@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto';
-import contentPatchJson from './data/micro-mvp-l1-content-patch.v1.json';
+import contentPatchJson from './data/micro-mvp-l1-content-patch.v1.json' with { type: 'json' };
 import { canonicalStringify } from '../rules-core/determinism';
 import type { SnapshotCatalogs } from './prodSnapshotL1Fixtures';
+import { certifiedExecutableRootProjection } from './certifiedContentProjection';
 
 type JsonObject = Record<string, unknown>;
 type PatchCollection = 'effects' | 'actions' | 'spells';
@@ -136,12 +137,10 @@ function productionFields(patch: DeclarativeFieldPatch): JsonObject | null {
     : null;
 }
 
-const SERVER_MANAGED_ENTITY_FIELDS = new Set(['id', 'created_at', 'updated_at', 'deleted_at']);
+const SERVER_MANAGED_ENTITY_FIELDS = ['id', 'created_at', 'updated_at', 'deleted_at'];
 
-function declaredMutableFields(entity: JsonObject): JsonObject {
-  return Object.fromEntries(Object.entries(entity).filter(([key]) => (
-    !SERVER_MANAGED_ENTITY_FIELDS.has(key)
-  )));
+function declaredExecutableFields(entity: JsonObject): JsonObject {
+  return certifiedExecutableRootProjection(entity, SERVER_MANAGED_ENTITY_FIELDS);
 }
 
 function replaceStringAliases(value: unknown, aliases: ReadonlyMap<string, string>): unknown {
@@ -340,8 +339,9 @@ export function materializeMicroMvpL1ContentPatch(
     };
     if (existing) {
       // Production POST assigns its own UUID. Stable card_number is the data
-      // identity; every other declared mutable field must still match exactly.
-      const declared = declaredMutableFields(declaration.entity as unknown as JsonObject);
+      // identity. Mutable presentation defaults may evolve independently, but
+      // every executable/structural declaration must still match exactly.
+      const declared = declaredExecutableFields(declaration.entity as unknown as JsonObject);
       const currentProjection = selectedFields(existing as unknown as JsonObject, declared);
       if (!same(currentProjection, declared)) {
         problems.push(`${declaration.collection}:${identity.cardNumber}: declared entity exists with different fields`);

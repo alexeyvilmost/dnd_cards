@@ -44,6 +44,8 @@
     "test:micro:matrix": "vitest run --config vitest.matrix.config.ts",
     "test:micro:live-matrix": "vitest run --config vitest.live-matrix.config.ts",
     "test:micro:certification": "vitest run --config vitest.live-matrix.config.ts src/mvp/micro-micro.certification.live.test.ts",
+    "test:production:condition-readiness": "vitest run --config vitest.production-certification-readiness.config.ts",
+    "test:production:certification-readiness": "npm run test:production:condition-readiness && node ../scripts/content/mark-mini-mvp-forge-sheet-roots.mjs --check-ready",
     "test:mini:live-ongoing": "vitest run --config vitest.live-matrix.config.ts src/mvp/mini-mvp.ongoing-spells.live.test.ts",
     "test:mini:live-traversal": "vitest run --config vitest.live-matrix.config.ts src/mvp/mini-mvp.traversal-spells.live.test.ts",
     "test:mini:live-control": "vitest run --config vitest.live-matrix.config.ts src/mvp/mini-mvp.control-spells.live.test.ts",

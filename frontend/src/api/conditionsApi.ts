@@ -10,12 +10,19 @@ import {
 import { payloadsOf } from '../engine/mechanicsView';
 import type { EntitySupportCertification } from '../content/supportStatus';
 import { canonicalSha256 } from '../rules-core/determinism';
+import { certifiedExecutableRootProjection } from '../canon/certifiedContentProjection';
 
 export interface ConditionEffectRecord {
   id?: string;
   card_number?: string | null;
   name: string;
+  name_en?: string | null;
   description?: string | null;
+  detailed_description?: string | null;
+  image_url?: string | null;
+  rarity?: string | null;
+  author?: string | null;
+  source?: string | null;
   effect_type?: string | null;
   mechanics?: unknown;
   support?: EntitySupportCertification | null;
@@ -35,9 +42,9 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
 const CONDITION_ID = /^[a-z][a-z0-9_-]*$/;
 const RFC3339_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/;
 export const MICRO_MVP_CONDITION_CERTIFICATION_VERSION = 'micro-mvp-l1-rules-core-v4';
-const CERTIFICATION_VOLATILE_FIELDS = new Set([
+const CERTIFICATION_VOLATILE_FIELDS = [
   'support', 'created_at', 'updated_at', 'deleted_at',
-]);
+] as const;
 const RELEASE_EVIDENCE_FIELDS = [
   'certification_version', 'certified_at', 'evidence_id', 'evidence_hash',
   'evidence_completed_at', 'gate_source_hash', 'source_content_hash',
@@ -185,10 +192,9 @@ export function materializeConditionRule(e: ConditionEffectRecord): ConditionRul
 export async function conditionRecordContentHash(
   effect: ConditionEffectRecord,
 ): Promise<string> {
-  return canonicalSha256(Object.fromEntries(
-    Object.entries(effect).filter(([key, value]) => (
-      !CERTIFICATION_VOLATILE_FIELDS.has(key) && value !== undefined
-    )),
+  return canonicalSha256(certifiedExecutableRootProjection(
+    effect,
+    CERTIFICATION_VOLATILE_FIELDS,
   ));
 }
 

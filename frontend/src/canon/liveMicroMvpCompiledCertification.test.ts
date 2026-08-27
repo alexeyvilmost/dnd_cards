@@ -9,12 +9,16 @@ import {
   compileLiveMicroMvpCertification,
   LiveMicroMvpCatalogDriftError,
   microMvpCatalogInputHash,
+  microMvpCompiledSemanticProjectionHash,
   microMvpRawCatalogInputHash,
 } from './liveMicroMvpCompiledCertification';
 import {
-  materializeMicroMvpL1ContentPatch,
   MICRO_MVP_L1_CONTENT_PATCH,
 } from './declarativeMechanicsPatch';
+import {
+  materializeReviewedPostMigrationCatalogs,
+  POST_MIGRATION_CATALOG_BOUNDARY,
+} from './postMigrationCatalogBoundary';
 import {
   readProdSnapshotCatalogs,
   type SnapshotCatalogs,
@@ -22,6 +26,10 @@ import {
 
 function copy<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function reviewedCatalogs(): SnapshotCatalogs {
+  return materializeReviewedPostMigrationCatalogs(readProdSnapshotCatalogs());
 }
 
 function reverseCollections(catalogs: SnapshotCatalogs): SnapshotCatalogs {
@@ -57,7 +65,7 @@ describe('live micro-MVP compiled certification boundary', () => {
   });
 
   it('rejects a changed executable primitive outside the materialization patch', async () => {
-    const reviewed = materializeMicroMvpL1ContentPatch(readProdSnapshotCatalogs()).catalogs;
+    const reviewed = reviewedCatalogs();
     const drifted = copy(reviewed);
     const tough = drifted.effects.find((entity) => entity.card_number === 'EFF-tough');
     if (!tough) throw new Error('missing reviewed Tough effect');
@@ -92,7 +100,7 @@ describe('live micro-MVP compiled certification boundary', () => {
   }, 60_000);
 
   it('records source presentation drift without redefining compiler semantics', async () => {
-    const reviewed = materializeMicroMvpL1ContentPatch(readProdSnapshotCatalogs()).catalogs;
+    const reviewed = reviewedCatalogs();
     const live = copy(reviewed);
     const fighter = live.classes.find((entity) => entity.card_number === 'CLASS-warrior');
     if (!fighter) throw new Error('missing reviewed Fighter');
@@ -114,7 +122,7 @@ describe('live micro-MVP compiled certification boundary', () => {
   }, 60_000);
 
   it('allows an unrelated global catalog extra while recording full-catalog drift', async () => {
-    const reviewed = materializeMicroMvpL1ContentPatch(readProdSnapshotCatalogs()).catalogs;
+    const reviewed = reviewedCatalogs();
     const live = copy(reviewed);
     const template = live.resources[0];
     if (!template) throw new Error('missing resource template');
@@ -145,7 +153,7 @@ describe('live micro-MVP compiled certification boundary', () => {
   }, 60_000);
 
   it('treats backend-assigned UUIDs for declared creates as surrogate identities', async () => {
-    const reviewed = materializeMicroMvpL1ContentPatch(readProdSnapshotCatalogs()).catalogs;
+    const reviewed = reviewedCatalogs();
     const live = copy(reviewed);
     const declaredCreates = [
       ...MICRO_MVP_L1_CONTENT_PATCH.createEntities.map((item) => ({
@@ -173,6 +181,45 @@ describe('live micro-MVP compiled certification boundary', () => {
     expect(result.catalogInput.fullCatalog.rawMatchesReviewed).toBe(false);
   }, 60_000);
 
+  it('binds Goliath, repaired equipment and both split attacks outside compiler roots', async () => {
+    const reviewed = reviewedCatalogs();
+    const result = await compileLiveMicroMvpCertification({
+      catalogs: copy(reviewed),
+      certificationVersion: 'micro-mvp-l1-rules-core-v4',
+    });
+    const baseline = result.catalogInput.reviewedSemanticProjectionHash;
+
+    const goliathDrift = copy(reviewed);
+    const fire = goliathDrift.actions.find((action) => action.card_number === 'ACT-goliath-fire');
+    if (!fire) throw new Error('missing Goliath Fire action');
+    const firePayload = (fire.mechanics as {
+      effects: Array<{ result: Array<{ kind: string; dice?: string }> }>;
+    }).effects.flatMap((effect) => effect.result).find((payload) => payload.kind === 'damage');
+    if (!firePayload) throw new Error('missing Goliath Fire damage');
+    firePayload.dice = '1d12';
+
+    const equipmentDrift = copy(reviewed);
+    const paladin = equipmentDrift.classes.find((item) => item.card_number === 'CLASS-paladin');
+    if (!paladin?.equipment_options?.option_b) throw new Error('missing Paladin option B');
+    paladin.equipment_options.option_b.gold = 151;
+
+    const splitActionDrift = copy(reviewed);
+    const offhand = splitActionDrift.actions.find((action) => (
+      action.card_number === 'action_basic_offhand'
+    ));
+    if (!offhand?.mechanics) throw new Error('missing offhand action mechanics');
+    offhand.mechanics.activation = {
+      ...(offhand.mechanics.activation ?? {}),
+      mode: 'reaction',
+    };
+
+    for (const drifted of [goliathDrift, equipmentDrift]) {
+      expect(microMvpCompiledSemanticProjectionHash(result.provider, drifted)).not.toBe(baseline);
+    }
+    expect(() => microMvpCompiledSemanticProjectionHash(result.provider, splitActionDrift))
+      .toThrow(/action_basic_offhand/);
+  }, 60_000);
+
   it('refuses the unmaterialized legacy snapshot on the production verification path', async () => {
     await expect(compileLiveMicroMvpCertification({
       catalogs: copy(readProdSnapshotCatalogs()),
@@ -181,14 +228,15 @@ describe('live micro-MVP compiled certification boundary', () => {
   }, 60_000);
 
   it('binds fetched catalog bytes, compiled release, denominator and evidence protocol', async () => {
-    const materialized = materializeMicroMvpL1ContentPatch(readProdSnapshotCatalogs()).catalogs;
+    const materialized = reviewedCatalogs();
     const result = await compileLiveMicroMvpCertification({
       catalogs: copy(materialized),
       certificationVersion: 'micro-mvp-l1-rules-core-v4',
     });
 
     expect(result.catalogInput).toMatchObject({
-      schemaVersion: 2,
+      schemaVersion: 3,
+      postMigrationBoundary: POST_MIGRATION_CATALOG_BOUNDARY,
       compilerRaw: {
         contentHashMatchesReviewed: true,
         releaseHashMatchesReviewed: true,

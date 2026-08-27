@@ -2,7 +2,8 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import type { Page, Route } from '@playwright/test';
 import type { SnapshotCatalogs } from '../src/canon/prodSnapshotL1Fixtures';
-import { projectPostSnapshotCatalogsThrough115 } from '../src/canon/postSnapshotCatalogProjection';
+import { MICRO_MVP_L1_CONTENT_PATCH } from '../src/canon/declarativeMechanicsPatch';
+import { materializeReviewedPostMigrationCatalogs } from '../src/canon/postMigrationCatalogBoundary';
 import {
   PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH,
   PINNED_MICRO_MVP_L1_COMPILED_RELEASE_HASH,
@@ -16,35 +17,6 @@ type JsonRecord = Record<string, unknown>;
 interface CollectionDefinition {
   responseKey: string;
   rows: JsonRecord[];
-}
-
-interface FixtureContentPatch {
-  mechanicsPatches: Record<string, Array<{
-    entityId: string;
-    cardNumber: string;
-    mechanics: JsonRecord;
-  }>>;
-  fieldPatches: Array<{
-    collection: string;
-    entityId: string;
-    cardNumber: string;
-    fields: JsonRecord;
-    entityReferences?: Array<{ collection: string; entityId: string; cardNumber: string }>;
-    productionFieldOverrides?: JsonRecord;
-    productionEntityReferences?: Array<{
-      collection: string;
-      entityId: string;
-      cardNumber: string;
-    }>;
-  }>;
-  createEntities: Array<{ collection: string; entity: JsonRecord }>;
-  conditionPatches: Array<{
-    cardNumber: string;
-    entityId: string | null;
-    fixtureEntityId: string;
-    fields: JsonRecord;
-    createFields: JsonRecord;
-  }>;
 }
 
 /**
@@ -143,75 +115,19 @@ function exactFixtureEntity(
 }
 
 /**
- * Playwright serves the same completely materialized catalog as the migration
- * tests. Apart from the exact persisted-sheet weapon subject declared above,
- * it intentionally interprets only generic replace/create operations; no
- * class, spell, or feature rule is inferred by this fixture.
+ * Applies only browser-specific subjects after the shared reviewed
+ * post-migration boundary. The declarative patch and migrations 107-116 are
+ * materialized once by that boundary, never reinterpreted permissively here.
  */
-function materializeFixturePatch(source: Record<string, JsonRecord[]>): Record<string, JsonRecord[]> {
+function materializeFixtureOnlyRepairs(
+  source: Record<string, JsonRecord[]>,
+): Record<string, JsonRecord[]> {
   const catalogs = cloneJson(source);
-  const patch = JSON.parse(readFileSync(new URL(
-    '../src/canon/data/micro-mvp-l1-content-patch.v1.json',
-    import.meta.url,
-  ), 'utf8')) as FixtureContentPatch;
-
-  for (const [collection, declarations] of Object.entries(patch.mechanicsPatches)) {
-    for (const declaration of declarations) {
-      exactFixtureEntity(catalogs, collection, declaration).mechanics = cloneJson(
-        declaration.mechanics,
-      );
-    }
-  }
-  for (const declaration of patch.fieldPatches) {
-    for (const reference of [
-      ...(declaration.entityReferences ?? []),
-      ...(declaration.productionEntityReferences ?? []),
-    ]) {
-      exactFixtureEntity(catalogs, reference.collection, reference);
-    }
-    const productionFields = declaration.productionFieldOverrides
-      ? { ...declaration.fields, ...declaration.productionFieldOverrides }
-      : declaration.fields;
-    Object.assign(
-      exactFixtureEntity(catalogs, declaration.collection, declaration),
-      cloneJson(productionFields),
-    );
-  }
-  for (const declaration of patch.createEntities) {
-    const rows = catalogs[declaration.collection];
-    if (!rows) throw new Error(`Fixture create references unknown collection ${declaration.collection}`);
-    const cardNumber = String(declaration.entity.card_number ?? '');
-    const matches = rows.filter((row) => row.card_number === cardNumber);
-    if (matches.length > 1) throw new Error(`Fixture create duplicates ${cardNumber}`);
-    if (!matches.length) rows.push(cloneJson(declaration.entity));
-    else Object.assign(matches[0], Object.fromEntries(
-      Object.entries(cloneJson(declaration.entity)).filter(([key]) => (
-        !['id', 'created_at', 'updated_at', 'deleted_at'].includes(key)
-      )),
-    ));
-  }
-  for (const declaration of patch.conditionPatches) {
-    const matches = catalogs.effects.filter((row) => row.card_number === declaration.cardNumber);
-    if (matches.length > 1) throw new Error(`Fixture condition duplicates ${declaration.cardNumber}`);
-    if (matches.length) {
-      if (declaration.entityId && matches[0].id !== declaration.entityId) {
-        throw new Error(`Fixture condition identity drifted: ${declaration.cardNumber}`);
-      }
-      Object.assign(matches[0], cloneJson(declaration.fields));
-    } else {
-      catalogs.effects.push({
-        ...cloneJson(declaration.createFields),
-        id: declaration.fixtureEntityId,
-        created_at: '2026-08-05T00:00:00.000Z',
-        updated_at: '2026-08-05T00:00:00.000Z',
-      });
-    }
-  }
   // The browser server represents the certified database projection, not the
   // runtime's emergency offline condition fallback. Recompute content hashes
   // after applying the exact condition patch and bind every row to the same
   // pinned compiled-release evidence used by App bootstrap.
-  for (const declaration of patch.conditionPatches) {
+  for (const declaration of MICRO_MVP_L1_CONTENT_PATCH.conditionPatches) {
     const condition = catalogs.effects.find((row) => row.card_number === declaration.cardNumber);
     if (!condition) throw new Error(`Fixture condition disappeared: ${declaration.cardNumber}`);
     certifyFixtureCondition(condition);
@@ -288,20 +204,8 @@ function materializeFixturePatch(source: Record<string, JsonRecord[]>): Record<s
   return catalogs;
 }
 
-function visible(rows: JsonRecord[]): JsonRecord[] {
-  return rows.map((row) => ({
-    ...row,
-    support: {
-      status: 'verified_mechanical',
-      certification_version: 'playwright-pinned-fixture-v1',
-      content_hash: 'sha256:playwright',
-      dependency_hash: 'sha256:playwright',
-    },
-  }));
-}
-
-const PATCHED_CATALOGS = projectPostSnapshotCatalogsThrough115(
-  materializeFixturePatch({
+const PATCHED_CATALOGS = materializeFixtureOnlyRepairs(
+  materializeReviewedPostMigrationCatalogs({
     cards: readSnapshot('cards'),
     races: readSnapshot('races'),
     classes: readSnapshot('classes'),
@@ -312,16 +216,16 @@ const PATCHED_CATALOGS = projectPostSnapshotCatalogsThrough115(
     actions: readSnapshot('actions'),
     resources: readSnapshot('resources'),
     variables: readSnapshot('variables'),
-  }) as unknown as SnapshotCatalogs,
+  } as unknown as SnapshotCatalogs) as unknown as Record<string, JsonRecord[]>,
 );
 
 const COLLECTIONS: Readonly<Record<string, CollectionDefinition>> = {
   cards: { responseKey: 'cards', rows: PATCHED_CATALOGS.cards as unknown as JsonRecord[] },
-  races: { responseKey: 'races', rows: visible(PATCHED_CATALOGS.races as unknown as JsonRecord[]) },
-  classes: { responseKey: 'classes', rows: visible(PATCHED_CATALOGS.classes as unknown as JsonRecord[]) },
-  backgrounds: { responseKey: 'backgrounds', rows: visible(PATCHED_CATALOGS.backgrounds as unknown as JsonRecord[]) },
-  feats: { responseKey: 'feats', rows: visible(PATCHED_CATALOGS.feats as unknown as JsonRecord[]) },
-  spells: { responseKey: 'spells', rows: visible(PATCHED_CATALOGS.spells as unknown as JsonRecord[]) },
+  races: { responseKey: 'races', rows: PATCHED_CATALOGS.races as unknown as JsonRecord[] },
+  classes: { responseKey: 'classes', rows: PATCHED_CATALOGS.classes as unknown as JsonRecord[] },
+  backgrounds: { responseKey: 'backgrounds', rows: PATCHED_CATALOGS.backgrounds as unknown as JsonRecord[] },
+  feats: { responseKey: 'feats', rows: PATCHED_CATALOGS.feats as unknown as JsonRecord[] },
+  spells: { responseKey: 'spells', rows: PATCHED_CATALOGS.spells as unknown as JsonRecord[] },
   effects: { responseKey: 'effects', rows: PATCHED_CATALOGS.effects as unknown as JsonRecord[] },
   actions: { responseKey: 'actions', rows: PATCHED_CATALOGS.actions as unknown as JsonRecord[] },
   resources: { responseKey: 'resources', rows: PATCHED_CATALOGS.resources as unknown as JsonRecord[] },

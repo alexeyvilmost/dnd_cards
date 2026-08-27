@@ -14,7 +14,11 @@ import {
   MicroMvpL1OverlayReadinessError,
   type CompiledMicroMvpL1Provider,
 } from './microMvpL1Overlay';
-import { materializeMicroMvpL1ContentPatch } from './declarativeMechanicsPatch';
+import {
+  materializeReviewedPostMigrationCatalogs,
+  POST_MIGRATION_CATALOG_BOUNDARY,
+  postMigrationCatalogSemanticProjection,
+} from './postMigrationCatalogBoundary';
 import {
   readMicroMvpSnapshotManifest,
   readProdSnapshotCatalogs,
@@ -39,8 +43,9 @@ const UNORDERED_ROOT_PROJECTION_ARRAYS = new Set([
 type JsonObject = Record<string, unknown>;
 
 export interface LiveMicroMvpCatalogInputAttestation {
-  schemaVersion: 2;
+  schemaVersion: 3;
   algorithm: 'sha256/canonical-json-v1';
+  postMigrationBoundary: typeof POST_MIGRATION_CATALOG_BOUNDARY;
   /** Exact equality here is the blocking catalog gate. It is calculated from
    * the compiled micro-MVP roots, not from unrelated rows in the global DB. */
   reviewedSemanticProjectionHash: string;
@@ -217,12 +222,11 @@ function catalogCardinalities(
 }
 
 /**
- * Hashes the compiler-owned executable 448-root projection after replacing DB
- * surrogate UUIDs with stable catalog identities. Production POST assigns a
- * fresh UUID to created effects; a byte-identical fixture UUID must therefore
- * never be part of release semantics. Nested mechanic/action order remains
- * semantic, while the compiler's top-level set-like arrays are re-sorted after
- * canonicalization.
+ * Hashes both the compiler-owned executable 448-root projection and the
+ * reviewed post-migration catalog boundary after replacing DB surrogate UUIDs
+ * with stable catalog identities. The latter closes the old blind spot where
+ * Goliath lineages, split attacks and starting equipment never reached a
+ * compiled root and therefore could drift without changing this attestation.
  */
 export function microMvpCompiledSemanticProjectionHash(
   provider: CompiledMicroMvpL1Provider,
@@ -252,7 +256,7 @@ export function microMvpCompiledSemanticProjectionHash(
     .sort((left, right) => canonicalStringify(left).localeCompare(canonicalStringify(right)));
   const { release } = provider;
   return canonicalHash({
-    schemaVersion: 2,
+    schemaVersion: 3,
     compilerRelease: {
       id: release.id,
       systemId: release.systemId,
@@ -264,6 +268,7 @@ export function microMvpCompiledSemanticProjectionHash(
     },
     roots,
     capabilityGaps,
+    postMigrationCatalog: postMigrationCatalogSemanticProjection(catalogs),
   });
 }
 
@@ -401,8 +406,9 @@ export function attestLiveMicroMvpCatalogInput(input: {
   const reviewedNormalizedHash = microMvpCatalogInputHash(input.reviewedCatalogs);
   const liveNormalizedHash = microMvpCatalogInputHash(input.liveCatalogs);
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     algorithm: 'sha256/canonical-json-v1',
+    postMigrationBoundary: POST_MIGRATION_CATALOG_BOUNDARY,
     reviewedSemanticProjectionHash,
     liveSemanticProjectionHash,
     compilerRaw: {
@@ -486,7 +492,7 @@ export async function compileLiveMicroMvpCertification(input: {
   certificationVersion: string;
 }): Promise<LiveMicroMvpCompiledCertification> {
   if (!input.certificationVersion.trim()) throw new Error('certificationVersion is required');
-  const reviewedCatalogs = materializeMicroMvpL1ContentPatch(readProdSnapshotCatalogs()).catalogs;
+  const reviewedCatalogs = materializeReviewedPostMigrationCatalogs(readProdSnapshotCatalogs());
   const [reviewedProvider, provider] = await Promise.all([
     compileMicroMvpL1MaterializedCatalogs(reviewedCatalogs),
     // Never compensate live DB rows with the apply-mode compatibility adapter.

@@ -38,10 +38,16 @@ test('stable selector plus visible verified status is ready', () => {
   assert.equal(result.status, 'ready');
 });
 
-test('canonical content hash ignores support, presentation hints, and timestamps but detects content edits', () => {
+test('canonical content hash ignores editable metadata and detects executable edits', () => {
   const entity = {
     id: 'entity-1',
     name: 'До',
+    description: 'До',
+    image_url: '/before.png',
+    rarity: 'common',
+    author: 'Before',
+    source: 'Before',
+    mechanics: { activation: { mode: 'passive' } },
     support: { status: 'verified_mechanical' },
     created_at: '2026-01-01',
     updated_at: '2026-01-02',
@@ -52,12 +58,25 @@ test('canonical content hash ignores support, presentation hints, and timestamps
     support: { status: 'known_mismatch' },
     choice_recommendations: { class_skills: ['arcana'] },
     updated_at: '2026-07-28',
+    name: 'После',
+    description: 'После',
+    image_url: 'data:image/png;base64,AA==',
+    rarity: 'rare',
+    author: 'After',
+    source: 'After',
   }), before);
-  assert.notEqual(contentHash({ ...entity, name: 'После' }), before);
+  assert.notEqual(contentHash({
+    ...entity,
+    mechanics: { activation: { mode: 'active' } },
+  }), before);
+  assert.notEqual(contentHash({ ...entity, action_type: 'reaction' }), before);
 });
 
-test('gate invalidates certification when a transitive dependency changes', () => {
-  const effect = { id: 'effect-1', card_number: 'EFFECT-1', description: 'До' };
+test('gate ignores dependency metadata but invalidates executable dependency changes', () => {
+  const effect = {
+    id: 'effect-1', card_number: 'EFFECT-1', description: 'До',
+    mechanics: { activation: { mode: 'passive' } },
+  };
   const action = {
     id: 'action-1',
     card_number: 'ACTION-1',
@@ -89,16 +108,22 @@ test('gate invalidates certification when a transitive dependency changes', () =
   );
 
   effect.description = 'После';
+  assert.equal(
+    resolveManifestEntry(item, [fighter], { entityType: 'class', index }).status,
+    'ready',
+  );
+
+  effect.mechanics.activation.mode = 'active';
   const stale = resolveManifestEntry(item, [fighter], { entityType: 'class', index });
   assert.equal(stale.status, 'stale_certification');
   assert.deepEqual(stale.staleFields, ['dependency_hash']);
 });
 
-test('gate invalidates certification when the entity content changes', () => {
+test('gate invalidates certification when entity structure changes', () => {
   const fighter = {
     id: 'class-1',
     card_number: 'CLASS-warrior',
-    description: 'До',
+    level_progression: { 1: { effects: [] } },
   };
   const index = buildCertificationIndex({ class: [fighter] });
   const hashes = certificationHashes(fighter, 'class', index);
@@ -108,7 +133,7 @@ test('gate invalidates certification when the entity content changes', () => {
     content_hash: hashes.contentHash,
     dependency_hash: hashes.dependencyHash,
   };
-  fighter.description = 'После';
+  fighter.level_progression = { 1: { effects: ['effect-1'] } };
 
   const result = resolveManifestEntry(
     MICRO_MICRO_MANIFEST.collections.classes[0],

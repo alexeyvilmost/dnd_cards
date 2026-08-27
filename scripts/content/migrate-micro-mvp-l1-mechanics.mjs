@@ -582,6 +582,37 @@ function containsExactString(value, expected) {
   return Object.values(value).some((item) => containsExactString(item, expected));
 }
 
+function declaredCreateIdentityAliases(catalogs, patch) {
+  const actualToDeclared = new Map();
+  for (const declaration of patch.createEntities) {
+    const declared = declaration.entity;
+    const matches = (catalogs[declaration.collection] ?? []).filter((entity) => (
+      entity.card_number === declared.card_number
+    ));
+    if (matches.length > 1) {
+      throw new Error(
+        `${declaration.collection}:${declared.card_number}: declared card_number is duplicated`,
+      );
+    }
+    if (matches.length === 1 && matches[0].id !== declared.id) {
+      // Production POST assigns a surrogate UUID. Relationship fields retain
+      // semantic identity through the declared card_number token, so compare
+      // the live UUID through that same stable identity on subsequent plans.
+      actualToDeclared.set(matches[0].id, declared.card_number);
+    }
+  }
+  return actualToDeclared;
+}
+
+function replaceStringAliases(value, aliases) {
+  if (typeof value === 'string') return aliases.get(value) ?? value;
+  if (Array.isArray(value)) return value.map((item) => replaceStringAliases(item, aliases));
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => (
+    [key, replaceStringAliases(item, aliases)]
+  )));
+}
+
 export function assertDependencySafeInterruptionPrefixes(operations) {
   const indexByID = new Map(operations.map((operation, index) => [operation.id, index]));
   const providers = operations.filter((operation) => operation.operation === 'create');
@@ -752,6 +783,7 @@ export function buildMigrationOperations(catalogs, patch) {
   validateContentPatchDeclaration(patch);
   const operations = [];
   const mechanicsTargets = [];
+  const createIdentityAliases = declaredCreateIdentityAliases(catalogs, patch);
   for (const collection of ['effects', 'actions', 'spells']) {
     const kind = collection === 'effects'
       ? 'passive_effect'
@@ -798,6 +830,7 @@ export function buildMigrationOperations(catalogs, patch) {
       exactEntity(catalogs[reference.collection], reference, reference.collection);
     }
     const current = projection(entity, targetFields);
+    const comparableCurrent = replaceStringAliases(current, createIdentityAliases);
     if (declaration.collection === 'cards' && targetFields.mechanics !== undefined) {
       mechanicsTargets.push({
         label: `${declaration.collection}:${declaration.cardNumber}`,
@@ -807,7 +840,7 @@ export function buildMigrationOperations(catalogs, patch) {
         mechanics: targetFields.mechanics,
       });
     }
-    if (same(current, targetFields)) continue;
+    if (same(comparableCurrent, targetFields)) continue;
     const beforeHash = sha256Canonical(current);
     const expectedBeforeHash = declaration.productionExpectedBeforeFieldsHash
       ?? declaration.expectedBeforeFieldsHash;

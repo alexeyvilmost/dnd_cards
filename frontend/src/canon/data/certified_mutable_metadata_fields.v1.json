@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "mutable_metadata_root_fields": [
+    "name",
+    "name_en",
+    "description",
+    "detailed_description",
+    "condition_description",
+    "upcast_description",
+    "image_url",
+    "image_cloudinary_id",
+    "image_cloudinary_url",
+    "image_generated",
+    "image_generation_prompt",
+    "rarity",
+    "custom_rarity_color",
+    "author",
+    "source",
+    "description_font_size",
+    "text_alignment",
+    "text_font_size",
+    "show_detailed_description",
+    "detailed_description_alignment",
+    "detailed_description_font_size"
+  ]
+}

@@ -85,6 +85,39 @@ afterEach(() => {
 });
 
 describe('condition DB mechanics materializer', () => {
+  it('hashes executable condition bytes but not editable presentation metadata', async () => {
+    const condition: ConditionEffectRecord & Record<string, unknown> = {
+      id: 'row:blinded',
+      card_number: 'COND-blinded',
+      name: 'Ослеплённый',
+      description: 'До',
+      effect_type: 'condition',
+      mechanics: { condition: { id: 'blinded' }, effects: [] },
+      image_url: '/before.png',
+      rarity: 'common',
+      author: 'Before',
+      source: 'Before',
+    };
+    const before = await conditionRecordContentHash(condition);
+    expect(await conditionRecordContentHash({
+      ...condition,
+      name: 'Новое имя',
+      description: 'После',
+      image_url: 'data:image/png;base64,iVBORw0KGgo=',
+      rarity: 'rare',
+      author: 'After',
+      source: 'After',
+    })).toBe(before);
+    expect(await conditionRecordContentHash({
+      ...condition,
+      mechanics: { condition: { id: 'blinded' }, effects: [], drift: true },
+    })).not.toBe(before);
+    expect(await conditionRecordContentHash({
+      ...condition,
+      effect_type: 'other',
+    })).not.toBe(before);
+  });
+
   it('preserves relational predicates, payload primitives, stacking, rest, and thresholds', () => {
     const rule = materializeConditionRule({
       card_number: 'COND-exhaustion',
@@ -284,7 +317,10 @@ describe('condition DB mechanics materializer', () => {
 
   it('rejects stale content and obsolete condition evidence before registry activation', async () => {
     const staleContent = await certifiedConditionRows();
-    staleContent[0] = { ...staleContent[0], name: 'changed after certification' };
+    staleContent[0] = {
+      ...staleContent[0],
+      mechanics: { condition: { id: 'blinded' }, effects: [], drift: true },
+    };
     vi.spyOn(effectsApi, 'getEffects').mockResolvedValueOnce({
       effects: staleContent,
       total: 15,

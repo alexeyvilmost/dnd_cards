@@ -134,7 +134,10 @@ test('derives every release-level hash reproducibly from source and exact catalo
   for (const [key, value] of Object.entries(first)) {
     if (key !== 'sourceCommit') assert.match(value, /^sha256:[0-9a-f]{64}$/u, key);
   }
-  catalogs.effect[0].description = 'drift';
+  catalogs.effect[0].mechanics = {
+    ...catalogs.effect[0].mechanics,
+    executable_drift: true,
+  };
   const drifted = await buildFightingStylePrimitiveReleaseEvidence(catalogs, {
     sourceCommit: SOURCE_COMMIT,
     localSourceCommit: SOURCE_COMMIT,

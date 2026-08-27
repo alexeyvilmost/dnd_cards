@@ -1,4 +1,27 @@
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+
+const BACKEND_PROJECTION_POLICY = JSON.parse(readFileSync(new URL(
+  '../../backend/migrations/certified_mutable_metadata_fields.v1.json',
+  import.meta.url,
+), 'utf8'));
+const FRONTEND_PROJECTION_POLICY = JSON.parse(readFileSync(new URL(
+  '../../frontend/src/canon/data/certified_mutable_metadata_fields.v1.json',
+  import.meta.url,
+), 'utf8'));
+
+if (JSON.stringify(BACKEND_PROJECTION_POLICY) !== JSON.stringify(FRONTEND_PROJECTION_POLICY)) {
+  throw new Error('Backend/frontend certified content projection policies differ');
+}
+const PROJECTION_POLICY = BACKEND_PROJECTION_POLICY;
+
+if (PROJECTION_POLICY.schema_version !== 1
+  || !Array.isArray(PROJECTION_POLICY.mutable_metadata_root_fields)
+  || PROJECTION_POLICY.mutable_metadata_root_fields.some((field) => (
+    typeof field !== 'string' || !/^[a-z][a-z0-9_]*$/u.test(field)
+  ))) {
+  throw new Error('Invalid certified content projection policy');
+}
 
 const VOLATILE_ROOT_FIELDS = new Set([
   'support',
@@ -9,6 +32,10 @@ const VOLATILE_ROOT_FIELDS = new Set([
   'updated_at',
   'deleted_at',
 ]);
+const NON_EXECUTABLE_ROOT_FIELDS = new Set([
+  ...VOLATILE_ROOT_FIELDS,
+  ...PROJECTION_POLICY.mutable_metadata_root_fields,
+]);
 
 function normalizedForHash(value, { root = false } = {}) {
   if (Array.isArray(value)) {
@@ -17,7 +44,7 @@ function normalizedForHash(value, { root = false } = {}) {
   if (value && typeof value === 'object') {
     return Object.fromEntries(
       Object.keys(value)
-        .filter((key) => !(root && VOLATILE_ROOT_FIELDS.has(key)))
+        .filter((key) => !(root && NON_EXECUTABLE_ROOT_FIELDS.has(key)))
         .sort()
         .filter((key) => value[key] !== undefined)
         .map((key) => [key, normalizedForHash(value[key])]),
@@ -71,7 +98,14 @@ export function buildCertificationIndex(entityGroups) {
   return { byReference, byIdentity };
 }
 
-function visitReferences(value, index, rootIdentity, dependencies, visitedObjects) {
+function visitReferences(
+  value,
+  index,
+  rootIdentity,
+  dependencies,
+  visitedObjects,
+  entityRoot = false,
+) {
   if (typeof value === 'string') {
     for (const record of index.byReference.get(value) ?? []) {
       if (record.identity === rootIdentity || dependencies.has(record.identity)) continue;
@@ -82,6 +116,7 @@ function visitReferences(value, index, rootIdentity, dependencies, visitedObject
         rootIdentity,
         dependencies,
         visitedObjects,
+        true,
       );
     }
     return;
@@ -90,8 +125,8 @@ function visitReferences(value, index, rootIdentity, dependencies, visitedObject
   visitedObjects.add(value);
 
   for (const [key, nested] of Object.entries(value)) {
-    if (VOLATILE_ROOT_FIELDS.has(key)) continue;
-    visitReferences(nested, index, rootIdentity, dependencies, visitedObjects);
+    if (entityRoot && NON_EXECUTABLE_ROOT_FIELDS.has(key)) continue;
+    visitReferences(nested, index, rootIdentity, dependencies, visitedObjects, false);
   }
 }
 
@@ -104,7 +139,7 @@ function visitReferences(value, index, rootIdentity, dependencies, visitedObject
 export function dependencySnapshot(entity, entityType, index) {
   const rootIdentity = identityOf(entityType, entity);
   const dependencies = new Map();
-  visitReferences(entity, index, rootIdentity, dependencies, new WeakSet());
+  visitReferences(entity, index, rootIdentity, dependencies, new WeakSet(), true);
 
   return [...dependencies.values()]
     .map((record) => ({

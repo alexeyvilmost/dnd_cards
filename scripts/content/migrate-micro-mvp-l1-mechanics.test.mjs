@@ -579,6 +579,48 @@ test('every apply and reverse-rollback interruption prefix preserves provider de
   );
 });
 
+test('subsequent plans compare created-provider relationships by stable card number', () => {
+  const catalogs = reviewedPreimageCatalogs();
+  const patch = sourceSnapshotPatch();
+  const provider = patch.createEntities.find((declaration) => (
+    declaration.collection === 'effects'
+      && declaration.entity.card_number === 'EFF-rogue-thieves-cant'
+  ));
+  const roguePatch = patch.fieldPatches.find((declaration) => (
+    declaration.collection === 'classes' && declaration.cardNumber === 'CLASS-rogue'
+  ));
+  assert.ok(provider);
+  assert.ok(roguePatch);
+
+  const serverAssignedProviderId = '112c7397-1f14-4899-92a6-479845c07db1';
+  catalogs.effects.push({
+    ...clone(provider.entity),
+    id: serverAssignedProviderId,
+  });
+  const rogue = catalogs.classes.find((entity) => entity.card_number === 'CLASS-rogue');
+  assert.ok(rogue);
+  Object.assign(rogue, clone(roguePatch.fields));
+  rogue.level_progression['1'].effects = rogue.level_progression['1'].effects.map((reference) => (
+    reference === provider.entity.card_number ? serverAssignedProviderId : reference
+  ));
+
+  patch.mechanicsPatches = { effects: [], actions: [], spells: [] };
+  patch.fieldPatches = [roguePatch];
+  patch.createEntities = [provider];
+  patch.conditionPatches = [];
+  assert.deepEqual(buildMigrationOperations(catalogs, patch), []);
+
+  rogue.level_progression['1'].effects = rogue.level_progression['1'].effects.map((reference) => (
+    reference === serverAssignedProviderId
+      ? '00000000-0000-4000-8000-000000000099'
+      : reference
+  ));
+  assert.throws(
+    () => buildMigrationOperations(catalogs, patch),
+    /classes:CLASS-rogue: reviewed production before fields hash/,
+  );
+});
+
 test('starting equipment and javelin corrections are stable-reference data and fail closed', () => {
   const patch = sourceSnapshotPatch();
   const catalogs = reviewedPreimageCatalogs();

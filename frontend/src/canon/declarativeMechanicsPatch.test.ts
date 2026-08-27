@@ -280,14 +280,34 @@ describe('versioned declarative micro-MVP L1 content patch', () => {
       .rejects.toThrow(/EFF-wizard-spellcasting: expected mechanics/);
   });
 
-  it('does not accept a pre-existing declared entity by mechanics alone', () => {
+  it('does not accept a pre-existing declared entity by mechanics without its structure', () => {
     const materialized = materializeMicroMvpL1ContentPatch(readProdSnapshotCatalogs()).catalogs;
     const armor = materialized.effects.find((effect) => (
       effect.card_number === 'EFF-invoc-armor_of_shadows'
     ))!;
-    armor.name = 'Wrong production row';
+    armor.effect_type = 'condition';
     expect(() => materializeMicroMvpL1ContentPatch(materialized))
       .toThrow(/EFF-invoc-armor_of_shadows: declared entity exists with different fields/);
+  });
+
+  it('accepts the production ranged action image override and other mutable metadata', () => {
+    const materialized = materializeMicroMvpL1ContentPatch(readProdSnapshotCatalogs()).catalogs;
+    const ranged = materialized.actions.find((action) => (
+      action.card_number === 'action_basic_weapon_ranged'
+    ))!;
+    Object.assign(ranged, {
+      name: 'Редактируемое имя',
+      name_en: 'Editable name',
+      description: 'Редактируемое описание',
+      image_url: 'data:image/png;base64,iVBORw0KGgo=',
+      rarity: 'rare',
+      author: 'Редактор',
+      source: 'Редактируемый источник',
+    });
+
+    const verified = materializeMicroMvpL1ContentPatch(materialized);
+    expect(verified.changes).toHaveLength(0);
+    expect(verified.alreadyMaterialized).toHaveLength(111);
   });
 
   it('accepts a server-assigned UUID for a fully matching created entity', () => {

@@ -114,6 +114,18 @@ test('required real-interaction spine: empty Forge reaches sheet and dedicated c
   const ammunitionCardId = weaponProfile?.ammo?.card_id;
   if (!ammunitionCardId) throw new Error('Projected Ranger longbow has no stable ammunition binding');
   const duplicateReads = trackDuplicateApiReads(page);
+  const supportConfirmations: string[] = [];
+  const unexpectedDialogs: string[] = [];
+  page.on('dialog', async (dialog) => {
+    if (dialog.type() === 'confirm'
+      && dialog.message().includes('не входит в проверенный каталог')) {
+      supportConfirmations.push(dialog.message());
+      await dialog.accept();
+      return;
+    }
+    unexpectedDialogs.push(`${dialog.type()}: ${dialog.message()}`);
+    await dialog.dismiss();
+  });
 
   await page.goto('/');
   await page.evaluate(() => localStorage.removeItem('forge-draft'));
@@ -123,12 +135,19 @@ test('required real-interaction spine: empty Forge reaches sheet and dedicated c
   // the real accessible control instead of bypassed with a forced click.
   await openForgeSection(page, 'Вид');
   await expect(page.getByRole('complementary', { name: 'Предложение мобильной версии' })).toBeHidden();
+  const showAllContent = page.getByRole('checkbox', { name: /Показать все сущности/ });
+  await showAllContent.check();
+  await expect(showAllContent).toBeChecked();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByTestId('offline-rules-authority'),
     'the isolated server must expose the certified database condition release').toHaveCount(0);
 
   await selectForgeEntity(page, race.name);
+  const confirmationsBeforeLineage = supportConfirmations.length;
   await selectForgeEntity(page, lineage.name);
+  expect(supportConfirmations.length,
+    'the raw post-migration fixture must expose Stone through the real unverified-content warning')
+    .toBeGreaterThan(confirmationsBeforeLineage);
   await completeVisibleForgeChoices(page);
 
   // Select the fixed background first. This order forces the later class-skill
@@ -263,4 +282,5 @@ test('required real-interaction spine: empty Forge reaches sheet and dedicated c
 
   duplicateReads.stop();
   expect(duplicateReads.duplicates, 'concurrent duplicate API GET requests').toEqual([]);
+  expect(unexpectedDialogs, 'unexpected browser dialogs').toEqual([]);
 });

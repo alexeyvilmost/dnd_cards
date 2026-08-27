@@ -738,6 +738,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairHalfCasterSpellcastingContract,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     certifiedMetadataProjectionMigrationVersion,
+			Description: "Согласовать сертификацию и блокировку с редактируемыми полями представления",
+			Up:          alignCertifiedMetadataProjection,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

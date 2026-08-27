@@ -183,11 +183,14 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     env:
       LIVE_BROWSER_CANARY: '1'
       LIVE_BROWSER_BASE_URL: 'https://bagofholding.ru'
       LIVE_BROWSER_API_URL: 'https://bagofholding.ru'
+      MVP_CONTENT: '1'
+      VITE_API_URL: 'https://bagofholding.ru'
+      API_URL: 'https://bagofholding.ru'
       LIVE_BROWSER_USER_A: ${{ secrets.LIVE_BROWSER_USER_A }}
       LIVE_BROWSER_PASSWORD_A: ${{ secrets.LIVE_BROWSER_PASSWORD_A }}
     steps:
@@ -265,6 +268,31 @@ jobs:
       - name: Установка зависимостей
         working-directory: frontend
         run: npm ci --ignore-scripts
+      - name: Ожидание exact certification-readiness перед production spine
+        working-directory: frontend
+        shell: bash
+        run: |
+          mkdir -p test-results-live
+          readiness_log="test-results-live/certification-readiness.log"
+          attempts=1
+          delay_seconds=0
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            attempts=90
+            delay_seconds=30
+          fi
+          for attempt in $(seq 1 "$attempts"); do
+            if npm run test:production:certification-readiness >"$readiness_log" 2>&1; then
+              cat "$readiness_log"
+              exit 0
+            fi
+            if [ "$attempt" -lt "$attempts" ]; then
+              echo "Certification is not ready yet ($attempt/$attempts); retrying in ${delay_seconds}s."
+              sleep "$delay_seconds"
+            fi
+          done
+          echo "Production did not reach exact certification readiness after $attempts attempt(s)." >&2
+          cat "$readiness_log" >&2
+          exit 1
       - name: Проверка типов production spine
         working-directory: frontend
         run: npm run test:browser:live:typecheck
