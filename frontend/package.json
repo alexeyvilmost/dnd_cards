@@ -11,7 +11,7 @@
   },
   "scripts": {
     "dev": "vite --config vite.config.ts",
-    "build": "tsc && vite build --config vite.config.ts",
+    "build": "node scripts/check-dice-box-assets.mjs && tsc && vite build --config vite.config.ts && node scripts/check-dice-box-assets.mjs --dist",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview --config vite.config.ts",
     "rules-lab:generate": "node scripts/generate-rules-lab-fixture.mjs",
@@ -38,7 +38,7 @@
     "test:rules:replay": "vitest run src/rules-core/determinism.test.ts src/rules-core/worldMigration.test.ts src/rules-core/world.test.ts",
     "test:rules:coverage": "vitest run --config vitest.rules-core.config.ts",
     "test:rules:primitives": "vitest run --config vitest.rules-primitives.config.ts --coverage",
-    "test:micro:manifest": "node --test ../scripts/content/micro-mvp-manifest.test.mjs ../scripts/content/micro-micro-manifest.test.mjs ../scripts/content/api.pagination.test.mjs ../scripts/content/export-prod.test.mjs ../scripts/content/migrate-micro-mvp-l1-mechanics.test.mjs ../scripts/content/micro-mvp-certifications.test.mjs ../scripts/content/micro-mvp-release-evidence.test.mjs ../scripts/content/basic-actions-certifications.test.mjs",
+    "test:micro:manifest": "node --test scripts/check-dice-box-assets.test.mjs ../scripts/content/micro-mvp-manifest.test.mjs ../scripts/content/micro-micro-manifest.test.mjs ../scripts/content/api.pagination.test.mjs ../scripts/content/export-prod.test.mjs ../scripts/content/migrate-micro-mvp-l1-mechanics.test.mjs ../scripts/content/micro-mvp-certifications.test.mjs ../scripts/content/micro-mvp-release-evidence.test.mjs ../scripts/content/basic-actions-certifications.test.mjs",
     "test:mini:catalog": "node --test ../scripts/content/mini-mvp-manifest.test.mjs ../scripts/content/mini-mvp-audit.test.mjs ../scripts/content/upgrade-mini-mvp-cantrip-primitives.test.mjs ../scripts/content/upgrade-mini-mvp-level1-riders.test.mjs ../scripts/content/upgrade-mini-mvp-ongoing-spells.test.mjs ../scripts/content/upgrade-mini-mvp-traversal-spells.test.mjs ../scripts/content/upgrade-mini-mvp-control-spells.test.mjs ../scripts/content/upgrade-mini-mvp-utility-cantrips.test.mjs ../scripts/content/upgrade-mini-mvp-utility-level1-spells.test.mjs ../scripts/content/upgrade-mini-mvp-fighting-style-primitives.test.mjs ../scripts/content/certify-mini-mvp-fighting-style-primitives.test.mjs ../scripts/content/mark-mini-mvp-reviewed-spells.test.mjs ../scripts/content/repair-mini-mvp-structural-baseline.test.mjs ../scripts/content/repair-mini-mvp-structural-data.test.mjs ../scripts/content/mark-mini-mvp-baseline.test.mjs ../scripts/content/mark-mini-mvp-structural-repairs.test.mjs ../scripts/content/mark-mini-mvp-forge-sheet-roots.test.mjs ../scripts/content/mark-mini-mvp-fighting-style-forge-sheet.test.mjs",
     "test:micro:live": "node ../scripts/content/micro-micro-gate.mjs --strict",
     "test:micro:matrix": "vitest run --config vitest.matrix.config.ts",

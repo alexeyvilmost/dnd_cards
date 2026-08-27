@@ -162,6 +162,7 @@ const SOURCE_FILES = Object.freeze([
   'backend/go.mod',
   'backend/go.sum',
   'frontend/.dockerignore',
+  'frontend/.npmrc',
   'frontend/Dockerfile',
   'frontend/.eslintrc.cjs',
   'frontend/index.html',

@@ -319,3 +319,13 @@ This changes the meaning of a green mini-MVP release: engine coverage is still
 necessary, but it can no longer substitute for Forge interaction, persisted
 sheet state, dedicated combat, assets, upstream integration or response-time
 budgets.
+
+The first exact-SHA evidence run also exposed an installation-only drift that
+ordinary tests could not see: `@3d-dice/dice-box` copied seven unused duplicate
+files into `public/assets/{ammo,themes}` while the application serves the
+reviewed copy at `/assets/dice-box/`. Install scripts are now disabled in every
+environment. Each build verifies the reviewed files byte-for-byte against the
+integrity-pinned installed package, then verifies the final Vite output contains
+the same files only at the runtime path. The release fingerprint continues to
+cover all of `frontend/public`; no asset directory was ignored to make evidence
+pass.

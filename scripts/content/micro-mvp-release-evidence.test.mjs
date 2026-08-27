@@ -139,6 +139,8 @@ test('release source fingerprint covers canonical data and every non-TypeScript 
     'frontend/charges/charges.json',
     'frontend/utils/weapon_types.json',
     'frontend/liveCanaryTargets.ts',
+    'frontend/.npmrc',
+    'frontend/public/assets/dice-box/ammo/ammo.wasm.wasm',
     'docs/mechanics.schema.json',
     'docs/product-rules/free_origin_feat_choice_v1.json',
   ];

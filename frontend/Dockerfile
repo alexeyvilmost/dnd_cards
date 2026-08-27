@@ -3,14 +3,14 @@ FROM node:20-slim AS build
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package*.json .npmrc ./
 
 RUN npm config set cache /tmp/.npm && \
     npm config set fetch-retry-mintimeout 20000 && \
     npm config set fetch-retry-maxtimeout 120000 && \
     npm config set fetch-retries 3
 
-RUN if [ -f package-lock.json ]; then npm ci --include=dev --no-audit --no-fund; else npm install --include=dev --no-audit --no-fund; fi
+RUN if [ -f package-lock.json ]; then npm ci --ignore-scripts --include=dev --no-audit --no-fund; else npm install --ignore-scripts --include=dev --no-audit --no-fund; fi
 
 COPY . .
 
