@@ -2163,6 +2163,7 @@ function executeUseAction(
   world: WorldState,
   command: AuthoritativeUseActionCommand,
   action: RuleActionDefinition,
+  catalog: RulesCatalog,
   env: DeterministicEnvironment,
   options: {
     skipReplacedConcentrationWorldObjectCleanup?: boolean;
@@ -2242,6 +2243,38 @@ function executeUseAction(
       retaliationSourceEntityIds.map((sourceId) => `entity:${sourceId}`)
     )),
   );
+  // Damage reactions belong to the damage transition, not to the attack-roll
+  // primitive.  Keeping the gate action-agnostic lets every canonical damage
+  // source (an automatic hazard/feature today, more primitives tomorrow) use
+  // the same persisted pre-mutation continuation.  The helper's exact-HP
+  // postcondition rejects mixed or deferred transitions that cannot be held
+  // losslessly.
+  if (executions.length === 1) {
+    const execution = executions[0];
+    const target = execution.target;
+    const facts = target ? command.factsByTarget?.[target.id] : undefined;
+    if (target && facts) {
+      const opened = damageReactionOpenedEvents({
+        world,
+        commandId: command.commandId,
+        source,
+        target,
+        action,
+        facts,
+        targetRuntimeBeforeDamage: target.runtime,
+        sourceRuntimeAfter: execution.result.state,
+        targetRuntimeAfter: execution.result.targetState,
+        attackEvents: execution.result.events,
+        retaliationEvents: execution.retaliationEvents,
+        retaliationSourceEntityIds: execution.retaliationSourceEntityIds,
+        deferredTargetSaves: execution.result.deferredTargetSaves,
+        catalog,
+        env,
+        obligations: obligationIds,
+      });
+      if (opened) return opened;
+    }
+  }
   const events: EventInput[] = actionStateEvents({
     world,
     commandId: command.commandId,
@@ -2738,6 +2771,199 @@ function hitReactionOptions(
   });
 }
 
+function damageReactionOptions(
+  target: ActorState,
+  catalog: RulesCatalog,
+): Array<{ action: RuleActionDefinition; option: ReactionActionOption }> {
+  if (deniedCapabilities(target.runtime, target.passives ?? []).has('reaction')) return [];
+  return target.capabilities.actionIds.flatMap((actionId) => {
+    const action = catalog.getAction(actionId);
+    if (!action || !hasReactionTrigger(action, 'damage_taken')) return [];
+    const [option] = sourceScopedReactionOptions(target, action);
+    return option ? [{ action, option }] : [];
+  });
+}
+
+function damagePackets(events: readonly EngineEvent[]): Array<{
+  amount: number;
+  damageType: string;
+  roll?: RollLog;
+}> {
+  return events.flatMap((event) => event.type === 'damage' && event.amount > 0
+    ? [{
+      amount: Math.max(0, Math.floor(event.amount)),
+      damageType: event.damageType,
+      ...(event.roll ? { roll: JSON.parse(JSON.stringify(event.roll)) as RollLog } : {}),
+    }]
+    : []);
+}
+
+function hpAfterDamage(
+  hp: ActorState['runtime']['hp'],
+  amount: number,
+): ActorState['runtime']['hp'] {
+  const next = { ...hp };
+  let remaining = Math.max(0, Math.floor(amount));
+  const absorbed = Math.min(next.temp, remaining);
+  next.temp -= absorbed;
+  remaining -= absorbed;
+  next.current = Math.max(0, next.current - remaining);
+  return next;
+}
+
+function sameHp(
+  left: ActorState['runtime']['hp'],
+  right: ActorState['runtime']['hp'],
+): boolean {
+  return left.current === right.current && left.max === right.max && left.temp === right.temp;
+}
+
+function adjustedDamageEvents(
+  events: readonly EngineEvent[],
+  reduction: number,
+): { events: EngineEvent[]; amount: number } {
+  let remainingReduction = Math.max(0, Math.floor(reduction));
+  let amount = 0;
+  const adjusted = events.map((event): EngineEvent => {
+    if (event.type !== 'damage' || event.amount <= 0) return JSON.parse(JSON.stringify(event)) as EngineEvent;
+    const applied = Math.min(event.amount, remainingReduction);
+    remainingReduction -= applied;
+    const nextAmount = event.amount - applied;
+    amount += nextAmount;
+    return { ...event, amount: nextAmount };
+  });
+  return { events: adjusted, amount };
+}
+
+function applyReactionRuntimeDelta(
+  continuation: ActorState['runtime'],
+  before: ActorState['runtime'],
+  after: ActorState['runtime'],
+): ActorState['runtime'] {
+  const patch = runtimePatch(before, after);
+  return {
+    ...continuation,
+    ...(patch.resources ? { resources: { ...patch.resources } } : {}),
+    ...(patch.maxResources ? { maxResources: { ...patch.maxResources } } : {}),
+    ...(patch.equipment ? { equipment: { ...patch.equipment } } : {}),
+    ...(patch.inventory ? { inventory: patch.inventory.map((entry) => ({ ...entry })) } : {}),
+    ...(patch.activeEffects ? {
+      activeEffects: patch.activeEffects.map((entry) => JSON.parse(JSON.stringify(entry))),
+    } : {}),
+    ...(patch.firedThisTurn !== undefined
+      ? { firedThisTurn: patch.firedThisTurn ?? undefined }
+      : {}),
+    ...(patch.firedThisRest !== undefined
+      ? { firedThisRest: patch.firedThisRest ?? undefined }
+      : {}),
+  };
+}
+
+interface DamageReactionContinuationInput {
+  world: WorldState;
+  commandId: string;
+  source: ActorState;
+  target: ActorState;
+  action: RuleActionDefinition;
+  facts: SpatialFacts;
+  targetRuntimeBeforeDamage: ActorState['runtime'];
+  sourceRuntimeAfter: ActorState['runtime'];
+  targetRuntimeAfter?: ActorState['runtime'];
+  preDamageTargetEvents?: readonly EngineEvent[];
+  attackEvents: readonly EngineEvent[];
+  retaliationEvents?: readonly EngineEvent[];
+  retaliationSourceEntityIds?: readonly string[];
+  deferredTargetSaves?: readonly DeferredTargetSave[];
+  attackActionId?: string;
+  catalog: RulesCatalog;
+  env: DeterministicEnvironment;
+  obligations: string[];
+}
+
+/**
+ * Hold an already-computed damage bundle outside WorldState until its owner
+ * accepts or declines a payable `damage_taken` reaction.  The executor may
+ * simulate freely, but the canonical event stream never mutates HP before the
+ * decision and never needs to reroll the triggering action after a reload.
+ */
+function damageReactionOpenedEvents(
+  input: DamageReactionContinuationInput,
+): EventInput[] | null {
+  if (!input.targetRuntimeAfter || input.source.id === input.target.id) return null;
+  const packets = damagePackets(input.attackEvents);
+  const amount = packets.reduce((sum, packet) => sum + packet.amount, 0);
+  if (amount <= 0) return null;
+
+  const targetAtWindow: ActorState = {
+    ...input.target,
+    runtime: input.targetRuntimeBeforeDamage,
+  };
+  const options = damageReactionOptions(targetAtWindow, input.catalog);
+  if (!options.length) return null;
+
+  // Snapshot continuations are safe only when this action's HP transition is
+  // exactly the held damage bundle.  Mixed damage/healing actions keep their
+  // existing atomic path rather than manufacturing a lossy rollback.
+  const expectedHp = hpAfterDamage(input.targetRuntimeBeforeDamage.hp, amount);
+  if (!sameHp(expectedHp, input.targetRuntimeAfter.hp)) return null;
+
+  const obligations = [...new Set([
+    ...input.obligations,
+    'system:damage-reaction-window',
+    'system:pending-resolution',
+  ])];
+  const resolutionId = input.env.nextId();
+  const masteryFollowUps = queuedMasterySaves({
+    deferred: input.deferredTargetSaves,
+    sourceActorId: input.source.id,
+    targetActorId: input.target.id,
+    actionId: input.action.id,
+  });
+  return [{
+    sourceActorId: input.source.id,
+    obligationIds: obligations,
+    payload: {
+      type: 'ResolutionOpened',
+      resolution: {
+        id: resolutionId,
+        type: 'damage_reaction',
+        openedByCommandId: input.commandId,
+        openedAtRevision: input.world.revision,
+        deadlineLogicalClock: input.world.logicalClock + 10,
+        sourceActorId: input.source.id,
+        targetActorId: input.target.id,
+        actionId: input.action.id,
+        action: JSON.parse(JSON.stringify(input.action)) as RuleActionDefinition,
+        facts: { ...input.facts },
+        targetRuntimeBeforeDamage: JSON.parse(JSON.stringify(input.targetRuntimeBeforeDamage)),
+        sourceRuntimeAfter: JSON.parse(JSON.stringify(input.sourceRuntimeAfter)),
+        targetRuntimeAfter: JSON.parse(JSON.stringify(input.targetRuntimeAfter)),
+        damage: packets,
+        preDamageTargetEvents: JSON.parse(JSON.stringify(input.preDamageTargetEvents ?? [])),
+        attackEvents: JSON.parse(JSON.stringify(input.attackEvents)),
+        retaliationEvents: JSON.parse(JSON.stringify(input.retaliationEvents ?? [])),
+        retaliationSourceEntityIds: [...(input.retaliationSourceEntityIds ?? [])],
+        obligationIds: obligations,
+        followUps: masteryFollowUps,
+        ...(input.attackActionId ? { attackActionId: input.attackActionId } : {}),
+        request: {
+          id: input.env.nextId(),
+          type: 'reaction',
+          actorId: input.target.id,
+          trigger: {
+            type: 'damage_taken',
+            sourceActorId: input.source.id,
+            actionId: input.action.id,
+            amount,
+            damageTypes: [...new Set(packets.map((packet) => packet.damageType))],
+          },
+          options: options.map(({ option }) => cloneReactionOption(option)),
+        },
+      },
+    },
+  }];
+}
+
 interface PendingAttackOptions {
   attackActionId?: string;
   preRollDisadvantageReasons?: readonly string[];
@@ -3161,6 +3387,29 @@ function pendingAttackEvents(
     deferTargetSaves: true,
     ...(options.externalPrimitiveHandled ? { externalPrimitiveHandled: true as const } : {}),
   });
+  const resumedEvents = [
+    ...paid.events,
+    ...relabelAttackRolls(preview.events, 'Атака'),
+    ...withoutAttackRoll(resumed.events),
+  ];
+  const damageWindow = damageReactionOpenedEvents({
+    world: effectiveWorld,
+    commandId: command.commandId,
+    source,
+    target,
+    action,
+    facts,
+    targetRuntimeBeforeDamage: target.runtime,
+    sourceRuntimeAfter: resumed.state,
+    targetRuntimeAfter: resumed.targetState,
+    attackEvents: resumedEvents,
+    deferredTargetSaves: resumed.deferredTargetSaves,
+    attackActionId: options.attackActionId,
+    catalog,
+    env,
+    obligations,
+  });
+  if (damageWindow) return [...protectionLifecycleEvents, ...damageWindow];
   const events: EventInput[] = [
     ...protectionLifecycleEvents,
     ...actionStateEvents({
@@ -3173,11 +3422,7 @@ function pendingAttackEvents(
       targetAfter: resumed.targetState,
       obligations,
     }),
-    ...engineTrace(source.id, [target.id], [
-      ...paid.events,
-      ...relabelAttackRolls(preview.events, 'Атака'),
-      ...withoutAttackRoll(resumed.events),
-    ], obligations),
+    ...engineTrace(source.id, [target.id], resumedEvents, obligations),
   ];
   events.push(...attackFollowUpEvents({
     world: effectiveWorld,
@@ -4212,6 +4457,7 @@ function resolvePendingAttack(
     selectedReactionSpell = preparedReaction.spell;
     const reactionResult = executeAction(targetRuntime, preparedReaction.action.mechanics, {
       ...actionContext(target, env, undefined, undefined, undefined, selectedReactionSpell),
+      actionName: preparedReaction.action.name,
       spell: selectedReactionSpell,
     });
     targetRuntime = reactionResult.state;
@@ -4254,6 +4500,87 @@ function resolvePendingAttack(
     ...(armor.retaliationEvents.length ? ['system:temporary-hp-melee-retaliation', 'system:retaliation'] : []),
     ...armor.retaliationSourceEntityIds.map((sourceId) => `entity:${sourceId}`),
   ])];
+  const resumedAttackEvents = relabelAttackRolls(
+    resumed.events,
+    selectedId ? 'Атака — после реакции' : 'Атака',
+  );
+  const damageWindow = damageReactionOpenedEvents({
+    world,
+    commandId: command.commandId,
+    source: sourceForAttack,
+    target: targetAfterReaction,
+    action: attack,
+    facts: pending.facts,
+    targetRuntimeBeforeDamage: targetRuntime,
+    sourceRuntimeAfter: sourceAfter,
+    targetRuntimeAfter: finalTargetRuntime,
+    preDamageTargetEvents: reactionEvents,
+    attackEvents: resumedAttackEvents,
+    retaliationEvents: armor.retaliationEvents,
+    retaliationSourceEntityIds: armor.retaliationSourceEntityIds,
+    deferredTargetSaves: resumed.deferredTargetSaves,
+    attackActionId: pending.attackActionId,
+    catalog,
+    env,
+    obligations,
+  });
+  if (damageWindow) {
+    const opened = damageWindow[0]?.payload.type === 'ResolutionOpened'
+      ? damageWindow[0].payload.resolution
+      : null;
+    if (!opened || opened.type !== 'damage_reaction') {
+      return rejected(world, 'InvalidDecision', 'Damage reaction continuation was not created');
+    }
+    const chained: EventInput[] = [{
+      sourceActorId: target.id,
+      obligationIds: obligations,
+      payload: {
+        type: 'DecisionRecorded',
+        resolutionId: pending.id,
+        requestId: pending.request.id,
+        actorId: target.id,
+        response: command.response,
+      },
+    }];
+    if (selectedReaction) {
+      chained.push(actionDeclaredEvent({
+        actorId: target.id,
+        action: selectedReaction,
+        targetIds: [target.id],
+        timing: 'reaction',
+        spell: selectedReactionSpell,
+        obligationIds: obligations,
+      }));
+    }
+    chained.push({
+      sourceActorId: target.id,
+      obligationIds: obligations,
+      payload: { type: 'ResolutionClosed', resolutionId: pending.id },
+    });
+    if (pending.attackActionId) {
+      const attackAction = world.attackActions[pending.attackActionId];
+      if (!attackAction || attackAction.blockedByResolutionId !== pending.id) {
+        return rejected(world, 'InvalidDecision', 'Attack reaction lost its canonical Attack-action ledger');
+      }
+      chained.push(...attackResolutionFinishedEvents({
+        attackAction,
+        resolutionId: pending.id,
+        actorId: source.id,
+        obligations: [...obligations, 'system:attack-action'],
+        closeIfComplete: false,
+      }));
+    }
+    chained.push(...damageWindow);
+    if (pending.attackActionId) {
+      chained.push(blockAttackActionEvent({
+        actorId: source.id,
+        attackActionId: pending.attackActionId,
+        resolutionId: opened.id,
+        obligations: [...obligations, 'system:attack-action'],
+      }));
+    }
+    return chained;
+  }
   const events: EventInput[] = [];
   events.push({
     sourceActorId: target.id,
@@ -4289,10 +4616,7 @@ function resolvePendingAttack(
   if (reactionEvents.length) {
     events.push(...engineTrace(target.id, [target.id], reactionEvents, obligations));
   }
-  events.push(...engineTrace(source.id, [target.id], relabelAttackRolls(
-    resumed.events,
-    selectedId ? 'Атака — после реакции' : 'Атака',
-  ), obligations));
+  events.push(...engineTrace(source.id, [target.id], resumedAttackEvents, obligations));
   events.push(...engineTrace(target.id, [source.id], armor.retaliationEvents, obligations, {
     sourceActorId: target.id,
     facts: { trigger: 'temporary_hp_melee_retaliation' },
@@ -4335,6 +4659,208 @@ function resolvePendingAttack(
     deferred: resumed.deferredTargetSaves,
     env,
     obligations,
+  }));
+  return events;
+}
+
+function resolvePendingDamageReaction(
+  world: WorldState,
+  command: Extract<GameCommand, { type: 'ResolveDecision' }>,
+  catalog: RulesCatalog,
+  env: DeterministicEnvironment,
+): CommandResult | EventInput[] {
+  const pending = world.pendingResolution;
+  if (!pending || pending.type !== 'damage_reaction') {
+    return rejected(world, 'NoPendingResolution', 'There is no incoming-damage reaction to resolve');
+  }
+  if (pending.id !== command.resolutionId || pending.request.id !== command.requestId) {
+    return rejected(world, 'StaleDecision', 'Decision does not match the active damage request');
+  }
+  if (pending.targetActorId !== command.actorId || pending.request.actorId !== command.actorId) {
+    return rejected(world, 'InvalidDecision', 'Only the damaged actor can resolve this reaction');
+  }
+  if (command.response.kind !== 'reaction') {
+    return rejected(world, 'InvalidDecision', 'Incoming damage requires a reaction response');
+  }
+  if (command.response.actionId === null && command.response.spell !== undefined) {
+    return rejected(world, 'InvalidDecision', 'A declined reaction cannot select a spell source');
+  }
+  const source = world.actors[pending.sourceActorId];
+  const target = world.actors[pending.targetActorId];
+  if (!source || !target) return rejected(world, 'ActorNotFound', 'Damage continuation actor is missing');
+  if (pending.request.trigger.type !== 'damage_taken'
+    || pending.request.trigger.sourceActorId !== source.id
+    || pending.request.trigger.actionId !== pending.actionId
+    || pending.request.trigger.amount !== pending.damage.reduce((sum, packet) => sum + packet.amount, 0)) {
+    return rejected(world, 'InvalidDecision', 'Incoming-damage continuation metadata is inconsistent');
+  }
+  if (pending.action.id !== pending.actionId || actionDefinitionIssue(pending.action)) {
+    return rejected(world, 'InvalidActionDefinition', 'Held damage action is no longer a valid definition');
+  }
+
+  let targetReactionRuntime = pending.targetRuntimeBeforeDamage;
+  let sourceAfter = pending.sourceRuntimeAfter;
+  let reactionEvents: EngineEvent[] = [];
+  let selectedReaction: RuleActionDefinition | undefined;
+  let selectedReactionSpell: CanonicalSpellContext | undefined;
+  let reactionTargetIds: string[] = [];
+  const selectedId = command.response.actionId;
+  if (selectedId !== null) {
+    if (!pending.request.options.some((option) => option.actionId === selectedId)) {
+      return rejected(world, 'InvalidDecision', `Reaction ${selectedId} was not offered`);
+    }
+    if (!target.capabilities.actionIds.includes(selectedId)) {
+      return rejected(world, 'ActionNotGranted', `Actor ${target.id} does not own reaction ${selectedId}`);
+    }
+    const reaction = catalog.getAction(selectedId);
+    if (!reaction || !hasReactionTrigger(reaction, 'damage_taken')) {
+      return rejected(world, 'InvalidDecision', `Reaction ${selectedId} is no longer valid for damage_taken`);
+    }
+    const definitionIssue = actionDefinitionIssue(reaction);
+    if (definitionIssue) return rejected(world, 'InvalidActionDefinition', definitionIssue);
+    const declarationIssue = spellDeclarationIssue(reaction);
+    if (declarationIssue) return rejected(world, 'InvalidSpellDeclaration', declarationIssue);
+    const targetAtWindow: ActorState = { ...target, runtime: targetReactionRuntime };
+    if (deniedCapabilities(targetReactionRuntime, target.passives ?? []).has('reaction')) {
+      return rejected(world, 'CapabilityDenied', `${target.id} cannot take reactions in its current state`);
+    }
+    const prepared = prepareReactionExecution(targetAtWindow, reaction, command.response.spell);
+    if (prepared.status === 'rejected') return rejected(world, prepared.code, prepared.message);
+    const payable = canPay(targetReactionRuntime, activationCost(prepared.action));
+    if (!payable.ok) {
+      return rejected(world, 'InsufficientResources', `Missing reaction resources: ${payable.missing.join(', ')}`);
+    }
+    selectedReaction = prepared.action;
+    selectedReactionSpell = prepared.spell;
+    const selfOnly = prepared.action.targeting?.allowedRelations.every((relation) => relation === 'self') === true;
+    const reactionTarget = selfOnly
+      ? undefined
+      : { ...source, runtime: sourceAfter };
+    reactionTargetIds = selfOnly ? [target.id] : [source.id];
+    const result = executeAction(targetReactionRuntime, prepared.action.mechanics, {
+      ...actionContext(
+        targetAtWindow,
+        env,
+        reactionTarget,
+        reactionTarget?.runtime,
+        reactionTarget ? pending.facts : undefined,
+        selectedReactionSpell,
+      ),
+      actionName: prepared.action.name,
+      spell: selectedReactionSpell,
+    });
+    targetReactionRuntime = result.state;
+    sourceAfter = result.targetState ?? sourceAfter;
+    reactionEvents = result.events;
+  }
+
+  const rolledReduction = reactionEvents.reduce((sum, event) => (
+    event.type === 'damage_reduction' ? sum + event.amount : sum
+  ), 0);
+  const originalAmount = pending.damage.reduce((sum, packet) => sum + packet.amount, 0);
+  const reduction = Math.min(originalAmount, Math.max(0, Math.floor(rolledReduction)));
+  const adjusted = adjustedDamageEvents(pending.attackEvents, reduction);
+  let targetAfter = applyReactionRuntimeDelta(
+    pending.targetRuntimeAfter,
+    pending.targetRuntimeBeforeDamage,
+    targetReactionRuntime,
+  );
+  targetAfter = {
+    ...targetAfter,
+    hp: hpAfterDamage(targetReactionRuntime.hp, adjusted.amount),
+  };
+  const obligations = [...new Set([
+    ...pending.obligationIds,
+    ...(selectedReaction ? actionObligationIds(selectedReaction) : []),
+  ])];
+  const events: EventInput[] = [{
+    sourceActorId: target.id,
+    obligationIds: obligations,
+    payload: {
+      type: 'DecisionRecorded',
+      resolutionId: pending.id,
+      requestId: pending.request.id,
+      actorId: target.id,
+      response: command.response,
+    },
+  }];
+  if (selectedReaction) {
+    events.push(actionDeclaredEvent({
+      actorId: target.id,
+      action: selectedReaction,
+      targetIds: reactionTargetIds,
+      timing: 'reaction',
+      spell: selectedReactionSpell,
+      obligationIds: obligations,
+    }));
+  }
+  events.push(...actionStateEvents({
+    world,
+    commandId: pending.openedByCommandId,
+    source,
+    action: pending.action,
+    sourceAfter,
+    target,
+    targetAfter,
+    obligations,
+  }));
+  if (pending.preDamageTargetEvents.length) {
+    events.push(...engineTrace(target.id, [target.id], pending.preDamageTargetEvents, obligations));
+  }
+  if (reactionEvents.length) {
+    events.push(...engineTrace(target.id, reactionTargetIds, reactionEvents, obligations, {
+      sourceActorId: target.id,
+      facts: { trigger: 'damage_taken', amount: originalAmount },
+    }));
+  }
+  if (reduction > 0) {
+    events.push(...engineTrace(target.id, [target.id], [{
+      type: 'narrative',
+      text: `Снижение урона: ${originalAmount} → ${adjusted.amount} (−${reduction})`,
+    }], obligations));
+  }
+  events.push(...engineTrace(source.id, [target.id], adjusted.events, obligations));
+  events.push(...engineTrace(target.id, [source.id], pending.retaliationEvents, obligations, {
+    sourceActorId: target.id,
+    facts: { trigger: 'temporary_hp_melee_retaliation' },
+  }));
+  events.push({
+    sourceActorId: target.id,
+    obligationIds: obligations,
+    payload: { type: 'ResolutionClosed', resolutionId: pending.id },
+  });
+  if (pending.attackActionId) {
+    const attackAction = world.attackActions[pending.attackActionId];
+    if (!attackAction || attackAction.blockedByResolutionId !== pending.id) {
+      return rejected(world, 'InvalidDecision', 'Damage reaction lost its canonical Attack-action ledger');
+    }
+    events.push(...attackResolutionFinishedEvents({
+      attackAction,
+      resolutionId: pending.id,
+      actorId: source.id,
+      obligations: [...obligations, 'system:attack-action'],
+    }));
+  }
+  const followUps: PendingResolutionFollowUp[] = [...pending.followUps];
+  const targetConcentration = concentrationSaveFollowUp({
+    world,
+    actor: target,
+    actorAfter: targetAfter,
+    obligations,
+  });
+  if (targetConcentration) followUps.push(targetConcentration);
+  const sourceConcentration = concentrationSaveFollowUp({
+    world,
+    actor: source,
+    actorAfter: sourceAfter,
+    obligations,
+  });
+  if (sourceConcentration) followUps.push(sourceConcentration);
+  events.push(...followUpOpenedEvents({
+    world,
+    commandId: command.commandId,
+    followUps,
+    env,
   }));
   return events;
 }
@@ -4442,6 +4968,7 @@ function resolveMagicMissileReaction(
     selectedReactionSpell = preparedReaction.spell;
     const reactionResult = executeAction(target.runtime, preparedReaction.action.mechanics, {
       ...actionContext(target, env, undefined, undefined, undefined, selectedReactionSpell),
+      actionName: preparedReaction.action.name,
       spell: selectedReactionSpell,
     });
     selectedRuntime = reactionResult.state;
@@ -6453,7 +6980,8 @@ function performWeaponAttack(
     const opened = pending.find((event) => event.payload.type === 'ResolutionOpened');
     if (opened?.payload.type === 'ResolutionOpened'
       && (opened.payload.resolution.type === 'protection_reaction'
-        || opened.payload.resolution.type === 'attack_reaction')) {
+        || opened.payload.resolution.type === 'attack_reaction'
+        || opened.payload.resolution.type === 'damage_reaction')) {
       return [
         ...(pactProjectionEvent ? [pactProjectionEvent] : []),
         declaration,
@@ -7278,7 +7806,8 @@ function executeUnarmedStrike(
       const opened = pending.find((event) => event.payload.type === 'ResolutionOpened');
       if (opened?.payload.type === 'ResolutionOpened'
         && (opened.payload.resolution.type === 'protection_reaction'
-          || opened.payload.resolution.type === 'attack_reaction')) {
+          || opened.payload.resolution.type === 'attack_reaction'
+          || opened.payload.resolution.type === 'damage_reaction')) {
         return [
           declaration,
           entryEvent,
@@ -7774,7 +8303,8 @@ function resolvePendingProtection(
   if (attackAction) {
     const nextOpened = resumed.find((event) => event.payload.type === 'ResolutionOpened');
     if (nextOpened?.payload.type === 'ResolutionOpened'
-      && nextOpened.payload.resolution.type === 'attack_reaction') {
+      && (nextOpened.payload.resolution.type === 'attack_reaction'
+        || nextOpened.payload.resolution.type === 'damage_reaction')) {
       events.push(blockAttackActionEvent({
         actorId: attackAction.actorId,
         attackActionId: attackAction.id,
@@ -8936,7 +9466,7 @@ function deliverTouchSpell(
     if (pending && !Array.isArray(pending)) return pending;
     return [
       declaration,
-      ...(pending ?? executeUseAction(world, authoritative, executableAction, env)),
+      ...(pending ?? executeUseAction(world, authoritative, executableAction, catalog, env)),
       reactionSpent,
     ];
   } catch (error) {
@@ -9081,7 +9611,8 @@ function performPactChainFamiliarAttack(
       const opened = pending.find((event) => event.payload.type === 'ResolutionOpened');
       if (opened?.payload.type === 'ResolutionOpened'
         && (opened.payload.resolution.type === 'protection_reaction'
-          || opened.payload.resolution.type === 'attack_reaction')) {
+          || opened.payload.resolution.type === 'attack_reaction'
+          || opened.payload.resolution.type === 'damage_reaction')) {
         return [
           declaration,
           entryEvent,
@@ -10390,7 +10921,7 @@ function executeCommand(
       return [
         ...pactBladeFocusEvents,
         declaration,
-        ...executeUseAction(world, authoritativeCommand, executableAction, env, {
+        ...executeUseAction(world, authoritativeCommand, executableAction, catalog, env, {
           skipReplacedConcentrationWorldObjectCleanup:
             primitive?.type === 'dancing_lights_world',
           ...(worldActionPrimitive(executableAction)
@@ -10439,6 +10970,8 @@ function executeCommand(
         ? resolvePendingProtection(world, command, catalog, env)
         : world.pendingResolution?.type === 'attack_reaction'
         ? resolvePendingAttack(world, command, catalog, env)
+        : world.pendingResolution?.type === 'damage_reaction'
+          ? resolvePendingDamageReaction(world, command, catalog, env)
         : world.pendingResolution?.type === 'unarmed_save'
           ? resolveUnarmedSave(world, command, env)
         : world.pendingResolution?.type === 'shove_outcome'

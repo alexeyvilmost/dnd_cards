@@ -151,10 +151,35 @@ UUID канонизируются в однозначные catalog identities, 
 новые неиспользуемые сущности mini-/part-MVP не ломают micro-MVP gate,
 но любое изменение каталога после сбора evidence всё ещё fail-closed.
 
-Отдельный opt-in canary проверяет уже развёрнутые frontend, backend и реальные
-CharacterV3-записи. Он намеренно не входит в изолированный `test:browser`,
-требует два разных заранее созданных аккаунта и явное разрешение на временные
-записи:
+Production browser gate проверяет уже развёрнутые frontend, backend и реальные
+CharacterV3-записи. Малый обязательный spine использует один canary-аккаунт,
+стартует с пустой Кузни и кликает реальные контролы вида, наследия, предыстории,
+класса, заклинаний и обязательных выборов. Он запрещает незавершённую сборку,
+проверяет изображения, UX-бюджеты и дублирующиеся GET, создаёт лист и открывает
+отдельный бой с реально спроецированным оружейным действием:
+
+```bash
+LIVE_BROWSER_CANARY=1 \
+LIVE_BROWSER_BASE_URL=https://bagofholding.ru \
+LIVE_BROWSER_API_URL=https://bagofholding.ru \
+EXPECTED_DEPLOYED_COMMIT=<exact-40-hex-commit> \
+LIVE_BROWSER_USER_A=<configured-user-a> \
+LIVE_BROWSER_PASSWORD_A=<from-secret-store> \
+npm run test:browser:live:nightly
+```
+
+Этот набор запускает три независимых production-пути: lineage/ranged/reaction,
+martial/spell и full-caster/world spell. Он выполняется ночью и вручную job-ом
+`live-browser-spine` из CI. После каждой production-выкладки он является
+обязательной release-проверкой с `expected_deployed_commit`, равным выложенному
+SHA. Push в `main` автоматически ждёт этот exact SHA в production до 45 минут и
+затем запускает тот же набор, поэтому проверка не зависит от ручного dispatch.
+Пароль хранится только в
+GitHub Actions secrets; отсутствие canary credentials делает job красным, а не
+превращает проверку в skip.
+
+Расширенный transport canary требует два разных заранее созданных аккаунта и
+явное разрешение на временные записи:
 
 ```bash
 LIVE_BROWSER_CANARY=1 \

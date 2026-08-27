@@ -165,6 +165,7 @@ function resolutionDecisionActorId(resolution: PendingResolution): string {
   switch (resolution.type) {
     case 'target_save':
     case 'attack_reaction':
+    case 'damage_reaction':
     case 'unarmed_save':
     case 'shove_outcome':
     case 'magic_missile_reaction':

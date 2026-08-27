@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../api/client';
 import type { AbilityKey, StatBlock } from '../types/initiative';
 
 export interface TtgClubBestiaryImport {
@@ -11,135 +12,183 @@ export interface TtgClubBestiaryImport {
   statblock: StatBlock;
 }
 
+export type TtgImportErrorKind = 'invalid_url' | 'upstream' | 'schema';
+
+export class TtgImportError extends Error {
+  constructor(readonly kind: TtgImportErrorKind, message: string) {
+    super(message);
+    this.name = 'TtgImportError';
+  }
+}
+
+interface TtgBestiaryLocation {
+  slug: string;
+  sourceUrl: string;
+}
+
+interface AdapterAction {
+  kind: 'action' | 'bonus_action' | 'reaction' | 'legendary_action';
+  name: string;
+  description: string[];
+}
+
+interface AdapterPayload {
+  slug: string;
+  source_url: string;
+  name: string;
+  ac: number;
+  max_hp: number;
+  initiative_bonus: number;
+  actions: AdapterAction[];
+  statblock: StatBlock;
+}
+
 const SUPPORTED_HOSTS = new Set(['new.ttg.club', 'ttg.club']);
+const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,127}$/;
+
+function invalidUrl(): never {
+  throw new TtgImportError(
+    'invalid_url',
+    'Вставьте ссылку на существо с new.ttg.club/bestiary',
+  );
+}
+
+export function parseTtgClubBestiaryUrl(url: string): TtgBestiaryLocation {
+  const trimmed = url.trim();
+  if (!trimmed) return invalidUrl();
+  const normalized = /^(?:https?):\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  let parsed: URL;
+  try {
+    parsed = new URL(normalized);
+  } catch {
+    return invalidUrl();
+  }
+  if (!SUPPORTED_HOSTS.has(parsed.hostname.toLowerCase()) || parsed.username || parsed.password) {
+    return invalidUrl();
+  }
+
+  const pathMatch = parsed.pathname.match(/^\/bestiary\/([^/]+)\/?$/);
+  const querySlug = parsed.pathname.replace(/\/+$/, '') === '/bestiary'
+    ? parsed.searchParams.get('detail')
+    : null;
+  let slug: string;
+  try {
+    slug = decodeURIComponent(pathMatch?.[1] ?? querySlug ?? '').toLowerCase();
+  } catch {
+    return invalidUrl();
+  }
+  if (!SLUG_PATTERN.test(slug)) return invalidUrl();
+  return {
+    slug,
+    sourceUrl: `https://new.ttg.club/bestiary?detail=${encodeURIComponent(slug)}`,
+  };
+}
 
 export function isTtgClubBestiaryUrl(url: string): boolean {
   try {
-    const parsed = normalizeTtgClubUrl(url);
-    const { hostname, pathname } = new URL(parsed);
-    return SUPPORTED_HOSTS.has(hostname) && /\/bestiary\/[^/]+/.test(pathname);
+    parseTtgClubBestiaryUrl(url);
+    return true;
   } catch {
     return false;
   }
 }
 
-export function normalizeTtgClubUrl(url: string): string {
-  const trimmed = url.trim();
-  if (!trimmed) throw new Error('Укажите ссылку');
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
-  return `https://${trimmed}`;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-function resolveProxyPath(url: string): string {
-  const normalized = normalizeTtgClubUrl(url);
-  const { pathname, search } = new URL(normalized);
-  // Путь-контракт (не ?url=): один обработчик и в dev (vite middleware), и в проде
-  // (nginx proxy_pass на new.ttg.club). Так импорт работает и локально, и после выкатки.
-  return `/proxy/ttg-club-import${pathname}${search}`;
-}
-
-export async function fetchTtgClubBestiaryHtml(url: string): Promise<string> {
-  const normalized = normalizeTtgClubUrl(url);
-  const response = await fetch(resolveProxyPath(normalized), {
-    headers: { Accept: 'text/plain' },
-  });
-  if (!response.ok) {
-    throw new Error(`Не удалось загрузить страницу (${response.status})`);
+function requireString(value: unknown, path: string, allowEmpty = false): string {
+  if (typeof value !== 'string' || (!allowEmpty && !value.trim())) {
+    throw new TtgImportError('schema', `Некорректное поле ${path} в ответе TTG`);
   }
-  return response.text();
+  return value;
 }
 
-function parseName(doc: Document): string {
-  const h2 = doc.querySelector('h2')?.textContent?.trim();
-  if (h2) return h2;
-
-  const title = doc.querySelector('title')?.textContent?.split('|')[0]?.trim();
-  if (title) return title;
-
-  return 'Без имени';
-}
-
-function parseStatValue(doc: Document, label: string): number | null {
-  const items = Array.from(doc.querySelectorAll('span'));
-  for (const nameSpan of items) {
-    if (!nameSpan.textContent?.trim().startsWith(`${label}:`)) continue;
-    const valueSpan = nameSpan.nextElementSibling;
-    const raw = valueSpan?.textContent?.trim() ?? '';
-    const match = raw.match(/^(\d+)/);
-    if (match) return parseInt(match[1], 10);
+function requireInteger(value: unknown, path: string, positive = false): number {
+  if (!Number.isInteger(value) || (positive && Number(value) <= 0)) {
+    throw new TtgImportError('schema', `Некорректное поле ${path} в ответе TTG`);
   }
-
-  const text = doc.body.textContent ?? '';
-  const regex = new RegExp(`${label}:\\s*(\\d+)`, 'i');
-  const fallback = text.match(regex);
-  return fallback ? parseInt(fallback[1], 10) : null;
+  return Number(value);
 }
 
-/** «Инициатива: +1 (11)» → 1. Знак учитывается, число в скобках (пассивная) игнорируется. */
-function parseInitiativeBonus(doc: Document): number {
-  const text = doc.body.textContent ?? '';
-  const match = text.match(/Инициатива:\s*([+-]?\d+)/i);
-  return match ? parseInt(match[1], 10) : 0;
-}
-
-/** Значение поля «Метка: значение» из статблока (Скорость, Иммунитеты, ПО …). */
-function parseLabeledText(doc: Document, label: string): string | undefined {
-  const spans = Array.from(doc.querySelectorAll('span'));
-  for (const span of spans) {
-    if (span.textContent?.trim() !== `${label}:`) continue;
-    let el = span.nextElementSibling;
-    while (el && !(el.textContent ?? '').trim()) el = el.nextElementSibling;
-    const value = el?.textContent?.trim().replace(/\s+/g, ' ');
-    if (value) return value;
+function parseAdapterAction(value: unknown, index: number): AdapterAction {
+  if (!isRecord(value)) {
+    throw new TtgImportError('schema', `Некорректное действие actions[${index}] в ответе TTG`);
   }
-  return undefined;
-}
-
-/** Характеристики вида «Сил 16+3+3 Лов 8-1-1 …» из текста статблока. */
-function parseAbilities(doc: Document): StatBlock['abilities'] {
-  const text = (doc.body.textContent ?? '').replace(/\s+/g, ' ');
-  const map: [AbilityKey, string][] = [
-    ['str', 'Сил'], ['dex', 'Лов'], ['con', 'Тел'],
-    ['int', 'Инт'], ['wis', 'Мдр'], ['cha', 'Хар'],
-  ];
-  const abilities: NonNullable<StatBlock['abilities']> = {};
-  for (const [key, ru] of map) {
-    const m = text.match(new RegExp(`${ru}\\s+(\\d+)([+-]\\d+)([+-]\\d+)`));
-    if (m) abilities[key] = { score: +m[1], mod: +m[2], save: +m[3] };
+  const allowedKinds = new Set<AdapterAction['kind']>([
+    'action', 'bonus_action', 'reaction', 'legendary_action',
+  ]);
+  const kind = requireString(value.kind, `actions[${index}].kind`) as AdapterAction['kind'];
+  if (!allowedKinds.has(kind)) {
+    throw new TtgImportError('schema', `Неизвестный тип действия ${kind} в ответе TTG`);
   }
-  return Object.keys(abilities).length ? abilities : undefined;
-}
-
-function parseStatBlock(doc: Document): StatBlock {
+  if (!Array.isArray(value.description)) {
+    throw new TtgImportError('schema', `Некорректное поле actions[${index}].description в ответе TTG`);
+  }
   return {
-    speed: parseLabeledText(doc, 'Скорость'),
-    senses: parseLabeledText(doc, 'Чувства'),
-    languages: parseLabeledText(doc, 'Языки'),
-    cr: parseLabeledText(doc, 'ПО'),
-    vulnerabilities: parseLabeledText(doc, 'Уязвимости'),
-    resistances: parseLabeledText(doc, 'Сопротивления'),
-    immunities: parseLabeledText(doc, 'Иммунитеты'),
-    saves: parseLabeledText(doc, 'Спасброски'),
-    skills: parseLabeledText(doc, 'Навыки'),
-    abilities: parseAbilities(doc),
+    kind,
+    name: requireString(value.name, `actions[${index}].name`).trim(),
+    description: value.description.map((description, descriptionIndex) => (
+      requireString(description, `actions[${index}].description[${descriptionIndex}]`).trim()
+    )),
   };
 }
 
-/** Убирает знак «+» перед числом внутри скобок, чтобы «Инициатива: +1» → +1, а не +1 дважды. */
-function signed(value: string): string {
-  const trimmed = value.trim();
-  if (/^-?\d+$/.test(trimmed) && !trimmed.startsWith('-')) return `+${trimmed}`;
-  return trimmed;
+function parseStatBlock(value: unknown): StatBlock {
+  if (!isRecord(value)) {
+    throw new TtgImportError('schema', 'Некорректный статблок в ответе TTG');
+  }
+  const result: StatBlock = {};
+  for (const key of [
+    'speed', 'senses', 'languages', 'cr', 'vulnerabilities', 'resistances',
+    'immunities', 'saves', 'skills',
+  ] as const) {
+    if (value[key] !== undefined) result[key] = requireString(value[key], `statblock.${key}`, true);
+  }
+  if (value.abilities !== undefined) {
+    if (!isRecord(value.abilities)) {
+      throw new TtgImportError('schema', 'Некорректные характеристики в ответе TTG');
+    }
+    const abilities: NonNullable<StatBlock['abilities']> = {};
+    for (const key of ['str', 'dex', 'con', 'int', 'wis', 'cha'] as AbilityKey[]) {
+      const source = value.abilities[key];
+      if (source === undefined) continue;
+      if (!isRecord(source)) {
+        throw new TtgImportError('schema', `Некорректная характеристика ${key} в ответе TTG`);
+      }
+      abilities[key] = {
+        score: requireInteger(source.score, `statblock.abilities.${key}.score`),
+        mod: requireInteger(source.mod, `statblock.abilities.${key}.mod`),
+        save: requireInteger(source.save, `statblock.abilities.${key}.save`),
+      };
+    }
+    result.abilities = abilities;
+  }
+  return result;
+}
+
+function parseAdapterPayload(value: unknown): AdapterPayload {
+  if (!isRecord(value) || !Array.isArray(value.actions)) {
+    throw new TtgImportError('schema', 'TTG вернул данные неизвестного формата');
+  }
+  return {
+    slug: requireString(value.slug, 'slug'),
+    source_url: requireString(value.source_url, 'source_url'),
+    name: requireString(value.name, 'name').trim(),
+    ac: requireInteger(value.ac, 'ac', true),
+    max_hp: requireInteger(value.max_hp, 'max_hp', true),
+    initiative_bonus: requireInteger(value.initiative_bonus, 'initiative_bonus'),
+    actions: value.actions.map(parseAdapterAction),
+    statblock: parseStatBlock(value.statblock),
+  };
 }
 
 /**
  * Разворачивает разметку ttg.club / 5etools вида {@tag содержимое} в читаемый текст.
- * Раньше {@roll ...} и {@item ...} удалялись целиком вместе со значениями урона и
- * бонусами — из-за этого описание «ломалось» (пустые скобки, пропавшие цифры).
+ * Броски, ссылки и значения урона сохраняются, а не удаляются вместе с тегами.
  */
 export function cleanTtgMarkup(text: string): string {
   const tagPattern = /\{@(\w+)(?:\s+([^{}]*))?\}/g;
-
   const resolveTag = (_match: string, tag: string, content = ''): string => {
     const parts = content.split('|');
     const first = (parts[0] ?? '').trim();
@@ -150,98 +199,93 @@ export function cleanTtgMarkup(text: string): string {
       case 'bold':
       case 'note':
         return content.trim();
-      case 'h': // {@h} → «Попадание:» в англ. источнике; на ru-страницах текст уже есть
+      case 'h':
         return '';
       case 'hit':
       case 'atkr':
-        return signed(first);
+        return /^-/.test(first) ? first : first.replace(/^\+?/, '+');
       case 'dc':
-        return first;
       case 'roll':
       case 'dice':
       case 'damage':
-        return first; // «+5» из «+5|notation:1d20+5» или «1к6 + 3»
+        return first;
       default:
-        // Ссылки: {@item Название|url:...}, {@spell Название|...}, {@creature Название|...}
-        // Отображаем текст ссылки (последняя часть, если задана) либо название.
         return (parts.length > 2 ? parts[parts.length - 1] : first).trim();
     }
   };
 
-  let out = text;
-  let guard = 0;
-  while (/\{@/.test(out) && guard < 5) {
-    const next = out.replace(tagPattern, resolveTag);
-    if (next === out) break;
-    out = next;
-    guard += 1;
+  let output = text;
+  for (let guard = 0; /\{@/.test(output) && guard < 5; guard += 1) {
+    const next = output.replace(tagPattern, resolveTag);
+    if (next === output) break;
+    output = next;
   }
-
-  return out.replace(/\s+/g, ' ').trim();
+  return output.replace(/\s+/g, ' ').trim();
 }
 
-/** Снимает JSON-экранирование строкового тела действия (\n, \", & и т.п.). */
-function unescapeJsonString(raw: string): string {
+function actionsDescription(actions: AdapterAction[]): string {
+  const labels: Partial<Record<AdapterAction['kind'], string>> = {
+    bonus_action: 'Бонусное действие',
+    reaction: 'Реакция',
+    legendary_action: 'Легендарное действие',
+  };
+  return actions.map((action) => {
+    const label = labels[action.kind];
+    const heading = label ? `${label}: ${action.name}` : action.name;
+    const body = action.description.map(cleanTtgMarkup).filter(Boolean);
+    return [heading, ...body].join('\n');
+  }).join('\n\n');
+}
+
+async function errorPayload(response: Response): Promise<Record<string, unknown>> {
   try {
-    return JSON.parse(`"${raw}"`);
+    const value = await response.json() as unknown;
+    return isRecord(value) ? value : {};
   } catch {
-    return raw.replace(/\\"/g, '"').replace(/\\n/g, '\n');
+    return {};
   }
-}
-
-function parseActionsFromJson(html: string): { name: string; text: string }[] {
-  const pattern = /\{"rus":\d+\},"([^"]+)",\[\d+\],"((?:\\.|[^"\\])*)"/g;
-  const actions: { name: string; text: string }[] = [];
-  let match: RegExpExecArray | null;
-  while ((match = pattern.exec(html)) !== null) {
-    const name = unescapeJsonString(match[1]).trim();
-    const text = cleanTtgMarkup(unescapeJsonString(match[2]));
-    if (!name || !text) continue;
-    if (actions.some((a) => a.name === name)) continue;
-    actions.push({ name, text });
-  }
-  return actions;
-}
-
-function parseActionsFromDom(doc: Document, html: string): string {
-  const headings = Array.from(doc.querySelectorAll('h4'));
-  const actionsHeading = headings.find((h) => h.textContent?.trim() === 'Действия');
-  const jsonActions = parseActionsFromJson(html);
-
-  if (jsonActions.length > 0) {
-    return jsonActions
-      .map((a) => `${a.name}\n${a.text}`)
-      .join('\n\n');
-  }
-
-  if (!actionsHeading) return '';
-
-  const section = actionsHeading.closest('[data-slot="root"]') ?? actionsHeading.parentElement;
-  const names = Array.from(section?.querySelectorAll('h5') ?? [])
-    .map((h) => h.textContent?.replace(/\s+/g, ' ').trim())
-    .filter(Boolean) as string[];
-
-  return names.map((name) => name.replace(/\.\s*$/, '')).join('\n');
-}
-
-export function parseTtgClubBestiaryHtml(html: string, sourceUrl: string): TtgClubBestiaryImport {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  const name = parseName(doc);
-  const ac = parseStatValue(doc, 'КД');
-  const maxHp = parseStatValue(doc, 'Хиты');
-
-  if (ac === null) throw new Error('Не найден класс доспеха (КД) на странице');
-  if (maxHp === null) throw new Error('Не найдены хиты на странице');
-
-  const initiativeBonus = parseInitiativeBonus(doc);
-  const description = parseActionsFromDom(doc, html);
-  const statblock = parseStatBlock(doc);
-
-  return { name, ac, maxHp, initiativeBonus, description, sourceUrl, statblock };
 }
 
 export async function importFromTtgClubUrl(url: string): Promise<TtgClubBestiaryImport> {
-  const normalized = normalizeTtgClubUrl(url);
-  const html = await fetchTtgClubBestiaryHtml(normalized);
-  return parseTtgClubBestiaryHtml(html, normalized);
+  const location = parseTtgClubBestiaryUrl(url);
+  let response: Response;
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/api/integrations/ttg/bestiary/${encodeURIComponent(location.slug)}`,
+      { headers: { Accept: 'application/json' } },
+    );
+  } catch {
+    throw new TtgImportError('upstream', 'Не удалось связаться с TTG');
+  }
+  if (!response.ok) {
+    const body = await errorPayload(response);
+    const code = typeof body.code === 'string' ? body.code : '';
+    if (code === 'ttg_schema_invalid') {
+      throw new TtgImportError('schema', 'TTG изменил формат статблока; импорт временно недоступен');
+    }
+    if (code === 'ttg_not_found') {
+      throw new TtgImportError('upstream', 'Существо не найдено в TTG');
+    }
+    throw new TtgImportError('upstream', 'TTG временно недоступен');
+  }
+
+  let raw: unknown;
+  try {
+    raw = await response.json() as unknown;
+  } catch {
+    throw new TtgImportError('schema', 'TTG вернул данные неизвестного формата');
+  }
+  const payload = parseAdapterPayload(raw);
+  if (payload.slug !== location.slug) {
+    throw new TtgImportError('schema', 'TTG вернул статблок другого существа');
+  }
+  return {
+    name: payload.name,
+    ac: payload.ac,
+    maxHp: payload.max_hp,
+    initiativeBonus: payload.initiative_bonus,
+    description: actionsDescription(payload.actions),
+    sourceUrl: payload.source_url || location.sourceUrl,
+    statblock: payload.statblock,
+  };
 }

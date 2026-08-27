@@ -85,7 +85,7 @@ export default function SheetPendingCombatPanel({
   }, [pending.id]);
 
   if (pending.request.type !== 'saving_throw'
-    && pending.type !== 'magic_missile_reaction') {
+    && pending.request.type !== 'reaction') {
     return (
       <section className="sheet-group" role="alert" data-testid="sheet-combat-unsupported-pending">
         Продолжение «{pending.type}» не поддержано этим интерфейсом. Состояние сохранено без изменений.
@@ -205,17 +205,48 @@ export default function SheetPendingCombatPanel({
     );
   }
 
-  if (pending.type !== 'magic_missile_reaction') {
-    return null;
-  }
+  if (pending.request.type !== 'reaction') return null;
   const options = sheetReactionDecisionOptions(pending.request.options);
-  const dartCount = pending.request.trigger.type === 'targeted_by_magic_missile'
-    ? pending.request.trigger.dartCount
-    : pending.dartTargetIds.filter((id) => id === pending.targetActorId).length;
+  const trigger = pending.request.trigger;
+  const sourceName = actorNames[trigger.sourceActorId] ?? trigger.sourceActorId;
+  const reactionCopy = (() => {
+    switch (trigger.type) {
+      case 'damage_taken':
+        return {
+          title: 'Реакция перед получением урона',
+          detail: `${decidingName}: входящий урон — ${trigger.amount}`
+            + `${trigger.damageTypes.length ? ` (${trigger.damageTypes.join(', ')})` : ''}.`,
+        };
+      case 'hit_by_attack':
+        return {
+          title: 'Реакция на попадание',
+          detail: `${sourceName}: результат атаки ${trigger.attackTotal}; исходный КД ${trigger.originalAc}.`,
+        };
+      case 'targeted_by_magic_missile':
+        return {
+          title: 'Реакция на Волшебную стрелу',
+          detail: `${decidingName}: направлено дротиков — ${trigger.dartCount}.`,
+        };
+      case 'protection_before_attack':
+        return {
+          title: 'Реакция перед атакой',
+          detail: `${decidingName} может защитить цель атаки ${trigger.targetActorId}.`,
+        };
+    }
+  })();
   return (
-    <section className="sheet-group" role="group" aria-label="Ожидающая реакция" data-testid="sheet-combat-magic-missile-reaction">
-      <h3 className="sheet-h3">Реакция на Волшебную стрелу</h3>
-      <p>{decidingName}: направлено дротиков — {dartCount}.</p>
+    <section
+      className="sheet-group"
+      role="group"
+      aria-label="Ожидающая реакция"
+      data-testid={pending.type === 'damage_reaction'
+        ? 'sheet-combat-damage-reaction'
+        : pending.type === 'magic_missile_reaction'
+          ? 'sheet-combat-magic-missile-reaction'
+          : 'sheet-combat-reaction'}
+    >
+      <h3 className="sheet-h3">{reactionCopy.title}</h3>
+      <p>{reactionCopy.detail}</p>
       <div className="flex gap-2 flex-wrap">
         {options.map((option) => (
           <button

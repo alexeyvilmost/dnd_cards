@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { X } from 'lucide-react';
-import { charactersV3Api } from '../character/api';
+import { charactersV3Api, type CharacterEventRow } from '../character/api';
 import { actionsApi, effectsApi } from '../api/client';
 import { getCardsIndex } from '../utils/cardsIndex';
 import type { AssembledCharacter } from '../character/assemble';
@@ -60,9 +60,11 @@ import SheetResourceTile from './SheetResourceTile';
 import { loadMasteryEffects } from '../utils/mastery';
 import {
   collectSheetPrimitiveChoices,
+  executeSheetCanonicalAction,
   executeSheetAction,
   planSheetActionDice,
   sheetPrimitiveCastTimingIssue,
+  validateSheetCanonicalAction,
   UnsupportedSheetPendingResolutionError,
   type SheetCanonicalActionContext,
 } from '../character/sheetActionOrchestrator';
@@ -92,12 +94,20 @@ import {
   writeSheetCanonicalWorld,
 } from '../character/sheetCanonicalWorld';
 import type {
+  ActorState,
   DecisionResponse,
   GameCommand,
   RuleActionDefinition,
   WorldState,
 } from '../rules-core/domain';
+import type { SheetCanonicalCommandInput } from '../character/sheetCanonicalCommand';
 import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
+import {
+  commitPreparedSheetAtomicWorld,
+  prepareSheetAtomicWorldCommit,
+  projectSheetAtomicParticipantWorld,
+  type PreparedSheetAtomicWorldCommit,
+} from '../character/sheetAtomicWorldCommit';
 import {
   buildSheetCombatDeclaration,
   UNARMED_STRIKE_PRIMITIVE,
@@ -114,8 +124,8 @@ import {
   readSheetCombatSession,
   assertCertifiedSheetCombatSession,
   resolveSheetCombatDecision,
-  sheetCombatEngineEvents,
   type PreparedSheetCombatCommit,
+  type SheetCombatParticipantSeed,
   type SheetCombatSession,
   type SheetCombatTransition,
 } from '../character/sheetCombatSession';
@@ -137,7 +147,14 @@ import {
   sheetCompanionRetryPolicy,
   type PreparedSheetCompanionInteraction,
 } from '../character/sheetCompanionInteraction';
-import { currentRuntimeCommandCharacters } from '../character/sheetRuntimeCommand';
+import {
+  commitSheetRuntimeCommand,
+  type CommittedSheetRuntimeCommand,
+} from '../character/sheetRuntimeCommand';
+import {
+  sheetAtomicRetryLabel,
+  type SheetAtomicRetryEnvelope,
+} from '../character/sheetAtomicRetry';
 import {
   createSheetSceneTargetActor,
   buildSheetSceneTargetContext,
@@ -157,6 +174,13 @@ interface Props {
   maxHp?: number;
   onUpdated: (c: ForgeCharacter) => void;
   onEvents?: (events: EngineEvent[]) => void;
+  /** Reconciles rows that the accepted atomic command already persisted. Never writes them again. */
+  onPersistedEvents?: (rows: CharacterEventRow[]) => void;
+  /** Controlled above sibling action/spell panels and section unmounts. */
+  pendingAtomicRetry?: SheetAtomicRetryEnvelope | null;
+  onPendingAtomicRetryChange?: (retry: SheetAtomicRetryEnvelope | null) => void;
+  /** The parent may nominate one sibling as the retry-control owner. */
+  showAtomicRetryControl?: boolean;
   embedded?: boolean;
   /** false — ресурсы/эффекты рисует соседняя SheetRuntimePanel (классический макет). */
   showResources?: boolean;
@@ -186,6 +210,21 @@ interface Props {
     disabledReason?: string,
   ) => void;
   disableHoverPreviews?: boolean;
+}
+
+/**
+ * Atomic runtime commands have already written their journal rows inside the
+ * server transaction. Keep both sheet event sinks visible at this boundary so
+ * a regression test can prove that accepted atomic rows are reconciled through
+ * the read-only sink and never sent back through the legacy writer.
+ */
+export function surfaceAcceptedSheetAtomicEvents(input: {
+  rows?: CharacterEventRow[];
+  onEvents?: (events: EngineEvent[]) => void;
+  onPersistedEvents?: (rows: CharacterEventRow[]) => void;
+}): void {
+  if (!input.rows) return;
+  input.onPersistedEvents?.(input.rows);
 }
 
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `id-${Math.random().toString(36).slice(2)}`);
@@ -498,6 +537,10 @@ export default function SheetActionsPanel({
   maxHp,
   onUpdated,
   onEvents,
+  onPersistedEvents,
+  pendingAtomicRetry: pendingAtomicRetryProp,
+  onPendingAtomicRetryChange,
+  showAtomicRetryControl = true,
   embedded,
   showResources = true,
   showEffects = true,
@@ -564,10 +607,17 @@ export default function SheetActionsPanel({
   const combatTargetDialog = useSheetCombatTargetDialog();
   const reactionPrompt = useReactionPrompt();
   const { showToast } = useToast();
-  const [combatRetry, setCombatRetry] = useState<{
-    prepared: PreparedSheetCombatCommit;
-    events: EngineEvent[];
-  } | null>(null);
+  const [localAtomicRetry, setLocalAtomicRetry] = useState<SheetAtomicRetryEnvelope | null>(null);
+  const pendingAtomicRetryCandidate = pendingAtomicRetryProp === undefined
+    ? localAtomicRetry
+    : pendingAtomicRetryProp;
+  const pendingAtomicRetry = pendingAtomicRetryCandidate?.characterId === character.id
+    ? pendingAtomicRetryCandidate
+    : null;
+  const setPendingAtomicRetry = (retry: SheetAtomicRetryEnvelope | null) => {
+    if (onPendingAtomicRetryChange) onPendingAtomicRetryChange(retry);
+    else setLocalAtomicRetry(retry);
+  };
 
   const resetCombatContinuation = useCallback(async () => {
     if (!hasSheetCombatSession(character.turn_state)) return;
@@ -597,7 +647,6 @@ export default function SheetActionsPanel({
       setBusy(false);
     }
   }, [character, onUpdated, showToast]);
-  const [companionRetry, setCompanionRetry] = useState<PreparedSheetCompanionInteraction | null>(null);
   const [certifiedCombat, setCertifiedCombat] = useState<{
     catalog: CertifiedSheetCombatCatalog | null;
     error: Error | null;
@@ -1040,7 +1089,7 @@ export default function SheetActionsPanel({
   }, [companionModel?.familiar?.actorId, companionModel?.touchSpells.length, character.id, loadTargetChars]);
 
   const runSingleCompanionCommand = async (command: GameCommand) => {
-    if (!canonicalBuild.runtime || companionRetry) return;
+    if (!canonicalBuild.runtime || pendingAtomicRetry) return;
     try {
       const prepared = prepareSheetCompanionCommand({
         participant: { character, canonical: canonicalBuild.runtime },
@@ -1116,53 +1165,102 @@ export default function SheetActionsPanel({
     void runSingleCompanionCommand(command);
   };
 
+  const reconcileCommittedAtomicCommand = (committed: CommittedSheetRuntimeCommand) => {
+    let cached = [...(targetCharsRef.current ?? [])];
+    for (const next of Object.values(committed.characters)) {
+      cached = replaceCachedInteractionTarget(cached, next);
+      if (next.id === character.id) onUpdated(next);
+    }
+    targetCharsRef.current = cached;
+    setAvailableSheetTargets(cached.filter((candidate) => !isCharacterReadOnly(candidate)));
+    setCompanionTargets(cached.filter((candidate) => candidate.id !== character.id));
+    setPendingAtomicRetry(null);
+    try {
+      surfaceAcceptedSheetAtomicEvents({
+        rows: committed.persistedEvents,
+        onEvents,
+        onPersistedEvents,
+      });
+    } catch (cause) {
+      console.error('Не удалось отобразить уже сохранённый журнал атомарной команды', cause);
+    }
+  };
+
+  const refreshAfterDefinitiveAtomicRejection = async (message: string) => {
+    setPendingAtomicRetry(null);
+    targetCharsRef.current = null;
+    setAvailableSheetTargets([]);
+    setCompanionTargets([]);
+    try {
+      const refreshed = await charactersV3Api.list();
+      targetCharsRef.current = refreshed;
+      setAvailableSheetTargets(refreshed.filter((candidate) => !isCharacterReadOnly(candidate)));
+      setCompanionTargets(refreshed.filter((candidate) => candidate.id !== character.id));
+      const refreshedSource = refreshed.find((candidate) => candidate.id === character.id);
+      if (refreshedSource) onUpdated(refreshedSource);
+      setError(`${message}. Отклонённый CAS-снимок сброшен, листы обновлены.`);
+    } catch {
+      setError(`${message}. Отклонённый CAS-снимок сброшен; обновите страницу перед повтором.`);
+    }
+  };
+
   const commitCompanionInteraction = async (prepared: PreparedSheetCompanionInteraction) => {
     setBusy(true);
     setError(null);
+    let committed: CommittedSheetRuntimeCommand | null = null;
     try {
-      const response = await charactersV3Api.postRuntimeCommand(prepared.request);
-      const current = await currentRuntimeCommandCharacters({
+      committed = await commitSheetRuntimeCommand({
         request: prepared.request,
-        response,
+        commit: () => charactersV3Api.postRuntimeCommand(prepared.request),
         loadCurrent: charactersV3Api.get,
+        viewingCharacterId: character.id,
+        loadPersistedEvents: charactersV3Api.getEvents,
       });
-      let cached = [...(targetCharsRef.current ?? [])];
-      for (const next of Object.values(current)) {
-        cached = replaceCachedInteractionTarget(cached, next);
-        if (next.id === character.id) onUpdated(next);
-      }
-      targetCharsRef.current = cached;
-      setCompanionRetry(null);
-      onEvents?.(prepared.request.events
-        .filter((event) => event.character_id === character.id)
-        .map((event) => event.payload));
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : String(cause);
       if (sheetCompanionRetryPolicy(cause) === 'retain_exact_retry') {
-        setCompanionRetry(prepared);
+        setPendingAtomicRetry({ characterId: character.id, kind: 'companion', prepared });
         setError(`${message}. Безопасный повтор сохранён.`);
       } else {
-        setCompanionRetry(null);
-        targetCharsRef.current = null;
-        setCompanionTargets([]);
-        try {
-          const refreshed = await charactersV3Api.list();
-          targetCharsRef.current = refreshed;
-          setCompanionTargets(refreshed.filter((candidate) => candidate.id !== character.id));
-          const refreshedSource = refreshed.find((candidate) => candidate.id === character.id);
-          if (refreshedSource) onUpdated(refreshedSource);
-          setError(`${message}. Отклонённый CAS-снимок сброшен, листы обновлены.`);
-        } catch {
-          setError(`${message}. Отклонённый CAS-снимок сброшен; обновите страницу перед повтором.`);
-        }
+        await refreshAfterDefinitiveAtomicRejection(message);
       }
     } finally {
       setBusy(false);
     }
+    if (committed) reconcileCommittedAtomicCommand(committed);
+  };
+
+  const commitOrdinarySpellInteraction = async (prepared: PreparedSheetAtomicWorldCommit) => {
+    setBusy(true);
+    setError(null);
+    let committed: CommittedSheetRuntimeCommand | null = null;
+    try {
+      committed = await commitSheetRuntimeCommand({
+        request: prepared.request,
+        commit: () => commitPreparedSheetAtomicWorld(
+          { commit: charactersV3Api.postRuntimeCommand },
+          prepared,
+        ),
+        loadCurrent: charactersV3Api.get,
+        viewingCharacterId: character.id,
+        loadPersistedEvents: charactersV3Api.getEvents,
+      });
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : String(cause);
+      if (sheetCompanionRetryPolicy(cause) === 'retain_exact_retry') {
+        setPendingAtomicRetry({ characterId: character.id, kind: 'ordinary_spell', prepared });
+        setError(`${message}. Безопасный повтор сохранён.`);
+      } else {
+        await refreshAfterDefinitiveAtomicRejection(message);
+      }
+    } finally {
+      setBusy(false);
+    }
+    if (committed) reconcileCommittedAtomicCommand(committed);
   };
 
   const handleFamiliarTouch = async (declaration: SheetCompanionTouchDeclaration) => {
-    if (!canonicalBuild.runtime || companionRetry) return;
+    if (!canonicalBuild.runtime || pendingAtomicRetry) return;
     try {
       const target = companionTargets.find((candidate) => candidate.id === declaration.targetActorId);
       if (!target) throw new Error('Выбранный лист цели больше недоступен');
@@ -1272,6 +1370,7 @@ export default function SheetActionsPanel({
       ? cb.ac
       : targetAc;
     return {
+      id: cb.actorId,
       ...(typeof explicitAc === 'number' ? { ac: explicitAc } : {}),
       ...(typeof targetSaveMod === 'number' ? {
         saveMods: {
@@ -1338,52 +1437,39 @@ export default function SheetActionsPanel({
     }
   }, [encounterId, character.name, sendEncounter]);
 
-  const applyCombatResponse = async (
-    prepared: PreparedSheetCombatCommit,
-    response: Awaited<ReturnType<typeof charactersV3Api.postRuntimeCommand>>,
-    events: EngineEvent[],
-  ) => {
-    const committed = await currentRuntimeCommandCharacters({
-      request: prepared.request,
-      response,
-      loadCurrent: charactersV3Api.get,
-    });
-    let cached = [...(targetCharsRef.current ?? [])];
-    for (const next of Object.values(committed)) {
-      cached = replaceCachedInteractionTarget(cached, next);
-      if (next.id === character.id) onUpdated(next);
-    }
-    targetCharsRef.current = cached;
-    setCombatRetry(null);
-    setError(null);
-    onEvents?.(events);
-  };
-
   const commitCombat = async (
     prepared: PreparedSheetCombatCommit,
-    events: EngineEvent[],
   ): Promise<boolean> => {
     setBusy(true);
     setError(null);
+    let committed: CommittedSheetRuntimeCommand | null = null;
     try {
-      const response = await commitPreparedSheetCombat(
-        { commit: charactersV3Api.postRuntimeCommand },
-        prepared,
-      );
-      await applyCombatResponse(prepared, response, events);
-      return true;
+      committed = await commitSheetRuntimeCommand({
+        request: prepared.request,
+        commit: () => commitPreparedSheetCombat(
+          { commit: charactersV3Api.postRuntimeCommand },
+          prepared,
+        ),
+        loadCurrent: charactersV3Api.get,
+        viewingCharacterId: character.id,
+        loadPersistedEvents: charactersV3Api.getEvents,
+      });
     } catch (cause) {
       console.error(cause);
-      // Keep the exact command bytes and command_id. A retry may be an
-      // idempotent replay of a transaction whose response was lost.
-      setCombatRetry({ prepared, events });
-      const message = cause instanceof Error
-        ? `${cause.message}. Повтор отправит ту же атомарную команду.`
-        : 'Не удалось подтвердить атомарную команду; её можно безопасно повторить.';
-      setError(message);
+      const detail = cause instanceof Error ? cause.message : String(cause);
+      const retain = sheetCompanionRetryPolicy(cause) === 'retain_exact_retry';
+      const message = retain
+        ? `${detail}. Повтор отправит ту же атомарную команду.`
+        : detail;
+      if (retain) {
+        setPendingAtomicRetry({ characterId: character.id, kind: 'combat', prepared });
+        setError(message);
+      } else {
+        await refreshAfterDefinitiveAtomicRejection(message);
+      }
       showToast({
         type: 'error',
-        title: 'Действие не подтверждено сервером',
+        title: retain ? 'Действие не подтверждено сервером' : 'Действие отклонено сервером',
         message,
         duration: 15000,
       });
@@ -1391,6 +1477,8 @@ export default function SheetActionsPanel({
     } finally {
       setBusy(false);
     }
+    reconcileCommittedAtomicCommand(committed);
+    return true;
   };
 
   const combatCharacters = async (
@@ -1416,7 +1504,7 @@ export default function SheetActionsPanel({
     characters: Readonly<Record<string, ForgeCharacter>>,
   ) => {
     const prepared = prepareSheetCombatCommit({ transition, characters });
-    return commitCombat(prepared, sheetCombatEngineEvents(transition.events));
+    return commitCombat(prepared);
   };
 
   const requireCertifiedCombatSession = (session: SheetCombatSession) => {
@@ -1478,7 +1566,7 @@ export default function SheetActionsPanel({
       setError('Этот атомарный двухлистовый режим пока не смешивается с онлайн-боем');
       return;
     }
-    if (combatRetry) {
+    if (pendingAtomicRetry) {
       setError('Сначала подтвердите предыдущую атомарную команду');
       return;
     }
@@ -1646,6 +1734,10 @@ export default function SheetActionsPanel({
   };
 
   const runAction = async (action: SheetAction) => {
+    if (pendingAtomicRetry) {
+      setError('Сначала подтвердите безопасный повтор предыдущей атомарной команды');
+      return;
+    }
     const contextualCostIssue = contextualCostProjection.issues.get(action.id);
     if (contextualCostIssue) {
       setError(contextualCostIssue);
@@ -1709,7 +1801,16 @@ export default function SheetActionsPanel({
     const requiresActorTarget = canonical
       ? sheetActionRequiresActorTargets(canonical.action)
       : actionInteractsWithTarget(mech);
-    const selectedTargetForAction = requiresActorTarget ? selectedSheetTarget : undefined;
+    let selectedTargetForAction = requiresActorTarget ? selectedSheetTarget : undefined;
+    let sceneTarget: TargetContext | undefined;
+    let canonicalTargetId: string | undefined;
+    let ordinaryCanonicalExecution: {
+      canonical: SheetCanonicalActionContext;
+      commandId: string;
+      declaration: SheetCanonicalCommandInput;
+      targetActors: ActorState[];
+      targetParticipants: SheetCombatParticipantSeed[];
+    } | undefined;
     const allowsSelfTarget = canonical?.action.targeting?.allowedRelations.includes('self')
       ?? sheetMechanicsAllowsSelfTarget(mech);
     const selectedTargetIssue = sheetSelectedTargetRelationIssue({
@@ -1721,8 +1822,175 @@ export default function SheetActionsPanel({
       setError(selectedTargetIssue);
       return;
     }
+    // Ordinary spells still use the sheet's dice/persistence adapter, but
+    // targeting legality is proven by a detached canonical dispatch before
+    // that adapter can spend anything. This covers data-owned constraints such
+    // as willing/unarmored without interpreting a spell name in the UI.
+    if (action.spellRef && canonical && canonicalSpellOption && !primitive && !encounterId) {
+      const targeting = canonical.action.targeting;
+      if (!targeting) {
+        setError('Каноническое заклинание не содержит targeting-контракт');
+        return;
+      }
+      const ordinaryInPlayChoices = collectInPlayActionChoices(
+        mech,
+        { kind: 'other', id: 'action', name: action.name },
+      ).map((choice) => choice.source === 'equipped_weapon'
+        ? {
+            ...choice,
+            items: equippedWeaponChoices(
+              ctx,
+              runtime.equipment,
+              Array.isArray(choice.filter) ? choice.filter : [],
+            ),
+          }
+        : choice);
+      const ordinaryChoices: Record<string, string[]> = {};
+      if (ordinaryInPlayChoices.length) {
+        const picked = await choiceDialog.request(ordinaryInPlayChoices, action.name);
+        if (!picked) return;
+        for (const [id, selected] of Object.entries(picked)) {
+          if (selected.length) ordinaryChoices[id] = selected;
+        }
+      }
+      const baseDeclaration = {
+        sceneMode: 'exploration' as const,
+        targetIds: [],
+        spell: canonicalSpellOption.declaration,
+        ...(Object.keys(ordinaryChoices).length ? { choices: ordinaryChoices } : {}),
+      };
+      let declaration: SheetCanonicalCommandInput = baseDeclaration;
+      const targetActors: ActorState[] = [];
+      const targetCharacters: ForgeCharacter[] = [];
+      if (!requiresActorTarget) {
+        // World-domain, target-free, and self-resolving actions never invent
+        // an actor identity from maxTargets. Their scene/world declaration is
+        // intentionally actor-free and canonical rules resolve the effect.
+      } else {
+        const allCharacters = await loadTargetChars();
+        const relationFor = (targetId: string) => {
+          if (targetId === character.id && targeting.allowedRelations.includes('self')) return 'self' as const;
+          if (targeting.allowedRelations.includes('ally')) return 'ally' as const;
+          return targeting.allowedRelations[0];
+        };
+        const characterCandidates: SheetCombatTargetCandidate[] = allCharacters
+          .filter((candidate) => !isCharacterReadOnly(candidate))
+          .filter((candidate) => candidate.id !== character.id || targeting.allowedRelations.includes('self'))
+          .map((candidate) => ({
+            id: candidate.id,
+            name: candidate.name,
+            defaultSelected: candidate.id === selectedSheetTarget?.id,
+            defaultFacts: {
+              factsSource: 'scenario',
+              boardRevision: canonical.runtime.world.revision,
+              relation: relationFor(candidate.id),
+              distanceFt: candidate.id === character.id ? 0 : Math.min(5, targeting.rangeFt),
+              lineOfSight: true,
+              cover: 'none',
+              ...(targeting.requiresWilling ? { willing: true } : {}),
+            },
+          }));
+        const dummyRelation = targeting.allowedRelations.includes('enemy')
+          ? 'enemy' as const
+          : targeting.allowedRelations.includes('ally')
+            ? 'ally' as const
+            : targeting.allowedRelations[0];
+        const targetCandidates: SheetCombatTargetCandidate[] = [{
+          id: TRAINING_DUMMY.id,
+          name: TRAINING_DUMMY.name,
+          description: TRAINING_DUMMY.description,
+          defaultSelected: !selectedSheetTarget,
+          defaultFacts: {
+            ...TRAINING_DUMMY.defaultFacts,
+            boardRevision: canonical.runtime.world.revision,
+            relation: dummyRelation,
+            distanceFt: Math.min(5, targeting.rangeFt),
+            ...(targeting.requiresWilling ? { willing: true } : {}),
+          },
+        }, ...characterCandidates];
+        const declared = await combatTargetDialog.request({
+          title: `${action.name}: цели и факты`,
+          action: canonical.action,
+          castLevel: canonicalSpellOption.declaration.castLevel,
+          candidates: targetCandidates,
+          requireTarget: targeting.minTargets > 0,
+        });
+        if (!declared) return;
+        declaration = buildSheetCombatDeclaration({
+          action: canonical.action,
+          base: baseDeclaration,
+          targets: declared.targets,
+        });
+        canonicalTargetId = declaration.targetIds[0];
+        const selectedCharacters: ForgeCharacter[] = [];
+        let includesTrainingDummy = false;
+        for (const targetId of declaration.targetIds) {
+          if (targetId === TRAINING_DUMMY_TARGET_ID) {
+            includesTrainingDummy = true;
+            continue;
+          }
+          const selected = allCharacters.find((candidate) => candidate.id === targetId);
+          if (!selected) {
+            setError('Один из выбранных листов цели больше недоступен');
+            return;
+          }
+          selectedCharacters.push(selected);
+        }
+        if (includesTrainingDummy) {
+          sceneTarget = buildSheetSceneTargetContext(TRAINING_DUMMY);
+          targetActors.push(createSheetSceneTargetActor(TRAINING_DUMMY));
+        }
+        selectedTargetForAction = selectedCharacters[0];
+        const externalTargets = selectedCharacters.filter((selected) => selected.id !== character.id);
+        targetCharacters.push(...externalTargets);
+      }
+      // The source's canonical world retains cross-sheet concentration actors.
+      // Hydrate those participants too: replacing concentration must remove its
+      // effects from old targets using current server snapshots, not stale cache.
+      const priorExternalIds = [...new Set(
+        canonical.runtime.world.concentrations[character.id]?.effectLinks
+          .map((link) => link.actorId)
+          .filter((actorId) => actorId !== character.id
+            && canonical.runtime.world.actors[actorId]?.kind === 'playerCharacter') ?? [],
+      )];
+      if (priorExternalIds.length) {
+        const allCharacters = await loadTargetChars();
+        for (const actorId of priorExternalIds) {
+          if (targetCharacters.some((candidate) => candidate.id === actorId)) continue;
+          const existing = allCharacters.find((candidate) => candidate.id === actorId);
+          if (!existing || isCharacterReadOnly(existing)) {
+            setError(`Нельзя обновить прежнюю цель концентрации ${actorId}`);
+            return;
+          }
+          targetCharacters.push(existing);
+        }
+      }
+      let targetParticipants: SheetCombatParticipantSeed[] = [];
+      if (targetCharacters.length) {
+        const cards = new Map([...cardsIndex.entries(), ...equipCards.entries()]);
+        targetParticipants = await Promise.all(targetCharacters.map((selected) => (
+          loadSheetCombatParticipant({ character: selected, basicActions, cards })
+        )));
+        for (const participant of targetParticipants) {
+          targetActors.push(participant.canonical.world.actors[participant.character.id]);
+        }
+      }
+      validateSheetCanonicalAction({
+        canonical,
+        state: runtime,
+        declaration,
+        targetActors,
+      });
+      ordinaryCanonicalExecution = {
+        canonical,
+        commandId: newSheetRuntimeCommandId(),
+        declaration,
+        targetActors,
+        targetParticipants,
+      };
+    }
+
     const unarmedTargetAction = legacyUnarmedTargetAction(action);
-    let sceneTarget: TargetContext | undefined;
     if (unarmedTargetAction && !selectedTargetForAction) {
       const declaration = await combatTargetDialog.request({
         title: `${action.name}: цели и факты`,
@@ -1886,26 +2154,41 @@ export default function SheetActionsPanel({
       targetOpts?: { targets?: { id: string; name: string }[]; needsTarget?: boolean },
       presetTargetId?: string,
       canonicalContext?: SheetCanonicalActionContext,
-    ): Promise<{ state: RuntimeState; events: EngineEvent[]; pending: ReactionOffer[]; targetState?: RuntimeState; commitTarget?: () => Promise<void>; targetId?: string; canonicalWorld?: WorldState } | null> => {
+      ordinaryCanonical?: {
+        canonical: SheetCanonicalActionContext;
+        commandId: string;
+        declaration: SheetCanonicalCommandInput;
+        targetActors: ActorState[];
+        targetParticipants: SheetCombatParticipantSeed[];
+      },
+    ): Promise<{ state: RuntimeState; events: EngineEvent[]; pending: ReactionOffer[]; targetState?: RuntimeState; commitTarget?: () => Promise<void>; atomicCommit?: PreparedSheetAtomicWorldCommit; targetId?: string; canonicalWorld?: WorldState } | null> => {
       // Ярус 1.2: выборы context:'in_play' ВНУТРИ действия (вариант эффекта при активации) —
       // спрашиваем ДО плана кубов, чтобы и план, и реальный прогон шли по выбранной ветке.
-      const inPlay = [
-        ...collectInPlayActionChoices(m, { kind: 'other', id: 'action', name: title }),
-        ...collectSheetPrimitiveChoices(
-          canonicalContext,
-          encounterId ? 'encounter' : 'exploration',
-        ),
-      ].map((choice) => choice.source === 'equipped_weapon'
-        ? {
-            ...choice,
-            items: equippedWeaponChoices(
-              ctx,
-              baseState.equipment,
-              Array.isArray(choice.filter) ? choice.filter : [],
+      const inPlay = ordinaryCanonical
+        ? []
+        : [
+            ...collectInPlayActionChoices(m, { kind: 'other', id: 'action', name: title }),
+            ...collectSheetPrimitiveChoices(
+              canonicalContext,
+              encounterId ? 'encounter' : 'exploration',
             ),
-          }
-        : choice);
+          ].map((choice) => choice.source === 'equipped_weapon'
+            ? {
+                ...choice,
+                items: equippedWeaponChoices(
+                  ctx,
+                  baseState.equipment,
+                  Array.isArray(choice.filter) ? choice.filter : [],
+                ),
+              }
+            : choice);
       const choices: Record<string, string[]> = {};
+      for (const [id, raw] of Object.entries(ordinaryCanonical?.declaration.choices ?? {})) {
+        const selected = (Array.isArray(raw) ? raw : [raw]).filter((value): value is string => (
+          typeof value === 'string' && value.length > 0
+        ));
+        if (selected.length) choices[id] = selected;
+      }
       if (inPlay.length) {
         const picked = await choiceDialog.request(inPlay, title);
         if (!picked) return null; // отмена выбора = отмена действия
@@ -1964,6 +2247,43 @@ export default function SheetActionsPanel({
         }
       }
       const rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();
+      if (ordinaryCanonical) {
+        const canonicalResult = executeSheetCanonicalAction({
+          canonical: ordinaryCanonical.canonical,
+          state: baseState,
+          declaration: ordinaryCanonical.declaration,
+          targetActors: ordinaryCanonical.targetActors,
+          rng,
+          commandId: ordinaryCanonical.commandId,
+        });
+        if (canonicalResult.pendingResolution) {
+          throw new UnsupportedSheetPendingResolutionError(canonicalResult.pendingResolution.type);
+        }
+        const atomicCommit = prepareSheetAtomicWorldCommit({
+          commandId: ordinaryCanonical.commandId,
+          participants: [{
+            character,
+            canonical: ordinaryCanonical.canonical.runtime,
+            world: canonicalResult.canonicalWorld,
+          }, ...ordinaryCanonical.targetParticipants.map((participant) => ({
+            ...participant,
+            world: projectSheetAtomicParticipantWorld({
+              participant,
+              acceptedWorld: canonicalResult.canonicalWorld,
+              commandId: ordinaryCanonical.commandId,
+            }),
+          }))],
+          events: canonicalResult.ruleEvents ?? [],
+        });
+        return {
+          state: canonicalResult.state,
+          events: canonicalResult.events,
+          pending: [],
+          atomicCommit,
+          targetId: ordinaryCanonical.declaration.targetIds[0],
+          canonicalWorld: canonicalResult.canonicalWorld,
+        };
+      }
       // Спас цели в бою: предрассчитываем ОБА исхода движком с ОДИНАКОВЫМИ костями урона
       // (record/replay rng — иначе успех не был бы «половиной» тех же костей). Персонаж бросит спас
       // сам у себя (pending); монстр без листа — кастер катит его спас и применяет сразу.
@@ -2089,10 +2409,15 @@ export default function SheetActionsPanel({
       }
       const main = await runViaDialog(runtime, mech, action.name, previewFor(action), needsConfirm,
         { targets: targetOptions, needsTarget: interactsWithTarget },
-        selectedTargetForAction?.id,
-        primitive ? canonical : undefined);
+        canonicalTargetId ?? selectedTargetForAction?.id,
+        primitive ? canonical : undefined,
+        ordinaryCanonicalExecution);
       if (!main) return;
       let { state, events } = main;
+      if (main.atomicCommit) {
+        await commitOrdinarySpellInteraction(main.atomicCommit);
+        return;
+      }
       // Применённое к цели состояние (урон/лечение/эффекты) — на комбатанта боя или в запись персонажа.
       if (main.commitTarget) await main.commitTarget();
       // Заклинание с концентрацией: чип + вытеснение предыдущей концентрации.
@@ -2158,6 +2483,12 @@ export default function SheetActionsPanel({
 
   // Доступность + причина недоступности: сперва экипировка (оружие в руке), затем ресурсы.
   const disabledInfo = (action: SheetAction): { disabled: boolean; reason?: string } => {
+    if (pendingAtomicRetry) {
+      return {
+        disabled: true,
+        reason: `Ожидается безопасный повтор ${sheetAtomicRetryLabel(pendingAtomicRetry)}`,
+      };
+    }
     const contextualCostIssue = contextualCostProjection.issues.get(action.id);
     if (contextualCostIssue) return { disabled: true, reason: contextualCostIssue };
     const primitive = mechanicsPrimitiveType(action.mechanics);
@@ -2211,9 +2542,6 @@ export default function SheetActionsPanel({
         }
         if (pendingCombat && combatContinuation.error) {
           return { disabled: true, reason: combatContinuation.error.message };
-        }
-        if (pendingCombat && combatRetry) {
-          return { disabled: true, reason: 'Предыдущая атомарная команда ожидает безопасного повтора' };
         }
         if (pendingCombat && combatContinuation.session?.world.pendingResolution) {
           return { disabled: true, reason: 'Сначала завершите ожидающее решение' };
@@ -2292,9 +2620,13 @@ export default function SheetActionsPanel({
     return sourceActions.some((candidate) => isSpellActionPrepared(access, candidate.id));
   };
 
-  const actionBlockActions = actions.filter((action) => (
-    action.group !== 'spell' || spellIsPrepared(action)
-  ));
+  const actionBlockActions = actions.filter((action) => {
+    const activation = action.mechanics.activation as Record<string, unknown> | undefined;
+    // Reactions remain actor capabilities for canonical combat, but are never
+    // manually activatable entries in the ordinary Action block.
+    if (activation?.mode === 'reaction') return false;
+    return action.group !== 'spell' || spellIsPrepared(action);
+  });
 
   const allGroups: { key: string; label: string; items: SheetAction[] }[] = [
     { key: 'basic', label: 'Базовые', items: actionBlockActions.filter((a) => a.group === 'basic') },
@@ -2343,30 +2675,29 @@ export default function SheetActionsPanel({
       {worldInputDialog.dialog}
       {combatTargetDialog.dialog}
       {error && <p className="issues" role="alert" data-testid="sheet-action-error">{error}</p>}
-      {companionRetry && (
-        <section className="sheet-group" role="alert" data-testid="sheet-companion-retry">
-          <h3 className="sheet-h3">Ответ операции спутника не подтверждён</h3>
-          <p>Повтор использует тот же command_id и те же CAS-снимки всех затронутых листов.</p>
-          <button type="button" className="forge-btn" disabled={busy} onClick={() => { void commitCompanionInteraction(companionRetry); }}>
-            Безопасно повторить
-          </button>
-        </section>
-      )}
-      {combatRetry && (
-        <section className="sheet-group" role="alert" data-testid="sheet-combat-retry">
-          <h3 className="sheet-h3">Ответ атомарной команды не подтверждён</h3>
-          <p>Повтор использует тот же command_id и тот же снимок всех участников.</p>
+      {showAtomicRetryControl && pendingAtomicRetry && (
+        <section className="sheet-group" role="alert" data-testid="sheet-atomic-retry">
+          <h3 className="sheet-h3">Ответ {sheetAtomicRetryLabel(pendingAtomicRetry)} не подтверждён</h3>
+          <p>Повтор использует тот же command_id и те же CAS-снимки всех участников.</p>
           <button
             type="button"
             className="forge-btn"
             disabled={busy}
-            onClick={() => { void commitCombat(combatRetry.prepared, combatRetry.events); }}
+            onClick={() => {
+              if (pendingAtomicRetry.kind === 'combat') {
+                void commitCombat(pendingAtomicRetry.prepared);
+              } else if (pendingAtomicRetry.kind === 'companion') {
+                void commitCompanionInteraction(pendingAtomicRetry.prepared);
+              } else {
+                void commitOrdinarySpellInteraction(pendingAtomicRetry.prepared);
+              }
+            }}
           >
             Безопасно повторить
           </button>
         </section>
       )}
-      {hasSheetCombatSession(character.turn_state) && (combatContinuation.error || combatScene) && (
+      {!spellsOnly && hasSheetCombatSession(character.turn_state) && (combatContinuation.error || combatScene) && (
         <section className="sheet-group" role={combatContinuation.error ? 'alert' : 'status'} data-testid="sheet-combat-reset">
           <h3 className="sheet-h3">
             {combatContinuation.error ? 'Сохранённое решение устарело' : 'Одиночный бой активен'}
@@ -2375,20 +2706,20 @@ export default function SheetActionsPanel({
           <button
             type="button"
             className="forge-btn ghost"
-            disabled={busy || !!combatRetry}
+            disabled={busy || !!pendingAtomicRetry}
             onClick={() => { void resetCombatContinuation(); }}
           >
             {combatContinuation.error ? 'Сбросить устаревшее решение' : 'Завершить одиночный бой'}
           </button>
         </section>
       )}
-      {combatSession && combatSessionCertificationError && (
+      {!spellsOnly && combatSession && combatSessionCertificationError && (
         <section className="sheet-group" role="alert" data-testid="sheet-combat-certification-error">
           <h3 className="sheet-h3">Продолжение боя заблокировано</h3>
           <p>{combatSessionCertificationError.message}</p>
         </section>
       )}
-      {combatSession?.world.pendingResolution && !combatSessionCertificationError && (
+      {!spellsOnly && combatSession?.world.pendingResolution && !combatSessionCertificationError && (
         <SheetPendingCombatPanel
           pending={combatSession.world.pendingResolution}
           viewingCharacterId={character.id}
@@ -2399,11 +2730,11 @@ export default function SheetActionsPanel({
               : combatSession.sourceCharacterId
           }
           actorNames={combatActorNames}
-          busy={busy || !!combatRetry}
+          busy={busy || !!pendingAtomicRetry}
           onResolve={resolveCombatDecision}
         />
       )}
-      {combatScene && !combatSession?.world.pendingResolution && !combatSessionCertificationError && (
+      {!spellsOnly && combatScene && !combatSession?.world.pendingResolution && !combatSessionCertificationError && (
         <section className="sheet-group" role="status" data-testid="sheet-combat-turn-state">
           <h3 className="sheet-h3">Последовательность ходов · раунд {combatScene.round}</h3>
           <p>
@@ -2414,7 +2745,7 @@ export default function SheetActionsPanel({
             <button
               type="button"
               className="forge-btn ghost"
-              disabled={busy || !!combatRetry}
+              disabled={busy || !!pendingAtomicRetry}
               onClick={() => { void moveCombatTurn(); }}
             >
               {combatScene.turnStarted ? 'Завершить ход' : 'Начать ход'}
@@ -2439,7 +2770,7 @@ export default function SheetActionsPanel({
                     ? { disabledReason: 'другая система правил' }
                     : {}),
           }))}
-          busy={busy || !!companionRetry}
+          busy={busy || !!pendingAtomicRetry}
           onDismiss={handleCompanionDismiss}
           onReappear={handleCompanionReappear}
           onReplaceTome={handlePactTomeReplace}

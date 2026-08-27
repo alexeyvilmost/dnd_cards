@@ -5,12 +5,14 @@ import type { ExecuteContext, ExecuteResult, RuntimeState } from '../mvp/contrac
 import { createLogicalClock, createSequentialIdFactory } from '../rules-core/determinism';
 import { parseActivationCastTime } from '../rules-core/activationCastTime';
 import type {
+  ActorState,
   GameCommand,
   PendingResolution,
   RuleActionDefinition,
   UncommittedRuleEvent,
   WorldState,
 } from '../rules-core/domain';
+import { defaultAttackProfile } from '../rules-core/domain';
 import { InMemoryRulesSession } from '../rules-core/session';
 import {
   FIND_FAMILIAR_CAST_PATH_CHOICE,
@@ -144,6 +146,21 @@ export interface SheetActionExecutionResult extends ExecuteResult {
   ruleEvents?: readonly UncommittedRuleEvent[];
   /** Durable continuation state; callers must never treat a non-null value as completed. */
   pendingResolution: PendingResolution | null;
+}
+
+export interface SheetCanonicalActionValidationInput {
+  canonical: SheetCanonicalActionContext;
+  state: RuntimeState;
+  declaration: SheetCanonicalCommandInput;
+  /** Complete rules actors selected by the UI but not owned by the source sheet world. */
+  targetActors?: readonly ActorState[];
+  rng?: () => number;
+  /** Stable idempotency key when the accepted world will be persisted atomically. */
+  commandId?: string;
+}
+
+export interface SheetCanonicalActionDispatchResult extends SheetActionExecutionResult {
+  canonicalWorld: WorldState;
 }
 
 function formulaContext(context: ExecuteContext, target = false): FormulaContext {
@@ -522,6 +539,89 @@ function executeCanonicalPrimitive(
     ruleEvents: session.getEvents(),
     pendingResolution,
   };
+}
+
+/** Execute an ordinary canonical action against a detached, complete actor set. */
+export function executeSheetCanonicalAction(
+  input: SheetCanonicalActionValidationInput,
+): SheetCanonicalActionDispatchResult {
+  const synchronized = synchronizeSheetCanonicalRuntime(
+    input.canonical.runtime.world,
+    input.canonical.runtime.actorId,
+    input.state,
+    Object.keys(input.canonical.runtime.resourceBindings),
+  );
+  let world = stageSheetScenarioObjects(
+    synchronized,
+    input.declaration.scenarioObjects,
+  );
+  const actors = { ...world.actors };
+  const suppliedActorIds = new Set<string>();
+  for (const rawActor of input.targetActors ?? []) {
+    if (rawActor.id === input.canonical.runtime.actorId) {
+      throw new SheetMechanicsPreflightError('A target actor cannot replace the acting sheet actor');
+    }
+    if (suppliedActorIds.has(rawActor.id)) {
+      throw new SheetMechanicsPreflightError(`Canonical target actor ${rawActor.id} is supplied twice`);
+    }
+    suppliedActorIds.add(rawActor.id);
+    // An ordinary sheet world may retain a prior cross-sheet concentration
+    // participant. Replace that cached actor with the freshly loaded server
+    // snapshot before evaluating either the new action or concentration cleanup.
+    const actor = JSON.parse(JSON.stringify(rawActor)) as ActorState;
+    actors[rawActor.id] = {
+      ...actor,
+      lifecycle: actor.lifecycle ?? { status: 'alive' },
+      attackProfile: actor.attackProfile ?? defaultAttackProfile(actor),
+    };
+  }
+  world = { ...world, actors };
+  const primitive = primitiveType(input.canonical.action.mechanics) ?? '';
+  const command = buildSheetCanonicalCommand({
+    world,
+    actorId: input.canonical.runtime.actorId,
+    action: input.canonical.action,
+    primitiveType: primitive,
+    commandId: input.commandId ?? sheetPrimitiveCommandId(
+      input.canonical.runtime.actorId,
+      input.canonical.action.id,
+      world.revision,
+    ),
+    declaration: input.declaration,
+  });
+  const session = new InMemoryRulesSession(world, input.canonical.runtime.catalog, {
+    rng: input.rng ?? (() => 0.5),
+    clock: createLogicalClock(world.logicalClock),
+    nextId: createSequentialIdFactory(
+      `sheet-validation-${input.canonical.runtime.actorId}-${world.revision}`,
+    ),
+  });
+  const result = session.dispatch(command);
+  if (result.status === 'rejected') {
+    throw new SheetCanonicalCommandRejectedError(result.code, result.message);
+  }
+  const canonicalWorld = session.getState();
+  const actor = canonicalWorld.actors[input.canonical.runtime.actorId];
+  if (!actor) throw new SheetMechanicsPreflightError('Canonical action removed its owning actor');
+  return {
+    state: actor.runtime,
+    events: engineEvents(session.getEvents(), input.canonical.action, canonicalWorld),
+    canonicalWorld,
+    ruleEvents: session.getEvents(),
+    pendingResolution: canonicalWorld.pendingResolution,
+  };
+}
+
+/**
+ * Runs an ordinary canonical action in a detached world as a pre-payment
+ * legality check. The accepted world is deliberately discarded by this
+ * wrapper; callers that own persistence use executeSheetCanonicalAction after
+ * the user confirms the action.
+ */
+export function validateSheetCanonicalAction(
+  input: SheetCanonicalActionValidationInput,
+): WorldState {
+  return executeSheetCanonicalAction(input).canonicalWorld;
 }
 
 /**

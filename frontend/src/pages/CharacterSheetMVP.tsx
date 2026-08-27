@@ -57,6 +57,7 @@ import SheetToasts, { useSheetToasts } from '../components/SheetToasts';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
 import { plannedD20BonusDice, plannedValuesRng, type PlannedDie } from '../engine/dicePlan';
 import SheetActionsPanel from '../components/SheetActionsPanel';
+import type { SheetAtomicRetryEnvelope } from '../character/sheetAtomicRetry';
 import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
 import SheetHpPanel from '../components/SheetHpPanel';
 import SheetSpeedDialog from '../components/SheetSpeedDialog';
@@ -142,6 +143,7 @@ const CharacterSheetMVP = () => {
   const [journalOpen, setJournalOpen] = useState(false);
   const [unseen, setUnseen] = useState(0);
   const [longRestOpen, setLongRestOpen] = useState(false);
+  const [pendingAtomicRetry, setPendingAtomicRetry] = useState<SheetAtomicRetryEnvelope | null>(null);
   const { toasts, push: pushToast } = useSheetToasts();
   const { entityDisplay, allowSheetEntityAdditions } = useSiteSettings();
   const diceDialog = useDiceDialog();
@@ -218,6 +220,20 @@ const CharacterSheetMVP = () => {
   // показывалась ТОЛЬКО для новых записей (пришедших из боя), а не для всей истории/своих действий.
   const seenEventIdsRef = useRef<Set<string>>(new Set());
   const journalSeededRef = useRef(false); // первая загрузка засеивает seen без тостов (иначе вся история всплыла бы)
+  const reconcilePersistedRuntimeEvents = useCallback((rows: CharacterEventRow[]) => {
+    // The accepted atomic command may finish before the mount-time journal load.
+    // Whichever authoritative read wins that race becomes the silent baseline;
+    // otherwise the entire pre-existing journal would be replayed as fresh toasts.
+    const firstLoad = !journalSeededRef.current;
+    journalSeededRef.current = true;
+    const fresh = rows.filter((row) => !seenEventIdsRef.current.has(row.id));
+    rows.forEach((row) => seenEventIdsRef.current.add(row.id));
+    setJournal([...rows].reverse());
+    if (!firstLoad && fresh.length) {
+      pushToastRef.current(fresh.map((row) => row.payload));
+      if (!journalOpenRef.current) setUnseen((current) => current + fresh.length);
+    }
+  }, []);
   const loadJournal = useCallback(async (characterId: string, opts?: { toast?: boolean }) => {
     setJournalLoading(true);
     try {
@@ -239,6 +255,10 @@ const CharacterSheetMVP = () => {
       setJournalLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    setPendingAtomicRetry(null);
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -1089,6 +1109,9 @@ const CharacterSheetMVP = () => {
           inPlayChoices={inPlayChoices}
           onUpdated={handleCharacterUpdated}
           onEvents={appendRuntimeEvents}
+          onPersistedEvents={reconcilePersistedRuntimeEvents}
+          pendingAtomicRetry={pendingAtomicRetry}
+          onPendingAtomicRetryChange={setPendingAtomicRetry}
           readOnly={readOnly}
           encounterApply={applyEncounter}
           combatActive={combatLocked}
@@ -1118,6 +1141,9 @@ const CharacterSheetMVP = () => {
             maxHp={maxHP}
             onUpdated={handleCharacterUpdated}
             onEvents={appendRuntimeEvents}
+            onPersistedEvents={reconcilePersistedRuntimeEvents}
+            pendingAtomicRetry={pendingAtomicRetry}
+            onPendingAtomicRetryChange={setPendingAtomicRetry}
             targetAc={targetAc}
             onTargetAcChange={setTargetAc}
             targetSaveMod={targetSaveMod}
@@ -1510,6 +1536,9 @@ const CharacterSheetMVP = () => {
                 maxHp={maxHP}
                 onUpdated={handleCharacterUpdated}
                 onEvents={appendRuntimeEvents}
+                onPersistedEvents={reconcilePersistedRuntimeEvents}
+                pendingAtomicRetry={pendingAtomicRetry}
+                onPendingAtomicRetryChange={setPendingAtomicRetry}
                 embedded
                 spellsOnly
                 targetAc={targetAc}

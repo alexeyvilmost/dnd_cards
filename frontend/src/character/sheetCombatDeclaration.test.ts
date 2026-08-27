@@ -233,4 +233,32 @@ describe('sheet combat declaration is mechanics-owned', () => {
       dartAllocation: { [TARGET]: 3 },
     })).toThrow('источник фактов');
   });
+
+  it('preserves explicit consent facts for an ordinary canonical action', () => {
+    const action = patchedAction('magic_missile');
+    delete (action.mechanics as Record<string, unknown>).primitive;
+    (action.mechanics.targeting as Record<string, unknown>).requires_willing = true;
+    action.targeting = compileMechanicsTargeting(action.mechanics);
+
+    expect(sheetCombatDeclarationPolicy(action)).toMatchObject({
+      primitiveType: 'generic_action',
+      requiresWilling: true,
+    });
+    expect(() => buildSheetCombatDeclaration({
+      action,
+      base: {
+        sceneMode: 'exploration', targetIds: [],
+        spell: { grantId: 'exact-grant', mode: 'normal', castLevel: 1 },
+      },
+      targets: [fact()],
+    })).toThrow('согласие');
+    expect(buildSheetCombatDeclaration({
+      action,
+      base: {
+        sceneMode: 'exploration', targetIds: [],
+        spell: { grantId: 'exact-grant', mode: 'normal', castLevel: 1 },
+      },
+      targets: [fact({ willing: false })],
+    }).factsByTarget?.[TARGET]).toMatchObject({ willing: false });
+  });
 });

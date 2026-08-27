@@ -15,7 +15,8 @@ async function fetchAll(path, key) {
   const result = [];
   let total = null;
   for (let page = 1; page <= 100; page += 1) {
-    const response = await fetch(`${API_URL}${path}?page=${page}&limit=1000`);
+    const separator = path.includes('?') ? '&' : '?';
+    const response = await fetch(`${API_URL}${path}${separator}page=${page}&limit=1000`);
     if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
     const body = await response.json();
     if (!Array.isArray(body[key])) throw new Error(`${path}: response is missing ${key}`);
@@ -32,7 +33,8 @@ async function fetchAll(path, key) {
 
 async function main() {
   process.env.VITE_API_URL = API_URL;
-  const [classes, races, backgrounds, feats, spells] = await Promise.all([
+  const [cards, classes, races, backgrounds, feats, spells] = await Promise.all([
+    fetchAll('/api/cards?fields=list', 'cards'),
     fetchAll('/api/classes', 'classes'),
     fetchAll('/api/races', 'races'),
     fetchAll('/api/backgrounds', 'backgrounds'),
@@ -55,6 +57,7 @@ async function main() {
   try {
     const module = await server.ssrLoadModule('/src/canon/miniMvpForgeSheetFixtureGenerator.ts');
     const artifact = await module.buildMiniMvpForgeSheetFixture(MINI_MVP_MANIFEST, {
+      cards,
       classes,
       races,
       backgrounds,

@@ -24,6 +24,11 @@ on:
   schedule:
     - cron: '0 3 * * *'   # ежедневно 03:00 UTC
   workflow_dispatch:
+    inputs:
+      expected_deployed_commit:
+        description: 'Optional exact deployed SHA for the production browser spine'
+        required: false
+        type: string
 
 jobs:
   offline:
@@ -169,3 +174,108 @@ jobs:
         with:
           name: prod-snapshot
           path: officials/canon/prod-snapshot
+
+  live-browser-spine:
+    name: Реальные production happy paths (ночью / после релиза)
+    needs: offline
+    if: >-
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      LIVE_BROWSER_CANARY: '1'
+      LIVE_BROWSER_BASE_URL: 'https://bagofholding.ru'
+      LIVE_BROWSER_API_URL: 'https://bagofholding.ru'
+      LIVE_BROWSER_USER_A: ${{ secrets.LIVE_BROWSER_USER_A }}
+      LIVE_BROWSER_PASSWORD_A: ${{ secrets.LIVE_BROWSER_PASSWORD_A }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Проверка настроенного canary-аккаунта
+        shell: bash
+        run: |
+          test -n "$LIVE_BROWSER_USER_A"
+          test -n "$LIVE_BROWSER_PASSWORD_A"
+      - name: Фиксация проверяемого production SHA
+        shell: bash
+        env:
+          REQUESTED_COMMIT: ${{ inputs.expected_deployed_commit }}
+          PUSH_COMMIT: ${{ github.event_name == 'push' && github.sha || '' }}
+        run: |
+          commit="$REQUESTED_COMMIT"
+          if [ -z "$commit" ] && [ -n "$PUSH_COMMIT" ]; then
+            commit="$PUSH_COMMIT"
+          fi
+          if [ -z "$commit" ]; then
+            commit=$(curl -fsS https://bagofholding.ru/build-info.json | node -e '
+              let body = "";
+              process.stdin.on("data", chunk => body += chunk);
+              process.stdin.on("end", () => process.stdout.write(JSON.parse(body).source_commit || ""));
+            ')
+          fi
+          case "$commit" in
+            ''|*[!0-9a-f]*) echo "Expected an exact 40-character lowercase production SHA" >&2; exit 1 ;;
+          esac
+          test "${#commit}" -eq 40
+          echo "EXPECTED_DEPLOYED_COMMIT=$commit" >> "$GITHUB_ENV"
+      - name: Загрузка точного проверяемого релиза
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=1 origin "$EXPECTED_DEPLOYED_COMMIT"
+          git checkout --detach "$EXPECTED_DEPLOYED_COMMIT"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_DEPLOYED_COMMIT"
+      - name: Ожидание exact-SHA frontend и backend после push
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          for attempt in $(seq 1 90); do
+            deployed=$(
+              curl -fsS https://bagofholding.ru/build-info.json 2>/dev/null | node -e '
+                let body = "";
+                process.stdin.on("data", chunk => body += chunk);
+                process.stdin.on("end", () => {
+                  try { process.stdout.write(JSON.parse(body).source_commit || ""); }
+                  catch { process.stdout.write(""); }
+                });
+              ' || true
+            )
+            backend=$(
+              curl -fsS https://bagofholding.ru/api/health 2>/dev/null | node -e '
+                let body = "";
+                process.stdin.on("data", chunk => body += chunk);
+                process.stdin.on("end", () => {
+                  try { process.stdout.write(JSON.parse(body).source_commit || ""); }
+                  catch { process.stdout.write(""); }
+                });
+              ' || true
+            )
+            if [ "$deployed" = "$EXPECTED_DEPLOYED_COMMIT" ] && [ "$backend" = "$EXPECTED_DEPLOYED_COMMIT" ]; then
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "Production did not expose $EXPECTED_DEPLOYED_COMMIT within 45 minutes" >&2
+          exit 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Установка зависимостей
+        working-directory: frontend
+        run: npm ci --ignore-scripts
+      - name: Проверка типов production spine
+        working-directory: frontend
+        run: npm run test:browser:live:typecheck
+      - name: "Три пути: lineage/ranged/reaction + martial/spell + full-caster/world"
+        working-directory: frontend
+        run: npm run test:browser:live:nightly
+      - name: Краткие диагностики production spine
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-browser-spine-${{ github.run_id }}-${{ github.run_attempt }}
+          path: frontend/test-results-live
+          if-no-files-found: warn
+          retention-days: 7

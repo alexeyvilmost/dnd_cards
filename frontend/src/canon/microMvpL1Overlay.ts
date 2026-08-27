@@ -49,6 +49,7 @@ import type {
   RulesCatalog,
   RulesetReference,
 } from '../rules-core/domain';
+import type { SpellAccessKind } from '../rules-core/spellcastingAccess';
 import {
   LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE,
   WEAPON_ATTACK_PRIMITIVE,
@@ -1088,13 +1089,88 @@ function toRulesAction(
   }
 }
 
-const CLASS_SPELL_CHOICE_SUFFIXES: Record<string, readonly string[]> = {
-  'CLASS-cleric': ['cleric_cantrips', 'cleric_spells_l1', 'cleric_thaumaturge_cantrip'],
-  'CLASS-druid': ['druid_cantrips', 'druid_spells_l1', 'druid_magician_cantrip'],
-  'CLASS-sorcerer': ['sorcerer_cantrips', 'sorcerer_spells_known'],
-  'CLASS-warlock': ['warlock_cantrips', 'warlock_spells_known'],
-  'CLASS-wizard': ['wizard_cantrips', 'wizard_spellbook_level_1'],
-};
+type ClassSpellChoiceAccess = Extract<
+  SpellAccessKind,
+  'cantrip' | 'known' | 'spellbook' | 'always_prepared'
+>;
+
+export interface ClassOwnedSpellSelection {
+  choice: PendingChoice;
+  access: ClassSpellChoiceAccess;
+  selectedReferences: string[];
+}
+
+function classSpellAccessForLabel(label: unknown, choiceId: string): ClassSpellChoiceAccess {
+  switch (label) {
+    case 'cantrip': return 'cantrip';
+    case 'known': return 'known';
+    case 'spellbook': return 'spellbook';
+    case 'prepared':
+    case 'always_prepared':
+      return 'always_prepared';
+    default:
+      throw new Error(
+        `${choiceId}: class grant_spell label must be cantrip, known, spellbook, prepared, or always_prepared`,
+      );
+  }
+}
+
+/**
+ * Finds class-owned spell choices from their persisted provenance and grant
+ * declaration. New caster classes therefore enter compilation through data;
+ * adding their card number or choice suffix to the compiler is neither needed
+ * nor permitted.
+ */
+export function classOwnedSpellSelections(input: {
+  classId: string;
+  pendingChoices: readonly PendingChoice[];
+  resolvedChoices: Readonly<Record<string, readonly string[]>>;
+}): ClassOwnedSpellSelection[] {
+  const candidates = input.pendingChoices.filter((choice) => (
+    choice.origin.kind === 'class'
+      && choice.origin.id === input.classId
+      && choice.source === 'spell'
+  ));
+  const duplicateChoiceIds = candidates
+    .map((choice) => choice.id)
+    .filter((choiceId, index, all) => all.indexOf(choiceId) !== index);
+  if (duplicateChoiceIds.length) {
+    throw new Error(`duplicate class spell choices: ${[...new Set(duplicateChoiceIds)].sort().join(', ')}`);
+  }
+  return candidates.map((choice) => {
+    if (choice.grantKind !== 'grant_spell' || choice.grant?.kind !== 'grant_spell') {
+      throw new Error(`${choice.id}: class spell choice must declare grant.kind=grant_spell`);
+    }
+    const selectedReferences = [...(input.resolvedChoices[choice.id] ?? [])];
+    if (selectedReferences.length !== choice.count
+      || new Set(selectedReferences).size !== selectedReferences.length) {
+      throw new Error(`${choice.id}: class spell choice must resolve exactly ${choice.count} distinct spells`);
+    }
+    return {
+      choice,
+      access: classSpellAccessForLabel(choice.grant.label, choice.id),
+      selectedReferences,
+    };
+  });
+}
+
+function classOwnedSpellSelectionsForRoot(
+  root: PinnedL1RootFixture,
+  assembled: AssembledCharacter,
+  draft: CharacterDraft,
+): ClassOwnedSpellSelection[] {
+  try {
+    return classOwnedSpellSelections({
+      classId: root.matrixCase.klass.id,
+      pendingChoices: assembled.pendingChoices,
+      resolvedChoices: draft.resolvedChoices,
+    });
+  } catch (error) {
+    throw new MicroMvpL1OverlayReadinessError([
+      `${root.stableKey}: ${error instanceof Error ? error.message : String(error)}`,
+    ]);
+  }
+}
 
 function classSpellEntityIds(
   root: PinnedL1RootFixture,
@@ -1102,14 +1178,16 @@ function classSpellEntityIds(
   draft: CharacterDraft,
   catalogs: SnapshotCatalogs,
 ): Set<string> {
-  const suffixes = CLASS_SPELL_CHOICE_SUFFIXES[root.matrixCase.klass.card_number] ?? [];
   const index = indexByReference(catalogs.spells);
   const ids = new Set<string>();
-  for (const choice of assembled.pendingChoices) {
-    if (!suffixes.some((suffix) => choice.id.endsWith(`:${suffix}`))) continue;
-    for (const selected of choicesSelected(draft, choice)) {
+  for (const selection of classOwnedSpellSelectionsForRoot(root, assembled, draft)) {
+    for (const selected of selection.selectedReferences) {
       const selectedSpell = index.get(selected);
-      if (!selectedSpell) continue;
+      if (!selectedSpell) {
+        throw new MicroMvpL1OverlayReadinessError([
+          `${root.stableKey}:${selection.choice.id}: selected spell ${selected} is absent`,
+        ]);
+      }
       ids.add(selectedSpell.id);
       ids.add(selectedSpell.card_number);
     }
@@ -1167,18 +1245,6 @@ function selectedSpells(
   return [...result.values()].sort((left, right) => left.level - right.level
     || left.card_number.localeCompare(right.card_number)
     || left.id.localeCompare(right.id));
-}
-
-function classSpellAccessKind(
-  classCardNumber: string,
-  choiceSuffix: string,
-): 'cantrip' | 'known' | 'spellbook' | 'always_prepared' {
-  if (choiceSuffix.includes('cantrips')) return 'cantrip';
-  if (classCardNumber === 'CLASS-wizard') return 'spellbook';
-  if (classCardNumber === 'CLASS-cleric' || classCardNumber === 'CLASS-druid') {
-    return 'always_prepared';
-  }
-  return 'known';
 }
 
 function preparedSourceProjections(
@@ -1259,29 +1325,28 @@ function spellcastingAccessForRoot(
   pactDeclaration: WarlockPactDeclaration | undefined,
   runtimeResources: Readonly<Record<string, number>>,
   primarySpellcastingAbility: Ability | undefined,
+  ruleState: CharacterRuleState,
   pactTomeBookObjectId?: string,
 ): FixtureActorState['spellcastingAccess'] {
   const classCardNumber = root.matrixCase.klass.card_number;
   const ability = primarySpellcastingAbility;
-  const suffixes = CLASS_SPELL_CHOICE_SUFFIXES[classCardNumber];
   const spellIndex = indexByReference(catalogs.spells);
-  const grants: SpellGrantProjection[] = assembled.pendingChoices.flatMap((choice) => {
-    const suffix = suffixes?.find((candidate) => choice.id.endsWith(`:${candidate}`));
-    if (!suffix) return [];
+  const classSelections = classOwnedSpellSelectionsForRoot(root, assembled, draft);
+  const grants: SpellGrantProjection[] = classSelections.flatMap((selection) => {
+    const { choice, access } = selection;
     if (!ability) {
       throw new MicroMvpL1OverlayReadinessError([
         `${root.stableKey}:${choice.id}: class spell choice has no spellcasting ability`,
       ]);
     }
-    const access = classSpellAccessKind(classCardNumber, suffix);
-    return choicesSelected(draft, choice).map((reference) => {
+    return selection.selectedReferences.map((reference) => {
       const spell = spellIndex.get(reference);
       if (!spell) {
         throw new MicroMvpL1OverlayReadinessError([
           `${root.stableKey}:${choice.id}: selected spell ${reference} is missing from the pinned catalog`,
         ]);
       }
-      const action = rulesActions.find((candidate): candidate is Extract<
+      const actions = rulesActions.filter((candidate): candidate is Extract<
         RuleActionDefinition,
         { kind: 'spell' }
       > => (
@@ -1295,16 +1360,20 @@ function spellcastingAccessForRoot(
           && (!selectedInvocation
             || !candidate.sourceEntityIds.includes(selectedInvocation.effect.id))
       ));
-      if (!action) {
+      if (actions.length !== 1) {
         throw new MicroMvpL1OverlayReadinessError([
-          `${root.stableKey}:${choice.id}: no class-scoped action for ${spell.card_number}`,
+          `${root.stableKey}:${choice.id}: expected one class-scoped action for `
+            + `${spell.card_number}, got ${actions.length}`,
         ]);
       }
-      const permitsRitual = spell.ritual === true && (
-        classCardNumber === 'CLASS-wizard'
-          || classCardNumber === 'CLASS-cleric'
-          || classCardNumber === 'CLASS-druid'
-      );
+      const [action] = actions;
+      if ((spell.level === 0) !== (access === 'cantrip')) {
+        throw new MicroMvpL1OverlayReadinessError([
+          `${root.stableKey}:${choice.id}: ${spell.card_number} level does not match ${access}`,
+        ]);
+      }
+      const permitsRitual = spell.ritual === true
+        && (access === 'spellbook' || access === 'always_prepared');
       return {
         action,
         sourceId: classCardNumber,
@@ -1402,23 +1471,35 @@ function spellcastingAccessForRoot(
     }
 
     if (ability && action.sourceEntityIds.includes(root.matrixCase.klass.id)) {
-      const access = spell.level === 0
-        ? 'cantrip'
-        : classCardNumber === 'CLASS-wizard'
-          ? 'always_prepared'
-          : classCardNumber === 'CLASS-cleric' || classCardNumber === 'CLASS-druid'
-            ? 'always_prepared'
-            : 'known';
+      const matchingRuleGrants = ruleState.appliedGrants.filter((grant) => {
+        if (grant.kind !== 'spell'
+          || grant.source.type !== 'class'
+          || grant.source.originEntityId !== root.matrixCase.klass.id) return false;
+        const grantedSpell = spellIndex.get(grant.value);
+        return grantedSpell?.id === spell.id;
+      });
+      if (matchingRuleGrants.length !== 1) {
+        throw new MicroMvpL1OverlayReadinessError([
+          `${root.stableKey}:${action.id}: expected one declarative class spell grant, `
+            + `got ${matchingRuleGrants.length}`,
+        ]);
+      }
+      let access: ClassSpellChoiceAccess;
+      try {
+        access = classSpellAccessForLabel(matchingRuleGrants[0].label, matchingRuleGrants[0].id);
+      } catch (error) {
+        throw new MicroMvpL1OverlayReadinessError([
+          `${root.stableKey}: ${error instanceof Error ? error.message : String(error)}`,
+        ]);
+      }
       grants.push({
         action,
         sourceId: classCardNumber,
         access,
         spellcastingAbility: ability,
-        ...(spell.ritual === true && (
-          classCardNumber === 'CLASS-wizard'
-            || classCardNumber === 'CLASS-cleric'
-            || classCardNumber === 'CLASS-druid'
-        ) ? { ritual: true } : {}),
+        ...(spell.ritual === true && (access === 'spellbook' || access === 'always_prepared')
+          ? { ritual: true }
+          : {}),
         ...(spell.level > 0 ? { slotResource: `spell_slot_${spell.level}` } : {}),
       });
       continue;
@@ -2286,6 +2367,7 @@ function compileRoot(
     pactDeclaration,
     runtimeResources.resources,
     ruleState.spellcasting?.ability,
+    ruleState,
     pactTomeBookObjectId,
   );
   const warlockPactProjection = warlockPactProjectionForRoot({

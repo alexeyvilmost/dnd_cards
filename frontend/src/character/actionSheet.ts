@@ -50,12 +50,12 @@ function effectUsesRef(effect: PassiveEffect): string | undefined {
   return actionUsesKey(effect.card_number || effect.id);
 }
 
-function normalizeActiveMechanics(
+function normalizeActionableMechanics(
   mech: Record<string, unknown>,
   usesKey?: string,
 ): Record<string, unknown> | null {
   const activation = { ...(mech.activation as Record<string, unknown> | undefined) };
-  if (activation.mode !== 'active') return mech;
+  if (activation.mode !== 'active' && activation.mode !== 'reaction') return null;
   // Цена — только из mechanics.activation.cost. Даже action.resource и
   // mechanics.uses не являются вторым источником экономики действия.
   if (!Array.isArray(activation.cost)) return null;
@@ -70,15 +70,15 @@ function effectActiveMechanics(effect: PassiveEffect): Record<string, unknown> |
   if (!mech || typeof mech !== 'object') return null;
   const activation = mech.activation as Record<string, unknown> | undefined;
   if (activation?.mode !== 'active') return null;
-  return normalizeActiveMechanics(mech as Record<string, unknown>, effectUsesRef(effect));
+  return normalizeActionableMechanics(mech as Record<string, unknown>, effectUsesRef(effect));
 }
 
 function actionMechanics(action: Action, withUses = true): Record<string, unknown> | null {
   const mech = action.mechanics;
   if (!mech || typeof mech !== 'object') return null;
   const activation = mech.activation as Record<string, unknown> | undefined;
-  if (activation?.mode !== 'active') return null;
-  return normalizeActiveMechanics(
+  if (activation?.mode !== 'active' && activation?.mode !== 'reaction') return null;
+  return normalizeActionableMechanics(
     mech as Record<string, unknown>,
     withUses ? actionUsesRef(action) : undefined,
   );
@@ -257,7 +257,7 @@ export function collectSheetActions(
         id: action.id,
         name: action.name,
         mechanics: mechanicsWithPresentationName(mechanics, action.name),
-        group: 'class' as const,
+        group: origin.kind === 'race' ? 'race' as const : 'class' as const,
         imageUrl: action.image_url,
         sourceLabel: `${origin.name}`,
         usesKey: actionUsesRef(action),
@@ -380,6 +380,12 @@ function isActiveMech(mech: unknown): boolean {
   return activation?.mode === 'active';
 }
 
+function isActionMech(mech: unknown): boolean {
+  if (!mech || typeof mech !== 'object') return false;
+  const activation = (mech as Dict).activation as Dict | undefined;
+  return activation?.mode === 'active' || activation?.mode === 'reaction';
+}
+
 /**
  * Пулы использований действий листа: uses_<card_number|id> → {count, per}.
  * Источники зеркалят collectSheetActions: действия + активные способности вида.
@@ -402,7 +408,7 @@ export function collectActionUsesPools(assembled: AssembledCharacter): ActionUse
     });
   };
   for (const { action, origin } of assembled.actions) {
-    if (isActiveMech(action.mechanics)) push(actionUsesRef(action), action.mechanics, `${action.name} · ${origin.name}`);
+    if (isActionMech(action.mechanics)) push(actionUsesRef(action), action.mechanics, `${action.name} · ${origin.name}`);
   }
   for (const { effect, origin } of assembled.effects) {
     if (!isActiveMech(effect.mechanics)) continue;

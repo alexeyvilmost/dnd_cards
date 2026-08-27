@@ -80,3 +80,33 @@ describe('Каменная стойкость — снижение урона (�
     expect(applyIncomingDamage(hurt(5), 5, ectx(), {}).state.hp.current).toBe(0);
   });
 });
+
+describe('Большая форма — однозначный журнал двух модификаторов', () => {
+  it('различает размер и скорость, сохраняя оба runtime-модификатора', () => {
+    const result = executeAction(stateWith({}, {}), {
+      name: 'Большая форма',
+      activation: { mode: 'active', cost: [] },
+      effects: [{
+        resolution: 'auto',
+        result: [
+          {
+            kind: 'modifier', op: 'add', value: '1',
+            applies_to: { roll: 'size' }, duration: { type: 'rounds', amount: 10 },
+          },
+          {
+            kind: 'modifier', op: 'add', value: '10',
+            applies_to: { roll: 'speed' }, duration: { type: 'rounds', amount: 10 },
+          },
+        ],
+      }],
+    }, { ...ectx(), actionName: 'Большая форма' });
+
+    expect(result.state.activeEffects.map((effect) => (
+      (effect.mechanics.applies_to as { roll?: string } | undefined)?.roll
+    ))).toEqual(['size', 'speed']);
+    expect(result.events.filter((event) => event.type === 'effect_applied')).toEqual([
+      { type: 'effect_applied', name: 'Большая форма · размер', sourceAction: 'Большая форма' },
+      { type: 'effect_applied', name: 'Большая форма · скорость', sourceAction: 'Большая форма' },
+    ]);
+  });
+});

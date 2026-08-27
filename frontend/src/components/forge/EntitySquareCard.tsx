@@ -37,6 +37,8 @@ const EntitySquareCard = ({ name, imageUrl, selected, onClick, preview, disabled
         className={`forge-square-card ${selected ? 'selected' : ''}${disabled ? ' disabled' : ''}`}
         style={disabled ? { opacity: 0.4, filter: 'grayscale(1)' } : undefined}
         title={disabled ? disabledReason : undefined}
+        aria-disabled={disabled || undefined}
+        data-image-state={url ? (failed ? 'error' : 'declared') : 'missing'}
         onClick={disabled ? undefined : onClick}
         onMouseEnter={onEnter}
         onMouseLeave={() => setHover(false)}

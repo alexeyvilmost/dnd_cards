@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { AssembledCharacter } from './assemble';
 import { recommendedOptionSelection } from './components';
-import { classSkillChoice } from './forgeHelpers';
+import { classSkillChoice, requiredChoiceIssues } from './forgeHelpers';
+import { emptyDraft } from './types';
+import { requiresInitialCharacterChoice, type PendingChoice } from '../mechanics/collectChoices';
 
 function assembled(
   skillChoices: Record<string, unknown>,
@@ -78,5 +80,28 @@ describe('classSkillChoice recommendations', () => {
       optionIds: ['animal_handling', 'athletics', 'insight', 'investigation', 'nature', 'perception', 'stealth', 'survival'],
       unavailable: (skill) => skill === 'perception',
     })).toEqual(['stealth', 'survival', 'animal_handling']);
+  });
+
+  it('requires the initial Weapon Mastery selection even when later changes happen in play', () => {
+    const choice: PendingChoice = {
+      id: 'class:fighter:weapon-mastery',
+      prompt: 'Искусность: выберите 3 вида оружия',
+      count: 3,
+      source: 'weapon',
+      origin: { kind: 'class', id: 'fighter', name: 'Воин' },
+      context: 'in_play',
+      grantKind: 'weapon_mastery',
+    };
+    expect(requiresInitialCharacterChoice(choice)).toBe(true);
+    expect(requiresInitialCharacterChoice({ context: 'in_play', grantKind: 'temporary_choice' })).toBe(false);
+
+    const bundle = assembled({ count: 0, options: [] });
+    bundle.pendingChoices = [choice];
+    const draft = emptyDraft();
+    expect(requiredChoiceIssues(draft, bundle)).toEqual([
+      '«Искусность: выберите 3 вида оружия»: выберите 3 (выбрано 0)',
+    ]);
+    draft.resolvedChoices[choice.id] = ['longsword', 'longbow', 'shortsword'];
+    expect(requiredChoiceIssues(draft, bundle)).toEqual([]);
   });
 });

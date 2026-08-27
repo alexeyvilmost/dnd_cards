@@ -1,5 +1,5 @@
 import type { Action, Card, PassiveEffect } from '../types';
-import { actionsApi, effectsApi } from '../api/client';
+import { actionsApi, cardsApi, effectsApi } from '../api/client';
 import { collectPassiveMechanics } from './resourceInit';
 import {
   collectGrantActionSlugs,
@@ -21,11 +21,64 @@ import { projectRunnableSheetCanonicalActions } from './sheetCanonicalActionProj
 import type { RuntimeState } from '../mvp/contracts';
 import type { ActorState } from '../rules-core/domain';
 import { loadMasteryEffectsStrict } from '../utils/mastery';
+import { parseWeaponProfile } from '../rules-core/weaponProfile';
+import { weaponActionAvailability } from '../engine/weapon';
 
 export interface SheetCombatActionInventory {
   actions: SheetAction[];
   grantedEffects: NonNullable<ActorState['grantedEffects']>;
   masteryEffects: NonNullable<ActorState['masteryEffects']>;
+}
+
+/**
+ * The shared cards index contains presentation/list rows only. Combat is a
+ * rules boundary, so every carried card it can inspect is replaced with its
+ * detail entity before action projection. A detail failure is fatal: silently
+ * omitting the dependent action would turn a catalog outage into different
+ * character rules.
+ */
+export async function hydrateSheetCombatCards(input: {
+  character: Pick<ForgeCharacter, 'name' | 'equipment' | 'inventory_items'>;
+  cards: ReadonlyMap<string, Card>;
+  loadCard?: (id: string) => Promise<Card>;
+}): Promise<Map<string, Card>> {
+  const cardIds = new Set<string>([
+    ...(input.character.inventory_items ?? []).map((row) => row.card_id),
+    ...Object.values(input.character.equipment ?? {})
+      .filter((id): id is string => typeof id === 'string' && id.length > 0),
+  ]);
+  const loadCard = input.loadCard ?? cardsApi.getCard;
+  const details = await Promise.all([...cardIds].map(async (cardId) => {
+    try {
+      const card = await loadCard(cardId);
+      if (card.id !== cardId) {
+        throw new Error(`detail endpoint returned ${card.id || '<empty id>'}`);
+      }
+      return card;
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : String(cause);
+      throw new Error(
+        `Не удалось загрузить механику предмета ${cardId} для боя «${input.character.name}»: ${message}`,
+      );
+    }
+  }));
+  const hydrated = new Map(input.cards);
+  for (const card of details) hydrated.set(card.id, card);
+
+  for (const cardId of Object.values(input.character.equipment ?? {})) {
+    if (!cardId) continue;
+    const card = hydrated.get(cardId);
+    if (!card) {
+      throw new Error(`Экипированный предмет ${cardId} не загружен для боя`);
+    }
+    if (card.type === 'weapon') {
+      const parsed = parseWeaponProfile(card);
+      if (!parsed.valid) {
+        throw new Error(`Бой не может начаться: ${parsed.issue}`);
+      }
+    }
+  }
+  return hydrated;
 }
 
 /**
@@ -145,6 +198,7 @@ export async function loadSheetCombatParticipant(input: {
   character: ForgeCharacter;
   basicActions?: readonly Action[];
   cards: ReadonlyMap<string, Card>;
+  loadCard?: (id: string) => Promise<Card>;
 }): Promise<SheetCombatParticipantSeed> {
   if (isCharacterReadOnly(input.character)) {
     throw new Error(`Персонаж «${input.character.name}» доступен только для чтения`);
@@ -160,13 +214,17 @@ export async function loadSheetCombatParticipant(input: {
   const assembled = await loadAssembly(draft);
   const ruleState = resolveCharacterRules({ draft, assembled });
   const runtime = forgeToRuntimeState(input.character);
+  const cardsById = await hydrateSheetCombatCards({
+    character: input.character,
+    cards: input.cards,
+    loadCard: input.loadCard,
+  });
   const equippedCards = Object.values(runtime.equipment)
-    .flatMap((id) => id && input.cards.get(id) ? [input.cards.get(id)!] : []);
+    .flatMap((id) => id && cardsById.get(id) ? [cardsById.get(id)!] : []);
   const passives = collectPassiveMechanics(
     assembled,
     input.character.resolved_choices ?? {},
   );
-  const cardsById = new Map(input.cards);
   const inventory = await collectSheetCombatActionInventory({
     assembled,
     character: input.character,
@@ -175,11 +233,21 @@ export async function loadSheetCombatParticipant(input: {
     cards: cardsById,
     requiresMasteryCatalog: ruleState.weaponMasteries.length > 0,
   });
-  const actions = projectRunnableSheetCanonicalActions({
+  const projection = projectRunnableSheetCanonicalActions({
     actions: inventory.actions,
     equipment: runtime.equipment,
     cards: cardsById,
-  }).actions;
+  });
+  for (const [actionId, issue] of projection.issues) {
+    const source = inventory.actions.find((action) => action.id === actionId);
+    const unavailableByEquipment = source
+      ? !weaponActionAvailability(source.mechanics, runtime.equipment, cardsById).available
+      : false;
+    if (!unavailableByEquipment) {
+      throw new Error(`Бой не может начаться: действие «${source?.name ?? actionId}» не скомпилировано (${issue})`);
+    }
+  }
+  const actions = projection.actions;
   const characterContext = {
     ...buildCharacterContext(
       ruleState,
@@ -199,7 +267,7 @@ export async function loadSheetCombatParticipant(input: {
     passives,
     grantedEffects: inventory.grantedEffects,
     masteryEffects: inventory.masteryEffects,
-    cards: [...input.cards.values()],
+    cards: [...cardsById.values()],
     ac: ruleState.armorClass,
   });
   return {

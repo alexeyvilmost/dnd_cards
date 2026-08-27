@@ -96,6 +96,7 @@ func main() {
 	openAIService := NewOpenAIService()
 	imageController := NewImageController(db, yandexStorage, openAIService)
 	contentImageController := NewContentImageController(db)
+	ttgBestiaryController := NewTTGBestiaryController()
 
 	// Инициализация сервисов и контроллеров
 	cardController := NewCardController(db)
@@ -148,6 +149,7 @@ func main() {
 		authRateLimit := NewFixedWindowRateLimiter(20, 10*time.Minute)
 		imageRateLimit := NewFixedWindowRateLimiter(3, 10*time.Minute)
 		uploadRateLimit := NewFixedWindowRateLimiter(20, time.Hour)
+		ttgBestiaryRateLimit := newTTGBestiaryRateLimiter()
 		// Глобальные справочники читаются публично, но любое изменение требует
 		// строгий JWT без public fallback и UUID из server-side admin allowlist.
 		contentAdminAuth := ContentAdminAuthMiddleware(authService)
@@ -167,6 +169,7 @@ func main() {
 		api.POST("/auth/register", authRateLimit.Handler(), authController.Register)
 		api.POST("/auth/login", authRateLimit.Handler(), authController.Login)
 		api.GET("/content-images/:entityType/:id", contentImageController.Get)
+		api.GET("/integrations/ttg/bestiary/:slug", ttgBestiaryRateLimit.Handler(), ttgBestiaryController.Get)
 
 		// Магазины (публичные ссылки на просмотр, создание за авторизацией)
 		api.GET("/shops/:slug", shopController.GetShop)

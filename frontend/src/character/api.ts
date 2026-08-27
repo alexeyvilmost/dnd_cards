@@ -1,4 +1,5 @@
 import { ApiRequestError, apiClient } from '../api/client';
+import { cached } from '../api/apiCache';
 import type { EngineEvent } from '../mvp/contracts';
 import type { ForgeCharacter, SaveForgeCharacterRequest } from './types';
 
@@ -132,10 +133,14 @@ function createClientEventId(): string {
 // API новой системы персонажей (characters_v3). Весь surface защищён строгой
 // JWT-аутентификацией; 403 означает отсутствие ownership/write-доступа.
 export const charactersV3Api = {
-  list: (): Promise<ForgeCharacter[]> => characterV3Request('list', async () => {
-    const { data } = await apiClient.get<ForgeCharacter[]>('/api/characters-v3');
-    return data ?? [];
-  }),
+  list: (): Promise<ForgeCharacter[]> => cached(
+    '/api/characters-v3',
+    0,
+    () => characterV3Request('list', async () => {
+      const { data } = await apiClient.get<ForgeCharacter[]>('/api/characters-v3');
+      return data ?? [];
+    }),
+  ),
   get: (id: string): Promise<ForgeCharacter> => characterV3Request('get', async () => {
     const { data } = await apiClient.get<ForgeCharacter>(`/api/characters-v3/${id}`);
     return data;

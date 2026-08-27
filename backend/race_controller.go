@@ -57,13 +57,28 @@ func (rc *RaceController) GetRaces(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения видов"})
 		return
 	}
+	legacyImageIDs := map[uuid.UUID]bool{}
+	if light {
+		ids := make([]uuid.UUID, 0, len(races))
+		for _, race := range races {
+			if !contentImageSourceUsable(race.ImageCloudinaryURL) {
+				ids = append(ids, race.ID)
+			}
+		}
+		var imageErr error
+		legacyImageIDs, imageErr = listLegacyImageIDs(rc.db, "races", ids)
+		if imageErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения видов"})
+			return
+		}
+	}
 
 	responses := make([]RaceResponse, 0)
 	for _, r := range races {
 		response := r.ToRaceResponse()
 		if light {
 			response.DetailedDescription = nil
-			response.ImageURL = listImageURL("races", r.ID, r.ImageCloudinaryURL)
+			response.ImageURL = listImageURL("races", r.ID, r.ImageCloudinaryURL, legacyImageIDs[r.ID])
 		}
 		responses = append(responses, response)
 	}

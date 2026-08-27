@@ -138,6 +138,7 @@ export function buildTargetFromCharacter(c: ForgeCharacter): TargetContext {
     spellcastingAbility: rs.spellcasting?.ability,
   } : undefined;
   return {
+    id: c.id,
     ac: armorClass,
     checkMods: rs?.skillBonuses,          // для состязаний (Толчок/Подножка): навыки цели
     characterContext,

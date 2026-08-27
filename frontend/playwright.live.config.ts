@@ -6,6 +6,7 @@ if (process.env.LIVE_BROWSER_CANARY !== '1') {
 }
 
 const frontendURL = requiredLiveCanaryOrigin('LIVE_BROWSER_BASE_URL', 'frontend');
+const ciBrowser = process.env.CI ? { channel: 'chrome' as const } : {};
 
 export default defineConfig({
   testDir: './e2e-live',
@@ -32,6 +33,6 @@ export default defineConfig({
   },
   projects: [{
     name: 'live-desktop-chromium',
-    use: { ...devices['Desktop Chrome'] },
+    use: { ...devices['Desktop Chrome'], ...ciBrowser },
   }],
 });

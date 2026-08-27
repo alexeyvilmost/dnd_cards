@@ -14,7 +14,7 @@ import type {
   SpellGrantAccess,
   SpellcastingAccessState,
 } from './spellcastingAccess';
-import type { ResourceRestRecovery } from './legacy/engineAdapter';
+import type { ResourceRestRecovery, RuntimeState } from './legacy/engineAdapter';
 import type { WorldObjectKind, WorldObjectSize, WorldObjectState } from './worldObjects';
 import type { ActorRuleTraits } from './actorTraits';
 import { attackSequenceInvariantHolds } from './attackSequence';
@@ -111,6 +111,70 @@ function uniqueStringArray(value: unknown, path: string): string[] {
   const strings = value.map((item, index) => nonBlankString(item, `${path}[${index}]`));
   if (new Set(strings).size !== strings.length) throw new Error(`${path} must contain unique IDs`);
   return [...strings].sort((left, right) => left.localeCompare(right));
+}
+
+function validatePendingRuntimeSnapshot(value: unknown, path: string): RuntimeState {
+  const runtime = record(value, path);
+  const hp = record(runtime.hp, `${path}.hp`);
+  const current = nonNegativeInteger(hp.current, `${path}.hp.current`);
+  const max = nonNegativeInteger(hp.max, `${path}.hp.max`);
+  nonNegativeInteger(hp.temp, `${path}.hp.temp`);
+  if (current > max) throw new Error(`${path}.hp.current cannot exceed max`);
+
+  const numericMap = (raw: unknown, label: string): Record<string, number> => {
+    const values = record(raw, label);
+    return Object.fromEntries(Object.entries(values).map(([key, entry]) => [
+      nonBlankString(key, `${label} key`),
+      nonNegativeInteger(entry, `${label}.${key}`),
+    ]));
+  };
+  numericMap(runtime.resources, `${path}.resources`);
+  numericMap(runtime.maxResources, `${path}.maxResources`);
+  const equipment = record(runtime.equipment, `${path}.equipment`);
+  for (const [slot, cardId] of Object.entries(equipment)) {
+    nonBlankString(slot, `${path}.equipment key`);
+    if (cardId !== null) nonBlankString(cardId, `${path}.equipment.${slot}`);
+  }
+  if (!Array.isArray(runtime.inventory)
+    || runtime.inventory.some((raw, index) => {
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return true;
+      const entry = raw as JsonRecord;
+      try {
+        nonBlankString(entry.cardId, `${path}.inventory[${index}].cardId`);
+        positiveInteger(entry.qty, `${path}.inventory[${index}].qty`);
+        if (entry.containerId !== undefined) {
+          nonBlankString(entry.containerId, `${path}.inventory[${index}].containerId`);
+        }
+        return false;
+      } catch {
+        return true;
+      }
+    })) {
+    throw new Error(`${path}.inventory is invalid`);
+  }
+  if (!Array.isArray(runtime.activeEffects)
+    || runtime.activeEffects.some((effect) => !effect || typeof effect !== 'object' || Array.isArray(effect))) {
+    throw new Error(`${path}.activeEffects must contain objects`);
+  }
+  if (runtime.firedThisTurn !== undefined) {
+    uniqueStringArray(runtime.firedThisTurn, `${path}.firedThisTurn`);
+  }
+  if (runtime.firedThisRest !== undefined) {
+    uniqueStringArray(runtime.firedThisRest, `${path}.firedThisRest`);
+  }
+  if (runtime.deathSaves !== undefined) record(runtime.deathSaves, `${path}.deathSaves`);
+  return runtime as unknown as RuntimeState;
+}
+
+function hpAfterExactDamage(hp: RuntimeState['hp'], amount: number): RuntimeState['hp'] {
+  let remaining = amount;
+  const absorbed = Math.min(hp.temp, remaining);
+  remaining -= absorbed;
+  return {
+    current: Math.max(0, hp.current - remaining),
+    max: hp.max,
+    temp: hp.temp - absorbed,
+  };
 }
 
 function optionalResource(value: unknown, path: string): string | undefined {
@@ -1365,6 +1429,109 @@ export function migrateWorldState(value: unknown): WorldState {
         if (!source || !card || card.type !== 'weapon' || source.runtime.equipment[slot] !== card.id) {
           throw new Error('world.pendingResolution weapon must match the source equipped Card');
         }
+      }
+    }
+    if (pending?.type === 'damage_reaction') {
+      const sourceActorId = nonBlankString(
+        pending.sourceActorId,
+        'world.pendingResolution.sourceActorId',
+      );
+      const targetActorId = nonBlankString(
+        pending.targetActorId,
+        'world.pendingResolution.targetActorId',
+      );
+      const actionId = nonBlankString(
+        pending.actionId,
+        'world.pendingResolution.actionId',
+      );
+      if (!actors[sourceActorId] || !actors[targetActorId] || sourceActorId === targetActorId) {
+        throw new Error('world.pendingResolution damage continuation actors are invalid');
+      }
+      const action = record(pending.action, 'world.pendingResolution.action');
+      if (action.id !== actionId) {
+        throw new Error('world.pendingResolution action must match its exact damage continuation');
+      }
+      if (!Array.isArray(pending.damage) || pending.damage.length === 0
+        || pending.damage.some((packet) => {
+          if (!packet || typeof packet !== 'object' || Array.isArray(packet)) return true;
+          const value = packet as JsonRecord;
+          return !Number.isInteger(value.amount) || Number(value.amount) <= 0
+            || typeof value.damageType !== 'string' || !value.damageType.trim();
+        })) {
+        throw new Error('world.pendingResolution damage must contain positive exact packets');
+      }
+      const request = record(pending.request, 'world.pendingResolution.request');
+      const trigger = record(request.trigger, 'world.pendingResolution.request.trigger');
+      const packets = pending.damage as JsonRecord[];
+      const amount = packets.reduce((sum, packet) => (
+        sum + Number(packet.amount)
+      ), 0);
+      const damageTypes = [...new Set(packets.map((packet) => String(packet.damageType)))]
+        .sort((left, right) => left.localeCompare(right));
+      const triggerDamageTypes = uniqueStringArray(
+        trigger.damageTypes,
+        'world.pendingResolution.request.trigger.damageTypes',
+      );
+      if (request.type !== 'reaction' || request.actorId !== targetActorId
+        || trigger.type !== 'damage_taken'
+        || trigger.sourceActorId !== sourceActorId
+        || trigger.actionId !== actionId
+        || trigger.amount !== amount
+        || JSON.stringify(triggerDamageTypes) !== JSON.stringify(damageTypes)) {
+        throw new Error('world.pendingResolution damage reaction request is inconsistent');
+      }
+      if (!Array.isArray(request.options) || request.options.length === 0) {
+        throw new Error('world.pendingResolution damage reaction must retain offered options');
+      }
+      const optionIds = request.options.map((rawOption, index) => {
+        const option = record(rawOption, `world.pendingResolution.request.options[${index}]`);
+        nonBlankString(option.label, `world.pendingResolution.request.options[${index}].label`);
+        return nonBlankString(option.actionId, `world.pendingResolution.request.options[${index}].actionId`);
+      });
+      if (new Set(optionIds).size !== optionIds.length) {
+        throw new Error('world.pendingResolution damage reaction options must be unique');
+      }
+      const targetBefore = validatePendingRuntimeSnapshot(
+        pending.targetRuntimeBeforeDamage,
+        'world.pendingResolution.targetRuntimeBeforeDamage',
+      );
+      validatePendingRuntimeSnapshot(
+        pending.sourceRuntimeAfter,
+        'world.pendingResolution.sourceRuntimeAfter',
+      );
+      const targetAfter = validatePendingRuntimeSnapshot(
+        pending.targetRuntimeAfter,
+        'world.pendingResolution.targetRuntimeAfter',
+      );
+      const expectedHp = hpAfterExactDamage(targetBefore.hp, amount);
+      if (targetAfter.hp.current !== expectedHp.current
+        || targetAfter.hp.max !== expectedHp.max
+        || targetAfter.hp.temp !== expectedHp.temp) {
+        throw new Error('world.pendingResolution target HP must match its exact held damage');
+      }
+      if (!Array.isArray(pending.preDamageTargetEvents)
+        || !Array.isArray(pending.attackEvents)
+        || !Array.isArray(pending.retaliationEvents)
+        || !Array.isArray(pending.followUps)) {
+        throw new Error('world.pendingResolution damage continuation arrays are invalid');
+      }
+      uniqueStringArray(
+        pending.retaliationSourceEntityIds,
+        'world.pendingResolution.retaliationSourceEntityIds',
+      );
+      uniqueStringArray(pending.obligationIds, 'world.pendingResolution.obligationIds');
+      const eventDamage = (pending.attackEvents as JsonRecord[]).flatMap((rawEvent) => (
+        rawEvent && typeof rawEvent === 'object' && !Array.isArray(rawEvent)
+          && rawEvent.type === 'damage' && Number(rawEvent.amount) > 0
+          ? [{ amount: Math.floor(Number(rawEvent.amount)), damageType: rawEvent.damageType }]
+          : []
+      ));
+      const exactDamage = packets.map((packet) => ({
+        amount: Number(packet.amount),
+        damageType: packet.damageType,
+      }));
+      if (JSON.stringify(eventDamage) !== JSON.stringify(exactDamage)) {
+        throw new Error('world.pendingResolution damage packets must match held engine events');
       }
     }
     for (const [attackActionId, attackAction] of Object.entries(attackActions)) {

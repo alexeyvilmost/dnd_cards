@@ -497,34 +497,34 @@ test('reviewed preimage fixture is schema-validated, hash-pinned and patch-close
   const fixture = readReviewedPreimageFixture();
   assert.equal(
     REVIEWED_PREIMAGE_FIXTURE_SHA256,
-    'sha256:0a8b311b87fc5aba0b811c67e073e35edc4c696ced600aa59b167bece10ea542',
+    'sha256:ac2fa254a8bc8170d881a3f073e1fd77228e42b59a415b7a989e022ba80ca1b9',
   );
   assert.equal(fixture.fixtureId, 'dnd5e-2024.micro-mvp-l1.reviewed-source-preimage.v1');
   assert.equal(fixture.patch.canonicalHash, sha256Canonical(reviewedPatch()));
   assert.deepEqual(fixture.selection.counts, {
-    effects: 47,
+    effects: 49,
     actions: 9,
     spells: 26,
     races: 2,
     classes: 7,
     cards: 28,
   });
-  assert.equal(fixture.selection.total, 119);
+  assert.equal(fixture.selection.total, 121);
 });
 
 test('plan covers the complete reviewed migration and stores full API preimages', () => {
   const patch = sourceSnapshotPatch();
   const operations = buildMigrationOperations(reviewedPreimageCatalogs(), patch);
-  assert.equal(patch.mechanicsPatches.effects.length, 34);
+  assert.equal(patch.mechanicsPatches.effects.length, 36);
   assert.equal(patch.mechanicsPatches.actions.length, 9);
   assert.equal(patch.mechanicsPatches.spells.length, 26);
-  assert.equal(operations.length, 109);
+  assert.equal(operations.length, 111);
   assert.deepEqual(
     Object.fromEntries(['cards', 'effects', 'actions', 'spells', 'races', 'classes'].map((collection) => [
       collection,
       operations.filter((operation) => operation.collection === collection).length,
     ])),
-    { cards: 12, effects: 52, actions: 10, spells: 26, races: 2, classes: 7 },
+    { cards: 12, effects: 54, actions: 10, spells: 26, races: 2, classes: 7 },
   );
 
   for (const operation of operations) {

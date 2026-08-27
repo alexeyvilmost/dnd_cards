@@ -378,6 +378,39 @@ ssh -i $SshKey $Server "readlink -f /opt/bagofholding/current"
 /opt/bagofholding/releases/<SHA>
 ```
 
+### 6. Пройти production UX spine до закрытия релиза
+
+Health-check подтверждает доступность контейнеров, но не пользовательский путь.
+Из `frontend` запустить однопользовательский canary с canary-учётной записью из
+секретного хранилища (не записывать пароль в репозиторий или shell history):
+
+```powershell
+$env:LIVE_BROWSER_CANARY = '1'
+$env:LIVE_BROWSER_BASE_URL = 'https://bagofholding.ru'
+$env:LIVE_BROWSER_API_URL = 'https://bagofholding.ru'
+$env:EXPECTED_DEPLOYED_COMMIT = $Sha
+$env:LIVE_BROWSER_USER_A = '<canary-user-from-secret-store>'
+$env:LIVE_BROWSER_PASSWORD_A = '<canary-password-from-secret-store>'
+
+Push-Location frontend
+npm run test:browser:live:typecheck
+npm run test:browser:live:nightly
+Pop-Location
+Remove-Item Env:LIVE_BROWSER_PASSWORD_A
+```
+
+Проверка создаёт и удаляет только своих временных персонажей. Она проходит три
+независимых пути: lineage + дальнобойная атака + реакция, martial + заклинание и
+полный заклинатель + world-domain spell. Каждый путь начинается с реальных
+контролов Кузни и проверяет наблюдаемый результат механики, а не только наличие
+кнопки. Красный canary означает незавершённый релиз и требует исправления либо
+отката; зелёные `/health` и `build-info.json` не могут его заменить. Тот же
+набор запускает `live-browser-spine` в GitHub Actions ночью и вручную с input
+`expected_deployed_commit`. Push в `main` также запускает этот job автоматически:
+после офлайн-гейта он до 45 минут ждёт появления exact SHA в production, а затем
+выполняет те же три пути. Поэтому невыкаченный SHA и выкаченный, но сломанный UX
+оба оставляют release job красным.
+
 После успешной проверки временный локальный каталог можно удалить:
 
 ```powershell

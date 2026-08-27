@@ -112,6 +112,30 @@ function scimitar(): Action {
   } as Action;
 }
 
+function stoneEndurance(): RuleActionDefinition {
+  return {
+    id: 'd3000000-0000-4000-8000-000000000001',
+    name: 'Каменная стойкость',
+    kind: 'nonSpell',
+    sourceEntityIds: ['ACT-goliath-stone', 'RACE-0011-stone'],
+    targeting: {
+      minTargets: 0, maxTargets: 1, rangeFt: 0,
+      requiresLineOfSight: false, allowedRelations: ['self'],
+    },
+    mechanics: {
+      activation: {
+        mode: 'reaction',
+        trigger: { event: 'damage_taken', timing: 'before' },
+        cost: [{ resource: 'reaction', amount: 1 }, { resource: 'giant_legacy', amount: 1 }],
+      },
+      effects: [{
+        resolution: 'auto',
+        result: [{ kind: 'reduce_damage', amount: '1d12+con' }],
+      }],
+    },
+  };
+}
+
 function basicAction(cardNumber: string, name: string, mechanics: Record<string, unknown>): Action {
   return {
     id: cardNumber === 'action_basic_dash'
@@ -458,6 +482,72 @@ describe('solo combat engine vertical integration', () => {
     expect(activeId(state)).toBe(participant.character.id);
     expect(state.world.actors[monsterId].runtime.resources.action).toBe(0);
     expect(() => runMonsterTurn(state, () => 0.5)).not.toThrow();
+  });
+
+  it('persists and resolves Stone Endurance before a monster attack mutates player HP', async () => {
+    let participant = fighterSeed();
+    const stone = stoneEndurance();
+    const actor = participant.canonical.world.actors[participant.character.id];
+    actor.capabilities.actionIds.push(stone.id);
+    actor.runtime.resources.reaction = 1;
+    actor.runtime.maxResources.reaction = 1;
+    actor.runtime.resources.giant_legacy = 1;
+    actor.runtime.maxResources.giant_legacy = 1;
+    participant.character.resources = clone(actor.runtime.resources);
+    participant.character.max_resources = clone(actor.runtime.maxResources);
+    const actions = [...participant.canonical.actions, stone];
+    const byId = new Map(actions.map((action) => [action.id, action]));
+    participant = {
+      ...participant,
+      canonical: {
+        ...participant.canonical,
+        actions,
+        catalog: { getAction: (id) => byId.get(id), listActions: () => [...actions] },
+      },
+    };
+
+    let state = await createSoloCombatState({
+      character: participant.character, participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar(), dash()], effects: [], dashAction: dash(), rng: () => 0.5,
+    });
+    const monsterId = Object.values(state.world.actors).find((candidate) => candidate.kind === 'monster')!.id;
+    const hpBefore = state.world.actors[state.characterId].runtime.hp.current;
+    state = advanceTurn(state);
+    expect(activeId(state)).toBe(monsterId);
+
+    state = runMonsterTurn(state, () => 0.99);
+    expect(state.world.pendingResolution).toMatchObject({
+      type: 'damage_reaction',
+      request: {
+        actorId: state.characterId,
+        trigger: { type: 'damage_taken' },
+        options: [{ actionId: stone.id }],
+      },
+    });
+    expect(state.world.actors[state.characterId].runtime.hp.current).toBe(hpBefore);
+
+    const restored = readSoloCombatState(
+      writeSoloCombatState({}, state),
+      state.characterId,
+      state.runtimeRevision,
+    );
+    expect(restored?.world.pendingResolution).toEqual(state.world.pendingResolution);
+    state = resolvePlayerReaction(
+      restored!,
+      { kind: 'reaction', actionId: stone.id },
+      () => 0,
+    );
+
+    expect(state.world.pendingResolution).toBeNull();
+    expect(activeId(state)).toBe(state.characterId);
+    expect(state.world.actors[state.characterId].runtime.resources).toMatchObject({
+      // The reaction was paid inside the monster turn, then restored exactly
+      // once when resolving the interruption advanced to the player's turn.
+      reaction: 1,
+      giant_legacy: 0,
+    });
+    expect(state.world.actors[state.characterId].runtime.hp.current).toBeLessThan(hpBefore);
   });
 
   it('recovers a persisted monster turn whose interrupted action was already spent', async () => {

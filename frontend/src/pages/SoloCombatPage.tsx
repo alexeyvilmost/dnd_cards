@@ -4,7 +4,7 @@ import { ArrowLeft, RotateCcw, X } from 'lucide-react';
 import { actionsApi, effectsApi } from '../api/client';
 import { charactersV3Api } from '../character/api';
 import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
-import { runtimeInventoryPayload, writeRulesEngineRuntimeTurnState } from '../character/runtime';
+import { runtimeInventoryPayload } from '../character/runtime';
 import type { ForgeCharacter } from '../character/types';
 import CombatHotbar from '../components/CombatHotbar';
 import CombatActorInspector from '../components/CombatActorInspector';
@@ -25,7 +25,8 @@ import {
   resolveTriggeredCombatAction,
   selectedTargetsForAction,
 } from '../solo-combat/engine';
-import { readSoloCombatState, writeSoloCombatState } from '../solo-combat/persistence';
+import { readSoloCombatState } from '../solo-combat/persistence';
+import { writeDedicatedCombatTurnState } from '../solo-combat/turnState';
 import type { GridPosition, SoloCombatState } from '../solo-combat/types';
 import {
   collectSoloCombatActionChoices,
@@ -76,8 +77,11 @@ export default function SoloCombatPage() {
     setBusy(true);
     const actor = next.world.actors[id];
     const predicted = { ...next, runtimeRevision: next.runtimeRevision + 1 };
-    const baseTurnState = writeRulesEngineRuntimeTurnState(currentCharacter.turn_state, actor.runtime);
-    const turnState = writeSoloCombatState(baseTurnState, predicted);
+    const turnState = writeDedicatedCombatTurnState(
+      currentCharacter.turn_state,
+      actor.runtime,
+      predicted,
+    );
     try {
       const saved = await charactersV3Api.patchRuntime(id, {
         expected_runtime_revision: next.runtimeRevision,
@@ -217,14 +221,17 @@ export default function SoloCombatPage() {
     setBusy(true);
     try {
       const actor = state.world.actors[id];
-      const runtimeTurnState = writeRulesEngineRuntimeTurnState(currentCharacter.turn_state, actor.runtime);
       const saved = await charactersV3Api.patchRuntime(id, {
         expected_runtime_revision: state.runtimeRevision,
         current_hp: actor.runtime.hp.current,
         resources: actor.runtime.resources,
         max_resources: actor.runtime.maxResources,
         active_effects: actor.runtime.activeEffects,
-        turn_state: writeSoloCombatState(runtimeTurnState, null),
+        turn_state: writeDedicatedCombatTurnState(
+          currentCharacter.turn_state,
+          actor.runtime,
+          null,
+        ),
       });
       characterRef.current = saved;
       navigate(`/characters-v3/${id}`);
@@ -239,10 +246,17 @@ export default function SoloCombatPage() {
   const pendingTriggered = state.pendingTriggeredAction;
   const reactionOptions = pending?.request.type === 'reaction' && pending.request.actorId === state.characterId
     ? sheetReactionDecisionOptions(pending.request.options) : [];
-  const reactionTitle = pending?.request.type === 'reaction'
-    && pending.request.trigger.type === 'hit_by_attack'
-    ? 'По вам попали'
-    : 'Открыто окно реакции';
+  const reactionTitle = pending?.type === 'damage_reaction'
+    ? 'Вам нанесен урон'
+    : pending?.request.type === 'reaction'
+      && pending.request.trigger.type === 'hit_by_attack'
+      ? 'По вам попали'
+      : 'Открыто окно реакции';
+  const reactionDetails = pending?.type === 'damage_reaction'
+    ? `Получено урона: ${pending.damage.reduce((sum, packet) => sum + packet.amount, 0)}${pending.damage.length
+      ? ` · ${[...new Set(pending.damage.map((packet) => packet.damageType))].join(', ')}`
+      : ''}`
+    : null;
   return (
     <main className="solo-combat-page forge">
       <MonsterTurnController state={state} disabled={busy} onTransition={apply} onError={setError} />
@@ -280,7 +294,7 @@ export default function SoloCombatPage() {
       )}
       <CombatHotbar state={state} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || busy || Boolean(pending) || Boolean(pendingTriggered) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); apply(advanceTurn(state)); }} onSheet={() => setSheetOpen(true)} />
       {sheetOpen && <aside className="combat-sheet-drawer"><button type="button" className="combat-sheet-drawer__close" onClick={() => setSheetOpen(false)} aria-label="Закрыть"><X /></button><header><h2>{character.name}</h2><p>Уровень {character.level} · КЗ {state.world.actors[id!].ac} · скорость {character.speed} фт.</p></header><CombatCharacterSidebar character={character} state={state} /><Link className="combat-sheet-drawer__full" target="_blank" to={`/characters-v3/${id}`}>Открыть полный лист ↗</Link></aside>}
-      {reactionOptions.length > 0 && <div className="combat-reaction-backdrop"><section><p>РЕАКЦИЯ</p><h2>{reactionTitle}</h2><div>{reactionOptions.map((option) => <button type="button" key={option.id} disabled={busy} onClick={() => apply(resolvePlayerReaction(state, option.response))}>{option.label}</button>)}<button type="button" onClick={() => apply(resolvePlayerReaction(state, { kind: 'reaction', actionId: null }))}>Пропустить</button></div></section></div>}
+      {reactionOptions.length > 0 && <div className="combat-reaction-backdrop"><section><p>РЕАКЦИЯ</p><h2>{reactionTitle}</h2>{reactionDetails && <p>{reactionDetails}</p>}<div>{reactionOptions.map((option) => <button type="button" key={option.id} disabled={busy} onClick={() => apply(resolvePlayerReaction(state, option.response))}>{option.label}</button>)}<button type="button" onClick={() => apply(resolvePlayerReaction(state, { kind: 'reaction', actionId: null }))}>Пропустить</button></div></section></div>}
       {pendingTriggered && <div className="combat-reaction-backdrop"><section><p>ПОПАДАНИЕ</p><h2>Применить дополнительную способность?</h2><div>{pendingTriggered.optionActionIds.map((actionId) => {
         const option = state.catalogActions.find((action) => action.id === actionId);
         return option ? <button type="button" key={actionId} disabled={busy} onClick={() => apply(resolveTriggeredCombatAction(state, actionId))}>{option.name}</button> : null;

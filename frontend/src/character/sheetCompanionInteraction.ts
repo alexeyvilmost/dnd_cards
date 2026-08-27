@@ -1,4 +1,3 @@
-import type { EngineEvent } from '../mvp/contracts';
 import { canonicalStringify } from '../rules-core/determinism';
 import type {
   FamiliarObservableFacts,
@@ -10,11 +9,9 @@ import type {
 } from '../rules-core/domain';
 import { migrateWorldState } from '../rules-core/worldMigration';
 import type {
-  CharacterRuntimeCommandEvent,
   CharacterRuntimeCommandRequest,
   CharacterRuntimeCommandResponse,
 } from './api';
-import { runtimeInventoryPayload, writeRulesEngineRuntimeTurnState } from './runtime';
 import { mergeSheetCombatParticipantWorlds } from './sheetCombatSession';
 import {
   buildFamiliarTouchSpellCommand,
@@ -22,10 +19,9 @@ import {
   SheetCompanionActionError,
 } from './sheetCompanionActions';
 import {
-  projectSheetCanonicalPersistence,
-  writeSheetCanonicalWorld,
   type SheetCanonicalRuntime,
 } from './sheetCanonicalWorld';
+import { prepareSheetAtomicWorldCommit } from './sheetAtomicWorldCommit';
 import type { ForgeCharacter } from './types';
 import { acceptedRuntimeCommandReceipt } from './sheetRuntimeCommand';
 
@@ -315,61 +311,6 @@ export function projectSheetCompanionParticipantWorld(input: {
   return migrateWorldState(world);
 }
 
-function commandEvents(
-  events: ReturnType<typeof executeSheetCompanionCommand>['events'],
-  participantIds: ReadonlySet<string>,
-): CharacterRuntimeCommandEvent[] {
-  const result: CharacterRuntimeCommandEvent[] = [];
-  for (const event of events) {
-    if (event.payload.type !== 'EngineEventRecorded') continue;
-    const recipients = new Set([event.payload.actorId, ...event.payload.targetIds]);
-    for (const characterId of [...recipients].sort()) {
-      if (!participantIds.has(characterId)) continue;
-      const payload = clone(event.payload.event) as EngineEvent;
-      result.push({ character_id: characterId, type: payload.type, payload });
-    }
-  }
-  return result;
-}
-
-function participantPatch(
-  participant: SheetCompanionParticipant,
-  world: WorldState,
-) {
-  const { character, canonical } = participant;
-  const actor = world.actors[character.id];
-  if (!actor) {
-    throw new SheetCompanionActionError(`Companion world misses participant ${character.id}`);
-  }
-  const projection = projectSheetCanonicalPersistence({
-    runtime: actor.runtime,
-    currency: character.currency,
-    resourceBindings: canonical.resourceBindings,
-  });
-  const turnState = writeSheetCanonicalWorld(
-    writeRulesEngineRuntimeTurnState(character.turn_state, projection.runtime),
-    character.id,
-    world,
-    canonical.resourceBindings,
-  );
-  const inventoryItems = runtimeInventoryPayload(projection.runtime);
-  const inventoryChanged = canonicalStringify(inventoryItems)
-    !== canonicalStringify(character.inventory_items ?? []);
-  return {
-    character_id: character.id,
-    expected_runtime_revision: runtimeRevision(character),
-    patch: {
-      current_hp: projection.runtime.hp.current,
-      ...(inventoryChanged ? { inventory_items: inventoryItems } : {}),
-      resources: clone(projection.runtime.resources),
-      max_resources: clone(projection.runtime.maxResources),
-      active_effects: clone(projection.runtime.activeEffects),
-      turn_state: turnState,
-      ...(projection.currency ? { currency: projection.currency } : {}),
-    },
-  };
-}
-
 /**
  * Prepare a fully-resolved one-sheet companion/Pact transition for the same
  * atomic CAS and idempotency transport used by multi-sheet combat. Rules-core
@@ -408,21 +349,11 @@ export function prepareSheetCompanionCommand(input: {
     throw new SheetCompanionActionError(SHEET_COMPANION_CONTINUATION_REASON);
   }
   const world = migrateWorldState(clone(executed.world));
-  const request: CharacterRuntimeCommandRequest = {
-    command_id: input.command.commandId,
-    ruleset_ref: {
-      system_id: world.ruleset.systemId,
-      release_id: world.ruleset.releaseId,
-      content_hash: world.ruleset.contentHash,
-      errata_version: world.ruleset.errataVersion,
-    },
-    participants: [participantPatch(input.participant, world)],
-    events: commandEvents(executed.events, new Set([character.id])),
-  };
-  return {
-    request,
-    worldsByCharacterId: { [character.id]: world },
-  };
+  return prepareSheetAtomicWorldCommit({
+    commandId: input.command.commandId,
+    participants: [{ ...input.participant, world }],
+    events: executed.events,
+  });
 }
 
 /**
@@ -500,23 +431,14 @@ export function prepareSheetFamiliarTouchInteraction(input: {
       commandId: input.commandId,
     }),
   ]));
-  const request: CharacterRuntimeCommandRequest = {
-    command_id: input.commandId,
-    ruleset_ref: {
-      system_id: merged.ruleset.systemId,
-      release_id: merged.ruleset.releaseId,
-      content_hash: merged.ruleset.contentHash,
-      errata_version: merged.ruleset.errataVersion,
-    },
-    participants: participants
-      .map((participant) => participantPatch(
-        participant,
-        worldsByCharacterId[participant.character.id],
-      ))
-      .sort((left, right) => left.character_id.localeCompare(right.character_id)),
-    events: commandEvents(executed.events, new Set(participants.map(({ character }) => character.id))),
-  };
-  return { request, worldsByCharacterId };
+  return prepareSheetAtomicWorldCommit({
+    commandId: input.commandId,
+    participants: participants.map((participant) => ({
+      ...participant,
+      world: worldsByCharacterId[participant.character.id],
+    })),
+    events: executed.events,
+  });
 }
 
 /** Receipt proof only. A replay caller must refetch current participants before updating UI. */

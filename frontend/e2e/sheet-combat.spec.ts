@@ -407,8 +407,11 @@ async function openPendingSpell(
   await cast.getByRole('button', { name: 'Применить', exact: true }).click();
   await declareTarget(page, 'Target', options.darts);
   if (options.loseResponse) {
-    const retry = page.getByTestId('sheet-combat-retry').first();
+    const retry = page.getByTestId('sheet-atomic-retry').first();
     await expect(retry).toBeVisible();
+    await expect(retry.getByRole('heading', {
+      name: 'Ответ атомарной боевой команды не подтверждён',
+    })).toBeVisible();
     await retry.getByRole('button', { name: 'Безопасно повторить' }).click();
   }
   await expect.poll(() => Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(1);
@@ -640,10 +643,11 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
     await expect(dialog).toContainText(`до ${longFt} фт.`);
     await declareTarget(page, 'Target');
 
-    const retry = page.getByTestId('sheet-combat-retry').first();
+    const retry = page.getByTestId('sheet-atomic-retry').first();
     await expect(retry).toBeVisible();
-    await expect(page.getByText('Действие не подтверждено сервером', { exact: true }))
-      .toBeVisible();
+    await expect(retry.getByRole('heading', {
+      name: 'Ответ атомарной боевой команды не подтверждён',
+    })).toBeVisible();
     const committedRequest = api.runtimeCommandRequests[0];
     await retry.getByRole('button', { name: 'Безопасно повторить' }).click();
     await expect.poll(() => Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(1);

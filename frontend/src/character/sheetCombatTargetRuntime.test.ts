@@ -1,9 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { RuntimeState } from '../mvp/contracts';
 import type { Action, Card, PassiveEffect } from '../types';
 import type { Monster } from '../monsters/types';
 import type { AssembledCharacter } from './assemble';
-import { collectSheetCombatActionInventory } from './sheetCombatTargetRuntime';
+import {
+  collectSheetCombatActionInventory,
+  hydrateSheetCombatCards,
+} from './sheetCombatTargetRuntime';
 import { projectRunnableSheetCanonicalActions } from './sheetCanonicalActionProjection';
 import { buildSheetCanonicalRuntime } from './sheetCanonicalWorld';
 import { createSoloCombatState, executeCombatAction } from '../solo-combat/engine';
@@ -14,6 +17,51 @@ const active = (cost = 'action', result: Record<string, unknown>[] = [{ kind: 'n
 });
 
 describe('sheet -> combat action inventory adapter', () => {
+  it('hydrates every carried list row through the detail endpoint before combat', async () => {
+    const shallow = {
+      id: 'item:carried', name: 'Carried', card_number: 'ITEM-carried', type: 'item',
+    } as unknown as Card;
+    const detail = {
+      ...shallow,
+      mechanics: active('bonus_action'),
+      description: 'rules-ready',
+    } as Card;
+    const loadCard = vi.fn(async (id: string) => {
+      expect(id).toBe(shallow.id);
+      return detail;
+    });
+
+    const cards = await hydrateSheetCombatCards({
+      character: {
+        name: 'Hydrated hero',
+        equipment: { main_hand: shallow.id },
+        inventory_items: [{ card_id: shallow.id, qty: 1 }],
+      },
+      cards: new Map([[shallow.id, shallow]]),
+      loadCard,
+    });
+
+    expect(loadCard).toHaveBeenCalledTimes(1);
+    expect(cards.get(shallow.id)).toBe(detail);
+    expect(cards.get(shallow.id)?.mechanics).toEqual(detail.mechanics);
+  });
+
+  it('fails combat initialization explicitly when an equipped weapon detail has no profile', async () => {
+    const weapon = {
+      id: 'item:broken-weapon', name: 'Broken weapon', card_number: 'ITEM-broken',
+      type: 'weapon', mechanics: {},
+    } as unknown as Card;
+    await expect(hydrateSheetCombatCards({
+      character: {
+        name: 'Fail-closed hero',
+        equipment: { main_hand: weapon.id },
+        inventory_items: [{ card_id: weapon.id, qty: 1 }],
+      },
+      cards: new Map([[weapon.id, weapon]]),
+      loadCard: async () => weapon,
+    })).rejects.toThrow(/weapon_profile is required/);
+  });
+
   it('fails combat inventory construction when an owned mastery catalog cannot load', async () => {
     await expect(collectSheetCombatActionInventory({
       assembled: { effects: [] } as unknown as AssembledCharacter,

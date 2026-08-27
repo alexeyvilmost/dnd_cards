@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"mime"
 	"net/http"
 	"strings"
 
@@ -40,9 +41,38 @@ type contentImageRow struct {
 	ImageCloudinaryURL string `gorm:"column:image_cloudinary_url"`
 }
 
+var contentImageRasterTypes = map[string]struct{}{
+	"image/avif": {},
+	"image/gif":  {},
+	"image/jpeg": {},
+	"image/png":  {},
+	"image/webp": {},
+}
+
 func contentImageETag(source string) string {
 	digest := sha256.Sum256([]byte(source))
 	return `"` + hex.EncodeToString(digest[:]) + `"`
+}
+
+func storedContentImageSource(row contentImageRow) string {
+	if source := strings.TrimSpace(row.ImageCloudinaryURL); source != "" {
+		if contentImageSourceUsable(source) {
+			return source
+		}
+	}
+	return strings.TrimSpace(row.ImageURL)
+}
+
+func contentImageSourceUsable(source string) bool {
+	source = strings.TrimSpace(source)
+	if source == "" {
+		return false
+	}
+	if contentImageRedirectSource(source) {
+		return true
+	}
+	_, _, ok := decodeContentImageDataURI(source)
+	return ok
 }
 
 func decodeContentImageDataURI(source string) (contentType string, body []byte, ok bool) {
@@ -53,15 +83,25 @@ func decodeContentImageDataURI(source string) (contentType string, body []byte, 
 	if !found || !strings.HasSuffix(header, ";base64") {
 		return "", nil, false
 	}
-	contentType = strings.TrimSuffix(header, ";base64")
-	if !strings.HasPrefix(contentType, "image/") {
+	declaredType := strings.TrimSuffix(header, ";base64")
+	contentType, _, err := mime.ParseMediaType(declaredType)
+	if _, allowed := contentImageRasterTypes[contentType]; err != nil || !allowed {
 		return "", nil, false
 	}
-	body, err := base64.StdEncoding.DecodeString(payload)
+	body, err = base64.StdEncoding.Strict().DecodeString(payload)
 	if err != nil || len(body) == 0 {
 		return "", nil, false
 	}
 	return contentType, body, true
+}
+
+func contentImageRedirectSource(source string) bool {
+	if strings.HasPrefix(source, "https://") {
+		return true
+	}
+	return strings.HasPrefix(source, "/") &&
+		!strings.HasPrefix(source, "//") &&
+		!strings.Contains(source, `\`)
 }
 
 func (cc *ContentImageController) Get(c *gin.Context) {
@@ -90,17 +130,14 @@ func (cc *ContentImageController) Get(c *gin.Context) {
 		return
 	}
 
-	source := row.ImageCloudinaryURL
-	if source == "" {
-		source = row.ImageURL
-	}
+	source := storedContentImageSource(row)
 	if source == "" {
 		c.Status(http.StatusNotFound)
 		return
 	}
 
 	c.Header("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800")
-	if strings.HasPrefix(source, "https://") || strings.HasPrefix(source, "http://") || strings.HasPrefix(source, "/") {
+	if contentImageRedirectSource(source) {
 		c.Redirect(http.StatusFound, source)
 		return
 	}

@@ -57,13 +57,28 @@ func (fc *FeatController) GetFeats(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения черт"})
 		return
 	}
+	legacyImageIDs := map[uuid.UUID]bool{}
+	if light {
+		ids := make([]uuid.UUID, 0, len(feats))
+		for _, feat := range feats {
+			if !contentImageSourceUsable(feat.ImageCloudinaryURL) {
+				ids = append(ids, feat.ID)
+			}
+		}
+		var imageErr error
+		legacyImageIDs, imageErr = listLegacyImageIDs(fc.db, "feats", ids)
+		if imageErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения черт"})
+			return
+		}
+	}
 
 	responses := make([]FeatResponse, 0, len(feats))
 	for _, f := range feats {
 		r := f.ToFeatResponse()
 		if light {
 			r.DetailedDescription = nil
-			r.ImageURL = listImageURL("feats", f.ID, f.ImageCloudinaryURL)
+			r.ImageURL = listImageURL("feats", f.ID, f.ImageCloudinaryURL, legacyImageIDs[f.ID])
 		}
 		responses = append(responses, r)
 	}
@@ -274,13 +289,28 @@ func (bc *BackgroundController) GetBackgrounds(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения предысторий"})
 		return
 	}
+	legacyImageIDs := map[uuid.UUID]bool{}
+	if light {
+		ids := make([]uuid.UUID, 0, len(backgrounds))
+		for _, background := range backgrounds {
+			if !contentImageSourceUsable(background.ImageCloudinaryURL) {
+				ids = append(ids, background.ID)
+			}
+		}
+		var imageErr error
+		legacyImageIDs, imageErr = listLegacyImageIDs(bc.db, "backgrounds", ids)
+		if imageErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения предысторий"})
+			return
+		}
+	}
 
 	responses := make([]BackgroundResponse, 0, len(backgrounds))
 	for _, b := range backgrounds {
 		r := b.ToBackgroundResponse()
 		if light {
 			r.DetailedDescription = nil
-			r.ImageURL = listImageURL("backgrounds", b.ID, b.ImageCloudinaryURL)
+			r.ImageURL = listImageURL("backgrounds", b.ID, b.ImageCloudinaryURL, legacyImageIDs[b.ID])
 		}
 		responses = append(responses, r)
 	}

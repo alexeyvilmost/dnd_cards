@@ -28,7 +28,8 @@ import SheetHpDialog from '../components/SheetHpDialog';
 import SheetRestButtons from '../components/SheetRestButtons';
 import EffectiveSenseValue from '../components/EffectiveSenseValue';
 import type { EncounterApply } from '../battle/encountersApi';
-import { charactersV3Api } from '../character/api';
+import { charactersV3Api, type CharacterEventRow } from '../character/api';
+import type { SheetAtomicRetryEnvelope } from '../character/sheetAtomicRetry';
 import CharacterSheetFirstColumn, { CHARACTER_SENSE_LABELS } from '../components/CharacterSheetFirstColumn';
 import './CharacterSheetV2.css';
 
@@ -74,6 +75,9 @@ interface Props {
   inPlayChoices: PendingChoice[];
   onUpdated: (c: ForgeCharacter) => void;
   onEvents: (events: EngineEvent[]) => void;
+  onPersistedEvents: (rows: CharacterEventRow[]) => void;
+  pendingAtomicRetry: SheetAtomicRetryEnvelope | null;
+  onPendingAtomicRetryChange: (retry: SheetAtomicRetryEnvelope | null) => void;
   readOnly: boolean;
   encounterApply?: EncounterApply;
   combatActive?: boolean;
@@ -84,7 +88,8 @@ interface Props {
 const CharacterSheetV2 = ({
   character, assembled, ruleState, effectiveSenses, draft, sheetCtx, runtimeState, passives, equipCards,
   acBreakdown, maxHpBreakdown, initBreakdown, speedBreakdown,
-  lineageName, inPlayChoices, onUpdated, onEvents, readOnly, encounterApply,
+  lineageName, inPlayChoices, onUpdated, onEvents, onPersistedEvents,
+  pendingAtomicRetry, onPendingAtomicRetryChange, readOnly, encounterApply,
   combatActive, onRollInitiative, rollingInitiative,
 }: Props) => {
   const [hpOpen, setHpOpen] = useState(false);
@@ -335,6 +340,9 @@ const CharacterSheetV2 = ({
               maxHp={maxHP}
               onUpdated={onUpdated}
               onEvents={onEvents}
+              onPersistedEvents={onPersistedEvents}
+              pendingAtomicRetry={pendingAtomicRetry}
+              onPendingAtomicRetryChange={onPendingAtomicRetryChange}
               embedded
               targetAc={targetAc}
               onTargetAcChange={setTargetAc}
@@ -365,6 +373,10 @@ const CharacterSheetV2 = ({
                 equipCards={equipCards}
                 onUpdated={onUpdated}
                 onEvents={onEvents}
+                onPersistedEvents={onPersistedEvents}
+                pendingAtomicRetry={pendingAtomicRetry}
+                onPendingAtomicRetryChange={onPendingAtomicRetryChange}
+                showAtomicRetryControl={false}
                 embedded
                 spellsOnly
                 targetAc={targetAc}

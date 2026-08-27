@@ -22,7 +22,7 @@ const SupportStatusBadge = ({ entity, compact = false }: SupportStatusBadgeProps
   const title = [
     presentation.label,
     coverage
-      ? `Сценарии заявленного scope: ${coverage.passed}/${coverage.required}; scope ${coverage.scope}`
+      ? `Ячейки evidence заявленного scope: ${coverage.passed}/${coverage.required} (${coverage.percent}%); scope ${coverage.scope}. Это не число браузерных сценариев.`
       : 'Точное покрытие не опубликовано',
     locked ? 'Механика закреплена' : null,
     entity?.support?.note,
@@ -36,8 +36,8 @@ const SupportStatusBadge = ({ entity, compact = false }: SupportStatusBadgeProps
       aria-label={presentation.label}
     >
       <span className="support-status-badge__dot" aria-hidden />
-      <span>{coverage ? `${coverage.passed}/${coverage.required}` : (compact ? '—' : presentation.label)}</span>
-      {!compact && coverage && <span> сценариев · {presentation.label}{locked ? ' · закреплено' : ''}</span>}
+      <span>{coverage ? `${coverage.percent}%` : (compact ? '—' : presentation.label)}</span>
+      {!compact && coverage && <span> evidence · {presentation.label}{locked ? ' · закреплено' : ''}</span>}
     </span>
   );
 };

@@ -1,4 +1,5 @@
 import type {
+  CharacterEventRow,
   CharacterRuntimeCommandRequest,
   CharacterRuntimeCommandResponse,
 } from './api';
@@ -110,4 +111,44 @@ export async function currentRuntimeCommandCharacters(input: {
     );
   }
   return current;
+}
+
+export interface CommittedSheetRuntimeCommand {
+  characters: Record<string, ForgeCharacter>;
+  /** Full authoritative journal snapshot; undefined when no local rows changed or refresh failed. */
+  persistedEvents?: CharacterEventRow[];
+}
+
+/**
+ * Commit one atomic runtime command and project its accepted postimage into the
+ * sheet. Runtime-command events are already inserted by that transaction, so
+ * the only legal journal follow-up is a read. A journal read failure is
+ * ancillary and must never turn an accepted transaction into an uncertain
+ * retry (which could otherwise strand the UI behind a false retry lock).
+ */
+export async function commitSheetRuntimeCommand(input: {
+  request: CharacterRuntimeCommandRequest;
+  commit: () => Promise<CharacterRuntimeCommandResponse>;
+  loadCurrent: (characterId: string) => Promise<ForgeCharacter>;
+  viewingCharacterId: string;
+  loadPersistedEvents?: (characterId: string) => Promise<CharacterEventRow[]>;
+}): Promise<CommittedSheetRuntimeCommand> {
+  const response = await input.commit();
+  const characters = await currentRuntimeCommandCharacters({
+    request: input.request,
+    response,
+    loadCurrent: input.loadCurrent,
+  });
+  const ownsJournalRows = input.request.events.some(
+    (event) => event.character_id === input.viewingCharacterId,
+  );
+  if (!ownsJournalRows || !input.loadPersistedEvents) return { characters };
+  try {
+    return {
+      characters,
+      persistedEvents: await input.loadPersistedEvents(input.viewingCharacterId),
+    };
+  } catch {
+    return { characters };
+  }
 }

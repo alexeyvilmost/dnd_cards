@@ -24,7 +24,7 @@ function readReviewedPreimageCatalogs(): ReturnType<typeof readProdSnapshotCatal
     import.meta.url,
   ), 'utf8').replace(/\r\n/g, '\n');
   const fixtureHash = `sha256:${createHash('sha256').update(rawFixture).digest('hex')}`;
-  if (fixtureHash !== 'sha256:0a8b311b87fc5aba0b811c67e073e35edc4c696ced600aa59b167bece10ea542') {
+  if (fixtureHash !== 'sha256:ac2fa254a8bc8170d881a3f073e1fd77228e42b59a415b7a989e022ba80ca1b9') {
     throw new Error(`Reviewed preimage fixture hash mismatch: ${fixtureHash}`);
   }
   const fixture = JSON.parse(rawFixture) as {
@@ -49,7 +49,7 @@ describe('versioned declarative micro-MVP L1 content patch', () => {
       patchId: 'dnd5e-2024.micro-mvp-l1.content-patch.v1',
       authorityTarget: 'database-entity-mechanics',
     });
-    expect(MICRO_MVP_L1_CONTENT_PATCH.mechanicsPatches.effects).toHaveLength(34);
+    expect(MICRO_MVP_L1_CONTENT_PATCH.mechanicsPatches.effects).toHaveLength(36);
     expect(MICRO_MVP_L1_CONTENT_PATCH.mechanicsPatches.actions).toHaveLength(9);
     expect(MICRO_MVP_L1_CONTENT_PATCH.mechanicsPatches.spells).toHaveLength(26);
     expect(MICRO_MVP_L1_CONTENT_PATCH.fieldPatches).toHaveLength(21);
@@ -108,6 +108,8 @@ describe('versioned declarative micro-MVP L1 content patch', () => {
     expect(spellcastingAbilities).toEqual({
       'EFF-cleric-spellcasting': 'wis',
       'EFF-druid-spellcasting': 'wis',
+      'EFF-paladin-spellcasting': 'cha',
+      'EFF-ranger-spellcasting': 'wis',
       'EFF-sorcerer-spellcasting': 'cha',
       'EFF-warlock-spellcasting': 'cha',
       'EFF-wizard-spellcasting': 'int',
@@ -218,12 +220,12 @@ describe('versioned declarative micro-MVP L1 content patch', () => {
       .toThrow(DeclarativeContentPatchError);
 
     const first = materializeMicroMvpL1ContentPatch(raw);
-    expect(first.changes).toHaveLength(109);
+    expect(first.changes).toHaveLength(111);
     expect(first.alreadyMaterialized).toHaveLength(0);
 
     const second = materializeMicroMvpL1ContentPatch(first.catalogs);
     expect(second.changes).toHaveLength(0);
-    expect(second.alreadyMaterialized).toHaveLength(109);
+    expect(second.alreadyMaterialized).toHaveLength(111);
     expect(() => assertMicroMvpL1ContentMaterialized(second.catalogs)).not.toThrow();
   });
 
@@ -252,7 +254,7 @@ describe('versioned declarative micro-MVP L1 content patch', () => {
 
     const verified = materializeMicroMvpL1ContentPatch(catalogs);
     expect(verified.changes).toHaveLength(0);
-    expect(verified.alreadyMaterialized).toHaveLength(109);
+    expect(verified.alreadyMaterialized).toHaveLength(111);
   });
 
   it('fails closed when source mechanics drift instead of overwriting them', () => {

@@ -714,6 +714,30 @@ func GetAllMigrations() []Migration {
 			// Явный источник устраняет неоднозначность каталога и не откатывается в NULL.
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "113_repair_goliath_reaction_authority",
+			Description: "Закрепить единственный Action-источник Каменной стойкости и удалить реакцию-дубль эффекта",
+			Up:          repairGoliathReactionAuthority,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     "114_repair_class_starting_equipment_references",
+			Description: "Перевыпустить наборы снаряжения пяти классов через каноничные PHB 2024 идентичности",
+			Up:          repairClassStartingEquipmentReferences,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     "115_repair_goliath_stone_targeting_contract",
+			Description: "Выровнять self-target Каменной стойкости со строгим контрактом компилятора",
+			Up:          repairGoliathStoneTargetingContract,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     halfCasterSpellcastingMigrationVersion,
+			Description: "Добавить каноничные характеристики колдовства паладина и следопыта",
+			Up:          repairHalfCasterSpellcastingContract,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

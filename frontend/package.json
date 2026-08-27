@@ -25,6 +25,8 @@
     "test": "vitest run",
     "test:browser": "npm run build && playwright test",
     "test:browser:live": "playwright test --config playwright.live.config.ts",
+    "test:browser:live:spine": "playwright test --config playwright.live.config.ts --grep \"required production spine:\"",
+    "test:browser:live:nightly": "playwright test --config playwright.live.config.ts --grep \"(required production spine:|public sheet certificate: Forge Magic Initiate Fighter|public sheet certificate: Forge Wizard)\"",
     "test:browser:live:sheet": "playwright test --config playwright.live.config.ts --grep \"public sheet certificate:\"",
     "test:browser:live:mini-forge": "playwright test --config playwright.live.config.ts --grep \"public mini-MVP sheet certificate:\"",
     "test:browser:live:typecheck": "tsc -p tsconfig.live.json --noEmit",

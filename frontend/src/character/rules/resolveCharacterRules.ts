@@ -155,7 +155,10 @@ function addGrant(
       message: `«${value}» уже получено из «${existing.source.name}», повтор из «${full.source.name}» не применяется.`,
       // Дубль из ФИКСИРОВАННОГО гранта (не выбор игрока) исправить нечем —
       // предупреждаем, но не блокируем создание; дубль из выбора — ошибка.
-      severity: full.choiceId ? 'error' : 'warning',
+      // The conflict is user-resolvable when either side came from a choice.
+      // Looking only at the incoming grant let a later fixed background grant
+      // turn an earlier class-skill choice into a non-blocking warning.
+      severity: full.choiceId || existing.choiceId ? 'error' : 'warning',
       kind: full.kind,
       value,
       source: full.source,

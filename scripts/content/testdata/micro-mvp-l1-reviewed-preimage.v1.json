@@ -7,21 +7,21 @@
   },
   "patch": {
     "id": "dnd5e-2024.micro-mvp-l1.content-patch.v1",
-    "version": "1.7.0",
+    "version": "1.8.0",
     "sourceReleaseId": "prod-snapshot@2026-07-15.micro-mvp-l1.v1",
-    "canonicalHash": "sha256:3ec837f18864a9787f0fc8c1b2a2c40f7ddc438e321c08f755a8fa225b2862a4"
+    "canonicalHash": "sha256:31148b36b944474af7506da946fcaaeb0adf42696dda359a91ad88f8a7aa40f5"
   },
   "selection": {
     "strategy": "patch-targets-plus-declared-entity-references",
     "counts": {
-      "effects": 47,
+      "effects": 49,
       "actions": 9,
       "spells": 26,
       "races": 2,
       "classes": 7,
       "cards": 28
     },
-    "total": 119
+    "total": 121
   },
   "catalogs": {
     "effects": [
@@ -1272,6 +1272,72 @@
         "weight": null
       },
       {
+        "card_number": "EFF-paladin-spellcasting",
+        "condition_description": null,
+        "created_at": "2026-07-02T16:50:33.45649Z",
+        "description": "Заговоры и подготовленные заклинания.",
+        "description_font_size": null,
+        "detailed_description": null,
+        "detailed_description_alignment": null,
+        "detailed_description_font_size": null,
+        "effect_type": "passive",
+        "id": "ab0c1d14-d8ef-4d0d-9952-b26e2f862b5c",
+        "image_url": "",
+        "is_extended": false,
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "description": "Подготовка заклинаний паладина. ХАР — характеристика заклинаний.",
+                  "kind": "narrative"
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "grant": {
+                "kind": "grant_spell",
+                "label": "prepared"
+              },
+              "id": "paladin_spells_l1",
+              "kind": "choice",
+              "options": {
+                "filter": {
+                  "classes": [
+                    "паладин"
+                  ],
+                  "levels": [
+                    1
+                  ]
+                },
+                "source": "spell"
+              },
+              "prompt": "Выберите 2 заклинания 1 уровня для подготовки",
+              "resolution": "on_acquire"
+            }
+          ]
+        },
+        "name": "Использование заклинаний (паладин)",
+        "name_en": null,
+        "price": null,
+        "properties": null,
+        "rarity": "common",
+        "repeatable": false,
+        "script": null,
+        "show_detailed_description": false,
+        "tags": null,
+        "text_alignment": null,
+        "text_font_size": null,
+        "type": null,
+        "updated_at": "2026-07-06T04:27:40.450067Z",
+        "weight": null
+      },
+      {
         "card_number": "EFF-primal-order",
         "condition_description": null,
         "created_at": "2026-07-02T16:59:28.925444Z",
@@ -1336,6 +1402,72 @@
         "text_font_size": null,
         "type": null,
         "updated_at": "2026-07-02T16:59:28.925444Z",
+        "weight": null
+      },
+      {
+        "card_number": "EFF-ranger-spellcasting",
+        "condition_description": null,
+        "created_at": "2026-07-02T16:50:33.74647Z",
+        "description": "Заговоры и подготовленные заклинания.",
+        "description_font_size": null,
+        "detailed_description": null,
+        "detailed_description_alignment": null,
+        "detailed_description_font_size": null,
+        "effect_type": "passive",
+        "id": "c4d0a9b1-90e8-49d4-8201-fc0aff542ae6",
+        "image_url": "",
+        "is_extended": false,
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "description": "Подготовка заклинаний следопыта. МДР — характеристика заклинаний.",
+                  "kind": "narrative"
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "grant": {
+                "kind": "grant_spell",
+                "label": "prepared"
+              },
+              "id": "ranger_spells_l1",
+              "kind": "choice",
+              "options": {
+                "filter": {
+                  "classes": [
+                    "следопыт"
+                  ],
+                  "levels": [
+                    1
+                  ]
+                },
+                "source": "spell"
+              },
+              "prompt": "Выберите 2 заклинания 1 уровня для подготовки",
+              "resolution": "on_acquire"
+            }
+          ]
+        },
+        "name": "Использование заклинаний (следопыт)",
+        "name_en": null,
+        "price": null,
+        "properties": null,
+        "rarity": "common",
+        "repeatable": false,
+        "script": null,
+        "show_detailed_description": false,
+        "tags": null,
+        "text_alignment": null,
+        "text_font_size": null,
+        "type": null,
+        "updated_at": "2026-07-06T04:27:40.52743Z",
         "weight": null
       },
       {

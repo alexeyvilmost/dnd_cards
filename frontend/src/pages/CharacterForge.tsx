@@ -67,7 +67,7 @@ import { BackgroundEquipment } from '../components/BackgroundEquipment';
 import { collectChosenSpellUuids, indexSpells } from '../engine/spellRefs';
 import { spellMatchesChoice } from '../character/spellChoices';
 import { isEntityUuid } from '../engine/ids';
-import { isSpellSelectionChoice, type PendingChoice } from '../mechanics/collectChoices';
+import { isSpellSelectionChoice, requiresInitialCharacterChoice, type PendingChoice } from '../mechanics/collectChoices';
 import { labelOf, SKILLS, ABILITIES } from '../mechanics/registries';
 import { FormattedText } from '../utils/formattedText';
 import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
@@ -339,7 +339,7 @@ const CharacterForge = () => {
     [ruleState, draft, assembled.klass],
   );
   const spellChoices = assembled.pendingChoices.filter((pc) => (
-    isSpellSelectionChoice(pc) && pc.context !== 'in_play'
+    isSpellSelectionChoice(pc) && requiresInitialCharacterChoice(pc)
   ));
   // Максимальный доступный круг ячеек (для choice-фильтра only_available_slots): считаем max-пулы
   // персонажа и берём наибольший spell_slot_N/warlock_slot. Нативно даёт колдунам их пактовый круг.
@@ -505,7 +505,7 @@ const CharacterForge = () => {
     ? `${recommendedClassSkillChoice.count}:${recommendedClassSkillChoice.recommended.join(',')}`
     : '';
   const recommendedMechanicsReady = assembled.pendingChoices
-    .filter((choice) => choice.context !== 'in_play' && (choice.recommended?.length ?? 0) > 0)
+    .filter((choice) => requiresInitialCharacterChoice(choice) && (choice.recommended?.length ?? 0) > 0)
     .every((choice) => Object.prototype.hasOwnProperty.call(draft.resolvedChoices, choice.id));
   useEffect(() => {
     const classId = draft.classId;
@@ -721,9 +721,10 @@ const CharacterForge = () => {
     }
   };
 
-  // Выборы по источникам / типам. context:'in_play' исключаем — они разрешаются на ЛИСТЕ
-  // во время игры (слайс 5), кузню не касаются.
-  const buildChoices = assembled.pendingChoices.filter((pc) => pc.context !== 'in_play');
+  // Большинство in_play-выборов разрешается на листе. Weapon Mastery является
+  // исключением: первая конфигурация обязательна при получении особенности,
+  // а последующие замены уже происходят во время игры/отдыха.
+  const buildChoices = assembled.pendingChoices.filter(requiresInitialCharacterChoice);
   const raceChoices = buildChoices.filter((pc) => pc.origin.kind === 'race' && !isSpellSelectionChoice(pc));
   const raceOtherChoices = raceChoices.filter((pc) => pc.source !== 'subfeature');
   const raceSubChoices = raceChoices.filter((pc) => pc.source === 'subfeature');
@@ -833,7 +834,7 @@ const CharacterForge = () => {
     const newEffects = assembled.effects.filter((e) => !prevRefs || !prevRefs.effects.has(e.effect.id));
     const newActions = assembled.actions.filter((a) => !prevRefs || !prevRefs.actions.has(a.action.id));
     const unresolved = assembled.pendingChoices.filter(
-      (pc) => pc.context !== 'in_play' && (draft.resolvedChoices[pc.id] || []).length < pc.count,
+      (pc) => requiresInitialCharacterChoice(pc) && (draft.resolvedChoices[pc.id] || []).length < pc.count,
     );
     const unresolvedSpells = unresolved.filter(isSpellSelectionChoice);
     const unresolvedOther = unresolved.filter((pc) => !isSpellSelectionChoice(pc));

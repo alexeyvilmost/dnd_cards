@@ -53,6 +53,21 @@ func (cc *ClassController) GetClasses(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения классов"})
 		return
 	}
+	legacyImageIDs := map[uuid.UUID]bool{}
+	if light {
+		ids := make([]uuid.UUID, 0, len(classes))
+		for _, class := range classes {
+			if !contentImageSourceUsable(class.ImageCloudinaryURL) {
+				ids = append(ids, class.ID)
+			}
+		}
+		var imageErr error
+		legacyImageIDs, imageErr = listLegacyImageIDs(cc.db, "classes", ids)
+		if imageErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения классов"})
+			return
+		}
+	}
 	references := make([]string, 0, len(classes))
 	for _, cl := range classes {
 		references = append(references, cl.CardNumber)
@@ -69,7 +84,7 @@ func (cc *ClassController) GetClasses(c *gin.Context) {
 		response.ChoiceRecommendations = recommendations[cl.CardNumber]
 		if light {
 			response.DetailedDescription = nil
-			response.ImageURL = listImageURL("classes", cl.ID, cl.ImageCloudinaryURL)
+			response.ImageURL = listImageURL("classes", cl.ID, cl.ImageCloudinaryURL, legacyImageIDs[cl.ID])
 		}
 		responses = append(responses, response)
 	}
@@ -109,6 +124,10 @@ func (cc *ClassController) CreateClass(c *gin.Context) {
 	}
 	if req.Rarity == "" {
 		req.Rarity = RarityCommon
+	}
+	if err := validateClassEquipmentCardReferences(cc.db, req.EquipmentOptions); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
 	}
 
 	cardNumber := req.CardNumber
@@ -172,6 +191,10 @@ func (cc *ClassController) UpdateClass(c *gin.Context) {
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения класса"})
+		return
+	}
+	if err := validateClassEquipmentCardReferences(cc.db, req.EquipmentOptions); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 

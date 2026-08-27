@@ -93,6 +93,21 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения заклинаний"})
 		return
 	}
+	legacyImageIDs := map[uuid.UUID]bool{}
+	if light {
+		ids := make([]uuid.UUID, 0, len(spells))
+		for _, spell := range spells {
+			if !contentImageSourceUsable(spell.ImageCloudinaryURL) {
+				ids = append(ids, spell.ID)
+			}
+		}
+		var imageErr error
+		legacyImageIDs, imageErr = listLegacyImageIDs(sc.db, "spells", ids)
+		if imageErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения заклинаний"})
+			return
+		}
+	}
 
 	// Преобразование в ответы
 	responses := make([]SpellResponse, 0, len(spells))
@@ -101,7 +116,7 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 		if light {
 			r.DetailedDescription = nil
 			r.Mechanics = nil
-			r.ImageURL = listImageURL("spells", spell.ID, spell.ImageCloudinaryURL)
+			r.ImageURL = listImageURL("spells", spell.ID, spell.ImageCloudinaryURL, legacyImageIDs[spell.ID])
 		}
 		responses = append(responses, r)
 	}

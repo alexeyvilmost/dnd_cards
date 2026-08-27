@@ -21,6 +21,7 @@ export interface SheetCombatTargetFactDraft {
   distanceFt: number;
   lineOfSight: boolean;
   cover: NonNullable<SpatialFacts['cover']>;
+  willing?: boolean;
 }
 
 export interface SheetCombatDeclarationPolicy {
@@ -30,12 +31,14 @@ export interface SheetCombatDeclarationPolicy {
     | 'magic_missile'
     | typeof UNARMED_STRIKE_PRIMITIVE
     | typeof WEAPON_ATTACK_PRIMITIVE
-    | typeof LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE;
+    | typeof LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE
+    | 'generic_action';
   minTargets: number;
   maxTargets: number;
   rangeFt: number;
   allowedRelations: Relation[];
   requiresLineOfSight: boolean;
+  requiresWilling: boolean;
   dartCount?: number;
   allocationChoiceId?: string;
   /** Human-readable shape compiled from mechanics.targeting (for example `area`). */
@@ -56,12 +59,10 @@ function primitive(action: RuleActionDefinition): SheetCombatDeclarationPolicy['
     if (parsed.status !== 'valid') throw new Error(parsed.issue);
     return parsed.policy.primitive;
   }
-  if (type !== 'burning_hands_objects'
-    && type !== 'area_object_push'
-    && type !== 'magic_missile') {
-    throw new Error(`${action.id} is not a supported combat primitive`);
-  }
-  return type;
+  if (type === 'burning_hands_objects'
+    || type === 'area_object_push'
+    || type === 'magic_missile') return type;
+  return 'generic_action';
 }
 
 export function sheetCombatDeclarationPolicy(
@@ -81,6 +82,7 @@ export function sheetCombatDeclarationPolicy(
     rangeFt: targeting.rangeFt,
     allowedRelations: [...targeting.allowedRelations],
     requiresLineOfSight: targeting.requiresLineOfSight,
+    requiresWilling: targeting.requiresWilling === true,
     targetingShape: typeof object(action.mechanics.targeting)?.shape === 'string'
       ? String(object(action.mechanics.targeting)?.shape)
       : undefined,
@@ -131,6 +133,9 @@ function factsFor(
   if (!['none', 'half', 'three_quarters', 'total'].includes(draft.cover)) {
     throw new Error(`Для ${draft.targetId} нужно явно указать укрытие`);
   }
+  if (policy.requiresWilling && typeof draft.willing !== 'boolean') {
+    throw new Error(`Для ${draft.targetId} нужно явно указать согласие`);
+  }
   return {
     factsSource: draft.factsSource,
     boardRevision: draft.boardRevision,
@@ -138,6 +143,7 @@ function factsFor(
     distanceFt: draft.distanceFt,
     lineOfSight: draft.lineOfSight,
     cover: draft.cover,
+    ...(policy.requiresWilling ? { willing: draft.willing } : {}),
   };
 }
 

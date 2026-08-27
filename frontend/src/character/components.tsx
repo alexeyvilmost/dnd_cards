@@ -1,6 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { optionsForChoiceSource, labelOf, SKILLS, type RegistryItem } from '../mechanics/registries';
-import type { PendingChoice } from '../mechanics/collectChoices';
+import { requiresInitialCharacterChoice, type PendingChoice } from '../mechanics/collectChoices';
 import type { AssembledCharacter } from './assemble';
 import { effectAbilityPresentation } from './abilityDisplay';
 import type { CharacterRuleState } from './rules/types';
@@ -240,7 +240,7 @@ export function recommendedChoiceSeed(
   const out: Record<string, string[]> = {};
   const projectedResolved = { ...resolved };
   for (const pc of choices) {
-    if (pc.context === 'in_play' || applied.has(pc.id)) continue;
+    if (!requiresInitialCharacterChoice(pc) || applied.has(pc.id)) continue;
     // Presence, not length, is the durable "touched" signal. An explicitly
     // cleared choice must stay cleared after a remount or draft restore.
     if (Object.prototype.hasOwnProperty.call(resolved, pc.id)) continue;
@@ -335,7 +335,7 @@ export function useAutoRecommendedChoices(
   useEffect(() => {
     const seed = recommendedChoiceSeed(choices, resolved, applied.current, policy);
     for (const pc of choices) {
-      if (pc.context !== 'in_play') applied.current.add(pc.id);   // отметить как обработанные
+      if (requiresInitialCharacterChoice(pc)) applied.current.add(pc.id);
     }
     if (!Object.keys(seed).length) return;
     if (setResolvedBatch) setResolvedBatch(seed);

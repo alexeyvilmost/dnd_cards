@@ -19,7 +19,7 @@ import {
   type MiniMvpForgeManifest,
   type MiniMvpForgeSheetFixture,
 } from '../canon/miniMvpForgeSheetFixtureGenerator';
-import type { Background, CharacterClass, Feat, Race, Spell } from '../types';
+import type { Background, Card, CharacterClass, Feat, Race, Spell } from '../types';
 import { readLiveJson } from './liveJsonRead';
 
 async function fetchAll<T extends { id: string }>(path: string, key: string): Promise<T[]> {
@@ -62,7 +62,8 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live Forge root cover
     const { MINI_MVP_MANIFEST } = await import(/* @vite-ignore */ manifestUrl.href) as {
       MINI_MVP_MANIFEST: MiniMvpForgeManifest;
     };
-    const [classes, races, backgrounds, feats, spells] = await Promise.all([
+    const [cards, classes, races, backgrounds, feats, spells] = await Promise.all([
+      fetchAll<Card>('/api/cards?fields=list', 'cards'),
       fetchAll<CharacterClass>('/api/classes?fields=list', 'classes'),
       fetchAll<Race>('/api/races?fields=list', 'races'),
       fetchAll<Background>('/api/backgrounds?fields=list', 'backgrounds'),
@@ -74,6 +75,7 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live Forge root cover
       ...MINI_MVP_MANIFEST.collections.firstLevelSpells,
     ].map((entry) => entry.selector.cardNumber));
     actual = await buildMiniMvpForgeSheetFixture(MINI_MVP_MANIFEST, {
+      cards,
       classes,
       races,
       backgrounds,

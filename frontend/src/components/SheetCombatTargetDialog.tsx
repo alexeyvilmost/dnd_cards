@@ -39,6 +39,7 @@ interface TargetDraft {
   distanceFt: string;
   lineOfSight: 'unknown' | 'yes' | 'no';
   cover: NonNullable<SpatialFacts['cover']> | '';
+  willing: 'unknown' | 'yes' | 'no';
   darts: string;
 }
 
@@ -81,6 +82,9 @@ function initialDraft(
       ? 'unknown'
       : candidate.defaultFacts.lineOfSight ? 'yes' : 'no',
     cover: candidate.defaultFacts?.cover ?? '',
+    willing: candidate.defaultFacts?.willing === undefined
+      ? 'unknown'
+      : candidate.defaultFacts.willing ? 'yes' : 'no',
     darts: '',
   };
 }
@@ -190,6 +194,7 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
           distanceFt: Number(draft.distanceFt),
           lineOfSight: draft.lineOfSight === 'yes',
           cover: draft.cover as NonNullable<SpatialFacts['cover']>,
+          ...(policy.requiresWilling ? { willing: draft.willing === 'yes' } : {}),
         };
       });
       const dartAllocation = policy.dartCount === undefined
@@ -209,6 +214,7 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
         const draft = state.drafts[target.targetId];
         if (!draft.factsSource || !draft.relation || !draft.cover
           || draft.lineOfSight === 'unknown' || draft.distanceFt.trim() === ''
+          || (policy.requiresWilling && draft.willing === 'unknown')
           || draft.boardRevision.trim() === '') {
           throw new Error('Для каждой цели явно укажите все наблюдаемые факты');
         }
@@ -284,6 +290,16 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
                               <span>Ревизия сцены</span>
                               <input type="number" min={0} step={1} value={draft.boardRevision} onChange={(event) => patch(candidate.id, { boardRevision: event.target.value })} />
                             </label>
+                            {policy.requiresWilling && (
+                              <label className="sheet-target-row">
+                                <span>Согласие цели</span>
+                                <select value={draft.willing} onChange={(event) => patch(candidate.id, { willing: event.target.value as TargetDraft['willing'] })}>
+                                  <option value="unknown">Укажите явно</option>
+                                  <option value="yes">Согласна</option>
+                                  <option value="no">Не согласна</option>
+                                </select>
+                              </label>
+                            )}
                             <label className="sheet-target-row">
                               <span>Источник фактов</span>
                               <select value={draft.factsSource} onChange={(event) => patch(candidate.id, { factsSource: event.target.value as SpatialFacts['factsSource'] })}>

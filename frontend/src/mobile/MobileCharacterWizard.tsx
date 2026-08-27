@@ -26,7 +26,7 @@ import {
   ABILITY_KEYS, emptyDraft, isCharacterReadOnly, type AbilityKey, type CharacterDraft, type ForgeCharacter,
 } from '../character/types';
 import { maxAvailableSpellSlotLevel } from '../engine/resources';
-import { isSpellSelectionChoice, type PendingChoice } from '../mechanics/collectChoices';
+import { isSpellSelectionChoice, requiresInitialCharacterChoice, type PendingChoice } from '../mechanics/collectChoices';
 import { labelOf, optionsForChoiceSource, SKILLS } from '../mechanics/registries';
 import type { Background, CharacterClass, Feat, Race, Spell } from '../types';
 import { EntityDetailContext } from '../contexts/entityDetail';
@@ -362,7 +362,7 @@ export default function MobileCharacterWizard() {
   const selectedRace = races.find((race) => race.id === draft.raceId);
   const selectedLineage = races.find((race) => race.id === draft.lineageId);
   const classSkills = assembled ? classSkillChoice(assembled) : null;
-  const buildChoices = assembled?.pendingChoices.filter((choice) => choice.context !== 'in_play') ?? [];
+  const buildChoices = assembled?.pendingChoices.filter(requiresInitialCharacterChoice) ?? [];
   const ruleState = useMemo(
     () => assembled ? resolveCharacterRules({ draft, assembled }) : null,
     [assembled, draft],

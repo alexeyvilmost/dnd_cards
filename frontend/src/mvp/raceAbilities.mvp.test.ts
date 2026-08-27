@@ -282,7 +282,6 @@ const KNOWN_RULE_DEVIATIONS = [
   'Полурослик — Проворство и Природная скрытность существуют только как narrative-подсказки',
   'Табакси — Кошачья ловкость существует только как narrative-подсказка',
   'Кованый — Отдых часового существует только как narrative-подсказка',
-  'Расовые Action-карточки показываются в группе class, а не race',
 ] as const;
 
 beforeAll(async () => {
@@ -598,7 +597,7 @@ d('Незаклинательные способности видов: полн�
     );
     const hasMisgroupedRacialAction = collectSheetActions(dragonBuild.assembled)
       .some((action) => racialActionIds.has(action.id) && action.group === 'class');
-    if (hasMisgroupedRacialAction) deviations.push(KNOWN_RULE_DEVIATIONS[10]);
+    expect(hasMisgroupedRacialAction).toBe(false);
 
     expect(deviations).toEqual(KNOWN_RULE_DEVIATIONS);
   });

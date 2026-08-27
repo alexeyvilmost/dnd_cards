@@ -60,13 +60,52 @@ func wantsListView(c *gin.Context) bool {
 }
 
 // listImageURL never ships embedded base64 originals in catalog projections.
-// A CDN asset remains useful as a thumbnail; otherwise a stable media endpoint
-// loads only the image columns and lets the browser cache them independently.
-func listImageURL(entityType string, entityID uuid.UUID, cloudinaryURL string) string {
-	if strings.HasPrefix(cloudinaryURL, "https://") || strings.HasPrefix(cloudinaryURL, "http://") {
+// Crucially, a row without either stored source projects an empty URL instead
+// of a route that is guaranteed to return 404.
+func listImageURL(entityType string, entityID uuid.UUID, cloudinaryURL string, hasLegacyImage bool) string {
+	cloudinaryURL = strings.TrimSpace(cloudinaryURL)
+	if strings.HasPrefix(cloudinaryURL, "https://") {
 		return cloudinaryURL
 	}
+	cloudSourceCanUseMediaRoute := contentImageSourceUsable(cloudinaryURL)
+	if !cloudSourceCanUseMediaRoute && !hasLegacyImage {
+		return ""
+	}
 	return "/api/content-images/" + entityType + "/" + entityID.String()
+}
+
+// listLegacyImageIDs checks only image presence, never reading a potentially
+// multi-megabyte embedded data URI into a catalog response or application row.
+func listLegacyImageIDs(db *gorm.DB, entityType string, entityIDs []uuid.UUID) (map[uuid.UUID]bool, error) {
+	table, allowed := contentImageTables[entityType]
+	if !allowed {
+		return nil, fmt.Errorf("unsupported content image type %q", entityType)
+	}
+	result := make(map[uuid.UUID]bool)
+	if len(entityIDs) == 0 {
+		return result, nil
+	}
+	var rows []struct {
+		ID uuid.UUID `gorm:"column:id"`
+	}
+	if err := db.Table(table).
+		Select("id").
+		Where(`id IN ? AND deleted_at IS NULL AND (
+			BTRIM(image_url) LIKE 'https://%'
+			OR (
+				LEFT(BTRIM(image_url), 1) = '/'
+				AND LEFT(BTRIM(image_url), 2) <> '//'
+				AND STRPOS(BTRIM(image_url), CHR(92)) = 0
+			)
+			OR BTRIM(image_url) ~ '^data:image/(avif|gif|jpeg|png|webp)(;[^,]*)?;base64,.+$'
+		)`, entityIDs).
+		Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+	for _, row := range rows {
+		result[row.ID] = true
+	}
+	return result, nil
 }
 
 // CardController - контроллер для работы с карточками
@@ -169,6 +208,22 @@ func (cc *CardController) GetCards(c *gin.Context) {
 		return
 	}
 	log.Printf("Загружено карточек: %d", len(cards))
+	legacyImageIDs := map[uuid.UUID]bool{}
+	if light {
+		ids := make([]uuid.UUID, 0, len(cards))
+		for _, card := range cards {
+			if !contentImageSourceUsable(card.ImageCloudinaryURL) {
+				ids = append(ids, card.ID)
+			}
+		}
+		var imageErr error
+		legacyImageIDs, imageErr = listLegacyImageIDs(cc.db, "cards", ids)
+		if imageErr != nil {
+			log.Printf("Ошибка проверки изображений карточек: %v", imageErr)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения карточек"})
+			return
+		}
+	}
 
 	// Преобразование в ответы
 	responses := make([]CardResponse, 0, len(cards))
@@ -177,7 +232,7 @@ func (cc *CardController) GetCards(c *gin.Context) {
 		if light {
 			r.DetailedDescription = nil
 			r.Mechanics = nil
-			r.ImageURL = listImageURL("cards", card.ID, card.ImageCloudinaryURL)
+			r.ImageURL = listImageURL("cards", card.ID, card.ImageCloudinaryURL, legacyImageIDs[card.ID])
 		}
 		responses = append(responses, r)
 	}
@@ -966,6 +1021,21 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения действий"})
 		return
 	}
+	legacyImageIDs := map[uuid.UUID]bool{}
+	if light {
+		ids := make([]uuid.UUID, 0, len(actions))
+		for _, action := range actions {
+			if !contentImageSourceUsable(action.ImageCloudinaryURL) {
+				ids = append(ids, action.ID)
+			}
+		}
+		var imageErr error
+		legacyImageIDs, imageErr = listLegacyImageIDs(ac.db, "actions", ids)
+		if imageErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения действий"})
+			return
+		}
+	}
 
 	// Преобразование в ответы
 	responses := make([]ActionResponse, 0, len(actions))
@@ -976,7 +1046,7 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 			r.DetailedDescription = nil
 			r.Mechanics = nil
 			r.Script = nil
-			r.ImageURL = listImageURL("actions", action.ID, action.ImageCloudinaryURL)
+			r.ImageURL = listImageURL("actions", action.ID, action.ImageCloudinaryURL, legacyImageIDs[action.ID])
 		}
 		responses = append(responses, r)
 	}
@@ -1415,6 +1485,21 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения эффектов"})
 		return
 	}
+	legacyImageIDs := map[uuid.UUID]bool{}
+	if light {
+		ids := make([]uuid.UUID, 0, len(effects))
+		for _, effect := range effects {
+			if !contentImageSourceUsable(effect.ImageCloudinaryURL) {
+				ids = append(ids, effect.ID)
+			}
+		}
+		var imageErr error
+		legacyImageIDs, imageErr = listLegacyImageIDs(ec.db, "effects", ids)
+		if imageErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения эффектов"})
+			return
+		}
+	}
 
 	// Преобразование в ответы
 	references := make([]string, 0, len(effects))
@@ -1435,7 +1520,7 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 			r.Mechanics = nil
 			r.Script = nil
 			r.ConditionDescription = nil
-			r.ImageURL = listImageURL("effects", effect.ID, effect.ImageCloudinaryURL)
+			r.ImageURL = listImageURL("effects", effect.ID, effect.ImageCloudinaryURL, legacyImageIDs[effect.ID])
 		}
 		responses = append(responses, r)
 	}

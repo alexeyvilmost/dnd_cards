@@ -4,20 +4,20 @@
   "source": {
     "ruleset": {
       "systemId": "dnd5e-2024",
-      "releaseId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0",
-      "contentHash": "sha256:7000486672c3f8fc3b0f21da0561ca2b48eb218b4de8278d2c8ebb2b1c99e1e5",
+      "releaseId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0",
+      "contentHash": "sha256:2ddba1ce7354f7d3e813a2531329019e6039dc27163259a59989f5557d233ca8",
       "errataVersion": "phb-2024-errata-v1"
     },
     "release": {
-      "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0",
+      "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0",
       "systemId": "dnd5e-2024",
       "rulesetVersion": "2024",
       "errataVersion": "phb-2024-errata-v1",
       "sourceReleaseId": "prod-snapshot@2026-08-20.micro-mvp-l1.v2",
       "sourceContentHash": "sha256:c7205737ed1f70fa9e2db87370cd59ccd43cc4e2960b2360429e3842a745c22d",
-      "overlayHash": "sha256:7ef20f51ae9683433431133887da21f9e2622a87368e7a9b675a9ba7fd3d08fe",
-      "contentHash": "sha256:7000486672c3f8fc3b0f21da0561ca2b48eb218b4de8278d2c8ebb2b1c99e1e5",
-      "releaseHash": "sha256:174f3f2dbf8dba29f5765da4d52a07e1779305773607755900a170963ea95c53"
+      "overlayHash": "sha256:67860317c1e3d1ede6993e688ad305f112186975e561508192e5ec34f4443292",
+      "contentHash": "sha256:2ddba1ce7354f7d3e813a2531329019e6039dc27163259a59989f5557d233ca8",
+      "releaseHash": "sha256:313dcc9fff197929b0d59e87246f6aac7ed162eaaf3107a583cba8ad3573d99f"
     },
     "rootStableKeys": {
       "fighter": "class.fighter|species.human|background.soldier|feat.alert",
@@ -30,7 +30,7 @@
   "roots": {
     "fighter": {
       "stableKey": "class.fighter|species.human|background.soldier|feat.alert",
-      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.fighter|species.human|background.soldier|feat.alert",
+      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.fighter|species.human|background.soldier|feat.alert",
       "draft": {
         "name": "Fixture · CLASS-warrior × RACE-0002 × BG-0012 × FEAT-0001",
         "description": "",
@@ -94,7 +94,7 @@
         "swapFeat": true
       },
       "actor": {
-        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.fighter|species.human|background.soldier|feat.alert",
+        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.fighter|species.human|background.soldier|feat.alert",
         "name": "Fixture · CLASS-warrior × RACE-0002 × BG-0012 × FEAT-0001",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -737,7 +737,7 @@
     },
     "magicInitiateFighter": {
       "stableKey": "class.fighter|species.human|background.soldier|feat.magic-initiate",
-      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.fighter|species.human|background.soldier|feat.magic-initiate:choice-variant:6a52f1c94849",
+      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.fighter|species.human|background.soldier|feat.magic-initiate:choice-variant:6a52f1c94849",
       "draft": {
         "name": "Fixture · CLASS-warrior × RACE-0002 × BG-0012 × FEAT-0009",
         "description": "",
@@ -815,7 +815,7 @@
         "swapFeat": true
       },
       "actor": {
-        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.fighter|species.human|background.soldier|feat.magic-initiate:choice-variant:6a52f1c94849",
+        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.fighter|species.human|background.soldier|feat.magic-initiate:choice-variant:6a52f1c94849",
         "name": "Fixture · CLASS-warrior × RACE-0002 × BG-0012 × FEAT-0009",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -1847,7 +1847,7 @@
     },
     "wizard": {
       "stableKey": "class.wizard|species.human|background.soldier|feat.alert",
-      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.wizard|species.human|background.soldier|feat.alert",
+      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.wizard|species.human|background.soldier|feat.alert",
       "draft": {
         "name": "Fixture · CLASS-wizard × RACE-0002 × BG-0012 × FEAT-0001",
         "description": "",
@@ -1932,7 +1932,7 @@
         "swapFeat": true
       },
       "actor": {
-        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.wizard|species.human|background.soldier|feat.alert",
+        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.wizard|species.human|background.soldier|feat.alert",
         "name": "Fixture · CLASS-wizard × RACE-0002 × BG-0012 × FEAT-0001",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -3489,9 +3489,9 @@
     },
     "blade": {
       "stableKey": "class.warlock|species.human|background.soldier|feat.alert",
-      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:04cd469a9004",
+      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:04cd469a9004",
       "actor": {
-        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:04cd469a9004",
+        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:04cd469a9004",
         "name": "Fixture · CLASS-warlock × RACE-0002 × BG-0012 × FEAT-0001",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -3976,7 +3976,7 @@
           "blade": {
             "kind": "blade",
             "sourceEntityId": "d0988f8f-15b8-4b9a-b201-99841460be44",
-            "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:04cd469a9004",
+            "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:04cd469a9004",
             "bondActionId": "d0988f8f-15b8-4b9a-b201-99841460be44@5a0403b5-3185-43a2-b187-38397d3d01b7",
             "lifecyclePolicy": {
               "separationDistanceFt": 5,
@@ -4463,9 +4463,9 @@
     },
     "chain": {
       "stableKey": "class.warlock|species.human|background.soldier|feat.alert",
-      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:3639261574af",
+      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:3639261574af",
       "actor": {
-        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:3639261574af",
+        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:3639261574af",
         "name": "Fixture · CLASS-warlock × RACE-0002 × BG-0012 × FEAT-0001",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -4986,7 +4986,7 @@
           "chain": {
             "kind": "chain",
             "sourceEntityId": "808d727d-7e58-4ae4-9ed4-b4d49cd0a704",
-            "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:3639261574af",
+            "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:3639261574af",
             "template": {
               "findFamiliarActionId": "aa2adb3d-101b-4e70-97f1-69dc9f0debf8@808d727d-7e58-4ae4-9ed4-b4d49cd0a704",
               "normalFormSource": "find_familiar_spell",
@@ -5497,9 +5497,9 @@
     },
     "tome": {
       "stableKey": "class.warlock|species.human|background.soldier|feat.alert",
-      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
       "actor": {
-        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
         "name": "Fixture · CLASS-warlock × RACE-0002 × BG-0012 × FEAT-0001",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -5507,11 +5507,16 @@
         "capabilities": {
           "actionIds": [
             "1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+            "1e9cb7db-f4dc-4215-ad57-0e3407b78913@CLASS-warlock",
             "25d868ad-0714-4fce-b5b2-2931dd5646bc@CLASS-warlock",
             "50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+            "50626b5a-33c5-46e0-af0e-50599f4306a0@CLASS-warlock",
             "677a3abf-5fc7-472f-b789-418dcba6dd88@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+            "677a3abf-5fc7-472f-b789-418dcba6dd88@CLASS-warlock",
             "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+            "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@CLASS-warlock",
             "a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+            "a8bb857d-cfaf-49d4-9f95-04a71a997a03@CLASS-warlock",
             "dc59ce91-4e89-4f1d-89a5-e25650f3a6b7@CLASS-warlock",
             "e300a1f2-91ae-4c82-9904-057f93a013ba@CLASS-warlock",
             "f55f58e8-a6f9-4c97-ab6f-8e7f385591d0@CLASS-warlock"
@@ -6006,12 +6011,56 @@
         "spellcastingAccess": {
           "grants": [
             {
+              "grantId": "spell-grant:CLASS-warlock:1e9cb7db-f4dc-4215-ad57-0e3407b78913@CLASS-warlock",
+              "actionId": "1e9cb7db-f4dc-4215-ad57-0e3407b78913@CLASS-warlock",
+              "sourceId": "CLASS-warlock",
+              "access": "cantrip",
+              "level": 0,
+              "spellcastingAbility": "cha"
+            },
+            {
               "grantId": "spell-grant:CLASS-warlock:25d868ad-0714-4fce-b5b2-2931dd5646bc@CLASS-warlock",
               "actionId": "25d868ad-0714-4fce-b5b2-2931dd5646bc@CLASS-warlock",
               "sourceId": "CLASS-warlock",
               "access": "known",
               "level": 1,
               "spellcastingAbility": "cha",
+              "slotResource": "spell_slot_1"
+            },
+            {
+              "grantId": "spell-grant:CLASS-warlock:50626b5a-33c5-46e0-af0e-50599f4306a0@CLASS-warlock",
+              "actionId": "50626b5a-33c5-46e0-af0e-50599f4306a0@CLASS-warlock",
+              "sourceId": "CLASS-warlock",
+              "access": "cantrip",
+              "level": 0,
+              "spellcastingAbility": "cha"
+            },
+            {
+              "grantId": "spell-grant:CLASS-warlock:677a3abf-5fc7-472f-b789-418dcba6dd88@CLASS-warlock",
+              "actionId": "677a3abf-5fc7-472f-b789-418dcba6dd88@CLASS-warlock",
+              "sourceId": "CLASS-warlock",
+              "access": "always_prepared",
+              "level": 1,
+              "spellcastingAbility": "cha",
+              "ritual": true,
+              "slotResource": "spell_slot_1"
+            },
+            {
+              "grantId": "spell-grant:CLASS-warlock:70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@CLASS-warlock",
+              "actionId": "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@CLASS-warlock",
+              "sourceId": "CLASS-warlock",
+              "access": "cantrip",
+              "level": 0,
+              "spellcastingAbility": "cha"
+            },
+            {
+              "grantId": "spell-grant:CLASS-warlock:a8bb857d-cfaf-49d4-9f95-04a71a997a03@CLASS-warlock",
+              "actionId": "a8bb857d-cfaf-49d4-9f95-04a71a997a03@CLASS-warlock",
+              "sourceId": "CLASS-warlock",
+              "access": "always_prepared",
+              "level": 1,
+              "spellcastingAbility": "cha",
+              "ritual": true,
               "slotResource": "spell_slot_1"
             },
             {
@@ -6040,25 +6089,25 @@
               "slotResource": "spell_slot_1"
             },
             {
-              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
               "actionId": "1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
               "access": "cantrip",
               "level": 0,
               "spellcastingAbility": "cha"
             },
             {
-              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
               "actionId": "50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
               "access": "cantrip",
               "level": 0,
               "spellcastingAbility": "cha"
             },
             {
-              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:677a3abf-5fc7-472f-b789-418dcba6dd88@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:677a3abf-5fc7-472f-b789-418dcba6dd88@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
               "actionId": "677a3abf-5fc7-472f-b789-418dcba6dd88@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
               "access": "always_prepared",
               "level": 1,
               "spellcastingAbility": "cha",
@@ -6066,17 +6115,17 @@
               "slotResource": "spell_slot_1"
             },
             {
-              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
               "actionId": "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
               "access": "cantrip",
               "level": 0,
               "spellcastingAbility": "cha"
             },
             {
-              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
               "actionId": "a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
               "access": "always_prepared",
               "level": 1,
               "spellcastingAbility": "cha",
@@ -6090,11 +6139,11 @@
           "tome": {
             "kind": "tome",
             "sourceEntityId": "67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-            "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+            "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
             "tome": {
               "sourceEntityId": "67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-              "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
-              "bookObjectId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+              "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+              "bookObjectId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
               "cantripActionIds": [
                 "1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
                 "50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
@@ -6105,11 +6154,11 @@
                 "a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c"
               ],
               "spellGrantIds": [
-                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:677a3abf-5fc7-472f-b789-418dcba6dd88@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c"
+                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:677a3abf-5fc7-472f-b789-418dcba6dd88@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c"
               ],
               "createdAfterRest": "long"
             }
@@ -6178,6 +6227,94 @@
           "sourceEntityIds": [
             "1e9cb7db-f4dc-4215-ad57-0e3407b78913",
             "67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+            "5a0403b5-3185-43a2-b187-38397d3d01b7"
+          ],
+          "targeting": {
+            "minTargets": 0,
+            "maxTargets": 1,
+            "rangeFt": 0,
+            "requiresLineOfSight": false,
+            "allowedRelations": [],
+            "requiresTouch": true
+          },
+          "kind": "spell",
+          "spell": {
+            "level": 0,
+            "sourceClass": "CLASS-warlock",
+            "ritual": false,
+            "classListIds": [
+              "CLASS-bard",
+              "CLASS-cleric",
+              "CLASS-sorcerer",
+              "CLASS-wizard"
+            ],
+            "components": {
+              "verbal": true,
+              "somatic": false,
+              "material": true
+            }
+          }
+        },
+        {
+          "id": "1e9cb7db-f4dc-4215-ad57-0e3407b78913@CLASS-warlock",
+          "name": "Свет",
+          "mechanics": {
+            "spell_class_list_ids": [
+              "CLASS-bard",
+              "CLASS-cleric",
+              "CLASS-sorcerer",
+              "CLASS-wizard"
+            ],
+            "activation": {
+              "cost": [
+                {
+                  "resource": "action"
+                }
+              ],
+              "mode": "active",
+              "cast_time": {
+                "unit": "action",
+                "amount": 1
+              }
+            },
+            "effects": [
+              {
+                "resolution": "auto",
+                "result": [
+                  {
+                    "description": "Свет: см. описание заклинания.",
+                    "kind": "narrative"
+                  }
+                ]
+              }
+            ],
+            "targeting": {
+              "domain": "world",
+              "actor_targets": false,
+              "min_targets": 0,
+              "max_targets": 1,
+              "range_ft": 0,
+              "allowed_relations": [],
+              "requires_line_of_sight": false,
+              "requires_touch": true,
+              "filter": "any",
+              "range": "Касание",
+              "shape": "single"
+            },
+            "primitive": {
+              "type": "light_world_object",
+              "policy": {
+                "max_object_size": "large",
+                "exclude_carried_by_other": true,
+                "bright_radius_ft": 20,
+                "dim_additional_radius_ft": 20,
+                "duration_rounds": 600,
+                "max_active_per_source": 1
+              }
+            }
+          },
+          "sourceEntityIds": [
+            "1e9cb7db-f4dc-4215-ad57-0e3407b78913",
             "5a0403b5-3185-43a2-b187-38397d3d01b7"
           ],
           "targeting": {
@@ -6623,6 +6760,98 @@
           }
         },
         {
+          "id": "50626b5a-33c5-46e0-af0e-50599f4306a0@CLASS-warlock",
+          "name": "Огненный снаряд",
+          "mechanics": {
+            "spell_class_list_ids": [
+              "CLASS-sorcerer",
+              "CLASS-wizard"
+            ],
+            "activation": {
+              "cost": [
+                {
+                  "resource": "action"
+                }
+              ],
+              "mode": "active",
+              "cast_time": {
+                "unit": "action",
+                "amount": 1
+              }
+            },
+            "effects": [
+              {
+                "ability": "spellcasting",
+                "attack_kind": "spell_ranged",
+                "on_hit": [
+                  {
+                    "dice": "1d10",
+                    "kind": "damage",
+                    "scaling": {
+                      "dice": "1d10",
+                      "per": "character_level"
+                    },
+                    "type": "fire"
+                  }
+                ],
+                "resolution": "attack_roll",
+                "vs": "ac"
+              }
+            ],
+            "targeting": {
+              "domain": "mixed",
+              "actor_targets": true,
+              "shape": "single",
+              "min_targets": 1,
+              "max_targets": 1,
+              "range_ft": 120,
+              "requires_line_of_sight": true,
+              "allowed_relations": [
+                "self",
+                "ally",
+                "enemy",
+                "neutral"
+              ],
+              "filter": "any",
+              "range": "120 футов"
+            },
+            "interaction": {
+              "intent": "harmful"
+            }
+          },
+          "sourceEntityIds": [
+            "50626b5a-33c5-46e0-af0e-50599f4306a0",
+            "5a0403b5-3185-43a2-b187-38397d3d01b7"
+          ],
+          "targeting": {
+            "minTargets": 1,
+            "maxTargets": 1,
+            "rangeFt": 120,
+            "requiresLineOfSight": true,
+            "allowedRelations": [
+              "self",
+              "ally",
+              "enemy",
+              "neutral"
+            ]
+          },
+          "kind": "spell",
+          "spell": {
+            "level": 0,
+            "sourceClass": "CLASS-warlock",
+            "ritual": false,
+            "classListIds": [
+              "CLASS-sorcerer",
+              "CLASS-wizard"
+            ],
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": false
+            }
+          }
+        },
+        {
           "id": "5b79a37b-e7a9-482a-9efc-46b57e3a79de@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
           "name": "Починка",
           "mechanics": {
@@ -6762,6 +6991,90 @@
           "sourceEntityIds": [
             "677a3abf-5fc7-472f-b789-418dcba6dd88",
             "67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+            "5a0403b5-3185-43a2-b187-38397d3d01b7"
+          ],
+          "targeting": {
+            "minTargets": 0,
+            "maxTargets": 1,
+            "rangeFt": 10,
+            "requiresLineOfSight": false,
+            "allowedRelations": []
+          },
+          "kind": "spell",
+          "spell": {
+            "level": 1,
+            "sourceClass": "CLASS-warlock",
+            "ritual": true,
+            "classListIds": [
+              "CLASS-cleric",
+              "CLASS-druid",
+              "CLASS-paladin"
+            ],
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": false
+            }
+          }
+        },
+        {
+          "id": "677a3abf-5fc7-472f-b789-418dcba6dd88@CLASS-warlock",
+          "name": "Очищение пищи и питья",
+          "mechanics": {
+            "spell_class_list_ids": [
+              "CLASS-cleric",
+              "CLASS-druid",
+              "CLASS-paladin"
+            ],
+            "activation": {
+              "cost": [
+                {
+                  "resource": "action"
+                },
+                {
+                  "amount": 1,
+                  "level": 1,
+                  "resource": "spell_slot"
+                }
+              ],
+              "mode": "active",
+              "cast_time": {
+                "unit": "action",
+                "amount": 1
+              }
+            },
+            "effects": [
+              {
+                "resolution": "auto",
+                "result": []
+              }
+            ],
+            "targeting": {
+              "domain": "world",
+              "actor_targets": false,
+              "min_targets": 0,
+              "max_targets": 1,
+              "range_ft": 10,
+              "allowed_relations": [],
+              "requires_line_of_sight": false,
+              "filter": "any",
+              "range": "10 футов",
+              "shape": "area",
+              "area": {
+                "kind": "sphere",
+                "radius_ft": 5
+              }
+            },
+            "primitive": {
+              "type": "purify_food_drink_world",
+              "policy": {
+                "require_in_area": true,
+                "exclude_magical": true
+              }
+            }
+          },
+          "sourceEntityIds": [
+            "677a3abf-5fc7-472f-b789-418dcba6dd88",
             "5a0403b5-3185-43a2-b187-38397d3d01b7"
           ],
           "targeting": {
@@ -7295,6 +7608,511 @@
           }
         },
         {
+          "id": "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@CLASS-warlock",
+          "name": "Наставление",
+          "mechanics": {
+            "spell_class_list_ids": [
+              "CLASS-cleric",
+              "CLASS-druid"
+            ],
+            "activation": {
+              "mode": "active",
+              "cast_time": {
+                "unit": "action",
+                "amount": 1
+              },
+              "cost": [
+                {
+                  "resource": "action"
+                }
+              ]
+            },
+            "effects": [
+              {
+                "kind": "choice",
+                "id": "guidance_skill",
+                "context": "in_play",
+                "prompt": "Выберите навык для Наставления",
+                "count": 1,
+                "who": "target",
+                "options": {
+                  "source": "explicit",
+                  "items": [
+                    {
+                      "id": "acrobatics",
+                      "name": "Акробатика",
+                      "grants": [
+                        {
+                          "kind": "modifier",
+                          "applies_to": {
+                            "roll": "ability_check",
+                            "filter": {
+                              "skill": "acrobatics"
+                            }
+                          },
+                          "op": "bonus_die",
+                          "faces": 4,
+                          "source": "Наставление",
+                          "duration": {
+                            "type": "rounds",
+                            "amount": 10,
+                            "concentration": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "animal_handling",
+                      "name": "Уход за животными",
+                      "grants": [
+                        {
+                          "kind": "modifier",
+                          "applies_to": {
+                            "roll": "ability_check",
+                            "filter": {
+                              "skill": "animal_handling"
+                            }
+                          },
+                          "op": "bonus_die",
+                          "faces": 4,
+                          "source": "Наставление",
+                          "duration": {
+                            "type": "rounds",
+                            "amount": 10,
+                            "concentration": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "arcana",
+                      "name": "Магия",
+                      "grants": [
+                        {
+                          "kind": "modifier",
+                          "applies_to": {
+                            "roll": "ability_check",
+                            "filter": {
+                              "skill": "arcana"
+                            }
+                          },
+                          "op": "bonus_die",
+                          "faces": 4,
+                          "source": "Наставление",
+                          "duration": {
+                            "type": "rounds",
+                            "amount": 10,
+                            "concentration": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "athletics",
+                      "name": "Атлетика",
+                      "grants": [
+                        {
+                          "kind": "modifier",
+                          "applies_to": {
+                            "roll": "ability_check",
+                            "filter": {
+                              "skill": "athletics"
+                            }
+                          },
+                          "op": "bonus_die",
+                          "faces": 4,
+                          "source": "Наставление",
+                          "duration": {
+                            "type": "rounds",
+                            "amount": 10,
+                            "concentration": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "deception",
+                      "name": "Обман",
+                      "grants": [
+                        {
+                          "kind": "modifier",
+                          "applies_to": {
+                            "roll": "ability_check",
+                            "filter": {
+                              "skill": "deception"
+                            }
+                          },
+                          "op": "bonus_die",
+                          "faces": 4,
+                          "source": "Наставление",
+                          "duration": {
+                            "type": "rounds",
+                            "amount": 10,
+                            "concentration": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "history",
+                      "name": "История",
+                      "grants": [
+                        {
+                          "kind": "modifier",
+                          "applies_to": {
+                            "roll": "ability_check",
+                            "filter": {
+                              "skill": "history"
+                            }
+                          },
+                          "op": "bonus_die",
+                          "faces": 4,
+                          "source": "Наставление",
+                          "duration": {
+                            "type": "rounds",
+                            "amount": 10,
+                            "concentration": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "insight",
+                      "name": "Проницательность",
+                      "grants": [
+                        {
+                          "kind": "modifier",
+                          "applies_to": {
+                            "roll": "ability_check",
+                            "filter": {
+                              "skill": "insight"
+                            }
+                          },
+                          "op": "bonus_die",
+                          "faces": 4,
+                          "source": "Наставление",
+                          "duration": {
+                            "type": "rounds",
+                            "amount": 10,
+                            "concentration": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "intimidation",
+                      "name": "Запугивание",
+                      "grants": [
+                        {
+                          "kind": "modifier",
+                          "applies_to": {
+                            "roll": "ability_check",
+                            "filter": {
+                              "skill": "intimidation"
+                            }
+                          },
+                          "op": "bonus_die",
+                          "faces": 4,
+                          "source": "Наставление",
+                          "duration": {
+                            "type": "rounds",
+                            "amount": 10,
+                            "concentration": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "investigation",
+                      "name": "Расследование",
+                      "grants": [
+                        {
+                          "kind": "modifier",
+                          "applies_to": {
+                            "roll": "ability_check",
+                            "filter": {
+                              "skill": "investigation"
+                            }
+                          },
+                          "op": "bonus_die",
+                          "faces": 4,
+                          "source": "Наставление",
+                          "duration": {
+                            "type": "rounds",
+                            "amount": 10,
+                            "concentration": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "medicine",
+                      "name": "Медицина",
+                      "grants": [
+                        {
+                          "kind": "modifier",
+                          "applies_to": {
+                            "roll": "ability_check",
+                            "filter": {
+                              "skill": "medicine"
+                            }
+                          },
+                          "op": "bonus_die",
+                          "faces": 4,
+                          "source": "Наставление",
+                          "duration": {
+                            "type": "rounds",
+                            "amount": 10,
+                            "concentration": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "nature",
+                      "name": "Природа",
+                      "grants": [
+                        {
+                          "kind": "modifier",
+                          "applies_to": {
+                            "roll": "ability_check",
+                            "filter": {
+                              "skill": "nature"
+                            }
+                          },
+                          "op": "bonus_die",
+                          "faces": 4,
+                          "source": "Наставление",
+                          "duration": {
+                            "type": "rounds",
+                            "amount": 10,
+                            "concentration": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "perception",
+                      "name": "Восприятие",
+                      "grants": [
+                        {
+                          "kind": "modifier",
+                          "applies_to": {
+                            "roll": "ability_check",
+                            "filter": {
+                              "skill": "perception"
+                            }
+                          },
+                          "op": "bonus_die",
+                          "faces": 4,
+                          "source": "Наставление",
+                          "duration": {
+                            "type": "rounds",
+                            "amount": 10,
+                            "concentration": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "performance",
+                      "name": "Выступление",
+                      "grants": [
+                        {
+                          "kind": "modifier",
+                          "applies_to": {
+                            "roll": "ability_check",
+                            "filter": {
+                              "skill": "performance"
+                            }
+                          },
+                          "op": "bonus_die",
+                          "faces": 4,
+                          "source": "Наставление",
+                          "duration": {
+                            "type": "rounds",
+                            "amount": 10,
+                            "concentration": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "persuasion",
+                      "name": "Убеждение",
+                      "grants": [
+                        {
+                          "kind": "modifier",
+                          "applies_to": {
+                            "roll": "ability_check",
+                            "filter": {
+                              "skill": "persuasion"
+                            }
+                          },
+                          "op": "bonus_die",
+                          "faces": 4,
+                          "source": "Наставление",
+                          "duration": {
+                            "type": "rounds",
+                            "amount": 10,
+                            "concentration": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "religion",
+                      "name": "Религия",
+                      "grants": [
+                        {
+                          "kind": "modifier",
+                          "applies_to": {
+                            "roll": "ability_check",
+                            "filter": {
+                              "skill": "religion"
+                            }
+                          },
+                          "op": "bonus_die",
+                          "faces": 4,
+                          "source": "Наставление",
+                          "duration": {
+                            "type": "rounds",
+                            "amount": 10,
+                            "concentration": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "sleight_of_hand",
+                      "name": "Ловкость рук",
+                      "grants": [
+                        {
+                          "kind": "modifier",
+                          "applies_to": {
+                            "roll": "ability_check",
+                            "filter": {
+                              "skill": "sleight_of_hand"
+                            }
+                          },
+                          "op": "bonus_die",
+                          "faces": 4,
+                          "source": "Наставление",
+                          "duration": {
+                            "type": "rounds",
+                            "amount": 10,
+                            "concentration": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "stealth",
+                      "name": "Скрытность",
+                      "grants": [
+                        {
+                          "kind": "modifier",
+                          "applies_to": {
+                            "roll": "ability_check",
+                            "filter": {
+                              "skill": "stealth"
+                            }
+                          },
+                          "op": "bonus_die",
+                          "faces": 4,
+                          "source": "Наставление",
+                          "duration": {
+                            "type": "rounds",
+                            "amount": 10,
+                            "concentration": true
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "survival",
+                      "name": "Выживание",
+                      "grants": [
+                        {
+                          "kind": "modifier",
+                          "applies_to": {
+                            "roll": "ability_check",
+                            "filter": {
+                              "skill": "survival"
+                            }
+                          },
+                          "op": "bonus_die",
+                          "faces": 4,
+                          "source": "Наставление",
+                          "duration": {
+                            "type": "rounds",
+                            "amount": 10,
+                            "concentration": true
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "resolution": "immediate"
+              }
+            ],
+            "targeting": {
+              "domain": "actor",
+              "actor_targets": true,
+              "shape": "single",
+              "min_targets": 1,
+              "max_targets": 1,
+              "range_ft": 5,
+              "requires_line_of_sight": false,
+              "allowed_relations": [
+                "self",
+                "ally",
+                "enemy",
+                "neutral"
+              ],
+              "requires_touch": true,
+              "requires_willing": true,
+              "range": "Касание",
+              "filter": "creature"
+            }
+          },
+          "sourceEntityIds": [
+            "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7",
+            "5a0403b5-3185-43a2-b187-38397d3d01b7"
+          ],
+          "targeting": {
+            "minTargets": 1,
+            "maxTargets": 1,
+            "rangeFt": 5,
+            "requiresLineOfSight": false,
+            "allowedRelations": [
+              "self",
+              "ally",
+              "enemy",
+              "neutral"
+            ],
+            "requiresWilling": true,
+            "requiresTouch": true
+          },
+          "concentration": true,
+          "kind": "spell",
+          "spell": {
+            "level": 0,
+            "sourceClass": "CLASS-warlock",
+            "ritual": false,
+            "classListIds": [
+              "CLASS-cleric",
+              "CLASS-druid"
+            ],
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": false
+            }
+          }
+        },
+        {
           "id": "7d0c00e7-0cfa-4f3f-8650-aac70150538c@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
           "name": "Ядовитые брызги",
           "mechanics": {
@@ -7567,6 +8385,117 @@
           "sourceEntityIds": [
             "a8bb857d-cfaf-49d4-9f95-04a71a997a03",
             "67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+            "5a0403b5-3185-43a2-b187-38397d3d01b7"
+          ],
+          "targeting": {
+            "minTargets": 0,
+            "maxTargets": 1,
+            "rangeFt": 0,
+            "requiresLineOfSight": false,
+            "allowedRelations": [
+              "self"
+            ]
+          },
+          "concentration": true,
+          "kind": "spell",
+          "spell": {
+            "level": 1,
+            "sourceClass": "CLASS-warlock",
+            "ritual": true,
+            "classListIds": [
+              "CLASS-cleric",
+              "CLASS-druid",
+              "CLASS-paladin",
+              "CLASS-ranger"
+            ],
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": true
+            }
+          }
+        },
+        {
+          "id": "a8bb857d-cfaf-49d4-9f95-04a71a997a03@CLASS-warlock",
+          "name": "Обнаружение болезней и яда",
+          "mechanics": {
+            "spell_class_list_ids": [
+              "CLASS-cleric",
+              "CLASS-druid",
+              "CLASS-paladin",
+              "CLASS-ranger"
+            ],
+            "activation": {
+              "cost": [
+                {
+                  "resource": "action"
+                },
+                {
+                  "amount": 1,
+                  "level": 1,
+                  "resource": "spell_slot"
+                }
+              ],
+              "mode": "active",
+              "cast_time": {
+                "unit": "action",
+                "amount": 1
+              }
+            },
+            "effects": [
+              {
+                "resolution": "auto",
+                "result": []
+              }
+            ],
+            "targeting": {
+              "domain": "actor",
+              "actor_targets": false,
+              "min_targets": 0,
+              "max_targets": 1,
+              "range_ft": 0,
+              "allowed_relations": [
+                "self"
+              ],
+              "requires_line_of_sight": false,
+              "shape": "self",
+              "range": "На себя",
+              "area": {
+                "kind": "emanation",
+                "radius_ft": 30
+              }
+            },
+            "primitive": {
+              "type": "detect_poison_disease_world",
+              "policy": {
+                "blockers": {
+                  "stone": {
+                    "threshold_inches": 12,
+                    "comparison": "gte"
+                  },
+                  "common_metal": {
+                    "threshold_inches": 1,
+                    "comparison": "gte"
+                  },
+                  "lead": {
+                    "threshold_inches": 0,
+                    "comparison": "gt"
+                  },
+                  "wood": {
+                    "threshold_inches": 12,
+                    "comparison": "gte"
+                  },
+                  "dirt": {
+                    "threshold_inches": 12,
+                    "comparison": "gte"
+                  },
+                  "other": null
+                }
+              }
+            }
+          },
+          "sourceEntityIds": [
+            "a8bb857d-cfaf-49d4-9f95-04a71a997a03",
             "5a0403b5-3185-43a2-b187-38397d3d01b7"
           ],
           "targeting": {
@@ -8425,13 +9354,13 @@
       ],
       "initialWorldObjects": [
         {
-          "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+          "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
           "name": "Book of Shadows",
           "kind": "item",
           "size": "small",
-          "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
-          "carriedByActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
-          "sourceActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+          "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+          "carriedByActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+          "sourceActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
           "sourceActionId": "67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
           "magicalAura": {
             "school": "conjuration",
@@ -8447,9 +9376,9 @@
     },
     "familiarWizard": {
       "stableKey": "class.wizard|species.human|background.soldier|feat.alert",
-      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.wizard|species.human|background.soldier|feat.alert:choice-variant:b262506e056c",
+      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.wizard|species.human|background.soldier|feat.alert:choice-variant:b262506e056c",
       "actor": {
-        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.wizard|species.human|background.soldier|feat.alert:choice-variant:b262506e056c",
+        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.wizard|species.human|background.soldier|feat.alert:choice-variant:b262506e056c",
         "name": "Fixture · CLASS-wizard × RACE-0002 × BG-0012 × FEAT-0001",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -10133,7 +11062,7 @@
         "familiarActionId": "mm2025.owl.talons"
       },
       "tome": {
-        "initialBookObjectId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+        "initialBookObjectId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
         "cantripActionId": "50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
         "cantripActionIds": [
           "1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",

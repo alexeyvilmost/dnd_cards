@@ -522,6 +522,21 @@ describe('resolveCharacterRules — экспертиза и конфликты �
     expect(rs.proficiencies.skills.filter((s) => s === 'perception')).toHaveLength(1);
     expect(rs.conflicts.some((c) => c.code === 'duplicate_proficiency')).toBe(true);
   });
+
+  it('фиксированный грант предыстории блокирует дублирующий выбор навыка класса', () => {
+    const rs = build({
+      klass: { id: 'wizard', name: 'Волшебник', hit_die: 'd6' },
+      background: { id: 'sage', name: 'Мудрец', skill_proficiencies: ['arcana'] },
+      draft: { classSkillChoices: ['arcana'] },
+    });
+    expect(rs.conflicts).toContainEqual(expect.objectContaining({
+      code: 'duplicate_proficiency',
+      kind: 'skill',
+      value: 'arcana',
+      severity: 'error',
+      choiceId: undefined,
+    }));
+  });
 });
 
 describe('resolveCharacterRules — grant_language и НЕреализованные гранты (карта пробелов)', () => {

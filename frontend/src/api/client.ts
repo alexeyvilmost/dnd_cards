@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { cached, bustPrefix } from './apiCache';
 import { readPersistedAuthToken, signalUnauthorized } from './authSession';
+import { shouldAttachAuthToken } from './authPolicy';
 import {
   isTransientReadFailure,
   SAFE_READ_MAX_ATTEMPTS,
@@ -71,6 +72,15 @@ export const apiClient = axios.create({
   },
 });
 
+function catalogListCacheKey(path: string, params?: object): string {
+  const query = Object.entries(params ?? {})
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+    .join('&');
+  return query ? `${path}?${query}` : path;
+}
+
 /**
  * Normalized transport error.  Keeping the HTTP status is important for
  * feature adapters that need to distinguish an expired session (401) from an
@@ -88,7 +98,7 @@ export class ApiRequestError extends Error {
 apiClient.interceptors.request.use(
   (config) => {
     const token = readPersistedAuthToken();
-    if (token) {
+    if (token && shouldAttachAuthToken(config.method, config.url)) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -306,10 +316,14 @@ export const spellsApi = {
     search?: string;
     sort_by?: string;
     fields?: 'list';
-  }): Promise<SpellsResponse> => {
-    const response = await apiClient.get<SpellsResponse>('/api/spells', { params });
-    return response.data;
-  },
+  }): Promise<SpellsResponse> => cached(
+    catalogListCacheKey('/api/spells', params),
+    60_000,
+    async () => {
+      const response = await apiClient.get<SpellsResponse>('/api/spells', { params });
+      return response.data;
+    },
+  ),
 
   // Получение заклинания по ID
   getSpell: async (id: string): Promise<Spell> =>
@@ -341,10 +355,14 @@ export const featsApi = {
     page?: number; limit?: number; category?: string; repeatable?: string;
     ability?: string; search?: string; sort_by?: string;
     fields?: 'list';
-  }): Promise<FeatsResponse> => {
-    const response = await apiClient.get<FeatsResponse>('/api/feats', { params });
-    return response.data;
-  },
+  }): Promise<FeatsResponse> => cached(
+    catalogListCacheKey('/api/feats', params),
+    60_000,
+    async () => {
+      const response = await apiClient.get<FeatsResponse>('/api/feats', { params });
+      return response.data;
+    },
+  ),
   getFeat: async (id: string): Promise<Feat> =>
     cached(`/api/feats/${id}`, 60000, async () => {
       const response = await apiClient.get<Feat>(`/api/feats/${id}`);
@@ -368,10 +386,14 @@ export const backgroundsApi = {
     page?: number; limit?: number; ability?: string; skill?: string;
     feat?: string; search?: string; sort_by?: string;
     fields?: 'list';
-  }): Promise<BackgroundsResponse> => {
-    const response = await apiClient.get<BackgroundsResponse>('/api/backgrounds', { params });
-    return response.data;
-  },
+  }): Promise<BackgroundsResponse> => cached(
+    catalogListCacheKey('/api/backgrounds', params),
+    60_000,
+    async () => {
+      const response = await apiClient.get<BackgroundsResponse>('/api/backgrounds', { params });
+      return response.data;
+    },
+  ),
   getBackground: async (id: string): Promise<Background> =>
     cached(`/api/backgrounds/${id}`, 60000, async () => {
       const response = await apiClient.get<Background>(`/api/backgrounds/${id}`);
@@ -395,10 +417,14 @@ export const racesApi = {
     page?: number; limit?: number; size?: string; creature_type?: string;
     search?: string; sort_by?: string;
     fields?: 'list';
-  }): Promise<RacesResponse> => {
-    const response = await apiClient.get<RacesResponse>('/api/races', { params });
-    return response.data;
-  },
+  }): Promise<RacesResponse> => cached(
+    catalogListCacheKey('/api/races', params),
+    60_000,
+    async () => {
+      const response = await apiClient.get<RacesResponse>('/api/races', { params });
+      return response.data;
+    },
+  ),
   getRace: async (id: string): Promise<Race> =>
     cached(`/api/races/${id}`, 60000, async () => {
       const response = await apiClient.get<Race>(`/api/races/${id}`);
@@ -424,10 +450,14 @@ export const classesApi = {
     search?: string;
     sort_by?: string;
     fields?: 'list';
-  }): Promise<ClassesResponse> => {
-    const response = await apiClient.get<ClassesResponse>('/api/classes', { params });
-    return response.data;
-  },
+  }): Promise<ClassesResponse> => cached(
+    catalogListCacheKey('/api/classes', params),
+    60_000,
+    async () => {
+      const response = await apiClient.get<ClassesResponse>('/api/classes', { params });
+      return response.data;
+    },
+  ),
   getClass: async (id: string): Promise<CharacterClass> =>
     cached(`/api/classes/${id}`, 60000, async () => {
       const response = await apiClient.get<CharacterClass>(`/api/classes/${id}`);
@@ -447,10 +477,14 @@ export const classesApi = {
 };
 
 export const resourcesApi = {
-  getResources: async (params?: { category?: string }): Promise<ResourcesResponse> => {
-    const response = await apiClient.get<ResourcesResponse>('/api/resources', { params });
-    return response.data;
-  },
+  getResources: async (params?: { category?: string }): Promise<ResourcesResponse> => cached(
+    `/api/resources?category=${params?.category ?? ''}`,
+    60_000,
+    async () => {
+      const response = await apiClient.get<ResourcesResponse>('/api/resources', { params });
+      return response.data;
+    },
+  ),
   getResource: async (id: string): Promise<ResourceDefinition> => {
     const response = await apiClient.get<ResourceDefinition>(`/api/resources/${id}`);
     return response.data;

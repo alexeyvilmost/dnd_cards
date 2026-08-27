@@ -17,7 +17,19 @@ import {
   assertLiveCanaryRequestOrigin,
   requiredLiveCanaryOrigin,
 } from '../liveCanaryTargets';
-import type { Background, Card, CharacterClass, Feat, Race } from '../src/types';
+import {
+  assertVisibleForgeImagesLoaded,
+  completeVisibleForgeChoices,
+  dismissMobileForgeSuggestion,
+  openForgeOverviewIfNeeded,
+  openForgeSection,
+  selectForgeEntity,
+  weaponActionIdsByAttackKind,
+} from '../e2e/forge-interaction-driver';
+import { rollFormula } from '../src/engine/formula';
+import type { Monster } from '../src/monsters/types';
+import { parseWeaponProfile } from '../src/rules-core/weaponProfile';
+import type { Background, Card, CharacterClass, Feat, Race, Spell } from '../src/types';
 
 type JsonRecord = Record<string, unknown>;
 type RequestMethod = 'get' | 'post' | 'patch' | 'delete';
@@ -114,6 +126,8 @@ interface CharacterResponse extends JsonRecord {
   turn_state?: JsonRecord;
   currency?: Record<string, number>;
   resolved_choices?: Record<string, string[]>;
+  spell_ids?: string[] | null;
+  action_ids?: string[] | null;
 }
 
 interface CatalogCard extends JsonRecord {
@@ -704,6 +718,897 @@ async function closeContext(
   }
 }
 
+async function cleanupCharacterNamedArtifact(
+  api: LiveAPI,
+  knownCharacterId: string | undefined,
+  exactName: string,
+  cleanupErrors: string[],
+): Promise<void> {
+  const ids = new Set<string>();
+  if (knownCharacterId) ids.add(knownCharacterId);
+  try {
+    const list = await checkedJSON<CharacterResponse[]>(api, 'get', '/api/characters-v3');
+    for (const candidate of list) {
+      if (candidate.name === exactName) ids.add(candidate.id);
+    }
+  } catch (error) {
+    cleanupErrors.push(`${api.label} named character sweep: ${errorMessage(error)}`);
+  }
+  for (const id of ids) {
+    await deleteAndVerify(api, `/api/characters-v3/${id}`, `${api.label} character ${id} cleanup`, cleanupErrors);
+  }
+}
+
+test('required production spine: empty Forge reaches sheet and dedicated combat through real controls', async ({
+  browser,
+  playwright,
+}, testInfo) => {
+  test.setTimeout(240_000);
+  const frontendOrigin = requiredLiveCanaryOrigin('LIVE_BROWSER_BASE_URL', 'frontend');
+  const apiOrigin = requiredLiveCanaryOrigin('LIVE_BROWSER_API_URL', 'backend');
+  const expectedCommit = required('EXPECTED_DEPLOYED_COMMIT').toLowerCase();
+  if (!/^[0-9a-f]{40}$/.test(expectedCommit)) {
+    throw new Error('EXPECTED_DEPLOYED_COMMIT must be an exact 40-hex Git commit');
+  }
+  const firstInteractiveBudget = Number(process.env.LIVE_BROWSER_FORGE_FIRST_INTERACTIVE_MS ?? 2_500);
+  const entitySettleBudget = Number(process.env.LIVE_BROWSER_FORGE_ENTITY_SETTLE_MS ?? 1_500);
+  const spellToggleBudget = Number(process.env.LIVE_BROWSER_FORGE_SPELL_TOGGLE_MS ?? 150);
+  if (![firstInteractiveBudget, entitySettleBudget, spellToggleBudget].every((value) => (
+    Number.isFinite(value) && value > 0
+  ))) throw new Error('Live Forge budgets must be positive finite milliseconds');
+
+  const account = credentials('A');
+  const unique = randomUUID();
+  const characterName = `Canary Real Forge ${unique}`;
+  const diagnostics: string[] = [];
+  const cleanupErrors: string[] = [];
+  const duplicateReads: string[] = [];
+  const apiReads: string[] = [];
+  let bodyError: unknown;
+  let auth: AuthenticatedAPI | undefined;
+  let context: BrowserContext | undefined;
+  let character: CharacterResponse | undefined;
+  let stopDiagnostics: (() => void) | undefined;
+
+  try {
+    auth = await authenticatedAPI(playwright, apiOrigin, account, 'real Forge spine account');
+    const [health, build] = await Promise.all([
+      checkedJSON<{ source_commit?: string }>(auth.api, 'get', '/api/health'),
+      checkedJSON<{ source_commit?: string }>(auth.api, 'get', `/build-info.json?release=${expectedCommit}`),
+    ]);
+    expect(health.source_commit, 'public backend commit').toBe(expectedCommit);
+    expect(build.source_commit, 'public frontend commit').toBe(expectedCommit);
+
+    const root = miniMvpForgeSheetFixture.roots.find((candidate) => (
+      candidate.classCardNumber === 'CLASS-ranger'
+      && candidate.lineageCardNumber === 'RACE-0011-stone'
+    ));
+    if (!root) throw new Error('The checked-in mini-MVP fixture misses the Stone Goliath Ranger spine');
+    const [race, lineage, klass, background, basicResponse, monstersResponse] = await Promise.all([
+      checkedJSON<Race>(auth.api, 'get', `/api/races/${root.draft.raceId}`),
+      checkedJSON<Race>(auth.api, 'get', `/api/races/${root.draft.lineageId}`),
+      checkedJSON<CharacterClass>(auth.api, 'get', `/api/classes/${root.draft.classId}`),
+      checkedJSON<Background>(auth.api, 'get', `/api/backgrounds/${root.draft.backgroundId}`),
+      checkedJSON<{ actions?: CatalogAction[] }>(auth.api, 'get', '/api/actions?type=basic&limit=100'),
+      checkedJSON<{ monsters?: Monster[] }>(auth.api, 'get', '/api/monsters?limit=100'),
+    ]);
+    const record = (value: unknown): JsonRecord | undefined => (
+      value && typeof value === 'object' && !Array.isArray(value)
+        ? value as JsonRecord
+        : undefined
+    );
+    const records = (value: unknown): JsonRecord[] => {
+      if (!Array.isArray(value)) return [];
+      const rows: JsonRecord[] = [];
+      for (const item of value) {
+        const row = record(item);
+        if (row) rows.push(row);
+      }
+      return rows;
+    };
+    const effectResultPayloads = (mechanics: unknown): JsonRecord[] => {
+      return records(record(mechanics)?.effects).flatMap((effect) => {
+        const result = record(effect)?.result;
+        return records(result);
+      });
+    };
+    const attackHitPayloads = (action: CatalogAction): JsonRecord[] => {
+      return records(record(action.mechanics)?.effects).flatMap((effect) => {
+        if (effect.resolution !== 'attack_roll') return [];
+        return records(effect.on_hit);
+      });
+    };
+    const monsterActionIds = [...new Set((monstersResponse.monsters ?? []).flatMap((monster) => (
+      monster.action_ids
+    )))];
+    const monsterActions = await Promise.all(monsterActionIds.map((actionId) => (
+      checkedJSON<CatalogAction>(auth!.api, 'get', `/api/actions/${actionId}`)
+    )));
+    const monsterActionById = new Map(monsterActions.map((action) => [action.id, action]));
+    const isAttackRollAction = (action: CatalogAction): boolean => (
+      records(record(action.mechanics)?.effects).some((effect) => effect.resolution === 'attack_roll')
+    );
+    const challengeValue = (challenge: string): number => {
+      const [numerator, denominator] = challenge.split('/').map(Number);
+      return Number.isFinite(denominator) && denominator > 0
+        ? numerator / denominator
+        : Number(challenge);
+    };
+    const qualifyingMonster = [...(monstersResponse.monsters ?? [])]
+      .filter((monster) => {
+        // The controller executes the monster's first attack action. Qualify
+        // that exact action, rather than any later unused catalog action.
+        const firstAttack = monster.action_ids
+          .map((actionId) => monsterActionById.get(actionId))
+          .find((action): action is CatalogAction => (
+            action !== undefined && isAttackRollAction(action)
+          ));
+        return firstAttack !== undefined
+          && attackHitPayloads(firstAttack).some((payload) => payload.kind === 'damage');
+      })
+      .sort((left, right) => (
+        challengeValue(left.challenge_rating) - challengeValue(right.challenge_rating)
+        || left.max_hp - right.max_hp
+        || left.id.localeCompare(right.id)
+      ))[0];
+    if (!qualifyingMonster) {
+      throw new Error('The live bestiary has no monster with a mechanics-declared damaging attack');
+    }
+    const splitWeaponActions = weaponActionIdsByAttackKind(basicResponse.actions ?? []);
+    expect(splitWeaponActions.melee, 'one declarative melee basic attack').toHaveLength(1);
+    expect(splitWeaponActions.ranged, 'one declarative ranged basic attack').toHaveLength(1);
+    const weaponActionIds = [...splitWeaponActions.melee, ...splitWeaponActions.ranged];
+    const meleeAction = basicResponse.actions?.find((action) => splitWeaponActions.melee.includes(action.id));
+    const rangedAction = basicResponse.actions?.find((action) => splitWeaponActions.ranged.includes(action.id));
+    if (!meleeAction || !rangedAction) throw new Error('The mechanics-derived weapon actions disappeared');
+    const equippedAmmoMarkers = (action: CatalogAction): number => {
+      const mechanics = action.mechanics as JsonRecord | undefined;
+      const activation = mechanics?.activation as JsonRecord | undefined;
+      const cost = Array.isArray(activation?.cost) ? activation.cost : [];
+      return cost.filter((entry) => (
+        entry && typeof entry === 'object'
+        && (entry as JsonRecord).resource === 'equipped_weapon_ammo'
+      )).length;
+    };
+    expect(equippedAmmoMarkers(meleeAction), 'melee attack must never request weapon ammunition').toBe(0);
+    expect(equippedAmmoMarkers(rangedAction), 'ranged attack owns exactly one contextual ammo cost').toBe(1);
+
+    context = await browser.newContext({ baseURL: frontendOrigin, serviceWorkers: 'allow' });
+    await installBrowserOriginFence(context, new Set([
+      frontendOrigin,
+      apiOrigin,
+      'https://dnd-cards-images.storage.yandexcloud.net',
+    ]));
+    const page = await context.newPage();
+    stopDiagnostics = captureBrowserDiagnostics(
+      page,
+      'required real Forge production spine',
+      [account.password],
+      diagnostics,
+    );
+    await loginInBrowser(page, account, frontendOrigin, apiOrigin);
+    await page.evaluate(() => localStorage.removeItem('forge-draft'));
+
+    const activeReads = new Map<string, number>();
+    const requestKey = (request: Request): string | null => {
+      if (request.method() !== 'GET') return null;
+      const url = new URL(request.url());
+      if (url.origin !== apiOrigin || !url.pathname.startsWith('/api/')) return null;
+      return `${url.pathname}${url.search}`;
+    };
+    const onRequest = (request: Request) => {
+      const key = requestKey(request);
+      if (!key) return;
+      apiReads.push(key);
+      const active = activeReads.get(key) ?? 0;
+      if (active > 0) duplicateReads.push(key);
+      activeReads.set(key, active + 1);
+    };
+    const onRequestDone = (request: Request) => {
+      const key = requestKey(request);
+      if (!key) return;
+      const active = activeReads.get(key) ?? 0;
+      if (active <= 1) activeReads.delete(key);
+      else activeReads.set(key, active - 1);
+    };
+    page.on('request', onRequest);
+    page.on('requestfinished', onRequestDone);
+    page.on('requestfailed', onRequestDone);
+
+    const forgeStarted = Date.now();
+    await page.goto('/character-forge');
+    await dismissMobileForgeSuggestion(page);
+    const firstRace = page.locator('.forge-editor').getByRole('button', {
+      name: new RegExp(`^${race.name}(?:\\s|$)`),
+    }).first();
+    await expect(firstRace).toBeVisible();
+    expect(Date.now() - forgeStarted, 'empty Forge first interactive').toBeLessThanOrEqual(firstInteractiveBudget);
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+
+    const raceStarted = Date.now();
+    await selectForgeEntity(page, race.name);
+    await expect(page.locator('.forge-editor').getByRole('button', {
+      name: new RegExp(`^${lineage.name}(?:\\s|$)`),
+    }).first()).toBeVisible();
+    expect(Date.now() - raceStarted, 'race selection settled').toBeLessThanOrEqual(entitySettleBudget);
+    await selectForgeEntity(page, lineage.name);
+    await completeVisibleForgeChoices(page);
+
+    // This order is intentional: fixed proficiencies exist before class skill
+    // recommendations, which catches the permutation that the old restored
+    // draft certificate skipped.
+    await openForgeSection(page, 'Предыстория');
+    await selectForgeEntity(page, background.name);
+    await openForgeSection(page, 'Класс');
+    const classStarted = Date.now();
+    await selectForgeEntity(page, klass.name);
+    await expect(page.getByRole('navigation', { name: 'Этапы создания персонажа' })
+      .getByRole('button', { name: /^Заклинания(?:\s|$)/ })).toBeVisible();
+    expect(Date.now() - classStarted, 'class graph selection settled').toBeLessThanOrEqual(entitySettleBudget);
+
+    for (const section of ['Вид', 'Класс', 'Заклинания', 'Черта', 'Характеристики']) {
+      const navigation = page.getByRole('navigation', { name: 'Этапы создания персонажа' });
+      if (await navigation.getByRole('button', { name: new RegExp(`^${section}(?:\\s|$)`) }).count() === 0) continue;
+      await openForgeSection(page, section);
+      await completeVisibleForgeChoices(page);
+    }
+
+    await openForgeSection(page, 'Заклинания');
+    await page.waitForLoadState('networkidle');
+    const selectedSpell = page.locator('.forge-editor button.forge-spell-icon.selected').first();
+    await expect(selectedSpell).toBeVisible();
+    const spellTitle = await selectedSpell.getAttribute('title');
+    if (!spellTitle) throw new Error('Selected Forge spell has no stable accessible title');
+    const readsBeforeSpellToggle = apiReads.length;
+    const toggleAndPaint = (button: import('@playwright/test').Locator) => button.evaluate(async (node) => {
+      const element = node as HTMLButtonElement;
+      const before = element.classList.contains('selected');
+      const started = performance.now();
+      element.click();
+      for (let frame = 0; frame < 120; frame += 1) {
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        if (element.classList.contains('selected') !== before) return performance.now() - started;
+      }
+      throw new Error('Spell toggle did not reach the next painted state');
+    });
+    expect(await toggleAndPaint(selectedSpell), 'spell deselection next paint').toBeLessThanOrEqual(spellToggleBudget);
+    const sameSpell = page.locator('.forge-editor').getByTitle(spellTitle, { exact: true }).first();
+    await expect(sameSpell).toBeVisible();
+    expect(await toggleAndPaint(sameSpell), 'spell selection next paint').toBeLessThanOrEqual(spellToggleBudget);
+    expect(apiReads.slice(readsBeforeSpellToggle), 'pure spell toggles must make zero API reads').toEqual([]);
+
+    await openForgeSection(page, 'Вид');
+    await assertVisibleForgeImagesLoaded(page);
+    await openForgeOverviewIfNeeded(page);
+    await page.getByPlaceholder('Фарадей фон Грасс').fill(characterName);
+    const create = page.getByRole('button', { name: 'Создать персонажа', exact: true });
+    await expect(create).toBeEnabled();
+    await expect(page.locator('.forge-overview .issues')).toHaveCount(0);
+    const createResponsePromise = page.waitForResponse((response) => (
+      response.request().method() === 'POST'
+      && new URL(response.url()).pathname === '/api/characters-v3'
+    ));
+    const saveStarted = Date.now();
+    await create.click();
+    const createResponse = await createResponsePromise;
+    expect(createResponse.status(), 'real-interaction Forge create response').toBe(201);
+    character = await createResponse.json() as CharacterResponse;
+    const realForgeApi = auth.api;
+    expect(Date.now() - saveStarted, 'save to live sheet').toBeLessThanOrEqual(1_500);
+    await expect(page).toHaveURL(new RegExp(`/characters-v3/${character.id}$`));
+    await expect(page.getByRole('button', { name: 'Открыть ошибки и незавершённые выборы' }))
+      .toHaveCount(0);
+    const grantedActions = await Promise.all((character.action_ids ?? []).map((actionId) => (
+      checkedJSON<CatalogAction>(realForgeApi, 'get', `/api/actions/${actionId}`)
+    )));
+    const reduceDamageReactions = grantedActions.filter((action) => {
+      const mechanics = record(action.mechanics);
+      const activation = record(mechanics?.activation);
+      const trigger = record(activation?.trigger);
+      return (activation?.mode === 'reaction' || activation?.mode === 'triggered')
+        && trigger?.event === 'damage_taken'
+        && effectResultPayloads(mechanics).some((payload) => payload.kind === 'reduce_damage');
+    });
+    expect(reduceDamageReactions, 'one mechanics-owned damage reaction on the real lineage')
+      .toHaveLength(1);
+    const reduceDamageReaction = reduceDamageReactions[0];
+    await expect(page.getByText(reduceDamageReaction.name, { exact: true }),
+      'one lineage ability must have one user-facing authority').toHaveCount(1);
+
+    // Exercise one ordinary prepared spell before entering dedicated combat.
+    // Its identity and expected result are discovered from the selected Ranger
+    // spell mechanics. A persistent self result avoids relying on a board/world
+    // adapter while still proving more than action/slot payment.
+    const preparedSpells = await Promise.all((character.spell_ids ?? []).map((spellId) => (
+      checkedJSON<Spell>(realForgeApi, 'get', `/api/spells/${spellId}`)
+    )));
+    const ordinarySpellCandidate = preparedSpells.map((spell) => {
+      const mechanics = spell.mechanics as JsonRecord | undefined;
+      const activation = mechanics?.activation as JsonRecord | undefined;
+      const targeting = mechanics?.targeting as JsonRecord | undefined;
+      const cost = Array.isArray(activation?.cost) ? activation.cost : [];
+      const effects = Array.isArray(mechanics?.effects) ? mechanics.effects : [];
+      const actionCost = cost.find((entry): entry is JsonRecord => (
+        Boolean(entry) && typeof entry === 'object' && !Array.isArray(entry)
+        && (entry as JsonRecord).resource === 'action'
+      ));
+      const slotCost = cost.find((entry): entry is JsonRecord => (
+        Boolean(entry) && typeof entry === 'object' && !Array.isArray(entry)
+        && (entry as JsonRecord).resource === 'spell_slot'
+      ));
+      const resultPayloads: JsonRecord[] = [];
+      for (const effect of effects) {
+        if (!effect || typeof effect !== 'object' || Array.isArray(effect)) continue;
+        const result = (effect as JsonRecord).result;
+        if (!Array.isArray(result)) continue;
+        resultPayloads.push(...result.filter((payload): payload is JsonRecord => (
+          Boolean(payload) && typeof payload === 'object' && !Array.isArray(payload)
+        )));
+      }
+      const outcome = resultPayloads.find((payload) => (
+        payload.kind === 'temporary_consumable'
+        && typeof payload.id === 'string'
+        && typeof payload.count === 'number'
+        && Number.isSafeInteger(payload.count)
+        && payload.count > 0
+        && typeof payload.consume_resource === 'string'
+        && Boolean(payload.duration)
+        && typeof payload.duration === 'object'
+        && !Array.isArray(payload.duration)
+      ));
+      const executable = spell.level === 1
+        && mechanics?.primitive === undefined
+        && targeting?.shape === 'self'
+        && effects.length > 0
+        && effects.every((effect) => (
+          effect && typeof effect === 'object' && (effect as JsonRecord).resolution === 'auto'
+        ))
+        && actionCost !== undefined
+        && slotCost !== undefined;
+      return { spell, executable, outcome, actionCost, slotCost };
+    }).find((candidate) => (
+      candidate.executable
+      && candidate.outcome !== undefined
+      && candidate.actionCost !== undefined
+      && candidate.slotCost !== undefined
+    ));
+    if (!ordinarySpellCandidate?.outcome
+      || !ordinarySpellCandidate.actionCost
+      || !ordinarySpellCandidate.slotCost) {
+      throw new Error('The real Ranger prepared catalog has no deterministic persistent ordinary self spell');
+    }
+    const ordinarySpell = ordinarySpellCandidate.spell;
+    const ordinaryOutcomePayload = ordinarySpellCandidate.outcome;
+    const ordinaryActionResource = String(ordinarySpellCandidate.actionCost.resource);
+    const ordinaryActionCost = Number(ordinarySpellCandidate.actionCost.amount ?? 1);
+    const ordinarySlotLevel = Number(ordinarySpellCandidate.slotCost.level ?? ordinarySpell.level);
+    const ordinarySlotCost = Number(ordinarySpellCandidate.slotCost.amount ?? 1);
+    if (![ordinaryActionCost, ordinarySlotLevel, ordinarySlotCost].every((value) => (
+      Number.isSafeInteger(value) && value > 0
+    ))) throw new Error('The mechanics-selected ordinary Ranger spell has invalid declared costs');
+    const ordinaryOutcomeMatches = (effect: RuntimeEffect): boolean => {
+      const persisted = effect.mechanics as JsonRecord | undefined;
+      return persisted?.kind === ordinaryOutcomePayload.kind
+        && persisted?.id === ordinaryOutcomePayload.id;
+    };
+    expect((character.active_effects ?? []).filter(ordinaryOutcomeMatches),
+      'ordinary Ranger spell outcome must not exist before the cast').toHaveLength(0);
+    const ordinarySlotKey = `${String(ordinarySpellCandidate.slotCost.resource)}_${ordinarySlotLevel}`;
+    const ordinaryActionBefore = Number(character.resources?.[ordinaryActionResource] ?? 0);
+    const ordinarySlotBefore = Number(character.resources?.[ordinarySlotKey] ?? 0);
+    expect(ordinaryActionBefore, 'action before the ordinary Ranger spell')
+      .toBeGreaterThanOrEqual(ordinaryActionCost);
+    expect(ordinarySlotBefore, 'slot before the ordinary Ranger spell')
+      .toBeGreaterThanOrEqual(ordinarySlotCost);
+    const ordinaryJournalBefore = await checkedJSON<CharacterEventRow[]>(
+      realForgeApi, 'get', `/api/characters-v3/${character.id}/events`,
+    );
+    const ordinaryJournalIdsBefore = new Set(ordinaryJournalBefore.map((event) => event.id));
+    const ordinarySpellButton = page.locator(`[data-action-id="${ordinarySpell.id}"]:visible`)
+      .getByRole('button').first();
+    await expect(ordinarySpellButton, 'prepared ordinary Ranger spell in the Spells block')
+      .toBeEnabled({ timeout: 30_000 });
+    await ordinarySpellButton.click();
+    const ordinaryChoice = page.getByRole('dialog', { name: 'Выбор при действии' });
+    if (await ordinaryChoice.isVisible()) {
+      await ordinaryChoice.getByRole('button', { name: 'Применить', exact: true }).click();
+    }
+    const ordinaryConfirm = page.getByRole('dialog', { name: 'Подтверждение действия' });
+    await expect(ordinaryConfirm).toBeVisible();
+    const ordinaryCommandPromise = page.waitForResponse((response) => (
+      response.request().method() === 'POST'
+      && new URL(response.url()).pathname === '/api/characters-v3/runtime-commands'
+    ));
+    await ordinaryConfirm.getByRole('button', { name: 'Применить', exact: true }).click();
+    const ordinaryCommandResponse = await ordinaryCommandPromise;
+    assertLiveCanaryRequestOrigin(
+      ordinaryCommandResponse.url(), apiOrigin, 'required-spine ordinary Ranger spell command',
+    );
+    expect(ordinaryCommandResponse.ok(), 'required-spine ordinary Ranger spell atomic command').toBe(true);
+    character = await checkedJSON<CharacterResponse>(
+      auth.api, 'get', `/api/characters-v3/${character.id}`,
+    );
+    const ordinaryActionAfter = ordinaryActionBefore - ordinaryActionCost;
+    const ordinarySlotAfter = ordinarySlotBefore - ordinarySlotCost;
+    expect(Number(character.resources?.[ordinaryActionResource] ?? 0),
+      'ordinary Ranger spell spends its mechanics-declared action cost atomically')
+      .toBe(ordinaryActionAfter);
+    expect(Number(character.resources?.[ordinarySlotKey] ?? 0), 'ordinary Ranger spell spends one slot atomically')
+      .toBe(ordinarySlotAfter);
+    const ordinaryOutcomeEffect = (character.active_effects ?? []).find(ordinaryOutcomeMatches);
+    expect(ordinaryOutcomeEffect, 'ordinary Ranger spell materializes its declared persistent outcome')
+      .toBeDefined();
+    if (!ordinaryOutcomeEffect) throw new Error('The declared ordinary Ranger spell outcome was not persisted');
+    expect(ordinaryOutcomeEffect.mechanics, 'persisted outcome preserves the mechanics-owned payload')
+      .toEqual(expect.objectContaining({
+        ...ordinaryOutcomePayload,
+        remaining: ordinaryOutcomePayload.count,
+      }));
+    expect(ordinaryOutcomeEffect.sourceId, 'persisted outcome remains owned by the casting Ranger')
+      .toBe(character.id);
+    const ordinaryDuration = ordinaryOutcomePayload.duration as JsonRecord;
+    if (ordinaryDuration.type === 'rounds') {
+      expect(ordinaryOutcomeEffect.roundsLeft, 'persistent outcome duration comes from spell mechanics')
+        .toBe(ordinaryDuration.amount);
+    }
+    const isOutcomeJournalEvent = (event: CharacterEventRow): boolean => (
+      event.type === 'effect_applied'
+      && event.payload.type === 'effect_applied'
+      && event.payload.name === ordinaryOutcomeEffect.name
+    );
+    const isResourceJournalEvent = (
+      event: CharacterEventRow,
+      resource: string,
+      amount: number,
+      remaining: number,
+    ): boolean => (
+      event.type === 'resource_spent'
+      && event.payload.type === 'resource_spent'
+      && event.payload.resource === resource
+      && event.payload.amount === amount
+      && event.payload.remaining === remaining
+    );
+    const ordinaryJournalDelta = async (): Promise<CharacterEventRow[]> => {
+      const events = await checkedJSON<CharacterEventRow[]>(
+        realForgeApi, 'get', `/api/characters-v3/${character!.id}/events`,
+      );
+      return events.filter((event) => !ordinaryJournalIdsBefore.has(event.id));
+    };
+    const ordinaryJournalCounts = (events: CharacterEventRow[]) => ({
+      outcome: events.filter(isOutcomeJournalEvent).length,
+      action: events.filter((event) => isResourceJournalEvent(
+        event, ordinaryActionResource, ordinaryActionCost, ordinaryActionAfter,
+      )).length,
+      slot: events.filter((event) => isResourceJournalEvent(
+        event, ordinarySlotKey, ordinarySlotCost, ordinarySlotAfter,
+      )).length,
+    });
+    // Require several consecutive exact snapshots. The former legacy callback
+    // started a second journal POST after the atomic command response; a single
+    // early read could briefly observe one copy and miss the duplicate.
+    let exactJournalSnapshots = 0;
+    await expect.poll(async () => {
+      const counts = ordinaryJournalCounts(await ordinaryJournalDelta());
+      const exact = counts.outcome === 1 && counts.action === 1 && counts.slot === 1;
+      exactJournalSnapshots = exact ? exactJournalSnapshots + 1 : 0;
+      return `${counts.outcome}/${counts.action}/${counts.slot};stable=${exactJournalSnapshots}`;
+    }, {
+      intervals: [250, 500, 1_000, 1_000],
+      timeout: 10_000,
+      message: 'ordinary Ranger spell must append one durable effect/action/slot event with no late duplicates',
+    }).toBe('1/1/1;stable=5');
+    const settledOrdinaryJournalDelta = await ordinaryJournalDelta();
+    const settledOrdinaryJournalCounts = ordinaryJournalCounts(settledOrdinaryJournalDelta);
+    expect(settledOrdinaryJournalCounts, 'exact mechanics-owned journal delta after ordinary Ranger spell')
+      .toEqual({ outcome: 1, action: 1, slot: 1 });
+    expect(settledOrdinaryJournalDelta.filter((event) => (
+      isOutcomeJournalEvent(event)
+      || isResourceJournalEvent(event, ordinaryActionResource, ordinaryActionCost, ordinaryActionAfter)
+      || isResourceJournalEvent(event, ordinarySlotKey, ordinarySlotCost, ordinarySlotAfter)
+    )), 'the mechanics-owned event delta contains no duplicate rows').toHaveLength(3);
+    await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);
+
+    // Equip an ammunition weapon through the real sheet. The candidate and its
+    // ammunition are discovered from the immutable weapon profile, so this
+    // keeps proving the runtime contract if catalog UUIDs or display names move.
+    const ownedCardIds = [...new Set([
+      ...(character.inventory_items ?? []).map((row) => row.card_id),
+      ...Object.values(character.equipment ?? {}).filter((id): id is string => typeof id === 'string'),
+    ])];
+    const ownedCards = await Promise.all(ownedCardIds.map((cardId) => (
+      checkedJSON<Card>(realForgeApi, 'get', `/api/cards/${cardId}`)
+    )));
+    const rangedWeapon = ownedCards.find((card) => {
+      const parsed = parseWeaponProfile(card);
+      return parsed.valid
+        && parsed.profile.attackModes.some((mode) => mode.kind === 'ranged')
+        && Boolean(parsed.profile.ammo?.cardId)
+        && (character!.inventory_items ?? []).some((row) => (
+          row.card_id === parsed.profile.ammo?.cardId && row.qty > 0
+        ));
+    });
+    if (!rangedWeapon) {
+      throw new Error('The real Ranger starting kit has no executable ranged weapon with ammunition');
+    }
+    const rangedProfile = parseWeaponProfile(rangedWeapon);
+    if (!rangedProfile.valid) {
+      throw new Error(`The selected ranged weapon is not executable: ${rangedProfile.issue}`);
+    }
+    if (!rangedProfile.profile.ammo) throw new Error('The selected ranged weapon has no ammunition binding');
+    const ammunitionCardId = rangedProfile.profile.ammo.cardId;
+    const inventoryQuantity = (snapshot: CharacterResponse, cardId: string): number => (
+      (snapshot.inventory_items ?? [])
+        .filter((row) => row.card_id === cardId)
+        .reduce((sum, row) => sum + row.qty, 0)
+    );
+    const rangedWeaponEquipped = Object.values(character.equipment ?? {}).includes(rangedWeapon.id);
+    if (!rangedWeaponEquipped) {
+      const inventory = page.locator('.sheet-group').filter({ has: page.getByRole('heading', { name: 'Инвентарь' }) });
+      const rangedWeaponItem = inventory.getByTitle(rangedWeapon.name, { exact: true }).first();
+      await expect(rangedWeaponItem, 'mechanics-selected Ranger ranged weapon in sheet inventory')
+        .toBeVisible({ timeout: 30_000 });
+      await rangedWeaponItem.click();
+      const equipDialog = page.locator('.sheet-equip-dialog');
+      await expect(equipDialog).toBeVisible();
+      const equipResponsePromise = page.waitForResponse((response) => (
+        response.request().method() === 'PATCH'
+        && new URL(response.url()).pathname === `/api/characters-v3/${character!.id}/runtime`
+      ));
+      await equipDialog.getByRole('button', { name: /^\u041d\u0430\u0434\u0435\u0442\u044c(?: \(\u0437\u0430\u043c\u0435\u043d\u0438\u0442\u044c\))?$/ }).click();
+      const equipResponse = await equipResponsePromise;
+      assertLiveCanaryRequestOrigin(equipResponse.url(), apiOrigin, 'real Ranger ranged weapon equip');
+      expect(equipResponse.ok(), 'real Ranger ranged weapon equip').toBe(true);
+      character = await equipResponse.json() as CharacterResponse;
+      expect(Object.values(character.equipment ?? {})).toContain(rangedWeapon.id);
+    }
+
+    await page.getByTestId('open-solo-combat').click();
+    const setup = page.getByRole('dialog', { name: /Противники для/ });
+    await expect(setup).toBeVisible();
+    const monsterSetupRow = setup.locator('article').filter({
+      has: setup.getByRole('heading', { name: qualifyingMonster.name, exact: true }),
+    });
+    await expect(monsterSetupRow, 'a live low-threat monster with a declared damaging attack')
+      .toHaveCount(1);
+    await monsterSetupRow.locator('button').last().click();
+    // Browser-owned deterministic tape: 19 on d20 is a qualifying non-critical
+    // hit and keeps initiative stable. UUID generation remains crypto-owned.
+    await page.evaluate(() => {
+      const harness = window as typeof window & { __liveCanaryOriginalRandom?: () => number };
+      harness.__liveCanaryOriginalRandom = Math.random;
+      Math.random = () => 0.94;
+    });
+    await setup.getByRole('button', { name: /Начать бой/ }).click();
+    await expect(page).toHaveURL(new RegExp(`/characters-v3/${character.id}/combat(?:\\?.*)?$`));
+    await expect(page.getByRole('region', { name: 'Панель действий' })).toBeVisible();
+    await expect.poll(async () => {
+      let visible = 0;
+      for (const actionId of weaponActionIds) {
+        visible += await page.locator(`[data-action-id="${actionId}"]`).count();
+      }
+      return visible;
+    }, { message: 'a hydrated equipped weapon action must survive the dedicated-combat projection' })
+      .toBeGreaterThan(0);
+    const rangedActionButton = page.locator(`[data-action-id="${rangedAction.id}"]:visible`)
+      .getByRole('button').first();
+    const reactionBackdrop = page.locator('.combat-reaction-backdrop');
+    const damageReactionHeading = reactionBackdrop.getByRole('heading', { name: 'Вам нанесен урон' });
+    const endTurnButton = page.getByRole('button', { name: 'Завершить ход', exact: true });
+    let damageReactionReached = false;
+    // A low-speed monster may need one deterministic approach/dash turn. Each
+    // retry advances only a real Ranger turn and waits for its CAS write, so a
+    // persisted interruption cannot accidentally replay the monster's attack.
+    for (let monsterTurn = 0; monsterTurn < 4; monsterTurn += 1) {
+      let gate = 'waiting';
+      await expect.poll(async () => {
+        if (await page.locator('.combat-error').isVisible()) gate = 'error';
+        else if (await damageReactionHeading.isVisible()) gate = 'reaction';
+        else if (await endTurnButton.isEnabled()) gate = 'player_turn';
+        else gate = 'waiting';
+        return gate;
+      }, { message: 'combat must reach a damage reaction or a retry-safe Ranger turn', timeout: 30_000 })
+        .toMatch(/^(?:reaction|player_turn|error)$/);
+      if (gate === 'error') {
+        throw new Error(`Dedicated combat failed before the damage reaction: ${await page.locator('.combat-error').innerText()}`);
+      }
+      if (gate === 'reaction') {
+        damageReactionReached = true;
+        break;
+      }
+      const turnResponsePromise = page.waitForResponse((response) => (
+        response.request().method() === 'PATCH'
+        && new URL(response.url()).pathname === `/api/characters-v3/${character!.id}/runtime`
+      ));
+      await endTurnButton.click();
+      const turnResponse = await turnResponsePromise;
+      assertLiveCanaryRequestOrigin(turnResponse.url(), apiOrigin, 'dedicated-combat Ranger turn advance');
+      expect(turnResponse.ok(), 'dedicated-combat Ranger turn advance persistence').toBe(true);
+    }
+    expect(damageReactionReached, 'a deterministic live monster attack must open the damage reaction')
+      .toBe(true);
+    await expect(damageReactionHeading).toBeVisible();
+
+    character = await checkedJSON<CharacterResponse>(
+      auth.api, 'get', `/api/characters-v3/${character.id}`,
+    );
+    const combatBeforeReaction = record(character.turn_state?.solo_combat_v1);
+    const worldBeforeReaction = record(combatBeforeReaction?.world);
+    const actorsBeforeReaction = record(worldBeforeReaction?.actors);
+    const rangerBeforeReaction = record(actorsBeforeReaction?.[character.id]);
+    const rangerRuntimeBeforeReaction = record(rangerBeforeReaction?.runtime);
+    const rangerContextBeforeReaction = record(rangerBeforeReaction?.character);
+    const pendingDamage = record(worldBeforeReaction?.pendingResolution);
+    const pendingRequest = record(pendingDamage?.request);
+    if (!combatBeforeReaction || !worldBeforeReaction || !actorsBeforeReaction
+      || !rangerBeforeReaction || !rangerRuntimeBeforeReaction || !rangerContextBeforeReaction
+      || pendingDamage?.type !== 'damage_reaction' || pendingRequest?.type !== 'reaction') {
+      throw new Error('The persisted dedicated combat does not contain a valid pre-damage reaction');
+    }
+    const initiative = records(combatBeforeReaction.initiative);
+    expect(initiative.length, 'deterministic combat includes the Ranger and selected monster')
+      .toBe(2);
+    expect(initiative.map((entry) => entry.die), 'the live initiative tape is deterministic and non-critical')
+      .toEqual([19, 19]);
+    const offeredOptions = records(pendingRequest.options);
+    const offeredActionIds = new Set(offeredOptions.map((option) => String(option.actionId ?? '')));
+    const combatActions = records(combatBeforeReaction.catalogActions);
+    const semanticDamageReactions = combatActions.filter((action) => {
+      if (!offeredActionIds.has(String(action.id ?? ''))) return false;
+      const mechanics = record(action.mechanics);
+      const activation = record(mechanics?.activation);
+      return activation?.mode === 'reaction'
+        && record(activation.trigger)?.event === 'damage_taken'
+        && effectResultPayloads(mechanics).some((payload) => payload.kind === 'reduce_damage');
+    });
+    expect(semanticDamageReactions, 'one offered reaction owns the reduce_damage mechanic')
+      .toHaveLength(1);
+    const combatDamageReaction = semanticDamageReactions[0];
+    expect(combatDamageReaction.name, 'the migrated combat action retains its catalog identity')
+      .toBe(reduceDamageReaction.name);
+    const combatReactionMechanics = record(combatDamageReaction.mechanics);
+    const combatReactionActivation = record(combatReactionMechanics?.activation);
+    const reductionPayloads = effectResultPayloads(combatReactionMechanics)
+      .filter((payload) => payload.kind === 'reduce_damage');
+    expect(reductionPayloads, 'the offered reaction has one authoritative reduction payload')
+      .toHaveLength(1);
+    const reductionPayload = reductionPayloads[0];
+    if (reductionPayload.amount === undefined) {
+      throw new Error('The mechanics-owned damage reduction has no amount formula');
+    }
+    const reactionCosts = records(combatReactionActivation?.cost);
+    expect(reactionCosts.length, 'the damage reaction declares its resource payment')
+      .toBeGreaterThan(0);
+    const targetRuntimeBeforeDamage = record(pendingDamage.targetRuntimeBeforeDamage);
+    const hpBeforeDamage = record(targetRuntimeBeforeDamage?.hp);
+    const resourcesBeforeDamage = record(targetRuntimeBeforeDamage?.resources);
+    const maxResourcesBeforeDamage = record(targetRuntimeBeforeDamage?.maxResources);
+    if (!targetRuntimeBeforeDamage || !hpBeforeDamage || !resourcesBeforeDamage || !maxResourcesBeforeDamage) {
+      throw new Error('The damage continuation lost the Ranger runtime before damage');
+    }
+    const expectedResources = Object.fromEntries(Object.entries(resourcesBeforeDamage).map(([key, value]) => (
+      [key, Number(value)]
+    )));
+    const expectedSpends = reactionCosts.map((cost) => {
+      const resource = String(cost.resource ?? '');
+      const key = resource === 'spell_slot' && cost.level !== undefined
+        ? `${resource}_${String(cost.level)}`
+        : resource;
+      const amount = Math.max(0, Math.floor(Number(cost.amount ?? 1)));
+      if (!key || !Number.isSafeInteger(amount) || amount <= 0) {
+        throw new Error('The damage reaction declares an invalid resource cost');
+      }
+      const remaining = Number(expectedResources[key] ?? 0) - amount;
+      expectedResources[key] = remaining;
+      return { resource: key, amount, remaining };
+    });
+    expect(expectedSpends.filter((cost) => cost.resource !== 'reaction').length,
+      'the lineage reaction declares a persistent non-turn resource spend').toBeGreaterThan(0);
+    const damagePackets = records(pendingDamage.damage);
+    const incomingDamage = damagePackets.reduce((sum, packet) => sum + Number(packet.amount ?? 0), 0);
+    expect(incomingDamage, 'the qualifying monster hit holds positive incoming damage')
+      .toBeGreaterThan(0);
+    await expect(reactionBackdrop).toContainText(`Получено урона: ${incomingDamage}`);
+    const hpCurrentBefore = Number(hpBeforeDamage.current ?? 0);
+    const hpTempBefore = Number(hpBeforeDamage.temp ?? 0);
+    expect(character.current_hp, 'incoming damage remains held until the reaction decision')
+      .toBe(hpCurrentBefore);
+    const logBeforeReaction = records(combatBeforeReaction.log);
+    const logIdsBeforeReaction = new Set(logBeforeReaction.map((entry) => String(entry.id ?? '')));
+    const formulaContext: JsonRecord = {
+      abilityMods: record(rangerContextBeforeReaction.abilityMods) ?? {},
+      profBonus: Number(rangerContextBeforeReaction.profBonus ?? 0),
+      selfLevel: Number(rangerContextBeforeReaction.level ?? character.level ?? 1),
+      classLevels: record(rangerContextBeforeReaction.classLevels),
+      spellcastingMod: Number(rangerContextBeforeReaction.spellcastingMod ?? 0),
+      variables: record(rangerContextBeforeReaction.variables),
+    };
+    const expectedReductionRoll = rollFormula(String(reductionPayload.amount), formulaContext, {
+      rng: () => 0,
+    });
+    const appliedReduction = Math.min(
+      incomingDamage,
+      Math.max(0, Math.floor(expectedReductionRoll.total)),
+    );
+    expect(appliedReduction, 'the mechanics-owned reaction must reduce this qualifying hit')
+      .toBeGreaterThan(0);
+    const expectedDamage = incomingDamage - appliedReduction;
+    const expectedTempAfter = Math.max(0, hpTempBefore - expectedDamage);
+    const expectedCurrentAfter = Math.max(0, hpCurrentBefore - Math.max(0, expectedDamage - hpTempBefore));
+    const offeredDamageReaction = offeredOptions.find((option) => (
+      option.actionId === combatDamageReaction.id
+    ));
+    if (typeof offeredDamageReaction?.label !== 'string') {
+      throw new Error('The semantic damage reaction has no persisted decision label');
+    }
+
+    // Minimize the reduction die deterministically, then prove the exact engine
+    // result rather than merely observing that the dialog closed.
+    await page.evaluate(() => { Math.random = () => 0; });
+    const reactionResponsePromise = page.waitForResponse((response) => (
+      response.request().method() === 'PATCH'
+      && new URL(response.url()).pathname === `/api/characters-v3/${character!.id}/runtime`
+    ));
+    await reactionBackdrop.getByRole('button', {
+      name: offeredDamageReaction.label,
+      exact: true,
+    }).click();
+    const reactionResponse = await reactionResponsePromise;
+    assertLiveCanaryRequestOrigin(reactionResponse.url(), apiOrigin, 'dedicated-combat damage reaction decision');
+    expect(reactionResponse.ok(), 'dedicated-combat damage reaction persistence').toBe(true);
+    await page.evaluate(() => {
+      const harness = window as typeof window & { __liveCanaryOriginalRandom?: () => number };
+      if (harness.__liveCanaryOriginalRandom) Math.random = harness.__liveCanaryOriginalRandom;
+      delete harness.__liveCanaryOriginalRandom;
+    });
+
+    character = await checkedJSON<CharacterResponse>(
+      auth.api, 'get', `/api/characters-v3/${character.id}`,
+    );
+    const combatAfterReaction = record(character.turn_state?.solo_combat_v1);
+    const worldAfterReaction = record(combatAfterReaction?.world);
+    const rangerAfterReaction = record(record(worldAfterReaction?.actors)?.[character.id]);
+    const rangerRuntimeAfterReaction = record(rangerAfterReaction?.runtime);
+    const hpAfterReaction = record(rangerRuntimeAfterReaction?.hp);
+    const resourcesAfterReaction = record(rangerRuntimeAfterReaction?.resources);
+    const maxResourcesAfterReaction = record(rangerRuntimeAfterReaction?.maxResources);
+    if (!combatAfterReaction || !worldAfterReaction || !rangerRuntimeAfterReaction
+      || !hpAfterReaction || !resourcesAfterReaction || !maxResourcesAfterReaction) {
+      throw new Error('The accepted damage reaction did not persist a complete Ranger runtime');
+    }
+    expect(worldAfterReaction.pendingResolution, 'accepted damage reaction closes the persisted interruption')
+      .toBeNull();
+    expect(hpAfterReaction, 'mechanics-derived reduction changes the exact HP pools')
+      .toMatchObject({ current: expectedCurrentAfter, temp: expectedTempAfter });
+    expect(character.current_hp, 'server character HP matches the dedicated-combat world')
+      .toBe(expectedCurrentAfter);
+    expect(expectedDamage, 'accepted reduction lowers the incoming damage')
+      .toBeLessThan(incomingDamage);
+    for (const spend of expectedSpends) {
+      const expectedCurrent = spend.resource === 'reaction'
+        ? Number(maxResourcesAfterReaction[spend.resource] ?? 0)
+        : spend.remaining;
+      expect(Number(resourcesAfterReaction[spend.resource] ?? 0),
+        `post-reaction resource ${spend.resource}`).toBe(expectedCurrent);
+    }
+    const logAfterReaction = records(combatAfterReaction.log);
+    const reactionLogDelta = logAfterReaction.filter((entry) => (
+      !logIdsBeforeReaction.has(String(entry.id ?? ''))
+    ));
+    const reactionRecords = reactionLogDelta.flatMap((entry) => records(entry.records));
+    const reactionEvents: Array<{ row: JsonRecord; event: JsonRecord }> = reactionRecords.flatMap((row) => {
+      const event = record(row.event);
+      return event ? [{ row, event }] : [];
+    });
+    const reductionEvents = reactionEvents.filter(({ event }) => event.type === 'damage_reduction');
+    expect(reductionEvents, 'one reduction roll is recorded for the accepted reaction')
+      .toHaveLength(1);
+    expect(reductionEvents[0].event.amount, 'reduction event equals the mechanics formula under the fixed tape')
+      .toBe(expectedReductionRoll.total);
+    const appliedDamage = reactionEvents
+      .filter(({ row, event }) => (
+        event.type === 'damage'
+        && Array.isArray(row.targetIds)
+        && row.targetIds.includes(character!.id)
+      ))
+      .reduce((sum, { event }) => sum + Number(event.amount ?? 0), 0);
+    expect(appliedDamage, 'combat log records the exact post-reduction damage')
+      .toBe(expectedDamage);
+    for (const spend of expectedSpends) {
+      expect(reactionEvents.filter(({ event }) => (
+        event.type === 'resource_spent'
+        && event.resource === spend.resource
+        && event.amount === spend.amount
+        && event.remaining === spend.remaining
+      )), `one exact ${spend.resource} spend event`).toHaveLength(1);
+    }
+    await expect(rangedActionButton, 'the equipped ranged weapon action must become executable on the Ranger turn')
+      .toBeEnabled({ timeout: 30_000 });
+
+    character = await checkedJSON<CharacterResponse>(
+      auth.api,
+      'get',
+      `/api/characters-v3/${character.id}`,
+    );
+    const ammunitionBefore = inventoryQuantity(character, ammunitionCardId);
+    expect(ammunitionBefore, 'ammunition before the ranged attack').toBeGreaterThan(0);
+    expect(character.resources?.action, 'action resource before the ranged attack').toBe(1);
+    const logEntriesBefore = await page.locator('.combat-log-entry').count();
+
+    await rangedActionButton.click();
+    await expect(page.getByTestId('tactical-map'), 'weapon click enters explicit target-selection mode')
+      .toHaveClass(/\bis-targeting\b/);
+    const opponent = page.locator(
+      `.tactical-cell[data-actor-id]:not([data-actor-id="${character.id}"])`,
+    ).first();
+    await expect(opponent, 'a live opponent token for the weapon attack').toBeVisible();
+    const attackResponsePromise = page.waitForResponse((response) => (
+      response.request().method() === 'PATCH'
+      && new URL(response.url()).pathname === `/api/characters-v3/${character!.id}/runtime`
+    ));
+    await opponent.click();
+    const attackResponse = await attackResponsePromise;
+    assertLiveCanaryRequestOrigin(attackResponse.url(), apiOrigin, 'dedicated-combat Ranger weapon attack');
+    expect(attackResponse.ok(), 'dedicated-combat Ranger weapon attack persistence').toBe(true);
+    await expect(page.getByTestId('tactical-map')).not.toHaveClass(/\bis-targeting\b/);
+    await expect.poll(() => page.locator('.combat-log-entry').count(), {
+      message: 'the weapon attack must append a structured combat-log entry',
+    }).toBeGreaterThan(logEntriesBefore);
+    const attackLog = page.locator('.combat-log-entry').first();
+    await expect(attackLog, 'the resolved roll keeps its data-owned action identity')
+      .toContainText(rangedAction.name);
+    await expect(attackLog.locator('.combat-log-detail--roll').first(), 'the target selection resolves an attack roll')
+      .toContainText('Атака против КЗ');
+
+    character = await checkedJSON<CharacterResponse>(
+      auth.api,
+      'get',
+      `/api/characters-v3/${character.id}`,
+    );
+    expect(character.resources?.action, 'one basic weapon attack spends exactly the action').toBe(0);
+    expect(inventoryQuantity(character, ammunitionCardId), 'only the ranged weapon action spends ammunition')
+      .toBe(ammunitionBefore - 1);
+    await expect(page.locator('.combat-error')).toHaveCount(0);
+
+    page.off('request', onRequest);
+    page.off('requestfinished', onRequestDone);
+    page.off('requestfailed', onRequestDone);
+    expect(duplicateReads, 'concurrent duplicate API reads').toEqual([]);
+    if (diagnostics.length > 0) {
+      throw new Error(`Browser diagnostics are not clean:\n${diagnostics.join('\n')}`);
+    }
+  } catch (error) {
+    bodyError = error;
+  } finally {
+    if (diagnostics.length > 0) {
+      await testInfo.attach('real-forge-production-spine-diagnostics', {
+        body: diagnostics.join('\n'),
+        contentType: 'text/plain',
+      });
+    }
+    stopDiagnostics?.();
+    await closeContext(context, 'real Forge production spine', cleanupErrors);
+    if (auth) {
+      await cleanupCharacterNamedArtifact(auth.api, character?.id, characterName, cleanupErrors);
+      try {
+        await auth.api.request.dispose();
+      } catch (error) {
+        cleanupErrors.push(`API context cleanup: ${errorMessage(error)}`);
+      }
+    }
+  }
+
+  if (bodyError !== undefined) {
+    if (cleanupErrors.length > 0) {
+      throw new AggregateError(
+        [bodyError, ...cleanupErrors.map((message) => new Error(message))],
+        'Real Forge production spine and cleanup both failed',
+      );
+    }
+    throw bodyError;
+  }
+  if (cleanupErrors.length > 0) throw new Error(cleanupErrors.join('; '));
+});
+
 test('public sheet certificate: Forge Magic Initiate Fighter uses Longbow and Thunderwave', async ({
   browser,
   playwright,
@@ -892,11 +1797,13 @@ test('public sheet certificate: Forge Magic Initiate Fighter uses Longbow and Th
     const mageConfirm = page.getByRole('dialog', { name: 'Подтверждение действия' });
     await expect(mageConfirm).toBeVisible();
     const mageRuntimePromise = page.waitForResponse((response) => (
-      response.request().method() === 'PATCH'
-      && new URL(response.url()).pathname === `/api/characters-v3/${character!.id}/runtime`
+      response.request().method() === 'POST'
+      && new URL(response.url()).pathname === '/api/characters-v3/runtime-commands'
     ));
     await mageConfirm.getByRole('button', { name: 'Применить', exact: true }).click();
-    expect((await mageRuntimePromise).ok(), 'public Mage Hand runtime persistence').toBe(true);
+    const mageRuntimeResponse = await mageRuntimePromise;
+    assertLiveCanaryRequestOrigin(mageRuntimeResponse.url(), apiOrigin, 'public Mage Hand runtime command');
+    expect(mageRuntimeResponse.ok(), 'public Mage Hand atomic runtime command').toBe(true);
     character = await checkedJSON<CharacterResponse>(auth.api, 'get', `/api/characters-v3/${character.id}`);
     expect((character.active_effects ?? []).some((effect) => (
       (effect.mechanics as JsonRecord)?.kind === 'remote_manipulator'
@@ -919,11 +1826,13 @@ test('public sheet certificate: Forge Magic Initiate Fighter uses Longbow and Th
     const elementalismConfirm = page.getByRole('dialog', { name: 'Подтверждение действия' });
     await expect(elementalismConfirm).toBeVisible();
     const elementalismRuntimePromise = page.waitForResponse((response) => (
-      response.request().method() === 'PATCH'
-      && new URL(response.url()).pathname === `/api/characters-v3/${character!.id}/runtime`
+      response.request().method() === 'POST'
+      && new URL(response.url()).pathname === '/api/characters-v3/runtime-commands'
     ));
     await elementalismConfirm.getByRole('button', { name: 'Применить', exact: true }).click();
-    expect((await elementalismRuntimePromise).ok(), 'public Elementalism runtime persistence').toBe(true);
+    const elementalismRuntimeResponse = await elementalismRuntimePromise;
+    assertLiveCanaryRequestOrigin(elementalismRuntimeResponse.url(), apiOrigin, 'public Elementalism runtime command');
+    expect(elementalismRuntimeResponse.ok(), 'public Elementalism atomic runtime command').toBe(true);
     await page.getByRole('button', { name: 'Открыть журнал', exact: true }).click();
     const journal = page.getByRole('dialog', { name: 'Журнал действий' });
     await expect(journal).toBeVisible();
@@ -1094,11 +2003,15 @@ test('public sheet certificate: Forge Wizard casts utility world primitives', as
       const confirm = page.getByRole('dialog', { name: 'Подтверждение действия' });
       await expect(confirm).toBeVisible();
       const runtimeResponse = page.waitForResponse((response) => (
-        response.request().method() === 'PATCH'
-        && new URL(response.url()).pathname === `/api/characters-v3/${character!.id}/runtime`
+        response.request().method() === 'POST'
+        && new URL(response.url()).pathname === '/api/characters-v3/runtime-commands'
       ));
       await confirm.getByRole('button', { name: 'Применить', exact: true }).click();
-      expect((await runtimeResponse).ok(), `${spell.card_number} runtime persistence`).toBe(true);
+      const runtimeCommandResponse = await runtimeResponse;
+      assertLiveCanaryRequestOrigin(
+        runtimeCommandResponse.url(), apiOrigin, `${spell.card_number} runtime command`,
+      );
+      expect(runtimeCommandResponse.ok(), `${spell.card_number} atomic runtime command`).toBe(true);
       await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);
     };
 

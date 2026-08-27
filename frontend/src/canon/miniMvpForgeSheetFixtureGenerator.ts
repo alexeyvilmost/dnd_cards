@@ -1,6 +1,11 @@
 import { autoBuildAt, type BuildContent } from './autoBuild';
 import type { CharacterDraft } from '../character/types';
-import type { Background, CharacterClass, Feat, Race } from '../types';
+import type { Background, Card, CharacterClass, Feat, Race } from '../types';
+import { assertClassEquipmentReferenceClosure } from './classEquipmentReferenceIntegrity';
+export {
+  ClassEquipmentReferenceIntegrityError,
+  assertClassEquipmentReferenceClosure,
+} from './classEquipmentReferenceIntegrity';
 
 type ManifestEntry = {
   key: string;
@@ -36,6 +41,8 @@ export interface MiniMvpForgeSheetFixture {
   roots: MiniMvpForgeSheetRoot[];
 }
 
+export type MiniMvpForgeBuildContent = BuildContent & { cards: Card[] };
+
 function resolveManifest<T extends { card_number: string }>(
   manifest: MiniMvpForgeManifest,
   collection: string,
@@ -64,8 +71,9 @@ function cardNumbers(values: ReadonlyArray<{ card_number: string }>): string[] {
  */
 export async function buildMiniMvpForgeSheetFixture(
   manifest: MiniMvpForgeManifest,
-  content: BuildContent,
+  content: MiniMvpForgeBuildContent,
 ): Promise<MiniMvpForgeSheetFixture> {
+  assertClassEquipmentReferenceClosure(content.classes, content.cards);
   const classes = resolveManifest<CharacterClass>(manifest, 'classes', content.classes);
   const species = resolveManifest<Race>(manifest, 'species', content.races);
   const backgrounds = resolveManifest<Background>(manifest, 'backgrounds', content.backgrounds);

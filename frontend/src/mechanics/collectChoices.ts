@@ -45,6 +45,18 @@ export type PendingChoice = {
   allowedOptionIds?: string[];
 };
 
+/**
+ * Weapon Mastery is selected when the character first gains the feature and
+ * may later be changed during play. Historical content marks it `in_play`
+ * because of that later rest-time replacement, but a newly created character
+ * still needs an initial, rules-complete selection.
+ */
+export function requiresInitialCharacterChoice(
+  choice: Pick<PendingChoice, 'context' | 'grantKind'>,
+): boolean {
+  return choice.context !== 'in_play' || choice.grantKind === 'weapon_mastery';
+}
+
 type Dict = Record<string, unknown>;
 export type ChoiceRecommendations = Readonly<Record<string, readonly string[]>>;
 

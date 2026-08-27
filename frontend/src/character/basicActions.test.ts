@@ -111,4 +111,49 @@ describe('базовые действия как сущности (не хард
     } as unknown as Action;
     expect(collectSheetActions(emptyAssembled, [], [poolOnly])).toEqual([]);
   });
+
+  it('проектирует reaction Action как capability, но не дублирует его из reaction Effect', () => {
+    const mechanics = {
+      activation: {
+        mode: 'reaction',
+        trigger: { event: 'damage_taken', timing: 'before' },
+        cost: [{ resource: 'reaction' }, { resource: 'giant_legacy' }],
+      },
+      effects: [{
+        resolution: 'auto',
+        result: [{ kind: 'reduce_damage', amount: '1d12+con' }],
+      }],
+    };
+    const action = {
+      id: 'stone-action',
+      card_number: 'ACT-goliath-stone',
+      name: 'Каменная стойкость',
+      mechanics,
+    } as unknown as Action;
+    const assembled = {
+      ...emptyAssembled,
+      actions: [{
+        action,
+        origin: { kind: 'race', id: 'RACE-0011-stone', name: 'Каменный голиаф' },
+      }],
+      effects: [{
+        effect: {
+          id: 'stone-effect',
+          card_number: 'RE-sub-stone',
+          name: 'Каменная стойкость',
+          mechanics,
+        },
+        origin: { kind: 'race', id: 'RACE-0011-stone', name: 'Каменный голиаф' },
+      }],
+    } as unknown as AssembledCharacter;
+
+    const projected = collectSheetActions(assembled);
+    expect(projected).toHaveLength(1);
+    expect(projected[0]).toMatchObject({
+      id: action.id,
+      group: 'race',
+      actionRef: action,
+      mechanics: { activation: { mode: 'reaction' } },
+    });
+  });
 });

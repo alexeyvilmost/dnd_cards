@@ -88,6 +88,52 @@ function concentrationSave(): PendingResolution {
   })) as PendingResolution;
 }
 
+function damageReaction(): PendingResolution {
+  const runtime = {
+    hp: { current: 20, max: 20, temp: 0 },
+    resources: { reaction: 1, giant_legacy: 1 },
+    maxResources: { reaction: 1, giant_legacy: 1 },
+    equipment: {}, inventory: [], activeEffects: [],
+  };
+  return JSON.parse(JSON.stringify({
+    id: 'damage-reaction:1',
+    type: 'damage_reaction',
+    openedByCommandId: 'command:damage',
+    openedAtRevision: 7,
+    deadlineLogicalClock: 12,
+    sourceActorId: SOURCE,
+    targetActorId: TARGET,
+    actionId: 'heavy-strike',
+    action: {
+      id: 'heavy-strike', name: 'Heavy Strike', kind: 'nonSpell',
+      sourceEntityIds: ['test:heavy-strike'],
+      targeting: {
+        minTargets: 1, maxTargets: 1, rangeFt: 5,
+        requiresLineOfSight: true, allowedRelations: ['enemy'],
+      },
+      mechanics: { effects: [] },
+    },
+    facts: {
+      factsSource: 'scenario', boardRevision: 0, relation: 'enemy',
+      distanceFt: 5, lineOfSight: true, cover: 'none',
+    },
+    targetRuntimeBeforeDamage: runtime,
+    sourceRuntimeAfter: runtime,
+    targetRuntimeAfter: { ...runtime, hp: { current: 12, max: 20, temp: 0 } },
+    damage: [{ amount: 8, damageType: 'bludgeoning' }],
+    preDamageTargetEvents: [], attackEvents: [], retaliationEvents: [],
+    retaliationSourceEntityIds: [], obligationIds: [], followUps: [],
+    request: {
+      id: 'request:damage', type: 'reaction', actorId: TARGET,
+      trigger: {
+        type: 'damage_taken', sourceActorId: SOURCE,
+        actionId: 'heavy-strike', amount: 8, damageTypes: ['bludgeoning'],
+      },
+      options: [{ actionId: 'stone-endurance', label: 'Каменная стойкость' }],
+    },
+  })) as PendingResolution;
+}
+
 describe('SheetPendingCombatPanel', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -170,6 +216,27 @@ describe('SheetPendingCombatPanel', () => {
       kind: 'reaction', actionId: 'shield',
       spell: { grantId: 'shield-grant', mode: 'normal', preferFreeUse: false },
     });
+    await act(async () => buttons.find((button) => button.textContent?.includes('Не использовать'))!.click());
+    expect(onResolve).toHaveBeenLastCalledWith({ kind: 'reaction', actionId: null });
+  });
+
+  it('renders a persisted generic pre-damage reaction with exact damage and accept/skip choices', async () => {
+    const onResolve = vi.fn();
+    await act(async () => root.render(
+      <SheetPendingCombatPanel
+        pending={damageReaction()}
+        viewingCharacterId={TARGET}
+        actorNames={{ [TARGET]: 'Варувар' }}
+        onResolve={onResolve}
+      />,
+    ));
+
+    expect(container.querySelector('[data-testid="sheet-combat-damage-reaction"]')).not.toBeNull();
+    expect(container.textContent).toContain('Реакция перед получением урона');
+    expect(container.textContent).toContain('Варувар: входящий урон — 8 (bludgeoning)');
+    const buttons = [...container.querySelectorAll<HTMLButtonElement>('button')];
+    await act(async () => buttons.find((button) => button.textContent?.includes('Каменная стойкость'))!.click());
+    expect(onResolve).toHaveBeenLastCalledWith({ kind: 'reaction', actionId: 'stone-endurance' });
     await act(async () => buttons.find((button) => button.textContent?.includes('Не использовать'))!.click());
     expect(onResolve).toHaveBeenLastCalledWith({ kind: 'reaction', actionId: null });
   });

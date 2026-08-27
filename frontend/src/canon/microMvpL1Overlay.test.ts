@@ -10,6 +10,7 @@ import { executeAction } from '../engine/execute';
 import { collectRollModifiers } from '../engine/modifiers';
 import {
   assertMicroMvpL1OverlayReady,
+  classOwnedSpellSelections,
   compileMicroMvpL1Overlay,
   compileMicroMvpL1OverlayFromCatalogs,
   compileMicroMvpL1ChoiceVariants,
@@ -154,7 +155,7 @@ describe('versioned deterministic micro-MVP L1 content overlay', () => {
   });
 
   it('pins overlay, compiled content, and release hashes independently from the raw release', () => {
-    expect(MICRO_MVP_L1_OVERLAY_VERSION).toBe('1.12.0');
+    expect(MICRO_MVP_L1_OVERLAY_VERSION).toBe('1.13.0');
     expect(provider.release).toMatchObject({
       id: MICRO_MVP_L1_OVERLAY_RELEASE_ID,
       sourceReleaseId: provider.source.release.id,
@@ -174,7 +175,7 @@ describe('versioned deterministic micro-MVP L1 content overlay', () => {
     expect(() => assertMicroMvpL1OverlayReady(provider)).not.toThrow();
   });
 
-  it('derives all five L1 caster abilities from their materialized effect primitive', () => {
+  it('derives every certified matrix caster ability from its materialized effect primitive', () => {
     const expected = {
       'CLASS-cleric': ['EFF-cleric-spellcasting', 'wis'],
       'CLASS-druid': ['EFF-druid-spellcasting', 'wis'],
@@ -196,6 +197,37 @@ describe('versioned deterministic micro-MVP L1 content overlay', () => {
         grant.spellcastingAbility === ability
       ))).toBe(true);
     }
+  });
+
+  it('discovers a new class spell choice from provenance and grant data without a class/suffix registry', () => {
+    const choice = {
+      id: 'class:new-caster:feature:new-spellcasting:new_spells_l1',
+      prompt: 'Choose spells',
+      count: 2,
+      source: 'spell',
+      grant: { kind: 'grant_spell', label: 'prepared' },
+      grantKind: 'grant_spell',
+      origin: {
+        kind: 'class' as const,
+        id: 'new-caster',
+        name: 'Renamed caster',
+        featureId: 'new-spellcasting',
+      },
+    };
+    expect(classOwnedSpellSelections({
+      classId: 'new-caster',
+      pendingChoices: [choice],
+      resolvedChoices: { [choice.id]: ['spell:a', 'spell:b'] },
+    })).toEqual([{
+      choice,
+      access: 'always_prepared',
+      selectedReferences: ['spell:a', 'spell:b'],
+    }]);
+    expect(() => classOwnedSpellSelections({
+      classId: 'new-caster',
+      pendingChoices: [{ ...choice, grant: { kind: 'grant_spell' } }],
+      resolvedChoices: { [choice.id]: ['spell:a', 'spell:b'] },
+    })).toThrow(/grant_spell label must be/);
   });
 
   it('copies authoritative V/S/M flags onto every compiled spell action', () => {

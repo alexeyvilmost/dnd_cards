@@ -38,13 +38,15 @@ describe('SupportStatusBadge', () => {
     localStorage.clear();
   });
 
-  it('shows exact coverage and the immutable-mechanics marker outside player mode', () => {
+  it('shows a percentage without presenting transitive cells as browser scenarios', () => {
     act(() => root.render(<SupportStatusBadge entity={entity} />));
-    expect(container.textContent).toContain('12/12 сценариев');
-    expect(container.textContent).not.toContain('100%');
+    expect(container.textContent).toContain('100% evidence');
+    expect(container.textContent).not.toContain('12/12');
     expect(container.textContent).toContain('закреплено');
     expect(container.querySelector('[title]')?.getAttribute('title'))
-      .toContain('Сценарии заявленного scope: 12/12');
+      .toContain('Ячейки evidence заявленного scope: 12/12 (100%)');
+    expect(container.querySelector('[title]')?.getAttribute('title'))
+      .toContain('Это не число браузерных сценариев');
   });
 
   it('renders no certification information in player mode', () => {

@@ -17,7 +17,7 @@ export interface TtgBestiaryRaw {
 export interface TtgBestiaryEntry {
   /** Отображаемое (русское) имя. */
   name: string;
-  /** Slug страницы на new.ttg.club/bestiary/<slug>. */
+  /** Slug текущей страницы new.ttg.club/bestiary?detail=<slug>. */
   slug: string;
   /** Английское имя — для поиска латиницей. */
   alias?: string;
@@ -28,7 +28,7 @@ export interface TtgBestiaryEntry {
 }
 
 export function ttgEntryUrl(entry: TtgBestiaryEntry): string {
-  return `https://new.ttg.club/bestiary/${entry.slug}`;
+  return `https://new.ttg.club/bestiary?detail=${encodeURIComponent(entry.slug)}`;
 }
 
 export const TTG_BESTIARY: TtgBestiaryEntry[] = TTG_BESTIARY_DATA.map((d) => ({

@@ -407,6 +407,14 @@ export interface ReactionDecisionRequest {
       dartCount: number;
     }
     | {
+      /** Damage is already rolled, but no HP mutation has been committed. */
+      type: 'damage_taken';
+      sourceActorId: string;
+      actionId: string;
+      amount: number;
+      damageTypes: string[];
+    }
+    | {
       type: 'protection_before_attack';
       sourceActorId: string;
       targetActorId: string;
@@ -503,6 +511,41 @@ export interface PendingAttackReactionResolution {
   weaponHand?: 'main' | 'off';
   weaponCardId?: string;
   pactBladeProjection?: PactBladeAttackContinuationProjection;
+}
+
+export interface PendingDamageReactionResolution {
+  id: string;
+  type: 'damage_reaction';
+  openedByCommandId: string;
+  openedAtRevision: number;
+  deadlineLogicalClock: number;
+  sourceActorId: string;
+  targetActorId: string;
+  actionId: string;
+  /** Exact immutable action definition that produced the held continuation. */
+  action: RuleActionDefinition;
+  facts: SpatialFacts;
+  request: ReactionDecisionRequest;
+  /** State immediately before the exact incoming damage bundle is committed. */
+  targetRuntimeBeforeDamage: RuntimeState;
+  /** Fully simulated action result, held off-world until the decision resolves. */
+  sourceRuntimeAfter: RuntimeState;
+  targetRuntimeAfter: RuntimeState;
+  /** Exact resistance-adjusted damage packets shown to the controller. */
+  damage: Array<{
+    amount: number;
+    damageType: string;
+    roll?: RollLog;
+  }>;
+  /** Replay-visible traces delayed with the HP mutation. */
+  preDamageTargetEvents: EngineEvent[];
+  attackEvents: EngineEvent[];
+  retaliationEvents: EngineEvent[];
+  retaliationSourceEntityIds: string[];
+  obligationIds: string[];
+  followUps: PendingResolutionFollowUp[];
+  /** Attack-action ledger identity, when damage came from one attack entry. */
+  attackActionId?: string;
 }
 
 export type ProtectionAttackContinuationKind =
@@ -686,6 +729,7 @@ export interface PendingHazardSaveResolution {
 export type PendingResolution =
   | PendingTargetSaveResolution
   | PendingAttackReactionResolution
+  | PendingDamageReactionResolution
   | PendingProtectionReactionResolution
   | PendingUnarmedSaveResolution
   | PendingShoveOutcomeResolution

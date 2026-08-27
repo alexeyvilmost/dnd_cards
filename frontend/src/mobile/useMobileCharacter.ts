@@ -41,6 +41,7 @@ export interface MobileCharacterData {
   error: string | null;
   updateCharacter: (next: ForgeCharacter) => void;
   appendEvents: (events: EngineEvent[]) => Promise<void>;
+  replacePersistedEvents: (rows: CharacterEventRow[]) => void;
   reloadJournal: () => Promise<void>;
 }
 
@@ -213,6 +214,10 @@ export function useMobileCharacter(id: string | undefined): MobileCharacterData 
     }
   }, [id]);
 
+  const replacePersistedEvents = useCallback((rows: CharacterEventRow[]) => {
+    setJournal([...rows]);
+  }, []);
+
   return {
     character,
     assembled,
@@ -232,6 +237,7 @@ export function useMobileCharacter(id: string | undefined): MobileCharacterData 
     error,
     updateCharacter: setCharacter,
     appendEvents,
+    replacePersistedEvents,
     reloadJournal,
   };
 }

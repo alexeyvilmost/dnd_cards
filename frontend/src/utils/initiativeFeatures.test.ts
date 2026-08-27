@@ -71,7 +71,7 @@ describe('initiative feature smoke', () => {
     expect(searchTtgBestiary('скелет').some((e) => e.slug === 'skeleton-mm')).toBe(true);
     expect(searchTtgBestiary('owlbear').some((e) => e.slug === 'owlbear-mm')).toBe(true);
     expect(ttgEntryUrl({ slug: 'skeleton-mm', name: 'x' })).toBe(
-      'https://new.ttg.club/bestiary/skeleton-mm',
+      'https://new.ttg.club/bestiary?detail=skeleton-mm',
     );
   });
 

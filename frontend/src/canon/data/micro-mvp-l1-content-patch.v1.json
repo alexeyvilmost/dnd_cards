@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "patchId": "dnd5e-2024.micro-mvp-l1.content-patch.v1",
-  "patchVersion": "1.7.0",
+  "patchVersion": "1.8.0",
   "sourceReleaseId": "prod-snapshot@2026-07-15.micro-mvp-l1.v1",
   "authorityTarget": "database-entity-mechanics",
   "mechanicsPatches": {
@@ -2149,6 +2149,72 @@
                 "source": "spell"
               },
               "prompt": "Выберите 4 заклинания 1 уровня для подготовки",
+              "resolution": "on_acquire"
+            }
+          ]
+        }
+      },
+      {
+        "entityId": "ab0c1d14-d8ef-4d0d-9952-b26e2f862b5c",
+        "cardNumber": "EFF-paladin-spellcasting",
+        "expectedBeforeMechanicsHash": "sha256:5335f592cf1a6d682bc529797df742a4290e72f56e330ed5f8ba884b4941b5b8",
+        "productionExpectedBeforeMechanicsHash": "sha256:5335f592cf1a6d682bc529797df742a4290e72f56e330ed5f8ba884b4941b5b8",
+        "mechanics": {
+          "activation": { "mode": "passive" },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                { "kind": "spellcasting_ability", "role": "primary", "ability": "cha" },
+                {
+                  "description": "Подготовка заклинаний паладина. ХАР — характеристика заклинаний.",
+                  "kind": "narrative"
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "grant": { "kind": "grant_spell", "label": "prepared" },
+              "id": "paladin_spells_l1",
+              "kind": "choice",
+              "options": {
+                "filter": { "classes": ["паладин"], "levels": [1] },
+                "source": "spell"
+              },
+              "prompt": "Выберите 2 заклинания 1 уровня для подготовки",
+              "resolution": "on_acquire"
+            }
+          ]
+        }
+      },
+      {
+        "entityId": "c4d0a9b1-90e8-49d4-8201-fc0aff542ae6",
+        "cardNumber": "EFF-ranger-spellcasting",
+        "expectedBeforeMechanicsHash": "sha256:2e864d8a2c2f6204d738cb4a785d59e680588132285cab98aaee145cbb4007af",
+        "productionExpectedBeforeMechanicsHash": "sha256:2e864d8a2c2f6204d738cb4a785d59e680588132285cab98aaee145cbb4007af",
+        "mechanics": {
+          "activation": { "mode": "passive" },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                { "kind": "spellcasting_ability", "role": "primary", "ability": "wis" },
+                {
+                  "description": "Подготовка заклинаний следопыта. МДР — характеристика заклинаний.",
+                  "kind": "narrative"
+                }
+              ]
+            },
+            {
+              "count": 2,
+              "grant": { "kind": "grant_spell", "label": "prepared" },
+              "id": "ranger_spells_l1",
+              "kind": "choice",
+              "options": {
+                "filter": { "classes": ["следопыт"], "levels": [1] },
+                "source": "spell"
+              },
+              "prompt": "Выберите 2 заклинания 1 уровня для подготовки",
               "resolution": "on_acquire"
             }
           ]

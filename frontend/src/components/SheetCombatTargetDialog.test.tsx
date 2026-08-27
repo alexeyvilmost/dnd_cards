@@ -42,6 +42,22 @@ const action: RuleActionDefinition = {
   },
 };
 
+const blessAction: RuleActionDefinition = {
+  id: 'bless@test',
+  name: 'Bless',
+  kind: 'spell',
+  sourceEntityIds: ['SPELL-0163'],
+  spell: { level: 1, components: { verbal: true, somatic: true, material: true } },
+  mechanics: { targeting: { shape: 'multiple' } },
+  targeting: {
+    minTargets: 1,
+    maxTargets: 3,
+    rangeFt: 30,
+    requiresLineOfSight: true,
+    allowedRelations: ['self', 'ally'],
+  },
+};
+
 const patch = contentPatchJson as unknown as {
   mechanicsPatches: {
     actions: Array<{ entityId: string; cardNumber: string; mechanics: Record<string, unknown> }>;
@@ -264,5 +280,44 @@ describe('SheetCombatTargetDialog explicit facts', () => {
       document.querySelectorAll<HTMLButtonElement>('.dice-dialog-btn')[1].click();
       await pending;
     });
+  });
+
+  it('keeps all three explicitly selected Bless targets in one declaration', async () => {
+    let result: Awaited<ReturnType<SheetCombatTargetDialogApi['request']>> | undefined;
+    const facts = {
+      factsSource: 'scenario' as const,
+      boardRevision: 4,
+      relation: 'ally' as const,
+      distanceFt: 20,
+      lineOfSight: true,
+      cover: 'none' as const,
+    };
+    await act(async () => {
+      void api.request({
+        title: 'Bless: цели и факты',
+        action: blessAction,
+        candidates: ['ally-1', 'ally-2', 'ally-3'].map((id) => ({
+          id,
+          name: id,
+          defaultFacts: facts,
+        })),
+        requireTarget: true,
+      }).then((value) => { result = value; });
+    });
+    const checkboxes = [...document.querySelectorAll<HTMLInputElement>(
+      '[data-testid="sheet-combat-target-list"] input[type="checkbox"]',
+    )];
+    expect(checkboxes).toHaveLength(3);
+    for (const checkbox of checkboxes) {
+      await act(async () => checkbox.click());
+    }
+    expect(checkboxes.every((checkbox) => checkbox.checked)).toBe(true);
+    await act(async () => {
+      document.querySelector<HTMLButtonElement>('.dice-dialog-btn.primary')!.click();
+      await Promise.resolve();
+    });
+    expect(result?.targets.map((target) => target.targetId)).toEqual([
+      'ally-1', 'ally-2', 'ally-3',
+    ]);
   });
 });

@@ -4,20 +4,20 @@
   "source": {
     "ruleset": {
       "systemId": "dnd5e-2024",
-      "releaseId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0",
-      "contentHash": "sha256:7000486672c3f8fc3b0f21da0561ca2b48eb218b4de8278d2c8ebb2b1c99e1e5",
+      "releaseId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0",
+      "contentHash": "sha256:2ddba1ce7354f7d3e813a2531329019e6039dc27163259a59989f5557d233ca8",
       "errataVersion": "phb-2024-errata-v1"
     },
     "release": {
-      "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.12.0",
+      "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0",
       "systemId": "dnd5e-2024",
       "rulesetVersion": "2024",
       "errataVersion": "phb-2024-errata-v1",
       "sourceReleaseId": "prod-snapshot@2026-08-20.micro-mvp-l1.v2",
       "sourceContentHash": "sha256:c7205737ed1f70fa9e2db87370cd59ccd43cc4e2960b2360429e3842a745c22d",
-      "overlayHash": "sha256:7ef20f51ae9683433431133887da21f9e2622a87368e7a9b675a9ba7fd3d08fe",
-      "contentHash": "sha256:7000486672c3f8fc3b0f21da0561ca2b48eb218b4de8278d2c8ebb2b1c99e1e5",
-      "releaseHash": "sha256:174f3f2dbf8dba29f5765da4d52a07e1779305773607755900a170963ea95c53"
+      "overlayHash": "sha256:67860317c1e3d1ede6993e688ad305f112186975e561508192e5ec34f4443292",
+      "contentHash": "sha256:2ddba1ce7354f7d3e813a2531329019e6039dc27163259a59989f5557d233ca8",
+      "releaseHash": "sha256:313dcc9fff197929b0d59e87246f6aac7ed162eaaf3107a583cba8ad3573d99f"
     }
   },
   "summary": {
@@ -6345,6 +6345,6 @@
       }
     ]
   },
-  "sourceProjectionHash": "sha256:30696327750dff6aa4d8042dfe0e959953eaaf05a6a4663e66259d0af8298bd2",
-  "contentHash": "sha256:a149d4aea87c07da7b95f7e5173ad76c0e56ae6bb5e119a45e1e3216961ef90a"
+  "sourceProjectionHash": "sha256:7321e95c5d91fa64f157c67d07ce615cecf8030a9592a6746dc1b515b2d99309",
+  "contentHash": "sha256:b4fbb2a6061ad235d55023561020ffe8c9143897b6654509536d34c56d240709"
 }

@@ -1619,6 +1619,21 @@ function runtimeEffectId(ctx: ExecuteContext, prefix: string, ordinal: number): 
   return ctx.nextId?.() ?? `${prefix}-${ordinal}-${Date.now()}`;
 }
 
+function modifierApplicationLabel(source: string, payload: Dict): string {
+  const appliesTo = payload.applies_to as Dict | undefined;
+  const roll = String(appliesTo?.roll ?? '');
+  const labels: Record<string, string> = {
+    ac: 'КД',
+    size: 'размер',
+    speed: 'скорость',
+    attack: 'атака',
+    damage: 'урон',
+    saving_throw: 'спасбросок',
+    ability_check: 'проверка',
+  };
+  return labels[roll] ? `${source} · ${labels[roll]}` : source;
+}
+
 function applyModifierPayload(
   state: RuntimeState,
   payload: Dict,
@@ -1642,7 +1657,11 @@ function applyModifierPayload(
     ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
     ...(relative ?? {}),
   };
-  events.push({ type: 'effect_applied', name: source });
+  events.push({
+    type: 'effect_applied',
+    name: modifierApplicationLabel(source, payload),
+    sourceAction: source,
+  });
   return stackApply(state, entry, payload);
 }
 

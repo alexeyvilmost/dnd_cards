@@ -37,6 +37,8 @@ import {
   collectSheetSlotRecoveryPolicies,
   slotRecoveryPickerState,
 } from '../character/sheetRestDecisions';
+import { clearSheetCombatSession } from '../character/sheetCombatSession';
+import { writeSoloCombatState } from '../solo-combat/persistence';
 
 interface Props {
   character: ForgeCharacter;
@@ -59,6 +61,13 @@ export function collectSheetActionUseRestPolicies(assembled: AssembledCharacter)
   };
 }
 
+/** A rest starts a new timeline and cannot retain an old combat continuation. */
+export function clearCombatContinuationsForRest(
+  turnState: Record<string, unknown> | null | undefined,
+): Record<string, unknown> {
+  return clearSheetCombatSession(writeSoloCombatState(turnState, null));
+}
+
 export default function SheetRestButtons({
   character,
   assembled,
@@ -74,6 +83,7 @@ export default function SheetRestButtons({
   const [shortRestDraft, setShortRestDraft] = useState<{ state: RuntimeState; events: EngineEvent[] } | null>(null);
   const [shortRestSelections, setShortRestSelections] = useState<Record<string, number[]>>({});
   const [shortRestError, setShortRestError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const syncAttempted = useRef(false);
   const diceDialog = useDiceDialog();
   const choiceDialog = useChoiceDialog();
@@ -149,6 +159,9 @@ export default function SheetRestButtons({
     baseTurnState: Record<string, unknown> | null | undefined = character.turn_state,
   ) {
     return {
+      ...(!Number.isSafeInteger(character.runtime_revision) ? {} : {
+        expected_runtime_revision: Number(character.runtime_revision),
+      }),
       current_hp: state.hp.current,
       max_hp: state.hp.max,
       resources: state.resources,
@@ -169,17 +182,24 @@ export default function SheetRestButtons({
     baseTurnState?: Record<string, unknown> | null,
   ) => {
     setBusy(true);
+    setError(null);
     try {
       const updated = await persistCharacterRuntime(
         character,
         persistPayload(next, attunementUnlocked, resetDeathSaves, baseTurnState),
         encounterApply,
       );
+      for (const [resource, expected] of Object.entries(next.resources)) {
+        if (updated.resources?.[resource] !== expected) {
+          throw new Error(`Сервер не подтвердил обновление ресурса ${resource}`);
+        }
+      }
       onUpdated(updated);
       onEvents?.(events);
       return true;
     } catch (e) {
       console.error(e);
+      setError(e instanceof Error ? e.message : 'Не удалось сохранить отдых');
       return false;
     } finally {
       setBusy(false);
@@ -322,7 +342,13 @@ export default function SheetRestButtons({
       ? writeSheetSpellPreparation(character.turn_state, picked)
       : character.turn_state;
     const { state, events } = longRest(runtime, restCtx);
-    const ok = await apply(state, events, true, true, turnState);
+    const ok = await apply(
+      state,
+      events,
+      true,
+      true,
+      clearCombatContinuationsForRest(turnState),
+    );
     if (ok) onLongRestComplete?.();
   };
 
@@ -365,6 +391,7 @@ export default function SheetRestButtons({
         <Moon size={14} /> Долгий отдых
       </button>
     </div>
+    {error && <p className="issues" role="alert">{error}</p>}
     {shortRestDraft && (
       <div className="dice-dialog-backdrop" onClick={() => !busy && setShortRestDraft(null)}>
         <div className="dice-dialog-wrap" onClick={(event) => event.stopPropagation()}>

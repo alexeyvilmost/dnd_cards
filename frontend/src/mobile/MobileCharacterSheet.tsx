@@ -15,6 +15,7 @@ import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/C
 import type { EntityRefType } from '../components/EntityRefRegistry';
 import type { SheetAction } from '../character/actionSheet';
 import { charactersV3Api } from '../character/api';
+import type { SheetAtomicRetryEnvelope } from '../character/sheetAtomicRetry';
 import { effectAbilityPresentation } from '../character/abilityDisplay';
 import { buildSavePayload, characterToDraft } from '../character/forgeHelpers';
 import {
@@ -161,7 +162,12 @@ export default function MobileCharacterSheet() {
   const [notice, setNotice] = useState<string | null>(null);
   const [savingNotes, setSavingNotes] = useState(false);
   const [longRestOpen, setLongRestOpen] = useState(false);
+  const [pendingAtomicRetry, setPendingAtomicRetry] = useState<SheetAtomicRetryEnvelope | null>(null);
   const readOnly = data.character ? isCharacterReadOnly(data.character) : true;
+
+  useEffect(() => {
+    setPendingAtomicRetry(null);
+  }, [id]);
 
   const visitPage = useCallback((next: SheetPage) => {
     setPage((current) => {
@@ -526,6 +532,9 @@ export default function MobileCharacterSheet() {
                 maxHp={maxHp}
                 onUpdated={data.updateCharacter}
                 onEvents={appendEvents}
+                onPersistedEvents={data.replacePersistedEvents}
+                pendingAtomicRetry={pendingAtomicRetry}
+                onPendingAtomicRetryChange={setPendingAtomicRetry}
                 showResources={false}
                 showEffects={false}
                 disableHoverPreviews

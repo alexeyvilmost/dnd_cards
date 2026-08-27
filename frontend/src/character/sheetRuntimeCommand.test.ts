@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import type {
+  CharacterEventRow,
   CharacterRuntimeCommandRequest,
   CharacterRuntimeCommandResponse,
 } from './api';
 import {
   acceptedRuntimeCommandReceipt,
+  commitSheetRuntimeCommand,
   currentRuntimeCommandCharacters,
 } from './sheetRuntimeCommand';
 import type { ForgeCharacter } from './types';
@@ -109,5 +111,48 @@ describe('sheet runtime-command receipt authority', () => {
       request(),
       malformed as CharacterRuntimeCommandResponse,
     )).toThrow('invalid replay marker');
+  });
+
+  it('refetches the exact transaction-owned journal once after acceptance', async () => {
+    const atomicRequest = request();
+    atomicRequest.events = [{
+      character_id: CHARACTER_ID,
+      type: 'resource_spent',
+      payload: { type: 'resource_spent', resource: 'action', amount: 1, remaining: 0 },
+    }, {
+      character_id: CHARACTER_ID,
+      type: 'effect_applied',
+      payload: { type: 'effect_applied', name: 'Bless' },
+    }];
+    const journal: CharacterEventRow[] = [];
+    let accepted = false;
+    const postRuntimeCommand = vi.fn(async () => {
+      const replayed = accepted;
+      if (!accepted) {
+        accepted = true;
+        journal.push(...atomicRequest.events.map((event, index) => ({
+          id: `event-${index + 1}`,
+          character_id: event.character_id,
+          ts: '2026-08-27T00:00:00Z',
+          type: event.type,
+          payload: event.payload,
+        })));
+      }
+      return response(replayed);
+    });
+    const getEvents = vi.fn(async () => structuredClone(journal));
+    const first = await commitSheetRuntimeCommand({
+      request: atomicRequest,
+      commit: postRuntimeCommand,
+      loadCurrent: async () => character(5),
+      viewingCharacterId: CHARACTER_ID,
+      loadPersistedEvents: getEvents,
+    });
+    expect(postRuntimeCommand).toHaveBeenCalledTimes(1);
+    expect(getEvents).toHaveBeenCalledTimes(1);
+    expect(journal).toHaveLength(atomicRequest.events.length);
+    expect(journal.map(({ character_id, type, payload }) => ({ character_id, type, payload })))
+      .toEqual(atomicRequest.events);
+    expect(first.persistedEvents).toHaveLength(atomicRequest.events.length);
   });
 });

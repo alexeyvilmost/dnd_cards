@@ -48,7 +48,7 @@ describe('Character Sheet engine ledger persistence', () => {
   it('requires an explicit target Armor Class and preserves an explicit legacy snapshot value', () => {
     const explicit = character(null);
     explicit.armor_class = 14;
-    expect(buildTargetFromCharacter(explicit).ac).toBe(14);
+    expect(buildTargetFromCharacter(explicit)).toMatchObject({ id: explicit.id, ac: 14 });
 
     expect(() => buildTargetFromCharacter(character(null)))
       .toThrow(/explicit positive finite Armor Class/);
