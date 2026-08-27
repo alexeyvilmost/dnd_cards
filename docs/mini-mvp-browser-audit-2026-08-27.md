@@ -329,3 +329,10 @@ integrity-pinned installed package, then verifies the final Vite output contains
 the same files only at the runtime path. The release fingerprint continues to
 cover all of `frontend/public`; no asset directory was ignored to make evidence
 pass.
+
+The first Windows-built deployment archive then exposed a second boundary:
+`git archive` inherited the operator's `core.autocrlf=true` and rewrote two
+lock-pinned JSON assets even though the commit itself was correct. The asset
+gate stopped that release before cutover. The documented release command now
+forces `core.autocrlf=false`, so the archive carries Git-object bytes regardless
+of the operator checkout while the build remains fail-closed on any drift.

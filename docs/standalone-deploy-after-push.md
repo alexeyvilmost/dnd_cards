@@ -314,7 +314,10 @@ $TempDir = Join-Path $env:TEMP ("bagofholding-deploy-" + [guid]::NewGuid())
 $Archive = Join-Path $TempDir "$Sha.tar"
 
 New-Item -ItemType Directory -Path $TempDir | Out-Null
-git archive --format=tar -o $Archive $Sha
+# Архив должен содержать байты Git-объектов, независимо от локальной
+# настройки Windows core.autocrlf. Иначе проверка lock-pinned assets в
+# release build намеренно остановит deployment до cutover.
+git -c core.autocrlf=false archive --format=tar -o $Archive $Sha
 if ($LASTEXITCODE -ne 0) {
     throw "git archive завершился с ошибкой"
 }
