@@ -1,6 +1,19 @@
 #!/usr/bin/env node
 import { createHash, randomUUID } from 'node:crypto';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import {
+  closeSync,
+  existsSync,
+  fsyncSync,
+  linkSync,
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  openSync,
+  readFileSync,
+  rmSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve, win32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -307,23 +320,144 @@ function postgresTestTarget(dsn, variable) {
   ].join('\0');
 }
 
-async function executeVitestGate(definition, {
-  temporaryDirectory, script, apiBase, npmTest = false, live = false,
+const MAX_VITEST_FAILURE_REPORT_BYTES = 64 * 1024 * 1024;
+const FAILURE_REPORT_RUN_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+const SEMANTIC_COVERAGE_VITEST_REPORTS = Object.freeze([
+  Object.freeze({
+    gateId: 'semantic_coverage_collection',
+    fileName: 'semantic_coverage_collection.json',
+  }),
+  Object.freeze({
+    gateId: 'semantic_coverage_gate',
+    fileName: 'semantic_coverage_gate.json',
+  }),
+]);
+
+/**
+ * Preserve the structured report before the evidence runner removes its
+ * private scratch directory. Failed reports are diagnostics only: they are
+ * never accepted as release evidence and always receive a unique private
+ * filename beside the requested evidence artifact.
+ */
+export function persistVitestFailureReport({
+  reportPath,
+  diagnosticDirectory,
+  gateId,
+  runId,
+}) {
+  if (!existsSync(reportPath)) return null;
+  if (!diagnosticDirectory || !/^[a-z0-9_]+$/.test(gateId ?? '')
+    || !FAILURE_REPORT_RUN_ID.test(runId ?? '')) {
+    throw new Error('Vitest failure-report identity is invalid');
+  }
+  const sourceStat = lstatSync(reportPath);
+  if (!sourceStat.isFile() || sourceStat.isSymbolicLink()
+    || sourceStat.size <= 0 || sourceStat.size > MAX_VITEST_FAILURE_REPORT_BYTES) {
+    throw new Error(`${gateId} produced an invalid failure report`);
+  }
+  const bytes = readFileSync(reportPath);
+
+  const directory = resolve(diagnosticDirectory);
+  mkdirSync(directory, { recursive: true });
+  const destination = join(
+    directory,
+    `micro-mvp-release-evidence-failure-${runId}-${gateId}.json`,
+  );
+  if (existsSync(destination)) {
+    throw new Error(`refusing to overwrite existing ${gateId} failure report`);
+  }
+  const temporary = `${destination}.${process.pid}.${randomUUID()}.tmp`;
+  let descriptor = null;
+  let published = false;
+  try {
+    descriptor = openSync(temporary, 'wx', 0o600);
+    writeFileSync(descriptor, bytes);
+    fsyncSync(descriptor);
+    closeSync(descriptor);
+    descriptor = null;
+    linkSync(temporary, destination);
+    published = true;
+  } finally {
+    if (descriptor !== null) closeSync(descriptor);
+    if (existsSync(temporary)) unlinkSync(temporary);
+  }
+  if (!published) throw new Error(`${gateId} failure report was not published`);
+  if (process.platform !== 'win32') {
+    const directoryDescriptor = openSync(directory, 'r');
+    try {
+      fsyncSync(directoryDescriptor);
+    } finally {
+      closeSync(directoryDescriptor);
+    }
+  }
+  const destinationStat = lstatSync(destination);
+  if (!destinationStat.isFile() || destinationStat.isSymbolicLink()
+    || destinationStat.size !== bytes.byteLength
+    || (process.platform !== 'win32' && (destinationStat.mode & 0o777) !== 0o600)) {
+    throw new Error(`${gateId} failure report was not persisted privately`);
+  }
+  return destination;
+}
+
+function persistVitestFailureReportAndLog({
+  reportPath,
+  failureReportDirectory,
+  gateId,
+  failureReportRunId,
+}) {
+  if (!failureReportDirectory || !failureReportRunId) return null;
+  const failureReportPath = persistVitestFailureReport({
+    reportPath,
+    diagnosticDirectory: failureReportDirectory,
+    gateId,
+    runId: failureReportRunId,
+  });
+  if (failureReportPath) {
+    process.stderr.write(
+      `[release-evidence] ${gateId} failure report preserved at ${failureReportPath}\n`,
+    );
+  }
+  return failureReportPath;
+}
+
+export async function executeVitestGate(definition, {
+  temporaryDirectory,
+  script,
+  apiBase,
+  npmTest = false,
+  live = false,
+  failureReportDirectory,
+  failureReportRunId,
+  commandRunner = runCommand,
 }) {
   const reportPath = join(temporaryDirectory, `${definition.id}.json`);
   const invocation = vitestGateInvocation({ script, npmTest, reportPath });
-  const execution = await runCommand({
+  const execution = await commandRunner({
     command: invocation.command,
     args: invocation.args,
     env: live ? { API_URL: apiBase, MVP_CONTENT: '1', VITE_API_URL: apiBase } : {},
   });
-  if (execution.exitCode !== 0) return { execution, testSummary: null, reportHash: null };
-  const report = readJson(reportPath, definition.id);
-  return {
-    execution,
-    testSummary: vitestSummary(report, definition),
-    reportHash: sha256File(reportPath),
-  };
+  const preserveFailureReport = () => persistVitestFailureReportAndLog({
+    reportPath,
+    failureReportDirectory,
+    gateId: definition.id,
+    failureReportRunId,
+  });
+  if (execution.exitCode !== 0) {
+    preserveFailureReport();
+    return { execution, testSummary: null, reportHash: null };
+  }
+  try {
+    const report = readJson(reportPath, definition.id);
+    return {
+      execution,
+      testSummary: vitestSummary(report, definition),
+      reportHash: sha256File(reportPath),
+    };
+  } catch (error) {
+    preserveFailureReport();
+    throw error;
+  }
 }
 
 export async function executeMicroMvpReleaseGate(definition, {
@@ -331,12 +465,20 @@ export async function executeMicroMvpReleaseGate(definition, {
   frontendBase,
   temporaryDirectory,
   expectedDeployedCommit,
+  failureReportDirectory,
+  failureReportRunId,
 }) {
   process.stdout.write(`\n[release-evidence] ${definition.id}: ${definition.command}\n`);
   let execution;
   let testSummary = null;
   let reportHash = null;
   let testCoverage = null;
+  const vitestContext = {
+    temporaryDirectory,
+    apiBase,
+    failureReportDirectory,
+    failureReportRunId,
+  };
   switch (definition.id) {
     case 'backend_go_test': {
       const integrationVariables = ['CANONICAL_RUNTIME_TEST_DSN', 'CONTENT_MIGRATION_TEST_DSN'];
@@ -388,11 +530,11 @@ export async function executeMicroMvpReleaseGate(definition, {
     }
     case 'frontend_test': ({ execution, testSummary, reportHash } = await executeVitestGate(
       definition,
-      { temporaryDirectory, apiBase, npmTest: true },
+      { ...vitestContext, npmTest: true },
     )); break;
     case 'frontend_mvp': ({ execution, testSummary, reportHash } = await executeVitestGate(
       definition,
-      { temporaryDirectory, apiBase, script: 'test:mvp', live: true },
+      { ...vitestContext, script: 'test:mvp', live: true },
     )); break;
     case 'micro_manifest': {
       const reportPath = join(temporaryDirectory, 'micro-manifest.tap');
@@ -412,47 +554,68 @@ export async function executeMicroMvpReleaseGate(definition, {
     }
     case 'micro_matrix': ({ execution, testSummary, reportHash } = await executeVitestGate(
       definition,
-      { temporaryDirectory, apiBase, script: 'test:micro:matrix' },
+      { ...vitestContext, script: 'test:micro:matrix' },
     )); break;
     case 'rules_core_coverage': ({ execution, testSummary, reportHash } = await executeVitestGate(
       definition,
-      { temporaryDirectory, apiBase, script: 'test:rules:coverage' },
+      { ...vitestContext, script: 'test:rules:coverage' },
     )); break;
     case 'rules_primitive_coverage': ({ execution, testSummary, reportHash } = await executeVitestGate(
       definition,
-      { temporaryDirectory, apiBase, script: 'test:rules:primitives' },
+      { ...vitestContext, script: 'test:rules:primitives' },
     )); break;
     case 'semantic_coverage': {
-      execution = await runCommand({ command: NPM, args: ['run', 'test:micro:coverage'] });
-      if (execution.exitCode === 0) {
-        const manifestPath = resolve(FRONTEND_ROOT, '.micro-mvp-evidence/execution-manifest.json');
-        const coveragePath = resolve(FRONTEND_ROOT, '.micro-mvp-evidence/coverage-summary.json');
-        const manifest = readJson(manifestPath, definition.id);
-        testCoverage = validateMicroMvpTestCoverageSummary(
-          readJson(coveragePath, `${definition.id} coverage`),
-          currentMicroMvpReleaseIdentity(),
-        );
-        const states = manifest.tests?.map((item) => item.state) ?? [];
-        testSummary = passedTestSummary({
-          total: manifest.testCount,
-          passed: states.filter((state) => state === 'passed').length,
-          failed: states.filter((state) => state === 'failed').length,
-          skipped: states.filter((state) => state === 'skipped').length,
-          todo: states.filter((state) => state === 'todo').length,
-        }, definition);
-        if (manifest.runResult !== 'passed' || manifest.unhandledErrorCount !== 0) {
-          throw new Error('offline coverage execution manifest did not pass cleanly');
+      execution = await runCommand({
+        command: NPM,
+        args: ['run', 'test:micro:coverage'],
+        env: { MICRO_MVP_VITEST_REPORT_DIRECTORY: temporaryDirectory },
+      });
+      const preserveSemanticFailureReports = () => {
+        for (const report of SEMANTIC_COVERAGE_VITEST_REPORTS) {
+          persistVitestFailureReportAndLog({
+            reportPath: join(temporaryDirectory, report.fileName),
+            failureReportDirectory,
+            gateId: report.gateId,
+            failureReportRunId,
+          });
         }
-        reportHash = `sha256:${createHash('sha256')
-          .update(readFileSync(manifestPath))
-          .update(readFileSync(coveragePath))
-          .digest('hex')}`;
+      };
+      if (execution.exitCode === 0) {
+        try {
+          const manifestPath = resolve(FRONTEND_ROOT, '.micro-mvp-evidence/execution-manifest.json');
+          const coveragePath = resolve(FRONTEND_ROOT, '.micro-mvp-evidence/coverage-summary.json');
+          const manifest = readJson(manifestPath, definition.id);
+          testCoverage = validateMicroMvpTestCoverageSummary(
+            readJson(coveragePath, `${definition.id} coverage`),
+            currentMicroMvpReleaseIdentity(),
+          );
+          const states = manifest.tests?.map((item) => item.state) ?? [];
+          testSummary = passedTestSummary({
+            total: manifest.testCount,
+            passed: states.filter((state) => state === 'passed').length,
+            failed: states.filter((state) => state === 'failed').length,
+            skipped: states.filter((state) => state === 'skipped').length,
+            todo: states.filter((state) => state === 'todo').length,
+          }, definition);
+          if (manifest.runResult !== 'passed' || manifest.unhandledErrorCount !== 0) {
+            throw new Error('offline coverage execution manifest did not pass cleanly');
+          }
+          reportHash = `sha256:${createHash('sha256')
+            .update(readFileSync(manifestPath))
+            .update(readFileSync(coveragePath))
+            .digest('hex')}`;
+        } catch (error) {
+          preserveSemanticFailureReports();
+          throw error;
+        }
+      } else {
+        preserveSemanticFailureReports();
       }
       break;
     }
     case 'live_matrix': ({ execution, testSummary, reportHash } = await executeVitestGate(
       definition,
-      { temporaryDirectory, apiBase, script: 'test:micro:live-matrix', live: true },
+      { ...vitestContext, script: 'test:micro:live-matrix', live: true },
     )); break;
     case 'rules_lab_fixture':
       execution = await runCommand({ command: NPM, args: ['run', 'rules-lab:check'] });
@@ -581,6 +744,8 @@ export async function generateMicroMvpReleaseEvidence({
   assertExactHttpOrigin(frontendBase, '--frontend');
 
   const temporaryDirectory = mkdtempSync(join(tmpdir(), 'micro-mvp-release-evidence-'));
+  const failureReportDirectory = dirname(resolve(artifactPath));
+  const failureReportRunId = randomUUID();
   const startedAt = new Date().toISOString();
   const sourceBefore = currentMicroMvpReleaseIdentity();
   try {
@@ -591,6 +756,8 @@ export async function generateMicroMvpReleaseEvidence({
         frontendBase,
         temporaryDirectory,
         expectedDeployedCommit,
+        failureReportDirectory,
+        failureReportRunId,
       }));
     }
     const catalogs = await catalogLoader();

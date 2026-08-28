@@ -8,6 +8,7 @@ import {
   rmSync,
   statSync,
   symlinkSync,
+  writeFileSync,
 } from 'node:fs';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
@@ -15,7 +16,9 @@ import { join } from 'node:path';
 import test from 'node:test';
 import {
   executeMicroMvpReleaseGate,
+  executeVitestGate,
   generateMicroMvpReleaseEvidence,
+  persistVitestFailureReport,
   releaseInvocation,
   vitestGateInvocation,
 } from './generate-micro-mvp-release-evidence.mjs';
@@ -159,6 +162,189 @@ test('release source fingerprint covers canonical data and every non-TypeScript 
     /^vite\.config\.js$/m,
     'generated Vite config must not enter the Railway Docker context',
   );
+});
+
+test('failed Vitest reports survive scratch cleanup as private immutable diagnostics', (t) => {
+  const directory = mkdtempSync(join(tmpdir(), 'micro-mvp-failed-report-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const scratch = join(directory, 'scratch');
+  const diagnostics = join(directory, 'diagnostics');
+  mkdirSync(scratch);
+  const reportPath = join(scratch, 'frontend_mvp.json');
+  const report = `${JSON.stringify({ success: false, testResults: [{ name: 'live contract' }] })}\n`;
+  writeFileSync(reportPath, report, 'utf8');
+  const runId = '11111111-2222-4333-8444-555555555555';
+
+  const persisted = persistVitestFailureReport({
+    reportPath,
+    diagnosticDirectory: diagnostics,
+    gateId: 'frontend_mvp',
+    runId,
+  });
+  assert.equal(
+    persisted,
+    join(diagnostics, `micro-mvp-release-evidence-failure-${runId}-frontend_mvp.json`),
+  );
+  assert.equal(readFileSync(persisted, 'utf8'), report);
+  assert.equal(statSync(persisted).size, Buffer.byteLength(report));
+  if (process.platform !== 'win32') assert.equal(statSync(persisted).mode & 0o777, 0o600);
+
+  rmSync(scratch, { recursive: true, force: true });
+  assert.equal(readFileSync(persisted, 'utf8'), report);
+  const retrySource = join(directory, 'retry.json');
+  writeFileSync(retrySource, '{"success":true}\n', 'utf8');
+  assert.throws(() => persistVitestFailureReport({
+    reportPath: retrySource,
+    diagnosticDirectory: diagnostics,
+    gateId: 'frontend_mvp',
+    runId,
+  }), /refusing to overwrite existing frontend_mvp failure report/);
+  assert.equal(readFileSync(persisted, 'utf8'), report);
+  assert.deepEqual(readdirSync(diagnostics), [
+    `micro-mvp-release-evidence-failure-${runId}-frontend_mvp.json`,
+  ]);
+  const implementation = readFileSync(
+    new URL('./generate-micro-mvp-release-evidence.mjs', import.meta.url),
+    'utf8',
+  );
+  assert.match(implementation, /openSync\(temporary, 'wx', 0o600\)/);
+  assert.match(implementation, /linkSync\(temporary, destination\)/);
+  assert.doesNotMatch(implementation, /openSync\(destination, 'wx'/);
+  assert.equal(persistVitestFailureReport({
+    reportPath: join(directory, 'absent.json'),
+    diagnosticDirectory: diagnostics,
+    gateId: 'frontend_mvp',
+    runId: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee',
+  }), null);
+});
+
+test('a nonzero wired Vitest gate preserves its generated report before returning failure', async (t) => {
+  const directory = mkdtempSync(join(tmpdir(), 'micro-mvp-failed-gate-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const scratch = join(directory, 'scratch');
+  const diagnostics = join(directory, 'diagnostics');
+  mkdirSync(scratch);
+  const runId = '22222222-3333-4444-8555-666666666666';
+  const report = `${JSON.stringify({
+    success: false,
+    numFailedTests: 1,
+    testResults: [{ name: 'live contract', status: 'failed' }],
+  })}\n`;
+
+  const result = await executeVitestGate({ id: 'frontend_mvp' }, {
+    temporaryDirectory: scratch,
+    apiBase: API_BASE,
+    script: 'test:mvp',
+    live: true,
+    failureReportDirectory: diagnostics,
+    failureReportRunId: runId,
+    commandRunner: async ({ args, env }) => {
+      const outputArgument = args.find((arg) => arg.startsWith('--outputFile='));
+      assert.ok(outputArgument);
+      writeFileSync(outputArgument.slice('--outputFile='.length), report, 'utf8');
+      assert.equal(env.API_URL, API_BASE);
+      assert.equal(env.MVP_CONTENT, '1');
+      return {
+        startedAt: new Date().toISOString(),
+        completedAt: new Date().toISOString(),
+        exitCode: 1,
+        outputHash: `sha256:${'0'.repeat(64)}`,
+        outputBytes: 0,
+        stdout: null,
+      };
+    },
+  });
+
+  assert.equal(result.execution.exitCode, 1);
+  assert.equal(result.testSummary, null);
+  assert.equal(result.reportHash, null);
+  const persisted = join(
+    diagnostics,
+    `micro-mvp-release-evidence-failure-${runId}-frontend_mvp.json`,
+  );
+  assert.equal(readFileSync(persisted, 'utf8'), report);
+  if (process.platform !== 'win32') assert.equal(statSync(persisted).mode & 0o777, 0o600);
+});
+
+test('an exit-zero Vitest report that violates strict skip policy is also preserved', async (t) => {
+  const directory = mkdtempSync(join(tmpdir(), 'micro-mvp-invalid-gate-report-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const scratch = join(directory, 'scratch');
+  const diagnostics = join(directory, 'diagnostics');
+  mkdirSync(scratch);
+  const runId = '33333333-4444-4555-8666-777777777777';
+  const report = `${JSON.stringify({
+    success: true,
+    numTotalTests: 1,
+    numPassedTests: 0,
+    numFailedTests: 0,
+    numPendingTests: 1,
+    numTodoTests: 0,
+    numFailedTestSuites: 0,
+    numPendingTestSuites: 0,
+    testResults: [{
+      assertionResults: [{
+        status: 'pending',
+        fullName: 'unexpected production skip',
+      }],
+    }],
+  })}\n`;
+
+  await assert.rejects(executeVitestGate({ id: 'frontend_mvp' }, {
+    temporaryDirectory: scratch,
+    apiBase: API_BASE,
+    script: 'test:mvp',
+    live: true,
+    failureReportDirectory: diagnostics,
+    failureReportRunId: runId,
+    commandRunner: async ({ args }) => {
+      const outputArgument = args.find((arg) => arg.startsWith('--outputFile='));
+      assert.ok(outputArgument);
+      writeFileSync(outputArgument.slice('--outputFile='.length), report, 'utf8');
+      return {
+        startedAt: new Date().toISOString(),
+        completedAt: new Date().toISOString(),
+        exitCode: 0,
+        outputHash: `sha256:${'0'.repeat(64)}`,
+        outputBytes: 0,
+        stdout: null,
+      };
+    },
+  }), /unexpected skipped\/todo test identity/);
+
+  assert.equal(readFileSync(join(
+    diagnostics,
+    `micro-mvp-release-evidence-failure-${runId}-frontend_mvp.json`,
+  ), 'utf8'), report);
+});
+
+test('composite semantic coverage gives both Vitest phases durable JSON report paths', () => {
+  const generator = readFileSync(
+    new URL('./generate-micro-mvp-release-evidence.mjs', import.meta.url),
+    'utf8',
+  );
+  const runner = readFileSync(
+    new URL('../../frontend/scripts/run-micro-mvp-coverage.mjs', import.meta.url),
+    'utf8',
+  );
+  const collectionConfig = readFileSync(
+    new URL('../../frontend/vitest.micro-coverage.config.ts', import.meta.url),
+    'utf8',
+  );
+  const gateConfig = readFileSync(
+    new URL('../../frontend/vitest.micro-coverage.gate.config.ts', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(generator, /MICRO_MVP_VITEST_REPORT_DIRECTORY: temporaryDirectory/);
+  for (const phase of ['collection', 'gate']) {
+    assert.match(runner, new RegExp(`runVitest\\([^\\n]+, '${phase}'\\)`));
+    assert.match(generator, new RegExp(`semantic_coverage_${phase}\\.json`));
+  }
+  for (const config of [collectionConfig, gateConfig]) {
+    assert.match(config, /MICRO_MVP_VITEST_JSON_REPORT_PATH/);
+    assert.match(config, /outputFile: \{ json: releaseJsonReportPath \}/);
+  }
 });
 
 test('Vite generator middleware never discovers the application entry', () => {
@@ -736,6 +922,7 @@ test('generator executes the exact mandatory gate set before writing evidence', 
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const path = join(directory, 'evidence.json');
   const executed = [];
+  const diagnostics = [];
 
   const result = await generateMicroMvpReleaseEvidence({
     apiBase: API_BASE,
@@ -747,8 +934,12 @@ test('generator executes the exact mandatory gate set before writing evidence', 
     catalogLoader: async () => catalogs(),
     coverageExpander: (coverage) => coverage,
     environment: {},
-    gateExecutor: async (gate) => {
+    gateExecutor: async (gate, context) => {
       executed.push(gate.id);
+      diagnostics.push({
+        directory: context.failureReportDirectory,
+        runId: context.failureReportRunId,
+      });
       const startedAt = new Date().toISOString();
       return {
         id: gate.id,
@@ -769,6 +960,13 @@ test('generator executes the exact mandatory gate set before writing evidence', 
   });
 
   assert.deepEqual(executed, REQUIRED_RELEASE_GATES.map((gate) => gate.id));
+  assert.equal(new Set(diagnostics.map((item) => item.directory)).size, 1);
+  assert.equal(diagnostics[0].directory, directory);
+  assert.equal(new Set(diagnostics.map((item) => item.runId)).size, 1);
+  assert.match(
+    diagnostics[0].runId,
+    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+  );
   assert.equal(result.destination, path);
   if (process.platform !== 'win32') {
     assert.equal(statSync(path).mode & 0o777, 0o600);

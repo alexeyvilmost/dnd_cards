@@ -1,6 +1,6 @@
 import { randomUUID, createHash } from 'node:crypto';
 import { readFile, unlink } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import { dirname, isAbsolute, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 
@@ -17,6 +17,10 @@ if (descriptor.coverageSummaryRelativePath !== '.micro-mvp-evidence/coverage-sum
   throw new Error('Refusing to remove an unexpected coverage summary target');
 }
 const coverageSummaryPath = resolve(frontendRoot, descriptor.coverageSummaryRelativePath);
+const reportDirectory = process.env.MICRO_MVP_VITEST_REPORT_DIRECTORY?.trim() || null;
+if (reportDirectory && !isAbsolute(reportDirectory)) {
+  throw new Error('MICRO_MVP_VITEST_REPORT_DIRECTORY must be absolute');
+}
 const vitestEntry = resolve(frontendRoot, 'node_modules/vitest/vitest.mjs');
 const runId = randomUUID();
 const startedAt = new Date().toISOString();
@@ -43,11 +47,17 @@ async function removeStaleFile(path) {
   }
 }
 
-function runVitest(configFile) {
+function runVitest(configFile, phase) {
+  const reportPath = reportDirectory
+    ? resolve(reportDirectory, `semantic_coverage_${phase}.json`)
+    : null;
   return new Promise((resolveExitCode, reject) => {
     const child = spawn(process.execPath, [vitestEntry, 'run', '--config', configFile], {
       cwd: frontendRoot,
-      env: childEnvironment,
+      env: {
+        ...childEnvironment,
+        ...(reportPath ? { MICRO_MVP_VITEST_JSON_REPORT_PATH: reportPath } : {}),
+      },
       stdio: 'inherit',
     });
     child.once('error', reject);
@@ -63,10 +73,10 @@ function runVitest(configFile) {
 }
 
 await Promise.all([removeStaleFile(manifestPath), removeStaleFile(coverageSummaryPath)]);
-const collectionExitCode = await runVitest('vitest.micro-coverage.config.ts');
+const collectionExitCode = await runVitest('vitest.micro-coverage.config.ts', 'collection');
 if (collectionExitCode !== 0) {
   process.exitCode = collectionExitCode;
 } else {
-  const gateExitCode = await runVitest(descriptor.gateConfig);
+  const gateExitCode = await runVitest(descriptor.gateConfig, 'gate');
   if (gateExitCode !== 0) process.exitCode = gateExitCode;
 }
