@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import contentPatch from '../canon/data/micro-mvp-l1-content-patch.v1.json';
 import compiledFixture from '../pages/rulesLabFixture.generated.json';
 import type { ActorState, RuleActionDefinition } from '../rules-core/domain';
+import { canonicalStringify } from '../rules-core/determinism';
 import type { CharacterContext } from '../mvp/contracts';
 import type { Action, Card, CharacterClass, PassiveEffect, Spell } from '../types';
 import { collectChoices, type ChoiceOrigin } from '../mechanics/collectChoices';
@@ -12,9 +13,15 @@ import {
   buildSheetCanonicalRuntime,
   projectSheetCanonicalPersistence,
   readSheetCanonicalWorld,
+  SHEET_CANONICAL_WORLD_KEY,
   writeSheetCanonicalWorld,
 } from './sheetCanonicalWorld';
-import { FIND_FAMILIAR_MATERIAL_RESOURCE } from '../rules-core/familiarRuntime';
+import {
+  FIND_FAMILIAR_MATERIAL_RESOURCE,
+  materializeCanonicalFamiliarActor,
+  pactChainProjection,
+} from '../rules-core/familiarRuntime';
+import { castFindFamiliar } from '../rules-core/findFamiliar';
 import { SHEET_SPELL_CAST_CHOICE } from './sheetSpellCastingUi';
 import { sourceKey } from '../mechanics/choiceKey';
 import type { CharacterRuleState } from './rules/types';
@@ -53,6 +60,20 @@ const generated = compiledFixture as unknown as {
 
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function legacySheetContentHash(
+  systemId: string,
+  rulesetVersion: string,
+  contentIdentity: unknown,
+): string {
+  const value = canonicalStringify(contentIdentity);
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return `sheet:${systemId}:${rulesetVersion}:fnv1a32:${hash.toString(16).padStart(8, '0')}`;
 }
 
 function patchEffect(cardNumber: string): PassiveEffect {
@@ -299,18 +320,19 @@ describe('real sheet canonical world materialization', () => {
       activeEffects: [],
     };
     const passives = [{ activation: { mode: 'passive' }, source: 'archer-test' }];
+    const characterContext = {
+      abilityMods: { str: 0, dex: 3, con: 1, int: 0, wis: 0, cha: 0 },
+      profBonus: 2,
+      level: 1,
+      passives,
+    } as CharacterContext;
     const built = buildSheetCanonicalRuntime({
       character: character('sheet-archer'),
       assembled: { ...baseAssembly, klass: null, effects: [] },
       ruleState: { appliedGrants: [] },
       sheetActions: [sheetAction],
       runtime,
-      characterContext: {
-        abilityMods: { str: 0, dex: 3, con: 1, int: 0, wis: 0, cha: 0 },
-        profBonus: 2,
-        level: 1,
-        passives,
-      } as CharacterContext,
+      characterContext,
       passives,
       cards: [bow, arrow, ...unrelatedCards],
       ac: 13,
@@ -330,6 +352,7 @@ describe('real sheet canonical world materialization', () => {
       .toBeUndefined();
     expect(built.world.actors[built.actorId].passives).toEqual(passives);
     expect(JSON.stringify(built.world).length).toBeLessThan(768 << 10);
+    expect(built.world.ruleset.contentHash).toMatch(/^sha256:[0-9a-f]{64}$/);
 
     const persisted = writeSheetCanonicalWorld({}, built.actorId, built.world);
     const stale = clone(persisted);
@@ -339,6 +362,134 @@ describe('real sheet canonical world materialization', () => {
       stale,
       built.actorId,
       built.world.ruleset.contentHash,
+    )).toBeNull();
+
+    const legacyContentHash = legacySheetContentHash(
+      'dnd5e-2024',
+      '2024',
+      {
+        systemId: 'dnd5e-2024',
+        rulesetVersion: '2024',
+        actions: built.actions,
+        pacts: [],
+        cards: built.cards.map((card) => ({
+          id: card.id,
+          cardNumber: card.card_number,
+          name: card.name,
+          type: card.type,
+          weaponType: card.weapon_type,
+          damageType: card.damage_type,
+          properties: card.properties,
+          tags: card.tags,
+          enchantBonus: card.enchant_bonus,
+          attunement: card.attunement,
+          requiresAttunement: card.requires_attunement,
+          slot: card.slot,
+          mechanics: card.mechanics,
+          battleProfile: card.battle_profile,
+        })),
+        grantedEffects: undefined,
+        masteryEffects: undefined,
+        familiarCatalog: undefined,
+      },
+    );
+    const legacyWorld = clone(built.world);
+    legacyWorld.ruleset.contentHash = legacyContentHash;
+    legacyWorld.logicalClock = 99;
+    legacyWorld.processedCommandIds.push('legacy-command');
+    legacyWorld.scene = {
+      mode: 'encounter',
+      initiative: [built.actorId],
+      activeIndex: 0,
+      round: 3,
+      turnStarted: true,
+    };
+    legacyWorld.objects['object:legacy-illusion'] = {
+      id: 'object:legacy-illusion',
+      name: 'Persisted illusion',
+      kind: 'spell_effect',
+      size: 'medium',
+      sourceActorId: built.actorId,
+      sourceActionId: sheetAction.id,
+      roundsLeft: 8,
+    };
+    legacyWorld.concentrations[built.actorId] = {
+      id: 'concentration:legacy',
+      sourceActorId: built.actorId,
+      actionId: sheetAction.id,
+      startedAtRevision: legacyWorld.revision,
+      effectLinks: [],
+    };
+    const legacyTurnState = writeSheetCanonicalWorld({}, built.actorId, legacyWorld);
+    const rebuilt = buildSheetCanonicalRuntime({
+      character: { ...character('sheet-archer'), turn_state: legacyTurnState },
+      assembled: { ...baseAssembly, klass: null, effects: [] },
+      ruleState: { appliedGrants: [] },
+      sheetActions: [sheetAction],
+      runtime,
+      characterContext,
+      passives,
+      cards: [bow, arrow, ...unrelatedCards],
+      ac: 13,
+    });
+    expect(rebuilt.world.ruleset.contentHash).toBe(built.world.ruleset.contentHash);
+    expect(rebuilt.world.logicalClock).toBe(99);
+    expect(rebuilt.world.processedCommandIds).toContain('legacy-command');
+    expect(rebuilt.world.scene).toEqual(legacyWorld.scene);
+    expect(rebuilt.world.objects['object:legacy-illusion'])
+      .toEqual(legacyWorld.objects['object:legacy-illusion']);
+    expect(rebuilt.world.concentrations[built.actorId])
+      .toEqual(legacyWorld.concentrations[built.actorId]);
+
+    const rewritten = writeSheetCanonicalWorld({}, rebuilt.actorId, rebuilt.world);
+    expect(rewritten[SHEET_CANONICAL_WORLD_KEY]).toMatchObject({
+      rulesetContentHash: built.world.ruleset.contentHash,
+      world: { ruleset: { contentHash: built.world.ruleset.contentHash } },
+    });
+
+    const inconsistent = clone(legacyTurnState);
+    const inconsistentEnvelope = inconsistent[SHEET_CANONICAL_WORLD_KEY] as {
+      world: { ruleset: { contentHash: string } };
+    };
+    inconsistentEnvelope.world.ruleset.contentHash = `${legacyContentHash}-tampered`;
+    expect(() => readSheetCanonicalWorld(
+      inconsistent,
+      built.actorId,
+      built.world.ruleset.contentHash,
+      {
+        contentHash: legacyContentHash,
+        replacementRuleset: built.world.ruleset,
+      },
+    )).toThrow(/different ruleset identities/);
+
+    expect(() => readSheetCanonicalWorld(
+      legacyTurnState,
+      built.actorId,
+      built.world.ruleset.contentHash,
+      {
+        contentHash: legacyContentHash,
+        replacementRuleset: {
+          ...built.world.ruleset,
+          releaseId: `${built.world.ruleset.releaseId}:tampered`,
+        },
+      },
+    )).toThrow(/metadata does not match/);
+
+    const unrelatedLegacy = clone(legacyTurnState);
+    const unrelatedEnvelope = unrelatedLegacy[SHEET_CANONICAL_WORLD_KEY] as {
+      rulesetContentHash: string;
+      world: { ruleset: { contentHash: string } };
+    };
+    unrelatedEnvelope.rulesetContentHash = 'sheet:dnd5e-2024:2024:fnv1a32:00000000';
+    unrelatedEnvelope.world.ruleset.contentHash = unrelatedEnvelope.rulesetContentHash;
+    expect(readSheetCanonicalWorld(
+      unrelatedLegacy,
+      built.actorId,
+      built.world.ruleset.contentHash,
+      {
+        contentHash: legacyContentHash,
+        replacementRuleset: built.world.ruleset,
+      },
     )).toBeNull();
   });
 
@@ -435,6 +586,56 @@ describe('real sheet canonical world materialization', () => {
     expect(reloaded.resourceBindings).toEqual(runtime.resourceBindings);
     expect(reloaded.world.actors[reloaded.actorId].runtime.resources)
       .toMatchObject({ [FIND_FAMILIAR_MATERIAL_RESOURCE]: 10 });
+
+    const legacyWorld = clone(reloaded.world);
+    const owner = legacyWorld.actors[reloaded.actorId];
+    const chainState = owner.warlockPacts?.chain;
+    if (!chainState) throw new Error('Reloaded Chain root has no invocation state');
+    const familiarState = castFindFamiliar({
+      familiarActorId: `${reloaded.actorId}:legacy-familiar`,
+      ownerActorId: reloaded.actorId,
+      policy: { kind: 'pact_chain', sourceEntityId: chainState.sourceEntityId },
+      method: 'pact_chain_magic_action',
+      formId: 'imp',
+      spiritType: 'fiend',
+      resources: { level1SpellSlots: 0, incenseGp: 10 },
+      incenseOfferingGp: 10,
+      materialCostGp: 10,
+      baseCastingTimeSeconds: 3_600,
+      mechanicsPolicy: {
+        connectionRangeFt: 100,
+        reappearRangeFt: 30,
+        ritualCastingAddedSeconds: 600,
+      },
+      existingFamiliar: null,
+    }).familiar;
+    const familiarActor = materializeCanonicalFamiliarActor({
+      familiar: familiarState,
+      owner,
+      summoningActionId: action.id,
+    });
+    familiarActor.lifecycle = { status: 'alive' };
+    chainState.activeFamiliar = pactChainProjection(familiarState);
+    legacyWorld.actors[familiarActor.id] = familiarActor;
+    const legacyAlias = 'sheet:dnd5e-2024:2024:fnv1a32:89abcdef';
+    legacyWorld.ruleset.contentHash = legacyAlias;
+    const migrated = readSheetCanonicalWorld(
+      writeSheetCanonicalWorld(
+        {},
+        reloaded.actorId,
+        legacyWorld,
+        reloaded.resourceBindings,
+      ),
+      reloaded.actorId,
+      reloaded.world.ruleset.contentHash,
+      {
+        contentHash: legacyAlias,
+        replacementRuleset: reloaded.world.ruleset,
+      },
+    );
+    expect(migrated?.actors[familiarActor.id]).toEqual(familiarActor);
+    expect(migrated?.actors[reloaded.actorId].warlockPacts?.chain?.activeFamiliar)
+      .toEqual(pactChainProjection(familiarState));
   });
 
   it('materializes Pact Tome from the five resolved Forge choices and round-trips its book/grants', () => {
@@ -498,6 +699,29 @@ describe('real sheet canonical world materialization', () => {
       runtime.actorId,
       runtime.world.ruleset.contentHash,
     )).toEqual(runtime.world);
+
+    const legacyAlias = 'sheet:dnd5e-2024:2024:fnv1a32:1234abcd';
+    const legacyWorld = clone(runtime.world);
+    legacyWorld.ruleset.contentHash = legacyAlias;
+    legacyWorld.logicalClock = 17;
+    const migrated = readSheetCanonicalWorld(
+      writeSheetCanonicalWorld({}, runtime.actorId, legacyWorld),
+      runtime.actorId,
+      runtime.world.ruleset.contentHash,
+      {
+        contentHash: legacyAlias,
+        replacementRuleset: runtime.world.ruleset,
+      },
+    );
+    expect(migrated).not.toBeNull();
+    expect(migrated?.ruleset).toEqual(runtime.world.ruleset);
+    expect(migrated?.logicalClock).toBe(17);
+    expect(migrated?.objects[state!.bookObjectId]).toEqual(
+      legacyWorld.objects[state!.bookObjectId],
+    );
+    expect(migrated?.actors[runtime.actorId].warlockPacts).toEqual(
+      legacyWorld.actors[runtime.actorId].warlockPacts,
+    );
   });
 
   it('materializes and reloads the explicit Wizard spellbook/prepared subset without first-N defaults', () => {
@@ -578,6 +802,7 @@ describe('real sheet canonical world materialization', () => {
       ac: root.actor.ac,
     });
     const actorAccess = built.world.actors[built.actorId].spellcastingAccess!;
+    expect(built.world.ruleset.contentHash).toMatch(/^sha256:[0-9a-f]{64}$/);
     const source = actorAccess.preparedSources['CLASS-wizard']!;
     expect(source.capacity).toBe(4);
     expect(source.availableActionIds).toHaveLength(6);

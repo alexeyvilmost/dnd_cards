@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+} from 'react';
 import Toast, { ToastProps } from '../components/Toast';
 
 interface ToastContextType {
@@ -27,9 +33,11 @@ interface ToastState extends Omit<ToastProps, 'onClose'> {
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastState[]>([]);
   const [recentToasts, setRecentToasts] = useState<Map<string, number>>(new Map());
+  const nextToastId = useRef(0);
 
   const showToast = useCallback((toast: Omit<ToastProps, 'id' | 'onClose'>) => {
-    const id = Math.random().toString(36).substr(2, 9);
+    nextToastId.current += 1;
+    const id = `toast-${nextToastId.current}`;
     
     // Создаем ключ для идентификации похожих уведомлений
     const toastKey = `${toast.title}|${toast.message || ''}|${toast.type}`;

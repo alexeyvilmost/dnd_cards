@@ -20,6 +20,7 @@ import {
 } from './mini-mvp-audit.mjs';
 import { fightingStyleForgeSheetCoverageProblems } from './mark-mini-mvp-fighting-style-forge-sheet.mjs';
 import { MINI_MVP_FIGHTING_STYLE_PRIMITIVE_PATCHES } from './upgrade-mini-mvp-fighting-style-primitives.mjs';
+import { postExactSupportBatch } from './exact-support-batch-client.mjs';
 
 export const FIGHTING_STYLE_PRIMITIVE_EVIDENCE_ID = '503b36da-2750-4cdd-9058-ecaf1229b254';
 
@@ -412,28 +413,12 @@ export function buildFightingStylePrimitiveCertificationBatch(
 
 async function applyRecordsAtomically(records, token, key) {
   const batch = buildFightingStylePrimitiveCertificationBatch(records);
-  const response = await fetch(`${apiUrl()}/api/content-support/batch-exact`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      'X-Content-Certification-Key': key,
-    },
-    body: JSON.stringify(batch),
+  return postExactSupportBatch({
+    baseUrl: apiUrl(),
+    batch,
+    token,
+    certificationKey: key,
   });
-  const text = await response.text();
-  if (!response.ok) {
-    throw new Error(`atomic certification apply returned ${response.status}: ${text.slice(0, 500)}`);
-  }
-  const receipt = text ? JSON.parse(text) : null;
-  if (receipt?.schema_version !== 1
-    || receipt?.mode !== batch.mode
-    || receipt?.plan_hash !== batch.plan_hash
-    || receipt?.total !== batch.expected_count
-    || receipt?.cas !== 'atomic_exact_full_api_response_v1') {
-    throw new Error('atomic certification apply returned an invalid receipt');
-  }
-  return receipt;
 }
 
 function option(name) {

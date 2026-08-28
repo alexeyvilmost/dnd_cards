@@ -247,6 +247,52 @@ test('readiness recomputes the exact payload using each existing certified_at', 
   );
 });
 
+test('Stone lineage dependency readiness tracks related action mechanics without certifying the action', () => {
+  const ready = fixture();
+  const stone = ready.catalogs.race.find((entity) => entity.card_number === 'RACE-0011-stone');
+  assert.ok(stone);
+  const stoneAction = {
+    id: 'id:ACT-goliath-stone',
+    card_number: 'ACT-goliath-stone',
+    support: null,
+    mechanics: {
+      activation: {
+        mode: 'reaction',
+        trigger: { event: 'damage_taken', timing: 'before' },
+      },
+      effects: [{ result: [{ kind: 'reduce_damage', amount: '1d12+con' }] }],
+    },
+  };
+  (ready.catalogs.action ??= []).push(stoneAction);
+  stone.related_actions = [stoneAction.id];
+
+  const plan = planForgeSheetRootSupport(ready.report, ready.catalogs);
+  const index = buildCertificationIndex(ready.catalogs);
+  const stoneDependencies = certificationHashes(stone, 'race', index).dependencies;
+  assert.equal(stoneDependencies.length, 1);
+  assert.equal(stoneDependencies[0].type, 'action');
+  assert.equal(stoneDependencies[0].identity, `action:${stoneAction.id}`);
+  for (const item of plan) {
+    item.entity.support = forgeSheetRootSupportPayload(
+      item.entity,
+      item.record.entityType,
+      index,
+      '2026-08-28T00:00:00.000Z',
+    );
+  }
+  assert.deepEqual(forgeSheetRootSupportReadinessProblems(plan, ready.catalogs), []);
+  assert.equal(stoneAction.support, null);
+
+  stoneAction.mechanics.effects[0].result[0].amount = '1';
+  const problems = forgeSheetRootSupportReadinessProblems(plan, ready.catalogs);
+  assert.equal(problems.length, 1);
+  assert.match(
+    problems[0],
+    /RACE-0011-stone: support is neither exact.*\(dependency_hash\)/,
+  );
+  assert.equal(stoneAction.support, null);
+});
+
 test('current micro-v4 roots from the condition evidence apply are ready and protected', () => {
   const ready = fixture();
   const microRoot = withCurrentMicroEvidence(ready, 'CLASS-wizard');

@@ -16,6 +16,7 @@ import {
 import { currentMicroMvpReleaseIdentity } from './micro-mvp-release-evidence.mjs';
 import { assessMiniMvpCatalogs, fetchMiniMvpCatalogs } from './mini-mvp-audit.mjs';
 import { MINI_MVP_MANIFEST } from './mini-mvp-manifest.mjs';
+import { postExactSupportBatch } from './exact-support-batch-client.mjs';
 
 export const FORGE_SHEET_SUPPORT_VERSION = 'mini-mvp-forge-sheet-v2';
 export const FORGE_SHEET_ROOT_COLLECTIONS = Object.freeze([
@@ -343,28 +344,12 @@ export function buildForgeSheetRootCertificationBatch(records, operationId = ran
 
 async function applyRecordsAtomically(records, token, key) {
   const batch = buildForgeSheetRootCertificationBatch(records);
-  const response = await fetch(`${apiUrl()}/api/content-support/batch-exact`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      'X-Content-Certification-Key': key,
-    },
-    body: JSON.stringify(batch),
+  return postExactSupportBatch({
+    baseUrl: apiUrl(),
+    batch,
+    token,
+    certificationKey: key,
   });
-  const responseText = await response.text();
-  if (!response.ok) {
-    throw new Error(`atomic Forge/sheet certification returned ${response.status}: ${responseText.slice(0, 500)}`);
-  }
-  const receipt = responseText ? JSON.parse(responseText) : null;
-  if (receipt?.schema_version !== 1
-    || receipt?.mode !== batch.mode
-    || receipt?.plan_hash !== batch.plan_hash
-    || receipt?.total !== batch.expected_count
-    || receipt?.cas !== 'atomic_exact_full_api_response_v1') {
-    throw new Error('atomic Forge/sheet certification returned an invalid receipt');
-  }
-  return receipt;
 }
 
 function optionValues(argv, name) {

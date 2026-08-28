@@ -14,7 +14,7 @@ import {
   writeSheetCanonicalWorld,
   type SheetCanonicalRuntime,
 } from './sheetCanonicalWorld';
-import type { ForgeCharacter } from './types';
+import { DEFAULT_CHARACTER_SYSTEM_ID, type ForgeCharacter } from './types';
 
 export interface SheetAtomicWorldParticipant {
   character: ForgeCharacter;
@@ -58,6 +58,17 @@ function runtimeRevision(character: ForgeCharacter): number {
 
 function sameRuleset(left: WorldState['ruleset'], right: WorldState['ruleset']): boolean {
   return canonicalStringify(left) === canonicalStringify(right);
+}
+
+function boundedIdentity(value: string, maximum: number): boolean {
+  return value.length > 0 && value.length <= maximum && value.trim() === value;
+}
+
+function validRuntimeCommandRuleset(ruleset: WorldState['ruleset']): boolean {
+  return ruleset.systemId === DEFAULT_CHARACTER_SYSTEM_ID
+    && boundedIdentity(ruleset.releaseId, 255)
+    && /^sha256:[0-9a-f]{64}$/.test(ruleset.contentHash)
+    && boundedIdentity(ruleset.errataVersion, 100);
 }
 
 function runtimeEvents(
@@ -167,6 +178,11 @@ export function prepareSheetAtomicWorldCommit(input: {
     .sort((left, right) => left.character.id.localeCompare(right.character.id));
   const ids = new Set<string>();
   const ruleset = sorted[0].world.ruleset;
+  if (!validRuntimeCommandRuleset(ruleset)) {
+    throw new SheetAtomicWorldCommitError(
+      'Atomic sheet transition requires a server-compatible ruleset identity',
+    );
+  }
   for (const participant of sorted) {
     const { character, canonical, world } = participant;
     if (ids.has(character.id)) {

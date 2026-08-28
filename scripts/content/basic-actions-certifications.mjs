@@ -8,6 +8,7 @@ import {
   certificationHashes,
   sha256Canonical,
 } from './certification-hash.mjs';
+import { postExactSupportBatch } from './exact-support-batch-client.mjs';
 
 export const BASIC_ACTIONS_CERTIFICATION_VERSION = 'micro-mvp-basic-actions-v2';
 export const BASIC_ACTIONS_EVIDENCE_ID = '9a983f0b-f3df-4aaf-a124-e8b78eec06a1';
@@ -192,28 +193,12 @@ export function buildBasicActionCertificationBatch(records, operationId = random
 
 async function applyRecordsAtomically(records, token, key) {
   const batch = buildBasicActionCertificationBatch(records);
-  const response = await fetch(`${apiUrl()}/api/content-support/batch-exact`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      'X-Content-Certification-Key': key,
-    },
-    body: JSON.stringify(batch),
+  return postExactSupportBatch({
+    baseUrl: apiUrl(),
+    batch,
+    token,
+    certificationKey: key,
   });
-  const text = await response.text();
-  if (!response.ok) {
-    throw new Error(`atomic certification apply returned ${response.status}: ${text.slice(0, 500)}`);
-  }
-  const receipt = text ? JSON.parse(text) : null;
-  if (receipt?.schema_version !== 1
-    || receipt?.mode !== batch.mode
-    || receipt?.plan_hash !== batch.plan_hash
-    || receipt?.total !== batch.expected_count
-    || receipt?.cas !== 'atomic_exact_full_api_response_v1') {
-    throw new Error('atomic certification apply returned an invalid receipt');
-  }
-  return receipt;
 }
 
 async function main() {

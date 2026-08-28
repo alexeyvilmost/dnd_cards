@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   canonicalSha256,
+  canonicalSha256Sync,
   canonicalStringify,
   createLogicalClock,
   createSequentialIdFactory,
   createStrictRngTape,
+  sha256String,
 } from './determinism';
 
 describe('deterministic runtime inputs', () => {
@@ -61,6 +63,18 @@ describe('canonical serialization', () => {
       await canonicalSha256({ a: 1, b: 2 }),
     );
     expect(await canonicalSha256({ a: 2 })).not.toBe(await canonicalSha256({ a: 1 }));
+  });
+
+  it('constructs synchronous browser SHA-256 identities without shortening the digest', async () => {
+    expect(sha256String('')).toBe(
+      'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+    );
+    expect(sha256String('abc')).toBe(
+      'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
+    );
+    const value = { unicode: 'Рука мага', nested: [{ b: 2, a: 1 }] };
+    expect(canonicalSha256Sync(value)).toBe(await canonicalSha256(value));
+    expect(canonicalSha256Sync(value)).toMatch(/^sha256:[0-9a-f]{64}$/);
   });
 
   it('rejects cycles and non-finite values', () => {

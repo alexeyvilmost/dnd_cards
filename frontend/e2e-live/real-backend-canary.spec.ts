@@ -642,6 +642,34 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+async function assertRuntimeCommandResponse(
+  response: Response,
+  label: string,
+): Promise<void> {
+  if (response.ok()) return;
+  let detail = '<unreadable response body>';
+  try {
+    const body = await response.json() as Record<string, unknown>;
+    detail = JSON.stringify(Object.fromEntries(
+      ['code', 'error', 'character_id', 'expected_runtime_revision', 'actual_runtime_revision']
+        .filter((key) => Object.prototype.hasOwnProperty.call(body, key))
+        .map((key) => [key, body[key]]),
+    ));
+  } catch {
+    // Never attach arbitrary HTML or proxy bodies to credentialed live evidence.
+  }
+  let rulesetDetail = '<unreadable ruleset_ref>';
+  try {
+    const request = response.request().postDataJSON() as Record<string, unknown>;
+    rulesetDetail = JSON.stringify(request.ruleset_ref ?? null);
+  } catch {
+    // The ruleset identity is the only request field safe and useful here.
+  }
+  throw new Error(
+    `${label}: HTTP ${response.status()} ${detail}; ruleset_ref=${rulesetDetail}`,
+  );
+}
+
 async function deleteAndVerify(
   api: LiveAPI,
   path: string,
@@ -998,10 +1026,15 @@ test('required production spine: empty Forge reaches sheet and dedicated combat 
     await expect(page).toHaveURL(new RegExp(`/characters-v3/${character.id}$`));
     await expect(page.getByRole('button', { name: 'Открыть ошибки и незавершённые выборы' }))
       .toHaveCount(0);
-    const grantedActions = await Promise.all((character.action_ids ?? []).map((actionId) => (
-      checkedJSON<CatalogAction>(realForgeApi, 'get', `/api/actions/${actionId}`)
-    )));
-    const reduceDamageReactions = grantedActions.filter((action) => {
+    expect(
+      character.action_ids ?? [],
+      'persisted action_ids contain only explicit Forge additions',
+    ).toEqual(root.draft.actionIds ?? []);
+    const lineageActions = await Promise.all([...new Set(lineage.related_actions ?? [])]
+      .map((actionId) => (
+        checkedJSON<CatalogAction>(realForgeApi, 'get', `/api/actions/${actionId}`)
+      )));
+    const reduceDamageReactions = lineageActions.filter((action) => {
       const mechanics = record(action.mechanics);
       const activation = record(mechanics?.activation);
       const trigger = record(activation?.trigger);
@@ -1803,7 +1836,10 @@ test('public sheet certificate: Forge Magic Initiate Fighter uses Longbow and Th
     await mageConfirm.getByRole('button', { name: 'Применить', exact: true }).click();
     const mageRuntimeResponse = await mageRuntimePromise;
     assertLiveCanaryRequestOrigin(mageRuntimeResponse.url(), apiOrigin, 'public Mage Hand runtime command');
-    expect(mageRuntimeResponse.ok(), 'public Mage Hand atomic runtime command').toBe(true);
+    await assertRuntimeCommandResponse(
+      mageRuntimeResponse,
+      'public Mage Hand atomic runtime command',
+    );
     character = await checkedJSON<CharacterResponse>(auth.api, 'get', `/api/characters-v3/${character.id}`);
     expect((character.active_effects ?? []).some((effect) => (
       (effect.mechanics as JsonRecord)?.kind === 'remote_manipulator'
@@ -2011,7 +2047,10 @@ test('public sheet certificate: Forge Wizard casts utility world primitives', as
       assertLiveCanaryRequestOrigin(
         runtimeCommandResponse.url(), apiOrigin, `${spell.card_number} runtime command`,
       );
-      expect(runtimeCommandResponse.ok(), `${spell.card_number} atomic runtime command`).toBe(true);
+      await assertRuntimeCommandResponse(
+        runtimeCommandResponse,
+        `${spell.card_number} atomic runtime command`,
+      );
       await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);
     };
 

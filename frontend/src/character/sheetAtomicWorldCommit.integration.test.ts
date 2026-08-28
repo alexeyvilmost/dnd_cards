@@ -5,6 +5,7 @@ import {
   type ActorState,
   type RulesCatalog,
   type RulesetReference,
+  type UncommittedRuleEvent,
 } from '../rules-core/domain';
 import type {
   CharacterRuntimeCommandRequest,
@@ -169,7 +170,21 @@ function fixture(): {
     prepared: prepareSheetAtomicWorldCommit({
       commandId: COMMAND_ID,
       participants,
-      events: [],
+      events: [{
+        ordinal: 0,
+        sourceActorId: SOURCE_ID,
+        obligationIds: [],
+        payload: {
+          type: 'EngineEventRecorded',
+          actorId: SOURCE_ID,
+          targetIds: [...TARGET_IDS],
+          event: {
+            type: 'effect_applied',
+            name: 'Bless',
+            sourceAction: 'SPELL-0163',
+          },
+        },
+      } satisfies UncommittedRuleEvent],
     }),
     initial: [source.character, ...targets.map((target) => target.character)],
   };
@@ -197,6 +212,7 @@ class AtomicMemoryStore implements SheetAtomicRuntimeCommandStore {
   readonly characters = new Map<string, ForgeCharacter>();
   readonly receipts = new Map<string, CharacterRuntimeCommandResponse>();
   readonly requests: CharacterRuntimeCommandRequest[] = [];
+  readonly events: CharacterRuntimeCommandRequest['events'] = [];
   calls = 0;
   loseFirstResponse = false;
 
@@ -227,6 +243,7 @@ class AtomicMemoryStore implements SheetAtomicRuntimeCommandStore {
     }
     this.characters.clear();
     for (const [id, value] of staged) this.characters.set(id, value);
+    this.events.push(...clone(request.events));
     const response: CharacterRuntimeCommandResponse = {
       command_id: request.command_id,
       replayed: false,
@@ -267,6 +284,40 @@ describe('ordinary spell atomic world commit', () => {
       expect(Object.keys(targetWorld?.actors ?? {})).toEqual([targetId]);
       expect(targetWorld?.concentrations[SOURCE_ID]).toBeUndefined();
     }
+    expect(prepared.request.events.map((event) => event.character_id)).toEqual([
+      ...TARGET_IDS,
+      SOURCE_ID,
+    ]);
+    expect(prepared.request.events.every((event) => (
+      event.type === 'effect_applied'
+      && event.payload.type === 'effect_applied'
+      && event.payload.name === 'Bless'
+    ))).toBe(true);
+  });
+
+  it('fails closed before HTTP when a canonical world uses a non-SHA content identity', () => {
+    const sourceActor = actor(SOURCE_ID, true);
+    const legacyRuleset = {
+      ...RULESET,
+      contentHash: 'sheet:dnd5e-2024:2024:fnv1a32:56593dfa',
+    };
+    const world = createWorld({
+      id: 'legacy-sheet-world',
+      ruleset: legacyRuleset,
+      actors: [sourceActor],
+    });
+    const sourceCanonical = canonical(SOURCE_ID, sourceActor);
+    sourceCanonical.world = world;
+
+    expect(() => prepareSheetAtomicWorldCommit({
+      commandId: COMMAND_ID,
+      participants: [{
+        character: character(SOURCE_ID, sourceActor),
+        canonical: sourceCanonical,
+        world,
+      }],
+      events: [],
+    })).toThrow(/server-compatible ruleset identity/);
   });
 
   it('rolls back every target, caster resource, and concentration write when one target CAS is stale', async () => {
@@ -309,6 +360,11 @@ describe('ordinary spell atomic world commit', () => {
     expect(store.calls).toBe(2);
     expect(store.requests[1]).toEqual(store.requests[0]);
     expect(store.requests[1].command_id).toBe(COMMAND_ID);
+    expect(store.events).toHaveLength(4);
+    expect(store.events.map((event) => event.character_id)).toEqual([
+      ...TARGET_IDS,
+      SOURCE_ID,
+    ]);
     expect(current[SOURCE_ID].runtime_revision).toBe(1);
     expect(current[SOURCE_ID].resources).toMatchObject({ action: 0, spell_slot_1: 0 });
     for (const targetId of TARGET_IDS) {

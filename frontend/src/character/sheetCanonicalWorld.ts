@@ -12,7 +12,7 @@ import {
   type WorldState,
 } from '../rules-core/domain';
 import { compileDeclaredMechanicsTargeting } from '../rules-core/actionTargeting';
-import { canonicalStringify } from '../rules-core/determinism';
+import { canonicalStringify, sha256String } from '../rules-core/determinism';
 import { migrateWorldState } from '../rules-core/worldMigration';
 import { bindWarlockPactDeclaration } from '../rules-core/warlockPactDeclaration';
 import {
@@ -53,6 +53,13 @@ export interface SheetCanonicalWorldEnvelope {
   rulesetContentHash: string;
   world: WorldState;
   resourceBindings?: SheetCanonicalResourceBindings;
+}
+
+export interface SheetCanonicalLegacyRulesetAlias {
+  /** Exact pre-SHA content identity computed from the same canonical payload. */
+  contentHash: string;
+  /** Complete current ruleset identity written into the upgraded in-memory world. */
+  replacementRuleset: RulesetReference;
 }
 
 export type SheetCanonicalResourceBindings = Record<string, {
@@ -96,15 +103,6 @@ function cloneJson<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
-function fnv1a32(value: string): string {
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193) >>> 0;
-  }
-  return `fnv1a32:${hash.toString(16).padStart(8, '0')}`;
-}
-
 function object(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? value as Record<string, unknown>
@@ -113,6 +111,20 @@ function object(value: unknown): Record<string, unknown> | null {
 
 function nonBlank(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
+}
+
+/**
+ * Compatibility only for worlds persisted before sheet identities became
+ * server-valid SHA-256 values. Keep this byte-for-byte equivalent to the old
+ * UTF-16 FNV implementation; it must never be used as a new wire identity.
+ */
+function legacySheetFnv1a32(value: string): string {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return `fnv1a32:${hash.toString(16).padStart(8, '0')}`;
 }
 
 function stableIds(values: readonly unknown[]): [string, ...string[]] {
@@ -796,6 +808,7 @@ export function readSheetCanonicalWorld(
   turnState: Record<string, unknown> | null | undefined,
   expectedActorId: string,
   expectedRulesetContentHash: string,
+  legacyAlias?: SheetCanonicalLegacyRulesetAlias,
 ): WorldState | null {
   const raw = turnState?.[SHEET_CANONICAL_WORLD_KEY];
   if (raw === undefined) return null;
@@ -806,20 +819,47 @@ export function readSheetCanonicalWorld(
     || !object(envelope.world)) {
     throw new SheetCanonicalWorldError('Persisted canonical sheet world envelope is malformed');
   }
+  const isCurrent = envelope.rulesetContentHash === expectedRulesetContentHash;
+  const isExactLegacyAlias = legacyAlias !== undefined
+    && envelope.rulesetContentHash === legacyAlias.contentHash;
   // This envelope is a derived execution cache, not the source of truth for
-  // CharacterV3. Content changes are expected during a deployment, so an old
-  // release must rebuild from the live sheet instead of disabling every
-  // canonical action forever. Structurally malformed data still fails closed.
-  if (envelope.rulesetContentHash !== expectedRulesetContentHash) {
+  // CharacterV3. A different content release rebuilds from the live sheet. The
+  // sole exception is the exact pre-SHA alias derived from today's identical
+  // canonical payload; accepting a general FNV shape would certify stale data.
+  if (!isCurrent && !isExactLegacyAlias) {
     return null;
   }
   persistedResourceBindings(turnState);
-  const world = migrateWorldState(envelope.world);
+  let world = migrateWorldState(cloneJson(envelope.world));
   if (!world.actors[expectedActorId]) {
     throw new SheetCanonicalWorldError('Persisted canonical sheet world has the wrong actor');
   }
-  if (world.ruleset.contentHash !== expectedRulesetContentHash) {
-    return null;
+  if (world.ruleset.contentHash !== envelope.rulesetContentHash) {
+    throw new SheetCanonicalWorldError(
+      'Persisted canonical sheet world and envelope have different ruleset identities',
+    );
+  }
+  if (isExactLegacyAlias) {
+    if (legacyAlias.replacementRuleset.contentHash !== expectedRulesetContentHash) {
+      throw new SheetCanonicalWorldError('Legacy canonical sheet alias has the wrong replacement');
+    }
+    const upgradedMetadata = {
+      ...world.ruleset,
+      contentHash: expectedRulesetContentHash,
+    };
+    if (canonicalStringify(upgradedMetadata)
+      !== canonicalStringify(legacyAlias.replacementRuleset)) {
+      throw new SheetCanonicalWorldError(
+        'Legacy canonical sheet world ruleset metadata does not match the current release',
+      );
+    }
+    // Replace only the ruleset identity. Every source/target actor, object,
+    // scene, concentration, Pact/Familiar state and replay ledger remains from
+    // the persisted world and is rewritten under SHA on its next atomic commit.
+    world = migrateWorldState({
+      ...world,
+      ruleset: cloneJson(legacyAlias.replacementRuleset),
+    });
   }
   return world;
 }
@@ -1037,7 +1077,7 @@ export function buildSheetCanonicalRuntime(input: {
     initialObjects.push(result.bookObject);
   }
 
-  const contentFingerprint = fnv1a32(canonicalStringify({
+  const contentIdentity = {
     systemId: input.character.system_id,
     rulesetVersion: input.character.ruleset_version,
     actions: uniqueActions,
@@ -1080,11 +1120,19 @@ export function buildSheetCanonicalRuntime(input: {
       id: FAMILIAR_ACTOR_CATALOG.catalogId,
       contentHash: FAMILIAR_ACTOR_CATALOG.contentHash,
     } : undefined,
-  }));
+  };
+  const serializedContentIdentity = canonicalStringify(contentIdentity);
+  const contentHash = `sha256:${sha256String(serializedContentIdentity)}`;
+  const legacyContentHash = [
+    'sheet',
+    input.character.system_id,
+    input.character.ruleset_version,
+    legacySheetFnv1a32(serializedContentIdentity),
+  ].join(':');
   const ruleset: RulesetReference = {
     systemId: 'dnd5e-2024',
     releaseId: `sheet:${input.character.ruleset_version || '2024'}:canonical-v1`,
-    contentHash: `sheet:${input.character.system_id}:${input.character.ruleset_version}:${contentFingerprint}`,
+    contentHash,
     errataVersion: input.character.ruleset_version || '2024',
   };
   const actorCharacterContext: CharacterContext = {
@@ -1124,6 +1172,7 @@ export function buildSheetCanonicalRuntime(input: {
     input.character.turn_state,
     actorId,
     ruleset.contentHash,
+    { contentHash: legacyContentHash, replacementRuleset: ruleset },
   );
   let world = fresh;
   if (persisted) {
