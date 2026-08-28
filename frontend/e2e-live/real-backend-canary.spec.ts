@@ -1299,7 +1299,10 @@ test('required production spine: empty Forge reaches sheet and dedicated combat 
     const setup = page.getByRole('dialog', { name: /Противники для/ });
     await expect(setup).toBeVisible();
     const monsterSetupRow = setup.locator('article').filter({
-      has: setup.getByRole('heading', { name: qualifyingMonster.name, exact: true }),
+      // `has` is evaluated relative to each candidate article. Do not root the
+      // inner locator at `setup`, or Playwright composes an impossible nested
+      // dialog selector and returns zero rows even when the heading is present.
+      has: page.getByRole('heading', { name: qualifyingMonster.name, exact: true }),
     });
     await expect(monsterSetupRow, 'a live low-threat monster with a declared damaging attack')
       .toHaveCount(1);
