@@ -18,6 +18,10 @@ export default mergeConfig(viteConfig, defineConfig({
       ...configDefaults.exclude,
       'e2e/**',
       'e2e-live/**',
+      // Scripts use Node's built-in test runner and are owned by explicit
+      // release gates. Vitest must not collect their compatible file names as
+      // empty suites.
+      'scripts/**/*.test.mjs',
       // The milestone suite has its own mandatory `test:mvp` gate. Keeping it
       // out of the generic unit run avoids duplicating live-gated specs as
       // anonymous skips in release evidence.

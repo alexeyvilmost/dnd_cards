@@ -336,3 +336,11 @@ lock-pinned JSON assets even though the commit itself was correct. The asset
 gate stopped that release before cutover. The documented release command now
 forces `core.autocrlf=false`, so the archive carries Git-object bytes regardless
 of the operator checkout while the build remains fail-closed on any drift.
+
+The next evidence attempt found a test-runner ownership collision: the new
+`node:test` asset suite matched Vitest's default `*.test.mjs` glob. All 2,679
+frontend assertions passed, but evidence correctly failed because Vitest saw an
+empty foreign suite. The default Vitest configuration now excludes
+`scripts/**/*.test.mjs`; those files remain mandatory under the explicit Node
+manifest gate. This keeps each test corpus owned by one runner without hiding it
+from release evidence.
