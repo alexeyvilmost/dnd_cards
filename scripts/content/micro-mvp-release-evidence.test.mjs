@@ -4,6 +4,7 @@ import {
   mkdtempSync,
   mkdirSync,
   readFileSync,
+  readdirSync,
   rmSync,
   statSync,
   symlinkSync,
@@ -158,6 +159,26 @@ test('release source fingerprint covers canonical data and every non-TypeScript 
     /^vite\.config\.js$/m,
     'generated Vite config must not enter the Railway Docker context',
   );
+});
+
+test('Vite generator middleware never discovers the application entry', () => {
+  const generatorDirectory = new URL('../../frontend/scripts/', import.meta.url);
+  const generators = readdirSync(generatorDirectory, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && /^generate-.*\.mjs$/.test(entry.name))
+    .map((entry) => ({
+      name: entry.name,
+      source: readFileSync(new URL(entry.name, generatorDirectory), 'utf8'),
+    }))
+    .filter(({ source }) => source.includes('createServer({') && /middlewareMode:\s*true/.test(source));
+
+  assert.ok(generators.length > 0, 'expected at least one Vite generator middleware server');
+  for (const { name, source } of generators) {
+    assert.match(
+      source,
+      /optimizeDeps:\s*\{\s*noDiscovery:\s*true\s*\}/,
+      `${name} must SSR-load only its explicit generator module`,
+    );
+  }
 });
 
 test('release source collection fails closed when a required directory is absent', (t) => {

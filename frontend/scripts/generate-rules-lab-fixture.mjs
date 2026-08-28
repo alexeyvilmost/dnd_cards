@@ -20,6 +20,7 @@ const server = await createServer({
   configFile: false,
   appType: 'custom',
   logLevel: 'error',
+  optimizeDeps: { noDiscovery: true },
   server: { middlewareMode: true },
 });
 

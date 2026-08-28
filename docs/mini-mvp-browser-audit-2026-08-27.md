@@ -363,3 +363,11 @@ and prove every distinct invalid boundary fails closed. The standalone
 pre-deploy barrier now runs both critical rules coverage commands explicitly,
 so this class of gap is caught before a release archive is built rather than
 during post-deploy evidence generation.
+
+That exact-SHA run then exposed a generator-host boundary: the config-free Vite
+middleware used for the sheet-combat and Rules Lab artifacts could still start
+automatic dependency discovery, crawl `src/main.tsx`, and fail on the
+config-owned `virtual:pwa-register` module. Both generators now disable entry
+discovery and SSR-load only their explicit generator module. The Node release
+manifest suite enforces that invariant for every Vite generator middleware, so
+a cold optimizer cache cannot make the evidence gate environment-dependent.
