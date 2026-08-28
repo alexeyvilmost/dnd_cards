@@ -344,3 +344,10 @@ empty foreign suite. The default Vitest configuration now excludes
 `scripts/**/*.test.mjs`; those files remain mandatory under the explicit Node
 manifest gate. This keeps each test corpus owned by one runner without hiding it
 from release evidence.
+
+The first live-backed MVP evidence pass then found one stale assertion left by
+the Goliath authority repair: the inventory test still required the deleted
+`RE-sub-stone` duplicate in addition to `ACT-goliath-stone`. Production already
+had the intended single action authority. The expected inventory now asserts
+that final migrated shape, so the gate checks the behavior we actually ship
+instead of preserving the pre-migration duplication.

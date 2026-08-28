@@ -264,7 +264,6 @@ const EXPECTED_NON_SPELL_INVENTORY: Record<string, string[]> = {
   'RE-sub-hill': ['narrative'],
   'RE-sub-infernal': ['resistance'],
   'RE-sub-rock': ['narrative'],
-  'RE-sub-stone': ['narrative', 'reduce_damage'],
   'RE-sub-storm': ['narrative'],
   'RE-sub-wood_elf': ['choice', 'grant_speed'],
   aasimar_healing_hands: ['healing'],
@@ -322,6 +321,23 @@ d('Незаклинательные способности видов: полн�
     );
     expect(revelation?.card_number).toBe('ACT-aasimar-revelation');
     expect(nonSpellKinds(revelation!)).toContain('choice');
+  });
+
+  it('Каменная стойкость имеет одну action-authority без дублирующего reduce_damage Effect', () => {
+    const stone = races.find((race) => race.card_number === 'RACE-0011-stone');
+    expect(stone, 'подвид Каменного великана должен быть в каталоге').toBeTruthy();
+
+    const semanticEffectRefs = (stone!.related_effects || []).filter((id) => {
+      const effect = effectsById.get(id);
+      return effect ? nonSpellKinds(effect).includes('reduce_damage') : false;
+    });
+    expect(semanticEffectRefs).toEqual([]);
+
+    const stoneActions = (stone!.related_actions || [])
+      .map((id) => actionsById.get(id))
+      .filter((action): action is Action => Boolean(action));
+    expect(stoneActions.map((action) => action.card_number)).toEqual(['ACT-goliath-stone']);
+    expect(nonSpellKinds(stoneActions[0])).toEqual(['reduce_damage']);
   });
 
   it('все расовые ссылки целы, а текущий инвентарь незаклинательных payload-ов зафиксирован', () => {
