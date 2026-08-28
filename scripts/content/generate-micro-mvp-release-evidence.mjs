@@ -320,7 +320,7 @@ function postgresTestTarget(dsn, variable) {
   ].join('\0');
 }
 
-const MAX_VITEST_FAILURE_REPORT_BYTES = 64 * 1024 * 1024;
+const MAX_STRUCTURED_FAILURE_REPORT_BYTES = 64 * 1024 * 1024;
 const FAILURE_REPORT_RUN_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const SEMANTIC_COVERAGE_VITEST_REPORTS = Object.freeze([
   Object.freeze({
@@ -334,12 +334,12 @@ const SEMANTIC_COVERAGE_VITEST_REPORTS = Object.freeze([
 ]);
 
 /**
- * Preserve the structured report before the evidence runner removes its
+ * Preserve a structured runner report before the evidence runner removes its
  * private scratch directory. Failed reports are diagnostics only: they are
  * never accepted as release evidence and always receive a unique private
  * filename beside the requested evidence artifact.
  */
-export function persistVitestFailureReport({
+export function persistStructuredFailureReport({
   reportPath,
   diagnosticDirectory,
   gateId,
@@ -348,11 +348,11 @@ export function persistVitestFailureReport({
   if (!existsSync(reportPath)) return null;
   if (!diagnosticDirectory || !/^[a-z0-9_]+$/.test(gateId ?? '')
     || !FAILURE_REPORT_RUN_ID.test(runId ?? '')) {
-    throw new Error('Vitest failure-report identity is invalid');
+    throw new Error('structured failure-report identity is invalid');
   }
   const sourceStat = lstatSync(reportPath);
   if (!sourceStat.isFile() || sourceStat.isSymbolicLink()
-    || sourceStat.size <= 0 || sourceStat.size > MAX_VITEST_FAILURE_REPORT_BYTES) {
+    || sourceStat.size <= 0 || sourceStat.size > MAX_STRUCTURED_FAILURE_REPORT_BYTES) {
     throw new Error(`${gateId} produced an invalid failure report`);
   }
   const bytes = readFileSync(reportPath);
@@ -399,14 +399,14 @@ export function persistVitestFailureReport({
   return destination;
 }
 
-function persistVitestFailureReportAndLog({
+function persistStructuredFailureReportAndLog({
   reportPath,
   failureReportDirectory,
   gateId,
   failureReportRunId,
 }) {
   if (!failureReportDirectory || !failureReportRunId) return null;
-  const failureReportPath = persistVitestFailureReport({
+  const failureReportPath = persistStructuredFailureReport({
     reportPath,
     diagnosticDirectory: failureReportDirectory,
     gateId,
@@ -437,7 +437,7 @@ export async function executeVitestGate(definition, {
     args: invocation.args,
     env: live ? { API_URL: apiBase, MVP_CONTENT: '1', VITE_API_URL: apiBase } : {},
   });
-  const preserveFailureReport = () => persistVitestFailureReportAndLog({
+  const preserveFailureReport = () => persistStructuredFailureReportAndLog({
     reportPath,
     failureReportDirectory,
     gateId: definition.id,
@@ -460,6 +460,52 @@ export async function executeVitestGate(definition, {
   }
 }
 
+export async function executeBrowserGate(definition, {
+  temporaryDirectory,
+  apiBase,
+  failureReportDirectory,
+  failureReportRunId,
+  commandRunner = runCommand,
+}) {
+  const reportPath = join(temporaryDirectory, 'playwright.json');
+  const execution = await commandRunner({
+    command: process.execPath,
+    args: [PLAYWRIGHT_CLI, 'test', '--reporter=json'],
+    env: {
+      CI: '1',
+      VITE_API_URL: apiBase,
+      PLAYWRIGHT_JSON_OUTPUT_FILE: reportPath,
+    },
+  });
+  const preserveFailureReport = () => persistStructuredFailureReportAndLog({
+    reportPath,
+    failureReportDirectory,
+    gateId: definition.id,
+    failureReportRunId,
+  });
+  if (execution.exitCode !== 0) {
+    preserveFailureReport();
+    return { execution, testSummary: null, reportHash: null };
+  }
+  try {
+    const report = readJson(reportPath, definition.id);
+    const testSummary = passedTestSummary({
+      total: Number(report.stats?.expected ?? 0)
+        + Number(report.stats?.skipped ?? 0)
+        + Number(report.stats?.unexpected ?? 0)
+        + Number(report.stats?.flaky ?? 0),
+      passed: Number(report.stats?.expected ?? 0),
+      failed: Number(report.stats?.unexpected ?? 0) + Number(report.stats?.flaky ?? 0),
+      skipped: Number(report.stats?.skipped ?? 0),
+    }, definition);
+    if ((report.errors?.length ?? 0) !== 0) throw new Error('browser report has global errors');
+    return { execution, testSummary, reportHash: sha256File(reportPath) };
+  } catch (error) {
+    preserveFailureReport();
+    throw error;
+  }
+}
+
 export async function executeMicroMvpReleaseGate(definition, {
   apiBase,
   frontendBase,
@@ -473,7 +519,7 @@ export async function executeMicroMvpReleaseGate(definition, {
   let testSummary = null;
   let reportHash = null;
   let testCoverage = null;
-  const vitestContext = {
+  const structuredReportContext = {
     temporaryDirectory,
     apiBase,
     failureReportDirectory,
@@ -530,11 +576,11 @@ export async function executeMicroMvpReleaseGate(definition, {
     }
     case 'frontend_test': ({ execution, testSummary, reportHash } = await executeVitestGate(
       definition,
-      { ...vitestContext, npmTest: true },
+      { ...structuredReportContext, npmTest: true },
     )); break;
     case 'frontend_mvp': ({ execution, testSummary, reportHash } = await executeVitestGate(
       definition,
-      { ...vitestContext, script: 'test:mvp', live: true },
+      { ...structuredReportContext, script: 'test:mvp', live: true },
     )); break;
     case 'micro_manifest': {
       const reportPath = join(temporaryDirectory, 'micro-manifest.tap');
@@ -554,15 +600,15 @@ export async function executeMicroMvpReleaseGate(definition, {
     }
     case 'micro_matrix': ({ execution, testSummary, reportHash } = await executeVitestGate(
       definition,
-      { ...vitestContext, script: 'test:micro:matrix' },
+      { ...structuredReportContext, script: 'test:micro:matrix' },
     )); break;
     case 'rules_core_coverage': ({ execution, testSummary, reportHash } = await executeVitestGate(
       definition,
-      { ...vitestContext, script: 'test:rules:coverage' },
+      { ...structuredReportContext, script: 'test:rules:coverage' },
     )); break;
     case 'rules_primitive_coverage': ({ execution, testSummary, reportHash } = await executeVitestGate(
       definition,
-      { ...vitestContext, script: 'test:rules:primitives' },
+      { ...structuredReportContext, script: 'test:rules:primitives' },
     )); break;
     case 'semantic_coverage': {
       execution = await runCommand({
@@ -572,7 +618,7 @@ export async function executeMicroMvpReleaseGate(definition, {
       });
       const preserveSemanticFailureReports = () => {
         for (const report of SEMANTIC_COVERAGE_VITEST_REPORTS) {
-          persistVitestFailureReportAndLog({
+          persistStructuredFailureReportAndLog({
             reportPath: join(temporaryDirectory, report.fileName),
             failureReportDirectory,
             gateId: report.gateId,
@@ -615,7 +661,7 @@ export async function executeMicroMvpReleaseGate(definition, {
     }
     case 'live_matrix': ({ execution, testSummary, reportHash } = await executeVitestGate(
       definition,
-      { ...vitestContext, script: 'test:micro:live-matrix', live: true },
+      { ...structuredReportContext, script: 'test:micro:live-matrix', live: true },
     )); break;
     case 'rules_lab_fixture':
       execution = await runCommand({ command: NPM, args: ['run', 'rules-lab:check'] });
@@ -633,33 +679,10 @@ export async function executeMicroMvpReleaseGate(definition, {
     case 'lint':
       execution = await runCommand({ command: NPM, args: ['run', 'lint'] });
       break;
-    case 'browser': {
-      const reportPath = join(temporaryDirectory, 'playwright.json');
-      execution = await runCommand({
-        command: process.execPath,
-        args: [PLAYWRIGHT_CLI, 'test', '--reporter=json'],
-        env: {
-          CI: '1',
-          VITE_API_URL: apiBase,
-          PLAYWRIGHT_JSON_OUTPUT_FILE: reportPath,
-        },
-      });
-      if (execution.exitCode === 0) {
-        const report = readJson(reportPath, definition.id);
-        testSummary = passedTestSummary({
-          total: Number(report.stats?.expected ?? 0)
-            + Number(report.stats?.skipped ?? 0)
-            + Number(report.stats?.unexpected ?? 0)
-            + Number(report.stats?.flaky ?? 0),
-          passed: Number(report.stats?.expected ?? 0),
-          failed: Number(report.stats?.unexpected ?? 0) + Number(report.stats?.flaky ?? 0),
-          skipped: Number(report.stats?.skipped ?? 0),
-        }, definition);
-        if ((report.errors?.length ?? 0) !== 0) throw new Error('browser report has global errors');
-        reportHash = sha256File(reportPath);
-      }
-      break;
-    }
+    case 'browser': ({ execution, testSummary, reportHash } = await executeBrowserGate(
+      definition,
+      structuredReportContext,
+    )); break;
     default:
       throw new Error(`unsupported release gate ${definition.id}`);
   }

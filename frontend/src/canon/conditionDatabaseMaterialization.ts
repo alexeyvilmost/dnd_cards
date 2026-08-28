@@ -1,7 +1,7 @@
 import {
   materializeConditionRule,
   type ConditionEffectRecord,
-} from '../api/conditionsApi';
+} from './conditionDatabaseContract';
 import {
   BUILTIN_CONDITION_RULES,
   type ConditionRule,

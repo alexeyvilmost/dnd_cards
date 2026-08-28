@@ -1,16 +1,8 @@
-import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import type { Page, Route } from '@playwright/test';
 import type { SnapshotCatalogs } from '../src/canon/prodSnapshotL1Fixtures';
-import { MICRO_MVP_L1_CONTENT_PATCH } from '../src/canon/declarativeMechanicsPatch';
 import { materializeReviewedPostMigrationCatalogs } from '../src/canon/postMigrationCatalogBoundary';
-import {
-  PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH,
-  PINNED_MICRO_MVP_L1_COMPILED_RELEASE_HASH,
-  PINNED_MICRO_MVP_L1_CONTENT_PATCH_HASH,
-  PINNED_MICRO_MVP_L1_OVERLAY_HASH,
-} from '../src/canon/microMvpL1ReleaseIdentity';
-import { canonicalStringify } from '../src/rules-core/determinism';
+import { materializePlaywrightCertifiedConditionRelease } from '../test-fixtures/playwright-certified-condition-release';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -63,39 +55,6 @@ function cloneJson<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
-const FIXTURE_CONDITION_CERTIFICATION_VERSION = 'micro-mvp-l1-rules-core-v4';
-const FIXTURE_EVIDENCE_HASH = `sha256:${'c'.repeat(64)}`;
-const CONDITION_VOLATILE_FIELDS = new Set([
-  'support', 'created_at', 'updated_at', 'deleted_at',
-]);
-
-function canonicalHash(value: unknown): string {
-  return `sha256:${createHash('sha256').update(canonicalStringify(value)).digest('hex')}`;
-}
-
-function certifyFixtureCondition(row: JsonRecord): void {
-  const content = Object.fromEntries(Object.entries(row).filter(([key, value]) => (
-    !CONDITION_VOLATILE_FIELDS.has(key) && value !== undefined
-  )));
-  row.support = {
-    status: 'verified_mechanical',
-    content_hash: canonicalHash(content),
-    dependency_hash: FIXTURE_EVIDENCE_HASH,
-    certification_version: FIXTURE_CONDITION_CERTIFICATION_VERSION,
-    certified_at: '2026-08-05T00:00:00Z',
-    evidence_id: '00000000-0000-4000-8000-000000000001',
-    evidence_hash: FIXTURE_EVIDENCE_HASH,
-    evidence_completed_at: '2026-08-05T00:00:00Z',
-    gate_source_hash: FIXTURE_EVIDENCE_HASH,
-    source_content_hash: PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH,
-    rules_hash: PINNED_MICRO_MVP_L1_OVERLAY_HASH,
-    release_content_hash: PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH,
-    release_hash: PINNED_MICRO_MVP_L1_COMPILED_RELEASE_HASH,
-    patch_hash: PINNED_MICRO_MVP_L1_CONTENT_PATCH_HASH,
-    catalog_hash: FIXTURE_EVIDENCE_HASH,
-  };
-}
-
 function exactFixtureEntity(
   catalogs: Record<string, JsonRecord[]>,
   collection: string,
@@ -122,16 +81,11 @@ function exactFixtureEntity(
 function materializeFixtureOnlyRepairs(
   source: Record<string, JsonRecord[]>,
 ): Record<string, JsonRecord[]> {
-  const catalogs = cloneJson(source);
-  // The browser server represents the certified database projection, not the
-  // runtime's emergency offline condition fallback. Recompute content hashes
-  // after applying the exact condition patch and bind every row to the same
-  // pinned compiled-release evidence used by App bootstrap.
-  for (const declaration of MICRO_MVP_L1_CONTENT_PATCH.conditionPatches) {
-    const condition = catalogs.effects.find((row) => row.card_number === declaration.cardNumber);
-    if (!condition) throw new Error(`Fixture condition disappeared: ${declaration.cardNumber}`);
-    certifyFixtureCondition(condition);
-  }
+  // The isolated browser server represents a real certified database release,
+  // not the runtime's emergency offline condition fallback. The test-only
+  // boundary certifies exactly the 15 versioned condition rows through the
+  // production projection/dependency hashes and current compiled-release pins.
+  const { catalogs } = materializePlaywrightCertifiedConditionRelease(source);
 
   const persistedWeapon = exactFixtureEntity(
     catalogs,

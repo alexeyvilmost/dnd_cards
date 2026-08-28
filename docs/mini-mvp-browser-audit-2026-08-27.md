@@ -376,11 +376,11 @@ The next exact-SHA attempt stopped once in the live MVP Vitest gate, while the
 same 63 suites and 134 assertions then passed in four consecutive isolated
 runs. The runner had already deleted its temporary JSON report, so the original
 exit could not be classified as an assertion, transport failure or runner
-error. Every direct Vitest gate and both phases of the composite semantic gate
-now publish a unique mode-0600 diagnostic beside the requested evidence
-artifact through an atomic no-overwrite boundary before scratch cleanup. The
-release still fails immediately and never retries automatically, but the exact
-failure is durable enough to fix rather than infer from a later green rerun.
-These diagnostics can contain production assertion values; operators must
-remove them from the private evidence volume after the failed release is
-resolved.
+error. Every direct Vitest gate, both phases of the composite semantic gate,
+and the Playwright browser gate now publish a unique mode-0600 JSON diagnostic
+beside the requested evidence artifact through an atomic no-overwrite boundary
+before scratch cleanup. The release still fails immediately and never retries
+automatically, but the exact failure is durable enough to fix rather than infer
+from a later green rerun. These diagnostics can contain production assertion
+values, URLs, and browser error context; operators must remove them from the
+private evidence volume after the failed release is resolved.

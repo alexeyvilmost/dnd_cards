@@ -73,6 +73,7 @@
   },
   "dependencies": {
     "@3d-dice/dice-box": "^1.1.4",
+    "@fontsource/inter": "5.2.8",
     "@fontsource/pangolin": "^5.2.8",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",

@@ -61,6 +61,16 @@ function captureBrowserErrors(page: Page): string[] {
   return errors;
 }
 
+function captureExternalTypographyRequests(page: Page): string[] {
+  const requests: string[] = [];
+  page.on('request', (request) => {
+    if (request.resourceType() !== 'font' && request.resourceType() !== 'stylesheet') return;
+    const url = new URL(request.url());
+    if (url.origin !== 'http://127.0.0.1:4173') requests.push(request.url());
+  });
+  return requests;
+}
+
 async function expectRevision(page: Page, revision: number): Promise<void> {
   await expect(page.getByTestId('rules-lab-revision')).toHaveText(String(revision));
 }
@@ -472,6 +482,7 @@ test('serializes a real Wizard target save offline, reloads it, and resumes exac
 test('Pact Blade replaces its bond and resumes a CHA psychic attack continuation offline', async ({ page, context }) => {
   test.slow();
   const browserErrors = captureBrowserErrors(page);
+  const externalTypographyRequests = captureExternalTypographyRequests(page);
   await openCachedScenario(page, '/rules-lab/blade');
   await expect(page.getByTestId('rules-lab-scenario-blade')).toHaveAttribute('aria-current', 'page');
   await context.setOffline(true);
@@ -499,6 +510,7 @@ test('Pact Blade replaces its bond and resumes a CHA psychic attack continuation
   await clickCommand(page, 'rules-lab-reaction-decline', 13);
   await expect(page.getByTestId('rules-lab-pending-state')).toHaveText('нет');
   await expect(page.getByTestId('rules-lab-events')).toContainText('psychic');
+  expect(externalTypographyRequests).toEqual([]);
   expect(browserErrors).toEqual([]);
 });
 

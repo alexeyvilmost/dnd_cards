@@ -4,47 +4,31 @@ import {
   conditionRegistryAuthority,
   replaceConditionsFromDatabase,
   resetConditionsToOfflineFixture,
-  type ConditionModifier,
-  type ConditionRule,
 } from '../engine/conditions';
-import { payloadsOf } from '../engine/mechanicsView';
 import type { EntitySupportCertification } from '../content/supportStatus';
-import { canonicalSha256 } from '../rules-core/determinism';
-import { certifiedExecutableRootProjection } from '../canon/certifiedContentProjection';
+import {
+  conditionRecordContentHash,
+  isCompleteConditionRule,
+  materializeConditionRule,
+  MICRO_MVP_CONDITION_CERTIFICATION_VERSION,
+  type CertifiedConditionEffectEntity,
+  type ConditionEffectRecord,
+} from '../canon/conditionDatabaseContract';
 
-export interface ConditionEffectRecord {
-  id?: string;
-  card_number?: string | null;
-  name: string;
-  name_en?: string | null;
-  description?: string | null;
-  detailed_description?: string | null;
-  image_url?: string | null;
-  rarity?: string | null;
-  author?: string | null;
-  source?: string | null;
-  effect_type?: string | null;
-  mechanics?: unknown;
-  support?: EntitySupportCertification | null;
-}
-
-export type CertifiedConditionEffectEntity = ConditionEffectRecord & {
-  id: string;
-  effect_type: 'condition';
-  mechanics: Record<string, unknown>;
-};
+export {
+  conditionRecordContentHash,
+  materializeConditionRule,
+  MICRO_MVP_CONDITION_CERTIFICATION_VERSION,
+  type CertifiedConditionEffectEntity,
+  type ConditionEffectRecord,
+} from '../canon/conditionDatabaseContract';
 
 const CONDITION_IDS = Object.keys(BUILTIN_CONDITION_RULES).sort();
 const CONDITION_PAGE_LIMIT = 200;
 const CONDITION_MAX_PAGES = 10_000;
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const CONDITION_ID = /^[a-z][a-z0-9_-]*$/;
 const RFC3339_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/;
-export const MICRO_MVP_CONDITION_CERTIFICATION_VERSION = 'micro-mvp-l1-rules-core-v4';
-const CERTIFICATION_VOLATILE_FIELDS = [
-  'support', 'created_at', 'updated_at', 'deleted_at',
-] as const;
 const RELEASE_EVIDENCE_FIELDS = [
   'certification_version', 'certified_at', 'evidence_id', 'evidence_hash',
   'evidence_completed_at', 'gate_source_hash', 'source_content_hash',
@@ -86,116 +70,6 @@ export function certifiedConditionEffectEntity(
 
 function releaseEvidenceIdentity(effect: ConditionEffectRecord): string {
   return JSON.stringify(RELEASE_EVIDENCE_FIELDS.map((field) => effect.support?.[field] ?? null));
-}
-
-const CONDITION_MODIFIER_OPS = new Set<ConditionModifier['op']>([
-  'advantage', 'disadvantage', 'add', 'set', 'multiply', 'upgrade', 'downgrade',
-  'auto_fail', 'auto_crit', 'deny',
-]);
-
-function isCompleteConditionRule(rule: ConditionRule | null): rule is ConditionRule {
-  if (!rule || !CONDITION_ID.test(rule.id) || !rule.label.trim()) return false;
-  if (!Array.isArray(rule.modifiers) || rule.modifiers.some((modifier) => (
-    !modifier
-      || typeof modifier !== 'object'
-      || !modifier.applies_to
-      || typeof modifier.applies_to.roll !== 'string'
-      || !modifier.applies_to.roll.trim()
-      || !CONDITION_MODIFIER_OPS.has(modifier.op)
-  ))) return false;
-  const dependencies = [...(rule.includes ?? []), ...(rule.leaves ?? [])];
-  if (dependencies.some((dependency) => !CONDITION_IDS.includes(dependency))) return false;
-  if (rule.stacking
-    && rule.stacking.mode !== 'binary'
-    && rule.stacking.mode !== 'levels') return false;
-  if (rule.stacking?.max != null
-    && (!Number.isSafeInteger(rule.stacking.max) || rule.stacking.max <= 0)) return false;
-  if (rule.longRest) {
-    const removeLevels = rule.longRest.removeLevels;
-    if (removeLevels == null || !Number.isSafeInteger(removeLevels) || removeLevels < 0) return false;
-  }
-  return !(rule.thresholds ?? []).some((threshold) => (
-    !Number.isSafeInteger(threshold.atLevel)
-      || threshold.atLevel <= 0
-      || threshold.outcome !== 'death'
-  ));
-}
-
-/** Payload modifier эффекта-состояния → правило ConditionModifier (scope сохраняется). */
-function toConditionModifier(p: Record<string, unknown>): ConditionModifier | null {
-  if (p.kind !== 'modifier') return null;
-  const applies = p.applies_to as ConditionModifier['applies_to'] | undefined;
-  if (!applies?.roll) return null;
-  return {
-    applies_to: applies,
-    op: String(p.op ?? 'add') as ConditionModifier['op'],
-    ...(p.value != null ? { value: String(p.value) } : {}),
-    ...(p.scope === 'target' ? { scope: 'target' as const } : {}),
-    ...(p.range === 'melee' || p.range === 'ranged' ? { range: p.range as 'melee' | 'ranged' } : {}),
-    ...(Array.isArray(p.when) ? { when: p.when as Record<string, unknown>[] } : {}),
-  };
-}
-
-/** Pure DB-effect -> engine-rule materializer. Kept exported so release gates
- * can prove new condition mechanics survive API loading without field loss. */
-export function materializeConditionRule(e: ConditionEffectRecord): ConditionRule | null {
-  const payloads = payloadsOf(e.mechanics as Record<string, unknown> | undefined);
-  const modifiers = payloads
-    .map(toConditionModifier)
-    .filter((modifier): modifier is ConditionModifier => modifier !== null);
-  const mech = e.mechanics as Record<string, unknown> | undefined;
-  const condition = mech?.condition as Record<string, unknown> | undefined;
-  const id = typeof condition?.id === 'string' ? condition.id.trim() : '';
-  if (!CONDITION_ID.test(id)) return null;
-  const rawIncludes = mech?.includes;
-  const includes = Array.isArray(rawIncludes) ? rawIncludes.map(String) : undefined;
-  const rawLeaves = mech?.leaves;
-  const leaves = Array.isArray(rawLeaves) ? rawLeaves.map(String) : undefined;
-  const stacking = mech?.stacking as ConditionRule['stacking'] | undefined;
-  const rawLongRest = (mech?.long_rest ?? mech?.longRest) as Record<string, unknown> | undefined;
-  const removeLevels = Number(rawLongRest?.remove_levels ?? rawLongRest?.removeLevels);
-  const longRest = Number.isFinite(removeLevels) && removeLevels >= 0
-    ? { removeLevels }
-    : undefined;
-  const rawThresholds = mech?.thresholds;
-  const thresholds = Array.isArray(rawThresholds)
-    ? rawThresholds.flatMap((threshold) => {
-      if (!threshold || typeof threshold !== 'object') return [];
-      const row = threshold as Record<string, unknown>;
-      const atLevel = Number(row.at_level ?? row.atLevel);
-      return Number.isInteger(atLevel) && atLevel > 0 && row.outcome === 'death'
-        ? [{ atLevel, outcome: 'death' as const }]
-        : [];
-    })
-    : undefined;
-  const worldFacts = mech?.world_facts;
-  return {
-    id,
-    label: e.name,
-    modifiers,
-    payloads: payloads.filter((payload) => payload.kind !== 'modifier'),
-    ...(includes?.length ? { includes } : {}),
-    ...(leaves?.length ? { leaves } : {}),
-    ...(stacking?.mode === 'levels' || stacking?.mode === 'binary' ? { stacking } : {}),
-    ...(longRest ? { longRest } : {}),
-    ...(thresholds?.length ? { thresholds } : {}),
-    ...(worldFacts && typeof worldFacts === 'object' && !Array.isArray(worldFacts)
-      ? { worldFacts: worldFacts as Record<string, unknown> }
-      : {}),
-    note: e.description || undefined,
-  };
-}
-
-/** Same root projection as scripts/content/certification-hash.mjs. Keeping the
- * hash check at the runtime boundary prevents a syntactically valid but stale
- * certification from activating different condition mechanics. */
-export async function conditionRecordContentHash(
-  effect: ConditionEffectRecord,
-): Promise<string> {
-  return canonicalSha256(certifiedExecutableRootProjection(
-    effect,
-    CERTIFICATION_VOLATILE_FIELDS,
-  ));
 }
 
 function validExpectedReleaseBinding(

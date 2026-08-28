@@ -15,10 +15,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import {
+  executeBrowserGate,
   executeMicroMvpReleaseGate,
   executeVitestGate,
   generateMicroMvpReleaseEvidence,
-  persistVitestFailureReport,
+  persistStructuredFailureReport,
   releaseInvocation,
   vitestGateInvocation,
 } from './generate-micro-mvp-release-evidence.mjs';
@@ -175,7 +176,7 @@ test('failed Vitest reports survive scratch cleanup as private immutable diagnos
   writeFileSync(reportPath, report, 'utf8');
   const runId = '11111111-2222-4333-8444-555555555555';
 
-  const persisted = persistVitestFailureReport({
+  const persisted = persistStructuredFailureReport({
     reportPath,
     diagnosticDirectory: diagnostics,
     gateId: 'frontend_mvp',
@@ -193,7 +194,7 @@ test('failed Vitest reports survive scratch cleanup as private immutable diagnos
   assert.equal(readFileSync(persisted, 'utf8'), report);
   const retrySource = join(directory, 'retry.json');
   writeFileSync(retrySource, '{"success":true}\n', 'utf8');
-  assert.throws(() => persistVitestFailureReport({
+  assert.throws(() => persistStructuredFailureReport({
     reportPath: retrySource,
     diagnosticDirectory: diagnostics,
     gateId: 'frontend_mvp',
@@ -210,7 +211,7 @@ test('failed Vitest reports survive scratch cleanup as private immutable diagnos
   assert.match(implementation, /openSync\(temporary, 'wx', 0o600\)/);
   assert.match(implementation, /linkSync\(temporary, destination\)/);
   assert.doesNotMatch(implementation, /openSync\(destination, 'wx'/);
-  assert.equal(persistVitestFailureReport({
+  assert.equal(persistStructuredFailureReport({
     reportPath: join(directory, 'absent.json'),
     diagnosticDirectory: diagnostics,
     gateId: 'frontend_mvp',
@@ -315,6 +316,93 @@ test('an exit-zero Vitest report that violates strict skip policy is also preser
   assert.equal(readFileSync(join(
     diagnostics,
     `micro-mvp-release-evidence-failure-${runId}-frontend_mvp.json`,
+  ), 'utf8'), report);
+});
+
+test('a nonzero wired browser gate preserves its Playwright JSON report', async (t) => {
+  const directory = mkdtempSync(join(tmpdir(), 'micro-mvp-failed-browser-gate-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const scratch = join(directory, 'scratch');
+  const diagnostics = join(directory, 'diagnostics');
+  mkdirSync(scratch);
+  const runId = '44444444-5555-4666-8777-888888888888';
+  const definition = REQUIRED_RELEASE_GATES.find((gate) => gate.id === 'browser');
+  assert.ok(definition);
+  const report = `${JSON.stringify({
+    stats: { expected: 39, skipped: 0, unexpected: 1, flaky: 0 },
+    errors: [],
+    suites: [{ title: 'required browser acceptance' }],
+  })}\n`;
+
+  const result = await executeBrowserGate(definition, {
+    temporaryDirectory: scratch,
+    apiBase: API_BASE,
+    failureReportDirectory: diagnostics,
+    failureReportRunId: runId,
+    commandRunner: async ({ args, env }) => {
+      assert.deepEqual(args.slice(-2), ['test', '--reporter=json']);
+      assert.equal(env.CI, '1');
+      assert.equal(env.VITE_API_URL, API_BASE);
+      assert.equal(env.PLAYWRIGHT_JSON_OUTPUT_FILE, join(scratch, 'playwright.json'));
+      writeFileSync(env.PLAYWRIGHT_JSON_OUTPUT_FILE, report, 'utf8');
+      return {
+        startedAt: new Date().toISOString(),
+        completedAt: new Date().toISOString(),
+        exitCode: 1,
+        outputHash: `sha256:${'0'.repeat(64)}`,
+        outputBytes: 0,
+        stdout: null,
+      };
+    },
+  });
+
+  assert.equal(result.execution.exitCode, 1);
+  assert.equal(result.testSummary, null);
+  assert.equal(result.reportHash, null);
+  const persisted = join(
+    diagnostics,
+    `micro-mvp-release-evidence-failure-${runId}-browser.json`,
+  );
+  assert.equal(readFileSync(persisted, 'utf8'), report);
+  if (process.platform !== 'win32') assert.equal(statSync(persisted).mode & 0o777, 0o600);
+});
+
+test('an exit-zero Playwright report that violates strict skip policy is preserved', async (t) => {
+  const directory = mkdtempSync(join(tmpdir(), 'micro-mvp-invalid-browser-report-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const scratch = join(directory, 'scratch');
+  const diagnostics = join(directory, 'diagnostics');
+  mkdirSync(scratch);
+  const runId = '55555555-6666-4777-8888-999999999999';
+  const definition = REQUIRED_RELEASE_GATES.find((gate) => gate.id === 'browser');
+  assert.ok(definition);
+  const report = `${JSON.stringify({
+    stats: { expected: 39, skipped: 1, unexpected: 0, flaky: 0 },
+    errors: [],
+    suites: [],
+  })}\n`;
+
+  await assert.rejects(executeBrowserGate(definition, {
+    temporaryDirectory: scratch,
+    apiBase: API_BASE,
+    failureReportDirectory: diagnostics,
+    failureReportRunId: runId,
+    commandRunner: async ({ env }) => {
+      writeFileSync(env.PLAYWRIGHT_JSON_OUTPUT_FILE, report, 'utf8');
+      return {
+        startedAt: new Date().toISOString(),
+        completedAt: new Date().toISOString(),
+        exitCode: 0,
+        outputHash: `sha256:${'0'.repeat(64)}`,
+        outputBytes: 0,
+        stdout: null,
+      };
+    },
+  }), /browser did not execute a complete non-empty pass within its skip\/todo policy/);
+
+  assert.equal(readFileSync(join(
+    diagnostics,
+    `micro-mvp-release-evidence-failure-${runId}-browser.json`,
   ), 'utf8'), report);
 });
 
