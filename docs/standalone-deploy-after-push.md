@@ -292,6 +292,8 @@ Pop-Location
 
 Push-Location frontend
 npm test -- --run
+npm run test:rules:coverage
+npm run test:rules:primitives
 npm run lint
 npm run build
 $env:CI = '1'

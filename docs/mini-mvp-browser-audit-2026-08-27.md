@@ -351,3 +351,15 @@ the Goliath authority repair: the inventory test still required the deleted
 had the intended single action authority. The expected inventory now asserts
 that final migrated shape, so the gate checks the behavior we actually ship
 instead of preserving the pre-migration duplication.
+
+The following clean evidence pass reached the dedicated 100% rules-core
+coverage barrier and exposed another pipeline discrepancy: the ordinary local
+test command had exercised every assertion but had never enabled the critical
+module coverage thresholds. The persisted pre-damage continuation validator
+therefore lacked corruption-path evidence for malformed actors, exact damage
+packets, reaction options, runtime snapshots and continuation arrays. Tests now
+round-trip a real engine-created checkpoint, preserve a complete runtime state
+and prove every distinct invalid boundary fails closed. The standalone
+pre-deploy barrier now runs both critical rules coverage commands explicitly,
+so this class of gap is caught before a release archive is built rather than
+during post-deploy evidence generation.

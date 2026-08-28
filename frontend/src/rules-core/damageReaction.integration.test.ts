@@ -65,6 +65,32 @@ const DAMAGE_PULSE: RuleActionDefinition = {
   },
 };
 
+const DUAL_DAMAGE_PULSE: RuleActionDefinition = {
+  id: 'action.dual-damage-pulse',
+  name: 'Dual Damage Pulse',
+  kind: 'nonSpell',
+  sourceEntityIds: ['entity:dual-damage-pulse'],
+  targeting: {
+    minTargets: 1,
+    maxTargets: 1,
+    rangeFt: 30,
+    requiresLineOfSight: true,
+    allowedRelations: ['enemy'],
+  },
+  mechanics: {
+    name: 'Dual Damage Pulse',
+    activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }] },
+    effects: [{
+      resolution: 'auto',
+      who: 'target',
+      result: [
+        { kind: 'damage', amount: '3', type: 'fire' },
+        { kind: 'damage', amount: '5', type: 'cold' },
+      ],
+    }],
+  },
+};
+
 const STONE_ENDURANCE: RuleActionDefinition = {
   id: 'action.stone-endurance',
   name: 'Каменная стойкость',
@@ -120,7 +146,7 @@ const SHIELD: RuleActionDefinition = {
   },
 };
 
-const ACTIONS = [STRIKE, DAMAGE_PULSE, STONE_ENDURANCE, SHIELD];
+const ACTIONS = [STRIKE, DAMAGE_PULSE, DUAL_DAMAGE_PULSE, STONE_ENDURANCE, SHIELD];
 const CATALOG: RulesCatalog = {
   getAction: (id) => ACTIONS.find((action) => action.id === id),
 };
@@ -448,5 +474,156 @@ describe('canonical pre-damage reaction lifecycle', () => {
       .find((event: { type?: string }) => event.type === 'damage');
     damageEvent.amount -= 1;
     expect(() => migrateWorldState(corruptTrace)).toThrow(/packets must match held engine events/);
+  });
+
+  it('fails closed for malformed persisted damage continuations and preserves complete runtime snapshots', () => {
+    type MutableJson = Record<string, unknown>;
+    type Corruption = {
+      name: string;
+      expected: RegExp;
+      mutate: (worldRecord: MutableJson, pending: MutableJson) => void;
+    };
+    const record = (value: unknown): MutableJson => value as MutableJson;
+    const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+
+    const initial = world();
+    initial.actors.attacker.capabilities.actionIds.push(DUAL_DAMAGE_PULSE.id);
+    initial.actors.defender.runtime = {
+      ...initial.actors.defender.runtime,
+      equipment: { main_hand: 'card:test-sword', off_hand: null },
+      inventory: [
+        { cardId: 'card:test-sword', qty: 1, containerId: 'card:test-pack' },
+        { cardId: 'card:test-pack', qty: 1 },
+      ],
+      activeEffects: [{
+        id: 'effect:test', name: 'Persisted effect', mechanics: {}, source: 'test',
+      }],
+      firedThisRest: ['action.stone-endurance'],
+      deathSaves: { successes: 0, failures: 0, stable: false, dead: false },
+    };
+    const tape = createStrictRngTape([]);
+    const session = new InMemoryRulesSession(initial, CATALOG, {
+      rng: tape.rng,
+      clock: createLogicalClock(),
+      nextId: createSequentialIdFactory('persisted-contract'),
+    });
+    begin(session);
+    const targetRuntimeBeforeDamage = clone(session.getState().actors.defender.runtime);
+    const opened = session.dispatch(base({
+      schemaVersion: 1 as const,
+      type: 'UseAction' as const,
+      commandId: 'dual-damage-pulse',
+      expectedRevision: session.getState().revision,
+      rulesetContentHash: RULESET.contentHash,
+      actorId: 'attacker',
+      actionId: DUAL_DAMAGE_PULSE.id,
+      targetIds: ['defender'],
+      factsByTarget: { defender: facts },
+    }));
+    expect(opened.status).toBe('accepted');
+    tape.assertExhausted();
+
+    const complete = clone(session.getState());
+    if (complete.pendingResolution?.type !== 'damage_reaction') {
+      throw new Error('Expected an exact pending damage-reaction checkpoint');
+    }
+    expect(complete.actors.defender.runtime).toEqual(targetRuntimeBeforeDamage);
+    expect(complete.pendingResolution).toMatchObject({
+      actionId: DUAL_DAMAGE_PULSE.id,
+      action: { id: DUAL_DAMAGE_PULSE.id },
+      damage: [
+        { amount: 3, damageType: 'fire' },
+        { amount: 5, damageType: 'cold' },
+      ],
+      request: {
+        trigger: { amount: 8, damageTypes: ['fire', 'cold'] },
+      },
+      targetRuntimeBeforeDamage,
+      targetRuntimeAfter: {
+        ...targetRuntimeBeforeDamage,
+        hp: { ...targetRuntimeBeforeDamage.hp, current: 12 },
+      },
+    });
+
+    const migrated = migrateWorldState(clone(complete));
+    expect(migrated.pendingResolution).toMatchObject({
+      type: 'damage_reaction',
+      targetRuntimeBeforeDamage: {
+        equipment: { main_hand: 'card:test-sword', off_hand: null },
+        inventory: [
+          { cardId: 'card:test-sword', qty: 1, containerId: 'card:test-pack' },
+          { cardId: 'card:test-pack', qty: 1 },
+        ],
+        activeEffects: [{ id: 'effect:test', name: 'Persisted effect' }],
+        firedThisRest: ['action.stone-endurance'],
+        deathSaves: { successes: 0, failures: 0, stable: false, dead: false },
+      },
+    });
+    expect(migrateWorldState(clone(migrated))).toEqual(migrated);
+
+    const corruptions: Corruption[] = [
+      {
+        name: 'current HP above maximum', expected: /hp.current cannot exceed max/,
+        mutate: (_worldRecord, rawPending) => {
+          const hp = record(record(rawPending.targetRuntimeBeforeDamage).hp);
+          hp.current = Number(hp.max) + 1;
+        },
+      },
+      {
+        name: 'missing source actor', expected: /damage continuation actors are invalid/,
+        mutate: (worldRecord) => { delete record(worldRecord.actors).attacker; },
+      },
+      {
+        name: 'mismatched action identity', expected: /action must match its exact damage continuation/,
+        mutate: (_worldRecord, rawPending) => { record(rawPending.action).id = 'action:other'; },
+      },
+      {
+        name: 'primitive damage packet', expected: /damage must contain positive exact packets/,
+        mutate: (_worldRecord, rawPending) => { rawPending.damage = ['invalid']; },
+      },
+      {
+        name: 'empty reaction options', expected: /must retain offered options/,
+        mutate: (_worldRecord, rawPending) => { record(rawPending.request).options = []; },
+      },
+      {
+        name: 'duplicate reaction options', expected: /options must be unique/,
+        mutate: (_worldRecord, rawPending) => {
+          const request = record(rawPending.request);
+          request.options = [
+            { actionId: STONE_ENDURANCE.id, label: STONE_ENDURANCE.name },
+            { actionId: STONE_ENDURANCE.id, label: 'Duplicate' },
+          ];
+        },
+      },
+      {
+        name: 'array inventory entry', expected: /inventory is invalid/,
+        mutate: (_worldRecord, rawPending) => {
+          record(rawPending.targetRuntimeBeforeDamage).inventory = [[]];
+        },
+      },
+      {
+        name: 'invalid inventory record', expected: /inventory is invalid/,
+        mutate: (_worldRecord, rawPending) => {
+          record(rawPending.targetRuntimeBeforeDamage).inventory = [{ cardId: ' ', qty: 1 }];
+        },
+      },
+      {
+        name: 'array active effect', expected: /activeEffects must contain objects/,
+        mutate: (_worldRecord, rawPending) => {
+          record(rawPending.targetRuntimeBeforeDamage).activeEffects = [[]];
+        },
+      },
+      {
+        name: 'non-array continuation events', expected: /damage continuation arrays are invalid/,
+        mutate: (_worldRecord, rawPending) => { rawPending.followUps = null; },
+      },
+    ];
+
+    for (const { name, expected, mutate } of corruptions) {
+      const corrupted = clone(complete) as unknown as MutableJson;
+      const rawPending = record(corrupted.pendingResolution);
+      mutate(corrupted, rawPending);
+      expect(() => migrateWorldState(corrupted), name).toThrow(expected);
+    }
   });
 });
