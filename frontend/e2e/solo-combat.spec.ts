@@ -9,6 +9,7 @@ const compiled = JSON.parse(readFileSync(new URL(
 ), 'utf8')) as { roots: { magicInitiateFighter: { draft: JsonRecord; actor: JsonRecord } } };
 
 const CHARACTER_ID = '11111111-1111-4111-8111-111111111111';
+const ALLY_ID = '22222222-2222-4222-8222-222222222222';
 const MONSTER_ID = 'c1000000-0000-4000-8000-000000000001';
 const MONSTER_ACTION_ID = 'b1000000-0000-4000-8000-000000000001';
 
@@ -38,6 +39,17 @@ function character(): JsonRecord {
   };
 }
 
+function allyCharacter(): JsonRecord {
+  return {
+    ...character(),
+    id: ALLY_ID,
+    name: 'Бард-помощник',
+    initiative_bonus: 20,
+    turn_state: {},
+    runtime_revision: 0,
+  };
+}
+
 const monsterAction = {
   id: MONSTER_ACTION_ID, name: 'Скимитар', description: 'Рукопашная атака.',
   rarity: 'common', card_number: 'MONSTER-ACTION-GOBLIN-SCIMITAR', resource: 'action',
@@ -61,9 +73,87 @@ const monster = {
 };
 
 async function dismissMobileSuggestion(page: Page): Promise<void> {
+  if ((page.viewportSize()?.width ?? 0) > 1024) return;
+  await page.evaluate(() => localStorage.setItem('boh:mobile-suggestion-dismissed', '1'));
   const suggestion = page.getByRole('complementary', { name: 'Предложение мобильной версии' });
-  if (await suggestion.isVisible()) await suggestion.getByRole('button', { name: 'Не сейчас', exact: true }).click();
+  if (await suggestion.isVisible()) {
+    await suggestion.getByRole('button', { name: 'Не сейчас', exact: true }).click();
+  }
 }
+
+async function expectPopoverInsideViewport(page: Page): Promise<void> {
+  const popover = page.locator('.forge-effect-popover');
+  await expect(popover).toBeVisible();
+  const box = await popover.boundingBox();
+  const viewport = page.viewportSize();
+  expect(box).not.toBeNull();
+  expect(viewport).not.toBeNull();
+  expect(box!.x).toBeGreaterThanOrEqual(0);
+  expect(box!.y).toBeGreaterThanOrEqual(0);
+  expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height);
+}
+
+test('combat setup invites an owned ally and keeps shared action cards inside the viewport', async ({ page }) => {
+  const api = await installForgeApiFixture(page);
+  api.seedCharacter(character());
+  api.seedCharacter(allyCharacter());
+  api.seedCatalogRow('actions', monsterAction);
+  api.seedMonster(monster);
+
+  await page.goto(`/characters-v3/${CHARACTER_ID}`);
+  await dismissMobileSuggestion(page);
+  const bottomSheetAction = page.locator('[data-action-id] .sheet-item-row:visible').last();
+  await bottomSheetAction.scrollIntoViewIfNeeded();
+  await bottomSheetAction.hover();
+  await expectPopoverInsideViewport(page);
+
+  await page.getByTestId('open-solo-combat').click();
+  const setup = page.getByRole('dialog', { name: 'Противники для Лучник-дварф' });
+  await setup.getByRole('button', { name: 'Пригласить союзника Бард-помощник' }).click();
+  const monsterRow = setup.locator('article').filter({
+    has: page.getByRole('heading', { name: 'Гоблин-воин', exact: true }),
+  });
+  await monsterRow.locator('button').last().click();
+  await page.evaluate(() => { Math.random = () => 0.5; });
+  await setup.getByRole('button', { name: 'Начать бой' }).click();
+
+  await expect(page).toHaveURL(new RegExp(`/characters-v3/${CHARACTER_ID}/combat`));
+  await expect(page.getByLabel('Порядок инициативы')).toContainText('Бард-помощник');
+  const hotbar = page.getByLabel('Панель действий');
+  await expect(hotbar).toContainText('Бард-помощник');
+  const summary = hotbar.locator('.combat-hotbar__character-summary');
+  const utility = hotbar.getByRole('group', { name: 'Управление полем' });
+  const actions = hotbar.getByLabel('Действия персонажа');
+  const [summaryBox, utilityBox, actionsBox] = await Promise.all([
+    summary.boundingBox(), utility.boundingBox(), actions.boundingBox(),
+  ]);
+  expect(summaryBox).not.toBeNull();
+  expect(utilityBox).not.toBeNull();
+  expect(actionsBox).not.toBeNull();
+  expect(utilityBox!.y).toBeGreaterThanOrEqual(summaryBox!.y + summaryBox!.height - 1);
+  expect(utilityBox!.x).toBeLessThan(actionsBox!.x);
+
+  const actionLayout = await actions.evaluate((node) => {
+    const style = getComputedStyle(node);
+    const tiles = [...node.querySelectorAll<HTMLElement>('.combat-sheet-action')];
+    return {
+      flow: style.gridAutoFlow,
+      rows: style.gridTemplateRows.split(' ').filter(Boolean).length,
+      rowTops: [...new Set(tiles.map((tile) => Math.round(tile.getBoundingClientRect().top)))],
+      scrollable: node.scrollWidth > node.clientWidth,
+    };
+  });
+  expect(actionLayout.flow).toBe('column');
+  expect(actionLayout.rows).toBe(2);
+  expect(actionLayout.rowTops.length).toBeLessThanOrEqual(2);
+  if (actionLayout.scrollable) expect(actionLayout.rowTops).toHaveLength(2);
+
+  const combatAction = actions.locator('.cs-action-tile').last();
+  await combatAction.scrollIntoViewIfNeeded();
+  await combatAction.hover();
+  await expectPopoverInsideViewport(page);
+});
 
 test('real character sheet: selects a monster and executes Thunderwave on the tactical board', async ({ page }) => {
   const api = await installForgeApiFixture(page);

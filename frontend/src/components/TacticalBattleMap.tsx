@@ -5,6 +5,7 @@ import { areaPositionsForAction, reachablePositions } from '../solo-combat/tacti
 
 export default function TacticalBattleMap({
   state,
+  actorId,
   selectedActionId,
   movementMode,
   inspectedActorId,
@@ -12,6 +13,7 @@ export default function TacticalBattleMap({
   onInspectActor,
 }: {
   state: SoloCombatState;
+  actorId: string;
   selectedActionId: string | null;
   movementMode: boolean;
   inspectedActorId?: string | null;
@@ -38,7 +40,7 @@ export default function TacticalBattleMap({
     `${token.position.x}:${token.position.y}`, token,
   ]));
   const selectedAction = state.catalogActions.find((action) => action.id === selectedActionId);
-  const sourcePosition = state.tokens[state.characterId]?.position;
+  const sourcePosition = state.tokens[actorId]?.position;
   const areaCells = useMemo(() => new Set(
     selectedAction && hovered && sourcePosition
       ? areaPositionsForAction({
@@ -52,11 +54,11 @@ export default function TacticalBattleMap({
     movementMode
       ? reachablePositions(
         state,
-        state.characterId,
-        state.movementRemainingFt[state.characterId] ?? 0,
+        actorId,
+        state.movementRemainingFt[actorId] ?? 0,
       ).map((position) => `${position.x}:${position.y}`)
       : [],
-  ), [movementMode, state]);
+  ), [actorId, movementMode, state]);
 
   const finishPan = (event: React.PointerEvent<HTMLDivElement>) => {
     const pan = panRef.current;

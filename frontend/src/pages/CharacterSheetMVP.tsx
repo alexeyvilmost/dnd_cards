@@ -1602,10 +1602,12 @@ const CharacterSheetMVP = () => {
       {combatSetupOpen && (
         <SoloCombatSetupDialog
           characterName={character.name}
+          characterId={character.id}
           onClose={() => setCombatSetupOpen(false)}
-          onStart={(selected) => {
+          onStart={({ opponents, allyId }) => {
             const params = new URLSearchParams();
-            selected.forEach(({ monster, quantity }) => params.set(monster.id, String(quantity)));
+            opponents.forEach(({ monster, quantity }) => params.set(monster.id, String(quantity)));
+            if (allyId) params.set('ally', allyId);
             navigate(`/characters-v3/${character.id}/combat?${params.toString()}`);
           }}
         />

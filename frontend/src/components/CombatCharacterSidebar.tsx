@@ -10,11 +10,13 @@ const abilityRecord = (value: Partial<Record<AbilityKey, number>>, fallback: num
 export default function CombatCharacterSidebar({
   character,
   state,
+  actorId = state.characterId,
 }: {
   character: ForgeCharacter;
   state: SoloCombatState;
+  actorId?: string;
 }) {
-  const actor = state.world.actors[state.characterId];
+  const actor = state.world.actors[actorId];
   const rules = character.rule_state;
   const abilities = abilityRecord(rules?.abilities ?? actor.character.abilityScores ?? {}, 10);
   const abilityMods = abilityRecord(rules?.abilityMods ?? actor.character.abilityMods ?? {}, 0);

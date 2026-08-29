@@ -310,7 +310,7 @@
   translate: -50% 0;
   width: min(1120px, calc(100% - 24px));
   display: grid;
-  grid-template-columns: 220px 126px minmax(0, 1fr) 120px;
+  grid-template-columns: 220px minmax(0, 1fr) 120px;
   gap: 10px;
   padding: 10px;
   border: 1px solid #735b39;
@@ -319,13 +319,19 @@
   box-shadow: 0 15px 45px #000;
 }
 .combat-hotbar__resources {
+  min-width: 0;
   display: flex;
-  align-items: center;
-  align-content: center;
+  flex-direction: column;
+  justify-content: center;
   gap: 7px;
-  flex-wrap: wrap;
   padding: 6px;
   border-right: 1px solid #4c4031;
+}
+.combat-hotbar__character-summary {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
 }
 .combat-hotbar__resource-filter {
   position: absolute;
@@ -383,14 +389,16 @@
   padding: 2px 0 5px;
 }
 .combat-hotbar__actions {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(2, 52px);
+  grid-auto-columns: 52px;
   align-content: center;
+  justify-content: start;
   gap: 8px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 8px 5px 10px;
+  padding: 7px 5px 9px;
 }
 .combat-sheet-action {
   flex: 0 0 auto;
@@ -406,16 +414,16 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   align-items: center;
-  gap: 7px;
+  gap: 5px;
 }
 .combat-utility-button {
   min-width: 0;
-  height: 74px;
-  display: flex;
-  flex-direction: column;
+  height: 42px;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: center;
-  gap: 4px;
+  justify-content: stretch;
+  gap: 3px;
   border: 1px solid #554837;
   border-radius: 8px;
   background: linear-gradient(#31291f, #1d1914);
@@ -432,10 +440,10 @@
   cursor: not-allowed;
 }
 .combat-utility-button svg {
-  width: 24px;
+  width: 18px;
 }
 .combat-utility-button span {
-  max-width: 52px;
+  min-width: 0;
   font-size: 9px;
   white-space: nowrap;
   overflow: hidden;
@@ -689,7 +697,7 @@
   }
   .combat-hotbar {
     height: 170px;
-    grid-template-columns: 135px 112px minmax(0, 1fr) 85px;
+    grid-template-columns: 150px minmax(0, 1fr) 85px;
   }
   .combat-hotbar__resources {
     font-size: 9px;
@@ -712,17 +720,14 @@
 }
 @media (max-width: 560px) {
   .combat-hotbar {
-    grid-template-rows: 48px minmax(0, 1fr);
     grid-template-columns: 104px minmax(0, 1fr) 74px;
-    height: 202px;
+    height: 170px;
   }
   .combat-hotbar__resources {
-    grid-column: 1 / -1;
     min-width: 0;
-    flex-wrap: nowrap;
-    padding: 2px 5px 5px;
-    border-right: 0;
-    border-bottom: 1px solid #4c4031;
+    padding: 3px;
+    border-right: 1px solid #4c4031;
+    border-bottom: 0;
   }
   .combat-hotbar__portrait {
     width: 34px;
@@ -731,9 +736,10 @@
     font-size: 16px;
   }
   .combat-hotbar__identity {
-    min-width: 72px;
+    min-width: 0;
     font-size: 9px;
   }
+  .combat-hotbar__identity b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .combat-hotbar__resource-tiles {
     width: auto;
     min-width: 0;
@@ -743,11 +749,16 @@
     height: calc(100vh - 283px);
   }
   .combat-hotbar__utility {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
   .combat-utility-button {
-    height: 56px;
+    height: 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
   }
+  .combat-utility-button span { max-width: 42px; }
   .combat-end-turn {
     font-size: 9px;
     padding: 8px;
@@ -762,7 +773,7 @@
     font-size: 10px;
   }
   .combat-actor-inspector {
-    bottom: 214px;
+    bottom: 184px;
     width: calc(100% - 16px);
   }
 }

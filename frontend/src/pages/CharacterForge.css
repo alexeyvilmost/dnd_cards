@@ -141,8 +141,11 @@
 /* Позиционная обёртка ховер-превью (действие/эффект/черта). Ширину задаёт сама карточка
    превью (.sp-tip = 340px); max-content не даёт max-width:100% схлопнуть её. */
 .forge-effect-popover {
-  position: fixed; z-index: 9999; pointer-events: none; width: max-content; max-width: 92vw;
+  position: fixed; z-index: 9999; pointer-events: none; width: max-content;
+  max-width: calc(100vw - 16px); max-height: calc(100vh - 16px);
+  overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable;
 }
+.forge-effect-popover > .sp-tip { max-width: 100%; box-sizing: border-box; }
 .sum-divider { border: none; border-top: 1px solid var(--forge-line); margin: 14px 0; }
 .sum-abilities { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
 .sum-ab { text-align: center; border: 1px solid var(--forge-line); border-radius: 6px; padding: 4px 8px; min-width: 46px; }

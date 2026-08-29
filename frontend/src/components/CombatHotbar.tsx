@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Footprints, MoreHorizontal } from 'lucide-react';
 import { canPay, costKey } from '../engine/cost';
 import { FREEUSE_SHOWCASE_KEY, isFreeusePoolKey } from '../engine/freeuse';
 import { bindEquippedWeaponActionContext } from '../engine/weapon';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
-import type { SoloCombatState } from '../solo-combat/types';
+import { playerActionIdsFor, type SoloCombatState } from '../solo-combat/types';
 import { isTriggeredCombatAction } from '../solo-combat/engine';
 import { actionCostResourceIds, findResource, useResourceOptions } from '../utils/resources';
 import SheetActionLine from './SheetActionLine';
@@ -52,8 +52,9 @@ export function filterCombatActionsByResource(
 export function combatActionAvailability(
   state: SoloCombatState,
   action: RuleActionDefinition,
+  actorId = state.characterId,
 ): { enabled: boolean; reason?: string } {
-  const actor = state.world.actors[state.characterId];
+  const actor = state.world.actors[actorId];
   let spellSlotResource: string | undefined;
   if (action.kind === 'spell') {
     if (!actor.spellcastingAccess) {
@@ -124,10 +125,11 @@ export function combatActionAvailability(
 }
 
 export default function CombatHotbar({
-  state, selectedActionId, movementMode, disabled,
+  state, actorId, selectedActionId, movementMode, disabled,
   onAction, onMove, onEndTurn, onSheet,
 }: {
   state: SoloCombatState;
+  actorId: string;
   selectedActionId: string | null;
   movementMode: boolean;
   disabled: boolean;
@@ -137,15 +139,16 @@ export default function CombatHotbar({
   onSheet: () => void;
 }) {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
+  useEffect(() => setSelectedResourceId(null), [actorId]);
   const resourceOptions = useResourceOptions();
-  const actor = state.world.actors[state.characterId];
+  const actor = state.world.actors[actorId];
   const spellcasting = actor.character.spellcastingMod == null
     ? undefined
     : {
       saveDC: 8 + actor.character.profBonus + actor.character.spellcastingMod,
       attack: actor.character.profBonus + actor.character.spellcastingMod,
     };
-  const actions = state.playerActionIds.flatMap((id) => {
+  const actions = playerActionIdsFor(state, actorId).flatMap((id) => {
     const action = state.catalogActions.find((candidate) => candidate.id === id);
     return action && !isTriggeredCombatAction(action) ? [action] : [];
   });
@@ -197,26 +200,27 @@ export default function CombatHotbar({
         ))}
       </div>
       <div className="combat-hotbar__resources">
-        <span className="combat-hotbar__portrait">
-          {state.tokens[state.characterId]?.tokenUrl
-            ? <img src={state.tokens[state.characterId].tokenUrl} alt="" />
-            : actor.name.slice(0, 1)}
-        </span>
-        <div className="combat-hotbar__identity"><b>{actor.name}</b><span>HP {actor.runtime.hp.current}/{actor.runtime.hp.max}</span></div>
-      </div>
-
-      <div className="combat-hotbar__utility" role="group" aria-label="Управление полем">
-        <button type="button" className={`combat-utility-button${movementMode ? ' is-selected' : ''}`} disabled={disabled} onClick={onMove} title="Перемещение">
-          <Footprints /><span>Движение</span><small>{state.movementRemainingFt[state.characterId] ?? 0} фт.</small>
-        </button>
-        <button type="button" className="combat-utility-button" onClick={onSheet} title="Открыть сокращённый лист">
-          <MoreHorizontal /><span>Лист</span>
-        </button>
+        <div className="combat-hotbar__character-summary">
+          <span className="combat-hotbar__portrait">
+            {state.tokens[actorId]?.tokenUrl
+              ? <img src={state.tokens[actorId].tokenUrl} alt="" />
+              : actor.name.slice(0, 1)}
+          </span>
+          <div className="combat-hotbar__identity"><b>{actor.name}</b><span>HP {actor.runtime.hp.current}/{actor.runtime.hp.max}</span></div>
+        </div>
+        <div className="combat-hotbar__utility" role="group" aria-label="Управление полем">
+          <button type="button" className={`combat-utility-button${movementMode ? ' is-selected' : ''}`} disabled={disabled} onClick={onMove} title="Перемещение">
+            <Footprints /><span>Движение</span><small>{state.movementRemainingFt[actorId] ?? 0} фт.</small>
+          </button>
+          <button type="button" className="combat-utility-button" onClick={onSheet} title="Открыть сокращённый лист">
+            <MoreHorizontal /><span>Лист</span>
+          </button>
+        </div>
       </div>
 
       <div className="combat-hotbar__actions cs-action-tiles site-scrollbar" aria-label="Действия персонажа">
         {visibleActions.map((action) => {
-          const availability = combatActionAvailability(state, action);
+          const availability = combatActionAvailability(state, action, actorId);
           const presentation = state.actionPresentation?.[action.id];
           const actionDisabled = disabled || !availability.enabled;
           return (

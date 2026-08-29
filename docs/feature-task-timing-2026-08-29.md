@@ -134,6 +134,42 @@ Speed improvements confirmed here:
 3. Run independent Go, TypeScript, and deployment-syntax checks concurrently.
 4. Perform Timecloud SSH/runner/disk preflight before lengthy CI or production builds.
 
+## Timecloud deployment and live verification
+
+- Production exact-SHA verification complete: `12:15:32 +03:00`
+- Signed-in production verification and timing log complete: `12:25:05.098 +03:00`
+- Migration-to-live wall clock from `11:33:04.370`: **52m 00.7s**
+- Deployed source commit: `0127c701fce9f78394dab7e592eba43308b827db`
+
+The repository checks, hosted CI, archive transfer, server build, and signed-in browser checks overlap. The action durations below therefore must not be summed as wall-clock time.
+
+| Action | Duration | Status / finding |
+| --- | ---: | --- |
+| Commit and push exact migration release | 6.05s | `origin/main` and local HEAD matched `0127c701fce9f78394dab7e592eba43308b827db`. |
+| Hosted offline gate | 15m 10s | Passed all build, lint, frontend, browser-acceptance, migration, backend, and vet gates. This was the longest single end-to-end verification phase. |
+| First archive-transfer preflight | 27.5s | Timed out before a trustworthy result. |
+| Second archive-transfer attempt | ~20.9s | Connection timed out and left a partial remote file; local and remote hashes did not match. |
+| Verified archive transfer | ~1m network-bound | Uploaded to a temporary remote name, verified SHA-256, then atomically renamed. This removed the risk of deploying a partial archive. |
+| First attached Timecloud runner | 2m 20.0s | Backup and backend build completed; the SSH connection reset during the frontend build before cutover, so the old release remained active. |
+| Detached Timecloud runner and atomic cutover | ~3m 12s | Completed despite SSH instability; all three services became healthy and the runner reported `DEPLOYED`. |
+| Public build and health identity check | 8.6s | Frontend build info and backend health both reported the exact release SHA; backend status was `ok`. |
+| Character library signed-in load | 2.70s | Preview cards rendered successfully. The production preview request was 1,051 compressed bytes and 11.35ms, down from the reported 2.7MB/14s behavior. |
+| Goblin constructor save | 2.24s | Update completed through the website and the durable token URL remained unchanged after reload. |
+| QA combat creation | 7.72s | Wizard-versus-Goblin combat opened with the deployed hotbar. |
+| Main-action filter interaction | 0.70s | The button became pressed and the hotbar showed only actions consuming the main-action resource. |
+| Main-action second-click reset | 0.70s | The button returned to unpressed state and the default action set was restored. |
+| Free-use spell filter interaction | 0.70s | Only the exactly granted free-use spell remained visible. |
+| Free-use second-click reset | 0.80s | The action set matched the pre-filter default. |
+| Combat hover-card verification | 1.0s | Hovering `Волна грома` displayed the shared action card with level, school, save, damage, description, and upcast text. |
+
+### Deployment speed findings
+
+1. Start the Timecloud runner detached and follow its release-local log. The attached run lost 2m20s when SSH reset even though the server was still healthy.
+2. Always upload as `<sha>.tar.upload`, verify SHA-256, and only then rename to `<sha>.tar`. This converts unreliable SSH transfers into a resumable, fail-closed step.
+3. Keep server-side Docker BuildKit caches warm and add a registry-backed cache if releases become frequent; frontend image construction was the largest deployment-side machine phase.
+4. Run the hosted offline gate in parallel with archive preparation, but gate the atomic cutover on its successful result.
+5. Make the post-release happy-path job wait for the Timecloud cutover or trigger it after deployment; in this run it started before the manual server release and reported the previous production state.
+
 ## What took longest
 
 1. **Cross-layer discovery and contract mapping (~15m)** was the largest active block. Three requests crossed UI, engine metadata, API serialization, storage upload, permissions, and browser behavior.
@@ -161,3 +197,62 @@ Speed improvements confirmed here:
 - Live-browser harness typecheck: **passed**.
 - Targeted lint: **passed**.
 - Production Vite build: **passed**.
+
+## Feature follow-up — two-row combat bar, safe previews, and owned allies
+
+- Start: `13:59:17.627 +03:00`
+- Local implementation and verification complete: `14:58:43 +03:00`
+- Local wall clock: **59m 25.4s**
+- Production deployment: recorded below after the exact-SHA Timecloud cutover.
+
+The user-visible result is one cohesive combat update: `Движение` and `Лист` now sit below the active character name on the left; action icons fill two rows before horizontal scrolling; shared action cards stay within the viewport in combat and at the bottom of the character sheet; and combat setup can add an owned ally with its own token, initiative, turn, action catalog, resources, reactions, and atomic character-sheet persistence.
+
+### Major phases
+
+| Phase | Duration | Result |
+| --- | ---: | --- |
+| CodeGraph/source mapping and existing-state audit | ~5m | Located the shared action preview, hotbar, combat/session engine, setup query, participant compiler, and runtime-command boundary. |
+| Production implementation | ~18m | Updated the hotbar/layout, viewport placement, setup UI, multi-actor combat state/engine, drawer/map controls, migration, and atomic multi-sheet persistence. |
+| Focused tests, typechecks, and production build | ~8m active machine time | Component and engine tests passed; TypeScript passed twice; the production bundle passed. |
+| Browser-test diagnosis and correction | ~12m | The feature was sound; stale row selectors and a late mobile-suggestion overlay caused long automatic retries in the new/existing tests. |
+| Full frontend regression and timeout proof | 10m 35s | The complete run passed 2,686 tests and skipped 11, while two compiler-heavy tests exceeded their fixed 30s limits; the same 14 tests passed with a 120s limit in 39.89s. |
+| Final release checks | ~2m | Final focused suite 23/23, final desktop/mobile combat suite 4/4, targeted lint, whitespace gate, provider scan, and Timecloud preflight passed. |
+
+### Detailed action log
+
+| Action | Duration | Status / finding |
+| --- | ---: | --- |
+| First TypeScript compile | ~84.2s | Passed. |
+| First focused component run | 9.90s process / 5.40s test | 11/12 passed; one new pure placement expectation used the wrong clamped coordinate. |
+| Corrected focused component run | 11.76s process / 6.87s test | 12/12 passed. |
+| First combat-engine run | ~10s | One legacy migration test only mutated the schema-v1 action alias; migration was corrected to union legacy and per-actor maps. |
+| Corrected combat-engine run | 9.86s process / 4.91s test | 13/13 passed before the later explicit Inspiration assertion. |
+| Second TypeScript compile | ~78.9s | Passed after atomic multi-sheet persistence was added. |
+| Production build | ~2m process; Vite 1m35s | Passed; longest pre-regression machine action. |
+| First dual-project feature browser attempt | ~2m38s | Two 60s timeouts: the test used a removed sheet-action tile selector. |
+| Second dual-project feature browser attempt | ~2m | Two more selector timeouts: the replacement still named the old row class. |
+| Selector diagnosis | ~8.7s | Accessibility snapshot proved the actions rendered and identified the shared `.sheet-item-row` contract. |
+| Corrected feature browser checks | 17.10s desktop; 17.73s mobile | Both passed. |
+| Full lint | 66.90s | Passed. |
+| First complete solo-combat browser regression | 105.40s | 3/4 passed; the mobile suggestion mounted late and covered the movement button until the 60s click timeout. |
+| First mobile-fixture correction | 30.66s | Failed because the helper incorrectly required the already-dismissed suggestion on its second call. |
+| Second mobile-fixture correction | 80.03s | Still allowed a late overlay to mount after the check. |
+| Stable mobile-fixture correction | 18.95s | Passed by setting the persisted dismissal preference before the component effect could mount the overlay. |
+| Complete frontend regression | 594.66s | 319 files passed; only two unrelated compiler-heavy cases crossed their fixed 30s timeout under full load. This was the longest local step. |
+| Isolated default-timeout reproduction | 49.58s | Reproduced both timeouts at roughly 31s, confirming they were load/limit related rather than assertions. |
+| Isolated extended-timeout proof | 39.89s | 14/14 passed. |
+| Explicit ally-support test iteration | 7.73s failed + 8.46s passed | The first assertion ran after Magic Missile had already ended combat; reordered it to prove Bardic Inspiration targets the other controlled character and spends its resource. |
+| Final focused suite | 11.08s | 23/23 passed. |
+| Final desktop/mobile combat suite | 42.94s | 4/4 passed. |
+| Targeted final lint | 5.86s | Passed. |
+| First Timecloud preflight | 4.26s | Read-only command had a PowerShell-to-remote quoting error after confirming the current SHA and runner. |
+| Corrected Timecloud preflight | 4.41s | Current release healthy, deploy runner ready, all three containers up, about 15.8 GB free. |
+| Retired-platform text scan | 1.23s with whitespace gate | Zero tracked mentions. |
+
+### What took longest and how to speed it up
+
+1. **The complete frontend suite (9m54.7s)** was the longest action. Keep it as the final safety net, but raise the two known compiler-artifact test/hook limits or move them to a separately budgeted serial job; both naturally take about 31s on this workstation.
+2. **Avoidable browser retries cost roughly 7 minutes.** Use stable action-row test IDs, dismiss unrelated overlays through context initialization, and run desktop alone until the first feature flow is green before adding mobile.
+3. **TypeScript plus the production build cost about 4m43s across three cold/warm processes.** Run TypeScript once after production code stabilizes and let the final build provide the second compiler pass.
+4. **Atomic multi-character persistence was the highest-risk reasoning block.** Reusing the existing runtime-command endpoint avoided a new backend API and kept the implementation/test loop under one hour.
+5. Add a `test:combat:changed` command that runs the four focused unit files and the two Playwright projects with automatic timestamps. The final useful feedback loop is then about **54 seconds** instead of waiting for the ten-minute full suite.

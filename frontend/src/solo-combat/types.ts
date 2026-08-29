@@ -123,11 +123,18 @@ export interface SoloCombatState {
   sideByActorId: Record<string, string>;
   /** Persisted content presentation for actors whose source rows are not re-fetched. */
   actorPresentation: Record<string, CombatActorPresentation>;
+  /** Character-sheet actors controlled by the current user in this encounter. */
+  controlledCharacterIds?: string[];
+  /** Per-character hotbar capabilities. `playerActionIds` remains the schema-v1 owner alias. */
+  playerActionIdsByActor?: Record<string, string[]>;
   playerActionIds: string[];
+  certifiedPlayerActionIdsByActor?: Record<string, string[]>;
   certifiedPlayerActionIds: string[];
   monsterActionIds: Record<string, string[]>;
   opportunityActionIds: Record<string, string>;
   dashActionId?: string;
+  participantRuntimeRevisions?: Record<string, number>;
+  resourceBindingsByActor?: Record<string, SheetCanonicalResourceBindings>;
   resourceBindings: SheetCanonicalResourceBindings;
   tokens: Record<string, TacticalToken>;
   boardRevision: number;
@@ -137,6 +144,27 @@ export interface SoloCombatState {
   log: CombatLogEntry[];
   pendingTriggeredAction?: PendingTriggeredAction;
   outcome: 'active' | 'victory' | 'defeat';
+}
+
+export function controlledCharacterIds(state: Pick<SoloCombatState, 'characterId' | 'controlledCharacterIds'>): string[] {
+  return state.controlledCharacterIds?.length
+    ? [...new Set(state.controlledCharacterIds)]
+    : [state.characterId];
+}
+
+export function isControlledCharacter(
+  state: Pick<SoloCombatState, 'characterId' | 'controlledCharacterIds'>,
+  actorId: string,
+): boolean {
+  return controlledCharacterIds(state).includes(actorId);
+}
+
+export function playerActionIdsFor(
+  state: Pick<SoloCombatState, 'characterId' | 'playerActionIds' | 'playerActionIdsByActor'>,
+  actorId: string,
+): string[] {
+  return state.playerActionIdsByActor?.[actorId]
+    ?? (actorId === state.characterId ? state.playerActionIds : []);
 }
 
 export interface TacticalActionSelection {

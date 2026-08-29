@@ -175,6 +175,87 @@ function goblin(): Monster {
 }
 
 describe('solo combat engine vertical integration', () => {
+  it('adds another owned sheet as an independently controlled ally with its own initiative and actions', async () => {
+    const participant = fighterSeed();
+    const ally = wizardSeed();
+    const inspiration: RuleActionDefinition = {
+      id: 'd2000000-0000-4000-8000-000000000001',
+      name: 'Вдохновение барда',
+      kind: 'nonSpell',
+      sourceEntityIds: ['ACT-bardic-inspiration'],
+      mechanics: {
+        activation: { mode: 'active', cost: [
+          { resource: 'bonus_action', amount: 1 },
+          { resource: 'bardic_inspiration', amount: 1 },
+        ] },
+        targeting: {
+          domain: 'actor', actor_targets: true, shape: 'single',
+          min_targets: 1, max_targets: 1, range_ft: 60,
+          requires_line_of_sight: true, allowed_relations: ['ally'],
+        },
+        effects: [{ resolution: 'auto', result: [{
+          kind: 'narrative',
+          description: 'Союзник получает кость вдохновения.',
+        }] }],
+      },
+      targeting: {
+        minTargets: 1, maxTargets: 1, rangeFt: 60,
+        requiresLineOfSight: true, allowedRelations: ['ally'],
+      },
+    };
+    const allyActor = ally.canonical.world.actors[ally.character.id];
+    ally.canonical.actions.push(inspiration);
+    allyActor.capabilities.actionIds.push(inspiration.id);
+    allyActor.runtime.resources.bardic_inspiration = 2;
+    allyActor.runtime.maxResources.bardic_inspiration = 2;
+    ally.character.resources = clone(allyActor.runtime.resources);
+    ally.character.max_resources = clone(allyActor.runtime.maxResources);
+    participant.character.initiative_bonus = 0;
+    ally.character.initiative_bonus = 20;
+    let state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      allies: [ally],
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const allyId = ally.character.id;
+    const monsterId = Object.values(state.world.actors).find((actor) => actor.kind === 'monster')!.id;
+    expect(state.controlledCharacterIds).toEqual([participant.character.id, allyId]);
+    expect(state.sideByActorId[allyId]).toBe(state.sideByActorId[participant.character.id]);
+    expect(state.tokens[allyId].position).not.toEqual(state.tokens[participant.character.id].position);
+    expect(state.initiative.find((entry) => entry.actorId === allyId)?.bonus).toBe(20);
+    expect(activeId(state)).toBe(allyId);
+
+    const inspirationBefore = state.world.actors[allyId].runtime.resources.bardic_inspiration;
+    state = executeCombatAction({
+      state,
+      actorId: allyId,
+      actionId: inspiration.id,
+      targetIds: [participant.character.id],
+      rng: () => 0.5,
+    });
+    expect(state.world.actors[allyId].runtime.resources.bardic_inspiration)
+      .toBe(inspirationBefore - 1);
+    expect(state.log.at(-1)?.text).toContain('Вдохновение барда');
+
+    const magicMissile = state.catalogActions.find((action) => (
+      state.playerActionIdsByActor?.[allyId]?.includes(action.id)
+      && primitive(action) === 'magic_missile'
+    ));
+    expect(magicMissile, 'the invited Wizard should keep its own certified action catalog').toBeDefined();
+    const hpBefore = state.world.actors[monsterId].runtime.hp.current;
+    state = autoResolveSystemDecisions(executeCombatAction({
+      state,
+      actorId: allyId,
+      actionId: magicMissile!.id,
+      targetIds: [monsterId],
+      rng: () => 0.5,
+    }), () => 0.5);
+    expect(state.world.actors[monsterId].runtime.hp.current).toBeLessThan(hpBefore);
+    expect(state.log.some((entry) => entry.actorId === allyId && entry.text.includes(ally.character.name))).toBe(true);
+  });
+
   it('opens and resolves a generic owned post-hit rider instead of exposing it proactively', async () => {
     let participant = fighterSeed();
     const attack: RuleActionDefinition = {

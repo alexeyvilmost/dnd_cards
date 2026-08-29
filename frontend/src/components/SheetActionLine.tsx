@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import type { Action, PassiveEffect, Spell } from '../types';
 import type { WeaponAttackPreview } from '../engine/weapon';
@@ -12,6 +12,23 @@ import { SPELL_CARD_CSS } from './spellCardStyle';
 
 // Уровень заклинания в углу иконки — римской цифрой (I..IX).
 const TILE_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
+
+export function fitActionPopoverToViewport(
+  anchor: { x: number; y: number },
+  popover: { width: number; height: number },
+  viewport: { width: number; height: number },
+  margin = 8,
+  gap = 12,
+): { left: number; top: number } {
+  const maxLeft = Math.max(margin, viewport.width - popover.width - margin);
+  const left = Math.max(margin, Math.min(anchor.x + gap, maxLeft));
+  const below = anchor.y + gap;
+  const preferredTop = below + popover.height <= viewport.height - margin
+    ? below
+    : anchor.y - popover.height - gap;
+  const maxTop = Math.max(margin, viewport.height - popover.height - margin);
+  return { left, top: Math.max(margin, Math.min(preferredTop, maxTop)) };
+}
 
 type Props = {
   name: string;
@@ -59,6 +76,8 @@ const SheetActionLine = ({
 }: Props) => {
   const [hover, setHover] = useState(false);
   const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [popoverPos, setPopoverPos] = useState({ left: 8, top: 8 });
+  const popoverRef = useRef<HTMLDivElement | null>(null);
   // Режим закрепления (T): превью не закрывается при уходе мыши и интерактивно.
   const { pinModeActive } = usePinMode();
   const prevPin = useRef(pinModeActive);
@@ -66,6 +85,23 @@ const SheetActionLine = ({
     if (prevPin.current && !pinModeActive) setHover(false);
     prevPin.current = pinModeActive;
   }, [pinModeActive]);
+
+  useLayoutEffect(() => {
+    if (!hover || !popoverRef.current) return undefined;
+    const place = () => {
+      const rect = popoverRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const next = fitActionPopoverToViewport(
+        pos,
+        { width: rect.width, height: rect.height },
+        { width: window.innerWidth, height: window.innerHeight },
+      );
+      setPopoverPos((current) => current.left === next.left && current.top === next.top ? current : next);
+    };
+    place();
+    window.addEventListener('resize', place);
+    return () => window.removeEventListener('resize', place);
+  }, [hover, pos]);
 
   const onEnter = (e: React.MouseEvent) => {
     if (disableHover) return;
@@ -109,10 +145,11 @@ const SheetActionLine = ({
           из данных сущности; причина недоступности — отдельным слоем, не вместо. */}
       {!disableHover && hover && (effectRef || actionRef || spellRef || description) && createPortal((
         <div
+          ref={popoverRef}
           className="forge-effect-popover"
           style={{
-            left: Math.min(pos.x + 12, window.innerWidth - 340),
-            top: Math.min(pos.y + 8, window.innerHeight - 200),
+            left: popoverPos.left,
+            top: popoverPos.top,
             pointerEvents: pinModeActive ? 'auto' : 'none',
           }}
           onMouseLeave={onLeave}

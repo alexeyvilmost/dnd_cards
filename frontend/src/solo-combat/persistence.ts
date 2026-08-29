@@ -1,5 +1,10 @@
 import { migrateWorldState } from '../rules-core/worldMigration';
-import { SOLO_COMBAT_KEY, SOLO_COMBAT_SCHEMA_VERSION, type SoloCombatState } from './types';
+import {
+  SOLO_COMBAT_KEY,
+  SOLO_COMBAT_SCHEMA_VERSION,
+  controlledCharacterIds,
+  type SoloCombatState,
+} from './types';
 
 function clone<T>(value: T): T { return JSON.parse(JSON.stringify(value)) as T; }
 
@@ -8,7 +13,11 @@ function restoreScopedActionPresentation(value: SoloCombatState): SoloCombatStat
   if (!current) return value;
   let migrated: SoloCombatState['actionPresentation'] | undefined;
 
-  for (const actionId of value.playerActionIds) {
+  const actionIds = [...new Set([
+    ...value.playerActionIds,
+    ...Object.values(value.playerActionIdsByActor ?? {}).flat(),
+  ])];
+  for (const actionId of actionIds) {
     if (current[actionId]) continue;
     const separator = actionId.indexOf('@');
     if (separator <= 0) continue;
@@ -25,11 +34,13 @@ function restoreScopedActionPresentation(value: SoloCombatState): SoloCombatStat
 
 /** Fill additive schema-v1 combat fields without invalidating an in-progress fight. */
 function migrateCombatPresentation(value: SoloCombatState): SoloCombatState {
+  const controlledIds = controlledCharacterIds(value);
+  const controlledSet = new Set(controlledIds);
   const savedSides = value.sideByActorId ?? {};
   const partySide = savedSides[value.characterId] ?? 'side:party';
   const sideByActorId = Object.fromEntries(Object.keys(value.world.actors).map((actorId) => [
     actorId,
-    savedSides[actorId] ?? (actorId === value.characterId ? partySide : 'side:opposition'),
+    savedSides[actorId] ?? (controlledSet.has(actorId) ? partySide : 'side:opposition'),
   ]));
   const savedPresentation = value.actorPresentation ?? {};
   const actorPresentation = Object.fromEntries(Object.values(value.world.actors).map((actor) => {
@@ -60,7 +71,20 @@ function migrateCombatPresentation(value: SoloCombatState): SoloCombatState {
       })),
     };
   });
-  return { ...value, sideByActorId, actorPresentation, log };
+  return {
+    ...value,
+    controlledCharacterIds: controlledIds,
+    playerActionIdsByActor: value.playerActionIdsByActor ?? { [value.characterId]: [...value.playerActionIds] },
+    certifiedPlayerActionIdsByActor: value.certifiedPlayerActionIdsByActor
+      ?? { [value.characterId]: [...value.certifiedPlayerActionIds] },
+    participantRuntimeRevisions: value.participantRuntimeRevisions
+      ?? { [value.characterId]: value.runtimeRevision },
+    resourceBindingsByActor: value.resourceBindingsByActor
+      ?? { [value.characterId]: clone(value.resourceBindings) },
+    sideByActorId,
+    actorPresentation,
+    log,
+  };
 }
 
 export function readSoloCombatState(

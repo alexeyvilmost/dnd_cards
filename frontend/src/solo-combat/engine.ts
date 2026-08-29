@@ -42,6 +42,8 @@ import {
   TACTICAL_HEIGHT,
   TACTICAL_WIDTH,
   combatRelation,
+  controlledCharacterIds,
+  isControlledCharacter,
   spatialFacts,
   type CombatLogEntry,
   type CombatLogEventRecord,
@@ -180,8 +182,11 @@ function applyForcedMovement(
 }
 
 function outcome(state: SoloCombatState): SoloCombatState {
-  const player = state.world.actors[state.characterId];
-  if (!player || player.runtime.hp.current <= 0) return { ...state, outcome: 'defeat' };
+  const partyIds = controlledCharacterIds(state);
+  const livingPlayer = partyIds.some((actorId) => (
+    (state.world.actors[actorId]?.runtime.hp.current ?? 0) > 0
+  ));
+  if (!livingPlayer) return { ...state, outcome: 'defeat' };
   const livingOpponent = Object.values(state.world.actors).some((actor) => (
     actor.runtime.hp.current > 0
       && combatRelation(state, state.characterId, actor.id) === 'enemy'
@@ -295,21 +300,27 @@ function declarationFor(
   };
 }
 
-function sheetSession(state: SoloCombatState): SheetCombatSession {
+function sheetSession(state: SoloCombatState, actorId: string): SheetCombatSession {
   // The strict sheet bridge receives only the reviewed slice. Generic data-driven
   // actions use the ordinary rules-core UseAction pipeline below.
-  const certifiedIds = new Set(state.certifiedPlayerActionIds);
+  const certifiedByActor = state.certifiedPlayerActionIdsByActor
+    ?? { [state.characterId]: state.certifiedPlayerActionIds };
+  const certifiedIds = new Set(certifiedByActor[actorId] ?? []);
   const catalogActions = state.catalogActions.filter((action) => certifiedIds.has(action.id));
   const catalog = buildCatalog(catalogActions);
+  const participantRevisions = state.participantRuntimeRevisions
+    ?? { [state.characterId]: state.runtimeRevision };
+  const resourceBindingsByActor = state.resourceBindingsByActor
+    ?? { [state.characterId]: state.resourceBindings };
   return {
     sourceCharacterId: state.characterId,
-    participantRevisions: { [state.characterId]: state.runtimeRevision },
+    participantRevisions,
     catalogActions,
     certifiedActionIdsByActor: {
-      [state.characterId]: state.certifiedPlayerActionIds,
+      ...certifiedByActor,
       ...state.monsterActionIds,
     },
-    resourceBindingsByActor: { [state.characterId]: state.resourceBindings },
+    resourceBindingsByActor,
     world: state.world,
     catalog,
   };
@@ -317,10 +328,11 @@ function sheetSession(state: SoloCombatState): SheetCombatSession {
 
 function applySheetTransition(
   state: SoloCombatState,
+  actorId: string,
   action: RuleActionDefinition,
   transition: SheetCombatTransition,
 ): SoloCombatState {
-  return transitionState(state, state.characterId, action.name, transition.nextWorld, transition.events);
+  return transitionState(state, actorId, action.name, transition.nextWorld, transition.events);
 }
 
 export function executeCombatAction(input: {
@@ -361,12 +373,13 @@ export function executeCombatAction(input: {
     };
     return withTriggeredHitOffer(dispatch({ state: input.state, command, rng, label: action.name }));
   }
-  if (input.actorId === input.state.characterId && SHEET_PRIMITIVES.has(primitiveType(action) ?? '')) {
+  if (isControlledCharacter(input.state, input.actorId)
+    && SHEET_PRIMITIVES.has(primitiveType(action) ?? '')) {
     const transition = executeSheetCombatAction({
-      session: sheetSession(input.state), actorId: input.actorId, actionId: action.id,
+      session: sheetSession(input.state, input.actorId), actorId: input.actorId, actionId: action.id,
       declaration, commandId: newSheetRuntimeCommandId(), rng,
     });
-    return withTriggeredHitOffer(applySheetTransition(input.state, action, transition));
+    return withTriggeredHitOffer(applySheetTransition(input.state, input.actorId, action, transition));
   }
   const command: GameCommand = {
     ...commandBase(input.state, input.actorId),
@@ -440,7 +453,8 @@ export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Ma
   let next = state;
   for (let guard = 0; guard < 24 && next.world.pendingResolution; guard += 1) {
     const pending = next.world.pendingResolution;
-    if (pending.request.type === 'reaction' && pending.request.actorId === next.characterId) break;
+    if (pending.request.type === 'reaction'
+      && isControlledCharacter(next, pending.request.actorId)) break;
     const response: DecisionResponse = pending.request.type === 'reaction'
       ? { kind: 'reaction', actionId: null }
       : pending.request.type === 'shove_outcome'
@@ -468,7 +482,8 @@ export function resolvePlayerReaction(
   rng: Rng = Math.random,
 ): SoloCombatState {
   const pending = state.world.pendingResolution;
-  if (!pending || pending.request.type !== 'reaction' || pending.request.actorId !== state.characterId) {
+  if (!pending || pending.request.type !== 'reaction'
+    || !isControlledCharacter(state, pending.request.actorId)) {
     throw new Error('Нет ожидающей реакции персонажа');
   }
   const actingActorId = activeActorId(state);
@@ -539,7 +554,7 @@ function offerTriggeredHitActions(input: {
 }): SoloCombatState {
   const { before, after, sourceActorId, sourceActionId, targetIds } = input;
   if (after.world.pendingResolution || after.pendingTriggeredAction
-    || sourceActorId !== after.characterId
+    || !isControlledCharacter(after, sourceActorId)
     || !hasHitRecord(after, before.log.length, sourceActorId)) return after;
   const actor = after.world.actors[sourceActorId];
   if (!actor) return after;
@@ -692,7 +707,15 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
     && (monster.runtime.resources.action ?? 0) <= 0) {
     return advanceTurn(state);
   }
-  const plan = planMonsterTurn(state, monster, state.characterId);
+  const targetId = controlledCharacterIds(state)
+    .filter((actorId) => (state.world.actors[actorId]?.runtime.hp.current ?? 0) > 0)
+    .sort((left, right) => (
+      gridDistanceFt(state.tokens[monsterId].position, state.tokens[left].position)
+        - gridDistanceFt(state.tokens[monsterId].position, state.tokens[right].position)
+        || left.localeCompare(right)
+    ))[0];
+  if (!targetId) return outcome(state);
+  const plan = planMonsterTurn(state, monster, targetId);
   let next = state;
   const firstDestination = plan.firstMove.at(-1);
   if (firstDestination) {
@@ -712,7 +735,7 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
       return action && isAttackAction(action);
     });
     if (actionId) {
-      next = executeCombatAction({ state: next, actorId: monsterId, actionId, targetIds: [next.characterId], rng });
+      next = executeCombatAction({ state: next, actorId: monsterId, actionId, targetIds: [targetId], rng });
       next = autoResolveSystemDecisions(next, rng);
     }
   }
@@ -749,6 +772,7 @@ function withInitiativeAndStart(state: SoloCombatState, rng: Rng): SoloCombatSta
 export async function createSoloCombatState(input: {
   character: ForgeCharacter;
   participant: SheetCombatParticipantSeed;
+  allies?: readonly SheetCombatParticipantSeed[];
   selected: readonly SelectedMonster[];
   actions: readonly Action[];
   effects: readonly PassiveEffect[];
@@ -767,26 +791,33 @@ export async function createSoloCombatState(input: {
     }
   }
   if (!monsters.length) throw new Error('Выберите хотя бы одного противника');
+  const participants = [input.participant, ...(input.allies ?? [])];
+  const controlledIds = participants.map(({ character }) => character.id);
   const base = await createSheetCombatSession({
-    source: input.participant, targets: [],
+    source: input.participant, targets: participants.slice(1),
     sceneActors: monsters.map((monster) => monster.actor), sceneMode: 'exploration',
   });
   const catalogActions = [...base.catalogActions];
   // The ordinary character sheet exposes every runnable data-owned action. Keep
   // that complete capability set in solo combat; only the reviewed primitive
   // subset is routed through executeSheetCombatAction.
-  for (const action of input.participant.canonical.actions) {
-    if (!catalogActions.some((candidate) => candidate.id === action.id)) catalogActions.push(clone(action));
+  for (const participant of participants) {
+    for (const action of participant.canonical.actions) {
+      if (!catalogActions.some((candidate) => candidate.id === action.id)) catalogActions.push(clone(action));
+    }
   }
-  const playerAttack = catalogActions.find((action) => (
-    primitiveType(action) === 'weapon_attack' && isAttackAction(action)
-  ));
   const opportunityActionIds: Record<string, string> = {};
-  if (playerAttack) {
+  for (const participant of participants) {
+    const playerAttack = participant.canonical.actions.find((action) => (
+      primitiveType(action) === 'weapon_attack' && isAttackAction(action)
+    ));
+    if (!playerAttack) continue;
     const opportunity = opportunityVersion(playerAttack);
-    catalogActions.push(opportunity);
-    base.world.actors[input.character.id].capabilities.actionIds.push(opportunity.id);
-    opportunityActionIds[input.character.id] = opportunity.id;
+    if (!catalogActions.some((candidate) => candidate.id === opportunity.id)) {
+      catalogActions.push(opportunity);
+    }
+    base.world.actors[participant.character.id].capabilities.actionIds.push(opportunity.id);
+    opportunityActionIds[participant.character.id] = opportunity.id;
   }
   const basicRows = input.actions.filter((action) => TACTICAL_BASIC_ACTIONS.has(action.card_number));
   const tacticalBasics = basicRows.map((action) => projectRuleAction(action));
@@ -794,8 +825,9 @@ export async function createSoloCombatState(input: {
     ?? (input.dashAction ? projectRuleAction(input.dashAction) : undefined);
   for (const action of tacticalBasics) {
     if (!catalogActions.some((candidate) => candidate.id === action.id)) catalogActions.push(action);
-    if (!base.world.actors[input.character.id].capabilities.actionIds.includes(action.id)) {
-      base.world.actors[input.character.id].capabilities.actionIds.push(action.id);
+    for (const participant of participants) {
+      const actor = base.world.actors[participant.character.id];
+      if (!actor.capabilities.actionIds.includes(action.id)) actor.capabilities.actionIds.push(action.id);
     }
   }
   if (dash && !catalogActions.some((action) => action.id === dash.id)) catalogActions.push(dash);
@@ -815,12 +847,17 @@ export async function createSoloCombatState(input: {
     }
     if (dash) base.world.actors[monster.actor.id].capabilities.actionIds.push(dash.id);
   }
-  const tokens: SoloCombatState['tokens'] = {
-    [input.character.id]: {
-      actorId: input.character.id, tokenUrl: input.character.avatar_url,
-      color: '#3c8ccf', position: { x: Math.floor(TACTICAL_WIDTH / 2), y: TACTICAL_HEIGHT - 2 },
-    },
-  };
+  const partyColors = ['#3c8ccf', '#8a63c7', '#3f9c68', '#c27a3d'];
+  const tokens: SoloCombatState['tokens'] = Object.fromEntries(participants.map((participant, index) => {
+    const centeredOffset = (index - (participants.length - 1) / 2) * 2;
+    const x = Math.max(1, Math.min(TACTICAL_WIDTH - 2, Math.round(TACTICAL_WIDTH / 2 + centeredOffset)));
+    return [participant.character.id, {
+      actorId: participant.character.id,
+      tokenUrl: participant.character.avatar_url,
+      color: partyColors[index % partyColors.length],
+      position: { x, y: TACTICAL_HEIGHT - 2 },
+    }];
+  }));
   monsters.forEach((monster, index) => {
     tokens[monster.actor.id] = {
       actorId: monster.actor.id, templateId: monster.template.id,
@@ -833,12 +870,20 @@ export async function createSoloCombatState(input: {
     characterId: input.character.id,
     runtimeRevision: Number(input.character.runtime_revision ?? 0),
     world: clone(base.world), catalogActions: catalogActions.sort((a, b) => a.id.localeCompare(b.id)),
+    controlledCharacterIds: controlledIds,
+    playerActionIdsByActor: Object.fromEntries(participants.map((participant) => [
+      participant.character.id,
+      [...new Set([
+        ...participant.canonical.actions.map((action) => action.id),
+        ...tacticalBasics.map((action) => action.id),
+      ])],
+    ])),
     playerActionIds: [...new Set([
       ...input.participant.canonical.actions.map((action) => action.id),
       ...tacticalBasics.map((action) => action.id),
     ])],
     actionPresentation: {
-      ...(input.participant.actionPresentation ?? {}),
+      ...Object.assign({}, ...participants.map((participant) => participant.actionPresentation ?? {})),
       ...Object.fromEntries(basicRows.map((action, index) => [tacticalBasics[index].id, {
         imageUrl: action.image_url,
         description: action.description,
@@ -861,15 +906,15 @@ export async function createSoloCombatState(input: {
       }))),
     },
     sideByActorId: {
-      [input.character.id]: 'side:party',
+      ...Object.fromEntries(controlledIds.map((actorId) => [actorId, 'side:party'])),
       ...Object.fromEntries(monsters.map((monster) => [monster.actor.id, 'side:opposition'])),
     },
     actorPresentation: {
-      [input.character.id]: {
-        creatureType: base.world.actors[input.character.id].character.creatureType,
-        actionIds: input.participant.canonical.actions.map((action) => action.id),
+      ...Object.fromEntries(participants.map((participant) => [participant.character.id, {
+        creatureType: base.world.actors[participant.character.id].character.creatureType,
+        actionIds: participant.canonical.actions.map((action) => action.id),
         traits: [],
-      },
+      }])),
       ...Object.fromEntries(monsters.map((monster) => [monster.actor.id, {
         templateId: monster.template.id,
         description: monster.template.description,
@@ -891,18 +936,33 @@ export async function createSoloCombatState(input: {
         }),
       }])),
     },
+    certifiedPlayerActionIdsByActor: Object.fromEntries(participants.map((participant) => [
+      participant.character.id,
+      [...(base.certifiedActionIdsByActor[participant.character.id] ?? [])],
+    ])),
     certifiedPlayerActionIds: [...base.certifiedActionIdsByActor[input.character.id]],
     monsterActionIds, opportunityActionIds,
     ...(dash ? { dashActionId: dash.id } : {}),
+    participantRuntimeRevisions: Object.fromEntries(participants.map(({ character }) => [
+      character.id,
+      Number(character.runtime_revision ?? 0),
+    ])),
+    resourceBindingsByActor: Object.fromEntries(participants.map((participant) => [
+      participant.character.id,
+      clone(base.resourceBindingsByActor[participant.character.id] ?? {}),
+    ])),
     resourceBindings: clone(base.resourceBindingsByActor[input.character.id]),
     tokens, boardRevision: 1,
     movementRemainingFt: Object.fromEntries(Object.values(base.world.actors).map((actor) => [
       actor.id, effectiveActorSpeedFt(actor),
     ])),
     initiativeBonuses: {
-      [input.character.id]: Number(input.character.initiative_bonus
-        ?? base.world.actors[input.character.id].character.abilityMods.dex
-        ?? 0),
+      ...Object.fromEntries(participants.map(({ character }) => [
+        character.id,
+        Number(character.initiative_bonus
+          ?? base.world.actors[character.id].character.abilityMods.dex
+          ?? 0),
+      ])),
       ...Object.fromEntries(monsters.map((monster) => [
         monster.actor.id,
         Number(monster.template.initiative_bonus
@@ -917,17 +977,19 @@ export async function createSoloCombatState(input: {
 
 export function selectedTargetsForAction(input: {
   state: SoloCombatState;
+  actorId?: string;
   actionId: string;
   clickedActorId?: string;
   clickedPosition: GridPosition;
 }): string[] {
   const action = input.state.catalogActions.find((candidate) => candidate.id === input.actionId);
   if (!action) throw new Error('Действие отсутствует в боевом каталоге');
+  const actorId = input.actorId ?? input.state.characterId;
   const rawTargeting = action.mechanics.targeting as Record<string, unknown> | undefined;
-  if (rawTargeting?.shape === 'self') return [input.state.characterId];
+  if (rawTargeting?.shape === 'self') return [actorId];
   if (rawTargeting?.shape === 'area') {
     return areaActorIds({
-      state: input.state, sourceActorId: input.state.characterId,
+      state: input.state, sourceActorId: actorId,
       aimPosition: input.clickedPosition, action,
     }).slice(0, action.targeting?.maxTargets ?? 8);
   }
