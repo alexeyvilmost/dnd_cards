@@ -248,6 +248,8 @@ The user-visible result is one cohesive combat update: `Движение` and `�
 | First Timecloud preflight | 4.26s | Read-only command had a PowerShell-to-remote quoting error after confirming the current SHA and runner. |
 | Corrected Timecloud preflight | 4.41s | Current release healthy, deploy runner ready, all three containers up, about 15.8 GB free. |
 | Retired-platform text scan | 1.23s with whitespace gate | Zero tracked mentions. |
+| Hosted offline gate #265 | 1m05s | Failed in production TypeScript: the new test fixture called `.push()` on a readonly action array. Runtime tests cannot detect this type-only error. |
+| Type-safe fixture correction and compile | 78.67s compile | Rebuilt the ally catalog immutably; the complete TypeScript project passed. |
 
 ### What took longest and how to speed it up
 
@@ -256,3 +258,4 @@ The user-visible result is one cohesive combat update: `Движение` and `�
 3. **TypeScript plus the production build cost about 4m43s across three cold/warm processes.** Run TypeScript once after production code stabilizes and let the final build provide the second compiler pass.
 4. **Atomic multi-character persistence was the highest-risk reasoning block.** Reusing the existing runtime-command endpoint avoided a new backend API and kept the implementation/test loop under one hour.
 5. Add a `test:combat:changed` command that runs the four focused unit files and the two Playwright projects with automatic timestamps. The final useful feedback loop is then about **54 seconds** instead of waiting for the ten-minute full suite.
+6. Keep the production TypeScript check after the last test edit. The late explicit Inspiration assertion introduced a type-only fixture error after the earlier compiler passes and cost a full hosted-gate restart.

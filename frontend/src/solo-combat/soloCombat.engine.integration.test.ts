@@ -204,7 +204,16 @@ describe('solo combat engine vertical integration', () => {
       },
     };
     const allyActor = ally.canonical.world.actors[ally.character.id];
-    ally.canonical.actions.push(inspiration);
+    const allyActions = [...ally.canonical.actions, inspiration];
+    const allyActionsById = new Map(allyActions.map((action) => [action.id, action]));
+    ally.canonical = {
+      ...ally.canonical,
+      actions: allyActions,
+      catalog: {
+        getAction: (actionId) => allyActionsById.get(actionId),
+        listActions: () => allyActions,
+      },
+    };
     allyActor.capabilities.actionIds.push(inspiration.id);
     allyActor.runtime.resources.bardic_inspiration = 2;
     allyActor.runtime.maxResources.bardic_inspiration = 2;
