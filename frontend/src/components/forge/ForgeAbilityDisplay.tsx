@@ -5,6 +5,7 @@ import { usePinMode } from '../../hooks/usePinMode';
 import ForgeAbilityLine from './ForgeAbilityLine';
 import EffectPreview from '../EffectPreview';
 import ActionPreview from '../ActionPreview';
+import { useViewportPopoverPosition } from '../../hooks/useViewportPopoverPosition';
 
 export type AbilityEntry = {
   key: string;
@@ -33,6 +34,7 @@ type Props = {
 const ForgeAbilityDisplay = ({ entries, mode, linesClassName = 'forge-ability-lines' }: Props) => {
   const [hovered, setHovered] = useState<AbilityEntry | null>(null);
   const [pos, setPos] = useState({ x: 0, y: 0 });
+  const { popoverRef, popoverPos } = useViewportPopoverPosition(Boolean(hovered), pos);
   // Режим закрепления (T): превью не закрывается при уходе мыши и становится интерактивным.
   const { pinModeActive } = usePinMode();
   const prevPin = useRef(pinModeActive);
@@ -88,10 +90,11 @@ const ForgeAbilityDisplay = ({ entries, mode, linesClassName = 'forge-ability-li
       </div>
       {hovered && (hovered.effect || hovered.action) && (
         <div
+          ref={popoverRef}
           className="forge-effect-popover"
           style={{
-            left: Math.min(pos.x + 12, window.innerWidth - 340),
-            top: Math.min(pos.y + 8, window.innerHeight - 200),
+            left: popoverPos.left,
+            top: popoverPos.top,
             pointerEvents: pinModeActive ? 'auto' : 'none',
           }}
           onMouseLeave={onLeave}

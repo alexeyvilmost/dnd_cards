@@ -112,7 +112,7 @@ test('combat setup invites an owned ally and keeps shared action cards inside th
     const current = JSON.parse(localStorage.getItem('site-settings') || '{}');
     localStorage.setItem('site-settings', JSON.stringify({
       ...current,
-      entityDisplay: { ...(current.entityDisplay ?? {}), actions: 'icon' },
+      entityDisplay: { ...(current.entityDisplay ?? {}), actions: 'icon', effects: 'icon' },
     }));
   });
   await page.reload();
@@ -123,6 +123,15 @@ test('combat setup invites an owned ally and keeps shared action cards inside th
   await bottomSheetTile.hover();
   await page.waitForTimeout(300);
   await expectPopoverInsideViewport(page);
+
+  if ((page.viewportSize()?.width ?? 0) > 820) {
+    const bottomAbilityTile = page.locator('.forge-spell-icon.ready:visible').last();
+    await expect(bottomAbilityTile).toBeVisible();
+    await bottomAbilityTile.scrollIntoViewIfNeeded();
+    await bottomAbilityTile.hover();
+    await page.waitForTimeout(300);
+    await expectPopoverInsideViewport(page);
+  }
 
   await page.getByTestId('open-solo-combat').click();
   const setup = page.getByRole('dialog', { name: 'Противники для Лучник-дварф' });

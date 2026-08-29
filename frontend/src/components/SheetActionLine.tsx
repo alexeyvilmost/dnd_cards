@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import type { Action, PassiveEffect, Spell } from '../types';
 import type { WeaponAttackPreview } from '../engine/weapon';
@@ -9,26 +9,12 @@ import ActionPreview from './ActionPreview';
 import SpellPreview from './SpellPreview';
 import SheetEntityRow from './SheetEntityRow';
 import { SPELL_CARD_CSS } from './spellCardStyle';
+import { useViewportPopoverPosition } from '../hooks/useViewportPopoverPosition';
+
+export { fitActionPopoverToViewport } from '../hooks/useViewportPopoverPosition';
 
 // Уровень заклинания в углу иконки — римской цифрой (I..IX).
 const TILE_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
-
-export function fitActionPopoverToViewport(
-  anchor: { x: number; y: number },
-  popover: { width: number; height: number },
-  viewport: { width: number; height: number },
-  margin = 8,
-  gap = 12,
-): { left: number; top: number } {
-  const maxLeft = Math.max(margin, viewport.width - popover.width - margin);
-  const left = Math.max(margin, Math.min(anchor.x + gap, maxLeft));
-  const below = anchor.y + gap;
-  const preferredTop = below + popover.height <= viewport.height - margin
-    ? below
-    : anchor.y - popover.height - gap;
-  const maxTop = Math.max(margin, viewport.height - popover.height - margin);
-  return { left, top: Math.max(margin, Math.min(preferredTop, maxTop)) };
-}
 
 type Props = {
   name: string;
@@ -76,8 +62,7 @@ const SheetActionLine = ({
 }: Props) => {
   const [hover, setHover] = useState(false);
   const [pos, setPos] = useState({ x: 0, y: 0 });
-  const [popoverPos, setPopoverPos] = useState({ left: 8, top: 8 });
-  const popoverRef = useRef<HTMLDivElement | null>(null);
+  const { popoverRef, popoverPos } = useViewportPopoverPosition(hover, pos);
   // Режим закрепления (T): превью не закрывается при уходе мыши и интерактивно.
   const { pinModeActive } = usePinMode();
   const prevPin = useRef(pinModeActive);
@@ -85,35 +70,6 @@ const SheetActionLine = ({
     if (prevPin.current && !pinModeActive) setHover(false);
     prevPin.current = pinModeActive;
   }, [pinModeActive]);
-
-  useLayoutEffect(() => {
-    if (!hover || !popoverRef.current) return undefined;
-    const place = () => {
-      const rect = popoverRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      const next = fitActionPopoverToViewport(
-        pos,
-        { width: rect.width, height: rect.height },
-        { width: window.innerWidth, height: window.innerHeight },
-      );
-      setPopoverPos((current) => current.left === next.left && current.top === next.top ? current : next);
-    };
-    place();
-    const frame = window.requestAnimationFrame(place);
-    // Preview cards inject their own styles. In Chromium those styles (and the
-    // stable scrollbar gutter) can change the border-box after the first layout
-    // frame without producing a ResizeObserver content-box change.
-    const settleTimers = [0, 100, 250].map((delay) => window.setTimeout(place, delay));
-    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(place);
-    observer?.observe(popoverRef.current);
-    window.addEventListener('resize', place);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      settleTimers.forEach((timer) => window.clearTimeout(timer));
-      observer?.disconnect();
-      window.removeEventListener('resize', place);
-    };
-  }, [hover, pos]);
 
   const onEnter = (e: React.MouseEvent) => {
     if (disableHover) return;

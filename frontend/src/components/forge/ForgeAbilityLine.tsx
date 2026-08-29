@@ -4,6 +4,7 @@ import { usePinMode } from '../../hooks/usePinMode';
 import EffectPreview from '../EffectPreview';
 import ActionPreview from '../ActionPreview';
 import SheetEntityRow from '../SheetEntityRow';
+import { useViewportPopoverPosition } from '../../hooks/useViewportPopoverPosition';
 
 type ForgeAbilityLineProps = {
   name: string;
@@ -19,6 +20,7 @@ type ForgeAbilityLineProps = {
 const ForgeAbilityLine = ({ name, imageUrl, fallbackImageUrl, sourceLabel, detail, effect, action }: ForgeAbilityLineProps) => {
   const [hover, setHover] = useState(false);
   const [pos, setPos] = useState({ x: 0, y: 0 });
+  const { popoverRef, popoverPos } = useViewportPopoverPosition(hover, pos);
   const iconUrl = imageUrl?.trim() || fallbackImageUrl?.trim() || null;
   // Режим закрепления (T): превью не закрывается при уходе мыши и становится интерактивным.
   const { pinModeActive } = usePinMode();
@@ -42,10 +44,11 @@ const ForgeAbilityLine = ({ name, imageUrl, fallbackImageUrl, sourceLabel, detai
       />
       {hover && (effect || action) && (
         <div
+          ref={popoverRef}
           className="forge-effect-popover"
           style={{
-            left: Math.min(pos.x + 12, window.innerWidth - 340),
-            top: Math.min(pos.y + 8, window.innerHeight - 200),
+            left: popoverPos.left,
+            top: popoverPos.top,
             pointerEvents: pinModeActive ? 'auto' : 'none',
           }}
           onMouseLeave={onLeave}

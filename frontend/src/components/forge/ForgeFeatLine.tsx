@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Feat } from '../../types';
 import ForgeEntityIcon from './ForgeEntityIcon';
 import FeatPreview from '../FeatPreview';
+import { useViewportPopoverPosition } from '../../hooks/useViewportPopoverPosition';
 
 /**
  * Черта в виде строки-как-эффект: маленькая иконка + подчёркнутый текст,
@@ -10,6 +11,7 @@ import FeatPreview from '../FeatPreview';
 const ForgeFeatLine = ({ feat }: { feat: Feat }) => {
   const [hover, setHover] = useState(false);
   const [pos, setPos] = useState({ x: 0, y: 0 });
+  const { popoverRef, popoverPos } = useViewportPopoverPosition(hover, pos);
 
   return (
     <>
@@ -25,10 +27,11 @@ const ForgeFeatLine = ({ feat }: { feat: Feat }) => {
       </span>
       {hover && (
         <div
+          ref={popoverRef}
           className="forge-effect-popover"
           style={{
-            left: Math.min(pos.x + 12, window.innerWidth - 340),
-            top: Math.min(pos.y + 8, window.innerHeight - 200),
+            left: popoverPos.left,
+            top: popoverPos.top,
           }}
         >
           <FeatPreview feat={feat} disableHover />
