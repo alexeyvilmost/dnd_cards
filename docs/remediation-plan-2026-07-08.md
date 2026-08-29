@@ -20,7 +20,7 @@
 - для контент-задач: `node scripts/lint-mechanics.mjs`;
 - живые тесты по прод-контенту: `MVP_CONTENT=1 npx vitest run --config vitest.mvp.config.ts` (нужна сеть до прода). Внимание: axios-клиент в node падает на localStorage-интерсепторе — тесты уже содержат заглушку Storage, новые live-тесты писать по образцу `src/mvp/forge.sweep.mvp.test.ts`.
 
-**Деплой:** пуш в `main` → Railway автодеплоит бэк и фронт. Владелец тестирует на проде, локальный стек не поднимает. Прод: бэк `https://backend-production-41c3.up.railway.app`, фронт `https://bagofholding.up.railway.app`. Прод-БД — единственный источник истины контента; контент правится через API (скрипты `scripts/content/*.mjs`, креды импортёра в `scripts/content/api.mjs`).
+**Деплой:** exact SHA из `main` передаётся Timecloud `deploy-release`, который собирает бэк и фронт, создаёт backup и проверяет оба SHA endpoint. Прод: бэк и фронт доступны через `https://bagofholding.ru`. Прод-БД — единственный источник истины контента; контент правится через API (скрипты `scripts/content/*.mjs`, креды импортёра в `scripts/content/api.mjs`).
 
 **Решения владельца — НЕ нарушать:**
 - **Авторизацию не трогаем** (решение 2026-07-08): её отсутствие упрощает тестирование; о сайте знает только узкий круг. Всё связанное с auth — этап H, выполняется последним, непосредственно перед публичным запуском. До этого НЕ включать строгий middleware, НЕ разводить пользователей, НЕ прятать /login.
@@ -58,7 +58,7 @@
 - `frontend/tsconfig.tsbuildinfo`, `frontend/tsconfig.node.tsbuildinfo`.
 
 В `.gitignore` добавить: `backend/main`, `dump_*.sql`, `*.tsbuildinfo`.
-Опционально (только с явного подтверждения владельца, т.к. переписывает историю и требует force-push при живом Railway-деплое с GitHub): `git filter-repo` для реального уменьшения клона (size-pack 62 MiB).
+Опционально (только с явного подтверждения владельца, т.к. переписывает историю и требует force-push при живом Timecloud-деплое с GitHub): `git filter-repo` для реального уменьшения клона (size-pack 62 MiB).
 **Приёмка:** `git ls-files | grep -E 'backend/main$|dump_|tsbuildinfo'` пусто; бэк собирается.
 
 ### A2. Персонажи v1/v2 на бэке (P1, M)

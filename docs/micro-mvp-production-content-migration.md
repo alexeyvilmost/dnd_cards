@@ -194,11 +194,10 @@ production bundle. Если post-A архив вышел за допустимо
 {
   "created_at_utc": "<fresh UTC RFC3339 captured at the actual dump step>",
   "source": {
-    "provider": "Railway",
-    "project_id": "3ec4e61c-9a4d-4b7b-99b8-ce2a560a8b55",
-    "environment_id": "ef702856-4300-4476-852a-1d4cc23532d7",
-    "service_id": "b008bd10-e7ad-41f6-97ad-1a8060a57110",
-    "database": "railway"
+    "provider": "Timecloud",
+    "server_host": "77.95.206.239",
+    "deployment_root": "/opt/bagofholding",
+    "database": "production"
   },
   "archive": {
     "file": "<fresh explicit .dump filename>",
@@ -330,7 +329,7 @@ unset IMPORTER_NEW_PASSWORD
 
 В уже аутентифицированном `psql` production-сеансе выполнить проверенный
 `scripts/content/rotate-content-admin-password.sql`. Конкретный
-Railway/PostgreSQL connection string не печатать и не сохранять в history. В
+Production PostgreSQL connection string не печатать и не сохранять в history. В
 `psql` передаётся только salted bcrypt hash, не пароль:
 
 ```bash
@@ -345,7 +344,7 @@ psql '<approved connection; obtain without shell history>' -X \
 Скрипт валидирует UUID и bcrypt cost 12, обновляет ровно совпавшего активного
 пользователя и делает `ROLLBACK`/exit 3, если строка не найдена. Если approved
 connection содержит пароль, вместо literal использовать PGSERVICE/Keychain или
-интерактивный Railway connection flow; секретный URL не должен быть аргументом
+интерактивный server-side connection flow; секретный URL не должен быть аргументом
 process или строкой history.
 
 После успешного `COMMIT` выполнить black-box проверку. Ни пароль, ни JWT не
@@ -416,7 +415,7 @@ allowlist и использовать отдельного content-admin пол�
 
 ### Актуальная двухклоновая репетиция patch 1.5.0
 
-2026-08-06 свежий Railway production dump был независимо восстановлен через
+2026-08-06 свежий Timecloud production dump был независимо восстановлен через
 `pg_restore --exit-on-error` в два disposable PostgreSQL 17.10 clone. После
 startup migrations оба имели 96 `schema_migrations`. На каждом клоне:
 
@@ -557,22 +556,19 @@ Rollback сначала сверяет полный SHA-256 каждого те�
 После всех локальных gate и staging drill, но **до первого push/deployment**:
 
 1. остановить изменение production-контента на окно обслуживания;
-2. снять свежий Railway custom-format dump с точной identity из
+2. снять свежий Timecloud custom-format dump с точной identity из
    `production-content-source.v1.json`;
 3. восстановить архив в одноразовый PostgreSQL 17 с
    `pg_restore --exit-on-error`, зафиксировать SHA-256, размер, TOC, права
    `0600`, время и контрольные row counts в metadata;
 4. зафиксировать полный 40-hex SHA **commit A** с rollback-complete API,
    migrations и инструментом materialization;
-5. только затем доставить commit A через GitHub-trigger в ветку, которую
-   действительно отслеживают оба Railway-сервиса (на момент написания —
-   `main`), и дождаться terminal `SUCCESS` exact commit для backend и frontend;
-6. не использовать `railway up` для attestable release: Railway предоставляет
-   `RAILWAY_GIT_COMMIT_SHA` только GitHub-triggered deployment, а без него
-   backend health возвращает `source_commit: "unavailable"`, а frontend
-   `/build-info.json` — `source_commit: null`;
-7. подтвердить по Railway deployment metadata SHA commit A обоих сервисов,
-   затем exact SHA в backend `/api/health` и frontend `/build-info.json`,
+5. только затем создать `git archive` exact commit A, загрузить его на Timecloud
+   и запустить `/opt/bagofholding/bin/deploy-release <SHA>`;
+6. дождаться terminal `DEPLOYED <SHA>`: runner сам создаёт backup, собирает оба
+   image, переключает `current` и передаёт `SOURCE_COMMIT` обоим контейнерам;
+7. подтвердить target `/opt/bagofholding/current`, затем exact SHA в backend
+   `/api/health` и frontend `/build-info.json`,
    API-контракт и наличие всех ожидаемых `schema_migrations` до
    построения production plan.
 
@@ -597,7 +593,7 @@ review-нуть его отдельно. Restore proof из шага 4 долж�
 `createdAt` bundle:
 
 ```bash
-API_URL=https://backend-production-41c3.up.railway.app \
+API_URL=https://bagofholding.ru \
 node scripts/content/migrate-micro-mvp-l1-mechanics.mjs \
   --bundle backups/micro-mvp-production-preimage.json
 ```
@@ -608,11 +604,11 @@ dependency order и точный набор операций, что переч�
 
 ```bash
 API_TOKEN=... CONTENT_CERTIFICATION_KEY=... \
-API_URL=https://backend-production-41c3.up.railway.app \
+API_URL=https://bagofholding.ru \
 node scripts/content/migrate-micro-mvp-l1-mechanics.mjs --apply \
   --bundle backups/micro-mvp-production-preimage.json \
   --backup-metadata backups/prod-before-micro-mvp-YYYYMMDDTHHMMSSZ.metadata.json \
-  --confirm-api https://backend-production-41c3.up.railway.app
+  --confirm-api https://bagofholding.ru
 ```
 
 Не использовать historical metadata `20260805T135818Z` для текущего apply:
@@ -657,8 +653,8 @@ Preflight до первой mutation также проверяет rollbackabili
 5. зафиксировать это единым **commit B**. Все файлы, входящие в source
    fingerprint, должны быть committed и byte-exact; dirty/untracked release
    input запрещён;
-6. доставить exact commit B в backend и frontend только через GitHub-trigger,
-   дождаться terminal `SUCCESS` обоих deployment, сверить Railway SHA и
+6. доставить exact commit B через Timecloud release runner, дождаться terminal
+   `DEPLOYED <SHA>`, сверить активный release symlink и
    exact SHA в `/api/health.source_commit` и `/build-info.json.source_commit`,
    затем ещё раз потребовать no-op production plan.
 
@@ -692,10 +688,10 @@ Preflight до первой mutation также проверяет rollbackabili
 
    Перед запуском потребовать clean source fingerprint и сравнить 40-hex commit
    локального `HEAD` (commit B) с commit успешных
-   backend **и** frontend deployment в Railway. После всех остальных gate
+   backend **и** frontend deployment в Timecloud. После всех остальных gate
    генератор последним live-проверяет один exact SHA в backend `/api/health` и
-   frontend `/build-info.json`; внешний metadata-аудит Railway остаётся
-   дополнительной проверкой. Ожидаемый SHA обязан совпасть с локальным `HEAD`.
+   frontend `/build-info.json`; проверка active release symlink на Timecloud
+   остаётся дополнительной проверкой. Ожидаемый SHA обязан совпасть с локальным `HEAD`.
    Backend integration DSN должны указывать на две разные
    выделенные disposable PostgreSQL 17 БД, не на production; значения DSN в
    artifact не записываются. `CANONICAL_RUNTIME_TEST_DSN` указывает на свежую
@@ -707,10 +703,10 @@ Preflight до первой mutation также проверяет rollbackabili
 
    ```bash
    cd frontend
-   MICRO_MVP_API=https://backend-production-41c3.up.railway.app
-   MICRO_MVP_FRONTEND=https://bagofholding.up.railway.app
+   MICRO_MVP_API=https://bagofholding.ru
+   MICRO_MVP_FRONTEND=https://bagofholding.ru
    MICRO_MVP_SOURCE_COMMIT=<40-hex-local-HEAD>
-   MICRO_MVP_DEPLOYED_COMMIT=<same-40-hex-verified-in-railway>
+   MICRO_MVP_DEPLOYED_COMMIT=<same-40-hex-verified-on-timecloud>
    unset CONTENT_MIGRATION_TEST_BOOTSTRAP
    export CANONICAL_RUNTIME_TEST_DSN=<fresh-canonical-postgres-17-dsn>
    export CONTENT_MIGRATION_TEST_DSN=<separate-restored-materialized-postgres-17-dsn>
@@ -752,7 +748,7 @@ version `micro-mvp-l1-rules-core-v4`; `--bundle` не должен сущест�
 `--evidence` указывает на свежий artifact из шага 6, а release timestamp
 задаётся явно:
 
-Certification bundle и apply выполняются при неизменных local HEAD, Railway
+Certification bundle и apply выполняются при неизменных local HEAD, Timecloud
 backend/frontend commit и source fingerprint commit B. Если после evidence
 появилось любое изменение source, новый commit или deployment, evidence
 отбрасывается до первой certification mutation и весь хвост начиная с deploy B
@@ -760,7 +756,7 @@ backend/frontend commit и source fingerprint commit B. Если после evid
 
 ```bash
 cd frontend
-API_URL=https://backend-production-41c3.up.railway.app \
+API_URL=https://bagofholding.ru \
 npm run content:certify:micro -- \
   --bundle ../backups/micro-mvp-production-certification.json \
   --evidence ../backups/micro-mvp-production-release-evidence.json \
@@ -776,13 +772,13 @@ identity. Время certification выбирают один раз; apply не 
 
 ```bash
 cd frontend
-API_URL=https://backend-production-41c3.up.railway.app \
+API_URL=https://bagofholding.ru \
 API_TOKEN=... \
 CONTENT_CERTIFICATION_KEY=... \
 npm run content:certify:micro -- --apply \
   --bundle ../backups/micro-mvp-production-certification.json \
   --evidence ../backups/micro-mvp-production-release-evidence.json \
-  --confirm-api https://backend-production-41c3.up.railway.app \
+  --confirm-api https://bagofholding.ru \
   --certified-at 2026-08-06T00:00:00Z
 ```
 
@@ -827,12 +823,12 @@ Rollback использует тот же transaction и exact CAS, восста
 
 ```bash
 cd frontend
-API_URL=https://backend-production-41c3.up.railway.app \
+API_URL=https://bagofholding.ru \
 API_TOKEN=... \
 CONTENT_CERTIFICATION_KEY=... \
 npm run content:certify:micro -- --rollback \
   --bundle ../backups/micro-mvp-production-certification.json \
-  --confirm-api https://backend-production-41c3.up.railway.app
+  --confirm-api https://bagofholding.ru
 ```
 
 Успешный rollback обязан оставить bundle в `rolled-back` и подтвердить полный

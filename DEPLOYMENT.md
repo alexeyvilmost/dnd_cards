@@ -1,175 +1,54 @@
-# Инструкция по деплою на Railway
+# Деплой Bag of Holding в Timecloud
 
-## Подготовка проекта
+Production работает на Timecloud Linux-сервере `77.95.206.239` через Docker
+Compose. Публичная граница обоих сервисов — `https://bagofholding.ru`: Caddy
+маршрутизирует `/api/*` в Go backend, а остальные запросы — в nginx frontend.
 
-### 1. Проверьте health и identity обоих сервисов
+## Release identity
 
-Backend уже публикует:
+Релизом считается точный 40-символьный Git SHA из `origin/main`. Серверный
+runner передаёт его обоим контейнерам через `SOURCE_COMMIT`:
 
-```go
-r.GET("/api/health", func(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"status":        "ok",
-		"timestamp":     time.Now().Unix(),
-		"source_commit": deployedSourceCommit(),
-	})
-})
-```
+- backend публикует SHA в `GET /api/health`;
+- frontend публикует SHA в `GET /build-info.json`.
 
-В Railway `source_commit` берётся из системной переменной
-`RAILWAY_GIT_COMMIT_SHA` и принимается только как полный 40-символьный Git SHA.
-После deployment значение обязано точно совпасть с локально проверенным
-release commit; `unavailable` закрывает production release gate.
+Выкладка завершена только когда оба endpoint возвращают один и тот же ожидаемый
+SHA. Отсутствующее или невалидное значение закрывает release gate.
 
-Frontend-контейнер при старте атомарно создаёт `/build-info.json` из той же
-`RAILWAY_GIT_COMMIT_SHA`. Endpoint отдаётся с `Cache-Control: no-cache,
-no-store, must-revalidate`; отсутствующий или невалидный SHA публикуется как
-`null` и также закрывает gate. Финальная release-проверка требует один и тот же
-exact 40-hex commit у backend и frontend.
+## Production layout
 
-### 2. Создайте .env.example файл
+| Компонент | Путь |
+| --- | --- |
+| Корень приложения | `/opt/bagofholding` |
+| Активный релиз | `/opt/bagofholding/current` |
+| Неизменяемые релизы | `/opt/bagofholding/releases/<SHA>` |
+| Архивы сборок | `/opt/bagofholding/builds/<SHA>.tar` |
+| Секреты приложения | `/opt/bagofholding/shared/app.env` |
+| Параметры Compose | `/opt/bagofholding/shared/deploy.env` |
+| Резервные копии PostgreSQL | `/opt/bagofholding/shared/backups/` |
+| Серверный runner | `/opt/bagofholding/bin/deploy-release` |
 
-```bash
-# Database
-DATABASE_URL=postgresql://user:password@host:port/database
+## Release flow
 
-# JWT
-JWT_SECRET=your-secret-key
+1. Проверить изменения и отправить allowlisted commit в `origin/main`.
+2. Пройти обязательный offline CI gate.
+3. Создать `git archive` точного SHA с `core.autocrlf=false`.
+4. Загрузить архив на Timecloud и сверить его SHA-256.
+5. Запустить `deploy-release <SHA>`.
+6. Runner создаст production `pg_dump`, соберёт два image, атомарно переключит
+   `current`, дождётся health-check и проверит оба публичных SHA endpoint.
+7. Выполнить production UX и content-certification gates.
 
-# OpenAI
-OPENAI_API_KEY=your-openai-key
+При неуспешном запуске или identity-check runner автоматически возвращает
+предыдущий application release. База данных при этом не откатывается, поэтому
+миграции обязаны сохранять expand/contract совместимость.
 
-# Yandex Storage
-YANDEX_ACCESS_KEY_ID=your-access-key
-YANDEX_SECRET_ACCESS_KEY=your-secret-key
-YANDEX_BUCKET_NAME=your-bucket-name
-YANDEX_REGION=ru-central1
-```
+Полная повторяемая процедура, команды проверки, rollback и диагностика:
+[`docs/standalone-deploy-after-push.md`](docs/standalone-deploy-after-push.md).
 
-## Деплой на Railway
+Канонические production-файлы находятся в `infra/`:
 
-### Вариант 1: Деплой фронтенда и бекенда отдельно
-
-#### 1. Подготовьте репозиторий
-```bash
-# Добавляйте только явно проверенный release allowlist; не используйте `git add .`
-git commit -m "Prepare for deployment"
-git push origin main
-```
-
-#### 2. Деплой бекенда
-1. Зайдите на [railway.app](https://railway.app)
-2. Нажмите "New Project" → "Deploy from GitHub repo"
-3. Выберите ваш репозиторий
-4. В настройках проекта:
-   - **Root Directory:** `backend`
-   - **Build Command:** `go build -o main .`
-   - **Start Command:** `./main`
-5. Добавьте переменные окружения в настройках проекта
-6. Railway автоматически определит, что это Go проект
-
-#### 3. Деплой фронтенда
-1. Создайте новый проект в Railway
-2. Выберите тот же репозиторий
-3. В настройках:
-   - **Root Directory:** `frontend`
-   - **Build Command:** `npm run build`
-   - **Start Command:** `npm run preview` (для Vite)
-4. Добавьте переменную окружения:
-   - `VITE_API_URL=https://your-backend-url.railway.app`
-
-### Вариант 2: Деплой через Docker Compose (рекомендуется)
-
-#### 1. Создайте railway.toml
-```toml
-[build]
-builder = "dockerfile"
-dockerfilePath = "Dockerfile"
-
-[deploy]
-startCommand = "docker-compose up"
-```
-
-#### 2. Обновите docker-compose.yml для продакшена
-```yaml
-version: '3.8'
-services:
-  backend:
-    build: ./backend
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - YANDEX_ACCESS_KEY_ID=${YANDEX_ACCESS_KEY_ID}
-      - YANDEX_SECRET_ACCESS_KEY=${YANDEX_SECRET_ACCESS_KEY}
-      - YANDEX_BUCKET_NAME=${YANDEX_BUCKET_NAME}
-      - YANDEX_REGION=${YANDEX_REGION}
-    ports:
-      - "8080:8080"
-
-  frontend:
-    build: ./frontend
-    environment:
-      - VITE_API_URL=${VITE_API_URL}
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-```
-
-## Переменные окружения для Railway
-
-### Backend:
-- `DATABASE_URL` - URL вашей Supabase БД
-- `JWT_SECRET` - секретный ключ для JWT, не менее 32 случайных байт
-- `ENCOUNTER_INVITE_SECRET` - рекомендуемый отдельный HMAC-ключ приглашений в бой (>=32 байт); при отсутствии используется доменно-разделённый `JWT_SECRET`
-- `OPENAI_API_KEY` - ключ OpenAI
-- `YANDEX_ACCESS_KEY_ID` - ключ Yandex Storage
-- `YANDEX_SECRET_ACCESS_KEY` - секрет Yandex Storage
-- `YANDEX_BUCKET_NAME` - имя bucket'а
-- `YANDEX_REGION` - регион (ru-central1)
-
-### Frontend:
-- `VITE_API_URL` - URL вашего бекенда (https://your-backend.railway.app)
-
-## Настройка домена
-
-1. В Railway перейдите в настройки проекта
-2. В разделе "Domains" добавьте ваш домен
-3. Настройте DNS записи согласно инструкциям Railway
-
-## Мониторинг
-
-Railway предоставляет:
-- Логи в реальном времени
-- Метрики производительности
-- Автоматические перезапуски при ошибках
-
-## Альтернативные варианты
-
-### Render.com
-1. Подключите GitHub репозиторий
-2. Выберите "Web Service"
-3. Настройте build и start команды
-4. Добавьте переменные окружения
-
-### DigitalOcean App Platform
-1. Создайте новый App
-2. Подключите GitHub репозиторий
-3. Настройте сервисы для frontend и backend
-4. Добавьте переменные окружения
-
-## Troubleshooting
-
-### Проблемы с CORS
-Убедитесь, что в backend настроен CORS для вашего домена:
-```go
-config := cors.DefaultConfig()
-config.AllowOrigins = []string{"https://your-frontend-domain.com"}
-```
-
-### Проблемы с БД
-Убедитесь, что DATABASE_URL корректный и БД доступна из интернета.
-
-### Проблемы с файлами
-Проверьте, что все статические файлы правильно копируются в Docker контейнер.
+- `infra/compose.prod.yml`;
+- `infra/Caddyfile`;
+- `infra/deploy-release`;
+- `infra/production.env.example`.

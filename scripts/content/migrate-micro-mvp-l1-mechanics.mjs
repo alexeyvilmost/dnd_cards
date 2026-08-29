@@ -184,8 +184,8 @@ CONTENT_CERTIFICATION_KEY is required for every protected update/create/rollback
 Rollback restores every API field exactly except server-managed updated_at;
 support is exact, and a null support preimage must remain null.
 
-For a new apply, backup metadata must pin the exact Railway project/environment/
-Postgres service/database from production-content-source.v1.json, prove a
+For a new apply, backup metadata must pin the exact Timecloud server/root/
+database from production-content-source.v1.json, prove a
 custom-format archive restore, be no older than two hours, and predate the plan.
 Resume/rollback retain the original SHA-pinned archive without the age limit.`;
 }
@@ -995,27 +995,25 @@ export function verifyBackupMetadata(path, { requireRecent = true, now = new Dat
   const metadata = readJson(metadataFile.path);
   const expectedSource = readJson(PRODUCTION_SOURCE_PATH);
   if (expectedSource?.schemaVersion !== 1
-    || expectedSource.provider !== 'Railway'
-    || !UUID_PATTERN.test(expectedSource.projectId ?? '')
-    || !UUID_PATTERN.test(expectedSource.environmentId ?? '')
-    || !UUID_PATTERN.test(expectedSource.serviceId ?? '')
-    || expectedSource.database !== 'railway'
+    || expectedSource.provider !== 'Timecloud'
+    || expectedSource.serverHost !== '77.95.206.239'
+    || expectedSource.deploymentRoot !== '/opt/bagofholding'
+    || expectedSource.database !== 'production'
     || expectedSource.requiredRestorePostgresMajor !== 17
     || expectedSource.maximumBackupAgeSeconds !== 7_200
     || expectedSource.maximumRestoreLagSeconds !== 1_800
     || expectedSource.maximumFutureClockSkewSeconds !== 300) {
-    throw new Error('Versioned Railway production backup policy is invalid or unexpectedly relaxed');
+    throw new Error('Versioned Timecloud production backup policy is invalid or unexpectedly relaxed');
   }
   const actualSource = metadata?.source;
   for (const [field, expected] of Object.entries({
     provider: expectedSource.provider,
-    project_id: expectedSource.projectId,
-    environment_id: expectedSource.environmentId,
-    service_id: expectedSource.serviceId,
+    server_host: expectedSource.serverHost,
+    deployment_root: expectedSource.deploymentRoot,
     database: expectedSource.database,
   })) {
     if (actualSource?.[field] !== expected) {
-      throw new Error(`Backup Railway source identity mismatch for ${field}`);
+      throw new Error(`Backup Timecloud source identity mismatch for ${field}`);
     }
   }
   const archive = metadata?.archive;
@@ -1090,7 +1088,7 @@ export function verifyBackupMetadata(path, { requireRecent = true, now = new Dat
     throw new Error('Backup restore proof is temporally inconsistent with the archive');
   }
   if (requireRecent && nowMs - createdAtMs > expectedSource.maximumBackupAgeSeconds * 1000) {
-    throw new Error('Backup is stale for a new apply; take and restore-check a fresh Railway dump');
+    throw new Error('Backup is stale for a new apply; take and restore-check a fresh Timecloud dump');
   }
   return {
     metadataPath: metadataFile.path,
@@ -1104,9 +1102,8 @@ export function verifyBackupMetadata(path, { requireRecent = true, now = new Dat
     rowCounts: stableClone(rowCounts),
     source: {
       provider: actualSource.provider,
-      projectId: actualSource.project_id,
-      environmentId: actualSource.environment_id,
-      serviceId: actualSource.service_id,
+      serverHost: actualSource.server_host,
+      deploymentRoot: actualSource.deployment_root,
       database: actualSource.database,
     },
   };

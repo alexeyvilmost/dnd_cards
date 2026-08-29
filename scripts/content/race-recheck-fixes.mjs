@@ -11,7 +11,7 @@
  *
  * Запуск: node scripts/content/race-recheck-fixes.mjs
  */
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'https://bagofholding.ru';
 const j = (r) => r.json();
 
 async function fixOrcAdrenaline() {

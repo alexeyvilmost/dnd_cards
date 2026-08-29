@@ -1,7 +1,7 @@
 # Portable production deployment
 
-The production boundary is a regular Docker Compose project and does not rely
-on Railway-specific build or routing behavior.
+The production boundary is a regular Docker Compose project running on the
+Timecloud server.
 
 ## Topology
 

@@ -7,7 +7,7 @@
  *
  * Запуск: node scripts/content/aasimar-revelation.mjs
  */
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'https://bagofholding.ru';
 const j = (r) => r.json();
 
 const REVELATION_MECH = {

@@ -203,11 +203,10 @@ function writeVerifiedBackup(directory, {
   writeFileSync(metadataPath, JSON.stringify({
     created_at_utc: createdAt,
     source: {
-      provider: 'Railway',
-      project_id: '3ec4e61c-9a4d-4b7b-99b8-ce2a560a8b55',
-      environment_id: 'ef702856-4300-4476-852a-1d4cc23532d7',
-      service_id: 'b008bd10-e7ad-41f6-97ad-1a8060a57110',
-      database: 'railway',
+      provider: 'Timecloud',
+      server_host: '77.95.206.239',
+      deployment_root: '/opt/bagofholding',
+      database: 'production',
       ...source,
     },
     archive: {
@@ -925,15 +924,15 @@ test('backup guard rejects public, symlinked, and non-regular metadata or archiv
   }
 });
 
-test('backup guard pins the exact Railway production source identity', () => {
+test('backup guard pins the exact Timecloud production source identity', () => {
   const directory = mkdtempSync(join(tmpdir(), 'micro-mvp-backup-source-'));
   const { metadataPath } = writeVerifiedBackup(directory, {
-    source: { service_id: '00000000-0000-4000-8000-000000000099' },
+    source: { server_host: '203.0.113.10' },
   });
 
   assert.throws(
     () => verifyBackupMetadata(metadataPath),
-    /Railway source identity mismatch for service_id/,
+    /Timecloud source identity mismatch for server_host/,
   );
 });
 

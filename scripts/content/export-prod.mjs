@@ -27,7 +27,7 @@ import { sha256Canonical } from './certification-hash.mjs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '../..');
 const OUT = join(ROOT, 'officials/canon/prod-snapshot');
-const API_URL = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const API_URL = process.env.API_URL || 'https://bagofholding.ru';
 
 // entity → [path, ключ массива в ответе]. Порядок = порядок в index.json.
 export const PROD_SNAPSHOT_ENTITIES = [

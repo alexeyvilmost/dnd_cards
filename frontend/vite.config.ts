@@ -56,12 +56,11 @@ export default defineConfig({
     host: true,
     allowedHosts: [
       'localhost',
-      '.railway.app',
-      'frontend-production-550b.up.railway.app',
+      'bagofholding.ru',
     ],
     proxy: {
       '/api': {
-        target: 'https://backend-production-41c3.up.railway.app',
+        target: 'https://bagofholding.ru',
         changeOrigin: true,
         secure: true,
       },

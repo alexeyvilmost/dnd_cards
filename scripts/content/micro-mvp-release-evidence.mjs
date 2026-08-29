@@ -141,7 +141,7 @@ const SOURCE_DIRECTORIES = Object.freeze([
   ['frontend/e2e-live', /\.(?:ts|tsx)$/],
   // These directories are Vite/Docker inputs outside frontend/src.  Keeping
   // them in the Git binding prevents a locally tested dictionary or resource
-  // catalog from differing from the tree Railway builds.
+  // catalog from differing from the tree deployed by the Timecloud runner.
   ['frontend/charges', /.+/],
   ['frontend/public', /.+/],
   ['frontend/scripts', /\.(?:mjs)$/],
@@ -151,7 +151,7 @@ const SOURCE_DIRECTORIES = Object.freeze([
   ['frontend/src', /.+/],
   ['frontend/utils', /.+/],
   // The canonical compiler and several mandatory gates read these files
-  // directly.  They are release inputs even though Railway assigns no meaning
+  // directly. They are release inputs even though the host assigns no meaning
   // to their database surrogate IDs.
   ['officials/canon/prod-snapshot', /.+/],
   ['scripts/content', /\.(?:mjs|json|sql)$/],
@@ -187,17 +187,17 @@ const SOURCE_FILES = Object.freeze([
   'frontend/vitest.rules-core.config.ts',
   'frontend/vitest.rules-primitives.config.ts',
   'frontend/vitest.config.ts',
-  'frontend/railway.json',
   'frontend/start.sh',
   // These files are executable release/gate inputs outside the directories
   // above and must be byte-identical to the supplied Git commit too.
   'docs/mechanics.schema.json',
   'docs/product-rules/free_origin_feat_choice_v1.json',
+  'infra/Caddyfile',
+  'infra/compose.prod.yml',
+  'infra/deploy-release',
+  'infra/production.env.example',
   "officials/Player's Handbook 2024.txt",
   'officials/Книга игрока 2024.txt',
-  'railway.json',
-  'railway-backend.json',
-  'railway-frontend.json',
 ]);
 
 function git(args, options = {}) {
@@ -311,7 +311,7 @@ export function assertMicroMvpSourceTreeMatchesCommit({
  * Proves that every file covered by sourceHash is byte-for-byte present in the
  * supplied commit and that the commit contains no additional covered file.
  * This binds sourceHash to Git; it deliberately does not query a deployment
- * provider and therefore cannot prove what Railway (or another host) runs.
+ * provider and therefore cannot prove what the Timecloud server runs.
  */
 export function assertCurrentMicroMvpSourceMatchesCommit(sourceCommit) {
   if (!GIT_COMMIT.test(sourceCommit ?? '')) {

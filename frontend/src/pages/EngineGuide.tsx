@@ -2,7 +2,7 @@ import { Children, isValidElement, useEffect, useId, useState, type ReactElement
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSlug from 'rehype-slug';
-// Railway builds with frontend/ as the Docker context. Keep this mirror in sync
+// Production builds with frontend/ as the Docker context. Keep this mirror in sync
 // with docs/engine/README.md, which remains the repository-facing document.
 import guideMd from '../content/engine-guide.md?raw';
 

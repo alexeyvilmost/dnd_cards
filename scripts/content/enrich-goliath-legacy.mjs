@@ -12,7 +12,7 @@
  *
  * Запуск: node scripts/content/enrich-goliath-legacy.mjs
  */
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'https://bagofholding.ru';
 
 const PARENT_EFFECT = 'RE-goliath-1'; // родительский эффект вида «Наследие великанов»
 // подвид-субрас → card_number действия

@@ -10,7 +10,7 @@
  *
  * Запуск: node scripts/content/goliath-size-carry.mjs
  */
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'https://bagofholding.ru';
 const LARGE_FORM_EFFECT = '88fdd229-09ae-4391-be3b-c40ee3a07fec'; // RE-goliath-2 «Большая форма»
 const j = (r) => r.json();
 

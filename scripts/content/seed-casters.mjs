@@ -131,7 +131,7 @@ async function main() {
     const featureIds = sub.level_progression?.['3']?.effects || [];
     let target = null;
     for (const id of featureIds) {
-      const e = effects.find((x) => x.id === id) || await fetch(`https://backend-production-41c3.up.railway.app/api/effects/${id}`).then((r) => r.json());
+      const e = effects.find((x) => x.id === id) || await fetch(`https://bagofholding.ru/api/effects/${id}`).then((r) => r.json());
       if (/Сотворение заклинаний/i.test(e.name)) { target = e; break; }
     }
     if (!target) { log(`E) фича «Сотворение заклинаний» не найдена у ${slug}`); continue; }

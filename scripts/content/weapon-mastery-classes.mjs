@@ -15,7 +15,7 @@
  *
  * Запуск: node scripts/content/weapon-mastery-classes.mjs
  */
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'https://bagofholding.ru';
 
 const RULE = 'Благодаря тренировкам вы можете пользоваться свойствами искусности выбранных вами видов оружия. Каждый раз, когда вы заканчиваете Долгий отдых, вы можете изменить выбор — на листе персонажа в блоке выборов.';
 

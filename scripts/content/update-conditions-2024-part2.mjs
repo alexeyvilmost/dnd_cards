@@ -9,7 +9,7 @@
  *
  * Запуск: node scripts/content/update-conditions-2024-part2.mjs
  */
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'https://bagofholding.ru';
 
 const M = (applies_to, op, extra = {}) => ({ kind: 'modifier', applies_to, op, ...extra });
 const ATTACK_DIS = M({ roll: 'attack' }, 'disadvantage');

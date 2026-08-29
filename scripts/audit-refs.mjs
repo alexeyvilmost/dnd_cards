@@ -2,9 +2,9 @@
 /**
  * Аудит slug-ссылок в механиках прод-контента.
  * Запуск: node scripts/audit-refs.mjs
- * Переменные: API_URL (по умолчанию Railway prod)
+ * Переменные: API_URL (по умолчанию Timecloud prod)
  */
-const API_URL = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const API_URL = process.env.API_URL || 'https://bagofholding.ru';
 
 async function fetchAll(path, key, retries = 3) {
   const items = [];

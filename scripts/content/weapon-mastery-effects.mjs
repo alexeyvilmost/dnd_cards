@@ -16,7 +16,7 @@
  *
  * Запуск: node scripts/content/weapon-mastery-effects.mjs
  */
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'https://bagofholding.ru';
 
 const onHit = (result) => ({
   activation: { mode: 'triggered', trigger: { event: 'hit' } },

@@ -4,7 +4,7 @@
 
 Полное исследование проекта на фундаменте прошлых артефактов (rules-coverage-plan-2026-07-11, remediation-plan-2026-07-08, content-sweep-2026-07-09, engine-architecture-review-2026-07-07, docs/coverage, docs/design).
 
-**Метод.** Многоагентный аудит: 1 агент-фундамент (чтение прошлых исследований + git log), 11 аудиторов по направлениям (4 — правила D&D 2024, 4 — фронтенд, 2 — мёртвый код, 1 — производительность), затем верификация каждой находки: батч-рецензент на направление и отдельный скептик на каждый кандидат мёртвого кода (проверка динамических импортов, роутов, строковых ключей, docker/CI/railway, go:embed). Итог: 138 находок — 130 подтверждено, 7 частично (помечены ⚠), 1 опровергнута. Ключевые находки дополнительно спот-проверены вручную по коду. Часть аудита сверялась с живым продом (GET к Railway, npm test: 72 файла / 630 тестов зелёные).
+**Метод.** Многоагентный аудит: 1 агент-фундамент (чтение прошлых исследований + git log), 11 аудиторов по направлениям (4 — правила D&D 2024, 4 — фронтенд, 2 — мёртвый код, 1 — производительность), затем верификация каждой находки: батч-рецензент на направление и отдельный скептик на каждый кандидат мёртвого кода (проверка динамических импортов, роутов, строковых ключей, docker/CI/timecloud, go:embed). Итог: 138 находок — 130 подтверждено, 7 частично (помечены ⚠), 1 опровергнута. Ключевые находки дополнительно спот-проверены вручную по коду. Часть аудита сверялась с живым продом (GET к Timecloud, npm test: 72 файла / 630 тестов зелёные).
 
 ---
 
@@ -829,7 +829,7 @@ DoD этапа 5: tokens.css импортирован; #d8b978 встречае�
 
 ## Мёртвый код и мусор в репозитории
 
-Аудит выполнен в два прохода. Детектор строил полный граф импортов фронтенда (входные точки — `main.tsx` и все тесты; все `.ts/.tsx/.css` в `src`) и прогонял grep/staticcheck по бэкенду. Скептик независимо перепроверял каждую находку по всему репозиторию: код, тесты, скрипты, docs, конфиги docker/railway/CI, строковые ключи, динамические импорты, барельные ре-экспорты, `go:embed`, gitignored-файлы.
+Аудит выполнен в два прохода. Детектор строил полный граф импортов фронтенда (входные точки — `main.tsx` и все тесты; все `.ts/.tsx/.css` в `src`) и прогонял grep/staticcheck по бэкенду. Скептик независимо перепроверял каждую находку по всему репозиторию: код, тесты, скрипты, docs, конфиги docker/timecloud/CI, строковые ключи, динамические импорты, барельные ре-экспорты, `go:embed`, gitignored-файлы.
 
 Итог: **15 находок confirmed, 1 refuted, 0 partial**.
 
@@ -851,7 +851,7 @@ DoD этапа 5: tokens.css импортирован; #d8b978 встречае�
 
 - **dnd.su-импортёр** (`frontend/src/utils/dndSuBestiary.ts` + `dndSuBestiary.test.ts` + `fixtures/skeleton.html` 86 КБ + `fixtures/skeleton-live.html`):
   - grep всех 5 экспортов (`importFromDndSuUrl`, `fetchDndSuBestiaryHtml`, `normalizeDndSuUrl`, `isDndSuBestiaryUrl`, `parseDndSuBestiaryHtml`) по всему репо — только объявления и собственный тест;
-  - grep `dndSuBestiary`/`DndSu` case-insensitive (ловит re-export, `import()`, lazy, строковые ключи, JSON/docker/railway) — только сам модуль и тест; упоминания dnd.su в `scripts/*.py|go` — независимые скрипты, модуль не используют;
+  - grep `dndSuBestiary`/`DndSu` case-insensitive (ловит re-export, `import()`, lazy, строковые ключи, JSON/docker/timecloud) — только сам модуль и тест; упоминания dnd.su в `scripts/*.py|go` — независимые скрипты, модуль не используют;
   - решающий аргумент: прокси-путь `/proxy/dnd-su-import` (`dndSuBestiary.ts:30`) существует только внутри модуля — в `vite.config.ts` зарегистрирован лишь `/proxy/ttg-club-import`, в backend/nginx маршрута нет: fetch упал бы даже при вызове;
   - `fixtures/skeleton-live.html` не ссылается вообще никто, даже тесты; живые потребители `InitiativeTracker.tsx` и `LibraryModal.tsx` импортируют только `ttgClubBestiary`.
 - **ESLint-стек** (`eslint`, `@typescript-eslint/eslint-plugin`, `@typescript-eslint/parser`, `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh` + скрипт `lint`):
@@ -872,7 +872,7 @@ DoD этапа 5: tokens.css импортирован; #d8b978 встречае�
 - **A9/A2/A4 (перепроверка плана)**:
   - A9: grep `useCardTilt`/`CardTilt` и `characterCalculationsV3` — только собственные объявления + упоминания в плане и комментарии; `import.meta.glob`/`require.context` во фронте отсутствуют вовсе;
   - A2: `charactersV2Api` объявлен в `client.ts:481–488` (дрейф с 457–464 из плана подтверждён), импортёров ноль; совпадения `characters-v2` — API-эндпоинт бэкенда (`main.go:303–313`) и redirect-роут `App.tsx:248`, не фронтовый экспорт;
-  - A4: каталоги существуют с заявленным составом (backstories 14, character_rules 29, classes 1, races 13, tools 10 = 67 файлов); греп путей-импортов по src пуст; backend, scripts (бьют только по API), Dockerfile/compose/railway/nginx — 0 ссылок; в статику не попадают (`publicDir='public'`); хит в `tsconfig.tsbuildinfo` — артефакт сборки.
+  - A4: каталоги существуют с заявленным составом (backstories 14, character_rules 29, classes 1, races 13, tools 10 = 67 файлов); греп путей-импортов по src пуст; backend, scripts (бьют только по API), Dockerfile/compose/timecloud/nginx — 0 ссылок; в статику не попадают (`publicDir='public'`); хит в `tsconfig.tsbuildinfo` — артефакт сборки.
 - **design_preview.html**:
   - rg по всем вариантам имени, включая gitignored и скрытые файлы (`rg -uu`), — только комментарии-отсылки в src (четыре, а не три из заявки: + `CardLibrary.tsx:2246`) и 2 упоминания в docs как «дизайн-эталон»;
   - `iframe|window.open|go:embed` по `.go/.ts/.tsx` — 0 совпадений: файл нигде не встраивается, бэкенд его не embed'ит;
@@ -908,7 +908,7 @@ DoD этапа 5: tokens.css импортирован; #d8b978 встречае�
 - **upload-base64** (`main.go:197`, `image_controller.go:265`):
   - case-insensitive grep всех написаний (`upload-base64`/`UploadBase64`/`upload_base64`) — только регистрация, хендлер (комментарий «для миграции base64→S3») и одноразовый скрипт `scripts/content/migrate-base64-images.mjs` (в плане прямо назван одноразовым, задача B1 закрыта: «32,5 МБ→180 КБ»);
   - фронт грузит через `/api/images/upload` (multipart, protected); единственный base64-путь на фронте (`CardCreator.tsx:378–383`) конвертирует data-URL в File и идёт через живой роут;
-  - grep по `*.json/yml/yaml/toml` (package.json, railway, compose, CI) — ноль упоминаний;
+  - grep по `*.json/yml/yaml/toml` (package.json, timecloud, compose, CI) — ноль упоминаний;
   - нюанс: роут под `OptionalAuthMiddleware` — в проде анонимная запись произвольного base64 в Yandex Storage (расходы/абьюз), т.е. не просто мёртвый код.
 - **staticcheck-трио**:
   - реальный прогон `go run honnef.co/go/tools/cmd/staticcheck@2025.1 -checks U1000 ./...` (go1.26.4) — ровно 3 заявленные находки: `contains` (`character_v2_controller.go:1050`), `extractKeywords` (`openai_service.go:522`), `min` (`openai_service.go:557`, вдобавок затеняет встроенный `min` из Go 1.21);
@@ -933,15 +933,15 @@ DoD этапа 5: tokens.css импортирован; #d8b978 встречае�
 | `n8n_battle_automation_plan.md` (210 строк) | Заброшенный процессный план автоматизации разработки | confirmed | Удалить (или в `docs/archive/`) |
 | 8 стейл-.md: «Дальнейшие планы», «Меню создания карты», «Система хранения персонажа», «Теги и ограничения», «Эффекты и действия», «Эффекты» (0 байт), `EffectDesign.md`, `FIXES_SUMMARY.md` | Заметки 2025 года, до текущей архитектуры; в A7 не числятся | confirmed | Удалить все 8; `EffectDesign.md` — можно в `docs/archive/` |
 | `docker-compose.prod.yml` + `DEPLOYMENT.md` | Стейл деплой-артефакты | confirmed | Удалить оба |
-| `railway-backend.json` | Дубль корневого `railway.json` | confirmed | Удалить (`railway-frontend.json` — см. «Требует решения») |
+| Legacy provider JSON configs | Дубли устаревшей hosting-конфигурации | confirmed | Удалены после перехода на `infra/compose.prod.yml` |
 | Корневые `node_modules/` (один vitest-кэш), `all_cards.json` (0 байт, untracked), `package-lock.json` (94 байта, tracked) | Огрызки локальных запусков | confirmed | Первые два снести локально; package-lock — из индекса вместе с A7 |
 | Известный A7: `Gortak.json`, `Hara*.json` ×3, `dummy.json`, `example.json`, `rage.json`, `modify_attack.json`, `image.png`, `site_logo.png`, `fix_dump_encoding.ps1`, `fix_foreign_key.sql`, «V4 System/», «Способности/» | Корневой мусор из плана, всё tracked | confirmed | Исполнять по A7 |
 
 Доказательная база:
 
-- **n8n-план**: grep «n8n» case-insensitive по репо — 13 файлов, реальные упоминания только в 2 устаревших доках 2026-07-07 (в одном имя разорвано переносом строки); остальные 10 хитов — подстрока «n8n» внутри base64-данных дампов и prod-снапшотов (проверено контекстом); `go:embed`/CI/compose/railway — ноль. Поправки скептика: 210 строк, не 151; по содержанию это план автоматизации РАЗРАБОТКИ боевого модуля (N8N-оркестратор + claude-code-action через PR), а не серверной автоматизации боёв — заброшен и мёртв в любом случае.
+- **n8n-план**: grep «n8n» case-insensitive по репо — 13 файлов, реальные упоминания только в 2 устаревших доках 2026-07-07 (в одном имя разорвано переносом строки); остальные 10 хитов — подстрока «n8n» внутри base64-данных дампов и prod-снапшотов (проверено контекстом); `go:embed`/CI/compose/timecloud — ноль. Поправки скептика: 210 строк, не 151; по содержанию это план автоматизации РАЗРАБОТКИ боевого модуля (N8N-оркестратор + claude-code-action через PR), а не серверной автоматизации боёв — заброшен и мёртв в любом случае.
 - **8 стейл-.md**: grep имён файлов, включая URL-энкоженную кириллицу (`%D0%AD%D1%84…`), — единственный референт: библиографическая пометка «что изучено» на `EffectDesign.md` в устаревшем ревью-доке (`engine-architecture-review-2026-07-07.md:58`); русские имена дают только ложные совпадения фраз («Эффекты и действия в list-режиме…» — про UI, не файл); единственный `?raw`-импорт .md во фронте — `mechanics-guide.md` (не связан); git log: последние правки сен–ноя 2025. Расхождение по числу строк (EffectDesign 383, не 317; FIXES_SUMMARY 81, не 54) на вердикт не влияет.
-- **Деплой-артефакты**: решающий аргумент по compose — он передаёт `YANDEX_ACCESS_KEY_ID`/`YANDEX_SECRET_ACCESS_KEY`/`YANDEX_BUCKET_NAME`/`YANDEX_REGION`, а бэкенд читает только `YANDEX_CLOUD_*` (`yandex_storage_service.go:29–33`): хранилище картинок с этим файлом молча не сконфигурируется — файл не просто неиспользуем, а неработоспособен. Grep «docker-compose.prod», «DEPLOYMENT», «railway-backend|railway-frontend» — 0 входящих ссылок. git log: все 3 кандидата не тронуты с pre-prod коммита, живой `railway.json` дважды правился после. `DEPLOYMENT.md` велит «создать /api/health», который существует (`main.go:112`) и уже прописан healthcheck'ом в `railway.json`.
+- **Деплой-артефакты**: старый compose передавал неверные имена Yandex-переменных, а provider JSON больше не участвовал в production. После миграции каноническими являются `infra/compose.prod.yml`, `infra/Caddyfile` и `infra/deploy-release`; `/api/health` проверяется Compose healthcheck-ом и release runner-ом.
 - **Локальный мусор**: корневой `node_modules/` содержит единственный vitest-кэш от запуска из корня без конфига (хэш каталога — SHA1 пустой строки), все vitest-конфиги и CI-запуски живут в `frontend/`; `all_cards.json` — ровно 0 байт, untracked (в .gitignore), хиты grep — одноимённые Python-переменные в скриптах; `package-lock.json` tracked при полном отсутствии корневого `package.json`, CI и `frontend/Dockerfile` используют только `frontend/package-lock.json`. ВАЖНО: `data/cards-all.json` — ДРУГОЙ файл, живой выход `scripts/export-cards.mjs:13`, не трогать.
 - **A7-мусор**: все корневые файлы tracked (git ls-files); `Hara*`/`example.json` читают только одноразовые `scripts/*.go` — сами кандидаты A8 (взаимные ссылки мертвецов); живой логотип — `frontend/public/site_logo.png` (`index.html:5`), корневой `site_logo.png` — дубль; `database/` в `docker-compose.yml` — только закомментированные строки 14–19.
 
@@ -957,7 +957,7 @@ DoD этапа 5: tokens.css импортирован; #d8b978 встречае�
    - единственный работающий путь — ручная инструкция «выполните ../database/schema.sql» в `backend/README.md:22`;
    - порядок исполнения A7: сначала Go-миграция `000_base_schema` с `CREATE TABLE IF NOT EXISTS`, потом удаление каталога. Безусловно мертвы уже сейчас только `database/weapon_templates.sql` и `armor_templates.sql` — сидируют таблицу, дропнутую миграцией 005.
 2. **`abilityForWeapon` (`engine/weapon.ts:118`) и `resolveSpellsForCharacter` (`engine/spellRefs.ts:23`)** — технически мертвы (0 ссылок), но оба скептика считают их заделом под недоведённые фичи: выбор характеристики для ranged/finesse-оружия (открытый пункт C11) и резолвер заклинаний персонажа. Перед удалением свериться с планом rules-coverage.
-3. **`railway-frontend.json`** — привязку кастомного config path в дашборде Railway из репозитория проверить нельзя; при этом существует штатный `frontend/railway.json`, делающий его вероятным дублем. Удалять только после проверки config path обоих сервисов в дашборде (для `railway-backend.json` привязка маловероятна — файл заморожен с pre-prod).
+3. **Legacy provider configs** — закрыто: удалены после перехода на Timecloud Compose runner; frontend и backend теперь входят в один атомарный release.
 4. **`upload-base64`** — если владелец хочет сохранить возможность повторного прогона миграции B1, альтернатива удалению — перевод роута под `AuthMiddleware`. Оставлять как есть нельзя: анонимная запись в облачный бакет.
 
 ### Что НЕ удалять
@@ -1109,7 +1109,7 @@ Apply читает бой обычным `First` (`backend/encounter_controller.
 
 **jsonb: ?fields=list режет только JSON-ответ, SQL остаётся SELECT * (вердикт: confirmed, severity: low)**
 
-Во всех списковых эндпоинтах облегчённая проекция реализована постфактум: `query.Find(&spells)` читает все колонки (включая mechanics и detailed_description jsonb), и лишь при сериализации `r.Mechanics = nil` (`backend/spell_controller.go:88`; тот же паттерн `backend/controller.go:135` для карт, `:880-910` действия, `backend/controller.go:1314` эффекты, `feat_background_controller.go:57`, `:269`). Для `/api/spells?fields=list` СУБД всё равно вычитывает и передаёт приложению ~1 МБ jsonb на 393 строки — экономится только HTTP (774 КБ вместо 1 072 КБ raw). Верификация: Select-проекция в backend есть только в `encounter_controller.go` (`:135`, `:202`) — ни в одном списковом хендлере её нет. На Railway БД и бэкенд в одной сети, поэтому некритично, но при переводе списков на `fields=list` (B2b) выгода будет вдвое меньше ожидаемой без Select-проекции.
+Во всех списковых эндпоинтах облегчённая проекция реализована постфактум: `query.Find(&spells)` читает все колонки (включая mechanics и detailed_description jsonb), и лишь при сериализации `r.Mechanics = nil` (`backend/spell_controller.go:88`; тот же паттерн `backend/controller.go:135` для карт, `:880-910` действия, `backend/controller.go:1314` эффекты, `feat_background_controller.go:57`, `:269`). Для `/api/spells?fields=list` СУБД всё равно вычитывает и передаёт приложению ~1 МБ jsonb на 393 строки — экономится только HTTP (774 КБ вместо 1 072 КБ raw). Верификация: Select-проекция в backend есть только в `encounter_controller.go` (`:135`, `:202`) — ни в одном списковом хендлере её нет. На Timecloud БД и бэкенд в одной сети, поэтому некритично, но при переводе списков на `fields=list` (B2b) выгода будет вдвое меньше ожидаемой без Select-проекции.
 
 Рекомендация: в ветке light добавить `query.Select(лёгкие колонки)` до `Find` — тогда БД и Go-аллокации сокращаются вместе с ответом.
 

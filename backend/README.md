@@ -69,10 +69,10 @@ go run .
 Сервер будет доступен по адресу `http://localhost:8080`
 
 `GET /api/health` возвращает `status`, Unix-время и `source_commit`. Для
-GitHub-triggered Railway deployment commit берётся из
-`RAILWAY_GIT_COMMIT_SHA`; отсутствующее или невалидное значение возвращается
-как `unavailable`. Production release evidence требует точного совпадения
-этого SHA с проверенным release commit.
+Timecloud deployment commit передаётся runner-ом через `SOURCE_COMMIT`;
+отсутствующее или невалидное значение возвращается как `unavailable`.
+Production release evidence требует точного совпадения этого SHA с проверенным
+release commit.
 
 ## API Endpoints
 

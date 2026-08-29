@@ -6,7 +6,7 @@
  *
  * Запуск: node scripts/content/fix-halfling-luck.mjs
  */
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'https://bagofholding.ru';
 
 const MECHANICS = {
   activation: { mode: 'passive' },

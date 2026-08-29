@@ -12,7 +12,7 @@
  *
  * Запуск: node scripts/content/weapon-mastery-weapons.mjs [--dry]
  */
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'https://bagofholding.ru';
 const DRY = process.argv.includes('--dry');
 
 // id эффектов-мастерств (EFFECT-0248..0255) — менять нельзя, на них ссылается контент.

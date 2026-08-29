@@ -148,6 +148,10 @@ test('release source fingerprint covers canonical data and every non-TypeScript 
     'frontend/public/assets/dice-box/ammo/ammo.wasm.wasm',
     'docs/mechanics.schema.json',
     'docs/product-rules/free_origin_feat_choice_v1.json',
+    'infra/Caddyfile',
+    'infra/compose.prod.yml',
+    'infra/deploy-release',
+    'infra/production.env.example',
   ];
   for (const relativePath of requiredInputs) {
     assert.equal(paths.has(relativePath), true, `source fingerprint omits ${relativePath}`);
@@ -161,7 +165,7 @@ test('release source fingerprint covers canonical data and every non-TypeScript 
   assert.match(
     readFileSync(new URL('../../frontend/.dockerignore', import.meta.url), 'utf8'),
     /^vite\.config\.js$/m,
-    'generated Vite config must not enter the Railway Docker context',
+    'generated Vite config must not enter the production Docker context',
   );
 });
 
@@ -911,7 +915,7 @@ test('frontend image publishes an atomic no-cache build-info endpoint contract',
   const dockerfile = readFileSync(new URL('../../frontend/Dockerfile', import.meta.url), 'utf8');
 
   assert.match(start, /^set -eu$/m);
-  assert.match(start, /SOURCE_COMMIT="\$\{SOURCE_COMMIT:-\$\{RAILWAY_GIT_COMMIT_SHA:-\}\}"/);
+  assert.match(start, /SOURCE_COMMIT="\$\{SOURCE_COMMIT:-\}"/);
   assert.match(start, /grep -Eq '\^\[0-9A-Fa-f\]\{40\}\$'/);
   assert.match(start, /printf '\{"source_commit":"%s"\}\\n'/);
   assert.match(start, /printf '\{"source_commit":null\}\\n'/);
@@ -920,11 +924,10 @@ test('frontend image publishes an atomic no-cache build-info endpoint contract',
   const nginxStart = start.indexOf("exec nginx -g 'daemon off;'");
   assert.ok(temporaryWrite >= 0 && atomicRename > temporaryWrite && nginxStart > atomicRename);
 
-  for (const source of [nginx, start]) {
-    assert.match(source, /location = \/build-info\.json \{/);
-    assert.match(source, /try_files \$uri =404;/);
-    assert.match(source, /add_header Cache-Control "no-cache, no-store, must-revalidate" always;/);
-  }
+  assert.match(nginx, /location = \/build-info\.json \{/);
+  assert.match(nginx, /try_files \$uri =404;/);
+  assert.match(nginx, /add_header Cache-Control "no-cache, no-store, must-revalidate" always;/);
+  assert.doesNotMatch(start, /legacy-port\.conf/);
   assert.match(dockerfile, /COPY start\.sh \/start\.sh/);
   assert.match(dockerfile, /CMD \["\/start\.sh"\]/);
 });

@@ -37,7 +37,7 @@ const CLASS_RECHARGE_FIX = {
 };
 
 async function main() {
-  const existing = await fetch('https://backend-production-41c3.up.railway.app/api/resources').then((r) => r.json());
+  const existing = await fetch('https://bagofholding.ru/api/resources').then((r) => r.json());
   const have = new Set((existing.resources || []).map((r) => r.resource_id));
   const missing = DEFS.filter((d) => !have.has(d.resource_id));
   console.log(`Справочник: ${have.size} записей; добавить: ${missing.length}; режим: ${APPLY ? 'APPLY' : 'dry-run'}`);

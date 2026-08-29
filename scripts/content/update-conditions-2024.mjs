@@ -8,7 +8,7 @@
  *
  * Запуск: node scripts/content/update-conditions-2024.mjs
  */
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'https://bagofholding.ru';
 
 const SPEED0 = { kind: 'modifier', applies_to: { roll: 'speed' }, op: 'set', value: '0' };
 const INIT = (op) => ({ kind: 'modifier', applies_to: { roll: 'initiative' }, op });

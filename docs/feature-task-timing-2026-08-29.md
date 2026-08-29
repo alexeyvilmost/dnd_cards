@@ -71,6 +71,69 @@ Authorization was completed in a later turn, so these actions are recorded separ
 
 Production token URL: `https://dnd-cards-images.storage.yandexcloud.net/monster_tokens/1787986913_i6hGgIzg.png`
 
+## Release attempt after production authorization
+
+The feature release was pushed to `main` as three allowlisted commits. The first release attempt incorrectly targeted the retired hosting integration, whose account was inactive. Production therefore remained on `d945965e0943f6beed68d31d03ee29f63c988b0f`; the intended feature SHA was `a6770435c43d94f1bda0b5979a5b8054008e0d0f` before the Timecloud migration commit.
+
+| Action | Duration | Status / finding |
+| --- | ---: | --- |
+| CI run 260 for `6090329` | 5m 52s | Failed in the full frontend suite: one character-access test still mocked `list` instead of the new `listPreviews` method. |
+| Local full frontend reproduction | 6m 23.1s | 2,693/2,694 tests passed; isolated the single stale mock. |
+| Targeted character-access regression | 8.60s process / 4.24s test | 2/2 passed after the mock correction. |
+| Frontend TypeScript check after correction | ~53.6s | Passed. |
+| CI run 261 for `a95ef6c` | 14m 38s | Frontend gates passed; PostgreSQL integration exposed `action_ids = NULL` for an unchanged monster with an explicit empty list. |
+| Local PostgreSQL failure reproduction | 8.57s | Reproduced the website-constructor save failure exactly. |
+| Targeted PostgreSQL regression after fix | 12.38s process / 3.57s test | Passed; explicit empty `Properties` now persists as `[]`, while a missing value remains SQL `NULL`. |
+| Content-migration bootstrap | 8.73s | Passed against the isolated PostgreSQL database. |
+| Complete backend suite against PostgreSQL | 26.52s process | Passed; backend package 12.661s and migrations package 5.911s. |
+| Backend static analysis | 2.30s | Passed. |
+| CI offline gate 262 for final `a677043` | 14m 50s | Passed: build, lint, 2,695 frontend tests, MVP/coverage/semantic gates, browser acceptance, content migration, backend tests, and vet. |
+| CI browser acceptance inside run 262 | 4m 09s | Passed; this was the longest individual final-CI step. |
+| CI production-canary job | 10s | Workflow remained red because the repository's production canary account secret is not configured; the tested offline gate itself passed. |
+| Wait for retired-host rollout | ~3m | No Aug 29 deployment appeared; both public services continued reporting the previous SHA. |
+| Retired-provider diagnosis | ~2m | Deployment history confirmed that GitHub pushes did not start new deployments. |
+| Retired-provider redeploy attempt | 15.9s | Rejected because that inactive account could no longer deploy. This was not the current Timecloud release path. |
+
+### Release speed findings
+
+1. Run the affected test before the complete 6m23s frontend suite. The stale mock was proven in 4.24s once isolated.
+2. Run the monster update integration test against PostgreSQL before the full CI push. SQLite/unit coverage could not expose the `NOT NULL JSONB` conversion failure.
+3. Check Timecloud SSH connectivity, runner availability, disk space, and current SHA before spending time on a release.
+4. Use the explicit Timecloud archive/runner procedure after the offline gate; a green code gate intentionally does not mutate production.
+5. Configure or intentionally disable the production-canary job when its credentials are absent so a passed offline gate is not reported as an undifferentiated workflow failure.
+
+## Timecloud migration timing
+
+- Start: `11:33:04.370 +03:00`
+- Repository migration, focused validation, and production-build check complete: `11:49:11.291 +03:00`
+- Pre-deployment wall clock: **16m 06.9s**
+
+Independent checks overlapped and therefore must not be summed as wall-clock time.
+
+| Action | Duration | Status / finding |
+| --- | ---: | --- |
+| CodeGraph deployment trace | 3.8s | Completed before text search as required by the indexed repository contract. |
+| Repository mention/source scan | 5.2s | Located runtime fallbacks, old hosts, release evidence, backup guards, docs, and obsolete config files. |
+| Timecloud guide and infrastructure review | 4.4s | Confirmed the exact-SHA archive, backup, atomic cutover, and rollback procedure. |
+| Timecloud SSH/server preflight | 3.9s | Current release, three containers, deploy runner, and disk capacity verified. |
+| Mechanical cleanup across 67 tracked files | 0.86s | Replaced obsolete provider text and retired production URLs before semantic corrections. |
+| Focused Go deployment/security tests | 14.69s | Passed. |
+| Release and backup-contract suite | 46.54s | 77/77 passed; the longest test inside it was the 29.52s migration integration case. |
+| Stale release-fixture correction | 0.96s rerun | The fixture still expected the deleted secondary nginx listener; corrected to assert the canonical template. |
+| Complete backend tests and vet | 14.78s | Passed. |
+| Timecloud Compose validation | 0.71s | Passed with an existing local env-file path. |
+| Shell runner syntax + diff whitespace gate | 1.18s | Passed. |
+| Frontend TypeScript | 53.07s | Passed; longest single pre-deployment machine action. |
+| Vite auto-config attempt | 3.93s | Failed because a local ignored generated config shadowed the tracked config. |
+| Canonical production Vite build | 46.91s | Passed when pinned to tracked `vite.config.ts`. |
+
+Speed improvements confirmed here:
+
+1. Pin `vite.config.ts` in local release commands; this avoids stale ignored generated config discovery.
+2. Keep the 1-second focused release assertion before the 46-second contract suite.
+3. Run independent Go, TypeScript, and deployment-syntax checks concurrently.
+4. Perform Timecloud SSH/runner/disk preflight before lengthy CI or production builds.
+
 ## What took longest
 
 1. **Cross-layer discovery and contract mapping (~15m)** was the largest active block. Three requests crossed UI, engine metadata, API serialization, storage upload, permissions, and browser behavior.

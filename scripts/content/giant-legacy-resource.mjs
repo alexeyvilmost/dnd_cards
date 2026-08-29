@@ -7,7 +7,7 @@
  * Идемпотентно: PUT, если ресурс уже есть, иначе POST.
  * Запуск: node scripts/content/giant-legacy-resource.mjs
  */
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'https://bagofholding.ru';
 
 const DEF = {
   resource_id: 'giant_legacy',

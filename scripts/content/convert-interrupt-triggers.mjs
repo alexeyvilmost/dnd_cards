@@ -8,7 +8,7 @@
  *
  * Запуск: node scripts/content/convert-interrupt-triggers.mjs
  */
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'https://bagofholding.ru';
 
 const SMITE = {
   activation: { mode: 'triggered', trigger: { event: 'hit' }, cost: [{ resource: 'bonus_action' }, { amount: 1, level: 1, resource: 'spell_slot' }] },

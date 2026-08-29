@@ -116,7 +116,7 @@ func TestUntrustedForwardingHeadersCannotRotateRateLimitIdentity(t *testing.T) {
 	}
 }
 
-func TestTrustedRailwayXRealIPDrivesLimiterAndXForwardedForIsIgnored(t *testing.T) {
+func TestTrustedProxyXRealIPDrivesLimiterAndXForwardedForIsIgnored(t *testing.T) {
 	limiter := NewFixedWindowRateLimiter(1, time.Minute)
 	router := configuredProxyTestRouter(t, limiter.Handler())
 
@@ -164,7 +164,7 @@ func TestMutationAuditUsesOnlyAuthenticatedProxyIdentity(t *testing.T) {
 	}
 	if !strings.Contains(entries, `request_id="audit-trusted"`) ||
 		!strings.Contains(entries, `client_ip="198.51.100.30"`) {
-		t.Fatalf("trusted Railway-style X-Real-IP was not used in audit:\n%s", entries)
+		t.Fatalf("trusted proxy X-Real-IP was not used in audit:\n%s", entries)
 	}
 	for _, spoofed := range []string{"198.51.100.20", "198.51.100.21", "192.0.2.20", "192.0.2.21", "192.0.2.30"} {
 		if strings.Contains(entries, `client_ip="`+spoofed+`"`) {

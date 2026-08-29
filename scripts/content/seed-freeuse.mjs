@@ -8,7 +8,7 @@
  * Идемпотентно (freeuse дописывается, если его нет). Auth в проекте отключён (middleware no-op),
  * PUT работает без токена. Запуск: node scripts/content/seed-freeuse.mjs   (--dry — только показать).
  */
-const API = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const API = process.env.API_URL || 'https://bagofholding.ru';
 const DRY = process.argv.includes('--dry');
 
 const EFFECT_HIGH_ELF = '8e2b5ef6-e3da-49d0-af6f-1cdd457db671';       // RE-sub-high_elf

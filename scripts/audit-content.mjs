@@ -3,7 +3,7 @@
  * Аудит контента Фазы A5: дубли черт, ру-строки владений, пустые lineages.
  * Запуск: node scripts/audit-content.mjs
  */
-const API_URL = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const API_URL = process.env.API_URL || 'https://bagofholding.ru';
 const CYRILLIC = /[а-яА-ЯёЁ]/;
 
 async function fetchAll(path, key) {

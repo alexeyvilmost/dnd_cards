@@ -19,7 +19,7 @@ type OpenAIService struct {
 	client *openai.Client
 }
 
-// newOpenAIHTTPClient — HTTP-клиент для OpenAI с egress Railway:
+// newOpenAIHTTPClient — HTTP-клиент для OpenAI из production-сети:
 //   - Proxy из окружения (HTTPS_PROXY) — можно направить трафик через достижимый прокси,
 //     если прямой доступ к api.openai.com блокируется/таймаутится;
 //   - укороченный dial-timeout (15с вместо дефолтных 30с) — быстрее падаем на недостижимом
@@ -66,7 +66,7 @@ func NewOpenAIService() *OpenAIService {
 
 	config := openai.DefaultConfig(apiKey)
 	// OPENAI_BASE_URL — опциональный прокси/шлюз, совместимый с OpenAI API, если прямой
-	// доступ из Railway недоступен (напр. Cloudflare Worker-релей). Пусто → api.openai.com.
+	// прямой доступ недоступен (напр. Cloudflare Worker-релей). Пусто → api.openai.com.
 	if base := strings.TrimSpace(os.Getenv("OPENAI_BASE_URL")); base != "" {
 		config.BaseURL = strings.TrimRight(base, "/")
 		log.Printf("[openai] используется кастомный BaseURL: %s", config.BaseURL)

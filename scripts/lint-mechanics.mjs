@@ -14,7 +14,7 @@ const Ajv = require(join(__dirname, '../frontend/node_modules/ajv/dist/ajv.js'))
 const addFormats = require(join(__dirname, '../frontend/node_modules/ajv-formats/dist/index.js')).default;
 
 const schema = JSON.parse(readFileSync(join(__dirname, '../frontend/src/schemas/mechanics.schema.json'), 'utf8'));
-const API_URL = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const API_URL = process.env.API_URL || 'https://bagofholding.ru';
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 addFormats(ajv);

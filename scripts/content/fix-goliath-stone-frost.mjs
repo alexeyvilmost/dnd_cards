@@ -10,7 +10,7 @@
  *
  * Запуск: node scripts/content/fix-goliath-stone-frost.mjs
  */
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'https://bagofholding.ru';
 const STONE_SUBRACE = '7a28d849-a2ea-4bf9-9b34-3824bb50211b';
 const STONE_EFFECT = '86817ebd-10e0-4f47-84e7-197cc973938d'; // related_effect Каменного подвида
 const j = (r) => r.json();

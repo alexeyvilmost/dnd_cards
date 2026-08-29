@@ -18,7 +18,7 @@ ARG VITE_API_URL
 ENV VITE_API_URL=${VITE_API_URL}
 
 # Keep the deployment boundary identical to the local/CI production gate.
-# `npm run build` runs TypeScript before Vite, so Railway cannot publish a
+# `npm run build` runs TypeScript before Vite, so production cannot publish a
 # bundle whose transpilation succeeds while the checked application contract
 # is already type-invalid.
 RUN npm run build
@@ -34,7 +34,7 @@ COPY start.sh /start.sh
 # Keep the image executable even when the checkout was produced on Windows.
 RUN sed -i 's/\r$//' /start.sh && chmod +x /start.sh
 
-# 3000 — исторический порт фронтенда на Railway (vite dev)
+# nginx listens on the internal Compose port used by Caddy.
 ENV PORT=3000
 EXPOSE 3000
 

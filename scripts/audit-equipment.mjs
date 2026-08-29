@@ -6,7 +6,7 @@
  *
  * Запуск: node scripts/audit-equipment.mjs
  */
-const API_URL = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const API_URL = process.env.API_URL || 'https://bagofholding.ru';
 
 /** Ключевые предметы PHB по русскому названию — ищем в существующей библиотеке */
 const KEY_ITEMS_BY_NAME = [

@@ -19,7 +19,8 @@ yarn install
 
 ### 2. Настройка переменных окружения
 
-По умолчанию фронтенд использует Railway production backend: `https://backend-production-41c3.up.railway.app`
+По умолчанию frontend обращается к production API через same-origin
+`https://bagofholding.ru/api`.
 
 Для локальной разработки создайте файл `.env` в корне frontend папки:
 
@@ -28,7 +29,7 @@ VITE_API_URL=http://localhost:8080
 ```
 
 **Быстрое переключение:**
-- **Production (Railway)**: удалите или закомментируйте `VITE_API_URL` в `.env`
+- **Production (Timecloud)**: оставьте `VITE_API_URL` пустым для same-origin `/api`
 - **Localhost**: установите `VITE_API_URL=http://localhost:8080` в `.env`
 
 Также можно изменить прокси в `vite.config.ts` для dev-сервера (см. комментарии в файле).

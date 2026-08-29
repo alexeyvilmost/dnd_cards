@@ -11,11 +11,9 @@ import (
 
 const trustedProxyCIDRsEnv = "TRUSTED_PROXY_CIDRS"
 
-// Railway connects to an application through its private proxy network and
-// supplies the original peer in X-Real-IP. Loopback remains trusted so local
-// reverse proxies and HTTP integration tests can use the same configuration.
+// Only loopback is trusted by default. The Timecloud Compose deployment pins
+// its Caddy network explicitly through TRUSTED_PROXY_CIDRS.
 var defaultTrustedProxyCIDRs = []string{
-	"100.0.0.0/8",
 	"127.0.0.0/8",
 	"::1/128",
 }
@@ -78,7 +76,7 @@ func configureTrustedClientIPs(router *gin.Engine) error {
 	}
 
 	// Gin defaults to trusting every proxy and consults X-Forwarded-For first.
-	// Railway owns X-Real-IP, so only that header is accepted and only when the
+	// Caddy owns X-Real-IP, so only that header is accepted and only when the
 	// immediate network peer belongs to an explicitly trusted proxy CIDR.
 	router.ForwardedByClientIP = true
 	router.RemoteIPHeaders = []string{"X-Real-IP"}

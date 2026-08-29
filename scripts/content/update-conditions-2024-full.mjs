@@ -13,7 +13,7 @@
  */
 import { readFileSync } from 'node:fs';
 
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'https://bagofholding.ru';
 const REQUESTED_APPLY = process.argv.includes('--apply');
 
 const contentPatch = JSON.parse(readFileSync(new URL(

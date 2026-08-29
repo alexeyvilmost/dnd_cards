@@ -17,7 +17,7 @@ type Config struct {
 }
 
 func LoadConfig() *Config {
-	// Проверяем наличие DATABASE_URL (Railway автоматически предоставляет эту переменную)
+	// Production injects DATABASE_URL from the server-side app.env file.
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL != "" {
 		return parseDatabaseURL(databaseURL)

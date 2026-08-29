@@ -38,7 +38,7 @@ function providerNeutralOrigin(): string | null {
 }
 
 /**
- * Resolve a mutation target without accepting a look-alike Railway host or a
+ * Resolve a mutation target without accepting a look-alike production host or a
  * URL that embeds credentials/data in components which are irrelevant to an
  * origin. Production canaries are pinned to the public product boundary;
  * explicit loopback origins remain available for rehearsing the spec locally.

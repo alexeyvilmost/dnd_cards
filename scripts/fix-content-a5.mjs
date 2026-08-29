@@ -5,7 +5,7 @@
  * Переменные: API_URL, API_TOKEN или CONTENT_ADMIN_USERNAME +
  * CONTENT_ADMIN_PASSWORD, DRY_RUN=1
  */
-const API_URL = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const API_URL = process.env.API_URL || 'https://bagofholding.ru';
 const CONTENT_ADMIN_USERNAME = process.env.CONTENT_ADMIN_USERNAME;
 const CONTENT_ADMIN_PASSWORD = process.env.CONTENT_ADMIN_PASSWORD;
 const API_TOKEN = process.env.API_TOKEN;

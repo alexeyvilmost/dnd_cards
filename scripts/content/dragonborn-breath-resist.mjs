@@ -6,7 +6,7 @@
  *
  * Запуск: node scripts/content/dragonborn-breath-resist.mjs
  */
-const BASE = process.env.API_URL || 'https://backend-production-41c3.up.railway.app';
+const BASE = process.env.API_URL || 'https://bagofholding.ru';
 const j = (r) => r.json();
 
 const TYPE_RU = { acid: 'кислота', cold: 'холод', fire: 'огонь', lightning: 'молния', poison: 'яд' };

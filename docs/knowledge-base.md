@@ -50,7 +50,7 @@
 | `constants/` | почти пуст: только `itemTypes.ts` (образцовый единственный источник) |
 | `api/`, `utils/`, `contexts/`, `hooks/`, `types/` | `apiCache.ts` (`cached(path,60000)` + `bustPrefix`), `damageTypes.ts`, 7 провайдеров, `types/index.ts` (1544 стр.) |
 
-### 2.2 Бэкенд `backend/` (Go, Gin+GORM, Railway)
+### 2.2 Бэкенд `backend/` (Go, Gin+GORM, Timecloud)
 `main.go` (роуты+middleware), `controller.go` (карты/действия/эффекты), `character_v3_controller.go` (**живой лист**), `character_controller.go`+`character_v2_controller.go` (**легаси, 1954 стр., мертвы**), `encounter_controller.go` (бои+SSE+LISTEN/NOTIFY; **не считает правила** — только write-through, образец разделения), `spell_controller.go`, `class_controller.go`, `race_controller.go`, `feat_background_controller.go`, `concept/resource/variable_controller.go`, `image*`, `ai_mechanics_controller.go`, `migrations/migrations.go` (~1600 стр.), `models*.go`.
 
 ### 2.3 Контент и канон
@@ -134,10 +134,10 @@
 | Типы | `cd frontend && ./node_modules/.bin/tsc --noEmit` — **единственный живой шлюз качества фронта**, проходит чисто |
 | Линт | `npm run lint` **сломан навсегда** — конфига eslint не существовало никогда (KB-206) |
 | Тесты фронта | `cd frontend && npx vitest run` (95 тестовых файлов) |
-| MVP-тесты | `npx vitest run --config vitest.mvp.config.ts`; живые — `$env:MVP_CONTENT='1'` (ходят в Railway) |
+| MVP-тесты | `npx vitest run --config vitest.mvp.config.ts`; живые — `$env:MVP_CONTENT='1'` (ходят в Timecloud) |
 | Линт механик | `node scripts/lint-mechanics.mjs` **из корня репо** (ajv по `mechanics.schema.json`) |
 | Go | `cd backend && go build ./...` → exit 0; `go vet ./...` чисто; `go test ./...` 0,08 с. **CI Go не собирает** (KB-205) |
-| Деплой | push в `main` → Railway (бэкенд). Healthcheck `/api/health` (`railway.json:8`) — **не удалять роут** |
+| Деплой | exact `origin/main` SHA → `git archive` → Timecloud `deploy-release`. Healthcheck `/api/health` задан в `infra/compose.prod.yml` — **не удалять роут** |
 | Снапшот прода | `node scripts/content/export-prod.mjs` → `officials/canon/prod-snapshot/*.json`. Экспортирует `/api/concepts` через ограниченную пагинацию с проверкой `total` и уникальных строковых `id`; состояния берёт только из `effects.json`, где они являются Effect (`effect_type='condition'`). До атомарной записи снапшота проверяет ровно одну Effect-строку для каждого из 15 обязательных `card_number` (KB-131) |
 | Досев контента | `scripts/content/*.mjs` через `scripts/content/api.mjs`. ⚠ **По умолчанию пишут в ПРОДАКШН** (KB-207); `PUT /api/actions/:id` и `/api/effects/:id` — под OptionalAuth, токен не нужен |
 | Canon-раннер | `frontend/src/canon/*` + `barbarian.canon.test.ts`. Покрывает **только Варвара**; реестр канона = 1 файл |
@@ -476,7 +476,7 @@
 | KB-206 | **`npm run lint` сломан навсегда: 5 devDependencies-сирот, конфига не было НИКОГДА** (`git log --diff-filter=D` пуст) | low | S | infra | CONFIRMED | 7.4 |
 | KB-207 | **Контентные скрипты по умолчанию писали в ПРОДАКШН**; `api.mjs` содержал login с закоммиченными importer credentials (пароль удалён из документа, обязательна production-ротация) | medium | M | infra | REMEDIATED_IN_CODE_ROTATION_PENDING | 7.5 |
 | KB-208 | **Прод-URL захардкожен как fallback в 4 файлах фронта (46 по репо)** | low | S | code | CONFIRMED | 7.6 |
-| KB-209 | **Прочая гигиена:** корневой мусор A7 (`Gortak.json`, `Hara*.json`×3, `dummy.json`, `example.json`, `rage.json`, `modify_attack.json`, `image.png`, `site_logo.png`, `fix_dump_encoding.ps1`, `fix_foreign_key.sql`, `V4 System/`, `Способности/`, `all_cards.json`), 8 стейл-.md, `tsconfig.tsbuildinfo` ×2, `DEPLOYMENT.md`, `docker-compose.prod.yml`. ⚠ Безопасно удалять **только** `railway-backend.json` — `railway-frontend.json` может быть привязан кастомным config path в дашборде | low | S | infra | CONFIRMED | 7.7 |
+| KB-209 | **Прочая гигиена:** корневой мусор A7 (`Gortak.json`, `Hara*.json`×3, `dummy.json`, `example.json`, `rage.json`, `modify_attack.json`, `image.png`, `site_logo.png`, `fix_dump_encoding.ps1`, `fix_foreign_key.sql`, `V4 System/`, `Способности/`, `all_cards.json`), 8 стейл-.md, `tsconfig.tsbuildinfo` ×2. Старые provider-конфиги удалены после перехода на `infra/compose.prod.yml` и `infra/deploy-release`. | low | S | infra | REMEDIATED | 7.7 |
 
 **Итого в реестре: 209 находок** (KB-001…KB-209).
 
@@ -581,7 +581,7 @@ KB-025 (Уклонение → `scope:'target'`) · KB-005 (`set_value ac_base` 
 - **`CardPreview` вне общих стилевых систем НАМЕРЕННО** (правило «интерфейс да / пергаментная карточка нет»).
 - **`go build ./...` exit 0; `go vet` чисто; `go test` 0,08 с.** npm-зависимости фронта: сирот нет, кроме eslint-стека. **Tailwind ЖИВОЙ** вопреки `grep tailwindcss src` → 0 (подключён через `@tailwind` в `index.css`) — **не удалять**.
 - **`officials/kb` (778 файлов) — ЖИВАЯ**, держать отслеживаемой обязательно.
-- **`GET /api/health` — ЖИВОЙ** (`railway.json:8`), удаление уронит деплой.
+- **`GET /api/health` — ЖИВОЙ** (`infra/compose.prod.yml`), удаление уронит деплой.
 - **Индексы под горячие запросы на месте**; дыр по индексам нет.
 - **`api/conditionsApi.ts` НЕ бьёт в `/api/conditions`** — ложноположительное совпадение по имени файла.
 - **Живая поверхность бэкенда (не трогать):** CRUD 10 справочных сущностей, encounters (7 + SSE), characters-v3 (8), groups (6), inventories (7 из 8), shops (2), images upload/generate, `/api/ai/mechanics`, auth.
