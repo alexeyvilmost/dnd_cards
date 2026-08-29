@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('../character/api', () => ({
   charactersV3Api: {
     list: mocks.list,
+    listPreviews: mocks.list,
     create: mocks.create,
     remove: mocks.remove,
   },
