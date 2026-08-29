@@ -57,6 +57,7 @@ const accessCases: ReadonlyArray<readonly [
   string,
 ]> = [
   ['list', () => charactersV3Api.list(), 'Нет доступа к списку персонажей.'],
+  ['list', () => charactersV3Api.listPreviews(), 'Нет доступа к списку персонажей.'],
   ['get', () => charactersV3Api.get(character.id), 'Нет доступа к этому персонажу.'],
   ['create', () => charactersV3Api.create(savePayload), 'Нет прав на создание персонажа.'],
   ['update', () => charactersV3Api.update(character.id, savePayload), 'Нет прав на изменение этого персонажа.'],
@@ -124,6 +125,7 @@ describe('charactersV3Api access handling', () => {
   it('uses the expected list/get/create/update/delete/runtime/events routes', async () => {
     const get = vi.spyOn(apiClient, 'get')
       .mockResolvedValueOnce({ data: [character] } as never)
+      .mockResolvedValueOnce({ data: [character] } as never)
       .mockResolvedValueOnce({ data: character } as never)
       .mockResolvedValueOnce({ data: [] } as never);
     const post = vi.spyOn(apiClient, 'post')
@@ -139,6 +141,7 @@ describe('charactersV3Api access handling', () => {
     const patch = vi.spyOn(apiClient, 'patch').mockResolvedValue({ data: character } as never);
 
     await charactersV3Api.list();
+    await charactersV3Api.listPreviews();
     await charactersV3Api.get(character.id);
     await charactersV3Api.create(savePayload);
     await charactersV3Api.update(character.id, savePayload);
@@ -149,8 +152,9 @@ describe('charactersV3Api access handling', () => {
     await charactersV3Api.postRuntimeCommand(runtimeCommand);
 
     expect(get).toHaveBeenNthCalledWith(1, '/api/characters-v3');
-    expect(get).toHaveBeenNthCalledWith(2, '/api/characters-v3/character-id');
-    expect(get).toHaveBeenNthCalledWith(3, '/api/characters-v3/character-id/events');
+    expect(get).toHaveBeenNthCalledWith(2, '/api/characters-v3', { params: { fields: 'preview' } });
+    expect(get).toHaveBeenNthCalledWith(3, '/api/characters-v3/character-id');
+    expect(get).toHaveBeenNthCalledWith(4, '/api/characters-v3/character-id/events');
     expect(post).toHaveBeenNthCalledWith(1, '/api/characters-v3', savePayload);
     expect(post).toHaveBeenNthCalledWith(2, '/api/characters-v3/character-id/events', {
       events: [expect.objectContaining({

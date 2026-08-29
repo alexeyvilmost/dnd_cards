@@ -295,6 +295,40 @@ func TestCharacterV3OwnerAndLegacyPublicAccessPolicy(t *testing.T) {
 	if listedIDs[fixture.publicCharacter.ID] {
 		t.Error("legacy public character leaked into the private character library")
 	}
+	largeTurnState := JSONMap{"world": strings.Repeat("x", 1<<20)}
+	if err := fixture.db.Model(&CharacterV3{}).
+		Where("id = ?", createdCharacter.ID).
+		Update("turn_state", largeTurnState).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	preview := performCharacterV3Request(t, fixture.router, http.MethodGet, "/api/characters-v3?fields=preview", ownerToken, nil)
+	if preview.Code != http.StatusOK {
+		t.Fatalf("owner preview list: got %d: %s", preview.Code, preview.Body.String())
+	}
+	var previewRows []map[string]any
+	if err := json.Unmarshal(preview.Body.Bytes(), &previewRows); err != nil {
+		t.Fatal(err)
+	}
+	if len(previewRows) != len(listed) {
+		t.Fatalf("preview rows=%d, full rows=%d", len(previewRows), len(listed))
+	}
+	if preview.Body.Len() >= 64<<10 {
+		t.Fatalf("preview response is not bounded: %d bytes", preview.Body.Len())
+	}
+	for _, row := range previewRows {
+		for _, forbidden := range []string{
+			"rule_state", "resolved_choices", "turn_state", "inventory_items",
+			"active_effects", "resources", "max_resources", "user", "group",
+		} {
+			if _, exists := row[forbidden]; exists {
+				t.Errorf("preview unexpectedly serialized %q", forbidden)
+			}
+		}
+		if row["access_mode"] != characterV3AccessOwner {
+			t.Errorf("preview access_mode=%v, want owner", row["access_mode"])
+		}
+	}
 	if listedIDs[fixture.otherCharacter.ID] {
 		t.Error("another user's private character leaked into list")
 	}

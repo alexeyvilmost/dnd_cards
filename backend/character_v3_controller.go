@@ -296,6 +296,22 @@ func (cc *CharacterV3Controller) GetCharactersV3(c *gin.Context) {
 		return
 	}
 
+	if c.Query("fields") == "preview" {
+		var previews []CharacterV3Preview
+		if err := cc.db.Model(&CharacterV3{}).
+			Select("id, name, avatar_url, system_id, ruleset_version, character_type, race_id, class_id, level, max_hp, current_hp, current_encounter_id").
+			Where("characters_v3.user_id = ?", userID).
+			Order("characters_v3.created_at DESC").Scan(&previews).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения списка персонажей"})
+			return
+		}
+		for index := range previews {
+			previews[index].AccessMode = characterV3AccessOwner
+		}
+		c.JSON(http.StatusOK, previews)
+		return
+	}
+
 	var characters []CharacterV3
 	if err := cc.db.Preload("User").Preload("Group").
 		Where("characters_v3.user_id = ?", userID).

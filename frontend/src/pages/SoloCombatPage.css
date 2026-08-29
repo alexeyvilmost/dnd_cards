@@ -327,6 +327,39 @@
   padding: 6px;
   border-right: 1px solid #4c4031;
 }
+.combat-hotbar__resource-filter {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 7px);
+  translate: -50% 0;
+  max-width: min(680px, calc(100vw - 24px));
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow-x: auto;
+  padding: 5px 8px;
+  border: 1px solid #735b39;
+  border-radius: 9px 9px 5px 5px;
+  background: linear-gradient(180deg, #302920fa, #17130ffa);
+  box-shadow: 0 7px 20px #000b;
+}
+.combat-hotbar__resource-filter .res-tile {
+  flex: 0 0 38px;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+}
+.combat-hotbar__resource-filter .res-tile--selected {
+  border-color: #e0b66f;
+  box-shadow: inset 0 0 10px #d8a84e4f, 0 0 0 2px #d8a84e61, 0 4px 12px #000a;
+  translate: 0 -2px;
+}
+.combat-hotbar__empty-filter {
+  margin: auto;
+  color: #a99a85;
+  font-size: 11px;
+  text-align: center;
+}
 .combat-hotbar__portrait {
   width: 44px;
   height: 44px;

@@ -1,12 +1,13 @@
+import { useState } from 'react';
 import { Footprints, MoreHorizontal } from 'lucide-react';
 import { canPay, costKey } from '../engine/cost';
-import { isFreeusePoolKey } from '../engine/freeuse';
+import { FREEUSE_SHOWCASE_KEY, isFreeusePoolKey } from '../engine/freeuse';
 import { bindEquippedWeaponActionContext } from '../engine/weapon';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
 import type { SoloCombatState } from '../solo-combat/types';
 import { isTriggeredCombatAction } from '../solo-combat/engine';
-import { findResource, useResourceOptions } from '../utils/resources';
+import { actionCostResourceIds, findResource, useResourceOptions } from '../utils/resources';
 import SheetActionLine from './SheetActionLine';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
 import SheetResourceTile, { sheetResourceTileOrder } from './SheetResourceTile';
@@ -34,6 +35,18 @@ export function actionCost(action: RuleActionDefinition): string {
 function actionLabel(action: RuleActionDefinition): string {
   const primitive = action.mechanics.primitive as Record<string, unknown> | undefined;
   return primitive?.type === 'weapon_attack' ? 'Атака' : action.name;
+}
+
+export function filterCombatActionsByResource(
+  actions: RuleActionDefinition[],
+  selectedResourceId: string | null,
+  freeuseActionIds: ReadonlySet<string>,
+): RuleActionDefinition[] {
+  if (!selectedResourceId) return actions;
+  if (selectedResourceId === FREEUSE_SHOWCASE_KEY) {
+    return actions.filter((action) => freeuseActionIds.has(action.id));
+  }
+  return actions.filter((action) => actionCostResourceIds(action).includes(selectedResourceId));
 }
 
 export function combatActionAvailability(
@@ -123,6 +136,7 @@ export default function CombatHotbar({
   onEndTurn: () => void;
   onSheet: () => void;
 }) {
+  const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   const resourceOptions = useResourceOptions();
   const actor = state.world.actors[state.characterId];
   const spellcasting = actor.character.spellcastingMod == null
@@ -147,6 +161,10 @@ export default function CombatHotbar({
     const spell = grant ? state.actionPresentation?.[grant.actionId]?.spellRef : undefined;
     return spell ? [{ ...spell, card_number: key.slice('freeuse-'.length) }] : [];
   });
+  const freeuseActionIds = new Set(actor.spellcastingAccess?.grants
+    .filter((grant) => grant.freeUseResource && freeuseResources.some(([key]) => key === grant.freeUseResource))
+    .map((grant) => grant.actionId) ?? []);
+  const visibleActions = filterCombatActionsByResource(actions, selectedResourceId, freeuseActionIds);
   const resources = Object.entries(actor.runtime.maxResources)
     .filter(([key, maximum]) => maximum > 0 && (
       ['action', 'bonus_action', 'reaction'].includes(key)
@@ -157,6 +175,27 @@ export default function CombatHotbar({
 
   return (
     <section className="combat-hotbar" aria-label="Панель действий">
+      <div className="combat-hotbar__resource-filter" role="group" aria-label="Фильтр действий по ресурсу">
+        <FreeuseSpellsTile
+          runtime={actor.runtime}
+          freeuseSpells={freeuseSpells}
+          spells={freeuseSpellRefs}
+          resourceOptions={resourceOptions}
+          selected={selectedResourceId === FREEUSE_SHOWCASE_KEY}
+          onSelect={() => setSelectedResourceId((current) => current === FREEUSE_SHOWCASE_KEY ? null : FREEUSE_SHOWCASE_KEY)}
+        />
+        {resources.map(([key, maximum]) => (
+          <SheetResourceTile
+            key={key}
+            resourceId={key}
+            option={findResource(resourceOptions, key)}
+            current={actor.runtime.resources[key] ?? 0}
+            maximum={maximum}
+            selected={selectedResourceId === key}
+            onSelect={() => setSelectedResourceId((current) => current === key ? null : key)}
+          />
+        ))}
+      </div>
       <div className="combat-hotbar__resources">
         <span className="combat-hotbar__portrait">
           {state.tokens[state.characterId]?.tokenUrl
@@ -164,23 +203,6 @@ export default function CombatHotbar({
             : actor.name.slice(0, 1)}
         </span>
         <div className="combat-hotbar__identity"><b>{actor.name}</b><span>HP {actor.runtime.hp.current}/{actor.runtime.hp.max}</span></div>
-        <div className="res-tile-row combat-hotbar__resource-tiles">
-          <FreeuseSpellsTile
-            runtime={actor.runtime}
-            freeuseSpells={freeuseSpells}
-            spells={freeuseSpellRefs}
-            resourceOptions={resourceOptions}
-          />
-          {resources.map(([key, maximum]) => (
-            <SheetResourceTile
-              key={key}
-              resourceId={key}
-              option={findResource(resourceOptions, key)}
-              current={actor.runtime.resources[key] ?? 0}
-              maximum={maximum}
-            />
-          ))}
-        </div>
       </div>
 
       <div className="combat-hotbar__utility" role="group" aria-label="Управление полем">
@@ -193,7 +215,7 @@ export default function CombatHotbar({
       </div>
 
       <div className="combat-hotbar__actions cs-action-tiles site-scrollbar" aria-label="Действия персонажа">
-        {actions.map((action) => {
+        {visibleActions.map((action) => {
           const availability = combatActionAvailability(state, action);
           const presentation = state.actionPresentation?.[action.id];
           const actionDisabled = disabled || !availability.enabled;
@@ -220,6 +242,9 @@ export default function CombatHotbar({
             </div>
           );
         })}
+        {visibleActions.length === 0 && (
+          <p className="combat-hotbar__empty-filter">Нет доступных действий для этого ресурса</p>
+        )}
       </div>
 
       <button type="button" className="combat-end-turn" disabled={disabled} onClick={onEndTurn}>Завершить ход</button>

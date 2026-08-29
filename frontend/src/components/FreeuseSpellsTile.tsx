@@ -19,9 +19,13 @@ interface Props {
   spells: Spell[];
   resourceOptions: ResourceOption[];
   resourceSources?: Record<string, RollModifier[]>;
+  selected?: boolean;
+  onSelect?: () => void;
 }
 
-export default function FreeuseSpellsTile({ runtime, freeuseSpells, spells, resourceOptions, resourceSources }: Props) {
+export default function FreeuseSpellsTile({
+  runtime, freeuseSpells, spells, resourceOptions, resourceSources, selected = false, onSelect,
+}: Props) {
   const rows = freeuseSpells
     .map((spec) => {
       const key = freeuseKey(spec.spell);
@@ -36,6 +40,15 @@ export default function FreeuseSpellsTile({ runtime, freeuseSpells, spells, reso
   const icon = def?.imageUrl && !def.imageUrl.startsWith('/charges/') ? def.imageUrl : undefined;
   const totalRemaining = rows.reduce((s, r) => s + Math.max(0, r.cur), 0);
   const allSpent = totalRemaining <= 0;
+  const className = `res-tile${allSpent ? ' res-tile--spent' : ''}${selected ? ' res-tile--selected' : ''}`;
+  const contents = (
+    <>
+      {icon
+        ? <img src={icon} alt="" className={`res-tile-icon${allSpent ? ' res-tile-icon--dim' : ''}`} />
+        : <span className={`res-tile-mono${allSpent ? ' res-tile-mono--dim' : ''}`}>Бз</span>}
+      {totalRemaining > 0 && <span className="res-tile-count">{totalRemaining}</span>}
+    </>
+  );
   return (
     <HoverCard
       content={(
@@ -63,15 +76,19 @@ export default function FreeuseSpellsTile({ runtime, freeuseSpells, spells, reso
         </div>
       )}
     >
-      <span
-        className={`res-tile${allSpent ? ' res-tile--spent' : ''}`}
-        aria-label={`${label}: ${totalRemaining}`}
-      >
-        {icon
-          ? <img src={icon} alt="" className={`res-tile-icon${allSpent ? ' res-tile-icon--dim' : ''}`} />
-          : <span className={`res-tile-mono${allSpent ? ' res-tile-mono--dim' : ''}`}>Бз</span>}
-        {totalRemaining > 0 && <span className="res-tile-count">{totalRemaining}</span>}
-      </span>
+      {onSelect ? (
+        <button
+          type="button"
+          className={className}
+          aria-label={`${label}: ${totalRemaining}`}
+          aria-pressed={selected}
+          onClick={onSelect}
+        >
+          {contents}
+        </button>
+      ) : (
+        <span className={className} aria-label={`${label}: ${totalRemaining}`}>{contents}</span>
+      )}
     </HoverCard>
   );
 }

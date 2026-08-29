@@ -234,6 +234,9 @@ export async function installForgeApiFixture(page: Page): Promise<ForgeApiFixtur
   const runtimePatchRequests: JsonRecord[] = [];
   const eventsByCharacterId = new Map<string, JsonRecord[]>();
   const monstersById = new Map<string, JsonRecord>();
+  const monsterUpdateRequests: JsonRecord[] = [];
+  const imageUploadRequests: string[] = [];
+  let characterListMetrics: { fields: string | null; bytes: number; rows: JsonRecord[] } | null = null;
   const runtimeCommandLedger = new Map<string, {
     request: string;
     response: JsonRecord;
@@ -397,7 +400,56 @@ export async function installForgeApiFixture(page: Page): Promise<ForgeApiFixtur
         await json(route, current ? 200 : 404, current ?? { error: 'unknown isolated character' });
         return;
       }
-      await json(route, 200, [...charactersById.values()]);
+      const fullRows = [...charactersById.values()];
+      const rows = url.searchParams.get('fields') === 'preview'
+        ? fullRows.map((row) => ({
+            id: row.id,
+            name: row.name,
+            avatar_url: row.avatar_url,
+            system_id: row.system_id,
+            ruleset_version: row.ruleset_version,
+            character_type: row.character_type,
+            race_id: row.race_id,
+            class_id: row.class_id,
+            level: row.level,
+            max_hp: row.max_hp,
+            current_hp: row.current_hp,
+            current_encounter_id: row.current_encounter_id,
+            access_mode: row.access_mode,
+          }))
+        : fullRows;
+      characterListMetrics = {
+        fields: url.searchParams.get('fields'),
+        bytes: Buffer.byteLength(JSON.stringify(rows)),
+        rows: cloneJson(rows),
+      };
+      await json(route, 200, rows);
+      return;
+    }
+
+    if (segments[1] === 'images' && segments[2] === 'upload' && request.method() === 'POST') {
+      imageUploadRequests.push(request.postData() ?? '');
+      await json(route, 200, {
+        success: true,
+        image_url: '/fixture-images/monster-token.png',
+        cloudinary_id: 'fixture-monster-token',
+        message: 'uploaded',
+      });
+      return;
+    }
+
+    if (segments[1] === 'monsters' && request.method() === 'PUT' && segments[2]) {
+      const id = decodeURIComponent(segments[2]);
+      const current = monstersById.get(id);
+      if (!current) {
+        await json(route, 404, { error: 'missing isolated monster' });
+        return;
+      }
+      const payload = request.postDataJSON() as JsonRecord;
+      monsterUpdateRequests.push(cloneJson(payload));
+      const updated = { ...current, ...payload, id };
+      monstersById.set(id, updated);
+      await json(route, 200, updated);
       return;
     }
 
@@ -443,6 +495,9 @@ export async function installForgeApiFixture(page: Page): Promise<ForgeApiFixtur
     createdCharacters,
     runtimeCommandRequests,
     runtimePatchRequests,
+    monsterUpdateRequests,
+    imageUploadRequests,
+    getCharacterListMetrics: () => characterListMetrics,
     getCharacter: (id) => charactersById.get(id),
     getEvents: (id) => eventsByCharacterId.get(id) ?? [],
     getCatalogRows: (collection) => COLLECTIONS[collection]?.rows ?? [],

@@ -21,6 +21,17 @@ const emptyMonster = (): MonsterInput => ({
   token_url: '', source: '',
 });
 
+export function monsterPayloadForSave(form: MonsterInput, persistedTokenUrl: string): {
+  localToken: string | null;
+  payload: MonsterInput;
+} {
+  const localToken = form.token_url.startsWith('data:') ? form.token_url : null;
+  return {
+    localToken,
+    payload: localToken ? { ...form, token_url: persistedTokenUrl } : form,
+  };
+}
+
 export default function MonsterCreator() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -29,6 +40,7 @@ export default function MonsterCreator() {
   const [effects, setEffects] = useState<PassiveEffect[]>([]);
   const [filter, setFilter] = useState('');
   const [savedId, setSavedId] = useState<string | null>(id ?? null);
+  const [persistedTokenUrl, setPersistedTokenUrl] = useState('');
   const [busy, setBusy] = useState(Boolean(id));
   const [error, setError] = useState<string | null>(null);
 
@@ -45,6 +57,7 @@ export default function MonsterCreator() {
         const { id: _id, support: _support, created_at: _created, updated_at: _updated, ...input } = monster;
         void _id; void _support; void _created; void _updated;
         setForm(input);
+        setPersistedTokenUrl(input.token_url);
       }
     }).catch((reason) => setError(reason instanceof Error ? reason.message : 'Не удалось открыть конструктор'))
       .finally(() => { if (active) setBusy(false); });
@@ -63,8 +76,9 @@ export default function MonsterCreator() {
   const save = async () => {
     setBusy(true); setError(null);
     try {
-      const localToken = form.token_url.startsWith('data:') ? form.token_url : null;
-      const payload = localToken ? { ...form, token_url: '' } : form;
+      const { localToken, payload } = monsterPayloadForSave(form, persistedTokenUrl);
+      // Keep the last durable token until the separate object-storage upload
+      // succeeds. A failed upload must not erase the existing monster image.
       let result = savedId ? await monstersApi.update(savedId, payload) : await monstersApi.create(payload);
       if (localToken) {
         const blob = await fetch(localToken).then((response) => response.blob());
@@ -74,6 +88,9 @@ export default function MonsterCreator() {
         );
         result = { ...result, token_url: uploaded.image_url };
         setForm((current) => ({ ...current, token_url: uploaded.image_url }));
+        setPersistedTokenUrl(uploaded.image_url);
+      } else {
+        setPersistedTokenUrl(result.token_url);
       }
       setSavedId(result.id);
       if (!id) navigate(`/monster-forge/${result.id}`, { replace: true });
@@ -115,7 +132,7 @@ export default function MonsterCreator() {
           </div><div className="monster-abilities">{ABILITIES.map(([key, label]) => <label key={key}>{label}<input type="number" min={1} max={30} value={form.abilities[key]} onChange={(event) => patch('abilities', { ...form.abilities, [key]: Number(event.target.value) })} /></label>)}</div></fieldset>
           <fieldset><legend>Действия и эффекты</legend><input className="monster-filter" value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="Фильтр сущностей" /><div className="monster-pickers"><div><h3>Действия</h3>{visibleActions.map((action) => <label className="monster-check" key={action.id}><input type="checkbox" checked={form.action_ids.includes(action.id)} onChange={() => toggle('action_ids', action.id)} /><span>{action.name}<small>{action.card_number}</small></span></label>)}</div><div><h3>Эффекты</h3>{visibleEffects.map((effect) => <label className="monster-check" key={effect.id}><input type="checkbox" checked={form.effect_ids.includes(effect.id)} onChange={() => toggle('effect_ids', effect.id)} /><span>{effect.name}<small>{effect.card_number}</small></span></label>)}</div></div></fieldset>
         </div>
-        <aside className="monster-forge__aside"><h2>Токен</h2><ImageUploader currentImageUrl={form.token_url} onImageUpload={(url) => patch('token_url', url)} entityType="monster" entityId={savedId ?? undefined} enableCloudUpload={Boolean(savedId)} /><label>Или URL<input value={form.token_url} onChange={(event) => patch('token_url', event.target.value)} /></label><label>Источник<input value={form.source} onChange={(event) => patch('source', event.target.value)} /></label><p>ИИ: приблизиться → атаковать, а если скорости не хватило — использовать Рывок.</p></aside>
+        <aside className="monster-forge__aside"><h2>Токен</h2><ImageUploader currentImageUrl={form.token_url} onImageUpload={(url) => patch('token_url', url)} entityType="monster" entityId={savedId ?? undefined} /><label>Или URL<input value={form.token_url} onChange={(event) => patch('token_url', event.target.value)} /></label><label>Источник<input value={form.source} onChange={(event) => patch('source', event.target.value)} /></label><p>Выбранный файл загружается вместе с сохранением монстра.</p><p>ИИ: приблизиться → атаковать, а если скорости не хватило — использовать Рывок.</p></aside>
       </div>
     </section>
   );

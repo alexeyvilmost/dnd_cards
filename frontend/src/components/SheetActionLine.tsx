@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import type { Action, PassiveEffect, Spell } from '../types';
 import type { WeaponAttackPreview } from '../engine/weapon';
 import { usePinMode } from '../hooks/usePinMode';
@@ -106,7 +107,7 @@ const SheetActionLine = ({
       )}
       {/* Превью доступно ВСЕГДА (в т.ч. когда действие недоступно): показывает суть
           из данных сущности; причина недоступности — отдельным слоем, не вместо. */}
-      {!disableHover && hover && (effectRef || actionRef || spellRef || description) && (
+      {!disableHover && hover && (effectRef || actionRef || spellRef || description) && createPortal((
         <div
           className="forge-effect-popover"
           style={{
@@ -132,7 +133,7 @@ const SheetActionLine = ({
             <div className="cs-action-disabled-reason">{disabledTitle}</div>
           )}
         </div>
-      )}
+      ), document.body)}
     </>
   );
 };

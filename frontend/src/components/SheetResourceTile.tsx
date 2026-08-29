@@ -84,12 +84,16 @@ export default function SheetResourceTile({
   current,
   maximum,
   maximumBreakdown,
+  selected = false,
+  onSelect,
 }: {
   resourceId: string;
   option?: ResourceOption;
   current: number;
   maximum: number;
   maximumBreakdown?: ValueBreakdown;
+  selected?: boolean;
+  onSelect?: () => void;
 }) {
   const [failed, setFailed] = useState<Record<string, boolean>>({});
   const markFailed = (src: string) => setFailed((value) => ({ ...value, [src]: true }));
@@ -125,13 +129,31 @@ export default function SheetResourceTile({
   }
 
   const cornerLevel = slotLevel ?? (warlockLevel && warlockLevel > 0 ? warlockLevel : null);
+  const className = `res-tile${spent ? ' res-tile--spent' : ''}${selected ? ' res-tile--selected' : ''}`;
+  const contents = (
+    <>
+      {icon}
+      {cornerLevel != null && <span className="res-tile-corner">{ROMAN[cornerLevel - 1]}</span>}
+      {maximum > 1 && current !== 1 && <span className="res-tile-count">{current}</span>}
+    </>
+  );
   return (
     <ResourceHoverPreview resourceId={resourceId} option={option} maximum={maximumBreakdown}>
-      <span className={`res-tile${spent ? ' res-tile--spent' : ''}`} aria-label={`${label}: ${current}/${maximum}`}>
-        {icon}
-        {cornerLevel != null && <span className="res-tile-corner">{ROMAN[cornerLevel - 1]}</span>}
-        {maximum > 1 && current !== 1 && <span className="res-tile-count">{current}</span>}
-      </span>
+      {onSelect ? (
+        <button
+          type="button"
+          className={className}
+          aria-label={`${label}: ${current}/${maximum}`}
+          aria-pressed={selected}
+          onClick={onSelect}
+        >
+          {contents}
+        </button>
+      ) : (
+        <span className={className} aria-label={`${label}: ${current}/${maximum}`}>
+          {contents}
+        </span>
+      )}
     </ResourceHoverPreview>
   );
 }

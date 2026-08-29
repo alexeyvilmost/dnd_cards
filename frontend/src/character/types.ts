@@ -87,6 +87,23 @@ export interface ForgeCharacter {
   updated_at: string;
 }
 
+export type ForgeCharacterPreview = Pick<
+  ForgeCharacter,
+  | 'id'
+  | 'name'
+  | 'avatar_url'
+  | 'system_id'
+  | 'ruleset_version'
+  | 'character_type'
+  | 'race_id'
+  | 'class_id'
+  | 'level'
+  | 'max_hp'
+  | 'current_hp'
+  | 'current_encounter_id'
+  | 'access_mode'
+>;
+
 export function isCharacterReadOnly(
   character: Pick<ForgeCharacter, 'access_mode'>,
 ): boolean {

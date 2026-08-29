@@ -6,14 +6,14 @@ import { racesApi, classesApi } from '../api/client';
 import {
   characterMetadataLabel,
   isCharacterReadOnly,
-  type ForgeCharacter,
+  type ForgeCharacterPreview,
 } from '../character/types';
 import type { Race, CharacterClass } from '../types';
 import CharacterAccessBadge from '../components/CharacterAccessBadge';
 import './CharacterForge.css';
 
 const CharactersForgeList = () => {
-  const [chars, setChars] = useState<ForgeCharacter[]>([]);
+  const [chars, setChars] = useState<ForgeCharacterPreview[]>([]);
   const [races, setRaces] = useState<Race[]>([]);
   const [classes, setClasses] = useState<CharacterClass[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,9 +25,9 @@ const CharactersForgeList = () => {
     (async () => {
       try {
         const [list, rr, cc] = await Promise.all([
-          charactersV3Api.list(),
-          racesApi.getRaces({ limit: 100 }).catch(() => ({ races: [] as Race[] })),
-          classesApi.getClasses({ limit: 100 }).catch(() => ({ classes: [] as CharacterClass[] })),
+          charactersV3Api.listPreviews(),
+          racesApi.getRaces({ limit: 100, fields: 'list' }).catch(() => ({ races: [] as Race[] })),
+          classesApi.getClasses({ limit: 100, fields: 'list' }).catch(() => ({ classes: [] as CharacterClass[] })),
         ]);
         setChars(list);
         setRaces(rr.races || []);
@@ -44,7 +44,7 @@ const CharactersForgeList = () => {
   const raceName = useMemo(() => new Map(races.map((r) => [r.id, r.name])), [races]);
   const className = useMemo(() => new Map(classes.map((c) => [c.id, c.name])), [classes]);
 
-  const subtitle = (c: ForgeCharacter) => {
+  const subtitle = (c: ForgeCharacterPreview) => {
     const parts = [
       c.race_id ? raceName.get(c.race_id) : null,
       c.class_id ? className.get(c.class_id) : null,

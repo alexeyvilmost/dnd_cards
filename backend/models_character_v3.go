@@ -112,6 +112,25 @@ type CharacterV3 struct {
 	Group *Group `json:"group,omitempty" gorm:"foreignKey:GroupID"`
 }
 
+// CharacterV3Preview is the bounded projection used by the character library.
+// Large rule/runtime JSON belongs to the detail endpoint and must never be
+// serialized just to render a name, portrait and three summary lines.
+type CharacterV3Preview struct {
+	ID                 uuid.UUID  `json:"id"`
+	Name               string     `json:"name"`
+	AvatarURL          string     `json:"avatar_url"`
+	SystemID           string     `json:"system_id"`
+	RulesetVersion     string     `json:"ruleset_version"`
+	CharacterType      string     `json:"character_type"`
+	RaceID             *uuid.UUID `json:"race_id"`
+	ClassID            *uuid.UUID `json:"class_id"`
+	Level              int        `json:"level"`
+	MaxHP              int        `json:"max_hp"`
+	CurrentHP          int        `json:"current_hp"`
+	CurrentEncounterID *uuid.UUID `json:"current_encounter_id"`
+	AccessMode         string     `json:"access_mode" gorm:"-"`
+}
+
 // TableName указывает имя таблицы для GORM
 func (CharacterV3) TableName() string { return "characters_v3" }
 

@@ -17,6 +17,12 @@ func NewMonsterController(db *gorm.DB) *MonsterController { return &MonsterContr
 
 var monsterSlugPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{1,99}$`)
 
+var monsterEditableColumns = []string{
+	"slug", "name", "name_en", "description", "size", "creature_type", "alignment",
+	"challenge_rating", "armor_class", "max_hp", "speed", "initiative_bonus",
+	"proficiency_bonus", "abilities", "action_ids", "effect_ids", "ai", "token_url", "source",
+}
+
 func normalizeMonsterRequest(req *MonsterUpsertRequest) {
 	req.Slug = strings.ToLower(strings.TrimSpace(req.Slug))
 	req.Name = strings.TrimSpace(req.Name)
@@ -227,13 +233,16 @@ func (mc *MonsterController) Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": issue})
 		return
 	}
-	next := monsterFromRequest(req)
-	next.ID, next.CreatedAt, next.Support, next.TokenStorageID = current.ID, current.CreatedAt, current.Support, current.TokenStorageID
-	if err := mc.db.Save(&next).Error; err != nil {
+	updates := monsterFromRequest(req)
+	if err := mc.db.Model(&current).Select(monsterEditableColumns).Updates(&updates).Error; err != nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "Не удалось обновить монстра", "details": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, next)
+	if err := mc.db.First(&current, "id = ?", current.ID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Монстр обновлён, но не удалось перечитать результат"})
+		return
+	}
+	c.JSON(http.StatusOK, current)
 }
 
 func (mc *MonsterController) Delete(c *gin.Context) {

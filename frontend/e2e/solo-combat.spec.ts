@@ -142,7 +142,14 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
   await utility.getByRole('button', { name: /Движение/ }).click();
   await expect(page.locator('.tactical-cell.is-move-reachable')).toHaveCount(0);
 
-  const resourceTile = page.locator('.combat-hotbar__resource-tiles .res-tile').first();
+  const hotbarBox = await page.getByLabel('Панель действий').boundingBox();
+  const resourceFilter = page.getByRole('group', { name: 'Фильтр действий по ресурсу' });
+  const resourceFilterBox = await resourceFilter.boundingBox();
+  expect(hotbarBox).not.toBeNull();
+  expect(resourceFilterBox).not.toBeNull();
+  expect(resourceFilterBox!.y + resourceFilterBox!.height).toBeLessThanOrEqual(hotbarBox!.y);
+
+  const resourceTile = resourceFilter.locator('.res-tile').first();
   await expect(resourceTile).toBeVisible();
   await resourceTile.hover();
   await expect(page.getByRole('tooltip')).toBeVisible();
@@ -150,12 +157,22 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
   await expect(freeuseTile).toBeVisible();
   await freeuseTile.hover();
   await expect(page.getByRole('tooltip')).toContainText('Бесплатные заклинания');
+  await freeuseTile.click();
+  await expect(freeuseTile).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: /Волна грома/ }).last()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Огненный снаряд/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Малая иллюзия/ })).toHaveCount(0);
+  await freeuseTile.click();
+  await expect(freeuseTile).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByRole('button', { name: /Огненный снаряд/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Малая иллюзия/ })).toBeVisible();
 
   const thunderwaveTile = page.getByRole('button', { name: /Волна грома/ }).last();
   await expect(thunderwaveTile.locator('img')).toBeVisible();
   await expect(thunderwaveTile.locator('.forge-entity-icon--placeholder')).toHaveCount(0);
   await thunderwaveTile.hover();
   await expect(page.locator('.forge-effect-popover .sp-tip')).toContainText('Волна грома');
+  expect(await page.locator('.forge-effect-popover').evaluate((node) => node.parentElement === document.body)).toBe(true);
 
   await page.locator('.combat-topbar').getByRole('link', { name: 'Лист' }).click();
   await dismissMobileSuggestion(page);

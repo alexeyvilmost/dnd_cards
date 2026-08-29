@@ -1,7 +1,7 @@
 import { ApiRequestError, apiClient } from '../api/client';
 import { cached } from '../api/apiCache';
 import type { EngineEvent } from '../mvp/contracts';
-import type { ForgeCharacter, SaveForgeCharacterRequest } from './types';
+import type { ForgeCharacter, ForgeCharacterPreview, SaveForgeCharacterRequest } from './types';
 
 export const CHARACTER_V3_ACCESS_ERROR_EVENT = 'dnd-cards:character-v3-access-error';
 
@@ -138,6 +138,16 @@ export const charactersV3Api = {
     0,
     () => characterV3Request('list', async () => {
       const { data } = await apiClient.get<ForgeCharacter[]>('/api/characters-v3');
+      return data ?? [];
+    }),
+  ),
+  listPreviews: (): Promise<ForgeCharacterPreview[]> => cached(
+    '/api/characters-v3?fields=preview',
+    0,
+    () => characterV3Request('list', async () => {
+      const { data } = await apiClient.get<ForgeCharacterPreview[]>('/api/characters-v3', {
+        params: { fields: 'preview' },
+      });
       return data ?? [];
     }),
   ),
