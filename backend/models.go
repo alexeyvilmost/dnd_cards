@@ -81,7 +81,7 @@ func (p *Properties) Scan(value interface{}) error {
 
 // Value - кастомный value для Properties (TEXT-колонка с JSON-массивом)
 func (p Properties) Value() (driver.Value, error) {
-	if p == nil || len(p) == 0 {
+	if p == nil {
 		return nil, nil
 	}
 	return json.Marshal(p)
