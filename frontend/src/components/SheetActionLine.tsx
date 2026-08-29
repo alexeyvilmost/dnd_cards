@@ -99,8 +99,15 @@ const SheetActionLine = ({
       setPopoverPos((current) => current.left === next.left && current.top === next.top ? current : next);
     };
     place();
+    const frame = window.requestAnimationFrame(place);
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(place);
+    observer?.observe(popoverRef.current);
     window.addEventListener('resize', place);
-    return () => window.removeEventListener('resize', place);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer?.disconnect();
+      window.removeEventListener('resize', place);
+    };
   }, [hover, pos]);
 
   const onEnter = (e: React.MouseEvent) => {
