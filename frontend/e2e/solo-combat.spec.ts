@@ -108,6 +108,22 @@ test('combat setup invites an owned ally and keeps shared action cards inside th
   await bottomSheetAction.hover();
   await expectPopoverInsideViewport(page);
 
+  await page.evaluate(() => {
+    const current = JSON.parse(localStorage.getItem('site-settings') || '{}');
+    localStorage.setItem('site-settings', JSON.stringify({
+      ...current,
+      entityDisplay: { ...(current.entityDisplay ?? {}), actions: 'icon' },
+    }));
+  });
+  await page.reload();
+  await dismissMobileSuggestion(page);
+  const bottomSheetTile = page.locator('.cs-action-tile:visible').last();
+  await expect(bottomSheetTile).toBeVisible();
+  await bottomSheetTile.scrollIntoViewIfNeeded();
+  await bottomSheetTile.hover();
+  await page.waitForTimeout(300);
+  await expectPopoverInsideViewport(page);
+
   await page.getByTestId('open-solo-combat').click();
   const setup = page.getByRole('dialog', { name: 'Противники для Лучник-дварф' });
   await setup.getByRole('button', { name: 'Пригласить союзника Бард-помощник' }).click();

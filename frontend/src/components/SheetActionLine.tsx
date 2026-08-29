@@ -100,11 +100,16 @@ const SheetActionLine = ({
     };
     place();
     const frame = window.requestAnimationFrame(place);
+    // Preview cards inject their own styles. In Chromium those styles (and the
+    // stable scrollbar gutter) can change the border-box after the first layout
+    // frame without producing a ResizeObserver content-box change.
+    const settleTimers = [0, 100, 250].map((delay) => window.setTimeout(place, delay));
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(place);
     observer?.observe(popoverRef.current);
     window.addEventListener('resize', place);
     return () => {
       window.cancelAnimationFrame(frame);
+      settleTimers.forEach((timer) => window.clearTimeout(timer));
       observer?.disconnect();
       window.removeEventListener('resize', place);
     };
