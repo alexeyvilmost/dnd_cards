@@ -27,7 +27,9 @@ describe('actionCostResourceIds — стоимость из activation.cost (е�
 
   it('показывает контекстные стоимости человекочитаемо, не меняя runtime id', () => {
     expect(resourceLabel([], 'self_uses')).toBe('Заряд способности');
+    expect(resourceLabel([], 'uses_ACT-second-wind')).toBe('Заряд способности');
     expect(resourceLabel([], 'self_item')).toBe('Использование предмета');
     expect(resourceLabel([], 'equipped_weapon_ammo')).toBe('Боеприпас оружия');
+    expect(resourceLabel([], 'freeuse-misty-step')).toBe('Бесплатное применение заклинания');
   });
 });

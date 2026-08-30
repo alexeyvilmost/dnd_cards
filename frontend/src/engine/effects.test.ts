@@ -13,7 +13,7 @@ describe('группировка активных эффектов для игр
   const largeForm = [
     {
       id: 'large:size', name: 'Большая форма', source: 'Большая форма', roundsLeft: 8,
-      mechanics: { kind: 'modifier', applies_to: { roll: 'size' }, op: 'upgrade', value: 'large' },
+      mechanics: { kind: 'modifier', applies_to: { roll: 'size' }, op: 'add', value: 1 },
     },
     {
       id: 'large:speed', name: 'Большая форма', source: 'Большая форма', roundsLeft: 8,
@@ -24,7 +24,7 @@ describe('группировка активных эффектов для игр
   it('показывает payload-строки одной способности один раз с обеими механиками', () => {
     const groups = groupActiveEffectsForDisplay(largeForm);
     expect(groups).toHaveLength(1);
-    expect(groups[0].instructions).toEqual(['Размер: Большой.', 'Скорость: +10 фт.']);
+    expect(groups[0].instructions).toEqual(['Размер: на одну категорию больше.', 'Скорость: +10 фт.']);
   });
 
   it('снимает всю показанную группу, не оставляя скрытых payload-строк', () => {

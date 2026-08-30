@@ -93,7 +93,11 @@ export function activeEffectInstruction(effect: ActiveEffectEntry): string | nul
     const op = String(mechanics.op ?? 'add');
     const rawValue = String(mechanics.value);
     const value = roll === 'size'
-      ? ({ large: 'Большой', medium: 'Средний', small: 'Маленький' }[rawValue.toLowerCase()] ?? rawValue)
+      ? (op === 'add' && rawValue === '1'
+        ? 'на одну категорию больше'
+        : op === 'add' && rawValue === '-1'
+          ? 'на одну категорию меньше'
+          : ({ large: 'Большой', medium: 'Средний', small: 'Маленький' }[rawValue.toLowerCase()] ?? rawValue))
       : `${op === 'add' && !rawValue.startsWith('-') ? '+' : ''}${rawValue} фт`;
     return `${label}: ${value}.`;
   }

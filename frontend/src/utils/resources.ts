@@ -76,8 +76,10 @@ export function findResource(resources: ResourceOption[], id?: string | null): R
 
 export function resourceLabel(resources: ResourceOption[], id?: string | null): string {
   if (id === 'self_uses') return 'Заряд способности';
+  if (id?.startsWith('uses_')) return 'Заряд способности';
   if (id === 'self_item') return 'Использование предмета';
   if (id === 'equipped_weapon_ammo') return 'Боеприпас оружия';
+  if (id?.startsWith('freeuse-')) return 'Бесплатное применение заклинания';
   return findResource(resources, id)?.label || id || '';
 }
 
