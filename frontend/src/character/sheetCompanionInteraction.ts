@@ -21,7 +21,10 @@ import {
 import {
   type SheetCanonicalRuntime,
 } from './sheetCanonicalWorld';
-import { prepareSheetAtomicWorldCommit } from './sheetAtomicWorldCommit';
+import {
+  composeSheetRuntimeRuleset,
+  prepareSheetAtomicWorldCommit,
+} from './sheetAtomicWorldCommit';
 import type { ForgeCharacter } from './types';
 import { acceptedRuntimeCommandReceipt } from './sheetRuntimeCommand';
 
@@ -91,16 +94,11 @@ function matchingCanonicalRuleset(
   ))) {
     throw new SheetCompanionActionError('Familiar Touch requires a complete canonical ruleset reference');
   }
-  let canonicalRulesets: string[];
   try {
-    canonicalRulesets = rulesets.map((ruleset) => canonicalStringify(ruleset));
+    return composeSheetRuntimeRuleset(rulesets as WorldState['ruleset'][]);
   } catch {
-    throw new SheetCompanionActionError('Familiar Touch requires a canonicalizable ruleset reference');
-  }
-  if (new Set(canonicalRulesets).size !== 1) {
     throw new SheetCompanionActionError('Characters use incompatible canonical ruleset releases');
   }
-  return rulesets[0] as WorldState['ruleset'];
 }
 
 function catalogFor(runtimes: readonly SheetCanonicalRuntime[]): RulesCatalog {

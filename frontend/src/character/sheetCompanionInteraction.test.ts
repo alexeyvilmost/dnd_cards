@@ -421,6 +421,37 @@ describe('fully resolved atomic CharacterV3 familiar interaction', () => {
     },
   );
 
+  it('accepts different actor-content hashes from the same canonical release', () => {
+    const f = fixture();
+    const sourceHash = f.source.canonical.world.ruleset.contentHash;
+    const targetHash = `sha256:${'b'.repeat(64)}`;
+    f.target.canonical.world.ruleset = {
+      ...f.target.canonical.world.ruleset,
+      contentHash: targetHash,
+    };
+    const touch = collectSheetCompanionControls({ runtime: f.source.canonical })
+      .touchSpells.find(({ action }) => action.id === f.mageArmor.id)!;
+
+    const prepared = prepareSheetFamiliarTouchInteraction({
+      source: f.source, target: f.target, commandId: COMMAND_ID,
+      spellActionId: f.mageArmor.id, castOptionId: touch.castOptions[0].id,
+      ownerToFamiliarFacts: {
+        factsSource: 'scenario', boardRevision: 0, distanceFt: 80, lineOfSight: false,
+      },
+      familiarToTargetFacts: {
+        factsSource: 'scenario', boardRevision: 0, distanceFt: 5,
+        lineOfSight: true, cover: 'none', relation: 'ally', willing: true,
+      },
+      rng: () => 0.5,
+    });
+
+    expect(prepared.request.ruleset_ref.content_hash).toMatch(/^sha256:[0-9a-f]{64}$/);
+    expect(prepared.request.ruleset_ref.content_hash).not.toBe(sourceHash);
+    expect(prepared.request.ruleset_ref.content_hash).not.toBe(targetHash);
+    expect(prepared.worldsByCharacterId[f.source.character.id].ruleset.contentHash).toBe(sourceHash);
+    expect(prepared.worldsByCharacterId[f.target.character.id].ruleset.contentHash).toBe(targetHash);
+  });
+
   it('rejects missing and future mismatched canonical ruleset fields', () => {
     const run = (mutate: (ruleset: Record<string, unknown>) => void) => {
       const f = fixture();

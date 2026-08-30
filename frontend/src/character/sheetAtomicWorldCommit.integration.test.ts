@@ -295,6 +295,92 @@ describe('ordinary spell atomic world commit', () => {
     ))).toBe(true);
   });
 
+  it('accepts different actor-content hashes from the same rules release and receipts their bundle', () => {
+    const sourceActor = actor(SOURCE_ID, true);
+    const targetActor = actor(TARGET_IDS[0]);
+    const sourceCanonical = canonical(SOURCE_ID, sourceActor);
+    const targetCanonical = canonical(TARGET_IDS[0], targetActor);
+    const targetRuleset = {
+      ...RULESET,
+      contentHash: `sha256:${'b'.repeat(64)}`,
+    };
+    targetCanonical.world.ruleset = targetRuleset;
+    const acceptedWorld = createWorld({
+      id: 'accepted:different-builds',
+      ruleset: RULESET,
+      actors: [sourceActor, targetActor],
+    });
+    const prepared = prepareSheetAtomicWorldCommit({
+      commandId: COMMAND_ID,
+      participants: [{
+        character: character(SOURCE_ID, sourceActor),
+        canonical: sourceCanonical,
+        world: acceptedWorld,
+      }, {
+        character: character(TARGET_IDS[0], targetActor),
+        canonical: targetCanonical,
+        world: projectSheetAtomicParticipantWorld({
+          participant: {
+            character: character(TARGET_IDS[0], targetActor),
+            canonical: targetCanonical,
+          },
+          acceptedWorld,
+          commandId: COMMAND_ID,
+        }),
+      }],
+      events: [],
+    });
+
+    expect(prepared.request.ruleset_ref).toMatchObject({
+      system_id: RULESET.systemId,
+      release_id: RULESET.releaseId,
+      errata_version: RULESET.errataVersion,
+    });
+    expect(prepared.request.ruleset_ref.content_hash).toMatch(/^sha256:[0-9a-f]{64}$/);
+    expect(prepared.request.ruleset_ref.content_hash).not.toBe(RULESET.contentHash);
+    expect(prepared.request.ruleset_ref.content_hash).not.toBe(targetRuleset.contentHash);
+    expect(prepared.worldsByCharacterId[SOURCE_ID].ruleset).toEqual(RULESET);
+    expect(prepared.worldsByCharacterId[TARGET_IDS[0]].ruleset).toEqual(targetRuleset);
+  });
+
+  it('still rejects participants from different release or errata identities', () => {
+    const sourceActor = actor(SOURCE_ID, true);
+    const targetActor = actor(TARGET_IDS[0]);
+    const sourceCanonical = canonical(SOURCE_ID, sourceActor);
+    const targetCanonical = canonical(TARGET_IDS[0], targetActor);
+    targetCanonical.world.ruleset = {
+      ...RULESET,
+      releaseId: `${RULESET.releaseId}:other`,
+      contentHash: `sha256:${'b'.repeat(64)}`,
+    };
+    const acceptedWorld = createWorld({
+      id: 'accepted:mismatched-release',
+      ruleset: RULESET,
+      actors: [sourceActor, targetActor],
+    });
+
+    expect(() => prepareSheetAtomicWorldCommit({
+      commandId: COMMAND_ID,
+      participants: [{
+        character: character(SOURCE_ID, sourceActor),
+        canonical: sourceCanonical,
+        world: acceptedWorld,
+      }, {
+        character: character(TARGET_IDS[0], targetActor),
+        canonical: targetCanonical,
+        world: projectSheetAtomicParticipantWorld({
+          participant: {
+            character: character(TARGET_IDS[0], targetActor),
+            canonical: targetCanonical,
+          },
+          acceptedWorld,
+          commandId: COMMAND_ID,
+        }),
+      }],
+      events: [],
+    })).toThrow('Atomic participants use incompatible rulesets');
+  });
+
   it('fails closed before HTTP when a canonical world uses a non-SHA content identity', () => {
     const sourceActor = actor(SOURCE_ID, true);
     const legacyRuleset = {

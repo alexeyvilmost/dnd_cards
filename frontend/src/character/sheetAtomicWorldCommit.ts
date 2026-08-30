@@ -1,4 +1,4 @@
-import { canonicalStringify } from '../rules-core/determinism';
+import { canonicalStringify, sha256String } from '../rules-core/determinism';
 import type { EngineEvent } from '../mvp/contracts';
 import type { UncommittedRuleEvent, WorldState } from '../rules-core/domain';
 import { migrateWorldState } from '../rules-core/worldMigration';
@@ -65,10 +65,49 @@ function boundedIdentity(value: string, maximum: number): boolean {
 }
 
 function validRuntimeCommandRuleset(ruleset: WorldState['ruleset']): boolean {
-  return ruleset.systemId === DEFAULT_CHARACTER_SYSTEM_ID
+  return Object.keys(ruleset).sort().join(',') === 'contentHash,errataVersion,releaseId,systemId'
+    && ruleset.systemId === DEFAULT_CHARACTER_SYSTEM_ID
     && boundedIdentity(ruleset.releaseId, 255)
     && /^sha256:[0-9a-f]{64}$/.test(ruleset.contentHash)
     && boundedIdentity(ruleset.errataVersion, 100);
+}
+
+/**
+ * Character-sheet content hashes intentionally pin each actor's own compiled
+ * actions, cards and effects. Different builds therefore have different hashes
+ * even when they were compiled by the same rules release. Cross-sheet commands
+ * keep those actor-owned identities in their individual worlds and use this
+ * deterministic bundle identity only for the atomic transaction receipt.
+ */
+export function composeSheetRuntimeRuleset(
+  rulesets: readonly WorldState['ruleset'][],
+): WorldState['ruleset'] {
+  if (!rulesets.length || rulesets.some((ruleset) => !validRuntimeCommandRuleset(ruleset))) {
+    throw new SheetAtomicWorldCommitError(
+      'Atomic sheet transition requires a server-compatible ruleset identity',
+    );
+  }
+  const first = rulesets[0];
+  if (rulesets.some((ruleset) => (
+    ruleset.systemId !== first.systemId
+    || ruleset.releaseId !== first.releaseId
+    || ruleset.errataVersion !== first.errataVersion
+  ))) {
+    throw new SheetAtomicWorldCommitError('Atomic participants use incompatible rulesets');
+  }
+  const contentHashes = [...new Set(rulesets.map((ruleset) => ruleset.contentHash))].sort();
+  return {
+    systemId: first.systemId,
+    releaseId: first.releaseId,
+    contentHash: contentHashes.length === 1
+      ? contentHashes[0]
+      : `sha256:${sha256String(canonicalStringify({
+          schemaVersion: 1,
+          kind: 'sheet-runtime-content-bundle',
+          contentHashes,
+        }))}`,
+    errataVersion: first.errataVersion,
+  };
 }
 
 function runtimeEvents(
@@ -177,12 +216,7 @@ export function prepareSheetAtomicWorldCommit(input: {
   const sorted = [...input.participants]
     .sort((left, right) => left.character.id.localeCompare(right.character.id));
   const ids = new Set<string>();
-  const ruleset = sorted[0].world.ruleset;
-  if (!validRuntimeCommandRuleset(ruleset)) {
-    throw new SheetAtomicWorldCommitError(
-      'Atomic sheet transition requires a server-compatible ruleset identity',
-    );
-  }
+  const participantRulesets: WorldState['ruleset'][] = [];
   for (const participant of sorted) {
     const { character, canonical, world } = participant;
     if (ids.has(character.id)) {
@@ -200,12 +234,13 @@ export function prepareSheetAtomicWorldCommit(input: {
         `Atomic sheet transition cannot persist a pending resolution for ${character.id}`,
       );
     }
-    if (character.system_id !== ruleset.systemId
-      || !sameRuleset(canonical.world.ruleset, ruleset)
-      || !sameRuleset(world.ruleset, ruleset)) {
+    if (character.system_id !== canonical.world.ruleset.systemId
+      || !sameRuleset(canonical.world.ruleset, world.ruleset)) {
       throw new SheetAtomicWorldCommitError('Atomic participants use incompatible rulesets');
     }
+    participantRulesets.push(canonical.world.ruleset);
   }
+  const ruleset = composeSheetRuntimeRuleset(participantRulesets);
   return {
     worldsByCharacterId: Object.fromEntries(sorted.map((participant) => [
       participant.character.id,
