@@ -154,7 +154,12 @@ function costDetail(cost: Dict[]): string {
     if (r === 'spell_slot') return c.level != null ? `слот ${c.level} круга` : ':spell_slot:';
     if (RES_ICON.has(r)) return `:${r}:`;
     const amount = c.amount != null ? `${c.amount} ` : '';
-    return `${amount}${RES_RU[r] ?? r}`;
+    const label = r.startsWith('uses_')
+      ? 'заряд способности'
+      : r.startsWith('freeuse-')
+        ? 'бесплатное применение заклинания'
+        : RES_RU[r] ?? r;
+    return `${amount}${label}`;
   });
   return `Стоит: ${parts.join(', ')}`;
 }

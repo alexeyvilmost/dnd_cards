@@ -15,7 +15,7 @@ const secondWind = {
   mechanics: {
     activation: {
       mode: 'active',
-      cost: [{ resource: 'bonus_action' }, { resource: 'self_uses' }],
+      cost: [{ resource: 'bonus_action' }, { resource: 'uses_ACT-second-wind' }],
     },
     uses: { count: 2, per: 'short_rest' },
     effects: [{
@@ -39,6 +39,6 @@ describe('ActionPreview contextual formulas and costs', () => {
 
     expect(html).toContain('1к10 + 1');
     expect(html).toContain('Заряд способности');
-    expect(html).not.toMatch(/self_(?:uses|level)/);
+    expect(html).not.toMatch(/self_level|uses_ACT-second-wind/);
   });
 });

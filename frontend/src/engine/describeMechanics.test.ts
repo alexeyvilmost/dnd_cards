@@ -79,6 +79,14 @@ describe('describeMechanics (фаза F)', () => {
     expect(d.details).toContain('Использования: 2/короткий отдых');
     expect([d.summary, ...d.details].join(' ')).not.toMatch(/self_(?:uses|level)/);
   });
+
+  it('не показывает runtime-ключ уже привязанного пула использований', () => {
+    const d = describeMechanics({
+      activation: { cost: [{ resource: 'bonus_action' }, { resource: 'uses_ACT-second-wind' }] },
+    });
+    expect(d.details).toContain('Стоит: :bonus_action:, заряд способности');
+    expect(d.details.join(' ')).not.toContain('uses_ACT-second-wind');
+  });
 });
 
 describe('parseMechanicsStats (превью из механики, не из легаси-флагов)', () => {
