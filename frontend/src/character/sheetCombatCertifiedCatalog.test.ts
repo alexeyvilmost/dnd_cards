@@ -33,7 +33,7 @@ function combatActions(root: CompiledMicroMvpL1Provider['roots'][number]): RuleA
   return root.rulesActions.filter(actionBelongsToSheetCombatSlice);
 }
 
-describe('448-root sheet combat certification', () => {
+describe('450-root sheet combat certification', () => {
   let provider: CompiledMicroMvpL1Provider;
   let artifact: SheetCombatCertificationArtifact;
   let certified: CertifiedSheetCombatCatalog;
@@ -52,10 +52,10 @@ describe('448-root sheet combat certification', () => {
     ))
       .toBe(serializeSheetCombatCertificationArtifact(artifact));
     expect(artifact.summary).toEqual({
-      rootCount: 448,
-      combatRootCount: 448,
-      actionOccurrenceCount: 1891,
-      uniqueActionCount: 14,
+      rootCount: 450,
+      combatRootCount: 450,
+      actionOccurrenceCount: 1896,
+      uniqueActionCount: 17,
     });
   });
 
@@ -140,6 +140,32 @@ describe('448-root sheet combat certification', () => {
         });
         expect(grant.freeUseResource).toMatch(/^freeuse-/);
       }
+    }
+  });
+
+  it('certifies Bard and alternate Sorcerer known-spell combat choices', () => {
+    const expected = [
+      ['34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-bard', 'CLASS-bard', 'always_prepared'],
+      ['34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-sorcerer', 'CLASS-sorcerer', 'known'],
+      ['d87f4507-849f-450b-b328-0198cb011587@CLASS-sorcerer', 'CLASS-sorcerer', 'known'],
+    ] as const;
+    for (const [actionId, sourceClass, access] of expected) {
+      const action = required(
+        artifact.actions.find((candidate) => candidate.id === actionId),
+        actionId,
+      );
+      expect(action).toMatchObject({ kind: 'spell', spell: { sourceClass } });
+      expect(artifact.accessSignaturesByAction[actionId]).toContainEqual({
+        grants: [expect.objectContaining({
+          actionId,
+          sourceId: sourceClass,
+          access,
+          level: 1,
+          spellcastingAbility: 'cha',
+          slotResource: 'spell_slot_1',
+        })],
+        preparedSources: [],
+      });
     }
   });
 

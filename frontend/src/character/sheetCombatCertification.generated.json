@@ -21,10 +21,10 @@
     }
   },
   "summary": {
-    "rootCount": 448,
-    "combatRootCount": 448,
-    "actionOccurrenceCount": 1891,
-    "uniqueActionCount": 14
+    "rootCount": 450,
+    "combatRootCount": 450,
+    "actionOccurrenceCount": 1896,
+    "uniqueActionCount": 17
   },
   "coverage": [
     {
@@ -4157,6 +4157,21 @@
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
         "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard"
       ]
+    },
+    {
+      "stableKey": "supplemental:known-spell-class:CLASS-bard",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-bard"
+      ]
+    },
+    {
+      "stableKey": "supplemental:known-spell-class:CLASS-sorcerer",
+      "actionIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-sorcerer",
+        "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
+        "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
+        "d87f4507-849f-450b-b328-0198cb011587@CLASS-sorcerer"
+      ]
     }
   ],
   "actions": [
@@ -4356,6 +4371,134 @@
       }
     },
     {
+      "id": "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-bard",
+      "name": "Волна грома",
+      "mechanics": {
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "interaction": {
+          "intent": "harmful"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "amount": 1,
+              "level": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active",
+          "cast_time": {
+            "unit": "action",
+            "amount": 1
+          }
+        },
+        "effects": [
+          {
+            "ability": "con",
+            "dc": "8 + prof + spellcasting",
+            "on_fail": [
+              {
+                "dice": "2d8",
+                "kind": "damage",
+                "scaling": {
+                  "dice": "1d8",
+                  "per": "spell_slot_above"
+                },
+                "type": "thunder"
+              },
+              {
+                "kind": "movement",
+                "value": "push",
+                "distance": 10
+              }
+            ],
+            "on_success": [
+              {
+                "dice": "2d8",
+                "kind": "damage",
+                "scaling": {
+                  "dice": "1d8",
+                  "per": "spell_slot_above"
+                },
+                "type": "thunder",
+                "on_success": "half"
+              }
+            ],
+            "resolution": "save",
+            "who": "target"
+          }
+        ],
+        "targeting": {
+          "domain": "mixed",
+          "actor_targets": true,
+          "range_ft": 15,
+          "allowed_relations": [
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": false,
+          "shape": "area",
+          "min_targets": 0,
+          "max_targets": 8,
+          "range": "15 футов",
+          "filter": "creature",
+          "area": {
+            "kind": "cube",
+            "size_ft": 15
+          }
+        },
+        "primitive": {
+          "type": "area_object_push",
+          "object_push_distance_ft": 10,
+          "object_max_distance_ft": 15,
+          "object_area_requirement": "entirely_in_area",
+          "exclude_secured_objects": true,
+          "exclude_carried_objects": true
+        }
+      },
+      "sourceEntityIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0",
+        "be96272c-8585-438d-ac32-b2788f1b1741"
+      ],
+      "targeting": {
+        "minTargets": 0,
+        "maxTargets": 8,
+        "rangeFt": 15,
+        "requiresLineOfSight": false,
+        "allowedRelations": [
+          "ally",
+          "enemy",
+          "neutral"
+        ]
+      },
+      "kind": "spell",
+      "spell": {
+        "level": 1,
+        "sourceClass": "CLASS-bard",
+        "ritual": false,
+        "classListIds": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "components": {
+          "verbal": true,
+          "somatic": true,
+          "material": false
+        }
+      }
+    },
+    {
       "id": "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
       "name": "Волна грома",
       "mechanics": {
@@ -4469,6 +4612,134 @@
       "spell": {
         "level": 1,
         "sourceClass": "CLASS-druid",
+        "ritual": false,
+        "classListIds": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "components": {
+          "verbal": true,
+          "somatic": true,
+          "material": false
+        }
+      }
+    },
+    {
+      "id": "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-sorcerer",
+      "name": "Волна грома",
+      "mechanics": {
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "interaction": {
+          "intent": "harmful"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "amount": 1,
+              "level": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active",
+          "cast_time": {
+            "unit": "action",
+            "amount": 1
+          }
+        },
+        "effects": [
+          {
+            "ability": "con",
+            "dc": "8 + prof + spellcasting",
+            "on_fail": [
+              {
+                "dice": "2d8",
+                "kind": "damage",
+                "scaling": {
+                  "dice": "1d8",
+                  "per": "spell_slot_above"
+                },
+                "type": "thunder"
+              },
+              {
+                "kind": "movement",
+                "value": "push",
+                "distance": 10
+              }
+            ],
+            "on_success": [
+              {
+                "dice": "2d8",
+                "kind": "damage",
+                "scaling": {
+                  "dice": "1d8",
+                  "per": "spell_slot_above"
+                },
+                "type": "thunder",
+                "on_success": "half"
+              }
+            ],
+            "resolution": "save",
+            "who": "target"
+          }
+        ],
+        "targeting": {
+          "domain": "mixed",
+          "actor_targets": true,
+          "range_ft": 15,
+          "allowed_relations": [
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": false,
+          "shape": "area",
+          "min_targets": 0,
+          "max_targets": 8,
+          "range": "15 футов",
+          "filter": "creature",
+          "area": {
+            "kind": "cube",
+            "size_ft": 15
+          }
+        },
+        "primitive": {
+          "type": "area_object_push",
+          "object_push_distance_ft": 10,
+          "object_max_distance_ft": 15,
+          "object_area_requirement": "entirely_in_area",
+          "exclude_secured_objects": true,
+          "exclude_carried_objects": true
+        }
+      },
+      "sourceEntityIds": [
+        "34518f38-b737-4a91-88ac-d5858d2d04a0",
+        "66a58227-41e6-4c56-b548-1253d98f6f09"
+      ],
+      "targeting": {
+        "minTargets": 0,
+        "maxTargets": 8,
+        "rangeFt": 15,
+        "requiresLineOfSight": false,
+        "allowedRelations": [
+          "ally",
+          "enemy",
+          "neutral"
+        ]
+      },
+      "kind": "spell",
+      "spell": {
+        "level": 1,
+        "sourceClass": "CLASS-sorcerer",
         "ritual": false,
         "classListIds": [
           "CLASS-bard",
@@ -5505,6 +5776,103 @@
       }
     },
     {
+      "id": "d87f4507-849f-450b-b328-0198cb011587@CLASS-sorcerer",
+      "name": "Щит",
+      "mechanics": {
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "activation": {
+          "cost": [
+            {
+              "resource": "reaction"
+            },
+            {
+              "amount": 1,
+              "level": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "reaction",
+          "cast_time": {
+            "unit": "reaction",
+            "amount": 1
+          },
+          "trigger": {
+            "event": "hit_by_attack",
+            "events": [
+              "hit_by_attack",
+              "targeted_by_magic_missile"
+            ]
+          }
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "applies_to": {
+                  "roll": "ac"
+                },
+                "duration": {
+                  "type": "until_start_of_next_turn"
+                },
+                "kind": "modifier",
+                "op": "add",
+                "value": "+5",
+                "magic_missile_immunity": true
+              },
+              {
+                "description": "Действует до начала вашего следующего хода, в т.ч. против вызвавшей атаки; иммунитет к Волшебной стреле.",
+                "kind": "narrative"
+              }
+            ]
+          }
+        ],
+        "targeting": {
+          "domain": "actor",
+          "actor_targets": false,
+          "shape": "self",
+          "min_targets": 0,
+          "max_targets": 1,
+          "range_ft": 0,
+          "requires_line_of_sight": false,
+          "allowed_relations": [
+            "self"
+          ]
+        }
+      },
+      "sourceEntityIds": [
+        "d87f4507-849f-450b-b328-0198cb011587",
+        "66a58227-41e6-4c56-b548-1253d98f6f09"
+      ],
+      "targeting": {
+        "minTargets": 0,
+        "maxTargets": 1,
+        "rangeFt": 0,
+        "requiresLineOfSight": false,
+        "allowedRelations": [
+          "self"
+        ]
+      },
+      "kind": "spell",
+      "spell": {
+        "level": 1,
+        "sourceClass": "CLASS-sorcerer",
+        "ritual": false,
+        "classListIds": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ],
+        "components": {
+          "verbal": true,
+          "somatic": true,
+          "material": false
+        }
+      }
+    },
+    {
       "id": "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard",
       "name": "Щит",
       "mechanics": {
@@ -5659,6 +6027,24 @@
         "preparedSources": []
       }
     ],
+    "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-bard": [
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:CLASS-bard:34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-bard",
+            "actionId": "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-bard",
+            "sourceId": "CLASS-bard",
+            "access": "always_prepared",
+            "level": 1,
+            "spellcastingAbility": "cha",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": null
+          }
+        ],
+        "preparedSources": []
+      }
+    ],
     "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid": [
       {
         "grants": [
@@ -5669,6 +6055,24 @@
             "access": "always_prepared",
             "level": 1,
             "spellcastingAbility": "wis",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": null
+          }
+        ],
+        "preparedSources": []
+      }
+    ],
+    "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-sorcerer": [
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:CLASS-sorcerer:34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-sorcerer",
+            "actionId": "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-sorcerer",
+            "sourceId": "CLASS-sorcerer",
+            "access": "known",
+            "level": 1,
+            "spellcastingAbility": "cha",
             "ritual": false,
             "slotResource": "spell_slot_1",
             "freeUseResource": null
@@ -6056,6 +6460,24 @@
         "preparedSources": []
       }
     ],
+    "d87f4507-849f-450b-b328-0198cb011587@CLASS-sorcerer": [
+      {
+        "grants": [
+          {
+            "grantId": "spell-grant:CLASS-sorcerer:d87f4507-849f-450b-b328-0198cb011587@CLASS-sorcerer",
+            "actionId": "d87f4507-849f-450b-b328-0198cb011587@CLASS-sorcerer",
+            "sourceId": "CLASS-sorcerer",
+            "access": "known",
+            "level": 1,
+            "spellcastingAbility": "cha",
+            "ritual": false,
+            "slotResource": "spell_slot_1",
+            "freeUseResource": null
+          }
+        ],
+        "preparedSources": []
+      }
+    ],
     "d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard": [
       {
         "grants": [
@@ -6345,6 +6767,6 @@
       }
     ]
   },
-  "sourceProjectionHash": "sha256:7321e95c5d91fa64f157c67d07ce615cecf8030a9592a6746dc1b515b2d99309",
-  "contentHash": "sha256:b4fbb2a6061ad235d55023561020ffe8c9143897b6654509536d34c56d240709"
+  "sourceProjectionHash": "sha256:ec1edaf5acc164bbf9366df664dbe68e2badb09873f8bd48dbe7fdca340237cf",
+  "contentHash": "sha256:34bddc0cc06f42e36f6a12e51cfcfa2c6fa0aefd4cb8a49b839220b1a3b02ba9"
 }

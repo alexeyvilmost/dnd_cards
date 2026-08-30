@@ -12,14 +12,25 @@ import {
   compileMicroMvpL1ChoiceVariants,
   type CompiledMicroMvpL1Provider,
 } from '../canon/microMvpL1Overlay';
+import { materializeMicroMvpL1ContentPatch } from '../canon/declarativeMechanicsPatch';
+import miniMvpForgeSheetFixture from '../canon/data/mini-mvp-forge-sheet-fixture.v1.json';
 import {
   readMicroMvpSnapshotManifest,
   readProdSnapshotCatalogs,
 } from '../canon/prodSnapshotL1Fixtures';
+import type { RuntimeState } from '../mvp/contracts';
 import { canonicalStringify } from '../rules-core/determinism';
 import type { ActorState, RuleActionDefinition } from '../rules-core/domain';
 import { buildMicroMvpSpellScopePolicy } from '../rules-core/microMvpSpellScope';
 import { buildRulesLabFixtureArtifact } from '../pages/rulesLabFixtureGenerator';
+import { collectSheetActions } from './actionSheet';
+import { assemble, type EntityBundle } from './assemble';
+import { buildCharacterContext } from './runtime';
+import { syncRuntimeResources } from './resourceInit';
+import { resolveCharacterRules } from './rules/resolveCharacterRules';
+import { buildSheetCanonicalRuntime } from './sheetCanonicalWorld';
+import { spellMatchesChoice } from './spellChoices';
+import { emptyDraft, type AbilityScores } from './types';
 import {
   actionBelongsToSheetCombatSlice,
   MAGIC_INITIATE_WIZARD_GRANT_SOURCE_ID,
@@ -27,6 +38,7 @@ import {
   SHEET_COMBAT_CERTIFICATION_ARTIFACT_VERSION,
   SHEET_COMBAT_CERTIFICATION_EXPECTED_ACTION_COUNT,
   SHEET_COMBAT_CERTIFICATION_EXPECTED_MAGIC_INITIATE_ACTION_COUNT,
+  SHEET_COMBAT_CERTIFICATION_EXPECTED_MATRIX_ROOT_COUNT,
   SHEET_COMBAT_CERTIFICATION_EXPECTED_ROOT_COUNT,
   SHEET_COMBAT_CERTIFICATION_SCHEMA_VERSION,
   sheetCombatCertificationSourceProjection,
@@ -62,6 +74,70 @@ interface SupplementalCombatActor {
   actions: readonly RuleActionDefinition[];
   /** Root whose declared choice branch was compiled for this supplemental actor. */
   stableKey?: string;
+}
+
+const KNOWN_SPELL_CLASS_SUPPLEMENTAL_CLASSES = [
+  {
+    classCardNumber: 'CLASS-bard',
+    abilities: { str: 8, dex: 14, con: 13, int: 10, wis: 12, cha: 16 },
+  },
+  {
+    classCardNumber: 'CLASS-sorcerer',
+    abilities: { str: 8, dex: 14, con: 13, int: 10, wis: 12, cha: 16 },
+  },
+] as const satisfies ReadonlyArray<{
+  classCardNumber: string;
+  abilities: AbilityScores;
+}>;
+
+function rawSpellBelongsToSheetCombatSlice(spell: { mechanics?: Record<string, unknown> | null }): boolean {
+  const mechanics = spell.mechanics ?? {};
+  const primitive = mechanics.primitive && typeof mechanics.primitive === 'object'
+    ? mechanics.primitive as Record<string, unknown>
+    : {};
+  const activation = mechanics.activation && typeof mechanics.activation === 'object'
+    ? mechanics.activation as Record<string, unknown>
+    : {};
+  const trigger = activation.trigger && typeof activation.trigger === 'object'
+    ? activation.trigger as Record<string, unknown>
+    : {};
+  return ['burning_hands_objects', 'area_object_push', 'magic_missile'].includes(
+    String(primitive.type ?? ''),
+  ) || (Array.isArray(trigger.events) && trigger.events.includes('targeted_by_magic_missile'));
+}
+
+function materializeBardSpellcastingMigration118<T extends {
+  effects: Array<{ card_number: string; mechanics?: Record<string, unknown> | null }>;
+}>(catalogs: T): T {
+  const matches = catalogs.effects.filter((effect) => effect.card_number === 'EFF-bard-spellcasting');
+  if (matches.length !== 1) {
+    throw new Error(`Cannot materialize Bard spellcasting migration 118: got ${matches.length} effects`);
+  }
+  const effect = matches[0];
+  const mechanics = JSON.parse(JSON.stringify(effect.mechanics ?? {})) as Record<string, unknown>;
+  const interactions = Array.isArray(mechanics.effects)
+    ? mechanics.effects as Array<Record<string, unknown>>
+    : [];
+  const first = interactions[0];
+  const results = first && Array.isArray(first.result)
+    ? first.result as Array<Record<string, unknown>>
+    : [];
+  const hasPrimaryCharisma = results.some((result) => (
+    result.kind === 'spellcasting_ability'
+      && result.role === 'primary'
+      && result.ability === 'cha'
+  ));
+  if (!first || !results.length) {
+    throw new Error('Cannot materialize Bard spellcasting migration 118: legacy narrative is absent');
+  }
+  if (!hasPrimaryCharisma) {
+    first.result = [
+      { kind: 'spellcasting_ability', role: 'primary', ability: 'cha' },
+      ...results,
+    ];
+  }
+  effect.mechanics = mechanics;
+  return catalogs;
 }
 
 function exactActionCatalog(
@@ -179,8 +255,10 @@ export function buildSheetCombatCertificationArtifactFromProvider(
   supplementalActors: readonly SupplementalCombatActor[] = [],
 ): SheetCombatCertificationArtifact {
   const roots = [...provider.roots].sort((left, right) => left.stableKey.localeCompare(right.stableKey));
-  if (roots.length !== SHEET_COMBAT_CERTIFICATION_EXPECTED_ROOT_COUNT) {
-    throw new Error(`Cannot certify combat: expected 448 roots, got ${roots.length}`);
+  if (roots.length !== SHEET_COMBAT_CERTIFICATION_EXPECTED_MATRIX_ROOT_COUNT) {
+    throw new Error(
+      `Cannot certify combat: expected ${SHEET_COMBAT_CERTIFICATION_EXPECTED_MATRIX_ROOT_COUNT} matrix roots, got ${roots.length}`,
+    );
   }
   const actions = exactActionCatalog(provider, supplementalActors);
   if (actions.length !== SHEET_COMBAT_CERTIFICATION_EXPECTED_ACTION_COUNT) {
@@ -200,7 +278,7 @@ export function buildSheetCombatCertificationArtifactFromProvider(
       .map((action) => action.id));
     supplementalActionIdsByRoot.set(supplemental.stableKey, ids);
   }
-  const coverage = roots.map((root) => ({
+  const matrixCoverage = roots.map((root) => ({
     stableKey: root.stableKey,
     actionIds: sortedUnique([
       ...root.rulesActions
@@ -210,6 +288,20 @@ export function buildSheetCombatCertificationArtifactFromProvider(
       ...(supplementalActionIdsByRoot.get(root.stableKey) ?? []),
     ]),
   }));
+  const matrixStableKeys = new Set(roots.map((root) => root.stableKey));
+  const supplementalCoverage = [...supplementalActionIdsByRoot.entries()]
+    .filter(([stableKey]) => !matrixStableKeys.has(stableKey))
+    .map(([stableKey, actionIds]) => ({
+      stableKey,
+      actionIds: sortedUnique(actionIds),
+    }));
+  const coverage = [...matrixCoverage, ...supplementalCoverage]
+    .sort((left, right) => left.stableKey.localeCompare(right.stableKey));
+  if (coverage.length !== SHEET_COMBAT_CERTIFICATION_EXPECTED_ROOT_COUNT) {
+    throw new Error(
+      `Cannot certify combat: expected ${SHEET_COMBAT_CERTIFICATION_EXPECTED_ROOT_COUNT} total roots, got ${coverage.length}`,
+    );
+  }
   const signatures = accessSignatures(provider, actions, supplementalActors);
   const profiles = preparedSourceProfiles(signatures);
   const base = {
@@ -234,6 +326,188 @@ export function buildSheetCombatCertificationArtifactFromProvider(
   const sourceProjectionHash = sha256Canonical(sheetCombatCertificationSourceProjection(base));
   const content = { ...base, sourceProjectionHash };
   return { ...content, contentHash: sha256Canonical(content) };
+}
+
+/**
+ * The 448-root micro-MVP denominator predates Bard and fixes one deterministic
+ * Sorcerer spell selection. Compile every legal L1 known-spell choice through
+ * the same Forge -> sheet bridge so valid Bard and alternate Sorcerer builds do
+ * not poison combat-session initialization. Only mechanics already admitted by
+ * actionBelongsToSheetCombatSlice can enter the resulting certificate.
+ */
+function knownSpellClassCombatChoiceSupplementals(): SupplementalCombatActor[] {
+  const catalogs = materializeBardSpellcastingMigration118(
+    materializeMicroMvpL1ContentPatch(readProdSnapshotCatalogs()).catalogs,
+  );
+  const supplementals: SupplementalCombatActor[] = [];
+
+  for (const fixture of KNOWN_SPELL_CLASS_SUPPLEMENTAL_CLASSES) {
+    const classMatches = catalogs.classes.filter((candidate) => (
+      candidate.card_number === fixture.classCardNumber
+    ));
+    if (classMatches.length !== 1) {
+      throw new Error(
+        `Cannot certify ${fixture.classCardNumber} spell choices: expected one class, got ${classMatches.length}`,
+      );
+    }
+    const klass = classMatches[0];
+    const origin = { kind: 'class' as const, id: klass.id, name: klass.name };
+    const levelOne = klass.level_progression?.['1'];
+    const effects = (levelOne?.effects ?? []).map((effectId) => {
+      const matches = catalogs.effects.filter((candidate) => candidate.id === effectId);
+      if (matches.length !== 1) {
+        throw new Error(`${fixture.classCardNumber}: effect ${effectId} has ${matches.length} matches`);
+      }
+      return { effect: matches[0], origin };
+    });
+    const bundle = (spells: typeof catalogs.spells): EntityBundle => ({
+      race: null,
+      klass,
+      background: null,
+      feats: [],
+      effects,
+      // The supplemental certificate is deliberately spell-only. Other class
+      // actions remain governed by their own reviewed mechanics catalogs.
+      actions: [],
+      spells,
+      resources: catalogs.resources,
+      variableDefs: catalogs.variables,
+    });
+    const baseDraft = {
+      ...emptyDraft(),
+      classId: klass.id,
+      level: 1,
+      abilities: fixture.abilities,
+    };
+    const initial = assemble(bundle([]), baseDraft);
+    const spellChoices = initial.pendingChoices.filter((choice) => (
+      choice.origin.kind === 'class'
+        && choice.origin.id === klass.id
+        && choice.source === 'spell'
+        && choice.grantKind === 'grant_spell'
+    ));
+    if (!spellChoices.length) {
+      throw new Error(`Cannot certify ${fixture.classCardNumber}: class spell choices are absent`);
+    }
+    const fixtureRoot = miniMvpForgeSheetFixture.roots.find((root) => (
+      root.classCardNumber === fixture.classCardNumber
+    ));
+    if (!fixtureRoot) {
+      throw new Error(`Cannot certify ${fixture.classCardNumber}: Forge fixture root is absent`);
+    }
+    const fixtureResolvedChoices = fixtureRoot.draft.resolvedChoices as Record<string, string[]>;
+    const eligibleByChoice = new Map(spellChoices.map((choice) => [
+      choice.id,
+      catalogs.spells
+        .filter((spell) => spellMatchesChoice(spell, choice, 1))
+        .sort((left, right) => left.card_number.localeCompare(right.card_number)),
+    ]));
+    for (const choice of spellChoices) {
+      if ((eligibleByChoice.get(choice.id)?.length ?? 0) < choice.count) {
+        throw new Error(
+          `Cannot certify ${fixture.classCardNumber}: ${choice.id} has fewer legal spells than required`,
+        );
+      }
+    }
+    const targets = [...new Map(
+      [...eligibleByChoice.values()].flat().map((spell) => [spell.id, spell]),
+    ).values()]
+      .filter(rawSpellBelongsToSheetCombatSlice)
+      .sort((left, right) => left.card_number.localeCompare(right.card_number));
+
+    for (const target of targets) {
+      const resolvedChoices = Object.fromEntries(spellChoices.map((choice) => {
+        const eligible = eligibleByChoice.get(choice.id) ?? [];
+        const fixtureSpellIds = fixtureResolvedChoices[choice.id] ?? [];
+        const fixtureSpells = fixtureSpellIds.flatMap((reference) => (
+          eligible.filter((spell) => spell.id === reference || spell.card_number === reference)
+        ));
+        const selected = [
+          ...(eligible.some((spell) => spell.id === target.id) ? [target] : []),
+          ...fixtureSpells.filter((spell) => spell.id !== target.id),
+          ...eligible.filter((spell) => spell.id !== target.id),
+        ].filter((spell, index, values) => (
+          values.findIndex((candidate) => candidate.id === spell.id) === index
+        )).slice(0, choice.count);
+        return [choice.id, selected.map((spell) => spell.id)];
+      }));
+      const selectedSpells = [...new Map(
+        Object.values(resolvedChoices)
+          .flat()
+          .map((spellId) => {
+            const spell = catalogs.spells.find((candidate) => candidate.id === spellId);
+            if (!spell) throw new Error(`${fixture.classCardNumber}: selected spell ${spellId} disappeared`);
+            return [spell.id, spell] as const;
+          }),
+      ).values()];
+      const draft = {
+        ...baseDraft,
+        resolvedChoices,
+        spellIds: selectedSpells.map((spell) => spell.id),
+      };
+      const assembled = assemble(bundle(selectedSpells), draft);
+      const ruleState = resolveCharacterRules({ draft, assembled });
+      const characterContext = buildCharacterContext(
+        ruleState,
+        { level: 1, abilities: draft.abilities as Record<string, number> },
+        [],
+        klass,
+      );
+      const resourceRuntime = syncRuntimeResources(
+        characterContext,
+        assembled,
+        undefined,
+        ruleState.freeuseSpells,
+      );
+      const runtime: RuntimeState = {
+        hp: { current: ruleState.maxHP, max: ruleState.maxHP, temp: 0 },
+        resources: resourceRuntime.resources,
+        maxResources: resourceRuntime.maxResources,
+        equipment: {},
+        inventory: [],
+        activeEffects: [],
+        firedThisTurn: [],
+        firedThisRest: [],
+      };
+      const sheetActions = collectSheetActions(assembled).filter((action) => (
+        action.spellRef?.id === target.id
+      ));
+      if (sheetActions.length !== 1) {
+        throw new Error(
+          `Cannot certify ${fixture.classCardNumber}/${target.card_number}: expected one sheet action, got ${sheetActions.length}`,
+        );
+      }
+      const canonical = buildSheetCanonicalRuntime({
+        character: {
+          id: `sheet-combat-cert:${fixture.classCardNumber}:${target.card_number}`,
+          name: `${fixture.classCardNumber} ${target.card_number}`,
+          system_id: 'dnd5e-2024',
+          ruleset_version: '2024',
+          turn_state: null,
+          resolved_choices: resolvedChoices,
+        },
+        assembled,
+        ruleState,
+        sheetActions,
+        runtime,
+        characterContext,
+        ac: ruleState.armorClass,
+      });
+      const combatActions = canonical.actions.filter((action) => (
+        action.kind === 'spell'
+          && action.spell.sourceClass === fixture.classCardNumber
+          && actionBelongsToSheetCombatSlice(action)
+      ));
+      if (combatActions.length) {
+        supplementals.push({
+          stableKey: `supplemental:known-spell-class:${fixture.classCardNumber}`,
+          actor: canonical.world.actors[canonical.actorId],
+          actions: combatActions,
+        });
+      }
+    }
+  }
+  return supplementals;
 }
 
 /**
@@ -296,9 +570,11 @@ export async function buildSheetCombatCertificationArtifact(): Promise<SheetComb
     throw new Error('Cannot certify Rules Lab familiar Wizard access variant');
   }
   const magicInitiateSupplementals = await magicInitiateCombatChoiceSupplementals(provider);
+  const knownSpellClassSupplementals = knownSpellClassCombatChoiceSupplementals();
   return buildSheetCombatCertificationArtifactFromProvider(provider, [
     { actor: familiarWizard.actor, actions: familiarWizard.actions },
     ...magicInitiateSupplementals,
+    ...knownSpellClassSupplementals,
   ]);
 }
 
