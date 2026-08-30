@@ -4,6 +4,29 @@ import { parseDeclaredWeaponActionPolicy } from '../rules-core/weaponActionPolic
 import { weaponContext } from '../engine/weapon';
 import { weaponMasteryPrimitive } from '../engine/weaponMastery2024';
 
+export const UNARMED_STRIKE_CHOICE_ID = 'unarmed_strike_option';
+
+function unarmedStrikeChoices(
+  action: RuleActionDefinition,
+  cardNumber?: string,
+): PendingChoice[] {
+  if (cardNumber !== 'action_basic_unarmed') return [];
+  return [{
+    id: UNARMED_STRIKE_CHOICE_ID,
+    prompt: 'Вариант безоружного удара',
+    count: 1,
+    source: 'explicit',
+    context: 'in_play',
+    origin: { kind: 'other', id: action.id, name: action.name },
+    recommended: ['damage'],
+    items: [
+      { id: 'damage', name: 'Нанести урон' },
+      { id: 'grapple', name: 'Схватить' },
+      { id: 'shove', name: 'Толкнуть' },
+    ],
+  }];
+}
+
 function masteryChoices(actor: ActorState, action: RuleActionDefinition): PendingChoice[] {
   const declared = parseDeclaredWeaponActionPolicy(action, 'bound');
   if (declared.status !== 'valid') return [];
@@ -66,8 +89,10 @@ function masteryChoices(actor: ActorState, action: RuleActionDefinition): Pendin
 export function collectSoloCombatActionChoices(
   actor: ActorState,
   action: RuleActionDefinition,
+  cardNumber?: string,
 ): PendingChoice[] {
   const choices = [
+    ...unarmedStrikeChoices(action, cardNumber),
     ...collectInPlayActionChoices(action.mechanics, {
       kind: 'other', id: action.id, name: action.name,
     }),

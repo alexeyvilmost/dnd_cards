@@ -12,6 +12,11 @@ export interface GrappleRelationView {
   targetActorId: string;
 }
 
+export interface TurnStartGrappleDamageOpportunity {
+  capabilityId: string;
+  targetActorIds: string[];
+}
+
 export interface InterceptionFacts {
   interceptorActorId: string;
   attackerActorId: string;
@@ -160,6 +165,27 @@ export function applyUnarmedDamageProfileToAction<
  * grappled by the source. Returning `declined` for a missing target preserves
  * the player's "may" choice without manufacturing a pending target.
  */
+export function turnStartGrappleDamageOpportunity(input: {
+  passives: readonly unknown[];
+  sourceActorId: string;
+  grapples: readonly GrappleRelationView[];
+}): TurnStartGrappleDamageOpportunity | null {
+  const candidates = input.passives.flatMap((mechanics) => payloads(mechanics))
+    .filter((payload) => payload.kind === 'turn_start_grapple_damage');
+  if (candidates.length !== 1) return null;
+  const payload = candidates[0];
+  if (!parsedDice(payload.dice)
+    || typeof payload.capability_id !== 'string' || !payload.capability_id.trim()
+    || typeof payload.damage_type !== 'string' || !payload.damage_type.trim()) return null;
+  const targetActorIds = [...new Set(input.grapples
+    .filter((grapple) => grapple.grapplerActorId === input.sourceActorId)
+    .map((grapple) => grapple.targetActorId))].sort();
+  return targetActorIds.length ? {
+    capabilityId: payload.capability_id.trim(),
+    targetActorIds,
+  } : null;
+}
+
 export function resolveTurnStartGrappleDamage(input: {
   passives: readonly unknown[];
   sourceActorId: string;
@@ -179,25 +205,24 @@ export function resolveTurnStartGrappleDamage(input: {
     values: number[];
     source: string;
   } {
-  const candidates = input.passives.flatMap((mechanics) => payloads(mechanics))
-    .filter((payload) => payload.kind === 'turn_start_grapple_damage');
-  if (candidates.length !== 1) return { status: 'unavailable' };
+  const opportunity = turnStartGrappleDamageOpportunity(input);
+  if (!opportunity) return { status: 'unavailable' };
   if (!input.selectedCapabilityId && !input.selectedTargetActorId) return { status: 'declined' };
-  const payload = candidates[0];
+  const payload = input.passives.flatMap((mechanics) => payloads(mechanics))
+    .find((candidate) => (
+      candidate.kind === 'turn_start_grapple_damage'
+      && candidate.capability_id === opportunity.capabilityId
+    ))!;
   const formula = parsedDice(payload.dice);
-  if (!formula || typeof payload.capability_id !== 'string' || !payload.capability_id.trim()
-    || typeof payload.damage_type !== 'string' || !payload.damage_type.trim()) {
-    return { status: 'unavailable' };
-  }
-  if (input.selectedCapabilityId !== payload.capability_id) {
+  if (!formula || typeof payload.capability_id !== 'string'
+    || typeof payload.damage_type !== 'string') return { status: 'unavailable' };
+  if (input.selectedCapabilityId !== opportunity.capabilityId) {
     return { status: 'invalid_capability' };
   }
   if (!input.selectedTargetActorId) return { status: 'invalid_target' };
-  const eligible = input.grapples.some((grapple) => (
-    grapple.grapplerActorId === input.sourceActorId
-    && grapple.targetActorId === input.selectedTargetActorId
-  ));
-  if (!eligible) return { status: 'invalid_target' };
+  if (!opportunity.targetActorIds.includes(input.selectedTargetActorId)) {
+    return { status: 'invalid_target' };
+  }
   const rolled = rollDice(formula, input.rng);
   return {
     status: 'resolved',

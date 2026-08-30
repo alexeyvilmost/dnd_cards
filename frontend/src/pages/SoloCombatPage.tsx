@@ -25,6 +25,7 @@ import {
   executeCombatAction,
   moveActor,
   resolvePlayerReaction,
+  resolveSoloCombatTurnStart,
   resolveTriggeredCombatAction,
   selectedTargetsForAction,
 } from '../solo-combat/engine';
@@ -301,6 +302,7 @@ export default function SoloCombatPage() {
       const requiredChoices = collectSoloCombatActionChoices(
         state.world.actors[activeControlledActorId],
         action,
+        state.actionPresentation?.[action.id]?.actionRef?.card_number,
       );
       const choices = requiredChoices.length
         ? await choiceDialog.request(requiredChoices, action.name)
@@ -323,7 +325,8 @@ export default function SoloCombatPage() {
   };
 
   const clickCell = (position: GridPosition, actorId?: string) => {
-    if (!state || !playerTurn || busy || state.world.pendingResolution || state.pendingTriggeredAction) return;
+    if (!state || !playerTurn || busy || state.world.pendingResolution
+      || state.pendingTriggeredAction || state.pendingTurnStartGrappleDamage) return;
     try {
       if (movementMode) {
         if (actorId) throw new Error('Для перемещения выберите свободную клетку');
@@ -418,6 +421,7 @@ export default function SoloCombatPage() {
   const actor = activeActor(state);
   const pending = state.world.pendingResolution;
   const pendingTriggered = state.pendingTriggeredAction;
+  const pendingTurnStart = state.pendingTurnStartGrappleDamage;
   const reactionOptions = pending?.request.type === 'reaction'
     && isControlledCharacter(state, pending.request.actorId)
     ? sheetReactionDecisionOptions(pending.request.options) : [];
@@ -434,7 +438,7 @@ export default function SoloCombatPage() {
     : null;
   return (
     <main className="solo-combat-page forge">
-      <MonsterTurnController state={state} disabled={busy} onTransition={apply} onError={setError} />
+      <MonsterTurnController state={state} disabled={busy || Boolean(pendingTurnStart)} onTransition={apply} onError={setError} />
       <header className="combat-topbar">
         <div className="combat-topbar__navigation"><Link to={`/characters-v3/${id}`}><ArrowLeft size={18} /> Лист</Link><button type="button" onClick={() => setSceneConstructorOpen(true)}><SlidersHorizontal size={16} /> Сцена</button></div>
         <div className="initiative-ribbon" aria-label="Порядок инициативы">
@@ -470,7 +474,7 @@ export default function SoloCombatPage() {
         <CombatActorInspector state={state} actorId={inspectedActorId} onClose={() => setInspectedActorId(null)} />
       )}
       {sceneConstructorOpen && <CombatSceneConstructor state={state} busy={busy} onApply={apply} onClose={() => setSceneConstructorOpen(false)} />}
-      <CombatHotbar state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || busy || Boolean(pending) || Boolean(pendingTriggered) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); apply(advanceTurn(state)); }} onSheet={() => { setSheetActorId(activeControlledActorId); setSheetOpen(true); }} />
+      <CombatHotbar state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); apply(advanceTurn(state)); }} onSheet={() => { setSheetActorId(activeControlledActorId); setSheetOpen(true); }} />
       {sheetOpen && (() => {
         const drawerActorId = sheetActorId && isControlledCharacter(state, sheetActorId)
           ? sheetActorId
@@ -484,6 +488,7 @@ export default function SoloCombatPage() {
         const option = state.catalogActions.find((action) => action.id === actionId);
         return option ? <button type="button" key={actionId} disabled={busy} onClick={() => apply(resolveTriggeredCombatAction(state, actionId))}>{option.name}</button> : null;
       })}<button type="button" disabled={busy} onClick={() => apply(resolveTriggeredCombatAction(state, null))}>Пропустить</button></div></section></div>}
+      {pendingTurnStart && <div className="combat-reaction-backdrop"><section><p>НАЧАЛО ХОДА</p><h2>Нанести 1к4 урона существу в захвате?</h2><div>{pendingTurnStart.targetActorIds.map((targetActorId) => <button type="button" key={targetActorId} disabled={busy} onClick={() => apply(resolveSoloCombatTurnStart(state, targetActorId))}>{state.world.actors[targetActorId]?.name ?? 'Цель'} · 1к4 дробящего урона</button>)}<button type="button" disabled={busy} onClick={() => apply(resolveSoloCombatTurnStart(state, null))}>Пропустить</button></div></section></div>}
       {state.outcome !== 'active' && <div className="combat-outcome"><section><p>БОЙ ЗАВЕРШЁН</p><h1>{state.outcome === 'victory' ? 'Победа' : 'Поражение'}</h1><p>{state.outcome === 'victory' ? 'Все противники уничтожены.' : `${character.name} потерял все хиты.`}</p><button type="button" onClick={finish}>Завершить и вернуться в лист</button><button type="button" onClick={() => navigate(`/characters-v3/${id}`)}><RotateCcw size={16} /> Оставить запись боя</button></section></div>}
     </main>
   );

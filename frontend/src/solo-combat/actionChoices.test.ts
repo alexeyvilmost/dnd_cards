@@ -6,9 +6,38 @@ import { weaponContext } from '../engine/weapon';
 import { compileWeaponMasteryEffects, weaponMasteryPrimitive } from '../engine/weaponMastery2024';
 import { parseDeclaredWeaponActionPolicy } from '../rules-core/weaponActionPolicies';
 import { parseWeaponProfile } from '../engine/weaponProfile';
-import { collectSoloCombatActionChoices, immediateSoloCombatTargetIds } from './actionChoices';
+import {
+  UNARMED_STRIKE_CHOICE_ID,
+  collectSoloCombatActionChoices,
+  immediateSoloCombatTargetIds,
+} from './actionChoices';
 
 describe('solo combat data-owned action choices', () => {
+  it('offers every canonical Unarmed Strike option only for the exact basic-action entity', () => {
+    const action = {
+      id: 'action:unarmed', name: 'Безоружный удар', kind: 'nonSpell',
+      sourceEntityIds: ['action:unarmed'], mechanics: {},
+    } as RuleActionDefinition;
+    expect(collectSoloCombatActionChoices(
+      {} as ActorState,
+      action,
+      'action_basic_unarmed',
+    )).toEqual([expect.objectContaining({
+      id: UNARMED_STRIKE_CHOICE_ID,
+      recommended: ['damage'],
+      items: [
+        { id: 'damage', name: 'Нанести урон' },
+        { id: 'grapple', name: 'Схватить' },
+        { id: 'shove', name: 'Толкнуть' },
+      ],
+    })]);
+    expect(collectSoloCombatActionChoices(
+      {} as ActorState,
+      action,
+      'another_action',
+    )).toEqual([]);
+  });
+
   it('projects the equipped weapon mastery declaration into a one-shot choice', () => {
     const masteryId = 'effect:slow';
     const weapon = withDeclaredTestWeaponProfile({

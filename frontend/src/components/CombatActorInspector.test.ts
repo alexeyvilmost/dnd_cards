@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { collectCombatDefenses } from './CombatActorInspector';
+import { combatGrappleStatusRows } from '../solo-combat/grapplePresentation';
 
 describe('combat actor inspector defenses', () => {
   it('derives defenses recursively from mechanics primitives and deduplicates them', () => {
@@ -19,5 +20,29 @@ describe('combat actor inspector defenses', () => {
 
   it('does not infer defenses from descriptive prose', () => {
     expect(collectCombatDefenses([{ description: 'Иммунитет к огню' }])).toEqual([]);
+  });
+
+  it('explains a persisted grapple to both participants', () => {
+    const world = {
+      actors: {
+        fighter: { name: 'Дворф' },
+        goblin: { name: 'Гоблин' },
+      },
+      grapples: {
+        hold: {
+          id: 'hold', grapplerActorId: 'fighter', targetActorId: 'goblin',
+          sourcePart: 'off_hand', escapeDc: 13, reachFt: 5,
+          sourceEntityIds: ['system:unarmed'], startedAtRevision: 1,
+        },
+      },
+    } as unknown as Parameters<typeof combatGrappleStatusRows>[0];
+    expect(combatGrappleStatusRows(world, 'goblin')).toEqual([{
+      key: 'grappled:hold', name: 'Схвачен',
+      instructions: ['Захватил: Дворф.', 'Скорость — 0; освобождение — действием против Сл 13.'],
+    }]);
+    expect(combatGrappleStatusRows(world, 'fighter')).toEqual([{
+      key: 'grappling:hold', name: 'Удерживает захват',
+      instructions: ['Цель: Гоблин.', 'Занята: свободная рука.'],
+    }]);
   });
 });

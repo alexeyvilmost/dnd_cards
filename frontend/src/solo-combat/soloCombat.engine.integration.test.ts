@@ -1,15 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import compiledFixtureJson from '../pages/rulesLabFixture.generated.json';
+import fightingStyleDefinitions from '../../../scripts/content/data/mini-mvp-complex-fighting-styles.v1.json';
 import { createWorld, type ActorState, type RuleActionDefinition, type RulesCatalog, type RulesetReference } from '../rules-core/domain';
+import { CARD_LONGSWORD } from '../mvp/fixtures';
 import type { SheetCanonicalRuntime } from '../character/sheetCanonicalWorld';
 import type { SheetCombatParticipantSeed } from '../character/sheetCombatSession';
 import type { ForgeCharacter } from '../character/types';
 import type { Action } from '../types';
 import type { Monster } from '../monsters/types';
-import { advanceTurn, autoResolveSystemDecisions, createSoloCombatState, executeCombatAction, moveActor, refreshSoloCombatResources, resolvePlayerReaction, resolveTriggeredCombatAction, runMonsterTurn, setSoloCombatInitiativeTotals } from './engine';
+import { advanceTurn, autoResolveSystemDecisions, createSoloCombatState, executeCombatAction, moveActor, refreshSoloCombatResources, resolvePlayerReaction, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, setSoloCombatInitiativeTotals } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { gridDistanceFt } from './tacticalGrid';
 import { SOLO_COMBAT_KEY } from './types';
+import { UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
 
 const fixture = compiledFixtureJson as unknown as {
   source: { ruleset: RulesetReference };
@@ -163,6 +166,91 @@ const disengage = () => basicAction('action_basic_disengage', 'Отход', {
   targeting: { domain: 'actor', actor_targets: false, shape: 'self', min_targets: 0, max_targets: 1, range_ft: 0, requires_line_of_sight: false, allowed_relations: ['self'] },
 });
 
+const unarmedStyleMechanics = fightingStyleDefinitions.find(
+  (definition) => definition.card_number === 'fs_unarmed',
+)!.mechanics;
+
+function unarmedParticipant(): { participant: SheetCombatParticipantSeed; action: RuleActionDefinition } {
+  const participant = fighterSeed();
+  const actor = participant.canonical.world.actors[participant.character.id];
+  const action: RuleActionDefinition = {
+    id: 'a1000000-0000-4000-8000-000000000003',
+    name: 'Безоружный удар',
+    kind: 'nonSpell',
+    sourceEntityIds: ['action_basic_unarmed'],
+    mechanics: {
+      activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }] },
+      targeting: {
+        domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1,
+        max_targets: 1, range_ft: 5, requires_line_of_sight: true,
+        allowed_relations: ['enemy'],
+      },
+      effects: [{
+        ability: 'str', attack_kind: 'unarmed', resolution: 'attack_roll', vs: 'ac',
+        on_hit: [{ amount: '1 + str', kind: 'damage', type: 'bludgeoning' }],
+      }],
+    },
+    targeting: {
+      minTargets: 1, maxTargets: 1, rangeFt: 5,
+      requiresLineOfSight: true, allowedRelations: ['enemy'],
+    },
+  };
+  actor.passives = [...(actor.passives ?? []), clone(unarmedStyleMechanics)];
+  actor.attackProfile = {
+    attacksPerAction: 1, size: 2, reachFt: 5,
+    graspingParts: ['main_hand', 'off_hand'],
+    sourceEntityIds: ['class:test:attack-profile'],
+  };
+  actor.character.knownCards = [...(actor.character.knownCards ?? []), clone(CARD_LONGSWORD)];
+  actor.character.equippedCards = [...(actor.character.equippedCards ?? []), clone(CARD_LONGSWORD)];
+  actor.runtime.equipment = {
+    ...actor.runtime.equipment,
+    main_hand: CARD_LONGSWORD.id,
+    off_hand: null,
+  };
+  actor.runtime.inventory = [{ cardId: CARD_LONGSWORD.id, qty: 1 }];
+  actor.runtime.resources.action = 1;
+  actor.runtime.maxResources.action = 1;
+  actor.capabilities.actionIds.push(action.id);
+  const actions = [...participant.canonical.actions, action];
+  const byId = new Map(actions.map((candidate) => [candidate.id, candidate]));
+  participant.canonical = {
+    ...participant.canonical,
+    actions,
+    catalog: { getAction: (id) => byId.get(id), listActions: () => actions },
+  };
+  participant.character.resources = clone(actor.runtime.resources);
+  participant.character.max_resources = clone(actor.runtime.maxResources);
+  participant.actionPresentation = {
+    [action.id]: {
+      entityType: 'action', entityId: action.id,
+      actionRef: {
+        id: action.id, name: action.name, description: '', rarity: 'common',
+        card_number: 'action_basic_unarmed', resource: 'action',
+        action_type: 'base_action', type: 'basic', mechanics: clone(action.mechanics),
+        created_at: '', updated_at: '',
+      } as Action,
+    },
+  };
+  return { participant, action };
+}
+
+function placeAdjacent(
+  state: Awaited<ReturnType<typeof createSoloCombatState>>,
+  actorId: string,
+  targetId: string,
+) {
+  const source = state.tokens[actorId].position;
+  return {
+    ...state,
+    boardRevision: state.boardRevision + 1,
+    tokens: {
+      ...state.tokens,
+      [targetId]: { ...state.tokens[targetId], position: { x: source.x, y: source.y - 1 } },
+    },
+  };
+}
+
 function speedModifierAction(value: number): RuleActionDefinition {
   return {
     id: 'd4000000-0000-4000-8000-000000000001',
@@ -200,6 +288,109 @@ function goblin(): Monster {
 }
 
 describe('solo combat engine vertical integration', () => {
+  it('routes the exact basic Unarmed Strike through canonical damage, grapple, persistence, and turn-start damage', async () => {
+    const damageFixture = unarmedParticipant();
+    let damageState = await createSoloCombatState({
+      character: damageFixture.participant.character,
+      participant: damageFixture.participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const damageActorId = damageFixture.participant.character.id;
+    const damageTargetId = Object.values(damageState.world.actors)
+      .find((actor) => actor.kind === 'monster')!.id;
+    damageState = placeAdjacent(damageState, damageActorId, damageTargetId);
+    const hpBeforeDamage = damageState.world.actors[damageTargetId].runtime.hp.current;
+    damageState = autoResolveSystemDecisions(executeCombatAction({
+      state: damageState,
+      actorId: damageActorId,
+      actionId: damageFixture.action.id,
+      targetIds: [damageTargetId],
+      choices: { [UNARMED_STRIKE_CHOICE_ID]: ['damage'] },
+      rng: () => 0.9,
+    }), () => 0.9);
+    const armedDamage = 6 + damageState.world.actors[damageActorId].character.abilityMods.str;
+    expect(damageState.world.actors[damageTargetId].runtime.hp.current)
+      .toBe(Math.max(0, hpBeforeDamage - armedDamage));
+    expect(damageState.world.actors[damageActorId].runtime.resources.action).toBe(0);
+    expect(Object.values(damageState.world.attackActions).at(-1)).toMatchObject({ status: 'completed' });
+
+    const grappleFixture = unarmedParticipant();
+    let grappleState = await createSoloCombatState({
+      character: grappleFixture.participant.character,
+      participant: grappleFixture.participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const grappleActorId = grappleFixture.participant.character.id;
+    const grappleTargetId = Object.values(grappleState.world.actors)
+      .find((actor) => actor.kind === 'monster')!.id;
+    grappleState = placeAdjacent(grappleState, grappleActorId, grappleTargetId);
+    grappleState = autoResolveSystemDecisions(executeCombatAction({
+      state: grappleState,
+      actorId: grappleActorId,
+      actionId: grappleFixture.action.id,
+      targetIds: [grappleTargetId],
+      choices: { [UNARMED_STRIKE_CHOICE_ID]: ['grapple'] },
+      rng: () => 0,
+    }), () => 0);
+    expect(Object.values(grappleState.world.grapples)).toEqual([
+      expect.objectContaining({
+        grapplerActorId: grappleActorId,
+        targetActorId: grappleTargetId,
+        sourcePart: 'off_hand',
+      }),
+    ]);
+    expect(() => moveActor({
+      state: grappleState,
+      actorId: grappleTargetId,
+      destination: { ...grappleState.tokens[grappleTargetId].position, x: 1 },
+    })).toThrow(/доступно 0 фт/);
+    const releasedByRange = moveActor({
+      state: grappleState,
+      actorId: grappleActorId,
+      destination: {
+        ...grappleState.tokens[grappleActorId].position,
+        x: grappleState.tokens[grappleActorId].position.x + 2,
+      },
+      rng: () => 0.5,
+    });
+    expect(releasedByRange.world.grapples).toEqual({});
+    expect(releasedByRange.log.some((entry) => entry.text.includes('цель вне досягаемости')))
+      .toBe(true);
+
+    grappleState = advanceTurn(grappleState);
+    grappleState = advanceTurn(grappleState);
+    expect(activeId(grappleState)).toBe(grappleActorId);
+    expect(grappleState.world.scene.mode === 'encounter'
+      && grappleState.world.scene.turnStarted).toBe(false);
+    expect(grappleState.pendingTurnStartGrappleDamage).toEqual({
+      actorId: grappleActorId,
+      capabilityId: 'fighting_style.unarmed.turn_start_grapple_damage',
+      targetActorIds: [grappleTargetId],
+    });
+
+    const restored = readSoloCombatState(
+      writeSoloCombatState({}, grappleState),
+      grappleActorId,
+      grappleState.runtimeRevision,
+    )!;
+    expect(restored.pendingTurnStartGrappleDamage).toEqual(
+      grappleState.pendingTurnStartGrappleDamage,
+    );
+    const hpBeforeTurnDamage = restored.world.actors[grappleTargetId].runtime.hp.current;
+    const resolved = resolveSoloCombatTurnStart(restored, grappleTargetId, () => 0.999);
+    expect(resolved.pendingTurnStartGrappleDamage).toBeUndefined();
+    expect(resolved.world.actors[grappleTargetId].runtime.hp.current).toBe(hpBeforeTurnDamage - 4);
+    expect(resolved.world.scene.mode === 'encounter' && resolved.world.scene.turnStarted).toBe(true);
+    expect(resolved.movementRemainingFt[grappleActorId]).toBeGreaterThan(0);
+
+    const skipped = resolveSoloCombatTurnStart(grappleState, null, () => 0.999);
+    expect(skipped.pendingTurnStartGrappleDamage).toBeUndefined();
+    expect(skipped.world.actors[grappleTargetId].runtime.hp.current)
+      .toBe(grappleState.world.actors[grappleTargetId].runtime.hp.current);
+  });
+
   it('adds another owned sheet as an independently controlled ally with its own initiative and actions', async () => {
     const participant = fighterSeed();
     const ally = wizardSeed();

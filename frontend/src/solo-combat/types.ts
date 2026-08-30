@@ -111,6 +111,13 @@ export interface PendingTriggeredAction {
   optionActionIds: string[];
 }
 
+/** Persisted player choice which must be answered before StartTurn can commit. */
+export interface PendingTurnStartGrappleDamage {
+  actorId: string;
+  capabilityId: string;
+  targetActorIds: string[];
+}
+
 export interface SoloCombatState {
   schemaVersion: typeof SOLO_COMBAT_SCHEMA_VERSION;
   characterId: string;
@@ -143,6 +150,7 @@ export interface SoloCombatState {
   initiative: InitiativeEntry[];
   log: CombatLogEntry[];
   pendingTriggeredAction?: PendingTriggeredAction;
+  pendingTurnStartGrappleDamage?: PendingTurnStartGrappleDamage;
   outcome: 'active' | 'victory' | 'defeat';
 }
 

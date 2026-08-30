@@ -24,6 +24,19 @@ export function effectiveActorSpeedFt(actor: ActorState): number {
   return Number.isFinite(value) ? Math.max(0, value) : 0;
 }
 
+/** Tactical speed also includes encounter relations such as being grappled. */
+export function effectiveCombatActorSpeedFt(
+  state: Pick<SoloCombatState, 'world'>,
+  actorId: string,
+): number {
+  const actor = state.world.actors[actorId];
+  if (!actor) return 0;
+  const grappled = Object.values(state.world.grapples).some((grapple) => (
+    grapple.targetActorId === actorId
+  ));
+  return grappled ? 0 : effectiveActorSpeedFt(actor);
+}
+
 export function occupiedPositions(state: Pick<SoloCombatState, 'tokens' | 'world'>, exceptActorId?: string): Set<string> {
   return new Set(Object.values(state.tokens).flatMap((token) => {
     const actor = state.world.actors[token.actorId];

@@ -24,6 +24,7 @@ import type {
 } from '../rules-core/domain';
 import { InMemoryRulesSession } from '../rules-core/session';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
+import { turnStartGrappleDamageOpportunity } from '../rules-core/fightingStyleComplexPrimitives';
 import { projectRuleAction } from '../canon/ruleActionProjection';
 import type { Monster } from '../monsters/types';
 import { canPay } from '../engine/cost';
@@ -33,6 +34,7 @@ import { projectCombatLogRecords } from './combatLog';
 import {
   areaActorIds,
   effectiveActorSpeedFt,
+  effectiveCombatActorSpeedFt,
   gridDistanceFt,
   occupiedPositions,
   pushAway,
@@ -50,6 +52,7 @@ import {
   type GridPosition,
   type SoloCombatState,
 } from './types';
+import { UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
 
 type Rng = () => number;
 
@@ -192,6 +195,10 @@ function outcome(state: SoloCombatState): SoloCombatState {
       && combatRelation(state, state.characterId, actor.id) === 'enemy'
   ));
   return livingOpponent ? state : { ...state, outcome: 'victory' };
+}
+
+function isBasicUnarmedStrike(state: SoloCombatState, action: RuleActionDefinition): boolean {
+  return state.actionPresentation?.[action.id]?.actionRef?.card_number === 'action_basic_unarmed';
 }
 
 /**
@@ -389,6 +396,36 @@ export function executeCombatAction(input: {
     sourceActionId: action.id,
     targetIds: input.targetIds,
   });
+  if (isBasicUnarmedStrike(input.state, action)) {
+    if (input.targetIds.length !== 1) throw new Error('Безоружный удар требует одну цель');
+    const option = input.choices?.[UNARMED_STRIKE_CHOICE_ID]?.[0] ?? 'damage';
+    if (option !== 'damage' && option !== 'grapple' && option !== 'shove') {
+      throw new Error('Неизвестный вариант безоружного удара');
+    }
+    const begun = dispatch({
+      state: input.state,
+      command: { ...commandBase(input.state, input.actorId), type: 'BeginAttackAction' },
+      rng,
+      label: 'Атака',
+    });
+    const attackAction = Object.values(begun.world.attackActions).find((candidate) => (
+      candidate.actorId === input.actorId && candidate.status === 'open'
+    ));
+    if (!attackAction) throw new Error('Не удалось открыть действие «Атака»');
+    return withTriggeredHitOffer(dispatch({
+      state: begun,
+      command: {
+        ...commandBase(begun, input.actorId),
+        type: 'PerformUnarmedStrike',
+        attackActionId: attackAction.id,
+        option,
+        targetActorId: input.targetIds[0],
+        facts: spatialFacts(begun, input.actorId, input.targetIds[0]),
+      },
+      rng,
+      label: action.name,
+    }));
+  }
   if (action.attackReplacement) {
     const command: GameCommand = {
       ...commandBase(input.state, input.actorId),
@@ -434,7 +471,7 @@ export function executeCombatAction(input: {
     movementRemainingFt: {
       ...next.movementRemainingFt,
       [input.actorId]: (next.movementRemainingFt[input.actorId] ?? 0)
-        + effectiveActorSpeedFt(next.world.actors[input.actorId]),
+        + effectiveCombatActorSpeedFt(next, input.actorId),
     },
   });
 }
@@ -486,7 +523,16 @@ export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Ma
       ? { kind: 'reaction', actionId: null }
       : pending.request.type === 'shove_outcome'
         ? { kind: 'shove_outcome', outcome: 'push_5ft' }
-        : { kind: 'roll', roll: { mode: 'system' } };
+        : pending.type === 'unarmed_save'
+          ? {
+            kind: 'roll', roll: { mode: 'system' },
+            selectedAbility: [...(pending.request.abilityOptions ?? [pending.request.ability])]
+              .sort((left, right) => (
+              (next.world.actors[pending.request.actorId].character.abilityMods[right] ?? 0)
+                - (next.world.actors[pending.request.actorId].character.abilityMods[left] ?? 0)
+              ))[0],
+          }
+          : { kind: 'roll', roll: { mode: 'system' } };
     const beforeDecision = next;
     next = resolveDecision(next, response, rng);
     if (pending.request.type === 'reaction'
@@ -536,7 +582,7 @@ export function resolvePlayerReaction(
     && !next.world.pendingResolution
     && !next.pendingTriggeredAction
     && activeActorId(next) === actingActorId) {
-    return advanceTurn(next);
+    return advanceTurn(next, rng);
   }
   return next;
 }
@@ -649,6 +695,35 @@ function executeOpportunityAttacks(
   return next;
 }
 
+function breakOutOfRangeGrapples(
+  state: SoloCombatState,
+  movedActorId: string,
+  rng: Rng,
+): SoloCombatState {
+  let next = state;
+  const candidates = Object.values(state.world.grapples).filter((grapple) => (
+    (grapple.grapplerActorId === movedActorId || grapple.targetActorId === movedActorId)
+    && gridDistanceFt(
+      state.tokens[grapple.grapplerActorId].position,
+      state.tokens[grapple.targetActorId].position,
+    ) > grapple.reachFt
+  ));
+  for (const grapple of candidates) {
+    next = dispatch({
+      state: next,
+      command: {
+        ...commandBase(next, movedActorId),
+        type: 'BreakGrappleRange',
+        grappleId: grapple.id,
+        facts: spatialFacts(next, grapple.grapplerActorId, grapple.targetActorId),
+      },
+      rng,
+      label: 'Захват прекращён: цель вне досягаемости',
+    });
+  }
+  return next;
+}
+
 export function moveActor(input: {
   state: SoloCombatState;
   actorId: string;
@@ -671,8 +746,12 @@ export function moveActor(input: {
   // would erase that data-driven action. Effective speed is projected whenever
   // a turn starts (and when combat is created), which is where speed conditions
   // such as Ray of Frost establish the next turn's movement budget.
-  const available = input.state.movementRemainingFt[input.actorId]
-    ?? effectiveActorSpeedFt(actor);
+  const available = input.voluntary === false
+    ? (input.state.movementRemainingFt[input.actorId] ?? effectiveActorSpeedFt(actor))
+    : Math.min(
+      input.state.movementRemainingFt[input.actorId] ?? effectiveActorSpeedFt(actor),
+      effectiveCombatActorSpeedFt(input.state, input.actorId),
+    );
   const maxFeet = input.maxFeet ?? available;
   if (distance > maxFeet) throw new Error(`За это перемещение доступно ${maxFeet} фт.`);
   if (occupiedPositions(input.state, input.actorId).has(`${input.destination.x}:${input.destination.y}`)) {
@@ -691,11 +770,81 @@ export function moveActor(input: {
       [input.actorId]: Math.max(0, available - distance),
     },
   };
+  next = breakOutOfRangeGrapples(next, input.actorId, input.rng ?? Math.random);
   return appendLog(next, input.actorId, `Перемещение на ${distance} фт.`);
 }
 
-export function advanceTurn(state: SoloCombatState): SoloCombatState {
-  if (state.outcome !== 'active' || state.world.pendingResolution) return state;
+function startTurnOrRequestGrappleDamage(
+  state: SoloCombatState,
+  actorId: string,
+  rng: Rng,
+): SoloCombatState {
+  const actor = state.world.actors[actorId];
+  const opportunity = isControlledCharacter(state, actorId)
+    ? turnStartGrappleDamageOpportunity({
+      passives: actor.passives ?? [],
+      sourceActorId: actorId,
+      grapples: Object.values(state.world.grapples),
+    })
+    : null;
+  if (opportunity) {
+    return {
+      ...state,
+      pendingTurnStartGrappleDamage: { actorId, ...opportunity },
+    };
+  }
+  const next = dispatch({
+    state,
+    command: { ...commandBase(state, actorId), type: 'StartTurn' },
+    rng,
+    label: 'Начало хода',
+  });
+  return {
+    ...next,
+    movementRemainingFt: {
+      ...next.movementRemainingFt,
+      [actorId]: effectiveCombatActorSpeedFt(next, actorId),
+    },
+  };
+}
+
+/** Commit the persisted optional Unarmed Fighting damage choice, or decline it. */
+export function resolveSoloCombatTurnStart(
+  state: SoloCombatState,
+  targetActorId: string | null,
+  rng: Rng = Math.random,
+): SoloCombatState {
+  const pending = state.pendingTurnStartGrappleDamage;
+  if (!pending) throw new Error('Нет ожидающего выбора в начале хода');
+  if (activeActorId(state) !== pending.actorId) throw new Error('Ожидающий выбор больше не относится к активному участнику');
+  if (targetActorId !== null && !pending.targetActorIds.includes(targetActorId)) {
+    throw new Error('Эту цель больше нельзя ранить захватом');
+  }
+  const { pendingTurnStartGrappleDamage: _cleared, ...cleared } = state;
+  const next = dispatch({
+    state: cleared as SoloCombatState,
+    command: {
+      ...commandBase(cleared as SoloCombatState, pending.actorId),
+      type: 'StartTurn',
+      ...(targetActorId === null ? {} : {
+        turnStartChoices: [{ capabilityId: pending.capabilityId, targetActorId }],
+      }),
+    },
+    rng,
+    label: 'Начало хода',
+  });
+  return {
+    ...next,
+    movementRemainingFt: {
+      ...next.movementRemainingFt,
+      [pending.actorId]: effectiveCombatActorSpeedFt(next, pending.actorId),
+    },
+  };
+}
+
+export function advanceTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
+  if (state.outcome !== 'active' || state.world.pendingResolution
+    || state.pendingTurnStartGrappleDamage) return state;
   const endingActorId = activeActorId(state);
   let next = dispatch({
     state,
@@ -705,19 +854,7 @@ export function advanceTurn(state: SoloCombatState): SoloCombatState {
   });
   if (next.outcome !== 'active') return next;
   const startingActorId = activeActorId(next);
-  next = dispatch({
-    state: next,
-    command: { ...commandBase(next, startingActorId), type: 'StartTurn' },
-    rng: () => { throw new Error('StartTurn не должен бросать кости'); },
-    label: 'Начало хода',
-  });
-  return {
-    ...next,
-    movementRemainingFt: {
-      ...next.movementRemainingFt,
-      [startingActorId]: effectiveActorSpeedFt(next.world.actors[startingActorId]),
-    },
-  };
+  return startTurnOrRequestGrappleDamage(next, startingActorId, rng);
 }
 
 /** Test-scene authority: replace initiative totals while preserving the current turn. */
@@ -782,14 +919,14 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
   const monsterId = activeActorId(state);
   const monster = state.world.actors[monsterId];
   if (!monster || monster.kind !== 'monster') return state;
-  if (monster.runtime.hp.current <= 0) return advanceTurn(state);
+  if (monster.runtime.hp.current <= 0) return advanceTurn(state, rng);
   // A persisted monster turn can resume after a player reaction without the
   // original controller stack frame that would have advanced initiative. The
   // action payment is the durable proof that the planner already committed its
   // one supported turn action; never plan and charge that action a second time.
   if ((monster.runtime.maxResources.action ?? 0) > 0
     && (monster.runtime.resources.action ?? 0) <= 0) {
-    return advanceTurn(state);
+    return advanceTurn(state, rng);
   }
   const targetId = controlledCharacterIds(state)
     .filter((actorId) => (state.world.actors[actorId]?.runtime.hp.current ?? 0) > 0)
@@ -823,7 +960,7 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
       next = autoResolveSystemDecisions(next, rng);
     }
   }
-  return next.world.pendingResolution || next.outcome !== 'active' ? next : advanceTurn(next);
+  return next.world.pendingResolution || next.outcome !== 'active' ? next : advanceTurn(next, rng);
 }
 
 function withInitiativeAndStart(state: SoloCombatState, rng: Rng): SoloCombatState {
@@ -845,12 +982,7 @@ function withInitiativeAndStart(state: SoloCombatState, rng: Rng): SoloCombatSta
     label: 'Инициатива',
   });
   const actorId = activeActorId(next);
-  return dispatch({
-    state: next,
-    command: { ...commandBase(next, actorId), type: 'StartTurn' },
-    rng: () => { throw new Error('StartTurn не должен бросать кости'); },
-    label: 'Начало хода',
-  });
+  return startTurnOrRequestGrappleDamage(next, actorId, rng);
 }
 
 export async function createSoloCombatState(input: {

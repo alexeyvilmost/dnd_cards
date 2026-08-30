@@ -5,18 +5,36 @@ import type { SoloCombatState } from '../solo-combat/types';
 import type { ActiveEffectEntry } from '../mvp/contracts';
 import CharacterSheetFirstColumn, { CHARACTER_SENSE_LABELS } from './CharacterSheetFirstColumn';
 import { groupActiveEffectsForDisplay } from '../engine/effects';
+import {
+  combatGrappleStatusRows,
+  type CombatGrappleStatusRow,
+} from '../solo-combat/grapplePresentation';
 
 const abilityRecord = (value: Partial<Record<AbilityKey, number>>, fallback: number): Record<AbilityKey, number> =>
   Object.fromEntries(ABILITY_KEYS.map((ability) => [ability, Number(value[ability] ?? fallback)])) as Record<AbilityKey, number>;
 
-export function CombatActiveEffects({ effects }: { effects: readonly ActiveEffectEntry[] }) {
-  if (!effects.length) return <p className="cs-hook-note">Активных состояний и эффектов нет.</p>;
+export function CombatActiveEffects({
+  effects,
+  grappleStatuses = [],
+}: {
+  effects: readonly ActiveEffectEntry[];
+  grappleStatuses?: readonly CombatGrappleStatusRow[];
+}) {
+  if (!effects.length && !grappleStatuses.length) {
+    return <p className="cs-hook-note">Активных состояний и эффектов нет.</p>;
+  }
   return (
     <div className="combat-sheet-effects">
       {groupActiveEffectsForDisplay(effects).map((group) => (
         <div key={group.key} className="combat-sheet-effect">
           <strong className="cs-tag">{group.name}</strong>
           {group.instructions.map((instruction) => <small key={instruction}>{instruction}</small>)}
+        </div>
+      ))}
+      {grappleStatuses.map((status) => (
+        <div key={status.key} className="combat-sheet-effect">
+          <strong className="cs-tag">{status.name}</strong>
+          {status.instructions.map((instruction) => <small key={instruction}>{instruction}</small>)}
         </div>
       ))}
     </div>
@@ -69,7 +87,10 @@ export default function CombatCharacterSidebar({
         label: CHARACTER_SENSE_LABELS[sense.sense] ?? sense.sense,
         value: `${sense.range} фт.`,
       }))}
-      conditions={<CombatActiveEffects effects={actor.runtime.activeEffects} />}
+      conditions={<CombatActiveEffects
+        effects={actor.runtime.activeEffects}
+        grappleStatuses={combatGrappleStatusRows(state.world, actorId)}
+      />}
     />
   );
 }
