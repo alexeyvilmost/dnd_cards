@@ -194,6 +194,32 @@ function outcome(state: SoloCombatState): SoloCombatState {
   return livingOpponent ? state : { ...state, outcome: 'victory' };
 }
 
+/**
+ * Keep the turn movement ledger aligned with runtime speed changes without
+ * erasing distance already moved or extra allotments granted by Dash.
+ */
+function reconcileMovementForSpeedChanges(
+  state: SoloCombatState,
+  nextWorld: WorldState,
+): SoloCombatState {
+  let movementRemainingFt = state.movementRemainingFt;
+  for (const [actorId, nextActor] of Object.entries(nextWorld.actors)) {
+    const previousActor = state.world.actors[actorId];
+    if (!previousActor) continue;
+    const speedDelta = effectiveActorSpeedFt(nextActor) - effectiveActorSpeedFt(previousActor);
+    if (speedDelta === 0) continue;
+    if (movementRemainingFt === state.movementRemainingFt) {
+      movementRemainingFt = { ...state.movementRemainingFt };
+    }
+    const previousRemaining = state.movementRemainingFt[actorId]
+      ?? effectiveActorSpeedFt(previousActor);
+    movementRemainingFt[actorId] = Math.max(0, previousRemaining + speedDelta);
+  }
+  return movementRemainingFt === state.movementRemainingFt
+    ? state
+    : { ...state, movementRemainingFt };
+}
+
 function transitionState(
   state: SoloCombatState,
   actorId: string,
@@ -202,7 +228,8 @@ function transitionState(
   rawEvents: readonly UncommittedRuleEvent[],
 ): SoloCombatState {
   const records = projectCombatLogRecords(rawEvents);
-  let next = { ...state, world: nextWorld };
+  let next = reconcileMovementForSpeedChanges(state, nextWorld);
+  next = { ...next, world: nextWorld };
   next = applyForcedMovement(next, rawEvents);
   next = appendLog(next, actorId, `${label}: ${eventSummary(records)}`, records);
   return outcome(next);

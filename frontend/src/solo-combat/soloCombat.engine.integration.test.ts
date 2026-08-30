@@ -163,6 +163,31 @@ const disengage = () => basicAction('action_basic_disengage', 'Отход', {
   targeting: { domain: 'actor', actor_targets: false, shape: 'self', min_targets: 0, max_targets: 1, range_ft: 0, requires_line_of_sight: false, allowed_relations: ['self'] },
 });
 
+function speedModifierAction(value: number): RuleActionDefinition {
+  return {
+    id: 'd4000000-0000-4000-8000-000000000001',
+    name: 'Большая форма',
+    kind: 'nonSpell',
+    sourceEntityIds: ['RE-goliath-2'],
+    targeting: {
+      minTargets: 0, maxTargets: 1, rangeFt: 0,
+      requiresLineOfSight: false, allowedRelations: ['self'],
+    },
+    mechanics: {
+      activation: { mode: 'active', cost: [{ resource: 'bonus_action', amount: 1 }] },
+      targeting: {
+        domain: 'actor', actor_targets: false, shape: 'self',
+        min_targets: 0, max_targets: 1, range_ft: 0,
+        requires_line_of_sight: false, allowed_relations: ['self'],
+      },
+      effects: [{ resolution: 'auto', result: [{
+        kind: 'modifier', applies_to: { roll: 'speed' }, op: 'add', value,
+        duration: { type: 'rounds', amount: 10 },
+      }] }],
+    },
+  };
+}
+
 function goblin(): Monster {
   return {
     id: 'c1000000-0000-4000-8000-000000000001', slug: 'goblin-warrior', name: 'Гоблин-воин',
@@ -563,6 +588,44 @@ describe('solo combat engine vertical integration', () => {
     state = moveActor({ state, actorId: participant.character.id, destination: { x: 6, y: 9 }, rng: () => 0.99 });
     expect(state.world.actors[participant.character.id].runtime.hp.current).toBe(hpBefore);
     expect(state.world.actors[monsterId].runtime.resources.reaction).toBe(1);
+  });
+
+  it('reconciles remaining movement when an active effect changes speed mid-turn', async () => {
+    const participant = fighterSeed();
+    const largeForm = speedModifierAction(10);
+    const actor = participant.canonical.world.actors[participant.character.id];
+    const actions = [...participant.canonical.actions, largeForm];
+    const byId = new Map(actions.map((action) => [action.id, action]));
+    actor.capabilities.actionIds.push(largeForm.id);
+    participant.canonical = {
+      ...participant.canonical,
+      actions,
+      catalog: { getAction: (id) => byId.get(id), listActions: () => actions },
+    };
+    let state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const actorId = participant.character.id;
+    const baseSpeed = Number(state.world.actors[actorId].character.characterSpeed);
+    state = moveActor({
+      state, actorId,
+      destination: { ...state.tokens[actorId].position, y: state.tokens[actorId].position.y - 2 },
+    });
+    expect(state.movementRemainingFt[actorId]).toBe(baseSpeed - 10);
+
+    state = executeCombatAction({
+      state, actorId, actionId: largeForm.id, targetIds: [actorId], rng: () => 0,
+    });
+
+    expect(state.movementRemainingFt[actorId]).toBe(baseSpeed);
+    expect(state.world.actors[actorId].runtime.resources.bonus_action).toBe(0);
+    expect(() => moveActor({
+      state, actorId,
+      destination: { ...state.tokens[actorId].position, y: state.tokens[actorId].position.y - 6 },
+    })).not.toThrow();
   });
 
   it('lets the separate monster controller move, attack, resolve, and hand back the turn', async () => {
