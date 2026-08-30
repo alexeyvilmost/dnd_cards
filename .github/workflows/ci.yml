@@ -1,4 +1,4 @@
-name: CI
+name: Focused CI
 
 permissions:
   contents: read
@@ -7,32 +7,58 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# PR/пуш — полный детерминированный micro-MVP gate: build/lint, обычные и
-# regression-наборы (их intentional skip/todo видны отдельно), manifest +
-# 448 builds, exact structural coverage ядра и
-# примитивов, semantic two-PC evidence, isolated Playwright desktop/mobile и PostgreSQL.
-# CI-only content fixture проверяет транзакционный контракт, но не считается
-# production restore drill. Release evidence отдельно требует восстановленную
-# production-like БД и намеренно запрещает CONTENT_MIGRATION_TEST_BOOTSTRAP.
-# Ночь/ручной запуск — read-only live catalog compilation/certification и
-# экспорт снапшота для явного обнаружения дрейфа production-контента.
+# PR/пуш выполняют только быстрый gate изменяемых продуктовых границ. Исторический
+# многочасовой полный набор сохранён исключительно как явная ручная диагностика:
+# он больше не запускается после каждого push, не ждёт несвязанный production SHA
+# и не считается доказательством ручной mini-MVP проверки.
 
 on:
   push:
     branches: [main]
   pull_request:
-  schedule:
-    - cron: '0 3 * * *'   # ежедневно 03:00 UTC
   workflow_dispatch:
     inputs:
+      run_full_regression:
+        description: 'Run the retired full diagnostic pipeline explicitly'
+        required: false
+        default: false
+        type: boolean
       expected_deployed_commit:
         description: 'Optional exact deployed SHA for the production browser spine'
         required: false
         type: string
 
 jobs:
+  focused:
+    name: Быстрый gate изменённых границ
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.x'
+          cache-dependency-path: backend/go.sum
+      - name: Установка зависимостей
+        working-directory: frontend
+        run: npm ci --ignore-scripts
+      - name: TypeScript и целевые продуктовые регрессии
+        working-directory: frontend
+        run: |
+          npx tsc --noEmit
+          npx vitest run src/character/rules/resolveCharacterRules.test.ts src/solo-combat/soloCombat.engine.integration.test.ts src/components/CombatHotbar.test.ts
+      - name: Контракты новых content-миграций
+        working-directory: backend
+        run: go test ./migrations -run 'Test(Bard|RepairBard|Sleep|RepairSleep)' -count=1
+
   offline:
-    name: Оффлайн-гейт (build + lint + tests)
+    name: Полная историческая диагностика (только вручную)
+    if: github.event_name == 'workflow_dispatch' && inputs.run_full_regression
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:
@@ -133,8 +159,8 @@ jobs:
         run: go vet ./...
 
   live-content:
-    name: Живой прод (ночью / вручную)
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    name: Живой прод (только явная полная диагностика)
+    if: github.event_name == 'workflow_dispatch' && inputs.run_full_regression
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -176,12 +202,9 @@ jobs:
           path: officials/canon/prod-snapshot
 
   live-browser-spine:
-    name: Реальные production happy paths (ночью / после релиза)
+    name: Реальные production happy paths (только вручную)
     needs: offline
-    if: >-
-      github.event_name == 'schedule' ||
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.event_name == 'workflow_dispatch' && inputs.run_full_regression
     runs-on: ubuntu-latest
     timeout-minutes: 120
     env:

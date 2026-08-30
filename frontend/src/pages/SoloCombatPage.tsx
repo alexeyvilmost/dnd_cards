@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, RotateCcw, X } from 'lucide-react';
+import { ArrowLeft, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
 import { actionsApi, effectsApi } from '../api/client';
 import { charactersV3Api } from '../character/api';
 import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
@@ -11,6 +11,7 @@ import CombatHotbar from '../components/CombatHotbar';
 import CombatActorInspector from '../components/CombatActorInspector';
 import CombatCharacterSidebar from '../components/CombatCharacterSidebar';
 import CombatLogPanel from '../components/CombatLogPanel';
+import CombatSceneConstructor from '../components/CombatSceneConstructor';
 import MonsterTurnController from '../components/MonsterTurnController';
 import { sheetReactionDecisionOptions } from '../components/SheetPendingCombatPanel';
 import TacticalBattleMap from '../components/TacticalBattleMap';
@@ -78,6 +79,7 @@ export default function SoloCombatPage() {
   const [movementMode, setMovementMode] = useState(false);
   const [inspectedActorId, setInspectedActorId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [sceneConstructorOpen, setSceneConstructorOpen] = useState(false);
   const [sheetActorId, setSheetActorId] = useState<string | null>(null);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -435,7 +437,7 @@ export default function SoloCombatPage() {
     <main className="solo-combat-page forge">
       <MonsterTurnController state={state} disabled={busy} onTransition={apply} onError={setError} />
       <header className="combat-topbar">
-        <Link to={`/characters-v3/${id}`}><ArrowLeft size={18} /> Лист</Link>
+        <div className="combat-topbar__navigation"><Link to={`/characters-v3/${id}`}><ArrowLeft size={18} /> Лист</Link><button type="button" onClick={() => setSceneConstructorOpen(true)}><SlidersHorizontal size={16} /> Сцена</button></div>
         <div className="initiative-ribbon" aria-label="Порядок инициативы">
           {state.initiative.map((entry) => {
             const participant = state.world.actors[entry.actorId];
@@ -468,6 +470,7 @@ export default function SoloCombatPage() {
       {inspectedActorId && state.world.actors[inspectedActorId] && (
         <CombatActorInspector state={state} actorId={inspectedActorId} onClose={() => setInspectedActorId(null)} />
       )}
+      {sceneConstructorOpen && <CombatSceneConstructor state={state} busy={busy} onApply={apply} onClose={() => setSceneConstructorOpen(false)} />}
       <CombatHotbar state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || busy || Boolean(pending) || Boolean(pendingTriggered) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); apply(advanceTurn(state)); }} onSheet={() => { setSheetActorId(activeControlledActorId); setSheetOpen(true); }} />
       {sheetOpen && (() => {
         const drawerActorId = sheetActorId && isControlledCharacter(state, sheetActorId)

@@ -693,6 +693,63 @@ export function advanceTurn(state: SoloCombatState): SoloCombatState {
   };
 }
 
+/** Test-scene authority: replace initiative totals while preserving the current turn. */
+export function setSoloCombatInitiativeTotals(
+  state: SoloCombatState,
+  totals: Readonly<Record<string, number>>,
+): SoloCombatState {
+  if (state.world.scene.mode !== 'encounter') throw new Error('Бой ещё не начат');
+  const currentActorId = activeActorId(state);
+  const initiative = state.initiative.map((entry) => {
+    const raw = totals[entry.actorId];
+    if (raw === undefined) return entry;
+    if (!Number.isInteger(raw) || raw < -100 || raw > 100) {
+      throw new Error('Инициатива должна быть целым числом от −100 до 100');
+    }
+    return { ...entry, die: raw - entry.bonus, total: raw };
+  }).sort((left, right) => (
+    right.total - left.total || right.bonus - left.bonus || left.actorId.localeCompare(right.actorId)
+  ));
+  if (initiative.length !== Object.keys(state.world.actors).length
+    || new Set(initiative.map((entry) => entry.actorId)).size !== initiative.length) {
+    throw new Error('Порядок инициативы не совпадает с участниками сцены');
+  }
+  const order = initiative.map((entry) => entry.actorId);
+  const activeIndex = order.indexOf(currentActorId);
+  if (activeIndex < 0) throw new Error('Активный участник исчез из инициативы');
+  return appendLog({
+    ...state,
+    initiative,
+    world: {
+      ...state.world,
+      scene: { ...state.world.scene, initiative: order, activeIndex },
+    },
+  }, currentActorId, 'Инициатива сцены изменена конструктором.');
+}
+
+/** Test-scene authority: refill one actor without simulating a rest or changing HP/effects. */
+export function refreshSoloCombatResources(
+  state: SoloCombatState,
+  actorId: string,
+): SoloCombatState {
+  const actor = state.world.actors[actorId];
+  if (!actor) throw new Error('Участник сцены не найден');
+  const world = {
+    ...state.world,
+    actors: {
+      ...state.world.actors,
+      [actorId]: {
+        ...actor,
+        runtime: {
+          ...actor.runtime,
+          resources: clone(actor.runtime.maxResources),
+        },
+      },
+    },
+  };
+  return appendLog({ ...state, world }, actorId, 'Ресурсы восстановлены конструктором сцены.');
+}
+
 export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
   if (state.outcome !== 'active' || state.world.pendingResolution) return state;
   const monsterId = activeActorId(state);

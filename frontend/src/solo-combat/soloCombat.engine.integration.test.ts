@@ -6,7 +6,7 @@ import type { SheetCombatParticipantSeed } from '../character/sheetCombatSession
 import type { ForgeCharacter } from '../character/types';
 import type { Action } from '../types';
 import type { Monster } from '../monsters/types';
-import { advanceTurn, autoResolveSystemDecisions, createSoloCombatState, executeCombatAction, moveActor, resolvePlayerReaction, resolveTriggeredCombatAction, runMonsterTurn } from './engine';
+import { advanceTurn, autoResolveSystemDecisions, createSoloCombatState, executeCombatAction, moveActor, refreshSoloCombatResources, resolvePlayerReaction, resolveTriggeredCombatAction, runMonsterTurn, setSoloCombatInitiativeTotals } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { gridDistanceFt } from './tacticalGrid';
 import { SOLO_COMBAT_KEY } from './types';
@@ -263,6 +263,48 @@ describe('solo combat engine vertical integration', () => {
     }), () => 0.5);
     expect(state.world.actors[monsterId].runtime.hp.current).toBeLessThan(hpBefore);
     expect(state.log.some((entry) => entry.actorId === allyId && entry.text.includes(ally.character.name))).toBe(true);
+  });
+
+  it('scene constructor reorders initiative without stealing the turn and refreshes exact resources', async () => {
+    const participant = fighterSeed();
+    const ally = wizardSeed();
+    let state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      allies: [ally],
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const activeBefore = activeId(state);
+    const totals = Object.fromEntries(state.initiative.map((entry, index) => [
+      entry.actorId, index === 0 ? -5 : 30 - index,
+    ]));
+    state = setSoloCombatInitiativeTotals(state, totals);
+    expect(activeId(state)).toBe(activeBefore);
+    expect(state.world.scene.mode).toBe('encounter');
+    if (state.world.scene.mode !== 'encounter') throw new Error('expected encounter');
+    expect(state.world.scene.initiative).toEqual(state.initiative.map((entry) => entry.actorId));
+    expect(state.initiative.map((entry) => entry.total)).toEqual(
+      [...state.initiative.map((entry) => entry.total)].sort((a, b) => b - a),
+    );
+
+    const actorId = participant.character.id;
+    const actor = state.world.actors[actorId];
+    const spent = Object.fromEntries(Object.keys(actor.runtime.maxResources).map((key) => [key, 0]));
+    state = {
+      ...state,
+      world: {
+        ...state.world,
+        actors: {
+          ...state.world.actors,
+          [actorId]: { ...actor, runtime: { ...actor.runtime, resources: spent } },
+        },
+      },
+    };
+    state = refreshSoloCombatResources(state, actorId);
+    expect(state.world.actors[actorId].runtime.resources)
+      .toEqual(state.world.actors[actorId].runtime.maxResources);
+    expect(state.log.at(-1)?.text).toContain('Ресурсы восстановлены');
   });
 
   it('opens and resolves a generic owned post-hit rider instead of exposing it proactively', async () => {

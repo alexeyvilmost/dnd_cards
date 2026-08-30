@@ -267,6 +267,40 @@ describe('resolveCharacterRules — grant_spell и заговоры', () => {
       .toBe('wis');
   });
 
+  it('реальный контракт Барда даёт Charisma всем выбранным заклинаниям Forge', () => {
+    const bardOrigin = {
+      kind: 'class' as const,
+      id: 'be96272c-8585-438d-ac32-b2788f1b1741',
+      name: 'Бард',
+    };
+    const rs = build({
+      klass: {
+        id: bardOrigin.id,
+        card_number: 'CLASS-bard',
+        name: bardOrigin.name,
+        hit_die: 'd8',
+      },
+      effects: [fx('1ea222f0-2d5b-47a3-91b2-3f683af5d007', auto(
+        { kind: 'spellcasting_ability', role: 'primary', ability: 'cha' },
+        { kind: 'grant_spell', value: 'SPELL-0173', label: 'cantrip' },
+        { kind: 'grant_spell', value: 'minor_illusion', label: 'cantrip' },
+        { kind: 'grant_spell', value: 'SPELL-0171', label: 'prepared' },
+        { kind: 'grant_spell', value: 'SPELL-0214', label: 'prepared' },
+        { kind: 'grant_spell', value: 'SPELL-0272', label: 'prepared' },
+        { kind: 'grant_spell', value: 'SPELL-0311', label: 'prepared' },
+      ), bardOrigin)],
+    });
+
+    expect(rs.spellcasting?.ability).toBe('cha');
+    expect(rs.spells.cantrips).toEqual(['SPELL-0173', 'minor_illusion']);
+    expect(rs.spells.leveled).toEqual([
+      'SPELL-0171', 'SPELL-0214', 'SPELL-0272', 'SPELL-0311',
+    ]);
+    expect(rs.appliedGrants
+      .filter((grant) => grant.kind === 'spell')
+      .every((grant) => grant.spellcastingAbility === 'cha')).toBe(true);
+  });
+
   it('class-origin invocation inherits primary ability by stable origin id, not source name', () => {
     const origin = { kind: 'class' as const, id: 'caster', name: 'Любое имя' };
     const rs = build({

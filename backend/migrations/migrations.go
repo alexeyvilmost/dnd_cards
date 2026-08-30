@@ -744,6 +744,18 @@ func GetAllMigrations() []Migration {
 			Up:          alignCertifiedMetadataProjection,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     bardSpellcastingMigrationVersion,
+			Description: "Добавить каноничную характеристику колдовства барда и отозвать ложный сертификат",
+			Up:          repairBardSpellcastingContract,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     sleepSpellClassListMigrationVersion,
+			Description: "Добавить каноничные списки классов Усыплению и отозвать ложный сертификат",
+			Up:          repairSleepSpellClassListContract,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

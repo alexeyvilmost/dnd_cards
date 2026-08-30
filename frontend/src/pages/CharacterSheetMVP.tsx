@@ -1604,10 +1604,10 @@ const CharacterSheetMVP = () => {
           characterName={character.name}
           characterId={character.id}
           onClose={() => setCombatSetupOpen(false)}
-          onStart={({ opponents, allyId }) => {
+          onStart={({ opponents, allyIds }) => {
             const params = new URLSearchParams();
             opponents.forEach(({ monster, quantity }) => params.set(monster.id, String(quantity)));
-            if (allyId) params.set('ally', allyId);
+            allyIds.forEach((allyId) => params.append('ally', allyId));
             navigate(`/characters-v3/${character.id}/combat?${params.toString()}`);
           }}
         />

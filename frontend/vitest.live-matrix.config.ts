@@ -27,6 +27,7 @@ export default defineConfig({
       'src/mvp/mini-mvp.control-spells.live.test.ts',
       'src/mvp/mini-mvp.utility-cantrips.live.test.ts',
       'src/mvp/mini-mvp.utility-level1-spells.live.test.ts',
+      'src/mvp/mini-mvp.spell-activation.live.test.ts',
       'src/mvp/mini-mvp.forge-roots.live.test.ts',
       'src/mvp/mini-mvp.fighting-styles-forge.live.test.ts',
       'src/mvp/mini-mvp.fighting-style-primitives.live.test.ts',
