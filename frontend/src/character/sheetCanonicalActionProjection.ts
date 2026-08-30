@@ -120,20 +120,24 @@ export function projectRunnableSheetCanonicalActions(input: {
           const cardId = input.equipment[slot];
           return cardId && cards.get(cardId) ? [cards.get(cardId)!] : [];
         });
+      const unarmedFacts = {
+        holdingWeaponOrShield: heldCards.some((card) => (
+          card.type === 'weapon' || card.type === 'shield' || card.defense_type === 'shield'
+        )),
+      };
       const profiled = applyUnarmedDamageProfileToAction(
         { ...action, mechanics },
         input.passives ?? [],
-        {
-          holdingWeaponOrShield: heldCards.some((card) => (
-            card.type === 'weapon' || card.type === 'shield' || card.defense_type === 'shield'
-          )),
-        },
+        unarmedFacts,
       );
+      const profiledActionRef = action.actionRef
+        ? applyUnarmedDamageProfileToAction(action.actionRef, input.passives ?? [], unarmedFacts)
+        : undefined;
       actions.push({
         ...profiled,
         mechanics: profiled.mechanics,
-        ...(action.actionRef && profiled.mechanics !== mechanics
-          ? { actionRef: { ...action.actionRef, mechanics: profiled.mechanics } }
+        ...(profiledActionRef
+          ? { actionRef: { ...profiledActionRef, mechanics: profiled.mechanics } }
           : {}),
         // Spell compilation intentionally starts from the immutable entity
         // reference to preserve grant provenance. Carry the same normalized

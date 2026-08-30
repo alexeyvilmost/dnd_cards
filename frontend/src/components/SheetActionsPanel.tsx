@@ -865,15 +865,19 @@ export default function SheetActionsPanel({
             const cardId = runtime.equipment[slot];
             return cardId && equipCards.get(cardId) ? [equipCards.get(cardId)!] : [];
           });
-        const profiled = applyUnarmedDamageProfileToAction(contextual, passives, {
+        const unarmedFacts = {
           holdingWeaponOrShield: heldCards.some((card) => (
             card.type === 'weapon' || card.type === 'shield' || card.defense_type === 'shield'
           )),
-        });
+        };
+        const profiled = applyUnarmedDamageProfileToAction(contextual, passives, unarmedFacts);
+        const profiledActionRef = action.actionRef
+          ? applyUnarmedDamageProfileToAction(action.actionRef, passives, unarmedFacts)
+          : undefined;
         return {
           ...profiled,
-          ...(action.actionRef && profiled.mechanics !== contextual.mechanics
-            ? { actionRef: { ...action.actionRef, mechanics: profiled.mechanics } }
+          ...(profiledActionRef
+            ? { actionRef: { ...profiledActionRef, mechanics: profiled.mechanics } }
             : {}),
         };
       } catch (cause) {

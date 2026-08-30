@@ -103,6 +103,18 @@ describe('runnable canonical sheet-action projection', () => {
     const unarmed: SheetAction = {
       id: 'unarmed', name: 'Unarmed Strike', group: 'basic',
       description: 'Атака кулаком. Урон: 1 + модификатор Силы (дробящий).',
+      actionRef: {
+        id: 'action:unarmed', name: 'Безоружный удар',
+        description: 'Атака кулаком. Урон: 1 + модификатор Силы (дробящий).',
+        mechanics: {
+          activation: { mode: 'active', cost: [{ resource: 'action' }] },
+          targeting: { shape: 'single', range: '5 feet', filter: 'enemy' },
+          effects: [{
+            resolution: 'attack_roll', attack_kind: 'unarmed', ability: 'str', vs: 'ac',
+            on_hit: [{ kind: 'damage', amount: '1 + str', type: 'bludgeoning' }],
+          }],
+        },
+      } as NonNullable<SheetAction['actionRef']>,
       mechanics: {
         activation: { mode: 'active', cost: [{ resource: 'action' }] },
         targeting: { shape: 'single', range: '5 feet', filter: 'enemy' },
@@ -144,6 +156,9 @@ describe('runnable canonical sheet-action projection', () => {
     expect(emptyHands.actions[0].description).toContain('Урон: 1d8 + модификатор Силы');
     expect(armed.actions[0].description).toContain('Урон: 1d6 + модификатор Силы');
     expect(baseline.actions[0].description).toContain('Урон: 1 + модификатор Силы');
+    expect(emptyHands.actions[0].actionRef?.description).toContain('Урон: 1d8 + модификатор Силы');
+    expect(armed.actions[0].actionRef?.description).toContain('Урон: 1d6 + модификатор Силы');
+    expect(baseline.actions[0].actionRef?.description).toContain('Урон: 1 + модификатор Силы');
   });
 
   it('binds the equipped main action and excludes an unavailable off-hand capability', () => {
