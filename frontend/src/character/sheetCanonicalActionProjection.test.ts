@@ -114,7 +114,7 @@ describe('runnable canonical sheet-action projection', () => {
             on_hit: [{ kind: 'damage', amount: '1 + str', type: 'bludgeoning' }],
           }],
         },
-      } as NonNullable<SheetAction['actionRef']>,
+      } as unknown as NonNullable<SheetAction['actionRef']>,
       mechanics: {
         activation: { mode: 'active', cost: [{ resource: 'action' }] },
         targeting: { shape: 'single', range: '5 feet', filter: 'enemy' },
