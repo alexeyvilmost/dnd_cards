@@ -24,4 +24,10 @@ describe('playerFacingSheetActionError', () => {
       'OutOfRange: actor:target is outside 10 ft unarmed reach',
     ))).toBe('Цель вне дистанции действия (10 фт.).');
   });
+
+  it('translates Stonecunning fact rejections into an actionable terrain instruction', () => {
+    expect(playerFacingSheetActionError(new Error(
+      'InvalidFacts: Stonecunning requires explicit stone-surface contact facts',
+    ))).toBe('Для Камнечувствия укажите, что персонаж стоит на каменной поверхности или касается её.');
+  });
 });

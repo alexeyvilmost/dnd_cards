@@ -12,5 +12,17 @@ export function playerFacingSheetActionError(cause: unknown): string {
   if (outOfRange) {
     return `Цель вне дистанции действия (${outOfRange[1]} фт.).`;
   }
+  if (/Stonecunning requires explicit stone-surface contact facts/u.test(detail)) {
+    return 'Для Камнечувствия укажите, что персонаж стоит на каменной поверхности или касается её.';
+  }
+  if (/Stonecunning requires a stone surface/u.test(detail)) {
+    return 'Камнечувствие действует только при контакте с каменной поверхностью.';
+  }
+  if (/Stonecunning stone must be natural or worked/u.test(detail)) {
+    return 'Для Камнечувствия выберите природный или обработанный камень.';
+  }
+  if (/Stonecunning requires standing on or touching the stone surface/u.test(detail)) {
+    return 'Для Камнечувствия нужно стоять на камне или касаться каменной поверхности.';
+  }
   return detail || 'Не удалось выполнить действие';
 }

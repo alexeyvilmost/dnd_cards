@@ -13,6 +13,7 @@ import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { gridDistanceFt } from './tacticalGrid';
 import { SOLO_COMBAT_KEY } from './types';
 import { UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
+import { STONEWORK_CONTACT_CHOICE_ID } from '../mechanics/collectChoices';
 
 const fixture = compiledFixtureJson as unknown as {
   source: { ruleset: RulesetReference };
@@ -235,6 +236,62 @@ function unarmedParticipant(): { participant: SheetCombatParticipantSeed; action
   return { participant, action };
 }
 
+function stonecunningParticipant(): { participant: SheetCombatParticipantSeed; action: RuleActionDefinition } {
+  const participant = fighterSeed();
+  const actor = participant.canonical.world.actors[participant.character.id];
+  const action: RuleActionDefinition = {
+    id: 'a1000000-0000-4000-8000-000000000004',
+    name: 'Камнечувствие',
+    kind: 'nonSpell',
+    sourceEntityIds: ['04c2410f-8bc1-4490-bf54-0a8d21e066c9', 'RE-dwarf-4'],
+    targeting: {
+      minTargets: 0, maxTargets: 1, rangeFt: 0,
+      requiresLineOfSight: false, allowedRelations: ['self'],
+      requiresStoneworkContact: true,
+    },
+    mechanics: {
+      activation: {
+        mode: 'active',
+        cost: [
+          { resource: 'bonus_action', amount: 1 },
+          { resource: 'uses_RE-dwarf-4', amount: 1 },
+        ],
+      },
+      targeting: {
+        domain: 'actor', actor_targets: false, shape: 'self', min_targets: 0,
+        max_targets: 1, range_ft: 0, requires_line_of_sight: false,
+        allowed_relations: ['self'], requires_stonework_contact: true,
+      },
+      effects: [{ resolution: 'auto', result: [{
+        kind: 'grant_sense', sense: 'tremorsense', range: 60,
+        duration: { type: 'rounds', amount: 100 },
+        senseScope: {
+          kind: 'stonework', stoneForms: ['natural', 'worked'],
+          ownerContact: ['on_surface', 'touching_surface'], sameSurfaceOnly: true,
+          detectsAirborne: false, grantsSight: false,
+        },
+        sourceEntityIds: ['04c2410f-8bc1-4490-bf54-0a8d21e066c9', 'RE-dwarf-4'],
+        stack_id: 'dnd5e-2024:stonecunning:tremorsense',
+      }] }],
+    },
+  };
+  actor.runtime.resources.bonus_action = 1;
+  actor.runtime.maxResources.bonus_action = 1;
+  actor.runtime.resources['uses_RE-dwarf-4'] = 1;
+  actor.runtime.maxResources['uses_RE-dwarf-4'] = 1;
+  actor.capabilities.actionIds.push(action.id);
+  const actions = [...participant.canonical.actions, action];
+  const byId = new Map(actions.map((candidate) => [candidate.id, candidate]));
+  participant.canonical = {
+    ...participant.canonical,
+    actions,
+    catalog: { getAction: (id) => byId.get(id), listActions: () => actions },
+  };
+  participant.character.resources = clone(actor.runtime.resources);
+  participant.character.max_resources = clone(actor.runtime.maxResources);
+  return { participant, action };
+}
+
 function placeAdjacent(
   state: Awaited<ReturnType<typeof createSoloCombatState>>,
   actorId: string,
@@ -288,6 +345,49 @@ function goblin(): Monster {
 }
 
 describe('solo combat engine vertical integration', () => {
+  it('requires and forwards explicit Stonecunning surface facts before spending resources', async () => {
+    const fixture = stonecunningParticipant();
+    let state = await createSoloCombatState({
+      character: fixture.participant.character,
+      participant: fixture.participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const actorId = fixture.participant.character.id;
+    expect(() => executeCombatAction({
+      state, actorId, actionId: fixture.action.id, targetIds: [actorId], rng: () => 0.5,
+    })).toThrow('Укажите, как персонаж соприкасается с каменной поверхностью.');
+    expect(state.world.actors[actorId].runtime.resources).toMatchObject({
+      bonus_action: 1,
+      'uses_RE-dwarf-4': 1,
+    });
+
+    state = executeCombatAction({
+      state,
+      actorId,
+      actionId: fixture.action.id,
+      targetIds: [actorId],
+      choices: { [STONEWORK_CONTACT_CHOICE_ID]: ['worked_touching'] },
+      rng: () => 0.5,
+    });
+    expect(state.world.actors[actorId].runtime.resources).toMatchObject({
+      bonus_action: 0,
+      'uses_RE-dwarf-4': 0,
+    });
+    expect(state.world.actors[actorId].runtime.activeEffects).toEqual([
+      expect.objectContaining({
+        name: 'Камнечувствие', roundsLeft: 100,
+        mechanics: expect.objectContaining({
+          kind: 'grant_sense', sense: 'tremorsense', range: 60,
+        }),
+      }),
+    ]);
+    const restored = readSoloCombatState(writeSoloCombatState({}, state), actorId, 9)!;
+    expect(restored.world.actors[actorId].runtime.activeEffects[0]).toMatchObject({
+      name: 'Камнечувствие', roundsLeft: 100,
+    });
+  });
+
   it('routes the exact basic Unarmed Strike through canonical damage, grapple, persistence, and turn-start damage', async () => {
     const damageFixture = unarmedParticipant();
     let damageState = await createSoloCombatState({

@@ -11,6 +11,7 @@ import {
   collectSoloCombatActionChoices,
   immediateSoloCombatTargetIds,
 } from './actionChoices';
+import { STONEWORK_CONTACT_CHOICE_ID } from '../mechanics/collectChoices';
 
 describe('solo combat data-owned action choices', () => {
   it('offers every canonical Unarmed Strike option only for the exact basic-action entity', () => {
@@ -174,6 +175,32 @@ describe('solo combat data-owned action choices', () => {
     } as RuleActionDefinition;
     expect(collectSoloCombatActionChoices({} as ActorState, action))
       .toEqual([expect.objectContaining({ id: 'container', context: 'in_play' })]);
+  });
+
+  it('asks for explicit Stonecunning terrain facts before immediate self execution', () => {
+    const action = {
+      id: 'action:stonecunning', name: 'Камнечувствие', kind: 'nonSpell',
+      sourceEntityIds: ['RE-dwarf-4'],
+      mechanics: {
+        targeting: {
+          domain: 'actor', actor_targets: false, shape: 'self', min_targets: 0,
+          max_targets: 1, range_ft: 0, requires_line_of_sight: false,
+          allowed_relations: ['self'], requires_stonework_contact: true,
+        },
+        effects: [{ resolution: 'auto', result: [{ kind: 'narrative' }] }],
+      },
+      targeting: {
+        minTargets: 0, maxTargets: 1, rangeFt: 0,
+        requiresLineOfSight: false, allowedRelations: ['self'],
+        requiresStoneworkContact: true,
+      },
+    } as RuleActionDefinition;
+    expect(collectSoloCombatActionChoices({} as ActorState, action)).toEqual([
+      expect.objectContaining({ id: STONEWORK_CONTACT_CHOICE_ID }),
+    ]);
+    expect(collectSoloCombatActionChoices({} as ActorState, action)[0])
+      .not.toHaveProperty('recommended');
+    expect(immediateSoloCombatTargetIds(action, 'dwarf')).toEqual(['dwarf']);
   });
 
   it('distinguishes zero-target, self, and map-targeted action contracts', () => {

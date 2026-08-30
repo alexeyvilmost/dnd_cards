@@ -54,6 +54,21 @@ describe('инструкция активного талона', () => {
     );
   });
 
+  it('объясняет дистанцию, срок и ограничения Камнечувствия', () => {
+    expect(activeEffectInstruction({
+      id: 'stonecunning-1', name: 'Камнечувствие', source: 'Камнечувствие', roundsLeft: 100,
+      mechanics: {
+        kind: 'grant_sense', sense: 'tremorsense', range: 60,
+        senseScope: {
+          kind: 'stonework', sameSurfaceOnly: true,
+          detectsAirborne: false, grantsSight: false,
+        },
+      },
+    })).toBe(
+      'Чувство вибрации: 60 фт. (100 ходов); только по той же каменной поверхности; не обнаруживает существ в воздухе; не даёт видеть.',
+    );
+  });
+
   it('не придумывает инструкцию для автоматического эффекта', () => {
     expect(activeEffectInstruction({
       id: 'light-1', name: 'Свет', source: 'Свет', expiry: 'manual',

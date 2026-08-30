@@ -1,5 +1,6 @@
 import { optionsToChoiceForm } from './blocks';
 import { choiceKey } from './choiceKey';
+import type { StoneworkContactFacts } from '../rules-core/dwarfTraits';
 
 // Откуда пришёл выбор — для группировки в UI и стабильного id.
 export type ChoiceOrigin = {
@@ -59,6 +60,46 @@ export function requiresInitialCharacterChoice(
 
 type Dict = Record<string, unknown>;
 export type ChoiceRecommendations = Readonly<Record<string, readonly string[]>>;
+
+export const STONEWORK_CONTACT_CHOICE_ID = 'scenario_stonework_contact';
+
+const STONEWORK_CONTACT_OPTIONS: Record<string, StoneworkContactFacts> = {
+  natural_on_surface: { material: 'stone', stoneForm: 'natural', contact: 'on_surface' },
+  natural_touching: { material: 'stone', stoneForm: 'natural', contact: 'touching_surface' },
+  worked_on_surface: { material: 'stone', stoneForm: 'worked', contact: 'on_surface' },
+  worked_touching: { material: 'stone', stoneForm: 'worked', contact: 'touching_surface' },
+};
+
+function stoneworkContactChoice(
+  mechanics: Record<string, unknown>,
+  origin: ChoiceOrigin,
+): PendingChoice[] {
+  const targeting = mechanics.targeting;
+  if (!targeting || typeof targeting !== 'object' || Array.isArray(targeting)
+    || (targeting as Dict).requires_stonework_contact !== true) return [];
+  return [{
+    id: STONEWORK_CONTACT_CHOICE_ID,
+    prompt: 'Как вы соприкасаетесь с каменной поверхностью?',
+    count: 1,
+    source: 'scenario_fact',
+    context: 'in_play',
+    origin,
+    items: [
+      { id: 'natural_on_surface', name: 'Стою на природном камне' },
+      { id: 'natural_touching', name: 'Касаюсь природного камня' },
+      { id: 'worked_on_surface', name: 'Стою на обработанном камне' },
+      { id: 'worked_touching', name: 'Касаюсь обработанного камня' },
+    ],
+  }];
+}
+
+export function stoneworkContactFactsFromChoices(
+  choices: Readonly<Record<string, readonly string[]>>,
+): StoneworkContactFacts | null {
+  const selected = choices[STONEWORK_CONTACT_CHOICE_ID]?.[0];
+  const facts = selected ? STONEWORK_CONTACT_OPTIONS[selected] : undefined;
+  return facts ? { ...facts } : null;
+}
 
 function choiceToPending(
   ch: Dict,
@@ -229,7 +270,6 @@ export function collectInPlayActionChoices(
 ): PendingChoice[] {
   if (!mechanics || typeof mechanics !== 'object') return [];
   const effects = (mechanics as Dict).effects;
-  if (!Array.isArray(effects)) return [];
   const raw: Dict[] = [];
   const outcomeKeys = ['result', 'results', 'on_hit', 'on_crit', 'on_miss', 'on_fail', 'on_success'];
   const visitInteraction = (interaction: Dict): void => {
@@ -245,10 +285,13 @@ export function collectInPlayActionChoices(
       }
     }
   };
-  for (const effect of effects as Dict[]) {
+  for (const effect of (Array.isArray(effects) ? effects : []) as Dict[]) {
     visitInteraction(effect);
   }
-  return raw
+  return [
+    ...stoneworkContactChoice(mechanics, origin),
+    ...raw
     .filter((ch) => String(ch.context ?? '') === 'in_play')
-    .map((ch) => ({ ...choiceToPending(ch, origin), id: String(ch.id ?? 'choice') }));
+    .map((ch) => ({ ...choiceToPending(ch, origin), id: String(ch.id ?? 'choice') })),
+  ];
 }

@@ -101,6 +101,27 @@ export function activeEffectInstruction(effect: ActiveEffectEntry): string | nul
       : `${op === 'add' && !rawValue.startsWith('-') ? '+' : ''}${rawValue} фт`;
     return `${label}: ${value}.`;
   }
+  if (mechanics.kind === 'grant_sense') {
+    const sense = String(mechanics.sense ?? 'чувство');
+    const label = ({
+      darkvision: 'Тёмное зрение',
+      tremorsense: 'Чувство вибрации',
+      blindsight: 'Слепое зрение',
+      truesight: 'Истинное зрение',
+    } as Record<string, string>)[sense] ?? sense;
+    const range = Number(mechanics.range);
+    const duration = expiryLabel(effect.expiry, effect.roundsLeft);
+    const scope = mechanics.senseScope as Record<string, unknown> | undefined;
+    const limitations = scope?.kind === 'stonework'
+      ? [
+          scope.sameSurfaceOnly === true ? 'только по той же каменной поверхности' : null,
+          scope.detectsAirborne === false ? 'не обнаруживает существ в воздухе' : null,
+          scope.grantsSight === false ? 'не даёт видеть' : null,
+        ].filter((value): value is string => Boolean(value))
+      : [];
+    const distance = Number.isFinite(range) && range > 0 ? `${range} фт.` : 'заявленная дистанция';
+    return `${label}: ${distance} (${duration})${limitations.length ? `; ${limitations.join('; ')}` : ''}.`;
+  }
   return null;
 }
 

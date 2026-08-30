@@ -5,7 +5,11 @@
  */
 import { describe, expect, it } from 'vitest';
 import { executeAction, applyIncomingDamage, MechanicsExecutionError } from './execute';
-import { collectInPlayActionChoices } from '../mechanics/collectChoices';
+import {
+  STONEWORK_CONTACT_CHOICE_ID,
+  collectInPlayActionChoices,
+  stoneworkContactFactsFromChoices,
+} from '../mechanics/collectChoices';
 import type { CharacterContext, ExecuteContext, RuntimeState } from '../mvp/contracts';
 
 type Dict = Record<string, unknown>;
@@ -118,5 +122,26 @@ describe('collectInPlayActionChoices', () => {
   });
   it('нет in_play выборов → пусто', () => {
     expect(collectInPlayActionChoices({ effects: [{ kind: 'choice', id: 'a', context: 'build' }] }, origin)).toEqual([]);
+  });
+  it('превращает требование контакта с камнем в явный вопрос сценария', () => {
+    const choices = collectInPlayActionChoices({
+      targeting: { requires_stonework_contact: true },
+      effects: [{ resolution: 'auto', result: [{ kind: 'narrative' }] }],
+    }, origin);
+    expect(choices).toEqual([expect.objectContaining({
+      id: STONEWORK_CONTACT_CHOICE_ID,
+      prompt: 'Как вы соприкасаетесь с каменной поверхностью?',
+      items: [
+        { id: 'natural_on_surface', name: 'Стою на природном камне' },
+        { id: 'natural_touching', name: 'Касаюсь природного камня' },
+        { id: 'worked_on_surface', name: 'Стою на обработанном камне' },
+        { id: 'worked_touching', name: 'Касаюсь обработанного камня' },
+      ],
+    })]);
+    expect(choices[0]).not.toHaveProperty('recommended');
+    expect(stoneworkContactFactsFromChoices({
+      [STONEWORK_CONTACT_CHOICE_ID]: ['worked_touching'],
+    })).toEqual({ material: 'stone', stoneForm: 'worked', contact: 'touching_surface' });
+    expect(stoneworkContactFactsFromChoices({})).toBeNull();
   });
 });

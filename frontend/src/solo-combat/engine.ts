@@ -28,6 +28,7 @@ import { turnStartGrappleDamageOpportunity } from '../rules-core/fightingStyleCo
 import { projectRuleAction } from '../canon/ruleActionProjection';
 import type { Monster } from '../monsters/types';
 import { canPay } from '../engine/cost';
+import { stoneworkContactFactsFromChoices } from '../mechanics/collectChoices';
 import { compileMonsterInstance } from './monsterCompiler';
 import { planMonsterTurn } from './monsterAi';
 import { projectCombatLogRecords } from './combatLog';
@@ -312,8 +313,17 @@ function declarationFor(
   suppliedChoices: Readonly<Record<string, readonly string[]>> = {},
 ): SheetCanonicalCommandInput {
   const primitive = primitiveType(action);
+  const stonework = action.targeting?.requiresStoneworkContact
+    ? stoneworkContactFactsFromChoices(suppliedChoices)
+    : null;
+  if (action.targeting?.requiresStoneworkContact && !stonework) {
+    throw new Error('Укажите, как персонаж соприкасается с каменной поверхностью.');
+  }
   const factsByTarget = Object.fromEntries(targetIds.map((targetId) => [
-    targetId, spatialFacts(state, actorId, targetId),
+    targetId, {
+      ...spatialFacts(state, actorId, targetId),
+      ...(stonework ? { stonework } : {}),
+    },
   ]));
   const choices: Record<string, string[]> = Object.fromEntries(
     Object.entries(suppliedChoices).map(([id, values]) => [id, [...values]]),
