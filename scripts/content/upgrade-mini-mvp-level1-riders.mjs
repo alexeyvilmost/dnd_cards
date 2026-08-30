@@ -9,6 +9,7 @@ const definitionsUrl = new URL('./data/mini-mvp-level1-spell-primitives.v1.json'
 const definitions = JSON.parse(await readFile(definitionsUrl, 'utf8'));
 
 const PREIMAGE_HASHES = Object.freeze({
+  ray_of_sickness: 'sha256:b9e04b442b54606748f2efe15480b2336209a030656381aa3f9f1e5d8230d40f',
   'SPELL-0165': 'sha256:0b7f4a8747c0b16f26fc1742087ca0559046855866d7e1f1b7da22934ac16251',
   'SPELL-0223': 'sha256:0eaa810287d157ea260b9dba43d080cfbae60f73bfcddeb7ebb7880eb9e2b007',
   'SPELL-0267': 'sha256:ab9b4711ed30d427304b1c68664550ffb20b976e00cd46f33dcb9e3040c3e87e',

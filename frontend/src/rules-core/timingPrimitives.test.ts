@@ -31,7 +31,7 @@ const APPLY_TIMERS: RuleActionDefinition = {
   id: 'test.apply-source-turn-effects',
   name: 'Source-turn effects',
   kind: 'nonSpell',
-  sourceEntityIds: ['PHB:ray-of-frost', 'PHB:guiding-bolt', 'PHB:chill-touch'],
+  sourceEntityIds: ['PHB:ray-of-frost', 'PHB:guiding-bolt', 'PHB:chill-touch', 'PHB:ray-of-sickness'],
   targeting: {
     minTargets: 1,
     maxTargets: 1,
@@ -68,6 +68,12 @@ const APPLY_TIMERS: RuleActionDefinition = {
           stack_id: 'chill-touch-healing-lock',
           applies_to: { roll: 'healing' },
           op: 'deny',
+          duration: { type: 'until_end_of_source_next_turn' },
+        },
+        {
+          kind: 'condition',
+          op: 'apply',
+          value: 'poisoned',
           duration: { type: 'until_end_of_source_next_turn' },
         },
       ],
@@ -386,7 +392,7 @@ describe('Alert and source-turn-relative timing primitives', () => {
     expect(rollIndex).toBe(1);
 
     const appliedEffects = rules.getState().actors.target.runtime.activeEffects;
-    expect(appliedEffects).toHaveLength(3);
+    expect(appliedEffects).toHaveLength(4);
     expect(appliedEffects).toEqual(expect.arrayContaining([
       expect.objectContaining({
         ownerId: 'target',
@@ -399,6 +405,14 @@ describe('Alert and source-turn-relative timing primitives', () => {
       expect.objectContaining({
         ownerId: 'target',
         sourceId: 'source',
+        sourceTurnExpiry: {
+          sourceActorId: 'source', ownerActorId: 'target', boundary: 'end',
+        },
+      }),
+      expect.objectContaining({
+        ownerId: 'target',
+        sourceId: 'source',
+        mechanics: expect.objectContaining({ kind: 'condition', value: 'poisoned' }),
         sourceTurnExpiry: {
           sourceActorId: 'source', ownerActorId: 'target', boundary: 'end',
         },
@@ -422,7 +436,7 @@ describe('Alert and source-turn-relative timing primitives', () => {
       schemaVersion: 1, type: 'EndTurn', commandId: 'source-end-1',
       rulesetContentHash: RULESET.contentHash, actorId: 'source',
     })).status).toBe('accepted');
-    expect(rules.getState().actors.target.runtime.activeEffects).toHaveLength(3);
+    expect(rules.getState().actors.target.runtime.activeEffects).toHaveLength(4);
 
     expect(dispatch(rules, command({
       schemaVersion: 1, type: 'StartTurn', commandId: 'attacker-start',
@@ -441,7 +455,7 @@ describe('Alert and source-turn-relative timing primitives', () => {
         : []
     ))[0];
     expect(strikeRoll?.advantage).toBe('advantage');
-    expect(rules.getState().actors.target.runtime.activeEffects).toHaveLength(2);
+    expect(rules.getState().actors.target.runtime.activeEffects).toHaveLength(3);
     expect(rules.getState().actors.target.runtime.activeEffects.some((effect) => (
       (effect.mechanics as Record<string, unknown>).scope === 'target'
     ))).toBe(false);
@@ -458,14 +472,14 @@ describe('Alert and source-turn-relative timing primitives', () => {
       schemaVersion: 1, type: 'EndTurn', commandId: 'target-end',
       rulesetContentHash: RULESET.contentHash, actorId: 'target',
     })).status).toBe('accepted');
-    expect(rules.getState().actors.target.runtime.activeEffects).toHaveLength(2);
+    expect(rules.getState().actors.target.runtime.activeEffects).toHaveLength(3);
 
     const sourceStart = dispatch(rules, command({
       schemaVersion: 1, type: 'StartTurn', commandId: 'source-start-2',
       rulesetContentHash: RULESET.contentHash, actorId: 'source',
     }));
     expect(sourceStart.status).toBe('accepted');
-    expect(rules.getState().actors.target.runtime.activeEffects).toHaveLength(1);
+    expect(rules.getState().actors.target.runtime.activeEffects).toHaveLength(2);
     expect(rules.getState().actors.target.runtime.activeEffects[0].sourceTurnExpiry).toEqual({
       sourceActorId: 'source', ownerActorId: 'target', boundary: 'end', armed: true,
     });

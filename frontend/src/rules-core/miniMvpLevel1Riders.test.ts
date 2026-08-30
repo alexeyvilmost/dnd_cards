@@ -74,6 +74,30 @@ describe('mini-MVP: заклинания первого уровня с длит
     );
   });
 
+  it('Луч болезни при попадании наносит 2к8 ядом и отравляет до конца следующего хода кастера', () => {
+    const rolls = [face(15), face(4, 8), face(5, 8)];
+    let rollIndex = 0;
+    const target = freshFighterState();
+    const result = executeAction(casterState(), spell('ray_of_sickness').mechanics, {
+      character: caster,
+      selfId: 'wizard',
+      target: { id: 'target', ac: 10, runtimeState: target },
+      rng: () => rolls[rollIndex++],
+    });
+    expect(result.targetState?.hp.current).toBe(target.hp.current - 9);
+    expect(result.state.resources.action).toBe(0);
+    expect(result.state.resources.spell_slot_1).toBe(1);
+    expect(result.targetState?.activeEffects).toContainEqual(expect.objectContaining({
+      ownerId: 'target',
+      sourceId: 'wizard',
+      expiry: 'source_turn',
+      sourceTurnExpiry: {
+        sourceActorId: 'wizard', ownerActorId: 'target', boundary: 'end',
+      },
+      mechanics: expect.objectContaining({ kind: 'condition', value: 'poisoned' }),
+    }));
+  });
+
   it('Сглаз сохраняет выбранную характеристику и source-bound некротический райдер', () => {
     const result = executeAction(casterState(), spell('SPELL-0287').mechanics, {
       character: caster,

@@ -1,5 +1,52 @@
 [
   {
+    "card_number": "ray_of_sickness",
+    "name": "Луч болезни",
+    "mechanics": {
+      "activation": {
+        "mode": "active",
+        "cost": [
+          { "resource": "action" },
+          { "resource": "spell_slot", "level": 1, "amount": 1 }
+        ]
+      },
+      "effects": [
+        {
+          "resolution": "attack_roll",
+          "ability": "spellcasting",
+          "attack_kind": "spell_ranged",
+          "vs": "ac",
+          "on_hit": [
+            {
+              "kind": "damage",
+              "dice": "2d8",
+              "type": "poison",
+              "scaling": { "per": "spell_slot_above", "dice": "1d8" }
+            },
+            {
+              "kind": "condition",
+              "op": "apply",
+              "value": "poisoned",
+              "duration": { "type": "until_end_of_source_next_turn" }
+            }
+          ]
+        }
+      ],
+      "interaction": { "intent": "harmful" },
+      "spell_class_list_ids": ["CLASS-sorcerer", "CLASS-wizard"],
+      "targeting": {
+        "shape": "single",
+        "domain": "actor",
+        "actor_targets": true,
+        "min_targets": 1,
+        "max_targets": 1,
+        "range_ft": 60,
+        "requires_line_of_sight": true,
+        "allowed_relations": ["enemy", "neutral"]
+      }
+    }
+  },
+  {
     "card_number": "SPELL-0165",
     "name": "Божественное благоволение",
     "mechanics": {

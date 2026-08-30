@@ -18,8 +18,8 @@ function payloads(mechanics) {
 }
 
 test('level-1 rider patch is exact and uses reusable typed primitives', () => {
-  assert.equal(MINI_MVP_LEVEL1_RIDER_PATCHES.length, 4);
-  assert.equal(new Set(MINI_MVP_LEVEL1_RIDER_PATCHES.map((item) => item.cardNumber)).size, 4);
+  assert.equal(MINI_MVP_LEVEL1_RIDER_PATCHES.length, 5);
+  assert.equal(new Set(MINI_MVP_LEVEL1_RIDER_PATCHES.map((item) => item.cardNumber)).size, 5);
   for (const patch of MINI_MVP_LEVEL1_RIDER_PATCHES) {
     assert.notEqual(patch.expectedBeforeHash, patch.expectedAfterHash, patch.cardNumber);
     assert.ok(payloads(patch.mechanics).some((payload) => payload.kind !== 'narrative'));
@@ -32,6 +32,13 @@ test('level-1 rider patch is exact and uses reusable typed primitives', () => {
   assert.deepEqual(riderSpells.map((patch) => patch.cardNumber).sort(), [
     'SPELL-0165', 'SPELL-0223', 'SPELL-0287',
   ]);
+  const ray = MINI_MVP_LEVEL1_RIDER_PATCHES.find((patch) => patch.cardNumber === 'ray_of_sickness');
+  assert.deepEqual(payloads(ray.mechanics).find((payload) => payload.kind === 'condition'), {
+    kind: 'condition',
+    op: 'apply',
+    value: 'poisoned',
+    duration: { type: 'until_end_of_source_next_turn' },
+  });
 });
 
 test('level-1 rider planner rejects drift and is idempotent', () => {

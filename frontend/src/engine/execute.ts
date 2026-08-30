@@ -2219,6 +2219,7 @@ function applyCondition(
   events: EngineEvent[],
   ctx: ExecuteContext,
   sourceId?: string,
+  ownerActorId?: string,
   conditionImmunities = ctx.conditionImmunities,
 ): RuntimeState {
   const condition = String(payload.value ?? '');
@@ -2297,7 +2298,10 @@ function applyCondition(
     return state;
   }
 
-  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const duration = payload.duration as Dict | undefined;
+  const relative = sourceTurnMetadata(duration, ctx, ownerActorId);
+  const resolved = relative ? { expiry: relative.expiry } : resolveDuration(duration);
+  const { roundsLeft, expiry } = resolved;
   const stacking = conditionStacking(condition);
   const existingLevel = conditionLevel(state, condition);
   if (stacking.mode === 'levels' && stacking.max != null && existingLevel >= stacking.max) {
@@ -2314,8 +2318,11 @@ function applyCondition(
     roundsLeft,
     expiry,
     source,
-    // E: id наложившего (кастера) — для реляционных правил (Очарованный ↛ очаровавший).
+    // E: владелец состояния и наложивший его актор нужны как для реляционных правил
+    // (Очарованный ↛ очаровавший), так и для точного source-turn lifecycle.
+    ...(ownerActorId ? { ownerId: ownerActorId } : {}),
     ...(sourceId ? { sourceId } : {}),
+    ...(relative ?? {}),
   };
   events.push(conditionAppliedEvent(condition));
   const next = stackApply(state, entry, persistedPayload);
@@ -2801,6 +2808,7 @@ function applyPayloads(
         events,
         ctx,
         ctx.selfId,
+        whoTarget ? ctx.target?.id : ctx.selfId,
         whoTarget ? ctx.target?.conditionImmunities : ctx.conditionImmunities,
       )); break;
       case 'resource': route((s) => applyResource(s, p, ctx, events)); break;
