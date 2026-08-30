@@ -130,7 +130,7 @@ export function projectRunnableSheetCanonicalActions(input: {
         },
       );
       actions.push({
-        ...action,
+        ...profiled,
         mechanics: profiled.mechanics,
         ...(action.actionRef && profiled.mechanics !== mechanics
           ? { actionRef: { ...action.actionRef, mechanics: profiled.mechanics } }

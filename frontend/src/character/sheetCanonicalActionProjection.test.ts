@@ -102,6 +102,7 @@ describe('runnable canonical sheet-action projection', () => {
   it('projects the Unarmed Fighting damage profile for empty and occupied hands', () => {
     const unarmed: SheetAction = {
       id: 'unarmed', name: 'Unarmed Strike', group: 'basic',
+      description: 'Атака кулаком. Урон: 1 + модификатор Силы (дробящий).',
       mechanics: {
         activation: { mode: 'active', cost: [{ resource: 'action' }] },
         targeting: { shape: 'single', range: '5 feet', filter: 'enemy' },
@@ -140,6 +141,9 @@ describe('runnable canonical sheet-action projection', () => {
     expect(damageAmount(emptyHands.actions[0])).toBe('1d8 + str');
     expect(damageAmount(armed.actions[0])).toBe('1d6 + str');
     expect(damageAmount(baseline.actions[0])).toBe('1 + str');
+    expect(emptyHands.actions[0].description).toContain('Урон: 1d8 + модификатор Силы');
+    expect(armed.actions[0].description).toContain('Урон: 1d6 + модификатор Силы');
+    expect(baseline.actions[0].description).toContain('Урон: 1 + модификатор Силы');
   });
 
   it('binds the equipped main action and excludes an unavailable off-hand capability', () => {

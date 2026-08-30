@@ -106,7 +106,7 @@ export function resolveUnarmedDamageProfile(
  * unarmed attack rolls are replaced.
  */
 export function applyUnarmedDamageProfileToAction<
-  T extends { mechanics?: Record<string, unknown> | null },
+  T extends { description?: string | null; mechanics?: Record<string, unknown> | null },
 >(
   action: T,
   passives: readonly unknown[],
@@ -136,9 +136,23 @@ export function applyUnarmedDamageProfileToAction<
     });
     return replaced ? { ...candidate, on_hit: onHit } : candidate;
   });
-  return changed
-    ? { ...action, mechanics: { ...mechanics, effects } }
-    : action;
+  if (!changed) return action;
+  const description = typeof action.description === 'string'
+    ? action.description
+      .replace(
+        /Урон:\s*1\s*\+\s*модификатор Силы/iu,
+        `Урон: ${profile.dice} + модификатор Силы`,
+      )
+      .replace(
+        /Damage:\s*1\s*\+\s*(?:your\s+)?Strength modifier/iu,
+        `Damage: ${profile.dice} + your Strength modifier`,
+      )
+    : action.description;
+  return {
+    ...action,
+    ...(description !== action.description ? { description } : {}),
+    mechanics: { ...mechanics, effects },
+  };
 }
 
 /**
