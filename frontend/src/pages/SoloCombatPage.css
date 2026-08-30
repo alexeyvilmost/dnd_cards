@@ -802,4 +802,7 @@
 .combat-sheet-drawer > header p { margin: 4px 0; color: #9d8c75; font-size: 12px; }
 .combat-sheet-drawer__close { position: absolute; right: 14px; top: 14px !important; float: none !important; color: #e7d5b8 !important; }
 .combat-sheet-drawer .combat-sheet-sidebar { overflow: visible; }
+.combat-sheet-effects { display: grid; gap: 9px; margin-bottom: 8px; }
+.combat-sheet-effect { display: grid; justify-items: start; gap: 4px; }
+.combat-sheet-effect small { display: block; color: #c9b99f; font-size: 11px; line-height: 1.35; }
 .combat-sheet-drawer__full { display: block !important; position: sticky; bottom: 0; margin: 12px 0 0 !important; padding: 11px; border: 1px solid #8b673c; border-radius: 8px; background: #261d13; color: #e0b66f !important; text-align: center; text-decoration: none; }

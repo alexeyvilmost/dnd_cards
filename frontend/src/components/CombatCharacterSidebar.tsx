@@ -2,11 +2,26 @@ import { ABILITY_KEYS, type AbilityKey, type ForgeCharacter } from '../character
 import { abilityOfSkill } from '../character/rules/foundation';
 import { SKILLS } from '../mechanics/registries';
 import type { SoloCombatState } from '../solo-combat/types';
+import type { ActiveEffectEntry } from '../mvp/contracts';
 import CharacterSheetFirstColumn, { CHARACTER_SENSE_LABELS } from './CharacterSheetFirstColumn';
 import { groupActiveEffectsForDisplay } from '../engine/effects';
 
 const abilityRecord = (value: Partial<Record<AbilityKey, number>>, fallback: number): Record<AbilityKey, number> =>
   Object.fromEntries(ABILITY_KEYS.map((ability) => [ability, Number(value[ability] ?? fallback)])) as Record<AbilityKey, number>;
+
+export function CombatActiveEffects({ effects }: { effects: readonly ActiveEffectEntry[] }) {
+  if (!effects.length) return <p className="cs-hook-note">Активных состояний и эффектов нет.</p>;
+  return (
+    <div className="combat-sheet-effects">
+      {groupActiveEffectsForDisplay(effects).map((group) => (
+        <div key={group.key} className="combat-sheet-effect">
+          <strong className="cs-tag">{group.name}</strong>
+          {group.instructions.map((instruction) => <small key={instruction}>{instruction}</small>)}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function CombatCharacterSidebar({
   character,
@@ -54,9 +69,7 @@ export default function CombatCharacterSidebar({
         label: CHARACTER_SENSE_LABELS[sense.sense] ?? sense.sense,
         value: `${sense.range} фт.`,
       }))}
-      conditions={actor.runtime.activeEffects.length
-        ? <div className="cs-tags">{groupActiveEffectsForDisplay(actor.runtime.activeEffects).map((group) => <span key={group.key} className="cs-tag">{group.name}</span>)}</div>
-        : <p className="cs-hook-note">Активных состояний и эффектов нет.</p>}
+      conditions={<CombatActiveEffects effects={actor.runtime.activeEffects} />}
     />
   );
 }
