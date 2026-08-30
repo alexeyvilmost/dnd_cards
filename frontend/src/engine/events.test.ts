@@ -48,4 +48,17 @@ describe('events serialization', () => {
     expect(describeEngineEvent({ type: 'damage', amount: 6, damageType: 'яд' })).toBe('Урон 6 (яд)');
     expect(describeEngineEvent({ type: 'condition_applied', condition: 'Отравлен', source: 'Тест' })).toBe('Тест: Состояние: Отравлен');
   });
+
+  it('localizes canonical damage and condition ids for the player journal', () => {
+    expect(describeEngineEvent({ type: 'damage', amount: 8, damageType: 'poison' }))
+      .toBe('Урон 8 (яд)');
+    expect(describeEngineEvent({ type: 'condition_applied', condition: 'poisoned' }))
+      .toBe('Состояние: Отравлен');
+    expect(describeEngineEvent({
+      type: 'condition_immune',
+      condition: 'poisoned',
+      sourceEntityIds: ['species:test'],
+    }))
+      .toBe('Иммунитет к состоянию: Отравлен');
+  });
 });

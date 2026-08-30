@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Moon, Sun, Swords } from 'lucide-react';
 import type { EncounterApply } from '../battle/encountersApi';
+import { charactersV3Api, type CharacterEventRow } from '../character/api';
 import { persistCharacterRuntime } from '../character/runtimePersistence';
 import { collectActionUsesRecharge, collectActionUsesRecovery } from '../character/actionSheet';
 import type { AssembledCharacter } from '../character/assemble';
@@ -19,12 +20,20 @@ import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { buildResourceRecharge } from '../engine/resources';
 import { hitDiceResourceKey, hitDieSides } from '../engine/resources';
-import { longRest, nextTurnWithReactions, shortRest, spendHitDie } from '../engine/turn';
+import {
+  endTurn,
+  longRest,
+  resolveTurnBoundaryOffers,
+  shortRest,
+  spendHitDie,
+  startTurn,
+} from '../engine/turn';
+import { applySourceTurnBoundary } from '../engine/sourceTurnExpiry';
 import { canPay } from '../engine/cost';
 import { executeAction } from '../engine/execute';
 import { describeMechanicsLine } from '../engine/describeMechanics';
 import { emptyDeathSaves } from '../character/death';
-import type { EngineEvent, RuntimeState } from '../mvp/contracts';
+import type { EngineEvent, ReactionOffer, RuntimeState } from '../mvp/contracts';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
 import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
 import { useReactionPrompt } from '../contexts/ReactionPromptContext';
@@ -39,6 +48,20 @@ import {
 } from '../character/sheetRestDecisions';
 import { clearSheetCombatSession } from '../character/sheetCombatSession';
 import { writeSoloCombatState } from '../solo-combat/persistence';
+import { fetchBasicActions } from '../character/basicActions';
+import { getCardsIndex } from '../utils/cardsIndex';
+import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
+import { newSheetRuntimeCommandId } from '../character/sheetCombatSession';
+import {
+  persistedSourceTurnCharacterIds,
+  prepareSheetNextTurnAtomicCommit,
+} from '../character/sheetNextTurn';
+import {
+  commitPreparedSheetAtomicWorld,
+  type PreparedSheetAtomicWorldCommit,
+} from '../character/sheetAtomicWorldCommit';
+import { commitSheetRuntimeCommand } from '../character/sheetRuntimeCommand';
+import { sheetCompanionRetryPolicy } from '../character/sheetCompanionInteraction';
 
 interface Props {
   character: ForgeCharacter;
@@ -46,6 +69,8 @@ interface Props {
   ruleState: CharacterRuleState;
   onUpdated: (c: ForgeCharacter) => void;
   onEvents?: (events: EngineEvent[]) => void;
+  /** Reconciles journal rows already persisted by an atomic turn transition. */
+  onPersistedEvents?: (rows: CharacterEventRow[]) => void;
   compact?: boolean;
   /** Вызывается после успешного долгого отдыха (диалог действий отдыха). */
   onLongRestComplete?: () => void;
@@ -74,6 +99,7 @@ export default function SheetRestButtons({
   ruleState,
   onUpdated,
   onEvents,
+  onPersistedEvents,
   compact,
   onLongRestComplete,
   encounterApply,
@@ -84,6 +110,7 @@ export default function SheetRestButtons({
   const [shortRestSelections, setShortRestSelections] = useState<Record<string, number[]>>({});
   const [shortRestError, setShortRestError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingAtomicTurn, setPendingAtomicTurn] = useState<PreparedSheetAtomicWorldCommit | null>(null);
   const syncAttempted = useRef(false);
   const diceDialog = useDiceDialog();
   const choiceDialog = useChoiceDialog();
@@ -230,23 +257,118 @@ export default function SheetRestButtons({
 
   const restCtx = useMemo(() => ({ ...ctx, passives }), [ctx, passives]);
 
-  const handleStartTurn = async () => {
+  const resolveTurnReaction = async (state: RuntimeState, offer: ReactionOffer) => {
+    if (!canPay(state, offer.cost).ok) return null;
+    const decision = await reactionPrompt.request(offer, {
+      describe: describeMechanicsLine(offer.mechanics),
+    });
+    if (decision.decision !== 'accept') return null;
+    return executeAction(state, { ...offer.mechanics, name: offer.name }, {
+      character: restCtx,
+      passives,
+      rng: () => Math.random(),
+    });
+  };
+
+  const commitAtomicTurn = async (prepared: PreparedSheetAtomicWorldCommit) => {
     try {
-      const result = await nextTurnWithReactions(runtime, restCtx, async (state, offer) => {
-        if (!canPay(state, offer.cost).ok) return null;
-        const decision = await reactionPrompt.request(offer, {
-          describe: describeMechanicsLine(offer.mechanics),
-        });
-        if (decision.decision !== 'accept') return null;
-        return executeAction(state, { ...offer.mechanics, name: offer.name }, {
-          character: restCtx,
-          passives,
-          rng: () => Math.random(),
-        });
+      const committed = await commitSheetRuntimeCommand({
+        request: prepared.request,
+        commit: () => commitPreparedSheetAtomicWorld(
+          { commit: charactersV3Api.postRuntimeCommand },
+          prepared,
+        ),
+        loadCurrent: charactersV3Api.get,
+        viewingCharacterId: character.id,
+        loadPersistedEvents: charactersV3Api.getEvents,
       });
-      await apply(result.state, result.events, false);
-    } catch (error) {
-      console.error(error);
+      const updated = committed.characters[character.id];
+      if (!updated) throw new Error('Сервер не вернул состояние персонажа после нового хода');
+      setPendingAtomicTurn(null);
+      onUpdated(updated);
+      if (committed.persistedEvents) onPersistedEvents?.(committed.persistedEvents);
+      return true;
+    } catch (cause) {
+      console.error(cause);
+      const message = cause instanceof Error ? cause.message : 'Не удалось сохранить новый ход';
+      if (sheetCompanionRetryPolicy(cause) === 'retain_exact_retry') {
+        setPendingAtomicTurn(prepared);
+        setError(`${message}. Безопасный повтор сохранён.`);
+      } else {
+        setPendingAtomicTurn(null);
+        setError(`${message}. Обновите лист перед повтором.`);
+      }
+      return false;
+    }
+  };
+
+  const handleStartTurn = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      if (pendingAtomicTurn) {
+        await commitAtomicTurn(pendingAtomicTurn);
+        return;
+      }
+      const externalIds = persistedSourceTurnCharacterIds(character.turn_state, character.id);
+      if (externalIds.length) {
+        const [characters, cards, basicActions] = await Promise.all([
+          Promise.all([character.id, ...externalIds].map(charactersV3Api.get)),
+          getCardsIndex(),
+          fetchBasicActions(),
+        ]);
+        const participants = await Promise.all(characters.map((selected) => (
+          loadSheetCombatParticipant({ character: selected, basicActions, cards })
+        )));
+        const source = participants.find((participant) => participant.character.id === character.id);
+        if (!source) throw new Error('Не удалось загрузить источник нового хода');
+        const prepared = await prepareSheetNextTurnAtomicCommit({
+          commandId: newSheetRuntimeCommandId(),
+          source,
+          externalParticipants: participants.filter((participant) => participant !== source),
+          endSource: (state) => resolveTurnBoundaryOffers(
+            endTurn(state, restCtx, { advanceRoundDurations: false }),
+            resolveTurnReaction,
+          ),
+          startSource: (state) => resolveTurnBoundaryOffers(
+            startTurn(state, restCtx),
+            resolveTurnReaction,
+          ),
+        });
+        setPendingAtomicTurn(prepared);
+        await commitAtomicTurn(prepared);
+        return;
+      }
+
+      const endedBoundary = applySourceTurnBoundary(runtime, {
+        sourceActorId: character.id,
+        ownerActorId: character.id,
+        boundary: 'end',
+      });
+      const ended = await resolveTurnBoundaryOffers(
+        endTurn(endedBoundary.state, restCtx, { advanceRoundDurations: false }),
+        resolveTurnReaction,
+      );
+      const startedBoundary = applySourceTurnBoundary(ended.state, {
+        sourceActorId: character.id,
+        ownerActorId: character.id,
+        boundary: 'start',
+      });
+      const started = await resolveTurnBoundaryOffers(
+        startTurn(startedBoundary.state, restCtx),
+        resolveTurnReaction,
+      );
+      await apply(started.state, [
+        ...endedBoundary.events,
+        ...ended.events,
+        ...startedBoundary.events,
+        ...started.events,
+      ], false);
+    } catch (cause) {
+      console.error(cause);
+      setError(cause instanceof Error ? cause.message : 'Не удалось начать новый ход');
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -370,12 +492,12 @@ export default function SheetRestButtons({
     <>
     <div className={cls}>
       <button type="button" className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'} disabled={busy || Boolean(lockReason)} title={lockReason} onClick={() => { void handleStartTurn(); }}>
-        <Swords size={14} /> Новый ход
+        <Swords size={14} /> {pendingAtomicTurn ? 'Повторить ход' : 'Новый ход'}
       </button>
       <button
         type="button"
         className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'}
-        disabled={busy || unconscious || Boolean(lockReason)}
+        disabled={busy || Boolean(pendingAtomicTurn) || unconscious || Boolean(lockReason)}
         onClick={handleShortRest}
         title={lockReason ?? restTitle('Короткий отдых: добровольная трата костей хитов и заряды умений')}
       >
@@ -384,7 +506,7 @@ export default function SheetRestButtons({
       <button
         type="button"
         className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'}
-        disabled={busy || unconscious || Boolean(lockReason)}
+        disabled={busy || Boolean(pendingAtomicTurn) || unconscious || Boolean(lockReason)}
         onClick={handleLongRest}
         title={lockReason ?? restTitle('Долгий отдых')}
       >

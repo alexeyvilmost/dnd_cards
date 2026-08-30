@@ -520,6 +520,7 @@ export default function MobileCharacterSheet() {
                 ruleState={ruleState}
                 onUpdated={data.updateCharacter}
                 onEvents={appendEvents}
+                onPersistedEvents={data.replacePersistedEvents}
                 onLongRestComplete={() => setLongRestOpen(true)}
               />
             </div>

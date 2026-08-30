@@ -2,6 +2,8 @@
  * Протокол событий движка (фаза B1): фабрики и сериализация.
  */
 import type { EngineEvent, RollLog } from '../mvp/contracts';
+import { conditionLabel } from './conditions';
+import { getDamageLabel } from '../utils/damageTypes';
 
 export type { EngineEvent, RollLog };
 
@@ -127,7 +129,7 @@ export function describeEngineEvent(event: EngineEvent): string {
     case 'roll':
       return `${event.label}: ${event.roll.text}`;
     case 'damage':
-      return `${src}Урон ${event.amount} (${event.damageType})${event.roll ? ` · ${event.roll.text}` : ''}`;
+      return `${src}Урон ${event.amount} (${getDamageLabel(event.damageType).toLocaleLowerCase('ru-RU')})${event.roll ? ` · ${event.roll.text}` : ''}`;
     case 'healing':
       return `${src}Лечение ${event.amount}${event.roll ? ` · ${event.roll.text}` : ''}`;
     case 'damage_reduction':
@@ -147,9 +149,9 @@ export function describeEngineEvent(event: EngineEvent): string {
     case 'effect_expired':
       return `Эффект снят: ${event.name}`;
     case 'condition_applied':
-      return `${src}Состояние: ${event.condition}`;
+      return `${src}Состояние: ${conditionLabel(event.condition)}`;
     case 'condition_immune':
-      return `${src}Иммунитет к состоянию: ${event.condition}`;
+      return `${src}Иммунитет к состоянию: ${conditionLabel(event.condition)}`;
     case 'movement':
       return `${src}Перемещение: ${event.mode} ${event.distanceFt} фт`;
     case 'stabilized':

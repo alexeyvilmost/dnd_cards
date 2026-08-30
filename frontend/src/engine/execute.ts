@@ -53,6 +53,7 @@ import {
 } from './weapon';
 import { evaluateWeaponHeavyRule } from './weaponProfile';
 import { activeMastery } from './mastery';
+import { getDamageLabel } from '../utils/damageTypes';
 
 type Dict = Record<string, unknown>;
 
@@ -4017,9 +4018,10 @@ export function applyIncomingDamage(
   const resisted = applyResistance(raw, level);
   if (level && resisted !== raw) {
     const label = level === 'immunity' ? 'иммунитет' : level === 'resistance' ? 'сопротивление' : 'уязвимость';
+    const damageLabel = getDamageLabel(damageType).toLocaleLowerCase('ru-RU');
     events.push({
       type: 'narrative',
-      text: `${label} к «${damageType}»: ${raw} → ${resisted}`,
+      text: `${label} (${damageLabel}): ${raw} → ${resisted}`,
       damageAdjustment: {
         damageType,
         adjustment: level as 'resistance' | 'immunity' | 'vulnerability',

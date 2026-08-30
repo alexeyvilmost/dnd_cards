@@ -27,6 +27,7 @@ import {
   weaponMasteryNickUseKey,
   WEAPON_MASTERY_CLEAVE_USE_PREFIX,
 } from './legacy/engineAdapter';
+import { applySourceTurnBoundary } from '../engine/sourceTurnExpiry';
 import { compileDeclaredMechanicsTargeting } from './actionTargeting';
 import type {
   CharacterContext,
@@ -1246,37 +1247,13 @@ function sourceTurnBoundary(
   const owners = Object.values(world.actors).sort((left, right) => left.id.localeCompare(right.id));
 
   for (const owner of owners) {
-    const expired: EngineEvent[] = [];
-    let changed = false;
-    const activeEffects = owner.runtime.activeEffects.flatMap((effect) => {
-      const lifecycle = effect.sourceTurnExpiry;
-      const matches = lifecycle?.sourceActorId === sourceActorId
-        && lifecycle.ownerActorId === owner.id
-        && effect.sourceId === sourceActorId
-        && effect.ownerId === owner.id;
-      if (!matches || !lifecycle) return [effect];
-
-      if (boundary === 'start' && lifecycle.boundary === 'start') {
-        changed = true;
-        expired.push({ type: 'effect_expired', name: effect.name });
-        return [];
-      }
-      if (boundary === 'start' && lifecycle.boundary === 'end' && lifecycle.armed !== true) {
-        changed = true;
-        return [{
-          ...effect,
-          sourceTurnExpiry: { ...lifecycle, armed: true as const },
-        }];
-      }
-      if (boundary === 'end' && lifecycle.boundary === 'end' && lifecycle.armed === true) {
-        changed = true;
-        expired.push({ type: 'effect_expired', name: effect.name });
-        return [];
-      }
-      return [effect];
+    const transition = applySourceTurnBoundary(owner.runtime, {
+      sourceActorId,
+      ownerActorId: owner.id,
+      boundary,
     });
-    if (!changed) continue;
-    const after = { ...owner.runtime, activeEffects };
+    if (!transition.changed) continue;
+    const after = transition.state;
     runtimes.set(owner.id, after);
     events.push(...runtimeTransition(
       sourceActorId,
@@ -1286,7 +1263,7 @@ function sourceTurnBoundary(
       boundary === 'start' ? 'start_turn' : 'end_turn',
       obligations,
     ));
-    events.push(...engineTrace(owner.id, [owner.id], expired, obligations, {
+    events.push(...engineTrace(owner.id, [owner.id], transition.events, obligations, {
       sourceActorId,
       facts: { sourceActorId, ownerActorId: owner.id, boundary },
     }));

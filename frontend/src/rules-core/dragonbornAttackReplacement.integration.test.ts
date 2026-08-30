@@ -354,7 +354,7 @@ describe('compiled Dragonborn Breath Weapon Attack-action replacement', () => {
       }),
       expect.objectContaining({
         type: 'narrative',
-        text: 'сопротивление к «fire»: 10 → 5',
+        text: 'сопротивление (огонь): 10 → 5',
       }),
     ]));
     const saveTrace = resolvedA.events.find((event) => (

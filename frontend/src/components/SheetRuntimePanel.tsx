@@ -31,6 +31,7 @@ import {
 } from '../engine/manualEffectCommands';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
 import type { EngineEvent } from '../mvp/contracts';
+import type { CharacterEventRow } from '../character/api';
 import { findResource, useResourceOptions } from '../utils/resources';
 import SheetRestButtons from './SheetRestButtons';
 import SheetResourceTile, { sheetResourceTileOrder } from './SheetResourceTile';
@@ -41,12 +42,13 @@ interface Props {
   ruleState: CharacterRuleState;
   onUpdated: (c: ForgeCharacter) => void;
   onEvents?: (events: EngineEvent[]) => void;
+  onPersistedEvents?: (rows: CharacterEventRow[]) => void;
   onLongRestComplete?: () => void;
   encounterApply?: EncounterApply;
   combatLocked?: boolean;
 }
 
-export default function SheetRuntimePanel({ character, assembled, ruleState, onUpdated, onEvents, onLongRestComplete, encounterApply, combatLocked }: Props) {
+export default function SheetRuntimePanel({ character, assembled, ruleState, onUpdated, onEvents, onPersistedEvents, onLongRestComplete, encounterApply, combatLocked }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const syncAttempted = useRef(false);
@@ -187,6 +189,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
         ruleState={ruleState}
         onUpdated={onUpdated}
         onEvents={onEvents}
+        onPersistedEvents={onPersistedEvents}
         onLongRestComplete={onLongRestComplete}
         encounterApply={encounterApply}
         disabledReason={combatLocked ? 'Управляйте ходами и отдыхом из активного боя' : undefined}

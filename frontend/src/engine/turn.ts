@@ -358,7 +358,7 @@ export type TurnReactionResolver = (
   offer: ReactionOffer,
 ) => Promise<ExecuteResult | null>;
 
-async function resolveTurnBoundaryOffers(
+export async function resolveTurnBoundaryOffers(
   result: ExecuteResult,
   resolveReaction: TurnReactionResolver,
 ): Promise<ExecuteResult> {

@@ -1170,6 +1170,7 @@ const CharacterSheetMVP = () => {
             ruleState={ruleState}
             onUpdated={handleCharacterUpdated}
             onEvents={appendRuntimeEvents}
+            onPersistedEvents={reconcilePersistedRuntimeEvents}
             onLongRestComplete={() => setLongRestOpen(true)}
             encounterApply={applyEncounter}
             combatLocked={combatLocked}

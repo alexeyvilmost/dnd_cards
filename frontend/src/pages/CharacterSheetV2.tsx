@@ -225,6 +225,7 @@ const CharacterSheetV2 = ({
             ruleState={ruleState}
             onUpdated={onUpdated}
             onEvents={onEvents}
+            onPersistedEvents={onPersistedEvents}
             compact
             onLongRestComplete={() => setLongRestOpen(true)}
             encounterApply={encounterApply}
