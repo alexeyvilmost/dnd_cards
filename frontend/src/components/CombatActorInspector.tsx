@@ -1,6 +1,7 @@
 import { Heart, Shield, X } from 'lucide-react';
 import { effectiveActorSpeedFt } from '../solo-combat/tacticalGrid';
 import type { SoloCombatState } from '../solo-combat/types';
+import { groupActiveEffectsForDisplay } from '../engine/effects';
 
 const ABILITIES = [
   ['str', 'СИЛ'], ['dex', 'ЛОВ'], ['con', 'ТЕЛ'],
@@ -70,7 +71,7 @@ export default function CombatActorInspector({
       defenses.push({ kind: 'condition_immunity', value: immunity.condition });
     }
   }
-  const conditions = actor.runtime.activeEffects.map((effect) => effect.name);
+  const effectGroups = groupActiveEffectsForDisplay(actor.runtime.activeEffects);
   const baseSpeed = Number(actor.character.characterSpeed ?? actor.character.baseSpeed ?? 0);
   const effectiveSpeed = effectiveActorSpeedFt(actor);
   const actions = (presentation?.actionIds ?? actor.capabilities.actionIds).flatMap((actionId) => {
@@ -118,8 +119,13 @@ export default function CombatActorInspector({
 
       <section>
         <h3>Состояния</h3>
-        {conditions.length
-          ? <div className="combat-actor-inspector__tags">{conditions.map((condition) => <span key={condition}>{condition}</span>)}</div>
+        {effectGroups.length
+          ? <div className="combat-actor-inspector__effects">{effectGroups.map((group) => (
+            <div key={group.key}>
+              <strong>{group.name}</strong>
+              {group.instructions.map((instruction) => <small key={instruction}>{instruction}</small>)}
+            </div>
+          ))}</div>
           : <p className="combat-actor-inspector__empty">Активных состояний нет</p>}
       </section>
 

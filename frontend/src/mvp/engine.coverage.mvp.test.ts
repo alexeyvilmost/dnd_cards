@@ -284,6 +284,21 @@ describe('payload-ы боёвки: boon / reroll / transform / модифика�
     expect(events.some((e) => e.type === 'narrative' && e.text.includes('1к6'))).toBe(true);
   });
 
+  it('повторное Вдохновение барда заменяет одноимённый талон вместо удвоения', () => {
+    const action = {
+      name: 'Вдохновение барда',
+      ...autoMech({ kind: 'boon', id: 'bardic_inspiration', die: '1d6' }),
+    };
+    const first = executeAction(freshFighterState(), action, {
+      character: FIGHTER_CTX, rng: seededRng(1), nextId: () => 'boon:first',
+    });
+    const second = executeAction(first.state, action, {
+      character: FIGHTER_CTX, rng: seededRng(1), nextId: () => 'boon:second',
+    });
+    expect(second.state.activeEffects).toHaveLength(1);
+    expect(second.state.activeEffects[0].id).toBe('boon:second');
+  });
+
   it('boon с who:target вешает кость получателю, а не барду', () => {
     const source = freshFighterState();
     const target = freshFighterState();

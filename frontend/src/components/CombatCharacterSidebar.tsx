@@ -3,6 +3,7 @@ import { abilityOfSkill } from '../character/rules/foundation';
 import { SKILLS } from '../mechanics/registries';
 import type { SoloCombatState } from '../solo-combat/types';
 import CharacterSheetFirstColumn, { CHARACTER_SENSE_LABELS } from './CharacterSheetFirstColumn';
+import { groupActiveEffectsForDisplay } from '../engine/effects';
 
 const abilityRecord = (value: Partial<Record<AbilityKey, number>>, fallback: number): Record<AbilityKey, number> =>
   Object.fromEntries(ABILITY_KEYS.map((ability) => [ability, Number(value[ability] ?? fallback)])) as Record<AbilityKey, number>;
@@ -54,7 +55,7 @@ export default function CombatCharacterSidebar({
         value: `${sense.range} фт.`,
       }))}
       conditions={actor.runtime.activeEffects.length
-        ? <div className="cs-tags">{actor.runtime.activeEffects.map((effect) => <span key={effect.id} className="cs-tag">{effect.name}</span>)}</div>
+        ? <div className="cs-tags">{groupActiveEffectsForDisplay(actor.runtime.activeEffects).map((group) => <span key={group.key} className="cs-tag">{group.name}</span>)}</div>
         : <p className="cs-hook-note">Активных состояний и эффектов нет.</p>}
     />
   );

@@ -39,7 +39,7 @@ import {
 } from '../engine/weapon';
 import { costAmount } from '../engine/cost';
 import { inventoryQty } from '../character/inventory';
-import { activeEffectInstruction, expiryLabel, removeActiveEffect } from '../engine/effects';
+import { expiryLabel, groupActiveEffectsForDisplay, removeActiveEffectGroup } from '../engine/effects';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
 import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
 import { useToast } from '../contexts/ToastContext';
@@ -2628,8 +2628,10 @@ export default function SheetActionsPanel({
     return { disabled: busy };
   };
 
-  const handleDismissEffect = (effectId: string) => {
-    const { state, events } = removeActiveEffect(runtime, effectId);
+  const activeEffectGroups = groupActiveEffectsForDisplay(runtime.activeEffects);
+
+  const handleDismissEffect = (effectIds: readonly string[]) => {
+    const { state, events } = removeActiveEffectGroup(runtime, effectIds);
     apply(state, events);
   };
 
@@ -2973,16 +2975,18 @@ export default function SheetActionsPanel({
         </div>
       )}
 
-      {showEffects && !spellsOnly && runtime.activeEffects.length > 0 && (
+      {showEffects && !spellsOnly && activeEffectGroups.length > 0 && (
         <div className="sheet-group" style={{ marginTop: 8 }}>
           <h3 className="sheet-h3">Активные эффекты</h3>
           <ul className="sheet-active-effects">
-            {runtime.activeEffects.map((fx) => (
-              <li key={fx.id} className="sheet-active-effect">
+            {activeEffectGroups.map((group) => {
+              const fx = group.effects[0];
+              return (
+              <li key={group.key} className="sheet-active-effect">
                 <span className="sheet-active-effect-summary">
-                  <span className="sheet-active-effect-name">{fx.name}</span>
-                  {activeEffectInstruction(fx) && (
-                    <span className="sheet-active-effect-detail">{activeEffectInstruction(fx)}</span>
+                  <span className="sheet-active-effect-name">{group.name}</span>
+                  {group.instructions.length > 0 && (
+                    <span className="sheet-active-effect-detail">{group.instructions.join(' ')}</span>
                   )}
                 </span>
                 <span className="sheet-active-effect-meta">{expiryLabel(fx.expiry, fx.roundsLeft)}</span>
@@ -2991,12 +2995,13 @@ export default function SheetActionsPanel({
                   className="sheet-active-effect-dismiss"
                   disabled={busy}
                   title="Снять вручную"
-                  onClick={() => handleDismissEffect(fx.id)}
+                  onClick={() => handleDismissEffect(group.effects.map((effect) => effect.id))}
                 >
                   <X size={14} />
                 </button>
               </li>
-            ))}
+              );
+            })}
           </ul>
         </div>
       )}

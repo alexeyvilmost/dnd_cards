@@ -67,6 +67,18 @@ describe('describeMechanics (фаза F)', () => {
     expect(describeMechanics(null)).toEqual({ summary: '', details: [] });
     expect(describeMechanicsLine(smite)).toContain('·');
   });
+
+  it('Second Wind не показывает внутренние self_* идентификаторы без контекста персонажа', () => {
+    const d = describeMechanics({
+      activation: { mode: 'active', cost: [{ resource: 'bonus_action' }, { resource: 'self_uses' }] },
+      uses: { count: 2, per: 'short_rest' },
+      effects: [{ resolution: 'auto', result: [{ kind: 'healing', amount: '1d10 + self_level' }] }],
+    });
+    expect(d.summary).toBe('лечение 1к10 + уровень');
+    expect(d.details).toContain('Стоит: :bonus_action:, заряд способности');
+    expect(d.details).toContain('Использования: 2/короткий отдых');
+    expect([d.summary, ...d.details].join(' ')).not.toMatch(/self_(?:uses|level)/);
+  });
 });
 
 describe('parseMechanicsStats (превью из механики, не из легаси-флагов)', () => {

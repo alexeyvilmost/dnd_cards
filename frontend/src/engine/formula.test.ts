@@ -191,11 +191,11 @@ describe('formula.describe', () => {
 
   it('подставляет self_level и переменные только когда они известны', () => {
     expect(describeFormula('1d10 + self_level', baseCtx)).toBe('1к10 + 5');
-    expect(describeFormula('1d10 + self_level', {})).toBe('1к10 + self_level');
+    expect(describeFormula('1d10 + self_level', {})).toBe('1к10 + уровень');
     expect(describeFormula('self_level d4', baseCtx)).toBe('5к4');
-    expect(describeFormula('self_level d4', {})).toBe('self_level к4');
+    expect(describeFormula('self_level d4', {})).toBe('уровень к4');
     expect(describeFormula('prof_bonus d4', baseCtx)).toBe('2к4');
-    expect(describeFormula('prof d4', {})).toBe('prof к4');
+    expect(describeFormula('prof d4', {})).toBe('БМ к4');
     expect(describeFormula('2 * d4', baseCtx)).toBe('2к4');
     expect(describeFormula('prof_bonus * martial_arts_die', {
       ...baseCtx,
@@ -209,9 +209,9 @@ describe('formula.describe', () => {
 });
 
 describe('formatFormulaDisplay', () => {
-  it('без контекста только кости, с контекстом — известные переменные', async () => {
+  it('без контекста показывает понятные имена, с контекстом — значения', async () => {
     const { formatFormulaDisplay } = await import('./formula');
-    expect(formatFormulaDisplay('1d10 + self_level')).toBe('1к10 + self_level');
+    expect(formatFormulaDisplay('1d10 + self_level')).toBe('1к10 + уровень');
     expect(formatFormulaDisplay('1d10 + self_level', baseCtx)).toBe('1к10 + 5');
   });
 

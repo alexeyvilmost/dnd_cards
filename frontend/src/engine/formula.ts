@@ -600,7 +600,7 @@ function describeId(id: string, ctx: FormulaContext): string {
     const [, divStr, sidesStr] = lower.split(':');
     if (ctx.selfLevel === undefined) {
       const div = Number(divStr);
-      return div > 1 ? `self_level/${div} к${sidesStr}` : `self_level к${sidesStr}`;
+      return div > 1 ? `уровень/${div} к${sidesStr}` : `уровень к${sidesStr}`;
     }
     const count = Math.ceil(ctx.selfLevel / Number(divStr));
     return `${count}к${sidesStr}`;
@@ -614,41 +614,43 @@ function describeId(id: string, ctx: FormulaContext): string {
     const sides = m[2];
     const varId = m[3];
     if (!isNumericScalarKnown(varId, ctx)) {
-      return divisor > 1 ? `${varId}/${divisor} к${sides}` : `${varId} к${sides}`;
+      const readableVar = describeId(varId, {});
+      return divisor > 1 ? `${readableVar}/${divisor} к${sides}` : `${readableVar} к${sides}`;
     }
     try {
       const n = resolveNumericScalar(varId, ctx);
       const count = Math.max(0, Math.ceil(n / (divisor || 1)));
       return `${count}к${sides}`;
     } catch {
-      return divisor > 1 ? `${varId}/${divisor} к${sides}` : `${varId} к${sides}`;
+      const readableVar = describeId(varId, {});
+      return divisor > 1 ? `${readableVar}/${divisor} к${sides}` : `${readableVar} к${sides}`;
     }
   }
 
   if (lower === 'prof_bonus' || lower === 'prof') {
-    if (ctx.profBonus === undefined) return id;
+    if (ctx.profBonus === undefined) return 'БМ';
     const v = ctx.profBonus;
     return v >= 0 ? `+${v} БМ` : `${v} БМ`;
   }
   if (lower === 'self_level') {
-    if (ctx.selfLevel === undefined) return id;
+    if (ctx.selfLevel === undefined) return 'уровень';
     return String(ctx.selfLevel);
   }
   if (lower === 'spellcasting') {
-    if (ctx.spellcastingMod === undefined) return id;
+    if (ctx.spellcastingMod === undefined) return 'модификатор заклинаний';
     const v = ctx.spellcastingMod;
     return v >= 0 ? `+${v} заклин.` : `${v} заклин.`;
   }
   if (lower === 'spell_slot_above') {
-    if (ctx.spellSlotAbove === undefined) return id;
+    if (ctx.spellSlotAbove === undefined) return 'уровень ячейки выше базового';
     return String(ctx.spellSlotAbove);
   }
   if (lower === 'rage_bonus') {
-    if (ctx.rageBonus === undefined) return id;
+    if (ctx.rageBonus === undefined) return 'бонус ярости';
     return String(ctx.rageBonus);
   }
   if (lower === 'character_speed') {
-    if (ctx.characterSpeed === undefined) return id;
+    if (ctx.characterSpeed === undefined) return 'скорость';
     return String(ctx.characterSpeed);
   }
   if (lower === 'weapon_mod') {
@@ -665,7 +667,7 @@ function describeId(id: string, ctx: FormulaContext): string {
 
   const ability = lower as AbilityKey;
   if (ability in ABILITY_LABEL_RU) {
-    if (!ctx.abilityMods || ctx.abilityMods[ability] === undefined) return id;
+    if (!ctx.abilityMods || ctx.abilityMods[ability] === undefined) return ABILITY_LABEL_RU[ability];
     const v = ctx.abilityMods[ability] ?? 0;
     const label = ABILITY_LABEL_RU[ability];
     return v >= 0 ? `+${v} [${label}]` : `${v} [${label}]`;
@@ -763,12 +765,10 @@ export function formatFormulaDisplay(formula: string | number, ctx?: FormulaCont
   } catch {
     // Invalid authoring data still follows the existing readable fallback.
   }
-  if (ctx) {
-    try {
-      return describe(raw, ctx);
-    } catch {
-      /* битая формула — ниже деградация до кости */
-    }
+  try {
+    return describe(raw, ctx ?? {});
+  } catch {
+    /* битая формула — ниже деградация до кости */
   }
   return raw.replace(/(\d)[dд](\d)/gi, '$1к$2');
 }

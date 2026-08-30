@@ -42,6 +42,8 @@ const RES_RU: Record<string, string> = {
   focus: 'фокус', rage: 'ярость', superiority_die: 'кость превосходства',
   channel_divinity: 'божественный канал', luck_points: 'очко удачи', bardic_inspiration: 'вдохновение',
   second_wind: 'второе дыхание', action_surge: 'прилив действий', hp: 'хиты',
+  self_uses: 'заряд способности', self_item: 'использование предмета',
+  equipped_weapon_ammo: 'боеприпас оружия',
 };
 
 const rollRu = (r: unknown) => ROLL_RU[String(r)] ?? String(r ?? 'бросок');

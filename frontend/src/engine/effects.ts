@@ -40,6 +40,20 @@ function turnsLabel(roundsLeft: number): string {
   return `${roundsLeft} ${word}`;
 }
 
+export function removeActiveEffectGroup(
+  state: RuntimeState,
+  effectIds: readonly string[],
+): { state: RuntimeState; events: EngineEvent[] } {
+  let next = state;
+  const events: EngineEvent[] = [];
+  for (const effectId of effectIds) {
+    const removed = removeActiveEffect(next, effectId);
+    next = removed.state;
+    events.push(...removed.events);
+  }
+  return { state: next, events };
+}
+
 export function expiryLabel(expiry?: string, roundsLeft?: number): string {
   if (roundsLeft != null) return turnsLabel(roundsLeft);
   switch (expiry) {
@@ -60,14 +74,58 @@ const BOON_ROLL_LABELS: Record<string, string> = {
 /** Player-facing instructions for active effects that require manual use. */
 export function activeEffectInstruction(effect: ActiveEffectEntry): string | null {
   const mechanics = effect.mechanics as Record<string, unknown>;
-  if (mechanics.kind !== 'boon') return null;
-  const die = String(mechanics.die ?? '1d6').replace(/d/i, 'к');
-  const declared = Array.isArray(mechanics.applies_to)
-    ? mechanics.applies_to.map(String)
-    : [];
-  const rolls = declared.map((item) => BOON_ROLL_LABELS[item] ?? item);
-  const scope = rolls.length
-    ? rolls.join(', ').replace(/, ([^,]*)$/, ' или $1')
-    : 'подходящему броску к20';
-  return `Добавьте ${die} к ${scope}, затем снимите эффект.`;
+  if (mechanics.kind === 'boon') {
+    const die = String(mechanics.die ?? '1d6').replace(/d/i, 'к');
+    const declared = Array.isArray(mechanics.applies_to)
+      ? mechanics.applies_to.map(String)
+      : [];
+    const rolls = declared.map((item) => BOON_ROLL_LABELS[item] ?? item);
+    const scope = rolls.length
+      ? rolls.join(', ').replace(/, ([^,]*)$/, ' или $1')
+      : 'подходящему броску к20';
+    return `Добавьте ${die} к ${scope}, затем снимите эффект.`;
+  }
+  if (mechanics.kind === 'modifier') {
+    const appliesTo = mechanics.applies_to as Record<string, unknown> | undefined;
+    const roll = String(appliesTo?.roll ?? '');
+    const label = roll === 'size' ? 'Размер' : roll === 'speed' ? 'Скорость' : '';
+    if (!label || mechanics.value == null) return null;
+    const op = String(mechanics.op ?? 'add');
+    const rawValue = String(mechanics.value);
+    const value = roll === 'size'
+      ? ({ large: 'Большой', medium: 'Средний', small: 'Маленький' }[rawValue.toLowerCase()] ?? rawValue)
+      : `${op === 'add' && !rawValue.startsWith('-') ? '+' : ''}${rawValue} фт`;
+    return `${label}: ${value}.`;
+  }
+  return null;
+}
+
+export interface ActiveEffectDisplayGroup {
+  key: string;
+  name: string;
+  effects: ActiveEffectEntry[];
+  instructions: string[];
+}
+
+/** One action can persist several mechanical payload rows. Present them as one
+ * player-facing effect while retaining every row for rules evaluation. */
+export function groupActiveEffectsForDisplay(
+  effects: readonly ActiveEffectEntry[],
+): ActiveEffectDisplayGroup[] {
+  const groups = new Map<string, ActiveEffectEntry[]>();
+  for (const effect of effects) {
+    const key = [
+      effect.name, effect.source, effect.ownerId ?? '', effect.sourceId ?? '',
+      effect.expiry ?? '', effect.roundsLeft ?? '',
+    ].join('\u0000');
+    const group = groups.get(key);
+    if (group) group.push(effect);
+    else groups.set(key, [effect]);
+  }
+  return [...groups.entries()].map(([key, entries]) => ({
+    key,
+    name: entries[0].name,
+    effects: entries,
+    instructions: [...new Set(entries.map(activeEffectInstruction).filter((value): value is string => Boolean(value)))],
+  }));
 }

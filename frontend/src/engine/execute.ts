@@ -1577,6 +1577,7 @@ function stackKeyOf(mech: Dict | undefined): string | undefined {
   if (!mech) return undefined;
   if (mech.stack_id != null) return String(mech.stack_id);
   if (mech.kind === 'condition' && mech.value != null) return `cond:${String(mech.value)}`;
+  if (mech.kind === 'boon' && mech.id != null) return `boon:${String(mech.id)}`;
   return undefined;
 }
 
@@ -2671,10 +2672,14 @@ function applyBoon(
 ): RuntimeState {
   const die = String(p.die ?? 'к6').replace(/d/i, 'к');
   const name = `Талон ${die}${p.id ? ` (${source})` : ''}`;
-  const entry: ActiveEffectEntry = {
-    id: runtimeEffectId(ctx, 'boon', state.activeEffects.length), name, mechanics: p, expiry: 'manual', source,
+  const mechanics: Dict = {
+    ...p,
+    ...(p.id != null && p.stack_id == null ? { stack_id: `boon:${String(p.id)}` } : {}),
   };
-  const next = { ...state, activeEffects: [...state.activeEffects, entry] };
+  const entry: ActiveEffectEntry = {
+    id: runtimeEffectId(ctx, 'boon', state.activeEffects.length), name, mechanics, expiry: 'manual', source,
+  };
+  const next = stackApply(state, entry, mechanics);
   events.push({ type: 'effect_applied', name, sourceAction: source });
   events.push(narrativeEvent(
     `Талон ${die}: получатель добавляет ${die} к броску атаки, проверке или спасброску`

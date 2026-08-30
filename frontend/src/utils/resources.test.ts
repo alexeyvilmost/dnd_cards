@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { actionCostResourceIds } from './resources';
+import { actionCostResourceIds, resourceLabel } from './resources';
 
 describe('actionCostResourceIds — стоимость из activation.cost (единый источник)', () => {
   it('берёт ресурсы из mechanics.activation.cost', () => {
@@ -23,5 +23,11 @@ describe('actionCostResourceIds — стоимость из activation.cost (е�
   it('нет ни cost, ни resources → устаревший resource', () => {
     expect(actionCostResourceIds({ resource: 'action' })).toEqual(['action']);
     expect(actionCostResourceIds({})).toEqual([]);
+  });
+
+  it('показывает контекстные стоимости человекочитаемо, не меняя runtime id', () => {
+    expect(resourceLabel([], 'self_uses')).toBe('Заряд способности');
+    expect(resourceLabel([], 'self_item')).toBe('Использование предмета');
+    expect(resourceLabel([], 'equipped_weapon_ammo')).toBe('Боеприпас оружия');
   });
 });
