@@ -32,10 +32,16 @@ const BARD_SPELLCASTING = {
 
 const BARDIC_INSPIRATION = {
   activation: { mode: 'active', cost: [{ resource: 'bonus_action' }, { resource: 'bardic_inspiration', amount: 1 }] },
-  uses: { count: 'prof_bonus', per: 'long_rest' },
   effects: [{
     resolution: 'auto',
-    result: [{ kind: 'narrative', description: 'Союзник в 60 фт получает кость вдохновения (d6) для одного d20 броска в течение 1 часа.' }],
+    who: 'target',
+    result: [{
+      kind: 'boon',
+      id: 'bardic_inspiration',
+      die: '1d6',
+      applies_to: ['ability_check', 'attack_roll', 'saving_throw'],
+      expires: '1 час',
+    }],
   }],
   targeting: { filter: 'ally', range: '60 feet', shape: 'single' },
 };
@@ -378,7 +384,7 @@ async function main() {
       options: ['acrobatics', 'animal_handling', 'arcana', 'athletics', 'deception', 'history', 'insight', 'intimidation', 'investigation', 'medicine', 'nature', 'perception', 'performance', 'persuasion', 'religion', 'sleight_of_hand', 'stealth', 'survival'],
     },
     resources: {
-      bardic_inspiration: { count: 'prof_bonus', per: 'long_rest' },
+      bardic_inspiration: { count: 'max(cha, 1)', per: 'long_rest' },
     },
     level_progression: {
       1: { effects: [bardSpellId], actions: [inspirationId] },

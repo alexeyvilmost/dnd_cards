@@ -102,6 +102,7 @@ import type {
 } from '../rules-core/domain';
 import type { SheetCanonicalCommandInput } from '../character/sheetCanonicalCommand';
 import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
+import { playerFacingSheetActionError } from '../character/sheetActionError';
 import {
   commitPreparedSheetAtomicWorld,
   prepareSheetAtomicWorldCommit,
@@ -1217,7 +1218,7 @@ export default function SheetActionsPanel({
         loadPersistedEvents: charactersV3Api.getEvents,
       });
     } catch (cause) {
-      const message = cause instanceof Error ? cause.message : String(cause);
+      const message = playerFacingSheetActionError(cause);
       if (sheetCompanionRetryPolicy(cause) === 'retain_exact_retry') {
         setPendingAtomicRetry({ characterId: character.id, kind: 'companion', prepared });
         setError(`${message}. Безопасный повтор сохранён.`);
@@ -1246,7 +1247,7 @@ export default function SheetActionsPanel({
         loadPersistedEvents: charactersV3Api.getEvents,
       });
     } catch (cause) {
-      const message = cause instanceof Error ? cause.message : String(cause);
+      const message = playerFacingSheetActionError(cause);
       if (sheetCompanionRetryPolicy(cause) === 'retain_exact_retry') {
         setPendingAtomicRetry({ characterId: character.id, kind: 'ordinary_spell', prepared });
         setError(`${message}. Безопасный повтор сохранён.`);
@@ -2477,7 +2478,7 @@ export default function SheetActionsPanel({
         return;
       }
       console.error(e);
-      setError(e instanceof Error ? e.message : 'Не удалось выполнить действие');
+      setError(playerFacingSheetActionError(e));
     }
   };
 
@@ -2675,6 +2676,11 @@ export default function SheetActionsPanel({
       {worldInputDialog.dialog}
       {combatTargetDialog.dialog}
       {error && <p className="issues" role="alert" data-testid="sheet-action-error">{error}</p>}
+      {busy && (
+        <p className="forge-note" role="status" data-testid="sheet-action-progress">
+          Сохраняем результат действия…
+        </p>
+      )}
       {showAtomicRetryControl && pendingAtomicRetry && (
         <section className="sheet-group" role="alert" data-testid="sheet-atomic-retry">
           <h3 className="sheet-h3">Ответ {sheetAtomicRetryLabel(pendingAtomicRetry)} не подтверждён</h3>

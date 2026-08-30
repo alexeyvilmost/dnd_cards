@@ -193,9 +193,10 @@ describe('solo combat engine vertical integration', () => {
           min_targets: 1, max_targets: 1, range_ft: 60,
           requires_line_of_sight: true, allowed_relations: ['ally'],
         },
-        effects: [{ resolution: 'auto', result: [{
-          kind: 'narrative',
-          description: 'Союзник получает кость вдохновения.',
+        effects: [{ resolution: 'auto', who: 'target', result: [{
+          kind: 'boon', id: 'bardic_inspiration', die: '1d6',
+          applies_to: ['ability_check', 'attack_roll', 'saving_throw'],
+          expires: '1 час',
         }] }],
       },
       targeting: {
@@ -246,6 +247,9 @@ describe('solo combat engine vertical integration', () => {
     });
     expect(state.world.actors[allyId].runtime.resources.bardic_inspiration)
       .toBe(inspirationBefore - 1);
+    expect(state.world.actors[participant.character.id].runtime.activeEffects.some(
+      (effect) => effect.name.includes('Талон 1к6'),
+    )).toBe(true);
     expect(state.log.at(-1)?.text).toContain('Вдохновение барда');
 
     const magicMissile = state.catalogActions.find((action) => (

@@ -1,14 +1,15 @@
 # Mini-MVP completion timing log — 2026-08-30
 
-- Status: in progress (steps 1–3; step 4 intentionally waits for user approval)
+- Status: steps 1–3 complete and deployed; step 4 manual browser testing approved and in progress
 - Display timezone: Europe/Moscow (UTC+03:00)
 - Accepted at: 2026-08-30T10:20:28.000+03:00
-- Completed at: pending
-- Critical-path wall time: pending
-- Active work: pending
-- Machine wait on critical path: pending
-- Machine wait overlapped by active work: pending
-- External wait: pending
+- Steps 1–3 completed at: 2026-08-30T11:32:00.000+03:00
+- Critical-path wall time: 1h11m32s
+- Definite active work: 43m53s minimum
+- Mixed/unseparated work and waits: 17m05s
+- Definite machine wait on critical path: 7m36s
+- Parallel machine wait removed from critical path: 16.002s
+- Definite external/network wait: 2m50s
 
 ## Action log
 
@@ -29,6 +30,28 @@
 | A13 | Scene constructor focused verification | 10:59:27 | 11:00:02 | 35s | machine wait | final-gates-1 | Engine integration gate passed 14/14 in 4.658s; TypeScript verification passed in 34.320s on the same parallel critical path. |
 | A14 | Replace automatic long CI with focused gates and add catalog certification support | 11:00:02 | 11:03:57 | 3m55s | active work | — | Push/PR CI now runs targeted TypeScript, Vitest, and migration gates with a 10-minute timeout. Historic full/offline/live-browser suites remain available only by explicit manual dispatch. Added an exact 98-row, atomic support-certification planner and tests. |
 | A15 | Final local release gates | 11:03:57 | 11:08:02 | 4m05s | mixed/unseparated | final-gates-2 | 70 focused frontend tests, 2 certification-planner tests, migration tests, and targeted lint passed. Production bundle compiled in 24.59s, then the post-build hygiene gate correctly rejected unrelated untracked local DiceBox `assets/ammo`; exact-archive build will exclude those files. |
+| A16 | Scoped review, commit, and release identity preparation | 11:08:02 | 11:10:15 | 2m13s | active work | — | Committed only the 22 task files as `a8f1bf7`; preserved the three pre-existing tracked edits and unrelated untracked files. `origin/main` was still the expected parent before push. |
+| A17 | Exact Git-archive production build | 11:10:30 | 11:11:37 | 1m07s | machine wait | — | Full TypeScript/Vite/PWA build and both DiceBox guards passed from immutable Git bytes in 66.471s. This proved the prior workspace-only `assets/ammo` failure could not enter the release. |
+| A18 | Checklist scope, live schema sampling, and normalized data model | 11:11:37 | 11:15:07 | 3m30s | active work | — | Bound the workbook to the manifest's 12 classes, 10 species + 24 variants, 98 spells, 20 feats, linked actions/effects, all level progression, base actions, conditions, and core combat flows. |
+| A19 | Push, exact archive upload, and remote hash verification | 11:15:07 | 11:16:06 | 59s | external wait | — | Uploaded 112,158,720 bytes to Timecloud in 58.374s and matched SHA-256 before atomically naming the server archive. An extra GitHub `ls-remote` probe had already spent 21.067s on a transient timeout after the push itself succeeded; later identity checks used the updated remote-tracking ref. |
+| A20 | Timecloud release runner | 11:16:07 | 11:20:55 | 4m48s | remote machine wait | — | Exact server log span was 4m47.448s. Backend/frontend images built, pre-release database backup created, migration 118/119 applied, atomic cutover completed, and both public identities reported `a8f1bf7dce078ab19f338515818a80e8ddf73ef1`. |
+| A21 | Finish spreadsheet authoring program | 11:20:55 | 11:22:41 | 1m46s | active work | — | Added styles, freeze panes, tables, status validation, conditional formatting, formulas, threaded-comment instructions, exact denominators, and render/export verification. |
+| A22 | Apply exact 98-spell verified-catalog support update | 11:22:41 | 11:26:12 | 3m31s | mixed/unseparated | — | Two fail-closed operational probes exposed the release runner's compose-only directory and one missing hash dependency; the corrected read-only archive mount applied 41 pending rows atomically in 5.763s. Final dry run: 98/98 visible, zero pending. |
+| A23 | Post-release live activation + Forge-root gate | 11:26:31 | 11:26:43 | 12s | machine wait | — | Both production tests passed in 11.991s: exact 98-spell activation and the live Forge root contract. |
+| A24 | Build, inspect, render, and export the five-tab workbook | 11:27:15 | 11:27:55 | 40s | machine wait | — | Artifact-tool authoring completed in 39.461s with 376 class, 206 species, 98 spell, 48 feat, and 44 base-mechanics rows. Every sheet rendered. |
+| A25 | Workbook structural/visual QA, deployed browser-session sanity check, and timing closeout | 11:27:55 | 11:32:00 | 4m05s | mixed/unseparated | — | Re-import verified exact row counts, 34+64 spells, 34 species entities, Bard Charisma, five tables, zero formula errors, and 98 verified spell rows. All five previews were visually inspected. Existing in-app tabs were at login, so authenticated browser execution remains correctly deferred to step 4 after approval. |
+| A26 | Step 4 approval intake, browser/spreadsheet procedure reload, and two-artifact test/report plan | 12:00:11 | 12:02:58 | 2m47s | active work | step-4-prep | Bound every applicable row to sheet use, combat use, and result-clarity evidence; added the requested standalone report with a dedicated cross-cutting-error section; preserved all future test characters by policy. |
+| A27 | Browser-session recovery and authentication boundary check | 12:02:58 | 12:04:20 | 1m22s | active work | step-4-prep | The prior in-app tab had been cleaned up; a fresh production tab loaded correctly but showed the login screen. Chrome is unavailable on this host. No credentials, cookies, or browser storage were inspected. Requested a new in-app sign-in while local preparation continued. |
+| A28 | Accepted-workbook re-import, exact level-1 denominator split, and browser-flow preparation | 12:04:20 | 12:08:21 | 4m01s | active work | step-4-prep | Re-imported the accepted workbook with artifact-tool. Manual L1 denominator is 491 rows: 112 class, 189 species, 98 spells, 48 feats, and 44 base mechanics; 281 progression rows are explicitly outside the accepted L1 scope. Mapped Forge completion gates and evidence fields without editing the workbook. |
+| A29 | First authenticated Bard sheet pass and fresh Forge target creation | 12:08:21 | 12:21:36 | 13m15s | active browser work | step-4-browser-1 | Retained a fresh current-ruleset Goliath Fighter; verified Forge duplicate-skill blocking, Mage Hand, two legacy-target Bardic Inspiration attempts, Light, Minor Illusion, and long-rest recovery. Confirmed target-side Bardic Inspiration failure and Minor Illusion evidence loss. |
+| A30 | Cross-character spell diagnosis and compatible self-cast control | 12:21:36 | 12:30:00 | 8m24s | mixed browser/debugging | step-4-browser-1 | Cure Wounds/Command attempts against older targets exposed `Atomic participants use incompatible rulesets`; self Cure Wounds completed after an approximately 4.6s opaque persistence wait and consumed exactly one action and one level-1 slot. |
+| A31 | Interrupted-session recovery, local credential preservation, and evidence consolidation | 12:30:00 | 12:34:01 | 4m01s | active work | step-4-browser-1 | Reclaimed the authenticated tab without retransmitting credentials, saved the user-authorized test login in a repository-local ignored file, and consolidated browser evidence before source tracing. No credential value entered the timing/report artifacts. |
+| A32 | Bardic Inspiration root-cause trace and focused implementation | 12:34:01 | 12:39:04 | 5m03s | active work | step-4-fix-1 | Confirmed the catalog action was narrative-only while the engine already supported typed boons. Added an exact-preimage compatibility upgrade, repaired the seed source, routed the boon to the target, translated ruleset errors, exposed persistence progress, and added engine/solo/error regressions. |
+| A33 | First focused verification attempt and immediate syntax correction | 12:39:04 | 12:40:01 | 57s | mixed/unseparated | step-4-fix-1 | The first targeted run stopped on one missing return-object brace in the new compatibility helper; two other suites had already passed. Corrected locally without widening the test scope. |
+| A34 | Corrected Bardic Inspiration and solo-combat verification | 12:40:01 | 12:40:28 | 27s | machine wait | step-4-fix-1 | 18 focused engine/error/compatibility tests passed in 4.747s; the explicit 14-test solo-combat integration gate passed in 7.767s. |
+| A35 | Sheet-action regression and TypeScript gate | 12:40:28 | 12:42:09 | 1m41s | machine wait | step-4-fix-1 | 17 action-sheet collection tests passed in 2.22s. TypeScript compilation passed; it dominated this gate at roughly 84s with no diagnostics. |
+| A36 | Production preimage/certificate audit and exact database migration | 12:42:09 | 12:46:22 | 4m13s | active work | step-4-fix-1 | Public production read confirmed the exact narrative-only action and a false `verified_mechanical` certificate. Added migration 120 with stable identity/preimage checks, CAS update, revocation ledger, typed target-boon postcondition, guard restoration, and idempotency. Focused Go migration gates passed twice; final three-migration gate took 3.680s. |
+| A37 | Targeted frontend lint | 12:46:22 | 12:47:20 | 58s | machine wait | step-4-fix-1 | ESLint passed for the eight changed TypeScript/TSX files with zero warnings. |
 
 ## Test and release gates
 
@@ -48,18 +71,30 @@
 | final focused migration gate | Bard + Sleep repair contracts | 4.394s wall / 1.728s test | passed | 6 registered/available | 0 | terminal output |
 | targeted lint | changed frontend modules | 23.557s | passed | — | 0 | terminal output |
 | production build | TypeScript + Vite + PWA + asset hygiene | 55s wall / 24.59s Vite | blocked only by unrelated untracked `assets/ammo` | — | 0 | terminal output |
-| sheet combat certification drift check | generated certificate baseline | pending | pending | — | 0 | terminal output |
+| immutable archive build | exact committed Git bytes | 66.471s | passed | — | 0 | terminal output |
+| Timecloud deploy | backup, images, migrations, cutover, exact identity | 4m47.448s | passed | — | 0 | server release log |
+| 98-row support certification | exact atomic support batch | 5.763s final apply | passed | 41 changed / 98 total | 2 fail-closed operational probes | content-migration receipt |
+| post-release live spell + Forge roots | production catalog through real sheet projection | 11.991s | passed | 2 | 0 | terminal output |
+| workbook authoring | fetch, formulas, formatting, five renders, XLSX export | 39.461s | passed | 772 checklist rows | 0 | XLSX + previews |
+| workbook re-import verification | row/status/denominator/formula/Bard invariants | 4.389s | passed | 5 sheets | 0 | terminal output |
+| legacy sheet-combat certificate drift check | generated overlay baseline | not run | retired from automatic focused gate because it previously masked live Bard drift | — | 0 | focused replacement gates above |
 
 ## Early bottleneck findings
 
 1. The existing catalog gate verifies patch planners and hashes, not that a real Forge caster can cast its chosen spells.
 2. The generated combat certificate compiles an overlay containing a bard spellcasting declaration that live production data lacks; the two inputs can therefore disagree while CI stays green.
-3. The current CI workflow runs build, the full frontend suite, two structural coverage suites, semantic coverage, two-browser Playwright, race-enabled backend tests, and a production browser wait serially. This is the long pipeline to replace with focused required checks and explicit manual checklist evidence.
+3. Before this change, CI ran build, the full frontend suite, two structural coverage suites, semantic coverage, two-browser Playwright, race-enabled backend tests, and a production browser wait serially. Push/PR CI now uses the focused gates; the historic suite remains explicit manual diagnostics only.
 4. The first material time loss was the repeated public live-audit request: 75.612s on the longest attempt and no diagnostic payload. Direct database inspection returned the decisive Bard mismatch in seconds, so later production gates will avoid blind HTTP retries.
 5. Aggregating every spell failure in one live run reduced diagnosis from a potential 40 request/test loops to three sub-six-second passes. Thirty-nine apparent targeting failures were valid legacy rows handled by the real sheet adapter; one genuine catalog defect remained: Sleep lacked stable class-list ids despite a full mechanical certificate.
+6. The longest active phase was the audited Bard repair (12m27s), because the production row, generated fixture, migration safety contract, and real resolver path disagreed. Keeping the new reported-character regression and 98-row gate makes this a sub-12-second release check next time.
+7. The longest machine phase was the Timecloud release (4m47.448s). The server rebuilt frontend dependencies and still uses Docker's legacy builder. BuildKit with a registry-backed lockfile cache, or a prebuilt dependency layer keyed by `frontend/package-lock.json`, should remove most of this wait.
+8. The largest avoidable diagnostic wait was the public audit timeout (75.612s). A single bounded HTTP attempt followed by the direct read-only database/catalog path should remain the standard failure policy.
+9. The local workspace build lost 55s after unrelated untracked DiceBox assets tripped the final guard. Running the first release build from exact Git-archive bytes avoids this false failure while preserving the guard.
+10. Catalog certification itself took only 5.763s; operational discovery around it took 3m25s. The Timecloud runner should ship one versioned `certify-from-release-archive` helper that mints a short-lived admin token internally and mounts the exact release archive, eliminating both failed probes.
+11. Workbook generation and full five-sheet rendering took 39.461s. Future runs can reuse the workbook layout and only refresh normalized live rows; step 4 should test/filter level-1 rows first while retaining higher-level rows as inventory.
 
 ## Data quality
 
-- Exact timestamps: task start, A01–A04 boundary, individual machine gate durations.
-- Reconstructed intervals: A01–A06 boundaries were reconstructed from exact tool-start time plus recorded wall durations; overlap is identified where applicable. Exact machine timings are stated separately in the evidence cells.
+- Exact timestamps: task start, commit, server archive birth/modify, server deployment log birth/modify, certification timestamp, workbook artifact timestamps, task close, and individual machine gate durations.
+- Reconstructed intervals: early A01–A06 boundaries and the active/mixed boundaries around A18/A21/A22 were reconstructed from exact tool-start times plus recorded wall durations. Exact machine timings are stated separately in the evidence cells.
 - Secrets: none recorded.

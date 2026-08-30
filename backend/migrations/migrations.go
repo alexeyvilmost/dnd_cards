@@ -756,6 +756,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairSleepSpellClassListContract,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     bardicInspirationMigrationVersion,
+			Description: "Выдать союзнику механическую кость Вдохновения барда и отозвать ложный сертификат",
+			Up:          repairBardicInspirationBoonContract,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

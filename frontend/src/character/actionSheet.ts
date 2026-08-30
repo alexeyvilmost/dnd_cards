@@ -9,6 +9,7 @@ import {
 import { bindSelfItemCost } from '../engine/cost';
 import type { ResourceRestRecovery } from '../mvp/contracts';
 import type { Action, Card, PassiveEffect, Spell } from '../types';
+import { upgradeLegacyActionMechanics } from './legacyActionMechanics';
 
 type Dict = Record<string, unknown>;
 
@@ -74,7 +75,7 @@ function effectActiveMechanics(effect: PassiveEffect): Record<string, unknown> |
 }
 
 function actionMechanics(action: Action, withUses = true): Record<string, unknown> | null {
-  const mech = action.mechanics;
+  const mech = upgradeLegacyActionMechanics(action);
   if (!mech || typeof mech !== 'object') return null;
   const activation = mech.activation as Record<string, unknown> | undefined;
   if (activation?.mode !== 'active' && activation?.mode !== 'reaction') return null;
