@@ -27,6 +27,7 @@ import {
 } from './derive';
 import { ABILITY_KEYS, type AbilityKey, type CharacterDraft } from './types';
 import { excludesMicroMvpL1SourceEffect } from '../canon/microMvpSourceCorrections';
+import { meetsActivationLevelRequirement } from '../rules-core/activationRequirements';
 import { resolvePrimarySpellcastingAbility } from './spellcastingAbility';
 
 // ─── Сбор ссылок на эффекты/действия из выбранных сущностей ──────────────────
@@ -350,12 +351,13 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   );
   const canonicalEffectRefs = effectRefs.filter((reference) => {
     const effect = effBodyById.get(reference.id);
-    return !excludesMicroMvpL1SourceEffect({
+    return !!effect && meetsActivationLevelRequirement(effect.mechanics, draft.level)
+      && !excludesMicroMvpL1SourceEffect({
       characterLevel: draft.level,
       raceCardNumber: race?.card_number,
       classCardNumber: klass?.card_number,
       effectCardNumber: effect?.card_number,
-    });
+      });
   });
   const baseEffects: OriginEffect[] = [];
   {
@@ -388,7 +390,8 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
 
   // Эффекты-«контейнеры»: разворачиваем ссылки на другие эффекты (grant_effect /
   // choice source:effect) в самостоятельные бусины-эффекты с тем же источником.
-  let effects = await expandEffectGrants(baseEffects, draft, resolveEffect);
+  let effects = (await expandEffectGrants(baseEffects, draft, resolveEffect))
+    .filter(({ effect }) => meetsActivationLevelRequirement(effect.mechanics, draft.level));
 
   // Черты, выбранные через choice(source:"feat") в механике эффектов (боевой
   // стиль воина/паладина/следопыта, черты происхождения, бонусная черта Человека):
@@ -469,7 +472,8 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   }
 
   if (extraEffects.length) {
-    effects = await expandEffectGrants([...effects, ...extraEffects], draft, resolveEffect);
+    effects = (await expandEffectGrants([...effects, ...extraEffects], draft, resolveEffect))
+      .filter(({ effect }) => meetsActivationLevelRequirement(effect.mechanics, draft.level));
   }
 
   const actions = (
@@ -478,7 +482,9 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
         actionsApi.getAction(r.id).then((action) => ({ action, origin: r.origin })).catch(() => null),
       ),
     )
-  ).filter((x): x is OriginAction => !!x);
+  ).filter((x): x is OriginAction => (
+    !!x && meetsActivationLevelRequirement(x.action.mechanics, draft.level)
+  ));
 
   // Справочник переменных (type/default) для сворачивания variable-payload'ов.
   // B5: загрузка стартовала в начале функции (variableDefsP) — здесь только ждём.

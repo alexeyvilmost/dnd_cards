@@ -70,6 +70,7 @@ import type {
 } from './domain';
 import { foldEvents } from './reducer';
 import { parseActivationCastTime } from './activationCastTime';
+import { parseActivationLevelRequirement } from './activationRequirements';
 import { createStrictRngTape } from './determinism';
 import {
   advanceWorldObjectRounds,
@@ -2714,6 +2715,10 @@ function sourceScopedReactionOptions(
   target: ActorState,
   action: RuleActionDefinition,
 ): ReactionActionOption[] {
+  const levelRequirement = parseActivationLevelRequirement(action.mechanics);
+  if (levelRequirement.status === 'invalid'
+    || (levelRequirement.status === 'required'
+      && target.character.level < levelRequirement.minLevel)) return [];
   if (action.kind !== 'spell' || !target.spellcastingAccess) {
     const execution = prepareReactionExecution(target, action);
     if (execution.status === 'rejected'
@@ -10611,6 +10616,18 @@ function executeCommand(
       if (!action) return rejected(world, 'ActionNotFound', `Unknown action ${command.actionId}`);
       const definitionIssue = actionDefinitionIssue(action);
       if (definitionIssue) return rejected(world, 'InvalidActionDefinition', definitionIssue);
+      const levelRequirement = parseActivationLevelRequirement(action.mechanics);
+      if (levelRequirement.status === 'invalid') {
+        return rejected(world, 'InvalidActionDefinition', `${action.id}: ${levelRequirement.issue}`);
+      }
+      if (levelRequirement.status === 'required'
+        && actor.character.level < levelRequirement.minLevel) {
+        return rejected(
+          world,
+          'InvalidActionTiming',
+          `${action.id} requires character level ${levelRequirement.minLevel}`,
+        );
+      }
       if (!actor.capabilities.actionIds.includes(action.id)) {
         return rejected(world, 'ActionNotGranted', `Actor ${actor.id} does not own action ${action.id}`);
       }

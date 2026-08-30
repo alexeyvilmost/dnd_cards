@@ -5,6 +5,7 @@ import { FREEUSE_SHOWCASE_KEY, isFreeusePoolKey } from '../engine/freeuse';
 import { bindEquippedWeaponActionContext } from '../engine/weapon';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
+import { parseActivationLevelRequirement } from '../rules-core/activationRequirements';
 import { playerActionIdsFor, type SoloCombatState } from '../solo-combat/types';
 import { isTriggeredCombatAction } from '../solo-combat/engine';
 import { actionCostResourceIds, findResource, useResourceOptions } from '../utils/resources';
@@ -55,6 +56,14 @@ export function combatActionAvailability(
   actorId = state.characterId,
 ): { enabled: boolean; reason?: string } {
   const actor = state.world.actors[actorId];
+  const levelRequirement = parseActivationLevelRequirement(action.mechanics);
+  if (levelRequirement.status === 'invalid') {
+    return { enabled: false, reason: 'Некорректное требование уровня' };
+  }
+  if (levelRequirement.status === 'required'
+    && actor.character.level < levelRequirement.minLevel) {
+    return { enabled: false, reason: `Доступно с уровня ${levelRequirement.minLevel}` };
+  }
   let spellSlotResource: string | undefined;
   if (action.kind === 'spell') {
     if (!actor.spellcastingAccess) {
