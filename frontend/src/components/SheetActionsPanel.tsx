@@ -77,6 +77,7 @@ import {
   sheetPrimitiveDisabledReason,
 } from '../character/sheetPrimitiveUi';
 import { projectRunnableSheetCanonicalActions } from '../character/sheetCanonicalActionProjection';
+import { applyUnarmedDamageProfileToAction } from '../rules-core/fightingStyleComplexPrimitives';
 import { sheetWorldInputFormContext } from '../character/sheetWorldInputForm';
 import { useSheetWorldInputDialog } from './SheetWorldInputDialog';
 import {
@@ -851,7 +852,7 @@ export default function SheetActionsPanel({
     const issues = new Map<string, string>();
     const projected = collectedActions.map((action) => {
       try {
-        return {
+        const contextual = {
           ...action,
           mechanics: bindEquippedWeaponActionContext(
             action.mechanics,
@@ -859,13 +860,29 @@ export default function SheetActionsPanel({
             equipCards,
           ),
         };
+        const heldCards = (['main_hand', 'off_hand'] as const)
+          .flatMap((slot) => {
+            const cardId = runtime.equipment[slot];
+            return cardId && equipCards.get(cardId) ? [equipCards.get(cardId)!] : [];
+          });
+        const profiled = applyUnarmedDamageProfileToAction(contextual, passives, {
+          holdingWeaponOrShield: heldCards.some((card) => (
+            card.type === 'weapon' || card.type === 'shield' || card.defense_type === 'shield'
+          )),
+        });
+        return {
+          ...profiled,
+          ...(action.actionRef && profiled.mechanics !== contextual.mechanics
+            ? { actionRef: { ...action.actionRef, mechanics: profiled.mechanics } }
+            : {}),
+        };
       } catch (cause) {
         issues.set(action.id, cause instanceof Error ? cause.message : String(cause));
         return action;
       }
     });
     return { actions: projected, issues };
-  }, [collectedActions, runtime.equipment, equipCards]);
+  }, [collectedActions, runtime.equipment, equipCards, passives]);
   const allActions = contextualCostProjection.actions;
 
   // Триггерные способности-СЛУШАТЕЛИ (interrupt): mode reaction/triggered + activation.trigger.event
@@ -885,7 +902,8 @@ export default function SheetActionsPanel({
     actions: collectedActions,
     equipment: runtime.equipment,
     cards: equipCards,
-  }).actions, [collectedActions, runtime.equipment, equipCards]);
+    passives,
+  }).actions, [collectedActions, runtime.equipment, equipCards, passives]);
 
   // Доспехи мага и т.п.: каст выдаёт ОТДЕЛЬНЫЙ эффект через grant_effect. Движок синхронный —
   // предзагружаем механику каждого выдаваемого эффекта по slug (кэш getEffect), кладём в execCtx,

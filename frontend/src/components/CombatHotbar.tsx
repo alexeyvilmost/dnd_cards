@@ -6,6 +6,7 @@ import { bindEquippedWeaponActionContext } from '../engine/weapon';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
 import { parseActivationLevelRequirement } from '../rules-core/activationRequirements';
+import { applyUnarmedDamageProfileToAction } from '../rules-core/fightingStyleComplexPrimitives';
 import { playerActionIdsFor, type SoloCombatState } from '../solo-combat/types';
 import { isTriggeredCombatAction } from '../solo-combat/engine';
 import { actionCostResourceIds, findResource, useResourceOptions } from '../utils/resources';
@@ -231,6 +232,26 @@ export default function CombatHotbar({
         {visibleActions.map((action) => {
           const availability = combatActionAvailability(state, action, actorId);
           const presentation = state.actionPresentation?.[action.id];
+          const heldCards = (['main_hand', 'off_hand'] as const)
+            .flatMap((slot) => {
+              const cardId = actor.runtime.equipment[slot];
+              const cards = [
+                ...(actor.character.knownCards ?? []),
+                ...(actor.character.equippedCards ?? []),
+              ];
+              return cardId ? cards.filter((card) => card.id === cardId) : [];
+            });
+          const actionRef = presentation?.actionRef
+            ? applyUnarmedDamageProfileToAction(
+              presentation.actionRef,
+              actor.passives ?? [],
+              {
+                holdingWeaponOrShield: heldCards.some((card) => (
+                  card.type === 'weapon' || card.type === 'shield' || card.defense_type === 'shield'
+                )),
+              },
+            )
+            : undefined;
           const actionDisabled = disabled || !availability.enabled;
           return (
             <div
@@ -244,7 +265,7 @@ export default function CombatHotbar({
                 sourceLabel={presentation?.sourceLabel ?? (action.kind === 'spell' ? 'Заклинание' : 'Действие')}
                 description={presentation?.description}
                 level={presentation?.spellRef?.level}
-                actionRef={presentation?.actionRef}
+                actionRef={actionRef}
                 spellRef={presentation?.spellRef}
                 spellcasting={spellcasting}
                 variant="icon"

@@ -100,6 +100,48 @@ export function resolveUnarmedDamageProfile(
 }
 
 /**
+ * Apply the data-owned Fighting Style profile to a catalog Unarmed Strike.
+ * The action identity, activation cost, targeting, and any non-damage riders
+ * remain unchanged; only primary damage payloads of structurally declared
+ * unarmed attack rolls are replaced.
+ */
+export function applyUnarmedDamageProfileToAction<
+  T extends { mechanics?: Record<string, unknown> | null },
+>(
+  action: T,
+  passives: readonly unknown[],
+  facts: { holdingWeaponOrShield: boolean },
+): T {
+  const profile = resolveUnarmedDamageProfile(passives, facts);
+  const mechanics = dict(action.mechanics) ? action.mechanics : null;
+  if (!profile || !mechanics || !Array.isArray(mechanics.effects)) return action;
+
+  let changed = false;
+  const effects = mechanics.effects.map((candidate) => {
+    if (!dict(candidate)
+      || candidate.resolution !== 'attack_roll'
+      || candidate.attack_kind !== 'unarmed'
+      || !Array.isArray(candidate.on_hit)) return candidate;
+    let replaced = false;
+    const onHit = candidate.on_hit.map((payload) => {
+      if (replaced || !dict(payload) || payload.kind !== 'damage') return payload;
+      replaced = true;
+      changed = true;
+      const { dice: _dice, ability: _ability, ...rest } = payload;
+      return {
+        ...rest,
+        amount: `${profile.dice} + ${profile.ability}`,
+        type: profile.damageType,
+      };
+    });
+    return replaced ? { ...candidate, on_hit: onHit } : candidate;
+  });
+  return changed
+    ? { ...action, mechanics: { ...mechanics, effects } }
+    : action;
+}
+
+/**
  * Resolves the optional start-of-turn damage against one creature actually
  * grappled by the source. Returning `declined` for a missing target preserves
  * the player's "may" choice without manufacturing a pending target.

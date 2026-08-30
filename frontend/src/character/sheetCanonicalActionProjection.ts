@@ -3,6 +3,7 @@ import type { Card } from '../types';
 import type { SheetAction } from './actionSheet';
 import { sheetActionNeedsCanonicalRuntime } from './sheetPrimitiveUi';
 import { materializeDeclaredMechanicsTargeting } from '../rules-core/actionTargeting';
+import { applyUnarmedDamageProfileToAction } from '../rules-core/fightingStyleComplexPrimitives';
 
 export interface RunnableSheetCanonicalActionProjection {
   actions: SheetAction[];
@@ -97,6 +98,7 @@ export function projectRunnableSheetCanonicalActions(input: {
   actions: readonly SheetAction[];
   equipment: Readonly<Record<string, string | null | undefined>>;
   cards: ReadonlyMap<string, Card>;
+  passives?: readonly unknown[];
 }): RunnableSheetCanonicalActionProjection {
   const actions: SheetAction[] = [];
   const issues = new Map<string, string>();
@@ -113,14 +115,31 @@ export function projectRunnableSheetCanonicalActions(input: {
         input.equipment,
         cards,
       );
+      const heldCards = (['main_hand', 'off_hand'] as const)
+        .flatMap((slot) => {
+          const cardId = input.equipment[slot];
+          return cardId && cards.get(cardId) ? [cards.get(cardId)!] : [];
+        });
+      const profiled = applyUnarmedDamageProfileToAction(
+        { ...action, mechanics },
+        input.passives ?? [],
+        {
+          holdingWeaponOrShield: heldCards.some((card) => (
+            card.type === 'weapon' || card.type === 'shield' || card.defense_type === 'shield'
+          )),
+        },
+      );
       actions.push({
         ...action,
-        mechanics,
+        mechanics: profiled.mechanics,
+        ...(action.actionRef && profiled.mechanics !== mechanics
+          ? { actionRef: { ...action.actionRef, mechanics: profiled.mechanics } }
+          : {}),
         // Spell compilation intentionally starts from the immutable entity
         // reference to preserve grant provenance. Carry the same normalized
         // runtime copy there so it cannot bypass this compatibility boundary.
         ...(action.spellRef
-          ? { spellRef: { ...action.spellRef, mechanics } }
+          ? { spellRef: { ...action.spellRef, mechanics: profiled.mechanics } }
           : {}),
       });
     } catch (cause) {

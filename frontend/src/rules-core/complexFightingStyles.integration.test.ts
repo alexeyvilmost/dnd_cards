@@ -5,6 +5,7 @@ import type { EngineEvent } from '../mvp/contracts';
 import type {
   ActorState,
   CommandResult,
+  RuleActionDefinition,
   RulesCatalog,
   SpatialFacts,
   UncommittedRuleEvent,
@@ -24,6 +25,28 @@ const FACTS: SpatialFacts = {
 };
 const catalog: RulesCatalog = { getAction: () => undefined };
 const unarmedMechanics = definitions.find((definition) => definition.card_number === 'fs_unarmed')!.mechanics;
+const catalogUnarmed: RuleActionDefinition = {
+  id: 'catalog:unarmed',
+  name: 'Unarmed Strike',
+  kind: 'nonSpell',
+  sourceEntityIds: ['action:catalog-unarmed'],
+  mechanics: {
+    activation: { mode: 'active', cost: [{ resource: 'action' }] },
+    targeting: {
+      domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1,
+      max_targets: 1, range_ft: 5, requires_line_of_sight: true,
+      allowed_relations: ['enemy'],
+    },
+    effects: [{
+      ability: 'str', attack_kind: 'unarmed', resolution: 'attack_roll', vs: 'ac',
+      on_hit: [{ amount: '1 + str', kind: 'damage', type: 'bludgeoning' }],
+    }],
+  },
+  targeting: {
+    minTargets: 1, maxTargets: 1, rangeFt: 5, requiresLineOfSight: true,
+    allowedRelations: ['enemy'],
+  },
+};
 
 function accepted(result: CommandResult) {
   if (result.status !== 'accepted') throw new Error(`${result.code}: ${result.message}`);
@@ -112,6 +135,44 @@ function attackSession(input: { style: boolean; weapon: boolean }) {
 }
 
 describe('complex Fighting Styles in the canonical RulesSession', () => {
+  it('applies the profile to a data-owned catalog Unarmed Strike used by sheet and solo combat', () => {
+    const attacker = actor('attacker', { passives: [unarmedMechanics] });
+    attacker.capabilities.actionIds = [catalogUnarmed.id];
+    const target = actor('target');
+    const world = createWorld({ id: 'catalog-unarmed-style', ruleset: RULESET, actors: [attacker, target] });
+    const actionCatalog: RulesCatalog = {
+      getAction: (id) => id === catalogUnarmed.id ? catalogUnarmed : undefined,
+    };
+    const rolls = [0.5, 0.999];
+    let rollIndex = 0;
+    let nextId = 0;
+    const session = new InMemoryRulesSession(world, actionCatalog, {
+      rng: () => rolls[Math.min(rollIndex++, rolls.length - 1)],
+      clock: () => 42_000,
+      nextId: () => `catalog-id:${nextId++}`,
+    });
+    accepted(session.dispatch({
+      schemaVersion: 1, type: 'StartEncounter', commandId: 'encounter', expectedRevision: 0,
+      rulesetContentHash: RULESET.contentHash, actorId: attacker.id,
+      initiative: [attacker.id, target.id],
+    }));
+    accepted(session.dispatch({
+      schemaVersion: 1, type: 'StartTurn', commandId: 'turn',
+      expectedRevision: session.getState().revision,
+      rulesetContentHash: RULESET.contentHash, actorId: attacker.id,
+    }));
+    const result = accepted(session.dispatch({
+      schemaVersion: 1, type: 'UseAction', commandId: 'strike',
+      expectedRevision: session.getState().revision,
+      rulesetContentHash: RULESET.contentHash, actorId: attacker.id,
+      actionId: catalogUnarmed.id, targetIds: [target.id], factsByTarget: { [target.id]: FACTS },
+    }));
+
+    expect(session.getState().actors.target.runtime.hp.current).toBe(19);
+    expect(engineEvents(result.events).filter((event) => event.type === 'damage'))
+      .toEqual([expect.objectContaining({ amount: 11, damageType: 'bludgeoning' })]);
+  });
+
   it('uses d8 with empty hands, d6 while holding a weapon, and the core flat damage without the style', () => {
     const emptyHands = attackSession({ style: true, weapon: false });
     const armed = attackSession({ style: true, weapon: true });

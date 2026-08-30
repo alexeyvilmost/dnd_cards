@@ -145,6 +145,7 @@ import {
   SYSTEM_ACTION_IDS,
 } from './systemActions';
 import {
+  applyUnarmedDamageProfileToAction,
   resolveTurnStartGrappleDamage,
   resolveUnarmedDamageProfile,
 } from './fightingStyleComplexPrimitives';
@@ -2773,6 +2774,19 @@ function hitReactionOptions(
     if (!action || !hasReactionTrigger(action, 'hit_by_attack')) return [];
     const [option] = sourceScopedReactionOptions(target, action);
     return option ? [{ action, option }] : [];
+  });
+}
+
+function catalogActionForActor(
+  actor: ActorState,
+  action: RuleActionDefinition,
+): RuleActionDefinition {
+  const holdsWeapon = (['main_hand', 'off_hand'] as const).some((slot) => {
+    const cardId = actor.runtime.equipment[slot];
+    return !!cardId && actorCard(actor, cardId)?.type === 'weapon';
+  });
+  return applyUnarmedDamageProfileToAction(action, actor.passives ?? [], {
+    holdingWeaponOrShield: holdsWeapon || actorHoldsCanonicalShield(actor),
   });
 }
 
@@ -10717,6 +10731,7 @@ function executeCommand(
         preparedSpell = preparation;
         executableAction = preparation.executableAction;
       }
+      executableAction = catalogActionForActor(actor, executableAction);
       const requestedBladeFocus = command.spell?.focusObjectId !== undefined
         || command.spell?.focusHand !== undefined;
       if (requestedBladeFocus) {

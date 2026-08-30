@@ -99,6 +99,49 @@ function legacySpell(id: string): SheetAction {
 }
 
 describe('runnable canonical sheet-action projection', () => {
+  it('projects the Unarmed Fighting damage profile for empty and occupied hands', () => {
+    const unarmed: SheetAction = {
+      id: 'unarmed', name: 'Unarmed Strike', group: 'basic',
+      mechanics: {
+        activation: { mode: 'active', cost: [{ resource: 'action' }] },
+        targeting: { shape: 'single', range: '5 feet', filter: 'enemy' },
+        effects: [{
+          resolution: 'attack_roll', attack_kind: 'unarmed', ability: 'str', vs: 'ac',
+          on_hit: [{ kind: 'damage', amount: '1 + str', type: 'bludgeoning' }],
+        }],
+      },
+    };
+    const style = {
+      activation: { mode: 'passive' },
+      effects: [{
+        resolution: 'auto',
+        result: [{
+          kind: 'unarmed_damage_profile', dice: '1d6', empty_hands_dice: '1d8',
+          ability: 'str', damage_type: 'bludgeoning', source: 'Unarmed Fighting',
+        }],
+      }],
+    };
+    const damageAmount = (action: SheetAction) => (
+      ((action.mechanics.effects as Record<string, unknown>[])[0]
+        .on_hit as Record<string, unknown>[])[0].amount
+    );
+
+    const emptyHands = projectRunnableSheetCanonicalActions({
+      actions: [unarmed], equipment: {}, cards: new Map(), passives: [style],
+    });
+    const armed = projectRunnableSheetCanonicalActions({
+      actions: [unarmed], equipment: { main_hand: WEAPON.id },
+      cards: new Map([[WEAPON.id, WEAPON]]), passives: [style],
+    });
+    const baseline = projectRunnableSheetCanonicalActions({
+      actions: [unarmed], equipment: {}, cards: new Map(),
+    });
+
+    expect(damageAmount(emptyHands.actions[0])).toBe('1d8 + str');
+    expect(damageAmount(armed.actions[0])).toBe('1d6 + str');
+    expect(damageAmount(baseline.actions[0])).toBe('1 + str');
+  });
+
   it('binds the equipped main action and excludes an unavailable off-hand capability', () => {
     const projection = projectRunnableSheetCanonicalActions({
       actions: [

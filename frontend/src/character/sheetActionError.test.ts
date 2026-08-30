@@ -15,4 +15,13 @@ describe('playerFacingSheetActionError', () => {
     expect(playerFacingSheetActionError(new Error('Цель вне дистанции')))
       .toBe('Цель вне дистанции');
   });
+
+  it('translates canonical range rejections without exposing actor ids', () => {
+    expect(playerFacingSheetActionError(new Error(
+      'OutOfRange: actor:target is outside 5 ft range',
+    ))).toBe('Цель вне дистанции действия (5 фт.).');
+    expect(playerFacingSheetActionError(new Error(
+      'OutOfRange: actor:target is outside 10 ft unarmed reach',
+    ))).toBe('Цель вне дистанции действия (10 фт.).');
+  });
 });

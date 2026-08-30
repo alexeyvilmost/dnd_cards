@@ -4,6 +4,7 @@ import { ArrowLeft, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
 import { actionsApi, effectsApi } from '../api/client';
 import { charactersV3Api } from '../character/api';
 import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
+import { playerFacingSheetActionError } from '../character/sheetActionError';
 import { runtimeInventoryPayload, writeRulesEngineRuntimeTurnState } from '../character/runtime';
 import { newSheetRuntimeCommandId } from '../character/sheetCombatSession';
 import type { ForgeCharacter } from '../character/types';
@@ -318,9 +319,7 @@ export default function SoloCombatPage() {
       }
       setSelectedActionId(action.id);
       setSelectedActionChoices(choices);
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Действие не выполнено');
-    }
+    } catch (reason) { setError(playerFacingSheetActionError(reason)); }
   };
 
   const clickCell = (position: GridPosition, actorId?: string) => {
@@ -349,7 +348,7 @@ export default function SoloCombatPage() {
         choices: selectedActionChoices,
       }));
       setSelectedActionId(null); setSelectedActionChoices({}); apply(next);
-    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Действие не выполнено'); }
+    } catch (reason) { setError(playerFacingSheetActionError(reason)); }
   };
 
   const finish = async () => {
