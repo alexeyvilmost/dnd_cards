@@ -38,6 +38,7 @@ export interface CharacterSheetFirstColumnProps {
   passivePerception: ReactNode;
   senses: Array<{ key: string; label: string; value: ReactNode }>;
   conditions: ReactNode;
+  additionalSections?: ReactNode;
   breakdownFor?: (key: FirstColumnBreakdownKey) => ValueBreakdown | null;
   skillSourceReason?: (skillId: string) => string | undefined;
   onRollSave?: (ability: AbilityKey, breakdown: ValueBreakdown) => void;
@@ -65,6 +66,7 @@ export default function CharacterSheetFirstColumn({
   passivePerception,
   senses,
   conditions,
+  additionalSections,
   breakdownFor,
   skillSourceReason,
   onRollSave,
@@ -201,6 +203,8 @@ export default function CharacterSheetFirstColumn({
       <CollapsibleSection title="Состояния">
         {conditions}
       </CollapsibleSection>
+
+      {additionalSections}
     </div>
   );
 }

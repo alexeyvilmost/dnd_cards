@@ -3,13 +3,14 @@ import { effectiveCombatActorSpeedFt } from '../solo-combat/tacticalGrid';
 import type { SoloCombatState } from '../solo-combat/types';
 import { groupActiveEffectsForDisplay } from '../engine/effects';
 import { combatGrappleStatusRows } from '../solo-combat/grapplePresentation';
+import { getDamageLabel } from '../utils/damageTypes';
 
 const ABILITIES = [
   ['str', 'СИЛ'], ['dex', 'ЛОВ'], ['con', 'ТЕЛ'],
   ['int', 'ИНТ'], ['wis', 'МДР'], ['cha', 'ХАР'],
 ] as const;
 
-const DEFENSE_LABELS = {
+export const COMBAT_DEFENSE_LABELS = {
   resistance: 'Сопротивление урону',
   immunity: 'Иммунитет к урону',
   vulnerability: 'Уязвимость к урону',
@@ -17,7 +18,7 @@ const DEFENSE_LABELS = {
 } as const;
 
 export interface CombatDefenseRow {
-  kind: keyof typeof DEFENSE_LABELS;
+  kind: keyof typeof COMBAT_DEFENSE_LABELS;
   value: string;
 }
 
@@ -139,7 +140,7 @@ export default function CombatActorInspector({
       <section>
         <h3>Защита</h3>
         {defenses.length
-          ? <dl className="combat-actor-inspector__defenses">{defenses.map((defense) => <div key={`${defense.kind}:${defense.value}`}><dt>{DEFENSE_LABELS[defense.kind]}</dt><dd>{defense.value}</dd></div>)}</dl>
+          ? <dl className="combat-actor-inspector__defenses">{defenses.map((defense) => <div key={`${defense.kind}:${defense.value}`}><dt>{COMBAT_DEFENSE_LABELS[defense.kind]}</dt><dd>{defense.kind === 'condition_immunity' ? defense.value : getDamageLabel(defense.value)}</dd></div>)}</dl>
           : <p className="combat-actor-inspector__empty">Особых защит нет</p>}
       </section>
 

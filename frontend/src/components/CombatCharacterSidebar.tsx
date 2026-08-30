@@ -4,6 +4,12 @@ import { SKILLS } from '../mechanics/registries';
 import type { SoloCombatState } from '../solo-combat/types';
 import type { ActiveEffectEntry } from '../mvp/contracts';
 import CharacterSheetFirstColumn, { CHARACTER_SENSE_LABELS } from './CharacterSheetFirstColumn';
+import CollapsibleSection from './CollapsibleSection';
+import { getDamageLabel } from '../utils/damageTypes';
+import {
+  collectCombatDefenses,
+  COMBAT_DEFENSE_LABELS,
+} from './CombatActorInspector';
 import { groupActiveEffectsForDisplay } from '../engine/effects';
 import {
   combatGrappleStatusRows,
@@ -69,6 +75,17 @@ export default function CombatCharacterSidebar({
       + (skillProficiencies.includes(skill.id) ? proficiencyBonus : 0)
       + (skillExpertise.includes(skill.id) ? proficiencyBonus : 0)];
   }));
+  const presentation = state.actorPresentation[actorId];
+  const defenses = collectCombatDefenses([
+    ...(actor.passives ?? []),
+    ...(presentation?.traits.map((trait) => trait.mechanics) ?? []),
+    ...actor.runtime.activeEffects.map((effect) => effect.mechanics),
+  ]);
+  for (const immunity of actor.traits?.conditionImmunities ?? []) {
+    if (!defenses.some((row) => row.kind === 'condition_immunity' && row.value === immunity.condition)) {
+      defenses.push({ kind: 'condition_immunity', value: immunity.condition });
+    }
+  }
 
   return (
     <CharacterSheetFirstColumn
@@ -91,6 +108,30 @@ export default function CombatCharacterSidebar({
         effects={actor.runtime.activeEffects}
         grappleStatuses={combatGrappleStatusRows(state.world, actorId)}
       />}
+      additionalSections={<>
+        <CollapsibleSection title="Защита">
+          {defenses.length
+            ? <dl className="combat-actor-inspector__defenses">{defenses.map((defense) => (
+              <div key={`${defense.kind}:${defense.value}`}>
+                <dt>{COMBAT_DEFENSE_LABELS[defense.kind]}</dt>
+                <dd>{defense.kind === 'condition_immunity' ? defense.value : getDamageLabel(defense.value)}</dd>
+              </div>
+            ))}</dl>
+            : <p className="combat-actor-inspector__empty">Особых защит нет</p>}
+        </CollapsibleSection>
+        {presentation?.traits.length ? (
+          <CollapsibleSection title="Особенности">
+            <div className="combat-actor-inspector__entries">
+              {presentation.traits.map((trait) => (
+                <details key={trait.id}>
+                  <summary>{trait.name}</summary>
+                  {trait.description && <p>{trait.description}</p>}
+                </details>
+              ))}
+            </div>
+          </CollapsibleSection>
+        ) : null}
+      </>}
     />
   );
 }
