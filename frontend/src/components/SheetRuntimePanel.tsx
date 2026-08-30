@@ -24,7 +24,7 @@ import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { buildResourceRecharge } from '../engine/resources';
 import { collectFreeuseRecharge, isFreeusePoolKey } from '../engine/freeuse';
-import { expiryLabel } from '../engine/effects';
+import { activeEffectInstruction, expiryLabel } from '../engine/effects';
 import {
   executeManualEffectCommand,
   nextBrowserManualEffectId,
@@ -198,7 +198,12 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
           <ul className="sheet-active-effects">
             {runtime.activeEffects.map((fx) => (
               <li key={fx.id} className="sheet-active-effect">
-                <span className="sheet-active-effect-name">{fx.name}</span>
+                <span className="sheet-active-effect-summary">
+                  <span className="sheet-active-effect-name">{fx.name}</span>
+                  {activeEffectInstruction(fx) && (
+                    <span className="sheet-active-effect-detail">{activeEffectInstruction(fx)}</span>
+                  )}
+                </span>
                 <span className="sheet-active-effect-meta">{expiryLabel(fx.expiry, fx.roundsLeft)}</span>
                 <button
                   type="button"

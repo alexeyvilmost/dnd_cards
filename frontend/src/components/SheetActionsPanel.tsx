@@ -39,7 +39,7 @@ import {
 } from '../engine/weapon';
 import { costAmount } from '../engine/cost';
 import { inventoryQty } from '../character/inventory';
-import { expiryLabel, removeActiveEffect } from '../engine/effects';
+import { activeEffectInstruction, expiryLabel, removeActiveEffect } from '../engine/effects';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
 import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
 import { useToast } from '../contexts/ToastContext';
@@ -2957,7 +2957,12 @@ export default function SheetActionsPanel({
           <ul className="sheet-active-effects">
             {runtime.activeEffects.map((fx) => (
               <li key={fx.id} className="sheet-active-effect">
-                <span className="sheet-active-effect-name">{fx.name}</span>
+                <span className="sheet-active-effect-summary">
+                  <span className="sheet-active-effect-name">{fx.name}</span>
+                  {activeEffectInstruction(fx) && (
+                    <span className="sheet-active-effect-detail">{activeEffectInstruction(fx)}</span>
+                  )}
+                </span>
                 <span className="sheet-active-effect-meta">{expiryLabel(fx.expiry, fx.roundsLeft)}</span>
                 <button
                   type="button"

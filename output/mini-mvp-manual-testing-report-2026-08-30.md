@@ -4,7 +4,7 @@
 
 - Testing status: in progress
 - Environment: production, `https://bagofholding.ru/`
-- Tested release: `a8f1bf7dce078ab19f338515818a80e8ddf73ef1`
+- Tested releases: baseline `a8f1bf7dce078ab19f338515818a80e8ddf73ef1`; repaired production `8d49f90351e0a948118212f23bff3103a367a401`
 - Browser method: authenticated production UI only
 - Character retention: every character created for this run is retained for reproduction
 - Evidence workbook: `mini-mvp-manual-testing-checklist-2026-08-30.xlsx`
@@ -37,7 +37,7 @@ _Populated after workbook evidence is complete._
 ## Major findings
 
 1. `A.Бард` can cast spells after the deployed Charisma repair. Mage Hand, Light, Minor Illusion, and self-targeted Cure Wounds all executed and consumed the expected action/slot resources. The original blanket symptom “none of the Bard's spells work” is no longer reproducible against a compatible target.
-2. Bardic Inspiration is a real entity defect. It consumes the Bard's bonus action and inspiration charge and reports success, but neither older targets nor the newly forged compatible Goliath receive an effect, control, or explanation. Source inspection confirmed that the production action is authored as narrative-only even though the engine already supports a typed target-owned boon.
+2. Bardic Inspiration was a real entity defect. On the baseline it consumed resources without changing the target. After release `8d49f90`, the newly forged compatible Goliath receives a persistent `Талон 1к6` with a manual remove control. The production retest then isolated a remaining presentation gap: the recipient sees the token but not which rolls accept it or that removal represents consumption.
 3. Cross-character spells against older characters fail atomically because their stored ruleset is incompatible with the current sheet. The safety rejection is correct, but production exposes the technical English message `Atomic participants use incompatible rulesets`, which does not tell a player what to do.
 4. Minor Illusion collects meaningful scenario facts (form, description, distance), but the accepted result collapses them to generic journal lines. The entered description `QA: звук далёкого колокола` was not visible afterward, so another participant cannot understand what illusion was created.
 5. Long rest correctly restored actions, both first-level slots, and Bardic Inspiration, and removed the temporary Mage Hand effect.
@@ -45,28 +45,29 @@ _Populated after workbook evidence is complete._
 ## Cross-cutting errors not tied to an individual entity
 
 - **Ruleset compatibility is invisible until commit.** Older and current characters remain selectable together; the incompatibility is discovered only after dice/confirmation work. This wastes a test attempt and can look like a broken spell.
-- **Technical error leakage.** The atomic incompatibility error is displayed in internal English instead of player-facing Russian with a recovery path.
+- **Technical error leakage (fixed in `8d49f90`).** The atomic incompatibility error was displayed in internal English. The deployed UI now explains the incompatible rules versions in Russian and directs the player to a compatible character or an updated Forge copy.
 - **Opaque persistence wait.** A successful self Cure Wounds commit took about 4.6 seconds after the dice dialog. During the wait action buttons were disabled and values initially appeared unchanged, with no visible “saving” state.
 - **Transient action availability.** On initial Bard-sheet load, most spells were briefly disabled while target/canonical data loaded, without a loading explanation. They enabled after the data arrived; Thunderwave remained disabled and requires separate diagnosis.
 - **World-interaction evidence loses submitted facts.** Minor Illusion retains only a generic completion message, making manual scene adjudication and ally/target clarity worse than the input form.
 
 ## Entity-specific failures
 
-- **Bardic Inspiration — failed:** resources and Bard-side log change, but no target-side boon or instructions appear, including on fresh compatible character `84e8c110-bbba-41be-85ef-9165c376d746`.
+- **Bardic Inspiration — mechanics passed after repair; clarity needs one follow-up release:** fresh compatible character `84e8c110-bbba-41be-85ef-9165c376d746` receives and retains the boon, but deployed release `8d49f90` does not yet show use instructions on the target sheet.
 - **Minor Illusion — result clarity failed:** activation succeeds, but chosen form/description are absent from the resulting journal/effect evidence.
 - **Thunderwave — blocked pending diagnosis:** action remains disabled on the reported Bard while other spells enable.
 - **Cure Wounds to legacy targets — blocked by compatibility:** the spell succeeds on self, but older target sheets are rejected by the atomic ruleset check.
 
 ## Defects fixed, deployed, and retested
 
-- **Local fix awaiting deployment:** exact-preimage compatibility upgrade converts legacy `ACT-bardic-inspiration` narrative mechanics to a target-owned `1d6` boon for ability checks, attack rolls, and saving throws. Audited database migration 120 repairs the production row and revokes its stale `verified_mechanical` certificate; the content seed is also repaired as the long-term source of truth. Engine and solo-combat regressions assert that the ally—not the Bard—owns the effect.
-- **Local fix awaiting deployment:** atomic ruleset incompatibility is translated to actionable Russian.
-- **Local fix awaiting deployment:** a visible `Сохраняем результат действия…` status is shown during sheet persistence.
+- **Deployed and mechanically retested (`8d49f90`):** exact-preimage compatibility upgrade converts legacy `ACT-bardic-inspiration` narrative mechanics to a target-owned `1d6` boon for ability checks, attack rolls, and saving throws. Audited database migration 120 repaired the production row and revoked its stale `verified_mechanical` certificate; the content seed is also repaired. The fresh Goliath retained the boon after reload.
+- **Deployed and retested (`8d49f90`):** atomic ruleset incompatibility is translated to actionable Russian. The old Goliath Cure Wounds path now displays the recovery guidance instead of `Atomic participants use incompatible rulesets`.
+- **Deployed (`8d49f90`):** a visible `Сохраняем результат действия…` status is available during sheet persistence. The Bardic Inspiration commit completed too quickly to capture it in the 50 ms browser sample; a deliberately slow commit remains the useful observation case.
+- **Local follow-up awaiting deployment:** both active-effect renderers now explain to an inspired recipient: add `1к6` to an ability check, attack roll, or saving throw, then remove the effect. Focused UI/engine tests and TypeScript pass.
 - Focused verification currently passes: 18 engine/error/compatibility tests, 14 solo-combat integration tests, 17 action-sheet collection tests, and TypeScript compilation.
 
 ## Remaining limitations and blocked checks
 
-- The three local fixes above still require an exact Timecloud deployment and production browser retest.
+- The target-side Bardic Inspiration instruction requires one exact Timecloud follow-up deployment and production browser retest.
 - Bardic Inspiration consumption remains manual by design: the boon effect tells the recipient to add the die and remove the effect after use. Automatic roll attachment/consumption is outside the current implementation and must be evaluated as a later usability improvement.
 - Thunderwave and Minor Illusion result serialization still require diagnosis/fix before their rows can be closed.
 

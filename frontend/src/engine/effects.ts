@@ -1,7 +1,7 @@
 /**
  * Управление активными эффектами (фаза D4).
  */
-import type { EngineEvent, RuntimeState } from '../mvp/contracts';
+import type { ActiveEffectEntry, EngineEvent, RuntimeState } from '../mvp/contracts';
 import { dropConcentration } from './concentration';
 
 function cloneState(state: RuntimeState): RuntimeState {
@@ -49,4 +49,25 @@ export function expiryLabel(expiry?: string, roundsLeft?: number): string {
     case 'manual': return 'вручную';
     default: return expiry ? expiry : 'без срока';
   }
+}
+
+const BOON_ROLL_LABELS: Record<string, string> = {
+  ability_check: 'проверке характеристики',
+  attack_roll: 'броску атаки',
+  saving_throw: 'спасброску',
+};
+
+/** Player-facing instructions for active effects that require manual use. */
+export function activeEffectInstruction(effect: ActiveEffectEntry): string | null {
+  const mechanics = effect.mechanics as Record<string, unknown>;
+  if (mechanics.kind !== 'boon') return null;
+  const die = String(mechanics.die ?? '1d6').replace(/d/i, 'к');
+  const declared = Array.isArray(mechanics.applies_to)
+    ? mechanics.applies_to.map(String)
+    : [];
+  const rolls = declared.map((item) => BOON_ROLL_LABELS[item] ?? item);
+  const scope = rolls.length
+    ? rolls.join(', ').replace(/, ([^,]*)$/, ' или $1')
+    : 'подходящему броску к20';
+  return `Добавьте ${die} к ${scope}, затем снимите эффект.`;
 }
