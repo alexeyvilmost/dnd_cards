@@ -4,7 +4,7 @@
 
 - Testing status: in progress
 - Environment: production, `https://bagofholding.ru/`
-- Tested releases: baseline `a8f1bf7dce078ab19f338515818a80e8ddf73ef1`; mechanics/error repair `8d49f90351e0a948118212f23bff3103a367a401`; recipient-clarity repair `f601e00530c788ef3f7fe3076be9bf66d100208b`
+- Tested releases: baseline `a8f1bf7dce078ab19f338515818a80e8ddf73ef1`; mechanics/error repair `8d49f90351e0a948118212f23bff3103a367a401`; recipient-clarity repair `f601e00530c788ef3f7fe3076be9bf66d100208b`; combat-certificate repair `3ee5028ded9c34327b606a8d5d30a9ec939e586c`
 - Browser method: authenticated production UI only
 - Character retention: every character created for this run is retained for reproduction
 - Evidence workbook: `mini-mvp-manual-testing-checklist-2026-08-30.xlsx`
@@ -41,7 +41,7 @@ _Populated after workbook evidence is complete._
 3. Cross-character spells against older characters fail atomically because their stored ruleset is incompatible with the current sheet. The safety rejection is correct, but production exposes the technical English message `Atomic participants use incompatible rulesets`, which does not tell a player what to do.
 4. Minor Illusion collects meaningful scenario facts (form, description, distance), but the accepted result collapses them to generic journal lines. The entered description `QA: звук далёкого колокола` was not visible afterward, so another participant cannot understand what illusion was created.
 5. Long rest correctly restored actions, both first-level slots, and Bardic Inspiration, and removed the temporary Mage Hand effect.
-6. The combat scene constructor successfully accepted the fresh Goliath and a Goblin Warrior, but the encounter could not initialize because the reviewed combat certificate omitted the Bard-scoped Thunderwave action. The certificate had the same spell for Druid/Wizard and already supported its `area_object_push` primitive; this was an access/coverage gap rather than an unsupported spell mechanic.
+6. The combat scene constructor successfully accepts the fresh Goliath and a Goblin Warrior after release `3ee5028`: initiative, all three actors, the tactical map, and the hotbar open. This proves the omitted Bard-scoped Thunderwave certificate was repaired. The first persistence attempt still fails with `turn_state must be bounded JSON`, so action/turn survival across reload is not yet a pass.
 
 ## Cross-cutting errors not tied to an individual entity
 
@@ -51,13 +51,14 @@ _Populated after workbook evidence is complete._
 - **Transient action availability.** On initial Bard-sheet load, most spells were briefly disabled while target/canonical data loaded, without a loading explanation. They enabled after the data arrived; Thunderwave remained disabled and requires separate diagnosis.
 - **World-interaction evidence loses submitted facts.** Minor Illusion retains only a generic completion message, making manual scene adjudication and ally/target clarity worse than the input form.
 - **One omitted action poisoned the entire encounter.** Combat session creation validates every participant action up front. A valid but uncertified Bard Thunderwave grant prevented initiative from opening even though the player had not attempted to cast it.
+- **Dedicated combat duplicated large entity images in every save.** The exact retained Bard + Goliath + Goblin state serialized to 790,755 bytes against a 786,432-byte limit. `actionPresentation` accounted for 537,305 bytes; Healing Hands alone occupied 482,512 bytes because its base64 image appeared both as the hotbar icon and inside the same hover-card entity. The local compaction keeps one copy and reconstructs the icon projection on reload, reducing the exact payload to 548,853 bytes without weakening the server guard.
 
 ## Entity-specific failures
 
 - **Bardic Inspiration — sheet mechanics and recipient clarity passed after repair; combat pending:** fresh compatible character `84e8c110-bbba-41be-85ef-9165c376d746` receives and retains the boon, sees its eligible rolls and consumption instruction, and can remove it manually after use.
 - **Minor Illusion — result clarity failed:** activation succeeds, but chosen form/description are absent from the resulting journal/effect evidence.
 - **Thunderwave — blocked pending diagnosis:** action remains disabled on the reported Bard while other spells enable.
-- **Combat scene initialization — failed on deployed `f601e00`:** retained Bard + fresh Goliath + Goblin Warrior is rejected before initiative because `Thunderwave@CLASS-bard` is absent from the deployed reviewed catalog.
+- **Combat scene persistence — failed on deployed `3ee5028`:** retained Bard + fresh Goliath + Goblin Warrior now reaches initiative, but the first save is rejected because the dedicated turn-state exceeds the bounded-JSON limit. Local exact-state compaction passes the limit; deployment and reload retest are pending.
 - **Cure Wounds to legacy targets — blocked by compatibility:** the spell succeeds on self, but older target sheets are rejected by the atomic ruleset check.
 
 ## Defects fixed, deployed, and retested
@@ -67,12 +68,13 @@ _Populated after workbook evidence is complete._
 - **Deployed (`8d49f90`):** a visible `Сохраняем результат действия…` status is available during sheet persistence. The Bardic Inspiration commit completed too quickly to capture it in the 50 ms browser sample; a deliberately slow commit remains the useful observation case.
 - **Deployed and retested (`f601e00`):** both active-effect renderers explain to an inspired recipient: add `1к6` to an ability check, attack roll, or saving throw, then remove the effect. The retained Goliath shows the explanation and `Снять вручную` control after a production reload.
 - Focused verification currently passes: 18 engine/error/compatibility tests, 14 solo-combat integration tests, 17 action-sheet collection tests, and TypeScript compilation.
-- **Locally fixed, deployment/retest pending:** the combat certificate now has 450 explicit reviewed roots and 17 exact actions. New Forge-derived roots certify Bard Thunderwave plus alternate Sorcerer Thunderwave/Shield with exact Charisma, slot, source, and access signatures. The 12-test certificate suite, artifact drift check, targeted lint, and TypeScript/Vite compilation pass.
+- **Deployed and initialization-retested (`3ee5028`):** the combat certificate now has 450 explicit reviewed roots and 17 exact actions. New Forge-derived roots certify Bard Thunderwave plus alternate Sorcerer Thunderwave/Shield with exact Charisma, slot, source, and access signatures. The retained three-actor scene now opens initiative and the tactical map.
+- **Locally fixed, deployment/reload retest pending:** dedicated combat persistence removes only a byte-identical duplicate image projection, while retaining the complete entity used by the character-sheet hover card and restoring the icon field after reload. The exact production scenario fell from 790,755 to 548,853 bytes. The 23-test focused gate and the read-only live size budget pass.
 
 ## Remaining limitations and blocked checks
 
 - Bardic Inspiration consumption remains manual by design: the boon effect tells the recipient to add the die and remove the effect after use. Automatic roll attachment/consumption is outside the current implementation and must be evaluated as a later usability improvement.
-- The expanded combat certificate still needs immutable Timecloud deployment and an exact production rerun of the retained Bard + Goliath + Goblin scene.
+- The combat-state compaction still needs immutable Timecloud deployment and an exact production rerun proving that encounter creation, a turn/action, and reload all persist.
 - Thunderwave sheet availability and Minor Illusion result serialization still require separate diagnosis/fix before their rows can be closed.
 
 ## Timing and speed analysis

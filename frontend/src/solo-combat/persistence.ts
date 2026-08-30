@@ -8,6 +8,44 @@ import {
 
 function clone<T>(value: T): T { return JSON.parse(JSON.stringify(value)) as T; }
 
+function presentationEntityImage(
+  value: NonNullable<SoloCombatState['actionPresentation']>[string],
+): string | undefined {
+  return value.actionRef?.image_url || value.spellRef?.image_url || undefined;
+}
+
+/**
+ * Action rows can carry large base64 images. The combat projection historically
+ * stored the same image both as `imageUrl` and inside the exact entity used by
+ * the hover card, doubling every image on each persisted turn. Keep the exact
+ * entity snapshot and omit only a byte-for-byte duplicate top-level copy.
+ */
+function compactActionPresentation(
+  current: SoloCombatState['actionPresentation'],
+): SoloCombatState['actionPresentation'] {
+  if (!current) return current;
+  return Object.fromEntries(Object.entries(current).map(([actionId, raw]) => {
+    const value = clone(raw);
+    const entityImage = presentationEntityImage(value);
+    if (value.imageUrl && entityImage === value.imageUrl) delete value.imageUrl;
+    return [actionId, value];
+  }));
+}
+
+function restoreActionPresentationImages(value: SoloCombatState): SoloCombatState {
+  const current = value.actionPresentation;
+  if (!current) return value;
+  let migrated: SoloCombatState['actionPresentation'] | undefined;
+  for (const [actionId, raw] of Object.entries(current)) {
+    if (raw.imageUrl != null) continue;
+    const entityImage = presentationEntityImage(raw);
+    if (!entityImage) continue;
+    migrated ??= { ...current };
+    migrated[actionId] = { ...raw, imageUrl: entityImage };
+  }
+  return migrated ? { ...value, actionPresentation: migrated } : value;
+}
+
 function restoreScopedActionPresentation(value: SoloCombatState): SoloCombatState {
   const current = value.actionPresentation;
   if (!current) return value;
@@ -99,18 +137,21 @@ export function readSoloCombatState(
     || value.characterId !== characterId
     || !value.world || !Array.isArray(value.catalogActions)
     || !value.tokens || !Array.isArray(value.initiative)) return null;
-  return restoreScopedActionPresentation(migrateCombatPresentation({
+  return restoreActionPresentationImages(restoreScopedActionPresentation(migrateCombatPresentation({
     ...value,
     runtimeRevision,
     world: migrateWorldState(value.world),
-  }));
+  })));
 }
 export function writeSoloCombatState(
   turnState: Record<string, unknown> | null | undefined,
   state: SoloCombatState | null,
 ): Record<string, unknown> {
   const next = { ...(turnState ?? {}) };
-  if (state) next[SOLO_COMBAT_KEY] = clone(state);
+  if (state) next[SOLO_COMBAT_KEY] = clone({
+    ...state,
+    actionPresentation: compactActionPresentation(state.actionPresentation),
+  });
   else delete next[SOLO_COMBAT_KEY];
   return next;
 }
