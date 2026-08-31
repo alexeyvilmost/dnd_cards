@@ -12,6 +12,7 @@ import type {
   ReactionOffer,
   RollModifier,
   RuntimeState,
+  TargetContext,
 } from '../mvp/contracts';
 import { canPay, pay } from './cost';
 import {
@@ -990,6 +991,21 @@ function preflightPayload(
       if (op !== 'apply' && op !== 'remove') {
         throw mechanicsError('INVALID_PAYLOAD', `${path}.op`, `unsupported condition operation «${op}»`);
       }
+      if (value.required_end_trigger !== undefined
+        && (typeof value.required_end_trigger !== 'string' || !value.required_end_trigger.trim())) {
+        throw mechanicsError(
+          'INVALID_PAYLOAD', `${path}.required_end_trigger`,
+          'condition removal end trigger must be a non-empty string',
+        );
+      }
+      if (value.required_cause_tags !== undefined
+        && (!Array.isArray(value.required_cause_tags)
+          || value.required_cause_tags.some((tag) => typeof tag !== 'string' || !tag.trim()))) {
+        throw mechanicsError(
+          'INVALID_PAYLOAD', `${path}.required_cause_tags`,
+          'condition removal cause tags must be non-empty strings',
+        );
+      }
       break;
     }
     case 'resource': {
@@ -1168,11 +1184,30 @@ function preflightEffect(
       'save resolution',
     ) as AbilityKey;
     explicitPositiveDc(value.dc, `${path}.dc`, ctx);
+    if (value.automatic_success !== undefined) {
+      if (!isDict(value.automatic_success)) {
+        throw mechanicsError(
+          'INVALID_PAYLOAD', `${path}.automatic_success`,
+          'automatic save success declaration must be an object',
+        );
+      }
+      const declaration = value.automatic_success as Dict;
+      const noSleep = declaration.if_sleep_not_required === true;
+      const immunity = declaration.if_condition_immunity;
+      if (!noSleep && (typeof immunity !== 'string' || !immunity.trim())) {
+        throw mechanicsError(
+          'INVALID_PAYLOAD', `${path}.automatic_success`,
+          'automatic save success requires a no-sleep or condition-immunity rule',
+        );
+      }
+    }
     const hasDeferredTargetAuthority = ctx.deferTargetSaves === true
       && targetOwned
       && ctx.target?.runtimeState !== undefined
       && ctx.deferredSaveSource !== undefined;
-    if (ctx.forceSaveOutcome == null && !hasDeferredTargetAuthority) {
+    if (ctx.forceSaveOutcome == null
+      && !hasDeferredTargetAuthority
+      && !automaticSaveSuccessReason(value, ctx.target)) {
       explicitTargetSaveModifier(ctx, ability);
     }
   } else if (resolution === 'ability_check') {
@@ -2228,9 +2263,28 @@ function applyCondition(
   const op = String(payload.op ?? 'apply');
 
   if (op === 'remove') {
+    const normalizeTag = (value: string) => value.trim().toLowerCase()
+      .replaceAll('-', '_').replaceAll(' ', '_');
+    const requiredCauseTags = (Array.isArray(payload.required_cause_tags)
+      ? payload.required_cause_tags : [])
+      .filter((tag): tag is string => typeof tag === 'string')
+      .map(normalizeTag);
+    const requiredEndTrigger = typeof payload.required_end_trigger === 'string'
+      ? payload.required_end_trigger : null;
     const kept = state.activeEffects.filter((e) => {
       const m = e.mechanics as Dict;
-      const match = m?.kind === 'condition' && String(m.value ?? '') === condition;
+      const causeTags = new Set(
+        (Array.isArray(m?.causeTags) ? m.causeTags
+          : Array.isArray(m?.cause_tags) ? m.cause_tags
+            : [])
+          .filter((tag): tag is string => typeof tag === 'string')
+          .map(normalizeTag),
+      );
+      const endTriggers = Array.isArray(m?.end_triggers) ? m.end_triggers.map(String) : [];
+      const match = m?.kind === 'condition'
+        && String(m.value ?? '') === condition
+        && requiredCauseTags.every((tag) => causeTags.has(tag))
+        && (requiredEndTrigger == null || endTriggers.includes(requiredEndTrigger));
       if (match) events.push({ type: 'effect_expired', name: e.name });
       return !match;
     });
@@ -2309,9 +2363,27 @@ function applyCondition(
     events.push(narrativeEvent(`${conditionLabel(condition)}: достигнут максимальный уровень ${stacking.max}.`));
     return state;
   }
-  const persistedPayload: Dict = stacking.mode === 'levels'
+  let persistedPayload: Dict = stacking.mode === 'levels'
     ? { ...payload, stack_type: 'stack' }
-    : payload;
+    : { ...payload };
+  const saveEnds = persistedPayload.save_ends as Dict | undefined;
+  if (saveEnds && typeof saveEnds === 'object' && !Array.isArray(saveEnds)
+    && saveEnds.dc !== undefined) {
+    const resolvedDc = evaluate(saveEnds.dc as string | number, {
+      ...formulaCtx(ctx),
+      rng: () => { throw new FormulaError('save_ends DC cannot contain a random die'); },
+    });
+    if (typeof resolvedDc !== 'number' || !Number.isFinite(resolvedDc) || resolvedDc <= 0) {
+      throw mechanicsError(
+        'INVALID_FORMULA', 'runtime.payload.save_ends.dc',
+        'save_ends DC must resolve to a positive finite number',
+      );
+    }
+    persistedPayload = {
+      ...persistedPayload,
+      save_ends: { ...saveEnds, dc: resolvedDc },
+    };
+  }
   const entry: ActiveEffectEntry = {
     id: runtimeEffectId(ctx, 'cond', state.activeEffects.length),
     name: condition,
@@ -3364,6 +3436,38 @@ function savedConditionsOf(effect: Dict): string[] {
   return (onFail as Dict[]).filter((p) => p.kind === 'condition' && p.value != null).map((p) => String(p.value));
 }
 
+function automaticSaveSuccessReason(
+  effect: Dict,
+  target: TargetContext | undefined,
+): { reason: string; sourceEntityIds: string[] } | null {
+  const declaration = effect.automatic_success;
+  if (!declaration || typeof declaration !== 'object' || Array.isArray(declaration) || !target) {
+    return null;
+  }
+  const rule = declaration as Dict;
+  if (rule.if_sleep_not_required === true && target.sleepRequired === false) {
+    return {
+      reason: 'существо не нуждается во сне',
+      sourceEntityIds: [...(target.sleepTraitSourceEntityIds ?? [])],
+    };
+  }
+  const requiredImmunity = typeof rule.if_condition_immunity === 'string'
+    ? rule.if_condition_immunity.trim().toLowerCase() : '';
+  if (requiredImmunity) {
+    const immunity = target.conditionImmunities?.find((candidate) => (
+      candidate.condition.trim().toLowerCase() === requiredImmunity
+      && (candidate.requiredCauseTags ?? []).length === 0
+    ));
+    if (immunity) {
+      return {
+        reason: `иммунитет к состоянию «${requiredImmunity}»`,
+        sourceEntityIds: [...immunity.sourceEntityIds],
+      };
+    }
+  }
+  return null;
+}
+
 function runSave(
   effect: Dict,
   state: RuntimeState,
@@ -3378,6 +3482,28 @@ function runSave(
   const dcFormula = String(effect.dc);
   const dc = evalDc(dcFormula, ctx);
   const ability = String(effect.ability) as AbilityKey;
+  const automaticSuccess = automaticSaveSuccessReason(effect, ctx.target);
+  if (automaticSuccess) {
+    events.push(narrativeEvent(
+      `Спасбросок ${ABILITY_LABEL[ability]} — автоуспех: ${automaticSuccess.reason}.`
+      + (automaticSuccess.sourceEntityIds.length
+        ? ` Источники: ${automaticSuccess.sourceEntityIds.join(', ')}.` : ''),
+    ));
+    const automaticPayloads = effect.on_success as Dict[] | undefined;
+    return Array.isArray(automaticPayloads)
+      ? applyPayloads(
+          automaticPayloads,
+          state,
+          ctx,
+          events,
+          source,
+          'main',
+          automaticPayloads.some((payload) => payload.on_success === 'half'),
+          whoTarget,
+          targetRef,
+        )
+      : state;
+  }
   if (ctx.deferTargetSaves && whoTarget && targetRef.state && ctx.deferredSaveSource) {
     deferredSaves.push({
       source: { ...ctx.deferredSaveSource },
@@ -3455,7 +3581,13 @@ function runSave(
 // readTargetSave — параметры форсируемого спасброска ЦЕЛИ из механики действия (ability, DC, half).
 // DC считается в контексте КАСТЕРА (8 + БМ + модификатор заклинания). Нужен, чтобы передать цели
 // pending-спасбросок в онлайн-бою: цель кинет d20 сама и сравнит со своей СЛ. null — сейва цели нет.
-export function readTargetSave(mechanics: Dict, ctx: ExecuteContext): { ability: string; dc: number; half: boolean; avoidsConditions: string[] } | null {
+export function readTargetSave(mechanics: Dict, ctx: ExecuteContext): {
+  ability: string;
+  dc: number;
+  half: boolean;
+  avoidsConditions: string[];
+  automaticSuccess?: { reason: string; sourceEntityIds: string[] };
+} | null {
   const effects = mechanics.effects as Dict[] | undefined;
   if (!Array.isArray(effects)) return null;
   const effectIndex = effects.findIndex((effect) => (
@@ -3474,7 +3606,14 @@ export function readTargetSave(mechanics: Dict, ctx: ExecuteContext): { ability:
   const dc = evalDc(String(eff.dc), ctx);
   const half = Array.isArray(eff.on_success) && (eff.on_success as Dict[]).some((p) => p.on_success === 'half');
   // Состояния, которые сейв позволяет избежать — цель применит condition-scoped модификаторы (Происхождение фей).
-  return { ability, dc, half, avoidsConditions: savedConditionsOf(eff) };
+  const automaticSuccess = automaticSaveSuccessReason(eff, ctx.target);
+  return {
+    ability,
+    dc,
+    half,
+    avoidsConditions: savedConditionsOf(eff),
+    ...(automaticSuccess ? { automaticSuccess } : {}),
+  };
 }
 
 function runAbilityCheck(
@@ -4047,6 +4186,9 @@ export function applyIncomingDamage(
   next.hp.temp -= absorbed;
   next.hp.current = Math.max(0, next.hp.current - (dmg - absorbed));
   events.push(damageEvent(dmg, damageType, opts?.roll));
+  if (dmg > 0) {
+    next = expireEffectsForTrigger(next, 'actor_takes_damage', events);
+  }
 
   // Авто-проверка концентрации при уроне.
   const conc = concentrationEntry(next);

@@ -53,6 +53,35 @@ describe('C3 слайс 2 — endTurn / turn-события через шину'
     expect(lose.state.activeEffects.find((e) => e.name === 'Отравление')).toBeTruthy();
   });
 
+  it('endTurn save_ends can transition one condition on the single failed repeat save', () => {
+    const state = freshFighterState();
+    state.activeEffects = [{
+      id: 'sleep',
+      name: 'Недееспособен',
+      source: 'Усыпление',
+      roundsLeft: 9,
+      mechanics: {
+        kind: 'condition', value: 'incapacitated',
+        save_ends: {
+          ability: 'wis', dc: 99, timing: 'end_of_turn',
+          on_failure_condition: 'unconscious',
+        },
+      },
+    }];
+    const result = endTurn(
+      state,
+      { ...FIGHTER_CTX, rng: () => 0 } as typeof FIGHTER_CTX,
+      { advanceRoundDurations: false },
+    );
+    expect(result.state.activeEffects).toEqual([
+      expect.objectContaining({
+        id: 'sleep', roundsLeft: 9,
+        mechanics: expect.objectContaining({ value: 'unconscious' }),
+      }),
+    ]);
+    expect((result.state.activeEffects[0].mechanics as Dict).save_ends).toBeUndefined();
+  });
+
   it.each([
     {
       label: 'ability',

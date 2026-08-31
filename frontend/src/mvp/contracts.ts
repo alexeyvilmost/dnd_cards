@@ -270,6 +270,11 @@ export interface TargetContext {
   passives?: Dict[];
   /** Target-owned immunities used when an action routes a condition to it. */
   conditionImmunities?: ConditionImmunityContext[];
+  /** Explicit rest trait used by effects whose save succeeds automatically
+   * for creatures that do not sleep (Sleep is the PHB 2024 example). */
+  sleepRequired?: boolean;
+  /** Immutable entities that established the target's no-sleep trait. */
+  sleepTraitSourceEntityIds?: string[];
 }
 
 export interface ConditionImmunityContext {

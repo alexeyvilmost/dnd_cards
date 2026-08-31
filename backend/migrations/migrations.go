@@ -775,6 +775,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairMageHandControlNarrative,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     sleep2024LifecycleMigrationVersion,
+			Description: "Исправить двухступенчатый цикл Усыпления и добавить пробуждение через Помощь",
+			Up:          repairSleep2024Lifecycle,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

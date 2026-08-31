@@ -89,7 +89,14 @@ describe.skipIf(!RUN)('регрессии ручной приёмки micro-micr
     const sleepSave = ((sleep.mechanics as Dict).effects as Dict[])[0];
     expect(sleepSave).toMatchObject({ resolution: 'save', ability: 'wis' });
     expect(sleepSave.on_fail).toEqual([
-      expect.objectContaining({ kind: 'condition', value: 'unconscious' }),
+      expect.objectContaining({
+        kind: 'condition',
+        value: 'incapacitated',
+        duration: { type: 'rounds', amount: 10, concentration: true },
+        save_ends: expect.objectContaining({
+          ability: 'wis', on_failure_condition: 'unconscious',
+        }),
+      }),
     ]);
   });
 

@@ -962,6 +962,13 @@
         "dc": { "$ref": "#/$defs/formula" },
         "on_fail": { "$ref": "#/$defs/outcome" },
         "on_success": { "$ref": "#/$defs/outcome" },
+        "automatic_success": {
+          "type": "object",
+          "properties": {
+            "if_sleep_not_required": { "type": "boolean" },
+            "if_condition_immunity": { "type": "string", "minLength": 1 }
+          }
+        },
         "repeat": { "type": "object" },
 
         "skill": { "type": ["string", "array"] },
@@ -1265,13 +1272,19 @@
               "value": { "type": "string" },
               "op": { "enum": ["apply", "remove"] },
               "duration": { "$ref": "#/$defs/duration" },
+              "causeTags": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+              "cause_tags": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+              "end_triggers": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+              "required_cause_tags": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+              "required_end_trigger": { "type": "string", "minLength": 1 },
               "save_ends": {
                 "type": "object",
                 "required": ["ability", "dc"],
                 "properties": {
                   "ability": { "enum": ["str", "dex", "con", "int", "wis", "cha"] },
                   "dc": { "$ref": "#/$defs/formula" },
-                  "timing": { "const": "end_of_turn" }
+                  "timing": { "const": "end_of_turn" },
+                  "on_failure_condition": { "type": "string", "minLength": 1 }
                 }
               }
             }

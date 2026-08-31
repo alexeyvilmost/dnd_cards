@@ -22,7 +22,7 @@ import { rollD20 } from './roll';
 import { collectModifiers } from './modifiers';
 import { evaluate, FormulaError, type FormulaContext } from './formula';
 import { activeConditionsOf } from './circumstances';
-import { conditionLongRestEntries } from './conditions';
+import { conditionLabel, conditionLongRestEntries } from './conditions';
 
 type Dict = Record<string, unknown>;
 type AbilityKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
@@ -196,6 +196,14 @@ function preflightSaveEnds(
         'save_ends requires an explicit DC formula',
       );
     }
+    if (se.on_failure_condition !== undefined
+      && (typeof se.on_failure_condition !== 'string' || !se.on_failure_condition.trim())) {
+      throw saveEndsError(
+        'INVALID_PAYLOAD',
+        `${path}.on_failure_condition`,
+        'save_ends failure transition requires a non-empty condition id',
+      );
+    }
     let dc: number;
     try {
       const value = evaluate(se.dc as string | number, {
@@ -304,6 +312,20 @@ export function endTurn(
         String((e.mechanics as Dict).value ?? ''),
       )) {
         events.push({ type: 'effect_expired', name: e.name });
+        continue;
+      }
+      const failureCondition = typeof se.on_failure_condition === 'string'
+        ? se.on_failure_condition.trim() : '';
+      if (failureCondition) {
+        const transitionedMechanics: Dict = { ...mechanics, value: failureCondition };
+        delete transitionedMechanics.save_ends;
+        events.push({ type: 'effect_expired', name: e.name });
+        events.push({ type: 'condition_applied', condition: failureCondition });
+        kept.push({
+          ...e,
+          name: conditionLabel(failureCondition),
+          mechanics: transitionedMechanics,
+        });
         continue;
       }
     }

@@ -93,7 +93,29 @@ function activeEffectSourceLabel(effect: ActiveEffectEntry): string | null {
 function activeEffectInstructionRows(effect: ActiveEffectEntry): string[] {
   const mechanics = effect.mechanics as Record<string, unknown>;
   if (mechanics.kind === 'condition' && typeof mechanics.value === 'string') {
-    return conditionInstructions(mechanics.value);
+    const rows = [...conditionInstructions(mechanics.value)];
+    const saveEnds = mechanics.save_ends as Record<string, unknown> | undefined;
+    if (saveEnds && String(saveEnds.timing ?? 'end_of_turn') === 'end_of_turn') {
+      const ability = ({
+        str: 'СИЛ', dex: 'ЛВК', con: 'ТЕЛ', int: 'ИНТ', wis: 'МДР', cha: 'ХАР',
+      } as Record<string, string>)[String(saveEnds.ability)] ?? String(saveEnds.ability ?? 'характеристики');
+      const dc = saveEnds.dc == null ? 'указанной СЛ' : `СЛ ${String(saveEnds.dc)}`;
+      const transition = typeof saveEnds.on_failure_condition === 'string'
+        ? conditionLabel(saveEnds.on_failure_condition) : null;
+      rows.push(
+        `В конце своего хода повторите спасбросок ${ability} против ${dc}`
+        + `${transition ? `; при провале получите состояние «${transition}»` : ''}.`,
+      );
+    }
+    const endTriggers = Array.isArray(mechanics.end_triggers)
+      ? mechanics.end_triggers.map(String) : [];
+    if (endTriggers.includes('actor_takes_damage')
+      && endTriggers.includes('wake_action_within_5_ft')) {
+      rows.push('Эффект закончится при получении урона или если существо в 5 фт потратит действие, чтобы разбудить вас.');
+    } else if (endTriggers.includes('actor_takes_damage')) {
+      rows.push('Эффект закончится при получении урона.');
+    }
+    return rows;
   }
   const instruction = activeEffectInstruction(effect);
   return instruction ? [instruction] : [];

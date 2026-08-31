@@ -1154,6 +1154,8 @@ function actionContext(
         characterContext: target.character,
         passives: target.passives,
         conditionImmunities: target.traits?.conditionImmunities,
+        sleepRequired: target.traits?.restProfile?.sleepRequired,
+        sleepTraitSourceEntityIds: target.traits?.restProfile?.sourceEntityIds,
         // A self target shares the source runtime. Leaving runtimeState unset
         // makes the legacy executor route `who:target` payloads into `state`
         // instead of creating a second, conflicting copy of the same actor.
@@ -3706,6 +3708,12 @@ function pendingSaveEvents(
   if (!command.targetIds.length) return null;
   const source = world.actors[command.actorId];
   const queuedTargets: QueuedTargetSaveResolution[] = [];
+  const automaticTargets: Array<{
+    targetActorId: string;
+    ability: Ability;
+    reason: string;
+    sourceEntityIds: string[];
+  }> = [];
   for (const targetId of command.targetIds) {
     const target = world.actors[targetId];
     const facts = command.factsByTarget?.[target.id];
@@ -3716,6 +3724,15 @@ function pendingSaveEvents(
       spell: command.spell,
     });
     if (!save) return null;
+    if (save.automaticSuccess) {
+      automaticTargets.push({
+        targetActorId: target.id,
+        ability: save.ability as Ability,
+        reason: save.automaticSuccess.reason,
+        sourceEntityIds: [...save.automaticSuccess.sourceEntityIds],
+      });
+      continue;
+    }
     queuedTargets.push({
       targetActorId: target.id,
       facts: { ...facts },
@@ -3726,6 +3743,11 @@ function pendingSaveEvents(
       },
     });
   }
+  // When every selected target has a data-owned automatic success, the normal
+  // action path applies those success branches immediately. In mixed areas the
+  // known successes are recorded at declaration and omitted from the manual
+  // dice queue; their actor ids remain in resolvedTargetIds for replay/audit.
+  if (!queuedTargets.length) return null;
   const [first, ...remainingTargets] = queuedTargets;
   if (!first) return null;
   const target = world.actors[first.targetActorId];
@@ -3762,6 +3784,14 @@ function pendingSaveEvents(
     obligationIds,
   ));
   events.push(...engineTrace(source.id, command.targetIds, declarationEvents, obligationIds));
+  for (const automatic of automaticTargets) {
+    events.push(...engineTrace(source.id, [automatic.targetActorId], [{
+      type: 'narrative',
+      text: `Спасбросок ${ABILITY_LABEL[automatic.ability]} — автоуспех: ${automatic.reason}.`
+        + (automatic.sourceEntityIds.length
+          ? ` Источники: ${automatic.sourceEntityIds.join(', ')}.` : ''),
+    }], obligationIds));
+  }
   events.push({
     sourceActorId: source.id,
     obligationIds,
@@ -3788,7 +3818,7 @@ function pendingSaveEvents(
           avoidsConditions: [...first.save.avoidsConditions],
         },
         remainingTargets,
-        resolvedTargetIds: [],
+        resolvedTargetIds: automaticTargets.map((entry) => entry.targetActorId),
         concentrationEffectLinks: [],
         followUps: [],
         spellCastEmitted: false,
