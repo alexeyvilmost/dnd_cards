@@ -8,11 +8,15 @@ import type { Action } from '../types';
  * редактор действий, без перевыкатки. Здесь только загрузка (кэш на модуль).
  */
 let cache: Promise<Action[]> | null = null;
+export const BASIC_ACTION_CATALOG_LIMIT = 1000;
 
 export function fetchBasicActions(): Promise<Action[]> {
   if (!cache) {
     cache = actionsApi
-      .getActions({ type: 'basic', limit: 50 })
+      // Basic actions are a shared catalog, not a single API page. A limit of
+      // 50 silently hid older valid actions once the catalog grew beyond it
+      // (Divine Inspiration was the first production casualty).
+      .getActions({ type: 'basic', limit: BASIC_ACTION_CATALOG_LIMIT })
       // Защита от старого бэкенда без ?type-фильтра: берём только реально basic.
       .then((r) => (r.actions ?? []).filter((a) => a.type === 'basic'))
       .catch(() => {

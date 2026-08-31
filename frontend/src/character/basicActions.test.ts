@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { collectSheetActions } from './actionSheet';
 import type { AssembledCharacter } from './assemble';
 import type { Action } from '../types';
+import { BASIC_ACTION_CATALOG_LIMIT } from './basicActions';
 
 // Базовые действия — сущности Action (type='basic'), а не хардкод. Проверяем, что
 // collectSheetActions строит группу basic ИЗ переданных сущностей (с actionRef для
@@ -34,6 +35,10 @@ const basicUnarmed = {
 const emptyAssembled = { actions: [], effects: [], spells: [] } as unknown as AssembledCharacter;
 
 describe('базовые действия как сущности (не хардкод)', () => {
+  it('загружает весь общий каталог, а не только первую страницу из 50 действий', () => {
+    expect(BASIC_ACTION_CATALOG_LIMIT).toBeGreaterThanOrEqual(1000);
+  });
+
   it('строит группу basic из переданных Action: actionRef + текст из данных сущности', () => {
     const out = collectSheetActions(emptyAssembled, [], [basicUnarmed]);
     const basic = out.filter((a) => a.group === 'basic');

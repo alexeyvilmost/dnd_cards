@@ -4,7 +4,7 @@ import compiledFixture from '../pages/rulesLabFixture.generated.json';
 import type { ActorState, RuleActionDefinition } from '../rules-core/domain';
 import { canonicalStringify } from '../rules-core/determinism';
 import type { CharacterContext } from '../mvp/contracts';
-import type { Action, Card, CharacterClass, PassiveEffect, Spell } from '../types';
+import type { Action, Card, CharacterClass, Feat, PassiveEffect, Spell } from '../types';
 import { collectChoices, type ChoiceOrigin } from '../mechanics/collectChoices';
 import { collectSheetPrimitiveChoices } from './sheetActionOrchestrator';
 import { collectSheetActions, type SheetAction } from './actionSheet';
@@ -275,6 +275,82 @@ function wizardRuleState(
 }
 
 describe('real sheet canonical world materialization', () => {
+  it('projects feat and Fighting Style capability provenance into the real sheet actor', () => {
+    const cases = [
+      {
+        feat: {
+          id: 'feat:alert', card_number: 'FEAT-0001', name: 'Alert', category: 'origin',
+          related_effects: ['effect:alert'],
+        },
+        effect: {
+          id: 'effect:alert', card_number: 'EFF-alert', name: 'Alert',
+          mechanics: { capabilities: [{ id: 'alert.initiative_swap' }] },
+        },
+        capabilityId: 'alert.initiative_swap',
+      },
+      {
+        feat: {
+          id: 'feat:protection', card_number: 'FEAT-0055', name: 'Protection',
+          category: 'fighting_style', related_effects: ['effect:protection'],
+        },
+        effect: {
+          id: 'effect:protection', card_number: 'fs_protection', name: 'Protection',
+          mechanics: { capabilities: [{ id: 'fighting_style.protection.reaction' }] },
+        },
+        capabilityId: 'fighting_style.protection.reaction',
+      },
+      {
+        feat: {
+          id: 'feat:interception', card_number: 'FEAT-0057', name: 'Interception',
+          category: 'fighting_style', related_effects: ['effect:interception'],
+        },
+        effect: {
+          id: 'effect:interception', card_number: 'fs_interception', name: 'Interception',
+          mechanics: { capabilities: [{ id: 'fighting_style.interception.reaction' }] },
+        },
+        capabilityId: 'fighting_style.interception.reaction',
+      },
+    ] as const;
+
+    for (const testCase of cases) {
+      const feat = {
+        ...testCase.feat,
+        description: '', rarity: 'common', repeatable: false, created_at: '', updated_at: '',
+      } as unknown as Feat;
+      const effect = {
+        ...testCase.effect,
+        description: '', rarity: 'common', effect_type: 'class_ability', created_at: '', updated_at: '',
+      } as unknown as PassiveEffect;
+      const baseAssembly = assembled({ effect });
+      const built = buildSheetCanonicalRuntime({
+        character: character(`sheet-${testCase.capabilityId}`),
+        assembled: {
+          ...baseAssembly,
+          klass: null,
+          feats: [feat],
+          effects: [{
+            effect,
+            origin: { kind: 'feat', id: feat.id, name: feat.name },
+          }],
+        },
+        ruleState: { appliedGrants: [] },
+        sheetActions: [],
+        runtime: {
+          hp: { current: 10, max: 10, temp: 0 },
+          resources: {}, maxResources: {}, equipment: {}, inventory: [], activeEffects: [],
+        },
+        characterContext: {
+          abilityMods: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+          profBonus: 2,
+          level: 1,
+        } as CharacterContext,
+      });
+
+      expect(built.world.actors[built.actorId].capabilities.featureSources?.[testCase.capabilityId])
+        .toEqual([feat.id, feat.card_number, effect.id, effect.card_number]);
+    }
+  });
+
   it('keeps bound ammunition in canonical activation.cost and pays it as an item', () => {
     const entity = patchAction('action_basic_weapon_ranged');
     const bow = withDeclaredTestWeaponProfile({

@@ -133,6 +133,71 @@ function stableIds(values: readonly unknown[]): [string, ...string[]] {
   return ids as [string, ...string[]];
 }
 
+function mergeFeatureSources(
+  target: Record<string, [string, ...string[]]>,
+  capabilityId: unknown,
+  sources: readonly unknown[],
+): void {
+  if (!nonBlank(capabilityId)) return;
+  target[capabilityId] = stableIds([
+    ...(target[capabilityId] ?? []),
+    ...sources,
+  ]);
+}
+
+function assembledOriginSource(
+  assembled: AssembledCharacter,
+  origin: AssembledCharacter['effects'][number]['origin'],
+): { id: string; card_number?: string } | undefined {
+  const candidates = origin.kind === 'feat'
+    ? assembled.feats
+    : origin.kind === 'race'
+      ? [assembled.race, assembled.subrace]
+      : origin.kind === 'class'
+        ? [assembled.klass, assembled.subclass]
+        : origin.kind === 'background'
+          ? [assembled.background]
+          : [];
+  return candidates.find((candidate) => candidate?.id === origin.id) ?? undefined;
+}
+
+/**
+ * Project every content-declared capability into the executable actor.  The
+ * compiled acceptance overlay already did this, but the real sheet world used
+ * to project only Warlock pact state.  That left Alert and reaction Fighting
+ * Styles visible as passives while making their combat handlers unreachable.
+ */
+function projectDeclaredFeatureSources(
+  assembled: AssembledCharacter,
+  actions: readonly RuleActionDefinition[],
+): Record<string, [string, ...string[]]> {
+  const result: Record<string, [string, ...string[]]> = {};
+  for (const { effect, origin } of assembled.effects) {
+    const mechanics = object(effect.mechanics);
+    const capabilities = Array.isArray(mechanics?.capabilities)
+      ? mechanics.capabilities
+      : [];
+    const source = assembledOriginSource(assembled, origin);
+    for (const rawCapability of capabilities) {
+      const capability = object(rawCapability);
+      mergeFeatureSources(result, capability?.id, [
+        source?.id ?? origin.id,
+        source?.card_number,
+        effect.id,
+        effect.card_number,
+      ]);
+    }
+  }
+  for (const action of actions) {
+    // Rest-decision actions are catalog-only, but their declared policy
+    // capability still needs source provenance for the rest handler to
+    // authorize it. Ordinary action ownership already lives in actionIds, so
+    // duplicating every action here would only inflate persisted turn state.
+    mergeFeatureSources(result, action.restDecision?.capabilityId, action.sourceEntityIds);
+  }
+  return result;
+}
+
 /**
  * Persist only the transitive Card closure that the actor/runtime/mechanics can
  * actually address. The UI's name resolver owns the full Card library, but a
@@ -987,7 +1052,7 @@ export function buildSheetCanonicalRuntime(input: {
   };
 
   const pacts: WarlockPactStates = {};
-  const featureSources: Record<string, [string, ...string[]]> = {};
+  const featureSources = projectDeclaredFeatureSources(input.assembled, uniqueActions);
   const initialObjects = [];
   const tomeActionIds = new Set<string>();
   const deferredTomes: Array<{
@@ -1003,7 +1068,7 @@ export function buildSheetCanonicalRuntime(input: {
       input.assembled.klass?.id,
       input.assembled.klass?.card_number,
     ]);
-    featureSources[binding.declaration.capabilityId] = sources;
+    mergeFeatureSources(featureSources, binding.declaration.capabilityId, sources);
     if (binding.declaration.kind === 'blade') {
       const action = matchingAction(
         compiled,
