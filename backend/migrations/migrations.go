@@ -805,6 +805,13 @@ func GetAllMigrations() []Migration {
 			Up:          repairCrafterInPlayChoice,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     missingWeaponMasteryProfilesMigrationVersion,
+			Description: "Материализовать строгие профили оружия для мастерств Рассечение и Толчок",
+			Up:          repairMissingWeaponMasteryProfiles,
+			// Возврат к неисполняемым display-полям оружия не поддерживается.
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
