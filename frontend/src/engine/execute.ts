@@ -10,6 +10,7 @@ import type {
   ExecuteContext,
   ExecuteResult,
   ReactionOffer,
+  RollLog,
   RollModifier,
   RuntimeState,
   TargetContext,
@@ -17,7 +18,7 @@ import type {
 import { canPay, pay } from './cost';
 import {
   conditionAppliedEvent, damageEvent, healingEvent, itemAddedEvent, narrativeEvent,
-  resourceRestoredEvent, rollEvent, tempHpEvent,
+  formatRollBreakdown, resourceRestoredEvent, rollEvent, tempHpEvent,
 } from './events';
 import { evaluate, FormulaError, MissingVariableError, rollFormula, type AbilityKey, type FormulaContext } from './formula';
 import {
@@ -62,6 +63,11 @@ type Dict = Record<string, unknown>;
 const ABILITY_LABEL: Record<AbilityKey, string> = {
   str: 'СИЛ', dex: 'ЛВК', con: 'ТЕЛ', int: 'ИНТ', wis: 'МДР', cha: 'ХАР',
 };
+
+function formattedRoll(input: Omit<RollLog, 'text'>): RollLog {
+  const roll: RollLog = { ...input, text: '' };
+  return { ...roll, text: formatRollBreakdown(roll) };
+}
 
 export class InsufficientResourcesError extends Error {
   constructor(readonly missing: string[]) {
@@ -2594,7 +2600,10 @@ function resolveDamageAmounts(
       return {
         amount: total,
         damageType: line.type,
-        roll: { kind: 'damage', advantage: 'none', dice: ruled.dice, modifiers: [...fr.modifiers, ...extraMods], total, text: fr.text },
+        roll: formattedRoll({
+          kind: 'damage', advantage: 'none', dice: ruled.dice,
+          modifiers: [...fr.modifiers, ...extraMods], total,
+        }),
       };
     });
   }
@@ -2634,7 +2643,10 @@ function resolveDamageAmounts(
     return [{
       amount: total,
       damageType,
-      roll: { kind: 'damage', advantage: 'none', dice: ruled.dice, modifiers: [...fr.modifiers, ...extraMods], total, text: fr.text },
+      roll: formattedRoll({
+        kind: 'damage', advantage: 'none', dice: ruled.dice,
+        modifiers: [...fr.modifiers, ...extraMods], total,
+      }),
     }];
   }
 

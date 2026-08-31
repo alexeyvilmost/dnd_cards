@@ -18,16 +18,25 @@ import { buildSheetCanonicalRuntime } from './sheetCanonicalWorld';
 import type { SheetCombatParticipantSeed } from './sheetCombatSession';
 import { isCharacterReadOnly, type ForgeCharacter } from './types';
 import { projectRunnableSheetCanonicalActions } from './sheetCanonicalActionProjection';
-import type { RuntimeState } from '../mvp/contracts';
+import type { CharacterContext, RuntimeState } from '../mvp/contracts';
 import type { ActorState } from '../rules-core/domain';
 import { loadMasteryEffectsStrict } from '../utils/mastery';
 import { parseWeaponProfile } from '../rules-core/weaponProfile';
 import { weaponActionAvailability } from '../engine/weapon';
+import { armorClassValue } from '../engine/ac';
 
 export interface SheetCombatActionInventory {
   actions: SheetAction[];
   grantedEffects: NonNullable<ActorState['grantedEffects']>;
   masteryEffects: NonNullable<ActorState['masteryEffects']>;
+}
+
+export function resolveSheetCombatArmorClass(
+  character: CharacterContext,
+  runtime: RuntimeState,
+  passives: Record<string, unknown>[],
+): number {
+  return armorClassValue(character, runtime, passives).value;
 }
 
 /**
@@ -258,6 +267,10 @@ export async function loadSheetCombatParticipant(input: {
     ),
     passives,
   };
+  // ruleState.armorClass intentionally represents the naked build. Combat must
+  // use the same runtime equipment + passive pipeline as the visible sheet,
+  // otherwise freshly equipped armor (and Defense) disappears at scene start.
+  const armorClass = resolveSheetCombatArmorClass(characterContext, runtime, passives);
   const canonical = buildSheetCanonicalRuntime({
     character: input.character,
     assembled,
@@ -269,7 +282,7 @@ export async function loadSheetCombatParticipant(input: {
     grantedEffects: inventory.grantedEffects,
     masteryEffects: inventory.masteryEffects,
     cards: [...cardsById.values()],
-    ac: ruleState.armorClass,
+    ac: armorClass,
   });
   return {
     character: input.character,

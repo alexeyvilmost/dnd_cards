@@ -159,4 +159,25 @@ describe('Интеграция через executeAction', () => {
     const dmg = res.events.filter((e) => e.type === 'damage').reduce((s, e) => s + ((e as { amount?: number }).amount ?? 0), 0);
     expect(dmg).toBe(10); // (5+1)+(3+1)
   });
+
+  it('minimum_die обновляет и кости, и читаемую разбивку урона', () => {
+    const passives = [{ effects: [{ resolution: 'auto', result: [{
+      kind: 'modifier', applies_to: { roll: 'damage', die: 6 }, op: 'minimum_die', value: 3,
+    }] }] }];
+    const mech = { name: 'Удар', effects: [{ resolution: 'auto', result: [{ kind: 'damage', dice: '2d6', type: 'slashing' }] }] };
+    const res = executeAction(fresh(), mech, {
+      character: char,
+      passives,
+      rng: seq([face(2, 6), face(4, 6)]),
+    } as ExecuteContext & { passives: unknown[] });
+    const event = res.events.find((candidate) => candidate.type === 'damage');
+    expect(event).toMatchObject({
+      type: 'damage',
+      amount: 7,
+      roll: {
+        dice: [{ sides: 6, result: 3 }, { sides: 6, result: 4 }],
+        text: 'к6: 3, 4',
+      },
+    });
+  });
 });

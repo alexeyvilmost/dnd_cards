@@ -6,10 +6,15 @@ import type { AssembledCharacter } from './assemble';
 import {
   collectSheetCombatActionInventory,
   hydrateSheetCombatCards,
+  resolveSheetCombatArmorClass,
 } from './sheetCombatTargetRuntime';
 import { projectRunnableSheetCanonicalActions } from './sheetCanonicalActionProjection';
 import { buildSheetCanonicalRuntime } from './sheetCanonicalWorld';
 import { createSoloCombatState, executeCombatAction } from '../solo-combat/engine';
+import {
+  CARD_CHAIN_MAIL, FIGHTER_CTX_EQUIPPED, freshFighterState,
+} from '../mvp/fixtures';
+import { equipItem } from '../mvp/contracts';
 
 const active = (cost = 'action', result: Record<string, unknown>[] = [{ kind: 'narrative' }]) => ({
   activation: { mode: 'active', cost: [{ resource: cost, amount: 1 }] },
@@ -17,6 +22,27 @@ const active = (cost = 'action', result: Record<string, unknown>[] = [{ kind: 'n
 });
 
 describe('sheet -> combat action inventory adapter', () => {
+  it('projects equipped armor and Defense into the combat actor AC', () => {
+    const defense = {
+      activation: { mode: 'passive' },
+      effects: [{
+        resolution: 'auto',
+        result: [{
+          kind: 'modifier', applies_to: { roll: 'ac', filter: { wearingArmor: true } },
+          op: 'add', value: '+1',
+          source: 'Боевой стиль: Оборона', when: [{ kind: 'wearing_armor' }],
+        }],
+      }],
+    };
+    const { state } = equipItem(freshFighterState(), CARD_CHAIN_MAIL);
+
+    const character = {
+      ...FIGHTER_CTX_EQUIPPED,
+      knownCards: [...(FIGHTER_CTX_EQUIPPED.knownCards ?? []), CARD_CHAIN_MAIL],
+    };
+    expect(resolveSheetCombatArmorClass(character, state, [defense])).toBe(17);
+  });
+
   it('hydrates every carried list row through the detail endpoint before combat', async () => {
     const shallow = {
       id: 'item:carried', name: 'Carried', card_number: 'ITEM-carried', type: 'item',
