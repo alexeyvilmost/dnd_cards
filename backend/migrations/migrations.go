@@ -781,6 +781,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairSleep2024Lifecycle,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     fireBoltUpcastDescriptionMigrationVersion,
+			Description: "Исправить кость усиления Огненного снаряда в карточке",
+			Up:          repairFireBoltUpcastDescription,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
