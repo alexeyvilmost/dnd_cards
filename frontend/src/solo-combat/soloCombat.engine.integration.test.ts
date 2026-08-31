@@ -8,7 +8,7 @@ import type { SheetCombatParticipantSeed } from '../character/sheetCombatSession
 import type { ForgeCharacter } from '../character/types';
 import type { Action } from '../types';
 import type { Monster } from '../monsters/types';
-import { advanceTurn, autoResolveSystemDecisions, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatResources, resolvePlayerReaction, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, setSoloCombatInitiativeTotals } from './engine';
+import { addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, autoResolveSystemDecisions, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatResources, resolvePlayerReaction, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, setSoloCombatInitiativeTotals } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { gridDistanceFt } from './tacticalGrid';
 import { SOLO_COMBAT_KEY } from './types';
@@ -704,6 +704,65 @@ describe('solo combat engine vertical integration', () => {
     expect(state.world.actors[actorId].runtime.resources)
       .toEqual(state.world.actors[actorId].runtime.maxResources);
     expect(state.log.at(-1)?.text).toContain('Ресурсы восстановлены');
+  });
+
+  it('scene constructor adds fresh monsters and owned characters without replacing the retained fight', async () => {
+    const participant = fighterSeed();
+    const ally = wizardSeed();
+    let state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const activeBefore = activeId(state);
+    const actorCountBefore = Object.keys(state.world.actors).length;
+    const tokenPositionsBefore = new Set(Object.values(state.tokens).map(
+      ({ position }) => `${position.x}:${position.y}`,
+    ));
+
+    state = addSoloCombatMonster({
+      state,
+      monster: goblin(),
+      actions: [scimitar()],
+      effects: [],
+      rng: () => 0,
+    });
+    const addedMonster = Object.values(state.world.actors).find((actor) => (
+      actor.kind === 'monster' && !tokenPositionsBefore.has(
+        `${state.tokens[actor.id].position.x}:${state.tokens[actor.id].position.y}`,
+      )
+    ));
+    expect(addedMonster).toBeDefined();
+    expect(state.monsterActionIds[addedMonster!.id]).toHaveLength(1);
+    expect(activeId(state)).toBe(activeBefore);
+    expect(state.outcome).toBe('active');
+
+    state = await addSoloCombatCharacter({ state, participant: ally, rng: () => 0 });
+    expect(Object.keys(state.world.actors)).toHaveLength(actorCountBefore + 2);
+    expect(state.controlledCharacterIds).toContain(ally.character.id);
+    expect(state.sideByActorId[ally.character.id]).toBe('side:party');
+    expect(state.playerActionIdsByActor?.[ally.character.id]).toEqual(expect.arrayContaining(
+      ally.canonical.actions.map(({ id }) => id),
+    ));
+    expect(state.participantRuntimeRevisions?.[ally.character.id])
+      .toBe(Number(ally.character.runtime_revision ?? 0));
+    expect(activeId(state)).toBe(activeBefore);
+    expect(new Set(Object.values(state.tokens).map(
+      ({ position }) => `${position.x}:${position.y}`,
+    )).size).toBe(Object.keys(state.tokens).length);
+    expect(state.log.at(-1)?.text).toContain('Добавлен в бой');
+
+    const restored = readSoloCombatState(
+      writeSoloCombatState({}, state),
+      participant.character.id,
+      state.runtimeRevision,
+    );
+    expect(restored?.world.actors[addedMonster!.id]).toBeDefined();
+    expect(restored?.world.actors[ally.character.id]).toBeDefined();
+    expect(restored?.world.scene.mode).toBe('encounter');
+    if (restored?.world.scene.mode !== 'encounter') throw new Error('expected encounter');
+    expect(restored.world.scene.initiative).toEqual(restored.initiative.map(({ actorId }) => actorId));
   });
 
   it('opens and resolves a generic owned post-hit rider instead of exposing it proactively', async () => {

@@ -1119,6 +1119,267 @@ export function refreshSoloCombatResources(
   return appendLog({ ...state, world }, actorId, 'Ресурсы восстановлены конструктором сцены.');
 }
 
+function availableScenePosition(state: SoloCombatState, side: 'party' | 'opposition'): GridPosition {
+  const occupied = new Set(Object.values(state.tokens).map(({ position }) => `${position.x}:${position.y}`));
+  const rows = side === 'party'
+    ? Array.from({ length: TACTICAL_HEIGHT }, (_, index) => TACTICAL_HEIGHT - 1 - index)
+    : Array.from({ length: TACTICAL_HEIGHT }, (_, index) => index);
+  for (const y of rows) {
+    for (let x = 0; x < TACTICAL_WIDTH; x += 1) {
+      if (!occupied.has(`${x}:${y}`)) return { x, y };
+    }
+  }
+  throw new Error('На тактическом поле нет свободной клетки для нового участника');
+}
+
+function insertSceneInitiative(
+  state: SoloCombatState,
+  actorId: string,
+  bonus: number,
+  rng: Rng,
+): SoloCombatState {
+  if (state.world.scene.mode !== 'encounter') throw new Error('Бой ещё не начат');
+  const currentActorId = activeActorId(state);
+  const die = Math.floor(rng() * 20) + 1;
+  const initiative = [
+    ...state.initiative,
+    { actorId, die, bonus, total: die + bonus },
+  ].sort((left, right) => (
+    right.total - left.total || right.bonus - left.bonus || left.actorId.localeCompare(right.actorId)
+  ));
+  const order = initiative.map((entry) => entry.actorId);
+  const activeIndex = order.indexOf(currentActorId);
+  if (activeIndex < 0) throw new Error('Активный участник исчез при добавлении участника');
+  return {
+    ...state,
+    initiative,
+    initiativeBonuses: { ...state.initiativeBonuses, [actorId]: bonus },
+    world: {
+      ...state.world,
+      scene: { ...state.world.scene, initiative: order, activeIndex },
+    },
+  };
+}
+
+/** Test-scene authority: add a fresh monster instance without replacing the retained encounter. */
+export function addSoloCombatMonster(input: {
+  state: SoloCombatState;
+  monster: Monster;
+  actions: readonly Action[];
+  effects: readonly PassiveEffect[];
+  rng?: Rng;
+}): SoloCombatState {
+  if (input.state.world.scene.mode !== 'encounter') throw new Error('Бой ещё не начат');
+  const instanceId = `${input.monster.id}:${newSheetRuntimeCommandId()}`;
+  const compiled = compileMonsterInstance({
+    monster: input.monster,
+    instanceId,
+    actions: input.actions,
+    effects: input.effects,
+  });
+  const actor: ActorState = { ...clone(compiled.actor), lifecycle: { status: 'alive' } };
+  const catalogActions = [...input.state.catalogActions];
+  for (const action of compiled.actions) {
+    if (!catalogActions.some((candidate) => candidate.id === action.id)) catalogActions.push(action);
+  }
+  const opportunityActionIds = { ...input.state.opportunityActionIds };
+  const attack = compiled.actions.find(isAttackAction);
+  if (attack) {
+    const opportunity = opportunityVersion(attack);
+    if (!catalogActions.some((candidate) => candidate.id === opportunity.id)) catalogActions.push(opportunity);
+    actor.capabilities.actionIds.push(opportunity.id);
+    opportunityActionIds[actor.id] = opportunity.id;
+  }
+  if (input.state.dashActionId && !actor.capabilities.actionIds.includes(input.state.dashActionId)) {
+    actor.capabilities.actionIds.push(input.state.dashActionId);
+  }
+  const position = availableScenePosition(input.state, 'opposition');
+  let next: SoloCombatState = {
+    ...input.state,
+    outcome: 'active',
+    boardRevision: input.state.boardRevision + 1,
+    world: {
+      ...input.state.world,
+      revision: input.state.world.revision + 1,
+      actors: { ...input.state.world.actors, [actor.id]: actor },
+    },
+    catalogActions: catalogActions.sort((left, right) => left.id.localeCompare(right.id)),
+    actionPresentation: {
+      ...input.state.actionPresentation,
+      ...Object.fromEntries(input.monster.action_ids.flatMap((actionId) => {
+        const row = input.actions.find((candidate) => candidate.id === actionId);
+        const projected = compiled.actions.find((candidate) => candidate.id === actionId);
+        return row && projected ? [[projected.id, {
+          imageUrl: row.image_url,
+          description: row.description,
+          sourceLabel: input.monster.name,
+          entityType: 'action' as const,
+          entityId: row.id,
+          actionRef: row,
+        }] as const] : [];
+      })),
+    },
+    sideByActorId: { ...input.state.sideByActorId, [actor.id]: 'side:opposition' },
+    actorPresentation: {
+      ...input.state.actorPresentation,
+      [actor.id]: {
+        templateId: input.monster.id,
+        description: input.monster.description,
+        size: input.monster.size,
+        creatureType: input.monster.creature_type,
+        alignment: input.monster.alignment,
+        challengeRating: input.monster.challenge_rating,
+        source: input.monster.source,
+        actionIds: compiled.actions.map((action) => action.id),
+        traits: input.monster.effect_ids.flatMap((effectId) => {
+          const effect = input.effects.find((candidate) => candidate.id === effectId);
+          return effect?.mechanics ? [{
+            id: effect.id,
+            name: effect.name,
+            description: effect.description,
+            imageUrl: effect.image_url,
+            mechanics: clone(effect.mechanics),
+          }] : [];
+        }),
+      },
+    },
+    monsterActionIds: { ...input.state.monsterActionIds, [actor.id]: compiled.actions.map(({ id }) => id) },
+    opportunityActionIds,
+    tokens: {
+      ...input.state.tokens,
+      [actor.id]: {
+        actorId: actor.id,
+        templateId: input.monster.id,
+        tokenUrl: input.monster.token_url,
+        color: '#b94d3f',
+        position,
+      },
+    },
+    movementRemainingFt: {
+      ...input.state.movementRemainingFt,
+      [actor.id]: effectiveActorSpeedFt(actor),
+    },
+  };
+  next = insertSceneInitiative(
+    next,
+    actor.id,
+    Number(input.monster.initiative_bonus ?? actor.character.abilityMods.dex ?? 0),
+    input.rng ?? Math.random,
+  );
+  return appendLog(next, actor.id, 'Добавлен в бой конструктором сцены.');
+}
+
+/** Test-scene authority: add another owned sheet as a controlled participant. */
+export async function addSoloCombatCharacter(input: {
+  state: SoloCombatState;
+  participant: SheetCombatParticipantSeed;
+  rng?: Rng;
+}): Promise<SoloCombatState> {
+  if (input.state.world.scene.mode !== 'encounter') throw new Error('Бой ещё не начат');
+  const actorId = input.participant.character.id;
+  if (input.state.world.actors[actorId]) throw new Error('Этот персонаж уже участвует в сцене');
+  if (input.participant.canonical.world.ruleset.contentHash !== input.state.world.ruleset.contentHash) {
+    throw new Error('Персонаж использует несовместимую версию правил');
+  }
+  const isolated = await createSheetCombatSession({
+    source: input.participant,
+    targets: [],
+    sceneMode: 'exploration',
+  });
+  const actor = clone(isolated.world.actors[actorId]);
+  const catalogActions = [...input.state.catalogActions];
+  for (const action of input.participant.canonical.actions) {
+    if (!catalogActions.some((candidate) => candidate.id === action.id)) catalogActions.push(clone(action));
+  }
+  const basicActionIds = Object.entries(input.state.actionPresentation ?? {}).flatMap(([actionId, row]) => (
+    row.actionRef && TACTICAL_BASIC_ACTIONS.has(row.actionRef.card_number) ? [actionId] : []
+  ));
+  for (const actionId of basicActionIds) {
+    if (!actor.capabilities.actionIds.includes(actionId)) actor.capabilities.actionIds.push(actionId);
+  }
+  const opportunityActionIds = { ...input.state.opportunityActionIds };
+  const attack = input.participant.canonical.actions.find((action) => (
+    primitiveType(action) === 'weapon_attack' && isAttackAction(action)
+  ));
+  if (attack) {
+    const opportunity = opportunityVersion(attack);
+    if (!catalogActions.some((candidate) => candidate.id === opportunity.id)) catalogActions.push(opportunity);
+    actor.capabilities.actionIds.push(opportunity.id);
+    opportunityActionIds[actorId] = opportunity.id;
+  }
+  const position = availableScenePosition(input.state, 'party');
+  const controlledIds = [...new Set([...controlledCharacterIds(input.state), actorId])];
+  const playerActionIds = [...new Set([
+    ...input.participant.canonical.actions.map(({ id }) => id),
+    ...basicActionIds,
+  ])];
+  let next: SoloCombatState = {
+    ...input.state,
+    outcome: 'active',
+    controlledCharacterIds: controlledIds,
+    boardRevision: input.state.boardRevision + 1,
+    world: {
+      ...input.state.world,
+      revision: input.state.world.revision + 1,
+      actors: { ...input.state.world.actors, [actorId]: actor },
+    },
+    catalogActions: catalogActions.sort((left, right) => left.id.localeCompare(right.id)),
+    actionPresentation: {
+      ...input.state.actionPresentation,
+      ...(input.participant.actionPresentation ?? {}),
+    },
+    sideByActorId: { ...input.state.sideByActorId, [actorId]: 'side:party' },
+    actorPresentation: {
+      ...input.state.actorPresentation,
+      [actorId]: {
+        creatureType: actor.character.creatureType,
+        actionIds: input.participant.canonical.actions.map(({ id }) => id),
+        traits: [],
+      },
+    },
+    playerActionIdsByActor: {
+      ...(input.state.playerActionIdsByActor ?? { [input.state.characterId]: input.state.playerActionIds }),
+      [actorId]: playerActionIds,
+    },
+    certifiedPlayerActionIdsByActor: {
+      ...(input.state.certifiedPlayerActionIdsByActor
+        ?? { [input.state.characterId]: input.state.certifiedPlayerActionIds }),
+      [actorId]: [...(isolated.certifiedActionIdsByActor[actorId] ?? [])],
+    },
+    opportunityActionIds,
+    participantRuntimeRevisions: {
+      ...(input.state.participantRuntimeRevisions
+        ?? { [input.state.characterId]: input.state.runtimeRevision }),
+      [actorId]: Number(input.participant.character.runtime_revision ?? 0),
+    },
+    resourceBindingsByActor: {
+      ...(input.state.resourceBindingsByActor
+        ?? { [input.state.characterId]: input.state.resourceBindings }),
+      [actorId]: clone(isolated.resourceBindingsByActor[actorId] ?? {}),
+    },
+    tokens: {
+      ...input.state.tokens,
+      [actorId]: {
+        actorId,
+        tokenUrl: input.participant.character.avatar_url,
+        color: '#3f9c68',
+        position,
+      },
+    },
+    movementRemainingFt: {
+      ...input.state.movementRemainingFt,
+      [actorId]: effectiveActorSpeedFt(actor),
+    },
+  };
+  next = insertSceneInitiative(
+    next,
+    actorId,
+    Number(input.participant.character.initiative_bonus ?? actor.character.abilityMods.dex ?? 0),
+    input.rng ?? Math.random,
+  );
+  return appendLog(next, actorId, 'Добавлен в бой конструктором сцены.');
+}
+
 export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
   if (state.outcome !== 'active' || state.world.pendingResolution) return state;
   const monsterId = activeActorId(state);

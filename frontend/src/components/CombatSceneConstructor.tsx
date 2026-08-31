@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
-import { RefreshCcw, Save, X } from 'lucide-react';
+import { Plus, RefreshCcw, Save, X } from 'lucide-react';
+import { charactersV3Api } from '../character/api';
+import type { ForgeCharacterPreview } from '../character/types';
+import { monstersApi } from '../monsters/api';
+import type { Monster } from '../monsters/types';
 import {
   refreshSoloCombatResources,
   setSoloCombatInitiativeTotals,
@@ -10,24 +14,107 @@ export default function CombatSceneConstructor({
   state,
   busy,
   onApply,
+  onAddCharacter,
+  onAddMonster,
   onClose,
 }: {
   state: SoloCombatState;
   busy: boolean;
   onApply: (state: SoloCombatState) => void;
+  onAddCharacter: (characterId: string) => Promise<void>;
+  onAddMonster: (monsterId: string) => Promise<void>;
   onClose: () => void;
 }) {
   const [totals, setTotals] = useState<Record<string, number>>({});
+  const [addKind, setAddKind] = useState<'character' | 'monster'>('monster');
+  const [selectedId, setSelectedId] = useState('');
+  const [characters, setCharacters] = useState<ForgeCharacterPreview[]>([]);
+  const [monsters, setMonsters] = useState<Monster[]>([]);
+  const [loadingOptions, setLoadingOptions] = useState(true);
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
   useEffect(() => {
     setTotals(Object.fromEntries(state.initiative.map((entry) => [entry.actorId, entry.total])));
   }, [state.initiative]);
+  useEffect(() => {
+    let active = true;
+    void Promise.all([
+      charactersV3Api.listPreviews(),
+      monstersApi.list({ page: 1, limit: 100 }),
+    ]).then(([characterRows, monsterRows]) => {
+      if (!active) return;
+      setCharacters(characterRows);
+      setMonsters(monsterRows.monsters);
+      setLoadingOptions(false);
+    }).catch((reason) => {
+      if (!active) return;
+      setAddError(reason instanceof Error ? reason.message : 'Не удалось загрузить участников');
+      setLoadingOptions(false);
+    });
+    return () => { active = false; };
+  }, []);
+
+  const availableCharacters = characters.filter((character) => !state.world.actors[character.id]);
+  const candidates = addKind === 'character' ? availableCharacters : monsters;
+  const selectedCandidateId = candidates.some(({ id }) => id === selectedId)
+    ? selectedId
+    : candidates[0]?.id ?? '';
+
+  const addParticipant = async () => {
+    if (!selectedCandidateId || busy || adding) return;
+    setAdding(true);
+    setAddError(null);
+    try {
+      if (addKind === 'character') await onAddCharacter(selectedCandidateId);
+      else await onAddMonster(selectedCandidateId);
+      setSelectedId('');
+    } catch (reason) {
+      setAddError(reason instanceof Error ? reason.message : 'Не удалось добавить участника');
+    } finally {
+      setAdding(false);
+    }
+  };
 
   return <aside className="combat-scene-constructor" aria-label="Конструктор сцены">
     <header>
       <div><p>ТЕСТОВЫЕ ИНСТРУМЕНТЫ</p><h2>Конструктор сцены</h2></div>
       <button type="button" onClick={onClose} aria-label="Закрыть"><X /></button>
     </header>
-    <p className="combat-scene-constructor__hint">Меняйте порядок хода и восстанавливайте ресурсы без пересоздания персонажей.</p>
+    <p className="combat-scene-constructor__hint">Добавляйте участников, меняйте порядок хода и восстанавливайте ресурсы без пересоздания сцены.</p>
+    <section className="combat-scene-constructor__add" aria-label="Добавить участника">
+      <h3>Добавить участника</h3>
+      <div>
+        <label>Тип
+          <select value={addKind} disabled={busy || adding} onChange={(event) => {
+            setAddKind(event.target.value as 'character' | 'monster');
+            setSelectedId('');
+            setAddError(null);
+          }}>
+            <option value="monster">Противник из каталога</option>
+            <option value="character">Мой персонаж</option>
+          </select>
+        </label>
+        <label>Участник
+          <select
+            value={selectedCandidateId}
+            disabled={busy || adding || loadingOptions || !candidates.length}
+            onChange={(event) => setSelectedId(event.target.value)}
+          >
+            {candidates.length ? candidates.map((candidate) => (
+              <option key={candidate.id} value={candidate.id}>{candidate.name}</option>
+            )) : <option value="">Нет доступных участников</option>}
+          </select>
+        </label>
+        <button
+          type="button"
+          disabled={busy || adding || loadingOptions || !selectedCandidateId}
+          onClick={() => { void addParticipant(); }}
+        >
+          <Plus size={16} /> {adding ? 'Добавляем…' : 'Добавить в сцену'}
+        </button>
+      </div>
+      {addError && <p role="alert">{addError}</p>}
+    </section>
     <div className="combat-scene-constructor__actors">
       {state.initiative.map((entry) => {
         const actor = state.world.actors[entry.actorId];

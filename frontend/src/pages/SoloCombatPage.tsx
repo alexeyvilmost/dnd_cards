@@ -22,6 +22,8 @@ import { useSheetWorldInputDialog } from '../components/SheetWorldInputDialog';
 import { monstersApi } from '../monsters/api';
 import {
   activeActor,
+  addSoloCombatCharacter,
+  addSoloCombatMonster,
   advanceTurn,
   autoResolveSystemDecisions,
   createSoloCombatState,
@@ -448,6 +450,36 @@ export default function SoloCombatPage() {
     } catch (reason) { setError(playerFacingSheetActionError(reason)); }
   };
 
+  const addSceneCharacter = async (characterId: string) => {
+    if (!state || !character) throw new Error('Сцена ещё не загружена');
+    const [row, basicResponse, cards] = await Promise.all([
+      charactersV3Api.get(characterId),
+      actionsApi.getActions({ type: 'basic', limit: 100 }),
+      getCardsIndex(),
+    ]);
+    if (row.user_id !== character.user_id) throw new Error('Можно добавить только своего персонажа');
+    const participant = await loadSheetCombatParticipant({
+      character: row,
+      basicActions: basicResponse.actions,
+      cards,
+    });
+    const next = await addSoloCombatCharacter({ state, participant });
+    const rows = { ...participantCharactersRef.current, [row.id]: row };
+    participantCharactersRef.current = rows;
+    setParticipantCharacters(rows);
+    apply(next);
+  };
+
+  const addSceneMonster = async (monsterId: string) => {
+    if (!state) throw new Error('Сцена ещё не загружена');
+    const monster = await monstersApi.get(monsterId);
+    const [actions, effects] = await Promise.all([
+      Promise.all(monster.action_ids.map((actionId) => actionsApi.getAction(actionId))),
+      Promise.all(monster.effect_ids.map((effectId) => effectsApi.getEffect(effectId))),
+    ]);
+    apply(addSoloCombatMonster({ state, monster, actions, effects }));
+  };
+
   const finish = async () => {
     const currentCharacter = characterRef.current;
     if (!currentCharacter || !state || !id) return;
@@ -588,7 +620,14 @@ export default function SoloCombatPage() {
       {inspectedActorId && state.world.actors[inspectedActorId] && (
         <CombatActorInspector state={state} actorId={inspectedActorId} onClose={() => setInspectedActorId(null)} />
       )}
-      {sceneConstructorOpen && <CombatSceneConstructor state={state} busy={busy} onApply={apply} onClose={() => setSceneConstructorOpen(false)} />}
+      {sceneConstructorOpen && <CombatSceneConstructor
+        state={state}
+        busy={busy}
+        onApply={apply}
+        onAddCharacter={addSceneCharacter}
+        onAddMonster={addSceneMonster}
+        onClose={() => setSceneConstructorOpen(false)}
+      />}
       <CombatHotbar state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); apply(advanceTurn(state)); }} onSheet={() => { setSheetActorId(activeControlledActorId); setSheetOpen(true); }} />
       {sheetOpen && (() => {
         const drawerActorId = sheetActorId && isControlledCharacter(state, sheetActorId)
