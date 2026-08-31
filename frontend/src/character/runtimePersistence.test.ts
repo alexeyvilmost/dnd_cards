@@ -3,6 +3,10 @@ import { encountersApi, type EncounterApply } from '../battle/encountersApi';
 import { charactersV3Api } from './api';
 import { persistCharacterRuntime } from './runtimePersistence';
 import type { ForgeCharacter } from './types';
+import { createWorld, type ActorState, type RulesetReference } from '../rules-core/domain';
+import type { RuntimeState } from '../mvp/contracts';
+import { readSoloCombatState, writeSoloCombatState } from '../solo-combat/persistence';
+import { SOLO_COMBAT_SCHEMA_VERSION, type SoloCombatState } from '../solo-combat/types';
 
 const character = (linked = true): ForgeCharacter => ({
   id: 'character-1',
@@ -72,5 +76,61 @@ describe('persistCharacterRuntime encounter ownership', () => {
       active_effects: [{ id: 'new', name: 'New' }],
       turn_state: { temp_hp: 4, death_saves: { failures: 1 } },
     });
+  });
+
+  it('keeps HP and temporary HP aligned with an active dedicated combat envelope', async () => {
+    const runtime: RuntimeState = {
+      hp: { current: 9, max: 12, temp: 0 },
+      resources: { action: 0 },
+      maxResources: { action: 1 },
+      equipment: {}, inventory: [], activeEffects: [],
+    };
+    const actor: ActorState = {
+      id: 'character-1', name: 'Hero', kind: 'playerCharacter', controllerId: 'owner',
+      capabilities: { actionIds: [] },
+      character: {
+        abilityMods: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+        profBonus: 2, level: 1,
+      },
+      runtime,
+    };
+    const ruleset: RulesetReference = {
+      systemId: 'dnd5e-2024', releaseId: 'runtime-sync-test',
+      contentHash: `sha256:${'a'.repeat(64)}`, errataVersion: '2024',
+    };
+    const world = createWorld({ id: 'solo:runtime-sync', ruleset, actors: [actor] });
+    const combat: SoloCombatState = {
+      schemaVersion: SOLO_COMBAT_SCHEMA_VERSION,
+      characterId: actor.id,
+      runtimeRevision: 4,
+      world,
+      catalogActions: [], sideByActorId: { [actor.id]: 'side:party' },
+      actorPresentation: {}, playerActionIds: [], certifiedPlayerActionIds: [],
+      monsterActionIds: {}, opportunityActionIds: {}, resourceBindings: {},
+      tokens: { [actor.id]: { actorId: actor.id, position: { x: 1, y: 1 }, color: '#ffffff' } },
+      boardRevision: 1, movementRemainingFt: { [actor.id]: 30 },
+      initiativeBonuses: { [actor.id]: 0 }, initiative: [], log: [], outcome: 'active',
+    };
+    const source = {
+      ...character(false), runtime_revision: 4,
+      turn_state: writeSoloCombatState({ temp_hp: 0 }, combat),
+    };
+    const patch = vi.spyOn(charactersV3Api, 'patchRuntime').mockImplementation(async (_id, payload) => ({
+      ...source,
+      runtime_revision: 5,
+      current_hp: payload.current_hp ?? source.current_hp,
+      turn_state: payload.turn_state ?? source.turn_state,
+    }));
+
+    await persistCharacterRuntime(source, {
+      current_hp: 9,
+      turn_state: { ...(source.turn_state ?? {}), temp_hp: 5 },
+    });
+
+    const payload = patch.mock.calls[0][1];
+    expect(payload.expected_runtime_revision).toBe(4);
+    const restored = readSoloCombatState(payload.turn_state, actor.id, 5);
+    expect(restored?.world.actors[actor.id].runtime.hp).toEqual({ current: 9, max: 12, temp: 5 });
+    expect(restored?.participantRuntimeRevisions?.[actor.id]).toBe(5);
   });
 });

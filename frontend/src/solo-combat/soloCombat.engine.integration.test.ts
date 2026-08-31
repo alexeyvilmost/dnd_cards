@@ -548,6 +548,35 @@ describe('solo combat engine vertical integration', () => {
     expect(damageState.world.actors[damageActorId].runtime.resources.action).toBe(0);
     expect(Object.values(damageState.world.attackActions).at(-1)).toMatchObject({ status: 'completed' });
 
+    const shoveFixture = unarmedParticipant();
+    let shoveState = await createSoloCombatState({
+      character: shoveFixture.participant.character,
+      participant: shoveFixture.participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const shoveActorId = shoveFixture.participant.character.id;
+    const shoveTargetId = Object.values(shoveState.world.actors)
+      .find((actor) => actor.kind === 'monster')!.id;
+    shoveState = placeAdjacent(shoveState, shoveActorId, shoveTargetId);
+    const shoveSource = shoveState.tokens[shoveActorId].position;
+    const shoveBefore = shoveState.tokens[shoveTargetId].position;
+    shoveState = autoResolveSystemDecisions(executeCombatAction({
+      state: shoveState,
+      actorId: shoveActorId,
+      actionId: shoveFixture.action.id,
+      targetIds: [shoveTargetId],
+      choices: { [UNARMED_STRIKE_CHOICE_ID]: ['shove'] },
+      rng: () => 0,
+    }), () => 0);
+    expect(gridDistanceFt(shoveSource, shoveState.tokens[shoveTargetId].position))
+      .toBe(gridDistanceFt(shoveSource, shoveBefore) + 5);
+    expect(readSoloCombatState(
+      writeSoloCombatState({}, shoveState),
+      shoveActorId,
+      shoveState.runtimeRevision,
+    )?.tokens[shoveTargetId].position).toEqual(shoveState.tokens[shoveTargetId].position);
+
     const grappleFixture = unarmedParticipant();
     let grappleState = await createSoloCombatState({
       character: grappleFixture.participant.character,

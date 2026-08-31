@@ -217,15 +217,28 @@ function applyForcedMovement(
   let tokens = state.tokens;
   let changed = false;
   for (const envelope of events) {
-    if (envelope.payload.type !== 'EngineEventRecorded'
-      || envelope.payload.event.type !== 'movement'
-      || envelope.payload.event.mode !== 'push') continue;
-    const source = tokens[envelope.payload.actorId]?.position;
-    for (const targetId of envelope.payload.targetIds) {
+    const forced = envelope.payload.type === 'EngineEventRecorded'
+      && envelope.payload.event.type === 'movement'
+      && envelope.payload.event.mode === 'push'
+      ? {
+        sourceActorId: envelope.payload.actorId,
+        targetIds: envelope.payload.targetIds,
+        distanceFt: envelope.payload.event.distanceFt,
+      }
+      : envelope.payload.type === 'ShoveApplied' && envelope.payload.outcome === 'push_5ft'
+        ? {
+          sourceActorId: envelope.payload.sourceActorId,
+          targetIds: [envelope.payload.targetActorId],
+          distanceFt: 5,
+        }
+        : null;
+    if (!forced) continue;
+    const source = tokens[forced.sourceActorId]?.position;
+    for (const targetId of forced.targetIds) {
       const target = tokens[targetId]?.position;
       if (!source || !target) continue;
       const position = pushAway({
-        source, target, distanceFt: envelope.payload.event.distanceFt,
+        source, target, distanceFt: forced.distanceFt,
         occupied: occupiedPositions({ ...state, tokens }, targetId),
       });
       if (position.x !== target.x || position.y !== target.y) {
