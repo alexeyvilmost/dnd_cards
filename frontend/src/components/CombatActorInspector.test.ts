@@ -1,5 +1,7 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { collectCombatDefenses } from './CombatActorInspector';
+import CombatActorInspector, { collectCombatDefenses } from './CombatActorInspector';
 import { combatGrappleStatusRows } from '../solo-combat/grapplePresentation';
 
 describe('combat actor inspector defenses', () => {
@@ -20,6 +22,46 @@ describe('combat actor inspector defenses', () => {
 
   it('does not infer defenses from descriptive prose', () => {
     expect(collectCombatDefenses([{ description: 'Иммунитет к огню' }])).toEqual([]);
+  });
+
+  it('renders Ray of Sickness condition rules, source, and duration on the mounted monster inspector', () => {
+    const state = {
+      world: {
+        actors: {
+          goblin: {
+            name: 'Гоблин-воин', ac: 15, passives: [],
+            character: {
+              baseSpeed: 30, characterSpeed: 30, creatureType: 'Гуманоид',
+              abilityScores: { str: 8, dex: 14, con: 10, int: 10, wis: 8, cha: 8 },
+              abilityMods: { str: -1, dex: 2, con: 0, int: 0, wis: -1, cha: -1 },
+            },
+            capabilities: { actionIds: [] },
+            runtime: {
+              hp: { current: 2, max: 10, temp: 0 }, resources: {}, maxResources: {},
+              equipment: {}, inventory: [],
+              activeEffects: [{
+                id: 'ray-poison', name: 'poisoned', source: 'Луч болезни', expiry: 'source_turn',
+                sourceTurnExpiry: {
+                  sourceActorId: 'drow', ownerActorId: 'goblin', boundary: 'end',
+                },
+                mechanics: { kind: 'condition', value: 'poisoned' },
+              }],
+            },
+          },
+        },
+        grapples: {},
+      },
+      actorPresentation: {}, tokens: {}, catalogActions: [], actionPresentation: {},
+    } as unknown as Parameters<typeof CombatActorInspector>[0]['state'];
+    const html = renderToStaticMarkup(createElement(CombatActorInspector, {
+      state, actorId: 'goblin', onClose: () => {},
+    }));
+    expect(html).toContain('Отравлен');
+    expect(html).toContain('Источник: Луч болезни');
+    expect(html).toContain('Длительность: до конца следующего хода источника');
+    expect(html).toContain('Помеха на броски атак.');
+    expect(html).toContain('Помеха на проверки характеристик.');
+    expect(html).not.toContain('<strong>poisoned</strong>');
   });
 
   it('explains a persisted grapple to both participants', () => {

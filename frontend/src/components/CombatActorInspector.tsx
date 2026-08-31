@@ -126,6 +126,8 @@ export default function CombatActorInspector({
           ? <div className="combat-actor-inspector__effects">{effectGroups.map((group) => (
             <div key={group.key}>
               <strong>{group.name}</strong>
+              {group.source && <small>Источник: {group.source}</small>}
+              <small>Длительность: {group.duration}</small>
               {group.instructions.map((instruction) => <small key={instruction}>{instruction}</small>)}
             </div>
           ))}{grappleStatuses.map((status) => (

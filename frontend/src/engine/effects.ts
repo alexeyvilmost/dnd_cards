@@ -3,6 +3,7 @@
  */
 import type { ActiveEffectEntry, EngineEvent, RuntimeState } from '../mvp/contracts';
 import { dropConcentration } from './concentration';
+import { conditionInstructions, conditionLabel } from './conditions';
 
 function cloneState(state: RuntimeState): RuntimeState {
   return {
@@ -61,8 +62,41 @@ export function expiryLabel(expiry?: string, roundsLeft?: number): string {
     case 'end_of_turn': return 'до конца хода';
     case 'until_rest': return 'до отдыха';
     case 'manual': return 'вручную';
+    case 'source_turn': return 'до хода источника';
     default: return expiry ? expiry : 'без срока';
   }
+}
+
+export function activeEffectDurationLabel(effect: ActiveEffectEntry): string {
+  const lifecycle = effect.sourceTurnExpiry;
+  if (lifecycle) {
+    if (lifecycle.boundary === 'start') return 'до начала следующего хода источника';
+    return lifecycle.armed
+      ? 'до конца текущего хода источника'
+      : 'до конца следующего хода источника';
+  }
+  return expiryLabel(effect.expiry, effect.roundsLeft);
+}
+
+function activeEffectDisplayName(effect: ActiveEffectEntry): string {
+  const mechanics = effect.mechanics as Record<string, unknown>;
+  return mechanics.kind === 'condition' && typeof mechanics.value === 'string'
+    ? conditionLabel(mechanics.value)
+    : effect.name;
+}
+
+function activeEffectSourceLabel(effect: ActiveEffectEntry): string | null {
+  const source = effect.source?.trim();
+  return source && !source.startsWith('manual:') ? source : null;
+}
+
+function activeEffectInstructionRows(effect: ActiveEffectEntry): string[] {
+  const mechanics = effect.mechanics as Record<string, unknown>;
+  if (mechanics.kind === 'condition' && typeof mechanics.value === 'string') {
+    return conditionInstructions(mechanics.value);
+  }
+  const instruction = activeEffectInstruction(effect);
+  return instruction ? [instruction] : [];
 }
 
 const BOON_ROLL_LABELS: Record<string, string> = {
@@ -74,6 +108,10 @@ const BOON_ROLL_LABELS: Record<string, string> = {
 /** Player-facing instructions for active effects that require manual use. */
 export function activeEffectInstruction(effect: ActiveEffectEntry): string | null {
   const mechanics = effect.mechanics as Record<string, unknown>;
+  if (mechanics.kind === 'condition' && typeof mechanics.value === 'string') {
+    const instructions = conditionInstructions(mechanics.value);
+    return instructions.length ? instructions.join(' ') : null;
+  }
   if (mechanics.kind === 'boon') {
     const die = String(mechanics.die ?? '1d6').replace(/d/i, 'к');
     const declared = Array.isArray(mechanics.applies_to)
@@ -130,6 +168,8 @@ export interface ActiveEffectDisplayGroup {
   name: string;
   effects: ActiveEffectEntry[];
   instructions: string[];
+  source: string | null;
+  duration: string;
 }
 
 /** One action can persist several mechanical payload rows. Present them as one
@@ -149,8 +189,10 @@ export function groupActiveEffectsForDisplay(
   }
   return [...groups.entries()].map(([key, entries]) => ({
     key,
-    name: entries[0].name,
+    name: activeEffectDisplayName(entries[0]),
     effects: entries,
-    instructions: [...new Set(entries.map(activeEffectInstruction).filter((value): value is string => Boolean(value)))],
+    instructions: [...new Set(entries.flatMap(activeEffectInstructionRows))],
+    source: activeEffectSourceLabel(entries[0]),
+    duration: activeEffectDurationLabel(entries[0]),
   }));
 }

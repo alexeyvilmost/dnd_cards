@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { activeEffectInstruction, expiryLabel, groupActiveEffectsForDisplay, removeActiveEffectGroup } from './effects';
+import { activeEffectDurationLabel, activeEffectInstruction, expiryLabel, groupActiveEffectsForDisplay, removeActiveEffectGroup } from './effects';
 
 describe('подпись длительности активного эффекта', () => {
   it('показывает оставшиеся ходы вместо «без срока»', () => {
@@ -35,6 +35,26 @@ describe('группировка активных эффектов для игр
     const result = removeActiveEffectGroup(state, largeForm.map((effect) => effect.id));
     expect(result.state.activeEffects).toEqual([]);
     expect(result.events).toHaveLength(2);
+  });
+
+  it('локализует состояние и объясняет механику, источник и срок действия', () => {
+    const groups = groupActiveEffectsForDisplay([{
+      id: 'ray-poison', name: 'poisoned', source: 'Луч болезни', expiry: 'source_turn',
+      sourceTurnExpiry: {
+        sourceActorId: 'drow', ownerActorId: 'goblin', boundary: 'end',
+      },
+      mechanics: { kind: 'condition', value: 'poisoned' },
+    }]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0]).toMatchObject({
+      name: 'Отравлен',
+      source: 'Луч болезни',
+      duration: 'до конца следующего хода источника',
+      instructions: [
+        'Помеха на броски атак.',
+        'Помеха на проверки характеристик.',
+      ],
+    });
   });
 });
 
@@ -74,5 +94,15 @@ describe('инструкция активного талона', () => {
       id: 'light-1', name: 'Свет', source: 'Свет', expiry: 'manual',
       mechanics: { kind: 'narrative' },
     })).toBeNull();
+  });
+
+  it('уточняет текущий source-turn после наступления хода источника', () => {
+    expect(activeEffectDurationLabel({
+      id: 'ray-poison', name: 'poisoned', source: 'Луч болезни', expiry: 'source_turn',
+      sourceTurnExpiry: {
+        sourceActorId: 'drow', ownerActorId: 'goblin', boundary: 'end', armed: true,
+      },
+      mechanics: { kind: 'condition', value: 'poisoned' },
+    })).toBe('до конца текущего хода источника');
   });
 });

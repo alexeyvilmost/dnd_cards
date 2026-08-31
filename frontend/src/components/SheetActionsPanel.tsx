@@ -1989,28 +1989,41 @@ export default function SheetActionsPanel({
         }
       }
       let targetParticipants: SheetCombatParticipantSeed[] = [];
-      if (targetCharacters.length) {
-        const cards = new Map([...cardsIndex.entries(), ...equipCards.entries()]);
-        targetParticipants = await Promise.all(targetCharacters.map((selected) => (
-          loadSheetCombatParticipant({ character: selected, basicActions, cards })
-        )));
-        for (const participant of targetParticipants) {
-          targetActors.push(participant.canonical.world.actors[participant.character.id]);
+      try {
+        if (targetCharacters.length) {
+          const cards = new Map([...cardsIndex.entries(), ...equipCards.entries()]);
+          targetParticipants = await Promise.all(targetCharacters.map((selected) => (
+            loadSheetCombatParticipant({ character: selected, basicActions, cards })
+          )));
+          for (const participant of targetParticipants) {
+            targetActors.push(participant.canonical.world.actors[participant.character.id]);
+          }
         }
+        validateSheetCanonicalAction({
+          canonical,
+          state: runtime,
+          declaration,
+          targetActors,
+        });
+        ordinaryCanonicalExecution = {
+          canonical,
+          commandId: newSheetRuntimeCommandId(),
+          declaration,
+          targetActors,
+          targetParticipants,
+        };
+      } catch (cause) {
+        console.error(cause);
+        const message = cause instanceof Error ? cause.message : String(cause);
+        setError(message);
+        showToast({
+          type: 'error',
+          title: 'Действие не выполнено',
+          message,
+          duration: 15000,
+        });
+        return;
       }
-      validateSheetCanonicalAction({
-        canonical,
-        state: runtime,
-        declaration,
-        targetActors,
-      });
-      ordinaryCanonicalExecution = {
-        canonical,
-        commandId: newSheetRuntimeCommandId(),
-        declaration,
-        targetActors,
-        targetParticipants,
-      };
     }
 
     const unarmedTargetAction = legacyUnarmedTargetAction(action);

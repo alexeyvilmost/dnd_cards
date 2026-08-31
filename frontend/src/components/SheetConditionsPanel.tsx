@@ -16,10 +16,9 @@ import {
 import type { ForgeCharacter } from '../character/types';
 import {
   conditionLabel,
+  conditionInstructions,
   conditionLevel,
-  conditionModifierPayloads,
   conditionOptions,
-  conditionRule,
   conditionStacking,
 } from '../engine/conditions';
 import {
@@ -130,32 +129,7 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, p
     }
   };
 
-  const conditionTip = (value: string): string => {
-    const rule = conditionRule(value);
-    if (!rule) return '';
-    const ROLL_RU: Record<string, string> = {
-      attack: 'атаки', saving_throw: 'спасброски', ability_check: 'проверки',
-      initiative: 'инициатива', speed: 'скорость',
-      action: 'действие', bonus_action: 'бонусное действие', reaction: 'реакция', concentration: 'концентрация',
-    };
-    // Раскрываем композицию (F): показываем и унаследованные правила (Без сознания → Недееспособен …).
-    const mods = conditionModifierPayloads(value).map((m) => {
-      const roll = ROLL_RU[m.applies_to.roll] ?? m.applies_to.roll;
-      const flt = m.applies_to.filter?.ability ? ` (${String(m.applies_to.filter.ability).toUpperCase()})` : '';
-      const scope = m.scope === 'target' ? ' по вам' : '';
-      const rng = m.range === 'melee' ? ' (рукопашные)' : m.range === 'ranged' ? ' (дальнобойные)' : '';
-      if (m.op === 'advantage') return `преимущество: ${roll}${flt}${scope}${rng}`;
-      if (m.op === 'disadvantage') return `помеха: ${roll}${flt}${scope}${rng}`;
-      if (m.op === 'auto_fail') return `автопровал: ${roll}${flt}`;
-      if (m.op === 'auto_crit') return `автокрит${scope}${rng}`;
-      if (m.op === 'deny') return `запрет: ${roll}`;
-      if (m.op === 'set') return `${roll} = ${m.value}`;
-      if (m.op === 'multiply') return `${roll} ×${m.value}`;
-      return `${m.value}: ${roll}${flt}`;
-    });
-    // Дедуп повторов из композиции (напр. incapacitated включён несколькими путями).
-    return [...new Set([...mods, rule.note].filter(Boolean))].join('\n');
-  };
+  const conditionTip = (value: string): string => conditionInstructions(value).join('\n');
 
   const body = (
     <>

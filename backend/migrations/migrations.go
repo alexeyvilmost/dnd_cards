@@ -762,6 +762,13 @@ func GetAllMigrations() []Migration {
 			Up:          repairBardicInspirationBoonContract,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     spearWeaponProfileMigrationVersion,
+			Description: "Материализовать строгий профиль копья для боя и межлистовых действий",
+			Up:          repairSpearWeaponProfile,
+			// Возврат к неисполняемым display-полям оружия не поддерживается.
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

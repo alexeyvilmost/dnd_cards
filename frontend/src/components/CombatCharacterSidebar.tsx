@@ -34,6 +34,8 @@ export function CombatActiveEffects({
       {groupActiveEffectsForDisplay(effects).map((group) => (
         <div key={group.key} className="combat-sheet-effect">
           <strong className="cs-tag">{group.name}</strong>
+          {group.source && <small>Источник: {group.source}</small>}
+          <small>Длительность: {group.duration}</small>
           {group.instructions.map((instruction) => <small key={instruction}>{instruction}</small>)}
         </div>
       ))}

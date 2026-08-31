@@ -308,6 +308,47 @@ export function conditionLabel(value: string): string {
   return registry[value]?.label ?? value;
 }
 
+const CONDITION_ROLL_LABELS: Record<string, string> = {
+  attack: 'броски атак',
+  saving_throw: 'спасброски',
+  ability_check: 'проверки характеристик',
+  initiative: 'инициативу',
+  speed: 'скорость',
+  action: 'действие',
+  bonus_action: 'бонусное действие',
+  reaction: 'реакцию',
+  concentration: 'концентрацию',
+  speech: 'речь',
+  harm: 'нанесение вреда',
+  movement_toward_condition_source: 'движение к источнику состояния',
+};
+
+/** Short player-facing rules summary used wherever an active condition is shown. */
+export function conditionInstructions(value: string): string[] {
+  const rule = conditionRule(value);
+  if (!rule) return [];
+  const rows = conditionModifierPayloads(value).map((modifier) => {
+    const roll = CONDITION_ROLL_LABELS[modifier.applies_to.roll] ?? modifier.applies_to.roll;
+    const ability = modifier.applies_to.filter?.ability
+      ? ` (${String(modifier.applies_to.filter.ability).toUpperCase()})`
+      : '';
+    const subject = modifier.scope === 'target' ? ' по носителю состояния' : '';
+    const range = modifier.range === 'melee'
+      ? ' в ближнем бою'
+      : modifier.range === 'ranged' ? ' в дальнем бою' : '';
+    if (modifier.op === 'advantage') return `Преимущество на ${roll}${subject}${range}${ability}.`;
+    if (modifier.op === 'disadvantage') return `Помеха на ${roll}${subject}${range}${ability}.`;
+    if (modifier.op === 'auto_fail') return `Автоматический провал: ${roll}${ability}.`;
+    if (modifier.op === 'auto_crit') return `Попадание становится критическим${subject}${range}.`;
+    if (modifier.op === 'deny') return `Запрещено: ${roll}.`;
+    if (modifier.op === 'set') return `${roll}: ${modifier.value}.`;
+    if (modifier.op === 'multiply') return `${roll}: ×${modifier.value}.`;
+    if (modifier.op === 'add') return `${roll}: ${modifier.value}.`;
+    return `${roll}: ${modifier.op}${modifier.value == null ? '' : ` ${modifier.value}`}.`;
+  });
+  return [...new Set([...rows, ...(rule.note ? [rule.note] : [])])];
+}
+
 /**
  * Все scoped-модификаторы состояния (self + target), включая унаследованные от `includes`
  * (композиция PHB 2024: «Без сознания» → Недееспособен и т.д.). Раскрытие ТРАНЗИТИВНОЕ со стражем
