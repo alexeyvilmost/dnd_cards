@@ -769,6 +769,12 @@ func GetAllMigrations() []Migration {
 			// Возврат к неисполняемым display-полям оружия не поддерживается.
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     mageHandControlMigrationVersion,
+			Description: "Заменить внутреннюю заметку Волшебной руки инструкцией игроку",
+			Up:          repairMageHandControlNarrative,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

@@ -29,7 +29,7 @@ import { startConcentration } from '../engine/concentration';
 import { canPay } from '../engine/cost';
 import { deniedCapabilities } from '../engine/modifiers';
 import { plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
-import { readTargetSave, InsufficientResourcesError } from '../engine/execute';
+import { executeRemoteManipulator, readTargetSave, InsufficientResourcesError } from '../engine/execute';
 import { describeMechanicsLine } from '../engine/describeMechanics';
 import {
   bindEquippedWeaponActionContext,
@@ -85,6 +85,7 @@ import {
   type SheetCombatTargetCandidate,
 } from './SheetCombatTargetDialog';
 import SheetPendingCombatPanel from './SheetPendingCombatPanel';
+import RemoteManipulatorControl, { remoteManipulatorSpec } from './RemoteManipulatorControl';
 import SheetCompanionControls, {
   type SheetCompanionTouchDeclaration,
 } from './SheetCompanionControls';
@@ -2648,6 +2649,13 @@ export default function SheetActionsPanel({
     apply(state, events);
   };
 
+  const handleRemoteManipulator = async (
+    command: Parameters<typeof executeRemoteManipulator>[1],
+  ) => {
+    const result = executeRemoteManipulator(runtime, command);
+    await apply(result.state, result.events);
+  };
+
   const spellIsPrepared = (action: SheetAction): boolean => {
     if (!action.spellRef) return true;
     const canonical = canonicalBuild.runtime;
@@ -2994,6 +3002,7 @@ export default function SheetActionsPanel({
           <ul className="sheet-active-effects">
             {activeEffectGroups.map((group) => {
               const fx = group.effects[0];
+              const remoteManipulator = group.effects.find((effect) => remoteManipulatorSpec(effect));
               return (
               <li key={group.key} className="sheet-active-effect">
                 <span className="sheet-active-effect-summary">
@@ -3003,6 +3012,13 @@ export default function SheetActionsPanel({
                   )}
                 </span>
                 <span className="sheet-active-effect-meta">{expiryLabel(fx.expiry, fx.roundsLeft)}</span>
+                {remoteManipulator && (
+                  <RemoteManipulatorControl
+                    effect={remoteManipulator}
+                    disabled={busy || (runtime.resources.action ?? 0) < 1}
+                    onExecute={handleRemoteManipulator}
+                  />
+                )}
                 <button
                   type="button"
                   className="sheet-active-effect-dismiss"

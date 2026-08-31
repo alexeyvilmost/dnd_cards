@@ -3,6 +3,7 @@ import { abilityOfSkill } from '../character/rules/foundation';
 import { SKILLS } from '../mechanics/registries';
 import type { SoloCombatState } from '../solo-combat/types';
 import type { ActiveEffectEntry } from '../mvp/contracts';
+import type { RemoteManipulatorCommand } from '../engine/execute';
 import CharacterSheetFirstColumn, { CHARACTER_SENSE_LABELS } from './CharacterSheetFirstColumn';
 import CollapsibleSection from './CollapsibleSection';
 import { getDamageLabel } from '../utils/damageTypes';
@@ -15,6 +16,7 @@ import {
   combatGrappleStatusRows,
   type CombatGrappleStatusRow,
 } from '../solo-combat/grapplePresentation';
+import RemoteManipulatorControl, { remoteManipulatorSpec } from './RemoteManipulatorControl';
 
 const abilityRecord = (value: Partial<Record<AbilityKey, number>>, fallback: number): Record<AbilityKey, number> =>
   Object.fromEntries(ABILITY_KEYS.map((ability) => [ability, Number(value[ability] ?? fallback)])) as Record<AbilityKey, number>;
@@ -22,23 +24,35 @@ const abilityRecord = (value: Partial<Record<AbilityKey, number>>, fallback: num
 export function CombatActiveEffects({
   effects,
   grappleStatuses = [],
+  onRemoteManipulator,
+  remoteManipulatorDisabled = false,
 }: {
   effects: readonly ActiveEffectEntry[];
   grappleStatuses?: readonly CombatGrappleStatusRow[];
+  onRemoteManipulator?: (command: RemoteManipulatorCommand) => void | Promise<void>;
+  remoteManipulatorDisabled?: boolean;
 }) {
   if (!effects.length && !grappleStatuses.length) {
     return <p className="cs-hook-note">Активных состояний и эффектов нет.</p>;
   }
   return (
     <div className="combat-sheet-effects">
-      {groupActiveEffectsForDisplay(effects).map((group) => (
-        <div key={group.key} className="combat-sheet-effect">
+      {groupActiveEffectsForDisplay(effects).map((group) => {
+        const remoteManipulator = group.effects.find((effect) => remoteManipulatorSpec(effect));
+        return <div key={group.key} className="combat-sheet-effect">
           <strong className="cs-tag">{group.name}</strong>
           {group.source && <small>Источник: {group.source}</small>}
           <small>Длительность: {group.duration}</small>
           {group.instructions.map((instruction) => <small key={instruction}>{instruction}</small>)}
-        </div>
-      ))}
+          {remoteManipulator && onRemoteManipulator && (
+            <RemoteManipulatorControl
+              effect={remoteManipulator}
+              disabled={remoteManipulatorDisabled}
+              onExecute={onRemoteManipulator}
+            />
+          )}
+        </div>;
+      })}
       {grappleStatuses.map((status) => (
         <div key={status.key} className="combat-sheet-effect">
           <strong className="cs-tag">{status.name}</strong>
@@ -53,10 +67,14 @@ export default function CombatCharacterSidebar({
   character,
   state,
   actorId = state.characterId,
+  onRemoteManipulator,
+  remoteManipulatorDisabled = false,
 }: {
   character: ForgeCharacter;
   state: SoloCombatState;
   actorId?: string;
+  onRemoteManipulator?: (command: RemoteManipulatorCommand) => void | Promise<void>;
+  remoteManipulatorDisabled?: boolean;
 }) {
   const actor = state.world.actors[actorId];
   const rules = character.rule_state;
@@ -109,6 +127,8 @@ export default function CombatCharacterSidebar({
       conditions={<CombatActiveEffects
         effects={actor.runtime.activeEffects}
         grappleStatuses={combatGrappleStatusRows(state.world, actorId)}
+        onRemoteManipulator={onRemoteManipulator}
+        remoteManipulatorDisabled={remoteManipulatorDisabled || (actor.runtime.resources?.action ?? 0) < 1}
       />}
       additionalSections={<>
         <CollapsibleSection title="Защита">

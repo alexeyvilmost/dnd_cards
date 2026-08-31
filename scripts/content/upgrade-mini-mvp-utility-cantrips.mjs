@@ -34,9 +34,12 @@ const INTERMEDIATE_HASHES = Object.freeze({
   'SPELL-0194': 'sha256:6ec4e4255badb8c2eee95af49371f51b3683dc63b801b06e234422305e324cf2',
   'SPELL-0298': 'sha256:5084000a43cabe3aea8180e9c08fe88f12dee80c250621696b8943f782fd72ef',
 });
+const PRE_CONTROL_UI_HASHES = Object.freeze({
+  'SPELL-0173': 'sha256:c2091205f9e919aa6a79d01c23f12b1ec7c32ff7976dfbcc4543e06180c89ff5',
+});
 const SUPPORT_VERSION = 'mini-mvp-utility-cantrips-v1';
 const SUPPORT = Object.freeze({
-  'SPELL-0173': { passed: 2, required: 3, limitation: 'Состояние руки и ограничения команд проверены; выбор объекта и применение мутации к сцене ещё не встроены в UI карты.' },
+  'SPELL-0173': { passed: 2, required: 3, limitation: 'Выбор объекта, ограничения, расход действия и журнал подключены; изменение несущества всё ещё отражается как структурированная запись сцены, а не отдельная модель предмета.' },
   'SPELL-0194': { passed: 3, required: 4, limitation: 'Выбор реального экипированного оружия и проекция атаки проверены; явное событие отпускания оружия ещё не подключено.' },
   'SPELL-0294': { passed: 2, required: 3, limitation: 'Приватная доставка, ответ и блокеры проверены; UI ещё не собирает знакомство с целью и материал препятствия.' },
   'SPELL-0298': { passed: 2, required: 3, limitation: 'Все пять типизированных вариантов проверяются движком; визуальная мутация объектов сцены ещё не подключена.' },
@@ -52,6 +55,7 @@ export const MINI_MVP_UTILITY_CANTRIP_PATCHES = Object.freeze(definitions.map((d
   name: definition.name,
   expectedBeforeHash: PREIMAGE_HASHES[definition.card_number],
   expectedIntermediateHash: INTERMEDIATE_HASHES[definition.card_number],
+  expectedPreControlUiHash: PRE_CONTROL_UI_HASHES[definition.card_number],
   expectedAfterHash: sha256Canonical(definition.mechanics),
   mechanics: definition.mechanics,
 })));
@@ -77,11 +81,13 @@ export function planMiniMvpUtilityCantripUpgrade(spells) {
     const currentHash = sha256Canonical(spell.mechanics);
     if (currentHash !== spec.expectedBeforeHash
       && currentHash !== spec.expectedIntermediateHash
+      && currentHash !== spec.expectedPreControlUiHash
       && currentHash !== spec.expectedAfterHash) {
       throw new Error(
         `${spec.cardNumber}: mechanics drift; expected ${[
           spec.expectedBeforeHash,
           spec.expectedIntermediateHash,
+          spec.expectedPreControlUiHash,
           spec.expectedAfterHash,
         ].filter(Boolean).join(' or ')}, got ${currentHash}`,
       );

@@ -28,6 +28,11 @@ import { turnStartGrappleDamageOpportunity } from '../rules-core/fightingStyleCo
 import { projectRuleAction } from '../canon/ruleActionProjection';
 import type { Monster } from '../monsters/types';
 import { canPay } from '../engine/cost';
+import {
+  executeRemoteManipulator as executeEngineRemoteManipulator,
+  type RemoteManipulatorCommand,
+} from '../engine/execute';
+import { describeEngineEvent } from '../engine/events';
 import { stoneworkContactFactsFromChoices } from '../mechanics/collectChoices';
 import { compileMonsterInstance } from './monsterCompiler';
 import { planMonsterTurn } from './monsterAi';
@@ -484,6 +489,40 @@ export function executeCombatAction(input: {
         + effectiveCombatActorSpeedFt(next, input.actorId),
     },
   });
+}
+
+/**
+ * Control a persisted remote manipulator from the dedicated combat UI. The
+ * generic engine owns validation/resource payment; this adapter commits the
+ * resulting runtime and readable world-interaction events to the saved fight.
+ */
+export function executeCombatRemoteManipulator(input: {
+  state: SoloCombatState;
+  actorId: string;
+  command: RemoteManipulatorCommand;
+}): SoloCombatState {
+  if (input.state.outcome !== 'active') throw new Error('Бой уже завершён');
+  if (activeActorId(input.state) !== input.actorId) throw new Error('Сейчас ход другого участника');
+  const actor = input.state.world.actors[input.actorId];
+  if (!actor) throw new Error('Участник боя не найден');
+  const result = executeEngineRemoteManipulator(actor.runtime, input.command);
+  const commandId = newSheetRuntimeCommandId();
+  const nextWorld: WorldState = {
+    ...input.state.world,
+    revision: input.state.world.revision + 1,
+    logicalClock: input.state.world.logicalClock + 1,
+    processedCommandIds: [...input.state.world.processedCommandIds.slice(-127), commandId],
+    actors: {
+      ...input.state.world.actors,
+      [input.actorId]: { ...actor, runtime: result.state },
+    },
+  };
+  const records: CombatLogEventRecord[] = result.events.map((event, ordinal) => ({
+    kind: 'engine', ordinal, sourceActorId: input.actorId, actorId: input.actorId,
+    targetIds: [], event,
+  }));
+  const summary = result.events.map(describeEngineEvent).join('; ');
+  return appendLog({ ...input.state, world: nextWorld }, input.actorId, summary, records);
 }
 
 /** Resolve (or skip) a source-side optional action opened by an observed hit. */

@@ -23,6 +23,7 @@ import {
   autoResolveSystemDecisions,
   createSoloCombatState,
   executeCombatAction,
+  executeCombatRemoteManipulator,
   moveActor,
   resolvePlayerReaction,
   resolveSoloCombatTurnStart,
@@ -481,7 +482,16 @@ export default function SoloCombatPage() {
           : activeControlledActorId;
         const drawerCharacter = participantCharacters[drawerActorId] ?? character;
         const drawerActor = state.world.actors[drawerActorId];
-        return <aside className="combat-sheet-drawer"><button type="button" className="combat-sheet-drawer__close" onClick={() => setSheetOpen(false)} aria-label="Закрыть"><X /></button><header><h2>{drawerActor.name}</h2><p>Уровень {drawerCharacter.level} · КЗ {drawerActor.ac} · скорость {drawerCharacter.speed} фт.</p></header><CombatCharacterSidebar character={drawerCharacter} state={state} actorId={drawerActorId} /><Link className="combat-sheet-drawer__full" target="_blank" to={`/characters-v3/${drawerActorId}`}>Открыть полный лист ↗</Link></aside>;
+        return <aside className="combat-sheet-drawer"><button type="button" className="combat-sheet-drawer__close" onClick={() => setSheetOpen(false)} aria-label="Закрыть"><X /></button><header><h2>{drawerActor.name}</h2><p>Уровень {drawerCharacter.level} · КЗ {drawerActor.ac} · скорость {drawerCharacter.speed} фт.</p></header><CombatCharacterSidebar
+          character={drawerCharacter}
+          state={state}
+          actorId={drawerActorId}
+          remoteManipulatorDisabled={!playerTurn || busy || drawerActorId !== activeControlledActorId}
+          onRemoteManipulator={(command) => {
+            const next = executeCombatRemoteManipulator({ state, actorId: drawerActorId, command });
+            apply(next);
+          }}
+        /><Link className="combat-sheet-drawer__full" target="_blank" to={`/characters-v3/${drawerActorId}`}>Открыть полный лист ↗</Link></aside>;
       })()}
       {reactionOptions.length > 0 && <div className="combat-reaction-backdrop"><section><p>РЕАКЦИЯ</p><h2>{reactionTitle}</h2>{reactionDetails && <p>{reactionDetails}</p>}<div>{reactionOptions.map((option) => <button type="button" key={option.id} disabled={busy} onClick={() => apply(resolvePlayerReaction(state, option.response))}>{option.label}</button>)}<button type="button" onClick={() => apply(resolvePlayerReaction(state, { kind: 'reaction', actionId: null }))}>Пропустить</button></div></section></div>}
       {pendingTriggered && <div className="combat-reaction-backdrop"><section><p>ПОПАДАНИЕ</p><h2>Применить дополнительную способность?</h2><div>{pendingTriggered.optionActionIds.map((actionId) => {

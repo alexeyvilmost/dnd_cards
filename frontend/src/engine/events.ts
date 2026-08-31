@@ -7,6 +7,15 @@ import { getDamageLabel } from '../utils/damageTypes';
 
 export type { EngineEvent, RollLog };
 
+const WORLD_INTERACTION_LABELS: Record<string, string> = {
+  move_object: 'переместить предмет',
+  open_unlocked_door: 'открыть незапертую дверь',
+  open_unlocked_container: 'открыть незапертый контейнер',
+  stow_item: 'убрать предмет',
+  retrieve_item: 'достать предмет',
+  pour_vial: 'вылить содержимое сосуда',
+};
+
 export interface StoredCharacterEvent {
   id?: string;
   character_id?: string;
@@ -157,7 +166,11 @@ export function describeEngineEvent(event: EngineEvent): string {
     case 'stabilized':
       return `${src}Цель стабилизирована`;
     case 'world_interaction':
-      return `${src}Взаимодействие с миром: ${event.operation}`;
+      return `${src}${WORLD_INTERACTION_LABELS[event.operation] ?? event.operation}${
+        typeof event.parameters?.object_label === 'string'
+          ? `: ${event.parameters.object_label}`
+          : ''
+      }`;
     case 'communication':
       return event.mode === 'reply' ? 'Приватный ответ отправлен' : 'Приватное сообщение отправлено';
     case 'turn_started':
