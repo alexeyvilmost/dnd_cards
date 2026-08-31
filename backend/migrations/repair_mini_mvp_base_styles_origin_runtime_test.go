@@ -5,15 +5,18 @@ import (
 	"testing"
 )
 
-func TestMiniMVPBaseStylesOriginMigrationRegisteredLast(t *testing.T) {
+func TestMiniMVPBaseStylesOriginMigrationRegistered(t *testing.T) {
 	migrations := GetAllMigrations()
-	last := migrations[len(migrations)-1]
-	if last.Version != miniMVPBaseStylesOriginMigrationVersion {
-		t.Fatalf("last migration = %q, want %q", last.Version, miniMVPBaseStylesOriginMigrationVersion)
+	for _, migration := range migrations {
+		if migration.Version != miniMVPBaseStylesOriginMigrationVersion {
+			continue
+		}
+		if migration.Up == nil || migration.Down == nil {
+			t.Fatal("migration 124 must register Up and a safe Down")
+		}
+		return
 	}
-	if last.Up == nil || last.Down == nil {
-		t.Fatal("migration 124 must register Up and a safe Down")
-	}
+	t.Fatal("migration 124 is not registered")
 }
 
 func TestMiniMVPBaseStylesOriginMigrationContainsExecutableContracts(t *testing.T) {

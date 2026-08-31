@@ -793,6 +793,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairMiniMVPBaseStylesOriginRuntime,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     miniMVPLimitedActionUsesMigrationVersion,
+			Description: "Связать ограниченные действия базовых механик и черт происхождения с их uses-пулами",
+			Up:          repairMiniMVPLimitedActionUses,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
