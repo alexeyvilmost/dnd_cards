@@ -151,6 +151,36 @@ function dancingLightsWizardSeed(): SheetCombatParticipantSeed {
   };
 }
 
+function mageArmorWizardSeed(): SheetCombatParticipantSeed {
+  const participant = wizardSeed();
+  const sourceAction = participant.canonical.actions.find((action) => (
+    action.targeting?.requiresWilling && action.targeting?.requiresUnarmored
+  ));
+  if (!sourceAction) throw new Error('Wizard fixture should include Mage Armor');
+  const action = { ...clone(sourceAction), id: 'd6000000-0000-4000-8000-000000000001' };
+  const actions = [...participant.canonical.actions, action];
+  const actor = participant.canonical.world.actors[participant.character.id];
+  actor.capabilities.actionIds.push(action.id);
+  actor.spellcastingAccess!.grants.push({
+    grantId: 'grant:test-mage-armor',
+    actionId: action.id,
+    sourceId: 'test-feature:mage-armor',
+    access: 'always_prepared',
+    level: 1,
+    spellcastingAbility: 'int',
+    slotResource: 'spell_slot_1',
+  });
+  const byId = new Map(actions.map((candidate) => [candidate.id, candidate]));
+  return {
+    ...participant,
+    canonical: {
+      ...participant.canonical,
+      actions,
+      catalog: { getAction: (id) => byId.get(id), listActions: () => actions },
+    },
+  };
+}
+
 function scimitar(): Action {
   return {
     id: 'b1000000-0000-4000-8000-000000000001', name: 'Скимитар', description: '',
@@ -870,6 +900,39 @@ describe('solo combat engine vertical integration', () => {
     }), () => 0);
     expect(state.world.actors[monsterId].runtime.hp.current).toBeLessThan(hpBefore);
     expect(state.log.at(-1)?.text).toContain(missile!.name);
+  });
+
+  it('treats a controlled self-target click as explicit Mage Armor consent', async () => {
+    const participant = mageArmorWizardSeed();
+    let state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const actorId = participant.character.id;
+    const mageArmor = state.catalogActions.find((action) => (
+      state.playerActionIds.includes(action.id)
+      && action.targeting?.requiresWilling
+      && action.targeting?.requiresUnarmored
+    ));
+    expect(mageArmor, 'Wizard should expose certified Mage Armor').toBeDefined();
+    const slotBefore = state.world.actors[actorId].runtime.resources.spell_slot_1;
+
+    state = executeCombatAction({
+      state,
+      actorId,
+      actionId: mageArmor!.id,
+      targetIds: [actorId],
+      rng: () => 0,
+    });
+
+    expect(state.world.actors[actorId].runtime.resources.action).toBe(0);
+    expect(state.world.actors[actorId].runtime.resources.spell_slot_1).toBe(slotBefore - 1);
+    expect(state.world.actors[actorId].runtime.activeEffects).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: mageArmor!.name, sourceId: actorId, roundsLeft: 4_800 }),
+    ]));
+    expect(state.log.at(-1)?.text).toContain(mageArmor!.name);
   });
 
   it('casts, displays, persists, and moves Dancing Lights from tactical map facts', async () => {

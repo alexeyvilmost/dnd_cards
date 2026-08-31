@@ -335,6 +335,11 @@ function declarationFor(
   const factsByTarget = Object.fromEntries(targetIds.map((targetId) => [
     targetId, {
       ...spatialFacts(state, actorId, targetId),
+      ...(action.targeting?.requiresWilling
+        && (actorId === targetId
+          || (isControlledCharacter(state, actorId) && isControlledCharacter(state, targetId)))
+        ? { willing: true }
+        : {}),
       ...(stonework ? { stonework } : {}),
     },
   ]));

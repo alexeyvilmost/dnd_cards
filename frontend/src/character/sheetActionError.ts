@@ -12,6 +12,12 @@ export function playerFacingSheetActionError(cause: unknown): string {
   if (outOfRange) {
     return `Цель вне дистанции действия (${outOfRange[1]} фт.).`;
   }
+  if (/^TargetNotWilling:/u.test(detail)) {
+    return 'Для этого действия нужно явное согласие цели.';
+  }
+  if (/^TargetArmored:/u.test(detail)) {
+    return 'Цель носит доспехи и не подходит для этого действия.';
+  }
   if (/Stonecunning requires explicit stone-surface contact facts/u.test(detail)) {
     return 'Для Камнечувствия укажите, что персонаж стоит на каменной поверхности или касается её.';
   }

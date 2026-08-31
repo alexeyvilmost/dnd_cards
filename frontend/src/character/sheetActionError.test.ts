@@ -25,6 +25,15 @@ describe('playerFacingSheetActionError', () => {
     ))).toBe('Цель вне дистанции действия (10 фт.).');
   });
 
+  it('translates willingness and armor rejections without exposing actor or action ids', () => {
+    expect(playerFacingSheetActionError(new Error(
+      'TargetNotWilling: actor:target has not explicitly consented to action:mage-armor',
+    ))).toBe('Для этого действия нужно явное согласие цели.');
+    expect(playerFacingSheetActionError(new Error(
+      'TargetArmored: actor:target is wearing armor',
+    ))).toBe('Цель носит доспехи и не подходит для этого действия.');
+  });
+
   it('translates Stonecunning fact rejections into an actionable terrain instruction', () => {
     expect(playerFacingSheetActionError(new Error(
       'InvalidFacts: Stonecunning requires explicit stone-surface contact facts',
