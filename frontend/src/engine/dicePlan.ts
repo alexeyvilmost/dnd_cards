@@ -24,6 +24,24 @@ export interface PlannedDie {
   sign?: 1 | -1;
 }
 
+/** Exact physical/manual dice required for one logical d20 roll. Advantage and
+ * disadvantage must request two independent d20 values rather than letting the
+ * runtime fill the missing second die with an unobserved random value. */
+export function plannedD20Dice(
+  label: string,
+  resultGroup: string,
+  advantage: PlannedDie['advantage'] = 'none',
+  modifier = 0,
+): PlannedDie[] {
+  return Array.from({ length: advantage === 'none' ? 1 : 2 }, (_, index) => ({
+    sides: 20,
+    label,
+    resultGroup,
+    advantage,
+    ...(index === 0 && modifier ? { modifier } : {}),
+  }));
+}
+
 /**
  * rng планирующего прогона: 0.94 → к20 даёт 19 (попадание почти всегда, не крит),
  * чтобы в план попали и кости урона on_hit.

@@ -1,8 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { calculatePlannedRollTotals, extractDiceFromEvents, plannedD20BonusDice } from './dicePlan';
+import { calculatePlannedRollTotals, extractDiceFromEvents, plannedD20BonusDice, plannedD20Dice } from './dicePlan';
 import type { EngineEvent } from '../mvp/contracts';
 
 describe('полный итог в панели 3D-кубиков', () => {
+  it('планирует два независимых к20 для преимущества и один модификатор', () => {
+    expect(plannedD20Dice('Спасбросок ТЕЛ', 'save', 'advantage', 4)).toEqual([
+      {
+        sides: 20, label: 'Спасбросок ТЕЛ', resultGroup: 'save',
+        advantage: 'advantage', modifier: 4,
+      },
+      {
+        sides: 20, label: 'Спасбросок ТЕЛ', resultGroup: 'save',
+        advantage: 'advantage',
+      },
+    ]);
+  });
+
   it('складывает кость и числовые модификаторы', () => {
     const plan = [{ sides: 20, label: 'Проверка', resultGroup: 'check', modifier: 5 }] as const;
     expect(calculatePlannedRollTotals([...plan], [13])).toEqual([{

@@ -55,7 +55,7 @@ import SheetConditionsPanel from '../components/SheetConditionsPanel';
 import SheetJournalFab from '../components/SheetJournalFab';
 import SheetToasts, { useSheetToasts } from '../components/SheetToasts';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
-import { plannedD20BonusDice, plannedValuesRng, type PlannedDie } from '../engine/dicePlan';
+import { plannedD20BonusDice, plannedD20Dice, plannedValuesRng, type PlannedDie } from '../engine/dicePlan';
 import SheetActionsPanel from '../components/SheetActionsPanel';
 import type { SheetAtomicRetryEnvelope } from '../character/sheetAtomicRetry';
 import SheetEquipmentPanel from '../components/SheetEquipmentPanel';
@@ -462,7 +462,6 @@ const CharacterSheetMVP = () => {
     const abilLabel = (ABILITY_LABEL_RU as Record<string, string>)[p.ability] ?? p.ability.toUpperCase();
     const mod = (ruleState.savingThrowBonuses as Record<string, number>)[p.ability] ?? 0;
     const halfLabel = (p.onSuccess.hpDelta ?? 0) < 0 ? ' · успех — половина урона' : '';
-    const plan = [{ sides: 20, label: `Спасбросок ${abilLabel} (СЛ ${p.dc})` }];
     const preview = (
       <div style={{ fontSize: 13, color: '#c9b98a', lineHeight: 1.5 }}>
         <b>{p.sourceName}</b> → «{p.actionName}»<br />
@@ -484,6 +483,10 @@ const CharacterSheetMVP = () => {
       saved = false;
       saveEvent = { type: 'narrative', text: `Спасбросок ${abilLabel} — автопровал (состояние)` };
     } else {
+      const rollLabel = `Спасбросок ${abilLabel} (СЛ ${p.dc})`;
+      const totalModifier = mod + collected.modifiers.reduce((sum, item) => sum + item.value, 0);
+      const plan = plannedD20Dice(rollLabel, 'incoming-save', collected.advantage, totalModifier);
+      plan.push(...plannedD20BonusDice(collected.rules, rollLabel, 'incoming-save'));
       // Отмена/клик мимо трактуем как автобросок — спас должен разрешиться (нельзя «зависнуть» в бою).
       const decision = await diceDialog.request(plan, `Входящий спасбросок — ${p.actionName}`, preview);
       const rng = decision.mode === 'manual' ? plannedValuesRng(plan, decision.values) : () => Math.random();

@@ -21,7 +21,13 @@ import { concentrationDC, concentrationEntry, dropConcentration } from '../engin
 import { conditionLabel, conditionOptions } from '../engine/conditions';
 import { canPay } from '../engine/cost';
 import { describeMechanicsLine } from '../engine/describeMechanics';
-import { extractDiceFromEvents, plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
+import {
+  extractDiceFromEvents,
+  plannedD20BonusDice,
+  plannedD20Dice,
+  plannedValuesRng,
+  PLANNING_RNG,
+} from '../engine/dicePlan';
 import { applyIncomingDamage, executeAction } from '../engine/execute';
 import { applyDamage, applyHealing, applyTempHp } from '../engine/hp';
 import { collectRollModifiers } from '../engine/modifiers';
@@ -357,7 +363,10 @@ export default function SheetHpPanel({
       saved = false;
       events.push({ type: 'narrative', text: `Спасбросок ${abilLabel} — автопровал (состояние)` });
     } else {
-      const plan = [{ sides: 20, label: `Спасбросок ${abilLabel} (СЛ ${saveDc})` }];
+      const rollLabel = `Спасбросок ${abilLabel} (СЛ ${saveDc})`;
+      const totalModifier = saveMod + collected.modifiers.reduce((sum, item) => sum + item.value, 0);
+      const plan = plannedD20Dice(rollLabel, 'incoming-condition-save', collected.advantage, totalModifier);
+      plan.push(...plannedD20BonusDice(collected.rules, rollLabel, 'incoming-condition-save'));
       const preview = (
         <div style={{ fontSize: 13, lineHeight: 1.5 }}>
           Входящий спас против «{label}»
