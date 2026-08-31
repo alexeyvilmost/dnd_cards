@@ -161,6 +161,38 @@ export function activeEffectInstruction(effect: ActiveEffectEntry): string | nul
       : `${op === 'add' && !rawValue.startsWith('-') ? '+' : ''}${rawValue} фт`;
     return `${label}: ${value}.`;
   }
+  const nestedResults = (Array.isArray(mechanics.effects) ? mechanics.effects : [])
+    .flatMap((entry) => {
+      if (!entry || typeof entry !== 'object') return [];
+      const result = (entry as Record<string, unknown>).result;
+      return Array.isArray(result) ? result : [];
+    })
+    .filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === 'object');
+  const acMethod = nestedResults.find((entry) => (
+    entry.kind === 'set_value' && entry.target === 'ac_base' && typeof entry.formula === 'string'
+  ));
+  if (acMethod) {
+    const formula = String(acMethod.formula)
+      .replace(/\bdex\b/giu, 'модификатор Ловкости')
+      .replace(/\bwis\b/giu, 'модификатор Мудрости')
+      .replace(/\bcon\b/giu, 'модификатор Телосложения');
+    const duration = mechanics.duration as Record<string, unknown> | undefined;
+    const rounds = duration?.type === 'rounds' ? Number(duration.amount) : 0;
+    const hours = rounds > 0 && rounds % 600 === 0 ? rounds / 600 : 0;
+    const hourWord = hours % 10 === 1 && hours % 100 !== 11
+      ? 'час'
+      : hours % 10 >= 2 && hours % 10 <= 4 && !(hours % 100 >= 12 && hours % 100 <= 14)
+        ? 'часа'
+        : 'часов';
+    const endTriggers = Array.isArray(mechanics.end_triggers) ? mechanics.end_triggers.map(String) : [];
+    return [
+      `КД: ${formula}.`,
+      hours ? `Срок: ${hours} ${hourWord}.` : null,
+      endTriggers.includes('wearer_dons_armor')
+        ? 'Эффект закончится, если вы наденете доспех.'
+        : null,
+    ].filter((row): row is string => Boolean(row)).join(' ');
+  }
   if (mechanics.kind === 'grant_sense') {
     const sense = String(mechanics.sense ?? 'чувство');
     const label = ({

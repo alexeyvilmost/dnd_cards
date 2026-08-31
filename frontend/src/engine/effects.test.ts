@@ -89,6 +89,22 @@ describe('инструкция активного талона', () => {
     );
   });
 
+  it('объясняет получателю метод КД, восьмичасовой срок и окончание Доспехов мага', () => {
+    expect(activeEffectInstruction({
+      id: 'mage-armor', name: 'Доспехи мага', source: 'Доспехи мага', roundsLeft: 4_800,
+      mechanics: {
+        duration: { type: 'rounds', amount: 4_800 },
+        end_triggers: ['wearer_dons_armor'],
+        effects: [{
+          resolution: 'auto',
+          result: [{ kind: 'set_value', target: 'ac_base', formula: '13 + dex' }],
+        }],
+      },
+    })).toBe(
+      'КД: 13 + модификатор Ловкости. Срок: 8 часов. Эффект закончится, если вы наденете доспех.',
+    );
+  });
+
   it('не придумывает инструкцию для автоматического эффекта', () => {
     expect(activeEffectInstruction({
       id: 'light-1', name: 'Свет', source: 'Свет', expiry: 'manual',

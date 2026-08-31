@@ -42,6 +42,25 @@ describe('CombatActiveEffects', () => {
     expect(html).toContain('не обнаруживает существ в воздухе');
     expect(html).toContain('не даёт видеть');
   });
+
+  it('shows a Mage Armor recipient how AC is calculated and how the effect ends', () => {
+    const effects: ActiveEffectEntry[] = [{
+      id: 'mage-armor', name: 'Доспехи мага', source: 'Доспехи мага', roundsLeft: 4_800,
+      mechanics: {
+        duration: { type: 'rounds', amount: 4_800 },
+        end_triggers: ['wearer_dons_armor'],
+        effects: [{
+          resolution: 'auto',
+          result: [{ kind: 'set_value', target: 'ac_base', formula: '13 + dex' }],
+        }],
+      },
+    }];
+
+    const html = renderToStaticMarkup(createElement(CombatActiveEffects, { effects }));
+    expect(html).toContain('КД: 13 + модификатор Ловкости.');
+    expect(html).toContain('Срок: 8 часов.');
+    expect(html).toContain('Эффект закончится, если вы наденете доспех.');
+  });
 });
 
 describe('CombatCharacterSidebar defenses', () => {
