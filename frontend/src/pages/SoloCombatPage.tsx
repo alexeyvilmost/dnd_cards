@@ -5,7 +5,11 @@ import { actionsApi, effectsApi } from '../api/client';
 import { charactersV3Api } from '../character/api';
 import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
 import { playerFacingSheetActionError } from '../character/sheetActionError';
-import { runtimeInventoryPayload, writeRulesEngineRuntimeTurnState } from '../character/runtime';
+import {
+  forgeToRuntimeState,
+  runtimeInventoryPayload,
+  writeRulesEngineRuntimeTurnState,
+} from '../character/runtime';
 import { newSheetRuntimeCommandId } from '../character/sheetCombatSession';
 import type { SheetCanonicalRuntime } from '../character/sheetCanonicalWorld';
 import { sheetWorldInputFormContext } from '../character/sheetWorldInputForm';
@@ -40,7 +44,7 @@ import {
 } from '../solo-combat/engine';
 import {
   readSoloCombatState,
-  rebaseSoloCombatParticipantRuntimeRevisions,
+  rebaseSoloCombatParticipants,
 } from '../solo-combat/persistence';
 import { writeDedicatedCombatTurnState } from '../solo-combat/turnState';
 import {
@@ -276,11 +280,14 @@ export default function SoloCombatPage() {
             loadedRows.map((row) => [row.id, row]),
           );
           setParticipantCharacters(participantCharactersRef.current);
-          setState(rebaseSoloCombatParticipantRuntimeRevisions(
+          setState(rebaseSoloCombatParticipants(
             restored,
             Object.fromEntries(loadedRows.map((row) => [
               row.id,
-              Number(row.runtime_revision ?? 0),
+              {
+                runtimeRevision: Number(row.runtime_revision ?? 0),
+                runtime: forgeToRuntimeState(row),
+              },
             ])),
           ));
           setBusy(false); return;

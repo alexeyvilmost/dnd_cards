@@ -4,7 +4,7 @@ import { createWorld } from '../rules-core/domain';
 import type { SoloCombatState } from './types';
 import {
   readSoloCombatState,
-  rebaseSoloCombatParticipantRuntimeRevisions,
+  rebaseSoloCombatParticipants,
 } from './persistence';
 import { writeDedicatedCombatTurnState } from './turnState';
 
@@ -108,11 +108,19 @@ describe('dedicated combat turn-state ownership', () => {
         'actor:owner': 7,
         'actor:ally': 4,
       },
+      world: {
+        actors: {
+          'actor:owner': { id: 'actor:owner', runtime },
+          'actor:ally': { id: 'actor:ally', runtime },
+        },
+      },
     } as unknown as SoloCombatState;
 
-    const rebased = rebaseSoloCombatParticipantRuntimeRevisions(combat, {
-      'actor:owner': 11,
-      'actor:ally': 9,
+    const ownerRuntime = { ...runtime, inventory: [{ cardId: 'card:new', qty: 2 }] };
+    const allyRuntime = { ...runtime, resources: { action: 0 } };
+    const rebased = rebaseSoloCombatParticipants(combat, {
+      'actor:owner': { runtimeRevision: 11, runtime: ownerRuntime },
+      'actor:ally': { runtimeRevision: 9, runtime: allyRuntime },
     });
 
     expect(rebased.runtimeRevision).toBe(11);
@@ -120,6 +128,8 @@ describe('dedicated combat turn-state ownership', () => {
       'actor:owner': 11,
       'actor:ally': 9,
     });
+    expect(rebased.world.actors['actor:owner'].runtime.inventory).toEqual(ownerRuntime.inventory);
+    expect(rebased.world.actors['actor:ally'].runtime.resources).toEqual({ action: 0 });
     expect(combat.runtimeRevision).toBe(7);
   });
 });

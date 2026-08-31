@@ -1,4 +1,5 @@
 import { migrateWorldState } from '../rules-core/worldMigration';
+import type { RuntimeState } from '../mvp/contracts';
 import {
   SOLO_COMBAT_KEY,
   SOLO_COMBAT_SCHEMA_VERSION,
@@ -151,22 +152,36 @@ export function readSoloCombatState(
  * optimistic-lock revisions to the freshly loaded participant rows before the
  * next combat command is persisted.
  */
-export function rebaseSoloCombatParticipantRuntimeRevisions(
+export function rebaseSoloCombatParticipants(
   state: SoloCombatState,
-  runtimeRevisions: Readonly<Record<string, number>>,
+  participants: Readonly<Record<string, {
+    runtimeRevision: number;
+    runtime: RuntimeState;
+  }>>,
 ): SoloCombatState {
   const participantRuntimeRevisions = { ...(state.participantRuntimeRevisions ?? {}) };
+  const actors = { ...state.world.actors };
   for (const actorId of controlledCharacterIds(state)) {
-    const revision = runtimeRevisions[actorId];
+    const participant = participants[actorId];
+    const revision = participant?.runtimeRevision;
     if (!Number.isInteger(revision) || revision < 0) {
       throw new Error(`Runtime revision for combat participant ${actorId} is unavailable`);
     }
+    const actor = actors[actorId];
+    if (!actor || !participant) {
+      throw new Error(`Runtime for combat participant ${actorId} is unavailable`);
+    }
     participantRuntimeRevisions[actorId] = revision;
+    actors[actorId] = {
+      ...actor,
+      runtime: clone(participant.runtime),
+    };
   }
   return {
     ...state,
     runtimeRevision: participantRuntimeRevisions[state.characterId],
     participantRuntimeRevisions,
+    world: { ...state.world, actors },
   };
 }
 
