@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import type { RuntimeState } from '../mvp/contracts';
 import { createWorld } from '../rules-core/domain';
 import type { SoloCombatState } from './types';
-import { readSoloCombatState } from './persistence';
+import {
+  readSoloCombatState,
+  rebaseSoloCombatParticipantRuntimeRevisions,
+} from './persistence';
 import { writeDedicatedCombatTurnState } from './turnState';
 
 const runtime: RuntimeState = {
@@ -94,5 +97,29 @@ describe('dedicated combat turn-state ownership', () => {
     const restored = readSoloCombatState(next, 'actor:owner', 7);
     expect(restored?.actionPresentation?.['action:healing-hands'].imageUrl).toBe(image);
     expect(restored?.actionPresentation?.['action:healing-hands'].actionRef?.image_url).toBe(image);
+  });
+
+  it('rebases every retained participant revision after out-of-combat sheet updates', () => {
+    const combat = {
+      characterId: 'actor:owner',
+      controlledCharacterIds: ['actor:owner', 'actor:ally'],
+      runtimeRevision: 7,
+      participantRuntimeRevisions: {
+        'actor:owner': 7,
+        'actor:ally': 4,
+      },
+    } as unknown as SoloCombatState;
+
+    const rebased = rebaseSoloCombatParticipantRuntimeRevisions(combat, {
+      'actor:owner': 11,
+      'actor:ally': 9,
+    });
+
+    expect(rebased.runtimeRevision).toBe(11);
+    expect(rebased.participantRuntimeRevisions).toEqual({
+      'actor:owner': 11,
+      'actor:ally': 9,
+    });
+    expect(combat.runtimeRevision).toBe(7);
   });
 });

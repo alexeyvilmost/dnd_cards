@@ -38,7 +38,10 @@ import {
   resolveTriggeredCombatAction,
   selectedTargetsForAction,
 } from '../solo-combat/engine';
-import { readSoloCombatState } from '../solo-combat/persistence';
+import {
+  readSoloCombatState,
+  rebaseSoloCombatParticipantRuntimeRevisions,
+} from '../solo-combat/persistence';
 import { writeDedicatedCombatTurnState } from '../solo-combat/turnState';
 import {
   controlledCharacterIds,
@@ -268,11 +271,19 @@ export default function SoloCombatPage() {
           if (!restored) throw new Error('Сохранённый бой не найден. Запустите проверку из листа персонажа.');
           const allyIds = controlledCharacterIds(restored).filter((actorId) => actorId !== loadedCharacter.id);
           const allyRows = await Promise.all(allyIds.map((allyId) => charactersV3Api.get(allyId)));
+          const loadedRows = [loadedCharacter, ...allyRows];
           participantCharactersRef.current = Object.fromEntries(
-            [loadedCharacter, ...allyRows].map((row) => [row.id, row]),
+            loadedRows.map((row) => [row.id, row]),
           );
           setParticipantCharacters(participantCharactersRef.current);
-          setState(restored); setBusy(false); return;
+          setState(rebaseSoloCombatParticipantRuntimeRevisions(
+            restored,
+            Object.fromEntries(loadedRows.map((row) => [
+              row.id,
+              Number(row.runtime_revision ?? 0),
+            ])),
+          ));
+          setBusy(false); return;
         }
         const [monsters, allyCharacters] = await Promise.all([
           Promise.all(requested.map(({ id: monsterId }) => monstersApi.get(monsterId))),

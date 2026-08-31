@@ -144,6 +144,32 @@ export function readSoloCombatState(
     world: migrateWorldState(value.world),
   })));
 }
+
+/**
+ * A retained combat can outlive non-combat character updates (for example,
+ * adding an action from the sheet). Keep the encounter snapshot, but rebase
+ * optimistic-lock revisions to the freshly loaded participant rows before the
+ * next combat command is persisted.
+ */
+export function rebaseSoloCombatParticipantRuntimeRevisions(
+  state: SoloCombatState,
+  runtimeRevisions: Readonly<Record<string, number>>,
+): SoloCombatState {
+  const participantRuntimeRevisions = { ...(state.participantRuntimeRevisions ?? {}) };
+  for (const actorId of controlledCharacterIds(state)) {
+    const revision = runtimeRevisions[actorId];
+    if (!Number.isInteger(revision) || revision < 0) {
+      throw new Error(`Runtime revision for combat participant ${actorId} is unavailable`);
+    }
+    participantRuntimeRevisions[actorId] = revision;
+  }
+  return {
+    ...state,
+    runtimeRevision: participantRuntimeRevisions[state.characterId],
+    participantRuntimeRevisions,
+  };
+}
+
 export function writeSoloCombatState(
   turnState: Record<string, unknown> | null | undefined,
   state: SoloCombatState | null,
