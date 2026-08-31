@@ -8,6 +8,10 @@ export function playerFacingSheetActionError(cause: unknown): string {
   if (INCOMPATIBLE_RULESETS.has(detail)) {
     return 'Нельзя применить действие между этими листами: они созданы с несовместимыми версиями правил. Выберите совместимого персонажа или создайте обновлённую копию цели через Forge.';
   }
+  if (/character runtime revision (?:is stale|changed during commit)/u.test(detail)
+    || /runtime revision changed; rebuild the command from fresh sheets/u.test(detail)) {
+    return 'Лист изменился в другой вкладке или во время боя.';
+  }
   const outOfRange = /^OutOfRange: .* is outside (\d+) ft (?:range|unarmed reach)$/u.exec(detail);
   if (outOfRange) {
     return `Цель вне дистанции действия (${outOfRange[1]} фт.).`;

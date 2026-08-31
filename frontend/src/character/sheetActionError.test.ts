@@ -16,6 +16,14 @@ describe('playerFacingSheetActionError', () => {
       .toBe('Цель вне дистанции');
   });
 
+  it('explains a stale sheet without exposing CAS or runtime implementation terms', () => {
+    expect(playerFacingSheetActionError(new Error('character runtime revision is stale')))
+      .toBe('Лист изменился в другой вкладке или во время боя.');
+    expect(playerFacingSheetActionError(new Error(
+      'f8e7549a-fe5c-4347-9d90-a7e27bfe94b9 runtime revision changed; rebuild the command from fresh sheets',
+    ))).toBe('Лист изменился в другой вкладке или во время боя.');
+  });
+
   it('translates canonical range rejections without exposing actor ids', () => {
     expect(playerFacingSheetActionError(new Error(
       'OutOfRange: actor:target is outside 5 ft range',

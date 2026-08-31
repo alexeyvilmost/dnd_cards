@@ -1222,9 +1222,9 @@ export default function SheetActionsPanel({
       setCompanionTargets(refreshed.filter((candidate) => candidate.id !== character.id));
       const refreshedSource = refreshed.find((candidate) => candidate.id === character.id);
       if (refreshedSource) onUpdated(refreshedSource);
-      setError(`${message}. Отклонённый CAS-снимок сброшен, листы обновлены.`);
+      setError(`${message} Данные обновлены; повторите действие.`);
     } catch {
-      setError(`${message}. Отклонённый CAS-снимок сброшен; обновите страницу перед повтором.`);
+      setError(`${message} Обновите страницу и повторите действие.`);
     }
   };
 
