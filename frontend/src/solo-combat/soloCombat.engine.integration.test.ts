@@ -992,6 +992,71 @@ describe('solo combat engine vertical integration', () => {
     expect(restored?.worldObjectPositions?.[light!.id]).toEqual(movePosition);
   });
 
+  it('casts, describes, positions, and persists Minor Illusion from explicit board input', async () => {
+    const participant = wizardSeed();
+    let state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const actorId = participant.character.id;
+    const minorIllusion = state.catalogActions.find((action) => (
+      state.playerActionIds.includes(action.id) && primitive(action) === 'minor_illusion_world_object'
+    ));
+    expect(minorIllusion, 'Wizard should expose certified Minor Illusion').toBeDefined();
+    const source = state.tokens[actorId].position;
+    const castPosition = { x: source.x < 9 ? source.x + 3 : source.x - 3, y: source.y };
+    const distanceFt = gridDistanceFt(source, castPosition);
+    const boardRevisionBeforeCast = state.boardRevision;
+
+    state = executeCombatAction({
+      state,
+      actorId,
+      actionId: minorIllusion!.id,
+      targetIds: [],
+      worldPosition: castPosition,
+      worldInput: {
+        type: 'minor_illusion',
+        form: 'sound',
+        description: 'Звон серебряного колокольчика',
+        facts: {
+          factsSource: 'board',
+          boardRevision: state.boardRevision,
+          distanceFt,
+          lineOfSight: true,
+        },
+      },
+      rng: () => 0,
+    });
+
+    const illusion = Object.values(state.world.objects).find((object) => (
+      object.sourceActorId === actorId
+      && object.sourceActionId === minorIllusion!.id
+      && object.illusion
+    ));
+    expect(illusion?.illusion).toMatchObject({
+      form: 'sound',
+      description: 'Звон серебряного колокольчика',
+      spellSaveDc: 12,
+    });
+    expect(state.worldObjectPositions?.[illusion!.id]).toEqual(castPosition);
+    expect(state.world.actors[actorId].runtime.resources.action).toBe(0);
+    expect(state.boardRevision).toBe(boardRevisionBeforeCast + 1);
+    expect(state.log.at(-1)?.text).toContain('Звон серебряного колокольчика');
+    expect(state.log.at(-1)?.text).toContain('Расследование');
+    expect(state.log.at(-1)?.text).toContain('СЛ 12');
+
+    const restored = readSoloCombatState(
+      writeSoloCombatState({}, state),
+      participant.character.id,
+      state.runtimeRevision,
+    );
+    expect(restored?.world.objects[illusion!.id].illusion?.description)
+      .toBe('Звон серебряного колокольчика');
+    expect(restored?.worldObjectPositions?.[illusion!.id]).toEqual(castPosition);
+  });
+
   it('runs a catalog-gated off-turn opportunity attack and spends exactly the reactor resource', async () => {
     const participant = fighterSeed();
     let state = await createSoloCombatState({

@@ -125,4 +125,32 @@ describe('SheetWorldInputDialog accessibility', () => {
       await pending;
     });
   });
+
+  it('starts from authoritative combat-board facts supplied by the caller', async () => {
+    let pending!: Promise<unknown>;
+    await act(async () => {
+      pending = api.request(
+        dialogContext(),
+        'Малая иллюзия: форма и факты',
+        'unused:illusion',
+        {
+          facts: {
+            factsSource: 'board',
+            boardRevision: '17',
+            distanceFt: '15',
+            lineOfSight: true,
+          },
+        },
+      );
+    });
+
+    expect(container.querySelector<HTMLSelectElement>('#sheet-world-facts-source')?.value).toBe('board');
+    expect(container.querySelector<HTMLInputElement>('#sheet-world-board-revision')?.value).toBe('17');
+    expect(container.querySelector<HTMLInputElement>('#sheet-world-distance')?.value).toBe('15');
+
+    await act(async () => {
+      container.querySelectorAll<HTMLButtonElement>('.dice-dialog-btn')[1].click();
+      await pending;
+    });
+  });
 });

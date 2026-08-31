@@ -45,6 +45,10 @@ export default function TacticalBattleMap({
     const position = state.worldObjectPositions?.[object.id];
     return object.dancingLight && position ? [[`${position.x}:${position.y}`, object] as const] : [];
   }));
+  const illusionByCell = new Map(Object.values(state.world.objects).flatMap((object) => {
+    const position = state.worldObjectPositions?.[object.id];
+    return object.illusion && position ? [[`${position.x}:${position.y}`, object] as const] : [];
+  }));
   const selectedAction = state.catalogActions.find((action) => action.id === selectedActionId);
   const sourcePosition = state.tokens[actorId]?.position;
   const areaCells = useMemo(() => new Set(
@@ -136,18 +140,22 @@ export default function TacticalBattleMap({
         const position = { x: index % TACTICAL_WIDTH, y: Math.floor(index / TACTICAL_WIDTH) };
         const token = tokenByCell.get(`${position.x}:${position.y}`);
         const dancingLight = dancingLightByCell.get(`${position.x}:${position.y}`);
+        const illusion = illusionByCell.get(`${position.x}:${position.y}`);
         const actor = token ? state.world.actors[token.actorId] : undefined;
         const dead = actor && actor.runtime.hp.current <= 0;
         const lightLabel = dancingLight
           ? `Танцующий огонёк, тусклый свет ${dancingLight.dancingLight!.dimRadiusFt} фт.`
+          : '';
+        const illusionLabel = illusion
+          ? `Малая иллюзия: ${illusion.illusion!.description} · ${illusion.illusion!.form === 'sound' ? 'звук' : 'изображение'} · ${illusion.roundsLeft ?? 0} раундов · Изучение: Интеллект (Расследование) против СЛ ${illusion.illusion!.spellSaveDc}${illusion.illusion!.form === 'image' ? ' · физическое взаимодействие раскрывает иллюзию' : ''}`
           : '';
         const actorLabel = token ? `${actor?.name}, ${actor?.runtime.hp.current}/${actor?.runtime.hp.max} HP` : '';
         return (
           <button
             type="button"
             key={`${position.x}:${position.y}`}
-            className={`tactical-cell${token ? ' has-token' : ''}${dancingLight ? ' has-world-object' : ''}${token?.actorId === activeId ? ' is-active' : ''}${token?.actorId === inspectedActorId ? ' is-inspected' : ''}${dead ? ' is-dead' : ''}${areaCells.has(`${position.x}:${position.y}`) ? ' is-area-preview' : ''}${reachableCells.has(`${position.x}:${position.y}`) ? ' is-move-reachable' : ''}`}
-            aria-label={[actorLabel, lightLabel, `Клетка ${position.x + 1}, ${position.y + 1}`].filter(Boolean).join(' · ')}
+            className={`tactical-cell${token ? ' has-token' : ''}${dancingLight || illusion ? ' has-world-object' : ''}${token?.actorId === activeId ? ' is-active' : ''}${token?.actorId === inspectedActorId ? ' is-inspected' : ''}${dead ? ' is-dead' : ''}${areaCells.has(`${position.x}:${position.y}`) ? ' is-area-preview' : ''}${reachableCells.has(`${position.x}:${position.y}`) ? ' is-move-reachable' : ''}`}
+            aria-label={[actorLabel, lightLabel, illusionLabel, `Клетка ${position.x + 1}, ${position.y + 1}`].filter(Boolean).join(' · ')}
             data-actor-id={token?.actorId}
             onMouseEnter={() => setHovered(position)}
             onMouseLeave={() => setHovered(null)}
@@ -159,6 +167,17 @@ export default function TacticalBattleMap({
             {dancingLight && (
               <span className="dancing-light-token" title={lightLabel} aria-hidden="true">
                 <b>✦</b><small>{dancingLight.dancingLight!.dimRadiusFt} фт.</small>
+              </span>
+            )}
+            {illusion && (
+              <span
+                className={`minor-illusion-token is-${illusion.illusion!.form}`}
+                title={illusionLabel}
+                data-world-object-id={illusion.id}
+                aria-hidden="true"
+              >
+                <b>{illusion.illusion!.form === 'sound' ? '♪' : '◈'}</b>
+                <small>{illusion.illusion!.description}</small>
               </span>
             )}
             {token && actor && (

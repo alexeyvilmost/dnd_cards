@@ -27,11 +27,16 @@ interface DialogState {
   draft: SheetWorldInputFormDraft;
 }
 
+export type SheetWorldInputDraftPatch = Omit<Partial<SheetWorldInputFormDraft>, 'facts'> & {
+  facts?: Partial<SheetWorldInputFormDraft['facts']>;
+};
+
 export interface SheetWorldInputDialogApi {
   request(
     context: SheetWorldInputFormContext,
     title: string,
     newObjectId: string,
+    initialDraft?: SheetWorldInputDraftPatch,
   ): Promise<SheetWorldInputFormResult | null>;
   dialog: ReactNode;
 }
@@ -341,6 +346,7 @@ export function useSheetWorldInputDialog(): SheetWorldInputDialogApi {
     context: SheetWorldInputFormContext,
     title: string,
     newObjectId: string,
+    initialDraft: SheetWorldInputDraftPatch = {},
   ): Promise<SheetWorldInputFormResult | null> => new Promise((resolve) => {
     resolver.current?.(null);
     resolver.current = resolve;
@@ -348,7 +354,16 @@ export function useSheetWorldInputDialog(): SheetWorldInputDialogApi {
       ? document.activeElement
       : null;
     setIssues([]);
-    setState({ title, context, draft: initialSheetWorldInputDraft(context, newObjectId) });
+    const defaults = initialSheetWorldInputDraft(context, newObjectId);
+    setState({
+      title,
+      context,
+      draft: {
+        ...defaults,
+        ...initialDraft,
+        facts: { ...defaults.facts, ...initialDraft.facts },
+      },
+    });
   }), []);
 
   useEffect(() => {

@@ -494,6 +494,15 @@ function engineEvents(
     if (event.payload.type !== 'WorldObjectMutationRecorded' || !action) return [];
     const mutation = event.payload.event;
     if (mutation.type === 'WorldObjectCreated') {
+      if (mutation.object.illusion) {
+        const illusion = mutation.object.illusion;
+        const form = illusion.form === 'sound' ? 'звук' : 'изображение';
+        return [{
+          type: 'narrative',
+          text: `${action.name}: создана иллюзия «${illusion.description}» (${form}). `
+            + `Изучение: Интеллект (Расследование) против СЛ ${illusion.spellSaveDc}.`,
+        }];
+      }
       return [{ type: 'narrative', text: `${action.name}: создан объект «${mutation.object.name}»` }];
     }
     const object = world?.objects[mutation.objectId];

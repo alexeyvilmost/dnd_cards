@@ -7,6 +7,8 @@ import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntim
 import { playerFacingSheetActionError } from '../character/sheetActionError';
 import { runtimeInventoryPayload, writeRulesEngineRuntimeTurnState } from '../character/runtime';
 import { newSheetRuntimeCommandId } from '../character/sheetCombatSession';
+import type { SheetCanonicalRuntime } from '../character/sheetCanonicalWorld';
+import { sheetWorldInputFormContext } from '../character/sheetWorldInputForm';
 import type { ForgeCharacter } from '../character/types';
 import CombatHotbar from '../components/CombatHotbar';
 import CombatActorInspector from '../components/CombatActorInspector';
@@ -16,6 +18,7 @@ import CombatSceneConstructor from '../components/CombatSceneConstructor';
 import MonsterTurnController from '../components/MonsterTurnController';
 import { sheetReactionDecisionOptions } from '../components/SheetPendingCombatPanel';
 import TacticalBattleMap from '../components/TacticalBattleMap';
+import { useSheetWorldInputDialog } from '../components/SheetWorldInputDialog';
 import { monstersApi } from '../monsters/api';
 import {
   activeActor,
@@ -45,6 +48,8 @@ import {
 } from '../solo-combat/actionChoices';
 import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
 import { getCardsIndex } from '../utils/cardsIndex';
+import { gridDistanceFt } from '../solo-combat/tacticalGrid';
+import type { ActionWorldInput } from '../rules-core/domain';
 import './CharacterForge.css';
 import './CharacterSheetV2.css';
 import './SoloCombatPage.css';
@@ -68,11 +73,35 @@ function initiativeLabel(entry: SoloCombatState['initiative'][number]): string {
   return `${entry.die}${entry.bonus >= 0 ? '+' : ''}${entry.bonus} = ${entry.total}`;
 }
 
+function combatWorldInputContext(
+  state: SoloCombatState,
+  actorId: string,
+  action: SoloCombatState['catalogActions'][number],
+) {
+  const actions = state.catalogActions;
+  const byId = new Map(actions.map((candidate) => [candidate.id, candidate]));
+  const runtime: SheetCanonicalRuntime = {
+    actorId,
+    world: state.world,
+    actions,
+    catalog: {
+      getAction: (actionId) => byId.get(actionId),
+      listActions: () => [...actions],
+    },
+    cards: [],
+    resourceBindings: state.resourceBindingsByActor?.[actorId]
+      ?? (actorId === state.characterId ? state.resourceBindings : {}),
+    actionFor: () => action,
+  };
+  return sheetWorldInputFormContext({ runtime, action });
+}
+
 export default function SoloCombatPage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const choiceDialog = useChoiceDialog();
+  const worldInputDialog = useSheetWorldInputDialog();
   const [character, setCharacter] = useState<ForgeCharacter | null>(null);
   const [participantCharacters, setParticipantCharacters] = useState<Record<string, ForgeCharacter>>({});
   const participantCharactersRef = useRef<Record<string, ForgeCharacter>>({});
@@ -335,7 +364,7 @@ export default function SoloCombatPage() {
     } catch (reason) { setError(playerFacingSheetActionError(reason)); }
   };
 
-  const clickCell = (position: GridPosition, actorId?: string) => {
+  const clickCell = async (position: GridPosition, actorId?: string) => {
     if (!state || !playerTurn || busy || state.world.pendingResolution
       || state.pendingTriggeredAction || state.pendingTurnStartGrappleDamage) return;
     try {
@@ -370,12 +399,49 @@ export default function SoloCombatPage() {
       });
       const action = state.catalogActions.find((candidate) => candidate.id === selectedActionId)!;
       if (!targetIds.length && (action.targeting?.minTargets ?? 0) > 0) throw new Error('В выбранной области нет допустимой цели');
+      let worldInput: ActionWorldInput | undefined;
+      const worldInputContext = combatWorldInputContext(state, activeControlledActorId, action);
+      if (worldInputContext?.form === 'minor_illusion') {
+        const sourcePosition = state.tokens[activeControlledActorId]?.position;
+        if (!sourcePosition) throw new Error('Персонаж отсутствует на поле боя.');
+        const distanceFt = gridDistanceFt(sourcePosition, position);
+        if (action.targeting?.rangeFt !== undefined && distanceFt > action.targeting.rangeFt) {
+          throw new Error(`${action.name}: выбранная клетка дальше ${action.targeting.rangeFt} фт.`);
+        }
+        const boardFacts = {
+          factsSource: 'board' as const,
+          boardRevision: String(state.boardRevision),
+          distanceFt: String(distanceFt),
+          lineOfSight: true,
+        };
+        const result = await worldInputDialog.request(
+          worldInputContext,
+          `${action.name}: форма и факты`,
+          newSheetRuntimeCommandId(),
+          { facts: boardFacts },
+        );
+        if (!result) return;
+        if (result.worldInput.type !== 'minor_illusion') {
+          throw new Error('Форма Малой иллюзии вернула несовместимые данные.');
+        }
+        worldInput = {
+          ...result.worldInput,
+          facts: {
+            ...result.worldInput.facts,
+            factsSource: 'board' as const,
+            boardRevision: state.boardRevision,
+            distanceFt,
+            lineOfSight: true,
+          },
+        };
+      }
       const next = autoResolveSystemDecisions(executeCombatAction({
         state,
         actorId: activeControlledActorId,
         actionId: selectedActionId,
         targetIds,
         worldPosition: position,
+        worldInput,
         choices: selectedActionChoices,
       }));
       setSelectedActionId(null); setSelectedActionChoices({}); apply(next);
@@ -547,6 +613,7 @@ export default function SoloCombatPage() {
         return option ? <button type="button" key={actionId} disabled={busy} onClick={() => apply(resolveTriggeredCombatAction(state, actionId))}>{option.name}</button> : null;
       })}<button type="button" disabled={busy} onClick={() => apply(resolveTriggeredCombatAction(state, null))}>Пропустить</button></div></section></div>}
       {pendingTurnStart && <div className="combat-reaction-backdrop"><section><p>НАЧАЛО ХОДА</p><h2>Нанести 1к4 урона существу в захвате?</h2><div>{pendingTurnStart.targetActorIds.map((targetActorId) => <button type="button" key={targetActorId} disabled={busy} onClick={() => apply(resolveSoloCombatTurnStart(state, targetActorId))}>{state.world.actors[targetActorId]?.name ?? 'Цель'} · 1к4 дробящего урона</button>)}<button type="button" disabled={busy} onClick={() => apply(resolveSoloCombatTurnStart(state, null))}>Пропустить</button></div></section></div>}
+      {worldInputDialog.dialog}
       {state.outcome !== 'active' && <div className="combat-outcome"><section><p>БОЙ ЗАВЕРШЁН</p><h1>{state.outcome === 'victory' ? 'Победа' : 'Поражение'}</h1><p>{state.outcome === 'victory' ? 'Все противники уничтожены.' : `${character.name} потерял все хиты.`}</p><button type="button" onClick={finish}>Завершить и вернуться в лист</button><button type="button" onClick={() => navigate(`/characters-v3/${id}`)}><RotateCcw size={16} /> Оставить запись боя</button></section></div>}
     </main>
   );

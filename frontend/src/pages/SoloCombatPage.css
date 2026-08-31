@@ -269,6 +269,35 @@
   font: 600 8px Inter;
   white-space: nowrap;
 }
+.minor-illusion-token {
+  position: absolute;
+  z-index: 3;
+  inset: 10%;
+  display: grid;
+  place-items: center;
+  border: 1px solid #b89cff;
+  border-radius: 18%;
+  background: radial-gradient(circle, #8163b9cc, #2b203edd 70%);
+  box-shadow: 0 0 12px #9b78df99, inset 0 0 12px #d8c7ff33;
+  color: #eee4ff;
+  pointer-events: none;
+}
+.minor-illusion-token.is-sound { border-radius: 50%; }
+.minor-illusion-token b { font-size: clamp(14px, 2vw, 25px); line-height: 1; }
+.minor-illusion-token small {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  translate: -50% 2px;
+  max-width: 112px;
+  padding: 2px 4px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #080807e8;
+  font: 600 8px Inter;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .combat-world-control {
   position: absolute;
   z-index: 5;

@@ -15,6 +15,7 @@ import {
 } from '../rules-core/determinism';
 import type {
   ActorState,
+  ActionWorldInput,
   DecisionResponse,
   GameCommand,
   RuleActionDefinition,
@@ -163,6 +164,20 @@ function eventSummary(records: readonly CombatLogEventRecord[]): string {
   return fragments.length ? fragments.join('; ') : 'действие выполнено';
 }
 
+function worldObjectSummary(events: readonly UncommittedRuleEvent[]): string[] {
+  return events.flatMap(({ payload }) => {
+    if (payload.type !== 'WorldObjectMutationRecorded'
+      || payload.event.type !== 'WorldObjectCreated'
+      || !payload.event.object.illusion) return [];
+    const illusion = payload.event.object.illusion;
+    const form = illusion.form === 'sound' ? 'звук' : 'изображение';
+    return [
+      `иллюзия «${illusion.description}» (${form}, ${payload.event.object.roundsLeft ?? 0} раундов; `
+      + `изучение: Интеллект (Расследование) против СЛ ${illusion.spellSaveDc})`,
+    ];
+  });
+}
+
 function applyForcedMovement(
   state: SoloCombatState,
   events: readonly UncommittedRuleEvent[],
@@ -251,7 +266,13 @@ function transitionState(
     next = { ...next, worldObjectPositions: retainedPositions };
   }
   next = applyForcedMovement(next, rawEvents);
-  next = appendLog(next, actorId, `${label}: ${eventSummary(records)}`, records);
+  const summaries = worldObjectSummary(rawEvents);
+  next = appendLog(
+    next,
+    actorId,
+    `${label}: ${summaries.length ? summaries.join('; ') : eventSummary(records)}`,
+    records,
+  );
   return outcome(next);
 }
 
@@ -324,6 +345,7 @@ function declarationFor(
   targetIds: string[],
   worldPosition?: GridPosition,
   suppliedChoices: Readonly<Record<string, readonly string[]>> = {},
+  suppliedWorldInput?: ActionWorldInput,
 ): SheetCanonicalCommandInput {
   const primitive = primitiveType(action);
   const stonework = action.targeting?.requiresStoneworkContact
@@ -382,6 +404,7 @@ function declarationFor(
       ? { worldInput: { type: 'area_objects', factsByObject: {} } as const }
       : {}),
     ...(dancingLightsWorldInput ? { worldInput: dancingLightsWorldInput } : {}),
+    ...(!dancingLightsWorldInput && suppliedWorldInput ? { worldInput: suppliedWorldInput } : {}),
   };
 }
 
@@ -426,6 +449,7 @@ export function executeCombatAction(input: {
   actionId: string;
   targetIds: string[];
   worldPosition?: GridPosition;
+  worldInput?: ActionWorldInput;
   choices?: Readonly<Record<string, readonly string[]>>;
   rng?: Rng;
 }): SoloCombatState {
@@ -440,6 +464,7 @@ export function executeCombatAction(input: {
     input.targetIds,
     input.worldPosition,
     input.choices,
+    input.worldInput,
   );
   const rng = input.rng ?? Math.random;
   const withTriggeredHitOffer = (next: SoloCombatState) => offerTriggeredHitActions({
@@ -518,12 +543,14 @@ export function executeCombatAction(input: {
     } : {}),
   };
   let next = dispatch({ state: input.state, command, rng, label: action.name });
-  if (primitiveType(action) === 'dancing_lights_world' && input.worldPosition) {
+  const worldPrimitive = primitiveType(action);
+  if ((worldPrimitive === 'dancing_lights_world' || worldPrimitive === 'minor_illusion_world_object')
+    && input.worldPosition) {
     const positions = { ...(next.worldObjectPositions ?? {}) };
     for (const object of Object.values(next.world.objects)) {
       if (object.sourceActorId === input.actorId
         && object.sourceActionId === action.id
-        && object.dancingLight) {
+        && (object.dancingLight || object.illusion)) {
         positions[object.id] = { ...input.worldPosition };
       }
     }

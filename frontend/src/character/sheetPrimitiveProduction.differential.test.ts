@@ -340,6 +340,12 @@ describe('production-compiled real-sheet no-pending primitive differential', () 
         text: expect.stringContaining(prepared.action.name),
       }));
     }
+    if (primitive === 'minor_illusion_world_object') {
+      expect(result.events).toContainEqual(expect.objectContaining({
+        type: 'narrative',
+        text: expect.stringMatching(/A quiet bell.*Интеллект \(Расследование\).*СЛ \d+/),
+      }));
+    }
 
     const castTime = parseActivationCastTime(prepared.action.mechanics);
     const declared = result.ruleEvents?.find((event) => (
