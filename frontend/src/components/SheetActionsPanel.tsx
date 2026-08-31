@@ -2292,6 +2292,7 @@ export default function SheetActionsPanel({
           targetActors: ordinaryCanonical.targetActors,
           rng,
           commandId: ordinaryCanonical.commandId,
+          resolveTargetSaves: true,
         });
         if (canonicalResult.pendingResolution) {
           throw new UnsupportedSheetPendingResolutionError(canonicalResult.pendingResolution.type);

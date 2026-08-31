@@ -157,6 +157,10 @@ export interface SheetCanonicalActionValidationInput {
   rng?: () => number;
   /** Stable idempotency key when the accepted world will be persisted atomically. */
   commandId?: string;
+  /** The sheet has already collected the target-save dice and may complete the
+   * canonical continuation with the injected RNG. Other continuation types
+   * remain durable/fail-closed. */
+  resolveTargetSaves?: boolean;
 }
 
 export interface SheetCanonicalActionDispatchResult extends SheetActionExecutionResult {
@@ -599,6 +603,35 @@ export function executeSheetCanonicalAction(
   const result = session.dispatch(command);
   if (result.status === 'rejected') {
     throw new SheetCanonicalCommandRejectedError(result.code, result.message);
+  }
+  if (input.resolveTargetSaves) {
+    const resumedResolutionIds = new Set<string>();
+    let pending = session.getState().pendingResolution;
+    let resolutionIndex = 0;
+    while (pending?.type === 'target_save') {
+      if (resumedResolutionIds.has(pending.id)) {
+        throw new SheetMechanicsPreflightError(
+          `Canonical target-save continuation ${pending.id} did not advance`,
+        );
+      }
+      resumedResolutionIds.add(pending.id);
+      const resolved = session.dispatch({
+        schemaVersion: 1,
+        type: 'ResolveDecision',
+        commandId: `${command.commandId}:target-save:${resolutionIndex}`,
+        expectedRevision: session.getState().revision,
+        rulesetContentHash: command.rulesetContentHash,
+        actorId: pending.targetActorId,
+        resolutionId: pending.id,
+        requestId: pending.request.id,
+        response: { kind: 'roll', roll: { mode: 'system' } },
+      });
+      if (resolved.status === 'rejected') {
+        throw new SheetCanonicalCommandRejectedError(resolved.code, resolved.message);
+      }
+      pending = session.getState().pendingResolution;
+      resolutionIndex += 1;
+    }
   }
   const canonicalWorld = session.getState();
   const actor = canonicalWorld.actors[input.canonical.runtime.actorId];

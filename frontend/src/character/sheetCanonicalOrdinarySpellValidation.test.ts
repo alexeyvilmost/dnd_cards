@@ -126,6 +126,42 @@ const BLESS: RuleActionDefinition = {
   },
 };
 
+const SAVE_SPELL: RuleActionDefinition = {
+  id: 'spell:sheet-save-resume',
+  name: 'Sheet Save Resume',
+  kind: 'spell',
+  sourceEntityIds: ['spell:sheet-save-resume'],
+  spell: {
+    level: 1,
+    sourceClass: 'wizard',
+    components: { verbal: true, somatic: true, material: false },
+  },
+  targeting: {
+    minTargets: 1,
+    maxTargets: 1,
+    rangeFt: 60,
+    requiresLineOfSight: true,
+    allowedRelations: ['enemy'],
+  },
+  mechanics: {
+    activation: {
+      mode: 'active',
+      cost: [{ resource: 'action' }, { resource: 'spell_slot', level: 1, amount: 1 }],
+    },
+    effects: [{
+      resolution: 'save',
+      who: 'target',
+      ability: 'wis',
+      dc: '12',
+      on_fail: [{
+        kind: 'condition', value: 'unconscious',
+        duration: { type: 'rounds', amount: 10 },
+      }],
+      on_success: [],
+    }],
+  },
+};
+
 function productionWorldUtilitySpell(
   cardNumber: string,
   id: string,
@@ -299,6 +335,63 @@ function blessFixture() {
   };
 }
 
+function saveSpellFixture() {
+  const caster = actor('caster');
+  caster.capabilities.actionIds = [SAVE_SPELL.id];
+  caster.spellcastingAccess = {
+    grants: [{
+      grantId: 'wizard:sheet-save-resume',
+      actionId: SAVE_SPELL.id,
+      sourceId: 'CLASS-wizard',
+      access: 'always_prepared',
+      level: 1,
+      spellcastingAbility: 'int',
+      slotResource: 'spell_slot_1',
+    }],
+    preparedSources: {},
+  };
+  const catalog: RulesCatalog = {
+    getAction: (actionId) => actionId === SAVE_SPELL.id ? SAVE_SPELL : undefined,
+  };
+  const world = createWorld({
+    id: 'sheet-save-resume',
+    ruleset: {
+      systemId: 'dnd5e-2024', releaseId: 'test', contentHash: 'test', errataVersion: '2024',
+    },
+    actors: [caster],
+  });
+  const canonical: SheetCanonicalActionContext = {
+    action: SAVE_SPELL,
+    runtime: {
+      actorId: caster.id,
+      world,
+      actions: [SAVE_SPELL],
+      catalog,
+      cards: [],
+      resourceBindings: {},
+      actionFor: () => SAVE_SPELL,
+    },
+  };
+  const declaration = buildSheetCombatDeclaration({
+    action: SAVE_SPELL,
+    base: {
+      sceneMode: 'exploration',
+      targetIds: [],
+      spell: { grantId: 'wizard:sheet-save-resume', mode: 'normal' },
+    },
+    targets: [{
+      targetId: 'target',
+      factsSource: 'scenario',
+      boardRevision: 0,
+      relation: 'enemy',
+      distanceFt: 5,
+      lineOfSight: true,
+      cover: 'none',
+    }],
+  });
+  return { caster, canonical, declaration, target: actor('target') };
+}
+
 function worldUtilityFixture(action: RuleActionDefinition, grantId: string) {
   const caster = actor('caster');
   caster.capabilities.actionIds = [action.id];
@@ -394,6 +487,40 @@ describe('ordinary sheet spell canonical pre-payment validation', () => {
     expect(result.canonicalWorld.concentrations.caster.effectLinks).toHaveLength(6);
     expect(caster.runtime.resources).toMatchObject({ action: 1, spell_slot_1: 1 });
     expect(targetActors.every((target) => target.runtime.activeEffects.length === 0)).toBe(true);
+  });
+
+  it('resumes a target save with the sheet dice RNG and returns one atomic completed world', () => {
+    const { caster, canonical, declaration, target } = saveSpellFixture();
+    const unresolved = executeSheetCanonicalAction({
+      canonical,
+      state: caster.runtime,
+      declaration,
+      targetActors: [target],
+      rng: () => (1 - 0.5) / 20,
+      commandId: 'sheet-save-unresolved',
+    });
+    expect(unresolved.pendingResolution?.type).toBe('target_save');
+    expect(unresolved.canonicalWorld.actors.target.runtime.activeEffects).toEqual([]);
+
+    const resolved = executeSheetCanonicalAction({
+      canonical,
+      state: caster.runtime,
+      declaration,
+      targetActors: [target],
+      rng: () => (1 - 0.5) / 20,
+      commandId: 'sheet-save-resolved',
+      resolveTargetSaves: true,
+    });
+
+    expect(resolved.pendingResolution).toBeNull();
+    expect(resolved.state.resources).toMatchObject({ action: 0, spell_slot_1: 0 });
+    expect(resolved.canonicalWorld.actors.target.runtime.activeEffects).toEqual([
+      expect.objectContaining({
+        mechanics: expect.objectContaining({ kind: 'condition', value: 'unconscious' }),
+      }),
+    ]);
+    expect(caster.runtime.resources).toMatchObject({ action: 1, spell_slot_1: 1 });
+    expect(target.runtime.activeEffects).toEqual([]);
   });
 
   it('dispatches a production world-domain utility spell with no invented actor target', () => {
