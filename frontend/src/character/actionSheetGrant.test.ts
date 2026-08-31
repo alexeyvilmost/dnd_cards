@@ -19,6 +19,18 @@ const dashAction = {
   },
 } as unknown as Action;
 
+const triggeredAction = {
+  id: 'act-follow-up', name: 'Ответный приём', card_number: 'follow-up', type: 'action',
+  mechanics: {
+    activation: {
+      mode: 'triggered', optional: true,
+      trigger: { event: 'hit', source_action_card_number: 'action_basic_unarmed' },
+      cost: [{ resource: 'bonus_action', amount: 1 }],
+    },
+    effects: [{ resolution: 'auto', result: [{ kind: 'narrative', description: 'Ответный приём' }] }],
+  },
+} as unknown as Action;
+
 describe('S6 — collectGrantActionSlugs', () => {
   it('читает grant_action.value (форма effects[{resolution:auto,result}])', () => {
     expect(collectGrantActionSlugs({ effects: [{ resolution: 'auto', result: [{ kind: 'grant_action', value: 'dash' }] }] })).toEqual(['dash']);
@@ -58,5 +70,13 @@ describe('S6 — collectSheetActions fromGranted', () => {
 
   it('без grantedActions группа не появляется (регресс)', () => {
     expect(collectSheetActions(emptyAssembled, [], []).filter((a) => a.group === 'item')).toHaveLength(0);
+  });
+
+  it('сохраняет выданное triggered-действие для шины событий, а не отбрасывает его как некликабельное', () => {
+    const granted: GrantedAction[] = [{ action: triggeredAction, sourceLabel: 'Черта', group: 'class' }];
+    const out = collectSheetActions(emptyAssembled, [], [], granted);
+    expect(out).toHaveLength(1);
+    expect((out[0].mechanics.activation as { mode?: string }).mode).toBe('triggered');
+    expect(out[0].actionRef).toBe(triggeredAction);
   });
 });

@@ -54,9 +54,11 @@ function effectUsesRef(effect: PassiveEffect): string | undefined {
 function normalizeActionableMechanics(
   mech: Record<string, unknown>,
   usesKey?: string,
+  allowTriggered = false,
 ): Record<string, unknown> | null {
   const activation = { ...(mech.activation as Record<string, unknown> | undefined) };
-  if (activation.mode !== 'active' && activation.mode !== 'reaction') return null;
+  if (activation.mode !== 'active' && activation.mode !== 'reaction'
+    && !(allowTriggered && activation.mode === 'triggered')) return null;
   // Цена — только из mechanics.activation.cost. Даже action.resource и
   // mechanics.uses не являются вторым источником экономики действия.
   if (!Array.isArray(activation.cost)) return null;
@@ -74,14 +76,20 @@ function effectActiveMechanics(effect: PassiveEffect): Record<string, unknown> |
   return normalizeActionableMechanics(mech as Record<string, unknown>, effectUsesRef(effect));
 }
 
-function actionMechanics(action: Action, withUses = true): Record<string, unknown> | null {
+function actionMechanics(
+  action: Action,
+  withUses = true,
+  allowTriggered = false,
+): Record<string, unknown> | null {
   const mech = upgradeLegacyActionMechanics(action);
   if (!mech || typeof mech !== 'object') return null;
   const activation = mech.activation as Record<string, unknown> | undefined;
-  if (activation?.mode !== 'active' && activation?.mode !== 'reaction') return null;
+  if (activation?.mode !== 'active' && activation?.mode !== 'reaction'
+    && !(allowTriggered && activation?.mode === 'triggered')) return null;
   return normalizeActionableMechanics(
     mech as Record<string, unknown>,
     withUses ? actionUsesRef(action) : undefined,
+    allowTriggered,
   );
 }
 
@@ -343,7 +351,7 @@ export function collectSheetActions(
       // withUses=false: grant_action пока не материализует uses-пул в init/rest.
       // Limited granted actions therefore fail closed (actionMechanics returns
       // null) instead of silently becoming unlimited.
-      const mechanics = actionMechanics(action, false);
+      const mechanics = actionMechanics(action, false, true);
       if (!mechanics) return null;
       return {
         id: `granted-${action.id}`,
