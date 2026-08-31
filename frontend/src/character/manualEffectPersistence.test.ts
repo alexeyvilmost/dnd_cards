@@ -1,11 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { charactersV3Api } from './api';
 import {
+  MANUAL_EFFECT_CROSS_CHARACTER_CONCENTRATION_REASON,
   MANUAL_EFFECT_RUNTIME_REVISION_REASON,
   persistDetachedManualEffects,
+  projectDetachedManualEffectsTurnState,
 } from './manualEffectPersistence';
 import { ONLINE_ENCOUNTER_MANUAL_EFFECT_BLOCK_REASON } from './manualEffectMutationPolicy';
 import type { ForgeCharacter } from './types';
+import { createWorld, type ActorState, type RulesetReference } from '../rules-core/domain';
+import type { RuntimeState } from '../mvp/contracts';
+import { SHEET_CANONICAL_WORLD_KEY, writeSheetCanonicalWorld } from './sheetCanonicalWorld';
 
 function character(overrides: Partial<ForgeCharacter> = {}): ForgeCharacter {
   return {
@@ -37,6 +42,40 @@ const effect = {
   mechanics: { kind: 'condition', value: 'poisoned' },
   source: 'manual:test',
 };
+
+const RULESET: RulesetReference = {
+  systemId: 'dnd5e-2024',
+  releaseId: 'manual-effect-test',
+  contentHash: `sha256:${'a'.repeat(64)}`,
+  errataVersion: '2024',
+};
+
+function runtime(activeEffects: RuntimeState['activeEffects'] = []): RuntimeState {
+  return {
+    hp: { current: 10, max: 10, temp: 0 },
+    resources: { action: 1 },
+    maxResources: { action: 1 },
+    equipment: {},
+    inventory: [],
+    activeEffects,
+  };
+}
+
+function actor(id: string, activeEffects: RuntimeState['activeEffects'] = []): ActorState {
+  return {
+    id,
+    name: id,
+    kind: 'playerCharacter',
+    controllerId: `controller:${id}`,
+    capabilities: { actionIds: [] },
+    character: {
+      abilityMods: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+      profBonus: 2,
+      level: 1,
+    },
+    runtime: runtime(activeEffects),
+  };
+}
 
 describe('detached manual-effect persistence', () => {
   beforeEach(() => vi.restoreAllMocks());
@@ -95,5 +134,62 @@ describe('detached manual-effect persistence', () => {
     }));
     await expect(persistDetachedManualEffects(character(), [effect]))
       .rejects.toThrow(/точную CAS-запись/);
+  });
+
+  it('atomically projects a concentration-ending condition into the canonical sheet world', () => {
+    const id = 'character:manual-effect';
+    const concentrationEffect = {
+      id: 'detect-magic:effect',
+      name: 'Detect Magic',
+      mechanics: { kind: 'modifier', duration: { concentration: true } },
+      source: 'spell:detect-magic',
+    };
+    const world = createWorld({
+      id: 'world:manual-effect',
+      ruleset: RULESET,
+      actors: [actor(id, [concentrationEffect])],
+    });
+    world.concentrations[id] = {
+      id: 'concentration:detect-magic',
+      sourceActorId: id,
+      actionId: 'spell:detect-magic',
+      startedAtRevision: 0,
+      effectLinks: [{ actorId: id, effectId: concentrationEffect.id }],
+    };
+    const source = character({
+      turn_state: writeSheetCanonicalWorld({}, id, world),
+      active_effects: [concentrationEffect],
+    });
+
+    const turnState = projectDetachedManualEffectsTurnState(source, [effect], {
+      endsConcentration: true,
+    });
+    const envelope = turnState?.[SHEET_CANONICAL_WORLD_KEY] as { world: typeof world };
+    expect(envelope.world.concentrations[id]).toBeUndefined();
+    expect(envelope.world.actors[id].runtime.activeEffects).toEqual([effect]);
+    expect(envelope.world.revision).toBe(1);
+  });
+
+  it('fails closed when detached concentration cleanup would need another character write', () => {
+    const id = 'character:manual-effect';
+    const allyId = 'character:ally';
+    const world = createWorld({
+      id: 'world:cross-character',
+      ruleset: RULESET,
+      actors: [actor(id), actor(allyId, [{
+        id: 'bless:ally', name: 'Bless', mechanics: { kind: 'modifier' }, source: 'spell:bless',
+      }])],
+    });
+    world.concentrations[id] = {
+      id: 'concentration:bless',
+      sourceActorId: id,
+      actionId: 'spell:bless',
+      startedAtRevision: 0,
+      effectLinks: [{ actorId: allyId, effectId: 'bless:ally' }],
+    };
+    const source = character({ turn_state: writeSheetCanonicalWorld({}, id, world) });
+    expect(() => projectDetachedManualEffectsTurnState(source, [effect], {
+      endsConcentration: true,
+    })).toThrow(MANUAL_EFFECT_CROSS_CHARACTER_CONCENTRATION_REASON);
   });
 });

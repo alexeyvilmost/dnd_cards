@@ -169,7 +169,9 @@ describe('manual-effect component authority boundaries', () => {
       await Promise.resolve();
     });
     expect(persistDetachedManualEffectsMock).toHaveBeenCalledTimes(1);
-    expect(persistDetachedManualEffectsMock).toHaveBeenCalledWith(detached, []);
+    expect(persistDetachedManualEffectsMock).toHaveBeenCalledWith(detached, [], {
+      endsConcentration: false,
+    });
     expect(persistCharacterRuntimeMock).not.toHaveBeenCalled();
   });
 

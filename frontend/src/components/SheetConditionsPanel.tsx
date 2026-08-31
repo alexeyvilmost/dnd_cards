@@ -21,6 +21,7 @@ import {
   conditionOptions,
   conditionStacking,
 } from '../engine/conditions';
+import { deniedCapabilities } from '../engine/modifiers';
 import {
   applyEffectCommandFromEntity,
   collectConditionImmunitiesFromPassives,
@@ -73,11 +74,15 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, p
     ? pickedLevel > 0
     : pickedStacking.max != null && pickedLevel >= pickedStacking.max;
 
-  const persist = async (activeEffects: typeof runtime.activeEffects, events: EngineEvent[]) => {
+  const persist = async (
+    activeEffects: typeof runtime.activeEffects,
+    events: EngineEvent[],
+    endsConcentration = false,
+  ) => {
     setBusy(true);
     setError(null);
     try {
-      const updated = await persistDetachedManualEffects(character, activeEffects);
+      const updated = await persistDetachedManualEffects(character, activeEffects, { endsConcentration });
       onUpdated(updated);
       if (events.length) onEvents?.(events);
     } catch (e) {
@@ -108,7 +113,11 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, p
       const result = executeManualEffectCommand(runtime, command, {
         nextId: nextBrowserManualEffectId,
       });
-      void persist(result.state.activeEffects, result.events);
+      void persist(
+        result.state.activeEffects,
+        result.events,
+        deniedCapabilities(result.state, passives).has('concentration'),
+      );
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Не удалось наложить состояние');
     }
@@ -123,7 +132,11 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, p
         ownerActorId: character.id,
         provenance: 'manual:sheet_conditions',
       }, { nextId: nextBrowserManualEffectId });
-      void persist(result.state.activeEffects, result.events);
+      void persist(
+        result.state.activeEffects,
+        result.events,
+        deniedCapabilities(result.state, passives).has('concentration'),
+      );
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Не удалось снять состояние');
     }
