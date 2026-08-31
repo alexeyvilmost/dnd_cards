@@ -106,6 +106,7 @@ import type {
 import type { SheetCanonicalCommandInput } from '../character/sheetCanonicalCommand';
 import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
 import { playerFacingSheetActionError } from '../character/sheetActionError';
+import { sheetTriggeredActionOffersAfterAttack } from '../character/sheetTriggeredActionOffers';
 import {
   commitPreparedSheetAtomicWorld,
   prepareSheetAtomicWorldCommit,
@@ -2544,7 +2545,16 @@ export default function SheetActionsPanel({
 
       // Предложенные реакции/триггеры (фаза A: interrupt): всплывающее окно решения. Для заклинаний
       // на ячейку — опции апкаста (Божественная кара). Свободные optional-триггеры (Голиаф) — тоже спрашиваем.
-      for (const offer of main.pending) {
+      const pendingOffers = sheetTriggeredActionOffersAfterAttack({
+        action,
+        events,
+        triggerSources,
+        state,
+        equipment: runtime.equipment,
+        cards: equipCards,
+        existing: main.pending,
+      });
+      for (const offer of pendingOffers) {
         const slotIdx = offer.cost.findIndex((c) => String(c.resource ?? '') === 'spell_slot' && c.level != null);
         const nonSlot = offer.cost.filter((_, i) => i !== slotIdx);
         if (nonSlot.length && !canPay(state, nonSlot).ok) continue; // нет действия/реакции — не предлагаем
