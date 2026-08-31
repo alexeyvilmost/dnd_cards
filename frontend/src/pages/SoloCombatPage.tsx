@@ -52,6 +52,7 @@ import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
 import { getCardsIndex } from '../utils/cardsIndex';
 import { gridDistanceFt } from '../solo-combat/tacticalGrid';
 import type { ActionWorldInput } from '../rules-core/domain';
+import { bindCombatWorldInputFacts } from '../solo-combat/worldInput';
 import './CharacterForge.css';
 import './CharacterSheetV2.css';
 import './SoloCombatPage.css';
@@ -403,7 +404,7 @@ export default function SoloCombatPage() {
       if (!targetIds.length && (action.targeting?.minTargets ?? 0) > 0) throw new Error('В выбранной области нет допустимой цели');
       let worldInput: ActionWorldInput | undefined;
       const worldInputContext = combatWorldInputContext(state, activeControlledActorId, action);
-      if (worldInputContext?.form === 'minor_illusion') {
+      if (worldInputContext) {
         const sourcePosition = state.tokens[activeControlledActorId]?.position;
         if (!sourcePosition) throw new Error('Персонаж отсутствует на поле боя.');
         const distanceFt = gridDistanceFt(sourcePosition, position);
@@ -423,19 +424,12 @@ export default function SoloCombatPage() {
           { facts: boardFacts },
         );
         if (!result) return;
-        if (result.worldInput.type !== 'minor_illusion') {
-          throw new Error('Форма Малой иллюзии вернула несовместимые данные.');
-        }
-        worldInput = {
-          ...result.worldInput,
-          facts: {
-            ...result.worldInput.facts,
-            factsSource: 'board' as const,
-            boardRevision: state.boardRevision,
-            distanceFt,
-            lineOfSight: true,
-          },
-        };
+        worldInput = bindCombatWorldInputFacts(result.worldInput, {
+          factsSource: 'board',
+          boardRevision: state.boardRevision,
+          distanceFt,
+          lineOfSight: true,
+        });
       }
       const next = autoResolveSystemDecisions(executeCombatAction({
         state,
