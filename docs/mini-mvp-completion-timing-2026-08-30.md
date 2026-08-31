@@ -553,6 +553,13 @@
 | A354 | Exact source commit and two-ref push | 1.542s commit + 7.515s pushes | passed | Commit `c46b4ed`; exactly twelve intended source/test files; feature and `main` advanced. |
 | A355 | Four-row workbook checkpoint | 7.849s discovery + 26.315s edit/render/export + 11.828s fresh verification + 0.6s visual QA | passed | 772 rows = 31 Passed / 24 Needs retest / 0 Failed / 717 Not tested; four rows/comments verified; zero formula errors. |
 | A356 | Four-entity report/timing reconciliation | under 0.2s patch plus review | completed | Added all three dimensions, cross-cutting findings, retained IDs/scene state, commit/gates, deployment block, and speed analysis. |
+| A357 | Prestidigitation combat reproduction | 0.849s select + 0.744s adjacent-cell click | atomic production block confirmed | Shared hover passed; no option form opened; `InvalidFacts` appeared; action, slots, HP, turn, and journal remained unchanged. Retained Dragonborn scene was not finished or deleted. |
+| A358 | Combat world-input navigation | 15.882s + 11.788s CodeGraph = 27.670s | Minor-Illusion-only page gate isolated | Shared form and canonical input types already existed; the page ignored every non-Minor-Illusion context. |
+| A359 | Generic combat world-input binding | sub-second patch plus review | completed | All supported forms now use the shared dialog; clicked-cell board facts replace scenario spatial facts while option-specific facts survive. |
+| A360 | Prestidigitation combat verification | 4.744s initial 4/4 + 3.166s lint + 30.007s failed build + 52.208s passing build + 5.206s final 33/33 | passed after one compile correction | First build caught combined Druidcraft/Prestidigitation union narrowing; explicit branches fixed it. Final build compiled 4,624 modules and passed PWA/DiceBox gates. |
+| A361 | Prestidigitation combat commit and two-ref push | 0.378s stage + 0.291s commit + 4.378s parallel-push critical path | passed | Commit `396c0f8`; exactly three intended files; feature and `main` advanced. |
+| A362 | Prestidigitation workbook checkpoint | 8.688s edit/changed-tab render/export + 3.595s fresh verification + 0.1s visual QA | passed | `Spells!35` now has two retained IDs/two comments; counts remain 31/24/0/717; zero formula errors. |
+| A363 | Prestidigitation combat report/timing reconciliation | under 0.2s patch plus review | completed | Added production failure, atomicity, preserved scene, fix/gates, deployment block, and speed analysis. |
 
 ### Current batch bottlenecks and concrete speedups
 
@@ -603,3 +610,5 @@
 45. **Command navigation cost about 108.7s across three CodeGraph calls, while exact JSON/source slices exposed the issue in seconds.** After one graph call satisfies architecture discovery, switch immediately to stable card number `SPELL-0272`, `turn_command`, and `resolveNextTurnCommand`; exclude `tmp/immutable-build-*` from the index.
 46. **Two unnecessary compiled-fixture reruns cost about 38.5s.** A fixed class root is not guaranteed to contain every class-list spell. Add a reusable rules-session helper that seeds a schema-validated active effect, and keep the separate exact-content execution test for choice expansion.
 47. **Batching four workbook rows kept the full checkpoint to about 46.6s.** This replaced four potential single-row render cycles and confirms that crash-safe notes plus one final all-tab render/export is the correct evidence cadence.
+48. **The successful build was the longest Prestidigitation-combat action at 52.208s; a type-narrowing miss wasted another 30.007s.** Split discriminated-union branches during editing or keep a fast incremental typecheck running before the full Vite/PWA build.
+49. **Browser proof took 1.593s while CodeGraph took 27.670s.** A mounted combat-page test for a non-Minor-Illusion form would turn this integration gap into a sub-five-second regression; excluding immutable release/build copies from the graph remains the largest navigation speedup.
