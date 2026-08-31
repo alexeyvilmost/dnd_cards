@@ -62,6 +62,9 @@ import {
 import { UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
 
 type Rng = () => number;
+const ALERT_INITIATIVE_SWAP_CAPABILITY = 'alert.initiative_swap';
+const PROTECTION_REACTION_CAPABILITY = 'fighting_style.protection.reaction';
+const INTERCEPTION_REACTION_CAPABILITY = 'fighting_style.interception.reaction';
 
 export interface SelectedMonster {
   monster: Monster;
@@ -162,6 +165,83 @@ function eventSummary(records: readonly CombatLogEventRecord[]): string {
     }
   });
   return fragments.length ? fragments.join('; ') : 'действие выполнено';
+}
+
+function actorHoldsWeaponOrShield(actor: ActorState): boolean {
+  const cards = [...(actor.character.equippedCards ?? []), ...(actor.character.knownCards ?? [])];
+  return (['main_hand', 'off_hand'] as const).some((slot) => {
+    const cardId = actor.runtime.equipment[slot];
+    if (!cardId) return false;
+    const card = cards.find((candidate) => candidate.id === cardId);
+    return card?.type === 'weapon' || card?.type === 'shield';
+  });
+}
+
+function interceptionCandidates(
+  state: SoloCombatState,
+  sourceActorId: string,
+  targetActorId: string,
+): string[] {
+  const targetSide = state.sideByActorId[targetActorId];
+  const targetPosition = state.tokens[targetActorId]?.position;
+  if (!targetSide || !targetPosition) return [];
+  return Object.values(state.world.actors)
+    .filter((candidate) => candidate.id !== targetActorId
+      && candidate.id !== sourceActorId
+      && state.sideByActorId[candidate.id] === targetSide
+      && Boolean(candidate.capabilities.featureSources?.[INTERCEPTION_REACTION_CAPABILITY])
+      && (candidate.runtime.resources.reaction ?? 0) >= 1
+      && actorHoldsWeaponOrShield(candidate)
+      && Boolean(state.tokens[candidate.id]?.position)
+      && gridDistanceFt(state.tokens[candidate.id].position, targetPosition) <= 5)
+    .map((candidate) => candidate.id)
+    .sort();
+}
+
+function hpPool(hp: { current: number; temp: number }): number { return hp.current + hp.temp; }
+
+function offerInterception(input: {
+  before: SoloCombatState;
+  after: SoloCombatState;
+  sourceActorId: string;
+  sourceActionId: string;
+  targetIds: readonly string[];
+  isAttack: boolean;
+}): SoloCombatState {
+  if (!input.isAttack || input.targetIds.length !== 1) return input.after;
+  const targetActorId = input.targetIds[0];
+  const existing = input.before.pendingInterceptionTrigger;
+  const trigger = existing?.sourceActorId === input.sourceActorId
+    && existing.sourceActionId === input.sourceActionId
+    && existing.targetActorId === targetActorId
+    ? existing
+    : {
+      sourceActorId: input.sourceActorId,
+      sourceActionId: input.sourceActionId,
+      targetActorId,
+      targetHpBefore: clone(input.before.world.actors[targetActorId].runtime.hp),
+      logIndex: input.before.log.length,
+    };
+  if (input.after.world.pendingResolution) {
+    return { ...input.after, pendingInterceptionTrigger: trigger };
+  }
+  const targetAfter = input.after.world.actors[targetActorId];
+  const hit = hasHitRecord(input.after, trigger.logIndex, input.sourceActorId);
+  const incomingDamage = hpPool(trigger.targetHpBefore) - hpPool(targetAfter.runtime.hp);
+  const { pendingInterceptionTrigger: _cleared, ...cleared } = input.after;
+  if (!hit || incomingDamage <= 0) return cleared as SoloCombatState;
+  const candidates = interceptionCandidates(cleared as SoloCombatState, input.sourceActorId, targetActorId);
+  if (!candidates.length) return cleared as SoloCombatState;
+  return {
+    ...(cleared as SoloCombatState),
+    pendingInterception: {
+      sourceActorId: input.sourceActorId,
+      targetActorId,
+      interceptorActorIds: candidates,
+      incomingDamage,
+      targetHpBefore: trigger.targetHpBefore,
+    },
+  };
 }
 
 const MAGIC_SCHOOL_RU: Record<string, string> = {
@@ -412,6 +492,21 @@ function declarationFor(
       ...(stonework ? { stonework } : {}),
     },
   ]));
+  const primaryTargetId = targetIds[0];
+  const protectionCandidates = primaryTargetId
+    ? Object.values(state.world.actors)
+      .filter((candidate) => candidate.capabilities.featureSources?.[PROTECTION_REACTION_CAPABILITY])
+      .map((candidate) => ({
+        factsSource: 'board' as const,
+        boardRevision: state.boardRevision,
+        protectorActorId: candidate.id,
+        protectorCanSeeAttacker: true,
+        protectorDistanceToTargetFt: gridDistanceFt(
+          state.tokens[candidate.id].position,
+          state.tokens[primaryTargetId].position,
+        ),
+      }))
+    : [];
   const choices: Record<string, string[]> = Object.fromEntries(
     Object.entries(suppliedChoices).map(([id, values]) => [id, [...values]]),
   );
@@ -445,6 +540,7 @@ function declarationFor(
   }
   return {
     sceneMode: 'encounter', targetIds, factsByTarget,
+    ...(protectionCandidates.length ? { protectionCandidates } : {}),
     ...(action.kind === 'spell' ? { spell: selectedSpellDeclaration(state.world, actorId, action) } : {}),
     ...(Object.keys(choices).length ? { choices } : {}),
     ...(primitive === 'burning_hands_objects' || primitive === 'area_object_push'
@@ -514,13 +610,23 @@ export function executeCombatAction(input: {
     input.worldInput,
   );
   const rng = input.rng ?? Math.random;
-  const withTriggeredHitOffer = (next: SoloCombatState) => offerTriggeredHitActions({
-    before: input.state,
-    after: next,
-    sourceActorId: input.actorId,
-    sourceActionId: action.id,
-    targetIds: input.targetIds,
-  });
+  const withTriggeredHitOffer = (next: SoloCombatState) => {
+    const intercepted = offerInterception({
+      before: input.state,
+      after: next,
+      sourceActorId: input.actorId,
+      sourceActionId: action.id,
+      targetIds: input.targetIds,
+      isAttack: isAttackAction(action) || isBasicUnarmedStrike(input.state, action),
+    });
+    return offerTriggeredHitActions({
+      before: input.state,
+      after: intercepted,
+      sourceActorId: input.actorId,
+      sourceActionId: action.id,
+      targetIds: input.targetIds,
+    });
+  };
   if (isBasicUnarmedStrike(input.state, action)) {
     if (input.targetIds.length !== 1) throw new Error('Безоружный удар требует одну цель');
     const option = input.choices?.[UNARMED_STRIKE_CHOICE_ID]?.[0] ?? 'damage';
@@ -546,6 +652,7 @@ export function executeCombatAction(input: {
         option,
         targetActorId: input.targetIds[0],
         facts: spatialFacts(begun, input.actorId, input.targetIds[0]),
+        ...(declaration.protectionCandidates ? { protectionCandidates: declaration.protectionCandidates } : {}),
       },
       rng,
       label: action.name,
@@ -575,6 +682,7 @@ export function executeCombatAction(input: {
     type: 'UseAction', actionId: action.id,
     targetIds: declaration.targetIds,
     ...(declaration.factsByTarget ? { factsByTarget: declaration.factsByTarget } : {}),
+    ...(declaration.protectionCandidates ? { protectionCandidates: declaration.protectionCandidates } : {}),
     ...(declaration.choices ? { choices: declaration.choices } : {}),
     ...(declaration.worldInput ? { worldInput: declaration.worldInput } : {}),
     ...(declaration.spell ? {
@@ -887,6 +995,18 @@ export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Ma
       });
     }
   }
+  const trigger = next.pendingInterceptionTrigger;
+  if (trigger && !next.world.pendingResolution) {
+    const action = next.catalogActions.find((candidate) => candidate.id === trigger.sourceActionId);
+    next = offerInterception({
+      before: next,
+      after: next,
+      sourceActorId: trigger.sourceActorId,
+      sourceActionId: trigger.sourceActionId,
+      targetIds: [trigger.targetActorId],
+      isAttack: Boolean(action && isAttackAction(action)),
+    });
+  }
   return next;
 }
 
@@ -903,6 +1023,18 @@ export function resolvePlayerReaction(
   const actingActorId = activeActorId(state);
   const monsterWasActing = state.world.actors[actingActorId]?.kind === 'monster';
   let next = autoResolveSystemDecisions(resolveDecision(state, response, rng), rng);
+  const interceptionTrigger = state.pendingInterceptionTrigger;
+  if (interceptionTrigger && !next.world.pendingResolution && !next.pendingInterception) {
+    const action = next.catalogActions.find((candidate) => candidate.id === interceptionTrigger.sourceActionId);
+    next = offerInterception({
+      before: state,
+      after: next,
+      sourceActorId: interceptionTrigger.sourceActorId,
+      sourceActionId: interceptionTrigger.sourceActionId,
+      targetIds: [interceptionTrigger.targetActorId],
+      isAttack: Boolean(action && isAttackAction(action)),
+    });
+  }
   if (pending.request.trigger.type === 'hit_by_attack') {
     next = offerTriggeredHitActions({
       before: state,
@@ -922,10 +1054,79 @@ export function resolvePlayerReaction(
     && next.outcome === 'active'
     && !next.world.pendingResolution
     && !next.pendingTriggeredAction
+    && !next.pendingInterception
     && activeActorId(next) === actingActorId) {
     return advanceTurn(next, rng);
   }
   return next;
+}
+
+/** Resolve Interception after a visible qualifying hit but before the held HP
+ * result is accepted by the solo-combat controller. */
+export function resolveSoloCombatInterception(
+  state: SoloCombatState,
+  interceptorActorId: string | null,
+  rng: Rng = Math.random,
+): SoloCombatState {
+  const pending = state.pendingInterception;
+  if (!pending) throw new Error('Нет ожидающей реакции «Перехват»');
+  if (interceptorActorId !== null && !pending.interceptorActorIds.includes(interceptorActorId)) {
+    throw new Error('Этот участник больше не может использовать «Перехват»');
+  }
+  const { pendingInterception: _cleared, ...cleared } = state;
+  let next = cleared as SoloCombatState;
+  if (interceptorActorId !== null) {
+    const interceptor = next.world.actors[interceptorActorId];
+    if (!interceptor || (interceptor.runtime.resources.reaction ?? 0) < 1) {
+      throw new Error('У участника нет доступной реакции');
+    }
+    const die = Math.floor(rng() * 10) + 1;
+    const reduction = Math.min(pending.incomingDamage, die + interceptor.character.profBonus);
+    const remaining = pending.incomingDamage - reduction;
+    const spentTemp = Math.min(pending.targetHpBefore.temp, remaining);
+    const targetHp = {
+      ...pending.targetHpBefore,
+      temp: pending.targetHpBefore.temp - spentTemp,
+      current: Math.max(0, pending.targetHpBefore.current - (remaining - spentTemp)),
+    };
+    next = {
+      ...next,
+      world: {
+        ...next.world,
+        actors: {
+          ...next.world.actors,
+          [interceptorActorId]: {
+            ...interceptor,
+            runtime: {
+              ...interceptor.runtime,
+              resources: {
+                ...interceptor.runtime.resources,
+                reaction: interceptor.runtime.resources.reaction - 1,
+              },
+            },
+          },
+          [pending.targetActorId]: {
+            ...next.world.actors[pending.targetActorId],
+            runtime: { ...next.world.actors[pending.targetActorId].runtime, hp: targetHp },
+          },
+        },
+      },
+    };
+    next = appendLog(
+      next,
+      interceptorActorId,
+      `Перехват: 1к10 (${die}) + БМ ${interceptor.character.profBonus} = ${die + interceptor.character.profBonus}; `
+        + `урон ${pending.incomingDamage} → ${remaining} (−${reduction}).`,
+    );
+  } else {
+    next = appendLog(next, pending.targetActorId, 'Перехват: реакция пропущена.');
+  }
+  const activeId = activeActorId(next);
+  return next.world.actors[activeId]?.kind === 'monster'
+    && next.outcome === 'active'
+    && !next.world.pendingResolution
+    ? advanceTurn(next, rng)
+    : next;
 }
 
 function triggerEvents(action: RuleActionDefinition): string[] {
@@ -977,6 +1178,12 @@ function offerTriggeredHitActions(input: {
     if (action.id === sourceActionId || !owned.has(action.id)
       || !isTriggeredCombatAction(action, 'hit')) return [];
     const activation = action.mechanics.activation as Record<string, unknown> | undefined;
+    const trigger = activation?.trigger as Record<string, unknown> | undefined;
+    const requiredSourceCardNumber = typeof trigger?.source_action_card_number === 'string'
+      ? trigger.source_action_card_number
+      : undefined;
+    const sourceCardNumber = after.actionPresentation?.[sourceActionId]?.actionRef?.card_number;
+    if (requiredSourceCardNumber && sourceCardNumber !== requiredSourceCardNumber) return [];
     const costs = Array.isArray(activation?.cost)
       ? activation.cost as Array<Record<string, unknown>>
       : [];
@@ -1185,7 +1392,8 @@ export function resolveSoloCombatTurnStart(
 
 export function advanceTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
   if (state.outcome !== 'active' || state.world.pendingResolution
-    || state.pendingTurnStartGrappleDamage) return state;
+    || state.pendingTurnStartGrappleDamage || state.pendingInterception
+    || state.pendingAlertSwapActorIds?.length) return state;
   const endingActorId = activeActorId(state);
   let next = dispatch({
     state,
@@ -1196,6 +1404,59 @@ export function advanceTurn(state: SoloCombatState, rng: Rng = Math.random): Sol
   if (next.outcome !== 'active') return next;
   const startingActorId = activeActorId(next);
   return startTurnOrRequestGrappleDamage(next, startingActorId, rng);
+}
+
+/** Resolve one Alert owner's immediate post-Initiative swap, then start turn one
+ * after every eligible controlled owner has either swapped or declined. */
+export function resolveSoloCombatAlertSwap(
+  state: SoloCombatState,
+  alertActorId: string,
+  allyActorId: string | null,
+  rng: Rng = Math.random,
+): SoloCombatState {
+  const pending = state.pendingAlertSwapActorIds ?? [];
+  if (pending[0] !== alertActorId) throw new Error('Этот выбор инициативы больше не ожидается');
+  const alertActor = state.world.actors[alertActorId];
+  if (!alertActor?.capabilities.featureSources?.[ALERT_INITIATIVE_SWAP_CAPABILITY]) {
+    throw new Error('У участника нет способности «Бдительный: обмен инициативой»');
+  }
+
+  let next = state;
+  if (allyActorId !== null) {
+    const ally = state.world.actors[allyActorId];
+    if (!ally || combatRelation(state, alertActorId, allyActorId) !== 'ally' || allyActorId === alertActorId) {
+      throw new Error('Для обмена инициативой нужен другой союзник в этой сцене');
+    }
+    next = dispatch({
+      state,
+      command: {
+        ...commandBase(state, alertActorId),
+        type: 'SwapInitiative',
+        allyActorId,
+        facts: {
+          factsSource: 'board',
+          boardRevision: state.boardRevision,
+          relation: 'ally',
+          willing: true,
+          confirmedByControllerId: ally.controllerId,
+        },
+      },
+      rng: () => { throw new Error('Обмен инициативой не бросает кости'); },
+      label: 'Бдительный',
+      emptySummary: `обмен инициативой с ${ally.name}`,
+    });
+    const order = next.world.scene.mode === 'encounter' ? next.world.scene.initiative : [];
+    const byActor = new Map(next.initiative.map((entry) => [entry.actorId, entry]));
+    next = { ...next, initiative: order.map((actorId) => byActor.get(actorId)!).filter(Boolean) };
+  } else {
+    next = appendLog(state, alertActorId, 'Бдительный: обмен инициативой пропущен.');
+  }
+
+  const remaining = pending.slice(1);
+  if (remaining.length) return { ...next, pendingAlertSwapActorIds: remaining };
+  const { pendingAlertSwapActorIds: _cleared, ...ready } = next;
+  const actorId = activeActorId(ready as SoloCombatState);
+  return startTurnOrRequestGrappleDamage(ready as SoloCombatState, actorId, rng);
 }
 
 /** Test-scene authority: replace initiative totals while preserving the current turn. */
@@ -1688,7 +1949,9 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
       next = autoResolveSystemDecisions(next, rng);
     }
   }
-  return next.world.pendingResolution || next.outcome !== 'active' ? next : advanceTurn(next, rng);
+  return next.world.pendingResolution || next.pendingInterception || next.outcome !== 'active'
+    ? next
+    : advanceTurn(next, rng);
 }
 
 function withInitiativeAndStart(state: SoloCombatState, rng: Rng): SoloCombatState {
@@ -1709,6 +1972,12 @@ function withInitiativeAndStart(state: SoloCombatState, rng: Rng): SoloCombatSta
     rng,
     label: 'Инициатива',
   });
+  const alertOwners = controlledCharacterIds(next).filter((actorId) => {
+    const actor = next.world.actors[actorId];
+    return Boolean(actor?.capabilities.featureSources?.[ALERT_INITIATIVE_SWAP_CAPABILITY])
+      && controlledCharacterIds(next).some((allyId) => allyId !== actorId);
+  });
+  if (alertOwners.length) return { ...next, pendingAlertSwapActorIds: alertOwners };
   const actorId = activeActorId(next);
   return startTurnOrRequestGrappleDamage(next, actorId, rng);
 }

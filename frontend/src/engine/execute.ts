@@ -45,6 +45,8 @@ import { collectListeners, isAuto, toOffer, type DomainEvent } from './dispatch'
 import { concentrationDC, concentrationEntry, dropConcentration } from './concentration';
 import { retargetAttackRoll, rollD20 } from './roll';
 import { applyDamageDieRules } from './rollRules';
+import { drawDie } from './random';
+import { hitDiceResourceKey, hitDieSides } from './resources';
 import {
   attackRangeFromEffect,
   attackRollQueryFacts,
@@ -171,9 +173,11 @@ const MODIFIER_OPS = new Set([
   'add', 'set', 'advantage', 'disadvantage', 'reroll', 'multiply', 'upgrade',
   'downgrade', 'auto_fail', 'auto_crit', 'deny', 'set_die', 'crit_range',
   'outcome', 'on_roll', 'minimum_die', 'die_bonus', 'bonus_die', 'explode',
+  'minimum_total', 'reroll_damage', 'reroll_healing_ones',
 ]);
 const NUMERIC_MODIFIER_OPS = new Set([
   'add', 'set', 'multiply', 'upgrade', 'downgrade', 'crit_range', 'minimum_die', 'die_bonus',
+  'minimum_total',
 ]);
 const MOVEMENT_MODES = new Set(['push', 'pull', 'teleport', 'extra_speed', 'double', 'knock_prone', 'move']);
 const RESISTANCE_LEVELS = new Set(['resistance', 'immunity', 'vulnerability']);
@@ -986,8 +990,15 @@ function preflightPayload(
     case 'healing':
     case 'reduce_damage':
     case 'temp_hp': {
-      if (value.amount == null) throw mechanicsError('INVALID_PAYLOAD', path, `${kind} requires amount`);
-      assertFiniteFormula(withScaling(String(value.amount), value, ctx), `${path}.amount`, ctx);
+      if (kind === 'healing' && value.hit_die === 'target') {
+        const targetHitDie = ctx.target?.characterContext?.hitDie;
+        if (!hitDieSides(targetHitDie)) {
+          throw mechanicsError('INVALID_MECHANICS', `${path}.hit_die`, 'target healing requires a declared target Hit Die');
+        }
+      } else {
+        if (value.amount == null) throw mechanicsError('INVALID_PAYLOAD', path, `${kind} requires amount`);
+        assertFiniteFormula(withScaling(String(value.amount), value, ctx), `${path}.amount`, ctx);
+      }
       break;
     }
     case 'condition': {
@@ -1021,7 +1032,7 @@ function preflightPayload(
         throw mechanicsError('INVALID_PAYLOAD', path, 'resource id must be non-empty');
       }
       const op = String(value.op ?? 'grant');
-      if (op !== 'grant' && op !== 'restore') {
+      if (op !== 'grant' && op !== 'restore' && op !== 'grant_capped') {
         throw mechanicsError('INVALID_PAYLOAD', `${path}.op`, `executor does not support resource operation «${op}»`);
       }
       if (value.amount !== undefined) assertFiniteFormula(value.amount, `${path}.amount`, ctx, targetOwned);
@@ -2206,18 +2217,43 @@ function applyHealing(
     events.push(narrativeEvent('Лечение заблокировано действующим эффектом.'));
     return state;
   }
-  const formula = withScaling(String(payload.amount ?? '0'), payload, ctx);
+  const targetHitDie = payload.hit_die === 'target' ? ctx.target?.characterContext?.hitDie : null;
+  const sides = targetHitDie ? hitDieSides(targetHitDie) : null;
+  const formula = sides
+    ? `1d${sides}+prof_bonus`
+    : withScaling(String(payload.amount ?? '0'), payload, ctx);
   const fr = rollFormula(formula, formulaCtx(ctx), { rng: ctx.rng });
   const next = cloneState(state);
-  next.hp.current = Math.min(next.hp.max, next.hp.current + fr.total);
-  events.push(healingEvent(fr.total, {
+  if (sides && payload.spend_hit_die === true) {
+    const key = hitDiceResourceKey(targetHitDie);
+    if (!key || (next.resources[key] ?? 0) < 1) throw new InsufficientResourcesError([key ?? 'hit_die']);
+    next.resources[key] -= 1;
+    events.push({ type: 'resource_spent', resource: key, amount: 1, remaining: next.resources[key] });
+  }
+  const healingRules = collectModifiers(state, passivesFromCtx(ctx), {
+    roll: 'healing', formulaCtx: formulaCtx(ctx), evalCtx: evalCtxOf(state, ctx),
+  }).rules;
+  const rerollOnes = payload.reroll_ones === true
+    || healingRules.some((rule) => rule.op === 'reroll_healing_ones');
+  const dice = fr.dice.map((die) => ({ ...die }));
+  let total = fr.total;
+  if (rerollOnes) {
+    for (const die of [...dice]) {
+      if (die.discarded || die.result !== 1) continue;
+      die.discarded = true;
+      const replacement = drawDie(ctx.rng, die.sides);
+      dice.push({ sides: die.sides, result: replacement });
+      total += replacement - 1;
+    }
+  }
+  next.hp.current = Math.min(next.hp.max, next.hp.current + total);
+  events.push(healingEvent(total, formattedRoll({
     kind: 'healing',
     advantage: 'none',
-    dice: fr.dice,
+    dice,
     modifiers: fr.modifiers,
-    total: fr.total,
-    text: fr.text,
-  }));
+    total,
+  })));
   return next;
 }
 
@@ -2436,7 +2472,7 @@ function applyResource(
   }
   const amount = Math.max(0, Math.floor(evaluated));
   const op = String(payload.op ?? 'grant');
-  if (op !== 'grant' && op !== 'restore') {
+  if (op !== 'grant' && op !== 'restore' && op !== 'grant_capped') {
     throw mechanicsError('INVALID_PAYLOAD', 'runtime.payload', `unsupported resource operation «${op}»`);
   }
   const next = cloneState(state);
@@ -2445,6 +2481,10 @@ function applyResource(
   if (op === 'restore') {
     const max = next.maxResources[key];
     next.resources[key] = max != null ? Math.min(max, current + amount) : current + amount;
+  } else if (op === 'grant_capped') {
+    const cap = Math.max(1, Math.floor(Number(payload.max ?? 1)) || 1);
+    next.maxResources[key] = Math.max(next.maxResources[key] ?? 0, cap);
+    next.resources[key] = Math.min(cap, current + amount);
   } else {
     next.resources[key] = current + amount;
   }
@@ -2490,12 +2530,22 @@ function damageRules(
   filter: ModifierQueryFacts,
   weaponMod?: number,
 ): Dict[] {
-  return collectModifiers(state, passivesFromCtx(ctx), {
+  const rules = collectModifiers(state, passivesFromCtx(ctx), {
     roll: 'damage',
     filter,
     formulaCtx: { ...formulaCtx(ctx), ...(weaponMod !== undefined ? { weaponMod } : {}) },
     evalCtx: evalCtxOf(state, ctx),
   }).rules;
+  const fired = new Set(state.firedThisTurn ?? []);
+  return rules.filter((rule) => {
+    const key = typeof rule.once_per_turn === 'string' ? rule.once_per_turn.trim() : '';
+    return !key || !fired.has(key);
+  });
+}
+
+function recordUsedDamageRules(state: RuntimeState, keys: readonly string[]): void {
+  if (!keys.length) return;
+  state.firedThisTurn = [...new Set([...(state.firedThisTurn ?? []), ...keys])];
 }
 
 /** Лимит взрывных костей из свойства payload.explode ({limit}|число|формула). undefined — нет взрыва. */
@@ -2562,6 +2612,7 @@ function resolveDamageAmounts(
       const fr = rollFormula(crit ? doubleDice(line.dice) : line.dice, formulaCtx(ctx), { rng: damageRng });
       // Правила кости (die_bonus/explode) — на кости строки, до модов характеристики/зачарования.
       const ruled = applyDamageDieRules(fr.dice, dmgRules, { explodeLimit, rng: damageRng });
+      recordUsedDamageRules(state, ruled.usedRuleKeys);
       let total = fr.total + ruled.delta;
       let extraMods: RollModifier[] = [];
       // Мод характеристики и зачарование — только на основную строку (RAW: +N один раз к урону оружия).
@@ -2633,6 +2684,7 @@ function resolveDamageAmounts(
     const dmgRules = damageRules(ctx, state, damageFilter, attackFacts?.weaponMod);
     const fr = rollFormula(crit ? doubleDice(scaled) : scaled, formulaCtx(ctx), { rng: damageRng });
     const ruled = applyDamageDieRules(fr.dice, dmgRules, { explodeLimit, rng: damageRng });
+    recordUsedDamageRules(state, ruled.usedRuleKeys);
     // C1: модификаторы урона из эффектов. Для не-оружейного урона ability берём из payload,
     // если задан; иначе ability в фильтр не кладём (эффект без ability-фильтра всё равно применится).
     const extraMods = payload.suppress_damage_modifiers === true
@@ -3085,6 +3137,17 @@ function applyPayloads(
           next = addItemToInventory(next, cardId, qty);
           const name = typeof p.name === 'string' ? p.name : undefined;
           events.push(itemAddedEvent(cardId, qty, invQtyOf(next, cardId), name));
+          if (p.temporary_until === 'long_rest') {
+            const entry: ActiveEffectEntry = {
+              id: runtimeEffectId(ctx, `temporary-item-${cardId}`, next.activeEffects.length),
+              name: `Временный предмет: ${name ?? cardId}`,
+              mechanics: { kind: 'temporary_inventory_item', card_id: cardId, qty },
+              expiry: 'long_rest',
+              source,
+            };
+            next = { ...next, activeEffects: [...next.activeEffects, entry] };
+            events.push({ type: 'effect_applied', name: entry.name, sourceAction: source });
+          }
         } else {
           throw mechanicsError('INVALID_PAYLOAD', 'runtime.payload', 'add_item has no card_id/value');
         }

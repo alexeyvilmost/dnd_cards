@@ -73,7 +73,18 @@ export function selectedChoicePayloads(choice: Dict, selected: string[]): Dict[]
       // S3 контейнеры / выбор-в-моменте предмета: выбранный предмет → в инвентарь (add_item, S1).
       // qty — из варианта (контейнер несёт quantity в options.items), иначе 1.
       const q = item && (item as Dict).qty != null ? Number((item as Dict).qty) : 1;
-      out.push({ kind: 'add_item', card_id: value, qty: Math.max(1, Math.floor(q) || 1) });
+      out.push({
+        kind: 'add_item',
+        card_id: value,
+        qty: Math.max(1, Math.floor(q) || 1),
+        ...((item as Dict | undefined)?.temporary_until != null
+          ? { temporary_until: (item as Dict).temporary_until }
+          : {}),
+        ...((item as Dict | undefined)?.temporary_until != null
+          && (item as Dict | undefined)?.name != null
+          ? { name: (item as Dict).name }
+          : {}),
+      });
     }
   }
 

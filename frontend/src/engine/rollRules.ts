@@ -9,11 +9,13 @@
  *  - crit_range — сместить порог крита (складывается): value (отрицательное — крит легче).
  *  - outcome    — переопределить исход при натуральном значении в диапазоне (11–14 → крит-промах):
  *                 natural + value ('crit'|'crit_miss'|'hit'|'miss'|'success'|'fail').
+ *  - minimum_total — поднять итог броска до указанного значения (Героическое вдохновение).
  *  - on_roll    — сработать payload-ами при натуральном значении (на 15 при атаке → парализовать
  *                 цель): natural + then[].
  * Правила урона (применяет execute.ts resolveDamageAmounts):
  *  - minimum_die — считать натуральный результат каждой подходящей кости не ниже value.
  *  - die_bonus  — +value к каждой кости заданных граней (+1 к каждой к8): applies_to.die + value.
+ *  - reroll_damage — перебросить весь подходящий набор костей и оставить лучший результат.
  *  - explode    — взрывные кости: на натуральном максимуме добросить ещё (Чародейский выброс):
  *                 limit (сколько всего добросов; формула вычисляется вызывающим). Может задаваться
  *                 и свойством payload-урона `explode:{limit}` (локально для конкретного заклинания).
@@ -23,8 +25,8 @@ import { drawDie } from './random';
 
 type Dict = Record<string, unknown>;
 
-export const D20_RULE_OPS = new Set(['reroll', 'set_die', 'crit_range', 'outcome', 'on_roll', 'bonus_die']);
-export const DAMAGE_RULE_OPS = new Set(['minimum_die', 'die_bonus', 'explode']);
+export const D20_RULE_OPS = new Set(['reroll', 'set_die', 'crit_range', 'outcome', 'on_roll', 'bonus_die', 'minimum_total']);
+export const DAMAGE_RULE_OPS = new Set(['minimum_die', 'die_bonus', 'explode', 'reroll_damage', 'reroll_healing_ones']);
 export const ROLL_RULE_OPS = new Set([...D20_RULE_OPS, ...DAMAGE_RULE_OPS]);
 
 const num = (v: unknown, d = 0): number => { const n = Number(v); return Number.isFinite(n) ? n : d; };
@@ -96,6 +98,23 @@ export function rollD20BonusDice(rules: Dict[], rng: () => number): DieRoll[] {
   return dice;
 }
 
+/** Highest floor requested for the final d20 total. */
+export function d20MinimumTotal(rules: Dict[]): { value: number; source: string } | undefined {
+  let best: { value: number; source: string } | undefined;
+  for (const rule of rules) {
+    if (rule.op !== 'minimum_total') continue;
+    const value = Math.floor(num(rule.value ?? rule.minimum, 0));
+    if (!Number.isFinite(value) || value <= (best?.value ?? -Infinity)) continue;
+    best = {
+      value,
+      source: typeof rule.source === 'string' && rule.source.trim()
+        ? rule.source.trim()
+        : 'Минимальный результат',
+    };
+  }
+  return best;
+}
+
 /** Переопределение исхода по натуральному значению; undefined — базовая логика. */
 export function outcomeOverride(rules: Dict[], natural: number): string | undefined {
   for (const r of rules) if (r.op === 'outcome' && matchesNatural(natural, r.natural)) return String(r.value ?? r.outcome ?? '');
@@ -125,9 +144,34 @@ export function applyDamageDieRules(
   dice: DieRoll[],
   rules: Dict[],
   opts: { explodeLimit?: number; rng: () => number },
-): { dice: DieRoll[]; delta: number } {
+): { dice: DieRoll[]; delta: number; usedRuleKeys: string[] } {
   let delta = 0;
   const out = dice.map((d) => ({ ...d }));
+  const usedRuleKeys: string[] = [];
+
+  for (const rule of rules) {
+    if (rule.op !== 'reroll_damage') continue;
+    const dieSize = num((rule.applies_to as Dict)?.die);
+    const eligible = out.filter((die) => !die.discarded
+      && (!dieSize || die.sides === dieSize)
+      && (rule.natural == null || matchesNatural(die.result, rule.natural)));
+    if (!eligible.length) continue;
+    const rerolled = eligible.map((die) => ({ sides: die.sides, result: drawDie(opts.rng, die.sides) }));
+    const originalTotal = eligible.reduce((sum, die) => sum + die.result, 0);
+    const rerolledTotal = rerolled.reduce((sum, die) => sum + die.result, 0);
+    const keepNew = rule.keep === 'new';
+    if (keepNew || rerolledTotal > originalTotal) {
+      for (const die of eligible) die.discarded = true;
+      out.push(...rerolled);
+      delta += rerolledTotal - originalTotal;
+    } else {
+      out.push(...rerolled.map((die) => ({ ...die, discarded: true })));
+    }
+    const key = typeof rule.once_per_turn === 'string' && rule.once_per_turn.trim()
+      ? rule.once_per_turn.trim()
+      : undefined;
+    if (key) usedRuleKeys.push(key);
+  }
 
   const exRule = rules.find((r) => r.op === 'explode');
   const limit = opts.explodeLimit ?? (exRule ? num(exRule.limit ?? exRule.value, 0) : 0);
@@ -164,5 +208,5 @@ export function applyDamageDieRules(
     for (const d of out) if (!d.discarded && d.sides === dieSize) { d.result += v; delta += v; }
   }
 
-  return { dice: out, delta };
+  return { dice: out, delta, usedRuleKeys: [...new Set(usedRuleKeys)] };
 }

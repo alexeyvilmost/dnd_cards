@@ -2,6 +2,7 @@ import type {
   ActionWorldInput,
   GameCommand,
   RuleActionDefinition,
+  ProtectionReactionCandidateFacts,
   SpatialFacts,
   WorldState,
 } from '../rules-core/domain';
@@ -25,6 +26,8 @@ export interface SheetCanonicalCommandInput {
   targetIds: string[];
   /** Explicit scenario/board facts for every selected actor target. */
   factsByTarget?: Record<string, SpatialFacts>;
+  /** Board observations for every Protection owner; required only in encounter transport. */
+  protectionCandidates?: ProtectionReactionCandidateFacts[];
   /** Explicit world-object declaration selected and confirmed in the sheet form. */
   worldInput?: ActionWorldInput;
   /** Scenario objects declared by the user before dispatch; committed only with an accepted action. */
@@ -186,6 +189,9 @@ export function buildSheetCanonicalCommand(input: {
     targetIds: [...declaration.targetIds],
     ...(declaration.factsByTarget
       ? { factsByTarget: clone(declaration.factsByTarget) }
+      : {}),
+    ...(declaration.protectionCandidates
+      ? { protectionCandidates: clone(declaration.protectionCandidates) }
       : {}),
     ...(declaration.choices ? { choices: clone(declaration.choices) } : {}),
     ...(spell ? { spell } : {}),

@@ -114,6 +114,17 @@ describe('Правила урона (applyDamageDieRules)', () => {
     expect(delta).toBe(3);
   });
 
+  it('minimum_total — поднимает итог до 20 и объясняет источник', () => {
+    const roll = rollD20({
+      rng: seq([face(4)]),
+      modifiers: [{ value: 2, source: 'БМ' }],
+      rules: [{ op: 'minimum_total', applies_to: { roll: 'd20' }, value: 20, source: 'Героическое вдохновение' }],
+    });
+    expect(roll.total).toBe(20);
+    expect(roll.modifiers).toContainEqual({ value: 14, source: 'Героическое вдохновение' });
+    expect(roll.text).toContain('+14 Героическое вдохновение = 20');
+  });
+
   it('die_bonus — +1 к каждой к8 (к6 не трогает)', () => {
     const dice: DieRoll[] = [{ sides: 8, result: 5 }, { sides: 8, result: 3 }, { sides: 6, result: 6 }];
     const { dice: out, delta } = applyDamageDieRules(dice, [{ op: 'die_bonus', applies_to: { die: 8 }, value: 1 }], { rng: seq([]) });
@@ -160,6 +171,27 @@ describe('Интеграция через executeAction', () => {
     expect(dmg).toBe(10); // (5+1)+(3+1)
   });
 
+  it('reroll_damage — перебрасывает весь набор и оставляет лучший результат', () => {
+    const dice: DieRoll[] = [{ sides: 6, result: 1 }, { sides: 6, result: 2 }];
+    const improved = applyDamageDieRules(dice, [{
+      op: 'reroll_damage', once_per_turn: 'savage_attacker', applies_to: { roll: 'damage' },
+    }], { rng: seq([face(5, 6), face(4, 6)]) });
+    expect(improved.delta).toBe(6);
+    expect(improved.dice).toEqual([
+      { sides: 6, result: 1, discarded: true },
+      { sides: 6, result: 2, discarded: true },
+      { sides: 6, result: 5 },
+      { sides: 6, result: 4 },
+    ]);
+    expect(improved.usedRuleKeys).toEqual(['savage_attacker']);
+
+    const kept = applyDamageDieRules([{ sides: 8, result: 8 }], [{
+      op: 'reroll_damage', applies_to: { roll: 'damage' },
+    }], { rng: seq([face(1, 8)]) });
+    expect(kept.delta).toBe(0);
+    expect(kept.dice[1]).toMatchObject({ sides: 8, result: 1, discarded: true });
+  });
+
   it('minimum_die обновляет и кости, и читаемую разбивку урона', () => {
     const passives = [{ effects: [{ resolution: 'auto', result: [{
       kind: 'modifier', applies_to: { roll: 'damage', die: 6 }, op: 'minimum_die', value: 3,
@@ -178,6 +210,33 @@ describe('Интеграция через executeAction', () => {
         dice: [{ sides: 6, result: 3 }, { sides: 6, result: 4 }],
         text: 'к6: 3, 4',
       },
+    });
+  });
+
+  it('Полевой медик тратит кость хитов цели, бросает её размер и перебрасывает 1', () => {
+    const source = { ...char, profBonus: 2 };
+    const targetCharacter = { ...char, hitDie: 'd10' };
+    const target = {
+      ...fresh(),
+      hp: { current: 1, max: 20, temp: 0 },
+      resources: { hit_dice_d10: 1 },
+      maxResources: { hit_dice_d10: 1 },
+    };
+    const mech = {
+      effects: [{ who: 'target', resolution: 'auto', result: [{
+        kind: 'healing', hit_die: 'target', spend_hit_die: true, reroll_ones: true,
+      }] }],
+    };
+    const result = executeAction(fresh(), mech, {
+      character: source,
+      target: { runtimeState: target, characterContext: targetCharacter },
+      rng: seq([face(1, 10), face(7, 10)]),
+    });
+    expect(result.targetState?.resources.hit_dice_d10).toBe(0);
+    expect(result.targetState?.hp.current).toBe(10);
+    expect(result.events.find((event) => event.type === 'healing')).toMatchObject({
+      type: 'healing', amount: 9,
+      roll: { dice: [{ sides: 10, result: 1, discarded: true }, { sides: 10, result: 7 }] },
     });
   });
 });

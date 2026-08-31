@@ -9,7 +9,7 @@
 import type {
   CharacterContext, EngineEvent, ExecuteContext, ExecuteResult, ReactionOffer, RuntimeState,
 } from '../mvp/contracts';
-import { rollEvent, turnEndedEvent } from './events';
+import { narrativeEvent, rollEvent, turnEndedEvent } from './events';
 import {
   hitDiceResourceKey,
   hitDieSides,
@@ -514,6 +514,20 @@ export function longRest(state: RuntimeState, ctx: CharacterContext): ExecuteRes
   const afterElapsedTime: typeof next.activeEffects = [];
   for (const effect of next.activeEffects) {
     if (effect.expiry === 'long_rest' || effect.expiry === 'until_rest') {
+      if (effect.mechanics.kind === 'temporary_inventory_item') {
+        const cardId = String(effect.mechanics.card_id ?? '');
+        const qty = Math.max(1, Math.floor(Number(effect.mechanics.qty ?? 1)) || 1);
+        let remaining = qty;
+        next.inventory = next.inventory.flatMap((row) => {
+          if (remaining <= 0 || row.cardId !== cardId) return [row];
+          const removed = Math.min(remaining, row.qty);
+          remaining -= removed;
+          return row.qty > removed ? [{ ...row, qty: row.qty - removed }] : [];
+        });
+        events.push(narrativeEvent(
+          `${effect.name} распался после долгого отдыха и удалён из инвентаря.`,
+        ));
+      }
       events.push({ type: 'effect_expired', name: effect.name });
       continue;
     }

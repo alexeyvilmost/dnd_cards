@@ -787,6 +787,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairFireBoltUpcastDescription,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     miniMVPBaseStylesOriginMigrationVersion,
+			Description: "Материализовать исполняемые контракты базовых механик, боевых стилей и черт происхождения",
+			Up:          repairMiniMVPBaseStylesOriginRuntime,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

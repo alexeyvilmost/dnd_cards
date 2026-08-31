@@ -5,6 +5,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { executeAction, MechanicsExecutionError } from './execute';
+import { longRest } from './turn';
 import type { CharacterContext, ExecuteContext, RuntimeState } from '../mvp/contracts';
 
 const character: CharacterContext = { abilityMods: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 }, profBonus: 2, level: 5 };
@@ -44,5 +45,26 @@ describe('S1 — add_item (рантайм-выдача предмета)', () =>
   it('неположительный qty — fail-closed, а не неявное исправление контента', () => {
     expect(() => executeAction(fresh(), addAct('x', { qty: -3 }), ctx)).toThrow(MechanicsExecutionError);
     expect(() => executeAction(fresh(), addAct('y', { qty: 0 }), ctx)).toThrow(MechanicsExecutionError);
+  });
+
+  it('временный предмет Самоделкина явно помечен и удаляется на следующем долгом отдыхе', () => {
+    const made = executeAction(
+      fresh(),
+      addAct('torch', { name: 'Факел', temporary_until: 'long_rest' }),
+      ctx,
+    );
+    expect(made.state.inventory).toContainEqual({ cardId: 'torch', qty: 1 });
+    expect(made.state.activeEffects[0]).toMatchObject({
+      name: 'Временный предмет: Факел',
+      expiry: 'long_rest',
+      mechanics: { kind: 'temporary_inventory_item', card_id: 'torch', qty: 1 },
+    });
+
+    const rested = longRest(made.state, character);
+    expect(rested.state.inventory.find((item) => item.cardId === 'torch')).toBeUndefined();
+    expect(rested.state.activeEffects).toEqual([]);
+    expect(rested.events).toContainEqual(expect.objectContaining({
+      type: 'narrative', text: expect.stringContaining('удалён из инвентаря'),
+    }));
   });
 });

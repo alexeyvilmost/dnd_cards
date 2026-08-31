@@ -16,6 +16,7 @@ import {
   outcomeOverride,
   rollTriggers,
   rollD20BonusDice,
+  d20MinimumTotal,
 } from './rollRules';
 import { drawDie } from './random';
 
@@ -78,7 +79,7 @@ function buildD20Text(
 export function rollD20(opts: RollD20Options): RollLog {
   const rng = opts.rng;
   const advantage: AdvantageState = opts.advantage ?? 'none';
-  const modifiers = opts.modifiers ?? [];
+  const modifiers = [...(opts.modifiers ?? [])];
   const modSum = modifiers.reduce((s, m) => s + m.value, 0);
   const rules = opts.rules ?? [];
   const faces = d20Faces(rules); // set_die: к24 вместо к20
@@ -111,7 +112,11 @@ export function rollD20(opts: RollD20Options): RollLog {
   const dieBonus = d20DieBonus(rules, faces);
   const bonusDice = rollD20BonusDice(rules, rng);
   const bonusDiceTotal = bonusDice.reduce((sum, die) => sum + die.result * (die.sign ?? 1), 0);
-  const total = natural + dieBonus + bonusDiceTotal + modSum;
+  const rawTotal = natural + dieBonus + bonusDiceTotal + modSum;
+  const minimumTotal = d20MinimumTotal(rules);
+  const floorBonus = minimumTotal ? Math.max(0, minimumTotal.value - rawTotal) : 0;
+  if (floorBonus) modifiers.push({ value: floorBonus, source: minimumTotal!.source });
+  const total = rawTotal + floorBonus;
   const critAt = (opts.critRange ?? 20) + critRangeShift(rules); // crit_range складывается
 
   let outcome: RollLog['outcome'];

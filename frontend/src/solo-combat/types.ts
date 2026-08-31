@@ -118,6 +118,22 @@ export interface PendingTurnStartGrappleDamage {
   targetActorIds: string[];
 }
 
+export interface PendingInterception {
+  sourceActorId: string;
+  targetActorId: string;
+  interceptorActorIds: string[];
+  incomingDamage: number;
+  targetHpBefore: { current: number; max: number; temp: number };
+}
+
+export interface PendingInterceptionTrigger {
+  sourceActorId: string;
+  sourceActionId: string;
+  targetActorId: string;
+  targetHpBefore: { current: number; max: number; temp: number };
+  logIndex: number;
+}
+
 export interface SoloCombatState {
   schemaVersion: typeof SOLO_COMBAT_SCHEMA_VERSION;
   characterId: string;
@@ -153,6 +169,10 @@ export interface SoloCombatState {
   log: CombatLogEntry[];
   pendingTriggeredAction?: PendingTriggeredAction;
   pendingTurnStartGrappleDamage?: PendingTurnStartGrappleDamage;
+  pendingInterception?: PendingInterception;
+  pendingInterceptionTrigger?: PendingInterceptionTrigger;
+  /** Alert owners waiting to accept or decline their post-Initiative swap before turn one starts. */
+  pendingAlertSwapActorIds?: string[];
   outcome: 'active' | 'victory' | 'defeat';
 }
 

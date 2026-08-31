@@ -38,6 +38,8 @@ import {
   refreshSoloCombatParticipants,
   revealCombatMagicAura,
   resolvePlayerReaction,
+  resolveSoloCombatAlertSwap,
+  resolveSoloCombatInterception,
   resolveSoloCombatTurnStart,
   resolveTriggeredCombatAction,
   selectedTargetsForAction,
@@ -580,7 +582,7 @@ export default function SoloCombatPage() {
     : null;
   return (
     <main className="solo-combat-page forge">
-      <MonsterTurnController state={state} disabled={busy || Boolean(pendingTurnStart)} onTransition={apply} onError={setError} />
+      <MonsterTurnController state={state} disabled={busy || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception)} onTransition={apply} onError={setError} />
       <header className="combat-topbar">
         <div className="combat-topbar__navigation"><Link to={`/characters-v3/${id}`}><ArrowLeft size={18} /> Лист</Link><button type="button" onClick={() => setSceneConstructorOpen(true)}><SlidersHorizontal size={16} /> Сцена</button></div>
         <div className="initiative-ribbon" aria-label="Порядок инициативы">
@@ -674,7 +676,7 @@ export default function SoloCombatPage() {
         onAddMonster={addSceneMonster}
         onClose={() => setSceneConstructorOpen(false)}
       />}
-      <CombatHotbar state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); apply(advanceTurn(state)); }} onSheet={() => { setSheetActorId(activeControlledActorId); setSheetOpen(true); }} />
+      <CombatHotbar state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); apply(advanceTurn(state)); }} onSheet={() => { setSheetActorId(activeControlledActorId); setSheetOpen(true); }} />
       {sheetOpen && (() => {
         const drawerActorId = sheetActorId && isControlledCharacter(state, sheetActorId)
           ? sheetActorId
@@ -693,6 +695,13 @@ export default function SoloCombatPage() {
         /><Link className="combat-sheet-drawer__full" target="_blank" to={`/characters-v3/${drawerActorId}`}>Открыть полный лист ↗</Link></aside>;
       })()}
       {reactionOptions.length > 0 && <div className="combat-reaction-backdrop"><section><p>РЕАКЦИЯ</p><h2>{reactionTitle}</h2>{reactionDetails && <p>{reactionDetails}</p>}<div>{reactionOptions.map((option) => <button type="button" key={option.id} disabled={busy} onClick={() => apply(resolvePlayerReaction(state, option.response))}>{option.label}</button>)}<button type="button" onClick={() => apply(resolvePlayerReaction(state, { kind: 'reaction', actionId: null }))}>Пропустить</button></div></section></div>}
+      {state.pendingAlertSwapActorIds?.length ? (() => {
+        const alertActorId = state.pendingAlertSwapActorIds[0];
+        const alertActor = state.world.actors[alertActorId];
+        const allies = controlledCharacterIds(state).filter((actorId) => actorId !== alertActorId);
+        return <div className="combat-reaction-backdrop"><section><p>БДИТЕЛЬНЫЙ</p><h2>{alertActor.name}: обменять инициативу?</h2><p>Сразу после броска инициативы можно обменяться местами с согласным союзником. Итоговые значения не меняются.</p><div>{allies.map((allyId) => <button type="button" key={allyId} disabled={busy} onClick={() => apply(resolveSoloCombatAlertSwap(state, alertActorId, allyId))}>Обменяться с {state.world.actors[allyId].name}</button>)}<button type="button" disabled={busy} onClick={() => apply(resolveSoloCombatAlertSwap(state, alertActorId, null))}>Оставить порядок</button></div></section></div>;
+      })() : null}
+      {state.pendingInterception ? <div className="combat-reaction-backdrop"><section><p>РЕАКЦИЯ</p><h2>Перехватить удар по {state.world.actors[state.pendingInterception.targetActorId].name}?</h2><p>Входящий урон: {state.pendingInterception.incomingDamage}. Перехват снизит его на 1к10 + Бонус владения и потратит реакцию.</p><div>{state.pendingInterception.interceptorActorIds.map((actorId) => <button type="button" key={actorId} disabled={busy} onClick={() => apply(resolveSoloCombatInterception(state, actorId))}>{state.world.actors[actorId].name} · использовать Перехват</button>)}<button type="button" disabled={busy} onClick={() => apply(resolveSoloCombatInterception(state, null))}>Пропустить</button></div></section></div> : null}
       {pendingTriggered && <div className="combat-reaction-backdrop"><section><p>ПОПАДАНИЕ</p><h2>Применить дополнительную способность?</h2><div>{pendingTriggered.optionActionIds.map((actionId) => {
         const option = state.catalogActions.find((action) => action.id === actionId);
         return option ? <button type="button" key={actionId} disabled={busy} onClick={() => apply(resolveTriggeredCombatAction(state, actionId))}>{option.name}</button> : null;

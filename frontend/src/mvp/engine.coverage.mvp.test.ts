@@ -284,6 +284,20 @@ describe('payload-ы боёвки: boon / reroll / transform / модифика�
     expect(events.some((e) => e.type === 'narrative' && e.text.includes('1к6'))).toBe(true);
   });
 
+  it('auto: grant_capped выдаёт не больше одного Героического вдохновения', () => {
+    const song: Mech = {
+      activation: noCost,
+      effects: [{ resolution: 'auto', result: [{
+        kind: 'resource', op: 'grant_capped', id: 'heroic_inspiration', amount: 1, max: 1,
+      }] }],
+    };
+    const first = executeAction(freshFighterState(), song, { character: FIGHTER_CTX, rng: seededRng(1) });
+    const second = executeAction(first.state, song, { character: FIGHTER_CTX, rng: seededRng(1) });
+    expect(first.state.resources.heroic_inspiration).toBe(1);
+    expect(first.state.maxResources.heroic_inspiration).toBe(1);
+    expect(second.state.resources.heroic_inspiration).toBe(1);
+  });
+
   it('повторное Вдохновение барда заменяет одноимённый талон вместо удвоения', () => {
     const action = {
       name: 'Вдохновение барда',

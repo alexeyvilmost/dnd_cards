@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest';
 import compiledFixtureJson from '../pages/rulesLabFixture.generated.json';
 import fightingStyleDefinitions from '../../../scripts/content/data/mini-mvp-complex-fighting-styles.v1.json';
 import { createWorld, type ActorState, type RuleActionDefinition, type RulesCatalog, type RulesetReference } from '../rules-core/domain';
-import { CARD_LONGSWORD } from '../mvp/fixtures';
+import { CARD_LONGSWORD, CARD_SHIELD } from '../mvp/fixtures';
 import type { SheetCanonicalRuntime } from '../character/sheetCanonicalWorld';
 import type { SheetCombatParticipantSeed } from '../character/sheetCombatSession';
 import type { ForgeCharacter } from '../character/types';
 import type { Action } from '../types';
 import type { Monster } from '../monsters/types';
-import { addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatParticipants, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, setSoloCombatInitiativeTotals } from './engine';
+import { addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatParticipants, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatAlertSwap, resolveSoloCombatInterception, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, setSoloCombatInitiativeTotals } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { gridDistanceFt } from './tacticalGrid';
 import { SOLO_COMBAT_KEY } from './types';
@@ -656,6 +656,7 @@ describe('solo combat engine vertical integration', () => {
   it('adds another owned sheet as an independently controlled ally with its own initiative and actions', async () => {
     const participant = fighterSeed();
     const ally = wizardSeed();
+    delete ally.canonical.world.actors[ally.character.id].capabilities.featureSources?.['alert.initiative_swap'];
     const inspiration: RuleActionDefinition = {
       id: 'd2000000-0000-4000-8000-000000000001',
       name: 'Вдохновение барда',
@@ -787,6 +788,83 @@ describe('solo combat engine vertical integration', () => {
     expect(state.world.actors[actorId].runtime.resources)
       .toEqual(state.world.actors[actorId].runtime.maxResources);
     expect(state.log.at(-1)?.text).toContain('Ресурсы восстановлены');
+  });
+
+  it('offers Alert initiative swap before turn one and starts only after the explicit decision', async () => {
+    const participant = fighterSeed();
+    const ally = wizardSeed();
+    delete ally.canonical.world.actors[ally.character.id].capabilities.featureSources?.['alert.initiative_swap'];
+    participant.canonical.world.actors[participant.character.id].capabilities.featureSources ??= {};
+    participant.canonical.world.actors[participant.character.id].capabilities.featureSources!['alert.initiative_swap'] = ['FEAT-0001'];
+    participant.character.initiative_bonus = 0;
+    ally.character.initiative_bonus = 10;
+
+    let state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      allies: [ally],
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    expect(state.pendingAlertSwapActorIds).toEqual([participant.character.id]);
+    expect(state.world.scene).toMatchObject({ mode: 'encounter', round: 1, turnStarted: false });
+    const before = state.world.scene.mode === 'encounter' ? [...state.world.scene.initiative] : [];
+
+    state = resolveSoloCombatAlertSwap(state, participant.character.id, ally.character.id, () => 0.5);
+    const after = state.world.scene.mode === 'encounter' ? state.world.scene.initiative : [];
+    expect(after.indexOf(participant.character.id)).toBe(before.indexOf(ally.character.id));
+    expect(after.indexOf(ally.character.id)).toBe(before.indexOf(participant.character.id));
+    expect(state.initiative.map((entry) => entry.actorId)).toEqual(after);
+    expect(state.pendingAlertSwapActorIds).toBeUndefined();
+    expect(state.world.scene).toMatchObject({ mode: 'encounter', round: 1, turnStarted: true });
+    expect(state.log.some((entry) => entry.text.includes('обмен инициативой'))).toBe(true);
+  });
+
+  it('offers Interception to an adjacent equipped ally and applies 1d10 + proficiency before the monster turn ends', async () => {
+    const participant = fighterSeed();
+    const interceptor = wizardSeed();
+    const interceptorActor = interceptor.canonical.world.actors[interceptor.character.id];
+    delete interceptorActor.capabilities.featureSources?.['alert.initiative_swap'];
+    interceptorActor.capabilities.featureSources ??= {};
+    interceptorActor.capabilities.featureSources['fighting_style.interception.reaction'] = ['FEAT-0057', 'fs_interception'];
+    interceptorActor.character.knownCards = [...(interceptorActor.character.knownCards ?? []), CARD_SHIELD];
+    interceptorActor.runtime.inventory.push({ cardId: CARD_SHIELD.id, qty: 1 });
+    interceptorActor.runtime.equipment.off_hand = CARD_SHIELD.id;
+    interceptorActor.runtime.resources.reaction = 1;
+    interceptorActor.runtime.maxResources.reaction = 1;
+    interceptor.character.resources = clone(interceptorActor.runtime.resources);
+    interceptor.character.max_resources = clone(interceptorActor.runtime.maxResources);
+
+    let state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      allies: [interceptor],
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar(), dash()], effects: [], dashAction: dash(), rng: () => 0.5,
+    });
+    const targetId = participant.character.id;
+    const interceptorId = interceptor.character.id;
+    state = {
+      ...state,
+      tokens: {
+        ...state.tokens,
+        [interceptorId]: {
+          ...state.tokens[interceptorId],
+          position: { x: state.tokens[targetId].position.x + 1, y: state.tokens[targetId].position.y },
+        },
+      },
+    };
+    while (state.world.actors[activeId(state)].kind !== 'monster') state = advanceTurn(state, () => 0.5);
+    const hpBefore = state.world.actors[targetId].runtime.hp.current;
+    state = runMonsterTurn(state, () => 0.95);
+    expect(state.pendingInterception).toMatchObject({ targetActorId: targetId, interceptorActorIds: [interceptorId] });
+    const hpAfterHit = state.world.actors[targetId].runtime.hp.current;
+    expect(hpAfterHit).toBeLessThan(hpBefore);
+
+    state = resolveSoloCombatInterception(state, interceptorId, () => 0);
+    expect(state.world.actors[targetId].runtime.hp.current).toBeGreaterThan(hpAfterHit);
+    expect(state.world.actors[interceptorId].runtime.resources.reaction).toBe(0);
+    expect(state.log.some((entry) => entry.text.includes('Перехват: 1к10 (1) + БМ'))).toBe(true);
   });
 
   it('scene constructor adds fresh monsters and owned characters without replacing the retained fight', async () => {
