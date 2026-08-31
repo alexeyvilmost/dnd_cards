@@ -8,7 +8,7 @@ import type { SheetCombatParticipantSeed } from '../character/sheetCombatSession
 import type { ForgeCharacter } from '../character/types';
 import type { Action } from '../types';
 import type { Monster } from '../monsters/types';
-import { addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, setSoloCombatInitiativeTotals } from './engine';
+import { addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatParticipants, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, setSoloCombatInitiativeTotals } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { gridDistanceFt } from './tacticalGrid';
 import { SOLO_COMBAT_KEY } from './types';
@@ -846,6 +846,69 @@ describe('solo combat engine vertical integration', () => {
     expect(restored?.world.scene.mode).toBe('encounter');
     if (restored?.world.scene.mode !== 'encounter') throw new Error('expected encounter');
     expect(restored.world.scene.initiative).toEqual(restored.initiative.map(({ actorId }) => actorId));
+  });
+
+  it('refreshes retained participant actions, passives, runtime and revision from the current sheet', async () => {
+    const original = fighterSeed();
+    const ally = wizardSeed();
+    const state = await createSoloCombatState({
+      character: original.character,
+      participant: original,
+      allies: [ally],
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const activeBefore = activeId(state);
+    const tokensBefore = clone(state.tokens);
+    const logBefore = clone(state.log);
+    const added: RuleActionDefinition = {
+      id: 'd3000000-0000-4000-8000-000000000099',
+      name: 'Добавлено с листа',
+      kind: 'nonSpell',
+      sourceEntityIds: ['manual-action'],
+      mechanics: {
+        activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }] },
+        targeting: { domain: 'actor', actor_targets: false, shape: 'self', min_targets: 0, max_targets: 1, range_ft: 0, requires_line_of_sight: false, allowed_relations: ['self'] },
+        effects: [{ resolution: 'auto', result: [{ kind: 'narrative', description: 'Ручное действие.' }] }],
+      },
+      targeting: { minTargets: 0, maxTargets: 1, rangeFt: 0, requiresLineOfSight: false, allowedRelations: ['self'] },
+    };
+    const refreshed = fighterSeed();
+    const refreshedActor = refreshed.canonical.world.actors[refreshed.character.id];
+    refreshedActor.capabilities.actionIds.push(added.id);
+    refreshedActor.runtime.hp.current = 3;
+    refreshedActor.passives = [{
+      source: 'Новая черта',
+      mechanics: { effects: [{ resolution: 'auto', result: [{ kind: 'modifier', applies_to: { roll: 'ac' }, op: 'add', value: 1 }] }] },
+    }];
+    const actions = [...refreshed.canonical.actions, added];
+    const byId = new Map(actions.map((action) => [action.id, action]));
+    refreshed.canonical = {
+      ...refreshed.canonical,
+      actions,
+      catalog: { getAction: (id) => byId.get(id), listActions: () => actions },
+    };
+    refreshed.character.runtime_revision = 17;
+    refreshed.actionPresentation = { [added.id]: { description: 'Ручное действие.' } };
+    ally.character.runtime_revision = 8;
+
+    const next = await refreshSoloCombatParticipants({
+      state,
+      participants: [refreshed, ally],
+    });
+    expect(next.playerActionIdsByActor?.[refreshed.character.id]).toContain(added.id);
+    expect(next.world.actors[refreshed.character.id].capabilities.actionIds).toContain(added.id);
+    expect(next.catalogActions.find(({ id }) => id === added.id)?.name).toBe('Добавлено с листа');
+    expect(next.actionPresentation?.[added.id]?.description).toBe('Ручное действие.');
+    expect(next.world.actors[refreshed.character.id].runtime.hp.current).toBe(3);
+    expect(next.world.actors[refreshed.character.id].passives).toEqual(refreshedActor.passives);
+    expect(next.participantRuntimeRevisions).toMatchObject({
+      [refreshed.character.id]: 17,
+      [ally.character.id]: 8,
+    });
+    expect(next.tokens).toEqual(tokensBefore);
+    expect(next.log).toEqual(logBefore);
+    expect(activeId(next)).toBe(activeBefore);
   });
 
   it('opens and resolves a generic owned post-hit rider instead of exposing it proactively', async () => {

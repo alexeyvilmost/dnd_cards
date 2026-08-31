@@ -6,7 +6,6 @@ import { charactersV3Api } from '../character/api';
 import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
 import { playerFacingSheetActionError } from '../character/sheetActionError';
 import {
-  forgeToRuntimeState,
   runtimeInventoryPayload,
   writeRulesEngineRuntimeTurnState,
 } from '../character/runtime';
@@ -36,16 +35,14 @@ import {
   executeCombatRemoteManipulator,
   moveCombatDancingLights,
   moveActor,
+  refreshSoloCombatParticipants,
   revealCombatMagicAura,
   resolvePlayerReaction,
   resolveSoloCombatTurnStart,
   resolveTriggeredCombatAction,
   selectedTargetsForAction,
 } from '../solo-combat/engine';
-import {
-  readSoloCombatState,
-  rebaseSoloCombatParticipants,
-} from '../solo-combat/persistence';
+import { readSoloCombatState } from '../solo-combat/persistence';
 import { writeDedicatedCombatTurnState } from '../solo-combat/turnState';
 import {
   controlledCharacterIds,
@@ -274,22 +271,24 @@ export default function SoloCombatPage() {
           );
           if (!restored) throw new Error('Сохранённый бой не найден. Запустите проверку из листа персонажа.');
           const allyIds = controlledCharacterIds(restored).filter((actorId) => actorId !== loadedCharacter.id);
-          const allyRows = await Promise.all(allyIds.map((allyId) => charactersV3Api.get(allyId)));
+          const [allyRows, basicResponse, cards] = await Promise.all([
+            Promise.all(allyIds.map((allyId) => charactersV3Api.get(allyId))),
+            actionsApi.getActions({ type: 'basic', limit: 100 }),
+            getCardsIndex(),
+          ]);
           const loadedRows = [loadedCharacter, ...allyRows];
           participantCharactersRef.current = Object.fromEntries(
             loadedRows.map((row) => [row.id, row]),
           );
           setParticipantCharacters(participantCharactersRef.current);
-          setState(rebaseSoloCombatParticipants(
-            restored,
-            Object.fromEntries(loadedRows.map((row) => [
-              row.id,
-              {
-                runtimeRevision: Number(row.runtime_revision ?? 0),
-                runtime: forgeToRuntimeState(row),
-              },
-            ])),
-          ));
+          const participants = await Promise.all(loadedRows.map((row) => (
+            loadSheetCombatParticipant({
+              character: row,
+              basicActions: basicResponse.actions,
+              cards,
+            })
+          )));
+          setState(await refreshSoloCombatParticipants({ state: restored, participants }));
           setBusy(false); return;
         }
         const [monsters, allyCharacters] = await Promise.all([

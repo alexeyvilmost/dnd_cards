@@ -1516,6 +1516,132 @@ export async function addSoloCombatCharacter(input: {
   return appendLog(next, actorId, 'Добавлен в бой конструктором сцены.');
 }
 
+/**
+ * Refresh owned sheet participants when a retained scene is reopened.
+ *
+ * Character edits can change more than optimistic-lock revisions and runtime
+ * resources: manually attached actions, fighting styles, feats, equipment and
+ * prepared spells all live in the canonical actor projection. Replacing only
+ * runtime left a retained scene with the old hotbar and passives. This rebases
+ * the controlled actors from their freshly compiled sheet seeds while keeping
+ * the encounter itself (initiative, tokens, monsters, log and pending state).
+ */
+export async function refreshSoloCombatParticipants(input: {
+  state: SoloCombatState;
+  participants: readonly SheetCombatParticipantSeed[];
+}): Promise<SoloCombatState> {
+  const controlledIds = controlledCharacterIds(input.state);
+  const byId = new Map(input.participants.map((participant) => [
+    participant.character.id,
+    participant,
+  ]));
+  for (const actorId of controlledIds) {
+    if (!byId.has(actorId)) throw new Error(`Combat participant ${actorId} is unavailable`);
+  }
+  const ordered = controlledIds.map((actorId) => byId.get(actorId)!);
+  const base = await createSheetCombatSession({
+    source: ordered[0],
+    targets: ordered.slice(1),
+    sceneMode: 'exploration',
+  });
+  if (base.world.ruleset.contentHash !== input.state.world.ruleset.contentHash) {
+    throw new Error('Character uses an incompatible rules version');
+  }
+
+  const actors = { ...input.state.world.actors };
+  const catalogActions = [...input.state.catalogActions];
+  const basicActionIds = Object.entries(input.state.actionPresentation ?? {}).flatMap(([actionId, row]) => (
+    row.actionRef && TACTICAL_BASIC_ACTIONS.has(row.actionRef.card_number) ? [actionId] : []
+  ));
+  const playerActionIdsByActor = {
+    ...(input.state.playerActionIdsByActor
+      ?? { [input.state.characterId]: input.state.playerActionIds }),
+  };
+  const certifiedPlayerActionIdsByActor = {
+    ...(input.state.certifiedPlayerActionIdsByActor
+      ?? { [input.state.characterId]: input.state.certifiedPlayerActionIds }),
+  };
+  const participantRuntimeRevisions = {
+    ...(input.state.participantRuntimeRevisions
+      ?? { [input.state.characterId]: input.state.runtimeRevision }),
+  };
+  const resourceBindingsByActor = {
+    ...(input.state.resourceBindingsByActor
+      ?? { [input.state.characterId]: input.state.resourceBindings }),
+  };
+  const opportunityActionIds = { ...input.state.opportunityActionIds };
+  const actorPresentation = { ...input.state.actorPresentation };
+  let actionPresentation = { ...(input.state.actionPresentation ?? {}) };
+
+  for (const participant of ordered) {
+    const actorId = participant.character.id;
+    const freshActor = clone(base.world.actors[actorId]);
+    for (const actionId of basicActionIds) {
+      if (!freshActor.capabilities.actionIds.includes(actionId)) {
+        freshActor.capabilities.actionIds.push(actionId);
+      }
+    }
+    for (const action of participant.canonical.actions) {
+      if (!catalogActions.some((candidate) => candidate.id === action.id)) {
+        catalogActions.push(clone(action));
+      }
+    }
+    const attack = participant.canonical.actions.find((action) => (
+      primitiveType(action) === 'weapon_attack' && isAttackAction(action)
+    ));
+    if (attack) {
+      const opportunity = opportunityVersion(attack);
+      if (!catalogActions.some((candidate) => candidate.id === opportunity.id)) {
+        catalogActions.push(opportunity);
+      }
+      if (!freshActor.capabilities.actionIds.includes(opportunity.id)) {
+        freshActor.capabilities.actionIds.push(opportunity.id);
+      }
+      opportunityActionIds[actorId] = opportunity.id;
+    } else {
+      delete opportunityActionIds[actorId];
+    }
+
+    actors[actorId] = freshActor;
+    const playerActionIds = [...new Set([
+      ...participant.canonical.actions.map(({ id }) => id),
+      ...basicActionIds,
+    ])];
+    playerActionIdsByActor[actorId] = playerActionIds;
+    certifiedPlayerActionIdsByActor[actorId] = [
+      ...(base.certifiedActionIdsByActor[actorId] ?? []),
+    ];
+    participantRuntimeRevisions[actorId] = Number(participant.character.runtime_revision ?? 0);
+    resourceBindingsByActor[actorId] = clone(base.resourceBindingsByActor[actorId] ?? {});
+    actionPresentation = {
+      ...actionPresentation,
+      ...(participant.actionPresentation ?? {}),
+    };
+    actorPresentation[actorId] = {
+      creatureType: freshActor.character.creatureType,
+      actionIds: participant.canonical.actions.map(({ id }) => id),
+      traits: [],
+    };
+  }
+
+  return {
+    ...input.state,
+    runtimeRevision: participantRuntimeRevisions[input.state.characterId],
+    world: { ...input.state.world, actors },
+    catalogActions: catalogActions.sort((left, right) => left.id.localeCompare(right.id)),
+    actionPresentation,
+    actorPresentation,
+    playerActionIdsByActor,
+    playerActionIds: [...playerActionIdsByActor[input.state.characterId]],
+    certifiedPlayerActionIdsByActor,
+    certifiedPlayerActionIds: [...certifiedPlayerActionIdsByActor[input.state.characterId]],
+    opportunityActionIds,
+    participantRuntimeRevisions,
+    resourceBindingsByActor,
+    resourceBindings: clone(resourceBindingsByActor[input.state.characterId]),
+  };
+}
+
 export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
   if (state.outcome !== 'active' || state.world.pendingResolution) return state;
   const monsterId = activeActorId(state);
