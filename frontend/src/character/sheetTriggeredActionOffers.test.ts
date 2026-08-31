@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { RuntimeState } from '../mvp/contracts';
+import type { EngineEvent, RuntimeState } from '../mvp/contracts';
 import type { Action, Card } from '../types';
 import type { SheetAction } from './actionSheet';
 import { sheetTriggeredActionOffersAfterAttack } from './sheetTriggeredActionOffers';
@@ -15,6 +15,16 @@ const unarmed = {
   id: 'unarmed', name: 'Безоружный удар', group: 'basic', mechanics: {},
   actionRef: { id: 'unarmed', card_number: 'action_basic_unarmed' } as Action,
 } satisfies SheetAction;
+
+function attackRoll(outcome: 'hit' | 'crit' | 'miss'): EngineEvent {
+  return {
+    type: 'roll', label: 'Атака',
+    roll: {
+      kind: 'd20', dice: [{ sides: 20, result: 10 }], advantage: 'none',
+      modifiers: [], total: 12, outcome, text: `Атака: ${outcome}`,
+    },
+  };
+}
 
 function martialArts(event: 'hit' | 'miss') {
   return {
@@ -39,7 +49,7 @@ describe('sheet triggered action offers after canonical attacks', () => {
     (outcome, expected) => {
       const offers = sheetTriggeredActionOffersAfterAttack({
         action: unarmed,
-        events: [{ type: 'roll', label: 'Атака', roll: { kind: 'd20', natural: 10, total: 12, outcome } }],
+        events: [attackRoll(outcome)],
         triggerSources: [martialArts('hit'), martialArts('miss')],
         state: runtime,
         equipment: runtime.equipment,
@@ -76,7 +86,7 @@ describe('sheet triggered action offers after canonical attacks', () => {
     const simple = weapon('simple', 'simple');
     const base = {
       action: weaponAction,
-      events: [{ type: 'roll', label: 'Атака', roll: { kind: 'd20', natural: 10, total: 12, outcome: 'hit' as const } }],
+      events: [attackRoll('hit')],
       triggerSources: [martialArts('hit')], state: runtime,
     };
     expect(sheetTriggeredActionOffersAfterAttack({
@@ -90,7 +100,7 @@ describe('sheet triggered action offers after canonical attacks', () => {
   it('does not offer the follow-up when the bonus action is unavailable', () => {
     expect(sheetTriggeredActionOffersAfterAttack({
       action: unarmed,
-      events: [{ type: 'roll', label: 'Атака', roll: { kind: 'd20', natural: 10, total: 12, outcome: 'hit' } }],
+      events: [attackRoll('hit')],
       triggerSources: [martialArts('hit')],
       state: { ...runtime, resources: { ...runtime.resources, bonus_action: 0 } },
       equipment: runtime.equipment,

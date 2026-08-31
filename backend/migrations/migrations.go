@@ -824,6 +824,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairLevelOneMonkRuntimeContracts,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     barbarianRageStackingMigrationVersion,
+			Description: "Сделать повторную Ярость обновлением длительности без удвоения её эффектов",
+			Up:          repairBarbarianRageStacking,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

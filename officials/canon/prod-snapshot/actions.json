@@ -1354,6 +1354,7 @@
               },
               "kind": "modifier",
               "op": "add",
+              "stack_id": "class:barbarian:rage:damage",
               "value": "rage_damage_modifier"
             },
             {
@@ -1363,6 +1364,7 @@
                 "type": "rounds"
               },
               "kind": "resistance",
+              "stack_id": "class:barbarian:rage:resistance:bludgeoning",
               "value": "resistance"
             },
             {
@@ -1372,6 +1374,7 @@
                 "type": "rounds"
               },
               "kind": "resistance",
+              "stack_id": "class:barbarian:rage:resistance:piercing",
               "value": "resistance"
             },
             {
@@ -1381,6 +1384,7 @@
                 "type": "rounds"
               },
               "kind": "resistance",
+              "stack_id": "class:barbarian:rage:resistance:slashing",
               "value": "resistance"
             },
             {
@@ -1395,7 +1399,8 @@
                 "type": "rounds"
               },
               "kind": "modifier",
-              "op": "advantage"
+              "op": "advantage",
+              "stack_id": "class:barbarian:rage:strength-check"
             },
             {
               "applies_to": {
@@ -1409,7 +1414,8 @@
                 "type": "rounds"
               },
               "kind": "modifier",
-              "op": "advantage"
+              "op": "advantage",
+              "stack_id": "class:barbarian:rage:strength-save"
             }
           ]
         }

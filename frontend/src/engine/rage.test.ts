@@ -65,4 +65,21 @@ describe('прод-данные: Ярость', () => {
   it('не даёт преимущество не-СИЛ спасброскам (ЛВК)', () => {
     expect(collectRollModifiers(raging(), [], { roll: 'saving_throw', filter: { ability: 'dex' } }).advantage).toBe('none');
   });
+
+  it('повторная активация обновляет Ярость, не удваивая её шесть эффектов', () => {
+    if (!RAGE) throw new Error('ACT-rage исчезло из прод-снапшота');
+    const once = executeAction(tank(), RAGE.mechanics, { character: barbarianContext, rng: seededRng(1) }).state;
+    const twice = executeAction(
+      { ...once, resources: { ...once.resources, bonus_action: 1 } },
+      RAGE.mechanics,
+      { character: barbarianContext, rng: seededRng(1) },
+    ).state;
+
+    expect(once.activeEffects).toHaveLength(6);
+    expect(twice.activeEffects).toHaveLength(6);
+    expect(twice.activeEffects.every((entry) => entry.roundsLeft === 10)).toBe(true);
+    expect(twice.activeEffects.filter((entry) => (
+      (entry.mechanics as Record<string, unknown>).stack_id === 'class:barbarian:rage:damage'
+    ))).toHaveLength(1);
+  });
 });
