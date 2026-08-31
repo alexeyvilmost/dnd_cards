@@ -38,10 +38,10 @@ func repairLevelOneSpeciesRuntimeContracts(db *sql.DB) error {
 
 	var forestLegacy, forestCanonical bool
 	if err := tx.QueryRow(`
-		SELECT mechanics #>> '{effects,0,result,1,kind}' = 'grant_spell'
+		SELECT COALESCE(mechanics #>> '{effects,0,result,1,kind}' = 'grant_spell'
 		       AND mechanics #>> '{effects,0,result,1,value}' = 'SPELL-0277'
-		       AND NOT (mechanics #> '{effects,0,result,1}' ? 'label'),
-		       mechanics #>> '{effects,0,result,1,label}' = 'always_prepared'
+		       AND NOT (mechanics #> '{effects,0,result,1}' ? 'label'), false),
+		       COALESCE(mechanics #>> '{effects,0,result,1,label}' = 'always_prepared', false)
 		FROM effects
 		WHERE id = $1::uuid AND card_number = $2 AND deleted_at IS NULL
 		FOR UPDATE
@@ -84,10 +84,11 @@ func repairLevelOneSpeciesRuntimeContracts(db *sql.DB) error {
 
 	var healingLegacy, healingCanonical bool
 	if err := tx.QueryRow(`
-		SELECT mechanics #>> '{effects,0,result,0,kind}' = 'healing'
+		SELECT COALESCE(mechanics #>> '{effects,0,result,0,kind}' = 'healing'
 		       AND mechanics #>> '{effects,0,result,0,amount}' = 'prof d4',
-		       mechanics #>> '{effects,0,result,0,kind}' = 'healing'
-		       AND mechanics #>> '{effects,0,result,0,amount}' = 'prof_bonus d4'
+		       false),
+		       COALESCE(mechanics #>> '{effects,0,result,0,kind}' = 'healing'
+		       AND mechanics #>> '{effects,0,result,0,amount}' = 'prof_bonus d4', false)
 		FROM actions
 		WHERE id = $1::uuid AND card_number = $2 AND deleted_at IS NULL
 		FOR UPDATE
