@@ -4,6 +4,7 @@
 import type { ActiveEffectEntry, EngineEvent, RuntimeState } from '../mvp/contracts';
 import { dropConcentration } from './concentration';
 import { conditionInstructions, conditionLabel } from './conditions';
+import { turnCommandEffectName, turnCommandInstruction } from './turnCommands';
 
 function cloneState(state: RuntimeState): RuntimeState {
   return {
@@ -68,6 +69,9 @@ export function expiryLabel(expiry?: string, roundsLeft?: number): string {
 }
 
 export function activeEffectDurationLabel(effect: ActiveEffectEntry): string {
+  const mechanics = effect.mechanics as Record<string, unknown>;
+  if (mechanics.kind === 'turn_command') return 'до начала следующего хода цели';
+  if (mechanics.kind === 'turn_command_resolution') return 'до конца текущего хода';
   const lifecycle = effect.sourceTurnExpiry;
   if (lifecycle) {
     if (lifecycle.boundary === 'start') return 'до начала следующего хода источника';
@@ -80,6 +84,9 @@ export function activeEffectDurationLabel(effect: ActiveEffectEntry): string {
 
 function activeEffectDisplayName(effect: ActiveEffectEntry): string {
   const mechanics = effect.mechanics as Record<string, unknown>;
+  if (mechanics.kind === 'turn_command' || mechanics.kind === 'turn_command_resolution') {
+    return turnCommandEffectName(effect.source, mechanics.command);
+  }
   return mechanics.kind === 'condition' && typeof mechanics.value === 'string'
     ? conditionLabel(mechanics.value)
     : effect.name;
@@ -130,6 +137,9 @@ const BOON_ROLL_LABELS: Record<string, string> = {
 /** Player-facing instructions for active effects that require manual use. */
 export function activeEffectInstruction(effect: ActiveEffectEntry): string | null {
   const mechanics = effect.mechanics as Record<string, unknown>;
+  if (mechanics.kind === 'turn_command' || mechanics.kind === 'turn_command_resolution') {
+    return turnCommandInstruction(mechanics.command);
+  }
   if (mechanics.kind === 'condition' && typeof mechanics.value === 'string') {
     const instructions = conditionInstructions(mechanics.value);
     return instructions.length ? instructions.join(' ') : null;
@@ -143,7 +153,7 @@ export function activeEffectInstruction(effect: ActiveEffectEntry): string | nul
     const scope = rolls.length
       ? rolls.join(', ').replace(/, ([^,]*)$/, ' или $1')
       : 'подходящему броску к20';
-    return `Добавьте ${die} к ${scope}, затем снимите эффект.`;
+    return `Чтобы использовать: бросьте отдельный ${die}, вручную добавьте результат к ${scope}, затем нажмите × «Снять вручную».`;
   }
   if (mechanics.kind === 'modifier') {
     const appliesTo = mechanics.applies_to as Record<string, unknown> | undefined;

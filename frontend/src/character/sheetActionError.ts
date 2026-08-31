@@ -22,6 +22,12 @@ export function playerFacingSheetActionError(cause: unknown): string {
   if (/^TargetArmored:/u.test(detail)) {
     return 'Цель носит доспехи и не подходит для этого действия.';
   }
+  const unsupportedPending = /^The compatible character sheet cannot resume canonical pending resolution (.+)$/u.exec(detail);
+  if (unsupportedPending) {
+    return unsupportedPending[1] === 'target_save'
+      ? 'Не удалось завершить спасбросок цели. Ресурсы не потрачены; обновите страницу и повторите действие.'
+      : 'Действие требует дополнительного решения, которое этот лист пока не может обработать. Ресурсы не потрачены.';
+  }
   if (/Stonecunning requires explicit stone-surface contact facts/u.test(detail)) {
     return 'Для Камнечувствия укажите, что персонаж стоит на каменной поверхности или касается её.';
   }

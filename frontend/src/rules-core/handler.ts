@@ -15,6 +15,7 @@ import {
   longRest,
   pay,
   readTargetSave,
+  resolveNextTurnCommand,
   rollD20,
   shortRest,
   startTurn,
@@ -10285,7 +10286,18 @@ function executeCommand(
         ...actorContext({ ...actor, runtime: before }),
         rng: env.rng,
       };
-      const result = startTurn(before, turnContext);
+      const started = startTurn(before, turnContext);
+      const commandResolution = resolveNextTurnCommand(started.state, {
+        ...actionContext({ ...actor, runtime: started.state }, env),
+        selfId: actor.id,
+      });
+      const result = commandResolution
+        ? {
+          ...started,
+          state: commandResolution.state,
+          events: [...started.events, ...commandResolution.events],
+        }
+        : started;
       const scene = world.scene as EncounterScene;
       const turnStartChoices = command.turnStartChoices ?? [];
       if (turnStartChoices.length > 1) {

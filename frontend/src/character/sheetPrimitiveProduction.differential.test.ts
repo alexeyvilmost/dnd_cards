@@ -346,6 +346,15 @@ describe('production-compiled real-sheet no-pending primitive differential', () 
         text: expect.stringMatching(/A quiet bell.*Интеллект \(Расследование\).*СЛ \d+/),
       }));
     }
+    if (primitive === 'prestidigitation_world') {
+      expect(result.events).toContainEqual({
+        type: 'narrative',
+        text: `${prepared.action.name}: мгновенный эффект «Harmless sparks» завершён`,
+      });
+      expect(result.events.some((event) => (
+        event.type === 'narrative' && event.text.includes('sheet:')
+      ))).toBe(false);
+    }
 
     const castTime = parseActivationCastTime(prepared.action.mechanics);
     const declared = result.ruleEvents?.find((event) => (

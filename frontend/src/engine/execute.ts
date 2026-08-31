@@ -54,6 +54,7 @@ import {
 } from './weapon';
 import { evaluateWeaponHeavyRule } from './weaponProfile';
 import { activeMastery } from './mastery';
+import { turnCommandEffectName, type TurnCommand } from './turnCommands';
 import { getDamageLabel } from '../utils/damageTypes';
 
 type Dict = Record<string, unknown>;
@@ -1875,16 +1876,19 @@ function applyTurnCommandPayload(
   ctx: ExecuteContext,
   ownerActorId?: string,
 ): RuntimeState {
+  const command = String(payload.command) as TurnCommand;
+  const name = turnCommandEffectName(source, command);
+  const displaySource = source.trim() && source !== 'действие' ? source : 'Приказ';
   const entry: ActiveEffectEntry = {
-    id: runtimeEffectId(ctx, `command-${String(payload.command)}`, state.activeEffects.length),
-    name: source,
+    id: runtimeEffectId(ctx, `command-${command}`, state.activeEffects.length),
+    name,
     mechanics: payload,
     expiry: 'manual',
-    source,
+    source: displaySource,
     ...(ownerActorId ? { ownerId: ownerActorId } : {}),
     ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
   };
-  events.push({ type: 'effect_applied', name: source });
+  events.push({ type: 'effect_applied', name });
   return stackApply(state, entry, payload);
 }
 
@@ -2741,8 +2745,8 @@ function applyAttackDamageRiders(
   return next;
 }
 
-/** «Талон» (Вдохновение барда): чип-эффект с костью, снимается вручную; кость вводится
- *  диалогом бросков получателя. Вынесен в хелпер, чтобы who:'target' мог класть его цели. */
+/** «Талон» (Вдохновение барда): чип-эффект с костью, которую получатель бросает отдельно
+ *  и снимает вручную. Вынесен в хелпер, чтобы who:'target' мог класть его цели. */
 function applyBoon(
   state: RuntimeState,
   p: Dict,
@@ -2762,8 +2766,8 @@ function applyBoon(
   const next = stackApply(state, entry, mechanics);
   events.push({ type: 'effect_applied', name, sourceAction: source });
   events.push(narrativeEvent(
-    `Талон ${die}: получатель добавляет ${die} к броску атаки, проверке или спасброску`
-    + `${p.expires ? ` (истекает: ${p.expires})` : ''}. Снимите эффект при использовании.`,
+    `Талон ${die}: получатель бросает отдельный ${die}, вручную добавляет результат к броску атаки, проверке или спасброску`
+    + `${p.expires ? ` (истекает: ${p.expires})` : ''}, затем снимает эффект.`,
   ));
   return next;
 }
@@ -4596,9 +4600,39 @@ export type TurnCommandDirective =
   | { type: 'halt' };
 
 export interface TurnCommandResolution extends ExecuteResult {
-  command: 'approach' | 'drop' | 'flee' | 'grovel' | 'halt';
+  command: TurnCommand;
   directive: TurnCommandDirective;
   endsTurn: boolean | 'within_5ft_of_source';
+}
+
+function applyTurnCommandEndRestriction(
+  state: RuntimeState,
+  commandEffect: { entry: ActiveEffectEntry },
+  command: TurnCommand,
+  events: EngineEvent[],
+  ctx: ExecuteContext,
+): RuntimeState {
+  const mechanics: Dict = {
+    kind: 'turn_command_resolution',
+    command,
+    effects: [{
+      resolution: 'auto',
+      result: ['movement', 'action', 'bonus_action'].map((capability) => ({
+        kind: 'modifier', applies_to: { roll: capability }, op: 'deny', value: '1',
+      })),
+    }],
+  };
+  const entry: ActiveEffectEntry = {
+    id: runtimeEffectId(ctx, `command-${command}-resolved`, state.activeEffects.length),
+    name: commandEffect.entry.name,
+    source: commandEffect.entry.source,
+    ownerId: commandEffect.entry.ownerId,
+    sourceId: commandEffect.entry.sourceId,
+    expiry: 'end_of_turn',
+    mechanics,
+  };
+  events.push({ type: 'effect_applied', name: entry.name });
+  return stackApply(state, entry, mechanics);
 }
 
 /** Consume one data-owned command at the beginning of its owner's next turn.
@@ -4610,7 +4644,7 @@ export function resolveNextTurnCommand(
 ): TurnCommandResolution | null {
   const commandEffect = activePayloadEntries(state, 'turn_command')[0];
   if (!commandEffect) return null;
-  const command = String(commandEffect.payload.command) as TurnCommandResolution['command'];
+  const command = String(commandEffect.payload.command) as TurnCommand;
   let next = cloneState(state);
   next.activeEffects = next.activeEffects.filter((entry) => entry.id !== commandEffect.entry.id);
   const events: EngineEvent[] = [{ type: 'effect_expired', name: commandEffect.entry.name }];
@@ -4625,6 +4659,7 @@ export function resolveNextTurnCommand(
       ctx,
       commandEffect.entry.sourceId,
     );
+    next = applyTurnCommandEndRestriction(next, commandEffect, command, events, ctx);
     return {
       state: next,
       events,
@@ -4635,24 +4670,7 @@ export function resolveNextTurnCommand(
   }
 
   if (command === 'halt') {
-    next.activeEffects.push({
-      id: runtimeEffectId(ctx, 'command-halt', next.activeEffects.length),
-      name: commandEffect.entry.name,
-      source: commandEffect.entry.source,
-      ownerId: commandEffect.entry.ownerId,
-      sourceId: commandEffect.entry.sourceId,
-      expiry: 'end_of_turn',
-      mechanics: {
-        activation: { mode: 'passive' },
-        effects: [{
-          resolution: 'auto',
-          result: ['movement', 'action', 'bonus_action'].map((capability) => ({
-            kind: 'modifier', applies_to: { roll: capability }, op: 'deny', value: '1',
-          })),
-        }],
-      },
-    });
-    events.push({ type: 'effect_applied', name: `${commandEffect.entry.name}: Стой` });
+    next = applyTurnCommandEndRestriction(next, commandEffect, command, events, ctx);
     return {
       state: next,
       events,
@@ -4677,6 +4695,7 @@ export function resolveNextTurnCommand(
 
   if (command === 'flee') {
     events.push({ type: 'movement', mode: 'flee_source', distanceFt: speed });
+    next = applyTurnCommandEndRestriction(next, commandEffect, command, events, ctx);
     return {
       state: next,
       events,
@@ -4689,6 +4708,7 @@ export function resolveNextTurnCommand(
   }
 
   events.push(narrativeEvent(`${commandEffect.entry.name}: цель бросает удерживаемые предметы.`));
+  next = applyTurnCommandEndRestriction(next, commandEffect, 'drop', events, ctx);
   return {
     state: next,
     events,

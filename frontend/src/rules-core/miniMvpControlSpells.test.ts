@@ -7,6 +7,7 @@ import {
   resolveNextTurnCommand,
 } from '../engine/execute';
 import { deniedCapabilities } from '../engine/modifiers';
+import { groupActiveEffectsForDisplay } from '../engine/effects';
 import { validateMechanics } from '../engine/validateMechanics';
 import { FIGHTER_CTX_EQUIPPED, freshFighterState } from '../mvp/fixtures';
 import type { CharacterContext, RuntimeState } from '../mvp/contracts';
@@ -136,11 +137,29 @@ describe('mini-MVP: data-driven control and ward spells', () => {
 
   it('Command persists the chosen failed-save order and resolves generic next-turn effects', () => {
     const grovel = castAtTarget('SPELL-0272', { choices: { command_option: 'grovel' } });
+    expect(groupActiveEffectsForDisplay(grovel.activeEffects)).toEqual([
+      expect.objectContaining({
+        name: 'Приказ: Падай',
+        duration: 'до начала следующего хода цели',
+        instructions: ['В начале следующего хода получите состояние «Сбит с ног», затем завершите ход.'],
+      }),
+    ]);
     const grovelTurn = resolveNextTurnCommand(grovel, {
       character: ordinaryTarget, selfId: 'target', rng: () => 0.5,
     });
     expect(grovelTurn).toMatchObject({ command: 'grovel', endsTurn: true });
     expect(grovelTurn && activeConditionsOf(grovelTurn.state).has('prone')).toBe(true);
+    expect(grovelTurn && [...deniedCapabilities(grovelTurn.state)].sort()).toEqual([
+      'action', 'bonus_action', 'movement',
+    ]);
+    expect(grovelTurn && groupActiveEffectsForDisplay(grovelTurn.state.activeEffects)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'Приказ: Падай',
+          duration: 'до конца текущего хода',
+        }),
+      ]),
+    );
 
     const halt = castAtTarget('SPELL-0272', { choices: { command_option: 'halt' } });
     const haltTurn = resolveNextTurnCommand(halt, {

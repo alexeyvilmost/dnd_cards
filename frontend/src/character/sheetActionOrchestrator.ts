@@ -489,6 +489,14 @@ function engineEvents(
   action?: RuleActionDefinition,
   world?: WorldState,
 ): ExecuteResult['events'] {
+  const createdObjectNames = new Map<string, string>();
+  for (const event of events) {
+    if (event.payload.type !== 'WorldObjectMutationRecorded') continue;
+    const mutation = event.payload.event;
+    if (mutation.type === 'WorldObjectCreated') {
+      createdObjectNames.set(mutation.object.id, mutation.object.name);
+    }
+  }
   return events.flatMap((event): ExecuteResult['events'] => {
     if (event.payload.type === 'EngineEventRecorded') return [event.payload.event];
     if (event.payload.type !== 'WorldObjectMutationRecorded' || !action) return [];
@@ -506,14 +514,37 @@ function engineEvents(
       return [{ type: 'narrative', text: `${action.name}: создан объект «${mutation.object.name}»` }];
     }
     const object = world?.objects[mutation.objectId];
-    const name = object?.name ?? mutation.objectId;
+    const name = object?.name ?? createdObjectNames.get(mutation.objectId);
     if (mutation.type === 'WorldObjectRemoved') {
-      return [{ type: 'narrative', text: `${action.name}: объект «${name}» удалён` }];
+      if (mutation.reason === 'instantaneous_effect_completed') {
+        return [{
+          type: 'narrative',
+          text: name
+            ? `${action.name}: мгновенный эффект «${name}» завершён`
+            : `${action.name}: мгновенный эффект завершён`,
+        }];
+      }
+      return [{
+        type: 'narrative',
+        text: name
+          ? `${action.name}: объект «${name}» удалён`
+          : `${action.name}: объект удалён`,
+      }];
     }
     if (mutation.type === 'WorldObjectObserved') {
-      return [{ type: 'narrative', text: `${action.name}: зафиксировано наблюдение для «${name}»` }];
+      return [{
+        type: 'narrative',
+        text: name
+          ? `${action.name}: зафиксировано наблюдение для «${name}»`
+          : `${action.name}: наблюдение зафиксировано`,
+      }];
     }
-    return [{ type: 'narrative', text: `${action.name}: объект «${name}» изменён` }];
+    return [{
+      type: 'narrative',
+      text: name
+        ? `${action.name}: объект «${name}» изменён`
+        : `${action.name}: объект изменён`,
+    }];
   });
 }
 

@@ -11,6 +11,7 @@ export {
   preflightMechanicsExecution,
   projectedAgainst,
   readTargetSave,
+  resolveNextTurnCommand,
 } from '../../engine/execute';
 export {
   collectRollModifiers,

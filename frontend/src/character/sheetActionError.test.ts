@@ -42,6 +42,17 @@ describe('playerFacingSheetActionError', () => {
     ))).toBe('Цель носит доспехи и не подходит для этого действия.');
   });
 
+  it('explains an unsupported pending target save without exposing engine terms', () => {
+    const message = playerFacingSheetActionError(new Error(
+      'The compatible character sheet cannot resume canonical pending resolution target_save',
+    ));
+    expect(message).toBe(
+      'Не удалось завершить спасбросок цели. Ресурсы не потрачены; обновите страницу и повторите действие.',
+    );
+    expect(message).not.toContain('canonical');
+    expect(message).not.toContain('target_save');
+  });
+
   it('translates Stonecunning fact rejections into an actionable terrain instruction', () => {
     expect(playerFacingSheetActionError(new Error(
       'InvalidFacts: Stonecunning requires explicit stone-surface contact facts',

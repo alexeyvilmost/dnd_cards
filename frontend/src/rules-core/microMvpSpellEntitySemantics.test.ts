@@ -2,6 +2,8 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { armorClassValue } from '../engine/ac';
 import { actionUsesKey } from '../engine/actionUses';
 import { breakdownValue } from '../engine/breakdown';
+import { activeConditionsOf } from '../engine/circumstances';
+import { deniedCapabilities } from '../engine/modifiers';
 import { CARD_LEATHER_ARMOR, CARD_SHIELD } from '../mvp/fixtures';
 import type { EngineEvent } from '../mvp/contracts';
 import {
@@ -378,6 +380,47 @@ describe('micro-MVP compiled spell entity semantics', () => {
 
     run('hit');
     run('miss');
+  });
+
+  it('resolves Command: Grovel automatically when the target turn starts', () => {
+    const root = provider.roots[0];
+    if (!root) throw new Error('Missing compiled mini-MVP root');
+    const caster = isolatedActor(root, 'command-caster', []);
+    const target = isolatedActor(root, 'command-target', []);
+    target.runtime.activeEffects.push({
+      id: 'command:grovel',
+      name: 'Приказ: Падай',
+      source: 'Приказ',
+      ownerId: target.id,
+      sourceId: caster.id,
+      expiry: 'manual',
+      mechanics: {
+        kind: 'turn_command', command: 'grovel', execute_at: 'next_turn',
+        stack_id: 'spell:command', stack_type: 'overwrite',
+      },
+    });
+    const test = harness('compiled-command-grovel', [caster, target], []);
+    startEncounter(test.session, 'command', [caster.id, target.id]);
+    const waiting = test.session.getState().actors[target.id].runtime.activeEffects;
+    expect(waiting).toHaveLength(1);
+    expect(waiting[0].name).toContain('Падай');
+    expect(waiting[0].name).not.toBe('действие');
+
+    endTurn(test.session, 'command:caster:end', caster.id);
+    const started = dispatchAccepted(test.session, {
+      type: 'StartTurn', commandId: 'command:target:start', actorId: target.id,
+    });
+    const targetRuntime = test.session.getState().actors[target.id].runtime;
+    expect(activeConditionsOf(targetRuntime).has('prone')).toBe(true);
+    expect([...deniedCapabilities(targetRuntime)].sort()).toEqual([
+      'action', 'bonus_action', 'movement',
+    ]);
+    expect(recorded(started.events)).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: 'effect_expired', name: expect.stringContaining('Падай') }),
+      expect.objectContaining({ type: 'condition_applied', condition: 'prone' }),
+    ]));
+    test.tape.assertExhausted();
+    expectReplay(test);
   });
 
   it('executes Sacred Flame Dexterity save boundaries without cover bonuses and deals 1d8 Radiant only on failure', () => {
