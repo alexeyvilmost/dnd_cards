@@ -8,6 +8,7 @@ export default function TacticalBattleMap({
   actorId,
   selectedActionId,
   movementMode,
+  worldObjectMoveMode,
   inspectedActorId,
   onCell,
   onInspectActor,
@@ -16,6 +17,7 @@ export default function TacticalBattleMap({
   actorId: string;
   selectedActionId: string | null;
   movementMode: boolean;
+  worldObjectMoveMode?: boolean;
   inspectedActorId?: string | null;
   onCell: (position: GridPosition, actorId?: string) => void;
   onInspectActor?: (actorId: string) => void;
@@ -39,6 +41,10 @@ export default function TacticalBattleMap({
   const tokenByCell = new Map(Object.values(state.tokens).map((token) => [
     `${token.position.x}:${token.position.y}`, token,
   ]));
+  const dancingLightByCell = new Map(Object.values(state.world.objects).flatMap((object) => {
+    const position = state.worldObjectPositions?.[object.id];
+    return object.dancingLight && position ? [[`${position.x}:${position.y}`, object] as const] : [];
+  }));
   const selectedAction = state.catalogActions.find((action) => action.id === selectedActionId);
   const sourcePosition = state.tokens[actorId]?.position;
   const areaCells = useMemo(() => new Set(
@@ -121,7 +127,7 @@ export default function TacticalBattleMap({
       }}
     >
     <div
-      className={`tactical-map${selectedActionId ? ' is-targeting' : ''}${movementMode ? ' is-moving' : ''}`}
+      className={`tactical-map${selectedActionId ? ' is-targeting' : ''}${movementMode ? ' is-moving' : ''}${worldObjectMoveMode ? ' is-world-object-moving' : ''}`}
       data-testid="tactical-map"
       data-zoom={zoom}
       style={{ '--tactical-cell-size': `${Math.round(80 * zoom)}px` } as React.CSSProperties}
@@ -129,14 +135,19 @@ export default function TacticalBattleMap({
       {Array.from({ length: TACTICAL_WIDTH * TACTICAL_HEIGHT }, (_, index) => {
         const position = { x: index % TACTICAL_WIDTH, y: Math.floor(index / TACTICAL_WIDTH) };
         const token = tokenByCell.get(`${position.x}:${position.y}`);
+        const dancingLight = dancingLightByCell.get(`${position.x}:${position.y}`);
         const actor = token ? state.world.actors[token.actorId] : undefined;
         const dead = actor && actor.runtime.hp.current <= 0;
+        const lightLabel = dancingLight
+          ? `Танцующий огонёк, тусклый свет ${dancingLight.dancingLight!.dimRadiusFt} фт.`
+          : '';
+        const actorLabel = token ? `${actor?.name}, ${actor?.runtime.hp.current}/${actor?.runtime.hp.max} HP` : '';
         return (
           <button
             type="button"
             key={`${position.x}:${position.y}`}
-            className={`tactical-cell${token ? ' has-token' : ''}${token?.actorId === activeId ? ' is-active' : ''}${token?.actorId === inspectedActorId ? ' is-inspected' : ''}${dead ? ' is-dead' : ''}${areaCells.has(`${position.x}:${position.y}`) ? ' is-area-preview' : ''}${reachableCells.has(`${position.x}:${position.y}`) ? ' is-move-reachable' : ''}`}
-            aria-label={token ? `${actor?.name}, ${actor?.runtime.hp.current}/${actor?.runtime.hp.max} HP` : `Клетка ${position.x + 1}, ${position.y + 1}`}
+            className={`tactical-cell${token ? ' has-token' : ''}${dancingLight ? ' has-world-object' : ''}${token?.actorId === activeId ? ' is-active' : ''}${token?.actorId === inspectedActorId ? ' is-inspected' : ''}${dead ? ' is-dead' : ''}${areaCells.has(`${position.x}:${position.y}`) ? ' is-area-preview' : ''}${reachableCells.has(`${position.x}:${position.y}`) ? ' is-move-reachable' : ''}`}
+            aria-label={[actorLabel, lightLabel, `Клетка ${position.x + 1}, ${position.y + 1}`].filter(Boolean).join(' · ')}
             data-actor-id={token?.actorId}
             onMouseEnter={() => setHovered(position)}
             onMouseLeave={() => setHovered(null)}
@@ -145,6 +156,11 @@ export default function TacticalBattleMap({
               onCell(position, token?.actorId);
             }}
           >
+            {dancingLight && (
+              <span className="dancing-light-token" title={lightLabel} aria-hidden="true">
+                <b>✦</b><small>{dancingLight.dancingLight!.dimRadiusFt} фт.</small>
+              </span>
+            )}
             {token && actor && (
               <span className="battle-token" style={{ '--token-color': token.color } as React.CSSProperties}>
                 {token.tokenUrl ? <img src={token.tokenUrl} alt="" /> : <b>{actor.name.slice(0, 1)}</b>}

@@ -8,7 +8,7 @@ import type { SheetCombatParticipantSeed } from '../character/sheetCombatSession
 import type { ForgeCharacter } from '../character/types';
 import type { Action } from '../types';
 import type { Monster } from '../monsters/types';
-import { advanceTurn, autoResolveSystemDecisions, createSoloCombatState, executeCombatAction, moveActor, refreshSoloCombatResources, resolvePlayerReaction, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, setSoloCombatInitiativeTotals } from './engine';
+import { advanceTurn, autoResolveSystemDecisions, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatResources, resolvePlayerReaction, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, setSoloCombatInitiativeTotals } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { gridDistanceFt } from './tacticalGrid';
 import { SOLO_COMBAT_KEY } from './types';
@@ -100,6 +100,55 @@ function wizardSeed(): SheetCombatParticipantSeed {
     initiative_bonus: 9, speed: actor.character.characterSpeed ?? 30,
   } as unknown as ForgeCharacter;
   return { character, canonical };
+}
+
+function dancingLightsWizardSeed(): SheetCombatParticipantSeed {
+  const participant = wizardSeed();
+  const actor = participant.canonical.world.actors[participant.character.id];
+  const action: RuleActionDefinition = {
+    id: 'd5000000-0000-4000-8000-000000000001',
+    name: 'Пляшущие огоньки',
+    kind: 'spell',
+    spell: { level: 0 },
+    concentration: true,
+    sourceEntityIds: ['SPELL-dancing-lights'],
+    mechanics: {
+      activation: { mode: 'active', cost: [{ resource: 'action' }] },
+      targeting: {
+        domain: 'world', actor_targets: false, range_ft: 120, allowed_relations: [],
+        requires_line_of_sight: false, shape: 'multiple', min_targets: 0, max_targets: 1,
+      },
+      effects: [{ resolution: 'auto', result: [] }],
+      primitive: {
+        type: 'dancing_lights_world',
+        policy: {
+          min_individual_lights: 1, max_individual_lights: 4,
+          combined_form_object_count: 1, required_separation_ft: 20,
+          max_move_ft: 60, dim_radius_ft: 10, duration_rounds: 10,
+        },
+      },
+    },
+    targeting: {
+      minTargets: 0, maxTargets: 1, rangeFt: 120,
+      requiresLineOfSight: false, allowedRelations: [],
+    },
+  };
+  const actions = [...participant.canonical.actions, action];
+  actor.capabilities.actionIds.push(action.id);
+  actor.spellcastingAccess ??= { grants: [], preparedSources: {} };
+  actor.spellcastingAccess.grants.push({
+    grantId: 'grant:dancing-lights', actionId: action.id, sourceId: 'CLASS-wizard',
+    access: 'cantrip', level: 0, spellcastingAbility: 'int',
+  });
+  const byId = new Map(actions.map((candidate) => [candidate.id, candidate]));
+  return {
+    ...participant,
+    canonical: {
+      ...participant.canonical,
+      actions,
+      catalog: { getAction: (id) => byId.get(id), listActions: () => actions },
+    },
+  };
 }
 
 function scimitar(): Action {
@@ -821,6 +870,63 @@ describe('solo combat engine vertical integration', () => {
     }), () => 0);
     expect(state.world.actors[monsterId].runtime.hp.current).toBeLessThan(hpBefore);
     expect(state.log.at(-1)?.text).toContain(missile!.name);
+  });
+
+  it('casts, displays, persists, and moves Dancing Lights from tactical map facts', async () => {
+    const participant = dancingLightsWizardSeed();
+    let state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const actorId = participant.character.id;
+    const dancingLights = state.catalogActions.find((action) => (
+      state.playerActionIds.includes(action.id) && primitive(action) === 'dancing_lights_world'
+    ));
+    expect(dancingLights, 'Wizard should expose certified Dancing Lights').toBeDefined();
+    const source = state.tokens[actorId].position;
+    const castPosition = { x: source.x < 10 ? source.x + 2 : source.x - 2, y: source.y };
+    const boardRevisionBeforeCast = state.boardRevision;
+
+    state = executeCombatAction({
+      state,
+      actorId,
+      actionId: dancingLights!.id,
+      targetIds: [],
+      worldPosition: castPosition,
+      rng: () => 0,
+    });
+
+    const light = Object.values(state.world.objects).find((object) => (
+      object.sourceActorId === actorId && object.sourceActionId === dancingLights!.id && object.dancingLight
+    ));
+    expect(light).toBeDefined();
+    expect(state.worldObjectPositions?.[light!.id]).toEqual(castPosition);
+    expect(light!.distanceFromSourceFt).toBe(10);
+    expect(state.world.actors[actorId].runtime.resources.action).toBe(0);
+    expect(state.world.concentrations[actorId]?.actionId).toBe(dancingLights!.id);
+    expect(state.boardRevision).toBe(boardRevisionBeforeCast + 1);
+
+    const movePosition = { ...castPosition, y: castPosition.y < 9 ? castPosition.y + 1 : castPosition.y - 1 };
+    const bonusBefore = state.world.actors[actorId].runtime.resources.bonus_action;
+    state = moveCombatDancingLights({
+      state,
+      actorId,
+      groupId: light!.dancingLight!.groupId,
+      destination: movePosition,
+      rng: () => 0,
+    });
+    expect(state.worldObjectPositions?.[light!.id]).toEqual(movePosition);
+    expect(state.world.actors[actorId].runtime.resources.bonus_action).toBe(bonusBefore - 1);
+    expect(state.log.at(-1)?.text).toContain('Танцующие огоньки: перемещение');
+
+    const restored = readSoloCombatState(
+      writeSoloCombatState({}, state),
+      participant.character.id,
+      state.runtimeRevision,
+    );
+    expect(restored?.worldObjectPositions?.[light!.id]).toEqual(movePosition);
   });
 
   it('runs a catalog-gated off-turn opportunity attack and spends exactly the reactor resource', async () => {

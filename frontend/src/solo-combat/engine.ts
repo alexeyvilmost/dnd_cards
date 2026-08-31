@@ -243,6 +243,13 @@ function transitionState(
   const records = projectCombatLogRecords(rawEvents);
   let next = reconcileMovementForSpeedChanges(state, nextWorld);
   next = { ...next, world: nextWorld };
+  const positionedObjects = next.worldObjectPositions ?? {};
+  const retainedPositions = Object.fromEntries(Object.entries(positionedObjects).filter(
+    ([objectId]) => nextWorld.objects[objectId] !== undefined,
+  ));
+  if (Object.keys(retainedPositions).length !== Object.keys(positionedObjects).length) {
+    next = { ...next, worldObjectPositions: retainedPositions };
+  }
   next = applyForcedMovement(next, rawEvents);
   next = appendLog(next, actorId, `${label}: ${eventSummary(records)}`, records);
   return outcome(next);
@@ -315,6 +322,7 @@ function declarationFor(
   actorId: string,
   action: RuleActionDefinition,
   targetIds: string[],
+  worldPosition?: GridPosition,
   suppliedChoices: Readonly<Record<string, readonly string[]>> = {},
 ): SheetCanonicalCommandInput {
   const primitive = primitiveType(action);
@@ -339,6 +347,28 @@ function declarationFor(
     const choiceId = String(policy?.allocation_choice_id ?? 'magic_missile_dart_targets');
     if (!choices[choiceId]) choices[choiceId] = Array(count).fill(targetIds[0]);
   }
+  let dancingLightsWorldInput: SheetCanonicalCommandInput['worldInput'];
+  if (primitive === 'dancing_lights_world') {
+    if (!worldPosition) throw new Error('Выберите клетку для Танцующих огоньков.');
+    const sourcePosition = state.tokens[actorId]?.position;
+    if (!sourcePosition) throw new Error('Персонаж отсутствует на поле боя.');
+    const distanceFromCasterFt = gridDistanceFt(sourcePosition, worldPosition);
+    const maxRangeFt = action.targeting?.rangeFt;
+    if (maxRangeFt !== undefined && distanceFromCasterFt > maxRangeFt) {
+      throw new Error(`Танцующие огоньки должны быть в пределах ${maxRangeFt} фт. от заклинателя.`);
+    }
+    dancingLightsWorldInput = {
+      type: 'dancing_lights',
+      form: 'individual',
+      placements: [{ distanceFromCasterFt, withinRequiredSeparation: true }],
+      facts: {
+        factsSource: 'board',
+        boardRevision: state.boardRevision,
+        distanceFt: distanceFromCasterFt,
+        lineOfSight: true,
+      },
+    };
+  }
   return {
     sceneMode: 'encounter', targetIds, factsByTarget,
     ...(action.kind === 'spell' ? { spell: selectedSpellDeclaration(state.world, actorId, action) } : {}),
@@ -346,6 +376,7 @@ function declarationFor(
     ...(primitive === 'burning_hands_objects' || primitive === 'area_object_push'
       ? { worldInput: { type: 'area_objects', factsByObject: {} } as const }
       : {}),
+    ...(dancingLightsWorldInput ? { worldInput: dancingLightsWorldInput } : {}),
   };
 }
 
@@ -389,6 +420,7 @@ export function executeCombatAction(input: {
   actorId: string;
   actionId: string;
   targetIds: string[];
+  worldPosition?: GridPosition;
   choices?: Readonly<Record<string, readonly string[]>>;
   rng?: Rng;
 }): SoloCombatState {
@@ -401,6 +433,7 @@ export function executeCombatAction(input: {
     input.actorId,
     action,
     input.targetIds,
+    input.worldPosition,
     input.choices,
   );
   const rng = input.rng ?? Math.random;
@@ -479,7 +512,22 @@ export function executeCombatAction(input: {
       },
     } : {}),
   };
-  const next = dispatch({ state: input.state, command, rng, label: action.name });
+  let next = dispatch({ state: input.state, command, rng, label: action.name });
+  if (primitiveType(action) === 'dancing_lights_world' && input.worldPosition) {
+    const positions = { ...(next.worldObjectPositions ?? {}) };
+    for (const object of Object.values(next.world.objects)) {
+      if (object.sourceActorId === input.actorId
+        && object.sourceActionId === action.id
+        && object.dancingLight) {
+        positions[object.id] = { ...input.worldPosition };
+      }
+    }
+    next = {
+      ...next,
+      worldObjectPositions: positions,
+      boardRevision: next.boardRevision + 1,
+    };
+  }
   if (action.id !== next.dashActionId) return withTriggeredHitOffer(next);
   return withTriggeredHitOffer({
     ...next,
@@ -489,6 +537,82 @@ export function executeCombatAction(input: {
         + effectiveCombatActorSpeedFt(next, input.actorId),
     },
   });
+}
+
+/** Move the caster-owned Dancing Lights group on the tactical board. */
+export function moveCombatDancingLights(input: {
+  state: SoloCombatState;
+  actorId: string;
+  groupId: string;
+  destination: GridPosition;
+  rng?: Rng;
+}): SoloCombatState {
+  if (input.state.outcome !== 'active') throw new Error('Бой уже завершён');
+  if (activeActorId(input.state) !== input.actorId) throw new Error('Сейчас ход другого участника');
+  const actor = input.state.world.actors[input.actorId];
+  if (!actor) throw new Error('Участник боя не найден');
+  const concentration = input.state.world.concentrations[input.actorId];
+  if (!concentration) throw new Error('Персонаж больше не поддерживает концентрацию на Танцующих огоньках.');
+  const action = input.state.catalogActions.find((candidate) => candidate.id === concentration.actionId);
+  if (!action || primitiveType(action) !== 'dancing_lights_world') {
+    throw new Error('Активные Танцующие огоньки не найдены.');
+  }
+  const group = Object.values(input.state.world.objects).filter((object) => (
+    object.sourceActorId === input.actorId
+    && object.sourceActionId === action.id
+    && object.dancingLight?.groupId === input.groupId
+  )).sort((left, right) => left.id.localeCompare(right.id));
+  if (!group.length) throw new Error('Активные Танцующие огоньки не найдены.');
+  if ((actor.runtime.resources.bonus_action ?? 0) < 1) {
+    throw new Error('Для перемещения Танцующих огоньков нужно бонусное действие.');
+  }
+  const sourcePosition = input.state.tokens[input.actorId]?.position;
+  if (!sourcePosition) throw new Error('Персонаж отсутствует на поле боя.');
+  const policy = (action.mechanics.primitive as Record<string, unknown>).policy as Record<string, unknown>;
+  const maxMoveFt = Number(policy?.max_move_ft ?? 60);
+  const maxRangeFt = action.targeting?.rangeFt ?? Number.POSITIVE_INFINITY;
+  const distanceFromCasterFt = gridDistanceFt(sourcePosition, input.destination);
+  if (distanceFromCasterFt > maxRangeFt) {
+    throw new Error(`Танцующие огоньки должны оставаться в пределах ${maxRangeFt} фт. от заклинателя.`);
+  }
+  const positions = input.state.worldObjectPositions ?? {};
+  const resultingFacts = group.map((object) => {
+    const current = positions[object.id];
+    if (!current) throw new Error('Положение Танцующего огонька на поле не найдено.');
+    const movementFt = gridDistanceFt(current, input.destination);
+    if (movementFt > maxMoveFt) {
+      throw new Error(`Танцующие огоньки можно переместить не более чем на ${maxMoveFt} фт.`);
+    }
+    return {
+      lightId: object.id,
+      movementFt,
+      distanceFromCasterFt,
+      ...(group.length > 1 ? { withinRequiredSeparation: true } : {}),
+    };
+  });
+  const next = dispatch({
+    state: input.state,
+    command: {
+      ...commandBase(input.state, input.actorId),
+      type: 'MoveDancingLights',
+      concentrationId: concentration.id,
+      groupId: input.groupId,
+      factsSource: 'board',
+      boardRevision: input.state.boardRevision,
+      resultingFacts,
+    },
+    rng: input.rng ?? Math.random,
+    label: 'Танцующие огоньки: перемещение',
+  });
+  const worldObjectPositions = { ...(next.worldObjectPositions ?? {}) };
+  for (const object of group) {
+    if (next.world.objects[object.id]) worldObjectPositions[object.id] = { ...input.destination };
+  }
+  return {
+    ...next,
+    worldObjectPositions,
+    boardRevision: next.boardRevision + 1,
+  };
 }
 
 /**
@@ -1217,7 +1341,7 @@ export async function createSoloCombatState(input: {
       clone(base.resourceBindingsByActor[participant.character.id] ?? {}),
     ])),
     resourceBindings: clone(base.resourceBindingsByActor[input.character.id]),
-    tokens, boardRevision: 1,
+    tokens, worldObjectPositions: {}, boardRevision: 1,
     movementRemainingFt: Object.fromEntries(Object.values(base.world.actors).map((actor) => [
       actor.id, effectiveActorSpeedFt(actor),
     ])),

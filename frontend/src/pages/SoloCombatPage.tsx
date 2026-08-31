@@ -24,6 +24,7 @@ import {
   createSoloCombatState,
   executeCombatAction,
   executeCombatRemoteManipulator,
+  moveCombatDancingLights,
   moveActor,
   resolvePlayerReaction,
   resolveSoloCombatTurnStart,
@@ -80,6 +81,7 @@ export default function SoloCombatPage() {
   const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
   const [selectedActionChoices, setSelectedActionChoices] = useState<Record<string, string[]>>({});
   const [movementMode, setMovementMode] = useState(false);
+  const [dancingLightsMoveGroupId, setDancingLightsMoveGroupId] = useState<string | null>(null);
   const [inspectedActorId, setInspectedActorId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sceneConstructorOpen, setSceneConstructorOpen] = useState(false);
@@ -291,11 +293,19 @@ export default function SoloCombatPage() {
     ? activeActor(state).id
     : state?.characterId ?? '';
   const playerTurn = state ? isControlledCharacter(state, activeActor(state).id) : false;
+  const activeDancingLights = state ? Object.values(state.world.objects).filter((object) => {
+    const concentration = state.world.concentrations[activeControlledActorId];
+    return object.sourceActorId === activeControlledActorId
+      && object.sourceActionId === concentration?.actionId
+      && object.dancingLight;
+  }).sort((left, right) => left.id.localeCompare(right.id)) : [];
+  const activeDancingLightsGroup = activeDancingLights[0]?.dancingLight?.groupId;
   const chooseAction = async (action: SoloCombatState['catalogActions'][number]) => {
     if (!state || !playerTurn || busy) return;
     const wasSelected = selectedActionId === action.id;
     setError(null);
     setMovementMode(false);
+    setDancingLightsMoveGroupId(null);
     setSelectedActionId(null);
     setSelectedActionChoices({});
     if (wasSelected) return;
@@ -334,6 +344,22 @@ export default function SoloCombatPage() {
         const next = moveActor({ state, actorId: activeControlledActorId, destination: position, voluntary: true });
         setMovementMode(false); setSelectedActionChoices({}); apply(next); return;
       }
+      if (dancingLightsMoveGroupId) {
+        if (dancingLightsMoveGroupId !== activeDancingLightsGroup) {
+          setDancingLightsMoveGroupId(null);
+          throw new Error('Активные Танцующие огоньки не найдены.');
+        }
+        const next = moveCombatDancingLights({
+          state,
+          actorId: activeControlledActorId,
+          groupId: dancingLightsMoveGroupId,
+          destination: position,
+        });
+        setDancingLightsMoveGroupId(null);
+        setSelectedActionChoices({});
+        apply(next);
+        return;
+      }
       if (!selectedActionId) return;
       const targetIds = selectedTargetsForAction({
         state,
@@ -349,6 +375,7 @@ export default function SoloCombatPage() {
         actorId: activeControlledActorId,
         actionId: selectedActionId,
         targetIds,
+        worldPosition: position,
         choices: selectedActionChoices,
       }));
       setSelectedActionId(null); setSelectedActionChoices({}); apply(next);
@@ -453,29 +480,50 @@ export default function SoloCombatPage() {
       </header>
       {error && <div className="combat-error" role="alert"><span>{error}</span><button type="button" onClick={() => setError(null)}><X size={16} /></button></div>}
       <section className="combat-stage">
-        <TacticalBattleMap
-          state={state}
-          actorId={activeControlledActorId}
-          selectedActionId={selectedActionId}
-          movementMode={movementMode}
-          inspectedActorId={inspectedActorId}
-          onCell={clickCell}
-          onInspectActor={(actorId) => {
-            if (isControlledCharacter(state, actorId)) {
-              setSheetActorId(actorId);
-              setSheetOpen(true);
-              return;
-            }
-            setInspectedActorId((current) => current === actorId ? null : actorId);
-          }}
-        />
+        <div className="combat-map-wrap">
+          <TacticalBattleMap
+            state={state}
+            actorId={activeControlledActorId}
+            selectedActionId={selectedActionId}
+            movementMode={movementMode}
+            worldObjectMoveMode={dancingLightsMoveGroupId === activeDancingLightsGroup}
+            inspectedActorId={inspectedActorId}
+            onCell={clickCell}
+            onInspectActor={(actorId) => {
+              if (isControlledCharacter(state, actorId)) {
+                setSheetActorId(actorId);
+                setSheetOpen(true);
+                return;
+              }
+              setInspectedActorId((current) => current === actorId ? null : actorId);
+            }}
+          />
+          {activeDancingLightsGroup && (
+            <section className="combat-world-control" aria-label="Управление Танцующими огоньками">
+              <span><b>✦ Танцующие огоньки</b><small>{activeDancingLights.length} · тусклый свет {activeDancingLights[0].dancingLight?.dimRadiusFt} фт. · концентрация · {activeDancingLights[0].roundsLeft} раундов</small></span>
+              <button
+                type="button"
+                disabled={busy || !playerTurn || (state.world.actors[activeControlledActorId].runtime.resources.bonus_action ?? 0) < 1}
+                onClick={() => {
+                  setSelectedActionId(null);
+                  setSelectedActionChoices({});
+                  setMovementMode(false);
+                  setDancingLightsMoveGroupId((current) => current === activeDancingLightsGroup ? null : activeDancingLightsGroup);
+                }}
+              >
+                {dancingLightsMoveGroupId === activeDancingLightsGroup ? 'Отмена' : 'Переместить · бонусное действие'}
+              </button>
+              {dancingLightsMoveGroupId === activeDancingLightsGroup && <em>Выберите клетку в пределах 60 фт.</em>}
+            </section>
+          )}
+        </div>
         <CombatLogPanel state={state} />
       </section>
       {inspectedActorId && state.world.actors[inspectedActorId] && (
         <CombatActorInspector state={state} actorId={inspectedActorId} onClose={() => setInspectedActorId(null)} />
       )}
       {sceneConstructorOpen && <CombatSceneConstructor state={state} busy={busy} onApply={apply} onClose={() => setSceneConstructorOpen(false)} />}
-      <CombatHotbar state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); apply(advanceTurn(state)); }} onSheet={() => { setSheetActorId(activeControlledActorId); setSheetOpen(true); }} />
+      <CombatHotbar state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); apply(advanceTurn(state)); }} onSheet={() => { setSheetActorId(activeControlledActorId); setSheetOpen(true); }} />
       {sheetOpen && (() => {
         const drawerActorId = sheetActorId && isControlledCharacter(state, sheetActorId)
           ? sheetActorId

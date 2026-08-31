@@ -144,6 +144,8 @@ export interface SoloCombatState {
   resourceBindingsByActor?: Record<string, SheetCanonicalResourceBindings>;
   resourceBindings: SheetCanonicalResourceBindings;
   tokens: Record<string, TacticalToken>;
+  /** Board-owned positions for durable world objects which have a tactical token. */
+  worldObjectPositions?: Record<string, GridPosition>;
   boardRevision: number;
   movementRemainingFt: Record<string, number>;
   initiativeBonuses: Record<string, number>;
