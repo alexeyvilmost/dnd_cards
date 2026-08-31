@@ -213,6 +213,14 @@ interface Props {
     disabledReason?: string,
   ) => void;
   disableHoverPreviews?: boolean;
+  /** Blocks sheet-side mutations while another surface owns the authoritative turn ledger. */
+  disabledReason?: string;
+}
+
+export function sheetActionPanelLockIssue(
+  disabledReason?: string,
+): { disabled: true; reason: string } | null {
+  return disabledReason ? { disabled: true, reason: disabledReason } : null;
 }
 
 /**
@@ -571,6 +579,7 @@ export default function SheetActionsPanel({
   encounterApply,
   onInspectAction,
   disableHoverPreviews = false,
+  disabledReason: panelDisabledReason,
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1771,6 +1780,10 @@ export default function SheetActionsPanel({
   };
 
   const runAction = async (action: SheetAction) => {
+    if (panelDisabledReason) {
+      setError(panelDisabledReason);
+      return;
+    }
     if (pendingAtomicRetry) {
       setError('Сначала подтвердите безопасный повтор предыдущей атомарной команды');
       return;
@@ -2555,6 +2568,8 @@ export default function SheetActionsPanel({
 
   // Доступность + причина недоступности: сперва экипировка (оружие в руке), затем ресурсы.
   const disabledInfo = (action: SheetAction): { disabled: boolean; reason?: string } => {
+    const panelLock = sheetActionPanelLockIssue(panelDisabledReason);
+    if (panelLock) return panelLock;
     if (pendingAtomicRetry) {
       return {
         disabled: true,
@@ -2680,6 +2695,10 @@ export default function SheetActionsPanel({
   const activeEffectGroups = groupActiveEffectsForDisplay(runtime.activeEffects);
 
   const handleDismissEffect = (effectIds: readonly string[]) => {
+    if (panelDisabledReason) {
+      setError(panelDisabledReason);
+      return;
+    }
     const { state, events } = removeActiveEffectGroup(runtime, effectIds);
     apply(state, events);
   };
@@ -2687,6 +2706,10 @@ export default function SheetActionsPanel({
   const handleRemoteManipulator = async (
     command: Parameters<typeof executeRemoteManipulator>[1],
   ) => {
+    if (panelDisabledReason) {
+      setError(panelDisabledReason);
+      return;
+    }
     const result = executeRemoteManipulator(runtime, command);
     await apply(result.state, result.events);
   };
@@ -2755,6 +2778,11 @@ export default function SheetActionsPanel({
     <>
       {worldInputDialog.dialog}
       {combatTargetDialog.dialog}
+      {panelDisabledReason && (
+        <p className="forge-note" role="status" data-testid="sheet-action-surface-lock">
+          {panelDisabledReason}
+        </p>
+      )}
       {error && <p className="issues" role="alert" data-testid="sheet-action-error">{error}</p>}
       {busy && (
         <p className="forge-note" role="status" data-testid="sheet-action-progress">
@@ -3050,15 +3078,15 @@ export default function SheetActionsPanel({
                 {remoteManipulator && (
                   <RemoteManipulatorControl
                     effect={remoteManipulator}
-                    disabled={busy || (runtime.resources.action ?? 0) < 1}
+                    disabled={Boolean(panelDisabledReason) || busy || (runtime.resources.action ?? 0) < 1}
                     onExecute={handleRemoteManipulator}
                   />
                 )}
                 <button
                   type="button"
                   className="sheet-active-effect-dismiss"
-                  disabled={busy}
-                  title="Снять вручную"
+                  disabled={Boolean(panelDisabledReason) || busy}
+                  title={panelDisabledReason ?? 'Снять вручную'}
                   onClick={() => handleDismissEffect(group.effects.map((effect) => effect.id))}
                 >
                   <X size={14} />

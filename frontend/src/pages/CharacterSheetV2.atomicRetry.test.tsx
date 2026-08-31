@@ -24,6 +24,7 @@ vi.mock('../components/SheetActionsPanel', () => ({
     pendingAtomicRetry?: SheetAtomicRetryEnvelope | null;
     onPendingAtomicRetryChange?: (retry: SheetAtomicRetryEnvelope | null) => void;
     showAtomicRetryControl?: boolean;
+    disabledReason?: string;
   }) => {
     const panel = props.spellsOnly ? 'spells' : 'actions';
     return (
@@ -32,6 +33,7 @@ vi.mock('../components/SheetActionsPanel', () => ({
         data-testid={`${panel}-atomic-panel`}
         data-command-id={props.pendingAtomicRetry?.prepared.request.command_id ?? ''}
         data-show-retry-control={String(props.showAtomicRetryControl !== false)}
+        data-disabled-reason={props.disabledReason ?? ''}
         disabled={Boolean(props.pendingAtomicRetry)}
         onClick={() => props.onPendingAtomicRetryChange?.({
           characterId: props.character.id,
@@ -162,5 +164,21 @@ describe('CharacterSheetV2 atomic retry ownership', () => {
     expect(spells.disabled).toBe(true);
     expect(actions.dataset.commandId).toBe('atomic-command');
     expect(spells.dataset.commandId).toBe('atomic-command');
+  });
+
+  it('forwards the dedicated-combat lock to both Action and Spells panels', async () => {
+    await act(async () => root.render(
+      <CharacterSheetV2
+        {...baseProps}
+        pendingAtomicRetry={null}
+        onPendingAtomicRetryChange={vi.fn()}
+        sheetActionDisabledReason="Use the dedicated combat surface"
+      />,
+    ));
+    const actions = container.querySelector<HTMLButtonElement>('[data-testid="actions-atomic-panel"]')!;
+    const spells = container.querySelector<HTMLButtonElement>('[data-testid="spells-atomic-panel"]')!;
+
+    expect(actions.dataset.disabledReason).toBe('Use the dedicated combat surface');
+    expect(spells.dataset.disabledReason).toBe('Use the dedicated combat surface');
   });
 });

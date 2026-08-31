@@ -81,6 +81,7 @@ interface Props {
   readOnly: boolean;
   encounterApply?: EncounterApply;
   combatActive?: boolean;
+  sheetActionDisabledReason?: string;
   onRollInitiative?: () => void;
   rollingInitiative?: boolean;
 }
@@ -90,7 +91,7 @@ const CharacterSheetV2 = ({
   acBreakdown, maxHpBreakdown, initBreakdown, speedBreakdown,
   lineageName, inPlayChoices, onUpdated, onEvents, onPersistedEvents,
   pendingAtomicRetry, onPendingAtomicRetryChange, readOnly, encounterApply,
-  combatActive, onRollInitiative, rollingInitiative,
+  combatActive, sheetActionDisabledReason, onRollInitiative, rollingInitiative,
 }: Props) => {
   const [hpOpen, setHpOpen] = useState(false);
   const [longRestOpen, setLongRestOpen] = useState(false);
@@ -353,6 +354,7 @@ const CharacterSheetV2 = ({
               onTargetCharacterChange={setTargetCharacterId}
               encounterId={character.current_encounter_id ?? undefined}
               encounterApply={encounterApply}
+              disabledReason={sheetActionDisabledReason}
             />}
           </CollapsibleSection>
 
@@ -388,6 +390,7 @@ const CharacterSheetV2 = ({
                 onTargetCharacterChange={setTargetCharacterId}
                 encounterId={character.current_encounter_id ?? undefined}
                 encounterApply={encounterApply}
+                disabledReason={sheetActionDisabledReason}
               />}
             </CollapsibleSection>
           )}

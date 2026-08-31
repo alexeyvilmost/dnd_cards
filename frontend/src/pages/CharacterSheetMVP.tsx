@@ -183,6 +183,9 @@ const CharacterSheetMVP = () => {
       && (soloCombatEnvelope as Record<string, unknown>).outcome === 'active',
   );
   const combatLocked = Boolean(activeEncounter || activeSoloCombat);
+  const sheetActionDisabledReason = activeSoloCombat
+    ? 'Персонаж находится в активном одиночном бою. Применяйте действия и эффекты на поле боя.'
+    : undefined;
   const encStateRef = useRef(encState);
   encStateRef.current = encState;
   const encSeqRef = useRef(encSeq);
@@ -1118,6 +1121,7 @@ const CharacterSheetMVP = () => {
           readOnly={readOnly}
           encounterApply={applyEncounter}
           combatActive={combatLocked}
+          sheetActionDisabledReason={sheetActionDisabledReason}
           onRollInitiative={rollInitiative}
           rollingInitiative={rollingInit}
         />
@@ -1153,6 +1157,7 @@ const CharacterSheetMVP = () => {
             onTargetSaveModChange={setTargetSaveMod}
             encounterId={encId ?? undefined}
             encounterApply={applyEncounter}
+            disabledReason={sheetActionDisabledReason}
           />
           )}
 
@@ -1551,6 +1556,7 @@ const CharacterSheetMVP = () => {
                 onTargetSaveModChange={setTargetSaveMod}
                 encounterId={encId ?? undefined}
                 encounterApply={applyEncounter}
+                disabledReason={sheetActionDisabledReason}
               />
             </section>
           )}
