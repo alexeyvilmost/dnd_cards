@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { purchaseItem } from '../character/inventory';
+import { purchaseItem, purchasePrice } from '../character/inventory';
 import {
   CURRENT_CHARACTER_SCHEMA_VERSION,
   DEFAULT_CHARACTER_RULESET_VERSION,
@@ -50,5 +50,46 @@ describe('purchaseItem', () => {
     const poor = { ...baseChar(), currency: { gold: 5 } };
     const { error } = purchaseItem(poor, sword);
     expect(error).toBe('Недостаточно средств');
+  });
+
+  it('применяет скидку Самоделкина 20% к немагической покупке', () => {
+    const crafter = [{
+      effects: [{
+        resolution: 'auto',
+        result: [{
+          kind: 'modifier',
+          applies_to: { value: 'nonmagical_purchase_price' },
+          op: 'multiply',
+          value: 0.8,
+        }],
+      }],
+    }];
+    const character = { ...baseChar(), currency: { gold: 12 } };
+
+    expect(purchasePrice(sword, crafter)).toMatchObject({
+      listed: 15,
+      payable: 12,
+      discounted: true,
+    });
+    const result = purchaseItem(character, sword, crafter);
+    expect(result.error).toBeUndefined();
+    expect(result.pricePaid).toBe(12);
+    expect(result.discountApplied).toBe(true);
+    expect(result.currency.gold).toBe(0);
+  });
+
+  it('не применяет скидку Самоделкина к явно магическому предмету', () => {
+    const magical = { ...sword, tags: ['magical'] };
+    const crafter = [{
+      effects: [{ result: [{
+        kind: 'modifier', applies_to: { value: 'nonmagical_purchase_price' }, op: 'multiply', value: 0.8,
+      }] }],
+    }];
+
+    expect(purchasePrice(magical, crafter)).toMatchObject({
+      listed: 15,
+      payable: 15,
+      discounted: false,
+    });
   });
 });

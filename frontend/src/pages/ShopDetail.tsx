@@ -3,7 +3,10 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Grid3X3, List, ShoppingCart } from 'lucide-react';
 import { shopsApi } from '../api/client';
 import { charactersV3Api } from '../character/api';
-import { characterCurrency, purchaseItem } from '../character/inventory';
+import { characterCurrency, purchaseItem, purchasePrice } from '../character/inventory';
+import { loadAssembly } from '../character/assemble';
+import { characterToDraft } from '../character/forgeHelpers';
+import { collectPassiveMechanics } from '../character/resourceInit';
 import { runtimeInventoryPayload } from '../character/runtime';
 import type { ForgeCharacter } from '../character/types';
 import type { Card } from '../types';
@@ -30,6 +33,7 @@ const ShopDetail = () => {
   const [error, setError] = useState<string | null>(null);
   const [shopMsg, setShopMsg] = useState<string | null>(null);
   const [buyingId, setBuyingId] = useState<string | null>(null);
+  const [purchasePassives, setPurchasePassives] = useState<Record<string, unknown>[]>([]);
   const [params, setParams] = useSearchParams();
   const selectedVendor = params.get('vendor') || '';
   const characterId = params.get('character') || '';
@@ -63,6 +67,24 @@ const ShopDetail = () => {
     };
     run();
   }, [slug]);
+
+  useEffect(() => {
+    let active = true;
+    if (!selectedCharacter) {
+      setPurchasePassives([]);
+      return () => { active = false; };
+    }
+    setPurchasePassives([]);
+    const draft = characterToDraft(selectedCharacter);
+    void loadAssembly(draft)
+      .then((assembled) => {
+        if (active) setPurchasePassives(collectPassiveMechanics(assembled, draft.resolvedChoices));
+      })
+      .catch(() => {
+        if (active) setPurchasePassives([]);
+      });
+    return () => { active = false; };
+  }, [selectedCharacter]);
 
   const selectCharacter = (id: string) => {
     const next = new URLSearchParams(params);
@@ -98,7 +120,16 @@ const ShopDetail = () => {
     setShopMsg(null);
     try {
       const fresh = await charactersV3Api.get(selectedCharacter.id);
-      const { runtime, currency, error: buyErr } = purchaseItem(fresh, card);
+      const draft = characterToDraft(fresh);
+      const assembled = await loadAssembly(draft);
+      const passives = collectPassiveMechanics(assembled, draft.resolvedChoices);
+      const {
+        runtime,
+        currency,
+        pricePaid,
+        discountApplied,
+        error: buyErr,
+      } = purchaseItem(fresh, card, passives);
       if (buyErr) {
         setShopMsg(buyErr);
         return;
@@ -108,7 +139,10 @@ const ShopDetail = () => {
         currency,
       });
       setCharacters((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
-      setShopMsg(`«${card.name}» добавлен в инвентарь.`);
+      const currencyLabel = getCurrencyInfo(card.price_currency || 'gold').short;
+      setShopMsg(discountApplied
+        ? `«${card.name}» добавлен в инвентарь. Самоделкин: скидка 20%, уплачено ${pricePaid} ${currencyLabel}.`
+        : `«${card.name}» добавлен в инвентарь.`);
     } catch (e) {
       console.error(e);
       setShopMsg('Ошибка покупки');
@@ -121,7 +155,7 @@ const ShopDetail = () => {
 
   const canAfford = (card: Card) => {
     if (!wallet) return false;
-    const price = card.price ?? 0;
+    const price = purchasePrice(card, purchasePassives).payable;
     if (price <= 0) return true;
     const cur = card.price_currency || 'gold';
     return (wallet[cur] ?? 0) >= price;
@@ -181,7 +215,7 @@ const ShopDetail = () => {
   );
 
   const buyButton = (card: Card, compact = false) => {
-    const price = card.price ?? 0;
+    const price = purchasePrice(card, purchasePassives).payable;
     const affordable = canAfford(card);
     const busy = buyingId === card.id;
     return (
@@ -297,9 +331,13 @@ const ShopDetail = () => {
                             )}
                           </div>
                           <div className="flex items-center gap-2 flex-wrap justify-center">
-                            {card.price != null && card.price > 0 && (
-                              <CurrencyPriceInline price={card.price} currency={card.price_currency} />
-                            )}
+                            {card.price != null && card.price > 0 && (() => {
+                              const price = purchasePrice(card, purchasePassives);
+                              return <span className="inline-flex items-center gap-1">
+                                <CurrencyPriceInline price={price.payable} currency={card.price_currency} />
+                                {price.discounted && <span className="text-xs text-green-700" title={`Цена до скидки: ${price.listed}`}>Самоделкин −20%</span>}
+                              </span>;
+                            })()}
                             {buyButton(card, true)}
                           </div>
                         </div>
@@ -329,9 +367,13 @@ const ShopDetail = () => {
                                 </div>
                                 <div className="flex items-center justify-between mt-1 text-xs gap-2">
                                   <div className="flex items-center gap-2">
-                                    {card.price != null && card.price > 0 && (
-                                      <CurrencyPriceInline price={card.price} currency={card.price_currency} textClassName="text-yellow-600 font-bold" />
-                                    )}
+                                    {card.price != null && card.price > 0 && (() => {
+                                      const price = purchasePrice(card, purchasePassives);
+                                      return <span className="inline-flex items-center gap-1">
+                                        <CurrencyPriceInline price={price.payable} currency={card.price_currency} textClassName="text-yellow-600 font-bold" />
+                                        {price.discounted && <span className="text-green-700">Самоделкин −20%</span>}
+                                      </span>;
+                                    })()}
                                     {buyButton(card, true)}
                                   </div>
                                   <span className="font-mono text-gray-400 shrink-0">{card.card_number}</span>

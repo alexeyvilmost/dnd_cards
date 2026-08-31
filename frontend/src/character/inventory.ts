@@ -4,6 +4,49 @@ import { equipItem, planEquip, unequipSlot } from '../engine/equipment';
 import type { Card } from '../types';
 import type { RuntimeState } from '../mvp/contracts';
 
+type MechanicsRecord = Record<string, unknown>;
+
+function mechanicsResults(mechanics: MechanicsRecord): MechanicsRecord[] {
+  const effects = Array.isArray(mechanics.effects) ? mechanics.effects as MechanicsRecord[] : [];
+  return effects.flatMap((effect) => {
+    const results = effect.result ?? effect.results;
+    return Array.isArray(results) ? results as MechanicsRecord[] : [];
+  });
+}
+
+export function nonmagicalPurchasePriceMultiplier(
+  passives: readonly MechanicsRecord[] = [],
+): number {
+  return passives.flatMap(mechanicsResults).reduce((multiplier, payload) => {
+    const appliesTo = payload.applies_to as MechanicsRecord | undefined;
+    if (payload.kind !== 'modifier'
+      || appliesTo?.value !== 'nonmagical_purchase_price'
+      || payload.op !== 'multiply') return multiplier;
+    const factor = Number(payload.value);
+    return Number.isFinite(factor) && factor > 0 ? multiplier * factor : multiplier;
+  }, 1);
+}
+
+export function isExplicitlyMagicalItem(card: Card): boolean {
+  const mechanics = card.mechanics as MechanicsRecord | null | undefined;
+  if (mechanics?.magical === true) return true;
+  const labels = [...(card.tags ?? []), ...(card.properties ?? [])]
+    .map((value) => String(value).trim().toLocaleLowerCase('ru'));
+  return labels.some((value) => ['magic', 'magical', 'магия', 'магический', 'магическое'].includes(value));
+}
+
+export function purchasePrice(
+  card: Card,
+  passives: readonly MechanicsRecord[] = [],
+): { listed: number; payable: number; multiplier: number; discounted: boolean } {
+  const listed = Math.max(0, Number(card.price ?? 0) || 0);
+  const multiplier = isExplicitlyMagicalItem(card)
+    ? 1
+    : nonmagicalPurchasePriceMultiplier(passives);
+  const payable = Math.max(0, Math.floor(listed * multiplier));
+  return { listed, payable, multiplier, discounted: payable < listed };
+}
+
 /** Всего предмета в инвентаре (S4: сумма по ВСЕМ локациям — верхний уровень + все контейнеры). */
 export function inventoryQty(state: RuntimeState, cardId: string): number {
   return state.inventory.reduce((s, r) => (r.cardId === cardId ? s + r.qty : s), 0);
@@ -138,14 +181,32 @@ export function characterCurrency(c: ForgeCharacter): Record<string, number> {
 export function purchaseItem(
   character: ForgeCharacter,
   card: Card,
-): { runtime: RuntimeState; currency: Record<string, number>; error?: string } {
+  passives: readonly MechanicsRecord[] = [],
+): {
+  runtime: RuntimeState;
+  currency: Record<string, number>;
+  pricePaid: number;
+  discountApplied: boolean;
+  error?: string;
+} {
   const runtime = forgeToRuntimeState(character);
   const currency = characterCurrency(character);
-  const price = card.price ?? 0;
+  const price = purchasePrice(card, passives);
   const curKey = card.price_currency || 'gold';
-  if (price > 0 && (currency[curKey] ?? 0) < price) {
-    return { runtime, currency, error: 'Недостаточно средств' };
+  if (price.payable > 0 && (currency[curKey] ?? 0) < price.payable) {
+    return {
+      runtime,
+      currency,
+      pricePaid: 0,
+      discountApplied: price.discounted,
+      error: 'Недостаточно средств',
+    };
   }
-  if (price > 0) currency[curKey] = (currency[curKey] ?? 0) - price;
-  return { runtime: addToInventory(runtime, card.id, 1), currency };
+  if (price.payable > 0) currency[curKey] = (currency[curKey] ?? 0) - price.payable;
+  return {
+    runtime: addToInventory(runtime, card.id, 1),
+    currency,
+    pricePaid: price.payable,
+    discountApplied: price.discounted,
+  };
 }
