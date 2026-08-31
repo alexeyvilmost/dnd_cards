@@ -22,11 +22,93 @@ deploy_env="$root/shared/deploy.env"
 backup_dir="$root/shared/backups"
 backup_file="$backup_dir/pre-$sha-$(date -u +%Y%m%dT%H%M%SZ).dump"
 lock_file="$root/shared/deploy.lock"
+retention_keep=5
 
 exec 9>"$lock_file"
 flock -n 9 || {
   echo "another deployment is already running" >&2
   exit 1
+}
+
+is_release_sha() {
+  candidate="$1"
+  [ "${#candidate}" -eq 40 ] || return 1
+  case "$candidate" in
+    *[!0-9a-f]*) return 1 ;;
+  esac
+}
+
+prune_release_history() {
+  keep_count="$1"
+  protected_sha="${2:-}"
+  current_release=$(readlink -f "$root/current")
+  current_sha=$(basename "$current_release")
+  is_release_sha "$current_sha"
+  [ "$current_release" = "$root/releases/$current_sha" ]
+
+  keep_file=$(mktemp "$root/shared/release-retention.keep.XXXXXX")
+  candidate_file=$(mktemp "$root/shared/release-retention.candidates.XXXXXX")
+  cleanup_retention_files() {
+    rm -f "$keep_file" "$candidate_file"
+  }
+
+  printf '%s\n' "$current_sha" > "$keep_file"
+  find "$root/releases" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %f\n' \
+    | sort -nr \
+    | awk '{print $2}' \
+    | while IFS= read -r candidate; do
+        is_release_sha "$candidate" || {
+          echo "invalid release directory: $root/releases/$candidate" >&2
+          cleanup_retention_files
+          exit 1
+        }
+        [ "$candidate" = "$current_sha" ] || printf '%s\n' "$candidate"
+      done > "$candidate_file"
+
+  remaining=$((keep_count - 1))
+  if [ "$remaining" -gt 0 ]; then
+    head -n "$remaining" "$candidate_file" >> "$keep_file"
+  fi
+  if [ -n "$protected_sha" ] && ! grep -Fxq "$protected_sha" "$keep_file"; then
+    is_release_sha "$protected_sha"
+    printf '%s\n' "$protected_sha" >> "$keep_file"
+  fi
+
+  find "$root/releases" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' \
+    | while IFS= read -r candidate; do
+        grep -Fxq "$candidate" "$keep_file" && continue
+        is_release_sha "$candidate"
+        echo "[retention] Removing release $candidate"
+        rm -rf -- "$root/releases/$candidate"
+      done
+
+  find "$root/builds" -mindepth 1 -maxdepth 1 -printf '%f\n' \
+    | while IFS= read -r entry; do
+        candidate=''
+        case "$entry" in
+          *.tar) candidate=${entry%.tar} ;;
+          deploy-*.log) candidate=${entry#deploy-}; candidate=${candidate%.log} ;;
+          *.deploy.log) candidate=${entry%.deploy.log} ;;
+          deploy-*.sh) candidate=${entry#deploy-}; candidate=${candidate%.sh} ;;
+          *) candidate=$entry ;;
+        esac
+        is_release_sha "$candidate" || continue
+        grep -Fxq "$candidate" "$keep_file" && continue
+        echo "[retention] Removing build artifact $entry"
+        rm -rf -- "$root/builds/$entry"
+      done
+
+  for repository in bagofholding-backend bagofholding-frontend; do
+    docker image ls "$repository" --format '{{.Tag}}' \
+      | while IFS= read -r candidate; do
+          is_release_sha "$candidate" || continue
+          grep -Fxq "$candidate" "$keep_file" && continue
+          echo "[retention] Removing image $repository:$candidate"
+          docker image rm -f "$repository:$candidate" >/dev/null
+        done
+  done
+
+  cleanup_retention_files
 }
 
 test -f "$archive"
@@ -35,6 +117,11 @@ test -f "$deploy_env"
 test -L "$root/current"
 test ! -e "$build_root"
 test ! -e "$release"
+
+# Keep four rollback candidates before creating a fifth release. The uploaded
+# archive for this deployment is protected even though no release directory
+# exists for it yet.
+prune_release_history $((retention_keep - 1)) "$sha"
 
 # APP_DOMAIN is also consumed by Caddy and may contain a comma-separated list.
 # Public verification must use one origin, not the entire Caddy site label.
@@ -139,6 +226,8 @@ if ! verify_release; then
   rollback
   exit 1
 fi
+
+prune_release_history "$retention_keep"
 
 echo "DEPLOYED $sha"
 echo "Database backup: $backup_file"
