@@ -74,6 +74,13 @@ describe('инструкция активного талона', () => {
     );
   });
 
+  it('объясняет запрет восстановления Хитов без привязки к названию заклинания', () => {
+    expect(activeEffectInstruction({
+      id: 'healing-lock', name: 'Могильный холод', source: 'Любой источник', expiry: 'source_turn',
+      mechanics: { kind: 'modifier', applies_to: { roll: 'healing' }, op: 'deny' },
+    })).toBe('Не может восстанавливать Хиты.');
+  });
+
   it('объясняет дистанцию, срок и ограничения Камнечувствия', () => {
     expect(activeEffectInstruction({
       id: 'stonecunning-1', name: 'Камнечувствие', source: 'Камнечувствие', roundsLeft: 100,

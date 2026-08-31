@@ -45,6 +45,13 @@ describe('combat actor inspector defenses', () => {
                   sourceActorId: 'drow', ownerActorId: 'goblin', boundary: 'end',
                 },
                 mechanics: { kind: 'condition', value: 'poisoned' },
+              }, {
+                id: 'chill-touch', name: 'Леденящее прикосновение',
+                source: 'Леденящее прикосновение', expiry: 'source_turn',
+                sourceTurnExpiry: {
+                  sourceActorId: 'wizard', ownerActorId: 'goblin', boundary: 'end',
+                },
+                mechanics: { kind: 'modifier', applies_to: { roll: 'healing' }, op: 'deny' },
               }],
             },
           },
@@ -61,6 +68,8 @@ describe('combat actor inspector defenses', () => {
     expect(html).toContain('Длительность: до конца следующего хода источника');
     expect(html).toContain('Помеха на броски атак.');
     expect(html).toContain('Помеха на проверки характеристик.');
+    expect(html).toContain('Леденящее прикосновение');
+    expect(html).toContain('Не может восстанавливать Хиты.');
     expect(html).not.toContain('<strong>poisoned</strong>');
   });
 

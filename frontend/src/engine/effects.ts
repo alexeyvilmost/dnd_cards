@@ -158,6 +158,9 @@ export function activeEffectInstruction(effect: ActiveEffectEntry): string | nul
   if (mechanics.kind === 'modifier') {
     const appliesTo = mechanics.applies_to as Record<string, unknown> | undefined;
     const roll = String(appliesTo?.roll ?? '');
+    if (String(mechanics.op) === 'deny' && roll === 'healing') {
+      return 'Не может восстанавливать Хиты.';
+    }
     const label = roll === 'size' ? 'Размер' : roll === 'speed' ? 'Скорость' : '';
     if (!label || mechanics.value == null) return null;
     const op = String(mechanics.op ?? 'add');
