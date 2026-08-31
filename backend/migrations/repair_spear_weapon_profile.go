@@ -67,7 +67,7 @@ func repairSpearWeaponProfile(db *sql.DB) error {
 	var profileAbsent, profileCanonical bool
 	if err := tx.QueryRow(`
 		SELECT COALESCE(mechanics->'weapon_profile', 'null'::jsonb) = 'null'::jsonb,
-		       mechanics->'weapon_profile' = $3::jsonb
+		       COALESCE(mechanics->'weapon_profile' = $3::jsonb, false)
 		FROM cards
 		WHERE id = $1::uuid AND card_number = $2 AND deleted_at IS NULL
 		FOR UPDATE

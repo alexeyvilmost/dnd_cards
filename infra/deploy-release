@@ -186,7 +186,11 @@ rollback() {
   mv -Tf "$rollback_link" "$root/current"
   cp "$deploy_env_backup" "$deploy_env"
   cd "$root/current"
-  docker compose --env-file "$deploy_env" -f compose.prod.yml up -d --wait
+  COMPOSE_ANSI=never docker compose --env-file "$deploy_env" -f compose.prod.yml up -d --wait
+  rm -rf -- "$release" "$build_root" "$archive"
+  docker image rm -f "bagofholding-backend:$sha" >/dev/null 2>&1 || true
+  docker image rm -f "bagofholding-frontend:$sha" >/dev/null 2>&1 || true
+  rm -f "$deploy_env_backup"
 }
 
 release_logs() {
@@ -201,7 +205,7 @@ mv -Tf "$next_link" "$root/current"
 
 echo "[6/7] Starting containers and waiting for health checks"
 cd "$root/current"
-if ! docker compose --env-file "$deploy_env" -f compose.prod.yml up -d --wait; then
+if ! COMPOSE_ANSI=never docker compose --env-file "$deploy_env" -f compose.prod.yml up -d --wait; then
   release_logs
   rollback
   exit 1

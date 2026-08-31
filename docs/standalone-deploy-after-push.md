@@ -344,7 +344,7 @@ if ($LocalHash -ne $RemoteHash) {
 ### 4. Запустить серверный runner
 
 ```powershell
-ssh -tt -i $SshKey $Server "/opt/bagofholding/bin/deploy-release $Sha"
+ssh -i $SshKey $Server "/opt/bagofholding/bin/deploy-release $Sha"
 if ($LASTEXITCODE -ne 0) {
     throw "Standalone deployment завершился с ошибкой"
 }
