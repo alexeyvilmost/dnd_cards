@@ -19,7 +19,6 @@ import {
 import type { ForgeCharacter } from '../character/types';
 import {
   filterEntitiesBySupport,
-  supportSelectionWarning,
   type SupportableEntity,
 } from '../content/supportStatus';
 
@@ -98,8 +97,6 @@ export default function SheetEntityAddDialog({
   }, [entities, showAll]);
 
   const add = async (entity: ManualEntity) => {
-    const warning = supportSelectionWarning(entity.source as SupportableEntity);
-    if (warning && !window.confirm(warning)) return;
     setAddingId(entity.id);
     setError(null);
     try {
