@@ -42,6 +42,17 @@ describe('playerFacingSheetActionError', () => {
     ))).toBe('Цель носит доспехи и не подходит для этого действия.');
   });
 
+  it('translates an out-of-window reaction rejection without exposing action or grant ids', () => {
+    const message = playerFacingSheetActionError(new Error(
+      'InvalidActionTiming: d87f4507-849f-450b-b328-0198cb011587@CLASS-wizard can only be used in a reaction window',
+    ));
+    expect(message).toBe(
+      'Сейчас это действие недоступно: дождитесь подходящего события или окна реакции.',
+    );
+    expect(message).not.toContain('InvalidActionTiming');
+    expect(message).not.toContain('CLASS-wizard');
+  });
+
   it('explains an unsupported pending target save without exposing engine terms', () => {
     const message = playerFacingSheetActionError(new Error(
       'The compatible character sheet cannot resume canonical pending resolution target_save',

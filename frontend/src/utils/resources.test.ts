@@ -31,5 +31,6 @@ describe('actionCostResourceIds — стоимость из activation.cost (е�
     expect(resourceLabel([], 'self_item')).toBe('Использование предмета');
     expect(resourceLabel([], 'equipped_weapon_ammo')).toBe('Боеприпас оружия');
     expect(resourceLabel([], 'freeuse-misty-step')).toBe('Бесплатное применение заклинания');
+    expect(resourceLabel([], 'spell_slot_1')).toBe('Ячейка 1-го круга');
   });
 });

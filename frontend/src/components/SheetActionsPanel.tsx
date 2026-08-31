@@ -223,6 +223,23 @@ export function sheetActionPanelLockIssue(
   return disabledReason ? { disabled: true, reason: disabledReason } : null;
 }
 
+export function sheetTriggerOnlyReason(
+  mechanics: Record<string, unknown> | undefined,
+): string | null {
+  const activation = mechanics?.activation as Record<string, unknown> | undefined;
+  const mode = String(activation?.mode ?? '');
+  const trigger = activation?.trigger as Record<string, unknown> | undefined;
+  const hasTrigger = typeof trigger?.event === 'string'
+    || (Array.isArray(trigger?.events) && trigger.events.some((event) => typeof event === 'string'));
+  return hasTrigger && (mode === 'reaction' || mode === 'triggered')
+    ? 'Доступно только в окне реакции после подходящего события'
+    : null;
+}
+
+export function sheetSpellActionsForPresentation(actions: readonly SheetAction[]): SheetAction[] {
+  return actions.filter((action) => action.group === 'spell');
+}
+
 /**
  * Atomic runtime commands have already written their journal rows inside the
  * server transaction. Keep both sheet event sinks visible at this boundary so
@@ -915,16 +932,11 @@ export default function SheetActionsPanel({
   // Триггерные способности-СЛУШАТЕЛИ (interrupt): mode reaction/triggered + activation.trigger.event
   // (Божественная кара при попадании, особенности Голиафа). Отдаём движку как ctx.triggers; из
   // кликабельного списка исключаем — их нельзя применить проактивно, только по событию.
-  const isTriggerAbility = (m: Record<string, unknown> | undefined): boolean => {
-    const act = m?.activation as Record<string, unknown> | undefined;
-    const mode = String(act?.mode ?? '');
-    return !!(act?.trigger as Record<string, unknown> | undefined)?.event && (mode === 'reaction' || mode === 'triggered');
-  };
   const triggerSources = useMemo(
-    () => allActions.filter((a) => isTriggerAbility(a.mechanics)).map((a) => ({ ...a.mechanics, name: a.name, id: a.mechanics?.id ?? a.name })),
+    () => allActions.filter((a) => sheetTriggerOnlyReason(a.mechanics)).map((a) => ({ ...a.mechanics, name: a.name, id: a.mechanics?.id ?? a.name })),
     [allActions],
   );
-  const actions = useMemo(() => allActions.filter((a) => !isTriggerAbility(a.mechanics)), [allActions]);
+  const actions = useMemo(() => allActions.filter((a) => !sheetTriggerOnlyReason(a.mechanics)), [allActions]);
   const canonicalSheetActions = useMemo(() => projectRunnableSheetCanonicalActions({
     actions: collectedActions,
     equipment: runtime.equipment,
@@ -2743,8 +2755,7 @@ export default function SheetActionsPanel({
   // поведение по клику/наведению, что и в блоке «Действия»).
   const spellLevelGroups: { key: string; label: string; items: SheetAction[] }[] = (() => {
     const m = new Map<number, SheetAction[]>();
-    for (const a of actions) {
-      if (a.group !== 'spell') continue;
+    for (const a of sheetSpellActionsForPresentation(allActions)) {
       const lvl = a.spellRef?.level ?? a.level ?? 0;
       if (!m.has(lvl)) m.set(lvl, []);
       m.get(lvl)!.push(a);
@@ -2984,9 +2995,12 @@ export default function SheetActionsPanel({
                 && !canonicalBuild.error
                 && !spellIsPrepared(action),
               );
+              const triggerOnlyReason = sheetTriggerOnlyReason(action.mechanics);
               const { disabled, reason } = preparationBlocked
                 ? { disabled: true, reason: 'Заклинание не подготовлено' }
-                : disabledInfo(action);
+                : triggerOnlyReason
+                  ? { disabled: true, reason: triggerOnlyReason }
+                  : disabledInfo(action);
               const weaponPreview = weaponAttackPreview(action.mechanics, ctx, runtime.equipment, runtime, passives) ?? undefined;
               return (
                 <div key={action.id} data-action-id={action.id} style={actionsAsIcons ? { display: 'contents' } : undefined}>

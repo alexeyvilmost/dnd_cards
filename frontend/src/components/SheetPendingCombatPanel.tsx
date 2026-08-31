@@ -5,6 +5,7 @@ import type {
   ReactionActionOption,
   ReactionSpellSourceOption,
 } from '../rules-core/domain';
+import { resourceLabel } from '../utils/resources';
 
 export interface SheetPendingCombatPanelProps {
   pending: PendingResolution;
@@ -49,7 +50,7 @@ export function sheetReactionDecisionOptions(
         label: `${action.label} · ${source.payment.kind === 'free_use'
           ? 'бесплатное использование'
           : source.payment.kind === 'slot'
-            ? source.payment.resource ?? 'ячейка'
+            ? resourceLabel([], source.payment.resource) || 'ячейка'
             : 'без стоимости'}`,
         response: spellResponse(action, source),
       }));

@@ -51,12 +51,27 @@ export function filterCombatActionsByResource(
   return actions.filter((action) => actionCostResourceIds(action).includes(selectedResourceId));
 }
 
+export function combatActionTimingAvailability(
+  action: RuleActionDefinition,
+): { enabled: boolean; reason?: string } {
+  const activation = action.mechanics.activation as Record<string, unknown> | undefined;
+  if (activation?.mode === 'reaction') {
+    return {
+      enabled: false,
+      reason: 'Доступно только в окне реакции после подходящего события',
+    };
+  }
+  return { enabled: true };
+}
+
 export function combatActionAvailability(
   state: SoloCombatState,
   action: RuleActionDefinition,
   actorId = state.characterId,
 ): { enabled: boolean; reason?: string } {
   const actor = state.world.actors[actorId];
+  const timing = combatActionTimingAvailability(action);
+  if (!timing.enabled) return timing;
   const levelRequirement = parseActivationLevelRequirement(action.mechanics);
   if (levelRequirement.status === 'invalid') {
     return { enabled: false, reason: 'Некорректное требование уровня' };

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FREEUSE_SHOWCASE_KEY } from '../engine/freeuse';
 import type { RuleActionDefinition } from '../rules-core/domain';
-import { filterCombatActionsByResource } from './CombatHotbar';
+import { combatActionTimingAvailability, filterCombatActionsByResource } from './CombatHotbar';
 
 function action(id: string, resource?: string, level?: number): RuleActionDefinition {
   return {
@@ -37,5 +37,24 @@ describe('combat hotbar resource filter', () => {
   it('uses the declared free-use grant set instead of spell names', () => {
     expect(filterCombatActionsByResource(actions, FREEUSE_SHOWCASE_KEY, new Set(['spell-free']))
       .map(({ id }) => id)).toEqual(['spell-free']);
+  });
+
+  it('keeps reaction cards inspectable but not proactively activatable', () => {
+    const reaction = {
+      ...action('shield', 'reaction'),
+      mechanics: {
+        activation: {
+          mode: 'reaction',
+          cost: [{ resource: 'reaction' }, { resource: 'spell_slot', level: 1 }],
+          trigger: { event: 'hit_by_attack' },
+        },
+      },
+    } as RuleActionDefinition;
+
+    expect(combatActionTimingAvailability(reaction)).toEqual({
+      enabled: false,
+      reason: 'Доступно только в окне реакции после подходящего события',
+    });
+    expect(filterCombatActionsByResource([reaction], 'reaction', new Set())).toEqual([reaction]);
   });
 });

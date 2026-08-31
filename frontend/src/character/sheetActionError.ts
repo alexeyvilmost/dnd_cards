@@ -22,6 +22,9 @@ export function playerFacingSheetActionError(cause: unknown): string {
   if (/^TargetArmored:/u.test(detail)) {
     return 'Цель носит доспехи и не подходит для этого действия.';
   }
+  if (/^InvalidActionTiming:/u.test(detail)) {
+    return 'Сейчас это действие недоступно: дождитесь подходящего события или окна реакции.';
+  }
   const unsupportedPending = /^The compatible character sheet cannot resume canonical pending resolution (.+)$/u.exec(detail);
   if (unsupportedPending) {
     return unsupportedPending[1] === 'target_save'

@@ -195,7 +195,7 @@ describe('SheetPendingCombatPanel', () => {
     if (pending.type !== 'magic_missile_reaction') throw new Error('fixture');
     expect(sheetReactionDecisionOptions(pending.request.options)).toEqual([{
       id: 'shield:shield-grant:slot:spell_slot_1',
-      label: 'Shield · spell_slot_1',
+      label: 'Shield · Ячейка 1-го круга',
       response: {
         kind: 'reaction', actionId: 'shield',
         spell: { grantId: 'shield-grant', mode: 'normal', preferFreeUse: false },

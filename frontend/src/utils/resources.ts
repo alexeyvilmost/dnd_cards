@@ -75,6 +75,8 @@ export function findResource(resources: ResourceOption[], id?: string | null): R
 }
 
 export function resourceLabel(resources: ResourceOption[], id?: string | null): string {
+  const spellSlot = /^spell_slot_([1-9])$/u.exec(id ?? '');
+  if (spellSlot) return `Ячейка ${spellSlot[1]}-го круга`;
   if (id === 'self_uses') return 'Заряд способности';
   if (id?.startsWith('uses_')) return 'Заряд способности';
   if (id === 'self_item') return 'Использование предмета';
