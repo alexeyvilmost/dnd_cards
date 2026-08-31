@@ -32,11 +32,15 @@ func TestRepairLevelOneMonkRuntimeContractsIsExactAndIdempotent(t *testing.T) {
 	}
 	if _, err := db.Exec(`
 		INSERT INTO classes (id, card_number, resources) VALUES
-		($1::uuid, $2, '{"focus":{"count":"self_level","per":"short_rest"}}'::jsonb);
+		($1::uuid, $2, '{"focus":{"count":"self_level","per":"short_rest"}}'::jsonb)
+	`, monkClassID, monkClassCard); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(`
 		INSERT INTO effects (id, name, description, card_number, mechanics) VALUES
-		($3::uuid, 'Боевые искусства', 'legacy', $4,
+		($1::uuid, 'Боевые искусства', 'legacy', $2,
 		 '{"activation":{"mode":"passive"},"effects":[{"resolution":"auto","result":[{"kind":"narrative","description":"legacy"}]}]}'::jsonb)
-	`, monkClassID, monkClassCard, martialArtsEffectID, martialArtsEffectCard); err != nil {
+	`, martialArtsEffectID, martialArtsEffectCard); err != nil {
 		t.Fatal(err)
 	}
 
