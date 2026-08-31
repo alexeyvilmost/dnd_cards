@@ -94,6 +94,7 @@ import {
   projectSheetCanonicalPersistence,
   synchronizeSheetCanonicalRuntime,
   writeSheetCanonicalWorld,
+  type SheetCanonicalRuntime,
 } from '../character/sheetCanonicalWorld';
 import type {
   ActorState,
@@ -221,6 +222,29 @@ export function sheetActionPanelLockIssue(
   disabledReason?: string,
 ): { disabled: true; reason: string } | null {
   return disabledReason ? { disabled: true, reason: disabledReason } : null;
+}
+
+export interface SheetConcentrationPresentation {
+  name: string;
+  detectMagicFollowUp: boolean;
+}
+
+/**
+ * The canonical sheet world owns concentration for ordinary spells. Unlike
+ * the legacy runtime chip, that record is not duplicated into active_effects,
+ * so derive the player-facing status from the same authoritative world.
+ */
+export function sheetConcentrationPresentation(
+  canonical: Pick<SheetCanonicalRuntime, 'world' | 'catalog'> | null,
+  actorId: string,
+): SheetConcentrationPresentation | null {
+  const concentration = canonical?.world.concentrations[actorId];
+  if (!concentration) return null;
+  const action = canonical.catalog.getAction(concentration.actionId);
+  return {
+    name: action?.name?.trim() || 'Заклинание',
+    detectMagicFollowUp: mechanicsPrimitiveType(action?.mechanics ?? {}) === 'detect_magic_world_sensing',
+  };
 }
 
 export function sheetTriggerOnlyReason(
@@ -2705,6 +2729,11 @@ export default function SheetActionsPanel({
   };
 
   const activeEffectGroups = groupActiveEffectsForDisplay(runtime.activeEffects);
+  const canonicalConcentration = runtime.activeEffects.some(
+    (effect) => (effect.mechanics as Record<string, unknown>)?.kind === 'concentration',
+  )
+    ? null
+    : sheetConcentrationPresentation(canonicalBuild.runtime, character.id);
 
   const handleDismissEffect = (effectIds: readonly string[]) => {
     if (panelDisabledReason) {
@@ -2921,6 +2950,18 @@ export default function SheetActionsPanel({
             resourceOptions={resourceOptions}
           />
         </div>
+      )}
+
+      {showEffects && !spellsOnly && canonicalConcentration && (
+        <section className="sheet-group" role="status" data-testid="sheet-canonical-concentration">
+          <h3 className="sheet-h3">Концентрация: {canonicalConcentration.name}</h3>
+          <p>
+            Концентрация активна.
+            {canonicalConcentration.detectMagicFollowUp
+              ? ' Чтобы проявить обнаруженные ауры действием, вернитесь на поле боя.'
+              : ' Новое заклинание с концентрацией прервёт это.'}
+          </p>
+        </section>
       )}
 
       {/* «КЗ/Спас цели» — только в основной панели действий; блок «Заклинания»
