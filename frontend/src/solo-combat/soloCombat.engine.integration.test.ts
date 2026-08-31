@@ -8,7 +8,7 @@ import type { SheetCombatParticipantSeed } from '../character/sheetCombatSession
 import type { ForgeCharacter } from '../character/types';
 import type { Action } from '../types';
 import type { Monster } from '../monsters/types';
-import { addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, autoResolveSystemDecisions, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatResources, resolvePlayerReaction, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, setSoloCombatInitiativeTotals } from './engine';
+import { addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, setSoloCombatInitiativeTotals } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { gridDistanceFt } from './tacticalGrid';
 import { SOLO_COMBAT_KEY } from './types';
@@ -139,6 +139,60 @@ function dancingLightsWizardSeed(): SheetCombatParticipantSeed {
   actor.spellcastingAccess.grants.push({
     grantId: 'grant:dancing-lights', actionId: action.id, sourceId: 'CLASS-wizard',
     access: 'cantrip', level: 0, spellcastingAbility: 'int',
+  });
+  const byId = new Map(actions.map((candidate) => [candidate.id, candidate]));
+  return {
+    ...participant,
+    canonical: {
+      ...participant.canonical,
+      actions,
+      catalog: { getAction: (id) => byId.get(id), listActions: () => actions },
+    },
+  };
+}
+
+function detectMagicWizardSeed(): SheetCombatParticipantSeed {
+  const participant = wizardSeed();
+  const actor = participant.canonical.world.actors[participant.character.id];
+  const action: RuleActionDefinition = {
+    id: 'd5000000-0000-4000-8000-000000000002',
+    name: 'Обнаружение магии',
+    kind: 'spell',
+    spell: { level: 1 },
+    concentration: true,
+    sourceEntityIds: ['SPELL-detect-magic'],
+    mechanics: {
+      activation: { mode: 'active', cost: [{ resource: 'action' }, { resource: 'spell_slot_1' }] },
+      targeting: {
+        domain: 'actor', actor_targets: false, range_ft: 0, allowed_relations: ['self'],
+        requires_line_of_sight: false, shape: 'self', min_targets: 0, max_targets: 1,
+        area: { kind: 'emanation', radius_ft: 30 },
+      },
+      effects: [{ resolution: 'auto', result: [] }],
+      primitive: {
+        type: 'detect_magic_world_sensing',
+        policy: {
+          blockers: {
+            stone: { threshold_inches: 12, comparison: 'gte' },
+            common_metal: { threshold_inches: 1, comparison: 'gte' },
+            lead: { threshold_inches: 0, comparison: 'gt' },
+            wood: { threshold_inches: 12, comparison: 'gte' },
+            dirt: { threshold_inches: 12, comparison: 'gte' },
+            other: null,
+          },
+          aura_requires_line_of_sight: true,
+          reveal_spell_school_only: true,
+        },
+      },
+    },
+    targeting: { minTargets: 0, maxTargets: 1, rangeFt: 0, requiresLineOfSight: false, allowedRelations: ['self'] },
+  };
+  const actions = [...participant.canonical.actions, action];
+  actor.capabilities.actionIds.push(action.id);
+  actor.spellcastingAccess ??= { grants: [], preparedSources: {} };
+  actor.spellcastingAccess.grants.push({
+    grantId: 'grant:detect-magic', actionId: action.id, sourceId: 'CLASS-wizard',
+    access: 'always_prepared', level: 1, spellcastingAbility: 'int', slotResource: 'spell_slot_1',
   });
   const byId = new Map(actions.map((candidate) => [candidate.id, candidate]));
   return {
@@ -1049,6 +1103,55 @@ describe('solo combat engine vertical integration', () => {
       state.runtimeRevision,
     );
     expect(restored?.worldObjectPositions?.[light!.id]).toEqual(movePosition);
+  });
+
+  it('shows Detect Magic concentration and reveals nearby board-owned auras with its Magic action', async () => {
+    const participant = detectMagicWizardSeed();
+    let state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const actorId = participant.character.id;
+    const detectMagic = state.catalogActions.find((action) => primitive(action) === 'detect_magic_world_sensing');
+    expect(detectMagic).toBeDefined();
+    const source = state.tokens[actorId].position;
+    state = {
+      ...state,
+      world: {
+        ...state.world,
+        objects: {
+          ...state.world.objects,
+          rune: {
+            id: 'rune', name: 'Руна защиты', kind: 'spell_effect', size: 'small',
+            magicalAura: { school: 'abjuration', createdBySpell: true, visible: true },
+          },
+        },
+      },
+      worldObjectPositions: {
+        ...state.worldObjectPositions,
+        rune: { x: source.x < 10 ? source.x + 2 : source.x - 2, y: source.y },
+      },
+    };
+
+    state = executeCombatAction({ state, actorId, actionId: detectMagic!.id, targetIds: [actorId], rng: () => 0 });
+    expect(combatDetectMagicStatus(state, actorId)).toEqual(expect.objectContaining({
+      actionName: 'Обнаружение магии', radiusFt: 30, sensedObjectNames: ['Руна защиты'],
+    }));
+
+    state = refreshSoloCombatResources(state, actorId);
+    state = revealCombatMagicAura({ state, actorId, rng: () => 0 });
+    expect(state.world.actors[actorId].runtime.resources.action).toBe(0);
+    expect(state.log.at(-1)?.text).toContain('Руна защиты: видна магическая аура (ограждение)');
+
+    state = refreshSoloCombatResources({
+      ...state,
+      world: { ...state.world, objects: {} },
+      worldObjectPositions: {},
+    }, actorId);
+    state = revealCombatMagicAura({ state, actorId, rng: () => 0 });
+    expect(state.log.at(-1)?.text).toContain('магических аур не обнаружено');
   });
 
   it('casts, describes, positions, and persists Minor Illusion from explicit board input', async () => {

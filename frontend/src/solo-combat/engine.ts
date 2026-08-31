@@ -164,8 +164,17 @@ function eventSummary(records: readonly CombatLogEventRecord[]): string {
   return fragments.length ? fragments.join('; ') : 'действие выполнено';
 }
 
-function worldObjectSummary(events: readonly UncommittedRuleEvent[]): string[] {
-  return events.flatMap(({ payload }) => {
+const MAGIC_SCHOOL_RU: Record<string, string> = {
+  abjuration: 'ограждение', conjuration: 'вызов', divination: 'прорицание',
+  enchantment: 'очарование', evocation: 'воплощение', illusion: 'иллюзия',
+  necromancy: 'некромантия', transmutation: 'преобразование',
+};
+
+function worldObjectSummary(
+  events: readonly UncommittedRuleEvent[],
+  world: WorldState,
+): string[] {
+  const summaries = events.flatMap(({ payload }) => {
     if (payload.type !== 'WorldObjectMutationRecorded'
       || payload.event.type !== 'WorldObjectCreated'
       || !payload.event.object.illusion) return [];
@@ -176,6 +185,29 @@ function worldObjectSummary(events: readonly UncommittedRuleEvent[]): string[] {
       + `изучение: Интеллект (Расследование) против СЛ ${illusion.spellSaveDc})`,
     ];
   });
+  const magicObservations = events.flatMap(({ payload }) => (
+    payload.type === 'WorldObjectMutationRecorded'
+      && payload.event.type === 'WorldObjectObserved'
+      && payload.event.observation === 'detect_magic_aura'
+      ? [payload.event]
+      : []
+  ));
+  if (!magicObservations.length) return summaries;
+  const sensed = magicObservations.filter((event) => event.details?.sensed === true);
+  if (!sensed.length) return [...summaries, 'магических аур не обнаружено'];
+  return [
+    ...summaries,
+    ...sensed.map((event) => {
+      const objectName = world.objects[event.objectId]?.name ?? event.objectId;
+      if (event.details?.auraVisible !== true) {
+        return `${objectName}: магия ощущается, но аура не видна`;
+      }
+      const school = typeof event.details?.school === 'string'
+        ? MAGIC_SCHOOL_RU[event.details.school] ?? event.details.school
+        : null;
+      return `${objectName}: видна магическая аура${school ? ` (${school})` : ''}`;
+    }),
+  ];
 }
 
 function applyForcedMovement(
@@ -254,6 +286,7 @@ function transitionState(
   label: string,
   nextWorld: WorldState,
   rawEvents: readonly UncommittedRuleEvent[],
+  emptySummary?: string,
 ): SoloCombatState {
   const records = projectCombatLogRecords(rawEvents);
   let next = reconcileMovementForSpeedChanges(state, nextWorld);
@@ -266,11 +299,11 @@ function transitionState(
     next = { ...next, worldObjectPositions: retainedPositions };
   }
   next = applyForcedMovement(next, rawEvents);
-  const summaries = worldObjectSummary(rawEvents);
+  const summaries = worldObjectSummary(rawEvents, nextWorld);
   next = appendLog(
     next,
     actorId,
-    `${label}: ${summaries.length ? summaries.join('; ') : eventSummary(records)}`,
+    `${label}: ${summaries.length ? summaries.join('; ') : emptySummary ?? eventSummary(records)}`,
     records,
   );
   return outcome(next);
@@ -281,6 +314,7 @@ function dispatch(input: {
   command: GameCommand;
   rng: Rng;
   label: string;
+  emptySummary?: string;
 }): SoloCombatState {
   const session = new InMemoryRulesSession(input.state.world, buildCatalog(input.state.catalogActions), {
     rng: input.rng,
@@ -291,7 +325,7 @@ function dispatch(input: {
   if (result.status === 'rejected') throw new Error(`${result.code}: ${result.message}`);
   return transitionState(
     input.state, input.command.actorId, input.label,
-    session.getState(), session.getEvents(),
+    session.getState(), session.getEvents(), input.emptySummary,
   );
 }
 
@@ -645,6 +679,95 @@ export function moveCombatDancingLights(input: {
     worldObjectPositions,
     boardRevision: next.boardRevision + 1,
   };
+}
+
+function detectMagicRadiusFt(action: RuleActionDefinition): number {
+  const targeting = action.mechanics.targeting as Record<string, unknown> | undefined;
+  const area = targeting?.area as Record<string, unknown> | undefined;
+  const radius = Number(area?.radius_ft ?? area?.radiusFt ?? 30);
+  return Number.isFinite(radius) && radius >= 0 ? radius : 30;
+}
+
+function combatWorldObjectPosition(
+  state: SoloCombatState,
+  objectId: string,
+): GridPosition | undefined {
+  const object = state.world.objects[objectId];
+  if (!object) return undefined;
+  const positioned = state.worldObjectPositions?.[objectId];
+  if (positioned) return positioned;
+  const carrierId = object.carriedByActorId ?? object.heldByActorId;
+  return carrierId ? state.tokens[carrierId]?.position : undefined;
+}
+
+function combatDetectMagicObservations(state: SoloCombatState, actorId: string) {
+  const sourcePosition = state.tokens[actorId]?.position;
+  if (!sourcePosition) throw new Error('Персонаж отсутствует на поле боя.');
+  return Object.fromEntries(Object.keys(state.world.objects).sort().flatMap((objectId) => {
+    const position = combatWorldObjectPosition(state, objectId);
+    if (!position) return [];
+    return [[objectId, {
+      facts: {
+        factsSource: 'board' as const,
+        boardRevision: state.boardRevision,
+        distanceFt: gridDistanceFt(sourcePosition, position),
+        lineOfSight: true,
+      },
+      blockingLayers: [],
+    }]];
+  }));
+}
+
+export interface CombatDetectMagicStatus {
+  concentrationId: string;
+  actionName: string;
+  radiusFt: number;
+  sensedObjectNames: string[];
+}
+
+/** Project the spell's passive presence sense from authoritative tactical-board facts. */
+export function combatDetectMagicStatus(
+  state: SoloCombatState,
+  actorId: string,
+): CombatDetectMagicStatus | null {
+  const concentration = state.world.concentrations[actorId];
+  if (!concentration) return null;
+  const action = state.catalogActions.find((candidate) => candidate.id === concentration.actionId);
+  if (!action || primitiveType(action) !== 'detect_magic_world_sensing') return null;
+  const radiusFt = detectMagicRadiusFt(action);
+  const observations = combatDetectMagicObservations(state, actorId);
+  const sensedObjectNames = Object.keys(observations).flatMap((objectId) => {
+    const object = state.world.objects[objectId];
+    return object.magicalAura && observations[objectId].facts.distanceFt <= radiusFt
+      ? [object.name]
+      : [];
+  });
+  return { concentrationId: concentration.id, actionName: action.name, radiusFt, sensedObjectNames };
+}
+
+/** Spend Detect Magic's follow-up Magic action using tactical-board observations. */
+export function revealCombatMagicAura(input: {
+  state: SoloCombatState;
+  actorId: string;
+  rng?: Rng;
+}): SoloCombatState {
+  if (input.state.outcome !== 'active') throw new Error('Бой уже завершён');
+  if (activeActorId(input.state) !== input.actorId) throw new Error('Сейчас ход другого участника');
+  const status = combatDetectMagicStatus(input.state, input.actorId);
+  if (!status) throw new Error('Персонаж больше не поддерживает Обнаружение магии.');
+  const observations = combatDetectMagicObservations(input.state, input.actorId);
+  return dispatch({
+    state: input.state,
+    command: {
+      ...commandBase(input.state, input.actorId),
+      type: 'RevealMagicAura',
+      concentrationId: status.concentrationId,
+      observations,
+    },
+    rng: input.rng ?? Math.random,
+    label: 'Обнаружение магии — действие «Магия»',
+    ...(Object.keys(observations).length ? {} : { emptySummary: 'магических аур не обнаружено' }),
+  });
 }
 
 /**

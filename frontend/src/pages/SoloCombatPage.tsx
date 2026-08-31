@@ -26,11 +26,13 @@ import {
   addSoloCombatMonster,
   advanceTurn,
   autoResolveSystemDecisions,
+  combatDetectMagicStatus,
   createSoloCombatState,
   executeCombatAction,
   executeCombatRemoteManipulator,
   moveCombatDancingLights,
   moveActor,
+  revealCombatMagicAura,
   resolvePlayerReaction,
   resolveSoloCombatTurnStart,
   resolveTriggeredCombatAction,
@@ -332,6 +334,9 @@ export default function SoloCombatPage() {
       && object.dancingLight;
   }).sort((left, right) => left.id.localeCompare(right.id)) : [];
   const activeDancingLightsGroup = activeDancingLights[0]?.dancingLight?.groupId;
+  const activeDetectMagic = state
+    ? combatDetectMagicStatus(state, activeControlledActorId)
+    : null;
   const chooseAction = async (action: SoloCombatState['catalogActions'][number]) => {
     if (!state || !playerTurn || busy) return;
     const wasSelected = selectedActionId === action.id;
@@ -606,6 +611,36 @@ export default function SoloCombatPage() {
                 {dancingLightsMoveGroupId === activeDancingLightsGroup ? 'Отмена' : 'Переместить · бонусное действие'}
               </button>
               {dancingLightsMoveGroupId === activeDancingLightsGroup && <em>Выберите клетку в пределах 60 фт.</em>}
+            </section>
+          )}
+          {activeDetectMagic && (
+            <section className="combat-world-control" aria-label="Обнаружение магии">
+              <span>
+                <b>✦ {activeDetectMagic.actionName}</b>
+                <small title={activeDetectMagic.sensedObjectNames.join(', ')}>
+                  Концентрация · {activeDetectMagic.radiusFt} фт. · {activeDetectMagic.sensedObjectNames.length
+                    ? `ощущается магия: ${activeDetectMagic.sensedObjectNames.length}`
+                    : 'магия не ощущается'}
+                </small>
+              </span>
+              <button
+                type="button"
+                disabled={busy || !playerTurn
+                  || (state.world.actors[activeControlledActorId].runtime.resources.action ?? 0) < 1}
+                onClick={() => {
+                  try {
+                    setSelectedActionId(null);
+                    setSelectedActionChoices({});
+                    setMovementMode(false);
+                    setDancingLightsMoveGroupId(null);
+                    apply(revealCombatMagicAura({ state, actorId: activeControlledActorId }));
+                  } catch (reason) {
+                    setError(playerFacingSheetActionError(reason));
+                  }
+                }}
+              >
+                Проявить ауры · действие
+              </button>
             </section>
           )}
         </div>
