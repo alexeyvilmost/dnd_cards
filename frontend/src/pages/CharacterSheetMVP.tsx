@@ -32,6 +32,8 @@ import {
   forgeToRuntimeState,
   writeRulesEngineRuntimeTurnState,
 } from '../character/runtime';
+import { persistCharacterRuntime } from '../character/runtimePersistence';
+import { finalizeSheetD20Roll } from '../character/sheetD20Roll';
 import { breakdownValue } from '../engine/breakdown';
 import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import type { RuntimeRuleSource } from '../character/rules/types';
@@ -967,7 +969,19 @@ const CharacterSheetMVP = () => {
       rng,
       rules: collected.rules,
     });
-    await appendRuntimeEvents([rollEvent(label, roll)]);
+    const rollEvents: EngineEvent[] = [rollEvent(label, roll)];
+    if (runtimeState && character) {
+      const finalized = finalizeSheetD20Roll(runtimeState, rollKind, filter);
+      rollEvents.push(...finalized.events);
+      if (finalized.state !== runtimeState) {
+        const updated = await persistCharacterRuntime(character, {
+          active_effects: finalized.state.activeEffects,
+          turn_state: writeRulesEngineRuntimeTurnState(character.turn_state, finalized.state),
+        }, applyEncounter);
+        setCharacter(updated);
+      }
+    }
+    await appendRuntimeEvents(rollEvents);
   };
 
   const headerLine = [

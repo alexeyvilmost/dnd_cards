@@ -10,6 +10,7 @@ import { plannedD20BonusDice, plannedValuesRng, type PlannedDie } from '../engin
 import { rollEvent } from '../engine/events';
 import { collectRollModifiers } from '../engine/modifiers';
 import { rollD20 } from '../engine/roll';
+import { finalizeSheetD20Roll } from '../character/sheetD20Roll';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
 import { getSkillGrantSource, grantReason } from '../character/rules/resolveCharacterRules';
 import { type Card, type Spell } from '../types';
@@ -29,6 +30,8 @@ import SheetRestButtons from '../components/SheetRestButtons';
 import EffectiveSenseValue from '../components/EffectiveSenseValue';
 import type { EncounterApply } from '../battle/encountersApi';
 import { charactersV3Api, type CharacterEventRow } from '../character/api';
+import { writeRulesEngineRuntimeTurnState } from '../character/runtime';
+import { persistCharacterRuntime } from '../character/runtimePersistence';
 import type { SheetAtomicRetryEnvelope } from '../character/sheetAtomicRetry';
 import CharacterSheetFirstColumn, { CHARACTER_SENSE_LABELS } from '../components/CharacterSheetFirstColumn';
 import './CharacterSheetV2.css';
@@ -161,7 +164,19 @@ const CharacterSheetV2 = ({
       rng,
       rules: collected.rules,
     });
-    onEvents([rollEvent(label, roll)]);
+    const rollEvents: EngineEvent[] = [rollEvent(label, roll)];
+    if (runtimeState) {
+      const finalized = finalizeSheetD20Roll(runtimeState, rollKind, filter);
+      rollEvents.push(...finalized.events);
+      if (finalized.state !== runtimeState) {
+        const updated = await persistCharacterRuntime(character, {
+          active_effects: finalized.state.activeEffects,
+          turn_state: writeRulesEngineRuntimeTurnState(character.turn_state, finalized.state),
+        }, encounterApply);
+        onUpdated(updated);
+      }
+    }
+    onEvents(rollEvents);
   };
 
   const scores = ruleState.abilities; // D3: с учётом grant_ability_score (ASI/раса), не «сырые» из драфта
