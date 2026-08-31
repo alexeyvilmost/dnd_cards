@@ -3133,7 +3133,7 @@ function protectionOpenedEvent(input: {
           },
           options: [{
             actionId: PROTECTION_2024_CAPABILITY_ID,
-            label: 'Fighting Style: Protection',
+            label: 'Боевой стиль: Защита',
           }],
         },
       },

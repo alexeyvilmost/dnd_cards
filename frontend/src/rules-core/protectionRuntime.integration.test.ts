@@ -392,7 +392,14 @@ describe('compiled D&D 2024 Protection runtime vertical', () => {
       type: 'protection_reaction',
       sourceActorId: 'monster', targetActorId: 'target',
       weaponHand: 'main', weaponCardId: monsterWeapon.id,
-      request: { actorId: 'protector', trigger: { type: 'protection_before_attack' } },
+      request: {
+        actorId: 'protector',
+        trigger: { type: 'protection_before_attack' },
+        options: [{
+          actionId: PROTECTION_2024_CAPABILITY_ID,
+          label: 'Боевой стиль: Защита',
+        }],
+      },
     });
     const checkpoint = copy(test.session.getState());
     expect(migrateWorldState(checkpoint)).toEqual(checkpoint);
