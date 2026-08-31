@@ -17,6 +17,7 @@ import {
 } from '../spellcastingAbility';
 import { abilityMod, abilityOfSkill, ABILITY_IDS, SKILL_IDS, proficiencyBonusForLevel } from './foundation';
 import { bonusOf } from '../pointBuy';
+import { getRussianName } from '../../utils/russianTranslations';
 import type {
   AppliedGrant,
   CharacterRuleState,
@@ -57,6 +58,31 @@ const grantId = (grant: Omit<AppliedGrant, 'id'>) =>
 
 const normalizedValue = (kind: AppliedGrant['kind'], value: string) =>
   kind === 'skill' ? normalizeSkillId(value) : value;
+
+function duplicateProficiencyMessage(
+  current: AppliedGrant,
+  existing: AppliedGrant,
+): string {
+  const isSkill = current.kind === 'skill';
+  const label = isSkill ? getRussianName('skill', current.value) : current.value;
+  const subject = isSkill ? `Навык «${label}» уже получен` : `Владение «${label}» уже получено`;
+  const selectable = current.choiceId ? current : existing.choiceId ? existing : null;
+  const step = selectable?.source.type === 'class'
+    ? '«Класс»'
+    : selectable?.source.type === 'species'
+      ? '«Вид»'
+      : selectable?.source.type === 'background'
+        ? '«Предыстория»'
+        : selectable?.source.type === 'feat'
+          ? '«Черта»'
+          : null;
+  const hint = selectable
+    ? step
+      ? ` Вернитесь к этапу ${step} и выберите другое владение.`
+      : ' Вернитесь к источнику выбора и выберите другое владение.'
+    : '';
+  return `${subject} из «${existing.source.name}», повтор из «${current.source.name}» не применяется.${hint}`;
+}
 
 function addGrant(
   grant: Omit<AppliedGrant, 'id'>,
@@ -152,7 +178,7 @@ function addGrant(
   if (existing && (existing.source.id !== full.source.id || existing.choiceId !== full.choiceId)) {
     conflicts.push({
       code: 'duplicate_proficiency',
-      message: `«${value}» уже получено из «${existing.source.name}», повтор из «${full.source.name}» не применяется.`,
+      message: duplicateProficiencyMessage(full, existing),
       // Дубль из ФИКСИРОВАННОГО гранта (не выбор игрока) исправить нечем —
       // предупреждаем, но не блокируем создание; дубль из выбора — ошибка.
       // The conflict is user-resolvable when either side came from a choice.

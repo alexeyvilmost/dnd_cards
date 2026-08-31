@@ -569,6 +569,7 @@ describe('resolveCharacterRules — экспертиза и конфликты �
       value: 'arcana',
       severity: 'error',
       choiceId: undefined,
+      message: 'Навык «Магия» уже получен из «Волшебник», повтор из «Мудрец» не применяется. Вернитесь к этапу «Класс» и выберите другое владение.',
     }));
   });
 });
