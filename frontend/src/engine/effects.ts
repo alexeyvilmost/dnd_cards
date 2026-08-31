@@ -161,6 +161,12 @@ export function activeEffectInstruction(effect: ActiveEffectEntry): string | nul
     if (String(mechanics.op) === 'deny' && roll === 'healing') {
       return 'Не может восстанавливать Хиты.';
     }
+    if (String(mechanics.op) === 'minimum_total' && roll === 'd20' && mechanics.value != null) {
+      const consume = String(mechanics.consume ?? '') === 'next'
+        ? ' После следующего броска эффект расходуется.'
+        : '';
+      return `Итог броска к20 не может быть меньше ${String(mechanics.value)}.${consume}`;
+    }
     const label = roll === 'size' ? 'Размер' : roll === 'speed' ? 'Скорость' : '';
     if (!label || mechanics.value == null) return null;
     const op = String(mechanics.op ?? 'add');

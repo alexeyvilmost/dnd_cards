@@ -81,6 +81,15 @@ describe('инструкция активного талона', () => {
     })).toBe('Не может восстанавливать Хиты.');
   });
 
+  it('объясняет получателю Божественного вдохновения результат и расход', () => {
+    expect(activeEffectInstruction({
+      id: 'divine-inspiration', name: 'Божественное вдохновение', source: 'Божественное вдохновение', expiry: 'manual',
+      mechanics: {
+        kind: 'modifier', applies_to: { roll: 'd20' }, op: 'minimum_total', value: 20, consume: 'next',
+      },
+    })).toBe('Итог броска к20 не может быть меньше 20. После следующего броска эффект расходуется.');
+  });
+
   it('объясняет дистанцию, срок и ограничения Камнечувствия', () => {
     expect(activeEffectInstruction({
       id: 'stonecunning-1', name: 'Камнечувствие', source: 'Камнечувствие', roundsLeft: 100,

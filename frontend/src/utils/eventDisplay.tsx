@@ -1,7 +1,7 @@
 import type { ReactNode, CSSProperties, SyntheticEvent } from 'react';
 import type { EngineEvent } from '../mvp/contracts';
 import { RESOURCE_ICONS, getResourceIconPath } from './damageTypes';
-import { findResource, useResourceOptions } from './resources';
+import { findResource, resourceLabel, useResourceOptions } from './resources';
 
 // Единое отображение событий ресурсов (журнал И всплывающие подсказки): русское
 // название + иконка вместо английского ключа. Чтобы правки не расходились.
@@ -22,7 +22,7 @@ export function resourceView(options: ResourceOptions, key: string): { label: st
   const slot = /^spell_slot_(\d+)$/.exec(key);
   const label = def?.label
     || RES_LABEL[key]
-    || (slot ? `Ячейка ${slot[1]}-го круга` : /^warlock_spell_slot/.test(key) ? 'Ячейка колдуна' : key);
+    || (slot ? `Ячейка ${slot[1]}-го круга` : /^warlock_spell_slot/.test(key) ? 'Ячейка колдуна' : resourceLabel(options, key));
   const icon = def?.imageUrl && !def.imageUrl.startsWith('/charges/')
     ? def.imageUrl
     : getResourceIconPath(resourceIconKey(key));

@@ -799,6 +799,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairMiniMVPLimitedActionUses,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     crafterInPlayChoiceMigrationVersion,
+			Description: "Сделать выбор предмета Самоделкина явным выбором во время игры",
+			Up:          repairCrafterInPlayChoice,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

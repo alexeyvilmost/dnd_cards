@@ -504,7 +504,7 @@ export function payableWithUpcast(runtime: RuntimeState, cost: Record<string, un
   return true;
 }
 
-function persistPayload(state: RuntimeState, prevTurnState: Record<string, unknown> | null | undefined, includeInventory: boolean) {
+export function persistPayload(state: RuntimeState, prevTurnState: Record<string, unknown> | null | undefined, includeInventory: boolean) {
   return {
     current_hp: state.hp.current,
     max_hp: state.hp.max,
@@ -1383,12 +1383,11 @@ export default function SheetActionsPanel({
     if (isCharacterReadOnly(targetChar)) {
       throw new Error('Архивный публичный лист нельзя изменить действием или заклинанием.');
     }
-    const persistedTarget = await persistCharacterRuntime(targetChar, {
-      current_hp: ts.hp.current,
-      max_hp: ts.hp.max,
-      active_effects: ts.activeEffects,
-      turn_state: writeRulesEngineRuntimeTurnState(targetChar.turn_state, ts),
-    }, targetChar.current_encounter_id === encounterId ? encounterApply : undefined);
+    const persistedTarget = await persistCharacterRuntime(
+      targetChar,
+      persistPayload(ts, targetChar.turn_state, false),
+      targetChar.current_encounter_id === encounterId ? encounterApply : undefined,
+    );
     // Освежаем весь серверный runtime-снимок, включая once-per-turn/rest ledgers:
     // повторное действие по той же цели в этой вкладке не должно заново активировать
     // уже сработавшую реактивную способность.

@@ -199,7 +199,7 @@ func repairMiniMVPBaseStylesOriginRuntime(db *sql.DB) error {
 			  "activation":{"mode":"active","cost":[]},
 			  "uses":{"count":1,"per":"long_rest"},
 			  "targeting":{"domain":"actor","actor_targets":false,"shape":"self","min_targets":0,"max_targets":1,"range_ft":0,"requires_line_of_sight":false,"allowed_relations":["self"]},
-			  "effects":[{"resolution":"auto","result":[{"kind":"choice","id":"crafter_fast_item","prompt":"Что изготовить? Выберите предмет, соответствующий одному из ваших Ремесленных инструментов.","count":1,"options":{"source":"item","items":[
+			  "effects":[{"resolution":"auto","result":[{"kind":"choice","id":"crafter_fast_item","context":"in_play","prompt":"Что изготовить? Выберите предмет, соответствующий одному из ваших Ремесленных инструментов.","count":1,"options":{"source":"item","items":[
 			    {"id":"14db2ea7-22cd-46fe-89e2-39dd9a0f2fcd","name":"Лестница","temporary_until":"long_rest"},
 			    {"id":"124781fb-abb9-43bd-8a2a-c07e4c539b6a","name":"Факел","temporary_until":"long_rest"},
 			    {"id":"fdd3770f-0eda-446d-bd78-5944f4d95d9d","name":"Кошель","temporary_until":"long_rest"},

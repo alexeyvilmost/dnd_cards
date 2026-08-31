@@ -3,6 +3,7 @@ import {
   explicitSheetTargetContext,
   explicitSheetTargetFactsIssue,
   mergeSelfTargetRuntime,
+  persistPayload,
   sheetActionDisplayName,
   sheetMechanicsAllowsSelfTarget,
   sheetActionNeedsCanonicalAvailability,
@@ -112,6 +113,22 @@ describe('explicit legacy sheet target facts', () => {
       resources: { action: 0, spell_slot_1: 0 },
       activeEffects: [{ id: 'mage-armor' }],
     });
+  });
+
+  it('persists resource grants and caps on a different character target', () => {
+    const target: RuntimeState = {
+      hp: { current: 10, max: 10, temp: 0 },
+      resources: { heroic_inspiration: 1 },
+      maxResources: { heroic_inspiration: 1 },
+      equipment: {}, inventory: [{ cardId: 'untouched-item', qty: 1 }], activeEffects: [],
+    };
+    expect(persistPayload(target, {}, false)).toMatchObject({
+      current_hp: 10,
+      resources: { heroic_inspiration: 1 },
+      max_resources: { heroic_inspiration: 1 },
+      active_effects: [],
+    });
+    expect(persistPayload(target, {}, false)).not.toHaveProperty('inventory_items');
   });
 });
 

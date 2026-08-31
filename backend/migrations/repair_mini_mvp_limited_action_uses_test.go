@@ -5,15 +5,17 @@ import (
 	"testing"
 )
 
-func TestMiniMVPLimitedActionUsesMigrationRegisteredLast(t *testing.T) {
-	migrations := GetAllMigrations()
-	last := migrations[len(migrations)-1]
-	if last.Version != miniMVPLimitedActionUsesMigrationVersion {
-		t.Fatalf("last migration = %q, want %q", last.Version, miniMVPLimitedActionUsesMigrationVersion)
+func TestMiniMVPLimitedActionUsesMigrationRegistered(t *testing.T) {
+	for _, migration := range GetAllMigrations() {
+		if migration.Version != miniMVPLimitedActionUsesMigrationVersion {
+			continue
+		}
+		if migration.Up == nil || migration.Down == nil {
+			t.Fatal("migration 125 must register Up and a safe Down")
+		}
+		return
 	}
-	if last.Up == nil || last.Down == nil {
-		t.Fatal("migration 125 must register Up and a safe Down")
-	}
+	t.Fatalf("migration %q is not registered", miniMVPLimitedActionUsesMigrationVersion)
 }
 
 func TestMiniMVPLimitedActionUsesMigrationRepairsEveryLimitedAction(t *testing.T) {
