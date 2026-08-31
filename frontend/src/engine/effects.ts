@@ -62,6 +62,8 @@ export function expiryLabel(expiry?: string, roundsLeft?: number): string {
     case 'start_of_next_turn': return 'до начала след. хода';
     case 'end_of_turn': return 'до конца хода';
     case 'until_rest': return 'до отдыха';
+    case 'short_rest': return 'до короткого отдыха';
+    case 'long_rest': return 'до долгого отдыха';
     case 'manual': return 'вручную';
     case 'source_turn': return 'до хода источника';
     default: return expiry ? expiry : 'без срока';

@@ -6,6 +6,8 @@ describe('подпись длительности активного эффек�
     expect(expiryLabel(undefined, 10)).toBe('10 ходов');
     expect(expiryLabel(undefined, 2)).toBe('2 хода');
     expect(expiryLabel(undefined, 1)).toBe('1 ход');
+    expect(expiryLabel('short_rest')).toBe('до короткого отдыха');
+    expect(expiryLabel('long_rest')).toBe('до долгого отдыха');
   });
 });
 

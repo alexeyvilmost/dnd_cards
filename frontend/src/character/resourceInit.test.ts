@@ -68,4 +68,46 @@ describe('MM4 — resource maximum sources', () => {
 
     expect(buildResourceRuntimePatch(character, ctx, assembled, false, 10)).toBeNull();
   });
+
+  it('preserves Heroic Inspiration granted by another character across sheet reconciliation', () => {
+    const character = {
+      current_hp: 10,
+      max_hp: 10,
+      resources: {
+        action: 1,
+        bonus_action: 1,
+        reaction: 1,
+        inspiration: 3,
+        heroic: 2,
+        heroic_inspiration: 1,
+      },
+      max_resources: {
+        action: 1,
+        bonus_action: 1,
+        reaction: 1,
+        inspiration: 3,
+        heroic: 2,
+        heroic_inspiration: 1,
+      },
+      turn_state: {},
+      inventory_items: [],
+      equipment: {},
+      active_effects: [],
+    } as unknown as ForgeCharacter;
+
+    const synced = syncRuntimeResources(ctx, assembled, undefined, []);
+    expect(synced.maxResources.heroic_inspiration).toBeUndefined();
+
+    expect(buildResourceRuntimePatch(character, ctx, assembled, false, 10)).toBeNull();
+    expect(syncRuntimeResources(ctx, assembled, {
+      hp: { current: 10, max: 10, temp: 0 },
+      resources: character.resources ?? {},
+      maxResources: character.max_resources ?? {},
+      equipment: {},
+      inventory: [],
+      activeEffects: [],
+      firedThisTurn: [],
+      firedThisRest: [],
+    }).resources.heroic_inspiration).toBe(1);
+  });
 });

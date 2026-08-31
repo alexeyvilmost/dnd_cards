@@ -231,6 +231,27 @@ export function syncRuntimeResources(
   const maxResources = { ...fresh.maxResources };
   const resources = { ...fresh.resources };
 
+  // Heroic Inspiration is a universal runtime-owned resource: another
+  // character can grant it even when the recipient's build does not declare
+  // a matching class/species/feat pool. Keep that server snapshot across the
+  // automatic sheet resource reconciliation, otherwise opening the recipient
+  // sheet immediately deletes Musician's grant.
+  if (existing.maxResources.heroic_inspiration > 0
+    && maxResources.heroic_inspiration == null) {
+    maxResources.heroic_inspiration = existing.maxResources.heroic_inspiration;
+    resources.heroic_inspiration = Math.min(
+      existing.resources.heroic_inspiration ?? 0,
+      existing.maxResources.heroic_inspiration,
+    );
+    addResourceSource(
+      sources,
+      'heroic_inspiration',
+      existing.maxResources.heroic_inspiration,
+      'Героическое вдохновение',
+      'универсальный ресурс персонажа',
+    );
+  }
+
   for (const key of Object.keys(maxResources)) {
     const cur = existing.resources[key];
     if (cur != null) {
