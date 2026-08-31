@@ -560,6 +560,11 @@
 | A361 | Prestidigitation combat commit and two-ref push | 0.378s stage + 0.291s commit + 4.378s parallel-push critical path | passed | Commit `396c0f8`; exactly three intended files; feature and `main` advanced. |
 | A362 | Prestidigitation workbook checkpoint | 8.688s edit/changed-tab render/export + 3.595s fresh verification + 0.1s visual QA | passed | `Spells!35` now has two retained IDs/two comments; counts remain 31/24/0/717; zero formula errors. |
 | A363 | Prestidigitation combat report/timing reconciliation | under 0.2s patch plus review | completed | Added production failure, atomicity, preserved scene, fix/gates, deployment block, and speed analysis. |
+| A364 | Dragonborn Mage Hand combat and observer pass | 0.646s select + 0.557s cast + 0.288s inspector | cast passed; deployed control/clarity failed | One action, no slot, 10-round effect and journal; no map token or deployed control in the actor inspector. |
+| A365 | Mage Hand resource refresh and full-sheet pass | 0.616s constructor open + 0.879s refresh + about 2.7s sheet load + 0.299s action open + 0.564s confirm | sheet cast passed; deployed control/clarity failed | Recast spent one action/no slot and retained one effect; sheet exposed only name, duration, and manual removal. |
+| A366 | Mage Hand ancestry/architecture audit | 12.796s + 12.458s + 18.105s CodeGraph = 43.359s; exact history under 1s | existing post-release fix confirmed | Production predates `ac12285`; no duplicate implementation added. Tactical-position clarity remains pending. |
+| A367 | Mage Hand workbook evidence update | 3.531s discovery + 8.287s edit/changed-tab render/export + 3.766s fresh verification + 0.1s visual QA | passed | `Spells!7` now has two retained IDs/three comments; counts remain 31/24/0/717; zero formula errors. |
+| A368 | Mage Hand report/timing reconciliation | under 0.2s patch plus review | completed | Added second-character sheet/combat/clarity evidence, release ancestry, unresolved tactical-position clarity, and speed finding. |
 
 ### Current batch bottlenecks and concrete speedups
 
@@ -612,3 +617,4 @@
 47. **Batching four workbook rows kept the full checkpoint to about 46.6s.** This replaced four potential single-row render cycles and confirms that crash-safe notes plus one final all-tab render/export is the correct evidence cadence.
 48. **The successful build was the longest Prestidigitation-combat action at 52.208s; a type-narrowing miss wasted another 30.007s.** Split discriminated-union branches during editing or keep a fast incremental typecheck running before the full Vite/PWA build.
 49. **Browser proof took 1.593s while CodeGraph took 27.670s.** A mounted combat-page test for a non-Minor-Illusion form would turn this integration gap into a sub-five-second regression; excluding immutable release/build copies from the graph remains the largest navigation speedup.
+50. **Mage Hand browser proof took about 6.55s, while three graph calls cost 43.359s.** Check the deployed release against prior entity-fix ancestry immediately after reproduction. Here, `git log` showed in under one second that `ac12285` already owned the missing control UI, so most new architecture tracing was unnecessary.
