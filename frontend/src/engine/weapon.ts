@@ -15,6 +15,7 @@ import {
   parseWeaponProfile,
   type WeaponProfile,
 } from './weaponProfile';
+import { resolveUnarmedDamageProfile } from '../rules-core/fightingStyleComplexPrimitives';
 
 type Dict = Record<string, unknown>;
 
@@ -628,10 +629,27 @@ export function weaponAttackPreview(
   if (!kind) return null;
 
   if (kind === 'unarmed') {
-    const strMod = character.abilityMods.str ?? 0;
+    const equipped = Object.values(equipment ?? {}).flatMap((id) => {
+      const card = cardById(character, id);
+      return card ? [card] : [];
+    });
+    const profile = resolveUnarmedDamageProfile(passives ?? [], {
+      holdingWeaponOrShield: equipped.some((card) => (
+        card.type === 'weapon' || card.type === 'shield' || card.defense_type === 'shield'
+      )),
+      wearingArmorOrShield: equipped.some((card) => card.defense_type != null),
+      variables: character.variables,
+      abilityMods: character.abilityMods,
+    });
+    const ability = profile?.ability ?? 'str';
+    const abilityMod = character.abilityMods[ability] ?? 0;
     return {
-      attack: strMod + character.profBonus,
-      damages: [{ dice: '1', bonus: strMod, type: 'bludgeoning' }],
+      attack: abilityMod + character.profBonus,
+      damages: [{
+        dice: profile?.dice ?? '1',
+        bonus: abilityMod,
+        type: profile?.damageType ?? 'bludgeoning',
+      }],
     };
   }
 

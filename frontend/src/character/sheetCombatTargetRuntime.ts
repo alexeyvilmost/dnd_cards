@@ -247,6 +247,8 @@ export async function loadSheetCombatParticipant(input: {
     equipment: runtime.equipment,
     cards: cardsById,
     passives,
+    variables: ruleState.variables,
+    abilityMods: ruleState.abilityMods,
   });
   for (const [actionId, issue] of projection.issues) {
     const source = inventory.actions.find((action) => action.id === actionId);

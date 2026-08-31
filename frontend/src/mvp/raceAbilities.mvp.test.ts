@@ -271,7 +271,6 @@ const EXPECTED_NON_SPELL_INVENTORY: Record<string, string[]> = {
 };
 
 const KNOWN_RULE_DEVIATIONS = [
-  'Аасимар — Целебные руки: число d4 равно уровню, должно равняться бонусу мастерства',
   'Аасимар — Небесное откровение: все три варианта дают только narrative-события',
   'Драконорождённый — Оружие дыхания: тратит всё действие и имеет только конус 15 фт вместо замены атаки с выбором конус/линия',
   'Драконорождённый — Драконий полёт с 5 уровня пока не меняет runtime-скорость после нажатия',
@@ -526,11 +525,11 @@ d('Незаклинательные способности видов: полн�
     const healing = featuresByNumber.get('aasimar_healing_hands');
     const healingAmount = directPayloads(healing?.mechanics as Dict | null | undefined)
       .find((payload) => payload.kind === 'healing')?.amount;
-    if (healingAmount !== 'prof_bonus d4') deviations.push(KNOWN_RULE_DEVIATIONS[0]);
+    expect(healingAmount).toBe('prof_bonus d4');
 
     const revelation = featuresByNumber.get('ACT-aasimar-revelation');
     const revelationKinds = nonSpellKinds(revelation!);
-    if (revelationKinds.every((kind) => kind === 'choice' || kind === 'narrative')) deviations.push(KNOWN_RULE_DEVIATIONS[1]);
+    if (revelationKinds.every((kind) => kind === 'choice' || kind === 'narrative')) deviations.push(KNOWN_RULE_DEVIATIONS[0]);
 
     const breath = featuresByNumber.get('ACT-breath-fire');
     const breathActivation = breath?.mechanics?.activation as Dict | undefined;
@@ -538,7 +537,7 @@ d('Незаклинательные способности видов: полн�
     const area = breathArea?.area as Dict | undefined;
     if (breathActivation?.mode === 'active'
       && ((breathActivation.cost as Dict[] | undefined) || []).some((cost) => cost.resource === 'action')
-      && area?.kind === 'cone') deviations.push(KNOWN_RULE_DEVIATIONS[2]);
+      && area?.kind === 'cone') deviations.push(KNOWN_RULE_DEVIATIONS[1]);
 
     const dragon = races.find((race) => race.card_number === 'RACE-0008')!;
     const klass = classes[0];
@@ -572,14 +571,14 @@ d('Незаклинательные способности видов: полн�
       }
     }
     if (flightPayload && !flightRuntimeImplemented) {
-      deviations.push(KNOWN_RULE_DEVIATIONS[3]);
+      deviations.push(KNOWN_RULE_DEVIATIONS[2]);
     }
     const largeForm = featuresByNumber.get('RE-goliath-2');
     const largeUses = largeForm?.mechanics?.uses as Dict | undefined;
     const largeDuration = directPayloads(largeForm?.mechanics as Dict | null | undefined)
       .find((payload) => payload.kind === 'modifier')?.duration as Dict | undefined;
     if (largeUses?.per === 'short_rest' && largeDuration?.type === 'rounds' && largeDuration.amount === 10) {
-      deviations.push(KNOWN_RULE_DEVIATIONS[4]);
+      deviations.push(KNOWN_RULE_DEVIATIONS[3]);
     }
 
     const powerfulBuild = featuresByNumber.get('RE-goliath-3');
@@ -587,22 +586,22 @@ d('Незаклинательные способности видов: полн�
       payload.kind === 'modifier'
       && (payload.applies_to as Dict | undefined)?.roll === 'saving_throw'
       && JSON.stringify(payload).includes('grappled'));
-    if (!hasGrappleSave) deviations.push(KNOWN_RULE_DEVIATIONS[5]);
+    if (!hasGrappleSave) deviations.push(KNOWN_RULE_DEVIATIONS[4]);
 
     const elf = races.find((race) => race.card_number === 'RACE-0004')!;
     const hasTrance = (elf.traits || []).some((trait) => /транс/i.test(`${trait.name} ${trait.description}`))
       || (elf.related_effects || []).some((id) => /транс/i.test(effectsById.get(id)?.name || ''));
-    if (!hasTrance) deviations.push(KNOWN_RULE_DEVIATIONS[6]);
+    if (!hasTrance) deviations.push(KNOWN_RULE_DEVIATIONS[5]);
 
     const narrativeOnly = (cardNumber: string) => {
       const feature = featuresByNumber.get(cardNumber);
       return !!feature && nonSpellKinds(feature).every((kind) => kind === 'narrative');
     };
     if (narrativeOnly('RE-halfling-2') && narrativeOnly('RE-halfling-4')) {
-      deviations.push(KNOWN_RULE_DEVIATIONS[7]);
+      deviations.push(KNOWN_RULE_DEVIATIONS[6]);
     }
-    if (narrativeOnly('EFF-tabaxi-feline')) deviations.push(KNOWN_RULE_DEVIATIONS[8]);
-    if (narrativeOnly('EFF-warforged-sentry-rest')) deviations.push(KNOWN_RULE_DEVIATIONS[9]);
+    if (narrativeOnly('EFF-tabaxi-feline')) deviations.push(KNOWN_RULE_DEVIATIONS[7]);
+    if (narrativeOnly('EFF-warforged-sentry-rest')) deviations.push(KNOWN_RULE_DEVIATIONS[8]);
 
     const dragonCombo = combos.find((combo) => combo.race.id === dragon.id)!;
     const dragonBuild = build(dragonCombo, klass, 20);

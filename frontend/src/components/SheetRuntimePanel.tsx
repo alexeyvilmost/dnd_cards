@@ -24,7 +24,7 @@ import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { buildResourceRecharge } from '../engine/resources';
 import { collectFreeuseRecharge, isFreeusePoolKey } from '../engine/freeuse';
-import { activeEffectInstruction, expiryLabel } from '../engine/effects';
+import { groupActiveEffectsForDisplay } from '../engine/effects';
 import {
   executeManualEffectCommand,
   nextBrowserManualEffectId,
@@ -78,6 +78,10 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
   const runtime = useMemo(
     () => alignRuntimeHp(forgeToRuntimeState(character), ruleState.maxHP),
     [character, ruleState.maxHP],
+  );
+  const activeEffectGroups = useMemo(
+    () => groupActiveEffectsForDisplay(runtime.activeEffects),
+    [runtime.activeEffects],
   );
   const effectMutationBlockReason = manualEffectMutationBlockReason(character.current_encounter_id);
 
@@ -135,15 +139,21 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
     [runtime.maxResources, resourceOptions],
   );
 
-  const handleDismissEffect = (effectId: string) => {
+  const handleDismissEffect = (effectIds: readonly string[]) => {
     try {
       assertManualEffectMutationAllowed(character.current_encounter_id);
-      const { state, events } = executeManualEffectCommand(runtime, {
-        type: 'RemoveEffect',
-        effectId,
-        ownerActorId: character.id,
-        provenance: 'manual:sheet_runtime',
-      }, { nextId: nextBrowserManualEffectId });
+      let state = runtime;
+      const events: EngineEvent[] = [];
+      for (const effectId of effectIds) {
+        const result = executeManualEffectCommand(state, {
+          type: 'RemoveEffect',
+          effectId,
+          ownerActorId: character.id,
+          provenance: 'manual:sheet_runtime',
+        }, { nextId: nextBrowserManualEffectId });
+        state = result.state;
+        events.push(...result.events);
+      }
       void persistManualEffects(state.activeEffects, events);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Не удалось снять эффект');
@@ -195,25 +205,25 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
         disabledReason={combatLocked ? 'Управляйте ходами и отдыхом из активного боя' : undefined}
       />
 
-      {runtime.activeEffects.length > 0 && (
+      {activeEffectGroups.length > 0 && (
         <div className="sheet-group" style={{ marginTop: 12 }}>
           <h3 className="sheet-h3">Активные эффекты</h3>
           <ul className="sheet-active-effects">
-            {runtime.activeEffects.map((fx) => (
-              <li key={fx.id} className="sheet-active-effect">
+            {activeEffectGroups.map((group) => (
+              <li key={group.key} className="sheet-active-effect">
                 <span className="sheet-active-effect-summary">
-                  <span className="sheet-active-effect-name">{fx.name}</span>
-                  {activeEffectInstruction(fx) && (
-                    <span className="sheet-active-effect-detail">{activeEffectInstruction(fx)}</span>
+                  <span className="sheet-active-effect-name">{group.name}</span>
+                  {group.instructions.length > 0 && (
+                    <span className="sheet-active-effect-detail">{group.instructions.join(' ')}</span>
                   )}
                 </span>
-                <span className="sheet-active-effect-meta">{expiryLabel(fx.expiry, fx.roundsLeft)}</span>
+                <span className="sheet-active-effect-meta">{group.duration}</span>
                 <button
                   type="button"
                   className="sheet-active-effect-dismiss"
                   disabled={busy || Boolean(effectMutationBlockReason)}
                   title={effectMutationBlockReason ?? 'Снять вручную'}
-                  onClick={() => handleDismissEffect(fx.id)}
+                  onClick={() => handleDismissEffect(group.effects.map((effect) => effect.id))}
                 >
                   <X size={14} />
                 </button>

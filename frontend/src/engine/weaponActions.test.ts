@@ -162,6 +162,25 @@ describe('weaponAttackPreview: числа из оружия в руке', () => 
     expect(p.damages).toEqual([{ dice: '1', bonus: 2, type: 'bludgeoning' }]);
   });
 
+  it('Боевые искусства показывают на листе кость монаха и лучшую характеристику', () => {
+    const monk = {
+      ...CTX,
+      abilityMods: { ...CTX.abilityMods, str: 1, dex: 3 },
+      variables: { martial_arts_die: { count: 1, sides: 6 } },
+    };
+    const martialArts = {
+      activation: { mode: 'passive' },
+      effects: [{ resolution: 'auto', result: [{
+        kind: 'unarmed_damage_profile', dice: 'martial_arts_die',
+        ability_options: ['str', 'dex'], damage_type: 'bludgeoning',
+        requires_unarmored: true, source: 'Боевые искусства',
+      }] }],
+    };
+    const p = weaponAttackPreview(MECH_UNARMED_STRIKE, monk, {}, undefined, [martialArts])!;
+    expect(p.attack).toBe(5);
+    expect(p.damages).toEqual([{ dice: '1d6', bonus: 3, type: 'bludgeoning' }]);
+  });
+
   it('нет оружия в руке — превью null (нечего показывать)', () => {
     expect(weaponAttackPreview(MECH_WEAPON_ATTACK, CTX, {})).toBeNull();
   });

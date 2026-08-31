@@ -929,10 +929,16 @@ export default function SheetActionsPanel({
             const cardId = runtime.equipment[slot];
             return cardId && equipCards.get(cardId) ? [equipCards.get(cardId)!] : [];
           });
+        const equippedCards = Object.values(runtime.equipment).flatMap((cardId) => (
+          cardId && equipCards.get(cardId) ? [equipCards.get(cardId)!] : []
+        ));
         const unarmedFacts = {
           holdingWeaponOrShield: heldCards.some((card) => (
             card.type === 'weapon' || card.type === 'shield' || card.defense_type === 'shield'
           )),
+          wearingArmorOrShield: equippedCards.some((card) => card.defense_type != null),
+          variables: ctx.variables,
+          abilityMods: ctx.abilityMods,
         };
         const profiled = applyUnarmedDamageProfileToAction(contextual, passives, unarmedFacts);
         const profiledActionRef = action.actionRef
@@ -950,7 +956,7 @@ export default function SheetActionsPanel({
       }
     });
     return { actions: projected, issues };
-  }, [collectedActions, runtime.equipment, equipCards, passives]);
+  }, [collectedActions, runtime.equipment, equipCards, passives, ctx.variables, ctx.abilityMods]);
   const allActions = contextualCostProjection.actions;
 
   // Триггерные способности-СЛУШАТЕЛИ (interrupt): mode reaction/triggered + activation.trigger.event
@@ -966,7 +972,9 @@ export default function SheetActionsPanel({
     equipment: runtime.equipment,
     cards: equipCards,
     passives,
-  }).actions, [collectedActions, runtime.equipment, equipCards, passives]);
+    variables: ctx.variables,
+    abilityMods: ctx.abilityMods,
+  }).actions, [collectedActions, runtime.equipment, equipCards, passives, ctx.variables, ctx.abilityMods]);
 
   // Доспехи мага и т.п.: каст выдаёт ОТДЕЛЬНЫЙ эффект через grant_effect. Движок синхронный —
   // предзагружаем механику каждого выдаваемого эффекта по slug (кэш getEffect), кладём в execCtx,

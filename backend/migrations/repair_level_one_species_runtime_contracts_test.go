@@ -2,14 +2,17 @@ package migrations
 
 import "testing"
 
-func TestLevelOneSpeciesRuntimeContractsMigrationIsRegisteredLast(t *testing.T) {
+func TestLevelOneSpeciesRuntimeContractsMigrationIsRegisteredBeforeMonkRepairs(t *testing.T) {
 	migrations := GetAllMigrations()
-	last := migrations[len(migrations)-1]
-	if last.Version != levelOneSpeciesRuntimeContractsMigrationVersion {
-		t.Fatalf("last migration is %s, want %s", last.Version, levelOneSpeciesRuntimeContractsMigrationVersion)
+	registered := migrations[len(migrations)-2]
+	if registered.Version != levelOneSpeciesRuntimeContractsMigrationVersion {
+		t.Fatalf("penultimate migration is %s, want %s", registered.Version, levelOneSpeciesRuntimeContractsMigrationVersion)
 	}
-	if migrations[len(migrations)-2].Version != missingWeaponMasteryProfilesMigrationVersion {
+	if migrations[len(migrations)-3].Version != missingWeaponMasteryProfilesMigrationVersion {
 		t.Fatal("migration 128 must immediately follow 127")
+	}
+	if migrations[len(migrations)-1].Version != levelOneMonkRuntimeContractsMigrationVersion {
+		t.Fatal("migration 129 must immediately follow 128")
 	}
 }
 

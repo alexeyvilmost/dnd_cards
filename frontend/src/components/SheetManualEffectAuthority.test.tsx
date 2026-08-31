@@ -212,4 +212,40 @@ describe('manual-effect component authority boundaries', () => {
     expect(persistDetachedManualEffectsMock).toHaveBeenCalledWith(detached, []);
     expect(persistCharacterRuntimeMock).not.toHaveBeenCalled();
   });
+
+  it('SheetRuntimePanel presents one removable row for one action with several mechanical effects', async () => {
+    const detached = {
+      ...character(null),
+      active_effects: [
+        {
+          id: 'rage:damage', name: 'Ярость', source: 'Варвар', sourceId: 'rage',
+          mechanics: { kind: 'modifier', applies_to: { roll: 'damage' }, value: 2 },
+          expiry: 'turns', roundsLeft: 10,
+        },
+        {
+          id: 'rage:resistance', name: 'Ярость', source: 'Варвар', sourceId: 'rage',
+          mechanics: { kind: 'resistance', damage_type: 'slashing' },
+          expiry: 'turns', roundsLeft: 10,
+        },
+      ],
+    } as ForgeCharacter;
+    persistDetachedManualEffectsMock.mockResolvedValue({ ...detached, active_effects: [] });
+
+    await act(async () => root.render(
+      <SheetRuntimePanel
+        character={detached}
+        assembled={assembled}
+        ruleState={ruleState}
+        onUpdated={() => undefined}
+      />,
+    ));
+
+    expect(container.querySelectorAll('.sheet-active-effect')).toHaveLength(1);
+    expect(container.textContent?.match(/Ярость/g)).toHaveLength(1);
+    await act(async () => {
+      (container.querySelector('.sheet-active-effect-dismiss') as HTMLButtonElement).click();
+      await Promise.resolve();
+    });
+    expect(persistDetachedManualEffectsMock).toHaveBeenCalledWith(detached, []);
+  });
 });

@@ -161,6 +161,55 @@ describe('runnable canonical sheet-action projection', () => {
     expect(baseline.actions[0].actionRef?.description).toContain('Урон: 1 + модификатор Силы');
   });
 
+  it('projects the Monk Martial Arts die and best Strength-or-Dexterity ability only while unarmored', () => {
+    const unarmed: SheetAction = {
+      id: 'unarmed', name: 'Unarmed Strike', group: 'basic',
+      description: 'Атака кулаком. Урон: 1 + модификатор Силы (дробящий).',
+      mechanics: {
+        activation: { mode: 'active', cost: [{ resource: 'action' }] },
+        targeting: { shape: 'single', range: '5 feet', filter: 'enemy' },
+        effects: [{
+          resolution: 'attack_roll', attack_kind: 'unarmed', ability: 'str', vs: 'ac',
+          on_hit: [{ kind: 'damage', amount: '1 + str', type: 'bludgeoning' }],
+        }],
+      },
+    };
+    const martialArts = {
+      activation: { mode: 'passive' },
+      effects: [{
+        resolution: 'auto',
+        result: [{
+          kind: 'unarmed_damage_profile', dice: 'martial_arts_die',
+          ability_options: ['str', 'dex'], damage_type: 'bludgeoning',
+          requires_unarmored: true, source: 'Боевые искусства',
+        }],
+      }],
+    };
+    const projected = projectRunnableSheetCanonicalActions({
+      actions: [unarmed], equipment: {}, cards: new Map(), passives: [martialArts],
+      variables: { martial_arts_die: { count: 1, sides: 6 } },
+      abilityMods: { str: 2, dex: 4 },
+    });
+    const armored = projectRunnableSheetCanonicalActions({
+      actions: [unarmed], equipment: { body: 'armor' },
+      cards: new Map([['armor', {
+        id: 'armor', type: 'chest', defense_type: 'light',
+      } as unknown as Card]]), passives: [martialArts],
+      variables: { martial_arts_die: { count: 1, sides: 6 } },
+      abilityMods: { str: 2, dex: 4 },
+    });
+    const attack = (projected.actions[0].mechanics.effects as Record<string, unknown>[])[0];
+    const damage = (attack.on_hit as Record<string, unknown>[])[0];
+    const armoredAttack = (armored.actions[0].mechanics.effects as Record<string, unknown>[])[0];
+    const armoredDamage = (armoredAttack.on_hit as Record<string, unknown>[])[0];
+
+    expect(attack.ability).toBe('dex');
+    expect(damage.amount).toBe('1d6 + dex');
+    expect(projected.actions[0].description).toContain('Урон: 1d6 + модификатор Ловкости');
+    expect(armoredAttack.ability).toBe('str');
+    expect(armoredDamage.amount).toBe('1 + str');
+  });
+
   it('binds the equipped main action and excludes an unavailable off-hand capability', () => {
     const projection = projectRunnableSheetCanonicalActions({
       actions: [

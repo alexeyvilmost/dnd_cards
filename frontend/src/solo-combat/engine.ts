@@ -26,6 +26,7 @@ import type {
 import { InMemoryRulesSession } from '../rules-core/session';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
 import { turnStartGrappleDamageOpportunity } from '../rules-core/fightingStyleComplexPrimitives';
+import { parseWeaponProfile } from '../rules-core/weaponProfile';
 import { projectRuleAction } from '../canon/ruleActionProjection';
 import type { Monster } from '../monsters/types';
 import { canPay } from '../engine/cost';
@@ -610,7 +611,7 @@ export function executeCombatAction(input: {
     input.worldInput,
   );
   const rng = input.rng ?? Math.random;
-  const withTriggeredHitOffer = (next: SoloCombatState) => {
+  const withTriggeredAttackOffer = (next: SoloCombatState) => {
     const intercepted = offerInterception({
       before: input.state,
       after: next,
@@ -619,7 +620,7 @@ export function executeCombatAction(input: {
       targetIds: input.targetIds,
       isAttack: isAttackAction(action) || isBasicUnarmedStrike(input.state, action),
     });
-    return offerTriggeredHitActions({
+    return offerTriggeredAttackActions({
       before: input.state,
       after: intercepted,
       sourceActorId: input.actorId,
@@ -643,7 +644,7 @@ export function executeCombatAction(input: {
       candidate.actorId === input.actorId && candidate.status === 'open'
     ));
     if (!attackAction) throw new Error('Не удалось открыть действие «Атака»');
-    return withTriggeredHitOffer(dispatch({
+    return withTriggeredAttackOffer(dispatch({
       state: begun,
       command: {
         ...commandBase(begun, input.actorId),
@@ -667,7 +668,7 @@ export function executeCombatAction(input: {
       ...(declaration.factsByTarget ? { factsByTarget: declaration.factsByTarget } : {}),
       ...(declaration.choices ? { choices: declaration.choices } : {}),
     };
-    return withTriggeredHitOffer(dispatch({ state: input.state, command, rng, label: action.name }));
+    return withTriggeredAttackOffer(dispatch({ state: input.state, command, rng, label: action.name }));
   }
   if (isControlledCharacter(input.state, input.actorId)
     && SHEET_PRIMITIVES.has(primitiveType(action) ?? '')) {
@@ -675,7 +676,7 @@ export function executeCombatAction(input: {
       session: sheetSession(input.state, input.actorId), actorId: input.actorId, actionId: action.id,
       declaration, commandId: newSheetRuntimeCommandId(), rng,
     });
-    return withTriggeredHitOffer(applySheetTransition(input.state, input.actorId, action, transition));
+    return withTriggeredAttackOffer(applySheetTransition(input.state, input.actorId, action, transition));
   }
   const command: GameCommand = {
     ...commandBase(input.state, input.actorId),
@@ -715,8 +716,8 @@ export function executeCombatAction(input: {
       boardRevision: next.boardRevision + 1,
     };
   }
-  if (action.id !== next.dashActionId) return withTriggeredHitOffer(next);
-  return withTriggeredHitOffer({
+  if (action.id !== next.dashActionId) return withTriggeredAttackOffer(next);
+  return withTriggeredAttackOffer({
     ...next,
     movementRemainingFt: {
       ...next.movementRemainingFt,
@@ -986,7 +987,7 @@ export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Ma
     next = resolveDecision(next, response, rng);
     if (pending.request.type === 'reaction'
       && pending.request.trigger.type === 'hit_by_attack') {
-      next = offerTriggeredHitActions({
+      next = offerTriggeredAttackActions({
         before: beforeDecision,
         after: next,
         sourceActorId: pending.request.trigger.sourceActorId,
@@ -1036,7 +1037,7 @@ export function resolvePlayerReaction(
     });
   }
   if (pending.request.trigger.type === 'hit_by_attack') {
-    next = offerTriggeredHitActions({
+    next = offerTriggeredAttackActions({
       before: state,
       after: next,
       sourceActorId: pending.request.trigger.sourceActorId,
@@ -1147,20 +1148,65 @@ export function isTriggeredCombatAction(action: RuleActionDefinition, event?: st
   return event === undefined ? events.length > 0 : events.includes(event);
 }
 
+function attackOutcomeEvent(
+  state: SoloCombatState,
+  fromLogIndex: number,
+  sourceActorId: string,
+): 'hit' | 'miss' | null {
+  const outcomes = state.log.slice(fromLogIndex).flatMap((entry) => (
+    entry.records ?? []
+  )).flatMap((record) => {
+    const roll = record.event?.type === 'roll' ? record.event.roll : undefined;
+    if (record.sourceActorId !== sourceActorId || roll?.kind !== 'd20') return [];
+    if (roll.outcome === 'hit' || roll.outcome === 'crit') return ['hit' as const];
+    if (roll.outcome === 'miss') return ['miss' as const];
+    return [];
+  });
+  return outcomes.at(-1) ?? null;
+}
+
 function hasHitRecord(
   state: SoloCombatState,
   fromLogIndex: number,
   sourceActorId: string,
 ): boolean {
-  return state.log.slice(fromLogIndex).some((entry) => entry.records?.some((record) => {
-    const roll = record.event?.type === 'roll' ? record.event.roll : undefined;
-    return record.sourceActorId === sourceActorId
-      && roll?.kind === 'd20'
-      && (roll.outcome === 'hit' || roll.outcome === 'crit');
-  }));
+  return attackOutcomeEvent(state, fromLogIndex, sourceActorId) === 'hit';
 }
 
-function offerTriggeredHitActions(input: {
+function sourceQualifiesForTriggeredAction(input: {
+  state: SoloCombatState;
+  actor: ActorState;
+  sourceActionId: string;
+  trigger: Record<string, unknown> | undefined;
+}): boolean {
+  const { state, actor, sourceActionId, trigger } = input;
+  const sourceCardNumber = state.actionPresentation?.[sourceActionId]?.actionRef?.card_number;
+  const requiredSources = [
+    ...(typeof trigger?.source_action_card_number === 'string'
+      ? [trigger.source_action_card_number]
+      : []),
+    ...(Array.isArray(trigger?.source_action_card_numbers)
+      ? trigger.source_action_card_numbers.filter((value): value is string => typeof value === 'string')
+      : []),
+  ];
+  if (requiredSources.length && (!sourceCardNumber || !requiredSources.includes(sourceCardNumber))) {
+    return false;
+  }
+  if (trigger?.source_weapon_qualifier !== 'monk_weapon') return true;
+  if (sourceCardNumber === 'action_basic_unarmed') return true;
+  if (sourceCardNumber !== 'action_basic_weapon') return false;
+  const weaponId = actor.runtime.equipment.main_hand;
+  const weapon = actor.character.equippedCards?.find((card) => card.id === weaponId);
+  if (!weapon) return false;
+  const parsed = parseWeaponProfile(weapon);
+  return parsed.valid
+    && parsed.profile.defaultAttackMode === 'melee'
+    && (parsed.profile.proficiencyCategory === 'simple'
+      || (parsed.profile.proficiencyCategory === 'martial'
+        && parsed.profile.properties.includes('light')));
+}
+
+function offerTriggeredAttackActions(input: {
   before: SoloCombatState;
   after: SoloCombatState;
   sourceActorId: string;
@@ -1168,22 +1214,19 @@ function offerTriggeredHitActions(input: {
   targetIds: string[];
 }): SoloCombatState {
   const { before, after, sourceActorId, sourceActionId, targetIds } = input;
+  const event = attackOutcomeEvent(after, before.log.length, sourceActorId);
   if (after.world.pendingResolution || after.pendingTriggeredAction
     || !isControlledCharacter(after, sourceActorId)
-    || !hasHitRecord(after, before.log.length, sourceActorId)) return after;
+    || !event) return after;
   const actor = after.world.actors[sourceActorId];
   if (!actor) return after;
   const owned = new Set(actor.capabilities.actionIds);
   const optionActionIds = after.catalogActions.flatMap((action) => {
     if (action.id === sourceActionId || !owned.has(action.id)
-      || !isTriggeredCombatAction(action, 'hit')) return [];
+      || !isTriggeredCombatAction(action, event)) return [];
     const activation = action.mechanics.activation as Record<string, unknown> | undefined;
     const trigger = activation?.trigger as Record<string, unknown> | undefined;
-    const requiredSourceCardNumber = typeof trigger?.source_action_card_number === 'string'
-      ? trigger.source_action_card_number
-      : undefined;
-    const sourceCardNumber = after.actionPresentation?.[sourceActionId]?.actionRef?.card_number;
-    if (requiredSourceCardNumber && sourceCardNumber !== requiredSourceCardNumber) return [];
+    if (!sourceQualifiesForTriggeredAction({ state: after, actor, sourceActionId, trigger })) return [];
     const costs = Array.isArray(activation?.cost)
       ? activation.cost as Array<Record<string, unknown>>
       : [];
@@ -1192,7 +1235,7 @@ function offerTriggeredHitActions(input: {
   return optionActionIds.length ? {
     ...after,
     pendingTriggeredAction: {
-      event: 'hit', sourceActorId, sourceActionId,
+      event, sourceActorId, sourceActionId,
       targetIds: [...targetIds], optionActionIds,
     },
   } : after;

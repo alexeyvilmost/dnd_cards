@@ -1053,6 +1053,74 @@ describe('solo combat engine vertical integration', () => {
     expect(state.world.actors[monsterId].runtime.hp.current).toBeLessThan(hpAfterAttack);
   });
 
+  it('offers a Monk Martial Arts bonus strike after a qualifying missed Unarmed Strike', async () => {
+    const fixture = unarmedParticipant();
+    const rider: RuleActionDefinition = {
+      id: 'd2000000-0000-4000-8000-000000000003',
+      name: 'Боевые искусства: безоружный удар', kind: 'nonSpell',
+      sourceEntityIds: ['EFF-martial-arts'],
+      mechanics: {
+        activation: {
+          mode: 'triggered', optional: true,
+          trigger: {
+            event: 'miss',
+            source_action_card_numbers: ['action_basic_unarmed', 'action_basic_weapon'],
+            source_weapon_qualifier: 'monk_weapon',
+          },
+          cost: [{ resource: 'bonus_action', amount: 1 }],
+        },
+        targeting: {
+          domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1,
+          max_targets: 1, range_ft: 5, requires_line_of_sight: true,
+          allowed_relations: ['enemy'],
+        },
+        effects: [{
+          resolution: 'attack_roll', attack_kind: 'unarmed', ability: 'dex', vs: 'ac',
+          on_hit: [{ kind: 'damage', amount: '1d6 + dex', type: 'bludgeoning' }],
+        }],
+      },
+      targeting: {
+        minTargets: 1, maxTargets: 1, rangeFt: 5,
+        requiresLineOfSight: true, allowedRelations: ['enemy'],
+      },
+    };
+    const actor = fixture.participant.canonical.world.actors[fixture.participant.character.id];
+    actor.capabilities.actionIds.push(rider.id);
+    actor.runtime.resources.bonus_action = 1;
+    actor.runtime.maxResources.bonus_action = 1;
+    const actions = [...fixture.participant.canonical.actions, rider];
+    const byId = new Map(actions.map((action) => [action.id, action]));
+    fixture.participant.canonical = {
+      ...fixture.participant.canonical,
+      actions,
+      catalog: { getAction: (id) => byId.get(id), listActions: () => actions },
+    };
+    fixture.participant.character.resources = clone(actor.runtime.resources);
+    fixture.participant.character.max_resources = clone(actor.runtime.maxResources);
+
+    let state = await createSoloCombatState({
+      character: fixture.participant.character,
+      participant: fixture.participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const actorId = fixture.participant.character.id;
+    const monsterId = Object.values(state.world.actors).find((candidate) => candidate.kind === 'monster')!.id;
+    state = placeAdjacent(state, actorId, monsterId);
+    state = executeCombatAction({
+      state, actorId, actionId: fixture.action.id, targetIds: [monsterId],
+      choices: { [UNARMED_STRIKE_CHOICE_ID]: ['damage'] }, rng: () => 0,
+    });
+
+    expect(state.pendingTriggeredAction).toEqual(expect.objectContaining({
+      event: 'miss', sourceActionId: fixture.action.id,
+      optionActionIds: [rider.id], targetIds: [monsterId],
+    }));
+    state = resolveTriggeredCombatAction(state, rider.id, () => 0.99);
+    expect(state.pendingTriggeredAction).toBeUndefined();
+    expect(state.world.actors[actorId].runtime.resources.bonus_action).toBe(0);
+  });
+
   it('restores sheet previews in fights persisted before scoped presentation keys', async () => {
     const participant = fighterSeed();
     const state = await createSoloCombatState({

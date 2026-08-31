@@ -2,9 +2,16 @@ type Dict = Record<string, unknown>;
 
 export interface UnarmedDamageProfile {
   dice: string;
-  ability: 'str';
+  ability: 'str' | 'dex';
   damageType: string;
   source: string;
+}
+
+export interface UnarmedDamageProfileFacts {
+  holdingWeaponOrShield: boolean;
+  wearingArmorOrShield?: boolean;
+  variables?: Readonly<Record<string, number | { count: number; sides: number }>>;
+  abilityMods?: Readonly<Partial<Record<'str' | 'dex', number>>>;
 }
 
 export interface GrappleRelationView {
@@ -69,6 +76,18 @@ function parsedDice(value: unknown): DiceFormula | null {
   return { count, sides };
 }
 
+function resolvedDice(
+  value: unknown,
+  variables: UnarmedDamageProfileFacts['variables'],
+): DiceFormula | null {
+  const literal = parsedDice(value);
+  if (literal) return literal;
+  if (typeof value !== 'string') return null;
+  const variable = variables?.[value.trim()];
+  if (!variable || typeof variable === 'number') return null;
+  return parsedDice(`${variable.count}d${variable.sides}`);
+}
+
 function rollDice(formula: DiceFormula, rng: () => number): { total: number; values: number[] } {
   const values = Array.from({ length: formula.count }, () => (
     Math.floor(Math.min(0.999999999, Math.max(0, rng())) * formula.sides) + 1
@@ -83,25 +102,44 @@ function rollDice(formula: DiceFormula, rng: () => number): { total: number; val
  */
 export function resolveUnarmedDamageProfile(
   passives: readonly unknown[],
-  facts: { holdingWeaponOrShield: boolean },
+  facts: UnarmedDamageProfileFacts,
 ): UnarmedDamageProfile | null {
   const candidates = passives.flatMap((mechanics) => payloads(mechanics))
     .filter((payload) => payload.kind === 'unarmed_damage_profile');
-  if (candidates.length !== 1) return null;
-  const payload = candidates[0];
-  const normalDice = parsedDice(payload.dice);
-  const emptyHandsDice = parsedDice(payload.empty_hands_dice);
-  const selected = facts.holdingWeaponOrShield ? normalDice : emptyHandsDice;
-  if (!selected || payload.ability !== 'str'
-    || typeof payload.damage_type !== 'string' || !payload.damage_type.trim()) return null;
-  return {
-    dice: `${selected.count}d${selected.sides}`,
-    ability: 'str',
-    damageType: payload.damage_type.trim(),
-    source: typeof payload.source === 'string' && payload.source.trim()
-      ? payload.source.trim()
-      : 'Unarmed Strike damage profile',
-  };
+  const profiles = candidates.flatMap((payload): Array<UnarmedDamageProfile & { score: number }> => {
+    if (payload.requires_unarmored === true && facts.wearingArmorOrShield) return [];
+    const normalDice = resolvedDice(payload.dice, facts.variables);
+    const emptyHandsDice = payload.empty_hands_dice === undefined
+      ? normalDice
+      : resolvedDice(payload.empty_hands_dice, facts.variables);
+    const selected = facts.holdingWeaponOrShield ? normalDice : emptyHandsDice;
+    const declaredAbilities = Array.isArray(payload.ability_options)
+      ? payload.ability_options
+      : [payload.ability];
+    const abilities = declaredAbilities.filter(
+      (ability): ability is 'str' | 'dex' => ability === 'str' || ability === 'dex',
+    );
+    if (!selected || !abilities.length
+      || typeof payload.damage_type !== 'string' || !payload.damage_type.trim()) return [];
+    const ability = [...abilities].sort((left, right) => (
+      (facts.abilityMods?.[right] ?? 0) - (facts.abilityMods?.[left] ?? 0)
+        || left.localeCompare(right)
+    ))[0];
+    return [{
+      dice: `${selected.count}d${selected.sides}`,
+      ability,
+      damageType: payload.damage_type.trim(),
+      source: typeof payload.source === 'string' && payload.source.trim()
+        ? payload.source.trim()
+        : 'Unarmed Strike damage profile',
+      score: selected.count * (selected.sides + 1) / 2 + (facts.abilityMods?.[ability] ?? 0),
+    }];
+  });
+  if (!profiles.length) return null;
+  const [{ score: _score, ...best }] = profiles.sort((left, right) => (
+    right.score - left.score || left.source.localeCompare(right.source)
+  ));
+  return best;
 }
 
 /**
@@ -115,7 +153,7 @@ export function applyUnarmedDamageProfileToAction<
 >(
   action: T,
   passives: readonly unknown[],
-  facts: { holdingWeaponOrShield: boolean },
+  facts: UnarmedDamageProfileFacts,
 ): T {
   const profile = resolveUnarmedDamageProfile(passives, facts);
   const mechanics = dict(action.mechanics) ? action.mechanics : null;
@@ -139,18 +177,18 @@ export function applyUnarmedDamageProfileToAction<
         type: profile.damageType,
       };
     });
-    return replaced ? { ...candidate, on_hit: onHit } : candidate;
+    return replaced ? { ...candidate, ability: profile.ability, on_hit: onHit } : candidate;
   });
   if (!changed) return action;
   const description = typeof action.description === 'string'
     ? action.description
       .replace(
         /Урон:\s*1\s*\+\s*модификатор Силы/iu,
-        `Урон: ${profile.dice} + модификатор Силы`,
+        `Урон: ${profile.dice} + модификатор ${profile.ability === 'dex' ? 'Ловкости' : 'Силы'}`,
       )
       .replace(
         /Damage:\s*1\s*\+\s*(?:your\s+)?Strength modifier/iu,
-        `Damage: ${profile.dice} + your Strength modifier`,
+        `Damage: ${profile.dice} + your ${profile.ability === 'dex' ? 'Dexterity' : 'Strength'} modifier`,
       )
     : action.description;
   return {

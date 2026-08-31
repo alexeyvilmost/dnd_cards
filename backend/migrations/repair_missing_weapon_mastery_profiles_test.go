@@ -29,14 +29,14 @@ func TestCanonicalMissingWeaponMasteryProfilesDeclareCleaveAndPush(t *testing.T)
 
 func TestMissingWeaponMasteryProfilesMigrationIsRegisteredBeforeLevelOneSpeciesRepairs(t *testing.T) {
 	migrations := GetAllMigrations()
-	registered := migrations[len(migrations)-2]
+	registered := migrations[len(migrations)-3]
 	if registered.Version != missingWeaponMasteryProfilesMigrationVersion {
 		t.Fatalf("penultimate migration is %s, want %s", registered.Version, missingWeaponMasteryProfilesMigrationVersion)
 	}
 	if registered.Up == nil || registered.Down == nil {
 		t.Fatal("127 must register Up and a safe Down")
 	}
-	if migrations[len(migrations)-3].Version != crafterInPlayChoiceMigrationVersion {
+	if migrations[len(migrations)-4].Version != crafterInPlayChoiceMigrationVersion {
 		t.Fatal("migration 127 must immediately follow 126")
 	}
 }

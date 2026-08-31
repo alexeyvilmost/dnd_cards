@@ -99,6 +99,8 @@ export function projectRunnableSheetCanonicalActions(input: {
   equipment: Readonly<Record<string, string | null | undefined>>;
   cards: ReadonlyMap<string, Card>;
   passives?: readonly unknown[];
+  variables?: Readonly<Record<string, number | { count: number; sides: number }>>;
+  abilityMods?: Readonly<Partial<Record<'str' | 'dex', number>>>;
 }): RunnableSheetCanonicalActionProjection {
   const actions: SheetAction[] = [];
   const issues = new Map<string, string>();
@@ -120,10 +122,16 @@ export function projectRunnableSheetCanonicalActions(input: {
           const cardId = input.equipment[slot];
           return cardId && cards.get(cardId) ? [cards.get(cardId)!] : [];
         });
+      const equippedCards = Object.values(input.equipment).flatMap((cardId) => (
+        cardId && cards.get(cardId) ? [cards.get(cardId)!] : []
+      ));
       const unarmedFacts = {
         holdingWeaponOrShield: heldCards.some((card) => (
           card.type === 'weapon' || card.type === 'shield' || card.defense_type === 'shield'
         )),
+        wearingArmorOrShield: equippedCards.some((card) => card.defense_type != null),
+        variables: input.variables,
+        abilityMods: input.abilityMods,
       };
       const profiled = applyUnarmedDamageProfileToAction(
         { ...action, mechanics },

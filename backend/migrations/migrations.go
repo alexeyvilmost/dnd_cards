@@ -818,6 +818,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairLevelOneSpeciesRuntimeContracts,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     levelOneMonkRuntimeContractsMigrationVersion,
+			Description: "Перенести Фокус монаха на 2 уровень и материализовать Боевые искусства",
+			Up:          repairLevelOneMonkRuntimeContracts,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

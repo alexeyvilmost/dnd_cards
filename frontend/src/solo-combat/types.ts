@@ -104,7 +104,7 @@ export interface CombatActorPresentation {
  * exposed as proactive hotbar buttons.
  */
 export interface PendingTriggeredAction {
-  event: 'hit';
+  event: 'hit' | 'miss';
   sourceActorId: string;
   sourceActionId: string;
   targetIds: string[];
