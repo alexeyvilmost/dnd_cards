@@ -6,13 +6,13 @@ import (
 	"testing"
 )
 
-func TestCrafterInPlayChoiceMigrationRegisteredLast(t *testing.T) {
+func TestCrafterInPlayChoiceMigrationRegisteredBeforeWeaponAndSpeciesRepairs(t *testing.T) {
 	migrations := GetAllMigrations()
-	last := migrations[len(migrations)-1]
-	if last.Version != crafterInPlayChoiceMigrationVersion {
-		t.Fatalf("last migration = %q, want %q", last.Version, crafterInPlayChoiceMigrationVersion)
+	registered := migrations[len(migrations)-3]
+	if registered.Version != crafterInPlayChoiceMigrationVersion {
+		t.Fatalf("registered migration = %q, want %q", registered.Version, crafterInPlayChoiceMigrationVersion)
 	}
-	if last.Up == nil || last.Down == nil {
+	if registered.Up == nil || registered.Down == nil {
 		t.Fatal("migration 126 must register Up and a safe Down")
 	}
 }

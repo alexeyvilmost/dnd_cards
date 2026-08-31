@@ -27,16 +27,16 @@ func TestCanonicalMissingWeaponMasteryProfilesDeclareCleaveAndPush(t *testing.T)
 	}
 }
 
-func TestMissingWeaponMasteryProfilesMigrationIsRegisteredLast(t *testing.T) {
+func TestMissingWeaponMasteryProfilesMigrationIsRegisteredBeforeLevelOneSpeciesRepairs(t *testing.T) {
 	migrations := GetAllMigrations()
-	last := migrations[len(migrations)-1]
-	if last.Version != missingWeaponMasteryProfilesMigrationVersion {
-		t.Fatalf("last migration is %s, want %s", last.Version, missingWeaponMasteryProfilesMigrationVersion)
+	registered := migrations[len(migrations)-2]
+	if registered.Version != missingWeaponMasteryProfilesMigrationVersion {
+		t.Fatalf("penultimate migration is %s, want %s", registered.Version, missingWeaponMasteryProfilesMigrationVersion)
 	}
-	if last.Up == nil || last.Down == nil {
+	if registered.Up == nil || registered.Down == nil {
 		t.Fatal("127 must register Up and a safe Down")
 	}
-	if migrations[len(migrations)-2].Version != crafterInPlayChoiceMigrationVersion {
+	if migrations[len(migrations)-3].Version != crafterInPlayChoiceMigrationVersion {
 		t.Fatal("migration 127 must immediately follow 126")
 	}
 }

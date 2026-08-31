@@ -812,6 +812,12 @@ func GetAllMigrations() []Migration {
 			// Возврат к неисполняемым display-полям оружия не поддерживается.
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     levelOneSpeciesRuntimeContractsMigrationVersion,
+			Description: "Исправить доступ Лесного гнома к Разговору с животными и формулу Целебных рук Аасимара",
+			Up:          repairLevelOneSpeciesRuntimeContracts,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
