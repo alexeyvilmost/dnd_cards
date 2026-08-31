@@ -4,6 +4,7 @@ import {
   describeEngineEvent,
   deserializeEngineEvent,
   deserializeStoredEvent,
+  formatRollBreakdown,
   narrativeEvent,
   rollEvent,
   serializeEngineEvent,
@@ -60,5 +61,24 @@ describe('events serialization', () => {
       sourceEntityIds: ['species:test'],
     }))
       .toBe('Иммунитет к состоянию: Отравлен');
+  });
+
+  it('labels non-d20 journal dice with their actual die size', () => {
+    expect(formatRollBreakdown({
+      kind: 'damage',
+      dice: [{ sides: 4, result: 3 }],
+      advantage: 'none',
+      modifiers: [],
+      total: 3,
+      text: 'к4: 3 = 3',
+    })).toBe('к4: 3');
+    expect(formatRollBreakdown({
+      kind: 'other',
+      dice: [{ sides: 4, result: 2 }, { sides: 6, result: 5 }],
+      advantage: 'none',
+      modifiers: [],
+      total: 7,
+      text: 'к4: 2 + к6: 5 = 7',
+    })).toBe('к4: 2, к6: 5');
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { CharacterEventRow } from '../character/api';
-import { surfaceAcceptedSheetAtomicEvents } from './SheetActionsPanel';
+import { contextualizeSheetJournalEvents, surfaceAcceptedSheetAtomicEvents } from './SheetActionsPanel';
 
 describe('SheetActionsPanel accepted atomic journal boundary', () => {
   it('reconciles the exact persisted snapshot once and never invokes the legacy event writer', () => {
@@ -25,5 +25,18 @@ describe('SheetActionsPanel accepted atomic journal boundary', () => {
     expect(onPersistedEvents).toHaveBeenCalledTimes(1);
     expect(onPersistedEvents).toHaveBeenLastCalledWith(rows);
     expect(onEvents).toHaveBeenCalledTimes(0);
+  });
+
+  it('adds a durable action and target heading to ordinary sheet journal events', () => {
+    const events = [{ type: 'damage', amount: 5, damageType: 'force' }] as const;
+    expect(contextualizeSheetJournalEvents({
+      actionName: 'Волшебная стрела',
+      targetNames: ['Пугало', 'Пугало'],
+      events,
+    })).toEqual([
+      { type: 'narrative', text: 'Волшебная стрела → Пугало' },
+      events[0],
+    ]);
+    expect(events).toHaveLength(1);
   });
 });

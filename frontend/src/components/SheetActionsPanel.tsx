@@ -19,7 +19,7 @@ import { encountersApi, type EncounterApply } from '../battle/encountersApi';
 import { persistCharacterRuntime } from '../character/runtimePersistence';
 import type { Combatant, BattleLogEntry, PendingSave, PendingAttack, SaveOutcome } from '../battle/encounterTypes';
 import { pendingAttackDamage } from '../battle/pendingAttack';
-import { describeEngineEvent } from '../engine/events';
+import { describeEngineEvent, narrativeEvent } from '../engine/events';
 import { rollD20 } from '../engine/roll';
 import { isCharacterReadOnly, type ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
@@ -228,6 +228,19 @@ export function surfaceAcceptedSheetAtomicEvents(input: {
 }): void {
   if (!input.rows) return;
   input.onPersistedEvents?.(input.rows);
+}
+
+export function contextualizeSheetJournalEvents(input: {
+  actionName: string;
+  targetNames?: readonly string[];
+  events: readonly EngineEvent[];
+}): EngineEvent[] {
+  if (!input.events.length) return [];
+  const targets = [...new Set((input.targetNames ?? []).map((name) => name.trim()).filter(Boolean))];
+  return [
+    narrativeEvent(`${input.actionName}${targets.length ? ` → ${targets.join(', ')}` : ''}`),
+    ...input.events,
+  ];
 }
 
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `id-${Math.random().toString(36).slice(2)}`);
@@ -2508,7 +2521,28 @@ export default function SheetActionsPanel({
         if (r.commitTarget) await r.commitTarget();
       }
 
-      apply(state, events, main.canonicalWorld);
+      const canonicalTargetNames = ordinaryCanonicalExecution?.declaration.targetIds.map((targetId) => (
+        targetId === TRAINING_DUMMY_TARGET_ID
+          ? TRAINING_DUMMY.name
+          : ordinaryCanonicalExecution.targetActors.find((actor) => actor.id === targetId)?.name
+      )).filter((name): name is string => Boolean(name)) ?? [];
+      const selectedJournalTarget = main.targetId
+        ? (main.targetId === TRAINING_DUMMY_TARGET_ID
+            ? TRAINING_DUMMY.name
+            : targetOptions?.find((option) => option.id === main.targetId)?.name
+              ?? (selectedTargetForAction?.id === main.targetId ? selectedTargetForAction.name : undefined))
+        : undefined;
+      apply(
+        state,
+        contextualizeSheetJournalEvents({
+          actionName: action.name,
+          targetNames: canonicalTargetNames.length
+            ? canonicalTargetNames
+            : selectedJournalTarget ? [selectedJournalTarget] : [],
+          events,
+        }),
+        main.canonicalWorld,
+      );
     } catch (e) {
       if (e instanceof InsufficientResourcesError) {
         setError('Недостаточно ресурсов');

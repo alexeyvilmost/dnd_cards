@@ -108,8 +108,13 @@ export function formatRollBreakdown(roll: RollLog): string {
   const discarded = roll.dice.filter((d) => d.discarded);
   const segments: string[] = [];
 
-  if (kept.length === 1) segments.push(`к20: ${kept[0].result}`);
-  else if (kept.length > 0) segments.push(`к20: ${kept.map((d) => d.result).join(', ')}`);
+  if (kept.length === 1) segments.push(`к${kept[0].sides}: ${kept[0].result}`);
+  else if (kept.length > 0) {
+    const sameSides = kept.every((die) => die.sides === kept[0].sides);
+    segments.push(sameSides
+      ? `к${kept[0].sides}: ${kept.map((die) => die.result).join(', ')}`
+      : kept.map((die) => `к${die.sides}: ${die.result}`).join(', '));
+  }
   if (discarded.length) segments.push(`отброшено ${discarded.map((d) => d.result).join(', ')}`);
   for (const m of roll.modifiers) {
     const sign = m.value >= 0 ? '+' : '';
