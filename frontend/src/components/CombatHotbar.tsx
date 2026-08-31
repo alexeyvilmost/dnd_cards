@@ -39,6 +39,10 @@ function actionLabel(action: RuleActionDefinition): string {
   return primitive?.type === 'weapon_attack' ? 'Атака' : action.name;
 }
 
+export function combatHpLabel(hp: { current: number; max: number; temp: number }): string {
+  return `HP ${hp.current}/${hp.max}${hp.temp > 0 ? ` · Врем. HP +${hp.temp}` : ''}`;
+}
+
 export function filterCombatActionsByResource(
   actions: RuleActionDefinition[],
   selectedResourceId: string | null,
@@ -231,7 +235,7 @@ export default function CombatHotbar({
               ? <img src={state.tokens[actorId].tokenUrl} alt="" />
               : actor.name.slice(0, 1)}
           </span>
-          <div className="combat-hotbar__identity"><b>{actor.name}</b><span>HP {actor.runtime.hp.current}/{actor.runtime.hp.max}</span></div>
+          <div className="combat-hotbar__identity"><b>{actor.name}</b><span>{combatHpLabel(actor.runtime.hp)}</span></div>
         </div>
         <div className="combat-hotbar__utility" role="group" aria-label="Управление полем">
           <button type="button" className={`combat-utility-button${movementMode ? ' is-selected' : ''}`} disabled={disabled} onClick={onMove} title="Перемещение">
