@@ -496,3 +496,62 @@ Verification passed: **4/4** focused checks in 3.594s cover the exact healing-de
 The cross-cutting finding is the same pattern seen in Bardic Inspiration and Mage Armor: an effect title proves visibility, not comprehension. Every persistent payload kind needs a recipient-facing sentence and duration at the inspection point, with mounted tests for the actual serialized payload shape.
 
 Timing: close/open/refresh/close scene controls took 0.338s + 0.311s + 0.325s + 0.324s; selecting the spell/details took 0.667s, cast resolution 1.044s, and target inspection 0.627s. The useful browser path was about **3.636s**. CodeGraph took 21.753s and again returned stale immutable-build copies before exact current-source reads. Focused test loops took 3.231s then 3.594s; lint 2.684s; TypeScript 56.027s; commit 0.295s; two-ref push 6.311s. Workbook discovery/edit/render/export/re-import/visual QA took 5.412s + 9.800s + 6.906s + 0.1s. The largest speedup remains excluding immutable builds from CodeGraph; the second is keeping the actual browser → formatter → four-test loop under ten seconds and deferring the expensive compiler to the end of a small entity cluster.
+
+## Timecloud retention and fresh current-release spell verification — 2026-08-31
+
+### Timecloud cleanup and permanent five-release policy
+
+The authorized cleanup is complete. Before cleanup, Timecloud had **102 release directories**, **252 build entries**, **88 application SHA image tags**, about **21GB** under builds, and only **1.1GB free** with the filesystem **98% used**. The active release and newest five candidates were identified before any deletion.
+
+The server runner now enforces retention on every deployment. It always protects the active release and the incoming SHA, reduces runnable history to four before a new build, and retains exactly five after public health and exact release-identity verification. Cleanup is limited to the matching immutable release directory, extracted build, tar archive, deploy logs/scripts, and the exact backend/frontend SHA tags. An isolated seven-release fixture proved that even an oldest active release and the incoming archive remain protected.
+
+The initial deployment exposed a production-shaped migration defect and automatically rolled back. Migration 121 scanned a nullable SQL comparison into a Go `bool` when a weapon profile was absent. Commit `f53d214` wraps that comparison in `COALESCE(..., false)`, and the rollback path now uses non-TTY diagnostics and removes only the failed SHA's build artifacts after health restoration. The database backup was retained.
+
+Production is now on `79c80ce00c565b4d6e9bbeaa17b8d540e6228d02`. Timecloud contains exactly **five release directories, five SHA build directories, five SHA tar archives, five backend SHA tags, and five frontend SHA tags**. Disk usage fell to **59% used with about 20GB free**. The oldest sixth release was automatically removed during the final deployment, demonstrating that the policy is active rather than a one-time cleanup.
+
+### Retained fresh character and scene
+
+A new Forge-created Human Wizard was retained:
+
+- Name: `QA-MMVP-Human-Wizard-Fresh-20260831`
+- Character ID: `6b474575-3eae-46b4-815f-d27ee696cf9c`
+- Build: Human Wizard 1, Sage; Magic Initiate (Wizard) supplied Chill Touch, Ray of Frost, and Find Familiar.
+
+The fresh Goblin combat was completed with Magic Missile after the three target tests so the sheet could be unlocked. The character and completed combat journal remain available; no character was deleted. The older Tархун scene also remains available and demonstrates the stale-scene finding below.
+
+### Detect Magic — Passed
+
+**Sheet usage:** PASS. Ritual casting spent the action but left level-1 slots at `2/2`. The initially deployed sheet did not expose active canonical concentration. Commit `79c80ce` now derives the display from the authoritative saved canonical world. Production visibly states `Концентрация: Обнаружение магии` and tells the user to return to the battlefield to reveal auras.
+
+**Combat usage:** PASS in a fresh current-version scene. The cast spent action `1→0` and slots `2→1`, displayed `Концентрация · 30 фт. · магия не ощущается`, survived scene-constructor resource refresh, enabled `Проявить ауры · действие`, spent the refreshed action, and journaled `магических аур не обнаружено`.
+
+**Result clarity:** PASS. Both surfaces expose the active state and next usable step; combat explicitly reports the negative scan result.
+
+### Chill Touch — Passed
+
+**Sheet usage:** PASS. The sheet opened an explicit target/facts dialog for the training target at 5 feet, used visible dice, spent one action and no slot, recorded a critical hit against AC 10, and recorded the applied effect.
+
+**Combat usage:** PASS. The fresh scene rolled `18 +3 +2 = 23` against AC 12, dealt 1 necrotic damage, and applied the anti-healing effect.
+
+**Result clarity:** PASS. The Goblin inspector names the source and duration and explicitly says `Не может восстанавливать Хиты.`
+
+### Ray of Frost — Passed
+
+**Sheet usage:** PASS. The explicit target/facts flow recorded one visible miss and then a retained successful retry, `16 +3 +2 = 21` against AC 10, with one action spent, no slot, and the speed effect recorded.
+
+**Combat usage:** PASS. The fresh scene rolled `15 +3 +2 = 20` against AC 12, dealt 1 cold damage, and applied the slow. Earlier retained evidence already proves next-turn expiry and speed restoration.
+
+**Result clarity:** PASS. The target inspector shows source, expiry, and `Скорость: -10 фт.`
+
+### Cross-cutting findings
+
+1. **Saved combats retain a release-specific compiled action catalog.** The old Tархун scene did not acquire newer Detect Magic/Chill Touch contracts after deployment, while the fresh scene passed immediately. Saved scenes need an explicit catalog version plus an upgrade/recompile path, or a visible “older release” label.
+2. **Canonical sheet concentration was mechanically saved but not presented.** Legacy concentration chips and canonical world concentration are separate storage paths. Commit `79c80ce` now presents the authoritative canonical record without fabricating a legacy effect.
+3. **Production-shaped migration data must be tested before cutover.** Migration 121's nullable comparison passed ordinary focused assumptions but failed on a real absent JSON field. A pre-cutover migration/startup gate against a recent sanitized production-shaped snapshot would have prevented the 247-second failed deployment.
+4. **Sheet actions correctly lock during active dedicated combat.** The lock prevented another split action ledger. Manual sheet testing should either use an idle retained character or finish the dedicated scene; it should not treat the lock as a spell failure.
+
+### Checklist and timing result
+
+The accepted workbook now reports **772 rows: 33 Passed / 25 Needs retest / 0 Failed / 714 Not tested**. `Spells!14`, `Spells!15`, and `Spells!72` contain the fresh retained character ID and two threaded evidence entries each. Fresh import verified the three rows/comment counts and found zero formula-error matches. All five tabs were rendered before and after the edit and visually inspected.
+
+The longest action was the first failed deployment and rollback at **247s**. The successful retention recovery deployment took **119s**; the final UI deployment took **125.281s**, including a **40.44s** Vite build. In contrast, the useful fresh combat checks took about **0.7s** for the Detect Magic follow-up, **2.942s** for Chill Touch, and about **2.1s** for Ray of Frost. The highest-value speedups are therefore: preflight migrations against production-shaped data, install BuildKit/buildx with persistent caches, skip unaffected backend/frontend image builds, batch adjacent entity fixes into one typecheck/deployment, version saved combat catalogs, and render only changed workbook crops during the test loop before one final all-tab QA pass.
