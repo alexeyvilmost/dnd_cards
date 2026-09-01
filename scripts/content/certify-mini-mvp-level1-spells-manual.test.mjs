@@ -54,6 +54,23 @@ test('manual level-1 batch uses exact current entity preimages', () => {
   )));
 });
 
+test('manual level-1 plan gives legacy partial rows an explicit limitation', () => {
+  const input = catalogs();
+  input.spell[1].support.limitations = [];
+  const records = planManualLevel1SpellSupport(input, '2026-09-01T09:00:00Z');
+  assert.equal(records[1].support.status, 'verified_partial');
+  assert.equal(records[1].support.limitations.length, 1);
+  assert.match(records[1].support.limitations[0], /ручного разрешения/);
+});
+
+test('manual level-1 plan never unlocks an existing mechanics lock', () => {
+  const input = catalogs();
+  input.spell[2].support.mechanics_locked = true;
+  const records = planManualLevel1SpellSupport(input, '2026-09-01T09:00:00Z');
+  assert.equal(records[2].changeRequired, false);
+  assert.strictEqual(records[2].support, input.spell[2].support);
+});
+
 test('manual level-1 plan fails closed on missing, duplicate, or renamed rows', () => {
   const missing = catalogs();
   missing.spell.pop();

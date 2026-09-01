@@ -616,6 +616,18 @@
 | A417 | Offensive-cantrip sheet proof and retained battle completion | Chill Touch 1.530s open + 0.710s target confirmation + 0.997s roll; Ray of Frost 2.613s miss + 2.492s hit retry; Magic Missile 1.671s select + 0.883s resolve | passed | Sheet targeting/fact dialogs and visible dice/journal results were exercised. Magic Missile ended the Goblin at 0 HP while retaining the character and completed combat log. |
 | A418 | Three-row workbook checkpoint | 25.634s pre-edit all-tab render/inspect + 6.4s row/thread inspection + 30.2s edit/render/export/re-import + 6.1s final count verification + 0.4s visual QA | passed | `Spells!14`, `Spells!15`, and `Spells!72` are Passed with retained IDs and two comments each. Final counts: 33 Passed / 25 Needs retest / 0 Failed / 714 Not tested across 772 rows; zero formula-error matches; all five tabs visually inspected. |
 | A419 | Timecloud/manual-test report and timing reconciliation | under 1s patch plus review | completed | Recorded destructive scope, rollback incident, exact retention result, three-dimensional entity evidence, cross-cutting stale-scene behavior, bottlenecks, and specific speed changes. |
+| A420 | Base Mechanics catalog/evidence review | 15.9s workbook import/inspect + 11.0s condition-range inspect; browser checks measured separately below | completed | Mapped all 44 rows to canonical actions, legacy duplicates, 15 conditions, and cross-cutting mechanics before changing statuses. |
+| A421 | Incapacitated/concentration diagnosis and repair | CodeGraph calls about 11–14s each; focused corrected test 2.88s; final related suite about 37s | passed | Commit `68c4c18` atomically aligns manual condition denial with canonical concentration. Production reload retest took about 3.4s and passed. |
+| A422 | First Base Mechanics Timecloud release | about 60s verified archive transfer + about 2m cached runner; Vite 39.72s | passed | Backend, frontend, symlink, and five-release retention matched `68c4c18`. |
+| A423 | Shove and temporary-HP browser diagnosis | useful Shove path/reload about 3.6s; temporary-HP reproduction about 6s interaction plus state inspection | two defects reproduced | Shove journaled without moving the token; sheet temporary HP did not enter active `solo_combat_v1`. Retained Fighter scene preserved both failures. |
+| A424 | Shove/runtime synchronization implementation and gates | Shove test 5.98s; runtime test 4.49s; final focused suite 33/33 in 9.01s; TypeScript roughly 50–65s per full run | passed | Commit `ca40a0d`; one initial test-fixture type error caused an avoidable extra full TypeScript pass. |
+| A425 | Second Base Mechanics Timecloud release | upload about 50s + cached runner about 2m; public/retention verification 4.3s | passed | Exact production identity `ca40a0d`; five releases retained. |
+| A426 | Production Shove/temp-HP retest | Shove select/resolve/reload about 3.6s; temp grant/return/6-damage resolution about 6s interaction | mechanics passed; clarity gap found | Goblin moved 7,8→7,7 and persisted. Five temp HP absorbed five of six damage, normal HP 4→3. Hotbar omitted the temp pool. |
+| A427 | Temporary-HP hotbar clarity fix | patch sub-second; focused 2/2 5.30s; lint included in 14.2s command; TypeScript about 31s | passed | Commit `6d4acef` displays `Врем. HP +N`; direct installed executables avoided the package-manager policy wrapper after one 8.7s failed invocation. |
+| A428 | Final archive upload and Timecloud release | archive creation/hash about 4s; two reset/empty upload attempts plus one unbounded retry wasted about 2m; bounded successful upload 73.4s; runner about 2m with Vite 41.09s; identity 3.1s | passed | Exact backend/frontend/symlink identity `6d4acef622f27bb00acf51ac55f3ea1052930500`; exactly five releases retained. |
+| A429 | Base Mechanics workbook checkpoint | 12.06s failed overlarge render + 10.56s corrected edit/render/export + 7.9s fresh import/error/thread verification + under 1s five-image visual QA | passed | 44 rows: 24 Passed / 20 Needs retest / 0 Failed / 0 Not tested / 0 Blocked; 44 threaded comments; zero formula-error matches; all five tabs visually clean. |
+| A430 | Base Mechanics report/timing reconciliation | under 1s patch plus review | completed | Recorded the three-dimensional result, retained IDs/scenes, four fixes, cross-cutting gaps, exact deployment, bottlenecks, and speed recommendations. |
+| A431 | Final deployed temporary-HP clarity proof | 2.2s reconnect/load + 2.0s sheet grant/verify + 1.2s combat navigation/reload | passed | Production hotbar on exact `6d4acef` visibly displayed `HP 3/12 · Врем. HP +5`; retained Fighter scene remains active. |
 
 ### Current batch bottlenecks and concrete speedups
 
@@ -689,3 +701,289 @@
 68. **Fresh scenes are required for release-sensitive action contracts.** The old Tархун combat retained its compiled action catalog and could not demonstrate newly deployed Detect Magic/Chill Touch presentation, while the fresh Wizard scene passed immediately. Add an explicit saved-scene catalog version and an upgrade/recompile command, or label older scenes as running an earlier release.
 69. **The three useful combat checks totaled roughly 6s; compilation/deployment exceeded 160s.** Continue grouping adjacent spell fixes into one typecheck and one deployment. Manual testing should front-load multiple entities before source finalization, then pay the release gate once.
 70. **Workbook verification remained bounded but pre/post all-tab rendering cost about 56s.** During active testing, render only the changed Spells crop; retain one all-tab visual pass immediately before delivery. This batch intentionally did both because it changed an already accepted artifact and needed a before/after preservation check.
+71. **Cached Timecloud releases were the longest successful individual actions at about two minutes each.** Vite alone repeated 39.72–41.09s. Batch all browser findings before one release and promote the already verified frontend artifact rather than rebuilding it remotely.
+72. **The final upload path exposed an avoidable unbounded wait.** SSH resets produced empty or hung transfer attempts before the bounded keepalive retry completed. Standardize connect/server-alive timeouts, resume partial archives, and print the exit code for every transport attempt.
+73. **Full TypeScript remained the dominant local gate at roughly 50–65s while focused regressions took 2.9–9.0s.** Run focused tests for each edit and one final compiler pass per coherent Base Mechanics batch. The extra typecheck caused by one fixture literal should be caught by editor/incremental diagnostics.
+74. **The useful production mechanics paths were seconds, not minutes.** Fixed Shove plus reload was about 3.6s, temporary-HP absorption about 6s of interaction, and Incapacitated concentration cleanup about 3.4s. Scene presets, deterministic rolls, and retained participants are working; expand them with obstacles/LoS and concentration-damage scenarios.
+75. **Spreadsheet export/verification was about 18.5s after correction; the failed all-sheet render added 12.06s.** Keep explicit crop ranges for large sheets during the edit loop and one all-tab crop render for delivery. The corrected artifact retained all 44 threads and zero formula errors.
+76. **The final deployed clarity proof took about 5.4s.** Reusing the retained Fighter and existing authenticated browser session was faster than creating a new character or scene and confirmed both sheet persistence and hotbar presentation on the exact release.
+## Base Mechanics retest, Fighting Styles, and Origin Feats — 2026-08-31
+
+### Measured major-step log
+
+| Major step / action | Duration | Notes |
+|---|---:|---|
+| Focused source regressions | 2.93s | 29/29 passed. |
+| Targeted lint | ~3s | Clean. |
+| Full TypeScript gate | ~31s | Clean; run once for the coherent fix batch. |
+| Git staging, commit, and push | ~8s | Commit `4325ee2`; push succeeded despite a broken local remote-tracking ref warning. |
+| Release archive and upload | ~60s | Bounded Timecloud transport. |
+| Timecloud release runner | ~2m | Longest single machine action; Vite itself reported 38.42s. |
+| Public SHA and five-release retention verification | 3.5s | Frontend/backend matched `4325ee2`; exactly five runnable releases remain. |
+| One feat/style attachment | 15–16s | Repeated save/recalculation latency after each browser click. |
+| Twelve retained-character attachments | ~3m cumulative | Longest cumulative browser wait. |
+| Typical sheet cold load/recompile | 7–15s | Repeated when returning from combat/attachment flows. |
+| Typical combat action/inspection | 2–5s | Archery, Dueling, Alert, Lucky, Savage, movement, and refresh evidence. |
+| Defense deployed re-verification | ~10s | Reload retained scene, end turn/attack, inspect AC 17 journal result. |
+| Alert combat-scene check | ~11s | Retained initiative and tooltip proof. |
+| Workbook edit + all-five-tab render + export | 15.4s | Updated 48 Feat rows plus Base Mechanics retest note. |
+| Workbook fresh import and formula/comment verification | 8.1s | Zero formula errors; all status counts and comments present. |
+| Visual QA of changed rendered tabs | 0.1s tool time | Feats and Base Mechanics checked; all five tabs were rendered. |
+| Final authenticated retained-ID audit | 2.2s | Resolved full UUIDs from the character index instead of relying on abbreviated notes. |
+| ID correction + required all-five-tab re-render/export | 15.9s | Corrected ten ID cells without adding duplicate comments. |
+| Final post-correction re-import verification | 7.3s | Correct UUIDs, unchanged counts/comments, zero formula errors. |
+
+The **Timecloud runner (~2m)** was the longest single action. The **per-entity attachment path (~3m cumulative)** was the longest browser-testing component and is the clearest product-side optimization target. The useful combat interactions themselves generally finished in seconds.
+
+### How to make the next batch faster
+
+1. Add multi-select/batch attachment and perform one character assembly/persist pass. Twelve independent 15–16s saves should become one request and one recalculation.
+2. Add deterministic dice or a controlled roll override to the scene constructor. Thrown Weapon and Great Weapon live-hit confirmation should not require random retries.
+3. Add reusable scenario presets: adjacent shielded ally, incoming-hit reaction, invisible target at 5/15 feet, obstacle/line-of-sight, and concentration caster taking damage.
+4. Keep focused tests as the edit loop, then run one TypeScript/build/deploy gate for the entire browser-discovered batch. This run did that successfully; the focused suite was 2.93s versus ~31s typecheck and ~2m remote release.
+5. Promote the already verified frontend artifact in Timecloud instead of rebuilding the same Vite graph remotely; Vite alone cost 38.42s.
+6. Profile the attachment endpoint into database write, character assembly, catalog hydration, and page invalidation spans. The consistent 15–16s plateau suggests one fixed expensive recomputation or serialized request rather than UI time.
+7. Keep the retained scene constructor and never rebuild characters/scenes for routine retests. Resource refresh and participant insertion reduce most behavior checks to 2–5 seconds.
+8. Batch spreadsheet evidence. One update covered 48 Feat rows and one Base row, so the all-tab render/export cost stayed at 15.4s instead of repeating per entity.
+
+## Final three-category approval batch — 2026-08-31
+
+### Measured major-step and action log
+
+| Major step / action | Duration | Result / observation |
+|---|---:|---|
+| Production release `06737908` runner | 212.079s | Runtime feedback and persistence fixes deployed; longest individual runner in this final approval sequence. |
+| Release `61cc8890` runner | 121.468s | Sheet d20-effect consumption/persistence deployed. |
+| Release `07d5908e` runner | 117.239s | Heroic Inspiration reconciliation and localized expiry deployed. |
+| Release `aeba081f` runner | ~128.6s | Crafter shop discount deployed; measured from uploaded archive mtime to active symlink switch. |
+| Four final Timecloud runners combined | **579.4s (9m39s)** | Largest cumulative block. Each immutable release repeated remote frontend work. |
+| Final release archive creation | 0.550s | Exact-SHA tar created locally. |
+| Final release upload | 33.379s | 112,957,440-byte archive transferred to Timecloud. |
+| Remote archive hash verification | 3.2s | SHA-256 matched `dc70f52e75911b585644ff4d7796b1dc864ee6d556e82efbacbfcfa83bd38df5`. |
+| Production identity check | 0.433s | `/api/health` returned exact SHA `aeba081f…`. |
+| Release/retention audit | 1.34s + 0.79s | Active symlink correct; exactly five releases; `d180c82…` artifacts absent. |
+| Final catalog idempotency audit | 5.658s | 10 basic actions + 12 origin feats + 10 styles, 65 records, 0 needing update. |
+| Crafter shop creation | 4.8s | Created retained test shop and loaded vendor inventory. |
+| Crafter character selection and assembly settle | 1.4s + 5.1s | Initial price remained listed while assembly loaded; then every eligible price visibly changed to −20%. |
+| Crafter live purchase | 2.2s | 10→8 ЗМ, wallet 35→27, item added, explicit discount confirmation. |
+| Final workbook evidence edit/render/export | 9.120s | Changed Base Mechanics and Feats statuses, IDs, notes, and comments; rendered all five tabs. |
+| Catalog-status workbook correction/render/export | 9.189s | Refreshed accepted workbook against the final production certification state. |
+| Workbook fresh-import verification | 3.569s + 3.674s | 44/44 Base, 48/48 Feats, 48/48 verified Feat rows, zero formula errors. |
+| Five-tab visual QA | 0.1s tool time | Classes, Species, Spells, Feats, and Base Mechanics rendered without layout corruption. |
+| Final Crafter focused regression | 1.629s | 4/4 inventory/discount tests passed. |
+| Final focused lint | 1.710s | Clean. |
+| Final full TypeScript gate | ~30.3s | Clean; still far longer than the focused behavior test. |
+| Broad final regression checkpoint | 29.618s wall | 61 files / 304 tests passed; useful as one coherent final gate, not per edit. |
+| CodeGraph Heroic-Inspiration ownership tracing | 23.7s + 26.1s | About 50s to locate the persistence/reconciliation ownership path. |
+| Typical live feature interaction | 0.6–5.5s | Divine, Musician, Protection, Interception, and Crafter actions themselves were fast once the retained scenario was ready. |
+
+### What took most of the time
+
+The release machine dominated. The four final Timecloud runners alone consumed **about 9 minutes 39 seconds**, before archive uploads. Remote Vite builds repeatedly cost roughly **38–39 seconds per release**. The next largest isolated costs were full TypeScript checks at about **30 seconds each** and the two CodeGraph ownership queries at about **50 seconds combined**. By comparison, the final Crafter production purchase took **2.2 seconds**, the catalog audit took **5.7 seconds**, and the full spreadsheet finalization/re-import cycle took about **25.6 seconds** plus visual review.
+
+The repeated releases were necessary because production-only recipient reload and shop integration behavior exposed defects that focused local primitives did not cover. The costly part was not manual clicking or the fixes themselves; it was discovering an integration gap after a deploy and paying another immutable build/deploy cycle.
+
+### Concrete speed improvements
+
+1. Add one mounted end-to-end test for `Musician grant → recipient fresh reload → Heroic Inspiration consume`. This single scenario would have caught both the missing target resource payload and the reconciliation deletion before the first deployment.
+2. Add one Crafter scenario for `choose temporary item → verify localized expiry → load shop → verify discount → purchase`. Keep the magical-item exclusion as the fast pure regression.
+3. Run browser exploration for the complete Base/Styles/Origin cluster before the one final compiler/build/deploy gate. Focused tests stay in the edit loop; a full TypeScript check runs once after the coherent batch.
+4. Promote an already verified frontend artifact to Timecloud, or use persistent BuildKit/Vite caches. Rebuilding the same frontend graph on every small release is the largest machine-side waste.
+5. Add a content lint that rejects actionable choices without `in_play` context and flags raw player-facing enum/resource labels such as `long_rest` or `uses_*`.
+6. Add timing spans around character assembly, target persistence, resource reconciliation, and shop passive collection. The visible 5-second Crafter-price settle and previous 15–16-second attachment plateau need server/client attribution rather than more manual observation.
+7. Keep the checked focused-test wrapper pinned to `frontend` and the installed local Vitest binary. Earlier broad invocations accidentally collected 41/61 files; exact runner paths make the intended scope predictable.
+8. Preserve retained scenario fixtures for adjacent ally reactions, initiative swap, invisible targets, concentration damage, and line of sight. The useful action paths then remain 1–5 seconds and avoid repeated Forge/scene setup.
+9. Update the workbook once per coherent category batch. The final two necessary workbook passes totaled 18.3 seconds; per-row exports would have multiplied that cost dramatically.
+
+## Species, classes, and weapon masteries checkpoint — 2026-09-01
+
+### Measured major-step log
+
+| Major step / action | Duration | Result / observation |
+|---|---:|---|
+| CodeGraph architecture trace | 16.101s | Located species/class effect and mastery ownership before text search. |
+| Initial workbook import/audit/render | 12.832s | Established the accepted Classes/Species baseline. |
+| Weapon mastery focused suite | 18.119s wall / 0.125s tests | 33/33 mastery scenarios passed; process startup dominated. |
+| Missing Cleave/Push migration test | 24.138s wall / 1.320s package | Exact fail-closed weapon profiles passed. |
+| First mastery deployment | 149.533s | Longest successful action in the first phase; Timecloud build/cutover dominated. |
+| Post-deploy 25-weapon mastery audit | 30.712s | All eight masteries reachable; zero unresolved strict bindings. Live API latency dominated. |
+| Species production matrix | 12.132s | 1,612 builds/actions passed. |
+| Production Forge sweep | 16.011s | Both Forge sweep scenarios passed. |
+| Class acceptance corpus | 23.310s | 30/30 scenarios passed across three files. |
+| Rage/AC/equipment focused regressions | 6.5s | 66/66 tests passed. |
+| Forest Gnome live failure reproduction | ~5s | Sheet succeeded; combat compiler exposed missing levelled-spell access label. |
+| Species migration package | 6.8s | Full Go migration package passed locally. |
+| First species deployment and automatic rollback | ~147s | Production-shaped driver exposed nullable-boolean scan; prior release restored healthy. |
+| Null-preimage correction + full migration tests | 7.4s | Added explicit `COALESCE(..., false)` checks; suite passed. |
+| Successful corrected Timecloud deployment | ~143s | Backend rebuild dominated; frontend cached; atomic cutover and health checks passed. |
+| Public SHA/content/retention verification | 5.4s | Both SHAs matched, both content postimages matched, exactly five releases. |
+| Forest Gnome production combat retest | 4.4s | Board opened; free-use 2/2 and resource filter/tooltip passed. |
+| Workbook edit, two exports, and five-tab renders | ~69s | First pass exposed a local class-column index mistake; corrected pass updated Classes and Species. |
+| Workbook fresh import/formula verification | 6.9s | 772 rows, expected status counts, zero formula errors. |
+
+### What took most time and how to reduce it
+
+The two species deployment attempts consumed about **290 seconds** and were the largest block. The failed attempt was avoidable: the isolated migration test used a database driver that tolerated a nullable boolean differently from production. Add a production-driver migration smoke test against a recent restored Timecloud schema before archive upload; this would have found the error in seconds and avoided a full build/health-timeout/rollback cycle.
+
+The next largest avoidable block was the spreadsheet double pass at about **69 seconds**. Header positions should be resolved by name rather than hard-coded numeric indices, and the edit script should assert a nonzero changed-row count before export. That would have prevented the first no-op Classes export and render.
+
+Useful mechanics feedback remained fast: 33 mastery scenarios executed in 125ms, the 1,612-build species matrix finished in 12.1s, and the decisive deployed Gnome combat/filter proof took 4.4s. The optimal loop is therefore: batch browser findings, run focused engine/migration tests, validate pending migrations with the production driver/schema, deploy once, then update the workbook once using header-name lookup and targeted preview crops before the final five-tab render.
+
+## Class/species final gate and first cantrip batch — 2026-09-01
+
+### Measured major-step and action log
+
+| Major step / action | Duration | Result / observation |
+|---|---:|---|
+| Final class/species workbook correction, render, and verification | ~31s | Produced a clean 57/57 Classes and 189/189 Species level-1 gate; five tabs preserved. |
+| Cantrip CodeGraph entry trace | 17.7s | Located the combat/world-input ownership path. |
+| Semantic cantrip suites | 17.3s | 16/16 passed. |
+| Cantrip content suite | 2.5s wall | 17/17 passed. |
+| Incorrect package-runner attempt | 5.3s | Wasted startup; the repository uses the frontend-local Vitest executable. |
+| First utility-cantrip focused gate | 11.25s | 35/35 passed before the first deployment. |
+| First full TypeScript gate | 37.2s | Clean. |
+| First targeted lint | 3.2s | Clean. |
+| First commit and push | ~5s | Released utility-cantrip world-input repair as `6650ca1…`. |
+| First Timecloud archive upload and release runner | ~61s upload + ~120s runner | Immutable build/cutover; remote Vite alone took 36.95s. |
+| First production identity/retention audit | 3.6s | Exact SHA and 5/5/5/5/5 retention confirmed. |
+| Initial retained Bard load | ~8s | Long scene exposed the bounded-JSON persistence defect. |
+| Production Light attempt | ~3s | Failed atomically with `turn_state must be bounded JSON`; no residue. |
+| Bounded-JSON CodeGraph trace | 22.7s | Located snapshot persistence and backend bound. |
+| Production-shaped snapshot measurement | 6.73s | Reproduced 1,272,010-byte state and isolated repeated inline art. |
+| Post-repair snapshot measurement | 6.66s | Reduced state to 338,446 bytes, under the 768 KiB bound. |
+| Final focused regression | 14.28s | 36/36 passed, including reload and persisted-size coverage. |
+| Final targeted lint | 4.46s | Clean. |
+| Second full TypeScript gate | ~51s | Clean; longest local verification action. |
+| Second commit and push | 5.4s | Shipped bounded presentation persistence as `a14996f…`. |
+| First second-release SSH attempt | ~55s | Wasted on timeout; retry succeeded in 4.7s. |
+| Second Timecloud runner | ~120s | Remote Vite took 37.16s; exact release cut over successfully. |
+| Final production identity/retention audit | 4.9s | Backend, frontend, public SHA, and all five retention dimensions matched. |
+| Final Light cast + reload | 3.3s + 6.8s | Object/light/journal/resources persisted. |
+| Final Prestidigitation setup, cast, and reload | ~18s | Six-option form and selected sensory result passed. |
+| Final Dancing Lights setup, cast, move, and reload | ~20s | Four placements and bonus-action movement passed. |
+| Six-row checklist render/export/fresh-import verification | 21.8s | Six evidence comments present, zero formula-error values, all five tabs rendered. |
+| Five-tab visual inspection | 0.2s tool time | No layout corruption detected. |
+
+### What took most time
+
+The two immutable Timecloud runners were the largest block at roughly **four minutes combined**, with another **~121 seconds** spent on archive upload and one timed-out SSH attempt. Full TypeScript checking cost about **88 seconds** across two passes. The actual production actions were short—generally 3–20 seconds including setup and reload—but the first deployment exposed a production-shaped persistence size that the initial local gate had not measured, forcing a second build/deploy cycle.
+
+### Concrete speed improvements
+
+1. Make the production-shaped serialized combat-size regression a mandatory pre-deploy gate. It now exists and measures the actual persisted payload; running it before release would have avoided the second Timecloud cycle.
+2. Reject or strip inline `data:image/...` payloads at the persistence boundary and log serialized section sizes when a snapshot approaches the backend limit. This turns a late generic save failure into an immediate attributable diagnostic.
+3. Promote an already verified frontend artifact or add persistent Vite/BuildKit caches. Remote Vite alone cost about 37 seconds on each release.
+4. Use bounded SSH timeouts and resumable/hash-aware uploads. The failed second-release connection consumed ~55 seconds before the successful 4.7-second retry.
+5. Run the frontend-local Vitest binary directly. The wrong package invocation added 5.3 seconds and no signal.
+6. Batch adjacent browser-discovered cantrip fixes behind one compiler/build/deploy gate. A second release should occur only when a production-only contract is newly discovered.
+7. Keep mounted integration fixtures for each utility form and retained scene-constructor presets. Light, Prestidigitation, and Dancing Lights then need only a final production smoke rather than rebuilding their setup.
+8. Exclude immutable temporary build trees from CodeGraph indexing/search. The useful ownership traces took 17–23 seconds; unrelated generated trees add noise and increase result volume.
+9. Resolve spreadsheet columns by header and use direct cell-value error scans. This batch's first validation falsely counted an inspection-file pointer as an error and cost one extra render/import pass.
+
+## Final 35-cantrip verification and certification — 2026-09-01
+
+### Measured major-step and action log
+
+| Major step / action | Duration | Result / observation |
+|---|---:|---|
+| Remaining manual sheet/combat/clarity matrix | ~75–95m reconstructed | Longest active-work block. Covered the remaining clean Bard, Warlock, Sorcerer, Wizard, Druid, and Magic Initiate Cleric cantrips while retaining every character and scene. |
+| First focused formatter/effect/world suite | 5.19s | 77/80 passed and exposed three expectation/localization mismatches. |
+| Corrected focused formatter/effect/world suite | 5.14s | 80/80 passed. |
+| Teleport integration check | 4.04s | Token moved to the supplied destination and journal used the actual distance. |
+| Area/geometry checks | 9.94s | Thunderclap/area projection tests passed. |
+| Initial cantrip certification tests | 0.48s | 7/7 passed, including retirement of the unsafe bulk writer. |
+| Full TypeScript gate | ~33.6s | Passed; longest local static machine action. |
+| Targeted lint | ~45.7s | Passed; the repository lint wrapper scanned more than the five named files. |
+| Live 35-row certification dry-run | 12.6s | Resolved exactly 35 unique production rows, including Astral Dash. |
+| First Timecloud archive upload | ~71.8s | Network-bound; exact SHA-256 verified before rename. |
+| First Timecloud runner | ~2m | Backup, cached images, atomic cutover and public identity passed for `6836b5f…`. |
+| First atomic certification attempt | 3.4s | Correctly rejected with 409 before any write because 19 rows already held stronger certificates. |
+| Certificate-preservation diagnosis/correction | ~3m active | Identified 19 existing verified rows, including 11 locked v4 rows; changed the plan to preserve them and certify only 16 pending rows. |
+| Atomic 16-row certification apply | 6.55s | Updated 16/16 in one exact-preimage transaction; postcheck reported 35/35 and zero pending. |
+| Second release upload | ~93.3s | Network-bound; larger than the first upload despite an almost identical archive. |
+| Final workbook edit/render/export/fresh import | ~60.4s | 35/35 Passed, Astral Dash added, zero formula errors, five tabs rendered. |
+| Final production recipient-clarity smoke | 2.4s | Guidance and Thaumaturgy instructions visible after reload. |
+
+### What took most time and how to reduce it
+
+Manual browser execution remained the largest active block because 35 entities require three distinct observations and several clean Forge builds. The two immutable Timecloud uploads/runners were the largest machine block. The second release was caused by a missing UI ownership test: the engine accepted a teleport destination, but the hotbar classified self-targeting teleport as immediate and never asked the player for one.
+
+1. Add a mounted `CombatHotbar → TacticalBattleMap → executeCombatAction` test for every action that owns a world destination. The existing engine-only teleport test could not catch the missing UI hand-off.
+2. Keep a retained cantrip laboratory with one clean caster per list and two saved scenes: single-target/ranged and adjacent-area/world-object. This avoids repeated Forge construction and initiative setup.
+3. Generate the manual-certification plan in read-only mode before the release archive. The first 409 was safe and fast, but a preflight that classifies existing locked/verified rows would have removed the retry entirely.
+4. Replace whole-project lint wrapper use with the installed ESLint binary plus exact paths; the wrapper spent ~45.7s scanning unrelated files.
+5. Keep TypeScript as one batch-final gate. At ~33.6s it is much slower than the 4–10s focused behavior suites and should not run after every small edit.
+6. Add resumable/hash-aware Timecloud upload or promote an already verified frontend artifact. The two uploads alone cost about 165 seconds, while the behavioral fixes and focused tests took seconds.
+7. Continue batching workbook evidence. One 60-second export rendered all five tabs and verified all 35 rows; per-row exports would have multiplied this cost dramatically.
+
+## Final Thunderclap closure timing — 2026-09-01
+
+| Major step / action | Duration | Result / observation |
+|---|---:|---|
+| Production action/state inspection | 2.4s | Identified the exact persisted `emanation + size_ft: 5` contract, diagonal token positions, and Goblin `CON +0`. |
+| Final focused area/combat regression | 7.93s | 34/34 passed using the exact `size_ft` and diagonal arrangement. |
+| Final targeted lint | 4.49s | Clean. |
+| Final full TypeScript gate | 34.78s | Clean; still much slower than the decisive focused suite. |
+| First corrective release: upload + runner | 60.79s + 128.99s | Added emanation projection and target-range validation; production browser exposed the diagonal case. |
+| Second corrective release: upload + runner | 52.11s + 117.51s | Added diagonal grid distance; production browser exposed `size_ft` versus `radius_ft`. |
+| Final corrective release: upload + runner | 36.05s + 120.15s | Exact persisted numeric authority supported; production retest passed. |
+| Three corrective release cycles combined | **515.6s (8m36s)** | Largest machine block by far. Remote builds/cutovers, not code edits or focused tests, dominated. |
+| Production browser retest/activation passes | ~118s | Included PWA worker activation waits and exact retained-scene attempts across the three releases. |
+| Final successful Thunderclap interaction | 4.5s | Target selected, Action spent, `CON +0` save and DC/outcome visible. |
+| Workbook finalization/import audit | 9.69s | 35/35 Passed, 35 comments, 0 formula errors; Spells tab rendered. |
+
+### Longest part and concrete speed improvements
+
+The three immutable releases consumed about **8 minutes 36 seconds**, while the final exact regression took **7.93 seconds**. The extra releases were caused by tests that approximated the production action instead of loading its exact persisted targeting payload, and by a PWA service worker that kept an older bundle active while retained tabs remained open.
+
+1. Build the emanation regression from a captured production action fixture, including the exact `size_ft` key and diagonal token placement. This would have caught all three mismatches before the first release.
+2. Add a table-driven geometry contract for every accepted area kind and both schema-valid size authorities. Include cardinal/diagonal boundaries and assert that preview cells, selected actor IDs, spatial facts, and rules-core range validation agree.
+3. Add a release-smoke mode that waits for the expected frontend SHA and activates/reloads the new service worker before browser assertions. A stale PWA client must never be mistaken for the deployed build.
+4. Promote a prebuilt, SHA-verified frontend image or use persistent BuildKit/Vite caching. Each tiny frontend correction still paid roughly two minutes for archive transfer, build, cutover, and health gates.
+5. Keep the exact focused suite, lint, and TypeScript checks parallel. In the final pass their wall time was bounded by TypeScript at 34.78s instead of the 47.2s sequential sum.
+
+## Final first-level-spell and whole-mini-MVP approval timing — 2026-09-01
+
+Active interval began at `2026-09-01T11:03:28.472+03:00`. The following log separates useful browser work, local machine checks, remote release waits, spreadsheet work, and avoidable retries. Durations marked “reconstructed” come from timestamped task actions rather than a single wrapper span.
+
+| Major step / action | Duration | Type | Result / observation |
+|---|---:|---|---|
+| Prepare retained all-spells characters and inspect all 64 sheet entries | ~35–45m reconstructed | active browser/API work | Verified sheet presence, hover/card contract, activation, targets, slot/resource cost, and explicit limitations without deleting characters. |
+| First-level combat/world family execution | ~40–50m reconstructed | active browser work | Covered attack, save, healing, buff/debuff, concentration, area/world, reaction, and post-hit families; retained caster/target state and journal evidence. |
+| Create and verify 16 missing background Forge builds | ~15–20m reconstructed | active browser/API work | All 16 PHB 2024 backgrounds gained retained character evidence; no deletion cleanup. |
+| Post-hit Ranger/Paladin production retests | ~12m active including setup | active browser work | Hail, Ensnaring, Wrathful, and Divine Smite completed with resource, save/damage, target-inspector, and clarity proof. |
+| Final-hit outcome-overlay diagnosis and fix | ~10–15m active | mixed code/browser | Found Victory covering an unresolved Ensnaring choice; added the pending-decision outcome gate. |
+| Focused outcome/post-hit regression | 2.95s | local machine | 34/34 passed. |
+| Local production build | ~60s wall; Vite 22.94s | local machine | 4,627 modules built successfully. |
+| Runtime release `04b137a` upload | ~36s | network wait | Exact archive uploaded and hash verified. |
+| Runtime release `04b137a` runner | ~107.6s; Vite 38.59s | remote machine wait | Backup, build, atomic cutover, health, exact identities, and five-release retention passed. |
+| Level-1 certification unit tests | ~0.12s | local machine | 5/5 passed, including partial limitations and immutable evidence locks. |
+| Level-1 certification validator retries | ~31.1s across four rejected attempts | avoidable integration retry | Server successively exposed missing partial limitations and immutable mechanics/evidence locks; every rejection was atomic. |
+| Successful level-1 certification | 6.5s | production API | 51 rows updated atomically; 13 stronger locked rows preserved; 64/64, zero pending. |
+| Legacy strict audit and root diagnosis | 7.5s + 23.9s CodeGraph | local/network diagnostic | Separated stale evidence-policy failures from five current support statuses. |
+| Restore three reset cantrip approvals | 6.6s dry/test + 19.7s credential/preflight/apply attempts | production API + avoidable setup | Blade Ward, Starry Wisp, and Vicious Mockery restored atomically; first two apply attempts lacked the server certification key/admin variable mapping and made no writes. |
+| Live manifest manual-approval audit | 4.60s | production API | 180/180 roots resolved and `verified_*`; zero pending. |
+| Background coverage audit | 6.3s | production API | 16/16 backgrounds mapped to retained characters. |
+| Workbook first pass | 25.02s | local artifact work | Export succeeded; fresh verification caught one blank row being coerced to level 0. |
+| Workbook corrected pass | 24.49s | local artifact work | 99/99 spells, 16/16 backgrounds, zero formula errors; six previews produced. |
+| Six-tab visual QA | ~1–2m human review; 0.2s image load | active review | Classes, Species, Spells, Feats, Base Mechanics, and Backgrounds visually clean. |
+
+### What took most of the time
+
+The longest active block was manual browser orchestration: approximately **75–95 minutes** for 64 first-level spell rows plus roughly **15–20 minutes** to close the background omission. The useful spell interactions themselves generally completed in seconds; most active time was spent preparing the correct caster/target state, refreshing resources, traversing sheet/combat surfaces, and recording three-dimensional evidence.
+
+The largest cumulative machine block was repeated immutable Timecloud release work. The final `04b137a` cycle alone took about **144 seconds** including upload; the earlier post-hit correction releases in this same approval sequence added roughly **14–16 minutes** reconstructed. The final UI defect required multiple production cycles because the focused tests initially proved only that a post-hit choice was offered, not that target/range/resource state resolved and the final-hit outcome remained hidden.
+
+Spreadsheet finalization took **49.51 seconds** across two passes. Half was avoidable: JavaScript `Number(null) === 0` made one intentionally blank workbook row look like a cantrip during fresh-import verification. No workbook data was lost; the assertion stopped the first pass after export and the corrected predicate required literal level values.
+
+### Concrete speed improvements
+
+1. Add one production-shaped route test for `weapon hit → post-hit choice → legal target/range → Bonus Action/slot spend → save/damage/effect → pending cleared → journal/inspector visible`, including a hit that defeats the final enemy. This would have caught the overlay defect and the earlier target/range gaps before the first deployment.
+2. Add deterministic hit/save/damage controls and saved post-hit presets to the combat constructor. Current useful actions take seconds, but scenario preparation and random misses consume minutes.
+3. Preflight certification batches through the exact backend validator locally. The fixture must enforce partial limitations and treat evidence/mechanics-locked rows as immutable; this removes four atomic API retries.
+4. Map the existing test credential names to content-admin variables inside one reviewed helper and retrieve the Timecloud certification key without printing it. This removes the two safe but avoidable apply attempts.
+5. Promote the already verified frontend artifact, or persist BuildKit/Vite caches. Remote Vite repeatedly costs about 38–39 seconds even for a tiny UI release.
+6. Batch all browser findings before one TypeScript/build/deploy gate. Focused 3–8 second regressions should remain the edit loop; immutable deployment should be paid once per coherent behavior batch.
+7. Keep the retained all-spells, Ranger, Paladin, single-target, area, and world-object scenes as named laboratory presets. Do not rebuild Forge state for each neighboring spell.
+8. Use literal spreadsheet level predicates and header-name lookup, render only changed crops during the loop, then perform one final six-tab render/import QA pass.
+9. Replace the stale strict audit with two explicit gates: a release-evidence migration audit and a manual-approval audit. Mixing their policies caused a misleading 0/180 headline after the actual live support state was 180/180.

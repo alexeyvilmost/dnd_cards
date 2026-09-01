@@ -16,7 +16,11 @@ export const MANUAL_LEVEL1_SUPPORT_VERSION = 'mini-mvp-level1-spells-manual-v1';
 export const MANUAL_LEVEL1_CHARACTER_IDS = Object.freeze([
   '0fdc8692-d722-4080-9ebc-47a32891e5bd',
   '27220891-0790-4ae6-a648-78130870fce1',
+  'b43c121b-971b-4f92-8726-01c724d2734e',
+  'e521c39b-5f3a-4c61-a78a-3f9bafb04a9f',
 ]);
+
+const DEFAULT_PARTIAL_LIMITATION = 'Длительные, площадные и иные последствия без отдельного автоматизированного шага в mini-MVP показаны в журнале как инструкция для ручного разрешения.';
 
 function manualSupport(entity, index, certifiedAt) {
   const hashes = certificationHashes(entity, 'spell', index);
@@ -25,12 +29,17 @@ function manualSupport(entity, index, certifiedAt) {
     ? previous.status
     : 'verified_partial';
   return {
+    ...previous,
     status: previousStatus,
     content_hash: hashes.contentHash,
     dependency_hash: hashes.dependencyHash,
     certification_version: MANUAL_LEVEL1_SUPPORT_VERSION,
     certified_at: certifiedAt,
-    limitations: [...new Set(previous.limitations ?? [])],
+    limitations: previousStatus === 'verified_partial'
+      ? [...new Set(previous.limitations?.length
+        ? previous.limitations
+        : [DEFAULT_PARTIAL_LIMITATION])]
+      : [...new Set(previous.limitations ?? [])],
     note: `Проверено вручную в листе, бою и по понятности результата. Сохранённые персонажи: ${MANUAL_LEVEL1_CHARACTER_IDS.join(', ')}. Подробности закреплены в mini-MVP checklist/report.`,
     test_coverage: {
       schema_version: 1,
@@ -39,7 +48,7 @@ function manualSupport(entity, index, certifiedAt) {
       passed: 3,
       percent: 100,
     },
-    mechanics_locked: false,
+    mechanics_locked: previous.mechanics_locked === true,
   };
 }
 
@@ -63,6 +72,12 @@ export function planManualLevel1SpellSupport(catalogs, certifiedAt) {
     const entity = matches[0];
     if (entity.name !== entry.label) {
       throw new Error(`${entry.selector.cardNumber}: expected «${entry.label}», got «${entity.name}»`);
+    }
+    // Evidence-certified rows are immutable by contract. Their existing
+    // approval remains authoritative; the manual checklist adds browser
+    // evidence without weakening or rewriting that lock.
+    if (entity.support?.mechanics_locked === true) {
+      return { entity, support: entity.support, changeRequired: false };
     }
     const support = manualSupport(entity, index, certifiedAt);
     const current = entity.support ?? {};

@@ -1,0 +1,1848 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-01T11:45:02.135Z",
+  "source": "https://bagofholding.ru",
+  "rule": "Exactly one live manifest root exists and support.status starts with verified_. Manual three-dimension results are recorded in the accepted workbook.",
+  "summary": {
+    "required": 180,
+    "resolved": 180,
+    "approved": 180,
+    "byCollection": {
+      "classes": {
+        "required": 12,
+        "approved": 12
+      },
+      "species": {
+        "required": 10,
+        "approved": 10
+      },
+      "backgrounds": {
+        "required": 16,
+        "approved": 16
+      },
+      "originFeats": {
+        "required": 10,
+        "approved": 10
+      },
+      "fightingStyles": {
+        "required": 10,
+        "approved": 10
+      },
+      "cantrips": {
+        "required": 34,
+        "approved": 34
+      },
+      "firstLevelSpells": {
+        "required": 64,
+        "approved": 64
+      },
+      "speciesLineages": {
+        "required": 24,
+        "approved": 24
+      }
+    },
+    "pending": []
+  },
+  "records": [
+    {
+      "key": "class.class-barbarian",
+      "collection": "classes",
+      "cardNumber": "CLASS-barbarian",
+      "name": "Варвар",
+      "entityId": "9cc3ffcd-8de0-4bc1-a1c3-0a0e67952ab8",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "class.class-bard",
+      "collection": "classes",
+      "cardNumber": "CLASS-bard",
+      "name": "Бард",
+      "entityId": "be96272c-8585-438d-ac32-b2788f1b1741",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "class.class-warrior",
+      "collection": "classes",
+      "cardNumber": "CLASS-warrior",
+      "name": "Воин",
+      "entityId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "class.class-wizard",
+      "collection": "classes",
+      "cardNumber": "CLASS-wizard",
+      "name": "Волшебник",
+      "entityId": "d3b22b24-a4f1-4dab-8038-c89bfee62843",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "class.class-druid",
+      "collection": "classes",
+      "cardNumber": "CLASS-druid",
+      "name": "Друид",
+      "entityId": "932a15ad-a7c5-4062-b13a-899933b94231",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "class.class-cleric",
+      "collection": "classes",
+      "cardNumber": "CLASS-cleric",
+      "name": "Жрец",
+      "entityId": "de7259fa-305e-429d-a209-fa79ec302afd",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "class.class-warlock",
+      "collection": "classes",
+      "cardNumber": "CLASS-warlock",
+      "name": "Колдун",
+      "entityId": "5a0403b5-3185-43a2-b187-38397d3d01b7",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "class.class-monk",
+      "collection": "classes",
+      "cardNumber": "CLASS-monk",
+      "name": "Монах",
+      "entityId": "ed17e7b6-366f-43ef-a94c-2d62dd5d7b20",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "class.class-paladin",
+      "collection": "classes",
+      "cardNumber": "CLASS-paladin",
+      "name": "Паладин",
+      "entityId": "03265901-3b0a-4d3e-ab2c-001a6cab59c3",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "class.class-rogue",
+      "collection": "classes",
+      "cardNumber": "CLASS-rogue",
+      "name": "Плут",
+      "entityId": "aa30f40a-88e5-4a0a-a79e-f3f5119bfa41",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "class.class-ranger",
+      "collection": "classes",
+      "cardNumber": "CLASS-ranger",
+      "name": "Следопыт",
+      "entityId": "7eda481c-0474-4443-9b8a-be08c53564c2",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "class.class-sorcerer",
+      "collection": "classes",
+      "cardNumber": "CLASS-sorcerer",
+      "name": "Чародей",
+      "entityId": "66a58227-41e6-4c56-b548-1253d98f6f09",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0010",
+      "collection": "species",
+      "cardNumber": "RACE-0010",
+      "name": "Аасимар",
+      "entityId": "3b63e5cd-fd0b-4887-a187-a6f11ab17dfc",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0005",
+      "collection": "species",
+      "cardNumber": "RACE-0005",
+      "name": "Гном",
+      "entityId": "a81e448f-34f6-417e-ae3c-8f92f5259edf",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0011",
+      "collection": "species",
+      "cardNumber": "RACE-0011",
+      "name": "Голиаф",
+      "entityId": "832cebd9-121a-4457-b9fd-92adaee40720",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0003",
+      "collection": "species",
+      "cardNumber": "RACE-0003",
+      "name": "Дварф",
+      "entityId": "3e524959-afd8-499a-9486-aa67b4d1b769",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0008",
+      "collection": "species",
+      "cardNumber": "RACE-0008",
+      "name": "Драконорождённый",
+      "entityId": "192243e7-5011-4fc3-a91b-a5d66354aa20",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0007",
+      "collection": "species",
+      "cardNumber": "RACE-0007",
+      "name": "Орк",
+      "entityId": "c8664de4-e485-43e5-9dce-d3022d44781a",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0006",
+      "collection": "species",
+      "cardNumber": "RACE-0006",
+      "name": "Полурослик",
+      "entityId": "6f19d163-7382-49a1-ac97-b75fb9067daa",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0009",
+      "collection": "species",
+      "cardNumber": "RACE-0009",
+      "name": "Тифлинг",
+      "entityId": "fac3f998-75c3-4fe3-9ff0-8adbe1e1e3fa",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0002",
+      "collection": "species",
+      "cardNumber": "RACE-0002",
+      "name": "Человек",
+      "entityId": "bda5fc05-255a-45bb-8e90-9b350ba5e14a",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0004",
+      "collection": "species",
+      "cardNumber": "RACE-0004",
+      "name": "Эльф",
+      "entityId": "4c9dd44e-cf60-46b1-9971-f717572d8a43",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "background.bg-0001",
+      "collection": "backgrounds",
+      "cardNumber": "BG-0001",
+      "name": "Артист",
+      "entityId": "f63ca302-2fa2-4e58-b790-3f03429cfa69",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "background.bg-0002",
+      "collection": "backgrounds",
+      "cardNumber": "BG-0002",
+      "name": "Благородный",
+      "entityId": "1084c6ac-d70d-4ef3-8cdb-caf9872017e5",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "background.bg-0003",
+      "collection": "backgrounds",
+      "cardNumber": "BG-0003",
+      "name": "Бродяга",
+      "entityId": "ddde0222-b594-4bac-8103-d32395c294c2",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "background.bg-0004",
+      "collection": "backgrounds",
+      "cardNumber": "BG-0004",
+      "name": "Моряк",
+      "entityId": "57c2fc4d-0e06-4868-a653-5baaea15563a",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "background.bg-0005",
+      "collection": "backgrounds",
+      "cardNumber": "BG-0005",
+      "name": "Мудрец",
+      "entityId": "169eef1a-4572-413c-86ae-4ecdd804c6af",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "background.bg-0006",
+      "collection": "backgrounds",
+      "cardNumber": "BG-0006",
+      "name": "Отшельник",
+      "entityId": "090600ef-7536-43ef-a285-a03ede11200c",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "background.bg-0007",
+      "collection": "backgrounds",
+      "cardNumber": "BG-0007",
+      "name": "Писарь",
+      "entityId": "fc0e2f06-8835-42e5-a016-80a1b55fc78f",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "background.bg-0008",
+      "collection": "backgrounds",
+      "cardNumber": "BG-0008",
+      "name": "Преступник",
+      "entityId": "a5d6d5a3-31b8-429c-88a3-6f112618a23c",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "background.bg-0009",
+      "collection": "backgrounds",
+      "cardNumber": "BG-0009",
+      "name": "Прислужник",
+      "entityId": "7eb8a9bb-c710-42b3-99e3-e74b03b4d7c8",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "background.bg-0010",
+      "collection": "backgrounds",
+      "cardNumber": "BG-0010",
+      "name": "Проводник",
+      "entityId": "e3505422-e7f8-479b-928e-b5dbbbc694b3",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "background.bg-0011",
+      "collection": "backgrounds",
+      "cardNumber": "BG-0011",
+      "name": "Ремесленник",
+      "entityId": "10559b70-2f82-42f1-84a0-7017c1980835",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "background.bg-0012",
+      "collection": "backgrounds",
+      "cardNumber": "BG-0012",
+      "name": "Солдат",
+      "entityId": "f35e329a-51a4-4b0d-bc3f-edcbfc276f76",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "background.bg-0013",
+      "collection": "backgrounds",
+      "cardNumber": "BG-0013",
+      "name": "Стражник",
+      "entityId": "04c222c1-c202-4cbe-aa06-5663a4e36ab5",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "background.bg-0014",
+      "collection": "backgrounds",
+      "cardNumber": "BG-0014",
+      "name": "Торговец",
+      "entityId": "06014c1a-4eaa-406d-9875-220a9bbc5098",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "background.bg-0015",
+      "collection": "backgrounds",
+      "cardNumber": "BG-0015",
+      "name": "Фермер",
+      "entityId": "df6ba1f4-e409-4021-8902-045ff5f37dbd",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "background.bg-0016",
+      "collection": "backgrounds",
+      "cardNumber": "BG-0016",
+      "name": "Шарлатан",
+      "entityId": "c9cea42f-e5cc-4596-b03a-61c2689b7777",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "origin-feat.feat-0001",
+      "collection": "originFeats",
+      "cardNumber": "FEAT-0001",
+      "name": "Бдительный",
+      "entityId": "642812ee-4ac3-44b8-bdda-beeeee15213a",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-base-styles-origin-v2",
+      "approved": true
+    },
+    {
+      "key": "origin-feat.feat-0002",
+      "collection": "originFeats",
+      "cardNumber": "FEAT-0002",
+      "name": "Везунчик",
+      "entityId": "1868ee2c-185c-486b-b6c1-457497e89820",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-base-styles-origin-v2",
+      "approved": true
+    },
+    {
+      "key": "origin-feat.feat-0003",
+      "collection": "originFeats",
+      "cardNumber": "FEAT-0003",
+      "name": "Дебошир",
+      "entityId": "d782baf6-6682-49d1-aee5-a8ee920f87fd",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-base-styles-origin-v2",
+      "approved": true
+    },
+    {
+      "key": "origin-feat.feat-0004",
+      "collection": "originFeats",
+      "cardNumber": "FEAT-0004",
+      "name": "Дикий атакующий",
+      "entityId": "bfc32df7-f1a1-4abc-9d1f-3569937133b1",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-base-styles-origin-v2",
+      "approved": true
+    },
+    {
+      "key": "origin-feat.feat-0005",
+      "collection": "originFeats",
+      "cardNumber": "FEAT-0005",
+      "name": "Крепкий",
+      "entityId": "2d4da70d-366e-49d6-a621-6c2b171e6ce4",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-base-styles-origin-v2",
+      "approved": true
+    },
+    {
+      "key": "origin-feat.feat-0006",
+      "collection": "originFeats",
+      "cardNumber": "FEAT-0006",
+      "name": "Лекарь",
+      "entityId": "3df05ae6-c766-444e-89cc-c44a0fcada6a",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-base-styles-origin-v2",
+      "approved": true
+    },
+    {
+      "key": "origin-feat.feat-0007",
+      "collection": "originFeats",
+      "cardNumber": "FEAT-0007",
+      "name": "Музыкант",
+      "entityId": "d4f9bc32-674e-45b5-8287-9afe7d2ba1ce",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-base-styles-origin-v2",
+      "approved": true
+    },
+    {
+      "key": "origin-feat.feat-0008",
+      "collection": "originFeats",
+      "cardNumber": "FEAT-0008",
+      "name": "Одарённый",
+      "entityId": "5b5e2cb6-3a2d-4b6d-ba95-b313c413db28",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-base-styles-origin-v2",
+      "approved": true
+    },
+    {
+      "key": "origin-feat.feat-0009",
+      "collection": "originFeats",
+      "cardNumber": "FEAT-0009",
+      "name": "Посвящённый в магию",
+      "entityId": "51832580-68f5-4e96-8afe-93e4af045283",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-base-styles-origin-v2",
+      "approved": true
+    },
+    {
+      "key": "origin-feat.feat-0010",
+      "collection": "originFeats",
+      "cardNumber": "FEAT-0010",
+      "name": "Самоделкин",
+      "entityId": "58444ab1-32a6-4a50-8eff-03ef7a1bce10",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-base-styles-origin-v2",
+      "approved": true
+    },
+    {
+      "key": "fighting-style.feat-0054",
+      "collection": "fightingStyles",
+      "cardNumber": "FEAT-0054",
+      "name": "Дуэлянт",
+      "entityId": "e28c558d-5239-4008-837f-6cda8fa47d3a",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-l1-v1",
+      "approved": true
+    },
+    {
+      "key": "fighting-style.feat-0055",
+      "collection": "fightingStyles",
+      "cardNumber": "FEAT-0055",
+      "name": "Защита",
+      "entityId": "c061b389-be25-439b-b9fc-71cfa43e195b",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-base-styles-origin-v2",
+      "approved": true
+    },
+    {
+      "key": "fighting-style.feat-0056",
+      "collection": "fightingStyles",
+      "cardNumber": "FEAT-0056",
+      "name": "Оборона",
+      "entityId": "25896e04-0c1d-4917-97fc-7feef7f836e1",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-base-styles-origin-v2",
+      "approved": true
+    },
+    {
+      "key": "fighting-style.feat-0057",
+      "collection": "fightingStyles",
+      "cardNumber": "FEAT-0057",
+      "name": "Перехват",
+      "entityId": "5d927d9a-6760-4b08-9b1c-d4551010da28",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-l1-v1",
+      "approved": true
+    },
+    {
+      "key": "fighting-style.feat-0058",
+      "collection": "fightingStyles",
+      "cardNumber": "FEAT-0058",
+      "name": "Сражение без оружия",
+      "entityId": "a1280d91-171b-4cbc-bf89-fa1440fd94c2",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-l1-v1",
+      "approved": true
+    },
+    {
+      "key": "fighting-style.feat-0059",
+      "collection": "fightingStyles",
+      "cardNumber": "FEAT-0059",
+      "name": "Сражение большим оружием",
+      "entityId": "f5e42e2a-9646-4d2f-9561-c47c4f3c1fcd",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-l1-v1",
+      "approved": true
+    },
+    {
+      "key": "fighting-style.feat-0060",
+      "collection": "fightingStyles",
+      "cardNumber": "FEAT-0060",
+      "name": "Сражение вслепую",
+      "entityId": "e1149e85-3c40-4b67-9d3d-46dc0c8b85b3",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-l1-v1",
+      "approved": true
+    },
+    {
+      "key": "fighting-style.feat-0061",
+      "collection": "fightingStyles",
+      "cardNumber": "FEAT-0061",
+      "name": "Сражение двумя оружиями",
+      "entityId": "440e7209-1602-415e-a5bb-e8bf42b3f720",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-base-styles-origin-v2",
+      "approved": true
+    },
+    {
+      "key": "fighting-style.feat-0062",
+      "collection": "fightingStyles",
+      "cardNumber": "FEAT-0062",
+      "name": "Сражение метательным оружием",
+      "entityId": "5f56912d-8f52-42b0-89e3-8ced07703d40",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-l1-v1",
+      "approved": true
+    },
+    {
+      "key": "fighting-style.feat-0063",
+      "collection": "fightingStyles",
+      "cardNumber": "FEAT-0063",
+      "name": "Стрельба",
+      "entityId": "bca8edf6-27ce-4399-8e34-bdadd59674b3",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-base-styles-origin-v2",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0166",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0166",
+      "name": "Брызги кислоты",
+      "entityId": "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-cantrips-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0173",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0173",
+      "name": "Волшебная рука",
+      "entityId": "70e35366-5446-49ff-b0b9-759dbbff347e",
+      "status": "verified_narrative",
+      "certificationVersion": "mini-mvp-cantrips-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0192",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0192",
+      "name": "Дружба",
+      "entityId": "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-cantrips-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0194",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0194",
+      "name": "Дубинка",
+      "entityId": "d3a05e09-7f80-44ea-be21-dfdd3408d528",
+      "status": "verified_narrative",
+      "certificationVersion": "mini-mvp-cantrips-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0202",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0202",
+      "name": "Защита от оружия",
+      "entityId": "73d4195c-5da4-444d-a0c1-19572df641b2",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-cantrips-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0204",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0204",
+      "name": "Звёздный светлячок",
+      "entityId": "7f7d92ed-0d5c-4567-990b-3395247b9266",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-cantrips-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0205",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0205",
+      "name": "Злая насмешка",
+      "entityId": "bdeda1c3-6574-4946-8b91-5faf0f76072c",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-cantrips-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.druidcraft",
+      "collection": "cantrips",
+      "cardNumber": "druidcraft",
+      "name": "Искусство друидов",
+      "entityId": "3c68b9a7-d143-4b39-b06c-3d78e3276117",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.chill_touch",
+      "collection": "cantrips",
+      "cardNumber": "chill_touch",
+      "name": "Леденящее прикосновение",
+      "entityId": "e300a1f2-91ae-4c82-9904-057f93a013ba",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0218",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0218",
+      "name": "Луч холода",
+      "entityId": "ebe432dd-c124-4f79-a39b-db14ca2ed741",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.minor_illusion",
+      "collection": "cantrips",
+      "cardNumber": "minor_illusion",
+      "name": "Малая иллюзия",
+      "entityId": "dc59ce91-4e89-4f1d-89a5-e25650f3a6b7",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0224",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0224",
+      "name": "Меткий удар",
+      "entityId": "f5d4b18f-6212-47e7-ae0b-8dda2f84d4c2",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-cantrips-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0226",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0226",
+      "name": "Мистический заряд",
+      "entityId": "0f0eca67-f241-4f1a-b01b-37c6f16adea2",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-spell-activation-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0230",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0230",
+      "name": "Наставление",
+      "entityId": "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.fire_bolt",
+      "collection": "cantrips",
+      "cardNumber": "fire_bolt",
+      "name": "Огненный снаряд",
+      "entityId": "50626b5a-33c5-46e0-af0e-50599f4306a0",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-cantrips-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.dancing_lights",
+      "collection": "cantrips",
+      "cardNumber": "dancing_lights",
+      "name": "Пляшущие огоньки",
+      "entityId": "b2c5ebf4-facc-4521-948f-55b30746bfa5",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0260",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0260",
+      "name": "Погребальный звон",
+      "entityId": "a9a0d114-ad46-435e-a3c9-128b305b8a5d",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-cantrips-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.mending",
+      "collection": "cantrips",
+      "cardNumber": "mending",
+      "name": "Починка",
+      "entityId": "5b79a37b-e7a9-482a-9efc-46b57e3a79de",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0280",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0280",
+      "name": "Раскат грома",
+      "entityId": "13e456fc-cf29-4c46-8aeb-c282a9cbcd5f",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-cantrips-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0281",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0281",
+      "name": "Расщепление разума",
+      "entityId": "c3fc969b-ba03-443f-a222-46f6b9a53bd6",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-cantrips-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.light",
+      "collection": "cantrips",
+      "cardNumber": "light",
+      "name": "Свет",
+      "entityId": "1e9cb7db-f4dc-4215-ad57-0e3407b78913",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0286",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0286",
+      "name": "Священное пламя",
+      "entityId": "8cddf152-e406-4c7a-8d34-cc8bcbfc0dfa",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0291",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0291",
+      "name": "Слово сияния",
+      "entityId": "78eb6e5c-5d2a-42ad-8e6e-6bf3be3f96c0",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-cantrips-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0294",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0294",
+      "name": "Сообщение",
+      "entityId": "35d36558-8a47-49a1-9099-387bee37b8a2",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-utility-cantrips-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0295",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0295",
+      "name": "Сопротивление",
+      "entityId": "bd99466f-46ab-4af5-a41d-b2b804b9f1e3",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-reviewed-spells-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0297",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0297",
+      "name": "Сотворение пламени",
+      "entityId": "ba23242c-eb9c-46a6-ba01-ebdc3b5b9618",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-cantrips-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0298",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0298",
+      "name": "Стихийность",
+      "entityId": "b84d904f-4768-4a05-8803-7a0d0da28a00",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-utility-cantrips-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0300",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0300",
+      "name": "Терновый кнут",
+      "entityId": "1c966901-b84a-435c-8950-1da774d72210",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-spell-activation-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0312",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0312",
+      "name": "Уход за умирающим",
+      "entityId": "d3177c17-b0c9-4691-a2ba-5ef24a28c1aa",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-utility-cantrips-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.prestidigitation",
+      "collection": "cantrips",
+      "cardNumber": "prestidigitation",
+      "name": "Фокусы",
+      "entityId": "e47e71cb-f44e-402e-91af-e6fad63982dc",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0315",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0315",
+      "name": "Чародейский выброс",
+      "entityId": "9c7cec56-53ed-43f1-8ba7-67d768cf28de",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-spell-activation-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.thaumaturgy",
+      "collection": "cantrips",
+      "cardNumber": "thaumaturgy",
+      "name": "Чудотворство",
+      "entityId": "8b708d7b-097e-4624-8a41-c8c8e00f044c",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-spell-activation-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0319",
+      "collection": "cantrips",
+      "cardNumber": "SPELL-0319",
+      "name": "Электрошок",
+      "entityId": "30530b80-5db9-4fd9-bae8-1cb092c05730",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-cantrips-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.poison_spray",
+      "collection": "cantrips",
+      "cardNumber": "poison_spray",
+      "name": "Ядовитые брызги",
+      "entityId": "7d0c00e7-0cfa-4f3f-8650-aac70150538c",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.hellish_rebuke",
+      "collection": "firstLevelSpells",
+      "cardNumber": "hellish_rebuke",
+      "name": "Адское возмездие",
+      "entityId": "3f618918-5477-4526-a123-da9dda136c7e",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0161",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0161",
+      "name": "Безмолвный образ",
+      "entityId": "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0163",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0163",
+      "name": "Благословение",
+      "entityId": "33c69e7d-7524-421a-9d68-521e1b7fb57a",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0164",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0164",
+      "name": "Божественная кара",
+      "entityId": "fe0a8d3c-318c-4308-9ff0-3838367f75e6",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0165",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0165",
+      "name": "Божественное благоволение",
+      "entityId": "a66ca78f-af5f-4310-85c3-01c300e06581",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0167",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0167",
+      "name": "Ведьмин снаряд",
+      "entityId": "96a02044-6274-4e68-a06e-853c206824b8",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0171",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0171",
+      "name": "Волна грома",
+      "entityId": "34518f38-b737-4a91-88ac-d5858d2d04a0",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0174",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0174",
+      "name": "Волшебная стрела",
+      "entityId": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0179",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0179",
+      "name": "Вызов на дуэль",
+      "entityId": "d6a193e8-0204-4277-9a6a-75a86c2d15cd",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0181",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0181",
+      "name": "Героизм",
+      "entityId": "a4491a9d-8a2d-4212-abc1-c92d3f0b85ed",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0183",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0183",
+      "name": "Гневная кара",
+      "entityId": "857500cb-45e7-4cce-9fd3-61116e10814f",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0185",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0185",
+      "name": "Град шипов",
+      "entityId": "a438dcc1-94d0-420c-ae29-35b2cafd2f7a",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0186",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0186",
+      "name": "Громовая кара",
+      "entityId": "ae684edc-08c3-4f00-94ab-5c11c6b05f4e",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0187",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0187",
+      "name": "Диссонирующий шёпот",
+      "entityId": "8821d595-ec03-42b8-aeaf-f50f7d72b726",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0188",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0188",
+      "name": "Добряника",
+      "entityId": "4291b817-6869-4f87-afae-5bd1a37aee3f",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0189",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0189",
+      "name": "Доспех Агатиса",
+      "entityId": "f55f58e8-a6f9-4c97-ab6f-8e7f385591d0",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0190",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0190",
+      "name": "Доспехи мага",
+      "entityId": "db6433bf-f779-4b65-8766-0feffefd1930",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0193",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0193",
+      "name": "Дружба с животными",
+      "entityId": "c2e3cd80-463a-4a0f-a918-ed9a302efe5b",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0199",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0199",
+      "name": "Жуткий смех Таши",
+      "entityId": "4abefac8-329b-4c70-a59a-84dca2d194d3",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0201",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0201",
+      "name": "Защита от добра и зла",
+      "entityId": "85b05dba-9662-43a2-afb9-050ce2bf6136",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0206",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0206",
+      "name": "Иллюзорные письмена",
+      "entityId": "befe393c-7463-40df-a888-d74f1e6e186c",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0212",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0212",
+      "name": "Ледяной кинжал",
+      "entityId": "f1eb548c-2299-4f6f-9417-6dda19ded14c",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0213",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0213",
+      "name": "Лечащее слово",
+      "entityId": "ddb5e045-045c-45ce-ab5e-4d6a489be913",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0214",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0214",
+      "name": "Лечение ран",
+      "entityId": "8d98d8f6-7085-48cd-b2a4-1f18cd8470d9",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.ray_of_sickness",
+      "collection": "firstLevelSpells",
+      "cardNumber": "ray_of_sickness",
+      "name": "Луч болезни",
+      "entityId": "92bcd9dd-2b4f-4264-9d8f-ba16722051e0",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0222",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0222",
+      "name": "Маскировка",
+      "entityId": "5a8cc8b7-8f5c-49d7-a66d-ba31a273c65c",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0223",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0223",
+      "name": "Метка охотника",
+      "entityId": "8c2702cd-4cfa-4c02-919a-178bd2196ca4",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0228",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0228",
+      "name": "Нанесение ран",
+      "entityId": "487e3b6a-ac09-47dc-a7a7-08c17665c60f",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0229",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0229",
+      "name": "Направляющий снаряд",
+      "entityId": "851027a9-0b6a-49d1-9f61-5eef831bf297",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0232",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0232",
+      "name": "Невидимый слуга",
+      "entityId": "13018914-f220-48c5-8aff-902b1fbfff73",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0236",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0236",
+      "name": "Обнаружение болезней и яда",
+      "entityId": "a8bb857d-cfaf-49d4-9f95-04a71a997a03",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0237",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0237",
+      "name": "Обнаружение добра и зла",
+      "entityId": "c6f10945-84d5-422f-bb70-98177142d90e",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.detect_magic",
+      "collection": "firstLevelSpells",
+      "cardNumber": "detect_magic",
+      "name": "Обнаружение магии",
+      "entityId": "25d868ad-0714-4fce-b5b2-2931dd5646bc",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0241",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0241",
+      "name": "Обретение фамильяра",
+      "entityId": "aa2adb3d-101b-4e70-97f1-69dc9f0debf8",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0242",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0242",
+      "name": "Огненные ладони",
+      "entityId": "732c2287-dd4d-46cd-9315-67447549abfa",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.faerie_fire",
+      "collection": "firstLevelSpells",
+      "cardNumber": "faerie_fire",
+      "name": "Огонь фей",
+      "entityId": "b132a28e-f6c9-4832-924b-1a680390e7fb",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0245",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0245",
+      "name": "Опознание",
+      "entityId": "8e26c8a3-c545-4524-98d5-35acc5d29ca5",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0246",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0246",
+      "name": "Опутывание",
+      "entityId": "b347be07-68e7-4cd1-8a5a-222e206711c2",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0247",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0247",
+      "name": "Опутывающий удар",
+      "entityId": "9afc306d-3f3d-4a05-8cb8-dfcd53b10b50",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0251",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0251",
+      "name": "Очарование личности",
+      "entityId": "a6c7db7d-f35c-4072-a5eb-29d4d58be93e",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0252",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0252",
+      "name": "Очищение пищи и питья",
+      "entityId": "677a3abf-5fc7-472f-b789-418dcba6dd88",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0253",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0253",
+      "name": "Падение пёрышком",
+      "entityId": "33e73716-4d61-4669-b9d4-b0e2f6fcc63f",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0254",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0254",
+      "name": "Палящая кара",
+      "entityId": "04dc8ba1-388f-4acc-ab4b-5a6784faeeaa",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0256",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0256",
+      "name": "Парящий диск Тензера",
+      "entityId": "3b1316f0-02e7-496b-8146-602f4bd8284a",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0265",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0265",
+      "name": "Понимание языков",
+      "entityId": "bf6dbc16-d7bc-4abd-9a85-f204858b9396",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0267",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0267",
+      "name": "Порча",
+      "entityId": "d7218ea6-2062-4ef3-8680-c8f9c657fda9",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0269",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0269",
+      "name": "Поспешное отступление",
+      "entityId": "bc90dc67-8fac-41b8-b3bf-a1e218013929",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0272",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0272",
+      "name": "Приказ",
+      "entityId": "a931ec6f-40ad-4f5d-beb4-4893f3c66c08",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0274",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0274",
+      "name": "Прыжок",
+      "entityId": "0cee5f3c-e943-46dd-96bc-ced618b90454",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.false_life",
+      "collection": "firstLevelSpells",
+      "cardNumber": "false_life",
+      "name": "Псевдожизнь",
+      "entityId": "f3098f61-1ea7-4816-9819-1903388cfe06",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0277",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0277",
+      "name": "Разговор с животными",
+      "entityId": "b6254e87-7bd3-4aaa-b937-5b793926128b",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0283",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0283",
+      "name": "Руки Хадара",
+      "entityId": "e75790cb-b03f-4a24-98a3-ef86a4756535",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0284",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0284",
+      "name": "Сверкающие брызги",
+      "entityId": "c5a6892f-d388-4075-9da6-6cfb0989ba26",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0287",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0287",
+      "name": "Сглаз",
+      "entityId": "b6cb9612-8dea-4949-bbd5-595bd5501beb",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0288",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0288",
+      "name": "Сигнал тревоги",
+      "entityId": "ac198b93-04d7-4633-831e-b0050330cccf",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.longstrider",
+      "collection": "firstLevelSpells",
+      "cardNumber": "longstrider",
+      "name": "Скороход",
+      "entityId": "f8ad3edb-c0e2-4321-9a91-172bf19e2ec7",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0292",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0292",
+      "name": "Смазка",
+      "entityId": "2a6cab0a-ee77-4ac4-8148-80743fc8e8ea",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0296",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0296",
+      "name": "Сотворение или уничтожение воды",
+      "entityId": "2ac56edb-1620-4cf1-9533-77f590b08afd",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0303",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0303",
+      "name": "Туманное облако",
+      "entityId": "d4a2b512-06fc-420f-ae35-1c4867d0e04e",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0306",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0306",
+      "name": "Убежище",
+      "entityId": "52d5507e-4350-4dcb-a5fd-c4a11bd91b67",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0311",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0311",
+      "name": "Усыпление",
+      "entityId": "0f81f3e2-ff95-4629-9292-e81332a57282",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0314",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0314",
+      "name": "Цветной шарик",
+      "entityId": "f0256294-e692-4695-8e29-d8288139a7ad",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0317",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0317",
+      "name": "Щит",
+      "entityId": "d87f4507-849f-450b-b328-0198cb011587",
+      "status": "verified_partial",
+      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "approved": true
+    },
+    {
+      "key": "spell.spell-0318",
+      "collection": "firstLevelSpells",
+      "cardNumber": "SPELL-0318",
+      "name": "Щит веры",
+      "entityId": "656f3c28-9fdd-44c7-88df-ce032a501e52",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "approved": true
+    },
+    {
+      "key": "species.race-0005.variant.sub-forest",
+      "collection": "speciesLineages",
+      "cardNumber": "sub-forest",
+      "name": "Лесной гном",
+      "entityId": "e5a17dcb-db1d-4e42-9191-33a123c66782",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0005.variant.sub-rock",
+      "collection": "speciesLineages",
+      "cardNumber": "sub-rock",
+      "name": "Скальный гном",
+      "entityId": "57c93442-dce0-4aaa-96dc-910736abfb78",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0011.variant.race-0011-cloud",
+      "collection": "speciesLineages",
+      "cardNumber": "RACE-0011-cloud",
+      "name": "Наследие облачного великана",
+      "entityId": "b262a4c9-e303-472b-b347-e3fcb2fe93f1",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0011.variant.race-0011-fire",
+      "collection": "speciesLineages",
+      "cardNumber": "RACE-0011-fire",
+      "name": "Наследие огненного великана",
+      "entityId": "1fc68a11-99de-4870-85ad-1cedf6e844e9",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0011.variant.race-0011-frost",
+      "collection": "speciesLineages",
+      "cardNumber": "RACE-0011-frost",
+      "name": "Наследие ледяного великана",
+      "entityId": "6e28e3b3-9049-44ff-9458-6efedfaa3013",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0011.variant.race-0011-hill",
+      "collection": "speciesLineages",
+      "cardNumber": "RACE-0011-hill",
+      "name": "Наследие холмового великана",
+      "entityId": "593f8c23-6ca8-49ab-8f71-ff88c39e95c7",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0011.variant.race-0011-stone",
+      "collection": "speciesLineages",
+      "cardNumber": "RACE-0011-stone",
+      "name": "Наследие каменного великана",
+      "entityId": "0fc14aae-e914-46d4-9143-b71758494983",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0011.variant.race-0011-storm",
+      "collection": "speciesLineages",
+      "cardNumber": "RACE-0011-storm",
+      "name": "Наследие штормового великана",
+      "entityId": "5f4be1d6-792c-4473-a7fa-3473528dea03",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0008.variant.sub-black",
+      "collection": "speciesLineages",
+      "cardNumber": "sub-black",
+      "name": "Чёрный",
+      "entityId": "1aae5238-0974-4418-bed2-961202fac804",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0008.variant.sub-blue",
+      "collection": "speciesLineages",
+      "cardNumber": "sub-blue",
+      "name": "Синий",
+      "entityId": "5e0694d7-049f-42fe-80b9-49b585bcf79c",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0008.variant.sub-brass",
+      "collection": "speciesLineages",
+      "cardNumber": "sub-brass",
+      "name": "Латунный",
+      "entityId": "1c97e560-8f80-4a51-b18d-da9aad5cf26a",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0008.variant.sub-bronze",
+      "collection": "speciesLineages",
+      "cardNumber": "sub-bronze",
+      "name": "Бронзовый",
+      "entityId": "df5eb7e6-ba8d-49b0-a42c-9b8b32270243",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0008.variant.sub-copper",
+      "collection": "speciesLineages",
+      "cardNumber": "sub-copper",
+      "name": "Медный",
+      "entityId": "9a244fdc-d2ea-440e-a46c-327903c63a69",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0008.variant.sub-gold",
+      "collection": "speciesLineages",
+      "cardNumber": "sub-gold",
+      "name": "Золотой",
+      "entityId": "dec43381-bae8-45bd-a1ba-d413d7677a67",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0008.variant.sub-green",
+      "collection": "speciesLineages",
+      "cardNumber": "sub-green",
+      "name": "Зелёный",
+      "entityId": "5ab51cec-28e4-4d8c-abd8-acd4b4b896b9",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0008.variant.sub-red",
+      "collection": "speciesLineages",
+      "cardNumber": "sub-red",
+      "name": "Красный",
+      "entityId": "b63ce5e6-a325-4ec0-bfd9-4d387e8112f1",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0008.variant.sub-silver",
+      "collection": "speciesLineages",
+      "cardNumber": "sub-silver",
+      "name": "Серебряный",
+      "entityId": "bed8127d-4206-402d-a9dd-39b2bd8a4f44",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0008.variant.sub-white",
+      "collection": "speciesLineages",
+      "cardNumber": "sub-white",
+      "name": "Белый",
+      "entityId": "aa0f144a-2364-46b2-af6f-213b6b7a4a31",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0009.variant.sub-abyssal",
+      "collection": "speciesLineages",
+      "cardNumber": "sub-abyssal",
+      "name": "Бездны",
+      "entityId": "1e194bbc-d321-4da0-a7f0-f3e72b2ab691",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0009.variant.sub-chthonic",
+      "collection": "speciesLineages",
+      "cardNumber": "sub-chthonic",
+      "name": "Хтоническое",
+      "entityId": "a3d4c1d2-f472-489c-9445-2f456486451a",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0009.variant.sub-infernal",
+      "collection": "speciesLineages",
+      "cardNumber": "sub-infernal",
+      "name": "Инфернальное",
+      "entityId": "a9280a29-bb4a-4530-ad79-6b495f2a7943",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0004.variant.sub-drow",
+      "collection": "speciesLineages",
+      "cardNumber": "sub-drow",
+      "name": "Дроу",
+      "entityId": "1aeec902-a018-445e-a866-5b552600d667",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0004.variant.sub-high_elf",
+      "collection": "speciesLineages",
+      "cardNumber": "sub-high_elf",
+      "name": "Высший эльф",
+      "entityId": "5783d111-a00b-405a-8f86-5c0a062f802f",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    },
+    {
+      "key": "species.race-0004.variant.sub-wood_elf",
+      "collection": "speciesLineages",
+      "cardNumber": "sub-wood_elf",
+      "name": "Лесной эльф",
+      "entityId": "533bd5b1-a98d-4b51-ba28-c123da0a9c0f",
+      "status": "verified_partial",
+      "certificationVersion": "mini-mvp-forge-sheet-v2",
+      "approved": true
+    }
+  ]
+}
