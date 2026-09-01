@@ -73,8 +73,6 @@ import { FormattedText } from '../utils/formattedText';
 import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
 import {
   filterEntitiesBySupport,
-  supportSelectionWarning,
-  type SupportableEntity,
 } from '../content/supportStatus';
 import './CharacterForge.css';
 
@@ -186,11 +184,6 @@ const CharacterForge = () => {
     () => filterEntitiesBySupport(spells, showAllContent, resolvedEntityIds),
     [spells, showAllContent, resolvedEntityIds],
   );
-  const confirmSupportChoice = useCallback((entity: SupportableEntity | null | undefined) => {
-    const warning = supportSelectionWarning(entity);
-    return !warning || window.confirm(warning);
-  }, []);
-
   // При входе в режим создания — предложить восстановить сохранённый черновик.
   useEffect(() => {
     if (editId) { setRestorable(null); return; }
@@ -564,25 +557,20 @@ const CharacterForge = () => {
   }, []);
   const toggleFeat = (fid: string) => {
     const removing = draft.featIds.includes(fid);
-    if (!removing && !confirmSupportChoice(feats.find((feat) => feat.id === fid))) return;
     patch({ featIds: removing ? draft.featIds.filter((x) => x !== fid) : [fid] });
   };
   const selectRace = (rid: string) => {
-    if (!confirmSupportChoice(races.find((race) => race.id === rid))) return;
     patch({ raceId: rid, lineageId: null });
   };
   const selectLineage = (id: string) => {
     const removing = draft.lineageId === id;
-    if (!removing && !confirmSupportChoice(races.find((race) => race.id === id))) return;
     patch({ lineageId: removing ? null : id });
   };
   const selectSubclass = (id: string) => {
     const removing = draft.subclassId === id;
-    if (!removing && !confirmSupportChoice(classes.find((klass) => klass.id === id))) return;
     patch({ subclassId: removing ? null : id });
   };
   const selectClass = (cid: string) => {
-    if (!confirmSupportChoice(classes.find((klass) => klass.id === cid))) return;
     classSkillAutoSeededForRef.current = null;
     setDraft((d) => {
       const next = { ...d, classId: cid, subclassId: null, classSkillChoices: [] as string[] };
@@ -601,7 +589,6 @@ const CharacterForge = () => {
     });
   };
   const selectBackground = (bid: string) => {
-    if (!confirmSupportChoice(backgrounds.find((background) => background.id === bid))) return;
     setDraft((d) => {
       const next = { ...d, backgroundId: bid };
       // KB-112/113: согласуем бонусы с НОВОЙ предысторией — снимаем назначения на её чужие
@@ -822,7 +809,7 @@ const CharacterForge = () => {
         Показать все сущности
         <small>
           {showAllContent
-            ? ' Непроверенные варианты доступны после предупреждения.'
+            ? ' Непроверенные варианты доступны без дополнительных окон.'
             : ' Сейчас показан только проверенный каталог.'}
         </small>
       </span>
@@ -1315,12 +1302,6 @@ function ChoiceList({ choices, resolved, setResolved, ruleState, feats, activeFe
             unavailableOptions={unavailableOptions}
             feats={feats}
             onChange={(nextValue) => {
-              if (pc.source === 'feat') {
-                const added = nextValue.find((id) => !value.includes(id));
-                const entity = added ? feats?.find((feat) => feat.id === added) : undefined;
-                const warning = supportSelectionWarning(entity);
-                if (warning && !window.confirm(warning)) return;
-              }
               setResolved(pc.id, nextValue);
             }}
           />
@@ -1690,8 +1671,6 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
       setResolved(choice.id, value.filter((reference) => canonicalSpellId(reference) !== spellId));
       return;
     }
-    const warning = supportSelectionWarning(spells.find((spell) => spell.id === spellId));
-    if (warning && !window.confirm(warning)) return;
     const owner = selectedSpellOwners.get(spellId);
     const ownedByPreparedSource = choice.source === 'prepared_spell'
       && owner?.choiceId === choice.preparedSpellSourceChoiceId;
