@@ -259,7 +259,7 @@ export function resolveDruidcraft(input: {
       if (!prediction) throw new Error('Druidcraft Weather Sensor requires a prediction');
       const object: WorldObjectState = {
         id,
-        name: 'Druidcraft Weather Sensor',
+        name: `Прогноз погоды: ${prediction}`,
         kind: 'spell_effect',
         size: 'tiny',
         sourceActorId: input.sourceActorId,

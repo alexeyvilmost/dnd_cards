@@ -1,4 +1,5 @@
 import { describeEngineEvent, formatRollBreakdown } from '../engine/events';
+import { getDamageLabel } from '../utils/damageTypes';
 import type { EngineEvent, RollLog } from '../mvp/contracts';
 import type { UncommittedRuleEvent } from '../rules-core/domain';
 import type {
@@ -173,7 +174,7 @@ export function combatLogDetails(
       {
         kind: 'damage' as const,
         label: 'Урон',
-        text: `${event.amount} (${event.damageType})${targetSuffix}`,
+        text: `${event.amount} (${getDamageLabel(event.damageType).toLocaleLowerCase('ru-RU')})${targetSuffix}`,
       },
     ];
   }

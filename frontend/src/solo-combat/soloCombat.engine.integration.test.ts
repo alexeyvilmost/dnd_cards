@@ -1732,6 +1732,56 @@ describe('solo combat engine vertical integration', () => {
     expect(state.world.actors[monsterId].runtime.resources.reaction).toBe(1);
   });
 
+  it('moves a caster token to the chosen legal destination for a teleport action', async () => {
+    const participant = fighterSeed();
+    const teleport: RuleActionDefinition = {
+      id: 'd1000000-0000-4000-8000-000000000099',
+      name: 'Тестовая телепортация',
+      kind: 'spell',
+      spell: { level: 0 },
+      sourceEntityIds: ['test-feat', 'test-teleport'],
+      mechanics: {
+        activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }] },
+        targeting: { domain: 'actor', actor_targets: true, shape: 'self', min_targets: 1, max_targets: 1, allowed_relations: ['self'] },
+        effects: [{ resolution: 'auto', result: [{ kind: 'movement', value: 'teleport', distance: '15' }] }],
+      },
+      targeting: {
+        minTargets: 1, maxTargets: 1, rangeFt: 0,
+        requiresLineOfSight: false, allowedRelations: ['self'],
+      },
+    };
+    const actor = participant.canonical.world.actors[participant.character.id];
+    actor.capabilities.actionIds.push(teleport.id);
+    actor.spellcastingAccess ??= { grants: [], preparedSources: {} };
+    actor.spellcastingAccess.grants.push({
+      grantId: 'test-teleport-grant', actionId: teleport.id, sourceId: 'test-feat',
+      access: 'cantrip', level: 0, spellcastingAbility: 'int',
+    });
+    const actions = [...participant.canonical.actions, teleport];
+    const byId = new Map(actions.map((action) => [action.id, action]));
+    participant.canonical = {
+      ...participant.canonical,
+      actions,
+      catalog: { getAction: (id) => byId.get(id), listActions: () => actions },
+    };
+    let state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const actorId = participant.character.id;
+    const source = state.tokens[actorId].position;
+    const destination = { x: source.x - 1, y: source.y };
+    state = executeCombatAction({
+      state, actorId, actionId: teleport.id, targetIds: [actorId], worldPosition: destination, rng: () => 0,
+    });
+    expect(state.tokens[actorId].position).toEqual(destination);
+    expect(state.log.at(-1)?.text).toContain('телепортация 5 фт.');
+    expect(state.log.at(-1)?.records?.find((record) => record.event?.type === 'movement')?.event)
+      .toMatchObject({ type: 'movement', mode: 'teleport', distanceFt: 5 });
+  });
+
   it('reconciles remaining movement when an active effect changes speed mid-turn', async () => {
     const participant = fighterSeed();
     const largeForm = speedModifierAction(10);

@@ -15,6 +15,15 @@ const WORLD_INTERACTION_LABELS: Record<string, string> = {
   stow_item: 'убрать предмет',
   retrieve_item: 'достать предмет',
   pour_vial: 'вылить содержимое сосуда',
+  beckon_air: 'стихийный эффект: воздух',
+  beckon_earth: 'стихийный эффект: земля',
+  beckon_fire: 'стихийный эффект: огонь',
+  beckon_water: 'стихийный эффект: вода',
+  sculpt_element: 'изменить форму стихии',
+  create_rain: 'создать дождь',
+  create_water_in_open_container: 'создать воду в открытом сосуде',
+  destroy_fog: 'рассеять туман',
+  destroy_water_in_open_container: 'уничтожить воду в открытом сосуде',
 };
 
 const MOVEMENT_LABELS: Record<string, string> = {

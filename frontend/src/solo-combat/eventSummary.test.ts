@@ -29,4 +29,11 @@ describe('solo combat event summary', () => {
       record({ type: 'resource_spent', resource: 'uses_ACT-breath-lightning', amount: 1, remaining: 1 }, 2),
     ])).toBe('потрачено: Бонусное действие; потрачено: Наследие великанов; потрачено: Заряд способности');
   });
+
+  it('localizes damage and condition ids in the combat summary', () => {
+    expect(eventSummary([
+      record({ type: 'damage', amount: 3, damageType: 'necrotic' }, 0),
+      record({ type: 'condition_applied', condition: 'poisoned' }, 1),
+    ])).toBe('урон 3 (некротический); состояние: Отравлен');
+  });
 });

@@ -22,6 +22,21 @@ const schema = JSON.parse(readFileSync(
 const ajv = new Ajv({ allErrors: true, strict: false });
 const validateMechanics = ajv.compile(schema);
 
+/**
+ * The original writer updated rows one by one and certified only after the
+ * last write. Once per-entity, lock-aware migrations were introduced, that
+ * behavior could both stop halfway on a locked row and overwrite a newer
+ * specialized postimage. Keep the catalog audit available, but fail before
+ * the first network mutation. Production changes must use the exact,
+ * preimage-pinned migration for the affected cantrip.
+ */
+export function assertCantripBulkApplyRetired(apply) {
+  if (!apply) return;
+  throw new Error(
+    'Bulk cantrip apply is retired: use the exact preimage-pinned cantrip migration; no rows were changed.',
+  );
+}
+
 function normalized(value) {
   return String(value ?? '').trim().toLocaleLowerCase('ru').replaceAll('ё', 'е');
 }
@@ -159,6 +174,7 @@ export async function runCantripUpgrade({ apply = APPLY } = {}) {
   for (const [name, upgrade] of Object.entries(CANTRIP_UPGRADES)) {
     validateUpgrade(name, upgrade);
   }
+  assertCantripBulkApplyRetired(apply);
 
   const spells = await fetchAll('/api/spells', 'spells', { limit: 1000 });
   const cantrips = assertCompleteCatalog(spells);

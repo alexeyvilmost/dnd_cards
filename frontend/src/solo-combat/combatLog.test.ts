@@ -96,13 +96,14 @@ describe('structured solo-combat log', () => {
     }), state);
     expect(details.map((detail) => detail.label)).toEqual(['Бросок урона', 'Урон']);
     expect(details[1].text).toContain('Противник');
+    expect(details[1].text).toContain('сила');
   });
 
   it('keeps actor-owned resource payments off the action target', () => {
     const details = combatLogDetails(engineRecord('enemy', ['hero'], {
       type: 'resource_spent', resource: 'action', amount: 1, remaining: 0,
     }), state);
-    expect(details[0].text).toBe('Потрачено action: 1 (осталось 0)');
+    expect(details[0].text).toBe('Потрачено Действие: 1 (осталось 0)');
     expect(details[0].text).not.toContain('Герой');
   });
 });

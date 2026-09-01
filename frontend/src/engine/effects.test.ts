@@ -83,6 +83,48 @@ describe('инструкция активного талона', () => {
     })).toBe('Не может восстанавливать Хиты.');
   });
 
+  it('объясняет получателю Наставления выбранный навык и кость', () => {
+    expect(activeEffectInstruction({
+      id: 'guidance-athletics', name: 'Наставление', source: 'Наставление', roundsLeft: 10,
+      mechanics: {
+        kind: 'modifier', applies_to: { roll: 'ability_check', filter: { skill: 'athletics' } },
+        op: 'bonus_die', faces: 4,
+      },
+    })).toBe('Добавьте 1к4 к проверке «Атлетика».');
+  });
+
+  it('объясняет одноразовую помеху от Злой насмешки', () => {
+    expect(activeEffectInstruction({
+      id: 'mockery', name: 'Злая насмешка', source: 'Злая насмешка', roundsLeft: 1,
+      mechanics: {
+        kind: 'modifier', applies_to: { roll: 'attack' }, op: 'disadvantage', consume: 'next',
+      },
+    })).toBe('Помеха на бросок атаки. После следующего подходящего броска эффект расходуется.');
+  });
+
+  it('объясняет получателю Сопротивления тип, кость и частоту уменьшения урона', () => {
+    expect(activeEffectInstruction({
+      id: 'resistance-fire', name: 'Сопротивление', source: 'Сопротивление', roundsLeft: 10,
+      mechanics: {
+        kind: 'triggered_effect', event: 'damage_taken',
+        circumstances: [{ key: 'damageType', kind: 'event_data_equals', value: 'fire' }],
+        effects: [{ resolution: 'auto', result: [{ kind: 'reduce_damage', amount: '1d4' }] }],
+        uses: { count: 1, per: 'turn' },
+      },
+    })).toBe('Получаемый урон типа «Огонь» уменьшается на 1к4 (не чаще одного раза за ход).');
+  });
+
+  it('объясняет выбранный навык для преимущества Чудотворства', () => {
+    expect(activeEffectInstruction({
+      id: 'thaumaturgy-voice', name: 'Чудотворство: раскатистый голос',
+      source: 'Чудотворство: раскатистый голос', roundsLeft: 10,
+      mechanics: {
+        kind: 'modifier', applies_to: { roll: 'ability_check', filter: { skill: 'intimidation' } },
+        op: 'advantage',
+      },
+    })).toBe('Преимущество на проверку «Запугивание».');
+  });
+
   it('объясняет получателю Божественного вдохновения результат и расход', () => {
     expect(activeEffectInstruction({
       id: 'divine-inspiration', name: 'Божественное вдохновение', source: 'Божественное вдохновение', expiry: 'manual',

@@ -74,6 +74,19 @@ describe('events serialization', () => {
       .toBe('Иммунитет к состоянию: Отравлен');
   });
 
+  it('localizes world-interaction operation ids for the player journal', () => {
+    expect(describeEngineEvent({
+      type: 'world_interaction',
+      operation: 'beckon_fire',
+      parameters: {},
+    })).toBe('стихийный эффект: огонь');
+    expect(describeEngineEvent({
+      type: 'world_interaction',
+      operation: 'create_water_in_open_container',
+      parameters: { object_label: 'кувшин' },
+    })).toBe('создать воду в открытом сосуде: кувшин');
+  });
+
   it('labels non-d20 journal dice with their actual die size', () => {
     expect(formatRollBreakdown({
       kind: 'damage',

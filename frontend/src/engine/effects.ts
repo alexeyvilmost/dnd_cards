@@ -5,6 +5,8 @@ import type { ActiveEffectEntry, EngineEvent, RuntimeState } from '../mvp/contra
 import { dropConcentration } from './concentration';
 import { conditionInstructions, conditionLabel } from './conditions';
 import { turnCommandEffectName, turnCommandInstruction } from './turnCommands';
+import { skillTranslations } from '../utils/russianTranslations';
+import { getDamageLabel } from '../utils/damageTypes';
 
 function cloneState(state: RuntimeState): RuntimeState {
   return {
@@ -160,6 +162,12 @@ export function activeEffectInstruction(effect: ActiveEffectEntry): string | nul
   if (mechanics.kind === 'modifier') {
     const appliesTo = mechanics.applies_to as Record<string, unknown> | undefined;
     const roll = String(appliesTo?.roll ?? '');
+    const consume = String(mechanics.consume ?? '') === 'next'
+      ? ' После следующего подходящего броска эффект расходуется.'
+      : '';
+    const filter = appliesTo?.filter as Record<string, unknown> | undefined;
+    const skillId = typeof filter?.skill === 'string' ? filter.skill : '';
+    const skillName = skillId ? (skillTranslations[skillId] ?? skillId) : '';
     if (String(mechanics.op) === 'deny' && roll === 'healing') {
       return 'Не может восстанавливать Хиты.';
     }
@@ -168,6 +176,29 @@ export function activeEffectInstruction(effect: ActiveEffectEntry): string | nul
         ? ' После следующего броска эффект расходуется.'
         : '';
       return `Итог броска к20 не может быть меньше ${String(mechanics.value)}.${consume}`;
+    }
+    if (String(mechanics.op) === 'bonus_die' && mechanics.faces != null) {
+      const scope = roll === 'ability_check'
+        ? (skillName ? `проверке «${skillName}»` : 'проверке характеристики')
+        : roll === 'attack' || roll === 'attack_roll'
+          ? 'броску атаки'
+          : roll === 'saving_throw'
+            ? 'спасброску'
+            : 'подходящему броску';
+      const verb = Number(mechanics.sign ?? 1) < 0 ? 'Вычтите' : 'Добавьте';
+      return `${verb} 1к${String(mechanics.faces)} к ${scope}.${consume}`;
+    }
+    if (String(mechanics.op) === 'disadvantage') {
+      const scope = roll === 'ability_check' && skillName
+        ? `проверку «${skillName}»`
+        : roll === 'attack' || roll === 'attack_roll' ? 'бросок атаки' : 'подходящий бросок';
+      return `Помеха на ${scope}.${consume}`;
+    }
+    if (String(mechanics.op) === 'advantage') {
+      const scope = roll === 'ability_check' && skillName
+        ? `проверку «${skillName}»`
+        : roll === 'attack' || roll === 'attack_roll' ? 'бросок атаки' : 'подходящий бросок';
+      return `Преимущество на ${scope}.${consume}`;
     }
     const label = roll === 'size' ? 'Размер' : roll === 'speed' ? 'Скорость' : '';
     if (!label || mechanics.value == null) return null;
@@ -181,6 +212,36 @@ export function activeEffectInstruction(effect: ActiveEffectEntry): string | nul
           : ({ large: 'Большой', medium: 'Средний', small: 'Маленький' }[rawValue.toLowerCase()] ?? rawValue))
       : `${op === 'add' && !rawValue.startsWith('-') ? '+' : ''}${rawValue} фт`;
     return `${label}: ${value}.`;
+  }
+  if (mechanics.kind === 'triggered_effect' && mechanics.event === 'damage_taken') {
+    const circumstances = Array.isArray(mechanics.circumstances)
+      ? mechanics.circumstances.filter((entry): entry is Record<string, unknown> => (
+          Boolean(entry) && typeof entry === 'object'
+        ))
+      : [];
+    const damageType = circumstances.find((entry) => entry.key === 'damageType')?.value;
+    const effects = Array.isArray(mechanics.effects)
+      ? mechanics.effects.filter((entry): entry is Record<string, unknown> => (
+          Boolean(entry) && typeof entry === 'object'
+        ))
+      : [];
+    const results = effects.flatMap((entry) => (
+      Array.isArray(entry.result)
+        ? entry.result.filter((result): result is Record<string, unknown> => (
+            Boolean(result) && typeof result === 'object'
+          ))
+        : []
+    ));
+    const reduction = results.find((result) => result.kind === 'reduce_damage');
+    if (reduction?.amount != null) {
+      const type = typeof damageType === 'string'
+        ? ` типа «${getDamageLabel(damageType)}»`
+        : '';
+      const uses = mechanics.uses as Record<string, unknown> | undefined;
+      const limit = uses?.per === 'turn' ? ' (не чаще одного раза за ход)' : '';
+      const amount = String(reduction.amount).replace(/d/giu, 'к');
+      return `Получаемый урон${type} уменьшается на ${amount}${limit}.`;
+    }
   }
   const nestedResults = (Array.isArray(mechanics.effects) ? mechanics.effects : [])
     .flatMap((entry) => {

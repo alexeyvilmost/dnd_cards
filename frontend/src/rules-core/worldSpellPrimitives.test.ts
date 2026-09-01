@@ -525,7 +525,7 @@ describe('Druidcraft world primitive', () => {
     });
     expect(result.objects.weather).toEqual({
       id: 'weather',
-      name: 'Druidcraft Weather Sensor',
+      name: 'Прогноз погоды: rain',
       kind: 'spell_effect',
       size: 'tiny',
       sourceActorId: 'druid',

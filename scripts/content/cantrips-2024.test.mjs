@@ -1,10 +1,19 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { CANTRIP_UPGRADES, EXPECTED_CANTRIP_NAMES } from './cantrips-2024.mjs';
+import { assertCantripBulkApplyRetired } from './upgrade-cantrips-2024.mjs';
 
 test('манифест содержит ровно 35 уникальных заговоров', () => {
   assert.equal(EXPECTED_CANTRIP_NAMES.length, 35);
   assert.equal(new Set(EXPECTED_CANTRIP_NAMES).size, 35);
+});
+
+test('устаревший массовый writer останавливается до первой записи', () => {
+  assert.doesNotThrow(() => assertCantripBulkApplyRetired(false));
+  assert.throws(
+    () => assertCantripBulkApplyRetired(true),
+    /Bulk cantrip apply is retired.*no rows were changed/,
+  );
 });
 
 test('каждый заговор имеет исполнимую механику и честный статус поддержки', () => {

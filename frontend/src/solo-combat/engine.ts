@@ -158,16 +158,81 @@ export function eventSummary(records: readonly CombatLogEventRecord[]): string {
     const event = record.event;
     if (!event) return [];
     switch (event.type) {
-      case 'damage': return [`урон ${event.amount} (${event.damageType})`];
+      case 'damage': return [describeEngineEvent(event).replace(/^Урон/u, 'урон')];
       case 'healing': return [`лечение ${event.amount}`];
       case 'movement': return [describeMovement(event.mode, event.distanceFt)];
-      case 'condition_applied': return [`состояние: ${event.condition}`];
+      case 'condition_applied': return [describeEngineEvent(event).replace(/^Состояние/u, 'состояние')];
       case 'resource_spent': return [`потрачено: ${describeResource(event.resource)}`];
       case 'roll': return [event.roll.text];
       default: return [];
     }
   });
   return fragments.length ? fragments.join('; ') : 'действие выполнено';
+}
+
+function teleportRangeFt(action: RuleActionDefinition): number | null {
+  const visit = (value: unknown): number | null => {
+    if (Array.isArray(value)) {
+      for (const entry of value) {
+        const found = visit(entry);
+        if (found !== null) return found;
+      }
+      return null;
+    }
+    if (!value || typeof value !== 'object') return null;
+    const row = value as Record<string, unknown>;
+    if (row.kind === 'movement' && (row.mode === 'teleport' || row.value === 'teleport')) {
+      const distance = Number(row.distance ?? row.distance_ft ?? row.distanceFt);
+      return Number.isFinite(distance) && distance > 0 ? distance : null;
+    }
+    for (const nested of Object.values(row)) {
+      const found = visit(nested);
+      if (found !== null) return found;
+    }
+    return null;
+  };
+  return visit(action.mechanics.effects);
+}
+
+function applyActionTeleport(
+  before: SoloCombatState,
+  after: SoloCombatState,
+  actorId: string,
+  destination: GridPosition | undefined,
+  maxDistanceFt: number | null,
+): SoloCombatState {
+  if (!destination || maxDistanceFt === null) return after;
+  const source = before.tokens[actorId]?.position;
+  if (!source) throw new Error('Персонаж отсутствует на поле боя.');
+  const distanceFt = gridDistanceFt(source, destination);
+  if (distanceFt > maxDistanceFt) {
+    throw new Error(`Телепортация ограничена ${maxDistanceFt} фт.`);
+  }
+  if (occupiedPositions(before, actorId).has(`${destination.x}:${destination.y}`)) {
+    throw new Error('Для телепортации выберите свободную клетку.');
+  }
+  const log = [...after.log];
+  const last = log[log.length - 1];
+  if (last) {
+    log[log.length - 1] = {
+      ...last,
+      text: last.text.replace(`телепортация ${maxDistanceFt} фт.`, `телепортация ${distanceFt} фт.`),
+      records: last.records?.map((record) => (
+        record.event?.type === 'movement' && record.event.mode === 'teleport'
+          ? { ...record, event: { ...record.event, distanceFt } }
+          : record
+      )),
+    };
+  }
+  return {
+    ...after,
+    tokens: {
+      ...after.tokens,
+      [actorId]: { ...after.tokens[actorId], position: { ...destination } },
+    },
+    boardRevision: after.boardRevision + 1,
+    log,
+  };
 }
 
 function actorHoldsWeaponOrShield(actor: ActorState): boolean {
@@ -751,6 +816,13 @@ export function executeCombatAction(input: {
     },
   } : input.state;
   let next = dispatch({ state: dispatchState, command, rng, label: action.name });
+  next = applyActionTeleport(
+    dispatchState,
+    next,
+    input.actorId,
+    input.worldPosition,
+    teleportRangeFt(action),
+  );
   if (scenarioObjects.length && input.worldPosition) {
     next = {
       ...next,
