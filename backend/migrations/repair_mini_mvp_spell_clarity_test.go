@@ -11,6 +11,9 @@ func TestMiniMVPSpellClarityMigrationFollowsTrueStrikeZeroDamageRepair(t *testin
 	if index == 0 || migrations[index-1].Version != trueStrikeZeroDamageMigrationVersion {
 		t.Fatal("migration 136 must immediately follow 135")
 	}
+	if index+1 >= len(migrations) || migrations[index+1].Version != miniMVPSpellTriggerTimingMigrationVersion {
+		t.Fatal("migration 136 must immediately precede 137")
+	}
 }
 
 func TestRepairMiniMVPSpellClarityIsExactAndIdempotent(t *testing.T) {

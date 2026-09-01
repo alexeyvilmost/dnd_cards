@@ -866,6 +866,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairMiniMVPSpellClarity,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     miniMVPSpellTriggerTimingMigrationVersion,
+			Description: "Исправить окна реакций и заклинаний после попадания 1 уровня",
+			Up:          repairMiniMVPSpellTriggerTiming,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
