@@ -2,13 +2,10 @@ package migrations
 
 import "testing"
 
-func TestLevelOneMonkRuntimeContractsMigrationIsRegisteredLast(t *testing.T) {
+func TestLevelOneMonkRuntimeContractsMigrationFollowsSpeciesRepairs(t *testing.T) {
 	migrations := GetAllMigrations()
-	last := migrations[len(migrations)-1]
-	if last.Version != levelOneMonkRuntimeContractsMigrationVersion {
-		t.Fatalf("last migration is %s, want %s", last.Version, levelOneMonkRuntimeContractsMigrationVersion)
-	}
-	if migrations[len(migrations)-2].Version != levelOneSpeciesRuntimeContractsMigrationVersion {
+	index := registeredMigrationIndex(t, levelOneMonkRuntimeContractsMigrationVersion)
+	if index == 0 || migrations[index-1].Version != levelOneSpeciesRuntimeContractsMigrationVersion {
 		t.Fatal("migration 129 must immediately follow 128")
 	}
 }

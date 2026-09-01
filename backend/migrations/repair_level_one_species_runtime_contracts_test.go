@@ -4,14 +4,15 @@ import "testing"
 
 func TestLevelOneSpeciesRuntimeContractsMigrationIsRegisteredBeforeMonkRepairs(t *testing.T) {
 	migrations := GetAllMigrations()
-	registered := migrations[len(migrations)-2]
+	index := registeredMigrationIndex(t, levelOneSpeciesRuntimeContractsMigrationVersion)
+	registered := migrations[index]
 	if registered.Version != levelOneSpeciesRuntimeContractsMigrationVersion {
 		t.Fatalf("penultimate migration is %s, want %s", registered.Version, levelOneSpeciesRuntimeContractsMigrationVersion)
 	}
-	if migrations[len(migrations)-3].Version != missingWeaponMasteryProfilesMigrationVersion {
+	if index == 0 || migrations[index-1].Version != missingWeaponMasteryProfilesMigrationVersion {
 		t.Fatal("migration 128 must immediately follow 127")
 	}
-	if migrations[len(migrations)-1].Version != levelOneMonkRuntimeContractsMigrationVersion {
+	if index+1 >= len(migrations) || migrations[index+1].Version != levelOneMonkRuntimeContractsMigrationVersion {
 		t.Fatal("migration 129 must immediately follow 128")
 	}
 }

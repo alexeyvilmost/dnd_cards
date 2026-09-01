@@ -5,13 +5,10 @@ import (
 	"testing"
 )
 
-func TestBarbarianRageStackingMigrationIsRegisteredLast(t *testing.T) {
+func TestBarbarianRageStackingMigrationFollowsMonkRepairs(t *testing.T) {
 	migrations := GetAllMigrations()
-	last := migrations[len(migrations)-1]
-	if last.Version != barbarianRageStackingMigrationVersion {
-		t.Fatalf("last migration is %s, want %s", last.Version, barbarianRageStackingMigrationVersion)
-	}
-	if migrations[len(migrations)-2].Version != levelOneMonkRuntimeContractsMigrationVersion {
+	index := registeredMigrationIndex(t, barbarianRageStackingMigrationVersion)
+	if index == 0 || migrations[index-1].Version != levelOneMonkRuntimeContractsMigrationVersion {
 		t.Fatal("migration 130 must immediately follow 129")
 	}
 }

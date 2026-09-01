@@ -830,6 +830,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairBarbarianRageStacking,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     woodElfSpeedMigrationVersion,
+			Description: "Исправить бонус скорости лесного эльфа с 35 до +5 фт.",
+			Up:          repairWoodElfSpeed,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

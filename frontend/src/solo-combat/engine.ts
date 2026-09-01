@@ -35,6 +35,7 @@ import {
   type RemoteManipulatorCommand,
 } from '../engine/execute';
 import { describeEngineEvent } from '../engine/events';
+import { resourceLabel } from '../utils/resources';
 import { stoneworkContactFactsFromChoices } from '../mechanics/collectChoices';
 import { compileMonsterInstance } from './monsterCompiler';
 import { planMonsterTurn } from './monsterAi';
@@ -151,16 +152,35 @@ function appendLog(
   return { ...state, log: [...state.log.slice(-79), entry] };
 }
 
-function eventSummary(records: readonly CombatLogEventRecord[]): string {
+function movementSummary(mode: string, distanceFt: number): string {
+  switch (mode) {
+    case 'push': return `отталкивание ${distanceFt} фт.`;
+    case 'pull': return `притягивание ${distanceFt} фт.`;
+    case 'teleport': return `телепортация ${distanceFt} фт.`;
+    case 'approach_source': return `приближение на ${distanceFt} фт.`;
+    case 'flee_source': return `отступление на ${distanceFt} фт.`;
+    default: return `перемещение ${distanceFt} фт.`;
+  }
+}
+
+function combatResourceSummaryLabel(resource: string): string {
+  const knownLabels: Record<string, string> = {
+    giant_legacy: 'Наследие великанов',
+  };
+  const label = resourceLabel([], resource);
+  return knownLabels[resource] ?? (label === resource ? 'Заряд способности' : label);
+}
+
+export function eventSummary(records: readonly CombatLogEventRecord[]): string {
   const fragments = records.flatMap((record) => {
     const event = record.event;
     if (!event) return [];
     switch (event.type) {
       case 'damage': return [`урон ${event.amount} (${event.damageType})`];
       case 'healing': return [`лечение ${event.amount}`];
-      case 'movement': return [`отталкивание ${event.distanceFt} фт.`];
+      case 'movement': return [movementSummary(event.mode, event.distanceFt)];
       case 'condition_applied': return [`состояние: ${event.condition}`];
-      case 'resource_spent': return [`потрачено: ${event.resource}`];
+      case 'resource_spent': return [`потрачено: ${combatResourceSummaryLabel(event.resource)}`];
       case 'roll': return [event.roll.text];
       default: return [];
     }

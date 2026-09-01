@@ -8,7 +8,7 @@ import (
 
 func TestCrafterInPlayChoiceMigrationRegisteredBeforeWeaponAndSpeciesRepairs(t *testing.T) {
 	migrations := GetAllMigrations()
-	registered := migrations[len(migrations)-4]
+	registered := migrations[registeredMigrationIndex(t, crafterInPlayChoiceMigrationVersion)]
 	if registered.Version != crafterInPlayChoiceMigrationVersion {
 		t.Fatalf("registered migration = %q, want %q", registered.Version, crafterInPlayChoiceMigrationVersion)
 	}
