@@ -27,6 +27,7 @@ import { InMemoryRulesSession } from '../rules-core/session';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
 import { turnStartGrappleDamageOpportunity } from '../rules-core/fightingStyleComplexPrimitives';
 import { parseWeaponProfile } from '../rules-core/weaponProfile';
+import type { WorldObjectState } from '../rules-core/worldObjects';
 import { projectRuleAction } from '../canon/ruleActionProjection';
 import type { Monster } from '../monsters/types';
 import { canPay } from '../engine/cost';
@@ -256,15 +257,48 @@ function worldObjectSummary(
   world: WorldState,
 ): string[] {
   const summaries = events.flatMap(({ payload }) => {
-    if (payload.type !== 'WorldObjectMutationRecorded'
-      || payload.event.type !== 'WorldObjectCreated'
-      || !payload.event.object.illusion) return [];
-    const illusion = payload.event.object.illusion;
-    const form = illusion.form === 'sound' ? 'звук' : 'изображение';
-    return [
-      `иллюзия «${illusion.description}» (${form}, ${payload.event.object.roundsLeft ?? 0} раундов; `
-      + `изучение: Интеллект (Расследование) против СЛ ${illusion.spellSaveDc})`,
-    ];
+    if (payload.type !== 'WorldObjectMutationRecorded') return [];
+    const event = payload.event;
+    if (event.type === 'WorldObjectCreated' && event.object.illusion) {
+      const illusion = event.object.illusion;
+      const form = illusion.form === 'sound' ? 'звук' : 'изображение';
+      return [
+        `иллюзия «${illusion.description}» (${form}, ${event.object.roundsLeft ?? 0} раундов; `
+        + `изучение: Интеллект (Расследование) против СЛ ${illusion.spellSaveDc})`,
+      ];
+    }
+    if (event.type === 'WorldObjectCreated'
+      && event.object.tags?.includes('prestidigitation:minor_creation')) {
+      return [`создана малая безделушка «${event.object.name}» до конца следующего хода`];
+    }
+    if (event.type === 'WorldObjectCreated'
+      && event.object.tags?.includes('instantaneous_sensory_effect')) {
+      return [`сенсорный эффект «${event.object.name}»`];
+    }
+    if (event.type !== 'WorldObjectPatched') return [];
+    const objectName = world.objects[event.objectId]?.name ?? event.objectId;
+    if (event.reason === 'prestidigitation_fire_play') {
+      return [`${objectName}: огонь ${event.patch.flame?.lit ? 'зажжён' : 'погашен'}`];
+    }
+    if (event.reason === 'prestidigitation_clean_or_soil') {
+      return [`${objectName}: ${event.patch.soiled ? 'испачкан' : 'очищен'}`];
+    }
+    if (event.reason === 'prestidigitation_minor_sensation'
+      || event.reason === 'prestidigitation_magic_mark') {
+      const effect = event.patch.prestidigitation?.at(-1);
+      if (!effect) return [];
+      const kind = effect.kind === 'magic_mark' ? 'магическая метка' : 'малое ощущение';
+      return [`${objectName}: ${kind} «${effect.description}» (${effect.roundsLeft} раундов)`];
+    }
+    if (event.reason === 'light_attached' && event.patch.illumination) {
+      const light = event.patch.illumination;
+      const color = light.color ? `; цвет: ${light.color}` : '';
+      return [
+        `${objectName}: яркий свет ${light.brightRadiusFt} фт. + тусклый свет ещё `
+        + `${light.dimAdditionalRadiusFt} фт. (${light.roundsLeft} раундов${color})`,
+      ];
+    }
+    return [];
   });
   const magicObservations = events.flatMap(({ payload }) => (
     payload.type === 'WorldObjectMutationRecorded'
@@ -527,7 +561,7 @@ function declarationFor(
     if (maxRangeFt !== undefined && distanceFromCasterFt > maxRangeFt) {
       throw new Error(`Танцующие огоньки должны быть в пределах ${maxRangeFt} фт. от заклинателя.`);
     }
-    dancingLightsWorldInput = {
+    dancingLightsWorldInput = suppliedWorldInput ?? {
       type: 'dancing_lights',
       form: 'individual',
       placements: [{ distanceFromCasterFt, withinRequiredSeparation: true }],
@@ -594,6 +628,7 @@ export function executeCombatAction(input: {
   targetIds: string[];
   worldPosition?: GridPosition;
   worldInput?: ActionWorldInput;
+  scenarioObjects?: readonly WorldObjectState[];
   choices?: Readonly<Record<string, readonly string[]>>;
   rng?: Rng;
 }): SoloCombatState {
@@ -698,7 +733,35 @@ export function executeCombatAction(input: {
       },
     } : {}),
   };
-  let next = dispatch({ state: input.state, command, rng, label: action.name });
+  const scenarioObjects = input.scenarioObjects ?? [];
+  for (const object of scenarioObjects) {
+    if (input.state.world.objects[object.id]) {
+      throw new Error(`Объект «${object.name}» уже существует в сцене.`);
+    }
+  }
+  const dispatchState = scenarioObjects.length ? {
+    ...input.state,
+    world: {
+      ...input.state.world,
+      objects: {
+        ...input.state.world.objects,
+        ...Object.fromEntries(scenarioObjects.map((object) => [object.id, clone(object)])),
+      },
+    },
+  } : input.state;
+  let next = dispatch({ state: dispatchState, command, rng, label: action.name });
+  if (scenarioObjects.length && input.worldPosition) {
+    next = {
+      ...next,
+      worldObjectPositions: {
+        ...(next.worldObjectPositions ?? {}),
+        ...Object.fromEntries(scenarioObjects.map((object) => [
+          object.id, { ...input.worldPosition! },
+        ])),
+      },
+      boardRevision: next.boardRevision + 1,
+    };
+  }
   const worldPrimitive = primitiveType(action);
   if ((worldPrimitive === 'dancing_lights_world' || worldPrimitive === 'minor_illusion_world_object')
     && input.worldPosition) {
@@ -2242,6 +2305,7 @@ export function selectedTargetsForAction(input: {
   if (!action) throw new Error('Действие отсутствует в боевом каталоге');
   const actorId = input.actorId ?? input.state.characterId;
   const rawTargeting = action.mechanics.targeting as Record<string, unknown> | undefined;
+  if (rawTargeting?.domain === 'world' || rawTargeting?.actor_targets === false) return [];
   if (rawTargeting?.shape === 'self') return [actorId];
   if (rawTargeting?.shape === 'area') {
     return areaActorIds({

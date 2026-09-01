@@ -8,7 +8,7 @@ import type { SheetCombatParticipantSeed } from '../character/sheetCombatSession
 import type { ForgeCharacter } from '../character/types';
 import type { Action } from '../types';
 import type { Monster } from '../monsters/types';
-import { addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatParticipants, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatAlertSwap, resolveSoloCombatInterception, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, setSoloCombatInitiativeTotals } from './engine';
+import { addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatParticipants, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatAlertSwap, resolveSoloCombatInterception, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectedTargetsForAction, setSoloCombatInitiativeTotals } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { gridDistanceFt } from './tacticalGrid';
 import { SOLO_COMBAT_KEY } from './types';
@@ -100,6 +100,104 @@ function wizardSeed(): SheetCombatParticipantSeed {
     initiative_bonus: 9, speed: actor.character.characterSpeed ?? 30,
   } as unknown as ForgeCharacter;
   return { character, canonical };
+}
+
+function prestidigitationWizardSeed(): SheetCombatParticipantSeed {
+  const participant = wizardSeed();
+  const actor = participant.canonical.world.actors[participant.character.id];
+  const action: RuleActionDefinition = {
+    id: 'd5000000-0000-4000-8000-000000000003',
+    name: 'Фокусы',
+    kind: 'spell',
+    spell: { level: 0 },
+    sourceEntityIds: ['SPELL-prestidigitation'],
+    mechanics: {
+      activation: { mode: 'active', cost: [{ resource: 'action' }] },
+      targeting: {
+        domain: 'world', actor_targets: false, range_ft: 10, allowed_relations: [],
+        requires_line_of_sight: false, shape: 'single', min_targets: 0, max_targets: 1,
+      },
+      effects: [{ resolution: 'auto', result: [] }],
+      primitive: {
+        type: 'prestidigitation_world',
+        policy: {
+          max_volume_cubic_ft: 1,
+          max_active_effects: 3,
+          attachment_duration_rounds: 600,
+          creation_source_turn_endings: 2,
+        },
+      },
+    },
+    targeting: {
+      minTargets: 0, maxTargets: 1, rangeFt: 10,
+      requiresLineOfSight: false, allowedRelations: [],
+    },
+  };
+  const actions = [...participant.canonical.actions, action];
+  actor.capabilities.actionIds.push(action.id);
+  actor.spellcastingAccess ??= { grants: [], preparedSources: {} };
+  actor.spellcastingAccess.grants.push({
+    grantId: 'grant:prestidigitation', actionId: action.id, sourceId: 'CLASS-wizard',
+    access: 'cantrip', level: 0, spellcastingAbility: 'int',
+  });
+  const byId = new Map(actions.map((candidate) => [candidate.id, candidate]));
+  return {
+    ...participant,
+    canonical: {
+      ...participant.canonical,
+      actions,
+      catalog: { getAction: (id) => byId.get(id), listActions: () => actions },
+    },
+  };
+}
+
+function lightWizardSeed(): SheetCombatParticipantSeed {
+  const participant = wizardSeed();
+  const actor = participant.canonical.world.actors[participant.character.id];
+  const action: RuleActionDefinition = {
+    id: 'd5000000-0000-4000-8000-000000000004',
+    name: 'Свет',
+    kind: 'spell',
+    spell: { level: 0 },
+    sourceEntityIds: ['SPELL-light'],
+    mechanics: {
+      activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }] },
+      targeting: {
+        domain: 'world', actor_targets: false, range_ft: 0, allowed_relations: [],
+        requires_line_of_sight: false, requires_touch: true, shape: 'single',
+        min_targets: 0, max_targets: 1,
+      },
+      effects: [{ resolution: 'auto', result: [] }],
+      primitive: {
+        type: 'light_world_object',
+        policy: {
+          max_object_size: 'large', exclude_carried_by_other: true,
+          bright_radius_ft: 20, dim_additional_radius_ft: 20,
+          duration_rounds: 600, max_active_per_source: 1,
+        },
+      },
+    },
+    targeting: {
+      minTargets: 0, maxTargets: 1, rangeFt: 0,
+      requiresLineOfSight: false, allowedRelations: [],
+    },
+  };
+  const actions = [...participant.canonical.actions, action];
+  actor.capabilities.actionIds.push(action.id);
+  actor.spellcastingAccess ??= { grants: [], preparedSources: {} };
+  actor.spellcastingAccess.grants.push({
+    grantId: 'grant:light', actionId: action.id, sourceId: 'CLASS-wizard',
+    access: 'cantrip', level: 0, spellcastingAbility: 'int',
+  });
+  const byId = new Map(actions.map((candidate) => [candidate.id, candidate]));
+  return {
+    ...participant,
+    canonical: {
+      ...participant.canonical,
+      actions,
+      catalog: { getAction: (id) => byId.get(id), listActions: () => actions },
+    },
+  };
 }
 
 function dancingLightsWizardSeed(): SheetCombatParticipantSeed {
@@ -1309,15 +1407,31 @@ describe('solo combat engine vertical integration', () => {
       actionId: dancingLights!.id,
       targetIds: [],
       worldPosition: castPosition,
+      worldInput: {
+        type: 'dancing_lights',
+        form: 'individual',
+        placements: Array.from({ length: 4 }, () => ({
+          distanceFromCasterFt: gridDistanceFt(source, castPosition),
+          withinRequiredSeparation: true,
+        })),
+        facts: {
+          factsSource: 'board',
+          boardRevision: state.boardRevision,
+          distanceFt: gridDistanceFt(source, castPosition),
+          lineOfSight: true,
+        },
+      },
       rng: () => 0,
     });
 
-    const light = Object.values(state.world.objects).find((object) => (
+    const lights = Object.values(state.world.objects).filter((object) => (
       object.sourceActorId === actorId && object.sourceActionId === dancingLights!.id && object.dancingLight
     ));
-    expect(light).toBeDefined();
-    expect(state.worldObjectPositions?.[light!.id]).toEqual(castPosition);
-    expect(light!.distanceFromSourceFt).toBe(10);
+    expect(lights).toHaveLength(4);
+    const light = lights[0];
+    expect(lights.map((candidate) => state.worldObjectPositions?.[candidate.id]))
+      .toEqual(Array.from({ length: 4 }, () => castPosition));
+    expect(lights.map((candidate) => candidate.distanceFromSourceFt)).toEqual([10, 10, 10, 10]);
     expect(state.world.actors[actorId].runtime.resources.action).toBe(0);
     expect(state.world.concentrations[actorId]?.actionId).toBe(dancingLights!.id);
     expect(state.boardRevision).toBe(boardRevisionBeforeCast + 1);
@@ -1455,6 +1569,109 @@ describe('solo combat engine vertical integration', () => {
     expect(restored?.world.objects[illusion!.id].illusion?.description)
       .toBe('Звон серебряного колокольчика');
     expect(restored?.worldObjectPositions?.[illusion!.id]).toEqual(castPosition);
+  });
+
+  it('keeps the selected Prestidigitation sensory effect visible in the combat journal', async () => {
+    const participant = prestidigitationWizardSeed();
+    let state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const actorId = participant.character.id;
+    const prestidigitation = state.catalogActions.find((action) => (
+      state.playerActionIds.includes(action.id) && primitive(action) === 'prestidigitation_world'
+    ));
+    expect(prestidigitation, 'Wizard should expose certified Prestidigitation').toBeDefined();
+    const source = state.tokens[actorId].position;
+    const castPosition = { x: source.x < 10 ? source.x + 2 : source.x - 2, y: source.y };
+
+    state = executeCombatAction({
+      state,
+      actorId,
+      actionId: prestidigitation!.id,
+      targetIds: [],
+      worldPosition: castPosition,
+      worldInput: {
+        type: 'prestidigitation',
+        option: {
+          kind: 'sensory_effect',
+          description: 'Запах хвои и искры',
+          facts: {
+            factsSource: 'board',
+            boardRevision: state.boardRevision,
+            distanceFt: gridDistanceFt(source, castPosition),
+            lineOfSight: true,
+          },
+        },
+      },
+      rng: () => 0,
+    });
+
+    expect(state.world.actors[actorId].runtime.resources.action).toBe(0);
+    expect(state.log.at(-1)?.text).toContain('сенсорный эффект «Запах хвои и искры»');
+    expect(Object.values(state.world.objects).some((object) => (
+      object.tags?.includes('instantaneous_sensory_effect')
+    ))).toBe(false);
+  });
+
+  it('casts Light on a newly described object without inventing a self actor target', async () => {
+    const participant = lightWizardSeed();
+    let state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const actorId = participant.character.id;
+    const light = state.catalogActions.find((action) => primitive(action) === 'light_world_object');
+    expect(light).toBeDefined();
+    const castPosition = state.tokens[actorId].position;
+    const targetIds = selectedTargetsForAction({
+      state, actorId, actionId: light!.id,
+      clickedActorId: actorId, clickedPosition: castPosition,
+    });
+    expect(targetIds).toEqual([]);
+    const token = {
+      id: 'object:copper-token', name: 'медный жетон', kind: 'item' as const,
+      size: 'tiny' as const, unattended: true,
+    };
+    const boardRevisionBefore = state.boardRevision;
+
+    state = executeCombatAction({
+      state,
+      actorId,
+      actionId: light!.id,
+      targetIds,
+      worldPosition: castPosition,
+      scenarioObjects: [token],
+      worldInput: {
+        type: 'target_object', objectId: token.id,
+        facts: {
+          factsSource: 'board', boardRevision: state.boardRevision,
+          distanceFt: 0, lineOfSight: true, touched: true,
+        },
+      },
+      rng: () => 0,
+    });
+
+    expect(state.world.actors[actorId].runtime.resources.action).toBe(0);
+    expect(state.world.objects[token.id].illumination).toMatchObject({
+      brightRadiusFt: 20, dimAdditionalRadiusFt: 20, roundsLeft: 600,
+      sourceActorId: actorId, sourceActionId: light!.id,
+    });
+    expect(state.worldObjectPositions?.[token.id]).toEqual(castPosition);
+    expect(state.boardRevision).toBe(boardRevisionBefore + 1);
+    expect(state.log.at(-1)?.text).toContain('медный жетон: яркий свет 20 фт.');
+    expect(state.log.at(-1)?.text).toContain('тусклый свет ещё 20 фт.');
+    expect(state.log.at(-1)?.text).toContain('600 раундов');
+
+    const restored = readSoloCombatState(
+      writeSoloCombatState({}, state), participant.character.id, state.runtimeRevision,
+    );
+    expect(restored?.world.objects[token.id].illumination?.roundsLeft).toBe(600);
+    expect(restored?.worldObjectPositions?.[token.id]).toEqual(castPosition);
   });
 
   it('runs a catalog-gated off-turn opportunity attack and spends exactly the reactor resource', async () => {
