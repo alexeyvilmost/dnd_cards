@@ -1250,8 +1250,9 @@ describe('solo combat engine vertical integration', () => {
     }), () => 0.99);
 
     expect(state.pendingTriggeredAction?.optionActionIds).toContain(rider.id);
-    state = resolveTriggeredCombatAction(state, rider.id, () => 0.5);
+    state = autoResolveSystemDecisions(resolveTriggeredCombatAction(state, rider.id, () => 0.5), () => 0.5);
     expect(state.pendingTriggeredAction).toBeUndefined();
+    expect(state.world.pendingResolution).toBeNull();
     expect(state.world.actors[participant.character.id].runtime.resources.bonus_action).toBe(0);
     expect(state.world.actors[participant.character.id].runtime.resources.spell_slot_1).toBe(1);
   });

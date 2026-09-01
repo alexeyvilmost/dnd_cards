@@ -345,7 +345,7 @@ export default function SoloCombatPage() {
 
   const resolveTriggeredChoice = (actionId: string | null) => {
     try {
-      apply(resolveTriggeredCombatAction(state!, actionId));
+      apply(autoResolveSystemDecisions(resolveTriggeredCombatAction(state!, actionId)));
     } catch (reason) {
       setError(playerFacingSheetActionError(reason));
     }
