@@ -45,6 +45,7 @@ import {
   selectedTargetsForAction,
 } from '../solo-combat/engine';
 import { readSoloCombatState } from '../solo-combat/persistence';
+import { shouldShowSoloCombatOutcome } from '../solo-combat/outcomeVisibility';
 import { writeDedicatedCombatTurnState } from '../solo-combat/turnState';
 import {
   controlledCharacterIds,
@@ -720,7 +721,7 @@ export default function SoloCombatPage() {
       })}<button type="button" disabled={busy} onClick={() => resolveTriggeredChoice(null)}>Пропустить</button></div></section></div>}
       {pendingTurnStart && <div className="combat-reaction-backdrop"><section><p>НАЧАЛО ХОДА</p><h2>Нанести 1к4 урона существу в захвате?</h2><div>{pendingTurnStart.targetActorIds.map((targetActorId) => <button type="button" key={targetActorId} disabled={busy} onClick={() => apply(resolveSoloCombatTurnStart(state, targetActorId))}>{state.world.actors[targetActorId]?.name ?? 'Цель'} · 1к4 дробящего урона</button>)}<button type="button" disabled={busy} onClick={() => apply(resolveSoloCombatTurnStart(state, null))}>Пропустить</button></div></section></div>}
       {worldInputDialog.dialog}
-      {state.outcome !== 'active' && <div className="combat-outcome"><section><p>БОЙ ЗАВЕРШЁН</p><h1>{state.outcome === 'victory' ? 'Победа' : 'Поражение'}</h1><p>{state.outcome === 'victory' ? 'Все противники уничтожены.' : `${character.name} потерял все хиты.`}</p><button type="button" onClick={finish}>Завершить и вернуться в лист</button><button type="button" onClick={() => navigate(`/characters-v3/${id}`)}><RotateCcw size={16} /> Оставить запись боя</button></section></div>}
+      {shouldShowSoloCombatOutcome(state) && <div className="combat-outcome"><section><p>БОЙ ЗАВЕРШЁН</p><h1>{state.outcome === 'victory' ? 'Победа' : 'Поражение'}</h1><p>{state.outcome === 'victory' ? 'Все противники уничтожены.' : `${character.name} потерял все хиты.`}</p><button type="button" onClick={finish}>Завершить и вернуться в лист</button><button type="button" onClick={() => navigate(`/characters-v3/${id}`)}><RotateCcw size={16} /> Оставить запись боя</button></section></div>}
     </main>
   );
 }
