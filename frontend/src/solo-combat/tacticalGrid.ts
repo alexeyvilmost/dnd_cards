@@ -83,7 +83,8 @@ export interface TacticalAreaProjectionInput {
 type TacticalAreaGeometry =
   | { kind: 'cone'; sizeFt: number }
   | { kind: 'cube'; sizeFt: number }
-  | { kind: 'sphere'; radiusFt: number };
+  | { kind: 'sphere'; radiusFt: number }
+  | { kind: 'emanation'; radiusFt: number };
 
 function positiveNumber(value: unknown): number | null {
   const parsed = Number(value);
@@ -103,6 +104,10 @@ function tacticalAreaGeometry(action: TacticalAreaAction): TacticalAreaGeometry 
     const radiusFt = positiveNumber(area.radius_ft);
     return radiusFt === null ? null : { kind: 'sphere', radiusFt };
   }
+  if (area?.kind === 'emanation') {
+    const radiusFt = positiveNumber(area.radius_ft);
+    return radiusFt === null ? null : { kind: 'emanation', radiusFt };
+  }
   return null;
 }
 
@@ -121,7 +126,7 @@ export function areaPositionsForAction(input: TacticalAreaProjectionInput): Grid
   const geometry = tacticalAreaGeometry(input.action);
   if (!geometry) return [];
 
-  if (geometry.kind !== 'cone') {
+  if (geometry.kind !== 'cone' && geometry.kind !== 'emanation') {
     const rangeFt = positiveNumber(input.action.targeting?.rangeFt);
     if (rangeFt !== null && gridDistanceFt(input.sourcePosition, input.aimPosition) > rangeFt) {
       return [];
@@ -140,11 +145,12 @@ export function areaPositionsForAction(input: TacticalAreaProjectionInput): Grid
     ));
   }
 
-  if (geometry.kind === 'sphere') {
+  if (geometry.kind === 'sphere' || geometry.kind === 'emanation') {
+    const center = geometry.kind === 'emanation' ? input.sourcePosition : input.aimPosition;
     return boardPositions().filter((position) => (
       Math.hypot(
-        position.x - input.aimPosition.x,
-        position.y - input.aimPosition.y,
+        position.x - center.x,
+        position.y - center.y,
       ) * TACTICAL_CELL_FT <= geometry.radiusFt + Number.EPSILON
     ));
   }

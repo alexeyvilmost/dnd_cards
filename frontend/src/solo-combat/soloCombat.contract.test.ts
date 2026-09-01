@@ -130,6 +130,21 @@ describe('solo combat tactical contract', () => {
     expect(cells).not.toContainEqual({ x: 4, y: 4 });
   });
 
+  it('anchors emanations on the source instead of the clicked aim cell', () => {
+    const cells = areaPositionsForAction({
+      action: {
+        mechanics: { targeting: { shape: 'area', area: { kind: 'emanation', radius_ft: 5 } } },
+        targeting: { rangeFt: 0 },
+      },
+      sourcePosition: { x: 5, y: 5 },
+      aimPosition: { x: 10, y: 10 },
+    });
+    expect(cells).toHaveLength(5);
+    expect(cells).toContainEqual({ x: 5, y: 5 });
+    expect(cells).toContainEqual({ x: 5, y: 4 });
+    expect(cells).not.toContainEqual({ x: 10, y: 10 });
+  });
+
   it('anchors cones at the source and rotates them toward the aim cell', () => {
     const action = {
       mechanics: { targeting: { shape: 'area', area: { kind: 'cone', size_ft: 15 } } },

@@ -305,12 +305,33 @@ function validateResolutionLock(world: WorldState, command: GameCommand): Comman
   return null;
 }
 
+function factualTargetRangeFt(action: RuleActionDefinition): number {
+  const targeting = action.mechanics.targeting;
+  if (!targeting || typeof targeting !== 'object' || Array.isArray(targeting)) {
+    return action.targeting?.rangeFt ?? 0;
+  }
+  const declaration = targeting as Record<string, unknown>;
+  const area = declaration.area;
+  if (declaration.shape === 'area' && area && typeof area === 'object' && !Array.isArray(area)) {
+    const geometry = area as Record<string, unknown>;
+    const radiusFt = Number(geometry.radius_ft);
+    // An emanation's origin has range 0, while its actor targets occupy the
+    // declared radius around that origin. Target validation therefore uses
+    // the radius; keeping range 0 as the casting-origin authority is correct.
+    if (geometry.kind === 'emanation' && Number.isFinite(radiusFt) && radiusFt > 0) {
+      return radiusFt;
+    }
+  }
+  return action.targeting?.rangeFt ?? 0;
+}
+
 function factsIssue(action: RuleActionDefinition, targetId: string, facts?: SpatialFacts): [CommandRejectionCode, string] | null {
   const targeting = action.targeting;
   if (!targeting) return null;
   if (!facts) return ['MissingSpatialFacts', `Missing spatial facts for target ${targetId}`];
-  if (facts.distanceFt < 0 || facts.distanceFt > targeting.rangeFt) {
-    return ['OutOfRange', `${targetId} is outside ${targeting.rangeFt} ft range`];
+  const targetRangeFt = factualTargetRangeFt(action);
+  if (facts.distanceFt < 0 || facts.distanceFt > targetRangeFt) {
+    return ['OutOfRange', `${targetId} is outside ${targetRangeFt} ft range`];
   }
   if (targeting.requiresLineOfSight && (!facts.lineOfSight || facts.cover === 'total')) {
     return ['LineOfSightBlocked', `Line of sight to ${targetId} is blocked`];

@@ -102,6 +102,50 @@ function wizardSeed(): SheetCombatParticipantSeed {
   return { character, canonical };
 }
 
+function thunderclapWizardSeed(): SheetCombatParticipantSeed {
+  const participant = wizardSeed();
+  const actor = participant.canonical.world.actors[participant.character.id];
+  const action: RuleActionDefinition = {
+    id: 'd9000000-0000-4000-8000-000000000005',
+    name: 'Раскат грома',
+    kind: 'spell',
+    spell: { level: 0 },
+    sourceEntityIds: ['SPELL-thunderclap'],
+    mechanics: {
+      activation: { mode: 'active', cost: [{ resource: 'action' }] },
+      targeting: {
+        domain: 'actor', actor_targets: true, shape: 'area',
+        area: { kind: 'emanation', radius_ft: 5 },
+        min_targets: 0, max_targets: 8, range_ft: 0,
+        requires_line_of_sight: false, allowed_relations: ['enemy'],
+      },
+      effects: [{
+        resolution: 'save', who: 'target', ability: 'con', dc: 10,
+        on_fail: [{ kind: 'damage', dice: '1d6', type: 'thunder' }],
+        on_success: [],
+      }],
+    },
+    targeting: {
+      minTargets: 0, maxTargets: 8, rangeFt: 0,
+      requiresLineOfSight: false, allowedRelations: ['enemy'],
+    },
+  };
+  actor.capabilities.actionIds.push(action.id);
+  actor.spellcastingAccess ??= { grants: [], preparedSources: {} };
+  actor.spellcastingAccess.grants.push({
+    grantId: 'test-thunderclap-grant', actionId: action.id, sourceId: 'test-wizard',
+    access: 'cantrip', level: 0, spellcastingAbility: 'int',
+  });
+  const actions = [...participant.canonical.actions, action];
+  const byId = new Map(actions.map((candidate) => [candidate.id, candidate]));
+  participant.canonical.actions = actions;
+  participant.canonical.catalog = {
+    getAction: (id) => byId.get(id),
+    listActions: () => actions,
+  };
+  return participant;
+}
+
 function prestidigitationWizardSeed(): SheetCombatParticipantSeed {
   const participant = wizardSeed();
   const actor = participant.canonical.world.actors[participant.character.id];
@@ -1302,6 +1346,43 @@ describe('solo combat engine vertical integration', () => {
     expect(state.world.actors[monsterId].runtime.hp.current).toBeLessThan(hpBefore);
     expect(state.tokens[monsterId].position.y).toBeLessThan(7);
     expect(state.log.some((entry) => entry.text.includes(thunderwave!.name))).toBe(true);
+  });
+
+  it('selects and resolves adjacent enemies for a 5-foot emanation with a zero Constitution modifier', async () => {
+    const participant = thunderclapWizardSeed();
+    let state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const actorId = participant.character.id;
+    const monsterId = Object.values(state.world.actors).find((actor) => actor.kind === 'monster')!.id;
+    const action = state.catalogActions.find((candidate) => candidate.name === 'Раскат грома')!;
+    const sourcePosition = state.tokens[actorId].position;
+    const targetPosition = { x: sourcePosition.x + 1, y: sourcePosition.y };
+    state = {
+      ...state,
+      tokens: {
+        ...state.tokens,
+        [monsterId]: { ...state.tokens[monsterId], position: targetPosition },
+      },
+      boardRevision: state.boardRevision + 1,
+    };
+
+    const targetIds = selectedTargetsForAction({
+      state, actorId, actionId: action.id,
+      clickedActorId: monsterId, clickedPosition: targetPosition,
+    });
+    expect(targetIds).toEqual([monsterId]);
+
+    const hpBefore = state.world.actors[monsterId].runtime.hp.current;
+    state = autoResolveSystemDecisions(executeCombatAction({
+      state, actorId, actionId: action.id, targetIds, rng: () => 0,
+    }), () => 0);
+    expect(state.world.actors[actorId].runtime.resources.action).toBe(0);
+    expect(state.world.actors[monsterId].runtime.hp.current).toBeLessThan(hpBefore);
+    expect(state.log.some((entry) => entry.text.includes(action.name))).toBe(true);
   });
 
   it('starts combat with SPELL-0173 and executes it outside the strict combat slice', async () => {
