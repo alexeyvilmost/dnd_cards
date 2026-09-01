@@ -26,6 +26,7 @@ import type {
 import { InMemoryRulesSession } from '../rules-core/session';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
 import { turnStartGrappleDamageOpportunity } from '../rules-core/fightingStyleComplexPrimitives';
+import { conditionInteractionDenied } from '../rules-core/conditionsRuntime';
 import { parseWeaponProfile } from '../rules-core/weaponProfile';
 import type { WorldObjectState } from '../rules-core/worldObjects';
 import { projectRuleAction } from '../canon/ruleActionProjection';
@@ -2025,12 +2026,24 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
   }
   const targetId = controlledCharacterIds(state)
     .filter((actorId) => (state.world.actors[actorId]?.runtime.hp.current ?? 0) > 0)
+    .filter((actorId) => !conditionInteractionDenied({
+      world: state.world,
+      actorId: monsterId,
+      targetActorId: actorId,
+      capability: 'harm',
+    }))
     .sort((left, right) => (
       gridDistanceFt(state.tokens[monsterId].position, state.tokens[left].position)
         - gridDistanceFt(state.tokens[monsterId].position, state.tokens[right].position)
         || left.localeCompare(right)
     ))[0];
-  if (!targetId) return outcome(state);
+  if (!targetId) {
+    return advanceTurn(appendLog(
+      state,
+      monsterId,
+      'Нет допустимой цели: ход завершён без атаки.',
+    ), rng);
+  }
   const plan = planMonsterTurn(state, monster, targetId);
   let next = state;
   const firstDestination = plan.firstMove.at(-1);

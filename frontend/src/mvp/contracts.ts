@@ -275,6 +275,8 @@ export interface TargetContext {
   sleepRequired?: boolean;
   /** Immutable entities that established the target's no-sleep trait. */
   sleepTraitSourceEntityIds?: string[];
+  /** Board-owned relationship to the acting creature for relational save rules. */
+  relationToSource?: 'self' | 'ally' | 'enemy' | 'neutral';
 }
 
 export interface ConditionImmunityContext {

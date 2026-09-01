@@ -26,6 +26,37 @@ const effect = (name: string, mechanics: Dict): ActiveEffectEntry => ({
 const rollEvents = (events: EngineEvent[]) => events.filter((event) => event.type === 'roll');
 
 describe('универсальные примитивы заговоров', () => {
+  it.each([
+    ['enemy', 'humanoid'],
+    ['ally', 'fey'],
+  ] as const)('Дружба даёт автоуспех цели при отношении %s и типе %s', (relation, creatureType) => {
+    const targetState = freshFighterState();
+    const result = executeAction(freshFighterState(), {
+      name: 'Дружба',
+      effects: [{
+        resolution: 'save', ability: 'wis', dc: '13',
+        automatic_success: {
+          if_target_relation: 'enemy',
+          if_target_creature_type_not: 'humanoid',
+        },
+        on_fail: [{ kind: 'condition', value: 'charmed', op: 'apply' }],
+        on_success: [],
+      }],
+    }, {
+      character: FIGHTER_CTX,
+      target: {
+        id: 'target', runtimeState: targetState, relationToSource: relation,
+        characterContext: { ...FIGHTER_CTX, creatureType },
+      },
+      rng: () => { throw new Error('automatic success must not roll'); },
+    });
+    expect(result.targetState).toBeUndefined();
+    expect(result.events.some((event) => event.type === 'condition_applied')).toBe(false);
+    expect(result.events).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: 'narrative', text: expect.stringContaining('автоуспех') }),
+    ]));
+  });
+
   it('проецирует штрафную кость Защиты от оружия на входящую атаку', () => {
     const state = freshFighterState();
     state.activeEffects = [effect('Защита от оружия', {

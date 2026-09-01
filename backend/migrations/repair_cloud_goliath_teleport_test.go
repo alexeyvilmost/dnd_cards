@@ -2,14 +2,14 @@ package migrations
 
 import "testing"
 
-func TestCloudGoliathTeleportMigrationIsRegisteredLast(t *testing.T) {
+func TestCloudGoliathTeleportMigrationPrecedesCantripRepairs(t *testing.T) {
 	migrations := GetAllMigrations()
-	last := migrations[len(migrations)-1]
-	if last.Version != cloudGoliathTeleportMigrationVersion {
-		t.Fatalf("last migration is %s, want %s", last.Version, cloudGoliathTeleportMigrationVersion)
-	}
-	if migrations[len(migrations)-2].Version != woodElfSpeedMigrationVersion {
+	index := registeredMigrationIndex(t, cloudGoliathTeleportMigrationVersion)
+	if index == 0 || migrations[index-1].Version != woodElfSpeedMigrationVersion {
 		t.Fatal("migration 132 must immediately follow 131")
+	}
+	if index+1 >= len(migrations) || migrations[index+1].Version != friendsMindSliverCantripMigrationVersion {
+		t.Fatal("migration 132 must immediately precede 133")
 	}
 }
 

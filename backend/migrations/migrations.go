@@ -842,6 +842,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairCloudGoliathTeleport,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     friendsMindSliverCantripMigrationVersion,
+			Description: "Исправить автоуспех Дружбы и одноразовый штраф спасброска Расщепления разума",
+			Up:          repairFriendsMindSliverCantrips,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

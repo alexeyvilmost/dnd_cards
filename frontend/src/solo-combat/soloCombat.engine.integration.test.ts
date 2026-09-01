@@ -1787,6 +1787,27 @@ describe('solo combat engine vertical integration', () => {
     expect(activeId(state)).toBe(participant.character.id);
   });
 
+  it('ends a monster turn cleanly when Charmed forbids every living target', async () => {
+    const participant = fighterSeed();
+    let state = await createSoloCombatState({
+      character: participant.character, participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar(), dash()], effects: [], dashAction: dash(), rng: () => 0.5,
+    });
+    const monsterId = Object.values(state.world.actors).find((actor) => actor.kind === 'monster')!.id;
+    state.world.actors[monsterId].runtime.activeEffects.push({
+      id: 'friends:charmed', name: 'Очарованный', source: 'Дружба',
+      ownerId: monsterId, sourceId: participant.character.id,
+      mechanics: { kind: 'condition', value: 'charmed', op: 'apply' },
+    });
+    state = advanceTurn(state);
+    expect(activeId(state)).toBe(monsterId);
+
+    expect(() => { state = runMonsterTurn(state, () => 0.5); }).not.toThrow();
+    expect(activeId(state)).toBe(participant.character.id);
+    expect(state.log.some((entry) => entry.text.includes('Нет допустимой цели'))).toBe(true);
+  });
+
   it.each([true, false])('finishes a paused monster turn exactly once after a Shield decision (%s)', async (useShield) => {
     const participant = wizardSeed();
     let state = await createSoloCombatState({

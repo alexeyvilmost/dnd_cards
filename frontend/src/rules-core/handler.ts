@@ -1157,6 +1157,7 @@ function actionContext(
         conditionImmunities: target.traits?.conditionImmunities,
         sleepRequired: target.traits?.restProfile?.sleepRequired,
         sleepTraitSourceEntityIds: target.traits?.restProfile?.sourceEntityIds,
+        ...(facts ? { relationToSource: facts.relation } : {}),
         // A self target shares the source runtime. Leaving runtimeState unset
         // makes the legacy executor route `who:target` payloads into `state`
         // instead of creating a second, conflicting copy of the same actor.

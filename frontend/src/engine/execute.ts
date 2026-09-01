@@ -1212,10 +1212,17 @@ function preflightEffect(
       const declaration = value.automatic_success as Dict;
       const noSleep = declaration.if_sleep_not_required === true;
       const immunity = declaration.if_condition_immunity;
-      if (!noSleep && (typeof immunity !== 'string' || !immunity.trim())) {
+      const relation = declaration.if_target_relation;
+      const excludedCreatureType = declaration.if_target_creature_type_not;
+      const hasRelation = relation === 'self' || relation === 'ally'
+        || relation === 'enemy' || relation === 'neutral';
+      const hasExcludedCreatureType = typeof excludedCreatureType === 'string'
+        && excludedCreatureType.trim().length > 0;
+      if (!noSleep && (typeof immunity !== 'string' || !immunity.trim())
+        && !hasRelation && !hasExcludedCreatureType) {
         throw mechanicsError(
           'INVALID_PAYLOAD', `${path}.automatic_success`,
-          'automatic save success requires a no-sleep or condition-immunity rule',
+          'automatic save success requires a supported target rule',
         );
       }
     }
@@ -3554,6 +3561,23 @@ function automaticSaveSuccessReason(
         sourceEntityIds: [...immunity.sourceEntityIds],
       };
     }
+  }
+  const requiredRelation = typeof rule.if_target_relation === 'string'
+    ? rule.if_target_relation.trim().toLowerCase() : '';
+  if (requiredRelation && target.relationToSource === requiredRelation) {
+    return {
+      reason: `отношение к источнику: ${requiredRelation}`,
+      sourceEntityIds: [],
+    };
+  }
+  const excludedCreatureType = typeof rule.if_target_creature_type_not === 'string'
+    ? rule.if_target_creature_type_not.trim().toLowerCase() : '';
+  const targetCreatureType = target.characterContext?.creatureType?.trim().toLowerCase() ?? '';
+  if (excludedCreatureType && targetCreatureType && targetCreatureType !== excludedCreatureType) {
+    return {
+      reason: `тип существа не «${excludedCreatureType}»`,
+      sourceEntityIds: [],
+    };
   }
   return null;
 }
