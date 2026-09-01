@@ -314,7 +314,7 @@ function factualTargetRangeFt(action: RuleActionDefinition): number {
   const area = declaration.area;
   if (declaration.shape === 'area' && area && typeof area === 'object' && !Array.isArray(area)) {
     const geometry = area as Record<string, unknown>;
-    const radiusFt = Number(geometry.radius_ft);
+    const radiusFt = Number(geometry.radius_ft ?? geometry.size_ft);
     // An emanation's origin has range 0, while its actor targets occupy the
     // declared radius around that origin. Target validation therefore uses
     // the radius; keeping range 0 as the casting-origin authority is correct.

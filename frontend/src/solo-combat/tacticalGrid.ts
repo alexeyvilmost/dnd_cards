@@ -105,7 +105,7 @@ function tacticalAreaGeometry(action: TacticalAreaAction): TacticalAreaGeometry 
     return radiusFt === null ? null : { kind: 'sphere', radiusFt };
   }
   if (area?.kind === 'emanation') {
-    const radiusFt = positiveNumber(area.radius_ft);
+    const radiusFt = positiveNumber(area.radius_ft ?? area.size_ft);
     return radiusFt === null ? null : { kind: 'emanation', radiusFt };
   }
   return null;

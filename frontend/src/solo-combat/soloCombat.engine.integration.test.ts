@@ -115,7 +115,7 @@ function thunderclapWizardSeed(): SheetCombatParticipantSeed {
       activation: { mode: 'active', cost: [{ resource: 'action' }] },
       targeting: {
         domain: 'actor', actor_targets: true, shape: 'area',
-        area: { kind: 'emanation', radius_ft: 5 },
+        area: { kind: 'emanation', size_ft: 5 },
         min_targets: 0, max_targets: 8, range_ft: 0,
         requires_line_of_sight: false, allowed_relations: ['enemy'],
       },

@@ -133,7 +133,7 @@ describe('solo combat tactical contract', () => {
   it('anchors emanations on the source instead of the clicked aim cell', () => {
     const cells = areaPositionsForAction({
       action: {
-        mechanics: { targeting: { shape: 'area', area: { kind: 'emanation', radius_ft: 5 } } },
+        mechanics: { targeting: { shape: 'area', area: { kind: 'emanation', size_ft: 5 } } },
         targeting: { rangeFt: 0 },
       },
       sourcePosition: { x: 5, y: 5 },
