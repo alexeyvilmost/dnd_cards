@@ -498,6 +498,15 @@ describe('WorldState command/event facade', () => {
       && event.payload.event.type === 'resource_spent'
       && event.payload.event.resource === 'spell_slot_1').length;
     expect(slotSpendCount).toBe(1);
+    const saveTrace = combined.find((event) => event.payload.type === 'EngineEventRecorded'
+      && event.payload.event.type === 'roll'
+      && event.payload.event.roll?.kind === 'save');
+    expect(saveTrace?.payload).toMatchObject({
+      type: 'EngineEventRecorded',
+      actorId: 'fighter',
+      targetIds: ['wizard'],
+      event: { label: 'Проверочный ядовитый импульс: спасбросок ТЕЛ' },
+    });
   });
 
   it('pauses a hit before damage and lets Shield turn it into a miss after JSON reload', () => {

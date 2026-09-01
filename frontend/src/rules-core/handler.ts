@@ -4211,7 +4211,7 @@ function resolvePendingSave(
   );
   const saveEvent: EngineEvent = {
     type: 'roll',
-    label: `Спасбросок ${ABILITY_LABEL[pending.request.ability]}`,
+    label: `${action.name}: спасбросок ${ABILITY_LABEL[pending.request.ability]}`,
     roll: { ...roll, kind: 'save' },
   };
   const targetAfter = target.id === source.id ? result.state : result.targetState;
@@ -4239,7 +4239,11 @@ function resolvePendingSave(
   ];
   const [nextTarget, ...remainingTargets] = pending.remainingTargets ?? [];
   const finalTarget = !nextTarget;
-  const events: EventInput[] = engineTrace(target.id, [], [saveEvent], obligationIds);
+  // The target owns the saving throw, but the source player must also receive
+  // its outcome. Sheet-only targets (for example the training dummy) have no
+  // persisted journal of their own, so omitting the source here reduced a
+  // successful save to a bare resource-spend row on the caster's sheet.
+  const events: EventInput[] = engineTrace(target.id, [source.id], [saveEvent], obligationIds);
   events.push(...actionStateEvents({
     world,
     commandId: pending.openedByCommandId,
