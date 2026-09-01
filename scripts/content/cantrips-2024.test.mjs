@@ -36,6 +36,11 @@ test('ключевые заговоры используют общие прим
   const trueStrike = CANTRIP_UPGRADES['Меткий удар'].mechanics.effects[0];
   assert.equal(trueStrike.ability, 'spellcasting');
   assert.equal(trueStrike.on_hit[0].kind, 'choice');
+  assert.equal(trueStrike.attack_kind, undefined);
+  assert.deepEqual(CANTRIP_UPGRADES['Меткий удар'].mechanics.targeting, {
+    shape: 'single', filter: 'enemy',
+  });
+  assert.equal(trueStrike.on_hit[0].options.items[1].grants[0].type, 'radiant');
 
   const sorcerousBurst = CANTRIP_UPGRADES['Чародейский выброс'].mechanics.effects[0].on_hit[0];
   assert.equal(sorcerousBurst.options.items.length, 7);

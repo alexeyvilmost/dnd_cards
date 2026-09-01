@@ -848,6 +848,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairFriendsMindSliverCantrips,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     trueStrikeCantripMigrationVersion,
+			Description: "Исправить оружейную атаку и выбор типа урона Меткого удара",
+			Up:          repairTrueStrikeCantrip,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

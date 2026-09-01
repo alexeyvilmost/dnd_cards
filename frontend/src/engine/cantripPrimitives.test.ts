@@ -27,6 +27,39 @@ const rollEvents = (events: EngineEvent[]) => events.filter((event) => event.typ
 
 describe('универсальные примитивы заговоров', () => {
   it.each([
+    ['weapon', 'slashing'],
+    ['radiant', 'radiant'],
+  ] as const)('Меткий удар наносит оружейный урон выбранного типа %s', (choice, damageType) => {
+    const targetState = freshFighterState();
+    const state = equippedFighterState();
+    const result = executeAction(state, {
+      name: 'Меткий удар',
+      activation: { mode: 'active', cost: [{ resource: 'action' }] },
+      effects: [{
+        resolution: 'attack_roll', attack_kind: 'weapon_melee', ability: 'spellcasting',
+        on_hit: [{
+          kind: 'choice', id: 'true_strike_damage_type', context: 'in_play', count: 1,
+          options: { source: 'explicit', items: [
+            { id: 'weapon', grants: [{ kind: 'damage', dice: 'weapon', type: 'weapon', ability: 'spellcasting' }] },
+            { id: 'radiant', grants: [{ kind: 'damage', dice: 'weapon', type: 'radiant', ability: 'spellcasting' }] },
+          ] },
+        }],
+      }],
+    }, {
+      character: { ...FIGHTER_CTX_EQUIPPED, spellcastingMod: 3 },
+      selfId: 'caster',
+      target: { id: 'target', ac: 10, runtimeState: targetState, characterContext: FIGHTER_CTX },
+      choices: { true_strike_damage_type: choice },
+      rng: sequence([face(15), face(4, 8)]),
+    });
+
+    expect(result.events).toContainEqual(expect.objectContaining({
+      type: 'damage', damageType, amount: 7,
+    }));
+    expect(result.targetState?.hp.current).toBe(targetState.hp.current - 7);
+  });
+
+  it.each([
     ['enemy', 'humanoid'],
     ['ally', 'fey'],
   ] as const)('Дружба даёт автоуспех цели при отношении %s и типе %s', (relation, creatureType) => {
@@ -55,6 +88,39 @@ describe('универсальные примитивы заговоров', () 
     expect(result.events).toEqual(expect.arrayContaining([
       expect.objectContaining({ type: 'narrative', text: expect.stringContaining('автоуспех') }),
     ]));
+  });
+
+  it('keeps the declared Mind Sliver name on the target-owned penalty', () => {
+    const targetState = freshFighterState();
+    const result = executeAction(freshFighterState(), {
+      name: 'действие',
+      effects: [{
+        resolution: 'save', ability: 'int', dc: '13', who: 'target',
+        on_fail: [{
+          kind: 'modifier', applies_to: { roll: 'saving_throw' },
+          op: 'bonus_die', faces: 4, sign: -1, source: 'Расщепление разума',
+          consume: 'next', duration: { type: 'until_end_of_source_next_turn' },
+        }],
+        on_success: [],
+      }],
+    }, {
+      character: FIGHTER_CTX,
+      selfId: 'caster',
+      target: { id: 'target', runtimeState: targetState, characterContext: FIGHTER_CTX },
+      rng: () => face(1),
+    });
+
+    expect(result.targetState?.activeEffects).toEqual([
+      expect.objectContaining({
+        name: 'Расщепление разума',
+        source: 'Расщепление разума',
+      }),
+    ]);
+    expect(result.events).toContainEqual(expect.objectContaining({
+      type: 'effect_applied',
+      name: 'Расщепление разума · спасбросок',
+      sourceAction: 'Расщепление разума',
+    }));
   });
 
   it('проецирует штрафную кость Защиты от оружия на входящую атаку', () => {

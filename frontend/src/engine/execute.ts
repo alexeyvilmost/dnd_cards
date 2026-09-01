@@ -627,13 +627,6 @@ function preflightPayload(
           'damage requires an explicit non-empty damage type',
         );
       }
-      if (base === 'weapon' && value.type !== 'weapon') {
-        throw mechanicsError(
-          'INVALID_PAYLOAD',
-          `${path}.type`,
-          'weapon damage dice require the explicit weapon damage type',
-        );
-      }
       if ((base === 'weapon' || value.type === 'weapon')
         && !weaponContext(ctx.character, hand, state.equipment, state)) {
         throw mechanicsError(
@@ -1708,21 +1701,26 @@ function applyModifierPayload(
   const relative = sourceTurnMetadata(duration, ctx, ownerActorId);
   const resolved = relative ? { expiry: relative.expiry } : resolveDuration(duration);
   const { roundsLeft, expiry } = resolved;
+  // Deferred target saves use a generic adapter label ("действие") as their
+  // execution source. Content may provide the real user-facing source so the
+  // target drawer and expiry journal remain understandable.
+  const declaredSource = typeof payload.source === 'string' ? payload.source.trim() : '';
+  const displaySource = declaredSource || source;
   const entry: ActiveEffectEntry = {
     id: runtimeEffectId(ctx, 'fx', state.activeEffects.length),
-    name: source,
+    name: displaySource,
     mechanics: payload,
     roundsLeft, // C6: раньше не выставлялся — модификатор с duration.rounds не истекал
     expiry,
-    source,
+    source: displaySource,
     ...(ownerActorId ? { ownerId: ownerActorId } : {}),
     ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
     ...(relative ?? {}),
   };
   events.push({
     type: 'effect_applied',
-    name: modifierApplicationLabel(source, payload),
-    sourceAction: source,
+    name: modifierApplicationLabel(displaySource, payload),
+    sourceAction: displaySource,
   });
   return stackApply(state, entry, payload);
 }
@@ -2580,6 +2578,8 @@ function doubleDice(formula: string): string {
  * Одна payload-строка урона → одна ИЛИ несколько нанесённых инстанций.
  * dice:"weapon" раскрывается в оружие в руке: основная строка (кость + мод характеристики
  * + зачарование) плюс отдельная инстанция на каждый стихийный урон (без мода и зачарования).
+ * Явный type, отличный от "weapon", заменяет тип основной строки (True Strike),
+ * не перекрашивая отдельные стихийные строки зачарования.
  * Порядок стабилен (основная первой) — важно для плана кубов/диалога и сопротивлений по типам.
  * crit=true — критическое попадание: кости броска удваиваются (модификаторы — один раз).
  */
@@ -2659,7 +2659,7 @@ function resolveDamageAmounts(
       }
       return {
         amount: total,
-        damageType: line.type,
+        damageType: i === 0 && declaredDamageType !== 'weapon' ? declaredDamageType : line.type,
         roll: formattedRoll({
           kind: 'damage', advantage: 'none', dice: ruled.dice,
           modifiers: [...fr.modifiers, ...extraMods], total,

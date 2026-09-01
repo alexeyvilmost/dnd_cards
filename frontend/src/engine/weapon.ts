@@ -245,6 +245,34 @@ export type WeaponAttackKind = 'main' | 'off' | 'unarmed' | null;
  *  - on_hit c dice:'weapon' → 'off' при теге off_hand, иначе 'main'.
  * Совпадает с тем, как resolveHand/resolveDamageAmount интерпретируют те же маркеры.
  */
+function nestedWeaponDamagePayload(value: unknown, depth = 0): Dict | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value) || depth > 6) return null;
+  const payload = value as Dict;
+  if (payload.dice === 'weapon') return payload;
+  if (payload.kind !== 'choice') return null;
+  const options = payload.options && typeof payload.options === 'object' && !Array.isArray(payload.options)
+    ? payload.options as Dict
+    : {};
+  const items = Array.isArray(options.items) ? options.items as Dict[] : [];
+  for (const item of items) {
+    const grants = Array.isArray(item.grants) ? item.grants : [];
+    for (const grant of grants) {
+      const nested = nestedWeaponDamagePayload(grant, depth + 1);
+      if (nested) return nested;
+    }
+  }
+  return nestedWeaponDamagePayload(payload.apply ?? payload.grant, depth + 1);
+}
+
+function weaponDamagePayloadFromEffect(effect: Dict): Dict | null {
+  const onHit = Array.isArray(effect.on_hit) ? effect.on_hit : [];
+  for (const payload of onHit) {
+    const nested = nestedWeaponDamagePayload(payload);
+    if (nested) return nested;
+  }
+  return null;
+}
+
 /** Эффект-атака, по которому классифицируется оружейное действие (тот же выбор, что в weaponAttackKind). */
 function matchedAttackEffect(mechanics: Dict | null | undefined): Dict | null {
   const effects = Array.isArray((mechanics as Dict | undefined)?.effects)
@@ -253,8 +281,7 @@ function matchedAttackEffect(mechanics: Dict | null | undefined): Dict | null {
   for (const e of effects) {
     if (String(e.resolution ?? '') !== 'attack_roll') continue;
     if (String(e.attack_kind ?? '') === 'unarmed') return e;
-    const onHit = Array.isArray(e.on_hit) ? (e.on_hit as Dict[]) : [];
-    if (onHit.some((p) => p.dice === 'weapon')) return e;
+    if (weaponDamagePayloadFromEffect(e)) return e;
   }
   return null;
 }
@@ -288,8 +315,7 @@ export function attackRangeFromEffect(
   equipment?: Record<string, string | null | undefined>,
 ): 'melee' | 'ranged' | undefined {
   if (String(effect.attack_kind ?? '') === 'unarmed') return 'melee';
-  const onHit = Array.isArray(effect.on_hit) ? (effect.on_hit as Dict[]) : [];
-  if (!onHit.some((p) => p.dice === 'weapon')) return undefined;
+  if (!weaponDamagePayloadFromEffect(effect)) return undefined;
   const w = weaponContext(character, hand, equipment);
   if (!w) return undefined;
   const declared = String(effect.attack_kind ?? '');
@@ -311,9 +337,8 @@ export function attackRollQueryFacts(
   const declaredKind = String(effect.attack_kind ?? '').toLowerCase();
   if (declaredKind === 'unarmed') return { attackKind: 'unarmed' };
   if (declaredKind === 'spell') return { attackKind: 'spell' };
-  const onHit = Array.isArray(effect.on_hit) ? (effect.on_hit as Dict[]) : [];
   const isWeaponAttack = declaredKind.startsWith('weapon')
-    || onHit.some((payload) => payload.dice === 'weapon');
+    || weaponDamagePayloadFromEffect(effect) !== null;
   if (!isWeaponAttack) return { attackKind: 'spell' };
   const weapon = weaponContext(character, hand, equipment);
   return {
@@ -444,8 +469,7 @@ export function bindEquippedWeaponProfileTargeting(
   if (!targeting || typeof targeting !== 'object' || Array.isArray(targeting)) {
     throw new Error('weapon action requires explicit mechanics.targeting');
   }
-  const requested = declaredWeaponAttackMode(mechanics);
-  if (!requested) throw new Error('weapon action requires explicit weapon_melee or weapon_ranged');
+  const requested = declaredWeaponAttackMode(mechanics) ?? selected.profile.defaultAttackMode;
   const mode = selected.profile.attackModes.find((candidate) => candidate.kind === requested);
   if (!mode) throw new Error(`${selected.weapon.id}: weapon_profile does not support ${requested} attacks`);
   const range = mode.kind === 'melee' ? mode.reachFt : mode.longFt;
@@ -459,7 +483,9 @@ export function bindEquippedWeaponProfileTargeting(
 }
 
 /**
- * Validate the action's explicit attack mode against the selected weapon.
+ * Validate the action's explicit attack mode against the selected weapon. A
+ * contextual weapon attack such as True Strike may omit the mode; in that
+ * case materialize the equipped weapon's declared default mode once.
  * Ammunition is a payment declaration and never selects melee/ranged behavior.
  */
 export function bindEquippedWeaponAttackMode(
@@ -478,11 +504,19 @@ export function bindEquippedWeaponAttackMode(
   if (!selected || !attack) {
     throw new Error('equipped weapon action requires one materializable weapon attack');
   }
-  const requested = declaredWeaponAttackMode(mechanics);
-  if (!requested || !selected.profile.attackModes.some((mode) => mode.kind === requested)) {
-    throw new Error(`${selected.weapon.id}: weapon_profile does not support ${requested ?? 'undeclared'} attacks`);
+  const declared = declaredWeaponAttackMode(mechanics);
+  const requested = declared ?? selected.profile.defaultAttackMode;
+  if (!selected.profile.attackModes.some((mode) => mode.kind === requested)) {
+    throw new Error(`${selected.weapon.id}: weapon_profile does not support ${requested} attacks`);
   }
-  return mechanics;
+  if (declared) return mechanics;
+  const effects = Array.isArray(mechanics.effects) ? mechanics.effects as Dict[] : [];
+  return {
+    ...mechanics,
+    effects: effects.map((effect) => (
+      effect === attack ? { ...effect, attack_kind: `weapon_${requested}` } : effect
+    )),
+  };
 }
 
 function declaredWeaponAmmo(weapon: Card): { cardId: string; name?: string } | null {
@@ -675,8 +709,7 @@ export function weaponAttackPreview(
   const attackEnchant = atkAbility === 'auto' ? w.attackEnchant : 0;
   const attackMods = attackModifierBonus(state, passives, character, attackFacts);
 
-  const onHit = Array.isArray(attackEffect.on_hit) ? attackEffect.on_hit as Dict[] : [];
-  const weaponDamage = onHit.find((payload) => payload.dice === 'weapon');
+  const weaponDamage = weaponDamagePayloadFromEffect(attackEffect);
   const damageAbility = String(weaponDamage?.ability ?? 'auto');
   const damageAbilityBonus = damageAbility === 'none'
     ? 0

@@ -286,6 +286,44 @@ describe('strict mechanics.weapon_profile authority', () => {
     ]);
   });
 
+  it.each([
+    ['melee', 5, weapon(), 'weapon_melee'],
+    ['ranged', 320, weapon(profile({
+      weapon_type: 'shortbow',
+      attack_ability: 'dex',
+      default_attack_mode: 'ranged',
+      attack_modes: [{ kind: 'ranged', normal_ft: 80, long_ft: 320 }],
+      properties: ['ammunition', 'two_handed'],
+      ammo: { card_id: 'card:arrow', name: 'Стрела' },
+    }), { id: 'card:contextual-shortbow', name: 'Короткий лук' }), 'weapon_ranged'],
+  ] as const)('binds a nested-choice contextual weapon attack to the equipped %s profile', (
+    _mode, expectedRange, card, expectedKind,
+  ) => {
+    const mechanics = {
+      activation: { mode: 'active', cost: [{ resource: 'action' }] },
+      targeting: {
+        shape: 'single', domain: 'actor', actor_targets: true,
+        min_targets: 1, max_targets: 1, range_ft: 600,
+        requires_line_of_sight: true, allowed_relations: ['enemy'],
+      },
+      effects: [{
+        resolution: 'attack_roll', ability: 'spellcasting',
+        on_hit: [{
+          kind: 'choice', id: 'true_strike_damage_type', options: { items: [{
+            id: 'radiant', grants: [{ kind: 'damage', dice: 'weapon', type: 'radiant', ability: 'spellcasting' }],
+          }] },
+        }],
+      }],
+    };
+    const bound = bindEquippedWeaponActionContext(
+      mechanics,
+      { main_hand: card.id },
+      new Map([[card.id, card]]),
+    );
+    expect(bound.targeting).toMatchObject({ range_ft: expectedRange, allowed_relations: ['enemy'] });
+    expect((bound.effects as Dict[])[0]).toMatchObject({ attack_kind: expectedKind });
+  });
+
   it('documents the current deterministic close-range thrown-mode limitation', () => {
     const parsed = parseWeaponProfile(weapon());
     if (!parsed.valid) throw new Error(parsed.issue);

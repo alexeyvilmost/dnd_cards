@@ -29,7 +29,7 @@ const attack = (onHit, {
   extra = {},
 } = {}) => ({
   resolution: 'attack_roll',
-  attack_kind: kind,
+  ...(kind ? { attack_kind: kind } : {}),
   ability,
   vs: 'ac',
   on_hit: onHit,
@@ -259,8 +259,8 @@ export const CANTRIP_UPGRADES = {
             ],
           },
         ]),
-      ], { kind: 'weapon_melee', ability: 'spellcasting' }),
-    ], { shape: 'self' }),
+      ], { kind: null, ability: 'spellcasting' }),
+    ], target(null, 'enemy')),
   },
   'Мистический заряд': {
     support: partial('На 5+ уровнях правила создают несколько отдельных лучей и атак, а текущий движок пока объединяет масштабирование в один бросок урона.'),
