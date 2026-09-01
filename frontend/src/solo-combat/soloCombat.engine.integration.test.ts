@@ -1212,7 +1212,7 @@ describe('solo combat engine vertical integration', () => {
       spell: { level: 1, sourceClass: 'CLASS-ranger' }, sourceEntityIds: ['SPELL-0185'],
       mechanics: {
         activation: { mode: 'triggered', trigger: { event: 'hit' }, cost: [{ resource: 'bonus_action' }, { resource: 'spell_slot', level: 1, amount: 1 }] },
-        targeting: { shape: 'single', filter: 'enemy' },
+        targeting: { shape: 'single', filter: 'enemy', range: '600 feet' },
         effects: [{ resolution: 'save', who: 'target', ability: 'dex', dc: '8 + prof + spellcasting', on_fail: [{ kind: 'damage', dice: '1d10', type: 'piercing' }], on_success: [] }],
       },
       targeting: { minTargets: 1, maxTargets: 1, rangeFt: 600, requiresLineOfSight: true, allowedRelations: ['enemy'] },

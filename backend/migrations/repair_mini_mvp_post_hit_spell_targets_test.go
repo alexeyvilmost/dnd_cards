@@ -11,8 +11,8 @@ func TestMiniMVPPostHitSpellTargetsMigrationFollowsTriggerTimingRepair(t *testin
 	if index == 0 || migrations[index-1].Version != miniMVPSpellTriggerTimingMigrationVersion {
 		t.Fatal("migration 138 must immediately follow 137")
 	}
-	if index != len(migrations)-1 {
-		t.Fatal("migration 138 must remain the latest migration")
+	if index == len(migrations)-1 || migrations[index+1].Version != miniMVPRangedPostHitSpellRangesMigrationVersion {
+		t.Fatal("migration 139 must immediately follow 138")
 	}
 }
 

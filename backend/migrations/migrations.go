@@ -878,6 +878,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairMiniMVPPostHitSpellTargets,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     miniMVPRangedPostHitSpellRangesMigrationVersion,
+			Description: "Исправить дальность post-hit заклинаний следопыта",
+			Up:          repairMiniMVPRangedPostHitSpellRanges,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
