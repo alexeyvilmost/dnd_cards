@@ -8,8 +8,8 @@ func TestMiniMVPSpellTriggerTimingMigrationFollowsClarityRepair(t *testing.T) {
 	if index == 0 || migrations[index-1].Version != miniMVPSpellClarityMigrationVersion {
 		t.Fatal("migration 137 must immediately follow 136")
 	}
-	if index != len(migrations)-1 {
-		t.Fatal("migration 137 must remain the latest migration")
+	if index == len(migrations)-1 || migrations[index+1].Version != miniMVPPostHitSpellTargetsMigrationVersion {
+		t.Fatal("migration 138 must immediately follow 137")
 	}
 }
 

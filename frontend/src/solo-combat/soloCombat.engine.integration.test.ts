@@ -1195,6 +1195,67 @@ describe('solo combat engine vertical integration', () => {
     expect(state.world.actors[monsterId].runtime.hp.current).toBeLessThan(hpAfterAttack);
   });
 
+  it('resolves a level-one post-hit spell against the creature that was hit', async () => {
+    let participant = wizardSeed();
+    const attack: RuleActionDefinition = {
+      id: 'd2000000-0000-4000-8000-000000000011', name: 'Проверочная атака', kind: 'nonSpell',
+      sourceEntityIds: ['test:attack'],
+      mechanics: {
+        activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }] },
+        targeting: { domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1, max_targets: 1, range_ft: 600, requires_line_of_sight: true, allowed_relations: ['enemy'] },
+        effects: [{ resolution: 'attack_roll', ability: 'int', vs: 'ac', on_hit: [{ kind: 'damage', dice: '1d4', type: 'piercing', ability: 'none' }] }],
+      },
+      targeting: { minTargets: 1, maxTargets: 1, rangeFt: 600, requiresLineOfSight: true, allowedRelations: ['enemy'] },
+    };
+    const rider: RuleActionDefinition = {
+      id: 'd2000000-0000-4000-8000-000000000012', name: 'Град шипов', kind: 'spell',
+      spell: { level: 1, sourceClass: 'CLASS-ranger' }, sourceEntityIds: ['SPELL-0185'],
+      mechanics: {
+        activation: { mode: 'triggered', trigger: { event: 'hit' }, cost: [{ resource: 'bonus_action' }, { resource: 'spell_slot', level: 1, amount: 1 }] },
+        targeting: { shape: 'single', filter: 'enemy' },
+        effects: [{ resolution: 'save', who: 'target', ability: 'dex', dc: '8 + prof + spellcasting', on_fail: [{ kind: 'damage', dice: '1d10', type: 'piercing' }], on_success: [] }],
+      },
+      targeting: { minTargets: 1, maxTargets: 1, rangeFt: 600, requiresLineOfSight: true, allowedRelations: ['enemy'] },
+    };
+    const actor = participant.canonical.world.actors[participant.character.id];
+    actor.capabilities.actionIds.push(attack.id, rider.id);
+    actor.runtime.resources.action = 1;
+    actor.runtime.maxResources.action = 1;
+    actor.runtime.resources.bonus_action = 1;
+    actor.runtime.maxResources.bonus_action = 1;
+    actor.runtime.resources.spell_slot_1 = 2;
+    actor.runtime.maxResources.spell_slot_1 = 2;
+    actor.spellcastingAccess ??= { grants: [], preparedSources: {} };
+    actor.spellcastingAccess.grants.push({
+      grantId: 'test:hail-of-thorns', actionId: rider.id, sourceId: 'CLASS-ranger',
+      access: 'known', level: 1, spellcastingAbility: 'int', slotResource: 'spell_slot_1',
+    });
+    participant.character.resources = clone(actor.runtime.resources);
+    participant.character.max_resources = clone(actor.runtime.maxResources);
+    const actions = [...participant.canonical.actions, attack, rider];
+    const byId = new Map(actions.map((action) => [action.id, action]));
+    participant = { ...participant, canonical: { ...participant.canonical, actions, catalog: {
+      getAction: (id) => byId.get(id), listActions: () => [...actions],
+    } } };
+
+    let state = await createSoloCombatState({
+      character: participant.character, participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const monsterId = Object.values(state.world.actors).find((candidate) => candidate.kind === 'monster')!.id;
+    state = autoResolveSystemDecisions(executeCombatAction({
+      state, actorId: participant.character.id, actionId: attack.id,
+      targetIds: [monsterId], rng: () => 0.99,
+    }), () => 0.99);
+
+    expect(state.pendingTriggeredAction?.optionActionIds).toContain(rider.id);
+    state = resolveTriggeredCombatAction(state, rider.id, () => 0.5);
+    expect(state.pendingTriggeredAction).toBeUndefined();
+    expect(state.world.actors[participant.character.id].runtime.resources.bonus_action).toBe(0);
+    expect(state.world.actors[participant.character.id].runtime.resources.spell_slot_1).toBe(1);
+  });
+
   it('offers a Monk Martial Arts bonus strike after a qualifying missed Unarmed Strike', async () => {
     const fixture = unarmedParticipant();
     const rider: RuleActionDefinition = {
