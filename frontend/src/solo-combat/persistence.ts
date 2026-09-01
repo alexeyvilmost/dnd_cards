@@ -15,6 +15,10 @@ function presentationEntityImage(
   return value.actionRef?.image_url || value.spellRef?.image_url || undefined;
 }
 
+function isInlineImage(value: string | null | undefined): value is string {
+  return typeof value === 'string' && value.startsWith('data:image/');
+}
+
 /**
  * Action rows can carry large base64 images. The combat projection historically
  * stored the same image both as `imageUrl` and inside the exact entity used by
@@ -29,6 +33,18 @@ function compactActionPresentation(
     const value = clone(raw);
     const entityImage = presentationEntityImage(value);
     if (value.imageUrl && entityImage === value.imageUrl) delete value.imageUrl;
+    // Inline card art is content presentation, not encounter state. A single
+    // production image can be hundreds of kilobytes and scoped action aliases
+    // can repeat it several times, eventually making an otherwise valid combat
+    // snapshot exceed the backend turn-state bound. Retained scenes are always
+    // refreshed from their character/card sources before they are rendered.
+    if (isInlineImage(value.imageUrl)) delete value.imageUrl;
+    if (value.actionRef && isInlineImage(value.actionRef.image_url)) {
+      delete value.actionRef.image_url;
+    }
+    if (value.spellRef && isInlineImage(value.spellRef.image_url)) {
+      delete value.spellRef.image_url;
+    }
     return [actionId, value];
   }));
 }
