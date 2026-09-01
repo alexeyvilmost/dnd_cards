@@ -221,10 +221,13 @@ describe('E4: auto-эффекты', () => {
 
   it('лечение не поднимает HP выше максимума', () => {
     const state = freshFighterState(); // full hp
-    const { state: next } = executeAction(state, MECH_SECOND_WIND, {
+    const { state: next, events } = executeAction(state, MECH_SECOND_WIND, {
       character: FIGHTER_CTX, rng: seededRng(6),
     });
     expect(next.hp.current).toBe(next.hp.max);
+    const heal = events.find((event) => event.type === 'healing');
+    expect(heal?.type === 'healing' ? heal.amount : null).toBe(0);
+    expect(heal?.type === 'healing' ? heal.roll?.total : 0).toBeGreaterThan(0);
   });
 });
 
@@ -297,7 +300,9 @@ describe('E5: заклинания через тот же исполнитель
     expect(heal).toBeTruthy();
     if (heal?.type === 'healing') {
       expect(heal.roll?.dice).toHaveLength(2);
-      expect(heal.amount).toBe(heal.roll!.dice[0].result + heal.roll!.dice[1].result + 3);
+      const rolled = heal.roll!.dice[0].result + heal.roll!.dice[1].result + 3;
+      expect(heal.roll?.total).toBe(rolled);
+      expect(heal.amount).toBe(Math.min(state.hp.max - state.hp.current, rolled));
     }
   });
 

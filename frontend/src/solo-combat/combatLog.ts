@@ -183,7 +183,7 @@ export function combatLogDetails(
       ...(event.roll ? [rollDetail(event, event.roll)] : []),
       {
         kind: 'healing' as const,
-        label: 'Лечение',
+        label: 'Восстановлено HP',
         text: `+${event.amount}${targetSuffix}`,
       },
     ];

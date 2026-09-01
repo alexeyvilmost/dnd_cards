@@ -2232,6 +2232,7 @@ function applyHealing(
     : withScaling(String(payload.amount ?? '0'), payload, ctx);
   const fr = rollFormula(formula, formulaCtx(ctx), { rng: ctx.rng });
   const next = cloneState(state);
+  const hpBefore = next.hp.current;
   if (sides && payload.spend_hit_die === true) {
     const key = hitDiceResourceKey(targetHitDie);
     if (!key || (next.resources[key] ?? 0) < 1) throw new InsufficientResourcesError([key ?? 'hit_die']);
@@ -2255,7 +2256,10 @@ function applyHealing(
     }
   }
   next.hp.current = Math.min(next.hp.max, next.hp.current + total);
-  events.push(healingEvent(total, formattedRoll({
+  // The roll remains available in the attached breakdown, while the event
+  // amount reports the HP actually restored after the target's maximum-HP cap.
+  // This prevents combat journals from claiming "+11" when only 4 HP changed.
+  events.push(healingEvent(next.hp.current - hpBefore, formattedRoll({
     kind: 'healing',
     advantage: 'none',
     dice,

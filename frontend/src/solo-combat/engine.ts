@@ -159,7 +159,7 @@ export function eventSummary(records: readonly CombatLogEventRecord[]): string {
     if (!event) return [];
     switch (event.type) {
       case 'damage': return [describeEngineEvent(event).replace(/^Урон/u, 'урон')];
-      case 'healing': return [`лечение ${event.amount}`];
+      case 'healing': return [`восстановлено HP: ${event.amount}`];
       case 'movement': return [describeMovement(event.mode, event.distanceFt)];
       case 'condition_applied': return [describeEngineEvent(event).replace(/^Состояние/u, 'состояние')];
       case 'resource_spent': return [`потрачено: ${describeResource(event.resource)}`];

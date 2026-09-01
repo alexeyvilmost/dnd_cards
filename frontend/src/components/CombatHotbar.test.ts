@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import type { SoloCombatState } from '../solo-combat/types';
-import { actionCost, combatActionAvailability } from './CombatHotbar';
+import { actionCost, combatActionAvailability, combatActionTimingAvailability } from './CombatHotbar';
 
 const SPELL_ID = 'spell@feat';
 const GRANT_ID = `spell-grant:feat:${SPELL_ID}`;
@@ -42,6 +42,40 @@ function state(
 }
 
 describe('combat hotbar action availability', () => {
+  it('keeps minute- and hour-long spells visible but explains that they are used outside turn combat', () => {
+    const ritual = {
+      ...spell,
+      mechanics: {
+        ...spell.mechanics,
+        activation: {
+          ...(spell.mechanics.activation as Record<string, unknown>),
+          cast_time: { amount: 10, unit: 'minute' },
+        },
+      },
+    } as RuleActionDefinition;
+    expect(combatActionTimingAvailability(ritual)).toEqual({
+      enabled: false,
+      reason: 'Время сотворения 10 мин.: используйте вне пошагового боя',
+    });
+  });
+
+  it('rejects malformed declared casting time with a user-facing reason', () => {
+    const malformed = {
+      ...spell,
+      mechanics: {
+        ...spell.mechanics,
+        activation: {
+          ...(spell.mechanics.activation as Record<string, unknown>),
+          cast_time: { amount: 0, unit: 'minute' },
+        },
+      },
+    } as RuleActionDefinition;
+    expect(combatActionTimingAvailability(malformed)).toEqual({
+      enabled: false,
+      reason: 'Некорректно указано время сотворения',
+    });
+  });
+
   it('enables a Magic Initiate spell while its free use remains', () => {
     expect(combatActionAvailability(state(1), spell)).toEqual({ enabled: true });
   });

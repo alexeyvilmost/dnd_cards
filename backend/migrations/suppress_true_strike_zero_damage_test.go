@@ -8,8 +8,8 @@ func TestTrueStrikeZeroDamageMigrationFollowsTrueStrikeRepair(t *testing.T) {
 	if index == 0 || migrations[index-1].Version != trueStrikeCantripMigrationVersion {
 		t.Fatal("migration 135 must immediately follow 134")
 	}
-	if index != len(migrations)-1 {
-		t.Fatal("migration 135 must remain the latest migration")
+	if index+1 >= len(migrations) || migrations[index+1].Version != miniMVPSpellClarityMigrationVersion {
+		t.Fatal("migration 135 must immediately precede 136")
 	}
 }
 

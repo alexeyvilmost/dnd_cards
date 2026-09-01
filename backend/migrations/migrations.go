@@ -860,6 +860,12 @@ func GetAllMigrations() []Migration {
 			Up:          suppressTrueStrikeZeroDamage,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     miniMVPSpellClarityMigrationVersion,
+			Description: "Исправить списки классов заговоров и понятность результатов заклинаний 1 уровня",
+			Up:          repairMiniMVPSpellClarity,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

@@ -1141,8 +1141,9 @@ describe('micro-MVP compiled spell entity semantics', () => {
     > => event.type === 'healing');
     const expectedHealing = 2 + 3 + (healer.character.spellcastingMod ?? 0);
     expect(healing).toEqual([expect.objectContaining({
-      amount: expectedHealing,
+      amount: Math.min(30 - 25, expectedHealing),
       roll: expect.objectContaining({
+        total: expectedHealing,
         dice: [
           { sides: 8, result: 2 },
           { sides: 8, result: 3 },

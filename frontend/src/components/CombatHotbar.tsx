@@ -6,6 +6,7 @@ import { bindEquippedWeaponActionContext } from '../engine/weapon';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
 import { parseActivationLevelRequirement } from '../rules-core/activationRequirements';
+import { parseActivationCastTime } from '../rules-core/activationCastTime';
 import { applyUnarmedDamageProfileToAction } from '../rules-core/fightingStyleComplexPrimitives';
 import { playerActionIdsFor, type SoloCombatState } from '../solo-combat/types';
 import { isTriggeredCombatAction } from '../solo-combat/engine';
@@ -63,6 +64,23 @@ export function combatActionTimingAvailability(
     return {
       enabled: false,
       reason: 'Доступно только в окне реакции после подходящего события',
+    };
+  }
+  const castTime = parseActivationCastTime(action.mechanics);
+  if (castTime.status === 'invalid') {
+    return { enabled: false, reason: 'Некорректно указано время сотворения' };
+  }
+  if (castTime.status === 'valid' && !castTime.policy.atomicInEncounter) {
+    const unit = castTime.policy.unit === 'round'
+      ? 'раунд.'
+      : castTime.policy.unit === 'minute'
+        ? 'мин.'
+        : castTime.policy.unit === 'hour'
+          ? 'ч.'
+          : castTime.policy.unit;
+    return {
+      enabled: false,
+      reason: `Время сотворения ${castTime.policy.amount} ${unit}: используйте вне пошагового боя`,
     };
   }
   return { enabled: true };
