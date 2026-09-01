@@ -2502,6 +2502,8 @@ type AttackDamageQueryFacts = Pick<ModifierQueryFacts,
   | 'weaponWieldedInTwoHands'
   | 'otherWeaponEquipped'
 > & {
+  /** Ability used by the parent attack. Flat on-hit payloads inherit it. */
+  ability?: AbilityKey;
   /** Ability modifier used for this attack, independent of the weapon's default ability. */
   weaponMod?: number;
 };
@@ -3358,6 +3360,11 @@ function runAttackRoll(
     const payloads = (useCritPayloads ? effect.on_crit : effect.on_hit) as Dict[] | undefined;
     const critDouble = outcome === 'crit' && !useCritPayloads;
     const attackAbility = String(effect.ability);
+    const usedAttackAbility = attackAbility === 'auto'
+      ? currentWeapon?.ability
+      : attackAbility !== 'none' && attackAbility !== 'spellcasting'
+        ? attackAbility as AbilityKey
+        : undefined;
     const attackWeaponMod = attackAbility === 'spellcasting'
       ? ctx.character.spellcastingMod!
       : attackAbility === 'auto'
@@ -3365,6 +3372,7 @@ function runAttackRoll(
         : ctx.character.abilityMods[attackAbility as AbilityKey];
     const attackDamageFacts: AttackDamageQueryFacts = {
       attackKind: attackFacts.attackKind,
+      ...(usedAttackAbility ? { ability: usedAttackAbility } : {}),
       extraAttackSource: extraAttackSourceFromEffect(
         effect, hand, ctx.character, state.equipment,
       ),

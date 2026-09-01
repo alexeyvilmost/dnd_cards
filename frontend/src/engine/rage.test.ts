@@ -82,4 +82,26 @@ describe('прод-данные: Ярость', () => {
       (entry.mechanics as Record<string, unknown>).stack_id === 'class:barbarian:rage:damage'
     ))).toHaveLength(1);
   });
+
+  it('добавляет бонус один раз к урону безоружной атаки Силой', () => {
+    const unarmed = {
+      name: 'Безоружный удар', activation: { cost: [{ resource: 'action' }] },
+      effects: [{
+        resolution: 'attack_roll', attack_kind: 'unarmed', ability: 'str', vs: 'ac',
+        on_hit: [{ kind: 'damage', amount: '1 + str', type: 'bludgeoning' }],
+      }],
+    };
+    const result = executeAction(raging(), unarmed, {
+      character: barbarianContext, target: { ac: 1 }, rng: seededRng(3),
+    });
+    const damage = result.events.find((event) => event.type === 'damage');
+    expect(damage).toMatchObject({
+      type: 'damage',
+      amount: 1 + barbarianContext.abilityMods.str + 2,
+      roll: { modifiers: [
+        expect.objectContaining({ value: barbarianContext.abilityMods.str }),
+        expect.objectContaining({ value: 2 }),
+      ] },
+    });
+  });
 });
