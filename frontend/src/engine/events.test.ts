@@ -39,7 +39,18 @@ describe('events serialization', () => {
   it('round-trips and describes a structured forced-movement event', () => {
     const event: EngineEvent = { type: 'movement', mode: 'push', distanceFt: 10 };
     expect(deserializeEngineEvent(serializeEngineEvent(event))).toEqual(event);
-    expect(describeEngineEvent(event)).toBe('Перемещение: push 10 фт');
+    expect(describeEngineEvent(event)).toBe('отталкивание 10 фт.');
+    expect(describeEngineEvent({ type: 'movement', mode: 'teleport', distanceFt: 30 }))
+      .toBe('телепортация 30 фт.');
+  });
+
+  it('localizes combat resources without exposing internal identifiers', () => {
+    expect(describeEngineEvent({
+      type: 'resource_spent', resource: 'giant_legacy', amount: 1, remaining: 1,
+    })).toBe('Потрачено Наследие великанов: 1 (осталось 1)');
+    expect(describeEngineEvent({
+      type: 'resource_spent', resource: 'uses_ACT-breath-lightning', amount: 1, remaining: 0,
+    })).toBe('Потрачено Заряд способности: 1 (осталось 0)');
   });
 
   it('source-атрибуция: журнал цели показывает «кто» (для боя)', () => {

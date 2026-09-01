@@ -20,6 +20,7 @@ const actionDefaults: ResourceOption[] = [
   { id: 'bonus_action', label: 'Бонусное действие', description: 'Бонусное действие в ход.', category: 'action_cost', imageUrl: '/charges/bonus_action.png', sortOrder: 20 },
   { id: 'reaction', label: 'Реакция', description: 'Ответное действие.', category: 'action_cost', imageUrl: '/charges/reaction_action.png', sortOrder: 30 },
   { id: 'free_action', label: 'Свободное действие', description: 'Не тратит основной ресурс действия.', category: 'action_cost', imageUrl: '/charges/free_action.png', sortOrder: 40 },
+  { id: 'giant_legacy', label: 'Наследие великанов', description: 'Заряд наследия голиафа.', category: 'species_resource', sortOrder: 50 },
 ];
 
 export const staticResourceOptions = (): ResourceOption[] => [

@@ -94,6 +94,16 @@ describe('executeAction fail-closed preflight', () => {
     expect(state.resources).toMatchObject({ action: 1, material_incense_gp: 12 });
   });
 
+  it('preserves the audited movement mode alias in the emitted event', () => {
+    const result = executeAction(fresh(), paid([
+      { kind: 'movement', mode: 'teleport', distance: 30 },
+    ]), { character, rng: () => 0.5 });
+
+    expect(result.events).toContainEqual({
+      type: 'movement', mode: 'teleport', distanceFt: 30,
+    });
+  });
+
   it.each([
     { cost: [{ resource: '' }], code: 'INVALID_PAYLOAD' as const },
     { cost: [{ resource: 'item', card_id: '' }], code: 'INVALID_PAYLOAD' as const },

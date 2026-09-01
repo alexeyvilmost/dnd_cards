@@ -836,6 +836,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairWoodElfSpeed,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     cloudGoliathTeleportMigrationVersion,
+			Description: "Нормализовать телепортацию облачного голиафа к каноническому movement.value",
+			Up:          repairCloudGoliathTeleport,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

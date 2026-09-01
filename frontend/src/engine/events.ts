@@ -4,6 +4,7 @@
 import type { EngineEvent, RollLog } from '../mvp/contracts';
 import { conditionLabel } from './conditions';
 import { getDamageLabel } from '../utils/damageTypes';
+import { resourceLabel } from '../utils/resources';
 
 export type { EngineEvent, RollLog };
 
@@ -15,6 +16,24 @@ const WORLD_INTERACTION_LABELS: Record<string, string> = {
   retrieve_item: 'достать предмет',
   pour_vial: 'вылить содержимое сосуда',
 };
+
+const MOVEMENT_LABELS: Record<string, string> = {
+  move: 'перемещение',
+  push: 'отталкивание',
+  pull: 'притягивание',
+  teleport: 'телепортация',
+  approach_source: 'приближение',
+  flee_source: 'отступление',
+};
+
+export function describeMovement(mode: string, distanceFt: number): string {
+  return `${MOVEMENT_LABELS[mode] ?? 'перемещение'} ${distanceFt} фт.`;
+}
+
+export function describeResource(resource: string): string {
+  const label = resourceLabel([], resource);
+  return label === resource ? 'Заряд способности' : label;
+}
 
 export interface StoredCharacterEvent {
   id?: string;
@@ -151,9 +170,9 @@ export function describeEngineEvent(event: EngineEvent): string {
     case 'temp_hp':
       return `${src}Временные HP +${event.amount}`;
     case 'resource_spent':
-      return `Потрачено ${event.resource}: ${event.amount} (осталось ${event.remaining})`;
+      return `Потрачено ${describeResource(event.resource)}: ${event.amount} (осталось ${event.remaining})`;
     case 'resource_restored':
-      return `Восстановлено ${event.resource}: +${event.amount} (сейчас ${event.current})`;
+      return `Восстановлено ${describeResource(event.resource)}: +${event.amount} (сейчас ${event.current})`;
     case 'item_consumed':
       return `Израсходован${event.name ? `: ${event.name}` : ' предмет'} (осталось ${event.remaining})`;
     case 'item_added':
@@ -167,7 +186,7 @@ export function describeEngineEvent(event: EngineEvent): string {
     case 'condition_immune':
       return `${src}Иммунитет к состоянию: ${conditionLabel(event.condition)}`;
     case 'movement':
-      return `${src}Перемещение: ${event.mode} ${event.distanceFt} фт`;
+      return `${src}${describeMovement(event.mode, event.distanceFt)}`;
     case 'stabilized':
       return `${src}Цель стабилизирована`;
     case 'world_interaction':

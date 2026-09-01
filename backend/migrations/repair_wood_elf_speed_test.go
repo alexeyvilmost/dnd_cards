@@ -13,13 +13,10 @@ func registeredMigrationIndex(t *testing.T, version string) int {
 	return -1
 }
 
-func TestWoodElfSpeedMigrationIsRegisteredLast(t *testing.T) {
+func TestWoodElfSpeedMigrationFollowsBarbarianRepairs(t *testing.T) {
 	migrations := GetAllMigrations()
-	last := migrations[len(migrations)-1]
-	if last.Version != woodElfSpeedMigrationVersion {
-		t.Fatalf("last migration is %s, want %s", last.Version, woodElfSpeedMigrationVersion)
-	}
-	if migrations[len(migrations)-2].Version != barbarianRageStackingMigrationVersion {
+	index := registeredMigrationIndex(t, woodElfSpeedMigrationVersion)
+	if index == 0 || migrations[index-1].Version != barbarianRageStackingMigrationVersion {
 		t.Fatal("migration 131 must immediately follow 130")
 	}
 }

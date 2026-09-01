@@ -3162,7 +3162,10 @@ function applyPayloads(
         }
         events.push({
           type: 'movement',
-          mode: String(p.value ?? 'move'),
+          // `value` is the canonical schema field. `mode` is accepted as a
+          // production-compatible alias because some audited content batches
+          // used it before the schema and editor converged on `value`.
+          mode: String(p.value ?? p.mode ?? 'move'),
           distanceFt: Math.max(0, evaluated),
         });
         break;
