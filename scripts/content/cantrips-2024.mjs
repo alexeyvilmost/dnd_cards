@@ -247,7 +247,12 @@ export const CANTRIP_UPGRADES = {
             name: 'Обычный тип оружия',
             grants: [
               { kind: 'damage', dice: 'weapon', type: 'weapon', ability: 'spellcasting' },
-              { kind: 'damage', dice: '0', type: 'radiant', scaling: { dice: '1d6', per: 'character_level' } },
+              {
+                kind: 'damage', dice: '0', type: 'radiant',
+                scaling: { dice: '1d6', per: 'character_level' },
+                suppress_damage_modifiers: true,
+                omit_if_zero: true,
+              },
             ],
           },
           {
@@ -255,7 +260,12 @@ export const CANTRIP_UPGRADES = {
             name: 'Излучение',
             grants: [
               { kind: 'damage', dice: 'weapon', type: 'radiant', ability: 'spellcasting' },
-              { kind: 'damage', dice: '0', type: 'radiant', scaling: { dice: '1d6', per: 'character_level' } },
+              {
+                kind: 'damage', dice: '0', type: 'radiant',
+                scaling: { dice: '1d6', per: 'character_level' },
+                suppress_damage_modifiers: true,
+                omit_if_zero: true,
+              },
             ],
           },
         ]),

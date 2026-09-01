@@ -41,6 +41,12 @@ test('ключевые заговоры используют общие прим
     shape: 'single', filter: 'enemy',
   });
   assert.equal(trueStrike.on_hit[0].options.items[1].grants[0].type, 'radiant');
+  assert.deepEqual(trueStrike.on_hit[0].options.items[1].grants[1], {
+    kind: 'damage', dice: '0', type: 'radiant',
+    scaling: { dice: '1d6', per: 'character_level' },
+    suppress_damage_modifiers: true,
+    omit_if_zero: true,
+  });
 
   const sorcerousBurst = CANTRIP_UPGRADES['Чародейский выброс'].mechanics.effects[0].on_hit[0];
   assert.equal(sorcerousBurst.options.items.length, 7);

@@ -40,8 +40,22 @@ describe('универсальные примитивы заговоров', () 
         on_hit: [{
           kind: 'choice', id: 'true_strike_damage_type', context: 'in_play', count: 1,
           options: { source: 'explicit', items: [
-            { id: 'weapon', grants: [{ kind: 'damage', dice: 'weapon', type: 'weapon', ability: 'spellcasting' }] },
-            { id: 'radiant', grants: [{ kind: 'damage', dice: 'weapon', type: 'radiant', ability: 'spellcasting' }] },
+            { id: 'weapon', grants: [
+              { kind: 'damage', dice: 'weapon', type: 'weapon', ability: 'spellcasting' },
+              {
+                kind: 'damage', dice: '0', type: 'radiant',
+                scaling: { dice: '1d6', per: 'character_level' },
+                suppress_damage_modifiers: true, omit_if_zero: true,
+              },
+            ] },
+            { id: 'radiant', grants: [
+              { kind: 'damage', dice: 'weapon', type: 'radiant', ability: 'spellcasting' },
+              {
+                kind: 'damage', dice: '0', type: 'radiant',
+                scaling: { dice: '1d6', per: 'character_level' },
+                suppress_damage_modifiers: true, omit_if_zero: true,
+              },
+            ] },
           ] },
         }],
       }],
@@ -57,6 +71,38 @@ describe('универсальные примитивы заговоров', () 
       type: 'damage', damageType, amount: 7,
     }));
     expect(result.targetState?.hp.current).toBe(targetState.hp.current - 7);
+    expect(result.events.filter((event) => event.type === 'damage')).toHaveLength(1);
+  });
+
+  it('Меткий удар добавляет отдельную кость излучения с 5-го уровня', () => {
+    const targetState = { ...freshFighterState(), hp: { current: 30, max: 30, temp: 0 } };
+    const result = executeAction(equippedFighterState(), {
+      name: 'Меткий удар',
+      effects: [{
+        resolution: 'attack_roll', attack_kind: 'weapon_melee', ability: 'spellcasting',
+        on_hit: [{
+          kind: 'choice', id: 'true_strike_damage_type', context: 'in_play', count: 1,
+          options: { source: 'explicit', items: [{ id: 'radiant', grants: [
+            { kind: 'damage', dice: 'weapon', type: 'radiant', ability: 'spellcasting' },
+            {
+              kind: 'damage', dice: '0', type: 'radiant',
+              scaling: { dice: '1d6', per: 'character_level' },
+              suppress_damage_modifiers: true, omit_if_zero: true,
+            },
+          ] }] },
+        }],
+      }],
+    }, {
+      character: { ...FIGHTER_CTX_EQUIPPED, level: 5, spellcastingMod: 3 },
+      target: { id: 'target', ac: 10, runtimeState: targetState, characterContext: FIGHTER_CTX },
+      choices: { true_strike_damage_type: 'radiant' },
+      rng: sequence([face(15), face(4, 8), face(5, 6)]),
+    });
+
+    expect(result.events.filter((event) => event.type === 'damage')).toEqual([
+      expect.objectContaining({ damageType: 'radiant', amount: 7 }),
+      expect.objectContaining({ damageType: 'radiant', amount: 5 }),
+    ]);
   });
 
   it.each([

@@ -8,8 +8,8 @@ func TestTrueStrikeMigrationFollowsFriendsMindSliverRepair(t *testing.T) {
 	if index == 0 || migrations[index-1].Version != friendsMindSliverCantripMigrationVersion {
 		t.Fatal("migration 134 must immediately follow 133")
 	}
-	if index != len(migrations)-1 {
-		t.Fatal("migration 134 must remain the latest migration")
+	if index+1 >= len(migrations) || migrations[index+1].Version != trueStrikeZeroDamageMigrationVersion {
+		t.Fatal("migration 134 must immediately precede 135")
 	}
 }
 

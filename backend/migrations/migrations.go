@@ -854,6 +854,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairTrueStrikeCantrip,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     trueStrikeZeroDamageMigrationVersion,
+			Description: "Скрыть неактивную нулевую строку усиления Меткого удара",
+			Up:          suppressTrueStrikeZeroDamage,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

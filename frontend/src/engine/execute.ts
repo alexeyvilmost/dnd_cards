@@ -638,6 +638,9 @@ function preflightPayload(
       if (base !== 'weapon') {
         assertFiniteFormula(withScaling(String(base), value, ctx), `${path}.${value.amount == null ? 'dice' : 'amount'}`, ctx);
       }
+      if (value.omit_if_zero !== undefined && typeof value.omit_if_zero !== 'boolean') {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.omit_if_zero`, 'omit_if_zero must be boolean');
+      }
       const explode = value.explode;
       if (isDict(explode) && explode.limit !== undefined) {
         assertFiniteFormula(explode.limit, `${path}.explode.limit`, ctx);
@@ -2701,6 +2704,7 @@ function resolveDamageAmounts(
       : collectDamageModifiers(ctx, state, damageFilter, attackFacts?.weaponMod);
     let total = fr.total + ruled.delta;
     for (const m of extraMods) total += m.value;
+    if (total === 0 && payload.omit_if_zero === true) return [];
     return [{
       amount: total,
       damageType,
