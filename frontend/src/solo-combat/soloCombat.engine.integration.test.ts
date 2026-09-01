@@ -1360,7 +1360,7 @@ describe('solo combat engine vertical integration', () => {
     const monsterId = Object.values(state.world.actors).find((actor) => actor.kind === 'monster')!.id;
     const action = state.catalogActions.find((candidate) => candidate.name === 'Раскат грома')!;
     const sourcePosition = state.tokens[actorId].position;
-    const targetPosition = { x: sourcePosition.x + 1, y: sourcePosition.y };
+    const targetPosition = { x: sourcePosition.x + 1, y: sourcePosition.y + 1 };
     state = {
       ...state,
       tokens: {

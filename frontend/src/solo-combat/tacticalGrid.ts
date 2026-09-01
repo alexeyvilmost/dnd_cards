@@ -145,12 +145,17 @@ export function areaPositionsForAction(input: TacticalAreaProjectionInput): Grid
     ));
   }
 
-  if (geometry.kind === 'sphere' || geometry.kind === 'emanation') {
-    const center = geometry.kind === 'emanation' ? input.sourcePosition : input.aimPosition;
+  if (geometry.kind === 'emanation') {
+    return boardPositions().filter((position) => (
+      gridDistanceFt(input.sourcePosition, position) <= geometry.radiusFt
+    ));
+  }
+
+  if (geometry.kind === 'sphere') {
     return boardPositions().filter((position) => (
       Math.hypot(
-        position.x - center.x,
-        position.y - center.y,
+        position.x - input.aimPosition.x,
+        position.y - input.aimPosition.y,
       ) * TACTICAL_CELL_FT <= geometry.radiusFt + Number.EPSILON
     ));
   }

@@ -139,9 +139,10 @@ describe('solo combat tactical contract', () => {
       sourcePosition: { x: 5, y: 5 },
       aimPosition: { x: 10, y: 10 },
     });
-    expect(cells).toHaveLength(5);
+    expect(cells).toHaveLength(9);
     expect(cells).toContainEqual({ x: 5, y: 5 });
     expect(cells).toContainEqual({ x: 5, y: 4 });
+    expect(cells).toContainEqual({ x: 4, y: 4 });
     expect(cells).not.toContainEqual({ x: 10, y: 10 });
   });
 
