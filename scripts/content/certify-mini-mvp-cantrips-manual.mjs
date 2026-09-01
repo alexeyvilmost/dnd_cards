@@ -14,6 +14,15 @@ import { fetchMiniMvpCatalogs } from './mini-mvp-audit.mjs';
 
 export const MANUAL_CANTRIP_SUPPORT_VERSION = 'mini-mvp-cantrips-manual-v1';
 
+function hasExistingVerifiedSupport(entity) {
+  const support = entity.support;
+  return typeof support?.status === 'string'
+    && support.status.startsWith('verified_')
+    && typeof support.content_hash === 'string'
+    && typeof support.dependency_hash === 'string'
+    && typeof support.certification_version === 'string';
+}
+
 function manualSupport(entity, index, certifiedAt) {
   const declared = CANTRIP_UPGRADES[entity.name]?.support;
   if (!declared?.status?.startsWith('verified_')) {
@@ -52,7 +61,12 @@ export function planManualCantripSupport(catalogs, certifiedAt) {
     const matches = spells.filter((spell) => spell.name === name && Number(spell.level) === 0);
     if (matches.length !== 1) throw new Error(`${name}: expected one live level-0 spell, got ${matches.length}`);
     const entity = matches[0];
-    return { entity, support: manualSupport(entity, index, certifiedAt) };
+    const preserved = hasExistingVerifiedSupport(entity);
+    return {
+      entity,
+      support: preserved ? entity.support : manualSupport(entity, index, certifiedAt),
+      changeRequired: !preserved,
+    };
   });
 }
 
@@ -86,20 +100,21 @@ export async function runManualCantripSupport({
     ?? (certifiedAtIndex >= 0 ? process.argv[certifiedAtIndex + 1] : undefined);
   if (!timestamp || timestamp.startsWith('--')) throw new Error('--certified-at is required');
   const records = planManualCantripSupport(await fetchMiniMvpCatalogs(), timestamp);
-  console.log(`${apply ? 'APPLY' : 'DRY-RUN'} ${apiUrl()}: ${records.length}/35 exact cantrip rows`);
-  for (const { entity, support } of records) {
-    console.log(`  ${entity.card_number} ${entity.name}: ${support.status}`);
+  const pending = records.filter((record) => record.changeRequired);
+  console.log(`${apply ? 'APPLY' : 'DRY-RUN'} ${apiUrl()}: ${records.length}/35 exact cantrip rows; ${pending.length} pending`);
+  for (const { entity, support, changeRequired } of records) {
+    console.log(`  ${changeRequired ? '◑' : '✓'} ${entity.card_number} ${entity.name}: ${support.status}`);
   }
-  if (!apply) return records;
+  if (!apply || pending.length === 0) return records;
   const key = process.env.CONTENT_CERTIFICATION_KEY?.trim();
   if (!key) throw new Error('--apply requires CONTENT_CERTIFICATION_KEY');
   const receipt = await postExactSupportBatch({
     baseUrl: apiUrl(),
-    batch: buildManualCantripSupportBatch(records),
+    batch: buildManualCantripSupportBatch(pending),
     token: await login(),
     certificationKey: key,
   });
-  console.log(`Applied ${records.length} manual cantrip certifications atomically; operation ${receipt.operation_id}`);
+  console.log(`Applied ${pending.length} manual cantrip certifications atomically; operation ${receipt.operation_id}`);
   return records;
 }
 

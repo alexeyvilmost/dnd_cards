@@ -115,6 +115,14 @@ export function immediateSoloCombatTargetIds(
   actorId: string,
 ): string[] | null {
   if (action.targeting?.maxTargets === 0) return [];
+  const needsMapDestination = (value: unknown): boolean => {
+    if (Array.isArray(value)) return value.some(needsMapDestination);
+    if (!value || typeof value !== 'object') return false;
+    const record = value as Record<string, unknown>;
+    if (record.kind === 'movement' && record.value === 'teleport') return true;
+    return Object.values(record).some(needsMapDestination);
+  };
+  if (needsMapDestination(action.mechanics.effects)) return null;
   const targeting = action.mechanics.targeting;
   if (targeting && typeof targeting === 'object' && !Array.isArray(targeting)
     && (targeting as Record<string, unknown>).shape === 'self') {

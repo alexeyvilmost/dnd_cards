@@ -221,4 +221,23 @@ describe('solo combat data-owned action choices', () => {
       requiresLineOfSight: true, allowedRelations: ['enemy'],
     }, 'single'), 'hero')).toBeNull();
   });
+
+  it('keeps a self-shaped teleport in map-targeting mode so the player chooses a destination', () => {
+    const teleport = {
+      id: 'teleport', name: 'Телепортация', kind: 'spell', spell: { level: 0 },
+      sourceEntityIds: ['teleport'],
+      mechanics: {
+        targeting: { shape: 'self' },
+        effects: [{
+          resolution: 'auto',
+          result: [{ kind: 'movement', value: 'teleport', distance: '15' }],
+        }],
+      },
+      targeting: {
+        minTargets: 1, maxTargets: 1, rangeFt: 0,
+        requiresLineOfSight: false, allowedRelations: ['self'],
+      },
+    } as RuleActionDefinition;
+    expect(immediateSoloCombatTargetIds(teleport, 'hero')).toBeNull();
+  });
 });

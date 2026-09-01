@@ -48,6 +48,22 @@ test('manual cantrip batch uses exact current entity preimages', () => {
   )));
 });
 
+test('manual cantrip plan preserves an existing stronger verified certificate', () => {
+  const input = catalogs();
+  input.spell[0].support = {
+    status: 'verified_partial',
+    content_hash: `sha256:${'1'.repeat(64)}`,
+    dependency_hash: `sha256:${'2'.repeat(64)}`,
+    certification_version: 'micro-mvp-l1-rules-core-v4',
+    mechanics_locked: true,
+    limitations: ['Existing release boundary'],
+  };
+  const records = planManualCantripSupport(input, '2026-09-01T06:00:00Z');
+  assert.equal(records[0].changeRequired, false);
+  assert.equal(records[0].support, input.spell[0].support);
+  assert.equal(records.filter((record) => record.changeRequired).length, 34);
+});
+
 test('manual cantrip plan fails closed on a missing or duplicate live row', () => {
   const missing = catalogs();
   missing.spell.pop();
