@@ -118,17 +118,13 @@ describe('persistent combat areas', () => {
     replaceConditionEntityReferences({ prone: { kind: 'effect', id: 'effect-prone', cardNumber: 'EFFECT-prone' } });
     const initial = state();
     initial.tokens.target.position = { x: 2, y: 3 };
-    const bearings: CombatAreaState = {
-      id: 'bearings', name: 'Металлические шарики', zoneType: 'ball_bearings',
-      sourceActorId: 'caster', sourceActionId: 'bearings-action', sourceEntityIds: ['CARD-0799'],
-      origin: { x: 3, y: 3 }, cells: [{ x: 3, y: 3 }], duration: { type: 'permanent' },
-      triggers: ['enter'], hazard: {
-        id: 'combat-area:bearings', name: 'Металлические шарики', sourceKind: 'environment',
-        sourceEntityIds: ['CARD-0799'], save: { ability: 'dex', dc: 10 },
-        onFailure: [{ kind: 'condition', value: 'prone', op: 'apply' }], onSuccess: [],
-      },
-    };
-    initial.combatAreas = { bearings };
+    const contextualGrease = { ...grease, id: 'grease@CLASS-wizard' };
+    const area = createCombatArea({
+      state: initial, action: contextualGrease, sourceActorId: 'caster', origin: { x: 3, y: 3 },
+    })!;
+    expect(area.hazard?.id).toMatch(/^[A-Za-z0-9._:-]{1,128}$/);
+    expect(area.hazard?.id).not.toContain('@');
+    initial.combatAreas = { [area.id]: area };
     const moved = moveActor({ state: initial, actorId: 'target', destination: { x: 3, y: 3 }, rng: () => 0 });
     expect(moved.world.pendingResolution).toBeNull();
     expect(moved.world.actors.target.runtime.activeEffects).toEqual([
@@ -136,7 +132,7 @@ describe('persistent combat areas', () => {
         mechanics: expect.objectContaining({ kind: 'condition', value: 'prone' }),
         entityRef: { kind: 'effect', id: 'effect-prone', cardNumber: 'EFFECT-prone' },
         ownerId: 'target',
-        sourceId: 'environment:combat-area:bearings',
+        sourceId: `environment:${area.hazard!.id}`,
       }),
     ]);
   });

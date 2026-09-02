@@ -57,8 +57,18 @@ function durationOf(action: RuleActionDefinition, payload: Dict): CombatAreaStat
   return { type: 'permanent' };
 }
 
+function stableHazardId(sourceActorId: string, actionId: string): string {
+  const raw = `${sourceActorId}:${actionId}`;
+  let hash = 2166136261;
+  for (let index = 0; index < raw.length; index += 1) {
+    hash ^= raw.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  const readable = raw.replace(/[^A-Za-z0-9._:-]/g, '_').slice(0, 100);
+  return `combat-area:${readable}:${(hash >>> 0).toString(16).padStart(8, '0')}`;
+}
+
 function hazardOf(input: {
-  areaId: string;
   action: RuleActionDefinition;
   payload: Dict;
   state: SoloCombatState;
@@ -79,7 +89,7 @@ function hazardOf(input: {
   if (!['str', 'dex', 'con', 'int', 'wis', 'cha'].includes(ability)
     || !Number.isInteger(dc) || dc < 1 || onFailure.length === 0) return undefined;
   return {
-    id: `combat-area:${input.areaId}`,
+    id: stableHazardId(input.sourceActorId, input.action.id),
     name: input.action.name,
     sourceKind: 'environment',
     sourceEntityIds: [...input.action.sourceEntityIds],
@@ -129,7 +139,7 @@ export function createCombatArea(input: {
     ...(typeof tactical.notice === 'string' ? { notice: tactical.notice } : {}),
   };
   const hazard = hazardOf({
-    areaId: id, action: input.action, payload,
+    action: input.action, payload,
     state: input.state, sourceActorId: input.sourceActorId,
   });
   return { ...area, ...(hazard ? {
