@@ -923,6 +923,25 @@ describe('real sheet canonical world materialization', () => {
       ?.preparedSources['CLASS-wizard']?.availableActionIds)
       .toEqual(source.availableActionIds);
 
+    const afterStalePreparationOverlay = buildSheetCanonicalRuntime({
+      character: {
+        ...character('sheet-wizard', persistedChoices),
+        turn_state: writeSheetSpellPreparation({}, {
+          [preparedChoice.id]: prepared.slice(0, 3),
+        }),
+      },
+      assembled: assembly,
+      ruleState: resolvedRuleState,
+      sheetActions,
+      runtime: root.actor.runtime,
+      characterContext: root.actor.character,
+      cards: [],
+      ac: root.actor.ac,
+    });
+    expect(afterStalePreparationOverlay.world.actors[afterStalePreparationOverlay.actorId]
+      .spellcastingAccess?.preparedSources['CLASS-wizard']?.preparedActionIds)
+      .toEqual(prepared.map((id) => `${id}@CLASS-wizard`).sort());
+
     const persisted = writeSheetCanonicalWorld({}, built.actorId, built.world);
     const reloaded = buildSheetCanonicalRuntime({
       character: {

@@ -754,9 +754,16 @@ function preparedSourceProjections(input: {
     );
   }
   const choice = choices[0];
-  const selected = input.runtimePreparedChoices?.[choice.id]
-    ?? input.resolvedChoices?.[choice.id]
-    ?? [];
+  const persistedSelection = input.resolvedChoices?.[choice.id] ?? [];
+  const runtimeSelection = input.runtimePreparedChoices?.[choice.id];
+  // Sheet preparation is mutable runtime state, but a level-up may increase
+  // the preparation capacity while an older overlay still contains the
+  // previous number of spells. Never let that stale overlay make the entire
+  // sheet/combat world uncompilable: fall back to the valid Forge selection.
+  const selected = runtimeSelection
+    && preparedSpellSelectionIssues(choice, runtimeSelection).length === 0
+    ? runtimeSelection
+    : persistedSelection;
   const issues = preparedSpellSelectionIssues(choice, selected);
   if (issues.length) {
     throw new SheetCanonicalWorldError(
