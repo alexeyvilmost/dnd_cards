@@ -20,6 +20,7 @@ import { FormattedText } from '../utils/formattedText';
 import { getRarityGlowColor, getRarityGlowSettings } from '../utils/rarityGlow';
 import { getCurrencyInfo, formatPriceAmount, currencyIconStyle } from '../utils/currencies';
 import { findMastery, useMasteryEffects } from '../utils/mastery';
+import { describeMechanics } from '../engine/describeMechanics';
 
 interface CardDetailModalProps {
   card: Card | null;
@@ -42,6 +43,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
   const containerSum = useContainerTotals(card); // S6: сумма веса/цены содержимого контейнера
   // Искусность (Weapon Mastery 2024): структурное поле card.mastery → эффект-мастерство.
   const masteryEffect = findMastery(useMasteryEffects(), card?.mastery);
+  const mechanicsDescription = describeMechanics(card?.mechanics as Record<string, unknown> | null | undefined);
   const asInterface = useSiteSettings().itemPreview === 'interface'; // #4: детальное превью как стат-блок
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
@@ -305,6 +307,18 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
               <p className="text-xs sm:text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">
                 {card.detailed_description}
               </p>
+            </div>
+          )}
+
+          {(mechanicsDescription.summary || mechanicsDescription.details.length > 0) && (
+            <div className="mt-2 sm:mt-4 p-3 sm:p-4 bg-gray-800 rounded-lg border border-gray-600">
+              <h3 className="text-xs sm:text-sm font-semibold text-gray-300 mb-2">Механика:</h3>
+              {mechanicsDescription.summary && (
+                <p className="text-xs sm:text-sm text-gray-100"><FormattedText text={mechanicsDescription.summary} /></p>
+              )}
+              {mechanicsDescription.details.map((detail, index) => (
+                <p key={index} className="text-xs sm:text-sm text-gray-200 mt-1"><FormattedText text={detail} /></p>
+              ))}
             </div>
           )}
 

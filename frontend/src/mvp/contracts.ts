@@ -253,6 +253,9 @@ export interface CharacterContext {
    * означает legacy-контекст без проекции; [] означает явно отсутствие владений.
    */
   weaponProficiencies?: string[];
+  /** Categories currently worn without armor training. Empty means the
+   * resolver verified the equipped armor; undefined is a legacy context. */
+  untrainedArmorCategories?: string[];
   /** Id предметов, на которые персонаж настроен (turn_state.attuned_ids). Для гейтинга
    * бонусов из mechanics.weapon_profile.attunement: требующий настройки предмет без неё
    * даёт только базовые свойства. undefined — неизвестный факт и отключает бонусы fail-closed. */

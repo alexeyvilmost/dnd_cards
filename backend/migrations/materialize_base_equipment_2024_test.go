@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 )
 
@@ -56,10 +57,22 @@ func TestBaseEquipment2024DeclaresEveryOfficialWeaponAndArmor(t *testing.T) {
 func TestBaseEquipment2024MigrationIsRegisteredLast(t *testing.T) {
 	migrations := GetAllMigrations()
 	last := migrations[len(migrations)-1]
-	if last.Version != baseEquipment2024MigrationVersion {
+	if last.Version != baseEquipmentDescriptionMigrationVersion {
 		t.Fatalf("last=%s", last.Version)
 	}
 	if last.Up == nil || last.Down == nil {
 		t.Fatal("migration must register Up and Down")
+	}
+}
+
+func TestBaseArmorDescriptionsContainRulesRatherThanLegacyBonuses(t *testing.T) {
+	for _, row := range baseArmors2024 {
+		description := armorDescription2024(row)
+		if !strings.Contains(description, "КЗ:") || !strings.Contains(description, "Без владения") {
+			t.Fatalf("incomplete armor description for %s: %s", row.CardNumber, description)
+		}
+		if strings.Contains(description, "максимальному здоровью") {
+			t.Fatalf("legacy HP bonus leaked into %s", row.CardNumber)
+		}
 	}
 }

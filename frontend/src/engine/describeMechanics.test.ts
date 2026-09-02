@@ -87,6 +87,20 @@ describe('describeMechanics (фаза F)', () => {
     expect(d.details).toContain('Стоит: :bonus_action:, заряд способности');
     expect(d.details.join(' ')).not.toContain('uses_ACT-second-wind');
   });
+
+  it('humanizes a data-driven weapon profile for the item card', () => {
+    const d = describeMechanics({
+      weapon_profile: {
+        proficiency_category: 'martial',
+        damage_lines: [{ dice: '1d8', type: 'slashing' }],
+        attack_modes: [{ kind: 'melee', reach_ft: 5 }, { kind: 'ranged', normal_ft: 20, long_ft: 60 }],
+        properties: ['finesse', 'thrown'],
+      },
+    });
+    expect(d.details).toContain('Оружие: воинское · урон [slashing]1к8 рубящий[/slashing]');
+    expect(d.details).toContain('Режимы: досягаемость 5 фт; дальность 20 / 60 фт');
+    expect(d.details).toContain('Свойства: фехтовальное, метательное');
+  });
 });
 
 describe('parseMechanicsStats (превью из механики, не из легаси-флагов)', () => {

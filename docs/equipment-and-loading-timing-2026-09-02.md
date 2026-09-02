@@ -14,6 +14,10 @@ Timezone: Europe/Moscow (UTC+03:00).
 | 08:23:59 | 08:30:58 | 6m 59s | Production catalog reconciliation | Resolved 12 of 14 apparent gaps as naming aliases or wrong duplicate selection. Confirmed two real gaps: Morningstar and Bullseye Lantern; identified 22 canonical weapons without executable profiles. |
 | 08:30:58 | 08:43:31 | 12m 33s | Canonical weapon/armor/utility implementation plus automated verification | Added 38 weapon profiles, 13 armor profiles, and mechanics for 55 utility rows; existing Healing Potion remains the 56th. Backend suite, 47 focused frontend tests, TypeScript, and production build passed. |
 | 08:43:31 | 08:55:56 | 12m 25s | First equipment deployment, automatic rollback, and production-schema diagnosis | Timecloud restored the prior healthy release. The failure was two new card numbers exceeding production's 20-character limit; local test fixtures used unconstrained text. Shortened both identifiers and added a real-limit regression check. |
+| 08:55:56 | 09:00:15 | 4m 19s | Corrected equipment release and checklist reconciliation against production | Release `bcef7032` became healthy on Timecloud; the rebuilt workbook matched all 107 scoped entities with zero missing catalog records. |
+| 09:00:15 | 09:05:27 | 5m 12s | Reusable manual-QA character setup | Created and retained six purpose-specific characters covering weapons, trained armor, untrained armor, consumables, combat gear, and sheet gear. |
+| 09:05:27 | 09:27:46 | 22m 19s | First manual browser pass: weapon, combat, trained armor, and untrained armor | Verified weapon equip/attack calculations, combat construction, trained armor AC, heavy-armor Strength speed penalty, and the untrained warning. Found two clarity gaps and one real rule gap: generic combat weapon action, missing item mechanic details, and spellcasting not blocked by untrained armor. |
+| 09:27:46 | 09:36:24 | 8m 38s | Weapon/item clarity and untrained-armor rule implementation | Added structured mechanic details to item cards and weapon action previews, weapon-specific combat labels, spell prohibition, Strength/Dexterity d20 disadvantage, corrected armor descriptions, and 47 focused regression checks. |
 
 ## Running bottleneck ranking
 
@@ -23,6 +27,7 @@ Timezone: Europe/Moscow (UTC+03:00).
 4. Resource catalog embedding about 504 KB of base64 image text (about 356 KB compressed).
 5. Equipment catalog duplication and display-only rules: resolving the canonical item took longer than writing most mechanics.
 6. Test-schema drift: a fixture that omitted the production varchar limit allowed a deployment-only migration failure.
+7. Manual UI discovery and scene setup: the first four representative sheet/combat cases took 22 minutes because each new UI state and dialog path had to be mapped once.
 
 ## Planned speedups
 
@@ -35,3 +40,4 @@ Timezone: Europe/Moscow (UTC+03:00).
 - Run the focused equipment contract suite before the full build; this pass found logic failures in about 3 seconds, while the production bundle took about 90 seconds end-to-end.
 - Use compressed uploads with SSH keepalive by default to avoid repeating the 3–5 minute failed-transfer path seen in the second loading release.
 - Generate migration test schemas from the production schema (or at minimum assert production field limits) so release-only constraint failures are caught before image builds.
+- Keep the six retained equipment QA characters and a small browser smoke script so later equipment passes start at the exact sheet/combat state instead of rebuilding inventory and scenes.

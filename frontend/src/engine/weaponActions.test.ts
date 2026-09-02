@@ -136,6 +136,10 @@ describe('weaponAttackPreview: числа из оружия в руке', () => 
     const p = weaponAttackPreview(MECH_WEAPON_ATTACK, CTX, { main_hand: CARD_LONGSWORD.id })!;
     expect(p.attack).toBe(4);
     expect(p.damages).toEqual([{ dice: '1d8', bonus: 2, type: 'slashing' }]);
+    expect(p.weaponName).toBe(CARD_LONGSWORD.name);
+    expect(p.mode).toBe('melee');
+    expect(p.reachFt).toBe(5);
+    expect(p.properties).toEqual([]);
   });
 
   it('кинжал во второй руке: атака +4, урон 1d4 БЕЗ мода характеристики', () => {

@@ -592,6 +592,13 @@ export interface WeaponAttackPreview {
   attack: number;
   /** Строки урона: {кость, плоский бонус, тип}. Пустая dice — только бонус (безоружный). */
   damages: Array<{ dice: string; bonus: number; type: string }>;
+  weaponName?: string;
+  mode?: 'melee' | 'ranged';
+  reachFt?: number;
+  normalRangeFt?: number;
+  longRangeFt?: number;
+  properties?: string[];
+  masteryId?: string | null;
 }
 
 function previewFormulaContext(
@@ -684,6 +691,10 @@ export function weaponAttackPreview(
         bonus: abilityMod,
         type: profile?.damageType ?? 'bludgeoning',
       }],
+      weaponName: 'Безоружный удар',
+      mode: 'melee',
+      reachFt: 5,
+      properties: [],
     };
   }
 
@@ -697,6 +708,8 @@ export function weaponAttackPreview(
   ) ? character.profBonus : 0;
   const attackEffect = matchedAttackEffect(mechanics) as Dict;
   const attackFacts = attackRollQueryFacts(attackEffect, hand, character, equipment);
+  const attackMode = String(attackEffect.attack_kind) === 'weapon_ranged' ? 'ranged' : 'melee';
+  const modeProfile = w.attackModes.find((mode) => mode.kind === attackMode);
 
   // Бонус к БРОСКУ АТАКИ — зеркало attackAbilityMods (execute.ts): при ability:'auto'
   // берём мод оружия и зачарование; при явной характеристике — её мод без зачарования.
@@ -743,5 +756,14 @@ export function weaponAttackPreview(
       bonus: i === 0 ? damageAbilityBonus + w.damageEnchant + dmgMods : 0,
       type: d.type,
     })),
+    weaponName: w.name,
+    mode: attackMode,
+    ...(modeProfile?.kind === 'melee' ? { reachFt: modeProfile.reachFt } : {}),
+    ...(modeProfile?.kind === 'ranged' ? {
+      normalRangeFt: modeProfile.normalFt,
+      longRangeFt: modeProfile.longFt,
+    } : {}),
+    properties: [...w.properties],
+    masteryId: w.mastery,
   };
 }

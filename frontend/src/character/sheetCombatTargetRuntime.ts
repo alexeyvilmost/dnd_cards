@@ -13,6 +13,7 @@ import type { AssembledCharacter } from './assemble';
 import { collectItemMechanics } from './attunement';
 import { characterToDraft } from './forgeHelpers';
 import { buildCharacterContext, forgeToRuntimeState } from './runtime';
+import { untrainedArmorPenaltyMechanics } from './untrainedArmor';
 import { resolveCharacterRules } from './rules/resolveCharacterRules';
 import { buildSheetCanonicalRuntime } from './sheetCanonicalWorld';
 import type { SheetCombatParticipantSeed } from './sheetCombatSession';
@@ -232,10 +233,10 @@ export async function loadSheetCombatParticipant(input: {
   });
   const equippedCards = Object.values(runtime.equipment)
     .flatMap((id) => id && cardsById.get(id) ? [cardsById.get(id)!] : []);
-  const passives = collectPassiveMechanics(
-    assembled,
-    input.character.resolved_choices ?? {},
-  );
+  const passives = [
+    ...collectPassiveMechanics(assembled, input.character.resolved_choices ?? {}),
+    ...untrainedArmorPenaltyMechanics(ruleState),
+  ];
   const inventory = await collectSheetCombatActionInventory({
     assembled,
     character: input.character,

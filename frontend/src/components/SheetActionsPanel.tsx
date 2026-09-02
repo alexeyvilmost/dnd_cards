@@ -105,6 +105,10 @@ import type {
 } from '../rules-core/domain';
 import type { SheetCanonicalCommandInput } from '../character/sheetCanonicalCommand';
 import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
+import {
+  UNTRAINED_ARMOR_SPELL_REASON,
+  untrainedArmorPenaltyMechanics,
+} from '../character/untrainedArmor';
 import { playerFacingSheetActionError } from '../character/sheetActionError';
 import { sheetTriggeredActionOffersAfterAttack } from '../character/sheetTriggeredActionOffers';
 import {
@@ -779,8 +783,13 @@ export default function SheetActionsPanel({
     const items = collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state, runtime.inventory)
       .map((im) => im.mechanics);
     // S3: выданные предметами эффекты (grant_effect) — тот же числовой канал, что и механики предметов.
-    return [...collectPassiveMechanics(assembled, character.resolved_choices ?? {}), ...items, ...(itemGrantedPassives ?? [])];
-  }, [assembled, character.equipment, character.turn_state, character.resolved_choices, equipCards, runtime.inventory, itemGrantedPassives]);
+    return [
+      ...collectPassiveMechanics(assembled, character.resolved_choices ?? {}),
+      ...items,
+      ...(itemGrantedPassives ?? []),
+      ...untrainedArmorPenaltyMechanics(ruleState),
+    ];
+  }, [assembled, character.equipment, character.turn_state, character.resolved_choices, equipCards, runtime.inventory, itemGrantedPassives, ruleState]);
 
   // D: способности экономики хода, запрещённые состояниями (Недееспособный → действие/бонусное/
   // реакция/концентрация). Гейтят запуск и доступность действий с соответствующей стоимостью.
@@ -2672,6 +2681,9 @@ export default function SheetActionsPanel({
         disabled: true,
         reason: `Ожидается безопасный повтор ${sheetAtomicRetryLabel(pendingAtomicRetry)}`,
       };
+    }
+    if (action.spellRef && ctx.untrainedArmorCategories?.length) {
+      return { disabled: true, reason: UNTRAINED_ARMOR_SPELL_REASON };
     }
     const contextualCostIssue = contextualCostProjection.issues.get(action.id);
     if (contextualCostIssue) return { disabled: true, reason: contextualCostIssue };

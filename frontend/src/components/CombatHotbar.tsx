@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Footprints, MoreHorizontal } from 'lucide-react';
 import { canPay, costKey } from '../engine/cost';
 import { FREEUSE_SHOWCASE_KEY, isFreeusePoolKey } from '../engine/freeuse';
-import { bindEquippedWeaponActionContext } from '../engine/weapon';
+import { bindEquippedWeaponActionContext, weaponAttackPreview } from '../engine/weapon';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
 import { parseActivationLevelRequirement } from '../rules-core/activationRequirements';
@@ -14,6 +14,7 @@ import { actionCostResourceIds, findResource, useResourceOptions } from '../util
 import SheetActionLine from './SheetActionLine';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
 import SheetResourceTile, { sheetResourceTileOrder } from './SheetResourceTile';
+import { UNTRAINED_ARMOR_SPELL_REASON } from '../character/untrainedArmor';
 
 const RESOURCE_LABELS: Record<string, string> = {
   action: 'Действие',
@@ -104,6 +105,9 @@ export function combatActionAvailability(
   }
   let spellSlotResource: string | undefined;
   if (action.kind === 'spell') {
+    if (actor.character.untrainedArmorCategories?.length) {
+      return { enabled: false, reason: UNTRAINED_ARMOR_SPELL_REASON };
+    }
     if (!actor.spellcastingAccess) {
       return { enabled: false, reason: 'У персонажа нет источника этого заклинания' };
     }
@@ -290,6 +294,16 @@ export default function CombatHotbar({
             )
             : undefined;
           const actionDisabled = disabled || !availability.enabled;
+          const weaponPreview = weaponAttackPreview(
+            action.mechanics,
+            actor.character,
+            actor.runtime.equipment,
+            actor.runtime,
+            actor.passives ?? [],
+          ) ?? undefined;
+          const contextualActionRef = actionRef && weaponPreview?.weaponName
+            ? { ...actionRef, name: `${weaponPreview.weaponName} — атака` }
+            : actionRef;
           return (
             <div
               key={action.id}
@@ -297,12 +311,13 @@ export default function CombatHotbar({
               data-action-id={action.id}
             >
               <SheetActionLine
-                name={actionLabel(action)}
+                name={weaponPreview?.weaponName ?? actionLabel(action)}
                 imageUrl={presentation?.imageUrl}
                 sourceLabel={presentation?.sourceLabel ?? (action.kind === 'spell' ? 'Заклинание' : 'Действие')}
                 description={presentation?.description}
                 level={presentation?.spellRef?.level}
-                actionRef={actionRef}
+                actionRef={contextualActionRef}
+                weaponAttackPreview={weaponPreview}
                 spellRef={presentation?.spellRef}
                 spellcasting={spellcasting}
                 variant="icon"

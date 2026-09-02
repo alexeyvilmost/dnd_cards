@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import type { SoloCombatState } from '../solo-combat/types';
 import { actionCost, combatActionAvailability, combatActionTimingAvailability } from './CombatHotbar';
+import { UNTRAINED_ARMOR_SPELL_REASON } from '../character/untrainedArmor';
 
 const SPELL_ID = 'spell@feat';
 const GRANT_ID = `spell-grant:feat:${SPELL_ID}`;
@@ -78,6 +79,15 @@ describe('combat hotbar action availability', () => {
 
   it('enables a Magic Initiate spell while its free use remains', () => {
     expect(combatActionAvailability(state(1), spell)).toEqual({ enabled: true });
+  });
+
+  it('blocks spellcasting while the actor wears armor without training', () => {
+    const armored = state(1);
+    armored.world.actors.hero.character.untrainedArmorCategories = ['heavy'];
+    expect(combatActionAvailability(armored, spell)).toEqual({
+      enabled: false,
+      reason: UNTRAINED_ARMOR_SPELL_REASON,
+    });
   });
 
   it('disables a levelled spell when both its free use and spell slots are exhausted', () => {

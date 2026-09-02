@@ -41,4 +41,25 @@ describe('ActionPreview contextual formulas and costs', () => {
     expect(html).toContain('Заряд способности');
     expect(html).not.toMatch(/self_level|uses_ACT-second-wind/);
   });
+
+  it('shows the equipped weapon identity, mode, properties, and resolved numbers', () => {
+    const html = renderToStaticMarkup(createElement(ActionPreview, {
+      action: secondWind,
+      resources: [],
+      weaponAttackPreview: {
+        attack: 5,
+        damages: [{ dice: '1d8', bonus: 3, type: 'slashing' }],
+        weaponName: 'Длинный меч',
+        mode: 'melee',
+        reachFt: 5,
+        properties: ['versatile'],
+      },
+    }));
+
+    expect(html).toContain('Длинный меч');
+    expect(html).toContain('досягаемость 5 фт');
+    expect(html).toContain('versatile');
+    expect(html).toContain('+5');
+    expect(html).toContain('1к8 + 3');
+  });
 });

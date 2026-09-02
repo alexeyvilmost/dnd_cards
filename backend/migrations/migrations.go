@@ -926,6 +926,12 @@ func GetAllMigrations() []Migration {
 			Up:          materializeBaseEquipment2024,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     baseEquipmentDescriptionMigrationVersion,
+			Description: "Заменить устаревшие тексты базовых доспех правилами 2024",
+			Up:          repairBaseEquipmentDescriptions,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

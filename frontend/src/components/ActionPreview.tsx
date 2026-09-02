@@ -12,6 +12,7 @@ import { useSiteSettings } from '../settings';
 import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
 import SupportStatusBadge from './forge/SupportStatusBadge';
+import { findMastery, useMasteryEffects } from '../utils/mastery';
 
 interface ActionPreviewProps {
   action: Action;
@@ -32,6 +33,7 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
   const resources = providedResources || loadedResources;
   const { playerMode } = useSiteSettings();
   const formulaCtx = useCharacterFormulaCtx();
+  const mastery = findMastery(useMasteryEffects(), wp?.masteryId);
   const fmt = (s: string) => formatFormulaDisplay(s, formulaCtx);
 
   const actionTypeLabel = ACTION_TYPE_OPTIONS.find((o) => o.value === action.action_type)?.label || action.action_type || '';
@@ -127,6 +129,17 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
               </span>
             </div>
           )}
+        </div>
+      )}
+
+      {wp?.weaponName && (
+        <div className="sp-desc" style={{ marginBottom: 4 }}>
+          <div><strong>Оружие:</strong> {wp.weaponName}</div>
+          <div><strong>Режим:</strong> {wp.mode === 'ranged'
+            ? `дальний ${wp.normalRangeFt ?? '?'} / ${wp.longRangeFt ?? '?'} фт`
+            : `рукопашный · досягаемость ${wp.reachFt ?? 5} фт`}</div>
+          {!!wp.properties?.length && <div><strong>Свойства:</strong> {wp.properties.join(', ')}</div>}
+          {mastery && <div title={mastery.description ?? undefined}><strong>Мастерство:</strong> {mastery.name}</div>}
         </div>
       )}
 

@@ -4,6 +4,7 @@ import type { Card } from '../types';
 import type { CharacterClass } from '../types';
 import type { CharacterRuleState } from './rules/types';
 import { readDeathSaves } from './death';
+import { untrainedArmorCategories } from './untrainedArmor';
 
 export const RULES_ENGINE_RUNTIME_TURN_STATE_KEY = 'rules_engine_runtime_v1' as const;
 export const RULES_ENGINE_RUNTIME_TURN_STATE_VERSION = 1 as const;
@@ -132,6 +133,7 @@ export function buildTargetFromCharacter(c: ForgeCharacter): TargetContext {
     ...(rs.proficiencies?.weapons
       ? { weaponProficiencies: [...rs.proficiencies.weapons] }
       : {}),
+    untrainedArmorCategories: untrainedArmorCategories(rs),
     spellcastingMod: rs.spellcasting
       ? rs.abilityMods[rs.spellcasting.ability]
       : undefined,
@@ -190,6 +192,7 @@ export function buildCharacterContext(
     skillProficiencies: ruleState.proficiencies.skills,
     skillExpertise: ruleState.expertise.skills,
     weaponProficiencies: [...ruleState.proficiencies.weapons],
+    untrainedArmorCategories: untrainedArmorCategories(ruleState),
   };
 }
 

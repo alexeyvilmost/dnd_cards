@@ -32,6 +32,7 @@ import {
   forgeToRuntimeState,
   writeRulesEngineRuntimeTurnState,
 } from '../character/runtime';
+import { untrainedArmorPenaltyMechanics } from '../character/untrainedArmor';
 import { persistCharacterRuntime } from '../character/runtimePersistence';
 import { finalizeSheetD20Roll } from '../character/sheetD20Roll';
 import { breakdownValue } from '../engine/breakdown';
@@ -628,8 +629,9 @@ const CharacterSheetMVP = () => {
   // Пассивки персонажа + механики надетых предметов + выданные эффекты предметов (числовой канал листа).
   const passives = useMemo(() => {
     const base = assembled ? collectPassiveMechanics(assembled, character?.resolved_choices ?? {}) : [];
-    return [...base, ...itemMechanics.map((im) => im.mechanics), ...itemGrantedPassives];
-  }, [assembled, character, itemMechanics, itemGrantedPassives]);
+    const armorPenalty = ruleState ? untrainedArmorPenaltyMechanics(ruleState) : [];
+    return [...base, ...itemMechanics.map((im) => im.mechanics), ...itemGrantedPassives, ...armorPenalty];
+  }, [assembled, character, itemMechanics, itemGrantedPassives, ruleState]);
 
   const sheetCtx = useMemo(() => {
     if (!ruleState || !draft || !runtimeState) return null;

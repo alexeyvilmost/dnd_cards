@@ -45,6 +45,10 @@ const RES_RU: Record<string, string> = {
   self_uses: 'заряд способности', self_item: 'использование предмета',
   equipped_weapon_ammo: 'боеприпас оружия',
 };
+const WEAPON_PROPERTY_RU: Record<string, string> = {
+  ammunition: 'боеприпасы', finesse: 'фехтовальное', heavy: 'тяжёлое', light: 'лёгкое',
+  reach: 'досягаемость', thrown: 'метательное', two_handed: 'двуручное', versatile: 'универсальное',
+};
 
 const rollRu = (r: unknown) => ROLL_RU[String(r)] ?? String(r ?? 'бросок');
 const abilityRu = (a: unknown) => ABILITY_RU[String(a)] ?? String(a ?? '').toUpperCase();
@@ -210,6 +214,23 @@ export function describeMechanics(
     if (Number(armor.strength_requirement ?? 0) > 0) details.push(`Требование: СИЛ ${armor.strength_requirement}; иначе Скорость −10 фт`);
     if (armor.stealth_disadvantage === true) details.push('Помеха на проверки Скрытности');
     if (armor.training_required === true) details.push('Требуется владение этой категорией доспеха');
+  }
+  const weapon = mechanics.weapon_profile as Dict | undefined;
+  if (weapon) {
+    const category = String(weapon.proficiency_category ?? '') === 'martial' ? 'воинское' : 'простое';
+    const damage = Array.isArray(weapon.damage_lines)
+      ? (weapon.damage_lines as Dict[]).map((line) => damagePhrase(line, formulaCtx)).filter(Boolean).join(' + ')
+      : '';
+    details.push(`Оружие: ${category}${damage ? ` · урон ${damage}` : ''}`);
+    const modes = Array.isArray(weapon.attack_modes) ? weapon.attack_modes as Dict[] : [];
+    const ranges = modes.map((mode) => String(mode.kind) === 'ranged'
+      ? `дальность ${mode.normal_ft ?? '?'} / ${mode.long_ft ?? '?'} фт`
+      : `досягаемость ${mode.reach_ft ?? 5} фт`);
+    if (ranges.length) details.push(`Режимы: ${ranges.join('; ')}`);
+    const properties = Array.isArray(weapon.properties)
+      ? (weapon.properties as unknown[]).map((value) => WEAPON_PROPERTY_RU[String(value)] ?? String(value))
+      : [];
+    if (properties.length) details.push(`Свойства: ${properties.join(', ')}`);
   }
 
   return { summary, details };
