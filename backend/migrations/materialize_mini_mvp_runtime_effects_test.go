@@ -46,3 +46,11 @@ func TestRuntimeEffectIdentityIsDeterministic(t *testing.T) {
 		t.Fatalf("identity is not deterministic: %#v vs %#v", left, right)
 	}
 }
+
+func TestRewriteDurableTargetPayloadsAcceptsEmptyHistoricalMechanics(t *testing.T) {
+	source := runtimeEffectSource{table: "actions", id: "legacy-id", cardNumber: "ACTION-0003", name: "Legacy"}
+	rewritten, effects, changed := rewriteDurableTargetPayloads(map[string]any{}, "mechanics", false, source)
+	if changed || len(effects) != 0 || len(rewritten.(map[string]any)) != 0 {
+		t.Fatalf("empty historical mechanics changed: rewritten=%#v effects=%#v changed=%v", rewritten, effects, changed)
+	}
+}

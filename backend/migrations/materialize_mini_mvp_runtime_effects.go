@@ -148,9 +148,9 @@ func loadMiniMVPRuntimeEffectSources(tx *sql.Tx) ([]runtimeEffectSource, error) 
 		table string
 		sql   string
 	}{
-		{"actions", `SELECT id::text,card_number,name,COALESCE(name_en,''),COALESCE(description,''),COALESCE(image_url,''),mechanics
+		{"actions", `SELECT id::text,card_number,name,COALESCE(name_en,''),COALESCE(description,''),COALESCE(image_url,''),COALESCE(mechanics,'{}'::jsonb)
 			FROM actions WHERE deleted_at IS NULL ORDER BY card_number,id`},
-		{"spells", `SELECT id::text,card_number,name,COALESCE(name_en,''),COALESCE(description,''),COALESCE(image_url,''),mechanics
+		{"spells", `SELECT id::text,card_number,name,COALESCE(name_en,''),COALESCE(description,''),COALESCE(image_url,''),COALESCE(mechanics,'{}'::jsonb)
 			FROM spells WHERE deleted_at IS NULL AND level <= 1 ORDER BY card_number,id`},
 	}
 	var result []runtimeEffectSource
