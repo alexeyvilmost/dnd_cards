@@ -950,6 +950,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairBaseEquipmentHealersKitTargeting,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     baseEquipmentHealersKitOwnershipMigrationVersion,
+			Description: "Привязать проверку стабилизации к выбранной цели",
+			Up:          repairBaseEquipmentHealersKitOwnership,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

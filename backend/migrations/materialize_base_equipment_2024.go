@@ -146,6 +146,7 @@ func utilityItems2024() []utilityItem2024 {
 		{"CARD-0811", activeItem2024("bonus_action", true, map[string]any{"kind": "modifier", "applies_to": map[string]any{"roll": "saving_throw"}, "op": "advantage", "when": []map[string]any{{"kind": "save_avoids_condition", "value": "poisoned"}}, "duration": map[string]any{"type": "hours", "amount": 1}, "source": "Противоядие"})},
 		{"CARD-0491", func() map[string]any {
 			m := activeItem2024("action", false, map[string]any{"kind": "stabilize", "who": "target"}, narrative("Использован один из 10 зарядов комплекта."))
+			m["effects"].([]map[string]any)[0]["who"] = "target"
 			m["uses"] = map[string]any{"count": 10, "per": "never"}
 			m["activation"].(map[string]any)["cost"] = append(m["activation"].(map[string]any)["cost"].([]map[string]any), map[string]any{"resource": "self_uses", "amount": 1})
 			m["targeting"] = itemTargeting("single", 5, "ally")
