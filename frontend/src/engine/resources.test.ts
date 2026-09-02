@@ -102,4 +102,14 @@ describe('partial class-resource recovery', () => {
       channel_divinity: { short_rest: { mode: 'fixed', amount: 1 }, long_rest: { mode: 'full' } },
     });
   });
+
+  it('projects Wild Shape as +1 on short rest and full on long rest', () => {
+    expect(buildResourceRecovery({
+      wild_shape: {
+        recovery: { short_rest: { mode: 'fixed', amount: 1 }, long_rest: { mode: 'full' } },
+      },
+    })).toEqual({
+      wild_shape: { short_rest: { mode: 'fixed', amount: 1 }, long_rest: { mode: 'full' } },
+    });
+  });
 });
