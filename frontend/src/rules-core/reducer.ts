@@ -32,6 +32,18 @@ import {
   applyAuthorizedPactBladeEndedOnOwnerDeath,
 } from './pactBladeWorldAdapter';
 import { PACT_BLADE_STATE_CAPABILITY } from './warlockPacts';
+import {
+  conditionEffectEntityRef,
+  conditionRegistryAuthority,
+} from '../engine/conditions';
+
+function conditionEntityRefForRuntime(condition: string) {
+  const ref = conditionEffectEntityRef(condition);
+  if (!ref && conditionRegistryAuthority().mode === 'database_release') {
+    throw new Error(`condition «${condition}» has no effects-library entity`);
+  }
+  return ref;
+}
 
 function ownerWithFamiliarProjection(
   owner: WorldState['actors'][string],
@@ -364,6 +376,7 @@ export function evolve(world: WorldState, payload: RuleEventPayload): WorldState
       if (target.runtime.activeEffects.some((effect) => effect.id === effectId)) {
         throw new Error(`Duplicate grapple effect ${effectId}`);
       }
+      const conditionEntityRef = conditionEntityRefForRuntime('grappled');
       return {
         ...world,
         actors: {
@@ -378,6 +391,7 @@ export function evolve(world: WorldState, payload: RuleEventPayload): WorldState
                 mechanics: { kind: 'condition', value: 'grappled', grappleId: grapple.id },
                 expiry: 'manual',
                 source: grapple.sourceEntityIds[0],
+                ...(conditionEntityRef ? { entityRef: conditionEntityRef } : {}),
                 ownerId: target.id,
                 sourceId: grapple.grapplerActorId,
               }],
@@ -422,6 +436,7 @@ export function evolve(world: WorldState, payload: RuleEventPayload): WorldState
         throw new Error(`Invalid shove outcome for ${payload.targetActorId}`);
       }
       if (payload.outcome === 'push_5ft') return world;
+      const conditionEntityRef = conditionEntityRefForRuntime('prone');
       return {
         ...world,
         actors: {
@@ -436,6 +451,7 @@ export function evolve(world: WorldState, payload: RuleEventPayload): WorldState
                 mechanics: { kind: 'condition', value: 'prone' },
                 expiry: 'manual',
                 source: 'system:dnd5e-2024:unarmed-strike:shove',
+                ...(conditionEntityRef ? { entityRef: conditionEntityRef } : {}),
                 ownerId: target.id,
                 sourceId: payload.sourceActorId,
               }],

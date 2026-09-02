@@ -64,6 +64,8 @@ describe('solo combat data-owned action choices', () => {
       },
       masteryEffects: {
         [masteryId]: {
+          id: masteryId,
+          card_number: 'EFFECT-SLOW',
           name: 'Slowing mastery',
           mechanics: { weapon_mastery: {
             type: 'slow', penaltyFt: 10, requiresDamage: true,
@@ -109,10 +111,12 @@ describe('solo combat data-owned action choices', () => {
     ]);
     expect(compileWeaponMasteryEffects(slow, {
       weapon: equipped, weaponMod: 3, dealtDamage: true,
+      sourceEntityId: masteryId, sourceEntityCardNumber: 'EFFECT-SLOW',
       choices: { 'apply-slow': ['skip'] },
     })).toEqual([]);
     expect(compileWeaponMasteryEffects(slow, {
       weapon: equipped, weaponMod: 3, dealtDamage: true,
+      sourceEntityId: masteryId, sourceEntityCardNumber: 'EFFECT-SLOW',
       choices: { 'apply-slow': ['use'] },
     })).toHaveLength(1);
 

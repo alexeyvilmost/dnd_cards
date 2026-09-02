@@ -76,6 +76,7 @@ const facts = (overrides: Record<string, unknown> = {}) => ({
   attackActionId: 'attack-action:1',
   attackCommandId: 'command:hit',
   sourceEntityId: 'effect:canonical-mastery',
+  sourceEntityCardNumber: 'EFFECT-canonical-mastery',
   firedThisTurn: [] as string[],
   ...overrides,
 });

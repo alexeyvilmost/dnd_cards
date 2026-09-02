@@ -310,7 +310,15 @@ func validActiveEffectValue(value interface{}) bool {
 			}
 		}
 	}
-	if entityRef, exists := row["entityRef"]; exists && entityRef != nil {
+	entityRef, hasEntityRef := row["entityRef"]
+	if mechanics, ok := row["mechanics"].(map[string]interface{}); ok {
+		stackID, _ := mechanics["stack_id"].(string)
+		requiresLibraryIdentity := mechanics["kind"] == "condition" || strings.HasPrefix(stackID, "weapon-mastery:")
+		if requiresLibraryIdentity && (!hasEntityRef || entityRef == nil) {
+			return false
+		}
+	}
+	if hasEntityRef && entityRef != nil {
 		value, ok := entityRef.(map[string]interface{})
 		if !ok || value["kind"] != "effect" || !boundedString(value["id"], true, 255) {
 			return false

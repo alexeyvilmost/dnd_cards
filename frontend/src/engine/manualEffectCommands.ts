@@ -6,6 +6,7 @@ import type {
 } from '../mvp/contracts';
 import { dropConcentration } from './concentration';
 import {
+  conditionEffectEntityRef,
   conditionLabel,
   conditionLevel,
   conditionLeaves,
@@ -495,6 +496,10 @@ function removeEffect(
 
   for (const leave of conditionLeaves(removedCondition)) {
     assertConditionRule(leave);
+    const leaveEntityRef = conditionEffectEntityRef(leave);
+    if (!leaveEntityRef && conditionRegistryAuthority().mode === 'database_release') {
+      throw new Error(`condition leave «${leave}» has no effects-library entity`);
+    }
     const alreadyPresent = next.activeEffects.some((entry) => (
       conditionValueOf(entry, `runtime.activeEffects[${entry.id}]`) === leave
     ));
@@ -512,6 +517,7 @@ function removeEffect(
       },
       expiry: 'manual',
       source: `condition_leave:${removedCondition}`,
+      ...(leaveEntityRef ? { entityRef: leaveEntityRef } : {}),
       ownerId: ownerActorId,
       ...(removed.sourceId ? { sourceId: removed.sourceId } : {}),
     };

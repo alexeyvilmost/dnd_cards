@@ -42,8 +42,14 @@ const LONGSWORD = withDeclaredTestWeaponProfile({
 });
 
 const TOPPLE = {
+  id: TOPPLE_ID,
+  card_number: 'EFFECT-2024-TOPPLE',
   name: 'Topple',
   mechanics: {
+    weapon_mastery: {
+      type: 'topple', saveAbility: 'con', dc: '8+prof_bonus+weapon_mod',
+      condition: 'prone', choiceId: 'weapon_mastery.topple.use',
+    },
     activation: { mode: 'triggered', trigger: { event: 'hit' } },
     effects: [{
       resolution: 'save',
@@ -226,6 +232,7 @@ function useAttack(session: InMemoryRulesSession, commandId: string) {
     actionId: ATTACK.id,
     targetIds: ['wizard'],
     factsByTarget: { wizard: facts },
+    choices: { 'weapon_mastery.topple.use': ['use'] },
   }));
 }
 

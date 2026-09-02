@@ -15,6 +15,11 @@ import type {
 } from './domain';
 import { evolve } from './reducer';
 import { SYSTEM_ACTION_IDS } from './systemActions';
+import {
+  BUILTIN_CONDITION_RULES,
+  replaceConditionsFromDatabase,
+  resetConditionsToOfflineFixture,
+} from '../engine/conditions';
 
 const ruleset = {
   systemId: 'dnd5e-2024' as const,
@@ -348,6 +353,44 @@ describe('Attack/grapple reducer integrity guards', () => {
     };
     const opened = evolve(base, { type: 'ResolutionOpened', resolution: pending });
     expectEventRejected(opened, { type: 'ResolutionOpened', resolution: pending }, /Cannot replace/);
+  });
+
+  it('projects grapple and shove only with their database condition identities', () => {
+    replaceConditionsFromDatabase(
+      Object.values(BUILTIN_CONDITION_RULES).map((definition) => ({
+        ...definition,
+        entityRef: {
+          kind: 'effect' as const,
+          id: `db-effect:${definition.id}`,
+          cardNumber: `CONDITION-${definition.id}`,
+        },
+      })),
+      `sha256:${'2'.repeat(64)}`,
+    );
+    try {
+      const grappled = evolve(baseWorld(), {
+        type: 'GrappleApplied', grapple: validGrapple(),
+      });
+      expect(grappled.actors.b.runtime.activeEffects[0].entityRef).toEqual({
+        kind: 'effect', id: 'db-effect:grappled', cardNumber: 'CONDITION-grappled',
+      });
+      const shoved = evolve(baseWorld(), {
+        type: 'ShoveApplied',
+        effectId: 'runtime:prone',
+        sourceActorId: 'a',
+        targetActorId: 'b',
+        outcome: 'prone',
+        facts: {
+          factsSource: 'scenario', boardRevision: 1, distanceFt: 5,
+          lineOfSight: true, cover: 'none', relation: 'enemy',
+        },
+      });
+      expect(shoved.actors.b.runtime.activeEffects[0].entityRef).toEqual({
+        kind: 'effect', id: 'db-effect:prone', cardNumber: 'CONDITION-prone',
+      });
+    } finally {
+      resetConditionsToOfflineFixture('attack_runtime_integrity_cleanup');
+    }
   });
 });
 

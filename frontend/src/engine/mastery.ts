@@ -30,6 +30,7 @@ export type MasteryEvent = 'hit' | 'miss';
 export interface ActiveMastery {
   /** id эффекта-мастерства (card.mastery). */
   id: string;
+  cardNumber: string;
   name: string;
   /** Механика эффекта-мастерства (то, что исполнит движок). */
   mechanics: Dict;
@@ -83,10 +84,13 @@ export function activeMastery(
   // A declaration that opted into the typed contract must satisfy it in full.
   // Never fall back to legacy effects for a malformed/partial mastery record.
   if (Object.prototype.hasOwnProperty.call(mech, 'weapon_mastery') && !primitive) return null;
-  // Legacy narrative-only passive records remain non-executable. Canonical
-  // passive Nick/Cleave records are distinguished by their typed primitive.
-  if (!primitive
-    && String((mech.activation as Dict | undefined)?.mode ?? 'triggered') === 'passive') return null;
+  // Only the typed library declaration is executable. Legacy effect bodies
+  // could persist free-standing modifiers without the mastery entityRef.
+  const sourceEntityId = rec?.id?.trim()
+    || (rec?.sourceEntityIds?.includes(weapon!.mastery!) ? weapon!.mastery! : '');
+  const sourceEntityCardNumber = rec?.card_number?.trim()
+    || rec?.sourceEntityIds?.find((id) => /^EFFECT-/i.test(id))?.trim();
+  if (!primitive || sourceEntityId !== weapon!.mastery! || !sourceEntityCardNumber) return null;
   const weaponMod = ctx.character.abilityMods[weapon!.ability] ?? 0;
   const mechanics = primitive ? {
     ...mech,
@@ -105,16 +109,16 @@ export function activeMastery(
       firedThisTurn: state.firedThisTurn,
       attackActionId: ctx.attackActionId,
       attackCommandId: ctx.attackCommandId,
-      sourceEntityId: weapon!.mastery!,
+      sourceEntityId,
+      sourceEntityCardNumber,
     }),
   } : mech;
   return {
     id: weapon!.mastery!,
+    cardNumber: sourceEntityCardNumber,
     name: String(rec?.name ?? 'Искусность'),
     mechanics,
-    event: primitive
-      ? weaponMasteryEvent(primitive) === 'miss' ? 'miss' : 'hit'
-      : masteryEvent(mech),
+    event: weaponMasteryEvent(primitive) === 'miss' ? 'miss' : 'hit',
     weaponMod,
     ...(primitive ? { primitive } : {}),
   };

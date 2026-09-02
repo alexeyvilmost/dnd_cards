@@ -192,7 +192,12 @@ export async function collectSheetCombatActionInventory(input: {
 
   const masteryEffects: NonNullable<ActorState['masteryEffects']> = {};
   for (const effect of masteryRows) {
-    const projected = { name: effect.name, mechanics: effect.mechanics };
+    const projected = {
+      id: effect.id,
+      card_number: effect.card_number,
+      name: effect.name,
+      mechanics: effect.mechanics,
+    };
     masteryEffects[effect.id] = projected;
     // Weapon data may reference either immutable id or card number. Both keys
     // point to the same declaration; no mastery name is interpreted here.

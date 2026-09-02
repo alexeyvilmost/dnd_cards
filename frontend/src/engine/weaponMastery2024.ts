@@ -72,6 +72,7 @@ export interface WeaponMasteryExecutionFacts {
   attackActionId?: string;
   attackCommandId?: string;
   sourceEntityId?: string;
+  sourceEntityCardNumber?: string;
 }
 
 export const WEAPON_MASTERY_CLEAVE_USE_PREFIX =
