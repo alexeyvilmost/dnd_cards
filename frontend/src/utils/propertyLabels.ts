@@ -7,6 +7,7 @@ export const getPropertyLabel = (property: string): string => {
     'thrown': 'метательное',
     'versatile': 'универсальное',
     'two-handed': 'двуручное',
+    'two_handed': 'двуручное',
     'reach': 'досягаемость',
     'ammunition': 'требует боеприпасы',
     'loading': 'зарядка',

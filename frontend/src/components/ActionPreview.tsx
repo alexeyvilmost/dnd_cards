@@ -13,6 +13,7 @@ import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
 import SupportStatusBadge from './forge/SupportStatusBadge';
 import { findMastery, useMasteryEffects } from '../utils/mastery';
+import { getPropertyLabel } from '../utils/propertyLabels';
 
 interface ActionPreviewProps {
   action: Action;
@@ -138,7 +139,7 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
           <div><strong>Режим:</strong> {wp.mode === 'ranged'
             ? `дальний ${wp.normalRangeFt ?? '?'} / ${wp.longRangeFt ?? '?'} фт`
             : `рукопашный · досягаемость ${wp.reachFt ?? 5} фт`}</div>
-          {!!wp.properties?.length && <div><strong>Свойства:</strong> {wp.properties.join(', ')}</div>}
+          {!!wp.properties?.length && <div><strong>Свойства:</strong> {wp.properties.map(getPropertyLabel).join(', ')}</div>}
           {mastery && <div title={mastery.description ?? undefined}><strong>Мастерство:</strong> {mastery.name}</div>}
         </div>
       )}

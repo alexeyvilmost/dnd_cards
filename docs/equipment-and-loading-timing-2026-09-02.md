@@ -18,6 +18,10 @@ Timezone: Europe/Moscow (UTC+03:00).
 | 09:00:15 | 09:05:27 | 5m 12s | Reusable manual-QA character setup | Created and retained six purpose-specific characters covering weapons, trained armor, untrained armor, consumables, combat gear, and sheet gear. |
 | 09:05:27 | 09:27:46 | 22m 19s | First manual browser pass: weapon, combat, trained armor, and untrained armor | Verified weapon equip/attack calculations, combat construction, trained armor AC, heavy-armor Strength speed penalty, and the untrained warning. Found two clarity gaps and one real rule gap: generic combat weapon action, missing item mechanic details, and spellcasting not blocked by untrained armor. |
 | 09:27:46 | 09:36:24 | 8m 38s | Weapon/item clarity and untrained-armor rule implementation | Added structured mechanic details to item cards and weapon action previews, weapon-specific combat labels, spell prohibition, Strength/Dexterity d20 disadvantage, corrected armor descriptions, and 47 focused regression checks. |
+| 09:36:24 | 09:53:25 | 17m 01s | Full verification, production build, review, commit, and main-branch publication | Backend suite and production frontend build passed; isolated only task-owned changes in the dirty worktree. |
+| 09:53:25 | 10:12:29 | 19m 04s | Timecloud package transfer, release build, migration, health checks, and retention | Release `ed352593` became healthy with exactly five releases. One 81 MB upload was repeated because the first artifact used an unsupported `.tar.gz` filename rather than the runner's `.tar` contract. |
+| 10:12:29 | 10:21:45 | 9m 16s | Production browser retest of untrained armor and weapon combat clarity | Spell buttons now expose the prohibition reason; Strength save requests 2d20; combat hotbar and action card expose the equipped Club, +5 attack, 1d4+3 damage, reach, and Slow mastery. Found the sheet equipment dialog uses a different preview component, and property IDs remained untranslated there. |
+| 10:21:45 | 10:43:06 | 21m 21s | Close the remaining equipment-dialog and localization boundary, including focused checks | Added structured mechanics to the actual equip dialog, centralized displayed property translation, and added a dialog regression test; 26 focused checks and TypeScript passed after updating the localization expectation. |
 
 ## Running bottleneck ranking
 
@@ -28,6 +32,7 @@ Timezone: Europe/Moscow (UTC+03:00).
 5. Equipment catalog duplication and display-only rules: resolving the canonical item took longer than writing most mechanics.
 6. Test-schema drift: a fixture that omitted the production varchar limit allowed a deployment-only migration failure.
 7. Manual UI discovery and scene setup: the first four representative sheet/combat cases took 22 minutes because each new UI state and dialog path had to be mapped once.
+8. Deployment transport: an 81 MB immutable repository archive plus duplicate upload consumed most of the 19-minute release step.
 
 ## Planned speedups
 
@@ -41,3 +46,4 @@ Timezone: Europe/Moscow (UTC+03:00).
 - Use compressed uploads with SSH keepalive by default to avoid repeating the 3–5 minute failed-transfer path seen in the second loading release.
 - Generate migration test schemas from the production schema (or at minimum assert production field limits) so release-only constraint failures are caught before image builds.
 - Keep the six retained equipment QA characters and a small browser smoke script so later equipment passes start at the exact sheet/combat state instead of rebuilding inventory and scenes.
+- Make the release runner accept `.tar.gz` (or publish its required extension in a checked-in deploy command) and exclude non-runtime tracked assets from the deployment context; this would remove the duplicate upload and shrink the slowest release step.

@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { ArrowRight, PackagePlus, Sparkles, Trash2, X } from 'lucide-react';
 import type { Card } from '../types';
 import CardPreview from './CardPreview';
+import { describeMechanics } from '../engine/describeMechanics';
+import { FormattedText } from '../utils/formattedText';
 
 // Диалог надевания/снятия предмета. Из инвентаря показывает нашу карточку и,
 // если целевой слот занят, вытесняемый предмет справа (приглушённо) со стрелкой.
@@ -31,6 +33,7 @@ export default function EquipItemDialog({
   containerTargets, onMoveToContainer,
   onEquip, onUnequip, onRemove, onToggleAttune, onClose,
 }: Props) {
+  const mechanicsDescription = describeMechanics(card.mechanics as Record<string, unknown> | null | undefined);
   const showContainer = mode === 'inventory' && card.type !== 'container'
     && !!containerTargets && containerTargets.length > 0 && !!onMoveToContainer;
   useEffect(() => {
@@ -60,6 +63,18 @@ export default function EquipItemDialog({
             </>
           )}
         </div>
+
+        {(mechanicsDescription.summary || mechanicsDescription.details.length > 0) && (
+          <div className="sp-tip" style={{ width: '100%', maxWidth: 560, margin: '0 auto 12px', padding: 12 }}>
+            <strong>Механика</strong>
+            {mechanicsDescription.summary && (
+              <div className="sp-desc"><FormattedText text={mechanicsDescription.summary} /></div>
+            )}
+            {mechanicsDescription.details.map((detail, index) => (
+              <div className="sp-desc" key={index}><FormattedText text={detail} /></div>
+            ))}
+          </div>
+        )}
 
         <div className="sheet-equip-actions">
           {mode === 'inventory' ? (

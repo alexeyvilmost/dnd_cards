@@ -58,7 +58,7 @@ describe('ActionPreview contextual formulas and costs', () => {
 
     expect(html).toContain('Длинный меч');
     expect(html).toContain('досягаемость 5 фт');
-    expect(html).toContain('versatile');
+    expect(html).toContain('универсальное');
     expect(html).toContain('+5');
     expect(html).toContain('1к8 + 3');
   });
