@@ -23,6 +23,7 @@ import { collectModifiers } from './modifiers';
 import { evaluate, FormulaError, type FormulaContext } from './formula';
 import { activeConditionsOf } from './circumstances';
 import { conditionLabel, conditionLongRestEntries } from './conditions';
+import { ACTION_SURGE_ACTION_RESOURCE } from './actionSurge';
 
 type Dict = Record<string, unknown>;
 type AbilityKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
@@ -78,6 +79,7 @@ function formulaCtxOf(ctx: CharacterContext): FormulaContext {
 
 function restoreTurnResources(state: RuntimeState): RuntimeState {
   const resources = { ...state.resources };
+  resources[ACTION_SURGE_ACTION_RESOURCE] = 0;
   for (const key of TURN_KEYS) {
     if (state.maxResources[key] != null) resources[key] = state.maxResources[key];
   }

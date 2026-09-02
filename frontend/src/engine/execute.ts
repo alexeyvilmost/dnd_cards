@@ -1589,6 +1589,10 @@ function resolveHand(effect: Dict): 'main' | 'off' {
 
 function attackAbilityMods(effect: Dict, ctx: ExecuteContext, hand: 'main' | 'off', state: RuntimeState): RollModifier[] {
   const mods: RollModifier[] = [];
+  const fixedAttackBonus = Number(effect.attack_bonus_override);
+  if (Number.isFinite(fixedAttackBonus)) {
+    return [{ value: fixedAttackBonus, source: 'стат-блок облика', reason: 'фиксированный бонус атаки' }];
+  }
   const ability = String(effect.ability);
   const attackKind = attackRollQueryFacts(effect, hand, ctx.character, state.equipment).attackKind;
   const currentWeapon = attackKind === 'weapon'

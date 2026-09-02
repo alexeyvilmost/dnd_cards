@@ -145,3 +145,20 @@ describe('collectInPlayActionChoices', () => {
     expect(stoneworkContactFactsFromChoices({})).toBeNull();
   });
 });
+
+describe('choice declaration aliases used by class actions', () => {
+  it('collects resolution:on_use as an execution-time choice', () => {
+    const choices = collectInPlayActionChoices({
+      effects: [{
+        kind: 'choice', id: 'wild_shape_form', resolution: 'on_use', count: 1,
+        prompt: 'Выберите форму', options: { source: 'explicit', items: [
+          { id: 'wolf', name: 'Волк', grants: [{ kind: 'transform', form: 'Волк' }] },
+        ] },
+      }],
+    }, { kind: 'class', id: 'druid', name: 'Друид' });
+    expect(choices).toMatchObject([{
+      id: 'wild_shape_form', prompt: 'Выберите форму', context: undefined,
+      items: [{ id: 'wolf', name: 'Волк' }],
+    }]);
+  });
+});

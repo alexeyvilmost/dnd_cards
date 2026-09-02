@@ -29,6 +29,8 @@ import {
   WEAPON_MASTERY_CLEAVE_USE_PREFIX,
 } from './legacy/engineAdapter';
 import { applySourceTurnBoundary } from '../engine/sourceTurnExpiry';
+import { activeEffectRequirementIssue } from '../engine/actionRequirements';
+import { projectActionSurgeCost } from '../engine/actionSurge';
 import { addBonusDieToD20Roll } from '../engine/roll';
 import { armBoonForNextRoll, consumeBoonAfterFailure, runtimeBoonSpec } from '../engine/boons';
 import { compileDeclaredMechanicsTargeting } from './actionTargeting';
@@ -10968,7 +10970,9 @@ function executeCommand(
         return rejected(world, 'InvalidActionTiming', `${action.id} can only be used in a reaction window`);
       }
       const requiredCapability = requiredActionCapability(action);
-      if (deniedCapabilities(actor.runtime, actor.passives ?? []).has(requiredCapability)) {
+      const denied = deniedCapabilities(actor.runtime, actor.passives ?? []);
+      if (denied.has(requiredCapability)
+        || (action.kind === 'spell' && denied.has('spellcasting'))) {
         return rejected(world, 'CapabilityDenied', `${actor.id} cannot use ${requiredCapability} in its current state`);
       }
       const declarationIssue = spellDeclarationIssue(action, command.spell);
@@ -11035,7 +11039,19 @@ function executeCommand(
         preparedSpell = preparation;
         executableAction = preparation.executableAction;
       }
+      const activeEffectIssue = activeEffectRequirementIssue(action.mechanics, actor.runtime);
+      if (activeEffectIssue) {
+        return rejected(world, 'InvalidActionTiming', activeEffectIssue);
+      }
       executableAction = catalogActionForActor(actor, executableAction);
+      executableAction = {
+        ...executableAction,
+        mechanics: projectActionSurgeCost(
+          executableAction.mechanics,
+          actor.runtime,
+          executableAction.kind === 'spell' ? 'spell' : 'nonspell',
+        ),
+      };
       const requestedBladeFocus = command.spell?.focusObjectId !== undefined
         || command.spell?.focusHand !== undefined;
       if (requestedBladeFocus) {
