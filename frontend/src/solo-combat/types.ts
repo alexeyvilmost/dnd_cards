@@ -59,6 +59,8 @@ export interface CombatLogEntry {
   id: string;
   round: number;
   actorId: string;
+  /** Names as they were when the entry was created (summons can reuse an id in a new form). */
+  actorNames?: Record<string, string>;
   text: string;
   records?: CombatLogEventRecord[];
   /** Legacy schema-v1 representation. New entries use `records`. */
