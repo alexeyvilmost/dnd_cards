@@ -280,4 +280,42 @@ describe('SheetPendingCombatPanel', () => {
       kind: 'roll', roll: { mode: 'manual', dice: [{ sides: 20, value: 12 }] },
     });
   });
+
+  it('passes an exact data-owned boon id for after-failure saving throws', async () => {
+    const onResolve = vi.fn();
+    await act(async () => root.render(
+      <SheetPendingCombatPanel
+        pending={concentrationSave()}
+        viewingCharacterId={TARGET}
+        actorNames={{ [TARGET]: 'Target' }}
+        decidingRuntime={{
+          hp: { current: 10, max: 10, temp: 0 },
+          resources: {}, maxResources: {}, equipment: {}, inventory: [],
+          activeEffects: [{
+            id: 'boon:bardic', name: 'Вдохновение барда', source: 'Бард',
+            mechanics: {
+              kind: 'boon', id: 'bardic_inspiration', die: '1d6',
+              applies_to: ['saving_throw'], timing: ['after_failure'],
+            },
+            entityRef: { kind: 'effect', id: 'effect:bardic-inspiration' },
+          }],
+        }}
+        onResolve={onResolve}
+      />,
+    ));
+    const select = container.querySelector<HTMLSelectElement>(
+      'select[aria-label="Милость после провала спасброска"]',
+    )!;
+    expect(select.textContent).toContain('Вдохновение барда');
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set?.call(select, 'boon:bardic');
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    const auto = [...container.querySelectorAll<HTMLButtonElement>('button')]
+      .find((button) => button.textContent?.includes('Бросить автоматически'))!;
+    await act(async () => auto.click());
+    expect(onResolve).toHaveBeenCalledWith({
+      kind: 'roll', roll: { mode: 'system' }, boonEffectId: 'boon:bardic',
+    });
+  });
 });

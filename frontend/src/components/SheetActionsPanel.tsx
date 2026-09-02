@@ -39,7 +39,7 @@ import {
 } from '../engine/weapon';
 import { costAmount } from '../engine/cost';
 import { inventoryQty } from '../character/inventory';
-import { expiryLabel, groupActiveEffectsForDisplay, removeActiveEffectGroup } from '../engine/effects';
+import { groupActiveEffectsForDisplay, removeActiveEffectGroup } from '../engine/effects';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
 import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
 import { useToast } from '../contexts/ToastContext';
@@ -57,6 +57,7 @@ import SpellPreview from './SpellPreview';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
 import ActionPreview from './ActionPreview';
 import SheetResourceTile from './SheetResourceTile';
+import ActiveEffectCard from './ActiveEffectCard';
 import { loadMasteryEffects } from '../utils/mastery';
 import {
   collectSheetPrimitiveChoices,
@@ -980,7 +981,7 @@ export default function SheetActionsPanel({
   // Доспехи мага и т.п.: каст выдаёт ОТДЕЛЬНЫЙ эффект через grant_effect. Движок синхронный —
   // предзагружаем механику каждого выдаваемого эффекта по slug (кэш getEffect), кладём в execCtx,
   // чтобы applyGrantEffect поставил стоячий активный эффект (set_value ac_base → КЗ обновится).
-  const [grantedEffectsBySlug, setGrantedEffectsBySlug] = useState<Record<string, { name?: string; mechanics?: unknown; repeatable?: boolean }>>({});
+  const [grantedEffectsBySlug, setGrantedEffectsBySlug] = useState<Record<string, { id?: string; card_number?: string; name?: string; mechanics?: unknown; repeatable?: boolean }>>({});
   // Искусность оружия (Weapon Mastery 2024): движок синхронный, поэтому механику мастерства
   // (как и grantedEffects) резолвим заранее — id эффекта из card.mastery → {name, mechanics}.
   // Без этой карты мастерство молча не сработает.
@@ -1004,11 +1005,17 @@ export default function SheetActionsPanel({
     if (!grantEffectSlugs.length) { setGrantedEffectsBySlug((p) => (Object.keys(p).length ? {} : p)); return; }
     let stale = false;
     Promise.all(grantEffectSlugs.map((slug) => effectsApi.getEffect(slug)
-      .then((eff) => [slug, { name: eff.name, mechanics: eff.mechanics, repeatable: eff.repeatable }] as const)
+      .then((eff) => [slug, {
+        id: eff.id,
+        card_number: eff.card_number,
+        name: eff.name,
+        mechanics: eff.mechanics,
+        repeatable: eff.repeatable,
+      }] as const)
       .catch(() => null)))
       .then((pairs) => {
         if (stale) return;
-        const map: Record<string, { name?: string; mechanics?: unknown; repeatable?: boolean }> = {};
+        const map: Record<string, { id?: string; card_number?: string; name?: string; mechanics?: unknown; repeatable?: boolean }> = {};
         for (const p of pairs) if (p) map[p[0]] = p[1];
         setGrantedEffectsBySlug(map);
       })
@@ -2901,6 +2908,9 @@ export default function SheetActionsPanel({
               : combatSession.sourceCharacterId
           }
           actorNames={combatActorNames}
+          decidingRuntime={combatSession.world.actors[
+            combatSession.world.pendingResolution.request.actorId
+          ]?.runtime}
           busy={busy || !!pendingAtomicRetry}
           onResolve={resolveCombatDecision}
         />
@@ -3136,17 +3146,10 @@ export default function SheetActionsPanel({
           <h3 className="sheet-h3">Активные эффекты</h3>
           <ul className="sheet-active-effects">
             {activeEffectGroups.map((group) => {
-              const fx = group.effects[0];
               const remoteManipulator = group.effects.find((effect) => remoteManipulatorSpec(effect));
               return (
               <li key={group.key} className="sheet-active-effect">
-                <span className="sheet-active-effect-summary">
-                  <span className="sheet-active-effect-name">{group.name}</span>
-                  {group.instructions.length > 0 && (
-                    <span className="sheet-active-effect-detail">{group.instructions.join(' ')}</span>
-                  )}
-                </span>
-                <span className="sheet-active-effect-meta">{expiryLabel(fx.expiry, fx.roundsLeft)}</span>
+                <ActiveEffectCard group={group} actions={<>
                 {remoteManipulator && (
                   <RemoteManipulatorControl
                     effect={remoteManipulator}
@@ -3163,6 +3166,7 @@ export default function SheetActionsPanel({
                 >
                   <X size={14} />
                 </button>
+                </>} />
               </li>
               );
             })}

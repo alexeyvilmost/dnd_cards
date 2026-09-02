@@ -157,14 +157,20 @@ export function activeEffectInstruction(effect: ActiveEffectEntry): string | nul
     const scope = rolls.length
       ? rolls.join(', ').replace(/, ([^,]*)$/, ' или $1')
       : 'подходящему броску к20';
-    return `Чтобы использовать: бросьте отдельный ${die}, вручную добавьте результат к ${scope}, затем нажмите × «Снять вручную».`;
+    const timing = Array.isArray(mechanics.timing) ? mechanics.timing.map(String) : ['before_roll'];
+    const after = timing.includes('after_failure')
+      ? ' Можно выбрать применение только при провале подходящей атаки, проверки или спасброска.'
+      : '';
+    return `Нажмите «Использовать» и выберите ${scope}: движок добавит ${die} и автоматически снимет эффект.${after}`;
   }
   if (mechanics.kind === 'modifier') {
     const appliesTo = mechanics.applies_to as Record<string, unknown> | undefined;
     const roll = String(appliesTo?.roll ?? '');
     const consume = String(mechanics.consume ?? '') === 'next'
       ? ' После следующего подходящего броска эффект расходуется.'
-      : '';
+      : String(mechanics.consume ?? '') === 'next_on_failure'
+        ? ' Кость бросится и эффект расходуется только при провале.'
+        : '';
     const filter = appliesTo?.filter as Record<string, unknown> | undefined;
     const skillId = typeof filter?.skill === 'string' ? filter.skill : '';
     const skillName = skillId ? (skillTranslations[skillId] ?? skillId) : '';
@@ -177,7 +183,8 @@ export function activeEffectInstruction(effect: ActiveEffectEntry): string | nul
         : '';
       return `Итог броска к20 не может быть меньше ${String(mechanics.value)}.${consume}`;
     }
-    if (String(mechanics.op) === 'bonus_die' && mechanics.faces != null) {
+    if ((String(mechanics.op) === 'bonus_die' || String(mechanics.op) === 'bonus_die_on_failure')
+      && mechanics.faces != null) {
       const scope = roll === 'ability_check'
         ? (skillName ? `проверке «${skillName}»` : 'проверке характеристики')
         : roll === 'attack' || roll === 'attack_roll'

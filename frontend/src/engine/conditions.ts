@@ -56,6 +56,12 @@ export interface ConditionThresholdRule {
 export interface ConditionRule {
   id: string;
   label: string;
+  /** Stable DB effect identity used by sheets and combat hover cards. */
+  entityRef?: {
+    kind: 'effect';
+    id: string;
+    cardNumber?: string;
+  };
   /** Правила состояния как scoped-модификаторы (self + target). */
   modifiers: ConditionModifier[];
   /** Non-modifier mechanics contributed by the condition.  They use the same
@@ -302,6 +308,13 @@ export function conditionRegistryAuthority(): ConditionRegistryAuthority {
 
 export function conditionRule(value: string): ConditionRule | null {
   return registry[value] ?? null;
+}
+
+export function conditionEffectEntityRef(
+  value: string,
+): ConditionRule['entityRef'] | undefined {
+  const ref = registry[value]?.entityRef;
+  return ref ? { ...ref } : undefined;
 }
 
 export function conditionLabel(value: string): string {

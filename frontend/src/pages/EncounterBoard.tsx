@@ -23,8 +23,11 @@ import {
   explicitEncounterArmorClass,
   manualGmOverrideCombatant,
 } from '../battle/encounterOverrides';
-import type { EngineEvent } from '../mvp/contracts';
+import type { ActiveEffectEntry, EngineEvent } from '../mvp/contracts';
 import { conditionOptions } from '../engine/conditions';
+import { certifiedConditionEffectEntity } from '../api/conditionsApi';
+import { groupActiveEffectsForDisplay } from '../engine/effects';
+import ActiveEffectCard from '../components/ActiveEffectCard';
 import { useAuth } from '../contexts/AuthContext';
 
 // Состояния берём из реестра движка (канонические id + метки), чтобы наложенное с доски
@@ -109,13 +112,19 @@ export default function EncounterBoard() {
     if (eff.some((e) => (e as { mechanics?: { kind?: string; value?: string } }).mechanics?.kind === 'condition'
       && (e as { mechanics?: { value?: string } }).mechanics?.value === opt.id)) return;
     // Богатая запись — валидна и как combatant.activeEffect, и как состояние листа (SheetConditionsPanel).
+    const entity = certifiedConditionEffectEntity(opt.id);
+    if (!entity) {
+      setNotice(`Состояние «${opt.label}» не загружено из библиотеки.`);
+      return;
+    }
     const entry = {
       id: uid(),
-      name: opt.label,
+      name: entity.name,
       mechanics: {
-        kind: 'condition', value: opt.id, op: 'apply',
+        ...entity.mechanics,
         provenance: ENCOUNTER_GM_OVERRIDE_PROVENANCE,
       },
+      entityRef: { kind: 'effect' as const, id: entity.id, cardNumber: entity.card_number },
       expiry: 'manual',
       source: ENCOUNTER_GM_OVERRIDE_PROVENANCE,
     };
@@ -124,12 +133,16 @@ export default function EncounterBoard() {
       log: [logEntry(c, { type: 'condition_applied', condition: opt.id }, `[GM override] Состояние «${opt.label}» → ${c.name}`)],
     });
   };
-  const removeCondition = (c: Combatant, effId: string) => {
-    const removed = (c.activeEffects ?? []).find((e) => e.id === effId);
-    const name = (removed as { name?: string })?.name ?? 'эффект';
+  const removeConditions = (c: Combatant, effectIds: readonly string[]) => {
+    const ids = new Set(effectIds);
+    const names = (c.activeEffects ?? [])
+      .filter((effect) => ids.has(effect.id))
+      .map((effect) => effect.name);
     apply({
-      patches: [{ actor_id: c.actorId, set: { activeEffects: (c.activeEffects ?? []).filter((e) => e.id !== effId) } }],
-      log: [logEntry(c, { type: 'effect_expired', name }, `[GM override] Снято «${name}» с ${c.name}`)],
+      patches: [{ actor_id: c.actorId, set: { activeEffects: (c.activeEffects ?? []).filter((effect) => !ids.has(effect.id)) } }],
+      log: names.map((name) => logEntry(
+        c, { type: 'effect_expired', name }, `[GM override] Снято «${name}» с ${c.name}`,
+      )),
     });
   };
   const removeCombatant = (combatant: Combatant) => apply({
@@ -263,10 +276,17 @@ export default function EncounterBoard() {
               </div>
               {!!c.activeEffects?.length && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
-                  {c.activeEffects.map((e) => (
-                    <span key={e.id} style={{ ...tag, background: '#3a2b2b', cursor: 'pointer' }} onClick={() => removeCondition(c, e.id)} title="Снять">
-                      {e.name} ✕
-                    </span>
+                  {groupActiveEffectsForDisplay(c.activeEffects as unknown as ActiveEffectEntry[]).map((group) => (
+                    <ActiveEffectCard
+                      key={group.key}
+                      group={group}
+                      actions={canPatch ? <button
+                        type="button"
+                        style={btnGhost}
+                        onClick={() => removeConditions(c, group.effects.map((effect) => effect.id))}
+                        title="Снять"
+                      >✕</button> : undefined}
+                    />
                   ))}
                 </div>
               )}

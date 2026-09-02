@@ -15,12 +15,11 @@ import {
 } from '../character/manualEffectMutationPolicy';
 import type { ForgeCharacter } from '../character/types';
 import {
-  conditionLabel,
-  conditionInstructions,
   conditionLevel,
   conditionOptions,
   conditionStacking,
 } from '../engine/conditions';
+import { groupActiveEffectsForDisplay } from '../engine/effects';
 import { deniedCapabilities } from '../engine/modifiers';
 import {
   applyEffectCommandFromEntity,
@@ -30,6 +29,7 @@ import {
   nextBrowserManualEffectId,
 } from '../engine/manualEffectCommands';
 import type { EngineEvent } from '../mvp/contracts';
+import ActiveEffectCard from './ActiveEffectCard';
 
 interface Props {
   character: ForgeCharacter;
@@ -51,6 +51,7 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, p
   const conditions = runtime.activeEffects.filter(
     (e) => (e.mechanics as Record<string, unknown>)?.kind === 'condition',
   );
+  const conditionGroups = groupActiveEffectsForDisplay(conditions);
   const activeValues = new Set(
     conditions.map((e) => String((e.mechanics as Record<string, unknown>).value ?? '')),
   );
@@ -123,26 +124,30 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, p
     }
   };
 
-  const removeCondition = (id: string) => {
+  const removeConditions = (ids: readonly string[]) => {
     try {
       assertManualEffectMutationAllowed(character.current_encounter_id);
-      const result = executeManualEffectCommand(runtime, {
-        type: 'RemoveEffect',
-        effectId: id,
-        ownerActorId: character.id,
-        provenance: 'manual:sheet_conditions',
-      }, { nextId: nextBrowserManualEffectId });
+      let state = runtime;
+      const events: EngineEvent[] = [];
+      for (const id of ids) {
+        const result = executeManualEffectCommand(state, {
+          type: 'RemoveEffect',
+          effectId: id,
+          ownerActorId: character.id,
+          provenance: 'manual:sheet_conditions',
+        }, { nextId: nextBrowserManualEffectId });
+        state = result.state;
+        events.push(...result.events);
+      }
       void persist(
-        result.state.activeEffects,
-        result.events,
-        deniedCapabilities(result.state, passives).has('concentration'),
+        state.activeEffects,
+        events,
+        deniedCapabilities(state, passives).has('concentration'),
       );
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Не удалось снять состояние');
     }
   };
-
-  const conditionTip = (value: string): string => conditionInstructions(value).join('\n');
 
   const body = (
     <>
@@ -152,23 +157,18 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, p
       )}
       {conditions.length > 0 && (
         <ul className="sheet-conditions">
-          {conditions.map((c) => {
-            const value = String((c.mechanics as Record<string, unknown>).value ?? '');
+          {conditionGroups.map((group) => {
             return (
-              <li key={c.id} className="sheet-condition" title={conditionTip(value)}>
-                <span className="sheet-condition-name">{conditionLabel(value)}</span>
-                {c.source && c.source !== 'manual:sheet_conditions' && (
-                  <span className="sheet-condition-src">· {c.source}</span>
-                )}
-                <button
+              <li key={group.key} className="sheet-condition">
+                <ActiveEffectCard group={group} actions={<button
                   type="button"
                   className="sheet-active-effect-dismiss"
                   disabled={busy || Boolean(mutationBlockReason)}
                   title={mutationBlockReason ?? 'Снять состояние'}
-                  onClick={() => removeCondition(c.id)}
+                  onClick={() => removeConditions(group.effects.map((effect) => effect.id))}
                 >
                   <X size={13} />
-                </button>
+                </button>} />
               </li>
             );
           })}

@@ -13,6 +13,7 @@ import {
 
 /** Служебный ключ resolved_choices для подкласса (без миграции БД). */
 export const SUBCLASS_KEY = 'builder:subclass';
+export const MANUAL_SPELLS_KEY = 'builder:manual_spells';
 import type { AssembledCharacter } from './assemble';
 import { resolveCharacterRules } from './rules/resolveCharacterRules';
 import type { CharacterRuleState } from './rules/types';
@@ -70,6 +71,9 @@ export function characterToDraft(c: ForgeCharacter): CharacterDraft {
   // Служебные builder:-ключи достаём из resolved_choices и не отдаём их
   // ChoiceResolver-у (buildSavePayload добавит их обратно при сохранении).
   const stored = c.resolved_choices || {};
+  const storedManualSpells = Array.isArray(stored[MANUAL_SPELLS_KEY])
+    ? stored[MANUAL_SPELLS_KEY].filter(isEntityUuid)
+    : [];
   const resolvedChoices: Record<string, string[]> = {};
   for (const [key, vals] of Object.entries(stored)) {
     if (!key.startsWith('builder:')) resolvedChoices[key] = vals;
@@ -107,6 +111,7 @@ export function characterToDraft(c: ForgeCharacter): CharacterDraft {
     effectIds: c.effect_ids || [],
     resourceIds: c.resource_ids || [],
     spellIds: (c.spell_ids || []).filter(isEntityUuid),
+    manualSpellIds: storedManualSpells,
     grantedSpellSlugs,
     abilities: (c.abilities as Partial<Record<AbilityKey, number>>) || {},
     // Сохранённый персонаж: расклад уже зафиксирован, смена класса не трогает.
@@ -208,6 +213,7 @@ export function buildSavePayload(
       [CLASS_EQUIPMENT_OPTION_KEY]: [draft.classEquipmentOption],
       [SUBCLASS_KEY]: draft.subclassId ? [draft.subclassId] : [],
       [CLASS_SKILLS_KEY]: draft.classSkillChoices,
+      [MANUAL_SPELLS_KEY]: [...new Set(draft.manualSpellIds ?? [])],
     },
     rule_state: ruleState,
     max_hp: maxHP,

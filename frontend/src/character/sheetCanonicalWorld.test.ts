@@ -941,6 +941,44 @@ describe('real sheet canonical world materialization', () => {
       .toEqual(actorAccess.preparedSources);
   });
 
+  it('treats a spell added manually through Forge as prepared for any class', () => {
+    const spellcasting = patchEffect('EFF-wizard-spellcasting');
+    const root = clone(generated.roots.wizard);
+    const sheetAction = root.actions
+      .filter((candidate): candidate is Extract<RuleActionDefinition, { kind: 'spell' }> => (
+        candidate.kind === 'spell' && candidate.spell.level === 1
+      ))
+      .map(sheetSpell)[0];
+    const spell = sheetAction.spellRef!;
+    const built = buildSheetCanonicalRuntime({
+      character: character('sheet-manual-spell', {
+        'builder:manual_spells': [spell.id],
+      }),
+      assembled: assembled({ effect: spellcasting, spells: [spell] }),
+      ruleState: { appliedGrants: [] },
+      sheetActions: [sheetAction],
+      runtime: root.actor.runtime,
+      characterContext: {
+        ...root.actor.character,
+        spellcastingAbility: undefined,
+        abilityMods: { str: 0, dex: 0, con: 1, int: 1, wis: 3, cha: 2 },
+      },
+      cards: [],
+      ac: root.actor.ac,
+    });
+    const action = built.actionFor(sheetAction);
+    expect(action.id).toBe(`${spell.id}@manual-spell:${spell.id}`);
+    expect(resolveSpellAccess({
+      state: built.world.actors[built.actorId].spellcastingAccess!,
+      actionId: action.id,
+      resources: { spell_slot_1: 2 },
+    })).toMatchObject({
+      status: 'allowed',
+      grant: { access: 'always_prepared', spellcastingAbility: 'wis' },
+      payment: { kind: 'slot', resource: 'spell_slot_1' },
+    });
+  });
+
   it('fails closed on missing, duplicate, and outside-book Wizard preparation', () => {
     const spellcasting = patchEffect('EFF-wizard-spellcasting');
     const root = clone(generated.roots.wizard);

@@ -826,6 +826,21 @@
 }
 .sheet-active-effect-dismiss:hover { color: var(--forge-gold); }
 .sheet-active-effect-dismiss:disabled { opacity: 0.4; cursor: not-allowed; }
+.active-effect-card { display: flex; align-items: flex-start; gap: 8px; width: 100%; min-width: 0; }
+.active-effect-card__hover { display: block; flex: 1; min-width: 0; }
+.active-effect-card__body { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+.active-effect-card__icon {
+  width: 32px; height: 32px; flex: 0 0 32px; display: grid; place-items: center;
+  overflow: hidden; border: 1px solid var(--forge-line); border-radius: 6px;
+  color: var(--forge-gold); background: var(--forge-bg);
+}
+.active-effect-card__icon img { width: 100%; height: 100%; object-fit: cover; }
+.active-effect-card__summary { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+.active-effect-card__summary strong { color: var(--forge-text); }
+.active-effect-card__summary small { color: var(--forge-text-dim); font-size: 12px; line-height: 1.35; }
+.active-effect-card__actions { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; }
+.sheet-boon-options { display: grid; gap: 8px; margin-top: 12px; }
+.sheet-active-effect-use { white-space: nowrap; padding: 4px 7px; font-size: 11px; }
 .sheet-combat-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .sheet-combat-action {
   display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 10px;

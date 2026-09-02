@@ -96,7 +96,13 @@ export interface ActorState {
   /** Materialized by createWorld/schema-v5 migration; optional only at TS fixture edges. */
   lifecycle?: ActorLifecycleState;
   passives?: JsonObject[];
-  grantedEffects?: Record<string, { name?: string; mechanics?: unknown; repeatable?: boolean } | undefined>;
+  grantedEffects?: Record<string, {
+    id?: string;
+    card_number?: string;
+    name?: string;
+    mechanics?: unknown;
+    repeatable?: boolean;
+  } | undefined>;
   masteryEffects?: Record<string, {
     name?: string;
     mechanics?: unknown;
@@ -1201,7 +1207,7 @@ export type DecisionRoll =
   | { mode: 'manual'; dice: Array<{ sides: number; value: number }> };
 
 export type DecisionResponse =
-  | { kind: 'roll'; roll: DecisionRoll; selectedAbility?: Ability }
+  | { kind: 'roll'; roll: DecisionRoll; selectedAbility?: Ability; boonEffectId?: string }
   | { kind: 'voluntary_fail'; selectedAbility?: Ability }
   | { kind: 'shove_outcome'; outcome: ShoveOutcome }
   | {
@@ -1221,6 +1227,13 @@ export interface ResolveDecisionCommand extends CommandBase {
   resolutionId: string;
   requestId: string;
   response: DecisionResponse;
+}
+
+export interface ArmBoonCommand extends CommandBase {
+  type: 'ArmBoon';
+  effectId: string;
+  rollKind: 'attack_roll' | 'saving_throw' | 'ability_check';
+  timing: 'before_roll' | 'after_failure';
 }
 
 export type GameCommand =
@@ -1263,7 +1276,8 @@ export type GameCommand =
   | ObserveProtectionProximityCommand
   | TakeShortRestCommand
   | TakeLongRestCommand
-  | ResolveDecisionCommand;
+  | ResolveDecisionCommand
+  | ArmBoonCommand;
 
 export interface ActorRuntimePatch {
   hp?: RuntimeState['hp'];
@@ -1280,7 +1294,7 @@ export interface ActorRuntimePatchedEvent {
   type: 'ActorRuntimePatched';
   actorId: string;
   patch: ActorRuntimePatch;
-  reason: 'start_turn' | 'end_turn' | 'action' | 'ability_check' | 'hazard' | 'short_rest' | 'long_rest';
+  reason: 'start_turn' | 'end_turn' | 'action' | 'ability_check' | 'hazard' | 'short_rest' | 'long_rest' | 'boon';
 }
 
 /**

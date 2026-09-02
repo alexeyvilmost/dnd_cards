@@ -122,6 +122,17 @@ export function materializeConditionRule(effect: ConditionEffectRecord): Conditi
   return {
     id,
     label: effect.name,
+    ...(typeof effect.id === 'string' && effect.id.trim()
+      ? {
+          entityRef: {
+            kind: 'effect' as const,
+            id: effect.id,
+            ...(typeof effect.card_number === 'string' && effect.card_number.trim()
+              ? { cardNumber: effect.card_number }
+              : {}),
+          },
+        }
+      : {}),
     modifiers,
     payloads: payloads.filter((payload) => payload.kind !== 'modifier'),
     ...(includes?.length ? { includes } : {}),

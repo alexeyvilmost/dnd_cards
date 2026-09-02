@@ -12,6 +12,8 @@
   color: var(--forge-text);
   font-size: 13px;
 }
+.cs-active-effects { display: grid; gap: 6px; }
+.cs-active-effects .active-effect-card { padding: 5px; border: 1px solid var(--forge-line); border-radius: 7px; }
 
 /* ── Верхняя лента ── */
 .csheet-top {

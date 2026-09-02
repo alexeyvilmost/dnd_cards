@@ -42,6 +42,8 @@ import {
 } from './MobileEntityCard';
 import { useMobileCharacter } from './useMobileCharacter';
 import CharacterAccessBadge from '../components/CharacterAccessBadge';
+import { groupActiveEffectsForDisplay, type ActiveEffectDisplayGroup } from '../engine/effects';
+import { useActiveEffectEntity } from '../components/ActiveEffectCard';
 import '../pages/CharacterForge.css';
 import './mobile.css';
 
@@ -136,6 +138,26 @@ function EntityRow({
       </span>
       <ChevronRight size={18} />
     </button>
+  );
+}
+
+function ActiveEffectEntityRow({
+  group,
+  onOpen,
+}: {
+  group: ActiveEffectDisplayGroup;
+  onOpen: (view: MobileEntityView) => void;
+}) {
+  const entity = useActiveEffectEntity(group);
+  return (
+    <EntityRow
+      name={group.name}
+      detail={[group.source, group.duration].filter(Boolean).join(' · ')}
+      imageUrl={entity?.image_url}
+      onClick={() => onOpen(entity
+        ? { kind: 'effect', entity, sourceLabel: group.source ?? 'Активный эффект' }
+        : { kind: 'text', title: group.name, detail: group.instructions.join(' ') })}
+    />
   );
 }
 
@@ -296,6 +318,8 @@ export default function MobileCharacterSheet() {
   const activeConditions = runtimeState.activeEffects.filter(
     (effect) => (effect.mechanics as Record<string, unknown>)?.kind === 'condition',
   );
+  const activeNonConditionGroups = groupActiveEffectsForDisplay(activeNonConditions);
+  const activeConditionGroups = groupActiveEffectsForDisplay(activeConditions);
 
   const addButton = (type?: string) => (
     readOnly ? null :
@@ -621,19 +645,11 @@ export default function MobileCharacterSheet() {
 
             <Section title="Состояния" action={addButton('conditions')} wide>
               <div className="m-entity-list">
-                {activeConditions.map((effect) => (
-                  <EntityRow
-                    key={effect.id}
-                    name={effect.name}
-                    detail={[effect.source, effect.expiry].filter(Boolean).join(' · ')}
-                    onClick={() => setOverlay({
-                      type: 'entity',
-                      view: {
-                        kind: 'text',
-                        title: effect.name,
-                        detail: `Источник: ${effect.source}`,
-                      },
-                    })}
+                {activeConditionGroups.map((group) => (
+                  <ActiveEffectEntityRow
+                    key={group.key}
+                    group={group}
+                    onOpen={(view) => setOverlay({ type: 'entity', view })}
                   />
                 ))}
                 {!activeConditions.length && <p className="m-muted">Нет активных состояний.</p>}
@@ -642,15 +658,11 @@ export default function MobileCharacterSheet() {
 
             <Section title="Эффекты" action={addButton('effects')} wide>
               <div className="m-entity-list">
-                {activeNonConditions.map((effect) => (
-                  <EntityRow
-                    key={effect.id}
-                    name={effect.name}
-                    detail={[effect.source, effect.expiry].filter(Boolean).join(' · ')}
-                    onClick={() => setOverlay({
-                      type: 'entity',
-                      view: { kind: 'text', title: effect.name, detail: `Источник: ${effect.source}` },
-                    })}
+                {activeNonConditionGroups.map((group) => (
+                  <ActiveEffectEntityRow
+                    key={group.key}
+                    group={group}
+                    onOpen={(view) => setOverlay({ type: 'entity', view })}
                   />
                 ))}
                 {!activeNonConditions.length && <p className="m-muted">Нет активных эффектов.</p>}

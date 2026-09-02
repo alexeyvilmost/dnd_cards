@@ -907,4 +907,12 @@
 .combat-sheet-effects { display: grid; gap: 9px; margin-bottom: 8px; }
 .combat-sheet-effect { display: grid; justify-items: start; gap: 4px; }
 .combat-sheet-effect small { display: block; color: #c9b99f; font-size: 11px; line-height: 1.35; }
+.combat-sheet-effect .active-effect-card,
+.combat-actor-inspector__effects .active-effect-card { color: #f4ead8; }
+.combat-sheet-effect .active-effect-card__icon,
+.combat-actor-inspector__effects .active-effect-card__icon { border-color: #6e5b3a; background: #18140f; }
+.combat-sheet-effect .active-effect-card__summary strong,
+.combat-actor-inspector__effects .active-effect-card__summary strong { color: #f4ead8; }
+.combat-sheet-effect .active-effect-card__summary small,
+.combat-actor-inspector__effects .active-effect-card__summary small { color: #c9b99f; }
 .combat-sheet-drawer__full { display: block !important; position: sticky; bottom: 0; margin: 12px 0 0 !important; padding: 11px; border: 1px solid #8b673c; border-radius: 8px; background: #261d13; color: #e0b66f !important; text-align: center; text-decoration: none; }

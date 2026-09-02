@@ -31,6 +31,7 @@ import {
   activeConditionsOf, creatureTypeMatches, matchesWhen, type EvalContext,
 } from './circumstances';
 import {
+  conditionEffectEntityRef,
   conditionLevel,
   conditionModifierPayloads,
   conditionRuntimePayloads,
@@ -2126,6 +2127,15 @@ function applyGrantEffect(
       roundsLeft,
       expiry,
       source: name,
+      ...(typeof rec?.id === 'string' && rec.id.trim()
+        ? { entityRef: {
+            kind: 'effect' as const,
+            id: rec.id,
+            ...(typeof rec.card_number === 'string' && rec.card_number.trim()
+              ? { cardNumber: rec.card_number }
+              : {}),
+          } }
+        : {}),
       ...(ownerActorId ? { ownerId: ownerActorId } : {}),
       ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
     };
@@ -2359,6 +2369,9 @@ function applyCondition(
         mechanics: { kind: 'condition', value: leave, op: 'apply' },
         expiry: 'manual',
         source: `осталось от «${condition}»`,
+        ...(conditionEffectEntityRef(leave)
+          ? { entityRef: conditionEffectEntityRef(leave) }
+          : {}),
       });
       events.push(conditionAppliedEvent(leave));
     }
@@ -2449,6 +2462,9 @@ function applyCondition(
     roundsLeft,
     expiry,
     source,
+    ...(conditionEffectEntityRef(condition)
+      ? { entityRef: conditionEffectEntityRef(condition) }
+      : {}),
     // E: владелец состояния и наложивший его актор нужны как для реляционных правил
     // (Очарованный ↛ очаровавший), так и для точного source-turn lifecycle.
     ...(ownerActorId ? { ownerId: ownerActorId } : {}),
@@ -3215,8 +3231,10 @@ function modifierMatchesRoll(
   filter?: Dict,
   evalCtx?: EvalContext,
   scope: 'self' | 'target' = 'self',
+  failed = false,
 ): boolean {
-  if (payload.kind !== 'modifier' || payload.consume !== 'next') return false;
+  if (payload.kind !== 'modifier'
+    || (payload.consume !== 'next' && !(payload.consume === 'next_on_failure' && failed))) return false;
   if (String(payload.scope ?? 'self') !== scope) return false;
   const applies = payload.applies_to as Dict | undefined;
   const rollMatches = applies?.roll === roll || (applies?.roll === 'd20'
@@ -3236,12 +3254,20 @@ export function consumeNextRollEffects(
   state: RuntimeState,
   roll: string,
   events: EngineEvent[],
-  options: { filter?: Dict; evalCtx?: EvalContext; scope?: 'self' | 'target' } = {},
+  options: {
+    filter?: Dict;
+    evalCtx?: EvalContext;
+    scope?: 'self' | 'target';
+    failed?: boolean;
+    onlyConditional?: boolean;
+  } = {},
 ): RuntimeState {
   const expired: ActiveEffectEntry[] = [];
   const activeEffects = state.activeEffects.filter((entry) => {
     const consumes = payloadsOf(entry.mechanics).some((payload) => (
-      modifierMatchesRoll(payload, roll, options.filter, options.evalCtx, options.scope)
+      (!options.onlyConditional || payload.consume === 'next_on_failure') && modifierMatchesRoll(
+        payload, roll, options.filter, options.evalCtx, options.scope, options.failed,
+      )
     ));
     if (consumes) expired.push(entry);
     return !consumes;
@@ -3347,11 +3373,13 @@ function runAttackRoll(
   let next = consumeNextRollEffects(state, 'attack', events, {
     filter: attackFilter,
     evalCtx: evalCtxOf(state, ctx),
+    failed: roll.usedFailureBonus === true,
   });
   if (targetRef.state) {
     const consumedTarget = consumeNextRollEffects(targetRef.state, 'attack', events, {
       scope: 'target',
       evalCtx: evalCtxOf(state, ctx),
+      failed: roll.usedFailureBonus === true,
     });
     if (consumedTarget !== targetRef.state) {
       targetRef.state = consumedTarget;
@@ -3649,6 +3677,7 @@ function runSave(
     : { modifiers: [] as RollModifier[], advantage: 'none' as const, autoFail: false, rules: [] as Dict[] };
 
   let success: boolean;
+  let failureBonusUsed = false;
   if (ctx.forceSaveOutcome != null) {
     // Онлайн-бой: исход форсирован (предрасчёт для передачи цели). d20 НЕ катим — иначе съели бы
     // из ctx.rng кости урона; событие спасброска не эмитим — бросок сделает цель на своём листе.
@@ -3667,6 +3696,7 @@ function runSave(
       rng: ctx.rng,
       rules: collected.rules,
     });
+    failureBonusUsed = roll.usedFailureBonus === true;
     events.push(rollEvent('Спасбросок', { ...roll, kind: 'save' }));
     // Планирующий прогон: берём ветку провала, чтобы кости on_fail-урона попали в план кубов
     // (иначе при высоком PLANNING_RNG цель успевает спастись и урон не планируется → #8).
@@ -3681,6 +3711,7 @@ function runSave(
         activeConditions: activeConditionsOf(targetRef.state),
         savedConditions: new Set(savedConditionsOf(effect)),
       },
+      failed: failureBonusUsed,
     });
     if (consumedTarget !== targetRef.state) {
       targetRef.state = consumedTarget;
@@ -3690,6 +3721,7 @@ function runSave(
     next = consumeNextRollEffects(next, 'saving_throw', events, {
       filter: { ability },
       evalCtx: evalCtxOf(next, ctx),
+      failed: failureBonusUsed,
     });
   }
 
@@ -3790,11 +3822,6 @@ function runAbilityCheck(
       rules: collected.rules,
     });
     events.push(rollEvent(skill ? `Проверка (${skill})` : 'Проверка', { ...attRoll, kind: 'check' }));
-    next = consumeNextRollEffects(state, 'ability_check', events, {
-      filter: checkFilter,
-      evalCtx: evalCtxOf(state, ctx),
-    });
-
     // Исход: против явно объявленной СЛ или явно объявленного набора защитных навыков.
     if (effect.dc != null) {
       success = attRoll.total >= evalDc(String(effect.dc), ctx);
@@ -3812,6 +3839,11 @@ function runAbilityCheck(
       events.push(rollEvent(`Ответ (${defSkill})`, { ...defRoll, kind: 'check' }));
       success = attRoll.total > defRoll.total;
     }
+    next = consumeNextRollEffects(state, 'ability_check', events, {
+      filter: checkFilter,
+      evalCtx: evalCtxOf(state, ctx),
+      failed: attRoll.usedFailureBonus === true,
+    });
   }
 
   if (!success) return next;

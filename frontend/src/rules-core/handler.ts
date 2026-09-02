@@ -29,6 +29,8 @@ import {
   WEAPON_MASTERY_CLEAVE_USE_PREFIX,
 } from './legacy/engineAdapter';
 import { applySourceTurnBoundary } from '../engine/sourceTurnExpiry';
+import { addBonusDieToD20Roll } from '../engine/roll';
+import { armBoonForNextRoll, consumeBoonAfterFailure, runtimeBoonSpec } from '../engine/boons';
 import { compileDeclaredMechanicsTargeting } from './actionTargeting';
 import type {
   CharacterContext,
@@ -1249,7 +1251,7 @@ function runtimeTransition(
   actorId: string,
   before: ActorState['runtime'],
   after: ActorState['runtime'],
-  reason: 'start_turn' | 'end_turn' | 'action' | 'ability_check' | 'hazard' | 'short_rest' | 'long_rest',
+  reason: 'start_turn' | 'end_turn' | 'action' | 'ability_check' | 'hazard' | 'short_rest' | 'long_rest' | 'boon',
   obligationIds: string[],
 ): EventInput[] {
   const patch = runtimePatch(before, after);
@@ -4127,6 +4129,43 @@ function replayableSharedDamageRng(
   };
 }
 
+function afterFailureSavingThrowBoon(input: {
+  target: ActorState;
+  roll: RollLog;
+  boonEffectId?: string;
+  env: DeterministicEnvironment;
+}): { runtime: ActorState['runtime']; roll: RollLog; events: EngineEvent[] } | { issue: string } {
+  const { target, boonEffectId, env } = input;
+  const events: EngineEvent[] = [];
+  let runtime = target.runtime;
+  if (input.roll.usedFailureBonus) {
+    runtime = consumeNextRollEffects(runtime, 'saving_throw', events, {
+      failed: true,
+      onlyConditional: true,
+    });
+  }
+  if (!boonEffectId) return { runtime, roll: input.roll, events };
+  const entry = target.runtime.activeEffects.find((effect) => effect.id === boonEffectId);
+  const boon = entry ? runtimeBoonSpec(entry) : null;
+  if (!boon || !boon.appliesTo.includes('saving_throw')
+    || !boon.timing.includes('after_failure')) {
+    return { issue: 'The selected boon cannot modify this saving throw' };
+  }
+  if (input.roll.outcome !== 'fail') {
+    return { runtime, roll: input.roll, events };
+  }
+  try {
+    const consumed = consumeBoonAfterFailure(runtime, boonEffectId, 'saving_throw');
+    return {
+      runtime: consumed.state,
+      roll: addBonusDieToD20Roll(input.roll, consumed.spec.faces, consumed.spec.name, env.rng),
+      events: [...events, { type: 'effect_expired', name: consumed.spec.name }],
+    };
+  } catch (error) {
+    return { issue: error instanceof Error ? error.message : 'Invalid boon' };
+  }
+}
+
 function resolvePendingSave(
   world: WorldState,
   command: Extract<GameCommand, { type: 'ResolveDecision' }>,
@@ -4146,6 +4185,7 @@ function resolvePendingSave(
   if (command.response.kind !== 'roll') {
     return rejected(world, 'InvalidDecision', 'A saving throw requires a roll response');
   }
+  const rollResponse = command.response;
   const action = catalog.getAction(pending.actionId);
   if (!action) return rejected(world, 'ActionNotFound', `Unknown action ${pending.actionId}`);
   const sequenceIssue = attackSequenceContinuationIssue(world, pending.attackSequence, pending, action);
@@ -4209,12 +4249,23 @@ function resolvePendingSave(
     return rejected(world, 'InvalidDecision', error instanceof Error ? error.message : 'Invalid manual roll');
   }
 
+  const boonResolution = afterFailureSavingThrowBoon({
+    target, roll, boonEffectId: rollResponse.boonEffectId, env,
+  });
+  if ('issue' in boonResolution) return rejected(world, 'InvalidDecision', boonResolution.issue);
+  roll = boonResolution.roll;
+  const targetRuntimeForResolution = boonResolution.runtime;
+  const boonEvents = boonResolution.events;
+
   const sharedDamage = replayableSharedDamageRng(pending.sharedDamageRolls, env.rng);
+  const targetForResolution = targetRuntimeForResolution === target.runtime
+    ? target
+    : { ...target, runtime: targetRuntimeForResolution };
   const result = executeAction(
     source.runtime,
     withoutActivationCost(action.mechanics),
     {
-      ...actionContext(source, env, target, target.runtime, pending.facts, pending.spell),
+      ...actionContext(source, env, targetForResolution, targetRuntimeForResolution, pending.facts, pending.spell),
       choices: pending.choices,
       spell: pending.spell,
       suppressSpellCastEvent: pending.spellCastEmitted === true,
@@ -4235,7 +4286,11 @@ function resolvePendingSave(
     label: `${action.name}: спасбросок ${ABILITY_LABEL[pending.request.ability]}`,
     roll: { ...roll, kind: 'save' },
   };
-  const targetAfter = target.id === source.id ? result.state : result.targetState;
+  const targetAfter = target.id === source.id
+    ? result.state
+    : result.targetState ?? (targetRuntimeForResolution !== target.runtime
+      ? targetRuntimeForResolution
+      : undefined);
   const currentConcentrationLinks = mergeConcentrationEffectLinks(
     concentrationLinkedEffectIds(source.runtime, result.state)
       .map((effectId) => ({ actorId: source.id, effectId })),
@@ -4264,7 +4319,7 @@ function resolvePendingSave(
   // its outcome. Sheet-only targets (for example the training dummy) have no
   // persisted journal of their own, so omitting the source here reduced a
   // successful save to a bare resource-spend row on the caster's sheet.
-  const events: EventInput[] = engineTrace(target.id, [source.id], [saveEvent], obligationIds);
+  const events: EventInput[] = engineTrace(target.id, [source.id], [saveEvent, ...boonEvents], obligationIds);
   events.push(...actionStateEvents({
     world,
     commandId: pending.openedByCommandId,
@@ -5201,6 +5256,12 @@ function resolveMasterySave(
   } catch (error) {
     return rejected(world, 'InvalidDecision', error instanceof Error ? error.message : 'Invalid mastery save');
   }
+  const boonResolution = afterFailureSavingThrowBoon({
+    target, roll, boonEffectId: command.response.boonEffectId, env,
+  });
+  if ('issue' in boonResolution) return rejected(world, 'InvalidDecision', boonResolution.issue);
+  roll = boonResolution.roll;
+  const targetRuntimeForResolution = boonResolution.runtime;
 
   const masteryAction: RuleActionDefinition = {
     id: pending.mastery.sourceEntityId,
@@ -5214,7 +5275,7 @@ function resolveMasterySave(
     },
   };
   const result = executeAction(source.runtime, masteryAction.mechanics, {
-    ...actionContext(source, env, target, target.runtime),
+    ...actionContext(source, env, { ...target, runtime: targetRuntimeForResolution }, targetRuntimeForResolution),
     ...(pending.mastery.weaponMod == null ? {} : { weaponMod: pending.mastery.weaponMod }),
     forceSaveOutcome: roll.outcome === 'success' ? 'success' : 'fail',
   });
@@ -5223,7 +5284,7 @@ function resolveMasterySave(
     type: 'roll',
     label: `${pending.mastery.name}: спасбросок ${ABILITY_LABEL[ability]}`,
     roll: { ...roll, kind: 'save' },
-  }], obligations);
+  }, ...boonResolution.events], obligations);
   events.push(...actionStateEvents({
     world,
     commandId: command.commandId,
@@ -5231,7 +5292,7 @@ function resolveMasterySave(
     action: masteryAction,
     sourceAfter: result.state,
     target,
-    targetAfter: result.targetState,
+    targetAfter: result.targetState ?? targetRuntimeForResolution,
     obligations,
   }));
   events.push(...engineTrace(source.id, [target.id], result.events, obligations));
@@ -5322,13 +5383,23 @@ function resolveConcentrationSave(
   } catch (error) {
     return rejected(world, 'InvalidDecision', error instanceof Error ? error.message : 'Invalid concentration roll');
   }
+  const boonResolution = afterFailureSavingThrowBoon({
+    target: actor, roll, boonEffectId: command.response.boonEffectId, env,
+  });
+  if ('issue' in boonResolution) return rejected(world, 'InvalidDecision', boonResolution.issue);
+  roll = boonResolution.roll;
 
   const obligations = ['system:concentration-damage-save', 'system:pending-resolution'];
   const events: EventInput[] = engineTrace(actor.id, [], [{
     type: 'roll',
     label: `Концентрация (СЛ ${pending.request.dc})`,
     roll: { ...roll, kind: 'save' },
-  }], obligations);
+  }, ...boonResolution.events], obligations);
+  if (boonResolution.runtime !== actor.runtime) {
+    events.push(...runtimeTransition(
+      actor.id, actor.id, actor.runtime, boonResolution.runtime, 'boon', obligations,
+    ));
+  }
   events.push({
     sourceActorId: actor.id,
     obligationIds: obligations,
@@ -5436,11 +5507,16 @@ function resolveHazardSave(
   } catch (error) {
     return rejected(world, 'InvalidDecision', error instanceof Error ? error.message : 'Invalid hazard save');
   }
+  const boonResolution = afterFailureSavingThrowBoon({
+    target, roll, boonEffectId: command.response.boonEffectId, env,
+  });
+  if ('issue' in boonResolution) return rejected(world, 'InvalidDecision', boonResolution.issue);
+  roll = boonResolution.roll;
 
   const hazard = pending.hazard;
   const sourceActorId = hazardSourceId(hazard);
   const obligations = hazardObligationIds(hazard);
-  const result = executeAction(target.runtime, {
+  const result = executeAction(boonResolution.runtime, {
     name: hazard.name,
     activation: { mode: 'passive', cost: [] },
     effects: [{
@@ -5462,7 +5538,7 @@ function resolveHazardSave(
     type: 'roll',
     label: `${hazard.name}: спасбросок ${ABILITY_LABEL[ability]}`,
     roll: { ...roll, kind: 'save' },
-  }], obligations));
+  }, ...boonResolution.events], obligations));
   events.push(...runtimeTransition(
     sourceActorId,
     target.id,
@@ -8418,6 +8494,7 @@ function resolveUnarmedSave(
   ];
   let failed = command.response.kind === 'voluntary_fail';
   const traceEvents: EngineEvent[] = [];
+  let targetRuntimeForResolution = target.runtime;
   if (command.response.kind === 'roll') {
     const rolled = targetSaveRoll({
       target,
@@ -8427,8 +8504,17 @@ function resolveUnarmedSave(
       env,
     });
     if ('issue' in rolled) return rejected(world, 'InvalidDecision', rolled.issue);
-    failed = rolled.roll.outcome !== 'success';
-    traceEvents.push(rolled.event);
+    const boonResolution = afterFailureSavingThrowBoon({
+      target, roll: rolled.roll, boonEffectId: command.response.boonEffectId, env,
+    });
+    if ('issue' in boonResolution) return rejected(world, 'InvalidDecision', boonResolution.issue);
+    failed = boonResolution.roll.outcome !== 'success';
+    targetRuntimeForResolution = boonResolution.runtime;
+    traceEvents.push({
+      type: 'roll',
+      label: `Спасбросок ${ABILITY_LABEL[selectedAbility!]}`,
+      roll: { ...boonResolution.roll, kind: 'save' },
+    }, ...boonResolution.events);
   } else {
     traceEvents.push({
       type: 'narrative',
@@ -8459,6 +8545,11 @@ function resolveUnarmedSave(
       payload: { type: 'ResolutionClosed', resolutionId: pending.id },
     },
   ];
+  if (targetRuntimeForResolution !== target.runtime) {
+    events.push(...runtimeTransition(
+      target.id, target.id, target.runtime, targetRuntimeForResolution, 'boon', obligations,
+    ));
+  }
   if (!failed) {
     events.push(...attackResolutionFinishedEvents({
       attackAction,
@@ -11007,6 +11098,27 @@ function executeCommand(
         }),
         ...worldExecution,
       ];
+    }
+    case 'ArmBoon': {
+      try {
+        const after = armBoonForNextRoll(
+          actor.runtime, command.effectId, command.rollKind, command.timing,
+        );
+        return runtimeTransition(
+          actor.id,
+          actor.id,
+          actor.runtime,
+          after,
+          'boon',
+          ['system:data-driven-boon'],
+        );
+      } catch (error) {
+        return rejected(
+          world,
+          'InvalidDecision',
+          error instanceof Error ? error.message : 'Invalid boon activation',
+        );
+      }
     }
     case 'AbilityCheck':
       return executeCheck(world, command, env);

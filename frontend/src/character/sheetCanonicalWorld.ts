@@ -449,6 +449,7 @@ type CompiledSheetAction = {
   sheet: SheetAction;
   action: RuleActionDefinition;
   spellGrant?: SpellGrantBinding;
+  manualSpell?: boolean;
 };
 
 function appliedSpellGrants(
@@ -582,6 +583,7 @@ function ruleActions(input: {
   sheet: SheetAction;
   assembled: AssembledCharacter;
   ruleState: Pick<CharacterRuleState, 'appliedGrants'>;
+  manualSpellIds?: ReadonlySet<string>;
 }): CompiledSheetAction[] {
   if (input.sheet.spellRef) {
     // One visual spell row may be owned by several immutable grants (for
@@ -589,7 +591,7 @@ function ruleActions(input: {
     // its own source-scoped action. A stale/manual row with no grant is safely
     // absent from actor capabilities instead of preventing unrelated combat
     // actions from starting.
-    return appliedSpellGrants(input.sheet.spellRef, input.ruleState).map((grant) => {
+    const compiled: CompiledSheetAction[] = appliedSpellGrants(input.sheet.spellRef, input.ruleState).map((grant) => {
       const binding = spellGrantBinding({
         spell: input.sheet.spellRef!,
         grant,
@@ -616,6 +618,18 @@ function ruleActions(input: {
         }),
       };
     });
+    const spell = input.sheet.spellRef;
+    if (input.manualSpellIds?.has(spell.id) || input.manualSpellIds?.has(spell.card_number)) {
+      compiled.push({
+        sheet: input.sheet,
+        manualSpell: true,
+        action: projectRuleAction(spell, {
+          sourceEntityIds: [spell.id],
+          grantScopeId: `manual-spell:${spell.id}`,
+        }),
+      });
+    }
+    return compiled;
   }
 
   // Non-spell sheet actions keep their existing synthetic/item adapters. Raw
@@ -759,10 +773,22 @@ function baseSpellAccess(input: {
   resolvedChoices: Record<string, string[]> | null | undefined;
   runtimePreparedChoices?: Readonly<Record<string, readonly string[]>>;
   tomeActionIds: ReadonlySet<string>;
+  manualSpellcastingAbility: 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
 }): ReturnType<typeof projectSpellcastingAccess> {
-  const grants: SpellGrantProjection[] = input.compiled.flatMap(({ sheet, action, spellGrant }) => {
-    if (action.kind !== 'spell' || !sheet.spellRef || !spellGrant
-      || input.tomeActionIds.has(action.id)) return [];
+  const grants: SpellGrantProjection[] = input.compiled.flatMap(({ sheet, action, spellGrant, manualSpell }) => {
+    if (action.kind !== 'spell' || !sheet.spellRef || input.tomeActionIds.has(action.id)) return [];
+    if (manualSpell) {
+      const slotResource = declaredSlotResource(action);
+      return [{
+        action,
+        sourceId: `manual-spell:${sheet.spellRef.id}`,
+        access: sheet.spellRef.level === 0 ? 'cantrip' : 'always_prepared',
+        spellcastingAbility: input.manualSpellcastingAbility,
+        ...(sheet.spellRef.ritual === true ? { ritual: true } : {}),
+        ...(slotResource ? { slotResource } : {}),
+      }];
+    }
+    if (!spellGrant) return [];
     const ability = spellGrant.grant.spellcastingAbility;
     if (!ability) {
       throw new SheetCanonicalWorldError(`${spellGrant.grant.id}: spellcasting ability is missing`);
@@ -989,11 +1015,15 @@ export function buildSheetCanonicalRuntime(input: {
   ac?: number;
 }): SheetCanonicalRuntime {
   const actorId = input.character.id;
+  const manualSpellIds = new Set(
+    input.character.resolved_choices?.['builder:manual_spells'] ?? [],
+  );
   const bindings = pactBindings(input.assembled, input.character.resolved_choices);
   const compiled = input.sheetActions.flatMap((sheet) => ruleActions({
     sheet,
     assembled: input.assembled,
     ruleState: input.ruleState,
+    manualSpellIds,
   }));
   const actions = compiled.map(({ action }) => action);
   const actionById = new Map<string, RuleActionDefinition>();
@@ -1114,6 +1144,12 @@ export function buildSheetCanonicalRuntime(input: {
     resolvedChoices: input.character.resolved_choices,
     runtimePreparedChoices: readSheetSpellPreparation(input.character.turn_state)?.choices,
     tomeActionIds,
+    manualSpellcastingAbility: input.characterContext.spellcastingAbility
+      ?? (['int', 'wis', 'cha'] as const).reduce((best, ability) => (
+        input.characterContext.abilityMods[ability] > input.characterContext.abilityMods[best]
+          ? ability
+          : best
+      ), 'int'),
   });
   const spellGrants: SpellGrantAccess[] = [...baseSpellcastingAccess.grants];
   for (const { binding, selected } of deferredTomes) {

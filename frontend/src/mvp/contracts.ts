@@ -55,6 +55,8 @@ export interface RollLog {
   text: string;
   /** Payload-ы, сработавшие по значению кости (on_roll-правила) — вызывающий их применяет. */
   triggered?: Record<string, unknown>[];
+  /** A conditional after-failure die was actually rolled and must be consumed. */
+  usedFailureBonus?: true;
 }
 
 // `source` — необязательная атрибуция «кто это сделал» (напр. имя атакующего в бою). Используется
@@ -143,6 +145,13 @@ export interface ActiveEffectEntry {
   /** 'start_of_next_turn' | 'end_of_turn' | 'until_rest' | 'manual' */
   expiry?: string;
   source: string;
+  /** Stable library identity of the effect that produced this runtime entry.
+   * Mechanics stay self-contained while the UI loads the real data-owned card. */
+  entityRef?: {
+    kind: 'effect';
+    id: string;
+    cardNumber?: string;
+  };
   /** Id существа-владельца, в чьём RuntimeState сериализован эффект. */
   ownerId?: string;
   /** Id наложившего эффект существа (кастера). Для реляционных правил и source-turn lifecycle. */
@@ -382,7 +391,13 @@ export interface ExecuteContext {
    *  Движок синхронный, эффект по slug грузит лист; здесь — уже резолвнутая механика для установки
    *  «стоячего» активного эффекта (напр. Доспех мага → set_value ac_base). repeatable — повторяемый
    *  эффект накапливается (не перезаписывается) при повторной выдаче. */
-  grantedEffects?: Record<string, { name?: string; mechanics?: unknown; repeatable?: boolean } | undefined>;
+  grantedEffects?: Record<string, {
+    id?: string;
+    card_number?: string;
+    name?: string;
+    mechanics?: unknown;
+    repeatable?: boolean;
+  } | undefined>;
   /** Предзагруженные эффекты-мастерства (Weapon Mastery 2024): id эффекта → {name, mechanics}.
    *  Ключ — card.mastery оружия. Движок синхронный, поэтому механику мастерства (как и grantedEffects)
    *  резолвит лист/бой заранее. Без этой карты мастерство молча не сработает. */

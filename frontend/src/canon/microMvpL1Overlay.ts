@@ -1332,6 +1332,16 @@ function spellcastingAccessForRoot(
   const ability = primarySpellcastingAbility;
   const spellIndex = indexByReference(catalogs.spells);
   const classSelections = classOwnedSpellSelectionsForRoot(root, assembled, draft);
+  const manualSpellIds = new Set((draft.manualSpellIds ?? []).flatMap((reference) => {
+    const spell = spellIndex.get(reference);
+    return spell ? [spell.id, spell.card_number] : [];
+  }));
+  const manualSpellcastingAbility = primarySpellcastingAbility ?? (['int', 'wis', 'cha'] as Ability[])
+    .reduce<Ability>((best, candidate) => (
+      Number(ruleState.abilities[candidate] ?? 10) > Number(ruleState.abilities[best] ?? 10)
+        ? candidate
+        : best
+    ), 'int');
   const grants: SpellGrantProjection[] = classSelections.flatMap((selection) => {
     const { choice, access } = selection;
     if (!ability) {
@@ -1467,6 +1477,21 @@ function spellcastingAccessForRoot(
           spellcastingAbility: 'cha',
         });
       }
+      continue;
+    }
+
+    // “+ Добавить” is an explicit player-owned grant, independent of class
+    // preparation lists. This must run before class-source inference so a
+    // manually added spell is usable by every class, including non-casters.
+    if (manualSpellIds.has(spell.id) || manualSpellIds.has(spell.card_number)) {
+      grants.push({
+        action,
+        sourceId: `manual-spell:${spell.id}`,
+        access: spell.level === 0 ? 'cantrip' : 'always_prepared',
+        spellcastingAbility: manualSpellcastingAbility,
+        ...(spell.ritual === true ? { ritual: true } : {}),
+        ...(spell.level > 0 ? { slotResource: `spell_slot_${spell.level}` } : {}),
+      });
       continue;
     }
 
@@ -2165,7 +2190,10 @@ function compileRoot(
     const choiceSpellIds = assembled.pendingChoices
       .filter((choice) => choice.source === 'spell')
       .flatMap((choice) => choicesSelected(draft, choice));
-    draft.spellIds = [...new Set(choiceSpellIds)].sort();
+    draft.spellIds = [...new Set([
+      ...choiceSpellIds,
+      ...(draft.manualSpellIds ?? []),
+    ])].sort();
     bundle.spells = draft.spellIds.flatMap((id) => {
       const spell = spellIndex.get(id);
       return spell ? [patchSpell(spell)] : [];

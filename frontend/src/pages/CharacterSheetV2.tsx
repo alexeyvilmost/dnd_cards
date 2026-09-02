@@ -34,6 +34,8 @@ import { writeRulesEngineRuntimeTurnState } from '../character/runtime';
 import { persistCharacterRuntime } from '../character/runtimePersistence';
 import type { SheetAtomicRetryEnvelope } from '../character/sheetAtomicRetry';
 import CharacterSheetFirstColumn, { CHARACTER_SENSE_LABELS } from '../components/CharacterSheetFirstColumn';
+import ActiveEffectCard from '../components/ActiveEffectCard';
+import { groupActiveEffectsForDisplay } from '../engine/effects';
 import './CharacterSheetV2.css';
 
 const fmtMod = (n: number) => (n >= 0 ? `+${n}` : String(n));
@@ -298,7 +300,8 @@ const CharacterSheetV2 = ({
           }))}
           conditions={readOnly
             ? runtimeState?.activeEffects.length
-              ? <div className="cs-tags">{runtimeState.activeEffects.map((effect) => <span key={effect.id} className="cs-tag">{effect.name}</span>)}</div>
+              ? <div className="cs-active-effects">{groupActiveEffectsForDisplay(runtimeState.activeEffects)
+                .map((group) => <ActiveEffectCard key={group.key} group={group} />)}</div>
               : <p className="cs-hook-note">Активных состояний и эффектов нет.</p>
             : <SheetConditionsPanel character={character} onUpdated={onUpdated} onEvents={onEvents} passives={passives} embedded encounterApply={encounterApply} />}
           breakdownFor={sheetCtx && runtimeState

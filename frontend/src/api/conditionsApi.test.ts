@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { effectsApi } from './client';
 import {
+  conditionEffectEntityRef,
   conditionRegistryAuthority,
   resetConditionsToOfflineFixture,
 } from '../engine/conditions';
@@ -192,6 +193,9 @@ describe('condition DB mechanics materializer', () => {
       id: 'row:blinded',
       effect_type: 'condition',
       mechanics: { condition: { id: 'blinded' } },
+    });
+    expect(conditionEffectEntityRef('blinded')).toEqual({
+      kind: 'effect', id: 'row:blinded', cardNumber: 'display:blinded',
     });
   });
 

@@ -17,6 +17,10 @@ import {
   type CombatGrappleStatusRow,
 } from '../solo-combat/grapplePresentation';
 import RemoteManipulatorControl, { remoteManipulatorSpec } from './RemoteManipulatorControl';
+import ActiveEffectCard from './ActiveEffectCard';
+import BoonActivationDialog from './BoonActivationDialog';
+import { runtimeBoonSpec, type BoonRollKind, type BoonTiming, type RuntimeBoonSpec } from '../engine/boons';
+import { useState } from 'react';
 
 const abilityRecord = (value: Partial<Record<AbilityKey, number>>, fallback: number): Record<AbilityKey, number> =>
   Object.fromEntries(ABILITY_KEYS.map((ability) => [ability, Number(value[ability] ?? fallback)])) as Record<AbilityKey, number>;
@@ -26,12 +30,17 @@ export function CombatActiveEffects({
   grappleStatuses = [],
   onRemoteManipulator,
   remoteManipulatorDisabled = false,
+  onActivateBoon,
+  boonDisabled = false,
 }: {
   effects: readonly ActiveEffectEntry[];
   grappleStatuses?: readonly CombatGrappleStatusRow[];
   onRemoteManipulator?: (command: RemoteManipulatorCommand) => void | Promise<void>;
   remoteManipulatorDisabled?: boolean;
+  onActivateBoon?: (effectId: string, rollKind: BoonRollKind, timing: BoonTiming) => void | Promise<void>;
+  boonDisabled?: boolean;
 }) {
+  const [selectedBoon, setSelectedBoon] = useState<RuntimeBoonSpec | null>(null);
   if (!effects.length && !grappleStatuses.length) {
     return <p className="cs-hook-note">Активных состояний и эффектов нет.</p>;
   }
@@ -40,10 +49,14 @@ export function CombatActiveEffects({
       {groupActiveEffectsForDisplay(effects).map((group) => {
         const remoteManipulator = group.effects.find((effect) => remoteManipulatorSpec(effect));
         return <div key={group.key} className="combat-sheet-effect">
-          <strong className="cs-tag">{group.name}</strong>
-          {group.source && <small>Источник: {group.source}</small>}
-          <small>Длительность: {group.duration}</small>
-          {group.instructions.map((instruction) => <small key={instruction}>{instruction}</small>)}
+          <ActiveEffectCard group={group} actions={(() => {
+            const boon = group.effects.map(runtimeBoonSpec).find(Boolean);
+            return boon && onActivateBoon ? (
+              <button type="button" className="forge-btn ghost sheet-active-effect-use" disabled={boonDisabled} onClick={() => setSelectedBoon(boon)}>
+                Использовать
+              </button>
+            ) : null;
+          })()} />
           {remoteManipulator && onRemoteManipulator && (
             <RemoteManipulatorControl
               effect={remoteManipulator}
@@ -59,6 +72,16 @@ export function CombatActiveEffects({
           {status.instructions.map((instruction) => <small key={instruction}>{instruction}</small>)}
         </div>
       ))}
+      <BoonActivationDialog
+        boon={selectedBoon}
+        busy={boonDisabled}
+        onChoose={(rollKind, timing) => {
+          if (!selectedBoon) return;
+          void onActivateBoon?.(selectedBoon.effectId, rollKind, timing);
+          setSelectedBoon(null);
+        }}
+        onClose={() => setSelectedBoon(null)}
+      />
     </div>
   );
 }
@@ -69,12 +92,16 @@ export default function CombatCharacterSidebar({
   actorId = state.characterId,
   onRemoteManipulator,
   remoteManipulatorDisabled = false,
+  onActivateBoon,
+  boonDisabled = false,
 }: {
   character: ForgeCharacter;
   state: SoloCombatState;
   actorId?: string;
   onRemoteManipulator?: (command: RemoteManipulatorCommand) => void | Promise<void>;
   remoteManipulatorDisabled?: boolean;
+  onActivateBoon?: (effectId: string, rollKind: BoonRollKind, timing: BoonTiming) => void | Promise<void>;
+  boonDisabled?: boolean;
 }) {
   const actor = state.world.actors[actorId];
   const rules = character.rule_state;
@@ -129,6 +156,8 @@ export default function CombatCharacterSidebar({
         grappleStatuses={combatGrappleStatusRows(state.world, actorId)}
         onRemoteManipulator={onRemoteManipulator}
         remoteManipulatorDisabled={remoteManipulatorDisabled || (actor.runtime.resources?.action ?? 0) < 1}
+        onActivateBoon={onActivateBoon}
+        boonDisabled={boonDisabled}
       />}
       additionalSections={<>
         <CollapsibleSection title="Защита">

@@ -18,9 +18,13 @@ describe('CombatActiveEffects', () => {
       },
     }];
 
-    const html = renderToStaticMarkup(createElement(CombatActiveEffects, { effects }));
+    const html = renderToStaticMarkup(createElement(CombatActiveEffects, {
+      effects,
+      onActivateBoon: () => undefined,
+    }));
     expect(html).toContain('Талон 1к6 (Вдохновение барда)');
-    expect(html).toContain('Добавьте 1к6 к проверке характеристики, броску атаки или спасброску, затем снимите эффект.');
+    expect(html).toContain('Использовать');
+    expect(html).toContain('движок добавит 1к6 и автоматически снимет эффект');
   });
 
   it('shows Stonecunning scope and limitations in the mounted combat drawer', () => {

@@ -8,8 +8,8 @@ func TestMiniMVPRangedPostHitSpellRangesMigrationFollowsTargetRepair(t *testing.
 	if index == 0 || migrations[index-1].Version != miniMVPPostHitSpellTargetsMigrationVersion {
 		t.Fatal("migration 139 must immediately follow 138")
 	}
-	if index != len(migrations)-1 {
-		t.Fatal("migration 139 must remain the latest migration")
+	if index+1 >= len(migrations) || migrations[index+1].Version != runtimeBoonsAreaMigrationVersion {
+		t.Fatal("migration 140 must immediately follow 139")
 	}
 }
 

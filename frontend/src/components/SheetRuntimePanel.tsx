@@ -35,6 +35,9 @@ import type { CharacterEventRow } from '../character/api';
 import { findResource, useResourceOptions } from '../utils/resources';
 import SheetRestButtons from './SheetRestButtons';
 import SheetResourceTile, { sheetResourceTileOrder } from './SheetResourceTile';
+import ActiveEffectCard from './ActiveEffectCard';
+import BoonActivationDialog from './BoonActivationDialog';
+import { armBoonForNextRoll, runtimeBoonSpec, type RuntimeBoonSpec } from '../engine/boons';
 
 interface Props {
   character: ForgeCharacter;
@@ -51,6 +54,7 @@ interface Props {
 export default function SheetRuntimePanel({ character, assembled, ruleState, onUpdated, onEvents, onPersistedEvents, onLongRestComplete, encounterApply, combatLocked }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedBoon, setSelectedBoon] = useState<RuntimeBoonSpec | null>(null);
   const syncAttempted = useRef(false);
   const resourceOptions = useResourceOptions();
 
@@ -160,6 +164,21 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
     }
   };
 
+  const handleArmBoon = (
+    rollKind: Parameters<typeof armBoonForNextRoll>[2],
+    timing: Parameters<typeof armBoonForNextRoll>[3],
+  ) => {
+    if (!selectedBoon) return;
+    try {
+      assertManualEffectMutationAllowed(character.current_encounter_id);
+      const state = armBoonForNextRoll(runtime, selectedBoon.effectId, rollKind, timing);
+      setSelectedBoon(null);
+      void persistManualEffects(state.activeEffects, []);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Не удалось использовать эффект');
+    }
+  };
+
   return (
     <section className="sheet-panel">
       <h2 className="sheet-h2">Ресурсы и отдых</h2>
@@ -211,14 +230,18 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
           <ul className="sheet-active-effects">
             {activeEffectGroups.map((group) => (
               <li key={group.key} className="sheet-active-effect">
-                <span className="sheet-active-effect-summary">
-                  <span className="sheet-active-effect-name">{group.name}</span>
-                  {group.instructions.length > 0 && (
-                    <span className="sheet-active-effect-detail">{group.instructions.join(' ')}</span>
+                <ActiveEffectCard group={group} actions={<>
+                  {group.effects.map(runtimeBoonSpec).find(Boolean) && (
+                    <button
+                      type="button"
+                      className="forge-btn ghost sheet-active-effect-use"
+                      disabled={busy || Boolean(effectMutationBlockReason)}
+                      onClick={() => setSelectedBoon(group.effects.map(runtimeBoonSpec).find(Boolean) ?? null)}
+                    >
+                      Использовать
+                    </button>
                   )}
-                </span>
-                <span className="sheet-active-effect-meta">{group.duration}</span>
-                <button
+                  <button
                   type="button"
                   className="sheet-active-effect-dismiss"
                   disabled={busy || Boolean(effectMutationBlockReason)}
@@ -226,7 +249,8 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
                   onClick={() => handleDismissEffect(group.effects.map((effect) => effect.id))}
                 >
                   <X size={14} />
-                </button>
+                  </button>
+                </>} />
               </li>
             ))}
           </ul>
@@ -241,6 +265,12 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
         возвращаются заряды с recharge «короткий отдых». Долгий отдых полностью восстанавливает
         HP, кости хитов и заряды с recharge «долгий отдых».
       </p>
+      <BoonActivationDialog
+        boon={selectedBoon}
+        busy={busy}
+        onChoose={handleArmBoon}
+        onClose={() => setSelectedBoon(null)}
+      />
     </section>
   );
 }

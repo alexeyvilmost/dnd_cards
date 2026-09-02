@@ -111,6 +111,14 @@ prune_release_history() {
   cleanup_retention_files
 }
 
+prune_dangling_images() {
+  # Removing old SHA tags can leave their now-unreferenced build layers behind.
+  # They are not runnable releases and otherwise accumulate until the disk is
+  # full even though the visible five-release invariant stays green.
+  echo "[retention] Removing unreferenced Docker image layers"
+  docker image prune -f >/dev/null
+}
+
 test -f "$archive"
 test -f "$app_env"
 test -f "$deploy_env"
@@ -122,6 +130,7 @@ test ! -e "$release"
 # archive for this deployment is protected even though no release directory
 # exists for it yet.
 prune_release_history $((retention_keep - 1)) "$sha"
+prune_dangling_images
 
 # APP_DOMAIN is also consumed by Caddy and may contain a comma-separated list.
 # Public verification must use one origin, not the entire Caddy site label.
@@ -232,6 +241,7 @@ if ! verify_release; then
 fi
 
 prune_release_history "$retention_keep"
+prune_dangling_images
 
 echo "DEPLOYED $sha"
 echo "Database backup: $backup_file"

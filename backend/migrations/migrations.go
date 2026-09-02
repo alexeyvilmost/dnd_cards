@@ -884,6 +884,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairMiniMVPRangedPostHitSpellRanges,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     runtimeBoonsAreaMigrationVersion,
+			Description: "Материализовать милости как эффекты библиотеки и исправить сферу Брызг кислоты",
+			Up:          materializeRuntimeBoonsAndAcidSplashArea,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

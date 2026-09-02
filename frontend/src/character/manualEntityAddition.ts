@@ -125,6 +125,7 @@ function addSelectionsToDraft(
     draft.featIds = appendManualEntityIds(draft.featIds, selections, true);
   } else {
     draft.spellIds = appendManualEntityIds(draft.spellIds, selections, false);
+    draft.manualSpellIds = appendManualEntityIds(draft.manualSpellIds, selections, false);
   }
 }
 

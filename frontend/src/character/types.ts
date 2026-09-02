@@ -216,6 +216,8 @@ export interface CharacterDraft {
   resourceIds?: string[];
   /** UUID заклинаний, выбранных игроком (не slug из grant_spell). */
   spellIds: string[];
+  /** UUID заклинаний, явно добавленных с листа через «+ Добавить». */
+  manualSpellIds?: string[];
   /** Slug-и заклинаний из rule_state / grant_spell (только для загрузки). */
   grantedSpellSlugs?: string[];
   /** ИТОГОВЫЕ значения (база point-buy + бонусы предыстории). */

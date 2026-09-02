@@ -7,7 +7,7 @@ import {
   conflictPartyPools,
   findConflictReplaceSlots,
 } from './resolveConflict';
-import { buildSavePayload, characterToDraft } from './forgeHelpers';
+import { buildSavePayload, characterToDraft, MANUAL_SPELLS_KEY } from './forgeHelpers';
 import { CLASS_SKILLS_KEY } from './pointBuy';
 import { resolveCharacterRules } from './rules/resolveCharacterRules';
 import type { RuleConflict } from './rules/types';
@@ -41,6 +41,27 @@ function assembledStub(over: Partial<AssembledCharacter> = {}): AssembledCharact
 }
 
 describe('resolveConflict skill duplicate', () => {
+  it('сохраняет происхождение вручную добавленных заклинаний в save→draft', () => {
+    const assembled = assembledStub();
+    const draft = {
+      ...emptyDraft(),
+      name: 'Тест',
+      spellIds: ['10000000-0000-4000-8000-000000000001'],
+      manualSpellIds: ['10000000-0000-4000-8000-000000000001'],
+    };
+    const ruleState = resolveCharacterRules({ draft, assembled });
+    const payload = buildSavePayload(draft, assembled, ruleState);
+    expect(payload.resolved_choices?.[MANUAL_SPELLS_KEY]).toEqual(draft.manualSpellIds);
+    const reloaded = characterToDraft({
+      id: 'char-manual-spell',
+      name: draft.name,
+      spell_ids: draft.spellIds,
+      resolved_choices: payload.resolved_choices,
+      rule_state: ruleState,
+    } as ForgeCharacter);
+    expect(reloaded.manualSpellIds).toEqual(draft.manualSpellIds);
+  });
+
   it('находит слот навыков класса Воина и предлагает незанятые из пулов Воин/Артист', () => {
     const assembled = assembledStub();
     const draft = {

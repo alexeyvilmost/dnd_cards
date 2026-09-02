@@ -4,6 +4,7 @@ import type { SoloCombatState } from '../solo-combat/types';
 import { groupActiveEffectsForDisplay } from '../engine/effects';
 import { combatGrappleStatusRows } from '../solo-combat/grapplePresentation';
 import { getDamageLabel } from '../utils/damageTypes';
+import ActiveEffectCard from './ActiveEffectCard';
 
 const ABILITIES = [
   ['str', 'СИЛ'], ['dex', 'ЛОВ'], ['con', 'ТЕЛ'],
@@ -125,10 +126,7 @@ export default function CombatActorInspector({
         {effectGroups.length || grappleStatuses.length
           ? <div className="combat-actor-inspector__effects">{effectGroups.map((group) => (
             <div key={group.key}>
-              <strong>{group.name}</strong>
-              {group.source && <small>Источник: {group.source}</small>}
-              <small>Длительность: {group.duration}</small>
-              {group.instructions.map((instruction) => <small key={instruction}>{instruction}</small>)}
+              <ActiveEffectCard group={group} />
             </div>
           ))}{grappleStatuses.map((status) => (
             <div key={status.key}>

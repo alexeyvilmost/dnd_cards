@@ -25,7 +25,10 @@ import { drawDie } from './random';
 
 type Dict = Record<string, unknown>;
 
-export const D20_RULE_OPS = new Set(['reroll', 'set_die', 'crit_range', 'outcome', 'on_roll', 'bonus_die', 'minimum_total']);
+export const D20_RULE_OPS = new Set([
+  'reroll', 'set_die', 'crit_range', 'outcome', 'on_roll', 'bonus_die',
+  'bonus_die_on_failure', 'minimum_total',
+]);
 export const DAMAGE_RULE_OPS = new Set(['minimum_die', 'die_bonus', 'explode', 'reroll_damage', 'reroll_healing_ones']);
 export const ROLL_RULE_OPS = new Set([...D20_RULE_OPS, ...DAMAGE_RULE_OPS]);
 
@@ -96,6 +99,15 @@ export function rollD20BonusDice(rules: Dict[], rng: () => number): DieRoll[] {
     }
   }
   return dice;
+}
+
+/** Bonus dice whose data explicitly permits use only after the base d20 test failed. */
+export function rollD20FailureBonusDice(rules: Dict[], rng: () => number): DieRoll[] {
+  return rollD20BonusDice(
+    rules.filter((rule) => rule.op === 'bonus_die_on_failure')
+      .map((rule) => ({ ...rule, op: 'bonus_die' })),
+    rng,
+  );
 }
 
 /** Highest floor requested for the final d20 total. */

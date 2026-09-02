@@ -16,6 +16,7 @@ import {
   outcomeOverride,
   rollTriggers,
   rollD20BonusDice,
+  rollD20FailureBonusDice,
   d20MinimumTotal,
 } from './rollRules';
 import { drawDie } from './random';
@@ -116,7 +117,7 @@ export function rollD20(opts: RollD20Options): RollLog {
   const minimumTotal = d20MinimumTotal(rules);
   const floorBonus = minimumTotal ? Math.max(0, minimumTotal.value - rawTotal) : 0;
   if (floorBonus) modifiers.push({ value: floorBonus, source: minimumTotal!.source });
-  const total = rawTotal + floorBonus;
+  let total = rawTotal + floorBonus;
   const critAt = (opts.critRange ?? 20) + critRangeShift(rules); // crit_range складывается
 
   let outcome: RollLog['outcome'];
@@ -133,19 +134,72 @@ export function rollD20(opts: RollD20Options): RollLog {
   const forced = outcomeOverride(rules, natural);
   if (forced) outcome = forced as RollLog['outcome'];
 
+  // A data-owned after-failure boon rolls only after the base test misses or
+  // fails. Forced outcomes remain authoritative and do not spend the boon.
+  const failureBonusDice = !forced && (outcome === 'miss' || outcome === 'fail')
+    ? rollD20FailureBonusDice(rules, rng)
+    : [];
+  if (failureBonusDice.length) {
+    total += failureBonusDice.reduce((sum, die) => sum + die.result * (die.sign ?? 1), 0);
+    if (opts.target?.type === 'ac' && natural > 1) {
+      outcome = total >= opts.target.value ? 'hit' : 'miss';
+    } else if (opts.target?.type === 'dc') {
+      outcome = total >= opts.target.value ? 'success' : 'fail';
+    }
+  }
+
   // on_roll-триггеры (на 15 при атаке → парализовать) — payload-ы отдаём вызывающему для применения.
   const triggered = rollTriggers(rules, natural);
 
   return {
     kind: 'd20',
-    dice: [...dice, ...bonusDice],
+    dice: [...dice, ...bonusDice, ...failureBonusDice],
     advantage,
     modifiers,
     total,
     target: opts.target,
     outcome,
-    text: buildD20Text(dice, modifiers, total, opts.target, outcome, dieBonus, bonusDice),
+    text: buildD20Text(
+      dice, modifiers, total, opts.target, outcome, dieBonus, [...bonusDice, ...failureBonusDice],
+    ),
+    ...(failureBonusDice.length ? { usedFailureBonus: true as const } : {}),
     ...(triggered.length ? { triggered } : {}),
+  };
+}
+
+/** Add a post-roll boon without rerolling or changing the natural d20. */
+export function addBonusDieToD20Roll(
+  roll: RollLog,
+  faces: number,
+  source: string,
+  rng: () => number,
+): RollLog {
+  if (roll.kind !== 'd20' || !Number.isInteger(faces) || faces < 2) {
+    throw new Error('Invalid post-roll bonus die');
+  }
+  const result = drawDie(rng, faces);
+  const bonusDie: DieRoll = { sides: faces, result, source, sign: 1 };
+  const total = roll.total + result;
+  let outcome = roll.outcome;
+  if (roll.target?.type === 'dc') outcome = total >= roll.target.value ? 'success' : 'fail';
+  else if (roll.target?.type === 'ac' && outcome !== 'crit' && outcome !== 'crit_miss') {
+    outcome = total >= roll.target.value ? 'hit' : 'miss';
+  }
+  const baseText = roll.text.replace(/ против (?:КЗ|СЛ) .*$/, '');
+  const targetText = roll.target
+    ? ` против ${roll.target.type === 'ac' ? 'КЗ' : 'СЛ'} ${roll.target.value}`
+    : '';
+  const outcomeText = outcome === 'success' ? ' — успех'
+    : outcome === 'fail' ? ' — провал'
+      : outcome === 'hit' ? ' — попадание'
+        : outcome === 'miss' ? ' — промах'
+          : outcome === 'crit' ? ' — крит' : '';
+  return {
+    ...roll,
+    dice: [...roll.dice, bonusDie],
+    total,
+    outcome,
+    text: `${baseText} + к${faces}: ${result} (${source}) = ${total}${targetText}${outcomeText}`,
   };
 }
 

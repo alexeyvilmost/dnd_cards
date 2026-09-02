@@ -19,12 +19,13 @@ import CombatCharacterSidebar from '../components/CombatCharacterSidebar';
 import CombatLogPanel from '../components/CombatLogPanel';
 import CombatSceneConstructor from '../components/CombatSceneConstructor';
 import MonsterTurnController from '../components/MonsterTurnController';
-import { sheetReactionDecisionOptions } from '../components/SheetPendingCombatPanel';
+import SheetPendingCombatPanel, { sheetReactionDecisionOptions } from '../components/SheetPendingCombatPanel';
 import TacticalBattleMap from '../components/TacticalBattleMap';
 import { useSheetWorldInputDialog } from '../components/SheetWorldInputDialog';
 import { monstersApi } from '../monsters/api';
 import {
   activeActor,
+  activateCombatBoon,
   addSoloCombatCharacter,
   addSoloCombatMonster,
   advanceTurn,
@@ -38,6 +39,7 @@ import {
   refreshSoloCombatParticipants,
   revealCombatMagicAura,
   resolvePlayerReaction,
+  resolvePlayerSavingThrow,
   resolveSoloCombatAlertSwap,
   resolveSoloCombatInterception,
   resolveSoloCombatTurnStart,
@@ -582,6 +584,10 @@ export default function SoloCombatPage() {
   const reactionOptions = pending?.request.type === 'reaction'
     && isControlledCharacter(state, pending.request.actorId)
     ? sheetReactionDecisionOptions(pending.request.options) : [];
+  const controlledSavePending = pending?.request.type === 'saving_throw'
+    && isControlledCharacter(state, pending.request.actorId)
+    ? pending
+    : null;
   const reactionTitle = pending?.type === 'damage_reaction'
     ? 'Вам нанесен урон'
     : pending?.request.type === 'reaction'
@@ -705,9 +711,25 @@ export default function SoloCombatPage() {
             const next = executeCombatRemoteManipulator({ state, actorId: drawerActorId, command });
             apply(next);
           }}
+          boonDisabled={!playerTurn || busy || drawerActorId !== activeControlledActorId}
+          onActivateBoon={(effectId, rollKind, timing) => {
+            apply(activateCombatBoon(state, drawerActorId, effectId, rollKind, timing));
+          }}
         /><Link className="combat-sheet-drawer__full" target="_blank" to={`/characters-v3/${drawerActorId}`}>Открыть полный лист ↗</Link></aside>;
       })()}
       {reactionOptions.length > 0 && <div className="combat-reaction-backdrop"><section><p>РЕАКЦИЯ</p><h2>{reactionTitle}</h2>{reactionDetails && <p>{reactionDetails}</p>}<div>{reactionOptions.map((option) => <button type="button" key={option.id} disabled={busy} onClick={() => apply(resolvePlayerReaction(state, option.response))}>{option.label}</button>)}<button type="button" onClick={() => apply(resolvePlayerReaction(state, { kind: 'reaction', actionId: null }))}>Пропустить</button></div></section></div>}
+      {controlledSavePending && <div className="combat-reaction-backdrop"><section>
+        <SheetPendingCombatPanel
+          pending={controlledSavePending}
+          viewingCharacterId={controlledSavePending.request.actorId}
+          actorNames={Object.fromEntries(Object.values(state.world.actors).map((entry) => [entry.id, entry.name]))}
+          decidingRuntime={state.world.actors[controlledSavePending.request.actorId].runtime}
+          busy={busy}
+          onResolve={(response) => {
+            if (response.kind === 'roll') apply(resolvePlayerSavingThrow(state, response));
+          }}
+        />
+      </section></div>}
       {state.pendingAlertSwapActorIds?.length ? (() => {
         const alertActorId = state.pendingAlertSwapActorIds[0];
         const alertActor = state.world.actors[alertActorId];

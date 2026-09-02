@@ -6,6 +6,8 @@ import type {
   ReactionSpellSourceOption,
 } from '../rules-core/domain';
 import { resourceLabel } from '../utils/resources';
+import type { RuntimeState } from '../mvp/contracts';
+import { runtimeBoons } from '../engine/boons';
 
 export interface SheetPendingCombatPanelProps {
   pending: PendingResolution;
@@ -14,6 +16,7 @@ export interface SheetPendingCombatPanelProps {
   decisionProxyCharacterId?: string;
   actorNames?: Readonly<Record<string, string>>;
   busy?: boolean;
+  decidingRuntime?: RuntimeState;
   onResolve: (response: DecisionResponse) => void | Promise<void>;
 }
 
@@ -73,16 +76,19 @@ export default function SheetPendingCombatPanel({
   decisionProxyCharacterId,
   actorNames = {},
   busy = false,
+  decidingRuntime,
   onResolve,
 }: SheetPendingCombatPanelProps) {
   const [manualD20, setManualD20] = useState('');
   const [selectedAbility, setSelectedAbility] = useState<string>('');
+  const [selectedBoonId, setSelectedBoonId] = useState('');
   const decidingActorId = pendingSheetCombatDecisionActorId(pending);
   const decidingName = decidingActorId ? actorNames[decidingActorId] ?? decidingActorId : '';
 
   useEffect(() => {
     setManualD20('');
     setSelectedAbility('');
+    setSelectedBoonId('');
   }, [pending.id]);
 
   if (pending.request.type !== 'saving_throw'
@@ -132,6 +138,11 @@ export default function SheetPendingCombatPanel({
     const title = pending.type === 'concentration_save'
       ? `Концентрация: спасбросок ${ability.toUpperCase()}`
       : `Спасбросок ${ability.toUpperCase()}`;
+    const afterFailureBoons = decidingRuntime
+      ? runtimeBoons(decidingRuntime).filter((boon) => (
+        boon.appliesTo.includes('saving_throw') && boon.timing.includes('after_failure')
+      ))
+      : [];
     return (
       <section
         className="sheet-group"
@@ -176,6 +187,25 @@ export default function SheetPendingCombatPanel({
             onChange={(event) => setManualD20(event.target.value)}
           />
         </label>
+        {afterFailureBoons.length > 0 && (
+          <label className="sheet-target-field">
+            <span>Милость после провала</span>
+            <select
+              className="forge-input"
+              aria-label="Милость после провала спасброска"
+              value={selectedBoonId}
+              onChange={(event) => setSelectedBoonId(event.target.value)}
+            >
+              <option value="">Не использовать</option>
+              {afterFailureBoons.map((boon) => (
+                <option key={boon.effectId} value={boon.effectId}>
+                  {boon.name} · {boon.die.replace('d', 'к')}
+                </option>
+              ))}
+            </select>
+            <small>Кость бросится и эффект расходуется, только если основной результат не достигнет СЛ.</small>
+          </label>
+        )}
         <div className="flex gap-2 flex-wrap mt-2">
           <button
             type="button"
@@ -184,6 +214,7 @@ export default function SheetPendingCombatPanel({
             onClick={() => onResolve({
               kind: 'roll',
               roll: { mode: 'manual', dice: [{ sides: 20, value: d20 }] },
+              ...(selectedBoonId ? { boonEffectId: selectedBoonId } : {}),
               ...(saveRequest.abilityOptions?.length ? { selectedAbility: ability } : {}),
             })}
           >
@@ -196,6 +227,7 @@ export default function SheetPendingCombatPanel({
             onClick={() => onResolve({
               kind: 'roll',
               roll: { mode: 'system' },
+              ...(selectedBoonId ? { boonEffectId: selectedBoonId } : {}),
               ...(saveRequest.abilityOptions?.length ? { selectedAbility: ability } : {}),
             })}
           >

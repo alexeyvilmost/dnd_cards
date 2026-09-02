@@ -38,6 +38,7 @@ import {
 } from '../engine/execute';
 import { describeEngineEvent, describeMovement, describeResource } from '../engine/events';
 import { stoneworkContactFactsFromChoices } from '../mechanics/collectChoices';
+import { runtimeBoons } from '../engine/boons';
 import { compileMonsterInstance } from './monsterCompiler';
 import { planMonsterTurn } from './monsterAi';
 import { projectCombatLogRecords } from './combatLog';
@@ -1105,6 +1106,11 @@ export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Ma
     const pending = next.world.pendingResolution;
     if (pending.request.type === 'reaction'
       && isControlledCharacter(next, pending.request.actorId)) break;
+    if (pending.request.type === 'saving_throw'
+      && isControlledCharacter(next, pending.request.actorId)
+      && runtimeBoons(next.world.actors[pending.request.actorId].runtime).some((boon) => (
+        boon.appliesTo.includes('saving_throw') && boon.timing.includes('after_failure')
+      ))) break;
     const response: DecisionResponse = pending.request.type === 'reaction'
       ? { kind: 'reaction', actionId: null }
       : pending.request.type === 'shove_outcome'
@@ -1145,6 +1151,35 @@ export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Ma
     });
   }
   return next;
+}
+
+export function resolvePlayerSavingThrow(
+  state: SoloCombatState,
+  response: Extract<DecisionResponse, { kind: 'roll' }>,
+  rng: Rng = Math.random,
+): SoloCombatState {
+  const pending = state.world.pendingResolution;
+  if (!pending || pending.request.type !== 'saving_throw'
+    || !isControlledCharacter(state, pending.request.actorId)) return state;
+  return autoResolveSystemDecisions(resolveDecision(state, response, rng), rng);
+}
+
+export function activateCombatBoon(
+  state: SoloCombatState,
+  actorId: string,
+  effectId: string,
+  rollKind: 'attack_roll' | 'saving_throw' | 'ability_check',
+  timing: 'before_roll' | 'after_failure',
+  rng: Rng = Math.random,
+): SoloCombatState {
+  const command: GameCommand = {
+    ...commandBase(state, actorId),
+    type: 'ArmBoon',
+    effectId,
+    rollKind,
+    timing,
+  };
+  return dispatch({ state, command, rng, label: 'Подготовка милости' });
 }
 
 export function resolvePlayerReaction(
