@@ -422,6 +422,7 @@ function applyCondition(
     mechanics,
     expiry: 'manual',
     source: provenance,
+    entityRef: { kind: 'effect', id: command.effect.sourceEntityId },
     ownerId: ownerActorId,
     ...(sourceActorId ? { sourceId: sourceActorId } : {}),
   };

@@ -137,6 +137,8 @@ function migrateCombatPresentation(value: SoloCombatState): SoloCombatState {
     resourceBindingsByActor: value.resourceBindingsByActor
       ?? { [value.characterId]: clone(value.resourceBindings) },
     worldObjectPositions: value.worldObjectPositions ?? {},
+    combatAreas: value.combatAreas ?? {},
+    pendingCombatAreaTriggers: value.pendingCombatAreaTriggers ?? [],
     sideByActorId,
     actorPresentation,
     log,

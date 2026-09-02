@@ -241,6 +241,13 @@
   height: 100%;
   background: #b34b3c;
 }
+.tactical-cell.has-combat-area { background: #9b6c2b33; box-shadow: inset 0 0 0 1px #c59143aa; }
+.tactical-cell.is-difficult-terrain { background-image: repeating-linear-gradient(135deg, #d69a3440 0 6px, transparent 6px 12px); }
+.tactical-cell.is-heavily-obscured { background: #27313dcc; box-shadow: inset 0 0 0 1px #8ca0b8aa; }
+.combat-area-token { position: absolute; inset: 4px; display: grid; place-items: center; pointer-events: none; color: #f3cc78; z-index: 2; }
+.combat-area-token b { font-size: 24px; text-shadow: 0 1px 6px #000; }
+.combat-area-token small { max-width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9px; color: #fff3cf; text-shadow: 0 1px 3px #000; }
+.combat-area-token.is-fog_cloud { color: #c7d5e5; }
 .dancing-light-token {
   position: absolute;
   z-index: 3;

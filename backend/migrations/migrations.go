@@ -956,6 +956,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairBaseEquipmentHealersKitOwnership,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     combatAreasMigrationVersion,
+			Description: "Материализовать эффекты предметов и событийные области боя",
+			Up:          materializeCombatAreas,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

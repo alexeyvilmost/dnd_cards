@@ -275,6 +275,9 @@ function validateTurn(world: WorldState, command: GameCommand): CommandResult | 
   // Reaction actions are catalog-gated in the UseReactionAction handler below.
   if (command.type === 'UseReactionAction') return null;
   if (command.type === 'SwapInitiative') return null;
+  // A catalog-owned environmental area can force a save when it appears or
+  // when another creature moves; the affected creature need not own the turn.
+  if (command.type === 'TriggerHazard') return null;
   if (command.type === 'ReleaseGrapple' || command.type === 'BreakGrappleRange') return null;
   if (command.type === 'ObserveProtectionProximity') return null;
   if (command.type === 'ObservePactBladeDistance' || command.type === 'AdjudicateActorDeath') return null;
@@ -995,6 +998,8 @@ function hazardDefinitionIssue(hazard: RuleHazardDefinition): string | null {
   if (hazard.onSuccess != null && !Array.isArray(hazard.onSuccess)) {
     return `${hazard.id} has invalid success consequences`;
   }
+  if (hazard.grantedEffects != null && (typeof hazard.grantedEffects !== 'object'
+    || Array.isArray(hazard.grantedEffects))) return `${hazard.id} has invalid granted effects`;
   return null;
 }
 
@@ -5529,7 +5534,9 @@ function resolveHazardSave(
     }],
   }, {
     ...actionContext(target, env),
-    selfId: sourceActorId,
+    grantedEffects: { ...(target.grantedEffects ?? {}), ...(hazard.grantedEffects ?? {}) },
+    selfId: target.id,
+    effectSourceId: sourceActorId,
     forceSaveOutcome: roll.outcome === 'success' ? 'success' : 'fail',
   });
 

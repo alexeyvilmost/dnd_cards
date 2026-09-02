@@ -47,7 +47,7 @@ export function occupiedPositions(state: Pick<SoloCombatState, 'tokens' | 'world
 
 /** Exact destination set accepted by the current five-foot tactical movement rule. */
 export function reachablePositions(
-  state: Pick<SoloCombatState, 'tokens' | 'world'>,
+  state: Pick<SoloCombatState, 'tokens' | 'world' | 'combatAreas'>,
   actorId: string,
   maximumFeet: number,
 ): GridPosition[] {
@@ -57,9 +57,22 @@ export function reachablePositions(
   return Array.from({ length: TACTICAL_WIDTH * TACTICAL_HEIGHT }, (_, index) => ({
     x: index % TACTICAL_WIDTH,
     y: Math.floor(index / TACTICAL_WIDTH),
-  })).filter((position) => !samePosition(position, origin)
-    && !occupied.has(`${position.x}:${position.y}`)
-    && gridDistanceFt(origin, position) <= maximumFeet);
+  })).filter((position) => {
+    if (samePosition(position, origin) || occupied.has(`${position.x}:${position.y}`)) return false;
+    const distance = gridDistanceFt(origin, position);
+    const steps = Math.max(Math.abs(position.x - origin.x), Math.abs(position.y - origin.y));
+    const path = Array.from({ length: steps + 1 }, (_, index) => {
+      const ratio = steps === 0 ? 0 : index / steps;
+      return {
+        x: Math.round(origin.x + (position.x - origin.x) * ratio),
+        y: Math.round(origin.y + (position.y - origin.y) * ratio),
+      };
+    });
+    const difficult = Object.values(state.combatAreas ?? {}).some((area) => (
+      area.difficultTerrain && area.cells.some((cell) => path.some((step) => samePosition(cell, step)))
+    ));
+    return distance * (difficult ? 2 : 1) <= maximumFeet;
+  });
 }
 
 function inside(position: GridPosition): boolean {

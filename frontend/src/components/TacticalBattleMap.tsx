@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import type { GridPosition, SoloCombatState } from '../solo-combat/types';
+import type { CombatAreaState, GridPosition, SoloCombatState } from '../solo-combat/types';
 import { TACTICAL_HEIGHT, TACTICAL_WIDTH } from '../solo-combat/types';
 import { areaPositionsForAction, reachablePositions } from '../solo-combat/tacticalGrid';
 
@@ -49,6 +49,13 @@ export default function TacticalBattleMap({
     const position = state.worldObjectPositions?.[object.id];
     return object.illusion && position ? [[`${position.x}:${position.y}`, object] as const] : [];
   }));
+  const areasByCell = new Map<string, CombatAreaState[]>();
+  for (const area of Object.values(state.combatAreas ?? {})) {
+    for (const cell of area.cells) {
+      const key = `${cell.x}:${cell.y}`;
+      areasByCell.set(key, [...(areasByCell.get(key) ?? []), area]);
+    }
+  }
   const selectedAction = state.catalogActions.find((action) => action.id === selectedActionId);
   const sourcePosition = state.tokens[actorId]?.position;
   const areaCells = useMemo(() => new Set(
@@ -141,6 +148,7 @@ export default function TacticalBattleMap({
         const token = tokenByCell.get(`${position.x}:${position.y}`);
         const dancingLight = dancingLightByCell.get(`${position.x}:${position.y}`);
         const illusion = illusionByCell.get(`${position.x}:${position.y}`);
+        const persistentAreas = areasByCell.get(`${position.x}:${position.y}`) ?? [];
         const actor = token ? state.world.actors[token.actorId] : undefined;
         const dead = actor && actor.runtime.hp.current <= 0;
         const lightLabel = dancingLight
@@ -150,12 +158,18 @@ export default function TacticalBattleMap({
           ? `Малая иллюзия: ${illusion.illusion!.description} · ${illusion.illusion!.form === 'sound' ? 'звук' : 'изображение'} · ${illusion.roundsLeft ?? 0} раундов · Изучение: Интеллект (Расследование) против СЛ ${illusion.illusion!.spellSaveDc}${illusion.illusion!.form === 'image' ? ' · физическое взаимодействие раскрывает иллюзию' : ''}`
           : '';
         const actorLabel = token ? `${actor?.name}, ${actor?.runtime.hp.current}/${actor?.runtime.hp.max} HP` : '';
+        const areaLabel = persistentAreas.map((area) => {
+          const duration = area.duration.type === 'permanent' ? 'постоянная'
+            : area.duration.type === 'concentration' ? 'концентрация'
+              : `${area.duration.roundsLeft} раундов`;
+          return `${area.name}: ${duration}${area.difficultTerrain ? ' · труднопроходимая местность' : ''}${area.heavilyObscured ? ' · сильно заслонённая область' : ''}`;
+        }).join(' · ');
         return (
           <button
             type="button"
             key={`${position.x}:${position.y}`}
-            className={`tactical-cell${token ? ' has-token' : ''}${dancingLight || illusion ? ' has-world-object' : ''}${token?.actorId === activeId ? ' is-active' : ''}${token?.actorId === inspectedActorId ? ' is-inspected' : ''}${dead ? ' is-dead' : ''}${areaCells.has(`${position.x}:${position.y}`) ? ' is-area-preview' : ''}${reachableCells.has(`${position.x}:${position.y}`) ? ' is-move-reachable' : ''}`}
-            aria-label={[actorLabel, lightLabel, illusionLabel, `Клетка ${position.x + 1}, ${position.y + 1}`].filter(Boolean).join(' · ')}
+            className={`tactical-cell${token ? ' has-token' : ''}${dancingLight || illusion ? ' has-world-object' : ''}${persistentAreas.length ? ' has-combat-area' : ''}${persistentAreas.some((area) => area.heavilyObscured) ? ' is-heavily-obscured' : ''}${persistentAreas.some((area) => area.difficultTerrain) ? ' is-difficult-terrain' : ''}${token?.actorId === activeId ? ' is-active' : ''}${token?.actorId === inspectedActorId ? ' is-inspected' : ''}${dead ? ' is-dead' : ''}${areaCells.has(`${position.x}:${position.y}`) ? ' is-area-preview' : ''}${reachableCells.has(`${position.x}:${position.y}`) ? ' is-move-reachable' : ''}`}
+            aria-label={[actorLabel, areaLabel, lightLabel, illusionLabel, `Клетка ${position.x + 1}, ${position.y + 1}`].filter(Boolean).join(' · ')}
             data-actor-id={token?.actorId}
             onMouseEnter={() => setHovered(position)}
             onMouseLeave={() => setHovered(null)}
@@ -164,6 +178,11 @@ export default function TacticalBattleMap({
               onCell(position, token?.actorId);
             }}
           >
+            {persistentAreas.map((area) => area.origin.x === position.x && area.origin.y === position.y ? (
+              <span key={area.id} className={`combat-area-token is-${area.zoneType}`} title={areaLabel} aria-hidden="true">
+                <b>{area.heavilyObscured ? '◉' : '◇'}</b><small>{area.name}</small>
+              </span>
+            ) : null)}
             {dancingLight && (
               <span className="dancing-light-token" title={lightLabel} aria-hidden="true">
                 <b>✦</b><small>{dancingLight.dancingLight!.dimRadiusFt} фт.</small>

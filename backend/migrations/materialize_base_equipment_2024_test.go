@@ -54,10 +54,10 @@ func TestBaseEquipment2024DeclaresEveryOfficialWeaponAndArmor(t *testing.T) {
 	}
 }
 
-func TestBaseEquipment2024MigrationIsRegisteredLast(t *testing.T) {
+func TestCombatAreasMigrationIsRegisteredLast(t *testing.T) {
 	migrations := GetAllMigrations()
 	last := migrations[len(migrations)-1]
-	if last.Version != baseEquipmentHealersKitOwnershipMigrationVersion {
+	if last.Version != combatAreasMigrationVersion {
 		t.Fatalf("last=%s", last.Version)
 	}
 	if last.Up == nil || last.Down == nil {

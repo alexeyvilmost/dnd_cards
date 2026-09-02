@@ -1,6 +1,7 @@
 import type { EngineEvent } from '../mvp/contracts';
 import type {
   RuleActionDefinition,
+  RuleHazardDefinition,
   SpatialFacts,
   WorldState,
 } from '../rules-core/domain';
@@ -96,6 +97,39 @@ export interface CombatActorPresentation {
   traits: CombatActorTraitPresentation[];
 }
 
+export type CombatAreaEvent = 'created' | 'enter' | 'exit' | 'start_turn' | 'end_turn';
+
+/** A board-owned persistent area. Creature conditions remain ordinary catalog
+ * effects; this record only owns geometry, lifecycle and hazard provenance. */
+export interface CombatAreaState {
+  id: string;
+  name: string;
+  zoneType: string;
+  sourceActorId: string;
+  sourceActionId: string;
+  sourceEntityIds: [string, ...string[]];
+  origin: GridPosition;
+  cells: GridPosition[];
+  duration:
+    | { type: 'permanent' }
+    | { type: 'rounds'; roundsLeft: number }
+    | { type: 'concentration' };
+  triggers: CombatAreaEvent[];
+  hazard?: RuleHazardDefinition;
+  difficultTerrain?: boolean;
+  heavilyObscured?: boolean;
+  insideCondition?: string;
+  notice?: string;
+  triggeredTurnKeys?: string[];
+}
+
+export interface PendingCombatAreaTrigger {
+  areaId: string;
+  actorId: string;
+  event: CombatAreaEvent;
+  turnKey: string;
+}
+
 /**
  * Board-owned continuation for optional source-side abilities which become
  * legal only after an observable combat event (for example a Goliath's
@@ -162,6 +196,11 @@ export interface SoloCombatState {
   tokens: Record<string, TacticalToken>;
   /** Board-owned positions for durable world objects which have a tactical token. */
   worldObjectPositions?: Record<string, GridPosition>;
+  /** Persistent tactical areas, separate from creature-owned runtime effects. */
+  combatAreas?: Record<string, CombatAreaState>;
+  pendingCombatAreaTriggers?: PendingCombatAreaTrigger[];
+  /** EndTurn is split only when a controlled creature must answer an area save. */
+  pendingCombatAreaTurnContinuation?: { endingActorId: string; startingActorId: string };
   boardRevision: number;
   movementRemainingFt: Record<string, number>;
   initiativeBonuses: Record<string, number>;
@@ -215,21 +254,32 @@ export function combatRelation(
 }
 
 export function spatialFacts(
-  state: Pick<SoloCombatState, 'tokens' | 'boardRevision' | 'sideByActorId'>,
+  state: Pick<SoloCombatState, 'tokens' | 'boardRevision' | 'sideByActorId' | 'combatAreas'>,
   sourceActorId: string,
   targetActorId: string,
 ): SpatialFacts {
   const source = state.tokens[sourceActorId]?.position;
   const target = state.tokens[targetActorId]?.position;
   if (!source || !target) throw new Error('На поле отсутствует участник действия');
+  const obscured = Object.values(state.combatAreas ?? {}).some((area) => {
+    if (!area.heavilyObscured) return false;
+    const cells = new Set(area.cells.map((cell) => `${cell.x}:${cell.y}`));
+    const steps = Math.max(Math.abs(target.x - source.x), Math.abs(target.y - source.y));
+    for (let index = 0; index <= steps; index += 1) {
+      const ratio = steps === 0 ? 0 : index / steps;
+      const cell = `${Math.round(source.x + (target.x - source.x) * ratio)}:${Math.round(source.y + (target.y - source.y) * ratio)}`;
+      if (cells.has(cell)) return true;
+    }
+    return false;
+  });
   return {
     factsSource: 'board',
     boardRevision: state.boardRevision,
     distanceFt: Math.max(Math.abs(source.x - target.x), Math.abs(source.y - target.y)) * TACTICAL_CELL_FT,
-    lineOfSight: true,
+    lineOfSight: !obscured,
     cover: 'none',
     relation: combatRelation(state, sourceActorId, targetActorId),
-    canSeeTarget: true,
-    targetCanSeeSource: true,
+    canSeeTarget: !obscured,
+    targetCanSeeSource: !obscured,
   };
 }

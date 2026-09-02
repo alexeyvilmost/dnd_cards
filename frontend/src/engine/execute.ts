@@ -32,6 +32,7 @@ import {
 } from './circumstances';
 import {
   conditionEffectEntityRef,
+  conditionRegistryAuthority,
   conditionLevel,
   conditionModifierPayloads,
   conditionRuntimePayloads,
@@ -2338,6 +2339,14 @@ function applyCondition(
 ): RuntimeState {
   const condition = String(payload.value ?? '');
   if (!condition) return state;
+  const conditionEntityRef = conditionEffectEntityRef(condition);
+  if (!conditionEntityRef && conditionRegistryAuthority().mode === 'database_release') {
+    throw mechanicsError(
+      'INVALID_PAYLOAD',
+      'runtime.payload.value',
+      `condition «${condition}» has no effects-library entity`,
+    );
+  }
   const op = String(payload.op ?? 'apply');
 
   if (op === 'remove') {
@@ -2467,13 +2476,13 @@ function applyCondition(
   }
   const entry: ActiveEffectEntry = {
     id: runtimeEffectId(ctx, 'cond', state.activeEffects.length),
-    name: condition,
+    name: conditionLabel(condition),
     mechanics: persistedPayload,
     roundsLeft,
     expiry,
     source,
-    ...(conditionEffectEntityRef(condition)
-      ? { entityRef: conditionEffectEntityRef(condition) }
+    ...(conditionEntityRef
+      ? { entityRef: conditionEntityRef }
       : {}),
     // E: владелец состояния и наложивший его актор нужны как для реляционных правил
     // (Очарованный ↛ очаровавший), так и для точного source-turn lifecycle.
@@ -3008,7 +3017,7 @@ function applyPayloads(
         source,
         events,
         ctx,
-        ctx.selfId,
+        ctx.effectSourceId ?? ctx.selfId,
         whoTarget ? ctx.target?.id : ctx.selfId,
         whoTarget ? ctx.target?.conditionImmunities : ctx.conditionImmunities,
       )); break;

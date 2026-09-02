@@ -125,17 +125,32 @@ func utilityItems2024() []utilityItem2024 {
 	zone := func(kind, text, shape string, size int) map[string]any {
 		return map[string]any{"kind": "world_zone", "zone_type": kind, "geometry": map[string]any{"shape": shape, "size_ft": size}, "description": text, "duration": map[string]any{"type": "permanent"}}
 	}
+	areaItem := func(kind, text, shape string, size, rangeFt int, tactical map[string]any, consumed bool) map[string]any {
+		payload := zone(kind, text, shape, size)
+		if len(tactical) > 0 {
+			payload["tactical"] = tactical
+		}
+		m := activeItem2024("action", consumed, payload)
+		area := map[string]any{"kind": shape, "size_ft": size}
+		if shape == "sphere" {
+			area = map[string]any{"kind": shape, "radius_ft": size}
+		}
+		m["targeting"] = map[string]any{
+			"shape": "area", "domain": "world", "actor_targets": false,
+			"min_targets": 0, "max_targets": 0, "range_ft": rangeFt,
+			"requires_line_of_sight": true, "allowed_relations": []string{}, "area": area,
+		}
+		return m
+	}
 	nextCheck := func(op, value string, filter map[string]any, source string) map[string]any {
-		payload := map[string]any{
-			"kind": "modifier", "applies_to": map[string]any{"roll": "ability_check", "filter": filter},
-			"op": op, "consume": "next", "duration": map[string]any{"type": "manual"}, "source": source,
-		}
-		if value != "" {
-			payload["value"] = value
-		}
+		effectRef := map[string]string{
+			"Ломик": "EFFECT-item-crowbar-check", "Портативный таран": "EFFECT-item-ram-check",
+			"Увеличительное стекло": "EFFECT-item-magnifier-check", "Карта": "EFFECT-item-map-check",
+			"Духи": "EFFECT-item-perfume-check", "Шест": "EFFECT-item-pole-check",
+		}[source]
 		return map[string]any{
 			"activation": map[string]any{"mode": "active", "while": "carried", "cost": []map[string]any{}},
-			"effects":    []map[string]any{{"resolution": "auto", "result": []map[string]any{payload}}},
+			"effects":    []map[string]any{{"resolution": "auto", "result": []map[string]any{{"kind": "grant_effect", "value": effectRef}}}},
 		}
 	}
 	rows := []utilityItem2024{
@@ -157,7 +172,7 @@ func utilityItems2024() []utilityItem2024 {
 			m["effects"].([]map[string]any)[0]["automatic_success"] = map[string]any{"if_target_creature_type_not_in": []string{"fiend", "undead"}}
 			return m
 		}()},
-		{"CARD-0723", activeItem2024("action", true, zone("oil", "Лужа масла 5×5 фт; после поджига горит 2 раунда и наносит 5 урона огнём.", "cube", 5))},
+		{"CARD-0723", areaItem("oil", "Лужа масла 5×5 фт; после поджига горит 2 раунда и наносит 5 урона огнём.", "cube", 5, 5, map[string]any{}, true)},
 		{"CARD-0832", activeItem2024("bonus_action", true,
 			map[string]any{"kind": "damage_rider", "trigger": "hit_by_attack_roll", "dice": "1d4", "type": "poison", "filter": map[string]any{"attackKind": "weapon"}, "consume": "next", "duration": map[string]any{"type": "rounds", "amount": 10}, "description": "Следующее попадание отравленным оружием добавляет 1к4 урона ядом."})},
 		// CARD-0839 already owns exact executable 2d4+2 healing and self-item consumption.
@@ -166,13 +181,22 @@ func utilityItems2024() []utilityItem2024 {
 		{"CARD-0785", passiveItem2024("Пуля расходуется профилем мушкета или пистоля при каждой дальнобойной атаке.")},
 		{"CARD-0786", passiveItem2024("Снаряд расходуется профилем пращи при каждой дальнобойной атаке.")},
 		{"CARD-0787", passiveItem2024("Игла расходуется профилем духовой трубки при каждой дальнобойной атаке.")},
-		{"CARD-0799", activeItem2024("action", false, zone("ball_bearings", "Зона 10×10 фт; спасбросок Ловкости Сл 10 или состояние Опрокинутый.", "cube", 10))},
-		{"CARD-0790", activeItem2024("action", false, zone("caltrops", "Зона 5×5 фт; спасбросок Ловкости Сл 15 или 1 колющего урона и Скорость 0 до начала следующего хода.", "cube", 5))},
+		{"CARD-0799", areaItem("ball_bearings", "Зона 10×10 фт; спасбросок Ловкости Сл 10 или состояние Опрокинутый.", "cube", 10, 5, map[string]any{
+			"triggers": []string{"enter"}, "save": map[string]any{"ability": "dex", "dc": 10},
+			"on_failure": []map[string]any{{"kind": "condition", "value": "prone", "op": "apply"}}, "on_success": []any{},
+		}, false)},
+		{"CARD-0790", areaItem("caltrops", "Зона 5×5 фт; спасбросок Ловкости Сл 15 или 1 колющего урона и Скорость 0 до начала следующего хода.", "cube", 5, 5, map[string]any{
+			"triggers": []string{"enter"}, "save": map[string]any{"ability": "dex", "dc": 15},
+			"on_failure": []map[string]any{{"kind": "damage", "dice": "1", "type": "piercing"}, {"kind": "grant_effect", "value": "EFFECT-item-caltrops-speed"}}, "on_success": []any{},
+		}, false)},
 		{"CARD-0829", activeItem2024("action", false, narrative("Связывает схваченную, недееспособную или опутанную цель; вырваться можно проверкой Силы (Атлетика) Сл 18."))},
 		{"CARD-0793", activeItem2024("action", false, narrative("Закрепляет персонажа: он не может упасть более чем на 25 фт от точки крепления."))},
 		{"CARD-0407", nextCheck("advantage", "", map[string]any{"ability": "str"}, "Ломик")},
 		{"CARD-0795", activeItem2024("action", false, narrative("Бросок в точку до 50 фт: проверка Ловкости (Акробатика) Сл 13 закрепляет крюк."))},
-		{"CARD-0411", activeItem2024("action", false, zone("hunting_trap", "Существо делает спасбросок Ловкости Сл 13; при провале 1к4 колющего урона и Скорость 0 до освобождения.", "cube", 5))},
+		{"CARD-0411", areaItem("hunting_trap", "Существо делает спасбросок Ловкости Сл 13; при провале 1к4 колющего урона и Скорость 0 до освобождения.", "cube", 5, 5, map[string]any{
+			"triggers": []string{"enter"}, "save": map[string]any{"ability": "dex", "dc": 13},
+			"on_failure": []map[string]any{{"kind": "damage", "dice": "1d4", "type": "piercing"}, {"kind": "grant_effect", "value": "EFFECT-item-hunting-trap-speed"}}, "on_success": []any{},
+		}, false)},
 		{"CARD-0748", activeItem2024("action", false, narrative("Сковывает подходящую цель: помеха атакам и ограничение движений; побег требует проверку Ловкости Сл 20 или Силы Сл 25."))},
 		{"CARD-0330", saveItem2024("action", false, 15, []string{"enemy", "neutral"}, "8 + dex + prof_bonus", map[string]any{"kind": "condition", "value": "restrained", "duration": map[string]any{"type": "permanent"}}, narrative("Сеть можно разорвать проверкой Силы Сл 10."))},
 		{"CARD-0819", nextCheck("add", "+4", map[string]any{"ability": "str"}, "Портативный таран")},

@@ -374,6 +374,9 @@ export interface RuleHazardDefinition {
   };
   onFailure: JsonObject[];
   onSuccess?: JsonObject[];
+  /** Catalog effects referenced by grant_effect consequences. The source actor
+   * snapshots these so a monster target never needs to own the item/spell. */
+  grantedEffects?: NonNullable<ActorState['grantedEffects']>;
 }
 
 export interface SavingThrowDecisionRequest {

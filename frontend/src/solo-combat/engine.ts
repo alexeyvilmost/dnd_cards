@@ -19,6 +19,7 @@ import type {
   DecisionResponse,
   GameCommand,
   RuleActionDefinition,
+  RuleHazardDefinition,
   RulesCatalog,
   UncommittedRuleEvent,
   WorldState,
@@ -51,6 +52,17 @@ import {
   pushAway,
 } from './tacticalGrid';
 import {
+  createCombatArea,
+  decrementSourceAreas,
+  enteredAndExitedAreas,
+  hazardCatalog,
+  movementCostThroughAreas,
+  pendingTriggerForArea,
+  queueCombatAreaEvent,
+  reconcileInsideAreaConditions,
+  removeInactiveCombatAreas,
+} from './combatAreas';
+import {
   SOLO_COMBAT_SCHEMA_VERSION,
   TACTICAL_HEIGHT,
   TACTICAL_WIDTH,
@@ -77,11 +89,16 @@ export interface SelectedMonster {
 
 function clone<T>(value: T): T { return JSON.parse(JSON.stringify(value)) as T; }
 
-function buildCatalog(actions: readonly RuleActionDefinition[]): RulesCatalog {
+function buildCatalog(
+  actions: readonly RuleActionDefinition[],
+  hazards: readonly RuleHazardDefinition[] = [],
+): RulesCatalog {
   const byId = new Map(actions.map((action) => [action.id, clone(action)]));
+  const hazardsById = new Map(hazards.map((hazard) => [hazard.id, clone(hazard)]));
   return {
     getAction: (id) => byId.get(id),
     listActions: () => [...byId.values()].sort((left, right) => left.id.localeCompare(right.id)),
+    getHazard: (id) => hazardsById.get(id),
   };
 }
 
@@ -501,7 +518,7 @@ function transitionState(
     `${label}: ${summaries.length ? summaries.join('; ') : emptySummary ?? eventSummary(records)}`,
     records,
   );
-  return outcome(next);
+  return outcome(removeInactiveCombatAreas(next));
 }
 
 function dispatch(input: {
@@ -511,7 +528,9 @@ function dispatch(input: {
   label: string;
   emptySummary?: string;
 }): SoloCombatState {
-  const session = new InMemoryRulesSession(input.state.world, buildCatalog(input.state.catalogActions), {
+  const session = new InMemoryRulesSession(
+    input.state.world,
+    buildCatalog(input.state.catalogActions, hazardCatalog(input.state)), {
     rng: input.rng,
     clock: createLogicalClock(input.state.world.logicalClock),
     nextId: createSequentialIdFactory(`solo:${input.command.commandId}`),
@@ -554,7 +573,8 @@ function selectedSpellDeclaration(world: WorldState, actorId: string, action: Ru
     const rank = (kind: 'none' | 'free_use' | 'slot') => kind === 'none' ? 0 : kind === 'free_use' ? 1 : 2;
     return rank(left.payment.kind) - rank(right.payment.kind)
       || left.grant.grantId.localeCompare(right.grant.grantId);
-  });
+    },
+  );
   const selected = options[0];
   if (!selected) throw new Error(`Для «${action.name}» не найден доступный источник заклинания в листе`);
   const paidLevel = selected.payment.resource?.match(/_(\d+)$/)?.[1];
@@ -853,6 +873,58 @@ export function executeCombatAction(input: {
       boardRevision: next.boardRevision + 1,
     };
   }
+  if (input.worldPosition) {
+    const area = createCombatArea({
+      state: next,
+      action,
+      sourceActorId: input.actorId,
+      origin: input.worldPosition,
+      choices: input.choices,
+    });
+    if (area) {
+      const source = next.world.actors[input.actorId];
+      const removedZoneEffectIds = new Set(source.runtime.activeEffects.flatMap((effect) => (
+        (effect.mechanics as Record<string, unknown>).kind === 'world_zone'
+          && String((effect.mechanics as Record<string, unknown>).zone_type ?? '') === area.zoneType
+          ? [effect.id] : []
+      )));
+      const concentration = next.world.concentrations[input.actorId];
+      next = {
+        ...next,
+        world: {
+          ...next.world,
+          actors: {
+            ...next.world.actors,
+            [input.actorId]: {
+              ...source,
+              runtime: {
+                ...source.runtime,
+                activeEffects: source.runtime.activeEffects.filter((effect) => (
+                  !removedZoneEffectIds.has(effect.id)
+                )),
+              },
+            },
+          },
+          concentrations: concentration ? {
+            ...next.world.concentrations,
+            [input.actorId]: {
+              ...concentration,
+              effectLinks: concentration.effectLinks.filter((link) => (
+                !removedZoneEffectIds.has(link.effectId)
+              )),
+            },
+          } : next.world.concentrations,
+        },
+      };
+      next = reconcileInsideAreaConditions({
+        ...next,
+        combatAreas: { ...(next.combatAreas ?? {}), [area.id]: area },
+        boardRevision: next.boardRevision + 1,
+      });
+      next = queueCombatAreaEvent(next, 'created', Object.keys(next.world.actors), [area.id]);
+      next = autoResolveSystemDecisions(next, rng);
+    }
+  }
   if (action.id !== next.dashActionId) return withTriggeredAttackOffer(next);
   return withTriggeredAttackOffer({
     ...next,
@@ -1100,9 +1172,52 @@ function resolveDecision(
   return dispatch({ state, command, rng, label: 'Разрешение реакции/спасброска' });
 }
 
+function openNextCombatAreaTrigger(state: SoloCombatState, rng: Rng): SoloCombatState {
+  if (state.world.pendingResolution) return state;
+  let next = state;
+  while (next.pendingCombatAreaTriggers?.length) {
+    const pending = pendingTriggerForArea(next);
+    const [, ...rest] = next.pendingCombatAreaTriggers;
+    next = { ...next, pendingCombatAreaTriggers: rest };
+    if (!pending || !next.world.actors[pending.trigger.actorId]) continue;
+    if (!pending.hazard) {
+      next = appendLog(
+        next,
+        pending.trigger.actorId,
+        `${pending.area.name}: ${pending.area.notice ?? 'событие области'} (${pending.trigger.event})`,
+      );
+      continue;
+    }
+    return dispatch({
+      state: next,
+      command: {
+        ...commandBase(next, pending.trigger.actorId),
+        type: 'TriggerHazard',
+        hazardId: pending.hazard.id,
+        targetActorId: pending.trigger.actorId,
+      },
+      rng,
+      label: `${pending.hazard.name}: ${pending.trigger.event}`,
+    });
+  }
+  return next;
+}
+
 export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
   let next = state;
-  for (let guard = 0; guard < 24 && next.world.pendingResolution; guard += 1) {
+  for (let guard = 0; guard < 48; guard += 1) {
+    next = openNextCombatAreaTrigger(next, rng);
+    if (!next.world.pendingResolution) {
+      const continuation = next.pendingCombatAreaTurnContinuation;
+      if (!continuation) break;
+      const { pendingCombatAreaTurnContinuation: _cleared, ...ready } = next;
+      next = startTurnOrRequestGrappleDamage(
+        decrementSourceAreas(ready as SoloCombatState, continuation.endingActorId),
+        continuation.startingActorId,
+        rng,
+      );
+      continue;
+    }
     const pending = next.world.pendingResolution;
     if (pending.request.type === 'reaction'
       && isControlledCharacter(next, pending.request.actorId)) break;
@@ -1515,7 +1630,10 @@ export function moveActor(input: {
       effectiveCombatActorSpeedFt(input.state, input.actorId),
     );
   const maxFeet = input.maxFeet ?? available;
-  if (distance > maxFeet) throw new Error(`За это перемещение доступно ${maxFeet} фт.`);
+  const movementCost = input.voluntary === false
+    ? distance
+    : movementCostThroughAreas(input.state, token.position, input.destination, distance);
+  if (movementCost > maxFeet) throw new Error(`За это перемещение доступно ${maxFeet} фт.`);
   if (occupiedPositions(input.state, input.actorId).has(`${input.destination.x}:${input.destination.y}`)) {
     throw new Error('Клетка занята');
   }
@@ -1523,17 +1641,26 @@ export function moveActor(input: {
     ? input.state
     : executeOpportunityAttacks(input.state, input.actorId, input.destination, input.rng ?? Math.random);
   if (next.world.actors[input.actorId].runtime.hp.current <= 0) return outcome(next);
+  const crossed = enteredAndExitedAreas(next, token.position, input.destination);
   next = {
     ...next,
     tokens: { ...next.tokens, [input.actorId]: { ...next.tokens[input.actorId], position: input.destination } },
     boardRevision: next.boardRevision + 1,
     movementRemainingFt: {
       ...next.movementRemainingFt,
-      [input.actorId]: Math.max(0, available - distance),
+      [input.actorId]: Math.max(0, available - movementCost),
     },
   };
+  next = reconcileInsideAreaConditions(next);
+  if (crossed.exited.length) {
+    next = queueCombatAreaEvent(next, 'exit', [input.actorId], crossed.exited);
+  }
+  if (crossed.entered.length) {
+    next = queueCombatAreaEvent(next, 'enter', [input.actorId], crossed.entered, true);
+  }
+  next = autoResolveSystemDecisions(next, input.rng ?? Math.random);
   next = breakOutOfRangeGrapples(next, input.actorId, input.rng ?? Math.random);
-  return appendLog(next, input.actorId, `Перемещение на ${distance} фт.`);
+  return appendLog(next, input.actorId, `Перемещение на ${distance} фт.${movementCost > distance ? ` Труднопроходимая местность: потрачено ${movementCost} фт.` : ''}`);
 }
 
 function startTurnOrRequestGrappleDamage(
@@ -1561,13 +1688,14 @@ function startTurnOrRequestGrappleDamage(
     rng,
     label: 'Начало хода',
   });
-  return {
+  const started = {
     ...next,
     movementRemainingFt: {
       ...next.movementRemainingFt,
       [actorId]: effectiveCombatActorSpeedFt(next, actorId),
     },
   };
+  return queueCombatAreaEvent(started, 'start_turn', [actorId]);
 }
 
 /** Commit the persisted optional Unarmed Fighting damage choice, or decline it. */
@@ -1595,13 +1723,14 @@ export function resolveSoloCombatTurnStart(
     rng,
     label: 'Начало хода',
   });
-  return {
+  const started = {
     ...next,
     movementRemainingFt: {
       ...next.movementRemainingFt,
       [pending.actorId]: effectiveCombatActorSpeedFt(next, pending.actorId),
     },
   };
+  return queueCombatAreaEvent(started, 'start_turn', [pending.actorId]);
 }
 
 export function advanceTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
@@ -1617,7 +1746,17 @@ export function advanceTurn(state: SoloCombatState, rng: Rng = Math.random): Sol
   });
   if (next.outcome !== 'active') return next;
   const startingActorId = activeActorId(next);
-  return startTurnOrRequestGrappleDamage(next, startingActorId, rng);
+  next = queueCombatAreaEvent(next, 'end_turn', [endingActorId]);
+  if (next.pendingCombatAreaTriggers?.length) {
+    return autoResolveSystemDecisions({
+      ...next,
+      pendingCombatAreaTurnContinuation: { endingActorId, startingActorId },
+    }, rng);
+  }
+  return autoResolveSystemDecisions(
+    startTurnOrRequestGrappleDamage(decrementSourceAreas(next, endingActorId), startingActorId, rng),
+    rng,
+  );
 }
 
 /** Resolve one Alert owner's immediate post-Initiative swap, then start turn one
@@ -2391,7 +2530,7 @@ export async function createSoloCombatState(input: {
       clone(base.resourceBindingsByActor[participant.character.id] ?? {}),
     ])),
     resourceBindings: clone(base.resourceBindingsByActor[input.character.id]),
-    tokens, worldObjectPositions: {}, boardRevision: 1,
+    tokens, worldObjectPositions: {}, combatAreas: {}, pendingCombatAreaTriggers: [], boardRevision: 1,
     movementRemainingFt: Object.fromEntries(Object.values(base.world.actors).map((actor) => [
       actor.id, effectiveActorSpeedFt(actor),
     ])),

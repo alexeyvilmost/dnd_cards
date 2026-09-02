@@ -333,6 +333,9 @@ export interface ExecuteContext {
   selfRuntime?: RuntimeState;
   /** Id исполнителя действия (кастера). Проставляется в sourceId накладываемых состояний (E). */
   selfId?: string;
+  /** Optional non-creature provenance for hazards whose affected self remains
+   * the runtime owner while the condition source is the environment. */
+  effectSourceId?: string;
   /** Persisted Attack-action identity available to typed follow-up primitives. */
   attackActionId?: string;
   /** Stable command that opened the current attack resolution. */
