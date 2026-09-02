@@ -52,6 +52,7 @@ import { writeDedicatedCombatTurnState } from '../solo-combat/turnState';
 import {
   controlledCharacterIds,
   isControlledCharacter,
+  isPlayerControlledCombatActor,
   type GridPosition,
   type SoloCombatState,
 } from '../solo-combat/types';
@@ -354,10 +355,10 @@ export default function SoloCombatPage() {
     }
   };
 
-  const activeControlledActorId = state && isControlledCharacter(state, activeActor(state).id)
+  const activeControlledActorId = state && isPlayerControlledCombatActor(state, activeActor(state).id)
     ? activeActor(state).id
     : state?.characterId ?? '';
-  const playerTurn = state ? isControlledCharacter(state, activeActor(state).id) : false;
+  const playerTurn = state ? isPlayerControlledCombatActor(state, activeActor(state).id) : false;
   const activeDancingLights = state ? Object.values(state.world.objects).filter((object) => {
     const concentration = state.world.concentrations[activeControlledActorId];
     return object.sourceActorId === activeControlledActorId
@@ -695,7 +696,14 @@ export default function SoloCombatPage() {
         onAddMonster={addSceneMonster}
         onClose={() => setSceneConstructorOpen(false)}
       />}
-      <CombatHotbar state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); apply(advanceTurn(state)); }} onSheet={() => { setSheetActorId(activeControlledActorId); setSheetOpen(true); }} />
+      <CombatHotbar state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); apply(advanceTurn(state)); }} onSheet={() => {
+        if (isControlledCharacter(state, activeControlledActorId)) {
+          setSheetActorId(activeControlledActorId);
+          setSheetOpen(true);
+        } else {
+          setInspectedActorId(activeControlledActorId);
+        }
+      }} />
       {sheetOpen && (() => {
         const drawerActorId = sheetActorId && isControlledCharacter(state, sheetActorId)
           ? sheetActorId

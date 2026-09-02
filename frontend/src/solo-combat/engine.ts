@@ -492,6 +492,121 @@ function reconcileMovementForSpeedChanges(
     : { ...state, movementRemainingFt };
 }
 
+/** Keep the tactical projection in lockstep with canonical summoned actors.
+ * Rules-core owns the familiar lifecycle and encounter order; solo combat owns
+ * board tokens plus the denormalized initiative/presentation indexes. */
+function reconcileSummonedActorProjection(
+  state: SoloCombatState,
+  nextWorld: WorldState,
+): SoloCombatState {
+  const nextActorIds = new Set(Object.keys(nextWorld.actors));
+  const removedActorIds = Object.keys(state.world.actors).filter((actorId) => !nextActorIds.has(actorId));
+  const summonedActors = Object.values(nextWorld.actors).filter((actor) => actor.kind === 'summonedActor');
+  if (!removedActorIds.length && !summonedActors.length) return { ...state, world: nextWorld };
+
+  const tokens = { ...state.tokens };
+  const movementRemainingFt = { ...state.movementRemainingFt };
+  const initiativeBonuses = { ...state.initiativeBonuses };
+  const sideByActorId = { ...state.sideByActorId };
+  const actorPresentation = { ...state.actorPresentation };
+  const playerActionIdsByActor = { ...(state.playerActionIdsByActor ?? {}) };
+  const certifiedPlayerActionIdsByActor = { ...(state.certifiedPlayerActionIdsByActor ?? {}) };
+  const monsterActionIds = { ...state.monsterActionIds };
+  const opportunityActionIds = { ...state.opportunityActionIds };
+
+  for (const actorId of removedActorIds) {
+    delete tokens[actorId];
+    delete movementRemainingFt[actorId];
+    delete initiativeBonuses[actorId];
+    delete sideByActorId[actorId];
+    delete actorPresentation[actorId];
+    delete playerActionIdsByActor[actorId];
+    delete certifiedPlayerActionIdsByActor[actorId];
+    delete monsterActionIds[actorId];
+    delete opportunityActionIds[actorId];
+  }
+
+  let projection: SoloCombatState = {
+    ...state,
+    world: nextWorld,
+    tokens,
+    movementRemainingFt,
+    initiativeBonuses,
+    sideByActorId,
+    actorPresentation,
+    playerActionIdsByActor,
+    certifiedPlayerActionIdsByActor,
+    monsterActionIds,
+    opportunityActionIds,
+  };
+  let boardChanged = removedActorIds.length > 0;
+  const initiativeByActor = new Map(
+    state.initiative
+      .filter((entry) => nextActorIds.has(entry.actorId))
+      .map((entry) => [entry.actorId, entry]),
+  );
+
+  for (const actor of summonedActors) {
+    const familiar = actor.familiarState;
+    const metadata = actor.familiarMetadata;
+    if (!familiar || !metadata || familiar.presence !== 'present') continue;
+    const { d20Roll, modifier, total } = familiar.initiative;
+    if (d20Roll === null || modifier === null || total === null) {
+      throw new Error(`Present familiar ${actor.id} has no complete initiative roll`);
+    }
+    const isNewToken = !projection.tokens[actor.id];
+    const position = projection.tokens[actor.id]?.position
+      ?? availableScenePosition(projection, 'party');
+    projection.tokens[actor.id] = {
+      ...projection.tokens[actor.id],
+      actorId: actor.id,
+      templateId: metadata.statBlockId,
+      color: '#6f8f5a',
+      position,
+    };
+    projection.movementRemainingFt[actor.id] = isNewToken
+      ? effectiveActorSpeedFt(actor)
+      : Math.min(
+        projection.movementRemainingFt[actor.id] ?? effectiveActorSpeedFt(actor),
+        effectiveActorSpeedFt(actor),
+      );
+    projection.initiativeBonuses[actor.id] = modifier;
+    projection.sideByActorId[actor.id] = projection.sideByActorId[familiar.ownerActorId] ?? 'side:party';
+    projection.actorPresentation[actor.id] = {
+      templateId: metadata.statBlockId,
+      description: `Фамильяр ${metadata.formId}; дух типа «${familiar.spiritType}». Действует в собственной инициативе и подчиняется командам владельца.`,
+      size: metadata.size,
+      creatureType: familiar.spiritType,
+      source: metadata.sourceEntityId,
+      actionIds: [],
+      traits: (actor.passives ?? []).map((passive, index) => {
+        const row = passive as Record<string, unknown>;
+        const id = String(row.id ?? `familiar-trait-${index + 1}`);
+        return { id, name: id.replaceAll('_', ' '), mechanics: clone(row) };
+      }),
+    };
+    initiativeByActor.set(actor.id, {
+      actorId: actor.id,
+      die: d20Roll,
+      bonus: modifier,
+      total,
+    });
+    boardChanged ||= isNewToken;
+  }
+
+  if (nextWorld.scene.mode === 'encounter') {
+    const initiative = nextWorld.scene.initiative.map((actorId) => initiativeByActor.get(actorId));
+    if (initiative.some((entry) => !entry)) {
+      throw new Error('Canonical encounter contains an actor without a tactical initiative entry');
+    }
+    projection.initiative = initiative as SoloCombatState['initiative'];
+  } else {
+    projection.initiative = [...initiativeByActor.values()];
+  }
+  if (boardChanged) projection.boardRevision += 1;
+  return projection;
+}
+
 function transitionState(
   state: SoloCombatState,
   actorId: string,
@@ -502,7 +617,7 @@ function transitionState(
 ): SoloCombatState {
   const records = projectCombatLogRecords(rawEvents);
   let next = reconcileMovementForSpeedChanges(state, nextWorld);
-  next = { ...next, world: nextWorld };
+  next = reconcileSummonedActorProjection(next, nextWorld);
   const positionedObjects = next.worldObjectPositions ?? {};
   const retainedPositions = Object.fromEntries(Object.entries(positionedObjects).filter(
     ([objectId]) => nextWorld.objects[objectId] !== undefined,

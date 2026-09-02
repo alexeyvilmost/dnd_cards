@@ -228,6 +228,21 @@ export function isControlledCharacter(
   return controlledCharacterIds(state).includes(actorId);
 }
 
+/** Player-turn authority also covers an owned, present familiar without
+ * pretending that the familiar is a persisted character-sheet participant. */
+export function isPlayerControlledCombatActor(
+  state: Pick<SoloCombatState, 'characterId' | 'controlledCharacterIds' | 'world'>,
+  actorId: string,
+): boolean {
+  if (isControlledCharacter(state, actorId)) return true;
+  const actor = state.world.actors[actorId];
+  const ownerActorId = actor?.kind === 'summonedActor'
+    && actor.familiarState?.presence === 'present'
+    ? actor.familiarState.ownerActorId
+    : null;
+  return ownerActorId !== null && controlledCharacterIds(state).includes(ownerActorId);
+}
+
 export function playerActionIdsFor(
   state: Pick<SoloCombatState, 'characterId' | 'playerActionIds' | 'playerActionIdsByActor'>,
   actorId: string,
