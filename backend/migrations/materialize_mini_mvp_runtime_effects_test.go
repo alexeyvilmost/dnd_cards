@@ -45,6 +45,13 @@ func TestRuntimeEffectIdentityIsDeterministic(t *testing.T) {
 	if left.id != right.id || left.cardNumber != right.cardNumber {
 		t.Fatalf("identity is not deterministic: %#v vs %#v", left, right)
 	}
+	if left.effectType != "spell_effect" {
+		t.Fatalf("spell runtime effect type=%q, want spell_effect", left.effectType)
+	}
+	action := runtimeEffectFromPayload(runtimeEffectSource{table: "actions", cardNumber: "ACT-test", name: "Тест"}, "mechanics.effects[0]", payload)
+	if action.effectType != "species_ability" {
+		t.Fatalf("action runtime effect type=%q, want species_ability", action.effectType)
+	}
 }
 
 func TestRewriteDurableTargetPayloadsAcceptsEmptyHistoricalMechanics(t *testing.T) {

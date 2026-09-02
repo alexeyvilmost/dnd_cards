@@ -33,6 +33,7 @@ type materializedRuntimeEffect struct {
 	detailed    string
 	imageURL    string
 	mechanics   map[string]any
+	effectType  string
 	sourceTable string
 	sourceID    string
 	path        string
@@ -89,9 +90,9 @@ func materializeMiniMVPRuntimeEffects(db *sql.DB) error {
 				id,name,name_en,description,detailed_description,image_url,rarity,
 				card_number,effect_type,mechanics,repeatable,author,source,support
 			) VALUES (
-				$1::uuid,$2,NULLIF($3,''),$4,$5,$6,'common',$7,'active_effect',$8::jsonb,
+				$1::uuid,$2,NULLIF($3,''),$4,$5,$6,'common',$7,$8,$9::jsonb,
 				false,'System','PHB 2024',
-				jsonb_build_object('status','untested','certification_version',$9::text,
+				jsonb_build_object('status','untested','certification_version',$10::text,
 				  'mechanics_locked',false,'note','Материализован длительный runtime-эффект; требуется браузерная перепроверка.')
 			)
 			ON CONFLICT (card_number) DO UPDATE SET
@@ -100,7 +101,7 @@ func materializeMiniMVPRuntimeEffects(db *sql.DB) error {
 				image_url=EXCLUDED.image_url,effect_type=EXCLUDED.effect_type,
 				mechanics=EXCLUDED.mechanics,repeatable=false,support=EXCLUDED.support,updated_at=NOW()
 		`, effect.id, effect.name, effect.nameEn, effect.description, effect.detailed,
-			effect.imageURL, effect.cardNumber, string(mechanicsJSON), miniMVPRuntimeEffectsMigrationVersion); err != nil {
+			effect.imageURL, effect.cardNumber, effect.effectType, string(mechanicsJSON), miniMVPRuntimeEffectsMigrationVersion); err != nil {
 			return fmt.Errorf("materialize %s: %w", effect.cardNumber, err)
 		}
 	}
@@ -242,6 +243,7 @@ func runtimeEffectFromPayload(source runtimeEffectSource, path string, mechanics
 		id: id, cardNumber: cardNumber, name: name, nameEn: nameEn,
 		description: summary + ". Источник: " + source.name + ".",
 		detailed:    source.description, imageURL: source.imageURL, mechanics: mechanics,
+		effectType:  map[bool]string{true: "species_ability", false: "spell_effect"}[source.table == "actions"],
 		sourceTable: source.table, sourceID: source.id, path: path,
 	}
 }
