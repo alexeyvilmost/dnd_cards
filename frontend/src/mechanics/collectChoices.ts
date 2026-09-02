@@ -312,7 +312,12 @@ export function collectInPlayActionChoices(
   return [
     ...stoneworkContactChoice(mechanics, origin),
     ...raw
-    .filter((ch) => String(ch.context ?? '') === 'in_play')
+    // Both spell/item content (`context:in_play`) and the class-feature
+    // vocabulary (`resolution:on_use`) declare a choice made at execution.
+    // Treating only the former as interactive lets the action reach the
+    // executor without a choice and fail after the user clicks it.
+    .filter((ch) => String(ch.context ?? '') === 'in_play'
+      || String(ch.resolution ?? '') === 'on_use')
     .map((ch) => ({ ...choiceToPending(ch, origin), id: String(ch.id ?? 'choice') })),
   ];
 }

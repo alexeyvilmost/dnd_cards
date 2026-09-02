@@ -15,6 +15,9 @@ import SheetActionLine from './SheetActionLine';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
 import SheetResourceTile, { sheetResourceTileOrder } from './SheetResourceTile';
 import { UNTRAINED_ARMOR_SPELL_REASON } from '../character/untrainedArmor';
+import { activeEffectRequirementIssue } from '../engine/actionRequirements';
+import { deniedCapabilities } from '../engine/modifiers';
+import { projectActionSurgeCost } from '../engine/actionSurge';
 
 function resourceLabel(resource: string): string {
   if (resource === 'spell_slot') return 'Ячейка';
@@ -99,6 +102,8 @@ export function combatActionAvailability(
   actorId = state.characterId,
 ): { enabled: boolean; reason?: string } {
   const actor = state.world.actors[actorId];
+  const activeEffectIssue = activeEffectRequirementIssue(action.mechanics, actor.runtime);
+  if (activeEffectIssue) return { enabled: false, reason: activeEffectIssue };
   const timing = combatActionTimingAvailability(action);
   if (!timing.enabled) return timing;
   const levelRequirement = parseActivationLevelRequirement(action.mechanics);
@@ -111,6 +116,9 @@ export function combatActionAvailability(
   }
   let spellSlotResource: string | undefined;
   if (action.kind === 'spell') {
+    if (deniedCapabilities(actor.runtime, actor.passives ?? []).has('spellcasting')) {
+      return { enabled: false, reason: 'В активном облике нельзя сотворять заклинания' };
+    }
     if (actor.character.untrainedArmorCategories?.length) {
       return { enabled: false, reason: UNTRAINED_ARMOR_SPELL_REASON };
     }
@@ -136,7 +144,11 @@ export function combatActionAvailability(
     spellSlotResource = access.grant.slotResource;
   }
 
-  let mechanics = action.mechanics;
+  let mechanics = projectActionSurgeCost(
+    action.mechanics,
+    actor.runtime,
+    action.kind === 'spell' ? 'spell' : 'nonspell',
+  );
   const templateActivation = mechanics.activation as Record<string, unknown> | undefined;
   const templateCosts = Array.isArray(templateActivation?.cost)
     ? templateActivation.cost as Array<Record<string, unknown>>

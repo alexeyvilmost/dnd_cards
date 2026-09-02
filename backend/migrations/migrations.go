@@ -1013,6 +1013,18 @@ func GetAllMigrations() []Migration {
 			Up:          repairWildCompanionRuntime,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     helpActionAdvantageMigrationVersion,
+			Description: "Replace malformed Help die boon with exact one-roll Advantage",
+			Up:          repairHelpActionAdvantage,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     levelTwoRuntimeRepairMigrationVersion,
+			Description: "Repair exact level-2 action timing and Wild Shape runtime choices",
+			Up:          repairLevelTwoRuntimeContracts,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

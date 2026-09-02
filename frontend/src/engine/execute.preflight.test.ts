@@ -449,6 +449,22 @@ describe('executeAction fail-closed preflight', () => {
     expect(first.events).toEqual(second.events);
   });
 
+  it('uses a fixed stat-block attack bonus for transformed attacks', () => {
+    const result = executeAction(fresh(), {
+      activation: { mode: 'active', cost: [{ resource: 'action' }] },
+      effects: [{
+        resolution: 'attack_roll', attack_kind: 'melee', ability: 'str',
+        attack_bonus_override: 4, vs: 'ac', on_hit: [],
+      }],
+    }, {
+      character: { ...character, abilityMods: { ...character.abilityMods, str: -5 } },
+      target: { ac: 10 },
+      rng: () => 0.5,
+    });
+    const roll = result.events.find((event) => event.type === 'roll');
+    expect(roll?.type === 'roll' ? roll.roll.total : null).toBe(15);
+  });
+
   it('requires an explicit canonical hand-off for world primitive metadata', () => {
     const mechanics = {
       primitive: { type: 'light_world_object' },

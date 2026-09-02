@@ -26,6 +26,8 @@ import { isActionUsesKey } from '../engine/actionUses';
 import { applyFreeuseCost, findFreeusePoolKey, freeuseKey, isFreeusePoolKey } from '../engine/freeuse';
 import { startConcentration } from '../engine/concentration';
 import { canPay } from '../engine/cost';
+import { activeEffectRequirementIssue } from '../engine/actionRequirements';
+import { projectActionSurgeCost } from '../engine/actionSurge';
 import { deniedCapabilities } from '../engine/modifiers';
 import { plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
 import { executeRemoteManipulator, readTargetSave, InsufficientResourcesError } from '../engine/execute';
@@ -832,11 +834,13 @@ export default function SheetActionsPanel({
   const CAP_RU: Record<string, string> = {
     action: 'тратить действие', bonus_action: 'тратить бонусное действие',
     reaction: 'использовать реакцию', concentration: 'концентрироваться',
+    spellcasting: 'сотворять заклинания',
   };
   const deniedActionReason = (action: SheetAction, cost: Record<string, unknown>[]): string | null => {
     if (!deniedCaps.size) return null;
     const cap = cost.map((c) => String(c.resource ?? '')).find((r) => deniedCaps.has(r));
     if (cap) return `Недееспособен: нельзя ${CAP_RU[cap] ?? cap}`;
+    if (action.spellRef && deniedCaps.has('spellcasting')) return 'В активном облике нельзя сотворять заклинания';
     const dur = action.mechanics.duration as Record<string, unknown> | undefined;
     if (deniedCaps.has('concentration') && dur?.concentration) return 'Недееспособен: нельзя концентрироваться';
     return null;
@@ -1895,7 +1899,14 @@ export default function SheetActionsPanel({
       setError(contextualCostIssue);
       return;
     }
-    let mech: Record<string, unknown> = { ...action.mechanics, name: action.name };
+    let mech: Record<string, unknown> = {
+      ...projectActionSurgeCost(
+        action.mechanics,
+        runtime,
+        action.spellRef ? 'spell' : 'nonspell',
+      ),
+      name: action.name,
+    };
     const primitive = mechanicsPrimitiveType(mech);
     const authoritativePrimitive = primitive !== null && isSheetNoPendingPrimitive(primitive);
     let canonical: SheetCanonicalActionContext | undefined;
@@ -2687,6 +2698,8 @@ export default function SheetActionsPanel({
         reason: `Ожидается безопасный повтор ${sheetAtomicRetryLabel(pendingAtomicRetry)}`,
       };
     }
+    const activeEffectIssue = activeEffectRequirementIssue(action.mechanics, runtime);
+    if (activeEffectIssue) return { disabled: true, reason: activeEffectIssue };
     if (action.spellRef && ctx.untrainedArmorCategories?.length) {
       return { disabled: true, reason: UNTRAINED_ARMOR_SPELL_REASON };
     }
@@ -2773,7 +2786,12 @@ export default function SheetActionsPanel({
       });
       if (targetFactsIssue) return { disabled: true, reason: targetFactsIssue };
     }
-    const activation = action.mechanics.activation as Record<string, unknown> | undefined;
+    const payableMechanics = projectActionSurgeCost(
+      action.mechanics,
+      runtime,
+      action.spellRef ? 'spell' : 'nonspell',
+    );
+    const activation = payableMechanics.activation as Record<string, unknown> | undefined;
     const baseCost = (activation?.cost as Record<string, unknown>[]) ?? [];
     // D: Недееспособность запрещает экономику хода — гейтим действие, если его стоимость включает
     // запрещённый тип (действие/бонусное/реакция) или оно требует концентрации при её запрете.
@@ -2844,7 +2862,12 @@ export default function SheetActionsPanel({
   };
 
   const actionBlockActions = actions.filter((action) => {
-    const activation = action.mechanics.activation as Record<string, unknown> | undefined;
+    const projectedMechanics = projectActionSurgeCost(
+      action.mechanics,
+      runtime,
+      action.spellRef ? 'spell' : 'nonspell',
+    );
+    const activation = projectedMechanics.activation as Record<string, unknown> | undefined;
     // Reactions remain actor capabilities for canonical combat, but are never
     // manually activatable entries in the ordinary Action block.
     if (activation?.mode === 'reaction') return false;
