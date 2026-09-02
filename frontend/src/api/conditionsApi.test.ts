@@ -235,6 +235,13 @@ describe('condition DB mechanics materializer', () => {
       mode: 'database_release',
       count: 15,
     });
+    expect(certifiedConditionEffectEntity('homebrew')).toBeNull();
+    expect(conditionEffectEntityRef('homebrew')).toEqual({
+      kind: 'effect', id: 'row:homebrew', cardNumber: 'display:homebrew',
+    });
+    expect(conditionEffectEntityRef('future_condition')).toEqual({
+      kind: 'effect', id: 'row:future', cardNumber: 'display:future',
+    });
   });
 
   it('reads every advertised condition page before selecting the exact certified release', async () => {
@@ -317,6 +324,7 @@ describe('condition DB mechanics materializer', () => {
     expect(result).toMatchObject({ mode: 'offline_fixture' });
     expect(conditionRegistryAuthority()).toMatchObject({ mode: 'offline_fixture' });
     expect(certifiedConditionEffectEntity('blinded')).toBeNull();
+    expect(conditionEffectEntityRef('homebrew')).toBeUndefined();
   });
 
   it('rejects stale content and obsolete condition evidence before registry activation', async () => {

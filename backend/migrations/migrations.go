@@ -890,6 +890,12 @@ func GetAllMigrations() []Migration {
 			Up:          materializeRuntimeBoonsAndAcidSplashArea,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     polymorphedConditionMigrationVersion,
+			Description: "Материализовать библиотечное состояние Превращённый",
+			Up:          materializePolymorphedCondition,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

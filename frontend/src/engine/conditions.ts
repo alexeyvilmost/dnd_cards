@@ -263,6 +263,7 @@ export const BUILTIN_CONDITION_RULES: Record<string, ConditionRule> = {
 
 // Живой реестр: сид + догруженные из /api/conditions.
 let registry: Record<string, ConditionRule> = { ...BUILTIN_CONDITION_RULES };
+let databaseConditionEntityRefs: Record<string, NonNullable<ConditionRule['entityRef']>> = {};
 
 export type ConditionRegistryAuthority =
   | { mode: 'offline_fixture'; reason: string }
@@ -299,7 +300,19 @@ export function replaceConditionsFromDatabase(
  * merge of stale database rows with source-code defaults. */
 export function resetConditionsToOfflineFixture(reason: string): void {
   registry = { ...BUILTIN_CONDITION_RULES };
+  databaseConditionEntityRefs = {};
   registryAuthority = { mode: 'offline_fixture', reason };
+}
+
+/** Presentation identity for every unambiguous database condition row. These
+ * references never add executable modifiers; only the separately certified
+ * registry above can do that. */
+export function replaceConditionEntityReferences(
+  refs: Record<string, NonNullable<ConditionRule['entityRef']>>,
+): void {
+  databaseConditionEntityRefs = Object.fromEntries(Object.entries(refs).map(([id, ref]) => [
+    id, { ...ref },
+  ]));
 }
 
 export function conditionRegistryAuthority(): ConditionRegistryAuthority {
@@ -313,7 +326,7 @@ export function conditionRule(value: string): ConditionRule | null {
 export function conditionEffectEntityRef(
   value: string,
 ): ConditionRule['entityRef'] | undefined {
-  const ref = registry[value]?.entityRef;
+  const ref = registry[value]?.entityRef ?? databaseConditionEntityRefs[value];
   return ref ? { ...ref } : undefined;
 }
 

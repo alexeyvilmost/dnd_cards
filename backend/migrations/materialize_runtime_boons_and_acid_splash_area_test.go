@@ -39,7 +39,10 @@ func TestRuntimeBoonAndAcidSplashDeclarations(t *testing.T) {
 	if !found {
 		t.Fatalf("migration %s is not registered", runtimeBoonsAreaMigrationVersion)
 	}
-	if migrations[len(migrations)-1].Version != runtimeBoonsAreaMigrationVersion {
-		t.Fatalf("migration %s must remain the latest migration", runtimeBoonsAreaMigrationVersion)
+	for index, migration := range migrations {
+		if migration.Version == runtimeBoonsAreaMigrationVersion &&
+			(index+1 >= len(migrations) || migrations[index+1].Version != polymorphedConditionMigrationVersion) {
+			t.Fatalf("migration %s must immediately follow %s", polymorphedConditionMigrationVersion, runtimeBoonsAreaMigrationVersion)
+		}
 	}
 }

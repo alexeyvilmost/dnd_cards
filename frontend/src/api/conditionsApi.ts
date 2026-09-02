@@ -2,6 +2,7 @@ import { effectsApi } from './client';
 import {
   BUILTIN_CONDITION_RULES,
   conditionRegistryAuthority,
+  replaceConditionEntityReferences,
   replaceConditionsFromDatabase,
   resetConditionsToOfflineFixture,
 } from '../engine/conditions';
@@ -230,6 +231,17 @@ export async function loadConditions(
       .join('\n');
     const setHash = await sha256(hashInput);
     replaceConditionsFromDatabase(defs, setHash);
+    const presentationCandidates = rows.flatMap((row) => {
+      const rule = row.effect_type === 'condition' ? materializeConditionRule(row) : null;
+      return rule?.entityRef ? [[rule.id, rule.entityRef] as const] : [];
+    });
+    const presentationCounts = new Map<string, number>();
+    for (const [id] of presentationCandidates) {
+      presentationCounts.set(id, (presentationCounts.get(id) ?? 0) + 1);
+    }
+    replaceConditionEntityReferences(Object.fromEntries(
+      presentationCandidates.filter(([id]) => presentationCounts.get(id) === 1),
+    ));
     certifiedConditionEntityCatalog = {
       setHash,
       byConditionId: new Map(materialized.map(({ row, rule }) => [
