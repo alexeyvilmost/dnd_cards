@@ -388,7 +388,13 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   for (const entry of classes) {
     const levelSource = (entry.card_number || entry.name).replace(/^CLASS[-_]/i, '').toLowerCase().replace(/-/g, '_');
     for (const [resource, definition] of Object.entries(entry.resources || {})) {
-      combinedClassResources[resource] = {
+      // The legacy Warlock rows use spell_slot_N names, but Pact Magic must
+      // remain an independent short-rest pool and must not be deleted when
+      // ordinary multiclass spell slots are rebuilt below.
+      const runtimeResource = levelSource === 'warlock'
+        ? resource.replace(/^spell_slot_(\d+)$/, 'pact_slot_$1')
+        : resource;
+      combinedClassResources[runtimeResource] = {
         ...((definition && typeof definition === 'object') ? definition as Record<string, unknown> : { count: definition }),
         level_source: levelSource,
       };
