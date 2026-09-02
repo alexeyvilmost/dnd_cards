@@ -111,11 +111,18 @@ prune_release_history() {
   cleanup_retention_files
 }
 
-prune_dangling_images() {
-  # Removing old SHA tags can leave their now-unreferenced build layers behind.
-  # They are not runnable releases and otherwise accumulate until the disk is
-  # full even though the visible five-release invariant stays green.
-  echo "[retention] Removing unreferenced Docker image layers"
+prune_dangling_images_if_low_space() {
+  # Multi-stage Docker build layers are the reusable dependency cache for the
+  # next release. Keep them while the host has comfortable headroom; prune only
+  # when free space drops below 8 GiB. Runnable releases and archives remain
+  # governed independently by the exact five-release retention policy above.
+  available_kb=$(df -Pk "$root" | awk 'NR==2 {print $4}')
+  minimum_kb=$((8 * 1024 * 1024))
+  if [ "$available_kb" -ge "$minimum_kb" ]; then
+    echo "[retention] Preserving Docker build cache (${available_kb} KiB free)"
+    return
+  fi
+  echo "[retention] Low disk space (${available_kb} KiB free); removing unreferenced Docker image layers"
   docker image prune -f >/dev/null
 }
 
@@ -130,7 +137,7 @@ test ! -e "$release"
 # archive for this deployment is protected even though no release directory
 # exists for it yet.
 prune_release_history $((retention_keep - 1)) "$sha"
-prune_dangling_images
+prune_dangling_images_if_low_space
 
 # APP_DOMAIN is also consumed by Caddy and may contain a comma-separated list.
 # Public verification must use one origin, not the entire Caddy site label.
@@ -241,7 +248,7 @@ if ! verify_release; then
 fi
 
 prune_release_history "$retention_keep"
-prune_dangling_images
+prune_dangling_images_if_low_space
 
 echo "DEPLOYED $sha"
 echo "Database backup: $backup_file"
