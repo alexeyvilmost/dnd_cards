@@ -21,6 +21,15 @@ const actionDefaults: ResourceOption[] = [
   { id: 'reaction', label: 'Реакция', description: 'Ответное действие.', category: 'action_cost', imageUrl: '/charges/reaction_action.png', sortOrder: 30 },
   { id: 'free_action', label: 'Свободное действие', description: 'Не тратит основной ресурс действия.', category: 'action_cost', imageUrl: '/charges/free_action.png', sortOrder: 40 },
   { id: 'giant_legacy', label: 'Наследие великанов', description: 'Заряд наследия голиафа.', category: 'species_resource', sortOrder: 50 },
+  { id: 'rage', label: 'Ярость', description: 'Использования Ярости варвара.', category: 'class_resource', sortOrder: 100 },
+  { id: 'rage_charge', label: 'Ярость', description: 'Использования Ярости варвара.', category: 'class_resource', sortOrder: 101 },
+  { id: 'bardic_inspiration', label: 'Бардовское вдохновение', description: 'Кости Бардовского вдохновения.', category: 'class_resource', sortOrder: 110 },
+  { id: 'channel_divinity', label: 'Божественный канал', description: 'Использования Божественного канала.', category: 'class_resource', sortOrder: 120 },
+  { id: 'wild_shape', label: 'Дикий облик', description: 'Использования Дикого облика.', category: 'class_resource', sortOrder: 130 },
+  { id: 'focus', label: 'Очки фокусировки', description: 'Очки Фокуса монаха.', category: 'class_resource', sortOrder: 140 },
+  { id: 'sorcery_points', label: 'Очки чародейства', description: 'Очки чародейства для Метамагии и Магического источника.', category: 'class_resource', sortOrder: 150 },
+  { id: 'second_wind', label: 'Второе дыхание', description: 'Использования Второго дыхания воина.', category: 'class_resource', sortOrder: 160 },
+  { id: 'action_surge', label: 'Всплеск действий', description: 'Использования Всплеска действий воина.', category: 'class_resource', sortOrder: 170 },
 ];
 
 export const staticResourceOptions = (): ResourceOption[] => [
@@ -78,6 +87,10 @@ export function findResource(resources: ResourceOption[], id?: string | null): R
 export function resourceLabel(resources: ResourceOption[], id?: string | null): string {
   const spellSlot = /^spell_slot_([1-9])$/u.exec(id ?? '');
   if (spellSlot) return `Ячейка ${spellSlot[1]}-го круга`;
+  const pactSlot = /^(?:pact_slot|warlock_spell_slot)_?([1-9])?$/u.exec(id ?? '');
+  if (pactSlot) return pactSlot[1]
+    ? `Ячейка Магии договора ${pactSlot[1]}-го круга`
+    : 'Ячейка Магии договора';
   if (id === 'self_uses') return 'Заряд способности';
   if (id?.startsWith('uses_')) return 'Заряд способности';
   if (id === 'self_item') return 'Использование предмета';

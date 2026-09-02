@@ -33,5 +33,8 @@ describe('actionCostResourceIds — стоимость из activation.cost (е�
     expect(resourceLabel([], 'freeuse-misty-step')).toBe('Бесплатное применение заклинания');
     expect(resourceLabel([], 'spell_slot_1')).toBe('Ячейка 1-го круга');
     expect(resourceLabel([], 'giant_legacy')).toBe('Наследие великанов');
+    expect(resourceLabel([], 'focus')).toBe('Очки фокусировки');
+    expect(resourceLabel([], 'sorcery_points')).toBe('Очки чародейства');
+    expect(resourceLabel([], 'pact_slot_1')).toBe('Ячейка Магии договора 1-го круга');
   });
 });

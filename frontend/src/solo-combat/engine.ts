@@ -2308,8 +2308,13 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
       return action && isAttackAction(action);
     });
     if (actionId) {
-      next = executeCombatAction({ state: next, actorId: monsterId, actionId, targetIds: [targetId], rng });
-      next = autoResolveSystemDecisions(next, rng);
+      try {
+        next = executeCombatAction({ state: next, actorId: monsterId, actionId, targetIds: [targetId], rng });
+        next = autoResolveSystemDecisions(next, rng);
+      } catch (reason) {
+        if (!(reason instanceof Error) || !reason.message.includes('LineOfSightBlocked')) throw reason;
+        next = appendLog(next, monsterId, 'Цель не видна: атака пропущена.');
+      }
     }
   }
   return next.world.pendingResolution || next.pendingInterception || next.outcome !== 'active'

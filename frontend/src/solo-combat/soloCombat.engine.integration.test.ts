@@ -2001,6 +2001,33 @@ describe('solo combat engine vertical integration', () => {
     expect(state.log.some((entry) => entry.text.includes('Нет допустимой цели'))).toBe(true);
   });
 
+  it('ends a monster turn cleanly when a heavily obscured area blocks its attack', async () => {
+    const participant = fighterSeed();
+    let state = await createSoloCombatState({
+      character: participant.character, participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar(), dash()], effects: [], dashAction: dash(), rng: () => 0.5,
+    });
+    const monsterId = Object.values(state.world.actors).find((actor) => actor.kind === 'monster')!.id;
+    state.tokens[participant.character.id].position = { x: 6, y: 6 };
+    state.tokens[monsterId].position = { x: 6, y: 5 };
+    state.combatAreas = {
+      fog: {
+        id: 'fog', name: 'Туманное облако', zoneType: 'fog_cloud',
+        sourceActorId: participant.character.id, sourceActionId: 'fog', sourceEntityIds: ['SPELL-fog'],
+        origin: { x: 0, y: 0 },
+        cells: Array.from({ length: 120 }, (_, index) => ({ x: index % 12, y: Math.floor(index / 12) })),
+        duration: { type: 'rounds', roundsLeft: 10 }, triggers: [], heavilyObscured: true,
+      },
+    };
+    state = advanceTurn(state);
+    expect(activeId(state)).toBe(monsterId);
+
+    expect(() => { state = runMonsterTurn(state, () => 0.5); }).not.toThrow();
+    expect(activeId(state)).toBe(participant.character.id);
+    expect(state.log.some((entry) => entry.text.includes('Цель не видна'))).toBe(true);
+  });
+
   it.each([true, false])('finishes a paused monster turn exactly once after a Shield decision (%s)', async (useShield) => {
     const participant = wizardSeed();
     let state = await createSoloCombatState({
