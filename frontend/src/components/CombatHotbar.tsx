@@ -10,24 +10,16 @@ import { parseActivationCastTime } from '../rules-core/activationCastTime';
 import { applyUnarmedDamageProfileToAction } from '../rules-core/fightingStyleComplexPrimitives';
 import { playerActionIdsFor, type SoloCombatState } from '../solo-combat/types';
 import { isTriggeredCombatAction } from '../solo-combat/engine';
-import { actionCostResourceIds, findResource, useResourceOptions } from '../utils/resources';
+import { actionCostResourceIds, findResource, resourceLabel as sharedResourceLabel, useResourceOptions } from '../utils/resources';
 import SheetActionLine from './SheetActionLine';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
 import SheetResourceTile, { sheetResourceTileOrder } from './SheetResourceTile';
 import { UNTRAINED_ARMOR_SPELL_REASON } from '../character/untrainedArmor';
 
-const RESOURCE_LABELS: Record<string, string> = {
-  action: 'Действие',
-  bonus_action: 'Бонусное действие',
-  reaction: 'Реакция',
-  spell_slot: 'Ячейка',
-  equipped_weapon_ammo: 'Боеприпас',
-};
-
 function resourceLabel(resource: string): string {
-  if (resource.startsWith('spell_slot_')) return `Яч. ${resource.slice('spell_slot_'.length)}`;
+  if (resource === 'spell_slot') return 'Ячейка';
   if (resource.startsWith('freeuse-')) return 'Бесплатный каст';
-  return RESOURCE_LABELS[resource] ?? resource;
+  return sharedResourceLabel([], resource);
 }
 
 export function actionCost(action: RuleActionDefinition): string {
@@ -39,6 +31,20 @@ export function actionCost(action: RuleActionDefinition): string {
 function actionLabel(action: RuleActionDefinition): string {
   const primitive = action.mechanics.primitive as Record<string, unknown> | undefined;
   return primitive?.type === 'weapon_attack' ? 'Атака' : action.name;
+}
+
+export function combatHotbarResourceKeys(
+  actions: RuleActionDefinition[],
+  maxResources: Record<string, number>,
+): string[] {
+  const declaredCosts = new Set(actions.flatMap(actionCostResourceIds));
+  return Object.entries(maxResources).flatMap(([key, maximum]) => (
+    maximum > 0 && !isFreeusePoolKey(key) && (
+      ['action', 'bonus_action', 'reaction'].includes(key)
+      || /^(?:spell_slot|pact_slot|warlock_spell_slot)_\d+$/u.test(key)
+      || declaredCosts.has(key)
+    ) ? [key] : []
+  ));
 }
 
 export function combatHpLabel(hp: { current: number; max: number; temp: number }): string {
@@ -218,12 +224,14 @@ export default function CombatHotbar({
   const freeuseActionIds = new Set(actor.spellcastingAccess?.grants
     .filter((grant) => grant.freeUseResource && freeuseResources.some(([key]) => key === grant.freeUseResource))
     .map((grant) => grant.actionId) ?? []);
-  const visibleActions = filterCombatActionsByResource(actions, selectedResourceId, freeuseActionIds);
-  const resources = Object.entries(actor.runtime.maxResources)
-    .filter(([key, maximum]) => maximum > 0 && (
-      ['action', 'bonus_action', 'reaction'].includes(key)
-      || key.startsWith('spell_slot_')
-    ) && !isFreeusePoolKey(key))
+  const selectedSlotActionIds = new Set(actor.spellcastingAccess?.grants
+    .filter((grant) => grant.slotResource === selectedResourceId)
+    .map((grant) => grant.actionId) ?? []);
+  const visibleActions = selectedSlotActionIds.size > 0
+    ? actions.filter((action) => selectedSlotActionIds.has(action.id))
+    : filterCombatActionsByResource(actions, selectedResourceId, freeuseActionIds);
+  const resourceKeys = combatHotbarResourceKeys(actions, actor.runtime.maxResources);
+  const resources = resourceKeys.map((key) => [key, actor.runtime.maxResources[key]] as const)
     .sort(([left], [right]) => sheetResourceTileOrder(left, resourceOptions)
       - sheetResourceTileOrder(right, resourceOptions) || left.localeCompare(right));
 
@@ -301,8 +309,10 @@ export default function CombatHotbar({
             actor.runtime,
             actor.passives ?? [],
           ) ?? undefined;
-          const contextualActionRef = actionRef && weaponPreview?.weaponName
-            ? { ...actionRef, name: `${weaponPreview.weaponName} — атака` }
+          const isGenericWeaponAttack = (action.mechanics.primitive as Record<string, unknown> | undefined)?.type === 'weapon_attack';
+          const displayedWeaponName = isGenericWeaponAttack ? weaponPreview?.weaponName : undefined;
+          const contextualActionRef = actionRef && displayedWeaponName
+            ? { ...actionRef, name: `${displayedWeaponName} — атака` }
             : actionRef;
           return (
             <div
@@ -311,7 +321,7 @@ export default function CombatHotbar({
               data-action-id={action.id}
             >
               <SheetActionLine
-                name={weaponPreview?.weaponName ?? actionLabel(action)}
+                name={displayedWeaponName ?? actionLabel(action)}
                 imageUrl={presentation?.imageUrl}
                 sourceLabel={presentation?.sourceLabel ?? (action.kind === 'spell' ? 'Заклинание' : 'Действие')}
                 description={presentation?.description}

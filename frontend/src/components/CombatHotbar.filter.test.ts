@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FREEUSE_SHOWCASE_KEY } from '../engine/freeuse';
 import type { RuleActionDefinition } from '../rules-core/domain';
-import { combatActionTimingAvailability, filterCombatActionsByResource } from './CombatHotbar';
+import { combatActionTimingAvailability, combatHotbarResourceKeys, filterCombatActionsByResource } from './CombatHotbar';
 
 function action(id: string, resource?: string, level?: number): RuleActionDefinition {
   return {
@@ -37,6 +37,16 @@ describe('combat hotbar resource filter', () => {
   it('uses the declared free-use grant set instead of spell names', () => {
     expect(filterCombatActionsByResource(actions, FREEUSE_SHOWCASE_KEY, new Set(['spell-free']))
       .map(({ id }) => id)).toEqual(['spell-free']);
+  });
+
+  it('exposes class resources and Pact slots as usable hotbar filters', () => {
+    const classActions = [action('flurry', 'focus'), action('font', 'sorcery_points')];
+    expect(combatHotbarResourceKeys(classActions, {
+      action: 1, bonus_action: 1, reaction: 1, focus: 2, sorcery_points: 2,
+      pact_slot_1: 2, hit_dice_d8: 2, 'freeuse-misty-step': 1,
+    })).toEqual([
+      'action', 'bonus_action', 'reaction', 'focus', 'sorcery_points', 'pact_slot_1',
+    ]);
   });
 
   it('keeps reaction cards inspectable but not proactively activatable', () => {
