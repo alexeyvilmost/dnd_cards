@@ -416,10 +416,13 @@ function stoneEndurance(): RuleActionDefinition {
 }
 
 function basicAction(cardNumber: string, name: string, mechanics: Record<string, unknown>): Action {
+  const ids: Record<string, string> = {
+    action_basic_dash: 'a1000000-0000-4000-8000-000000000001',
+    action_basic_disengage: 'a1000000-0000-4000-8000-000000000002',
+    action_help: 'a1000000-0000-4000-8000-000000000003',
+  };
   return {
-    id: cardNumber === 'action_basic_dash'
-      ? 'a1000000-0000-4000-8000-000000000001'
-      : 'a1000000-0000-4000-8000-000000000002',
+    id: ids[cardNumber] ?? 'a1000000-0000-4000-8000-000000000099',
     name, description: '', rarity: 'common', card_number: cardNumber,
     resource: 'action', action_type: 'base_action', type: 'basic',
     mechanics, created_at: '', updated_at: '',
@@ -428,7 +431,10 @@ function basicAction(cardNumber: string, name: string, mechanics: Record<string,
 
 const dash = () => basicAction('action_basic_dash', 'Рывок', {
   activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }] },
-  effects: [{ resolution: 'auto', result: [{ kind: 'narrative' }] }],
+  effects: [{ resolution: 'auto', result: [{
+    kind: 'modifier', op: 'add', value: 'character_speed',
+    applies_to: { roll: 'speed' }, duration: { type: 'until_start_of_next_turn' },
+  }] }],
   targeting: { domain: 'actor', actor_targets: false, shape: 'self', min_targets: 0, max_targets: 1, range_ft: 0, requires_line_of_sight: false, allowed_relations: ['self'] },
 });
 
@@ -440,6 +446,12 @@ const disengage = () => basicAction('action_basic_disengage', 'Отход', {
     duration: { type: 'until_start_of_next_turn' }, stack_id: 'basic-action:disengage',
   }] }],
   targeting: { domain: 'actor', actor_targets: false, shape: 'self', min_targets: 0, max_targets: 1, range_ft: 0, requires_line_of_sight: false, allowed_relations: ['self'] },
+});
+
+const help = () => basicAction('action_help', 'Помощь', {
+  activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }] },
+  effects: [{ resolution: 'auto', result: [{ kind: 'narrative' }] }],
+  targeting: { domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1, max_targets: 1, range_ft: 5, requires_line_of_sight: true, allowed_relations: ['ally'] },
 });
 
 const unarmedStyleMechanics = fightingStyleDefinitions.find(
@@ -674,11 +686,12 @@ describe('solo combat engine vertical integration', () => {
     const fixture = wildCompanionParticipant();
     const basicDash = dash();
     const basicDisengage = disengage();
+    const basicHelp = help();
     let state = await createSoloCombatState({
       character: fixture.participant.character,
       participant: fixture.participant,
       selected: [{ monster: goblin(), quantity: 1 }],
-      actions: [scimitar(), basicDash, basicDisengage], effects: [], rng: () => 0.5,
+      actions: [scimitar(), basicDash, basicDisengage, basicHelp], effects: [], rng: () => 0.5,
     });
     const ownerActorId = fixture.participant.character.id;
     state = executeCombatAction({
@@ -687,7 +700,7 @@ describe('solo combat engine vertical integration', () => {
       actionId: fixture.action.id,
       targetIds: [],
       choices: { find_familiar_form: ['owl'] },
-      rng: () => 0.5,
+      rng: () => 0.65,
     });
 
     const familiar = Object.values(state.world.actors).find((actor) => actor.kind === 'summonedActor');
@@ -697,17 +710,17 @@ describe('solo combat engine vertical integration', () => {
     expect(state.tokens[familiar!.id]).toMatchObject({ actorId: familiar!.id, color: '#6f8f5a' });
     expect(state.sideByActorId[familiar!.id]).toBe(state.sideByActorId[ownerActorId]);
     expect(state.initiative.find((entry) => entry.actorId === familiar!.id)).toMatchObject({
-      die: 11, bonus: 1, total: 12,
+      die: 14, bonus: 1, total: 15,
     });
     expect(state.world.scene.mode === 'encounter' && state.world.scene.initiative)
       .toEqual(state.initiative.map((entry) => entry.actorId));
     expect(state.actorPresentation[familiar!.id]).toMatchObject({
       creatureType: 'Фея', size: 'Крошечный',
-      actionIds: expect.arrayContaining([basicDash.id, basicDisengage.id]),
+      actionIds: expect.arrayContaining([basicDash.id, basicDisengage.id, basicHelp.id]),
     });
     expect(state.actorPresentation[familiar!.id].description).toContain('полёт 60 фт.');
     expect(state.playerActionIdsByActor?.[familiar!.id]).toEqual(expect.arrayContaining([
-      basicDash.id, basicDisengage.id,
+      basicDash.id, basicDisengage.id, basicHelp.id,
     ]));
     expect(state.playerActionIdsByActor?.[familiar!.id]).not.toContain(scimitar().id);
     expect(isPlayerControlledCombatActor(state, familiar!.id)).toBe(true);
@@ -728,6 +741,27 @@ describe('solo combat engine vertical integration', () => {
     const restored = readSoloCombatState(writeSoloCombatState({}, state), ownerActorId, 9)!;
     expect(restored.tokens[familiar!.id].position).toEqual(destination);
     expect(restored.initiative.some((entry) => entry.actorId === familiar!.id)).toBe(true);
+
+    state = advanceTurn(state, () => 0.5);
+    state = runMonsterTurn(state, () => 0.5);
+    expect(activeId(state)).toBe(ownerActorId);
+    state = refreshSoloCombatResources(state, ownerActorId);
+    state = executeCombatAction({
+      state,
+      actorId: ownerActorId,
+      actionId: fixture.action.id,
+      targetIds: [],
+      choices: { find_familiar_form: ['cat'] },
+      rng: () => 0.95,
+    });
+    const familiars = Object.values(state.world.actors).filter((actor) => actor.kind === 'summonedActor');
+    expect(familiars).toHaveLength(1);
+    expect(familiars[0]).toMatchObject({ id: familiar!.id, name: 'Cat' });
+    expect(state.initiative[0]).toMatchObject({ actorId: familiar!.id, die: 20, bonus: 2, total: 22 });
+    expect(activeId(state)).toBe(ownerActorId);
+    expect(state.log.find((entry) => entry.text.startsWith('Owl:'))?.actorNames?.[familiar!.id]).toBe('Owl');
+    expect(state.world.scene.mode === 'encounter' && state.world.scene.initiative)
+      .toEqual(state.initiative.map((entry) => entry.actorId));
   });
 
   it('requires and forwards explicit Stonecunning surface facts before spending resources', async () => {

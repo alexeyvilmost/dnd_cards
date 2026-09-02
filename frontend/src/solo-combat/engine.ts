@@ -121,6 +121,7 @@ const TACTICAL_BASIC_ACTIONS = new Set([
 const FAMILIAR_BASIC_ACTIONS = new Set([
   ...TACTICAL_BASIC_ACTIONS,
   'action_basic_help',
+  'action_help',
 ]);
 const FAMILIAR_SIZE_LABELS: Record<string, string> = {
   tiny: 'Крошечный', small: 'Маленький', medium: 'Средний',
@@ -183,8 +184,16 @@ function appendLog(
 ): SoloCombatState {
   const round = state.world.scene.mode === 'encounter' ? state.world.scene.round : 1;
   const actorName = state.world.actors[actorId]?.name ?? 'Неизвестный участник';
+  const loggedActorIds = new Set([
+    actorId,
+    ...records.flatMap((record) => [record.sourceActorId, record.actorId, ...record.targetIds]),
+  ]);
   const entry: CombatLogEntry = {
     id: newSheetRuntimeCommandId(), round, actorId, text: `${actorName}: ${text}`,
+    actorNames: Object.fromEntries([...loggedActorIds].map((loggedActorId) => [
+      loggedActorId,
+      state.world.actors[loggedActorId]?.name ?? loggedActorId,
+    ])),
     ...(records.length ? { records: clone([...records]) } : {}),
   };
   return { ...state, log: [...state.log.slice(-79), entry] };
@@ -625,11 +634,22 @@ function reconcileSummonedActorProjection(
   }
 
   if (nextWorld.scene.mode === 'encounter') {
-    const initiative = nextWorld.scene.initiative.map((actorId) => initiativeByActor.get(actorId));
-    if (initiative.some((entry) => !entry)) {
+    const currentActorId = nextWorld.scene.initiative[nextWorld.scene.activeIndex] ?? null;
+    const initiative = [...initiativeByActor.values()].sort((left, right) => (
+      right.total - left.total || right.bonus - left.bonus || left.actorId.localeCompare(right.actorId)
+    ));
+    if (initiative.length !== nextWorld.scene.initiative.length
+      || initiative.some((entry) => !nextWorld.actors[entry.actorId])) {
       throw new Error('Canonical encounter contains an actor without a tactical initiative entry');
     }
-    projection.initiative = initiative as SoloCombatState['initiative'];
+    const order = initiative.map((entry) => entry.actorId);
+    const activeIndex = currentActorId === null ? nextWorld.scene.activeIndex : order.indexOf(currentActorId);
+    if (activeIndex < 0) throw new Error('Active actor disappeared while reconciling a familiar');
+    projection.initiative = initiative;
+    projection.world = {
+      ...projection.world,
+      scene: { ...nextWorld.scene, initiative: order, activeIndex },
+    };
   } else {
     projection.initiative = [...initiativeByActor.values()];
   }
@@ -1123,12 +1143,21 @@ export function executeCombatAction(input: {
   };
   next = restoreFamiliarCapabilities(next);
   if (action.id !== next.dashActionId) return withTriggeredAttackOffer(next);
+  const movementBeforeDash = input.state.movementRemainingFt[input.actorId]
+    ?? effectiveCombatActorSpeedFt(input.state, input.actorId);
+  const dashAllotment = effectiveCombatActorSpeedFt(input.state, input.actorId);
   return withTriggeredAttackOffer({
     ...next,
     movementRemainingFt: {
       ...next.movementRemainingFt,
-      [input.actorId]: (next.movementRemainingFt[input.actorId] ?? 0)
-        + effectiveCombatActorSpeedFt(next, input.actorId),
+      // Some catalog rows express Dash's visible speed boon as a modifier and
+      // therefore reconcile the ledger during dispatch. Narrative-only rows
+      // need the tactical fallback. Both paths converge on exactly one extra
+      // pre-Dash Speed allotment instead of stacking the same grant twice.
+      [input.actorId]: Math.max(
+        next.movementRemainingFt[input.actorId] ?? 0,
+        movementBeforeDash + dashAllotment,
+      ),
     },
   });
 }
@@ -2599,7 +2628,7 @@ export async function createSoloCombatState(input: {
     base.world.actors[participant.character.id].capabilities.actionIds.push(opportunity.id);
     opportunityActionIds[participant.character.id] = opportunity.id;
   }
-  const basicRows = input.actions.filter((action) => TACTICAL_BASIC_ACTIONS.has(action.card_number));
+  const basicRows = input.actions.filter((action) => FAMILIAR_BASIC_ACTIONS.has(action.card_number));
   const tacticalBasics = basicRows.map((action) => projectRuleAction(action));
   const dash = tacticalBasics.find((_, index) => basicRows[index]?.card_number === 'action_basic_dash')
     ?? (input.dashAction ? projectRuleAction(input.dashAction) : undefined);

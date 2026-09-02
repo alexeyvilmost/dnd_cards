@@ -7,17 +7,20 @@ export default function CombatLogPanel({ state }: { state: SoloCombatState }) {
       <h2>Журнал боя</h2>
       {[...state.log].reverse().map((entry) => {
         const entryActor = state.world.actors[entry.actorId];
+        const loggedName = (actorId: string) => (
+          entry.actorNames?.[actorId] ?? state.world.actors[actorId]?.name ?? actorId
+        );
         const records = combatLogRecords(entry);
         const tone = combatLogTone(entry, state);
         return (
           <article key={entry.id} className={`combat-log-entry combat-log-entry--${tone}`} data-tone={tone}>
-            <header>Раунд {entry.round} · {entryActor?.name ?? 'Участник'}</header>
+            <header>Раунд {entry.round} · {entry.actorNames?.[entry.actorId] ?? entryActor?.name ?? 'Участник'}</header>
             <p className="combat-log-entry__summary">{entry.text}</p>
             {records.length > 0 && (
               <div className="combat-log-entry__events">
                 {records.flatMap((record) => combatLogDetails(record, state).map((detail, detailIndex) => {
-                  const targets = record.targetIds.map((id) => state.world.actors[id]?.name ?? id);
-                  const source = state.world.actors[record.sourceActorId]?.name ?? record.sourceActorId;
+                  const targets = record.targetIds.map(loggedName);
+                  const source = loggedName(record.sourceActorId);
                   return (
                     <div
                       key={`${record.ordinal}:${detailIndex}`}
