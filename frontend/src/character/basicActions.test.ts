@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { collectSheetActions } from './actionSheet';
 import type { AssembledCharacter } from './assemble';
-import type { Action } from '../types';
+import type { Action, Card } from '../types';
 import { actionsApi } from '../api/client';
 import { BASIC_ACTION_CATALOG_LIMIT, fetchBasicActions } from './basicActions';
 
@@ -126,6 +126,29 @@ describe('базовые действия как сущности (не хард
       },
     } as unknown as Action;
     expect(collectSheetActions(emptyAssembled, [], [poolOnly])).toEqual([]);
+  });
+
+  it('связывает self_uses активного предмета с его стабильным пулом', () => {
+    const healerKit = {
+      id: 'healer-kit-id',
+      card_number: 'CARD-0491',
+      name: 'Комплект целителя',
+    } as unknown as Card;
+    const mechanics = {
+      activation: {
+        mode: 'active',
+        while: 'carried',
+        cost: [{ resource: 'action' }, { resource: 'self_uses' }],
+      },
+      uses: { count: 10, per: 'never' },
+      effects: [{ resolution: 'auto', result: [{ kind: 'stabilize', who: 'target' }] }],
+    };
+
+    const [projected] = collectSheetActions(emptyAssembled, [{ card: healerKit, mechanics }]);
+    expect(projected.usesKey).toBe('uses_CARD-0491');
+    expect((projected.mechanics.activation as { cost: unknown }).cost).toEqual([
+      { resource: 'action' }, { resource: 'uses_CARD-0491' },
+    ]);
   });
 
   it('проектирует reaction Action как capability, но не дублирует его из reaction Effect', () => {

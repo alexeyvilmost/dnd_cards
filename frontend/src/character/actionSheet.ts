@@ -334,10 +334,14 @@ export function collectSheetActions(
       // Экономика предмета так же обязана быть объявлена данными. Legacy
       // consumes_self больше не превращается здесь в скрытую стоимость.
       if (!Array.isArray(activation.cost)) return null;
-      const mechanics2 = bindSelfItemCost(
+      let mechanics2 = bindSelfItemCost(
         mechanicsWithPresentationName(mechanics, card.name),
         card.id,
       );
+      const itemUsesKey = usesFromMechanics(mechanics)
+        ? actionUsesKey(card.card_number || card.id)
+        : undefined;
+      if (itemUsesKey) mechanics2 = bindActionUsesCost(mechanics2, itemUsesKey);
       return {
         id: `item-${card.id}`,
         name: card.name,
@@ -345,6 +349,7 @@ export function collectSheetActions(
         group: 'item' as const,
         imageUrl: card.image_url,
         sourceLabel: 'Предмет',
+        usesKey: itemUsesKey,
         sourceEntityIds: stableSources(card.id, card.card_number),
       };
     })
