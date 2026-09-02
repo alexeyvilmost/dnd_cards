@@ -186,8 +186,11 @@ const CharacterForge = () => {
     [races, showAllContent, draft.raceId, draft.lineageId],
   );
   const visibleClasses = useMemo(
-    () => filterEntitiesBySupport(classes, showAllContent, [draft.classId, draft.subclassId].filter(Boolean) as string[]),
-    [classes, showAllContent, draft.classId, draft.subclassId],
+    () => filterEntitiesBySupport(classes, showAllContent, [
+      ...Object.keys(draftClassLevels(draft)),
+      draft.subclassId,
+    ].filter(Boolean) as string[]),
+    [classes, showAllContent, draft.classId, draft.classLevels, draft.level, draft.subclassId],
   );
   const visibleBackgrounds = useMemo(
     () => filterEntitiesBySupport(backgrounds, showAllContent, draft.backgroundId ? [draft.backgroundId] : []),
