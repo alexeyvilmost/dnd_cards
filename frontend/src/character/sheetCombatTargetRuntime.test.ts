@@ -174,6 +174,7 @@ describe('sheet -> combat action inventory adapter', () => {
       expect.objectContaining({ id: `granted-${granted.id}`, group: 'race' }),
     ]));
     expect(inventory.grantedEffects['ward-effect']).toMatchObject({
+      id: ward.id, card_number: ward.card_number,
       name: ward.name, mechanics: ward.mechanics, repeatable: false,
     });
     expect(inventory.masteryEffects[mastery.id]?.mechanics).toEqual(mastery.mechanics);

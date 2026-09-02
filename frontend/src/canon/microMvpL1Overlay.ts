@@ -1794,7 +1794,13 @@ function grantedEffectsFor(
     for (const reference of referenceIds(action.mechanics, 'grant_effect')) {
       const effect = index.get(reference);
       if (!effect) continue;
-      const entry = { name: effect.name, mechanics: cloneJson(effect.mechanics), repeatable: effect.repeatable };
+      const entry = {
+        id: effect.id,
+        card_number: effect.card_number,
+        name: effect.name,
+        mechanics: cloneJson(effect.mechanics),
+        repeatable: effect.repeatable,
+      };
       result[effect.id] = entry;
       result[effect.card_number] = entry;
     }

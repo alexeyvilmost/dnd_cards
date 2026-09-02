@@ -576,6 +576,10 @@ describe('versioned deterministic micro-MVP L1 content overlay', () => {
     expect((mechanics.activation as Dict).cost).toEqual([{ resource: 'action' }]);
     expect(mechanics).not.toHaveProperty('uses');
     expect(root.actor.runtime.maxResources).not.toHaveProperty(actionUsesKey('SPELL-0190'));
+    expect(root.actor.grantedEffects?.['EFFECT-0256']).toMatchObject({
+      id: expect.any(String),
+      card_number: 'EFFECT-0256',
+    });
 
     const first = executeAction(copy(root.actor.runtime), mechanics, {
       character: root.actor.character,

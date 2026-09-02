@@ -181,6 +181,8 @@ export async function collectSheetCombatActionInventory(input: {
   )));
   const grantedEffects: NonNullable<ActorState['grantedEffects']> = Object.fromEntries(
     grantedEffectRows.map(([reference, effect]) => [reference, {
+      id: effect.id,
+      card_number: effect.card_number,
       name: effect.name,
       mechanics: effect.mechanics,
       repeatable: effect.repeatable,
