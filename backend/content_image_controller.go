@@ -34,6 +34,7 @@ var contentImageTables = map[string]string{
 	"classes":     "classes",
 	"feats":       "feats",
 	"backgrounds": "backgrounds",
+	"resources":   "resources",
 }
 
 type contentImageRow struct {
@@ -117,8 +118,12 @@ func (cc *ContentImageController) Get(c *gin.Context) {
 	}
 
 	var row contentImageRow
+	imageSelect := "image_url, image_cloudinary_url"
+	if c.Param("entityType") == "resources" {
+		imageSelect = "image_url, '' AS image_cloudinary_url"
+	}
 	result := cc.db.Table(table).
-		Select("image_url, image_cloudinary_url").
+		Select(imageSelect).
 		Where("id = ? AND deleted_at IS NULL", entityID).
 		Take(&row)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {

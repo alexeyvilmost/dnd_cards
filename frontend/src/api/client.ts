@@ -478,8 +478,8 @@ export const classesApi = {
 };
 
 export const resourcesApi = {
-  getResources: async (params?: { category?: string }): Promise<ResourcesResponse> => cached(
-    `/api/resources?category=${params?.category ?? ''}`,
+  getResources: async (params?: { category?: string; fields?: 'list' }): Promise<ResourcesResponse> => cached(
+    `/api/resources?category=${params?.category ?? ''}&fields=${params?.fields ?? ''}`,
     60_000,
     async () => {
       const response = await apiClient.get<ResourcesResponse>('/api/resources', { params });

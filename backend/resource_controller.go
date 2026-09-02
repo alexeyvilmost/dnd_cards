@@ -38,12 +38,30 @@ func (rc *ResourceController) GetResources(c *gin.Context) {
 		return
 	}
 	rows := query.Order("sort_order ASC, name ASC, id ASC")
+	if wantsListView(c) {
+		rows = rows.Select("id, resource_id, name, name_en, description, category, recharge, sort_order, created_at, updated_at")
+	}
 	if explicitPagination {
 		rows = rows.Offset(offset).Limit(limit)
 	}
 	if err := rows.Find(&resources).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения ресурсов"})
 		return
+	}
+	if wantsListView(c) {
+		ids := make([]uuid.UUID, 0, len(resources))
+		for _, resource := range resources {
+			ids = append(ids, resource.ID)
+		}
+		imageIDs, err := listLegacyImageIDs(rc.db, "resources", ids)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения ресурсов"})
+			return
+		}
+		for i := range resources {
+			resources[i].ImageURL = listImageURL("resources", resources[i].ID, "", imageIDs[resources[i].ID])
+			resources[i].ImageURLSpent = ""
+		}
 	}
 	if !explicitPagination {
 		page = 1

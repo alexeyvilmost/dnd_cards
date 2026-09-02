@@ -83,7 +83,7 @@ func TestReferenceCatalogsUseStablePagination(t *testing.T) {
 	db := openCatalogPaginationTestDB(t)
 
 	resources := []ResourceDefinition{
-		{ResourceID: "class-first", Name: "First", Category: "class", SortOrder: 1},
+		{ResourceID: "class-first", Name: "First", Category: "class", SortOrder: 1, ImageURL: "data:image/png;base64,iVBORw0KGgo="},
 		{ResourceID: "class-second", Name: "Second", Category: "class", SortOrder: 2},
 		{ResourceID: "character-only", Name: "Character", Category: "character", SortOrder: 1},
 	}
@@ -117,6 +117,15 @@ func TestReferenceCatalogsUseStablePagination(t *testing.T) {
 	if defaultResourcePage.Total != 3 || defaultResourcePage.Page != 1 ||
 		defaultResourcePage.Limit != 3 || len(defaultResourcePage.Resources) != 3 {
 		t.Fatalf("default resource catalog no longer returns the complete small catalog: %#v", defaultResourcePage)
+	}
+	listResourceRecorder := httptest.NewRecorder()
+	router.ServeHTTP(listResourceRecorder, httptest.NewRequest(http.MethodGet, "/resources?category=class&fields=list", nil))
+	listResourcePage := decodeCatalogPage(t, listResourceRecorder)
+	if strings.Contains(listResourceRecorder.Body.String(), "data:image") {
+		t.Fatal("resource list projection leaked an embedded image")
+	}
+	if got := listResourcePage.Resources[0].ImageURL; got != "/api/content-images/resources/"+resources[0].ID.String() {
+		t.Fatalf("resource list image route=%q", got)
 	}
 
 	resourceRecorder := httptest.NewRecorder()

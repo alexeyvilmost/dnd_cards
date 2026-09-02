@@ -58,7 +58,7 @@ export function useResourceOptions() {
   const [dbResources, setDbResources] = useState<ResourceOption[]>([]);
   useEffect(() => {
     let stale = false;
-    resourcesApi.getResources()
+    resourcesApi.getResources({ fields: 'list' })
       .then((response) => {
         if (!stale) setDbResources((response.resources || []).map(fromApi));
       })

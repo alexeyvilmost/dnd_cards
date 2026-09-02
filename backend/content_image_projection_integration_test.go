@@ -109,6 +109,13 @@ func TestListProjectionAndContentImageRouteShareAvailabilityContract(t *testing.
 	if response := request(fallbackRoute); response.Code != http.StatusOK || response.Header().Get("Content-Type") != "image/png" {
 		t.Fatalf("fallback route status=%d type=%q body=%v", response.Code, response.Header().Get("Content-Type"), response.Body.Bytes())
 	}
+	resource := ResourceDefinition{ResourceID: "image-route-test", Name: "Image route", ImageURL: embedded}
+	if err := db.Create(&resource).Error; err != nil {
+		t.Fatal(err)
+	}
+	if response := request("/api/content-images/resources/" + resource.ID.String()); response.Code != http.StatusOK || response.Header().Get("Content-Type") != "image/png" {
+		t.Fatalf("resource image route status=%d type=%q body=%v", response.Code, response.Header().Get("Content-Type"), response.Body.Bytes())
+	}
 	if response := request("/api/content-images/spells/" + blankID.String()); response.Code != http.StatusNotFound {
 		t.Fatalf("blank image route status=%d want=404", response.Code)
 	}
