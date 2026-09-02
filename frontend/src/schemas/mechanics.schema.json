@@ -935,6 +935,10 @@
         "id": { "type": "string", "minLength": 1 },
         "prompt": { "type": "string", "minLength": 1 },
         "count": { "type": "integer", "minimum": 1 },
+        "count_by_level": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 1 }
+        },
         "source_choice_id": { "type": "string", "minLength": 1 },
         "resolution": { "const": "on_acquire" },
         "context": { "enum": ["build", "level_up"] }
@@ -949,6 +953,10 @@
         "id": { "type": "string" },
         "prompt": { "type": "string" },
         "count": { "type": "integer", "minimum": 1 },
+        "count_by_level": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 1 }
+        },
         "options": { "type": "object" },
         "grant": { "$ref": "#/$defs/payload" },
         "resolution": { "enum": ["on_acquire", "immediate", "on_rest"] },
@@ -1503,6 +1511,10 @@
         "id": { "type": "string" },
         "prompt": { "type": "string" },
         "count": { "type": "integer", "minimum": 1, "default": 1 },
+        "count_by_level": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 1 }
+        },
         "options": {
           "type": "object",
           "required": ["source"],

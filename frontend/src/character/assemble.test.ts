@@ -211,6 +211,51 @@ describe('assemble — recommendation sidecars', () => {
   });
 });
 
+describe('assemble — level-up spellbook preparation', () => {
+  it('unions repeated spellbook additions and scales preparation by class level', () => {
+    const wizard = { id: 'wizard', name: 'Wizard', hit_die: 'd6' } as unknown as CharacterClass;
+    const spellcasting = mkEffect('spellcasting', 'EFF-wizard-spellcasting', {
+      effects: [
+        { kind: 'choice', id: 'wizard_book', count: 6, options: { source: 'spell' }, grant: { kind: 'grant_spell', label: 'spellbook' } },
+        { kind: 'prepared_spell_choice', id: 'wizard_prepared', source_choice_id: 'wizard_book', prompt: 'Prepare', count: 4, count_by_level: { 1: 4, 2: 5 }, resolution: 'on_acquire' },
+      ],
+    });
+    const levelTwoBooks = mkEffect('book-growth', 'wizard_spells_2', {
+      effects: [
+        { kind: 'choice', id: 'wizard_book', count: 2, options: { source: 'spell' }, grant: { kind: 'grant_spell', label: 'spellbook' } },
+      ],
+    });
+    const bundle = {
+      race: null,
+      klass: wizard,
+      classes: [wizard],
+      background: null,
+      feats: [],
+      effects: [
+        oe(spellcasting, { kind: 'class', id: wizard.id, name: wizard.name }),
+        oe(levelTwoBooks, { kind: 'class', id: wizard.id, name: wizard.name, instanceKey: 'level-2' }),
+      ],
+      actions: [], spells: [], resources: [],
+    };
+    const baseDraft = { ...emptyDraft(), classId: wizard.id, level: 2, classLevels: { [wizard.id]: 2 } };
+    const initial = assemble(bundle, baseDraft);
+    const bookChoices = initial.pendingChoices.filter((choice) => choice.rawId === 'wizard_book');
+    const preparedChoice = initial.pendingChoices.find((choice) => choice.source === 'prepared_spell')!;
+    const resolvedChoices = {
+      [bookChoices[0].id]: ['spell-1', 'spell-2', 'spell-3', 'spell-4', 'spell-5', 'spell-6'],
+      [bookChoices[1].id]: ['spell-7', 'spell-8'],
+      [preparedChoice.id]: ['spell-1', 'spell-2', 'spell-3', 'spell-4', 'spell-7'],
+    };
+    const assembled = assemble(bundle, { ...baseDraft, resolvedChoices });
+    const prepared = assembled.pendingChoices.find((choice) => choice.source === 'prepared_spell')!;
+
+    expect(prepared.count).toBe(5);
+    expect(prepared.allowedOptionIds).toEqual([
+      'spell-1', 'spell-2', 'spell-3', 'spell-4', 'spell-5', 'spell-6', 'spell-7', 'spell-8',
+    ]);
+  });
+});
+
 describe('expandEffectGrants — разворачивание бусин', () => {
   it('«получить всё»: добавляет набор эффектов с origin родителя', async () => {
     const store = { 'EFF-b': mkEffect('id-b', 'EFF-b'), 'EFF-c': mkEffect('id-c', 'EFF-c') };
