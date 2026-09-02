@@ -212,7 +212,7 @@ export const actionsApi = {
     action_type?: string;
     type?: string;
     search?: string;
-    fields?: 'list';
+    fields?: 'list' | 'runtime';
   }): Promise<ActionsResponse> => {
     const response = await apiClient.get<ActionsResponse>('/api/actions', { params });
     return response.data;
@@ -252,7 +252,7 @@ export const effectsApi = {
     effect_type?: string;
     type?: string;
     search?: string;
-    fields?: 'list';
+    fields?: 'list' | 'runtime';
   }, request?: { timeoutMs?: number }): Promise<PassiveEffectsResponse> => {
     const response = await apiClient.get<PassiveEffectsResponse>('/api/effects', {
       params,
@@ -308,6 +308,7 @@ export const spellsApi = {
     limit?: number;
     rarity?: string;
     level?: number;
+    max_level?: number;
     school?: string;
     class?: string;
     subclass?: string;

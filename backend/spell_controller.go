@@ -46,6 +46,17 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 	if level := c.Query("level"); level != "" {
 		query = query.Where("level = ?", level)
 	}
+	if maxLevel := c.Query("max_level"); maxLevel != "" {
+		if parsed, err := strconv.Atoi(maxLevel); err == nil {
+			if parsed < 0 {
+				parsed = 0
+			}
+			if parsed > 12 {
+				parsed = 12
+			}
+			query = query.Where("level <= ?", parsed)
+		}
+	}
 
 	// Фильтрация по школе
 	if school := c.Query("school"); school != "" {

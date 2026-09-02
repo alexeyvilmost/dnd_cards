@@ -59,6 +59,13 @@ func wantsListView(c *gin.Context) bool {
 	return c.Query("fields") == "list"
 }
 
+// wantsRuntimeView keeps executable mechanics but omits editor-only payloads
+// and embedded source images. Character sheets need mechanics for execution,
+// not multi-megabyte authoring fields.
+func wantsRuntimeView(c *gin.Context) bool {
+	return c.Query("fields") == "runtime"
+}
+
 // listImageURL never ships embedded base64 originals in catalog projections.
 // Crucially, a row without either stored source projects an empty URL instead
 // of a route that is guaranteed to return 404.
@@ -980,8 +987,11 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 
 	query := ac.db.Model(&Action{})
 	light := wantsListView(c)
+	runtimeView := wantsRuntimeView(c)
 	if light {
 		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt", "Mechanics", "Script")
+	} else if runtimeView {
+		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt", "Script")
 	}
 
 	// Фильтрация по редкости
@@ -1022,7 +1032,7 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 		return
 	}
 	legacyImageIDs := map[uuid.UUID]bool{}
-	if light {
+	if light || runtimeView {
 		ids := make([]uuid.UUID, 0, len(actions))
 		for _, action := range actions {
 			if !contentImageSourceUsable(action.ImageCloudinaryURL) {
@@ -1042,10 +1052,12 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 	for _, action := range actions {
 		// Конвертируем ActionResources в []ActionResource для ответа
 		r := action.ToActionResponse()
-		if light {
+		if light || runtimeView {
 			r.DetailedDescription = nil
-			r.Mechanics = nil
 			r.Script = nil
+			if light {
+				r.Mechanics = nil
+			}
 			r.ImageURL = listImageURL("actions", action.ID, action.ImageCloudinaryURL, legacyImageIDs[action.ID])
 		}
 		responses = append(responses, r)
@@ -1449,8 +1461,11 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 
 	query := ec.db.Model(&Effect{})
 	light := wantsListView(c)
+	runtimeView := wantsRuntimeView(c)
 	if light {
 		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt", "Mechanics", "Script", "ConditionDescription")
+	} else if runtimeView {
+		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt", "Script", "ConditionDescription")
 	}
 
 	// Фильтрация по редкости
@@ -1486,7 +1501,7 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 		return
 	}
 	legacyImageIDs := map[uuid.UUID]bool{}
-	if light {
+	if light || runtimeView {
 		ids := make([]uuid.UUID, 0, len(effects))
 		for _, effect := range effects {
 			if !contentImageSourceUsable(effect.ImageCloudinaryURL) {
@@ -1515,11 +1530,13 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 	for _, effect := range effects {
 		r := effect.ToEffectResponse()
 		r.ChoiceRecommendations = recommendations[effect.CardNumber]
-		if light {
+		if light || runtimeView {
 			r.DetailedDescription = nil
-			r.Mechanics = nil
 			r.Script = nil
 			r.ConditionDescription = nil
+			if light {
+				r.Mechanics = nil
+			}
 			r.ImageURL = listImageURL("effects", effect.ID, effect.ImageCloudinaryURL, legacyImageIDs[effect.ID])
 		}
 		responses = append(responses, r)

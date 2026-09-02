@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { collectSheetActions } from './actionSheet';
 import type { AssembledCharacter } from './assemble';
 import type { Action } from '../types';
-import { BASIC_ACTION_CATALOG_LIMIT } from './basicActions';
+import { actionsApi } from '../api/client';
+import { BASIC_ACTION_CATALOG_LIMIT, fetchBasicActions } from './basicActions';
 
 // Базовые действия — сущности Action (type='basic'), а не хардкод. Проверяем, что
 // collectSheetActions строит группу basic ИЗ переданных сущностей (с actionRef для
@@ -35,6 +36,16 @@ const basicUnarmed = {
 const emptyAssembled = { actions: [], effects: [], spells: [] } as unknown as AssembledCharacter;
 
 describe('базовые действия как сущности (не хардкод)', () => {
+  it('requests the mechanics-preserving runtime projection', async () => {
+    const request = vi.spyOn(actionsApi, 'getActions').mockResolvedValue({
+      actions: [basicUnarmed], total: 1, page: 1, limit: BASIC_ACTION_CATALOG_LIMIT,
+    });
+    await expect(fetchBasicActions()).resolves.toEqual([basicUnarmed]);
+    expect(request).toHaveBeenCalledWith({
+      type: 'basic', limit: BASIC_ACTION_CATALOG_LIMIT, fields: 'runtime',
+    });
+  });
+
   it('загружает весь общий каталог, а не только первую страницу из 50 действий', () => {
     expect(BASIC_ACTION_CATALOG_LIMIT).toBeGreaterThanOrEqual(1000);
   });

@@ -16,7 +16,7 @@ export function fetchBasicActions(): Promise<Action[]> {
       // Basic actions are a shared catalog, not a single API page. A limit of
       // 50 silently hid older valid actions once the catalog grew beyond it
       // (Divine Inspiration was the first production casualty).
-      .getActions({ type: 'basic', limit: BASIC_ACTION_CATALOG_LIMIT })
+      .getActions({ type: 'basic', limit: BASIC_ACTION_CATALOG_LIMIT, fields: 'runtime' })
       // Защита от старого бэкенда без ?type-фильтра: берём только реально basic.
       .then((r) => (r.actions ?? []).filter((a) => a.type === 'basic'))
       .catch(() => {

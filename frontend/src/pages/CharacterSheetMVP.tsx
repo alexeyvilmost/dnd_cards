@@ -276,9 +276,13 @@ const CharacterSheetMVP = () => {
         if (stale) return;
         setCharacter(c);
         const draft = characterToDraft(c);
-        const asm = await loadAssembly(draft);
+        // Assembly and journal are independent. The journal used to sit on the
+        // critical path and kept the whole sheet behind its loading screen.
+        // Render as soon as rules are assembled; journal state fills in beside it.
+        const assemblyRequest = loadAssembly(draft);
+        void loadJournal(id);
+        const asm = await assemblyRequest;
         if (!stale) setAssembled(asm);
-        if (!stale) await loadJournal(id);
       } catch (e) {
         console.error(e);
         if (!stale) setError(characterV3ErrorMessage(e, 'Не удалось загрузить лист персонажа'));

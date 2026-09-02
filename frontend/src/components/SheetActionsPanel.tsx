@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { charactersV3Api, type CharacterEventRow } from '../character/api';
-import { actionsApi, effectsApi } from '../api/client';
-import { getCardsIndex } from '../utils/cardsIndex';
+import { actionsApi, cardsApi, effectsApi } from '../api/client';
 import type { AssembledCharacter } from '../character/assemble';
 import { actionInteractsWithTarget, actionForcesTargetSave, collectSheetActions, collectGrantActionSlugs, collectGrantEffectSlugs, type SheetAction, type GrantedAction } from '../character/actionSheet';
 import { useBasicActions } from '../character/basicActions';
@@ -21,7 +20,7 @@ import type { Combatant, BattleLogEntry, PendingSave, PendingAttack, SaveOutcome
 import { pendingAttackDamage } from '../battle/pendingAttack';
 import { describeEngineEvent, narrativeEvent } from '../engine/events';
 import { rollD20 } from '../engine/roll';
-import { isCharacterReadOnly, type ForgeCharacter } from '../character/types';
+import { isCharacterReadOnly, type ForgeCharacter, type ForgeCharacterPreview } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { isActionUsesKey } from '../engine/actionUses';
 import { applyFreeuseCost, findFreeusePoolKey, freeuseKey, isFreeusePoolKey } from '../engine/freeuse';
@@ -654,6 +653,15 @@ export default function SheetActionsPanel({
   // One selected sheet supplies real AC, saves, HP and effects. Manual target
   // facts remain available when the target is not represented by a sheet.
   const targetCharsRef = useRef<ForgeCharacter[] | null>(null);
+  const targetPreviewsRef = useRef<ForgeCharacterPreview[] | null>(null);
+  const loadTargetPreviews = useCallback(async (): Promise<ForgeCharacterPreview[]> => {
+    if (targetPreviewsRef.current) return targetPreviewsRef.current;
+    try {
+      const list = await charactersV3Api.listPreviews();
+      targetPreviewsRef.current = list;
+      return list;
+    } catch { return []; }
+  }, []);
   const loadTargetChars = useCallback(async (): Promise<ForgeCharacter[]> => {
     if (targetCharsRef.current) return targetCharsRef.current;
     try {
@@ -662,7 +670,7 @@ export default function SheetActionsPanel({
       return list;
     } catch { return []; }
   }, []);
-  const [availableSheetTargets, setAvailableSheetTargets] = useState<ForgeCharacter[]>([]);
+  const [availableSheetTargets, setAvailableSheetTargets] = useState<ForgeCharacterPreview[]>([]);
   const [localSelectedSheetTargetId, setLocalSelectedSheetTargetId] = useState('');
   const selectedSheetTargetId = targetCharacterIdProp ?? localSelectedSheetTargetId;
   const setSelectedSheetTargetId = (id: string) => {
@@ -787,18 +795,29 @@ export default function SheetActionsPanel({
     }
     return out;
   }, [runtime]);
-  const selectedSheetTarget = useMemo(() => (
-    availableSheetTargets.find((candidate) => candidate.id === selectedSheetTargetId)
-  ), [availableSheetTargets, selectedSheetTargetId]);
+  const [selectedSheetTarget, setSelectedSheetTarget] = useState<ForgeCharacter | null>(null);
   useEffect(() => {
     let active = true;
-    void loadTargetChars().then((candidates) => {
+    void loadTargetPreviews().then((candidates) => {
       if (active) setAvailableSheetTargets(candidates.filter((candidate) => (
         !isCharacterReadOnly(candidate)
       )));
     });
     return () => { active = false; };
-  }, [character.id, loadTargetChars]);
+  }, [character.id, loadTargetPreviews]);
+  useEffect(() => {
+    if (!selectedSheetTargetId) {
+      setSelectedSheetTarget(null);
+      return;
+    }
+    if (selectedSheetTarget?.id === selectedSheetTargetId) return;
+    let active = true;
+    setSelectedSheetTarget(null);
+    void charactersV3Api.get(selectedSheetTargetId)
+      .then((candidate) => { if (active) setSelectedSheetTarget(candidate); })
+      .catch(() => { if (active) setSelectedSheetTarget(null); });
+    return () => { active = false; };
+  }, [selectedSheetTargetId, selectedSheetTarget?.id]);
 
   // D: причина запрета действия недееспособностью (стоимость с запрещённым типом / концентрация).
   const CAP_RU: Record<string, string> = {
@@ -875,17 +894,34 @@ export default function SheetActionsPanel({
     return () => { stale = true; };
   }, [itemMechs, assembled.effects, character.level, spellsOnly]);
 
-  // S3-полировка (#32): общий индекс карт — резолвер имён СОДЕРЖИМОГО контейнера (его карты не в
-  // equipCards, т.к. лежат внутри мешка) для диалога выбора «Достать» и журнала распаковки.
+  // Hydrate only cards referenced by containers the character actually owns.
+  // The former process-wide index paged through the entire card catalog on
+  // every cold sheet load even when the inventory contained no container.
   const [cardsIndex, setCardsIndex] = useState<Map<string, Card>>(new Map());
   const [cardsIndexReady, setCardsIndexReady] = useState(false);
   const [cardsIndexError, setCardsIndexError] = useState<Error | null>(null);
+  const referencedContainerCardIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const card of equipCards.values()) {
+      for (const reference of card.contents ?? []) {
+        if (reference.card_id && !equipCards.has(reference.card_id)) ids.add(reference.card_id);
+      }
+    }
+    return [...ids].sort();
+  }, [equipCards]);
   useEffect(() => {
+    if (!referencedContainerCardIds.length) {
+      setCardsIndex(new Map());
+      setCardsIndexReady(true);
+      setCardsIndexError(null);
+      return;
+    }
     let alive = true;
-    getCardsIndex()
-      .then((m) => {
+    setCardsIndexReady(false);
+    Promise.all(referencedContainerCardIds.map((id) => cardsApi.getCard(id)))
+      .then((cards) => {
         if (!alive) return;
-        setCardsIndex(m);
+        setCardsIndex(new Map(cards.map((card) => [card.id, card])));
         setCardsIndexReady(true);
         setCardsIndexError(null);
       })
@@ -894,7 +930,7 @@ export default function SheetActionsPanel({
         setCardsIndexError(cause instanceof Error ? cause : new Error(String(cause)));
       });
     return () => { alive = false; };
-  }, []);
+  }, [referencedContainerCardIds.join('|')]);
 
   // S2/S3 контейнеры: носимые карты-контейнеры → действие «Распаковать» (mode='all') или «Достать» (mode='choice').
   const containerCards = useMemo(() => {
@@ -1268,6 +1304,7 @@ export default function SheetActionsPanel({
     for (const next of Object.values(committed.characters)) {
       cached = replaceCachedInteractionTarget(cached, next);
       if (next.id === character.id) onUpdated(next);
+      if (next.id === selectedSheetTargetId) setSelectedSheetTarget(next);
     }
     targetCharsRef.current = cached;
     setAvailableSheetTargets(cached.filter((candidate) => !isCharacterReadOnly(candidate)));

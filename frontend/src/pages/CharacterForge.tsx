@@ -139,12 +139,11 @@ const CharacterForge = () => {
   const loadCatalogs = useCallback(async () => {
     setCatalogError(false);
     try {
-      const [rr, cc, bb, ff, ss] = await Promise.all([
+      const [rr, cc, bb, ff] = await Promise.all([
         racesApi.getRaces({ limit: 100, fields: 'list' }),
         classesApi.getClasses({ limit: 100, fields: 'list' }),
         backgroundsApi.getBackgrounds({ limit: 100, fields: 'list' }),
         featsApi.getFeats({ limit: 200, fields: 'list' }),
-        spellsApi.getSpells({ limit: 500, fields: 'list' }),
       ]);
       setRaces(rr.races || []);
       setClasses(cc.classes || []);
@@ -152,13 +151,28 @@ const CharacterForge = () => {
       // Все черты: origin — для смены черты происхождения, fighting_style
       // и другие категории — как варианты choice(source:"feat").
       setFeats(ff.feats || []);
-      setSpells(ss.spells || []);
     } catch (e) {
       console.error(e);
       setCatalogError(true);
     }
   }, []);
   useEffect(() => { void loadCatalogs(); }, [loadCatalogs]);
+
+  // A fresh level-1 Forge used to download every spell in the database.
+  // Load only cantrips and levels the current character can reach; the cap
+  // grows automatically during level-up and official 2024 player spells end
+  // at level 9.
+  const forgeSpellLevelCap = Math.min(9, Math.max(1, Math.ceil((draft.level || 1) / 2)));
+  useEffect(() => {
+    let stale = false;
+    spellsApi.getSpells({ limit: 500, max_level: forgeSpellLevelCap, fields: 'list' })
+      .then((response) => { if (!stale) setSpells(response.spells || []); })
+      .catch((reason) => {
+        console.error(reason);
+        if (!stale) setCatalogError(true);
+      });
+    return () => { stale = true; };
+  }, [forgeSpellLevelCap]);
 
   const visibleRaces = useMemo(
     () => filterEntitiesBySupport(races, showAllContent, [draft.raceId, draft.lineageId].filter(Boolean) as string[]),

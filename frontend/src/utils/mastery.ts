@@ -25,7 +25,7 @@ let inflight: Promise<PassiveEffect[]> | null = null;
 export function loadMasteryEffectsStrict(): Promise<PassiveEffect[]> {
   if (cache) return Promise.resolve(cache);
   if (!inflight) {
-    inflight = effectsApi.getEffects({ type: MASTERY_EFFECT_TYPE, limit: 100 })
+    inflight = effectsApi.getEffects({ type: MASTERY_EFFECT_TYPE, limit: 100, fields: 'runtime' })
       .then((r) => {
         // Бэкенд может игнорировать фильтр type — подстраховываемся клиентским отбором.
         cache = (r.effects || []).filter((e) => e.type === MASTERY_EFFECT_TYPE);
