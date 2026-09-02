@@ -181,6 +181,26 @@ describe('solo combat data-owned action choices', () => {
       .toEqual([expect.objectContaining({ id: 'container', context: 'in_play' })]);
   });
 
+  it('asks which temporary HP to keep before Armor of Agathys executes', () => {
+    const action = {
+      id: 'spell:armor-of-agathys', name: 'Доспех Агатиса', kind: 'spell',
+      sourceEntityIds: ['spell:armor-of-agathys'],
+      spell: { level: 1, classListIds: ['class:warlock'] },
+      mechanics: { primitive: { type: 'temporary_hp_melee_retaliation' } },
+    } as RuleActionDefinition;
+
+    expect(collectSoloCombatActionChoices({} as ActorState, action)).toEqual([
+      expect.objectContaining({
+        id: 'temporary_hp',
+        recommended: ['take_spell'],
+        items: [
+          { id: 'take_spell', name: 'Принять временные хиты заклинания' },
+          { id: 'keep_current', name: 'Сохранить текущие временные хиты' },
+        ],
+      }),
+    ]);
+  });
+
   it('asks for explicit Stonecunning terrain facts before immediate self execution', () => {
     const action = {
       id: 'action:stonecunning', name: 'Камнечувствие', kind: 'nonSpell',
