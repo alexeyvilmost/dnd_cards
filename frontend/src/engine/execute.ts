@@ -2962,8 +2962,11 @@ function applyTransform(
   const entry: ActiveEffectEntry = {
     id: runtimeEffectId(ctx, 'form', state.activeEffects.length), name: `Облик: ${formName}`, mechanics: p, expiry: 'manual', source,
   };
-  const next = { ...state, activeEffects: [...state.activeEffects, entry] };
+  let next = { ...state, activeEffects: [...state.activeEffects, entry] };
   events.push({ type: 'effect_applied', name: entry.name, sourceAction: source });
+  if (p.temporary_hp != null) {
+    next = applyTempHp(next, { kind: 'temp_hp', amount: p.temporary_hp }, ctx, events);
+  }
   events.push(narrativeEvent(
     `Превращение (${source}): используйте стат-блок зверя${p.max_cr != null ? ` (ПО ≤ ${p.max_cr})` : ''}; `
     + 'ментальные характеристики и спасброски МДР/ИНТ/ХАР — ваши. Снимите эффект при возврате.',
@@ -3341,6 +3344,8 @@ export function consumeNextRollEffects(
     scope?: 'self' | 'target';
     failed?: boolean;
     onlyConditional?: boolean;
+    /** The final result still failed after a conditional bonus die. */
+    finalFailed?: boolean;
   } = {},
 ): RuntimeState {
   const expired: ActiveEffectEntry[] = [];
@@ -3355,7 +3360,25 @@ export function consumeNextRollEffects(
   });
   if (!expired.length) return state;
   expired.forEach((entry) => events.push({ type: 'effect_expired', name: entry.name }));
-  return { ...state, activeEffects };
+  const resources = { ...state.resources };
+  if (options.finalFailed) {
+    for (const entry of expired) {
+      for (const payload of payloadsOf(entry.mechanics)) {
+        const refund = (payload.boon as Dict | undefined)?.refund_on_failure as Dict | undefined;
+        const resource = String(refund?.resource ?? '').trim();
+        const requested = Number(refund?.amount ?? 0);
+        if (!resource || !Number.isInteger(requested) || requested <= 0) continue;
+        const current = resources[resource] ?? 0;
+        const maximum = state.maxResources[resource] ?? current + requested;
+        const nextValue = Math.min(maximum, current + requested);
+        const amount = nextValue - current;
+        if (amount <= 0) continue;
+        resources[resource] = nextValue;
+        events.push({ type: 'resource_restored', resource, amount, current: nextValue });
+      }
+    }
+  }
+  return { ...state, resources, activeEffects };
 }
 
 /**
@@ -3455,12 +3478,14 @@ function runAttackRoll(
     filter: attackFilter,
     evalCtx: evalCtxOf(state, ctx),
     failed: roll.usedFailureBonus === true,
+    finalFailed: roll.usedFailureBonus === true && (roll.outcome === 'miss' || roll.outcome === 'crit_miss'),
   });
   if (targetRef.state) {
     const consumedTarget = consumeNextRollEffects(targetRef.state, 'attack', events, {
       scope: 'target',
       evalCtx: evalCtxOf(state, ctx),
       failed: roll.usedFailureBonus === true,
+      finalFailed: roll.usedFailureBonus === true && (roll.outcome === 'miss' || roll.outcome === 'crit_miss'),
     });
     if (consumedTarget !== targetRef.state) {
       targetRef.state = consumedTarget;
@@ -3805,6 +3830,7 @@ function runSave(
         savedConditions: new Set(savedConditionsOf(effect)),
       },
       failed: failureBonusUsed,
+      finalFailed: failureBonusUsed && !success,
     });
     if (consumedTarget !== targetRef.state) {
       targetRef.state = consumedTarget;
@@ -3815,6 +3841,7 @@ function runSave(
       filter: { ability },
       evalCtx: evalCtxOf(next, ctx),
       failed: failureBonusUsed,
+      finalFailed: failureBonusUsed && !success,
     });
   }
 
@@ -3936,6 +3963,7 @@ function runAbilityCheck(
       filter: checkFilter,
       evalCtx: evalCtxOf(state, ctx),
       failed: attRoll.usedFailureBonus === true,
+      finalFailed: attRoll.usedFailureBonus === true && !success,
     });
   }
 

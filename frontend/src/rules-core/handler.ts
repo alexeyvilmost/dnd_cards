@@ -4161,10 +4161,29 @@ function afterFailureSavingThrowBoon(input: {
   }
   try {
     const consumed = consumeBoonAfterFailure(runtime, boonEffectId, 'saving_throw');
+    const augmentedRoll = addBonusDieToD20Roll(input.roll, consumed.spec.faces, consumed.spec.name, env.rng);
+    let consumedState = consumed.state;
+    const refund = consumed.spec.refundOnFailure;
+    const refundEvents: EngineEvent[] = [];
+    if (augmentedRoll.outcome === 'fail' && refund) {
+      const current = consumedState.resources[refund.resource] ?? 0;
+      const maximum = consumedState.maxResources[refund.resource] ?? current + refund.amount;
+      const nextValue = Math.min(maximum, current + refund.amount);
+      const amount = nextValue - current;
+      if (amount > 0) {
+        consumedState = {
+          ...consumedState,
+          resources: { ...consumedState.resources, [refund.resource]: nextValue },
+        };
+        refundEvents.push({
+          type: 'resource_restored', resource: refund.resource, amount, current: nextValue,
+        });
+      }
+    }
     return {
-      runtime: consumed.state,
-      roll: addBonusDieToD20Roll(input.roll, consumed.spec.faces, consumed.spec.name, env.rng),
-      events: [...events, { type: 'effect_expired', name: consumed.spec.name }],
+      runtime: consumedState,
+      roll: augmentedRoll,
+      events: [...events, { type: 'effect_expired', name: consumed.spec.name }, ...refundEvents],
     };
   } catch (error) {
     return { issue: error instanceof Error ? error.message : 'Invalid boon' };
@@ -5636,6 +5655,8 @@ function studyWorldObject(
   ];
   const after = consumeNextRollEffects(paid.state, 'ability_check', checkEvents, {
     filter: { ability: 'int', skill },
+    failed: roll.usedFailureBonus === true,
+    finalFailed: roll.usedFailureBonus === true && roll.outcome === 'fail',
   });
   const mutation = studyMinorIllusion({
     objects: world.objects,
@@ -6088,6 +6109,8 @@ function executeCheck(
   });
   const after = consumeNextRollEffects(actor.runtime, 'ability_check', checkEvents, {
     filter: { ability: command.ability, ...(skill ? { skill } : {}) },
+    failed: roll.usedFailureBonus === true,
+    finalFailed: roll.usedFailureBonus === true && roll.outcome === 'fail',
   });
   const obligations = ['system:ability-check', 'system:next-roll-effect'];
   const concentration = consumedConcentrationLifecycle({

@@ -29,7 +29,8 @@ import {
   type ForgeCharacter,
 } from '../character/types';
 import { bonusOf, reapplyBonuses, reconcileBonusesForBackground } from '../character/pointBuy';
-import { computeMaxHP } from '../character/derive';
+import { computeMulticlassMaxHP } from '../character/derive';
+import { addClassLevel, draftClassLevels, multiclassPrerequisiteIssues } from '../character/multiclass';
 import { buildSavePayload, completionIssues, classSkillChoice, characterToDraft, requiredChoiceIssues, resolveLineageName } from '../character/forgeHelpers';
 import { unavailableChoiceOptions } from '../character/choiceAvailability';
 import { normalizeSkillId, normalizeSkillList } from '../character/skillNormalize';
@@ -111,7 +112,7 @@ const CharacterForge = () => {
   const [active, setActive] = useState('race');
   const isMobile = useIsMobile();
   /** Режим повышения уровня: показываем только новое, база заблокирована. */
-  const [levelUp, setLevelUp] = useState<{ fromLevel: number } | null>(null);
+  const [levelUp, setLevelUp] = useState<{ fromLevel: number; fromClassLevels: Record<string, number>; selectedClassId: string } | null>(null);
   const [prevRefs, setPrevRefs] = useState<{ effects: Set<string>; actions: Set<string>; choiceIds: Set<string> } | null>(null);
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
@@ -252,8 +253,10 @@ const CharacterForge = () => {
         const d = characterToDraft(c);
         if (searchParams.get('levelup') === '1') {
           const fromLevel = d.level || 1;
+          const fromClassLevels = draftClassLevels(d);
           d.level = Math.min(20, fromLevel + 1);
-          setLevelUp({ fromLevel });
+          if (d.classId && fromLevel < 20) d.classLevels = addClassLevel({ ...d, level: fromLevel, classLevels: fromClassLevels }, d.classId);
+          setLevelUp({ fromLevel, fromClassLevels, selectedClassId: d.classId ?? '' });
           setSearchParams({}, { replace: true });
         }
         setDraft(d);
@@ -587,7 +590,7 @@ const CharacterForge = () => {
   const selectClass = (cid: string) => {
     classSkillAutoSeededForRef.current = null;
     setDraft((d) => {
-      const next = { ...d, classId: cid, subclassId: null, classSkillChoices: [] as string[] };
+      const next = { ...d, classId: cid, classLevels: { [cid]: Math.max(1, d.level) }, subclassId: null, classSkillChoices: [] as string[] };
       // Оптимальный расклад класса применяется при каждой смене класса,
       // пока игрок не правил характеристики вручную (решение №2).
       const rec = classes.find((c) => c.id === cid)?.recommended_abilities;
@@ -601,6 +604,17 @@ const CharacterForge = () => {
       }
       return next;
     });
+  };
+
+  const selectLevelUpClass = (cid: string) => {
+    if (!levelUp) return;
+    setLevelUp((state) => state ? { ...state, selectedClassId: cid } : state);
+    setPrevRefs(null);
+    setDraft((current) => ({
+      ...current,
+      level: levelUp.fromLevel + 1,
+      classLevels: addClassLevel({ ...current, level: levelUp.fromLevel, classLevels: levelUp.fromClassLevels }, cid),
+    }));
   };
   const selectBackground = (bid: string) => {
     setDraft((d) => {
@@ -635,12 +649,13 @@ const CharacterForge = () => {
     if (!levelUp || !draft.classId) return;
     let stale = false;
     (async () => {
-      const oldBundle = await loadBundle({ ...draft, level: levelUp.fromLevel });
+      const oldDraft = { ...draft, level: levelUp.fromLevel, classLevels: levelUp.fromClassLevels };
+      const oldBundle = await loadBundle(oldDraft);
       if (stale) return;
       // Идентификаторы выборов, существовавших НА СТАРОМ уровне — чтобы на уровень-апе отличать
       // выборы этого уровня (их показываем даже заполненными, #3) от прежних.
       const prevChoiceIds = new Set(
-        assemble({ ...oldBundle, spells: [] }, { ...draft, level: levelUp.fromLevel }).pendingChoices.map((pc) => pc.id),
+        assemble({ ...oldBundle, spells: [] }, oldDraft).pendingChoices.map((pc) => pc.id),
       );
       setPrevRefs({
         effects: new Set(oldBundle.effects.map((e) => e.effect.id)),
@@ -650,7 +665,7 @@ const CharacterForge = () => {
     })();
     return () => { stale = true; };
 
-  }, [levelUp, draft.classId, draft.raceId]);
+  }, [levelUp?.fromLevel, levelUp?.selectedClassId, draft.classId, draft.raceId]);
 
   const issues = useMemo(
     () => completionIssues(draft, assembled, ruleState),
@@ -756,7 +771,8 @@ const CharacterForge = () => {
     : [];
   const selectedClassEntity = draft.classId ? classes.find((c) => c.id === draft.classId) : undefined;
   const subclassLevel = selectedClassEntity?.subclass_level ?? 3;
-  const subclassUnlocked = draft.level >= subclassLevel;
+  const primaryClassLevel = draft.classId ? (draftClassLevels(draft)[draft.classId] ?? draft.level) : 0;
+  const subclassUnlocked = primaryClassLevel >= subclassLevel;
 
   // Условия появления вкладок
   const hasSubclass = classSubChoices.length > 0;
@@ -832,6 +848,17 @@ const CharacterForge = () => {
 
   // ─── Режим повышения уровня: только новое, база заблокирована ───
   if (levelUp) {
+    const rootClasses = visibleClasses.filter((entry) => !entry.parent_class_id && !entry.is_subclass);
+    const selectedLevelClass = classes.find((entry) => entry.id === levelUp.selectedClassId);
+    const takingNewClass = selectedLevelClass && !levelUp.fromClassLevels[selectedLevelClass.id];
+    const prerequisiteClasses = takingNewClass
+      ? [...new Set([...Object.keys(levelUp.fromClassLevels), selectedLevelClass.id])]
+          .map((id) => classes.find((entry) => entry.id === id))
+          .filter((entry): entry is CharacterClass => !!entry)
+      : [];
+    const multiclassIssues = prerequisiteClasses.flatMap((entry) => (
+      multiclassPrerequisiteIssues(entry, draft.abilities).map((issue) => `${entry.name}: ${issue}`)
+    ));
     const newEffects = assembled.effects.filter((e) => !prevRefs || !prevRefs.effects.has(e.effect.id));
     const newActions = assembled.actions.filter((a) => !prevRefs || !prevRefs.actions.has(a.action.id));
     const unresolved = assembled.pendingChoices.filter(
@@ -845,14 +872,24 @@ const CharacterForge = () => {
     const newSpellChoices = prevRefs
       ? spellChoices.filter((pc) => !prevRefs.choiceIds.has(pc.id))
       : unresolvedSpells;
-    const oldMaxHP = computeMaxHP(assembled.klass?.hit_die, draft.abilities.con, levelUp.fromLevel);
+    const oldMaxHP = computeMulticlassMaxHP(
+      (assembled.classes ?? []).map((klass) => ({
+        id: klass.id,
+        hit_die: klass.hit_die,
+        level: levelUp.fromClassLevels[klass.id] ?? 0,
+      })),
+      draft.classId,
+      draft.abilities.con,
+    );
     // #2: ресурсы, выданные/увеличенные классом на этом уровне (ячейки, заряды и т.п.) — по дельте
     // by_level-сеток между старым и новым уровнем. Не-by_level ресурсы (count/max) → 0, отсекаются.
-    const klassResources = (assembled.klass?.resources ?? {}) as Record<string, { by_level?: unknown }>;
+    const klassResources = (selectedLevelClass?.resources ?? {}) as Record<string, { by_level?: unknown }>;
+    const selectedFromClassLevel = levelUp.fromClassLevels[levelUp.selectedClassId] ?? 0;
+    const selectedToClassLevel = selectedFromClassLevel + 1;
     const resourceGains = Object.entries(klassResources)
       .map(([key, def]) => {
-        const before = resolveByLevel(def?.by_level, levelUp.fromLevel) ?? 0;
-        const after = resolveByLevel(def?.by_level, draft.level) ?? 0;
+        const before = resolveByLevel(def?.by_level, selectedFromClassLevel) ?? 0;
+        const after = resolveByLevel(def?.by_level, selectedToClassLevel) ?? 0;
         return { key, before, after, delta: after - before };
       })
       .filter((r) => r.delta > 0)
@@ -868,12 +905,13 @@ const CharacterForge = () => {
     // Подкласс редактируем только когда его выбирают ПРЯМО СЕЙЧАС (порог пересечён на этом
     // уровне или ещё не выбран). Выбранный на прошлом уровне — закреплён, как класс/вид (#4).
     const subclassEditable = subclasses.length > 0 && subclassUnlocked
-      && (levelUp.fromLevel < subclassLevel || !draft.subclassId);
+      && ((levelUp.fromClassLevels[draft.classId ?? ''] ?? levelUp.fromLevel) < subclassLevel || !draft.subclassId);
     const subclassLocked = subclasses.length > 0 && subclassUnlocked && !subclassEditable && !!draft.subclassId;
     const conflictWarnings = ruleState.conflicts
       .filter((c) => c.severity === 'error')
       .map((c) => c.message);
-    const canConfirm = blockingIssues.length === 0;
+    blockingIssues.unshift(...multiclassIssues.map((issue) => `Требование мультикласса: ${issue}`));
+    const canConfirm = blockingIssues.length === 0 && !!levelUp.selectedClassId;
 
     return (
       <CharacterFormulaProvider value={formulaCtx}>
@@ -897,6 +935,27 @@ const CharacterForge = () => {
               <span className="levelup-class">
                 {assembled.klass?.name}{lineageName ? ` · ${lineageName}` : assembled.race ? ` · ${assembled.race.name}` : ''}
               </span>
+            </div>
+            <div className="forge-block">
+              <div className="forge-section-h">Уровень класса</div>
+              <p className="forge-note">Продолжите текущий класс или возьмите первый уровень другого класса.</p>
+              <div className="forge-square-grid">
+                {rootClasses.map((entry) => {
+                  const requirements = entry.id === draft.classId ? [] : multiclassPrerequisiteIssues(entry, draft.abilities);
+                  return (
+                    <EntitySquareCard
+                      key={entry.id}
+                      name={`${entry.name} · ${(levelUp.fromClassLevels[entry.id] ?? 0) + 1}`}
+                      imageUrl={entry.image_url}
+                      selected={levelUp.selectedClassId === entry.id}
+                      onClick={() => selectLevelUpClass(entry.id)}
+                      preview={<ClassPreview characterClass={entry} disableHover />}
+                      supportEntity={entry}
+                      disabled={requirements.length > 0}
+                    />
+                  );
+                })}
+              </div>
             </div>
             {supportFilterControl}
 

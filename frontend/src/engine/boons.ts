@@ -12,6 +12,7 @@ export interface RuntimeBoonSpec {
   faces: number;
   appliesTo: BoonRollKind[];
   timing: BoonTiming[];
+  refundOnFailure?: { resource: string; amount: number };
 }
 
 function boonMechanics(effect: ActiveEffectEntry): Dict | null {
@@ -37,7 +38,13 @@ export function runtimeBoonSpec(effect: ActiveEffectEntry): RuntimeBoonSpec | nu
     value === 'before_roll' || value === 'after_failure'
   ));
   if (!Number.isInteger(faces) || faces < 2 || !appliesTo.length || !timing.length) return null;
-  return { effectId: effect.id, name: effect.name, die, faces, appliesTo, timing };
+  const rawRefund = mechanics.refund_on_failure as Dict | undefined;
+  const refundResource = String(rawRefund?.resource ?? '').trim();
+  const refundAmount = Number(rawRefund?.amount ?? 0);
+  const refundOnFailure = refundResource && Number.isInteger(refundAmount) && refundAmount > 0
+    ? { resource: refundResource, amount: refundAmount }
+    : undefined;
+  return { effectId: effect.id, name: effect.name, die, faces, appliesTo, timing, ...(refundOnFailure ? { refundOnFailure } : {}) };
 }
 
 export function runtimeBoons(state: RuntimeState): RuntimeBoonSpec[] {
@@ -82,6 +89,7 @@ export function armBoonForNextRoll(
           effect_id: effectId,
           roll_kind: rollKind,
           timing,
+          ...(spec.refundOnFailure ? { refund_on_failure: spec.refundOnFailure } : {}),
         },
       },
     } : candidate),

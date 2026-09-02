@@ -1501,6 +1501,19 @@ export interface CharacterClass {
   weapon_proficiencies?: string[] | null;
   tool_proficiencies?: string[] | null;
   skill_choices?: Record<string, unknown> | null;
+  multiclass_proficiencies?: {
+    armor?: string[];
+    weapons?: string[];
+    tools?: string[];
+    choices?: Array<{
+      id: string;
+      prompt: string;
+      count: number;
+      source: string;
+      options: string[];
+      grant: Record<string, unknown>;
+    }>;
+  } | null;
   /** Non-certified UX metadata keyed by a stable choice name (`class_skills`). */
   choice_recommendations?: Record<string, string[]> | null;
   starting_equipment?: Record<string, unknown> | null;
@@ -1537,6 +1550,7 @@ export interface CreateClassRequest {
   weapon_proficiencies?: string[] | null;
   tool_proficiencies?: string[] | null;
   skill_choices?: Record<string, unknown> | null;
+  multiclass_proficiencies?: CharacterClass['multiclass_proficiencies'];
   starting_equipment?: Record<string, unknown> | null;
   equipment_options?: ClassEquipmentOptions | null;
   level_progression?: LevelProgression | null;

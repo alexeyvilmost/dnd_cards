@@ -81,6 +81,8 @@ export interface CharacterRuleState {
   /** Альтернативные методы, если характеристика выбирается не обычной суммой. */
   abilityMethods?: Partial<Record<AbilityKey, AbilityMethodCandidate[]>>;
   proficiencyBonus: number;
+  /** Formula/runtime class-level map keyed by canonical class slug. */
+  classLevels?: Record<string, number>;
   proficiencies: {
     skills: string[];
     savingThrows: string[];

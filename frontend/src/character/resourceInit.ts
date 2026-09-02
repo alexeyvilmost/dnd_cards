@@ -1,6 +1,6 @@
 import type { AssembledCharacter } from './assemble';
 import { collectActionUsesPools } from './actionSheet';
-import { hitDiceResourceKey, initResources, resolveByLevel, resolveCount } from '../engine/resources';
+import { hitDiceResourceKey, initResources, resolveByLevel, resolveCount, resourceLevel } from '../engine/resources';
 import { freeuseKey, type FreeuseSpec } from '../engine/freeuse';
 import type { ValueBreakdown } from '../mvp/contracts';
 import type { CharacterContext, RollModifier, RuntimeState } from '../mvp/contracts';
@@ -98,23 +98,24 @@ export function resourceMaximumBreakdown(
 
   if (turnLabels[resourceKey]) {
     parts = [{ value: 1, source: 'Экономика хода', reason: turnLabels[resourceKey] }];
-  } else if (resourceKey === hitDiceResourceKey(ctx.hitDie)) {
-    parts = [{
-      value: Math.max(0, ctx.level),
-      source: assembled.klass?.name ?? 'Класс',
-      reason: `${ctx.level} ур. · ${ctx.hitDie ?? 'кость хитов'}`,
-    }];
+  } else if (resourceKey.startsWith('hit_dice_d')) {
+    for (const klass of assembled.classes ?? (assembled.klass ? [assembled.klass] : [])) {
+      if (hitDiceResourceKey(klass.hit_die) !== resourceKey) continue;
+      const slug = (klass.card_number || klass.name).replace(/^CLASS[-_]/i, '').toLowerCase().replace(/-/g, '_');
+      const count = Math.max(0, Math.floor(ctx.classLevels?.[slug] ?? 0));
+      if (count) parts.push({ value: count, source: klass.name, reason: `${count} ур. · ${klass.hit_die ?? 'кость хитов'}` });
+    }
   } else {
     const classDef = (assembled.klass?.resources as Dict | null | undefined)?.[resourceKey] as Dict | undefined;
     if (classDef) {
-      const value = resolveByLevel(classDef.by_level, ctx.level)
+      const value = resolveByLevel(classDef.by_level, resourceLevel(classDef, ctx))
         ?? resolveCount(classDef.count ?? classDef.max, ctx);
       if (value > 0) {
         const fromSubclass = Boolean((assembled.subclass?.resources as Dict | null | undefined)?.[resourceKey]);
         parts.push({
           value,
           source: (fromSubclass ? assembled.subclass?.name : assembled.klass?.name) ?? 'Класс',
-          reason: classDef.by_level ? `значение на ${ctx.level}-м уровне` : 'максимум класса',
+          reason: classDef.by_level ? `значение на ${resourceLevel(classDef, ctx)}-м уровне класса` : 'максимум класса',
         });
       }
     }
@@ -189,6 +190,22 @@ export function syncRuntimeResources(
   const grantDetails = collectResourceGrantDetails(passiveMechanics);
   const grants = grantDetails.map(({ payload }) => payload);
   const fresh = initResources(ctx, classRes, grants);
+  // Each class contributes its own Hit Dice. Replace the legacy single-class
+  // total seeded by initResources with one pool per die size.
+  for (const key of Object.keys(fresh.maxResources)) {
+    if (key.startsWith('hit_dice_d')) {
+      delete fresh.maxResources[key];
+      delete fresh.resources[key];
+    }
+  }
+  for (const klass of assembled.classes ?? (assembled.klass ? [assembled.klass] : [])) {
+    const key = hitDiceResourceKey(klass.hit_die);
+    const slug = (klass.card_number || klass.name).replace(/^CLASS[-_]/i, '').toLowerCase().replace(/-/g, '_');
+    const count = Math.max(0, Math.floor(ctx.classLevels?.[slug] ?? 0));
+    if (!key || !count) continue;
+    fresh.maxResources[key] = (fresh.maxResources[key] ?? 0) + count;
+    fresh.resources[key] = (fresh.resources[key] ?? 0) + count;
+  }
   const sources: Record<string, RollModifier[]> = {};
   addResourceSource(sources, 'action', 1, 'Базовый ресурс хода', 'один ресурс на ход');
   addResourceSource(sources, 'bonus_action', 1, 'Базовый ресурс хода', 'один ресурс на ход');
@@ -197,7 +214,7 @@ export function syncRuntimeResources(
   if (classRes) {
     for (const [id, def] of Object.entries(classRes)) {
       const row = def as Dict;
-      const count = resolveByLevel(row.by_level, ctx.level) ?? resolveCount(row.count ?? row.max, ctx);
+      const count = resolveByLevel(row.by_level, resourceLevel(row, ctx)) ?? resolveCount(row.count ?? row.max, ctx);
       if (count > 0) addResourceSource(sources, id, count, assembled.klass?.name || 'Класс', 'классовый максимум');
     }
   }

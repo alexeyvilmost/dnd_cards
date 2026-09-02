@@ -18,7 +18,7 @@ import {
 } from '../character/resourceInit';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
-import { buildResourceRecharge } from '../engine/resources';
+import { buildResourceRecharge, buildResourceRecovery } from '../engine/resources';
 import { hitDiceResourceKey, hitDieSides } from '../engine/resources';
 import {
   endTurn,
@@ -152,7 +152,10 @@ export default function SheetRestButtons({
     }),
     [assembled.klass?.resources, actionUseRestPolicies.recharge, ruleState.freeuseSpells],
   );
-  const resourceRecovery = actionUseRestPolicies.recovery;
+  const resourceRecovery = useMemo(() => ({
+    ...buildResourceRecovery((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
+    ...actionUseRestPolicies.recovery,
+  }), [assembled.klass?.resources, actionUseRestPolicies.recovery]);
 
   const ctx = useMemo(
     () => ({

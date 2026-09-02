@@ -52,4 +52,30 @@ describe('data-driven runtime boons', () => {
       onlyConditional: true,
     }).activeEffects).toHaveLength(0);
   });
+
+  it('refunds Tactical Mind only when its bonus still leaves the check failed', () => {
+    const tactical = state();
+    tactical.resources['uses_ACT-second-wind'] = 0;
+    tactical.maxResources['uses_ACT-second-wind'] = 1;
+    tactical.activeEffects[0].mechanics = {
+      kind: 'boon', die: '1d10', applies_to: ['ability_check'], timing: ['after_failure'],
+      refund_on_failure: { resource: 'uses_ACT-second-wind', amount: 1 },
+    };
+    const armed = armBoonForNextRoll(tactical, 'boon:1', 'ability_check', 'after_failure');
+    const events: import('../mvp/contracts').EngineEvent[] = [];
+    const failed = consumeNextRollEffects(armed, 'ability_check', events, {
+      failed: true, onlyConditional: true, finalFailed: true,
+    });
+    expect(failed.resources['uses_ACT-second-wind']).toBe(1);
+    expect(events).toContainEqual({
+      type: 'resource_restored', resource: 'uses_ACT-second-wind', amount: 1, current: 1,
+    });
+
+    const succeededEvents: import('../mvp/contracts').EngineEvent[] = [];
+    const succeeded = consumeNextRollEffects(armed, 'ability_check', succeededEvents, {
+      failed: true, onlyConditional: true, finalFailed: false,
+    });
+    expect(succeeded.resources['uses_ACT-second-wind']).toBe(0);
+    expect(succeededEvents.some((event) => event.type === 'resource_restored')).toBe(false);
+  });
 });

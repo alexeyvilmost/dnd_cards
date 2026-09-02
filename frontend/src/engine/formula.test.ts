@@ -73,6 +73,11 @@ describe('formula.evaluate', () => {
     expect(evaluate('(str+dex)*2', baseCtx)).toBe(10);
   });
 
+  it('floor/ceil поддерживают правила округления ресурсов и половины БМ', () => {
+    expect(evaluate('floor(3/2)', baseCtx)).toBe(1);
+    expect(evaluate('ceil(3/2)', baseCtx)).toBe(2);
+  });
+
   it('кости 1d8+spellcasting', () => {
     // rng=0.5 → d8=5, +4 = 9
     expect(evaluate('1d8+spellcasting', baseCtx)).toBe(9);

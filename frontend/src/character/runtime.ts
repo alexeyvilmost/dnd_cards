@@ -174,7 +174,9 @@ export function buildCharacterContext(
     abilityMethods: ruleState.abilityMethods,
     profBonus: ruleState.proficiencyBonus,
     level: draft.level,
-    classLevels: classKey ? { [classKey]: draft.level } : undefined,
+    classLevels: Object.keys(ruleState.classLevels ?? {}).length
+      ? ruleState.classLevels
+      : classKey ? { [classKey]: draft.level } : undefined,
     variables: ruleState.variables,
     characterSpeed: ruleState.speed,
     baseSpeed: ruleState.baseSpeed,

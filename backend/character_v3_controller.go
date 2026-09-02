@@ -178,6 +178,10 @@ func applyCharacterV3Defaults(ch *CharacterV3) {
 	if ch.Level <= 0 {
 		ch.Level = 1
 	}
+	if ch.ClassID != nil && (ch.ClassLevels == nil || len(*ch.ClassLevels) == 0) {
+		levels := JSONMap{ch.ClassID.String(): ch.Level}
+		ch.ClassLevels = &levels
+	}
 	if ch.Speed <= 0 {
 		ch.Speed = 30
 	}
@@ -231,6 +235,7 @@ func (cc *CharacterV3Controller) CreateCharacterV3(c *gin.Context) {
 		RaceID:                   req.RaceID,
 		LineageID:                req.LineageID,
 		ClassID:                  req.ClassID,
+		ClassLevels:              req.ClassLevels,
 		BackgroundID:             req.BackgroundID,
 		Level:                    req.Level,
 		FeatIDs:                  req.FeatIDs,
@@ -263,6 +268,10 @@ func (cc *CharacterV3Controller) CreateCharacterV3(c *gin.Context) {
 		Currency:                 req.Currency,
 	}
 	applyCharacterV3Defaults(&character)
+	if err := validateCharacterClassLevels(character); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверные уровни классов", "details": err.Error()})
+		return
+	}
 
 	tx := cc.db.Begin()
 	if tx.Error != nil {
@@ -372,6 +381,17 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 		c.JSON(http.StatusConflict, gin.H{"error": "нельзя изменить принадлежность персонажа", "details": err.Error()})
 		return
 	}
+	classLevelCandidate := *character
+	classLevelCandidate.ClassID = req.ClassID
+	classLevelCandidate.Level = req.Level
+	if req.ClassLevels != nil {
+		classLevelCandidate.ClassLevels = req.ClassLevels
+	}
+	applyCharacterV3Defaults(&classLevelCandidate)
+	if err := validateCharacterClassLevels(classLevelCandidate); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверные уровни классов", "details": err.Error()})
+		return
+	}
 
 	var full CharacterV3
 	txErr := cc.db.Transaction(func(tx *gorm.DB) error {
@@ -394,6 +414,9 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 		locked.RaceID = req.RaceID
 		locked.LineageID = req.LineageID
 		locked.ClassID = req.ClassID
+		if req.ClassLevels != nil {
+			locked.ClassLevels = req.ClassLevels
+		}
 		locked.BackgroundID = req.BackgroundID
 		locked.Level = req.Level
 		locked.FeatIDs = req.FeatIDs
@@ -420,6 +443,9 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 		locked.InitiativeBonus = req.InitiativeBonus
 		locked.PassivePerception = req.PassivePerception
 		applyCharacterV3Defaults(&locked)
+		if err := validateCharacterClassLevels(locked); err != nil {
+			return err
+		}
 
 		result := tx.Model(&CharacterV3{}).
 			Where("id = ? AND user_id = ?", characterID, userID).
@@ -431,6 +457,7 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 				"race_id":                    locked.RaceID,
 				"lineage_id":                 locked.LineageID,
 				"class_id":                   locked.ClassID,
+				"class_levels":               locked.ClassLevels,
 				"background_id":              locked.BackgroundID,
 				"level":                      locked.Level,
 				"feat_ids":                   locked.FeatIDs,

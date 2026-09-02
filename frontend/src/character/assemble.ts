@@ -20,7 +20,7 @@ import { createApiResolver } from '../engine/apiResolver';
 import { isEntityUuid } from '../engine/ids';
 import {
   abilityMod,
-  computeMaxHP,
+  computeMulticlassMaxHP,
   proficiencyBonusForLevel,
   spellcasting,
   type Spellcasting,
@@ -29,6 +29,7 @@ import { ABILITY_KEYS, type AbilityKey, type CharacterDraft } from './types';
 import { excludesMicroMvpL1SourceEffect } from '../canon/microMvpSourceCorrections';
 import { meetsActivationLevelRequirement } from '../rules-core/activationRequirements';
 import { resolvePrimarySpellcastingAbility } from './spellcastingAbility';
+import { draftClassLevels } from './multiclass';
 
 // ─── Сбор ссылок на эффекты/действия из выбранных сущностей ──────────────────
 
@@ -108,6 +109,8 @@ export interface AssembledCharacter {
   /** Выбранный подвид-субрас (lineageId = UUID субраса). Для отображения имени линиджа на листе. */
   subrace?: Race | null;
   klass: CharacterClass | null;
+  /** Every selected class; klass remains the initial class for first-level proficiencies. */
+  classes?: CharacterClass[];
   subclass?: CharacterClass | null;
   background: Background | null;
   feats: Feat[];
@@ -134,6 +137,7 @@ export interface EntityBundle {
   race: Race | null;
   subrace?: Race | null;
   klass: CharacterClass | null;
+  classes?: CharacterClass[];
   subclass?: CharacterClass | null;
   background: Background | null;
   feats: Feat[];
@@ -201,6 +205,7 @@ export function bundleDependencyKey(
     raceId: draft.raceId ?? null,
     lineageId: draft.lineageId ?? null,
     classId: draft.classId ?? null,
+    classLevels: draftClassLevels(draft),
     subclassId: draft.subclassId ?? null,
     backgroundId: draft.backgroundId ?? null,
     level: draft.level,
@@ -234,6 +239,19 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
   for (const { action, origin } of bundle.actions) {
     pendingChoices.push(...collectChoices(action.mechanics, { ...origin, featureId: instanceFeatureId(action.id, origin.instanceKey), featureName: action.name }, draft.resolvedChoices));
   }
+  for (const klass of (bundle.classes ?? []).filter((entry) => entry.id !== draft.classId)) {
+    for (const choice of klass.multiclass_proficiencies?.choices ?? []) {
+      pendingChoices.push({
+        id: choice.id,
+        prompt: choice.prompt,
+        count: choice.count,
+        source: choice.source,
+        filter: choice.options,
+        grant: choice.grant,
+        origin: { kind: 'class', id: klass.id, name: `${klass.name} (мультикласс)` },
+      });
+    }
+  }
 
   const abilityMods = Object.fromEntries(
     ABILITY_KEYS.map((k) => [k, abilityMod(scores[k])]),
@@ -264,6 +282,7 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
     race: bundle.race,
     subrace: bundle.subrace ?? null,
     klass: bundle.klass,
+    classes: bundle.classes ?? (bundle.klass ? [bundle.klass] : []),
     subclass: bundle.subclass ?? null,
     background: bundle.background,
     feats: bundle.feats,
@@ -276,7 +295,15 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
     variables,
     derived: {
       proficiencyBonus: pb,
-      maxHP: computeMaxHP(bundle.klass?.hit_die, scores.con, draft.level),
+      maxHP: computeMulticlassMaxHP(
+        (bundle.classes ?? (bundle.klass ? [bundle.klass] : [])).map((klass) => ({
+          id: klass.id,
+          hit_die: klass.hit_die,
+          level: draftClassLevels(draft)[klass.id] ?? (klass.id === (draft.classId ?? bundle.klass?.id) ? draft.level : 0),
+        })),
+        draft.classId ?? bundle.klass?.id,
+        scores.con,
+      ),
       initiative: abilityMod(scores.dex),
       ac: 10 + abilityMod(scores.dex),
       speed: bundle.race?.speed ?? 30,
@@ -298,14 +325,18 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   // B5: все независимые справочные загрузки — одним Promise.all (раньше был водопад
   // race/klass/background → manualFeats → subrace → subclass). Зависят только от
   // полей draft, поэтому запускаются параллельно. subrace/subclass — по UUID из draft.
-  const [race, klass, background, manualFeatsRaw, subrace, subclass] = await Promise.all([
+  const levels = draftClassLevels(draft);
+  const secondaryClassIds = Object.keys(levels).filter((id) => id !== draft.classId);
+  const [race, klass, secondaryClassesRaw, background, manualFeatsRaw, subrace, subclass] = await Promise.all([
     draft.raceId ? racesApi.getRace(draft.raceId) : Promise.resolve(null),
     draft.classId ? classesApi.getClass(draft.classId) : Promise.resolve(null),
+    Promise.all(secondaryClassIds.map((id) => classesApi.getClass(id).catch(() => null))),
     draft.backgroundId ? backgroundsApi.getBackground(draft.backgroundId) : Promise.resolve(null),
     Promise.all((draft.featIds || []).map((id) => featsApi.getFeat(id))),
     draft.lineageId && isEntityUuid(draft.lineageId) ? racesApi.getRace(draft.lineageId) : Promise.resolve(null),
     draft.subclassId && isEntityUuid(draft.subclassId) ? classesApi.getClass(draft.subclassId) : Promise.resolve(null),
   ]);
+  const classes = [klass, ...secondaryClassesRaw].filter((entry): entry is CharacterClass => !!entry);
   const manualFeats = manualFeatsRaw.filter((f): f is Feat => !!f);
 
   // Origin-черта предыстории (по card_number/uuid): действует по умолчанию,
@@ -320,11 +351,54 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
     : manualFeats;
 
   // Ресурсы подкласса вливаются в ресурсы класса (лист читает klass.resources).
-  const klassWithSub = klass && subclass?.resources
-    ? { ...klass, resources: { ...(klass.resources || {}), ...subclass.resources } }
+  const combinedClassResources: Record<string, unknown> = {};
+  for (const entry of classes) {
+    const levelSource = (entry.card_number || entry.name).replace(/^CLASS[-_]/i, '').toLowerCase().replace(/-/g, '_');
+    for (const [resource, definition] of Object.entries(entry.resources || {})) {
+      combinedClassResources[resource] = {
+        ...((definition && typeof definition === 'object') ? definition as Record<string, unknown> : { count: definition }),
+        level_source: levelSource,
+      };
+    }
+  }
+  for (const [resource, definition] of Object.entries(subclass?.resources || {})) {
+    combinedClassResources[resource] = definition;
+  }
+  // Normal spell slots use the multiclass spellcaster table. Pact Magic stays
+  // separate and therefore keeps the Warlock-owned resource definitions.
+  const fullCasters = new Set(['bard', 'cleric', 'druid', 'sorcerer', 'wizard']);
+  const halfCasters = new Set(['paladin', 'ranger']);
+  let casterLevel = 0;
+  for (const entry of classes) {
+    const slug = (entry.card_number || '').replace(/^CLASS[-_]/i, '').toLowerCase();
+    const classLevel = levels[entry.id] ?? 0;
+    if (fullCasters.has(slug)) casterLevel += classLevel;
+    else if (halfCasters.has(slug)) casterLevel += Math.ceil(classLevel / 2);
+  }
+  for (const key of Object.keys(combinedClassResources)) {
+    if (/^spell_slot_\d+$/.test(key)) delete combinedClassResources[key];
+  }
+  const multiclassSlots: number[][] = [
+    [], [2], [3], [4, 2], [4, 3], [4, 3, 2], [4, 3, 3], [4, 3, 3, 1], [4, 3, 3, 2],
+    [4, 3, 3, 3, 1], [4, 3, 3, 3, 2], [4, 3, 3, 3, 2, 1], [4, 3, 3, 3, 2, 1],
+    [4, 3, 3, 3, 2, 1, 1], [4, 3, 3, 3, 2, 1, 1], [4, 3, 3, 3, 2, 1, 1, 1],
+    [4, 3, 3, 3, 2, 1, 1, 1], [4, 3, 3, 3, 2, 1, 1, 1, 1], [4, 3, 3, 3, 3, 1, 1, 1, 1],
+    [4, 3, 3, 3, 3, 2, 1, 1, 1], [4, 3, 3, 3, 3, 2, 2, 1, 1],
+  ];
+  const slotRow = multiclassSlots[Math.min(20, casterLevel)] ?? [];
+  slotRow.forEach((count, index) => {
+    if (count > 0) combinedClassResources[`spell_slot_${index + 1}`] = { count, per: 'long_rest' };
+  });
+  const klassWithSub = klass
+    ? { ...klass, resources: combinedClassResources }
     : klass;
 
-  const { effectRefs, actionRefs } = gatherFeatureRefs(race, klass, feats, draft.level, subrace, subclass);
+  const { effectRefs, actionRefs } = gatherFeatureRefs(race, null, feats, draft.level, subrace, subclass);
+  for (const classEntity of classes) {
+    const classRefs = gatherFeatureRefs(null, classEntity, [], levels[classEntity.id] ?? 0);
+    effectRefs.push(...classRefs.effectRefs);
+    actionRefs.push(...classRefs.actionRefs.filter((candidate) => !actionRefs.some((existing) => existing.id === candidate.id)));
+  }
   const manualOrigin = (kind: 'effect' | 'action', index: number): ChoiceOrigin => ({
     kind: 'other',
     id: `manual-${kind}-${index}`,
@@ -497,6 +571,7 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
     race,
     subrace,
     klass: klassWithSub,
+    classes,
     subclass,
     background,
     feats: allFeats,

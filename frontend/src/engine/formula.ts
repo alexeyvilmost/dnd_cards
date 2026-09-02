@@ -455,6 +455,8 @@ function parseFunctionCall(name: string, tokens: Token[], pos: { i: number }, si
   const fn = name.toLowerCase();
   if (fn === 'min') return Math.min(...args);
   if (fn === 'max') return Math.max(...args);
+  if (fn === 'floor' && args.length === 1) return Math.floor(args[0]);
+  if (fn === 'ceil' && args.length === 1) return Math.ceil(args[0]);
   throw new FormulaError(`Неизвестная функция формулы: ${name}`);
 }
 

@@ -12,6 +12,7 @@ import { hitDieMax } from '../character/derive';
 import { abilityOfSkill } from '../character/rules/foundation';
 import { collectModifiers, foldModifiers } from './modifiers';
 import type { FormulaContext } from './formula';
+import { activeConditionsOf } from './circumstances';
 
 type Dict = Record<string, unknown>;
 type AbilityKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
@@ -63,6 +64,7 @@ function effectModifiers(
     roll,
     ...(filter ? { filter } : {}),
     formulaCtx: formulaCtxOf(character),
+    evalCtx: { character, state, activeConditions: activeConditionsOf(state) },
   }).modifiers;
 }
 
@@ -129,14 +131,16 @@ function breakdownSkill(
     { value: mod, source: ABILITY_LABEL[ability], reason: 'модификатор характеристики', kind: 'ability' },
   ];
   let total = mod;
-  if (character.skillExpertise?.includes(skillId)) {
+  const expert = character.skillExpertise?.includes(skillId) ?? false;
+  const proficient = expert || (character.skillProficiencies?.includes(skillId) ?? false);
+  if (expert) {
     parts.push({ value: character.profBonus * 2, source: 'БМ×2', reason: 'экспертиза', kind: 'expertise' });
     total += character.profBonus * 2;
-  } else if (character.skillProficiencies?.includes(skillId)) {
+  } else if (proficient) {
     parts.push({ value: character.profBonus, source: 'БМ', reason: 'владение', kind: 'proficiency' });
     total += character.profBonus;
   }
-  const fxParts = effectModifiers('ability_check', { skill: skillId }, character, state, passives);
+  const fxParts = effectModifiers('ability_check', { skill: skillId, proficient }, character, state, passives);
   for (const p of fxParts) { parts.push(p); total += p.value; }
   return { value: total, parts };
 }
@@ -180,7 +184,10 @@ export function breakdownValue(
     // Скорость — единственное производное листа, где НУЖНА не-аддитивная алгебра C5: состояния
     // «Схвачен/Опутан/Парализован/Без сознания» задают Скорость 0 через op:'set' (у Ускорения был
     // бы ×2). foldModifiers применяет и аддитивные модификаторы, и set/multiply/upgrade/downgrade.
-    const collected = collectModifiers(state, passives, { roll: 'speed', formulaCtx: formulaCtxOf(character) });
+    const collected = collectModifiers(state, passives, {
+      roll: 'speed', formulaCtx: formulaCtxOf(character),
+      evalCtx: { character, state, activeConditions: activeConditionsOf(state) },
+    });
     const folded = foldModifiers(base, collected);
     // Live ruleState.characterSpeed already contains this penalty. The visible
     // breakdown starts from baseSpeed, so project the data-declared armor rule

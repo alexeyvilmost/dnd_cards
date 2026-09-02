@@ -37,6 +37,8 @@ export interface ForgeCharacter {
   race_id?: string | null;
   lineage_id?: string | null;
   class_id?: string | null;
+  /** Per-class levels keyed by class UUID. Legacy rows fall back to class_id + level. */
+  class_levels?: Record<string, number> | null;
   background_id?: string | null;
   level: number;
 
@@ -139,6 +141,7 @@ export interface SaveForgeCharacterRequest {
   race_id?: string | null;
   lineage_id?: string | null;
   class_id?: string | null;
+  class_levels?: Record<string, number> | null;
   background_id?: string | null;
   level?: number;
   feat_ids?: string[] | null;
@@ -205,6 +208,8 @@ export interface CharacterDraft {
   raceId: string | null;
   lineageId: string | null;
   classId: string | null;
+  /** Per-class levels keyed by class UUID. Includes classId for every complete character. */
+  classLevels: Record<string, number>;
   /** Подкласс (UUID класса-подкласса); хранится в resolved_choices['builder:subclass']. */
   subclassId: string | null;
   backgroundId: string | null;
@@ -260,6 +265,7 @@ export const emptyDraft = (): CharacterDraft => ({
   raceId: null,
   lineageId: null,
   classId: null,
+  classLevels: {},
   subclassId: null,
   backgroundId: null,
   level: 1,

@@ -151,7 +151,7 @@ func (cc *ClassController) CreateClass(c *gin.Context) {
 		PrimaryAbilities: req.PrimaryAbilities, RecommendedAbilities: req.RecommendedAbilities,
 		SavingThrows: req.SavingThrows, ArmorTraining: req.ArmorTraining,
 		WeaponProficiencies: req.WeaponProficiencies, ToolProficiencies: req.ToolProficiencies,
-		SkillChoices: req.SkillChoices, StartingEquipment: req.StartingEquipment,
+		SkillChoices: req.SkillChoices, MulticlassProficiencies: req.MulticlassProficiencies, StartingEquipment: req.StartingEquipment,
 		EquipmentOptions: req.EquipmentOptions,
 		LevelProgression: req.LevelProgression, Resources: req.Resources,
 		IsSubclass: req.IsSubclass, ParentClassID: req.ParentClassID, SubclassLevel: req.SubclassLevel,
@@ -237,6 +237,9 @@ func (cc *ClassController) UpdateClass(c *gin.Context) {
 	}
 	if req.SkillChoices != nil {
 		cl.SkillChoices = req.SkillChoices
+	}
+	if req.MulticlassProficiencies != nil {
+		cl.MulticlassProficiencies = req.MulticlassProficiencies
 	}
 	if req.StartingEquipment != nil {
 		cl.StartingEquipment = req.StartingEquipment

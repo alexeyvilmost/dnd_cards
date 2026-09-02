@@ -1,6 +1,7 @@
 import type { Action, PassiveEffect } from '../../types';
 import type { OriginAction, OriginEffect } from '../assemble';
-import { computeMaxHP, spellcasting } from '../derive';
+import { computeMulticlassMaxHP, spellcasting } from '../derive';
+import { draftClassLevels } from '../multiclass';
 import { armorClassValue } from '../../engine/ac';
 import { foldModifiers, type ModifierOp } from '../../engine/modifiers';
 import type { CharacterContext, RollModifier, RuntimeState } from '../../mvp/contracts';
@@ -237,6 +238,7 @@ const NUMERIC_ROLLS = new Set(['max_hp', 'speed', 'initiative', 'size', 'carry']
 /** Собирает числовой self-modifier из payload в аккумулятор numericMods. */
 function collectNumericModifier(payload: Dict, formulaCtx: FormulaContext, numericMods: Record<string, number>, source: RuleSource) {
   if (payload.kind !== 'modifier') return;
+  if (Array.isArray(payload.when) && payload.when.length > 0) return;
   // Модификатор с длительностью (Большая форма: size/speed на 10 раундов) применяется в РАНТАЙМЕ
   // при активации действия, а не пассивно на сборке — иначе временный бафф висел бы постоянно.
   if (payload.duration != null) return;
@@ -338,7 +340,10 @@ function collectAbilityDeltas(
   const preFctx: FormulaContext = {
     selfLevel: level,
     profBonus: proficiencyBonusForLevel(level),
-    classLevels: input.assembled.klass?.name ? { [input.assembled.klass.name.toLowerCase()]: level } : {},
+    classLevels: Object.fromEntries((input.assembled.classes ?? (input.assembled.klass ? [input.assembled.klass] : [])).map((klass) => [
+      (klass.card_number || klass.name).replace(/^CLASS[-_]/i, '').toLowerCase().replace(/-/g, '_'),
+      draftClassLevels(input.draft)[klass.id] ?? 0,
+    ])),
     variables: input.assembled.variables,
   };
   const walk = (payload: Dict, source: RuleSource, depth = 0) => {
@@ -544,6 +549,27 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   for (const tool of assembled.klass?.tool_proficiencies || []) {
     addGrant({ source: classSource, kind: 'tool', value: tool, mode: 'proficiency' }, maps, expertise, appliedGrants, conflicts);
   }
+  // Multiclass proficiency is deliberately separate from the initial-class
+  // table and comes from the destination class entity.
+  for (const klass of (assembled.classes ?? []).filter((entry) => entry.id !== assembled.klass?.id)) {
+    const source: RuleSource = { type: 'class', id: `multiclass:${klass.id}`, name: `${klass.name} (мультикласс)`, originEntityId: klass.id };
+    const definition = klass.multiclass_proficiencies;
+    for (const armor of definition?.armor ?? []) {
+      addGrant({ source, kind: 'armor', value: armor, mode: 'proficiency' }, maps, expertise, appliedGrants, conflicts);
+    }
+    for (const weapon of definition?.weapons ?? []) {
+      addGrant({ source, kind: 'weapon', value: weapon, mode: 'proficiency' }, maps, expertise, appliedGrants, conflicts);
+    }
+    for (const tool of definition?.tools ?? []) {
+      addGrant({ source, kind: 'tool', value: tool, mode: 'proficiency' }, maps, expertise, appliedGrants, conflicts);
+    }
+    for (const choice of definition?.choices ?? []) {
+      const kind = String(choice.grant?.prof ?? choice.source) as AppliedGrant['kind'];
+      for (const value of draft.resolvedChoices[choice.id] ?? []) {
+        addGrant({ source, kind, value, mode: 'proficiency', choiceId: choice.id }, maps, expertise, appliedGrants, conflicts);
+      }
+    }
+  }
 
   // D3: grant_ability_score — пред-скан ДО расчёта модов, чтобы прирост дошёл до ВСЕХ
   // производных (maxHP, спасброски, заклинательство, навыки). ASI 4 уровня, +расы/предыстории.
@@ -609,7 +635,10 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     abilityMods: abilityMods0,
     profBonus: pb0,
     selfLevel: draft.level,
-    classLevels: assembled.klass?.name ? { [assembled.klass.name.toLowerCase()]: draft.level } : {},
+    classLevels: Object.fromEntries((assembled.classes ?? (assembled.klass ? [assembled.klass] : [])).map((klass) => [
+      (klass.card_number || klass.name).replace(/^CLASS[-_]/i, '').toLowerCase().replace(/-/g, '_'),
+      draftClassLevels(draft)[klass.id] ?? 0,
+    ])),
     variables: assembled.variables,
   };
   const numericMods: Record<string, number> = {};
@@ -688,11 +717,24 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   const spellDerived = spellcasting(primarySpellcastingAbility, scores, pb);
   const spellcastingMod = spellDerived ? abilityMods[spellDerived.ability] : undefined;
 
+  let untrainedAbilityCheckBonus = 0;
+  for (const { effect } of buildEffects) {
+    for (const payload of payloadsFromMechanics(effect.mechanics)) {
+      const applies = payload.applies_to as Dict | undefined;
+      const filter = applies?.filter as Dict | undefined;
+      if (payload.kind !== 'modifier' || payload.op !== 'add' || applies?.roll !== 'ability_check'
+        || filter?.proficient !== false || payload.value == null) continue;
+      try {
+        const value = evaluate(String(payload.value), formulaCtx);
+        if (typeof value === 'number' && Number.isFinite(value)) untrainedAbilityCheckBonus += value;
+      } catch { /* invalid formulas are reported by mechanics validation */ }
+    }
+  }
   const skillBonuses = Object.fromEntries(SKILL_IDS.map((skill) => {
     const base = abilityMod(scores[abilityOfSkill(skill)]);
     const proficient = maps.skill.has(skill);
     const expert = expertise.skill.has(skill);
-    return [skill, base + (proficient ? pb : 0) + (expert ? pb : 0)];
+    return [skill, base + (proficient ? pb : untrainedAbilityCheckBonus) + (expert ? pb : 0)];
   }));
 
   const savingThrowBonuses = Object.fromEntries(ABILITY_IDS.map((ability) => {
@@ -702,7 +744,15 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
 
   // Числовые модификаторы эффектов вливаются в производные значения листа
   // (фундаментально, единообразно с расчётом КЗ через breakdown).
-  const maxHP = computeMaxHP(assembled.klass?.hit_die, scores.con, draft.level) + (numericMods.max_hp ?? 0);
+  const maxHP = computeMulticlassMaxHP(
+    (assembled.classes ?? (assembled.klass ? [assembled.klass] : [])).map((klass) => ({
+      id: klass.id,
+      hit_die: klass.hit_die,
+      level: draftClassLevels(draft)[klass.id] ?? (klass.id === (draft.classId ?? assembled.klass?.id) ? draft.level : 0),
+    })),
+    draft.classId ?? assembled.klass?.id,
+    scores.con,
+  ) + (numericMods.max_hp ?? 0);
   // Единый КЗ (C9): тот же примитив, что на листе (armorClassValue). На этапе резолва
   // билда экипировки нет (стартовое снаряжение уходит в inventory уже после создания) —
   // считается «голый» КЗ: база / Unarmored Defense / set_value ac_base + modifier-эффекты
@@ -789,6 +839,7 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     abilitySources,
     abilityMethods,
     proficiencyBonus: pb,
+    classLevels: formulaCtx.classLevels,
     proficiencies: {
       skills: [...maps.skill.keys()],
       savingThrows: [...maps.saving_throw.keys()],
