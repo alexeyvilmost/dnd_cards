@@ -25,7 +25,10 @@ func TestPolymorphedConditionDeclarationAndRegistration(t *testing.T) {
 	if !found {
 		t.Fatalf("migration %s is not registered", polymorphedConditionMigrationVersion)
 	}
-	if migrations[len(migrations)-1].Version != polymorphedConditionMigrationVersion {
-		t.Fatalf("migration %s must remain the latest migration", polymorphedConditionMigrationVersion)
+	for index, migration := range migrations {
+		if migration.Version == polymorphedConditionMigrationVersion &&
+			(index+1 >= len(migrations) || migrations[index+1].Version != miniMVPAreaTargetingMigrationVersion) {
+			t.Fatalf("migration %s must immediately follow %s", miniMVPAreaTargetingMigrationVersion, polymorphedConditionMigrationVersion)
+		}
 	}
 }

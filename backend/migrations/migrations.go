@@ -896,6 +896,12 @@ func GetAllMigrations() []Migration {
 			Up:          materializePolymorphedCondition,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     miniMVPAreaTargetingMigrationVersion,
+			Description: "Исправить оставшиеся области заклинаний mini-MVP",
+			Up:          repairMiniMVPAreaTargeting,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
