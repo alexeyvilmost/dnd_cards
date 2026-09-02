@@ -310,6 +310,16 @@ func validActiveEffectValue(value interface{}) bool {
 			}
 		}
 	}
+	if entityRef, exists := row["entityRef"]; exists && entityRef != nil {
+		value, ok := entityRef.(map[string]interface{})
+		if !ok || value["kind"] != "effect" || !boundedString(value["id"], true, 255) {
+			return false
+		}
+		if cardNumber, present := value["cardNumber"]; present && cardNumber != nil &&
+			!boundedString(cardNumber, false, 255) {
+			return false
+		}
+	}
 	if rounds, exists := row["roundsLeft"]; exists && rounds != nil && !boundedJSONInteger(rounds, 0, maxEncounterRuntimeValue) {
 		return false
 	}

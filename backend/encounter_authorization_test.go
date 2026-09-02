@@ -144,6 +144,7 @@ func TestEncounterApplyPolicyValidatesBoundedRuntimeShapes(t *testing.T) {
 		"activeEffects": []interface{}{map[string]interface{}{
 			"id": "fx-1", "name": "Bless", "mechanics": map[string]interface{}{"kind": "modifier"},
 			"ownerId": "hero", "sourceId": "cleric",
+			"entityRef": map[string]interface{}{"kind": "effect", "id": uuid.NewString(), "cardNumber": "EFFECT-TEST"},
 			"sourceTurnExpiry": map[string]interface{}{
 				"sourceActorId": "cleric", "ownerActorId": "hero", "boundary": "end", "armed": true,
 			},
@@ -177,6 +178,15 @@ func TestEncounterApplyPolicyValidatesBoundedRuntimeShapes(t *testing.T) {
 	}}}}
 	if err := validateEncounterApplyPolicy(&enc, member, actors, nil, malformedLifecycle); err == nil || err.Status != http.StatusBadRequest {
 		t.Fatalf("malformed source-turn lifecycle accepted: %#v", err)
+	}
+	malformedEntityRef := ApplyRequest{Patches: []CombatantPatch{{ActorID: "hero", Set: JSONMap{
+		"activeEffects": []interface{}{map[string]interface{}{
+			"id": "bad-ref", "name": "Bad reference",
+			"entityRef": map[string]interface{}{"kind": "spell", "id": uuid.NewString()},
+		}},
+	}}}}
+	if err := validateEncounterApplyPolicy(&enc, member, actors, nil, malformedEntityRef); err == nil || err.Status != http.StatusBadRequest {
+		t.Fatalf("malformed active-effect entity identity accepted: %#v", err)
 	}
 	tooMany := make([]interface{}, maxEncounterRuntimeRows+1)
 	request := ApplyRequest{Patches: []CombatantPatch{{ActorID: "hero", Set: JSONMap{"pendingSaves": tooMany}}}}

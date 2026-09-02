@@ -29,6 +29,25 @@ func TestDecodeCharacterRuntimeCommandRejectsAmbiguousAndUnknownJSON(t *testing.
 	}
 }
 
+func TestDecodeCharacterRuntimeCommandAcceptsActiveEffectLibraryIdentity(t *testing.T) {
+	characterID := uuid.NewString()
+	effectID := uuid.NewString()
+	raw := fmt.Sprintf(`{"command_id":%q,"ruleset_ref":{"system_id":"dnd5e-2024","release_id":"micro","content_hash":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","errata_version":"2024.1"},"participants":[{"character_id":%q,"expected_runtime_revision":0,"patch":{"active_effects":[{"id":"runtime-effect","name":"Bardic Inspiration","mechanics":{},"source":"Bardic Inspiration","entityRef":{"kind":"effect","id":%q,"cardNumber":"EFFECT-TEST"}}]}}],"events":[]}`,
+		uuid.NewString(), characterID, effectID,
+	)
+	request, _, err := decodeCharacterRuntimeCommand([]byte(raw))
+	if err != nil {
+		t.Fatalf("library-linked active effect rejected: %v", err)
+	}
+	if err := validateRuntimeCommandPatch(request.Participants[0].Patch); err != nil {
+		t.Fatalf("library-linked active effect failed shape validation: %v", err)
+	}
+	ref := (*request.Participants[0].Patch.ActiveEffects)[0].EntityRef
+	if ref == nil || ref.Kind != "effect" || ref.ID != effectID || ref.CardNumber != "EFFECT-TEST" {
+		t.Fatalf("entity identity did not round-trip: %#v", ref)
+	}
+}
+
 func TestRuntimeCommandInventorySnapshotIsStrictAndBounded(t *testing.T) {
 	cardID := uuid.NewString()
 	containerID := uuid.NewString()

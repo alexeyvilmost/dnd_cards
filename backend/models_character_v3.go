@@ -362,6 +362,15 @@ type ActiveEffectSourceTurnExpiry struct {
 	Armed         bool   `json:"armed,omitempty"`
 }
 
+// ActiveEffectEntityRef keeps a runtime effect linked to its data-owned
+// library card so sheets and combat inspectors can render the canonical icon
+// and hover card after the effect has been persisted by the backend.
+type ActiveEffectEntityRef struct {
+	Kind       string `json:"kind"`
+	ID         string `json:"id"`
+	CardNumber string `json:"cardNumber,omitempty"`
+}
+
 // ActiveEffectRow — активный эффект на листе v3 (runtime).
 type ActiveEffectRow struct {
 	ID               string                        `json:"id"`
@@ -370,6 +379,7 @@ type ActiveEffectRow struct {
 	RoundsLeft       *int                          `json:"roundsLeft,omitempty"`
 	Expiry           *string                       `json:"expiry,omitempty"`
 	Source           string                        `json:"source"`
+	EntityRef        *ActiveEffectEntityRef        `json:"entityRef,omitempty"`
 	OwnerID          string                        `json:"ownerId,omitempty"`
 	SourceID         string                        `json:"sourceId,omitempty"`
 	SourceTurnExpiry *ActiveEffectSourceTurnExpiry `json:"sourceTurnExpiry,omitempty"`
