@@ -9,6 +9,7 @@
  */
 import { useEffect, useState } from 'react';
 import { effectsApi } from '../api/client';
+import { weaponMasteryPrimitive } from '../engine/weaponMastery2024';
 import type { PassiveEffect } from '../types';
 
 /** Маркер эффекта-мастерства в базе — единственный надёжный ключ выборки (имена — прилагательные). */
@@ -28,11 +29,25 @@ export function loadMasteryEffectsStrict(): Promise<PassiveEffect[]> {
     inflight = effectsApi.getEffects({ type: MASTERY_EFFECT_TYPE, limit: 100, fields: 'runtime' })
       .then((r) => {
         // Бэкенд может игнорировать фильтр type — подстраховываемся клиентским отбором.
-        cache = (r.effects || []).filter((e) => e.type === MASTERY_EFFECT_TYPE);
-        if (!cache.length) {
+        const selected = (r.effects || []).filter((e) => e.type === MASTERY_EFFECT_TYPE);
+        if (!selected.length) {
           cache = null;
           throw new Error('Каталог искусностей оружия пуст');
         }
+        const invalid = selected.filter((effect) => (
+          !effect.id?.trim()
+          || !effect.card_number?.trim()
+          || !weaponMasteryPrimitive(effect.mechanics as Record<string, unknown> | null | undefined)
+        ));
+        if (invalid.length) {
+          cache = null;
+          throw new Error(
+            `Каталог искусностей содержит записи без строгой библиотечной механики: ${invalid
+              .map((effect) => effect.card_number || effect.id || effect.name)
+              .join(', ')}`,
+          );
+        }
+        cache = selected;
         return cache;
       })
       .catch((error) => {

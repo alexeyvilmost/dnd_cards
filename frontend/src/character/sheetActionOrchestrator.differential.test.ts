@@ -105,6 +105,8 @@ const SWORD = {
 } as unknown as Card;
 
 const SAP = {
+  id: 'effect:sap',
+  card_number: 'EFFECT-SAP',
   name: 'Sap',
   mechanics: {
     weapon_mastery: {

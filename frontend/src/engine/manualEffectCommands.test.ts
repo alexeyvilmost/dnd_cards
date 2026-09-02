@@ -67,7 +67,14 @@ function apply(
 beforeEach(() => {
   generatedId = 0;
   replaceConditionsFromDatabase(
-    Object.values(BUILTIN_CONDITION_RULES),
+    Object.values(BUILTIN_CONDITION_RULES).map((definition) => ({
+      ...definition,
+      entityRef: {
+        kind: 'effect' as const,
+        id: `db-effect:${definition.id}`,
+        cardNumber: `CONDITION-${definition.id}`,
+      },
+    })),
     `sha256:${'1'.repeat(64)}`,
   );
 });
@@ -218,6 +225,9 @@ describe('manual ApplyEffect/RemoveEffect interpreter', () => {
     }, ids());
     expect(conditionLevel(result.state, 'unconscious')).toBe(0);
     expect(conditionLevel(result.state, 'prone')).toBe(1);
+    expect(result.state.activeEffects[0].entityRef).toEqual({
+      kind: 'effect', id: 'db-effect:prone', cardNumber: 'CONDITION-prone',
+    });
     expect(result.events).toContainEqual({ type: 'condition_applied', condition: 'prone' });
   });
 

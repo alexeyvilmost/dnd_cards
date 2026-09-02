@@ -48,6 +48,27 @@ func TestDecodeCharacterRuntimeCommandAcceptsActiveEffectLibraryIdentity(t *test
 	}
 }
 
+func TestDecodeCharacterRuntimeCommandRejectsGenericConditionsAndMasteryEffects(t *testing.T) {
+	characterID := uuid.NewString()
+	for name, mechanics := range map[string]string{
+		"condition":      `{"kind":"condition","value":"prone"}`,
+		"weapon mastery": `{"kind":"modifier","stack_id":"weapon-mastery:sap"}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			raw := fmt.Sprintf(`{"command_id":%q,"ruleset_ref":{"system_id":"dnd5e-2024","release_id":"micro","content_hash":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","errata_version":"2024.1"},"participants":[{"character_id":%q,"expected_runtime_revision":0,"patch":{"active_effects":[{"id":"runtime-effect","name":"Generic","mechanics":%s,"source":"Generic"}]}}],"events":[]}`,
+				uuid.NewString(), characterID, mechanics,
+			)
+			request, _, err := decodeCharacterRuntimeCommand([]byte(raw))
+			if err != nil {
+				t.Fatalf("shape decode failed before invariant validation: %v", err)
+			}
+			if err := validateRuntimeCommandPatch(request.Participants[0].Patch); err == nil {
+				t.Fatal("generic actor effect was accepted without an effects-library identity")
+			}
+		})
+	}
+}
+
 func TestRuntimeCommandInventorySnapshotIsStrictAndBounded(t *testing.T) {
 	cardID := uuid.NewString()
 	containerID := uuid.NewString()

@@ -1030,13 +1030,18 @@ export default function SheetActionsPanel({
   // Искусность оружия (Weapon Mastery 2024): движок синхронный, поэтому механику мастерства
   // (как и grantedEffects) резолвим заранее — id эффекта из card.mastery → {name, mechanics}.
   // Без этой карты мастерство молча не сработает.
-  const [masteryById, setMasteryById] = useState<Record<string, { name?: string; mechanics?: unknown }>>({});
+  const [masteryById, setMasteryById] = useState<Record<string, { id?: string; card_number?: string; name?: string; mechanics?: unknown }>>({});
   useEffect(() => {
     let stale = false;
     loadMasteryEffects().then((list) => {
       if (stale) return;
-      const map: Record<string, { name?: string; mechanics?: unknown }> = {};
-      for (const e of list) map[e.id] = { name: e.name, mechanics: e.mechanics };
+      const map: Record<string, { id?: string; card_number?: string; name?: string; mechanics?: unknown }> = {};
+      for (const e of list) map[e.id] = {
+        id: e.id,
+        card_number: e.card_number,
+        name: e.name,
+        mechanics: e.mechanics,
+      };
       setMasteryById(map);
     });
     return () => { stale = true; };

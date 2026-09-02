@@ -37,8 +37,13 @@ const glaive = withDeclaredTestWeaponProfile({
 
 const MASTERY_EFFECTS = {
   [SAP]: {
+    id: SAP,
+    card_number: 'EFFECT-SAP',
     name: 'Ослабляющее',
     mechanics: {
+      weapon_mastery: {
+        type: 'sap', consume: 'next', expires: 'start_of_source_next_turn',
+      },
       activation: { mode: 'triggered', trigger: { event: 'hit' } },
       // who:'target' на ВЗАИМОДЕЙСТВИИ — так эффект ложится на цель (прецедент «Морозная поступь»).
       effects: [{ resolution: 'auto', who: 'target', result: [{
@@ -48,13 +53,18 @@ const MASTERY_EFFECTS = {
     },
   },
   [GRAZE]: {
+    id: GRAZE,
+    card_number: 'EFFECT-GRAZE',
     name: 'Задевающее',
     mechanics: {
+      weapon_mastery: {
+        type: 'graze', damage: 'max(weapon_mod,0)', choiceId: 'weapon_mastery.graze.use',
+      },
       activation: { mode: 'triggered', trigger: { event: 'miss' } },
       effects: [{ resolution: 'auto', who: 'target', result: [{ kind: 'damage', amount: 'weapon_mod', type: 'weapon' }] }],
     },
   },
-} as Record<string, { name: string; mechanics: Dict }>;
+} as Record<string, { id: string; card_number: string; name: string; mechanics: Dict }>;
 
 const character = (weaponMasteries?: string[], cards: Card[] = [longsword]): CharacterContext => ({
   abilityMods: { str: 3, dex: 1, con: 0, int: 0, wis: 0, cha: 0 },
@@ -127,6 +137,9 @@ describe('Ослабляющее (Sap) — на попадании кладёт 
     const fx = res.targetState?.activeEffects ?? [];
     expect(fx.map((e) => e.name)).toContain('Ослабляющее');
     expect((fx[0].mechanics as Dict).op).toBe('disadvantage');
+    expect(fx[0].entityRef).toEqual({
+      kind: 'effect', id: SAP, cardNumber: 'EFFECT-SAP',
+    });
   });
 
   it('вид оружия НЕ выбран → мастерство не срабатывает', () => {
@@ -169,7 +182,11 @@ describe('Ослабляющее (Sap) — на попадании кладёт 
 });
 
 describe('Задевающее (Graze) — на промахе урон = модификатор характеристики атаки', () => {
-  const glaiveCtx = { character: character(['glaive'], [glaive]), masteryEffects: MASTERY_EFFECTS };
+  const glaiveCtx = {
+    character: character(['glaive'], [glaive]),
+    masteryEffects: MASTERY_EFFECTS,
+    choices: { 'weapon_mastery.graze.use': 'use' },
+  };
 
   it('промах → урон weapon_mod (СИЛ 3), тип оружия', () => {
     const res = run(MISS, 30, glaiveCtx, 'w-glaive');

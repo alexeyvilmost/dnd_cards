@@ -1704,6 +1704,43 @@ function modifierApplicationLabel(source: string, payload: Dict): string {
   return labels[roll] ? `${source} · ${labels[roll]}` : source;
 }
 
+function effectReferenceForPayload(
+  payload: Dict,
+  ctx: ExecuteContext,
+): ActiveEffectEntry['entityRef'] | undefined {
+  const raw = payload.effect_ref;
+  const masterySource = ctx.deferredSaveSource?.kind === 'weapon_mastery'
+    ? ctx.deferredSaveSource : undefined;
+  if (!isDict(raw) && !masterySource) return undefined;
+  const id = isDict(raw) && typeof raw.id === 'string'
+    ? raw.id.trim()
+    : masterySource?.entityId.trim() ?? '';
+  const kind = isDict(raw) ? raw.kind : 'effect';
+  const declaredCardNumber = isDict(raw) && typeof raw.cardNumber === 'string'
+    ? raw.cardNumber.trim()
+    : masterySource?.cardNumber?.trim() ?? '';
+  const mastery = id ? ctx.masteryEffects?.[id] : undefined;
+  const resolvedId = mastery?.id?.trim()
+    || (mastery?.sourceEntityIds?.includes(id) ? id : '');
+  const resolvedCardNumber = mastery?.card_number?.trim()
+    || mastery?.sourceEntityIds?.find((sourceId) => /^EFFECT-/i.test(sourceId))?.trim();
+  if (kind !== 'effect' || !id || !mastery || resolvedId !== id || !resolvedCardNumber) {
+    throw mechanicsError(
+      'UNRESOLVED_GRANT_EFFECT',
+      'runtime.payload.effect_ref',
+      `effect reference «${id || '?'}» was not resolved from the effects library`,
+    );
+  }
+  if (declaredCardNumber && resolvedCardNumber !== declaredCardNumber) {
+    throw mechanicsError(
+      'UNRESOLVED_GRANT_EFFECT',
+      'runtime.payload.effect_ref.cardNumber',
+      `effect reference «${id}» has mismatched card number`,
+    );
+  }
+  return { kind: 'effect', id, cardNumber: resolvedCardNumber };
+}
+
 function applyModifierPayload(
   state: RuntimeState,
   payload: Dict,
@@ -1721,6 +1758,7 @@ function applyModifierPayload(
   // target drawer and expiry journal remain understandable.
   const declaredSource = typeof payload.source === 'string' ? payload.source.trim() : '';
   const displaySource = declaredSource || source;
+  const entityRef = effectReferenceForPayload(payload, ctx);
   const entry: ActiveEffectEntry = {
     id: runtimeEffectId(ctx, 'fx', state.activeEffects.length),
     name: displaySource,
@@ -1728,6 +1766,7 @@ function applyModifierPayload(
     roundsLeft, // C6: раньше не выставлялся — модификатор с duration.rounds не истекал
     expiry,
     source: displaySource,
+    ...(entityRef ? { entityRef } : {}),
     ...(ownerActorId ? { ownerId: ownerActorId } : {}),
     ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
     ...(relative ?? {}),
@@ -2382,15 +2421,21 @@ function applyCondition(
     const additions: ActiveEffectEntry[] = [];
     for (const leave of conditionLeaves(condition)) {
       if (present.has(leave)) continue;
+      const leaveEntityRef = conditionEffectEntityRef(leave);
+      if (!leaveEntityRef && conditionRegistryAuthority().mode === 'database_release') {
+        throw mechanicsError(
+          'INVALID_PAYLOAD',
+          'runtime.payload.value',
+          `condition leave «${leave}» has no effects-library entity`,
+        );
+      }
       additions.push({
         id: runtimeEffectId(ctx, `cond-leave-${leave}`, state.activeEffects.length + additions.length),
         name: conditionLabel(leave),
         mechanics: { kind: 'condition', value: leave, op: 'apply' },
         expiry: 'manual',
         source: `осталось от «${condition}»`,
-        ...(conditionEffectEntityRef(leave)
-          ? { entityRef: conditionEffectEntityRef(leave) }
-          : {}),
+        ...(leaveEntityRef ? { entityRef: leaveEntityRef } : {}),
       });
       events.push(conditionAppliedEvent(leave));
     }
@@ -3588,6 +3633,7 @@ function runMastery(
     deferredSaveSource: {
       kind: 'weapon_mastery',
       entityId: m.id,
+      cardNumber: m.cardNumber,
       name: m.name,
       weaponMod: m.weaponMod,
     },

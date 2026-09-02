@@ -104,6 +104,8 @@ export interface ActorState {
     repeatable?: boolean;
   } | undefined>;
   masteryEffects?: Record<string, {
+    id?: string;
+    card_number?: string;
     name?: string;
     mechanics?: unknown;
     /** Selected weapon types whose class-granted mastery resolves to this effect. */

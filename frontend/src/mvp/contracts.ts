@@ -407,7 +407,15 @@ export interface ExecuteContext {
   /** Предзагруженные эффекты-мастерства (Weapon Mastery 2024): id эффекта → {name, mechanics}.
    *  Ключ — card.mastery оружия. Движок синхронный, поэтому механику мастерства (как и grantedEffects)
    *  резолвит лист/бой заранее. Без этой карты мастерство молча не сработает. */
-  masteryEffects?: Record<string, { name?: string; mechanics?: unknown } | undefined>;
+  masteryEffects?: Record<string, {
+    /** Exact effects-library identity. A mastery without this provenance is
+     * not executable: otherwise its compiled rider becomes a generic effect. */
+    id?: string;
+    card_number?: string;
+    name?: string;
+    mechanics?: unknown;
+    sourceEntityIds?: readonly [string, ...string[]];
+  } | undefined>;
   /** Модификатор характеристики атаки текущим оружием → формульный токен weapon_mod.
    *  Проставляется движком на прогоне механики искусности (СЛ Опрокидывающего, урон Задевающего). */
   weaponMod?: number;
@@ -428,6 +436,7 @@ export interface ExecuteContext {
   deferredSaveSource?: {
     kind: 'weapon_mastery' | 'nested_effect';
     entityId: string;
+    cardNumber?: string;
     name: string;
     weaponMod?: number;
   };
