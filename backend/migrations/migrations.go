@@ -989,6 +989,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairWizardLevelTwoSpellbook,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     retiredStartingEquipmentMigrationVersion,
+			Description: "Replace retired MVP weapon and shield identities in characters and class equipment",
+			Up:          repairRetiredStartingEquipment,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
