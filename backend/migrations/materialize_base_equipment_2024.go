@@ -40,7 +40,7 @@ var baseWeapons2024 = []baseWeapon2024{
 	{"CARD-0320", "lance", "martial", "str", "1d10", "piercing", "melee", "1464fb09-59c1-4bc5-8143-92abae8657b1", "", "", "", "", []map[string]any{{"kind": "melee", "reach_ft": 10}}, []string{"heavy", "reach", "two_handed"}, true},
 	{"CARD-0319", "longsword", "martial", "str", "1d8", "slashing", "melee", "4cfe0660-ba1c-415b-b1ed-15e3c708a8e3", "", "", "", "1d10", []map[string]any{{"kind": "melee", "reach_ft": 5}}, []string{"versatile"}, false},
 	{"CARD-0315", "maul", "martial", "str", "2d6", "bludgeoning", "melee", "1464fb09-59c1-4bc5-8143-92abae8657b1", "", "", "", "", []map[string]any{{"kind": "melee", "reach_ft": 5}}, []string{"heavy", "two_handed"}, true},
-	{"CARD-BASE2024-MORNINGSTAR", "morningstar", "martial", "str", "1d8", "piercing", "melee", "4cfe0660-ba1c-415b-b1ed-15e3c708a8e3", "", "", "", "", []map[string]any{{"kind": "melee", "reach_ft": 5}}, []string{}, false},
+	{"CARD-B24-MORNINGSTAR", "morningstar", "martial", "str", "1d8", "piercing", "melee", "4cfe0660-ba1c-415b-b1ed-15e3c708a8e3", "", "", "", "", []map[string]any{{"kind": "melee", "reach_ft": 5}}, []string{}, false},
 	{"CARD-0314", "pike", "martial", "str", "1d10", "piercing", "melee", "82ec5a23-18f9-4c68-9119-470c1ef120d9", "", "", "", "", []map[string]any{{"kind": "melee", "reach_ft": 10}}, []string{"heavy", "reach", "two_handed"}, true},
 	{"CARD-0313", "rapier", "martial", "finesse", "1d8", "piercing", "melee", "2877d5fd-f912-4186-867d-53d353570ded", "", "", "", "", []map[string]any{{"kind": "melee", "reach_ft": 5}}, []string{"finesse"}, false},
 	{"CARD-0311", "scimitar", "martial", "finesse", "1d6", "slashing", "melee", "c00b501c-2e9a-4f32-89e7-1c5ed898d7b2", "", "", "", "", []map[string]any{{"kind": "melee", "reach_ft": 5}}, []string{"finesse", "light"}, false},
@@ -187,7 +187,7 @@ func utilityItems2024() []utilityItem2024 {
 		"CARD-0792":                      "Колокольчик слышен на расстоянии до 60 фт.",
 		"CARD-0814":                      "Свеча горит 1 час: яркий свет 5 фт и тусклый ещё 5 фт.",
 		"CARD-0713":                      "Лампа на масле: яркий свет 15 фт и тусклый ещё 30 фт.",
-		"CARD-BASE2024-BULLSEYE-LANTERN": "Направленный фонарь на масле: яркий конус 60 фт и тусклый ещё 60 фт.",
+		"CARD-B24-BULLSEYE": "Направленный фонарь на масле: яркий конус 60 фт и тусклый ещё 60 фт.",
 		"CARD-0722":                      "Закрытый фонарь на масле: яркий свет 30 фт и тусклый ещё 30 фт; колпак управляется бонусным действием.",
 		"CARD-0820":                      "Зажигает факел, лампу или другой открытый огонь; без готового топлива требуется 1 минута.",
 	} {
@@ -238,7 +238,7 @@ func materializeBaseEquipment2024(db *sql.DB) error {
 			bonus_type,bonus_value,damage_type,type,weapon_type,mastery,source,slot,is_template,created_at,updated_at)
 		VALUES ('946b2b0d-8c45-4f8c-b718-c7135e41977a'::uuid,'Моргенштерн','Morningstar',
 			'Воинское рукопашное оружие. 1к8 колющего урона. Мастерство: Ослабляющее.','',
-			'common','CARD-BASE2024-MORNINGSTAR',15,'gold',4,'damage','1d8','piercing','weapon','morningstar',
+			'common','CARD-B24-MORNINGSTAR',15,'gold',4,'damage','1d8','piercing','weapon','morningstar',
 			'4cfe0660-ba1c-415b-b1ed-15e3c708a8e3','PHB 2024','one_hand','false',NOW(),NOW())
 		ON CONFLICT (card_number) DO UPDATE SET deleted_at=NULL, updated_at=NOW()
 	`); err != nil {
@@ -249,7 +249,7 @@ func materializeBaseEquipment2024(db *sql.DB) error {
 			type,source,is_template,created_at,updated_at)
 		VALUES ('5eedaf1c-0607-4b84-995a-0963c89c7da8'::uuid,'Фонарь, направленный','Bullseye Lantern',
 			'На масле даёт яркий свет конусом 60 футов и тусклый свет ещё на 60 футов.','',
-			'common','CARD-BASE2024-BULLSEYE-LANTERN',10,'gold',2,'tool','PHB 2024','false',NOW(),NOW())
+			'common','CARD-B24-BULLSEYE',10,'gold',2,'tool','PHB 2024','false',NOW(),NOW())
 		ON CONFLICT (card_number) DO UPDATE SET deleted_at=NULL, updated_at=NOW()
 	`); err != nil {
 		return fmt.Errorf("upsert Bullseye Lantern: %w", err)

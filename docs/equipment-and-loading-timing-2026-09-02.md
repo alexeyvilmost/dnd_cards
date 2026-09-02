@@ -13,6 +13,7 @@ Timezone: Europe/Moscow (UTC+03:00).
 | 08:06:59 | 08:23:59 | 17m 00s | Official 2024 equipment scope definition and initial workbook authoring/render review | Defined 107 mechanical rows across five QA tabs; generated and visually checked every tab. Exact-name comparison initially matched 93/107 production records. |
 | 08:23:59 | 08:30:58 | 6m 59s | Production catalog reconciliation | Resolved 12 of 14 apparent gaps as naming aliases or wrong duplicate selection. Confirmed two real gaps: Morningstar and Bullseye Lantern; identified 22 canonical weapons without executable profiles. |
 | 08:30:58 | 08:43:31 | 12m 33s | Canonical weapon/armor/utility implementation plus automated verification | Added 38 weapon profiles, 13 armor profiles, and mechanics for 55 utility rows; existing Healing Potion remains the 56th. Backend suite, 47 focused frontend tests, TypeScript, and production build passed. |
+| 08:43:31 | 08:55:56 | 12m 25s | First equipment deployment, automatic rollback, and production-schema diagnosis | Timecloud restored the prior healthy release. The failure was two new card numbers exceeding production's 20-character limit; local test fixtures used unconstrained text. Shortened both identifiers and added a real-limit regression check. |
 
 ## Running bottleneck ranking
 
@@ -21,6 +22,7 @@ Timezone: Europe/Moscow (UTC+03:00).
 3. Forge loading all 394 spells for a level-1 character.
 4. Resource catalog embedding about 504 KB of base64 image text (about 356 KB compressed).
 5. Equipment catalog duplication and display-only rules: resolving the canonical item took longer than writing most mechanics.
+6. Test-schema drift: a fixture that omitted the production varchar limit allowed a deployment-only migration failure.
 
 ## Planned speedups
 
@@ -32,3 +34,4 @@ Timezone: Europe/Moscow (UTC+03:00).
 - Keep a committed stable equipment manifest (card number, aliases, expected mechanic) so later audits do not repeat duplicate/name reconciliation.
 - Run the focused equipment contract suite before the full build; this pass found logic failures in about 3 seconds, while the production bundle took about 90 seconds end-to-end.
 - Use compressed uploads with SSH keepalive by default to avoid repeating the 3–5 minute failed-transfer path seen in the second loading release.
+- Generate migration test schemas from the production schema (or at minimum assert production field limits) so release-only constraint failures are caught before image builds.

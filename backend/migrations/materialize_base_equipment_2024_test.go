@@ -18,6 +18,9 @@ func TestBaseEquipment2024DeclaresEveryOfficialWeaponAndArmor(t *testing.T) {
 			t.Fatalf("duplicate weapon %s", row.CardNumber)
 		}
 		seen[row.CardNumber] = true
+		if len(row.CardNumber) > 20 {
+			t.Fatalf("card number %q exceeds the production cards.card_number limit", row.CardNumber)
+		}
 		if row.WeaponType == "" || row.MasteryID == "" || len(row.Modes) == 0 {
 			t.Fatalf("incomplete weapon %#v", row)
 		}
@@ -25,7 +28,7 @@ func TestBaseEquipment2024DeclaresEveryOfficialWeaponAndArmor(t *testing.T) {
 			t.Fatalf("%s: %v", row.CardNumber, err)
 		}
 	}
-	if !seen["CARD-BASE2024-MORNINGSTAR"] {
+	if !seen["CARD-B24-MORNINGSTAR"] {
 		t.Fatal("Morningstar declaration is absent")
 	}
 	utilities := utilityItems2024()
@@ -38,11 +41,14 @@ func TestBaseEquipment2024DeclaresEveryOfficialWeaponAndArmor(t *testing.T) {
 			t.Fatalf("duplicate utility %s", row.CardNumber)
 		}
 		utilitySeen[row.CardNumber] = true
+		if len(row.CardNumber) > 20 {
+			t.Fatalf("card number %q exceeds the production cards.card_number limit", row.CardNumber)
+		}
 		if _, err := json.Marshal(row.Mechanics); err != nil {
 			t.Fatalf("%s: %v", row.CardNumber, err)
 		}
 	}
-	if !utilitySeen["CARD-BASE2024-BULLSEYE-LANTERN"] {
+	if !utilitySeen["CARD-B24-BULLSEYE"] {
 		t.Fatal("Bullseye Lantern declaration is absent")
 	}
 }
