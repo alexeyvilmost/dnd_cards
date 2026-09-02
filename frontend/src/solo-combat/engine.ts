@@ -26,6 +26,7 @@ import type {
 } from '../rules-core/domain';
 import { InMemoryRulesSession } from '../rules-core/session';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
+import { canFamiliarUseOrdinaryAction } from '../rules-core/findFamiliar';
 import { turnStartGrappleDamageOpportunity } from '../rules-core/fightingStyleComplexPrimitives';
 import { conditionInteractionDenied } from '../rules-core/conditionsRuntime';
 import { parseWeaponProfile } from '../rules-core/weaponProfile';
@@ -117,6 +118,24 @@ const TACTICAL_BASIC_ACTIONS = new Set([
   'action_basic_disengage',
   'action_basic_dodge',
 ]);
+const FAMILIAR_BASIC_ACTIONS = new Set([
+  ...TACTICAL_BASIC_ACTIONS,
+  'action_basic_help',
+]);
+const FAMILIAR_SIZE_LABELS: Record<string, string> = {
+  tiny: 'Крошечный', small: 'Маленький', medium: 'Средний',
+};
+const FAMILIAR_SPIRIT_LABELS: Record<string, string> = {
+  celestial: 'Небожитель', fey: 'Фея', fiend: 'Исчадие',
+};
+const FAMILIAR_SPEED_LABELS: Record<string, string> = {
+  walk: 'ходьба', climb: 'лазание', fly: 'полёт', swim: 'плавание', burrow: 'копание',
+};
+const FAMILIAR_TRAIT_LABELS: Record<string, string> = {
+  agile: 'Проворство', amphibious: 'Амфибия', compression: 'Сжатие', flyby: 'Облёт',
+  jumper: 'Прыгун', mimicry: 'Подражание', spider_climb: 'Паучье лазание',
+  standing_leap: 'Прыжок с места', water_breathing: 'Дыхание под водой', web_walker: 'Хождение по паутине',
+};
 
 function opportunityVersion(action: RuleActionDefinition): RuleActionDefinition {
   const mechanics = clone(action.mechanics);
@@ -555,6 +574,12 @@ function reconcileSummonedActorProjection(
       throw new Error(`Present familiar ${actor.id} has no complete initiative roll`);
     }
     const isNewToken = !projection.tokens[actor.id];
+    const basicActionIds = state.catalogActions.flatMap((action) => {
+      const cardNumber = state.actionPresentation?.[action.id]?.actionRef?.card_number;
+      return cardNumber && FAMILIAR_BASIC_ACTIONS.has(cardNumber) ? [action.id] : [];
+    });
+    projection.playerActionIdsByActor![actor.id] = [...basicActionIds];
+    projection.certifiedPlayerActionIdsByActor![actor.id] = [];
     const position = projection.tokens[actor.id]?.position
       ?? availableScenePosition(projection, 'party');
     projection.tokens[actor.id] = {
@@ -572,17 +597,22 @@ function reconcileSummonedActorProjection(
       );
     projection.initiativeBonuses[actor.id] = modifier;
     projection.sideByActorId[actor.id] = projection.sideByActorId[familiar.ownerActorId] ?? 'side:party';
+    const spiritLabel = FAMILIAR_SPIRIT_LABELS[familiar.spiritType] ?? familiar.spiritType;
+    const speeds = Object.entries(metadata.speeds)
+      .filter((entry): entry is [string, number] => Number.isFinite(entry[1]))
+      .map(([mode, feet]) => `${FAMILIAR_SPEED_LABELS[mode] ?? mode} ${feet} фт.`)
+      .join(', ');
     projection.actorPresentation[actor.id] = {
       templateId: metadata.statBlockId,
-      description: `Фамильяр ${metadata.formId}; дух типа «${familiar.spiritType}». Действует в собственной инициативе и подчиняется командам владельца.`,
-      size: metadata.size,
-      creatureType: familiar.spiritType,
-      source: metadata.sourceEntityId,
-      actionIds: [],
+      description: `Фамильяр ${actor.name}. Тип духа: ${spiritLabel}. Скорости: ${speeds}. Действует в собственной инициативе и подчиняется командам владельца; обычные атаки запрещены.`,
+      size: FAMILIAR_SIZE_LABELS[metadata.size] ?? metadata.size,
+      creatureType: spiritLabel,
+      source: 'D&D 2024 · Monster Manual 2025',
+      actionIds: basicActionIds,
       traits: (actor.passives ?? []).map((passive, index) => {
         const row = passive as Record<string, unknown>;
         const id = String(row.id ?? `familiar-trait-${index + 1}`);
-        return { id, name: id.replaceAll('_', ' '), mechanics: clone(row) };
+        return { id, name: FAMILIAR_TRAIT_LABELS[id] ?? id.replaceAll('_', ' '), mechanics: clone(row) };
       }),
     };
     initiativeByActor.set(actor.id, {
@@ -939,7 +969,7 @@ export function executeCombatAction(input: {
       throw new Error(`Объект «${object.name}» уже существует в сцене.`);
     }
   }
-  const dispatchState = scenarioObjects.length ? {
+  let dispatchState = scenarioObjects.length ? {
     ...input.state,
     world: {
       ...input.state.world,
@@ -949,6 +979,44 @@ export function executeCombatAction(input: {
       },
     },
   } : input.state;
+  let familiarCapabilities: ActorState['capabilities'] | null = null;
+  const familiarActor = dispatchState.world.actors[input.actorId];
+  const familiarActionCardNumber = dispatchState.actionPresentation?.[action.id]?.actionRef?.card_number;
+  if (familiarActor?.kind === 'summonedActor'
+    && familiarActor.familiarState
+    && familiarActionCardNumber
+    && FAMILIAR_BASIC_ACTIONS.has(familiarActionCardNumber)) {
+    if (!canFamiliarUseOrdinaryAction({
+      familiar: familiarActor.familiarState,
+      actionKind: isAttackAction(action) ? 'attack' : 'ordinary_action',
+    })) {
+      throw new Error('Фамильяр не может выполнить это обычное действие');
+    }
+    // Familiar integrity intentionally keeps catalog capabilities empty. The
+    // solo adapter grants exactly one allowlisted base action for this command,
+    // then restores the canonical capability projection before persistence.
+    familiarCapabilities = clone(familiarActor.capabilities);
+    dispatchState = {
+      ...dispatchState,
+      world: {
+        ...dispatchState.world,
+        actors: {
+          ...dispatchState.world.actors,
+          [familiarActor.id]: {
+            ...familiarActor,
+            capabilities: {
+              ...familiarActor.capabilities,
+              actionIds: [...new Set([...familiarActor.capabilities.actionIds, action.id])],
+              featureSources: {
+                ...(familiarActor.capabilities.featureSources ?? {}),
+                [action.id]: ['dnd2024.find-familiar.basic-actions'],
+              },
+            },
+          },
+        },
+      },
+    };
+  }
   let next = dispatch({ state: dispatchState, command, rng, label: action.name });
   next = applyActionTeleport(
     dispatchState,
@@ -1038,6 +1106,22 @@ export function executeCombatAction(input: {
       next = autoResolveSystemDecisions(next, rng);
     }
   }
+  const restoreFamiliarCapabilities = (candidate: SoloCombatState): SoloCombatState => {
+    if (!familiarCapabilities) return candidate;
+    const current = candidate.world.actors[input.actorId];
+    if (!current) return candidate;
+    return {
+      ...candidate,
+      world: {
+        ...candidate.world,
+        actors: {
+          ...candidate.world.actors,
+          [input.actorId]: { ...current, capabilities: familiarCapabilities },
+        },
+      },
+    };
+  };
+  next = restoreFamiliarCapabilities(next);
   if (action.id !== next.dashActionId) return withTriggeredAttackOffer(next);
   return withTriggeredAttackOffer({
     ...next,

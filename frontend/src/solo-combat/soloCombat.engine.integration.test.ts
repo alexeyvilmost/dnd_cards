@@ -672,11 +672,13 @@ function goblin(): Monster {
 describe('solo combat engine vertical integration', () => {
   it('projects a Wild Companion into the tactical map, initiative, allegiance, and player-controlled turn', async () => {
     const fixture = wildCompanionParticipant();
+    const basicDash = dash();
+    const basicDisengage = disengage();
     let state = await createSoloCombatState({
       character: fixture.participant.character,
       participant: fixture.participant,
       selected: [{ monster: goblin(), quantity: 1 }],
-      actions: [scimitar()], effects: [], rng: () => 0.5,
+      actions: [scimitar(), basicDash, basicDisengage], effects: [], rng: () => 0.5,
     });
     const ownerActorId = fixture.participant.character.id;
     state = executeCombatAction({
@@ -700,13 +702,25 @@ describe('solo combat engine vertical integration', () => {
     expect(state.world.scene.mode === 'encounter' && state.world.scene.initiative)
       .toEqual(state.initiative.map((entry) => entry.actorId));
     expect(state.actorPresentation[familiar!.id]).toMatchObject({
-      creatureType: 'fey', size: 'tiny', actionIds: [],
+      creatureType: 'Фея', size: 'Крошечный',
+      actionIds: expect.arrayContaining([basicDash.id, basicDisengage.id]),
     });
+    expect(state.actorPresentation[familiar!.id].description).toContain('полёт 60 фт.');
+    expect(state.playerActionIdsByActor?.[familiar!.id]).toEqual(expect.arrayContaining([
+      basicDash.id, basicDisengage.id,
+    ]));
+    expect(state.playerActionIdsByActor?.[familiar!.id]).not.toContain(scimitar().id);
     expect(isPlayerControlledCombatActor(state, familiar!.id)).toBe(true);
     expect(state.world.actors[ownerActorId].runtime.resources).toMatchObject({ action: 0, wild_shape: 1 });
 
     state = advanceTurn(state, () => 0.5);
     expect(activeId(state)).toBe(familiar!.id);
+    state = executeCombatAction({
+      state, actorId: familiar!.id, actionId: basicDash.id,
+      targetIds: [familiar!.id], rng: () => 0.5,
+    });
+    expect(state.world.actors[familiar!.id].runtime.resources.action).toBe(0);
+    expect(state.movementRemainingFt[familiar!.id]).toBe(10);
     const destination = { x: state.tokens[familiar!.id].position.x + 1, y: state.tokens[familiar!.id].position.y };
     state = moveActor({ state, actorId: familiar!.id, destination, voluntary: true, rng: () => 0.5 });
     expect(state.tokens[familiar!.id].position).toEqual(destination);
