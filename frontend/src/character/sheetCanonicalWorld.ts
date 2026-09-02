@@ -718,6 +718,26 @@ function declaredSlotResource(action: RuleActionDefinition): string | undefined 
   return resources[0];
 }
 
+function declaredGrantSlotResource(
+  action: RuleActionDefinition,
+  binding: SpellGrantBinding,
+  assembled: AssembledCharacter,
+): string | undefined {
+  const declared = declaredSlotResource(action);
+  if (!declared?.startsWith('spell_slot_') || binding.source.type !== 'class') return declared;
+  const owner = (assembled.classes ?? (assembled.klass ? [assembled.klass] : []))
+    .find((klass) => klass.id === binding.source.originEntityId);
+  const definition = owner?.resources?.[declared];
+  if (!definition || typeof definition !== 'object') return declared;
+  const row = definition as Record<string, unknown>;
+  // A class-owned short-rest spell-slot table is Pact Magic. The runtime keeps
+  // it separate from the multiclass spellcaster table, so its grants must
+  // declare that same independent payment resource.
+  return String(row.per ?? row.recharge ?? '') === 'short_rest'
+    ? declared.replace(/^spell_slot_/, 'pact_slot_')
+    : declared;
+}
+
 function preparedSourceProjections(input: {
   assembled: AssembledCharacter;
   resolvedChoices: Record<string, string[]> | null | undefined;
@@ -794,7 +814,7 @@ function baseSpellAccess(input: {
       throw new SheetCanonicalWorldError(`${spellGrant.grant.id}: spellcasting ability is missing`);
     }
     const access = accessForGrant(spellGrant.grant, sheet.spellRef, spellGrant.castingOverride);
-    const slotResource = declaredSlotResource(action);
+    const slotResource = declaredGrantSlotResource(action, spellGrant, input.assembled);
     return [{
       action,
       sourceId: spellGrant.sourceId,

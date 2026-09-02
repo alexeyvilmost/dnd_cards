@@ -979,6 +979,54 @@ describe('real sheet canonical world materialization', () => {
     });
   });
 
+  it('pays a Warlock class spell from its separate short-rest Pact Magic pool', () => {
+    const spellcasting = patchEffect('EFF-warlock-spellcasting');
+    // The compiled corpus has a Wizard spell root but no separate Warlock
+    // root. Granting that real level-1 spell through the Warlock class source
+    // is sufficient here: the regression is about the payment-pool binding.
+    const root = clone(generated.roots.wizard);
+    const sheetAction = root.actions
+      .filter((candidate): candidate is Extract<RuleActionDefinition, { kind: 'spell' }> => (
+        candidate.kind === 'spell' && candidate.spell.level === 1
+      ))
+      .map(sheetSpell)[0];
+    const spell = sheetAction.spellRef!;
+    const warlock = {
+      ...warlockClass(),
+      resources: {
+        spell_slot_1: { by_level: { 1: 1, 2: 2 }, per: 'short_rest' },
+      },
+    };
+    const assembly = {
+      ...assembled({ effect: spellcasting, spells: [spell] }),
+      klass: { ...warlock, resources: { pact_slot_1: { count: 2, per: 'short_rest' } } },
+      classes: [warlock],
+    };
+    const built = buildSheetCanonicalRuntime({
+      character: character('sheet-warlock'),
+      assembled: assembly,
+      ruleState: spellRuleState(spellcasting, [spell], { [spell.id]: 'known' }),
+      sheetActions: [sheetAction],
+      runtime: {
+        ...root.actor.runtime,
+        resources: { ...root.actor.runtime.resources, pact_slot_1: 2 },
+        maxResources: { ...root.actor.runtime.maxResources, pact_slot_1: 2 },
+      },
+      characterContext: root.actor.character,
+      cards: [],
+      ac: root.actor.ac,
+    });
+    const action = built.actionFor(sheetAction);
+    expect(resolveSpellAccess({
+      state: built.world.actors[built.actorId].spellcastingAccess!,
+      actionId: action.id,
+      resources: { pact_slot_1: 2 },
+    })).toMatchObject({
+      status: 'allowed',
+      payment: { kind: 'slot', resource: 'pact_slot_1' },
+    });
+  });
+
   it('fails closed on missing, duplicate, and outside-book Wizard preparation', () => {
     const spellcasting = patchEffect('EFF-wizard-spellcasting');
     const root = clone(generated.roots.wizard);
