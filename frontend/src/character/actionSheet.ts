@@ -126,22 +126,28 @@ export function collectGrantActionSlugs(mechanics: Record<string, unknown> | nul
 
 /** Slug'и эффектов, ВЫДАВАЕМЫХ кастом через grant_effect (Доспехи мага → EFFECT-0256). Лист
  *  предзагружает их механику, чтобы движок поставил стоячий активный эффект при активации.
- *  Читает value | values, формы effects[]{kind} и effects[]{resolution:'auto',result[]}. */
+ *  Обходит всё дерево механики: длительный эффект может находиться в on_hit/on_fail,
+ *  внутри runtime-choice или в обычном result. */
 export function collectGrantEffectSlugs(mechanics: Record<string, unknown> | null | undefined): string[] {
   if (!mechanics || typeof mechanics !== 'object') return [];
-  const effects = (mechanics as Dict).effects;
-  if (!Array.isArray(effects)) return [];
-  const out: string[] = [];
-  const scan = (p: Dict) => {
-    if (!p || p.kind !== 'grant_effect') return;
-    if (typeof p.value === 'string' && p.value) out.push(p.value);
-    if (Array.isArray(p.values)) for (const v of p.values) if (typeof v === 'string' && v) out.push(v);
+  const out = new Set<string>();
+  const scan = (value: unknown): void => {
+    if (Array.isArray(value)) {
+      value.forEach(scan);
+      return;
+    }
+    if (!value || typeof value !== 'object') return;
+    const payload = value as Dict;
+    if (payload.kind === 'grant_effect') {
+      if (typeof payload.value === 'string' && payload.value) out.add(payload.value);
+      if (Array.isArray(payload.values)) {
+        for (const reference of payload.values) if (typeof reference === 'string' && reference) out.add(reference);
+      }
+    }
+    Object.values(payload).forEach(scan);
   };
-  for (const it of effects as Dict[]) {
-    if (it?.kind) scan(it);
-    else if (Array.isArray(it?.result)) for (const p of it.result as Dict[]) scan(p);
-  }
-  return out;
+  scan(mechanics);
+  return [...out];
 }
 
 /** Действие, выданное через grant_action (уже загруженное по slug), для collectSheetActions. */

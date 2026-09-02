@@ -5,7 +5,7 @@
  * листа группы item с источником-предметом.
  */
 import { describe, expect, it } from 'vitest';
-import { collectSheetActions, collectGrantActionSlugs, type GrantedAction } from './actionSheet';
+import { collectSheetActions, collectGrantActionSlugs, collectGrantEffectSlugs, type GrantedAction } from './actionSheet';
 import type { AssembledCharacter } from './assemble';
 import type { Action } from '../types';
 
@@ -50,6 +50,26 @@ describe('S6 — collectGrantActionSlugs', () => {
     expect(collectGrantActionSlugs(mech, 1)).toEqual([]);          // 1 < 5 → скрыт
     expect(collectGrantActionSlugs(mech, 5)).toEqual(['riposte']); // 5 ≥ 5 → доступен
     expect(collectGrantActionSlugs(mech)).toEqual(['riposte']);    // без уровня (Infinity) → доступен
+  });
+});
+
+describe('runtime effect library references', () => {
+  it('находит grant_effect внутри on_hit, on_fail и runtime-choice', () => {
+    expect(collectGrantEffectSlugs({ effects: [{
+      on_hit: [{ kind: 'grant_effect', value: 'ray-slow' }],
+      on_fail: [{ kind: 'grant_effect', values: ['bane-attack', 'bane-save'] }],
+      result: [{ kind: 'choice', options: { items: [{ grants: [
+        { kind: 'grant_effect', value: 'hex-strength' },
+        { kind: 'grant_effect', value: 'hex-rider' },
+      ] }] } }],
+    }] })).toEqual(['ray-slow', 'bane-attack', 'bane-save', 'hex-strength', 'hex-rider']);
+  });
+
+  it('дедуплицирует библиотечную ссылку, повторённую в вариантах выбора', () => {
+    expect(collectGrantEffectSlugs({ effects: [{ result: [
+      { kind: 'grant_effect', value: 'shared' },
+      { kind: 'grant_effect', values: ['shared'] },
+    ] }] })).toEqual(['shared']);
   });
 });
 
