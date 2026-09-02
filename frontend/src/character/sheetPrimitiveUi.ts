@@ -18,6 +18,8 @@ import {
   FIND_FAMILIAR_CAST_PATH_CHOICE,
   FIND_FAMILIAR_FORM_CHOICE,
   FIND_FAMILIAR_SPIRIT_CHOICE,
+  WILD_COMPANION_PRIMITIVE,
+  wildCompanionMechanicsPolicy,
 } from '../rules-core/familiarRuntime';
 import type { SheetCanonicalRuntime } from './sheetCanonicalWorld';
 import type { SheetCanonicalCommandInput } from './sheetCanonicalCommand';
@@ -33,6 +35,7 @@ export const PACT_BLADE_HAND_CHOICE = 'pact_blade_hand' as const;
 export const SHEET_NO_PENDING_PRIMITIVES = [
   'pact_blade_bond',
   'find_familiar',
+  WILD_COMPANION_PRIMITIVE,
   'temporary_hp_melee_retaliation',
   'detect_magic_world_sensing',
   'detect_poison_disease_world',
@@ -150,6 +153,11 @@ export function sheetPrimitiveDefinitionIssue(action: RuleActionDefinition): str
     return temporaryHpMeleeRetaliationPolicyFromMechanics(
       object(action.mechanics.primitive) ?? {},
     ) ? null : `${action.id} has invalid temporary-hit-point retaliation policy`;
+  }
+  if (primitive === WILD_COMPANION_PRIMITIVE) {
+    return wildCompanionMechanicsPolicy(action)
+      ? null
+      : `${action.id} has invalid Wild Companion policy`;
   }
   if ((isSheetNoPendingPrimitive(primitive) && sheetPrimitiveRequiresWorldInput(primitive))
     || primitive === 'detect_magic_world_sensing'

@@ -1063,6 +1063,73 @@ describe('real-sheet canonical primitive bridge', () => {
     });
   });
 
+  it('executes Wild Companion from the sheet as a canonical material-free Fey familiar', () => {
+    const actorId = RULES_LAB_FAMILIAR_ACTOR_IDS[0];
+    const world = migrateWorldState(RULES_LAB_FAMILIAR_SESSION_CONFIG.createWorld());
+    const action: RuleActionDefinition = {
+      id: 'test.action.sheet-wild-companion',
+      name: 'Дикий спутник',
+      kind: 'nonSpell',
+      sourceEntityIds: ['EFF-wild-companion'],
+      targeting: {
+        minTargets: 0, maxTargets: 0, rangeFt: 10,
+        requiresLineOfSight: false, allowedRelations: [],
+      },
+      mechanics: {
+        activation: { mode: 'active', cost: [{ resource: 'action' }, { resource: 'wild_shape' }] },
+        targeting: {
+          domain: 'world', actor_targets: false, shape: 'single', min_targets: 0,
+          max_targets: 0, range_ft: 10, requires_line_of_sight: false, allowed_relations: [],
+        },
+        primitive: {
+          type: 'wild_companion',
+          policy: {
+            connection_range_ft: 100,
+            reappear_range_ft: 30,
+            ritual_casting_added_seconds: 600,
+          },
+        },
+        effects: [],
+      },
+    };
+    world.actors[actorId].capabilities.actionIds.push(action.id);
+    world.actors[actorId].capabilities.featureSources = {
+      ...(world.actors[actorId].capabilities.featureSources ?? {}),
+      [action.id]: ['EFF-wild-companion'],
+    };
+    world.actors[actorId].runtime.resources.wild_shape = 2;
+    world.actors[actorId].runtime.maxResources.wild_shape = 2;
+    const catalog: RulesCatalog = {
+      ...RULES_LAB_FAMILIAR_SESSION_CONFIG.catalog,
+      getAction: (id) => id === action.id
+        ? action
+        : RULES_LAB_FAMILIAR_SESSION_CONFIG.catalog.getAction(id),
+    };
+    const runtime = primitiveRuntime({ actorId, world, action, catalog });
+    expect(collectSheetPrimitiveChoices({ runtime, action })).toEqual([
+      expect.objectContaining({ id: FIND_FAMILIAR_FORM_CHOICE, prompt: 'Форма дикого спутника' }),
+    ]);
+    const result = executeSheetAction({
+      state: clone(world.actors[actorId].runtime),
+      mechanics: action.mechanics,
+      context: primitiveContext(
+        world.actors[actorId],
+        { [FIND_FAMILIAR_FORM_CHOICE]: ['owl'] },
+        createSequentialIdFactory('sheet-wild-companion'),
+      ),
+      canonical: { runtime, action },
+    });
+    expect(result.state.resources).toMatchObject({ action: 0, wild_shape: 1 });
+    expect(Object.values(result.canonicalWorld!.actors).find((candidate) => (
+      candidate.familiarState?.ownerActorId === actorId
+    ))?.familiarState).toMatchObject({
+      extension: 'base', spiritType: 'fey', form: { id: 'owl' },
+    });
+    expect(result.events.some((event) => (
+      event.type === 'narrative' && event.text.includes('Дикий спутник')
+    ))).toBe(true);
+  });
+
   it.each([
     {
       label: 'unknown primitive',

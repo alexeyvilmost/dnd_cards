@@ -501,7 +501,9 @@ export function evolve(world: WorldState, payload: RuleEventPayload): WorldState
         || familiar.actorId !== payload.actor.id
         || payload.casting.actionId !== payload.actor.familiarMetadata?.summoningActionId
         || !Number.isInteger(payload.casting.consumedIncenseGp)
-        || payload.casting.consumedIncenseGp <= 0
+        || payload.casting.consumedIncenseGp < 0
+        || (payload.casting.method !== 'wild_companion_magic_action'
+          && payload.casting.consumedIncenseGp === 0)
         || payload.casting.created !== !world.actors[payload.actor.id]
         || (payload.casting.method === 'pact_chain_magic_action') !== (familiar.extension === 'pact_chain')) {
         throw new Error(`Invalid familiar upsert for ${payload.ownerActorId}`);
@@ -567,7 +569,7 @@ export function evolve(world: WorldState, payload: RuleEventPayload): WorldState
       const owner = world.actors[payload.ownerActorId];
       if (!actor?.familiarState || !owner
         || actor.familiarState.ownerActorId !== owner.id
-        || payload.reason !== 'forever_dismissal'
+        || !['forever_dismissal', 'wild_companion_long_rest'].includes(payload.reason)
         || Object.values(world.attackActions).some((entry) => (
           entry.actorId === actor.id && entry.status === 'open'
         ))

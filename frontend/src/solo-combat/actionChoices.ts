@@ -3,6 +3,11 @@ import type { ActorState, RuleActionDefinition } from '../rules-core/domain';
 import { parseDeclaredWeaponActionPolicy } from '../rules-core/weaponActionPolicies';
 import { weaponContext } from '../engine/weapon';
 import { weaponMasteryPrimitive } from '../engine/weaponMastery2024';
+import { FAMILIAR_ACTOR_CATALOG } from '../rules-core/familiarActorCatalog';
+import {
+  FIND_FAMILIAR_FORM_CHOICE,
+  WILD_COMPANION_PRIMITIVE,
+} from '../rules-core/familiarRuntime';
 
 export const UNARMED_STRIKE_CHOICE_ID = 'unarmed_strike_option';
 
@@ -87,6 +92,22 @@ function masteryChoices(actor: ActorState, action: RuleActionDefinition): Pendin
 
 function primitiveChoices(action: RuleActionDefinition): PendingChoice[] {
   const primitive = action.mechanics.primitive;
+  if (primitive && typeof primitive === 'object' && !Array.isArray(primitive)
+    && (primitive as Record<string, unknown>).type === WILD_COMPANION_PRIMITIVE) {
+    const forms = FAMILIAR_ACTOR_CATALOG.forms
+      .filter((form) => form.eligibility === 'base_standard')
+      .map((form) => ({ id: form.formId, name: form.name }));
+    return [{
+      id: FIND_FAMILIAR_FORM_CHOICE,
+      prompt: 'Форма дикого спутника',
+      count: 1,
+      source: 'explicit',
+      context: 'in_play',
+      origin: { kind: 'other', id: action.id, name: action.name },
+      recommended: forms[0] ? [forms[0].id] : [],
+      items: forms,
+    }];
+  }
   if (!primitive || typeof primitive !== 'object' || Array.isArray(primitive)
     || (primitive as Record<string, unknown>).type !== 'temporary_hp_melee_retaliation') {
     return [];
@@ -140,6 +161,13 @@ export function projectSoloCombatActionChoices(
     && (primitive as Record<string, unknown>).type === 'temporary_hp_melee_retaliation') {
     const selected = projected.temporary_hp;
     if (Array.isArray(selected) && selected.length === 1) projected.temporary_hp = selected[0];
+  }
+  if (primitive && typeof primitive === 'object' && !Array.isArray(primitive)
+    && (primitive as Record<string, unknown>).type === WILD_COMPANION_PRIMITIVE) {
+    const selected = projected[FIND_FAMILIAR_FORM_CHOICE];
+    if (Array.isArray(selected) && selected.length === 1) {
+      projected[FIND_FAMILIAR_FORM_CHOICE] = selected[0];
+    }
   }
   return projected;
 }

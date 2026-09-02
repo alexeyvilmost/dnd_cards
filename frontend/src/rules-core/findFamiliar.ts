@@ -120,7 +120,11 @@ export interface FamiliarState {
   canAttackNormally: false;
 }
 
-export type FindFamiliarCastMethod = 'spell_slot' | 'ritual' | 'pact_chain_magic_action';
+export type FindFamiliarCastMethod =
+  | 'spell_slot'
+  | 'ritual'
+  | 'pact_chain_magic_action'
+  | 'wild_companion_magic_action';
 
 export interface FindFamiliarResources {
   level1SpellSlots: number;
@@ -630,7 +634,10 @@ export function castFindFamiliar(input: {
   const slots = nonNegativeInteger(input.resources.level1SpellSlots, 'Level-1 spell slots');
   const incense = finiteNonNegative(input.resources.incenseGp, 'Find Familiar incense');
   const offering = finiteNonNegative(input.incenseOfferingGp, 'Find Familiar incense offering');
-  const materialCostGp = positiveInteger(input.materialCostGp);
+  const wildCompanion = input.method === 'wild_companion_magic_action';
+  const materialCostGp = wildCompanion && input.materialCostGp === 0
+    ? 0
+    : positiveInteger(input.materialCostGp);
   const baseCastingTimeSeconds = positiveInteger(input.baseCastingTimeSeconds);
   const mechanicsPolicy = validMechanicsPolicy(input.mechanicsPolicy);
   if (materialCostGp === null || baseCastingTimeSeconds === null) {
@@ -642,11 +649,17 @@ export function castFindFamiliar(input: {
   if (!(FAMILIAR_SPIRIT_TYPES as readonly string[]).includes(input.spiritType)) {
     throw new Error('Find Familiar requires Celestial, Fey, or Fiend spirit type');
   }
-  if (!['spell_slot', 'ritual', 'pact_chain_magic_action'].includes(input.method)) {
+  if (!['spell_slot', 'ritual', 'pact_chain_magic_action', 'wild_companion_magic_action'].includes(input.method)) {
     throw new Error('Find Familiar has an unknown casting method');
   }
   if (input.method === 'pact_chain_magic_action' && input.policy.kind !== 'pact_chain') {
     throw new Error('Only Pact of the Chain grants the Magic-action Find Familiar cast');
+  }
+  if (input.method === 'wild_companion_magic_action' && input.policy.kind !== 'base') {
+    throw new Error('Wild Companion uses the base familiar form policy');
+  }
+  if (input.method === 'wild_companion_magic_action' && input.spiritType !== 'fey') {
+    throw new Error('Wild Companion always summons a Fey spirit');
   }
   const spellSlotsExpended = input.method === 'spell_slot' ? 1 : 0;
   if (spellSlotsExpended && slots < 1) throw new Error('Find Familiar spell-slot cast requires a level-1 slot');
@@ -683,7 +696,7 @@ export function castFindFamiliar(input: {
     });
   }
   validState(familiar, input.validation);
-  const castingDuration: FindFamiliarCastResult['castingDuration'] = input.method === 'pact_chain_magic_action'
+  const castingDuration: FindFamiliarCastResult['castingDuration'] = input.method.endsWith('_magic_action')
     ? { kind: 'magic_action' }
     : input.method === 'ritual'
       ? {
@@ -704,7 +717,7 @@ export function castFindFamiliar(input: {
     },
     consumedIncenseGp: offering,
     spellSlotsExpended: spellSlotsExpended as 0 | 1,
-    castingTime: input.method === 'pact_chain_magic_action'
+    castingTime: input.method.endsWith('_magic_action')
       ? 'magic_action'
       : input.method === 'ritual' ? 'ritual' : 'one_hour',
     castingDuration,
