@@ -902,6 +902,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairMiniMVPAreaTargeting,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     conditionLibraryIconsMigrationVersion,
+			Description: "Материализовать недостающие иконки библиотечных состояний",
+			Up:          materializeConditionLibraryIcons,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

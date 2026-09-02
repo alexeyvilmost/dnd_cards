@@ -28,7 +28,14 @@ func TestMiniMVPAreaTargetingDeclarationsAndRegistration(t *testing.T) {
 	}
 
 	migrations := GetAllMigrations()
-	if migrations[len(migrations)-1].Version != miniMVPAreaTargetingMigrationVersion {
-		t.Fatalf("migration %s must remain the latest migration", miniMVPAreaTargetingMigrationVersion)
+	found := false
+	for _, migration := range migrations {
+		if migration.Version == miniMVPAreaTargetingMigrationVersion {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("migration %s must remain registered", miniMVPAreaTargetingMigrationVersion)
 	}
 }
