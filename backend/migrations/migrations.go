@@ -977,6 +977,12 @@ func GetAllMigrations() []Migration {
 			Up:          materializeLevelTwoClassFeatures,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     levelTwoActorTargetingMigrationVersion,
+			Description: "Repair explicit actor targeting on level-two self actions",
+			Up:          repairLevelTwoActorTargeting,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
