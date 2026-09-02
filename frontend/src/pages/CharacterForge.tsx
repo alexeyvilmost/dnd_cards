@@ -360,9 +360,29 @@ const CharacterForge = () => {
   // Максимальный доступный круг ячеек (для choice-фильтра only_available_slots): считаем max-пулы
   // персонажа и берём наибольший spell_slot_N/warlock_slot. Нативно даёт колдунам их пактовый круг.
   const maxSlotLevel = useMemo(
-    () => maxAvailableSpellSlotLevel(
-      syncRuntimeResources(buildCharacterContext(ruleState, draft, [], assembled.klass), assembled, undefined, ruleState.freeuseSpells).maxResources,
-    ),
+    () => {
+      const runtimeLevel = maxAvailableSpellSlotLevel(
+        syncRuntimeResources(buildCharacterContext(ruleState, draft, [], assembled.klass), assembled, undefined, ruleState.freeuseSpells).maxResources,
+      );
+      // During an unresolved level-up choice the rules projection is
+      // intentionally incomplete, but the class resource table is already
+      // authoritative. Read it directly as a fallback so Warlock's recurring
+      // only_available_slots choice does not collapse to an empty catalog.
+      const levels = draftClassLevels(draft);
+      let declaredLevel = 0;
+      for (const klass of assembled.classes ?? (assembled.klass ? [assembled.klass] : [])) {
+        const classLevel = levels[klass.id] ?? 0;
+        for (const [key, raw] of Object.entries(klass.resources ?? {})) {
+          const match = /^(?:spell_slot|warlock_spell_slot|pact_slot)_(\d+)$/.exec(key);
+          if (!match || !raw || typeof raw !== 'object') continue;
+          const resource = raw as { by_level?: unknown; count?: number; max?: number };
+          const available = resolveByLevel(resource.by_level, classLevel)
+            ?? Number(resource.max ?? resource.count ?? 0);
+          if (available > 0) declaredLevel = Math.max(declaredLevel, Number(match[1]));
+        }
+      }
+      return Math.max(runtimeLevel, declaredLevel);
+    },
     [ruleState, draft, assembled],
   );
   const resourceOptions = useResourceOptions();

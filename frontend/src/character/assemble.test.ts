@@ -256,6 +256,37 @@ describe('assemble — level-up spellbook preparation', () => {
   });
 });
 
+describe('assemble — class-level choice capacity', () => {
+  it('uses the selected class level for an existing expanding choice', () => {
+    const warlock = { id: 'warlock', name: 'Warlock', hit_die: 'd8' } as unknown as CharacterClass;
+    const invocations = mkEffect('invocations', 'EFF-eldritch-invocations', {
+      effects: [{
+        kind: 'choice',
+        id: 'warlock_invocation_l1',
+        count: 1,
+        count_by_level: { 1: 1, 2: 3 },
+        options: { source: 'effect', items: [
+          { id: 'inv-a', name: 'A' }, { id: 'inv-b', name: 'B' }, { id: 'inv-c', name: 'C' },
+        ] },
+      }],
+    });
+    const origin = { kind: 'class' as const, id: warlock.id, name: warlock.name };
+    const choiceId = 'class:warlock:invocations:warlock_invocation_l1';
+    const assembled = assemble({
+      race: null, klass: warlock, classes: [warlock], background: null, feats: [],
+      effects: [oe(invocations, origin)], actions: [], spells: [], resources: [],
+    }, {
+      ...emptyDraft(),
+      classId: warlock.id,
+      level: 2,
+      classLevels: { [warlock.id]: 2 },
+      resolvedChoices: { [choiceId]: ['inv-a'] },
+    });
+    expect(assembled.pendingChoices.find((choice) => choice.rawId === 'warlock_invocation_l1')?.count)
+      .toBe(3);
+  });
+});
+
 describe('expandEffectGrants — разворачивание бусин', () => {
   it('«получить всё»: добавляет набор эффектов с origin родителя', async () => {
     const store = { 'EFF-b': mkEffect('id-b', 'EFF-b'), 'EFF-c': mkEffect('id-c', 'EFF-c') };
