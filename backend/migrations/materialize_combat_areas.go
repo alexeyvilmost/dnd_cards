@@ -151,7 +151,7 @@ func materializeCombatAreas(db *sql.DB) error {
 		if _, err = tx.Exec(`
 			INSERT INTO effects (id,name,description,detailed_description,image_url,rarity,
 			  card_number,effect_type,mechanics,repeatable,author,source,support)
-			VALUES ($1::uuid,$2,$2,$2,'','common',$3,'item_effect',$4::jsonb,false,
+			VALUES ($1::uuid,$2::text,$2::text,$2::text,'','common',$3::text,'item_effect',$4::jsonb,false,
 			  'System','PHB 2024',jsonb_build_object('status','untested',
 			  'certification_version',$5::text,'mechanics_locked',false,
 			  'note','Материализован эффект предмета; требуется браузерная перепроверка.'))
