@@ -914,6 +914,12 @@ func GetAllMigrations() []Migration {
 			Up:          materializeMiniMVPRuntimeEffects,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     runtimeEffectIconsMigrationVersion,
+			Description: "Заполнить отсутствующие иконки runtime-эффектов",
+			Up:          fillRuntimeEffectIcons,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
