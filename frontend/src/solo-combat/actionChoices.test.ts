@@ -10,6 +10,7 @@ import {
   UNARMED_STRIKE_CHOICE_ID,
   collectSoloCombatActionChoices,
   immediateSoloCombatTargetIds,
+  projectSoloCombatActionChoices,
 } from './actionChoices';
 import { STONEWORK_CONTACT_CHOICE_ID } from '../mechanics/collectChoices';
 
@@ -199,6 +200,9 @@ describe('solo combat data-owned action choices', () => {
         ],
       }),
     ]);
+    expect(projectSoloCombatActionChoices(action, {
+      temporary_hp: ['take_spell'],
+    })).toEqual({ temporary_hp: 'take_spell' });
   });
 
   it('asks for explicit Stonecunning terrain facts before immediate self execution', () => {
