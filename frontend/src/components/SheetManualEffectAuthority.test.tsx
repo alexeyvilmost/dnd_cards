@@ -213,6 +213,24 @@ describe('manual-effect component authority boundaries', () => {
     expect(persistCharacterRuntimeMock).not.toHaveBeenCalled();
   });
 
+  it('SheetConditionsPanel displays non-condition runtime effects', async () => {
+    const detached = character(null);
+    detached.active_effects = [{
+      id: 'effect:antitoxin',
+      name: 'Противоядие',
+      source: 'Противоядие',
+      mechanics: {
+        kind: 'modifier', applies_to: { roll: 'saving_throw' }, op: 'advantage',
+      },
+    }];
+    await act(async () => root.render(
+      <SheetConditionsPanel character={detached} onUpdated={() => undefined} passives={[]} />,
+    ));
+    expect(container.textContent).toContain('Противоядие');
+    expect(container.textContent).toContain('Преимущество');
+    expect(container.textContent).not.toContain('Нет активных');
+  });
+
   it('SheetRuntimePanel presents one removable row for one action with several mechanical effects', async () => {
     const detached = {
       ...character(null),

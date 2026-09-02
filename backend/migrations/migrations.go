@@ -932,6 +932,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairBaseEquipmentDescriptions,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     baseEquipmentRuntimeMigrationVersion,
+			Description: "Исправить runtime-механику расходников и зон снаряжения",
+			Up:          repairBaseEquipmentRuntime,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

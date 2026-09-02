@@ -122,39 +122,58 @@ func passiveItem2024(description string) map[string]any {
 
 func utilityItems2024() []utilityItem2024 {
 	narrative := func(text string) map[string]any { return map[string]any{"kind": "narrative", "description": text} }
-	zone := func(kind, text string, radius int) map[string]any {
-		return map[string]any{"kind": "world_zone", "zone_type": kind, "geometry": map[string]any{"shape": "sphere", "radius_ft": radius}, "description": text, "duration": map[string]any{"type": "permanent"}}
+	zone := func(kind, text, shape string, size int) map[string]any {
+		return map[string]any{"kind": "world_zone", "zone_type": kind, "geometry": map[string]any{"shape": shape, "size_ft": size}, "description": text, "duration": map[string]any{"type": "permanent"}}
+	}
+	nextCheck := func(op, value string, filter map[string]any, source string) map[string]any {
+		payload := map[string]any{
+			"kind": "modifier", "applies_to": map[string]any{"roll": "ability_check", "filter": filter},
+			"op": op, "consume": "next", "duration": map[string]any{"type": "manual"}, "source": source,
+		}
+		if value != "" {
+			payload["value"] = value
+		}
+		return activeItem2024("free_action", false, payload)
 	}
 	rows := []utilityItem2024{
 		{"CARD-0791", saveItem2024("action", true, 20, []string{"enemy", "neutral"}, "8 + dex + prof_bonus", map[string]any{"kind": "damage", "dice": "2d6", "type": "acid"})},
-		{"CARD-0714", saveItem2024("action", true, 20, []string{"enemy", "neutral"}, "8 + dex + prof_bonus", map[string]any{"kind": "damage", "dice": "1d4", "type": "fire"}, narrative("Цель горит и повторяет 1к4 урона в начале хода, пока не потушит огонь действием."))},
+		{"CARD-0714", saveItem2024("action", true, 20, []string{"enemy", "neutral"}, "8 + dex + prof_bonus",
+			map[string]any{"kind": "damage", "dice": "1d4", "type": "fire"},
+			map[string]any{"kind": "triggered_effect", "event": "turn_start", "effects": []map[string]any{{"kind": "damage", "dice": "1d4", "type": "fire"}}, "duration": map[string]any{"type": "manual"}, "description": "Горение: 1к4 огня в начале хода; снимите эффект после тушения действием."})},
 		{"CARD-0811", activeItem2024("bonus_action", true, map[string]any{"kind": "modifier", "applies_to": map[string]any{"roll": "saving_throw"}, "op": "advantage", "when": []map[string]any{{"kind": "save_avoids_condition", "value": "poisoned"}}, "duration": map[string]any{"type": "hours", "amount": 1}, "source": "Противоядие"})},
 		{"CARD-0491", func() map[string]any {
-			m := activeItem2024("action", false, map[string]any{"kind": "stabilize", "who": "target"}, narrative("Комплект имеет 10 применений; использован один заряд."))
+			m := activeItem2024("action", false, map[string]any{"kind": "stabilize", "who": "target"}, narrative("Использован один из 10 зарядов комплекта."))
+			m["uses"] = map[string]any{"count": 10, "per": "never"}
+			m["activation"].(map[string]any)["cost"] = append(m["activation"].(map[string]any)["cost"].([]map[string]any), map[string]any{"resource": "self_uses", "amount": 1})
 			m["targeting"] = itemTargeting("single", 5, "self", "ally")
 			return m
 		}()},
-		{"CARD-0815", saveItem2024("action", true, 20, []string{"enemy", "neutral"}, "8 + dex + prof_bonus", map[string]any{"kind": "damage", "dice": "2d8", "type": "radiant"}, narrative("Урон применяется только к Исчадию или Нежити."))},
-		{"CARD-0723", activeItem2024("action", true, zone("oil", "Покрытая маслом цель получает ещё 5 урона огнём; лужа горит 2 раунда.", 5))},
-		{"CARD-0832", activeItem2024("bonus_action", true, narrative("Покрывает одно оружие или три боеприпаса: следующее попадание в течение 1 минуты вызывает спасбросок Телосложения Сл 10 и 1к4 урона ядом при провале."))},
+		{"CARD-0815", func() map[string]any {
+			m := saveItem2024("action", true, 20, []string{"enemy", "neutral"}, "8 + dex + prof_bonus", map[string]any{"kind": "damage", "dice": "2d8", "type": "radiant"})
+			m["effects"].([]map[string]any)[0]["automatic_success"] = map[string]any{"if_target_creature_type_not_in": []string{"fiend", "undead"}}
+			return m
+		}()},
+		{"CARD-0723", activeItem2024("action", true, zone("oil", "Лужа масла 5×5 фт; после поджига горит 2 раунда и наносит 5 урона огнём.", "cube", 5))},
+		{"CARD-0832", activeItem2024("bonus_action", true,
+			map[string]any{"kind": "damage_rider", "trigger": "hit_by_attack_roll", "dice": "1d4", "type": "poison", "filter": map[string]any{"attackKind": "weapon"}, "consume": "next", "duration": map[string]any{"type": "rounds", "amount": 10}, "description": "Следующее попадание отравленным оружием добавляет 1к4 урона ядом."})},
 		// CARD-0839 already owns exact executable 2d4+2 healing and self-item consumption.
 		{"CARD-0728", passiveItem2024("Стрела расходуется профилем лука при каждой дальнобойной атаке.")},
 		{"CARD-0749", passiveItem2024("Арбалетный болт расходуется профилем арбалета при каждой дальнобойной атаке.")},
 		{"CARD-0785", passiveItem2024("Пуля расходуется профилем мушкета или пистоля при каждой дальнобойной атаке.")},
 		{"CARD-0786", passiveItem2024("Снаряд расходуется профилем пращи при каждой дальнобойной атаке.")},
 		{"CARD-0787", passiveItem2024("Игла расходуется профилем духовой трубки при каждой дальнобойной атаке.")},
-		{"CARD-0799", activeItem2024("action", false, zone("ball_bearings", "Зона 10×10 фт; спасбросок Ловкости Сл 10 или состояние Опрокинутый.", 5))},
-		{"CARD-0790", activeItem2024("action", false, zone("caltrops", "Зона 5×5 фт; спасбросок Ловкости Сл 15 или 1 колющего урона и Скорость 0 до начала следующего хода.", 5))},
+		{"CARD-0799", activeItem2024("action", false, zone("ball_bearings", "Зона 10×10 фт; спасбросок Ловкости Сл 10 или состояние Опрокинутый.", "cube", 10))},
+		{"CARD-0790", activeItem2024("action", false, zone("caltrops", "Зона 5×5 фт; спасбросок Ловкости Сл 15 или 1 колющего урона и Скорость 0 до начала следующего хода.", "cube", 5))},
 		{"CARD-0829", activeItem2024("action", false, narrative("Связывает схваченную, недееспособную или опутанную цель; вырваться можно проверкой Силы (Атлетика) Сл 18."))},
 		{"CARD-0793", activeItem2024("action", false, narrative("Закрепляет персонажа: он не может упасть более чем на 25 фт от точки крепления."))},
-		{"CARD-0407", passiveItem2024("Даёт преимущество на проверку Силы, когда ломик можно использовать как рычаг.")},
+		{"CARD-0407", nextCheck("advantage", "", map[string]any{"ability": "str"}, "Ломик")},
 		{"CARD-0795", activeItem2024("action", false, narrative("Бросок в точку до 50 фт: проверка Ловкости (Акробатика) Сл 13 закрепляет крюк."))},
-		{"CARD-0411", activeItem2024("action", false, zone("hunting_trap", "Существо делает спасбросок Ловкости Сл 13; при провале 1к4 колющего урона и Скорость 0 до освобождения.", 5))},
+		{"CARD-0411", activeItem2024("action", false, zone("hunting_trap", "Существо делает спасбросок Ловкости Сл 13; при провале 1к4 колющего урона и Скорость 0 до освобождения.", "cube", 5))},
 		{"CARD-0748", activeItem2024("action", false, narrative("Сковывает подходящую цель: помеха атакам и ограничение движений; побег требует проверку Ловкости Сл 20 или Силы Сл 25."))},
 		{"CARD-0330", saveItem2024("action", false, 15, []string{"enemy", "neutral"}, "8 + dex + prof_bonus", map[string]any{"kind": "condition", "value": "restrained", "duration": map[string]any{"type": "permanent"}}, narrative("Сеть можно разорвать проверкой Силы Сл 10."))},
-		{"CARD-0819", passiveItem2024("Даёт +4 к проверке Силы для выламывания двери; помощь второго персонажа даёт преимущество.")},
+		{"CARD-0819", nextCheck("add", "+4", map[string]any{"ability": "str"}, "Портативный таран")},
 		{"CARD-0706", activeItem2024("action", false, narrative("Связывает подходящую цель или объект; побег и разрыв разрешаются проверками по правилу верёвки."))},
-		{"CARD-0823", activeItem2024("action", false, zone("torch_light", "Яркий свет 20 фт и тусклый ещё 20 фт на 1 час; импровизированное оружие добавляет 1 урона огнём.", 20))},
+		{"CARD-0823", activeItem2024("action", false, zone("torch_light", "Яркий свет 20 фт и тусклый ещё 20 фт на 1 час; импровизированное оружие добавляет 1 урона огнём.", "sphere", 20))},
 	}
 
 	passive := map[string]string{
@@ -163,10 +182,6 @@ func utilityItems2024() []utilityItem2024 {
 		"CARD-0715": "Позволяет поднять груз до четырёхкратного обычного предела.",
 		"CARD-0847": "+5 к подходящей проверке Магии, Истории, Природы или Религии по теме книги.",
 		"CARD-0789": "Закрывается ключом; без ключа открывается проверкой Ловкости с воровскими инструментами Сл 15.",
-		"CARD-0822": "Даёт преимущество на проверки для оценки или изучения мелких деталей.",
-		"CARD-0389": "+5 к Мудрости (Выживание) при поиске пути в изображённом месте.",
-		"CARD-0696": "На 1 час даёт преимущество на Харизму (Убеждение) против безразличного гуманоида в 5 фт.",
-		"CARD-0831": "Позволяет достать объект в 10 фт и даёт преимущество Атлетики при прыжке с шестом.",
 		"CARD-0801": "Заменяет материальные компоненты заклинаний без указанной стоимости и расходования.",
 		"CARD-0826": "Магическая фокусировка для Чародея, Колдуна или Волшебника.",
 		"CARD-0827": "Друидическая фокусировка для Друида.",
@@ -182,14 +197,20 @@ func utilityItems2024() []utilityItem2024 {
 	for cardNumber, text := range passive {
 		rows = append(rows, utilityItem2024{cardNumber, passiveItem2024(text)})
 	}
+	rows = append(rows,
+		utilityItem2024{"CARD-0822", nextCheck("advantage", "", map[string]any{"skill": "investigation"}, "Увеличительное стекло")},
+		utilityItem2024{"CARD-0389", nextCheck("add", "+5", map[string]any{"skill": "survival"}, "Карта")},
+		utilityItem2024{"CARD-0696", nextCheck("advantage", "", map[string]any{"skill": "persuasion"}, "Духи")},
+		utilityItem2024{"CARD-0831", nextCheck("advantage", "", map[string]any{"skill": "athletics"}, "Шест")},
+	)
 
 	for cardNumber, text := range map[string]string{
-		"CARD-0792":                      "Колокольчик слышен на расстоянии до 60 фт.",
-		"CARD-0814":                      "Свеча горит 1 час: яркий свет 5 фт и тусклый ещё 5 фт.",
-		"CARD-0713":                      "Лампа на масле: яркий свет 15 фт и тусклый ещё 30 фт.",
+		"CARD-0792":         "Колокольчик слышен на расстоянии до 60 фт.",
+		"CARD-0814":         "Свеча горит 1 час: яркий свет 5 фт и тусклый ещё 5 фт.",
+		"CARD-0713":         "Лампа на масле: яркий свет 15 фт и тусклый ещё 30 фт.",
 		"CARD-B24-BULLSEYE": "Направленный фонарь на масле: яркий конус 60 фт и тусклый ещё 60 фт.",
-		"CARD-0722":                      "Закрытый фонарь на масле: яркий свет 30 фт и тусклый ещё 30 фт; колпак управляется бонусным действием.",
-		"CARD-0820":                      "Зажигает факел, лампу или другой открытый огонь; без готового топлива требуется 1 минута.",
+		"CARD-0722":         "Закрытый фонарь на масле: яркий свет 30 фт и тусклый ещё 30 фт; колпак управляется бонусным действием.",
+		"CARD-0820":         "Зажигает факел, лампу или другой открытый огонь; без готового топлива требуется 1 минута.",
 	} {
 		rows = append(rows, utilityItem2024{cardNumber, activeItem2024("action", false, narrative(text))})
 	}

@@ -51,7 +51,10 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, p
   const conditions = runtime.activeEffects.filter(
     (e) => (e.mechanics as Record<string, unknown>)?.kind === 'condition',
   );
-  const conditionGroups = groupActiveEffectsForDisplay(conditions);
+  // Manual controls below remain condition-specific, while the display is the
+  // sheet's source of truth for every runtime effect (boons, item modifiers,
+  // spell riders, and conditions).
+  const effectGroups = groupActiveEffectsForDisplay(runtime.activeEffects);
   const activeValues = new Set(
     conditions.map((e) => String((e.mechanics as Record<string, unknown>).value ?? '')),
   );
@@ -152,19 +155,19 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, p
   const body = (
     <>
       {error && <p className="issues" role="alert">{error}</p>}
-      {conditions.length === 0 && (
-        <p className="forge-note">Нет активных состояний.</p>
+      {effectGroups.length === 0 && (
+        <p className="forge-note">Нет активных состояний и эффектов.</p>
       )}
-      {conditions.length > 0 && (
+      {effectGroups.length > 0 && (
         <ul className="sheet-conditions">
-          {conditionGroups.map((group) => {
+          {effectGroups.map((group) => {
             return (
               <li key={group.key} className="sheet-condition">
                 <ActiveEffectCard group={group} actions={<button
                   type="button"
                   className="sheet-active-effect-dismiss"
                   disabled={busy || Boolean(mutationBlockReason)}
-                  title={mutationBlockReason ?? 'Снять состояние'}
+                  title={mutationBlockReason ?? 'Снять эффект'}
                   onClick={() => removeConditions(group.effects.map((effect) => effect.id))}
                 >
                   <X size={13} />

@@ -57,11 +57,46 @@ func TestBaseEquipment2024DeclaresEveryOfficialWeaponAndArmor(t *testing.T) {
 func TestBaseEquipment2024MigrationIsRegisteredLast(t *testing.T) {
 	migrations := GetAllMigrations()
 	last := migrations[len(migrations)-1]
-	if last.Version != baseEquipmentDescriptionMigrationVersion {
+	if last.Version != baseEquipmentRuntimeMigrationVersion {
 		t.Fatalf("last=%s", last.Version)
 	}
 	if last.Up == nil || last.Down == nil {
 		t.Fatal("migration must register Up and Down")
+	}
+}
+
+func TestBaseEquipment2024RuntimeDeclarationsAreExecutable(t *testing.T) {
+	byCard := map[string]map[string]any{}
+	for _, row := range utilityItems2024() {
+		byCard[row.CardNumber] = row.Mechanics
+	}
+	for _, cardNumber := range []string{"CARD-0799", "CARD-0790", "CARD-0411", "CARD-0723", "CARD-0823"} {
+		mechanics := byCard[cardNumber]
+		effects := mechanics["effects"].([]map[string]any)
+		payload := effects[0]["result"].([]map[string]any)[0]
+		geometry := payload["geometry"].(map[string]any)
+		if geometry["size_ft"] == nil || geometry["radius_ft"] != nil {
+			t.Fatalf("%s has invalid world-zone geometry: %#v", cardNumber, geometry)
+		}
+	}
+
+	healer := byCard["CARD-0491"]
+	if healer["uses"].(map[string]any)["count"] != 10 {
+		t.Fatalf("healer kit uses=%#v", healer["uses"])
+	}
+	healerCosts := healer["activation"].(map[string]any)["cost"].([]map[string]any)
+	if healerCosts[len(healerCosts)-1]["resource"] != "self_uses" {
+		t.Fatalf("healer kit does not consume its declared uses: %#v", healerCosts)
+	}
+
+	poisonPayload := byCard["CARD-0832"]["effects"].([]map[string]any)[0]["result"].([]map[string]any)[0]
+	if poisonPayload["kind"] != "damage_rider" || poisonPayload["consume"] != "next" {
+		t.Fatalf("basic poison is not a one-hit damage rider: %#v", poisonPayload)
+	}
+
+	firePayloads := byCard["CARD-0714"]["effects"].([]map[string]any)[0]["on_fail"].([]map[string]any)
+	if firePayloads[1]["kind"] != "triggered_effect" || firePayloads[1]["event"] != "turn_start" {
+		t.Fatalf("alchemist fire does not persist burning: %#v", firePayloads)
 	}
 }
 

@@ -143,4 +143,30 @@ describe('универсальный damage_rider', () => {
       type: 'damage', damageType: 'force', amount: 4,
     }));
   });
+
+  it('снимает одноразовый райдер после первого подходящего попадания', () => {
+    const state = equippedFighterState();
+    state.activeEffects.push({
+      id: 'basic-poison',
+      name: 'Яд, простой',
+      source: 'Яд, простой',
+      ownerId: 'fighter',
+      sourceId: 'fighter',
+      mechanics: {
+        kind: 'damage_rider', trigger: 'hit_by_attack_roll', dice: '1d4', type: 'poison',
+        filter: { attackKind: 'weapon' }, consume: 'next', duration: { type: 'rounds', amount: 10 },
+      },
+    });
+    const target = durableTarget();
+    const first = executeAction(state, weaponAttack, {
+      character: FIGHTER_CTX_EQUIPPED,
+      selfId: 'fighter',
+      target: { id: 'target', ac: 10, runtimeState: target },
+      rng: sequence([face(15), face(5, 8), face(3, 4)]),
+    });
+
+    expect(first.state.activeEffects.some((effect) => effect.id === 'basic-poison')).toBe(false);
+    expect(first.events).toContainEqual({ type: 'effect_expired', name: 'Яд, простой' });
+    expect(first.events.filter((event) => event.type === 'damage')).toHaveLength(2);
+  });
 });

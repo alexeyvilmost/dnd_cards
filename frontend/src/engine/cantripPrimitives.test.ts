@@ -136,6 +136,39 @@ describe('универсальные примитивы заговоров', () 
     ]));
   });
 
+  it('supports creature-type allow-lists for restricted item saves', () => {
+    const action = {
+      name: 'Святая вода',
+      effects: [{
+        resolution: 'save', ability: 'dex', dc: '12',
+        automatic_success: { if_target_creature_type_not_in: ['fiend', 'undead'] },
+        on_fail: [{ kind: 'damage', dice: '2d8', type: 'radiant' }],
+        on_success: [],
+      }],
+    };
+    const humanoid = executeAction(freshFighterState(), action, {
+      character: FIGHTER_CTX,
+      target: {
+        id: 'target', runtimeState: freshFighterState(),
+        characterContext: { ...FIGHTER_CTX, creatureType: 'humanoid' },
+      },
+      rng: () => { throw new Error('automatic success must not roll'); },
+    });
+    expect(humanoid.events).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: 'narrative', text: expect.stringContaining('автоуспех') }),
+    ]));
+
+    const fiend = executeAction(freshFighterState(), action, {
+      character: FIGHTER_CTX,
+      target: {
+        id: 'target', runtimeState: freshFighterState(),
+        characterContext: { ...FIGHTER_CTX, creatureType: 'fiend' },
+      },
+      rng: () => face(20),
+    });
+    expect(fiend.events.some((event) => event.type === 'roll')).toBe(true);
+  });
+
   it('keeps the declared Mind Sliver name on the target-owned penalty', () => {
     const targetState = freshFighterState();
     const result = executeAction(freshFighterState(), {

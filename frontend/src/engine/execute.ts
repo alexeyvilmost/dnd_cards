@@ -1211,12 +1211,22 @@ function preflightEffect(
       const immunity = declaration.if_condition_immunity;
       const relation = declaration.if_target_relation;
       const excludedCreatureType = declaration.if_target_creature_type_not;
+      const allowedCreatureTypes = declaration.if_target_creature_type_not_in;
       const hasRelation = relation === 'self' || relation === 'ally'
         || relation === 'enemy' || relation === 'neutral';
       const hasExcludedCreatureType = typeof excludedCreatureType === 'string'
         && excludedCreatureType.trim().length > 0;
+      const hasAllowedCreatureTypes = Array.isArray(allowedCreatureTypes)
+        && allowedCreatureTypes.length > 0
+        && allowedCreatureTypes.every((candidate) => typeof candidate === 'string' && candidate.trim());
+      if (allowedCreatureTypes !== undefined && !hasAllowedCreatureTypes) {
+        throw mechanicsError(
+          'INVALID_PAYLOAD', `${path}.automatic_success.if_target_creature_type_not_in`,
+          'creature type allow-list must contain non-empty strings',
+        );
+      }
       if (!noSleep && (typeof immunity !== 'string' || !immunity.trim())
-        && !hasRelation && !hasExcludedCreatureType) {
+        && !hasRelation && !hasExcludedCreatureType && !hasAllowedCreatureTypes) {
         throw mechanicsError(
           'INVALID_PAYLOAD', `${path}.automatic_success`,
           'automatic save success requires a supported target rule',
@@ -2752,7 +2762,12 @@ function riderFilterMatches(filter: Dict | undefined, facts: Dict): boolean {
   return Object.entries(filter).every(([key, value]) => facts[key] === value);
 }
 
-type DamageRiderCandidate = { payload: Dict; name: string; sourceId?: string };
+type DamageRiderCandidate = {
+  payload: Dict;
+  name: string;
+  sourceId?: string;
+  activeEffectId?: string;
+};
 
 /** Collects one-hit damage additions from actor-owned runtime/passive effects
  * and target-owned marks. Target marks are source-bound by persisted actor id,
@@ -2768,6 +2783,7 @@ function attackDamageRiders(
     name: string,
     expectedScope: 'self' | 'target',
     sourceId?: string,
+    activeEffectId?: string,
   ): void => {
     for (const payload of payloadsOf(mechanics)) {
       if (payload.kind !== 'damage_rider'
@@ -2780,17 +2796,17 @@ function attackDamageRiders(
         ...evalCtxOf(state, ctx),
         event: { kind: 'hit', data: facts },
       })) continue;
-      candidates.push({ payload, name, sourceId });
+      candidates.push({ payload, name, sourceId, activeEffectId });
     }
   };
   for (const effect of state.activeEffects) {
-    collect(effect.mechanics as Dict, effect.name, 'self', effect.sourceId);
+    collect(effect.mechanics as Dict, effect.name, 'self', effect.sourceId, effect.id);
   }
   for (const passive of passivesFromCtx(ctx)) {
     collect(passive, String(passive.name ?? 'пассивный райдер'), 'self');
   }
   for (const effect of ctx.target?.runtimeState?.activeEffects ?? []) {
-    collect(effect.mechanics as Dict, effect.name, 'target', effect.sourceId);
+    collect(effect.mechanics as Dict, effect.name, 'target', effect.sourceId, effect.id);
   }
   return candidates;
 }
@@ -2805,6 +2821,7 @@ function applyAttackDamageRiders(
   facts: AttackDamageQueryFacts,
 ): RuntimeState {
   let next = state;
+  const consumedEffectIds = new Set<string>();
   for (const rider of attackDamageRiders(next, ctx, facts)) {
     const payload = {
       ...rider.payload,
@@ -2838,6 +2855,16 @@ function applyAttackDamageRiders(
         events.push(damageEvent(damage.amount, damage.damageType, damage.roll));
       }
     }
+    if (rider.payload.consume === 'next' && rider.activeEffectId) {
+      consumedEffectIds.add(rider.activeEffectId);
+      events.push({ type: 'effect_expired', name: rider.name });
+    }
+  }
+  if (consumedEffectIds.size > 0) {
+    next = {
+      ...next,
+      activeEffects: next.activeEffects.filter((effect) => !consumedEffectIds.has(effect.id)),
+    };
   }
   return next;
 }
@@ -3612,6 +3639,16 @@ function automaticSaveSuccessReason(
   if (excludedCreatureType && targetCreatureType && targetCreatureType !== excludedCreatureType) {
     return {
       reason: `тип существа не «${excludedCreatureType}»`,
+      sourceEntityIds: [],
+    };
+  }
+  const allowedCreatureTypes = Array.isArray(rule.if_target_creature_type_not_in)
+    ? rule.if_target_creature_type_not_in.map(String).filter((candidate) => candidate.trim())
+    : [];
+  if (allowedCreatureTypes.length > 0 && targetCreatureType
+    && !allowedCreatureTypes.some((candidate) => creatureTypeMatches(targetCreatureType, candidate))) {
+    return {
+      reason: `тип существа не входит в: ${allowedCreatureTypes.join(', ')}`,
       sourceEntityIds: [],
     };
   }
