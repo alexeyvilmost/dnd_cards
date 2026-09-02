@@ -85,6 +85,27 @@ function masteryChoices(actor: ActorState, action: RuleActionDefinition): Pendin
   }];
 }
 
+function primitiveChoices(action: RuleActionDefinition): PendingChoice[] {
+  const primitive = action.mechanics.primitive;
+  if (!primitive || typeof primitive !== 'object' || Array.isArray(primitive)
+    || (primitive as Record<string, unknown>).type !== 'temporary_hp_melee_retaliation') {
+    return [];
+  }
+  return [{
+    id: 'temporary_hp',
+    prompt: 'Какие временные хиты оставить?',
+    count: 1,
+    source: 'explicit',
+    context: 'in_play',
+    origin: { kind: 'other', id: action.id, name: action.name },
+    recommended: ['take_spell'],
+    items: [
+      { id: 'take_spell', name: 'Принять временные хиты заклинания' },
+      { id: 'keep_current', name: 'Сохранить текущие временные хиты' },
+    ],
+  }];
+}
+
 /** Every one-shot choice required by a combat-hotbar action, from data only. */
 export function collectSoloCombatActionChoices(
   actor: ActorState,
@@ -93,6 +114,7 @@ export function collectSoloCombatActionChoices(
 ): PendingChoice[] {
   const choices = [
     ...unarmedStrikeChoices(action, cardNumber),
+    ...primitiveChoices(action),
     ...collectInPlayActionChoices(action.mechanics, {
       kind: 'other', id: action.id, name: action.name,
     }),
