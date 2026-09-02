@@ -11,7 +11,7 @@ import type { Monster } from '../monsters/types';
 import { addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatParticipants, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatAlertSwap, resolveSoloCombatInterception, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectedTargetsForAction, setSoloCombatInitiativeTotals } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { gridDistanceFt } from './tacticalGrid';
-import { SOLO_COMBAT_KEY } from './types';
+import { isPlayerControlledCombatActor, SOLO_COMBAT_KEY } from './types';
 import { UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
 import { STONEWORK_CONTACT_CHOICE_ID } from '../mechanics/collectChoices';
 
@@ -567,6 +567,56 @@ function stonecunningParticipant(): { participant: SheetCombatParticipantSeed; a
   return { participant, action };
 }
 
+function wildCompanionParticipant(): { participant: SheetCombatParticipantSeed; action: RuleActionDefinition } {
+  const participant = fighterSeed();
+  const actor = participant.canonical.world.actors[participant.character.id];
+  const action: RuleActionDefinition = {
+    id: 'a1000000-0000-4000-8000-000000000005',
+    name: 'Дикий спутник',
+    kind: 'nonSpell',
+    sourceEntityIds: ['EFF-wild-companion'],
+    targeting: {
+      minTargets: 0, maxTargets: 0, rangeFt: 10,
+      requiresLineOfSight: false, allowedRelations: [],
+    },
+    mechanics: {
+      activation: { mode: 'active', cost: [{ resource: 'action' }, { resource: 'wild_shape' }] },
+      targeting: {
+        domain: 'world', actor_targets: false, shape: 'single', min_targets: 0,
+        max_targets: 0, range_ft: 10, requires_line_of_sight: false, allowed_relations: [],
+      },
+      primitive: {
+        type: 'wild_companion',
+        policy: {
+          connection_range_ft: 100,
+          reappear_range_ft: 30,
+          ritual_casting_added_seconds: 600,
+        },
+      },
+      effects: [],
+    },
+  };
+  actor.capabilities.actionIds.push(action.id);
+  actor.capabilities.featureSources = {
+    ...(actor.capabilities.featureSources ?? {}),
+    [action.id]: ['EFF-wild-companion'],
+  };
+  actor.runtime.resources.action = 1;
+  actor.runtime.maxResources.action = 1;
+  actor.runtime.resources.wild_shape = 2;
+  actor.runtime.maxResources.wild_shape = 2;
+  const actions = [...participant.canonical.actions, action];
+  const byId = new Map(actions.map((candidate) => [candidate.id, candidate]));
+  participant.canonical = {
+    ...participant.canonical,
+    actions,
+    catalog: { getAction: (id) => byId.get(id), listActions: () => actions },
+  };
+  participant.character.resources = clone(actor.runtime.resources);
+  participant.character.max_resources = clone(actor.runtime.maxResources);
+  return { participant, action };
+}
+
 function placeAdjacent(
   state: Awaited<ReturnType<typeof createSoloCombatState>>,
   actorId: string,
@@ -620,6 +670,52 @@ function goblin(): Monster {
 }
 
 describe('solo combat engine vertical integration', () => {
+  it('projects a Wild Companion into the tactical map, initiative, allegiance, and player-controlled turn', async () => {
+    const fixture = wildCompanionParticipant();
+    let state = await createSoloCombatState({
+      character: fixture.participant.character,
+      participant: fixture.participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const ownerActorId = fixture.participant.character.id;
+    state = executeCombatAction({
+      state,
+      actorId: ownerActorId,
+      actionId: fixture.action.id,
+      targetIds: [],
+      choices: { find_familiar_form: ['owl'] },
+      rng: () => 0.5,
+    });
+
+    const familiar = Object.values(state.world.actors).find((actor) => actor.kind === 'summonedActor');
+    expect(familiar?.familiarState).toMatchObject({
+      ownerActorId, spiritType: 'fey', presence: 'present', form: { id: 'owl' },
+    });
+    expect(state.tokens[familiar!.id]).toMatchObject({ actorId: familiar!.id, color: '#6f8f5a' });
+    expect(state.sideByActorId[familiar!.id]).toBe(state.sideByActorId[ownerActorId]);
+    expect(state.initiative.find((entry) => entry.actorId === familiar!.id)).toMatchObject({
+      die: 11, bonus: 1, total: 12,
+    });
+    expect(state.world.scene.mode === 'encounter' && state.world.scene.initiative)
+      .toEqual(state.initiative.map((entry) => entry.actorId));
+    expect(state.actorPresentation[familiar!.id]).toMatchObject({
+      creatureType: 'fey', size: 'tiny', actionIds: [],
+    });
+    expect(isPlayerControlledCombatActor(state, familiar!.id)).toBe(true);
+    expect(state.world.actors[ownerActorId].runtime.resources).toMatchObject({ action: 0, wild_shape: 1 });
+
+    state = advanceTurn(state, () => 0.5);
+    expect(activeId(state)).toBe(familiar!.id);
+    const destination = { x: state.tokens[familiar!.id].position.x + 1, y: state.tokens[familiar!.id].position.y };
+    state = moveActor({ state, actorId: familiar!.id, destination, voluntary: true, rng: () => 0.5 });
+    expect(state.tokens[familiar!.id].position).toEqual(destination);
+
+    const restored = readSoloCombatState(writeSoloCombatState({}, state), ownerActorId, 9)!;
+    expect(restored.tokens[familiar!.id].position).toEqual(destination);
+    expect(restored.initiative.some((entry) => entry.actorId === familiar!.id)).toBe(true);
+  });
+
   it('requires and forwards explicit Stonecunning surface facts before spending resources', async () => {
     const fixture = stonecunningParticipant();
     let state = await createSoloCombatState({
