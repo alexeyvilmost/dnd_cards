@@ -127,6 +127,23 @@ export function collectSoloCombatActionChoices(
   return choices;
 }
 
+/** Project dialog arrays into the exact rules-core shape required by a primitive. */
+export function projectSoloCombatActionChoices(
+  action: RuleActionDefinition,
+  supplied: Readonly<Record<string, readonly string[]>>,
+): Record<string, string | string[]> {
+  const projected: Record<string, string | string[]> = Object.fromEntries(
+    Object.entries(supplied).map(([id, values]) => [id, [...values]]),
+  );
+  const primitive = action.mechanics.primitive;
+  if (primitive && typeof primitive === 'object' && !Array.isArray(primitive)
+    && (primitive as Record<string, unknown>).type === 'temporary_hp_melee_retaliation') {
+    const selected = projected.temporary_hp;
+    if (Array.isArray(selected) && selected.length === 1) projected.temporary_hp = selected[0];
+  }
+  return projected;
+}
+
 /**
  * Resolve actions that do not need a map click. A declared zero-target action
  * executes with an empty actor-target list; self-shaped actions name the

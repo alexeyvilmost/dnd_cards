@@ -75,7 +75,7 @@ import {
   type GridPosition,
   type SoloCombatState,
 } from './types';
-import { UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
+import { projectSoloCombatActionChoices, UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
 
 type Rng = () => number;
 const ALERT_INITIATIVE_SWAP_CAPABILITY = 'alert.initiative_swap';
@@ -629,9 +629,7 @@ function declarationFor(
         ),
       }))
     : [];
-  const choices: Record<string, string[]> = Object.fromEntries(
-    Object.entries(suppliedChoices).map(([id, values]) => [id, [...values]]),
-  );
+  const choices = projectSoloCombatActionChoices(action, suppliedChoices);
   if (primitive === 'magic_missile' && targetIds.length) {
     const policy = (action.mechanics.primitive as Record<string, unknown>).policy as Record<string, unknown>;
     const count = Number(policy?.base_dart_count ?? 3);
