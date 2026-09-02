@@ -180,6 +180,7 @@ import {
   FIND_FAMILIAR_FORM_CHOICE,
   FIND_FAMILIAR_PRIMITIVE,
   FIND_FAMILIAR_SPIRIT_CHOICE,
+  WILD_COMPANION_PRIMITIVE,
   canonicalTouchSpell,
   findFamiliarMaterialCost,
   familiarActorsOwnedBy,
@@ -187,6 +188,7 @@ import {
   materializeCanonicalFamiliarActor,
   requireOwnedFamiliar,
   rollFamiliarInitiative,
+  wildCompanionMechanicsPolicy,
 } from './familiarRuntime';
 import {
   PROTECTION_2024_CAPABILITY_ID,
@@ -9302,6 +9304,115 @@ function executeFindFamiliarCast(input: {
   }
 }
 
+function executeWildCompanionCast(input: {
+  world: WorldState;
+  command: AuthoritativeUseActionCommand;
+  action: RuleActionDefinition;
+  env: DeterministicEnvironment;
+}): CommandResult | EventInput[] {
+  const { world, command, action, env } = input;
+  const owner = world.actors[command.actorId];
+  const policy = wildCompanionMechanicsPolicy(action);
+  if (action.kind === 'spell'
+    || (action.mechanics.primitive as Record<string, unknown> | undefined)?.type
+      !== WILD_COMPANION_PRIMITIVE
+    || !policy) {
+    return rejected(world, 'InvalidActionDefinition', `${action.id} is not canonical Wild Companion`);
+  }
+  if (command.worldInput || command.targetIds.length > 0) {
+    return rejected(world, 'InvalidFacts', 'Wild Companion does not accept arbitrary targets or world input');
+  }
+  const formId = explicitStringChoice(command.choices, FIND_FAMILIAR_FORM_CHOICE);
+  if (!formId) {
+    return rejected(world, 'InvalidDecision', `Wild Companion requires explicit ${FIND_FAMILIAR_FORM_CHOICE}`);
+  }
+  const owned = familiarActorsOwnedBy(world, owner.id);
+  if (owned.length > 1) {
+    return rejected(world, 'InvalidDecision', `${owner.id} has more than one canonical familiar`);
+  }
+  const existing = owned[0] ?? null;
+  const familiarActorId = existing?.id ?? env.nextId();
+  if (!existing && world.actors[familiarActorId]) {
+    return rejected(world, 'InvalidDecision', `Generated familiar actor ${familiarActorId} already exists`);
+  }
+  const payable = canPay(owner.runtime, activationCost(action));
+  if (!payable.ok) {
+    return rejected(world, 'InsufficientResources', `Missing resources: ${payable.missing.join(', ')}`);
+  }
+  try {
+    const cast = castFindFamiliar({
+      familiarActorId,
+      ownerActorId: owner.id,
+      policy: { kind: 'base', sourceEntityId: action.sourceEntityIds[0] },
+      method: 'wild_companion_magic_action',
+      formId,
+      spiritType: 'fey',
+      existingFamiliar: existing?.familiarState ?? null,
+      resources: { level1SpellSlots: 0, incenseGp: 0 },
+      incenseOfferingGp: 0,
+      materialCostGp: 0,
+      baseCastingTimeSeconds: 6,
+      mechanicsPolicy: policy,
+    });
+    let familiar = cast.familiar;
+    if (world.scene.mode === 'encounter') {
+      const template = getFamiliarActorTemplate(familiar.form.id);
+      familiar = rollFamiliarInitiative({ familiar, modifier: template.initiativeModifier, rng: env.rng });
+    }
+    const actor = materializeCanonicalFamiliarActor({
+      familiar,
+      owner,
+      summoningActionId: action.id,
+    });
+    const paid = pay(owner.runtime, activationCost(action));
+    const obligations = actionObligationIds(
+      action,
+      'system:wild-companion',
+      'system:find-familiar',
+      'system:summoned-actor',
+      'system:initiative',
+    );
+    return [
+      ...runtimeTransition(owner.id, owner.id, owner.runtime, paid.state, 'action', obligations),
+      ...engineTrace(owner.id, [actor.id], [
+        ...paid.events,
+        { type: 'narrative', text: `Дикий спутник: ${familiar.form.name} (Фея) призван до долгого отдыха.` },
+      ], obligations, {
+        facts: {
+          formId,
+          spiritType: 'fey',
+          castingMethod: 'wild_companion_magic_action',
+          castingDuration: cast.castingDuration,
+          catalogId: actor.familiarMetadata!.catalogId,
+          catalogContentHash: actor.familiarMetadata!.catalogContentHash,
+        },
+      }),
+      {
+        sourceActorId: owner.id,
+        obligationIds: obligations,
+        payload: {
+          type: 'FamiliarActorUpserted',
+          ownerActorId: owner.id,
+          actor,
+          casting: {
+            actionId: action.id,
+            method: 'wild_companion_magic_action',
+            consumedIncenseGp: 0,
+            created: cast.created,
+            changedForm: cast.changedForm,
+          },
+        },
+      },
+    ];
+  } catch (error) {
+    return rejected(
+      world,
+      'InvalidDecision',
+      error instanceof Error ? error.message : 'Wild Companion choices are invalid',
+    );
+  }
+}
+
 function familiarPolicyFromSummoningAction(
   familiar: ActorState,
   catalog: RulesCatalog,
@@ -9312,6 +9423,8 @@ function familiarPolicyFromSummoningAction(
   }
   const action = catalog.getAction(summoningActionId);
   if (!action) return { issue: `Unknown familiar summoning action ${summoningActionId}` };
+  const wildCompanion = wildCompanionMechanicsPolicy(action);
+  if (wildCompanion) return { policy: wildCompanion };
   const parsed = parseFindFamiliarMechanicsPolicy(action.mechanics);
   return parsed.status === 'valid'
     ? { policy: parsed.policy }
@@ -10747,10 +10860,35 @@ function executeCommand(
         })
         : [];
       if (!Array.isArray(tomeEvents)) return tomeEvents;
+      const wildCompanion = familiarActorsOwnedBy(world, actor.id).find((candidate) => {
+        const summoningActionId = candidate.familiarMetadata?.summoningActionId;
+        const summoningAction = summoningActionId ? catalog.getAction(summoningActionId) : undefined;
+        return (summoningAction?.mechanics.primitive as Record<string, unknown> | undefined)?.type
+          === WILD_COMPANION_PRIMITIVE;
+      });
+      const wildCompanionEnd: EventInput[] = wildCompanion ? [{
+        sourceActorId: actor.id,
+        obligationIds: [
+          'system:long-rest',
+          'system:wild-companion',
+          `entity:${wildCompanion.familiarMetadata!.summoningActionId}`,
+        ],
+        payload: {
+          type: 'FamiliarActorRemoved',
+          ownerActorId: actor.id,
+          familiarActorId: wildCompanion.id,
+          reason: 'wild_companion_long_rest',
+          droppedItemIds: [
+            ...wildCompanion.familiarState!.carriedItemIds,
+            ...wildCompanion.familiarState!.wornItemIds,
+          ].sort((left, right) => left.localeCompare(right)),
+        },
+      }] : [];
       return [
         ...runtimeTransition(actor.id, actor.id, actor.runtime, result.state, 'long_rest', obligations),
         ...engineTrace(actor.id, [], result.events, obligations),
         ...tomeEvents,
+        ...wildCompanionEnd,
       ];
     }
     case 'UseAttackReplacement':
@@ -11027,8 +11165,11 @@ function executeCommand(
         spellAudit,
       );
       const authoritativeCommand: AuthoritativeUseActionCommand = { ...command, type: 'UseAction', spell };
-      if ((executableAction.mechanics.primitive as Record<string, unknown> | undefined)?.type
-        === FIND_FAMILIAR_PRIMITIVE) {
+      const executablePrimitiveType = (
+        executableAction.mechanics.primitive as Record<string, unknown> | undefined
+      )?.type;
+      if (executablePrimitiveType === FIND_FAMILIAR_PRIMITIVE
+        || executablePrimitiveType === WILD_COMPANION_PRIMITIVE) {
         const declaration = actionDeclaredEvent({
           actorId: actor.id,
           action: executableAction,
@@ -11040,12 +11181,9 @@ function executeCommand(
           },
           obligationIds: actionObligationIds(executableAction, 'system:action-declaration'),
         });
-        const familiar = executeFindFamiliarCast({
-          world,
-          command: authoritativeCommand,
-          action: executableAction,
-          env,
-        });
+        const familiar = executablePrimitiveType === WILD_COMPANION_PRIMITIVE
+          ? executeWildCompanionCast({ world, command: authoritativeCommand, action: executableAction, env })
+          : executeFindFamiliarCast({ world, command: authoritativeCommand, action: executableAction, env });
         return Array.isArray(familiar)
           ? [...pactBladeFocusEvents, declaration, ...familiar]
           : familiar;

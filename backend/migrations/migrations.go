@@ -1007,6 +1007,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairRangerFavoredEnemy2024,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     wildCompanionRuntimeMigrationVersion,
+			Description: "Replace generic Wild Companion marker with canonical familiar runtime",
+			Up:          repairWildCompanionRuntime,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

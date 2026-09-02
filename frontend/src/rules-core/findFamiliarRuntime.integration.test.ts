@@ -1422,4 +1422,111 @@ describe('canonical compiled Find Familiar world runtime', () => {
     duplicate.actors[second.id] = second;
     expect(() => migrateWorldState(duplicate)).toThrow(/multiple canonical familiar actors/);
   });
+
+  it('materializes Wild Companion as the owner\'s one canonical Fey familiar in combat', () => {
+    const action: RuleActionDefinition = {
+      id: 'test.action.wild-companion',
+      name: 'Дикий спутник',
+      kind: 'nonSpell',
+      sourceEntityIds: ['EFF-wild-companion'],
+      targeting: {
+        minTargets: 0, maxTargets: 0, rangeFt: 10,
+        requiresLineOfSight: false, allowedRelations: [],
+      },
+      mechanics: {
+        activation: { mode: 'active', cost: [{ resource: 'action' }, { resource: 'wild_shape' }] },
+        targeting: {
+          domain: 'world', actor_targets: false, shape: 'single', min_targets: 0,
+          max_targets: 0, range_ft: 10, requires_line_of_sight: false, allowed_relations: [],
+        },
+        primitive: {
+          type: 'wild_companion',
+          policy: {
+            connection_range_ft: 100,
+            reappear_range_ft: 30,
+            ritual_casting_added_seconds: 600,
+          },
+        },
+        effects: [],
+      },
+    };
+    const druid = actorWithId(wizardRoot.actor, 'druid');
+    const support = actorWithId(wizardRoot.actor, 'support');
+    druid.capabilities.actionIds = [...new Set([...druid.capabilities.actionIds, action.id])];
+    druid.capabilities.featureSources = {
+      ...(druid.capabilities.featureSources ?? {}),
+      [action.id]: ['EFF-wild-companion'],
+    };
+    druid.runtime.resources.wild_shape = 2;
+    druid.runtime.maxResources.wild_shape = 2;
+    const baseCatalog = catalogFor(wizardRoot);
+    const test = makeSession({
+      id: 'wild-companion:combat',
+      owner: druid,
+      support,
+      catalog: { getAction: (id) => id === action.id ? action : baseCatalog.getAction(id) },
+      dice: [{ label: 'wild companion initiative', sides: 20, value: 15 }],
+    });
+    accept(test.session, provider.ruleset.contentHash, 'druid', {
+      type: 'StartEncounter', commandId: 'wild:start', initiative: ['druid', 'support'],
+    });
+    accept(test.session, provider.ruleset.contentHash, 'druid', {
+      type: 'StartTurn', commandId: 'wild:turn',
+    });
+    const result = accept(test.session, provider.ruleset.contentHash, 'druid', {
+      type: 'UseAction', commandId: 'wild:cast', actionId: action.id, targetIds: [],
+      choices: { [FIND_FAMILIAR_FORM_CHOICE]: 'owl' },
+    });
+    const familiar = required(familiarActorsOwnedBy(test.session.getState(), 'druid')[0], 'wild companion');
+    expect(familiar).toMatchObject({
+      kind: 'summonedActor',
+      familiarState: {
+        ownerActorId: 'druid', spiritType: 'fey', presence: 'present',
+        form: { id: 'owl' }, initiative: { d20Roll: 15 },
+      },
+      familiarMetadata: { summoningActionId: action.id, formId: 'owl' },
+    });
+    expect(test.session.getState().actors.druid.runtime.resources).toMatchObject({
+      action: 0, wild_shape: 1,
+    });
+    expect(result.events.find((event) => event.payload.type === 'FamiliarActorUpserted')?.payload)
+      .toMatchObject({
+        casting: {
+          method: 'wild_companion_magic_action', consumedIncenseGp: 0, created: true,
+        },
+      });
+    assertReplay(test.initial, test.session);
+    test.tape.assertExhausted();
+
+    const restingDruid = actorWithId(wizardRoot.actor, 'resting-druid');
+    const restingSupport = actorWithId(wizardRoot.actor, 'resting-support');
+    restingDruid.capabilities.actionIds = [...new Set([...restingDruid.capabilities.actionIds, action.id])];
+    restingDruid.capabilities.featureSources = {
+      ...(restingDruid.capabilities.featureSources ?? {}),
+      [action.id]: ['EFF-wild-companion'],
+    };
+    restingDruid.runtime.resources.wild_shape = 2;
+    restingDruid.runtime.maxResources.wild_shape = 2;
+    const restTest = makeSession({
+      id: 'wild-companion:long-rest',
+      owner: restingDruid,
+      support: restingSupport,
+      catalog: { getAction: (id) => id === action.id ? action : baseCatalog.getAction(id) },
+    });
+    accept(restTest.session, provider.ruleset.contentHash, 'resting-druid', {
+      type: 'UseAction', commandId: 'wild:rest:cast', actionId: action.id, targetIds: [],
+      choices: { [FIND_FAMILIAR_FORM_CHOICE]: 'cat' },
+    });
+    expect(familiarActorsOwnedBy(restTest.session.getState(), 'resting-druid')).toHaveLength(1);
+    const rest = accept(restTest.session, provider.ruleset.contentHash, 'resting-druid', {
+      type: 'TakeLongRest', commandId: 'wild:rest:end', durationHours: 8,
+    });
+    expect(familiarActorsOwnedBy(restTest.session.getState(), 'resting-druid')).toHaveLength(0);
+    expect(rest.events.some((event) => (
+      event.payload.type === 'FamiliarActorRemoved'
+      && event.payload.reason === 'wild_companion_long_rest'
+    ))).toBe(true);
+    assertReplay(restTest.initial, restTest.session);
+    restTest.tape.assertExhausted();
+  });
 });

@@ -466,6 +466,28 @@ describe('Find Familiar casting, resources, and one-familiar invariant', () => {
       resources: { level1SpellSlots: 0, incenseGp: 0 },
       familiar: { extension: 'pact_chain', sourceEntityId: 'EFF-pact-chain' },
     });
+    const wildCompanion = castFindFamiliar({
+      familiarActorId: 'druid:familiar',
+      ownerActorId: 'druid',
+      policy: { kind: 'base', sourceEntityId: 'EFF-wild-companion' },
+      method: 'wild_companion_magic_action',
+      formId: 'owl',
+      spiritType: 'fey',
+      existingFamiliar: null,
+      resources: { level1SpellSlots: 0, incenseGp: 0 },
+      incenseOfferingGp: 0,
+      materialCostGp: 0,
+      baseCastingTimeSeconds: 6,
+      mechanicsPolicy,
+    });
+    expect(wildCompanion).toMatchObject({
+      castingTime: 'magic_action', spellSlotsExpended: 0, consumedIncenseGp: 0,
+      castingDuration: { kind: 'magic_action' },
+      resources: { level1SpellSlots: 0, incenseGp: 0 },
+      familiar: {
+        extension: 'base', sourceEntityId: 'EFF-wild-companion', spiritType: 'fey',
+      },
+    });
     expect(resources).toEqual({ level1SpellSlots: 2, incenseGp: 36 });
 
     expect(() => cast({

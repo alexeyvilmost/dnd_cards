@@ -205,6 +205,38 @@ describe('solo combat data-owned action choices', () => {
     })).toEqual({ temporary_hp: 'take_spell' });
   });
 
+  it('asks for a pinned Wild Companion form and executes without a map target', () => {
+    const action = {
+      id: 'action:wild-companion', name: 'Дикий спутник', kind: 'nonSpell',
+      sourceEntityIds: ['EFF-wild-companion'],
+      mechanics: {
+        primitive: {
+          type: 'wild_companion',
+          policy: {
+            connection_range_ft: 100,
+            reappear_range_ft: 30,
+            ritual_casting_added_seconds: 600,
+          },
+        },
+      },
+      targeting: {
+        minTargets: 0, maxTargets: 0, rangeFt: 10,
+        requiresLineOfSight: false, allowedRelations: [],
+      },
+    } as RuleActionDefinition;
+
+    const choices = collectSoloCombatActionChoices({} as ActorState, action);
+    expect(choices).toHaveLength(1);
+    expect(choices[0]).toMatchObject({
+      id: 'find_familiar_form', prompt: 'Форма дикого спутника', count: 1,
+    });
+    expect(choices[0].items).toHaveLength(11);
+    expect(projectSoloCombatActionChoices(action, {
+      find_familiar_form: ['owl'],
+    })).toEqual({ find_familiar_form: 'owl' });
+    expect(immediateSoloCombatTargetIds(action, 'druid')).toEqual([]);
+  });
+
   it('asks for explicit Stonecunning terrain facts before immediate self execution', () => {
     const action = {
       id: 'action:stonecunning', name: 'Камнечувствие', kind: 'nonSpell',

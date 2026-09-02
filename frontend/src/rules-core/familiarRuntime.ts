@@ -22,6 +22,7 @@ export const FIND_FAMILIAR_MATERIAL_RESOURCE = 'material_incense_gp' as const;
 export const FIND_FAMILIAR_FORM_CHOICE = 'find_familiar_form' as const;
 export const FIND_FAMILIAR_SPIRIT_CHOICE = 'find_familiar_spirit' as const;
 export const FIND_FAMILIAR_CAST_PATH_CHOICE = 'find_familiar_cast_path' as const;
+export const WILD_COMPANION_PRIMITIVE = 'wild_companion' as const;
 
 export interface FindFamiliarMaterialCostDeclaration {
   resource: string;
@@ -38,6 +39,32 @@ function record(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
     ? value as Record<string, unknown>
     : null;
+}
+
+export function wildCompanionMechanicsPolicy(
+  action: Pick<RuleActionDefinition, 'mechanics'>,
+): import('./findFamiliar').FindFamiliarMechanicsPolicy | null {
+  const primitive = record(action.mechanics.primitive);
+  const policy = record(primitive?.policy);
+  const exactKeys = (value: Record<string, unknown>, expected: readonly string[]) => {
+    const actual = Object.keys(value).sort();
+    const wanted = [...expected].sort();
+    return actual.length === wanted.length
+      && actual.every((key, index) => key === wanted[index]);
+  };
+  if (primitive?.type !== WILD_COMPANION_PRIMITIVE || !policy
+    || !exactKeys(primitive, ['type', 'policy'])
+    || !exactKeys(policy, [
+      'connection_range_ft', 'reappear_range_ft', 'ritual_casting_added_seconds',
+    ])) return null;
+  const connectionRangeFt = policy.connection_range_ft;
+  const reappearRangeFt = policy.reappear_range_ft;
+  const ritualCastingAddedSeconds = policy.ritual_casting_added_seconds;
+  if (typeof connectionRangeFt !== 'number' || !Number.isFinite(connectionRangeFt) || connectionRangeFt <= 0
+    || typeof reappearRangeFt !== 'number' || !Number.isFinite(reappearRangeFt) || reappearRangeFt <= 0
+    || typeof ritualCastingAddedSeconds !== 'number'
+    || !Number.isInteger(ritualCastingAddedSeconds) || ritualCastingAddedSeconds <= 0) return null;
+  return { connectionRangeFt, reappearRangeFt, ritualCastingAddedSeconds };
 }
 
 /**

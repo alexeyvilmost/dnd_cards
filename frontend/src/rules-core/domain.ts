@@ -1464,7 +1464,7 @@ export interface FamiliarActorUpsertedEvent {
   actor: ActorState;
   casting: {
     actionId: string;
-    method: 'spell_slot' | 'ritual' | 'pact_chain_magic_action';
+    method: 'spell_slot' | 'ritual' | 'pact_chain_magic_action' | 'wild_companion_magic_action';
     consumedIncenseGp: number;
     created: boolean;
     changedForm: boolean;
@@ -1496,7 +1496,7 @@ export interface FamiliarActorRemovedEvent {
   type: 'FamiliarActorRemoved';
   ownerActorId: string;
   familiarActorId: string;
-  reason: 'forever_dismissal';
+  reason: 'forever_dismissal' | 'wild_companion_long_rest';
   droppedItemIds: string[];
 }
 

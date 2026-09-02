@@ -19,6 +19,7 @@ import {
   FIND_FAMILIAR_FORM_CHOICE,
   FIND_FAMILIAR_PRIMITIVE,
   FIND_FAMILIAR_SPIRIT_CHOICE,
+  WILD_COMPANION_PRIMITIVE,
   findFamiliarMaterialCost,
 } from '../rules-core/familiarRuntime';
 import { FAMILIAR_ACTOR_CATALOG } from '../rules-core/familiarActorCatalog';
@@ -58,6 +59,7 @@ const KNOWN_WORLD_PRIMITIVES = new Set([
   'detect_poison_disease_world',
   'druidcraft_world',
   FIND_FAMILIAR_PRIMITIVE,
+  WILD_COMPANION_PRIMITIVE,
   'light_world_object',
   'magic_missile',
   'mending_world',
@@ -395,6 +397,18 @@ function legacyPrimitiveDeclaration(
         grantId: grant.grantId,
         mode: method === 'ritual' ? 'ritual' : 'normal',
         preferFreeUse: false,
+      },
+    };
+  }
+  if (primitive === WILD_COMPANION_PRIMITIVE) {
+    return {
+      sceneMode: world.scene.mode,
+      targetIds: [],
+      choices: {
+        [FIND_FAMILIAR_FORM_CHOICE]: oneChoice(
+          input.context.choices,
+          FIND_FAMILIAR_FORM_CHOICE,
+        ),
       },
     };
   }
@@ -794,6 +808,17 @@ export function collectSheetPrimitiveChoices(
       choice(PACT_BLADE_WEAPON_CHOICE, 'Какое оружие призвать?', weapons, [weapons[0].id]),
       choice(PACT_BLADE_HAND_CHOICE, 'В какой руке появится оружие?', hands, [hands[0].id]),
     ];
+  }
+  if (primitive === WILD_COMPANION_PRIMITIVE) {
+    const forms = FAMILIAR_ACTOR_CATALOG.forms
+      .filter((form) => form.eligibility === 'base_standard')
+      .map((form) => ({ id: form.formId, name: form.name }));
+    return [choice(
+      FIND_FAMILIAR_FORM_CHOICE,
+      'Форма дикого спутника',
+      forms,
+      forms[0] ? [forms[0].id] : undefined,
+    )];
   }
   let castOptions = canonical.action.kind === 'spell'
     ? collectSheetSpellCastOptions({ runtime: canonical.runtime, action: canonical.action })
