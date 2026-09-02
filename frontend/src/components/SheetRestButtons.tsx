@@ -117,7 +117,7 @@ export default function SheetRestButtons({
   const [shortRestError, setShortRestError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingAtomicTurn, setPendingAtomicTurn] = useState<PreparedSheetAtomicWorldCommit | null>(null);
-  const syncAttempted = useRef(false);
+  const syncAttemptedFor = useRef<string | null>(null);
   const diceDialog = useDiceDialog();
   const choiceDialog = useChoiceDialog();
   const reactionPrompt = useReactionPrompt();
@@ -253,13 +253,20 @@ export default function SheetRestButtons({
     }
   }, [character, ctx, assembled, encounterApply, onUpdated, ruleState.maxHP, ruleState.freeuseSpells, itemCards]);
 
-  // Один прогон синка на маунт: buildResourceRuntimePatch сам вернёт null,
-  // если пулы (включая uses_<key> действий) и HP уже актуальны.
+  const itemResourceSignature = useMemo(
+    () => itemCards.map((card) => card.id).sort().join('|'),
+    [itemCards],
+  );
+
+  // Инвентарь загружается после самого листа. Повторяем синк один раз, когда
+  // набор карточек предметов меняется; buildResourceRuntimePatch остаётся
+  // идемпотентным и не пишет состояние, если все пулы уже актуальны.
   useEffect(() => {
-    if (syncAttempted.current) return;
-    syncAttempted.current = true;
+    const signature = `${character.id}:${itemResourceSignature}`;
+    if (syncAttemptedFor.current === signature) return;
+    syncAttemptedFor.current = signature;
     syncResources();
-  }, [syncResources]);
+  }, [character.id, itemResourceSignature, syncResources]);
 
   const restCtx = useMemo(() => ({ ...ctx, passives }), [ctx, passives]);
 
