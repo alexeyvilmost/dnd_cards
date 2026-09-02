@@ -220,6 +220,16 @@ describe('solo combat data-owned action choices', () => {
       minTargets: 1, maxTargets: 1, rangeFt: 30,
       requiresLineOfSight: true, allowedRelations: ['enemy'],
     }, 'single'), 'hero')).toBeNull();
+
+    const worldArea = action({
+      minTargets: 0, maxTargets: 0, rangeFt: 60,
+      requiresLineOfSight: true, allowedRelations: [],
+    }, 'area');
+    worldArea.mechanics.effects = [{
+      resolution: 'auto',
+      result: [{ kind: 'world_zone', zone_type: 'grease' }],
+    }];
+    expect(immediateSoloCombatTargetIds(worldArea, 'hero')).toBeNull();
   });
 
   it('keeps a self-shaped teleport in map-targeting mode so the player chooses a destination', () => {
