@@ -113,7 +113,12 @@ const CharacterForge = () => {
   const isMobile = useIsMobile();
   /** Режим повышения уровня: показываем только новое, база заблокирована. */
   const [levelUp, setLevelUp] = useState<{ fromLevel: number; fromClassLevels: Record<string, number>; selectedClassId: string } | null>(null);
-  const [prevRefs, setPrevRefs] = useState<{ effects: Set<string>; actions: Set<string>; choiceIds: Set<string> } | null>(null);
+  const [prevRefs, setPrevRefs] = useState<{
+    effects: Set<string>;
+    actions: Set<string>;
+    choiceIds: Set<string>;
+    maxHP: number;
+  } | null>(null);
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -654,13 +659,13 @@ const CharacterForge = () => {
       if (stale) return;
       // Идентификаторы выборов, существовавших НА СТАРОМ уровне — чтобы на уровень-апе отличать
       // выборы этого уровня (их показываем даже заполненными, #3) от прежних.
-      const prevChoiceIds = new Set(
-        assemble({ ...oldBundle, spells: [] }, oldDraft).pendingChoices.map((pc) => pc.id),
-      );
+      const oldAssembled = assemble({ ...oldBundle, spells: [] }, oldDraft);
+      const prevChoiceIds = new Set(oldAssembled.pendingChoices.map((pc) => pc.id));
       setPrevRefs({
         effects: new Set(oldBundle.effects.map((e) => e.effect.id)),
         actions: new Set(oldBundle.actions.map((a) => a.action.id)),
         choiceIds: prevChoiceIds,
+        maxHP: resolveCharacterRules({ draft: oldDraft, assembled: oldAssembled }).maxHP,
       });
     })();
     return () => { stale = true; };
@@ -872,7 +877,7 @@ const CharacterForge = () => {
     const newSpellChoices = prevRefs
       ? spellChoices.filter((pc) => !prevRefs.choiceIds.has(pc.id))
       : unresolvedSpells;
-    const oldMaxHP = computeMulticlassMaxHP(
+    const oldMaxHP = prevRefs?.maxHP ?? computeMulticlassMaxHP(
       (assembled.classes ?? []).map((klass) => ({
         id: klass.id,
         hit_die: klass.hit_die,

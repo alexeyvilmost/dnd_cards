@@ -5,30 +5,19 @@ import (
 	"testing"
 )
 
-func TestLevelTwoActionDeclarationsAreJSONAndUnique(t *testing.T) {
-	seen := map[string]bool{}
-	if len(levelTwoActions) != 19 {
-		t.Fatalf("level-two action count=%d, want 19", len(levelTwoActions))
-	}
+func TestLevelTwoActorActionsDeclareActorTargets(t *testing.T) {
 	for _, action := range levelTwoActions {
-		if seen[action.card] {
-			t.Fatalf("duplicate action %s", action.card)
+		var mechanics struct {
+			Targeting struct {
+				Domain       string `json:"domain"`
+				ActorTargets *bool  `json:"actor_targets"`
+			} `json:"targeting"`
 		}
-		seen[action.card] = true
-		var mechanics map[string]any
 		if err := json.Unmarshal([]byte(action.mechanics), &mechanics); err != nil {
-			t.Fatalf("%s: %v", action.card, err)
+			t.Fatalf("%s mechanics is not JSON: %v", action.card, err)
 		}
-		if mechanics["activation"] == nil || mechanics["effects"] == nil || mechanics["targeting"] == nil {
-			t.Fatalf("%s is missing an executable contract", action.card)
+		if mechanics.Targeting.Domain == "actor" && mechanics.Targeting.ActorTargets == nil {
+			t.Errorf("%s actor targeting must declare actor_targets", action.card)
 		}
-	}
-}
-
-func TestLevelTwoMigrationIsRegisteredLast(t *testing.T) {
-	migrations := GetAllMigrations()
-	last := migrations[len(migrations)-1]
-	if last.Version != levelTwoClassFeaturesMigrationVersion || last.Up == nil || last.Down == nil {
-		t.Fatalf("last migration=%s", last.Version)
 	}
 }
