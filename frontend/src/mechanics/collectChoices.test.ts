@@ -177,3 +177,16 @@ describe('prepared_spell_choice', () => {
     ]);
   });
 });
+
+describe('class-level choice capacity', () => {
+  it('retains a data-owned count_by_level table for Forge level-up choices', () => {
+    const [choice] = collectChoices({
+      effects: [{
+        kind: 'choice', id: 'invocations', count: 1,
+        count_by_level: { 1: 1, 2: 3 },
+        options: { source: 'effect', items: [] },
+      }],
+    }, { kind: 'class', id: 'warlock', name: 'Warlock', featureId: 'invocations' });
+    expect(choice).toMatchObject({ count: 1, countByLevel: { 1: 1, 2: 3 } });
+  });
+});

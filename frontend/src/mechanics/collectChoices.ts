@@ -17,6 +17,8 @@ export type ChoiceOrigin = {
 // Ожидающий разрешения выбор, извлечённый из механики эффекта.
 export type PendingChoice = {
   id: string; // стабильный id (choice.id)
+  /** Unscoped data-owned id, used to join repeated instances of one choice family. */
+  rawId?: string;
   prompt: string;
   count: number;
   source: string; // skill | tool | feat | language | subfeature | ...
@@ -42,6 +44,10 @@ export type PendingChoice = {
   /** A prepared-spell choice is a second, non-granting selection over the
    * exact spells persisted by another choice in the same mechanics source. */
   preparedSpellSourceChoiceId?: string;
+  /** Unscoped source id used to merge spellbook additions from later levels. */
+  preparedSpellSourceRawChoiceId?: string;
+  /** Optional class-level capacity table for a prepared-spell choice. */
+  countByLevel?: Record<string, number>;
   /** Immutable option domain projected from the referenced source choice. */
   allowedOptionIds?: string[];
 };
@@ -60,6 +66,14 @@ export function requiresInitialCharacterChoice(
 
 type Dict = Record<string, unknown>;
 export type ChoiceRecommendations = Readonly<Record<string, readonly string[]>>;
+
+function parseCountByLevel(value: unknown): Record<string, number> | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const parsed = Object.fromEntries(Object.entries(value as Dict)
+    .filter(([level, count]) => /^\d+$/.test(level) && Number.isSafeInteger(count) && Number(count) > 0)
+    .map(([level, count]) => [level, Number(count)]));
+  return Object.keys(parsed).length ? parsed : undefined;
+}
 
 export const STONEWORK_CONTACT_CHOICE_ID = 'scenario_stonework_contact';
 
@@ -116,8 +130,10 @@ function choiceToPending(
   const recommended = hasRecommendationOverlay
     ? choiceRecommendations?.[rawChoiceId as string]
     : (Array.isArray(ch.recommended) ? ch.recommended : undefined);
+  const countByLevel = parseCountByLevel(ch.count_by_level);
   return {
     id: choiceKey(origin, ch.id as string | number | undefined),
+    ...(rawChoiceId ? { rawId: rawChoiceId } : {}),
     prompt: String(ch.prompt ?? 'Выбор'),
     count: Number(ch.count ?? 1),
     source: String(form.source ?? 'skill'),
@@ -135,6 +151,7 @@ function choiceToPending(
     origin,
     context: ch.context ? String(ch.context) : undefined,
     grantKind: grant?.kind != null ? String(grant.kind) : undefined,
+    ...(countByLevel ? { countByLevel } : {}),
   };
 }
 
@@ -156,6 +173,7 @@ function preparedSpellChoiceToPending(
   }
   const id = choiceKey(origin, rawId);
   const preparedSpellSourceChoiceId = choiceKey(origin, rawSourceChoiceId);
+  const countByLevel = parseCountByLevel(declaration.count_by_level);
   const allowedOptionIds = [...new Set(
     resolvedChoices?.[preparedSpellSourceChoiceId]
       ?? resolvedChoices?.[String(rawSourceChoiceId)]
@@ -163,12 +181,15 @@ function preparedSpellChoiceToPending(
   )];
   return {
     id,
+    rawId: String(rawId),
     prompt: String(declaration.prompt ?? 'Подготовьте заклинания'),
     count: Number(count),
     source: 'prepared_spell',
     origin,
     context: declaration.context ? String(declaration.context) : undefined,
     preparedSpellSourceChoiceId,
+    preparedSpellSourceRawChoiceId: String(rawSourceChoiceId),
+    ...(countByLevel && Object.keys(countByLevel).length ? { countByLevel } : {}),
     allowedOptionIds,
   };
 }

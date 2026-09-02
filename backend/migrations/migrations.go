@@ -983,6 +983,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairLevelTwoActorTargeting,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     wizardLevelTwoSpellbookMigrationVersion,
+			Description: "Scale Wizard prepared spells and merge level-up spellbook additions",
+			Up:          repairWizardLevelTwoSpellbook,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

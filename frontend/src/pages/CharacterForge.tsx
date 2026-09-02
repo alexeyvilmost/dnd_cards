@@ -71,6 +71,7 @@ import { isEntityUuid } from '../engine/ids';
 import { isSpellSelectionChoice, requiresInitialCharacterChoice, type PendingChoice } from '../mechanics/collectChoices';
 import { labelOf, SKILLS, ABILITIES } from '../mechanics/registries';
 import { FormattedText } from '../utils/formattedText';
+import { writeSoloCombatState } from '../solo-combat/persistence';
 import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
 import {
   filterEntitiesBySupport,
@@ -718,6 +719,13 @@ const CharacterForge = () => {
           undefined,
           ruleState.freeuseSpells,
         );
+        // A class-level change alters the actor capability graph. A retained
+        // solo encounter contains an immutable snapshot of that graph, so
+        // continuing it would either hide new features or fail compatibility
+        // validation. Start the next test combat from the updated character.
+        if (levelUp && runtimePatch) {
+          runtimePatch.turn_state = writeSoloCombatState(res.turn_state, null);
+        }
         if (runtimePatch) res = await charactersV3Api.patchRuntime(res.id, runtimePatch);
       }
       if (localAvatar) {
@@ -875,7 +883,10 @@ const CharacterForge = () => {
     // уже заполненные, чтобы игрок мог переиграть выбор, не уходя «назад». До загрузки prevRefs —
     // fallback на незавершённые (как раньше).
     const newSpellChoices = prevRefs
-      ? spellChoices.filter((pc) => !prevRefs.choiceIds.has(pc.id))
+      ? spellChoices.filter((pc) => (
+          !prevRefs.choiceIds.has(pc.id)
+          || unresolvedSpells.some((unresolvedChoice) => unresolvedChoice.id === pc.id)
+        ))
       : unresolvedSpells;
     const oldMaxHP = prevRefs?.maxHP ?? computeMulticlassMaxHP(
       (assembled.classes ?? []).map((klass) => ({

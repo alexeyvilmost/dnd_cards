@@ -253,6 +253,39 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
     }
   }
 
+  // A spellbook can receive additional spell choices on later class levels.
+  // Prepared-spell choices operate over the union of every persisted choice
+  // instance in that data-owned family, while their capacity follows the
+  // owning class level rather than total character level.
+  const classLevels = draftClassLevels(draft);
+  for (const choice of pendingChoices) {
+    if (choice.countByLevel) {
+      const ownerLevel = choice.origin.kind === 'class'
+        ? (classLevels[choice.origin.id] ?? draft.level)
+        : draft.level;
+      const thresholds = Object.entries(choice.countByLevel)
+        .map(([level, count]) => [Number(level), count] as const)
+        .filter(([level]) => Number.isFinite(level) && level <= ownerLevel)
+        .sort((left, right) => left[0] - right[0]);
+      if (thresholds.length) choice.count = thresholds[thresholds.length - 1][1];
+    }
+  }
+  for (const prepared of pendingChoices.filter((choice) => choice.source === 'prepared_spell')) {
+    const rawSource = prepared.preparedSpellSourceRawChoiceId;
+    if (!rawSource) continue;
+    const spellbookChoices = pendingChoices.filter((choice) => (
+      choice.source === 'spell'
+      && choice.rawId === rawSource
+      && choice.origin.kind === prepared.origin.kind
+      && choice.origin.id === prepared.origin.id
+      && choice.grant?.kind === 'grant_spell'
+      && choice.grant?.label === 'spellbook'
+    ));
+    prepared.allowedOptionIds = [...new Set(spellbookChoices.flatMap((choice) => (
+      draft.resolvedChoices[choice.id] ?? []
+    )))];
+  }
+
   const abilityMods = Object.fromEntries(
     ABILITY_KEYS.map((k) => [k, abilityMod(scores[k])]),
   ) as Record<AbilityKey, number>;
