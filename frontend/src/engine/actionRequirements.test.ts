@@ -28,4 +28,20 @@ describe('temporary library-effect action requirements', () => {
   it('does not gate ordinary actions', () => {
     expect(activeEffectRequirementIssue({ activation: { cost: [] } }, state())).toBeNull();
   });
+
+  it('supports a data-owned stack requirement for a shared exit action', () => {
+    const active = state('EFFECT-wild-shape-wolf');
+    active.activeEffects[0].mechanics = { stack_id: 'wild_shape_form' };
+    const mechanics = { requires_active_effect_stack: 'wild_shape_form' };
+    expect(activeEffectRequirementIssue(mechanics, state())).toContain('активном облике');
+    expect(activeEffectRequirementIssue(mechanics, active)).toBeNull();
+  });
+
+  it('blocks arming a second Metamagic option for the same next spell', () => {
+    const active = state('EFFECT-metamagic-quickened-armed');
+    active.activeEffects[0].mechanics = { stack_id: 'metamagic_next_spell' };
+    expect(activeEffectRequirementIssue({
+      forbids_active_effect_stack: 'metamagic_next_spell',
+    }, active)).toContain('другой вариант Метамагии');
+  });
 });

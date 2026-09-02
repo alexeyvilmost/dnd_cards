@@ -85,9 +85,47 @@ describe('Ярус 1.2 — правки ревью', () => {
     const autoAct: Dict = { name: 'Авто', activation: { cost: [] }, effects: [{ resolution: 'auto', result: [{ kind: 'choice', id: 'z', context: 'in_play', options: { items: [{ id: 't', grants: [{ kind: 'temp_hp', amount: '4' }] }] } }] }] };
     expect(executeAction(fresh(), autoAct, { character, rng: () => 0.5, choices: { z: 't' } } as unknown as Ctx).state.hp.temp).toBe(4);
   });
+  it('choice исполняет grant_effect как рантайм-эффект из библиотеки', () => {
+    const shape: Dict = { name: 'Дикая форма', activation: { cost: [] }, effects: [{
+      kind: 'choice', id: 'wild_shape_form', context: 'in_play', options: { items: [{
+        id: 'wolf', grants: [{ kind: 'grant_effect', value: 'EFFECT-wild-shape-wolf' }],
+      }] },
+    }] };
+    const { state } = executeAction(fresh(), shape, {
+      character,
+      rng: () => 0.5,
+      choices: { wild_shape_form: 'wolf' },
+      grantedEffects: {
+        'EFFECT-wild-shape-wolf': {
+          id: 'effect-wolf',
+          card_number: 'EFFECT-wild-shape-wolf',
+          name: 'Дикий облик: Волк',
+          mechanics: { stack_id: 'wild_shape_form', effects: [] },
+        },
+      },
+    } as unknown as Ctx);
+    expect(state.activeEffects).toEqual([expect.objectContaining({
+      name: 'Дикий облик: Волк',
+      entityRef: { kind: 'effect', id: 'effect-wolf', cardNumber: 'EFFECT-wild-shape-wolf' },
+    })]);
+  });
   it('choice без явного id читается по общему fallback-ключу «choice» (коллектор ↔ движок)', () => {
     const noId: Dict = { name: 'Безымянный', activation: { cost: [] }, effects: [{ kind: 'choice', context: 'in_play', options: { items: [{ id: 'x', grants: [{ kind: 'temp_hp', amount: '6' }] }] } }] };
     expect(executeAction(fresh(), noId, { character, rng: () => 0.5, choices: { choice: ['x'] } } as unknown as Ctx).state.hp.temp).toBe(6);
+  });
+  it('remove_effect снимает выбранный облик по общему stack_id', () => {
+    const transformed = fresh();
+    transformed.activeEffects = [{
+      id: 'wolf-form', name: 'Дикий облик: Волк', source: 'Дикая форма',
+      mechanics: { stack_id: 'wild_shape_form' },
+      entityRef: { kind: 'effect', id: 'wolf', cardNumber: 'EFFECT-wild-shape-wolf' },
+    }];
+    const exit: Dict = { activation: { cost: [] }, effects: [{
+      resolution: 'auto', result: [{ kind: 'remove_effect', stack_id: 'wild_shape_form' }],
+    }] };
+    const result = executeAction(transformed, exit, { character, rng: () => 0.5 } as unknown as Ctx);
+    expect(result.state.activeEffects).toEqual([]);
+    expect(result.events).toContainEqual({ type: 'effect_expired', name: 'Дикий облик: Волк' });
   });
 });
 

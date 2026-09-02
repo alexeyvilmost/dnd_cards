@@ -141,6 +141,12 @@ const BOON_ROLL_LABELS: Record<string, string> = {
 /** Player-facing instructions for active effects that require manual use. */
 export function activeEffectInstruction(effect: ActiveEffectEntry): string | null {
   const mechanics = effect.mechanics as Record<string, unknown>;
+  if (mechanics.metamagic_option === 'transmuted' && typeof mechanics.damage_type === 'string') {
+    return `Следующее заклинание заменит подходящий тип урона на «${getDamageLabel(mechanics.damage_type)}»; после сотворения эффект снимется автоматически.`;
+  }
+  if (mechanics.metamagic_option === 'quickened') {
+    return 'Следующее заклинание со временем сотворения «Действие» использует специальный маркер Бонусного действия.';
+  }
   if (mechanics.kind === 'turn_command' || mechanics.kind === 'turn_command_resolution') {
     return turnCommandInstruction(mechanics.command);
   }

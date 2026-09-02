@@ -1025,6 +1025,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairLevelTwoRuntimeContracts,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     levelTwoRuntimeReapplyMigrationVersion,
+			Description: "Reapply exact Wild Shape runtime choices after production verification",
+			Up:          reapplyLevelTwoRuntimeContracts,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
