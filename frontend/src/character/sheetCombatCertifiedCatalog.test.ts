@@ -233,6 +233,23 @@ describe('450-root sheet combat certification', () => {
     expect(() => assertCertifiedSheetCombatActorAccess(actor, actionIds, certified)).not.toThrow();
   });
 
+  it('accepts a progression-owned prepared capacity increase when the added spell is granted', () => {
+    const root = required(
+      provider.roots.find((candidate) => candidate.matrixCase.klass.card_number === 'CLASS-wizard'),
+      'Wizard root',
+    );
+    const actionIds = combatActions(root).map((action) => action.id);
+    const actor = clone(root.actor);
+    const source = actor.spellcastingAccess!.preparedSources['CLASS-wizard']!;
+    const added = required(
+      source.availableActionIds.find((id) => !source.preparedActionIds.includes(id)),
+      'additional Wizard spell',
+    );
+    source.capacity += 1;
+    source.preparedActionIds.push(added);
+    expect(() => assertCertifiedSheetCombatActorAccess(actor, actionIds, certified)).not.toThrow();
+  });
+
   it('allows live display metadata but rejects execution or generated artifact drift', async () => {
     const action = clone(artifact.actions[0]);
     action.name = `${action.name} (tampered)`;
