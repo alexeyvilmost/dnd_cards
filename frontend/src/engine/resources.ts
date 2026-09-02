@@ -67,6 +67,12 @@ export function resolveByLevel(byLevel: unknown, level: number): number | null {
   return best;
 }
 
+/** A class-owned resource scales by that class level, never by total character level. */
+export function resourceLevel(row: Dict, ctx: CharacterContext): number {
+  const source = String(row.level_source ?? '');
+  return source && ctx.classLevels ? Number(ctx.classLevels[source] ?? 0) : ctx.level;
+}
+
 export function buildResourceRecharge(classResources: Dict | null): Record<string, string> {
   const out: Record<string, string> = {};
   if (!classResources) return out;
@@ -74,6 +80,22 @@ export function buildResourceRecharge(classResources: Dict | null): Record<strin
     const row = def as Dict;
     const per = row.per ?? row.recharge;
     if (per) out[id] = String(per);
+  }
+  return out;
+}
+
+export function buildResourceRecovery(classResources: Dict | null): Record<string, ResourceRestRecovery | null> {
+  const out: Record<string, ResourceRestRecovery | null> = {};
+  if (!classResources) return out;
+  for (const [id, definition] of Object.entries(classResources)) {
+    const recovery = (definition as Dict).recovery as Dict | undefined;
+    if (!recovery) continue;
+    const shortRest = recovery.short_rest as Dict | undefined;
+    const longRest = recovery.long_rest as Dict | undefined;
+    out[id] = shortRest?.mode === 'fixed' && Number.isSafeInteger(shortRest.amount) && Number(shortRest.amount) > 0
+      && longRest?.mode === 'full'
+      ? { short_rest: { mode: 'fixed', amount: Number(shortRest.amount) }, long_rest: { mode: 'full' } }
+      : null;
   }
   return out;
 }
@@ -95,7 +117,7 @@ export function initResources(
   if (classResources) {
     for (const [id, def] of Object.entries(classResources)) {
       const row = def as Dict;
-      const count = resolveByLevel(row.by_level, ctx.level)
+      const count = resolveByLevel(row.by_level, resourceLevel(row, ctx))
         ?? resolveCount(row.count ?? row.max, ctx);
       if (count > 0) {
         maxResources[id] = count;

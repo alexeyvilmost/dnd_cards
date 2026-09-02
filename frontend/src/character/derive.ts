@@ -34,6 +34,27 @@ export function computeMaxHP(
   return Math.max(1, die + conMod + (lvl - 1) * perLevel);
 }
 
+/** Fixed-average HP for a multiclass character; only character level 1 uses a maximum Hit Die. */
+export function computeMulticlassMaxHP(
+  classes: Array<{ id: string; hit_die?: string | null; level: number }>,
+  primaryClassId: string | null | undefined,
+  conScore: number | undefined,
+): number {
+  if (!classes.length) return computeMaxHP(null, conScore, 1);
+  const conMod = abilityMod(conScore);
+  let hp = 0;
+  for (const entry of classes) {
+    const levels = Math.max(0, Math.floor(entry.level));
+    if (!levels) continue;
+    const die = hitDieMax(entry.hit_die);
+    const average = Math.floor(die / 2) + 1;
+    const firstLevels = entry.id === primaryClassId ? 1 : 0;
+    hp += firstLevels * Math.max(1, die + conMod);
+    hp += Math.max(0, levels - firstLevels) * Math.max(1, average + conMod);
+  }
+  return Math.max(1, hp);
+}
+
 export const savingThrowBonus = (
   ability: AbilityKey,
   scores: Partial<AbilityScores>,

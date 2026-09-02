@@ -12,7 +12,7 @@
  */
 import type { AdvantageState, CharacterContext, RuntimeState, TargetContext } from '../mvp/contracts';
 import { expandConditionSet } from './conditions';
-import { isWearingArmor } from './equipment';
+import { isShieldCard, isWearingArmor } from './equipment';
 
 type Dict = Record<string, unknown>;
 
@@ -111,6 +111,12 @@ export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
         ...(ctx.character?.equippedCards ?? []),
         ...(ctx.character?.knownCards ?? []),
       ]);
+    case 'wielding_shield': {
+      if (!ctx.state || !ctx.character) return false;
+      const equipped = new Set([ctx.state.equipment?.main_hand, ctx.state.equipment?.off_hand].filter(Boolean));
+      return [...(ctx.character.equippedCards ?? []), ...(ctx.character.knownCards ?? [])]
+        .some((card) => equipped.has(card.id) && isShieldCard(card));
+    }
     case 'you_have_condition':
       return ctx.activeConditions?.has(String(cond.value)) ?? false;
     case 'target_has_condition':

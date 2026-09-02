@@ -31,3 +31,17 @@ describe('MM4 — breakdown характеристик', () => {
     expect(result.parts[0]).toMatchObject({ value: 3, source: 'модификатор СИЛ' });
   });
 });
+
+describe('level-two sheet modifiers', () => {
+  const state = { equipment: {}, inventory: [], activeEffects: [], resources: {}, maxResources: {} } as unknown as RuntimeState;
+  const jack = { effects: [{ resolution: 'auto', result: [{
+    kind: 'modifier', op: 'add', value: 'floor(prof_bonus/2)',
+    applies_to: { roll: 'ability_check', filter: { proficient: false } },
+  }] }] };
+
+  it('Jack of All Trades appears only on untrained skill totals', () => {
+    const bard = { ...character, level: 2, skillProficiencies: ['stealth'] };
+    expect(breakdownValue('skill:arcana', bard, state, [jack]).value).toBe(1);
+    expect(breakdownValue('skill:stealth', bard, state, [jack]).value).toBe(2);
+  });
+});

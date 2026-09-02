@@ -54,10 +54,10 @@ func TestBaseEquipment2024DeclaresEveryOfficialWeaponAndArmor(t *testing.T) {
 	}
 }
 
-func TestCombatAreasMigrationIsRegisteredLast(t *testing.T) {
+func TestCharacterClassLevelsMigrationIsRegisteredLast(t *testing.T) {
 	migrations := GetAllMigrations()
 	last := migrations[len(migrations)-1]
-	if last.Version != combatAreasMigrationVersion {
+	if last.Version != levelTwoClassFeaturesMigrationVersion {
 		t.Fatalf("last=%s", last.Version)
 	}
 	if last.Up == nil || last.Down == nil {

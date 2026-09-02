@@ -22,7 +22,7 @@ import {
 } from '../character/resourceInit';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
-import { buildResourceRecharge } from '../engine/resources';
+import { buildResourceRecharge, buildResourceRecovery } from '../engine/resources';
 import { collectFreeuseRecharge, isFreeusePoolKey } from '../engine/freeuse';
 import { groupActiveEffectsForDisplay } from '../engine/effects';
 import {
@@ -67,6 +67,10 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
     }),
     [assembled.klass?.resources, ruleState.freeuseSpells],
   );
+  const resourceRecovery = useMemo(
+    () => buildResourceRecovery((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
+    [assembled.klass?.resources],
+  );
 
   const ctx = useMemo(
     () => ({
@@ -77,8 +81,9 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
         assembled.klass,
       ),
       resourceRecharge,
+      resourceRecovery,
     }),
-    [ruleState, character.level, character.abilities, assembled.klass, resourceRecharge],
+    [ruleState, character.level, character.abilities, assembled.klass, resourceRecharge, resourceRecovery],
   );
 
   const runtime = useMemo(

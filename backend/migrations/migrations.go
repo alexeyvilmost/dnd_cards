@@ -962,6 +962,21 @@ func GetAllMigrations() []Migration {
 			Up:          materializeCombatAreas,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     characterClassLevelsMigrationVersion,
+			Description: "Persist per-class levels for level-up and multiclass characters",
+			Up:          addCharacterClassLevels,
+			Down: func(db *sql.DB) error {
+				_, err := db.Exec("ALTER TABLE characters_v3 DROP COLUMN IF EXISTS class_levels; ALTER TABLE classes DROP COLUMN IF EXISTS multiclass_proficiencies")
+				return err
+			},
+		},
+		{
+			Version:     levelTwoClassFeaturesMigrationVersion,
+			Description: "Materialize executable D&D 2024 level-two class feature contracts",
+			Up:          materializeLevelTwoClassFeatures,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

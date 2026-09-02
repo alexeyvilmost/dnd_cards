@@ -4,7 +4,7 @@
  * т.е. заклинания 2+ круга перестают быть серыми (costKey spell_slot_N существует).
  */
 import { describe, expect, it } from 'vitest';
-import { initResources, resolveByLevel, maxAvailableSpellSlotLevel } from './resources';
+import { buildResourceRecovery, initResources, resolveByLevel, maxAvailableSpellSlotLevel } from './resources';
 import type { CharacterContext } from '../mvp/contracts';
 
 // Сетка полного кастера PHB 2024 (как залито классам Бард/Жрец/Друид/Чародей/Волшебник).
@@ -89,5 +89,17 @@ describe('масштабирование класс-ресурсов (0.6)', () 
     expect(initResources(cha(3, 1), BARD, []).maxResources.bardic_inspiration).toBe(3); // ХАР+3 → 3 (было 2 по prof_bonus)
     expect(initResources(cha(0, 1), BARD, []).maxResources.bardic_inspiration).toBe(1); // минимум 1
     expect(initResources(cha(5, 20), BARD, []).maxResources.bardic_inspiration).toBe(5);
+  });
+});
+
+describe('partial class-resource recovery', () => {
+  it('projects Channel Divinity as +1 on short rest and full on long rest', () => {
+    expect(buildResourceRecovery({
+      channel_divinity: {
+        recovery: { short_rest: { mode: 'fixed', amount: 1 }, long_rest: { mode: 'full' } },
+      },
+    })).toEqual({
+      channel_divinity: { short_rest: { mode: 'fixed', amount: 1 }, long_rest: { mode: 'full' } },
+    });
   });
 });

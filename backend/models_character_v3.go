@@ -42,9 +42,12 @@ type CharacterV3 struct {
 	CharacterSchemaVersion int    `json:"character_schema_version" gorm:"not null;default:1"`
 
 	// Ссылки на сущности
-	RaceID       *uuid.UUID `json:"race_id" gorm:"type:uuid"`
-	LineageID    *string    `json:"lineage_id" gorm:"type:varchar(100)"` // id варианта из race.lineages
-	ClassID      *uuid.UUID `json:"class_id" gorm:"type:uuid"`
+	RaceID    *uuid.UUID `json:"race_id" gorm:"type:uuid"`
+	LineageID *string    `json:"lineage_id" gorm:"type:varchar(100)"` // id варианта из race.lineages
+	ClassID   *uuid.UUID `json:"class_id" gorm:"type:uuid"`
+	// ClassLevels stores per-class progression. Keys are class UUIDs; Level is
+	// the authoritative total character level and remains in preview responses.
+	ClassLevels  *JSONMap   `json:"class_levels" gorm:"type:jsonb"`
 	BackgroundID *uuid.UUID `json:"background_id" gorm:"type:uuid"`
 	Level        int        `json:"level" gorm:"not null;default:1"`
 
@@ -149,6 +152,7 @@ type CreateCharacterV3Request struct {
 	RaceID                 *uuid.UUID `json:"race_id"`
 	LineageID              *string    `json:"lineage_id"`
 	ClassID                *uuid.UUID `json:"class_id"`
+	ClassLevels            *JSONMap   `json:"class_levels"`
 	BackgroundID           *uuid.UUID `json:"background_id"`
 	Level                  int        `json:"level"`
 
@@ -204,6 +208,7 @@ type UpdateCharacterV3Request struct {
 	RaceID                 *uuid.UUID `json:"race_id"`
 	LineageID              *string    `json:"lineage_id"`
 	ClassID                *uuid.UUID `json:"class_id"`
+	ClassLevels            *JSONMap   `json:"class_levels"`
 	BackgroundID           *uuid.UUID `json:"background_id"`
 	Level                  int        `json:"level"`
 
@@ -290,6 +295,48 @@ func validateCharacterMetadataUpdate(character CharacterV3, req UpdateCharacterV
 	}
 	if req.CharacterSchemaVersion != nil && *req.CharacterSchemaVersion != character.CharacterSchemaVersion {
 		return fmt.Errorf("character_schema_version управляется серверной миграцией")
+	}
+	return nil
+}
+
+func validateCharacterClassLevels(character CharacterV3) error {
+	if character.ClassID == nil {
+		if character.ClassLevels != nil && len(*character.ClassLevels) > 0 {
+			return fmt.Errorf("class_levels requires class_id")
+		}
+		return nil
+	}
+	if character.ClassLevels == nil || len(*character.ClassLevels) == 0 {
+		return fmt.Errorf("class_levels is required for a classed character")
+	}
+	total := 0
+	primaryFound := false
+	for rawID, rawLevel := range *character.ClassLevels {
+		classID, err := uuid.Parse(rawID)
+		if err != nil {
+			return fmt.Errorf("invalid class_levels key %q", rawID)
+		}
+		level, ok := rawLevel.(float64)
+		if !ok {
+			if integer, integerOK := rawLevel.(int); integerOK {
+				level = float64(integer)
+			} else {
+				return fmt.Errorf("class level for %s must be a number", rawID)
+			}
+		}
+		if level < 1 || level > 20 || level != float64(int(level)) {
+			return fmt.Errorf("class level for %s must be an integer from 1 to 20", rawID)
+		}
+		total += int(level)
+		if classID == *character.ClassID {
+			primaryFound = true
+		}
+	}
+	if !primaryFound {
+		return fmt.Errorf("class_levels must include class_id")
+	}
+	if total != character.Level {
+		return fmt.Errorf("class_levels total %d does not match level %d", total, character.Level)
 	}
 	return nil
 }

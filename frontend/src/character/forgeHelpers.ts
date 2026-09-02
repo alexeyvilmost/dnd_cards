@@ -23,6 +23,7 @@ import { isEntityUuid } from '../engine/ids';
 import { normalizeSkillList } from './skillNormalize';
 import type { Race, RaceTrait } from '../types';
 import type { PendingChoice } from '../mechanics/collectChoices';
+import { characterClassLevels, draftClassLevels } from './multiclass';
 
 /** Восстановить выбранные навыки класса: явный ключ → appliedGrants → пусто. */
 export function classSkillChoicesFromCharacter(c: ForgeCharacter): string[] {
@@ -103,6 +104,7 @@ export function characterToDraft(c: ForgeCharacter): CharacterDraft {
     raceId: c.race_id ?? null,
     lineageId: c.lineage_id ?? null,
     classId: c.class_id ?? null,
+    classLevels: characterClassLevels(c),
     subclassId: stored[SUBCLASS_KEY]?.[0] ?? null,
     backgroundId: c.background_id ?? null,
     level: c.level || 1,
@@ -191,6 +193,7 @@ export function buildSavePayload(
     race_id: draft.raceId,
     lineage_id: draft.lineageId,
     class_id: draft.classId,
+    class_levels: draftClassLevels(draft),
     background_id: draft.backgroundId,
     level: draft.level,
     feat_ids: draft.featIds,

@@ -990,10 +990,14 @@ const CharacterSheetMVP = () => {
     await appendRuntimeEvents(rollEvents);
   };
 
+  const classLine = (assembled.classes ?? (assembled.klass ? [assembled.klass] : []))
+    .map((klass) => `${klass.name} ${draft.classLevels?.[klass.id] ?? (klass.id === draft.classId ? draft.level : 0)}`)
+    .filter((label) => !label.endsWith(' 0'))
+    .join(' / ');
   const headerLine = [
     assembled.race?.name,
     lineageName,
-    assembled.klass ? `${assembled.klass.name} ${draft.level}` : null,
+    classLine || null,
     assembled.background?.name,
   ].filter(Boolean).join(' · ');
 

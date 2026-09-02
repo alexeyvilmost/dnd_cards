@@ -347,10 +347,12 @@ describe('payload-ы боёвки: boon / reroll / transform / модифика�
   it('transform (Дикий облик): чип облика + напоминание про стат-блок', () => {
     const { state: next, events } = executeAction(
       freshFighterState(),
-      { name: 'Дикий облик', ...autoMech({ kind: 'transform', max_cr: 0.25 }) },
+      { name: 'Дикий облик', ...autoMech({ kind: 'transform', max_cr: 0.25, temporary_hp: 2 }) },
       { character: FIGHTER_CTX, rng: seededRng(1) },
     );
     expect(next.activeEffects.some((e) => e.name.startsWith('Облик:'))).toBe(true);
+    expect(next.hp.temp).toBe(2);
+    expect(events).toContainEqual(expect.objectContaining({ type: 'temp_hp', amount: 2 }));
     expect(events.some((e) => e.type === 'narrative' && e.text.includes('стат-блок'))).toBe(true);
   });
 
