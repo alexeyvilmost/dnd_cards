@@ -182,8 +182,21 @@ export function breakdownValue(
     // бы ×2). foldModifiers применяет и аддитивные модификаторы, и set/multiply/upgrade/downgrade.
     const collected = collectModifiers(state, passives, { roll: 'speed', formulaCtx: formulaCtxOf(character) });
     const folded = foldModifiers(base, collected);
-    const parts = [{ value: base, source: 'скорость', reason: 'базовая' }, ...folded.parts];
-    return { value: Math.max(0, folded.value), parts };
+    // Live ruleState.characterSpeed already contains this penalty. The visible
+    // breakdown starts from baseSpeed, so project the data-declared armor rule
+    // exactly once when that explicit base is available.
+    const armorPenalty = character.baseSpeed == null ? 0 : passives.some((mechanics) => {
+      const profile = mechanics.armor_profile as Dict | undefined;
+      const required = Number(profile?.strength_requirement ?? 0);
+      const strength = Number(character.abilityScores?.str ?? ((character.abilityMods.str ?? 0) * 2 + 10));
+      return required > 0 && strength < required;
+    }) ? -10 : 0;
+    const parts = [
+      { value: base, source: 'скорость', reason: 'базовая' },
+      ...folded.parts,
+      ...(armorPenalty ? [{ value: armorPenalty, source: 'Доспех', reason: 'не выполнено требование Силы' }] : []),
+    ];
+    return { value: Math.max(0, folded.value + armorPenalty), parts };
   }
   if (what === 'size') {
     // База = раса; временные модификаторы размера (Большая форма: +1 на 10 раундов) — из активных

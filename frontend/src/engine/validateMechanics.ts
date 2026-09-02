@@ -48,6 +48,7 @@ export function normalizeMechanicsForSchema(
     'thresholds',
     'world_facts',
     'weapon_profile',
+    'armor_profile',
   ] as const;
   return {
     schema_version: '1.0',

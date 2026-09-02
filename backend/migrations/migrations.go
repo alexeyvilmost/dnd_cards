@@ -920,6 +920,12 @@ func GetAllMigrations() []Migration {
 			Up:          fillRuntimeEffectIcons,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     baseEquipment2024MigrationVersion,
+			Description: "Материализовать каноничные профили оружия и доспехов PHB 2024",
+			Up:          materializeBaseEquipment2024,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

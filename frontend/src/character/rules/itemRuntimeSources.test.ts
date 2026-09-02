@@ -101,4 +101,29 @@ describe('Слайс 1 — предмет доходит до резолвера
     });
     expect(withFx.maxHP).toBe(bare.maxHP + 5); // не-предмет по-прежнему вливает числовое в ruleState
   });
+
+  it('PHB 2024: тяжёлый доспех снижает скорость на 10 фт при недостаточной Силе', () => {
+    const armor = {
+      activation: { mode: 'passive', while: 'equipped' }, effects: [],
+      armor_profile: {
+        category: 'heavy', ac_formula: '16', strength_requirement: 13,
+        stealth_disadvantage: true, training_required: true,
+      },
+    };
+    expect(resolve(armor, { str: 12 }).speed).toBe(20);
+    expect(resolve(armor, { str: 13 }).speed).toBe(30);
+  });
+
+  it('PHB 2024: отсутствие владения доспехом даёт понятное предупреждение', () => {
+    const armor = {
+      activation: { mode: 'passive', while: 'equipped' }, effects: [],
+      armor_profile: {
+        category: 'heavy', ac_formula: '16', strength_requirement: 13,
+        stealth_disadvantage: true, training_required: true,
+      },
+    };
+    expect(resolve(armor, { str: 13 }).conflicts).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'untrained_armor', severity: 'warning' }),
+    ]));
+  });
 });

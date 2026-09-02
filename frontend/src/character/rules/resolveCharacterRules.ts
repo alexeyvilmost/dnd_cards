@@ -732,7 +732,29 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   // ×2 у Ускорения) должна доходить и до ruleState.speed → characterContext.characterSpeed (формулы,
   // будущий грид-бой), а не только до отображения листа (breakdown('speed')). Собираем set/multiply-
   // ops состояний из runtimeSources (лист передаёт активные состояния как condition-источники).
-  const speedAdditive = baseSpeed + (numericMods.speed ?? 0); // все аддитивные прибавки
+  let armorStrengthPenalty = 0;
+  for (const runtime of input.runtimeSources ?? []) {
+    if (runtime.source.type !== 'item') continue;
+    const profile = runtime.mechanics?.armor_profile as Dict | undefined;
+    if (!profile) continue;
+    const required = Number(profile.strength_requirement ?? 0);
+    if (required > 0 && Number(scores.str ?? 10) < required) armorStrengthPenalty = -10;
+
+    if (profile.training_required === true) {
+      const category = String(profile.category ?? '');
+      const accepted = category === 'shield'
+        ? ['shield', 'shields']
+        : [category, `${category}_armor`];
+      if (category && !accepted.some((value) => maps.armor.has(value))) {
+        conflicts.push({
+          code: 'untrained_armor', severity: 'warning', kind: 'armor', value: category,
+          source: runtime.source,
+          message: `Нет владения категорией «${category}»: доспех даёт помеху на связанные с СИЛ и ЛВК проверки и запрещает сотворение заклинаний.`,
+        });
+      }
+    }
+  }
+  const speedAdditive = baseSpeed + (numericMods.speed ?? 0) + armorStrengthPenalty; // все аддитивные прибавки
   const speedOps: ModifierOp[] = [];
   for (const rt of input.runtimeSources ?? []) {
     for (const p of payloadsFromMechanics(rt.mechanics)) {

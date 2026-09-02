@@ -45,7 +45,7 @@ export interface AppliedGrant {
 }
 
 export interface RuleConflict {
-  code: 'duplicate_proficiency' | 'duplicate_spell' | 'duplicate_feat' | 'missing_proficiency_for_expertise' | 'unsupported_grant';
+  code: 'duplicate_proficiency' | 'duplicate_spell' | 'duplicate_feat' | 'missing_proficiency_for_expertise' | 'unsupported_grant' | 'untrained_armor';
   message: string;
   severity: 'error' | 'warning';
   kind?: GrantKind;

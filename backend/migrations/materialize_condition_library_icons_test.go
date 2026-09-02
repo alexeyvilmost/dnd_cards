@@ -13,10 +13,11 @@ func TestConditionLibraryIconSourcesAndRegistration(t *testing.T) {
 	}
 
 	migrations := GetAllMigrations()
-	if migrations[len(migrations)-3].Version != conditionLibraryIconsMigrationVersion {
+	index := registeredMigrationIndex(t, conditionLibraryIconsMigrationVersion)
+	if migrations[index].Version != conditionLibraryIconsMigrationVersion {
 		t.Fatalf("migration %s must remain immediately before runtime effect materialization", conditionLibraryIconsMigrationVersion)
 	}
-	if migrations[len(migrations)-2].Version != miniMVPRuntimeEffectsMigrationVersion {
+	if index+1 >= len(migrations) || migrations[index+1].Version != miniMVPRuntimeEffectsMigrationVersion {
 		t.Fatalf("migration %s must remain immediately before runtime icon completion", miniMVPRuntimeEffectsMigrationVersion)
 	}
 }

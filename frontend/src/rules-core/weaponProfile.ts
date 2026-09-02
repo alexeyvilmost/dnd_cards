@@ -73,7 +73,9 @@ const NORMALIZED_PROPERTIES = new Set([
   'versatile',
 ]);
 const STABLE_ID = /^[a-z][a-z0-9_]*$/;
-const DICE = /^[1-9]\d*d(?:[2468]|1[02]|20|100)$/;
+// A normalized damage expression may also be a positive flat amount. The
+// 2024 Blowgun is the canonical base-equipment case (1 piercing damage).
+const DICE = /^(?:[1-9]\d*d(?:[2468]|1[02]|20|100)|[1-9]\d*)$/;
 
 function record(value: unknown): Dict | null {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -101,7 +103,7 @@ function parseDamageLine(value: unknown, path: string): WeaponDamageLine | strin
   const line = record(value);
   if (!line || !exactKeys(line, DAMAGE_LINE_KEYS)) return `${path} must contain only dice and type`;
   if (typeof line.dice !== 'string' || !DICE.test(line.dice)) {
-    return `${path}.dice must be a normalized dice expression`;
+    return `${path}.dice must be a normalized damage expression`;
   }
   if (!nonBlank(line.type) || !STABLE_ID.test(line.type)) {
     return `${path}.type must be a normalized non-blank damage type`;

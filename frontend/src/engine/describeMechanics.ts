@@ -203,6 +203,14 @@ export function describeMechanics(
   if (dur) details.push(dur);
   const uses = usesDetail(mechanics.uses as Dict | undefined, formulaCtx);
   if (uses) details.push(uses);
+  const armor = mechanics.armor_profile as Dict | undefined;
+  if (armor) {
+    const category = ({ light: 'лёгкий доспех', medium: 'средний доспех', heavy: 'тяжёлый доспех', shield: 'щит' } as Record<string, string>)[String(armor.category)] ?? String(armor.category ?? 'доспех');
+    details.push(`Защита: ${category}, КЗ ${String(armor.ac_formula ?? '')}`);
+    if (Number(armor.strength_requirement ?? 0) > 0) details.push(`Требование: СИЛ ${armor.strength_requirement}; иначе Скорость −10 фт`);
+    if (armor.stealth_disadvantage === true) details.push('Помеха на проверки Скрытности');
+    if (armor.training_required === true) details.push('Требуется владение этой категорией доспеха');
+  }
 
   return { summary, details };
 }

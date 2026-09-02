@@ -74,7 +74,8 @@
       }
     },
     "world_facts": { "type": "object" },
-    "weapon_profile": { "$ref": "#/$defs/weaponProfile" }
+    "weapon_profile": { "$ref": "#/$defs/weaponProfile" },
+    "armor_profile": { "$ref": "#/$defs/armorProfile" }
   },
 
   "allOf": [
@@ -107,7 +108,7 @@
       "additionalProperties": false,
       "required": ["dice", "type"],
       "properties": {
-        "dice": { "type": "string", "pattern": "^[1-9][0-9]*d(?:[2468]|1[02]|20|100)$" },
+        "dice": { "type": "string", "pattern": "^(?:[1-9][0-9]*d(?:[2468]|1[02]|20|100)|[1-9][0-9]*)$" },
         "type": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" }
       }
     },
@@ -403,6 +404,18 @@
           "then": { "properties": { "policy": { "$ref": "#/$defs/prestidigitationWorldPolicy" } } }
         }
       ]
+    },
+    "armorProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["category", "ac_formula", "strength_requirement", "stealth_disadvantage", "training_required"],
+      "properties": {
+        "category": { "enum": ["light", "medium", "heavy", "shield"] },
+        "ac_formula": { "type": "string", "minLength": 1 },
+        "strength_requirement": { "type": "integer", "minimum": 0 },
+        "stealth_disadvantage": { "type": "boolean" },
+        "training_required": { "type": "boolean" }
+      }
     },
 
     "magicBlockerThreshold": {

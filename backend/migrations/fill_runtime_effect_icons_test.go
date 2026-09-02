@@ -7,7 +7,8 @@ func TestRuntimeEffectIconMigrationIdentityAndRegistration(t *testing.T) {
 		t.Fatal("runtime effect icon identities must remain exact")
 	}
 	migrations := GetAllMigrations()
-	if migrations[len(migrations)-1].Version != runtimeEffectIconsMigrationVersion {
-		t.Fatalf("migration %s must remain the latest migration", runtimeEffectIconsMigrationVersion)
+	index := registeredMigrationIndex(t, runtimeEffectIconsMigrationVersion)
+	if index == 0 || migrations[index-1].Version != miniMVPRuntimeEffectsMigrationVersion {
+		t.Fatalf("migration %s must remain immediately after runtime effect materialization", runtimeEffectIconsMigrationVersion)
 	}
 }

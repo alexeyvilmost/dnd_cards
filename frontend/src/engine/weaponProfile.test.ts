@@ -248,6 +248,24 @@ describe('strict mechanics.weapon_profile authority', () => {
     expect((bound.effects as Dict[])[0]).toMatchObject({ attack_kind: 'weapon_melee' });
   });
 
+  it('accepts the 2024 Blowgun flat 1 damage in parser and schema', () => {
+    const raw = profile({
+      weapon_type: 'blowgun', attack_ability: 'dex',
+      damage_lines: [{ dice: '1', type: 'piercing' }],
+      default_attack_mode: 'ranged',
+      attack_modes: [{ kind: 'ranged', normal_ft: 25, long_ft: 100 }],
+      properties: ['ammunition'],
+      ammo: { card_id: 'card:needle', name: 'Игла' },
+    });
+    expect(parseWeaponProfile(weapon(raw))).toMatchObject({
+      valid: true, profile: { damageLines: [{ dice: '1', type: 'piercing' }] },
+    });
+    expect(validateMechanics(
+      { activation: { mode: 'passive' }, effects: [], weapon_profile: raw },
+      { id: 'weapon-blowgun', name: 'Blowgun', kind: 'passive_effect' },
+    ).valid).toBe(true);
+  });
+
   it('materializes a reusable equipped-weapon action as ranged for a ranged-only weapon', () => {
     const card = weapon(profile({
       weapon_type: 'shortbow',
