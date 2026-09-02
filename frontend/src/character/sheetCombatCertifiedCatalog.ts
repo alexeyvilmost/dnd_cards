@@ -830,8 +830,8 @@ function assertCertifiedPreparedSources(
   if (canonicalStringify(actualSourceIds) !== canonicalStringify(expectedSourceIds)) {
     throw new Error(`Actor ${actor.id} prepared source set differs from certified spellbook access`);
   }
-  const certifiedCapacities = new Set(certified.preparedSourceProfiles.map((profile) => (
-    canonicalStringify({ sourceId: profile.sourceId, capacity: profile.capacity })
+  const certifiedSourceIds = new Set(certified.preparedSourceProfiles.map((profile) => (
+    profile.sourceId
   )));
   for (const [sourceKey, source] of preparedEntries) {
     if (!source || source.sourceId !== sourceKey) {
@@ -843,11 +843,12 @@ function assertCertifiedPreparedSources(
       throw new Error(`Actor ${actor.id} prepared source ${sourceKey} has invalid capacity or duplicates`);
     }
     const projected = projectCertifiedPreparedSource(source);
-    if (!certifiedCapacities.has(canonicalStringify({
-      sourceId: projected.sourceId,
-      capacity: projected.capacity,
-    }))) {
-      throw new Error(`Actor ${actor.id} prepared source ${sourceKey} has uncertified capacity`);
+    // Capacity is character-progression data. The L1 certification proves the
+    // source identity and every spell grant; later levels may legitimately
+    // increase the exact prepared subset without changing those mechanics.
+    // Cardinality, uniqueness, availability and grant equality remain strict.
+    if (!certifiedSourceIds.has(projected.sourceId)) {
+      throw new Error(`Actor ${actor.id} prepared source ${sourceKey} is uncertified`);
     }
     const grantedActionIds = sortedUnique(spellbookBySource.get(sourceKey) ?? []);
     if (canonicalStringify(projected.availableActionIds) !== canonicalStringify(grantedActionIds)) {
