@@ -12,6 +12,7 @@ describe('EquipItemDialog mechanic clarity', () => {
         damage_lines: [{ dice: '1d4', damage_type: 'bludgeoning' }],
         attack_modes: [{ kind: 'melee', reach_ft: 5 }],
         properties: ['light'],
+        mastery_effect_id: 'c7d07a67-374c-49f6-b34b-40e85c26674e',
       } },
     } as unknown as Card;
     const html = renderToStaticMarkup(<EquipItemDialog
@@ -21,5 +22,6 @@ describe('EquipItemDialog mechanic clarity', () => {
     expect(html).toContain('Механика');
     expect(html).toContain('Оружие: простое');
     expect(html).toContain('Свойства: лёгкое');
+    expect(html).toContain('Мастерство: Замедление');
   });
 });

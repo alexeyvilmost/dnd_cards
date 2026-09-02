@@ -57,7 +57,7 @@ func TestBaseEquipment2024DeclaresEveryOfficialWeaponAndArmor(t *testing.T) {
 func TestBaseEquipment2024MigrationIsRegisteredLast(t *testing.T) {
 	migrations := GetAllMigrations()
 	last := migrations[len(migrations)-1]
-	if last.Version != baseEquipmentRuntimeMigrationVersion {
+	if last.Version != baseEquipmentSheetUtilityMigrationVersion {
 		t.Fatalf("last=%s", last.Version)
 	}
 	if last.Up == nil || last.Down == nil {
@@ -92,6 +92,12 @@ func TestBaseEquipment2024RuntimeDeclarationsAreExecutable(t *testing.T) {
 	poisonPayload := byCard["CARD-0832"]["effects"].([]map[string]any)[0]["result"].([]map[string]any)[0]
 	if poisonPayload["kind"] != "damage_rider" || poisonPayload["consume"] != "next" {
 		t.Fatalf("basic poison is not a one-hit damage rider: %#v", poisonPayload)
+	}
+	for _, cardNumber := range []string{"CARD-0407", "CARD-0819", "CARD-0822", "CARD-0389", "CARD-0696", "CARD-0831"} {
+		cost := byCard[cardNumber]["activation"].(map[string]any)["cost"].([]map[string]any)
+		if len(cost) != 0 {
+			t.Fatalf("%s sheet helper is blocked by a turn resource: %#v", cardNumber, cost)
+		}
 	}
 
 	firePayloads := byCard["CARD-0714"]["effects"].([]map[string]any)[0]["on_fail"].([]map[string]any)

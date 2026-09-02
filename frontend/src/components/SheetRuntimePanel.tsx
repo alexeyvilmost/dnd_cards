@@ -38,6 +38,7 @@ import SheetResourceTile, { sheetResourceTileOrder } from './SheetResourceTile';
 import ActiveEffectCard from './ActiveEffectCard';
 import BoonActivationDialog from './BoonActivationDialog';
 import { armBoonForNextRoll, runtimeBoonSpec, type RuntimeBoonSpec } from '../engine/boons';
+import type { Card } from '../types';
 
 interface Props {
   character: ForgeCharacter;
@@ -49,9 +50,10 @@ interface Props {
   onLongRestComplete?: () => void;
   encounterApply?: EncounterApply;
   combatLocked?: boolean;
+  itemCards?: readonly Card[];
 }
 
-export default function SheetRuntimePanel({ character, assembled, ruleState, onUpdated, onEvents, onPersistedEvents, onLongRestComplete, encounterApply, combatLocked }: Props) {
+export default function SheetRuntimePanel({ character, assembled, ruleState, onUpdated, onEvents, onPersistedEvents, onLongRestComplete, encounterApply, combatLocked, itemCards = [] }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedBoon, setSelectedBoon] = useState<RuntimeBoonSpec | null>(null);
@@ -90,8 +92,8 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
   const effectMutationBlockReason = manualEffectMutationBlockReason(character.current_encounter_id);
 
   const resourceBreakdowns = useMemo(
-    () => syncRuntimeResources(ctx, assembled, runtime, ruleState.freeuseSpells).sources,
-    [ctx, assembled, runtime, ruleState.freeuseSpells],
+    () => syncRuntimeResources(ctx, assembled, runtime, ruleState.freeuseSpells, itemCards).sources,
+    [ctx, assembled, runtime, ruleState.freeuseSpells, itemCards],
   );
 
   const persistManualEffects = useCallback(async (
@@ -113,7 +115,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
   }, [character, onUpdated, onEvents]);
 
   const syncResources = useCallback(async (force = false) => {
-    const patch = buildResourceRuntimePatch(character, ctx, assembled, force, ruleState.maxHP, ruleState.freeuseSpells);
+    const patch = buildResourceRuntimePatch(character, ctx, assembled, force, ruleState.maxHP, ruleState.freeuseSpells, itemCards);
     if (!patch) return;
     setBusy(true);
     setError(null);
@@ -126,7 +128,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
     } finally {
       setBusy(false);
     }
-  }, [character, ctx, assembled, encounterApply, onUpdated, ruleState.maxHP]);
+  }, [character, ctx, assembled, encounterApply, onUpdated, ruleState.maxHP, ruleState.freeuseSpells, itemCards]);
 
   useEffect(() => {
     if (syncAttempted.current || (!resourcesNeedSync(character) && !hpNeedsSync(character, ruleState.maxHP))) return;
@@ -222,6 +224,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
         onLongRestComplete={onLongRestComplete}
         encounterApply={encounterApply}
         disabledReason={combatLocked ? 'Управляйте ходами и отдыхом из активного боя' : undefined}
+        itemCards={itemCards}
       />
 
       {activeEffectGroups.length > 0 && (

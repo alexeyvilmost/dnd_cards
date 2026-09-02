@@ -8,6 +8,7 @@ import type { ForgeCharacter } from './types';
 import type { PatchCharacterRuntimeRequest } from './api';
 import { alignRuntimeHp, forgeToRuntimeState } from './runtime';
 import { expandPassiveChoicePayloads, passiveSourceId } from '../mechanics/expandChoices';
+import type { Card } from '../types';
 
 type Dict = Record<string, unknown>;
 
@@ -181,6 +182,7 @@ export function syncRuntimeResources(
   assembled: AssembledCharacter,
   existing?: RuntimeState,
   freeuseSpells: FreeuseSpec[] = [],
+  itemCards: readonly Card[] = [],
 ): { resources: Record<string, number>; maxResources: Record<string, number>; sources: Record<string, RollModifier[]> } {
   const classRes = (assembled.klass?.resources ?? null) as Dict | null;
   const passiveMechanics = collectPassiveMechanics(assembled);
@@ -206,7 +208,7 @@ export function syncRuntimeResources(
   }
 
   // Виртуальные пулы использований действий (mechanics.uses → uses_<key>).
-  for (const pool of collectActionUsesPools(assembled)) {
+  for (const pool of collectActionUsesPools(assembled, itemCards)) {
     const count = resolveCount(pool.count, ctx);
     if (count > 0) {
       fresh.maxResources[pool.key] = count;
@@ -298,12 +300,13 @@ export function buildResourceRuntimePatch(
   force = false,
   computedMaxHp?: number,
   freeuseSpells: FreeuseSpec[] = [],
+  itemCards: readonly Card[] = [],
 ): PatchCharacterRuntimeRequest | null {
   const existing = forgeToRuntimeState(character);
   const hpBase = computedMaxHp && computedMaxHp > 0
     ? alignRuntimeHp(existing, computedMaxHp)
     : existing;
-  const synced = syncRuntimeResources(ctx, assembled, hpBase, freeuseSpells);
+  const synced = syncRuntimeResources(ctx, assembled, hpBase, freeuseSpells, itemCards);
   // PostgreSQL/jsonb returns object keys in its own order. Resource identity is
   // key/value based, so ordering must never manufacture a runtime write (and a
   // new runtime_revision) every time a character sheet mounts.

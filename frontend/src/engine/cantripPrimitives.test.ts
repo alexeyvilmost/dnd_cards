@@ -158,6 +158,15 @@ describe('универсальные примитивы заговоров', () 
       expect.objectContaining({ type: 'narrative', text: expect.stringContaining('автоуспех') }),
     ]));
 
+    const unknownType = executeAction(freshFighterState(), action, {
+      character: FIGHTER_CTX,
+      target: { id: 'target', runtimeState: freshFighterState(), characterContext: FIGHTER_CTX },
+      rng: () => { throw new Error('unknown creature type must fail closed'); },
+    });
+    expect(unknownType.events).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: 'narrative', text: expect.stringContaining('автоуспех') }),
+    ]));
+
     const fiend = executeAction(freshFighterState(), action, {
       character: FIGHTER_CTX,
       target: {

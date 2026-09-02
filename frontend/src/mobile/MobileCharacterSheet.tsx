@@ -546,6 +546,7 @@ export default function MobileCharacterSheet() {
                 onEvents={appendEvents}
                 onPersistedEvents={data.replacePersistedEvents}
                 onLongRestComplete={() => setLongRestOpen(true)}
+                itemCards={[...data.equipCards.values()]}
               />
             </div>
             <div className="m-reused-panel">

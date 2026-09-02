@@ -133,13 +133,16 @@ func utilityItems2024() []utilityItem2024 {
 		if value != "" {
 			payload["value"] = value
 		}
-		return activeItem2024("free_action", false, payload)
+		return map[string]any{
+			"activation": map[string]any{"mode": "active", "while": "carried", "cost": []map[string]any{}},
+			"effects":    []map[string]any{{"resolution": "auto", "result": []map[string]any{payload}}},
+		}
 	}
 	rows := []utilityItem2024{
 		{"CARD-0791", saveItem2024("action", true, 20, []string{"enemy", "neutral"}, "8 + dex + prof_bonus", map[string]any{"kind": "damage", "dice": "2d6", "type": "acid"})},
 		{"CARD-0714", saveItem2024("action", true, 20, []string{"enemy", "neutral"}, "8 + dex + prof_bonus",
 			map[string]any{"kind": "damage", "dice": "1d4", "type": "fire"},
-			map[string]any{"kind": "triggered_effect", "event": "turn_start", "effects": []map[string]any{{"kind": "damage", "dice": "1d4", "type": "fire"}}, "duration": map[string]any{"type": "manual"}, "description": "Горение: 1к4 огня в начале хода; снимите эффект после тушения действием."})},
+			map[string]any{"kind": "triggered_effect", "event": "turn_start", "effects": []map[string]any{{"resolution": "auto", "result": []map[string]any{{"kind": "damage", "dice": "1d4", "type": "fire"}}}}, "duration": map[string]any{"type": "manual"}, "description": "Горение: 1к4 огня в начале хода; снимите эффект после тушения действием."})},
 		{"CARD-0811", activeItem2024("bonus_action", true, map[string]any{"kind": "modifier", "applies_to": map[string]any{"roll": "saving_throw"}, "op": "advantage", "when": []map[string]any{{"kind": "save_avoids_condition", "value": "poisoned"}}, "duration": map[string]any{"type": "hours", "amount": 1}, "source": "Противоядие"})},
 		{"CARD-0491", func() map[string]any {
 			m := activeItem2024("action", false, map[string]any{"kind": "stabilize", "who": "target"}, narrative("Использован один из 10 зарядов комплекта."))

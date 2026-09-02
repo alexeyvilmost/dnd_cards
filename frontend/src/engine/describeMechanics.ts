@@ -49,6 +49,16 @@ const WEAPON_PROPERTY_RU: Record<string, string> = {
   ammunition: 'боеприпасы', finesse: 'фехтовальное', heavy: 'тяжёлое', light: 'лёгкое',
   reach: 'досягаемость', thrown: 'метательное', two_handed: 'двуручное', versatile: 'универсальное',
 };
+const WEAPON_MASTERY_RU: Record<string, string> = {
+  'c7d07a67-374c-49f6-b34b-40e85c26674e': 'Замедление',
+  'c00b501c-2e9a-4f32-89e7-1c5ed898d7b2': 'Порез',
+  '82ec5a23-18f9-4c68-9119-470c1ef120d9': 'Толчок',
+  '2877d5fd-f912-4186-867d-53d353570ded': 'Отвлечение',
+  '4cfe0660-ba1c-415b-b1ed-15e3c708a8e3': 'Ослабление',
+  '1464fb09-59c1-4bc5-8143-92abae8657b1': 'Опрокидывание',
+  '651f4b6a-74c1-4ecf-a787-d98580bc9495': 'Скольжение',
+  '3ad18858-a1a9-44fc-a412-4748d8daaeaa': 'Рассечение',
+};
 
 const rollRu = (r: unknown) => ROLL_RU[String(r)] ?? String(r ?? 'бросок');
 const abilityRu = (a: unknown) => ABILITY_RU[String(a)] ?? String(a ?? '').toUpperCase();
@@ -231,6 +241,8 @@ export function describeMechanics(
       ? (weapon.properties as unknown[]).map((value) => WEAPON_PROPERTY_RU[String(value)] ?? String(value))
       : [];
     if (properties.length) details.push(`Свойства: ${properties.join(', ')}`);
+    const mastery = String(weapon.mastery_effect_id ?? '');
+    if (mastery) details.push(`Мастерство: ${WEAPON_MASTERY_RU[mastery] ?? mastery}`);
   }
 
   return { summary, details };

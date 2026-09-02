@@ -3645,8 +3645,9 @@ function automaticSaveSuccessReason(
   const allowedCreatureTypes = Array.isArray(rule.if_target_creature_type_not_in)
     ? rule.if_target_creature_type_not_in.map(String).filter((candidate) => candidate.trim())
     : [];
-  if (allowedCreatureTypes.length > 0 && targetCreatureType
-    && !allowedCreatureTypes.some((candidate) => creatureTypeMatches(targetCreatureType, candidate))) {
+  if (allowedCreatureTypes.length > 0
+    && (!targetCreatureType
+      || !allowedCreatureTypes.some((candidate) => creatureTypeMatches(targetCreatureType, candidate)))) {
     return {
       reason: `тип существа не входит в: ${allowedCreatureTypes.join(', ')}`,
       sourceEntityIds: [],

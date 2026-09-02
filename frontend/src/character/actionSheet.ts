@@ -405,7 +405,10 @@ function isActionMech(mech: unknown): boolean {
  * Пулы использований действий листа: uses_<card_number|id> → {count, per}.
  * Источники зеркалят collectSheetActions: действия + активные способности вида.
  */
-export function collectActionUsesPools(assembled: AssembledCharacter): ActionUsesPool[] {
+export function collectActionUsesPools(
+  assembled: AssembledCharacter,
+  itemCards: readonly Card[] = [],
+): ActionUsesPool[] {
   const out: ActionUsesPool[] = [];
   const seen = new Set<string>();
   const push = (key: string | undefined, mech: unknown, source: string) => {
@@ -429,13 +432,23 @@ export function collectActionUsesPools(assembled: AssembledCharacter): ActionUse
     if (!isActiveMech(effect.mechanics)) continue;
     push(effectUsesRef(effect), effect.mechanics, `${effect.name} · ${origin.name}`);
   }
+  for (const card of itemCards) {
+    if (!isActionMech(card.mechanics)) continue;
+    const key = usesFromMechanics(card.mechanics as Dict | null | undefined)
+      ? actionUsesKey(card.card_number || card.id)
+      : undefined;
+    push(key, card.mechanics, `Предмет: ${card.name}`);
+  }
   return out;
 }
 
 /** recharge-карта пулов использований: uses_<key> → per (short_rest | long_rest). */
-export function collectActionUsesRecharge(assembled: AssembledCharacter): Record<string, string> {
+export function collectActionUsesRecharge(
+  assembled: AssembledCharacter,
+  itemCards: readonly Card[] = [],
+): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const pool of collectActionUsesPools(assembled)) {
+  for (const pool of collectActionUsesPools(assembled, itemCards)) {
     if (pool.recovery === null) {
       out[pool.key] = 'never';
     } else if (pool.recovery?.short_rest) {
@@ -454,9 +467,10 @@ export function collectActionUsesRecharge(assembled: AssembledCharacter): Record
  */
 export function collectActionUsesRecovery(
   assembled: AssembledCharacter,
+  itemCards: readonly Card[] = [],
 ): Record<string, ResourceRestRecovery | null> {
   const out: Record<string, ResourceRestRecovery | null> = {};
-  for (const pool of collectActionUsesPools(assembled)) {
+  for (const pool of collectActionUsesPools(assembled, itemCards)) {
     if (Object.prototype.hasOwnProperty.call(pool, 'recovery')) {
       out[pool.key] = pool.recovery ?? null;
     }

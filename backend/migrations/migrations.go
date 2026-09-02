@@ -938,6 +938,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairBaseEquipmentRuntime,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     baseEquipmentSheetUtilityMigrationVersion,
+			Description: "Включить листовые действия базового снаряжения без несуществующего free-action ресурса",
+			Up:          repairBaseEquipmentSheetUtilities,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

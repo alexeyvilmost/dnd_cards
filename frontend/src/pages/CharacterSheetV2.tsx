@@ -241,6 +241,7 @@ const CharacterSheetV2 = ({
             character={character}
             assembled={assembled}
             ruleState={ruleState}
+            itemCards={[...equipCards.values()]}
             onUpdated={onUpdated}
             onEvents={onEvents}
             onPersistedEvents={onPersistedEvents}

@@ -3,6 +3,7 @@ import { buildResourceRuntimePatch, syncRuntimeResources } from './resourceInit'
 import type { AssembledCharacter } from './assemble';
 import type { CharacterContext } from '../mvp/contracts';
 import type { ForgeCharacter } from './types';
+import type { Card } from '../types';
 
 const ctx: CharacterContext = {
   abilityMods: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 3 },
@@ -109,5 +110,20 @@ describe('MM4 — resource maximum sources', () => {
       firedThisTurn: [],
       firedThisRest: [],
     }).resources.heroic_inspiration).toBe(1);
+  });
+
+  it('initializes a bounded uses pool declared by a carried item', () => {
+    const healerKit = {
+      id: 'kit-id', card_number: 'CARD-0491', name: 'Комплект целителя',
+      mechanics: {
+        activation: { mode: 'active', while: 'carried', cost: [{ resource: 'self_uses' }] },
+        uses: { count: 10, per: 'never' },
+        effects: [{ resolution: 'auto', result: [{ kind: 'stabilize', who: 'target' }] }],
+      },
+    } as unknown as Card;
+
+    const synced = syncRuntimeResources(ctx, assembled, undefined, [], [healerKit]);
+    expect(synced.maxResources['uses_CARD-0491']).toBe(10);
+    expect(synced.resources['uses_CARD-0491']).toBe(10);
   });
 });

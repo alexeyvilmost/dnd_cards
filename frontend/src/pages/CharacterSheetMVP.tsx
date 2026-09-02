@@ -1202,6 +1202,7 @@ const CharacterSheetMVP = () => {
             onLongRestComplete={() => setLongRestOpen(true)}
             encounterApply={applyEncounter}
             combatLocked={combatLocked}
+            itemCards={[...equipCards.values()]}
           />
           )}
 

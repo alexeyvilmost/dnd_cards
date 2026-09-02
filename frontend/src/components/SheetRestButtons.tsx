@@ -62,6 +62,7 @@ import {
 } from '../character/sheetAtomicWorldCommit';
 import { commitSheetRuntimeCommand } from '../character/sheetRuntimeCommand';
 import { sheetCompanionRetryPolicy } from '../character/sheetCompanionInteraction';
+import type { Card } from '../types';
 
 interface Props {
   character: ForgeCharacter;
@@ -76,13 +77,17 @@ interface Props {
   onLongRestComplete?: () => void;
   encounterApply?: EncounterApply;
   disabledReason?: string;
+  itemCards?: readonly Card[];
 }
 
 /** Pure adapter used by the real sheet: action mechanics remain the authority. */
-export function collectSheetActionUseRestPolicies(assembled: AssembledCharacter) {
+export function collectSheetActionUseRestPolicies(
+  assembled: AssembledCharacter,
+  itemCards: readonly Card[] = [],
+) {
   return {
-    recharge: collectActionUsesRecharge(assembled),
-    recovery: collectActionUsesRecovery(assembled),
+    recharge: collectActionUsesRecharge(assembled, itemCards),
+    recovery: collectActionUsesRecovery(assembled, itemCards),
   };
 }
 
@@ -104,6 +109,7 @@ export default function SheetRestButtons({
   onLongRestComplete,
   encounterApply,
   disabledReason,
+  itemCards = [],
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [shortRestDraft, setShortRestDraft] = useState<{ state: RuntimeState; events: EngineEvent[] } | null>(null);
@@ -125,8 +131,8 @@ export default function SheetRestButtons({
 
   const passives = useMemo(() => collectPassiveMechanics(assembled, character.resolved_choices ?? {}), [assembled, character.resolved_choices]);
   const actionUseRestPolicies = useMemo(
-    () => collectSheetActionUseRestPolicies(assembled),
-    [assembled],
+    () => collectSheetActionUseRestPolicies(assembled, itemCards),
+    [assembled, itemCards],
   );
   const preparationChoices = useMemo(() => collectLongRestPreparationChoices({
     assembled,
@@ -234,7 +240,7 @@ export default function SheetRestButtons({
   }, [character, encounterApply, onUpdated, onEvents]);
 
   const syncResources = useCallback(async (force = false) => {
-    const patch = buildResourceRuntimePatch(character, ctx, assembled, force, ruleState.maxHP, ruleState.freeuseSpells);
+    const patch = buildResourceRuntimePatch(character, ctx, assembled, force, ruleState.maxHP, ruleState.freeuseSpells, itemCards);
     if (!patch) return;
     setBusy(true);
     try {
@@ -245,7 +251,7 @@ export default function SheetRestButtons({
     } finally {
       setBusy(false);
     }
-  }, [character, ctx, assembled, encounterApply, onUpdated, ruleState.maxHP]);
+  }, [character, ctx, assembled, encounterApply, onUpdated, ruleState.maxHP, ruleState.freeuseSpells, itemCards]);
 
   // Один прогон синка на маунт: buildResourceRuntimePatch сам вернёт null,
   // если пулы (включая uses_<key> действий) и HP уже актуальны.
