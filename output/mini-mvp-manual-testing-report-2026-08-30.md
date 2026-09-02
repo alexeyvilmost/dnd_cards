@@ -815,3 +815,41 @@ All 16 PHB 2024 backgrounds have a retained Forge character. The new Backgrounds
 ### Delivery verification
 
 The workbook was exported through the spreadsheet artifact workflow, freshly re-imported, and checked as **99/99 spells Passed, 16/16 backgrounds Passed, and zero formula-error values**. All six tabs—Classes, Species, Spells, Feats, Base Mechanics, and Backgrounds—were rendered and visually inspected without clipping or layout corruption. Comments are authored as `Alexey Romanovich Wilhelm`. No test character or combat scene was deleted.
+
+## Data-driven effects and targeting polish closure — 2026-09-02
+
+This section is the final post-approval polish checkpoint and supersedes the earlier statement that QA characters were retained.
+
+### Player-visible result
+
+- Lasting ally/enemy results are now real catalog effects rather than frontend-generated labels. The migration materialized **63 runtime effects** for modifiers, triggered boons, immunities, damage riders, communication, fall protection, movement and targeting wards. Together with the dedicated Bardic Inspiration entity, these effects carry stable identity, image, source, mechanics and an inspectable card.
+- The combat actor inspector and character surfaces show effect icons. Clicking an icon opens the same data-driven effect card rather than a second frontend description.
+- Bardic Inspiration now grants a usable boon. The recipient can choose it before a suitable roll or after a failed roll when the rule permits; use consumes the d6 and removes the effect. Retained pre-cleanup Bard/Goliath evidence used `100eb271-ad36-4045-9aea-ef0d01a9e395` and `84e8c110-bbba-41be-85ef-9165c376d746`.
+- Ray of Frost browser evidence used `467b52d2-3982-4c32-bbfa-f39cce69bcf0`. A hit on a Wolf applied “Луч холода — Скорость снижена на 10 футов”; inspection showed **30 ft effective / 40 ft base**, the real image and source, and an icon card explaining the −10 ft effect.
+- Acid Splash now uses its declared 60-foot point and 5-foot sphere contract instead of presenting a single-creature action. Arms of Hadar selected four creatures in its 10-foot self-origin emanation while excluding the caster. Color Spray selected exactly three creatures in its 15-foot cone and exposed Blinded on failed saves.
+- A spell added through `+ Добавить` remains prepared/available for every class. The retained pre-cleanup Fighter cast the manually added Ray of Frost without a spell slot, proving the cross-class contract in a fresh scene.
+
+### Major bugs found and fixed
+
+1. Active combat effects did not persist their catalog `entityRef`, so the engine could apply a boon while the UI could not reliably recover its library identity.
+2. The frontend preloader only inspected top-level `grant_effect` payloads. References nested in `on_hit`, `on_fail`, or runtime choices were missing from execution context; a fresh Ray of Frost failed atomically with `UNRESOLVED_GRANT_EFFECT`. The collector now traverses the complete mechanics tree and deduplicates references.
+3. Two deployment-only migration assumptions were wrong: a legacy action contained SQL `NULL` mechanics, and `active_effect` was not an allowed effect type. Both deployments rolled back automatically; the fixes accept empty legacy mechanics and use catalog-valid effect types.
+4. One newly materialized Frost Goliath slow effect inherited no image. The follow-up migration supplies the canonical Ray of Frost artwork, bringing runtime effects to **63/63 with images**.
+5. Area descriptions and tactical targeting had drifted. Point-sphere, self-emanation and cone declarations now drive actual target discovery for Acid Splash, Arms of Hadar and Color Spray.
+
+### Non-entity and process findings
+
+- Production-shaped migration validation must happen before a release. An ephemeral PostgreSQL preflight restored the latest production backup, ran migrations, and checked row/image counts; this converted the final cached deployment into a safe short release instead of another rollback cycle.
+- The release runner still rebuilds backend and frontend when only one side changed. The final frontend-only fix spent most deployment time recompiling an unchanged Go backend. Changed-path image reuse is the largest remaining deployment-speed improvement.
+- The Git archive was approximately 114 MB and its upload took materially longer than hashing or switching the release. A content-addressed delta upload or server-side fetch of the exact Git SHA would reduce this fixed cost.
+- Full-sheet workbook rendering was slower than the workbook edits and verification. Future checkpoints should render only changed ranges during iteration, then perform one final full visual pass.
+- Timecloud web passkey login still reports an error, but infrastructure authorization is confirmed through the approved SSH key. Backend, frontend and public build identity all report exact release `a79f20b27d6bbc67f0cfd016344ff7ac46ea319d`.
+
+### Certification, Forge visibility and cleanup
+
+- The live manifest audit now passes **180/180**: 12 classes, 10 species, 24 lineages, 16 backgrounds, 10 Origin Feats, 10 Fighting Styles, 34 manifest cantrips and 64 first-level spells.
+- An exact-preimage atomic operation certified the 22 roots reset by the polish migrations plus 17 manually tested class/species actions and 116 related effects. All **63 runtime effects are verified and have images**.
+- Default Forge mode (“only verified catalog”) visibly lists all 10 species and all 12 classes. Wizard spell selection includes Acid Splash, Ray of Frost, the repaired first-level catalog entries and Color Spray without enabling “Показать все сущности”.
+- The accepted workbook was synchronized with live support in 111 cells, received seven new evidence-comment threads, re-imported with zero formula errors, and all six tabs were rendered and visually inspected.
+- After evidence, certification and workbook verification were complete, exactly **75 QA characters** (`QA-*` plus `A.Бард`) were deleted. The exact ten non-QA characters were verified before and after; **10 remain and 0 QA remain**. Recovery is possible from Timecloud backup `/opt/bagofholding/shared/backups/pre-a79f20b27d6bbc67f0cfd016344ff7ac46ea319d-20260902T034716Z.dump`, but not through an in-product undo.
+- Timecloud retains exactly **five** immutable release directories; the retention runner removed the sixth version and preserved Docker build cache.

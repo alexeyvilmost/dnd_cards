@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-01T11:45:02.135Z",
+  "generatedAt": "2026-09-02T04:05:03.670Z",
   "source": "https://bagofholding.ru",
   "rule": "Exactly one live manifest root exists and support.status starts with verified_. Manual three-dimension results are recorded in the accepted workbook.",
   "summary": {
@@ -630,8 +630,8 @@
       "cardNumber": "SPELL-0166",
       "name": "Брызги кислоты",
       "entityId": "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
-      "status": "verified_partial",
-      "certificationVersion": "mini-mvp-cantrips-manual-v1",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -691,7 +691,7 @@
       "name": "Злая насмешка",
       "entityId": "bdeda1c3-6574-4946-8b91-5faf0f76072c",
       "status": "verified_mechanical",
-      "certificationVersion": "mini-mvp-cantrips-manual-v1",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -710,8 +710,8 @@
       "cardNumber": "chill_touch",
       "name": "Леденящее прикосновение",
       "entityId": "e300a1f2-91ae-4c82-9904-057f93a013ba",
-      "status": "verified_partial",
-      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -720,8 +720,8 @@
       "cardNumber": "SPELL-0218",
       "name": "Луч холода",
       "entityId": "ebe432dd-c124-4f79-a39b-db14ca2ed741",
-      "status": "verified_partial",
-      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -760,8 +760,8 @@
       "cardNumber": "SPELL-0230",
       "name": "Наставление",
       "entityId": "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7",
-      "status": "verified_partial",
-      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -820,8 +820,8 @@
       "cardNumber": "SPELL-0281",
       "name": "Расщепление разума",
       "entityId": "c3fc969b-ba03-443f-a222-46f6b9a53bd6",
-      "status": "verified_partial",
-      "certificationVersion": "mini-mvp-cantrips-manual-v1",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -860,8 +860,8 @@
       "cardNumber": "SPELL-0294",
       "name": "Сообщение",
       "entityId": "35d36558-8a47-49a1-9099-387bee37b8a2",
-      "status": "verified_partial",
-      "certificationVersion": "mini-mvp-utility-cantrips-v1",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -870,8 +870,8 @@
       "cardNumber": "SPELL-0295",
       "name": "Сопротивление",
       "entityId": "bd99466f-46ab-4af5-a41d-b2b804b9f1e3",
-      "status": "verified_partial",
-      "certificationVersion": "mini-mvp-reviewed-spells-v1",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -990,8 +990,8 @@
       "cardNumber": "SPELL-0163",
       "name": "Благословение",
       "entityId": "33c69e7d-7524-421a-9d68-521e1b7fb57a",
-      "status": "verified_partial",
-      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -1050,8 +1050,8 @@
       "cardNumber": "SPELL-0179",
       "name": "Вызов на дуэль",
       "entityId": "d6a193e8-0204-4277-9a6a-75a86c2d15cd",
-      "status": "verified_partial",
-      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -1060,8 +1060,8 @@
       "cardNumber": "SPELL-0181",
       "name": "Героизм",
       "entityId": "a4491a9d-8a2d-4212-abc1-c92d3f0b85ed",
-      "status": "verified_partial",
-      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -1160,8 +1160,8 @@
       "cardNumber": "SPELL-0201",
       "name": "Защита от добра и зла",
       "entityId": "85b05dba-9662-43a2-afb9-050ce2bf6136",
-      "status": "verified_partial",
-      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -1230,8 +1230,8 @@
       "cardNumber": "SPELL-0223",
       "name": "Метка охотника",
       "entityId": "8c2702cd-4cfa-4c02-919a-178bd2196ca4",
-      "status": "verified_partial",
-      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -1250,8 +1250,8 @@
       "cardNumber": "SPELL-0229",
       "name": "Направляющий снаряд",
       "entityId": "851027a9-0b6a-49d1-9f61-5eef831bf297",
-      "status": "verified_partial",
-      "certificationVersion": "micro-mvp-l1-rules-core-v4",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -1320,8 +1320,8 @@
       "cardNumber": "faerie_fire",
       "name": "Огонь фей",
       "entityId": "b132a28e-f6c9-4832-924b-1a680390e7fb",
-      "status": "verified_partial",
-      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -1380,8 +1380,8 @@
       "cardNumber": "SPELL-0253",
       "name": "Падение пёрышком",
       "entityId": "33e73716-4d61-4669-b9d4-b0e2f6fcc63f",
-      "status": "verified_partial",
-      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -1420,8 +1420,8 @@
       "cardNumber": "SPELL-0267",
       "name": "Порча",
       "entityId": "d7218ea6-2062-4ef3-8680-c8f9c657fda9",
-      "status": "verified_partial",
-      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -1450,8 +1450,8 @@
       "cardNumber": "SPELL-0274",
       "name": "Прыжок",
       "entityId": "0cee5f3c-e943-46dd-96bc-ced618b90454",
-      "status": "verified_partial",
-      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -1480,8 +1480,8 @@
       "cardNumber": "SPELL-0283",
       "name": "Руки Хадара",
       "entityId": "e75790cb-b03f-4a24-98a3-ef86a4756535",
-      "status": "verified_partial",
-      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -1490,8 +1490,8 @@
       "cardNumber": "SPELL-0284",
       "name": "Сверкающие брызги",
       "entityId": "c5a6892f-d388-4075-9da6-6cfb0989ba26",
-      "status": "verified_partial",
-      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -1500,8 +1500,8 @@
       "cardNumber": "SPELL-0287",
       "name": "Сглаз",
       "entityId": "b6cb9612-8dea-4949-bbd5-595bd5501beb",
-      "status": "verified_partial",
-      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
@@ -1560,8 +1560,8 @@
       "cardNumber": "SPELL-0306",
       "name": "Убежище",
       "entityId": "52d5507e-4350-4dcb-a5fd-c4a11bd91b67",
-      "status": "verified_partial",
-      "certificationVersion": "mini-mvp-level1-spells-manual-v1",
+      "status": "verified_mechanical",
+      "certificationVersion": "mini-mvp-manual-three-dimension-v6",
       "approved": true
     },
     {
