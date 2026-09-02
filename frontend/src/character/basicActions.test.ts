@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { collectSheetActions } from './actionSheet';
+import { actionInteractsWithTarget, collectSheetActions } from './actionSheet';
 import type { AssembledCharacter } from './assemble';
 import type { Action, Card } from '../types';
 import { actionsApi } from '../api/client';
@@ -149,6 +149,10 @@ describe('базовые действия как сущности (не хард
     expect((projected.mechanics.activation as { cost: unknown }).cost).toEqual([
       { resource: 'action' }, { resource: 'uses_CARD-0491' },
     ]);
+    expect(actionInteractsWithTarget({
+      ...mechanics,
+      targeting: { actor_targets: true, min_targets: 1, max_targets: 1 },
+    })).toBe(true);
   });
 
   it('проектирует reaction Action как capability, но не дублирует его из reaction Effect', () => {

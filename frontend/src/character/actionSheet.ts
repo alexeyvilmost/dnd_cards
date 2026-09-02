@@ -486,6 +486,8 @@ export function collectActionUsesRecovery(
 /** Действие ВЗАИМОДЕЙСТВУЕТ с другим персонажем (для пикера цели): бросок против цели
  *  (атака/спас) ИЛИ явный who:'target' (лечение/бафф/дебафф на цель). */
 export function actionInteractsWithTarget(mechanics: Record<string, unknown>): boolean {
+  const targeting = mechanics.targeting as Record<string, unknown> | undefined;
+  if (targeting?.actor_targets === true && Number(targeting.min_targets ?? 0) > 0) return true;
   const effects = mechanics.effects as Record<string, unknown>[] | undefined;
   if (!Array.isArray(effects)) return false;
   return effects.some((e) => {
