@@ -44,6 +44,7 @@ describe('combat hotbar resource filter', () => {
     expect(combatHotbarResourceKeys(classActions, {
       action: 1, bonus_action: 1, reaction: 1, focus: 2, sorcery_points: 2,
       pact_slot_1: 2, hit_dice_d8: 2, 'freeuse-misty-step': 1,
+      'uses_EFF-innate-sorcery': 1, 'uses_CARD-0491': 10,
     })).toEqual([
       'action', 'bonus_action', 'reaction', 'focus', 'sorcery_points', 'pact_slot_1',
     ]);

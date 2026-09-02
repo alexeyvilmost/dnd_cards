@@ -268,6 +268,10 @@ function resolveNumericScalar(id: string, ctx: FormulaContext): number {
   if (lower === 'prof_bonus' || lower === 'prof') return ctx.profBonus ?? 0;
   if (lower === 'self_level') return ctx.selfLevel ?? 0;
   if (lower === 'spellcasting') return ctx.spellcastingMod ?? 0;
+  if (lower === 'spell_save_dc') {
+    if (ctx.spellcastingMod === undefined) throw new MissingVariableError(id);
+    return 8 + (ctx.profBonus ?? 0) + ctx.spellcastingMod;
+  }
   if (lower === 'spell_slot_above') return ctx.spellSlotAbove ?? 0;
   if (lower === 'rage_bonus') return ctx.rageBonus ?? 0;
   if (lower === 'character_speed') return ctx.characterSpeed ?? 0;
@@ -294,6 +298,7 @@ function isNumericScalarKnown(id: string, ctx: FormulaContext): boolean {
   if (lower === 'prof_bonus' || lower === 'prof') return ctx.profBonus !== undefined;
   if (lower === 'self_level') return ctx.selfLevel !== undefined;
   if (lower === 'spellcasting') return ctx.spellcastingMod !== undefined;
+  if (lower === 'spell_save_dc') return ctx.spellcastingMod !== undefined;
   if (lower === 'spell_slot_above') return ctx.spellSlotAbove !== undefined;
   if (lower === 'rage_bonus') return ctx.rageBonus !== undefined;
   if (lower === 'character_speed') return ctx.characterSpeed !== undefined;
@@ -347,6 +352,15 @@ function resolveId(id: string, sink: EvalSink): EvalValue {
   }
   if (lower === 'spellcasting') {
     return addModifier(sink, ctx.spellcastingMod ?? 0, 'заклин.', 'модификатор заклинаний');
+  }
+  if (lower === 'spell_save_dc') {
+    if (ctx.spellcastingMod === undefined) throw new MissingVariableError(id);
+    return addModifier(
+      sink,
+      8 + (ctx.profBonus ?? 0) + ctx.spellcastingMod,
+      'СЛ закл.',
+      'сложность спасброска заклинаний',
+    );
   }
   if (lower === 'spell_slot_above') {
     return addModifier(sink, ctx.spellSlotAbove ?? 0, 'ячейка+', 'уровень ячейки выше');

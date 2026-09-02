@@ -47,6 +47,7 @@ describe('formula.evaluate', () => {
 
   it('spellcasting', () => {
     expect(evaluate('spellcasting', baseCtx)).toBe(4);
+    expect(evaluate('spell_save_dc', baseCtx)).toBe(14);
   });
 
   it('spell_slot_above', () => {

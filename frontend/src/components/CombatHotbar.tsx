@@ -39,7 +39,7 @@ export function combatHotbarResourceKeys(
 ): string[] {
   const declaredCosts = new Set(actions.flatMap(actionCostResourceIds));
   return Object.entries(maxResources).flatMap(([key, maximum]) => (
-    maximum > 0 && !isFreeusePoolKey(key) && (
+    maximum > 0 && !isFreeusePoolKey(key) && !key.startsWith('uses_') && (
       ['action', 'bonus_action', 'reaction'].includes(key)
       || /^(?:spell_slot|pact_slot|warlock_spell_slot)_\d+$/u.test(key)
       || declaredCosts.has(key)

@@ -995,6 +995,18 @@ func GetAllMigrations() []Migration {
 			Up:          repairRetiredStartingEquipment,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     wildCompanionTargetingMigrationVersion,
+			Description: "Repair Wild Companion world targeting contracts",
+			Up:          repairWildCompanionTargeting,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     rangerFavoredEnemy2024MigrationVersion,
+			Description: "Replace obsolete Ranger Favored Enemy with its 2024 Hunter's Mark contract",
+			Up:          repairRangerFavoredEnemy2024,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
