@@ -944,6 +944,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairBaseEquipmentSheetUtilities,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     baseEquipmentHealersKitTargetingMigrationVersion,
+			Description: "Исправить выбор цели комплекта целителя",
+			Up:          repairBaseEquipmentHealersKitTargeting,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

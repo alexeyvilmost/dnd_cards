@@ -57,7 +57,7 @@ func TestBaseEquipment2024DeclaresEveryOfficialWeaponAndArmor(t *testing.T) {
 func TestBaseEquipment2024MigrationIsRegisteredLast(t *testing.T) {
 	migrations := GetAllMigrations()
 	last := migrations[len(migrations)-1]
-	if last.Version != baseEquipmentSheetUtilityMigrationVersion {
+	if last.Version != baseEquipmentHealersKitTargetingMigrationVersion {
 		t.Fatalf("last=%s", last.Version)
 	}
 	if last.Up == nil || last.Down == nil {
@@ -87,6 +87,11 @@ func TestBaseEquipment2024RuntimeDeclarationsAreExecutable(t *testing.T) {
 	healerCosts := healer["activation"].(map[string]any)["cost"].([]map[string]any)
 	if healerCosts[len(healerCosts)-1]["resource"] != "self_uses" {
 		t.Fatalf("healer kit does not consume its declared uses: %#v", healerCosts)
+	}
+	healerTargeting := healer["targeting"].(map[string]any)
+	healerRelations := healerTargeting["allowed_relations"].([]string)
+	if healerTargeting["range_ft"] != 5 || len(healerRelations) != 1 || healerRelations[0] != "ally" {
+		t.Fatalf("healer kit must select one adjacent ally: %#v", healerTargeting)
 	}
 
 	poisonPayload := byCard["CARD-0832"]["effects"].([]map[string]any)[0]["result"].([]map[string]any)[0]
