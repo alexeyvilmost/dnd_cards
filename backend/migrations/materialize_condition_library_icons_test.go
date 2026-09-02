@@ -13,7 +13,10 @@ func TestConditionLibraryIconSourcesAndRegistration(t *testing.T) {
 	}
 
 	migrations := GetAllMigrations()
-	if migrations[len(migrations)-1].Version != conditionLibraryIconsMigrationVersion {
-		t.Fatalf("migration %s must remain the latest migration", conditionLibraryIconsMigrationVersion)
+	if migrations[len(migrations)-2].Version != conditionLibraryIconsMigrationVersion {
+		t.Fatalf("migration %s must remain immediately before runtime effect materialization", conditionLibraryIconsMigrationVersion)
+	}
+	if migrations[len(migrations)-1].Version != miniMVPRuntimeEffectsMigrationVersion {
+		t.Fatalf("migration %s must remain the latest migration", miniMVPRuntimeEffectsMigrationVersion)
 	}
 }

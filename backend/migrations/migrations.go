@@ -908,6 +908,12 @@ func GetAllMigrations() []Migration {
 			Up:          materializeConditionLibraryIcons,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     miniMVPRuntimeEffectsMigrationVersion,
+			Description: "Материализовать длительные эффекты mini-MVP в библиотеке",
+			Up:          materializeMiniMVPRuntimeEffects,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
