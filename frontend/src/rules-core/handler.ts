@@ -30,7 +30,7 @@ import {
 } from './legacy/engineAdapter';
 import { applySourceTurnBoundary } from '../engine/sourceTurnExpiry';
 import { activeEffectRequirementIssue } from '../engine/actionRequirements';
-import { projectActionSurgeCost } from '../engine/actionSurge';
+import { projectActionSurgeCost, projectQuickenedSpellCost } from '../engine/actionSurge';
 import { addBonusDieToD20Roll } from '../engine/roll';
 import { armBoonForNextRoll, consumeBoonAfterFailure, runtimeBoonSpec } from '../engine/boons';
 import { compileDeclaredMechanicsTargeting } from './actionTargeting';
@@ -11046,8 +11046,12 @@ function executeCommand(
       executableAction = catalogActionForActor(actor, executableAction);
       executableAction = {
         ...executableAction,
-        mechanics: projectActionSurgeCost(
-          executableAction.mechanics,
+        mechanics: projectQuickenedSpellCost(
+          projectActionSurgeCost(
+            executableAction.mechanics,
+            actor.runtime,
+            executableAction.kind === 'spell' ? 'spell' : 'nonspell',
+          ),
           actor.runtime,
           executableAction.kind === 'spell' ? 'spell' : 'nonspell',
         ),

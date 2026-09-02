@@ -27,7 +27,7 @@ import { applyFreeuseCost, findFreeusePoolKey, freeuseKey, isFreeusePoolKey } fr
 import { startConcentration } from '../engine/concentration';
 import { canPay } from '../engine/cost';
 import { activeEffectRequirementIssue } from '../engine/actionRequirements';
-import { projectActionSurgeCost } from '../engine/actionSurge';
+import { projectActionSurgeCost, projectQuickenedSpellCost } from '../engine/actionSurge';
 import { deniedCapabilities } from '../engine/modifiers';
 import { plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
 import { executeRemoteManipulator, readTargetSave, InsufficientResourcesError } from '../engine/execute';
@@ -1900,8 +1900,12 @@ export default function SheetActionsPanel({
       return;
     }
     let mech: Record<string, unknown> = {
-      ...projectActionSurgeCost(
-        action.mechanics,
+      ...projectQuickenedSpellCost(
+        projectActionSurgeCost(
+          action.mechanics,
+          runtime,
+          action.spellRef ? 'spell' : 'nonspell',
+        ),
         runtime,
         action.spellRef ? 'spell' : 'nonspell',
       ),
@@ -2786,8 +2790,12 @@ export default function SheetActionsPanel({
       });
       if (targetFactsIssue) return { disabled: true, reason: targetFactsIssue };
     }
-    const payableMechanics = projectActionSurgeCost(
-      action.mechanics,
+    const payableMechanics = projectQuickenedSpellCost(
+      projectActionSurgeCost(
+        action.mechanics,
+        runtime,
+        action.spellRef ? 'spell' : 'nonspell',
+      ),
       runtime,
       action.spellRef ? 'spell' : 'nonspell',
     );
@@ -2862,8 +2870,12 @@ export default function SheetActionsPanel({
   };
 
   const actionBlockActions = actions.filter((action) => {
-    const projectedMechanics = projectActionSurgeCost(
-      action.mechanics,
+    const projectedMechanics = projectQuickenedSpellCost(
+      projectActionSurgeCost(
+        action.mechanics,
+        runtime,
+        action.spellRef ? 'spell' : 'nonspell',
+      ),
       runtime,
       action.spellRef ? 'spell' : 'nonspell',
     );

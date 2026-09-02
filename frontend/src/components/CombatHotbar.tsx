@@ -17,7 +17,7 @@ import SheetResourceTile, { sheetResourceTileOrder } from './SheetResourceTile';
 import { UNTRAINED_ARMOR_SPELL_REASON } from '../character/untrainedArmor';
 import { activeEffectRequirementIssue } from '../engine/actionRequirements';
 import { deniedCapabilities } from '../engine/modifiers';
-import { projectActionSurgeCost } from '../engine/actionSurge';
+import { projectActionSurgeCost, projectQuickenedSpellCost } from '../engine/actionSurge';
 
 function resourceLabel(resource: string): string {
   if (resource === 'spell_slot') return 'Ячейка';
@@ -146,6 +146,11 @@ export function combatActionAvailability(
 
   let mechanics = projectActionSurgeCost(
     action.mechanics,
+    actor.runtime,
+    action.kind === 'spell' ? 'spell' : 'nonspell',
+  );
+  mechanics = projectQuickenedSpellCost(
+    mechanics,
     actor.runtime,
     action.kind === 'spell' ? 'spell' : 'nonspell',
   );

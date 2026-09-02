@@ -21,8 +21,22 @@ export function activeEffectRequirementIssue(
   mechanics: Dict,
   state: RuntimeState,
 ): string | null {
+  const forbiddenStack = typeof mechanics.forbids_active_effect_stack === 'string'
+    ? mechanics.forbids_active_effect_stack.trim()
+    : '';
+  if (forbiddenStack && state.activeEffects.some((effect) => (
+    (effect.mechanics as Dict | undefined)?.stack_id === forbiddenStack
+  ))) {
+    return 'Для следующего заклинания уже выбран другой вариант Метамагии';
+  }
   const required = requiredEffectReferences(mechanics);
-  if (!required.length) return null;
+  const requiredStack = typeof mechanics.requires_active_effect_stack === 'string'
+    ? mechanics.requires_active_effect_stack.trim()
+    : '';
+  if (!required.length && !requiredStack) return null;
+  if (requiredStack && state.activeEffects.some((effect) => (
+    (effect.mechanics as Dict | undefined)?.stack_id === requiredStack
+  ))) return null;
   const active = new Set(state.activeEffects.flatMap((effect) => {
     const reference = effect.entityRef;
     return [reference?.id, reference?.cardNumber].filter(

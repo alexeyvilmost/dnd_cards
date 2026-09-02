@@ -23,6 +23,13 @@ func TestLevelTwoRuntimeRepairPinsExactContracts(t *testing.T) {
 		`"attack_bonus_override":4`,
 		`"kind":"modifier","op":"deny","applies_to":{"roll":"spellcasting"}`,
 		`"stack_id":"wild_shape_form"`,
+		`"requires_active_effect_stack":"wild_shape_form"`,
+		`"kind":"remove_effect","stack_id":"wild_shape_form"`,
+		`"source":"effect"`,
+		`"value":"EFFECT-metamagic-quickened"`,
+		`"value":"EFFECT-metamagic-transmuted"`,
+		`"id":"quickened_spell_action"`,
+		`"metamagic_option":"transmuted"`,
 	} {
 		if !strings.Contains(source, required) {
 			t.Fatalf("level-2 repair is missing %q", required)

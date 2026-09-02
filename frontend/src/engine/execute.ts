@@ -166,7 +166,7 @@ const EXECUTABLE_PAYLOAD_KINDS = new Set([
   'stabilize', 'weapon_enchantment', 'remote_manipulator', 'communication_link',
   'world_interaction', 'illusion', 'temporary_consumable', 'world_entity',
   'information_access', 'information_reveal', 'world_zone',
-  'grant_effect', 'choice', 'add_item', 'movement', 'boon', 'reroll',
+  'grant_effect', 'remove_effect', 'choice', 'add_item', 'movement', 'boon', 'reroll',
   'transform', 'narrative',
 ]);
 const ABILITY_KEYS = new Set<AbilityKey>(['str', 'dex', 'con', 'int', 'wis', 'cha']);
@@ -1084,6 +1084,14 @@ function preflightPayload(
             `effect reference «${slug}» is not present in ExecuteContext.grantedEffects`,
           );
         }
+      }
+      break;
+    }
+    case 'remove_effect': {
+      const stackId = typeof value.stack_id === 'string' ? value.stack_id.trim() : '';
+      const cardNumber = typeof value.card_number === 'string' ? value.card_number.trim() : '';
+      if (!stackId && !cardNumber) {
+        throw mechanicsError('INVALID_PAYLOAD', path, 'remove_effect requires stack_id or card_number');
       }
       break;
     }
@@ -2590,6 +2598,22 @@ function applyResource(
 }
 
 type DamageInstance = { amount: number; damageType: string; roll?: import('../mvp/contracts').RollLog };
+const TRANSMUTABLE_DAMAGE_TYPES = new Set(['acid', 'cold', 'fire', 'lightning', 'poison', 'thunder']);
+
+function transmutedSpellDamageType(
+  state: RuntimeState,
+  ctx: ExecuteContext,
+  declaredDamageType: string,
+): string {
+  if (!ctx.spell || !TRANSMUTABLE_DAMAGE_TYPES.has(declaredDamageType)) return declaredDamageType;
+  for (const entry of state.activeEffects) {
+    const mechanics = entry.mechanics as Dict;
+    if (mechanics.metamagic_option !== 'transmuted') continue;
+    const nextType = typeof mechanics.damage_type === 'string' ? mechanics.damage_type : '';
+    if (TRANSMUTABLE_DAMAGE_TYPES.has(nextType) && nextType !== declaredDamageType) return nextType;
+  }
+  return declaredDamageType;
+}
 type AttackDamageQueryFacts = Pick<ModifierQueryFacts,
   | 'attackKind'
   | 'weaponCategory'
@@ -2683,7 +2707,7 @@ function resolveDamageAmounts(
   attackFacts?: AttackDamageQueryFacts,
 ): DamageInstance[] {
   const handWeapon = weaponContext(ctx.character, hand, state.equipment, state);
-  const declaredDamageType = String(payload.type).trim();
+  const declaredDamageType = transmutedSpellDamageType(state, ctx, String(payload.type).trim());
   const explodeLimit = explodeLimitOf(payload, ctx);
   const damageRng = ctx.damageRng ?? ctx.rng;
 
@@ -3218,6 +3242,22 @@ function applyPayloads(
         ));
         break;
       }
+      case 'remove_effect': {
+        const stackId = typeof p.stack_id === 'string' ? p.stack_id : '';
+        const cardNumber = typeof p.card_number === 'string' ? p.card_number : '';
+        const removed = next.activeEffects.filter((entry) => (
+          (stackId && (entry.mechanics as Dict | undefined)?.stack_id === stackId)
+          || (cardNumber && entry.entityRef?.cardNumber === cardNumber)
+        ));
+        if (removed.length) {
+          next = {
+            ...next,
+            activeEffects: next.activeEffects.filter((entry) => !removed.includes(entry)),
+          };
+          removed.forEach((entry) => events.push({ type: 'effect_expired', name: entry.name }));
+        }
+        break;
+      }
       case 'variable':
         throw mechanicsError(
           'UNKNOWN_PAYLOAD',
@@ -3241,7 +3281,11 @@ function applyPayloads(
         if (vals.length) {
           const sub = selectedChoicePayloads(p, vals)
             .map(normalizeChoicePayload)
-            .filter((sp) => !String(sp.kind).startsWith('grant_'));
+            // Build-time grants (grant_feat, grant_proficiency, ...)
+            // cannot mutate RuntimeState. grant_effect is deliberately an
+            // exception: it is the canonical runtime primitive for attaching
+            // a real library condition/effect selected by an action.
+            .filter((sp) => sp.kind === 'grant_effect' || !String(sp.kind).startsWith('grant_'));
           next = applyPayloads(
             sub, next, ctx, events, source, hand, halfDamage, whoTarget, targetRef, crit, attackFacts,
           );
