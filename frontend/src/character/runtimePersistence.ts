@@ -4,6 +4,7 @@ import { readSoloCombatState } from '../solo-combat/persistence';
 import { writeDedicatedCombatTurnState } from '../solo-combat/turnState';
 import { charactersV3Api, type PatchCharacterRuntimeRequest } from './api';
 import type { ForgeCharacter } from './types';
+import { readDeathSaves } from './death';
 
 const owns = (value: object, key: PropertyKey): boolean => Object.prototype.hasOwnProperty.call(value, key);
 
@@ -44,6 +45,9 @@ function soloCombatOwnedPatch(
   if (payload.turn_state && owns(payload.turn_state, 'temp_hp')) {
     const temp = Number(payload.turn_state.temp_hp);
     if (Number.isFinite(temp)) runtime.hp.temp = Math.max(0, temp);
+  }
+  if (payload.turn_state && owns(payload.turn_state, 'death_saves')) {
+    runtime.deathSaves = readDeathSaves(payload.turn_state);
   }
 
   const nextRevision = revision + 1;

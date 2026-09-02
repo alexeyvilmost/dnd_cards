@@ -84,6 +84,7 @@ describe('persistCharacterRuntime encounter ownership', () => {
       resources: { action: 0 },
       maxResources: { action: 1 },
       equipment: {}, inventory: [], activeEffects: [],
+      deathSaves: { successes: 0, failures: 0, stable: false, dead: false },
     };
     const actor: ActorState = {
       id: 'character-1', name: 'Hero', kind: 'playerCharacter', controllerId: 'owner',
@@ -124,13 +125,20 @@ describe('persistCharacterRuntime encounter ownership', () => {
 
     await persistCharacterRuntime(source, {
       current_hp: 9,
-      turn_state: { ...(source.turn_state ?? {}), temp_hp: 5 },
+      turn_state: {
+        ...(source.turn_state ?? {}),
+        temp_hp: 5,
+        death_saves: { successes: 0, failures: 0, stable: true, dead: false },
+      },
     });
 
     const payload = patch.mock.calls[0][1];
     expect(payload.expected_runtime_revision).toBe(4);
     const restored = readSoloCombatState(payload.turn_state, actor.id, 5);
     expect(restored?.world.actors[actor.id].runtime.hp).toEqual({ current: 9, max: 12, temp: 5 });
+    expect(restored?.world.actors[actor.id].runtime.deathSaves).toEqual({
+      successes: 0, failures: 0, stable: true, dead: false,
+    });
     expect(restored?.participantRuntimeRevisions?.[actor.id]).toBe(5);
   });
 });
