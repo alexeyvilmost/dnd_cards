@@ -1214,6 +1214,12 @@ func GetAllMigrations() []Migration {
 			Up:          repairLevelFiveSpellInteractions,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     draconicSorcerySpellAbilityVersion,
+			Description: "Repair explicit casting ability on Draconic Sorcery spell grants",
+			Up:          repairDraconicSorcerySpellAbility,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

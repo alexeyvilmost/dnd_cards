@@ -86,6 +86,8 @@ This log records wall-clock duration for major work and the slowest individual a
 | 13:35–13:40 | Unsafe no-picker and long-cast repair (agent) | about 5m 35s | Six false immediate interactions became explicit narratives and nine non-atomic casting times became enforceable. Migration replay and 18/18 focused tests passed; authoring exact postconditions was the longest substep. |
 | 13:35–13:37 | Final Timecloud/readiness preflight (agent) | 1m 39.3s | Backend/frontend/symlink identity matched, runner checksum matched, release count was exactly five and about 27.9 GiB remained. One harmless local quoting retry made no remote change. |
 | 13:40–13:45 | Final integration gate before commit | about 5m | Backend test+vet passed in 14.48s; TypeScript passed in 43.40s; lint 22.69s; build 74.81s; certificate drift 19.50s; manifest/security 1.87s; 159/159 changed-surface tests passed in 8.98s; idempotent migration-tail replay passed in 3.46s. One new assertion used the wrong projected targeting field and cost one 12.45s failed focused run before correction. |
+| 13:45–13:50 | Timecloud release `242cebde` | about 4m 21s measured | Archive 0.63s, hash 0.43s, upload 35.25s and runner 222.35s. This was about 93s faster than the checkpoint runner; backend/frontend/symlink identity and exactly five retained releases passed independently. |
+| 13:50–13:53 | Production Sorcerer retest and casting-ability repair | about 3m | Browser immediately narrowed the remaining failure from class-list ownership to an explicit subclass-grant casting ability. Migration 193 adds Charisma to all six Draconic Sorcery grants; its declaration test passed in 4.51s and local application succeeded. |
 
 ## Individual measured actions
 
