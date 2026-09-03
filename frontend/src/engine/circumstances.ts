@@ -119,6 +119,13 @@ export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
     }
     case 'you_have_condition':
       return ctx.activeConditions?.has(String(cond.value)) ?? false;
+    case 'you_have_effect_stack': {
+      const stackId = String(cond.value ?? cond.id ?? '').trim();
+      if (!stackId || !ctx.state) return false;
+      return ctx.state.activeEffects.some((entry) => (
+        (entry.mechanics as Dict | undefined)?.stack_id === stackId
+      ));
+    }
     case 'target_has_condition':
       return ctx.targetConditions?.has(String(cond.value)) ?? false;
     case 'save_avoids_condition':

@@ -18,7 +18,7 @@ import type {
 import { canPay, pay } from './cost';
 import {
   conditionAppliedEvent, damageEvent, healingEvent, itemAddedEvent, narrativeEvent,
-  formatRollBreakdown, resourceRestoredEvent, rollEvent, tempHpEvent,
+  formatRollBreakdown, resourceRestoredEvent, resourceSpentEvent, rollEvent, tempHpEvent,
 } from './events';
 import { evaluate, FormulaError, MissingVariableError, rollFormula, type AbilityKey, type FormulaContext } from './formula';
 import {
@@ -911,7 +911,7 @@ function preflightPayload(
       // A cylinder projects to its circular footprint on the two-dimensional
       // combat board. Height remains descriptive catalog data; the footprint
       // has the same positive radius/size contract as a sphere.
-      if (!['cube', 'sphere', 'cylinder'].includes(String(geometry.shape ?? ''))
+      if (!['cube', 'sphere', 'cylinder', 'emanation'].includes(String(geometry.shape ?? ''))
         || !Number.isFinite(geometry.size_ft) || Number(geometry.size_ft) <= 0) {
         throw mechanicsError('INVALID_PAYLOAD', `${path}.geometry`, 'world zone geometry is invalid');
       }
@@ -1068,7 +1068,7 @@ function preflightPayload(
         throw mechanicsError('INVALID_PAYLOAD', path, 'resource id must be non-empty');
       }
       const op = String(value.op ?? 'grant');
-      if (op !== 'grant' && op !== 'restore' && op !== 'grant_capped') {
+      if (op !== 'grant' && op !== 'restore' && op !== 'grant_capped' && op !== 'spend') {
         throw mechanicsError('INVALID_PAYLOAD', `${path}.op`, `executor does not support resource operation «${op}»`);
       }
       if (value.amount !== undefined) assertFiniteFormula(value.amount, `${path}.amount`, ctx, targetOwned);
@@ -2665,30 +2665,41 @@ function applyCondition(
   return next;
 }
 
-/** resource: grant — сверх максимума (Прилив действий), restore — до максимума. */
+/** resource: grant — сверх максимума, restore — до максимума, spend — строго из текущего пула. */
 function applyResource(
   state: RuntimeState,
   payload: Dict,
   ctx: ExecuteContext,
   events: EngineEvent[],
+  targetOwned = false,
 ): RuntimeState {
   let key = String(payload.id ?? payload.resource ?? '');
   if (!key) throw mechanicsError('INVALID_PAYLOAD', 'runtime.payload', 'resource id is empty');
   if (key === 'spell_slot' && payload.level != null) key = `spell_slot_${payload.level}`;
 
-  const evaluated = evaluate(payload.amount == null ? 1 : String(payload.amount), formulaCtx(ctx));
+  const evaluated = evaluate(
+    payload.amount == null ? 1 : String(payload.amount),
+    targetOwned ? (targetFormulaCtx(ctx.target) ?? formulaCtx(ctx)) : formulaCtx(ctx),
+  );
   if (typeof evaluated !== 'number' || !Number.isFinite(evaluated)) {
     throw new FormulaError(`resource «${key}»: amount must resolve to a finite number`);
   }
   const amount = Math.max(0, Math.floor(evaluated));
   const op = String(payload.op ?? 'grant');
-  if (op !== 'grant' && op !== 'restore' && op !== 'grant_capped') {
+  if (op !== 'grant' && op !== 'restore' && op !== 'grant_capped' && op !== 'spend') {
     throw mechanicsError('INVALID_PAYLOAD', 'runtime.payload', `unsupported resource operation «${op}»`);
   }
   const next = cloneState(state);
   const current = next.resources[key] ?? 0;
 
-  if (op === 'restore') {
+  if (op === 'spend') {
+    if (amount <= 0) {
+      throw mechanicsError('INVALID_PAYLOAD', 'runtime.payload.amount', 'resource spend amount must be positive');
+    }
+    if (current < amount) throw new InsufficientResourcesError([key]);
+    next.resources[key] = current - amount;
+    events.push(resourceSpentEvent(key, amount, next.resources[key]));
+  } else if (op === 'restore') {
     const max = next.maxResources[key];
     next.resources[key] = max != null ? Math.min(max, current + amount) : current + amount;
   } else if (op === 'grant_capped') {
@@ -2698,8 +2709,10 @@ function applyResource(
   } else {
     next.resources[key] = current + amount;
   }
-  const gained = next.resources[key] - current;
-  if (gained > 0) events.push(resourceRestoredEvent(key, gained, next.resources[key]));
+  if (op !== 'spend') {
+    const gained = next.resources[key] - current;
+    if (gained > 0) events.push(resourceRestoredEvent(key, gained, next.resources[key]));
+  }
   return next;
 }
 
@@ -2728,6 +2741,8 @@ type AttackDamageQueryFacts = Pick<ModifierQueryFacts,
   | 'weaponWieldedInTwoHands'
   | 'otherWeaponEquipped'
 > & {
+  /** Folded Advantage state of the parent attack, for hit-gated riders such as Frenzy. */
+  advantage?: AdvantageState;
   /** Ability used by the parent attack. Flat on-hit payloads inherit it. */
   ability?: AbilityKey;
   /** Ability modifier used for this attack, independent of the weapon's default ability. */
@@ -3287,7 +3302,7 @@ function applyPayloads(
         whoTarget ? ctx.target?.id : ctx.selfId,
         whoTarget ? ctx.target?.conditionImmunities : ctx.conditionImmunities,
       )); break;
-      case 'resource': route((s) => applyResource(s, p, ctx, events)); break;
+      case 'resource': route((s) => applyResource(s, p, ctx, events, whoTarget)); break;
       case 'modifier': route((s) => applyModifierPayload(
         s,
         p,
@@ -3674,8 +3689,15 @@ function runAttackRoll(
   ) : null;
   if (heavy && !heavy.valid) throw new Error(heavy.issue);
   const attackFacts = attackRollQueryFacts(effect, hand, ctx.character, state.equipment);
+  const declaredAttackAbility = String(effect.ability ?? '');
+  const queryAbility = declaredAttackAbility === 'auto'
+    ? currentWeapon?.ability
+    : ABILITY_KEYS.has(declaredAttackAbility as AbilityKey)
+      ? declaredAttackAbility as AbilityKey
+      : undefined;
   const attackFilter: ModifierQueryFacts = {
     ...attackFacts,
+    ...(queryAbility ? { ability: queryAbility } : {}),
     ...(ctx.target?.id ? { targetActorId: ctx.target.id } : {}),
     ...(ctx.spell?.sourceClass ? { spellClass: ctx.spell.sourceClass } : {}),
   };
@@ -3763,6 +3785,7 @@ function runAttackRoll(
         : ctx.character.abilityMods[attackAbility as AbilityKey];
     const attackDamageFacts: AttackDamageQueryFacts = {
       attackKind: attackFacts.attackKind,
+      advantage: roll.advantage,
       critical: outcome === 'crit',
       ...(usedAttackAbility ? { ability: usedAttackAbility } : {}),
       extraAttackSource: extraAttackSourceFromEffect(

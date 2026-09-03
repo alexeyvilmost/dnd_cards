@@ -4,7 +4,7 @@ import type {
   RuleHazardDefinition,
   RuleSavingHazardDefinition,
 } from '../rules-core/domain';
-import { areaPositionsForAction, samePosition } from './tacticalGrid';
+import { areaPositionsForAction, gridDistanceFt, samePosition } from './tacticalGrid';
 import type {
   CombatAreaEvent,
   CombatAreaState,
@@ -12,6 +12,7 @@ import type {
   PendingCombatAreaTrigger,
   SoloCombatState,
 } from './types';
+import { TACTICAL_HEIGHT, TACTICAL_WIDTH } from './types';
 
 type Dict = Record<string, unknown>;
 
@@ -111,13 +112,21 @@ function hazardOf(input: {
     ? tactical.auto_effects as Dict[] : [];
   const source = input.state.world.actors[input.sourceActorId];
   if (automaticEffects.length > 0) {
+    // Automatic hazards execute against each target's runtime state. Snapshot
+    // source-owned values here so a lower/higher-level target cannot silently
+    // substitute its own proficiency bonus into the creator's area damage.
+    const sourceBoundEffects = automaticEffects.map((effect) => (
+      effect.kind === 'damage' && effect.dice === 'prof_bonus' && source
+        ? { ...effect, dice: source.character.profBonus }
+        : effect
+    ));
     return {
       id: stableHazardId(input.sourceActorId, `${input.action.id}${input.identitySuffix ?? ''}`),
       name: input.action.name,
       sourceKind: 'environment',
       sourceEntityIds: [...input.action.sourceEntityIds],
       resolution: 'automatic',
-      effects: automaticEffects,
+      effects: sourceBoundEffects,
       grantedEffects: { ...(source?.grantedEffects ?? {}) },
     };
   }
@@ -157,14 +166,30 @@ export function createCombatArea(input: {
   if (!payload) return null;
   const sourcePosition = input.state.tokens[input.sourceActorId]?.position;
   if (!sourcePosition) throw new Error('У создателя зоны нет токена на поле');
-  const cells = areaPositionsForAction({
-    action: input.action,
-    sourcePosition,
-    aimPosition: input.origin,
-  });
+  const tactical = record(payload.tactical) ?? {};
+  const sourceAnchored = tactical.anchor === 'source';
+  const targeting = record(input.action.mechanics.targeting);
+  const targetingArea = record(targeting?.area);
+  const payloadGeometry = record(payload.geometry);
+  const anchorGeometry = targetingArea?.kind === 'emanation'
+    ? targetingArea
+    : payloadGeometry?.shape === 'emanation' ? payloadGeometry : undefined;
+  const sourceAnchorRadiusFt = sourceAnchored
+    ? Number(anchorGeometry?.radius_ft ?? anchorGeometry?.size_ft) : undefined;
+  if (sourceAnchored && (!anchorGeometry
+    || !Number.isFinite(sourceAnchorRadiusFt) || sourceAnchorRadiusFt! <= 0)) {
+    throw new Error(`У «${input.action.name}» привязка к источнику требует геометрию эманации`);
+  }
+  const origin = sourceAnchored ? sourcePosition : input.origin;
+  const cells = sourceAnchored
+    ? sourceAnchoredCells(origin, sourceAnchorRadiusFt!)
+    : areaPositionsForAction({
+      action: input.action,
+      sourcePosition,
+      aimPosition: origin,
+    });
   if (!cells.length) throw new Error(`У «${input.action.name}» нет исполнимой геометрии области`);
   const id = `${input.sourceActorId}:${input.action.id}:${input.state.world.revision}`;
-  const tactical = record(payload.tactical) ?? {};
   const insideEffect = insideEffectOf(tactical, input.state.world.actors[input.sourceActorId]);
   const endTurnSave = record(tactical.end_turn_save);
   const endTurnHazard = endTurnSave ? hazardOf({
@@ -193,8 +218,11 @@ export function createCombatArea(input: {
     sourceActorId: input.sourceActorId,
     sourceActionId: input.action.id,
     sourceEntityIds: [...input.action.sourceEntityIds],
-    origin: { ...input.origin },
+    origin: { ...origin },
     cells,
+    ...(sourceAnchored ? { sourceAnchored: true, sourceAnchorRadiusFt } : {}),
+    ...(tactical.trigger_scope === 'source_turn_all_inside'
+      ? { sourceTurnAffectsAllInside: true } : {}),
     duration: durationOf(input.action, payload),
     triggers,
     difficultTerrain: tactical.difficult_terrain === true,
@@ -241,8 +269,13 @@ export function queueCombatAreaEvent(
   for (const area of Object.values(areas)) {
     if (areaIds && !areaIds.includes(area.id)) continue;
     if ((!area.hazard && !area.eventHazards?.[event] && !area.notice) || !area.triggers.includes(event)) continue;
+    if (area.sourceTurnAffectsAllInside && event === 'end_turn'
+      && !actorIds.includes(area.sourceActorId)) continue;
+    const eventActorIds = area.sourceTurnAffectsAllInside && event === 'end_turn'
+      ? Object.keys(state.world.actors)
+      : actorIds;
     const triggered = new Set(area.triggeredTurnKeys ?? []);
-    for (const actorId of actorIds) {
+    for (const actorId of eventActorIds) {
       const token = state.tokens[actorId];
       if (!token || (!assumeMembership && event !== 'exit' && !areaContains(area, token.position))) continue;
       const occurrences = Math.max(1, Math.floor(occurrencesByArea[area.id] ?? 1));
@@ -274,6 +307,81 @@ function areaConditionEffect(area: CombatAreaState, actorId: string): ActiveEffe
     ownerId: actorId,
     sourceId: area.sourceActorId,
   };
+}
+
+function sourceAnchoredCells(origin: GridPosition, radiusFt: number): GridPosition[] {
+  return Array.from({ length: TACTICAL_WIDTH * TACTICAL_HEIGHT }, (_, index) => ({
+    x: index % TACTICAL_WIDTH,
+    y: Math.floor(index / TACTICAL_WIDTH),
+  })).filter((position) => gridDistanceFt(origin, position) <= radiusFt);
+}
+
+/** Rebuild source-following geometry at the persistence boundary. Saved cells
+ * are a projection, never authority: a stale or tampered footprint cannot move
+ * independently from its living source token. */
+export function normalizeSourceAnchoredCombatAreas(state: SoloCombatState): SoloCombatState {
+  const areas = { ...(state.combatAreas ?? {}) };
+  let changed = false;
+  for (const [areaId, area] of Object.entries(areas)) {
+    if (!area.sourceAnchored) continue;
+    const source = state.world.actors[area.sourceActorId];
+    const position = state.tokens[area.sourceActorId]?.position;
+    const radiusFt = area.sourceAnchorRadiusFt;
+    if (!source || !position || !Number.isFinite(radiusFt) || radiusFt! <= 0) {
+      throw new Error(`Source-anchored combat area ${areaId} has no valid source geometry`);
+    }
+    areas[areaId] = {
+      ...area,
+      origin: { ...position },
+      cells: sourceAnchoredCells(position, radiusFt!),
+    };
+    changed = true;
+  }
+  return changed ? { ...state, combatAreas: areas } : state;
+}
+
+/** Move every source-anchored emanation with its owner and emit entry/exit
+ * events for other actors crossed by the moving footprint. */
+export function reanchorSourceCombatAreas(
+  state: SoloCombatState,
+  sourceActorId: string,
+): SoloCombatState {
+  const position = state.tokens[sourceActorId]?.position;
+  if (!position) return state;
+  const actorsBefore = new Map<string, Set<string>>();
+  const areas = { ...(state.combatAreas ?? {}) };
+  const changedAreaIds: string[] = [];
+  for (const [areaId, area] of Object.entries(areas)) {
+    if (!area.sourceAnchored || area.sourceActorId !== sourceActorId
+      || !area.sourceAnchorRadiusFt || samePosition(area.origin, position)) continue;
+    actorsBefore.set(areaId, new Set(Object.entries(state.tokens).flatMap(([actorId, token]) => (
+      actorId !== sourceActorId && areaContains(area, token.position) ? [actorId] : []
+    ))));
+    areas[areaId] = {
+      ...area,
+      origin: { ...position },
+      cells: sourceAnchoredCells(position, area.sourceAnchorRadiusFt),
+    };
+    changedAreaIds.push(areaId);
+  }
+  if (!changedAreaIds.length) return state;
+  let next: SoloCombatState = {
+    ...state,
+    combatAreas: areas,
+    boardRevision: state.boardRevision + 1,
+  };
+  for (const areaId of changedAreaIds) {
+    const area = areas[areaId];
+    const before = actorsBefore.get(areaId) ?? new Set<string>();
+    const after = new Set(Object.entries(state.tokens).flatMap(([actorId, token]) => (
+      actorId !== sourceActorId && areaContains(area, token.position) ? [actorId] : []
+    )));
+    const exited = [...before].filter((actorId) => !after.has(actorId));
+    const entered = [...after].filter((actorId) => !before.has(actorId));
+    if (exited.length) next = queueCombatAreaEvent(next, 'exit', exited, [areaId], true);
+    if (entered.length) next = queueCombatAreaEvent(next, 'enter', entered, [areaId], true);
+  }
+  return next;
 }
 
 function areaDamageImmunityEffect(
@@ -389,8 +497,11 @@ export function enteredAndExitedAreas(
   state: SoloCombatState,
   from: GridPosition,
   to: GridPosition,
+  movingActorId?: string,
 ): { entered: string[]; exited: string[]; movementOccurrences: Record<string, number> } {
-  const areas = Object.values(state.combatAreas ?? {});
+  const areas = Object.values(state.combatAreas ?? {}).filter((area) => (
+    !movingActorId || !area.sourceAnchored || area.sourceActorId !== movingActorId
+  ));
   const traversed = movementCells(from, to);
   return {
     entered: areas.filter((area) => !areaContains(area, from)

@@ -656,6 +656,7 @@ type WorldActionPrimitive =
   | 'prestidigitation_world'
   | 'detect_poison_disease_world'
   | 'purify_food_drink_world'
+  | 'owned_summon'
   | 'temporary_hp_melee_retaliation';
 
 function worldActionPrimitive(action: RuleActionDefinition): WorldActionPrimitive | null {
@@ -672,6 +673,7 @@ function worldActionPrimitive(action: RuleActionDefinition): WorldActionPrimitiv
     case 'prestidigitation_world':
     case 'detect_poison_disease_world':
     case 'purify_food_drink_world':
+    case 'owned_summon':
     case 'temporary_hp_melee_retaliation':
       return primitive.type;
     default:
@@ -1869,6 +1871,14 @@ function executeWorldActionPrimitive(
 ): CommandResult | EventInput[] {
   const primitive = worldActionPrimitive(action);
   if (!primitive) {
+    return command.worldInput
+      ? rejected(world, 'InvalidFacts', `${action.id} does not accept world-object input`)
+      : [];
+  }
+  // Actor creation is owned by the tactical adapter, which has the placement
+  // grid. Rules core still validates, pays, starts concentration and audits
+  // this command through externalPrimitiveHandled.
+  if (primitive === 'owned_summon') {
     return command.worldInput
       ? rejected(world, 'InvalidFacts', `${action.id} does not accept world-object input`)
       : [];

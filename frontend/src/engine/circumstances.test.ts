@@ -44,6 +44,21 @@ describe('circumstances', () => {
     expect(evaluateCondition({ kind: 'not', of: hasnt }, ctx)).toBe(true);
   });
 
+  it('you_have_effect_stack sees an exact active runtime stack and fails closed without state', () => {
+    const rage = stateWith([{
+      id: 'rage', name: 'Ярость', source: 'Ярость',
+      mechanics: { kind: 'modifier', stack_id: 'class:barbarian:rage:damage' },
+    }]);
+    expect(evaluateCondition(
+      { kind: 'you_have_effect_stack', value: 'class:barbarian:rage:damage' },
+      { state: rage },
+    )).toBe(true);
+    expect(evaluateCondition(
+      { kind: 'you_have_effect_stack', value: 'class:barbarian:rage:damage' },
+      {},
+    )).toBe(false);
+  });
+
   it('wearing_armor honors an optional armor category', () => {
     const lightArmor = {
       id: 'light-armor', name: 'Light armor', description: '', rarity: 'common',

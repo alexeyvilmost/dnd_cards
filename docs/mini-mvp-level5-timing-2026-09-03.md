@@ -88,6 +88,13 @@ This log records wall-clock duration for major work and the slowest individual a
 | 13:40–13:45 | Final integration gate before commit | about 5m | Backend test+vet passed in 14.48s; TypeScript passed in 43.40s; lint 22.69s; build 74.81s; certificate drift 19.50s; manifest/security 1.87s; 159/159 changed-surface tests passed in 8.98s; idempotent migration-tail replay passed in 3.46s. One new assertion used the wrong projected targeting field and cost one 12.45s failed focused run before correction. |
 | 13:45–13:50 | Timecloud release `242cebde` | about 4m 21s measured | Archive 0.63s, hash 0.43s, upload 35.25s and runner 222.35s. This was about 93s faster than the checkpoint runner; backend/frontend/symlink identity and exactly five retained releases passed independently. |
 | 13:50–13:53 | Production Sorcerer retest and casting-ability repair | about 3m | Browser immediately narrowed the remaining failure from class-list ownership to an explicit subclass-grant casting ability. Migration 193 adds Charisma to all six Draconic Sorcery grants; its declaration test passed in 4.51s and local application succeeded. |
+| 13:57–14:02 | Documentation reconciliation release | about 5m | Local archive 0.743s, SHA calculation 0.423s, Timecloud upload 36.008s and remote runner 18.35s. Independent health/build/symlink/five-release verification completed immediately after the runner. |
+| 14:04–14:20 | Mobile emanation implementation and local proof | about 16m | Added source anchoring, board re-anchoring, source-turn all-inside dispatch, visible hover semantics and migration 196. The first sheet run found the missing `emanation` schema enum before spending resources; the corrected 53-test focused gate passed in 4.21s. One wrong local database name cost under 5s before the idempotent replay passed against the correct clone. |
+| 14:19–14:22 | Fresh Aasimar browser scenario | about 3m | Scene-constructor resource refresh, choice activation and one full round proved the 10-foot source-following footprint, two-enemy plus source end-turn damage, resistance, duration decrement and combat-log clarity. |
+| 14:03–14:23 | Owned-summon lifecycle (agent) | about 20m | Architecture/scope validation was the longest substep (~5m); core implementation ~5m, integration ~4m, regression closure ~4m and final gates ~2m. TypeScript startup (~48s) dominated automated checks. |
+| 14:04–14:23 | Subclass primary-runtime closure (agent) | about 19m | Resource-spend vocabulary, attack query facts, Frenzy and Tides of Chaos. Focused 26/26 tests took 4–6s; full TypeScript took 53.31s and two-pass PostgreSQL replay about 10.5s. |
+| 14:18–14:29 | Independent combined-diff audit (agent plus child) | about 11m | Contract-path inspection was the longest work. Parallel settled gates took about 50s and found four non-obvious integration/persistence defects before release. |
+| 14:24–14:33 | Final parallel gates and audit repairs | about 9m | Initial 153-test, lint, DB replay and TypeScript gate ran concurrently. A 41.537s TypeScript rerun found only a two-field test-fixture omission. Final 139-test world/solo suite passed in 7.37s test time, lint in 23.148s and production build in 79.988s. |
 
 ## Individual measured actions
 
@@ -129,6 +136,12 @@ This log records wall-clock duration for major work and the slowest individual a
 | Regenerated sheet-combat certificate suite | 32/32 in 19.58s |
 | Protection continuation regression | 45/45 in 3.44s |
 | Final backend test/vet gate | 6.59s / 1.43s |
+| Combined 194–196 focused frontend gate | 53/53 passed in 4.21s; 8.92s command wall |
+| Fresh Aasimar browser activation and end-turn proof | about 3m |
+| Summon/area persistence regression set | 27/27 passed in 3.17s |
+| Final world-migration plus solo-combat suite | 139 passed, 1 intentional skip; 11.911s command wall |
+| Final production build | 79.988s |
+| Legacy micro-MVP manifest probe | 6.10s; failed from one pre-existing immutable-patch hash mismatch, producing 42 cascading fixture failures |
 
 ## Current longest paths
 
@@ -149,6 +162,8 @@ This log records wall-clock duration for major work and the slowest individual a
 7. Add one actor-bound unarmed end-to-end test that starts from the Forge class progression and reaches the system `PerformUnarmedStrike` command. The separate projection/certificate/runtime tests were individually green while their composition was wrong.
 8. Add one deterministic browser-seeded combat mode for hit/save branches. Two consecutive manual misses consumed the available Fighter actions even though the post-hit continuation was already deterministic-test green.
 9. Keep SSH `ConnectTimeout=10` and `ConnectionAttempts=3`; the preflight recovered from one 10-second transient connection failure without manual intervention.
+10. Generate typed fixture builders for `GrappleState` and persistent combat areas. One handwritten fixture omitted `reachFt` and `startedAtRevision`, wasting a full 41.537s TypeScript pass; a builder would make that class of error immediate in the editor.
+11. Keep the read-only integration-audit stream. In 11 minutes it found source/target proficiency substitution, summon map routing, stale lifecycle references and non-normalized ownership—bugs that feature-local green tests did not expose.
 
 ## Final reconciliation
 

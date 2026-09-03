@@ -10,7 +10,7 @@ import {
   setSoloCombatInitiativeTotals,
 } from '../solo-combat/engine';
 import { effectiveActorSize } from '../solo-combat/tacticalGrid';
-import { isControlledCharacter, type SoloCombatState } from '../solo-combat/types';
+import { isPlayerControlledCombatActor, type SoloCombatState } from '../solo-combat/types';
 import { actorOwnsMountedCombatant } from '../rules-core/generalFeatReactionRuntime';
 
 export default function CombatSceneConstructor({
@@ -121,10 +121,16 @@ export default function CombatSceneConstructor({
     <div className="combat-scene-constructor__actors">
       {state.initiative.map((entry) => {
         const actor = state.world.actors[entry.actorId];
-        const controlled = isControlledCharacter(state, entry.actorId);
-        const mountCandidates = actorOwnsMountedCombatant(actor)
+        const controlled = isPlayerControlledCombatActor(state, entry.actorId);
+        const ownsMountedCombatant = actorOwnsMountedCombatant(actor);
+        const mountCandidates = (ownsMountedCombatant || Object.values(state.world.actors).some((candidate) => (
+          candidate.ownedSummon?.ownerActorId === actor.id
+            && candidate.ownedSummon.summonKey === 'otherworldly_steed'
+        )))
           ? Object.values(state.world.actors).filter((candidate) => (
             candidate.id !== actor.id
+              && (ownsMountedCombatant || (candidate.ownedSummon?.ownerActorId === actor.id
+                && candidate.ownedSummon.summonKey === 'otherworldly_steed'))
               && state.sideByActorId[candidate.id] === state.sideByActorId[actor.id]
               && candidate.runtime.hp.current > 0
               && Number.isInteger(effectiveActorSize(actor))
@@ -138,9 +144,9 @@ export default function CombatSceneConstructor({
           : [];
         return <article key={entry.actorId}>
           <span className="combat-scene-constructor__token">{state.tokens[entry.actorId]?.tokenUrl ? <img src={state.tokens[entry.actorId].tokenUrl} alt="" /> : actor.name.slice(0, 1)}</span>
-          <span><b>{actor.name}</b><small>{controlled ? 'Персонаж' : 'Противник'} · ресурсы {Object.values(actor.runtime.resources).filter((value) => Number(value) > 0).length}/{Object.keys(actor.runtime.maxResources).length}</small></span>
+          <span><b>{actor.name}</b><small>{actor.ownedSummon ? `Призвано: ${state.world.actors[actor.ownedSummon.ownerActorId]?.name ?? 'владелец'}` : controlled ? 'Персонаж' : 'Противник'} · ресурсы {Object.values(actor.runtime.resources).filter((value) => Number(value) > 0).length}/{Object.keys(actor.runtime.maxResources).length}</small></span>
           <label>Инициатива<input type="number" min={-100} max={100} value={totals[entry.actorId] ?? entry.total} onChange={(event) => setTotals((current) => ({ ...current, [entry.actorId]: Number(event.target.value) }))} /></label>
-          {actorOwnsMountedCombatant(actor) && <label>Скакун
+          {mountCandidates.length > 0 && <label>Скакун
             <select
               aria-label={`Скакун: ${actor.name}`}
               disabled={busy}

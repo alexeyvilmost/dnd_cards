@@ -184,11 +184,19 @@ export function immediateSoloCombatTargetIds(
   actorId: string,
   state?: SoloCombatState,
 ): string[] | null {
+  const primitive = action.mechanics.primitive;
+  if (primitive && typeof primitive === 'object' && !Array.isArray(primitive)
+    && (primitive as Record<string, unknown>).type === 'owned_summon') return null;
   const needsMapDestination = (value: unknown): boolean => {
     if (Array.isArray(value)) return value.some(needsMapDestination);
     if (!value || typeof value !== 'object') return false;
     const record = value as Record<string, unknown>;
-    if (record.kind === 'world_zone') return true;
+    if (record.kind === 'world_zone') {
+      const tactical = record.tactical && typeof record.tactical === 'object'
+        && !Array.isArray(record.tactical)
+        ? record.tactical as Record<string, unknown> : undefined;
+      return tactical?.anchor !== 'source';
+    }
     if (record.kind === 'movement' && record.value === 'teleport') return true;
     return Object.values(record).some(needsMapDestination);
   };

@@ -324,6 +324,24 @@ describe('solo combat data-owned action choices', () => {
     expect(immediateSoloCombatTargetIds(emanation, 'cleric', state)).toEqual(['skeleton']);
   });
 
+  it('does not request a map click for a source-anchored world-zone emanation', () => {
+    const radiance = {
+      id: 'radiance', name: 'Radiance', kind: 'nonSpell', sourceEntityIds: ['radiance'],
+      mechanics: {
+        targeting: { shape: 'self' },
+        effects: [{ resolution: 'auto', result: [{
+          kind: 'world_zone', zone_type: 'radiance',
+          tactical: { anchor: 'source', triggers: ['end_turn'] },
+        }] }],
+      },
+      targeting: {
+        minTargets: 1, maxTargets: 1, rangeFt: 0,
+        requiresLineOfSight: false, allowedRelations: ['self'],
+      },
+    } as RuleActionDefinition;
+    expect(immediateSoloCombatTargetIds(radiance, 'hero')).toEqual(['hero']);
+  });
+
   it('keeps a self-shaped teleport in map-targeting mode so the player chooses a destination', () => {
     const teleport = {
       id: 'teleport', name: 'Телепортация', kind: 'spell', spell: { level: 0 },

@@ -162,16 +162,20 @@ export default function TacticalBattleMap({
           const duration = area.duration.type === 'permanent' ? 'постоянная'
             : area.duration.type === 'concentration' ? 'концентрация'
               : `${area.duration.roundsLeft} раундов`;
-          const triggerLabels = area.triggers.map((trigger) => ({
-            created: 'при создании', enter: 'при входе', exit: 'при выходе',
-            move: 'за каждые 5 фт. движения', start_turn: 'в начале хода', end_turn: 'в конце хода',
-          })[trigger]).join(', ');
+          const triggerLabels = area.triggers.map((trigger) => (
+            trigger === 'end_turn' && area.sourceTurnAffectsAllInside
+              ? 'в конце хода источника — всем внутри'
+              : ({
+                created: 'при создании', enter: 'при входе', exit: 'при выходе',
+                move: 'за каждые 5 фт. движения', start_turn: 'в начале хода', end_turn: 'в конце хода',
+              })[trigger]
+          )).join(', ');
           const hazard = area.hazard?.resolution === 'save'
             ? ` · спасбросок ${area.hazard.save.ability.toUpperCase()} СЛ ${area.hazard.save.dc}`
             : area.hazard?.resolution === 'automatic' ? ' · без спасброска' : '';
           const immunities = area.damageImmunities?.length
             ? ` · иммунитеты в области: ${area.damageImmunities.join(', ')}` : '';
-          return `${area.name}: ${duration}${area.difficultTerrain ? ' · труднопроходимая местность' : ''}${area.lightlyObscured ? ' · слабо заслонённая область' : ''}${area.heavilyObscured ? ' · сильно заслонённая область' : ''}${area.blocksVerbalComponents ? ' · блокирует Вербальные компоненты' : ''}${immunities}${hazard}${triggerLabels ? ` · ${triggerLabels}` : ''}`;
+          return `${area.name}: ${duration}${area.sourceAnchored ? ' · следует за источником' : ''}${area.difficultTerrain ? ' · труднопроходимая местность' : ''}${area.lightlyObscured ? ' · слабо заслонённая область' : ''}${area.heavilyObscured ? ' · сильно заслонённая область' : ''}${area.blocksVerbalComponents ? ' · блокирует Вербальные компоненты' : ''}${immunities}${hazard}${triggerLabels ? ` · ${triggerLabels}` : ''}`;
         }).join(' · ');
         return (
           <button

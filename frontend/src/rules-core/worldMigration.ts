@@ -1334,6 +1334,55 @@ export function migrateWorldState(value: unknown): WorldState {
     const issue = familiarActorStateIssue({ actor, owner });
     if (issue) throw new Error(`world.actors.${actorId}: ${issue}`);
   }
+  for (const [actorId, actor] of Object.entries(actors)) {
+    if (actor.ownedSummon === undefined) continue;
+    const path = `world.actors.${actorId}.ownedSummon`;
+    const raw = record(actor.ownedSummon, path);
+    if (actor.kind !== 'summonedActor') throw new Error(`${path} requires a summonedActor`);
+    const ownerActorId = nonBlankString(raw.ownerActorId, `${path}.ownerActorId`);
+    const owner = actors[ownerActorId];
+    if (!owner || ownerActorId === actorId || owner.controllerId !== actor.controllerId) {
+      throw new Error(`${path}.ownerActorId must reference a different actor with the same controller`);
+    }
+    const sourceActionId = nonBlankString(raw.sourceActionId, `${path}.sourceActionId`);
+    if (!owner.capabilities.actionIds.includes(sourceActionId)) {
+      throw new Error(`${path}.sourceActionId must be owned by the summon owner`);
+    }
+    const sourceEntityIds = uniqueStringArray(raw.sourceEntityIds, `${path}.sourceEntityIds`);
+    if (!sourceEntityIds.length || !sourceEntityIds.includes(sourceActionId)) {
+      throw new Error(`${path}.sourceEntityIds must retain the source action`);
+    }
+    const summonKey = nonBlankString(raw.summonKey, `${path}.summonKey`);
+    if (actorId !== `${ownerActorId}:summon:${summonKey}`) {
+      throw new Error(`${path}.summonKey must match the deterministic actor id`);
+    }
+    if (raw.initiative !== 'immediately_after_owner') {
+      throw new Error(`${path}.initiative must be immediately_after_owner`);
+    }
+    const rawDuration = record(raw.duration, `${path}.duration`);
+    let duration: NonNullable<ActorState['ownedSummon']>['duration'];
+    if (rawDuration.type === 'until_destroyed' || rawDuration.type === 'concentration') {
+      duration = { type: rawDuration.type };
+    } else if (rawDuration.type === 'rounds') {
+      duration = {
+        type: 'rounds',
+        expiresAfterRound: nonNegativeInteger(rawDuration.expiresAfterRound, `${path}.duration.expiresAfterRound`),
+      };
+    } else {
+      throw new Error(`${path}.duration.type is invalid`);
+    }
+    const createdAtWorldRevision = nonNegativeInteger(
+      raw.createdAtWorldRevision, `${path}.createdAtWorldRevision`,
+    );
+    if (createdAtWorldRevision > worldRevision) {
+      throw new Error(`${path}.createdAtWorldRevision cannot exceed world.revision`);
+    }
+    actor.ownedSummon = {
+      ownerActorId, sourceActionId,
+      sourceEntityIds: sourceEntityIds as [string, ...string[]],
+      summonKey, initiative: 'immediately_after_owner', duration, createdAtWorldRevision,
+    };
+  }
   for (const ownerActorId of Object.keys(actors)) {
     const owned = familiarActorsOwnedBy({ actors }, ownerActorId);
     if (owned.length > 1) {

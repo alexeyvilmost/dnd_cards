@@ -65,8 +65,10 @@ import {
   movementCostThroughAreas,
   pendingTriggerForArea,
   queueCombatAreaEvent,
+  reanchorSourceCombatAreas,
   reconcileInsideAreaConditions,
   removeInactiveCombatAreas,
+  worldZonePayload,
 } from './combatAreas';
 import {
   SOLO_COMBAT_SCHEMA_VERSION,
@@ -75,6 +77,7 @@ import {
   combatRelation,
   controlledCharacterIds,
   isControlledCharacter,
+  isPlayerControlledCombatActor,
   spatialFacts,
   type CombatLogEntry,
   type CombatLogEventRecord,
@@ -98,6 +101,7 @@ import {
   shieldMasterBashEligible,
 } from '../rules-core/generalFeatReactionRuntime';
 import { projectSoloCombatActionChoices, UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
+import { materializeOwnedSummon, reconcileOwnedSummons } from './ownedSummons';
 
 type Rng = () => number;
 type CombatActionInput = {
@@ -348,7 +352,7 @@ function applyActionTeleport(
       )),
     };
   }
-  return {
+  const moved = {
     ...after,
     tokens: {
       ...after.tokens,
@@ -357,6 +361,7 @@ function applyActionTeleport(
     boardRevision: after.boardRevision + 1,
     log,
   };
+  return reanchorSourceCombatAreas(moved, actorId);
 }
 
 function actorHoldsWeaponOrShield(actor: ActorState): boolean {
@@ -521,6 +526,7 @@ function applyForcedMovement(
 ): SoloCombatState {
   let tokens = state.tokens;
   let changed = false;
+  const movedActorIds = new Set<string>();
   for (const envelope of events) {
     const forced = envelope.payload.type === 'EngineEventRecorded'
       && envelope.payload.event.type === 'movement'
@@ -551,10 +557,14 @@ function applyForcedMovement(
       if (position.x !== target.x || position.y !== target.y) {
         tokens = { ...tokens, [targetId]: { ...tokens[targetId], position } };
         changed = true;
+        movedActorIds.add(targetId);
       }
     }
   }
-  return changed ? { ...state, tokens, boardRevision: state.boardRevision + 1 } : state;
+  if (!changed) return state;
+  let next = { ...state, tokens, boardRevision: state.boardRevision + 1 };
+  for (const actorId of movedActorIds) next = reanchorSourceCombatAreas(next, actorId);
+  return next;
 }
 
 function outcome(state: SoloCombatState): SoloCombatState {
@@ -748,6 +758,7 @@ function transitionState(
   const records = projectCombatLogRecords(rawEvents);
   let next = reconcileMovementForSpeedChanges(state, nextWorld);
   next = reconcileSummonedActorProjection(next, nextWorld);
+  next = reconcileOwnedSummons(next);
   const positionedObjects = next.worldObjectPositions ?? {};
   const retainedPositions = Object.fromEntries(Object.entries(positionedObjects).filter(
     ([objectId]) => nextWorld.objects[objectId] !== undefined,
@@ -1369,12 +1380,18 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
       boardRevision: next.boardRevision + 1,
     };
   }
-  if (input.worldPosition) {
+  const selectedWorldZone = worldZonePayload(action, input.choices);
+  const selectedWorldZoneTactical = selectedWorldZone
+    ? selectedWorldZone.tactical as Record<string, unknown> | undefined : undefined;
+  const combatAreaOrigin = input.worldPosition
+    ?? (selectedWorldZoneTactical?.anchor === 'source'
+      ? next.tokens[input.actorId]?.position : undefined);
+  if (combatAreaOrigin) {
     const area = createCombatArea({
       state: next,
       action,
       sourceActorId: input.actorId,
-      origin: input.worldPosition,
+      origin: combatAreaOrigin,
       choices: input.choices,
     });
     if (area) {
@@ -1421,6 +1438,13 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
       next = autoResolveSystemDecisions(next, rng);
     }
   }
+  next = materializeOwnedSummon({
+    state: next,
+    action,
+    ownerActorId: input.actorId,
+    castLevel: declaration.spell?.castLevel ?? (action.kind === 'spell' ? action.spell.level : 0),
+    position: input.worldPosition,
+  });
   const restoreFamiliarCapabilities = (candidate: SoloCombatState): SoloCombatState => {
     if (!familiarCapabilities) return candidate;
     const current = candidate.world.actors[input.actorId];
@@ -2829,7 +2853,7 @@ export function moveActor(input: {
   if (input.voluntary !== false && effectiveCombatActorSpeedFt(next, input.actorId) === 0) {
     return appendLog(next, input.actorId, 'Перемещение остановлено попаданием провоцированной атаки Стража.');
   }
-  const crossed = enteredAndExitedAreas(next, token.position, input.destination);
+  const crossed = enteredAndExitedAreas(next, token.position, input.destination, input.actorId);
   const previousStraight = next.recentStraightMovementByActor?.[input.actorId];
   const round = next.world.scene.mode === 'encounter' ? next.world.scene.round : 0;
   const dx = Math.sign(input.destination.x - token.position.x) as -1 | 0 | 1;
@@ -2862,6 +2886,7 @@ export function moveActor(input: {
     },
     ...(recentStraightMovementByActor ? { recentStraightMovementByActor } : {}),
   };
+  next = reanchorSourceCombatAreas(next, input.actorId);
   if (input.voluntary !== false) {
     next = executePolearmEntryAttacks(
       next, input.actorId, token.position, input.destination, input.rng ?? Math.random,
@@ -3102,15 +3127,18 @@ export function setSoloCombatMount(
   mountId: string | null,
 ): SoloCombatState {
   const rider = state.world.actors[riderId];
-  if (!rider || !actorOwnsMountedCombatant(rider)) {
-    throw new Error('Всадник без черты «Верховой боец» не может закрепить скакуна');
-  }
+  if (!rider) throw new Error('Всадник отсутствует в сцене');
   const relations = { ...(state.mountByRiderId ?? {}) };
   if (mountId === null) {
     delete relations[riderId];
     return appendLog({ ...state, mountByRiderId: relations }, riderId, 'Всадник спешился.');
   }
   const mount = state.world.actors[mountId];
+  const faithfulSteed = mount?.ownedSummon?.ownerActorId === riderId
+    && mount.ownedSummon.summonKey === 'otherworldly_steed';
+  if (!actorOwnsMountedCombatant(rider) && !faithfulSteed) {
+    throw new Error('Без черты «Верховой боец» можно выбрать только собственного Потустороннего скакуна');
+  }
   const riderPosition = state.tokens[riderId]?.position;
   const mountPosition = state.tokens[mountId]?.position;
   const riderSize = effectiveActorSize(rider);
@@ -3127,7 +3155,7 @@ export function setSoloCombatMount(
   relations[riderId] = mountId;
   return appendLog(
     { ...state, mountByRiderId: relations }, riderId,
-    `Скакун закреплён: ${mount.name}. Активен «Удар всадника».`,
+    `Скакун закреплён: ${mount.name}.${actorOwnsMountedCombatant(rider) ? ' Активен «Удар всадника».' : ''}`,
   );
 }
 
@@ -3540,7 +3568,8 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
     && (monster.runtime.resources.action ?? 0) <= 0) {
     return advanceTurn(state, rng);
   }
-  const targetId = controlledCharacterIds(state)
+  const targetId = Object.keys(state.world.actors)
+    .filter((actorId) => isPlayerControlledCombatActor(state, actorId))
     .filter((actorId) => (state.world.actors[actorId]?.runtime.hp.current ?? 0) > 0)
     .filter((actorId) => !conditionInteractionDenied({
       world: state.world,

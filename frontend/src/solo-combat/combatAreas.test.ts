@@ -6,6 +6,8 @@ import {
   createCombatArea,
   movementCostThroughAreas,
   queueCombatAreaEvent,
+  reanchorSourceCombatAreas,
+  normalizeSourceAnchoredCombatAreas,
   reconcileInsideAreaConditions,
   removeInactiveCombatAreas,
   worldZonePayload,
@@ -52,7 +54,7 @@ function state(): SoloCombatState {
       },
       objects: {}, concentrations: {}, attackActions: {}, grapples: {}, processedCommandIds: [],
       pendingResolution: null,
-      scene: { mode: 'encounter', round: 1, activeIndex: 0, initiative: ['caster', 'target'] },
+      scene: { mode: 'encounter', round: 1, activeIndex: 0, initiative: ['caster', 'target'], turnStarted: true },
     },
     catalogActions: [], sideByActorId: { caster: 'heroes', target: 'monsters' }, actorPresentation: {},
     playerActionIds: [], certifiedPlayerActionIds: [], monsterActionIds: {}, opportunityActionIds: {},
@@ -380,5 +382,219 @@ describe('persistent combat areas', () => {
         event: expect.objectContaining({ type: 'damage', amount: 2, damageType: 'acid' }),
       }),
     ]));
+  });
+
+  it('moves a source-anchored emanation and queues actors entered by its footprint', () => {
+    const initial = state();
+    const radiance: RuleActionDefinition = {
+      ...grease,
+      id: 'radiance', name: 'Внутренний свет', sourceEntityIds: ['ACT-aasimar-revelation'],
+      mechanics: {
+        targeting: {
+          shape: 'area', domain: 'world', actor_targets: false, range_ft: 0,
+          area: { kind: 'emanation', radius_ft: 5 },
+        },
+        effects: [{ resolution: 'auto', result: [{
+          kind: 'world_zone', zone_type: 'aasimar_radiance',
+          duration: { type: 'rounds', amount: 10 },
+          tactical: {
+            anchor: 'source', triggers: ['enter'], notice: 'Источник приблизился.',
+          },
+        }] }],
+      },
+    };
+    const area = createCombatArea({
+      state: initial, action: radiance, sourceActorId: 'caster', origin: { x: 9, y: 9 },
+    })!;
+    expect(area).toMatchObject({
+      origin: { x: 0, y: 0 }, sourceAnchored: true, sourceAnchorRadiusFt: 5,
+    });
+    expect(area.cells).toHaveLength(4);
+
+    const moved = reanchorSourceCombatAreas({
+      ...initial,
+      combatAreas: { [area.id]: area },
+      tokens: {
+        ...initial.tokens,
+        caster: { ...initial.tokens.caster, position: { x: 2, y: 2 } },
+      },
+    }, 'caster');
+    expect(moved.combatAreas?.[area.id]).toMatchObject({ origin: { x: 2, y: 2 } });
+    expect(moved.combatAreas?.[area.id].cells).toHaveLength(9);
+    expect(moved.pendingCombatAreaTriggers).toEqual([
+      expect.objectContaining({ areaId: area.id, actorId: 'target', event: 'enter' }),
+    ]);
+  });
+
+  it('keeps a source-anchored emanation attached through action teleport', () => {
+    const initial = state();
+    const teleport: RuleActionDefinition = {
+      id: 'teleport', name: 'Телепортация', kind: 'nonSpell', sourceEntityIds: ['fixture'],
+      targeting: {
+        minTargets: 1, maxTargets: 1, rangeFt: 0,
+        requiresLineOfSight: false, allowedRelations: ['self'],
+      },
+      mechanics: {
+        activation: { mode: 'active', cost: [] },
+        targeting: {
+          domain: 'actor', actor_targets: true, shape: 'self', min_targets: 1, max_targets: 1,
+          range_ft: 0, requires_line_of_sight: false, allowed_relations: ['self'],
+        },
+        effects: [{ resolution: 'auto', result: [{ kind: 'movement', value: 'teleport', distance: 15 }] }],
+      },
+    };
+    initial.world.actors.caster.capabilities = {
+      actionIds: [teleport.id], featureSources: { [teleport.id]: ['fixture'] },
+    };
+    initial.catalogActions = [teleport];
+    initial.playerActionIds = [teleport.id];
+    initial.combatAreas = {
+      radiance: {
+        id: 'radiance', name: 'Внутренний свет', zoneType: 'aasimar_radiance',
+        sourceActorId: 'caster', sourceActionId: 'revelation', sourceEntityIds: ['fixture'],
+        origin: { x: 0, y: 0 }, cells: [{ x: 0, y: 0 }],
+        duration: { type: 'rounds', roundsLeft: 10 }, triggers: [],
+        sourceAnchored: true, sourceAnchorRadiusFt: 5,
+      },
+    };
+    const moved = executeCombatAction({
+      state: initial, actorId: 'caster', actionId: teleport.id, targetIds: ['caster'],
+      worldPosition: { x: 2, y: 2 }, rng: () => 0,
+    });
+    expect(moved.tokens.caster.position).toEqual({ x: 2, y: 2 });
+    expect(moved.combatAreas?.radiance.origin).toEqual({ x: 2, y: 2 });
+  });
+
+  it('keeps a source-anchored emanation attached through forced movement', () => {
+    const initial = state();
+    initial.tokens.target.position = { x: 0, y: 0 };
+    initial.tokens.caster.position = { x: 2, y: 2 };
+    if (initial.world.scene.mode !== 'encounter') throw new Error('fixture');
+    initial.world.scene.activeIndex = 1;
+    const push: RuleActionDefinition = {
+      id: 'push', name: 'Толчок', kind: 'nonSpell', sourceEntityIds: ['fixture'],
+      targeting: {
+        minTargets: 1, maxTargets: 1, rangeFt: 30,
+        requiresLineOfSight: true, allowedRelations: ['enemy'],
+      },
+      mechanics: {
+        activation: { mode: 'active', cost: [] },
+        targeting: {
+          domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1, max_targets: 1,
+          range_ft: 30, requires_line_of_sight: true, allowed_relations: ['enemy'],
+        },
+        effects: [{ resolution: 'auto', who: 'target', result: [{ kind: 'movement', value: 'push', distance: 5 }] }],
+      },
+    };
+    initial.world.actors.target.capabilities = {
+      actionIds: [push.id], featureSources: { [push.id]: ['fixture'] },
+    };
+    initial.catalogActions = [push];
+    initial.monsterActionIds.target = [push.id];
+    initial.combatAreas = {
+      radiance: {
+        id: 'radiance', name: 'Внутренний свет', zoneType: 'aasimar_radiance',
+        sourceActorId: 'caster', sourceActionId: 'revelation', sourceEntityIds: ['fixture'],
+        origin: { x: 2, y: 2 }, cells: [{ x: 2, y: 2 }],
+        duration: { type: 'rounds', roundsLeft: 10 }, triggers: [],
+        sourceAnchored: true, sourceAnchorRadiusFt: 5,
+      },
+    };
+    const moved = executeCombatAction({
+      state: initial, actorId: 'target', actionId: push.id, targetIds: ['caster'], rng: () => 0,
+    });
+    expect(moved.tokens.caster.position).not.toEqual({ x: 2, y: 2 });
+    expect(moved.combatAreas?.radiance.origin).toEqual(moved.tokens.caster.position);
+  });
+
+  it('rebuilds persisted source-anchored cells from the source token', () => {
+    const initial = state();
+    initial.tokens.caster.position = { x: 4, y: 4 };
+    initial.combatAreas = {
+      radiance: {
+        id: 'radiance', name: 'Внутренний свет', zoneType: 'aasimar_radiance',
+        sourceActorId: 'caster', sourceActionId: 'revelation', sourceEntityIds: ['fixture'],
+        origin: { x: 0, y: 0 }, cells: [{ x: 11, y: 9 }],
+        duration: { type: 'rounds', roundsLeft: 10 }, triggers: [],
+        sourceAnchored: true, sourceAnchorRadiusFt: 5,
+      },
+    };
+    const normalized = normalizeSourceAnchoredCombatAreas(initial);
+    expect(normalized.combatAreas?.radiance.origin).toEqual({ x: 4, y: 4 });
+    expect(normalized.combatAreas?.radiance.cells).toEqual(expect.arrayContaining([
+      { x: 4, y: 4 }, { x: 3, y: 4 }, { x: 5, y: 4 }, { x: 4, y: 3 }, { x: 4, y: 5 },
+    ]));
+  });
+
+  it('targets every member only when a source-turn emanation owner ends their turn', () => {
+    const initial = state();
+    const radiance: CombatAreaState = {
+      id: 'radiance', name: 'Внутренний свет', zoneType: 'aasimar_radiance',
+      sourceActorId: 'caster', sourceActionId: 'revelation',
+      sourceEntityIds: ['ACT-aasimar-revelation'], origin: { x: 2, y: 2 },
+      cells: [{ x: 2, y: 2 }, { x: 3, y: 3 }],
+      duration: { type: 'rounds', roundsLeft: 10 }, triggers: ['end_turn'],
+      sourceAnchored: true, sourceAnchorRadiusFt: 10, sourceTurnAffectsAllInside: true,
+      notice: 'Всем внутри.',
+    };
+    initial.tokens.caster.position = { x: 2, y: 2 };
+    initial.combatAreas = { [radiance.id]: radiance };
+    expect(queueCombatAreaEvent(initial, 'end_turn', ['target']).pendingCombatAreaTriggers).toEqual([]);
+    expect(queueCombatAreaEvent(initial, 'end_turn', ['caster']).pendingCombatAreaTriggers).toEqual([
+      expect.objectContaining({ actorId: 'caster', event: 'end_turn' }),
+      expect.objectContaining({ actorId: 'target', event: 'end_turn' }),
+    ]);
+  });
+
+  it('creates a selected source-anchored emanation without a map destination', () => {
+    const initial = state();
+    initial.world.actors.caster.character.profBonus = 5;
+    initial.world.actors.target.character.profBonus = 2;
+    const revelation: RuleActionDefinition = {
+      id: 'revelation', name: 'Небесное откровение', kind: 'nonSpell',
+      sourceEntityIds: ['ACT-aasimar-revelation'],
+      targeting: {
+        minTargets: 0, maxTargets: 1, rangeFt: 0,
+        requiresLineOfSight: false, allowedRelations: ['self'],
+      },
+      mechanics: {
+        targeting: {
+          shape: 'self', domain: 'actor', actor_targets: false, range_ft: 0,
+          min_targets: 0, max_targets: 1, requires_line_of_sight: false,
+          allowed_relations: ['self'],
+        },
+        effects: [{
+          kind: 'choice', id: 'revelation', count: 1,
+          options: { source: 'explicit', items: [{
+            id: 'radiance', name: 'Внутренний свет', grants: [{
+              kind: 'world_zone', zone_type: 'aasimar_radiance',
+              geometry: { shape: 'emanation', size_ft: 10 },
+              duration: { type: 'rounds', amount: 10 },
+              tactical: {
+                anchor: 'source', triggers: ['end_turn'], notice: 'Свет следует за источником.',
+                auto_effects: [{ kind: 'damage', dice: 'prof_bonus', type: 'radiant' }],
+              },
+            }],
+          }] },
+        }],
+      },
+    };
+    initial.world.actors.caster.capabilities.actionIds = [revelation.id];
+    initial.catalogActions = [revelation];
+    initial.playerActionIds = [revelation.id];
+    const executed = executeCombatAction({
+      state: initial, actorId: 'caster', actionId: revelation.id,
+      targetIds: ['caster'], choices: { revelation: ['radiance'] }, rng: () => 0,
+    });
+    expect(Object.values(executed.combatAreas ?? {})).toEqual([
+      expect.objectContaining({
+        sourceActorId: 'caster', sourceAnchored: true,
+        origin: { x: 0, y: 0 }, sourceAnchorRadiusFt: 10,
+        hazard: expect.objectContaining({
+          resolution: 'automatic',
+          effects: [expect.objectContaining({ kind: 'damage', dice: 5, type: 'radiant' })],
+        }),
+      }),
+    ]);
   });
 });

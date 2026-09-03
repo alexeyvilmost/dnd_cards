@@ -122,6 +122,14 @@ export interface CombatAreaState {
   sourceEntityIds: [string, ...string[]];
   origin: GridPosition;
   cells: GridPosition[];
+  /** Source-anchored emanations follow their owner when that token moves. */
+  sourceAnchored?: boolean;
+  /** Data-owned radius retained so an emanation clipped by a board edge can
+   * recover its complete footprint after its source moves away from the edge. */
+  sourceAnchorRadiusFt?: number;
+  /** When declared, the source's end-turn boundary targets every current
+   * member of the emanation rather than only the actor ending its own turn. */
+  sourceTurnAffectsAllInside?: boolean;
   duration:
     | { type: 'permanent' }
     | { type: 'rounds'; roundsLeft: number }
@@ -316,8 +324,9 @@ export function isPlayerControlledCombatActor(
   if (isControlledCharacter(state, actorId)) return true;
   const actor = state.world.actors[actorId];
   const ownerActorId = actor?.kind === 'summonedActor'
-    && actor.familiarState?.presence === 'present'
-    ? actor.familiarState.ownerActorId
+    ? actor.familiarState?.presence === 'present'
+      ? actor.familiarState.ownerActorId
+      : actor.ownedSummon?.ownerActorId ?? null
     : null;
   return ownerActorId !== null && controlledCharacterIds(state).includes(ownerActorId);
 }

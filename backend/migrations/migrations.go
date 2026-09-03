@@ -1220,6 +1220,24 @@ func GetAllMigrations() []Migration {
 			Up:          repairDraconicSorcerySpellAbility,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     subclassPrimaryRuntimeVersion,
+			Description: "Repair executable primary mechanics for selected level-three subclasses",
+			Up:          repairSubclassPrimaryRuntime,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     ownedSummonsMigrationVersion,
+			Description: "Materialize owned summon actor lifecycle for selected level-two and level-three spells",
+			Up:          materializeOwnedSummons,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     mobileEmanationsMigrationVersion,
+			Description: "Materialize source-following combat emanations",
+			Up:          materializeMobileEmanations,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

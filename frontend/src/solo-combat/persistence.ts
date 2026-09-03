@@ -1,5 +1,6 @@
 import { migrateWorldState } from '../rules-core/worldMigration';
 import type { RuntimeState } from '../mvp/contracts';
+import { normalizeSourceAnchoredCombatAreas } from './combatAreas';
 import {
   SOLO_COMBAT_KEY,
   SOLO_COMBAT_SCHEMA_VERSION,
@@ -158,11 +159,11 @@ export function readSoloCombatState(
     || value.characterId !== characterId
     || !value.world || !Array.isArray(value.catalogActions)
     || !value.tokens || !Array.isArray(value.initiative)) return null;
-  return restoreActionPresentationImages(restoreScopedActionPresentation(migrateCombatPresentation({
+  return restoreActionPresentationImages(restoreScopedActionPresentation(normalizeSourceAnchoredCombatAreas(migrateCombatPresentation({
     ...value,
     runtimeRevision,
     world: migrateWorldState(value.world),
-  })));
+  }))));
 }
 
 /**

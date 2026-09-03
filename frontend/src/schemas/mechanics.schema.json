@@ -237,7 +237,7 @@
       "required": ["type"],
       "additionalProperties": false,
       "properties": {
-        "type": { "enum": ["area_object_push", "burning_hands_objects", "dancing_lights_world", "detect_magic_world_sensing", "detect_poison_disease_world", "druidcraft_world", "find_familiar", "light_weapon_extra_attack", "light_world_object", "magic_missile", "mending_world", "minor_illusion_world_object", "pact_blade_bond", "pact_chain_familiar", "pact_tome_book", "prestidigitation_world", "purify_food_drink_world", "temporary_hp_melee_retaliation", "weapon_attack"] },
+        "type": { "enum": ["area_object_push", "burning_hands_objects", "dancing_lights_world", "detect_magic_world_sensing", "detect_poison_disease_world", "druidcraft_world", "find_familiar", "light_weapon_extra_attack", "light_world_object", "magic_missile", "mending_world", "minor_illusion_world_object", "owned_summon", "pact_blade_bond", "pact_chain_familiar", "pact_tome_book", "prestidigitation_world", "purify_food_drink_world", "temporary_hp_melee_retaliation", "weapon_attack"] },
         "stateCapability": { "enum": ["warlock.pact.blade", "warlock.pact.chain", "warlock.pact.tome"] },
         "grantedSpell": { "type": "string", "minLength": 1 },
         "cantripChoiceId": { "type": "string", "minLength": 1 },
@@ -288,6 +288,40 @@
         ,"end_when_no_temporary_hp": { "const": true }
         ,"minimum_slot_level": { "type": "integer", "minimum": 1 }
         ,"maximum_slot_level": { "type": "integer", "minimum": 1 }
+        ,"summon_key": { "type": "string", "minLength": 1 }
+        ,"name": { "type": "string", "minLength": 1 }
+        ,"creature_type": { "type": "string", "minLength": 1 }
+        ,"size": { "type": "integer", "minimum": 0, "maximum": 5 }
+        ,"speed_ft": { "type": "number", "exclusiveMinimum": 0 }
+        ,"armor_class": {
+          "type": "object", "additionalProperties": false,
+          "required": ["base", "per_spell_level"],
+          "properties": {
+            "base": { "type": "number", "minimum": 0 },
+            "per_spell_level": { "type": "number", "minimum": 0 }
+          }
+        }
+        ,"hit_points": {
+          "type": "object", "additionalProperties": false,
+          "required": ["base", "per_spell_level", "scale_from_level"],
+          "properties": {
+            "base": { "type": "number", "minimum": 0 },
+            "per_spell_level": { "type": "number", "minimum": 0 },
+            "scale_from_level": { "type": "integer", "minimum": 0 }
+          }
+        }
+        ,"duration": {
+          "oneOf": [
+            { "enum": ["until_destroyed", "concentration"] },
+            {
+              "type": "object", "additionalProperties": false,
+              "required": ["rounds"],
+              "properties": { "rounds": { "type": "integer", "minimum": 1 } }
+            }
+          ]
+        }
+        ,"initiative": { "const": "immediately_after_owner" }
+        ,"replace_existing": { "const": true }
       },
       "allOf": [
         {
@@ -345,6 +379,15 @@
           },
           "else": {
             "properties": { "object_push_distance_ft": false, "object_max_distance_ft": false, "object_area_requirement": false, "exclude_secured_objects": false, "exclude_carried_objects": false }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "owned_summon" } } },
+          "then": {
+            "required": ["summon_key", "name", "creature_type", "size", "speed_ft", "armor_class", "hit_points", "duration", "initiative", "replace_existing"]
+          },
+          "else": {
+            "properties": { "summon_key": false, "name": false, "creature_type": false, "size": false, "speed_ft": false, "armor_class": false, "hit_points": false, "duration": false, "initiative": false, "replace_existing": false }
           }
         },
         {
@@ -1346,7 +1389,7 @@
                 "type": "object",
                 "required": ["shape", "size_ft"],
                 "properties": {
-                  "shape": { "enum": ["cube", "sphere", "cylinder"] },
+                  "shape": { "enum": ["cube", "sphere", "cylinder", "emanation"] },
                   "size_ft": { "type": "number", "exclusiveMinimum": 0 }
                 }
               },

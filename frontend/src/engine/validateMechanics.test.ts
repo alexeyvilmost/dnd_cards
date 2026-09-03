@@ -23,7 +23,7 @@ describe('validateMechanics', () => {
     expect(result.valid).toBe(true);
   });
 
-  it('accepts cylinder world-zone geometry and rejects a missing radius', () => {
+  it('accepts circular world-zone geometry and rejects a missing radius', () => {
     const mechanics = (geometry: Record<string, unknown>) => ({
       activation: { mode: 'active' },
       effects: [{ resolution: 'auto', result: [{
@@ -33,6 +33,7 @@ describe('validateMechanics', () => {
     });
     const meta = { id: 'moonbeam', name: 'Moonbeam', kind: 'spell' as const };
     expect(validateMechanics(mechanics({ shape: 'cylinder', size_ft: 5 }), meta).valid).toBe(true);
+    expect(validateMechanics(mechanics({ shape: 'emanation', size_ft: 10 }), meta).valid).toBe(true);
     expect(validateMechanics(mechanics({ shape: 'cylinder' }), meta).valid).toBe(false);
   });
 

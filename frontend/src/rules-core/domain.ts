@@ -130,6 +130,21 @@ export interface ActorState {
     catalogId: string;
     catalogContentHash: string;
   };
+  /** Data-owned lifecycle for non-familiar creatures materialized by a spell.
+   * The tactical adapter owns their token and initiative projection; these
+   * fields keep ownership, replacement and cleanup rules replay-visible. */
+  ownedSummon?: {
+    ownerActorId: string;
+    sourceActionId: string;
+    sourceEntityIds: [string, ...string[]];
+    summonKey: string;
+    initiative: 'immediately_after_owner';
+    duration:
+      | { type: 'until_destroyed' }
+      | { type: 'concentration' }
+      | { type: 'rounds'; expiresAfterRound: number };
+    createdAtWorldRevision: number;
+  };
   /**
    * Compiled Attack-action facts.  It is optional only at the TypeScript edge
    * while schema <=3 snapshots are being upgraded; createWorld/migration always
