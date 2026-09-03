@@ -83,6 +83,53 @@ describe('shared declarative rule-action projection', () => {
       .toThrow(/spell_class_list_ids must be explicit stable class ids/);
   });
 
+  it('projects narrative-only self and world casts without an impossible actor target', () => {
+    const cases = [
+      {
+        cardNumber: 'SPELL-0184',
+        targeting: {
+          domain: 'actor', actor_targets: false, shape: 'self',
+          min_targets: 0, max_targets: 1, range_ft: 0,
+          requires_line_of_sight: false, allowed_relations: ['self'],
+        },
+      },
+      {
+        cardNumber: 'conjure_animals',
+        targeting: {
+          domain: 'world', actor_targets: false, shape: 'single',
+          min_targets: 0, max_targets: 0, range_ft: 60,
+          requires_line_of_sight: true, allowed_relations: [],
+        },
+      },
+    ];
+
+    for (const { cardNumber, targeting } of cases) {
+      const entity = spell({
+        spell_class_list_ids: ['CLASS-wizard'],
+        activation: {
+          mode: 'active',
+          cost: [{ resource: 'action' }, { resource: 'spell_slot', level: 1, amount: 1 }],
+        },
+        targeting,
+        effects: [{
+          resolution: 'auto',
+          result: [{ kind: 'narrative', description: 'Secondary entity is resolved manually.' }],
+        }],
+      });
+      entity.card_number = cardNumber;
+
+      const projected = projectRuleAction(entity);
+      const projectedTargeting = projected.mechanics.targeting as Record<string, unknown> | undefined;
+      expect(projectedTargeting?.actor_targets, cardNumber).not.toBe(true);
+      const encoded = JSON.stringify(projected.mechanics.effects);
+      expect(encoded, cardNumber).not.toContain('"who":"target"');
+      expect(encoded, cardNumber).not.toContain('"resolution":"save"');
+      expect(encoded, cardNumber).not.toContain('"resolution":"attack_roll"');
+      expect(encoded, cardNumber).not.toContain('"kind":"damage"');
+      expect(encoded, cardNumber).toContain('"kind":"narrative"');
+    }
+  });
+
   it('applies the exact grant-owned casting override without mutating the spell card', () => {
     const source = spell(declaredMechanics());
     const grant = {

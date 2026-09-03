@@ -33,6 +33,7 @@
     "weapon_mastery": { "$ref": "#/$defs/weaponMasteryPrimitive" },
     "attack_replacement": { "$ref": "#/$defs/attackReplacement" },
     "rest_decision": { "$ref": "#/$defs/restDecision" },
+    "spell_preparation_rest": { "$ref": "#/$defs/spellPreparationRest" },
     "condition": { "$ref": "#/$defs/conditionIdentity" },
     "fighting_style": { "$ref": "#/$defs/fightingStyle" },
     "capabilities": { "type": "array", "items": { "type": "object" } },
@@ -736,6 +737,22 @@
       }
     },
 
+    "spellPreparationRest": {
+      "type": "object",
+      "required": ["kind", "decision_type", "rest", "source", "maximum_per_rest", "minimum_spell_level", "maximum_spell_level", "optional"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "prepared_spell_swap" },
+        "decision_type": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "rest": { "const": "short_rest" },
+        "source": { "const": "spellbook" },
+        "maximum_per_rest": { "const": 1 },
+        "minimum_spell_level": { "const": 1 },
+        "maximum_spell_level": { "const": "max_available_spell_slot" },
+        "optional": { "const": true }
+      }
+    },
+
     "conditionIdentity": {
       "type": "object",
       "required": ["id"],
@@ -1093,7 +1110,7 @@
           "then": {
             "required": ["trigger", "dice", "type", "duration"],
             "properties": {
-              "trigger": { "const": "hit_by_attack_roll" },
+              "trigger": { "enum": ["hit_by_attack_roll", "damage_by_attack_or_spell"] },
               "dice": { "type": "string", "minLength": 1 },
               "type": { "type": "string", "minLength": 1 },
               "scope": { "enum": ["self", "target"] },
@@ -1325,7 +1342,14 @@
             "required": ["zone_type", "geometry", "duration"],
             "properties": {
               "zone_type": { "type": "string", "minLength": 1 },
-              "geometry": { "type": "object" },
+              "geometry": {
+                "type": "object",
+                "required": ["shape", "size_ft"],
+                "properties": {
+                  "shape": { "enum": ["cube", "sphere", "cylinder"] },
+                  "size_ft": { "type": "number", "exclusiveMinimum": 0 }
+                }
+              },
               "duration": { "$ref": "#/$defs/duration" }
             }
           }

@@ -139,6 +139,7 @@ function migrateCombatPresentation(value: SoloCombatState): SoloCombatState {
     worldObjectPositions: value.worldObjectPositions ?? {},
     combatAreas: value.combatAreas ?? {},
     pendingCombatAreaTriggers: value.pendingCombatAreaTriggers ?? [],
+    mountByRiderId: value.mountByRiderId ?? {},
     sideByActorId,
     actorPresentation,
     log,

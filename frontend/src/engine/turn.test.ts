@@ -27,6 +27,43 @@ describe('resource recharge (R4)', () => {
     expect(next.resources.second_wind).toBe(2);
     expect(next.resources.rage_charge).toBe(0);
   });
+
+  it('Sorcerous Restoration restores half the Sorcerer level once per long rest', () => {
+    const restoration: Dict = {
+      id: 'EFF-sorcerous-restoration',
+      name: 'Чародейское восстановление',
+      activation: { mode: 'triggered', trigger: { event: 'short_rest', timing: 'during' } },
+      uses: { count: 1, per: 'long_rest' },
+      effects: [{
+        resolution: 'auto',
+        result: [{
+          kind: 'resource', op: 'restore', id: 'sorcery_points',
+          amount: 'floor(class_level:sorcerer/2)',
+        }],
+      }],
+    };
+    const state = freshFighterState();
+    state.resources.sorcery_points = 1;
+    state.maxResources.sorcery_points = 5;
+    const ctx = {
+      ...FIGHTER_CTX,
+      classLevels: { sorcerer: 5 },
+      resourceRecharge: { sorcery_points: 'long_rest' },
+      passives: [restoration],
+    } as typeof FIGHTER_CTX;
+
+    const first = shortRest(state, ctx);
+    expect(first.state.resources.sorcery_points).toBe(3);
+    expect(first.events).toContainEqual({
+      type: 'resource_restored', resource: 'sorcery_points', amount: 2, current: 3,
+    });
+    expect(first.state.firedThisRest).toContain('EFF-sorcerous-restoration');
+
+    const second = shortRest(first.state, ctx);
+    expect(second.state.resources.sorcery_points).toBe(3);
+    expect(second.events.some((event) => event.type === 'resource_restored'
+      && event.resource === 'sorcery_points')).toBe(false);
+  });
 });
 
 describe('C3 слайс 2 — endTurn / turn-события через шину', () => {

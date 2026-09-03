@@ -48,6 +48,11 @@ import {
   writeSheetSpellPreparation,
 } from '../character/sheetSpellPreparation';
 import {
+  applySheetPreparedSpellSwap,
+  collectSheetPreparedSpellSwapPolicies,
+  type PreparedSpellSwapSelection,
+} from '../character/sheetSpellPreparationRest';
+import {
   applySheetSlotRecoverySelections,
   collectSheetSlotRecoveryPolicies,
   slotRecoveryPickerState,
@@ -124,6 +129,9 @@ export default function SheetRestButtons({
   const [busy, setBusy] = useState(false);
   const [shortRestDraft, setShortRestDraft] = useState<{ state: RuntimeState; events: EngineEvent[] } | null>(null);
   const [shortRestSelections, setShortRestSelections] = useState<Record<string, number[]>>({});
+  const [shortRestSpellSwapSelections, setShortRestSpellSwapSelections] = useState<
+    Record<string, PreparedSpellSwapSelection>
+  >({});
   const [shortRestError, setShortRestError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingAtomicTurn, setPendingAtomicTurn] = useState<PreparedSheetAtomicWorldCommit | null>(null);
@@ -168,6 +176,10 @@ export default function SheetRestButtons({
   const slotRecoveryPolicies = useMemo(
     () => collectSheetSlotRecoveryPolicies(assembled),
     [assembled],
+  );
+  const spellSwapPolicies = useMemo(
+    () => collectSheetPreparedSpellSwapPolicies({ assembled, character }),
+    [assembled, character],
   );
 
   // Ресурсы класса + виртуальные пулы использований действий + пулы freeuse (ключ → per).
@@ -431,6 +443,7 @@ export default function SheetRestButtons({
   const handleShortRest = () => {
     const { state, events } = shortRest(runtime, restCtx);
     setShortRestSelections({});
+    setShortRestSpellSwapSelections({});
     setShortRestError(null);
     setShortRestDraft({ state, events });
   };
@@ -463,15 +476,33 @@ export default function SheetRestButtons({
         policies: slotRecoveryPolicies,
         selections: shortRestSelections,
       });
+      let turnState = character.turn_state;
+      const spellSwapEvents: EngineEvent[] = [];
+      for (const policy of spellSwapPolicies) {
+        const result = applySheetPreparedSpellSwap({
+          turnState,
+          policy,
+          selection: shortRestSpellSwapSelections[policy.declaration.decisionType] ?? {},
+        });
+        turnState = result.turnState;
+        if (result.changed) {
+          spellSwapEvents.push({
+            type: 'narrative',
+            text: `${policy.sourceName}: ${result.forgotten?.name} заменено на ${result.memorized?.name}`,
+          });
+        }
+      }
       const ok = await apply(
         recovery.state,
-        [...shortRestDraft.events, ...recovery.events],
+        [...shortRestDraft.events, ...recovery.events, ...spellSwapEvents],
         true,
         true,
+        turnState,
       );
       if (ok) {
         setShortRestDraft(null);
         setShortRestSelections({});
+        setShortRestSpellSwapSelections({});
         setShortRestError(null);
       }
     } catch (cause) {
@@ -630,6 +661,80 @@ export default function SheetRestButtons({
                         </button>
                       ))}
                     </div>
+                  )}
+                </div>
+              );
+            })}
+            {spellSwapPolicies.map((policy) => {
+              const selection = shortRestSpellSwapSelections[policy.declaration.decisionType] ?? {};
+              const update = (patch: PreparedSpellSwapSelection) => {
+                setShortRestSpellSwapSelections((current) => ({
+                  ...current,
+                  [policy.declaration.decisionType]: {
+                    ...(current[policy.declaration.decisionType] ?? {}),
+                    ...patch,
+                  },
+                }));
+                setShortRestError(null);
+              };
+              return (
+                <div className="choice-box" key={policy.sourceEffectId}>
+                  <div className="choice-title">{policy.sourceName}</div>
+                  <p className="dice-dialog-note">
+                    Необязательно: замените одно подготовленное заклинание Волшебника
+                    на другое заклинание из своей книги, для которого у вас есть ячейка.
+                  </p>
+                  {policy.replacements.length > 0 ? (
+                    <>
+                      <label>
+                        Заменить
+                        <select
+                          className="forge-select"
+                          aria-label={`${policy.sourceName}: заменить подготовленное заклинание`}
+                          value={selection.forgetReference ?? ''}
+                          onChange={(event) => update({ forgetReference: event.target.value || undefined })}
+                        >
+                          <option value="">Не заменять</option>
+                          {policy.current.map((option) => (
+                            <option value={option.reference} key={option.reference}>
+                              {option.name} · {option.level} ур.
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        Подготовить
+                        <select
+                          className="forge-select"
+                          aria-label={`${policy.sourceName}: подготовить новое заклинание`}
+                          value={selection.memorizeReference ?? ''}
+                          onChange={(event) => update({ memorizeReference: event.target.value || undefined })}
+                        >
+                          <option value="">Не выбрано</option>
+                          {policy.replacements.map((option) => (
+                            <option value={option.reference} key={option.reference}>
+                              {option.name} · {option.level} ур.
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      {(selection.forgetReference || selection.memorizeReference) && (
+                        <button
+                          type="button"
+                          className="chip"
+                          onClick={() => setShortRestSpellSwapSelections((current) => ({
+                            ...current,
+                            [policy.declaration.decisionType]: {},
+                          }))}
+                        >
+                          Отменить замену
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <p className="dice-dialog-note">
+                      Все заклинания из книги уже подготовлены — замена не требуется.
+                    </p>
                   )}
                 </div>
               );

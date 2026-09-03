@@ -48,6 +48,7 @@ import { planMonsterTurn } from './monsterAi';
 import { projectCombatLogRecords } from './combatLog';
 import {
   areaActorIds,
+  effectiveActorSize,
   effectiveActorSpeedFt,
   effectiveCombatActorSpeedFt,
   gridDistanceFt,
@@ -86,8 +87,14 @@ import { warCasterOpportunitySpellVersion } from '../rules-core/generalSpellFeat
 import { generalFeatTriggeredUseKey } from '../rules-core/generalFeatDamageRuntime';
 import {
   actorOwnsCharger,
+  actorOwnsMountedCombatant,
+  actorOwnsPolearmMaster,
   actorOwnsSentinel,
   chargerApproachEligible,
+  MOUNTED_COMBATANT_ADVANTAGE_PASSIVE_ID,
+  mountedCombatantAttackAdvantage,
+  polearmMasterButtEligible,
+  polearmMasterEntryEligible,
   shieldMasterBashEligible,
 } from '../rules-core/generalFeatReactionRuntime';
 import { projectSoloCombatActionChoices, UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
@@ -1081,6 +1088,76 @@ function actionD20RollKind(
   )) ? 'ability_check' : null;
 }
 
+function mountedCombatantAttackState(input: {
+  state: SoloCombatState;
+  actorId: string;
+  targetIds: readonly string[];
+  action: RuleActionDefinition;
+}): { state: SoloCombatState; projected: boolean } {
+  if (input.targetIds.length !== 1) return { state: input.state, projected: false };
+  const mountId = input.state.mountByRiderId?.[input.actorId];
+  if (!mountId) return { state: input.state, projected: false };
+  const riderPosition = input.state.tokens[input.actorId]?.position;
+  const mountPosition = input.state.tokens[mountId]?.position;
+  const targetPosition = input.state.tokens[input.targetIds[0]]?.position;
+  if (!riderPosition || !mountPosition || !targetPosition
+    || combatRelation(input.state, input.actorId, mountId) !== 'ally'
+    || gridDistanceFt(riderPosition, mountPosition) > 5) {
+    return { state: input.state, projected: false };
+  }
+  const rider = input.state.world.actors[input.actorId];
+  const mount = input.state.world.actors[mountId];
+  const target = input.state.world.actors[input.targetIds[0]];
+  const passive = rider ? mountedCombatantAttackAdvantage({
+    rider,
+    mount,
+    target,
+    mountSize: mount ? effectiveActorSize(mount) : undefined,
+    targetSize: target ? effectiveActorSize(target) : undefined,
+    targetDistanceFromMountFt: gridDistanceFt(mountPosition, targetPosition),
+    sourceAction: input.action,
+  }) : null;
+  if (!rider || !passive) return { state: input.state, projected: false };
+  return {
+    projected: true,
+    state: {
+      ...input.state,
+      world: {
+        ...input.state.world,
+        actors: {
+          ...input.state.world.actors,
+          [rider.id]: { ...rider, passives: [...(rider.passives ?? []), passive] },
+        },
+      },
+    },
+  };
+}
+
+function removeMountedCombatantAttackProjection(
+  state: SoloCombatState,
+  actorId: string,
+  projected: boolean,
+): SoloCombatState {
+  if (!projected) return state;
+  const actor = state.world.actors[actorId];
+  if (!actor) return state;
+  return {
+    ...state,
+    world: {
+      ...state.world,
+      actors: {
+        ...state.world.actors,
+        [actorId]: {
+          ...actor,
+          passives: (actor.passives ?? []).filter((passive) => (
+            (passive as Record<string, unknown>).id !== MOUNTED_COMBATANT_ADVANTAGE_PASSIVE_ID
+          )),
+        },
+      },
+    },
+  };
+}
+
 function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
   if (input.state.outcome !== 'active') return input.state;
   if (activeActorId(input.state) !== input.actorId) throw new Error('Сейчас ход другого участника');
@@ -1102,6 +1179,10 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
     input.choices,
     input.worldInput,
   );
+  const mountedProjection = mountedCombatantAttackState({
+    state: input.state, actorId: input.actorId, targetIds: input.targetIds, action,
+  });
+  if (mountedProjection.projected) input = { ...input, state: mountedProjection.state };
   const rng = input.rng ?? Math.random;
   const withTriggeredAttackOffer = (next: SoloCombatState) => {
     const intercepted = offerInterception({
@@ -1112,13 +1193,16 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
       targetIds: input.targetIds,
       isAttack: isAttackAction(action) || isBasicUnarmedStrike(input.state, action),
     });
-    return offerTriggeredAttackActions({
+    const offered = offerTriggeredAttackActions({
       before: input.state,
       after: intercepted,
       sourceActorId: input.actorId,
       sourceActionId: action.id,
       targetIds: input.targetIds,
     });
+    return removeMountedCombatantAttackProjection(
+      offered, input.actorId, mountedProjection.projected,
+    );
   };
   if (isBasicUnarmedStrike(input.state, action)) {
     if (input.targetIds.length !== 1) throw new Error('Безоружный удар требует одну цель');
@@ -2381,9 +2465,12 @@ function sourceQualifiesForTriggeredAction(input: {
       event.type === 'damage' && event.amount > 0 && event.damageType === trigger.feat_damage_type
     ))) return false;
   if (Number.isFinite(Number(trigger?.feat_max_relative_size))) {
-    const sourceSize = actor.attackProfile?.size;
-    const targetSize = targetIds.length === 1
-      ? state.world.actors[targetIds[0]]?.attackProfile?.size
+    const sourceSize = effectiveActorSize(actor);
+    const relativeSizeTarget = targetIds.length === 1
+      ? state.world.actors[targetIds[0]]
+      : undefined;
+    const targetSize = relativeSizeTarget
+      ? effectiveActorSize(relativeSizeTarget)
       : undefined;
     if (!Number.isInteger(sourceSize) || !Number.isInteger(targetSize)
       || targetSize! > sourceSize! + Number(trigger!.feat_max_relative_size)) return false;
@@ -2404,6 +2491,29 @@ function sourceQualifiesForTriggeredAction(input: {
     const round = before.world.scene.mode === 'encounter' ? before.world.scene.round : 0;
     if (!chargerApproachEligible({
       actor, movement, actorPosition, targetPosition, round, distance: gridDistanceFt,
+    })) return false;
+  }
+  if (trigger?.feat_polearm_master_butt === true) {
+    const targetId = targetIds.length === 1 ? targetIds[0] : undefined;
+    const targetPosition = targetId ? state.tokens[targetId]?.position : undefined;
+    const actorPosition = state.tokens[actor.id]?.position;
+    const currentTurnKey = state.world.scene.mode === 'encounter'
+      ? `encounter:${state.world.scene.round}:${state.world.scene.activeIndex}:${actor.id}`
+      : null;
+    const completed = Object.values(state.world.attackActions)
+      .filter((entry) => entry.actorId === actor.id
+        && entry.status === 'completed'
+        && currentTurnKey !== null
+        && entry.turnKey === currentTurnKey)
+      .sort((left, right) => right.startedAtRevision - left.startedAtRevision)[0];
+    const weaponCardId = completed?.sequence.entries
+      .filter((entry) => entry.kind === 'weapon_attack')
+      .at(-1)?.weaponCardId;
+    if (!sourceAction || !actorPosition || !targetPosition || !polearmMasterButtEligible({
+      actor,
+      sourceAction,
+      targetDistanceFt: gridDistanceFt(actorPosition, targetPosition),
+      completedAttackWeaponCardId: weaponCardId,
     })) return false;
   }
   if (trigger?.feat_gwm_hew === true) {
@@ -2565,6 +2675,88 @@ function executeOpportunityAttacks(
   return next;
 }
 
+function executePolearmEntryAttacks(
+  state: SoloCombatState,
+  moverId: string,
+  start: GridPosition,
+  destination: GridPosition,
+  rng: Rng,
+): SoloCombatState {
+  if (state.pendingTriggeredAction || state.world.pendingResolution) return state;
+  const mover = state.world.actors[moverId];
+  if (!mover) return state;
+  let next = state;
+  const eligible = Object.values(state.world.actors).filter((actor) => (
+    actor.id !== moverId
+      && combatRelation(state, moverId, actor.id) === 'enemy'
+      && actor.runtime.hp.current > 0
+      && actorOwnsPolearmMaster(actor)
+      && polearmMasterEntryEligible({
+        actor,
+        startDistanceFt: gridDistanceFt(state.tokens[actor.id].position, start),
+        endDistanceFt: gridDistanceFt(state.tokens[actor.id].position, destination),
+      })
+  ));
+  for (const enemy of eligible) {
+    const baseActionId = next.opportunityActionIds[enemy.id];
+    const baseAction = baseActionId
+      ? next.catalogActions.find((candidate) => candidate.id === baseActionId)
+      : undefined;
+    const featSources = enemy.capabilities.featureSources?.['general_feat.polearm_master'] ?? [];
+    if (!baseAction || !featSources.length || next.world.actors[moverId].runtime.hp.current <= 0) continue;
+    const action: RuleActionDefinition = {
+      ...clone(baseAction),
+      id: `${baseAction.id}:polearm-master-entry`,
+      name: `${baseAction.name} — Превентивный удар`,
+      sourceEntityIds: [...new Set([...baseAction.sourceEntityIds, ...featSources])] as [string, ...string[]],
+    };
+    const owner = next.world.actors[enemy.id];
+    next = {
+      ...next,
+      catalogActions: next.catalogActions.some((candidate) => candidate.id === action.id)
+        ? next.catalogActions
+        : [...next.catalogActions, action].sort((left, right) => left.id.localeCompare(right.id)),
+      world: {
+        ...next.world,
+        actors: {
+          ...next.world.actors,
+          [owner.id]: {
+            ...owner,
+            capabilities: {
+              ...owner.capabilities,
+              actionIds: [...new Set([...owner.capabilities.actionIds, action.id])],
+              featureSources: {
+                ...(owner.capabilities.featureSources ?? {}),
+                [action.id]: [...featSources] as [string, ...string[]],
+              },
+            },
+          },
+        },
+      },
+    };
+    if (isControlledCharacter(next, enemy.id)) {
+      return {
+        ...next,
+        pendingTriggeredAction: {
+          event: 'opportunity_attack', sourceActorId: enemy.id, sourceActionId: action.id,
+          targetIds: [moverId], optionActionIds: [action.id],
+        },
+      };
+    }
+    const command: GameCommand = {
+      ...commandBase(next, enemy.id), type: 'UseReactionAction', trigger: 'opportunity_attack',
+      actionId: action.id, targetIds: [moverId],
+      factsByTarget: { [moverId]: spatialFacts(next, enemy.id, moverId) },
+    };
+    next = autoResolveSystemDecisions(
+      dispatch({ state: next, command, rng, label: action.name }),
+      rng,
+    );
+    if (next.world.pendingResolution || next.pendingTriggeredAction) return next;
+  }
+  return next;
+}
+
 function breakOutOfRangeGrapples(
   state: SoloCombatState,
   movedActorId: string,
@@ -2670,6 +2862,11 @@ export function moveActor(input: {
     },
     ...(recentStraightMovementByActor ? { recentStraightMovementByActor } : {}),
   };
+  if (input.voluntary !== false) {
+    next = executePolearmEntryAttacks(
+      next, input.actorId, token.position, input.destination, input.rng ?? Math.random,
+    );
+  }
   next = reconcileInsideAreaConditions(next);
   const movementAreaIds = Object.keys(crossed.movementOccurrences);
   if (movementAreaIds.length) {
@@ -2895,6 +3092,43 @@ export function refreshSoloCombatResources(
     },
   };
   return appendLog({ ...state, world }, actorId, 'Ресурсы восстановлены конструктором сцены.');
+}
+
+/** Test-scene authority for recording a real board mount relation. It accepts
+ * only an adjacent, living, allied and larger actor and never grants the feat. */
+export function setSoloCombatMount(
+  state: SoloCombatState,
+  riderId: string,
+  mountId: string | null,
+): SoloCombatState {
+  const rider = state.world.actors[riderId];
+  if (!rider || !actorOwnsMountedCombatant(rider)) {
+    throw new Error('Всадник без черты «Верховой боец» не может закрепить скакуна');
+  }
+  const relations = { ...(state.mountByRiderId ?? {}) };
+  if (mountId === null) {
+    delete relations[riderId];
+    return appendLog({ ...state, mountByRiderId: relations }, riderId, 'Всадник спешился.');
+  }
+  const mount = state.world.actors[mountId];
+  const riderPosition = state.tokens[riderId]?.position;
+  const mountPosition = state.tokens[mountId]?.position;
+  const riderSize = effectiveActorSize(rider);
+  const mountSize = mount ? effectiveActorSize(mount) : undefined;
+  if (!mount || mountId === riderId || !riderPosition || !mountPosition
+    || combatRelation(state, riderId, mountId) !== 'ally'
+    || mount.runtime.hp.current <= 0
+    || !Number.isInteger(riderSize)
+    || !Number.isInteger(mountSize)
+    || mountSize! <= riderSize!
+    || gridDistanceFt(riderPosition, mountPosition) > 5) {
+    throw new Error('Скакун должен быть живым союзником, крупнее всадника и находиться в пределах 5 фт.');
+  }
+  relations[riderId] = mountId;
+  return appendLog(
+    { ...state, mountByRiderId: relations }, riderId,
+    `Скакун закреплён: ${mount.name}. Активен «Удар всадника».`,
+  );
 }
 
 function availableScenePosition(state: SoloCombatState, side: 'party' | 'opposition'): GridPosition {

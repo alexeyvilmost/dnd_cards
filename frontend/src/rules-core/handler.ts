@@ -2,6 +2,7 @@ import {
   activeConditionsOf,
   applyIncomingDamage,
   armorClassValue,
+  breakdownValue,
   bindEquippedWeaponActionContext,
   canPay,
   collectRollModifiers,
@@ -1159,6 +1160,17 @@ function effectiveArmorClass(actor: ActorState, runtime = actor.runtime): number
   return (actor.ac ?? baseline) + (projected - baseline);
 }
 
+/** Runtime transformations (for example Goliath Large Form) must participate
+ * in every relative-size rule, not only in the sheet projection. */
+function effectiveActorSize(actor: ActorState, runtime = actor.runtime): number | undefined {
+  const declared = actor.attackProfile?.size;
+  if (!Number.isInteger(declared)) return undefined;
+  const withoutTransient = { ...runtime, activeEffects: [] };
+  const baseline = breakdownValue('size', actor.character, withoutTransient, actor.passives ?? []).value;
+  const projected = breakdownValue('size', actor.character, runtime, actor.passives ?? []).value;
+  return declared! + (projected - baseline);
+}
+
 function actionContext(
   source: ActorState,
   env: DeterministicEnvironment,
@@ -1209,8 +1221,8 @@ function actionContext(
     ...(target ? {
       target: {
         id: target.id,
-        ...(Number.isInteger(target.attackProfile?.size)
-          ? { size: target.attackProfile!.size }
+        ...(Number.isInteger(effectiveActorSize(target, targetRuntime))
+          ? { size: effectiveActorSize(target, targetRuntime)! }
           : {}),
         ac: effectiveArmorClass(target, targetRuntime ?? target.runtime),
         characterContext: target.character,
@@ -8066,8 +8078,8 @@ function executeUnarmedStrike(
   const system = getSystemActionDefinition(systemId);
   if (!system) return rejected(world, 'InvalidActionDefinition', `Missing system action ${systemId}`);
   if (command.option !== 'damage') {
-    const sourceSize = source.attackProfile?.size;
-    const targetSize = target.attackProfile?.size;
+    const sourceSize = effectiveActorSize(source);
+    const targetSize = effectiveActorSize(target);
     if (!Number.isInteger(sourceSize) || !Number.isInteger(targetSize)) {
       return rejected(world, 'InvalidActionDefinition', 'Unarmed control requires canonical creature sizes');
     }

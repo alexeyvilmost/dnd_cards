@@ -25,6 +25,7 @@ export {
 } from '../../engine/conditions';
 export { rollD20 } from '../../engine/roll';
 export { armorClassValue } from '../../engine/ac';
+export { breakdownValue } from '../../engine/breakdown';
 export { isArmorCard } from '../../engine/equipment';
 export {
   bindEquippedWeaponActionContext,

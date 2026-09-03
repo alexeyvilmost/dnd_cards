@@ -1178,6 +1178,42 @@ func GetAllMigrations() []Migration {
 			Up:          repairLevelFiveSpellIntegrity,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     remainingLevelFiveGeneralFeatsVersion,
+			Description: "Materialize the remaining level-five General feat runtime mechanics",
+			Up:          materializeRemainingLevelFiveGeneralFeats,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     wizardMemorizeSpellMigrationVersion,
+			Description: "Materialize Wizard Memorize Spell as a short-rest preparation decision",
+			Up:          materializeWizardMemorizeSpell,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     speciesTransformationRuntimeVersion,
+			Description: "Repair level-five Aasimar and Goliath transformation runtime mechanics",
+			Up:          repairSpeciesTransformationRuntime,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     sorcererLevelFiveRuntimeVersion,
+			Description: "Repair Sorcerer level-five spell ownership and rest-bound restoration",
+			Up:          repairSorcererLevelFiveRuntime,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     levelFiveSpellAreaRuntimeVersion,
+			Description: "Repair level-five Heat Metal cost and cylinder area runtime",
+			Up:          repairLevelFiveSpellAreaRuntime,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     levelFiveSpellInteractionRepairVersion,
+			Description: "Repair level-five secondary spell interactions and long casting times",
+			Up:          repairLevelFiveSpellInteractions,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

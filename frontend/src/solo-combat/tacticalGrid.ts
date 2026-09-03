@@ -98,6 +98,7 @@ type TacticalAreaGeometry =
   | { kind: 'line'; lengthFt: number; widthFt: number }
   | { kind: 'cube'; sizeFt: number }
   | { kind: 'sphere'; radiusFt: number }
+  | { kind: 'cylinder'; radiusFt: number }
   | { kind: 'emanation'; radiusFt: number };
 
 function positiveNumber(value: unknown): number | null {
@@ -119,9 +120,9 @@ function tacticalAreaGeometry(action: TacticalAreaAction): TacticalAreaGeometry 
     const widthFt = positiveNumber(area.width_ft) ?? TACTICAL_CELL_FT;
     return lengthFt === null ? null : { kind: 'line', lengthFt, widthFt };
   }
-  if (area?.kind === 'sphere') {
-    const radiusFt = positiveNumber(area.radius_ft);
-    return radiusFt === null ? null : { kind: 'sphere', radiusFt };
+  if (area?.kind === 'sphere' || area?.kind === 'cylinder') {
+    const radiusFt = positiveNumber(area.radius_ft ?? area.size_ft);
+    return radiusFt === null ? null : { kind: area.kind, radiusFt };
   }
   if (area?.kind === 'emanation') {
     const radiusFt = positiveNumber(area.radius_ft ?? area.size_ft);
@@ -170,7 +171,7 @@ export function areaPositionsForAction(input: TacticalAreaProjectionInput): Grid
     ));
   }
 
-  if (geometry.kind === 'sphere') {
+  if (geometry.kind === 'sphere' || geometry.kind === 'cylinder') {
     return boardPositions().filter((position) => (
       Math.hypot(
         position.x - input.aimPosition.x,
@@ -200,6 +201,20 @@ export function areaPositionsForAction(input: TacticalAreaProjectionInput): Grid
     const halfWidth = geometry.kind === 'line' ? geometry.widthFt / 2 : forward / 2;
     return lateral <= halfWidth + Number.EPSILON;
   });
+}
+
+/** Effective size category, including temporary data-driven transformations. */
+export function effectiveActorSize(actor: ActorState): number | undefined {
+  const declared = actor.attackProfile?.size;
+  if (!Number.isInteger(declared)) return undefined;
+  const withoutTransient = { ...actor.runtime, activeEffects: [] };
+  const baseline = breakdownValue(
+    'size', actor.character, withoutTransient, actor.passives ?? [],
+  ).value;
+  const projected = breakdownValue(
+    'size', actor.character, actor.runtime, actor.passives ?? [],
+  ).value;
+  return declared! + (projected - baseline);
 }
 
 const DIRECTIONS: GridPosition[] = [

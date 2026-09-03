@@ -69,6 +69,7 @@ function actor(input: {
   abilityScores?: Partial<Record<'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha', number>>;
   weaponProficiencies?: string[];
   graspingParts?: string[];
+  largeForm?: boolean;
 }): ActorState {
   const weapon = input.weaponCard
     ?? (input.weapon ? { ...CARD_LONGSWORD, weapon_type: 'longsword' } : undefined);
@@ -94,7 +95,20 @@ function actor(input: {
       maxResources: { action: 1, bonus_action: 1, reaction: 1 },
       equipment: weapon ? { main_hand: weapon.id, off_hand: null } : {},
       inventory: weapon ? [{ cardId: weapon.id, qty: 1 }] : [],
-      activeEffects: [],
+      activeEffects: input.largeForm ? [{
+        id: 'goliath-large-form',
+        name: 'Большая форма',
+        source: 'Большая форма',
+        ownerId: input.id,
+        sourceId: input.id,
+        roundsLeft: 100,
+        mechanics: {
+          activation: { mode: 'passive' },
+          effects: [{ resolution: 'auto', result: [{
+            kind: 'modifier', op: 'set', value: 3, applies_to: { roll: 'size' },
+          }] }],
+        },
+      }] : [],
     },
     attackProfile: {
       attacksPerAction: input.attacks ?? 1,
@@ -115,6 +129,7 @@ function started(input?: {
   rng?: () => number;
   weaponProficiencies?: string[];
   graspingParts?: string[];
+  largeForm?: boolean;
 }) {
   const attacker = actor({
     id: 'attacker',
@@ -124,6 +139,7 @@ function started(input?: {
     abilityScores: input?.abilityScores,
     weaponProficiencies: input?.weaponProficiencies,
     graspingParts: input?.graspingParts,
+    largeForm: input?.largeForm,
   });
   const target = actor({ id: 'target', size: input?.targetSize });
   const initial = createWorld({ id: 'attack-runtime', ruleset: RULESET, actors: [attacker, target] });
@@ -449,6 +465,21 @@ describe('schema-v4 canonical Attack runtime', () => {
       facts: FACTS,
     })).toMatchObject({ status: 'rejected', code: 'TargetTooLarge' });
     expect(tooSmall.session.getState()).toEqual(baseline);
+
+    const largeForm = started({ attacks: 2, targetSize: 4, largeForm: true });
+    const enlargedAttack = begin(largeForm.session, 'begin-large-form').attackAction;
+    expect(largeForm.session.dispatch({
+      schemaVersion: 1,
+      type: 'PerformUnarmedStrike',
+      commandId: 'large-form-grapple',
+      expectedRevision: largeForm.session.getState().revision,
+      rulesetContentHash: RULESET.contentHash,
+      actorId: 'attacker',
+      attackActionId: enlargedAttack.id,
+      option: 'grapple',
+      targetActorId: 'target',
+      facts: FACTS,
+    })).toMatchObject({ status: 'accepted' });
 
     const noWeapon = started();
     const noWeaponAction = begin(noWeapon.session, 'begin-no-weapon').attackAction;

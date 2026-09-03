@@ -23,6 +23,19 @@ describe('validateMechanics', () => {
     expect(result.valid).toBe(true);
   });
 
+  it('accepts cylinder world-zone geometry and rejects a missing radius', () => {
+    const mechanics = (geometry: Record<string, unknown>) => ({
+      activation: { mode: 'active' },
+      effects: [{ resolution: 'auto', result: [{
+        kind: 'world_zone', zone_type: 'moonbeam', geometry,
+        duration: { type: 'rounds', amount: 10, concentration: true },
+      }] }],
+    });
+    const meta = { id: 'moonbeam', name: 'Moonbeam', kind: 'spell' as const };
+    expect(validateMechanics(mechanics({ shape: 'cylinder', size_ft: 5 }), meta).valid).toBe(true);
+    expect(validateMechanics(mechanics({ shape: 'cylinder' }), meta).valid).toBe(false);
+  });
+
   it('fail-closed требует явный тип и формулу урона', () => {
     const meta = { id: 'damage-contract', name: 'Damage contract', kind: 'action' as const };
     const mechanics = (payload: Record<string, unknown>) => ({
@@ -317,6 +330,24 @@ describe('validateMechanics', () => {
     };
     expect(validateMechanics(rest, { id: 'rest', name: 'Rest', kind: 'action' }).valid)
       .toBe(true);
+    const preparationRest = {
+      activation: { mode: 'passive' },
+      effects: [],
+      spell_preparation_rest: {
+        kind: 'prepared_spell_swap',
+        decision_type: 'wizard_memorize_spell',
+        rest: 'short_rest',
+        source: 'spellbook',
+        maximum_per_rest: 1,
+        minimum_spell_level: 1,
+        maximum_spell_level: 'max_available_spell_slot',
+        optional: true,
+      },
+    };
+    expect(validateMechanics(
+      preparationRest,
+      { id: 'memorize-spell', name: 'Memorize Spell', kind: 'passive_effect' },
+    ).valid).toBe(true);
     expect(validateMechanics({
       activation: { mode: 'passive' },
       effects: [],
@@ -326,6 +357,13 @@ describe('validateMechanics', () => {
 
     for (const mechanics of [
       { ...rest, rest_decision: { ...rest.rest_decision, hidden_rule: true } },
+      {
+        ...preparationRest,
+        spell_preparation_rest: {
+          ...preparationRest.spell_preparation_rest,
+          maximum_per_rest: 2,
+        },
+      },
       { activation: { mode: 'active' }, effects: [], attack_replacement: {
         replacement_key: 'bad', replaces_attacks: 2, total_attacks: 1,
         once_per_attack_action: true,

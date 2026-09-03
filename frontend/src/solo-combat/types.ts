@@ -277,6 +277,9 @@ export interface SoloCombatState {
   movementRemainingFt: Record<string, number>;
   /** Last contiguous straight voluntary path this turn; used by rules such as Charger. */
   recentStraightMovementByActor?: Record<string, RecentStraightMovement>;
+  /** Board-owned mounted relation. The mount remains a normal actor; this map
+   * only records which larger allied token the rider currently occupies. */
+  mountByRiderId?: Record<string, string>;
   initiativeBonuses: Record<string, number>;
   initiative: InitiativeEntry[];
   log: CombatLogEntry[];

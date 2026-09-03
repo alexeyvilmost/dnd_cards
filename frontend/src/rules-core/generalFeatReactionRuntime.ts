@@ -7,6 +7,11 @@ export const GRAPPLER_CAPABILITY = 'general_feat.grappler';
 export const SHIELD_MASTER_CAPABILITY = 'general_feat.shield_master';
 export const SENTINEL_CAPABILITY = 'general_feat.sentinel';
 export const CHARGER_CAPABILITY = 'general_feat.charger';
+export const MOUNTED_COMBATANT_CAPABILITY = 'general_feat.mounted_combatant';
+export const POLEARM_MASTER_CAPABILITY = 'general_feat.polearm_master';
+
+export const MOUNTED_COMBATANT_ADVANTAGE_PASSIVE_ID =
+  'runtime:general-feat:mounted-combatant-advantage';
 
 function actorCard(actor: ActorState, cardId: string | null | undefined) {
   if (!cardId) return undefined;
@@ -86,6 +91,119 @@ export function actorOwnsSentinel(actor: ActorState): boolean {
 
 export function actorOwnsCharger(actor: ActorState): boolean {
   return ownsGeneralFeatCapability(actor, CHARGER_CAPABILITY);
+}
+
+export function actorOwnsMountedCombatant(actor: ActorState): boolean {
+  return ownsGeneralFeatCapability(actor, MOUNTED_COMBATANT_CAPABILITY);
+}
+
+export function actorOwnsPolearmMaster(actor: ActorState): boolean {
+  return ownsGeneralFeatCapability(actor, POLEARM_MASTER_CAPABILITY);
+}
+
+function conditionValue(value: unknown, wanted: string): boolean {
+  if (Array.isArray(value)) return value.some((entry) => conditionValue(entry, wanted));
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  if (row.kind === 'condition' && (row.id === wanted || row.value === wanted)) return true;
+  return Object.values(row).some((entry) => conditionValue(entry, wanted));
+}
+
+export function actorIsIncapacitated(actor: ActorState): boolean {
+  return actor.runtime.activeEffects.some((effect) => conditionValue(effect.mechanics, 'incapacitated'));
+}
+
+export function polearmMasterWeapon(actor: ActorState): {
+  cardId: string;
+  reachFt: number;
+} | null {
+  const cardId = actor.runtime.equipment.main_hand;
+  const card = actorCard(actor, cardId);
+  if (!card || card.type !== 'weapon') return null;
+  const parsed = parseWeaponProfile(card);
+  if (!parsed.valid) return null;
+  const profile = parsed.profile;
+  const weaponType = profile.weaponType.trim().toLowerCase();
+  const namedPolearm = [
+    'quarterstaff', 'spear',
+    'боевой посох', 'посох', 'копьё', 'копье',
+  ].includes(weaponType);
+  const heavyReach = profile.properties.includes('heavy') && profile.properties.includes('reach');
+  if ((!namedPolearm && !heavyReach) || !profile.attackModes.some((mode) => mode.kind === 'melee')) {
+    return null;
+  }
+  const reachFt = Math.max(...profile.attackModes.flatMap((mode) => (
+    mode.kind === 'melee' && Number.isFinite(mode.reachFt) ? [mode.reachFt] : []
+  )));
+  return Number.isFinite(reachFt) && reachFt > 0 ? { cardId: card.id, reachFt } : null;
+}
+
+/** Polearm Master reacts to entering, not leaving, the currently held
+ * qualifying weapon's reach. Forced movement is filtered by the board caller. */
+export function polearmMasterEntryEligible(input: {
+  actor: ActorState;
+  startDistanceFt: number;
+  endDistanceFt: number;
+}): boolean {
+  const weapon = polearmMasterWeapon(input.actor);
+  return actorOwnsPolearmMaster(input.actor)
+    && !actorIsIncapacitated(input.actor)
+    && input.actor.runtime.resources.reaction > 0
+    && weapon !== null
+    && input.startDistanceFt > weapon.reachFt
+    && input.endDistanceFt <= weapon.reachFt;
+}
+
+/** The butt-end attack is offered only after the actor's current Attack action
+ * is complete and its final weapon entry names the still-held qualifying Card. */
+export function polearmMasterButtEligible(input: {
+  actor: ActorState;
+  sourceAction: RuleActionDefinition;
+  targetDistanceFt: number;
+  completedAttackWeaponCardId?: string;
+}): boolean {
+  const weapon = polearmMasterWeapon(input.actor);
+  return actorOwnsPolearmMaster(input.actor)
+    && weapon !== null
+    && input.completedAttackWeaponCardId === weapon.cardId
+    && actionHasMeleeAttackRoll(input.sourceAction)
+    && input.targetDistanceFt <= weapon.reachFt
+    && (input.actor.runtime.resources.bonus_action ?? 0) > 0;
+}
+
+/** The feat's primary Mounted Strike branch is projected as a short-lived
+ * source-owned passive only for the one board-proven attack declaration. */
+export function mountedCombatantAttackAdvantage(input: {
+  rider: ActorState;
+  mount: ActorState | undefined;
+  target: ActorState | undefined;
+  mountSize: number | undefined;
+  targetSize: number | undefined;
+  targetDistanceFromMountFt: number;
+  sourceAction: RuleActionDefinition;
+}): Record<string, unknown> | null {
+  const { rider, mount, target } = input;
+  const sources = rider.capabilities.featureSources?.[MOUNTED_COMBATANT_CAPABILITY];
+  if (!actorOwnsMountedCombatant(rider)
+    || !mount || !target
+    || actorIsIncapacitated(rider) || actorIsIncapacitated(mount)
+    || mount.runtime.hp.current <= 0 || target.runtime.hp.current <= 0
+    || !Number.isInteger(input.mountSize)
+    || !Number.isInteger(input.targetSize)
+    || input.targetSize! >= input.mountSize!
+    || input.targetDistanceFromMountFt > 5
+    || !actionHasMeleeAttackRoll(input.sourceAction)
+    || !sources?.length) return null;
+  return {
+    id: MOUNTED_COMBATANT_ADVANTAGE_PASSIVE_ID,
+    name: 'Верховой боец: Удар всадника',
+    sourceEntityIds: [...sources],
+    activation: { mode: 'passive' },
+    effects: [{ resolution: 'auto', result: [{
+      kind: 'modifier', op: 'advantage',
+      applies_to: { roll: 'attack' },
+    }] }],
+  };
 }
 
 export function shieldMasterBashEligible(input: {

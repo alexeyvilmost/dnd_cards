@@ -138,6 +138,21 @@ describe('solo combat tactical contract', () => {
     expect(cells).not.toContainEqual({ x: 4, y: 4 });
   });
 
+  it('projects a cylinder as its circular two-dimensional footprint', () => {
+    const cells = areaPositionsForAction({
+      action: {
+        mechanics: { targeting: { shape: 'area', area: { kind: 'cylinder', radius_ft: 5 } } },
+        targeting: { rangeFt: 30 },
+      },
+      sourcePosition: { x: 5, y: 8 },
+      aimPosition: { x: 5, y: 5 },
+    });
+    expect(cells).toHaveLength(5);
+    expect(cells).toContainEqual({ x: 5, y: 5 });
+    expect(cells).toContainEqual({ x: 5, y: 4 });
+    expect(cells).not.toContainEqual({ x: 4, y: 4 });
+  });
+
   it('anchors emanations on the source instead of the clicked aim cell', () => {
     const cells = areaPositionsForAction({
       action: {

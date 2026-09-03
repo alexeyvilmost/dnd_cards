@@ -29,18 +29,49 @@ function state(): SoloCombatState {
   return {
     characterId: 'character:owner',
     controlledCharacterIds: ['character:owner'],
+    sideByActorId: { 'character:owner': 'party', 'mount:horse': 'party' },
     world: {
-      scene: { mode: 'encounter', initiative: ['character:owner'], activeIndex: 0, round: 1 },
+      scene: { mode: 'encounter', initiative: ['character:owner', 'mount:horse'], activeIndex: 0, round: 1 },
       actors: {
         'character:owner': {
           id: 'character:owner', name: 'Владелец', runtime: {
-            resources: { action: 1 }, maxResources: { action: 1 },
+            hp: { current: 10, max: 10, temp: 0 }, resources: { action: 1 }, maxResources: { action: 1 },
+            equipment: {}, inventory: [], activeEffects: [],
           },
+          character: { baseSize: 2, profBonus: 3, abilityMods: {} } as never,
+          passives: [],
+          capabilities: { actionIds: [], featureSources: { 'general_feat.mounted_combatant': ['EFF-general-FEAT-0017'] } },
+          attackProfile: { attacksPerAction: 1, size: 2, reachFt: 5, graspingParts: ['main_hand'], sourceEntityIds: ['owner'] },
+        },
+        'mount:horse': {
+          id: 'mount:horse', name: 'Боевой конь', runtime: {
+            hp: { current: 19, max: 19, temp: 0 }, resources: {}, maxResources: {},
+            equipment: {}, inventory: [], activeEffects: [{
+              id: 'goliath-large-form', name: 'Крупная форма', source: 'EFFECT-goliath-large-form',
+              mechanics: {
+                activation: { mode: 'passive' },
+                effects: [{ resolution: 'auto', result: [{
+                  kind: 'modifier', op: 'set', value: 3, applies_to: { roll: 'size' },
+                }] }],
+              },
+            }],
+          },
+          character: { baseSize: 2, profBonus: 3, abilityMods: {} } as never,
+          passives: [],
+          capabilities: { actionIds: [], featureSources: {} },
+          attackProfile: { attacksPerAction: 1, size: 2, reachFt: 5, graspingParts: ['hooves'], sourceEntityIds: ['horse'] },
         },
       },
     },
-    tokens: { 'character:owner': { actorId: 'character:owner', color: '#fff', position: { x: 1, y: 1 } } },
-    initiative: [{ actorId: 'character:owner', die: 10, bonus: 2, total: 12 }],
+    tokens: {
+      'character:owner': { actorId: 'character:owner', color: '#fff', position: { x: 1, y: 1 } },
+      'mount:horse': { actorId: 'mount:horse', color: '#986', position: { x: 2, y: 1 } },
+    },
+    initiative: [
+      { actorId: 'character:owner', die: 10, bonus: 2, total: 12 },
+      { actorId: 'mount:horse', die: 8, bonus: 0, total: 8 },
+    ],
+    log: [],
   } as unknown as SoloCombatState;
 }
 
@@ -96,5 +127,32 @@ describe('CombatSceneConstructor participant controls', () => {
       await Promise.resolve();
     });
     expect(onAddCharacter).toHaveBeenCalledWith('character:new');
+  });
+
+  it('exposes a clear mounted-combat relation for the feat owner', async () => {
+    const onApply = vi.fn();
+    await act(async () => {
+      root.render(
+        <CombatSceneConstructor
+          state={state()}
+          busy={false}
+          onApply={onApply}
+          onAddCharacter={async () => {}}
+          onAddMonster={async () => {}}
+          onClose={() => {}}
+        />,
+      );
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    const mount = container.querySelector<HTMLSelectElement>('[aria-label="Скакун: Владелец"]')!;
+    expect([...mount.options].map((option) => option.text)).toEqual(['Не верхом', 'Боевой конь']);
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set?.call(mount, 'mount:horse');
+      mount.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(onApply).toHaveBeenCalledWith(expect.objectContaining({
+      mountByRiderId: { 'character:owner': 'mount:horse' },
+    }));
   });
 });

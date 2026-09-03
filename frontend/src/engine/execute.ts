@@ -677,11 +677,12 @@ function preflightPayload(
       break;
     }
     case 'damage_rider': {
-      if (value.trigger !== 'hit_by_attack_roll') {
+      if (value.trigger !== 'hit_by_attack_roll'
+        && value.trigger !== 'damage_by_attack_or_spell') {
         throw mechanicsError(
           'INVALID_PAYLOAD',
           `${path}.trigger`,
-          'damage_rider requires trigger hit_by_attack_roll',
+          'damage_rider requires trigger hit_by_attack_roll or damage_by_attack_or_spell',
         );
       }
       if (typeof value.dice !== 'string' || !value.dice.trim()) {
@@ -907,7 +908,10 @@ function preflightPayload(
         throw mechanicsError('INVALID_PAYLOAD', path, 'world zone requires type, geometry, and duration');
       }
       const geometry = value.geometry as Dict;
-      if (!['cube', 'sphere'].includes(String(geometry.shape ?? ''))
+      // A cylinder projects to its circular footprint on the two-dimensional
+      // combat board. Height remains descriptive catalog data; the footprint
+      // has the same positive radius/size contract as a sphere.
+      if (!['cube', 'sphere', 'cylinder'].includes(String(geometry.shape ?? ''))
         || !Number.isFinite(geometry.size_ft) || Number(geometry.size_ft) <= 0) {
         throw mechanicsError('INVALID_PAYLOAD', `${path}.geometry`, 'world zone geometry is invalid');
       }
@@ -2963,10 +2967,11 @@ type DamageRiderCandidate = {
 /** Collects one-hit damage additions from actor-owned runtime/passive effects
  * and target-owned marks. Target marks are source-bound by persisted actor id,
  * so a second attacker cannot borrow Hunter's Mark or Hex. */
-function attackDamageRiders(
+function damageRiders(
   state: RuntimeState,
   ctx: ExecuteContext,
   facts: AttackDamageQueryFacts,
+  acceptedTriggers: ReadonlySet<string>,
 ): DamageRiderCandidate[] {
   const candidates: DamageRiderCandidate[] = [];
   const firedThisTurn = new Set(state.firedThisTurn ?? []);
@@ -2979,7 +2984,7 @@ function attackDamageRiders(
   ): void => {
     for (const payload of payloadsOf(mechanics)) {
       if (payload.kind !== 'damage_rider'
-        || payload.trigger !== 'hit_by_attack_roll'
+        || !acceptedTriggers.has(String(payload.trigger ?? ''))
         || String(payload.scope ?? 'self') !== expectedScope
         || !riderFilterMatches(payload.filter as Dict | undefined, facts)) continue;
       if (expectedScope === 'target' && payload.source_actor_only === true
@@ -3010,7 +3015,7 @@ function attackDamageRiders(
   return candidates;
 }
 
-function applyAttackDamageRiders(
+function applyDamageRiders(
   state: RuntimeState,
   ctx: ExecuteContext,
   events: EngineEvent[],
@@ -3018,10 +3023,11 @@ function applyAttackDamageRiders(
   targetRef: TargetRef,
   crit: boolean,
   facts: AttackDamageQueryFacts,
+  acceptedTriggers: ReadonlySet<string>,
 ): RuntimeState {
   let next = state;
   const consumedEffectIds = new Set<string>();
-  for (const rider of attackDamageRiders(next, ctx, facts)) {
+  for (const rider of damageRiders(next, ctx, facts, acceptedTriggers)) {
     const firedKey = rider.oncePerTurnKey
       ? `damage-rider:${rider.oncePerTurnKey}`
       : undefined;
@@ -3077,6 +3083,49 @@ function applyAttackDamageRiders(
     };
   }
   return next;
+}
+
+function applyAttackDamageRiders(
+  state: RuntimeState,
+  ctx: ExecuteContext,
+  events: EngineEvent[],
+  hand: 'main' | 'off',
+  targetRef: TargetRef,
+  crit: boolean,
+  facts: AttackDamageQueryFacts,
+): RuntimeState {
+  return applyDamageRiders(
+    state,
+    ctx,
+    events,
+    hand,
+    targetRef,
+    crit,
+    facts,
+    new Set(['hit_by_attack_roll', 'damage_by_attack_or_spell']),
+  );
+}
+
+/** Damage-triggered transformation riders also apply to saving-throw spells.
+ * Attack-roll spells stay on the attack path above, so the once-per-turn
+ * ledger cannot be charged twice for one hit. */
+function applySpellDamageRiders(
+  state: RuntimeState,
+  ctx: ExecuteContext,
+  events: EngineEvent[],
+  hand: 'main' | 'off',
+  targetRef: TargetRef,
+): RuntimeState {
+  return applyDamageRiders(
+    state,
+    ctx,
+    events,
+    hand,
+    targetRef,
+    false,
+    { attackKind: 'spell' },
+    new Set(['damage_by_attack_or_spell']),
+  );
 }
 
 /** «Талон» (Вдохновение барда): чип-эффект с костью, которую получатель бросает отдельно
@@ -3174,6 +3223,7 @@ function applyPayloads(
     const kind = String(p.kind ?? '');
     switch (kind) {
       case 'damage': {
+        const damageEventStart = events.length;
         // Оружейный урон может раскрыться в несколько строк (основной + стихийный) —
         // каждую наносим отдельным событием (сопротивления по типам, план кубов, №4).
         const routedTarget = whoTarget
@@ -3215,6 +3265,12 @@ function applyPayloads(
             const amount = halfDamage ? Math.floor(dmg.amount / 2) : dmg.amount;
             events.push(damageEvent(amount, dmg.damageType, dmg.roll));
           }
+        }
+        const dealtDamage = events.slice(damageEventStart).some((entry) => (
+          entry.type === 'damage' && entry.amount > 0
+        ));
+        if (dealtDamage && whoTarget && ctx.spell && !attackFacts) {
+          next = applySpellDamageRiders(next, ctx, events, hand, targetRef);
         }
         break;
       }

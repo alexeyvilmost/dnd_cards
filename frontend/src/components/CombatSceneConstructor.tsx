@@ -6,9 +6,12 @@ import { monstersApi } from '../monsters/api';
 import type { Monster } from '../monsters/types';
 import {
   refreshSoloCombatResources,
+  setSoloCombatMount,
   setSoloCombatInitiativeTotals,
 } from '../solo-combat/engine';
+import { effectiveActorSize } from '../solo-combat/tacticalGrid';
 import { isControlledCharacter, type SoloCombatState } from '../solo-combat/types';
+import { actorOwnsMountedCombatant } from '../rules-core/generalFeatReactionRuntime';
 
 export default function CombatSceneConstructor({
   state,
@@ -119,10 +122,39 @@ export default function CombatSceneConstructor({
       {state.initiative.map((entry) => {
         const actor = state.world.actors[entry.actorId];
         const controlled = isControlledCharacter(state, entry.actorId);
+        const mountCandidates = actorOwnsMountedCombatant(actor)
+          ? Object.values(state.world.actors).filter((candidate) => (
+            candidate.id !== actor.id
+              && state.sideByActorId[candidate.id] === state.sideByActorId[actor.id]
+              && candidate.runtime.hp.current > 0
+              && Number.isInteger(effectiveActorSize(actor))
+              && Number.isInteger(effectiveActorSize(candidate))
+              && effectiveActorSize(candidate)! > effectiveActorSize(actor)!
+              && Math.max(
+                Math.abs(state.tokens[candidate.id].position.x - state.tokens[actor.id].position.x),
+                Math.abs(state.tokens[candidate.id].position.y - state.tokens[actor.id].position.y),
+              ) <= 1
+          ))
+          : [];
         return <article key={entry.actorId}>
           <span className="combat-scene-constructor__token">{state.tokens[entry.actorId]?.tokenUrl ? <img src={state.tokens[entry.actorId].tokenUrl} alt="" /> : actor.name.slice(0, 1)}</span>
           <span><b>{actor.name}</b><small>{controlled ? 'Персонаж' : 'Противник'} · ресурсы {Object.values(actor.runtime.resources).filter((value) => Number(value) > 0).length}/{Object.keys(actor.runtime.maxResources).length}</small></span>
           <label>Инициатива<input type="number" min={-100} max={100} value={totals[entry.actorId] ?? entry.total} onChange={(event) => setTotals((current) => ({ ...current, [entry.actorId]: Number(event.target.value) }))} /></label>
+          {actorOwnsMountedCombatant(actor) && <label>Скакун
+            <select
+              aria-label={`Скакун: ${actor.name}`}
+              disabled={busy}
+              value={state.mountByRiderId?.[actor.id] ?? ''}
+              onChange={(event) => onApply(setSoloCombatMount(
+                state, actor.id, event.target.value || null,
+              ))}
+            >
+              <option value="">Не верхом</option>
+              {mountCandidates.map((candidate) => (
+                <option key={candidate.id} value={candidate.id}>{candidate.name}</option>
+              ))}
+            </select>
+          </label>}
           <button type="button" disabled={busy} onClick={() => onApply(refreshSoloCombatResources(state, entry.actorId))}><RefreshCcw size={15} /> Ресурсы</button>
         </article>;
       })}

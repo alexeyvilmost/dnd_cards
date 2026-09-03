@@ -182,7 +182,7 @@ describe('универсальный damage_rider', () => {
       mechanics: {
         activation: { mode: 'passive' },
         effects: [{ resolution: 'auto', result: [{
-          kind: 'damage_rider', trigger: 'hit_by_attack_roll', dice: 'prof_bonus', type: 'radiant',
+          kind: 'damage_rider', trigger: 'damage_by_attack_or_spell', dice: 'prof_bonus', type: 'radiant',
           scope: 'self', once_per_turn: 'aasimar:celestial-revelation:damage',
           duration: { type: 'minutes', amount: 1 },
         }] }],
@@ -209,5 +209,52 @@ describe('универсальный damage_rider', () => {
     expect(second.events.filter((event) => event.type === 'damage').map((event) => (
       event.type === 'damage' ? event.damageType : ''
     ))).toEqual(['slashing']);
+  });
+
+  it('applies an Aasimar revelation rider after damaging with a saving-throw spell', () => {
+    const state = equippedFighterState();
+    state.activeEffects.push({
+      id: 'celestial-revelation',
+      name: 'Небесное откровение',
+      source: 'Небесное откровение',
+      ownerId: 'aasimar',
+      sourceId: 'aasimar',
+      roundsLeft: 10,
+      mechanics: {
+        activation: { mode: 'passive' },
+        effects: [{ resolution: 'auto', result: [{
+          kind: 'damage_rider',
+          trigger: 'damage_by_attack_or_spell',
+          dice: 'prof_bonus',
+          type: 'radiant',
+          scope: 'self',
+          once_per_turn: 'aasimar:celestial-revelation:damage',
+          duration: { type: 'minutes', amount: 1 },
+        }] }],
+      },
+    });
+    const spell = {
+      name: 'Заклинание со спасброском',
+      effects: [{
+        resolution: 'auto',
+        who: 'target',
+        result: [{ kind: 'damage', dice: '1d6', type: 'cold' }],
+      }],
+    };
+    const result = executeAction(state, spell, {
+      character: FIGHTER_CTX_EQUIPPED,
+      selfId: 'aasimar',
+      target: { id: 'target', runtimeState: durableTarget(30) },
+      spell: { baseLevel: 1, castLevel: 1 },
+      rng: sequence([face(4, 6)]),
+    });
+
+    expect(result.events.filter((event) => event.type === 'damage').map((event) => (
+      event.type === 'damage' ? [event.damageType, event.amount] : []
+    ))).toEqual([['cold', 4], ['radiant', 2]]);
+    expect(result.targetState?.hp.current).toBe(24);
+    expect(result.state.firedThisTurn).toContain(
+      'damage-rider:aasimar:celestial-revelation:damage',
+    );
   });
 });

@@ -37,6 +37,7 @@ export function normalizeMechanicsForSchema(
     'weapon_mastery',
     'attack_replacement',
     'rest_decision',
+    'spell_preparation_rest',
     'condition',
     'fighting_style',
     'capabilities',

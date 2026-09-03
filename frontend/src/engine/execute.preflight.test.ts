@@ -46,6 +46,20 @@ function expectCode(run: () => unknown, code: MechanicsExecutionErrorCode): Mech
 }
 
 describe('executeAction fail-closed preflight', () => {
+  it('accepts a cylinder world zone with a positive circular footprint', () => {
+    const result = executeAction(fresh(), paid([{
+      kind: 'world_zone',
+      zone_type: 'moonbeam',
+      geometry: { shape: 'cylinder', size_ft: 5 },
+      duration: { type: 'rounds', amount: 10, concentration: true },
+    }]), { character, rng: () => 0.5 });
+
+    expect(result.state.resources.action).toBe(0);
+    expect(result.state.activeEffects).toEqual([
+      expect.objectContaining({ mechanics: expect.objectContaining({ kind: 'world_zone' }) }),
+    ]);
+  });
+
   it('rejects an unresolved grant_effect before cost, RNG, or id allocation', () => {
     const state = fresh();
     const before = structuredClone(state);
