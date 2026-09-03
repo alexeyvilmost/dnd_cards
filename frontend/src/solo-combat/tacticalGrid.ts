@@ -31,7 +31,7 @@ export function effectiveCombatActorSpeedFt(
 ): number {
   const actor = state.world.actors[actorId];
   if (!actor) return 0;
-  const grappled = Object.values(state.world.grapples).some((grapple) => (
+  const grappled = Object.values(state.world.grapples ?? {}).some((grapple) => (
     grapple.targetActorId === actorId
   ));
   return grappled ? 0 : effectiveActorSpeedFt(actor);

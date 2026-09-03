@@ -1031,6 +1031,12 @@ func GetAllMigrations() []Migration {
 			Up:          reapplyLevelTwoRuntimeContracts,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     levelTwoClassCertificationMigrationVersion,
+			Description: "Certify the twelve level-two base classes and repair Turn Undead emanation targeting",
+			Up:          certifyLevelTwoClasses,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

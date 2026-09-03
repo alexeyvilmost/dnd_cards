@@ -44,7 +44,7 @@ describe('dedicated combat turn-state ownership', () => {
     expect(next.unrelated).toBe('preserved');
   });
 
-  it('persists one copy of a large hover-card image and restores the icon projection', () => {
+  it('strips large inline hover-card images from persisted encounter state', () => {
     const image = `data:image/png;base64,${'A'.repeat(300_000)}`;
     const combat = {
       schemaVersion: 1,
@@ -91,12 +91,12 @@ describe('dedicated combat turn-state ownership', () => {
     const persisted = next.solo_combat_v1 as SoloCombatState;
     const persistedPresentation = persisted.actionPresentation?.['action:healing-hands'];
     expect(persistedPresentation).not.toHaveProperty('imageUrl');
-    expect(persistedPresentation?.actionRef?.image_url).toBe(image);
-    expect(JSON.stringify(next).match(/data:image\/png;base64/g)).toHaveLength(1);
+    expect(persistedPresentation?.actionRef?.image_url).toBeUndefined();
+    expect(JSON.stringify(next).match(/data:image\/png;base64/g)).toBeNull();
 
     const restored = readSoloCombatState(next, 'actor:owner', 7);
-    expect(restored?.actionPresentation?.['action:healing-hands'].imageUrl).toBe(image);
-    expect(restored?.actionPresentation?.['action:healing-hands'].actionRef?.image_url).toBe(image);
+    expect(restored?.actionPresentation?.['action:healing-hands'].imageUrl).toBeUndefined();
+    expect(restored?.actionPresentation?.['action:healing-hands'].actionRef?.image_url).toBeUndefined();
   });
 
   it('rebases every retained participant revision after out-of-combat sheet updates', () => {

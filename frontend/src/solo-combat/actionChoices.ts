@@ -8,6 +8,8 @@ import {
   FIND_FAMILIAR_FORM_CHOICE,
   WILD_COMPANION_PRIMITIVE,
 } from '../rules-core/familiarRuntime';
+import type { SoloCombatState } from './types';
+import { areaActorIds } from './tacticalGrid';
 
 export const UNARMED_STRIKE_CHOICE_ID = 'unarmed_strike_option';
 
@@ -180,6 +182,7 @@ export function projectSoloCombatActionChoices(
 export function immediateSoloCombatTargetIds(
   action: RuleActionDefinition,
   actorId: string,
+  state?: SoloCombatState,
 ): string[] | null {
   const needsMapDestination = (value: unknown): boolean => {
     if (Array.isArray(value)) return value.some(needsMapDestination);
@@ -192,6 +195,21 @@ export function immediateSoloCombatTargetIds(
   if (needsMapDestination(action.mechanics.effects)) return null;
   if (action.targeting?.maxTargets === 0) return [];
   const targeting = action.mechanics.targeting;
+  const area = targeting && typeof targeting === 'object' && !Array.isArray(targeting)
+    ? (targeting as Record<string, unknown>).area
+    : undefined;
+  if (state && targeting && typeof targeting === 'object' && !Array.isArray(targeting)
+    && (targeting as Record<string, unknown>).shape === 'area'
+    && area && typeof area === 'object' && !Array.isArray(area)
+    && (area as Record<string, unknown>).kind === 'emanation') {
+    const sourcePosition = state.tokens[actorId]?.position;
+    return sourcePosition ? areaActorIds({
+      state,
+      sourceActorId: actorId,
+      aimPosition: sourcePosition,
+      action,
+    }).slice(0, action.targeting?.maxTargets ?? 8) : [];
+  }
   if (targeting && typeof targeting === 'object' && !Array.isArray(targeting)
     && (targeting as Record<string, unknown>).shape === 'self') {
     return [actorId];

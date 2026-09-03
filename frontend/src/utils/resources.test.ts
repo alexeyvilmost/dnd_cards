@@ -36,5 +36,7 @@ describe('actionCostResourceIds — стоимость из activation.cost (е�
     expect(resourceLabel([], 'focus')).toBe('Очки фокусировки');
     expect(resourceLabel([], 'sorcery_points')).toBe('Очки чародейства');
     expect(resourceLabel([], 'pact_slot_1')).toBe('Ячейка Магии договора 1-го круга');
+    expect(resourceLabel([], 'action_surge_action')).toBe('Дополнительное действие Всплеска');
+    expect(resourceLabel([], 'quickened_spell_action')).toBe('Ускоренное сотворение');
   });
 });
