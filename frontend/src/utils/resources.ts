@@ -30,6 +30,8 @@ const actionDefaults: ResourceOption[] = [
   { id: 'sorcery_points', label: 'Очки чародейства', description: 'Очки чародейства для Метамагии и Магического источника.', category: 'class_resource', sortOrder: 150 },
   { id: 'second_wind', label: 'Второе дыхание', description: 'Использования Второго дыхания воина.', category: 'class_resource', sortOrder: 160 },
   { id: 'action_surge', label: 'Всплеск действий', description: 'Использования Всплеска действий воина.', category: 'class_resource', sortOrder: 170 },
+  { id: 'action_surge_action', label: 'Дополнительное действие Всплеска', description: 'Одно дополнительное действие от Всплеска действий; его нельзя потратить на Магию.', category: 'action_cost', imageUrl: '/charges/main_action.png', sortOrder: 12 },
+  { id: 'quickened_spell_action', label: 'Ускоренное сотворение', description: 'Одно заклинание со временем сотворения «Действие», подготовленное Метамагией.', category: 'action_cost', imageUrl: '/charges/bonus_action.png', sortOrder: 21 },
 ];
 
 export const staticResourceOptions = (): ResourceOption[] => [

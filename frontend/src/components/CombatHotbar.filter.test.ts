@@ -50,6 +50,14 @@ describe('combat hotbar resource filter', () => {
     ]);
   });
 
+  it('shows temporary Action Surge and Quickened Spell economy with readable filters', () => {
+    expect(combatHotbarResourceKeys(actions, {
+      action: 1,
+      action_surge_action: 1,
+      quickened_spell_action: 1,
+    })).toEqual(['action', 'action_surge_action', 'quickened_spell_action']);
+  });
+
   it('keeps reaction cards inspectable but not proactively activatable', () => {
     const reaction = {
       ...action('shield', 'reaction'),

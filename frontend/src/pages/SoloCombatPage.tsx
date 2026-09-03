@@ -388,7 +388,7 @@ export default function SoloCombatPage() {
         ? await choiceDialog.request(requiredChoices, action.name)
         : {};
       if (!choices) return;
-      const immediateTargets = immediateSoloCombatTargetIds(action, activeControlledActorId);
+      const immediateTargets = immediateSoloCombatTargetIds(action, activeControlledActorId, state);
       if (immediateTargets) {
         apply(autoResolveSystemDecisions(executeCombatAction({
           state,

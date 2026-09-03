@@ -1,6 +1,6 @@
 import type { ActorState } from '../rules-core/domain';
 import {
-  effectiveCombatActorSpeedFt,
+  effectiveActorSpeedFt,
   gridDistanceFt,
   occupiedPositions,
   pathToward,
@@ -25,7 +25,10 @@ export function planMonsterTurn(
   if (gridDistanceFt(start, target) <= 5) {
     return { firstMove: [], dashMove: [], usesDash: false, attacks: true };
   }
-  const speed = effectiveCombatActorSpeedFt(state, monster.id);
+  const grappled = Object.values(state.world.grapples ?? {}).some((grapple) => (
+    grapple.targetActorId === monster.id
+  ));
+  const speed = grappled ? 0 : effectiveActorSpeedFt(monster);
   const occupied = occupiedPositions(state, monster.id);
   const firstMove = pathToward({ start, target, maxFeet: speed, occupied });
   const afterMove = firstMove.at(-1) ?? start;

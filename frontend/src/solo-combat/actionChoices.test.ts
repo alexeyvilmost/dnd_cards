@@ -13,6 +13,7 @@ import {
   projectSoloCombatActionChoices,
 } from './actionChoices';
 import { STONEWORK_CONTACT_CHOICE_ID } from '../mechanics/collectChoices';
+import type { SoloCombatState } from './types';
 
 describe('solo combat data-owned action choices', () => {
   it('offers every canonical Unarmed Strike option only for the exact basic-action entity', () => {
@@ -290,6 +291,37 @@ describe('solo combat data-owned action choices', () => {
       result: [{ kind: 'world_zone', zone_type: 'grease' }],
     }];
     expect(immediateSoloCombatTargetIds(worldArea, 'hero')).toBeNull();
+  });
+
+  it('resolves self-centered emanations immediately from the actor position', () => {
+    const emanation = {
+      id: 'turn-undead', name: 'Turn Undead', kind: 'nonSpell', sourceEntityIds: ['turn-undead'],
+      mechanics: {
+        targeting: {
+          domain: 'actor', actor_targets: true, shape: 'area', range_ft: 0,
+          allowed_relations: ['enemy'], area: { kind: 'emanation', radius_ft: 30 },
+        },
+      },
+      targeting: {
+        minTargets: 1, maxTargets: 20, rangeFt: 0,
+        requiresLineOfSight: false, allowedRelations: ['enemy'],
+      },
+    } as RuleActionDefinition;
+    const state = {
+      characterId: 'cleric',
+      sideByActorId: { cleric: 'player', skeleton: 'enemy', distant: 'enemy' },
+      world: { actors: {
+        cleric: { id: 'cleric', runtime: { hp: { current: 10 } } },
+        skeleton: { id: 'skeleton', runtime: { hp: { current: 10 } } },
+        distant: { id: 'distant', runtime: { hp: { current: 10 } } },
+      } },
+      tokens: {
+        cleric: { actorId: 'cleric', side: 'player', position: { x: 4, y: 4 } },
+        skeleton: { actorId: 'skeleton', side: 'enemy', position: { x: 5, y: 4 } },
+        distant: { actorId: 'distant', side: 'enemy', position: { x: 11, y: 9 } },
+      },
+    } as unknown as SoloCombatState;
+    expect(immediateSoloCombatTargetIds(emanation, 'cleric', state)).toEqual(['skeleton']);
   });
 
   it('keeps a self-shaped teleport in map-targeting mode so the player chooses a destination', () => {
