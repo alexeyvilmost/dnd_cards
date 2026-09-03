@@ -20,13 +20,20 @@ Policy: log major implementation, test, browser, deployment and correction phase
 | Certification integrity review | ~4 min | active review | Replaced blanket full-mechanical certification with explicit partial limits for Druid, Fighter, Monk and Sorcerer. |
 | Release-candidate parallel gate | 37.737 s critical path | machine wait | TypeScript passed; Go migrations passed in 4.662 s. |
 | Stale persistence assertion diagnosis and correction | ~5 min active + 11.395 s test wait | diagnosis/test | The size-optimized runtime correctly strips inline card art, but one older test still expected one embedded copy. Updated only the assertion; final relevant suite passed in 7.284 s. |
-| Timecloud and final live checks | pending | machine/network + browser | To be appended after exact-SHA deployment. |
+| Exact archive creation | 0.635 s | local machine | 114,268,160-byte immutable tar for `1c26b297`; SHA-256 `4f3b9ec48969695ea41c4a0cc15fe7350dc602e4db6ddc5c86e24aa2dc7197ff`. |
+| Verified Timecloud upload | 32.645 s | network wait | Remote SHA-256 matched before runner start. |
+| Timecloud release runner | 209.408 s | remote machine wait | Backup, backend/frontend images, migration, atomic cutover and health checks passed. This was the longest single machine action. |
+| Independent identity + retention | 1.231 s | network/read-only | Backend, frontend and `current` matched `1c26b297`; exactly 5 releases and 5 archives. |
+| Fresh Forge + Turn Undead production acceptance | ~8 min | manual browser | All 12 classes visible; fresh 30-foot emanation selected undead immediately and logged a successful save plus both resource spends. |
+| Action Surge production acceptance and filter defect | ~6 min | manual browser/diagnosis | Dedicated resource and hover card were clear, but the literal-cost filter returned zero actions. |
+| Follow-up filter implementation and gates | ~3 min + 36.222 s critical path | code/machine wait | Substitute Action Surge resource maps to non-spell `action` cards; Quickened maps to spell `action` cards. Focused tests 5.363 s, TypeScript 36.222 s. |
+| Follow-up Timecloud release and final live check | pending | network/machine/browser | Appended after final cutover. |
 
 ## What took longest
 
-The longest useful phase was manual browser acceptance, especially Monk and Cleric combat setup: approximately 18 minutes combined. The slow part was not test execution; it was repeated page state preparation, target selection, dice dialogs, initiative turns and rebuilding a fresh encounter after discovering that old snapshots embed old action mechanics.
+The longest useful phase was manual browser acceptance, especially Monk/Cleric setup and the production follow-up: over 30 minutes combined. The slow part was not test execution; it was repeated page state preparation, target selection, dice dialogs, initiative turns and rebuilding a fresh encounter after discovering that old snapshots embed old action mechanics.
 
-The longest single automated action so far was TypeScript at 34.474 seconds. Focused behavior tests were under seven seconds per pass.
+The longest single automated action was the Timecloud runner at 209.408 seconds. Local TypeScript took 34–38 seconds; focused behavior tests were under eight seconds per pass.
 
 ## How to speed up the next run
 

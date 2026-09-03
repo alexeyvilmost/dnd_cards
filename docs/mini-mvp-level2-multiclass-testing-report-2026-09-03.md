@@ -8,6 +8,8 @@ Scope: all twelve base classes through character level 2, level-up, multiclass. 
 
 ## Release conclusion
 
+Initial production release: `1c26b29777af891cdcbfee9639813f8c44c927b8`. Backend, frontend and Timecloud `current` matched; retention was 5 releases / 5 archives. A browser follow-up found and corrected the temporary-action filter before final acceptance; the final SHA is recorded below after the follow-up deployment.
+
 The level-up and multiclass paths are working, and every base class is visible in the approved Forge catalog after the certification migration. Eight classes have complete level-2 acceptance for the current mini-MVP contract. Four classes remain explicitly `verified_partial` rather than being falsely labelled fully mechanical:
 
 - Druid: form statistics, attacks, exit, temporary HP and spell denial work; Pack Tactics, Spider Climb and Web Walker are visible data but are not tactical modifiers yet.
@@ -49,6 +51,8 @@ The level-up and multiclass paths are working, and every base class is visible i
 - Monk Flurry of Blows: two independent attacks hit the Goblin Warrior for 7 and 6 damage; exactly one Focus and one bonus action were spent, with both rolls and damage entries visible.
 - Cleric Divine Spark heal: healed the selected allied Rogue for `1d8 + Wisdom = 3`, spent action and Channel Divinity 2→1, and persisted the ally HP change.
 - Turn Undead defect: catalog data described a self-centred 30-foot effect but encoded a zero-range destination sphere, so every map destination was rejected. It is corrected to an emanation and resolved immediately from the Cleric position.
+- Production Turn Undead retest: from exactly 30 feet it selected the Skeleton without requesting a destination; the Skeleton rolled `13 - 1 = 12` against DC 12 and succeeded. The journal clearly showed the save, action spend and Channel Divinity spend. A successful save correctly applied no conditions.
+- Production Action Surge retest: activation produced a visible `Дополнительное действие Всплеска: 1/1` button and a readable hover card. The first deployed filter matched only literal resource costs and therefore showed no actions; the follow-up maps this substitute resource to non-spell actions that normally cost `action`.
 - Scene constructor: adding characters/monsters, changing initiative and refreshing exact resources worked. The retained undead test target is `24b39706-f71a-4813-9994-efa831b42604` (`QA-L2-Скелет`).
 - Action Surge and Quickened Spell temporary action pools now appear above the hotbar with human-readable labels.
 
@@ -66,3 +70,4 @@ The level-up and multiclass paths are working, and every base class is visible i
 - Backend migration package release-candidate rerun: passed in 4.662 s.
 - A stale persistence assertion still expected an inline base64 image inside saved combat state even though the size optimization deliberately removes all inline card art. The test now checks the production contract; its isolated failure/recheck added 4.111 s plus diagnosis.
 - Retired long `microMvpScenarioCorpus` pipeline was not run.
+- Follow-up hotbar regression: focused tests passed in 5.363 s; TypeScript passed in 36.222 s.
