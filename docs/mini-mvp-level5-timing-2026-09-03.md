@@ -152,4 +152,13 @@ This log records wall-clock duration for major work and the slowest individual a
 
 ## Final reconciliation
 
-To be completed at handoff: total elapsed time, browser/manual-test duration, deployment duration and SHA, longest step, wasted/repeated work, and remaining scope if the 15:00 deadline is reached.
+Work began at 08:47 MSK and the final production browser retest completed at about 13:59 MSK: approximately 5h 12m elapsed, with up to three independent workers plus the root agent active concurrently. The elapsed number is not additive labor time.
+
+- Final production SHA: `4353b189f1f669bdab2b40d005061cabca9aaadc`.
+- Checkpoint deploy `273f73d`: 353.53s (archive 1.11s, hash 0.45s, upload 36.16s, runner 315.11s).
+- Integrated release `242cebd`: about 258.66s of measured archive/hash/upload/runner work (0.63s + 0.43s + 35.25s + 222.35s), plus sub-second identity checks.
+- Draconic-grant follow-up `4353b18`: about 153.43s measured (archive 0.64s, hash 0.42s, upload 40.30s, runner 112.07s). Docker caching reduced the follow-up runner by about 110s.
+- The largest single deployment wait was the first remote runner at 315.11s. The largest implementation/audit path was the 38m level-2/3 spell-integrity pass. Browser construction and level-up work accumulated roughly 45m across retained characters and was the largest repeated manual category.
+- Avoidable/repeated work: one concurrent typecheck failed after 42.6s on an in-flight feat tuple type; a wrong targeting assertion cost 12.45s; stale local migration data cost about 6m; local auth/JWT setup cost about 5m; a wrong Go working directory cost 0.10s. Production-first Sorcerer retests were intentional release gates and found two separate strict-data defects before handoff.
+- The fastest loop was local focused testing: most Vitest batches completed in 3–16s and migration-tail replay in 3.46s. The best immediate speed improvement is a generated DB-backed spell-grant audit that compiles every retained level-5 character source, not only the 115 spell rows; it would have caught both Fly ownership and subclass casting ability before the first production deploy.
+- The fixed 266-row denominator is structurally present, but blanket manual certification is not complete. Subclass secondary clauses, summon persistence, movable areas/emanations, full aerial/large-footprint rules, delayed spell entities/triggers, and per-entity sheet/combat/clarity evidence remain explicitly untested. No unsupported row was promoted merely to satisfy the deadline.

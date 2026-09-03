@@ -130,6 +130,14 @@ This addendum supersedes the earlier unsupported-row counts where the later work
 - Six deeper no-picker contradictions were made safe: Flame Blade, Detect Thoughts, Lightning Arrow, Cordon of Arrows, Conjure Animals and Glyph of Warding no longer execute impossible target attack/save/damage payloads during their self/world cast (including Lightning Arrow damaging its caster). Their not-yet-persisted blades, sensors, traps, ammunition, moving swarms and delayed triggers are explicitly narrative and remain untested. Nine minute/hour casts now carry structured non-atomic casting times and are blocked in combat before spending resources. Heat Metal's initial cast now spends Action + level-2 slot, while its repeat Bonus Action remains manual. Moonbeam and Sleet Storm retain cylinder identity and project a circular 2D footprint. None of these safety repairs is represented as full certification.
 - Aasimar Celestial Revelation damage riders now trigger once per turn from weapon attacks, spell attacks, and non-attack damaging spells; Goliath Large Form's temporary size reaches relative-size rule consumers. The 2D board still lacks true aerial traversal/large footprints, Radiance's moving end-turn emanation and Shroud's initial fear burst, so these rows remain untested and uncertified.
 
+Final production evidence on release `4353b189f1f669bdab2b40d005061cabca9aaadc`:
+
+- backend health, frontend build identity and active Timecloud symlink all reported the exact release SHA; exactly five runnable releases remained;
+- the retained Sorcerer showed Fire Bolt, Fireball, Counterspell, Fly and Fear enabled on the sheet with their normal titles instead of a global strict-projection error;
+- a fresh combat projected Fireball, Counterspell, Fly and Fear as usable actions; casting Fly on the Sorcerer spent one Action and one level-3 slot and wrote the target/result to the shared combat journal;
+- after spending two Sorcery Points, a Short Rest fired Sorcerous Restoration, restored exactly two points (3→5) and exposed both the trigger and resource restoration in the journal;
+- this proves the reported "cannot use any spells" regression and the primary Sorcerous Restoration path are fixed in production. It does not certify Fly's full aerial movement/fall model or every Sorcerer spell interaction.
+
 ## Certification policy
 
 Only entities that pass all relevant dimensions—character sheet, combat, and user-visible clarity—will be marked certified/free to choose in Forge. Untested, partially supported, stationary-only, or narrative-only entities remain `untested`; the report will list them rather than changing their certification optimistically.
