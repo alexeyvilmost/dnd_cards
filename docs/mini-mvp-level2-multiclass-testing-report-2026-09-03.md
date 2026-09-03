@@ -8,7 +8,9 @@ Scope: all twelve base classes through character level 2, level-up, multiclass. 
 
 ## Release conclusion
 
-Initial production release: `1c26b29777af891cdcbfee9639813f8c44c927b8`. Backend, frontend and Timecloud `current` matched; retention was 5 releases / 5 archives. A browser follow-up found and corrected the temporary-action filter before final acceptance; the final SHA is recorded below after the follow-up deployment.
+Initial production release: `1c26b29777af891cdcbfee9639813f8c44c927b8`. A browser follow-up found and corrected the temporary-action filter before final acceptance.
+
+Final production release: `55ca2842c7ae5e7f4448ac44e0dfeb6e58bc4703`. Backend, frontend and Timecloud `current` all matched; retention was exactly 5 releases / 5 archives.
 
 The level-up and multiclass paths are working, and every base class is visible in the approved Forge catalog after the certification migration. Eight classes have complete level-2 acceptance for the current mini-MVP contract. Four classes remain explicitly `verified_partial` rather than being falsely labelled fully mechanical:
 
@@ -53,6 +55,7 @@ The level-up and multiclass paths are working, and every base class is visible i
 - Turn Undead defect: catalog data described a self-centred 30-foot effect but encoded a zero-range destination sphere, so every map destination was rejected. It is corrected to an emanation and resolved immediately from the Cleric position.
 - Production Turn Undead retest: from exactly 30 feet it selected the Skeleton without requesting a destination; the Skeleton rolled `13 - 1 = 12` against DC 12 and succeeded. The journal clearly showed the save, action spend and Channel Divinity spend. A successful save correctly applied no conditions.
 - Production Action Surge retest: activation produced a visible `Дополнительное действие Всплеска: 1/1` button and a readable hover card. The first deployed filter matched only literal resource costs and therefore showed no actions; the follow-up maps this substitute resource to non-spell actions that normally cost `action`.
+- Final fresh-client Action Surge retest: selecting its resource showed Help, Unarmed Strike, Dash, Disengage, weapon and eligible item actions while excluding Magic actions. A second click returned the hotbar to its default unfiltered state.
 - Scene constructor: adding characters/monsters, changing initiative and refreshing exact resources worked. The retained undead test target is `24b39706-f71a-4813-9994-efa831b42604` (`QA-L2-Скелет`).
 - Action Surge and Quickened Spell temporary action pools now appear above the hotbar with human-readable labels.
 

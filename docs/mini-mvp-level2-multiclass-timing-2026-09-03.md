@@ -27,7 +27,13 @@ Policy: log major implementation, test, browser, deployment and correction phase
 | Fresh Forge + Turn Undead production acceptance | ~8 min | manual browser | All 12 classes visible; fresh 30-foot emanation selected undead immediately and logged a successful save plus both resource spends. |
 | Action Surge production acceptance and filter defect | ~6 min | manual browser/diagnosis | Dedicated resource and hover card were clear, but the literal-cost filter returned zero actions. |
 | Follow-up filter implementation and gates | ~3 min + 36.222 s critical path | code/machine wait | Substitute Action Surge resource maps to non-spell `action` cards; Quickened maps to spell `action` cards. Focused tests 5.363 s, TypeScript 36.222 s. |
-| Follow-up Timecloud release and final live check | pending | network/machine/browser | Appended after final cutover. |
+| Follow-up archive creation | 0.583 s | local machine | 114,278,400-byte archive; SHA-256 `02a48e2266ece732a5b8418180c7d66fbf3517d1a4aaef57c5f8033345673fac`. |
+| Follow-up verified upload | 30.306 s | network wait | Remote checksum matched. |
+| Follow-up Timecloud runner | 149.386 s | remote machine wait | Cached release was 60.022 s faster than the first runner. |
+| Final identity + retention | 1.353 s | network/read-only | Backend, frontend and `current` matched `55ca2842`; 5 releases and 5 archives. |
+| Fresh-client filter and toggle acceptance | ~2 min | manual browser | Non-spell actions appeared for Action Surge; Magic actions were excluded; second click restored default hotbar. |
+
+Task close: 2026-09-03 03:43:59 +03:00. Total wall clock for this continuation: 41m 08s.
 
 ## What took longest
 
