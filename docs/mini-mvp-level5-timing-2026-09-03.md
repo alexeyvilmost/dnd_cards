@@ -142,6 +142,10 @@ This log records wall-clock duration for major work and the slowest individual a
 | Final world-migration plus solo-combat suite | 139 passed, 1 intentional skip; 11.911s command wall |
 | Final production build | 79.988s |
 | Legacy micro-MVP manifest probe | 6.10s; failed from one pre-existing immutable-patch hash mismatch, producing 42 cascading fixture failures |
+| Git push of release `6612461` | 5.054s |
+| Final Timecloud archive / SHA / upload | 0.792s / 0.469s / 97.473s | Upload was the largest local/network step in the final release. |
+| Final Timecloud runner | 219.204s | Production backup, both image builds, migrations 194–196, atomic cutover, health checks and five-release retention passed. |
+| Independent public/remote identity verification | 4.2s | Backend, frontend, current symlink and both image tags matched the exact 40-hex SHA; exactly five releases remained. |
 
 ## Current longest paths
 
@@ -176,4 +180,5 @@ Work began at 08:47 MSK and the final production browser retest completed at abo
 - The largest single deployment wait was the first remote runner at 315.11s. The largest implementation/audit path was the 38m level-2/3 spell-integrity pass. Browser construction and level-up work accumulated roughly 45m across retained characters and was the largest repeated manual category.
 - Avoidable/repeated work: one concurrent typecheck failed after 42.6s on an in-flight feat tuple type; a wrong targeting assertion cost 12.45s; stale local migration data cost about 6m; local auth/JWT setup cost about 5m; a wrong Go working directory cost 0.10s. Production-first Sorcerer retests were intentional release gates and found two separate strict-data defects before handoff.
 - The fastest loop was local focused testing: most Vitest batches completed in 3–16s and migration-tail replay in 3.46s. The best immediate speed improvement is a generated DB-backed spell-grant audit that compiles every retained level-5 character source, not only the 115 spell rows; it would have caught both Fly ownership and subclass casting ability before the first production deploy.
+- Final closure release `6612461`: exact archive generation 0.792s, local hash 0.469s, upload 97.473s and guarded Timecloud runner 219.204s. The remote runner and upload together took 316.677s and were the dominant final critical path; final identity verification took about 4.2s.
 - The fixed 266-row denominator is structurally present, but blanket manual certification is not complete. Subclass secondary clauses, summon persistence, movable areas/emanations, full aerial/large-footprint rules, delayed spell entities/triggers, and per-entity sheet/combat/clarity evidence remain explicitly untested. No unsupported row was promoted merely to satisfy the deadline.
