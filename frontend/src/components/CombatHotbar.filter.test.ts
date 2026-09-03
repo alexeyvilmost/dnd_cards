@@ -56,6 +56,10 @@ describe('combat hotbar resource filter', () => {
       action_surge_action: 1,
       quickened_spell_action: 1,
     })).toEqual(['action', 'action_surge_action', 'quickened_spell_action']);
+    expect(filterCombatActionsByResource(actions, 'action_surge_action', new Set())
+      .map(({ id }) => id)).toEqual(['main']);
+    expect(filterCombatActionsByResource(actions, 'quickened_spell_action', new Set())
+      .map(({ id }) => id)).toEqual(['spell-free']);
   });
 
   it('keeps reaction cards inspectable but not proactively activatable', () => {

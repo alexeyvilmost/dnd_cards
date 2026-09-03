@@ -64,6 +64,16 @@ export function filterCombatActionsByResource(
   if (selectedResourceId === FREEUSE_SHOWCASE_KEY) {
     return actions.filter((action) => freeuseActionIds.has(action.id));
   }
+  if (selectedResourceId === 'action_surge_action') {
+    return actions.filter((action) => (
+      action.kind !== 'spell' && actionCostResourceIds(action).includes('action')
+    ));
+  }
+  if (selectedResourceId === 'quickened_spell_action') {
+    return actions.filter((action) => (
+      action.kind === 'spell' && actionCostResourceIds(action).includes('action')
+    ));
+  }
   return actions.filter((action) => actionCostResourceIds(action).includes(selectedResourceId));
 }
 
