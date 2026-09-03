@@ -17,6 +17,13 @@ export const WEAPON_TYPES: RegistryItem[] = (weaponTypesData.basic ?? []).flatMa
     })),
 );
 
+export const WEAPON_TYPE_PROFICIENCY_CATEGORY: Readonly<Record<string, 'simple' | 'martial'>> = Object.fromEntries(
+  (weaponTypesData.basic ?? []).flatMap((group: { name?: string; weapons?: Array<{ name: string }> }) => {
+    const category = group.name?.startsWith('martial') ? 'martial' : 'simple';
+    return (group.weapons ?? []).map((weapon) => [weapon.name, category]);
+  }),
+);
+
 export const ABILITIES: RegistryItem[] = [
   { id: 'str', label: 'Сила' },
   { id: 'dex', label: 'Ловкость' },
@@ -223,11 +230,12 @@ export const USES_PER: RegistryItem[] = [
 // События триггера ($defs/trigger.event). Помечаем ⏳ те, что движок пока НЕ эмитит
 // (в JSON допустимы, но слушатель никогда не сработает) — см. execute.EMITTED_EVENTS.
 const EMITTED_EVENTS = new Set([
-  'hit', 'crit', 'miss', 'damage_taken', 'spell_cast', 'reduced_to_0_hp',
+  'hit', 'sneak_attack_hit', 'crit', 'miss', 'damage_taken', 'spell_cast', 'reduced_to_0_hp',
   'turn_start', 'turn_end', 'short_rest', 'long_rest',
 ]);
 const RAW_TRIGGER_EVENTS: RegistryItem[] = [
   { id: 'hit', label: 'Попадание (вы попали)' },
+  { id: 'sneak_attack_hit', label: 'Попадание со Скрытой атакой' },
   { id: 'crit', label: 'Критическое попадание' },
   { id: 'miss', label: 'Промах' },
   { id: 'damage_taken', label: 'Получен урон' },

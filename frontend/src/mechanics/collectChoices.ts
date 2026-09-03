@@ -12,6 +12,18 @@ export type ChoiceOrigin = {
   /** Дискриминатор экземпляра повторяемой черты (id слота-пикера). Делает ключи вложенных
    *  выборов уникальными на КАЖДОЕ получение (ASI×N, Одарённый×N). См. instanceFeatureId. */
   instanceKey?: string;
+  /** Class/race progression step that granted this exact feature instance.
+   * It is metadata only (not part of the persisted choice id) and lets a
+   * repeatable spell-learning choice use the slots available at that step,
+   * rather than leaking the character's current highest spell level into all
+   * historical level-up choices. */
+  progressionLevel?: number;
+  /** Highest spell-slot level available to the owning class at the exact
+   * progression step. Undefined means the choice is not progression-scoped. */
+  spellSlotLevelCap?: number;
+  /** Current level of the owning class. This projection metadata is not part
+   * of the persisted choice id. */
+  owningClassLevel?: number;
 };
 
 // Ожидающий разрешения выбор, извлечённый из механики эффекта.
@@ -31,6 +43,10 @@ export type PendingChoice = {
   items?: Array<{
     id: string;
     name: string;
+    /** Optional payload reference when it intentionally differs from id. */
+    value?: string;
+    /** Data-owned prerequisite evaluated against the originating class. */
+    minimumClassLevel?: number;
     /** Declarative effects granted by this exact option. Consumers use these
      * primitives to explain/disable conflicts without branching on an entity
      * name, UUID, card number, or choice id. */
@@ -50,6 +66,9 @@ export type PendingChoice = {
   countByLevel?: Record<string, number>;
   /** Immutable option domain projected from the referenced source choice. */
   allowedOptionIds?: string[];
+  /** Options already consumed by another instance of the same repeatable,
+   * data-declared choice (for example an Elemental Adept damage type). */
+  reservedOptionIds?: string[];
 };
 
 /**
@@ -119,6 +138,7 @@ function choiceToPending(
   ch: Dict,
   origin: ChoiceOrigin,
   choiceRecommendations?: ChoiceRecommendations,
+  resolvedChoices?: Readonly<Record<string, readonly string[]>>,
 ): PendingChoice {
   const form = optionsToChoiceForm(ch) as Dict;
   const opts = (ch.options || {}) as Dict;
@@ -131,6 +151,16 @@ function choiceToPending(
     ? choiceRecommendations?.[rawChoiceId as string]
     : (Array.isArray(ch.recommended) ? ch.recommended : undefined);
   const countByLevel = parseCountByLevel(ch.count_by_level);
+  const currentChoiceId = choiceKey(origin, ch.id as string | number | undefined);
+  const reservedOptionIds = ch.unique_across_instances === true && rawChoiceId
+    ? [...new Set(Object.entries(resolvedChoices ?? {}).flatMap(([choiceId, values]) => (
+      choiceId !== currentChoiceId
+        && choiceId !== rawChoiceId
+        && choiceId.endsWith(`:${rawChoiceId}`)
+        ? values.map(String)
+        : []
+    )))]
+    : [];
   return {
     id: choiceKey(origin, ch.id as string | number | undefined),
     ...(rawChoiceId ? { rawId: rawChoiceId } : {}),
@@ -144,6 +174,11 @@ function choiceToPending(
     items: items.map((it) => ({
       id: String(it.id),
       name: String(it.name),
+      ...(typeof it.value === 'string' && it.value ? { value: it.value } : {}),
+      ...(Number.isSafeInteger(Number(it.minimum_class_level))
+        && Number(it.minimum_class_level) >= 1
+        ? { minimumClassLevel: Number(it.minimum_class_level) }
+        : {}),
       ...(Array.isArray(it.grants) ? {
         grants: (it.grants as Dict[]).map((grant) => ({ ...grant })),
       } : {}),
@@ -152,6 +187,7 @@ function choiceToPending(
     context: ch.context ? String(ch.context) : undefined,
     grantKind: grant?.kind != null ? String(grant.kind) : undefined,
     ...(countByLevel ? { countByLevel } : {}),
+    ...(reservedOptionIds.length ? { reservedOptionIds } : {}),
   };
 }
 
@@ -248,7 +284,7 @@ export function collectChoices(
   const out: PendingChoice[] = [];
 
   const visit = (ch: Dict, depth: number) => {
-    const pending = choiceToPending(ch, origin, choiceRecommendations);
+    const pending = choiceToPending(ch, origin, choiceRecommendations, resolvedChoices);
     out.push(pending);
     if (!resolvedChoices || depth >= MAX_CHOICE_DEPTH) return;
     // Всплытие вложенных выборов: спускаемся в grants выбранного пункта.

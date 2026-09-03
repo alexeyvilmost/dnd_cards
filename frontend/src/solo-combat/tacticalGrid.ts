@@ -95,6 +95,7 @@ export interface TacticalAreaProjectionInput {
 
 type TacticalAreaGeometry =
   | { kind: 'cone'; sizeFt: number }
+  | { kind: 'line'; lengthFt: number; widthFt: number }
   | { kind: 'cube'; sizeFt: number }
   | { kind: 'sphere'; radiusFt: number }
   | { kind: 'emanation'; radiusFt: number };
@@ -112,6 +113,11 @@ function tacticalAreaGeometry(action: TacticalAreaAction): TacticalAreaGeometry 
   if (area?.kind === 'cone' || area?.kind === 'cube') {
     const sizeFt = positiveNumber(area.size_ft);
     return sizeFt === null ? null : { kind: area.kind, sizeFt };
+  }
+  if (area?.kind === 'line') {
+    const lengthFt = positiveNumber(area.length_ft ?? area.size_ft);
+    const widthFt = positiveNumber(area.width_ft) ?? TACTICAL_CELL_FT;
+    return lengthFt === null ? null : { kind: 'line', lengthFt, widthFt };
   }
   if (area?.kind === 'sphere') {
     const radiusFt = positiveNumber(area.radius_ft);
@@ -139,7 +145,7 @@ export function areaPositionsForAction(input: TacticalAreaProjectionInput): Grid
   const geometry = tacticalAreaGeometry(input.action);
   if (!geometry) return [];
 
-  if (geometry.kind !== 'cone' && geometry.kind !== 'emanation') {
+  if (geometry.kind !== 'cone' && geometry.kind !== 'line' && geometry.kind !== 'emanation') {
     const rangeFt = positiveNumber(input.action.targeting?.rangeFt);
     if (rangeFt !== null && gridDistanceFt(input.sourcePosition, input.aimPosition) > rangeFt) {
       return [];
@@ -187,10 +193,12 @@ export function areaPositionsForAction(input: TacticalAreaProjectionInput): Grid
       y: (position.y - input.sourcePosition.y) * TACTICAL_CELL_FT,
     };
     const forward = delta.x * unit.x + delta.y * unit.y;
-    if (forward <= 0 || forward > geometry.sizeFt + Number.EPSILON) return false;
+    const lengthFt = geometry.kind === 'line' ? geometry.lengthFt : geometry.sizeFt;
+    if (forward <= 0 || forward > lengthFt + Number.EPSILON) return false;
     const lateral = Math.abs(delta.x * unit.y - delta.y * unit.x);
     // A 5e cone's width at a point equals its distance from the origin.
-    return lateral <= forward / 2 + Number.EPSILON;
+    const halfWidth = geometry.kind === 'line' ? geometry.widthFt / 2 : forward / 2;
+    return lateral <= halfWidth + Number.EPSILON;
   });
 }
 
@@ -233,6 +241,28 @@ export function pushAway(input: {
   const direction = {
     x: Math.sign(input.target.x - input.source.x),
     y: Math.sign(input.target.y - input.source.y),
+  };
+  if (direction.x === 0 && direction.y === 0) return { ...input.target };
+  let current = { ...input.target };
+  for (let index = 0; index < Math.floor(input.distanceFt / TACTICAL_CELL_FT); index += 1) {
+    const next = { x: current.x + direction.x, y: current.y + direction.y };
+    if (!inside(next) || occupied.has(`${next.x}:${next.y}`)) break;
+    current = next;
+  }
+  return current;
+}
+
+/** Resolve forced movement toward its source without entering an occupied cell. */
+export function pullToward(input: {
+  source: GridPosition;
+  target: GridPosition;
+  distanceFt: number;
+  occupied?: ReadonlySet<string>;
+}): GridPosition {
+  const occupied = input.occupied ?? new Set<string>();
+  const direction = {
+    x: Math.sign(input.source.x - input.target.x),
+    y: Math.sign(input.source.y - input.target.y),
   };
   if (direction.x === 0 && direction.y === 0) return { ...input.target };
   let current = { ...input.target };

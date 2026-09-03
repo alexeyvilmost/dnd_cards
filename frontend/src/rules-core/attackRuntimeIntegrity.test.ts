@@ -343,6 +343,7 @@ describe('Attack/grapple reducer integrity guards', () => {
       hazard: {
         id: 'hazard', name: 'hazard', sourceKind: 'system' as const,
         sourceEntityIds: ['hazard'] as [string],
+        resolution: 'save' as const,
         save: { ability: 'dex' as const, dc: 10 },
         onFailure: [],
       },

@@ -11,6 +11,7 @@ import {
   LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE,
   WEAPON_ATTACK_PRIMITIVE,
 } from '../rules-core/weaponActionPolicies';
+import { lightWeaponExtraAttackUseKey } from '../rules-core/lightWeaponExtraAttack';
 import {
   executeSheetCombatAction,
   prepareSheetCombatCommit,
@@ -242,6 +243,32 @@ function persistedCharacter(id: string): ForgeCharacter {
 }
 
 describe('sheet weapon actions use one atomic canonical session', () => {
+  it('forwards complete Protection observations through the weapon bridge', () => {
+    const initial = session();
+    initial.world.actors[ATTACKER].capabilities.featureSources = {
+      'fighting_style.protection.reaction': ['effect:test-protection'],
+    };
+    const transition = executeSheetCombatAction({
+      session: initial,
+      actorId: ATTACKER,
+      actionId: MAIN,
+      declaration: {
+        ...declaration(),
+        protectionCandidates: [{
+          factsSource: 'board',
+          boardRevision: 0,
+          protectorActorId: ATTACKER,
+          protectorCanSeeAttacker: true,
+          protectorDistanceToTargetFt: 5,
+        }],
+      },
+      commandId: '77777777-7777-4777-8777-777777777777',
+      rng: () => 0.99,
+    });
+
+    expect(transition.nextWorld.actors[TARGET].runtime.hp.current).toBeLessThan(30);
+  });
+
   it('opens and completes Attack, pays contextual ammo, then consumes the persisted Light ledger', () => {
     const initial = session();
     const main = executeSheetCombatAction({
@@ -292,7 +319,10 @@ describe('sheet weapon actions use one atomic canonical session', () => {
     afterMainSession.world.actors[ATTACKER].character.weaponMasteries = ['scimitar'];
     afterMainSession.world.actors[ATTACKER].masteryEffects = {
       mastery_nick: {
+        id: 'mastery_nick',
+        card_number: 'EFFECT-TEST-SLOW',
         name: 'Data-owned slowing mastery',
+        sourceEntityIds: ['mastery_nick', 'EFFECT-TEST-SLOW'],
         mechanics: { weapon_mastery: {
           type: 'slow', penaltyFt: 10, requiresDamage: true,
           expires: 'start_of_source_next_turn', choiceId: 'apply-slow',
@@ -340,7 +370,10 @@ describe('sheet weapon actions use one atomic canonical session', () => {
       bridged.world.actors[ATTACKER].character.weaponMasteries = ['scimitar'];
       bridged.world.actors[ATTACKER].masteryEffects = {
         mastery_nick: {
+          id: 'mastery_nick',
+          card_number: 'EFFECT-TEST-PUSH',
           name: 'Data-owned pushing mastery',
+          sourceEntityIds: ['mastery_nick', 'EFFECT-TEST-PUSH'],
           mechanics: { weapon_mastery: {
             type: 'push', maxDistanceFt: 10, maxTargetSize: 'large',
             choiceId: 'push-distance',
@@ -371,6 +404,49 @@ describe('sheet weapon actions use one atomic canonical session', () => {
         }));
       }
     }
+  });
+
+  it('uses the newest unused qualifying Attack ledger after Action Surge', () => {
+    const initial = session();
+    const main = executeSheetCombatAction({
+      session: initial,
+      actorId: ATTACKER,
+      actionId: MAIN,
+      declaration: declaration(),
+      commandId: '88888888-8888-4888-8888-888888888888',
+      rng: () => 0.99,
+    });
+    const [firstLedger] = Object.values(main.nextWorld.attackActions);
+    const secondLedger = structuredClone(firstLedger);
+    secondLedger.id = 'attack:action-surge';
+    secondLedger.startedAtRevision += 10;
+    secondLedger.sequence.id = secondLedger.id;
+    const afterSurge: SheetCombatSession = {
+      ...initial,
+      world: {
+        ...main.nextWorld,
+        attackActions: {
+          ...main.nextWorld.attackActions,
+          [secondLedger.id]: secondLedger,
+        },
+      },
+    };
+
+    const off = executeSheetCombatAction({
+      session: afterSurge,
+      actorId: ATTACKER,
+      actionId: OFF,
+      declaration: declaration(),
+      commandId: '99999999-9999-4999-8999-999999999999',
+      rng: () => 0.99,
+    });
+
+    expect(off.nextWorld.actors[ATTACKER].runtime.firedThisTurn).toContain(
+      lightWeaponExtraAttackUseKey(secondLedger.id),
+    );
+    expect(off.nextWorld.actors[ATTACKER].runtime.firedThisTurn).not.toContain(
+      lightWeaponExtraAttackUseKey(firstLedger.id),
+    );
   });
 
   it('rejects a mutated data-owned timing cost instead of falling back to CORE Attack cost', () => {

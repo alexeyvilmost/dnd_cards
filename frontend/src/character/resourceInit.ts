@@ -1,5 +1,5 @@
 import type { AssembledCharacter } from './assemble';
-import { collectActionUsesPools } from './actionSheet';
+import { collectActionUsesPools, type GrantedAction } from './actionSheet';
 import { hitDiceResourceKey, initResources, resolveByLevel, resolveCount, resourceLevel } from '../engine/resources';
 import { freeuseKey, type FreeuseSpec } from '../engine/freeuse';
 import type { ValueBreakdown } from '../mvp/contracts';
@@ -184,6 +184,7 @@ export function syncRuntimeResources(
   existing?: RuntimeState,
   freeuseSpells: FreeuseSpec[] = [],
   itemCards: readonly Card[] = [],
+  grantedActions: readonly GrantedAction[] = [],
 ): { resources: Record<string, number>; maxResources: Record<string, number>; sources: Record<string, RollModifier[]> } {
   const classRes = (assembled.klass?.resources ?? null) as Dict | null;
   const passiveMechanics = collectPassiveMechanics(assembled);
@@ -225,7 +226,7 @@ export function syncRuntimeResources(
   }
 
   // Виртуальные пулы использований действий (mechanics.uses → uses_<key>).
-  for (const pool of collectActionUsesPools(assembled, itemCards)) {
+  for (const pool of collectActionUsesPools(assembled, itemCards, grantedActions)) {
     const count = resolveCount(pool.count, ctx);
     if (count > 0) {
       fresh.maxResources[pool.key] = count;
@@ -275,7 +276,7 @@ export function syncRuntimeResources(
     const cur = existing.resources[key];
     if (cur != null) {
       const oldMax = existing.maxResources[key] ?? maxResources[key];
-      const gainedAtLevelUp = key === hitDiceResourceKey(ctx.hitDie)
+      const gainedAtLevelUp = key.startsWith('hit_dice_d')
         ? Math.max(0, maxResources[key] - oldMax)
         : 0;
       resources[key] = Math.min(cur + gainedAtLevelUp, maxResources[key]);
@@ -318,12 +319,13 @@ export function buildResourceRuntimePatch(
   computedMaxHp?: number,
   freeuseSpells: FreeuseSpec[] = [],
   itemCards: readonly Card[] = [],
+  grantedActions: readonly GrantedAction[] = [],
 ): PatchCharacterRuntimeRequest | null {
   const existing = forgeToRuntimeState(character);
   const hpBase = computedMaxHp && computedMaxHp > 0
     ? alignRuntimeHp(existing, computedMaxHp)
     : existing;
-  const synced = syncRuntimeResources(ctx, assembled, hpBase, freeuseSpells, itemCards);
+  const synced = syncRuntimeResources(ctx, assembled, hpBase, freeuseSpells, itemCards, grantedActions);
   // PostgreSQL/jsonb returns object keys in its own order. Resource identity is
   // key/value based, so ordering must never manufacture a runtime write (and a
   // new runtime_revision) every time a character sheet mounts.

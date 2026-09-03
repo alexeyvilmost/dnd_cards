@@ -4,6 +4,7 @@ import { bindEquippedWeaponActionContext } from '../engine/weapon';
 import { compileDeclaredMechanicsTargeting } from '../rules-core/actionTargeting';
 import type { ActorState, RuleActionDefinition } from '../rules-core/domain';
 import { WEAPON_ATTACK_PRIMITIVE } from '../rules-core/weaponActionPolicies';
+import { UNARMED_STRIKE_PRIMITIVE } from './sheetCombatDeclaration';
 import {
   assertCertifiedSheetCombatActorAction,
   type CertifiedSheetCombatCatalog,
@@ -131,8 +132,10 @@ describe('actor-specific weapon template certification', () => {
     const slingerAction = bound(value, slinger);
 
     expect(archerAction.mechanics).not.toEqual(slingerAction.mechanics);
-    expect(assertCertifiedSheetCombatActorAction(archerAction, archer, certified(value))).toEqual(value);
-    expect(assertCertifiedSheetCombatActorAction(slingerAction, slinger, certified(value))).toEqual(value);
+    expect(assertCertifiedSheetCombatActorAction(archerAction, archer, certified(value)))
+      .toEqual(archerAction);
+    expect(assertCertifiedSheetCombatActorAction(slingerAction, slinger, certified(value)))
+      .toEqual(slingerAction);
     expect(() => assertCertifiedSheetCombatActorAction(slingerAction, archer, certified(value)))
       .toThrow('actor-specific certified weapon binding');
   });
@@ -165,5 +168,47 @@ describe('actor-specific weapon template certification', () => {
     const archer = actor('archer', weapon('bow', 'arrow'));
     expect(() => assertCertifiedSheetCombatActorAction(invalid, archer, certified(invalid)))
       .toThrow(/invalid|positive integer/i);
+  });
+});
+
+describe('actor-specific unarmed profile certification', () => {
+  const unarmed: RuleActionDefinition = {
+    id: 'action:unarmed',
+    name: 'Unarmed Strike',
+    kind: 'nonSpell',
+    sourceEntityIds: ['action_basic_unarmed'],
+    mechanics: {
+      primitive: { type: UNARMED_STRIKE_PRIMITIVE },
+      activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }] },
+      effects: [{
+        resolution: 'attack_roll', attack_kind: 'unarmed', ability: 'str', vs: 'ac',
+        on_hit: [{ kind: 'damage', amount: '1 + str', type: 'bludgeoning' }],
+      }],
+    },
+  };
+
+  it('certifies the deterministic Martial Arts DEX/die binding and rejects another profile', () => {
+    const monk = actor('monk', weapon('shortsword'));
+    monk.runtime.equipment = {};
+    monk.character.abilityMods = { str: 1, dex: 4, con: 0, int: 0, wis: 3, cha: 0 };
+    monk.passives = [{ effects: [{ result: [{
+      kind: 'unarmed_damage_profile',
+      dice: '1d8',
+      damage_type: 'bludgeoning',
+      ability: 'dex',
+    }] }] }];
+    const live = structuredClone(unarmed);
+    const effect = (live.mechanics.effects as Record<string, unknown>[])[0];
+    effect.ability = 'dex';
+    effect.on_hit = [{ kind: 'damage', amount: '1d8 + dex', type: 'bludgeoning' }];
+
+    expect(assertCertifiedSheetCombatActorAction(live, monk, certified(unarmed)))
+      .toMatchObject({ mechanics: live.mechanics });
+
+    const forged = structuredClone(live);
+    const forgedEffect = (forged.mechanics.effects as Record<string, unknown>[])[0];
+    forgedEffect.on_hit = [{ kind: 'damage', amount: '1d10 + dex', type: 'bludgeoning' }];
+    expect(() => assertCertifiedSheetCombatActorAction(forged, monk, certified(unarmed)))
+      .toThrow('actor-specific certified unarmed binding');
   });
 });

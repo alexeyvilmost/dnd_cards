@@ -110,7 +110,7 @@ export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
       return isWearingArmor(ctx.state, [
         ...(ctx.character?.equippedCards ?? []),
         ...(ctx.character?.knownCards ?? []),
-      ]);
+      ], typeof cond.category === 'string' ? cond.category : undefined);
     case 'wielding_shield': {
       if (!ctx.state || !ctx.character) return false;
       const equipped = new Set([ctx.state.equipment?.main_hand, ctx.state.equipment?.off_hand].filter(Boolean));

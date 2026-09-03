@@ -40,6 +40,7 @@ import {
   revealCombatMagicAura,
   resolvePlayerReaction,
   resolvePlayerSavingThrow,
+  resolveD20Interrupt,
   resolveSoloCombatAlertSwap,
   resolveSoloCombatInterception,
   resolveSoloCombatTurnStart,
@@ -47,6 +48,7 @@ import {
   selectedTargetsForAction,
 } from '../solo-combat/engine';
 import { readSoloCombatState } from '../solo-combat/persistence';
+import { clearIncompatibleCombatSnapshot, isIncompatibleCombatRulesError } from '../solo-combat/rulesUpgrade';
 import { shouldShowSoloCombatOutcome } from '../solo-combat/outcomeVisibility';
 import { writeDedicatedCombatTurnState } from '../solo-combat/turnState';
 import {
@@ -133,6 +135,7 @@ export default function SoloCombatPage() {
   const [sheetActorId, setSheetActorId] = useState<string | null>(null);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [staleRulesSnapshot, setStaleRulesSnapshot] = useState(false);
   characterRef.current = character;
   participantCharactersRef.current = participantCharacters;
   // The setup query is consumed exactly once. Removing it from the URL after
@@ -336,11 +339,32 @@ export default function SoloCombatPage() {
         await persist(created);
         navigate(`/characters-v3/${id}/combat`, { replace: true });
       } catch (reason) {
-        if (active) { setError(reason instanceof Error ? reason.message : 'Не удалось начать бой'); setBusy(false); }
+        if (active) {
+          setStaleRulesSnapshot(isIncompatibleCombatRulesError(reason));
+          setError(reason instanceof Error ? reason.message : 'Не удалось начать бой'); setBusy(false);
+        }
       }
     })();
     return () => { active = false; };
   }, [id, navigate, persist]);
+
+  const resetStaleCombat = useCallback(async () => {
+    const current = characterRef.current;
+    if (!current || !id) return;
+    setBusy(true);
+    try {
+      const saved = await charactersV3Api.patchRuntime(id, {
+        expected_runtime_revision: Number(current.runtime_revision ?? 0),
+        turn_state: clearIncompatibleCombatSnapshot(current.turn_state),
+      });
+      characterRef.current = saved;
+      setCharacter(saved);
+      navigate(`/characters-v3/${id}`);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Не удалось сбросить устаревший бой');
+      setBusy(false);
+    }
+  }, [id, navigate]);
 
   const apply = useCallback((next: SoloCombatState) => {
     setError(null);
@@ -576,11 +600,12 @@ export default function SoloCombatPage() {
   };
 
   if (!state || !character) {
-    return <main className="solo-combat-loading"><h1>Подготовка поля боя</h1><p>{error ?? 'Компилируем лист, монстров и инициативу…'}</p>{error && <Link to={`/characters-v3/${id}`}>Вернуться в лист</Link>}</main>;
+    return <main className="solo-combat-loading"><h1>Подготовка поля боя</h1><p>{error ?? 'Компилируем лист, монстров и инициативу…'}</p>{staleRulesSnapshot && <button type="button" onClick={() => void resetStaleCombat()}>Сбросить устаревший бой</button>}{error && <Link to={`/characters-v3/${id}`}>Вернуться в лист</Link>}</main>;
   }
   const actor = activeActor(state);
   const pending = state.world.pendingResolution;
   const pendingTriggered = state.pendingTriggeredAction;
+  const pendingD20Interrupt = state.pendingD20Interrupt;
   const pendingTurnStart = state.pendingTurnStartGrappleDamage;
   const reactionOptions = pending?.request.type === 'reaction'
     && isControlledCharacter(state, pending.request.actorId)
@@ -602,7 +627,7 @@ export default function SoloCombatPage() {
     : null;
   return (
     <main className="solo-combat-page forge">
-      <MonsterTurnController state={state} disabled={busy || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception)} onTransition={apply} onError={setError} />
+      <MonsterTurnController state={state} disabled={busy || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt)} onTransition={apply} onError={setError} />
       <header className="combat-topbar">
         <div className="combat-topbar__navigation"><Link to={`/characters-v3/${id}`}><ArrowLeft size={18} /> Лист</Link><button type="button" onClick={() => setSceneConstructorOpen(true)}><SlidersHorizontal size={16} /> Сцена</button></div>
         <div className="initiative-ribbon" aria-label="Порядок инициативы">
@@ -696,7 +721,7 @@ export default function SoloCombatPage() {
         onAddMonster={addSceneMonster}
         onClose={() => setSceneConstructorOpen(false)}
       />}
-      <CombatHotbar state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); apply(advanceTurn(state)); }} onSheet={() => {
+      <CombatHotbar state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); apply(advanceTurn(state)); }} onSheet={() => {
         if (isControlledCharacter(state, activeControlledActorId)) {
           setSheetActorId(activeControlledActorId);
           setSheetOpen(true);
@@ -745,7 +770,8 @@ export default function SoloCombatPage() {
         return <div className="combat-reaction-backdrop"><section><p>БДИТЕЛЬНЫЙ</p><h2>{alertActor.name}: обменять инициативу?</h2><p>Сразу после броска инициативы можно обменяться местами с согласным союзником. Итоговые значения не меняются.</p><div>{allies.map((allyId) => <button type="button" key={allyId} disabled={busy} onClick={() => apply(resolveSoloCombatAlertSwap(state, alertActorId, allyId))}>Обменяться с {state.world.actors[allyId].name}</button>)}<button type="button" disabled={busy} onClick={() => apply(resolveSoloCombatAlertSwap(state, alertActorId, null))}>Оставить порядок</button></div></section></div>;
       })() : null}
       {state.pendingInterception ? <div className="combat-reaction-backdrop"><section><p>РЕАКЦИЯ</p><h2>Перехватить удар по {state.world.actors[state.pendingInterception.targetActorId].name}?</h2><p>Входящий урон: {state.pendingInterception.incomingDamage}. Перехват снизит его на 1к10 + Бонус владения и потратит реакцию.</p><div>{state.pendingInterception.interceptorActorIds.map((actorId) => <button type="button" key={actorId} disabled={busy} onClick={() => apply(resolveSoloCombatInterception(state, actorId))}>{state.world.actors[actorId].name} · использовать Перехват</button>)}<button type="button" disabled={busy} onClick={() => apply(resolveSoloCombatInterception(state, null))}>Пропустить</button></div></section></div> : null}
-      {pendingTriggered && <div className="combat-reaction-backdrop"><section><p>ПОПАДАНИЕ</p><h2>Применить дополнительную способность?</h2><div>{pendingTriggered.optionActionIds.map((actionId) => {
+      {pendingD20Interrupt ? <div className="combat-reaction-backdrop"><section><p>{pendingD20Interrupt.timing === 'before_roll' ? 'ДО БРОСКА АТАКИ' : 'ПОСЛЕ РЕЗУЛЬТАТА'}</p><h2>{pendingD20Interrupt.operation === 'impose_disadvantage' ? 'Наложить Помеху на бросок?' : 'Попытаться изменить успешный бросок?'}</h2>{pendingD20Interrupt.preview && <p>Показанный результат: {pendingD20Interrupt.preview.total} · {pendingD20Interrupt.preview.rollKind === 'attack_roll' ? 'попадание' : 'успех'}. Сохранённый бросок будет продолжен без переброса.</p>}<div>{pendingD20Interrupt.responders.map((responder) => <button type="button" key={`${responder.actorId}:${responder.effectId}`} disabled={busy} onClick={() => apply(resolveD20Interrupt(state, responder.actorId))}>{state.world.actors[responder.actorId]?.name ?? responder.actorId} · {responder.effectName}</button>)}<button type="button" disabled={busy} onClick={() => apply(resolveD20Interrupt(state, null))}>Пропустить</button></div></section></div> : null}
+      {pendingTriggered && <div className="combat-reaction-backdrop"><section><p>{pendingTriggered.event === 'opportunity_attack' ? 'ВОИНСТВЕННАЯ МАГИЯ' : pendingTriggered.event === 'sneak_attack_hit' ? 'СКРЫТАЯ АТАКА' : 'ПОПАДАНИЕ'}</p><h2>{pendingTriggered.event === 'opportunity_attack' ? 'Сотворить заклинание по уходящей цели?' : pendingTriggered.event === 'sneak_attack_hit' ? 'Применить Хитрый удар и отказаться от 1к6 урона?' : 'Применить дополнительную способность?'}</h2>{pendingTriggered.sneakAttackTradeoff && <p>Из броска урона исключается: {pendingTriggered.sneakAttackTradeoff.dieResults.join(' + ')}{pendingTriggered.sneakAttackTradeoff.dieResults.length > 1 ? ' (критическое удвоение)' : ''}. Фактический урон уменьшится на {pendingTriggered.sneakAttackTradeoff.effectiveDamage}.</p>}<div>{pendingTriggered.optionActionIds.map((actionId) => {
         const option = state.catalogActions.find((action) => action.id === actionId);
         return option ? <button type="button" key={actionId} disabled={busy} onClick={() => resolveTriggeredChoice(actionId)}>{option.name}</button> : null;
       })}<button type="button" disabled={busy} onClick={() => resolveTriggeredChoice(null)}>Пропустить</button></div></section></div>}

@@ -100,6 +100,7 @@ const CHARM_HAZARD: RuleHazardDefinition = {
   name: 'Charm Save Probe',
   sourceKind: 'system',
   sourceEntityIds: ['scenario:hazard:charm'],
+  resolution: 'save',
   save: { ability: 'wis', dc: 10 },
   onFailure: [{
     kind: 'condition', value: 'charmed', op: 'apply',
@@ -785,7 +786,6 @@ describe('compiled species, Origin feat, and Fighting Style runtime scenarios', 
     });
     const poisonSave = required(engineEvents(run.events).find(({ entry, event }) => (
       event.type === 'roll' && event.roll.kind === 'save'
-        && event.label.includes('Спасбросок')
         && entry.obligationIds.includes(`entity:${POISON_SAVE_PROBE.sourceEntityIds[0]}`)
     )), 'Dwarven Resilience save');
     if (poisonSave.event.type !== 'roll') throw new Error('Dwarf poison save did not roll');

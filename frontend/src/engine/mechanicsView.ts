@@ -11,7 +11,8 @@ const PAYLOAD_KINDS = new Set([
   'information_access', 'information_reveal', 'world_zone',
   'narrative', 'temp_hp', 'set_value', 'boon', 'transform', 'reroll',
   'grant_action', 'resistance', 'variable', 'add_item',
-  'condition_immunity',
+  'condition_immunity', 'grant_sense', 'grant_speed',
+  'd20_interrupt',
 ]);
 
 function isPayload(obj: Dict): boolean {

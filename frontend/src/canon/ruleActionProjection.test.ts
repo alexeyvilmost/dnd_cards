@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Spell } from '../types';
+import type { Action, Spell } from '../types';
 import {
   applySpellCastingOverride,
   declaredSpellCastingOverride,
@@ -93,6 +93,10 @@ describe('shared declarative rule-action projection', () => {
           value: source.card_number,
           casting_override: {
             remove_cost_resources: ['spell_slot'],
+            range_bonus_ft: 30,
+            components: { verbal: false, somatic: false },
+            free_use_resource: 'ritual_caster_quick_ritual',
+            ritual: true,
             targeting: {
               domain: 'actor',
               actor_targets: false,
@@ -113,6 +117,11 @@ describe('shared declarative rule-action projection', () => {
     expect(((projected.mechanics?.activation as Dict).cost as Dict[]))
       .toEqual([{ resource: 'action' }]);
     expect((projected.mechanics?.targeting as Dict).shape).toBe('self');
+    expect((projected.mechanics?.targeting as Dict).range_ft).toBe(30);
+    expect(projected.component_verbal).toBe(false);
+    expect(projected.component_somatic).toBe(false);
+    expect(override?.freeUseResource).toBe('ritual_caster_quick_ritual');
+    expect(override?.ritual).toBe(true);
     expect(((source.mechanics?.activation as Dict).cost as Dict[]))
       .toHaveLength(2);
     expect((source.mechanics?.targeting as Dict).shape).toBe('single');
@@ -132,5 +141,40 @@ describe('shared declarative rule-action projection', () => {
     };
     expect(() => declaredSpellCastingOverride(duplicate, source))
       .toThrow(/ambiguous casting_override declarations/);
+
+    expect(() => declaredSpellCastingOverride({
+      effects: [{ kind: 'grant_spell', value: source.id, casting_override: {
+        remove_cost_resources: ['spell_slot'], components: { verbal: 'no' },
+      } }],
+    }, source)).toThrow(/components is malformed/);
+  });
+
+  it('materializes the legacy primitive only for the exact basic Unarmed Strike card', () => {
+    const mechanics = {
+      activation: { mode: 'active', cost: [{ resource: 'bonus_action' }] },
+      targeting: {
+        domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1,
+        max_targets: 1, range_ft: 5, requires_line_of_sight: true,
+        allowed_relations: ['enemy'],
+      },
+      effects: [{
+        resolution: 'attack_roll', attack_kind: 'unarmed', ability: 'dex', vs: 'ac',
+        on_hit: [{ kind: 'damage', amount: '1d8 + dex', type: 'bludgeoning' }],
+      }],
+    };
+    const feature = projectRuleAction({
+      id: 'flurry', card_number: 'ACT-monk-flurry-of-blows',
+      name: 'Flurry of Blows', mechanics,
+    } as unknown as Action);
+    const basic = projectRuleAction({
+      id: 'unarmed', card_number: 'action_basic_unarmed',
+      name: 'Unarmed Strike', mechanics: {
+        ...mechanics,
+        activation: { mode: 'active', cost: [{ resource: 'action' }] },
+      },
+    } as unknown as Action);
+
+    expect(feature.mechanics).not.toHaveProperty('primitive');
+    expect(basic.mechanics).toMatchObject({ primitive: { type: 'unarmed_strike' } });
   });
 });

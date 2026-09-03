@@ -43,6 +43,10 @@ import {
   sheetPrimitiveDisabledReason,
 } from './sheetPrimitiveUi';
 import {
+  UNARMED_STRIKE_CHOICE_ID,
+  UNARMED_STRIKE_PRIMITIVE,
+} from './sheetCombatDeclaration';
+import {
   collectSheetSpellCastOptions,
   SHEET_SPELL_CAST_CHOICE,
 } from './sheetSpellCastingUi';
@@ -818,6 +822,18 @@ export function collectSheetPrimitiveChoices(
       'Форма дикого спутника',
       forms,
       forms[0] ? [forms[0].id] : undefined,
+    )];
+  }
+  if (primitive === UNARMED_STRIKE_PRIMITIVE) {
+    return [choice(
+      UNARMED_STRIKE_CHOICE_ID,
+      'Вариант безоружного удара',
+      [
+        { id: 'damage', name: 'Нанести урон' },
+        { id: 'grapple', name: 'Схватить' },
+        { id: 'shove', name: 'Толкнуть' },
+      ],
+      ['damage'],
     )];
   }
   let castOptions = canonical.action.kind === 'spell'

@@ -83,6 +83,16 @@ describe('rollDeathSaveDie (KB-042: правила бросков и преим�
     expect(roll.dice.find((d) => !d.discarded)?.result).toBe(15);
   });
 
+  it('применяет data-driven преимущество только с фильтром death', () => {
+    const durable = passive({
+      kind: 'modifier', op: 'advantage',
+      applies_to: { roll: 'saving_throw', filter: { kind: 'death' } },
+    });
+    const roll = rollDeathSaveDie(freshState(), [durable], {}, seqRng([NAT1, HIGH]));
+    expect(roll.advantage).toBe('advantage');
+    expect(roll.dice.find((d) => !d.discarded)?.result).toBe(15);
+  });
+
   it('преимущество на спас С ФИЛЬТРОМ (напр. против яда) на death save НЕ распространяется', () => {
     const advPoison = passive({ kind: 'modifier', applies_to: { roll: 'saving_throw', filter: { ability: 'con' } }, op: 'advantage' });
     const roll = rollDeathSaveDie(freshState(), [advPoison], {}, seqRng([NAT1, HIGH]));

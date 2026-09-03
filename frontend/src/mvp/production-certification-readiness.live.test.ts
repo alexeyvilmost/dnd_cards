@@ -4,9 +4,9 @@ import {
   MICRO_MVP_CONDITION_CERTIFICATION_VERSION,
 } from '../api/conditionsApi';
 import {
-  PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH,
-  PINNED_MICRO_MVP_L1_COMPILED_RELEASE_HASH,
-  PINNED_MICRO_MVP_L1_OVERLAY_HASH,
+  PINNED_MICRO_MVP_CONDITION_RELEASE_CONTENT_HASH,
+  PINNED_MICRO_MVP_CONDITION_RELEASE_HASH,
+  PINNED_MICRO_MVP_CONDITION_RULES_HASH,
 } from '../canon/microMvpL1ReleaseIdentity';
 
 describe('production certification readiness', () => {
@@ -15,9 +15,9 @@ describe('production certification readiness', () => {
       timeoutMs: 30_000,
       expectedRelease: {
         certificationVersion: MICRO_MVP_CONDITION_CERTIFICATION_VERSION,
-        rulesHash: PINNED_MICRO_MVP_L1_OVERLAY_HASH,
-        releaseContentHash: PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH,
-        releaseHash: PINNED_MICRO_MVP_L1_COMPILED_RELEASE_HASH,
+        rulesHash: PINNED_MICRO_MVP_CONDITION_RULES_HASH,
+        releaseContentHash: PINNED_MICRO_MVP_CONDITION_RELEASE_CONTENT_HASH,
+        releaseHash: PINNED_MICRO_MVP_CONDITION_RELEASE_HASH,
       },
     });
 

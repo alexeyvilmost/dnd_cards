@@ -7,9 +7,9 @@ import {
   type ConditionLoadResult,
 } from './api/conditionsApi';
 import {
-  PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH,
-  PINNED_MICRO_MVP_L1_COMPILED_RELEASE_HASH,
-  PINNED_MICRO_MVP_L1_OVERLAY_HASH,
+  PINNED_MICRO_MVP_CONDITION_RELEASE_CONTENT_HASH,
+  PINNED_MICRO_MVP_CONDITION_RELEASE_HASH,
+  PINNED_MICRO_MVP_CONDITION_RULES_HASH,
 } from './canon/microMvpL1ReleaseIdentity';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -81,9 +81,9 @@ const RULE_BOOTSTRAP_TIMEOUT_MS = 15_000;
 const RULE_BOOTSTRAP_RETRY_MS = 5_000;
 const CONDITION_RELEASE_BINDING = Object.freeze({
   certificationVersion: MICRO_MVP_CONDITION_CERTIFICATION_VERSION,
-  rulesHash: PINNED_MICRO_MVP_L1_OVERLAY_HASH,
-  releaseContentHash: PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH,
-  releaseHash: PINNED_MICRO_MVP_L1_COMPILED_RELEASE_HASH,
+  rulesHash: PINNED_MICRO_MVP_CONDITION_RULES_HASH,
+  releaseContentHash: PINNED_MICRO_MVP_CONDITION_RELEASE_CONTENT_HASH,
+  releaseHash: PINNED_MICRO_MVP_CONDITION_RELEASE_HASH,
 });
 
 function App() {

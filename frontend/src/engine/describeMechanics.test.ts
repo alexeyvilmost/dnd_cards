@@ -122,6 +122,15 @@ describe('parseMechanicsStats (превью из механики, не из л�
     expect(s.damage).toEqual([{ value: '1d10', type: 'fire' }]);
   });
 
+  it('показывает повторённый урон веток спасброска один раз, а не как сумму', () => {
+    const fireball = { effects: [{
+      resolution: 'save', ability: 'dex',
+      on_fail: [{ kind: 'damage', dice: '8d6', type: 'fire', on_success: 'half' }],
+      on_success: [{ kind: 'damage', dice: '8d6', type: 'fire', on_success: 'half' }],
+    }] };
+    expect(parseMechanicsStats(fireball).damage).toEqual([{ value: '8d6', type: 'fire' }]);
+  });
+
   it('пустая механика', () => {
     expect(parseMechanicsStats(null)).toEqual({ attack: false, save: false, saveAbility: null, damage: [], heal: [] });
   });

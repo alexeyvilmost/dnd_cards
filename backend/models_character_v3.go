@@ -47,7 +47,9 @@ type CharacterV3 struct {
 	ClassID   *uuid.UUID `json:"class_id" gorm:"type:uuid"`
 	// ClassLevels stores per-class progression. Keys are class UUIDs; Level is
 	// the authoritative total character level and remains in preview responses.
-	ClassLevels  *JSONMap   `json:"class_levels" gorm:"type:jsonb"`
+	ClassLevels *JSONMap `json:"class_levels" gorm:"type:jsonb"`
+	// SubclassIDs maps each owning base-class UUID to its selected subclass UUID.
+	SubclassIDs  *JSONMap   `json:"subclass_ids" gorm:"type:jsonb"`
 	BackgroundID *uuid.UUID `json:"background_id" gorm:"type:uuid"`
 	Level        int        `json:"level" gorm:"not null;default:1"`
 
@@ -153,6 +155,7 @@ type CreateCharacterV3Request struct {
 	LineageID              *string    `json:"lineage_id"`
 	ClassID                *uuid.UUID `json:"class_id"`
 	ClassLevels            *JSONMap   `json:"class_levels"`
+	SubclassIDs            *JSONMap   `json:"subclass_ids"`
 	BackgroundID           *uuid.UUID `json:"background_id"`
 	Level                  int        `json:"level"`
 
@@ -209,6 +212,7 @@ type UpdateCharacterV3Request struct {
 	LineageID              *string    `json:"lineage_id"`
 	ClassID                *uuid.UUID `json:"class_id"`
 	ClassLevels            *JSONMap   `json:"class_levels"`
+	SubclassIDs            *JSONMap   `json:"subclass_ids"`
 	BackgroundID           *uuid.UUID `json:"background_id"`
 	Level                  int        `json:"level"`
 
@@ -337,6 +341,31 @@ func validateCharacterClassLevels(character CharacterV3) error {
 	}
 	if total != character.Level {
 		return fmt.Errorf("class_levels total %d does not match level %d", total, character.Level)
+	}
+	return nil
+}
+
+func validateCharacterSubclassIDs(character CharacterV3) error {
+	if character.SubclassIDs == nil || len(*character.SubclassIDs) == 0 {
+		return nil
+	}
+	if character.ClassLevels == nil {
+		return fmt.Errorf("subclass_ids requires class_levels")
+	}
+	for rawClassID, rawSubclassID := range *character.SubclassIDs {
+		if _, err := uuid.Parse(rawClassID); err != nil {
+			return fmt.Errorf("invalid subclass_ids class key %q", rawClassID)
+		}
+		if _, owned := (*character.ClassLevels)[rawClassID]; !owned {
+			return fmt.Errorf("subclass_ids class %s is not present in class_levels", rawClassID)
+		}
+		subclassID, ok := rawSubclassID.(string)
+		if !ok || subclassID == "" {
+			return fmt.Errorf("subclass id for %s must be a UUID string", rawClassID)
+		}
+		if _, err := uuid.Parse(subclassID); err != nil {
+			return fmt.Errorf("invalid subclass id %q for class %s", subclassID, rawClassID)
+		}
 	}
 	return nil
 }

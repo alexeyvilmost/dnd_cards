@@ -156,9 +156,19 @@ function addGrant(
   if (full.kind === 'spell') {
     const existing = maps.spell.get(value);
     if (existing && (existing.source.id !== full.source.id || existing.choiceId !== full.choiceId)) {
+      // The same spell can be granted by independent rules sources (for
+      // example Drow lineage and a Cleric domain).  Keep both source-scoped
+      // grants so their casting ability, free use, and slot access remain
+      // independently authoritative; maps.spell still deduplicates the
+      // visible known-spell list. A duplicate inside one selectable source is
+      // still an authoring/selection error.
+      if (existing.source.id !== full.source.id) {
+        appliedGrants.push(full);
+        return;
+      }
       conflicts.push({
         code: 'duplicate_spell',
-        message: `Заклинание «${value}» уже выбрано из «${existing.source.name}», повтор из «${full.source.name}» не применяется.`,
+        message: `Заклинание «${value}» уже выбрано в «${existing.source.name}».`,
         severity: 'error',
         kind: 'spell',
         value,
@@ -235,10 +245,88 @@ function appliesDuringBuild(entity: PassiveEffect | Action): boolean {
 // который сам собирает modifier-эффекты роли 'ac' — иначе двойной учёт.
 const NUMERIC_ROLLS = new Set(['max_hp', 'speed', 'initiative', 'size', 'carry']);
 
+interface BuildConditionFacts {
+  wornArmorCategories: Set<string>;
+}
+
+/** Class and subclass payload gates use the level of their owning class.
+ * Species, feats, items, and temporary effects continue to use total
+ * character level. */
+function levelForSource(input: RuleInput, source: RuleSource): number {
+  const totalLevel = input.draft.level ?? 1;
+  if (source.type !== 'class' || !source.originEntityId) return totalLevel;
+  const levels = draftClassLevels(input.draft);
+  const direct = levels[source.originEntityId];
+  if (direct != null) return direct;
+  const subclass = (input.assembled.subclasses
+    ?? (input.assembled.subclass ? [input.assembled.subclass] : []))
+    .find((entry) => entry.id === source.originEntityId);
+  return subclass?.parent_class_id
+    ? (levels[subclass.parent_class_id] ?? 0)
+    : totalLevel;
+}
+
+function choiceSelectionsAllowedAtLevel(
+  payload: Dict,
+  selected: readonly string[],
+  level: number,
+): string[] {
+  const options = payload.options as Dict | undefined;
+  const items = Array.isArray(options?.items) ? options.items as Dict[] : [];
+  if (!items.length) return [...selected];
+  return selected.filter((optionId) => {
+    const item = items.find((candidate) => String(candidate.id) === optionId);
+    const minimum = Number(item?.minimum_class_level ?? 0);
+    return !Number.isFinite(minimum) || minimum <= 0 || level >= minimum;
+  });
+}
+
+function evaluateBuildCondition(condition: Dict, facts: BuildConditionFacts): boolean {
+  const kind = String(condition.kind ?? '');
+  if (kind === 'any_of') {
+    const choices = Array.isArray(condition.of) ? condition.of as Dict[] : [];
+    return choices.length === 0 || choices.some((choice) => evaluateBuildCondition(choice, facts));
+  }
+  if (kind === 'all_of') {
+    const choices = Array.isArray(condition.of) ? condition.of as Dict[] : [];
+    return choices.every((choice) => evaluateBuildCondition(choice, facts));
+  }
+  if (kind === 'not') {
+    return condition.of && typeof condition.of === 'object' && !Array.isArray(condition.of)
+      ? !evaluateBuildCondition(condition.of as Dict, facts)
+      : true;
+  }
+  if (kind === 'wearing_armor') {
+    const category = typeof condition.category === 'string'
+      ? condition.category.trim().toLowerCase()
+      : '';
+    return category
+      ? facts.wornArmorCategories.has(category)
+      : facts.wornArmorCategories.size > 0;
+  }
+  if (kind === 'narrative') return true;
+  // The build projection has no reliable fact for other combat predicates.
+  return false;
+}
+
+function matchesBuildConditions(when: unknown, facts: BuildConditionFacts): boolean {
+  return !Array.isArray(when) || when.every((condition) => (
+    condition && typeof condition === 'object' && !Array.isArray(condition)
+      ? evaluateBuildCondition(condition as Dict, facts)
+      : false
+  ));
+}
+
 /** Собирает числовой self-modifier из payload в аккумулятор numericMods. */
-function collectNumericModifier(payload: Dict, formulaCtx: FormulaContext, numericMods: Record<string, number>, source: RuleSource) {
+function collectNumericModifier(
+  payload: Dict,
+  formulaCtx: FormulaContext,
+  numericMods: Record<string, number>,
+  source: RuleSource,
+  buildConditions: BuildConditionFacts,
+) {
   if (payload.kind !== 'modifier') return;
-  if (Array.isArray(payload.when) && payload.when.length > 0) return;
+  if (!matchesBuildConditions(payload.when, buildConditions)) return;
   // Модификатор с длительностью (Большая форма: size/speed на 10 раундов) применяется в РАНТАЙМЕ
   // при активации действия, а не пассивно на сборке — иначе временный бафф висел бы постоянно.
   if (payload.duration != null) return;
@@ -351,13 +439,17 @@ function collectAbilityDeltas(
       if (depth >= MAX_CHOICE_DEPTH) return;
       const rawChoiceId = String(payload.id || 'choice');
       const choiceId = choiceInstanceId(source.id, rawChoiceId);
-      const selected = input.draft.resolvedChoices[choiceId] || input.draft.resolvedChoices[rawChoiceId] || [];
+      const selected = choiceSelectionsAllowedAtLevel(
+        payload,
+        input.draft.resolvedChoices[choiceId] || input.draft.resolvedChoices[rawChoiceId] || [],
+        levelForSource(input, source),
+      );
       // Рекурсия зеркалит applyPayload: вложенный choice (ASI: режим → характеристика)
       // разворачивается, grant_ability_score из его item.grants доходит до дельт.
       for (const sp of selectedChoicePayloads(payload, selected)) walk(sp, source, depth + 1);
       return;
     }
-    if (passesLevelGate(payload, level)) {
+    if (passesLevelGate(payload, levelForSource(input, source))) {
       applyAbilityDelta(payload, deltas, sources, source);
       applyAbilityMethod(payload, methods, preFctx, source);
     }
@@ -395,9 +487,18 @@ export function sizeToNumber(s: string | null | undefined): number {
  * долгого отдыха): оба пути идут через resolvedChoices в этот же резолвер.
  */
 function collectWeaponMastery(payload: Dict, masteries: string[]) {
-  if (String(payload.kind ?? '') !== 'weapon_mastery') return;
+	if (!['weapon_mastery', 'grant_weapon_mastery'].includes(String(payload.kind ?? ''))) return;
   const v = String(payload.value ?? payload.weapon_type ?? '').trim();
   if (v && !masteries.includes(v)) masteries.push(v);
+}
+
+function adaptiveProficiencyPayload(payload: Dict, maps: ReturnType<typeof emptySetMap>): Dict {
+  if (String(payload.kind ?? '') !== 'grant_proficiency_or_expertise') return payload;
+  const value = normalizeSkillId(String(payload.value ?? ''));
+  if (!value) return payload;
+  return maps.skill.has(value)
+    ? { kind: 'grant_expertise', prof: 'skill', value }
+    : { kind: 'grant_proficiency', prof: 'skill', value };
 }
 
 /** grant_sense / grant_speed → чувства и небазовые скорости (walk-прибавка → numericMods.walk_grant,
@@ -405,6 +506,7 @@ function collectWeaponMastery(payload: Dict, masteries: string[]) {
 function collectSenseSpeed(
   payload: Dict, formulaCtx: FormulaContext,
   numericMods: Record<string, number>, senses: SenseEntry[], speeds: Record<string, number>,
+  currentSpeedModes: Set<string>,
 ) {
   const kind = String(payload.kind ?? '');
   if (kind === 'grant_sense') {
@@ -422,6 +524,14 @@ function collectSenseSpeed(
   if (kind === 'grant_speed') {
     const mode = String(payload.mode ?? 'walk').toLowerCase();
     const raw = String(payload.value ?? payload.amount ?? 0).replace(/^\+/, '');
+    // Some features grant a movement mode equal to the character's *current*
+    // Speed.  That value is only final after every additive/set/multiply Speed
+    // rule has been folded below, so preserve the relationship instead of
+    // evaluating an absent characterSpeed as 0 and silently dropping it.
+    if (mode !== 'walk' && ['character_speed', 'speed'].includes(raw.trim().toLowerCase())) {
+      currentSpeedModes.add(mode);
+      return;
+    }
     let v: number;
     try { const r = evaluate(raw, formulaCtx); v = typeof r === 'number' ? r : Number(raw); }
     catch { v = Number(raw); } // формульный value (напр. 'walk_speed') без резолва → NaN → мягкий пропуск
@@ -447,35 +557,42 @@ function applyPayload(
   repeatableFeats: Set<string>,
   senses: SenseEntry[],
   speeds: Record<string, number>,
+  currentSpeedModes: Set<string>,
+  buildConditions: BuildConditionFacts,
   masteries: string[],
   depth = 0,
 ) {
-  const level = input.draft.level ?? 1;
+  const level = levelForSource(input, source);
   if (payload.kind === 'choice') {
     if (depth >= MAX_CHOICE_DEPTH) return;
     const rawChoiceId = String(payload.id || 'choice');
     const choiceId = choiceInstanceId(source.id, rawChoiceId);
-    const selected = input.draft.resolvedChoices[choiceId] || input.draft.resolvedChoices[rawChoiceId] || [];
-    for (const selectedPayload of selectedChoicePayloads(payload, selected)) {
+		const selected = choiceSelectionsAllowedAtLevel(
+			payload,
+			input.draft.resolvedChoices[choiceId] || input.draft.resolvedChoices[rawChoiceId] || [],
+			level,
+		);
+		for (const selectedPayload of selectedChoicePayloads(payload, selected)) {
       // Вложенный choice (напр. item.grants выбранного режима ASI → выбор характеристики):
       // разворачиваем рекурсивно тем же путём, ключ вложенного выбора считается по его id.
       if (selectedPayload.kind === 'choice') {
-        applyPayload(selectedPayload, source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, masteries, depth + 1);
+        applyPayload(selectedPayload, source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, currentSpeedModes, buildConditions, masteries, depth + 1);
         continue;
       }
-      if (!passesLevelGate(selectedPayload, level)) continue;
-      collectNumericModifier(selectedPayload, formulaCtx, numericMods, source);
-      collectSenseSpeed(selectedPayload, formulaCtx, numericMods, senses, speeds);
-      collectWeaponMastery(selectedPayload, masteries);
-      const grant = grantFromPayload(selectedPayload, source, choiceId);
+			if (!passesLevelGate(selectedPayload, level)) continue;
+			const appliedPayload = adaptiveProficiencyPayload(selectedPayload, maps);
+			collectNumericModifier(appliedPayload, formulaCtx, numericMods, source, buildConditions);
+			collectSenseSpeed(appliedPayload, formulaCtx, numericMods, senses, speeds, currentSpeedModes);
+			collectWeaponMastery(appliedPayload, masteries);
+			const grant = grantFromPayload(appliedPayload, source, choiceId);
       if (grant) addGrant(grant, maps, expertise, appliedGrants, conflicts, repeatableFeats);
     }
     return;
   }
 
   if (!passesLevelGate(payload, level)) return;
-  collectNumericModifier(payload, formulaCtx, numericMods, source);
-  collectSenseSpeed(payload, formulaCtx, numericMods, senses, speeds);
+  collectNumericModifier(payload, formulaCtx, numericMods, source, buildConditions);
+  collectSenseSpeed(payload, formulaCtx, numericMods, senses, speeds, currentSpeedModes);
   collectWeaponMastery(payload, masteries);
   const grant = grantFromPayload(payload, source);
   if (grant) addGrant(grant, maps, expertise, appliedGrants, conflicts, repeatableFeats);
@@ -494,10 +611,12 @@ function applyMechanics(
   repeatableFeats: Set<string>,
   senses: SenseEntry[],
   speeds: Record<string, number>,
+  currentSpeedModes: Set<string>,
+  buildConditions: BuildConditionFacts,
   masteries: string[],
 ) {
   for (const payload of payloadsFromMechanics(entity.mechanics)) {
-    applyPayload(payload, source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, masteries);
+    applyPayload(payload, source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, currentSpeedModes, buildConditions, masteries);
   }
 }
 
@@ -644,20 +763,30 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   const numericMods: Record<string, number> = {};
   const senses: SenseEntry[] = [];
   const speeds: Record<string, number> = {};
+  const currentSpeedModes = new Set<string>();
+  const buildConditions: BuildConditionFacts = {
+    wornArmorCategories: new Set((input.runtimeSources ?? []).flatMap((runtime) => {
+      if (runtime.source.type !== 'item') return [];
+      const profile = runtime.mechanics?.armor_profile;
+      if (!profile || typeof profile !== 'object' || Array.isArray(profile)) return [];
+      const category = String((profile as Dict).category ?? '').trim().toLowerCase();
+      return category && category !== 'shield' ? [category] : [];
+    })),
+  };
   // Искусность: выбранные виды оружия (Weapon Mastery 2024).
   const masteries: string[] = [];
   // Повторяемые черты — id из собранных черт (assembled.feats).
   const repeatableFeats = new Set((assembled.feats || []).filter((f) => f.repeatable).map((f) => f.id));
 
   for (const { effect, origin } of buildEffects) {
-    applyMechanics(effect, sourceFromOrigin(origin, effect), input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, masteries);
+    applyMechanics(effect, sourceFromOrigin(origin, effect), input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, currentSpeedModes, buildConditions, masteries);
   }
   for (const { action, origin } of buildActions) {
-    applyMechanics(action, sourceFromOrigin(origin, action), input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, masteries);
+    applyMechanics(action, sourceFromOrigin(origin, action), input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, currentSpeedModes, buildConditions, masteries);
   }
   for (const runtime of input.runtimeSources || []) {
     for (const payload of payloadsFromMechanics(runtime.mechanics)) {
-      applyPayload(payload, runtime.source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, masteries);
+      applyPayload(payload, runtime.source, input, maps, expertise, appliedGrants, conflicts, numericMods, formulaCtx, repeatableFeats, senses, speeds, currentSpeedModes, buildConditions, masteries);
     }
   }
 
@@ -820,6 +949,9 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   const speed = speedOps.length
     ? Math.max(0, foldModifiers(speedAdditive, { modifiers: [], advantage: 'none', hasAdvantage: false, hasDisadvantage: false, ops: speedOps, autoFail: false, denied: false, rules: [] }).value)
     : speedAdditive;
+  for (const mode of currentSpeedModes) {
+    speeds[mode] = Math.max(speeds[mode] ?? 0, speed);
+  }
   const initiativeBonus = abilityMod(scores.dex) + (numericMods.initiative ?? 0);
   // Размер как числовая категория (Крошечный=0…Громадный=5). База — раса (Голиаф Средний=2);
   // «или Маленький» → Средний по умолчанию. Постоянные size-модификаторы (редко) прибавляются;

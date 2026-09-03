@@ -210,6 +210,39 @@ describe('runnable canonical sheet-action projection', () => {
     expect(armoredDamage.amount).toBe('1 + str');
   });
 
+  it('does not misclassify a triggered Monk unarmed rider as the certified basic strike', () => {
+    const rider: SheetAction = {
+      id: 'martial-arts-rider',
+      name: 'Martial Arts rider',
+      group: 'class',
+      mechanics: {
+        activation: {
+          mode: 'triggered',
+          optional: true,
+          trigger: { event: 'hit' },
+          cost: [{ resource: 'bonus_action', amount: 1 }],
+        },
+        targeting: {
+          domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1,
+          max_targets: 1, range_ft: 5, requires_line_of_sight: true,
+          allowed_relations: ['enemy'],
+        },
+        effects: [{
+          resolution: 'attack_roll', attack_kind: 'unarmed', ability: 'dex', vs: 'ac',
+          on_hit: [{ kind: 'damage', amount: '1d8 + dex', type: 'bludgeoning' }],
+        }],
+      },
+    };
+
+    const projected = projectRunnableSheetCanonicalActions({
+      actions: [rider], equipment: {}, cards: new Map(),
+    });
+
+    expect(projected.issues.size).toBe(0);
+    expect(projected.actions).toHaveLength(1);
+    expect(projected.actions[0].mechanics).not.toHaveProperty('primitive');
+  });
+
   it('binds the equipped main action and excludes an unavailable off-hand capability', () => {
     const projection = projectRunnableSheetCanonicalActions({
       actions: [
@@ -225,6 +258,52 @@ describe('runnable canonical sheet-action projection', () => {
     expect(projection.actions[0].mechanics.targeting).toMatchObject({ range_ft: 320 });
     expect(projection.issues.get('off')).toMatch(/off hand/);
     expect(projection.issues.has('legacy')).toBe(false);
+  });
+
+  it('carries an actor-bound off-hand range into the immutable action reference', () => {
+    const shortsword = {
+      ...WEAPON,
+      id: 'card:test-shortsword',
+      card_number: 'CARD-TEST-SHORTSWORD',
+      name: 'Test shortsword',
+      mechanics: {
+        weapon_profile: {
+          ...WEAPON.mechanics.weapon_profile,
+          weapon_type: 'shortsword',
+          default_attack_mode: 'melee',
+          attack_modes: [{ kind: 'melee', reach_ft: 5 }],
+          properties: ['light', 'finesse'],
+          ammo: null,
+        },
+      },
+    } satisfies Card;
+    const off = weaponAction('off', true);
+    off.mechanics = {
+      ...off.mechanics,
+      name: 'Off-hand attack',
+      effects: [{
+        resolution: 'attack_roll', attack_kind: 'weapon_melee', ability: 'auto', vs: 'ac',
+        tags: ['off_hand', 'two_weapon'],
+        on_hit: [{ kind: 'damage', dice: 'weapon', type: 'weapon', ability: 'none' }],
+      }],
+    };
+    off.actionRef = {
+      id: off.id,
+      card_number: 'ACTION-OFF',
+      name: off.name,
+      description: '',
+      mechanics: structuredClone(off.mechanics),
+    } as NonNullable<SheetAction['actionRef']>;
+
+    const projection = projectRunnableSheetCanonicalActions({
+      actions: [off],
+      equipment: { off_hand: shortsword.id },
+      cards: new Map([[shortsword.id, shortsword]]),
+    });
+
+    expect(projection.issues.size).toBe(0);
+    expect(projection.actions[0].mechanics.targeting).toMatchObject({ range_ft: 5 });
+    expect(projection.actions[0].actionRef?.mechanics?.targeting).toMatchObject({ range_ft: 5 });
   });
 
   it('fails closed by omitting an action whose equipped Card has no valid profile', () => {

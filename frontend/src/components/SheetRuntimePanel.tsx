@@ -8,6 +8,8 @@ import {
   manualEffectMutationBlockReason,
 } from '../character/manualEffectMutationPolicy';
 import type { AssembledCharacter } from '../character/assemble';
+import { collectItemMechanics } from '../character/attunement';
+import { useGrantedActions } from '../character/grantedActions';
 import {
   buildCharacterContext,
   alignRuntimeHp,
@@ -90,6 +92,21 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
     () => alignRuntimeHp(forgeToRuntimeState(character), ruleState.maxHP),
     [character, ruleState.maxHP],
   );
+  const grantedItemMechanics = useMemo(() => {
+    const cards = new Map(itemCards.map((card) => [card.id, card]));
+    return collectItemMechanics(
+      character.equipment ?? {},
+      cards,
+      character.turn_state,
+      runtime.inventory,
+    );
+  }, [character.equipment, character.turn_state, itemCards, runtime.inventory]);
+  const grantedActions = useGrantedActions({
+    assembled,
+    characterLevel: character.level,
+    resolvedChoices: character.resolved_choices,
+    itemMechanics: grantedItemMechanics,
+  });
   const activeEffectGroups = useMemo(
     () => groupActiveEffectsForDisplay(runtime.activeEffects),
     [runtime.activeEffects],
@@ -97,8 +114,15 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
   const effectMutationBlockReason = manualEffectMutationBlockReason(character.current_encounter_id);
 
   const resourceBreakdowns = useMemo(
-    () => syncRuntimeResources(ctx, assembled, runtime, ruleState.freeuseSpells, itemCards).sources,
-    [ctx, assembled, runtime, ruleState.freeuseSpells, itemCards],
+    () => syncRuntimeResources(
+      ctx,
+      assembled,
+      runtime,
+      ruleState.freeuseSpells,
+      itemCards,
+      grantedActions,
+    ).sources,
+    [ctx, assembled, runtime, ruleState.freeuseSpells, itemCards, grantedActions],
   );
 
   const persistManualEffects = useCallback(async (
@@ -120,7 +144,16 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
   }, [character, onUpdated, onEvents]);
 
   const syncResources = useCallback(async (force = false) => {
-    const patch = buildResourceRuntimePatch(character, ctx, assembled, force, ruleState.maxHP, ruleState.freeuseSpells, itemCards);
+    const patch = buildResourceRuntimePatch(
+      character,
+      ctx,
+      assembled,
+      force,
+      ruleState.maxHP,
+      ruleState.freeuseSpells,
+      itemCards,
+      grantedActions,
+    );
     if (!patch) return;
     setBusy(true);
     setError(null);
@@ -133,7 +166,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
     } finally {
       setBusy(false);
     }
-  }, [character, ctx, assembled, encounterApply, onUpdated, ruleState.maxHP, ruleState.freeuseSpells, itemCards]);
+  }, [character, ctx, assembled, encounterApply, onUpdated, ruleState.maxHP, ruleState.freeuseSpells, itemCards, grantedActions]);
 
   useEffect(() => {
     if (syncAttempted.current || (!resourcesNeedSync(character) && !hpNeedsSync(character, ruleState.maxHP))) return;
@@ -230,6 +263,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
         encounterApply={encounterApply}
         disabledReason={combatLocked ? 'Управляйте ходами и отдыхом из активного боя' : undefined}
         itemCards={itemCards}
+        grantedActions={grantedActions}
       />
 
       {activeEffectGroups.length > 0 && (

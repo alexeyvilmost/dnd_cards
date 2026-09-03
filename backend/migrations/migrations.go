@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 // GetAllMigrations возвращает все миграции в порядке выполнения
@@ -1035,6 +1038,144 @@ func GetAllMigrations() []Migration {
 			Version:     levelTwoClassCertificationMigrationVersion,
 			Description: "Certify the twelve level-two base classes and repair Turn Undead emanation targeting",
 			Up:          certifyLevelTwoClasses,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     levelThreeCoreMigrationVersion,
+			Description: "Materialize executable level-three base-class features and resources",
+			Up:          materializeLevelThreeCore,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     levelFiveSpellsMigrationVersion,
+			Description: "Normalize executable PHB level-two and level-three spell contracts",
+			Up:          materializeLevelFiveSpells,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     levelFiveProgressionMigrationVersion,
+			Description: "Materialize level-four and level-five class, subclass, and species progression",
+			Up:          materializeLevelFiveProgression,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     multiclassSubclassesMigrationVersion,
+			Description: "Persist and validate one subclass selection per owning class",
+			Up: func(db *sql.DB) error {
+				gormDB, err := gorm.Open(postgres.New(postgres.Config{Conn: db}), &gorm.Config{})
+				if err != nil {
+					return err
+				}
+				return addMulticlassSubclasses(gormDB)
+			},
+			Down: func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     levelFiveRuntimeHardeningMigrationVersion,
+			Description: "Harden level-five attack, spell-grant, reaction, and trigger contracts",
+			Up:          hardenLevelFiveRuntime,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     levelFourGeneralFeatsMigrationVersion,
+			Description: "Materialize level-four General-feat choices and missing class gates",
+			Up:          materializeLevelFourGeneralFeats,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     generalSpellFeatSignaturesMigrationVersion,
+			Description: "Materialize spell-linked General-feat signature mechanics",
+			Up:          materializeGeneralSpellFeatSignatures,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     generalFeatSignaturesMigrationVersion,
+			Description: "Materialize non-spell General-feat signature mechanics",
+			Up:          materializeGeneralFeatSignatures,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     speciesLevelledSpellAccessMigrationVersion,
+			Description: "Repair levelled species spell access labels",
+			Up:          repairSpeciesLevelledSpellAccess,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     generalFeatEffectClarityMigrationVersion,
+			Description: "Expose complete General-feat rules on linked sheet effect cards",
+			Up:          clarifyGeneralFeatEffectCards,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     generalFeatActionPayloadRepairVersion,
+			Description: "Repair General-feat action payloads for the shared executor",
+			Up:          repairGeneralFeatActionPayloads,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     wizardCantripGrowthRepairVersion,
+			Description: "Repair the Wizard level-four cantrip growth grant",
+			Up:          repairWizardCantripGrowth,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     levelFiveStrictConditionsMigrationVersion,
+			Description: "Replace level-five spell and subclass generic conditions with exact library effects",
+			Up:          repairLevelFiveStrictConditions,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     generalFeatChoiceIntegrityRepairVersion,
+			Description: "Repair atomic and repeat-instance General-feat choices",
+			Up:          repairGeneralFeatChoiceIntegrity,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     levelFiveBaseProgressionRepairVersion,
+			Description: "Repair level-five spell, resource, invocation and Sneak Attack progression",
+			Up:          repairLevelFiveBaseProgression,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     warlockInvocationsLevelFiveVersion,
+			Description: "Materialize the complete Warlock invocation catalog through level five",
+			Up:          materializeWarlockInvocationsLevelFive180,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     levelFiveSubclassActionsRepairVersion,
+			Description: "Repair level-five subclass action costs, uses and strict condition grants",
+			Up:          repairLevelFiveSubclassActions,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     generalFeatRuntimeIntegrityVersion,
+			Description: "Repair level-four General-feat runtime mechanics and duration ownership",
+			Up:          repairGeneralFeatRuntimeIntegrity,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     speciesLevelFiveIntegrityVersion,
+			Description: "Repair species features and damage riders through level five",
+			Up:          repairSpeciesLevelFiveIntegrity,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     d20InterruptsMigrationVersion,
+			Description: "Materialize persisted Cutting Words and Warding Flare d20 interrupts",
+			Up:          materializeD20Interrupts,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     classLevelFiveIntegrityVersion,
+			Description: "Repair audited class and subclass mechanics through level five",
+			Up:          repairClassLevelFiveIntegrity,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     levelFiveSpellIntegrityVersion,
+			Description: "Repair audited level-two and level-three spell targeting and semantics",
+			Up:          repairLevelFiveSpellIntegrity,
 			Down:        func(db *sql.DB) error { return nil },
 		},
 		// Здесь можно добавлять новые миграции

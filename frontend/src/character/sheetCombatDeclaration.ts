@@ -12,6 +12,7 @@ import {
 import type { SheetCanonicalCommandInput } from './sheetCanonicalCommand';
 
 export const UNARMED_STRIKE_PRIMITIVE = 'unarmed_strike' as const;
+export const UNARMED_STRIKE_CHOICE_ID = 'unarmed_strike_option' as const;
 
 export interface SheetCombatTargetFactDraft {
   targetId: string;

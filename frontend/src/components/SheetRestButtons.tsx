@@ -3,8 +3,14 @@ import { Moon, Sun, Swords } from 'lucide-react';
 import type { EncounterApply } from '../battle/encountersApi';
 import { charactersV3Api, type CharacterEventRow } from '../character/api';
 import { persistCharacterRuntime } from '../character/runtimePersistence';
-import { collectActionUsesRecharge, collectActionUsesRecovery } from '../character/actionSheet';
+import {
+  collectActionUsesRecharge,
+  collectActionUsesRecovery,
+  type GrantedAction,
+} from '../character/actionSheet';
 import type { AssembledCharacter } from '../character/assemble';
+import { collectItemMechanics } from '../character/attunement';
+import { useGrantedActions } from '../character/grantedActions';
 import { collectFreeuseRecharge } from '../engine/freeuse';
 import {
   buildCharacterContext,
@@ -78,16 +84,19 @@ interface Props {
   encounterApply?: EncounterApply;
   disabledReason?: string;
   itemCards?: readonly Card[];
+  /** Reuse a parent surface's resolved grant_action cards when available. */
+  grantedActions?: readonly GrantedAction[];
 }
 
 /** Pure adapter used by the real sheet: action mechanics remain the authority. */
 export function collectSheetActionUseRestPolicies(
   assembled: AssembledCharacter,
   itemCards: readonly Card[] = [],
+  grantedActions: Parameters<typeof collectActionUsesRecharge>[2] = [],
 ) {
   return {
-    recharge: collectActionUsesRecharge(assembled, itemCards),
-    recovery: collectActionUsesRecovery(assembled, itemCards),
+    recharge: collectActionUsesRecharge(assembled, itemCards, grantedActions),
+    recovery: collectActionUsesRecovery(assembled, itemCards, grantedActions),
   };
 }
 
@@ -110,6 +119,7 @@ export default function SheetRestButtons({
   encounterApply,
   disabledReason,
   itemCards = [],
+  grantedActions: providedGrantedActions,
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [shortRestDraft, setShortRestDraft] = useState<{ state: RuntimeState; events: EngineEvent[] } | null>(null);
@@ -130,9 +140,26 @@ export default function SheetRestButtons({
     : undefined);
 
   const passives = useMemo(() => collectPassiveMechanics(assembled, character.resolved_choices ?? {}), [assembled, character.resolved_choices]);
+  const grantedItemMechanics = useMemo(() => {
+    const cards = new Map(itemCards.map((card) => [card.id, card]));
+    return collectItemMechanics(
+      character.equipment ?? {},
+      cards,
+      character.turn_state,
+      forgeToRuntimeState(character).inventory,
+    );
+  }, [character, itemCards]);
+  const loadedGrantedActions = useGrantedActions({
+    assembled,
+    characterLevel: character.level,
+    resolvedChoices: character.resolved_choices,
+    itemMechanics: grantedItemMechanics,
+    disabled: providedGrantedActions !== undefined,
+  });
+  const grantedActions = providedGrantedActions ?? loadedGrantedActions;
   const actionUseRestPolicies = useMemo(
-    () => collectSheetActionUseRestPolicies(assembled, itemCards),
-    [assembled, itemCards],
+    () => collectSheetActionUseRestPolicies(assembled, itemCards, grantedActions),
+    [assembled, itemCards, grantedActions],
   );
   const preparationChoices = useMemo(() => collectLongRestPreparationChoices({
     assembled,
@@ -243,7 +270,16 @@ export default function SheetRestButtons({
   }, [character, encounterApply, onUpdated, onEvents]);
 
   const syncResources = useCallback(async (force = false) => {
-    const patch = buildResourceRuntimePatch(character, ctx, assembled, force, ruleState.maxHP, ruleState.freeuseSpells, itemCards);
+    const patch = buildResourceRuntimePatch(
+      character,
+      ctx,
+      assembled,
+      force,
+      ruleState.maxHP,
+      ruleState.freeuseSpells,
+      itemCards,
+      grantedActions,
+    );
     if (!patch) return;
     setBusy(true);
     try {
@@ -254,22 +290,26 @@ export default function SheetRestButtons({
     } finally {
       setBusy(false);
     }
-  }, [character, ctx, assembled, encounterApply, onUpdated, ruleState.maxHP, ruleState.freeuseSpells, itemCards]);
+  }, [character, ctx, assembled, encounterApply, onUpdated, ruleState.maxHP, ruleState.freeuseSpells, itemCards, grantedActions]);
 
   const itemResourceSignature = useMemo(
     () => itemCards.map((card) => card.id).sort().join('|'),
     [itemCards],
+  );
+  const grantedActionResourceSignature = useMemo(
+    () => grantedActions.map(({ action }) => action.card_number || action.id).sort().join('|'),
+    [grantedActions],
   );
 
   // Инвентарь загружается после самого листа. Повторяем синк один раз, когда
   // набор карточек предметов меняется; buildResourceRuntimePatch остаётся
   // идемпотентным и не пишет состояние, если все пулы уже актуальны.
   useEffect(() => {
-    const signature = `${character.id}:${itemResourceSignature}`;
+    const signature = `${character.id}:${itemResourceSignature}:${grantedActionResourceSignature}`;
     if (syncAttemptedFor.current === signature) return;
     syncAttemptedFor.current = signature;
     syncResources();
-  }, [character.id, itemResourceSignature, syncResources]);
+  }, [character.id, itemResourceSignature, grantedActionResourceSignature, syncResources]);
 
   const restCtx = useMemo(() => ({ ...ctx, passives }), [ctx, passives]);
 

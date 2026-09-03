@@ -5,6 +5,7 @@ import type { AppliedGrant, CharacterRuleState, RuleSource } from './rules/types
 import type { CharacterContext, RuntimeState } from '../mvp/contracts';
 import {
   createWorld,
+  defaultAttackProfile,
   type ActorState,
   type RuleActionDefinition,
   type RulesCatalog,
@@ -42,7 +43,12 @@ import {
 import { freeuseKey } from '../engine/freeuse';
 import { actionUsesKey, restoreSelfUsesCost } from '../engine/actionUses';
 import { preparedSpellSelectionIssues } from '../mechanics/collectChoices';
+import { passiveSourceId } from '../mechanics/expandChoices';
 import { readSheetSpellPreparation } from './sheetSpellPreparation';
+import {
+  applyGeneralSpellFeatActionRules,
+  hasRitualCasterQuickRitual,
+} from '../rules-core/generalSpellFeatRuntime';
 
 export const SHEET_CANONICAL_WORLD_KEY = 'canonical_rules_world_v1' as const;
 export const SHEET_CANONICAL_WORLD_ENVELOPE_VERSION = 1 as const;
@@ -465,11 +471,13 @@ function sourceFeature(input: {
   source: RuleSource;
   assembled: AssembledCharacter;
 }): { mechanics: Record<string, unknown>; cardNumber?: string; originId: string } {
-  const effectMatches = input.assembled.effects.filter(({ effect }) => (
+  const effectMatches = input.assembled.effects.filter(({ effect, origin }) => (
     effect.id === input.source.featureEntityId
+      && passiveSourceId(origin, effect) === input.source.id
   ));
-  const actionMatches = input.assembled.actions.filter(({ action }) => (
+  const actionMatches = input.assembled.actions.filter(({ action, origin }) => (
     action.id === input.source.featureEntityId
+      && passiveSourceId(origin, action) === input.source.id
   ));
   if (effectMatches.length + actionMatches.length !== 1) {
     throw new SheetCanonicalWorldError(
@@ -584,6 +592,7 @@ function ruleActions(input: {
   assembled: AssembledCharacter;
   ruleState: Pick<CharacterRuleState, 'appliedGrants'>;
   manualSpellIds?: ReadonlySet<string>;
+  passives?: readonly Record<string, unknown>[];
 }): CompiledSheetAction[] {
   if (input.sheet.spellRef) {
     // One visual spell row may be owned by several immutable grants (for
@@ -611,11 +620,14 @@ function ruleActions(input: {
       return {
         sheet: input.sheet,
         spellGrant: binding,
-        action: projectRuleAction(spell, {
-          sourceEntityIds: binding.sourceEntityIds,
-          sourceClass: binding.sourceClass,
-          grantScopeId: binding.grantScopeId,
-        }),
+        action: applyGeneralSpellFeatActionRules(
+          projectRuleAction(spell, {
+            sourceEntityIds: binding.sourceEntityIds,
+            sourceClass: binding.sourceClass,
+            grantScopeId: binding.grantScopeId,
+          }),
+          input.passives ?? [],
+        ),
       };
     });
     const spell = input.sheet.spellRef;
@@ -623,10 +635,13 @@ function ruleActions(input: {
       compiled.push({
         sheet: input.sheet,
         manualSpell: true,
-        action: projectRuleAction(spell, {
-          sourceEntityIds: [spell.id],
-          grantScopeId: `manual-spell:${spell.id}`,
-        }),
+        action: applyGeneralSpellFeatActionRules(
+          projectRuleAction(spell, {
+            sourceEntityIds: [spell.id],
+            grantScopeId: `manual-spell:${spell.id}`,
+          }),
+          input.passives ?? [],
+        ),
       });
     }
     return compiled;
@@ -692,10 +707,14 @@ function accessForGrant(grant: AppliedGrant, spell: Spell, override?: SpellCasti
     if (spell.level !== 0) throw new SheetCanonicalWorldError(`${grant.id}: cantrip grant has level ${spell.level}`);
     return 'cantrip' as const;
   }
+  // Level-zero spells are always cantrips in the runtime access model. Some
+  // legacy/data-owned choice grants share an `always_prepared` label between
+  // their cantrip and levelled options; normalize those cantrip rows here
+  // instead of producing an invalid always-prepared level-zero grant.
+  if (spell.level === 0) return 'cantrip' as const;
   if (label === 'known') return 'known' as const;
   if (label === 'prepared' || label === 'always_prepared') return 'always_prepared' as const;
   if (label === 'spellbook') return 'spellbook' as const;
-  if (spell.level === 0) return 'cantrip' as const;
   if (override?.removeCostResources.includes('spell_slot')) return 'innate' as const;
   throw new SheetCanonicalWorldError(`${grant.id}: levelled spell grant requires an explicit access label`);
 }
@@ -801,7 +820,9 @@ function baseSpellAccess(input: {
   runtimePreparedChoices?: Readonly<Record<string, readonly string[]>>;
   tomeActionIds: ReadonlySet<string>;
   manualSpellcastingAbility: 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
+  passives?: readonly Record<string, unknown>[];
 }): ReturnType<typeof projectSpellcastingAccess> {
+  const quickRitual = hasRitualCasterQuickRitual(input.passives ?? []);
   const grants: SpellGrantProjection[] = input.compiled.flatMap(({ sheet, action, spellGrant, manualSpell }) => {
     if (action.kind !== 'spell' || !sheet.spellRef || input.tomeActionIds.has(action.id)) return [];
     if (manualSpell) {
@@ -829,12 +850,17 @@ function baseSpellAccess(input: {
       spellcastingAbility: ability,
       ...(sheet.spellRef.ritual === true
         && (access === 'spellbook'
-          || (access === 'always_prepared' && spellGrant.source.type === 'class'))
+          || (access === 'always_prepared' && spellGrant.source.type === 'class')
+          || spellGrant.castingOverride?.ritual === true)
         ? { ritual: true }
         : {}),
-      ...(spellGrant.grant.freeuse
-        ? { freeUseResource: freeuseKey(spellGrant.grant.value) }
-        : {}),
+      ...(spellGrant.castingOverride?.freeUseResource
+        ? { freeUseResource: spellGrant.castingOverride.freeUseResource }
+        : quickRitual && sheet.spellRef.ritual === true
+          ? { freeUseResource: 'ritual_caster_quick_ritual' }
+        : spellGrant.grant.freeuse
+          ? { freeUseResource: freeuseKey(spellGrant.grant.value) }
+          : {}),
       ...(slotResource ? { slotResource } : {}),
     }];
   });
@@ -1051,6 +1077,7 @@ export function buildSheetCanonicalRuntime(input: {
     assembled: input.assembled,
     ruleState: input.ruleState,
     manualSpellIds,
+    passives: input.passives,
   }));
   const actions = compiled.map(({ action }) => action);
   const actionById = new Map<string, RuleActionDefinition>();
@@ -1177,6 +1204,7 @@ export function buildSheetCanonicalRuntime(input: {
           ? ability
           : best
       ), 'int'),
+    passives: input.passives,
   });
   const spellGrants: SpellGrantAccess[] = [...baseSpellcastingAccess.grants];
   for (const { binding, selected } of deferredTomes) {
@@ -1278,6 +1306,15 @@ export function buildSheetCanonicalRuntime(input: {
       ...(Object.keys(featureSources).length ? { featureSources } : {}),
     },
     character: actorCharacterContext,
+    attackProfile: {
+      ...defaultAttackProfile({ character: actorCharacterContext }),
+      attacksPerAction: (() => {
+        const declared = actorCharacterContext.variables?.attacks_per_attack_action;
+        return typeof declared === 'number' && Number.isInteger(declared) && declared >= 1
+          ? declared
+          : 1;
+      })(),
+    },
     runtime: cloneJson(runtime),
     ...(input.passives?.length ? { passives: cloneJson(input.passives) } : {}),
     ...(input.grantedEffects ? { grantedEffects: cloneJson(input.grantedEffects) } : {}),
@@ -1312,6 +1349,10 @@ export function buildSheetCanonicalRuntime(input: {
       ac: actor.ac,
       capabilities: actor.capabilities,
       character: actor.character,
+      // Build progression owns the authoritative attack count. A persisted
+      // world can survive a level-up when its content catalog is unchanged;
+      // retaining that old profile would silently leave Extra Attack at one.
+      attackProfile: actor.attackProfile,
       runtime: actor.runtime,
       passives: actor.passives,
       grantedEffects: actor.grantedEffects,

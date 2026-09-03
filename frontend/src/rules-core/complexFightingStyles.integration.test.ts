@@ -94,11 +94,19 @@ function engineEvents(events: readonly UncommittedRuleEvent[]): EngineEvent[] {
   ));
 }
 
-function attackSession(input: { style: boolean; weapon: boolean }) {
+function attackSession(input: {
+  style: boolean;
+  weapon: boolean;
+  passives?: Record<string, unknown>[];
+  variables?: ActorState['character']['variables'];
+  abilityMods?: ActorState['character']['abilityMods'];
+}) {
   const attacker = actor('attacker', {
-    passives: input.style ? [unarmedMechanics] : [],
+    passives: input.passives ?? (input.style ? [unarmedMechanics] : []),
     weapon: input.weapon,
   });
+  attacker.character.variables = input.variables;
+  if (input.abilityMods) attacker.character.abilityMods = input.abilityMods;
   const target = actor('target');
   const world = createWorld({ id: 'unarmed-style', ruleset: RULESET, actors: [attacker, target] });
   const rolls = [0.5, 0.999];
@@ -182,6 +190,31 @@ describe('complex Fighting Styles in the canonical RulesSession', () => {
     expect(baseline.session.getState().actors.target.runtime.hp.current).toBe(26);
     expect(engineEvents(emptyHands.result.events).filter((event) => event.type === 'damage'))
       .toEqual([expect.objectContaining({ amount: 11, damageType: 'bludgeoning' })]);
+  });
+
+  it('resolves the Monk variable die and uses the better Dexterity modifier in a system strike', () => {
+    const martialArts = {
+      activation: { mode: 'passive' },
+      effects: [{ resolution: 'auto', result: [{
+        kind: 'unarmed_damage_profile',
+        dice: 'martial_arts_die',
+        ability_options: ['str', 'dex'],
+        damage_type: 'bludgeoning',
+        requires_unarmored: true,
+        source: 'Martial Arts',
+      }] }],
+    };
+    const monk = attackSession({
+      style: false,
+      weapon: false,
+      passives: [martialArts],
+      variables: { martial_arts_die: { count: 1, sides: 8 } },
+      abilityMods: { str: 1, dex: 4, con: 0, int: 0, wis: 3, cha: 0 },
+    });
+
+    expect(monk.session.getState().actors.target.runtime.hp.current).toBe(18);
+    expect(engineEvents(monk.result.events).filter((event) => event.type === 'damage'))
+      .toEqual([expect.objectContaining({ amount: 12, damageType: 'bludgeoning' })]);
   });
 
   it('applies the selected d4 at StartTurn only to a persisted grapple target', () => {

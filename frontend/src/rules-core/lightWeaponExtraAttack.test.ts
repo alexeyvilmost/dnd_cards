@@ -35,6 +35,7 @@ function weapon(id: string, properties: string[], legacyProperties: string[]): C
 const DAGGER = weapon('dagger', ['light', 'finesse'], []);
 const SCIMITAR = weapon('scimitar', ['light', 'finesse'], []);
 const LONGSWORD = weapon('longsword', [], ['light']);
+const GREATSWORD = weapon('greatsword', ['two_handed', 'heavy'], []);
 
 function eligibility(overrides: Partial<Parameters<typeof lightWeaponExtraAttackEligibility>[0]> = {}) {
   return lightWeaponExtraAttackEligibility({
@@ -141,5 +142,26 @@ describe('canonical Light-property extra-attack policy', () => {
     for (const [issue, override] of probes) {
       expect(eligibility(override), issue).toEqual({ eligible: false, issue });
     }
+  });
+
+  it('Dual Wielder allows a one-handed melee extra weapon but never a two-handed one', () => {
+    expect(eligibility({
+      selectedWeaponCardId: LONGSWORD.id,
+      equipment: { main_hand: DAGGER.id, off_hand: LONGSWORD.id },
+      allowNonLightMeleeExtraWeapon: true,
+    })).toMatchObject({
+      eligible: true,
+      facts: { qualifyingWeapon: DAGGER, extraWeapon: LONGSWORD, extraWeaponHand: 'off' },
+    });
+    expect(eligibility({
+      selectedWeaponCardId: LONGSWORD.id,
+      equipment: { main_hand: DAGGER.id, off_hand: LONGSWORD.id },
+    })).toEqual({ eligible: false, issue: 'extra_weapon_not_light' });
+    expect(eligibility({
+      cards: [DAGGER, SCIMITAR, LONGSWORD, GREATSWORD],
+      selectedWeaponCardId: GREATSWORD.id,
+      equipment: { main_hand: DAGGER.id, off_hand: GREATSWORD.id },
+      allowNonLightMeleeExtraWeapon: true,
+    })).toEqual({ eligible: false, issue: 'extra_weapon_not_dual_wielder_eligible' });
   });
 });

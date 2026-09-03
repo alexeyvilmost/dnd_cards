@@ -114,6 +114,17 @@ function optionConflictReason(
   reservedGrants: readonly NormalizedGrantPrimitive[],
   policy: ChoiceAvailabilityPolicy,
 ): string | undefined {
+  if (choice.reservedOptionIds?.includes(optionId)) {
+    return 'Уже выбрано другим экземпляром этой черты';
+  }
+  if (choice.grant?.kind === 'grant_proficiency_or_expertise') {
+    const alreadyExpert = state.expertise.skills.includes(optionId);
+    if (alreadyExpert) return 'Экспертность уже получена';
+    if (reservedGrants.some((grant) => grant.kind === 'skill' && grant.value === optionId)) {
+      return 'Такой результат уже выбран в этом выборе';
+    }
+    return undefined;
+  }
   const grants = normalizedChoiceOptionGrants(choice, optionId);
   if (grants.some((grant) => reservedGrants.some((reserved) => sameGrant(grant, reserved, policy)))) {
     return 'Такой результат уже выбран в этом выборе';

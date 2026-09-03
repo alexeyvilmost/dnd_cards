@@ -78,6 +78,23 @@ describe('collectModifiers (фаза C)', () => {
     expect(dex.modifiers).toHaveLength(1);
     expect(con.modifiers).toHaveLength(0);
   });
+
+  it('supports a data-owned allowlist filter for Actor impersonation checks', () => {
+    const actor = modEffect({
+      kind: 'modifier', op: 'advantage',
+      applies_to: {
+        roll: 'ability_check',
+        filter: { skill: ['deception', 'performance'], context: 'impersonation' },
+      },
+    }, 'Артистичный');
+    const query = (skill: string, context?: string) => collectModifiers(stateWith([actor]), [], {
+      roll: 'ability_check', filter: { skill, ...(context ? { context } : {}) },
+    }).advantage;
+    expect(query('deception', 'impersonation')).toBe('advantage');
+    expect(query('performance', 'impersonation')).toBe('advantage');
+    expect(query('deception')).toBe('none');
+    expect(query('persuasion', 'impersonation')).toBe('none');
+  });
 });
 
 describe('save_avoids_condition через РЕАЛЬНУЮ прод-механику (вложенный effects[].result[])', () => {

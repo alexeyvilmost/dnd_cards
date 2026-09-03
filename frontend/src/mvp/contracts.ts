@@ -340,6 +340,10 @@ export interface ExecuteContext {
   attackActionId?: string;
   /** Stable command that opened the current attack resolution. */
   attackCommandId?: string;
+  /** Exact held pre-mutation damage for a damage_taken reaction. Exposed to
+   * declarative formulas as incoming_damage; absent outside that reaction
+   * window so ordinary actions cannot invent an incoming-damage value. */
+  incomingDamage?: number;
   /** Триггерные способности-СЛУШАТЕЛИ (заклинания вроде Божественной кары): пул для emitEvent/реакций.
    *  В ОТЛИЧИЕ от passives их НЕ читает collectModifiers — чтобы модификатор-эффект реакции (напр. +5 КЗ
    *  Щита) не применялся пассивно до активации. */

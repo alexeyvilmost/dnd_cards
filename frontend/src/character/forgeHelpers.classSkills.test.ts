@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { AssembledCharacter } from './assemble';
 import { recommendedOptionSelection } from './components';
-import { classSkillChoice, requiredChoiceIssues } from './forgeHelpers';
+import {
+  classSkillChoice,
+  featOwnedChoicesForSelections,
+  levelUpChoicesToShow,
+  requiredChoiceIssues,
+} from './forgeHelpers';
+import type { Feat } from '../types';
 import { emptyDraft } from './types';
 import { requiresInitialCharacterChoice, type PendingChoice } from '../mechanics/collectChoices';
 
@@ -103,5 +109,91 @@ describe('classSkillChoice recommendations', () => {
     ]);
     draft.resolvedChoices[choice.id] = ['longsword', 'longbow', 'shortsword'];
     expect(requiredChoiceIssues(draft, bundle)).toEqual([]);
+  });
+
+  it('rejects a persisted choice above the owning class level', () => {
+    const choice: PendingChoice = {
+      id: 'class:warlock:invocations', prompt: 'Воззвания', count: 1,
+      source: 'effect',
+      origin: { kind: 'class', id: 'warlock', name: 'Колдун', owningClassLevel: 2 },
+      items: [{ id: 'thirsting-blade', name: 'Жаждущий клинок', minimumClassLevel: 5 }],
+    };
+    const bundle = assembled({ count: 0, options: [] });
+    bundle.pendingChoices = [choice];
+    const draft = emptyDraft();
+    draft.resolvedChoices[choice.id] = ['thirsting-blade'];
+
+    expect(requiredChoiceIssues(draft, bundle)).toEqual([
+      '«Воззвания»: вариант «Жаждущий клинок» требует 5-й уровень класса',
+    ]);
+  });
+});
+
+describe('Forge level-up feat choices', () => {
+  const feat = {
+    id: 'feat-asi',
+    card_number: 'FEAT-0049',
+    name: 'Увеличение характеристик',
+  } as Feat;
+  const featSlot: PendingChoice = {
+    id: 'class:fighter:feat-slot',
+    prompt: 'Получение черты',
+    count: 1,
+    source: 'feat',
+    origin: {
+      kind: 'class', id: 'fighter', name: 'Воин', featureId: 'effect-feat-slot',
+    },
+  };
+  const asiMode: PendingChoice = {
+    id: 'feat:feat-asi:asi:asi-mode',
+    prompt: 'Улучшение характеристик',
+    count: 1,
+    source: 'explicit',
+    origin: {
+      kind: 'feat', id: feat.id, name: feat.name, instanceKey: 'effect-feat-slot',
+    },
+  };
+  const asiAbility: PendingChoice = {
+    ...asiMode,
+    id: 'feat:feat-asi:asi:asi-one',
+    prompt: 'Характеристика (+2)',
+    source: 'ability',
+  };
+
+  it('keeps newly introduced resolved controls editable until confirmation', () => {
+    const oldResolved = { ...asiMode, id: 'class:fighter:old-choice' };
+    const oldIncomplete = { ...asiMode, id: 'class:fighter:legacy-incomplete' };
+    const resolved = {
+      [oldResolved.id]: ['done'],
+      [oldIncomplete.id]: [],
+      [featSlot.id]: [feat.id],
+      [asiMode.id]: ['plus2'],
+      [asiAbility.id]: ['str'],
+    };
+
+    expect(levelUpChoicesToShow(
+      [oldResolved, oldIncomplete, featSlot, asiMode, asiAbility],
+      new Set([oldResolved.id, oldIncomplete.id]),
+      resolved,
+    ).map((choice) => choice.id)).toEqual([
+      oldIncomplete.id,
+      featSlot.id,
+      asiMode.id,
+      asiAbility.id,
+    ]);
+  });
+
+  it('routes a selected class feat own controls back beside its picker', () => {
+    const unrelated = {
+      ...asiMode,
+      id: 'feat:other:choice',
+      origin: { kind: 'feat' as const, id: 'feat-other', name: 'Другая черта' },
+    };
+    expect(featOwnedChoicesForSelections(
+      [asiMode, asiAbility, unrelated],
+      [featSlot],
+      { [featSlot.id]: [feat.card_number] },
+      [feat],
+    ).map((choice) => choice.id)).toEqual([asiMode.id, asiAbility.id]);
   });
 });

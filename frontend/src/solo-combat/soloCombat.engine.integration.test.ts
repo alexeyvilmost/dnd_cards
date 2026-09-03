@@ -682,6 +682,34 @@ function goblin(): Monster {
 }
 
 describe('solo combat engine vertical integration', () => {
+  it('persists War Caster reaction aliases without polluting the spellbook source', async () => {
+    const participant = wizardSeed();
+    const actor = participant.canonical.world.actors[participant.character.id];
+    const spell = participant.canonical.actions.find((action) => action.id.startsWith('db6433bf-'))!;
+    const prepared = actor.spellcastingAccess!.preparedSources['CLASS-wizard']!;
+    prepared.preparedActionIds = [spell.id, ...prepared.preparedActionIds.slice(0, 3)].sort();
+    actor.passives = [...(actor.passives ?? []), {
+      activation: { mode: 'passive' },
+      effects: [{ resolution: 'auto', result: [{
+        kind: 'modifier', op: 'set', value: 1,
+        applies_to: { roll: 'reaction' }, reason: 'war_caster_opportunity_spell',
+      }] }],
+    }];
+
+    const created = await createSoloCombatState({
+      character: participant.character, participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar(), dash()], effects: [], dashAction: dash(), rng: () => 0.5,
+    });
+    const access = created.world.actors[participant.character.id].spellcastingAccess!;
+    expect(access.preparedSources['CLASS-wizard']?.availableActionIds).toEqual(prepared.availableActionIds);
+    expect(access.grants.find((grant) => grant.actionId === `${spell.id}:war-caster-opportunity`))
+      .toMatchObject({ access: 'always_prepared' });
+    expect(() => readSoloCombatState(
+      writeSoloCombatState({}, created), participant.character.id, 1,
+    )).not.toThrow();
+  });
+
   it('projects a Wild Companion into the tactical map, initiative, allegiance, and player-controlled turn', async () => {
     const fixture = wildCompanionParticipant();
     const basicDash = dash();
@@ -937,6 +965,129 @@ describe('solo combat engine vertical integration', () => {
     expect(skipped.pendingTurnStartGrappleDamage).toBeUndefined();
     expect(skipped.world.actors[grappleTargetId].runtime.hp.current)
       .toBe(grappleState.world.actors[grappleTargetId].runtime.hp.current);
+  });
+
+  it('reuses one paid Attack ledger for exactly two Unarmed Strikes and Action Surge opens one fresh ledger', async () => {
+    const { participant, action } = unarmedParticipant();
+    participant.canonical.world.actors[participant.character.id].attackProfile!.attacksPerAction = 2;
+    let state = await createSoloCombatState({
+      character: participant.character,
+      participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const actorId = participant.character.id;
+    const targetId = Object.values(state.world.actors).find((actor) => actor.kind === 'monster')!.id;
+    state = placeAdjacent(state, actorId, targetId);
+    const strike = (current: typeof state) => executeCombatAction({
+      state: current, actorId, actionId: action.id, targetIds: [targetId],
+      choices: { [UNARMED_STRIKE_CHOICE_ID]: ['damage'] }, rng: () => 0,
+    });
+
+    state = strike(state);
+    expect(state.world.actors[actorId].runtime.resources.action).toBe(0);
+    expect(Object.values(state.world.attackActions)).toMatchObject([{
+      status: 'open', sequence: { totalAttacks: 2, attacksRemaining: 1 },
+    }]);
+    // Action Surge may be activated between the two entries. The remaining
+    // entry belongs to the already-paid ledger and must not consume the token.
+    state.world.actors[actorId].runtime.resources.action_surge_action = 1;
+    state.world.actors[actorId].runtime.maxResources.action_surge_action = 1;
+    state = strike(state);
+    expect(Object.values(state.world.attackActions)).toMatchObject([{
+      status: 'completed', sequence: { totalAttacks: 2, attacksRemaining: 0 },
+    }]);
+    expect(state.world.actors[actorId].runtime.resources.action_surge_action).toBe(1);
+    const withoutSurge = clone(state);
+    withoutSurge.world.actors[actorId].runtime.resources.action_surge_action = 0;
+    expect(() => strike(withoutSurge)).toThrow(/InsufficientResources/);
+
+    state = strike(state);
+    expect(state.world.actors[actorId].runtime.resources.action_surge_action).toBe(0);
+    expect(Object.values(state.world.attackActions).filter((ledger) => ledger.status === 'open'))
+      .toMatchObject([{ sequence: { totalAttacks: 2, attacksRemaining: 1 } }]);
+    state = strike(state);
+    expect(Object.values(state.world.attackActions)).toHaveLength(2);
+    expect(Object.values(state.world.attackActions).every((ledger) => (
+      ledger.status === 'completed'
+      && ledger.sequence.totalAttacks === 2
+      && ledger.sequence.attacksRemaining === 0
+    ))).toBe(true);
+    expect(() => strike(state)).toThrow(/InsufficientResources/);
+  });
+
+  it('reuses the same paid Attack ledger for two equipped-weapon attacks', async () => {
+    const participant = fighterSeed();
+    const actor = participant.canonical.world.actors[participant.character.id];
+    const action: RuleActionDefinition = {
+      id: 'ae7b59a2-2eee-412f-aee6-6323b4c1fb4d',
+      name: 'Атака оружием', kind: 'nonSpell',
+      sourceEntityIds: ['ae7b59a2-2eee-412f-aee6-6323b4c1fb4d'],
+      mechanics: {
+        primitive: { type: 'weapon_attack' },
+        activation: { mode: 'active', cost: [{ resource: 'action' }] },
+        name: 'Рукопашная атака оружием',
+        targeting: {
+          domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1,
+          max_targets: 1, range_ft: 5, requires_line_of_sight: true,
+          allowed_relations: ['ally', 'enemy', 'neutral'],
+        },
+        effects: [{
+          resolution: 'attack_roll', attack_kind: 'weapon_melee', ability: 'auto', vs: 'ac',
+          on_hit: [{ kind: 'damage', dice: 'weapon', type: 'weapon', ability: 'auto' }],
+        }],
+      },
+      targeting: {
+        minTargets: 1, maxTargets: 1, rangeFt: 5,
+        requiresLineOfSight: true, allowedRelations: ['ally', 'enemy', 'neutral'],
+      },
+    };
+    actor.attackProfile = {
+      attacksPerAction: 2, size: 2, reachFt: 5,
+      graspingParts: ['main_hand', 'off_hand'], sourceEntityIds: ['class:fighter:extra-attack'],
+    };
+    actor.character.knownCards = [...(actor.character.knownCards ?? []), clone(CARD_LONGSWORD)];
+    actor.character.equippedCards = [...(actor.character.equippedCards ?? []), clone(CARD_LONGSWORD)];
+    actor.character.weaponProficiencies = [...new Set([
+      ...(actor.character.weaponProficiencies ?? []), 'longsword', 'martial',
+    ])];
+    actor.runtime.equipment = { ...actor.runtime.equipment, main_hand: CARD_LONGSWORD.id };
+    actor.runtime.inventory = [{ cardId: CARD_LONGSWORD.id, qty: 1 }];
+    actor.runtime.resources.action = 1;
+    actor.runtime.maxResources.action = 1;
+    actor.capabilities.actionIds.push(action.id);
+    const actions = [...participant.canonical.actions, action];
+    const byId = new Map(actions.map((candidate) => [candidate.id, candidate]));
+    participant.canonical = {
+      ...participant.canonical,
+      actions,
+      cards: [...participant.canonical.cards, clone(CARD_LONGSWORD)],
+      catalog: { getAction: (id) => byId.get(id), listActions: () => actions },
+    };
+    participant.character.resources = clone(actor.runtime.resources);
+    participant.character.max_resources = clone(actor.runtime.maxResources);
+
+    let state = await createSoloCombatState({
+      character: participant.character, participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const actorId = participant.character.id;
+    const targetId = Object.values(state.world.actors).find((entry) => entry.kind === 'monster')!.id;
+    state = placeAdjacent(state, actorId, targetId);
+    const attack = (current: typeof state) => executeCombatAction({
+      state: current, actorId, actionId: action.id, targetIds: [targetId], rng: () => 0,
+    });
+    state = attack(state);
+    expect(state.world.actors[actorId].runtime.resources.action).toBe(0);
+    expect(Object.values(state.world.attackActions).at(-1)).toMatchObject({
+      status: 'open', sequence: { totalAttacks: 2, attacksRemaining: 1 },
+    });
+    state = attack(state);
+    expect(Object.values(state.world.attackActions).at(-1)).toMatchObject({
+      status: 'completed', sequence: { totalAttacks: 2, attacksRemaining: 0 },
+    });
+    expect(() => attack(state)).toThrow(/InsufficientResources/);
   });
 
   it('adds another owned sheet as an independently controlled ally with its own initiative and actions', async () => {
@@ -1986,6 +2137,137 @@ describe('solo combat engine vertical integration', () => {
     expect(state.tokens[participant.character.id].position).toEqual({ x: 6, y: 9 });
   });
 
+  it('lets Sentinel ignore Disengage and stop movement with an exact library effect', async () => {
+    const participant = fighterSeed();
+    const sentinelAttack: RuleActionDefinition = {
+      id: '18200000-0000-4000-8000-000000000016',
+      name: 'Страж: провоцированная атака', kind: 'nonSpell',
+      sourceEntityIds: ['FEAT-0045', 'ACT-general-sentinel-test-opportunity'],
+      mechanics: {
+        activation: {
+          mode: 'reaction', cost: [{ resource: 'reaction', amount: 1 }],
+          trigger: { events: ['opportunity_attack'] },
+        },
+        targeting: {
+          domain: 'actor', actor_targets: true, shape: 'single', range_ft: 5,
+          min_targets: 1, max_targets: 1, requires_line_of_sight: true,
+          allowed_relations: ['enemy'],
+        },
+        effects: [{
+          resolution: 'attack_roll', ability: 'str', attack_kind: 'weapon_melee', vs: 'ac',
+          on_hit: [{ kind: 'damage', dice: '1d6', ability: 'str', type: 'slashing' }],
+        }],
+      },
+      targeting: {
+        minTargets: 1, maxTargets: 1, rangeFt: 5,
+        requiresLineOfSight: true, allowedRelations: ['enemy'],
+      },
+    };
+    const sentinelStop: RuleActionDefinition = {
+      id: '18200000-0000-4000-8000-000000000015',
+      name: 'Страж: остановить', kind: 'nonSpell',
+      sourceEntityIds: ['FEAT-0045', 'ACT-general-sentinel-stop'],
+      mechanics: {
+        activation: {
+          mode: 'triggered', cost: [],
+          trigger: { event: 'hit', feat_sentinel_opportunity: true },
+        },
+        targeting: {
+          domain: 'actor', actor_targets: true, shape: 'single', range_ft: 10,
+          min_targets: 1, max_targets: 1, requires_line_of_sight: true,
+          allowed_relations: ['enemy'],
+        },
+        effects: [{ resolution: 'auto', who: 'target', result: [{
+          kind: 'grant_effect', value: 'EFF-general-sentinel-stop',
+          duration: { type: 'until_end_of_turn' },
+        }] }],
+      },
+      targeting: {
+        minTargets: 1, maxTargets: 1, rangeFt: 10,
+        requiresLineOfSight: true, allowedRelations: ['enemy'],
+      },
+    };
+    let state = await createSoloCombatState({
+      character: participant.character, participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar(), disengage()], effects: [], rng: () => 0.5,
+    });
+    const fighterId = participant.character.id;
+    const monsterId = Object.values(state.world.actors).find((candidate) => candidate.kind === 'monster')!.id;
+    const fighter = state.world.actors[fighterId];
+    state = {
+      ...state,
+      catalogActions: [...state.catalogActions, sentinelAttack, sentinelStop],
+      opportunityActionIds: { ...state.opportunityActionIds, [fighterId]: sentinelAttack.id },
+      tokens: {
+        ...state.tokens,
+        [fighterId]: { ...state.tokens[fighterId], position: { x: 6, y: 7 } },
+        [monsterId]: { ...state.tokens[monsterId], position: { x: 6, y: 8 } },
+      },
+      world: {
+        ...state.world,
+        actors: {
+          ...state.world.actors,
+          [fighterId]: {
+            ...fighter,
+            capabilities: {
+              ...fighter.capabilities,
+              actionIds: [...fighter.capabilities.actionIds, sentinelAttack.id, sentinelStop.id],
+              featureSources: {
+                ...(fighter.capabilities.featureSources ?? {}),
+                'general_feat.sentinel': ['FEAT-0045'],
+              },
+            },
+            grantedEffects: {
+              ...(fighter.grantedEffects ?? {}),
+              'EFF-general-sentinel-stop': {
+                id: '18200000-0000-4000-8000-000000000020',
+                card_number: 'EFF-general-sentinel-stop',
+                name: 'Страж: скорость 0',
+                mechanics: {
+                  activation: { mode: 'passive' }, duration: { type: 'until_end_of_turn' },
+                  effects: [{ resolution: 'auto', result: [{
+                    kind: 'modifier', op: 'set', value: 0,
+                    applies_to: { roll: 'speed' },
+                  }] }],
+                },
+              },
+            },
+          },
+          [monsterId]: {
+            ...state.world.actors[monsterId],
+            runtime: {
+              ...state.world.actors[monsterId].runtime,
+              activeEffects: [{
+                id: 'disengage', name: 'Отход', source: 'Отход',
+                mechanics: {
+                  kind: 'modifier', op: 'deny',
+                  applies_to: { interaction: 'opportunity_attack', trigger: 'self_movement' },
+                  duration: { type: 'until_end_of_turn' },
+                },
+              }],
+            },
+          },
+        },
+      },
+    };
+    expect(state.world.actors[fighterId].capabilities.featureSources?.['general_feat.sentinel'])
+      .toEqual(['FEAT-0045']);
+    expect(state.opportunityActionIds[fighterId]).toBeTruthy();
+    expect(gridDistanceFt(state.tokens[fighterId].position, state.tokens[monsterId].position)).toBe(5);
+    const before = { ...state.tokens[monsterId].position };
+    state = moveActor({
+      state, actorId: monsterId, destination: { x: 6, y: 9 }, voluntary: true, rng: () => 0.75,
+    });
+
+    expect(state.world.actors[fighterId].runtime.resources.reaction).toBe(0);
+    expect(state.tokens[monsterId].position).toEqual(before);
+    expect(state.world.actors[monsterId].runtime.activeEffects).toContainEqual(expect.objectContaining({
+      entityRef: expect.objectContaining({ cardNumber: 'EFF-general-sentinel-stop' }),
+    }));
+    expect(state.log.at(-1)?.text).toContain('Стража');
+  });
+
   it('connects the reusable Dash and Disengage data rows to tactical movement', async () => {
     const participant = fighterSeed();
     const selected = [{ monster: goblin(), quantity: 1 }];
@@ -2305,5 +2587,179 @@ describe('solo combat engine vertical integration', () => {
 
     expect(() => { state = runMonsterTurn(state, () => 0.5); }).not.toThrow();
     expect(activeId(state)).toBe(participant.character.id);
+  });
+
+  it('offers Crusher only after qualifying bludgeoning damage and closes it once per turn', async () => {
+    const participant = fighterSeed();
+    const actor = participant.canonical.world.actors[participant.character.id];
+    actor.attackProfile = { ...(actor.attackProfile ?? {
+      attacksPerAction: 1, reachFt: 5, graspingParts: ['main_hand'],
+      sourceEntityIds: ['test:attack-profile'],
+    }), size: 2 };
+    const attack: RuleActionDefinition = {
+      id: 'd7000000-0000-4000-8000-000000000001', name: 'Булава', kind: 'nonSpell',
+      sourceEntityIds: ['test:crusher-attack'],
+      mechanics: {
+        activation: { mode: 'active', cost: [{ resource: 'action' }] },
+        targeting: { domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1, max_targets: 1, range_ft: 5, requires_line_of_sight: true, allowed_relations: ['enemy'] },
+        effects: [{ resolution: 'attack_roll', ability: 'str', attack_kind: 'weapon_melee', who: 'target', on_hit: [{ kind: 'damage', amount: 2, type: 'bludgeoning' }] }],
+      },
+      targeting: { minTargets: 1, maxTargets: 1, rangeFt: 5, requiresLineOfSight: true, allowedRelations: ['enemy'] },
+    };
+    const rider: RuleActionDefinition = {
+      id: 'd7000000-0000-4000-8000-000000000002', name: 'Крушитель: оттолкнуть', kind: 'nonSpell',
+      sourceEntityIds: ['FEAT-0026', 'EFF-general-FEAT-0026'],
+      mechanics: {
+        activation: { mode: 'triggered', cost: [], trigger: {
+          event: 'hit', source_action_card_number: 'action_basic_weapon',
+          feat_damage_type: 'bludgeoning', feat_once_per_turn: 'general_feat.crusher.push',
+          feat_max_relative_size: 1,
+        } },
+        targeting: { domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1, max_targets: 1, range_ft: 600, requires_line_of_sight: true, allowed_relations: ['enemy'] },
+        effects: [{ resolution: 'auto', who: 'target', result: [{ kind: 'movement', value: 'push', distance: 5 }] }],
+      },
+      targeting: { minTargets: 1, maxTargets: 1, rangeFt: 600, requiresLineOfSight: true, allowedRelations: ['enemy'] },
+    };
+    const slashingAttack: RuleActionDefinition = {
+      ...clone(attack), id: 'd7000000-0000-4000-8000-000000000003', name: 'Меч',
+      mechanics: {
+        ...clone(attack.mechanics),
+        effects: [{ resolution: 'attack_roll', ability: 'str', attack_kind: 'weapon_melee', who: 'target', on_hit: [{ kind: 'damage', amount: 2, type: 'slashing' }] }],
+      },
+    };
+    actor.capabilities.actionIds.push(attack.id, rider.id, slashingAttack.id);
+    actor.runtime.resources.action = 1;
+    actor.runtime.maxResources.action = 1;
+    participant.character.resources = clone(actor.runtime.resources);
+    participant.character.max_resources = clone(actor.runtime.maxResources);
+    const actions = [...participant.canonical.actions, attack, rider, slashingAttack];
+    const byId = new Map(actions.map((action) => [action.id, action]));
+    participant.canonical = { ...participant.canonical, actions, catalog: {
+      getAction: (id) => byId.get(id), listActions: () => actions,
+    } };
+    participant.actionPresentation = {
+      ...(participant.actionPresentation ?? {}),
+      [attack.id]: { entityType: 'action', entityId: attack.id, actionRef: {
+        id: attack.id, name: attack.name, description: '', rarity: 'common',
+        card_number: 'action_basic_weapon', resource: 'action', action_type: 'base_action',
+        type: 'basic', mechanics: clone(attack.mechanics), created_at: '', updated_at: '',
+      } as Action },
+      [slashingAttack.id]: { entityType: 'action', entityId: slashingAttack.id, actionRef: {
+        id: slashingAttack.id, name: slashingAttack.name, description: '', rarity: 'common',
+        card_number: 'action_basic_weapon', resource: 'action', action_type: 'base_action',
+        type: 'basic', mechanics: clone(slashingAttack.mechanics), created_at: '', updated_at: '',
+      } as Action },
+    };
+
+    let state = await createSoloCombatState({
+      character: participant.character, participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    const monsterId = Object.values(state.world.actors).find((candidate) => candidate.kind === 'monster')!.id;
+    state = placeAdjacent(state, actor.id, monsterId);
+    state = executeCombatAction({ state, actorId: actor.id, actionId: attack.id, targetIds: [monsterId], rng: () => 0.6 });
+    expect(state.pendingTriggeredAction?.optionActionIds, JSON.stringify({
+      presentation: state.actionPresentation?.[attack.id],
+      owned: state.world.actors[actor.id].capabilities.actionIds,
+      fired: state.world.actors[actor.id].runtime.firedThisTurn,
+      log: state.log.at(-1),
+      targetSize: state.world.actors[monsterId].attackProfile?.size,
+      sourceSize: state.world.actors[actor.id].attackProfile?.size,
+    })).toEqual([rider.id]);
+    state = resolveTriggeredCombatAction(state, rider.id, () => 0.5);
+    expect(state.pendingTriggeredAction).toBeUndefined();
+    expect(state.world.actors[actor.id].runtime.firedThisTurn).toContain('general_feat.crusher.push');
+    expect(state.log.flatMap((entry) => entry.records ?? []).some((record) => (
+      record.event?.type === 'movement' && record.event.mode === 'push' && record.event.distanceFt === 5
+    ))).toBe(true);
+
+    state.world.actors[actor.id].runtime.resources.action = 1;
+    state = placeAdjacent(state, actor.id, monsterId);
+    state = executeCombatAction({ state, actorId: actor.id, actionId: attack.id, targetIds: [monsterId], rng: () => 0.6 });
+    expect(state.pendingTriggeredAction).toBeUndefined();
+
+    state.world.actors[actor.id].runtime.resources.action = 1;
+    state.world.actors[actor.id].runtime.firedThisTurn = [];
+    state = placeAdjacent(state, actor.id, monsterId);
+    state = executeCombatAction({ state, actorId: actor.id, actionId: slashingAttack.id, targetIds: [monsterId], rng: () => 0.6 });
+    expect(state.pendingTriggeredAction).toBeUndefined();
+
+    state.world.actors[actor.id].runtime.resources.action = 1;
+    state.world.actors[actor.id].capabilities.actionIds = state.world.actors[actor.id].capabilities.actionIds.filter((id) => id !== rider.id);
+    state = placeAdjacent(state, actor.id, monsterId);
+    state = executeCombatAction({ state, actorId: actor.id, actionId: attack.id, targetIds: [monsterId], rng: () => 0.6 });
+    expect(state.pendingTriggeredAction).toBeUndefined();
+  });
+
+  it('offers a post-hit feat after a Protection pre-roll reaction continuation', async () => {
+    const participant = fighterSeed();
+    const actor = participant.canonical.world.actors[participant.character.id];
+    const attack: RuleActionDefinition = {
+      id: 'd8000000-0000-4000-8000-000000000001', name: 'Копьё', kind: 'nonSpell',
+      sourceEntityIds: ['test:shield-master-attack'],
+      mechanics: {
+        activation: { mode: 'active', cost: [{ resource: 'action' }] },
+        targeting: { domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1, max_targets: 1, range_ft: 5, requires_line_of_sight: true, allowed_relations: ['enemy'] },
+        effects: [{ resolution: 'attack_roll', ability: 'str', attack_kind: 'weapon_melee', who: 'target', on_hit: [{ kind: 'damage', amount: 1, type: 'piercing' }] }],
+      },
+      targeting: { minTargets: 1, maxTargets: 1, rangeFt: 5, requiresLineOfSight: true, allowedRelations: ['enemy'] },
+    };
+    const bash: RuleActionDefinition = {
+      id: 'd8000000-0000-4000-8000-000000000002', name: 'Мастер щитов: толкнуть', kind: 'nonSpell',
+      sourceEntityIds: ['FEAT-0032', 'EFF-general-FEAT-0032'],
+      mechanics: {
+        activation: { mode: 'triggered', cost: [], trigger: {
+          event: 'hit', source_action_card_number: 'action_basic_weapon',
+          feat_once_per_turn: 'general_feat.shield_master.bash',
+          feat_requires_shield: true, feat_requires_melee: true,
+        } },
+        targeting: { domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1, max_targets: 1, range_ft: 5, requires_line_of_sight: true, allowed_relations: ['enemy'] },
+        effects: [{ resolution: 'auto', who: 'target', result: [{ kind: 'movement', value: 'push', distance: 5 }] }],
+      },
+      targeting: { minTargets: 1, maxTargets: 1, rangeFt: 5, requiresLineOfSight: true, allowedRelations: ['enemy'] },
+    };
+    const canonicalShield = { ...CARD_SHIELD, properties: ['shield'] };
+    actor.character.knownCards = [...(actor.character.knownCards ?? []), canonicalShield];
+    actor.character.equippedCards = [...(actor.character.equippedCards ?? []), canonicalShield];
+    actor.runtime.equipment.off_hand = canonicalShield.id;
+    actor.capabilities.actionIds.push(attack.id, bash.id);
+    actor.capabilities.featureSources = {
+      ...(actor.capabilities.featureSources ?? {}),
+      'fighting_style.protection.reaction': ['effect:test-protection'],
+      'general_feat.shield_master': ['EFF-general-FEAT-0032'],
+    };
+    actor.runtime.resources.action = 1;
+    actor.runtime.resources.reaction = 1;
+    participant.character.resources = clone(actor.runtime.resources);
+    const actions = [...participant.canonical.actions, attack, bash];
+    const byId = new Map(actions.map((action) => [action.id, action]));
+    participant.canonical = { ...participant.canonical, actions, catalog: {
+      getAction: (id) => byId.get(id), listActions: () => actions,
+    } };
+    participant.actionPresentation = {
+      ...(participant.actionPresentation ?? {}),
+      [attack.id]: { entityType: 'action', entityId: attack.id, actionRef: {
+        id: attack.id, name: attack.name, description: '', rarity: 'common',
+        card_number: 'action_basic_weapon', resource: 'action', action_type: 'base_action',
+        type: 'basic', mechanics: clone(attack.mechanics), created_at: '', updated_at: '',
+      } as Action },
+    };
+
+    let state = await createSoloCombatState({
+      character: participant.character, participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.99,
+    });
+    const monsterId = Object.values(state.world.actors).find((candidate) => candidate.kind === 'monster')!.id;
+    state = placeAdjacent(state, actor.id, monsterId);
+    state = executeCombatAction({
+      state, actorId: actor.id, actionId: attack.id, targetIds: [monsterId], rng: () => 0.99,
+    });
+    expect(state.world.pendingResolution?.type).toBe('protection_reaction');
+
+    state = resolvePlayerReaction(state, { kind: 'reaction', actionId: null }, () => 0.99);
+    expect(state.world.pendingResolution).toBeNull();
+    expect(state.pendingTriggeredAction?.optionActionIds).toContain(bash.id);
   });
 });

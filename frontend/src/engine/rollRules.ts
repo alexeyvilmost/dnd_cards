@@ -15,6 +15,7 @@
  * Правила урона (применяет execute.ts resolveDamageAmounts):
  *  - minimum_die — считать натуральный результат каждой подходящей кости не ниже value.
  *  - die_bonus  — +value к каждой кости заданных граней (+1 к каждой к8): applies_to.die + value.
+ *  - critical_extra_die — добавить value костей того же размера к уже удвоенным костям крита.
  *  - reroll_damage — перебросить весь подходящий набор костей и оставить лучший результат.
  *  - explode    — взрывные кости: на натуральном максимуме добросить ещё (Чародейский выброс):
  *                 limit (сколько всего добросов; формула вычисляется вызывающим). Может задаваться
@@ -29,7 +30,10 @@ export const D20_RULE_OPS = new Set([
   'reroll', 'set_die', 'crit_range', 'outcome', 'on_roll', 'bonus_die',
   'bonus_die_on_failure', 'minimum_total',
 ]);
-export const DAMAGE_RULE_OPS = new Set(['minimum_die', 'die_bonus', 'explode', 'reroll_damage', 'reroll_healing_ones']);
+export const DAMAGE_RULE_OPS = new Set([
+  'minimum_die', 'die_bonus', 'critical_extra_die', 'explode',
+  'reroll_damage', 'reroll_healing_ones',
+]);
 export const ROLL_RULE_OPS = new Set([...D20_RULE_OPS, ...DAMAGE_RULE_OPS]);
 
 const num = (v: unknown, d = 0): number => { const n = Number(v); return Number.isFinite(n) ? n : d; };
@@ -183,6 +187,18 @@ export function applyDamageDieRules(
       ? rule.once_per_turn.trim()
       : undefined;
     if (key) usedRuleKeys.push(key);
+  }
+
+  for (const rule of rules) {
+    if (rule.op !== 'critical_extra_die') continue;
+    const exemplar = out.find((die) => !die.discarded);
+    const count = Math.max(0, Math.floor(num(rule.value, 1)));
+    if (!exemplar || count === 0) continue;
+    for (let index = 0; index < count; index += 1) {
+      const result = drawDie(opts.rng, exemplar.sides);
+      out.push({ sides: exemplar.sides, result });
+      delta += result;
+    }
   }
 
   const exRule = rules.find((r) => r.op === 'explode');

@@ -4,33 +4,34 @@
   "source": {
     "ruleset": {
       "systemId": "dnd5e-2024",
-      "releaseId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0",
-      "contentHash": "sha256:2ddba1ce7354f7d3e813a2531329019e6039dc27163259a59989f5557d233ca8",
+      "releaseId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0",
+      "contentHash": "sha256:9f28e9a8049d662b4e15bc6287838b47bf56e2e65001281bce3e9199f90e9633",
       "errataVersion": "phb-2024-errata-v1"
     },
     "release": {
-      "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0",
+      "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0",
       "systemId": "dnd5e-2024",
       "rulesetVersion": "2024",
       "errataVersion": "phb-2024-errata-v1",
       "sourceReleaseId": "prod-snapshot@2026-08-20.micro-mvp-l1.v2",
       "sourceContentHash": "sha256:c7205737ed1f70fa9e2db87370cd59ccd43cc4e2960b2360429e3842a745c22d",
-      "overlayHash": "sha256:67860317c1e3d1ede6993e688ad305f112186975e561508192e5ec34f4443292",
-      "contentHash": "sha256:2ddba1ce7354f7d3e813a2531329019e6039dc27163259a59989f5557d233ca8",
-      "releaseHash": "sha256:313dcc9fff197929b0d59e87246f6aac7ed162eaaf3107a583cba8ad3573d99f"
+      "overlayHash": "sha256:475cf792832c0edc32b88d2d4bcd537146d90694b250964221b36291cf8b77c6",
+      "contentHash": "sha256:9f28e9a8049d662b4e15bc6287838b47bf56e2e65001281bce3e9199f90e9633",
+      "releaseHash": "sha256:b78a359098d0728d6ccf46a942af7dece176a4519531d75bc0f3dd9d0ab15ef8"
     }
   },
   "summary": {
     "rootCount": 450,
     "combatRootCount": 450,
-    "actionOccurrenceCount": 1896,
-    "uniqueActionCount": 17
+    "actionOccurrenceCount": 2344,
+    "uniqueActionCount": 18
   },
   "coverage": [
     {
       "stableKey": "class.cleric|species.dragonborn|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -39,6 +40,7 @@
       "stableKey": "class.cleric|species.dragonborn|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -48,6 +50,7 @@
       "stableKey": "class.cleric|species.dragonborn|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -56,6 +59,7 @@
       "stableKey": "class.cleric|species.dragonborn|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -64,6 +68,7 @@
       "stableKey": "class.cleric|species.dragonborn|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -72,6 +77,7 @@
       "stableKey": "class.cleric|species.dragonborn|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -81,6 +87,7 @@
       "stableKey": "class.cleric|species.dragonborn|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -89,6 +96,7 @@
       "stableKey": "class.cleric|species.dragonborn|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -97,6 +105,7 @@
       "stableKey": "class.cleric|species.dragonborn|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -105,6 +114,7 @@
       "stableKey": "class.cleric|species.dragonborn|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -114,6 +124,7 @@
       "stableKey": "class.cleric|species.dragonborn|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -122,6 +133,7 @@
       "stableKey": "class.cleric|species.dragonborn|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -130,6 +142,7 @@
       "stableKey": "class.cleric|species.dragonborn|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -138,6 +151,7 @@
       "stableKey": "class.cleric|species.dragonborn|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -147,6 +161,7 @@
       "stableKey": "class.cleric|species.dragonborn|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -155,6 +170,7 @@
       "stableKey": "class.cleric|species.dragonborn|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -163,6 +179,7 @@
       "stableKey": "class.cleric|species.dwarf|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -171,6 +188,7 @@
       "stableKey": "class.cleric|species.dwarf|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -180,6 +198,7 @@
       "stableKey": "class.cleric|species.dwarf|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -188,6 +207,7 @@
       "stableKey": "class.cleric|species.dwarf|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -196,6 +216,7 @@
       "stableKey": "class.cleric|species.dwarf|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -204,6 +225,7 @@
       "stableKey": "class.cleric|species.dwarf|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -213,6 +235,7 @@
       "stableKey": "class.cleric|species.dwarf|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -221,6 +244,7 @@
       "stableKey": "class.cleric|species.dwarf|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -229,6 +253,7 @@
       "stableKey": "class.cleric|species.dwarf|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -237,6 +262,7 @@
       "stableKey": "class.cleric|species.dwarf|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -246,6 +272,7 @@
       "stableKey": "class.cleric|species.dwarf|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -254,6 +281,7 @@
       "stableKey": "class.cleric|species.dwarf|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -262,6 +290,7 @@
       "stableKey": "class.cleric|species.dwarf|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -270,6 +299,7 @@
       "stableKey": "class.cleric|species.dwarf|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -279,6 +309,7 @@
       "stableKey": "class.cleric|species.dwarf|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -287,6 +318,7 @@
       "stableKey": "class.cleric|species.dwarf|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -295,6 +327,7 @@
       "stableKey": "class.cleric|species.elf|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -303,6 +336,7 @@
       "stableKey": "class.cleric|species.elf|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -312,6 +346,7 @@
       "stableKey": "class.cleric|species.elf|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -320,6 +355,7 @@
       "stableKey": "class.cleric|species.elf|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -328,6 +364,7 @@
       "stableKey": "class.cleric|species.elf|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -336,6 +373,7 @@
       "stableKey": "class.cleric|species.elf|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -345,6 +383,7 @@
       "stableKey": "class.cleric|species.elf|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -353,6 +392,7 @@
       "stableKey": "class.cleric|species.elf|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -361,6 +401,7 @@
       "stableKey": "class.cleric|species.elf|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -369,6 +410,7 @@
       "stableKey": "class.cleric|species.elf|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -378,6 +420,7 @@
       "stableKey": "class.cleric|species.elf|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -386,6 +429,7 @@
       "stableKey": "class.cleric|species.elf|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -394,6 +438,7 @@
       "stableKey": "class.cleric|species.elf|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -402,6 +447,7 @@
       "stableKey": "class.cleric|species.elf|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -411,6 +457,7 @@
       "stableKey": "class.cleric|species.elf|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -419,6 +466,7 @@
       "stableKey": "class.cleric|species.elf|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -427,6 +475,7 @@
       "stableKey": "class.cleric|species.human|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -435,6 +484,7 @@
       "stableKey": "class.cleric|species.human|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -444,6 +494,7 @@
       "stableKey": "class.cleric|species.human|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -452,6 +503,7 @@
       "stableKey": "class.cleric|species.human|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -460,6 +512,7 @@
       "stableKey": "class.cleric|species.human|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -468,6 +521,7 @@
       "stableKey": "class.cleric|species.human|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -477,6 +531,7 @@
       "stableKey": "class.cleric|species.human|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -485,6 +540,7 @@
       "stableKey": "class.cleric|species.human|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -493,6 +549,7 @@
       "stableKey": "class.cleric|species.human|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -501,6 +558,7 @@
       "stableKey": "class.cleric|species.human|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -510,6 +568,7 @@
       "stableKey": "class.cleric|species.human|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -518,6 +577,7 @@
       "stableKey": "class.cleric|species.human|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -526,6 +586,7 @@
       "stableKey": "class.cleric|species.human|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -534,6 +595,7 @@
       "stableKey": "class.cleric|species.human|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -543,6 +605,7 @@
       "stableKey": "class.cleric|species.human|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -551,6 +614,7 @@
       "stableKey": "class.cleric|species.human|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -560,6 +624,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -569,6 +634,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -579,6 +645,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -588,6 +655,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -597,6 +665,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -606,6 +675,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -616,6 +686,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -625,6 +696,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -634,6 +706,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -643,6 +716,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -653,6 +727,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -662,6 +737,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -671,6 +747,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -680,6 +757,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -690,6 +768,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -699,6 +778,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -708,6 +788,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -717,6 +798,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -727,6 +809,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -736,6 +819,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -745,6 +829,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -754,6 +839,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -764,6 +850,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -773,6 +860,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -782,6 +870,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -791,6 +880,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -801,6 +891,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -810,6 +901,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -819,6 +911,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -828,6 +921,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -838,6 +932,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -847,6 +942,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -856,6 +952,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -865,6 +962,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -875,6 +973,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -884,6 +983,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -893,6 +993,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -902,6 +1003,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -912,6 +1014,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -921,6 +1024,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -930,6 +1034,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -939,6 +1044,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -949,6 +1055,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -958,6 +1065,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -967,6 +1075,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -976,6 +1085,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -986,6 +1096,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -995,6 +1106,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1004,6 +1116,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1013,6 +1126,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1023,6 +1137,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1032,6 +1147,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1041,6 +1157,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1050,6 +1167,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1060,6 +1178,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1069,6 +1188,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1078,6 +1198,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1087,6 +1208,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1097,6 +1219,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1106,6 +1229,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1115,6 +1239,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1124,6 +1249,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1134,6 +1260,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1143,6 +1270,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-druid",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1151,6 +1279,7 @@
       "stableKey": "class.fighter|species.dragonborn|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1160,6 +1289,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@51832580-68f5-4e96-8afe-93e4af045283",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@51832580-68f5-4e96-8afe-93e4af045283",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
@@ -1171,6 +1301,7 @@
       "stableKey": "class.fighter|species.dragonborn|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1179,6 +1310,7 @@
       "stableKey": "class.fighter|species.dragonborn|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1187,6 +1319,7 @@
       "stableKey": "class.fighter|species.dragonborn|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1195,6 +1328,7 @@
       "stableKey": "class.fighter|species.dragonborn|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1204,6 +1338,7 @@
       "stableKey": "class.fighter|species.dragonborn|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1212,6 +1347,7 @@
       "stableKey": "class.fighter|species.dragonborn|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1220,6 +1356,7 @@
       "stableKey": "class.fighter|species.dragonborn|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1228,6 +1365,7 @@
       "stableKey": "class.fighter|species.dragonborn|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1237,6 +1375,7 @@
       "stableKey": "class.fighter|species.dragonborn|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1245,6 +1384,7 @@
       "stableKey": "class.fighter|species.dragonborn|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1253,6 +1393,7 @@
       "stableKey": "class.fighter|species.dragonborn|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1261,6 +1402,7 @@
       "stableKey": "class.fighter|species.dragonborn|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1270,6 +1412,7 @@
       "stableKey": "class.fighter|species.dragonborn|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1278,6 +1421,7 @@
       "stableKey": "class.fighter|species.dragonborn|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1286,6 +1430,7 @@
       "stableKey": "class.fighter|species.dwarf|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1294,6 +1439,7 @@
       "stableKey": "class.fighter|species.dwarf|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1303,6 +1449,7 @@
       "stableKey": "class.fighter|species.dwarf|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1311,6 +1458,7 @@
       "stableKey": "class.fighter|species.dwarf|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1319,6 +1467,7 @@
       "stableKey": "class.fighter|species.dwarf|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1327,6 +1476,7 @@
       "stableKey": "class.fighter|species.dwarf|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1336,6 +1486,7 @@
       "stableKey": "class.fighter|species.dwarf|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1344,6 +1495,7 @@
       "stableKey": "class.fighter|species.dwarf|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1352,6 +1504,7 @@
       "stableKey": "class.fighter|species.dwarf|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1360,6 +1513,7 @@
       "stableKey": "class.fighter|species.dwarf|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1369,6 +1523,7 @@
       "stableKey": "class.fighter|species.dwarf|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1377,6 +1532,7 @@
       "stableKey": "class.fighter|species.dwarf|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1385,6 +1541,7 @@
       "stableKey": "class.fighter|species.dwarf|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1393,6 +1550,7 @@
       "stableKey": "class.fighter|species.dwarf|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1402,6 +1560,7 @@
       "stableKey": "class.fighter|species.dwarf|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1410,6 +1569,7 @@
       "stableKey": "class.fighter|species.dwarf|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1418,6 +1578,7 @@
       "stableKey": "class.fighter|species.elf|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1426,6 +1587,7 @@
       "stableKey": "class.fighter|species.elf|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1435,6 +1597,7 @@
       "stableKey": "class.fighter|species.elf|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1443,6 +1606,7 @@
       "stableKey": "class.fighter|species.elf|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1451,6 +1615,7 @@
       "stableKey": "class.fighter|species.elf|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1459,6 +1624,7 @@
       "stableKey": "class.fighter|species.elf|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1468,6 +1634,7 @@
       "stableKey": "class.fighter|species.elf|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1476,6 +1643,7 @@
       "stableKey": "class.fighter|species.elf|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1484,6 +1652,7 @@
       "stableKey": "class.fighter|species.elf|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1492,6 +1661,7 @@
       "stableKey": "class.fighter|species.elf|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1501,6 +1671,7 @@
       "stableKey": "class.fighter|species.elf|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1509,6 +1680,7 @@
       "stableKey": "class.fighter|species.elf|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1517,6 +1689,7 @@
       "stableKey": "class.fighter|species.elf|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1525,6 +1698,7 @@
       "stableKey": "class.fighter|species.elf|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1534,6 +1708,7 @@
       "stableKey": "class.fighter|species.elf|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1542,6 +1717,7 @@
       "stableKey": "class.fighter|species.elf|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1550,6 +1726,7 @@
       "stableKey": "class.fighter|species.human|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1558,6 +1735,7 @@
       "stableKey": "class.fighter|species.human|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1567,6 +1745,7 @@
       "stableKey": "class.fighter|species.human|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1575,6 +1754,7 @@
       "stableKey": "class.fighter|species.human|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1583,6 +1763,7 @@
       "stableKey": "class.fighter|species.human|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1591,6 +1772,7 @@
       "stableKey": "class.fighter|species.human|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1600,6 +1782,7 @@
       "stableKey": "class.fighter|species.human|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1608,6 +1791,7 @@
       "stableKey": "class.fighter|species.human|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1616,6 +1800,7 @@
       "stableKey": "class.fighter|species.human|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1624,6 +1809,7 @@
       "stableKey": "class.fighter|species.human|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1633,6 +1819,7 @@
       "stableKey": "class.fighter|species.human|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1641,6 +1828,7 @@
       "stableKey": "class.fighter|species.human|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1649,6 +1837,7 @@
       "stableKey": "class.fighter|species.human|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1657,6 +1846,7 @@
       "stableKey": "class.fighter|species.human|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1666,6 +1856,7 @@
       "stableKey": "class.fighter|species.human|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1674,6 +1865,7 @@
       "stableKey": "class.fighter|species.human|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1682,6 +1874,7 @@
       "stableKey": "class.rogue|species.dragonborn|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1690,6 +1883,7 @@
       "stableKey": "class.rogue|species.dragonborn|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1699,6 +1893,7 @@
       "stableKey": "class.rogue|species.dragonborn|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1707,6 +1902,7 @@
       "stableKey": "class.rogue|species.dragonborn|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1715,6 +1911,7 @@
       "stableKey": "class.rogue|species.dragonborn|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1723,6 +1920,7 @@
       "stableKey": "class.rogue|species.dragonborn|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1732,6 +1930,7 @@
       "stableKey": "class.rogue|species.dragonborn|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1740,6 +1939,7 @@
       "stableKey": "class.rogue|species.dragonborn|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1748,6 +1948,7 @@
       "stableKey": "class.rogue|species.dragonborn|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1756,6 +1957,7 @@
       "stableKey": "class.rogue|species.dragonborn|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1765,6 +1967,7 @@
       "stableKey": "class.rogue|species.dragonborn|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1773,6 +1976,7 @@
       "stableKey": "class.rogue|species.dragonborn|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1781,6 +1985,7 @@
       "stableKey": "class.rogue|species.dragonborn|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1789,6 +1994,7 @@
       "stableKey": "class.rogue|species.dragonborn|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1798,6 +2004,7 @@
       "stableKey": "class.rogue|species.dragonborn|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1806,6 +2013,7 @@
       "stableKey": "class.rogue|species.dragonborn|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1814,6 +2022,7 @@
       "stableKey": "class.rogue|species.dwarf|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1822,6 +2031,7 @@
       "stableKey": "class.rogue|species.dwarf|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1831,6 +2041,7 @@
       "stableKey": "class.rogue|species.dwarf|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1839,6 +2050,7 @@
       "stableKey": "class.rogue|species.dwarf|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1847,6 +2059,7 @@
       "stableKey": "class.rogue|species.dwarf|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1855,6 +2068,7 @@
       "stableKey": "class.rogue|species.dwarf|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1864,6 +2078,7 @@
       "stableKey": "class.rogue|species.dwarf|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1872,6 +2087,7 @@
       "stableKey": "class.rogue|species.dwarf|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1880,6 +2096,7 @@
       "stableKey": "class.rogue|species.dwarf|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1888,6 +2105,7 @@
       "stableKey": "class.rogue|species.dwarf|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1897,6 +2115,7 @@
       "stableKey": "class.rogue|species.dwarf|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1905,6 +2124,7 @@
       "stableKey": "class.rogue|species.dwarf|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1913,6 +2133,7 @@
       "stableKey": "class.rogue|species.dwarf|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1921,6 +2142,7 @@
       "stableKey": "class.rogue|species.dwarf|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1930,6 +2152,7 @@
       "stableKey": "class.rogue|species.dwarf|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1938,6 +2161,7 @@
       "stableKey": "class.rogue|species.dwarf|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1946,6 +2170,7 @@
       "stableKey": "class.rogue|species.elf|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1954,6 +2179,7 @@
       "stableKey": "class.rogue|species.elf|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1963,6 +2189,7 @@
       "stableKey": "class.rogue|species.elf|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1971,6 +2198,7 @@
       "stableKey": "class.rogue|species.elf|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1979,6 +2207,7 @@
       "stableKey": "class.rogue|species.elf|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -1987,6 +2216,7 @@
       "stableKey": "class.rogue|species.elf|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -1996,6 +2226,7 @@
       "stableKey": "class.rogue|species.elf|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2004,6 +2235,7 @@
       "stableKey": "class.rogue|species.elf|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2012,6 +2244,7 @@
       "stableKey": "class.rogue|species.elf|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2020,6 +2253,7 @@
       "stableKey": "class.rogue|species.elf|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -2029,6 +2263,7 @@
       "stableKey": "class.rogue|species.elf|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2037,6 +2272,7 @@
       "stableKey": "class.rogue|species.elf|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2045,6 +2281,7 @@
       "stableKey": "class.rogue|species.elf|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2053,6 +2290,7 @@
       "stableKey": "class.rogue|species.elf|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -2062,6 +2300,7 @@
       "stableKey": "class.rogue|species.elf|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2070,6 +2309,7 @@
       "stableKey": "class.rogue|species.elf|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2078,6 +2318,7 @@
       "stableKey": "class.rogue|species.human|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2086,6 +2327,7 @@
       "stableKey": "class.rogue|species.human|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -2095,6 +2337,7 @@
       "stableKey": "class.rogue|species.human|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2103,6 +2346,7 @@
       "stableKey": "class.rogue|species.human|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2111,6 +2355,7 @@
       "stableKey": "class.rogue|species.human|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2119,6 +2364,7 @@
       "stableKey": "class.rogue|species.human|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -2128,6 +2374,7 @@
       "stableKey": "class.rogue|species.human|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2136,6 +2383,7 @@
       "stableKey": "class.rogue|species.human|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2144,6 +2392,7 @@
       "stableKey": "class.rogue|species.human|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2152,6 +2401,7 @@
       "stableKey": "class.rogue|species.human|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -2161,6 +2411,7 @@
       "stableKey": "class.rogue|species.human|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2169,6 +2420,7 @@
       "stableKey": "class.rogue|species.human|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2177,6 +2429,7 @@
       "stableKey": "class.rogue|species.human|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2185,6 +2438,7 @@
       "stableKey": "class.rogue|species.human|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -2194,6 +2448,7 @@
       "stableKey": "class.rogue|species.human|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2202,6 +2457,7 @@
       "stableKey": "class.rogue|species.human|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2210,6 +2466,7 @@
       "stableKey": "class.sorcerer|species.dragonborn|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2220,6 +2477,7 @@
       "stableKey": "class.sorcerer|species.dragonborn|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2231,6 +2489,7 @@
       "stableKey": "class.sorcerer|species.dragonborn|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2241,6 +2500,7 @@
       "stableKey": "class.sorcerer|species.dragonborn|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2251,6 +2511,7 @@
       "stableKey": "class.sorcerer|species.dragonborn|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2261,6 +2522,7 @@
       "stableKey": "class.sorcerer|species.dragonborn|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2272,6 +2534,7 @@
       "stableKey": "class.sorcerer|species.dragonborn|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2282,6 +2545,7 @@
       "stableKey": "class.sorcerer|species.dragonborn|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2292,6 +2556,7 @@
       "stableKey": "class.sorcerer|species.dragonborn|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2302,6 +2567,7 @@
       "stableKey": "class.sorcerer|species.dragonborn|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2313,6 +2579,7 @@
       "stableKey": "class.sorcerer|species.dragonborn|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2323,6 +2590,7 @@
       "stableKey": "class.sorcerer|species.dragonborn|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2333,6 +2601,7 @@
       "stableKey": "class.sorcerer|species.dragonborn|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2343,6 +2612,7 @@
       "stableKey": "class.sorcerer|species.dragonborn|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2354,6 +2624,7 @@
       "stableKey": "class.sorcerer|species.dragonborn|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2364,6 +2635,7 @@
       "stableKey": "class.sorcerer|species.dragonborn|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2374,6 +2646,7 @@
       "stableKey": "class.sorcerer|species.dwarf|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2384,6 +2657,7 @@
       "stableKey": "class.sorcerer|species.dwarf|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2395,6 +2669,7 @@
       "stableKey": "class.sorcerer|species.dwarf|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2405,6 +2680,7 @@
       "stableKey": "class.sorcerer|species.dwarf|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2415,6 +2691,7 @@
       "stableKey": "class.sorcerer|species.dwarf|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2425,6 +2702,7 @@
       "stableKey": "class.sorcerer|species.dwarf|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2436,6 +2714,7 @@
       "stableKey": "class.sorcerer|species.dwarf|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2446,6 +2725,7 @@
       "stableKey": "class.sorcerer|species.dwarf|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2456,6 +2736,7 @@
       "stableKey": "class.sorcerer|species.dwarf|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2466,6 +2747,7 @@
       "stableKey": "class.sorcerer|species.dwarf|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2477,6 +2759,7 @@
       "stableKey": "class.sorcerer|species.dwarf|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2487,6 +2770,7 @@
       "stableKey": "class.sorcerer|species.dwarf|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2497,6 +2781,7 @@
       "stableKey": "class.sorcerer|species.dwarf|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2507,6 +2792,7 @@
       "stableKey": "class.sorcerer|species.dwarf|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2518,6 +2804,7 @@
       "stableKey": "class.sorcerer|species.dwarf|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2528,6 +2815,7 @@
       "stableKey": "class.sorcerer|species.dwarf|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2538,6 +2826,7 @@
       "stableKey": "class.sorcerer|species.elf|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2548,6 +2837,7 @@
       "stableKey": "class.sorcerer|species.elf|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2559,6 +2849,7 @@
       "stableKey": "class.sorcerer|species.elf|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2569,6 +2860,7 @@
       "stableKey": "class.sorcerer|species.elf|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2579,6 +2871,7 @@
       "stableKey": "class.sorcerer|species.elf|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2589,6 +2882,7 @@
       "stableKey": "class.sorcerer|species.elf|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2600,6 +2894,7 @@
       "stableKey": "class.sorcerer|species.elf|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2610,6 +2905,7 @@
       "stableKey": "class.sorcerer|species.elf|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2620,6 +2916,7 @@
       "stableKey": "class.sorcerer|species.elf|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2630,6 +2927,7 @@
       "stableKey": "class.sorcerer|species.elf|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2641,6 +2939,7 @@
       "stableKey": "class.sorcerer|species.elf|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2651,6 +2950,7 @@
       "stableKey": "class.sorcerer|species.elf|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2661,6 +2961,7 @@
       "stableKey": "class.sorcerer|species.elf|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2671,6 +2972,7 @@
       "stableKey": "class.sorcerer|species.elf|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2682,6 +2984,7 @@
       "stableKey": "class.sorcerer|species.elf|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2692,6 +2995,7 @@
       "stableKey": "class.sorcerer|species.elf|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2702,6 +3006,7 @@
       "stableKey": "class.sorcerer|species.human|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2712,6 +3017,7 @@
       "stableKey": "class.sorcerer|species.human|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2723,6 +3029,7 @@
       "stableKey": "class.sorcerer|species.human|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2733,6 +3040,7 @@
       "stableKey": "class.sorcerer|species.human|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2743,6 +3051,7 @@
       "stableKey": "class.sorcerer|species.human|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2753,6 +3062,7 @@
       "stableKey": "class.sorcerer|species.human|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2764,6 +3074,7 @@
       "stableKey": "class.sorcerer|species.human|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2774,6 +3085,7 @@
       "stableKey": "class.sorcerer|species.human|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2784,6 +3096,7 @@
       "stableKey": "class.sorcerer|species.human|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2794,6 +3107,7 @@
       "stableKey": "class.sorcerer|species.human|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2805,6 +3119,7 @@
       "stableKey": "class.sorcerer|species.human|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2815,6 +3130,7 @@
       "stableKey": "class.sorcerer|species.human|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2825,6 +3141,7 @@
       "stableKey": "class.sorcerer|species.human|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2835,6 +3152,7 @@
       "stableKey": "class.sorcerer|species.human|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2846,6 +3164,7 @@
       "stableKey": "class.sorcerer|species.human|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2856,6 +3175,7 @@
       "stableKey": "class.sorcerer|species.human|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-sorcerer",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-sorcerer",
@@ -2866,6 +3186,7 @@
       "stableKey": "class.warlock|species.dragonborn|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2874,6 +3195,7 @@
       "stableKey": "class.warlock|species.dragonborn|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -2883,6 +3205,7 @@
       "stableKey": "class.warlock|species.dragonborn|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2891,6 +3214,7 @@
       "stableKey": "class.warlock|species.dragonborn|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2899,6 +3223,7 @@
       "stableKey": "class.warlock|species.dragonborn|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2907,6 +3232,7 @@
       "stableKey": "class.warlock|species.dragonborn|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -2916,6 +3242,7 @@
       "stableKey": "class.warlock|species.dragonborn|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2924,6 +3251,7 @@
       "stableKey": "class.warlock|species.dragonborn|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2932,6 +3260,7 @@
       "stableKey": "class.warlock|species.dragonborn|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2940,6 +3269,7 @@
       "stableKey": "class.warlock|species.dragonborn|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -2949,6 +3279,7 @@
       "stableKey": "class.warlock|species.dragonborn|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2957,6 +3288,7 @@
       "stableKey": "class.warlock|species.dragonborn|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2965,6 +3297,7 @@
       "stableKey": "class.warlock|species.dragonborn|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2973,6 +3306,7 @@
       "stableKey": "class.warlock|species.dragonborn|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -2982,6 +3316,7 @@
       "stableKey": "class.warlock|species.dragonborn|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2990,6 +3325,7 @@
       "stableKey": "class.warlock|species.dragonborn|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -2998,6 +3334,7 @@
       "stableKey": "class.warlock|species.dwarf|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3006,6 +3343,7 @@
       "stableKey": "class.warlock|species.dwarf|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -3015,6 +3353,7 @@
       "stableKey": "class.warlock|species.dwarf|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3023,6 +3362,7 @@
       "stableKey": "class.warlock|species.dwarf|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3031,6 +3371,7 @@
       "stableKey": "class.warlock|species.dwarf|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3039,6 +3380,7 @@
       "stableKey": "class.warlock|species.dwarf|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -3048,6 +3390,7 @@
       "stableKey": "class.warlock|species.dwarf|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3056,6 +3399,7 @@
       "stableKey": "class.warlock|species.dwarf|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3064,6 +3408,7 @@
       "stableKey": "class.warlock|species.dwarf|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3072,6 +3417,7 @@
       "stableKey": "class.warlock|species.dwarf|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -3081,6 +3427,7 @@
       "stableKey": "class.warlock|species.dwarf|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3089,6 +3436,7 @@
       "stableKey": "class.warlock|species.dwarf|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3097,6 +3445,7 @@
       "stableKey": "class.warlock|species.dwarf|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3105,6 +3454,7 @@
       "stableKey": "class.warlock|species.dwarf|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -3114,6 +3464,7 @@
       "stableKey": "class.warlock|species.dwarf|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3122,6 +3473,7 @@
       "stableKey": "class.warlock|species.dwarf|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3130,6 +3482,7 @@
       "stableKey": "class.warlock|species.elf|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3138,6 +3491,7 @@
       "stableKey": "class.warlock|species.elf|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -3147,6 +3501,7 @@
       "stableKey": "class.warlock|species.elf|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3155,6 +3510,7 @@
       "stableKey": "class.warlock|species.elf|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3163,6 +3519,7 @@
       "stableKey": "class.warlock|species.elf|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3171,6 +3528,7 @@
       "stableKey": "class.warlock|species.elf|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -3180,6 +3538,7 @@
       "stableKey": "class.warlock|species.elf|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3188,6 +3547,7 @@
       "stableKey": "class.warlock|species.elf|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3196,6 +3556,7 @@
       "stableKey": "class.warlock|species.elf|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3204,6 +3565,7 @@
       "stableKey": "class.warlock|species.elf|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -3213,6 +3575,7 @@
       "stableKey": "class.warlock|species.elf|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3221,6 +3584,7 @@
       "stableKey": "class.warlock|species.elf|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3229,6 +3593,7 @@
       "stableKey": "class.warlock|species.elf|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3237,6 +3602,7 @@
       "stableKey": "class.warlock|species.elf|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -3246,6 +3612,7 @@
       "stableKey": "class.warlock|species.elf|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3254,6 +3621,7 @@
       "stableKey": "class.warlock|species.elf|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3262,6 +3630,7 @@
       "stableKey": "class.warlock|species.human|background.acolyte|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3270,6 +3639,7 @@
       "stableKey": "class.warlock|species.human|background.acolyte|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -3279,6 +3649,7 @@
       "stableKey": "class.warlock|species.human|background.acolyte|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3287,6 +3658,7 @@
       "stableKey": "class.warlock|species.human|background.acolyte|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3295,6 +3667,7 @@
       "stableKey": "class.warlock|species.human|background.criminal|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3303,6 +3676,7 @@
       "stableKey": "class.warlock|species.human|background.criminal|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -3312,6 +3686,7 @@
       "stableKey": "class.warlock|species.human|background.criminal|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3320,6 +3695,7 @@
       "stableKey": "class.warlock|species.human|background.criminal|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3328,6 +3704,7 @@
       "stableKey": "class.warlock|species.human|background.sage|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3336,6 +3713,7 @@
       "stableKey": "class.warlock|species.human|background.sage|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -3345,6 +3723,7 @@
       "stableKey": "class.warlock|species.human|background.sage|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3353,6 +3732,7 @@
       "stableKey": "class.warlock|species.human|background.sage|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3361,6 +3741,7 @@
       "stableKey": "class.warlock|species.human|background.soldier|feat.alert",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3369,6 +3750,7 @@
       "stableKey": "class.warlock|species.human|background.soldier|feat.magic-initiate",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
@@ -3378,6 +3760,7 @@
       "stableKey": "class.warlock|species.human|background.soldier|feat.skilled",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3386,6 +3769,7 @@
       "stableKey": "class.warlock|species.human|background.soldier|feat.tough",
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d"
       ]
@@ -3395,6 +3779,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3407,6 +3792,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3419,6 +3805,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3431,6 +3818,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3443,6 +3831,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3455,6 +3844,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3467,6 +3857,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3479,6 +3870,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3491,6 +3883,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3503,6 +3896,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3515,6 +3909,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3527,6 +3922,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3539,6 +3935,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3551,6 +3948,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3563,6 +3961,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3575,6 +3974,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3587,6 +3987,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3599,6 +4000,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3611,6 +4013,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3623,6 +4026,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3635,6 +4039,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3647,6 +4052,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3659,6 +4065,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3671,6 +4078,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3683,6 +4091,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3695,6 +4104,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3707,6 +4117,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3719,6 +4130,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3731,6 +4143,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3743,6 +4156,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3755,6 +4169,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3767,6 +4182,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3779,6 +4195,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3791,6 +4208,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3803,6 +4221,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3815,6 +4234,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3827,6 +4247,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3839,6 +4260,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3851,6 +4273,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3863,6 +4286,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3875,6 +4299,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3887,6 +4312,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3899,6 +4325,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3911,6 +4338,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3923,6 +4351,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3935,6 +4364,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3947,6 +4377,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3959,6 +4390,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3971,6 +4403,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3983,6 +4416,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -3995,6 +4429,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -4007,6 +4442,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -4019,6 +4455,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -4031,6 +4468,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -4043,6 +4481,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -4055,6 +4494,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -4067,6 +4507,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -4079,6 +4520,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -4091,6 +4533,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -4103,6 +4546,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -4115,6 +4559,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -4127,6 +4572,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -4139,6 +4585,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -4151,6 +4598,7 @@
       "actionIds": [
         "10800000-0000-4000-8000-000000000001",
         "34518f38-b737-4a91-88ac-d5858d2d04a0@CLASS-wizard",
+        "442ba733-5af0-4680-a411-05e15adc8a4d",
         "6812f780-de8a-4509-9253-b4be711a9212",
         "732c2287-dd4d-46cd-9315-67447549abfa@CLASS-wizard",
         "938a86fd-e0bf-4845-b4b3-acfe2fed2b59@CLASS-wizard",
@@ -4881,6 +5329,64 @@
           "material": false
         }
       }
+    },
+    {
+      "id": "442ba733-5af0-4680-a411-05e15adc8a4d",
+      "name": "Безоружный удар",
+      "mechanics": {
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            }
+          ],
+          "mode": "active"
+        },
+        "effects": [
+          {
+            "ability": "str",
+            "attack_kind": "unarmed",
+            "on_hit": [
+              {
+                "amount": "1 + str",
+                "kind": "damage",
+                "type": "bludgeoning"
+              }
+            ],
+            "resolution": "attack_roll",
+            "vs": "ac"
+          }
+        ],
+        "name": "Безоружный удар",
+        "targeting": {
+          "domain": "actor",
+          "actor_targets": true,
+          "shape": "single",
+          "min_targets": 1,
+          "max_targets": 1,
+          "range_ft": 5,
+          "requires_line_of_sight": true,
+          "allowed_relations": [
+            "enemy"
+          ]
+        },
+        "primitive": {
+          "type": "unarmed_strike"
+        }
+      },
+      "sourceEntityIds": [
+        "442ba733-5af0-4680-a411-05e15adc8a4d"
+      ],
+      "targeting": {
+        "minTargets": 1,
+        "maxTargets": 1,
+        "rangeFt": 5,
+        "requiresLineOfSight": true,
+        "allowedRelations": [
+          "enemy"
+        ]
+      },
+      "kind": "nonSpell"
     },
     {
       "id": "6812f780-de8a-4509-9253-b4be711a9212",
@@ -6118,6 +6624,12 @@
         ]
       }
     ],
+    "442ba733-5af0-4680-a411-05e15adc8a4d": [
+      {
+        "grants": [],
+        "preparedSources": []
+      }
+    ],
     "6812f780-de8a-4509-9253-b4be711a9212": [
       {
         "grants": [],
@@ -6767,6 +7279,6 @@
       }
     ]
   },
-  "sourceProjectionHash": "sha256:ec1edaf5acc164bbf9366df664dbe68e2badb09873f8bd48dbe7fdca340237cf",
-  "contentHash": "sha256:34bddc0cc06f42e36f6a12e51cfcfa2c6fa0aefd4cb8a49b839220b1a3b02ba9"
+  "sourceProjectionHash": "sha256:7e5f2d57b459964aac9cd22cca69e7c815c05b627e4a5af10ae1be7e917daa35",
+  "contentHash": "sha256:3004b67c5a3389b530a9091d241473f05361d416d64b6c513c0c86a92a37b30d"
 }

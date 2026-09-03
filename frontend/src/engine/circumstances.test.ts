@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { activeConditionsOf, evaluateCondition, matchesWhen, type EvalContext } from './circumstances';
 import type { ActiveEffectEntry, RuntimeState } from '../mvp/contracts';
+import type { Card } from '../types';
 
 function stateWith(activeEffects: ActiveEffectEntry[]): RuntimeState {
   return {
@@ -41,6 +42,29 @@ describe('circumstances', () => {
     expect(evaluateCondition({ kind: 'any_of', of: [has, hasnt] }, ctx)).toBe(true);
     expect(evaluateCondition({ kind: 'all_of', of: [has, hasnt] }, ctx)).toBe(false);
     expect(evaluateCondition({ kind: 'not', of: hasnt }, ctx)).toBe(true);
+  });
+
+  it('wearing_armor honors an optional armor category', () => {
+    const lightArmor = {
+      id: 'light-armor', name: 'Light armor', description: '', rarity: 'common',
+      card_number: 'test-light', type: 'chest', slot: 'body', properties: null,
+      defense_type: 'light',
+    } as Card;
+    const heavyArmor = {
+      ...lightArmor, id: 'heavy-armor', name: 'Heavy armor', card_number: 'test-heavy', defense_type: 'heavy',
+    } as Card;
+    const baseState = stateWith([]);
+    const lightState = { ...baseState, equipment: { body: lightArmor.id } };
+    const heavyState = { ...baseState, equipment: { body: heavyArmor.id } };
+    const character = { knownCards: [lightArmor, heavyArmor] } as EvalContext['character'];
+
+    expect(evaluateCondition({ kind: 'wearing_armor' }, { state: lightState, character })).toBe(true);
+    expect(evaluateCondition({ kind: 'wearing_armor', category: 'heavy' }, { state: lightState, character })).toBe(false);
+    expect(evaluateCondition({ kind: 'wearing_armor', category: 'heavy' }, { state: heavyState, character })).toBe(true);
+    expect(evaluateCondition(
+      { kind: 'not', of: { kind: 'wearing_armor', category: 'heavy' } },
+      { state: lightState, character },
+    )).toBe(true);
   });
 
   it('нераспознанный предикат-гейт → false (closed-by-default); narrative → true (ГМ)', () => {

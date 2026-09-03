@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CharacterClass } from '../types';
 import { computeMulticlassMaxHP } from './derive';
-import { addClassLevel, multiclassPrerequisiteIssues, normalizedClassLevels, totalClassLevel } from './multiclass';
+import { addClassLevel, multiclassPrerequisiteIssues, normalizedClassLevels, normalizedSubclassIds, subclassSelectionIssues, totalClassLevel } from './multiclass';
 
 const klass = (id: string, card_number: string): CharacterClass => ({
   id, card_number, name: card_number, description: '', rarity: 'common', created_at: '', updated_at: '',
@@ -17,6 +17,27 @@ describe('multiclass progression', () => {
   it('adds a level to the selected destination class', () => {
     const levels = addClassLevel({ classId: 'fighter-id', classLevels: { 'fighter-id': 1 }, level: 1 }, 'wizard-id');
     expect(levels).toEqual({ 'fighter-id': 1, 'wizard-id': 1 });
+  });
+
+  it('preserves one subclass per owning class and backfills the legacy primary selection', () => {
+    expect(normalizedSubclassIds({ wizard: 'evoker' }, 'fighter', 'champion')).toEqual({
+      fighter: 'champion', wizard: 'evoker',
+    });
+    expect(normalizedSubclassIds({ fighter: 'battle-master' }, 'fighter', 'champion')).toEqual({
+      fighter: 'battle-master',
+    });
+  });
+
+  it('requires every already-due subclass and rejects a subclass owned by another class', () => {
+    const fighter = { ...klass('fighter', 'CLASS-warrior'), subclass_level: 3 };
+    const wizard = { ...klass('wizard', 'CLASS-wizard'), subclass_level: 3 };
+    const champion = { ...klass('champion', 'fighter_champion'), parent_class_id: fighter.id, is_subclass: true };
+    const evoker = { ...klass('evoker', 'wizard_evoker'), parent_class_id: wizard.id, is_subclass: true };
+    const classes = [fighter, wizard, champion, evoker];
+    expect(subclassSelectionIssues(classes, { fighter: 3, wizard: 3 }, { fighter: 'champion' }))
+      .toEqual([{ classId: 'wizard', className: 'CLASS-wizard', reason: 'missing' }]);
+    expect(subclassSelectionIssues(classes, { fighter: 3, wizard: 3 }, { fighter: 'evoker', wizard: 'evoker' }))
+      .toEqual([{ classId: 'fighter', className: 'CLASS-warrior', reason: 'invalid' }]);
   });
 
   it('enforces every ability in a multiclass prerequisite', () => {

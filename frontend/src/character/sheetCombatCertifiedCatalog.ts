@@ -14,13 +14,15 @@ import {
   parseDeclaredWeaponActionPolicy,
   WEAPON_ATTACK_PRIMITIVE,
 } from '../rules-core/weaponActionPolicies';
+import { UNARMED_STRIKE_PRIMITIVE } from './sheetCombatDeclaration';
+import { applyUnarmedDamageProfileToAction } from '../rules-core/fightingStyleComplexPrimitives';
 import generatedSheetCombatArtifact from './sheetCombatCertification.generated.json';
 
 export const SHEET_COMBAT_CERTIFICATION_SCHEMA_VERSION = 1 as const;
 export const SHEET_COMBAT_CERTIFICATION_ARTIFACT_VERSION = '1.0.0' as const;
 export const SHEET_COMBAT_CERTIFICATION_EXPECTED_MATRIX_ROOT_COUNT = 448 as const;
 export const SHEET_COMBAT_CERTIFICATION_EXPECTED_ROOT_COUNT = 450 as const;
-export const SHEET_COMBAT_CERTIFICATION_EXPECTED_ACTION_COUNT = 17 as const;
+export const SHEET_COMBAT_CERTIFICATION_EXPECTED_ACTION_COUNT = 18 as const;
 export const SHEET_COMBAT_CERTIFICATION_EXPECTED_MAGIC_INITIATE_ACTION_COUNT = 4 as const;
 export const MAGIC_INITIATE_WIZARD_GRANT_SOURCE_ID = 'FEAT-0009' as const;
 
@@ -28,6 +30,7 @@ const COMBAT_PRIMITIVES = new Set([
   'burning_hands_objects',
   'area_object_push',
   'magic_missile',
+  UNARMED_STRIKE_PRIMITIVE,
   WEAPON_ATTACK_PRIMITIVE,
   LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE,
 ]);
@@ -181,12 +184,20 @@ function exactStringArray(value: unknown, label: string): string[] {
 }
 
 function isSheetCombatAction(action: RuleActionDefinition): boolean {
-  const primitive = object(action.mechanics.primitive)?.type;
-  if (typeof primitive === 'string' && COMBAT_PRIMITIVES.has(primitive)) return true;
   const activation = object(action.mechanics.activation);
   const trigger = object(activation?.trigger);
-  return Array.isArray(trigger?.events)
+  const isCertifiedMagicMissileReaction = Array.isArray(trigger?.events)
     && trigger.events.includes('targeted_by_magic_missile');
+  if (isCertifiedMagicMissileReaction) return true;
+  // Triggered higher-level actions are merged into solo combat from the
+  // character's live data after the independently pinned L1 certificate has
+  // been established. A compatibility primitive must not promote them into
+  // that certificate (for example Martial Arts is still an unarmed attack).
+  if (activation?.mode === 'triggered') {
+    return false;
+  }
+  const primitive = object(action.mechanics.primitive)?.type;
+  return typeof primitive === 'string' && COMBAT_PRIMITIVES.has(primitive);
 }
 
 /**
@@ -763,6 +774,41 @@ export function assertCertifiedSheetCombatActorAction(
     throw new Error(`Action ${action.id} is outside the reviewed micro-MVP combat catalog`);
   }
   const primitive = object(expected.mechanics.primitive)?.type;
+  if (primitive === UNARMED_STRIKE_PRIMITIVE) {
+    const cards = new Map([
+      ...(actor.character.knownCards ?? []),
+      ...(actor.character.equippedCards ?? []),
+    ].map((card) => [card.id, card] as const));
+    const heldCards = (['main_hand', 'off_hand'] as const).flatMap((slot) => {
+      const cardId = actor.runtime.equipment[slot];
+      return cardId && cards.get(cardId) ? [cards.get(cardId)!] : [];
+    });
+    const equippedCards = Object.values(actor.runtime.equipment).flatMap((cardId) => (
+      cardId && cards.get(cardId) ? [cards.get(cardId)!] : []
+    ));
+    const expectedBound = applyUnarmedDamageProfileToAction(
+      expected,
+      actor.passives ?? [],
+      {
+        holdingWeaponOrShield: heldCards.some((card) => (
+          card.type === 'weapon' || card.type === 'shield' || card.defense_type === 'shield'
+        )),
+        wearingArmorOrShield: equippedCards.some((card) => card.defense_type != null),
+        variables: actor.character.variables,
+        abilityMods: actor.character.abilityMods,
+      },
+    );
+    const expectedExecution = certifiedExecutionProjection(expectedBound);
+    const actualExecution = certifiedExecutionProjection(action);
+    if (canonicalStringify(actualExecution) !== canonicalStringify(expectedExecution)) {
+      throw new Error(
+        `Action ${action.id} differs from its actor-specific certified unarmed binding at ${
+          firstExecutionDifference(expectedExecution, actualExecution)
+        }`,
+      );
+    }
+    return certifiedActionWithLiveMetadata(expectedBound, action);
+  }
   if (primitive !== WEAPON_ATTACK_PRIMITIVE
     && primitive !== LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE) {
     return assertCertifiedSheetCombatAction(action, certified);
@@ -799,13 +845,18 @@ export function assertCertifiedSheetCombatActorAction(
   const expectedExecution = certifiedExecutionProjection(expectedBound);
   const actualExecution = certifiedExecutionProjection(action);
   if (canonicalStringify(actualExecution) !== canonicalStringify(expectedExecution)) {
+    const expectedRange = object(expectedExecution.mechanics.targeting)?.range_ft;
+    const actualRange = object(actualExecution.mechanics.targeting)?.range_ft;
     throw new Error(
       `Action ${action.id} differs from its actor-specific certified weapon binding at ${
         firstExecutionDifference(expectedExecution, actualExecution)
-      }`,
+      } (expected range ${String(expectedRange)}, received ${String(actualRange)})`,
     );
   }
-  return certifiedActionWithLiveMetadata(expected, action);
+  // Keep the reviewed identity and the actor-specific weapon binding together.
+  // Returning the unbound 600-foot template here makes the session's own
+  // second certification pass reject the action that just passed validation.
+  return certifiedActionWithLiveMetadata(expectedBound, action);
 }
 
 export function actionBelongsToSheetCombatSlice(action: RuleActionDefinition): boolean {

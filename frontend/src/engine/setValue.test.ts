@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { executeAction, applyIncomingDamage, MechanicsExecutionError } from './execute';
 import { computeAC } from './ac';
 import { longRest } from './turn';
+import { activeConditionsOf } from './circumstances';
 import type { CharacterContext, ExecuteContext, RuntimeState } from '../mvp/contracts';
 
 type Dict = Record<string, unknown>;
@@ -103,6 +104,38 @@ describe('2.4 — set_value', () => {
     expect(events.some((e) => JSON.stringify(e).includes('NOT_IMPLEMENTED'))).toBe(false);
     expect(state.activeEffects.length).toBe(1);              // выданный эффект установлен
     expect(computeAC(cc, state, []).value).toBe(16);         // 13 + ЛВК(3)
+  });
+
+  it('COND-* grant_effect materializes the exact library condition and remove_effect removes that card', () => {
+    const apply: Dict = { name: 'Паутина', activation: { cost: [] }, effects: [{
+      resolution: 'auto', result: [{
+        kind: 'grant_effect', value: 'COND-restrained', area_linked: true,
+        duration: { type: 'rounds', amount: 2 },
+      }],
+    }] };
+    const granted = {
+      'COND-restrained': {
+        id: 'effect-restrained', card_number: 'COND-restrained', name: 'Опутан',
+        mechanics: { activation: { mode: 'passive' }, condition: { id: 'restrained' }, effects: [] },
+      },
+    };
+    const conditionCtx = {
+      character, rng: () => 0.5, selfId: 'caster', grantedEffects: granted,
+    } as unknown as Ctx;
+    const applied = executeAction(fresh(), apply, conditionCtx).state;
+    expect(activeConditionsOf(applied)).toContain('restrained');
+    expect(applied.activeEffects).toEqual([expect.objectContaining({
+      roundsLeft: 2,
+      entityRef: { kind: 'effect', id: 'effect-restrained', cardNumber: 'COND-restrained' },
+      mechanics: expect.objectContaining({
+        kind: 'condition', value: 'restrained', source_entity_id: 'effect-restrained', area_linked: true,
+      }),
+    })]);
+
+    const remove: Dict = { name: 'Освобождение', activation: { cost: [] }, effects: [{
+      resolution: 'auto', result: [{ kind: 'remove_effect', card_number: 'COND-restrained' }],
+    }] };
+    expect(executeAction(applied, remove, conditionCtx).state.activeEffects).toEqual([]);
   });
 
   it('повторяемый grant_effect (условие) НАКАПЛИВАЕТСЯ: два каста → два экземпляра', () => {

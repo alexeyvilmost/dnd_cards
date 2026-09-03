@@ -46,6 +46,30 @@ describe('450-root sheet combat certification', () => {
     certified = await certifySheetCombatArtifact(generatedArtifact);
   }, 30_000);
 
+  it('keeps higher-level triggered attack riders outside the pinned L1 primitive slice', () => {
+    const martialArtsRider: RuleActionDefinition = {
+      id: 'martial-arts-rider',
+      name: 'Martial Arts rider',
+      kind: 'nonSpell',
+      sourceEntityIds: ['EFF-martial-arts'],
+      mechanics: {
+        primitive: { type: 'unarmed_strike' },
+        activation: {
+          mode: 'triggered',
+          optional: true,
+          trigger: { event: 'hit' },
+          cost: [{ resource: 'bonus_action', amount: 1 }],
+        },
+        effects: [{
+          resolution: 'attack_roll', attack_kind: 'unarmed', ability: 'dex', vs: 'ac',
+          on_hit: [{ kind: 'damage', amount: '1d8 + dex', type: 'bludgeoning' }],
+        }],
+      },
+    };
+
+    expect(actionBelongsToSheetCombatSlice(martialArtsRider)).toBe(false);
+  });
+
   it('is byte-for-byte generated from the complete current compiler output', () => {
     expect(serializeSheetCombatCertificationArtifact(
       generatedArtifact as unknown as SheetCombatCertificationArtifact,
@@ -54,8 +78,8 @@ describe('450-root sheet combat certification', () => {
     expect(artifact.summary).toEqual({
       rootCount: 450,
       combatRootCount: 450,
-      actionOccurrenceCount: 1896,
-      uniqueActionCount: 17,
+      actionOccurrenceCount: 2344,
+      uniqueActionCount: 18,
     });
   });
 
@@ -106,7 +130,7 @@ describe('450-root sheet combat certification', () => {
         certified,
       )).not.toThrow();
     }
-    expect(occurrences).toBe(1888);
+    expect(occurrences).toBe(2336);
   });
 
   it('records every Magic Initiate combat spell choice and mental casting ability', () => {

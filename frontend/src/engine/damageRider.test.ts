@@ -169,4 +169,45 @@ describe('универсальный damage_rider', () => {
     expect(first.events).toContainEqual({ type: 'effect_expired', name: 'Яд, простой' });
     expect(first.events.filter((event) => event.type === 'damage')).toHaveLength(2);
   });
+
+  it('применяет общий once_per_turn райдер лишь к первому подходящему попаданию', () => {
+    const state = equippedFighterState();
+    state.activeEffects.push({
+      id: 'celestial-revelation',
+      name: 'Небесное откровение',
+      source: 'Небесное откровение',
+      ownerId: 'aasimar',
+      sourceId: 'aasimar',
+      roundsLeft: 10,
+      mechanics: {
+        activation: { mode: 'passive' },
+        effects: [{ resolution: 'auto', result: [{
+          kind: 'damage_rider', trigger: 'hit_by_attack_roll', dice: 'prof_bonus', type: 'radiant',
+          scope: 'self', once_per_turn: 'aasimar:celestial-revelation:damage',
+          duration: { type: 'minutes', amount: 1 },
+        }] }],
+      },
+    });
+    const target = durableTarget(50);
+    const first = executeAction(state, weaponAttack, {
+      character: FIGHTER_CTX_EQUIPPED,
+      selfId: 'aasimar',
+      target: { id: 'target', ac: 10, runtimeState: target },
+      rng: sequence([face(15), face(5, 8)]),
+    });
+    const second = executeAction(first.state, weaponAttack, {
+      character: FIGHTER_CTX_EQUIPPED,
+      selfId: 'aasimar',
+      target: { id: 'target', ac: 10, runtimeState: first.targetState },
+      rng: sequence([face(15), face(5, 8)]),
+    });
+
+    expect(first.events.filter((event) => event.type === 'damage').map((event) => (
+      event.type === 'damage' ? event.damageType : ''
+    ))).toEqual(['slashing', 'radiant']);
+    expect(first.state.firedThisTurn).toContain('damage-rider:aasimar:celestial-revelation:damage');
+    expect(second.events.filter((event) => event.type === 'damage').map((event) => (
+      event.type === 'damage' ? event.damageType : ''
+    ))).toEqual(['slashing']);
+  });
 });

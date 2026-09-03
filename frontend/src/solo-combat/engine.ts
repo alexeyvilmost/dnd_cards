@@ -33,7 +33,9 @@ import { parseWeaponProfile } from '../rules-core/weaponProfile';
 import type { WorldObjectState } from '../rules-core/worldObjects';
 import { projectRuleAction } from '../canon/ruleActionProjection';
 import type { Monster } from '../monsters/types';
-import { canPay } from '../engine/cost';
+import { canPay, pay } from '../engine/cost';
+import { payloadsOf } from '../engine/mechanicsView';
+import { deniedCapabilities } from '../engine/modifiers';
 import {
   executeRemoteManipulator as executeEngineRemoteManipulator,
   type RemoteManipulatorCommand,
@@ -50,10 +52,12 @@ import {
   effectiveCombatActorSpeedFt,
   gridDistanceFt,
   occupiedPositions,
+  pullToward,
   pushAway,
 } from './tacticalGrid';
 import {
   createCombatArea,
+  areaContains,
   decrementSourceAreas,
   enteredAndExitedAreas,
   hazardCatalog,
@@ -74,14 +78,43 @@ import {
   type CombatLogEntry,
   type CombatLogEventRecord,
   type GridPosition,
+  type PendingD20Interrupt,
+  type PendingTriggeredAction,
   type SoloCombatState,
 } from './types';
+import { warCasterOpportunitySpellVersion } from '../rules-core/generalSpellFeatRuntime';
+import { generalFeatTriggeredUseKey } from '../rules-core/generalFeatDamageRuntime';
+import {
+  actorOwnsCharger,
+  actorOwnsSentinel,
+  chargerApproachEligible,
+  shieldMasterBashEligible,
+} from '../rules-core/generalFeatReactionRuntime';
 import { projectSoloCombatActionChoices, UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
 
 type Rng = () => number;
+type CombatActionInput = {
+  state: SoloCombatState;
+  actorId: string;
+  actionId: string;
+  targetIds: string[];
+  worldPosition?: GridPosition;
+  worldInput?: ActionWorldInput;
+  scenarioObjects?: readonly WorldObjectState[];
+  choices?: Readonly<Record<string, readonly string[]>>;
+  rng?: Rng;
+};
 const ALERT_INITIATIVE_SWAP_CAPABILITY = 'alert.initiative_swap';
 const PROTECTION_REACTION_CAPABILITY = 'fighting_style.protection.reaction';
 const INTERCEPTION_REACTION_CAPABILITY = 'fighting_style.interception.reaction';
+const COMBAT_AREA_EVENT_LABELS = {
+  created: 'создание области',
+  enter: 'вход в область',
+  exit: 'выход из области',
+  move: 'движение внутри области',
+  start_turn: 'начало хода в области',
+  end_turn: 'конец хода в области',
+} as const;
 
 export interface SelectedMonster {
   monster: Monster;
@@ -161,6 +194,44 @@ function opportunityVersion(action: RuleActionDefinition): RuleActionDefinition 
       allowedRelations: ['enemy'],
     },
   } as RuleActionDefinition;
+}
+
+function installWarCasterOpportunitySpells(input: {
+  actor: ActorState;
+  sourceActions: readonly RuleActionDefinition[];
+  catalogActions: RuleActionDefinition[];
+}): string[] {
+  const installed: string[] = [];
+  for (const source of input.sourceActions) {
+    const reaction = warCasterOpportunitySpellVersion(source, input.actor.passives ?? []);
+    if (!reaction) continue;
+    if (!input.catalogActions.some((candidate) => candidate.id === reaction.id)) {
+      input.catalogActions.push(reaction);
+    }
+    if (!input.actor.capabilities.actionIds.includes(reaction.id)) {
+      input.actor.capabilities.actionIds.push(reaction.id);
+    }
+    const access = input.actor.spellcastingAccess;
+    if (access) {
+      const reactionGrants = access.grants.filter((grant) => grant.actionId === source.id).map((grant) => ({
+        ...grant,
+        grantId: `${grant.grantId}:war-caster-opportunity`,
+        actionId: reaction.id,
+        // This is a derived cast mode of an already prepared spell, not a new
+        // entry in the spellbook. Keeping `spellbook` here makes the persisted
+        // prepared-source invariant demand that the reaction alias itself be
+        // present in availableActionIds and bricks the next combat reload.
+        access: grant.access === 'spellbook' ? 'always_prepared' as const : grant.access,
+      }));
+      for (const grant of reactionGrants) {
+        if (!access.grants.some((candidate) => candidate.grantId === grant.grantId)) {
+          access.grants.push(grant);
+        }
+      }
+    }
+    installed.push(reaction.id);
+  }
+  return installed;
 }
 
 function isAttackAction(action: RuleActionDefinition): boolean {
@@ -446,17 +517,19 @@ function applyForcedMovement(
   for (const envelope of events) {
     const forced = envelope.payload.type === 'EngineEventRecorded'
       && envelope.payload.event.type === 'movement'
-      && envelope.payload.event.mode === 'push'
+      && (envelope.payload.event.mode === 'push' || envelope.payload.event.mode === 'pull')
       ? {
         sourceActorId: envelope.payload.actorId,
         targetIds: envelope.payload.targetIds,
         distanceFt: envelope.payload.event.distanceFt,
+        mode: envelope.payload.event.mode,
       }
       : envelope.payload.type === 'ShoveApplied' && envelope.payload.outcome === 'push_5ft'
         ? {
           sourceActorId: envelope.payload.sourceActorId,
           targetIds: [envelope.payload.targetActorId],
           distanceFt: 5,
+          mode: 'push' as const,
         }
         : null;
     if (!forced) continue;
@@ -464,7 +537,7 @@ function applyForcedMovement(
     for (const targetId of forced.targetIds) {
       const target = tokens[targetId]?.position;
       if (!source || !target) continue;
-      const position = pushAway({
+      const position = (forced.mode === 'pull' ? pullToward : pushAway)({
         source, target, distanceFt: forced.distanceFt,
         occupied: occupiedPositions({ ...state, tokens }, targetId),
       });
@@ -871,21 +944,155 @@ function applySheetTransition(
   return transitionState(state, actorId, action.name, transition.nextWorld, transition.events);
 }
 
-export function executeCombatAction(input: {
-  state: SoloCombatState;
+type D20InterruptOperation = PendingD20Interrupt['operation'];
+type D20InterruptRollKind = NonNullable<PendingD20Interrupt['preview']>['rollKind'];
+
+interface D20InterruptCapability {
   actorId: string;
-  actionId: string;
-  targetIds: string[];
-  worldPosition?: GridPosition;
-  worldInput?: ActionWorldInput;
-  scenarioObjects?: readonly WorldObjectState[];
-  choices?: Readonly<Record<string, readonly string[]>>;
-  rng?: Rng;
-}): SoloCombatState {
+  effectId: string;
+  effectName: string;
+  operation: D20InterruptOperation;
+  timing: PendingD20Interrupt['timing'];
+  cost: Record<string, unknown>[];
+  payload: Record<string, unknown>;
+}
+
+function d20InterruptCapabilities(
+  state: SoloCombatState,
+  sourceActorId: string,
+  operation: D20InterruptOperation,
+  rollKind: D20InterruptRollKind,
+  outcome?: string,
+): D20InterruptCapability[] {
+  return Object.values(state.world.actors).flatMap((actor) => {
+    if (actor.id === sourceActorId || !isControlledCharacter(state, actor.id)
+      || actor.runtime.hp.current <= 0
+      || deniedCapabilities(actor.runtime, actor.passives ?? []).has('reaction')) return [];
+    return (actor.passives ?? []).flatMap((mechanics) => {
+      const activation = mechanics.activation as Record<string, unknown> | undefined;
+      const cost = Array.isArray(activation?.cost)
+        ? activation.cost.filter((entry): entry is Record<string, unknown> => (
+          Boolean(entry) && typeof entry === 'object'
+        ))
+        : [];
+      const effectId = String(mechanics.id ?? '').trim();
+      const effectName = String(mechanics.name ?? '').trim();
+      if (!effectId || !effectName || activation?.mode !== 'triggered'
+        || !cost.some((entry) => entry.resource === 'reaction')
+        || !canPay(actor.runtime, cost).ok) return [];
+      return payloadsOf(mechanics).flatMap((payload) => {
+        if (payload.kind !== 'd20_interrupt' || payload.operation !== operation
+          || payload.timing !== (operation === 'impose_disadvantage' ? 'before_roll' : 'after_outcome')) {
+          return [];
+        }
+        const eligibleRolls = Array.isArray(payload.eligible_rolls)
+          ? payload.eligible_rolls.map(String)
+          : [];
+        if (!eligibleRolls.includes(rollKind)) return [];
+        const eligibleOutcomes = Array.isArray(payload.eligible_outcomes)
+          ? payload.eligible_outcomes.map(String)
+          : [];
+        if (outcome && eligibleOutcomes.length && !eligibleOutcomes.includes(outcome)) return [];
+        const allowedRelations = Array.isArray(payload.allowed_relations)
+          ? payload.allowed_relations.map(String)
+          : [];
+        if (allowedRelations.length
+          && !allowedRelations.includes(combatRelation(state, actor.id, sourceActorId))) return [];
+        let facts;
+        try {
+          facts = spatialFacts(state, actor.id, sourceActorId);
+        } catch {
+          return [];
+        }
+        const rangeFt = Number(payload.range_ft);
+        if (Number.isFinite(rangeFt) && facts.distanceFt > rangeFt) return [];
+        if (payload.requires_line_of_sight === true && !facts.lineOfSight) return [];
+        return [{
+          actorId: actor.id, effectId, effectName, operation,
+          timing: payload.timing as PendingD20Interrupt['timing'], cost, payload,
+        }];
+      });
+    });
+  }).sort((left, right) => (
+    left.actorId.localeCompare(right.actorId) || left.effectId.localeCompare(right.effectId)
+  ));
+}
+
+function serializableCombatCommand(input: CombatActionInput): PendingD20Interrupt['command'] {
+  const choices = input.choices
+    ? Object.fromEntries(Object.entries(input.choices).map(([key, values]) => [key, [...values]]))
+    : undefined;
+  return clone({
+    actorId: input.actorId,
+    actionId: input.actionId,
+    targetIds: input.targetIds,
+    ...(input.worldPosition ? { worldPosition: input.worldPosition } : {}),
+    ...(input.worldInput ? { worldInput: input.worldInput } : {}),
+    ...(input.scenarioObjects ? { scenarioObjects: [...input.scenarioObjects] } : {}),
+    ...(choices ? { choices } : {}),
+  });
+}
+
+function recordedRng(source: Rng): { rng: Rng; values: number[] } {
+  const values: number[] = [];
+  return { rng: () => { const value = source(); values.push(value); return value; }, values };
+}
+
+function transcriptRng(values: readonly number[]): Rng {
+  let index = 0;
+  return () => {
+    if (index >= values.length) {
+      throw new Error('Сохранённый бросок реакции не содержит достаточно случайных значений');
+    }
+    const value = values[index];
+    index += 1;
+    return value;
+  };
+}
+
+function successfulD20Preview(
+  state: SoloCombatState,
+  fromLogIndex: number,
+  sourceActorId: string,
+  rollKind: D20InterruptRollKind,
+): NonNullable<PendingD20Interrupt['preview']> | null {
+  const acceptedOutcomes = rollKind === 'attack_roll' ? new Set(['hit']) : new Set(['success']);
+  const rolls = state.log.slice(fromLogIndex).flatMap((entry) => entry.records ?? [])
+    .filter((record) => record.sourceActorId === sourceActorId)
+    .flatMap((record) => record.event?.type === 'roll' ? [record.event.roll] : [])
+    .filter((roll) => (
+      (rollKind === 'attack_roll' ? roll.kind === 'd20' : roll.kind === 'check')
+        && roll.outcome && acceptedOutcomes.has(roll.outcome)
+    ));
+  const roll = rolls.at(-1);
+  if (!roll || (roll.outcome !== 'hit' && roll.outcome !== 'success')) return null;
+  return { rollKind, total: roll.total, outcome: roll.outcome };
+}
+
+function actionD20RollKind(
+  state: SoloCombatState,
+  action: RuleActionDefinition,
+): D20InterruptRollKind | null {
+  if (isAttackAction(action) || isBasicUnarmedStrike(state, action)) return 'attack_roll';
+  const effects = Array.isArray(action.mechanics.effects) ? action.mechanics.effects : [];
+  return effects.some((effect) => (
+    Boolean(effect) && typeof effect === 'object'
+      && (effect as Record<string, unknown>).resolution === 'ability_check'
+  )) ? 'ability_check' : null;
+}
+
+function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
   if (input.state.outcome !== 'active') return input.state;
   if (activeActorId(input.state) !== input.actorId) throw new Error('Сейчас ход другого участника');
   const action = input.state.catalogActions.find((candidate) => candidate.id === input.actionId);
   if (!action) throw new Error('Действие отсутствует в снимке боя');
+  const actorPosition = input.state.tokens[input.actorId]?.position;
+  const verbalBlocked = action.kind === 'spell' && action.spell.components?.verbal === true
+    && actorPosition != null
+    && Object.values(input.state.combatAreas ?? {}).some((area) => (
+      area.blocksVerbalComponents && areaContains(area, actorPosition)
+    ));
+  if (verbalBlocked) throw new Error('Тишина в этой области блокирует Вербальный компонент заклинания');
   const declaration = declarationFor(
     input.state,
     input.actorId,
@@ -919,13 +1126,17 @@ export function executeCombatAction(input: {
     if (option !== 'damage' && option !== 'grapple' && option !== 'shove') {
       throw new Error('Неизвестный вариант безоружного удара');
     }
-    const begun = dispatch({
+    const open = Object.values(input.state.world.attackActions).filter((candidate) => (
+      candidate.actorId === input.actorId && candidate.status === 'open'
+    ));
+    if (open.length > 1) throw new Error('Найдено несколько открытых действий «Атака»');
+    const begun = open.length ? input.state : dispatch({
       state: input.state,
       command: { ...commandBase(input.state, input.actorId), type: 'BeginAttackAction' },
       rng,
       label: 'Атака',
     });
-    const attackAction = Object.values(begun.world.attackActions).find((candidate) => (
+    const attackAction = open[0] ?? Object.values(begun.world.attackActions).find((candidate) => (
       candidate.actorId === input.actorId && candidate.status === 'open'
     ));
     if (!attackAction) throw new Error('Не удалось открыть действие «Атака»');
@@ -1145,7 +1356,8 @@ export function executeCombatAction(input: {
   if (action.id !== next.dashActionId) return withTriggeredAttackOffer(next);
   const movementBeforeDash = input.state.movementRemainingFt[input.actorId]
     ?? effectiveCombatActorSpeedFt(input.state, input.actorId);
-  const dashAllotment = effectiveCombatActorSpeedFt(input.state, input.actorId);
+  const dashAllotment = effectiveCombatActorSpeedFt(input.state, input.actorId)
+    + (actorOwnsCharger(input.state.world.actors[input.actorId]) ? 10 : 0);
   return withTriggeredAttackOffer({
     ...next,
     movementRemainingFt: {
@@ -1160,6 +1372,232 @@ export function executeCombatAction(input: {
       ),
     },
   });
+}
+
+function executeCombatActionWithD20Interrupts(
+  input: CombatActionInput,
+  options: { skipWardingFlare?: boolean; skipCuttingWords?: boolean } = {},
+): SoloCombatState {
+  if (input.state.pendingD20Interrupt) {
+    throw new Error('Сначала завершите открытую реакцию на бросок к20');
+  }
+  const action = input.state.catalogActions.find((candidate) => candidate.id === input.actionId);
+  if (!action) throw new Error('Действие отсутствует в снимке боя');
+  const rollKind = actionD20RollKind(input.state, action);
+  if (!rollKind) return executeCombatActionCore(input);
+
+  if (!options.skipWardingFlare && rollKind === 'attack_roll') {
+    const responders = d20InterruptCapabilities(
+      input.state, input.actorId, 'impose_disadvantage', rollKind,
+    );
+    if (responders.length) {
+      return {
+        ...input.state,
+        pendingD20Interrupt: {
+          timing: 'before_roll',
+          operation: 'impose_disadvantage',
+          command: serializableCombatCommand(input),
+          responders: responders.map(({ actorId, effectId, effectName }) => ({
+            actorId, effectId, effectName,
+          })),
+        },
+      };
+    }
+  }
+
+  if (options.skipCuttingWords) return executeCombatActionCore(input);
+  const recorded = recordedRng(input.rng ?? Math.random);
+  const previewState = executeCombatActionCore({ ...input, rng: recorded.rng });
+  const preview = successfulD20Preview(
+    previewState, input.state.log.length, input.actorId, rollKind,
+  );
+  if (!preview) return previewState;
+  const responders = d20InterruptCapabilities(
+    input.state, input.actorId, 'subtract_die', rollKind, preview.outcome,
+  );
+  return responders.length ? {
+    ...input.state,
+    pendingD20Interrupt: {
+      timing: 'after_outcome',
+      operation: 'subtract_die',
+      command: serializableCombatCommand(input),
+      responders: responders.map(({ actorId, effectId, effectName }) => ({
+        actorId, effectId, effectName,
+      })),
+      randomValues: recorded.values,
+      preview,
+    },
+  } : previewState;
+}
+
+/**
+ * Execute a tactical action, pausing at any data-driven cross-actor d20
+ * interrupt. The held continuation is JSON-safe and therefore survives the
+ * same combat persistence path as Shield, Interception, and saving throws.
+ */
+export function executeCombatAction(input: CombatActionInput): SoloCombatState {
+  return executeCombatActionWithD20Interrupts(input);
+}
+
+function interruptDieFaces(
+  payload: Record<string, unknown>,
+  actor: ActorState,
+): number | null {
+  const die = payload.die;
+  if (typeof die === 'string') {
+    const match = /^1d(\d+)$/i.exec(die.trim());
+    const faces = Number(match?.[1]);
+    return Number.isSafeInteger(faces) && faces > 1 ? faces : null;
+  }
+  if (!die || typeof die !== 'object') return null;
+  const row = die as Record<string, unknown>;
+  const classId = String(row.class ?? '').trim();
+  const classLevel = Number(actor.character.classLevels?.[classId] ?? 0);
+  const byLevel = row.by_level;
+  if (!classId || !Number.isSafeInteger(classLevel) || classLevel < 1
+    || !byLevel || typeof byLevel !== 'object') return null;
+  const selected = Object.entries(byLevel as Record<string, unknown>)
+    .map(([level, faces]) => ({ level: Number(level), faces: Number(faces) }))
+    .filter((entry) => Number.isSafeInteger(entry.level) && entry.level <= classLevel
+      && Number.isSafeInteger(entry.faces) && entry.faces > 1)
+    .sort((left, right) => right.level - left.level)[0];
+  return selected?.faces ?? null;
+}
+
+function spendD20Interrupt(
+  state: SoloCombatState,
+  capability: D20InterruptCapability,
+): SoloCombatState {
+  const actor = state.world.actors[capability.actorId];
+  if (!actor || !canPay(actor.runtime, capability.cost).ok) {
+    throw new Error('Ресурсы для этой реакции больше недоступны');
+  }
+  const paid = pay(actor.runtime, capability.cost);
+  const next = {
+    ...state,
+    world: {
+      ...state.world,
+      actors: {
+        ...state.world.actors,
+        [actor.id]: { ...actor, runtime: paid.state },
+      },
+    },
+  };
+  const records: CombatLogEventRecord[] = paid.events.map((event, ordinal) => ({
+    kind: 'engine', ordinal, sourceActorId: actor.id, actorId: actor.id,
+    targetIds: [], event,
+  }));
+  return appendLog(next, actor.id, `${capability.effectName}: реакция принята; ${eventSummary(records)}`, records);
+}
+
+function armD20InterruptModifier(input: {
+  state: SoloCombatState;
+  sourceActorId: string;
+  ownerActorId: string;
+  capability: D20InterruptCapability;
+  rollKind: D20InterruptRollKind;
+  value?: number;
+}): SoloCombatState {
+  const source = input.state.world.actors[input.sourceActorId];
+  if (!source) throw new Error('Участник исходного броска больше не существует');
+  const mechanics = input.capability.operation === 'impose_disadvantage'
+    ? {
+      kind: 'modifier', op: 'disadvantage', consume: 'next',
+      applies_to: { roll: 'attack' },
+    }
+    : {
+      kind: 'modifier', op: 'add', value: -Math.abs(input.value ?? 0), consume: 'next',
+      applies_to: { roll: input.rollKind === 'attack_roll' ? 'attack' : 'ability_check' },
+    };
+  return {
+    ...input.state,
+    world: {
+      ...input.state.world,
+      actors: {
+        ...input.state.world.actors,
+        [source.id]: {
+          ...source,
+          runtime: {
+            ...source.runtime,
+            activeEffects: [...source.runtime.activeEffects, {
+              id: `d20-interrupt:${input.capability.effectId}:${newSheetRuntimeCommandId()}`,
+              name: input.capability.effectName,
+              source: input.capability.effectName,
+              sourceId: input.ownerActorId,
+              ownerId: source.id,
+              mechanics,
+            }],
+          },
+        },
+      },
+    },
+  };
+}
+
+/** Accept or decline the persisted cross-actor d20 reaction and resume exactly once. */
+export function resolveD20Interrupt(
+  state: SoloCombatState,
+  responderActorId: string | null,
+  rng: Rng = Math.random,
+): SoloCombatState {
+  const pending = state.pendingD20Interrupt;
+  if (!pending) throw new Error('Нет ожидающей реакции на бросок к20');
+  const chosen = responderActorId === null ? null : pending.responders.find((candidate) => (
+    candidate.actorId === responderActorId
+  ));
+  if (responderActorId !== null && !chosen) {
+    throw new Error('Этот участник не может ответить на текущий бросок');
+  }
+  const { pendingD20Interrupt: _cleared, ...withoutPending } = state;
+  let prepared = withoutPending as SoloCombatState;
+  const rollKind = pending.preview?.rollKind ?? 'attack_roll';
+  if (chosen) {
+    const capabilities = d20InterruptCapabilities(
+      prepared,
+      pending.command.actorId,
+      pending.operation,
+      rollKind,
+      pending.preview?.outcome,
+    );
+    const capability = capabilities.find((candidate) => (
+      candidate.actorId === chosen.actorId && candidate.effectId === chosen.effectId
+    ));
+    if (!capability) throw new Error('Эта реакция больше недоступна');
+    prepared = spendD20Interrupt(prepared, capability);
+    let value: number | undefined;
+    if (pending.operation === 'subtract_die') {
+      const owner = prepared.world.actors[capability.actorId];
+      const faces = interruptDieFaces(capability.payload, owner);
+      if (!faces) throw new Error('Способность не объявляет допустимую кость реакции');
+      value = Math.floor(rng() * faces) + 1;
+      prepared = appendLog(
+        prepared,
+        capability.actorId,
+        `${capability.effectName}: 1к${faces} = ${value}; итог исходного броска уменьшается на ${value}.`,
+      );
+    }
+    prepared = armD20InterruptModifier({
+      state: prepared,
+      sourceActorId: pending.command.actorId,
+      ownerActorId: capability.actorId,
+      capability,
+      rollKind,
+      value,
+    });
+  } else {
+    prepared = appendLog(
+      prepared,
+      pending.command.actorId,
+      `${pending.responders.map((candidate) => candidate.effectName).join(' / ')}: реакция пропущена.`,
+    );
+  }
+  const actionRng = pending.randomValues ? transcriptRng(pending.randomValues) : rng;
+  return executeCombatActionWithD20Interrupts(
+    { ...pending.command, state: prepared, rng: actionRng },
+    pending.operation === 'impose_disadvantage'
+      ? { skipWardingFlare: true }
+      : { skipWardingFlare: true, skipCuttingWords: true },
+  );
 }
 
 /** Move the caster-owned Dancing Lights group on the tactical board. */
@@ -1374,13 +1812,93 @@ export function resolveTriggeredCombatAction(
   if (!pending.optionActionIds.includes(actionId)) {
     throw new Error('Эта способность недоступна для текущего события');
   }
-  return executeCombatAction({
-    state: cleared as SoloCombatState,
+  if (pending.event === 'opportunity_attack') {
+    const action = state.catalogActions.find((candidate) => candidate.id === actionId);
+    if (!action) throw new Error('Заклинание Воинственной магии отсутствует в снимке боя');
+    const declaration = declarationFor(
+      cleared as SoloCombatState,
+      pending.sourceActorId,
+      action,
+      pending.targetIds,
+    );
+    const command: GameCommand = {
+      ...commandBase(cleared as SoloCombatState, pending.sourceActorId),
+      type: 'UseReactionAction', trigger: 'opportunity_attack', actionId,
+      targetIds: declaration.targetIds,
+      ...(declaration.factsByTarget ? { factsByTarget: declaration.factsByTarget } : {}),
+      ...(declaration.spell ? {
+        spell: {
+          baseLevel: action.kind === 'spell' ? action.spell.level : 0,
+          castLevel: declaration.spell.castLevel,
+          grantId: declaration.spell.grantId,
+          mode: declaration.spell.mode,
+          ...(declaration.spell.preferFreeUse === undefined
+            ? {}
+            : { preferFreeUse: declaration.spell.preferFreeUse }),
+        },
+      } : {}),
+    };
+    return dispatch({ state: cleared as SoloCombatState, command, rng, label: action.name });
+  }
+  const chosen = state.catalogActions.find((candidate) => candidate.id === actionId);
+  if (!chosen) throw new Error('Способность отсутствует в снимке боя');
+  const chosenTrigger = triggerEvents(chosen);
+  let prepared = cleared as SoloCombatState;
+  if (chosenTrigger.includes('sneak_attack_hit')) {
+    const tradeoff = pending.sneakAttackTradeoff;
+    if (!tradeoff) throw new Error('Цена Хитрого удара больше не подтверждена');
+    const target = prepared.world.actors[tradeoff.targetActorId];
+    if (!target
+      || target.runtime.hp.current !== tradeoff.committedHp.current
+      || target.runtime.hp.max !== tradeoff.committedHp.max
+      || target.runtime.hp.temp !== tradeoff.committedHp.temp) {
+      throw new Error('Урон Скрытой атаки изменился до выбора Хитрого удара');
+    }
+    prepared = appendLog({
+      ...prepared,
+      outcome: tradeoff.replacementHp.current > 0 ? 'active' : prepared.outcome,
+      world: {
+        ...prepared.world,
+        actors: {
+          ...prepared.world.actors,
+          [target.id]: {
+            ...target,
+            runtime: { ...target.runtime, hp: { ...tradeoff.replacementHp } },
+          },
+        },
+      },
+    }, pending.sourceActorId,
+    `Хитрый удар: отказ от 1к6 Скрытой атаки (из броска исключено: ${tradeoff.dieResults.join(' + ')}); `
+      + `урон уменьшен на ${tradeoff.effectiveDamage}.`);
+  }
+  const targeting = chosen.mechanics.targeting as Record<string, unknown> | undefined;
+  const chosenTargetIds = targeting?.actor_targets === false ? [] : pending.targetIds;
+  const next = executeCombatAction({
+    state: prepared,
     actorId: pending.sourceActorId,
     actionId,
-    targetIds: pending.targetIds,
+    targetIds: chosenTargetIds,
     rng,
   });
+  const useKey = chosen ? generalFeatTriggeredUseKey(chosen) : null;
+  if (!useKey) return next;
+  const owner = next.world.actors[pending.sourceActorId];
+  return {
+    ...next,
+    world: {
+      ...next.world,
+      actors: {
+        ...next.world.actors,
+        [owner.id]: {
+          ...owner,
+          runtime: {
+            ...owner.runtime,
+            firedThisTurn: [...new Set([...(owner.runtime.firedThisTurn ?? []), useKey])],
+          },
+        },
+      },
+    },
+  };
 }
 
 function resolveDecision(
@@ -1410,11 +1928,11 @@ function openNextCombatAreaTrigger(state: SoloCombatState, rng: Rng): SoloCombat
       next = appendLog(
         next,
         pending.trigger.actorId,
-        `${pending.area.name}: ${pending.area.notice ?? 'событие области'} (${pending.trigger.event})`,
+        `${pending.area.name}: ${pending.area.notice ?? 'событие области'} (${COMBAT_AREA_EVENT_LABELS[pending.trigger.event]})`,
       );
       continue;
     }
-    return dispatch({
+    const triggered = dispatch({
       state: next,
       command: {
         ...commandBase(next, pending.trigger.actorId),
@@ -1423,8 +1941,10 @@ function openNextCombatAreaTrigger(state: SoloCombatState, rng: Rng): SoloCombat
         targetActorId: pending.trigger.actorId,
       },
       rng,
-      label: `${pending.hazard.name}: ${pending.trigger.event}`,
+      label: `${pending.hazard.name}: ${COMBAT_AREA_EVENT_LABELS[pending.trigger.event]}`,
     });
+    if (triggered.world.pendingResolution) return triggered;
+    next = triggered;
   }
   return next;
 }
@@ -1476,6 +1996,22 @@ export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Ma
         sourceActorId: pending.request.trigger.sourceActorId,
         sourceActionId: pending.request.trigger.actionId,
         targetIds: [pending.request.actorId],
+      });
+    } else if (pending.type === 'damage_reaction') {
+      next = offerTriggeredAttackActions({
+        before: beforeDecision,
+        after: next,
+        sourceActorId: pending.sourceActorId,
+        sourceActionId: pending.actionId,
+        targetIds: [pending.targetActorId],
+      });
+    } else if (pending.type === 'protection_reaction') {
+      next = offerTriggeredAttackActions({
+        before: beforeDecision,
+        after: next,
+        sourceActorId: pending.sourceActorId,
+        sourceActionId: pending.actionId,
+        targetIds: [pending.targetActorId],
       });
     }
   }
@@ -1555,6 +2091,22 @@ export function resolvePlayerReaction(
       sourceActorId: pending.request.trigger.sourceActorId,
       sourceActionId: pending.request.trigger.actionId,
       targetIds: [pending.request.actorId],
+    });
+  } else if (pending.type === 'damage_reaction') {
+    next = offerTriggeredAttackActions({
+      before: state,
+      after: next,
+      sourceActorId: pending.sourceActorId,
+      sourceActionId: pending.actionId,
+      targetIds: [pending.targetActorId],
+    });
+  } else if (pending.type === 'protection_reaction') {
+    next = offerTriggeredAttackActions({
+      before: state,
+      after: next,
+      sourceActorId: pending.sourceActorId,
+      sourceActionId: pending.actionId,
+      targetIds: [pending.targetActorId],
     });
   }
 
@@ -1677,6 +2229,117 @@ function attackOutcomeEvent(
   return outcomes.at(-1) ?? null;
 }
 
+type AttackTriggerEvent = 'hit' | 'miss' | 'sneak_attack_hit';
+
+const SNEAK_ATTACK_EFFECT_ID = 'EFF-sneak-attack';
+
+function attackTriggerEvents(
+  before: SoloCombatState,
+  after: SoloCombatState,
+  sourceActorId: string,
+): AttackTriggerEvent[] {
+  const outcomeEvent = attackOutcomeEvent(after, before.log.length, sourceActorId);
+  if (!outcomeEvent) return [];
+  if (outcomeEvent === 'miss') return ['miss'];
+  const beforeFired = before.world.actors[sourceActorId]?.runtime.firedThisTurn ?? [];
+  const afterFired = after.world.actors[sourceActorId]?.runtime.firedThisTurn ?? [];
+  return !beforeFired.includes(SNEAK_ATTACK_EFFECT_ID)
+    && afterFired.includes(SNEAK_ATTACK_EFFECT_ID)
+    ? ['hit', 'sneak_attack_hit']
+    : ['hit'];
+}
+
+function applyDamageToHp(
+  hp: { current: number; max: number; temp: number },
+  amount: number,
+): { current: number; max: number; temp: number } {
+  const damage = Math.max(0, Math.floor(amount));
+  const absorbed = Math.min(hp.temp, damage);
+  return {
+    ...hp,
+    temp: hp.temp - absorbed,
+    current: Math.max(0, hp.current - (damage - absorbed)),
+  };
+}
+
+function effectiveForegoneSneakDamage(total: number, applied: number, dieResult: number): number {
+  const raw = Math.max(0, Math.floor(total));
+  const actual = Math.max(0, Math.floor(applied));
+  const die = Math.max(0, Math.floor(dieResult));
+  if (actual === 0 || raw === 0 || die === 0) return 0;
+  if (actual === raw) return Math.min(die, actual);
+  if (actual === Math.floor(raw / 2)) {
+    return actual - Math.floor(Math.max(0, raw - die) / 2);
+  }
+  if (actual === raw * 2) return Math.min(actual, die * 2);
+  // Damage reductions can flatten part of a packet. Never refund more than
+  // either the sacrificed die or the damage which actually reached the target.
+  return Math.min(die, actual);
+}
+
+function sneakAttackTradeoff(input: {
+  before: SoloCombatState;
+  after: SoloCombatState;
+  sourceActorId: string;
+  targetIds: string[];
+}): PendingTriggeredAction['sneakAttackTradeoff'] {
+  if (input.targetIds.length !== 1) return undefined;
+  const targetActorId = input.targetIds[0];
+  const beforeTarget = input.before.world.actors[targetActorId];
+  const afterTarget = input.after.world.actors[targetActorId];
+  if (!beforeTarget || !afterTarget) return undefined;
+  const packets = input.after.log.slice(input.before.log.length)
+    .flatMap((entry) => entry.records ?? [])
+    .filter((record) => (
+      record.sourceActorId === input.sourceActorId
+      && record.targetIds.includes(targetActorId)
+      && record.event?.type === 'damage'
+    ))
+    .map((record) => record.event as Extract<NonNullable<typeof record.event>, { type: 'damage' }>);
+  const sneakIndex = packets.findIndex((packet) => {
+    const dice = packet.roll?.dice.filter((die) => !die.discarded) ?? [];
+    // Cunning Strike is gained at Rogue 5, where Sneak Attack is 3d6 (6d6 on
+    // a critical). Requiring that exact signature avoids mistaking a d6 weapon
+    // or another on-hit rider for the sacrificed Sneak Attack die.
+    return dice.length >= 3 && dice.every((die) => die.sides === 6);
+  });
+  if (sneakIndex < 0) return undefined;
+  const sneak = packets[sneakIndex];
+  const rolledDice = sneak.roll!.dice.filter((die) => !die.discarded && die.sides === 6);
+  // Critical hits double the remaining Sneak Attack dice. Forgoing one base
+  // die therefore removes two rolled d6 results from a level-5 critical.
+  const dieResults = rolledDice.slice(rolledDice.length >= 6 ? -2 : -1).map((die) => die.result);
+  if (!dieResults.length || dieResults.some((result) => !Number.isInteger(result) || result <= 0)) {
+    return undefined;
+  }
+  const foregoneRoll = dieResults.reduce((sum, result) => sum + result, 0);
+  const effectiveDamage = effectiveForegoneSneakDamage(
+    sneak.roll!.total,
+    sneak.amount,
+    foregoneRoll,
+  );
+  if (effectiveDamage <= 0) return undefined;
+
+  let committed = { ...beforeTarget.runtime.hp };
+  let replacement = { ...beforeTarget.runtime.hp };
+  packets.forEach((packet, index) => {
+    committed = applyDamageToHp(committed, packet.amount);
+    replacement = applyDamageToHp(
+      replacement,
+      index === sneakIndex ? packet.amount - effectiveDamage : packet.amount,
+    );
+  });
+  const actual = afterTarget.runtime.hp;
+  if (committed.current !== actual.current || committed.temp !== actual.temp) return undefined;
+  return {
+    targetActorId,
+    committedHp: { ...actual },
+    replacementHp: replacement,
+    dieResults,
+    effectiveDamage,
+  };
+}
+
 function hasHitRecord(
   state: SoloCombatState,
   fromLogIndex: number,
@@ -1686,12 +2349,14 @@ function hasHitRecord(
 }
 
 function sourceQualifiesForTriggeredAction(input: {
+  before: SoloCombatState;
   state: SoloCombatState;
   actor: ActorState;
   sourceActionId: string;
+  targetIds: string[];
   trigger: Record<string, unknown> | undefined;
 }): boolean {
-  const { state, actor, sourceActionId, trigger } = input;
+  const { before, state, actor, sourceActionId, targetIds, trigger } = input;
   const sourceCardNumber = state.actionPresentation?.[sourceActionId]?.actionRef?.card_number;
   const requiredSources = [
     ...(typeof trigger?.source_action_card_number === 'string'
@@ -1703,6 +2368,58 @@ function sourceQualifiesForTriggeredAction(input: {
   ];
   if (requiredSources.length && (!sourceCardNumber || !requiredSources.includes(sourceCardNumber))) {
     return false;
+  }
+  const onceKey = typeof trigger?.feat_once_per_turn === 'string'
+    ? trigger.feat_once_per_turn
+    : null;
+  if (onceKey && (actor.runtime.firedThisTurn ?? []).includes(onceKey)) return false;
+  const recentEvents = state.log.slice(before.log.length).flatMap((entry) => entry.records ?? [])
+    .filter((record) => record.sourceActorId === actor.id)
+    .flatMap((record) => record.event ? [record.event] : []);
+  if (typeof trigger?.feat_damage_type === 'string'
+    && !recentEvents.some((event) => (
+      event.type === 'damage' && event.amount > 0 && event.damageType === trigger.feat_damage_type
+    ))) return false;
+  if (Number.isFinite(Number(trigger?.feat_max_relative_size))) {
+    const sourceSize = actor.attackProfile?.size;
+    const targetSize = targetIds.length === 1
+      ? state.world.actors[targetIds[0]]?.attackProfile?.size
+      : undefined;
+    if (!Number.isInteger(sourceSize) || !Number.isInteger(targetSize)
+      || targetSize! > sourceSize! + Number(trigger!.feat_max_relative_size)) return false;
+  }
+  const sourceAction = state.catalogActions.find((candidate) => candidate.id === sourceActionId);
+  if (trigger?.feat_requires_shield === true || trigger?.feat_requires_melee === true) {
+    if (!sourceAction || targetIds.length !== 1 || !shieldMasterBashEligible({
+      actor,
+      sourceAction,
+      targetDistanceFt: gridDistanceFt(state.tokens[actor.id].position, state.tokens[targetIds[0]].position),
+    })) return false;
+  }
+  if (trigger?.feat_charger === true) {
+    const movement = before.recentStraightMovementByActor?.[actor.id];
+    const targetId = targetIds.length === 1 ? targetIds[0] : undefined;
+    const targetPosition = targetId ? before.tokens[targetId]?.position : undefined;
+    const actorPosition = before.tokens[actor.id]?.position;
+    const round = before.world.scene.mode === 'encounter' ? before.world.scene.round : 0;
+    if (!chargerApproachEligible({
+      actor, movement, actorPosition, targetPosition, round, distance: gridDistanceFt,
+    })) return false;
+  }
+  if (trigger?.feat_gwm_hew === true) {
+    const weaponId = actor.runtime.equipment.main_hand;
+    const weapon = actor.character.equippedCards?.find((card) => card.id === weaponId)
+      ?? actor.character.knownCards?.find((card) => card.id === weaponId);
+    const parsed = weapon ? parseWeaponProfile(weapon) : null;
+    if (!parsed?.valid || !parsed.profile.attackModes.some((mode) => mode.kind === 'melee')) return false;
+    const critical = recentEvents.some((event) => (
+      event.type === 'roll' && event.roll.kind === 'd20' && event.roll.outcome === 'crit'
+    ));
+    const reducedToZero = targetIds.some((targetId) => (
+      (before.world.actors[targetId]?.runtime.hp.current ?? 0) > 0
+      && state.world.actors[targetId]?.runtime.hp.current === 0
+    ));
+    if (!critical && !reducedToZero) return false;
   }
   if (trigger?.source_weapon_qualifier !== 'monk_weapon') return true;
   if (sourceCardNumber === 'action_basic_unarmed') return true;
@@ -1726,29 +2443,44 @@ function offerTriggeredAttackActions(input: {
   targetIds: string[];
 }): SoloCombatState {
   const { before, after, sourceActorId, sourceActionId, targetIds } = input;
-  const event = attackOutcomeEvent(after, before.log.length, sourceActorId);
+  const events = attackTriggerEvents(before, after, sourceActorId);
   if (after.world.pendingResolution || after.pendingTriggeredAction
     || !isControlledCharacter(after, sourceActorId)
-    || !event) return after;
+    || !events.length) return after;
   const actor = after.world.actors[sourceActorId];
   if (!actor) return after;
   const owned = new Set(actor.capabilities.actionIds);
-  const optionActionIds = after.catalogActions.flatMap((action) => {
+  const options = after.catalogActions.flatMap((action) => {
     if (action.id === sourceActionId || !owned.has(action.id)
-      || !isTriggeredCombatAction(action, event)) return [];
+      || !events.some((event) => isTriggeredCombatAction(action, event))) return [];
     const activation = action.mechanics.activation as Record<string, unknown> | undefined;
     const trigger = activation?.trigger as Record<string, unknown> | undefined;
-    if (!sourceQualifiesForTriggeredAction({ state: after, actor, sourceActionId, trigger })) return [];
+    if (!sourceQualifiesForTriggeredAction({
+      before, state: after, actor, sourceActionId, targetIds, trigger,
+    })) return [];
     const costs = Array.isArray(activation?.cost)
       ? activation.cost as Array<Record<string, unknown>>
       : [];
-    return canPay(actor.runtime, costs).ok ? [action.id] : [];
+    const event = events.find((candidate) => isTriggeredCombatAction(action, candidate));
+    return canPay(actor.runtime, costs).ok && event ? [{ actionId: action.id, event }] : [];
   });
-  return optionActionIds.length ? {
+  const needsSneakTradeoff = options.some(({ event }) => event === 'sneak_attack_hit');
+  const tradeoff = needsSneakTradeoff
+    ? sneakAttackTradeoff({ before, after, sourceActorId, targetIds })
+    : undefined;
+  const executableOptions = tradeoff
+    ? options
+    : options.filter(({ event }) => event !== 'sneak_attack_hit');
+  return executableOptions.length ? {
     ...after,
     pendingTriggeredAction: {
-      event, sourceActorId, sourceActionId,
-      targetIds: [...targetIds], optionActionIds,
+      event: executableOptions.some(({ event }) => event === 'sneak_attack_hit')
+        ? 'sneak_attack_hit'
+        : events[0],
+      sourceActorId, sourceActionId,
+      targetIds: [...targetIds],
+      optionActionIds: executableOptions.map(({ actionId }) => actionId),
+      ...(tradeoff ? { sneakAttackTradeoff: tradeoff } : {}),
     },
   } : after;
 }
@@ -1775,11 +2507,13 @@ function executeOpportunityAttacks(
 ): SoloCombatState {
   const mover = state.world.actors[moverId];
   const start = state.tokens[moverId]?.position;
-  if (!mover || !start || deniesOpportunityAttack(mover)) return state;
+  if (!mover || !start) return state;
+  const moverDeniedOrdinaryOpportunity = deniesOpportunityAttack(mover);
   let next = state;
   const enemies = Object.values(state.world.actors).filter((actor) => (
     combatRelation(state, moverId, actor.id) === 'enemy' && actor.runtime.hp.current > 0
       && actor.runtime.resources.reaction > 0
+      && (!moverDeniedOrdinaryOpportunity || actorOwnsSentinel(actor))
       && gridDistanceFt(state.tokens[actor.id].position, start) <= 5
       && gridDistanceFt(state.tokens[actor.id].position, destination) > 5
   ));
@@ -1788,12 +2522,45 @@ function executeOpportunityAttacks(
     if (!actionId || next.world.actors[moverId].runtime.hp.current <= 0) continue;
     const action = next.catalogActions.find((candidate) => candidate.id === actionId);
     if (!action) continue;
+    const warCasterOptions = enemy.capabilities.actionIds.filter((candidateId) => (
+      candidateId.endsWith(':war-caster-opportunity')
+      && next.catalogActions.some((candidate) => candidate.id === candidateId)
+    ));
+    if (warCasterOptions.length && isControlledCharacter(next, enemy.id)) {
+      return {
+        ...next,
+        pendingTriggeredAction: {
+          event: 'opportunity_attack', sourceActorId: enemy.id, sourceActionId: action.id,
+          targetIds: [moverId], optionActionIds: warCasterOptions,
+        },
+      };
+    }
     const command: GameCommand = {
       ...commandBase(next, enemy.id), type: 'UseReactionAction', trigger: 'opportunity_attack', actionId,
       targetIds: [moverId], factsByTarget: { [moverId]: spatialFacts(next, enemy.id, moverId) },
     };
+    const beforeAttack = next;
     next = dispatch({ state: next, command, rng, label: action.name });
     next = autoResolveSystemDecisions(next, rng);
+    if (!next.world.pendingResolution
+      && actorOwnsSentinel(next.world.actors[enemy.id])
+      && hasHitRecord(next, beforeAttack.log.length, enemy.id)) {
+      const stopActionId = next.world.actors[enemy.id].capabilities.actionIds.find((candidateId) => {
+        const candidate = next.catalogActions.find((value) => value.id === candidateId);
+        const activation = candidate?.mechanics.activation as Record<string, unknown> | undefined;
+        const trigger = activation?.trigger as Record<string, unknown> | undefined;
+        return trigger?.feat_sentinel_opportunity === true;
+      });
+      if (stopActionId) {
+        next = executeCombatAction({
+          state: next,
+          actorId: enemy.id,
+          actionId: stopActionId,
+          targetIds: [moverId],
+          rng,
+        });
+      }
+    }
   }
   return next;
 }
@@ -1867,7 +2634,32 @@ export function moveActor(input: {
     ? input.state
     : executeOpportunityAttacks(input.state, input.actorId, input.destination, input.rng ?? Math.random);
   if (next.world.actors[input.actorId].runtime.hp.current <= 0) return outcome(next);
+  if (input.voluntary !== false && effectiveCombatActorSpeedFt(next, input.actorId) === 0) {
+    return appendLog(next, input.actorId, 'Перемещение остановлено попаданием провоцированной атаки Стража.');
+  }
   const crossed = enteredAndExitedAreas(next, token.position, input.destination);
+  const previousStraight = next.recentStraightMovementByActor?.[input.actorId];
+  const round = next.world.scene.mode === 'encounter' ? next.world.scene.round : 0;
+  const dx = Math.sign(input.destination.x - token.position.x) as -1 | 0 | 1;
+  const dy = Math.sign(input.destination.y - token.position.y) as -1 | 0 | 1;
+  const continuesStraight = input.voluntary !== false
+    && previousStraight?.round === round
+    && previousStraight.to.x === token.position.x
+    && previousStraight.to.y === token.position.y
+    && previousStraight.direction.x === dx
+    && previousStraight.direction.y === dy;
+  const recentStraightMovementByActor = input.voluntary === false
+    ? next.recentStraightMovementByActor
+    : {
+      ...(next.recentStraightMovementByActor ?? {}),
+      [input.actorId]: {
+        from: continuesStraight ? { ...previousStraight!.from } : { ...token.position },
+        to: { ...input.destination },
+        distanceFt: (continuesStraight ? previousStraight!.distanceFt : 0) + distance,
+        direction: { x: dx, y: dy },
+        round,
+      },
+    };
   next = {
     ...next,
     tokens: { ...next.tokens, [input.actorId]: { ...next.tokens[input.actorId], position: input.destination } },
@@ -1876,8 +2668,15 @@ export function moveActor(input: {
       ...next.movementRemainingFt,
       [input.actorId]: Math.max(0, available - movementCost),
     },
+    ...(recentStraightMovementByActor ? { recentStraightMovementByActor } : {}),
   };
   next = reconcileInsideAreaConditions(next);
+  const movementAreaIds = Object.keys(crossed.movementOccurrences);
+  if (movementAreaIds.length) {
+    next = queueCombatAreaEvent(
+      next, 'move', [input.actorId], movementAreaIds, true, crossed.movementOccurrences,
+    );
+  }
   if (crossed.exited.length) {
     next = queueCombatAreaEvent(next, 'exit', [input.actorId], crossed.exited);
   }
@@ -1920,6 +2719,9 @@ function startTurnOrRequestGrappleDamage(
       ...next.movementRemainingFt,
       [actorId]: effectiveCombatActorSpeedFt(next, actorId),
     },
+    recentStraightMovementByActor: Object.fromEntries(Object.entries(
+      next.recentStraightMovementByActor ?? {},
+    ).filter(([candidateId]) => candidateId !== actorId)),
   };
   return queueCombatAreaEvent(started, 'start_turn', [actorId]);
 }
@@ -1961,7 +2763,7 @@ export function resolveSoloCombatTurnStart(
 
 export function advanceTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
   if (state.outcome !== 'active' || state.world.pendingResolution
-    || state.pendingTurnStartGrappleDamage || state.pendingInterception
+    || state.pendingTurnStartGrappleDamage || state.pendingInterception || state.pendingD20Interrupt
     || state.pendingAlertSwapActorIds?.length) return state;
   const endingActorId = activeActorId(state);
   let next = dispatch({
@@ -2254,14 +3056,17 @@ export async function addSoloCombatCharacter(input: {
   if (input.state.world.scene.mode !== 'encounter') throw new Error('Бой ещё не начат');
   const actorId = input.participant.character.id;
   if (input.state.world.actors[actorId]) throw new Error('Этот персонаж уже участвует в сцене');
-  if (input.participant.canonical.world.ruleset.contentHash !== input.state.world.ruleset.contentHash) {
-    throw new Error('Персонаж использует несовместимую версию правил');
-  }
   const isolated = await createSheetCombatSession({
     source: input.participant,
     targets: [],
     sceneMode: 'exploration',
   });
+  // A sheet canonical hash is intentionally character-specific: it includes
+  // that character's actions, equipment, and granted effects. Compare the
+  // certified combat-session ruleset produced from the participant instead.
+  if (isolated.world.ruleset.contentHash !== input.state.world.ruleset.contentHash) {
+    throw new Error('Персонаж использует несовместимую версию правил');
+  }
   const actor = clone(isolated.world.actors[actorId]);
   const catalogActions = [...input.state.catalogActions];
   for (const action of input.participant.canonical.actions) {
@@ -2426,6 +3231,11 @@ export async function refreshSoloCombatParticipants(input: {
         catalogActions.push(clone(action));
       }
     }
+    installWarCasterOpportunitySpells({
+      actor: freshActor,
+      sourceActions: participant.canonical.actions,
+      catalogActions,
+    });
     const attack = participant.canonical.actions.find((action) => (
       primitiveType(action) === 'weapon_attack' && isAttackAction(action)
     ));
@@ -2483,7 +3293,7 @@ export async function refreshSoloCombatParticipants(input: {
 }
 
 export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
-  if (state.outcome !== 'active' || state.world.pendingResolution) return state;
+  if (state.outcome !== 'active' || state.world.pendingResolution || state.pendingD20Interrupt) return state;
   const monsterId = activeActorId(state);
   const monster = state.world.actors[monsterId];
   if (!monster || monster.kind !== 'monster') return state;
@@ -2545,7 +3355,7 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
       }
     }
   }
-  return next.world.pendingResolution || next.pendingInterception || next.outcome !== 'active'
+  return next.world.pendingResolution || next.pendingInterception || next.pendingD20Interrupt || next.outcome !== 'active'
     ? next
     : advanceTurn(next, rng);
 }
@@ -2617,6 +3427,11 @@ export async function createSoloCombatState(input: {
   }
   const opportunityActionIds: Record<string, string> = {};
   for (const participant of participants) {
+    installWarCasterOpportunitySpells({
+      actor: base.world.actors[participant.character.id],
+      sourceActions: participant.canonical.actions,
+      catalogActions,
+    });
     const playerAttack = participant.canonical.actions.find((action) => (
       primitiveType(action) === 'weapon_attack' && isAttackAction(action)
     ));

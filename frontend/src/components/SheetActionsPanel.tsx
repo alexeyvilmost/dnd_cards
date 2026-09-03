@@ -1,9 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { charactersV3Api, type CharacterEventRow } from '../character/api';
-import { actionsApi, cardsApi, effectsApi } from '../api/client';
+import { cardsApi, effectsApi } from '../api/client';
 import type { AssembledCharacter } from '../character/assemble';
-import { actionInteractsWithTarget, actionForcesTargetSave, collectSheetActions, collectGrantActionSlugs, collectGrantEffectSlugs, type SheetAction, type GrantedAction } from '../character/actionSheet';
+import {
+  actionInteractsWithTarget,
+  actionForcesTargetSave,
+  collectActionUsesRecharge,
+  collectActionUsesRecovery,
+  collectGrantEffectSlugs,
+  collectSheetActions,
+  type SheetAction,
+} from '../character/actionSheet';
+import { useGrantedActions } from '../character/grantedActions';
 import { useBasicActions } from '../character/basicActions';
 import { collectItemMechanics, readAttunedIds } from '../character/attunement';
 import { collectPassiveMechanics } from '../character/resourceInit';
@@ -547,7 +556,15 @@ function mechanicsPrimitiveType(mechanics: Record<string, unknown>): string | nu
 export function sheetActionNeedsCanonicalAvailability(
   action: Pick<SheetAction, 'mechanics' | 'spellRef'>,
 ): boolean {
-  return action.spellRef !== undefined || mechanicsPrimitiveType(action.mechanics) !== null;
+  const effects = Array.isArray(action.mechanics.effects)
+    ? action.mechanics.effects as Record<string, unknown>[]
+    : [];
+  const structuralUnarmed = effects.some((effect) => (
+    effect.resolution === 'attack_roll' && effect.attack_kind === 'unarmed'
+  ));
+  return action.spellRef !== undefined
+    || mechanicsPrimitiveType(action.mechanics) !== null
+    || structuralUnarmed;
 }
 
 /**
@@ -854,7 +871,7 @@ export default function SheetActionsPanel({
     return out;
   }, [runtime.equipment, equipCards]);
 
-  const ctx = useMemo(
+  const baseCtx = useMemo(
     () => ({
       ...buildCharacterContext(
         ruleState,
@@ -878,34 +895,26 @@ export default function SheetActionsPanel({
   );
   const basicActions = useBasicActions();
 
-  // grant_action: доступ к библиотечному действию по slug. Источники — ПРЕДМЕТЫ (S6, приёмы оружия
-  // BG3) И ПАССИВКИ-эффекты вида/класса/черты (дыхание Драконорождённого, откровение Аасимара).
-  // Карта действия несёт экономику/поведение; здесь только доступ к нему на листе.
-  const [grantedActions, setGrantedActions] = useState<GrantedAction[]>([]);
-  useEffect(() => {
-    if (spellsOnly) { setGrantedActions((p) => (p.length ? [] : p)); return; }
-    const refs: { slug: string; sourceLabel: string; group: SheetAction['group'] }[] = [];
-    const seen = new Set<string>();
-    const collect = (mech: Record<string, unknown> | null | undefined, sourceLabel: string, group: SheetAction['group']) => {
-      for (const slug of collectGrantActionSlugs(mech, character.level)) {
-        if (seen.has(slug)) continue;
-        seen.add(slug);
-        refs.push({ slug, sourceLabel, group });
-      }
-    };
-    for (const im of itemMechs) collect(im.card.mechanics, im.card.name, 'item');
-    for (const { effect, origin } of assembled.effects) {
-      collect(effect.mechanics as Record<string, unknown>, effect.name, origin.kind === 'race' ? 'race' : 'class');
-    }
-    if (!refs.length) { setGrantedActions((p) => (p.length ? [] : p)); return; }
-    let stale = false;
-    Promise.all(refs.map((r): Promise<GrantedAction | null> => actionsApi.getAction(r.slug)
-      .then((action): GrantedAction => ({ action, sourceLabel: r.sourceLabel, group: r.group }))
-      .catch(() => null)))
-      .then((list) => { if (!stale) setGrantedActions(list.filter((x): x is GrantedAction => x !== null)); })
-      .catch(() => { if (!stale) setGrantedActions((p) => (p.length ? [] : p)); });
-    return () => { stale = true; };
-  }, [itemMechs, assembled.effects, character.level, spellsOnly]);
+  // grant_action: every surface resolves the same library cards so limited
+  // grants cannot diverge between display, resource synchronization, and rest.
+  const grantedActions = useGrantedActions({
+    assembled,
+    characterLevel: character.level,
+    resolvedChoices: character.resolved_choices,
+    itemMechanics: itemMechs,
+    disabled: Boolean(spellsOnly),
+  });
+  const ctx = useMemo(() => ({
+    ...baseCtx,
+    resourceRecharge: {
+      ...(baseCtx.resourceRecharge ?? {}),
+      ...collectActionUsesRecharge(assembled, [...equipCards.values()], grantedActions),
+    },
+    resourceRecovery: {
+      ...(baseCtx.resourceRecovery ?? {}),
+      ...collectActionUsesRecovery(assembled, [...equipCards.values()], grantedActions),
+    },
+  }), [baseCtx, assembled, equipCards, grantedActions]);
 
   // Hydrate only cards referenced by containers the character actually owns.
   // The former process-wide index paged through the entire card catalog on
@@ -1052,9 +1061,12 @@ export default function SheetActionsPanel({
   }, []);
   const grantEffectSlugs = useMemo(() => {
     const set = new Set<string>();
-    for (const a of actions) for (const slug of collectGrantEffectSlugs(a.mechanics)) set.add(slug);
+    // Trigger-only actions execute from persisted combat continuations too.
+    // Their exact library effects must therefore be present in the same
+    // granted-effect closure even though they are not proactive sheet buttons.
+    for (const a of allActions) for (const slug of collectGrantEffectSlugs(a.mechanics)) set.add(slug);
     return [...set];
-  }, [actions]);
+  }, [allActions]);
   useEffect(() => {
     if (!grantEffectSlugs.length) { setGrantedEffectsBySlug((p) => (Object.keys(p).length ? {} : p)); return; }
     let stale = false;
@@ -1911,7 +1923,8 @@ export default function SheetActionsPanel({
       ),
       name: action.name,
     };
-    const primitive = mechanicsPrimitiveType(mech);
+    const primitive = mechanicsPrimitiveType(mech)
+      ?? (legacyUnarmedTargetAction(action) ? UNARMED_STRIKE_PRIMITIVE : null);
     const authoritativePrimitive = primitive !== null && isSheetNoPendingPrimitive(primitive);
     let canonical: SheetCanonicalActionContext | undefined;
     if (sheetActionNeedsCanonicalAvailability(action)) {

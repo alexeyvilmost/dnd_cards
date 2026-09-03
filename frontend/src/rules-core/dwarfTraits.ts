@@ -1,3 +1,5 @@
+import { payloadsOf } from '../engine/mechanicsView';
+
 type JsonRecord = Record<string, unknown>;
 
 export const DWARF_SPECIES_CARD = 'RACE-0003' as const;
@@ -121,13 +123,15 @@ export function effectiveSenses(input: {
   for (const effect of input.runtime.activeEffects) {
     if (effect.roundsLeft != null && effect.roundsLeft <= 0) continue;
     const mechanics = record(effect.mechanics);
-    if (!mechanics || mechanics.kind !== 'grant_sense') continue;
-    add(String(mechanics.sense ?? ''), Number(mechanics.range), {
-      kind: 'runtime',
-      sourceEntityIds: stableEntityIds(mechanics.sourceEntityIds),
-      runtimeEffectId: effect.id,
-      ...(effect.roundsLeft != null ? { roundsLeft: effect.roundsLeft } : {}),
-    });
+    if (!mechanics) continue;
+    for (const payload of payloadsOf(mechanics).filter((candidate) => candidate.kind === 'grant_sense')) {
+      add(String(payload.sense ?? ''), Number(payload.range), {
+        kind: 'runtime',
+        sourceEntityIds: stableEntityIds(payload.sourceEntityIds),
+        runtimeEffectId: effect.id,
+        ...(effect.roundsLeft != null ? { roundsLeft: effect.roundsLeft } : {}),
+      });
+    }
   }
   return [...bySense.values()].sort((left, right) => left.sense.localeCompare(right.sense));
 }
@@ -153,7 +157,10 @@ export function effectiveSenseRoundsLeft(sense: EffectiveSense): number | null {
 export function runtimeSenseEffectIssue(value: unknown, ownerActorId: string): string | null {
   const effect = record(value);
   const mechanics = record(effect?.mechanics);
-  if (!mechanics || mechanics.kind !== 'grant_sense') return null;
+  const sense = mechanics
+    ? payloadsOf(mechanics).find((payload) => payload.kind === 'grant_sense')
+    : undefined;
+  if (!mechanics || !sense) return null;
   if (typeof effect?.id !== 'string' || !effect.id.trim()
     || typeof effect.name !== 'string' || !effect.name.trim()
     || typeof effect.source !== 'string' || !effect.source.trim()) {
@@ -164,8 +171,8 @@ export function runtimeSenseEffectIssue(value: unknown, ownerActorId: string): s
     || !effect.sourceId.trim()) {
     return 'Runtime sense effect must retain its owner and source actor provenance';
   }
-  if (typeof mechanics.sense !== 'string' || !mechanics.sense.trim()
-    || !Number.isFinite(mechanics.range) || Number(mechanics.range) <= 0) {
+  if (typeof sense.sense !== 'string' || !sense.sense.trim()
+    || !Number.isFinite(sense.range) || Number(sense.range) <= 0) {
     return 'Runtime sense declaration requires a non-empty sense and positive finite range';
   }
   if (mechanics.senseScope !== undefined) {

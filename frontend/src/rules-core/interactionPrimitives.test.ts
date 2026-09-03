@@ -250,6 +250,7 @@ describe('rules-core interaction primitives', () => {
       name: 'Poison Spores',
       sourceKind: 'environment',
       sourceEntityIds: ['DMG:hazard:poison-spores'],
+      resolution: 'save',
       save: { ability: 'con', dc: 13 },
       onFailure: [{
         kind: 'condition', value: 'poisoned', op: 'apply', duration: { type: 'rounds', amount: 1 },
@@ -339,6 +340,48 @@ describe('rules-core interaction primitives', () => {
       ...(resolved.status === 'accepted' ? resolved.events : []),
     ];
     expect(foldEvents(initial, combined)).toEqual(resumed.getState());
+  });
+
+  it('applies a no-save environment hazard immediately through canonical events', () => {
+    const hazard: RuleHazardDefinition = {
+      id: 'hazard.cloud-of-daggers',
+      name: 'Cloud of Daggers',
+      sourceKind: 'environment',
+      sourceEntityIds: ['SPELL-0234'],
+      resolution: 'automatic',
+      effects: [{ kind: 'damage', dice: '2d4', type: 'force' }],
+    };
+    const catalog: RulesCatalog = {
+      getAction: () => undefined,
+      getHazard: (id) => id === hazard.id ? hazard : undefined,
+    };
+    const initial = createWorld({ id: 'automatic-hazard', ruleset: RULESET, actors: [actor('rogue')] });
+    const session = new InMemoryRulesSession(initial, catalog, {
+      rng: createStrictRngTape([
+        { label: 'dagger-1', sides: 4, value: 3 },
+        { label: 'dagger-2', sides: 4, value: 4 },
+      ]).rng,
+      clock: createLogicalClock(),
+      nextId: createSequentialIdFactory('automatic-hazard'),
+    });
+    const result = session.dispatch(command({
+      schemaVersion: 1,
+      type: 'TriggerHazard',
+      commandId: 'automatic-hazard-trigger',
+      expectedRevision: 0,
+      rulesetContentHash: RULESET.contentHash,
+      actorId: 'rogue',
+      targetActorId: 'rogue',
+      hazardId: hazard.id,
+    }));
+
+    expect(result.status).toBe('accepted');
+    expect(session.getState().pendingResolution).toBeNull();
+    expect(session.getState().actors.rogue.runtime.hp.current).toBe(3);
+    expect(engineEvents(result.status === 'accepted' ? result.events : [])).toContainEqual(
+      expect.objectContaining({ type: 'damage', amount: 7, damageType: 'force' }),
+    );
+    expect(foldEvents(initial, result.status === 'accepted' ? result.events : [])).toEqual(session.getState());
   });
 
   it('rejects malformed or non-catalog hazards before opening a resolution', () => {

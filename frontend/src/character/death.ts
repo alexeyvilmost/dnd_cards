@@ -66,7 +66,11 @@ export function rollDeathSaveDie(
   formulaCtx: FormulaContext,
   rng: () => number,
 ): RollLog {
-  const collected = collectModifiers(runtime, passives, { roll: 'saving_throw', formulaCtx });
+  const collected = collectModifiers(runtime, passives, {
+    roll: 'saving_throw',
+    filter: { kind: 'death' },
+    formulaCtx,
+  });
   return rollD20({ advantage: collected.advantage, rules: collected.rules, modifiers: [], rng });
 }
 

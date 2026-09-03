@@ -4,6 +4,7 @@ import type { SheetAction } from './actionSheet';
 import { sheetActionNeedsCanonicalRuntime } from './sheetPrimitiveUi';
 import { materializeDeclaredMechanicsTargeting } from '../rules-core/actionTargeting';
 import { applyUnarmedDamageProfileToAction } from '../rules-core/fightingStyleComplexPrimitives';
+import { UNARMED_STRIKE_PRIMITIVE } from './sheetCombatDeclaration';
 
 export interface RunnableSheetCanonicalActionProjection {
   actions: SheetAction[];
@@ -53,6 +54,13 @@ function declaresActorInteraction(mechanics: Record<string, unknown>): boolean {
   });
 }
 
+function declaresUnarmedAttack(mechanics: Record<string, unknown>): boolean {
+  return Array.isArray(mechanics.effects) && mechanics.effects.some((candidate) => {
+    const effect = object(candidate);
+    return effect?.resolution === 'attack_roll' && effect.attack_kind === 'unarmed';
+  });
+}
+
 /**
  * Adapt target-independent active mechanics to an explicit zero-actor-target
  * contract. This is a semantic adapter, not content identity logic: the
@@ -75,6 +83,34 @@ function canonicalMechanics(action: SheetAction): Record<string, unknown> {
   const mechanics = immutableDeclaresName
     ? action.mechanics
     : mechanicsWithoutPresentationName;
+  // Migration 169 gives the production entity this primitive. The pinned L1
+  // certification snapshot predates it, so retain one structural compatibility
+  // projection until that immutable fixture is refreshed.
+  // Only the reviewed basic Unarmed Strike receives the legacy primitive.
+  // Triggered/feature-owned unarmed attacks (Martial Arts, Flurry, and similar
+  // granted actions) remain ordinary data-owned actions and are merged into
+  // solo combat after the strict L1 certificate is established. Promoting
+  // them to the basic primitive incorrectly makes the L1 certificate reject
+  // every higher-level Monk before the scene can start.
+  if (!mechanics.primitive && action.group === 'basic' && declaresUnarmedAttack(mechanics)) {
+    const declared = object(mechanics.targeting);
+    const rangeMatch = String(declared?.range ?? '').match(/\d+/);
+    const rangeFt = rangeMatch ? Number(rangeMatch[0]) : 5;
+    return materializeDeclaredMechanicsTargeting({
+      ...mechanics,
+      primitive: { type: UNARMED_STRIKE_PRIMITIVE },
+      targeting: {
+        domain: 'actor',
+        actor_targets: true,
+        shape: 'single',
+        min_targets: 1,
+        max_targets: 1,
+        range_ft: rangeFt,
+        requires_line_of_sight: true,
+        allowed_relations: ['enemy'],
+      },
+    });
+  }
   if (mechanics.targeting !== undefined) {
     return materializeDeclaredMechanicsTargeting(mechanics);
   }

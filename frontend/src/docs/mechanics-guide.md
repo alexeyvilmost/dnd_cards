@@ -86,13 +86,13 @@
 
 | Поле | Значения |
 |---|---|
-| `event` | `hit`, `miss`, `crit`, `damage_taken`, `spell_cast`, `reduced_to_0_hp`, `turn_start`, `turn_end`, `short_rest`, `long_rest` (эмитятся движком) + запланированные: `attack_roll_made`, `damage_dealt`, `saving_throw_made`, `forced_save`, `ability_check_made`, `creature_enters/leaves_reach`, `creature_moves`, `condition_applied`, `initiative_roll`, `on_acquire`, `level_gained` |
+| `event` | `hit`, `sneak_attack_hit` (боевой адаптер), `miss`, `crit`, `damage_taken`, `spell_cast`, `reduced_to_0_hp`, `turn_start`, `turn_end`, `short_rest`, `long_rest` (эмитятся движком) + запланированные: `attack_roll_made`, `damage_dealt`, `saving_throw_made`, `forced_save`, `ability_check_made`, `creature_enters/leaves_reach`, `creature_moves`, `condition_applied`, `initiative_roll`, `on_acquire`, `level_gained` |
 | `timing` | `before` \| `during` \| `after` \| `replaces` |
 | `subject` | `self` \| `ally` \| `enemy` \| `attacker` \| `target` \| `any_creature` |
 | `circumstances` | массив предикатов (см. §6) |
 
 > **Статус.** Реально эмитятся (то есть могут запустить `triggered`/`reaction`):
-> `hit`, `miss`, `crit`, `damage_taken`, `spell_cast`, `reduced_to_0_hp`,
+> `hit`, `sneak_attack_hit` (в solo combat), `miss`, `crit`, `damage_taken`, `spell_cast`, `reduced_to_0_hp`,
 > `turn_start`, `turn_end`, `short_rest`, `long_rest`. Остальные события зарезервированы
 > схемой и заработают вместе с боевой моделью (позиции/несколько существ). Пока их не
 > используйте как рабочий триггер.

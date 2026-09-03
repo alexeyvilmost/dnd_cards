@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import type { SoloCombatState } from '../solo-combat/types';
-import { actionCost, combatActionAvailability, combatActionTimingAvailability } from './CombatHotbar';
+import {
+  actionCost,
+  combatActionAvailability,
+  combatActionTimingAvailability,
+  projectCombatHotbarAction,
+} from './CombatHotbar';
 import { UNTRAINED_ARMOR_SPELL_REASON } from '../character/untrainedArmor';
+import { weaponMasteryNickUseKey } from '../engine/weaponMastery2024';
 
 const SPELL_ID = 'spell@feat';
 const GRANT_ID = `spell-grant:feat:${SPELL_ID}`;
@@ -43,6 +49,118 @@ function state(
 }
 
 describe('combat hotbar action availability', () => {
+  const weaponAttack = {
+    id: 'weapon-attack', name: 'Weapon attack', kind: 'nonSpell', sourceEntityIds: ['action:weapon'],
+    mechanics: {
+      primitive: { type: 'weapon_attack' },
+      activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }] },
+    },
+  } as RuleActionDefinition;
+
+  it('keeps an Attack entry enabled while its paid ledger has a strike remaining', () => {
+    const afterFirst = state(0, 0);
+    afterFirst.world.attackActions = {
+      'attack:1': {
+        id: 'attack:1', actorId: 'hero', startedAtRevision: 1,
+        turnKey: 'encounter:1:0:hero', status: 'open',
+        sequence: {
+          id: 'attack:1', actorId: 'hero', totalAttacks: 2, attacksRemaining: 1,
+          entries: [{
+            ordinal: 1, kind: 'weapon_attack', actionId: weaponAttack.id,
+            weaponCardId: 'weapon', sourceEntityIds: ['action:weapon'],
+          }],
+          usedReplacementKeys: [],
+        },
+      },
+    };
+    expect(combatActionAvailability(afterFirst, weaponAttack)).toEqual({ enabled: true });
+
+    afterFirst.world.attackActions['attack:1'].status = 'completed';
+    afterFirst.world.attackActions['attack:1'].sequence.attacksRemaining = 0;
+    afterFirst.world.attackActions['attack:1'].sequence.entries.push({
+      ordinal: 2, kind: 'weapon_attack', actionId: weaponAttack.id,
+      weaponCardId: 'weapon', sourceEntityIds: ['action:weapon'],
+    });
+    expect(combatActionAvailability(afterFirst, weaponAttack)).toEqual({
+      enabled: false,
+      reason: 'Не хватает ресурса «Действие»',
+    });
+  });
+
+  it('enables a fresh non-spell Attack from the Action Surge token', () => {
+    expect(combatActionAvailability(state(0, 0, {
+      resources: { action_surge_action: 1 },
+    }), weaponAttack)).toEqual({ enabled: true });
+  });
+
+  it('shows Nick as an Attack entry, preserves Bonus Action, and disables it after its once-per-turn use', () => {
+    const lightExtra = {
+      id: 'light-extra', name: 'Light extra attack', kind: 'nonSpell', sourceEntityIds: ['action:light'],
+      mechanics: {
+        primitive: { type: 'light_weapon_extra_attack' },
+        activation: { mode: 'active', cost: [{ resource: 'bonus_action', amount: 1 }] },
+      },
+    } as RuleActionDefinition;
+    const weapon = (id: string, weaponType: string, mastery: string) => ({
+      id, card_number: id, name: weaponType, type: 'weapon', mechanics: {
+        weapon_profile: {
+          weapon_type: weaponType, proficiency_category: 'martial', attack_ability: 'finesse',
+          damage_lines: [{ dice: '1d6', type: 'slashing' }], default_attack_mode: 'melee',
+          attack_modes: [{ kind: 'melee', reach_ft: 5 }], properties: ['light', 'finesse'],
+          mastery_effect_id: mastery, ammo: null,
+          enchantment: { attack_bonus: 0, damage_bonus: 0, extra_damage_lines: [] },
+          attunement: { required: false },
+        },
+      },
+    });
+    const shortsword = weapon('card:shortsword', 'shortsword', 'effect:vex');
+    const scimitar = weapon('card:scimitar', 'scimitar', 'effect:nick');
+    const nickState = state(0, 0, { resources: { bonus_action: 1 } });
+    const actor = nickState.world.actors.hero;
+    actor.runtime.equipment = { main_hand: shortsword.id, off_hand: scimitar.id };
+    actor.character.knownCards = [shortsword, scimitar] as never;
+    actor.character.equippedCards = [shortsword, scimitar] as never;
+    actor.character.weaponMasteries = ['shortsword', 'scimitar'];
+    actor.masteryEffects = {
+      'effect:nick': { mechanics: { weapon_mastery: {
+        type: 'nick', timing: 'attack_action', maximumPerTurn: 1,
+      } } },
+      'effect:vex': { mechanics: { weapon_mastery: {
+        type: 'vex', consume: 'next', targetLocked: true, requiresDamage: true,
+        expires: 'end_of_source_next_turn',
+      } } },
+    };
+    nickState.world.scene = {
+      mode: 'encounter', initiative: ['hero'], activeIndex: 0, round: 1, turnStarted: true,
+    };
+    const turnKey = 'encounter:1:0:hero';
+    nickState.world.attackActions = {
+      'attack:1': {
+        id: 'attack:1', actorId: 'hero', startedAtRevision: 1, turnKey, status: 'completed',
+        sequence: {
+          id: 'attack:1', actorId: 'hero', totalAttacks: 2, attacksRemaining: 0,
+          entries: [{
+            ordinal: 1, kind: 'weapon_attack', actionId: 'weapon-attack',
+            weaponCardId: shortsword.id, sourceEntityIds: ['action:weapon'],
+          }],
+          usedReplacementKeys: [],
+        },
+      },
+    };
+
+    expect(combatActionAvailability(nickState, lightExtra)).toEqual({ enabled: true });
+    const projected = projectCombatHotbarAction(nickState, lightExtra);
+    expect(projected.mechanics.activation).toEqual({ mode: 'attack_entry', cost: [] });
+    expect(actionCost(projected)).toBe('');
+    expect(actor.runtime.resources.bonus_action).toBe(1);
+
+    actor.runtime.firedThisTurn = [weaponMasteryNickUseKey(turnKey)];
+    expect(combatActionAvailability(nickState, lightExtra)).toEqual({
+      enabled: false,
+      reason: 'Дополнительная атака «Быстрое» уже использована в этом ходу',
+    });
+  });
+
   it('keeps minute- and hour-long spells visible but explains that they are used outside turn combat', () => {
     const ritual = {
       ...spell,

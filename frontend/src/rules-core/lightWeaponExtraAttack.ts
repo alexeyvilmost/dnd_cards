@@ -13,6 +13,7 @@ export type LightWeaponExtraAttackIssue =
   | 'qualifying_weapon_not_equipped'
   | 'extra_weapon_missing'
   | 'extra_weapon_not_light'
+  | 'extra_weapon_not_dual_wielder_eligible'
   | 'extra_weapon_not_equipped'
   | 'same_weapon'
   | 'bonus_action_unavailable';
@@ -83,6 +84,8 @@ export function lightWeaponExtraAttackEligibility(input: {
   firedThisTurn: readonly string[];
   /** Nick replaces the Bonus Action cost with Attack-action timing. */
   actionEconomy?: 'bonus_action' | 'attack_action';
+  /** Dual Wielder permits the extra weapon to be any one-handed melee weapon. */
+  allowNonLightMeleeExtraWeapon?: boolean;
 }): LightWeaponExtraAttackEligibility {
   if (input.firedThisTurn.includes(lightWeaponExtraAttackUseKey(input.attackAction.id))) {
     return { eligible: false, issue: 'already_used' };
@@ -115,7 +118,15 @@ export function lightWeaponExtraAttackEligibility(input: {
   const extraWeapon = cardById(input.cards, input.selectedWeaponCardId);
   if (!extraWeapon) return { eligible: false, issue: 'extra_weapon_missing' };
   if (!immutableCardHasLightProperty(extraWeapon)) {
-    return { eligible: false, issue: 'extra_weapon_not_light' };
+    if (!input.allowNonLightMeleeExtraWeapon) {
+      return { eligible: false, issue: 'extra_weapon_not_light' };
+    }
+    const profile = parseWeaponProfile(extraWeapon);
+    if (!profile.valid
+      || !profile.profile.attackModes.some((mode) => mode.kind === 'melee')
+      || profile.profile.properties.includes('two_handed')) {
+      return { eligible: false, issue: 'extra_weapon_not_dual_wielder_eligible' };
+    }
   }
   const extraWeaponHand = input.equipment.main_hand === extraWeapon.id
     ? 'main'

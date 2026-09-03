@@ -58,11 +58,17 @@ export function isArmorCard(card: Card): boolean {
   return /dex/i.test(formula) || Number(formula.match(/\d+/)?.[0] ?? 0) > 10;
 }
 
-export function isWearingArmor(state: RuntimeState | undefined, cards: Card[] = []): boolean {
+export function isWearingArmor(
+  state: RuntimeState | undefined,
+  cards: Card[] = [],
+  category?: string,
+): boolean {
   const bodyId = state?.equipment?.body;
   if (!bodyId) return false;
   const card = cards.find((candidate) => candidate.id === bodyId);
-  return !!card && isArmorCard(card);
+  if (!card || !isArmorCard(card)) return false;
+  if (!category) return true;
+  return String(card.defense_type ?? '').trim().toLowerCase() === category.trim().toLowerCase();
 }
 
 function bothHandsFree(equipment: Record<string, string | null | undefined>): boolean {

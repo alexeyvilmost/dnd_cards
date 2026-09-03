@@ -575,6 +575,7 @@ const MICRO_MVP_SCENARIO_HAZARDS: readonly RuleHazardDefinition[] = [{
   name: 'Неустойчивые обломки',
   sourceKind: 'environment',
   sourceEntityIds: ['DMG-2024:environment:unstable-rubble'],
+  resolution: 'save',
   save: { ability: 'dex', dc: 14 },
   onFailure: [{
     kind: 'condition', value: 'prone', op: 'apply',

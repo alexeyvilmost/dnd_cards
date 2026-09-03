@@ -1,4 +1,6 @@
 import type { AssembledCharacter } from './assemble';
+import type { ChoiceOrigin } from '../mechanics/collectChoices';
+import { choiceKey } from '../mechanics/choiceKey';
 import {
   actionUsesKey,
   bindActionUsesCost,
@@ -104,24 +106,54 @@ function spellMechanics(spell: Spell): Record<string, unknown> | null {
 
 /** S6 «предмет=эффект»: slug'и действий, ВЫДАННЫХ через grant_action (даёт доступ к библиотечному
  *  действию; экономика/поведение — на самой карте действия). Читает value | values, форму effects[]. */
-export function collectGrantActionSlugs(mechanics: Record<string, unknown> | null | undefined, level = Infinity): string[] {
+export interface GrantActionChoiceContext {
+  resolvedChoices: Readonly<Record<string, readonly string[]>>;
+  origin: ChoiceOrigin;
+}
+
+export function collectGrantActionSlugs(
+  mechanics: Record<string, unknown> | null | undefined,
+  level = Infinity,
+  choiceContext?: GrantActionChoiceContext,
+): string[] {
   if (!mechanics || typeof mechanics !== 'object') return [];
   const effects = (mechanics as Dict).effects;
   if (!Array.isArray(effects)) return [];
-  const out: string[] = [];
-  const scan = (p: Dict) => {
-    if (!p || p.kind !== 'grant_action') return;
-    // Уровневый гейт (как grant_spell): приём доступен только с нужного уровня персонажа.
-    const g = p.level_gate ?? p.min_level;
-    if (g != null && !Number.isNaN(Number(g)) && level < Number(g)) return;
-    if (typeof p.value === 'string' && p.value) out.push(p.value);
-    if (Array.isArray(p.values)) for (const v of p.values) if (typeof v === 'string' && v) out.push(v);
+  const out = new Set<string>();
+  const scan = (p: Dict, depth = 0) => {
+    if (!p || depth > 6) return;
+    if (p.kind === 'grant_action') {
+      // Уровневый гейт (как grant_spell): приём доступен только с нужного уровня персонажа.
+      const g = p.level_gate ?? p.min_level;
+      if (g != null && !Number.isNaN(Number(g)) && level < Number(g)) return;
+      if (typeof p.value === 'string' && p.value) out.add(p.value);
+      if (Array.isArray(p.values)) {
+        for (const v of p.values) if (typeof v === 'string' && v) out.add(v);
+      }
+      return;
+    }
+    if (p.kind === 'choice') {
+      if (!choiceContext) return;
+      const rawChoiceId = String(p.id ?? 'choice');
+      const instanceId = choiceKey(choiceContext.origin, rawChoiceId);
+      const selected = choiceContext.resolvedChoices[instanceId]
+        ?? choiceContext.resolvedChoices[rawChoiceId]
+        ?? [];
+      const options = p.options as Dict | undefined;
+      const items = Array.isArray(options?.items) ? options.items as Dict[] : [];
+      for (const selectedId of selected) {
+        const item = items.find((candidate) => String(candidate.id) === selectedId);
+        if (!item || !Array.isArray(item.grants)) continue;
+        for (const grant of item.grants as Dict[]) scan(grant, depth + 1);
+      }
+      return;
+    }
+    if (p.resolution === 'auto' && Array.isArray(p.result)) {
+      for (const result of p.result as Dict[]) scan(result, depth + 1);
+    }
   };
-  for (const it of effects as Dict[]) {
-    if (it?.kind) scan(it);
-    else if (it?.resolution === 'auto' && Array.isArray(it.result)) for (const p of it.result as Dict[]) scan(p);
-  }
-  return out;
+  for (const it of effects as Dict[]) scan(it);
+  return [...out];
 }
 
 /** Slug'и эффектов, ВЫДАВАЕМЫХ кастом через grant_effect (Доспехи мага → EFFECT-0256). Лист
@@ -266,7 +298,11 @@ export function collectSheetActions(
 
   const fromClass: SheetAction[] = assembled.actions
     .map(({ action, origin }): SheetAction | null => {
-      const mechanics = actionMechanics(action);
+      // Direct class/species reaction and triggered action cards must reach
+      // the event bus. The presentation layer excludes trigger-only rows from
+      // proactive buttons, so retaining them here cannot make them clickable
+      // outside their declared event window.
+      const mechanics = actionMechanics(action, true, true);
       if (!mechanics) return null;
       return {
         id: action.id,
@@ -359,10 +395,7 @@ export function collectSheetActions(
   // (activation) и поведение — здесь только оборачиваем в строку листа с источником.
   const fromGranted: SheetAction[] = grantedActions
     .map(({ action, sourceLabel, group }): SheetAction | null => {
-      // withUses=false: grant_action пока не материализует uses-пул в init/rest.
-      // Limited granted actions therefore fail closed (actionMechanics returns
-      // null) instead of silently becoming unlimited.
-      const mechanics = actionMechanics(action, false, true);
+      const mechanics = actionMechanics(action, true, true);
       if (!mechanics) return null;
       return {
         id: `granted-${action.id}`,
@@ -371,6 +404,7 @@ export function collectSheetActions(
         group,
         imageUrl: action.image_url,
         sourceLabel,
+        usesKey: actionUsesRef(action),
         actionRef: action,
         sourceEntityIds: stableSources(action.id, action.card_number),
       };
@@ -403,7 +437,9 @@ function isActiveMech(mech: unknown): boolean {
 function isActionMech(mech: unknown): boolean {
   if (!mech || typeof mech !== 'object') return false;
   const activation = (mech as Dict).activation as Dict | undefined;
-  return activation?.mode === 'active' || activation?.mode === 'reaction';
+  return activation?.mode === 'active'
+    || activation?.mode === 'reaction'
+    || activation?.mode === 'triggered';
 }
 
 /**
@@ -413,6 +449,7 @@ function isActionMech(mech: unknown): boolean {
 export function collectActionUsesPools(
   assembled: AssembledCharacter,
   itemCards: readonly Card[] = [],
+  grantedActions: readonly GrantedAction[] = [],
 ): ActionUsesPool[] {
   const out: ActionUsesPool[] = [];
   const seen = new Set<string>();
@@ -444,6 +481,10 @@ export function collectActionUsesPools(
       : undefined;
     push(key, card.mechanics, `Предмет: ${card.name}`);
   }
+  for (const { action, sourceLabel } of grantedActions) {
+    if (!isActionMech(action.mechanics)) continue;
+    push(actionUsesRef(action), action.mechanics, `${action.name} · ${sourceLabel}`);
+  }
   return out;
 }
 
@@ -451,9 +492,10 @@ export function collectActionUsesPools(
 export function collectActionUsesRecharge(
   assembled: AssembledCharacter,
   itemCards: readonly Card[] = [],
+  grantedActions: readonly GrantedAction[] = [],
 ): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const pool of collectActionUsesPools(assembled, itemCards)) {
+  for (const pool of collectActionUsesPools(assembled, itemCards, grantedActions)) {
     if (pool.recovery === null) {
       out[pool.key] = 'never';
     } else if (pool.recovery?.short_rest) {
@@ -473,9 +515,10 @@ export function collectActionUsesRecharge(
 export function collectActionUsesRecovery(
   assembled: AssembledCharacter,
   itemCards: readonly Card[] = [],
+  grantedActions: readonly GrantedAction[] = [],
 ): Record<string, ResourceRestRecovery | null> {
   const out: Record<string, ResourceRestRecovery | null> = {};
-  for (const pool of collectActionUsesPools(assembled, itemCards)) {
+  for (const pool of collectActionUsesPools(assembled, itemCards, grantedActions)) {
     if (Object.prototype.hasOwnProperty.call(pool, 'recovery')) {
       out[pool.key] = pool.recovery ?? null;
     }

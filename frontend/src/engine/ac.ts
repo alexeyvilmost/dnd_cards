@@ -7,6 +7,7 @@ import type { RollModifier } from '../mvp/contracts';
 import { evaluate } from './formula';
 import { getCard } from './cardRegistry';
 import { pickBestMethod, type ValueMethod } from './derivedValue';
+import { payloadsOf } from './mechanicsView';
 import { collectModifiers, foldModifiers } from './modifiers';
 
 type Dict = Record<string, unknown>;
@@ -116,7 +117,43 @@ function shieldFromState(state: RuntimeState, cards: Card[]): Card | undefined {
   return undefined;
 }
 
-function armorAc(armor: Card, character: CharacterContext, parts: RollModifier[]): number | null {
+/**
+ * Data-owned replacement for the normal medium-armor Dexterity cap.  General
+ * feats declare this as `applies_to.stat`, because it changes how the armor
+ * method is assembled rather than adding a flat point of AC.  The requirement
+ * remains in content and is evaluated against the immutable character score.
+ */
+function mediumArmorDexCap(
+  armor: Card,
+  character: CharacterContext,
+  passives: Dict[],
+): number {
+  if (String(armor.defense_type ?? '').toLowerCase() !== 'medium') return 2;
+  let cap = 2;
+  for (const passive of passives) {
+    const mode = (passive.activation as Dict | undefined)?.mode;
+    if (mode != null && mode !== 'passive') continue;
+    for (const payload of payloadsOf(passive)) {
+      const applies = payload.applies_to as Dict | undefined;
+      const requirement = applies?.requirement as Dict | undefined;
+      if (payload.kind !== 'modifier' || payload.op !== 'set'
+        || applies?.stat !== 'medium_armor_dex_cap') continue;
+      const requiredDex = Number(requirement?.dex ?? 0);
+      if (!Number.isFinite(requiredDex)
+        || Number(character.abilityScores?.dex ?? 0) < requiredDex) continue;
+      const value = Number(payload.value);
+      if (Number.isFinite(value)) cap = Math.max(cap, value);
+    }
+  }
+  return cap;
+}
+
+function armorAc(
+  armor: Card,
+  character: CharacterContext,
+  parts: RollModifier[],
+  passives: Dict[],
+): number | null {
   const raw = armor.bonus_value ?? '10';
 
   if (/dex/i.test(raw)) {
@@ -124,12 +161,15 @@ function armorAc(armor: Card, character: CharacterContext, parts: RollModifier[]
     const base = tryEvalNum(baseFormula || '10', character);
     const total = tryEvalNum(raw, character);
     if (base === null || total === null) return null;
-    const dexPart = total - base;
+    const normalDexPart = total - base;
+    const dexPart = String(armor.defense_type ?? '').toLowerCase() === 'medium'
+      ? Math.min(character.abilityMods.dex ?? 0, mediumArmorDexCap(armor, character, passives))
+      : normalDexPart;
     parts.push({ value: base, source: armor.name, reason: 'доспех' });
     if (dexPart) {
       parts.push({ value: dexPart, source: 'ЛВК', reason: 'модификатор характеристики' });
     }
-    return total;
+    return base + dexPart;
   }
 
   const fixed = tryEvalNum(raw, character);
@@ -167,7 +207,7 @@ export function computeAC(
   if (armor) {
     // В доспехе безоружные методы неприменимы (по RAW 2024 требуют отсутствия доспеха).
     const parts: RollModifier[] = [];
-    const value = armorAc(armor, character, parts);
+    const value = armorAc(armor, character, parts, passives);
     if (value !== null) {
       methods.push({ name: armor.name, value, parts });
     } else {

@@ -27,8 +27,8 @@ const limitArg = process.argv.indexOf('--limit');
 const LIMIT = limitArg > -1 ? Number(process.argv[limitArg + 1]) : Infinity;
 const srcPath = process.argv[2];
 
-const KINDS = new Set(['damage', 'healing', 'temp_hp', 'condition', 'modifier', 'movement', 'resource', 'resistance', 'grant_action', 'boon', 'reroll', 'set_die', 'set_value', 'transform', 'narrative', 'grant_proficiency', 'grant_feat', 'grant_spell', 'grant_ability_score', 'grant_sense', 'grant_speed', 'choice']);
-const EVENTS = new Set(['attack_roll_made', 'hit', 'miss', 'crit', 'damage_dealt', 'damage_taken', 'saving_throw_made', 'forced_save', 'ability_check_made', 'reduced_to_0_hp', 'creature_enters_reach', 'creature_leaves_reach', 'creature_moves', 'turn_start', 'turn_end', 'spell_cast', 'condition_applied', 'initiative_roll', 'short_rest', 'long_rest', 'on_acquire', 'level_gained']);
+const KINDS = new Set(['damage', 'healing', 'temp_hp', 'condition', 'modifier', 'movement', 'resource', 'resistance', 'grant_action', 'boon', 'reroll', 'set_die', 'set_value', 'transform', 'narrative', 'grant_proficiency', 'grant_feat', 'grant_spell', 'grant_ability_score', 'grant_sense', 'grant_speed', 'choice', 'd20_interrupt']);
+const EVENTS = new Set(['attack_roll_made', 'hit', 'sneak_attack_hit', 'miss', 'crit', 'damage_dealt', 'damage_taken', 'saving_throw_made', 'forced_save', 'ability_check_made', 'reduced_to_0_hp', 'creature_enters_reach', 'creature_leaves_reach', 'creature_moves', 'turn_start', 'turn_end', 'spell_cast', 'condition_applied', 'initiative_roll', 'short_rest', 'long_rest', 'on_acquire', 'level_gained']);
 const SKILL_IDS = new Set(['athletics', 'acrobatics', 'sleight_of_hand', 'stealth', 'arcana', 'history', 'investigation', 'nature', 'religion', 'animal_handling', 'insight', 'medicine', 'perception', 'survival', 'deception', 'intimidation', 'performance', 'persuasion']);
 const ABILITY_IDS = new Set(['str', 'dex', 'con', 'int', 'wis', 'cha']);
 

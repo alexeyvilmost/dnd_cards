@@ -4,7 +4,7 @@ import type { ActorState } from '../rules-core/domain';
 import type { Monster } from '../monsters/types';
 import { compileMonsterInstance } from './monsterCompiler';
 import { planMonsterTurn } from './monsterAi';
-import { areaPositionsForAction, effectiveActorSpeedFt, gridDistanceFt, pathToward, pushAway, reachablePositions } from './tacticalGrid';
+import { areaPositionsForAction, effectiveActorSpeedFt, gridDistanceFt, pathToward, pullToward, pushAway, reachablePositions } from './tacticalGrid';
 import type { SoloCombatState } from './types';
 
 const MONSTER_ID = 'c1000000-0000-4000-8000-000000000001';
@@ -89,6 +89,14 @@ describe('solo combat tactical contract', () => {
     })).toEqual({ x: 2, y: 0 });
     expect(pushAway({ source: { x: 9, y: 0 }, target: { x: 10, y: 0 }, distanceFt: 20 }))
       .toEqual({ x: 11, y: 0 });
+    expect(pullToward({
+      source: { x: 1, y: 0 }, target: { x: 4, y: 0 }, distanceFt: 5,
+      occupied: new Set(['1:0']),
+    })).toEqual({ x: 3, y: 0 });
+    expect(pullToward({
+      source: { x: 1, y: 0 }, target: { x: 2, y: 0 }, distanceFt: 5,
+      occupied: new Set(['1:0']),
+    })).toEqual({ x: 2, y: 0 });
   });
 
   it('projects exactly the free destinations accepted by remaining movement', () => {
@@ -163,6 +171,20 @@ describe('solo combat tactical contract', () => {
     expect(east).toContainEqual({ x: 8, y: 5 });
     expect(east).toContainEqual({ x: 7, y: 4 });
     expect(east).not.toContainEqual({ x: 5, y: 2 });
+  });
+
+  it('projects a fixed-width line from the caster toward the aim cell', () => {
+    const cells = areaPositionsForAction({
+      action: {
+        mechanics: { targeting: { shape: 'area', area: { kind: 'line', length_ft: 30, width_ft: 5 } } },
+      },
+      sourcePosition: { x: 2, y: 2 },
+      aimPosition: { x: 5, y: 2 },
+    });
+    expect(cells).toEqual([
+      { x: 3, y: 2 }, { x: 4, y: 2 }, { x: 5, y: 2 },
+      { x: 6, y: 2 }, { x: 7, y: 2 }, { x: 8, y: 2 },
+    ]);
   });
 
   it('compiles a monster entirely from referenced Action and Effect entities', () => {

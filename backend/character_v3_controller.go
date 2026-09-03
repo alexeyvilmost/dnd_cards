@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -182,6 +183,14 @@ func applyCharacterV3Defaults(ch *CharacterV3) {
 		levels := JSONMap{ch.ClassID.String(): ch.Level}
 		ch.ClassLevels = &levels
 	}
+	if ch.ClassID != nil && (ch.SubclassIDs == nil || len(*ch.SubclassIDs) == 0) && ch.ResolvedChoices != nil {
+		if raw, ok := (*ch.ResolvedChoices)["builder:subclass"].([]interface{}); ok && len(raw) > 0 {
+			if subclassID, ok := raw[0].(string); ok && subclassID != "" {
+				values := JSONMap{ch.ClassID.String(): subclassID}
+				ch.SubclassIDs = &values
+			}
+		}
+	}
 	if ch.Speed <= 0 {
 		ch.Speed = 30
 	}
@@ -193,6 +202,84 @@ func applyCharacterV3Defaults(ch *CharacterV3) {
 	}
 	if ch.PassivePerception <= 0 {
 		ch.PassivePerception = 10
+	}
+}
+
+func validateCharacterSubclassOwnership(db *gorm.DB, character CharacterV3) error {
+	if err := validateCharacterSubclassIDs(character); err != nil {
+		return err
+	}
+	if character.ClassLevels != nil {
+		for rawClassID, rawClassLevel := range *character.ClassLevels {
+			classID := uuid.MustParse(rawClassID)
+			var parent Class
+			if err := db.Where("id = ?", classID).First(&parent).Error; err != nil {
+				return fmt.Errorf("load subclass owner %s: %w", classID, err)
+			}
+			threshold := 3
+			if parent.SubclassLevel != nil && *parent.SubclassLevel > 0 {
+				threshold = *parent.SubclassLevel
+			}
+			classLevel, _ := numericJSONValue(rawClassLevel)
+			if err := validateRequiredSubclassSelection(character, rawClassID, int(classLevel), threshold); err != nil {
+				return err
+			}
+		}
+	}
+	if character.SubclassIDs == nil {
+		return nil
+	}
+	for rawClassID, rawSubclassID := range *character.SubclassIDs {
+		classID := uuid.MustParse(rawClassID)
+		subclassID := uuid.MustParse(rawSubclassID.(string))
+		var parent, subclass Class
+		if err := db.Where("id = ?", classID).First(&parent).Error; err != nil {
+			return fmt.Errorf("load subclass owner %s: %w", classID, err)
+		}
+		if err := db.Where("id = ?", subclassID).First(&subclass).Error; err != nil {
+			return fmt.Errorf("load subclass %s: %w", subclassID, err)
+		}
+		if subclass.IsSubclass == nil || !*subclass.IsSubclass || subclass.ParentClassID == nil || *subclass.ParentClassID != classID {
+			return fmt.Errorf("subclass %s does not belong to class %s", subclassID, classID)
+		}
+		threshold := 3
+		if parent.SubclassLevel != nil && *parent.SubclassLevel > 0 {
+			threshold = *parent.SubclassLevel
+		}
+		classLevel, _ := numericJSONValue((*character.ClassLevels)[rawClassID])
+		if int(classLevel) < threshold {
+			return fmt.Errorf("subclass %s requires class %s level %d", subclassID, classID, threshold)
+		}
+	}
+	return nil
+}
+
+func validateRequiredSubclassSelection(character CharacterV3, classID string, classLevel, threshold int) error {
+	if classLevel < threshold {
+		return nil
+	}
+	if character.SubclassIDs == nil {
+		return fmt.Errorf("class %s requires a subclass at level %d", classID, threshold)
+	}
+	rawSubclassID, exists := (*character.SubclassIDs)[classID]
+	if !exists {
+		return fmt.Errorf("class %s requires a subclass at level %d", classID, threshold)
+	}
+	subclassID, ok := rawSubclassID.(string)
+	if !ok || strings.TrimSpace(subclassID) == "" {
+		return fmt.Errorf("class %s requires a subclass at level %d", classID, threshold)
+	}
+	return nil
+}
+
+func numericJSONValue(value interface{}) (float64, bool) {
+	switch typed := value.(type) {
+	case float64:
+		return typed, true
+	case int:
+		return float64(typed), true
+	default:
+		return 0, false
 	}
 }
 
@@ -236,6 +323,7 @@ func (cc *CharacterV3Controller) CreateCharacterV3(c *gin.Context) {
 		LineageID:                req.LineageID,
 		ClassID:                  req.ClassID,
 		ClassLevels:              req.ClassLevels,
+		SubclassIDs:              req.SubclassIDs,
 		BackgroundID:             req.BackgroundID,
 		Level:                    req.Level,
 		FeatIDs:                  req.FeatIDs,
@@ -270,6 +358,10 @@ func (cc *CharacterV3Controller) CreateCharacterV3(c *gin.Context) {
 	applyCharacterV3Defaults(&character)
 	if err := validateCharacterClassLevels(character); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "неверные уровни классов", "details": err.Error()})
+		return
+	}
+	if err := validateCharacterSubclassOwnership(cc.db, character); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверные подклассы", "details": err.Error()})
 		return
 	}
 
@@ -387,9 +479,16 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 	if req.ClassLevels != nil {
 		classLevelCandidate.ClassLevels = req.ClassLevels
 	}
+	if req.SubclassIDs != nil {
+		classLevelCandidate.SubclassIDs = req.SubclassIDs
+	}
 	applyCharacterV3Defaults(&classLevelCandidate)
 	if err := validateCharacterClassLevels(classLevelCandidate); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "неверные уровни классов", "details": err.Error()})
+		return
+	}
+	if err := validateCharacterSubclassOwnership(cc.db, classLevelCandidate); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверные подклассы", "details": err.Error()})
 		return
 	}
 
@@ -416,6 +515,9 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 		locked.ClassID = req.ClassID
 		if req.ClassLevels != nil {
 			locked.ClassLevels = req.ClassLevels
+		}
+		if req.SubclassIDs != nil {
+			locked.SubclassIDs = req.SubclassIDs
 		}
 		locked.BackgroundID = req.BackgroundID
 		locked.Level = req.Level
@@ -446,6 +548,9 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 		if err := validateCharacterClassLevels(locked); err != nil {
 			return err
 		}
+		if err := validateCharacterSubclassIDs(locked); err != nil {
+			return err
+		}
 
 		result := tx.Model(&CharacterV3{}).
 			Where("id = ? AND user_id = ?", characterID, userID).
@@ -458,6 +563,7 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 				"lineage_id":                 locked.LineageID,
 				"class_id":                   locked.ClassID,
 				"class_levels":               locked.ClassLevels,
+				"subclass_ids":               locked.SubclassIDs,
 				"background_id":              locked.BackgroundID,
 				"level":                      locked.Level,
 				"feat_ids":                   locked.FeatIDs,

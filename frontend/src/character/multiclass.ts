@@ -25,6 +25,52 @@ export function characterClassLevels(character: Pick<ForgeCharacter, 'class_leve
   return normalizedClassLevels(character.class_levels, character.class_id, character.level);
 }
 
+export function normalizedSubclassIds(
+  value: Record<string, string> | null | undefined,
+  primaryClassId: string | null | undefined,
+  legacySubclassId: string | null | undefined,
+): Record<string, string> {
+  const result = Object.fromEntries(Object.entries(value ?? {}).filter(([classId, subclassId]) => (
+    Boolean(classId && subclassId)
+  )));
+  if (primaryClassId && legacySubclassId && !result[primaryClassId]) {
+    result[primaryClassId] = legacySubclassId;
+  }
+  return result;
+}
+
+export interface SubclassSelectionIssue {
+  classId: string;
+  className: string;
+  reason: 'missing' | 'invalid';
+}
+
+/** Every owned class independently owes a valid subclass at its own threshold. */
+export function subclassSelectionIssues(
+  classes: readonly CharacterClass[],
+  classLevels: Readonly<Record<string, number>>,
+  subclassIds: Readonly<Record<string, string>>,
+): SubclassSelectionIssue[] {
+  const classById = new Map(classes.map((entry) => [entry.id, entry]));
+  const childrenByParent = new Map<string, CharacterClass[]>();
+  for (const entry of classes) {
+    if (!entry.parent_class_id) continue;
+    childrenByParent.set(entry.parent_class_id, [...(childrenByParent.get(entry.parent_class_id) ?? []), entry]);
+  }
+  const issues: SubclassSelectionIssue[] = [];
+  for (const [classId, level] of Object.entries(classLevels)) {
+    const owner = classById.get(classId);
+    const children = childrenByParent.get(classId) ?? [];
+    if (!owner || !children.length || level < (owner.subclass_level ?? 3)) continue;
+    const selected = subclassIds[classId];
+    if (!selected) issues.push({ classId, className: owner.name, reason: 'missing' });
+    else if (!children.some((entry) => entry.id === selected)) {
+      issues.push({ classId, className: owner.name, reason: 'invalid' });
+    }
+  }
+  return issues;
+}
+
 export function totalClassLevel(levels: Record<string, number>): number {
   return Object.values(levels).reduce((sum, level) => sum + Math.max(0, Math.floor(Number(level))), 0);
 }

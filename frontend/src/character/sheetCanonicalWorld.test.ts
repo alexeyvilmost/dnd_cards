@@ -275,6 +275,68 @@ function wizardRuleState(
 }
 
 describe('real sheet canonical world materialization', () => {
+  it('projects the data-driven Extra Attack count into the canonical attack ledger', () => {
+    const feature = {
+      id: 'effect:extra-attack', card_number: 'EFF-extra-attack', name: 'Extra Attack',
+      description: '', rarity: 'common', effect_type: 'class_ability', created_at: '', updated_at: '',
+      mechanics: { activation: { mode: 'passive' }, effects: [] },
+    } as unknown as PassiveEffect;
+    const baseAssembly = assembled({ effect: feature });
+    const built = buildSheetCanonicalRuntime({
+      character: character('sheet-extra-attack'),
+      assembled: { ...baseAssembly, variables: { attacks_per_attack_action: 2 } },
+      ruleState: { appliedGrants: [] },
+      sheetActions: [],
+      runtime: {
+        hp: { current: 10, max: 10, temp: 0 }, resources: {}, maxResources: {},
+        equipment: {}, inventory: [], activeEffects: [],
+      },
+      characterContext: {
+        abilityMods: { str: 3, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+        profBonus: 3, level: 5, variables: { attacks_per_attack_action: 2 },
+      } as CharacterContext,
+    });
+
+    expect(built.world.actors[built.actorId].attackProfile?.attacksPerAction).toBe(2);
+  });
+
+  it('refreshes a persisted attack profile when level-up grants Extra Attack', () => {
+    const baseAssembly = assembled({
+      effect: {
+        id: 'effect:neutral', card_number: 'EFF-neutral', name: 'Neutral',
+        mechanics: { activation: { mode: 'passive' }, effects: [] },
+      } as unknown as PassiveEffect,
+    });
+    const runtime = {
+      hp: { current: 10, max: 10, temp: 0 }, resources: {}, maxResources: {},
+      equipment: {}, inventory: [], activeEffects: [],
+    };
+    const before = buildSheetCanonicalRuntime({
+      character: character('sheet-extra-attack-upgrade'),
+      assembled: { ...baseAssembly, variables: {} },
+      ruleState: { appliedGrants: [] },
+      sheetActions: [], runtime,
+      characterContext: {
+        abilityMods: { str: 3, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+        profBonus: 2, level: 4, variables: {},
+      } as CharacterContext,
+    });
+    const persisted = writeSheetCanonicalWorld({}, before.actorId, before.world);
+    const after = buildSheetCanonicalRuntime({
+      character: { ...character('sheet-extra-attack-upgrade'), turn_state: persisted },
+      assembled: { ...baseAssembly, variables: { attacks_per_attack_action: 2 } },
+      ruleState: { appliedGrants: [] },
+      sheetActions: [], runtime,
+      characterContext: {
+        abilityMods: { str: 3, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+        profBonus: 3, level: 5, variables: { attacks_per_attack_action: 2 },
+      } as CharacterContext,
+    });
+
+    expect(before.world.actors[before.actorId].attackProfile?.attacksPerAction).toBe(1);
+    expect(after.world.actors[after.actorId].attackProfile?.attacksPerAction).toBe(2);
+  });
+
   it('projects feat and Fighting Style capability provenance into the real sheet actor', () => {
     const cases = [
       {
@@ -998,6 +1060,108 @@ describe('real sheet canonical world materialization', () => {
     });
   });
 
+  it('compiles a levelled species spell as always prepared with free-use and slot payments', () => {
+    const root = clone(generated.roots.wizard);
+    const sheetAction = root.actions
+      .filter((candidate): candidate is Extract<RuleActionDefinition, { kind: 'spell' }> => (
+        candidate.kind === 'spell' && candidate.spell.level === 1
+      ))
+      .map(sheetSpell)[0];
+    const spell = sheetAction.spellRef!;
+    const lineage = {
+      id: 'effect:drow-lineage', card_number: 'RE-sub-drow', name: 'Drow Lineage',
+      description: '', rarity: 'common', effect_type: 'species_ability',
+      mechanics: { activation: { mode: 'passive' }, effects: [] },
+      created_at: '', updated_at: '',
+    } as unknown as PassiveEffect;
+    const raceId = 'race:elf';
+    const sourceId = sourceKey('race', raceId, lineage.id);
+    const baseAssembly = assembled({ effect: lineage, spells: [spell] });
+    const assembly = {
+      ...baseAssembly,
+      race: {
+        id: raceId, card_number: 'RACE-elf', name: 'Elf', description: '',
+        rarity: 'common' as const, speed: 30, created_at: '', updated_at: '',
+      },
+      effects: [{ effect: lineage, origin: { kind: 'race' as const, id: raceId, name: 'Elf' } }],
+    };
+    const freeUseResource = `freeuse-${spell.id}`;
+    const built = buildSheetCanonicalRuntime({
+      character: character('sheet-drow-spell'),
+      assembled: assembly,
+      ruleState: { appliedGrants: [{
+        id: `grant:drow:${spell.id}`,
+        source: {
+          type: 'species', id: sourceId, name: 'Elf: Drow Lineage',
+          originEntityId: raceId, featureEntityId: lineage.id,
+        },
+        kind: 'spell', value: spell.id, mode: 'proficiency',
+        spellcastingAbility: 'cha', label: 'always_prepared',
+        freeuse: { count: 1, recharge: 'long_rest' },
+      }] },
+      sheetActions: [sheetAction],
+      runtime: {
+        ...root.actor.runtime,
+        resources: { ...root.actor.runtime.resources, [freeUseResource]: 1, spell_slot_1: 1 },
+        maxResources: { ...root.actor.runtime.maxResources, [freeUseResource]: 1, spell_slot_1: 1 },
+      },
+      characterContext: root.actor.character,
+      cards: [],
+      ac: root.actor.ac,
+    });
+    const action = built.actionFor(sheetAction);
+    const access = built.world.actors[built.actorId].spellcastingAccess!;
+    expect(access.grants).toHaveLength(1);
+    expect(access.grants[0]).toMatchObject({
+      access: 'always_prepared', spellcastingAbility: 'cha',
+      freeUseResource, slotResource: 'spell_slot_1',
+    });
+    expect(resolveSpellAccess({
+      state: access, actionId: action.id,
+      resources: { [freeUseResource]: 1, spell_slot_1: 1 },
+    })).toMatchObject({ status: 'allowed', payment: { kind: 'free_use', resource: freeUseResource } });
+    expect(resolveSpellAccess({
+      state: access, actionId: action.id,
+      resources: { [freeUseResource]: 0, spell_slot_1: 1 },
+    })).toMatchObject({ status: 'allowed', payment: { kind: 'slot', resource: 'spell_slot_1' } });
+  });
+
+  it('normalizes a level-zero spell with a shared always-prepared grant label to cantrip access', () => {
+    const root = clone(generated.roots.wizard);
+    const spellcasting = patchEffect('EFF-wizard-spellcasting');
+    const sheetAction = root.actions
+      .filter((candidate): candidate is Extract<RuleActionDefinition, { kind: 'spell' }> => (
+        candidate.kind === 'spell' && candidate.spell.level === 0
+      ))
+      .map(sheetSpell)[0];
+    const spell = sheetAction.spellRef!;
+    const built = buildSheetCanonicalRuntime({
+      character: character('sheet-shared-cantrip-label'),
+      assembled: assembled({ effect: spellcasting, spells: [spell] }),
+      ruleState: { appliedGrants: [{
+        id: `grant:shared-label:${spell.id}`,
+        source: {
+          type: 'class',
+          id: sourceKey('class', 'class-entity:warlock', spellcasting.id),
+          name: 'Shared spell choice',
+          originEntityId: 'class-entity:warlock',
+          featureEntityId: spellcasting.id,
+        },
+        kind: 'spell', value: spell.id, mode: 'proficiency',
+        spellcastingAbility: 'int', label: 'always_prepared',
+      }] },
+      sheetActions: [sheetAction],
+      runtime: root.actor.runtime,
+      characterContext: root.actor.character,
+      cards: [],
+      ac: root.actor.ac,
+    });
+    const action = built.actionFor(sheetAction);
+    expect(built.world.actors[built.actorId].spellcastingAccess?.grants).toContainEqual(
+      expect.objectContaining({ actionId: action.id, access: 'cantrip', level: 0 }),
+    );
+  });
+
   it('pays a Warlock class spell from its separate short-rest Pact Magic pool', () => {
     const spellcasting = patchEffect('EFF-warlock-spellcasting');
     // The compiled corpus has a Wizard spell root but no separate Warlock
@@ -1044,6 +1208,52 @@ describe('real sheet canonical world materialization', () => {
       status: 'allowed',
       payment: { kind: 'slot', resource: 'pact_slot_1' },
     });
+  });
+
+  it('binds a spell grant to its exact repeated feature instance', () => {
+    const growth = patchEffect('EFF-warlock-spellcasting');
+    const root = clone(generated.roots.wizard);
+    const sheetAction = root.actions
+      .filter((candidate): candidate is Extract<RuleActionDefinition, { kind: 'spell' }> => (
+        candidate.kind === 'spell' && candidate.spell.level === 1
+      ))
+      .map(sheetSpell)[0];
+    const spell = sheetAction.spellRef!;
+    const baseAssembly = assembled({ effect: growth, spells: [spell] });
+    const instanceKey = 'class-level-5';
+    const ruleState = spellRuleState(growth, [spell], { [spell.id]: 'known' });
+    ruleState.appliedGrants[0].source.id = sourceKey(
+      'class',
+      'class-entity:warlock',
+      `${growth.id}#${instanceKey}`,
+    );
+    const built = buildSheetCanonicalRuntime({
+      character: character('sheet-repeated-spell-source'),
+      assembled: {
+        ...baseAssembly,
+        effects: ['class-level-2', 'class-level-3', 'class-level-4', instanceKey].map((key) => ({
+          effect: growth,
+          origin: {
+            kind: 'class' as const,
+            id: 'class-entity:warlock',
+            name: 'Warlock',
+            instanceKey: key,
+          },
+        })),
+      },
+      ruleState,
+      sheetActions: [sheetAction],
+      runtime: {
+        ...root.actor.runtime,
+        resources: { ...root.actor.runtime.resources, pact_slot_1: 1 },
+        maxResources: { ...root.actor.runtime.maxResources, pact_slot_1: 1 },
+      },
+      characterContext: root.actor.character,
+      cards: [],
+      ac: root.actor.ac,
+    });
+
+    expect(built.actionFor(sheetAction).id).toBe(`${spell.id}@CLASS-warlock`);
   });
 
   it('fails closed on missing, duplicate, and outside-book Wizard preparation', () => {

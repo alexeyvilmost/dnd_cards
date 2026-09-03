@@ -1,10 +1,12 @@
 import type { EngineEvent } from '../mvp/contracts';
 import type {
+  ActionWorldInput,
   RuleActionDefinition,
   RuleHazardDefinition,
   SpatialFacts,
   WorldState,
 } from '../rules-core/domain';
+import type { WorldObjectState } from '../rules-core/worldObjects';
 import type { SheetCanonicalResourceBindings } from '../character/sheetCanonicalWorld';
 import type { Action, Spell } from '../types';
 
@@ -15,6 +17,14 @@ export const TACTICAL_WIDTH = 12;
 export const TACTICAL_HEIGHT = 10;
 
 export interface GridPosition { x: number; y: number }
+
+export interface RecentStraightMovement {
+  from: GridPosition;
+  to: GridPosition;
+  distanceFt: number;
+  direction: { x: -1 | 0 | 1; y: -1 | 0 | 1 };
+  round: number;
+}
 
 export interface TacticalToken {
   actorId: string;
@@ -99,7 +109,7 @@ export interface CombatActorPresentation {
   traits: CombatActorTraitPresentation[];
 }
 
-export type CombatAreaEvent = 'created' | 'enter' | 'exit' | 'start_turn' | 'end_turn';
+export type CombatAreaEvent = 'created' | 'enter' | 'exit' | 'move' | 'start_turn' | 'end_turn';
 
 /** A board-owned persistent area. Creature conditions remain ordinary catalog
  * effects; this record only owns geometry, lifecycle and hazard provenance. */
@@ -118,9 +128,25 @@ export interface CombatAreaState {
     | { type: 'concentration' };
   triggers: CombatAreaEvent[];
   hazard?: RuleHazardDefinition;
+  /** Event-specific riders when one area has different resolutions at
+   * different lifecycle boundaries (for example Hunger of Hadar). */
+  eventHazards?: Partial<Record<CombatAreaEvent, RuleHazardDefinition>>;
   difficultTerrain?: boolean;
+  /** Light visual obstruction is projected for inspection and later
+   * sight-based Perception checks; unlike heavy obscurement it does not erase
+   * line of sight or creature visibility. */
+  lightlyObscured?: boolean;
   heavilyObscured?: boolean;
-  insideCondition?: string;
+  blocksVerbalComponents?: boolean;
+  damageImmunities?: string[];
+  /** Exact effect-library identity applied for area membership. The condition
+   * behavior id is read from that entity's mechanics.condition.id. */
+  insideEffect?: {
+    cardNumber: string;
+    entityId: string;
+    name: string;
+    conditionId: string;
+  };
   notice?: string;
   triggeredTurnKeys?: string[];
 }
@@ -130,6 +156,7 @@ export interface PendingCombatAreaTrigger {
   actorId: string;
   event: CombatAreaEvent;
   turnKey: string;
+  occurrence?: number;
 }
 
 /**
@@ -140,11 +167,24 @@ export interface PendingCombatAreaTrigger {
  * exposed as proactive hotbar buttons.
  */
 export interface PendingTriggeredAction {
-  event: 'hit' | 'miss';
+  event: 'hit' | 'miss' | 'sneak_attack_hit' | 'opportunity_attack';
   sourceActorId: string;
   sourceActionId: string;
   targetIds: string[];
   optionActionIds: string[];
+  /**
+   * Exact replacement HP after foregoing one rolled Sneak Attack d6. The
+   * combat adapter derives this from the committed damage packet sequence and
+   * stores it with the choice, so refresh/retry cannot reroll or refund an
+   * unrelated packet. It is consumed only by a sneak_attack_hit option.
+   */
+  sneakAttackTradeoff?: {
+    targetActorId: string;
+    committedHp: { current: number; max: number; temp: number };
+    replacementHp: { current: number; max: number; temp: number };
+    dieResults: number[];
+    effectiveDamage: number;
+  };
 }
 
 /** Persisted player choice which must be answered before StartTurn can commit. */
@@ -168,6 +208,36 @@ export interface PendingInterceptionTrigger {
   targetActorId: string;
   targetHpBefore: { current: number; max: number; temp: number };
   logIndex: number;
+}
+
+/**
+ * Serializable command held while another controlled actor decides whether to
+ * interrupt a d20 roll. The RNG transcript belongs to the continuation, so a
+ * refresh or a reaction choice cannot silently reroll the triggering action.
+ */
+export interface PendingD20Interrupt {
+  timing: 'before_roll' | 'after_outcome';
+  operation: 'impose_disadvantage' | 'subtract_die';
+  command: {
+    actorId: string;
+    actionId: string;
+    targetIds: string[];
+    worldPosition?: GridPosition;
+    worldInput?: ActionWorldInput;
+    scenarioObjects?: WorldObjectState[];
+    choices?: Record<string, string[]>;
+  };
+  responders: Array<{
+    actorId: string;
+    effectId: string;
+    effectName: string;
+  }>;
+  randomValues?: number[];
+  preview?: {
+    rollKind: 'attack_roll' | 'ability_check';
+    total: number;
+    outcome: 'hit' | 'success';
+  };
 }
 
 export interface SoloCombatState {
@@ -205,6 +275,8 @@ export interface SoloCombatState {
   pendingCombatAreaTurnContinuation?: { endingActorId: string; startingActorId: string };
   boardRevision: number;
   movementRemainingFt: Record<string, number>;
+  /** Last contiguous straight voluntary path this turn; used by rules such as Charger. */
+  recentStraightMovementByActor?: Record<string, RecentStraightMovement>;
   initiativeBonuses: Record<string, number>;
   initiative: InitiativeEntry[];
   log: CombatLogEntry[];
@@ -212,6 +284,8 @@ export interface SoloCombatState {
   pendingTurnStartGrappleDamage?: PendingTurnStartGrappleDamage;
   pendingInterception?: PendingInterception;
   pendingInterceptionTrigger?: PendingInterceptionTrigger;
+  /** Cross-actor pre/post-roll reaction continuation (for example Warding Flare or Cutting Words). */
+  pendingD20Interrupt?: PendingD20Interrupt;
   /** Alert owners waiting to accept or decline their post-Initiative swap before turn one starts. */
   pendingAlertSwapActorIds?: string[];
   outcome: 'active' | 'victory' | 'defeat';

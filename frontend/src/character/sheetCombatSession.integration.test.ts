@@ -405,11 +405,15 @@ describe('CharacterV3 atomic pending-combat session', () => {
     };
     const prepared = prepareSheetCombatCommit({ transition: opened.transition, characters });
     expect(prepared.request.ruleset_ref).toEqual({
-      system_id: fixture.source.ruleset.systemId,
-      release_id: fixture.source.ruleset.releaseId,
-      content_hash: fixture.source.ruleset.contentHash,
-      errata_version: fixture.source.ruleset.errataVersion,
+      system_id: opened.transition.nextWorld.ruleset.systemId,
+      release_id: opened.transition.nextWorld.ruleset.releaseId,
+      content_hash: opened.transition.nextWorld.ruleset.contentHash,
+      errata_version: opened.transition.nextWorld.ruleset.errataVersion,
     });
+    // Sheet projections can be older than the generated certification artifact.
+    // A newly opened session is deliberately pinned to the certified release.
+    expect(prepared.request.ruleset_ref.content_hash)
+      .not.toBe(fixture.source.ruleset.contentHash);
     expect(prepared.request.participants.map((row) => row.character_id)).toEqual([
       IDS.source,
       IDS.target,

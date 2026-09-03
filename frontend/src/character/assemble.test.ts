@@ -9,6 +9,7 @@ import {
   collectFeatChoiceRefs,
   expandEffectGrants,
   gatherFeatureRefs,
+  multiclassSpellSlotCounts,
 } from './assemble';
 import type { OriginEffect } from './assemble';
 import type { CharacterClass, Feat, PassiveEffect, Race } from '../types';
@@ -52,6 +53,32 @@ describe('gatherFeatureRefs — гейт по уровню', () => {
     expect(ids(actionRefs)).toContain('act-action-surge');
   });
 
+  it('помнит исторический круг ячеек для каждого шага классовой прогрессии', () => {
+    const caster = {
+      id: 'wizard', name: 'Wizard',
+      resources: {
+        spell_slot_1: { by_level: { 1: 2, 2: 3 }, per: 'long_rest' },
+        spell_slot_2: { by_level: { 3: 2 }, per: 'long_rest' },
+        spell_slot_3: { by_level: { 5: 2 }, per: 'long_rest' },
+      },
+      level_progression: {
+        '2': { effects: ['spell-growth'] },
+        '3': { effects: ['spell-growth'] },
+        '5': { effects: ['spell-growth'] },
+      },
+    } as unknown as CharacterClass;
+    const refs = gatherFeatureRefs(null, caster, [], 5).effectRefs;
+
+    expect(refs.map(({ origin }) => ({
+      level: origin.progressionLevel,
+      cap: origin.spellSlotLevelCap,
+    }))).toEqual([
+      { level: 2, cap: 1 },
+      { level: 3, cap: 2 },
+      { level: 5, cap: 3 },
+    ]);
+  });
+
   it('L5 открывает видовую способность 5 уровня', () => {
     const { effectRefs } = gatherFeatureRefs(race, klass, [], 5);
     expect(ids(effectRefs)).toContain('fx-darkvision-boost');
@@ -80,6 +107,15 @@ describe('gatherFeatureRefs — гейт по уровню', () => {
     const { effectRefs, actionRefs } = gatherFeatureRefs(null, null, [], 1);
     expect(effectRefs).toHaveLength(0);
     expect(actionRefs).toHaveLength(0);
+  });
+
+  it('гейтит прогрессию подкласса уровнем его класса, а не общим уровнем', () => {
+    const subclass = {
+      id: 'evoker', name: 'Воплотитель',
+      level_progression: { '3': { effects: ['fx-l3'] }, '5': { effects: ['fx-l5'] } },
+    } as unknown as CharacterClass;
+    expect(ids(gatherFeatureRefs(null, null, [], 3, null, subclass).effectRefs)).toEqual(['fx-l3']);
+    expect(ids(gatherFeatureRefs(null, null, [], 5, null, subclass).effectRefs)).toEqual(['fx-l3', 'fx-l5']);
   });
 
   it('источник (origin) проставлен для каждой ссылки', () => {
@@ -147,6 +183,52 @@ describe('collectEffectGrantRefs — извлечение ссылок на эф
   it('choice без выбора не даёт ссылок', () => {
     const mech = { effects: [{ kind: 'choice', id: 'ch1', options: { source: 'effect', items: [{ id: 'EFF-b' }] } }] };
     expect(collectEffectGrantRefs(mech, 'id-a', ORIGIN, draftWith())).toEqual([]);
+  });
+
+  it('не подключает воззвание выше уровня класса или вне домена', () => {
+    const mech = { effects: [{
+      kind: 'choice', id: 'invocations',
+      options: { source: 'effect', items: [
+        { id: 'EFF-level-2', minimum_class_level: 2 },
+        { id: 'EFF-level-5', minimum_class_level: 5 },
+      ] },
+    }] };
+    const lowOrigin = { ...ORIGIN, kind: 'class' as const, owningClassLevel: 2 };
+    expect(collectEffectGrantRefs(
+      mech,
+      'id-a',
+      lowOrigin,
+      draftWith({ invocations: ['EFF-level-5', 'EFF-not-declared'] }),
+    )).toEqual([]);
+    expect(collectEffectGrantRefs(
+      mech,
+      'id-a',
+      { ...lowOrigin, owningClassLevel: 5 },
+      draftWith({ invocations: ['EFF-level-5'] }),
+    )).toEqual(['EFF-level-5']);
+  });
+});
+
+describe('multiclass spell slots', () => {
+  const caster = (id: string, cardNumber: string) => ({
+    id, card_number: cardNumber, name: id,
+  } as unknown as CharacterClass);
+
+  it('combines full and half caster levels while excluding Pact Magic', () => {
+    const wizard = caster('wizard', 'CLASS-wizard');
+    const paladin = caster('paladin', 'CLASS-paladin');
+    const warlock = caster('warlock', 'CLASS-warlock');
+    expect(multiclassSpellSlotCounts(
+      [wizard, paladin, warlock],
+      { wizard: 2, paladin: 2, warlock: 1 },
+    )).toEqual([4, 2]);
+  });
+
+  it('uses the level-five half-caster row and gives martials no ordinary slots', () => {
+    const ranger = caster('ranger', 'CLASS-ranger');
+    const fighter = caster('fighter', 'CLASS-warrior');
+    expect(multiclassSpellSlotCounts([ranger], { ranger: 5 })).toEqual([4, 2]);
+    expect(multiclassSpellSlotCounts([fighter], { fighter: 5 })).toEqual([]);
   });
 });
 
@@ -266,7 +348,8 @@ describe('assemble — class-level choice capacity', () => {
         count: 1,
         count_by_level: { 1: 1, 2: 3 },
         options: { source: 'effect', items: [
-          { id: 'inv-a', name: 'A' }, { id: 'inv-b', name: 'B' }, { id: 'inv-c', name: 'C' },
+          { id: 'inv-a', name: 'A' }, { id: 'inv-b', name: 'B' },
+          { id: 'inv-c', name: 'C', minimum_class_level: 5 },
         ] },
       }],
     });
@@ -282,8 +365,10 @@ describe('assemble — class-level choice capacity', () => {
       classLevels: { [warlock.id]: 2 },
       resolvedChoices: { [choiceId]: ['inv-a'] },
     });
-    expect(assembled.pendingChoices.find((choice) => choice.rawId === 'warlock_invocation_l1')?.count)
-      .toBe(3);
+    const choice = assembled.pendingChoices.find((candidate) => candidate.rawId === 'warlock_invocation_l1');
+    expect(choice?.count).toBe(3);
+    expect(choice?.origin.owningClassLevel).toBe(2);
+    expect(choice?.items?.find((item) => item.id === 'inv-c')?.minimumClassLevel).toBe(5);
   });
 });
 

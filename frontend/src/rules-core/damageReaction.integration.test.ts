@@ -4,6 +4,7 @@ import type {
   GameCommand,
   RuleActionDefinition,
   RulesCatalog,
+  SpatialFacts,
   UncommittedRuleEvent,
 } from './domain';
 import { createWorld } from './domain';
@@ -120,6 +121,39 @@ const STONE_ENDURANCE: RuleActionDefinition = {
   },
 };
 
+const UNCANNY_DODGE: RuleActionDefinition = {
+  id: 'action.uncanny-dodge',
+  name: 'Невероятное уклонение',
+  kind: 'nonSpell',
+  sourceEntityIds: ['ACT-rogue-uncanny-dodge', 'EFF-rogue-uncanny-dodge'],
+  targeting: {
+    minTargets: 0,
+    maxTargets: 1,
+    rangeFt: 0,
+    requiresLineOfSight: false,
+    allowedRelations: ['self'],
+  },
+  mechanics: {
+    name: 'Невероятное уклонение',
+    activation: {
+      mode: 'reaction',
+      trigger: {
+        event: 'damage_taken',
+        timing: 'before',
+        circumstances: [
+          { kind: 'event_data_equals', key: 'delivery', value: 'attack' },
+          { kind: 'event_data_equals', key: 'source_visible', value: true },
+        ],
+      },
+      cost: [{ resource: 'reaction', amount: 1 }],
+    },
+    effects: [{
+      resolution: 'auto',
+      result: [{ kind: 'reduce_damage', amount: 'floor(incoming_damage/2)' }],
+    }],
+  },
+};
+
 const SHIELD: RuleActionDefinition = {
   id: 'spell.shield',
   name: 'Щит',
@@ -146,7 +180,7 @@ const SHIELD: RuleActionDefinition = {
   },
 };
 
-const ACTIONS = [STRIKE, DAMAGE_PULSE, DUAL_DAMAGE_PULSE, STONE_ENDURANCE, SHIELD];
+const ACTIONS = [STRIKE, DAMAGE_PULSE, DUAL_DAMAGE_PULSE, STONE_ENDURANCE, UNCANNY_DODGE, SHIELD];
 const CATALOG: RulesCatalog = {
   getAction: (id) => ACTIONS.find((action) => action.id === id),
 };
@@ -187,7 +221,7 @@ function actor(id: string, actionIds: string[]): ActorState {
   };
 }
 
-const facts = {
+const facts: SpatialFacts = {
   factsSource: 'scenario' as const,
   boardRevision: 1,
   distanceFt: 5,
@@ -232,7 +266,11 @@ function world(defenderActions = [STONE_ENDURANCE.id]) {
   });
 }
 
-function useStrike(session: InMemoryRulesSession, commandId = 'strike') {
+function useStrike(
+  session: InMemoryRulesSession,
+  commandId = 'strike',
+  strikeFacts = facts,
+) {
   return session.dispatch(base({
     schemaVersion: 1,
     type: 'UseAction',
@@ -242,7 +280,7 @@ function useStrike(session: InMemoryRulesSession, commandId = 'strike') {
     actorId: 'attacker',
     actionId: STRIKE.id,
     targetIds: ['defender'],
-    factsByTarget: { defender: facts },
+    factsByTarget: { defender: strikeFacts },
   }));
 }
 
@@ -287,6 +325,66 @@ function engineEvents(events: readonly UncommittedRuleEvent[]) {
 }
 
 describe('canonical pre-damage reaction lifecycle', () => {
+  it('offers Uncanny Dodge only for a visible attack and halves the held damage', () => {
+    const tape = createStrictRngTape([
+      { label: 'attack', sides: 20, value: 15 },
+      { label: 'damage', sides: 8, value: 8 },
+    ]);
+    const session = new InMemoryRulesSession(world([UNCANNY_DODGE.id]), CATALOG, {
+      rng: tape.rng,
+      clock: createLogicalClock(),
+      nextId: createSequentialIdFactory('uncanny'),
+    });
+    begin(session, [UNCANNY_DODGE.id]);
+
+    expect(useStrike(session).status).toBe('accepted');
+    expect(session.getState()).toMatchObject({
+      actors: { defender: { runtime: { hp: { current: 20 } } } },
+      pendingResolution: {
+        type: 'damage_reaction',
+        request: { options: [{ actionId: UNCANNY_DODGE.id }] },
+      },
+    });
+    expect(resolveReaction(session, UNCANNY_DODGE.id, 'uncanny-dodge').status).toBe('accepted');
+    tape.assertExhausted();
+    expect(session.getState().actors.defender.runtime.hp.current).toBe(16);
+    expect(session.getState().actors.defender.runtime.resources.reaction).toBe(0);
+  });
+
+  it('does not offer Uncanny Dodge for an unseen attacker or non-attack damage', () => {
+    const unseenTape = createStrictRngTape([
+      { label: 'attack', sides: 20, value: 15 },
+      { label: 'damage', sides: 8, value: 8 },
+    ]);
+    const unseen = new InMemoryRulesSession(world([UNCANNY_DODGE.id]), CATALOG, {
+      rng: unseenTape.rng,
+      clock: createLogicalClock(),
+      nextId: createSequentialIdFactory('unseen'),
+    });
+    begin(unseen, [UNCANNY_DODGE.id]);
+    expect(useStrike(unseen, 'unseen-strike', { ...facts, targetCanSeeSource: false }).status)
+      .toBe('accepted');
+    unseenTape.assertExhausted();
+    expect(unseen.getState().pendingResolution).toBeNull();
+    expect(unseen.getState().actors.defender.runtime.hp.current).toBe(12);
+    expect(unseen.getState().actors.defender.runtime.resources.reaction).toBe(1);
+
+    const pulseWorld = world([UNCANNY_DODGE.id]);
+    pulseWorld.actors.attacker.capabilities.actionIds.push(DAMAGE_PULSE.id);
+    const pulseTape = createStrictRngTape([{ label: 'damage', sides: 6, value: 6 }]);
+    const pulse = new InMemoryRulesSession(pulseWorld, CATALOG, {
+      rng: pulseTape.rng,
+      clock: createLogicalClock(),
+      nextId: createSequentialIdFactory('uncanny-pulse'),
+    });
+    begin(pulse, [UNCANNY_DODGE.id]);
+    expect(useDamagePulse(pulse).status).toBe('accepted');
+    pulseTape.assertExhausted();
+    expect(pulse.getState().pendingResolution).toBeNull();
+    expect(pulse.getState().actors.defender.runtime.hp.current).toBe(14);
+    expect(pulse.getState().actors.defender.runtime.resources.reaction).toBe(1);
+  });
+
   it('uses the same held transition for a non-attack damage source', () => {
     const initial = world();
     initial.actors.attacker.capabilities.actionIds.push(DAMAGE_PULSE.id);

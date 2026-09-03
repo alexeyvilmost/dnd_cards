@@ -41,6 +41,8 @@ export interface ModifierQueryFacts {
   weaponDamageLine?: 'base' | 'extra' | 'none';
   /** Stable defender identity for target-locked effects such as Vex. */
   targetActorId?: string;
+  /** Exact damage packet type for spell-source die and resistance policies. */
+  damageType?: string;
 }
 
 export interface CollectOptions {
@@ -101,7 +103,9 @@ function matchFilter(effectFilter: Dict | undefined, queryFilter: Dict | undefin
   if (!effectFilter || Object.keys(effectFilter).length === 0) return true;
   if (!queryFilter) return false;
   for (const [k, v] of Object.entries(effectFilter)) {
-    if (queryFilter[k] !== v) return false;
+    if (Array.isArray(v)) {
+      if (!v.includes(queryFilter[k])) return false;
+    } else if (queryFilter[k] !== v) return false;
   }
   return true;
 }

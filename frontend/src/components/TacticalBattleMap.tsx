@@ -162,13 +162,22 @@ export default function TacticalBattleMap({
           const duration = area.duration.type === 'permanent' ? 'постоянная'
             : area.duration.type === 'concentration' ? 'концентрация'
               : `${area.duration.roundsLeft} раундов`;
-          return `${area.name}: ${duration}${area.difficultTerrain ? ' · труднопроходимая местность' : ''}${area.heavilyObscured ? ' · сильно заслонённая область' : ''}`;
+          const triggerLabels = area.triggers.map((trigger) => ({
+            created: 'при создании', enter: 'при входе', exit: 'при выходе',
+            move: 'за каждые 5 фт. движения', start_turn: 'в начале хода', end_turn: 'в конце хода',
+          })[trigger]).join(', ');
+          const hazard = area.hazard?.resolution === 'save'
+            ? ` · спасбросок ${area.hazard.save.ability.toUpperCase()} СЛ ${area.hazard.save.dc}`
+            : area.hazard?.resolution === 'automatic' ? ' · без спасброска' : '';
+          const immunities = area.damageImmunities?.length
+            ? ` · иммунитеты в области: ${area.damageImmunities.join(', ')}` : '';
+          return `${area.name}: ${duration}${area.difficultTerrain ? ' · труднопроходимая местность' : ''}${area.lightlyObscured ? ' · слабо заслонённая область' : ''}${area.heavilyObscured ? ' · сильно заслонённая область' : ''}${area.blocksVerbalComponents ? ' · блокирует Вербальные компоненты' : ''}${immunities}${hazard}${triggerLabels ? ` · ${triggerLabels}` : ''}`;
         }).join(' · ');
         return (
           <button
             type="button"
             key={`${position.x}:${position.y}`}
-            className={`tactical-cell${token ? ' has-token' : ''}${dancingLight || illusion ? ' has-world-object' : ''}${persistentAreas.length ? ' has-combat-area' : ''}${persistentAreas.some((area) => area.heavilyObscured) ? ' is-heavily-obscured' : ''}${persistentAreas.some((area) => area.difficultTerrain) ? ' is-difficult-terrain' : ''}${token?.actorId === activeId ? ' is-active' : ''}${token?.actorId === inspectedActorId ? ' is-inspected' : ''}${dead ? ' is-dead' : ''}${areaCells.has(`${position.x}:${position.y}`) ? ' is-area-preview' : ''}${reachableCells.has(`${position.x}:${position.y}`) ? ' is-move-reachable' : ''}`}
+            className={`tactical-cell${token ? ' has-token' : ''}${dancingLight || illusion ? ' has-world-object' : ''}${persistentAreas.length ? ' has-combat-area' : ''}${persistentAreas.some((area) => area.lightlyObscured) ? ' is-lightly-obscured' : ''}${persistentAreas.some((area) => area.heavilyObscured) ? ' is-heavily-obscured' : ''}${persistentAreas.some((area) => area.difficultTerrain) ? ' is-difficult-terrain' : ''}${token?.actorId === activeId ? ' is-active' : ''}${token?.actorId === inspectedActorId ? ' is-inspected' : ''}${dead ? ' is-dead' : ''}${areaCells.has(`${position.x}:${position.y}`) ? ' is-area-preview' : ''}${reachableCells.has(`${position.x}:${position.y}`) ? ' is-move-reachable' : ''}`}
             aria-label={[actorLabel, areaLabel, lightLabel, illusionLabel, `Клетка ${position.x + 1}, ${position.y + 1}`].filter(Boolean).join(' · ')}
             data-actor-id={token?.actorId}
             onMouseEnter={() => setHovered(position)}
@@ -180,7 +189,7 @@ export default function TacticalBattleMap({
           >
             {persistentAreas.map((area) => area.origin.x === position.x && area.origin.y === position.y ? (
               <span key={area.id} className={`combat-area-token is-${area.zoneType}`} title={areaLabel} aria-hidden="true">
-                <b>{area.heavilyObscured ? '◉' : '◇'}</b><small>{area.name}</small>
+                <b>{area.heavilyObscured ? '◉' : area.lightlyObscured ? '◌' : '◇'}</b><small>{area.name}</small>
               </span>
             ) : null)}
             {dancingLight && (

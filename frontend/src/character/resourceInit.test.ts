@@ -4,6 +4,8 @@ import type { AssembledCharacter } from './assemble';
 import type { CharacterContext } from '../mvp/contracts';
 import type { ForgeCharacter } from './types';
 import type { Card } from '../types';
+import type { Action } from '../types';
+import type { GrantedAction } from './actionSheet';
 
 const ctx: CharacterContext = {
   abilityMods: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 3 },
@@ -125,5 +127,83 @@ describe('MM4 — resource maximum sources', () => {
     const synced = syncRuntimeResources(ctx, assembled, undefined, [], [healerKit]);
     expect(synced.maxResources['uses_CARD-0491']).toBe(10);
     expect(synced.resources['uses_CARD-0491']).toBe(10);
+  });
+
+  it('materializes and preserves the spent pool of a limited granted action', () => {
+    const action = {
+      id: 'flight-id',
+      card_number: 'ACT-dragonborn-draconic-flight',
+      name: 'Драконьий полёт',
+      mechanics: {
+        activation: {
+          mode: 'active',
+          cost: [{ resource: 'bonus_action' }, { resource: 'self_uses' }],
+        },
+        uses: { count: 1, per: 'long_rest' },
+        effects: [{ resolution: 'auto', result: [] }],
+      },
+    } as unknown as Action;
+    const grantedActions: GrantedAction[] = [{
+      action,
+      sourceLabel: 'Драконорождённый',
+      group: 'race',
+    }];
+
+    const fresh = syncRuntimeResources(ctx, assembled, undefined, [], [], grantedActions);
+    expect(fresh.maxResources['uses_ACT-dragonborn-draconic-flight']).toBe(1);
+    expect(fresh.resources['uses_ACT-dragonborn-draconic-flight']).toBe(1);
+
+    const spent = {
+      hp: { current: 10, max: 10, temp: 0 },
+      resources: { ...fresh.resources, 'uses_ACT-dragonborn-draconic-flight': 0 },
+      maxResources: fresh.maxResources,
+      equipment: {},
+      inventory: [],
+      activeEffects: [],
+      firedThisTurn: [],
+      firedThisRest: [],
+    };
+    const reconciled = syncRuntimeResources(ctx, assembled, spent, [], [], grantedActions);
+    expect(reconciled.resources['uses_ACT-dragonborn-draconic-flight']).toBe(0);
+    expect(reconciled.maxResources['uses_ACT-dragonborn-draconic-flight']).toBe(1);
+    expect(reconciled.sources['uses_ACT-dragonborn-draconic-flight']).toEqual([{
+      value: 1,
+      source: 'Действие: ACT-dragonborn-draconic-flight',
+      reason: 'число использований',
+    }]);
+  });
+
+  it('adds a newly gained secondary-class Hit Die without restoring spent dice', () => {
+    const multiclass = {
+      ...assembled,
+      klass: { id: 'fighter', card_number: 'CLASS-warrior', name: 'Воин', hit_die: 'd10', resources: {} },
+      classes: [
+        { id: 'fighter', card_number: 'CLASS-warrior', name: 'Воин', hit_die: 'd10' },
+        { id: 'wizard', card_number: 'CLASS-wizard', name: 'Волшебник', hit_die: 'd6' },
+      ],
+      effects: [],
+    } as unknown as AssembledCharacter;
+    const leveledContext: CharacterContext = {
+      ...ctx,
+      level: 3,
+      hitDie: 'd10',
+      classLevels: { warrior: 1, wizard: 2 },
+    };
+    const existing = {
+      hp: { current: 10, max: 10, temp: 0 },
+      resources: {
+        action: 1, bonus_action: 1, reaction: 1,
+        hit_dice_d10: 0, hit_dice_d6: 0,
+      },
+      maxResources: {
+        action: 1, bonus_action: 1, reaction: 1,
+        hit_dice_d10: 1, hit_dice_d6: 1,
+      },
+      equipment: {}, inventory: [], activeEffects: [], firedThisTurn: [], firedThisRest: [],
+    };
+
+    const result = syncRuntimeResources(leveledContext, multiclass, existing);
+    expect(result.maxResources).toMatchObject({ hit_dice_d10: 1, hit_dice_d6: 2 });
+    expect(result.resources).toMatchObject({ hit_dice_d10: 0, hit_dice_d6: 1 });
   });
 });

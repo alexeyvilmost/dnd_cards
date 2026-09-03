@@ -171,6 +171,25 @@ describe('Dwarf 2024 pure traits', () => {
         },
       ],
     }]);
+
+    const enveloped = effectiveSenses({
+      build: [],
+      runtime: runtime([{
+        id: 'spell-darkvision', roundsLeft: 4800,
+        mechanics: {
+          activation: { mode: 'passive' },
+          effects: [{ resolution: 'auto', result: [{
+            kind: 'grant_sense', sense: 'darkvision', range: 150,
+          }] }],
+        },
+      }]),
+    });
+    expect(enveloped).toEqual([{
+      sense: 'darkvision', range: 150,
+      sources: [{
+        kind: 'runtime', sourceEntityIds: [], runtimeEffectId: 'spell-darkvision', roundsLeft: 4800,
+      }],
+    }]);
   });
 
   it('validates every persisted sense generically without recognizing Stonecunning by shape', () => {

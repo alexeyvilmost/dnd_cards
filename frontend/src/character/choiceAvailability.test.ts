@@ -54,6 +54,18 @@ const choice: PendingChoice = {
   ],
 };
 
+describe('adaptive proficiency-or-expertise choices', () => {
+  it('keeps an already proficient skill available for expertise and blocks existing expertise', () => {
+    const adaptive: PendingChoice = {
+      id: 'observant_skill', prompt: 'Навык', count: 1, source: 'skill', origin: choice.origin,
+      grant: { kind: 'grant_proficiency_or_expertise', prof: 'skill' },
+    };
+    expect(unavailableChoiceOptions(adaptive, state(), ['acrobatics'])).toEqual({});
+    const expert = state(); expert.expertise.skills.push('acrobatics');
+    expect(unavailableChoiceOptions(adaptive, expert, ['acrobatics']).acrobatics).toContain('Экспертность');
+  });
+});
+
 describe('declarative choice option availability', () => {
   it('disables existing proficiency grants without branching on entity identity', () => {
     expect(unavailableChoiceItemOptions(choice, state())).toEqual({
@@ -104,6 +116,17 @@ describe('declarative choice option availability', () => {
     };
     expect(unavailableChoiceItemOptions(renamed, state()))
       .toEqual(unavailableChoiceItemOptions(choice, state()));
+  });
+
+  it('blocks an option reserved by another repeatable feat instance', () => {
+    const repeatable: PendingChoice = {
+      ...choice,
+      count: 1,
+      reservedOptionIds: ['skill:arcana'],
+    };
+    expect(unavailableChoiceItemOptions(repeatable, state())).toMatchObject({
+      'skill:arcana': 'Уже выбрано другим экземпляром этой черты',
+    });
   });
 
   it('uses the same expertise aliases as the resolver', () => {

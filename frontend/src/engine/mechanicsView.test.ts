@@ -26,4 +26,17 @@ describe('payloadsOf (R1)', () => {
     const payloads = payloadsOf(MECH_DODGE);
     expect(payloads.filter((p) => p.kind === 'modifier')).toHaveLength(2);
   });
+
+  it('канонический effect-envelope раскрывает runtime-скорость и чувство', () => {
+    const mechanics = {
+      activation: { mode: 'passive' },
+      effects: [{ resolution: 'auto', result: [
+        { kind: 'grant_speed', mode: 'climb', value: 'character_speed' },
+        { kind: 'grant_sense', sense: 'darkvision', range: 150 },
+      ] }],
+    };
+    expect(payloadsOf(mechanics).map((payload) => payload.kind)).toEqual([
+      'grant_speed', 'grant_sense',
+    ]);
+  });
 });

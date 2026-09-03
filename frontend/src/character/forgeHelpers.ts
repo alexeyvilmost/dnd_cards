@@ -21,9 +21,68 @@ import { collectChosenSpellUuids } from '../engine/spellRefs';
 import { preparedSpellSelectionIssues, requiresInitialCharacterChoice } from '../mechanics/collectChoices';
 import { isEntityUuid } from '../engine/ids';
 import { normalizeSkillList } from './skillNormalize';
-import type { Race, RaceTrait } from '../types';
+import type { Feat, Race, RaceTrait } from '../types';
 import type { PendingChoice } from '../mechanics/collectChoices';
-import { characterClassLevels, draftClassLevels } from './multiclass';
+import { characterClassLevels, draftClassLevels, normalizedSubclassIds } from './multiclass';
+
+/**
+ * Keep every choice introduced by the current level visible after it is
+ * resolved.  A level-up choice is editable until the player confirms the
+ * level, so selecting a feat or one ASI branch must not make that control
+ * disappear.  Older resolved choices stay hidden; older incomplete choices
+ * remain available so a legacy character can still be repaired.
+ */
+export function levelUpChoicesToShow(
+  choices: readonly PendingChoice[],
+  previousChoiceIds: ReadonlySet<string> | null | undefined,
+  resolvedChoices: Readonly<Record<string, readonly string[]>>,
+): PendingChoice[] {
+  return choices.filter((choice) => (
+    previousChoiceIds == null
+    || !previousChoiceIds.has(choice.id)
+    || (resolvedChoices[choice.id]?.length ?? 0) < choice.count
+  ));
+}
+
+/**
+ * Find the parameter choices owned by feats selected in a particular Forge
+ * section.  General feats are selected by a class-owned `source: "feat"`
+ * choice, while the selected feat's own ASI/half-feat controls have a feat
+ * origin.  Joining the two lets the Forge render those controls next to the
+ * picker that created them instead of hiding them on another navigation tab.
+ */
+export function featOwnedChoicesForSelections(
+  ownChoices: readonly PendingChoice[],
+  ownerChoices: readonly PendingChoice[],
+  resolvedChoices: Readonly<Record<string, readonly string[]>>,
+  feats: readonly Feat[],
+): PendingChoice[] {
+  const featIdByReference = new Map<string, string>();
+  for (const feat of feats) {
+    featIdByReference.set(feat.id, feat.id);
+    featIdByReference.set(feat.card_number, feat.id);
+  }
+
+  const selectedFeatIds = new Set<string>();
+  const selectedInstances = new Set<string>();
+  for (const owner of ownerChoices) {
+    if (owner.source !== 'feat') continue;
+    for (const reference of resolvedChoices[owner.id] ?? []) {
+      const featId = featIdByReference.get(reference) ?? reference;
+      selectedFeatIds.add(featId);
+      if (owner.origin.featureId) selectedInstances.add(`${featId}:${owner.origin.featureId}`);
+    }
+  }
+
+  return ownChoices.filter((choice) => {
+    if (choice.origin.kind !== 'feat') return false;
+    const featId = featIdByReference.get(choice.origin.id) ?? choice.origin.id;
+    if (!selectedFeatIds.has(featId)) return false;
+    return !choice.origin.instanceKey
+      || selectedInstances.size === 0
+      || selectedInstances.has(`${featId}:${choice.origin.instanceKey}`);
+  });
+}
 
 /** Восстановить выбранные навыки класса: явный ключ → appliedGrants → пусто. */
 export function classSkillChoicesFromCharacter(c: ForgeCharacter): string[] {
@@ -105,7 +164,10 @@ export function characterToDraft(c: ForgeCharacter): CharacterDraft {
     lineageId: c.lineage_id ?? null,
     classId: c.class_id ?? null,
     classLevels: characterClassLevels(c),
-    subclassId: stored[SUBCLASS_KEY]?.[0] ?? null,
+    subclassIds: normalizedSubclassIds(c.subclass_ids, c.class_id, stored[SUBCLASS_KEY]?.[0] ?? null),
+    subclassId: c.class_id
+      ? normalizedSubclassIds(c.subclass_ids, c.class_id, stored[SUBCLASS_KEY]?.[0] ?? null)[c.class_id] ?? null
+      : null,
     backgroundId: c.background_id ?? null,
     level: c.level || 1,
     featIds: c.feat_ids || [],
@@ -194,6 +256,7 @@ export function buildSavePayload(
     lineage_id: draft.lineageId,
     class_id: draft.classId,
     class_levels: draftClassLevels(draft),
+    subclass_ids: normalizedSubclassIds(draft.subclassIds, draft.classId, draft.subclassId),
     background_id: draft.backgroundId,
     level: draft.level,
     feat_ids: draft.featIds,
@@ -240,6 +303,18 @@ export function requiredChoiceIssues(draft: CharacterDraft, assembled: Assembled
   for (const pc of assembled.pendingChoices) {
     if (!requiresInitialCharacterChoice(pc)) continue;
     const sel = draft.resolvedChoices[pc.id] || [];
+    const gatedSelections = sel.flatMap((optionId) => {
+      const option = pc.items?.find((item) => item.id === optionId);
+      return option?.minimumClassLevel != null
+        && pc.origin.owningClassLevel != null
+        && pc.origin.owningClassLevel < option.minimumClassLevel
+        ? [`«${pc.prompt}»: вариант «${option.name}» требует ${option.minimumClassLevel}-й уровень класса`]
+        : [];
+    });
+    if (gatedSelections.length) {
+      issues.push(...gatedSelections);
+      continue;
+    }
     const preparedIssues = preparedSpellSelectionIssues(pc, sel);
     if (preparedIssues.length) {
       issues.push(...preparedIssues.map((issue) => `«${pc.prompt}»: ${issue}`));

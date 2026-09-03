@@ -29,11 +29,24 @@ import {
   WEAPON_MASTERY_CLEAVE_USE_PREFIX,
 } from './legacy/engineAdapter';
 import { applySourceTurnBoundary } from '../engine/sourceTurnExpiry';
+import { matchesWhen } from '../engine/circumstances';
 import { activeEffectRequirementIssue } from '../engine/actionRequirements';
 import { projectActionSurgeCost, projectQuickenedSpellCost } from '../engine/actionSurge';
 import { addBonusDieToD20Roll } from '../engine/roll';
 import { armBoonForNextRoll, consumeBoonAfterFailure, runtimeBoonSpec } from '../engine/boons';
 import { compileDeclaredMechanicsTargeting } from './actionTargeting';
+import { generalFeatRangedDeclaration } from './generalFeatAttackDeclaration';
+import {
+  DUAL_WIELDER_CAPABILITY,
+  generalFeatWeaponDamagePassives,
+  ownsGeneralFeatCapability,
+} from './generalFeatDamageRuntime';
+import {
+  actorOwnsGrappler,
+  defensiveDuelistReactionEligible,
+  grapplerAttackAdvantagePassive,
+} from './generalFeatReactionRuntime';
+import { spellAttackIgnoresCover } from './generalSpellFeatRuntime';
 import type {
   CharacterContext,
   DeferredTargetSave,
@@ -852,8 +865,14 @@ function unarmedDamageActionFor(actor: ActorState): RuleActionDefinition {
     const cardId = actor.runtime.equipment[slot];
     return !!cardId && actorCard(actor, cardId)?.type === 'weapon';
   });
+  const wearingArmorOrShield = Object.values(actor.runtime.equipment).some((cardId) => (
+    !!cardId && actorCard(actor, cardId)?.defense_type != null
+  ));
   const profile = resolveUnarmedDamageProfile(actor.passives ?? [], {
     holdingWeaponOrShield: holdsWeapon || actorHoldsCanonicalShield(actor),
+    wearingArmorOrShield,
+    variables: actor.character.variables,
+    abilityMods: actor.character.abilityMods,
   });
   if (!profile) return CORE_UNARMED_DAMAGE;
   return {
@@ -861,7 +880,7 @@ function unarmedDamageActionFor(actor: ActorState): RuleActionDefinition {
     mechanics: {
       ...CORE_UNARMED_DAMAGE.mechanics,
       effects: [{
-        ability: 'str',
+        ability: profile.ability,
         attack_kind: 'unarmed',
         resolution: 'attack_roll',
         vs: 'ac',
@@ -989,6 +1008,14 @@ function hazardDefinitionIssue(hazard: RuleHazardDefinition): string | null {
   if (new Set(hazard.sourceEntityIds).size !== hazard.sourceEntityIds.length) {
     return `${hazard.id} contains duplicate sourceEntityIds`;
   }
+  if (hazard.resolution === 'automatic') {
+    if (!Array.isArray(hazard.effects) || hazard.effects.length === 0) {
+      return `${hazard.id} must define at least one automatic consequence`;
+    }
+    if (hazard.grantedEffects != null && (typeof hazard.grantedEffects !== 'object'
+      || Array.isArray(hazard.grantedEffects))) return `${hazard.id} has invalid granted effects`;
+    return null;
+  }
   const save = raw.save as Record<string, unknown> | undefined;
   if (!save || !['str', 'dex', 'con', 'int', 'wis', 'cha'].includes(String(save.ability ?? ''))) {
     return `${hazard.id} has an invalid saving throw ability`;
@@ -1019,12 +1046,14 @@ function hazardObligationIds(hazard: RuleHazardDefinition): string[] {
   return [...new Set([
     `hazard:${hazard.id}`,
     ...hazard.sourceEntityIds.map((id) => `entity:${id}`),
-    'system:hazard-save',
-    'system:pending-resolution',
+    ...(hazard.resolution === 'automatic'
+      ? ['system:hazard-resolution']
+      : ['system:hazard-save', 'system:pending-resolution']),
   ])];
 }
 
 function hazardAvoidedConditions(hazard: RuleHazardDefinition): string[] {
+  if (hazard.resolution !== 'save') return [];
   return hazard.onFailure.flatMap((payload) => (
     payload.kind === 'condition' && payload.value != null ? [String(payload.value)] : []
   ));
@@ -2197,7 +2226,20 @@ function executeUseAction(
   }> = [];
 
   for (const [index, target] of executionTargets.entries()) {
-    const sourceAtStep: ActorState = { ...source, runtime: sourceAfter };
+    const sourceAtStepBase: ActorState = { ...source, runtime: sourceAfter };
+    const grapplerSources = sourceAtStepBase.capabilities.featureSources?.['general_feat.grappler'] ?? [];
+    const attacksGrappledTarget = target != null
+      && actorOwnsGrappler(sourceAtStepBase)
+      && Object.values(world.grapples).some((grapple) => (
+        grapple.grapplerActorId === source.id && grapple.targetActorId === target.id
+      ));
+    const sourceAtStep: ActorState = attacksGrappledTarget ? {
+      ...sourceAtStepBase,
+      passives: [
+        ...(sourceAtStepBase.passives ?? []),
+        grapplerAttackAdvantagePassive(grapplerSources),
+      ],
+    } : sourceAtStepBase;
     const result = executeAction(
       sourceAfter,
       index === 0 ? action.mechanics : withoutActivationCost(action.mechanics),
@@ -2780,11 +2822,17 @@ function cloneReactionOption(option: ReactionActionOption): ReactionActionOption
 function hitReactionOptions(
   target: ActorState,
   catalog: RulesCatalog,
+  incomingAction: RuleActionDefinition,
+  facts: SpatialFacts,
 ): Array<{ action: RuleActionDefinition; option: ReactionActionOption }> {
   if (deniedCapabilities(target.runtime, target.passives ?? []).has('reaction')) return [];
   return target.capabilities.actionIds.flatMap((actionId) => {
     const action = catalog.getAction(actionId);
     if (!action || !hasReactionTrigger(action, 'hit_by_attack')) return [];
+    const activation = action.mechanics.activation as Record<string, unknown> | undefined;
+    const trigger = activation?.trigger as Record<string, unknown> | undefined;
+    if (trigger?.feat_defensive_duelist === true
+      && !defensiveDuelistReactionEligible({ defender: target, incomingAction, facts })) return [];
     const [option] = sourceScopedReactionOptions(target, action);
     return option ? [{ action, option }] : [];
   });
@@ -2806,11 +2854,20 @@ function catalogActionForActor(
 function damageReactionOptions(
   target: ActorState,
   catalog: RulesCatalog,
+  eventData: Record<string, unknown>,
 ): Array<{ action: RuleActionDefinition; option: ReactionActionOption }> {
   if (deniedCapabilities(target.runtime, target.passives ?? []).has('reaction')) return [];
   return target.capabilities.actionIds.flatMap((actionId) => {
     const action = catalog.getAction(actionId);
     if (!action || !hasReactionTrigger(action, 'damage_taken')) return [];
+    const activation = action.mechanics.activation as Record<string, unknown> | undefined;
+    const trigger = activation?.trigger as Record<string, unknown> | undefined;
+    // Incoming damage is held before HP mutation. Reactions declared for an
+    // after-damage window cannot be offered through this pre-damage protocol.
+    if (trigger?.timing != null && trigger.timing !== 'before') return [];
+    if (!matchesWhen(trigger?.circumstances as Record<string, unknown>[] | undefined, {
+      event: { kind: 'damage_taken', data: eventData },
+    })) return [];
     const [option] = sourceScopedReactionOptions(target, action);
     return option ? [{ action, option }] : [];
   });
@@ -2930,7 +2987,10 @@ function damageReactionOpenedEvents(
     ...input.target,
     runtime: input.targetRuntimeBeforeDamage,
   };
-  const options = damageReactionOptions(targetAtWindow, input.catalog);
+  const options = damageReactionOptions(targetAtWindow, input.catalog, {
+    delivery: hasAttackRoll(input.action) ? 'attack' : 'other',
+    source_visible: input.facts.targetCanSeeSource ?? true,
+  });
   if (!options.length) return null;
 
   // Snapshot continuations are safe only when this action's HP transition is
@@ -3267,9 +3327,15 @@ function pendingAttackEvents(
   const source = effectiveWorld.actors[command.actorId];
   // Cover was an ephemeral projection in the original weapon/unarmed command.
   // A restored pre-roll continuation must reconstruct it from persisted facts.
-  const target = options.protectionWindowResolved
-    ? attackTargetWithCover(effectiveWorld.actors[targetId], facts.cover)
-    : effectiveWorld.actors[targetId];
+  const spellCover = action.kind === 'spell'
+    && spellAttackIgnoresCover(source.passives ?? [], facts.cover)
+    ? 'none'
+    : facts.cover;
+  const target = action.kind === 'spell'
+    ? attackTargetWithCover(effectiveWorld.actors[targetId], spellCover)
+    : options.protectionWindowResolved
+      ? attackTargetWithCover(effectiveWorld.actors[targetId], facts.cover)
+      : effectiveWorld.actors[targetId];
   const obligations = actionObligationIds(
     action,
     'system:attack-resolution',
@@ -3308,7 +3374,7 @@ function pendingAttackEvents(
   // once.  The normal path now defers nested mastery saves itself; previewing
   // and replaying a multiattack would otherwise duplicate attack rolls and
   // incorrectly reuse the first roll for later attacks.
-  const availableReactions = hitReactionOptions(target, catalog);
+  const availableReactions = hitReactionOptions(target, catalog, action, facts);
   if (!availableReactions.length
     && !options.forceExecution
     && !protectionDisadvantage
@@ -4036,7 +4102,7 @@ function swapAlertInitiative(
   ];
 }
 
-function openHazardSave(
+function triggerHazard(
   world: WorldState,
   command: Extract<GameCommand, { type: 'TriggerHazard' }>,
   catalog: RulesCatalog,
@@ -4053,6 +4119,39 @@ function openHazardSave(
   const hazard = cloneHazard(definition);
   const sourceActorId = hazardSourceId(hazard);
   const obligations = hazardObligationIds(hazard);
+  if (hazard.resolution === 'automatic') {
+    const target = world.actors[command.targetActorId];
+    if (!target) return rejected(world, 'ActorNotFound', `Unknown actor ${command.targetActorId}`);
+    try {
+      const result = executeAction(target.runtime, {
+        name: hazard.name,
+        activation: { mode: 'passive', cost: [] },
+        effects: [{ resolution: 'auto', who: 'target', result: hazard.effects }],
+      }, {
+        ...actionContext(target, env, target),
+        grantedEffects: { ...(target.grantedEffects ?? {}), ...(hazard.grantedEffects ?? {}) },
+        selfId: target.id,
+        effectSourceId: sourceActorId,
+      });
+      return [
+        ...runtimeTransition(
+          sourceActorId,
+          target.id,
+          target.runtime,
+          result.state,
+          'hazard',
+          obligations,
+        ),
+        ...engineTrace(sourceActorId, [target.id], result.events, obligations),
+      ];
+    } catch (error) {
+      return rejected(
+        world,
+        'InvalidHazardDefinition',
+        error instanceof Error ? error.message : 'Invalid automatic hazard',
+      );
+    }
+  }
   const resolutionId = env.nextId();
   const requestId = env.nextId();
   return [
@@ -4574,6 +4673,16 @@ function resolvePendingAttack(
     if (!reaction || !hasReactionTrigger(reaction, 'hit_by_attack')) {
       return rejected(world, 'InvalidDecision', `Reaction ${selectedId} is no longer valid for this trigger`);
     }
+    const reactionActivation = reaction.mechanics.activation as Record<string, unknown> | undefined;
+    const reactionTrigger = reactionActivation?.trigger as Record<string, unknown> | undefined;
+    if (reactionTrigger?.feat_defensive_duelist === true
+      && !defensiveDuelistReactionEligible({
+        defender: target,
+        incomingAction: attack,
+        facts: pending.facts,
+      })) {
+      return rejected(world, 'InvalidEquipmentState', 'Defensive Duelist requires a held Finesse weapon and a melee attack');
+    }
     const definitionIssue = actionDefinitionIssue(reaction);
     if (definitionIssue) return rejected(world, 'InvalidActionDefinition', definitionIssue);
     const declarationIssue = spellDeclarationIssue(reaction);
@@ -4884,6 +4993,7 @@ function resolvePendingDamageReaction(
       ),
       actionName: prepared.action.name,
       spell: selectedReactionSpell,
+      incomingDamage: pending.damage.reduce((sum, packet) => sum + packet.amount, 0),
     });
     targetReactionRuntime = result.state;
     sourceAfter = result.targetState ?? sourceAfter;
@@ -5549,14 +5659,19 @@ function resolveHazardSave(
     activation: { mode: 'passive', cost: [] },
     effects: [{
       resolution: 'save',
-      who: 'self',
+      who: 'target',
       ability: hazard.save.ability,
       dc: String(hazard.save.dc),
       on_fail: hazard.onFailure,
       on_success: hazard.onSuccess ?? [],
     }],
   }, {
-    ...actionContext(target, env),
+    ...actionContext(
+      target,
+      env,
+      { ...target, runtime: boonResolution.runtime },
+      boonResolution.runtime,
+    ),
     grantedEffects: { ...(target.grantedEffects ?? {}), ...(hazard.grantedEffects ?? {}) },
     selfId: target.id,
     effectSourceId: sourceActorId,
@@ -6091,7 +6206,11 @@ function executeCheck(
   const proficiency = expertise ? actor.character.profBonus * 2 : proficient ? actor.character.profBonus : 0;
   const collected = collectRollModifiers(actor.runtime, actor.passives ?? [], {
     roll: 'ability_check',
-    filter: { ability: command.ability, ...(skill ? { skill } : {}) },
+    filter: {
+      ability: command.ability,
+      ...(skill ? { skill } : {}),
+      ...(command.context ? { context: command.context } : {}),
+    },
     formulaCtx: actorFormulaContext(actor.character),
   });
   const checkEvents: EngineEvent[] = [];
@@ -6112,7 +6231,11 @@ function executeCheck(
     roll: { ...roll, kind: 'check' },
   });
   const after = consumeNextRollEffects(actor.runtime, 'ability_check', checkEvents, {
-    filter: { ability: command.ability, ...(skill ? { skill } : {}) },
+    filter: {
+      ability: command.ability,
+      ...(skill ? { skill } : {}),
+      ...(command.context ? { context: command.context } : {}),
+    },
     failed: roll.usedFailureBonus === true,
     finalFailed: roll.usedFailureBonus === true && roll.outcome === 'fail',
   });
@@ -6338,9 +6461,18 @@ function beginAttackAction(
     return rejected(world, 'InvalidActionDefinition', declared.issue);
   }
   const declarationAction = declared.status === 'valid' ? declared.action : CORE_ATTACK_ACTION;
-  const timingCost = declared.status === 'valid'
+  const declaredTimingCost = declared.status === 'valid'
     ? declared.cost.filter((entry) => entry.resource === 'action')
     : activationCost(CORE_ATTACK_ACTION);
+  const declarationActivation = declarationAction.mechanics.activation as Record<string, unknown> | undefined;
+  const timingAction: RuleActionDefinition = {
+    ...declarationAction,
+    mechanics: projectActionSurgeCost({
+      ...declarationAction.mechanics,
+      activation: { ...(declarationActivation ?? {}), cost: declaredTimingCost },
+    }, actor.runtime, 'nonspell'),
+  };
+  const timingCost = activationCost(timingAction);
   const payable = canPay(actor.runtime, timingCost);
   if (!payable.ok) {
     return rejected(world, 'InsufficientResources', `Missing resources: ${payable.missing.join(', ')}`);
@@ -7010,12 +7142,20 @@ function performWeaponAttack(
   if (heavy && !heavy.valid) {
     return rejected(world, 'InvalidEquipmentState', heavy.issue);
   }
+  const generalFeatDeclaration = generalFeatRangedDeclaration({
+    actor: source,
+    rangeKind: range.kind,
+    weaponName: card.name,
+    weaponType: profileResult.profile.weaponType,
+  });
   const disadvantageReasons = [
     ...(heavy?.valid && heavy.disadvantage
       ? [`Heavy (${heavy.ability.toUpperCase()} below ${heavy.threshold})`]
       : []),
-    ...(range.kind === 'ranged' && command.facts.distanceFt > range.normalFt ? ['Long range'] : []),
+    ...(range.kind === 'ranged' && command.facts.distanceFt > range.normalFt
+      && !generalFeatDeclaration.ignoreLongRangeDisadvantage ? ['Long range'] : []),
     ...(range.kind === 'ranged' && command.facts.distanceFt <= 5 && command.facts.relation === 'enemy'
+      && !generalFeatDeclaration.ignoreAdjacentEnemyDisadvantage
       ? ['Ranged attack in close combat'] : []),
   ];
   const baseAction = weaponAttackAction(hand, range.kind);
@@ -7043,14 +7183,23 @@ function performWeaponAttack(
       }
       : executionSource.runtime,
   };
-  const sourceForAttack: ActorState = disadvantageReasons.length ? {
+  const featDamagePassives = generalFeatWeaponDamagePassives({
+    actor: source,
+    profile: profileResult.profile,
+    attackActionId: attackAction.id,
+    ownTurn: world.scene.mode === 'encounter'
+      && world.scene.initiative[world.scene.activeIndex] === source.id,
+  });
+  const sourceForAttack: ActorState = disadvantageReasons.length || featDamagePassives.length ? {
     ...paidExecutionSource,
     passives: [
       ...(paidExecutionSource.passives ?? []),
+      ...featDamagePassives,
       ...disadvantageReasons.map(attackDisadvantagePassive),
     ],
   } : paidExecutionSource;
-  const targetForAttack = attackTargetWithCover(target, command.facts.cover);
+  const targetForAttack = attackTargetWithCover(target,
+    generalFeatDeclaration.ignoreHalfAndThreeQuarterCover ? 'none' : command.facts.cover);
   const nextSequence = performWeaponSequenceAttack({
     sequence: attackAction.sequence,
     actionId: action.id,
@@ -7326,6 +7475,7 @@ function performLightWeaponExtraAttack(
     bonusActions: source.runtime.resources.bonus_action ?? 0,
     firedThisTurn: source.runtime.firedThisTurn ?? [],
     actionEconomy: nickTiming ? 'attack_action' : 'bonus_action',
+    allowNonLightMeleeExtraWeapon: ownsGeneralFeatCapability(source, DUAL_WIELDER_CAPABILITY),
   });
   if (!eligibility.eligible) return lightExtraAttackRejection(world, eligibility.issue);
 
@@ -7384,12 +7534,20 @@ function performLightWeaponExtraAttack(
   if (heavy && !heavy.valid) {
     return rejected(world, 'InvalidEquipmentState', heavy.issue);
   }
+  const generalFeatDeclaration = generalFeatRangedDeclaration({
+    actor: source,
+    rangeKind: range.kind,
+    weaponName: extraWeapon.name,
+    weaponType: extraWeaponProfile.profile.weaponType,
+  });
   const disadvantageReasons = [
     ...(heavy?.valid && heavy.disadvantage
       ? [`Heavy (${heavy.ability.toUpperCase()} below ${heavy.threshold})`]
       : []),
-    ...(range.kind === 'ranged' && command.facts.distanceFt > range.normalFt ? ['Long range'] : []),
+    ...(range.kind === 'ranged' && command.facts.distanceFt > range.normalFt
+      && !generalFeatDeclaration.ignoreLongRangeDisadvantage ? ['Long range'] : []),
     ...(range.kind === 'ranged' && command.facts.distanceFt <= 5 && command.facts.relation === 'enemy'
+      && !generalFeatDeclaration.ignoreAdjacentEnemyDisadvantage
       ? ['Ranged attack in close combat'] : []),
   ];
   const declaredCost = declaredWeaponAction.status === 'valid'
@@ -7435,14 +7593,24 @@ function performLightWeaponExtraAttack(
       ])] as [string, ...string[]],
     }
     : projectedAction;
-  const sourceForAttack: ActorState = disadvantageReasons.length ? {
+  const featDamagePassives = generalFeatWeaponDamagePassives({
+    actor: source,
+    profile: extraWeaponProfile.profile,
+    attackActionId: attackAction.id,
+    ownTurn: world.scene.mode === 'encounter'
+      && world.scene.initiative[world.scene.activeIndex] === source.id,
+    extraAttackSource: 'light_property',
+  });
+  const sourceForAttack: ActorState = disadvantageReasons.length || featDamagePassives.length ? {
     ...markedSource,
     passives: [
       ...(markedSource.passives ?? []),
+      ...featDamagePassives,
       ...disadvantageReasons.map(attackDisadvantagePassive),
     ],
   } : markedSource;
-  const targetForAttack = attackTargetWithCover(target, command.facts.cover);
+  const targetForAttack = attackTargetWithCover(target,
+    generalFeatDeclaration.ignoreHalfAndThreeQuarterCover ? 'none' : command.facts.cover);
   const passiveDamageSourceIds = passiveModifierSourceEntityIds(source, {
     roll: 'damage',
     filter: {
@@ -7547,6 +7715,8 @@ function performLightWeaponExtraAttack(
 
   const result = executeAction(markedRuntime, action.mechanics, {
     ...actionContext(sourceForAttack, env, targetForAttack, target.runtime, command.facts),
+    attackActionId: attackAction.id,
+    attackCommandId: command.commandId,
     choices: command.choices,
   });
   const armor = resolveTemporaryHpMeleeRetaliationAfterAttack({
@@ -7948,6 +8118,18 @@ function executeUnarmedStrike(
   });
 
   if (command.option === 'damage') {
+    const grapplerSources = source.capabilities.featureSources?.['general_feat.grappler'] ?? [];
+    const hasGrapplerAdvantage = actorOwnsGrappler(source)
+      && Object.values(world.grapples).some((grapple) => (
+        grapple.grapplerActorId === source.id && grapple.targetActorId === target.id
+      ));
+    const sourceForAttack: ActorState = hasGrapplerAdvantage ? {
+      ...source,
+      passives: [
+        ...(source.passives ?? []),
+        grapplerAttackAdvantagePassive(grapplerSources),
+      ],
+    } : source;
     const targetForAttack = attackTargetWithCover(target, command.facts.cover);
     const attackCommand: AuthoritativeUseActionCommand = {
       ...command,
@@ -7957,7 +8139,14 @@ function executeUnarmedStrike(
       factsByTarget: { [target.id]: command.facts },
     };
     const pending = pendingAttackEvents(
-      { ...world, actors: { ...world.actors, [target.id]: targetForAttack } },
+      {
+        ...world,
+        actors: {
+          ...world.actors,
+          [source.id]: sourceForAttack,
+          [target.id]: targetForAttack,
+        },
+      },
       attackCommand,
       ruleAction,
       catalog,
@@ -7996,7 +8185,7 @@ function executeUnarmedStrike(
       ];
     }
     const result = executeAction(source.runtime, ruleAction.mechanics, {
-      ...actionContext(source, env, targetForAttack, target.runtime, command.facts),
+      ...actionContext(sourceForAttack, env, targetForAttack, target.runtime, command.facts),
     });
     const armor = resolveTemporaryHpMeleeRetaliationAfterAttack({
       world,
@@ -11319,7 +11508,7 @@ function executeCommand(
     case 'SwapInitiative':
       return swapAlertInitiative(world, command);
     case 'TriggerHazard':
-      return openHazardSave(world, command, catalog, env);
+      return triggerHazard(world, command, catalog, env);
     case 'SavingThrow':
       return executeSave(world, command, env);
     case 'StudyWorldObject':

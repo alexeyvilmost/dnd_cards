@@ -2,8 +2,16 @@ import { useEffect, useState } from 'react';
 import { Footprints, MoreHorizontal } from 'lucide-react';
 import { canPay, costKey } from '../engine/cost';
 import { FREEUSE_SHOWCASE_KEY, isFreeusePoolKey } from '../engine/freeuse';
-import { bindEquippedWeaponActionContext, weaponAttackPreview } from '../engine/weapon';
+import { bindEquippedWeaponActionContext, weaponAttackPreview, weaponContext } from '../engine/weapon';
+import {
+  actorWeaponHasMasteryPrimitive,
+  weaponMasteryNickUseKey,
+} from '../engine/weaponMastery2024';
 import type { RuleActionDefinition } from '../rules-core/domain';
+import {
+  lightWeaponExtraAttackEligibility,
+  type LightWeaponExtraAttackIssue,
+} from '../rules-core/lightWeaponExtraAttack';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
 import { parseActivationLevelRequirement } from '../rules-core/activationRequirements';
 import { parseActivationCastTime } from '../rules-core/activationCastTime';
@@ -18,6 +26,11 @@ import { UNTRAINED_ARMOR_SPELL_REASON } from '../character/untrainedArmor';
 import { activeEffectRequirementIssue } from '../engine/actionRequirements';
 import { deniedCapabilities } from '../engine/modifiers';
 import { projectActionSurgeCost, projectQuickenedSpellCost } from '../engine/actionSurge';
+import {
+  DUAL_WIELDER_CAPABILITY,
+  ownsGeneralFeatCapability,
+} from '../rules-core/generalFeatDamageRuntime';
+import { LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE } from '../rules-core/weaponActionPolicies';
 
 function resourceLabel(resource: string): string {
   if (resource === 'spell_slot') return 'Ячейка';
@@ -107,12 +120,157 @@ export function combatActionTimingAvailability(
   return { enabled: true };
 }
 
+function currentAttackTurnKey(state: SoloCombatState, actorId: string): string | null {
+  const scene = state.world.scene;
+  return scene?.mode === 'encounter'
+    ? `encounter:${scene.round}:${scene.activeIndex}:${actorId}`
+    : null;
+}
+
+function lightExtraAttackEconomy(
+  state: SoloCombatState,
+  actorId: string,
+): 'bonus_action' | 'attack_action' {
+  const actor = state.world.actors[actorId];
+  const weaponCardId = actor?.runtime.equipment.off_hand;
+  if (!actor || !weaponCardId) return 'bonus_action';
+  return actorWeaponHasMasteryPrimitive({
+    weapon: weaponContext(actor.character, 'off', actor.runtime.equipment, actor.runtime),
+    selectedWeaponTypes: actor.character.weaponMasteries,
+    masteryEffects: actor.masteryEffects,
+    type: 'nick',
+  }) ? 'attack_action' : 'bonus_action';
+}
+
+/**
+ * Projects Nick's Attack-action timing into the hotbar without mutating the
+ * immutable catalog action. The command handler independently derives and
+ * validates the same timing from the equipped weapon and selected mastery.
+ */
+export function projectCombatHotbarAction(
+  state: SoloCombatState,
+  action: RuleActionDefinition,
+  actorId = state.characterId,
+): RuleActionDefinition {
+  const primitive = action.mechanics.primitive as Record<string, unknown> | undefined;
+  if (primitive?.type !== LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE
+    || lightExtraAttackEconomy(state, actorId) !== 'attack_action') return action;
+  const activation = action.mechanics.activation as Record<string, unknown> | undefined;
+  return {
+    ...action,
+    mechanics: {
+      ...action.mechanics,
+      activation: {
+        ...activation,
+        mode: 'attack_entry',
+        cost: [],
+      },
+    },
+  };
+}
+
+function lightExtraAttackIssueReason(issue: LightWeaponExtraAttackIssue): string {
+  switch (issue) {
+    case 'already_used':
+      return 'Дополнительная атака от свойства «Лёгкое» уже использована';
+    case 'attack_action_not_completed':
+    case 'attack_action_blocked':
+    case 'attack_budget_incomplete':
+      return 'Сначала завершите текущее действие «Атака»';
+    case 'wrong_turn':
+      return 'Подходящее действие «Атака» было совершено не в текущем ходу';
+    case 'bonus_action_unavailable':
+      return 'Не хватает ресурса «Бонусное действие»';
+    case 'no_qualifying_light_attack':
+    case 'qualifying_weapon_missing':
+    case 'qualifying_weapon_not_light':
+    case 'qualifying_weapon_not_equipped':
+      return 'Сначала атакуйте другим экипированным лёгким оружием';
+    case 'extra_weapon_missing':
+    case 'extra_weapon_not_light':
+    case 'extra_weapon_not_dual_wielder_eligible':
+    case 'extra_weapon_not_equipped':
+    case 'same_weapon':
+      return 'Для дополнительной атаки нужно подходящее оружие в другой руке';
+  }
+}
+
+function combatLightExtraAttackAvailability(
+  state: SoloCombatState,
+  actorId: string,
+): { enabled: boolean; reason?: string } {
+  const actor = state.world.actors[actorId];
+  const currentTurnKey = currentAttackTurnKey(state, actorId);
+  if (!actor || !currentTurnKey) {
+    return { enabled: false, reason: 'Дополнительная атака доступна только в свой ход боя' };
+  }
+  const selectedWeaponCardId = actor.runtime.equipment.off_hand;
+  if (!selectedWeaponCardId) {
+    return { enabled: false, reason: 'Для дополнительной атаки нужно оружие в другой руке' };
+  }
+  const actionEconomy = lightExtraAttackEconomy(state, actorId);
+  if (actionEconomy === 'attack_action'
+    && (actor.runtime.firedThisTurn ?? []).includes(weaponMasteryNickUseKey(currentTurnKey))) {
+    return { enabled: false, reason: 'Дополнительная атака «Быстрое» уже использована в этом ходу' };
+  }
+  const cards = [
+    ...(actor.character.knownCards ?? []),
+    ...(actor.character.equippedCards ?? []),
+  ];
+  const candidates = Object.values(state.world.attackActions ?? {})
+    .filter((entry) => entry.actorId === actorId && entry.turnKey === currentTurnKey)
+    .sort((left, right) => right.startedAtRevision - left.startedAtRevision);
+  if (!candidates.length) {
+    return { enabled: false, reason: 'Сначала совершите действие «Атака» лёгким оружием' };
+  }
+  let issue: LightWeaponExtraAttackIssue = 'attack_action_not_completed';
+  for (const attackAction of candidates) {
+    const eligibility = lightWeaponExtraAttackEligibility({
+      attackAction: {
+        id: attackAction.id,
+        status: attackAction.status,
+        turnKey: attackAction.turnKey,
+        ...(attackAction.blockedByResolutionId
+          ? { blockedByResolutionId: attackAction.blockedByResolutionId }
+          : {}),
+        attacksRemaining: attackAction.sequence.attacksRemaining,
+        entries: attackAction.sequence.entries,
+      },
+      currentTurnKey,
+      selectedWeaponCardId,
+      cards,
+      equipment: actor.runtime.equipment,
+      bonusActions: actor.runtime.resources.bonus_action ?? 0,
+      firedThisTurn: actor.runtime.firedThisTurn ?? [],
+      actionEconomy,
+      allowNonLightMeleeExtraWeapon: ownsGeneralFeatCapability(actor, DUAL_WIELDER_CAPABILITY),
+    });
+    if (eligibility.eligible) return { enabled: true };
+    issue = eligibility.issue;
+  }
+  return { enabled: false, reason: lightExtraAttackIssueReason(issue) };
+}
+
 export function combatActionAvailability(
   state: SoloCombatState,
   action: RuleActionDefinition,
   actorId = state.characterId,
 ): { enabled: boolean; reason?: string } {
   const actor = state.world.actors[actorId];
+  const primitive = action.mechanics.primitive as Record<string, unknown> | undefined;
+  if (primitive?.type === LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE) {
+    return combatLightExtraAttackAvailability(state, actorId);
+  }
+  const actionCardNumber = state.actionPresentation?.[action.id]?.actionRef?.card_number;
+  const isAttackEntry = primitive?.type === 'weapon_attack'
+    || primitive?.type === 'unarmed_strike'
+    || actionCardNumber === 'action_basic_unarmed';
+  const reusesOpenAttack = isAttackEntry && Object.values(state.world.attackActions ?? {}).some((entry) => (
+    entry.actorId === actorId
+    && entry.status === 'open'
+    && entry.sequence.attacksRemaining > 0
+    && !entry.blockedByResolutionId
+  ));
   const activeEffectIssue = activeEffectRequirementIssue(action.mechanics, actor.runtime);
   if (activeEffectIssue) return { enabled: false, reason: activeEffectIssue };
   const timing = combatActionTimingAvailability(action);
@@ -155,7 +313,7 @@ export function combatActionAvailability(
     spellSlotResource = access.grant.slotResource;
   }
 
-  let mechanics = projectActionSurgeCost(
+  let mechanics = reusesOpenAttack ? action.mechanics : projectActionSurgeCost(
     action.mechanics,
     actor.runtime,
     action.kind === 'spell' ? 'spell' : 'nonspell',
@@ -190,6 +348,7 @@ export function combatActionAvailability(
   const activation = mechanics.activation as Record<string, unknown> | undefined;
   const costs = Array.isArray(activation?.cost) ? activation.cost as Array<Record<string, unknown>> : [];
   const genericCosts = costs.filter((cost) => {
+    if (reusesOpenAttack && cost.resource === 'action') return false;
     if (action.kind !== 'spell') return true;
     const resource = String(cost.resource ?? '');
     return resource !== 'spell_slot' && costKey(cost) !== spellSlotResource;
@@ -236,7 +395,7 @@ export default function CombatHotbar({
   const actions = playerActionIdsFor(state, actorId).flatMap((id) => {
     const action = state.catalogActions.find((candidate) => candidate.id === id);
     return action && !isTriggeredCombatAction(action) ? [action] : [];
-  });
+  }).map((action) => projectCombatHotbarAction(state, action, actorId));
   const freeuseResources = Object.entries(actor.runtime.maxResources)
     .filter(([key, maximum]) => maximum > 0 && isFreeusePoolKey(key));
   const freeuseSpells = freeuseResources.map(([key, maximum]) => ({
@@ -329,6 +488,17 @@ export default function CombatHotbar({
               },
             )
             : undefined;
+          const projectedActionRef = actionRef
+            && (action.mechanics.primitive as Record<string, unknown> | undefined)?.type
+              === LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE
+            ? {
+              ...actionRef,
+              mechanics: {
+                ...(actionRef.mechanics ?? {}),
+                activation: action.mechanics.activation,
+              },
+            }
+            : actionRef;
           const actionDisabled = disabled || !availability.enabled;
           const weaponPreview = weaponAttackPreview(
             action.mechanics,
@@ -339,9 +509,9 @@ export default function CombatHotbar({
           ) ?? undefined;
           const isGenericWeaponAttack = (action.mechanics.primitive as Record<string, unknown> | undefined)?.type === 'weapon_attack';
           const displayedWeaponName = isGenericWeaponAttack ? weaponPreview?.weaponName : undefined;
-          const contextualActionRef = actionRef && displayedWeaponName
-            ? { ...actionRef, name: `${displayedWeaponName} — атака` }
-            : actionRef;
+          const contextualActionRef = projectedActionRef && displayedWeaponName
+            ? { ...projectedActionRef, name: `${displayedWeaponName} — атака` }
+            : projectedActionRef;
           return (
             <div
               key={action.id}

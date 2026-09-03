@@ -69,6 +69,20 @@ describe('collectChoices — всплытие вложенных выборов'
     });
   });
 
+  it('reserves options selected by another instance of a repeatable unique choice', () => {
+    const firstOrigin = { ...ORIGIN, featureId: 'elemental-fx#slot-1' };
+    const secondOrigin = { ...ORIGIN, featureId: 'elemental-fx#slot-2' };
+    const mechanics = { effects: [{
+      kind: 'choice', id: 'damage_type', unique_across_instances: true,
+      options: { source: 'explicit', items: [{ id: 'fire' }, { id: 'cold' }] },
+    }] };
+    const [second] = collectChoices(mechanics, secondOrigin, {
+      [choiceKey(firstOrigin, 'damage_type')]: ['fire'],
+      [choiceKey(secondOrigin, 'damage_type')]: ['cold'],
+    });
+    expect(second.reservedOptionIds).toEqual(['fire']);
+  });
+
   it('после выбора режима «+2» всплывает вложенный выбор характеристики', () => {
     const out = collectChoices(asiMechanics, ORIGIN, { 'feat:asi:asi_fx:asi_mode': ['plus2'] });
     const ids = out.map((c) => c.id);

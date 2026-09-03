@@ -20,6 +20,10 @@ export interface RuleActionProjectionProvenance {
 export interface SpellCastingOverride {
   removeCostResources: readonly string[];
   targeting?: JsonObject;
+  rangeBonusFt?: number;
+  components?: Partial<Record<'verbal' | 'somatic' | 'material', boolean>>;
+  freeUseResource?: string;
+  ritual?: boolean;
 }
 
 export class RuleActionProjectionError extends Error {
@@ -37,6 +41,35 @@ function record(value: unknown): JsonObject | null {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? value as JsonObject
     : null;
+}
+
+function materializeLegacyUnarmedStrike(
+  mechanics: JsonObject,
+  cardNumber: string,
+): JsonObject {
+  // This compatibility adapter belongs only to the historical basic Unarmed
+  // Strike row. Higher-level Monk actions also contain unarmed attack rolls;
+  // promoting those cards to the same certified primitive makes the L1
+  // certificate reject otherwise valid level-2+ characters.
+  if (cardNumber !== 'action_basic_unarmed' || mechanics.primitive) return mechanics;
+  const effects = Array.isArray(mechanics.effects) ? mechanics.effects : [];
+  const unarmed = effects.some((candidate) => {
+    const effect = record(candidate);
+    return effect?.resolution === 'attack_roll' && effect.attack_kind === 'unarmed';
+  });
+  if (!unarmed) return mechanics;
+  const legacyTargeting = record(mechanics.targeting);
+  const rangeMatch = String(legacyTargeting?.range ?? '').match(/\d+/);
+  const rangeFt = rangeMatch ? Number(rangeMatch[0]) : 5;
+  return {
+    ...mechanics,
+    primitive: { type: 'unarmed_strike' },
+    targeting: {
+      domain: 'actor', actor_targets: true, shape: 'single',
+      min_targets: 1, max_targets: 1, range_ft: rangeFt,
+      requires_line_of_sight: true, allowed_relations: ['enemy'],
+    },
+  };
 }
 
 function compileAttackReplacement(
@@ -150,8 +183,14 @@ export function projectRuleAction(
   entity: Action | Spell,
   provenance: RuleActionProjectionProvenance = {},
 ): RuleActionDefinition {
-  const baseMechanics = cloneJson(entity.mechanics ?? {});
+  // Production migration 169 materializes this contract on the entity. Keep
+  // the pinned pre-169 certification snapshot executable by upgrading only
+  // the exact structural Unarmed Strike declaration.
   const usesRef = entity.card_number || entity.id;
+  const baseMechanics = materializeLegacyUnarmedStrike(
+    cloneJson(entity.mechanics ?? {}),
+    usesRef,
+  );
   const hasUses = usesFromMechanics(baseMechanics) !== null;
   const activation = record(baseMechanics.activation);
   const executable = activation?.mode === 'active' || activation?.mode === 'reaction';
@@ -256,26 +295,51 @@ export function declaredSpellCastingOverride(
   if (!raw) {
     throw new RuleActionProjectionError(`${spell.card_number}: casting_override must be an object`);
   }
-  const allowedKeys = new Set(['remove_cost_resources', 'targeting']);
+  const allowedKeys = new Set([
+    'remove_cost_resources', 'targeting', 'range_bonus_ft', 'components', 'free_use_resource', 'ritual',
+  ]);
   if (Object.keys(raw).some((key) => !allowedKeys.has(key))) {
     throw new RuleActionProjectionError(`${spell.card_number}: casting_override has unsupported fields`);
   }
-  const resources = raw.remove_cost_resources;
+  const resources = raw.remove_cost_resources ?? [];
   if (!Array.isArray(resources)
-    || resources.length === 0
     || resources.some((entry) => typeof entry !== 'string' || entry.length === 0)
     || new Set(resources).size !== resources.length) {
     throw new RuleActionProjectionError(
-      `${spell.card_number}: casting_override.remove_cost_resources must be unique resource ids`,
+      `${spell.card_number}: casting_override.remove_cost_resources must contain unique resource ids`,
     );
   }
   const targeting = raw.targeting;
   if (targeting !== undefined && !record(targeting)) {
     throw new RuleActionProjectionError(`${spell.card_number}: casting_override.targeting must be an object`);
   }
+  const rangeBonusFt = raw.range_bonus_ft;
+  if (rangeBonusFt !== undefined && (typeof rangeBonusFt !== 'number' || rangeBonusFt <= 0)) {
+    throw new RuleActionProjectionError(`${spell.card_number}: casting_override.range_bonus_ft must be positive`);
+  }
+  const components = record(raw.components);
+  if (raw.components !== undefined && (!components
+    || Object.keys(components).some((key) => !['verbal', 'somatic', 'material'].includes(key))
+    || Object.values(components).some((value) => typeof value !== 'boolean'))) {
+    throw new RuleActionProjectionError(`${spell.card_number}: casting_override.components is malformed`);
+  }
+  const freeUseResource = raw.free_use_resource;
+  if (freeUseResource !== undefined
+    && (typeof freeUseResource !== 'string' || freeUseResource.trim().length === 0)) {
+    throw new RuleActionProjectionError(`${spell.card_number}: casting_override.free_use_resource must be non-empty`);
+  }
+  if (raw.ritual !== undefined && typeof raw.ritual !== 'boolean') {
+    throw new RuleActionProjectionError(`${spell.card_number}: casting_override.ritual must be boolean`);
+  }
   return {
     removeCostResources: [...resources] as string[],
     ...(targeting !== undefined ? { targeting: cloneJson(targeting as JsonObject) } : {}),
+    ...(rangeBonusFt !== undefined ? { rangeBonusFt } : {}),
+    ...(components ? {
+      components: cloneJson(components) as Partial<Record<'verbal' | 'somatic' | 'material', boolean>>,
+    } : {}),
+    ...(freeUseResource !== undefined ? { freeUseResource } : {}),
+    ...(raw.ritual !== undefined ? { ritual: raw.ritual } : {}),
   };
 }
 
@@ -300,6 +364,20 @@ export function applySpellCastingOverride(
   activation.cost = cost.filter((entry) => !removed.has(String(entry.resource ?? '')));
   mechanics.activation = activation;
   if (override.targeting !== undefined) mechanics.targeting = cloneJson(override.targeting);
+  if (override.rangeBonusFt !== undefined) {
+    const targeting = record(mechanics.targeting);
+    if (!targeting || typeof targeting.range_ft !== 'number') {
+      throw new RuleActionProjectionError(
+        `${spell.card_number}: casting_override.range_bonus_ft requires numeric targeting.range_ft`,
+      );
+    }
+    mechanics.targeting = { ...targeting, range_ft: targeting.range_ft + override.rangeBonusFt };
+  }
+  if (override.components) {
+    if (override.components.verbal !== undefined) next.component_verbal = override.components.verbal;
+    if (override.components.somatic !== undefined) next.component_somatic = override.components.somatic;
+    if (override.components.material !== undefined) next.component_material = override.components.material;
+  }
   next.mechanics = mechanics;
   return next;
 }

@@ -85,7 +85,17 @@ export function optionsForChoice(choice: PendingChoice, feats?: Feat[]): ChoiceO
   // data-driven домен вариантов: например source:"ability" обычно даёт все
   // характеристики, а «Посвящённый в магию» объявляет только INT/WIS/CHA.
   if (choice.items?.length) {
-    return choice.items.map((it) => ({ id: it.id, label: it.name }));
+    const isAbilityIncrease = choice.grant?.kind === 'grant_ability_score';
+    return choice.items
+      .filter((it) => it.minimumClassLevel == null
+        || choice.origin.owningClassLevel == null
+        || choice.origin.owningClassLevel >= it.minimumClassLevel)
+      .map((it) => ({
+        id: it.id,
+        label: isAbilityIncrease && ABILITY_LABEL_RU[it.id as AbilityKey]
+          ? ABILITY_LABEL_RU[it.id as AbilityKey]
+          : it.name,
+      }));
   }
   // Черты (боевые стили, черты происхождения, «Получение черты» на ASI-уровнях):
   // варианты — реальные черты из справочника, суженные по категории из filter или

@@ -3016,6 +3016,7 @@ async function compileMicroMvpL1OverlayWithCatalogs(input: {
     }
   }
   const globalWeaponPrimitiveTypes = new Set<string>([
+    'unarmed_strike',
     WEAPON_ATTACK_PRIMITIVE,
     LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE,
   ]);
@@ -3025,7 +3026,8 @@ async function compileMicroMvpL1OverlayWithCatalogs(input: {
       const type = primitive && typeof primitive === 'object' && !Array.isArray(primitive)
         ? (primitive as JsonObject).type
         : undefined;
-      return typeof type === 'string' && globalWeaponPrimitiveTypes.has(type);
+      return (typeof type === 'string' && globalWeaponPrimitiveTypes.has(type))
+        || action.card_number === 'action_basic_unarmed';
     })
     .map((action) => toRulesAction(action))
     .sort((left, right) => left.id.localeCompare(right.id));

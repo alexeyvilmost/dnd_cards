@@ -37,6 +37,7 @@ function build(opts: {
   effects?: OriginEffect[];
   actions?: OriginAction[];
   draft?: Partial<CharacterDraft>;
+  runtimeSources?: Parameters<typeof resolveCharacterRules>[0]['runtimeSources'];
 } = {}) {
   const draft: CharacterDraft = { ...emptyDraft(), abilities: { ...STD }, level: 1, ...opts.draft };
   const assembled = {
@@ -52,7 +53,7 @@ function build(opts: {
     featAbilityIncreases: [],
     derived: {},
   } as unknown as AssembledCharacter;
-  return resolveCharacterRules({ draft, assembled });
+  return resolveCharacterRules({ draft, assembled, runtimeSources: opts.runtimeSources });
 }
 
 describe('resolveCharacterRules — базовые владения и производные', () => {
@@ -241,7 +242,7 @@ describe('resolveCharacterRules — grant_spell и заговоры', () => {
     expect(rs.spells.leveled).toEqual(['cure_wounds']);
   });
 
-  it('дубль одного заклинания из другого источника даёт конфликт и не дублируется', () => {
+  it('одно заклинание из двух источников сохраняет оба source-scoped гранта без дубля в known', () => {
     const rs = build({
       effects: [
         fx('a', auto({ kind: 'grant_spell', value: 'light' }), { kind: 'race', id: 'elf', name: 'Эльф' }),
@@ -249,7 +250,9 @@ describe('resolveCharacterRules — grant_spell и заговоры', () => {
       ],
     });
     expect(rs.spells.known).toEqual(['light']);
-    expect(rs.conflicts.some((c) => c.code === 'duplicate_spell')).toBe(true);
+    expect(rs.conflicts.some((c) => c.code === 'duplicate_spell')).toBe(false);
+    expect(rs.appliedGrants.filter((grant) => grant.kind === 'spell' && grant.value === 'light'))
+      .toHaveLength(2);
   });
 
   it('сохраняет exact ability grant-а и наследует data-declared ability того же mechanics source', () => {
@@ -340,6 +343,53 @@ describe('resolveCharacterRules — level_gate распределяет закл
   });
   it('L5: все три (в т.ч. Туманный шаг)', () => {
     expect(highElf(5).spells.known.sort()).toEqual(['detect_magic', 'misty_step', 'prestidigitation']);
+  });
+
+  it('гейт класса/подкласса не открывается от общего уровня мультикласса', () => {
+    const druid = { id: 'druid', name: 'Друид', hit_die: 'd8' };
+    const circle = { id: 'circle', name: 'Круг', parent_class_id: 'druid' };
+    const effect = fx(
+      'circle-spells',
+      auto({ kind: 'grant_spell', value: 'conjure_animals', level_gate: 5 }),
+      { kind: 'class', id: 'circle', name: 'Круг' },
+    );
+    const mixed = build({
+      klass: druid,
+      subclass: circle,
+      effects: [effect],
+      draft: { level: 5, classId: 'druid', classLevels: { druid: 3, fighter: 2 } },
+    });
+    const qualified = build({
+      klass: druid,
+      subclass: circle,
+      effects: [effect],
+      draft: { level: 5, classId: 'druid', classLevels: { druid: 5 } },
+    });
+
+    expect(mixed.spells.known).not.toContain('conjure_animals');
+    expect(qualified.spells.known).toContain('conjure_animals');
+  });
+
+  it('не применяет выбранный вариант воззвания выше уровня колдуна', () => {
+    const origin = { kind: 'class' as const, id: 'warlock', name: 'Колдун' };
+    const invocations = {
+      effects: [{
+        kind: 'choice', id: 'invocations', count: 1,
+        options: { source: 'explicit', items: [{
+          id: 'thirsting-blade', minimum_class_level: 5,
+          grants: [{ kind: 'grant_proficiency', prof: 'weapon', value: 'pact-blade' }],
+        }] },
+      }],
+    };
+    const low = build({
+      klass: { id: 'warlock', name: 'Колдун', hit_die: 'd8' },
+      effects: [fx('invocations', invocations, origin)],
+      draft: {
+        level: 5, classId: 'warlock', classLevels: { warlock: 2, fighter: 3 },
+        resolvedChoices: { invocations: ['thirsting-blade'] },
+      },
+    });
+    expect(low.proficiencies.weapons).not.toContain('pact-blade');
   });
 });
 
@@ -607,6 +657,36 @@ describe('resolveCharacterRules — grant_language и НЕреализованн
     expect(rs.speeds.fly).toBeUndefined();
   });
 
+  it('grant_speed character_speed follows the final walking speed', () => {
+    const rs = build({
+      race: { id: 'thief-race', name: 'Вид', speed: 30 },
+      effects: [
+        fx('second-story-work', auto({ kind: 'grant_speed', mode: 'climb', value: 'character_speed' })),
+        fx('speed-bonus', auto({
+          kind: 'modifier', op: 'add', value: 10, applies_to: { roll: 'speed' },
+        })),
+      ],
+    });
+
+    expect(rs.speed).toBe(40);
+    expect(rs.speeds.climb).toBe(40);
+  });
+
+  it('conditional speed modifier distinguishes heavy armor from light armor', () => {
+    const fastMovement = fx('fast-movement', auto({
+      kind: 'modifier', op: 'add', value: 10, applies_to: { roll: 'speed' },
+      when: [{ kind: 'not', of: { kind: 'wearing_armor', category: 'heavy' } }],
+    }));
+    const armor = (category: 'light' | 'heavy') => [{
+      source: { type: 'item' as const, id: `${category}-armor`, name: `${category} armor` },
+      mechanics: { armor_profile: { category } },
+    }];
+
+    expect(build({ effects: [fastMovement] }).speed).toBe(40);
+    expect(build({ effects: [fastMovement], runtimeSources: armor('light') }).speed).toBe(40);
+    expect(build({ effects: [fastMovement], runtimeSources: armor('heavy') }).speed).toBe(30);
+  });
+
   it('несколько grant_sense одного вида — берётся больший радиус', () => {
     const rs = build({
       effects: [
@@ -654,6 +734,31 @@ describe('Искусность оружия (Weapon Mastery, PHB 2024) — сб�
   it('прямой пейлоад weapon_mastery (без выбора) тоже собирается', () => {
     const rs = build({ effects: [fx('wm', auto({ kind: 'weapon_mastery', value: 'rapier' }))] });
     expect(rs.weaponMasteries).toEqual(['rapier']);
+  });
+
+  it('Forge-алиас grant_weapon_mastery реально попадает в ruleState', () => {
+    const rs = build({
+      effects: [fx('feat-weapon-master', auto({
+        kind: 'choice', id: 'feat_weapon_mastery', count: 1,
+        options: { source: 'weapon' }, grant: { kind: 'grant_weapon_mastery' },
+      }))],
+      draft: { resolvedChoices: { feat_weapon_mastery: ['longsword'] } },
+    });
+    expect(rs.weaponMasteries).toEqual(['longsword']);
+  });
+
+  it('adaptive skill choice grants proficiency first and expertise when already proficient', () => {
+    const adaptive = auto({
+      kind: 'choice', id: 'adaptive_skill', count: 1,
+      options: { source: 'skill' }, grant: { kind: 'grant_proficiency_or_expertise', prof: 'skill' },
+    });
+    const novice = build({ effects: [fx('adaptive', adaptive)], draft: { resolvedChoices: { adaptive_skill: ['perception'] } } });
+    expect(novice.proficiencies.skills).toContain('perception');
+    const expert = build({
+      effects: [fx('base', auto({ kind: 'grant_proficiency', prof: 'skill', value: 'perception' })), fx('adaptive', adaptive)],
+      draft: { resolvedChoices: { adaptive_skill: ['perception'] } },
+    });
+    expect(expert.expertise.skills).toContain('perception');
   });
 
   it('дубли из разных источников не копятся', () => {

@@ -21,6 +21,7 @@ import {
   LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE,
   WEAPON_ATTACK_PRIMITIVE,
 } from '../rules-core/weaponActionPolicies';
+import { lightWeaponExtraAttackUseKey } from '../rules-core/lightWeaponExtraAttack';
 import type {
   CharacterRuntimeCommandEvent,
   CharacterRuntimeCommandRequest,
@@ -37,6 +38,10 @@ import {
   stageSheetScenarioObjects,
   type SheetCanonicalCommandInput,
 } from './sheetCanonicalCommand';
+import {
+  UNARMED_STRIKE_CHOICE_ID,
+  UNARMED_STRIKE_PRIMITIVE,
+} from './sheetCombatDeclaration';
 import type { ForgeCharacter } from './types';
 import type { Action, Spell } from '../types';
 import { acceptedRuntimeCommandReceipt } from './sheetRuntimeCommand';
@@ -44,7 +49,6 @@ import {
   actionBelongsToSheetCombatSlice,
   assertCertifiedSheetCombatActorAccess,
   assertCertifiedSheetCombatActorAction,
-  assertCertifiedSheetCombatAction,
   loadCertifiedSheetCombatCatalog,
   type CertifiedSheetCombatCatalog,
 } from './sheetCombatCertifiedCatalog';
@@ -56,6 +60,7 @@ const COMBAT_PRIMITIVES = new Set([
   'burning_hands_objects',
   'area_object_push',
   'magic_missile',
+  UNARMED_STRIKE_PRIMITIVE,
   WEAPON_ATTACK_PRIMITIVE,
   LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE,
 ]);
@@ -505,7 +510,21 @@ export function assertCertifiedSheetCombatSession(
     throw new SheetCombatSessionError('Combat continuation belongs to another certified release');
   }
   for (const action of session.catalogActions) {
-    assertCertifiedSheetCombatAction(action, certified);
+    const claimingActorIds = Object.entries(session.certifiedActionIdsByActor)
+      .filter(([, actionIds]) => actionIds.includes(action.id))
+      .map(([actorId]) => actorId);
+    if (!claimingActorIds.length) {
+      throw new SheetCombatSessionError(
+        `Combat continuation action ${action.id} has no certified actor owner`,
+      );
+    }
+    for (const actorId of claimingActorIds) {
+      const actor = session.world.actors[actorId];
+      if (!actor) {
+        throw new SheetCombatSessionError(`Combat continuation misses participant actor ${actorId}`);
+      }
+      assertCertifiedSheetCombatActorAction(action, actor, certified);
+    }
   }
   for (const actorId of Object.keys(session.participantRevisions)) {
     const actor = session.world.actors[actorId];
@@ -625,7 +644,10 @@ function requireSingleWeaponTarget(input: {
   world: WorldState;
   actorId: string;
   action: RuleActionDefinition;
-  primitive: typeof WEAPON_ATTACK_PRIMITIVE | typeof LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE;
+  primitive:
+    | typeof UNARMED_STRIKE_PRIMITIVE
+    | typeof WEAPON_ATTACK_PRIMITIVE
+    | typeof LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE;
   declaration: SheetCanonicalCommandInput;
 }): { targetActorId: string; facts: NonNullable<SheetCanonicalCommandInput['factsByTarget']>[string] } {
   const validated = buildSheetCanonicalCommand({
@@ -652,6 +674,93 @@ function requireSingleWeaponTarget(input: {
   return { targetActorId, facts: clone(facts) };
 }
 
+function unarmedStrikeOption(
+  declaration: SheetCanonicalCommandInput,
+): 'damage' | 'grapple' | 'shove' {
+  const raw = declaration.choices?.[UNARMED_STRIKE_CHOICE_ID];
+  const selected = Array.isArray(raw) ? raw : raw == null ? [] : [raw];
+  if (selected.length !== 1
+    || (selected[0] !== 'damage' && selected[0] !== 'grapple' && selected[0] !== 'shove')) {
+    throw new SheetCombatSessionError(
+      `Unarmed Strike requires exactly one ${UNARMED_STRIKE_CHOICE_ID} choice`,
+    );
+  }
+  return selected[0];
+}
+
+function acceptedUnarmedTransition(input: {
+  base: SheetCombatSession;
+  actorId: string;
+  action: RuleActionDefinition;
+  declaration: SheetCanonicalCommandInput;
+  commandId: string;
+  rng: () => number;
+}): SheetCombatTransition {
+  if (!canonicalUuid(input.commandId)) {
+    throw new SheetCombatSessionError('Runtime command id must be a canonical UUID');
+  }
+  const { targetActorId, facts } = requireSingleWeaponTarget({
+    world: input.base.world,
+    actorId: input.actorId,
+    action: input.action,
+    primitive: UNARMED_STRIKE_PRIMITIVE,
+    declaration: input.declaration,
+  });
+  const option = unarmedStrikeOption(input.declaration);
+  const session = new InMemoryRulesSession(input.base.world, input.base.catalog, {
+    rng: input.rng,
+    clock: createLogicalClock(input.base.world.logicalClock),
+    nextId: createSequentialIdFactory(`sheet-combat:${input.commandId}`),
+  });
+  const dispatch = (command: GameCommand): void => {
+    const result = session.dispatch(command);
+    if (result.status === 'rejected') {
+      throw new SheetCombatSessionError(`${result.code}: ${result.message}`);
+    }
+  };
+  let open = Object.values(session.getState().attackActions).filter((entry) => (
+    entry.actorId === input.actorId && entry.status === 'open'
+  ));
+  if (!open.length) {
+    const current = session.getState();
+    dispatch({
+      schemaVersion: 1,
+      type: 'BeginAttackAction',
+      commandId: `${input.commandId}:begin-attack`,
+      expectedRevision: current.revision,
+      rulesetContentHash: current.ruleset.contentHash,
+      actorId: input.actorId,
+    });
+    open = Object.values(session.getState().attackActions).filter((entry) => (
+      entry.actorId === input.actorId && entry.status === 'open'
+    ));
+  }
+  if (open.length !== 1) {
+    throw new SheetCombatSessionError(
+      `Unarmed Strike requires exactly one open Attack ledger; got ${open.length}`,
+    );
+  }
+  const current = session.getState();
+  dispatch({
+    schemaVersion: 1,
+    type: 'PerformUnarmedStrike',
+    commandId: input.commandId,
+    expectedRevision: current.revision,
+    rulesetContentHash: current.ruleset.contentHash,
+    actorId: input.actorId,
+    attackActionId: open[0].id,
+    targetActorId,
+    option,
+    facts,
+  });
+  return {
+    commandId: input.commandId,
+    base: input.base,
+    nextWorld: session.getState(),
+    events: session.getEvents(),
+  };
+}
+
 function currentEncounterTurnKey(world: WorldState, actorId: string): string | null {
   return world.scene.mode === 'encounter'
     ? `encounter:${world.scene.round}:${world.scene.activeIndex}:${actorId}`
@@ -665,6 +774,7 @@ function qualifyingLightAttackActionId(world: WorldState, actorId: string): stri
       'The sheet Light-extra-attack bridge requires an ordered encounter turn',
     );
   }
+  const firedThisTurn = world.actors[actorId]?.runtime.firedThisTurn ?? [];
   const candidates = Object.values(world.attackActions).filter((entry) => (
     entry.actorId === actorId
     && entry.turnKey === turnKey
@@ -672,10 +782,11 @@ function qualifyingLightAttackActionId(world: WorldState, actorId: string): stri
     && !entry.blockedByResolutionId
     && entry.sequence.attacksRemaining === 0
     && entry.sequence.entries.some((attack) => attack.kind === 'weapon_attack')
-  ));
-  if (candidates.length !== 1) {
+    && !firedThisTurn.includes(lightWeaponExtraAttackUseKey(entry.id))
+  )).sort((left, right) => right.startedAtRevision - left.startedAtRevision);
+  if (!candidates.length) {
     throw new SheetCombatSessionError(
-      `Light extra attack requires exactly one completed qualifying Attack ledger; got ${candidates.length}`,
+      'Light extra attack requires an unused completed qualifying Attack ledger',
     );
   }
   return candidates[0].id;
@@ -752,6 +863,9 @@ function acceptedWeaponTransition(input: {
       weaponCardId,
       targetActorId,
       facts,
+      ...(input.declaration.protectionCandidates
+        ? { protectionCandidates: clone(input.declaration.protectionCandidates) }
+        : {}),
       ...(input.declaration.choices ? { choices: clone(input.declaration.choices) } : {}),
     });
   } else {
@@ -768,6 +882,9 @@ function acceptedWeaponTransition(input: {
       weaponCardId,
       targetActorId,
       facts,
+      ...(input.declaration.protectionCandidates
+        ? { protectionCandidates: clone(input.declaration.protectionCandidates) }
+        : {}),
       ...(input.declaration.choices ? { choices: clone(input.declaration.choices) } : {}),
     });
   }
@@ -814,6 +931,16 @@ export function executeSheetCombatAction(input: {
       actorId,
       action,
       primitive,
+      declaration: input.declaration,
+      commandId: input.commandId,
+      rng: input.rng,
+    });
+  }
+  if (primitive === UNARMED_STRIKE_PRIMITIVE) {
+    return acceptedUnarmedTransition({
+      base: stagedSession,
+      actorId,
+      action,
       declaration: input.declaration,
       commandId: input.commandId,
       rng: input.rng,

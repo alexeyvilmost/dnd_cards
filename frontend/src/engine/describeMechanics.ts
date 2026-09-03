@@ -285,14 +285,15 @@ export function parseMechanicsStats(mechanics: Dict | null | undefined): Mechani
   const out: MechanicsStats = { attack: false, save: false, saveAbility: null, damage: [], heal: [] };
   const effects = Array.isArray((mechanics as Dict | undefined)?.effects) ? ((mechanics as Dict).effects as Dict[]) : [];
 
-  const readDmg = (arr: unknown): void => {
+  const readDmg = (arr: unknown, skipDamageKeys: ReadonlySet<string> = new Set()): void => {
     (Array.isArray(arr) ? (arr as Dict[]) : []).forEach((p) => {
       if (p?.kind === 'damage') {
         const v = p.dice ?? p.formula ?? p.amount;
         // dice:"weapon" — плейсхолдер, значение резолвится из оружия в руке (см. weaponAttackPreview).
         // Без контекста оружия показывать нечего, поэтому пропускаем (иначе рисуется литерал «weapon»).
         if (v != null && v !== '' && v !== 'weapon') {
-          out.damage.push({ value: String(v), type: String(p.type ?? p.damage_type ?? 'damage') });
+          const entry = { value: String(v), type: String(p.type ?? p.damage_type ?? 'damage') };
+          if (!skipDamageKeys.has(`${entry.value}\u0000${entry.type}`)) out.damage.push(entry);
         }
       } else if (p?.kind === 'healing') {
         const v = p.amount ?? p.dice ?? p.formula;
@@ -304,7 +305,17 @@ export function parseMechanicsStats(mechanics: Dict | null | undefined): Mechani
   for (const eff of effects) {
     const res = String(eff.resolution ?? '');
     if (res === 'attack_roll') { out.attack = true; readDmg(eff.on_hit); readDmg(eff.on_crit); }
-    else if (res === 'save') { out.save = true; if (!out.saveAbility && eff.ability) out.saveAbility = String(eff.ability); readDmg(eff.on_fail); readDmg(eff.on_success); }
+    else if (res === 'save') {
+      out.save = true;
+      if (!out.saveAbility && eff.ability) out.saveAbility = String(eff.ability);
+      const beforeFail = out.damage.length;
+      readDmg(eff.on_fail);
+      // Save branches are mutually exclusive. PHB payloads commonly repeat
+      // the same dice in on_fail and on_success to express half damage; the
+      // card must display that damage once, not as an additive second hit.
+      const failDamageKeys = new Set(out.damage.slice(beforeFail).map(({ value, type }) => `${value}\u0000${type}`));
+      readDmg(eff.on_success, failDamageKeys);
+    }
     else readDmg(eff.result ?? eff.results);
   }
   return out;

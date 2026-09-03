@@ -364,22 +364,35 @@ export type RuleActionDefinition =
     };
   });
 
-/** Catalog-owned non-creature source that forces a saving throw. */
-export interface RuleHazardDefinition {
+/** Shared immutable provenance for catalog-owned non-creature sources. */
+interface RuleHazardDefinitionBase {
   id: string;
   name: string;
   sourceKind: 'environment' | 'system';
   sourceEntityIds: readonly [string, ...string[]];
+  /** Catalog effects referenced by grant_effect consequences. The source actor
+   * snapshots these so a monster target never needs to own the item/spell. */
+  grantedEffects?: NonNullable<ActorState['grantedEffects']>;
+}
+
+/** A catalog-owned hazard whose consequences are gated by a saving throw. */
+export interface RuleSavingHazardDefinition extends RuleHazardDefinitionBase {
+  resolution: 'save';
   save: {
     ability: Ability;
     dc: number;
   };
   onFailure: JsonObject[];
   onSuccess?: JsonObject[];
-  /** Catalog effects referenced by grant_effect consequences. The source actor
-   * snapshots these so a monster target never needs to own the item/spell. */
-  grantedEffects?: NonNullable<ActorState['grantedEffects']>;
 }
+
+/** A catalog-owned hazard which applies consequences without inventing a save. */
+export interface RuleAutomaticHazardDefinition extends RuleHazardDefinitionBase {
+  resolution: 'automatic';
+  effects: JsonObject[];
+}
+
+export type RuleHazardDefinition = RuleSavingHazardDefinition | RuleAutomaticHazardDefinition;
 
 export interface SavingThrowDecisionRequest {
   id: string;
@@ -733,7 +746,7 @@ export interface PendingHazardSaveResolution {
    * Canonical snapshot makes the continuation independent of mutable process
    * memory and therefore safe to JSON-persist and resume after a reload.
    */
-  hazard: RuleHazardDefinition;
+  hazard: RuleSavingHazardDefinition;
   request: SavingThrowDecisionRequest;
 }
 
@@ -1004,6 +1017,8 @@ export interface AbilityCheckCommand extends CommandBase {
   type: 'AbilityCheck';
   ability: Ability;
   skill?: string;
+  /** Rules-owned situational context for explicitly declared checks. */
+  context?: 'impersonation';
   dc?: number;
 }
 

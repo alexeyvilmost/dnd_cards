@@ -29,11 +29,62 @@ import { ABILITY_KEYS, type AbilityKey, type CharacterDraft } from './types';
 import { excludesMicroMvpL1SourceEffect } from '../canon/microMvpSourceCorrections';
 import { meetsActivationLevelRequirement } from '../rules-core/activationRequirements';
 import { resolvePrimarySpellcastingAbility } from './spellcastingAbility';
-import { draftClassLevels } from './multiclass';
+import { draftClassLevels, normalizedSubclassIds } from './multiclass';
 
 // ─── Сбор ссылок на эффекты/действия из выбранных сущностей ──────────────────
 
 type Ref = { id: string; origin: ChoiceOrigin };
+
+function classSpellSlotLevelAt(
+  resources: CharacterClass['resources'] | null | undefined,
+  level: number,
+): number {
+  if (!resources || typeof resources !== 'object') return 0;
+  let maximum = 0;
+  for (const [resourceId, rawDefinition] of Object.entries(resources)) {
+    const match = /^spell_slot_(\d+)$/.exec(resourceId);
+    if (!match || !rawDefinition || typeof rawDefinition !== 'object') continue;
+    const definition = rawDefinition as unknown as Record<string, unknown>;
+    let count = Number(definition.count ?? 0);
+    const byLevel = definition.by_level;
+    if (byLevel && typeof byLevel === 'object' && !Array.isArray(byLevel)) {
+      const threshold = Object.entries(byLevel as Record<string, unknown>)
+        .map(([gate, value]) => [Number(gate), Number(value)] as const)
+        .filter(([gate, value]) => Number.isFinite(gate) && gate <= level && Number.isFinite(value))
+        .sort((left, right) => left[0] - right[0])
+        .at(-1);
+      count = threshold?.[1] ?? 0;
+    }
+    if (count > 0) maximum = Math.max(maximum, Number(match[1]));
+  }
+  return maximum;
+}
+
+const MULTICLASS_SPELL_SLOTS: readonly (readonly number[])[] = [
+  [], [2], [3], [4, 2], [4, 3], [4, 3, 2], [4, 3, 3], [4, 3, 3, 1], [4, 3, 3, 2],
+  [4, 3, 3, 3, 1], [4, 3, 3, 3, 2], [4, 3, 3, 3, 2, 1], [4, 3, 3, 3, 2, 1],
+  [4, 3, 3, 3, 2, 1, 1], [4, 3, 3, 3, 2, 1, 1], [4, 3, 3, 3, 2, 1, 1, 1],
+  [4, 3, 3, 3, 2, 1, 1, 1], [4, 3, 3, 3, 2, 1, 1, 1, 1], [4, 3, 3, 3, 3, 1, 1, 1, 1],
+  [4, 3, 3, 3, 3, 2, 1, 1, 1], [4, 3, 3, 3, 3, 2, 2, 1, 1],
+];
+
+/** Ordinary slot row from the 2024 multiclass spellcaster table. Pact Magic
+ * is deliberately excluded and remains a Warlock-owned short-rest pool. */
+export function multiclassSpellSlotCounts(
+  classes: readonly CharacterClass[],
+  levels: Readonly<Record<string, number>>,
+): readonly number[] {
+  const fullCasters = new Set(['bard', 'cleric', 'druid', 'sorcerer', 'wizard']);
+  const halfCasters = new Set(['paladin', 'ranger']);
+  let casterLevel = 0;
+  for (const entry of classes) {
+    const slug = (entry.card_number || '').replace(/^CLASS[-_]/i, '').toLowerCase();
+    const classLevel = Math.max(0, Math.floor(Number(levels[entry.id] ?? 0)));
+    if (fullCasters.has(slug)) casterLevel += classLevel;
+    else if (halfCasters.has(slug)) casterLevel += Math.ceil(classLevel / 2);
+  }
+  return MULTICLASS_SPELL_SLOTS[Math.min(20, casterLevel)] ?? [];
+}
 
 // Источники эффектов/действий: виды (related + по уровням), классы (по уровням),
 // черты (related). Предыстории эффектов не добавляют — их вклад через прямые поля.
@@ -57,12 +108,24 @@ export function gatherFeatureRefs(
   const pushA = (id: string | undefined, origin: ChoiceOrigin) => {
     if (id && !seenA.has(id)) { seenA.add(id); actionRefs.push({ id, origin }); }
   };
-  const addLevelProg = (lp: LevelProgression | null | undefined, origin: ChoiceOrigin) => {
+  const addLevelProg = (
+    lp: LevelProgression | null | undefined,
+    origin: ChoiceOrigin,
+    resources?: CharacterClass['resources'] | null,
+  ) => {
     if (!lp) return;
     for (const [lvl, entry] of Object.entries(lp)) {
-      if (Number(lvl) <= level) {
-        (entry?.effects || []).forEach((id) => pushE(id, origin));
-        (entry?.actions || []).forEach((id) => pushA(id, origin));
+      const progressionLevel = Number(lvl);
+      if (progressionLevel <= level) {
+        const progressionOrigin: ChoiceOrigin = {
+          ...origin,
+          progressionLevel,
+          ...(resources ? {
+            spellSlotLevelCap: classSpellSlotLevelAt(resources, progressionLevel),
+          } : {}),
+        };
+        (entry?.effects || []).forEach((id) => pushE(id, progressionOrigin));
+        (entry?.actions || []).forEach((id) => pushA(id, progressionOrigin));
       }
     }
   };
@@ -82,7 +145,7 @@ export function gatherFeatureRefs(
   }
   if (klass) {
     const origin: ChoiceOrigin = { kind: 'class', id: klass.id, name: klass.name };
-    addLevelProg(klass.level_progression, origin);
+    addLevelProg(klass.level_progression, origin, klass.resources);
   }
   if (subclass) {
     // Подкласс работает как класс: его эффекты/действия добавляются с class-источником.
@@ -112,6 +175,7 @@ export interface AssembledCharacter {
   /** Every selected class; klass remains the initial class for first-level proficiencies. */
   classes?: CharacterClass[];
   subclass?: CharacterClass | null;
+  subclasses?: CharacterClass[];
   background: Background | null;
   feats: Feat[];
   effects: OriginEffect[];
@@ -139,6 +203,8 @@ export interface EntityBundle {
   klass: CharacterClass | null;
   classes?: CharacterClass[];
   subclass?: CharacterClass | null;
+  subclasses?: CharacterClass[];
+  subclassOwnerClassIds?: Record<string, string>;
   background: Background | null;
   feats: Feat[];
   effects: OriginEffect[];
@@ -207,6 +273,7 @@ export function bundleDependencyKey(
     classId: draft.classId ?? null,
     classLevels: draftClassLevels(draft),
     subclassId: draft.subclassId ?? null,
+    subclassIds: normalizedSubclassIds(draft.subclassIds, draft.classId, draft.subclassId),
     backgroundId: draft.backgroundId ?? null,
     level: draft.level,
     swapFeat: Boolean(draft.swapFeat),
@@ -258,10 +325,20 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
   // instance in that data-owned family, while their capacity follows the
   // owning class level rather than total character level.
   const classLevels = draftClassLevels(draft);
+  const subclassOwnerLevels = Object.fromEntries((bundle.subclasses ?? (bundle.subclass ? [bundle.subclass] : []))
+    .map((entry) => [entry.id, classLevels[bundle.subclassOwnerClassIds?.[entry.id] ?? entry.parent_class_id ?? ''] ?? 0]));
   for (const choice of pendingChoices) {
+    if (choice.origin.kind === 'class') {
+      choice.origin = {
+        ...choice.origin,
+        owningClassLevel: classLevels[choice.origin.id]
+          ?? subclassOwnerLevels[choice.origin.id]
+          ?? 0,
+      };
+    }
     if (choice.countByLevel) {
       const ownerLevel = choice.origin.kind === 'class'
-        ? (classLevels[choice.origin.id] ?? draft.level)
+        ? (classLevels[choice.origin.id] ?? subclassOwnerLevels[choice.origin.id] ?? draft.level)
         : draft.level;
       const thresholds = Object.entries(choice.countByLevel)
         .map(([level, count]) => [Number(level), count] as const)
@@ -317,6 +394,7 @@ export function assemble(bundle: EntityBundle, draft: CharacterDraft): Assembled
     klass: bundle.klass,
     classes: bundle.classes ?? (bundle.klass ? [bundle.klass] : []),
     subclass: bundle.subclass ?? null,
+    subclasses: bundle.subclasses ?? (bundle.subclass ? [bundle.subclass] : []),
     background: bundle.background,
     feats: bundle.feats,
     effects: bundle.effects,
@@ -359,17 +437,38 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   // race/klass/background → manualFeats → subrace → subclass). Зависят только от
   // полей draft, поэтому запускаются параллельно. subrace/subclass — по UUID из draft.
   const levels = draftClassLevels(draft);
+  const subclassSelections = normalizedSubclassIds(draft.subclassIds, draft.classId, draft.subclassId);
   const secondaryClassIds = Object.keys(levels).filter((id) => id !== draft.classId);
-  const [race, klass, secondaryClassesRaw, background, manualFeatsRaw, subrace, subclass] = await Promise.all([
+  const selectedSubclassIds = [...new Set(Object.values(subclassSelections))];
+  const [race, klass, secondaryClassesRaw, background, manualFeatsRaw, subrace, subclassesRaw] = await Promise.all([
     draft.raceId ? racesApi.getRace(draft.raceId) : Promise.resolve(null),
     draft.classId ? classesApi.getClass(draft.classId) : Promise.resolve(null),
     Promise.all(secondaryClassIds.map((id) => classesApi.getClass(id).catch(() => null))),
     draft.backgroundId ? backgroundsApi.getBackground(draft.backgroundId) : Promise.resolve(null),
     Promise.all((draft.featIds || []).map((id) => featsApi.getFeat(id))),
     draft.lineageId && isEntityUuid(draft.lineageId) ? racesApi.getRace(draft.lineageId) : Promise.resolve(null),
-    draft.subclassId && isEntityUuid(draft.subclassId) ? classesApi.getClass(draft.subclassId) : Promise.resolve(null),
+    Promise.all(selectedSubclassIds.map((id) => (
+      isEntityUuid(id) ? classesApi.getClass(id).catch(() => null) : Promise.resolve(null)
+    ))),
   ]);
   const classes = [klass, ...secondaryClassesRaw].filter((entry): entry is CharacterClass => !!entry);
+  const subclasses = subclassesRaw.filter((entry): entry is CharacterClass => !!entry);
+  const subclassOwnerClassIds = Object.fromEntries(Object.entries(subclassSelections)
+    .map(([classId, subclassId]) => [subclassId, classId]));
+  const originWithOwningClassLevel = (origin: ChoiceOrigin): ChoiceOrigin => (
+    origin.kind === 'class'
+      ? {
+          ...origin,
+          owningClassLevel: levels[origin.id]
+            ?? levels[subclassOwnerClassIds[origin.id] ?? '']
+            ?? 0,
+        }
+      : origin
+  );
+  const primarySubclassId = draft.classId ? subclassSelections[draft.classId] : undefined;
+  const subclass = primarySubclassId
+    ? subclasses.find((entry) => entry.id === primarySubclassId) ?? null
+    : null;
   const manualFeats = manualFeatsRaw.filter((f): f is Feat => !!f);
 
   // Origin-черта предыстории (по card_number/uuid): действует по умолчанию,
@@ -400,31 +499,17 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
       };
     }
   }
-  for (const [resource, definition] of Object.entries(subclass?.resources || {})) {
-    combinedClassResources[resource] = definition;
+  for (const selectedSubclass of subclasses) {
+    for (const [resource, definition] of Object.entries(selectedSubclass.resources || {})) {
+      combinedClassResources[resource] = definition;
+    }
   }
   // Normal spell slots use the multiclass spellcaster table. Pact Magic stays
   // separate and therefore keeps the Warlock-owned resource definitions.
-  const fullCasters = new Set(['bard', 'cleric', 'druid', 'sorcerer', 'wizard']);
-  const halfCasters = new Set(['paladin', 'ranger']);
-  let casterLevel = 0;
-  for (const entry of classes) {
-    const slug = (entry.card_number || '').replace(/^CLASS[-_]/i, '').toLowerCase();
-    const classLevel = levels[entry.id] ?? 0;
-    if (fullCasters.has(slug)) casterLevel += classLevel;
-    else if (halfCasters.has(slug)) casterLevel += Math.ceil(classLevel / 2);
-  }
   for (const key of Object.keys(combinedClassResources)) {
     if (/^spell_slot_\d+$/.test(key)) delete combinedClassResources[key];
   }
-  const multiclassSlots: number[][] = [
-    [], [2], [3], [4, 2], [4, 3], [4, 3, 2], [4, 3, 3], [4, 3, 3, 1], [4, 3, 3, 2],
-    [4, 3, 3, 3, 1], [4, 3, 3, 3, 2], [4, 3, 3, 3, 2, 1], [4, 3, 3, 3, 2, 1],
-    [4, 3, 3, 3, 2, 1, 1], [4, 3, 3, 3, 2, 1, 1], [4, 3, 3, 3, 2, 1, 1, 1],
-    [4, 3, 3, 3, 2, 1, 1, 1], [4, 3, 3, 3, 2, 1, 1, 1, 1], [4, 3, 3, 3, 3, 1, 1, 1, 1],
-    [4, 3, 3, 3, 3, 2, 1, 1, 1], [4, 3, 3, 3, 3, 2, 2, 1, 1],
-  ];
-  const slotRow = multiclassSlots[Math.min(20, casterLevel)] ?? [];
+  const slotRow = multiclassSpellSlotCounts(classes, levels);
   slotRow.forEach((count, index) => {
     if (count > 0) combinedClassResources[`spell_slot_${index + 1}`] = { count, per: 'long_rest' };
   });
@@ -432,11 +517,17 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
     ? { ...klass, resources: combinedClassResources }
     : klass;
 
-  const { effectRefs, actionRefs } = gatherFeatureRefs(race, null, feats, draft.level, subrace, subclass);
+  const { effectRefs, actionRefs } = gatherFeatureRefs(race, null, feats, draft.level, subrace, null);
   for (const classEntity of classes) {
     const classRefs = gatherFeatureRefs(null, classEntity, [], levels[classEntity.id] ?? 0);
     effectRefs.push(...classRefs.effectRefs);
     actionRefs.push(...classRefs.actionRefs.filter((candidate) => !actionRefs.some((existing) => existing.id === candidate.id)));
+  }
+  for (const selectedSubclass of subclasses) {
+    const ownerClassId = subclassOwnerClassIds[selectedSubclass.id] ?? selectedSubclass.parent_class_id ?? '';
+    const subclassRefs = gatherFeatureRefs(null, null, [], levels[ownerClassId] ?? 0, null, selectedSubclass);
+    effectRefs.push(...subclassRefs.effectRefs);
+    actionRefs.push(...subclassRefs.actionRefs.filter((candidate) => !actionRefs.some((existing) => existing.id === candidate.id)));
   }
   const manualOrigin = (kind: 'effect' | 'action', index: number): ChoiceOrigin => ({
     kind: 'other',
@@ -464,7 +555,12 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   );
   const canonicalEffectRefs = effectRefs.filter((reference) => {
     const effect = effBodyById.get(reference.id);
-    return !!effect && meetsActivationLevelRequirement(effect.mechanics, draft.level)
+    const activationLevel = reference.origin.kind === 'class'
+      ? (levels[reference.origin.id]
+        ?? levels[subclassOwnerClassIds[reference.origin.id] ?? '']
+        ?? 0)
+      : draft.level;
+    return !!effect && meetsActivationLevelRequirement(effect.mechanics, activationLevel)
       && !excludesMicroMvpL1SourceEffect({
       characterLevel: draft.level,
       raceCardNumber: race?.card_number,
@@ -483,11 +579,14 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
         const n = repN.get(r.id) ?? 0;
         repN.set(r.id, n + 1);
         const instanceKey = r.origin.instanceKey ?? `${r.origin.kind}:${r.origin.id}:${r.id}:${n}`;
-        baseEffects.push({ effect, origin: { ...r.origin, instanceKey } });
+        baseEffects.push({
+          effect,
+          origin: originWithOwningClassLevel({ ...r.origin, instanceKey }),
+        });
       } else {
         if (seenNonRep.has(r.id)) continue;
         seenNonRep.add(r.id);
-        baseEffects.push({ effect, origin: r.origin });
+        baseEffects.push({ effect, origin: originWithOwningClassLevel(r.origin) });
       }
     }
   }
@@ -592,11 +691,19 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   const actions = (
     await Promise.all(
       actionRefs.map((r) =>
-        actionsApi.getAction(r.id).then((action) => ({ action, origin: r.origin })).catch(() => null),
+        actionsApi.getAction(r.id).then((action) => ({
+          action,
+          origin: originWithOwningClassLevel(r.origin),
+        })).catch(() => null),
       ),
     )
   ).filter((x): x is OriginAction => (
-    !!x && meetsActivationLevelRequirement(x.action.mechanics, draft.level)
+    !!x && meetsActivationLevelRequirement(
+      x.action.mechanics,
+      x.origin.kind === 'class'
+        ? (levels[x.origin.id] ?? levels[subclassOwnerClassIds[x.origin.id] ?? ''] ?? 0)
+        : draft.level,
+    )
   ));
 
   // Справочник переменных (type/default) для сворачивания variable-payload'ов.
@@ -612,6 +719,8 @@ export async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
     klass: klassWithSub,
     classes,
     subclass,
+    subclasses,
+    subclassOwnerClassIds,
     background,
     feats: allFeats,
     effects,
@@ -661,7 +770,16 @@ export function collectEffectGrantRefs(
       const items = Array.isArray(opts.items) ? (opts.items as RefDict[]) : [];
       for (const sel of selected) {
         const item = items.find((it) => String(it.id) === sel);
-        pushVal((item?.value as string) ?? sel); // item.value переопределяет slug, иначе id === slug
+        // Explicit effect domains fail closed: a persisted arbitrary slug is
+        // not authority to attach another library entity. Class-gated
+        // options (Eldritch Invocations) use their owning class level.
+        if (!item) continue;
+        const minimumClassLevel = Number(item.minimum_class_level ?? 0);
+        if (Number.isFinite(minimumClassLevel)
+          && minimumClassLevel > 0
+          && origin.owningClassLevel != null
+          && origin.owningClassLevel < minimumClassLevel) continue;
+        pushVal((item.value as string) ?? sel); // item.value переопределяет slug, иначе id === slug
       }
     }
   };

@@ -14,6 +14,7 @@ import {
   parseDeclaredWeaponActionPolicy,
   WEAPON_ATTACK_PRIMITIVE,
 } from '../rules-core/weaponActionPolicies';
+import { UNARMED_STRIKE_PRIMITIVE } from './sheetCombatDeclaration';
 import {
   FIND_FAMILIAR_CAST_PATH_CHOICE,
   FIND_FAMILIAR_FORM_CHOICE,
@@ -56,6 +57,7 @@ export const SHEET_PENDING_COMBAT_PRIMITIVES = [
   'burning_hands_objects',
   'area_object_push',
   'magic_missile',
+  UNARMED_STRIKE_PRIMITIVE,
   WEAPON_ATTACK_PRIMITIVE,
   LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE,
 ] as const;

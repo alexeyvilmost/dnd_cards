@@ -363,13 +363,14 @@ describe('C13: контракт схема ↔ рантайм (payload.kind)', (
     'condition_immunity', 'resistance', 'set_value',    // condition-owned defense + урон/AC runtime
     'value_method',                                     // сборка: методы характеристик (C8, Пояс силы огра)
     'narrative', 'add_item',                            // add_item: S1 контейнеры
-    'grant_effect', 'grant_language', 'grant_expertise',
+    'grant_effect', 'remove_effect', 'grant_language', 'grant_expertise',
     'grant_proficiency', 'grant_feat', 'grant_spell',   // сборка персонажа
     'grant_ability_score', 'grant_sense', 'grant_speed',// D3: применяются резолвером (resolveCharacterRules.ts:253-364)
     'spellcasting_ability',                            // primary build projection + source-scoped persisted choices
     'weapon_mastery',                                   // искусность 2024: резолвер → ruleState.weaponMasteries,
                                                          // движок гейтит свойство оружия (engine/mastery.ts)
     'unarmed_damage_profile', 'turn_start_grapple_damage', // каноническая Attack/StartTurn RulesSession
+    'd20_interrupt',                                  // persisted cross-actor solo-combat d20 continuation
     'choice',                                           // мета-kind (ChoiceResolver / expandChoices)
   ];
   // ЧАСТИЧНО: kind исполняется, но не полностью (чип+нарратив, один путь, лог-only).

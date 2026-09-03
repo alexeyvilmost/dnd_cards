@@ -77,12 +77,20 @@ function formulaCtxOf(ctx: CharacterContext): FormulaContext {
   };
 }
 
-function restoreTurnResources(state: RuntimeState): RuntimeState {
+function restoreTurnResources(
+  state: RuntimeState,
+  recharge?: Readonly<Record<string, string>>,
+): RuntimeState {
   const resources = { ...state.resources };
   resources[ACTION_SURGE_ACTION_RESOURCE] = 0;
   resources[QUICKENED_SPELL_ACTION_RESOURCE] = 0;
   for (const key of TURN_KEYS) {
     if (state.maxResources[key] != null) resources[key] = state.maxResources[key];
+  }
+  for (const [key, cadence] of Object.entries(recharge ?? {})) {
+    if (cadence === 'turn' && state.maxResources[key] != null) {
+      resources[key] = state.maxResources[key];
+    }
   }
   return { ...state, resources };
 }
@@ -134,7 +142,7 @@ export function startTurn(
 
   // Сброс гейта «раз за ход» для triggered-эффектов (Скрытая атака и т.п.).
   next = { ...next, firedThisTurn: [] };
-  next = restoreTurnResources(next);
+  next = restoreTurnResources(next, ctx?.resourceRecharge);
   if (options.advanceRoundDurations !== false) {
     const expired = advanceRoundEffects(next, true);
     next = expired.state;

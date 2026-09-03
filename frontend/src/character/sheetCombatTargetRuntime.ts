@@ -10,6 +10,7 @@ import {
 } from './actionSheet';
 import { loadAssembly } from './assemble';
 import type { AssembledCharacter } from './assemble';
+import { instanceFeatureId } from '../mechanics/choiceKey';
 import { collectItemMechanics } from './attunement';
 import { characterToDraft } from './forgeHelpers';
 import { buildCharacterContext, forgeToRuntimeState } from './runtime';
@@ -99,7 +100,7 @@ export async function hydrateSheetCombatCards(input: {
  */
 export async function collectSheetCombatActionInventory(input: {
   assembled: AssembledCharacter;
-  character: Pick<ForgeCharacter, 'level' | 'turn_state'>;
+  character: Pick<ForgeCharacter, 'level' | 'turn_state' | 'resolved_choices'>;
   runtime: RuntimeState;
   basicActions?: readonly Action[];
   cards: ReadonlyMap<string, Card>;
@@ -141,11 +142,25 @@ export async function collectSheetCombatActionInventory(input: {
     collectActionGrants(item.mechanics, item.card.name, 'item');
   }
   for (const { effect, origin } of input.assembled.effects) {
-    collectActionGrants(
+    for (const reference of collectGrantActionSlugs(
       effect.mechanics as Record<string, unknown> | null | undefined,
-      effect.name,
-      origin.kind === 'race' ? 'race' : 'class',
-    );
+      input.character.level,
+      {
+        resolvedChoices: input.character.resolved_choices ?? {},
+        origin: {
+          ...origin,
+          featureId: instanceFeatureId(effect.id, origin.instanceKey),
+          featureName: effect.name,
+        },
+      },
+    )) {
+      if (!grantRefs.has(reference)) {
+        grantRefs.set(reference, {
+          sourceLabel: effect.name,
+          group: origin.kind === 'race' ? 'race' : 'class',
+        });
+      }
+    }
   }
   const grantedActions = await Promise.all([...grantRefs].map(async ([reference, grant]) => ({
     ...grant,
