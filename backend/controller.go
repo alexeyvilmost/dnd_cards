@@ -22,6 +22,8 @@ const maxListLimit = 500
 // offset API. Bounding page also prevents integer overflow in offset math.
 const maxListPage = 1_000_000
 
+var generatedCardNumberPattern = regexp.MustCompile(`^CARD-([0-9]+)$`)
+
 // parseListPagination читает page/limit из query с дефолтами и клампит их
 // в разумные границы. Общий помощник для всех списковых хендлеров справочников.
 func parseListPagination(c *gin.Context) (page, limit, offset int) {
@@ -527,7 +529,12 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 	}
 
 	// Генерация уникального номера карточки
-	cardNumber := generateCardNumber(cc.db)
+	cardNumber, err := generateCardNumber(cc.db)
+	if err != nil {
+		log.Printf("❌ [CREATE CARD] Ошибка генерации номера: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации номера карточки"})
+		return
+	}
 
 	card := Card{
 		Name:                         req.Name,
@@ -952,19 +959,31 @@ func (cc *CardController) ExportCards(c *gin.Context) {
 }
 
 // generateCardNumber - генерация уникального номера карточки
-func generateCardNumber(db *gorm.DB) string {
-	var maxCard Card
-	// Только CARD-*: иначе MVP-* и другие префиксы ломают счётчик и дают коллизию CARD-0001.
-	db.Unscoped().Where("card_number LIKE ?", "CARD-%").Order("card_number DESC").First(&maxCard)
+func generateCardNumber(db *gorm.DB) (string, error) {
+	var cardNumbers []string
+	if err := db.Unscoped().Model(&Card{}).
+		Where("card_number LIKE ?", "CARD-%").
+		Pluck("card_number", &cardNumbers).Error; err != nil {
+		return "", fmt.Errorf("получить номера карт: %w", err)
+	}
 
-	nextNum := 1
-	if strings.HasPrefix(maxCard.CardNumber, "CARD-") {
-		if num, err := strconv.Atoi(strings.TrimPrefix(maxCard.CardNumber, "CARD-")); err == nil {
-			nextNum = num + 1
+	return nextGeneratedCardNumber(cardNumbers), nil
+}
+
+func nextGeneratedCardNumber(cardNumbers []string) string {
+	maxNumber := 0
+	for _, cardNumber := range cardNumbers {
+		matches := generatedCardNumberPattern.FindStringSubmatch(cardNumber)
+		if len(matches) != 2 {
+			continue
+		}
+		number, err := strconv.Atoi(matches[1])
+		if err == nil && number > maxNumber {
+			maxNumber = number
 		}
 	}
 
-	return fmt.Sprintf("CARD-%04d", nextNum)
+	return fmt.Sprintf("CARD-%04d", maxNumber+1)
 }
 
 // ActionController - контроллер для работы с действиями
