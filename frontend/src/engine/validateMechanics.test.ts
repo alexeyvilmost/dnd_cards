@@ -12,6 +12,15 @@ describe('validateMechanics', () => {
     expect(validateMechanics(null, { id: 'x', name: 'X', kind: 'passive_effect' }).valid).toBe(true);
   });
 
+  it('принимает уровневый лимит использований с источником уровня класса', () => {
+    const result = validateMechanics({
+      activation: { mode: 'active', cost: [{ resource: 'bonus_action' }, { resource: 'self_uses' }] },
+      uses: { count: 2, by_level: { 1: 2, 4: 3 }, level_source: 'warrior', per: 'long_rest' },
+      effects: [{ resolution: 'auto', result: [{ kind: 'healing', amount: '1d10 + class_level:warrior' }] }],
+    }, { id: 'second-wind', name: 'Второе дыхание', kind: 'action' });
+    expect(result.valid).toBe(true);
+  });
+
   it('валидная пассивка с auto', () => {
     const result = validateMechanics(
       {

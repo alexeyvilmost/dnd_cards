@@ -203,6 +203,11 @@ const CharacterForge = () => {
     ].filter(Boolean) as string[]),
     [classes, showAllContent, draft.classId, draft.classLevels, draft.level, draft.subclassId, draft.subclassIds],
   );
+  const hiddenRootClassCount = useMemo(() => {
+    const rootCount = classes.filter((entry) => !entry.parent_class_id && !entry.is_subclass).length;
+    const visibleRootCount = visibleClasses.filter((entry) => !entry.parent_class_id && !entry.is_subclass).length;
+    return Math.max(0, rootCount - visibleRootCount);
+  }, [classes, visibleClasses]);
   const visibleBackgrounds = useMemo(
     () => filterEntitiesBySupport(backgrounds, showAllContent, draft.backgroundId ? [draft.backgroundId] : []),
     [backgrounds, showAllContent, draft.backgroundId],
@@ -1352,6 +1357,7 @@ const CharacterForge = () => {
               {act === 'class' && (
                 <>
                 <ClassSection classes={visibleClasses} draft={draft} onSelect={selectClass} assembled={assembled}
+                  showAllContent={showAllContent} hiddenClassCount={hiddenRootClassCount}
                   onToggleSkill={toggleClassSkill} choices={classOtherChoices} ownChoices={classFeatOwnChoices} resolved={draft.resolvedChoices}
                   setResolved={setResolved} ruleState={ruleState} allFeats={visibleFeats} activeFeats={assembled.feats}
                   subclasses={selectableSubclasses} subclassUnlocked={subclassUnlocked} subclassLevel={subclassLevel}
@@ -1668,7 +1674,7 @@ function RaceSection({ races, draft, onSelect, subraces, subraceUnlocked, subrac
   );
 }
 
-function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choices, ownChoices, resolved, setResolved, ruleState, allFeats, activeFeats, subclasses = [], subclassUnlocked = false, subclassLevel = 3, onPickSubclass, onEquipmentOption }: any) {
+function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choices, ownChoices, resolved, setResolved, ruleState, allFeats, activeFeats, subclasses = [], subclassUnlocked = false, subclassLevel = 3, onPickSubclass, onEquipmentOption, showAllContent = false, hiddenClassCount = 0 }: any) {
   const sc = classSkillChoice(assembled);
   const topClasses = (classes as CharacterClass[]).filter((c) => !c.is_subclass);
   const klass = classes.find((c: CharacterClass) => c.id === draft.classId) as CharacterClass | undefined;
@@ -1695,7 +1701,13 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
               supportEntity={c}
             />
           ))}
-          {topClasses.length === 0 && <p className="forge-note">Нет классов в базе.</p>}
+          {topClasses.length === 0 && (
+            <p className="forge-note">
+              {!showAllContent && hiddenClassCount > 0
+                ? `Нет проверенных классов. Фильтр скрывает классы: ${hiddenClassCount}. Включите «Показать все сущности».`
+                : 'Классы ещё не добавлены в каталог.'}
+            </p>
+          )}
         </div>
       </div>
       {klass && (

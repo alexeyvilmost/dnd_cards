@@ -33,6 +33,7 @@ const EffectCreator = () => {
     }
   });
   const [loading, setLoading] = useState(false);
+  const [mechanicsEditorValid, setMechanicsEditorValid] = useState(true);
   const [loadingEffect, setLoadingEffect] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [idError, setIdError] = useState<string | null>(null);
@@ -135,6 +136,10 @@ const EffectCreator = () => {
   };
 
   const onSubmit = async (data: CreatePassiveEffectRequest) => {
+    if (!mechanicsEditorValid) {
+      setError('Исправьте ошибку в механике перед сохранением');
+      return;
+    }
     setLoading(true);
     setError(null);
     setIdError(null);
@@ -479,6 +484,7 @@ const EffectCreator = () => {
                       <MechanicsBuilder
                         value={(watch('mechanics') as Record<string, unknown>) || null}
                         onChange={(m) => setValue('mechanics', m)}
+                        onValidationChange={setMechanicsEditorValid}
                         resourceOptions={registryItems(resourceOptions)}
                         aiContext={{ kind: 'passive_effect', name: watch('name') || '', description: [watch('description'), watch('condition_description')].filter(Boolean).join(' ') }}
                       />
@@ -490,7 +496,7 @@ const EffectCreator = () => {
                 <div className="flex gap-4 pt-4 border-t border-gray-200">
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || !mechanicsEditorValid}
                     className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
                   >
                     {loading ? (isEditMode ? 'Сохранение...' : 'Создание...') : (isEditMode ? 'Сохранить изменения' : 'Создать эффект')}

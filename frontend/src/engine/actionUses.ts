@@ -22,7 +22,12 @@ type Dict = Record<string, unknown>;
 export const ACTION_USES_PREFIX = 'uses_';
 export const SELF_USES_RESOURCE = 'self_uses';
 
-export type ActionUses = { count: number | string; per?: string };
+export type ActionUses = {
+  count: number | string;
+  per?: string;
+  by_level?: Record<string, unknown>;
+  level_source?: unknown;
+};
 
 export type ActionUsesRecoveryResolution =
   | { status: 'legacy' }
@@ -97,7 +102,15 @@ export function usesFromMechanics(mech: Dict | null | undefined): ActionUses | n
   if (!uses || typeof uses !== 'object') return null;
   const count = uses.count;
   if (typeof count !== 'number' && typeof count !== 'string') return null;
-  return { count, per: typeof uses.per === 'string' ? uses.per : undefined };
+  const byLevel = uses.by_level;
+  return {
+    count,
+    per: typeof uses.per === 'string' ? uses.per : undefined,
+    ...(byLevel && typeof byLevel === 'object' && !Array.isArray(byLevel)
+      ? { by_level: byLevel as Record<string, unknown> }
+      : {}),
+    ...(uses.level_source != null ? { level_source: uses.level_source } : {}),
+  };
 }
 
 /** True only when the content explicitly spends its own uses pool. */

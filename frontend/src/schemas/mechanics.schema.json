@@ -1728,6 +1728,25 @@
       "additionalProperties": false,
       "properties": {
         "count": { "$ref": "#/$defs/formula" },
+        "by_level": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "type": "number", "minimum": 0 }
+        },
+        "level_source": {
+          "oneOf": [
+            { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
+            {
+              "type": "object",
+              "required": ["kind", "class_id"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": { "const": "class_level" },
+                "class_id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" }
+              }
+            }
+          ]
+        },
         "per": { "enum": ["turn", "round", "short_rest", "long_rest", "day"] },
         "recharge": { "type": "string" },
         "recovery": {

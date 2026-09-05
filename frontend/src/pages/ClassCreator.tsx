@@ -85,7 +85,7 @@ const ClassCreator = () => {
     }).catch(() => setParentOptions([]));
   }, [editId]);
 
-  const { loadEffects, loadActions } = useEffectActionLoaders();
+  const { loadEffects, loadActions, resolveEffects, resolveActions } = useEffectActionLoaders();
 
   useEffect(() => {
     if (!isEditMode || !editId) return;
@@ -322,6 +322,8 @@ const ClassCreator = () => {
             onChange={setLevelProgression}
             loadEffects={loadEffects}
             loadActions={loadActions}
+            resolveEffects={resolveEffects}
+            resolveActions={resolveActions}
             showAllLevels
           />
         </div>

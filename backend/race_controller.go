@@ -115,7 +115,12 @@ func (rc *RaceController) CreateRace(c *gin.Context) {
 
 	cardNumber := req.CardNumber
 	if cardNumber == "" {
-		cardNumber = generateNumber(rc.db, &Race{}, "RACE")
+		generated, generationErr := generateNumber(rc.db, &Race{}, "RACE")
+		if generationErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации ID вида"})
+			return
+		}
+		cardNumber = generated
 	} else {
 		var existing Race
 		if err := rc.db.Where("card_number = ?", cardNumber).First(&existing).Error; err == nil {

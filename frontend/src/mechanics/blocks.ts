@@ -233,20 +233,29 @@ export const TRIGGER_BLOCKS: Block[] = [
     group: 'trigger',
     fields: [
       { key: 'resources', label: 'Ресурсы', type: 'multiselect', options: ACTIVE_RESOURCES, optionSource: 'resources' },
-      { key: 'uses_count', label: 'Использований', type: 'text', default: 'prof_bonus' },
+      { key: 'uses_count', label: 'Использований (пусто — без лимита)', type: 'text', default: '' },
       { key: 'uses_per', label: 'За период', type: 'select', options: USES_PER, default: 'long_rest' },
     ],
-    defaults: { resources: ['action'], uses_count: 'prof_bonus', uses_per: 'long_rest' },
-    build: (v) => ({
-      mode: 'active',
-      // Экономическая стоимость — из мультиселекта; доп. ресурсы (слот/хиты/предмет) задаёт
-      // отдельный редактор «Доп. стоимость» и дописываются в MechanicsBuilder.
-      cost: ((Array.isArray(v.resources) ? v.resources : []) as unknown[]).map((resource) => ({ resource })),
-      uses: { count: v.uses_count || 'prof_bonus', per: v.uses_per || 'long_rest' },
-    }),
+    defaults: { resources: ['action'], uses_count: '', uses_per: 'long_rest' },
+    build: (v) => {
+      const rawCount = v.uses_count;
+      const count = typeof rawCount === 'string' ? rawCount.trim() : rawCount;
+      const uses = count === '' || count == null
+        ? null
+        : { count, per: v.uses_per || 'long_rest' };
+      return {
+        mode: 'active',
+        // Экономическая стоимость — из мультиселекта; доп. ресурсы (слот/хиты/предмет) задаёт
+        // отдельный редактор «Доп. стоимость» и дописываются в MechanicsBuilder.
+        cost: ((Array.isArray(v.resources) ? v.resources : []) as unknown[]).map((resource) => ({ resource })),
+        ...(uses ? { uses } : {}),
+      };
+    },
     summary: (v) => {
       const resources = (Array.isArray(v.resources) ? v.resources : [v.resource || 'action']).map(String);
-      return `Актив: ${resources.map((r) => labelOf(ACTIVE_RESOURCES, r)).join(' + ')}, ${v.uses_count}/${labelOf(USES_PER, String(v.uses_per))}`;
+      const count = String(v.uses_count ?? '').trim();
+      const limit = count ? `${count}/${labelOf(USES_PER, String(v.uses_per))}` : 'без лимита';
+      return `Актив: ${resources.map((r) => labelOf(ACTIVE_RESOURCES, r)).join(' + ')}, ${limit}`;
     },
   },
   {
@@ -783,8 +792,9 @@ export const EFFECT_BLOCKS: Block[] = [
     build: (v) => {
       try {
         return JSON.parse(String(v.json || '{}'));
-      } catch {
-        return { kind: 'narrative', description: 'Invalid JSON' };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Некорректный JSON';
+        throw new Error(`Сырой JSON эффекта не разобран: ${message}`);
       }
     },
     summary: () => 'Сырой JSON',
@@ -1005,6 +1015,68 @@ export type DeserializedMechanics = {
   effectEntries: Array<{ id: string; blockId: string; values: Dict }>;
 };
 
+/** Собирает механику из полного состояния редактора, включая общие поля вне блоков. */
+export function buildDeserializedMechanics(state: DeserializedMechanics): Dict | null {
+  const base = buildMechanics(
+    state.triggerId,
+    state.triggerValues,
+    state.effectEntries.map(({ blockId, values }) => ({ blockId, values })),
+  ) as Dict | null;
+  if (!base) return null;
+
+  const activation = base.activation as Dict;
+  const existing = (activation.requirements as Dict[] | undefined) ?? [];
+  const levelRequirement = state.minLevel !== '' && Number(state.minLevel) > 0
+    ? { type: 'level', min_level: Number(state.minLevel) }
+    : existing.find((row) => row.type === 'level');
+  const requirements = [
+    ...(levelRequirement ? [levelRequirement] : []),
+    ...existing.filter((row) => row.type !== 'level'),
+    ...reqRowsToRequirements(state.requirements),
+  ];
+  if (requirements.length) activation.requirements = requirements;
+  else delete activation.requirements;
+
+  if (state.itemWhile) activation.while = state.itemWhile;
+  const contextualCost = state.consumesSelf ? [{ resource: 'self_item' }] : [];
+  const extraCost = costRowsToCost(state.extraCost);
+  if (contextualCost.length || extraCost.length) {
+    activation.cost = [...((activation.cost as unknown[]) ?? []), ...contextualCost, ...extraCost];
+  }
+  if (state.recharge.trim()) {
+    base.uses = { ...((base.uses as Dict | undefined) ?? {}), recharge: state.recharge.trim() };
+  }
+  if (state.ammo.trim()) base.ammo = state.ammo.trim();
+  const targeting = targetingToJson(state.targeting);
+  if (targeting) base.targeting = targeting;
+  const duration = durationToJson(state.duration);
+  if (duration) base.duration = duration;
+  return base;
+}
+
+function canonicalizeJson(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalizeJson);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(
+    Object.entries(value as Dict)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, entry]) => [key, canonicalizeJson(entry)]),
+  );
+}
+
+/** True только когда переход JSON → блоки → JSON сохраняет весь документ и порядок. */
+export function mechanicsRoundTripIsLossless(mechanics: Dict | null): boolean {
+  if (mechanics == null) return true;
+  const deserialized = deserializeMechanics(mechanics);
+  if (!deserialized) return false;
+  try {
+    return JSON.stringify(canonicalizeJson(buildDeserializedMechanics(deserialized)))
+      === JSON.stringify(canonicalizeJson(mechanics));
+  } catch {
+    return false;
+  }
+}
+
 // mechanics-объект -> состояние конструктора. Неузнанное падает в eff_raw_json (сырой JSON).
 export function deserializeMechanics(m: Dict | null | undefined): DeserializedMechanics | null {
   if (!m || typeof m !== 'object') return null;
@@ -1029,7 +1101,7 @@ export function deserializeMechanics(m: Dict | null | undefined): DeserializedMe
     const cost = Array.isArray(act.cost) ? (act.cost as Dict[]) : [];
     // В мультиселект — только простая экономика; доп. ресурсы уходят в extraCost (ниже).
     tv.resources = cost.filter(isPlainActiveCost).map((c) => c.resource);
-    tv.uses_count = uses.count ?? 'prof_bonus';
+    tv.uses_count = uses.count ?? '';
     tv.uses_per = uses.per ?? 'long_rest';
   } else if (act.mode === 'reaction') {
     toCustom((act.trigger || {}) as Dict);

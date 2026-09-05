@@ -6,12 +6,11 @@ import {
   TRIGGER_BLOCKS,
   EFFECT_BLOCKS,
   BLOCK_MAP,
-  buildMechanics,
+  buildDeserializedMechanics,
+  mechanicsRoundTripIsLossless,
   summarizeMechanics,
   defaultValuesForBlock,
   deserializeMechanics,
-  costRowsToCost,
-  reqRowsToRequirements,
   targetingToJson,
   durationToJson,
   type Field,
@@ -20,6 +19,7 @@ import {
   type FilterRow,
   type TargetingForm,
   type DurationForm,
+  type DeserializedMechanics,
 } from '../../mechanics/blocks';
 import { DAMAGE_TYPE_OPTIONS } from '../../mechanics/registries';
 import type { Cond } from '../../mechanics/predicates';
@@ -45,6 +45,7 @@ export interface AiMechanicsContext {
 interface MechanicsBuilderProps {
   value: Mechanics | Record<string, unknown> | null;
   onChange: (m: Record<string, unknown> | null) => void;
+  onValidationChange?: (valid: boolean) => void;
   resourceOptions?: { id: string; label: string }[];
   /** Если передан — показывается кнопка «AI»: генерация механики по описанию. */
   aiContext?: AiMechanicsContext;
@@ -53,7 +54,7 @@ interface MechanicsBuilderProps {
 let entryCounter = 0;
 const newEntryId = () => `eff_${++entryCounter}`;
 
-const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: MechanicsBuilderProps) => {
+const MechanicsBuilder = ({ value, onChange, onValidationChange, resourceOptions = [], aiContext }: MechanicsBuilderProps) => {
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [triggerId, setTriggerId] = useState('trg_passive');
@@ -72,6 +73,7 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
   const [mode, setMode] = useState<'blocks' | 'json'>('blocks');
   const [jsonText, setJsonText] = useState('');
   const [jsonError, setJsonError] = useState<string | null>(null);
+  const [blockModeError, setBlockModeError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   // dirty=true только после правки пользователя — чтобы открытие эффекта не перезаписывало механику
   const dirty = useRef(false);
@@ -115,46 +117,39 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
     if (value) {
       applyDeserialized(value as Record<string, unknown>);
       setJsonText(JSON.stringify(value, null, 2));
+      if (!mechanicsRoundTripIsLossless(value as Record<string, unknown>)) {
+        setMode('json');
+        setBlockModeError('Эта механика содержит поля или порядок, которые блоковый редактор пока не сохраняет. Используйте сырой JSON.');
+      }
     }
     setHydrated(true);
   }, [value, hydrated]);
 
-  const built = useMemo(() => {
-    const base = buildMechanics(triggerId, triggerValues, effectEntries.map((e) => ({
-      blockId: e.blockId,
-      values: e.values,
-    })));
-    if (!base) return null;
-    const act = base.activation as Record<string, unknown>;
-    // Не более одного требования level: поле «Мин. уровень» имеет приоритет над блоком trg_level.
-    const existing = (act.requirements as Array<Record<string, unknown>>) || [];
-    const levelReq = (minLevel !== '' && Number(minLevel) > 0)
-      ? { type: 'level', min_level: Number(minLevel) }
-      : existing.find((r) => r.type === 'level');
-    const reqs = [
-      ...(levelReq ? [levelReq] : []),
-      ...existing.filter((r) => r.type !== 'level'),
-      ...reqRowsToRequirements(requirements),
-    ];
-    if (reqs.length) act.requirements = reqs; else delete act.requirements;
-    // S3-гейты вплетаем в собранную механику. Саморасход — явная
-    // относительная цена, которую адаптер предмета связывает с card id.
-    if (itemWhile) act.while = itemWhile;
-    const extra = costRowsToCost(extraCost);
-    const contextualCost = consumesSelf ? [{ resource: 'self_item' }] : [];
-    if (extra.length || contextualCost.length) {
-      act.cost = [...((act.cost as unknown[]) || []), ...contextualCost, ...extra];
+  const buildResult = useMemo(() => {
+    const state: DeserializedMechanics = {
+      triggerId,
+      triggerValues,
+      effectEntries,
+      minLevel,
+      itemWhile,
+      consumesSelf,
+      ammo,
+      recharge,
+      extraCost,
+      requirements,
+      targeting,
+      duration,
+    };
+    try {
+      return { built: buildDeserializedMechanics(state), error: null as string | null };
+    } catch (error) {
+      return {
+        built: null,
+        error: error instanceof Error ? error.message : 'Механику не удалось собрать',
+      };
     }
-    if (recharge.trim()) {
-      base.uses = { ...((base.uses as Record<string, unknown>) || {}), recharge: recharge.trim() };
-    }
-    if (ammo.trim()) base.ammo = ammo.trim();
-    const tgt = targetingToJson(targeting);
-    if (tgt) base.targeting = tgt;
-    const dur = durationToJson(duration);
-    if (dur) base.duration = dur;
-    return base;
   }, [triggerId, triggerValues, effectEntries, minLevel, itemWhile, consumesSelf, ammo, recharge, extraCost, requirements, targeting, duration]);
+  const built = buildResult.built;
 
   const summary = useMemo(
     () => summarizeMechanics(triggerId, triggerValues, effectEntries.map((e) => ({ blockId: e.blockId, values: e.values }))),
@@ -174,14 +169,23 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
   // В режиме блоков отдаём собранную механику — только после правок пользователя,
   // чтобы открытие существующего эффекта не перезаписывало его механику.
   useEffect(() => {
-    if (!hydrated || !dirty.current || mode !== 'blocks') return;
+    if (!hydrated || !dirty.current || mode !== 'blocks' || buildResult.error) return;
     emit(built);
 
-  }, [built, hydrated, mode]);
+  }, [built, buildResult.error, hydrated, mode]);
+
+  useEffect(() => {
+    onValidationChange?.(mode === 'json' ? !jsonError : !buildResult.error);
+  }, [mode, jsonError, buildResult.error, onValidationChange]);
 
   const switchToJson = () => {
-    setJsonText(JSON.stringify(built ?? value ?? null, null, 2));
+    if (buildResult.error) {
+      setBlockModeError(buildResult.error);
+      return;
+    }
+    setJsonText(JSON.stringify(dirty.current ? built : (value ?? built ?? null), null, 2));
     setJsonError(null);
+    setBlockModeError(null);
     setMode('json');
   };
 
@@ -189,17 +193,27 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
     // Разбираем текущий JSON обратно в блоки
     try {
       const parsed = jsonText.trim() ? JSON.parse(jsonText) : null;
+      if (parsed !== null && (typeof parsed !== 'object' || Array.isArray(parsed))) {
+        setJsonError('Корень механики должен быть JSON-объектом');
+        return;
+      }
+      if (!mechanicsRoundTripIsLossless(parsed)) {
+        setBlockModeError('Переход в блоки отменён: блоковый редактор потерял бы поля или изменил порядок эффектов.');
+        return;
+      }
       applyDeserialized(parsed);
       setJsonError(null);
-    } catch {
-      // Если JSON не разобрался — оставляем блоки как есть
+      setBlockModeError(null);
+      setMode('blocks');
+    } catch (error) {
+      setJsonError(error instanceof Error ? error.message : 'Некорректный JSON');
     }
-    setMode('blocks');
   };
 
   const onJsonChange = (text: string) => {
     setJsonText(text);
     markDirty();
+    setBlockModeError(null);
     if (!text.trim()) {
       setJsonError(null);
       onChange(null);
@@ -366,10 +380,17 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
         extra: aiContext.extra ?? '',
       });
       const mech = data.mechanics;
-      applyDeserialized(mech);
       setJsonText(JSON.stringify(mech, null, 2));
       markDirty();
       onChange(mech);
+      if (mechanicsRoundTripIsLossless(mech)) {
+        applyDeserialized(mech);
+        setMode('blocks');
+        setBlockModeError(null);
+      } else {
+        setMode('json');
+        setBlockModeError('Сгенерированная механика содержит поля, которые блоковый редактор пока не сохраняет. Продолжайте в JSON.');
+      }
     } catch (e) {
       console.error(e);
       const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error;
@@ -412,6 +433,10 @@ const MechanicsBuilder = ({ value, onChange, resourceOptions = [], aiContext }: 
         )}
         {aiError && <span className="text-xs text-red-600">{aiError}</span>}
       </div>
+      {blockModeError && <p className="text-xs text-amber-700">{blockModeError}</p>}
+      {mode === 'blocks' && buildResult.error && (
+        <p className="text-xs text-red-600">Ошибка механики: {buildResult.error}</p>
+      )}
 
       {mode === 'json' ? (
         <div>

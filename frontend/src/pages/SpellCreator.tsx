@@ -92,6 +92,7 @@ const SpellCreator = () => {
   const [mechanics, setMechanics] = useState<Record<string, unknown> | null>(null);
 
   const [loading, setLoading] = useState(false);
+  const [mechanicsEditorValid, setMechanicsEditorValid] = useState(true);
   const [loadingSpell, setLoadingSpell] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [idError, setIdError] = useState<string | null>(null);
@@ -191,6 +192,10 @@ const SpellCreator = () => {
   };
 
   const onSubmit = async (data: ScalarForm) => {
+    if (!mechanicsEditorValid) {
+      setError('Исправьте ошибку в механике перед сохранением');
+      return;
+    }
     setLoading(true);
     setError(null);
     setIdError(null);
@@ -559,6 +564,7 @@ const SpellCreator = () => {
                       <MechanicsBuilder
                         value={mechanics}
                         onChange={setMechanics}
+                        onValidationChange={setMechanicsEditorValid}
                         aiContext={{
                           kind: 'spell',
                           name: fd.name || '',
@@ -612,7 +618,7 @@ const SpellCreator = () => {
 
                 {/* Кнопки */}
                 <div className="flex gap-4 pt-4 border-t border-gray-200">
-                  <button type="submit" disabled={loading} className="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400">
+                  <button type="submit" disabled={loading || !mechanicsEditorValid} className="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400">
                     {loading ? (isEditMode ? 'Сохранение...' : 'Создание...') : (isEditMode ? 'Сохранить изменения' : 'Создать заклинание')}
                   </button>
                   <button type="button" onClick={() => navigate('/?type=spells')} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">

@@ -1,6 +1,6 @@
 import type { AssembledCharacter } from './assemble';
 import { collectActionUsesPools, type GrantedAction } from './actionSheet';
-import { hitDiceResourceKey, initResources, resolveByLevel, resolveCount, resourceLevel } from '../engine/resources';
+import { hitDiceResourceKey, initResources, resolveCount, resolveLeveledCount, resourceLevel } from '../engine/resources';
 import { freeuseKey, type FreeuseSpec } from '../engine/freeuse';
 import type { ValueBreakdown } from '../mvp/contracts';
 import type { CharacterContext, RollModifier, RuntimeState } from '../mvp/contracts';
@@ -108,8 +108,7 @@ export function resourceMaximumBreakdown(
   } else {
     const classDef = (assembled.klass?.resources as Dict | null | undefined)?.[resourceKey] as Dict | undefined;
     if (classDef) {
-      const value = resolveByLevel(classDef.by_level, resourceLevel(classDef, ctx))
-        ?? resolveCount(classDef.count ?? classDef.max, ctx);
+      const value = resolveLeveledCount(classDef, ctx);
       if (value > 0) {
         const fromSubclass = Boolean((assembled.subclass?.resources as Dict | null | undefined)?.[resourceKey]);
         parts.push({
@@ -124,7 +123,7 @@ export function resourceMaximumBreakdown(
 
   const usesPool = collectActionUsesPools(assembled).find((pool) => pool.key === resourceKey);
   if (usesPool) {
-    parts = [{ value: resolveCount(usesPool.count, ctx), source: usesPool.source, reason: 'лимит использований' }];
+    parts = [{ value: resolveLeveledCount(usesPool, ctx), source: usesPool.source, reason: 'лимит использований' }];
   }
 
   const freeuse = freeuseSpells.find((spec) => freeuseKey(spec.spell) === resourceKey);
@@ -215,7 +214,7 @@ export function syncRuntimeResources(
   if (classRes) {
     for (const [id, def] of Object.entries(classRes)) {
       const row = def as Dict;
-      const count = resolveByLevel(row.by_level, resourceLevel(row, ctx)) ?? resolveCount(row.count ?? row.max, ctx);
+      const count = resolveLeveledCount(row, ctx);
       if (count > 0) addResourceSource(sources, id, count, assembled.klass?.name || 'Класс', 'классовый максимум');
     }
   }
@@ -227,7 +226,7 @@ export function syncRuntimeResources(
 
   // Виртуальные пулы использований действий (mechanics.uses → uses_<key>).
   for (const pool of collectActionUsesPools(assembled, itemCards, grantedActions)) {
-    const count = resolveCount(pool.count, ctx);
+    const count = resolveLeveledCount(pool, ctx);
     if (count > 0) {
       fresh.maxResources[pool.key] = count;
       fresh.resources[pool.key] = count;

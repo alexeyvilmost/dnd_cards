@@ -423,6 +423,8 @@ export type ActionUsesPool = {
   key: string;
   count: number | string;
   per?: string;
+  by_level?: Record<string, unknown>;
+  level_source?: unknown;
   source: string;
   /** undefined = legacy uses.per; null = explicit invalid recovery (fail closed). */
   recovery?: ResourceRestRecovery | null;
@@ -462,6 +464,8 @@ export function collectActionUsesPools(
       key,
       count: uses.count,
       per: uses.per,
+      by_level: uses.by_level,
+      level_source: uses.level_source,
       source,
       ...(recovery.status === 'configured' ? { recovery: recovery.recovery } : {}),
       ...(recovery.status === 'invalid' ? { recovery: null } : {}),

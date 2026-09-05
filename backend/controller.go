@@ -22,8 +22,6 @@ const maxListLimit = 500
 // offset API. Bounding page also prevents integer overflow in offset math.
 const maxListPage = 1_000_000
 
-var generatedCardNumberPattern = regexp.MustCompile(`^CARD-([0-9]+)$`)
-
 // parseListPagination читает page/limit из query с дефолтами и клампит их
 // в разумные границы. Общий помощник для всех списковых хендлеров справочников.
 func parseListPagination(c *gin.Context) (page, limit, offset int) {
@@ -960,36 +958,33 @@ func (cc *CardController) ExportCards(c *gin.Context) {
 
 // generateCardNumber - генерация уникального номера карточки
 func generateCardNumber(db *gorm.DB) (string, error) {
-	var cardNumbers []string
-	if err := db.Unscoped().Model(&Card{}).
-		Where("card_number LIKE ?", "CARD-%").
-		Pluck("card_number", &cardNumbers).Error; err != nil {
-		return "", fmt.Errorf("получить номера карт: %w", err)
-	}
-
-	return nextGeneratedCardNumber(cardNumbers), nil
+	return generateNumber(db, &Card{}, "CARD")
 }
 
 func nextGeneratedCardNumber(cardNumbers []string) string {
-	maxNumber := 0
-	for _, cardNumber := range cardNumbers {
-		matches := generatedCardNumberPattern.FindStringSubmatch(cardNumber)
-		if len(matches) != 2 {
-			continue
-		}
-		number, err := strconv.Atoi(matches[1])
-		if err == nil && number > maxNumber {
-			maxNumber = number
-		}
-	}
-
-	return fmt.Sprintf("CARD-%04d", maxNumber+1)
+	return nextGeneratedNumber(cardNumbers, "CARD")
 }
 
 // ActionController - контроллер для работы с действиями
 type ActionController struct {
 	db            *gorm.DB
 	openaiService *OpenAIService
+}
+
+// HTML-select передаёт пустую строку для «без перезарядки». В БД это NULL:
+// пустое enum-значение нарушает CHECK constraint и не несёт отдельного смысла.
+func normalizeActionRecharge(recharge **ActionRecharge, custom **string) {
+	if recharge != nil && *recharge != nil && strings.TrimSpace(string(**recharge)) == "" {
+		*recharge = nil
+	}
+	if custom != nil && *custom != nil {
+		trimmed := strings.TrimSpace(**custom)
+		if trimmed == "" {
+			*custom = nil
+		} else {
+			*custom = &trimmed
+		}
+	}
 }
 
 // NewActionController - создание нового контроллера действий
@@ -1128,6 +1123,7 @@ func (ac *ActionController) CreateAction(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса", "details": err.Error()})
 		return
 	}
+	normalizeActionRecharge(&req.Recharge, &req.RechargeCustom)
 
 	log.Printf("🔍 [CREATE_ACTION] Получен запрос: Name=%s, Rarity=%s, ActionType=%s, Resources=%v",
 		req.Name, req.Rarity, req.ActionType, req.Resources)
@@ -1172,7 +1168,12 @@ func (ac *ActionController) CreateAction(c *gin.Context) {
 	cardNumber := req.CardNumber
 	if cardNumber == "" {
 		// Если ID не указан, генерируем автоматически
-		cardNumber = ac.generateActionNumber()
+		generated, generationErr := generateNumber(ac.db, &Action{}, "ACTION")
+		if generationErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации ID действия"})
+			return
+		}
+		cardNumber = generated
 		log.Printf("🔍 [CREATE_ACTION] CardNumber не указан, сгенерирован автоматически: %s", cardNumber)
 	} else {
 		log.Printf("🔍 [CREATE_ACTION] Проверка уникальности card_number: %s", cardNumber)
@@ -1290,6 +1291,7 @@ func (ac *ActionController) UpdateAction(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
 		return
 	}
+	normalizeActionRecharge(&req.Recharge, &req.RechargeCustom)
 
 	var action Action
 	if err := ac.db.Where("id = ?", id).First(&action).Error; err != nil {
@@ -1442,22 +1444,6 @@ func (ac *ActionController) DeleteAction(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Действие удалено"})
-}
-
-// generateActionNumber - генерация номера действия
-func (ac *ActionController) generateActionNumber() string {
-	var maxAction Action
-	// Фильтруем по префиксу, иначе чужой card_number (без ACTION-) ломает счётчик и даёт коллизию.
-	ac.db.Unscoped().Where("card_number LIKE ?", "ACTION-%").Order("card_number DESC").First(&maxAction)
-
-	nextNum := 1
-	if strings.HasPrefix(maxAction.CardNumber, "ACTION-") {
-		if num, err := strconv.Atoi(strings.TrimPrefix(maxAction.CardNumber, "ACTION-")); err == nil {
-			nextNum = num + 1
-		}
-	}
-
-	return fmt.Sprintf("ACTION-%04d", nextNum)
 }
 
 // EffectController - контроллер для работы с эффектами
@@ -1633,7 +1619,12 @@ func (ec *EffectController) CreateEffect(c *gin.Context) {
 	cardNumber := req.CardNumber
 	if cardNumber == "" {
 		// Если ID не указан, генерируем автоматически
-		cardNumber = ec.generateEffectNumber()
+		generated, generationErr := generateNumber(ec.db, &Effect{}, "EFFECT")
+		if generationErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации ID эффекта"})
+			return
+		}
+		cardNumber = generated
 	} else {
 		// Проверяем уникальность указанного ID
 		var existingEffect Effect
@@ -1858,20 +1849,4 @@ func (ec *EffectController) DeleteEffect(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Эффект удален"})
-}
-
-// generateEffectNumber - генерация номера эффекта
-func (ec *EffectController) generateEffectNumber() string {
-	var maxEffect Effect
-	// Фильтруем по префиксу, иначе чужой card_number (без EFFECT-) ломает счётчик и даёт коллизию.
-	ec.db.Unscoped().Where("card_number LIKE ?", "EFFECT-%").Order("card_number DESC").First(&maxEffect)
-
-	nextNum := 1
-	if strings.HasPrefix(maxEffect.CardNumber, "EFFECT-") {
-		if num, err := strconv.Atoi(strings.TrimPrefix(maxEffect.CardNumber, "EFFECT-")); err == nil {
-			nextNum = num + 1
-		}
-	}
-
-	return fmt.Sprintf("EFFECT-%04d", nextNum)
 }

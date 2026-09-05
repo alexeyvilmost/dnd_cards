@@ -190,7 +190,12 @@ func (sc *SpellController) CreateSpell(c *gin.Context) {
 	// Проверка уникальности card_number (ID заклинания)
 	cardNumber := req.CardNumber
 	if cardNumber == "" {
-		cardNumber = sc.generateSpellNumber()
+		generated, generationErr := generateNumber(sc.db, &Spell{}, "SPELL")
+		if generationErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации ID заклинания"})
+			return
+		}
+		cardNumber = generated
 	} else {
 		var existingSpell Spell
 		if err := sc.db.Where("card_number = ?", cardNumber).First(&existingSpell).Error; err == nil {
@@ -435,22 +440,4 @@ func (sc *SpellController) DeleteSpell(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Заклинание удалено"})
-}
-
-// generateSpellNumber - генерация номера заклинания (SPELL-XXXX)
-func (sc *SpellController) generateSpellNumber() string {
-	var maxSpell Spell
-	sc.db.Unscoped().Where("card_number LIKE ?", "SPELL-%").Order("card_number DESC").First(&maxSpell)
-
-	nextNum := 1
-	if maxSpell.CardNumber != "" {
-		if len(maxSpell.CardNumber) >= 10 { // SPELL-XXXX
-			numStr := maxSpell.CardNumber[6:10]
-			if num, err := strconv.Atoi(numStr); err == nil {
-				nextNum = num + 1
-			}
-		}
-	}
-
-	return fmt.Sprintf("SPELL-%04d", nextNum)
 }

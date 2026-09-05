@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -123,7 +122,12 @@ func (fc *FeatController) CreateFeat(c *gin.Context) {
 
 	cardNumber := req.CardNumber
 	if cardNumber == "" {
-		cardNumber = generateNumber(fc.db, &Feat{}, "FEAT")
+		generated, generationErr := generateNumber(fc.db, &Feat{}, "FEAT")
+		if generationErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации ID черты"})
+			return
+		}
+		cardNumber = generated
 	} else {
 		var existing Feat
 		if err := fc.db.Where("card_number = ?", cardNumber).First(&existing).Error; err == nil {
@@ -347,7 +351,12 @@ func (bc *BackgroundController) CreateBackground(c *gin.Context) {
 
 	cardNumber := req.CardNumber
 	if cardNumber == "" {
-		cardNumber = generateNumber(bc.db, &Background{}, "BG")
+		generated, generationErr := generateNumber(bc.db, &Background{}, "BG")
+		if generationErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации ID предыстории"})
+			return
+		}
+		cardNumber = generated
 	} else {
 		var existing Background
 		if err := bc.db.Where("card_number = ?", cardNumber).First(&existing).Error; err == nil {
@@ -469,24 +478,4 @@ func (bc *BackgroundController) DeleteBackground(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Предыстория удалена"})
-}
-
-// generateNumber генерирует card_number вида PREFIX-NNNN для переданной модели.
-func generateNumber(db *gorm.DB, model interface{}, prefix string) string {
-	type row struct{ CardNumber string }
-	var r row
-	db.Unscoped().Model(model).
-		Where("card_number LIKE ?", prefix+"-%").
-		Order("card_number DESC").
-		Limit(1).
-		Scan(&r)
-
-	next := 1
-	pfx := prefix + "-"
-	if strings.HasPrefix(r.CardNumber, pfx) {
-		if n, err := strconv.Atoi(strings.TrimPrefix(r.CardNumber, pfx)); err == nil {
-			next = n + 1
-		}
-	}
-	return fmt.Sprintf("%s-%04d", prefix, next)
 }

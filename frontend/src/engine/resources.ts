@@ -6,6 +6,13 @@ import { evaluate, type FormulaContext } from './formula';
 
 type Dict = Record<string, unknown>;
 
+export type LeveledCountDefinition = {
+  count?: unknown;
+  max?: unknown;
+  by_level?: unknown;
+  level_source?: unknown;
+};
+
 const TURN_RESOURCES: Record<string, number> = {
   action: 1,
   bonus_action: 1,
@@ -68,9 +75,21 @@ export function resolveByLevel(byLevel: unknown, level: number): number | null {
 }
 
 /** A class-owned resource scales by that class level, never by total character level. */
-export function resourceLevel(row: Dict, ctx: CharacterContext): number {
-  const source = String(row.level_source ?? '');
+export function resourceLevel(row: LeveledCountDefinition, ctx: CharacterContext): number {
+  const declaration = row.level_source;
+  const source = typeof declaration === 'string'
+    ? declaration
+    : (declaration && typeof declaration === 'object'
+      && (declaration as Dict).kind === 'class_level'
+      ? String((declaration as Dict).class_id ?? '')
+      : '');
   return source && ctx.classLevels ? Number(ctx.classLevels[source] ?? 0) : ctx.level;
+}
+
+/** Общий примитив счётчика: ступени по уровню имеют приоритет над формулой count/max. */
+export function resolveLeveledCount(row: LeveledCountDefinition, ctx: CharacterContext): number {
+  return resolveByLevel(row.by_level, resourceLevel(row, ctx))
+    ?? resolveCount(row.count ?? row.max, ctx);
 }
 
 export function buildResourceRecharge(classResources: Dict | null): Record<string, string> {
@@ -117,8 +136,7 @@ export function initResources(
   if (classResources) {
     for (const [id, def] of Object.entries(classResources)) {
       const row = def as Dict;
-      const count = resolveByLevel(row.by_level, resourceLevel(row, ctx))
-        ?? resolveCount(row.count ?? row.max, ctx);
+      const count = resolveLeveledCount(row, ctx);
       if (count > 0) {
         maxResources[id] = count;
         resources[id] = count;

@@ -1238,6 +1238,12 @@ func GetAllMigrations() []Migration {
 			Up:          materializeMobileEmanations,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     secondWindScalingMigrationVersion,
+			Description: "Scale Second Wind uses by Fighter level",
+			Up:          repairSecondWindScaling,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

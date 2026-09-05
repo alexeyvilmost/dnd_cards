@@ -173,6 +173,29 @@ describe('MM4 — resource maximum sources', () => {
     }]);
   });
 
+  it('scales Second Wind uses by Fighter level in a multiclass', () => {
+    const secondWind = {
+      id: 'second-wind-id',
+      card_number: 'ACT-second-wind',
+      name: 'Второе дыхание',
+      mechanics: {
+        activation: { mode: 'active', cost: [{ resource: 'bonus_action' }, { resource: 'self_uses' }] },
+        uses: { count: 2, by_level: { 1: 2, 4: 3 }, level_source: 'warrior', per: 'long_rest' },
+        effects: [{ resolution: 'auto', result: [{ kind: 'healing', amount: '1d10 + class_level:warrior' }] }],
+      },
+    } as unknown as Action;
+    const fighterAssembly = {
+      ...assembled,
+      actions: [{ action: secondWind, origin: { kind: 'class', id: 'fighter', name: 'Воин' } }],
+    } as unknown as AssembledCharacter;
+
+    const fighterOne = syncRuntimeResources({ ...ctx, classLevels: { warrior: 1, wizard: 4 } }, fighterAssembly);
+    expect(fighterOne.maxResources['uses_ACT-second-wind']).toBe(2);
+
+    const fighterFour = syncRuntimeResources({ ...ctx, level: 8, classLevels: { warrior: 4, wizard: 4 } }, fighterAssembly);
+    expect(fighterFour.maxResources['uses_ACT-second-wind']).toBe(3);
+  });
+
   it('adds a newly gained secondary-class Hit Die without restoring spent dice', () => {
     const multiclass = {
       ...assembled,

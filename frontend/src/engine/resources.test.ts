@@ -4,7 +4,7 @@
  * т.е. заклинания 2+ круга перестают быть серыми (costKey spell_slot_N существует).
  */
 import { describe, expect, it } from 'vitest';
-import { buildResourceRecovery, initResources, resolveByLevel, maxAvailableSpellSlotLevel } from './resources';
+import { buildResourceRecovery, initResources, resolveByLevel, resolveLeveledCount, maxAvailableSpellSlotLevel } from './resources';
 import type { CharacterContext } from '../mvp/contracts';
 
 // Сетка полного кастера PHB 2024 (как залито классам Бард/Жрец/Друид/Чародей/Волшебник).
@@ -111,5 +111,28 @@ describe('partial class-resource recovery', () => {
     })).toEqual({
       wild_shape: { short_rest: { mode: 'fixed', amount: 1 }, long_rest: { mode: 'full' } },
     });
+  });
+});
+
+describe('общий уровневый счётчик', () => {
+  const multiclassContext: CharacterContext = {
+    ...ctxAt(5),
+    classLevels: { warrior: 1, wizard: 4 },
+  };
+
+  it('масштабирует по объявленному уровню класса, а не общему уровню', () => {
+    expect(resolveLeveledCount({
+      count: 2,
+      by_level: { 1: 2, 4: 3 },
+      level_source: 'warrior',
+    }, multiclassContext)).toBe(2);
+  });
+
+  it('понимает типизированный class_level source', () => {
+    expect(resolveLeveledCount({
+      count: 2,
+      by_level: { 1: 2, 4: 3 },
+      level_source: { kind: 'class_level', class_id: 'wizard' },
+    }, multiclassContext)).toBe(3);
   });
 });

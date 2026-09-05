@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { deserializeMechanics, reqRowsToRequirements } from './blocks';
+import {
+  BLOCK_MAP,
+  buildDeserializedMechanics,
+  deserializeMechanics,
+  mechanicsRoundTripIsLossless,
+  reqRowsToRequirements,
+} from './blocks';
 import { normalizeCond, normalizeWhen, type Cond } from './predicates';
 
 // Регрессии по находкам адверсариал-ревью конструктора (все round-trip без потерь).
@@ -29,6 +35,14 @@ describe('eff_save_damage — только точный паттерн (инач
 });
 
 describe('trigger uses не теряется', () => {
+  it('активная способность без uses остаётся безлимитной', () => {
+    const mechanics = { activation: { mode: 'active', cost: [{ resource: 'action' }] }, effects: [] };
+    const deserialized = deserializeMechanics(mechanics);
+    expect(deserialized?.triggerValues.uses_count).toBe('');
+    expect(buildDeserializedMechanics(deserialized!)).toEqual(mechanics);
+    expect(mechanicsRoundTripIsLossless(mechanics)).toBe(true);
+  });
+
   it('безлимитный 0-hp (без uses) → trg_custom, не капается 1/отдых', () => {
     const d = deserializeMechanics({ activation: { mode: 'triggered', trigger: { event: 'reduced_to_0_hp', timing: 'replaces' } }, effects: [] });
     expect(d?.triggerId).toBe('trg_custom');
@@ -55,6 +69,33 @@ describe('trigger uses не теряется', () => {
   it('d20=1 без uses → trg_d20_one', () => {
     const d = deserializeMechanics({ activation: { mode: 'triggered', trigger: { event: 'attack_roll_made', timing: 'replaces', circumstances: [{ kind: 'd20_equals', value: 1 }] } }, effects: [] });
     expect(d?.triggerId).toBe('trg_d20_one');
+  });
+});
+
+describe('защита lossless-перехода в блоки', () => {
+  it('обнаруживает изменение порядка auto/save взаимодействий', () => {
+    const mechanics = {
+      activation: { mode: 'active', cost: [{ resource: 'action' }] },
+      effects: [
+        { resolution: 'save', who: 'target', ability: 'dex', dc: '13', on_fail: [], on_success: [] },
+        { resolution: 'auto', result: [{ kind: 'narrative', description: 'после спасброска' }] },
+      ],
+    };
+    expect(mechanicsRoundTripIsLossless(mechanics)).toBe(false);
+  });
+
+  it('обнаруживает неизвестное поле верхнего уровня', () => {
+    const mechanics = {
+      activation: { mode: 'passive' },
+      effects: [],
+      scaling: { by_level: { 5: '2d6' } },
+    };
+    expect(mechanicsRoundTripIsLossless(mechanics)).toBe(false);
+  });
+
+  it('не превращает сломанный сырой JSON в narrative', () => {
+    expect(() => BLOCK_MAP.eff_raw_json.build({ json: '{broken' }))
+      .toThrow(/Сырой JSON эффекта не разобран/);
   });
 });
 

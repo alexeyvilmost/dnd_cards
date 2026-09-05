@@ -40,6 +40,7 @@ const ActionCreator = () => {
     }
   });
   const [loading, setLoading] = useState(false);
+  const [mechanicsEditorValid, setMechanicsEditorValid] = useState(true);
   const [loadingAction, setLoadingAction] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [idError, setIdError] = useState<string | null>(null);
@@ -163,6 +164,10 @@ const ActionCreator = () => {
   };
 
   const onSubmit = async (data: CreateActionRequest) => {
+    if (!mechanicsEditorValid) {
+      setError('Исправьте ошибку в механике перед сохранением');
+      return;
+    }
     setLoading(true);
     setError(null);
     setIdError(null);
@@ -246,9 +251,17 @@ const ActionCreator = () => {
         // Создание нового действия
         
         // Добавляем resources в данные перед отправкой
-        const submitData = {
+        const submitData: CreateActionRequest = {
           ...data,
+          name_en: data.name_en?.trim() || null,
+          detailed_description: data.detailed_description || null,
           resources: selectedResources.length > 0 ? selectedResources : null,
+          distance: data.distance || null,
+          recharge: data.recharge || null,
+          recharge_custom: data.recharge_custom?.trim() || null,
+          type: data.type || null,
+          author: data.author || 'Admin',
+          source: data.source || null,
         };
         await actionsApi.createAction(submitData);
         navigate('/?type=actions');
@@ -517,6 +530,7 @@ const ActionCreator = () => {
                   <MechanicsBuilder
                     value={(watch('mechanics') as Record<string, unknown>) || null}
                     onChange={(m) => setValue('mechanics', m)}
+                    onValidationChange={setMechanicsEditorValid}
                     resourceOptions={resourceItems}
                     aiContext={{ kind: 'action', name: watch('name') || '', description: watch('description') || '' }}
                   />
@@ -528,7 +542,7 @@ const ActionCreator = () => {
             <div className="flex gap-4">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !mechanicsEditorValid}
                 className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
               >
                 {loading ? (isEditMode ? 'Сохранение...' : 'Создание...') : (isEditMode ? 'Сохранить изменения' : 'Создать действие')}

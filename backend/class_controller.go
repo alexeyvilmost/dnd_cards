@@ -132,7 +132,12 @@ func (cc *ClassController) CreateClass(c *gin.Context) {
 
 	cardNumber := req.CardNumber
 	if cardNumber == "" {
-		cardNumber = generateNumber(cc.db, &Class{}, "CLASS")
+		generated, generationErr := generateNumber(cc.db, &Class{}, "CLASS")
+		if generationErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации ID класса"})
+			return
+		}
+		cardNumber = generated
 	} else {
 		var existing Class
 		if err := cc.db.Where("card_number = ?", cardNumber).First(&existing).Error; err == nil {

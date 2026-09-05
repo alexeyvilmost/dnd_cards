@@ -27,3 +27,17 @@ func TestNextGeneratedCardNumberSupportsMoreThanFourDigits(t *testing.T) {
 		t.Fatalf("nextGeneratedCardNumber() = %q, want %q", got, want)
 	}
 }
+
+func TestNextGeneratedNumberIgnoresNamedIDsAndUsesNumericMaximum(t *testing.T) {
+	ids := []string{"EFFECT-runtime-fire", "EFFECT-9999", "EFFECT-10000", "EFFECT-0042-extra"}
+	if got, want := nextGeneratedNumber(ids, "EFFECT"), "EFFECT-10001"; got != want {
+		t.Fatalf("nextGeneratedNumber() = %q, want %q", got, want)
+	}
+}
+
+func TestNextGeneratedNumberDoesNotUseAnotherPrefix(t *testing.T) {
+	ids := []string{"ACTION-0007", "ACT-9000", "ACTION-custom"}
+	if got, want := nextGeneratedNumber(ids, "ACTION"), "ACTION-0008"; got != want {
+		t.Fatalf("nextGeneratedNumber() = %q, want %q", got, want)
+	}
+}
