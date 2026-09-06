@@ -29,10 +29,14 @@ func TestRepairLevelOneSpeciesRuntimeContractsIsExactAndIdempotent(t *testing.T)
 	}
 	if _, err := db.Exec(`
 		INSERT INTO effects (id, card_number, mechanics) VALUES ($1::uuid, $2,
-		'{"effects":[{"result":[{"kind":"grant_spell","value":"minor_illusion"},{"kind":"grant_spell","value":"SPELL-0277","freeuse":{"count":"prof_bonus","recharge":"long_rest"}}]}]}'::jsonb);
-		INSERT INTO actions (id, card_number, mechanics) VALUES ($3::uuid, $4,
+		'{"effects":[{"result":[{"kind":"grant_spell","value":"minor_illusion"},{"kind":"grant_spell","value":"SPELL-0277","freeuse":{"count":"prof_bonus","recharge":"long_rest"}}]}]}'::jsonb)
+	`, forestGnomeEffectID, forestGnomeCard); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(`
+		INSERT INTO actions (id, card_number, mechanics) VALUES ($1::uuid, $2,
 		'{"effects":[{"result":[{"kind":"healing","amount":"prof d4"}]}]}'::jsonb)
-	`, forestGnomeEffectID, forestGnomeCard, healingHandsID, healingHandsCard); err != nil {
+	`, healingHandsID, healingHandsCard); err != nil {
 		t.Fatal(err)
 	}
 

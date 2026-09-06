@@ -73,6 +73,7 @@ func seedHalfCasterSpellcastingFixture(
 	for _, statement := range []string{
 		`CREATE TABLE actions (
 			id uuid PRIMARY KEY DEFAULT gen_random_uuid(), card_number text UNIQUE,
+			name text NOT NULL DEFAULT '',
 			mechanics jsonb, support jsonb, updated_at timestamptz NOT NULL DEFAULT NOW(),
 			deleted_at timestamptz
 		)`,

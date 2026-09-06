@@ -29,7 +29,11 @@ func TestRepairMiniMVPSpellClarityIsExactAndIdempotent(t *testing.T) {
 	}
 	base := `{"activation":{"mode":"active","cost":[]},"effects":[{"resolution":"auto","on_hit":[{"kind":"damage","dice":"3d8","type":"fire"}],"result":[{"kind":"movement","value":"double"},{"kind":"narrative","description":"old"},{"kind":"narrative","description":"stale"}]}],"targeting":{"shape":"self"}}`
 	for _, identity := range miniMVPSpellClarityIdentities {
-		if _, err := db.Exec(`INSERT INTO spells (id,card_number,mechanics) VALUES ($1::uuid,$2,$3::jsonb)`, identity.id, identity.card, base); err != nil {
+		mechanics := base
+		if identity.card == "detect_magic" {
+			mechanics = `{"activation":{"mode":"active","cost":[]},"effects":[{"resolution":"auto","result":[{"kind":"narrative","description":"old"}]}],"targeting":{"shape":"self"}}`
+		}
+		if _, err := db.Exec(`INSERT INTO spells (id,card_number,mechanics) VALUES ($1::uuid,$2,$3::jsonb)`, identity.id, identity.card, mechanics); err != nil {
 			t.Fatal(err)
 		}
 	}

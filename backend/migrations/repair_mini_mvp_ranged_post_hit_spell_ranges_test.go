@@ -15,14 +15,18 @@ func TestMiniMVPRangedPostHitSpellRangesMigrationFollowsTargetRepair(t *testing.
 
 func TestRepairMiniMVPRangedPostHitSpellRangesIsExactAndIdempotent(t *testing.T) {
 	db := openIsolatedPostgresSchema(t, "CONTENT_MIGRATION_TEST_DSN")
-	if _, err := db.Exec(`
-		CREATE TABLE spells (
+	for _, ddl := range []string{
+		`CREATE TABLE actions (id uuid PRIMARY KEY, mechanics jsonb, support jsonb, deleted_at timestamptz)`,
+		`CREATE TABLE effects (id uuid PRIMARY KEY, mechanics jsonb, support jsonb, deleted_at timestamptz)`,
+		`CREATE TABLE spells (
 			id uuid PRIMARY KEY, card_number text NOT NULL, mechanics jsonb NOT NULL,
 			support jsonb NOT NULL DEFAULT '{}'::jsonb, updated_at timestamptz NOT NULL DEFAULT NOW(),
 			deleted_at timestamptz
-		)
-	`); err != nil {
-		t.Fatal(err)
+		)`,
+	} {
+		if _, err := db.Exec(ddl); err != nil {
+			t.Fatal(err)
+		}
 	}
 	base := `{"activation":{"mode":"triggered","trigger":{"event":"hit"}},"targeting":{"filter":"enemy","shape":"single"},"effects":[]}`
 	for _, identity := range miniMVPRangedPostHitSpellRangeIdentities {
