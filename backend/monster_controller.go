@@ -154,7 +154,7 @@ func (mc *MonsterController) List(c *gin.Context) {
 		return
 	}
 	var monsters []Monster
-	if err := query.Order("challenge_rating ASC, name ASC").Offset(offset).Limit(limit).Find(&monsters).Error; err != nil {
+	if err := query.Order("challenge_rating ASC, name ASC").Order("id ASC").Offset(offset).Limit(limit).Find(&monsters).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения монстров"})
 		return
 	}

@@ -209,7 +209,7 @@ func (cc *CardController) GetCards(c *gin.Context) {
 		}
 	}
 
-	if err := query.Offset(offset).Limit(limit).Order(orderBy).Find(&cards).Error; err != nil {
+	if err := query.Offset(offset).Limit(limit).Order(orderBy).Order("id ASC").Find(&cards).Error; err != nil {
 		log.Printf("Ошибка получения карточек: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения карточек"})
 		return
@@ -1041,7 +1041,7 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 	query.Count(&total)
 
 	// Получение действий
-	if err := query.Order("created_at DESC").Offset(offset).Limit(limit).Find(&actions).Error; err != nil {
+	if err := query.Order("created_at DESC").Order("id ASC").Offset(offset).Limit(limit).Find(&actions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения действий"})
 		return
 	}
@@ -1501,7 +1501,7 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 	query.Count(&total)
 
 	// Получение эффектов
-	if err := query.Order("created_at DESC").Offset(offset).Limit(limit).Find(&effects).Error; err != nil {
+	if err := query.Order("created_at DESC").Order("id ASC").Offset(offset).Limit(limit).Find(&effects).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения эффектов"})
 		return
 	}

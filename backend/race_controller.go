@@ -53,7 +53,7 @@ func (rc *RaceController) GetRaces(c *gin.Context) {
 	if c.Query("sort_by") == "created_desc" {
 		sortClause = "created_at DESC"
 	}
-	if err := query.Order(sortClause).Offset(offset).Limit(limit).Find(&races).Error; err != nil {
+	if err := query.Order(sortClause).Order("id ASC").Offset(offset).Limit(limit).Find(&races).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения видов"})
 		return
 	}

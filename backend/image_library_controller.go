@@ -72,7 +72,7 @@ func (c *ImageLibraryController) GetImageLibrary(ctx *gin.Context) {
 
 	// Получаем изображения
 	var images []ImageLibrary
-	if err := query.Order("created_at DESC").Offset(offset).Limit(limit).Find(&images).Error; err != nil {
+	if err := query.Order("created_at DESC").Order("id ASC").Offset(offset).Limit(limit).Find(&images).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения изображений"})
 		return
 	}

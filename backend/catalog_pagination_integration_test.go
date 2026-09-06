@@ -60,7 +60,12 @@ func openCatalogPaginationTestDB(t *testing.T) *gorm.DB {
 			_ = sqlDB.Close()
 		}
 	})
-	if err = db.AutoMigrate(&ResourceDefinition{}, &Variable{}, &ConceptEntity{}); err != nil {
+	if err = db.AutoMigrate(
+		&ResourceDefinition{},
+		&Variable{},
+		&ConceptEntity{},
+		&ContentChoiceRecommendation{},
+	); err != nil {
 		t.Fatal(err)
 	}
 	return db
@@ -180,5 +185,63 @@ func TestReferenceCatalogsUseStablePagination(t *testing.T) {
 	if defaultConceptPage.Total != 3 || defaultConceptPage.Page != 1 ||
 		defaultConceptPage.Limit != 3 || len(defaultConceptPage.Concepts) != 3 {
 		t.Fatalf("default concept catalog no longer returns the complete glossary: %#v", defaultConceptPage)
+	}
+}
+
+func TestEffectCatalogUsesIDAsPaginationTieBreaker(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db := openCatalogPaginationTestDB(t)
+	if err := db.Exec(`CREATE TABLE effects (
+		id UUID PRIMARY KEY,
+		name TEXT NOT NULL,
+		description TEXT NOT NULL,
+		rarity TEXT NOT NULL,
+		card_number TEXT NOT NULL UNIQUE,
+		effect_type TEXT NOT NULL,
+		created_at TIMESTAMPTZ NOT NULL,
+		updated_at TIMESTAMPTZ NOT NULL,
+		deleted_at TIMESTAMPTZ
+	)`).Error; err != nil {
+		t.Fatal(err)
+	}
+	for _, suffix := range []string{"3", "1", "2"} {
+		id := "00000000-0000-4000-8000-00000000000" + suffix
+		if err := db.Exec(`INSERT INTO effects (
+			id, name, description, rarity, card_number, effect_type, created_at, updated_at
+		) VALUES (?, ?, 'test', 'common', ?, 'passive', '2026-09-06T00:00:00Z', '2026-09-06T00:00:00Z')`,
+			id, "Effect "+suffix, "EFFECT-PAGE-"+suffix).Error; err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	router := gin.New()
+	router.GET("/effects", NewEffectController(db).GetEffects)
+	got := make([]string, 0, 3)
+	for page := 1; page <= 3; page++ {
+		recorder := httptest.NewRecorder()
+		path := fmt.Sprintf("/effects?page=%d&limit=1", page)
+		router.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, path, nil))
+		if recorder.Code != http.StatusOK {
+			t.Fatalf("page %d returned %d: %s", page, recorder.Code, recorder.Body.String())
+		}
+		var response struct {
+			Effects []Effect `json:"effects"`
+			Total   int64    `json:"total"`
+		}
+		if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
+			t.Fatal(err)
+		}
+		if response.Total != 3 || len(response.Effects) != 1 {
+			t.Fatalf("unexpected page %d: %#v", page, response)
+		}
+		got = append(got, response.Effects[0].ID.String())
+	}
+	want := []string{
+		"00000000-0000-4000-8000-000000000001",
+		"00000000-0000-4000-8000-000000000002",
+		"00000000-0000-4000-8000-000000000003",
+	}
+	if fmt.Sprint(got) != fmt.Sprint(want) {
+		t.Fatalf("effect pages are not stable: got %v, want %v", got, want)
 	}
 }

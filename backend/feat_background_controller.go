@@ -52,7 +52,7 @@ func (fc *FeatController) GetFeats(c *gin.Context) {
 	if c.Query("sort_by") == "created_desc" {
 		sortClause = "created_at DESC"
 	}
-	if err := query.Order(sortClause).Offset(offset).Limit(limit).Find(&feats).Error; err != nil {
+	if err := query.Order(sortClause).Order("id ASC").Offset(offset).Limit(limit).Find(&feats).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения черт"})
 		return
 	}
@@ -289,7 +289,7 @@ func (bc *BackgroundController) GetBackgrounds(c *gin.Context) {
 	if c.Query("sort_by") == "created_desc" {
 		sortClause = "created_at DESC"
 	}
-	if err := query.Order(sortClause).Offset(offset).Limit(limit).Find(&backgrounds).Error; err != nil {
+	if err := query.Order(sortClause).Order("id ASC").Offset(offset).Limit(limit).Find(&backgrounds).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения предысторий"})
 		return
 	}
