@@ -25,6 +25,9 @@ import {
   migrationPlanHash,
   MIGRATION_WRITE_PROTOCOL,
   readMigrationBundle,
+  REVIEWED_EXISTING_CREATE_PREIMAGE_HASHES,
+  REVIEWED_SUPERSEDING_FIELD_HASHES,
+  REVIEWED_SUPERSEDING_MECHANICS_HASHES,
   rollbackMigrationBundle,
   validateContentPatchDeclaration,
   validateMechanicsTargets,
@@ -543,6 +546,122 @@ test('plan covers the complete reviewed migration and stores full API preimages'
   const createCount = operations.filter((operation) => operation.operation === 'create').length;
   assert.ok(operations.slice(0, createCount).every((operation) => operation.operation === 'create'));
   assert.ok(operations.slice(createCount).every((operation) => operation.operation === 'update'));
+});
+
+test('reviewed superseding mechanics postimages are preserved by exact hash', () => {
+  const patch = sourceSnapshotPatch();
+  const catalogs = reviewedPreimageCatalogs();
+  const label = 'effects:EFF-eldritch-invocations';
+  const declaration = patch.mechanicsPatches.effects.find(
+    (item) => item.cardNumber === 'EFF-eldritch-invocations',
+  );
+  const entity = catalogs.effects.find(
+    (item) => item.card_number === 'EFF-eldritch-invocations',
+  );
+  assert.ok(declaration);
+  assert.ok(entity);
+
+  const successorMechanics = clone(declaration.mechanics);
+  successorMechanics.activation.prompt = 'Reviewed successor activation';
+  entity.mechanics = successorMechanics;
+  const successorHash = sha256Canonical(successorMechanics);
+
+  assert.throws(
+    () => buildMigrationOperations(catalogs, patch, { supersedingMechanicsHashes: {} }),
+    /effects:EFF-eldritch-invocations: reviewed production before mechanics hash/,
+  );
+  assert.throws(
+    () => buildMigrationOperations(catalogs, patch, {
+      supersedingMechanicsHashes: { [label]: `sha256:${'0'.repeat(64)}` },
+    }),
+    /effects:EFF-eldritch-invocations: reviewed production before mechanics hash/,
+  );
+
+  const operations = buildMigrationOperations(catalogs, patch, {
+    supersedingMechanicsHashes: { [label]: successorHash },
+  });
+  assert.equal(operations.length, 110);
+  assert.equal(operations.some((operation) => operation.cardNumber === entity.card_number), false);
+  assert.match(REVIEWED_SUPERSEDING_MECHANICS_HASHES[label], /^sha256:[0-9a-f]{64}$/);
+});
+
+test('reviewed superseding field postimages are preserved and validated by exact hash', () => {
+  const patch = sourceSnapshotPatch();
+  const catalogs = reviewedPreimageCatalogs();
+  const label = 'cards:CARD-0297';
+  const declaration = patch.fieldPatches.find(
+    (item) => item.collection === 'cards' && item.cardNumber === 'CARD-0297',
+  );
+  const entity = catalogs.cards.find((item) => item.card_number === 'CARD-0297');
+  assert.ok(declaration);
+  assert.ok(entity);
+
+  Object.assign(entity, clone(declaration.fields));
+  entity.mechanics.weapon_profile.properties.reverse();
+  const current = Object.fromEntries(Object.keys(declaration.fields).map((key) => [
+    key,
+    entity[key],
+  ]));
+  const successorHash = sha256Canonical(current);
+
+  assert.throws(
+    () => buildMigrationOperations(catalogs, patch, { supersedingFieldHashes: {} }),
+    /cards:CARD-0297: reviewed production before fields hash/,
+  );
+  assert.throws(
+    () => buildMigrationOperations(catalogs, patch, {
+      supersedingFieldHashes: { [label]: `sha256:${'0'.repeat(64)}` },
+    }),
+    /cards:CARD-0297: reviewed production before fields hash/,
+  );
+
+  const operations = buildMigrationOperations(catalogs, patch, {
+    supersedingFieldHashes: { [label]: successorHash },
+  });
+  assert.equal(operations.length, 110);
+  assert.equal(operations.some((operation) => operation.cardNumber === entity.card_number), false);
+  assert.match(REVIEWED_SUPERSEDING_FIELD_HASHES[label], /^sha256:[0-9a-f]{64}$/);
+});
+
+test('reviewed existing create preimage becomes an exact update instead of a duplicate', () => {
+  const patch = sourceSnapshotPatch();
+  const catalogs = reviewedPreimageCatalogs();
+  const label = 'actions:action_basic_weapon_ranged';
+  const declaration = patch.createEntities.find(
+    (item) => item.collection === 'actions'
+      && item.entity.card_number === 'action_basic_weapon_ranged',
+  );
+  assert.ok(declaration);
+
+  const existing = clone(declaration.entity);
+  existing.id = 'f9b9f742-6110-4ec7-8fc2-e16e5d8ba0ff';
+  existing.image_url = 'data:image/png;base64,reviewed-preimage';
+  catalogs.actions.push(existing);
+  const requestKeys = Object.keys(declaration.entity).filter(
+    (key) => !['id', 'created_at', 'updated_at'].includes(key),
+  );
+  const current = Object.fromEntries(requestKeys.map((key) => [key, existing[key]]));
+  const currentHash = sha256Canonical(current);
+
+  assert.throws(
+    () => buildMigrationOperations(catalogs, patch, { existingCreatePreimageHashes: {} }),
+    /create identity exists with unreviewed fields/,
+  );
+  assert.throws(
+    () => buildMigrationOperations(catalogs, patch, {
+      existingCreatePreimageHashes: { [label]: `sha256:${'0'.repeat(64)}` },
+    }),
+    /create identity exists with unreviewed fields/,
+  );
+
+  const operations = buildMigrationOperations(catalogs, patch, {
+    existingCreatePreimageHashes: { [label]: currentHash },
+  });
+  const update = operations.find((operation) => operation.cardNumber === existing.card_number);
+  assert.equal(update?.operation, 'update');
+  assert.equal(update?.entityId, existing.id);
+  assert.equal(update?.request.image_url, '/icons/actions/ranged_weapon_attack.png');
+  assert.match(REVIEWED_EXISTING_CREATE_PREIMAGE_HASHES[label], /^sha256:[0-9a-f]{64}$/);
 });
 
 test('every apply and reverse-rollback interruption prefix preserves provider dependencies', () => {

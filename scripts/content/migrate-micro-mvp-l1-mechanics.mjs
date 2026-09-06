@@ -75,6 +75,39 @@ export const MIGRATION_WRITE_PROTOCOL = Object.freeze({
 });
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+// Exact postimages produced by later reviewed level-5 migrations. The micro-MVP
+// patch predates these values, so matching rows are already materialized and
+// must not be downgraded to the older postimage. Any unlisted hash still fails
+// the normal preimage compare-and-swap check below.
+export const REVIEWED_SUPERSEDING_MECHANICS_HASHES = Object.freeze({
+  'effects:EFF-eldritch-invocations': 'sha256:daee9871613ffe21a2a6c9bc345c46b795cf1f2625dacbb14193bb9b8290e989',
+  'effects:EFF-sneak-attack': 'sha256:e471cb013b97d863045247981572b22af572749bc747d9c8de60fcdbfe2de6c9',
+  'effects:RE-sub-drow': 'sha256:3dfa9ad8d51341e3755672e74b3bdd3cec572eba0e4a09dbe2c9fc243d60edff',
+  'effects:RE-sub-high_elf': 'sha256:025850b85f88483a31ef832eece4eeaa907534416e16cb1b9adcc698645ce103',
+  'effects:RE-sub-wood_elf': 'sha256:774d9e8353a73203bbc9e0eabf9c9a0e7cd4435e3e7c08333f3116dcd927c6d2',
+  'effects:EFF-wizard-spellcasting': 'sha256:50aa1f6749bc648a25c1d0759bbdc5247ff5a4a239ca6762c6a388e19e23f8d3',
+  'actions:ACT-second-wind': 'sha256:fedde94b66944eeeb87a134d79316850263951600865b1d278da53c646ad0a5a',
+  'spells:chill_touch': 'sha256:e5f09a9e779443569869bdc602df3ba14940747b1b77cb0c6d3399c8a35607af',
+  'spells:SPELL-0163': 'sha256:d10c16fa2d7fd71d1ebe8e505aad3cadc9f3181e77aecf37d6d5317e0758f7aa',
+  'spells:SPELL-0218': 'sha256:302252f05e294f1eaa6e8ad98143df8092392e9284248311a8d581854c5b644e',
+  'spells:SPELL-0229': 'sha256:2a7cc999fdca47c30a3d40eeb3759eb94adc8672bf95b79a85574117dc10e0b7',
+  'spells:SPELL-0230': 'sha256:7ee667e904525e2e8eca851f1f03b8b6b7112e976087ebcd18087555d1aa83de',
+});
+
+export const REVIEWED_SUPERSEDING_FIELD_HASHES = Object.freeze({
+  'cards:CARD-0297': 'sha256:26bb0eb9d1a8d321da909f6938097ec2c5e6596b5101a2a9503c5ba20acb66b7',
+  'cards:CARD-0311': 'sha256:78cee37dc077cdfd8f61ee907524be61ff9f11d2e51c5533761c41bf6efc40f1',
+  'cards:CARD-0316': 'sha256:30468401d885520d00217b3f27cb0eb1995420e6bd1f94fb06b5826b6b0d57a3',
+  'cards:CARD-0317': 'sha256:f5d08e363d38811e1d93e0a45a7b3eb9e4df63835ac127ac8fc5a66847da7255',
+  'cards:CARD-0327': 'sha256:4402388e6ea6998eb57f3ba992119f1760754fb0d7ba3f0245e0d1e2c793a31b',
+  'classes:CLASS-warlock': 'sha256:bfbd02ab19923ba879f2bb581761d19b3b961bbfba296afde39914aa15bcf45b',
+  'classes:CLASS-rogue': 'sha256:4a3bf1efefd8e14474378d21221bfd9f4d9b43baede2871cafde39d3e8703300',
+});
+
+export const REVIEWED_EXISTING_CREATE_PREIMAGE_HASHES = Object.freeze({
+  'actions:action_basic_weapon_ranged': 'sha256:a50724ca235815eb0171ac4557990ebf36af3e77cc1b8d914e1e24d61926d9f2',
+});
+
 const EFFECT_CREATE_FIELDS = [
   'name', 'name_en', 'description', 'detailed_description', 'image_url', 'rarity',
   'card_number', 'effect_type', 'condition_description', 'script', 'mechanics',
@@ -779,7 +812,15 @@ function assertMigrationPlanIntegrity(bundle) {
   assertDependencySafeInterruptionPrefixes(bundle.operations);
 }
 
-export function buildMigrationOperations(catalogs, patch) {
+export function buildMigrationOperations(
+  catalogs,
+  patch,
+  {
+    supersedingMechanicsHashes = REVIEWED_SUPERSEDING_MECHANICS_HASHES,
+    supersedingFieldHashes = REVIEWED_SUPERSEDING_FIELD_HASHES,
+    existingCreatePreimageHashes = REVIEWED_EXISTING_CREATE_PREIMAGE_HASHES,
+  } = {},
+) {
   validateContentPatchDeclaration(patch);
   const operations = [];
   const mechanicsTargets = [];
@@ -790,15 +831,31 @@ export function buildMigrationOperations(catalogs, patch) {
       : collection === 'actions' ? 'action' : 'spell';
     for (const declaration of patch.mechanicsPatches[collection] ?? []) {
       const entity = exactEntity(catalogs[collection], declaration, collection);
+      const label = `${collection}:${declaration.cardNumber}`;
+      const currentMechanics = entity.mechanics ?? null;
+      if (same(currentMechanics, declaration.mechanics)) {
+        mechanicsTargets.push({
+          label,
+          cardNumber: declaration.cardNumber,
+          name: entity.name,
+          kind,
+          mechanics: declaration.mechanics,
+        });
+        continue;
+      }
+      const beforeHash = sha256Canonical(currentMechanics);
+      const reviewedSupersedingHash = supersedingMechanicsHashes[label];
+      const isReviewedSupersedingPostimage = reviewedSupersedingHash === beforeHash;
       mechanicsTargets.push({
-        label: `${collection}:${declaration.cardNumber}`,
+        label,
         cardNumber: declaration.cardNumber,
         name: entity.name,
         kind,
-        mechanics: declaration.mechanics,
+        mechanics: isReviewedSupersedingPostimage
+          ? currentMechanics
+          : declaration.mechanics,
       });
-      if (same(entity.mechanics ?? null, declaration.mechanics)) continue;
-      const beforeHash = sha256Canonical(entity.mechanics ?? null);
+      if (isReviewedSupersedingPostimage) continue;
       const expectedBeforeHash = declaration.productionExpectedBeforeMechanicsHash
         ?? declaration.expectedBeforeMechanicsHash;
       if (beforeHash !== expectedBeforeHash) {
@@ -814,6 +871,7 @@ export function buildMigrationOperations(catalogs, patch) {
 
   for (const declaration of patch.fieldPatches) {
     const entity = exactEntity(catalogs[declaration.collection], declaration, declaration.collection);
+    const label = `${declaration.collection}:${declaration.cardNumber}`;
     const targetFields = declaration.productionFieldOverrides
       ? { ...declaration.fields, ...declaration.productionFieldOverrides }
       : declaration.fields;
@@ -831,17 +889,22 @@ export function buildMigrationOperations(catalogs, patch) {
     }
     const current = projection(entity, targetFields);
     const comparableCurrent = replaceStringAliases(current, createIdentityAliases);
+    const isDesiredPostimage = same(comparableCurrent, targetFields);
+    const beforeHash = isDesiredPostimage ? null : sha256Canonical(current);
+    const isReviewedSupersedingPostimage = !isDesiredPostimage
+      && supersedingFieldHashes[label] === beforeHash;
     if (declaration.collection === 'cards' && targetFields.mechanics !== undefined) {
       mechanicsTargets.push({
-        label: `${declaration.collection}:${declaration.cardNumber}`,
+        label,
         cardNumber: declaration.cardNumber,
         name: entity.name,
         kind: 'passive_effect',
-        mechanics: targetFields.mechanics,
+        mechanics: isReviewedSupersedingPostimage
+          ? current.mechanics
+          : targetFields.mechanics,
       });
     }
-    if (same(comparableCurrent, targetFields)) continue;
-    const beforeHash = sha256Canonical(current);
+    if (isDesiredPostimage || isReviewedSupersedingPostimage) continue;
     const expectedBeforeHash = declaration.productionExpectedBeforeFieldsHash
       ?? declaration.expectedBeforeFieldsHash;
     if (beforeHash !== expectedBeforeHash) {
@@ -881,9 +944,19 @@ export function buildMigrationOperations(catalogs, patch) {
     if (matches.length === 1) {
       const current = projection(matches[0], request);
       if (!same(current, request)) {
-        throw new Error(
-          `${collection}:${declaration.entity.card_number}: create identity exists with unreviewed fields`,
-        );
+        const label = `${collection}:${declaration.entity.card_number}`;
+        const currentHash = sha256Canonical(current);
+        if (existingCreatePreimageHashes[label] !== currentHash) {
+          throw new Error(
+            `${label}: create identity exists with unreviewed fields (live ${currentHash})`,
+          );
+        }
+        operations.push(operationBase(
+          collection,
+          matches[0],
+          exactUpdateFields(request),
+          'update',
+        ));
       }
       continue;
     }
