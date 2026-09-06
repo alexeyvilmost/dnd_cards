@@ -59,7 +59,7 @@ describe('SoloCombatSetupDialog sheet entry flow', () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-    expect(container.textContent).toContain('Противники для Лучник-дварф');
+    expect(container.textContent).toContain('Боевая сцена для Лучник-дварф');
     expect(container.textContent).toContain('КЗ 15 · 10 HP');
     expect(container.textContent).toContain('Бард-помощник');
     const start = [...container.querySelectorAll('button')].find((button) => button.textContent?.includes('Начать бой'))!;
@@ -72,7 +72,7 @@ describe('SoloCombatSetupDialog sheet entry flow', () => {
     await act(async () => start.click());
     expect(onStart).toHaveBeenCalledWith({
       opponents: [{ monster, quantity: 1 }],
-      allyId: ally.id,
+      allyIds: [ally.id],
     });
   });
 });

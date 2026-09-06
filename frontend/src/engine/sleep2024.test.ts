@@ -153,7 +153,7 @@ describe('Sleep 2024 lifecycle', () => {
     expect(damaged.state.activeEffects.some((effect) => (
       (effect.mechanics as Dict).value === 'incapacitated'
     ))).toBe(false);
-    expect(damaged.events).toContainEqual({ type: 'effect_expired', name: 'incapacitated' });
+    expect(damaged.events).toContainEqual({ type: 'effect_expired', name: 'Недееспособен' });
   });
 
   it('Help can choose the 5-foot wake branch without removing unrelated conditions', () => {

@@ -58,8 +58,17 @@ const LONGSWORD = withDeclaredTestWeaponProfile({
 });
 
 const TOPPLE = {
+  id: TOPPLE_ID,
+  card_number: 'EFFECT-topple',
   name: 'Topple',
   mechanics: {
+    weapon_mastery: {
+      type: 'topple',
+      saveAbility: 'con',
+      dc: '8+prof_bonus+weapon_mod',
+      condition: 'prone',
+      choiceId: 'weapon_mastery.topple.use',
+    },
     activation: { mode: 'triggered', trigger: { event: 'hit' } },
     effects: [{
       resolution: 'save',
@@ -381,6 +390,7 @@ class FocusedMasteryHarness {
       actionId: ATTACK.id,
       targetIds: ['wizard'],
       factsByTarget: { wizard: ATTACK_FACTS },
+      choices: { 'weapon_mastery.topple.use': 'use' },
     });
   }
 

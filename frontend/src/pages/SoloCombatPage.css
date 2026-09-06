@@ -132,7 +132,36 @@
 .tactical-map-viewport.is-panning .tactical-cell {
   cursor: grabbing !important;
 }
+.tactical-map-controls {
+  position: sticky;
+  grid-area: 1 / 1;
+  align-self: start;
+  justify-self: start;
+  z-index: 8;
+  top: 8px;
+  left: 8px;
+  width: max-content;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #735b39;
+  border-radius: 9px;
+  background: #17130feb;
+  box-shadow: 0 5px 18px #0008;
+}
+.tactical-map-controls button {
+  min-width: 32px;
+  min-height: 32px;
+  border: 1px solid #655039;
+  border-radius: 7px;
+  background: #31271e;
+  color: #f0dfc4;
+  cursor: pointer;
+}
+.tactical-map-controls span { min-width: 38px; color: #cdbb9e; font-size: 10px; text-align: center; }
 .tactical-map {
+  grid-area: 1 / 1;
   --tactical-cell-size: 80px;
   width: calc(var(--tactical-cell-size) * 12);
   height: calc(var(--tactical-cell-size) * 10);
@@ -500,6 +529,9 @@
   flex-direction: column;
   font-size: 11px;
 }
+.combat-hotbar__economy { display: none; }
+.combat-hotbar__action-label,
+.combat-hotbar__action-reason { display: none; }
 .combat-hotbar__resource-tiles {
   width: 100%;
   flex-wrap: nowrap;
@@ -843,14 +875,27 @@
 }
 @media (max-width: 560px) {
   .combat-hotbar {
-    grid-template-columns: 104px minmax(0, 1fr) 74px;
-    height: 170px;
+    left: 4px;
+    right: 4px;
+    bottom: 0;
+    translate: none;
+    width: auto;
+    height: 210px;
+    box-sizing: border-box;
+    grid-template-columns: minmax(0, 1fr) 92px;
+    grid-template-rows: 72px minmax(0, 1fr);
+    gap: 6px;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    border-radius: 14px 14px 0 0;
   }
   .combat-hotbar__resources {
     min-width: 0;
-    padding: 3px;
-    border-right: 1px solid #4c4031;
-    border-bottom: 0;
+    padding: 3px 6px;
+    border-right: 0;
+    border-bottom: 1px solid #4c4031;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
   }
   .combat-hotbar__portrait {
     width: 34px;
@@ -862,6 +907,26 @@
     min-width: 0;
     font-size: 9px;
   }
+  .combat-hotbar__economy {
+    display: flex;
+    flex: 1;
+    justify-content: flex-end;
+    gap: 4px;
+  }
+  .combat-hotbar__economy span {
+    display: grid;
+    gap: 1px;
+    min-width: 45px;
+    padding: 4px 5px;
+    border: 1px solid #675640;
+    border-radius: 7px;
+    color: #d7c8b2;
+    font-size: 8px;
+    text-align: center;
+  }
+  .combat-hotbar__economy span.is-ready { border-color: #8b7048; background: #30271d; }
+  .combat-hotbar__economy span.is-spent { opacity: .52; }
+  .combat-hotbar__economy b { color: #fff2d6; font-size: 12px; }
   .combat-hotbar__identity b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .combat-hotbar__resource-tiles {
     width: auto;
@@ -869,9 +934,11 @@
     flex: 1;
   }
   .combat-stage {
-    height: calc(100vh - 283px);
+    height: calc(100vh - 323px - env(safe-area-inset-bottom));
   }
   .combat-hotbar__utility {
+    grid-column: 2;
+    grid-row: 1;
     grid-template-columns: 1fr 1fr;
   }
   .combat-utility-button {
@@ -882,9 +949,52 @@
     gap: 1px;
   }
   .combat-utility-button span { max-width: 42px; }
-  .combat-end-turn {
+  .combat-hotbar__actions {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 7px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 4px 2px 8px;
+  }
+  .combat-sheet-action {
+    width: 72px;
+    min-width: 72px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .combat-hotbar__action-label {
+    display: -webkit-box;
+    width: 100%;
+    overflow: hidden;
+    color: #eadbc3;
     font-size: 9px;
-    padding: 8px;
+    line-height: 1.1;
+    text-align: center;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .combat-hotbar__action-reason {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    color: #ffb4a2;
+    font-size: 7px;
+    line-height: 1.05;
+    text-align: center;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .combat-end-turn {
+    grid-column: 2;
+    grid-row: 2;
+    min-width: 0;
+    font-size: 10px;
+    padding: 8px 5px;
   }
   .initiative-ribbon > div {
     min-width: 50px;

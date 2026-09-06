@@ -1017,6 +1017,33 @@ const CharacterSheetMVP = () => {
   const mobileSectioned = isMobile && !renderedV2;
   // На десктопе показываем все секции; на мобильном — только активную.
   const inSec = (s: string) => !mobileSectioned || activeSec === s;
+  const combatReturnHref = activeEncounter
+    ? `/encounter/${activeEncounter.id}`
+    : `/characters-v3/${character.id}/combat`;
+  const sheetActionsPanel = !readOnly ? (
+    <SheetActionsPanel
+      character={character}
+      assembled={assembledForActions ?? assembled}
+      ruleState={ruleState}
+      showResources={false}
+      showEffects={false}
+      equipCards={equipCards}
+      itemGrantedPassives={itemGrantedPassives}
+      maxHp={maxHP}
+      onUpdated={handleCharacterUpdated}
+      onEvents={appendRuntimeEvents}
+      onPersistedEvents={reconcilePersistedRuntimeEvents}
+      pendingAtomicRetry={pendingAtomicRetry}
+      onPendingAtomicRetryChange={setPendingAtomicRetry}
+      targetAc={targetAc}
+      onTargetAcChange={setTargetAc}
+      targetSaveMod={targetSaveMod}
+      onTargetSaveModChange={setTargetSaveMod}
+      encounterId={encId ?? undefined}
+      encounterApply={applyEncounter}
+      disabledReason={sheetActionDisabledReason}
+    />
+  ) : null;
 
   return (
     <CharacterFormulaProvider value={formulaCtxFromCharacter(sheetCtx)}>
@@ -1161,28 +1188,19 @@ const CharacterSheetMVP = () => {
 
         <div className="sheet-grid">
           {inSec('combat') && !readOnly && (
-          <SheetActionsPanel
-            character={character}
-            assembled={assembledForActions ?? assembled}
-            ruleState={ruleState}
-            showResources={false}
-            showEffects={false}
-            equipCards={equipCards}
-            itemGrantedPassives={itemGrantedPassives}
-            maxHp={maxHP}
-            onUpdated={handleCharacterUpdated}
-            onEvents={appendRuntimeEvents}
-            onPersistedEvents={reconcilePersistedRuntimeEvents}
-            pendingAtomicRetry={pendingAtomicRetry}
-            onPendingAtomicRetryChange={setPendingAtomicRetry}
-            targetAc={targetAc}
-            onTargetAcChange={setTargetAc}
-            targetSaveMod={targetSaveMod}
-            onTargetSaveModChange={setTargetSaveMod}
-            encounterId={encId ?? undefined}
-            encounterApply={applyEncounter}
-            disabledReason={sheetActionDisabledReason}
-          />
+            combatLocked && isMobile ? (
+              <section className="sheet-active-combat-card" aria-label="Активный бой">
+                <div>
+                  <strong>Идёт бой</strong>
+                  <span>{activeEncounter?.name ?? 'Одиночная сцена'}</span>
+                </div>
+                <Link to={combatReturnHref}><Swords size={17} /> Вернуться на поле боя</Link>
+                <details>
+                  <summary>Способности персонажа</summary>
+                  {sheetActionsPanel}
+                </details>
+              </section>
+            ) : sheetActionsPanel
           )}
 
           {inSec('inventory') && !readOnly && (

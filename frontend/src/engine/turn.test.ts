@@ -64,6 +64,24 @@ describe('resource recharge (R4)', () => {
     expect(second.events.some((event) => event.type === 'resource_restored'
       && event.resource === 'sorcery_points')).toBe(false);
   });
+
+  it('short-rest trigger becomes available again on every short rest', () => {
+    const listener: Dict = {
+      id: 'EFF-short-rest-cadence',
+      name: 'Ритм короткого отдыха',
+      activation: { mode: 'triggered', trigger: { event: 'short_rest', timing: 'during' } },
+      uses: { count: 1, per: 'short_rest' },
+      effects: [{ resolution: 'auto', result: [{ kind: 'temp_hp', amount: '1' }] }],
+    };
+    const ctx = { ...FIGHTER_CTX, passives: [listener] } as typeof FIGHTER_CTX;
+
+    const first = shortRest(freshFighterState(), ctx);
+    const second = shortRest(first.state, ctx);
+
+    expect(narratives(first.events)).toContain('Сработало: Ритм короткого отдыха');
+    expect(narratives(second.events)).toContain('Сработало: Ритм короткого отдыха');
+    expect(second.state.firedByPeriod?.short_rest).toEqual(['EFF-short-rest-cadence']);
+  });
 });
 
 describe('C3 слайс 2 — endTurn / turn-события через шину', () => {

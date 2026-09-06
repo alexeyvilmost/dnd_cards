@@ -624,7 +624,7 @@ describe('compiled Dwarf 2024 vertical', () => {
     const avoidedSave = resumed.getEvents().find((event) => (
       event.payload.type === 'EngineEventRecorded'
         && event.payload.event.type === 'roll'
-        && event.payload.event.label.includes('Спасбросок')
+        && event.payload.event.roll.kind === 'save'
     ));
     expect(avoidedSave?.payload).toMatchObject({
       type: 'EngineEventRecorded',

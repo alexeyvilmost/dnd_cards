@@ -133,9 +133,9 @@ describe('actor-specific weapon template certification', () => {
 
     expect(archerAction.mechanics).not.toEqual(slingerAction.mechanics);
     expect(assertCertifiedSheetCombatActorAction(archerAction, archer, certified(value)))
-      .toEqual(archerAction);
+      .toEqual(value);
     expect(assertCertifiedSheetCombatActorAction(slingerAction, slinger, certified(value)))
-      .toEqual(slingerAction);
+      .toEqual(value);
     expect(() => assertCertifiedSheetCombatActorAction(slingerAction, archer, certified(value)))
       .toThrow('actor-specific certified weapon binding');
   });
@@ -145,8 +145,16 @@ describe('actor-specific weapon template certification', () => {
     const archer = actor('archer', weapon('bow', 'arrow'));
     const live = { ...bound(value, archer), name: 'Лук в действии' };
 
-    expect(assertCertifiedSheetCombatActorAction(live, archer, certified(value)).name)
-      .toBe('Лук в действии');
+    expect(assertCertifiedSheetCombatActorAction(live, archer, certified(value)))
+      .toEqual({ ...value, name: 'Лук в действии' });
+  });
+
+  it('accepts the immutable template stored in a persisted combat session', () => {
+    const value = template();
+    const archer = actor('archer', weapon('bow', 'arrow'));
+
+    expect(assertCertifiedSheetCombatActorAction(value, archer, certified(value)))
+      .toEqual(value);
   });
 
   it('rejects UI card_id/amount tampering and a melee-only weapon for the ranged action', () => {

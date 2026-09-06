@@ -47,7 +47,35 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/proxy\//],
-        globPatterns: ['**/*.{js,css,html,woff,woff2}'],
+        // Keep install small: app entry + Russian/Latin UI fonts. Route chunks
+        // are cached only after the user opens them, so authoring, Mermaid,
+        // export and 3D assets do not compete with login or the library.
+        globPatterns: [
+          'index.html',
+          'assets/index-*.{js,css}',
+          'assets/inter-{cyrillic,latin}-*.woff2',
+          'assets/pangolin-{cyrillic,latin}-*.woff2',
+        ],
+        runtimeCaching: [
+          {
+            urlPattern: /\/assets\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'bagofholding-route-assets',
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: { maxEntries: 160, maxAgeSeconds: 30 * 24 * 60 * 60 },
+            },
+          },
+          {
+            urlPattern: /\/(?:images|icons)\//,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'bagofholding-content-images',
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: { maxEntries: 160, maxAgeSeconds: 14 * 24 * 60 * 60 },
+            },
+          },
+        ],
       },
     }),
   ],

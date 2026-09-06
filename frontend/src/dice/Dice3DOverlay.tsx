@@ -296,7 +296,7 @@ export default function Dice3DOverlay({
           <label className="dice3d-target">
             <span>Цель</span>
             <select value={targetId} onChange={(event) => onTargetChange(event.target.value)}>
-              <option value="">— выберите противника —</option>
+              <option value="">— выберите цель —</option>
               {targets.map((target) => (
                 <option key={target.id} value={target.id} disabled={target.disabled} title={target.reason}>
                   {target.name}{target.disabled && target.reason ? ` — ${target.reason}` : ''}

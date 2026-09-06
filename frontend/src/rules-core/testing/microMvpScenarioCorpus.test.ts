@@ -189,6 +189,7 @@ describe('micro-MVP deterministic scenario corpus', () => {
       rulesetContentHash: MICRO_MVP_SCENARIO_RULESET.contentHash, actorId: 'fighter',
       actionId: MICRO_MVP_SCENARIO_ACTION_IDS.weaponAttack, targetIds: ['wizard'],
       factsByTarget: { wizard: MICRO_MVP_SCENARIO_FACTS.enemy(5) },
+      choices: { 'weapon_mastery.topple.use': 'use' },
     }));
     expect(opening.getState().pendingResolution?.type).toBe('attack_reaction');
     expect(opening.getState().actors.wizard.runtime.hp.current).toBe(12);

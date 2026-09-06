@@ -160,10 +160,14 @@ export const cardsApi = {
     template_only?: boolean;
     exclude_template_only?: boolean;
     fields?: 'list';
-  }): Promise<CardsResponse> => {
-    const response = await apiClient.get<CardsResponse>('/api/cards', { params });
-    return response.data;
-  },
+  }): Promise<CardsResponse> => cached(
+    catalogListCacheKey('/api/cards', params),
+    60_000,
+    async () => {
+      const response = await apiClient.get<CardsResponse>('/api/cards', { params });
+      return response.data;
+    },
+  ),
 
   // Получение карточки по ID
   getCard: async (id: string): Promise<Card> =>
@@ -213,10 +217,14 @@ export const actionsApi = {
     type?: string;
     search?: string;
     fields?: 'list' | 'runtime';
-  }): Promise<ActionsResponse> => {
-    const response = await apiClient.get<ActionsResponse>('/api/actions', { params });
-    return response.data;
-  },
+  }): Promise<ActionsResponse> => cached(
+    catalogListCacheKey('/api/actions', params),
+    60_000,
+    async () => {
+      const response = await apiClient.get<ActionsResponse>('/api/actions', { params });
+      return response.data;
+    },
+  ),
 
   // Получение действия по ID
   getAction: async (id: string): Promise<Action> =>
@@ -253,13 +261,17 @@ export const effectsApi = {
     type?: string;
     search?: string;
     fields?: 'list' | 'runtime';
-  }, request?: { timeoutMs?: number }): Promise<PassiveEffectsResponse> => {
-    const response = await apiClient.get<PassiveEffectsResponse>('/api/effects', {
-      params,
-      ...(request?.timeoutMs != null ? { timeout: request.timeoutMs } : {}),
-    });
-    return response.data;
-  },
+  }, request?: { timeoutMs?: number }): Promise<PassiveEffectsResponse> => cached(
+    catalogListCacheKey('/api/effects', params),
+    60_000,
+    async () => {
+      const response = await apiClient.get<PassiveEffectsResponse>('/api/effects', {
+        params,
+        ...(request?.timeoutMs != null ? { timeout: request.timeoutMs } : {}),
+      });
+      return response.data;
+    },
+  ),
 
   // Получение эффекта по ID
   getEffect: async (id: string): Promise<PassiveEffect> =>
@@ -479,17 +491,21 @@ export const classesApi = {
 
 export const resourcesApi = {
   getResources: async (params?: { category?: string; fields?: 'list' }): Promise<ResourcesResponse> => cached(
-    `/api/resources?category=${params?.category ?? ''}&fields=${params?.fields ?? ''}`,
+    catalogListCacheKey('/api/resources', params),
     60_000,
     async () => {
       const response = await apiClient.get<ResourcesResponse>('/api/resources', { params });
       return response.data;
     },
   ),
-  getResource: async (id: string): Promise<ResourceDefinition> => {
-    const response = await apiClient.get<ResourceDefinition>(`/api/resources/${id}`);
-    return response.data;
-  },
+  getResource: async (id: string): Promise<ResourceDefinition> => cached(
+    `/api/resources/${id}`,
+    60_000,
+    async () => {
+      const response = await apiClient.get<ResourceDefinition>(`/api/resources/${id}`);
+      return response.data;
+    },
+  ),
   createResource: async (data: CreateResourceRequest): Promise<ResourceDefinition> => {
     const response = await apiClient.post<ResourceDefinition>('/api/resources', data);
     return response.data;

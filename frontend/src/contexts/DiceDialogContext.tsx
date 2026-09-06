@@ -147,7 +147,7 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
                   onChange={(e) => setTargetId(e.target.value)}
                   style={{ flex: 1, padding: '5px 8px', borderRadius: 6, border: '1px solid #6b5836', background: '#1c1813', color: '#e8e0d0', fontSize: 13 }}
                 >
-                  <option value="">— выберите противника —</option>
+                  <option value="">— выберите цель —</option>
                   {dialog.targets.map((t) => (
                     <option key={t.id} value={t.id} disabled={t.disabled} title={t.reason}>
                       {t.name}{t.disabled && t.reason ? ` — ${t.reason}` : ''}

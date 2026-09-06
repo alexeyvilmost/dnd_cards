@@ -57,7 +57,7 @@ const PINNED_CONTENT_PATCH = Object.freeze({
   id: 'dnd5e-2024.micro-mvp-l1.content-patch.v1',
   version: '1.8.0',
   sourceReleaseId: 'prod-snapshot@2026-07-15.micro-mvp-l1.v1',
-  hash: 'sha256:31148b36b944474af7506da946fcaaeb0adf42696dda359a91ad88f8a7aa40f5',
+  hash: 'sha256:633fafd289b191d4b3feac67252424f8f3f69690148452f99d22b9586e2c2eb2',
   conditionCount: 15,
 });
 

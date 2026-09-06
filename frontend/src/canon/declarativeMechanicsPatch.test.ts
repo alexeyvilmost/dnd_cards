@@ -24,7 +24,7 @@ function readReviewedPreimageCatalogs(): ReturnType<typeof readProdSnapshotCatal
     import.meta.url,
   ), 'utf8').replace(/\r\n/g, '\n');
   const fixtureHash = `sha256:${createHash('sha256').update(rawFixture).digest('hex')}`;
-  if (fixtureHash !== 'sha256:ac2fa254a8bc8170d881a3f073e1fd77228e42b59a415b7a989e022ba80ca1b9') {
+  if (fixtureHash !== 'sha256:00f0bed8fff0002bc501df25718263d98be275b27a4dea9b0d75518263e5484b') {
     throw new Error(`Reviewed preimage fixture hash mismatch: ${fixtureHash}`);
   }
   const fixture = JSON.parse(rawFixture) as {

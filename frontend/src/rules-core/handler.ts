@@ -28,13 +28,16 @@ import {
   weaponMasteryCleaveUseKey,
   weaponMasteryNickUseKey,
   WEAPON_MASTERY_CLEAVE_USE_PREFIX,
+  applySourceTurnBoundary,
+  matchesWhen,
+  activeEffectRequirementIssue,
+  projectActionSurgeCost,
+  projectQuickenedSpellCost,
+  addBonusDieToD20Roll,
+  armBoonForNextRoll,
+  consumeBoonAfterFailure,
+  runtimeBoonSpec,
 } from './legacy/engineAdapter';
-import { applySourceTurnBoundary } from '../engine/sourceTurnExpiry';
-import { matchesWhen } from '../engine/circumstances';
-import { activeEffectRequirementIssue } from '../engine/actionRequirements';
-import { projectActionSurgeCost, projectQuickenedSpellCost } from '../engine/actionSurge';
-import { addBonusDieToD20Roll } from '../engine/roll';
-import { armBoonForNextRoll, consumeBoonAfterFailure, runtimeBoonSpec } from '../engine/boons';
 import { compileDeclaredMechanicsTargeting } from './actionTargeting';
 import { generalFeatRangedDeclaration } from './generalFeatAttackDeclaration';
 import {
@@ -1295,6 +1298,7 @@ function runtimePatch(before: ActorState['runtime'], after: ActorState['runtime'
   if (differs(before.activeEffects, after.activeEffects)) patch.activeEffects = after.activeEffects;
   if (differs(before.firedThisTurn, after.firedThisTurn)) patch.firedThisTurn = after.firedThisTurn ?? null;
   if (differs(before.firedThisRest, after.firedThisRest)) patch.firedThisRest = after.firedThisRest ?? null;
+  if (differs(before.firedByPeriod, after.firedByPeriod)) patch.firedByPeriod = after.firedByPeriod ?? null;
   return patch;
 }
 
@@ -2966,6 +2970,9 @@ function applyReactionRuntimeDelta(
       : {}),
     ...(patch.firedThisRest !== undefined
       ? { firedThisRest: patch.firedThisRest ?? undefined }
+      : {}),
+    ...(patch.firedByPeriod !== undefined
+      ? { firedByPeriod: patch.firedByPeriod ?? undefined }
       : {}),
   };
 }

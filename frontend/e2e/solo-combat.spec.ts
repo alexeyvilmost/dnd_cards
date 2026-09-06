@@ -134,7 +134,7 @@ test('combat setup invites an owned ally and keeps shared action cards inside th
   }
 
   await page.getByTestId('open-solo-combat').click();
-  const setup = page.getByRole('dialog', { name: 'Противники для Лучник-дварф' });
+  const setup = page.getByRole('dialog', { name: 'Боевая сцена для Лучник-дварф' });
   await setup.getByRole('button', { name: 'Пригласить союзника Бард-помощник' }).click();
   const monsterRow = setup.locator('article').filter({
     has: page.getByRole('heading', { name: 'Гоблин-воин', exact: true }),
@@ -156,23 +156,35 @@ test('combat setup invites an owned ally and keeps shared action cards inside th
   expect(summaryBox).not.toBeNull();
   expect(utilityBox).not.toBeNull();
   expect(actionsBox).not.toBeNull();
-  expect(utilityBox!.y).toBeGreaterThanOrEqual(summaryBox!.y + summaryBox!.height - 1);
-  expect(utilityBox!.x).toBeLessThan(actionsBox!.x);
+  const compactHotbar = (page.viewportSize()?.width ?? 0) <= 560;
+  if (compactHotbar) {
+    expect(utilityBox!.x).toBeGreaterThanOrEqual(summaryBox!.x + summaryBox!.width - 1);
+    expect(actionsBox!.y).toBeGreaterThanOrEqual(summaryBox!.y + summaryBox!.height - 1);
+  } else {
+    expect(utilityBox!.y).toBeGreaterThanOrEqual(summaryBox!.y + summaryBox!.height - 1);
+    expect(utilityBox!.x).toBeLessThan(actionsBox!.x);
+  }
 
   const actionLayout = await actions.evaluate((node) => {
     const style = getComputedStyle(node);
     const tiles = [...node.querySelectorAll<HTMLElement>('.combat-sheet-action')];
     return {
       flow: style.gridAutoFlow,
+      wrap: style.flexWrap,
       rows: style.gridTemplateRows.split(' ').filter(Boolean).length,
       rowTops: [...new Set(tiles.map((tile) => Math.round(tile.getBoundingClientRect().top)))],
       scrollable: node.scrollWidth > node.clientWidth,
     };
   });
-  expect(actionLayout.flow).toBe('column');
-  expect(actionLayout.rows).toBe(2);
-  expect(actionLayout.rowTops.length).toBeLessThanOrEqual(2);
-  if (actionLayout.scrollable) expect(actionLayout.rowTops).toHaveLength(2);
+  if (compactHotbar) {
+    expect(actionLayout.wrap).toBe('nowrap');
+    expect(actionLayout.rowTops).toHaveLength(1);
+  } else {
+    expect(actionLayout.flow).toBe('column');
+    expect(actionLayout.rows).toBe(2);
+    expect(actionLayout.rowTops.length).toBeLessThanOrEqual(2);
+    if (actionLayout.scrollable) expect(actionLayout.rowTops).toHaveLength(2);
+  }
 
   const combatAction = actions.locator('.cs-action-tile').last();
   await combatAction.scrollIntoViewIfNeeded();
@@ -197,7 +209,7 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
   await expect(open).toBeVisible({ timeout: 30_000 });
   await open.click();
 
-  const setup = page.getByRole('dialog', { name: `Противники для Лучник-дварф` });
+  const setup = page.getByRole('dialog', { name: 'Боевая сцена для Лучник-дварф' });
   await expect(setup).toContainText('Гоблин-воин');
   await setup.locator('.lucide-plus').click();
   await setup.getByRole('button', { name: 'Начать бой' }).click();
@@ -219,11 +231,15 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
   expect(firstCellBox).not.toBeNull();
   expect(Math.abs(firstCellBox!.width - firstCellBox!.height)).toBeLessThan(0.5);
   const viewport = page.getByTestId('tactical-map-viewport');
+  const initialZoom = Number(await map.getAttribute('data-zoom'));
   await viewport.hover();
   await page.mouse.wheel(0, 120);
-  await expect(map).toHaveAttribute('data-zoom', '0.9');
-  for (let index = 0; index < 5; index += 1) await page.mouse.wheel(0, -120);
-  await expect(map).toHaveAttribute('data-zoom', '1.4');
+  await expect(map).toHaveAttribute(
+    'data-zoom',
+    String(Math.max(0.35, Number((initialZoom - 0.1).toFixed(2)))),
+  );
+  for (let index = 0; index < 20; index += 1) await page.mouse.wheel(0, -120);
+  await expect(map).toHaveAttribute('data-zoom', '1.8');
   await viewport.evaluate((node) => { node.scrollLeft = 0; node.scrollTop = 0; });
   const viewportBox = await viewport.boundingBox();
   expect(viewportBox).not.toBeNull();

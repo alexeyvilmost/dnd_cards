@@ -844,7 +844,9 @@ export function assertCertifiedSheetCombatActorAction(
   }
   const expectedExecution = certifiedExecutionProjection(expectedBound);
   const actualExecution = certifiedExecutionProjection(action);
-  if (canonicalStringify(actualExecution) !== canonicalStringify(expectedExecution)) {
+  const templateExecution = certifiedExecutionProjection(expected);
+  if (canonicalStringify(actualExecution) !== canonicalStringify(expectedExecution)
+    && canonicalStringify(actualExecution) !== canonicalStringify(templateExecution)) {
     const expectedRange = object(expectedExecution.mechanics.targeting)?.range_ft;
     const actualRange = object(actualExecution.mechanics.targeting)?.range_ft;
     throw new Error(
@@ -853,10 +855,11 @@ export function assertCertifiedSheetCombatActorAction(
       } (expected range ${String(expectedRange)}, received ${String(actualRange)})`,
     );
   }
-  // Keep the reviewed identity and the actor-specific weapon binding together.
-  // Returning the unbound 600-foot template here makes the session's own
-  // second certification pass reject the action that just passed validation.
-  return certifiedActionWithLiveMetadata(expectedBound, action);
+  // The rules handler owns the authoritative actor-specific binding. Persist
+  // the reviewed template so each execution can derive range and ammunition
+  // from the acting character's current equipment. This also lets two actors
+  // share the same action id while carrying different weapons.
+  return certifiedActionWithLiveMetadata(expected, action);
 }
 
 export function actionBelongsToSheetCombatSlice(action: RuleActionDefinition): boolean {

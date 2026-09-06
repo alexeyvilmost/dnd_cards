@@ -530,13 +530,21 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
     const button = page.locator(`[data-action-id="${unarmed.id}"]`).getByRole('button');
     await expect(button).toBeEnabled({ timeout: 30_000 });
     await button.click();
+    const choice = page.getByRole('dialog', { name: 'Выбор при действии' });
+    await expect(choice).toBeVisible();
+    await expect(choice.getByRole('button', { name: 'Нанести урон' }))
+      .toHaveClass(/\bon\b/);
+    await choice.getByRole('button', { name: 'Применить', exact: true }).click();
     await declareTrainingDummy(page, 5);
-    const roll = page.getByRole('dialog', { name: 'Бросок кубов' });
-    await expect(roll).toBeVisible();
-    await roll.getByRole('button', { name: 'Автобросок' }).click();
 
-    await expect.poll(() => api.runtimePatchRequests.length).toBe(1);
+    await expect.poll(() => Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(1);
+    expect(api.runtimeCommandRequests).toHaveLength(1);
     expect((api.getCharacter(IDS.source)?.resources as JsonRecord).action).toBe(0);
+    const turnState = api.getCharacter(IDS.source)?.turn_state as JsonRecord;
+    const continuation = turnState.canonical_pending_combat_v1 as JsonRecord;
+    const actors = ((continuation.world as JsonRecord).actors) as Record<string, JsonRecord>;
+    expect(((actors['scene-target:training-dummy'].runtime as JsonRecord).hp as JsonRecord).current)
+      .toBeLessThan(100);
     await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);
   });
 
@@ -604,7 +612,8 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
     await button.click();
     const confirm = page.getByRole('dialog', { name: 'Подтверждение действия' });
     await expect(confirm).toBeVisible();
-    await expect(confirm.getByRole('combobox')).toHaveCount(0);
+    await expect(confirm.getByRole('combobox')).toHaveValue(IDS.target);
+    await expect(confirm.getByRole('combobox').getByRole('option', { name: 'Ally' })).toBeAttached();
     await confirm.getByRole('button', { name: 'Применить', exact: true }).click();
 
     await expect.poll(() => api.runtimePatchRequests.length).toBeGreaterThan(0);

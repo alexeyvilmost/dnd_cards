@@ -113,6 +113,15 @@ function uniqueStringArray(value: unknown, path: string): string[] {
   return [...strings].sort((left, right) => left.localeCompare(right));
 }
 
+function validateFiredByPeriod(value: unknown, path: string): void {
+  if (value === undefined) return;
+  const periods = record(value, path);
+  for (const [period, ids] of Object.entries(periods)) {
+    nonBlankString(period, `${path} key`);
+    uniqueStringArray(ids, `${path}.${period}`);
+  }
+}
+
 function validatePendingRuntimeSnapshot(value: unknown, path: string): RuntimeState {
   const runtime = record(value, path);
   const hp = record(runtime.hp, `${path}.hp`);
@@ -162,6 +171,7 @@ function validatePendingRuntimeSnapshot(value: unknown, path: string): RuntimeSt
   if (runtime.firedThisRest !== undefined) {
     uniqueStringArray(runtime.firedThisRest, `${path}.firedThisRest`);
   }
+  validateFiredByPeriod(runtime.firedByPeriod, `${path}.firedByPeriod`);
   if (runtime.deathSaves !== undefined) record(runtime.deathSaves, `${path}.deathSaves`);
   return runtime as unknown as RuntimeState;
 }
@@ -1206,6 +1216,7 @@ export function migrateWorldState(value: unknown): WorldState {
       objects,
     });
     const runtime = record(actor.runtime, `world.actors.${actorId}.runtime`);
+    validateFiredByPeriod(runtime.firedByPeriod, `world.actors.${actorId}.runtime.firedByPeriod`);
     const character = record(actor.character, `world.actors.${actorId}.character`);
     const normalizedResourceRecovery = normalizeResourceRecovery({
       value: character.resourceRecovery,

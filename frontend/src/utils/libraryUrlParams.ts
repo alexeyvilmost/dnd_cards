@@ -14,9 +14,24 @@ export interface LibraryFilters {
   resourceCategory: string;
   sortBy: string;
   viewMode: LibraryViewMode;
+  spellLevel: string;
+  spellClass: string;
+  spellSubclass: string;
+  spellSchool: string;
+  spellConcentration: string;
+  spellRitual: string;
+  featCategory: string;
+  featRepeatable: string;
+  featAbility: string;
+  backgroundAbility: string;
+  backgroundSkill: string;
 }
 
-const FILTER_KEYS = ['type', 'q', 'rarity', 'effect', 'properties', 'template', 'slot', 'armor', 'resource', 'sort', 'view'] as const;
+const FILTER_KEYS = [
+  'type', 'q', 'rarity', 'effect', 'properties', 'template', 'slot', 'armor', 'resource', 'sort', 'view',
+  'spellLevel', 'spellClass', 'spellSubclass', 'spellSchool', 'concentration', 'ritual',
+  'featCategory', 'repeatable', 'featAbility', 'backgroundAbility', 'backgroundSkill',
+] as const;
 
 export function parseLibrarySearchParams(params: URLSearchParams): LibraryFilters {
   const type = params.get('type');
@@ -37,6 +52,17 @@ export function parseLibrarySearchParams(params: URLSearchParams): LibraryFilter
     resourceCategory: params.get('resource') ?? '',
     sortBy: params.get('sort') ?? 'created_desc',
     viewMode: view === 'grid' ? 'grid' : view === 'interface' ? 'interface' : 'list',
+    spellLevel: params.get('spellLevel') ?? '',
+    spellClass: params.get('spellClass') ?? '',
+    spellSubclass: params.get('spellSubclass') ?? '',
+    spellSchool: params.get('spellSchool') ?? '',
+    spellConcentration: params.get('concentration') ?? '',
+    spellRitual: params.get('ritual') ?? '',
+    featCategory: params.get('featCategory') ?? '',
+    featRepeatable: params.get('repeatable') ?? '',
+    featAbility: params.get('featAbility') ?? '',
+    backgroundAbility: params.get('backgroundAbility') ?? '',
+    backgroundSkill: params.get('backgroundSkill') ?? '',
   };
 }
 
@@ -84,6 +110,16 @@ export function buildLibrarySearchParams(
     params.set('view', 'grid');
   } else if (filters.viewMode === 'interface') {
     params.set('view', 'interface');
+  }
+  const specialized: Array<[keyof LibraryFilters, string]> = [
+    ['spellLevel', 'spellLevel'], ['spellClass', 'spellClass'], ['spellSubclass', 'spellSubclass'],
+    ['spellSchool', 'spellSchool'], ['spellConcentration', 'concentration'], ['spellRitual', 'ritual'],
+    ['featCategory', 'featCategory'], ['featRepeatable', 'repeatable'], ['featAbility', 'featAbility'],
+    ['backgroundAbility', 'backgroundAbility'], ['backgroundSkill', 'backgroundSkill'],
+  ];
+  for (const [field, key] of specialized) {
+    const value = filters[field];
+    if (typeof value === 'string' && value) params.set(key, value);
   }
 
   return params;

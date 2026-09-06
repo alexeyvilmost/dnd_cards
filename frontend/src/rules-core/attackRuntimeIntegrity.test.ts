@@ -357,6 +357,11 @@ describe('Attack/grapple reducer integrity guards', () => {
   });
 
   it('projects grapple and shove only with their database condition identities', () => {
+    replaceConditionsFromDatabase([], `sha256:${'1'.repeat(64)}`);
+    expect(() => evolve(baseWorld(), {
+      type: 'GrappleApplied', grapple: validGrapple(),
+    })).toThrow(/grappled.*no effects-library entity/);
+
     replaceConditionsFromDatabase(
       Object.values(BUILTIN_CONDITION_RULES).map((definition) => ({
         ...definition,

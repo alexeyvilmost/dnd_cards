@@ -17,6 +17,8 @@ import {
 } from '../rules-core/determinism';
 import { InMemoryRulesSession } from '../rules-core/session';
 import { migrateWorldState } from '../rules-core/worldMigration';
+import { compileDeclaredMechanicsTargeting } from '../rules-core/actionTargeting';
+import { bindEquippedWeaponActionContext } from '../engine/weapon';
 import {
   LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE,
   WEAPON_ATTACK_PRIMITIVE,
@@ -804,16 +806,40 @@ function acceptedWeaponTransition(input: {
   if (!canonicalUuid(input.commandId)) {
     throw new SheetCombatSessionError('Runtime command id must be a canonical UUID');
   }
-  const { targetActorId, facts } = requireSingleWeaponTarget({
-    ...input,
-    world: input.base.world,
-  });
   const actor = input.base.world.actors[input.actorId];
   const handSlot = input.primitive === WEAPON_ATTACK_PRIMITIVE ? 'main_hand' : 'off_hand';
   const weaponCardId = actor.runtime.equipment[handSlot];
   if (!weaponCardId) {
     throw new SheetCombatSessionError(`${input.action.id} requires a weapon in ${handSlot}`);
   }
+  const cards = new Map([
+    ...(actor.character.knownCards ?? []),
+    ...(actor.character.equippedCards ?? []),
+  ].map((card) => [card.id, card] as const));
+  let boundAction: RuleActionDefinition;
+  try {
+    const mechanics = bindEquippedWeaponActionContext(
+      input.action.mechanics,
+      actor.runtime.equipment,
+      cards,
+    );
+    boundAction = {
+      ...input.action,
+      mechanics,
+      targeting: compileDeclaredMechanicsTargeting(mechanics),
+    };
+  } catch (error) {
+    throw new SheetCombatSessionError(
+      `Cannot bind weapon action ${input.action.id}: ${error instanceof Error ? error.message : 'unknown error'}`,
+    );
+  }
+  const { targetActorId, facts } = requireSingleWeaponTarget({
+    world: input.base.world,
+    actorId: input.actorId,
+    action: boundAction,
+    primitive: input.primitive,
+    declaration: input.declaration,
+  });
   const session = new InMemoryRulesSession(input.base.world, input.base.catalog, {
     rng: input.rng,
     clock: createLogicalClock(input.base.world.logicalClock),

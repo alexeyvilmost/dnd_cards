@@ -102,6 +102,8 @@
         "raceId": "3b63e5cd-fd0b-4887-a187-a6f11ab17dfc",
         "lineageId": null,
         "classId": "9cc3ffcd-8de0-4bc1-a1c3-0a0e67952ab8",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "f63ca302-2fa2-4e58-b790-3f03429cfa69",
         "level": 1,
@@ -161,6 +163,8 @@
         "raceId": "a81e448f-34f6-417e-ae3c-8f92f5259edf",
         "lineageId": "57c93442-dce0-4aaa-96dc-910736abfb78",
         "classId": "be96272c-8585-438d-ac32-b2788f1b1741",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "1084c6ac-d70d-4ef3-8cdb-caf9872017e5",
         "level": 1,
@@ -234,6 +238,8 @@
         "raceId": "832cebd9-121a-4457-b9fd-92adaee40720",
         "lineageId": "6e28e3b3-9049-44ff-9458-6efedfaa3013",
         "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "ddde0222-b594-4bac-8103-d32395c294c2",
         "level": 1,
@@ -296,6 +302,8 @@
         "raceId": "3e524959-afd8-499a-9486-aa67b4d1b769",
         "lineageId": null,
         "classId": "d3b22b24-a4f1-4dab-8038-c89bfee62843",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "57c2fc4d-0e06-4868-a653-5baaea15563a",
         "level": 1,
@@ -380,6 +388,8 @@
         "raceId": "192243e7-5011-4fc3-a91b-a5d66354aa20",
         "lineageId": "9a244fdc-d2ea-440e-a46c-327903c63a69",
         "classId": "932a15ad-a7c5-4062-b13a-899933b94231",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "169eef1a-4572-413c-86ae-4ecdd804c6af",
         "level": 1,
@@ -458,6 +468,8 @@
         "raceId": "c8664de4-e485-43e5-9dce-d3022d44781a",
         "lineageId": null,
         "classId": "de7259fa-305e-429d-a209-fa79ec302afd",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "090600ef-7536-43ef-a285-a03ede11200c",
         "level": 1,
@@ -534,6 +546,8 @@
         "raceId": "6f19d163-7382-49a1-ac97-b75fb9067daa",
         "lineageId": null,
         "classId": "5a0403b5-3185-43a2-b187-38397d3d01b7",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "fc0e2f06-8835-42e5-a016-80a1b55fc78f",
         "level": 1,
@@ -573,6 +587,11 @@
           "deception"
         ],
         "resolvedChoices": {
+          "feat:d4f9bc32-674e-45b5-8287-9afe7d2ba1ce:e2b33d7a-e1e8-453b-b321-847c0a98e8e3:music_instruments": [
+            "bagpipes",
+            "drum",
+            "dulcimer"
+          ],
           "class:5a0403b5-3185-43a2-b187-38397d3d01b7:567f000b-6554-41d2-9888-8b601afd7f6f:warlock_cantrips": [
             "70e35366-5446-49ff-b0b9-759dbbff347e",
             "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2"
@@ -583,11 +602,6 @@
           ],
           "class:5a0403b5-3185-43a2-b187-38397d3d01b7:39f2a896-dda5-4424-b976-bc7ceb60152b:warlock_invocation_l1": [
             "EFF-invoc-armor_of_shadows"
-          ],
-          "feat:d4f9bc32-674e-45b5-8287-9afe7d2ba1ce:e2b33d7a-e1e8-453b-b321-847c0a98e8e3:music_instruments": [
-            "bagpipes",
-            "drum",
-            "dulcimer"
           ]
         },
         "swapFeat": true
@@ -610,6 +624,8 @@
         "raceId": "fac3f998-75c3-4fe3-9ff0-8adbe1e1e3fa",
         "lineageId": "a3d4c1d2-f472-489c-9445-2f456486451a",
         "classId": "ed17e7b6-366f-43ef-a94c-2d62dd5d7b20",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "a5d6d5a3-31b8-429c-88a3-6f112618a23c",
         "level": 1,
@@ -669,6 +685,8 @@
         "raceId": "bda5fc05-255a-45bb-8e90-9b350ba5e14a",
         "lineageId": null,
         "classId": "03265901-3b0a-4d3e-ab2c-001a6cab59c3",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "7eb8a9bb-c710-42b3-99e3-e74b03b4d7c8",
         "level": 1,
@@ -679,11 +697,11 @@
         "effectIds": [],
         "resourceIds": [],
         "spellIds": [
-          "33c69e7d-7524-421a-9d68-521e1b7fb57a",
-          "fe0a8d3c-318c-4308-9ff0-3838367f75e6",
           "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
           "70e35366-5446-49ff-b0b9-759dbbff347e",
-          "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1"
+          "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",
+          "33c69e7d-7524-421a-9d68-521e1b7fb57a",
+          "fe0a8d3c-318c-4308-9ff0-3838367f75e6"
         ],
         "abilities": {
           "str": 15,
@@ -715,14 +733,6 @@
           "race:bda5fc05-255a-45bb-8e90-9b350ba5e14a:f02c7a7b-c5eb-4291-8caa-e5728dca59c5:human_feat": [
             "642812ee-4ac3-44b8-bdda-beeeee15213a"
           ],
-          "class:03265901-3b0a-4d3e-ab2c-001a6cab59c3:ab0c1d14-d8ef-4d0d-9952-b26e2f862b5c:paladin_spells_l1": [
-            "33c69e7d-7524-421a-9d68-521e1b7fb57a",
-            "fe0a8d3c-318c-4308-9ff0-3838367f75e6"
-          ],
-          "class:03265901-3b0a-4d3e-ab2c-001a6cab59c3:58167888-c7a4-4fe3-9fd3-0aabfa8aed9a:weapon-mastery": [
-            "quarterstaff",
-            "mace"
-          ],
           "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80:magic_initiate_spellcasting_ability": [
             "int"
           ],
@@ -732,6 +742,14 @@
           ],
           "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80:magic_initiate_wizard_level_1": [
             "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1"
+          ],
+          "class:03265901-3b0a-4d3e-ab2c-001a6cab59c3:ab0c1d14-d8ef-4d0d-9952-b26e2f862b5c:paladin_spells_l1": [
+            "33c69e7d-7524-421a-9d68-521e1b7fb57a",
+            "fe0a8d3c-318c-4308-9ff0-3838367f75e6"
+          ],
+          "class:03265901-3b0a-4d3e-ab2c-001a6cab59c3:58167888-c7a4-4fe3-9fd3-0aabfa8aed9a:weapon-mastery": [
+            "quarterstaff",
+            "mace"
           ]
         },
         "swapFeat": true
@@ -754,6 +772,8 @@
         "raceId": "4c9dd44e-cf60-46b1-9971-f717572d8a43",
         "lineageId": "1aeec902-a018-445e-a866-5b552600d667",
         "classId": "aa30f40a-88e5-4a0a-a79e-f3f5119bfa41",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "e3505422-e7f8-479b-928e-b5dbbbc694b3",
         "level": 1,
@@ -796,6 +816,11 @@
           "race:1aeec902-a018-445e-a866-5b552600d667:497bd2ec-39bd-433d-a67e-626e2ff0df69:elf_lineage_spellcasting_ability": [
             "int"
           ],
+          "feat:58444ab1-32a6-4a50-8eff-03ef7a1bce10:bdc3fe91-8223-48e0-86a4-796a8dda7eef:crafter_tools": [
+            "alchemist",
+            "brewer",
+            "calligrapher"
+          ],
           "class:aa30f40a-88e5-4a0a-a79e-f3f5119bfa41:083ca63a-be75-4b3b-81b4-bcba905aa8af:rogue_expertise_l1": [
             "acrobatics",
             "athletics"
@@ -807,10 +832,8 @@
           "class:aa30f40a-88e5-4a0a-a79e-f3f5119bfa41:112c7397-1f14-4899-92a6-479845c07db1:rogue_additional_language": [
             "common"
           ],
-          "feat:58444ab1-32a6-4a50-8eff-03ef7a1bce10:bdc3fe91-8223-48e0-86a4-796a8dda7eef:crafter_tools": [
-            "alchemist",
-            "brewer",
-            "calligrapher"
+          "feat:58444ab1-32a6-4a50-8eff-03ef7a1bce10:12400000-0000-4000-8000-000000000003:crafter_fast_item": [
+            "14db2ea7-22cd-46fe-89e2-39dd9a0f2fcd"
           ]
         },
         "swapFeat": true
@@ -832,6 +855,8 @@
         "raceId": "3b63e5cd-fd0b-4887-a187-a6f11ab17dfc",
         "lineageId": null,
         "classId": "7eda481c-0474-4443-9b8a-be08c53564c2",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "10559b70-2f82-42f1-84a0-7017c1980835",
         "level": 1,
@@ -874,9 +899,6 @@
             "a438dcc1-94d0-420c-ae29-35b2cafd2f7a",
             "4291b817-6869-4f87-afae-5bd1a37aee3f"
           ],
-          "class:7eda481c-0474-4443-9b8a-be08c53564c2:e0bca40f-dd27-4e71-bdc6-2d6e7c36b305:ranger_favored_enemy": [
-            "beasts"
-          ],
           "class:7eda481c-0474-4443-9b8a-be08c53564c2:58167888-c7a4-4fe3-9fd3-0aabfa8aed9a:weapon-mastery": [
             "quarterstaff",
             "mace"
@@ -902,6 +924,8 @@
         "raceId": "a81e448f-34f6-417e-ae3c-8f92f5259edf",
         "lineageId": "57c93442-dce0-4aaa-96dc-910736abfb78",
         "classId": "66a58227-41e6-4c56-b548-1253d98f6f09",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "f35e329a-51a4-4b0d-bc3f-edcbfc276f76",
         "level": 1,
@@ -974,6 +998,8 @@
         "raceId": "832cebd9-121a-4457-b9fd-92adaee40720",
         "lineageId": "b262a4c9-e303-472b-b347-e3fcb2fe93f1",
         "classId": "9cc3ffcd-8de0-4bc1-a1c3-0a0e67952ab8",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "04c222c1-c202-4cbe-aa06-5663a4e36ab5",
         "level": 1,
@@ -1032,6 +1058,8 @@
         "raceId": "3e524959-afd8-499a-9486-aa67b4d1b769",
         "lineageId": null,
         "classId": "be96272c-8585-438d-ac32-b2788f1b1741",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "06014c1a-4eaa-406d-9875-220a9bbc5098",
         "level": 1,
@@ -1105,6 +1133,8 @@
         "raceId": "192243e7-5011-4fc3-a91b-a5d66354aa20",
         "lineageId": "9a244fdc-d2ea-440e-a46c-327903c63a69",
         "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "df6ba1f4-e409-4021-8902-045ff5f37dbd",
         "level": 1,
@@ -1167,6 +1197,8 @@
         "raceId": "c8664de4-e485-43e5-9dce-d3022d44781a",
         "lineageId": null,
         "classId": "d3b22b24-a4f1-4dab-8038-c89bfee62843",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "c9cea42f-e5cc-4596-b03a-61c2689b7777",
         "level": 1,
@@ -1251,6 +1283,8 @@
         "raceId": "a81e448f-34f6-417e-ae3c-8f92f5259edf",
         "lineageId": "e5a17dcb-db1d-4e42-9191-33a123c66782",
         "classId": "932a15ad-a7c5-4062-b13a-899933b94231",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "f63ca302-2fa2-4e58-b790-3f03429cfa69",
         "level": 1,
@@ -1293,6 +1327,11 @@
           "animal_handling"
         ],
         "resolvedChoices": {
+          "feat:d4f9bc32-674e-45b5-8287-9afe7d2ba1ce:e2b33d7a-e1e8-453b-b321-847c0a98e8e3:music_instruments": [
+            "bagpipes",
+            "drum",
+            "dulcimer"
+          ],
           "class:932a15ad-a7c5-4062-b13a-899933b94231:0a5724ae-fb9f-4d32-82e9-a4bfe3e48858:druid_cantrips": [
             "d3a05e09-7f80-44ea-be21-dfdd3408d528",
             "7f7d92ed-0d5c-4567-990b-3395247b9266"
@@ -1305,11 +1344,6 @@
           ],
           "class:932a15ad-a7c5-4062-b13a-899933b94231:ccaf0064-4564-4e2c-9f57-1d3efb8b47c2:druid_primal_order": [
             "magician"
-          ],
-          "feat:d4f9bc32-674e-45b5-8287-9afe7d2ba1ce:e2b33d7a-e1e8-453b-b321-847c0a98e8e3:music_instruments": [
-            "bagpipes",
-            "drum",
-            "dulcimer"
           ],
           "class:932a15ad-a7c5-4062-b13a-899933b94231:ccaf0064-4564-4e2c-9f57-1d3efb8b47c2:druid_magician_cantrip": [
             "3c68b9a7-d143-4b39-b06c-3d78e3276117"
@@ -1335,6 +1369,8 @@
         "raceId": "832cebd9-121a-4457-b9fd-92adaee40720",
         "lineageId": "1fc68a11-99de-4870-85ad-1cedf6e844e9",
         "classId": "ed17e7b6-366f-43ef-a94c-2d62dd5d7b20",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "57c2fc4d-0e06-4868-a653-5baaea15563a",
         "level": 1,
@@ -1373,6 +1409,9 @@
             "alchemist",
             "brewer",
             "calligrapher"
+          ],
+          "feat:58444ab1-32a6-4a50-8eff-03ef7a1bce10:12400000-0000-4000-8000-000000000003:crafter_fast_item": [
+            "14db2ea7-22cd-46fe-89e2-39dd9a0f2fcd"
           ]
         },
         "swapFeat": true
@@ -1395,6 +1434,8 @@
         "raceId": "832cebd9-121a-4457-b9fd-92adaee40720",
         "lineageId": "593f8c23-6ca8-49ab-8f71-ff88c39e95c7",
         "classId": "aa30f40a-88e5-4a0a-a79e-f3f5119bfa41",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "090600ef-7536-43ef-a285-a03ede11200c",
         "level": 1,
@@ -1463,6 +1504,8 @@
         "raceId": "832cebd9-121a-4457-b9fd-92adaee40720",
         "lineageId": "0fc14aae-e914-46d4-9143-b71758494983",
         "classId": "7eda481c-0474-4443-9b8a-be08c53564c2",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "fc0e2f06-8835-42e5-a016-80a1b55fc78f",
         "level": 1,
@@ -1505,9 +1548,6 @@
             "a438dcc1-94d0-420c-ae29-35b2cafd2f7a",
             "4291b817-6869-4f87-afae-5bd1a37aee3f"
           ],
-          "class:7eda481c-0474-4443-9b8a-be08c53564c2:e0bca40f-dd27-4e71-bdc6-2d6e7c36b305:ranger_favored_enemy": [
-            "beasts"
-          ],
           "class:7eda481c-0474-4443-9b8a-be08c53564c2:58167888-c7a4-4fe3-9fd3-0aabfa8aed9a:weapon-mastery": [
             "quarterstaff",
             "mace"
@@ -1533,6 +1573,8 @@
         "raceId": "832cebd9-121a-4457-b9fd-92adaee40720",
         "lineageId": "5f4be1d6-792c-4473-a7fa-3473528dea03",
         "classId": "66a58227-41e6-4c56-b548-1253d98f6f09",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "a5d6d5a3-31b8-429c-88a3-6f112618a23c",
         "level": 1,
@@ -1605,6 +1647,8 @@
         "raceId": "192243e7-5011-4fc3-a91b-a5d66354aa20",
         "lineageId": "1aae5238-0974-4418-bed2-961202fac804",
         "classId": "9cc3ffcd-8de0-4bc1-a1c3-0a0e67952ab8",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "7eb8a9bb-c710-42b3-99e3-e74b03b4d7c8",
         "level": 1,
@@ -1664,6 +1708,8 @@
         "raceId": "192243e7-5011-4fc3-a91b-a5d66354aa20",
         "lineageId": "5e0694d7-049f-42fe-80b9-49b585bcf79c",
         "classId": "be96272c-8585-438d-ac32-b2788f1b1741",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "e3505422-e7f8-479b-928e-b5dbbbc694b3",
         "level": 1,
@@ -1737,6 +1783,8 @@
         "raceId": "192243e7-5011-4fc3-a91b-a5d66354aa20",
         "lineageId": "1c97e560-8f80-4a51-b18d-da9aad5cf26a",
         "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "10559b70-2f82-42f1-84a0-7017c1980835",
         "level": 1,
@@ -1771,6 +1819,11 @@
           "animal_handling"
         ],
         "resolvedChoices": {
+          "feat:d4f9bc32-674e-45b5-8287-9afe7d2ba1ce:e2b33d7a-e1e8-453b-b321-847c0a98e8e3:music_instruments": [
+            "bagpipes",
+            "drum",
+            "dulcimer"
+          ],
           "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
             "e28c558d-5239-4008-837f-6cda8fa47d3a"
           ],
@@ -1778,11 +1831,6 @@
             "quarterstaff",
             "mace",
             "club"
-          ],
-          "feat:d4f9bc32-674e-45b5-8287-9afe7d2ba1ce:e2b33d7a-e1e8-453b-b321-847c0a98e8e3:music_instruments": [
-            "bagpipes",
-            "drum",
-            "dulcimer"
           ]
         },
         "swapFeat": true
@@ -1805,6 +1853,8 @@
         "raceId": "192243e7-5011-4fc3-a91b-a5d66354aa20",
         "lineageId": "df5eb7e6-ba8d-49b0-a42c-9b8b32270243",
         "classId": "d3b22b24-a4f1-4dab-8038-c89bfee62843",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "f35e329a-51a4-4b0d-bc3f-edcbfc276f76",
         "level": 1,
@@ -1849,6 +1899,11 @@
           "history"
         ],
         "resolvedChoices": {
+          "feat:5b5e2cb6-3a2d-4b6d-ba95-b313c413db28:bfa97845-1f04-4057-9890-3503320b30c7:feat_skilled": [
+            "skill:acrobatics",
+            "skill:animal_handling",
+            "skill:deception"
+          ],
           "class:d3b22b24-a4f1-4dab-8038-c89bfee62843:bcb05701-70ac-4b48-8e60-4cf46f6ea544:wizard_cantrips": [
             "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
             "70e35366-5446-49ff-b0b9-759dbbff347e",
@@ -1861,11 +1916,6 @@
             "938a86fd-e0bf-4845-b4b3-acfe2fed2b59",
             "db6433bf-f779-4b65-8766-0feffefd1930",
             "4abefac8-329b-4c70-a59a-84dca2d194d3"
-          ],
-          "feat:5b5e2cb6-3a2d-4b6d-ba95-b313c413db28:bfa97845-1f04-4057-9890-3503320b30c7:feat_skilled": [
-            "skill:acrobatics",
-            "skill:animal_handling",
-            "skill:deception"
           ],
           "class:d3b22b24-a4f1-4dab-8038-c89bfee62843:bcb05701-70ac-4b48-8e60-4cf46f6ea544:wizard_prepared_spells_level_1": [
             "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",
@@ -1894,6 +1944,8 @@
         "raceId": "192243e7-5011-4fc3-a91b-a5d66354aa20",
         "lineageId": "dec43381-bae8-45bd-a1ba-d413d7677a67",
         "classId": "de7259fa-305e-429d-a209-fa79ec302afd",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "06014c1a-4eaa-406d-9875-220a9bbc5098",
         "level": 1,
@@ -1936,6 +1988,11 @@
           "insight"
         ],
         "resolvedChoices": {
+          "feat:58444ab1-32a6-4a50-8eff-03ef7a1bce10:bdc3fe91-8223-48e0-86a4-796a8dda7eef:crafter_tools": [
+            "alchemist",
+            "brewer",
+            "calligrapher"
+          ],
           "class:de7259fa-305e-429d-a209-fa79ec302afd:438229f4-ac52-4250-af9a-8be69435ef4b:cleric_cantrips": [
             "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7",
             "a9a0d114-ad46-435e-a3c9-128b305b8a5d",
@@ -1950,10 +2007,8 @@
           "class:de7259fa-305e-429d-a209-fa79ec302afd:46aec414-906e-4b1f-a2f9-629ec220a9c4:cleric_divine_order": [
             "protector"
           ],
-          "feat:58444ab1-32a6-4a50-8eff-03ef7a1bce10:bdc3fe91-8223-48e0-86a4-796a8dda7eef:crafter_tools": [
-            "alchemist",
-            "brewer",
-            "calligrapher"
+          "feat:58444ab1-32a6-4a50-8eff-03ef7a1bce10:12400000-0000-4000-8000-000000000003:crafter_fast_item": [
+            "14db2ea7-22cd-46fe-89e2-39dd9a0f2fcd"
           ]
         },
         "swapFeat": true
@@ -1976,6 +2031,8 @@
         "raceId": "192243e7-5011-4fc3-a91b-a5d66354aa20",
         "lineageId": "5ab51cec-28e4-4d8c-abd8-acd4b4b896b9",
         "classId": "5a0403b5-3185-43a2-b187-38397d3d01b7",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "df6ba1f4-e409-4021-8902-045ff5f37dbd",
         "level": 1,
@@ -2047,6 +2104,8 @@
         "raceId": "192243e7-5011-4fc3-a91b-a5d66354aa20",
         "lineageId": "b63ce5e6-a325-4ec0-bfd9-4d387e8112f1",
         "classId": "ed17e7b6-366f-43ef-a94c-2d62dd5d7b20",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "c9cea42f-e5cc-4596-b03a-61c2689b7777",
         "level": 1,
@@ -2101,6 +2160,8 @@
         "raceId": "192243e7-5011-4fc3-a91b-a5d66354aa20",
         "lineageId": "bed8127d-4206-402d-a9dd-39b2bd8a4f44",
         "classId": "03265901-3b0a-4d3e-ab2c-001a6cab59c3",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "f63ca302-2fa2-4e58-b790-3f03429cfa69",
         "level": 1,
@@ -2167,6 +2228,8 @@
         "raceId": "192243e7-5011-4fc3-a91b-a5d66354aa20",
         "lineageId": "aa0f144a-2364-46b2-af6f-213b6b7a4a31",
         "classId": "aa30f40a-88e5-4a0a-a79e-f3f5119bfa41",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "1084c6ac-d70d-4ef3-8cdb-caf9872017e5",
         "level": 1,
@@ -2235,6 +2298,8 @@
         "raceId": "fac3f998-75c3-4fe3-9ff0-8adbe1e1e3fa",
         "lineageId": "1e194bbc-d321-4da0-a7f0-f3e72b2ab691",
         "classId": "7eda481c-0474-4443-9b8a-be08c53564c2",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "ddde0222-b594-4bac-8103-d32395c294c2",
         "level": 1,
@@ -2277,9 +2342,6 @@
             "a438dcc1-94d0-420c-ae29-35b2cafd2f7a",
             "4291b817-6869-4f87-afae-5bd1a37aee3f"
           ],
-          "class:7eda481c-0474-4443-9b8a-be08c53564c2:e0bca40f-dd27-4e71-bdc6-2d6e7c36b305:ranger_favored_enemy": [
-            "beasts"
-          ],
           "class:7eda481c-0474-4443-9b8a-be08c53564c2:58167888-c7a4-4fe3-9fd3-0aabfa8aed9a:weapon-mastery": [
             "quarterstaff",
             "mace"
@@ -2305,6 +2367,8 @@
         "raceId": "fac3f998-75c3-4fe3-9ff0-8adbe1e1e3fa",
         "lineageId": "a9280a29-bb4a-4530-ad79-6b495f2a7943",
         "classId": "9cc3ffcd-8de0-4bc1-a1c3-0a0e67952ab8",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "169eef1a-4572-413c-86ae-4ecdd804c6af",
         "level": 1,
@@ -2339,14 +2403,14 @@
           "athletics"
         ],
         "resolvedChoices": {
-          "class:9cc3ffcd-8de0-4bc1-a1c3-0a0e67952ab8:58167888-c7a4-4fe3-9fd3-0aabfa8aed9a:weapon-mastery": [
-            "quarterstaff",
-            "mace"
-          ],
           "feat:d4f9bc32-674e-45b5-8287-9afe7d2ba1ce:e2b33d7a-e1e8-453b-b321-847c0a98e8e3:music_instruments": [
             "bagpipes",
             "drum",
             "dulcimer"
+          ],
+          "class:9cc3ffcd-8de0-4bc1-a1c3-0a0e67952ab8:58167888-c7a4-4fe3-9fd3-0aabfa8aed9a:weapon-mastery": [
+            "quarterstaff",
+            "mace"
           ]
         },
         "swapFeat": true
@@ -2369,6 +2433,8 @@
         "raceId": "4c9dd44e-cf60-46b1-9971-f717572d8a43",
         "lineageId": "5783d111-a00b-405a-8f86-5c0a062f802f",
         "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "fc0e2f06-8835-42e5-a016-80a1b55fc78f",
         "level": 1,
@@ -2413,14 +2479,6 @@
           "race:5783d111-a00b-405a-8f86-5c0a062f802f:8e2b5ef6-e3da-49d0-af6f-1cdd457db671:elf_lineage_spellcasting_ability": [
             "int"
           ],
-          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
-            "e28c558d-5239-4008-837f-6cda8fa47d3a"
-          ],
-          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:bfd9a78c-4676-4b6f-8318-e5aee7f1d89b:weapon-mastery": [
-            "quarterstaff",
-            "mace",
-            "club"
-          ],
           "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80:magic_initiate_spellcasting_ability": [
             "int"
           ],
@@ -2430,6 +2488,14 @@
           ],
           "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80:magic_initiate_wizard_level_1": [
             "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1"
+          ],
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
+            "e28c558d-5239-4008-837f-6cda8fa47d3a"
+          ],
+          "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:bfd9a78c-4676-4b6f-8318-e5aee7f1d89b:weapon-mastery": [
+            "quarterstaff",
+            "mace",
+            "club"
           ]
         },
         "swapFeat": true
@@ -2452,6 +2518,8 @@
         "raceId": "4c9dd44e-cf60-46b1-9971-f717572d8a43",
         "lineageId": "533bd5b1-a98d-4b51-ba28-c123da0a9c0f",
         "classId": "d3b22b24-a4f1-4dab-8038-c89bfee62843",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "a5d6d5a3-31b8-429c-88a3-6f112618a23c",
         "level": 1,
@@ -2502,6 +2570,11 @@
           "race:533bd5b1-a98d-4b51-ba28-c123da0a9c0f:89a1ef1a-3448-4233-8294-bdc86153416a:elf_lineage_spellcasting_ability": [
             "int"
           ],
+          "feat:58444ab1-32a6-4a50-8eff-03ef7a1bce10:bdc3fe91-8223-48e0-86a4-796a8dda7eef:crafter_tools": [
+            "alchemist",
+            "brewer",
+            "calligrapher"
+          ],
           "class:d3b22b24-a4f1-4dab-8038-c89bfee62843:bcb05701-70ac-4b48-8e60-4cf46f6ea544:wizard_cantrips": [
             "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
             "70e35366-5446-49ff-b0b9-759dbbff347e",
@@ -2515,10 +2588,8 @@
             "db6433bf-f779-4b65-8766-0feffefd1930",
             "4abefac8-329b-4c70-a59a-84dca2d194d3"
           ],
-          "feat:58444ab1-32a6-4a50-8eff-03ef7a1bce10:bdc3fe91-8223-48e0-86a4-796a8dda7eef:crafter_tools": [
-            "alchemist",
-            "brewer",
-            "calligrapher"
+          "feat:58444ab1-32a6-4a50-8eff-03ef7a1bce10:12400000-0000-4000-8000-000000000003:crafter_fast_item": [
+            "14db2ea7-22cd-46fe-89e2-39dd9a0f2fcd"
           ],
           "class:d3b22b24-a4f1-4dab-8038-c89bfee62843:bcb05701-70ac-4b48-8e60-4cf46f6ea544:wizard_prepared_spells_level_1": [
             "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",

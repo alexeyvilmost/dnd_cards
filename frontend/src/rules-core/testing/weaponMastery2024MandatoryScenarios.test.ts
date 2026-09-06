@@ -218,6 +218,8 @@ function actor(input: {
     ...(effect ? {
       masteryEffects: {
         [effect.id]: {
+          id: effect.id,
+          card_number: effect.card_number,
           name: effect.name,
           mechanics: copy(effect.mechanics),
           weaponTypes: [...input.mastery!.weaponTypes],

@@ -410,10 +410,10 @@ describe('CharacterV3 atomic pending-combat session', () => {
       content_hash: opened.transition.nextWorld.ruleset.contentHash,
       errata_version: opened.transition.nextWorld.ruleset.errataVersion,
     });
-    // Sheet projections can be older than the generated certification artifact.
-    // A newly opened session is deliberately pinned to the certified release.
+    // The checked-in certification artifact is regenerated from the same
+    // certified release that pins every newly opened session.
     expect(prepared.request.ruleset_ref.content_hash)
-      .not.toBe(fixture.source.ruleset.contentHash);
+      .toBe(fixture.source.ruleset.contentHash);
     expect(prepared.request.participants.map((row) => row.character_id)).toEqual([
       IDS.source,
       IDS.target,

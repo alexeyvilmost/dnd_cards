@@ -155,6 +155,7 @@ describe('Dwarf 2024 pure traits', () => {
       ],
       runtime: runtime([
         { id: 'expired', mechanics: { kind: 'grant_sense', sense: 'blindsight', range: 30 }, roundsLeft: 0 },
+        { id: 'no-mechanics', mechanics: null as never },
         { id: 'other', mechanics: { kind: 'modifier', value: 1 } },
         { id: 'blank', mechanics: { kind: 'grant_sense', range: 30 } },
         { id: 'permanent-runtime', mechanics: {
@@ -203,6 +204,7 @@ describe('Dwarf 2024 pure traits', () => {
       source: 'Stonecunning', ownerId: 'dwarf', sourceId: 'dwarf',
     };
     expect(runtimeSenseEffectIssue(valid, 'dwarf')).toBeNull();
+    expect(runtimeSenseEffectIssue({ mechanics: null }, 'dwarf')).toBeNull();
     for (const malformedLabels of [
       { id: '' }, { id: 7 },
       { name: '' }, { name: 7 },

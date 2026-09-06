@@ -192,9 +192,13 @@ export interface RuntimeState {
   deathSaves?: DeathSaveState;
   /** Id triggered-эффектов, сработавших за этот ход (для uses.per:"turn"); сброс в startTurn. */
   firedThisTurn?: string[];
-  /** Id triggered-эффектов, сработавших с последнего долгого отдыха (uses.per: long_rest/short_rest/…),
+  /** Id triggered-эффектов, сработавших с последнего долгого отдыха (uses.per: long_rest),
    *  чтобы «раз за отдых»-триггеры (Неумолимая стойкость) не срабатывали бесконечно; сброс в longRest. */
   firedThisRest?: string[];
+  /** Id triggered-эффектов для более коротких/особых периодов uses.per. Ключ — имя периода
+   *  (сейчас short_rest); отдельные корзины не дают короткому отдыху случайно заблокировать
+   *  способность до следующего долгого отдыха. */
+  firedByPeriod?: Record<string, string[]>;
 }
 
 export interface ResourceRestRecovery {

@@ -1,4 +1,4 @@
-import { payloadsOf } from '../engine/mechanicsView';
+import { payloadsOf } from './legacy/engineAdapter';
 
 type JsonRecord = Record<string, unknown>;
 

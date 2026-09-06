@@ -6,8 +6,9 @@
  *
  * По образцу DiceDialogContext (промис + модалка).
  */
-import { createContext, useCallback, useContext, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { ReactionOffer } from '../mvp/contracts';
+import DialogShell from '../components/DialogShell';
 import './DiceDialog.css';
 
 export type ReactionDecision = 'accept' | 'decline';
@@ -69,6 +70,10 @@ const linkStyle: CSSProperties = {
 export function ReactionPromptProvider({ children }: { children: ReactNode }) {
   const [prompt, setPrompt] = useState<PromptState | null>(null);
   const resolver = useRef<((r: ReactionResult) => void) | null>(null);
+  useEffect(() => () => {
+    resolver.current?.({ decision: 'decline' });
+    resolver.current = null;
+  }, []);
 
   const request = useCallback((offer: ReactionOffer, opts?: { describe?: string; options?: ReactionOption[] }): Promise<ReactionResult> => {
     const options = opts?.options;
@@ -76,6 +81,7 @@ export function ReactionPromptProvider({ children }: { children: ReactNode }) {
     if (policy === 'auto') return Promise.resolve({ decision: 'accept', option: options?.[0]?.id });
     if (policy === 'disabled') return Promise.resolve({ decision: 'decline' });
     return new Promise((resolve) => {
+      resolver.current?.({ decision: 'decline' });
       resolver.current = resolve;
       setPrompt({ offer, describe: opts?.describe, options });
     });
@@ -98,8 +104,7 @@ export function ReactionPromptProvider({ children }: { children: ReactNode }) {
     <Ctx.Provider value={{ request }}>
       {children}
       {prompt && (
-        <div className="dice-dialog-backdrop" onClick={() => finish({ decision: 'decline' })}>
-          <div className="dice-dialog" role="dialog" aria-label="Реакция" onClick={(e) => e.stopPropagation()}>
+        <DialogShell label="Реакция" onCancel={() => finish({ decision: 'decline' })}>
             <div className="dice-dialog-title">Реакция: {prompt.offer.name}</div>
             <div className="dice-dialog-summary">
               {prompt.describe || 'Использовать эту реакцию?'}
@@ -137,8 +142,7 @@ export function ReactionPromptProvider({ children }: { children: ReactNode }) {
                 Больше не предлагать
               </button>
             </p>
-          </div>
-        </div>
+        </DialogShell>
       )}
     </Ctx.Provider>
   );

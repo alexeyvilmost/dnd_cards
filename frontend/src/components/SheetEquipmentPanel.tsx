@@ -92,6 +92,7 @@ export default function SheetEquipmentPanel({
   const [itemMouse, setItemMouse] = useState({ x: 0, y: 0 });
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [attuneOpen, setAttuneOpen] = useState(false);
+  const [showEmptySlots, setShowEmptySlots] = useState(false);
   // S5 контейнеры: какие контейнеры раскрыты (показывают содержимое) в инвентаре.
   const [expandedContainers, setExpandedContainers] = useState<Set<string>>(new Set());
   const toggleContainer = (cardId: string) =>
@@ -241,7 +242,10 @@ export default function SheetEquipmentPanel({
 
   // ── Слот-ячейка ──
   const renderSlots = () => {
-    const entries = Object.entries(SLOT_LABELS);
+    const allEntries = Object.entries(SLOT_LABELS);
+    const entries = showEmptySlots
+      ? allEntries
+      : allEntries.filter(([slot]) => Boolean(runtime.equipment[slot]));
     if (asIcons) {
       return (
         <div className="sheet-slot-grid">
@@ -391,6 +395,8 @@ export default function SheetEquipmentPanel({
   };
 
   const dialogCardAttuned = dialog ? attuned.includes(dialog.card.id) : false;
+  const emptySlotCount = Object.keys(SLOT_LABELS)
+    .filter((slot) => !runtime.equipment[slot]).length;
 
   const body = (
     <>
@@ -426,7 +432,17 @@ export default function SheetEquipmentPanel({
       </div>
 
       <div className="sheet-group">
-        <h3 className="sheet-h3">Слоты</h3>
+        <div className="sheet-group-heading">
+          <h3 className="sheet-h3">Экипировано</h3>
+          {emptySlotCount > 0 && (
+            <button type="button" className="sheet-empty-slots-toggle" onClick={() => setShowEmptySlots((shown) => !shown)}>
+              {showEmptySlots ? 'Скрыть пустые' : `Показать пустые (${emptySlotCount})`}
+            </button>
+          )}
+        </div>
+        {!showEmptySlots && emptySlotCount === Object.keys(SLOT_LABELS).length && (
+          <p className="forge-note">Ничего не надето. Выберите предмет в инвентаре ниже.</p>
+        )}
         {renderSlots()}
       </div>
 

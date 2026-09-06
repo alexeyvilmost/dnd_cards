@@ -6,6 +6,7 @@ import type { CharacterContext } from '../mvp/contracts';
 
 const ctx = {
   level: 3,
+  classLevels: { fighter: 3 },
   hitDie: 'd10',
   profBonus: 2,
   abilityMods: { str: 3, dex: 2, con: 2, int: 0, wis: 1, cha: -1 },
@@ -14,6 +15,7 @@ const ctx = {
 const assembled = {
   klass: {
     id: 'fighter',
+    card_number: 'CLASS-fighter',
     name: 'Воин',
     hit_die: 'd10',
     resources: { second_wind: { by_level: { 1: 2, 3: 3 }, per: 'short_rest' } },
@@ -35,7 +37,7 @@ describe('resourceMaximumBreakdown', () => {
 
   it('explains a by-level class resource', () => {
     const result = resourceMaximumBreakdown('second_wind', ctx, assembled, [], 3);
-    expect(result.parts).toEqual([{ value: 3, source: 'Воин', reason: 'значение на 3-м уровне' }]);
+    expect(result.parts).toEqual([{ value: 3, source: 'Воин', reason: 'значение на 3-м уровне класса' }]);
   });
 
   it('makes a persisted legacy override explicit and keeps the sum invariant', () => {

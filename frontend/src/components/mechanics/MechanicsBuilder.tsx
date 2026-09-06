@@ -31,6 +31,8 @@ import FilterEditor from './FilterEditor';
 import TargetingEditor from './TargetingEditor';
 import DurationEditor from './DurationEditor';
 import { MECH_INPUT_CLS as cls } from './shared';
+import { describeMechanics } from '../../engine/describeMechanics';
+import { FormattedText } from '../../utils/formattedText';
 
 type EffectEntry = { id: string; blockId: string; values: Record<string, unknown> };
 
@@ -154,6 +156,10 @@ const MechanicsBuilder = ({ value, onChange, onValidationChange, resourceOptions
   const summary = useMemo(
     () => summarizeMechanics(triggerId, triggerValues, effectEntries.map((e) => ({ blockId: e.blockId, values: e.values }))),
     [triggerId, triggerValues, effectEntries],
+  );
+  const executableDescription = useMemo(
+    () => describeMechanics(built as Record<string, unknown> | null),
+    [built],
   );
 
   const emit = (next: typeof built) => {
@@ -416,19 +422,19 @@ const MechanicsBuilder = ({ value, onChange, onValidationChange, resourceOptions
             className={`px-3 py-1 text-sm rounded-md ${mode === 'json' ? 'bg-white shadow text-gray-900 font-medium' : 'text-gray-500'}`}
             onClick={() => mode !== 'json' && switchToJson()}
           >
-            Сырой JSON
+            Расширенный JSON
           </button>
         </div>
         {aiContext && (
           <button
             type="button"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-gray-300"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-gray-700 text-white hover:bg-gray-800 disabled:bg-gray-300"
             disabled={aiBusy}
             title="Сгенерировать механику по описанию (OpenAI)"
             onClick={generateWithAi}
           >
             <Wand2 size={14} />
-            {aiBusy ? 'Генерация…' : 'AI'}
+            {aiBusy ? 'Генерация…' : 'AI-черновик'}
           </button>
         )}
         {aiError && <span className="text-xs text-red-600">{aiError}</span>}
@@ -453,13 +459,13 @@ const MechanicsBuilder = ({ value, onChange, onValidationChange, resourceOptions
           {jsonError ? (
             <p className="text-xs text-red-600 mt-1">Ошибка JSON: {jsonError}</p>
           ) : (
-            <p className="text-xs text-green-600 mt-1">JSON корректен</p>
+            <p className="text-xs text-green-600 mt-1">Синтаксис JSON корректен. Исполняемость проверяется общей валидацией формы.</p>
           )}
         </div>
       ) : (
       <>
       <div>
-        <h3 className="text-sm font-semibold text-gray-800 mb-2">Триггер / активация</h3>
+        <h3 className="text-sm font-semibold text-gray-800 mb-2">Когда срабатывает</h3>
         <select
           className="w-full px-3 py-2 border rounded-lg text-sm mb-3"
           value={triggerId}
@@ -504,11 +510,11 @@ const MechanicsBuilder = ({ value, onChange, onValidationChange, resourceOptions
       </div>
 
       <div className="border-t pt-4">
-        <h3 className="text-sm font-semibold text-gray-800 mb-2">Разрешения / доступность</h3>
-        <p className="text-xs text-gray-500 mb-3">Когда механика применима и что расходует. «Мин. уровень» — выше.</p>
+        <h3 className="text-sm font-semibold text-gray-800 mb-2">Цена и доступность</h3>
+        <p className="text-xs text-gray-500 mb-3">Укажите, когда способность доступна и какие ресурсы она расходует.</p>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Гейт предмета (while)</label>
+            <label className="block text-xs text-gray-600 mb-1">Когда предмет действует</label>
             <select
               className={cls}
               value={itemWhile}
@@ -521,7 +527,7 @@ const MechanicsBuilder = ({ value, onChange, onValidationChange, resourceOptions
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Боеприпас (ammo — id/слаг)</label>
+            <label className="block text-xs text-gray-600 mb-1">Боеприпас</label>
             <input
               className={cls}
               value={ammo}
@@ -530,14 +536,14 @@ const MechanicsBuilder = ({ value, onChange, onValidationChange, resourceOptions
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Перезарядка uses (recharge) ⏳</label>
+            <label className="block text-xs text-gray-600 mb-1">Особая перезарядка</label>
             <input
               className={cls}
               value={recharge}
               placeholder="напр. 5-6, dawn"
               onChange={(e) => { markDirty(); setRecharge(e.target.value); }}
             />
-            <p className="text-[11px] text-amber-600 mt-0.5">⏳ Движок пока перезаряжает по «За период» (uses.per), поле recharge не читается.</p>
+            <p className="text-[11px] text-amber-600 mt-0.5">Расширенный параметр: сейчас восстановления задаются настройкой «За период».</p>
           </div>
           <label className="flex items-center gap-2 text-sm text-gray-700 self-end pb-1 cursor-pointer">
             <input
@@ -550,12 +556,12 @@ const MechanicsBuilder = ({ value, onChange, onValidationChange, resourceOptions
           </label>
         </div>
         <div className="mt-3">
-          <label className="block text-xs text-gray-600 mb-1">Доп. стоимость (ресурсы: слот, хиты, предмет…)</label>
+          <label className="block text-xs text-gray-600 mb-1">Дополнительная стоимость</label>
           <CostEditor value={extraCost} onChange={(c) => { markDirty(); setExtraCost(c); }} />
         </div>
         <div className="mt-3">
-          <label className="block text-xs text-gray-600 mb-1">Требования (класс, вид, характеристика…)</label>
-          <p className="text-xs text-amber-600 mb-1">⚠ Движок пока не проверяет требования в бою — только «Мин. уровень» действует на выдачу способностей.</p>
+          <label className="block text-xs text-gray-600 mb-1">Требования</label>
+          <p className="text-xs text-amber-600 mb-1">Требования применяются при выдаче способности; в бою повторно проверяется минимальный уровень.</p>
           <RequirementsEditor value={requirements} onChange={(r) => { markDirty(); setRequirements(r); }} />
         </div>
       </div>
@@ -576,7 +582,7 @@ const MechanicsBuilder = ({ value, onChange, onValidationChange, resourceOptions
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-gray-800">Эффекты</h3>
+          <h3 className="text-sm font-semibold text-gray-800">Результат</h3>
           <select
             className="text-sm border rounded px-2 py-1"
             defaultValue=""
@@ -644,9 +650,17 @@ const MechanicsBuilder = ({ value, onChange, onValidationChange, resourceOptions
       </div>
 
       <div className="border-t pt-4">
-        <h3 className="text-sm font-semibold text-gray-800 mb-2">Превью</h3>
-        <p className="text-sm text-gray-700 mb-2">{summary || '—'}</p>
-        <p className="text-xs text-gray-400">Полный JSON — на вкладке «Сырой JSON».</p>
+        <h3 className="text-sm font-semibold text-gray-800 mb-2">Исполняемое резюме</h3>
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <p className="text-sm text-gray-800 mb-1">
+            <FormattedText text={executableDescription.summary || summary || 'Результат пока не задан'} />
+          </p>
+          {executableDescription.details.map((detail) => (
+            <p key={detail} className="text-xs text-gray-600 mt-1"><FormattedText text={detail} /></p>
+          ))}
+          {!built?.uses && <p className="text-xs text-gray-600 mt-1">Использования: без лимита</p>}
+        </div>
+        <p className="text-xs text-gray-400 mt-2">Полный документ доступен на вкладке «Расширенный JSON».</p>
       </div>
       </>
       )}

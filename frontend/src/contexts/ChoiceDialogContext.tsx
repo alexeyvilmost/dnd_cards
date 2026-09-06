@@ -4,9 +4,10 @@
  * через useChoiceDialog().request(choices, title) — вернётся Promise с картой id→значения
  * или null при отмене. Переиспользует ChoiceResolver и стили dice-диалога.
  */
-import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import { ChoiceResolver } from '../character/components';
+import DialogShell from '../components/DialogShell';
 import './DiceDialog.css';
 
 /** Результат: id выбора (сырой choice.id) → выбранные значения. null — отмена. */
@@ -31,6 +32,10 @@ export function ChoiceDialogProvider({ children }: { children: ReactNode }) {
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [values, setValues] = useState<Record<string, string[]>>({});
   const resolver = useRef<((r: ChoiceResult) => void) | null>(null);
+  useEffect(() => () => {
+    resolver.current?.(null);
+    resolver.current = null;
+  }, []);
 
   const request = useCallback((choices: PendingChoice[], title: string): Promise<ChoiceResult> => {
     if (choices.length === 0) return Promise.resolve({});
@@ -57,9 +62,7 @@ export function ChoiceDialogProvider({ children }: { children: ReactNode }) {
     <Ctx.Provider value={{ request }}>
       {children}
       {dialog && (
-        <div className="dice-dialog-backdrop" onClick={() => finish(null)}>
-          <div className="dice-dialog-wrap" onClick={(e) => e.stopPropagation()}>
-            <div className="dice-dialog" role="dialog" aria-label="Выбор при действии">
+        <DialogShell label="Выбор при действии" onCancel={() => finish(null)} wrap>
               <div className="dice-dialog-title">{dialog.title}</div>
               <div className="dice-dialog-summary">Выберите вариант применения:</div>
               <div className="dice-dialog-list">
@@ -86,9 +89,7 @@ export function ChoiceDialogProvider({ children }: { children: ReactNode }) {
                   Отмена
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
+        </DialogShell>
       )}
     </Ctx.Provider>
   );

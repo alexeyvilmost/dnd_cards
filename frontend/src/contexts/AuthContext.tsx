@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authApi } from '../api/authApi';
+import { clearApiCache } from '../api/apiCache';
 import {
   AUTH_UNAUTHORIZED_EVENT,
   clearPersistedAuthSession,
@@ -38,6 +39,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const clearAuthState = () => {
       invalidated = true;
+      clearApiCache();
       if (!active) return;
       setToken(null);
       setUser(null);
@@ -81,6 +83,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (data: AuthRequest) => {
     const response = await authApi.login(data);
+    clearApiCache();
     setToken(response.token);
     setUser(response.user);
 
@@ -94,6 +97,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
+    clearApiCache();
     setToken(null);
     setUser(null);
     clearPersistedAuthSession();

@@ -120,6 +120,9 @@ function cloneState(state: RuntimeState): RuntimeState {
     deathSaves: state.deathSaves ? { ...state.deathSaves } : undefined,
     firedThisTurn: state.firedThisTurn ? [...state.firedThisTurn] : undefined,
     firedThisRest: state.firedThisRest ? [...state.firedThisRest] : undefined,
+    firedByPeriod: state.firedByPeriod
+      ? Object.fromEntries(Object.entries(state.firedByPeriod).map(([period, ids]) => [period, [...ids]]))
+      : undefined,
   };
 }
 
@@ -4337,7 +4340,8 @@ export const EMITTED_EVENTS = [
 
 export const PLANNED_EVENTS = [
   // Требуют конвейера стадий атаки/урона (отдельные точки эмиссии):
-  'attack_roll_made', 'hit_by_attack', 'damage_dealt', 'saving_throw_made', 'forced_save', 'ability_check_made',
+  'attack_roll_made', 'hit_by_attack', 'targeted_by_magic_missile', 'damage_dealt',
+  'saving_throw_made', 'forced_save', 'ability_check_made',
   // Требуют многоактора/EncounterState (позиции, дистанции) — вне текущей модели:
   'creature_enters_reach', 'creature_leaves_reach', 'creature_moves',
   // Прочее (условия/инициатива/приобретение/уровень) — отдельные слайсы:
@@ -4392,20 +4396,29 @@ export function emitEvent(
   for (const lm of listeners) {
     if (!isAuto(lm)) { pending.push(toOffer(lm, ev)); continue; }
     const per = lm.usesPer;
-    // Гейт «уже сработал в этом периоде»: per:'turn' — firedThisTurn (сброс в startTurn); любой иной
-    // период (long_rest/short_rest/day/…) — firedThisRest (сброс в longRest), иначе «раз за отдых»-триггер
-    // (Неумолимая стойкость → hp=1) срабатывал бы бесконечно. firedThisTurn/Rest читаем СВЕЖИМ на каждой
-    // итерации (C4: вложенный каскад мог обновить), помечаем и коммитим ДО запуска механики.
+    // Гейт «уже сработал в этом периоде»: turn и long_rest сохраняют совместимые поля,
+    // остальные cadence получают отдельную корзину. Иначе short_rest ошибочно оставался
+    // заблокирован до длинного отдыха. Состояние читаем свежим: вложенный каскад мог обновить его.
     const firedTurn = new Set(next.firedThisTurn ?? []);
     const firedRest = new Set(next.firedThisRest ?? []);
+    const firedPeriod = new Set(per && per !== 'turn' && per !== 'long_rest'
+      ? next.firedByPeriod?.[per] ?? []
+      : []);
     if (per === 'turn' && firedTurn.has(lm.id)) continue;
-    if (per && per !== 'turn' && firedRest.has(lm.id)) continue;
+    if (per === 'long_rest' && firedRest.has(lm.id)) continue;
+    if (per && per !== 'turn' && per !== 'long_rest' && firedPeriod.has(lm.id)) continue;
     if (per === 'turn') {
       firedTurn.add(lm.id);
       next = { ...next, firedThisTurn: [...firedTurn] };
-    } else if (per) {
+    } else if (per === 'long_rest') {
       firedRest.add(lm.id);
       next = { ...next, firedThisRest: [...firedRest] };
+    } else if (per) {
+      firedPeriod.add(lm.id);
+      next = {
+        ...next,
+        firedByPeriod: { ...(next.firedByPeriod ?? {}), [per]: [...firedPeriod] },
+      };
     }
     const effs = (lm.mechanics.effects as Dict[]) ?? [];
     if (effs.length) {

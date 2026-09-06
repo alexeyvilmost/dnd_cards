@@ -1323,6 +1323,7 @@ export interface ActorRuntimePatch {
   activeEffects?: RuntimeState['activeEffects'];
   firedThisTurn?: string[] | null;
   firedThisRest?: string[] | null;
+  firedByPeriod?: Record<string, string[]> | null;
 }
 
 export interface ActorRuntimePatchedEvent {

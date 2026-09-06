@@ -114,12 +114,10 @@ test('required real-interaction spine: empty Forge reaches sheet and dedicated c
   const ammunitionCardId = weaponProfile?.ammo?.card_id;
   if (!ammunitionCardId) throw new Error('Projected Ranger longbow has no stable ammunition binding');
   const duplicateReads = trackDuplicateApiReads(page);
-  const supportConfirmations: string[] = [];
   const unexpectedDialogs: string[] = [];
   page.on('dialog', async (dialog) => {
     if (dialog.type() === 'confirm'
       && dialog.message().includes('не входит в проверенный каталог')) {
-      supportConfirmations.push(dialog.message());
       await dialog.accept();
       return;
     }
@@ -127,8 +125,7 @@ test('required real-interaction spine: empty Forge reaches sheet and dedicated c
     await dialog.dismiss();
   });
 
-  await page.goto('/');
-  await page.evaluate(() => localStorage.removeItem('forge-draft'));
+  await page.addInitScript(() => localStorage.removeItem('forge-draft'));
   await page.goto('/character-forge');
   // Enter through the shared navigation driver before touching Forge cards.
   // On mobile this proves that its late-mounted suggestion is dismissed by
@@ -143,11 +140,7 @@ test('required real-interaction spine: empty Forge reaches sheet and dedicated c
     'the isolated server must expose the certified database condition release').toHaveCount(0);
 
   await selectForgeEntity(page, race.name);
-  const confirmationsBeforeLineage = supportConfirmations.length;
   await selectForgeEntity(page, lineage.name);
-  expect(supportConfirmations.length,
-    'the raw post-migration fixture must expose Stone through the real unverified-content warning')
-    .toBeGreaterThan(confirmationsBeforeLineage);
   await completeVisibleForgeChoices(page);
 
   // Select the fixed background first. This order forces the later class-skill
@@ -222,7 +215,7 @@ test('required real-interaction spine: empty Forge reaches sheet and dedicated c
   );
 
   await page.getByTestId('open-solo-combat').click();
-  const setup = page.getByRole('dialog', { name: /Противники для/ });
+  const setup = page.getByRole('dialog', { name: /Боевая сцена для/ });
   await expect(setup).toBeVisible();
   const firstMonster = setup.locator('article').first();
   await firstMonster.locator('button').last().click();

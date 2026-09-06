@@ -163,6 +163,9 @@ const CardLibrary = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState(initialFilters.search);
+  const [searchDraft, setSearchDraft] = useState(initialFilters.search);
+  const catalogRequestSequence = useRef(0);
+  const previousContentType = useRef<LibraryContentType>(initialFilters.contentType);
   const [rarityFilter, setRarityFilter] = useState<string>(initialFilters.rarity);
   const [effectTypeFilter, setEffectTypeFilter] = useState<string>(initialFilters.effectType);
   const [propertiesFilter, setPropertiesFilter] = useState<string>(initialFilters.properties);
@@ -178,19 +181,19 @@ const CardLibrary = () => {
   const [resourceCategoryFilter, setResourceCategoryFilter] = useState<string>(initialFilters.resourceCategory);
   const [sortBy, setSortBy] = useState<string>(initialFilters.sortBy);
   // Фильтры заклинаний
-  const [spellLevel, setSpellLevel] = useState<string>('');
-  const [spellClass, setSpellClass] = useState<string>('');
-  const [spellSubclass, setSpellSubclass] = useState<string>('');
-  const [spellSchool, setSpellSchool] = useState<string>('');
-  const [spellConcentration, setSpellConcentration] = useState<string>('');
-  const [spellRitual, setSpellRitual] = useState<string>('');
+  const [spellLevel, setSpellLevel] = useState<string>(initialFilters.spellLevel);
+  const [spellClass, setSpellClass] = useState<string>(initialFilters.spellClass);
+  const [spellSubclass, setSpellSubclass] = useState<string>(initialFilters.spellSubclass);
+  const [spellSchool, setSpellSchool] = useState<string>(initialFilters.spellSchool);
+  const [spellConcentration, setSpellConcentration] = useState<string>(initialFilters.spellConcentration);
+  const [spellRitual, setSpellRitual] = useState<string>(initialFilters.spellRitual);
   // Фильтры черт
-  const [featCategory, setFeatCategory] = useState<string>('');
-  const [featRepeatable, setFeatRepeatable] = useState<string>('');
-  const [featAbility, setFeatAbility] = useState<string>('');
+  const [featCategory, setFeatCategory] = useState<string>(initialFilters.featCategory);
+  const [featRepeatable, setFeatRepeatable] = useState<string>(initialFilters.featRepeatable);
+  const [featAbility, setFeatAbility] = useState<string>(initialFilters.featAbility);
   // Фильтры предысторий
-  const [bgAbility, setBgAbility] = useState<string>('');
-  const [bgSkill, setBgSkill] = useState<string>('');
+  const [bgAbility, setBgAbility] = useState<string>(initialFilters.backgroundAbility);
+  const [bgSkill, setBgSkill] = useState<string>(initialFilters.backgroundSkill);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [selectedEffect, setSelectedEffect] = useState<PassiveEffect | null>(null);
@@ -232,7 +235,7 @@ const CardLibrary = () => {
   const [hoveredSpell, setHoveredSpell] = useState<Spell | null>(null);
   const [hoveredFeat, setHoveredFeat] = useState<Feat | null>(null);
   const [hoveredBackground, setHoveredBackground] = useState<Background | null>(null);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const previewPositionRef = useRef<HTMLDivElement | null>(null);
 
   // Режим закрепления (клавиша T): превью не закрываются при уходе мыши и становятся
   // интерактивными (можно навести на ссылки внутри). При выходе из режима — закрыть все.
@@ -252,7 +255,18 @@ const CardLibrary = () => {
     if (mouseRafRef.current != null) return;
     mouseRafRef.current = requestAnimationFrame(() => {
       mouseRafRef.current = null;
-      setMousePosition(pendingMouse.current);
+      const preview = previewPositionRef.current;
+      if (!preview) return;
+      const { x: pointerX, y: pointerY } = pendingMouse.current;
+      const width = preview.offsetWidth || 360;
+      const height = preview.offsetHeight || 320;
+      const left = Math.max(10, Math.min(pointerX + 16, window.innerWidth - width - 10));
+      const top = pointerY > window.innerHeight / 2
+        ? Math.max(10, pointerY - height - 16)
+        : Math.min(pointerY + 16, window.innerHeight - height - 10);
+      preview.style.left = `${left}px`;
+      preview.style.top = `${top}px`;
+      preview.style.transform = 'none';
     });
   };
   useEffect(() => () => { if (mouseRafRef.current != null) cancelAnimationFrame(mouseRafRef.current); }, []);
@@ -280,6 +294,7 @@ const CardLibrary = () => {
 
   // Загрузка карточек
   const loadCards = async (page = 1, append = false) => {
+    const requestSequence = catalogRequestSequence.current;
     try {
       console.log(`📥 [CARD LIBRARY] Загружаем карты: страница ${page}, append: ${append}`);
       
@@ -318,6 +333,7 @@ const CardLibrary = () => {
       }
       
       const response = await cardsApi.getCards(params);
+      if (requestSequence !== catalogRequestSequence.current) return;
       
       if (append) {
         setCards(prev => {
@@ -341,15 +357,19 @@ const CardLibrary = () => {
       setCurrentPage(page);
       setError(null);
     } catch (err) {
+      if (requestSequence !== catalogRequestSequence.current) return;
       setError(err instanceof Error ? err.message : 'Ошибка загрузки карточек');
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (requestSequence === catalogRequestSequence.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
   };
 
   // Загрузка действий
   const loadActions = async (page = 1, append = false) => {
+    const requestSequence = catalogRequestSequence.current;
     try {
       console.log(`📥 [CARD LIBRARY] Загружаем действия: страница ${page}, append: ${append}`);
       
@@ -368,6 +388,7 @@ const CardLibrary = () => {
       if (rarityFilter) params.rarity = rarityFilter;
       
       const response = await actionsApi.getActions(params);
+      if (requestSequence !== catalogRequestSequence.current) return;
       
       if (append) {
         setActions(prev => {
@@ -391,15 +412,19 @@ const CardLibrary = () => {
       setCurrentPage(page);
       setError(null);
     } catch (err) {
+      if (requestSequence !== catalogRequestSequence.current) return;
       setError(err instanceof Error ? err.message : 'Ошибка загрузки действий');
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (requestSequence === catalogRequestSequence.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
   };
 
   // Загрузка эффектов
   const loadEffects = async (page = 1, append = false) => {
+    const requestSequence = catalogRequestSequence.current;
     try {
       console.log(`📥 [CARD LIBRARY] Загружаем эффекты: страница ${page}, append: ${append}`);
       
@@ -419,6 +444,7 @@ const CardLibrary = () => {
       if (effectTypeFilter) params.effect_type = effectTypeFilter;
       
       const response = await effectsApi.getEffects(params);
+      if (requestSequence !== catalogRequestSequence.current) return;
       
       if (append) {
         setEffects(prev => {
@@ -442,15 +468,19 @@ const CardLibrary = () => {
       setCurrentPage(page);
       setError(null);
     } catch (err) {
+      if (requestSequence !== catalogRequestSequence.current) return;
       setError(err instanceof Error ? err.message : 'Ошибка загрузки эффектов');
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (requestSequence === catalogRequestSequence.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
   };
 
   // Загрузка заклинаний
   const loadSpells = async (page = 1, append = false) => {
+    const requestSequence = catalogRequestSequence.current;
     try {
       if (page === 1) {
         setLoading(true);
@@ -468,6 +498,7 @@ const CardLibrary = () => {
       if (spellRitual) params.ritual = spellRitual;
 
       const response = await spellsApi.getSpells(params);
+      if (requestSequence !== catalogRequestSequence.current) return;
 
       if (append) {
         setSpells(prev => {
@@ -486,15 +517,19 @@ const CardLibrary = () => {
       setCurrentPage(page);
       setError(null);
     } catch (err) {
+      if (requestSequence !== catalogRequestSequence.current) return;
       setError(err instanceof Error ? err.message : 'Ошибка загрузки заклинаний');
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (requestSequence === catalogRequestSequence.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
   };
 
   // Загрузка черт
   const loadFeats = async (page = 1, append = false) => {
+    const requestSequence = catalogRequestSequence.current;
     try {
       if (page === 1) setLoading(true); else setLoadingMore(true);
       const params: any = { page, limit: 50 };
@@ -503,6 +538,7 @@ const CardLibrary = () => {
       if (featRepeatable) params.repeatable = featRepeatable;
       if (featAbility) params.ability = featAbility;
       const response = await featsApi.getFeats(params);
+      if (requestSequence !== catalogRequestSequence.current) return;
       if (append) {
         setFeats(prev => {
           const existing = new Set(prev.map(f => f.id));
@@ -518,15 +554,19 @@ const CardLibrary = () => {
       setCurrentPage(page);
       setError(null);
     } catch (err) {
+      if (requestSequence !== catalogRequestSequence.current) return;
       setError(err instanceof Error ? err.message : 'Ошибка загрузки черт');
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (requestSequence === catalogRequestSequence.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
   };
 
   // Загрузка предысторий
   const loadBackgrounds = async (page = 1, append = false) => {
+    const requestSequence = catalogRequestSequence.current;
     try {
       if (page === 1) setLoading(true); else setLoadingMore(true);
       const params: any = { page, limit: 50 };
@@ -534,6 +574,7 @@ const CardLibrary = () => {
       if (bgAbility) params.ability = bgAbility;
       if (bgSkill) params.skill = bgSkill;
       const response = await backgroundsApi.getBackgrounds(params);
+      if (requestSequence !== catalogRequestSequence.current) return;
       if (append) {
         setBackgrounds(prev => {
           const existing = new Set(prev.map(b => b.id));
@@ -549,19 +590,24 @@ const CardLibrary = () => {
       setCurrentPage(page);
       setError(null);
     } catch (err) {
+      if (requestSequence !== catalogRequestSequence.current) return;
       setError(err instanceof Error ? err.message : 'Ошибка загрузки предысторий');
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (requestSequence === catalogRequestSequence.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
   };
 
   const loadRaces = async (page = 1, append = false) => {
+    const requestSequence = catalogRequestSequence.current;
     try {
       if (page === 1) setLoading(true); else setLoadingMore(true);
       const params: any = { page, limit: 50 };
       if (search) params.search = search;
       const response = await racesApi.getRaces(params);
+      if (requestSequence !== catalogRequestSequence.current) return;
       if (append) {
         setRaces(prev => {
           const existing = new Set(prev.map(r => r.id));
@@ -577,19 +623,24 @@ const CardLibrary = () => {
       setCurrentPage(page);
       setError(null);
     } catch (err) {
+      if (requestSequence !== catalogRequestSequence.current) return;
       setError(err instanceof Error ? err.message : 'Ошибка загрузки видов');
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (requestSequence === catalogRequestSequence.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
   };
 
   const loadClasses = async (page = 1, append = false) => {
+    const requestSequence = catalogRequestSequence.current;
     try {
       if (page === 1) setLoading(true); else setLoadingMore(true);
       const params: any = { page, limit: 50 };
       if (search) params.search = search;
       const response = await classesApi.getClasses(params);
+      if (requestSequence !== catalogRequestSequence.current) return;
       if (append) {
         setClasses(prev => {
           const existing = new Set(prev.map(c => c.id));
@@ -605,17 +656,22 @@ const CardLibrary = () => {
       setCurrentPage(page);
       setError(null);
     } catch (err) {
+      if (requestSequence !== catalogRequestSequence.current) return;
       setError(err instanceof Error ? err.message : 'Ошибка загрузки классов');
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (requestSequence === catalogRequestSequence.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
   };
 
   const loadResources = async () => {
+    const requestSequence = catalogRequestSequence.current;
     try {
       setLoading(true);
       const response = await resourcesApi.getResources(resourceCategoryFilter ? { category: resourceCategoryFilter } : undefined);
+      if (requestSequence !== catalogRequestSequence.current) return;
       const normalizedSearch = search.trim().toLowerCase();
       const filtered = normalizedSearch
         ? response.resources.filter((resource) => {
@@ -636,19 +692,24 @@ const CardLibrary = () => {
       setCurrentPage(1);
       setError(null);
     } catch (err) {
+      if (requestSequence !== catalogRequestSequence.current) return;
       setError(err instanceof Error ? err.message : 'Ошибка загрузки ресурсов');
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (requestSequence === catalogRequestSequence.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
   };
 
   // Переменные раньше в библиотеке не грузились вовсе: вкладка была заглушкой со ссылкой
   // на конструктор. Теперь это полноценный раздел, как понятия.
   const loadVariables = async () => {
+    const requestSequence = catalogRequestSequence.current;
     try {
       setLoading(true);
       const response = await variablesApi.getVariables();
+      if (requestSequence !== catalogRequestSequence.current) return;
       const list = response.variables || [];
       const normalizedSearch = search.trim().toLowerCase();
       const filtered = normalizedSearch
@@ -664,17 +725,22 @@ const CardLibrary = () => {
       setCurrentPage(1);
       setError(null);
     } catch (err) {
+      if (requestSequence !== catalogRequestSequence.current) return;
       setError(err instanceof Error ? err.message : 'Ошибка загрузки переменных');
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (requestSequence === catalogRequestSequence.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
   };
 
   const loadConcepts = async () => {
+    const requestSequence = catalogRequestSequence.current;
     try {
       setLoading(true);
       const response = await conceptsApi.getConcepts();
+      if (requestSequence !== catalogRequestSequence.current) return;
       const list = response.concepts || [];
       const normalizedSearch = search.trim().toLowerCase();
       const filtered = normalizedSearch
@@ -690,25 +756,29 @@ const CardLibrary = () => {
       setCurrentPage(1);
       setError(null);
     } catch (err) {
+      if (requestSequence !== catalogRequestSequence.current) return;
       setError(err instanceof Error ? err.message : 'Ошибка загрузки понятий');
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (requestSequence === catalogRequestSequence.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
   };
 
   useEffect(() => {
+    const timer = window.setTimeout(() => setSearch(searchDraft), 250);
+    return () => window.clearTimeout(timer);
+  }, [searchDraft]);
+
+  useEffect(() => {
+    catalogRequestSequence.current += 1;
     setCurrentPage(1);
-    setCards([]);
-    setEffects([]);
-    setActions([]);
-    setSpells([]);
-    setFeats([]);
-    setBackgrounds([]);
-    setRaces([]);
-    setClasses([]);
-    setResources([]);
-    setConcepts([]);
+    if (previousContentType.current !== contentType) {
+      setCards([]); setEffects([]); setActions([]); setSpells([]); setFeats([]);
+      setBackgrounds([]); setRaces([]); setClasses([]); setResources([]); setConcepts([]);
+      previousContentType.current = contentType;
+    }
     if (contentType === 'cards') {
       loadCards(1, false);
     } else if (contentType === 'effects') {
@@ -747,6 +817,17 @@ const CardLibrary = () => {
       resourceCategory: resourceCategoryFilter,
       sortBy,
       viewMode,
+      spellLevel,
+      spellClass,
+      spellSubclass,
+      spellSchool,
+      spellConcentration,
+      spellRitual,
+      featCategory,
+      featRepeatable,
+      featAbility,
+      backgroundAbility: bgAbility,
+      backgroundSkill: bgSkill,
     }),
     [
       contentType,
@@ -760,6 +841,17 @@ const CardLibrary = () => {
       resourceCategoryFilter,
       sortBy,
       viewMode,
+      spellLevel,
+      spellClass,
+      spellSubclass,
+      spellSchool,
+      spellConcentration,
+      spellRitual,
+      featCategory,
+      featRepeatable,
+      featAbility,
+      bgAbility,
+      bgSkill,
     ]
   );
 
@@ -801,6 +893,7 @@ const CardLibrary = () => {
     skipFilterUrlSync.current = true;
     setContentType(parsed.contentType);
     setSearch(parsed.search);
+    setSearchDraft(parsed.search);
     setRarityFilter(parsed.rarity);
     setEffectTypeFilter(parsed.effectType);
     setPropertiesFilter(parsed.properties);
@@ -810,6 +903,17 @@ const CardLibrary = () => {
     setResourceCategoryFilter(parsed.resourceCategory);
     setSortBy(parsed.sortBy);
     setViewMode(clampView(parsed.viewMode, parsed.contentType));
+    setSpellLevel(parsed.spellLevel);
+    setSpellClass(parsed.spellClass);
+    setSpellSubclass(parsed.spellSubclass);
+    setSpellSchool(parsed.spellSchool);
+    setSpellConcentration(parsed.spellConcentration);
+    setSpellRitual(parsed.spellRitual);
+    setFeatCategory(parsed.featCategory);
+    setFeatRepeatable(parsed.featRepeatable);
+    setFeatAbility(parsed.featAbility);
+    setBgAbility(parsed.backgroundAbility);
+    setBgSkill(parsed.backgroundSkill);
     lastWrittenParamsRef.current = currentStr;
   }, [searchParams]);
 
@@ -1293,8 +1397,8 @@ const CardLibrary = () => {
               <input
                 type="text"
                 placeholder="Поиск..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                value={searchDraft}
+                onChange={(e) => setSearchDraft(e.target.value)}
                 className="input-field pl-10 text-sm sm:text-base"
               />
             </div>
@@ -1845,11 +1949,11 @@ const CardLibrary = () => {
               </div>
               {hoveredConcept && (
                 <div
+                  ref={previewPositionRef}
                   className="fixed z-50"
                   style={previewStyle({
-                    left: Math.min(mousePosition.x + 16, window.innerWidth - 320),
-                    top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20),
-                    transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',
+                    left: -10_000,
+                    top: 10,
                   })}
                 >
                   <ConceptPreview concept={hoveredConcept} disableHover />
@@ -2027,11 +2131,11 @@ const CardLibrary = () => {
               {/* Показ карточки при наведении */}
               {hoveredCard && (
                 <div
+                  ref={previewPositionRef}
                   className="fixed z-50"
                   style={previewStyle({
-                    left: Math.min(mousePosition.x + 10, window.innerWidth - (itemPreview === 'interface' ? 360 : 220)),
-                    top: Math.max(mousePosition.y - 10, 10),
-                    transform: mousePosition.y < 300 ? 'translateY(0)' : 'translateY(-100%)'
+                    left: -10_000,
+                    top: 10,
                   })}
                 >
                   {itemPreview === 'interface' ? (
@@ -2293,11 +2397,11 @@ const CardLibrary = () => {
               {/* Детальная карточка при наведении (как в design_preview) */}
               {hoveredSpell && (
                 <div
+                  ref={previewPositionRef}
                   className="fixed z-50"
                   style={previewStyle({
-                    left: Math.min(mousePosition.x + 16, window.innerWidth - 360),
-                    top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20),
-                    transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',
+                    left: -10_000,
+                    top: 10,
                   })}
                   onMouseLeave={leaveHover(() => setHoveredSpell(null))}
                 >
@@ -2413,7 +2517,7 @@ const CardLibrary = () => {
                 ))}
               </div>
               {hoveredFeat && (
-                <div className="fixed z-50" style={previewStyle({ left: Math.min(mousePosition.x + 16, window.innerWidth - 360), top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20), transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)' })}>
+                <div ref={previewPositionRef} className="fixed z-50" style={previewStyle({ left: -10_000, top: 10 })}>
                   <FeatPreview feat={hoveredFeat} disableHover={true} />
                 </div>
               )}
@@ -2462,7 +2566,7 @@ const CardLibrary = () => {
                 ))}
               </div>
               {hoveredBackground && (
-                <div className="fixed z-50" style={previewStyle({ left: Math.min(mousePosition.x + 16, window.innerWidth - 360), top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20), transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)' })}>
+                <div ref={previewPositionRef} className="fixed z-50" style={previewStyle({ left: -10_000, top: 10 })}>
                   <BackgroundPreview background={hoveredBackground} disableHover={true} />
                 </div>
               )}
@@ -2563,7 +2667,7 @@ const CardLibrary = () => {
                 ))}
               </div>
               {hoveredRace && (
-                <div className="fixed z-50" style={previewStyle({ left: Math.min(mousePosition.x + 16, window.innerWidth - 360), top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20), transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)' })}>
+                <div ref={previewPositionRef} className="fixed z-50" style={previewStyle({ left: -10_000, top: 10 })}>
                   <RacePreview
                     race={hoveredRace}
                     parentRaceName={hoveredRace.parent_race_id ? raceParentById.get(hoveredRace.parent_race_id)?.name : undefined}
@@ -2661,7 +2765,7 @@ const CardLibrary = () => {
                 ))}
               </div>
               {hoveredClass && (
-                <div className="fixed z-50" style={previewStyle({ left: Math.min(mousePosition.x + 16, window.innerWidth - 360), top: Math.min(Math.max(mousePosition.y - 40, 10), window.innerHeight - 20), transform: mousePosition.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)' })}>
+                <div ref={previewPositionRef} className="fixed z-50" style={previewStyle({ left: -10_000, top: 10 })}>
                   <ClassPreview characterClass={hoveredClass} disableHover={true} />
                 </div>
               )}

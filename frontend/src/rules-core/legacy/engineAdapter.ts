@@ -18,12 +18,19 @@ export {
   conditionCapabilityDenied,
   deniedCapabilities,
 } from '../../engine/modifiers';
-export { activeConditionsOf } from '../../engine/circumstances';
+export { activeConditionsOf, matchesWhen } from '../../engine/circumstances';
 export {
   activeConditionWorldFactEnabled,
+  conditionEffectEntityRef,
+  conditionRegistryAuthority,
   conditionThresholdOutcomes,
 } from '../../engine/conditions';
-export { rollD20 } from '../../engine/roll';
+export { addBonusDieToD20Roll, rollD20 } from '../../engine/roll';
+export { applySourceTurnBoundary } from '../../engine/sourceTurnExpiry';
+export { activeEffectRequirementIssue } from '../../engine/actionRequirements';
+export { projectActionSurgeCost, projectQuickenedSpellCost } from '../../engine/actionSurge';
+export { armBoonForNextRoll, consumeBoonAfterFailure, runtimeBoonSpec } from '../../engine/boons';
+export { payloadsOf } from '../../engine/mechanicsView';
 export { armorClassValue } from '../../engine/ac';
 export { breakdownValue } from '../../engine/breakdown';
 export { isArmorCard } from '../../engine/equipment';

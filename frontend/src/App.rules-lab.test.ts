@@ -5,9 +5,9 @@ import { createRoot } from 'react-dom/client';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-  PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH,
-  PINNED_MICRO_MVP_L1_COMPILED_RELEASE_HASH,
-  PINNED_MICRO_MVP_L1_OVERLAY_HASH,
+  PINNED_MICRO_MVP_CONDITION_RELEASE_CONTENT_HASH,
+  PINNED_MICRO_MVP_CONDITION_RELEASE_HASH,
+  PINNED_MICRO_MVP_CONDITION_RULES_HASH,
 } from './canon/microMvpL1ReleaseIdentity';
 import App from './App';
 
@@ -79,6 +79,7 @@ describe('/rules-lab route', () => {
     mocks.loadConditions.mockReturnValue(new Promise((resolve) => {
       finish = () => resolve({ mode: 'database_release', count: 15, setHash: 'test' });
     }));
+    mocks.useAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
     const container = document.createElement('div');
     document.body.append(container);
     const root = createRoot(container);
@@ -97,15 +98,38 @@ describe('/rules-lab route', () => {
       timeoutMs: 15_000,
       expectedRelease: {
         certificationVersion: 'micro-mvp-l1-rules-core-v4',
-        rulesHash: PINNED_MICRO_MVP_L1_OVERLAY_HASH,
-        releaseContentHash: PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH,
-        releaseHash: PINNED_MICRO_MVP_L1_COMPILED_RELEASE_HASH,
+        rulesHash: PINNED_MICRO_MVP_CONDITION_RULES_HASH,
+        releaseContentHash: PINNED_MICRO_MVP_CONDITION_RELEASE_CONTENT_HASH,
+        releaseHash: PINNED_MICRO_MVP_CONDITION_RELEASE_HASH,
       },
     });
-    expect(container.textContent).toContain('Загрузка правил…');
+    expect(container.textContent).toContain('Проверяем правила для игрового экрана…');
 
     await act(async () => root.unmount());
     finish();
+  });
+
+  it('renders login while condition authority is still loading', async () => {
+    mocks.loadConditions.mockReturnValue(new Promise(() => undefined));
+    const container = document.createElement('div');
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(createElement(
+        MemoryRouter,
+        { initialEntries: ['/login'] },
+        createElement(App),
+      ));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    await vi.waitFor(() => {
+      expect(container.querySelector('[data-testid="login-route-marker"]')).not.toBeNull();
+    });
+    expect(container.textContent).not.toContain('Проверяем правила для игрового экрана…');
+
+    await act(async () => root.unmount());
   });
 
   it('makes the offline rules authority visible after a fail-closed bootstrap', async () => {

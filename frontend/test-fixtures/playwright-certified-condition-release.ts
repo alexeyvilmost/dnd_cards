@@ -5,10 +5,10 @@ import {
 } from '../src/canon/conditionDatabaseContract';
 import { MICRO_MVP_L1_CONTENT_PATCH } from '../src/canon/declarativeMechanicsPatch';
 import {
-  PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH,
-  PINNED_MICRO_MVP_L1_COMPILED_RELEASE_HASH,
   PINNED_MICRO_MVP_L1_CONTENT_PATCH_HASH,
-  PINNED_MICRO_MVP_L1_OVERLAY_HASH,
+  PINNED_MICRO_MVP_CONDITION_RELEASE_CONTENT_HASH,
+  PINNED_MICRO_MVP_CONDITION_RELEASE_HASH,
+  PINNED_MICRO_MVP_CONDITION_RULES_HASH,
 } from '../src/canon/microMvpL1ReleaseIdentity';
 import {
   certificationContractIssues,
@@ -167,9 +167,9 @@ export function materializePlaywrightCertifiedConditionRelease(
     // is the source artifact; the executable rules/release/patch identities
     // remain the same pinned identities consumed by App bootstrap.
     sourceContentHash: catalogHash,
-    rulesHash: PINNED_MICRO_MVP_L1_OVERLAY_HASH,
-    releaseContentHash: PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH,
-    releaseHash: PINNED_MICRO_MVP_L1_COMPILED_RELEASE_HASH,
+    rulesHash: PINNED_MICRO_MVP_CONDITION_RULES_HASH,
+    releaseContentHash: PINNED_MICRO_MVP_CONDITION_RELEASE_CONTENT_HASH,
+    releaseHash: PINNED_MICRO_MVP_CONDITION_RELEASE_HASH,
     patchHash: PINNED_MICRO_MVP_L1_CONTENT_PATCH_HASH,
   };
   const gateSourceHash = sha256Canonical({

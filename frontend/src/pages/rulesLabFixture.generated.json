@@ -4,20 +4,20 @@
   "source": {
     "ruleset": {
       "systemId": "dnd5e-2024",
-      "releaseId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0",
-      "contentHash": "sha256:2ddba1ce7354f7d3e813a2531329019e6039dc27163259a59989f5557d233ca8",
+      "releaseId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0",
+      "contentHash": "sha256:9f28e9a8049d662b4e15bc6287838b47bf56e2e65001281bce3e9199f90e9633",
       "errataVersion": "phb-2024-errata-v1"
     },
     "release": {
-      "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0",
+      "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0",
       "systemId": "dnd5e-2024",
       "rulesetVersion": "2024",
       "errataVersion": "phb-2024-errata-v1",
       "sourceReleaseId": "prod-snapshot@2026-08-20.micro-mvp-l1.v2",
       "sourceContentHash": "sha256:c7205737ed1f70fa9e2db87370cd59ccd43cc4e2960b2360429e3842a745c22d",
-      "overlayHash": "sha256:67860317c1e3d1ede6993e688ad305f112186975e561508192e5ec34f4443292",
-      "contentHash": "sha256:2ddba1ce7354f7d3e813a2531329019e6039dc27163259a59989f5557d233ca8",
-      "releaseHash": "sha256:313dcc9fff197929b0d59e87246f6aac7ed162eaaf3107a583cba8ad3573d99f"
+      "overlayHash": "sha256:475cf792832c0edc32b88d2d4bcd537146d90694b250964221b36291cf8b77c6",
+      "contentHash": "sha256:9f28e9a8049d662b4e15bc6287838b47bf56e2e65001281bce3e9199f90e9633",
+      "releaseHash": "sha256:b78a359098d0728d6ccf46a942af7dece176a4519531d75bc0f3dd9d0ab15ef8"
     },
     "rootStableKeys": {
       "fighter": "class.fighter|species.human|background.soldier|feat.alert",
@@ -30,7 +30,7 @@
   "roots": {
     "fighter": {
       "stableKey": "class.fighter|species.human|background.soldier|feat.alert",
-      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.fighter|species.human|background.soldier|feat.alert",
+      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.fighter|species.human|background.soldier|feat.alert",
       "draft": {
         "name": "Fixture · CLASS-warrior × RACE-0002 × BG-0012 × FEAT-0001",
         "description": "",
@@ -42,6 +42,8 @@
         "raceId": "bda5fc05-255a-45bb-8e90-9b350ba5e14a",
         "lineageId": null,
         "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "f35e329a-51a4-4b0d-bc3f-edcbfc276f76",
         "level": 1,
@@ -94,7 +96,7 @@
         "swapFeat": true
       },
       "actor": {
-        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.fighter|species.human|background.soldier|feat.alert",
+        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.fighter|species.human|background.soldier|feat.alert",
         "name": "Fixture · CLASS-warrior × RACE-0002 × BG-0012 × FEAT-0001",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -224,6 +226,7 @@
             "simple",
             "martial"
           ],
+          "untrainedArmorCategories": [],
           "resourceRecharge": {
             "uses_ACT-second-wind": "short_rest"
           },
@@ -249,16 +252,16 @@
             "action": 1,
             "bonus_action": 1,
             "reaction": 1,
-            "hit_dice_d10": 1,
             "heroic_inspiration": 1,
+            "hit_dice_d10": 1,
             "uses_ACT-second-wind": 2
           },
           "maxResources": {
             "action": 1,
             "bonus_action": 1,
             "reaction": 1,
-            "hit_dice_d10": 1,
             "heroic_inspiration": 1,
+            "hit_dice_d10": 1,
             "uses_ACT-second-wind": 2
           },
           "equipment": {},
@@ -737,7 +740,7 @@
     },
     "magicInitiateFighter": {
       "stableKey": "class.fighter|species.human|background.soldier|feat.magic-initiate",
-      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.fighter|species.human|background.soldier|feat.magic-initiate:choice-variant:6a52f1c94849",
+      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.fighter|species.human|background.soldier|feat.magic-initiate:choice-variant:6a52f1c94849",
       "draft": {
         "name": "Fixture · CLASS-warrior × RACE-0002 × BG-0012 × FEAT-0009",
         "description": "",
@@ -749,6 +752,8 @@
         "raceId": "bda5fc05-255a-45bb-8e90-9b350ba5e14a",
         "lineageId": null,
         "classId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "f35e329a-51a4-4b0d-bc3f-edcbfc276f76",
         "level": 1,
@@ -815,7 +820,7 @@
         "swapFeat": true
       },
       "actor": {
-        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.fighter|species.human|background.soldier|feat.magic-initiate:choice-variant:6a52f1c94849",
+        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.fighter|species.human|background.soldier|feat.magic-initiate:choice-variant:6a52f1c94849",
         "name": "Fixture · CLASS-warrior × RACE-0002 × BG-0012 × FEAT-0009",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -940,6 +945,7 @@
             "simple",
             "martial"
           ],
+          "untrainedArmorCategories": [],
           "resourceRecharge": {
             "uses_ACT-second-wind": "short_rest",
             "freeuse-34518f38-b737-4a91-88ac-d5858d2d04a0": "long_rest"
@@ -966,8 +972,8 @@
             "action": 1,
             "bonus_action": 1,
             "reaction": 1,
-            "hit_dice_d10": 1,
             "heroic_inspiration": 1,
+            "hit_dice_d10": 1,
             "uses_ACT-second-wind": 2,
             "freeuse-34518f38-b737-4a91-88ac-d5858d2d04a0": 1
           },
@@ -975,8 +981,8 @@
             "action": 1,
             "bonus_action": 1,
             "reaction": 1,
-            "hit_dice_d10": 1,
             "heroic_inspiration": 1,
+            "hit_dice_d10": 1,
             "uses_ACT-second-wind": 2,
             "freeuse-34518f38-b737-4a91-88ac-d5858d2d04a0": 1
           },
@@ -1847,7 +1853,7 @@
     },
     "wizard": {
       "stableKey": "class.wizard|species.human|background.soldier|feat.alert",
-      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.wizard|species.human|background.soldier|feat.alert",
+      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.wizard|species.human|background.soldier|feat.alert",
       "draft": {
         "name": "Fixture · CLASS-wizard × RACE-0002 × BG-0012 × FEAT-0001",
         "description": "",
@@ -1859,6 +1865,8 @@
         "raceId": "bda5fc05-255a-45bb-8e90-9b350ba5e14a",
         "lineageId": null,
         "classId": "d3b22b24-a4f1-4dab-8038-c89bfee62843",
+        "classLevels": {},
+        "subclassIds": {},
         "subclassId": null,
         "backgroundId": "f35e329a-51a4-4b0d-bc3f-edcbfc276f76",
         "level": 1,
@@ -1932,7 +1940,7 @@
         "swapFeat": true
       },
       "actor": {
-        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.wizard|species.human|background.soldier|feat.alert",
+        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.wizard|species.human|background.soldier|feat.alert",
         "name": "Fixture · CLASS-wizard × RACE-0002 × BG-0012 × FEAT-0001",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -2071,6 +2079,7 @@
           "weaponProficiencies": [
             "simple"
           ],
+          "untrainedArmorCategories": [],
           "resourceRecharge": {
             "magic_recovery_charge": "long_rest",
             "spell_slot_1": "long_rest"
@@ -2087,19 +2096,19 @@
             "action": 1,
             "bonus_action": 1,
             "reaction": 1,
-            "hit_dice_d6": 1,
             "magic_recovery_charge": 1,
             "spell_slot_1": 2,
-            "heroic_inspiration": 1
+            "heroic_inspiration": 1,
+            "hit_dice_d6": 1
           },
           "maxResources": {
             "action": 1,
             "bonus_action": 1,
             "reaction": 1,
-            "hit_dice_d6": 1,
             "magic_recovery_charge": 1,
             "spell_slot_1": 2,
-            "heroic_inspiration": 1
+            "heroic_inspiration": 1,
+            "hit_dice_d6": 1
           },
           "equipment": {},
           "inventory": [],
@@ -2355,6 +2364,8 @@
         ],
         "grantedEffects": {
           "236f55b0-bcda-4ad6-9dd6-a26e0a48ddb0": {
+            "id": "236f55b0-bcda-4ad6-9dd6-a26e0a48ddb0",
+            "card_number": "EFFECT-0256",
             "name": "Доспехи мага",
             "mechanics": {
               "activation": {
@@ -2383,6 +2394,8 @@
             "repeatable": false
           },
           "EFFECT-0256": {
+            "id": "236f55b0-bcda-4ad6-9dd6-a26e0a48ddb0",
+            "card_number": "EFFECT-0256",
             "name": "Доспехи мага",
             "mechanics": {
               "activation": {
@@ -3489,9 +3502,9 @@
     },
     "blade": {
       "stableKey": "class.warlock|species.human|background.soldier|feat.alert",
-      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:04cd469a9004",
+      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:04cd469a9004",
       "actor": {
-        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:04cd469a9004",
+        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:04cd469a9004",
         "name": "Fixture · CLASS-warlock × RACE-0002 × BG-0012 × FEAT-0001",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -3628,6 +3641,7 @@
           "weaponProficiencies": [
             "simple"
           ],
+          "untrainedArmorCategories": [],
           "resourceRecharge": {
             "spell_slot_1": "short_rest"
           },
@@ -3643,17 +3657,17 @@
             "action": 1,
             "bonus_action": 1,
             "reaction": 1,
-            "hit_dice_d8": 1,
             "spell_slot_1": 1,
-            "heroic_inspiration": 1
+            "heroic_inspiration": 1,
+            "hit_dice_d8": 1
           },
           "maxResources": {
             "action": 1,
             "bonus_action": 1,
             "reaction": 1,
-            "hit_dice_d8": 1,
             "spell_slot_1": 1,
-            "heroic_inspiration": 1
+            "heroic_inspiration": 1,
+            "hit_dice_d8": 1
           },
           "equipment": {},
           "inventory": [],
@@ -3976,7 +3990,7 @@
           "blade": {
             "kind": "blade",
             "sourceEntityId": "d0988f8f-15b8-4b9a-b201-99841460be44",
-            "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:04cd469a9004",
+            "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:04cd469a9004",
             "bondActionId": "d0988f8f-15b8-4b9a-b201-99841460be44@5a0403b5-3185-43a2-b187-38397d3d01b7",
             "lifecyclePolicy": {
               "separationDistanceFt": 5,
@@ -4024,7 +4038,7 @@
                 "resolution": "auto",
                 "result": [
                   {
-                    "description": "Обнаружение магии: см. описание заклинания.",
+                    "description": "До 10 минут (концентрация) вы ощущаете магию в пределах 30 футов. Для видимой магической ауры показывается школа магии; камень, металл, свинец, дерево или земля достаточной толщины могут блокировать обнаружение.",
                     "kind": "narrative"
                   }
                 ]
@@ -4463,9 +4477,9 @@
     },
     "chain": {
       "stableKey": "class.warlock|species.human|background.soldier|feat.alert",
-      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:3639261574af",
+      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:3639261574af",
       "actor": {
-        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:3639261574af",
+        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:3639261574af",
         "name": "Fixture · CLASS-warlock × RACE-0002 × BG-0012 × FEAT-0001",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -4602,6 +4616,7 @@
           "weaponProficiencies": [
             "simple"
           ],
+          "untrainedArmorCategories": [],
           "resourceRecharge": {
             "spell_slot_1": "short_rest"
           },
@@ -4617,17 +4632,17 @@
             "action": 1,
             "bonus_action": 1,
             "reaction": 1,
-            "hit_dice_d8": 1,
             "spell_slot_1": 1,
-            "heroic_inspiration": 1
+            "heroic_inspiration": 1,
+            "hit_dice_d8": 1
           },
           "maxResources": {
             "action": 1,
             "bonus_action": 1,
             "reaction": 1,
-            "hit_dice_d8": 1,
             "spell_slot_1": 1,
-            "heroic_inspiration": 1
+            "heroic_inspiration": 1,
+            "hit_dice_d8": 1
           },
           "equipment": {},
           "inventory": [],
@@ -4986,7 +5001,7 @@
           "chain": {
             "kind": "chain",
             "sourceEntityId": "808d727d-7e58-4ae4-9ed4-b4d49cd0a704",
-            "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:3639261574af",
+            "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:3639261574af",
             "template": {
               "findFamiliarActionId": "aa2adb3d-101b-4e70-97f1-69dc9f0debf8@808d727d-7e58-4ae4-9ed4-b4d49cd0a704",
               "normalFormSource": "find_familiar_spell",
@@ -5042,7 +5057,7 @@
                 "resolution": "auto",
                 "result": [
                   {
-                    "description": "Обнаружение магии: см. описание заклинания.",
+                    "description": "До 10 минут (концентрация) вы ощущаете магию в пределах 30 футов. Для видимой магической ауры показывается школа магии; камень, металл, свинец, дерево или земля достаточной толщины могут блокировать обнаружение.",
                     "kind": "narrative"
                   }
                 ]
@@ -5497,9 +5512,9 @@
     },
     "tome": {
       "stableKey": "class.warlock|species.human|background.soldier|feat.alert",
-      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
       "actor": {
-        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
         "name": "Fixture · CLASS-warlock × RACE-0002 × BG-0012 × FEAT-0001",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -5645,6 +5660,7 @@
           "weaponProficiencies": [
             "simple"
           ],
+          "untrainedArmorCategories": [],
           "resourceRecharge": {
             "spell_slot_1": "short_rest"
           },
@@ -5660,17 +5676,17 @@
             "action": 1,
             "bonus_action": 1,
             "reaction": 1,
-            "hit_dice_d8": 1,
             "spell_slot_1": 1,
-            "heroic_inspiration": 1
+            "heroic_inspiration": 1,
+            "hit_dice_d8": 1
           },
           "maxResources": {
             "action": 1,
             "bonus_action": 1,
             "reaction": 1,
-            "hit_dice_d8": 1,
             "spell_slot_1": 1,
-            "heroic_inspiration": 1
+            "heroic_inspiration": 1,
+            "hit_dice_d8": 1
           },
           "equipment": {},
           "inventory": [],
@@ -6089,25 +6105,25 @@
               "slotResource": "spell_slot_1"
             },
             {
-              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
               "actionId": "1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
               "access": "cantrip",
               "level": 0,
               "spellcastingAbility": "cha"
             },
             {
-              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
               "actionId": "50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
               "access": "cantrip",
               "level": 0,
               "spellcastingAbility": "cha"
             },
             {
-              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:677a3abf-5fc7-472f-b789-418dcba6dd88@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:677a3abf-5fc7-472f-b789-418dcba6dd88@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
               "actionId": "677a3abf-5fc7-472f-b789-418dcba6dd88@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
               "access": "always_prepared",
               "level": 1,
               "spellcastingAbility": "cha",
@@ -6115,17 +6131,17 @@
               "slotResource": "spell_slot_1"
             },
             {
-              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
               "actionId": "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
               "access": "cantrip",
               "level": 0,
               "spellcastingAbility": "cha"
             },
             {
-              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+              "grantId": "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
               "actionId": "a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+              "sourceId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
               "access": "always_prepared",
               "level": 1,
               "spellcastingAbility": "cha",
@@ -6139,11 +6155,11 @@
           "tome": {
             "kind": "tome",
             "sourceEntityId": "67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-            "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+            "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
             "tome": {
               "sourceEntityId": "67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-              "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
-              "bookObjectId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+              "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+              "bookObjectId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
               "cantripActionIds": [
                 "1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
                 "50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
@@ -6154,11 +6170,11 @@
                 "a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c"
               ],
               "spellGrantIds": [
-                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:677a3abf-5fc7-472f-b789-418dcba6dd88@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
-                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c"
+                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:677a3abf-5fc7-472f-b789-418dcba6dd88@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:70dcdadd-7e66-43f0-81b1-1fd1d346d9b7@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
+                "spell-grant:prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows:a8bb857d-cfaf-49d4-9f95-04a71a997a03@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c"
               ],
               "createdAfterRest": "long"
             }
@@ -6379,7 +6395,7 @@
                 "resolution": "auto",
                 "result": [
                   {
-                    "description": "Обнаружение магии: см. описание заклинания.",
+                    "description": "До 10 минут (концентрация) вы ощущаете магию в пределах 30 футов. Для видимой магической ауры показывается школа магии; камень, металл, свинец, дерево или земля достаточной толщины могут блокировать обнаружение.",
                     "kind": "narrative"
                   }
                 ]
@@ -6505,7 +6521,7 @@
                 "resolution": "auto",
                 "result": [
                   {
-                    "description": "Обнаружение магии: см. описание заклинания.",
+                    "description": "До 10 минут (концентрация) вы ощущаете магию в пределах 30 футов. Для видимой магической ауры показывается школа магии; камень, металл, свинец, дерево или земля достаточной толщины могут блокировать обнаружение.",
                     "kind": "narrative"
                   }
                 ]
@@ -9354,13 +9370,13 @@
       ],
       "initialWorldObjects": [
         {
-          "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+          "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
           "name": "Book of Shadows",
           "kind": "item",
           "size": "small",
-          "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
-          "carriedByActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
-          "sourceActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+          "ownerActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+          "carriedByActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
+          "sourceActorId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85",
           "sourceActionId": "67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
           "magicalAura": {
             "school": "conjuration",
@@ -9376,9 +9392,9 @@
     },
     "familiarWizard": {
       "stableKey": "class.wizard|species.human|background.soldier|feat.alert",
-      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.wizard|species.human|background.soldier|feat.alert:choice-variant:b262506e056c",
+      "fixtureId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.wizard|species.human|background.soldier|feat.alert:choice-variant:b262506e056c",
       "actor": {
-        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.wizard|species.human|background.soldier|feat.alert:choice-variant:b262506e056c",
+        "id": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.wizard|species.human|background.soldier|feat.alert:choice-variant:b262506e056c",
         "name": "Fixture · CLASS-wizard × RACE-0002 × BG-0012 × FEAT-0001",
         "kind": "playerCharacter",
         "controllerId": "micro-mvp-overlay-controller",
@@ -9517,6 +9533,7 @@
           "weaponProficiencies": [
             "simple"
           ],
+          "untrainedArmorCategories": [],
           "resourceRecharge": {
             "magic_recovery_charge": "long_rest",
             "spell_slot_1": "long_rest"
@@ -9533,19 +9550,19 @@
             "action": 1,
             "bonus_action": 1,
             "reaction": 1,
-            "hit_dice_d6": 1,
             "magic_recovery_charge": 1,
             "spell_slot_1": 2,
-            "heroic_inspiration": 1
+            "heroic_inspiration": 1,
+            "hit_dice_d6": 1
           },
           "maxResources": {
             "action": 1,
             "bonus_action": 1,
             "reaction": 1,
-            "hit_dice_d6": 1,
             "magic_recovery_charge": 1,
             "spell_slot_1": 2,
-            "heroic_inspiration": 1
+            "heroic_inspiration": 1,
+            "hit_dice_d6": 1
           },
           "equipment": {},
           "inventory": [],
@@ -9801,6 +9818,8 @@
         ],
         "grantedEffects": {
           "236f55b0-bcda-4ad6-9dd6-a26e0a48ddb0": {
+            "id": "236f55b0-bcda-4ad6-9dd6-a26e0a48ddb0",
+            "card_number": "EFFECT-0256",
             "name": "Доспехи мага",
             "mechanics": {
               "activation": {
@@ -9829,6 +9848,8 @@
             "repeatable": false
           },
           "EFFECT-0256": {
+            "id": "236f55b0-bcda-4ad6-9dd6-a26e0a48ddb0",
+            "card_number": "EFFECT-0256",
             "name": "Доспехи мага",
             "mechanics": {
               "activation": {
@@ -9999,7 +10020,7 @@
                 "resolution": "auto",
                 "result": [
                   {
-                    "description": "Обнаружение магии: см. описание заклинания.",
+                    "description": "До 10 минут (концентрация) вы ощущаете магию в пределах 30 футов. Для видимой магической ауры показывается школа магии; камень, металл, свинец, дерево или земля достаточной толщины могут блокировать обнаружение.",
                     "kind": "narrative"
                   }
                 ]
@@ -11062,7 +11083,7 @@
         "familiarActionId": "mm2025.owl.talons"
       },
       "tome": {
-        "initialBookObjectId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.13.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
+        "initialBookObjectId": "prod-snapshot@2026-08-20.micro-mvp-l1.overlay.1.14.0:class.warlock|species.human|background.soldier|feat.alert:choice-variant:a9fce6c21f85:book-of-shadows",
         "cantripActionId": "50626b5a-33c5-46e0-af0e-50599f4306a0@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",
         "cantripActionIds": [
           "1e9cb7db-f4dc-4215-ad57-0e3407b78913@67b1e7bc-7c80-47ea-a5f4-da0f7b50343c",

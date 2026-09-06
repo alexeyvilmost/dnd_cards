@@ -40,6 +40,7 @@ function actor(id = 'actor'): ActorState {
       activeEffects: [],
       firedThisTurn: ['old-turn'],
       firedThisRest: ['old-rest'],
+      firedByPeriod: { short_rest: ['old-short-rest'] },
     },
   };
 }
@@ -91,19 +92,25 @@ describe('critical reducer and adapter coverage', () => {
     const patched = evolve(initial, {
       type: 'ActorRuntimePatched',
       actorId: 'actor',
-      patch: { firedThisTurn: null, firedThisRest: ['new-rest'] },
+      patch: {
+        firedThisTurn: null,
+        firedThisRest: ['new-rest'],
+        firedByPeriod: { short_rest: ['new-short-rest'] },
+      },
       reason: 'action',
     });
     expect(patched.actors.actor.runtime.firedThisTurn).toBeUndefined();
     expect(patched.actors.actor.runtime.firedThisRest).toEqual(['new-rest']);
+    expect(patched.actors.actor.runtime.firedByPeriod).toEqual({ short_rest: ['new-short-rest'] });
 
     const cleared = evolve(patched, {
       type: 'ActorRuntimePatched',
       actorId: 'actor',
-      patch: { firedThisRest: null },
+      patch: { firedThisRest: null, firedByPeriod: null },
       reason: 'long_rest',
     });
     expect(cleared.actors.actor.runtime.firedThisRest).toBeUndefined();
+    expect(cleared.actors.actor.runtime.firedByPeriod).toBeUndefined();
     expect(() => evolve(initial, {
       type: 'ActorRuntimePatched', actorId: 'missing', patch: {}, reason: 'action',
     })).toThrow(/unknown actor/);

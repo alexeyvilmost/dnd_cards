@@ -228,6 +228,90 @@ describe('persisted WorldState migration', () => {
       .toThrow(/long_rest must declare full recovery/);
   });
 
+  it('round-trips cadence ledgers and rejects malformed period buckets', () => {
+    const current = createWorld({
+      id: 'cadence-ledger-world',
+      ruleset: { systemId: 'dnd5e-2024', releaseId: 'r', contentHash: 'h', errataVersion: 'e' },
+      actors: [{
+        ...actor,
+        runtime: { ...actor.runtime, firedByPeriod: { short_rest: ['feature:a'] } },
+      }],
+    });
+    expect(migrateWorldState(clone(current)).actors.a.runtime.firedByPeriod)
+      .toEqual({ short_rest: ['feature:a'] });
+
+    for (const [value, message] of [
+      [[], /firedByPeriod must be an object/],
+      [{ '': ['feature:a'] }, /firedByPeriod key must be a non-empty string/],
+      [{ short_rest: ['feature:a', 'feature:a'] }, /must contain unique IDs/],
+    ] as const) {
+      const malformed = clone(current) as unknown as MutableRecord;
+      (rawActor(malformed).runtime as MutableRecord).firedByPeriod = value;
+      expect(() => migrateWorldState(malformed)).toThrow(message);
+    }
+  });
+
+  it('validates and normalizes canonical owned summons', () => {
+    const summonActionId = 'action:summon';
+    const owner: ActorState = {
+      ...actor,
+      id: 'owner',
+      controllerId: 'shared-controller',
+      capabilities: { actionIds: [summonActionId] },
+    };
+    const summonId = 'owner:summon:wolf';
+    const summon: ActorState = {
+      ...actor,
+      id: summonId,
+      name: 'Wolf',
+      kind: 'summonedActor',
+      controllerId: 'shared-controller',
+      ownedSummon: {
+        ownerActorId: owner.id,
+        sourceActionId: summonActionId,
+        sourceEntityIds: [summonActionId],
+        summonKey: 'wolf',
+        initiative: 'immediately_after_owner',
+        duration: { type: 'rounds', expiresAfterRound: 3 },
+        createdAtWorldRevision: 0,
+      },
+    };
+    const current = createWorld({
+      id: 'owned-summon-world',
+      ruleset: { systemId: 'dnd5e-2024', releaseId: 'r', contentHash: 'h', errataVersion: 'e' },
+      actors: [owner, summon],
+    });
+    const migrated = migrateWorldState(clone(current));
+    expect(migrated.actors[summonId].ownedSummon).toEqual(summon.ownedSummon);
+
+    for (const duration of [{ type: 'until_destroyed' }, { type: 'concentration' }] as const) {
+      const variant = clone(current);
+      variant.actors[summonId].ownedSummon!.duration = duration;
+      expect(migrateWorldState(variant).actors[summonId].ownedSummon?.duration).toEqual(duration);
+    }
+
+    const cases: Array<[string, (world: MutableRecord) => void, RegExp]> = [
+      ['kind', (world) => { (world.actors as MutableRecord)[summonId] = {
+        ...((world.actors as MutableRecord)[summonId] as MutableRecord), kind: 'playerCharacter',
+      }; }, /requires a summonedActor/],
+      ['owner missing', (world) => { (((world.actors as MutableRecord)[summonId] as MutableRecord).ownedSummon as MutableRecord).ownerActorId = 'missing'; }, /different actor with the same controller/],
+      ['owner self', (world) => { (((world.actors as MutableRecord)[summonId] as MutableRecord).ownedSummon as MutableRecord).ownerActorId = summonId; }, /different actor with the same controller/],
+      ['controller', (world) => { ((world.actors as MutableRecord).owner as MutableRecord).controllerId = 'other'; }, /different actor with the same controller/],
+      ['source action', (world) => { (((world.actors as MutableRecord)[summonId] as MutableRecord).ownedSummon as MutableRecord).sourceActionId = 'missing'; }, /sourceActionId must be owned/],
+      ['empty sources', (world) => { (((world.actors as MutableRecord)[summonId] as MutableRecord).ownedSummon as MutableRecord).sourceEntityIds = []; }, /sourceEntityIds must retain/],
+      ['wrong sources', (world) => { (((world.actors as MutableRecord)[summonId] as MutableRecord).ownedSummon as MutableRecord).sourceEntityIds = ['other']; }, /sourceEntityIds must retain/],
+      ['summon key', (world) => { (((world.actors as MutableRecord)[summonId] as MutableRecord).ownedSummon as MutableRecord).summonKey = 'bear'; }, /summonKey must match/],
+      ['initiative', (world) => { (((world.actors as MutableRecord)[summonId] as MutableRecord).ownedSummon as MutableRecord).initiative = 'independent'; }, /initiative must be immediately_after_owner/],
+      ['duration', (world) => { (((world.actors as MutableRecord)[summonId] as MutableRecord).ownedSummon as MutableRecord).duration = { type: 'forever' }; }, /duration.type is invalid/],
+      ['revision', (world) => { (((world.actors as MutableRecord)[summonId] as MutableRecord).ownedSummon as MutableRecord).createdAtWorldRevision = 1; }, /cannot exceed world.revision/],
+    ];
+    for (const [, mutate, message] of cases) {
+      const malformed = clone(current) as unknown as MutableRecord;
+      mutate(malformed);
+      expect(() => migrateWorldState(malformed)).toThrow(message);
+    }
+  });
+
   it('upgrades missing v4 lifecycle to alive but fails closed for missing or uncommitted v5 death facts', () => {
     const current = createWorld({
       id: 'lifecycle-v5',

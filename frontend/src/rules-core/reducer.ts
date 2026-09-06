@@ -35,7 +35,7 @@ import { PACT_BLADE_STATE_CAPABILITY } from './warlockPacts';
 import {
   conditionEffectEntityRef,
   conditionRegistryAuthority,
-} from '../engine/conditions';
+} from './legacy/engineAdapter';
 
 function conditionEntityRefForRuntime(condition: string) {
   const ref = conditionEffectEntityRef(condition);
@@ -141,6 +141,7 @@ export function evolve(world: WorldState, payload: RuleEventPayload): WorldState
       const {
         firedThisTurn,
         firedThisRest,
+        firedByPeriod,
         ...regularPatch
       } = payload.patch;
       const runtime = { ...actor.runtime, ...regularPatch };
@@ -148,6 +149,8 @@ export function evolve(world: WorldState, payload: RuleEventPayload): WorldState
       else if (firedThisTurn !== undefined) runtime.firedThisTurn = firedThisTurn;
       if (firedThisRest === null) delete runtime.firedThisRest;
       else if (firedThisRest !== undefined) runtime.firedThisRest = firedThisRest;
+      if (firedByPeriod === null) delete runtime.firedByPeriod;
+      else if (firedByPeriod !== undefined) runtime.firedByPeriod = firedByPeriod;
       return {
         ...world,
         actors: {

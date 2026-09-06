@@ -506,6 +506,10 @@ export function shortRest(state: RuntimeState, ctx: CharacterContext): ExecuteRe
   }
   next.activeEffects = kept.map((e) => (e.roundsLeft != null ? { ...e, roundsLeft: e.roundsLeft - 600 } : e));
 
+  // Новый короткий отдых открывает следующий short_rest cadence до обработки его события.
+  // Поэтому слушатель самого short_rest тоже может честно сработать на каждом отдыхе.
+  next.firedByPeriod = { ...(next.firedByPeriod ?? {}), short_rest: [] };
+
   // Шина: короткий отдых (отклики на отдых как данные, с circumstances/uses-гейтами).
   next = emitEvent({ kind: 'short_rest', source: 'self' }, next, execCtxOf(ctx), events, pending);
 
@@ -558,6 +562,7 @@ export function longRest(state: RuntimeState, ctx: CharacterContext): ExecuteRes
   }
   next.activeEffects = conditionRest.retained;
   next.firedThisRest = []; // 2.4: сброс гейта «раз за отдых»-триггеров (Неумолимая стойкость и т.п.)
+  next.firedByPeriod = {};
 
   // КРИТИЧНО (C3): эмитим long_rest ДО сплошного восстановления. applyResource op:'grant'
   // = current+amount; если эмитить ПОСЛЕ restore-к-max, гранты (heroic_inspiration от

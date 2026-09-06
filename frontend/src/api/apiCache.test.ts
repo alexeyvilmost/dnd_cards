@@ -31,6 +31,19 @@ describe('apiCache', () => {
     expect(freshLoader).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps unrelated in-flight catalog reads deduplicated after a runtime mutation', async () => {
+    let resolveClass!: (value: string) => void;
+    const classLoader = vi.fn(() => new Promise<string>((done) => { resolveClass = done; }));
+    const first = cached('/api/classes/one', 60_000, classLoader);
+
+    bustPrefix('/api/characters-v3');
+    const second = cached('/api/classes/one', 60_000, classLoader);
+
+    expect(classLoader).toHaveBeenCalledTimes(1);
+    resolveClass('warrior');
+    await expect(Promise.all([first, second])).resolves.toEqual(['warrior', 'warrior']);
+  });
+
   it('allows a retry after a rejected shared loader', async () => {
     const loader = vi.fn()
       .mockRejectedValueOnce(new Error('temporary'))

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import {
@@ -86,6 +86,15 @@ const CONDITION_RELEASE_BINDING = Object.freeze({
   releaseHash: PINNED_MICRO_MVP_CONDITION_RELEASE_HASH,
 });
 
+function RulesAuthorityBoundary({ ready, children }: { ready: boolean; children: ReactNode }) {
+  if (ready) return <>{children}</>;
+  return (
+    <div role="status" aria-live="polite" style={{ padding: '60px 24px', textAlign: 'center', color: '#a59886' }}>
+      Проверяем правила для игрового экрана…
+    </div>
+  );
+}
+
 function App() {
   const location = useLocation();
   const isRulesLab = location.pathname === '/rules-lab'
@@ -150,11 +159,9 @@ function App() {
     );
   }
 
-  // Do not expose an interactive sheet while the engine can still switch
-  // from its recovery fixture to the database release underneath the user.
-  if (!conditionsReady) {
-    return <div style={{ padding: '60px 24px', textAlign: 'center', color: '#a59886' }}>Загрузка правил…</div>;
-  }
+  const withRulesAuthority = (children: ReactNode) => (
+    <RulesAuthorityBoundary ready={conditionsReady}>{children}</RulesAuthorityBoundary>
+  );
 
   return (
     <>
@@ -192,22 +199,22 @@ function App() {
         <Route path="/register" element={<Register />} />
 
         {/* CharacterV3 хранит личные листы/журналы и требует валидную сессию. */}
-        <Route path="/character-forge" element={<ProtectedRoute><CharacterForge /></ProtectedRoute>} />
-        <Route path="/character-forge/:id" element={<ProtectedRoute><CharacterForge /></ProtectedRoute>} />
+        <Route path="/character-forge" element={<ProtectedRoute>{withRulesAuthority(<CharacterForge />)}</ProtectedRoute>} />
+        <Route path="/character-forge/:id" element={<ProtectedRoute>{withRulesAuthority(<CharacterForge />)}</ProtectedRoute>} />
         <Route path="/characters-forge" element={<ProtectedRoute><CharactersForgeList /></ProtectedRoute>} />
         <Route path="/spell/:id" element={<SpellPage />} />
-        <Route path="/characters-v3/:id" element={<ProtectedRoute><CharacterSheetMVP /></ProtectedRoute>} />
-        <Route path="/characters-v3/:id/combat" element={<ProtectedRoute><SoloCombatPage /></ProtectedRoute>} />
+        <Route path="/characters-v3/:id" element={<ProtectedRoute>{withRulesAuthority(<CharacterSheetMVP />)}</ProtectedRoute>} />
+        <Route path="/characters-v3/:id/combat" element={<ProtectedRoute>{withRulesAuthority(<SoloCombatPage />)}</ProtectedRoute>} />
 
         {/* Отдельный мобильный интерфейс игрока */}
         <Route path="/m" element={<Navigate to="/m/characters" replace />} />
         <Route path="/m/characters" element={<ProtectedRoute><MobileCharactersPage /></ProtectedRoute>} />
-        <Route path="/m/characters/new" element={<ProtectedRoute><MobileCharacterWizard /></ProtectedRoute>} />
-        <Route path="/m/characters/:id" element={<ProtectedRoute><MobileCharacterSheet /></ProtectedRoute>} />
-        <Route path="/m/characters/:id/edit" element={<ProtectedRoute><MobileCharacterWizard /></ProtectedRoute>} />
-        <Route path="/m/characters/:id/level-up" element={<ProtectedRoute><MobileCharacterWizard /></ProtectedRoute>} />
-        <Route path="/m/characters/:id/add" element={<ProtectedRoute><MobileEntityCatalog /></ProtectedRoute>} />
-        <Route path="/m/characters/:id/add/:type" element={<ProtectedRoute><MobileEntityCatalog /></ProtectedRoute>} />
+        <Route path="/m/characters/new" element={<ProtectedRoute>{withRulesAuthority(<MobileCharacterWizard />)}</ProtectedRoute>} />
+        <Route path="/m/characters/:id" element={<ProtectedRoute>{withRulesAuthority(<MobileCharacterSheet />)}</ProtectedRoute>} />
+        <Route path="/m/characters/:id/edit" element={<ProtectedRoute>{withRulesAuthority(<MobileCharacterWizard />)}</ProtectedRoute>} />
+        <Route path="/m/characters/:id/level-up" element={<ProtectedRoute>{withRulesAuthority(<MobileCharacterWizard />)}</ProtectedRoute>} />
+        <Route path="/m/characters/:id/add" element={<ProtectedRoute>{withRulesAuthority(<MobileEntityCatalog />)}</ProtectedRoute>} />
+        <Route path="/m/characters/:id/add/:type" element={<ProtectedRoute>{withRulesAuthority(<MobileEntityCatalog />)}</ProtectedRoute>} />
 
         {/* Защищенные маршруты */}
         <Route path="/" element={
@@ -240,9 +247,7 @@ function App() {
         } />
         <Route path="/encounter/:id" element={
           <ProtectedRoute>
-            <Layout>
-              <EncounterBoard />
-            </Layout>
+            {withRulesAuthority(<Layout><EncounterBoard /></Layout>)}
           </ProtectedRoute>
         } />
         <Route path="/create" element={
@@ -385,7 +390,7 @@ function App() {
         <Route path="/characters-v3" element={<Navigate to="/characters-forge" replace />} />
         <Route path="/characters-v3/create" element={<Navigate to="/character-forge" replace />} />
         <Route path="/characters/create" element={<Navigate to="/character-forge" replace />} />
-        <Route path="/characters-v3/:id/edit" element={<ProtectedRoute><CharacterForge /></ProtectedRoute>} />
+        <Route path="/characters-v3/:id/edit" element={<ProtectedRoute>{withRulesAuthority(<CharacterForge />)}</ProtectedRoute>} />
         
         {/* Настройки сайта */}
         <Route path="/settings" element={
@@ -398,9 +403,7 @@ function App() {
 
         <Route path="/initiative" element={
           <ProtectedRoute>
-            <Layout>
-              <InitiativeTracker />
-            </Layout>
+            {withRulesAuthority(<Layout><InitiativeTracker /></Layout>)}
           </ProtectedRoute>
         } />
 

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CombatAreaState, GridPosition, SoloCombatState } from '../solo-combat/types';
 import { TACTICAL_HEIGHT, TACTICAL_WIDTH } from '../solo-combat/types';
 import { areaPositionsForAction, reachablePositions } from '../solo-combat/tacticalGrid';
@@ -35,6 +35,7 @@ export default function TacticalBattleMap({
     moved: boolean;
   } | null>(null);
   const suppressClickRef = useRef(false);
+  const initialFitDone = useRef(false);
   const activeId = state.world.scene.mode === 'encounter'
     ? state.world.scene.initiative[state.world.scene.activeIndex]
     : '';
@@ -77,6 +78,47 @@ export default function TacticalBattleMap({
       : [],
   ), [actorId, movementMode, state]);
 
+  const centerOn = useCallback((positions: GridPosition[], nextZoom = zoom) => {
+    const viewport = viewportRef.current;
+    if (!viewport || !positions.length) return;
+    setZoom(nextZoom);
+    window.requestAnimationFrame(() => {
+      const cellSize = 80 * nextZoom;
+      const centerX = positions.reduce((sum, position) => sum + position.x + 0.5, 0) / positions.length;
+      const centerY = positions.reduce((sum, position) => sum + position.y + 0.5, 0) / positions.length;
+      const left = Math.max(0, centerX * cellSize - viewport.clientWidth / 2);
+      const top = Math.max(0, centerY * cellSize - viewport.clientHeight / 2);
+      if (typeof viewport.scrollTo === 'function') {
+        viewport.scrollTo({ left, top, behavior: 'smooth' });
+      } else {
+        viewport.scrollLeft = left;
+        viewport.scrollTop = top;
+      }
+    });
+  }, [zoom]);
+
+  useEffect(() => {
+    if (initialFitDone.current) return;
+    const positions = Object.values(state.tokens).map((token) => token.position);
+    if (!positions.length) return;
+    initialFitDone.current = true;
+    window.requestAnimationFrame(() => {
+      const viewport = viewportRef.current;
+      if (!viewport) return;
+      const minX = Math.min(...positions.map((position) => position.x));
+      const maxX = Math.max(...positions.map((position) => position.x));
+      const minY = Math.min(...positions.map((position) => position.y));
+      const maxY = Math.max(...positions.map((position) => position.y));
+      const widthCells = maxX - minX + 3;
+      const heightCells = maxY - minY + 3;
+      const fitZoom = Math.min(1, Math.max(0.35, Math.min(
+        viewport.clientWidth / (widthCells * 80),
+        viewport.clientHeight / (heightCells * 80),
+      )));
+      centerOn(positions, Number(fitZoom.toFixed(2)));
+    });
+  }, [centerOn, state.tokens]);
+
   const finishPan = (event: React.PointerEvent<HTMLDivElement>) => {
     const pan = panRef.current;
     if (!pan || pan.pointerId !== event.pointerId) return;
@@ -97,7 +139,7 @@ export default function TacticalBattleMap({
       title={`Масштаб ${Math.round(zoom * 100)}% · колесо меняет масштаб · перетаскивание двигает карту`}
       onWheel={(event) => {
         event.preventDefault();
-        setZoom((current) => Math.min(1.8, Math.max(0.45, Number((current + (event.deltaY < 0 ? 0.1 : -0.1)).toFixed(2)))));
+        setZoom((current) => Math.min(1.8, Math.max(0.35, Number((current + (event.deltaY < 0 ? 0.1 : -0.1)).toFixed(2)))));
       }}
       onPointerDown={(event) => {
         if (event.button !== 0 || !event.isPrimary) return;
@@ -137,6 +179,15 @@ export default function TacticalBattleMap({
         event.stopPropagation();
       }}
     >
+    <div className="tactical-map-controls" role="group" aria-label="Навигация по полю">
+      <button type="button" onClick={() => setZoom((current) => Math.max(0.35, Number((current - 0.1).toFixed(2))))} aria-label="Уменьшить масштаб">−</button>
+      <span>{Math.round(zoom * 100)}%</span>
+      <button type="button" onClick={() => setZoom((current) => Math.min(1.8, Number((current + 0.1).toFixed(2))))} aria-label="Увеличить масштаб">+</button>
+      <button type="button" onClick={() => {
+        const position = state.tokens[actorId]?.position;
+        if (position) centerOn([position]);
+      }}>К персонажу</button>
+    </div>
     <div
       className={`tactical-map${selectedActionId ? ' is-targeting' : ''}${movementMode ? ' is-moving' : ''}${worldObjectMoveMode ? ' is-world-object-moving' : ''}`}
       data-testid="tactical-map"

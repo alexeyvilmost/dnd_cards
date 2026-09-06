@@ -114,8 +114,17 @@ const target = (
 });
 
 const TOPPLE_MASTERY = {
+  id: TOPPLE_MASTERY_ID,
+  card_number: 'EFFECT-project-rule-mastery-topple',
   name: 'Опрокидывающее',
   mechanics: {
+    weapon_mastery: {
+      type: 'topple',
+      saveAbility: 'con',
+      dc: '8+prof_bonus+weapon_mod',
+      condition: 'prone',
+      choiceId: 'weapon_mastery.topple.use',
+    },
     activation: { mode: 'triggered', trigger: { event: 'hit' } },
     effects: [{
       resolution: 'save',
@@ -948,7 +957,7 @@ const SC_01: ScenarioSpec = {
   steps: [
     { do: 'startTurn', actor: 'fighter', assertions: [{ id: 'SC-01-TURN-FIGHTER-1', type: 'event', eventType: 'turn_started' }] },
     { do: 'abilityCheck', actor: 'fighter', ability: 'int', skill: 'investigation', dc: 10, assertions: [{ id: 'SC-01-STUDY-CHECK', type: 'event', eventType: 'roll' }] },
-    { do: 'use', actor: 'fighter', actionId: MICRO_MVP_SCENARIO_ACTION_IDS.weaponAttack, actionKind: 'nonSpell', targets: ['wizard'], factsByTarget: { wizard: enemy(5) }, assertions: [
+    { do: 'use', actor: 'fighter', actionId: MICRO_MVP_SCENARIO_ACTION_IDS.weaponAttack, actionKind: 'nonSpell', targets: ['wizard'], factsByTarget: { wizard: enemy(5) }, choices: { 'weapon_mastery.topple.use': 'use' }, assertions: [
       { id: 'SC-01-SHIELD-WINDOW-BEFORE-DAMAGE', type: 'pending', pendingType: 'attack_reaction' },
       { id: 'SC-01-WIZARD-HP-UNTOUCHED-BEFORE-REACTION', type: 'equals', path: 'actors.wizard.runtime.hp.current', value: 12 },
     ] },
@@ -994,7 +1003,7 @@ const SC_01: ScenarioSpec = {
       { id: 'SC-01-SECOND-WIND-COSTS-BONUS-ACTION', type: 'equals', path: 'actors.fighter.runtime.resources.bonus_action', value: 0 },
       { id: 'SC-01-SECOND-WIND-COSTS-ONE-USE', type: 'equals', path: `actors.fighter.runtime.resources.${SECOND_WIND_2024_RESOURCE_KEY}`, value: 1 },
     ] },
-    { do: 'use', actor: 'fighter', actionId: MICRO_MVP_SCENARIO_ACTION_IDS.weaponAttack, actionKind: 'nonSpell', targets: ['wizard'], factsByTarget: { wizard: enemy(5) }, assertions: [
+    { do: 'use', actor: 'fighter', actionId: MICRO_MVP_SCENARIO_ACTION_IDS.weaponAttack, actionKind: 'nonSpell', targets: ['wizard'], factsByTarget: { wizard: enemy(5) }, choices: { 'weapon_mastery.topple.use': 'use' }, assertions: [
       { id: 'SC-01-MASTERY-SAVE-WINDOW', type: 'pending', pendingType: 'mastery_save' },
       { id: 'SC-01-MASTERY-NOT-APPLIED-BEFORE-SAVE', type: 'condition', actor: 'wizard', condition: 'prone', present: false },
       { id: 'SC-01-WEAPON-HIT-DAMAGE', type: 'equals', path: 'actors.wizard.runtime.hp.current', value: 4 },
@@ -1112,7 +1121,7 @@ const SC_03: ScenarioSpec = {
     { do: 'startTurn', actor: 'sorcerer', assertions: [{ id: 'SC-03-TURN-SORCERER-1', type: 'event', eventType: 'turn_started' }] },
     { do: 'use', actor: 'sorcerer', actionId: MICRO_MVP_SCENARIO_ACTION_IDS.innateSorcery, actionKind: 'nonSpell', targets: [], factsByTarget: {}, assertions: [
       { id: 'SC-03-INNATE-COSTS-BONUS', type: 'equals', path: 'actors.sorcerer.runtime.resources.bonus_action', value: 0 },
-      { id: 'SC-03-INNATE-EXECUTABLE-EFFECT', type: 'equals', path: 'actors.sorcerer.runtime.activeEffects.0.name', value: 'Врождённое чародейство (runtime slice)' },
+      { id: 'SC-03-INNATE-EXECUTABLE-EFFECT', type: 'equals', path: 'actors.sorcerer.runtime.activeEffects.0.name', value: 'Врождённое чародейство' },
     ] },
     { do: 'use', actor: 'sorcerer', actionId: MICRO_MVP_SCENARIO_ACTION_IDS.fireBolt, actionKind: 'spell', targets: ['druid'], factsByTarget: { druid: enemy(60) }, spell: { baseLevel: 0 }, assertions: [{ id: 'SC-03-FIRE-BOLT-1-DAMAGE', type: 'equals', path: 'actors.druid.runtime.hp.current', value: 8 }] },
     { do: 'endTurn', actor: 'sorcerer', assertions: [{ id: 'SC-03-TURN-SORCERER-END-1', type: 'event', eventType: 'turn_ended' }] },
@@ -1176,7 +1185,7 @@ const SC_04: ScenarioSpec = {
     { do: 'abilityCheck', actor: 'warlock', ability: 'cha', skill: 'deception', dc: 12, assertions: [{ id: 'SC-04-WARLOCK-CHECK', type: 'event', eventType: 'roll' }] },
     { do: 'endTurn', actor: 'warlock', assertions: [{ id: 'SC-04-TURN-WARLOCK-END-1', type: 'event', eventType: 'turn_ended' }] },
     { do: 'startTurn', actor: 'fighter', assertions: [{ id: 'SC-04-TURN-FIGHTER-1', type: 'event', eventType: 'turn_started' }] },
-    { do: 'use', actor: 'fighter', actionId: MICRO_MVP_SCENARIO_ACTION_IDS.weaponAttack, actionKind: 'nonSpell', targets: ['warlock'], factsByTarget: { warlock: enemy(5) }, assertions: [
+    { do: 'use', actor: 'fighter', actionId: MICRO_MVP_SCENARIO_ACTION_IDS.weaponAttack, actionKind: 'nonSpell', targets: ['warlock'], factsByTarget: { warlock: enemy(5) }, choices: { 'weapon_mastery.topple.use': 'use' }, assertions: [
       { id: 'SC-04-MASTERY-SAVE-WINDOW', type: 'pending', pendingType: 'mastery_save' },
       { id: 'SC-04-MASTERY-NOT-APPLIED-BEFORE-SAVE', type: 'condition', actor: 'warlock', condition: 'prone', present: false },
       { id: 'SC-04-FIGHTER-DAMAGE', type: 'equals', path: 'actors.warlock.runtime.hp.current', value: 5 },

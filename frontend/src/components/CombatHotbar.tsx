@@ -421,6 +421,11 @@ export default function CombatHotbar({
   const resources = resourceKeys.map((key) => [key, actor.runtime.maxResources[key]] as const)
     .sort(([left], [right]) => sheetResourceTileOrder(left, resourceOptions)
       - sheetResourceTileOrder(right, resourceOptions) || left.localeCompare(right));
+  const actionEconomy = [
+    ['Действие', 'action'],
+    ['Бонус', 'bonus_action'],
+    ['Реакция', 'reaction'],
+  ] as const;
 
   return (
     <section className="combat-hotbar" aria-label="Панель действий">
@@ -453,6 +458,13 @@ export default function CombatHotbar({
               : actor.name.slice(0, 1)}
           </span>
           <div className="combat-hotbar__identity"><b>{actor.name}</b><span>{combatHpLabel(actor.runtime.hp)}</span></div>
+        </div>
+        <div className="combat-hotbar__economy" aria-label="Экономика хода">
+          {actionEconomy.map(([label, key]) => (
+            <span key={key} className={(actor.runtime.resources[key] ?? 0) > 0 ? 'is-ready' : 'is-spent'}>
+              {label} <b>{actor.runtime.resources[key] ?? 0}</b>
+            </span>
+          ))}
         </div>
         <div className="combat-hotbar__utility" role="group" aria-label="Управление полем">
           <button type="button" className={`combat-utility-button${movementMode ? ' is-selected' : ''}`} disabled={disabled} onClick={onMove} title="Перемещение">
@@ -512,6 +524,7 @@ export default function CombatHotbar({
           const contextualActionRef = projectedActionRef && displayedWeaponName
             ? { ...projectedActionRef, name: `${displayedWeaponName} — атака` }
             : projectedActionRef;
+          const displayedName = displayedWeaponName ?? actionLabel(action);
           return (
             <div
               key={action.id}
@@ -519,7 +532,7 @@ export default function CombatHotbar({
               data-action-id={action.id}
             >
               <SheetActionLine
-                name={displayedWeaponName ?? actionLabel(action)}
+                name={displayedName}
                 imageUrl={presentation?.imageUrl}
                 sourceLabel={presentation?.sourceLabel ?? (action.kind === 'spell' ? 'Заклинание' : 'Действие')}
                 description={presentation?.description}
@@ -533,6 +546,12 @@ export default function CombatHotbar({
                 disabledTitle={availability.reason ?? (disabled ? 'Сейчас действие недоступно' : 'Недостаточно ресурсов')}
                 onActivate={() => onAction(action)}
               />
+              <span className="combat-hotbar__action-label">{displayedName}</span>
+              {actionDisabled && (
+                <small className="combat-hotbar__action-reason">
+                  {availability.reason ?? (disabled ? 'Сейчас недоступно' : 'Недостаточно ресурсов')}
+                </small>
+              )}
             </div>
           );
         })}

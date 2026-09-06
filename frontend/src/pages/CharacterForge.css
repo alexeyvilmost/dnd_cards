@@ -662,6 +662,42 @@
   text-overflow: ellipsis;
 }
 .sheet-in-battle:hover { color: var(--forge-gold); text-decoration: underline; }
+.sheet-active-combat-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--forge-gold-dim);
+  border-radius: 12px;
+  background: var(--forge-panel);
+}
+.sheet-active-combat-card > div { display: flex; flex-direction: column; gap: 2px; }
+.sheet-active-combat-card > div span { color: var(--forge-text-dim); font-size: 12px; }
+.sheet-active-combat-card > a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border-radius: 9px;
+  background: var(--forge-gold);
+  color: #1a1510;
+  font-weight: 800;
+  text-decoration: none;
+}
+.sheet-active-combat-card details { border-top: 1px solid var(--forge-border); padding-top: 10px; }
+.sheet-active-combat-card summary { cursor: pointer; color: var(--forge-text-dim); font-weight: 700; }
+.sheet-active-combat-card details > .sheet-panel { margin-top: 10px; }
+.sheet-group-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.sheet-group-heading .sheet-h3 { margin: 0; }
+.sheet-empty-slots-toggle {
+  border: 0;
+  padding: 4px 0;
+  background: transparent;
+  color: var(--forge-gold);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
 .sheet-back, .sheet-edit {
   position: absolute;
   top: 50%;

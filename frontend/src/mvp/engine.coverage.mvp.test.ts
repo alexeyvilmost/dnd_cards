@@ -162,9 +162,15 @@ describe('payload-ы исполнителя: condition / temp_hp / resource / sc
     });
     expect(events.some((e) => e.type === 'condition_applied' && e.condition === 'stunned')).toBe(true);
     // на кастере состояния НЕТ:
-    expect(next.activeEffects.find((e) => e.name === 'stunned')).toBeFalsy();
+    expect(next.activeEffects.find((e) => (
+      (e.mechanics as Mech).kind === 'condition'
+        && (e.mechanics as Mech).value === 'stunned'
+    ))).toBeFalsy();
     // на ЦЕЛИ — есть, с длительностью:
-    const onTarget = targetState?.activeEffects.find((e) => e.name === 'stunned');
+    const onTarget = targetState?.activeEffects.find((e) => (
+      (e.mechanics as Mech).kind === 'condition'
+        && (e.mechanics as Mech).value === 'stunned'
+    ));
     expect(onTarget).toBeTruthy();
     expect(onTarget?.roundsLeft).toBe(1);
   });
@@ -174,7 +180,10 @@ describe('payload-ы исполнителя: condition / temp_hp / resource / sc
       character: FIGHTER_CTX, target: { saveMods: { con: 0 } }, rng: seededRng(7),
     });
     expect(events.some((e) => e.type === 'condition_applied' && e.condition === 'stunned')).toBe(true);
-    expect(next.activeEffects.find((e) => e.name === 'stunned')).toBeTruthy();
+    expect(next.activeEffects.find((e) => (
+      (e.mechanics as Mech).kind === 'condition'
+        && (e.mechanics as Mech).value === 'stunned'
+    ))).toBeTruthy();
     expect(targetState).toBeUndefined();
   });
 

@@ -15,6 +15,7 @@ import {
   pactChainProjection,
   requireOwnedFamiliar,
   rollFamiliarInitiative,
+  wildCompanionMechanicsPolicy,
 } from './familiarRuntime';
 import { createPactChainInvocationState } from './warlockPacts';
 
@@ -119,6 +120,47 @@ function withMetadataAction(
 }
 
 describe('canonical familiar runtime helpers', () => {
+  it('reads only the exact positive Wild Companion policy primitive', () => {
+    const valid = {
+      primitive: {
+        type: 'wild_companion',
+        policy: {
+          connection_range_ft: 100,
+          reappear_range_ft: 30,
+          ritual_casting_added_seconds: 600,
+        },
+      },
+    };
+    expect(wildCompanionMechanicsPolicy({ mechanics: valid })).toEqual({
+      connectionRangeFt: 100,
+      reappearRangeFt: 30,
+      ritualCastingAddedSeconds: 600,
+    });
+
+    const mutations: Array<(mechanics: Record<string, unknown>) => void> = [
+      (mechanics) => { mechanics.primitive = null; },
+      (mechanics) => { (mechanics.primitive as Record<string, unknown>).type = 'other'; },
+      (mechanics) => { (mechanics.primitive as Record<string, unknown>).extra = true; },
+      (mechanics) => { (mechanics.primitive as Record<string, unknown>).policy = null; },
+      (mechanics) => { ((mechanics.primitive as Record<string, unknown>).policy as Record<string, unknown>).extra = true; },
+      (mechanics) => { delete ((mechanics.primitive as Record<string, unknown>).policy as Record<string, unknown>).connection_range_ft; },
+      (mechanics) => { ((mechanics.primitive as Record<string, unknown>).policy as Record<string, unknown>).connection_range_ft = '100'; },
+      (mechanics) => { ((mechanics.primitive as Record<string, unknown>).policy as Record<string, unknown>).connection_range_ft = Number.NaN; },
+      (mechanics) => { ((mechanics.primitive as Record<string, unknown>).policy as Record<string, unknown>).connection_range_ft = 0; },
+      (mechanics) => { ((mechanics.primitive as Record<string, unknown>).policy as Record<string, unknown>).reappear_range_ft = '30'; },
+      (mechanics) => { ((mechanics.primitive as Record<string, unknown>).policy as Record<string, unknown>).reappear_range_ft = Number.NaN; },
+      (mechanics) => { ((mechanics.primitive as Record<string, unknown>).policy as Record<string, unknown>).reappear_range_ft = 0; },
+      (mechanics) => { ((mechanics.primitive as Record<string, unknown>).policy as Record<string, unknown>).ritual_casting_added_seconds = '600'; },
+      (mechanics) => { ((mechanics.primitive as Record<string, unknown>).policy as Record<string, unknown>).ritual_casting_added_seconds = 1.5; },
+      (mechanics) => { ((mechanics.primitive as Record<string, unknown>).policy as Record<string, unknown>).ritual_casting_added_seconds = 0; },
+    ];
+    for (const mutate of mutations) {
+      const malformed = copy(valid) as unknown as Record<string, unknown>;
+      mutate(malformed);
+      expect(wildCompanionMechanicsPolicy({ mechanics: malformed })).toBeNull();
+    }
+  });
+
   it('reads the exact data-owned Find Familiar material cost declaration', () => {
     for (const currency of ['gold', 'silver', 'copper'] as const) {
       expect(findFamiliarMaterialCost({

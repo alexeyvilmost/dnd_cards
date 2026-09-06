@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, Trash2 } from 'lucide-react';
 import { actionsApi, effectsApi } from '../api/client';
@@ -7,6 +7,7 @@ import ImageUploader from '../components/ImageUploader';
 import { monstersApi } from '../monsters/api';
 import type { MonsterAbility, MonsterInput } from '../monsters/types';
 import type { Action, PassiveEffect } from '../types';
+import { useCatalogOptions } from '../hooks/useCatalogOptions';
 import './MonsterLibrary.css';
 
 const ABILITIES: Array<[MonsterAbility, string]> = [
@@ -36,23 +37,33 @@ export default function MonsterCreator() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [form, setForm] = useState<MonsterInput>(emptyMonster);
-  const [actions, setActions] = useState<Action[]>([]);
-  const [effects, setEffects] = useState<PassiveEffect[]>([]);
   const [filter, setFilter] = useState('');
   const [savedId, setSavedId] = useState<string | null>(id ?? null);
   const [persistedTokenUrl, setPersistedTokenUrl] = useState('');
   const [busy, setBusy] = useState(Boolean(id));
   const [error, setError] = useState<string | null>(null);
 
+  const fetchActionPage = useCallback(async (params: { page: number; limit: number; search?: string }) => {
+    const response = await actionsApi.getActions({ ...params, fields: 'list' });
+    return { items: response.actions, total: response.total };
+  }, []);
+  const fetchEffectPage = useCallback(async (params: { page: number; limit: number; search?: string }) => {
+    const response = await effectsApi.getEffects({ ...params, fields: 'list' });
+    return { items: response.effects, total: response.total };
+  }, []);
+  const fetchAction = useCallback((entityId: string) => actionsApi.getAction(entityId), []);
+  const fetchEffect = useCallback((entityId: string) => effectsApi.getEffect(entityId), []);
+  const actionOptions = useCatalogOptions<Action>({
+    query: filter, selectedIds: form.action_ids, fetchPage: fetchActionPage, fetchOne: fetchAction,
+  });
+  const effectOptions = useCatalogOptions<PassiveEffect>({
+    query: filter, selectedIds: form.effect_ids, fetchPage: fetchEffectPage, fetchOne: fetchEffect,
+  });
+
   useEffect(() => {
     let active = true;
-    Promise.all([
-      actionsApi.getActions({ limit: 500 }), effectsApi.getEffects({ limit: 500 }),
-      id ? monstersApi.get(id) : Promise.resolve(null),
-    ]).then(([actionResponse, effectResponse, monster]) => {
+    (id ? monstersApi.get(id) : Promise.resolve(null)).then((monster) => {
       if (!active) return;
-      setActions(actionResponse.actions);
-      setEffects(effectResponse.effects);
       if (monster) {
         const { id: _id, support: _support, created_at: _created, updated_at: _updated, ...input } = monster;
         void _id; void _support; void _created; void _updated;
@@ -64,12 +75,6 @@ export default function MonsterCreator() {
     return () => { active = false; };
   }, [id]);
 
-  const visibleActions = useMemo(() => actions.filter((action) => (
-    !filter || `${action.name} ${action.card_number}`.toLowerCase().includes(filter.toLowerCase())
-  )).slice(0, 80), [actions, filter]);
-  const visibleEffects = useMemo(() => effects.filter((effect) => (
-    !filter || `${effect.name} ${effect.card_number}`.toLowerCase().includes(filter.toLowerCase())
-  )).slice(0, 80), [effects, filter]);
   const patch = <K extends keyof MonsterInput>(key: K, value: MonsterInput[K]) => setForm((current) => ({ ...current, [key]: value }));
   const toggle = (key: 'action_ids' | 'effect_ids', value: string) => patch(key, form[key].includes(value) ? form[key].filter((id) => id !== value) : [...form[key], value]);
 
@@ -130,7 +135,7 @@ export default function MonsterCreator() {
             <label>Инициатива<input type="number" value={form.initiative_bonus} onChange={(event) => patch('initiative_bonus', Number(event.target.value))} /></label>
             <label>Бонус мастерства<input type="number" min={1} value={form.proficiency_bonus} onChange={(event) => patch('proficiency_bonus', Number(event.target.value))} /></label>
           </div><div className="monster-abilities">{ABILITIES.map(([key, label]) => <label key={key}>{label}<input type="number" min={1} max={30} value={form.abilities[key]} onChange={(event) => patch('abilities', { ...form.abilities, [key]: Number(event.target.value) })} /></label>)}</div></fieldset>
-          <fieldset><legend>Действия и эффекты</legend><input className="monster-filter" value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="Фильтр сущностей" /><div className="monster-pickers"><div><h3>Действия</h3>{visibleActions.map((action) => <label className="monster-check" key={action.id}><input type="checkbox" checked={form.action_ids.includes(action.id)} onChange={() => toggle('action_ids', action.id)} /><span>{action.name}<small>{action.card_number}</small></span></label>)}</div><div><h3>Эффекты</h3>{visibleEffects.map((effect) => <label className="monster-check" key={effect.id}><input type="checkbox" checked={form.effect_ids.includes(effect.id)} onChange={() => toggle('effect_ids', effect.id)} /><span>{effect.name}<small>{effect.card_number}</small></span></label>)}</div></div></fieldset>
+          <fieldset><legend>Действия и эффекты</legend><input className="monster-filter" value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="Поиск по названию или ID" /><div className="monster-pickers"><div><h3>Действия <small>{actionOptions.total}</small></h3>{actionOptions.error && <p className="monster-error" role="alert">{actionOptions.error}</p>}{actionOptions.items.map((action) => <label className="monster-check" key={action.id}><input type="checkbox" checked={form.action_ids.includes(action.id)} onChange={() => toggle('action_ids', action.id)} /><span>{action.name}<small>{action.card_number}</small></span></label>)}{actionOptions.loading && <p role="status">Ищем действия…</p>}{actionOptions.hasMore && <button type="button" className="monster-secondary" disabled={actionOptions.loadingMore} onClick={() => void actionOptions.loadMore()}>{actionOptions.loadingMore ? 'Загрузка…' : 'Показать ещё'}</button>}</div><div><h3>Эффекты <small>{effectOptions.total}</small></h3>{effectOptions.error && <p className="monster-error" role="alert">{effectOptions.error}</p>}{effectOptions.items.map((effect) => <label className="monster-check" key={effect.id}><input type="checkbox" checked={form.effect_ids.includes(effect.id)} onChange={() => toggle('effect_ids', effect.id)} /><span>{effect.name}<small>{effect.card_number}</small></span></label>)}{effectOptions.loading && <p role="status">Ищем эффекты…</p>}{effectOptions.hasMore && <button type="button" className="monster-secondary" disabled={effectOptions.loadingMore} onClick={() => void effectOptions.loadMore()}>{effectOptions.loadingMore ? 'Загрузка…' : 'Показать ещё'}</button>}</div></div></fieldset>
         </div>
         <aside className="monster-forge__aside"><h2>Токен</h2><ImageUploader currentImageUrl={form.token_url} onImageUpload={(url) => patch('token_url', url)} entityType="monster" entityId={savedId ?? undefined} /><label>Или URL<input value={form.token_url} onChange={(event) => patch('token_url', event.target.value)} /></label><label>Источник<input value={form.source} onChange={(event) => patch('source', event.target.value)} /></label><p>Выбранный файл загружается вместе с сохранением монстра.</p><p>ИИ: приблизиться → атаковать, а если скорости не хватило — использовать Рывок.</p></aside>
       </div>

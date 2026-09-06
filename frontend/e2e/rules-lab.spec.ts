@@ -293,10 +293,12 @@ async function runPersistedSheetWeaponAttack(
   await page.goto(`/characters-v3/${targetId}`);
   const sheetHp = page.locator('.cs-hp-cur, .sheet-hp-main strong').first();
   await expect(sheetHp).toHaveText(String(hpAfter));
-  await expect(page.getByText('Ослабляющее', { exact: true })).toBeVisible();
+  await expect(page.locator('.sheet-conditions')
+    .getByText('Ослабляющее', { exact: true })).toBeVisible();
   await page.reload();
   await expect(page.locator('.cs-hp-cur, .sheet-hp-main strong').first()).toHaveText(String(hpAfter));
-  await expect(page.getByText('Ослабляющее', { exact: true })).toBeVisible();
+  await expect(page.locator('.sheet-conditions')
+    .getByText('Ослабляющее', { exact: true })).toBeVisible();
 }
 
 test('creates two exact compiled-root characters before running their canonical two-PC world', async ({ page }) => {
