@@ -23,6 +23,7 @@ import {
   createMigrationBundle,
   exactSupportRollbackRequest,
   migrationPlanHash,
+  migrationUpdateInvalidatesSupport,
   MIGRATION_WRITE_PROTOCOL,
   readMigrationBundle,
   REVIEWED_EXISTING_CREATE_PREIMAGE_HASHES,
@@ -355,10 +356,11 @@ function inMemoryContentApi(initialCatalogs) {
       const row = catalogs[collection]?.find((entity) => entity.id === entityId);
       if (!row) return new Response('not found', { status: 404 });
       const body = JSON.parse(String(init.body));
+      const invalidatesSupport = migrationUpdateInvalidatesSupport(body.fields);
       const desired = {
         ...clone(body.expected_current),
         ...clone(body.fields),
-        support: null,
+        support: invalidatesSupport ? null : clone(body.expected_current.support),
       };
       const comparable = (value) => Object.fromEntries(
         Object.entries(value).filter(([key]) => key !== 'updated_at'),
@@ -367,7 +369,7 @@ function inMemoryContentApi(initialCatalogs) {
       if (JSON.stringify(row) === JSON.stringify(body.expected_current)) {
         mutationCounts.exactUpdate += 1;
         Object.assign(row, clone(body.fields));
-        row.support = null;
+        if (invalidatesSupport) row.support = null;
         row.updated_at = nextTimestamp();
       } else if (JSON.stringify(comparable(row)) === JSON.stringify(comparable(desired))) {
         alreadyApplied = true;
@@ -665,6 +667,13 @@ test('reviewed existing create preimage becomes an exact update instead of a dup
   assert.deepEqual(Object.keys(update?.request ?? {}), ['image_url']);
   assert.match(REVIEWED_EXISTING_CREATE_PREIMAGE_HASHES[label], /^sha256:[0-9a-f]{64}$/);
   assert.deepEqual(REVIEWED_EXISTING_CREATE_UPDATES[label], update?.request);
+});
+
+test('support invalidation follows the versioned mutable metadata projection', () => {
+  assert.equal(migrationUpdateInvalidatesSupport({ image_url: '/after.png' }), false);
+  assert.equal(migrationUpdateInvalidatesSupport({ name: 'After', description: 'After' }), false);
+  assert.equal(migrationUpdateInvalidatesSupport({ mechanics: { activation: { mode: 'active' } } }), true);
+  assert.equal(migrationUpdateInvalidatesSupport({ image_url: '/after.png', action_type: 'base_action' }), true);
 });
 
 test('every apply and reverse-rollback interruption prefix preserves provider dependencies', () => {

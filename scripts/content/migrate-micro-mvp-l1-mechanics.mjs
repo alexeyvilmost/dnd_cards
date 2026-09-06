@@ -43,6 +43,10 @@ const PATCH_SCHEMA_PATH = join(
   'frontend/src/canon/data/micro-mvp-l1-content-patch.schema.json',
 );
 const PRODUCTION_SOURCE_PATH = join(HERE, 'production-content-source.v1.json');
+const CERTIFIED_MUTABLE_METADATA_POLICY_PATH = join(
+  REPO_ROOT,
+  'backend/migrations/certified_mutable_metadata_fields.v1.json',
+);
 const require = createRequire(import.meta.url);
 const Ajv = require(join(REPO_ROOT, 'frontend/node_modules/ajv/dist/ajv.js')).default;
 const addFormats = require(join(REPO_ROOT, 'frontend/node_modules/ajv-formats/dist/index.js')).default;
@@ -231,6 +235,23 @@ Resume/rollback retain the original SHA-pinned archive without the age limit.`;
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
+}
+
+const CERTIFIED_MUTABLE_METADATA_FIELDS = (() => {
+  const policy = readJson(CERTIFIED_MUTABLE_METADATA_POLICY_PATH);
+  const fields = policy?.mutable_metadata_root_fields;
+  if (policy?.schema_version !== 1
+    || !Array.isArray(fields)
+    || fields.length === 0
+    || fields.some((field) => typeof field !== 'string' || !/^[a-z][a-z0-9_]*$/.test(field))
+    || new Set(fields).size !== fields.length) {
+    throw new Error('Versioned certified mutable metadata policy is invalid');
+  }
+  return new Set(fields);
+})();
+
+export function migrationUpdateInvalidatesSupport(fields) {
+  return Object.keys(fields).some((field) => !CERTIFIED_MUTABLE_METADATA_FIELDS.has(field));
 }
 
 function stableClone(value) {
@@ -1453,11 +1474,17 @@ function updateApplyComparable(entity, operation) {
   return Object.fromEntries(Object.entries(entity).filter(([key]) => !changed.has(key)));
 }
 
+function expectedUpdatePostimageSupport(operation) {
+  return migrationUpdateInvalidatesSupport(operation.request)
+    ? null
+    : operation.before.support;
+}
+
 function isRecognizedUpdatePostimage(current, operation) {
   return Boolean(current)
     && current.id === operation.entityId
     && Object.prototype.hasOwnProperty.call(current, 'support')
-    && current.support === null
+    && same(current.support, expectedUpdatePostimageSupport(operation))
     && same(projection(current, operation.desiredProjection), operation.desiredProjection)
     && same(updateApplyComparable(current, operation), updateApplyComparable(operation.before, operation));
 }
@@ -1471,6 +1498,9 @@ function assertCapturedApplyPostimage(bundle, operation, current) {
   }
   if (!same(projection(current, operation.desiredProjection), operation.desiredProjection)) {
     throw new Error(`${operation.id}: exact post-apply projection verification failed`);
+  }
+  if (operation.operation === 'update' && !isRecognizedUpdatePostimage(current, operation)) {
+    throw new Error(`${operation.id}: persisted postimage changed fields outside the reviewed write`);
   }
   if (operation.operation === 'create') assertCreateReceipt(bundle, operation);
 }
@@ -1819,7 +1849,8 @@ export async function rollbackMigrationBundle(bundle, options) {
       operation.rollbackAfter = stableClone(current);
       operation.rollbackAfterHash = sha256Canonical(current);
       operation.state = 'rolled-back';
-    } else if (isRollbackContentBodyRestored(current, operation) && current.support === null) {
+    } else if (isRollbackContentBodyRestored(current, operation)
+      && same(current.support, expectedUpdatePostimageSupport(operation))) {
       operation.rollbackContentPostimage = stableClone(current);
       operation.rollbackContentPostimageHash = sha256Canonical(current);
       operation.state = 'rollback-content-restored';
@@ -1849,7 +1880,8 @@ export async function rollbackMigrationBundle(bundle, options) {
   }
 
   const protectedRollbackArtifacts = applied.filter((operation) => (
-    operation.operation === 'create' || operation.before?.support != null
+    operation.operation === 'create'
+      || (migrationUpdateInvalidatesSupport(operation.request) && operation.before?.support != null)
   ));
   for (const operation of protectedRollbackArtifacts) {
     if (operation.operation === 'create') {
@@ -1879,6 +1911,7 @@ export async function rollbackMigrationBundle(bundle, options) {
         operation.rollbackAfter = null;
         operation.rollbackAfterHash = sha256Canonical(null);
       } else {
+        const invalidatesSupport = migrationUpdateInvalidatesSupport(operation.request);
         let contentRestored;
         if (initialStates.has(operation.state)) {
           operation.state = 'rollback-content-writing';
@@ -1904,8 +1937,9 @@ export async function rollbackMigrationBundle(bundle, options) {
           if (!isRollbackContentBodyRestored(contentRestored, operation)) {
             throw new Error(`${operation.id}: full content preimage was not restored`);
           }
-          if (contentRestored.support !== null) {
-            throw new Error(`${operation.id}: content trigger did not invalidate support to exact null`);
+          const expectedContentSupport = expectedUpdatePostimageSupport(operation);
+          if (!same(contentRestored.support, expectedContentSupport)) {
+            throw new Error(`${operation.id}: content trigger produced unexpected support state`);
           }
           operation.rollbackContentPostimage = stableClone(contentRestored);
           operation.rollbackContentPostimageHash = sha256Canonical(contentRestored);
@@ -1920,7 +1954,7 @@ export async function rollbackMigrationBundle(bundle, options) {
           );
         }
 
-        if (operation.before.support != null) {
+        if (invalidatesSupport && operation.before.support != null) {
           const support = exactSupportRollbackRequest(operation.before.support, operation.id);
           operation.state = 'rollback-support-writing';
           writeJsonAtomic(options.bundlePath, bundle);
