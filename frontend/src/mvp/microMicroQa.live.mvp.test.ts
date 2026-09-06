@@ -39,6 +39,21 @@ function supported(entity: { support?: { status?: string } | null }) {
     .includes(entity.support?.status || '');
 }
 
+function grantedEffectPayloads(mechanics: Dict | null | undefined): Dict[] {
+  const effectsByNumber = new Map(effects.map((effect) => [effect.card_number, effect]));
+  return payloads(mechanics).flatMap((payload) => {
+    if (payload.kind !== 'grant_effect') return [];
+    const references = [payload.value, ...((payload.values as unknown[] | undefined) || [])]
+      .filter((value): value is string => typeof value === 'string');
+    return references.flatMap((reference) => {
+      const granted = effectsByNumber.get(reference);
+      return granted?.mechanics && typeof granted.mechanics === 'object'
+        ? [granted.mechanics as Dict]
+        : [];
+    });
+  });
+}
+
 describe.skipIf(!RUN)('регрессии ручной приёмки micro-micro-MVP 2026-07-30', () => {
   beforeAll(async () => {
     [effects, spells, races, feats, classes] = await Promise.all([
@@ -79,11 +94,14 @@ describe.skipIf(!RUN)('регрессии ручной приёмки micro-micr
   it('Наставление, Благословение и Усыпление больше не являются narrative-only', () => {
     const guidance = spells.find((entity) => entity.card_number === 'SPELL-0230')!;
     const guidanceChoice = payloads(guidance.mechanics as Dict).find((payload) => payload.id === 'guidance_skill')!;
-    const firstGuidance = ((((guidanceChoice.options as Dict).items as Dict[])[0].grants) as Dict[])[0];
-    expect(firstGuidance).toMatchObject({ kind: 'modifier', op: 'bonus_die', faces: 4 });
+    const firstGuidanceGrant = ((((guidanceChoice.options as Dict).items as Dict[])[0].grants) as Dict[])[0];
+    expect(firstGuidanceGrant).toMatchObject({ kind: 'grant_effect' });
+    expect(grantedEffectPayloads({ effects: [{ resolution: 'auto', result: [firstGuidanceGrant] }] })[0])
+      .toMatchObject({ kind: 'modifier', op: 'bonus_die', faces: 4 });
 
     const bless = spells.find((entity) => entity.card_number === 'SPELL-0163')!;
-    expect(payloads(bless.mechanics as Dict).filter((payload) => payload.op === 'bonus_die')).toHaveLength(2);
+    expect(grantedEffectPayloads(bless.mechanics as Dict).filter((payload) => payload.op === 'bonus_die'))
+      .toHaveLength(2);
 
     const sleep = spells.find((entity) => entity.card_number === 'SPELL-0311')!;
     const sleepSave = ((sleep.mechanics as Dict).effects as Dict[])[0];

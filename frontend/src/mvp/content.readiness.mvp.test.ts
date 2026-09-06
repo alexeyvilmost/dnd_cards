@@ -124,9 +124,11 @@ d('C7: снаряжение', () => {
 });
 
 d('H: гигиена механик', () => {
-  it('lint-mechanics: все механики валидны по схеме (0 ошибок)', async () => {
-    // Скрипт возвращает ненулевой код при ошибках — здесь дублируем логику кратко:
-    // каждая механика обязана иметь activation.mode и массив effects.
+  it('каждая механика имеет исполняемый корень или типизированный library-payload', async () => {
+    // Effects API содержит два намеренно разных контракта: полноценные карточки
+    // персонажа и payload-шаблоны, которые grant_effect материализует в
+    // RuntimeState. Второй вид распознаётся по корневому kind и не должен
+    // притворяться отдельным активируемым действием.
     const kinds: Array<[string, string]> = [['/api/actions', 'actions'], ['/api/effects', 'effects'], ['/api/spells', 'spells']];
     const bad: string[] = [];
     for (const [path, key] of kinds) {
@@ -134,9 +136,22 @@ d('H: гигиена механик', () => {
       for (const it of items) {
         const m = it.mechanics as Record<string, unknown> | null;
         if (!m || !Object.keys(m).length) continue;
+        if (typeof m.kind === 'string' && m.kind.trim()) {
+          if (key !== 'effects') bad.push(`${key}:${it.card_number}: library-payload допустим только в каталоге эффектов`);
+          continue;
+        }
         const activation = m.activation as Record<string, unknown> | undefined;
+        if (key === 'effects' && !activation?.mode && Array.isArray(m.effects) && m.duration) {
+          // Persistable ActiveEffectEntry template: grant_effect installs it as
+          // state and mechanicsView reads its effects[] directly.
+          continue;
+        }
         if (!activation?.mode) bad.push(`${key}:${it.card_number}: нет activation.mode`);
-        if (!Array.isArray(m.effects)) bad.push(`${key}:${it.card_number}: нет effects[]`);
+        const hasDirectPrimitive = key === 'effects' && [
+          'primitive', 'spell_preparation_rest', 'rest_decision',
+          'weapon_mastery', 'attack_replacement', 'condition',
+        ].some((field) => m[field] && typeof m[field] === 'object');
+        if (!Array.isArray(m.effects) && !hasDirectPrimitive) bad.push(`${key}:${it.card_number}: нет effects[] или прямого primitive-контракта`);
       }
     }
     expect(bad, bad.join('\n')).toHaveLength(0);

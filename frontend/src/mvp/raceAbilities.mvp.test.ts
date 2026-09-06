@@ -15,7 +15,12 @@ import {
   gatherFeatureRefs,
   type EntityBundle,
 } from '../character/assemble';
-import { collectSheetActions } from '../character/actionSheet';
+import {
+  collectGrantActionSlugs,
+  collectSheetActions,
+  type GrantedAction,
+  type SheetAction,
+} from '../character/actionSheet';
 import { collectPassiveMechanics, syncRuntimeResources } from '../character/resourceInit';
 import { buildCharacterContext } from '../character/runtime';
 import { resolveCharacterRules } from '../character/rules/resolveCharacterRules';
@@ -47,6 +52,7 @@ let effectsById = new Map<string, PassiveEffect>();
 let actionsById = new Map<string, Action>();
 let featuresByNumber = new Map<string, Feature>();
 let combos: RaceCombo[] = [];
+let grantedEffects: NonNullable<ExecuteContext['grantedEffects']> = {};
 
 async function fetchAll<T>(path: string, key: string): Promise<T[]> {
   const items: T[] = [];
@@ -210,8 +216,29 @@ function inPlayChoices(mechanics: Dict): Record<string, string[]> {
   return selected;
 }
 
+function collectRaceSheetActions(
+  assembled: ReturnType<typeof assemble>,
+  draft: CharacterDraft,
+): SheetAction[] {
+  const grants = new Map<string, GrantedAction>();
+  for (const { effect, origin } of assembled.effects) {
+    for (const slug of collectGrantActionSlugs(effect.mechanics as Dict, draft.level)) {
+      const feature = featuresByNumber.get(slug);
+      if (!feature || !('action_type' in feature)) {
+        throw new Error(`Эффект ${effect.card_number} ссылается на отсутствующее действие ${slug}`);
+      }
+      grants.set(slug, {
+        action: feature as Action,
+        sourceLabel: effect.name,
+        group: origin.kind === 'race' ? 'race' : 'class',
+      });
+    }
+  }
+  return collectSheetActions(assembled, [], [], [...grants.values()]);
+}
+
 const EXPECTED_NON_SPELL_INVENTORY: Record<string, string[]> = {
-  'ACT-aasimar-revelation': ['choice', 'narrative'],
+  'ACT-aasimar-revelation': ['choice', 'grant_effect', 'world_zone'],
   'ACT-breath-acid': ['damage'],
   'ACT-breath-cold': ['damage'],
   'ACT-breath-fire': ['damage'],
@@ -219,13 +246,14 @@ const EXPECTED_NON_SPELL_INVENTORY: Record<string, string[]> = {
   'ACT-breath-poison': ['damage'],
   'ACT-goliath-cloud': ['movement'],
   'ACT-goliath-fire': ['damage'],
-  'ACT-goliath-frost': ['damage', 'modifier'],
+  'ACT-goliath-frost': ['damage', 'grant_effect'],
   'ACT-goliath-hill': ['condition'],
   'ACT-goliath-stone': ['reduce_damage'],
   'ACT-goliath-storm': ['damage'],
   'ACTION-0002': ['modifier'],
   'EFF-darkvision-120': ['grant_sense'],
   'EFF-darkvision-60': ['grant_sense'],
+  'EFF-goliath-large-form': ['grant_action'],
   'EFF-tabaxi-feline': ['narrative'],
   'EFF-warforged-constructed': ['modifier', 'narrative'],
   'EFF-warforged-sentry-rest': ['narrative'],
@@ -235,7 +263,7 @@ const EXPECTED_NON_SPELL_INVENTORY: Record<string, string[]> = {
   'RE-dragon-resist-fire': ['resistance'],
   'RE-dragon-resist-lightning': ['resistance'],
   'RE-dragon-resist-poison': ['resistance'],
-  'RE-dragonborn-4': ['grant_speed'],
+  'RE-dragonborn-4': ['grant_action'],
   'RE-dwarf-2': ['modifier', 'resistance'],
   'RE-dwarf-3': ['modifier'],
   'RE-dwarf-4': ['grant_sense'],
@@ -243,7 +271,6 @@ const EXPECTED_NON_SPELL_INVENTORY: Record<string, string[]> = {
   'RE-elf-3': ['choice'],
   'RE-gnome-2': ['modifier'],
   'RE-goliath-1': ['narrative', 'resource'],
-  'RE-goliath-2': ['modifier', 'narrative'],
   'RE-goliath-3': ['modifier', 'narrative'],
   'RE-halfling-1': ['modifier'],
   'RE-halfling-2': ['narrative'],
@@ -256,25 +283,17 @@ const EXPECTED_NON_SPELL_INVENTORY: Record<string, string[]> = {
   'RE-orc-3': ['set_value'],
   'RE-sub-abyssal': ['resistance'],
   'RE-sub-chthonic': ['resistance'],
-  'RE-sub-cloud': ['narrative'],
   'RE-sub-drow': ['choice', 'grant_sense'],
-  'RE-sub-fire': ['narrative'],
-  'RE-sub-frost': ['narrative'],
   'RE-sub-high_elf': ['choice'],
-  'RE-sub-hill': ['narrative'],
   'RE-sub-infernal': ['resistance'],
   'RE-sub-rock': ['narrative'],
-  'RE-sub-storm': ['narrative'],
   'RE-sub-wood_elf': ['choice', 'grant_speed'],
   aasimar_healing_hands: ['healing'],
   tabaxi_unarmed_strike: ['damage'],
 };
 
 const KNOWN_RULE_DEVIATIONS = [
-  'Аасимар — Небесное откровение: все три варианта дают только narrative-события',
   'Драконорождённый — Оружие дыхания: тратит всё действие и имеет только конус 15 фт вместо замены атаки с выбором конус/линия',
-  'Драконорождённый — Драконий полёт с 5 уровня пока не меняет runtime-скорость после нажатия',
-  'Голиаф — Большая форма: длится 10 раундов и восстанавливается после короткого отдыха вместо 10 минут и длинного отдыха',
   'Голиаф — Мощное телосложение: преимущество на спасбросок для окончания Схваченного осталось narrative',
   'Эльф — Транс отсутствует и среди traits, и среди механических карточек',
   'Полурослик — Проворство и Природная скрытность существуют только как narrative-подсказки',
@@ -297,6 +316,17 @@ beforeAll(async () => {
       .filter((feature) => feature.card_number)
       .map((feature) => [feature.card_number, feature]),
   );
+  grantedEffects = Object.fromEntries(effects.flatMap((effect) => {
+    if (!effect.card_number) return [];
+    const value = {
+      id: effect.id,
+      card_number: effect.card_number,
+      name: effect.name,
+      mechanics: effect.mechanics,
+      repeatable: effect.repeatable,
+    };
+    return [[effect.card_number, value], [effect.id, value]];
+  }));
   combos = raceCombos(races);
 }, 120_000);
 
@@ -378,7 +408,7 @@ d('Незаклинательные способности видов: полн�
               failures.push(`${label}: действий ${assembled.actions.length}/${expectedRefs.actionRefs.length}`);
             }
 
-            const sheetIds = new Set(collectSheetActions(assembled).map((action) => action.id));
+            const sheetIds = new Set(collectRaceSheetActions(assembled, draft).map((action) => action.id));
             for (const { effect, origin } of assembled.effects) {
               if (origin.kind !== 'race') continue;
               const mode = (effect.mechanics?.activation as Dict | undefined)?.mode;
@@ -444,7 +474,9 @@ d('Незаклинательные способности видов: полн�
               if (!applies?.roll) continue;
               const collected = collectModifiers(emptyState(), passives, {
                 roll: String(applies.roll),
-                filter: applies.filter as Dict | undefined,
+                filter: Object.fromEntries(Object.entries((applies.filter as Dict | undefined) || {}).map(([key, value]) => (
+                  [key, Array.isArray(value) ? value[0] : value]
+                ))),
                 formulaCtx: {
                   abilityMods: character.abilityMods,
                   profBonus: character.profBonus,
@@ -475,7 +507,9 @@ d('Незаклинательные способности видов: полн�
           ...assembled.effects.filter(({ origin }) => origin.kind === 'race').map(({ effect }) => effect.id),
           ...assembled.actions.filter(({ origin }) => origin.kind === 'race').map(({ action }) => action.id),
         ]);
-        for (const sheetAction of collectSheetActions(assembled).filter((action) => racialFeatureIds.has(action.id))) {
+        for (const sheetAction of collectRaceSheetActions(assembled, draft).filter((action) => (
+          action.group === 'race' && (racialFeatureIds.has(action.id) || action.id.startsWith('granted-'))
+        ))) {
           executions++;
           try {
             const state = emptyState(50);
@@ -490,6 +524,7 @@ d('Незаклинательные способности видов: полн�
               },
               choices: inPlayChoices(sheetAction.mechanics),
               rng: seededRng(17),
+              grantedEffects,
             });
             for (const event of result.events) {
               if (event.type !== 'narrative') continue;
@@ -515,9 +550,7 @@ d('Незаклинательные способности видов: полн�
     }
     expect(executions).toBeGreaterThan(0);
     expect(failures, failures.join('\n')).toEqual([]);
-    expect([...notImplemented].sort()).toEqual([
-      'RE-dragonborn-4:grant_speed',
-    ]);
+    expect([...notImplemented].sort()).toEqual([]);
   }, 120_000);
 
   it('явно фиксирует известные расхождения с PHB 2024 вместо ложного заявления «работает всё»', () => {
@@ -527,27 +560,23 @@ d('Незаклинательные способности видов: полн�
       .find((payload) => payload.kind === 'healing')?.amount;
     expect(healingAmount).toBe('prof_bonus d4');
 
-    const revelation = featuresByNumber.get('ACT-aasimar-revelation');
-    const revelationKinds = nonSpellKinds(revelation!);
-    if (revelationKinds.every((kind) => kind === 'choice' || kind === 'narrative')) deviations.push(KNOWN_RULE_DEVIATIONS[0]);
-
     const breath = featuresByNumber.get('ACT-breath-fire');
     const breathActivation = breath?.mechanics?.activation as Dict | undefined;
     const breathArea = breath?.mechanics?.targeting as Dict | undefined;
     const area = breathArea?.area as Dict | undefined;
     if (breathActivation?.mode === 'active'
       && ((breathActivation.cost as Dict[] | undefined) || []).some((cost) => cost.resource === 'action')
-      && area?.kind === 'cone') deviations.push(KNOWN_RULE_DEVIATIONS[1]);
+      && area?.kind === 'cone') deviations.push(KNOWN_RULE_DEVIATIONS[0]);
 
     const dragon = races.find((race) => race.card_number === 'RACE-0008')!;
     const klass = classes[0];
     const dragonL1 = build({ race: dragon }, klass, 1);
     const dragonL5 = build({ race: dragon }, klass, 5);
     const flight = featuresByNumber.get('RE-dragonborn-4');
-    const flightPayload = directPayloads(flight?.mechanics as Dict | null | undefined)
-      .find((payload) => payload.kind === 'grant_speed');
-    const flightButtonAtL1 = collectSheetActions(dragonL1.assembled).find((action) => action.id === flight?.id);
-    const flightButtonAtL5 = collectSheetActions(dragonL5.assembled).find((action) => action.id === flight?.id);
+    const flightButtonAtL1 = collectRaceSheetActions(dragonL1.assembled, dragonL1.draft)
+      .find((action) => action.actionRef?.card_number === 'ACT-dragonborn-draconic-flight');
+    const flightButtonAtL5 = collectRaceSheetActions(dragonL5.assembled, dragonL5.draft)
+      .find((action) => action.actionRef?.card_number === 'ACT-dragonborn-draconic-flight');
     expect(flightButtonAtL1).toBeUndefined();
     expect(flightButtonAtL5).toBeTruthy();
     let flightRuntimeImplemented = false;
@@ -563,6 +592,7 @@ d('Незаклинательные способности видов: полн�
         const result = executeAction(initial, withoutCost(flightButtonAtL5.mechanics), {
           character,
           rng: seededRng(19),
+          grantedEffects,
         });
         flightRuntimeImplemented = result.events.length > 0
           || JSON.stringify(result.state) !== JSON.stringify(initial);
@@ -570,38 +600,29 @@ d('Незаклинательные способности видов: полн�
         flightRuntimeImplemented = false;
       }
     }
-    if (flightPayload && !flightRuntimeImplemented) {
-      deviations.push(KNOWN_RULE_DEVIATIONS[2]);
-    }
-    const largeForm = featuresByNumber.get('RE-goliath-2');
-    const largeUses = largeForm?.mechanics?.uses as Dict | undefined;
-    const largeDuration = directPayloads(largeForm?.mechanics as Dict | null | undefined)
-      .find((payload) => payload.kind === 'modifier')?.duration as Dict | undefined;
-    if (largeUses?.per === 'short_rest' && largeDuration?.type === 'rounds' && largeDuration.amount === 10) {
-      deviations.push(KNOWN_RULE_DEVIATIONS[3]);
-    }
+    expect(flightRuntimeImplemented).toBe(true);
 
     const powerfulBuild = featuresByNumber.get('RE-goliath-3');
     const hasGrappleSave = directPayloads(powerfulBuild?.mechanics as Dict | null | undefined).some((payload) =>
       payload.kind === 'modifier'
       && (payload.applies_to as Dict | undefined)?.roll === 'saving_throw'
       && JSON.stringify(payload).includes('grappled'));
-    if (!hasGrappleSave) deviations.push(KNOWN_RULE_DEVIATIONS[4]);
+    if (!hasGrappleSave) deviations.push(KNOWN_RULE_DEVIATIONS[1]);
 
     const elf = races.find((race) => race.card_number === 'RACE-0004')!;
     const hasTrance = (elf.traits || []).some((trait) => /транс/i.test(`${trait.name} ${trait.description}`))
       || (elf.related_effects || []).some((id) => /транс/i.test(effectsById.get(id)?.name || ''));
-    if (!hasTrance) deviations.push(KNOWN_RULE_DEVIATIONS[5]);
+    if (!hasTrance) deviations.push(KNOWN_RULE_DEVIATIONS[2]);
 
     const narrativeOnly = (cardNumber: string) => {
       const feature = featuresByNumber.get(cardNumber);
       return !!feature && nonSpellKinds(feature).every((kind) => kind === 'narrative');
     };
     if (narrativeOnly('RE-halfling-2') && narrativeOnly('RE-halfling-4')) {
-      deviations.push(KNOWN_RULE_DEVIATIONS[6]);
+      deviations.push(KNOWN_RULE_DEVIATIONS[3]);
     }
-    if (narrativeOnly('EFF-tabaxi-feline')) deviations.push(KNOWN_RULE_DEVIATIONS[7]);
-    if (narrativeOnly('EFF-warforged-sentry-rest')) deviations.push(KNOWN_RULE_DEVIATIONS[8]);
+    if (narrativeOnly('EFF-tabaxi-feline')) deviations.push(KNOWN_RULE_DEVIATIONS[4]);
+    if (narrativeOnly('EFF-warforged-sentry-rest')) deviations.push(KNOWN_RULE_DEVIATIONS[5]);
 
     const dragonCombo = combos.find((combo) => combo.race.id === dragon.id)!;
     const dragonBuild = build(dragonCombo, klass, 20);

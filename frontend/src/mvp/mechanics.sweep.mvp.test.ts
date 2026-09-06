@@ -9,7 +9,7 @@
  * (без флага — пропускается, чтобы не бить сеть в обычном прогоне).
  */
 import { describe, expect, it } from 'vitest';
-import { executeAction, type RuntimeState } from './contracts';
+import { executeAction, type ExecuteContext, type RuntimeState } from './contracts';
 import { CARD_LONGSWORD, seededRng } from './fixtures';
 import { validateMechanics, type MechanicKind } from '../engine/validateMechanics';
 import { collectInPlayActionChoices } from '../mechanics/collectChoices';
@@ -20,6 +20,19 @@ const BASE = process.env.API_URL || 'http://localhost:8080';
 
 type Dict = Record<string, unknown>;
 type Entity = { id: string; name: string; card_number?: string; level?: number; mechanics?: Dict | null };
+
+function grantedEffectRegistry(entities: Entity[]): NonNullable<ExecuteContext['grantedEffects']> {
+  return Object.fromEntries(entities.flatMap((entity) => {
+    if (!entity.card_number) return [];
+    const value = {
+      id: entity.id,
+      card_number: entity.card_number,
+      name: entity.name,
+      mechanics: entity.mechanics,
+    };
+    return [[entity.card_number, value], [entity.id, value]];
+  }));
+}
 
 const SWEEP_CLUB = withDeclaredTestWeaponProfile({
   ...CARD_LONGSWORD,
@@ -57,6 +70,8 @@ function richState(equipWeapon = false): RuntimeState {
     ki_points: 99, rage: 9, sorcery_points: 99, superiority_die: 9,
     bardic_inspiration: 9, channel_divinity: 9, wild_shape: 9, second_wind: 9,
     warlock_spell_slot: 9, heroic_inspiration: 9, luck_points: 9,
+    focus: 99, focus_points: 99,
+    hit_dice_d10: 99,
   };
   for (let l = 1; l <= 9; l++) res[`spell_slot_${l}`] = 9;
   return {
@@ -78,6 +93,12 @@ const CTX = {
   abilityMods: { str: 3, dex: 3, con: 3, int: 5, wis: 5, cha: 5 },
   profBonus: 6, level: 17, classLevels: { wizard: 17 }, characterSpeed: 30,
   spellcastingAbility: 'wis', spellcastingMod: 5,
+  hitDie: 'd10',
+  variables: {
+    martial_arts_die: { count: 1, sides: 10 },
+    rage_damage_modifier: 4,
+    speed: 30,
+  },
 } as unknown as Parameters<typeof executeAction>[2]['character'];
 
 function firstInPlayChoiceSelections(mechanics: Dict, label: string): Record<string, string[]> {
@@ -101,6 +122,10 @@ function firstInPlayChoiceSelections(mechanics: Dict, label: string): Record<str
         .slice(0, choice.count)
         .map((card) => card.id);
     }
+    // Rest-domain spellbook choices are resolved by the sheet adapter. The
+    // sweep supplies one stable catalog identity so it can exercise the
+    // declared grant without pretending the choice itself is missing.
+    if (selected.length === 0 && choice.source === 'spellbook') selected = ['SPELL-0174'];
     return selected.length > 0 ? [[choice.id, selected]] : [];
   }));
 }
@@ -108,6 +133,8 @@ function firstInPlayChoiceSelections(mechanics: Dict, label: string): Record<str
 const TARGET_FACTS = {
   ac: 1,
   saveMods: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+  checkMods: { athletics: 0, acrobatics: 0 },
+  characterContext: CTX,
 };
 
 function containsPayloadKind(value: unknown, kind: string): boolean {
@@ -153,45 +180,26 @@ interface SweepResult {
  * cannot hide behind a broad allow-list, while a fixed gap makes this list stale.
  */
 const KNOWN_LEGACY_EXECUTION_GAPS = new Map<string, string>([
-  ['SPELL-0190', 'UNRESOLVED_GRANT_EFFECT'],
   ['SPELL-0483', 'INVALID_FORMULA'],
   ['SPELL-0225', 'INVALID_FORMULA'],
-  ['SPELL-0250', 'UNKNOWN_PAYLOAD'],
-  ['SPELL-0258', 'UNKNOWN_PAYLOAD'],
-  ['SPELL-0293', 'UNKNOWN_PAYLOAD'],
   ['EFFECT-0236', 'UNKNOWN_PAYLOAD'],
-  ['EFFECT-0231', 'INVALID_PAYLOAD'],
   ['EFFECT-0220', 'UNKNOWN_PAYLOAD'],
   ['EFFECT-0219', 'UNKNOWN_PAYLOAD'],
-  ['EFFECT-0192', 'INVALID_PAYLOAD'],
-  ['EFFECT-0182', 'INVALID_PAYLOAD'],
-  ['EFFECT-0176', 'INVALID_PAYLOAD'],
-  ['EFFECT-0170', 'INVALID_PAYLOAD'],
   ['EFFECT-0169', 'UNKNOWN_PAYLOAD'],
-  ['EFFECT-0166', 'INVALID_PAYLOAD'],
-  ['EFFECT-0164', 'INVALID_PAYLOAD'],
-  ['EFFECT-0158', 'INVALID_PAYLOAD'],
-  ['EFFECT-0153', 'INVALID_FORMULA'],
-  ['EFFECT-0151', 'INVALID_PAYLOAD'],
-  ['EFFECT-0147', 'INVALID_PAYLOAD'],
-  ['EFFECT-0120', 'INVALID_PAYLOAD'],
-  ['EFFECT-0115', 'INVALID_PAYLOAD'],
-  ['EFFECT-0111', 'INVALID_PAYLOAD'],
-  ['EFFECT-0107', 'INVALID_PAYLOAD'],
   ['EFFECT-0017', 'UNKNOWN_PAYLOAD'],
-  ['EFFECT-0016', 'INVALID_PAYLOAD'],
-  ['RE-dragonborn-4', 'UNKNOWN_PAYLOAD'],
-  ['ACT-rage', 'INVALID_FORMULA'],
-  ['action_shove', 'INVALID_MECHANICS'],
-  ['action_offhand_attack', 'INVALID_MECHANICS'],
-  ['action_melee_attack', 'INVALID_MECHANICS'],
+  ['ACT-wizard-memorize-spell', 'UNKNOWN_PAYLOAD'],
 ]);
 
 function executionErrorCode(error: string): string {
   return /^([A-Z][A-Z_]+)/.exec(error)?.[1] ?? 'UNCLASSIFIED';
 }
 
-function runSweep(entities: Entity[], kind: MechanicKind, checkInert: boolean): SweepResult {
+function runSweep(
+  entities: Entity[],
+  kind: MechanicKind,
+  checkInert: boolean,
+  grantedEffects: NonNullable<ExecuteContext['grantedEffects']>,
+): SweepResult {
   const r: SweepResult = {
     total: entities.length, withMechanics: 0,
     schemaInvalid: [], execThrows: [], notImplemented: new Map(), inertLevel02: [],
@@ -209,11 +217,14 @@ function runSweep(entities: Entity[], kind: MechanicKind, checkInert: boolean): 
     try {
       const spellCtx = kind === 'spell' ? { baseLevel: e.level ?? 1, castLevel: Math.max(e.level ?? 1, 1) } : undefined;
       const label = `${id}: ${e.name}`;
-      const { events } = executeAction(richState(kind === 'spell'), stripCost(mech), {
-        character: kind === 'spell' ? { ...CTX, equippedCards: [...SWEEP_WEAPONS] } : CTX,
+      const choices = firstInPlayChoiceSelections(mech, label);
+      if (id === 'ACT-wizard-memorize-spell') choices.wizard_memorize_spell = ['SPELL-0174'];
+      const { events } = executeAction(richState(true), stripCost(mech), {
+        character: { ...CTX, equippedCards: [...SWEEP_WEAPONS], knownCards: [...SWEEP_WEAPONS] },
         target: targetForMechanics(mech),
         rng: seededRng(7),
-        choices: firstInPlayChoiceSelections(mech, label),
+        choices,
+        grantedEffects,
         ...(spellCtx ? { spell: spellCtx } : {}),
       } as Parameters<typeof executeAction>[2]);
 
@@ -266,9 +277,10 @@ describe.runIf(RUN)('Свип механик прод-контента чере�
       fetchAll('/api/actions', 'actions'),
     ]);
 
-    const rs = runSweep(spells, 'spell', true);
-    const re = runSweep(effects, 'passive_effect', false);
-    const ra = runSweep(actions, 'action', false);
+    const grantedEffects = grantedEffectRegistry(effects);
+    const rs = runSweep(spells, 'spell', true, grantedEffects);
+    const re = runSweep(effects, 'passive_effect', false, grantedEffects);
+    const ra = runSweep(actions, 'action', false, grantedEffects);
 
     printReport('ЗАКЛИНАНИЯ', rs);
     printReport('ЭФФЕКТЫ', re);
