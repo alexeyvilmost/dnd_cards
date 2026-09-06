@@ -26,6 +26,7 @@ import {
   MIGRATION_WRITE_PROTOCOL,
   readMigrationBundle,
   REVIEWED_EXISTING_CREATE_PREIMAGE_HASHES,
+  REVIEWED_EXISTING_CREATE_UPDATES,
   REVIEWED_SUPERSEDING_FIELD_HASHES,
   REVIEWED_SUPERSEDING_MECHANICS_HASHES,
   rollbackMigrationBundle,
@@ -661,7 +662,9 @@ test('reviewed existing create preimage becomes an exact update instead of a dup
   assert.equal(update?.operation, 'update');
   assert.equal(update?.entityId, existing.id);
   assert.equal(update?.request.image_url, '/icons/actions/ranged_weapon_attack.png');
+  assert.deepEqual(Object.keys(update?.request ?? {}), ['image_url']);
   assert.match(REVIEWED_EXISTING_CREATE_PREIMAGE_HASHES[label], /^sha256:[0-9a-f]{64}$/);
+  assert.deepEqual(REVIEWED_EXISTING_CREATE_UPDATES[label], update?.request);
 });
 
 test('every apply and reverse-rollback interruption prefix preserves provider dependencies', () => {

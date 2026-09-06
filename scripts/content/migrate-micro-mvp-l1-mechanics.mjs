@@ -108,6 +108,12 @@ export const REVIEWED_EXISTING_CREATE_PREIMAGE_HASHES = Object.freeze({
   'actions:action_basic_weapon_ranged': 'sha256:a50724ca235815eb0171ac4557990ebf36af3e77cc1b8d914e1e24d61926d9f2',
 });
 
+export const REVIEWED_EXISTING_CREATE_UPDATES = Object.freeze({
+  'actions:action_basic_weapon_ranged': Object.freeze({
+    image_url: '/icons/actions/ranged_weapon_attack.png',
+  }),
+});
+
 const EFFECT_CREATE_FIELDS = [
   'name', 'name_en', 'description', 'detailed_description', 'image_url', 'rarity',
   'card_number', 'effect_type', 'condition_description', 'script', 'mechanics',
@@ -819,6 +825,7 @@ export function buildMigrationOperations(
     supersedingMechanicsHashes = REVIEWED_SUPERSEDING_MECHANICS_HASHES,
     supersedingFieldHashes = REVIEWED_SUPERSEDING_FIELD_HASHES,
     existingCreatePreimageHashes = REVIEWED_EXISTING_CREATE_PREIMAGE_HASHES,
+    existingCreateUpdates = REVIEWED_EXISTING_CREATE_UPDATES,
   } = {},
 ) {
   validateContentPatchDeclaration(patch);
@@ -951,10 +958,14 @@ export function buildMigrationOperations(
             `${label}: create identity exists with unreviewed fields (live ${currentHash})`,
           );
         }
+        const reviewedUpdate = existingCreateUpdates[label];
+        if (!reviewedUpdate || !same(projection(request, reviewedUpdate), reviewedUpdate)) {
+          throw new Error(`${label}: reviewed existing-create update is missing or invalid`);
+        }
         operations.push(operationBase(
           collection,
           matches[0],
-          exactUpdateFields(request),
+          exactUpdateFields(reviewedUpdate),
           'update',
         ));
       }
