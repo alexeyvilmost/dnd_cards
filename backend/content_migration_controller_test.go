@@ -242,6 +242,18 @@ func TestExactUpdateValidationPreservesIdentityAndServerFields(t *testing.T) {
 	if desired["id"] != expected["id"] || desired["card_number"] != expected["card_number"] || desired["support"] != nil {
 		t.Fatalf("identity/support semantics changed: %#v", desired)
 	}
+	metadataSupport := map[string]any{"status": "verified_mechanical", "mechanics_locked": true}
+	metadataExpected := JSONMap{
+		"id": expected["id"], "card_number": expected["card_number"],
+		"image_url": "/before.png", "support": metadataSupport,
+	}
+	metadataDesired, err := contentMigrationDesiredUpdate(
+		metadataExpected,
+		map[string]json.RawMessage{"image_url": json.RawMessage(`"/after.png"`)},
+	)
+	if err != nil || !reflect.DeepEqual(metadataDesired["support"], metadataSupport) {
+		t.Fatalf("metadata-only exact update changed support: desired=%#v err=%v", metadataDesired, err)
+	}
 	retry := JSONMap{}
 	for key, value := range desired {
 		retry[key] = value

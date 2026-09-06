@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"sort"
 
+	backendmigrations "dnd-cards-backend/migrations"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -228,9 +230,21 @@ func contentMigrationDesiredUpdate(
 	if !changed {
 		return nil, errContentMigrationInvalidUpdate
 	}
-	// Every accepted request changes at least one content column. The database
-	// invalidation trigger must therefore clear any prior certification.
-	desired["support"] = nil
+	mutableMetadataFields, err := backendmigrations.CertifiedMutableMetadataFields()
+	if err != nil {
+		return nil, errContentMigrationInvalidUpdate
+	}
+	mutableMetadata := make(map[string]bool, len(mutableMetadataFields))
+	for _, field := range mutableMetadataFields {
+		mutableMetadata[field] = true
+	}
+	for field := range fields {
+		if !mutableMetadata[field] {
+			// Structural and mechanical writes invalidate prior certification.
+			desired["support"] = nil
+			break
+		}
+	}
 	return desired, nil
 }
 

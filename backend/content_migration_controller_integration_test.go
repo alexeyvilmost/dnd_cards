@@ -117,6 +117,28 @@ func TestContentMigrationCreateReceiptRoundTripOnIsolatedPostgres(t *testing.T) 
 			classMap["choice_recommendations"],
 		)
 	}
+	metadataImageURL := "/icons/actions/reviewed-metadata.png"
+	metadataFields := map[string]json.RawMessage{
+		"image_url": json.RawMessage(fmt.Sprintf("%q", metadataImageURL)),
+	}
+	metadataEntity, alreadyUpdated, metadataErr := controller.updateExactContent(
+		"effect", supportEffect.ID, beforeSupportMap, metadataFields,
+	)
+	if metadataErr != nil || alreadyUpdated {
+		t.Fatalf("real-trigger metadata update: already=%v err=%v", alreadyUpdated, metadataErr)
+	}
+	metadataMap, mapErr := apiResponseAsJSONMap(metadataEntity)
+	if mapErr != nil || metadataMap["image_url"] != metadataImageURL ||
+		!reflect.DeepEqual(metadataMap["support"], beforeSupportMap["support"]) {
+		t.Fatalf("metadata update changed certification semantics: %#v err=%v", metadataMap, mapErr)
+	}
+	_, alreadyUpdated, metadataErr = controller.updateExactContent(
+		"effect", supportEffect.ID, beforeSupportMap, metadataFields,
+	)
+	if metadataErr != nil || !alreadyUpdated {
+		t.Fatalf("lost-response metadata retry: already=%v err=%v", alreadyUpdated, metadataErr)
+	}
+	beforeSupportMap = metadataMap
 	exactDescription := "CAS-updated disposable support fixture"
 	exactMechanics := map[string]any{
 		"activation": map[string]any{

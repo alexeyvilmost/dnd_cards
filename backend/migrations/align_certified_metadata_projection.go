@@ -47,6 +47,12 @@ func certifiedMutableMetadataFields() ([]string, error) {
 	return fields, nil
 }
 
+// CertifiedMutableMetadataFields exposes the same versioned projection to
+// protected writers that must predict whether PostgreSQL will retain support.
+func CertifiedMutableMetadataFields() ([]string, error) {
+	return certifiedMutableMetadataFields()
+}
+
 func quotedTextArray(fields []string) string {
 	quoted := make([]string, len(fields))
 	for index, field := range fields {
