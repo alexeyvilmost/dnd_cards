@@ -83,7 +83,7 @@ function usage() {
     '    --expected-deployed-commit <same-40-hex-verified-on-host> \\',
     '    --artifact backups/micro-mvp-release-evidence.json',
     '',
-    'The destination must not exist. Strict micro/integration/browser gates require zero skips/todos.',
+    'The destination must not exist. Strict gates reject every skip/todo outside their exact pinned policy.',
     'The deployed commit value is an operator attestation; verify it externally before running this command.',
   ].join('\n');
 }
@@ -277,7 +277,7 @@ function nodeTapSummary(source, definition) {
   }, definition);
 }
 
-function goJsonSummary(source, definition) {
+export function goJsonSummary(source, definition) {
   const terminal = new Map();
   for (const [index, line] of source.split('\n').entries()) {
     if (!line.trim()) continue;
@@ -288,7 +288,15 @@ function goJsonSummary(source, definition) {
       throw new Error(`${definition.id} emitted invalid JSON on line ${index + 1}: ${error.message}`);
     }
     if (!event.Test || !['pass', 'fail', 'skip'].includes(event.Action)) continue;
-    terminal.set(`${event.Package}\0${event.Test}`, event.Action);
+    terminal.set(`${event.Package}.${event.Test}`, event.Action);
+  }
+  const expectedSkipped = [...(definition.allowedSkippedTests ?? [])].sort();
+  const actualSkipped = [...terminal.entries()]
+    .filter(([, action]) => action === 'skip')
+    .map(([identity]) => identity)
+    .sort();
+  if (JSON.stringify(actualSkipped) !== JSON.stringify(expectedSkipped)) {
+    throw new Error(`${definition.id} emitted an unexpected skipped test identity`);
   }
   const states = [...terminal.values()];
   return passedTestSummary({

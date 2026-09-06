@@ -681,10 +681,14 @@ Preflight до первой mutation также проверяет rollbackabili
    live matrix (`MVP_CONTENT=1` + exact `VITE_API_URL`), полный 448-root
    `sheet-combat-certification:check`, Rules Lab fixture check, build, lint и
    browser Playwright. У всех тестовых gate должно быть ненулевое
-   число тестов, `0 failed` и `0 skipped`. Общий `npm test` обязан иметь `0 todo`;
-   `test:mvp` запускается с live-контентом и допускает только три закреплённых по
-   полному имени post-micro-MVP `todo` (`set_die`, runtime `grant_action` и
-   фактическое перемещение). Любой иной skip/todo останавливает evidence.
+   число тестов и `0 failed`. Backend gate допускает ровно 26 закреплённых по
+   полному имени historical clone drills миграций 176-196: каждому из них нужен
+   отдельный снимок БД непосредственно до своей миграции, а обязательный
+   production-like clone уже содержит migration 201. Любое другое имя skip,
+   включая пропуск интеграции на одной из двух обязательных текущих БД,
+   останавливает evidence. Остальные gate должны иметь `0 skipped`, а все gate —
+   `0 todo`; прежние roadmap TODO для `set_die`, runtime `grant_action` и
+   фактического перемещения уже заменены исполняемыми release-тестами.
 
    Перед запуском потребовать clean source fingerprint и сравнить 40-hex commit
    локального `HEAD` (commit B) с commit успешных
@@ -790,7 +794,8 @@ npm run content:certify:micro -- --apply \
 
 `--apply` заново читает raw evidence, проверяет mode `0600`, его SHA-256,
 четырёхчасовую давность, exact 16-gate contract, отсутствие failures и
-неожиданных skip/todo, точное число закреплённых regression TODO, совпадение
+неожиданных skip/todo, точные полные имена 26 historical clone skips и
+закреплённых regression TODO, совпадение
 source/expected-deployed commit, exact source/release/patch и текущий полный
 catalog fingerprint **до login и до первой mutation**. В каждую
 support-запись v3 попадают `evidence_id`, `evidence_hash`,

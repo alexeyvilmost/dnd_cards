@@ -19,11 +19,13 @@ import {
   executeMicroMvpReleaseGate,
   executeVitestGate,
   generateMicroMvpReleaseEvidence,
+  goJsonSummary,
   persistStructuredFailureReport,
   releaseInvocation,
   vitestGateInvocation,
 } from './generate-micro-mvp-release-evidence.mjs';
 import {
+  BACKEND_GO_ALLOWED_HISTORICAL_CLONE_SKIPS,
   REQUIRED_RELEASE_GATES,
   MICRO_MVP_RELEASE_EVIDENCE_SCHEMA_VERSION,
   assertMicroMvpSourceTreeMatchesCommit,
@@ -541,7 +543,13 @@ function artifactFor(inputCatalogs = catalogs(), completed = new Date('2026-08-0
     outputBytes: 10,
     reportHash: gate.tests ? `sha256:${'b'.repeat(64)}` : null,
     testSummary: gate.tests
-      ? { total: 2, passed: 2, failed: 0, skipped: 0, todo: 0 }
+      ? {
+        total: 2 + (gate.allowedSkippedTests?.length ?? 0),
+        passed: 2,
+        failed: 0,
+        skipped: gate.allowedSkippedTests?.length ?? 0,
+        todo: 0,
+      }
       : null,
     ...(gate.id === 'semantic_coverage' ? { testCoverage: completeTestCoverage() } : {}),
   }));
@@ -654,7 +662,7 @@ test('release evidence reader and writer require a private regular file', (t) =>
   }
 });
 
-test('release evidence has the complete exact command contract and strict gates reject skips', () => {
+test('release evidence has the complete exact command contract and strict gates reject unpinned skips', () => {
   assert.deepEqual(
     REQUIRED_RELEASE_GATES.map(({ id, command }) => [id, command]),
     EXPECTED_GATES,
@@ -671,7 +679,11 @@ test('release evidence has the complete exact command contract and strict gates 
   assert.doesNotThrow(() => validateMicroMvpReleaseEvidenceArtifact(artifact, {
     apiBase: API_BASE, catalogs: inputCatalogs, now: new Date('2026-08-05T18:01:00Z'),
   }));
-  assert.equal(artifact.skippedTests, 0, 'release gates must not contain anonymous skips');
+  assert.equal(
+    artifact.skippedTests,
+    BACKEND_GO_ALLOWED_HISTORICAL_CLONE_SKIPS.length,
+    'release evidence must expose every pinned historical clone skip',
+  );
   assert.equal(artifact.todoTests, 0, 'release gates must not contain TODO tests');
 
   const hiddenSkip = clone(artifact);
@@ -701,6 +713,43 @@ test('release evidence has the complete exact command contract and strict gates 
       apiBase: API_BASE, catalogs: inputCatalogs, now: new Date('2026-08-05T18:01:00Z'),
     }),
     /semantic_coverage.*skip\/todo policy/,
+  );
+});
+
+test('Go evidence accepts only the exact pinned historical clone drill identities', () => {
+  const definition = REQUIRED_RELEASE_GATES[0];
+  const events = [
+    { Package: 'dnd-cards-backend/api', Test: 'TestCurrentRuntime', Action: 'pass' },
+    ...BACKEND_GO_ALLOWED_HISTORICAL_CLONE_SKIPS.map((identity) => {
+      const separator = identity.lastIndexOf('.');
+      return {
+        Package: identity.slice(0, separator),
+        Test: identity.slice(separator + 1),
+        Action: 'skip',
+      };
+    }),
+  ];
+  const report = events.map((event) => JSON.stringify(event)).join('\n');
+  assert.deepEqual(goJsonSummary(report, definition), {
+    total: 1 + BACKEND_GO_ALLOWED_HISTORICAL_CLONE_SKIPS.length,
+    passed: 1,
+    failed: 0,
+    skipped: BACKEND_GO_ALLOWED_HISTORICAL_CLONE_SKIPS.length,
+    todo: 0,
+  });
+
+  const unknown = `${report}\n${JSON.stringify({
+    Package: 'dnd-cards-backend/migrations',
+    Test: 'TestNewUnconfiguredIntegration',
+    Action: 'skip',
+  })}`;
+  assert.throws(
+    () => goJsonSummary(unknown, definition),
+    /unexpected skipped test identity/,
+  );
+  assert.throws(
+    () => goJsonSummary(events.slice(0, -1).map((event) => JSON.stringify(event)).join('\n'), definition),
+    /unexpected skipped test identity/,
   );
 });
 
@@ -1043,7 +1092,13 @@ test('generator executes the exact mandatory gate set before writing evidence', 
         outputBytes: 1,
         reportHash: gate.tests ? `sha256:${'b'.repeat(64)}` : null,
         testSummary: gate.tests
-          ? { total: 1, passed: 1, failed: 0, skipped: 0, todo: 0 }
+          ? {
+            total: 1 + (gate.allowedSkippedTests?.length ?? 0),
+            passed: 1,
+            failed: 0,
+            skipped: gate.allowedSkippedTests?.length ?? 0,
+            todo: 0,
+          }
           : null,
         ...(gate.id === 'semantic_coverage' ? { testCoverage: completeTestCoverage() } : {}),
       };
