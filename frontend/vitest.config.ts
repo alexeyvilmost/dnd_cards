@@ -26,7 +26,10 @@ export default mergeConfig(viteConfig, defineConfig({
       // out of the generic unit run avoids duplicating live-gated specs as
       // anonymous skips in release evidence.
       'src/mvp/**/*.mvp.test.ts',
-      'src/mvp/**/*.live.test.ts',
+      // Live API diagnostics are opt-in regardless of which feature folder
+      // owns them. Keeping the suffix boundary global prevents a credential-
+      // gated probe from appearing as an anonymous skip in the offline suite.
+      'src/**/*.live.test.ts',
     ],
   },
 }));
