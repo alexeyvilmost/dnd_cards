@@ -68,12 +68,22 @@ def main() -> None:
     }, expected=201)
     login = api("POST", "/auth/login", {"username": username, "password": password})
     token, user_id = login["token"], login["user"]["id"]
-    sql(f"UPDATE characters_v3 SET user_id='{user_id}' WHERE id='{SOURCE_CHARACTER_ID}'")
+    sql(
+        f"UPDATE characters_v3 SET user_id='{user_id}',current_hp=GREATEST(1,max_hp-1),"
+        f"resources='{{\"action\":0}}'::jsonb,"
+        f"active_effects='[{{\"id\":\"e2e-transient\",\"name\":\"Transient\"}}]'::jsonb,"
+        f"turn_state='{{\"solo_combat_v1\":{{\"outcome\":\"defeat\"}},\"temp_hp\":5}}'::jsonb "
+        f"WHERE id='{SOURCE_CHARACTER_ID}'"
+    )
 
     created = api("POST", "/roguelike/runs", {"source_character_id": SOURCE_CHARACTER_ID}, token, expected=201)["run"]
     run_id, character_id = created["id"], created["character_id"]
     assert created["status"] == "active" and created["phase"] == "camp"
     assert created["supplies"] == 1 and created["character"]["character_type"] == "dungeon_crawl"
+    assert created["character"]["current_hp"] == created["character"]["max_hp"]
+    assert created["character"]["resources"] == created["character"]["max_resources"]
+    assert not (created["character"].get("active_effects") or [])
+    assert not (created["character"].get("turn_state") or {})
     assert len(created["shop"]["offers"]) == 5 and len(created["shop"]["staples"]) == 4
     numbers = {offer["card_number"] for offer in created["shop"]["offers"]}
     consumables = {"CARD-0791", "CARD-0815", "CARD-0714", "CARD-0840"}

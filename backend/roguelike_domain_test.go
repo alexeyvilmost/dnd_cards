@@ -167,3 +167,41 @@ func TestRoguelikeCommandHashCoversPayloadAndRevision(t *testing.T) {
 		t.Fatal("expected revision is absent from receipt identity")
 	}
 }
+
+func TestResetRoguelikeCloneRuntimeStartsRestedAndOutOfCombat(t *testing.T) {
+	maximums := JSONMap{"action": float64(1), "second_wind": float64(1)}
+	resources := JSONMap{"action": float64(0), "second_wind": float64(0)}
+	effects := ActiveEffectRows{{ID: "poisoned", Name: "Отравленный"}}
+	turnState := JSONMap{
+		SOLO_COMBAT_KEY: map[string]any{"outcome": "defeat"},
+		"temp_hp":       float64(5),
+	}
+	encounterID := uuid.New()
+	character := CharacterV3{
+		MaxHP: 13, CurrentHP: 4, Resources: &resources, MaxResources: &maximums,
+		ActiveEffects: &effects, TurnState: &turnState, CurrentEncounterID: &encounterID,
+		RuntimeRevision: 9,
+	}
+
+	if err := resetRoguelikeCloneRuntime(&character); err != nil {
+		t.Fatal(err)
+	}
+	if character.CurrentHP != character.MaxHP {
+		t.Fatalf("current HP=%d, want full %d", character.CurrentHP, character.MaxHP)
+	}
+	if character.Resources == nil || !roguelikeJSONEqual(character.Resources, character.MaxResources) {
+		t.Fatalf("resources=%#v, want maximums %#v", character.Resources, character.MaxResources)
+	}
+	if character.Resources == character.MaxResources {
+		t.Fatal("current and maximum resources share the same map pointer")
+	}
+	if character.ActiveEffects == nil || len(*character.ActiveEffects) != 0 {
+		t.Fatalf("active effects were retained: %#v", character.ActiveEffects)
+	}
+	if character.TurnState == nil || len(*character.TurnState) != 0 {
+		t.Fatalf("turn state was retained: %#v", character.TurnState)
+	}
+	if character.CurrentEncounterID != nil || character.RuntimeRevision != 0 {
+		t.Fatalf("encounter runtime was retained: encounter=%v revision=%d", character.CurrentEncounterID, character.RuntimeRevision)
+	}
+}

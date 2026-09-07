@@ -51,6 +51,26 @@ func roguelikeCommandRequestHash(request RoguelikeCommandRequest) (string, error
 	return fmt.Sprintf("%x", sha256.Sum256(raw)), nil
 }
 
+func resetRoguelikeCloneRuntime(character *CharacterV3) error {
+	character.CurrentHP = character.MaxHP
+	resources := JSONMap{}
+	if character.MaxResources != nil {
+		var err error
+		resources, err = mapFromJSON(*character.MaxResources)
+		if err != nil {
+			return fmt.Errorf("clone maximum resources: %w", err)
+		}
+	}
+	activeEffects := ActiveEffectRows{}
+	turnState := JSONMap{}
+	character.Resources = &resources
+	character.ActiveEffects = &activeEffects
+	character.TurnState = &turnState
+	character.CurrentEncounterID = nil
+	character.RuntimeRevision = 0
+	return nil
+}
+
 type RoguelikeOffer struct {
 	ID         string `json:"id"`
 	CardID     string `json:"card_id"`
@@ -395,8 +415,9 @@ func (rc *RoguelikeController) Create(c *gin.Context) {
 		clone.User = User{}
 		clone.Name = strings.TrimSpace(source.Name) + " · Забег"
 		clone.CharacterType = "dungeon_crawl"
-		clone.CurrentEncounterID = nil
-		clone.RuntimeRevision = 0
+		if err = resetRoguelikeCloneRuntime(&clone); err != nil {
+			return err
+		}
 		clone.CreatedAt = time.Time{}
 		clone.UpdatedAt = time.Time{}
 		potion, err := roguelikeCardByNumber(tx, roguelikeHealingPotionCard)
