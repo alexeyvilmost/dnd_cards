@@ -8,7 +8,7 @@ import type { SheetCombatParticipantSeed } from '../character/sheetCombatSession
 import type { ForgeCharacter } from '../character/types';
 import type { Action } from '../types';
 import type { Monster } from '../monsters/types';
-import { addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatParticipants, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatAlertSwap, resolveSoloCombatInterception, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectedTargetsForAction, setSoloCombatInitiativeTotals, setSoloCombatMount } from './engine';
+import { addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, canStandActor, standActor, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatParticipants, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatAlertSwap, resolveSoloCombatInterception, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectedTargetsForAction, setSoloCombatInitiativeTotals, setSoloCombatMount } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { gridDistanceFt } from './tacticalGrid';
 import { isPlayerControlledCombatActor, SOLO_COMBAT_KEY } from './types';
@@ -3049,4 +3049,72 @@ describe('wolf Bite in the shared combat engine', () => {
       expect(activeId(restored)).toBe(participant.character.id);
     },
   );
+});
+
+
+describe('Prone tactical movement', () => {
+  async function scene() {
+    const participant = fighterSeed();
+    const state = await createSoloCombatState({ character: participant.character, participant,
+      selected: [{ monster: goblin(), quantity: 1 }], actions: [scimitar(), dash()],
+      effects: [], dashAction: dash(), rng: () => 0.5 });
+    const actorId = participant.character.id;
+    state.world.actors[actorId].runtime.activeEffects.push({ id: 'prone', name: 'Prone', source: 'test',
+      mechanics: { kind: 'condition', value: 'prone' } });
+    state.tokens[actorId].position = { x: 5, y: 5 };
+    return { state, actorId };
+  }
+  it('stands for half speed without spending an action, provoking or repeating after reload', async () => {
+    const { state, actorId } = await scene();
+    const resources = clone(state.world.actors[actorId].runtime.resources);
+    const stood = standActor(state, actorId);
+    expect(stood.movementRemainingFt[actorId]).toBe(15);
+    expect(stood.world.actors[actorId].runtime.resources).toEqual(resources);
+    expect(stood.tokens).toEqual(state.tokens);
+    expect(stood.world.actors[actorId].runtime.hp).toEqual(state.world.actors[actorId].runtime.hp);
+    const restored = readSoloCombatState(writeSoloCombatState({}, stood), actorId, stood.runtimeRevision)!;
+    expect(restored.world.actors[actorId].runtime.activeEffects.some((entry) => entry.mechanics.value === 'prone')).toBe(false);
+    expect(canStandActor(restored, actorId)).toBe(false);
+    expect(() => standActor(restored, actorId)).toThrow();
+  });
+  it('rounds half an odd speed down without losing a foot from an unmaterialized ledger', async () => {
+    const { state, actorId } = await scene();
+    state.world.actors[actorId].character.characterSpeed = 25;
+    state.world.actors[actorId].character.baseSpeed = 25;
+    delete state.movementRemainingFt[actorId];
+    expect(standActor(state, actorId).movementRemainingFt[actorId]).toBe(13);
+  });
+  it('cannot stand with insufficient movement, zero speed, or a pending decision', async () => {
+    const { state, actorId } = await scene();
+    state.movementRemainingFt[actorId] = 14;
+    expect(canStandActor(state, actorId)).toBe(false);
+    state.movementRemainingFt[actorId] = 30;
+    state.world.actors[actorId].runtime.activeEffects.push({ id: 'restrained', name: 'Restrained', source: 'test',
+      mechanics: { kind: 'condition', value: 'restrained' } });
+    expect(canStandActor(state, actorId)).toBe(false);
+    state.world.actors[actorId].runtime.activeEffects.pop();
+    state.pendingAlertSwapActorIds = [actorId];
+    expect(canStandActor(state, actorId)).toBe(false);
+  });
+  it.each([false, true])('crawling charges extra distance, additive with difficult terrain (%s)', async (difficult) => {
+    const { state, actorId } = await scene();
+    if (difficult) state.combatAreas = { mud: { id: 'mud', name: 'Mud', zoneType: 'test',
+      sourceActorId: actorId, sourceActionId: 'test', sourceEntityIds: ['test'],
+      origin: { x: 5, y: 5 }, cells: [{ x: 5, y: 5 }, { x: 6, y: 5 }],
+      duration: { type: 'rounds', roundsLeft: 10 }, triggers: [], difficultTerrain: true } };
+    const moved = moveActor({ state, actorId, destination: { x: 6, y: 5 }, rng: () => 0.5 });
+    expect(moved.movementRemainingFt[actorId]).toBe(difficult ? 15 : 20);
+  });
+  it('the AI stands before attacking and spends movement only once', async () => {
+    const { state: initial, actorId } = await scene();
+    const monsterId = Object.values(initial.world.actors).find((actor) => actor.kind === 'monster')!.id;
+    let state = advanceTurn(initial);
+    state.world.actors[monsterId].runtime.activeEffects.push({ id: 'prone', name: 'Prone', source: 'test',
+      mechanics: { kind: 'condition', value: 'prone' } });
+    state.tokens[monsterId].position = { x: 6, y: 5 };
+    state = runMonsterTurn(state, () => 0.5);
+    expect(state.world.actors[monsterId].runtime.activeEffects.some((entry) => entry.mechanics.value === 'prone')).toBe(false);
+    expect(state.log.filter((entry) => entry.text.includes('Встал:'))).toHaveLength(1);
+    expect(activeId(state)).toBe(actorId);
+  });
 });

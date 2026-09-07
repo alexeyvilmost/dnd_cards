@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Footprints, MoreHorizontal } from 'lucide-react';
+import { ArrowUp, Footprints, MoreHorizontal } from 'lucide-react';
 import { canPay, costKey } from '../engine/cost';
 import { FREEUSE_SHOWCASE_KEY, isFreeusePoolKey } from '../engine/freeuse';
 import { bindEquippedWeaponActionContext, weaponAttackPreview, weaponContext } from '../engine/weapon';
@@ -17,7 +17,8 @@ import { parseActivationLevelRequirement } from '../rules-core/activationRequire
 import { parseActivationCastTime } from '../rules-core/activationCastTime';
 import { applyUnarmedDamageProfileToAction } from '../rules-core/fightingStyleComplexPrimitives';
 import { playerActionIdsFor, type SoloCombatState } from '../solo-combat/types';
-import { isTriggeredCombatAction } from '../solo-combat/engine';
+import { canStandActor, isTriggeredCombatAction } from '../solo-combat/engine';
+import { actorMustCrawl, standMovementCost } from '../solo-combat/tacticalGrid';
 import { actionCostResourceIds, findResource, resourceLabel as sharedResourceLabel, useResourceOptions } from '../utils/resources';
 import SheetActionLine from './SheetActionLine';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
@@ -370,7 +371,7 @@ export function combatActionAvailability(
 
 export default function CombatHotbar({
   state, actorId, selectedActionId, movementMode, disabled,
-  onAction, onMove, onEndTurn, onSheet,
+  onAction, onMove, onStand, onEndTurn, onSheet,
 }: {
   state: SoloCombatState;
   actorId: string;
@@ -379,6 +380,7 @@ export default function CombatHotbar({
   disabled: boolean;
   onAction: (action: RuleActionDefinition) => void;
   onMove: () => void;
+  onStand: () => void;
   onEndTurn: () => void;
   onSheet: () => void;
 }) {
@@ -467,6 +469,9 @@ export default function CombatHotbar({
           ))}
         </div>
         <div className="combat-hotbar__utility" role="group" aria-label="Управление полем">
+          {actorMustCrawl(actor) && <button type="button" className="combat-utility-button" disabled={disabled || !canStandActor(state, actorId)} onClick={onStand} title="Встать, потратив половину скорости">
+            <ArrowUp /><span>Встать</span><small>{standMovementCost(state, actorId)} фт.</small>
+          </button>}
           <button type="button" className={`combat-utility-button${movementMode ? ' is-selected' : ''}`} disabled={disabled} onClick={onMove} title="Перемещение">
             <Footprints /><span>Движение</span><small>{state.movementRemainingFt[actorId] ?? 0} фт.</small>
           </button>

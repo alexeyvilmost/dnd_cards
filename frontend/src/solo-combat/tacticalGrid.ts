@@ -8,6 +8,16 @@ import {
 } from './types';
 import { breakdownValue } from '../engine/breakdown';
 import type { ActorState } from '../rules-core/domain';
+import { activeConditionWorldFactValues } from '../engine/conditions';
+
+export function actorMustCrawl(actor: ActorState): boolean {
+  if (!actor.runtime.activeEffects?.length) return false;
+  return activeConditionWorldFactValues(actor.runtime, 'stand_cost').includes('half_speed');
+}
+
+export function standMovementCost(state: Pick<SoloCombatState, 'world'>, actorId: string): number {
+  return Math.floor(effectiveCombatActorSpeedFt(state, actorId) / 2);
+}
 
 export function gridDistanceFt(left: GridPosition, right: GridPosition): number {
   return Math.max(Math.abs(left.x - right.x), Math.abs(left.y - right.y)) * TACTICAL_CELL_FT;
@@ -71,7 +81,8 @@ export function reachablePositions(
     const difficult = Object.values(state.combatAreas ?? {}).some((area) => (
       area.difficultTerrain && area.cells.some((cell) => path.some((step) => samePosition(cell, step)))
     ));
-    return distance * (difficult ? 2 : 1) <= maximumFeet;
+    const crawl = actorMustCrawl(state.world.actors[actorId]);
+    return distance * (1 + Number(difficult) + Number(crawl)) <= maximumFeet;
   });
 }
 

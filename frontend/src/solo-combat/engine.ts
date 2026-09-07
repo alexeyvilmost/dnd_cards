@@ -38,6 +38,7 @@ import { payloadsOf } from '../engine/mechanicsView';
 import { deniedCapabilities } from '../engine/modifiers';
 import {
   executeRemoteManipulator as executeEngineRemoteManipulator,
+  executeAction as executeEngineAction,
   type RemoteManipulatorCommand,
 } from '../engine/execute';
 import { describeEngineEvent, describeMovement, describeResource } from '../engine/events';
@@ -48,6 +49,8 @@ import { planMonsterTurn } from './monsterAi';
 import { projectCombatLogRecords } from './combatLog';
 import {
   areaActorIds,
+  actorMustCrawl,
+  standMovementCost,
   effectiveActorSize,
   effectiveActorSpeedFt,
   effectiveCombatActorSpeedFt,
@@ -2810,6 +2813,31 @@ function breakOutOfRangeGrapples(
   return next;
 }
 
+export function canStandActor(state: SoloCombatState, actorId: string): boolean {
+  const actor = state.world.actors[actorId];
+  const cost = standMovementCost(state, actorId);
+  return Boolean(actor && actorMustCrawl(actor) && actor.runtime.hp.current > 0
+    && state.outcome === 'active' && activeActorId(state) === actorId
+    && !state.world.pendingResolution && !state.pendingD20Interrupt && !state.pendingInterception
+    && !state.pendingTriggeredAction && !state.pendingTurnStartGrappleDamage
+    && !state.pendingAlertSwapActorIds?.length && effectiveCombatActorSpeedFt(state, actorId) > 0
+    && (state.movementRemainingFt[actorId] ?? effectiveCombatActorSpeedFt(state, actorId)) >= cost);
+}
+
+export function standActor(state: SoloCombatState, actorId: string): SoloCombatState {
+  if (!canStandActor(state, actorId)) throw new Error('Сейчас нельзя встать: нужна половина скорости и незавершённый ход');
+  const actor = state.world.actors[actorId];
+  const cost = standMovementCost(state, actorId);
+  const result = executeEngineAction(actor.runtime, {
+    name: 'Встать', effects: [{ resolution: 'auto', result: [{ kind: 'condition', value: 'prone', op: 'remove' }] }],
+  }, { character: actor.character, selfId: actorId, rng: () => { throw new Error('Вставание не требует броска'); } });
+  return appendLog({
+    ...state,
+    world: { ...state.world, actors: { ...state.world.actors, [actorId]: { ...actor, runtime: result.state } } },
+    movementRemainingFt: { ...state.movementRemainingFt, [actorId]: (state.movementRemainingFt[actorId] ?? effectiveCombatActorSpeedFt(state, actorId)) - cost },
+  }, actorId, `Встал: потрачено ${cost} фт. движения.`);
+}
+
 export function moveActor(input: {
   state: SoloCombatState;
   actorId: string;
@@ -2841,7 +2869,8 @@ export function moveActor(input: {
   const maxFeet = input.maxFeet ?? available;
   const movementCost = input.voluntary === false
     ? distance
-    : movementCostThroughAreas(input.state, token.position, input.destination, distance);
+    : movementCostThroughAreas(input.state, token.position, input.destination, distance)
+      + (actorMustCrawl(actor) ? distance : 0);
   if (movementCost > maxFeet) throw new Error(`За это перемещение доступно ${maxFeet} фт.`);
   if (occupiedPositions(input.state, input.actorId).has(`${input.destination.x}:${input.destination.y}`)) {
     throw new Error('Клетка занята');
@@ -2907,7 +2936,7 @@ export function moveActor(input: {
   }
   next = autoResolveSystemDecisions(next, input.rng ?? Math.random);
   next = breakOutOfRangeGrapples(next, input.actorId, input.rng ?? Math.random);
-  return appendLog(next, input.actorId, `Перемещение на ${distance} фт.${movementCost > distance ? ` Труднопроходимая местность: потрачено ${movementCost} фт.` : ''}`);
+  return appendLog(next, input.actorId, `Перемещение на ${distance} фт.${movementCost > distance ? ` С учётом условий движения: потрачено ${movementCost} фт.` : ''}`);
 }
 
 function startTurnOrRequestGrappleDamage(
@@ -3624,6 +3653,9 @@ function withoutMonsterTacticalAdvantage(state: SoloCombatState, actorId: string
 export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
   if (state.outcome !== 'active' || state.world.pendingResolution || state.pendingD20Interrupt || state.pendingInterception) return state;
   const monsterId = activeActorId(state);
+  if (state.world.actors[monsterId]?.kind === 'monster' && canStandActor(state, monsterId)) {
+    state = standActor(state, monsterId);
+  }
   const monster = state.world.actors[monsterId];
   if (!monster || monster.kind !== 'monster') return state;
   if (monster.runtime.hp.current <= 0) return advanceTurn(state, rng);

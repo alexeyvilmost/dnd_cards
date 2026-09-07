@@ -45,3 +45,18 @@ Do not enable the remaining monsters or advertise complete original-plan coverag
 - Combat setup uses the run-owned roster and catalog. URL parameters no longer override the encounter or add external allies to a run.
 - Legacy encounters without a frozen catalog continue using their previously drawn ids. This preserves compatibility but cannot retroactively recover historical records.
 - This freezes monster content, not old executable rules artifacts or every player dependency; those remain in the acceptance backlog.
+
+
+## Production acceptance: 298349e
+
+- TimeWeb health and containers verified exact SHA `298349e358858074b021436991352ddcf1a4f829`.
+- Full frontend gate: 381 files / 3161 tests; Go, TypeScript and lint passed.
+- Built-in browser: QA run `497cc48f-73f8-48a4-a59e-31a909a00cef` was prepared with 300 XP and an explicit wolf seed, then leveled through desktop Forge. This is fixture-based acceptance, not a natural full run.
+- Two wolf Bites applied 6 and 7 piercing damage, each applying Prone without a save; the second attack rolled with advantage. Reload retained 3/22 HP and the actual Prone runtime effect.
+- The subsequent defeat gave no XP. Browser Retry restored the L2 checkpoint, gold and clock; the encounter hash `b0239f1db8820bb18823cc49d22fd40b` and catalog hash `db2f078bd1669ad2e0d4201ba904d2ae` remained unchanged.
+
+## Prone movement follow-up
+
+Browser acceptance exposed a missing tactical command to stand. The existing combat hotbar now exposes it beside movement while Prone. It costs half effective speed rounded down, spends no action, and is unavailable at zero speed, insufficient remaining movement or a pending decision. The same command is used by monster AI. Crawling costs one extra foot per foot, additive with difficult terrain; reachable-cell projection and actual movement use the same surcharge. Focused engine tests cover standing, persistence, rejection cases, crawling and AI standing before attacking.
+
+Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br-2024/rules-glossary
