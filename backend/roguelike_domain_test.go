@@ -21,15 +21,19 @@ func TestRoguelikeLevelAndVictoryThresholds(t *testing.T) {
 	}
 }
 
-func TestRoguelikeEncounterBudgetProgressesWithinCycle(t *testing.T) {
-	difficulties := []string{"low", "low", "moderate", "moderate", "moderate", "high"}
-	for index, want := range difficulties {
-		got, budget := roguelikeEncounterBudget(3, index)
-		if got != want {
-			t.Fatalf("encounter %d: difficulty=%s, want %s", index, got, want)
-		}
-		if budget <= 0 {
-			t.Fatalf("encounter %d: invalid budget %d", index, budget)
+func TestRoguelikeEncounterBudgetProgressesWithinStage(t *testing.T) {
+	for _, test := range []struct {
+		xp         int
+		want       string
+		wantBudget int
+	}{
+		{900, "low", 150}, {1499, "low", 150},
+		{1500, "moderate", 225}, {2249, "moderate", 225},
+		{2250, "high", 400}, {2699, "high", 400},
+	} {
+		got, budget := roguelikeEncounterBudget(3, test.xp)
+		if got != test.want || budget != test.wantBudget {
+			t.Fatalf("xp %d: got %s/%d, want %s/%d", test.xp, got, budget, test.want, test.wantBudget)
 		}
 	}
 }
@@ -49,24 +53,82 @@ func TestRoguelikeContentManifestsAreUniqueAndComplete(t *testing.T) {
 		t.Fatalf("monster pool has %d entries, want 18", len(roguelikeMonsterPool))
 	}
 	monsters := map[string]bool{}
+	certified := 0
 	for _, entry := range roguelikeMonsterPool {
-		if entry.Slug == "" || entry.XP <= 0 || entry.MinLevel < 1 || entry.MinLevel > 5 || entry.MaxCount < 1 {
+		if entry.Slug == "" || entry.XP <= 0 || entry.MinLevel < 1 || entry.MinLevel > 5 || entry.MaxCount < 1 || entry.GeneratorWeight < 0 {
 			t.Fatalf("invalid monster manifest entry: %#v", entry)
 		}
 		if monsters[entry.Slug] {
 			t.Fatalf("duplicate monster slug %q", entry.Slug)
 		}
 		monsters[entry.Slug] = true
+		if entry.GeneratorWeight > 0 {
+			certified++
+		}
+	}
+	if certified != 9 {
+		t.Fatalf("certified generator pool has %d entries, want 9", certified)
 	}
 	items := map[string]bool{}
 	for _, entry := range roguelikeShopManifest {
-		if entry.CardNumber == "" || entry.Price < 1 || entry.MinLevel < 1 || entry.MinLevel > 5 || entry.Weight < 1 {
+		if entry.CardNumber == "" || entry.Price < 1 || entry.MinLevel < 1 || entry.MinLevel > 5 || entry.Weight < 1 ||
+			(entry.Kind != "equipment" && entry.Kind != "consumable" && entry.Kind != "magic") {
 			t.Fatalf("invalid shop manifest entry: %#v", entry)
 		}
 		if items[entry.CardNumber] {
 			t.Fatalf("duplicate shop card %q", entry.CardNumber)
 		}
 		items[entry.CardNumber] = true
+	}
+}
+
+func TestRoguelikeEncounterCandidatesExcludeUncertifiedMonsters(t *testing.T) {
+	available := map[string]Monster{}
+	for _, entry := range roguelikeMonsterPool {
+		available[entry.Slug] = Monster{Slug: entry.Slug}
+	}
+	for _, candidate := range roguelikeEncounterCandidates(5, 700, 20, available) {
+		if candidate.Entry.GeneratorWeight <= 0 {
+			t.Fatalf("uncertified monster %q entered a generated encounter", candidate.Entry.Slug)
+		}
+	}
+}
+
+func TestRoguelikeEncounterBodyLimits(t *testing.T) {
+	available := map[string]Monster{}
+	for _, entry := range roguelikeMonsterPool {
+		available[entry.Slug] = Monster{Slug: entry.Slug}
+	}
+	for _, test := range []struct {
+		level, budget, won, limit int
+	}{
+		{1, 100, 0, 1}, {1, 100, 1, 1}, {1, 100, 2, 2},
+		{2, 200, 8, 2}, {3, 400, 15, 3}, {5, 1100, 30, 3},
+	} {
+		candidates := roguelikeEncounterCandidates(test.level, test.budget, test.won, available)
+		if len(candidates) == 0 {
+			t.Fatalf("level %d budget %d has no reserve candidate", test.level, test.budget)
+		}
+		for _, candidate := range candidates {
+			if candidate.Quantity > test.limit {
+				t.Fatalf("level %d generated %d bodies, limit %d", test.level, candidate.Quantity, test.limit)
+			}
+		}
+	}
+}
+
+func TestRoguelikeLootCategoriesByStage(t *testing.T) {
+	for _, test := range []struct {
+		level, roll int
+		want        string
+	}{
+		{1, 0, "consumable"}, {2, 79, "consumable"}, {2, 80, "equipment"},
+		{3, 69, "consumable"}, {4, 70, "equipment"}, {4, 90, "magic"},
+		{5, 59, "consumable"}, {5, 60, "equipment"}, {5, 75, "magic"},
+	} {
+		if got := roguelikeLootKind(test.level, test.roll); got != test.want {
+			t.Fatalf("level %d roll %d: got %s, want %s", test.level, test.roll, got, test.want)
+		}
 	}
 }
 
@@ -82,5 +144,26 @@ func TestConsumeRoguelikeInventoryItem(t *testing.T) {
 	}
 	if consumeRoguelikeInventoryItem(&character, cardID) {
 		t.Fatal("consumed an unavailable item")
+	}
+}
+
+func TestRoguelikeCommandHashCoversPayloadAndRevision(t *testing.T) {
+	commandID := uuid.New()
+	base := RoguelikeCommandRequest{CommandID: commandID, ExpectedRevision: 2, Type: "buy", Payload: JSONMap{"offer_id": "one"}}
+	differentPayload := base
+	differentPayload.Payload = JSONMap{"offer_id": "two"}
+	differentRevision := base
+	differentRevision.ExpectedRevision = 3
+	baseHash, err := roguelikeCommandRequestHash(base)
+	if err != nil {
+		t.Fatal(err)
+	}
+	payloadHash, _ := roguelikeCommandRequestHash(differentPayload)
+	revisionHash, _ := roguelikeCommandRequestHash(differentRevision)
+	if baseHash == payloadHash {
+		t.Fatal("command payload is absent from receipt identity")
+	}
+	if baseHash == revisionHash {
+		t.Fatal("expected revision is absent from receipt identity")
 	}
 }

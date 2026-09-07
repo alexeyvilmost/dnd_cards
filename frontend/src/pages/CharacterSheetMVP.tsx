@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, ChevronsUp, Dices, Pencil, Settings as SettingsIcon, Sun, Moon,
   Swords, Sparkles, Backpack, ScrollText, Zap, LayoutGrid, Plus,
@@ -131,6 +131,8 @@ const originDetail = (kind: string, name: string) => `${originKindShort(kind)} �
 const CharacterSheetMVP = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const roguelikeRunId = new URLSearchParams(location.search).get('roguelike');
   const [character, setCharacter] = useState<ForgeCharacter | null>(null);
   const characterRef = useRef<ForgeCharacter | null>(character);
   characterRef.current = character;
@@ -188,7 +190,9 @@ const CharacterSheetMVP = () => {
       && (soloCombatEnvelope as Record<string, unknown>).outcome === 'active',
   );
   const combatLocked = Boolean(activeEncounter || activeSoloCombat);
-  const sheetActionDisabledReason = activeSoloCombat
+  const sheetActionDisabledReason = roguelikeRunId
+    ? 'Боевые действия, хиты и ресурсы героя забега изменяются на поле боя или в лагере.'
+    : activeSoloCombat
     ? 'Персонаж находится в активном одиночном бою. Применяйте действия и эффекты на поле боя.'
     : undefined;
   const coordinatedSheetActionDisabledReason = sheetActionDisabledReason
@@ -1057,7 +1061,7 @@ const CharacterSheetMVP = () => {
     <CharacterFormulaProvider value={formulaCtxFromCharacter(sheetCtx)}>
     <div className={`${rootCls}${!renderedV2 ? ' sheet-has-bottomnav' : ''}`}>
       <div className="forge-header sheet-header-bar">
-        <button type="button" className="sheet-back" onClick={() => navigate(-1)} title="Назад">
+        <button type="button" className="sheet-back" onClick={() => roguelikeRunId ? navigate(`/roguelike/${roguelikeRunId}`) : navigate(-1)} title="Назад">
           <ArrowLeft size={18} />
         </button>
         <div className="sheet-header-center">
@@ -1072,7 +1076,7 @@ const CharacterSheetMVP = () => {
           )}
         </div>
         <div className="sheet-header-actions">
-          {allowSheetEntityAdditions && !readOnly && (
+          {allowSheetEntityAdditions && !readOnly && !roguelikeRunId && (
             <button
               type="button"
               className="sheet-header-btn"
@@ -1112,7 +1116,7 @@ const CharacterSheetMVP = () => {
             {paperTheme ? <Moon size={16} /> : <Sun size={16} />}
             <span className="sheet-header-btn-label">{paperTheme ? 'Тёмная' : 'Бумага'}</span>
           </button>}
-          {!readOnly && (
+          {!readOnly && !roguelikeRunId && (
             <>
               {activeSoloCombat ? (
                 <Link className="sheet-header-btn sheet-in-battle" to={`/characters-v3/${character.id}/combat`}>
@@ -1151,6 +1155,13 @@ const CharacterSheetMVP = () => {
         <p className="forge-note" role="note" style={{ margin: '12px auto', maxWidth: 900, padding: '0 16px' }}>
           Архивный публичный лист открыт только для чтения. Создайте свою копию, чтобы менять HP,
           ресурсы, эффекты, экипировку или сборку персонажа.
+        </p>
+      )}
+
+      {roguelikeRunId && (
+        <p className="forge-note" role="note" style={{ margin: '12px auto', maxWidth: 900, padding: '0 16px' }}>
+          Лист открыт из лагеря. Здесь можно менять экипировку, размещение в инвентаре и настройку предметов.
+          Отдых, лечение, покупки и повышение уровня выполняются на экране забега.
         </p>
       )}
 

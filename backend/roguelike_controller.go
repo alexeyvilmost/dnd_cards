@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -40,6 +41,14 @@ func (e *roguelikeHTTPError) Error() string { return e.Message }
 
 func roguelikeError(status int, code, message string) error {
 	return &roguelikeHTTPError{Status: status, Code: code, Message: message}
+}
+
+func roguelikeCommandRequestHash(request RoguelikeCommandRequest) (string, error) {
+	raw, err := json.Marshal(request)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", sha256.Sum256(raw)), nil
 }
 
 type RoguelikeOffer struct {
@@ -258,6 +267,7 @@ func generateRoguelikeShop(tx *gorm.DB, run *RoguelikeRun, level int, preserve *
 	generation := current.Generation + 1
 	ordered := roguelikeWeightedOrder(run.RunSeed, "shop", generation*1009+run.EncountersWon, available)
 	offers := make([]RoguelikeOffer, 0, 5)
+	selected := make([]roguelikeShopManifestEntry, 0, 5)
 	pinnedCard := ""
 	shop := RoguelikeShop{Generation: generation}
 	if preserve != nil && !preserve.Sold {
@@ -267,13 +277,37 @@ func generateRoguelikeShop(tx *gorm.DB, run *RoguelikeRun, level int, preserve *
 		shop.PinnedOfferID = copy.ID
 		pinnedCard = copy.CardNumber
 	}
-	for _, entry := range ordered {
-		if len(offers) == 5 {
-			break
-		}
-		if entry.CardNumber == pinnedCard {
+	selectedCards := map[string]bool{pinnedCard: pinnedCard != ""}
+	hasKind := map[string]bool{}
+	if entry, ok := byNumber[pinnedCard]; ok {
+		hasKind[entry.Kind] = true
+	}
+	// Keep both an immediately usable consumable and an equippable alternative
+	// on the five-slot shelf whenever both pools are available.
+	for _, requiredKind := range []string{"consumable", "equipment"} {
+		if hasKind[requiredKind] {
 			continue
 		}
+		for _, entry := range ordered {
+			if entry.Kind == requiredKind && !selectedCards[entry.CardNumber] {
+				selected = append(selected, entry)
+				selectedCards[entry.CardNumber] = true
+				hasKind[requiredKind] = true
+				break
+			}
+		}
+	}
+	for _, entry := range ordered {
+		if len(offers)+len(selected) == 5 {
+			break
+		}
+		if selectedCards[entry.CardNumber] {
+			continue
+		}
+		selected = append(selected, entry)
+		selectedCards[entry.CardNumber] = true
+	}
+	for _, entry := range selected {
 		card := cardByNumber[entry.CardNumber]
 		offerID := uuid.NewSHA1(uuid.NameSpaceOID, []byte(fmt.Sprintf("%s:shop:%d:%s", run.ID, generation, entry.CardNumber)))
 		offers = append(offers, RoguelikeOffer{
@@ -303,7 +337,8 @@ func roguelikeCheckpoint(run *RoguelikeRun, character *CharacterV3) (JSONMap, er
 		"experience": run.Experience, "gold": run.Gold, "supplies": run.Supplies,
 		"encounters_won": run.EncountersWon, "game_clock_hours": run.GameClockHours,
 		"last_long_rest_hour": run.LastLongRestHour, "paid_refresh_count": run.PaidRefreshCount,
-		"shop": run.Shop, "character": characterMap,
+		"pending_level": run.PendingLevel,
+		"shop":          run.Shop, "character": characterMap,
 	})
 }
 
@@ -313,8 +348,9 @@ func saveRoguelikeRun(tx *gorm.DB, run *RoguelikeRun) error {
 		"experience": run.Experience, "gold": run.Gold, "supplies": run.Supplies,
 		"encounters_won": run.EncountersWon, "attempt": run.Attempt,
 		"game_clock_hours": run.GameClockHours, "last_long_rest_hour": run.LastLongRestHour,
-		"paid_refresh_count": run.PaidRefreshCount, "encounter": run.Encounter,
-		"shop": run.Shop, "checkpoint": run.Checkpoint, "last_reward": run.LastReward,
+		"paid_refresh_count": run.PaidRefreshCount, "pending_level": run.PendingLevel,
+		"encounter": run.Encounter,
+		"shop":      run.Shop, "checkpoint": run.Checkpoint, "last_reward": run.LastReward,
 		"updated_at": time.Now().UTC(),
 	}).Error
 }
@@ -440,7 +476,7 @@ func (rc *RoguelikeController) Get(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"run": run})
 }
 
-func roguelikeEncounterCandidates(level, budget int, available map[string]Monster) []struct {
+func roguelikeEncounterCandidates(level, budget, encountersWon int, available map[string]Monster) []struct {
 	Entry    roguelikeMonsterEntry
 	Monster  Monster
 	Quantity int
@@ -452,7 +488,7 @@ func roguelikeEncounterCandidates(level, budget int, available map[string]Monste
 	}{}
 	for _, entry := range roguelikeMonsterPool {
 		monster, exists := available[entry.Slug]
-		if !exists || entry.MinLevel > level {
+		if !exists || entry.MinLevel > level || entry.GeneratorWeight <= 0 {
 			continue
 		}
 		quantity := (budget + entry.XP/2) / entry.XP
@@ -461,6 +497,16 @@ func roguelikeEncounterCandidates(level, budget int, available map[string]Monste
 		}
 		if quantity > entry.MaxCount {
 			quantity = entry.MaxCount
+		}
+		bodyLimit := 3
+		if level <= 2 {
+			bodyLimit = 2
+		}
+		if level == 1 && encountersWon < 2 {
+			bodyLimit = 1
+		}
+		if quantity > bodyLimit {
+			quantity = bodyLimit
 		}
 		total := quantity * entry.XP
 		if total*2 < budget || total > budget+budget/2 {
@@ -480,6 +526,9 @@ func startRoguelikeEncounter(tx *gorm.DB, run *RoguelikeRun) error {
 	if run.Status != RoguelikeStatusActive || run.Phase != RoguelikePhaseCamp {
 		return roguelikeError(http.StatusConflict, "camp_required", "новую встречу можно начать только из лагеря")
 	}
+	if run.PendingLevel != 0 {
+		return roguelikeError(http.StatusConflict, "level_up_pending", "сначала подтвердите начатое повышение уровня")
+	}
 	level := roguelikeLevelForXP(run.Experience)
 	if run.Experience >= roguelikeVictoryXP {
 		return roguelikeError(http.StatusConflict, "victory_ready", "цель забега достигнута — завершите его кнопкой «Победа!»")
@@ -487,10 +536,12 @@ func startRoguelikeEncounter(tx *gorm.DB, run *RoguelikeRun) error {
 	if run.Character == nil || run.Character.Level != level {
 		return roguelikeError(http.StatusConflict, "level_up_required", "сначала повысьте уровень воина")
 	}
-	difficulty, budget := roguelikeEncounterBudget(level, run.EncountersWon)
+	difficulty, budget := roguelikeEncounterBudget(level, run.Experience)
 	slugs := make([]string, 0, len(roguelikeMonsterPool))
 	for _, entry := range roguelikeMonsterPool {
-		slugs = append(slugs, entry.Slug)
+		if entry.GeneratorWeight > 0 {
+			slugs = append(slugs, entry.Slug)
+		}
 	}
 	var monsters []Monster
 	if err := tx.Where("slug IN ?", slugs).Find(&monsters).Error; err != nil {
@@ -500,7 +551,7 @@ func startRoguelikeEncounter(tx *gorm.DB, run *RoguelikeRun) error {
 	for _, monster := range monsters {
 		available[monster.Slug] = monster
 	}
-	candidates := roguelikeEncounterCandidates(level, budget, available)
+	candidates := roguelikeEncounterCandidates(level, budget, run.EncountersWon, available)
 	if len(candidates) == 0 {
 		return roguelikeError(http.StatusConflict, "encounter_pool_unavailable", "для этого этапа нет проверенного состава встречи")
 	}
@@ -558,18 +609,23 @@ func encounterNumber(run *RoguelikeRun, key string) (int, error) {
 	return value, nil
 }
 
-func appendRoguelikeLoot(tx *gorm.DB, run *RoguelikeRun, character *CharacterV3, encounterNo int) (*Card, error) {
-	if roguelikeDeterministicInt(run.RunSeed, "loot-chance", encounterNo, 100) >= 25 {
-		return nil, nil
-	}
-	level := roguelikeLevelForXP(run.Experience)
+func grantRoguelikeLootByKind(
+	tx *gorm.DB,
+	run *RoguelikeRun,
+	character *CharacterV3,
+	level int,
+	kind string,
+	stream string,
+	cursor int,
+	excluded map[string]bool,
+) (*Card, error) {
 	eligible := []roguelikeShopManifestEntry{}
 	for _, entry := range roguelikeShopManifest {
-		if entry.MinLevel <= level && entry.Price <= 410 {
+		if entry.MinLevel <= level && entry.Kind == kind && !excluded[entry.CardNumber] {
 			eligible = append(eligible, entry)
 		}
 	}
-	ordered := roguelikeWeightedOrder(run.RunSeed, "loot-item", encounterNo, eligible)
+	ordered := roguelikeWeightedOrder(run.RunSeed, stream, cursor, eligible)
 	for _, entry := range ordered {
 		card, err := roguelikeCardByNumber(tx, entry.CardNumber)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -579,9 +635,42 @@ func appendRoguelikeLoot(tx *gorm.DB, run *RoguelikeRun, character *CharacterV3,
 			return nil, err
 		}
 		addInventoryItem(character, card.ID.String(), 1)
+		excluded[entry.CardNumber] = true
 		return card, nil
 	}
 	return nil, nil
+}
+
+func appendRoguelikeLoot(
+	tx *gorm.DB,
+	run *RoguelikeRun,
+	character *CharacterV3,
+	encounterNo int,
+	guaranteeMilestoneItem bool,
+) ([]*Card, error) {
+	level := roguelikeLevelForXP(run.Experience)
+	items := []*Card{}
+	excluded := map[string]bool{}
+	if roguelikeDeterministicInt(run.RunSeed, "loot-chance", encounterNo, 100) < 25 {
+		kind := roguelikeLootKind(level, roguelikeDeterministicInt(run.RunSeed, "loot-kind", encounterNo, 100))
+		card, err := grantRoguelikeLootByKind(tx, run, character, level, kind, "loot-item", encounterNo, excluded)
+		if err != nil {
+			return nil, err
+		}
+		if card != nil {
+			items = append(items, card)
+		}
+	}
+	if guaranteeMilestoneItem {
+		card, err := grantRoguelikeLootByKind(tx, run, character, level, "magic", "hoard-item", 900, excluded)
+		if err != nil {
+			return nil, err
+		}
+		if card != nil {
+			items = append(items, card)
+		}
+	}
+	return items, nil
 }
 
 func rewardRoguelikeVictory(tx *gorm.DB, run *RoguelikeRun) error {
@@ -620,7 +709,7 @@ func rewardRoguelikeVictory(tx *gorm.DB, run *RoguelikeRun) error {
 	run.EncountersWon++
 	run.GameClockHours++
 	setCharacterGold(run.Character, run.Gold)
-	loot, err := appendRoguelikeLoot(tx, run, run.Character, encounterNo)
+	loot, err := appendRoguelikeLoot(tx, run, run.Character, encounterNo, previousXP < 900 && run.Experience >= 900)
 	if err != nil {
 		return err
 	}
@@ -642,8 +731,13 @@ func rewardRoguelikeVictory(tx *gorm.DB, run *RoguelikeRun) error {
 		return err
 	}
 	reward := map[string]any{"experience": xp, "gold": gold, "total_experience": run.Experience}
-	if loot != nil {
-		reward["item"] = map[string]any{"card_id": loot.ID, "card_number": loot.CardNumber, "name": loot.Name}
+	if len(loot) > 0 {
+		items := make([]map[string]any, 0, len(loot))
+		for _, card := range loot {
+			items = append(items, map[string]any{"card_id": card.ID, "card_number": card.CardNumber, "name": card.Name})
+		}
+		reward["item"] = items[0]
+		reward["items"] = items
 	}
 	run.LastReward, err = mapFromJSON(reward)
 	if err != nil {
@@ -990,6 +1084,10 @@ func confirmRoguelikeLevelUp(run *RoguelikeRun) error {
 	if level > roguelikeLevelForXP(run.Experience) {
 		return roguelikeError(http.StatusConflict, "invalid_run_level", "уровень листа не соответствует опыту забега")
 	}
+	if run.PendingLevel != level {
+		return roguelikeError(http.StatusConflict, "level_up_not_pending", "сначала завершите мастер повышения уровня")
+	}
+	run.PendingLevel = 0
 	checkpoint, err := roguelikeCheckpoint(run, run.Character)
 	if err != nil {
 		return err
@@ -1010,6 +1108,7 @@ func restoreRoguelikeCheckpoint(run *RoguelikeRun) error {
 		GameClockHours   int         `json:"game_clock_hours"`
 		LastLongRestHour int         `json:"last_long_rest_hour"`
 		PaidRefreshCount int         `json:"paid_refresh_count"`
+		PendingLevel     int         `json:"pending_level"`
 		Shop             JSONMap     `json:"shop"`
 		Character        CharacterV3 `json:"character"`
 	}
@@ -1029,6 +1128,7 @@ func restoreRoguelikeCheckpoint(run *RoguelikeRun) error {
 	run.GameClockHours = snapshot.GameClockHours
 	run.LastLongRestHour = snapshot.LastLongRestHour
 	run.PaidRefreshCount = snapshot.PaidRefreshCount
+	run.PendingLevel = snapshot.PendingLevel
 	run.Shop = snapshot.Shop
 	run.Encounter = JSONMap{}
 	run.LastReward = JSONMap{}
@@ -1094,12 +1194,17 @@ func (rc *RoguelikeController) Command(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "неверная команда забега", "code": "invalid_command"})
 		return
 	}
+	requestHash, err := roguelikeCommandRequestHash(request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверная команда забега", "code": "invalid_command"})
+		return
+	}
 	var response JSONMap
 	err = rc.db.Transaction(func(tx *gorm.DB) error {
 		var receipt RoguelikeCommandReceipt
-		receiptResult := tx.Where("run_id = ? AND command_id = ?", runID, request.CommandID).First(&receipt)
+		receiptResult := tx.Where("run_id = ? AND user_id = ? AND command_id = ?", runID, userID, request.CommandID).First(&receipt)
 		if receiptResult.Error == nil {
-			if receipt.CommandType != request.Type {
+			if receipt.CommandType != request.Type || receipt.RequestHash != requestHash {
 				return roguelikeError(http.StatusConflict, "command_id_reused", "ID команды уже использован для другой операции")
 			}
 			response = receipt.Response
@@ -1135,7 +1240,7 @@ func (rc *RoguelikeController) Command(c *gin.Context) {
 		}
 		return tx.Create(&RoguelikeCommandReceipt{
 			RunID: runID, UserID: userID, CommandID: request.CommandID,
-			CommandType: request.Type, Response: response,
+			CommandType: request.Type, RequestHash: requestHash, Response: response,
 		}).Error
 	})
 	if err != nil {

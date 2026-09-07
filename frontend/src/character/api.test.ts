@@ -170,4 +170,20 @@ describe('charactersV3Api access handling', () => {
     expect(remove).toHaveBeenCalledWith('/api/characters-v3/character-id');
     expect(patch).toHaveBeenCalledWith('/api/characters-v3/character-id/runtime', { current_hp: 7 });
   });
+
+  it('authorizes equipment persistence when the sheet was opened from a roguelike camp', async () => {
+    const runId = '8f13483e-05ea-4ac2-ad21-7cdd6ba21f72';
+    window.history.replaceState({}, '', `/characters-v3/character-id?roguelike=${runId}`);
+    const patch = vi.spyOn(apiClient, 'patch').mockResolvedValue({ data: character } as never);
+    try {
+      await charactersV3Api.patchRuntime(character.id, { equipment: { main_hand: null } });
+      expect(patch).toHaveBeenCalledWith(
+        '/api/characters-v3/character-id/runtime',
+        { equipment: { main_hand: null } },
+        { headers: { 'X-Roguelike-Run-ID': runId, 'X-Roguelike-Intent': 'camp' } },
+      );
+    } finally {
+      window.history.replaceState({}, '', '/');
+    }
+  });
 });

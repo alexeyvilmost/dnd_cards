@@ -12,31 +12,32 @@ const roguelikeVictoryXP = 14000
 var roguelikeXPThresholds = []int{0, 300, 900, 2700, 6500, roguelikeVictoryXP}
 
 type roguelikeMonsterEntry struct {
-	Slug     string
-	XP       int
-	MinLevel int
-	MaxCount int
+	Slug            string
+	XP              int
+	MinLevel        int
+	MaxCount        int
+	GeneratorWeight int
 }
 
 var roguelikeMonsterPool = []roguelikeMonsterEntry{
-	{Slug: "bandit", XP: 25, MinLevel: 1, MaxCount: 4},
-	{Slug: "guard", XP: 25, MinLevel: 1, MaxCount: 4},
-	{Slug: "giant-rat", XP: 25, MinLevel: 1, MaxCount: 4},
-	{Slug: "kobold-warrior", XP: 25, MinLevel: 1, MaxCount: 4},
-	{Slug: "goblin-warrior", XP: 50, MinLevel: 1, MaxCount: 4},
-	{Slug: "skeleton", XP: 50, MinLevel: 1, MaxCount: 4},
-	{Slug: "zombie", XP: 50, MinLevel: 1, MaxCount: 3},
-	{Slug: "wolf", XP: 50, MinLevel: 1, MaxCount: 4},
-	{Slug: "giant-wolf-spider", XP: 50, MinLevel: 3, MaxCount: 3},
-	{Slug: "hobgoblin-warrior", XP: 100, MinLevel: 2, MaxCount: 3},
-	{Slug: "tough", XP: 100, MinLevel: 2, MaxCount: 3},
-	{Slug: "animated-armor", XP: 200, MinLevel: 3, MaxCount: 2},
-	{Slug: "dire-wolf", XP: 200, MinLevel: 3, MaxCount: 2},
-	{Slug: "bugbear-warrior", XP: 200, MinLevel: 3, MaxCount: 2},
-	{Slug: "ogre", XP: 450, MinLevel: 4, MaxCount: 2},
-	{Slug: "berserker", XP: 450, MinLevel: 4, MaxCount: 2},
-	{Slug: "bandit-captain", XP: 450, MinLevel: 4, MaxCount: 2},
-	{Slug: "warrior-veteran", XP: 700, MinLevel: 5, MaxCount: 1},
+	{Slug: "bandit", XP: 25, MinLevel: 1, MaxCount: 4, GeneratorWeight: 1},
+	{Slug: "guard", XP: 25, MinLevel: 1, MaxCount: 4, GeneratorWeight: 1},
+	{Slug: "giant-rat", XP: 25, MinLevel: 1, MaxCount: 4, GeneratorWeight: 1},
+	{Slug: "kobold-warrior", XP: 25, MinLevel: 1, MaxCount: 4, GeneratorWeight: 1},
+	{Slug: "goblin-warrior", XP: 50, MinLevel: 1, MaxCount: 4}, // Nimble Escape is not executable yet.
+	{Slug: "skeleton", XP: 50, MinLevel: 1, MaxCount: 4, GeneratorWeight: 1},
+	{Slug: "zombie", XP: 50, MinLevel: 1, MaxCount: 3},             // Undead Fortitude is not executable yet.
+	{Slug: "wolf", XP: 50, MinLevel: 2, MaxCount: 4},               // Bite's knock-prone save is not executable yet.
+	{Slug: "giant-wolf-spider", XP: 50, MinLevel: 3, MaxCount: 3},  // Poison save is not executable yet.
+	{Slug: "hobgoblin-warrior", XP: 100, MinLevel: 2, MaxCount: 3}, // Poison save is not executable yet.
+	{Slug: "tough", XP: 100, MinLevel: 2, MaxCount: 3, GeneratorWeight: 1},
+	{Slug: "animated-armor", XP: 200, MinLevel: 3, MaxCount: 2, GeneratorWeight: 1},
+	{Slug: "dire-wolf", XP: 200, MinLevel: 3, MaxCount: 2},       // Bite's knock-prone save is not executable yet.
+	{Slug: "bugbear-warrior", XP: 200, MinLevel: 3, MaxCount: 2}, // Grab and drag are not executable yet.
+	{Slug: "ogre", XP: 450, MinLevel: 4, MaxCount: 2, GeneratorWeight: 1},
+	{Slug: "berserker", XP: 450, MinLevel: 4, MaxCount: 2, GeneratorWeight: 1},
+	{Slug: "bandit-captain", XP: 450, MinLevel: 4, MaxCount: 2},  // Parry is not executable yet.
+	{Slug: "warrior-veteran", XP: 700, MinLevel: 5, MaxCount: 1}, // Parry is not executable yet.
 }
 
 type roguelikeShopManifestEntry struct {
@@ -44,32 +45,62 @@ type roguelikeShopManifestEntry struct {
 	Price      int
 	MinLevel   int
 	Weight     int
+	Kind       string
 }
 
 var roguelikeShopManifest = []roguelikeShopManifestEntry{
-	{"CARD-0319", 15, 1, 8},   // Longsword
-	{"CARD-0313", 25, 1, 8},   // Rapier
-	{"CARD-0311", 25, 1, 8},   // Scimitar
-	{"CARD-0297", 2, 1, 6},    // Dagger
-	{"CARD-0295", 5, 1, 6},    // Handaxe
-	{"CARD-0317", 50, 1, 7},   // Greatsword
-	{"CARD-0315", 10, 1, 7},   // Maul
-	{"CARD-0323", 15, 1, 7},   // Warhammer
-	{"CARD-0325", 20, 1, 6},   // Halberd
-	{"CARD-0321", 20, 1, 6},   // Glaive
-	{"CARD-0306", 25, 1, 7},   // Shortbow
-	{"CARD-0327", 50, 1, 7},   // Longbow
-	{"CARD-0307", 25, 1, 7},   // Light crossbow
-	{"CARD-0200", 10, 1, 8},   // Shield
-	{"CARD-0276", 45, 1, 7},   // Studded leather
-	{"CARD-0283", 75, 1, 7},   // Chain mail
-	{"CARD-0791", 25, 1, 5},   // Acid
-	{"CARD-0815", 25, 1, 4},   // Holy water
-	{"CARD-0714", 50, 2, 5},   // Alchemist's fire
-	{"CARD-0290", 200, 3, 5},  // Splint
-	{"CARD-0271", 400, 3, 4},  // Breastplate
-	{"CARD-0840", 200, 3, 5},  // Greater healing potion
-	{"CARD-0291", 1500, 5, 1}, // Plate
+	{"CARD-0319", 15, 1, 8, "equipment"},   // Longsword
+	{"CARD-0313", 25, 1, 8, "equipment"},   // Rapier
+	{"CARD-0311", 25, 1, 8, "equipment"},   // Scimitar
+	{"CARD-0297", 2, 1, 6, "equipment"},    // Dagger
+	{"CARD-0295", 5, 1, 6, "equipment"},    // Handaxe
+	{"CARD-0317", 50, 1, 7, "equipment"},   // Greatsword
+	{"CARD-0315", 10, 1, 7, "equipment"},   // Maul
+	{"CARD-0323", 15, 1, 7, "equipment"},   // Warhammer
+	{"CARD-0325", 20, 1, 6, "equipment"},   // Halberd
+	{"CARD-0321", 20, 1, 6, "equipment"},   // Glaive
+	{"CARD-0306", 25, 1, 7, "equipment"},   // Shortbow
+	{"CARD-0327", 50, 1, 7, "equipment"},   // Longbow
+	{"CARD-0307", 25, 1, 7, "equipment"},   // Light crossbow
+	{"CARD-0200", 10, 1, 8, "equipment"},   // Shield
+	{"CARD-0276", 45, 1, 7, "equipment"},   // Studded leather
+	{"CARD-0283", 75, 1, 7, "equipment"},   // Chain mail
+	{"CARD-0791", 25, 1, 5, "consumable"},  // Acid
+	{"CARD-0815", 25, 1, 4, "consumable"},  // Holy water
+	{"CARD-0714", 50, 2, 5, "consumable"},  // Alchemist's fire
+	{"CARD-0290", 200, 3, 5, "equipment"},  // Splint
+	{"CARD-0271", 400, 3, 4, "equipment"},  // Breastplate
+	{"CARD-0840", 200, 3, 5, "consumable"}, // Greater healing potion
+	{"CARD-0081", 415, 3, 2, "magic"},      // Longsword +1, executable +1 attack/damage
+	{"CARD-0118", 415, 3, 2, "magic"},      // Warhammer +1, executable +1 attack/damage
+	{"CARD-0548", 400, 4, 1, "magic"},      // Cloak of Protection, attunement required
+	{"CARD-0624", 400, 4, 1, "magic"},      // Ring of Protection, attunement required
+	{"CARD-0291", 1500, 5, 1, "equipment"}, // Plate
+}
+
+func roguelikeLootKind(level, roll int) string {
+	if level <= 2 {
+		if roll < 80 {
+			return "consumable"
+		}
+		return "equipment"
+	}
+	if level <= 4 {
+		if roll < 70 {
+			return "consumable"
+		}
+		if roll < 90 {
+			return "equipment"
+		}
+		return "magic"
+	}
+	if roll < 60 {
+		return "consumable"
+	}
+	if roll < 75 {
+		return "equipment"
+	}
+	return "magic"
 }
 
 func roguelikeLevelForXP(xp int) int {
@@ -91,7 +122,7 @@ func roguelikeNextLevelXP(level int) int {
 	return roguelikeXPThresholds[level]
 }
 
-func roguelikeEncounterBudget(level, encountersWon int) (string, int) {
+func roguelikeEncounterBudget(level, experience int) (string, int) {
 	budgets := map[int][3]int{
 		1: {50, 75, 100}, 2: {100, 150, 200}, 3: {150, 225, 400},
 		4: {250, 375, 500}, 5: {500, 750, 1100},
@@ -100,11 +131,17 @@ func roguelikeEncounterBudget(level, encountersWon int) (string, int) {
 	if !ok {
 		row = budgets[5]
 	}
-	index := encountersWon % 6
-	if index < 2 {
+	stageStart := roguelikeXPThresholds[level-1]
+	stageEnd := roguelikeXPThresholds[level]
+	progress := experience - stageStart
+	if progress < 0 {
+		progress = 0
+	}
+	span := stageEnd - stageStart
+	if progress*3 < span {
 		return "low", row[0]
 	}
-	if index < 5 {
+	if progress*4 < span*3 {
 		return "moderate", row[1]
 	}
 	return "high", row[2]

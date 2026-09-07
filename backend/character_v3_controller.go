@@ -494,6 +494,7 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 
 	var full CharacterV3
 	txErr := cc.db.Transaction(func(tx *gorm.DB) error {
+		var roguelikeRun *RoguelikeRun
 		var locked CharacterV3
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("id = ? AND user_id = ?", characterID, userID).
@@ -510,7 +511,9 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 			if authErr != nil {
 				return authErr
 			}
-			if run == nil || req.Level != locked.Level+1 || req.Level > 5 || req.Level > roguelikeLevelForXP(run.Experience) {
+			isNextLevel := run != nil && req.Level == locked.Level+1
+			isPendingRetry := run != nil && req.Level == locked.Level && run.PendingLevel == req.Level
+			if run == nil || (!isNextLevel && !isPendingRetry) || req.Level > 5 || req.Level > roguelikeLevelForXP(run.Experience) {
 				return &characterRuntimeCommandError{
 					Status: http.StatusConflict, Code: "roguelike_level_up_forbidden",
 					Message:     "этот уровень ещё не заработан или выбран неверный уровень",
@@ -524,6 +527,7 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 					CharacterID: locked.ID.String(),
 				}
 			}
+			roguelikeRun = run
 		}
 
 		if req.Name != "" {
@@ -616,6 +620,12 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 		}
 		if result.RowsAffected != 1 {
 			return errCharacterV3OwnerChanged
+		}
+		if roguelikeRun != nil {
+			if err := tx.Model(&RoguelikeRun{}).Where("id = ?", roguelikeRun.ID).
+				Update("pending_level", req.Level).Error; err != nil {
+				return err
+			}
 		}
 		return tx.Preload("User").Preload("Group").First(&full, locked.ID).Error
 	})
@@ -875,6 +885,17 @@ func (cc *CharacterV3Controller) PatchCharacterRuntime(c *gin.Context) {
 		if authErr != nil {
 			return authErr
 		}
+		if roguelikeRun != nil && c.GetHeader(roguelikeIntentHeader) == roguelikeIntentCamp {
+			if err := validateRoguelikeCampRuntimePatch(locked, req); err != nil {
+				return err
+			}
+		}
+		if roguelikeRun != nil && c.GetHeader(roguelikeIntentHeader) == roguelikeIntentLevel &&
+			roguelikeRun.PendingLevel != locked.Level {
+			return roguelikeMutationError(
+				"roguelike_level_up_not_pending", "сначала завершите мастер повышения уровня", locked.ID,
+			)
+		}
 		updates := runtimeUpdatesForLockedCharacter(locked, req)
 		if req.ExpectedRuntimeRevision != nil && locked.RuntimeRevision != *req.ExpectedRuntimeRevision {
 			expected := *req.ExpectedRuntimeRevision
@@ -899,17 +920,6 @@ func (cc *CharacterV3Controller) PatchCharacterRuntime(c *gin.Context) {
 		}
 		if err := tx.Preload("User").Preload("Group").First(&full, locked.ID).Error; err != nil {
 			return err
-		}
-		if roguelikeRun != nil && c.GetHeader(roguelikeIntentHeader) == roguelikeIntentLevel {
-			roguelikeRun.Character = &full
-			checkpoint, checkpointErr := roguelikeCheckpoint(roguelikeRun, &full)
-			if checkpointErr != nil {
-				return checkpointErr
-			}
-			if err := tx.Model(&RoguelikeRun{}).Where("id = ?", roguelikeRun.ID).
-				Update("checkpoint", checkpoint).Error; err != nil {
-				return err
-			}
 		}
 		return nil
 	})

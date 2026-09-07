@@ -254,7 +254,7 @@ function RunCamp({ id }: { id: string }) {
   const currentLevel = run?.character?.level ?? 1;
   const targetXP = nextTarget(currentLevel);
   const progress = run ? Math.min(100, Math.round((run.experience / targetXP) * 100)) : 0;
-  const levelAvailable = run ? earnedLevel(run.experience) > currentLevel : false;
+  const levelAvailable = run ? earnedLevel(run.experience) > currentLevel || Boolean(run.pending_level) : false;
   const victoryAvailable = Boolean(run && run.experience >= 14000 && currentLevel === 5);
   const hitDieKey = restDraft ? hitDiceResourceKey(restDraft.context.hitDie) : null;
   const hitDiceLeft = hitDieKey && restDraft ? restDraft.runtime.resources[hitDieKey] ?? 0 : 0;
@@ -327,7 +327,9 @@ function RunCamp({ id }: { id: string }) {
       {run.last_reward?.experience ? (
         <section className="roguelike-reward">
           <strong>Награда:</strong> +{run.last_reward.experience} XP, +{run.last_reward.gold} зм
-          {run.last_reward.item && <> · найдено: <b>{run.last_reward.item.name}</b></>}
+          {(run.last_reward.items?.length ?? 0) > 0
+            ? <> · найдено: <b>{run.last_reward.items!.map((item) => item.name).join(', ')}</b></>
+            : run.last_reward.item && <> · найдено: <b>{run.last_reward.item.name}</b></>}
         </section>
       ) : null}
       {error && <div className="roguelike-error" role="alert">{error}</div>}
@@ -341,15 +343,15 @@ function RunCamp({ id }: { id: string }) {
             </button>
           ) : levelAvailable ? (
             <Link className="roguelike-primary" to={`/m/characters/${run.character_id}/level-up?returnTo=${encodeURIComponent(`/roguelike/${run.id}`)}`}>
-              Повысить до {earnedLevel(run.experience)} уровня
+              {run.pending_level ? `Продолжить повышение до ${run.pending_level} уровня` : `Повысить до ${earnedLevel(run.experience)} уровня`}
             </Link>
           ) : (
             <button type="button" className="roguelike-primary" disabled={busy} onClick={startEncounter}>
               <Swords size={18} /> Начать столкновение
             </button>
           )}
-          <Link className="roguelike-secondary" to={`/characters-v3/${run.character_id}`}>
-            Открыть лист героя
+          <Link className="roguelike-secondary" to={`/characters-v3/${run.character_id}?roguelike=${encodeURIComponent(run.id)}`}>
+            Экипировка и лист героя
           </Link>
 
           <div className="roguelike-consumables">

@@ -36,6 +36,7 @@ export interface RoguelikeReward {
   gold?: number;
   total_experience?: number;
   item?: { card_id: string; card_number: string; name: string };
+  items?: Array<{ card_id: string; card_number: string; name: string }>;
 }
 
 export interface RoguelikeRun {
@@ -54,6 +55,7 @@ export interface RoguelikeRun {
   game_clock_hours: number;
   last_long_rest_hour: number;
   paid_refresh_count: number;
+  pending_level?: number;
   encounter: RoguelikeEncounter;
   shop: RoguelikeShop;
   last_reward: RoguelikeReward;

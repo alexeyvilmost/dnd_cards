@@ -25,6 +25,7 @@ func createRoguelikeRuns(db *sql.DB) error {
 			game_clock_hours integer NOT NULL DEFAULT 0,
 			last_long_rest_hour integer NOT NULL DEFAULT -24,
 			paid_refresh_count integer NOT NULL DEFAULT 0,
+			pending_level integer NOT NULL DEFAULT 0,
 			run_seed varchar(64) NOT NULL,
 			encounter jsonb NOT NULL DEFAULT '{}'::jsonb,
 			shop jsonb NOT NULL DEFAULT '{}'::jsonb,
@@ -51,6 +52,7 @@ func createRoguelikeRuns(db *sql.DB) error {
 			user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 			command_id uuid NOT NULL,
 			command_type varchar(40) NOT NULL,
+			request_hash char(64) NOT NULL,
 			response jsonb NOT NULL,
 			created_at timestamptz NOT NULL DEFAULT NOW(),
 			UNIQUE(run_id, command_id)

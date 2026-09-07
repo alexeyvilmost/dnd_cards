@@ -22,6 +22,15 @@ export interface CharacterV3AccessErrorDetail {
   message: string;
 }
 
+type RoguelikeCharacterIntent = 'combat' | 'level_up' | 'camp';
+
+function activeRoguelikeCampContext(): { runId: string; intent: 'camp' } | undefined {
+  if (typeof window === 'undefined' || !window.location.pathname.startsWith('/characters-v3/')) return undefined;
+  const runId = new URLSearchParams(window.location.search).get('roguelike')?.trim() ?? '';
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(runId)) return undefined;
+  return { runId, intent: 'camp' };
+}
+
 export class CharacterV3AccessError extends Error {
   constructor(
     message: string,
@@ -160,9 +169,13 @@ export const charactersV3Api = {
     return data;
   }),
 	update: (id: string, payload: SaveForgeCharacterRequest, roguelikeRunId?: string): Promise<ForgeCharacter> => characterV3Request('update', async () => {
-		const { data } = await apiClient.put<ForgeCharacter>(`/api/characters-v3/${id}`, payload, roguelikeRunId ? {
-			headers: { 'X-Roguelike-Run-ID': roguelikeRunId, 'X-Roguelike-Intent': 'level_up' },
-		} : undefined);
+		const path = `/api/characters-v3/${id}`;
+		const response = roguelikeRunId
+			? await apiClient.put<ForgeCharacter>(path, payload, {
+				headers: { 'X-Roguelike-Run-ID': roguelikeRunId, 'X-Roguelike-Intent': 'level_up' },
+			})
+			: await apiClient.put<ForgeCharacter>(path, payload);
+		const { data } = response;
 	return data;
   }),
   remove: (id: string): Promise<void> => characterV3Request('delete', async () => {
@@ -180,11 +193,16 @@ export const charactersV3Api = {
 	patchRuntime: (
 		characterId: string,
 		payload: PatchCharacterRuntimeRequest,
-		roguelike?: { runId: string; intent: 'combat' | 'level_up' },
+		roguelike?: { runId: string; intent: RoguelikeCharacterIntent },
 	): Promise<ForgeCharacter> => characterV3Request('runtime', async () => {
-		const { data } = await apiClient.patch<ForgeCharacter>(`/api/characters-v3/${characterId}/runtime`, payload, roguelike ? {
-			headers: { 'X-Roguelike-Run-ID': roguelike.runId, 'X-Roguelike-Intent': roguelike.intent },
-		} : undefined);
+		const context = roguelike ?? activeRoguelikeCampContext();
+		const path = `/api/characters-v3/${characterId}/runtime`;
+		const response = context
+			? await apiClient.patch<ForgeCharacter>(path, payload, {
+				headers: { 'X-Roguelike-Run-ID': context.runId, 'X-Roguelike-Intent': context.intent },
+			})
+			: await apiClient.patch<ForgeCharacter>(path, payload);
+		const { data } = response;
 	return data;
   }),
   postRuntimeCommand: (

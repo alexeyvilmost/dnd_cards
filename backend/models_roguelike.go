@@ -35,6 +35,7 @@ type RoguelikeRun struct {
 	GameClockHours    int          `json:"game_clock_hours" gorm:"not null"`
 	LastLongRestHour  int          `json:"last_long_rest_hour" gorm:"not null"`
 	PaidRefreshCount  int          `json:"paid_refresh_count" gorm:"not null"`
+	PendingLevel      int          `json:"pending_level,omitempty" gorm:"not null"`
 	RunSeed           string       `json:"-" gorm:"type:varchar(64);not null"`
 	Encounter         JSONMap      `json:"encounter" gorm:"type:jsonb;not null"`
 	Shop              JSONMap      `json:"shop" gorm:"type:jsonb;not null"`
@@ -53,6 +54,7 @@ type RoguelikeCommandReceipt struct {
 	UserID      uuid.UUID `gorm:"type:uuid;not null"`
 	CommandID   uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_roguelike_run_command"`
 	CommandType string    `gorm:"type:varchar(40);not null"`
+	RequestHash string    `gorm:"type:char(64);not null"`
 	Response    JSONMap   `gorm:"type:jsonb;not null"`
 	CreatedAt   time.Time
 }

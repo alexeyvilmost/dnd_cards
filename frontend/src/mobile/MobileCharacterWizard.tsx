@@ -279,13 +279,14 @@ export default function MobileCharacterWizard() {
     (async () => {
       setLoading(true);
       try {
-        const [raceResult, classResult, backgroundResult, featResult, spellResult, character] = await Promise.all([
+        const [raceResult, classResult, backgroundResult, featResult, spellResult, character, roguelikeRun] = await Promise.all([
           racesApi.getRaces({ limit: 300 }),
           classesApi.getClasses({ limit: 300 }),
           backgroundsApi.getBackgrounds({ limit: 300 }),
           featsApi.getFeats({ limit: 300 }),
           spellsApi.getSpells({ limit: 1000 }),
           id ? charactersV3Api.get(id) : Promise.resolve(null),
+		  roguelikeRunId ? roguelikeApi.get(roguelikeRunId) : Promise.resolve(null),
         ]);
         if (stale) return;
         setRaces(raceResult.races ?? []);
@@ -305,7 +306,8 @@ export default function MobileCharacterWizard() {
           const stored = safeDraft(localStorage.getItem(storageKey));
           if (!stored) {
             const fromCharacter = characterToDraft(character);
-            setDraft(levelUp ? { ...fromCharacter, level: fromCharacter.level + 1 } : fromCharacter);
+			const targetLevel = roguelikeRun?.pending_level ?? fromCharacter.level + 1;
+            setDraft(levelUp ? { ...fromCharacter, level: targetLevel } : fromCharacter);
           }
         }
       } catch (e) {
@@ -316,7 +318,7 @@ export default function MobileCharacterWizard() {
       }
     })();
     return () => { stale = true; };
-  }, [id, levelUp, navigate, storageKey]);
+  }, [id, levelUp, navigate, roguelikeRunId, storageKey]);
 
   useEffect(() => {
     if (loading) return;
