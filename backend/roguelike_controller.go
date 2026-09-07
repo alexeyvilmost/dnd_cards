@@ -557,6 +557,13 @@ func startRoguelikeEncounter(tx *gorm.DB, run *RoguelikeRun) error {
 	if run.Character == nil || run.Character.Level != level {
 		return roguelikeError(http.StatusConflict, "level_up_required", "сначала повысьте уровень воина")
 	}
+	// An attempt reuses the encounter that was already drawn. Catalog edits,
+	// equipment changes and a deployment must not reroll a failed encounter.
+	if number, ok := numberFromJSON(run.Encounter["number"]); ok && number == run.EncountersWon+1 {
+		run.LastReward = JSONMap{}
+		run.Phase = RoguelikePhaseCombat
+		return nil
+	}
 	difficulty, budget := roguelikeEncounterBudget(level, run.Experience)
 	slugs := make([]string, 0, len(roguelikeMonsterPool))
 	for _, entry := range roguelikeMonsterPool {
@@ -578,11 +585,16 @@ func startRoguelikeEncounter(tx *gorm.DB, run *RoguelikeRun) error {
 	}
 	index := roguelikeDeterministicInt(run.RunSeed, "encounter", run.EncountersWon+1, len(candidates))
 	selected := candidates[index]
+	catalog, err := freezeRoguelikeMonsterCatalog(tx, selected.Monster)
+	if err != nil {
+		return err
+	}
 	encounter, err := mapFromJSON(map[string]any{
 		"number": run.EncountersWon + 1, "difficulty": difficulty, "budget_xp": budget,
 		"monster_id": selected.Monster.ID, "monster_slug": selected.Monster.Slug,
 		"monster_name": selected.Monster.Name, "quantity": selected.Quantity,
 		"xp_each": selected.Entry.XP, "xp_total": selected.Entry.XP * selected.Quantity,
+		"generator_version": "roguelike-encounters-v2", "catalog": catalog,
 	})
 	if err != nil {
 		return err
@@ -1161,7 +1173,6 @@ func restoreRoguelikeCheckpoint(run *RoguelikeRun) error {
 	run.PaidRefreshCount = snapshot.PaidRefreshCount
 	run.PendingLevel = snapshot.PendingLevel
 	run.Shop = snapshot.Shop
-	run.Encounter = JSONMap{}
 	run.LastReward = JSONMap{}
 	run.Attempt++
 	run.Status = RoguelikeStatusActive

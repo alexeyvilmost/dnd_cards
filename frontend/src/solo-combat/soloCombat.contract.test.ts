@@ -5,7 +5,7 @@ import type { Monster } from '../monsters/types';
 import { compileMonsterInstance } from './monsterCompiler';
 import { planMonsterTurn } from './monsterAi';
 import { areaPositionsForAction, effectiveActorSpeedFt, gridDistanceFt, pathToward, pullToward, pushAway, reachablePositions } from './tacticalGrid';
-import type { SoloCombatState } from './types';
+import { spatialFacts, type SoloCombatState } from './types';
 
 const MONSTER_ID = 'c1000000-0000-4000-8000-000000000001';
 const ACTION_ID = 'b1000000-0000-4000-8000-000000000001';
@@ -319,4 +319,30 @@ describe('solo combat tactical contract', () => {
     expect(plan.firstMove).toHaveLength(4);
     expect(plan.dashMove).toHaveLength(4);
   });
+});
+
+
+describe('pack tactics ally eligibility', () => {
+  it.each(['incapacitated', 'stunned', 'paralyzed', 'unconscious', 'petrified', 'prone', 'poisoned'])('%s ally', (condition) => {
+    const { state, monster } = aiState({ x: 0, y: 0 }, { x: 2, y: 2 });
+    state.sideByActorId = { monster: 'enemy', ally: 'enemy', player: 'player' };
+    state.world.actors.ally = { ...monster, id: 'ally', runtime: { ...monster.runtime,
+      activeEffects: [{ id: 'condition', name: condition, source: 'test', mechanics: { kind: 'condition', value: condition } }],
+    } };
+    state.tokens.ally = { actorId: 'ally', color: '#fff', position: { x: 2, y: 1 } };
+    expect(spatialFacts(state, 'monster', 'player').nearbyEligibleAllyToTarget)
+      .toBe(['prone', 'poisoned'].includes(condition));
+  });
+});
+
+
+it('compiles monster proficiencies, expertise, senses and condition immunities as shared actor rules', () => {
+  const monster = goblin();
+  monster.ai = { skill_proficiencies: ['perception', 'stealth'], skill_expertise: ['perception'],
+    save_proficiencies: ['wis'], darkvision_ft: 60, condition_immunities: ['poisoned'] };
+  const { actor } = compileMonsterInstance({ monster, instanceId: 'test:wolf', actions: [meleeAction()], effects: [] });
+  expect(actor.character).toMatchObject({ skillProficiencies: ['perception', 'stealth'],
+    skillExpertise: ['perception'], saveProficiencies: ['wis'] });
+  expect(actor.passives).toContainEqual(expect.objectContaining({ kind: 'grant_sense', sense: 'darkvision', range: 60 }));
+  expect(actor.traits?.conditionImmunities).toEqual([{ condition: 'poisoned', sourceEntityIds: [monster.id] }]);
 });

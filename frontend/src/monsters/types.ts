@@ -27,6 +27,11 @@ export interface Monster {
     pack_tactics?: boolean;
     damage_immunities?: string[];
     damage_vulnerabilities?: string[];
+    condition_immunities?: string[];
+    save_proficiencies?: MonsterAbility[];
+    skill_proficiencies?: string[];
+    skill_expertise?: string[];
+    darkvision_ft?: number;
     knock_prone?: boolean;
     undead_fortitude?: boolean;
     bloodied_frenzy?: boolean;

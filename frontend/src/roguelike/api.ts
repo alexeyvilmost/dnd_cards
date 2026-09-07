@@ -1,5 +1,7 @@
 import { apiClient } from '../api/client';
 import type { ForgeCharacter } from '../character/types';
+import type { Monster } from '../monsters/types';
+import type { Action, PassiveEffect } from '../types';
 
 export interface RoguelikeOffer {
   id: string;
@@ -20,6 +22,8 @@ export interface RoguelikeShop {
 }
 
 export interface RoguelikeEncounter {
+  generator_version?: string;
+  catalog?: { version: 1; monsters: Monster[]; actions: Action[]; effects: PassiveEffect[] };
   number?: number;
   difficulty?: 'low' | 'moderate' | 'high';
   budget_xp?: number;

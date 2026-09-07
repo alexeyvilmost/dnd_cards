@@ -9,6 +9,7 @@ import type {
 import type { WorldObjectState } from '../rules-core/worldObjects';
 import type { SheetCanonicalResourceBindings } from '../character/sheetCanonicalWorld';
 import type { Action, Spell } from '../types';
+import { expandConditionSet } from '../engine/conditions';
 
 export const SOLO_COMBAT_KEY = 'solo_combat_v1' as const;
 export const SOLO_COMBAT_SCHEMA_VERSION = 1 as const;
@@ -380,6 +381,11 @@ export function spatialFacts(
   const nearbyEligibleAllyToTarget = Boolean(sourceSide && state.world && Object.values(state.world.actors).some((actor) => {
     if (actor.id === sourceActorId || state.sideByActorId?.[actor.id] !== sourceSide) return false;
     if ((actor.runtime.hp.current ?? 0) <= 0) return false;
+    const conditions = (actor.runtime.activeEffects ?? []).flatMap((effect) => {
+      const mechanics = effect.mechanics as Record<string, unknown>;
+      return mechanics?.kind === 'condition' ? [String(mechanics.value)] : [];
+    });
+    if (expandConditionSet(conditions).has('incapacitated')) return false;
     const position = state.tokens[actor.id]?.position;
     return Boolean(position && Math.max(Math.abs(position.x - target.x), Math.abs(position.y - target.y)) * TACTICAL_CELL_FT <= 5);
   }));

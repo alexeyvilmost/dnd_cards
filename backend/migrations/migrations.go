@@ -1256,6 +1256,12 @@ func GetAllMigrations() []Migration {
 			Up:          materializeRoguelikeMonsters,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "200_roguelike_wolf_riders",
+			Description: "Execute SRD wolf size-gated prone riders and perceptive senses",
+			Up:          materializeRoguelikeWolfRiders,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

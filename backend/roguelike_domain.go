@@ -26,13 +26,13 @@ var roguelikeMonsterPool = []roguelikeMonsterEntry{
 	{Slug: "kobold-warrior", XP: 25, MinLevel: 1, MaxCount: 4, GeneratorWeight: 1},
 	{Slug: "goblin-warrior", XP: 50, MinLevel: 1, MaxCount: 4}, // Nimble Escape is not executable yet.
 	{Slug: "skeleton", XP: 50, MinLevel: 1, MaxCount: 4, GeneratorWeight: 1},
-	{Slug: "zombie", XP: 50, MinLevel: 1, MaxCount: 3},             // Undead Fortitude is not executable yet.
-	{Slug: "wolf", XP: 50, MinLevel: 2, MaxCount: 4},               // Bite's knock-prone save is not executable yet.
+	{Slug: "zombie", XP: 50, MinLevel: 1, MaxCount: 3}, // Undead Fortitude is not executable yet.
+	{Slug: "wolf", XP: 50, MinLevel: 2, MaxCount: 4, GeneratorWeight: 1},
 	{Slug: "giant-wolf-spider", XP: 50, MinLevel: 3, MaxCount: 3},  // Poison save is not executable yet.
 	{Slug: "hobgoblin-warrior", XP: 100, MinLevel: 2, MaxCount: 3}, // Poison save is not executable yet.
 	{Slug: "tough", XP: 100, MinLevel: 2, MaxCount: 3, GeneratorWeight: 1},
 	{Slug: "animated-armor", XP: 200, MinLevel: 3, MaxCount: 2, GeneratorWeight: 1},
-	{Slug: "dire-wolf", XP: 200, MinLevel: 3, MaxCount: 2},       // Bite's knock-prone save is not executable yet.
+	{Slug: "dire-wolf", XP: 200, MinLevel: 3, MaxCount: 2, GeneratorWeight: 1},
 	{Slug: "bugbear-warrior", XP: 200, MinLevel: 3, MaxCount: 2}, // Grab and drag are not executable yet.
 	{Slug: "ogre", XP: 450, MinLevel: 4, MaxCount: 2, GeneratorWeight: 1},
 	{Slug: "berserker", XP: 450, MinLevel: 4, MaxCount: 2, GeneratorWeight: 1},

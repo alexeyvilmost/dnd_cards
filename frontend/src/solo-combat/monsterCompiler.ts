@@ -44,6 +44,10 @@ export function compileMonsterInstance(input: {
   };
   const aiPassives: Record<string, unknown>[] = [
     { id: 'monster-ai-profile', kind: 'monster_ai', ...input.monster.ai },
+    ...(input.monster.ai.darkvision_ft ? [{
+      id: 'monster-darkvision', kind: 'grant_sense', sense: 'darkvision',
+      range: input.monster.ai.darkvision_ft,
+    }] : []),
     ...(input.monster.ai.damage_immunities ?? []).map((damageType) => ({
       id: `monster-immunity:${damageType}`,
       kind: 'resistance', damage_type: damageType, value: 'immunity',
@@ -70,8 +74,13 @@ export function compileMonsterInstance(input: {
         level: 1,
         characterSpeed: input.monster.speed,
         baseSpeed: input.monster.speed,
-        saveProficiencies: [], skillProficiencies: [], skillExpertise: [],
+        saveProficiencies: input.monster.ai.save_proficiencies ?? [],
+        skillProficiencies: input.monster.ai.skill_proficiencies ?? [],
+        skillExpertise: input.monster.ai.skill_expertise ?? [],
       },
+      traits: { conditionImmunities: (input.monster.ai.condition_immunities ?? []).map((condition) => ({
+        condition, sourceEntityIds: [input.monster.id],
+      })) },
       runtime,
       passives: [
         ...effects.flatMap((effect) => effect?.mechanics ? [effect.mechanics] : []),

@@ -509,3 +509,48 @@ describe('executeAction fail-closed preflight', () => {
     expect(result.events).toContainEqual({ type: 'narrative', text: 'legacy projection' });
   });
 });
+
+
+describe('size-gated condition riders', () => {
+  const bite = (limit: unknown) => ({
+    activation: { mode: 'active', cost: [{ resource: 'action' }] },
+    effects: [{ resolution: 'attack_roll', ability: 'str', attack_kind: 'weapon_melee',
+      attack_bonus_override: 4, vs: 'ac', on_hit: [
+        { kind: 'damage', amount: 3, type: 'piercing' },
+        { kind: 'condition', value: 'prone', max_target_size: limit },
+      ] }],
+  });
+  it.each([[2, 2, true], [2, 3, false], [3, 3, true], [3, 4, false], [2, 0, true]])(
+    'limit %i against size %i: applies prone %s without an extra save', (limit, size, prone) => {
+      const result = executeAction(fresh(), bite(limit), {
+        character, selfId: 'wolf', rng: () => 0.7,
+        target: { id: 'victim', ac: 10, size, runtimeState: fresh() },
+      });
+      expect(result.targetState?.hp.current).toBe(5);
+      expect(result.targetState?.activeEffects.some((entry) => entry.mechanics.value === 'prone')).toBe(prone);
+      expect(result.state.resources.action).toBe(0);
+      expect(result.events.filter((event) => event.type === 'roll')).toHaveLength(1);
+    },
+  );
+  it('does not apply the rider on a miss', () => {
+    const result = executeAction(fresh(), bite(2), { character, selfId: 'wolf', rng: () => 0,
+      target: { id: 'victim', ac: 10, size: 2, runtimeState: fresh() } });
+    expect(result.targetState?.activeEffects ?? []).toEqual([]);
+    expect(result.targetState?.hp.current ?? 8).toBe(8);
+  });
+  it.each([undefined, -1, 6, 2.5])('rejects missing or invalid target size %s before spending or rolling', (size) => {
+    const state = fresh();
+    let calls = 0;
+    expectCode(() => executeAction(state, bite(2), { character,
+      rng: () => { calls += 1; return 0.5; },
+      target: { id: 'victim', ac: 10, size, runtimeState: fresh() },
+    }), 'INVALID_MECHANICS');
+    expect(state.resources.action).toBe(1);
+    expect(calls).toBe(0);
+  });
+  it.each([-1, 6, 2.5, 'medium'])('rejects invalid size gate %s', (limit) => {
+    expectCode(() => executeAction(fresh(), bite(limit), { character, rng: () => 0.5,
+      target: { id: 'victim', ac: 10, size: 2, runtimeState: fresh() },
+    }), 'INVALID_PAYLOAD');
+  });
+});

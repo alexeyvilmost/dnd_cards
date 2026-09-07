@@ -271,13 +271,25 @@ export default function SoloCombatPage() {
     let active = true;
     (async () => {
       try {
-        const loadedCharacter = await charactersV3Api.get(id);
+        const [loadedCharacter, loadedRun] = await Promise.all([
+          charactersV3Api.get(id),
+          roguelikeRunId ? roguelikeApi.get(roguelikeRunId) : Promise.resolve(null),
+        ]);
+        if (loadedRun && (loadedRun.character_id !== id || loadedRun.phase !== 'combat')) {
+          throw new Error('Этот лист не участвует в активной встрече забега');
+        }
         if (!active) return;
         characterRef.current = loadedCharacter;
         setCharacter(loadedCharacter);
         participantCharactersRef.current = { [loadedCharacter.id]: loadedCharacter };
         setParticipantCharacters(participantCharactersRef.current);
-        const requested = initialRequestedRef.current;
+        const requested = loadedRun
+          ? loadedCharacter.turn_state?.solo_combat_v1 ? []
+            : loadedRun.encounter.monster_id && loadedRun.encounter.quantity
+              ? [{ id: loadedRun.encounter.monster_id, quantity: loadedRun.encounter.quantity }] : []
+          : initialRequestedRef.current;
+        const pinnedCatalog = loadedRun?.encounter.catalog;
+        if (pinnedCatalog && pinnedCatalog.version !== 1) throw new Error('Версия сохранённого каталога встречи не поддерживается');
         if (!requested.length) {
           const restored = readSoloCombatState(
             loadedCharacter.turn_state, id, Number(loadedCharacter.runtime_revision ?? 0),
@@ -305,8 +317,9 @@ export default function SoloCombatPage() {
           setBusy(false); return;
         }
         const [monsters, allyCharacters] = await Promise.all([
-          Promise.all(requested.map(({ id: monsterId }) => monstersApi.get(monsterId))),
-          Promise.all(initialAlliesRef.current.map((allyId) => charactersV3Api.get(allyId))),
+          pinnedCatalog ? Promise.resolve(pinnedCatalog.monsters)
+            : Promise.all(requested.map(({ id: monsterId }) => monstersApi.get(monsterId))),
+          Promise.all((loadedRun ? [] : initialAlliesRef.current).map((allyId) => charactersV3Api.get(allyId))),
         ]);
         if (allyCharacters.some((ally) => ally.user_id !== loadedCharacter.user_id)) {
           throw new Error('Союзник должен принадлежать тому же пользователю');
@@ -314,8 +327,10 @@ export default function SoloCombatPage() {
         const actionIds = [...new Set(monsters.flatMap((monster) => monster.action_ids))];
         const effectIds = [...new Set(monsters.flatMap((monster) => monster.effect_ids))];
         const [actionRows, effectRows, basicResponse, cards] = await Promise.all([
-          Promise.all(actionIds.map((actionId) => actionsApi.getAction(actionId))),
-          Promise.all(effectIds.map((effectId) => effectsApi.getEffect(effectId))),
+          pinnedCatalog ? Promise.resolve(pinnedCatalog.actions)
+            : Promise.all(actionIds.map((actionId) => actionsApi.getAction(actionId))),
+          pinnedCatalog ? Promise.resolve(pinnedCatalog.effects)
+            : Promise.all(effectIds.map((effectId) => effectsApi.getEffect(effectId))),
           actionsApi.getActions({ type: 'basic', limit: 100 }),
           getCardsIndex(),
         ]);

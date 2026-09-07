@@ -1041,6 +1041,18 @@ function preflightPayload(
       break;
     }
     case 'condition': {
+      if (value.max_target_size !== undefined) {
+        if (!targetOwned || !Number.isInteger(value.max_target_size)
+          || Number(value.max_target_size) < 0 || Number(value.max_target_size) > 5) {
+          throw mechanicsError('INVALID_PAYLOAD', `${path}.max_target_size`,
+            'size-gated conditions require a target and a size index from 0 to 5');
+        }
+        if (!Number.isInteger(ctx.target?.size) || Number(ctx.target?.size) < 0
+          || Number(ctx.target?.size) > 5) {
+          throw mechanicsError('INVALID_MECHANICS', 'context.target.size',
+            'size-gated conditions require an explicit target size');
+        }
+      }
       if (typeof value.value !== 'string' || !value.value.trim()) {
         throw mechanicsError('INVALID_PAYLOAD', `${path}.value`, 'condition id must be non-empty');
       }
@@ -2506,6 +2518,8 @@ function applyCondition(
 ): RuntimeState {
   const condition = String(payload.value ?? '');
   if (!condition) return state;
+  if (payload.max_target_size !== undefined
+    && Number(ctx.target?.size) > Number(payload.max_target_size)) return state;
   const conditionEntityRef = conditionEffectEntityRef(condition);
   if (!conditionEntityRef && conditionRegistryAuthority().mode === 'database_release') {
     throw mechanicsError(

@@ -3009,3 +3009,44 @@ describe('solo combat engine vertical integration', () => {
     ))).toBe(false);
   });
 });
+
+
+describe('wolf Bite in the shared combat engine', () => {
+  it.each([[2, 2, true], [2, 3, false], [3, 3, true], [3, 4, false]])(
+    'prone size ceiling %i against %i survives reload (%s)', async (limit, size, expected) => {
+      const participant = fighterSeed();
+      const player = participant.canonical.world.actors[participant.character.id];
+      player.attackProfile = { attacksPerAction: 1, size, reachFt: 5,
+        graspingParts: ['main_hand'], sourceEntityIds: ['test:fighter'] };
+      player.runtime.hp = { current: 100, max: 100, temp: 0 };
+      player.runtime.resources.reaction = 0;
+      participant.character.current_hp = 100;
+      participant.character.max_hp = 100;
+      const bite = scimitar();
+      bite.mechanics = {
+        activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }] },
+        targeting: { domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1,
+          max_targets: 1, range_ft: 5, requires_line_of_sight: true, allowed_relations: ['enemy'] },
+        effects: [{ resolution: 'attack_roll', ability: 'str', attack_kind: 'weapon_melee',
+          attack_bonus_override: 4, vs: 'ac', on_hit: [
+            { kind: 'damage', amount: '1d6 + 2', type: 'piercing' },
+            { kind: 'condition', value: 'prone', max_target_size: limit },
+          ] }],
+      };
+      const wolf = { ...goblin(), size: limit === 2 ? 'medium' : 'large',
+        ai: { strategy: 'tactical' as const, pack_tactics: true, preferred_range_ft: 5 } };
+      let state = await createSoloCombatState({ character: participant.character, participant,
+        selected: [{ monster: wolf, quantity: 1 }], actions: [bite], effects: [], rng: () => 0.5 });
+      const monsterId = Object.values(state.world.actors).find((actor) => actor.kind === 'monster')!.id;
+      state.tokens[participant.character.id].position = { x: 4, y: 4 };
+      state.tokens[monsterId].position = { x: 5, y: 4 };
+      state = advanceTurn(state);
+      state = runMonsterTurn(state, () => 0.99);
+      const restored = readSoloCombatState(writeSoloCombatState({}, state), participant.character.id, state.runtimeRevision)!;
+      expect(restored.world.actors[participant.character.id].runtime.activeEffects
+        .some((effect) => effect.mechanics.value === 'prone')).toBe(expected);
+      expect(restored.world.actors[participant.character.id].runtime.hp.current).toBeLessThan(100);
+      expect(activeId(restored)).toBe(participant.character.id);
+    },
+  );
+});

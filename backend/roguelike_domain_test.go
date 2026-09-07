@@ -66,8 +66,8 @@ func TestRoguelikeContentManifestsAreUniqueAndComplete(t *testing.T) {
 			certified++
 		}
 	}
-	if certified != 9 {
-		t.Fatalf("certified generator pool has %d entries, want 9", certified)
+	if certified != 11 {
+		t.Fatalf("certified generator pool has %d entries, want 11", certified)
 	}
 	items := map[string]bool{}
 	for _, entry := range roguelikeShopManifest {
@@ -228,5 +228,41 @@ func TestResourceMapWithinMaximumAllowsOnlyEmptyDerivedPools(t *testing.T) {
 	overMaximum["second_wind"] = float64(3)
 	if resourceMapWithinMaximum(&overMaximum, &maximums) {
 		t.Fatal("resource above its maximum was accepted")
+	}
+}
+
+func TestRoguelikeRetryRetainsDrawnEncounterAcrossCatalogChanges(t *testing.T) {
+	character := &CharacterV3{ID: uuid.New(), UserID: uuid.New(), Level: 2, RuntimeRevision: 7}
+	run := &RoguelikeRun{CharacterID: character.ID, UserID: character.UserID, Character: character,
+		Status: RoguelikeStatusActive, Phase: RoguelikePhaseCamp, Experience: 300,
+		EncountersWon: 6, Gold: 80, Supplies: 2, Attempt: 1,
+		Shop: JSONMap{"generation": 6}, Encounter: JSONMap{}}
+	var err error
+	run.Checkpoint, err = roguelikeCheckpoint(run, character)
+	if err != nil {
+		t.Fatal(err)
+	}
+	encounter := JSONMap{"number": 7, "monster_slug": "wolf", "quantity": 2,
+		"catalog": map[string]any{"version": 1, "sentinel": "frozen-before-library-edit"}}
+	run.Encounter = encounter
+	run.Status = RoguelikeStatusDefeat
+	run.Gold = 1
+	run.Character.RuntimeRevision = 12
+	if err := restoreRoguelikeCheckpoint(run); err != nil {
+		t.Fatal(err)
+	}
+	if run.Gold != 80 || run.Attempt != 2 || run.Character.RuntimeRevision != 13 {
+		t.Fatal("checkpoint did not restore economy with a new runtime revision")
+	}
+	// A nil database proves reuse does not consult the current library or generator.
+	if err := startRoguelikeEncounter(nil, run); err != nil {
+		t.Fatal(err)
+	}
+	if run.Phase != RoguelikePhaseCombat || run.Encounter["monster_slug"] != "wolf" {
+		t.Fatal("retry rerolled the encounter")
+	}
+	catalog := run.Encounter["catalog"].(map[string]any)
+	if catalog["sentinel"] != "frozen-before-library-edit" {
+		t.Fatal("retry replaced the content")
 	}
 }
