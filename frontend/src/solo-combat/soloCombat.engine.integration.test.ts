@@ -391,6 +391,26 @@ function scimitar(): Action {
   } as Action;
 }
 
+function monsterUnarmedStrike(): Action {
+  return {
+    id: 'a1000000-0000-4000-8000-000000000098', name: 'Безоружный удар', description: '',
+    rarity: 'common', card_number: 'action_basic_unarmed', resource: 'action',
+    action_type: 'base_action', type: 'basic', created_at: '', updated_at: '',
+    mechanics: {
+      activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }] },
+      effects: [{
+        ability: 'str', attack_kind: 'unarmed', resolution: 'attack_roll', vs: 'ac',
+        on_hit: [{ amount: '1 + str', kind: 'damage', type: 'bludgeoning' }],
+      }],
+      targeting: {
+        domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1,
+        max_targets: 1, range_ft: 5, requires_line_of_sight: true,
+        allowed_relations: ['enemy'],
+      },
+    },
+  } as Action;
+}
+
 function stoneEndurance(): RuleActionDefinition {
   return {
     id: 'd3000000-0000-4000-8000-000000000001',
@@ -2492,7 +2512,7 @@ describe('solo combat engine vertical integration', () => {
     expect(() => runMonsterTurn(state, () => 0.5)).not.toThrow();
   });
 
-  it('persists and resolves Stone Endurance before a monster attack mutates player HP', async () => {
+  it('persists and resolves Stone Endurance before a monster Unarmed Strike mutates player HP', async () => {
     let participant = fighterSeed();
     const stone = stoneEndurance();
     const actor = participant.canonical.world.actors[participant.character.id];
@@ -2514,10 +2534,14 @@ describe('solo combat engine vertical integration', () => {
       },
     };
 
+    const unarmed = monsterUnarmedStrike();
+    const unarmedMonster = goblin();
+    unarmedMonster.abilities = { ...unarmedMonster.abilities, str: 10 };
+    unarmedMonster.action_ids = [unarmed.id];
     let state = await createSoloCombatState({
       character: participant.character, participant,
-      selected: [{ monster: goblin(), quantity: 1 }],
-      actions: [scimitar(), dash()], effects: [], dashAction: dash(), rng: () => 0.5,
+      selected: [{ monster: unarmedMonster, quantity: 1 }],
+      actions: [unarmed, dash()], effects: [], dashAction: dash(), rng: () => 0.5,
     });
     const monsterId = Object.values(state.world.actors).find((candidate) => candidate.kind === 'monster')!.id;
     const hpBefore = state.world.actors[state.characterId].runtime.hp.current;
@@ -2555,7 +2579,7 @@ describe('solo combat engine vertical integration', () => {
       reaction: 1,
       giant_legacy: 0,
     });
-    expect(state.world.actors[state.characterId].runtime.hp.current).toBeLessThan(hpBefore);
+    expect(state.world.actors[state.characterId].runtime.hp.current).toBe(hpBefore);
   });
 
   it('recovers a persisted monster turn whose interrupted action was already spent', async () => {

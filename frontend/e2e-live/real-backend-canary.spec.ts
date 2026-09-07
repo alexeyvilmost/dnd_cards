@@ -1876,7 +1876,11 @@ test('public sheet certificate: Forge Magic Initiate Fighter uses Longbow and Th
     const journal = page.getByRole('dialog', { name: 'Журнал действий' });
     await expect(journal).toBeVisible();
     await expect(journal.getByText(
-      'Стихийность: Взаимодействие с миром: beckon_water',
+      'Стихийность: стихийный эффект: вода',
+      { exact: true },
+    )).toBeVisible();
+    await expect(journal.getByText(
+      'Движок выдаёт типизированную мутацию окружения; её визуальное применение к объектам карты остаётся обязанностью world adapter.',
       { exact: true },
     )).toBeVisible();
     await expect(page.getByTestId('sheet-action-error')).toHaveCount(0);

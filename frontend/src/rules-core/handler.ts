@@ -3404,7 +3404,12 @@ function pendingAttackEvents(
   // and replaying a multiattack would otherwise duplicate attack rolls and
   // incorrectly reuse the first roll for later attacks.
   const availableReactions = hitReactionOptions(target, catalog, action, facts);
+  const availableDamageReactions = damageReactionOptions(target, catalog, {
+    delivery: 'attack',
+    source_visible: facts.targetCanSeeSource ?? true,
+  });
   if (!availableReactions.length
+    && !availableDamageReactions.length
     && !options.forceExecution
     && !protectionDisadvantage
     && !protectionLifecycleEvents.length) return null;
