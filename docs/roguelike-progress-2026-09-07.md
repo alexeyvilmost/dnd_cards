@@ -177,3 +177,19 @@ Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br
 - Monster compiler splits repeated stat-block attacks into single common-engine strikes with one initial action cost and a persisted tail. A reaction no longer advances initiative while movement/attack continuations remain. A scenario proves first hit→saved reaction→Parry→independently rolled second hit, with exactly one action payment.
 - Migration204 was exercised against temporary copies of the two monster/card rows in production PostgreSQL and rolled back; both updates affected one row. No global content changed during that check.
 - Both candidates remain gated until production reaction acceptance and remaining weapon/mixed-Multiattack coverage. Other outstanding work still includes the complete four-subclass matrix, all18 monsters, movement/AI coverage, future-content pinning and a natural full run.
+
+
+## Production Parry acceptance: ef27679
+
+- TimeWeb/public SHA `ef2767926a86035c309c0a7bf98f09a36104c602`; all four containers healthy. Backup `pre-ef2767926a86035c309c0a7bf98f09a36104c602-20260907T165231Z.dump`. Offline regression:384 files /3209 tests, Go/TypeScript/lint/headless/Node replay passed.
+- Dedicated browser fixture used a1000HP fighter to sustain repeated veteran attacks; this is mechanics acceptance, not a natural run or balance sample. Veteran made two independently rolled attacks each turn and switched from crossbow to greatsword at melee range. A13+5=18 player attack triggered Parry: reaction spent, AC17 became19 for that attack, miss. A later16+5=21 attack used normalAC17 and dealt7 damage. Reload preserved round15, veteran37/65HP, fighter767/1000HP and the Parry log.
+- All30 accepted commands replayed against the actual archived4b202b05 executable with identical random values and envelope hashes. Final hash `sha256:8c307ba19d10fa4f6bd90b9dd578fb4d736ef5f6dabc5846dbd4b746d3a9f1f9`.
+- The preceding Tough encounter ended in defeat through browser controls. All6 journaled commands replayed against17f22d98; final hash `sha256:199b0b92824d260251868d7101969b36062669658a70859081f0c8764ee11b54`. Retry restored camp. Existing inventory equipped chainmail (AC12→16), existing shop bought supplies for20gp, existing long-rest flow restored6→22HP and consumed one supply. No duplicate camp interface was introduced.
+
+
+## Undead Fortitude and movement corrections (pending deployment)
+
+- Added a common data-owned `zero_hp_save` primitive. The monster compiler projects existing frozen Undead Fortitude metadata into a Constitution save, DC5+actual damage, remaining1HP, excluding radiant/critical damage. No healing event or reaction resource is involved. Unit and full combat tests cover success, failure, repeated use after reload, tempHP, resistance/proficiency and already-resolved spell saves.
+- The combat integration caught missing critical provenance on primary damage. It now reaches the damage recipient (as riders already did). Critical hits do not independently impose concentration disadvantage; explicit rules still can.
+- AI preserves saved extra movement allotments; forced movement preserves voluntary movement. Opportunity eligibility uses the actual action reach and visible target, including a10ft boundary test. Full movement continuation/route work is still outstanding.
+- Zombie remains generator-gated until production acceptance. This does not certify all18 monsters or the four fighter subclasses.

@@ -41,7 +41,7 @@ export function planMonsterTurn(
     grapple.targetActorId === monster.id
   ));
   const speed = grappled ? 0 : effectiveActorSpeedFt(monster);
-  const available = Math.max(0, Math.min(speed, state.movementRemainingFt?.[monster.id] ?? speed));
+  const available = speed === 0 ? 0 : Math.max(0, state.movementRemainingFt?.[monster.id] ?? speed);
   const at = (position: GridPosition): SoloCombatState => ({
     ...state,
     tokens: { ...state.tokens, [monster.id]: { ...state.tokens[monster.id], position } },

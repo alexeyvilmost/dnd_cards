@@ -256,6 +256,15 @@ describe('solo combat tactical contract', () => {
     });
   });
 
+  it('uses a saved extra movement allotment without paying for another Dash', () => {
+    const extra = aiState({ x: 0, y: 0 }, { x: 10, y: 0 }, 30);
+    extra.state.movementRemainingFt = { monster: 50 };
+    const restored = JSON.parse(JSON.stringify(extra.state)) as SoloCombatState;
+    const plan = planMonsterTurn(restored, JSON.parse(JSON.stringify(extra.monster)), 'player');
+    expect(plan).toMatchObject({ attacks: true, usesDash: false, dashMove: [] });
+    expect(plan.firstMove).toHaveLength(9);
+  });
+
   it('budgets difficult terrain for both normal movement and Dash', () => {
     const difficult = aiState({ x: 0, y: 0 }, { x: 11, y: 9 }, 20);
     difficult.state.combatAreas = {

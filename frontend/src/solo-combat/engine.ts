@@ -2673,13 +2673,18 @@ function executeOpportunityAttacks(
   if (!mover || !start) return state;
   const moverDeniedOrdinaryOpportunity = deniesOpportunityAttack(mover);
   let next = state;
-  const enemies = Object.values(state.world.actors).filter((actor) => (
-    combatRelation(state, moverId, actor.id) === 'enemy' && actor.runtime.hp.current > 0
+  const enemies = Object.values(state.world.actors).filter((actor) => {
+    const action = state.catalogActions.find(row => row.id === state.opportunityActionIds[actor.id]);
+    const position = state.tokens[actor.id]?.position;
+    if (!action || !position) return false;
+    const reach = monsterAttackRange(action);
+    return combatRelation(state, moverId, actor.id) === 'enemy' && actor.runtime.hp.current > 0
       && actor.runtime.resources.reaction > 0
       && (!moverDeniedOrdinaryOpportunity || actorOwnsSentinel(actor))
-      && gridDistanceFt(state.tokens[actor.id].position, start) <= 5
-      && gridDistanceFt(state.tokens[actor.id].position, destination) > 5
-  ));
+      && gridDistanceFt(position, start) <= reach
+      && gridDistanceFt(position, destination) > reach
+      && spatialFacts(state, actor.id, moverId).canSeeTarget;
+  });
   for (const enemy of enemies) {
     const actionId = next.opportunityActionIds[enemy.id];
     if (!actionId || next.world.actors[moverId].runtime.hp.current <= 0) continue;
@@ -2937,7 +2942,7 @@ export function moveActor(input: {
     boardRevision: next.boardRevision + 1,
     movementRemainingFt: {
       ...next.movementRemainingFt,
-      [input.actorId]: Math.max(0, available - movementCost),
+      [input.actorId]: input.voluntary === false ? available : Math.max(0, available - movementCost),
     },
     ...(recentStraightMovementByActor ? { recentStraightMovementByActor } : {}),
   };

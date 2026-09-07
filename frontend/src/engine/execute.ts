@@ -3282,6 +3282,7 @@ function applyPayloads(
           for (const dmg of resolveDamageAmounts(p, ctx, next, hand, crit, attackFacts)) {
             const amount = halfDamage ? Math.floor(dmg.amount / 2) : dmg.amount;
             const res = applyIncomingDamage(damagedTarget, amount, tctx, {
+              crit,
               damageType: dmg.damageType,
               roll: dmg.roll,
               delivery: attackFacts ? 'attack' : 'other',
@@ -4858,6 +4859,41 @@ export function applyIncomingDamage(
   if (dmg > 0) {
     next = expireEffectsForTrigger(next, 'actor_takes_damage', events);
   }
+  // A survival save changes the zero-HP result of this damage instance; it is
+  // neither healing nor a reaction and must precede reduced_to_0_hp listeners.
+  if (state.hp.current > 0 && next.hp.current === 0 && dmg > 0) {
+    const survival = passivesFromCtx(ctx).flatMap(payloadsOf).find(payload =>
+      payload.kind === 'zero_hp_save'
+      && !(payload.except_critical === true && opts?.crit)
+      && !(Array.isArray(payload.except_damage_types) && payload.except_damage_types.includes(damageType)));
+    if (survival) {
+      const ability = String(survival.ability) as AbilityKey;
+      const dcBase = Number(survival.dc_base);
+      const remaining = Number(survival.remaining_hp);
+      if (!(ability in ABILITY_LABEL) || !Number.isFinite(dcBase) || dcBase < 0
+        || !Number.isInteger(remaining) || remaining < 1) {
+        throw mechanicsError('INVALID_PAYLOAD', 'zero_hp_save', 'Invalid survival save');
+      }
+      const dc = dcBase + dmg;
+      const collected = collectModifiers(next, passivesFromCtx(ctx), {
+        roll: 'saving_throw', filter: {ability},
+        formulaCtx: formulaCtx(ctx), evalCtx: evalCtxOf(next, ctx),
+      });
+      const base = explicitCharacterAbilityModifier(ctx, ability)
+        + (ctx.character.saveProficiencies?.includes(ability) ? explicitCharacterProficiencyBonus(ctx) : 0);
+      const roll = rollD20({advantage: collected.advantage,
+        modifiers: [{value: base, source: ABILITY_LABEL[ability]}, ...collected.modifiers],
+        rules: collected.rules, target: {type: 'dc', value: dc}, rng: ctx.rng});
+      const label = typeof survival.name === 'string' ? survival.name : 'Стойкость';
+      events.push(rollEvent(`${label}: ${ABILITY_LABEL[ability]} (СЛ ${dc})`, {...roll, kind: 'save'}));
+      next = consumeNextRollEffects(next, 'saving_throw', events, {filter: {ability}, failed: roll.outcome !== 'success'});
+      if (roll.outcome === 'success') {
+        next.hp.current = Math.min(next.hp.max, remaining);
+        events.push(narrativeEvent(`${label}: остаётся ${next.hp.current} HP.`));
+      }
+    }
+  }
+
 
   // Авто-проверка концентрации при уроне.
   const conc = concentrationEntry(next);
@@ -4875,7 +4911,7 @@ export function applyIncomingDamage(
     const conMod = opts?.conSaveBonus ?? (ctx.character.abilityMods.con ?? 0);
     const advantage = foldAdvantage(
       collected.hasAdvantage,
-      collected.hasDisadvantage || opts?.crit === true || opts?.imposeConcentrationDisadvantage === true,
+      collected.hasDisadvantage || opts?.imposeConcentrationDisadvantage === true,
     );
     const roll = rollD20({
       advantage,

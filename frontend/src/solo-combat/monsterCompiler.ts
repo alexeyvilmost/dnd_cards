@@ -62,6 +62,11 @@ export function compileMonsterInstance(input: {
   };
   const aiPassives: Record<string, unknown>[] = [
     { id: 'monster-ai-profile', kind: 'monster_ai', ...input.monster.ai },
+    ...(input.monster.ai.undead_fortitude ? [{
+      id: 'monster-undead-fortitude', kind: 'zero_hp_save', name: 'Стойкость нежити',
+      ability: 'con', dc_base: 5, remaining_hp: 1,
+      except_damage_types: ['radiant'], except_critical: true,
+    }] : []),
     ...(input.monster.ai.darkvision_ft ? [{
       id: 'monster-darkvision', kind: 'grant_sense', sense: 'darkvision',
       range: input.monster.ai.darkvision_ft,

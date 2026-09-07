@@ -12,7 +12,7 @@ const PAYLOAD_KINDS = new Set([
   'narrative', 'temp_hp', 'set_value', 'boon', 'transform', 'reroll',
   'grant_action', 'resistance', 'variable', 'add_item',
   'condition_immunity', 'grant_sense', 'grant_speed',
-  'd20_interrupt',
+  'd20_interrupt', 'zero_hp_save',
 ]);
 
 function isPayload(obj: Dict): boolean {

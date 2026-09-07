@@ -704,6 +704,56 @@ function goblin(): Monster {
 }
 
 describe('solo combat engine vertical integration', () => {
+  it('keeps a compiled undead monster alive after a lethal hit, then ends combat on a failed save after reload', async () => {
+    const participant = fighterSeed();
+    const actorId = participant.character.id;
+    const incomingRow = clone(scimitar());
+    incomingRow.id = 'b2050000-0000-4000-8000-000000000001';
+    incomingRow.mechanics = {...incomingRow.mechanics, effects: [{resolution: 'attack_roll', ability: 'str',
+      attack_kind: 'weapon_melee', attack_bonus_override: 10, vs: 'ac',
+      on_hit: [{kind: 'damage', amount: 3, type: 'slashing'}]}]};
+    const incoming = projectRuleAction(incomingRow);
+    participant.canonical.world.actors[actorId].capabilities.actionIds.push(incoming.id);
+    const actions = [...participant.canonical.actions, incoming];
+    participant.canonical = {...participant.canonical, actions, catalog: {
+      getAction: id => actions.find(action => action.id === id), listActions: () => actions,
+    }};
+    const monster = {...goblin(), max_hp: 3, armor_class: 8,
+      abilities: {...goblin().abilities, con: 16}, ai: {undead_fortitude: true}};
+    let state = await createSoloCombatState({character: participant.character, participant,
+      selected: [{monster, quantity: 1}], actions: [scimitar()], effects: [], rng: () => 0.5});
+    const monsterId = Object.values(state.world.actors).find(actor => actor.kind === 'monster')!.id;
+    state = placeAdjacent(state, actorId, monsterId);
+    let criticalDraws = 0;
+    const critical = executeCombatAction({state: clone(state), actorId, actionId: incoming.id,
+      targetIds: [monsterId], rng: () => {criticalDraws++; return 0.99;}});
+    expect(criticalDraws).toBe(1);
+    expect(critical.outcome).toBe('victory');
+    const radiantState = clone(state);
+    const radiantAction = radiantState.catalogActions.find(action => action.id === incoming.id)!;
+    radiantAction.mechanics.effects = [{resolution: 'attack_roll', ability: 'str',
+      attack_kind: 'weapon_melee', attack_bonus_override: 10, vs: 'ac',
+      on_hit: [{kind: 'damage', amount: 3, type: 'radiant'}]}];
+    let radiantDraws = 0;
+    const radiant = executeCombatAction({state: radiantState, actorId, actionId: incoming.id,
+      targetIds: [monsterId], rng: () => {radiantDraws++; return 0.2;}});
+    expect(radiantDraws).toBe(1);
+    expect(radiant.outcome).toBe('victory');
+    let draws = 0;
+    state = executeCombatAction({state, actorId, actionId: incoming.id, targetIds: [monsterId],
+      rng: () => {draws++; return 0.2;}});
+    expect(draws).toBe(2);
+    expect(state.world.actors[monsterId].runtime.hp.current).toBe(1);
+    expect(state.outcome).toBe('active');
+    state = clone(state);
+    state.world.actors[actorId].runtime.resources.action = 1;
+    const dice = [0.5, 0];
+    state = executeCombatAction({state, actorId, actionId: incoming.id, targetIds: [monsterId], rng: () => dice.shift()!});
+    expect(dice).toHaveLength(0);
+    expect(state.world.actors[monsterId].runtime.hp.current).toBe(0);
+    expect(state.outcome).toBe('victory');
+  });
+
   async function parryEncounter(attackKind = 'weapon_melee', held = true, monsterAttacks = 1) {
     const participant = fighterSeed();
     const actor = participant.canonical.world.actors[participant.character.id];
@@ -2219,6 +2269,30 @@ describe('solo combat engine vertical integration', () => {
     expect(restored?.worldObjectPositions?.[token.id]).toEqual(castPosition);
   });
 
+  it('provokes at the declared ten-foot reach boundary and only for a visible mover', async () => {
+    const participant = fighterSeed();
+    const actorId = participant.character.id;
+    const longReach = scimitar();
+    longReach.mechanics = {...longReach.mechanics, targeting: {
+      ...(longReach.mechanics?.targeting as Record<string, unknown>), range_ft: 10,
+    }};
+    let state = await createSoloCombatState({
+      character: participant.character, participant, selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [longReach], effects: [], rng: () => 0.5,
+    });
+    const monsterId = Object.values(state.world.actors).find(actor => actor.kind === 'monster')!.id;
+    state.tokens[monsterId].position = {x: 2, y: 2};
+    state.tokens[actorId].position = {x: 3, y: 2};
+    state = moveActor({state, actorId, destination: {x: 4, y: 2}, rng: () => 0});
+    expect(state.world.actors[monsterId].runtime.resources.reaction).toBe(1);
+    const obscured = clone(state);
+    obscured.combatAreas = {fog: {heavilyObscured: true, cells: [{x: 4, y: 2}]}} as unknown as typeof state.combatAreas;
+    const hiddenMove = moveActor({state: obscured, actorId, destination: {x: 5, y: 2}, rng: () => 0});
+    expect(hiddenMove.world.actors[monsterId].runtime.resources.reaction).toBe(1);
+    state = moveActor({state: clone(state), actorId, destination: {x: 5, y: 2}, rng: () => 0});
+    expect(state.world.actors[monsterId].runtime.resources.reaction).toBe(0);
+  });
+
   it('runs a catalog-gated off-turn opportunity attack and spends exactly the reactor resource', async () => {
     const participant = fighterSeed();
     let state = await createSoloCombatState({
@@ -2395,6 +2469,24 @@ describe('solo combat engine vertical integration', () => {
       expect(() => moveActor({ state, actorId, destination: { x, y: 9 } })).toThrow();
     }
     state = moveActor({ state, actorId, destination: { x: 4, y: 9 }, rng: () => 0 });
+    expect(state.movementRemainingFt[actorId]).toBe(0);
+  });
+
+  it('preserves voluntary movement when an external effect pushes an actor', async () => {
+    const participant = fighterSeed();
+    const actorId = participant.character.id;
+    let state = await createSoloCombatState({
+      character: participant.character, participant, selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar()], effects: [], rng: () => 0.5,
+    });
+    state.tokens[actorId].position = { x: 0, y: 9 };
+    state.movementRemainingFt[actorId] = 5;
+    state = moveActor({ state, actorId, destination: { x: 3, y: 9 }, voluntary: false, maxFeet: 15 });
+    expect(state.movementRemainingFt[actorId]).toBe(5);
+    state = moveActor({ state: clone(state), actorId, destination: { x: 4, y: 9 } });
+    expect(state.movementRemainingFt[actorId]).toBe(0);
+    state = moveActor({ state, actorId, destination: { x: 7, y: 9 }, voluntary: false, maxFeet: 15 });
+    expect(state.tokens[actorId].position).toEqual({ x: 7, y: 9 });
     expect(state.movementRemainingFt[actorId]).toBe(0);
   });
 
