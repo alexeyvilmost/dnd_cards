@@ -205,3 +205,28 @@ func TestResetRoguelikeCloneRuntimeStartsRestedAndOutOfCombat(t *testing.T) {
 		t.Fatalf("encounter runtime was retained: encounter=%v revision=%d", character.CurrentEncounterID, character.RuntimeRevision)
 	}
 }
+
+func TestResourceMapWithinMaximumAllowsOnlyEmptyDerivedPools(t *testing.T) {
+	maximums := JSONMap{"action": float64(1), "second_wind": float64(2)}
+	valid := JSONMap{
+		"action": float64(1), "second_wind": float64(2),
+		"action_surge_action": float64(0), "quickened_spell_action": float64(0),
+	}
+	if !resourceMapWithinMaximum(&valid, &maximums) {
+		t.Fatal("empty derived action pools were rejected")
+	}
+	invalidExtra := cloneJSONMapValue(&valid)
+	invalidExtra["invented_resource"] = float64(1)
+	if resourceMapWithinMaximum(&invalidExtra, &maximums) {
+		t.Fatal("positive resource without a maximum was accepted")
+	}
+	missingMaximum := JSONMap{"action": float64(1)}
+	if resourceMapWithinMaximum(&missingMaximum, &maximums) {
+		t.Fatal("runtime missing a bounded resource was accepted")
+	}
+	overMaximum := cloneJSONMapValue(&valid)
+	overMaximum["second_wind"] = float64(3)
+	if resourceMapWithinMaximum(&overMaximum, &maximums) {
+		t.Fatal("resource above its maximum was accepted")
+	}
+}

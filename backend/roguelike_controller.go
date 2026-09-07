@@ -914,13 +914,23 @@ func resourceMapWithinMaximum(current, maximum *JSONMap) bool {
 	if current == nil || maximum == nil {
 		return current == nil && maximum == nil
 	}
-	if len(*current) != len(*maximum) {
-		return false
+	for key, rawMaximum := range *maximum {
+		rawCurrent, exists := (*current)[key]
+		value, ok := numberFromJSON(rawCurrent)
+		maxValue, maxOK := numberFromJSON(rawMaximum)
+		if !exists || !ok || !maxOK || value < 0 || value > maxValue {
+			return false
+		}
 	}
-	for key, raw := range *current {
-		value, ok := numberFromJSON(raw)
-		maxValue, maxOK := numberFromJSON((*maximum)[key])
-		if !ok || !maxOK || value < 0 || value > maxValue {
+	for key, rawCurrent := range *current {
+		if _, exists := (*maximum)[key]; exists {
+			continue
+		}
+		value, ok := numberFromJSON(rawCurrent)
+		// The rules engine materializes temporary action-economy pools in the
+		// runtime snapshot even though they do not have persistent maxima.
+		// They are safe to persist at rest only while empty.
+		if !ok || value != 0 {
 			return false
 		}
 	}

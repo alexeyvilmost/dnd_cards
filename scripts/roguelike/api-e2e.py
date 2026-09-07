@@ -169,9 +169,12 @@ def main() -> None:
     current_hp = max(1, run["character"]["max_hp"] - 5)
     sql(f"UPDATE characters_v3 SET current_hp={current_hp} WHERE id='{character_id}'")
     run = api("GET", f"/roguelike/runs/{run_id}", token=token)["run"]
+    rested_resources = dict(run["character"]["max_resources"])
+    rested_resources["action_surge_action"] = 0
+    rested_resources["quickened_spell_action"] = 0
     command("long_rest", {"runtime": {
         "current_hp": run["character"]["max_hp"],
-        "resources": run["character"]["max_resources"],
+        "resources": rested_resources,
         "active_effects": run["character"].get("active_effects") or [],
         "turn_state": run["character"].get("turn_state") or {},
     }})
