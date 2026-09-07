@@ -1234,6 +1234,7 @@ function preflightEffect(
     }
   }
   if (resolution === 'attack_roll') {
+    declaredAttackRangeDisadvantage(value, ctx);
     const ability = explicitAbility(
       value.ability,
       `${path}.ability`,
@@ -3689,6 +3690,25 @@ export function expireEffectsForTrigger(
   return { ...state, activeEffects };
 }
 
+/** Stat-block attacks declare their normal range separately from targeting's
+ * maximum range. The board supplies distance; missing facts fail before costs. */
+function declaredAttackRangeDisadvantage(effect: Dict, ctx: ExecuteContext): boolean {
+  if (effect.normal_range_ft === undefined) return false;
+  const normal = effect.normal_range_ft;
+  const distance = ctx.selfId && ctx.target?.id
+    ? ctx.conditionRelationFacts?.distancesFt?.[ctx.selfId]?.[ctx.target.id]
+      ?? ctx.conditionRelationFacts?.distancesFt?.[ctx.target.id]?.[ctx.selfId]
+    : undefined;
+  if (typeof normal !== 'number' || !Number.isFinite(normal) || normal <= 0
+    || !String(effect.attack_kind).endsWith('_ranged')) {
+    throw mechanicsError('INVALID_MECHANICS', 'attack.normal_range_ft', 'normal range requires a positive range and a ranged attack');
+  }
+  if (typeof distance !== 'number' || !Number.isFinite(distance) || distance < 0) {
+    throw mechanicsError('INVALID_MECHANICS', 'context.conditionRelationFacts.distancesFt', 'ranged attack requires explicit board distance');
+  }
+  return distance > normal;
+}
+
 function runAttackRoll(
   effect: Dict,
   state: RuntimeState,
@@ -3750,7 +3770,8 @@ function runAttackRoll(
     advantage: foldAdvantage(
       collected.hasAdvantage || projected.hasAdvantage,
       collected.hasDisadvantage || projected.hasDisadvantage
-        || Boolean(heavy?.valid && heavy.disadvantage),
+        || Boolean(heavy?.valid && heavy.disadvantage)
+        || declaredAttackRangeDisadvantage(effect, ctx),
     ),
     modifiers: mods,
     target: { type: 'ac', value: ac },

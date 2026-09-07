@@ -3,6 +3,7 @@ import type { Card } from '../types';
 import type { RuntimeState } from '../mvp/contracts';
 import { executeAction } from './execute';
 import {
+  attackRangeFromEffect,
   bindEquippedWeaponActionContext,
   EQUIPPED_WEAPON_AMMO_RESOURCE,
   weaponCategory,
@@ -351,4 +352,12 @@ describe('strict mechanics.weapon_profile authority', () => {
       kind: 'ranged', normalFt: 20, longFt: 60,
     });
   });
+});
+
+
+it('classifies stat-block attack modes without borrowing an equipped weapon', () => {
+  const character = {abilityMods: {str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0}, profBonus: 2, level: 1};
+  expect(attackRangeFromEffect({attack_kind: 'weapon_melee', attack_bonus_override: 4}, 'main', character)).toBe('melee');
+  expect(attackRangeFromEffect({attack_kind: 'weapon_ranged', attack_bonus_override: 3}, 'main', character)).toBe('ranged');
+  expect(attackRangeFromEffect({attack_kind: 'weapon_melee'}, 'main', character)).toBeUndefined();
 });

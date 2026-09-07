@@ -315,6 +315,11 @@ export function attackRangeFromEffect(
   equipment?: Record<string, string | null | undefined>,
 ): 'melee' | 'ranged' | undefined {
   if (String(effect.attack_kind ?? '') === 'unarmed') return 'melee';
+  // A materialized stat-block attack owns its mode without an equipped Card.
+  if (typeof effect.attack_bonus_override === 'number' && Number.isFinite(effect.attack_bonus_override)) {
+    if (effect.attack_kind === 'weapon_melee') return 'melee';
+    if (effect.attack_kind === 'weapon_ranged') return 'ranged';
+  }
   if (!weaponDamagePayloadFromEffect(effect)) return undefined;
   const w = weaponContext(character, hand, equipment);
   if (!w) return undefined;

@@ -3118,3 +3118,67 @@ describe('Prone tactical movement', () => {
     expect(activeId(state)).toBe(actorId);
   });
 });
+
+
+describe('stat-block poison damage and ranged distance', () => {
+  it.each([
+    ['hobgoblin', '1d8 + 1', '3d4', 0.5, false, 15],
+    ['hobgoblin', '1d8 + 1', '3d4', 0.99, false, 41],
+    ['hobgoblin', '1d8 + 1', '3d4', 0.5, true, 6],
+    ['spider', '1d4 + 3', '2d4', 0.5, false, 12],
+    ['spider', '1d4 + 3', '2d4', 0.99, false, 27],
+    ['spider', '1d4 + 3', '2d4', 0.5, true, 6],
+  ] as const)('%s applies both damage types: %s plus %s, rng=%s, immunity=%s', async (kind, physical, poison, roll, immune, damage) => {
+    const participant = fighterSeed();
+    const player = participant.canonical.world.actors[participant.character.id];
+    player.runtime.hp = { current: 100, max: 100, temp: 0 };
+    player.ac = 10;
+    player.runtime.resources.reaction = 0;
+    if (immune) (player.passives ??= []).push({kind: 'resistance', damage_type: 'poison', value: 'immunity'});
+    participant.character.current_hp = 100;
+    participant.character.max_hp = 100;
+    const attack = scimitar();
+    attack.mechanics = {
+      activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }] },
+      targeting: { domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1,
+        max_targets: 1, range_ft: kind === 'hobgoblin' ? 600 : 5,
+        requires_line_of_sight: true, allowed_relations: ['enemy'] },
+      effects: [{ resolution: 'attack_roll', ability: 'dex',
+        attack_kind: kind === 'hobgoblin' ? 'weapon_ranged' : 'weapon_melee',
+        ...(kind === 'hobgoblin' ? {normal_range_ft: 150} : {}),
+        attack_bonus_override: kind === 'hobgoblin' ? 3 : 5, vs: 'ac', on_hit: [
+          { kind: 'damage', amount: physical, type: 'piercing' },
+          { kind: 'damage', amount: poison, type: 'poison' },
+        ] }],
+    };
+    const monster = {...goblin(), ai: {strategy: 'tactical' as const}};
+    let state = await createSoloCombatState({ character: participant.character, participant,
+      selected: [{monster, quantity: 1}], actions: [attack], effects: [], rng: () => 0.5 });
+    const monsterId = Object.values(state.world.actors).find((actor) => actor.kind === 'monster')!.id;
+    state.tokens[participant.character.id].position = {x:4,y:4};
+    state.tokens[monsterId].position = {x:5,y:4};
+    state = runMonsterTurn(advanceTurn(state), () => roll);
+    const restored = readSoloCombatState(writeSoloCombatState({}, state), participant.character.id, state.runtimeRevision)!;
+    expect(restored.world.actors[participant.character.id].runtime.hp.current).toBe(100-damage);
+    expect(restored.world.actors[participant.character.id].runtime.activeEffects).toEqual(player.runtime.activeEffects);
+    expect(activeId(restored)).toBe(participant.character.id);
+  });
+});
+
+
+it('grants monsters one melee opportunity attack even when a ranged mode is listed first', async () => {
+  const participant = fighterSeed();
+  const melee = scimitar();
+  const ranged = clone(melee);
+  ranged.id = 'b2010000-0000-4000-8000-000000000099';
+  (ranged.mechanics!.effects as Record<string, unknown>[])[0].attack_kind = 'weapon_ranged';
+  const effects = melee.mechanics!.effects as Record<string, unknown>[];
+  effects.push(clone(effects[0]));
+  const monster = {...goblin(), action_ids: [ranged.id, melee.id]};
+  const state = await createSoloCombatState({character: participant.character, participant,
+    selected: [{monster, quantity: 1}], actions: [ranged, melee], effects: [], rng: () => 0.5});
+  const monsterId = Object.values(state.world.actors).find((actor) => actor.kind === 'monster')!.id;
+  const opportunity = state.catalogActions.find((action) => action.id === state.opportunityActionIds[monsterId]);
+  expect(opportunity?.id).toBe(`${melee.id}:opportunity`);
+  expect(opportunity?.mechanics.effects).toHaveLength(1);
+});

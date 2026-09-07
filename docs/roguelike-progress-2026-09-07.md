@@ -78,3 +78,29 @@ Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br
 - Checkpoints retain the last five won composition keys. A third identical composition in a row is excluded when another legal candidate exists; reserve selection cannot become empty.
 - The existing reward transaction uses total roster XP and body count, preserving one-time rewards.
 - 1000 deterministic successful-encounter simulations: 45–57 victories, mean 50.39, all 11 enabled monsters visited. These simulations do not measure combat survival.
+
+
+## Production acceptance: 6232779
+
+- TimeWeb and public health verified SHA `6232779fddba176e1970099ae3ebc89d238ff818`.
+- Built-in browser: the L2 QA fighter defeated both wolves through ordinary Unarmed Fighting attacks, Action Surge and Second Wind. Claiming the result changed XP 300→400 and gold 18→36, retained 19/22 HP, and awarded Alchemist's Fire. Reload retained the result in the existing character sheet.
+- During the deployment, an old lazy-loaded chunk failed. The existing “Load new version” recovery button restored the app; the awarded result was not lost. Asset continuity across deployments still needs improvement.
+- A separate mixed-composition fixture used seed `qa-mixed-acceptance-1` at XP400 / one victory. The next encounter generated one bandit and one guard. Both performed their turns; reload retained their initiative, positions and the player's 14/22 HP. This fixture is not an unmodified full run.
+
+## Stat-block attacks follow-up (pending deployment)
+
+- Normal and maximum ranged distances are distinct. The shared executor folds long-range disadvantage with existing advantage/disadvantage and rejects missing distance before costs or RNG.
+- Migration201 declares normal ranges and adds separate melee variants for the guard's spear, kobold's dagger, bugbear's hammer and ogre's javelin. Existing AI chooses a legal melee mode at close range.
+- Fixed stat-block attack bonuses also establish melee/ranged mode without requiring an equipped player item. Condition projections therefore receive the actual mode.
+- Integration tests execute hobgoblin and spider physical+poison damage, critical dice and poison immunity through the common engine and persistence. Neither stat block calls for a poison save or the Poisoned condition in SRD5.2.1.
+- Hobgoblin Warrior's Darkvision is materialized and it is enabled. Spider remains gated pending climbing/sense coverage. Six of the eighteen candidates remain gated; full fighter/trusted-worker acceptance remains outstanding.
+
+
+## Portable rules boundary
+
+- Moved pure resource presentation out of the React hook/API module; the UI re-exports preserve existing imports and behavior.
+- `npm run test:roguelike:headless` bundles the actual tactical engine for Node, rejects React/API dependencies, initializes a canonical fighter plus monster and executes a real monster turn (100→97 HP). No browser globals or HTTP mock are supplied.
+- This proves a portable runtime boundary, not trusted production execution. The Go command transport, server-owned initialization, deterministic IDs/RNG and pinned worker dispatch still need implementation.
+- Monster opportunity attacks now select a melee mode and one attack effect, including when a ranged action precedes melee or the monster has Multiattack. An integration scenario covers that ordering.
+- Full offline gate passed 382 files / 3187 tests before the final boundary/opportunity follow-up; focused boundary, resource presentation and tactical scenarios also passed. Updated XP pacing with 12 enabled creatures: 44–57 victories, mean49.76 over1000 successful-encounter simulations.
+- Browser potion acceptance in the mixed encounter: 14→22HP, bonus action1→0, ordinary movement and attack remained available.

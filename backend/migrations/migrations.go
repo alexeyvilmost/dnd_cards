@@ -1262,6 +1262,12 @@ func GetAllMigrations() []Migration {
 			Up:          materializeRoguelikeWolfRiders,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "201_roguelike_attack_ranges",
+			Description: "Declare monster ranged distances and melee thrown-weapon modes",
+			Up:          materializeRoguelikeAttackRanges,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

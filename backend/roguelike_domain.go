@@ -28,8 +28,8 @@ var roguelikeMonsterPool = []roguelikeMonsterEntry{
 	{Slug: "skeleton", XP: 50, MinLevel: 1, MaxCount: 4, GeneratorWeight: 1},
 	{Slug: "zombie", XP: 50, MinLevel: 1, MaxCount: 3}, // Undead Fortitude is not executable yet.
 	{Slug: "wolf", XP: 50, MinLevel: 2, MaxCount: 4, GeneratorWeight: 1},
-	{Slug: "giant-wolf-spider", XP: 50, MinLevel: 3, MaxCount: 3},  // Poison save is not executable yet.
-	{Slug: "hobgoblin-warrior", XP: 100, MinLevel: 2, MaxCount: 3}, // Poison save is not executable yet.
+	{Slug: "giant-wolf-spider", XP: 50, MinLevel: 3, MaxCount: 3}, // Spider Climb and senses still need certification.
+	{Slug: "hobgoblin-warrior", XP: 100, MinLevel: 2, MaxCount: 3, GeneratorWeight: 1},
 	{Slug: "tough", XP: 100, MinLevel: 2, MaxCount: 3, GeneratorWeight: 1},
 	{Slug: "animated-armor", XP: 200, MinLevel: 3, MaxCount: 2, GeneratorWeight: 1},
 	{Slug: "dire-wolf", XP: 200, MinLevel: 3, MaxCount: 2, GeneratorWeight: 1},

@@ -185,7 +185,7 @@ const FAMILIAR_TRAIT_LABELS: Record<string, string> = {
   standing_leap: 'Прыжок с места', water_breathing: 'Дыхание под водой', web_walker: 'Хождение по паутине',
 };
 
-function opportunityVersion(action: RuleActionDefinition): RuleActionDefinition {
+function opportunityVersion(action: RuleActionDefinition, reachFt = 5): RuleActionDefinition {
   const mechanics = clone(action.mechanics);
   delete mechanics.primitive;
   mechanics.activation = {
@@ -195,7 +195,7 @@ function opportunityVersion(action: RuleActionDefinition): RuleActionDefinition 
   };
   mechanics.targeting = {
     domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1, max_targets: 1,
-    range_ft: 5, requires_line_of_sight: true, allowed_relations: ['enemy'],
+    range_ft: reachFt, requires_line_of_sight: true, allowed_relations: ['enemy'],
   };
   return {
     ...clone(action),
@@ -204,10 +204,22 @@ function opportunityVersion(action: RuleActionDefinition): RuleActionDefinition 
     kind: 'nonSpell',
     mechanics,
     targeting: {
-      minTargets: 1, maxTargets: 1, rangeFt: 5, requiresLineOfSight: true,
+      minTargets: 1, maxTargets: 1, rangeFt: reachFt, requiresLineOfSight: true,
       allowedRelations: ['enemy'],
     },
   } as RuleActionDefinition;
+}
+
+/** An opportunity attack is one melee attack, never a ranged shot or Multiattack. */
+function monsterOpportunityVersion(actions: RuleActionDefinition[]): RuleActionDefinition | undefined {
+  const action = actions.find((entry) => isAttackAction(entry) && monsterAttackKind(entry) === 'melee');
+  if (!action) return undefined;
+  const effects = action.mechanics.effects as Record<string, unknown>[];
+  const attack = effects.find((effect) => effect.resolution === 'attack_roll');
+  if (!attack) return undefined;
+  return opportunityVersion({ ...action, name: 'Рукопашная атака',
+    mechanics: {...action.mechanics, effects: [attack]},
+  }, monsterAttackRange(action));
 }
 
 function installWarCasterOpportunitySpells(input: {
@@ -3252,9 +3264,8 @@ export function addSoloCombatMonster(input: {
     if (!catalogActions.some((candidate) => candidate.id === action.id)) catalogActions.push(action);
   }
   const opportunityActionIds = { ...input.state.opportunityActionIds };
-  const attack = compiled.actions.find(isAttackAction);
-  if (attack) {
-    const opportunity = opportunityVersion(attack);
+  const opportunity = monsterOpportunityVersion(compiled.actions);
+  if (opportunity) {
     if (!catalogActions.some((candidate) => candidate.id === opportunity.id)) catalogActions.push(opportunity);
     actor.capabilities.actionIds.push(opportunity.id);
     opportunityActionIds[actor.id] = opportunity.id;
@@ -3855,9 +3866,8 @@ export async function createSoloCombatState(input: {
     for (const action of monster.actions) {
       if (!catalogActions.some((candidate) => candidate.id === action.id)) catalogActions.push(action);
     }
-    const attack = monster.actions.find(isAttackAction);
-    if (attack) {
-      const opportunity = opportunityVersion(attack);
+    const opportunity = monsterOpportunityVersion(monster.actions);
+    if (opportunity) {
       if (!catalogActions.some((candidate) => candidate.id === opportunity.id)) catalogActions.push(opportunity);
       base.world.actors[monster.actor.id].capabilities.actionIds.push(opportunity.id);
       opportunityActionIds[monster.actor.id] = opportunity.id;

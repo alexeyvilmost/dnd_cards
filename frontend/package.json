@@ -23,6 +23,7 @@
     "sheet-combat-certification:generate": "node scripts/generate-sheet-combat-certification.mjs",
     "sheet-combat-certification:check": "node scripts/generate-sheet-combat-certification.mjs --check",
     "test": "vitest run",
+    "test:roguelike:headless": "node scripts/check-roguelike-headless.mjs",
     "test:browser": "npm run build && playwright test",
     "test:browser:live": "playwright test --config playwright.live.config.ts",
     "test:browser:live:spine": "playwright test --config playwright.live.config.ts --grep \"required production spine:\"",

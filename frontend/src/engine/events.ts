@@ -4,7 +4,7 @@
 import type { EngineEvent, RollLog } from '../mvp/contracts';
 import { conditionLabel } from './conditions';
 import { getDamageLabel } from '../utils/damageTypes';
-import { resourceLabel } from '../utils/resources';
+import { resourceLabel } from '../utils/resourcePresentation';
 
 export type { EngineEvent, RollLog };
 

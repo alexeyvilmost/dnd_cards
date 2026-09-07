@@ -554,3 +554,47 @@ describe('size-gated condition riders', () => {
     }), 'INVALID_PAYLOAD');
   });
 });
+
+
+describe('stat-block normal range', () => {
+  const bow = (normal: unknown = 80) => ({
+    activation: { mode: 'active', cost: [{ resource: 'action' }] },
+    effects: [{ resolution: 'attack_roll', ability: 'dex', attack_kind: 'weapon_ranged',
+      normal_range_ft: normal, attack_bonus_override: 3, vs: 'ac',
+      on_hit: [{ kind: 'damage', amount: 1, type: 'piercing' }] }],
+  });
+  it.each([[80, false], [85, true]])('distance %i has disadvantage %s', (distance, disadvantaged) => {
+    const result = executeAction(fresh(), bow(), { character, selfId: 'archer',
+      target: { id: 'victim', ac: 10, runtimeState: fresh() }, rng: () => 0.5,
+      conditionRelationFacts: { distancesFt: { archer: { victim: distance } } },
+    });
+    const event = result.events.find((entry) => entry.type === 'roll');
+    expect(event?.type === 'roll' ? event.roll.dice.length : 0).toBe(disadvantaged ? 2 : 1);
+    expect(result.state.resources.action).toBe(0);
+  });
+  it.each([undefined, -1, NaN])('requires a valid distance %s before RNG and costs', (distance) => {
+    const state = fresh();
+    let calls = 0;
+    expectCode(() => executeAction(state, bow(), { character, selfId: 'archer',
+      target: { id: 'victim', ac: 10, runtimeState: fresh() },
+      rng: () => { calls++; return 0.5; },
+      conditionRelationFacts: { distancesFt: { archer: { victim: distance as number } } },
+    }), 'INVALID_MECHANICS');
+    expect(calls).toBe(0);
+    expect(state.resources.action).toBe(1);
+  });
+});
+
+
+it('combines long-range disadvantage with advantage using the shared cancellation rule', () => {
+  const result = executeAction(fresh(), {
+    effects: [{resolution: 'attack_roll', ability: 'dex', attack_kind: 'weapon_ranged',
+      normal_range_ft: 80, vs: 'ac', on_hit: []}],
+  }, {character, selfId: 'archer', rng: () => 0.5,
+    target: {id: 'victim', ac: 10, runtimeState: fresh()},
+    conditionRelationFacts: {distancesFt: {archer: {victim: 100}}},
+    passives: [{kind: 'modifier', applies_to: {roll: 'attack'}, op: 'advantage'}],
+  });
+  const event = result.events.find((entry) => entry.type === 'roll');
+  expect(event?.type === 'roll' ? event.roll.dice.length : 0).toBe(1);
+});
