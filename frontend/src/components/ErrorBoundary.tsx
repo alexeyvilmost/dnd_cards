@@ -1,4 +1,8 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import {
+  isStaleClientBundleError,
+  recoverFromStaleClientBundle,
+} from './staleClientBundle';
 
 interface Props {
   children: ReactNode;
@@ -38,18 +42,21 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
     console.error('ErrorBoundary поймал ошибку рендера:', error, info.componentStack);
+    recoverFromStaleClientBundle(error);
   }
 
   render(): ReactNode {
     const { error } = this.state;
     if (!error) return this.props.children;
+    const staleBundle = isStaleClientBundleError(error);
 
     return (
       <div style={{ padding: '60px 24px', maxWidth: 640, margin: '0 auto', textAlign: 'center', color: '#a59886' }}>
         <h1 style={{ fontSize: 20, marginBottom: 12, color: '#c9b896' }}>Что-то пошло не так</h1>
         <p style={{ marginBottom: 20, lineHeight: 1.5 }}>
-          Страница не смогла отрисоваться. Обычно виноват один сломанный предмет или эффект —
-          вернитесь назад и попробуйте снять последнее изменение.
+          {staleBundle
+            ? 'Приложение обновилось, но вкладка запросила файл прошлой версии. Загружаем актуальную версию автоматически.'
+            : 'Страница не смогла отрисоваться. Обычно виноват один сломанный предмет или эффект — вернитесь назад и попробуйте снять последнее изменение.'}
         </p>
         <pre style={{
           textAlign: 'left', fontSize: 12, background: 'rgba(0,0,0,0.25)', padding: 12,
@@ -58,6 +65,15 @@ export default class ErrorBoundary extends Component<Props, State> {
           {error.message}
         </pre>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+          {staleBundle && (
+            <button
+              type="button"
+              onClick={() => { recoverFromStaleClientBundle(error, { force: true }); }}
+              style={{ padding: '8px 18px', borderRadius: 6, cursor: 'pointer' }}
+            >
+              Загрузить новую версию
+            </button>
+          )}
           <button
             type="button"
             onClick={() => { window.history.back(); }}
