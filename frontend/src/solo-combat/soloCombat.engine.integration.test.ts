@@ -3353,7 +3353,7 @@ describe('solo combat engine vertical integration', () => {
       state: entryState, actorId: enteringId, destination: { x: 4, y: 5 }, rng: () => 0.6,
     });
     expect(entryState.pendingTriggeredAction).toMatchObject({
-      event: 'opportunity_attack', sourceActorId: actor.id, targetIds: [enteringId],
+      event: 'reach_entry', sourceActorId: actor.id, targetIds: [enteringId],
       optionActionIds: [`${entryState.opportunityActionIds[actor.id]}:polearm-master-entry`],
     });
     const entryAction = entryState.catalogActions.find((candidate) => (

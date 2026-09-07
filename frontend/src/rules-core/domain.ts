@@ -915,7 +915,7 @@ export interface UseActionCommand extends CommandBase, ProtectionAttackWindowInp
  */
 export type UseReactionActionCommand = Omit<UseActionCommand, 'type'> & {
   type: 'UseReactionAction';
-  trigger: 'opportunity_attack';
+  trigger: 'opportunity_attack' | 'reach_entry';
 };
 
 /**

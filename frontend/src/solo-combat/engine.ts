@@ -1998,7 +1998,7 @@ export function resolveTriggeredCombatAction(
   if (!pending.optionActionIds.includes(actionId)) {
     throw new Error('Эта способность недоступна для текущего события');
   }
-  if (pending.event === 'opportunity_attack') {
+  if (pending.event === 'opportunity_attack' || pending.event === 'reach_entry') {
     const action = state.catalogActions.find((candidate) => candidate.id === actionId);
     if (!action) throw new Error('Заклинание Воинственной магии отсутствует в снимке боя');
     const declaration = declarationFor(
@@ -2009,7 +2009,7 @@ export function resolveTriggeredCombatAction(
     );
     const command: GameCommand = {
       ...commandBase(cleared as SoloCombatState, pending.sourceActorId),
-      type: 'UseReactionAction', trigger: 'opportunity_attack', actionId,
+      type: 'UseReactionAction', trigger: pending.event, actionId,
       targetIds: declaration.targetIds,
       ...(declaration.factsByTarget ? { factsByTarget: declaration.factsByTarget } : {}),
       ...(declaration.spell ? {
@@ -2887,7 +2887,11 @@ function executePolearmEntryAttacks(
     const action: RuleActionDefinition = {
       ...clone(baseAction),
       id: `${baseAction.id}:polearm-master-entry`,
-      name: `${baseAction.name} — Превентивный удар`,
+      name: `${baseAction.name.replace(/ — провоцированная атака$/u, '')} — Превентивный удар`,
+      mechanics: {...clone(baseAction.mechanics), activation: {
+        ...(baseAction.mechanics.activation as Record<string, unknown>),
+        mode: 'reaction', trigger: {events: ['reach_entry']},
+      }},
       sourceEntityIds: [...new Set([...baseAction.sourceEntityIds, ...featSources])] as [string, ...string[]],
     };
     const owner = next.world.actors[enemy.id];
@@ -2918,13 +2922,13 @@ function executePolearmEntryAttacks(
       return {
         ...next,
         pendingTriggeredAction: {
-          event: 'opportunity_attack', sourceActorId: enemy.id, sourceActionId: action.id,
+          event: 'reach_entry', sourceActorId: enemy.id, sourceActionId: action.id,
           targetIds: [moverId], optionActionIds: [action.id],
         },
       };
     }
     const command: GameCommand = {
-      ...commandBase(next, enemy.id), type: 'UseReactionAction', trigger: 'opportunity_attack',
+      ...commandBase(next, enemy.id), type: 'UseReactionAction', trigger: 'reach_entry',
       actionId: action.id, targetIds: [moverId],
       factsByTarget: { [moverId]: spatialFacts(next, enemy.id, moverId) },
     };

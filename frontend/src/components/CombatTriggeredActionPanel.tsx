@@ -8,7 +8,8 @@ export default function CombatTriggeredActionPanel({state, busy, onChoose}: {
   const pending = state.pendingTriggeredAction;
   if (!pending) return null;
   const actor = state.world.actors[pending.sourceActorId];
-  const entry = pending.event === 'opportunity_attack' && Boolean(state.pendingReachEntry);
+  const entry = pending.event === 'reach_entry'
+    || (pending.event === 'opportunity_attack' && Boolean(state.pendingReachEntry));
   const title = entry ? 'Выполнить Превентивный удар?'
     : pending.event === 'opportunity_attack' ? 'Совершить провоцированную атаку?'
       : pending.event === 'sneak_attack_hit' ? 'Применить Хитрый удар и отказаться от 1к6 урона?'

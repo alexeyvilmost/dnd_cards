@@ -312,3 +312,9 @@ Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br
 - The existing post-hit/reaction dialog now renders `SheetActionLine` rows with the saved action/spell or weapon illustration, description and existing preview behavior. It identifies the deciding actor, removes repeated suffixes from option labels and distinguishes the entry-attack prompt from a leaving-reach opportunity attack. Shared sheet row CSS is preserved instead of inheriting the dialog's plain-button styling.
 - TypeScript and lint pass. This changes presentation only; the immediately preceding full rules regression remains387/3256. No additional rules-worker release was needed.
 - Built-in browser run `ff7bca65-a3b2-4df1-805c-0e77998bac53`, character `ad12e101-72c7-4c3d-a568-e014a38c136b`, uses a1000HP Polearm Master mechanics fixture and one actual berserker. The NPC approached through its normal AI route. Visual inspection confirmed the deciding actor, correct entry prompt and illustrated staff row. Reload retained the choice. Clicking the row executed the saved reaction (natural1, miss), after which the berserker attacked and returned initiative. No positions, decisions or entropy were edited in this fixture.
+
+
+## Reach-entry trigger contract
+
+- Reach-entry attacks now declare and dispatch their own `reach_entry` trigger rather than reusing `opportunity_attack`. The persisted choice and reaction validator agree on the trigger; legacy saved choices remain display-compatible. This is necessary before movement that suppresses opportunity attacks can be implemented without suppressing Polearm Master entry attacks.
+- Focused reaction/solo integration: 110 tests pass; TypeScript passes. Full regression and local browser acceptance of subsequent movement abilities remain pending.
