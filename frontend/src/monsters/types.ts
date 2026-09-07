@@ -1,4 +1,5 @@
 import type { EntitySupportCertification } from '../content/supportStatus';
+import type {Card} from '../types';
 
 export type MonsterAbility = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
 
@@ -36,6 +37,7 @@ export interface Monster {
     undead_fortitude?: boolean;
     bloodied_frenzy?: boolean;
     parry_ac?: number;
+    held_weapon_card?: Card;
     [key: string]: unknown;
   };
   token_url: string;

@@ -1295,6 +1295,12 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 			},
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "204_roguelike_parry",
+			Description: "Materialize single-attack Parry reactions and held NPC weapons",
+			Up:          materializeRoguelikeParry,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

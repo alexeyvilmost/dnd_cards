@@ -162,3 +162,18 @@ Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br
 - Internal append-only combat events record accepted intents, actual RNG values, executable hash and before/after snapshot hashes. One baseline per combat avoids repeating catalogs. Existing fights receive a baseline at the first accepted command after rollout. Events and receipts commit in the same run/character transaction.
 - The private Node replay tool dispatches the pinned artifact and includes the shared runtime projection. A real HTTP worker scenario replays three complete turns after JSON export and detects removed commands or changed hashes. Camp command receipts also retain input payloads.
 - This is snapshot-plus-command replay; initialization starts from its accepted baseline, not an event-only rebuild of character/catalog assembly. No public endpoint exposes entropy.
+
+
+## Production replay acceptance: b13d253
+
+- TimeWeb/public SHA `b13d2537bda9ffa93da6730aa88a624bf68de6c8`; backup `pre-b13d2537bda9ffa93da6730aa88a624bf68de6c8-20260907T162726Z.dump`. Full offline gate passed384 files /3201 tests; Go, TypeScript, lint and real-worker replay checks passed.
+- In the already-open Tough×2 battle, browser Dodge and End Turn committed revisions40/41. The first journal event captured the existing17f22d98 envelope; the second recorded four actual random values. Reload preserved round2,10/22HP, NPC positions and spent/recovered resources.
+- A private export was replayed with the actual archived17f22d98 executable:2 commands verified, final envelope hash `sha256:e27e275ac219425ea1aad4ba6688ee2e5f716b3a64a5ad07de3fa6d90e4b3144`. Repeating the last accepted HTTP request returned revision41 and left exactly2 events.
+
+## Parry and individual Multiattack continuations (pending deployment)
+
+- Added data-owned +2 AC for one triggering melee attack, with held-weapon eligibility checked both before offering and before accepting. No lasting AC modifier is stored. NPC weapons use ordinary frozen card/equipment state. Captain saves/skills and veteran skills are materialized from SRD5.2.1 pp262/337.
+- AI uses an offered Parry only when it changes the known hit into a miss; it preserves the reaction on critical/unpreventable hits. Integration cases cover weapon, unarmed and spell melee attacks, ranged attacks, missing weapon, repeat attacks and reload.
+- Monster compiler splits repeated stat-block attacks into single common-engine strikes with one initial action cost and a persisted tail. A reaction no longer advances initiative while movement/attack continuations remain. A scenario proves first hit→saved reaction→Parry→independently rolled second hit, with exactly one action payment.
+- Migration204 was exercised against temporary copies of the two monster/card rows in production PostgreSQL and rolled back; both updates affected one row. No global content changed during that check.
+- Both candidates remain gated until production reaction acceptance and remaining weapon/mixed-Multiattack coverage. Other outstanding work still includes the complete four-subclass matrix, all18 monsters, movement/AI coverage, future-content pinning and a natural full run.

@@ -45,7 +45,7 @@ import { describeEngineEvent, describeMovement, describeResource } from '../engi
 import { stoneworkContactFactsFromChoices } from '../mechanics/collectChoices';
 import { runtimeBoons } from '../engine/boons';
 import { compileMonsterInstance } from './monsterCompiler';
-import { planMonsterTurn } from './monsterAi';
+import { planMonsterTurn, chooseMonsterReaction } from './monsterAi';
 import { projectCombatLogRecords } from './combatLog';
 import {
   areaActorIds,
@@ -2109,7 +2109,7 @@ export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Ma
         boon.appliesTo.includes('saving_throw') && boon.timing.includes('after_failure')
       ))) break;
     const response: DecisionResponse = pending.request.type === 'reaction'
-      ? { kind: 'reaction', actionId: null }
+      ? { kind: 'reaction', actionId: chooseMonsterReaction(next) }
       : pending.request.type === 'shove_outcome'
         ? { kind: 'shove_outcome', outcome: 'push_5ft' }
         : pending.type === 'unarmed_save'
@@ -2252,6 +2252,7 @@ export function resolvePlayerReaction(
   // turn exactly once. Reactions opened by opportunity attacks during the
   // player's own turn deliberately do not advance initiative.
   if (monsterWasActing
+    && !next.monsterAttackSequence && !next.monsterMovement
     && next.outcome === 'active'
     && !next.world.pendingResolution
     && !next.pendingTriggeredAction
@@ -3706,9 +3707,48 @@ function executeMonsterRoute(state: SoloCombatState, actorId: string, steps: Gri
   return report(finished);
 }
 
+function executeMonsterStrike(state: SoloCombatState, actorId: string, actionId: string, targetId: string, rng: Rng): SoloCombatState {
+  const monster = state.world.actors[actorId];
+  const ai = monsterAIProfile(monster);
+  const facts = spatialFacts(state, actorId, targetId);
+  const hasAdvantage = (ai.pack_tactics === true && facts.nearbyEligibleAllyToTarget === true)
+    || (ai.bloodied_frenzy === true && monster.runtime.hp.current <= monster.runtime.hp.max / 2);
+  const prepared = hasAdvantage ? withMonsterTacticalAdvantage(state, actorId) : state;
+  const result = executeCombatAction({state: prepared, actorId, actionId, targetIds: [targetId], rng});
+  return autoResolveSystemDecisions(withoutMonsterTacticalAdvantage(result, actorId), rng);
+}
+
+function continueMonsterAttackSequence(state: SoloCombatState, rng: Rng): SoloCombatState {
+  let next = state;
+  while (next.monsterAttackSequence?.actionIds.length && next.outcome === 'active') {
+    if (monsterMovementPaused(next)) return next;
+    const sequence = next.monsterAttackSequence;
+    const source = next.world.actors[sequence.actorId];
+    if (!source || source.runtime.hp.current <= 0 || deniedCapabilities(source.runtime, source.passives ?? []).has('action')) break;
+    const actionId = sequence.actionIds[0];
+    const action = next.catalogActions.find(row => row.id === actionId);
+    if (!action || action.mechanics.npc_multiattack_followup !== true) throw new Error('Повреждена последовательность многоатаки');
+    const candidates = Object.values(next.world.actors).filter(target => target.runtime.hp.current > 0
+      && combatRelation(next, sequence.actorId, target.id) === 'enemy'
+      && !conditionInteractionDenied({world: next.world, actorId: sequence.actorId, targetActorId: target.id, capability: 'harm'})
+      && gridDistanceFt(next.tokens[sequence.actorId].position, next.tokens[target.id].position) <= monsterAttackRange(action)
+      && spatialFacts(next, sequence.actorId, target.id).lineOfSight)
+      .sort((a, b) => Number(b.id === sequence.targetId) - Number(a.id === sequence.targetId) || a.id.localeCompare(b.id));
+    next = {...next, monsterAttackSequence: {...sequence, actionIds: sequence.actionIds.slice(1)}};
+    if (candidates[0]) next = executeMonsterStrike(next, sequence.actorId, actionId, candidates[0].id, rng);
+  }
+  if (monsterMovementPaused(next)) return next;
+  const {monsterAttackSequence: _finished, ...finished} = next;
+  return finished;
+}
+
 export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
   if (state.outcome !== 'active' || monsterMovementPaused(state)) return state;
   const monsterId = activeActorId(state);
+  if (state.monsterAttackSequence?.actorId === monsterId) {
+    state = continueMonsterAttackSequence(state, rng);
+    return monsterMovementPaused(state) || state.outcome !== 'active' ? state : advanceTurn(state, rng);
+  }
   if (state.monsterMovement?.actorId === monsterId) {
     state = executeMonsterRoute(state, monsterId, state.monsterMovement.steps, rng);
     if (state.outcome !== 'active' || monsterMovementPaused(state)) return state;
@@ -3754,7 +3794,8 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
   }
   const attackActions = (state.monsterActionIds[monsterId] ?? [])
     .map((id) => state.catalogActions.find((candidate) => candidate.id === id))
-    .filter((action): action is RuleActionDefinition => Boolean(action && isAttackAction(action)));
+    .filter((action): action is RuleActionDefinition => Boolean(action && isAttackAction(action)
+      && action.mechanics.npc_multiattack_followup !== true));
   const maximumAttackRange = attackActions.reduce((maximum, action) => (
     Math.max(maximum, monsterAttackRange(action))
   ), monster.attackProfile?.reachFt ?? 5);
@@ -3782,16 +3823,13 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
     const actionId = legalActions[0]?.id;
     if (actionId) {
       try {
-        const currentMonster = next.world.actors[monsterId];
-        const ai = monsterAIProfile(currentMonster);
-        const facts = spatialFacts(next, monsterId, targetId);
-        const hasAdvantage = (ai.pack_tactics === true && facts.nearbyEligibleAllyToTarget === true)
-          || (ai.bloodied_frenzy === true
-            && currentMonster.runtime.hp.current <= currentMonster.runtime.hp.max / 2);
-        if (hasAdvantage) next = withMonsterTacticalAdvantage(next, monsterId);
-        next = executeCombatAction({ state: next, actorId: monsterId, actionId, targetIds: [targetId], rng });
-        next = withoutMonsterTacticalAdvantage(next, monsterId);
-        next = autoResolveSystemDecisions(next, rng);
+        const attack = next.catalogActions.find(row => row.id === actionId)!;
+        const sequence = attack.mechanics.npc_multiattack as {followUpActionIds?: string[]} | undefined;
+        if (sequence?.followUpActionIds?.length) next = {...next, monsterAttackSequence: {
+          actorId: monsterId, targetId, actionIds: [...sequence.followUpActionIds],
+        }};
+        next = executeMonsterStrike(next, monsterId, actionId, targetId, rng);
+        if (next.monsterAttackSequence) next = continueMonsterAttackSequence(next, rng);
       } catch (reason) {
         next = withoutMonsterTacticalAdvantage(next, monsterId);
         if (!(reason instanceof Error) || !reason.message.includes('LineOfSightBlocked')) throw reason;

@@ -1,4 +1,5 @@
 import type { ActorState } from '../rules-core/domain';
+import {singleAttackDefenseBonus} from '../rules-core/attackDefenseRuntime';
 import { effectiveActorSpeedFt, gridDistanceFt, reachableRoutes } from './tacticalGrid';
 import { spatialFacts, type GridPosition, type SoloCombatState } from './types';
 
@@ -7,6 +8,20 @@ export interface MonsterTurnPlan {
   dashMove: GridPosition[];
   usesDash: boolean;
   attacks: boolean;
+}
+
+/** Spend a reaction only when its declared defense turns this known hit into a
+ * miss. Critical hits cannot be parried; no speculative RNG or hidden rolls. */
+export function chooseMonsterReaction(state: SoloCombatState): string | null {
+  const pending = state.world.pendingResolution;
+  if (pending?.type !== 'attack_reaction' || pending.attackRoll.outcome === 'crit'
+    || pending.request.type !== 'reaction' || pending.request.trigger.type !== 'hit_by_attack') return null;
+  const trigger = pending.request.trigger;
+  return pending.request.options.flatMap(option => {
+    const action = state.catalogActions.find(row => row.id === option.actionId);
+    const bonus = action ? singleAttackDefenseBonus(action) : 0;
+    return bonus > 0 && trigger.attackTotal < trigger.originalAc + bonus ? [{id: option.actionId, bonus}] : [];
+  }).sort((a, b) => a.bonus - b.bonus || a.id.localeCompare(b.id))[0]?.id ?? null;
 }
 
 /** Pure controller using the same reachable destinations and sight as player actions. */

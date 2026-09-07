@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import {projectRuleAction} from '../canon/ruleActionProjection';
 import { stepRoguelikeCombat, type RoguelikeCombatEnvelope } from '../roguelike/combatWorker';
 import compiledFixtureJson from '../pages/rulesLabFixture.generated.json';
 import fightingStyleDefinitions from '../../../scripts/content/data/mini-mvp-complex-fighting-styles.v1.json';
@@ -703,6 +704,91 @@ function goblin(): Monster {
 }
 
 describe('solo combat engine vertical integration', () => {
+  async function parryEncounter(attackKind = 'weapon_melee', held = true, monsterAttacks = 1) {
+    const participant = fighterSeed();
+    const actor = participant.canonical.world.actors[participant.character.id];
+    const incomingRow = clone(scimitar());
+    incomingRow.id = 'b2040000-0000-4000-8000-000000000002';
+    incomingRow.mechanics = {...incomingRow.mechanics, effects: [{resolution: 'attack_roll', ability: 'str', attack_kind: attackKind,
+      attack_bonus_override: 10, vs: 'ac', on_hit: [{kind: 'damage', amount: 3, type: 'slashing'}]}]};
+    const incoming = projectRuleAction(incomingRow);
+    actor.capabilities.actionIds.push(incoming.id);
+    const actions = [...participant.canonical.actions, incoming];
+    participant.canonical = {...participant.canonical, actions, catalog: {
+      getAction: id => actions.find(action => action.id === id), listActions: () => actions,
+    }};
+    const parry = {...basicAction('parry-test', 'Парирование', {
+      activation: {mode: 'reaction', trigger: {event: 'hit_by_attack', melee_attack_while_holding_weapon: true}, cost: [{resource: 'reaction', amount: 1}]},
+      effects: [], attack_defense: {scope: 'triggering_attack', ac_bonus: 2},
+      targeting: {domain: 'actor', actor_targets: false, shape: 'self', min_targets: 0, max_targets: 1, range_ft: 0, requires_line_of_sight: false, allowed_relations: ['self']},
+    }), type: 'monster', action_type: 'base_action', resource: 'reaction'} as Action;
+    const monster = {...goblin(), max_hp: 100, action_ids: [scimitar().id, parry.id],
+      ai: {...goblin().ai, held_weapon_card: CARD_LONGSWORD}};
+    const monsterAttack = scimitar();
+    monsterAttack.mechanics = {...monsterAttack.mechanics, effects: Array.from({length: monsterAttacks}, () => ({
+      resolution: 'attack_roll', ability: 'str', attack_kind: 'weapon_melee', attack_bonus_override: 10,
+      vs: 'ac', on_hit: [{kind: 'damage', amount: 3, type: 'slashing'}],
+    }))};
+    let state = await createSoloCombatState({character: participant.character, participant,
+      selected: [{monster, quantity: 1}], actions: [monsterAttack, parry], effects: [], rng: () => 0.5});
+    const monsterId = Object.values(state.world.actors).find(row => row.kind === 'monster')!.id;
+    state = placeAdjacent(state, actor.id, monsterId);
+    if (!held) state.world.actors[monsterId].runtime.equipment = {};
+    return {state, actorId: actor.id, monsterId, actionId: incoming.id, parryId: parry.id};
+  }
+
+  it('resumes the second monster strike after a saved player reaction with a new roll and one action payment', async () => {
+    const setup = await parryEncounter('weapon_melee', true, 2);
+    let state = setup.state;
+    const player = state.world.actors[setup.actorId];
+    player.ac = 15;
+    player.runtime.hp = {current: 100, max: 100, temp: 0};
+    player.capabilities.actionIds.push(setup.parryId);
+    player.runtime.equipment.main_hand = CARD_LONGSWORD.id;
+    player.character.knownCards = [...(player.character.knownCards ?? []), CARD_LONGSWORD];
+    state = advanceTurn(state, () => 0.5);
+    let rolls = 0;
+    state = runMonsterTurn(state, () => {rolls++; return 0.2;});
+    expect(rolls).toBe(1);
+    expect(state.world.pendingResolution?.type).toBe('attack_reaction');
+    expect(state.monsterAttackSequence?.actionIds).toHaveLength(1);
+    expect(state.world.actors[setup.monsterId].runtime.resources.action).toBe(0);
+    state = resolvePlayerReaction(clone(state), {kind: 'reaction', actionId: setup.parryId}, () => {throw Error('Attack roll must not repeat');});
+    expect(state.world.actors[setup.actorId].runtime.hp.current).toBe(100);
+    state = runMonsterTurn(clone(state), () => {rolls++; return 0.5;});
+    expect(rolls).toBe(2);
+    expect(state.world.actors[setup.actorId].runtime.hp.current).toBe(97);
+    expect(state.world.actors[setup.monsterId].runtime.resources.action).toBe(0);
+    expect(state.monsterAttackSequence).toBeUndefined();
+    expect(activeId(state)).toBe(setup.actorId);
+  });
+
+  it.each(['weapon_melee', 'unarmed', 'spell_melee'])('parries one %s hit after reload without rerolling it or retaining the AC bonus', async kind => {
+    const setup = await parryEncounter(kind);
+    let state = executeCombatAction({...setup, targetIds: [setup.monsterId], rng: () => 0.2});
+    expect(state.world.pendingResolution?.type).toBe('attack_reaction');
+    expect(state.world.actors[setup.actorId].runtime.resources.action).toBe(0);
+    state = autoResolveSystemDecisions(clone(state), () => {throw Error('Parry must reuse the attack roll');});
+    expect(state.world.pendingResolution).toBeNull();
+    expect(state.world.actors[setup.monsterId].runtime.hp.current).toBe(100);
+    expect(state.world.actors[setup.monsterId].runtime.resources.reaction).toBe(0);
+    expect(state.world.actors[setup.monsterId].ac).toBe(15);
+    expect(state.world.actors[setup.monsterId].runtime.activeEffects).toHaveLength(0);
+    state.world.actors[setup.actorId].runtime.resources.action = 1;
+    state = autoResolveSystemDecisions(executeCombatAction({...setup, state, targetIds: [setup.monsterId], rng: () => 0.2}), () => 0.2);
+    expect(state.world.actors[setup.monsterId].runtime.hp.current).toBe(97);
+  });
+
+  it.each([
+    ['weapon_ranged', true, 0.5], ['weapon_melee', false, 0.2],
+    ['weapon_melee', true, 0.5], ['weapon_melee', true, 0.99],
+  ])('does not waste Parry on an ineligible or unstoppable hit (%s, held=%s, rng=%s)', async (kind, held, roll) => {
+    const setup = await parryEncounter(kind, held);
+    const state = autoResolveSystemDecisions(executeCombatAction({...setup, targetIds: [setup.monsterId], rng: () => roll}), () => roll);
+    expect(state.world.actors[setup.monsterId].runtime.resources.reaction).toBe(1);
+    expect(state.world.actors[setup.monsterId].runtime.hp.current).toBeLessThan(100);
+  });
+
   it('persists War Caster reaction aliases without polluting the spellbook source', async () => {
     const participant = wizardSeed();
     const actor = participant.canonical.world.actors[participant.character.id];

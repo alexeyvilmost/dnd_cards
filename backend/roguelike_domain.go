@@ -36,8 +36,8 @@ var roguelikeMonsterPool = []roguelikeMonsterEntry{
 	{Slug: "bugbear-warrior", XP: 200, MinLevel: 3, MaxCount: 2}, // Grab and drag are not executable yet.
 	{Slug: "ogre", XP: 450, MinLevel: 4, MaxCount: 2, GeneratorWeight: 1},
 	{Slug: "berserker", XP: 450, MinLevel: 4, MaxCount: 2, GeneratorWeight: 1},
-	{Slug: "bandit-captain", XP: 450, MinLevel: 4, MaxCount: 2},  // Parry is not executable yet.
-	{Slug: "warrior-veteran", XP: 700, MinLevel: 5, MaxCount: 1}, // Parry is not executable yet.
+	{Slug: "bandit-captain", XP: 450, MinLevel: 4, MaxCount: 2},  // Mixed Multiattack and weapon lifecycle acceptance pending.
+	{Slug: "warrior-veteran", XP: 700, MinLevel: 5, MaxCount: 1}, // Production Parry and weapon lifecycle acceptance pending.
 }
 
 type roguelikeShopManifestEntry struct {

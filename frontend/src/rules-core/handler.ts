@@ -1,3 +1,4 @@
+import {meleeWeaponDefenseEligible, singleAttackDefenseBonus} from './attackDefenseRuntime';
 import {
   activeConditionsOf,
   applyIncomingDamage,
@@ -2857,6 +2858,7 @@ function hitReactionOptions(
     if (!action || !hasReactionTrigger(action, 'hit_by_attack')) return [];
     const activation = action.mechanics.activation as Record<string, unknown> | undefined;
     const trigger = activation?.trigger as Record<string, unknown> | undefined;
+    if (trigger?.melee_attack_while_holding_weapon === true && !meleeWeaponDefenseEligible(target, incomingAction)) return [];
     if (trigger?.feat_defensive_duelist === true
       && !defensiveDuelistReactionEligible({ defender: target, incomingAction, facts })) return [];
     const [option] = sourceScopedReactionOptions(target, action);
@@ -4709,6 +4711,9 @@ function resolvePendingAttack(
     }
     const reactionActivation = reaction.mechanics.activation as Record<string, unknown> | undefined;
     const reactionTrigger = reactionActivation?.trigger as Record<string, unknown> | undefined;
+    if (reactionTrigger?.melee_attack_while_holding_weapon === true && !meleeWeaponDefenseEligible(target, attack)) {
+      return rejected(world, 'InvalidEquipmentState', 'Parry requires a held weapon and a melee attack');
+    }
     if (reactionTrigger?.feat_defensive_duelist === true
       && !defensiveDuelistReactionEligible({
         defender: target,
@@ -4743,7 +4748,9 @@ function resolvePendingAttack(
     reactionEvents = reactionResult.events;
   }
 
-  const targetAfterReaction: ActorState = { ...target, runtime: targetRuntime };
+  const defenseBonus = selectedReaction ? singleAttackDefenseBonus(selectedReaction) : 0;
+  const targetAfterReaction: ActorState = { ...target, runtime: targetRuntime,
+    ...(defenseBonus ? {ac: effectiveArmorClass(target, {...target.runtime, activeEffects: []}) + defenseBonus} : {}) };
   const resumed = executeAction(sourceForAttack.runtime, withoutActivationCost(attack.mechanics), {
     ...actionContext(sourceForAttack, env, targetAfterReaction, targetRuntime, pending.facts, pending.spell),
     ...(pending.attackActionId ? { attackActionId: pending.attackActionId } : {}),
