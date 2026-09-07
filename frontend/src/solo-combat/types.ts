@@ -251,6 +251,11 @@ export interface PendingD20Interrupt {
 }
 
 export interface SoloCombatState {
+  pendingMovementStep?: {
+    actorId: string; from: GridPosition; destination: GridPosition; maxFeet?: number; logMovement?: boolean;
+    processedOpportunityActorIds: string[];
+    lastOpportunity?: {actorId: string; logStart: number};
+  };
   monsterAttackSequence?: {actorId: string; targetId: string; actionIds: string[]};
   monsterMovement?: {actorId: string; steps: GridPosition[]};
   schemaVersion: typeof SOLO_COMBAT_SCHEMA_VERSION;

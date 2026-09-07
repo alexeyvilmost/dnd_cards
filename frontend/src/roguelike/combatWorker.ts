@@ -4,7 +4,7 @@ import {TACTICAL_WIDTH, TACTICAL_HEIGHT} from '../solo-combat/types';
 import type { DecisionResponse } from '../rules-core/domain';
 import { canonicalSha256Sync } from '../rules-core/determinism';
 import {
-  activeActor, activateCombatBoon, advanceTurn, autoResolveSystemDecisions,
+  resumePendingMovement, activeActor, activateCombatBoon, advanceTurn, autoResolveSystemDecisions,
   executeCombatAction, executeCombatRemoteManipulator, moveCombatDancingLights, revealCombatMagicAura, moveActor, resolveD20Interrupt, resolvePlayerReaction,
   resolvePlayerSavingThrow, resolveSoloCombatAlertSwap, resolveSoloCombatInterception,
   resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, standActor,
@@ -136,7 +136,7 @@ export function stepRoguelikeCombat(
     case 'resume': break;
     default: throw new Error('Неизвестная команда боя');
   }
-  state = autoResolveSystemDecisions(state, rng);
+  state = resumePendingMovement(autoResolveSystemDecisions(state, rng), rng);
   let turns = 0;
   while (state.outcome === 'active' && !hasDecision(state) && !isPlayerControlledCombatActor(state, activeActor(state).id)) {
     if (++turns > 64) throw new Error('Превышен бюджет ходов ИИ');

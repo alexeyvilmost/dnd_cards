@@ -10,7 +10,7 @@ import type { SheetCombatParticipantSeed } from '../character/sheetCombatSession
 import type { ForgeCharacter } from '../character/types';
 import type { Action } from '../types';
 import type { Monster } from '../monsters/types';
-import { addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, canStandActor, standActor, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatParticipants, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatAlertSwap, resolveSoloCombatInterception, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectedTargetsForAction, setSoloCombatInitiativeTotals, setSoloCombatMount } from './engine';
+import { resumePendingMovement, addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, canStandActor, standActor, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatParticipants, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatAlertSwap, resolveSoloCombatInterception, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectedTargetsForAction, setSoloCombatInitiativeTotals, setSoloCombatMount } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { gridDistanceFt } from './tacticalGrid';
 import { isPlayerControlledCombatActor, SOLO_COMBAT_KEY, type SoloCombatState } from './types';
@@ -754,7 +754,7 @@ describe('solo combat engine vertical integration', () => {
     expect(state.outcome).toBe('victory');
   });
 
-  async function parryEncounter(attackKind = 'weapon_melee', held = true, monsterAttacks = 1) {
+  async function parryEncounter(attackKind = 'weapon_melee', held = true, monsterAttacks = 1, quantity = 1) {
     const participant = fighterSeed();
     const actor = participant.canonical.world.actors[participant.character.id];
     const incomingRow = clone(scimitar());
@@ -780,12 +780,139 @@ describe('solo combat engine vertical integration', () => {
       vs: 'ac', on_hit: [{kind: 'damage', amount: 3, type: 'slashing'}],
     }))};
     let state = await createSoloCombatState({character: participant.character, participant,
-      selected: [{monster, quantity: 1}], actions: [monsterAttack, parry], effects: [], rng: () => 0.5});
+      selected: [{monster, quantity}], actions: [monsterAttack, parry], effects: [], rng: () => 0.5});
     const monsterId = Object.values(state.world.actors).find(row => row.kind === 'monster')!.id;
     state = placeAdjacent(state, actor.id, monsterId);
     if (!held) state.world.actors[monsterId].runtime.equipment = {};
     return {state, actorId: actor.id, monsterId, actionId: incoming.id, parryId: parry.id};
   }
+
+  it.each([true, false])('keeps the mover in place until a saved Parry decision settles (%s)', async parry => {
+    const setup = await parryEncounter();
+    let state = setup.state;
+    const player = state.world.actors[setup.actorId];
+    player.ac = 15;
+    player.runtime.hp = {current: 100, max: 100, temp: 0};
+    player.capabilities.actionIds.push(setup.parryId);
+    player.runtime.equipment.main_hand = CARD_LONGSWORD.id;
+    player.character.knownCards = [...(player.character.knownCards ?? []), CARD_LONGSWORD];
+    state.tokens[setup.actorId].position = {x: 4, y: 4};
+    state.tokens[setup.monsterId].position = {x: 5, y: 4};
+    const feet = state.movementRemainingFt[setup.actorId];
+    let draws = 0;
+    state = moveActor({...setup, state, destination: {x: 3, y: 4}, rng: () => {draws++; return 0.2;}});
+    expect(draws).toBe(1);
+    expect(state.world.pendingResolution?.type).toBe('attack_reaction');
+    expect(state.tokens[setup.actorId].position).toEqual({x: 4, y: 4});
+    expect(state.movementRemainingFt[setup.actorId]).toBe(feet);
+    expect(state.pendingMovementStep?.processedOpportunityActorIds).toEqual([setup.monsterId]);
+    state = resolvePlayerReaction(clone(state), {kind: 'reaction', actionId: parry ? setup.parryId : null},
+      () => {throw Error('The saved attack must not reroll');});
+    state = resumePendingMovement(clone(state), () => {throw Error('The opportunity must not repeat');});
+    expect(state.tokens[setup.actorId].position).toEqual({x: 3, y: 4});
+    expect(state.movementRemainingFt[setup.actorId]).toBe(feet - 5);
+    expect(state.world.actors[setup.actorId].runtime.hp.current).toBe(parry ? 100 : 97);
+    expect(state.pendingMovementStep).toBeUndefined();
+    expect(activeId(state)).toBe(setup.actorId);
+    expect(resumePendingMovement(clone(state))).toEqual(state);
+  });
+
+  it('preserves the remaining reactors across two saved decisions without moving or rerolling early', async () => {
+    const setup = await parryEncounter('weapon_melee', true, 1, 2);
+    let state = setup.state;
+    const player = state.world.actors[setup.actorId];
+    player.ac = 15;
+    player.runtime.hp = {current: 100, max: 100, temp: 0};
+    player.capabilities.actionIds.push(setup.parryId);
+    player.runtime.equipment.main_hand = CARD_LONGSWORD.id;
+    player.character.knownCards = [...(player.character.knownCards ?? []), CARD_LONGSWORD];
+    const enemies = Object.values(state.world.actors).filter(row => row.kind === 'monster');
+    state.tokens[setup.actorId].position = {x: 4, y: 4};
+    enemies.forEach((enemy, index) => {state.tokens[enemy.id].position = {x: 5, y: 4 + index};});
+    let draws = 0;
+    const rng = () => {draws++; return 0.2;};
+    const noReroll = () => {throw Error('Decision must not reroll');};
+    state = moveActor({...setup, state, destination: {x: 3, y: 4}, rng});
+    state = resolvePlayerReaction(clone(state), {kind: 'reaction', actionId: null}, noReroll);
+    state = resumePendingMovement(clone(state), rng);
+    expect(draws).toBe(2);
+    expect(state.world.pendingResolution?.type).toBe('attack_reaction');
+    expect(state.tokens[setup.actorId].position).toEqual({x: 4, y: 4});
+    expect(state.pendingMovementStep?.processedOpportunityActorIds).toHaveLength(2);
+    state = resolvePlayerReaction(clone(state), {kind: 'reaction', actionId: setup.parryId}, noReroll);
+    state = resumePendingMovement(clone(state), noReroll);
+    expect(state.world.actors[setup.actorId].runtime.hp.current).toBe(97);
+    expect(state.tokens[setup.actorId].position).toEqual({x: 3, y: 4});
+    expect(state.pendingMovementStep).toBeUndefined();
+    enemies.forEach(enemy => expect(state.world.actors[enemy.id].runtime.resources.reaction).toBe(0));
+  });
+
+  it('offers ordinary and War Caster reactions before movement and does not reopen a declined choice', async () => {
+    const participant = fighterSeed();
+    const player = participant.canonical.world.actors[participant.character.id];
+    player.passives = [...(player.passives ?? []), {kind: 'modifier', op: 'set', value: 1,
+      applies_to: {roll: 'reaction'}, reason: 'war_caster_opportunity_spell'}];
+    let state = await createSoloCombatState({character: participant.character, participant,
+      selected: [{monster: goblin(), quantity: 1}], actions: [scimitar()], effects: [], rng: () => 0.5});
+    // This fixture has no weapon-attack primitive; install a normal melee
+    // reaction to isolate movement continuation from weapon loadout assembly.
+    const ordinary = projectRuleAction({...scimitar(), id: 'test-ordinary-opportunity',
+      mechanics: {...scimitar().mechanics, activation: {mode: 'reaction',
+        cost: [{resource: 'reaction', amount: 1}], trigger: {events: ['opportunity_attack']}}}});
+    state.catalogActions.push(ordinary);
+    state.world.actors[player.id].capabilities.actionIds.push(ordinary.id);
+    state.opportunityActionIds[player.id] = ordinary.id;
+    const monster = Object.values(state.world.actors).find(row => row.kind === 'monster')!;
+    state.tokens[player.id].position = {x: 4, y: 4};
+    state.tokens[monster.id].position = {x: 5, y: 4};
+    const noRoll = () => {throw Error('Declining a reaction must not roll');};
+    state = moveActor({state, actorId: monster.id, destination: {x: 6, y: 4}, rng: noRoll});
+    expect(state.pendingTriggeredAction?.event).toBe('opportunity_attack');
+    expect(state.pendingTriggeredAction?.optionActionIds).toContain(state.opportunityActionIds[player.id]);
+    expect(state.pendingTriggeredAction?.optionActionIds.some(id => id.endsWith(':war-caster-opportunity'))).toBe(true);
+    expect(state.tokens[monster.id].position).toEqual({x: 5, y: 4});
+    state = resolveTriggeredCombatAction(clone(state), null, noRoll);
+    state = resumePendingMovement(clone(state), noRoll);
+    expect(state.tokens[monster.id].position).toEqual({x: 6, y: 4});
+    expect(state.world.actors[player.id].runtime.resources.reaction).toBe(1);
+    expect(state.pendingMovementStep).toBeUndefined();
+    expect(state.pendingTriggeredAction).toBeUndefined();
+  });
+
+  it('applies Sentinel after a saved hit decision and cancels the uncommitted movement', async () => {
+    const setup = await parryEncounter();
+    let state = setup.state;
+    const player = state.world.actors[setup.actorId];
+    player.ac = 15;
+    player.runtime.hp = {current: 100, max: 100, temp: 0};
+    player.capabilities.actionIds.push(setup.parryId);
+    player.runtime.equipment.main_hand = CARD_LONGSWORD.id;
+    player.character.knownCards = [...(player.character.knownCards ?? []), CARD_LONGSWORD];
+    const enemy = state.world.actors[setup.monsterId];
+    const stop = projectRuleAction(basicAction('test-sentinel-stop', 'Stop', {
+      activation: {mode: 'triggered', trigger: {event: 'hit', feat_sentinel_opportunity: true}, cost: []},
+      targeting: {domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1, max_targets: 1,
+        range_ft: 5, requires_line_of_sight: true, allowed_relations: ['enemy']},
+      effects: [{resolution: 'auto', who: 'target', result: [{kind: 'modifier', op: 'set', value: 0,
+        applies_to: {roll: 'speed'}, duration: {type: 'until_end_of_turn'}}]}],
+    }));
+    stop.id = 'test-sentinel-stop-action';
+    state.catalogActions.push(stop);
+    enemy.capabilities.actionIds.push(stop.id);
+    enemy.capabilities.featureSources = {...enemy.capabilities.featureSources, 'general_feat.sentinel': ['FEAT-0045']};
+    state.tokens[player.id].position = {x: 4, y: 4};
+    state.tokens[enemy.id].position = {x: 5, y: 4};
+    expect(state.movementRemainingFt[player.id]).toBeGreaterThan(0);
+    state = moveActor({...setup, state, destination: {x: 3, y: 4}, rng: () => 0.2});
+    expect(state.world.pendingResolution?.type).toBe('attack_reaction');
+    state = resolvePlayerReaction(clone(state), {kind: 'reaction', actionId: null}, () => 0.2);
+    state = resumePendingMovement(clone(state), () => {throw Error('No further roll expected');});
+    expect(state.world.actors[player.id].runtime.hp.current).toBe(97);
+    expect(state.tokens[player.id].position).toEqual({x: 4, y: 4});
+    expect(state.movementRemainingFt[player.id]).toBe(0);
+    expect(state.pendingMovementStep).toBeUndefined();
+    expect(state.world.actors[player.id].runtime.activeEffects.some(row => row.mechanics.value === 0)).toBe(true);
+  });
 
   it('uses the same Blindsight for sight targeting and an unpenalized attack after reload', async () => {
     const setup = await parryEncounter('weapon_melee', false);

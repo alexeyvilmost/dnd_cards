@@ -2252,7 +2252,7 @@ export function resolvePlayerReaction(
   // turn exactly once. Reactions opened by opportunity attacks during the
   // player's own turn deliberately do not advance initiative.
   if (monsterWasActing
-    && !next.monsterAttackSequence && !next.monsterMovement
+    && !next.monsterAttackSequence && !next.monsterMovement && !next.pendingMovementStep
     && next.outcome === 'active'
     && !next.world.pendingResolution
     && !next.pendingTriggeredAction
@@ -2662,6 +2662,41 @@ function deniesOpportunityAttack(actor: ActorState): boolean {
   return actor.runtime.activeEffects.some((effect) => visit(effect.mechanics));
 }
 
+function finishMovementOpportunity(state: SoloCombatState, rng: Rng): SoloCombatState {
+  const pending = state.pendingMovementStep;
+  const last = pending?.lastOpportunity;
+  if (!pending || !last || monsterMovementPaused(state)) return state;
+  const {lastOpportunity: _finished, ...remaining} = pending;
+  let next: SoloCombatState = {...state, pendingMovementStep: remaining};
+  const enemy = next.world.actors[last.actorId];
+  if (enemy && actorOwnsSentinel(enemy) && hasHitRecord(next, last.logStart, enemy.id)) {
+    const stopActionId = enemy.capabilities.actionIds.find(candidateId => {
+      const candidate = next.catalogActions.find(value => value.id === candidateId);
+      const activation = candidate?.mechanics.activation as Record<string, unknown> | undefined;
+      const trigger = activation?.trigger as Record<string, unknown> | undefined;
+      return trigger?.feat_sentinel_opportunity === true;
+    });
+    // A zero-cost hit rider is a continuation of this opportunity, not a
+    // proactive action on the enemy's turn. Its alias retains the owned data
+    // and costs and is never installed into the player's proactive hotbar.
+    if (stopActionId) {
+      const source = next.catalogActions.find(row => row.id === stopActionId)!;
+      const activation = source.mechanics.activation as Record<string, unknown>;
+      const reactionId = `${source.id}:opportunity-hit`;
+      const reaction = {...source, id: reactionId, mechanics: {...source.mechanics,
+        activation: {...activation, mode: 'reaction', trigger: {events: ['opportunity_attack']}}}};
+      next = {...next, catalogActions: [...next.catalogActions.filter(row => row.id !== reactionId), reaction],
+        world: {...next.world, actors: {...next.world.actors, [enemy.id]: {...enemy,
+          capabilities: {...enemy.capabilities, actionIds: [...new Set([...enemy.capabilities.actionIds, reactionId])]}}}}};
+      next = dispatch({state: next, command: {
+        ...commandBase(next, enemy.id), type: 'UseReactionAction', trigger: 'opportunity_attack', actionId: reactionId,
+        targetIds: [pending.actorId], factsByTarget: {[pending.actorId]: spatialFacts(next, enemy.id, pending.actorId)},
+      }, rng, label: 'Страж: остановка перемещения'});
+    }
+  }
+  return next;
+}
+
 function executeOpportunityAttacks(
   state: SoloCombatState,
   moverId: string,
@@ -2672,11 +2707,12 @@ function executeOpportunityAttacks(
   const start = state.tokens[moverId]?.position;
   if (!mover || !start) return state;
   const moverDeniedOrdinaryOpportunity = deniesOpportunityAttack(mover);
-  let next = state;
+  let next = finishMovementOpportunity(state, rng);
+  if (monsterMovementPaused(next) || effectiveCombatActorSpeedFt(next, moverId) === 0) return next;
   const enemies = Object.values(state.world.actors).filter((actor) => {
     const action = state.catalogActions.find(row => row.id === state.opportunityActionIds[actor.id]);
     const position = state.tokens[actor.id]?.position;
-    if (!action || !position) return false;
+    if (!action || !position || next.pendingMovementStep?.processedOpportunityActorIds.includes(actor.id)) return false;
     const reach = monsterAttackRange(action);
     return combatRelation(state, moverId, actor.id) === 'enemy' && actor.runtime.hp.current > 0
       && actor.runtime.resources.reaction > 0
@@ -2690,6 +2726,8 @@ function executeOpportunityAttacks(
     if (!actionId || next.world.actors[moverId].runtime.hp.current <= 0) continue;
     const action = next.catalogActions.find((candidate) => candidate.id === actionId);
     if (!action) continue;
+    if (next.pendingMovementStep) next = {...next, pendingMovementStep: {...next.pendingMovementStep,
+      processedOpportunityActorIds: [...next.pendingMovementStep.processedOpportunityActorIds, enemy.id]}};
     const warCasterOptions = enemy.capabilities.actionIds.filter((candidateId) => (
       candidateId.endsWith(':war-caster-opportunity')
       && next.catalogActions.some((candidate) => candidate.id === candidateId)
@@ -2699,7 +2737,7 @@ function executeOpportunityAttacks(
         ...next,
         pendingTriggeredAction: {
           event: 'opportunity_attack', sourceActorId: enemy.id, sourceActionId: action.id,
-          targetIds: [moverId], optionActionIds: warCasterOptions,
+          targetIds: [moverId], optionActionIds: [action.id, ...warCasterOptions],
         },
       };
     }
@@ -2707,28 +2745,13 @@ function executeOpportunityAttacks(
       ...commandBase(next, enemy.id), type: 'UseReactionAction', trigger: 'opportunity_attack', actionId,
       targetIds: [moverId], factsByTarget: { [moverId]: spatialFacts(next, enemy.id, moverId) },
     };
-    const beforeAttack = next;
+    if (next.pendingMovementStep) next = {...next, pendingMovementStep: {...next.pendingMovementStep,
+      lastOpportunity: {actorId: enemy.id, logStart: next.log.length}}};
     next = dispatch({ state: next, command, rng, label: action.name });
     next = autoResolveSystemDecisions(next, rng);
-    if (!next.world.pendingResolution
-      && actorOwnsSentinel(next.world.actors[enemy.id])
-      && hasHitRecord(next, beforeAttack.log.length, enemy.id)) {
-      const stopActionId = next.world.actors[enemy.id].capabilities.actionIds.find((candidateId) => {
-        const candidate = next.catalogActions.find((value) => value.id === candidateId);
-        const activation = candidate?.mechanics.activation as Record<string, unknown> | undefined;
-        const trigger = activation?.trigger as Record<string, unknown> | undefined;
-        return trigger?.feat_sentinel_opportunity === true;
-      });
-      if (stopActionId) {
-        next = executeCombatAction({
-          state: next,
-          actorId: enemy.id,
-          actionId: stopActionId,
-          targetIds: [moverId],
-          rng,
-        });
-      }
-    }
+    if (monsterMovementPaused(next)) return next;
+    next = finishMovementOpportunity(next, rng);
+    if (effectiveCombatActorSpeedFt(next, moverId) === 0) return next;
   }
   return next;
 }
@@ -2906,9 +2929,25 @@ export function moveActor(input: {
   if (occupiedPositions(input.state, input.actorId).has(`${input.destination.x}:${input.destination.y}`)) {
     throw new Error('Клетка занята');
   }
-  let next = input.voluntary === false
-    ? input.state
-    : executeOpportunityAttacks(input.state, input.actorId, input.destination, input.rng ?? Math.random);
+  const pending = input.state.pendingMovementStep;
+  if (input.voluntary !== false && pending && (pending.actorId !== input.actorId
+    || pending.destination.x !== input.destination.x || pending.destination.y !== input.destination.y)) {
+    throw new Error('Сначала завершите прерванное перемещение');
+  }
+  const prepared = input.voluntary === false ? input.state : {...input.state,
+    pendingMovementStep: pending ?? {actorId: input.actorId, from: {...token.position},
+      destination: {...input.destination}, maxFeet: input.maxFeet, logMovement: input.logMovement,
+      processedOpportunityActorIds: []}};
+  let next = input.voluntary === false ? prepared
+    : executeOpportunityAttacks(prepared, input.actorId, input.destination, input.rng ?? Math.random);
+  if (input.voluntary !== false) {
+    if (monsterMovementPaused(next)) return next;
+    const {pendingMovementStep: _completed, ...ready} = next;
+    next = ready;
+    // A reaction can displace the mover; never finish a stale path from a new origin.
+    if (next.tokens[input.actorId].position.x !== token.position.x
+      || next.tokens[input.actorId].position.y !== token.position.y) return next;
+  }
   if (next.world.actors[input.actorId].runtime.hp.current <= 0) return outcome(next);
   if (input.voluntary !== false && effectiveCombatActorSpeedFt(next, input.actorId) === 0) {
     return appendLog(next, input.actorId, 'Перемещение остановлено попаданием провоцированной атаки Стража.');
@@ -2968,6 +3007,22 @@ export function moveActor(input: {
   next = autoResolveSystemDecisions(next, input.rng ?? Math.random);
   next = breakOutOfRangeGrapples(next, input.actorId, input.rng ?? Math.random);
   return input.logMovement === false ? next : appendLog(next, input.actorId, `Перемещение на ${distance} фт.${movementCost > distance ? ` С учётом условий движения: потрачено ${movementCost} фт.` : ''}`);
+}
+
+/** Continue only after all decisions belonging to the interrupting attack settle. */
+export function resumePendingMovement(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
+  const pending = state.pendingMovementStep;
+  if (!pending || monsterMovementPaused(state)) return state;
+  const actor = state.world.actors[pending.actorId];
+  const position = state.tokens[pending.actorId]?.position;
+  if (state.outcome !== 'active' || !actor || actor.runtime.hp.current <= 0 || !position
+    || position.x !== pending.from.x || position.y !== pending.from.y
+    || effectiveCombatActorSpeedFt(state, pending.actorId) === 0) {
+    const {pendingMovementStep: _stopped, ...stopped} = state;
+    return stopped;
+  }
+  return moveActor({state, actorId: pending.actorId, destination: pending.destination,
+    maxFeet: pending.maxFeet, logMovement: true, voluntary: true, rng});
 }
 
 function startTurnOrRequestGrappleDamage(
@@ -3696,6 +3751,11 @@ function executeMonsterRoute(state: SoloCombatState, actorId: string, steps: Gri
   let next = {...state, monsterMovement: {actorId, steps}};
   while (next.monsterMovement?.steps.length) {
     const step = next.monsterMovement.steps[0];
+    const position = next.tokens[actorId].position;
+    if (position.x === step.x && position.y === step.y) {
+      next = {...next, monsterMovement: {actorId, steps: next.monsterMovement.steps.slice(1)}};
+      continue;
+    }
     if (next.outcome !== 'active' || next.world.actors[actorId].runtime.hp.current <= 0) break;
     if (monsterMovementPaused(next)) return report(next);
     if (effectiveCombatActorSpeedFt(next, actorId) <= 0

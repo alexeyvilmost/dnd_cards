@@ -31,7 +31,7 @@ import {
   addSoloCombatCharacter,
   addSoloCombatMonster,
   advanceTurn,
-  autoResolveSystemDecisions,
+  autoResolveSystemDecisions, resumePendingMovement,
   combatDetectMagicStatus,
   createSoloCombatState,
   executeCombatAction,
@@ -416,7 +416,7 @@ export default function SoloCombatPage() {
 
   const applyIntent = useCallback((intent: RoguelikeCombatIntent, local: () => SoloCombatState) => {
     const run = trustedRunRef.current;
-    if (!run) { apply(local()); return; }
+    if (!run) { apply(resumePendingMovement(local())); return; }
     if (trustedBusyRef.current) return;
     trustedBusyRef.current = true;
     setBusy(true); setError(null);
