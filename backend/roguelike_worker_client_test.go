@@ -64,3 +64,16 @@ func TestWorkerPatchRejectsProgressionAndUnexpectedRevision(t *testing.T) {
 		t.Fatal("runtime patch was not applied")
 	}
 }
+
+func TestTrustedEncounterRejectsClientOutcomeBeforeAndAfterInitialization(t *testing.T) {
+	turn := JSONMap{SOLO_COMBAT_KEY: map[string]any{"outcome": "victory"}}
+	run := RoguelikeRun{Status: RoguelikeStatusActive, Phase: RoguelikePhaseCombat,
+		Encounter: JSONMap{"trusted_required": true}, Character: &CharacterV3{TurnState: &turn}}
+	if err := completeRoguelikeEncounter(nil, &run); err == nil {
+		t.Fatal("accepted browser victory before initialization")
+	}
+	run.CombatEnvelope = JSONMap{"state": map[string]any{"outcome": "active"}}
+	if err := completeRoguelikeEncounter(nil, &run); err == nil {
+		t.Fatal("accepted browser victory over authoritative active state")
+	}
+}

@@ -213,7 +213,7 @@ func authorizeRoguelikeCharacterMutation(
 			CharacterID: character.ID.String(),
 		}
 	}
-	if len(run.CombatEnvelope) > 0 && run.Phase == RoguelikePhaseCombat {
+	if (len(run.CombatEnvelope) > 0 || run.Encounter["trusted_required"] == true) && run.Phase == RoguelikePhaseCombat {
 		return nil, roguelikeMutationError("trusted_combat_required", "бой изменяется только командами серверного движка", character.ID)
 	}
 	wantPhase := ""

@@ -121,3 +121,7 @@ Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br
 - Node dispatcher persists executable bundles by SHA256 separately from Docker image retention and checks requested hashes. Retry retains the saved catalog/artifact. The service is internal-only and authenticated.
 - Local checks: offline initialization/replay and engine integration 69 tests; Go packages pass; Node transport restart/pinning/authentication test passes; headless bundle builds a pinned fighter and executes real engine transitions without browser mocks. Full regression is still running. No claim of production acceptance yet.
 - Still outstanding beyond this increment: full fighter/subclass matrix, remaining gated monster mechanics, combat/economy survival simulations, full natural-run acceptance, full-run future-content pinning and old frontend asset continuity.
+
+- Final offline regression passed: 384 files / 3197 tests. TypeScript, focused lint, headless execution and Node dispatcher tests passed.
+- First worker image build stopped before any production switch because its Docker context omitted the existing weapon/charge JSON directories. Added both directories to the image inputs. Public service remained on 15f9915.
+- Added a trusted-required encounter flag so a client cannot inject a legacy outcome before server initialization; regression rejects forged victory both before and after initialization.

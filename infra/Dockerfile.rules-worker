@@ -3,6 +3,8 @@ WORKDIR /app/frontend
 COPY frontend/package*.json frontend/.npmrc ./
 RUN npm ci --ignore-scripts --include=dev --no-audit --no-fund
 COPY frontend/src ./src
+COPY frontend/utils ./utils
+COPY frontend/charges ./charges
 COPY frontend/worker ./worker
 COPY scripts /app/scripts
 RUN node worker/build.mjs

@@ -568,6 +568,9 @@ func startRoguelikeEncounter(tx *gorm.DB, run *RoguelikeRun) error {
 	if number, ok := numberFromJSON(run.Encounter["number"]); ok && number == run.EncountersWon+1 {
 		run.LastReward = JSONMap{}
 		run.Phase = RoguelikePhaseCombat
+		if os.Getenv("RULES_WORKER_URL") != "" {
+			run.Encounter["trusted_required"] = true
+		}
 		return nil
 	}
 	difficulty, budget := roguelikeEncounterBudget(level, run.Experience)
@@ -617,6 +620,9 @@ func startRoguelikeEncounter(tx *gorm.DB, run *RoguelikeRun) error {
 	run.CombatEnvelope = JSONMap{}
 	run.CombatCatalog = JSONMap{}
 	run.Encounter = encounter
+	if os.Getenv("RULES_WORKER_URL") != "" {
+		run.Encounter["trusted_required"] = true
+	}
 	run.LastReward = JSONMap{}
 	run.Phase = RoguelikePhaseCombat
 	return nil
@@ -813,6 +819,9 @@ func rewardRoguelikeVictory(tx *gorm.DB, run *RoguelikeRun) error {
 func completeRoguelikeEncounter(tx *gorm.DB, run *RoguelikeRun) error {
 	if run.Status != RoguelikeStatusActive || run.Phase != RoguelikePhaseCombat {
 		return roguelikeError(http.StatusConflict, "combat_required", "активная встреча не найдена")
+	}
+	if run.Encounter["trusted_required"] == true && len(run.CombatEnvelope) == 0 {
+		return roguelikeError(http.StatusConflict, "trusted_combat_missing", "серверный бой ещё не инициализирован")
 	}
 	outcome := combatOutcome(run.Character)
 	if len(run.CombatEnvelope) > 0 {
