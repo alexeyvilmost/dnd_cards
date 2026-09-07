@@ -2103,7 +2103,7 @@ function resolveDecision(
 }
 
 function openNextCombatAreaTrigger(state: SoloCombatState, rng: Rng): SoloCombatState {
-  if (state.world.pendingResolution) return state;
+  if (state.world.pendingResolution || state.pendingTriggeredAction || state.pendingReachEntry) return state;
   let next = state;
   while (next.pendingCombatAreaTriggers?.length) {
     const pending = pendingTriggerForArea(next);
@@ -2868,7 +2868,16 @@ function executePolearmEntryAttacks(
         endDistanceFt: gridDistanceFt(state.tokens[actor.id].position, destination),
       })
   ));
-  for (const enemy of eligible) {
+  const actorIds = state.pendingReachEntry?.actorIds ?? eligible.map(actor => actor.id);
+  next = {...next, pendingReachEntry: {moverId, from: start, destination, actorIds}};
+  for (let index = 0; index < actorIds.length; index++) {
+    const enemy = next.world.actors[actorIds[index]];
+    next = {...next, pendingReachEntry: {...next.pendingReachEntry!, actorIds: actorIds.slice(index + 1)}};
+    if (!enemy || enemy.runtime.hp.current <= 0
+      || !samePosition(next.tokens[moverId].position, destination)
+      || !polearmMasterEntryEligible({actor: enemy,
+        startDistanceFt: gridDistanceFt(next.tokens[enemy.id].position, start),
+        endDistanceFt: gridDistanceFt(next.tokens[enemy.id].position, next.tokens[moverId].position)})) continue;
     const baseActionId = next.opportunityActionIds[enemy.id];
     const baseAction = baseActionId
       ? next.catalogActions.find((candidate) => candidate.id === baseActionId)
@@ -2925,7 +2934,8 @@ function executePolearmEntryAttacks(
     );
     if (next.world.pendingResolution || next.pendingTriggeredAction) return next;
   }
-  return next;
+  const {pendingReachEntry: _completed, ...completed} = next;
+  return completed;
 }
 
 function breakOutOfRangeGrapples(
@@ -3172,8 +3182,15 @@ function continuePlayerRoute(state: SoloCombatState, rng: Rng): SoloCombatState 
 
 /** Continue only after all decisions belonging to the interrupting attack settle. */
 export function resumePendingMovement(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
-  const pending = state.pendingMovementStep;
   if (monsterMovementPaused(state)) return state;
+  if (state.pendingReachEntry) {
+    const entry = state.pendingReachEntry;
+    state = executePolearmEntryAttacks(state, entry.moverId, entry.from, entry.destination, rng);
+    if (monsterMovementPaused(state)) return state;
+    state = autoResolveSystemDecisions(state, rng);
+    if (monsterMovementPaused(state)) return state;
+  }
+  const pending = state.pendingMovementStep;
   if (!pending) return continuePlayerRoute(state, rng);
   const actor = state.world.actors[pending.actorId];
   const position = state.tokens[pending.actorId]?.position;

@@ -3338,6 +3338,17 @@ describe('solo combat engine vertical integration', () => {
     entryState.opportunityActionIds[actor.id] = opportunity.id;
     entryState.tokens[actor.id].position = { x: 4, y: 4 };
     entryState.tokens[enteringId].position = { x: 4, y: 6 };
+    const allyId = 'd9000000-0000-4000-8000-000000000098';
+    const ally = {...clone(entryState.world.actors[actor.id]), id: allyId, name: 'Второй страж'};
+    entryState.world.actors[allyId] = ally;
+    entryState.controlledCharacterIds = [actor.id, allyId];
+    entryState.tokens[allyId] = {...entryState.tokens[actor.id], actorId: allyId, position: {x: 5, y: 4}};
+    entryState.sideByActorId[allyId] = 'heroes';
+    entryState.opportunityActionIds[allyId] = opportunity.id;
+    entryState.combatAreas = {entryNotice: {id: 'entryNotice', name: 'Сигнал', zoneType: 'alarm',
+      sourceActorId: actor.id, sourceActionId: 'alarm', sourceEntityIds: ['SPELL-alarm'],
+      origin: {x: 4, y: 5}, cells: [{x: 4, y: 5}], duration: {type: 'permanent'}, triggers: ['enter'],
+      notice: 'Вход в сигнальную область'}};
     entryState = moveActor({
       state: entryState, actorId: enteringId, destination: { x: 4, y: 5 }, rng: () => 0.6,
     });
@@ -3349,6 +3360,29 @@ describe('solo combat engine vertical integration', () => {
       candidate.id === entryState.pendingTriggeredAction?.optionActionIds[0]
     ));
     expect(entryAction?.sourceEntityIds).toContain('EFF-general-FEAT-0028');
+    expect(entryState.pendingReachEntry?.actorIds).toEqual([allyId]);
+    expect(entryState.log.some(row => row.text.includes('Вход в сигнальную область'))).toBe(false);
+    const noRoll = () => {throw Error('Declining an entry reaction does not roll');};
+    const declined = resolveTriggeredCombatAction(clone(entryState), null, noRoll);
+    const unavailable = clone(declined);
+    unavailable.world.actors[allyId].runtime.resources.reaction = 0;
+    const skipped = resumePendingMovement(unavailable, noRoll);
+    expect(skipped.pendingTriggeredAction).toBeUndefined();
+    expect(skipped.pendingReachEntry).toBeUndefined();
+    expect(skipped.log.some(row => row.text.includes('Вход в сигнальную область'))).toBe(true);
+    entryState = resumePendingMovement(clone(declined), noRoll);
+    expect(entryState.pendingTriggeredAction?.sourceActorId).toBe(allyId);
+    expect(entryState.world.actors[actor.id].runtime.resources.reaction).toBe(1);
+    expect(entryState.log.some(row => row.text.includes('Вход в сигнальную область'))).toBe(false);
+    const beforeEntryAttack = entryState.world.actors[enteringId].runtime.hp.current;
+    entryState = resolveTriggeredCombatAction(clone(entryState), entryState.pendingTriggeredAction!.optionActionIds[0], () => 0.6);
+    entryState = resumePendingMovement(autoResolveSystemDecisions(clone(entryState), () => 0.6), noRoll);
+    expect(entryState.world.actors[allyId].runtime.resources.reaction).toBe(0);
+    expect(entryState.world.actors[enteringId].runtime.hp.current).toBeLessThan(beforeEntryAttack);
+    expect(entryState.pendingReachEntry).toBeUndefined();
+    expect(entryState.pendingTriggeredAction).toBeUndefined();
+    expect(entryState.tokens[enteringId].position).toEqual({x: 4, y: 5});
+    expect(entryState.log.some(row => row.text.includes('Вход в сигнальную область'))).toBe(true);
   });
 
   it('applies Mounted Strike advantage only while the explicit allied mount relation stays valid', async () => {

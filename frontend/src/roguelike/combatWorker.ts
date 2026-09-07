@@ -82,7 +82,7 @@ export function stepRoguelikeCombat(
   if ('actorId' in intent && intent.actorId !== null) requireOwned(intent.actorId);
   const proactive = new Set(['action', 'move', 'stand', 'end_turn', 'dancing_lights', 'detect_magic', 'remote_manipulator', 'boon']);
   if (proactive.has(intent.type) && 'actorId' in intent
-    && (hasDecision(state) || state.playerMovement || activeActor(state).id !== intent.actorId)) {
+    && (hasDecision(state) || state.playerMovement || state.pendingReachEntry || activeActor(state).id !== intent.actorId)) {
     throw new Error('Сначала завершите текущее решение или дождитесь своего хода');
   }
   switch (intent.type) {
