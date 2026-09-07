@@ -204,3 +204,12 @@ Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br
 
 - Browser acceptance finished: on round8 the last zombie at1HP took5damage, rolled14+3 vsDC10 and stayed at1HP. Reload preserved the state; another fatal8damage produced17+3 vsDC13 and again retained1HP. A later6damage produced3+3 vsDC11, failure. Ordinary result button returned to the existing sheet:150XP,one victory,53gp,one supply; server reward was150XP/35gp, hero965/1000HP.
 - The20 accepted commands replayed with the actual e837ce7c executable: `sha256:c61f06240af040d7bead915e40efdca1bedeb35d4e4e77d5117150074963e5e9`. A transient SSH timeout on the first read did not affect gameplay; the successful read/replay followed without another game mutation.
+
+
+## Defense data deployed; shared Blindsight pending deployment
+
+- TimeWeb/public SHA `a98a2e6f950ae83dc1d949df2160696e982ac428`, backup `pre-a98a2e6f950ae83dc1d949df2160696e982ac428-20260907T175317Z.dump`, archive SHA256 `c8f01cdf60af3d827d9b7bc939809a82657c025f4cce27c6f0677f2054bd28ff`. All four containers healthy. Production rows now contain the exact three condition-immunity lists,60ft senses and zombie Wisdom proficiency. Existing fights remain on frozen data.
+- New common sense resolver reads permanent and unexpired active `grant_sense` declarations, excluding unactivated abilities. Tactical visibility is directed and accounts for concealment, invisibility, blindness and in-range Blindsight. Darkvision and Tremorsense do not grant sight through fog.
+- The common attack modifier collectors suppress blindness attack penalties only for an owned in-range nonvisual sense; unrelated Poisoned penalties and purely visual ability checks remain. Required-sight targeting checks the same owned range. Monster compilation now projects declared Blindsight, shared with the existing fighter style.
+- Focused regression includes a JSON-restored blinded fighter attacking an invisible target without extra dice, and rejecting required-sight targeting outside its range. The final full regression passed386 files /3225 tests; TypeScript and lint passed. Browser acceptance with the actual FEAT-0060 choice is prepared but has not initialized combat yet.
+- Lighting, physical occlusion and complete movement continuations remain separate outstanding work; this increment does not claim the entire original plan is accepted.

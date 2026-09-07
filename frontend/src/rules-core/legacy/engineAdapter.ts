@@ -69,3 +69,5 @@ export type {
 } from '../../mvp/contracts';
 export type { ModifierQueryFacts } from '../../engine/modifiers';
 export type { EvalContext } from '../../engine/circumstances';
+
+export {perceivesWithoutSight} from '../../engine/senses';

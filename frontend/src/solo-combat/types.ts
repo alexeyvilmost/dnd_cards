@@ -9,7 +9,8 @@ import type {
 import type { WorldObjectState } from '../rules-core/worldObjects';
 import type { SheetCanonicalResourceBindings } from '../character/sheetCanonicalWorld';
 import type { Action, Spell } from '../types';
-import { expandConditionSet } from '../engine/conditions';
+import { activeConditionWorldFactEnabled, expandConditionSet } from '../engine/conditions';
+import {perceivesWithoutSight} from '../engine/senses';
 
 export const SOLO_COMBAT_KEY = 'solo_combat_v1' as const;
 export const SOLO_COMBAT_SCHEMA_VERSION = 1 as const;
@@ -379,6 +380,17 @@ export function spatialFacts(
     }
     return false;
   });
+  const distanceFt = Math.max(Math.abs(source.x - target.x), Math.abs(source.y - target.y)) * TACTICAL_CELL_FT;
+  const sees = (observerId: string, observedId: string): boolean => {
+    const observer = state.world?.actors[observerId];
+    const observed = state.world?.actors[observedId];
+    if (observer && perceivesWithoutSight(observer.runtime, observer.passives ?? [], distanceFt)) return true;
+    return !obscured
+      && !(observer && activeConditionWorldFactEnabled(observer.runtime, 'cannot_see'))
+      && !(observed && activeConditionWorldFactEnabled(observed.runtime, 'cannot_be_targeted_by_requires_sight_unless_seen'));
+  };
+  const sourceActor = state.world?.actors[sourceActorId];
+  const sourceNonvisual = Boolean(sourceActor && perceivesWithoutSight(sourceActor.runtime, sourceActor.passives ?? [], distanceFt));
   const sourceSide = state.sideByActorId?.[sourceActorId];
   const nearbyEligibleAllyToTarget = Boolean(sourceSide && state.world && Object.values(state.world.actors).some((actor) => {
     if (actor.id === sourceActorId || state.sideByActorId?.[actor.id] !== sourceSide) return false;
@@ -395,11 +407,11 @@ export function spatialFacts(
     factsSource: 'board',
     boardRevision: state.boardRevision,
     distanceFt: Math.max(Math.abs(source.x - target.x), Math.abs(source.y - target.y)) * TACTICAL_CELL_FT,
-    lineOfSight: !obscured,
+    lineOfSight: !obscured || sourceNonvisual,
     cover: 'none',
     relation: combatRelation(state, sourceActorId, targetActorId),
-    canSeeTarget: !obscured,
-    targetCanSeeSource: !obscured,
+    canSeeTarget: sees(sourceActorId, targetActorId),
+    targetCanSeeSource: sees(targetActorId, sourceActorId),
     nearbyEligibleAllyToTarget,
   };
 }

@@ -60,7 +60,7 @@ function aiState(monsterPosition: { x: number; y: number }, playerPosition: { x:
     },
     passives: [],
   } as unknown as ActorState;
-  const worldActor = (id: string) => ({ id, runtime: { hp: { current: 10 } } });
+  const worldActor = (id: string) => id === monster.id ? monster : {...structuredClone(monster), id};
   const state = {
     tokens: {
       monster: { actorId: 'monster', position: monsterPosition },
@@ -288,6 +288,24 @@ describe('solo combat tactical contract', () => {
     expect(obscured.state.tokens.monster.position).toEqual({ x: 1, y: 1 });
   });
 
+  it('projects directed Blindsight through fog and invisibility within its declared range', () => {
+    const setup = aiState({x: 0, y: 0}, {x: 2, y: 0}, 30);
+    const {state, monster} = setup;
+    monster.passives = [{kind: 'grant_sense', sense: 'blindsight', range: 10}];
+    monster.runtime.activeEffects = [{id: 'blind', name: 'Blind', source: 'test', mechanics: {kind: 'condition', value: 'blinded'}}];
+    state.world.actors.player.runtime.activeEffects = [{id: 'invisible', name: 'Invisible', source: 'test', mechanics: {kind: 'condition', value: 'invisible'}}];
+    state.combatAreas = {fog: {heavilyObscured: true, cells: [{x: 1, y: 0}]}} as unknown as SoloCombatState['combatAreas'];
+    expect(spatialFacts(state, 'monster', 'player')).toMatchObject({lineOfSight: true, canSeeTarget: true, targetCanSeeSource: false});
+    expect(planMonsterTurn(state, monster, 'player', 60)).toMatchObject({firstMove: [], attacks: true});
+    state.tokens.player.position = {x: 3, y: 0};
+    expect(spatialFacts(state, 'monster', 'player')).toMatchObject({lineOfSight: false, canSeeTarget: false});
+    monster.passives = [{kind: 'grant_sense', sense: 'darkvision', range: 60}];
+    expect(spatialFacts(state, 'monster', 'player').canSeeTarget).toBe(false);
+    state.combatAreas = {};
+    monster.runtime.activeEffects = [];
+    expect(spatialFacts(state, 'monster', 'player')).toMatchObject({lineOfSight: true, canSeeTarget: false, targetCanSeeSource: true});
+  });
+
   it('closes to the preferred range without spending an action on Dash', () => {
     const ranged = aiState({ x: 0, y: 0 }, { x: 8, y: 0 }, 20);
     const plan = planMonsterTurn(ranged.state, ranged.monster, 'player', 60, 20);
@@ -348,11 +366,12 @@ describe('pack tactics ally eligibility', () => {
 it('compiles monster proficiencies, expertise, senses and condition immunities as shared actor rules', () => {
   const monster = goblin();
   monster.ai = { skill_proficiencies: ['perception', 'stealth'], skill_expertise: ['perception'],
-    save_proficiencies: ['wis'], darkvision_ft: 60, condition_immunities: ['poisoned'] };
+    save_proficiencies: ['wis'], darkvision_ft: 60, blindsight_ft: 10, condition_immunities: ['poisoned'] };
   const { actor } = compileMonsterInstance({ monster, instanceId: 'test:wolf', actions: [meleeAction()], effects: [] });
   expect(actor.character).toMatchObject({ skillProficiencies: ['perception', 'stealth'],
     skillExpertise: ['perception'], saveProficiencies: ['wis'] });
   expect(actor.passives).toContainEqual(expect.objectContaining({ kind: 'grant_sense', sense: 'darkvision', range: 60 }));
+  expect(actor.passives).toContainEqual(expect.objectContaining({kind: 'grant_sense', sense: 'blindsight', range: 10}));
   expect(actor.traits?.conditionImmunities).toEqual([{ condition: 'poisoned', sourceEntityIds: [monster.id] }]);
 });
 

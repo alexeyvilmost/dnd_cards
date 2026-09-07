@@ -15,6 +15,7 @@ import {
   type ModifierQueryFacts,
 } from './legacy/engineAdapter';
 import type { ActorState, WorldState } from './domain';
+import {perceivesWithoutSight} from './legacy/engineAdapter';
 
 export interface ConditionSourceObservation {
   sourceActorId: string;
@@ -114,11 +115,13 @@ export function conditionTargetingSightIssue(input: {
   targetActorId: string;
   requiresSight: boolean;
   canSeeTarget?: boolean;
+  distanceFt?: number;
 }): 'source_cannot_see' | 'target_unseen' | null {
   if (!input.requiresSight) return null;
   const source = actor(input.world, input.sourceActorId);
   const target = actor(input.world, input.targetActorId);
-  if (activeConditionWorldFactEnabled(source.runtime, 'cannot_see')) {
+  if (activeConditionWorldFactEnabled(source.runtime, 'cannot_see')
+    && !(input.canSeeTarget === true && perceivesWithoutSight(source.runtime, source.passives ?? [], input.distanceFt))) {
     return 'source_cannot_see';
   }
   if (activeConditionWorldFactEnabled(

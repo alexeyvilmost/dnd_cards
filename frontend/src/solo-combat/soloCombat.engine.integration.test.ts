@@ -787,6 +787,28 @@ describe('solo combat engine vertical integration', () => {
     return {state, actorId: actor.id, monsterId, actionId: incoming.id, parryId: parry.id};
   }
 
+  it('uses the same Blindsight for sight targeting and an unpenalized attack after reload', async () => {
+    const setup = await parryEncounter('weapon_melee', false);
+    let state = setup.state;
+    const player = state.world.actors[setup.actorId];
+    player.passives = [...(player.passives ?? []), {kind: 'grant_sense', sense: 'blindsight', range: 10}];
+    player.runtime.activeEffects = [{id: 'blind', name: 'Blind', source: 'test', ownerId: player.id,
+      mechanics: {kind: 'condition', value: 'blinded'}}];
+    state.world.actors[setup.monsterId].runtime.activeEffects = [{id: 'invisible', name: 'Invisible', source: 'test',
+      mechanics: {kind: 'condition', value: 'invisible'}}];
+    const action = state.catalogActions.find(row => row.id === setup.actionId)!;
+    action.targeting = {...action.targeting!, requiresSight: true, rangeFt: 30};
+    action.mechanics.targeting = {...action.mechanics.targeting as Record<string, unknown>, requires_sight: true, range_ft: 30};
+    let rolls = 0;
+    state = executeCombatAction({...setup, state: clone(state), targetIds: [setup.monsterId], rng: () => {rolls++; return 0.5;}});
+    expect(rolls).toBe(1);
+    expect(state.world.actors[setup.monsterId].runtime.hp.current).toBe(97);
+    state.world.actors[setup.actorId].runtime.resources.action = 1;
+    const position = state.tokens[setup.actorId].position;
+    state.tokens[setup.monsterId].position = {x: position.x + 3, y: position.y};
+    expect(() => executeCombatAction({...setup, state, targetIds: [setup.monsterId], rng: () => 0.5})).toThrow();
+  });
+
   it('resumes the second monster strike after a saved player reaction with a new roll and one action payment', async () => {
     const setup = await parryEncounter('weapon_melee', true, 2);
     let state = setup.state;

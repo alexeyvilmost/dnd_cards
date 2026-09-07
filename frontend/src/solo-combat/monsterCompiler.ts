@@ -67,6 +67,10 @@ export function compileMonsterInstance(input: {
       ability: 'con', dc_base: 5, remaining_hp: 1,
       except_damage_types: ['radiant'], except_critical: true,
     }] : []),
+    ...(input.monster.ai.blindsight_ft ? [{
+      id: 'monster-blindsight', kind: 'grant_sense', sense: 'blindsight',
+      range: input.monster.ai.blindsight_ft,
+    }] : []),
     ...(input.monster.ai.darkvision_ft ? [{
       id: 'monster-darkvision', kind: 'grant_sense', sense: 'darkvision',
       range: input.monster.ai.darkvision_ft,

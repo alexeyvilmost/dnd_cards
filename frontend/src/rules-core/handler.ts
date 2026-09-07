@@ -429,6 +429,7 @@ function actionValidation(
       targetActorId: targetId,
       requiresSight: targeting?.requiresSight === true,
       canSeeTarget: factsByTarget?.[targetId]?.canSeeTarget,
+      distanceFt: factsByTarget?.[targetId]?.distanceFt,
     });
     if (sightIssue === 'source_cannot_see') {
       return rejected(world, 'CapabilityDenied', `${sourceActorId} cannot see a required target`);

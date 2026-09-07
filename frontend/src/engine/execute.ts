@@ -42,6 +42,7 @@ import {
   conditionLabel,
 } from './conditions';
 import { payloadsOf } from './mechanicsView';
+import {perceivesWithoutSight} from './senses';
 import { selectedChoicePayloads, normalizeChoicePayload } from '../mechanics/expandChoices';
 import { collectListeners, isAuto, toOffer, type DomainEvent } from './dispatch';
 import { concentrationDC, concentrationEntry, dropConcentration } from './concentration';
@@ -1485,6 +1486,11 @@ export function projectedAgainst(
   for (const e of st.activeEffects) {
     const mech = e.mechanics as Dict;
     if (mech?.kind === 'condition' && mech.value) {
+      const owner = target?.id;
+      const other = evalCtx?.rollerActorId;
+      const distance = owner && other ? evalCtx?.distancesFt?.[owner]?.[other] : undefined;
+      if (roll === 'attack' && conditionRule(String(mech.value))?.worldFacts?.cannot_see
+        && perceivesWithoutSight(st, target?.passives ?? [], distance)) continue;
       for (const rule of conditionModifierPayloads(String(mech.value))) {
         consider(rule as unknown as Dict, String(mech.value), e.sourceId);
       }

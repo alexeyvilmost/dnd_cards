@@ -33,6 +33,7 @@ export interface Monster {
     skill_proficiencies?: string[];
     skill_expertise?: string[];
     darkvision_ft?: number;
+    blindsight_ft?: number;
     knock_prone?: boolean;
     undead_fortitude?: boolean;
     bloodied_frenzy?: boolean;

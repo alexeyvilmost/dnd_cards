@@ -8,7 +8,8 @@
  * Старый экспорт collectRollModifiers сохранён как обёртка (см. низ файла).
  */
 import type { AdvantageState, RollModifier, RuntimeState } from '../mvp/contracts';
-import { conditionModifierPayloads } from './conditions';
+import { conditionModifierPayloads, conditionRule } from './conditions';
+import {perceivesWithoutSight} from './senses';
 import { payloadsOf } from './mechanicsView';
 import { evaluate, type FormulaContext } from './formula';
 import { matchesWhen, type EvalContext } from './circumstances';
@@ -236,6 +237,11 @@ export function collectModifiers(
             conditionOwnerId: effect.ownerId ?? opts.evalCtx?.rollerActorId,
           },
         };
+        const owner = conditionOpts.evalCtx?.conditionOwnerId;
+        const other = conditionOpts.evalCtx?.rollTargetActorId;
+        const distance = owner && other ? conditionOpts.evalCtx?.distancesFt?.[owner]?.[other] : undefined;
+        if (opts.roll === 'attack' && conditionRule(String(payload.value))?.worldFacts?.cannot_see
+          && perceivesWithoutSight(state, passives, distance)) continue;
         for (const rule of conditionModifierPayloads(String(payload.value))) {
           collectFromPayload({ kind: 'modifier', ...rule }, conditionOpts, String(payload.value), out);
         }
