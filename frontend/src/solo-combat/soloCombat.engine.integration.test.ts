@@ -3664,3 +3664,34 @@ describe('Bloodied Frenzy uses shared saves and opportunity attacks', () => {
     expect(state.tokens[scene.actorId].position).toEqual({x: 3, y: 4});
   });
 });
+
+
+describe('Pack Tactics is a shared attack rule', () => {
+  it.each(['near', 'far', 'dead', 'incapacitated', 'prone'])('uses board facts during opportunity attacks: ally %s', async status => {
+    const participant = fighterSeed();
+    const player = participant.canonical.world.actors[participant.character.id];
+    player.ac = 1;
+    player.runtime.hp = {current: 100, max: 100, temp: 0};
+    player.runtime.resources.reaction = 0;
+    participant.character.current_hp = 100;
+    participant.character.max_hp = 100;
+    const monster = {...goblin(), ai: {pack_tactics: true}};
+    let state = await createSoloCombatState({character: participant.character, participant,
+      selected: [{monster, quantity: 2}], actions: [scimitar()], effects: [], rng: () => 0.5});
+    const [attacker, ally] = Object.values(state.world.actors).filter(row => row.kind === 'monster');
+    ally.runtime.resources.reaction = 0;
+    if (status === 'dead') ally.runtime.hp.current = 0;
+    if (status === 'incapacitated' || status === 'prone') ally.runtime.activeEffects.push({id: 'condition',
+      name: status, source: 'test', mechanics: {kind: 'condition', value: status}});
+    state.tokens[player.id].position = {x: 4, y: 4};
+    state.tokens[attacker.id].position = {x: 5, y: 4};
+    state.tokens[ally.id].position = status === 'far' ? {x: 8, y: 8} : {x: 4, y: 5};
+    let draws = 0;
+    state = moveActor({state: clone(state), actorId: player.id, destination: {x: 3, y: 4},
+      rng: () => {draws++; return 0.5;}});
+    expect(draws).toBe(['near', 'prone'].includes(status) ? 3 : 2);
+    expect(state.world.actors[attacker.id].runtime.resources.reaction).toBe(0);
+    expect(state.world.actors[ally.id].runtime.resources.reaction).toBe(0);
+    expect(state.tokens[player.id].position).toEqual({x: 3, y: 4});
+  });
+});

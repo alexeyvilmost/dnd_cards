@@ -3748,6 +3748,7 @@ function runAttackRoll(
       : undefined;
   const attackFilter: ModifierQueryFacts = {
     ...attackFacts,
+    nearbyEligibleAllyToTarget: ctx.attackFacts?.nearbyEligibleAllyToTarget === true,
     ...(queryAbility ? { ability: queryAbility } : {}),
     ...(ctx.target?.id ? { targetActorId: ctx.target.id } : {}),
     ...(ctx.spell?.sourceClass ? { spellClass: ctx.spell.sourceClass } : {}),
