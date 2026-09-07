@@ -3,6 +3,8 @@ import { Moon, Sun, Swords } from 'lucide-react';
 import type { EncounterApply } from '../battle/encountersApi';
 import { charactersV3Api, type CharacterEventRow } from '../character/api';
 import { persistCharacterRuntime } from '../character/runtimePersistence';
+import { roguelikeApi } from '../roguelike/api';
+import { activeRunId, notifyRunUpdated } from '../roguelike/navigation';
 import {
   collectActionUsesRecharge,
   collectActionUsesRecovery,
@@ -144,6 +146,7 @@ export default function SheetRestButtons({
     Record<string, PreparedSpellSwapSelection>
   >({});
   const [shortRestError, setShortRestError] = useState<string | null>(null);
+  const hitDieRolls = useRef<number[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pendingAtomicTurn, setPendingAtomicTurn] = useState<PreparedSheetAtomicWorldCommit | null>(null);
   const syncAttemptedFor = useRef<string | null>(null);
@@ -266,15 +269,28 @@ export default function SheetRestButtons({
     attunementUnlocked?: boolean,
     resetDeathSaves?: boolean,
     baseTurnState?: Record<string, unknown> | null,
+    restType?: 'short_rest' | 'long_rest',
   ) => {
     setBusy(true);
     setError(null);
     try {
-      const updated = await persistCharacterRuntime(
-        character,
-        persistPayload(next, attunementUnlocked, resetDeathSaves, baseTurnState),
-        encounterApply,
-      );
+      const runId = character.character_type === 'dungeon_crawl' ? activeRunId() : undefined;
+      let updated: ForgeCharacter;
+      if (runId && restType) {
+        const run = await roguelikeApi.get(runId);
+        const patch = persistPayload(next, attunementUnlocked, resetDeathSaves, baseTurnState);
+        const result = await roguelikeApi.command(runId, run.revision, restType, {
+          runtime: { current_hp: patch.current_hp, resources: patch.resources,
+            active_effects: patch.active_effects, turn_state: patch.turn_state },
+          hit_die_rolls: restType === 'short_rest' ? hitDieRolls.current : [],
+        });
+        if (!result.character) throw new Error('Сервер не вернул лист после отдыха');
+        updated = result.character;
+        notifyRunUpdated();
+      } else {
+        updated = await persistCharacterRuntime(character,
+          persistPayload(next, attunementUnlocked, resetDeathSaves, baseTurnState), encounterApply);
+      }
       for (const [resource, expected] of Object.entries(next.resources)) {
         if (updated.resources?.[resource] !== expected) {
           throw new Error(`Сервер не подтвердил обновление ресурса ${resource}`);
@@ -453,6 +469,7 @@ export default function SheetRestButtons({
   };
 
   const handleShortRest = () => {
+    hitDieRolls.current = [];
     const { state, events } = shortRest(runtime, restCtx);
     setShortRestSelections({});
     setShortRestSpellSwapSelections({});
@@ -472,6 +489,7 @@ export default function SheetRestButtons({
     const rolled = decision.mode === 'manual'
       ? decision.values[0]
       : Math.floor(Math.random() * sides) + 1;
+    hitDieRolls.current.push(rolled);
     setShortRestDraft((current) => {
       if (!current) return current;
       const result = spendHitDie(current.state, ctx, rolled);
@@ -510,6 +528,7 @@ export default function SheetRestButtons({
         true,
         true,
         turnState,
+        'short_rest',
       );
       if (ok) {
         setShortRestDraft(null);
@@ -569,6 +588,7 @@ export default function SheetRestButtons({
       true,
       true,
       clearCombatContinuationsForRest(turnState),
+      'long_rest',
     );
     if (ok) onLongRestComplete?.();
   };

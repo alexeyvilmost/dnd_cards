@@ -65,11 +65,12 @@ type CharacterRuntimeCommandEvent struct {
 }
 
 type CharacterRuntimeCommandRequest struct {
-	CommandID      string                               `json:"command_id"`
-	RoguelikeRunID string                               `json:"roguelike_run_id,omitempty"`
-	RulesetRef     CharacterRuntimeCommandRulesetRef    `json:"ruleset_ref"`
-	Participants   []CharacterRuntimeCommandParticipant `json:"participants"`
-	Events         []CharacterRuntimeCommandEvent       `json:"events"`
+	CommandID       string                               `json:"command_id"`
+	RoguelikeRunID  string                               `json:"roguelike_run_id,omitempty"`
+	RoguelikeIntent string                               `json:"roguelike_intent,omitempty"`
+	RulesetRef      CharacterRuntimeCommandRulesetRef    `json:"ruleset_ref"`
+	Participants    []CharacterRuntimeCommandParticipant `json:"participants"`
+	Events          []CharacterRuntimeCommandEvent       `json:"events"`
 }
 
 type CharacterRuntimeCommandParticipantResponse struct {
@@ -567,8 +568,15 @@ func (cc *CharacterV3Controller) PostCharacterRuntimeCommand(c *gin.Context) {
 						CharacterID: participant.CharacterID,
 					}
 				}
+				intent := roguelikeIntentCombat
+				if request.RoguelikeIntent == roguelikeIntentCamp {
+					intent = roguelikeIntentCamp
+					if err := validateRoguelikeCampAction(character, participant.Patch); err != nil {
+						return err
+					}
+				}
 				if _, err := authorizeRoguelikeCharacterMutation(
-					tx, character, userID, request.RoguelikeRunID, roguelikeIntentCombat,
+					tx, character, userID, request.RoguelikeRunID, intent,
 				); err != nil {
 					return err
 				}

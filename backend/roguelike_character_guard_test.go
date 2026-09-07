@@ -7,6 +7,27 @@ import (
 	"github.com/google/uuid"
 )
 
+func TestRoguelikeCampActionsCannotRecoverResourcesOrChangeEconomy(t *testing.T) {
+	resources := JSONMap{"action": 0, "bonus_action": 1, "second_wind": 2, "hit_dice_d10": 2}
+	maxima := JSONMap{"action": 1, "bonus_action": 1, "second_wind": 2, "hit_dice_d10": 2}
+	currency := JSONMap{"gold": 20}
+	character := CharacterV3{ID: uuid.New(), Resources: &resources, MaxResources: &maxima, Currency: &currency}
+	spent := JSONMap{"action": 1, "bonus_action": 0, "second_wind": 1, "hit_dice_d10": 2}
+	if err := validateRoguelikeCampAction(character, CharacterRuntimeCommandPatch{Resources: &spent, MaxResources: &maxima}); err != nil {
+		t.Fatal(err)
+	}
+	for _, patch := range []CharacterRuntimeCommandPatch{
+		{Resources: &JSONMap{"second_wind": 3}},
+		{Resources: &JSONMap{"hit_dice_d10": 3}},
+		{MaxResources: &JSONMap{"second_wind": 100}},
+		{Currency: &JSONMap{"gold": 100}},
+	} {
+		if err := validateRoguelikeCampAction(character, patch); err == nil {
+			t.Fatal("camp action bypassed run authority")
+		}
+	}
+}
+
 func TestValidateRoguelikeCampRuntimePatchPreservesOwnership(t *testing.T) {
 	characterID := uuid.New()
 	cardID := uuid.New().String()

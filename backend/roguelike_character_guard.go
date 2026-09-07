@@ -149,6 +149,31 @@ const (
 	roguelikeIntentCamp   = "camp"
 )
 
+// Sheet actions may consume items and class resources in camp. Rest recovery
+// and the run economy still go through run commands.
+func validateRoguelikeCampAction(character CharacterV3, patch CharacterRuntimeCommandPatch) error {
+	if (patch.MaxResources != nil && !roguelikeJSONEqual(patch.MaxResources, character.MaxResources)) ||
+		(patch.Currency != nil && !roguelikeJSONEqual(patch.Currency, character.Currency)) {
+		return roguelikeMutationError("roguelike_camp_action_forbidden", "действие не может менять максимумы ресурсов или деньги забега", character.ID)
+	}
+	if patch.Resources != nil {
+		for key, raw := range *patch.Resources {
+			if key == "action" || key == "bonus_action" || key == "reaction" {
+				continue
+			}
+			before := 0
+			if character.Resources != nil {
+				before, _ = numberFromJSON((*character.Resources)[key])
+			}
+			after, ok := numberFromJSON(raw)
+			if !ok || after > before {
+				return roguelikeMutationError("roguelike_rest_required", "восстановление ресурсов требует отдыха", character.ID)
+			}
+		}
+	}
+	return nil
+}
+
 // authorizeRoguelikeCharacterMutation closes every ordinary CharacterV3 write
 // path for a run-owned sheet. The caller must name the owning run and the one
 // phase-specific operation that is allowed through the shared rules surface.

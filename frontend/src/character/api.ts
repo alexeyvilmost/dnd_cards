@@ -1,5 +1,6 @@
 import { ApiRequestError, apiClient } from '../api/client';
 import { cached } from '../api/apiCache';
+import { activeRunId, notifyRunUpdated } from '../roguelike/navigation';
 import type { EngineEvent } from '../mvp/contracts';
 import type { ForgeCharacter, ForgeCharacterPreview, SaveForgeCharacterRequest } from './types';
 
@@ -212,8 +213,11 @@ export const charactersV3Api = {
   ): Promise<CharacterRuntimeCommandResponse> => characterV3Request('runtime_command', async () => {
     const { data } = await apiClient.post<CharacterRuntimeCommandResponse>(
       '/api/characters-v3/runtime-commands',
-      payload,
+      activeRunId() && !payload.roguelike_run_id
+        ? { ...payload, roguelike_run_id: activeRunId(), roguelike_intent: 'camp' }
+        : payload,
     );
+    notifyRunUpdated();
     return data;
   }),
   uploadAvatar: (characterId: string, file: File): Promise<string> => characterV3Request('update', async () => {
@@ -274,6 +278,7 @@ export interface CharacterRuntimeCommandEvent {
 export interface CharacterRuntimeCommandRequest {
   command_id: string;
 	roguelike_run_id?: string;
+  roguelike_intent?: 'camp' | 'combat';
   ruleset_ref: CharacterRuntimeCommandRulesetRef;
   participants: CharacterRuntimeCommandParticipant[];
   events: CharacterRuntimeCommandEvent[];

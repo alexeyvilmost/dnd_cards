@@ -186,4 +186,19 @@ describe('charactersV3Api access handling', () => {
       window.history.replaceState({}, '', '/');
     }
   });
+
+  it('uses camp authority for sheet actions and preserves explicit combat authority', async () => {
+    const runId = '8f13483e-05ea-4ac2-ad21-7cdd6ba21f72';
+    window.history.replaceState({}, '', `/characters-v3/character-id?roguelike=${runId}`);
+    const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: { participants: [] } } as never);
+    try {
+      await charactersV3Api.postRuntimeCommand(runtimeCommand);
+      expect(post).toHaveBeenLastCalledWith('/api/characters-v3/runtime-commands', {
+        ...runtimeCommand, roguelike_run_id: runId, roguelike_intent: 'camp',
+      });
+      const combat = { ...runtimeCommand, roguelike_run_id: runId };
+      await charactersV3Api.postRuntimeCommand(combat);
+      expect(post).toHaveBeenLastCalledWith('/api/characters-v3/runtime-commands', combat);
+    } finally { window.history.replaceState({}, '', '/'); }
+  });
 });

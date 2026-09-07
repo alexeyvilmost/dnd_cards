@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Grid3X3, List, ShoppingCart } from 'lucide-react';
-import { shopsApi } from '../api/client';
+import { shopsApi, cardsApi } from '../api/client';
+import { roguelikeApi, type RoguelikeRun, type RoguelikeOffer } from '../roguelike/api';
+import { runSheetURL } from '../roguelike/navigation';
 import { charactersV3Api } from '../character/api';
 import { characterCurrency, purchaseItem, purchasePrice } from '../character/inventory';
 import { loadAssembly } from '../character/assemble';
@@ -18,6 +20,8 @@ import { getCurrencyInfo } from '../utils/currencies';
 import { getSettings } from '../settings';
 
 type VendorsResponse = Record<string, Card[]>;
+type RunShopCard = Card & { runOfferId?: string };
+const offerId = (card: Card) => (card as RunShopCard).runOfferId ?? card.id;
 
 const STARTING_GOLD = 150;
 
@@ -35,8 +39,35 @@ const ShopDetail = () => {
   const [buyingId, setBuyingId] = useState<string | null>(null);
   const [purchasePassives, setPurchasePassives] = useState<Record<string, unknown>[]>([]);
   const [params, setParams] = useSearchParams();
+  const runId = params.get('roguelike');
+  const [roguelike, setRoguelike] = useState<RoguelikeRun | null>(null);
   const selectedVendor = params.get('vendor') || '';
   const characterId = params.get('character') || '';
+
+  const applyRun = useCallback(async (run: RoguelikeRun) => {
+    const hydrate = async (offer: RoguelikeOffer): Promise<Card> => {
+      const card = offer.card_id ? await cardsApi.getCard(offer.card_id) : {
+        id: offer.id, name: offer.name, rarity: 'common', image_url: '/default_image.png',
+      } as Card;
+      return { ...card, runOfferId: offer.id, price: offer.price, price_currency: 'gold' } as RunShopCard;
+    };
+    const [staples, offers] = await Promise.all([
+      Promise.all(run.shop.staples.map(hydrate)), Promise.all(run.shop.offers.map(hydrate)),
+    ]);
+    setRoguelike(run);
+    setCharacters(run.character ? [run.character] : []);
+    setVendors({ 'Постоянный ассортимент': staples, 'Случайный ассортимент': offers });
+  }, []);
+
+  const runCommand = async (type: 'buy' | 'pin' | 'refresh_shop', payload: Record<string, unknown> = {}) => {
+    if (!runId || buyingId) return;
+    setBuyingId(String(payload.offer_id ?? type)); setShopMsg(null);
+    try {
+      const fresh = await roguelikeApi.get(runId);
+      await applyRun(await roguelikeApi.command(runId, fresh.revision, type, payload));
+    } catch (e) { setShopMsg(e instanceof Error ? e.message : 'Ошибка магазина'); }
+    finally { setBuyingId(null); }
+  };
 
   const selectedCharacter = useMemo(
     () => characters.find((c) => c.id === characterId) ?? null,
@@ -52,6 +83,10 @@ const ShopDetail = () => {
     const run = async () => {
       try {
         if (!slug) return;
+        if (runId) {
+          await applyRun(await roguelikeApi.get(runId));
+          return;
+        }
         const [shop, chars] = await Promise.all([
           shopsApi.getShop(slug),
           charactersV3Api.list(),
@@ -66,11 +101,11 @@ const ShopDetail = () => {
       }
     };
     run();
-  }, [slug]);
+  }, [slug, runId, applyRun]);
 
   useEffect(() => {
     let active = true;
-    if (!selectedCharacter) {
+    if (!selectedCharacter || runId) {
       setPurchasePassives([]);
       return () => { active = false; };
     }
@@ -84,7 +119,7 @@ const ShopDetail = () => {
         if (active) setPurchasePassives([]);
       });
     return () => { active = false; };
-  }, [selectedCharacter]);
+  }, [selectedCharacter, runId]);
 
   const selectCharacter = (id: string) => {
     const next = new URLSearchParams(params);
@@ -201,7 +236,7 @@ const ShopDetail = () => {
           </span>
         );
       })}
-      {(wallet.gold ?? 0) === 0 && (wallet.silver ?? 0) === 0 && (wallet.copper ?? 0) === 0 && (
+      {!runId && (wallet.gold ?? 0) === 0 && (wallet.silver ?? 0) === 0 && (wallet.copper ?? 0) === 0 && (
         <button
           type="button"
           className="text-blue-600 hover:underline text-sm"
@@ -215,14 +250,16 @@ const ShopDetail = () => {
   );
 
   const buyButton = (card: Card, compact = false) => {
+    const offer = roguelike && [...roguelike.shop.staples, ...roguelike.shop.offers].find((entry) => entry.id === offerId(card));
     const price = purchasePrice(card, purchasePassives).payable;
     const affordable = canAfford(card);
-    const busy = buyingId === card.id;
+    const busy = buyingId === offerId(card);
     return (
+      <>
       <button
         type="button"
-        disabled={!selectedCharacter || busy || (price > 0 && !affordable)}
-        onClick={() => handleBuy(card)}
+        disabled={!selectedCharacter || Boolean(buyingId) || (price > 0 && !affordable) || Boolean(offer?.sold) || Boolean(roguelike && (roguelike.phase !== 'camp' || roguelike.status !== 'active'))}
+        onClick={() => runId ? void runCommand('buy', { offer_id: offerId(card) }) : void handleBuy(card)}
         className={`inline-flex items-center gap-1 rounded-lg border transition-colors ${
           compact ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm'
         } ${
@@ -233,8 +270,15 @@ const ShopDetail = () => {
         title={!selectedCharacter ? 'Выберите персонажа' : price > 0 && !affordable ? 'Недостаточно средств' : 'Купить'}
       >
         <ShoppingCart size={compact ? 14 : 16} />
-        {busy ? '…' : 'Купить'}
+        {busy ? '…' : offer?.sold ? 'Продано' : 'Купить'}
       </button>
+      {offer && <span className="text-xs text-gray-500">{roguelike?.shop.staples.some((entry) => entry.id === offer.id) ? '∞' : `${offer.quantity} шт.`}</span>}
+      {offer && roguelike?.shop.offers.some((entry) => entry.id === offer.id) && <button type="button"
+        className="text-xs border rounded-lg px-2 py-1" disabled={Boolean(buyingId) || offer.sold || (!offer.pinned && roguelike.gold < 5) || roguelike.phase !== 'camp' || roguelike.status !== 'active'}
+        onClick={() => void runCommand('pin', { offer_id: offer.pinned ? '' : offer.id })}>
+        {offer.pinned ? 'Снять фиксацию' : 'Зафиксировать · 5 зм'}
+      </button>}
+      </>
     );
   };
 
@@ -261,11 +305,17 @@ const ShopDetail = () => {
       </div>
 
       <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+        {roguelike && <div className="flex items-center gap-3 flex-wrap">
+          <span>Припасы: {roguelike.supplies} · Обновление {roguelike.shop.generation}</span>
+          <button className="border rounded-lg px-3 py-2" disabled={Boolean(buyingId) || roguelike.gold < 5 * (roguelike.paid_refresh_count + 1) || roguelike.phase !== 'camp' || roguelike.status !== 'active'}
+            onClick={() => void runCommand('refresh_shop')}>Обновить ассортимент · {5 * (roguelike.paid_refresh_count + 1)} зм</button>
+        </div>}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <label className="text-sm font-medium text-gray-700 shrink-0">Покупатель:</label>
           <select
             className="flex-1 max-w-md border border-gray-300 rounded-lg px-3 py-2 text-sm"
             value={characterId}
+            disabled={Boolean(runId)}
             onChange={(e) => selectCharacter(e.target.value)}
           >
             <option value="">— выберите персонажа v3 —</option>
@@ -275,7 +325,7 @@ const ShopDetail = () => {
           </select>
           {selectedCharacter && (
             <Link
-              to={`/characters-v3/${selectedCharacter.id}`}
+              to={roguelike ? runSheetURL(roguelike) : `/characters-v3/${selectedCharacter.id}`}
               className="text-sm text-blue-600 hover:underline shrink-0"
             >
               Открыть лист →

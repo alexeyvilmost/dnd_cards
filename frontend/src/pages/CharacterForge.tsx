@@ -5,6 +5,7 @@ import { racesApi, classesApi, backgroundsApi, featsApi, spellsApi } from '../ap
 import type { Race, CharacterClass, Background, Feat, Spell } from '../types';
 import { getSpellLevelLabel } from '../types';
 import { characterV3ErrorMessage, charactersV3Api } from '../character/api';
+import { roguelikeApi } from '../roguelike/api';
 import { buildCharacterContext } from '../character/runtime';
 import { buildResourceRuntimePatch, syncRuntimeResources } from '../character/resourceInit';
 import { projectCharacterStartingEquipmentPatch } from '../character/startingEquipment';
@@ -265,6 +266,11 @@ const CharacterForge = () => {
     (async () => {
       try {
         const c = await charactersV3Api.get(editId);
+        const runId = searchParams.get('roguelike');
+        const run = runId ? await roguelikeApi.get(runId) : null;
+        if (run && (run.character_id !== c.id || run.status !== 'active' || run.phase !== 'camp')) {
+          throw new Error('Повышение уровня недоступно в текущем состоянии забега');
+        }
         if (isCharacterReadOnly(c)) {
           navigate(`/characters-v3/${c.id}`, {
             replace: true,
@@ -277,12 +283,13 @@ const CharacterForge = () => {
         restoredClassSkillsRef.current = false;
         const d = characterToDraft(c);
         if (searchParams.get('levelup') === '1') {
-          const fromLevel = d.level || 1;
+          const fromLevel = run?.pending_level ? run.pending_level - 1 : d.level || 1;
           const fromClassLevels = draftClassLevels(d);
+          if (run?.pending_level && d.classId) fromClassLevels[d.classId] = fromLevel;
           d.level = Math.min(20, fromLevel + 1);
           if (d.classId && fromLevel < 20) d.classLevels = addClassLevel({ ...d, level: fromLevel, classLevels: fromClassLevels }, d.classId);
           setLevelUp({ fromLevel, fromClassLevels, selectedClassId: d.classId ?? '' });
-          setSearchParams({}, { replace: true });
+          if (!runId) setSearchParams({}, { replace: true });
         }
         setDraft(d);
       } catch (e) {
@@ -767,7 +774,7 @@ const CharacterForge = () => {
           initialRuntime: runtimePatch,
         });
       } else {
-        res = await charactersV3Api.update(draft.id!, payload);
+        res = await charactersV3Api.update(draft.id!, payload, searchParams.get('roguelike') || undefined);
         const runtimePatch = buildResourceRuntimePatch(
           res,
           ctx,
@@ -783,7 +790,12 @@ const CharacterForge = () => {
         if (levelUp && runtimePatch) {
           runtimePatch.turn_state = writeSoloCombatState(res.turn_state, null);
         }
-        if (runtimePatch) res = await charactersV3Api.patchRuntime(res.id, runtimePatch);
+        if (runtimePatch) res = await charactersV3Api.patchRuntime(res.id, runtimePatch,
+          searchParams.get('roguelike') ? { runId: searchParams.get('roguelike')!, intent: 'level_up' } : undefined);
+        if (searchParams.get('roguelike')) {
+          const run = await roguelikeApi.get(searchParams.get('roguelike')!);
+          await roguelikeApi.command(run.id, run.revision, 'confirm_level_up');
+        }
       }
       if (localAvatar) {
         const avatarBlob = await fetch(localAvatar).then((response) => response.blob());
@@ -799,9 +811,11 @@ const CharacterForge = () => {
       setRestorable(null);
       try { localStorage.removeItem(FORGE_DRAFT_KEY); } catch { /* ignore */ }
       if (isCreate) navigate(`/characters-v3/${res.id}`, { replace: true });
+      return true;
     } catch (e) {
       console.error(e);
       setError(characterV3ErrorMessage(e, 'Ошибка сохранения персонажа'));
+      return false;
     } finally {
       setSaving(false);
     }
@@ -1054,9 +1068,9 @@ const CharacterForge = () => {
             </div>
             <div className="forge-block">
               <div className="forge-section-h">Уровень класса</div>
-              <p className="forge-note">Продолжите текущий класс или возьмите первый уровень другого класса.</p>
+              <p className="forge-note">{searchParams.get('roguelike') ? 'Продолжите развитие воина.' : 'Продолжите текущий класс или возьмите первый уровень другого класса.'}</p>
               <div className="forge-square-grid">
-                {rootClasses.map((entry) => {
+                {rootClasses.filter((entry) => !searchParams.get('roguelike') || entry.id === draft.classId).map((entry) => {
                   const requirements = entry.id === draft.classId ? [] : multiclassPrerequisiteIssues(entry, draft.abilities);
                   return (
                     <EntitySquareCard
@@ -1236,12 +1250,12 @@ const CharacterForge = () => {
                   type="button"
                   className="forge-btn forge-create-btn"
                   disabled={!canConfirm || saving}
-                  onClick={async () => { await save(); navigate(`/characters-v3/${draft.id}`); }}
+                  onClick={async () => { if (await save()) navigate(`/characters-v3/${draft.id}${searchParams.get('roguelike') ? `?roguelike=${searchParams.get('roguelike')}` : ''}`); }}
                 >
                   {saving ? 'Сохранение…' : `Подтвердить уровень ${draft.level}`}
                 </button>
                 <button type="button" className="forge-btn ghost"
-                  onClick={() => navigate(`/characters-v3/${draft.id}`)}>
+                  onClick={() => navigate(`/characters-v3/${draft.id}${searchParams.get('roguelike') ? `?roguelike=${searchParams.get('roguelike')}` : ''}`)}>
                   Отмена
                 </button>
               </div>

@@ -34,6 +34,9 @@ import {
 } from '../character/runtime';
 import { untrainedArmorPenaltyMechanics } from '../character/untrainedArmor';
 import { persistCharacterRuntime } from '../character/runtimePersistence';
+import SheetRunPanel from '../components/SheetRunPanel';
+import { roguelikeApi } from '../roguelike/api';
+import { runSheetURL } from '../roguelike/navigation';
 import { finalizeSheetD20Roll } from '../character/sheetD20Roll';
 import { breakdownValue } from '../engine/breakdown';
 import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
@@ -135,6 +138,15 @@ const CharacterSheetMVP = () => {
   const roguelikeRunId = new URLSearchParams(location.search).get('roguelike');
   const [character, setCharacter] = useState<ForgeCharacter | null>(null);
   const characterRef = useRef<ForgeCharacter | null>(character);
+  useEffect(() => {
+    if (!character || character.character_type !== 'dungeon_crawl' || roguelikeRunId) return;
+    let active = true;
+    void roguelikeApi.list().then((runs) => {
+      const run = runs.find((entry) => entry.character_id === character.id);
+      if (active && run) navigate(runSheetURL(run), { replace: true });
+    }).catch((e: unknown) => active && setError(e instanceof Error ? e.message : 'Не удалось загрузить забег'));
+    return () => { active = false; };
+  }, [character?.id, character?.character_type, roguelikeRunId, navigate]);
   characterRef.current = character;
   const [assembled, setAssembled] = useState<AssembledCharacter | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -190,9 +202,7 @@ const CharacterSheetMVP = () => {
       && (soloCombatEnvelope as Record<string, unknown>).outcome === 'active',
   );
   const combatLocked = Boolean(activeEncounter || activeSoloCombat);
-  const sheetActionDisabledReason = roguelikeRunId
-    ? 'Боевые действия, хиты и ресурсы героя забега изменяются на поле боя или в лагере.'
-    : activeSoloCombat
+  const sheetActionDisabledReason = activeSoloCombat
     ? 'Персонаж находится в активном одиночном бою. Применяйте действия и эффекты на поле боя.'
     : undefined;
   const coordinatedSheetActionDisabledReason = sheetActionDisabledReason
@@ -1159,10 +1169,7 @@ const CharacterSheetMVP = () => {
       )}
 
       {roguelikeRunId && (
-        <p className="forge-note" role="note" style={{ margin: '12px auto', maxWidth: 900, padding: '0 16px' }}>
-          Лист открыт из лагеря. Здесь можно менять экипировку, размещение в инвентаре и настройку предметов.
-          Отдых, лечение, покупки и повышение уровня выполняются на экране забега.
-        </p>
+        <SheetRunPanel runId={roguelikeRunId} characterId={character.id} />
       )}
 
       {renderedV2 ? (
