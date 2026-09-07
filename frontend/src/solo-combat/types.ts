@@ -69,6 +69,8 @@ export interface CombatLogEventRecord {
 
 export interface CombatLogEntry {
   id: string;
+  /** Monotonic cursor; visible history is a bounded window, not an event offset. */
+  sequence?: number;
   round: number;
   actorId: string;
   /** Names as they were when the entry was created (summons can reuse an id in a new form). */

@@ -286,6 +286,16 @@ function activeActorId(state: SoloCombatState): string {
   return state.world.scene.initiative[state.world.scene.activeIndex];
 }
 
+function combatLogCursor(state: SoloCombatState): number {
+  return state.log.at(-1)?.sequence ?? state.log.length;
+}
+
+function combatLogSince(state: SoloCombatState, cursor: number): CombatLogEntry[] {
+  // Legacy saves have no sequence. New entries start after their current tail,
+  // so pending legacy cursors still work when the first old row is evicted.
+  return state.log.filter((entry, index) => (entry.sequence ?? index + 1) > cursor);
+}
+
 function appendLog(
   state: SoloCombatState,
   actorId: string,
@@ -299,7 +309,7 @@ function appendLog(
     ...records.flatMap((record) => [record.sourceActorId, record.actorId, ...record.targetIds]),
   ]);
   const entry: CombatLogEntry = {
-    id: combatIdentity(state, `log:${actorId}`), round, actorId, text: `${actorName}: ${text}`,
+    id: combatIdentity(state, `log:${actorId}`), sequence: combatLogCursor(state) + 1, round, actorId, text: `${actorName}: ${text}`,
     actorNames: Object.fromEntries([...loggedActorIds].map((loggedActorId) => [
       loggedActorId,
       state.world.actors[loggedActorId]?.name ?? loggedActorId,
@@ -445,7 +455,7 @@ function offerInterception(input: {
       sourceActionId: input.sourceActionId,
       targetActorId,
       targetHpBefore: clone(input.before.world.actors[targetActorId].runtime.hp),
-      logIndex: input.before.log.length,
+      logIndex: combatLogCursor(input.before),
     };
   if (input.after.world.pendingResolution) {
     return { ...input.after, pendingInterceptionTrigger: trigger };
@@ -1103,7 +1113,7 @@ function successfulD20Preview(
   rollKind: D20InterruptRollKind,
 ): NonNullable<PendingD20Interrupt['preview']> | null {
   const acceptedOutcomes = rollKind === 'attack_roll' ? new Set(['hit']) : new Set(['success']);
-  const rolls = state.log.slice(fromLogIndex).flatMap((entry) => entry.records ?? [])
+  const rolls = combatLogSince(state, fromLogIndex).flatMap((entry) => entry.records ?? [])
     .filter((record) => record.sourceActorId === sourceActorId)
     .flatMap((record) => record.event?.type === 'roll' ? [record.event.roll] : [])
     .filter((roll) => (
@@ -1545,7 +1555,7 @@ function executeCombatActionWithD20Interrupts(
   const recorded = recordedRng(input.rng ?? Math.random);
   const previewState = executeCombatActionCore({ ...input, rng: recorded.rng });
   const preview = successfulD20Preview(
-    previewState, input.state.log.length, input.actorId, rollKind,
+    previewState, combatLogCursor(input.state), input.actorId, rollKind,
   );
   if (!preview) return previewState;
   const responders = d20InterruptCapabilities(
@@ -2367,7 +2377,7 @@ function attackOutcomeEvent(
   fromLogIndex: number,
   sourceActorId: string,
 ): 'hit' | 'miss' | null {
-  const outcomes = state.log.slice(fromLogIndex).flatMap((entry) => (
+  const outcomes = combatLogSince(state, fromLogIndex).flatMap((entry) => (
     entry.records ?? []
   )).flatMap((record) => {
     const roll = record.event?.type === 'roll' ? record.event.roll : undefined;
@@ -2388,7 +2398,7 @@ function attackTriggerEvents(
   after: SoloCombatState,
   sourceActorId: string,
 ): AttackTriggerEvent[] {
-  const outcomeEvent = attackOutcomeEvent(after, before.log.length, sourceActorId);
+  const outcomeEvent = attackOutcomeEvent(after, combatLogCursor(before), sourceActorId);
   if (!outcomeEvent) return [];
   if (outcomeEvent === 'miss') return ['miss'];
   const beforeFired = before.world.actors[sourceActorId]?.runtime.firedThisTurn ?? [];
@@ -2438,7 +2448,7 @@ function sneakAttackTradeoff(input: {
   const beforeTarget = input.before.world.actors[targetActorId];
   const afterTarget = input.after.world.actors[targetActorId];
   if (!beforeTarget || !afterTarget) return undefined;
-  const packets = input.after.log.slice(input.before.log.length)
+  const packets = combatLogSince(input.after, combatLogCursor(input.before))
     .flatMap((entry) => entry.records ?? [])
     .filter((record) => (
       record.sourceActorId === input.sourceActorId
@@ -2523,7 +2533,7 @@ function sourceQualifiesForTriggeredAction(input: {
     ? trigger.feat_once_per_turn
     : null;
   if (onceKey && (actor.runtime.firedThisTurn ?? []).includes(onceKey)) return false;
-  const recentEvents = state.log.slice(before.log.length).flatMap((entry) => entry.records ?? [])
+  const recentEvents = combatLogSince(state, combatLogCursor(before)).flatMap((entry) => entry.records ?? [])
     .filter((record) => record.sourceActorId === actor.id)
     .flatMap((record) => record.event ? [record.event] : []);
   if (typeof trigger?.feat_damage_type === 'string'
@@ -2759,7 +2769,7 @@ function executeOpportunityAttacks(
       targetIds: [moverId], factsByTarget: { [moverId]: spatialFacts(next, enemy.id, moverId) },
     };
     if (next.pendingMovementStep) next = {...next, pendingMovementStep: {...next.pendingMovementStep,
-      lastOpportunity: {actorId: enemy.id, logStart: next.log.length}}};
+      lastOpportunity: {actorId: enemy.id, logStart: combatLogCursor(next)}}};
     next = dispatch({ state: next, command, rng, label: action.name });
     next = autoResolveSystemDecisions(next, rng);
     if (monsterMovementPaused(next)) return next;

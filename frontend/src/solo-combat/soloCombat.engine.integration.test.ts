@@ -879,9 +879,12 @@ describe('solo combat engine vertical integration', () => {
     expect(state.pendingTriggeredAction).toBeUndefined();
   });
 
-  it('applies Sentinel after a saved hit decision and cancels the uncommitted movement', async () => {
+  it.each([0, 80, 160])('applies Sentinel after a saved hit decision with log cursor %i', async cursor => {
     const setup = await parryEncounter();
     let state = setup.state;
+    if (cursor) state.log = Array.from({length: 80}, (_, index) => ({id: `old:${index}`,
+      ...(cursor > 80 ? {sequence: cursor - 79 + index} : {}),
+      actorId: setup.actorId, round: 1, text: 'Earlier unrelated event'}));
     const player = state.world.actors[setup.actorId];
     player.ac = 15;
     player.runtime.hp = {current: 100, max: 100, temp: 0};
@@ -3001,7 +3004,7 @@ describe('solo combat engine vertical integration', () => {
     expect(activeId(state)).toBe(participant.character.id);
   });
 
-  it('offers Crusher only after qualifying bludgeoning damage and closes it once per turn', async () => {
+  it.each([0, 160])('offers Crusher only after qualifying damage and once per turn with log cursor %i', async cursor => {
     const participant = fighterSeed();
     const actor = participant.canonical.world.actors[participant.character.id];
     actor.attackProfile = { ...(actor.attackProfile ?? {
@@ -3070,6 +3073,9 @@ describe('solo combat engine vertical integration', () => {
     });
     const monsterId = Object.values(state.world.actors).find((candidate) => candidate.kind === 'monster')!.id;
     state = placeAdjacent(state, actor.id, monsterId);
+    if (cursor) state.log = Array.from({length: 80}, (_, index) => ({id: `old:${index}`,
+      sequence: cursor - 79 + index, actorId: actor.id, round: 1, text: 'Earlier unrelated event'}));
+    state = clone(state);
     state = executeCombatAction({ state, actorId: actor.id, actionId: attack.id, targetIds: [monsterId], rng: () => 0.6 });
     expect(state.pendingTriggeredAction?.optionActionIds, JSON.stringify({
       presentation: state.actionPresentation?.[attack.id],
