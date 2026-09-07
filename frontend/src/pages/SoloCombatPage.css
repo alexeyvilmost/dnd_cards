@@ -811,7 +811,7 @@
   letter-spacing: 0.17em;
   font-size: 10px;
 }
-.combat-reaction-backdrop button,
+.combat-reaction-backdrop button:not(.sheet-item-row):not(.cs-action-tile),
 .combat-outcome button {
   display: inline-flex;
   align-items: center;
