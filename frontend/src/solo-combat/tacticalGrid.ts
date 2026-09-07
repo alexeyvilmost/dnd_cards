@@ -86,6 +86,49 @@ export function reachablePositions(
   });
 }
 
+export interface TacticalRoute {
+  destination: GridPosition;
+  path: GridPosition[];
+  costFt: number;
+}
+
+/** Bounded Dijkstra search over the 120-cell board. Every returned step is
+ * adjacent and unoccupied; cost matches the common movement executor per step. */
+export function reachableRoutes(
+  state: Pick<SoloCombatState, 'tokens' | 'world' | 'combatAreas'>,
+  actorId: string,
+  maximumFeet: number,
+): TacticalRoute[] {
+  const origin = state.tokens[actorId]?.position;
+  const actor = state.world.actors[actorId];
+  if (!origin || !actor || maximumFeet < 5 || !Number.isFinite(maximumFeet)) return [];
+  const occupied = occupiedPositions(state, actorId);
+  const key = (p: GridPosition) => `${p.x}:${p.y}`;
+  const difficult = new Set(Object.values(state.combatAreas ?? {}).flatMap(area =>
+    area.difficultTerrain ? area.cells.map(key) : []));
+  const crawl = Number(actorMustCrawl(actor));
+  const routes = new Map<string, TacticalRoute>([[key(origin), {destination: origin, path: [], costFt: 0}]]);
+  const queue = [routes.get(key(origin))!];
+  while (queue.length) {
+    queue.sort((a, b) => a.costFt - b.costFt || a.path.length - b.path.length
+      || a.destination.y - b.destination.y || a.destination.x - b.destination.x);
+    const current = queue.shift()!;
+    if (routes.get(key(current.destination)) !== current) continue;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (dx === 0 && dy === 0) continue;
+      const destination = {x: current.destination.x + dx, y: current.destination.y + dy};
+      if (!inside(destination) || occupied.has(key(destination))) continue;
+      const costFt = current.costFt + 5 * (1 + crawl
+        + Number(difficult.has(key(current.destination)) || difficult.has(key(destination))));
+      if (costFt > maximumFeet || (routes.get(key(destination))?.costFt ?? Infinity) <= costFt) continue;
+      const route = {destination, costFt, path: [...current.path, destination]};
+      routes.set(key(destination), route); queue.push(route);
+    }
+  }
+  routes.delete(key(origin));
+  return [...routes.values()];
+}
+
 function inside(position: GridPosition): boolean {
   return position.x >= 0 && position.y >= 0
     && position.x < TACTICAL_WIDTH && position.y < TACTICAL_HEIGHT;

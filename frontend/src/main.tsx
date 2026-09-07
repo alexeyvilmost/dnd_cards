@@ -12,7 +12,7 @@ import './index.css'
 let serviceWorkerRegistrationStarted = false
 
 const registerServiceWorker = () => {
-  if (!navigator.onLine || navigator.serviceWorker.controller || serviceWorkerRegistrationStarted) {
+  if (!navigator.onLine || serviceWorkerRegistrationStarted) {
     return
   }
   serviceWorkerRegistrationStarted = true

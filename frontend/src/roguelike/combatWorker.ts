@@ -79,6 +79,11 @@ export function stepRoguelikeCombat(
     if (!isPlayerControlledCombatActor(state, actorId)) throw new Error('Нельзя управлять этим участником боя');
   };
   if ('actorId' in intent && intent.actorId !== null) requireOwned(intent.actorId);
+  const proactive = new Set(['action', 'move', 'stand', 'end_turn', 'dancing_lights', 'detect_magic', 'remote_manipulator', 'boon']);
+  if (proactive.has(intent.type) && 'actorId' in intent
+    && (hasDecision(state) || activeActor(state).id !== intent.actorId)) {
+    throw new Error('Сначала завершите текущее решение или дождитесь своего хода');
+  }
   switch (intent.type) {
     case 'action': {
       let worldInput = intent.worldInput;

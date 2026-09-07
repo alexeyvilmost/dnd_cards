@@ -2870,6 +2870,7 @@ export function moveActor(input: {
   maxFeet?: number;
   voluntary?: boolean;
   rng?: Rng;
+  logMovement?: boolean;
 }): SoloCombatState {
   const token = input.state.tokens[input.actorId];
   if (!token) throw new Error('У участника нет токена на поле');
@@ -2961,7 +2962,7 @@ export function moveActor(input: {
   }
   next = autoResolveSystemDecisions(next, input.rng ?? Math.random);
   next = breakOutOfRangeGrapples(next, input.actorId, input.rng ?? Math.random);
-  return appendLog(next, input.actorId, `Перемещение на ${distance} фт.${movementCost > distance ? ` С учётом условий движения: потрачено ${movementCost} фт.` : ''}`);
+  return input.logMovement === false ? next : appendLog(next, input.actorId, `Перемещение на ${distance} фт.${movementCost > distance ? ` С учётом условий движения: потрачено ${movementCost} фт.` : ''}`);
 }
 
 function startTurnOrRequestGrappleDamage(
@@ -3674,9 +3675,45 @@ function withoutMonsterTacticalAdvantage(state: SoloCombatState, actorId: string
   };
 }
 
+function monsterMovementPaused(state: SoloCombatState): boolean {
+  return Boolean(state.world.pendingResolution || state.pendingD20Interrupt || state.pendingInterception
+    || state.pendingTriggeredAction || state.pendingTurnStartGrappleDamage);
+}
+
+function executeMonsterRoute(state: SoloCombatState, actorId: string, steps: GridPosition[], rng: Rng): SoloCombatState {
+  let traveled = 0;
+  const initialFeet = state.movementRemainingFt[actorId] ?? effectiveCombatActorSpeedFt(state, actorId);
+  const report = (value: SoloCombatState) => {
+    if (!traveled) return value;
+    const cost = Math.max(0, initialFeet - (value.movementRemainingFt[actorId] ?? 0));
+    return appendLog(value, actorId, `Перемещение на ${traveled} фт.${cost > traveled ? ` С учётом условий движения: потрачено ${cost} фт.` : ''}`);
+  };
+  let next = {...state, monsterMovement: {actorId, steps}};
+  while (next.monsterMovement?.steps.length) {
+    const step = next.monsterMovement.steps[0];
+    if (next.outcome !== 'active' || next.world.actors[actorId].runtime.hp.current <= 0) break;
+    if (monsterMovementPaused(next)) return report(next);
+    if (effectiveCombatActorSpeedFt(next, actorId) <= 0
+      || occupiedPositions(next, actorId).has(`${step.x}:${step.y}`)) break;
+    const moved = moveActor({state: next, actorId, destination: step, voluntary: true, rng, logMovement: false});
+    const arrived = moved.tokens[actorId].position.x === step.x && moved.tokens[actorId].position.y === step.y;
+    if (arrived) traveled += 5;
+    const remaining = arrived ? next.monsterMovement.steps.slice(1) : next.monsterMovement.steps;
+    next = {...moved, monsterMovement: {actorId, steps: remaining}};
+    if (monsterMovementPaused(next)) return report(next);
+    if (!arrived) break;
+  }
+  const {monsterMovement: _finished, ...finished} = next;
+  return report(finished);
+}
+
 export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
-  if (state.outcome !== 'active' || state.world.pendingResolution || state.pendingD20Interrupt || state.pendingInterception) return state;
+  if (state.outcome !== 'active' || monsterMovementPaused(state)) return state;
   const monsterId = activeActorId(state);
+  if (state.monsterMovement?.actorId === monsterId) {
+    state = executeMonsterRoute(state, monsterId, state.monsterMovement.steps, rng);
+    if (state.outcome !== 'active' || monsterMovementPaused(state)) return state;
+  }
   if (state.world.actors[monsterId]?.kind === 'monster' && canStandActor(state, monsterId)) {
     state = standActor(state, monsterId);
   }
@@ -3724,19 +3761,13 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
   ), monster.attackProfile?.reachFt ?? 5);
   const plan = planMonsterTurn(state, monster, targetId, maximumAttackRange, monsterAIProfile(monster).preferred_range_ft);
   let next = state;
-  const firstDestination = plan.firstMove.at(-1);
-  if (firstDestination) {
-    next = moveActor({ state: next, actorId: monsterId, destination: firstDestination, voluntary: true, rng });
-  }
+  if (plan.firstMove.length) next = executeMonsterRoute(next, monsterId, plan.firstMove, rng);
   if (next.world.actors[monsterId].runtime.hp.current <= 0 || next.outcome !== 'active'
-    || next.world.pendingResolution || next.pendingD20Interrupt || next.pendingInterception) return next;
+    || monsterMovementPaused(next)) return next;
   if (plan.usesDash) {
     if (!next.dashActionId) throw new Error('В боевом каталоге нет data-driven действия «Рывок»');
     next = executeCombatAction({ state: next, actorId: monsterId, actionId: next.dashActionId, targetIds: [monsterId], rng });
-    const dashDestination = plan.dashMove.at(-1);
-    if (dashDestination) {
-      next = moveActor({ state: next, actorId: monsterId, destination: dashDestination, voluntary: true, rng });
-    }
+    if (plan.dashMove.length) next = executeMonsterRoute(next, monsterId, plan.dashMove, rng);
   } else if (plan.attacks) {
     const distance = gridDistanceFt(next.tokens[monsterId].position, next.tokens[targetId].position);
     const reach = next.world.actors[monsterId].attackProfile?.reachFt ?? 5;
@@ -3772,7 +3803,7 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
   if (!plan.attacks && !plan.usesDash) {
     next = appendLog(next, monsterId, 'Цель не видна или недоступна: ход завершён без атаки.');
   }
-  return next.world.pendingResolution || next.pendingInterception || next.pendingD20Interrupt || next.outcome !== 'active'
+  return monsterMovementPaused(next) || next.outcome !== 'active'
     ? next
     : advanceTurn(next, rng);
 }

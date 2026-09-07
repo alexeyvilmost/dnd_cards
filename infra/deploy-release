@@ -184,6 +184,28 @@ docker build \
   -t "bagofholding-frontend:$sha" \
   "$build_root/frontend"
 
+# Keep the old tab's hashed imports available after the atomic switch. These
+# files are public build output; nginx exposes only immutable asset paths.
+assets_root="$root/shared/frontend-assets"
+mkdir -p "$assets_root"
+chmod 755 "$assets_root"
+retain_frontend_assets() {
+  assets_image="$1"
+  assets_container=$(docker create --entrypoint /bin/true "$assets_image")
+  if ! docker cp "$assets_container:/usr/share/nginx/html/." "$assets_root/"; then
+    docker rm "$assets_container" >/dev/null
+    return 1
+  fi
+  docker rm "$assets_container" >/dev/null
+}
+previous_assets_sha=$(basename "$(readlink -f "$root/current")")
+is_release_sha "$previous_assets_sha"
+retain_frontend_assets "bagofholding-frontend:$previous_assets_sha"
+retain_frontend_assets "bagofholding-frontend:$sha"
+# A bounded grace period for stale tabs, independent of image retention.
+find "$assets_root/assets" -type f -mtime +90 -delete
+find "$assets_root" -maxdepth 1 -type f -name 'workbox-*.js' -mtime +90 -delete
+
 echo "[4/7] Preparing release directory"
 mkdir "$release"
 cp "$build_root/infra/compose.prod.yml" "$release/compose.prod.yml"

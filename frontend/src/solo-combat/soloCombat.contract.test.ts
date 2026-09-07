@@ -4,7 +4,7 @@ import type { ActorState } from '../rules-core/domain';
 import type { Monster } from '../monsters/types';
 import { compileMonsterInstance } from './monsterCompiler';
 import { planMonsterTurn } from './monsterAi';
-import { areaPositionsForAction, effectiveActorSpeedFt, gridDistanceFt, pathToward, pullToward, pushAway, reachablePositions } from './tacticalGrid';
+import { areaPositionsForAction, effectiveActorSpeedFt, gridDistanceFt, pathToward, pullToward, pushAway, reachablePositions, reachableRoutes } from './tacticalGrid';
 import { spatialFacts, type SoloCombatState } from './types';
 
 const MONSTER_ID = 'c1000000-0000-4000-8000-000000000001';
@@ -345,4 +345,35 @@ it('compiles monster proficiencies, expertise, senses and condition immunities a
     skillExpertise: ['perception'], saveProficiencies: ['wis'] });
   expect(actor.passives).toContainEqual(expect.objectContaining({ kind: 'grant_sense', sense: 'darkvision', range: 60 }));
   expect(actor.traits?.conditionImmunities).toEqual([{ condition: 'poisoned', sourceEntityIds: [monster.id] }]);
+});
+
+
+describe('AI path search', () => {
+  it('routes around occupied intermediate cells rather than crossing them', () => {
+    const {state, monster} = aiState({x: 0, y: 1}, {x: 5, y: 1}, 30);
+    for (let y=0; y<3; y++) {
+      const id=`blocker-${y}`;
+      state.world.actors[id]={...state.world.actors.player,id};
+      state.tokens[id]={...state.tokens.player,actorId:id,position:{x:2,y}};
+    }
+    const plan=planMonsterTurn(state,monster,'player');
+    expect(plan.attacks).toBe(true);
+    expect(plan.firstMove.some(p=>p.y>=3)).toBe(true);
+    let previous={x:0,y:1};
+    for (const step of plan.firstMove) {
+      expect(gridDistanceFt(previous,step)).toBe(5);
+      expect(step.x!==2 || step.y>=3).toBe(true);
+      previous=step;
+    }
+    expect(gridDistanceFt(previous,{x:5,y:1})).toBeLessThanOrEqual(5);
+  });
+  it('does not report cells behind a full occupied barrier', () => {
+    const {state}=aiState({x:0,y:0},{x:4,y:0},60);
+    for(let y=0;y<10;y++) {
+      const id=`blocker-${y}`;
+      state.world.actors[id]={...state.world.actors.player,id};
+      state.tokens[id]={...state.tokens.player,actorId:id,position:{x:2,y}};
+    }
+    expect(reachableRoutes(state,'monster',60).every(route=>route.destination.x<2)).toBe(true);
+  });
 });

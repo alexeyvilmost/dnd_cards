@@ -54,6 +54,8 @@ services:
       - edge
 
   frontend:
+    volumes:
+      - /opt/bagofholding/shared/frontend-assets:/var/lib/bagofholding/frontend:ro
     image: bagofholding-frontend:${SOURCE_COMMIT:?SOURCE_COMMIT is required}
     environment:
       PORT: "3000"

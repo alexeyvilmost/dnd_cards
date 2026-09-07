@@ -125,3 +125,25 @@ Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br
 - Final offline regression passed: 384 files / 3197 tests. TypeScript, focused lint, headless execution and Node dispatcher tests passed.
 - First worker image build stopped before any production switch because its Docker context omitted the existing weapon/charge JSON directories. Added both directories to the image inputs. Public service remained on 15f9915.
 - Added a trusted-required encounter flag so a client cannot inject a legacy outcome before server initialization; regression rejects forged victory both before and after initialization.
+
+
+## Production trusted-worker acceptance: 1029fe0 (in progress)
+
+- Exact public/TimeWeb release: `1029fe0600d758cf472465189197b51bef6c0619`; backup `pre-1029fe0600d758cf472465189197b51bef6c0619-20260907T140949Z.dump`.
+- Internal worker artifact: `sha256:17f22d98bbc064bdd2d1821bd81ba04415aed890b27b21647077b05f36f230a2`.
+- Built-in browser retry restored XP400, one victory, gold36 and 19/22 HP in the existing sheet. The old PWA client attempted a compatibility combat PATCH and was correctly rejected before mutation. A second reload activated the new client and initialized the server fight.
+- Server initialization persisted run revision20/runtime70. The public run contains combat_state but no private envelope/entropy. Movement to UI cell4,3 spent30ft. Unarmed Fighting rolled14+5 againstAC18 and dealt10 (d8=7+3), leaving Hobgoblin1HP.
+- Reload preserved positions, initiative22/14, HP19/22, enemy1/11 and action0. A duplicate resume command returned revision23/runtime73 and byte-equivalent state both times. The stale browser received a revision conflict, reconciled, and its next end-turn executed once.
+- Enemy turns and subsequent player attacks execute through the worker and persist. Reward acceptance is not yet complete; this is a dedicated QA encounter, not a full natural run.
+
+- Browser completed the trusted encounter: player survived at6/22HP, defeated Hobgoblin, and claimed exactly100XP/15gp. Camp displayed500XP,51gp,two victories. The potion healed8→18HP, spent its one item and bonus action; ordinary attack remained available.
+- Next follow-up: retain immutable frontend chunks across deployments and register service-worker update checks even for already-controlled tabs. The previous controller guard prevented those checks on precisely the long-lived tabs that needed them.
+
+
+## Route and deployment continuity follow-up (not yet deployed)
+
+- AI now uses bounded Dijkstra routes through unoccupied adjacent cells and executes each route step through the common movement engine. Persisted remaining steps resume even after Dash has spent the action. Movement logs are aggregated per completed segment.
+- Added obstacle/barrier and saved-Dash-route scenarios; tactical/engine/interrupt suites passed99 cases. TypeScript, lint and headless worker gate passed.
+- Proactive worker intents now explicitly reject off-turn actions and unresolved decisions, including movement; direct API calls cannot bypass the hotbar's disabled state.
+- Retain old immutable assets for90days independently of Docker image retention. nginx fallback was tested in an isolated container: retained asset200, missing asset404. Service worker registration no longer skips already-controlled tabs.
+- Remaining movement work still includes full player route/crossing semantics and broader NPC utility/reaction coverage; this increment does not certify all six gated monsters.

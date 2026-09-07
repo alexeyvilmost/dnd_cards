@@ -12,7 +12,7 @@ import type { Monster } from '../monsters/types';
 import { addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, canStandActor, standActor, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatParticipants, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatAlertSwap, resolveSoloCombatInterception, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectedTargetsForAction, setSoloCombatInitiativeTotals, setSoloCombatMount } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { gridDistanceFt } from './tacticalGrid';
-import { isPlayerControlledCombatActor, SOLO_COMBAT_KEY } from './types';
+import { isPlayerControlledCombatActor, SOLO_COMBAT_KEY, type SoloCombatState } from './types';
 import { UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
 import { STONEWORK_CONTACT_CHOICE_ID } from '../mechanics/collectChoices';
 
@@ -3241,6 +3241,29 @@ describe('internal combat worker transition', () => {
     expect(() => stepRoguelikeCombat(input, {type: 'end_turn', actorId: monsterId}, artifactHash)).toThrow();
     expect(() => stepRoguelikeCombat(input, {type: 'resume'}, `sha256:${'b'.repeat(64)}`)).toThrow();
     expect(() => stepRoguelikeCombat(input, {type: 'action', actorId: input.state.characterId, actionId: 'any', targetIds: [], worldPosition: {x: 999, y: 0}}, artifactHash)).toThrow('Клетка вне поля боя');
+    const enemyTurn = {...input, state: advanceTurn(input.state, () => 0.5)};
+    expect(() => stepRoguelikeCombat(enemyTurn, {type: 'move', actorId: input.state.characterId, destination: {x: 3, y: 4}}, artifactHash)).toThrow('дождитесь своего хода');
     expect(input).toEqual(before);
   });
+});
+
+
+it('resumes a persisted monster route even after Dash has spent its action', async () => {
+  const participant=fighterSeed();
+  let state=await createSoloCombatState({character:participant.character,participant,
+    selected:[{monster:goblin(),quantity:1}],actions:[scimitar(),dash()],effects:[],dashAction:dash(),rng:()=>0.5});
+  const monsterId=Object.values(state.world.actors).find(actor=>actor.kind==='monster')!.id;
+  state.tokens[participant.character.id].position={x:11,y:9};
+  state.tokens[monsterId].position={x:0,y:0};
+  state=advanceTurn(state,()=>0.5);
+  state.world.actors[monsterId].runtime.resources.action=0;
+  state.movementRemainingFt[monsterId]=15;
+  state.monsterMovement={actorId:monsterId,steps:[{x:1,y:0},{x:2,y:0},{x:3,y:0}]};
+  const loaded=JSON.parse(JSON.stringify(state)) as SoloCombatState;
+  const result=runMonsterTurn(loaded,()=>0.5);
+  expect(result.tokens[monsterId].position).toEqual({x:3,y:0});
+  expect(result.movementRemainingFt[monsterId]).toBe(0);
+  expect(result.monsterMovement).toBeUndefined();
+  expect(activeId(result)).toBe(participant.character.id);
+  expect(result).toEqual(runMonsterTurn(state,()=>0.5));
 });

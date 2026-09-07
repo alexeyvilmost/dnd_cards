@@ -1,5 +1,5 @@
 import type { ActorState } from '../rules-core/domain';
-import { effectiveActorSpeedFt, gridDistanceFt, reachablePositions } from './tacticalGrid';
+import { effectiveActorSpeedFt, gridDistanceFt, reachableRoutes } from './tacticalGrid';
 import { spatialFacts, type GridPosition, type SoloCombatState } from './types';
 
 export interface MonsterTurnPlan {
@@ -7,14 +7,6 @@ export interface MonsterTurnPlan {
   dashMove: GridPosition[];
   usesDash: boolean;
   attacks: boolean;
-}
-
-function movementSteps(start: GridPosition, end: GridPosition): GridPosition[] {
-  const steps = gridDistanceFt(start, end) / 5;
-  return Array.from({ length: steps }, (_, index) => ({
-    x: Math.round(start.x + (end.x - start.x) * (index + 1) / steps),
-    y: Math.round(start.y + (end.y - start.y) * (index + 1) / steps),
-  }));
 }
 
 /** Pure controller using the same reachable destinations and sight as player actions. */
@@ -52,23 +44,19 @@ export function planMonsterTurn(
     return a[0] - b[0] || a[1] - b[1];
   };
   const choose = (origin: GridPosition, feet: number) => (
-    [origin, ...reachablePositions(at(origin), monster.id, feet)].sort((left, right) => (
-      compare(left, right)
-      || gridDistanceFt(origin, left) - gridDistanceFt(origin, right)
-      || left.y - right.y || left.x - right.x
+    [{destination: origin, path: [] as GridPosition[], costFt: 0}, ...reachableRoutes(at(origin), monster.id, feet)].sort((left, right) => (
+      compare(left.destination, right.destination)
+      || left.costFt - right.costFt
+      || left.destination.y - right.destination.y || left.destination.x - right.destination.x
     ))[0]
   );
-  const afterMove = choose(start, available);
-  const firstMove = movementSteps(start, afterMove);
+  const movement = choose(start, available);
+  const afterMove = movement.destination;
+  const firstMove = movement.path;
   if (canAttack(afterMove)) {
     return { firstMove, dashMove: [], usesDash: false, attacks: true };
   }
-  const afterDash = choose(afterMove, speed);
-  const usefulDash = compare(afterDash, afterMove) < 0;
-  return {
-    firstMove,
-    dashMove: usefulDash ? movementSteps(afterMove, afterDash) : [],
-    usesDash: usefulDash,
-    attacks: false,
-  };
+  const dash = choose(afterMove, speed);
+  const usefulDash = compare(dash.destination, afterMove) < 0;
+  return {firstMove, dashMove: usefulDash ? dash.path : [], usesDash: usefulDash, attacks: false};
 }

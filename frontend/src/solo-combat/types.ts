@@ -250,6 +250,7 @@ export interface PendingD20Interrupt {
 }
 
 export interface SoloCombatState {
+  monsterMovement?: {actorId: string; steps: GridPosition[]};
   schemaVersion: typeof SOLO_COMBAT_SCHEMA_VERSION;
   characterId: string;
   runtimeRevision: number;
