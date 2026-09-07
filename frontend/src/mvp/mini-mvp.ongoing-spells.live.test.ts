@@ -5,8 +5,13 @@ import { executeAction, projectedAgainst } from '../engine/execute';
 import { collectModifiers } from '../engine/modifiers';
 import { startTurn } from '../engine/turn';
 import { FIGHTER_CTX_EQUIPPED, freshFighterState } from './fixtures';
-import type { RuntimeState } from './contracts';
+import type { ExecuteContext, RuntimeState } from './contracts';
 import { readLiveJson } from './liveJsonRead';
+import {
+  buildGrantedEffectRegistry,
+  fetchLiveGrantedEffects,
+  resolveMaterializedRuntimeEffects,
+} from './liveGrantedEffects';
 import type { Spell } from '../types';
 
 type Dict = Record<string, unknown>;
@@ -63,9 +68,11 @@ const targetCharacter = { ...FIGHTER_CTX_EQUIPPED, spellcastingMod: 0 };
 
 describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: ongoing spells', () => {
   let spells: Map<string, Spell>;
+  let grantedEffects: NonNullable<ExecuteContext['grantedEffects']>;
 
   beforeAll(async () => {
-    const catalog = await fetchAllSpells();
+    const [catalog, effects] = await Promise.all([fetchAllSpells(), fetchLiveGrantedEffects()]);
+    grantedEffects = buildGrantedEffectRegistry(effects);
     spells = new Map(REVIEWED_CARD_NUMBERS.map((cardNumber) => {
       const matches = catalog.filter((spell) => spell.card_number === cardNumber);
       if (matches.length !== 1) {
@@ -92,6 +99,7 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: ongoing spel
         characterContext: targetCharacter,
         runtimeState: freshFighterState(),
       },
+      grantedEffects,
       rng: () => face(1),
     });
     if (!result.targetState) throw new Error(`${cardNumber} did not mutate its target`);
@@ -102,7 +110,8 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: ongoing spel
     for (const reviewed of reviewedDefinitions) {
       const actual = liveSpell(reviewed.card_number);
       expect(actual.name).toBe(reviewed.name);
-      expect(actual.mechanics).toEqual(reviewed.mechanics);
+      expect(resolveMaterializedRuntimeEffects(actual.mechanics, grantedEffects))
+        .toEqual(reviewed.mechanics);
     }
   });
 

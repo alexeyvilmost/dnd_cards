@@ -235,7 +235,7 @@ describe('live micro-MVP compiled certification boundary', () => {
     });
 
     expect(result.catalogInput).toMatchObject({
-      schemaVersion: 3,
+      schemaVersion: 4,
       postMigrationBoundary: POST_MIGRATION_CATALOG_BOUNDARY,
       compilerRaw: {
         contentHashMatchesReviewed: true,

@@ -105,18 +105,20 @@ function visitReferences(
   dependencies,
   visitedObjects,
   entityRoot = false,
+  projectEntity = undefined,
 ) {
   if (typeof value === 'string') {
     for (const record of index.byReference.get(value) ?? []) {
       if (record.identity === rootIdentity || dependencies.has(record.identity)) continue;
       dependencies.set(record.identity, record);
       visitReferences(
-        record.entity,
+        projectEntity ? projectEntity(record.entity, record.type) : record.entity,
         index,
         rootIdentity,
         dependencies,
         visitedObjects,
         true,
+        projectEntity,
       );
     }
     return;
@@ -126,7 +128,15 @@ function visitReferences(
 
   for (const [key, nested] of Object.entries(value)) {
     if (entityRoot && NON_EXECUTABLE_ROOT_FIELDS.has(key)) continue;
-    visitReferences(nested, index, rootIdentity, dependencies, visitedObjects, false);
+    visitReferences(
+      nested,
+      index,
+      rootIdentity,
+      dependencies,
+      visitedObjects,
+      false,
+      projectEntity,
+    );
   }
 }
 
@@ -136,10 +146,18 @@ function visitReferences(
  * related_effects, так и вложенные level_progression/equipment_options, не
  * привязывая release-gate к конкретной форме JSON каждой игровой системы.
  */
-export function dependencySnapshot(entity, entityType, index) {
+export function dependencySnapshot(entity, entityType, index, { projectEntity } = {}) {
   const rootIdentity = identityOf(entityType, entity);
   const dependencies = new Map();
-  visitReferences(entity, index, rootIdentity, dependencies, new WeakSet(), true);
+  visitReferences(
+    projectEntity ? projectEntity(entity, entityType) : entity,
+    index,
+    rootIdentity,
+    dependencies,
+    new WeakSet(),
+    true,
+    projectEntity,
+  );
 
   return [...dependencies.values()]
     .map((record) => ({
@@ -150,8 +168,8 @@ export function dependencySnapshot(entity, entityType, index) {
     .sort((left, right) => left.identity.localeCompare(right.identity));
 }
 
-export function certificationHashes(entity, entityType, index) {
-  const dependencies = dependencySnapshot(entity, entityType, index);
+export function certificationHashes(entity, entityType, index, options) {
+  const dependencies = dependencySnapshot(entity, entityType, index, options);
   return {
     contentHash: contentHash(entity),
     dependencyHash: sha256Canonical(dependencies),

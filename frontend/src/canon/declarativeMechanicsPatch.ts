@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import contentPatchJson from './data/micro-mvp-l1-content-patch.v1.json' with { type: 'json' };
+import supersedingPostimagesJson from './data/micro-mvp-reviewed-superseding-postimages.v1.json' with { type: 'json' };
 import { canonicalStringify } from '../rules-core/determinism';
 import type { SnapshotCatalogs } from './prodSnapshotL1Fixtures';
 import { certifiedExecutableRootProjection } from './certifiedContentProjection';
@@ -9,6 +10,21 @@ type PatchCollection = 'effects' | 'actions' | 'spells';
 type CreateCollection = 'effects' | 'actions';
 type FieldPatchCollection = 'cards' | 'classes' | 'races';
 type EntityReferenceCollection = 'cards' | 'effects';
+
+interface ReviewedSupersedingPostimages {
+  schemaVersion: 1;
+  mechanicsHashes: Record<string, string>;
+  fieldHashes: Record<string, string>;
+}
+
+const REVIEWED_SUPERSEDING_POSTIMAGES = supersedingPostimagesJson as ReviewedSupersedingPostimages;
+const SHA256_HASH = /^sha256:[0-9a-f]{64}$/;
+if (REVIEWED_SUPERSEDING_POSTIMAGES.schemaVersion !== 1
+    || [...Object.values(REVIEWED_SUPERSEDING_POSTIMAGES.mechanicsHashes),
+      ...Object.values(REVIEWED_SUPERSEDING_POSTIMAGES.fieldHashes)]
+      .some((hash) => !SHA256_HASH.test(hash))) {
+  throw new Error('Reviewed superseding postimages registry is invalid');
+}
 
 export interface DeclarativeEntityReference {
   collection: EntityReferenceCollection;
@@ -76,6 +92,47 @@ export interface MicroMvpL1ContentPatch {
 }
 
 export const MICRO_MVP_L1_CONTENT_PATCH = contentPatchJson as MicroMvpL1ContentPatch;
+
+const REVIEWED_SUPERSEDING_MECHANICS_BY_HASH = (() => {
+  const byHash = new Map<string, JsonObject>();
+  const declarations = Object.entries(MICRO_MVP_L1_CONTENT_PATCH.mechanicsPatches)
+    .flatMap(([collection, patches]) => patches.map((patch) => ({ collection, patch })));
+  for (const [label, hash] of Object.entries(REVIEWED_SUPERSEDING_POSTIMAGES.mechanicsHashes)) {
+    const [collection, cardNumber] = label.split(':');
+    const matches = declarations.filter((candidate) => (
+      candidate.collection === collection && candidate.patch.cardNumber === cardNumber
+    ));
+    if (matches.length !== 1 || byHash.has(hash)) {
+      throw new Error(`Reviewed superseding mechanics ${label} is missing, duplicated, or hash-ambiguous`);
+    }
+    byHash.set(hash, matches[0].patch.mechanics);
+  }
+  return byHash;
+})();
+
+const REVIEWED_SUPERSEDING_MECHANICS_BY_LABEL = new Map(
+  Object.entries(REVIEWED_SUPERSEDING_POSTIMAGES.mechanicsHashes).map(([label, hash]) => (
+    [label, { hash, mechanics: REVIEWED_SUPERSEDING_MECHANICS_BY_HASH.get(hash)! }]
+  )),
+);
+
+/** Later reviewed Level-5 migrations can replace a Level-1 mechanics row with
+ * a generalized formula, count_by_level table, or higher-level choices. Exact
+ * postimage hashes collapse to the earlier reviewed Level-1 payload only for
+ * the L1 semantic attestation; any unregistered byte change remains visible. */
+export function microMvpL1MechanicsSemanticProjection(mechanics: unknown): unknown {
+  const reviewedL1 = REVIEWED_SUPERSEDING_MECHANICS_BY_HASH.get(hashCanonical(mechanics));
+  return reviewedL1 ? cloneJson(reviewedL1) : mechanics;
+}
+
+export function reviewedSupersedingMicroMvpL1Mechanics(
+  collection: PatchCollection,
+  cardNumber: string,
+  mechanics: unknown,
+): JsonObject | undefined {
+  const reviewed = REVIEWED_SUPERSEDING_MECHANICS_BY_LABEL.get(`${collection}:${cardNumber}`);
+  return reviewed?.hash === hashCanonical(mechanics) ? cloneJson(reviewed.mechanics) : undefined;
+}
 
 export type ContentPatchMode = 'apply' | 'verify-only';
 
@@ -220,6 +277,13 @@ export function materializeMicroMvpL1ContentPatch(
         continue;
       }
       const beforeHash = hashCanonical(entity.mechanics ?? null);
+      const supersedingHash = REVIEWED_SUPERSEDING_POSTIMAGES.mechanicsHashes[
+        `${collection}:${patch.cardNumber}`
+      ];
+      if (supersedingHash === beforeHash) {
+        alreadyMaterialized.push(change);
+        continue;
+      }
       if (beforeHash !== patch.expectedBeforeMechanicsHash) {
         problems.push(
           `${collection}:${patch.cardNumber}: expected mechanics ${patch.expectedBeforeMechanicsHash}, got ${beforeHash}`,
@@ -297,6 +361,13 @@ export function materializeMicroMvpL1ContentPatch(
       continue;
     }
     const beforeHash = hashCanonical(currentFields);
+    const supersedingHash = REVIEWED_SUPERSEDING_POSTIMAGES.fieldHashes[
+      `${patch.collection}:${patch.cardNumber}`
+    ];
+    if (supersedingHash === beforeHash) {
+      alreadyMaterialized.push(change);
+      continue;
+    }
     if (beforeHash !== patch.expectedBeforeFieldsHash) {
       problems.push(
         `${patch.collection}:${patch.cardNumber}: expected fields ${patch.expectedBeforeFieldsHash}, got ${beforeHash}`,

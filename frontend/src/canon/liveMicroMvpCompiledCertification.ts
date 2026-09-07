@@ -20,6 +20,14 @@ import {
   postMigrationCatalogSemanticProjection,
 } from './postMigrationCatalogBoundary';
 import {
+  buildMaterializedRuntimeEffectRegistry,
+  resolveMaterializedRuntimeEffects,
+} from './materializedRuntimeEffects';
+import {
+  microMvpL1MechanicsSemanticProjection,
+  reviewedSupersedingMicroMvpL1Mechanics,
+} from './declarativeMechanicsPatch';
+import {
   readMicroMvpSnapshotManifest,
   readProdSnapshotCatalogs,
   type SnapshotCatalogs,
@@ -43,7 +51,7 @@ const UNORDERED_ROOT_PROJECTION_ARRAYS = new Set([
 type JsonObject = Record<string, unknown>;
 
 export interface LiveMicroMvpCatalogInputAttestation {
-  schemaVersion: 3;
+  schemaVersion: 4;
   algorithm: 'sha256/canonical-json-v1';
   postMigrationBoundary: typeof POST_MIGRATION_CATALOG_BOUNDARY;
   /** Exact equality here is the blocking catalog gate. It is calculated from
@@ -127,10 +135,17 @@ export class LiveMicroMvpCatalogDriftError extends Error {
     readonly reviewedSemanticProjectionHash: string,
     readonly liveSemanticProjectionHash: string,
     readonly collections: readonly LiveMicroMvpCatalogCollectionDrift[],
+    readonly semanticComponents: Readonly<Record<string, {
+      reviewedHash: string;
+      liveHash: string;
+    }>> = {},
   ) {
     super([
       'Live micro-MVP compiled semantic projection differs from the reviewed release: '
         + `reviewed=${reviewedSemanticProjectionHash}; live=${liveSemanticProjectionHash}`,
+      ...Object.entries(semanticComponents).map(([component, hashes]) => (
+        `${component}: reviewed=${hashes.reviewedHash}; live=${hashes.liveHash}`
+      )),
       ...collections.map((drift) => (
         `${drift.collection}: ${drift.pinnedCount}→${drift.liveCount}; `
           + `missing=${drift.missingCount}`
@@ -232,12 +247,29 @@ export function microMvpCompiledSemanticProjectionHash(
   provider: CompiledMicroMvpL1Provider,
   catalogs: SnapshotCatalogs,
 ): string {
+  return canonicalHash(microMvpCompiledSemanticProjection(provider, catalogs));
+}
+
+export function microMvpCompiledSemanticProjection(
+  provider: CompiledMicroMvpL1Provider,
+  catalogs: SnapshotCatalogs,
+): JsonObject {
   const aliases = catalogReferenceAliases(catalogs);
+  const grantedEffects = buildMaterializedRuntimeEffectRegistry(catalogs.effects);
   const roots = [...provider.roots]
     .sort((left, right) => left.stableKey.localeCompare(right.stableKey))
     .map((root) => {
       const projection = canonicalCatalogReferences(
-        microMvpL1RootSemanticProjection(root),
+        resolveMaterializedRuntimeEffects(
+          normalizeCompiledMechanics(
+            normalizeCompiledActionPostimages(
+              microMvpL1RootSemanticProjection(root),
+              catalogs,
+            ),
+          ),
+          grantedEffects,
+          `roots.${root.stableKey}`,
+        ),
         aliases,
       ) as JsonObject;
       return semanticValue(Object.fromEntries(Object.entries(projection).map(([key, value]) => [
@@ -255,8 +287,8 @@ export function microMvpCompiledSemanticProjectionHash(
     .map((gap) => semanticValue(canonicalCatalogReferences(gap, aliases)))
     .sort((left, right) => canonicalStringify(left).localeCompare(canonicalStringify(right)));
   const { release } = provider;
-  return canonicalHash({
-    schemaVersion: 3,
+  return {
+    schemaVersion: 4,
     compilerRelease: {
       id: release.id,
       systemId: release.systemId,
@@ -268,8 +300,68 @@ export function microMvpCompiledSemanticProjectionHash(
     },
     roots,
     capabilityGaps,
-    postMigrationCatalog: postMigrationCatalogSemanticProjection(catalogs),
-  });
+    postMigrationCatalog: resolveMaterializedRuntimeEffects(
+      postMigrationCatalogSemanticProjection(catalogs),
+      grantedEffects,
+      'postMigrationCatalog',
+    ),
+  };
+}
+
+function normalizeCompiledActionPostimages(
+  projection: JsonObject,
+  catalogs: SnapshotCatalogs,
+): JsonObject {
+  const actions = Array.isArray(projection.actions) ? projection.actions : [];
+  return {
+    ...projection,
+    actions: actions.map((value) => {
+      if (!value || typeof value !== 'object') return value;
+      const action = value as JsonObject;
+      const sources = Array.isArray(action.sourceEntityIds)
+        ? action.sourceEntityIds.filter((source): source is string => typeof source === 'string')
+        : [];
+      const replacements = catalogs.actions.flatMap((entity) => (
+        sources.includes(entity.id) || sources.includes(entity.card_number)
+          ? [reviewedSupersedingMicroMvpL1Mechanics(
+            'actions',
+            entity.card_number,
+            entity.mechanics,
+          )]
+          : []
+      )).filter((replacement): replacement is JsonObject => replacement !== undefined);
+      if (replacements.length > 1) {
+        throw new Error(`compiled action ${String(action.id ?? '<blank>')} has ambiguous reviewed postimages`);
+      }
+      if (replacements.length !== 1) return action;
+      const compiledMechanics = action.mechanics && typeof action.mechanics === 'object'
+        ? action.mechanics as JsonObject
+        : {};
+      return {
+        ...action,
+        mechanics: {
+          ...compiledMechanics,
+          ...replacements[0],
+          // The compiler scopes self_uses to the action identity. Preserve
+          // that compiled resource name while collapsing reviewed L5 fields.
+          ...(compiledMechanics.activation !== undefined
+            ? { activation: compiledMechanics.activation }
+            : {}),
+        },
+      };
+    }),
+  };
+}
+
+function normalizeCompiledMechanics(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(normalizeCompiledMechanics);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value as JsonObject).map(([key, nested]) => [
+    key,
+    key === 'mechanics'
+      ? microMvpL1MechanicsSemanticProjection(nested)
+      : normalizeCompiledMechanics(nested),
+  ]));
 }
 
 function stableCatalogIdentity(
@@ -385,6 +477,14 @@ export function attestLiveMicroMvpCatalogInput(input: {
     input.liveProvider,
     input.liveCatalogs,
   );
+  const reviewedSemanticProjection = microMvpCompiledSemanticProjection(
+    input.reviewedProvider,
+    input.reviewedCatalogs,
+  );
+  const liveSemanticProjection = microMvpCompiledSemanticProjection(
+    input.liveProvider,
+    input.liveCatalogs,
+  );
   const collections = (Object.keys(input.reviewedCatalogs) as Array<keyof SnapshotCatalogs>)
     .flatMap((collection) => {
       const drift = collectionDrift(
@@ -395,10 +495,20 @@ export function attestLiveMicroMvpCatalogInput(input: {
       return drift ? [drift] : [];
     });
   if (liveSemanticProjectionHash !== reviewedSemanticProjectionHash) {
+    const semanticComponents = Object.fromEntries(
+      Object.keys(reviewedSemanticProjection).flatMap((component) => {
+        const reviewedHash = canonicalHash(reviewedSemanticProjection[component]);
+        const liveHash = canonicalHash(liveSemanticProjection[component]);
+        return reviewedHash === liveHash
+          ? []
+          : [[component, { reviewedHash, liveHash }]];
+      }),
+    );
     throw new LiveMicroMvpCatalogDriftError(
       reviewedSemanticProjectionHash,
       liveSemanticProjectionHash,
       collections,
+      semanticComponents,
     );
   }
   const reviewedRawHash = microMvpRawCatalogInputHash(input.reviewedCatalogs);
@@ -406,7 +516,7 @@ export function attestLiveMicroMvpCatalogInput(input: {
   const reviewedNormalizedHash = microMvpCatalogInputHash(input.reviewedCatalogs);
   const liveNormalizedHash = microMvpCatalogInputHash(input.liveCatalogs);
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     algorithm: 'sha256/canonical-json-v1',
     postMigrationBoundary: POST_MIGRATION_CATALOG_BOUNDARY,
     reviewedSemanticProjectionHash,

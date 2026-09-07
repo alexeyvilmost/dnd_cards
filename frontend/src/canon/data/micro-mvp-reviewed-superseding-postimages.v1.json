@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "mechanicsHashes": {
+    "effects:EFF-eldritch-invocations": "sha256:daee9871613ffe21a2a6c9bc345c46b795cf1f2625dacbb14193bb9b8290e989",
+    "effects:EFF-sneak-attack": "sha256:e471cb013b97d863045247981572b22af572749bc747d9c8de60fcdbfe2de6c9",
+    "effects:RE-sub-drow": "sha256:3dfa9ad8d51341e3755672e74b3bdd3cec572eba0e4a09dbe2c9fc243d60edff",
+    "effects:RE-sub-high_elf": "sha256:025850b85f88483a31ef832eece4eeaa907534416e16cb1b9adcc698645ce103",
+    "effects:RE-sub-wood_elf": "sha256:774d9e8353a73203bbc9e0eabf9c9a0e7cd4435e3e7c08333f3116dcd927c6d2",
+    "effects:EFF-wizard-spellcasting": "sha256:50aa1f6749bc648a25c1d0759bbdc5247ff5a4a239ca6762c6a388e19e23f8d3",
+    "actions:ACT-second-wind": "sha256:fedde94b66944eeeb87a134d79316850263951600865b1d278da53c646ad0a5a",
+    "spells:chill_touch": "sha256:e5f09a9e779443569869bdc602df3ba14940747b1b77cb0c6d3399c8a35607af",
+    "spells:SPELL-0163": "sha256:d10c16fa2d7fd71d1ebe8e505aad3cadc9f3181e77aecf37d6d5317e0758f7aa",
+    "spells:SPELL-0218": "sha256:302252f05e294f1eaa6e8ad98143df8092392e9284248311a8d581854c5b644e",
+    "spells:SPELL-0229": "sha256:2a7cc999fdca47c30a3d40eeb3759eb94adc8672bf95b79a85574117dc10e0b7",
+    "spells:SPELL-0230": "sha256:7ee667e904525e2e8eca851f1f03b8b6b7112e976087ebcd18087555d1aa83de"
+  },
+  "fieldHashes": {
+    "cards:CARD-0297": "sha256:26bb0eb9d1a8d321da909f6938097ec2c5e6596b5101a2a9503c5ba20acb66b7",
+    "cards:CARD-0311": "sha256:78cee37dc077cdfd8f61ee907524be61ff9f11d2e51c5533761c41bf6efc40f1",
+    "cards:CARD-0316": "sha256:30468401d885520d00217b3f27cb0eb1995420e6bd1f94fb06b5826b6b0d57a3",
+    "cards:CARD-0317": "sha256:f5d08e363d38811e1d93e0a45a7b3eb9e4df63835ac127ac8fc5a66847da7255",
+    "cards:CARD-0327": "sha256:4402388e6ea6998eb57f3ba992119f1760754fb0d7ba3f0245e0d1e2c793a31b",
+    "classes:CLASS-warlock": "sha256:bfbd02ab19923ba879f2bb581761d19b3b961bbfba296afde39914aa15bcf45b",
+    "classes:CLASS-rogue": "sha256:4a3bf1efefd8e14474378d21221bfd9f4d9b43baede2871cafde39d3e8703300"
+  }
+}

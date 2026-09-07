@@ -485,7 +485,14 @@
     "name": "Падение пёрышком",
     "mechanics": {
       "activation": {
-        "mode": "active",
+        "mode": "reaction",
+        "trigger": {
+          "event": "fall_started"
+        },
+        "cast_time": {
+          "amount": 1,
+          "unit": "reaction"
+        },
         "cost": [
           {
             "resource": "reaction"

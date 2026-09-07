@@ -925,10 +925,10 @@
       ],
       "properties": {
         "timing": { "enum": ["before", "during", "after", "replaces"] },
-        "event": { "enum": ["attack_roll_made", "hit_by_attack", "targeted_by_magic_missile", "hit", "sneak_attack_hit", "miss", "crit", "damage_dealt", "damage_taken", "saving_throw_made", "forced_save", "ability_check_made", "reduced_to_0_hp", "creature_enters_reach", "creature_leaves_reach", "creature_moves", "turn_start", "turn_end", "spell_cast", "condition_applied", "initiative_roll", "short_rest", "long_rest", "on_acquire", "level_gained"] },
+        "event": { "enum": ["attack_roll_made", "hit_by_attack", "targeted_by_magic_missile", "hit", "sneak_attack_hit", "miss", "crit", "damage_dealt", "damage_taken", "saving_throw_made", "forced_save", "ability_check_made", "reduced_to_0_hp", "creature_enters_reach", "creature_leaves_reach", "creature_moves", "fall_started", "turn_start", "turn_end", "spell_cast", "condition_applied", "initiative_roll", "short_rest", "long_rest", "on_acquire", "level_gained"] },
         "events": {
           "type": "array", "minItems": 1, "uniqueItems": true,
-          "items": { "enum": ["attack_roll_made", "hit_by_attack", "targeted_by_magic_missile", "hit", "sneak_attack_hit", "miss", "crit", "damage_dealt", "damage_taken", "saving_throw_made", "forced_save", "ability_check_made", "reduced_to_0_hp", "creature_enters_reach", "creature_leaves_reach", "creature_moves", "turn_start", "turn_end", "spell_cast", "condition_applied", "initiative_roll", "short_rest", "long_rest", "on_acquire", "level_gained"] }
+          "items": { "enum": ["attack_roll_made", "hit_by_attack", "targeted_by_magic_missile", "hit", "sneak_attack_hit", "miss", "crit", "damage_dealt", "damage_taken", "saving_throw_made", "forced_save", "ability_check_made", "reduced_to_0_hp", "creature_enters_reach", "creature_leaves_reach", "creature_moves", "fall_started", "turn_start", "turn_end", "spell_cast", "condition_applied", "initiative_roll", "short_rest", "long_rest", "on_acquire", "level_gained"] }
         },
         "subject": { "enum": ["self", "ally", "enemy", "attacker", "target", "any_creature"] },
         "circumstances": { "type": "array", "items": { "$ref": "#/$defs/condition" } }
@@ -1686,7 +1686,7 @@
             "die": { "type": "number", "description": "Грани кости для die_bonus/explode (напр. 8 — только к8)." }
           }
         },
-        "op": { "enum": ["add", "set", "advantage", "disadvantage", "reroll", "multiply", "upgrade", "downgrade", "auto_fail", "auto_crit", "deny", "set_die", "crit_range", "outcome", "on_roll", "minimum_die", "die_bonus", "critical_extra_die", "bonus_die", "explode"] },
+        "op": { "enum": ["add", "set", "advantage", "disadvantage", "reroll", "reroll_damage", "multiply", "upgrade", "downgrade", "auto_fail", "auto_crit", "deny", "set_die", "crit_range", "outcome", "on_roll", "minimum_die", "die_bonus", "critical_extra_die", "bonus_die", "explode"] },
         "value": { "$ref": "#/$defs/formula" },
         "modifier_kind": {
           "enum": ["base", "ability", "proficiency", "expertise", "effect"],
@@ -1747,7 +1747,7 @@
             }
           ]
         },
-        "per": { "enum": ["turn", "round", "short_rest", "long_rest", "day"] },
+        "per": { "enum": ["turn", "round", "short_rest", "long_rest", "day", "never"] },
         "recharge": { "type": "string" },
         "recovery": {
           "type": "object",

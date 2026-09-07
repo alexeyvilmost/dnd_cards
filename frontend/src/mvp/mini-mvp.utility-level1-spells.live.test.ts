@@ -12,8 +12,13 @@ import {
 } from '../engine/execute';
 import { FIGHTER_CTX_EQUIPPED, freshFighterState } from './fixtures';
 import { readLiveJson } from './liveJsonRead';
-import type { CharacterContext, RuntimeState } from './contracts';
+import type { CharacterContext, ExecuteContext, RuntimeState } from './contracts';
 import type { Spell } from '../types';
+import {
+  buildGrantedEffectRegistry,
+  fetchLiveGrantedEffects,
+  resolveMaterializedRuntimeEffects,
+} from './liveGrantedEffects';
 
 type Dict = Record<string, unknown>;
 
@@ -33,12 +38,16 @@ function casterState(): RuntimeState {
 
 describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: utility level-1 spells', () => {
   let spells: Map<string, Spell>;
+  let grantedEffects: NonNullable<ExecuteContext['grantedEffects']>;
 
   beforeAll(async () => {
-    const body = await readLiveJson<Record<string, unknown>>(
-      `${API_BASE_URL}/api/spells?page=1&limit=1000`,
-      { label: '/api/spells' },
-    );
+    const [body, effects] = await Promise.all([
+      readLiveJson<Record<string, unknown>>(
+        `${API_BASE_URL}/api/spells?page=1&limit=1000`,
+        { label: '/api/spells' },
+      ),
+      fetchLiveGrantedEffects(),
+    ]);
     if (!Array.isArray(body.spells)) throw new Error('/api/spells: required collection spells is missing');
     const catalog = body.spells as Spell[];
     spells = new Map(reviewedDefinitions.map((reviewed) => {
@@ -48,6 +57,7 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: utility leve
       }
       return [reviewed.card_number, matches[0]];
     }));
+    grantedEffects = buildGrantedEffectRegistry(effects);
   }, 180_000);
 
   const mechanics = (cardNumber: string): Dict => {
@@ -64,6 +74,7 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: utility leve
       selfId: 'caster',
       spell: { baseLevel: 1, sourceClass: 'wizard', spellcastingAbility: 'int' },
       choices,
+      grantedEffects,
       rng: () => 0.5,
     },
   );
@@ -71,7 +82,10 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: utility leve
   it('loads the exact reviewed mechanics for all thirteen live rows', () => {
     expect(spells.size).toBe(13);
     for (const reviewed of reviewedDefinitions) {
-      expect(spells.get(reviewed.card_number)?.mechanics).toEqual(reviewed.mechanics);
+      expect(resolveMaterializedRuntimeEffects(
+        spells.get(reviewed.card_number)?.mechanics,
+        grantedEffects,
+      )).toEqual(reviewed.mechanics);
     }
   });
 

@@ -98,11 +98,6 @@ const CERTIFICATION_ENTITY_TYPES = [
   'class', 'race', 'background', 'feat', 'spell', 'card', 'action', 'effect',
 ] as const;
 
-// The production Dragonborn record still references its level-5 flight
-// feature at the species level.  The L1 compiler removes it explicitly, so it
-// belongs to part-MVP rather than this executable denominator.
-const OUT_OF_SCOPE_DEPENDENCY_CARD_NUMBERS = new Set(['RE-dragonborn-4']);
-
 async function fetchAll<T extends { id: string }>(path: string, key: string): Promise<T[]> {
   const items: T[] = [];
   const seenIds = new Set<string>();
@@ -194,6 +189,14 @@ function directReferences(entity: CatalogEntity): string[] {
     refs.push(...(progression.effects ?? []), ...(progression.actions ?? []));
   }
   return refs;
+}
+
+function containsPayloadKind(value: unknown, kind: string): boolean {
+  if (Array.isArray(value)) return value.some((item) => containsPayloadKind(item, kind));
+  if (!value || typeof value !== 'object') return false;
+  const record = value as Dict;
+  return record.kind === kind
+    || Object.values(record).some((nested) => containsPayloadKind(nested, kind));
 }
 
 describe.skipIf(process.env.MVP_CONTENT !== '1')('micro-MVP certification audit: 49 core entities + 15 conditions', () => {
@@ -350,7 +353,6 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('micro-MVP certification audit:
     const audited = new Set<string>();
     const schemaFailures: string[] = [];
     const executionFailures: string[] = [];
-    const excludedHigherLevelDependencies = new Set<string>();
     let executedActiveMechanics = 0;
     const grantedEffects = Object.fromEntries(
       groups.effect.map((effect) => [
@@ -376,10 +378,6 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('micro-MVP certification audit:
         });
         const label = `${identity} (${record.entity.card_number}: ${record.entity.name})`;
         if (!validation.valid) schemaFailures.push(`${label}: ${validation.errors.join(' | ')}`);
-        if (OUT_OF_SCOPE_DEPENDENCY_CARD_NUMBERS.has(record.entity.card_number)) {
-          excludedHigherLevelDependencies.add(record.entity.card_number);
-          continue;
-        }
         const activation = mechanics.activation as Dict | undefined;
         // executeAction is the legacy direct-action adapter. Passive,
         // triggered, reaction and build-time choice effects are queried or
@@ -392,6 +390,13 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('micro-MVP certification audit:
           // interpreter reports NOT_IMPLEMENTED or emits no legacy event.
           // Their behavior is certified by the rules-core scenario/unit gates.
           executedActiveMechanics += 1;
+          const targetRuntime = containsPayloadKind(mechanics, 'stabilize')
+            ? {
+              ...richState(),
+              hp: { current: 0, max: 60, temp: 0 },
+              deathSaves: { successes: 0, failures: 0, stable: false, dead: false },
+            }
+            : richState();
           executeAction(richState(), stripCost(mechanics), {
             character: {
               abilityMods: { str: 3, dex: 3, con: 3, int: 5, wis: 5, cha: 5 },
@@ -404,7 +409,7 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('micro-MVP certification audit:
             target: {
               ac: 1,
               saveMods: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
-              runtimeState: richState(),
+              runtimeState: targetRuntime,
             },
             rng: () => 0.75,
             forceSaveOutcome: 'fail',
@@ -426,7 +431,6 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('micro-MVP certification audit:
     expect(schemaFailures).toEqual([]);
     expect(executionFailures).toEqual([]);
     expect(executedActiveMechanics).toBeGreaterThan(20);
-    expect([...excludedHigherLevelDependencies].sort()).toEqual(['RE-dragonborn-4']);
     expect(audited.size).toBeGreaterThan(49);
   });
 

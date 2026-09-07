@@ -10,8 +10,13 @@ import {
 import { weaponContext } from '../engine/weapon';
 import { withDeclaredTestWeaponProfile } from '../testing/weaponProfileFixtures';
 import type { Card, Spell } from '../types';
-import type { CharacterContext, RuntimeState } from './contracts';
+import type { CharacterContext, ExecuteContext, RuntimeState } from './contracts';
 import { CARD_LONGSWORD, FIGHTER_CTX, freshFighterState } from './fixtures';
+import {
+  buildGrantedEffectRegistry,
+  fetchLiveGrantedEffects,
+  resolveMaterializedRuntimeEffects,
+} from './liveGrantedEffects';
 import { readLiveJson } from './liveJsonRead';
 
 type Dict = Record<string, unknown>;
@@ -73,9 +78,17 @@ function casterState(): RuntimeState {
 describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: utility cantrips', () => {
   let spells: Map<string, Spell>;
   let weapons: Map<string, Card>;
+  let grantedEffects: NonNullable<ExecuteContext['grantedEffects']>;
 
   beforeAll(async () => {
-    [spells, weapons] = await Promise.all([fetchReviewedSpells(), fetchReviewedWeapons()]);
+    const [reviewedSpells, reviewedWeapons, effects] = await Promise.all([
+      fetchReviewedSpells(),
+      fetchReviewedWeapons(),
+      fetchLiveGrantedEffects(),
+    ]);
+    spells = reviewedSpells;
+    weapons = reviewedWeapons;
+    grantedEffects = buildGrantedEffectRegistry(effects);
   }, 180_000);
 
   const mechanics = (cardNumber: string): Dict => {
@@ -86,7 +99,10 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: utility cant
 
   it('loads the exact reviewed mechanics from the current database', () => {
     for (const reviewed of reviewedDefinitions) {
-      expect(spells.get(reviewed.card_number)?.mechanics).toEqual(reviewed.mechanics);
+      expect(resolveMaterializedRuntimeEffects(
+        spells.get(reviewed.card_number)?.mechanics,
+        grantedEffects,
+      )).toEqual(reviewed.mechanics);
     }
     for (const reviewed of reviewedWeaponDefinitions) {
       expect(weapons.get(reviewed.card_number)?.mechanics).toEqual(reviewed.mechanics);
@@ -95,7 +111,7 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: utility cant
 
   it('executes Mage Hand and Elementalism from live rows', () => {
     const hand = executeAction(casterState(), mechanics('SPELL-0173'), {
-      character: caster, selfId: 'caster', rng: () => 0.5,
+      character: caster, selfId: 'caster', grantedEffects, rng: () => 0.5,
     });
     const nextTurn = { ...hand.state, resources: { ...hand.state.resources, action: 1 } };
     expect(executeRemoteManipulator(nextTurn, {
@@ -105,7 +121,7 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: utility cant
     }));
 
     const elementalism = executeAction(casterState(), mechanics('SPELL-0298'), {
-      character: caster, choices: { elementalism_effect: 'air' }, rng: () => 0.5,
+      character: caster, choices: { elementalism_effect: 'air' }, grantedEffects, rng: () => 0.5,
     });
     expect(elementalism.events).toContainEqual(expect.objectContaining({
       type: 'world_interaction', operation: 'beckon_air',
@@ -122,6 +138,7 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: utility cant
       character: liveCaster,
       spell: { baseLevel: 0, spellcastingAbility: 'wis' },
       choices: { shillelagh_weapon: liveClub.id, shillelagh_damage_type: 'force' },
+      grantedEffects,
       rng: () => 0.5,
     });
     expect(weaponContext(liveCaster, 'main', cast.state.equipment, cast.state)).toMatchObject({
@@ -134,6 +151,7 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: utility cant
       character: caster,
       selfId: 'caster',
       target: { id: 'target', ac: 10, runtimeState: freshFighterState() },
+      grantedEffects,
       rng: () => 0.5,
     });
     expect(resolveCommunicationLink(cast.targetState!, { distanceFt: 80 }).events)
@@ -147,6 +165,7 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: utility cant
     const cast = executeAction(casterState(), mechanics('SPELL-0312'), {
       character: caster,
       target: { id: 'target', ac: 10, runtimeState: dying },
+      grantedEffects,
       rng: () => 0.5,
     });
     expect(cast.targetState?.deathSaves).toEqual({

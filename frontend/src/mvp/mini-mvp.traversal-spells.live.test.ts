@@ -9,8 +9,13 @@ import {
   resolveFallLanding,
 } from '../engine/execute';
 import { FIGHTER_CTX_EQUIPPED, freshFighterState } from './fixtures';
-import type { RuntimeState } from './contracts';
+import type { ExecuteContext, RuntimeState } from './contracts';
 import { readLiveJson } from './liveJsonRead';
+import {
+  buildGrantedEffectRegistry,
+  fetchLiveGrantedEffects,
+  resolveMaterializedRuntimeEffects,
+} from './liveGrantedEffects';
 import type { Spell } from '../types';
 
 type Dict = Record<string, unknown>;
@@ -43,9 +48,15 @@ const targetCharacter = { ...FIGHTER_CTX_EQUIPPED, spellcastingMod: 0 };
 
 describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: traversal spells', () => {
   let spells: Map<string, Spell>;
+  let grantedEffects: NonNullable<ExecuteContext['grantedEffects']>;
 
   beforeAll(async () => {
-    spells = await fetchReviewedSpells();
+    const [reviewedSpells, effects] = await Promise.all([
+      fetchReviewedSpells(),
+      fetchLiveGrantedEffects(),
+    ]);
+    spells = reviewedSpells;
+    grantedEffects = buildGrantedEffectRegistry(effects);
   }, 180_000);
 
   function cast(cardNumber: string, choices?: Record<string, string>): RuntimeState {
@@ -60,6 +71,7 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: traversal sp
         runtimeState: freshFighterState(),
       },
       choices,
+      grantedEffects,
       rng: () => 0,
     });
     if (!result.targetState) throw new Error(`${cardNumber} did not mutate target`);
@@ -68,7 +80,10 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: traversal sp
 
   it('loads the exact reviewed mechanics from the current database', () => {
     for (const reviewed of reviewedDefinitions) {
-      expect(spells.get(reviewed.card_number)?.mechanics).toEqual(reviewed.mechanics);
+      expect(resolveMaterializedRuntimeEffects(
+        spells.get(reviewed.card_number)?.mechanics,
+        grantedEffects,
+      )).toEqual(reviewed.mechanics);
     }
   });
 

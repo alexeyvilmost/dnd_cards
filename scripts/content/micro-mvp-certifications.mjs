@@ -273,6 +273,44 @@ function duplicateValues(items, selector) {
   return [...duplicates].sort();
 }
 
+/** The stored entity hash still binds the complete row, while dependency
+ * traversal follows only references reachable at character level 1. This
+ * prevents later progression rows from inheriting a mechanical certificate
+ * from scenarios that never acquired them. */
+export function microMvpL1DependencyProjection(value) {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item) => {
+        if (!item || typeof item !== 'object') return true;
+        const gate = Number(item.level_gate ?? item.minimum_class_level ?? 1);
+        return !Number.isFinite(gate) || gate <= 1;
+      })
+      .map(microMvpL1DependencyProjection);
+  }
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value).flatMap(([key, nested]) => {
+    if (key === 'level_progression') {
+      const progression = nested && typeof nested === 'object' ? nested : {};
+      return [['level_progression', {
+        ...('1' in progression ? { 1: microMvpL1DependencyProjection(progression[1]) } : {}),
+      }]];
+    }
+    if (key === 'count_by_level') {
+      const counts = nested && typeof nested === 'object' ? nested : {};
+      return [['count_by_level', {
+        ...('1' in counts ? { 1: microMvpL1DependencyProjection(counts[1]) } : {}),
+      }]];
+    }
+    return [[key, microMvpL1DependencyProjection(nested)]];
+  }));
+}
+
+function microMvpL1CertificationHashes(entity, entityType, index) {
+  return certificationHashes(entity, entityType, index, {
+    projectEntity: microMvpL1DependencyProjection,
+  });
+}
+
 /**
  * Certification hashes use id/card_number references transitively.  Ambiguous
  * identities would therefore make a seemingly valid hash describe an
@@ -320,7 +358,7 @@ function certificationBaseTargets(entityGroups, index) {
   return [...core, ...conditions].map((target) => ({
     ...target,
     identity: `${target.type}:${target.entity.id}`,
-    dependencies: certificationHashes(target.entity, target.type, index).dependencies,
+    dependencies: microMvpL1CertificationHashes(target.entity, target.type, index).dependencies,
   }));
 }
 
@@ -574,7 +612,7 @@ export function prepareMicroMvpCertifications(entityGroups, {
     if (!resolved.entity || !['not_certified', 'ready'].includes(resolved.status)) {
       throw new Error(`${item.key}: невозможно сертифицировать (${resolved.status})`);
     }
-    const hashes = certificationHashes(resolved.entity, entityType, index);
+    const hashes = microMvpL1CertificationHashes(resolved.entity, entityType, index);
     const limitations = [
       ...MICRO_MVP_LIMITATIONS[item.collection],
       ...(MICRO_MVP_ENTITY_LIMITATIONS[item.key] ?? []),
@@ -625,7 +663,7 @@ export function prepareMicroMvpCertifications(entityGroups, {
         `${target.key}: condition fields differ from the exact versioned content patch`,
       );
     }
-    const hashes = certificationHashes(entity, 'effect', index);
+    const hashes = microMvpL1CertificationHashes(entity, 'effect', index);
     return {
       key: target.key,
       collection: target.collection,
@@ -669,7 +707,7 @@ export function prepareMicroMvpCertifications(entityGroups, {
       const entity = indexed.entity;
       const entityType = indexed.type;
       const key = dependencyCoverageKey(entityType, entity);
-      const hashes = certificationHashes(entity, entityType, index);
+      const hashes = microMvpL1CertificationHashes(entity, entityType, index);
       const mechanicallyCertified = ['action', 'effect', 'spell'].includes(entityType);
       return {
         key,
@@ -920,7 +958,7 @@ function assertCertificationPostimage(entity, record, index = null) {
     throw new Error(`${record.key}: entity content changed during certification`);
   }
   if (index) {
-    const hashes = certificationHashes(entity, record.entity_type, index);
+    const hashes = microMvpL1CertificationHashes(entity, record.entity_type, index);
     if (hashes.dependencyHash !== record.support.dependency_hash) {
       throw new Error(`${record.key}: dependency graph changed during certification`);
     }

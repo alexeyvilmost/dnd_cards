@@ -31,6 +31,7 @@ import {
   createMicroMvpCertificationPlanFromCatalogs,
   expandMicroMvpCoverageSummaryForCatalogs,
   loadCertificationCatalogs,
+  microMvpL1DependencyProjection,
   readCertificationBundle,
   rollbackMicroMvpCertificationPlan,
   runMicroMvpCertificationCommand,
@@ -170,6 +171,39 @@ test('coverage and certification expand to every exercised DB dependency and loc
   assert.equal(record.support.status, 'verified_mechanical');
   assert.equal(record.support.mechanics_locked, true);
   assert.deepEqual(record.support.test_coverage, expanded.entities[record.key]);
+});
+
+test('level-1 dependency projection excludes later progression and gated choice references', () => {
+  const projected = microMvpL1DependencyProjection({
+    level_progression: {
+      1: { actions: ['ACT-level-one'] },
+      2: { actions: ['ACT-level-two'] },
+      5: { effects: ['EFF-level-five'] },
+    },
+    mechanics: {
+      effects: [{
+        options: {
+          items: [
+            { value: 'EFF-level-one-choice', minimum_class_level: 1 },
+            { value: 'EFF-level-two-choice', minimum_class_level: 2 },
+            { value: 'SPELL-level-five', level_gate: 5 },
+          ],
+        },
+        count_by_level: { 1: 1, 2: 3, 5: 5 },
+      }],
+    },
+  });
+  assert.deepEqual(projected, {
+    level_progression: { 1: { actions: ['ACT-level-one'] } },
+    mechanics: {
+      effects: [{
+        options: {
+          items: [{ value: 'EFF-level-one-choice', minimum_class_level: 1 }],
+        },
+        count_by_level: { 1: 1 },
+      }],
+    },
+  });
 });
 
 test('partial dependency certification names its limited standalone scope and fails closed when erased', () => {

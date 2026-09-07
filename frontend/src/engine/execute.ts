@@ -1910,20 +1910,9 @@ function resolveTriggeredFormulaBindings(
   }));
 }
 
-/** Convert a payload declaration into the ordinary triggered-listener shape
- * already consumed by the event bus. Formula bindings are frozen at apply
- * time, so an effect on another actor retains the caster-owned value. */
-function applyTriggeredEffectPayload(
-  state: RuntimeState,
-  payload: Dict,
-  source: string,
-  events: EngineEvent[],
-  ctx: ExecuteContext,
-  ownerActorId?: string,
-): RuntimeState {
-  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+function triggeredEffectMechanics(payload: Dict, ctx: ExecuteContext): Dict {
   const formulaVariables = resolveTriggeredFormulaBindings(payload, ctx);
-  const mechanics: Dict = {
+  return {
     activation: {
       mode: 'triggered',
       trigger: {
@@ -1939,6 +1928,21 @@ function applyTriggeredEffectPayload(
     ...(payload.stack_id !== undefined ? { stack_id: payload.stack_id } : {}),
     ...(payload.stack_type !== undefined ? { stack_type: payload.stack_type } : {}),
   };
+}
+
+/** Convert a payload declaration into the ordinary triggered-listener shape
+ * already consumed by the event bus. Formula bindings are frozen at apply
+ * time, so an effect on another actor retains the caster-owned value. */
+function applyTriggeredEffectPayload(
+  state: RuntimeState,
+  payload: Dict,
+  source: string,
+  events: EngineEvent[],
+  ctx: ExecuteContext,
+  ownerActorId?: string,
+): RuntimeState {
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const mechanics = triggeredEffectMechanics(payload, ctx);
   const entry: ActiveEffectEntry = {
     id: runtimeEffectId(ctx, 'trigger', state.activeEffects.length),
     name: source,
@@ -2270,9 +2274,12 @@ function applyGrantEffect(
     // Ключуем выданный эффект его slug'ом (если автор не задал stack_id): неповторяемый повторный
     // каст ПЕРЕЗАПИСЫВАЕТ (одна копия), повторяемый — НАКАПЛИВАЕТСЯ (stack_type='stack' → независимые
     // экземпляры даже для Истощения/Отравления, которые иначе схлопнулись бы).
+    const runtimeMech = rawMech.kind === 'triggered_effect'
+      ? triggeredEffectMechanics(rawMech, ctx)
+      : rawMech;
     const mech: Dict = {
-      ...rawMech,
-      stack_id: rawMech.stack_id ?? slug,
+      ...runtimeMech,
+      stack_id: runtimeMech.stack_id ?? slug,
       ...(rec?.repeatable ? { stack_type: 'stack' } : {}),
     };
     const name = String(rec?.name ?? (rawMech as Dict).name ?? slug);
@@ -4343,7 +4350,7 @@ export const PLANNED_EVENTS = [
   'attack_roll_made', 'hit_by_attack', 'targeted_by_magic_missile', 'damage_dealt',
   'saving_throw_made', 'forced_save', 'ability_check_made',
   // Требуют многоактора/EncounterState (позиции, дистанции) — вне текущей модели:
-  'creature_enters_reach', 'creature_leaves_reach', 'creature_moves',
+  'creature_enters_reach', 'creature_leaves_reach', 'creature_moves', 'fall_started',
   // Прочее (условия/инициатива/приобретение/уровень) — отдельные слайсы:
   'condition_applied', 'initiative_roll', 'on_acquire', 'level_gained',
 ] as const;

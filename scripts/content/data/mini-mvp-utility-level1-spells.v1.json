@@ -308,12 +308,14 @@
                 "kind": "world_zone", "zone_type": "alarm", "geometry": { "shape": "cube", "size_ft": 20 },
                 "alarm_mode": "audible", "audible_range_ft": 60, "audible_duration_rounds": 1,
                 "exemptions": "declared_at_cast", "duration": { "type": "rounds", "amount": 4800 },
+                "tactical": { "triggers": ["enter"], "notice": "Тревога сработала" },
                 "stack_id": "spell:alarm", "stack_type": "separate"
               }] },
               { "id": "mental", "name": "Мысленная тревога", "grants": [{
                 "kind": "world_zone", "zone_type": "alarm", "geometry": { "shape": "cube", "size_ft": 20 },
                 "alarm_mode": "mental", "mental_range_ft": 5280, "wakes_caster": true,
                 "exemptions": "declared_at_cast", "duration": { "type": "rounds", "amount": 4800 },
+                "tactical": { "triggers": ["enter"], "notice": "Тревога сработала" },
                 "stack_id": "spell:alarm", "stack_type": "separate"
               }] }
             ]
@@ -380,19 +382,17 @@
         "resolution": "auto",
         "result": [{
           "kind": "world_zone",
-          "zone_type": "heavily_obscured_fog",
-          "geometry": { "shape": "sphere", "size_ft": 20, "measurement": "radius" },
+          "zone_type": "fog_cloud",
+          "geometry": { "shape": "sphere", "size_ft": 20 },
           "dispersed_by_strong_wind": true,
-          "radius_scaling_ft_per_slot_above_1": 20,
-          "duration": { "type": "rounds", "amount": 600 },
-          "stack_id": "spell:fog-cloud",
-          "stack_type": "separate"
+          "duration": { "type": "rounds", "amount": 600, "concentration": true },
+          "tactical": { "heavily_obscured": true, "inside_condition": "blinded" }
         }]
       }],
       "spell_class_list_ids": ["CLASS-druid", "CLASS-ranger", "CLASS-sorcerer", "CLASS-wizard"],
       "targeting": {
         "shape": "area", "domain": "world", "actor_targets": false,
-        "min_targets": 0, "max_targets": 1, "range_ft": 120,
+        "min_targets": 0, "max_targets": 0, "range_ft": 120,
         "requires_line_of_sight": true, "allowed_relations": [],
         "area": { "kind": "sphere", "radius_ft": 20 }
       }

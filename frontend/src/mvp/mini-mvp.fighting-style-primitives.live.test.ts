@@ -2,7 +2,6 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import reviewedDefinitions from '../../../scripts/content/data/mini-mvp-fighting-style-primitives.v1.json';
 import existingDefinitions from '../../../scripts/content/data/mini-mvp-existing-fighting-styles.v1.json';
 import complexDefinitions from '../../../scripts/content/data/mini-mvp-complex-fighting-styles.v1.json';
-import { API_BASE_URL } from '../api/client';
 import {
   COMPLEX_STYLE_EXPECTED_SCENARIOS,
   EXISTING_STYLE_EXPECTED_SCENARIOS,
@@ -11,18 +10,13 @@ import {
   evaluateMiniMvpFightingStylePrimitiveScenarios,
 } from '../testing/miniMvpFightingStylePrimitiveScenarios';
 import type { PassiveEffect } from '../types';
-import { readLiveJson } from './liveJsonRead';
+import { fetchLiveGrantedEffects } from './liveGrantedEffects';
 
 type Dict = Record<string, unknown>;
 const allDefinitions = [...reviewedDefinitions, ...existingDefinitions, ...complexDefinitions];
 
 async function fetchReviewedEffects(): Promise<Map<string, PassiveEffect>> {
-  const body = await readLiveJson<Record<string, unknown>>(
-    `${API_BASE_URL}/api/effects?page=1&limit=1000`,
-    { label: '/api/effects' },
-  );
-  if (!Array.isArray(body.effects)) throw new Error('/api/effects: required collection effects is missing');
-  const catalog = body.effects as PassiveEffect[];
+  const catalog = await fetchLiveGrantedEffects();
   return new Map(allDefinitions.map((reviewed) => {
     const matches = catalog.filter((effect) => effect.card_number === reviewed.card_number);
     if (matches.length !== 1) {

@@ -109,51 +109,81 @@ function exactByCardNumber(
   return matches[0];
 }
 
-function catalogReferenceAliases(catalogs: SnapshotCatalogs): Map<string, string> {
-  const aliases = new Map<string, string>();
-  for (const [collection, rows] of Object.entries(catalogs)) {
+type CatalogReferenceAliases = ReadonlyMap<string, ReadonlySet<string>>;
+
+function catalogReferenceAliases(catalogs: SnapshotCatalogs): CatalogReferenceAliases {
+  const aliases = new Map<string, Set<string>>();
+  for (const rows of Object.values(catalogs)) {
     for (const value of rows as unknown as JsonRecord[]) {
       const identity = value.card_number ?? value.resource_id ?? value.variable_id;
       if (typeof identity !== 'string' || !identity) continue;
       for (const reference of [identity, value.id]) {
         if (typeof reference !== 'string' || !reference) continue;
-        const existing = aliases.get(reference);
-        if (existing !== undefined && existing !== identity) {
-          throw new PostMigrationCatalogBoundaryError([
-            `${collection}:${identity}: reference ${reference} also resolves to ${existing}`,
-          ]);
-        }
-        aliases.set(reference, identity);
+        const identities = aliases.get(reference) ?? new Set<string>();
+        identities.add(identity);
+        aliases.set(reference, identities);
       }
     }
   }
   return aliases;
 }
 
-function stableReferences(value: unknown, aliases: ReadonlyMap<string, string>): unknown {
-  if (typeof value === 'string') return aliases.get(value) ?? value;
-  if (Array.isArray(value)) return value.map((item) => stableReferences(item, aliases));
+function stableReference(
+  value: string,
+  aliases: CatalogReferenceAliases,
+  path: string,
+): string {
+  const identities = [...(aliases.get(value) ?? [])].sort();
+  if (identities.length > 1) {
+    throw new PostMigrationCatalogBoundaryError([
+      `${path}: reference ${value} is ambiguous between ${identities.join(', ')}`,
+    ]);
+  }
+  return identities[0] ?? value;
+}
+
+function stableReferences(
+  value: unknown,
+  aliases: CatalogReferenceAliases,
+  path = 'catalog mechanics',
+): unknown {
+  if (typeof value === 'string') return stableReference(value, aliases, path);
+  if (Array.isArray(value)) {
+    return value.map((item, index) => stableReferences(item, aliases, `${path}[${index}]`));
+  }
   if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value).map(([key, item]) => (
-      [key, stableReferences(item, aliases)]
+    const normalized = Object.fromEntries(Object.entries(value).map(([key, item]) => (
+      [key, stableReferences(item, aliases, `${path}.${key}`)]
     )));
+    if (normalized.kind === 'movement'
+        && normalized.mode === 'teleport'
+        && normalized.value === undefined) {
+      const canonical: JsonRecord = { ...normalized, value: 'teleport' };
+      delete canonical.mode;
+      return canonical;
+    }
+    return normalized;
   }
   return value;
 }
 
-function stableReferenceList(value: unknown, aliases: ReadonlyMap<string, string>): string[] {
+function stableReferenceList(
+  value: unknown,
+  aliases: CatalogReferenceAliases,
+  path: string,
+): string[] {
   if (!Array.isArray(value)) return [];
-  return value.map((reference) => {
+  return value.map((reference, index) => {
     if (typeof reference !== 'string') {
       throw new PostMigrationCatalogBoundaryError(['catalog relationship contains a non-string reference']);
     }
-    return aliases.get(reference) ?? reference;
+    return stableReference(reference, aliases, `${path}[${index}]`);
   }).sort();
 }
 
 function stableEquipmentOptions(
   value: unknown,
-  aliases: ReadonlyMap<string, string>,
+  aliases: CatalogReferenceAliases,
 ): JsonRecord {
   return Object.fromEntries(Object.entries(record(value)).sort(([left], [right]) => (
     left.localeCompare(right)
@@ -162,7 +192,7 @@ function stableEquipmentOptions(
     const items = (Array.isArray(option.items) ? option.items : []).map((rawItem) => {
       const item = record(rawItem);
       const reference = typeof item.card_id === 'string'
-        ? aliases.get(item.card_id) ?? item.card_id
+        ? stableReference(item.card_id, aliases, `${key}.items.card_id`)
         : '';
       if (!reference) {
         throw new PostMigrationCatalogBoundaryError([`${key}: equipment item has no stable card identity`]);
@@ -203,11 +233,10 @@ export function postMigrationCatalogSemanticProjection(
       cardNumber,
       isSubrace: lineage.is_subrace === true,
       parent: typeof lineage.parent_race_id === 'string'
-        ? aliases.get(lineage.parent_race_id) ?? lineage.parent_race_id
+        ? stableReference(lineage.parent_race_id, aliases, `${cardNumber}.parent_race_id`)
         : null,
       subraceLevel: Number(lineage.subrace_level ?? 1),
-      relatedEffects: stableReferenceList(lineage.related_effects, aliases),
-      relatedActions: stableReferenceList(lineage.related_actions, aliases),
+      relatedActions: stableReferenceList(lineage.related_actions, aliases, `${cardNumber}.related_actions`),
     };
   });
 
@@ -243,9 +272,23 @@ export function postMigrationCatalogSemanticProjection(
     return {
       cardNumber,
       weaponType: card.weapon_type ?? null,
-      mastery: typeof card.mastery === 'string' ? aliases.get(card.mastery) ?? card.mastery : null,
+      mastery: typeof card.mastery === 'string'
+        ? stableReference(card.mastery, aliases, `${cardNumber}.mastery`)
+        : null,
       range: card.range ?? null,
-      profile: stableReferences(record(card.mechanics).weapon_profile, aliases),
+      profile: (() => {
+        const profile = stableReferences(
+          record(card.mechanics).weapon_profile,
+          aliases,
+          `${cardNumber}.mechanics.weapon_profile`,
+        ) as JsonRecord;
+        return {
+          ...profile,
+          ...(Array.isArray(profile.properties)
+            ? { properties: [...profile.properties].sort() }
+            : {}),
+        };
+      })(),
     };
   });
 

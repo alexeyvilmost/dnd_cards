@@ -5,6 +5,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { executeAction, applyIncomingDamage, MechanicsExecutionError } from './execute';
+import { startTurn } from './turn';
 import {
   STONEWORK_CONTACT_CHOICE_ID,
   collectInPlayActionChoices,
@@ -108,6 +109,44 @@ describe('Ярус 1.2 — правки ревью', () => {
       name: 'Дикий облик: Волк',
       entityRef: { kind: 'effect', id: 'effect-wolf', cardNumber: 'EFFECT-wild-shape-wolf' },
     })]);
+  });
+  it('grant_effect materializes a triggered listener and freezes caster formulas', () => {
+    const action: Dict = {
+      name: 'Героизм',
+      activation: { cost: [] },
+      effects: [{
+        resolution: 'auto',
+        result: [{ kind: 'grant_effect', value: 'EFFECT-heroism-pulse' }],
+      }],
+    };
+    const cast = executeAction(fresh(), action, {
+      character: { ...character, spellcastingMod: 3 },
+      rng: () => 0.5,
+      grantedEffects: {
+        'EFFECT-heroism-pulse': {
+          id: 'effect-heroism-pulse',
+          card_number: 'EFFECT-heroism-pulse',
+          name: 'Героизм — временные хиты',
+          mechanics: {
+            kind: 'triggered_effect',
+            event: 'turn_start',
+            formula_bindings: { heroism_temp_hp: 'spellcasting' },
+            effects: [{ resolution: 'auto', result: [{ kind: 'temp_hp', amount: 'heroism_temp_hp' }] }],
+            duration: { type: 'rounds', amount: 10 },
+          },
+        },
+      },
+    } as unknown as Ctx);
+    expect(cast.state.activeEffects[0].mechanics).toMatchObject({
+      activation: { mode: 'triggered', trigger: { event: 'turn_start' } },
+      formula_variables: { heroism_temp_hp: 3 },
+    });
+    const turn = startTurn(
+      cast.state,
+      { ...character, spellcastingMod: 0 },
+      { advanceRoundDurations: false },
+    );
+    expect(turn.state.hp.temp).toBe(3);
   });
   it('choice без явного id читается по общему fallback-ключу «choice» (коллектор ↔ движок)', () => {
     const noId: Dict = { name: 'Безымянный', activation: { cost: [] }, effects: [{ kind: 'choice', context: 'in_play', options: { items: [{ id: 'x', grants: [{ kind: 'temp_hp', amount: '6' }] }] } }] };

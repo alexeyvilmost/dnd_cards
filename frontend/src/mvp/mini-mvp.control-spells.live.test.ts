@@ -8,8 +8,13 @@ import {
   resolveNextTurnCommand,
 } from '../engine/execute';
 import { deniedCapabilities } from '../engine/modifiers';
-import type { CharacterContext, RuntimeState } from './contracts';
+import type { CharacterContext, ExecuteContext, RuntimeState } from './contracts';
 import { FIGHTER_CTX_EQUIPPED, freshFighterState } from './fixtures';
+import {
+  buildGrantedEffectRegistry,
+  fetchLiveGrantedEffects,
+  resolveMaterializedRuntimeEffects,
+} from './liveGrantedEffects';
 import { readLiveJson } from './liveJsonRead';
 import type { Spell } from '../types';
 
@@ -60,9 +65,15 @@ const singleAttack: Dict = {
 
 describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: control and ward spells', () => {
   let spells: Map<string, Spell>;
+  let grantedEffects: NonNullable<ExecuteContext['grantedEffects']>;
 
   beforeAll(async () => {
-    spells = await fetchReviewedSpells();
+    const [reviewedSpells, effects] = await Promise.all([
+      fetchReviewedSpells(),
+      fetchLiveGrantedEffects(),
+    ]);
+    spells = reviewedSpells;
+    grantedEffects = buildGrantedEffectRegistry(effects);
   }, 180_000);
 
   function cast(cardNumber: string, choices?: Record<string, string>): RuntimeState {
@@ -78,6 +89,7 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: control and 
         runtimeState: freshFighterState(),
       },
       choices,
+      grantedEffects,
       rng: () => 0,
     });
     if (!result.targetState) throw new Error(`${cardNumber} did not mutate target`);
@@ -86,7 +98,10 @@ describe.skipIf(process.env.MVP_CONTENT !== '1')('mini-MVP live DB: control and 
 
   it('loads the exact reviewed mechanics from the current database', () => {
     for (const reviewed of reviewedDefinitions) {
-      expect(spells.get(reviewed.card_number)?.mechanics).toEqual(reviewed.mechanics);
+      expect(resolveMaterializedRuntimeEffects(
+        spells.get(reviewed.card_number)?.mechanics,
+        grantedEffects,
+      )).toEqual(reviewed.mechanics);
     }
   });
 

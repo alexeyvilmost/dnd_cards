@@ -388,6 +388,31 @@ describe('validateMechanics', () => {
   });
 });
 
+describe('catalog runtime modifier and consumable contracts', () => {
+  it('accepts the implemented Savage Attacker reroll and finite non-recharging item charges', () => {
+    expect(validateMechanics({
+      activation: { mode: 'passive' },
+      effects: [{
+        resolution: 'auto',
+        result: [{
+          kind: 'modifier',
+          op: 'reroll_damage',
+          keep: 'highest',
+          once_per_turn: 'origin_feat.savage_attacker',
+          applies_to: { roll: 'damage', filter: { attackKind: 'weapon_melee' } },
+        }],
+      }],
+    }, { id: 'savage-attacker', name: 'Savage Attacker', kind: 'passive_effect' }).valid)
+      .toBe(true);
+
+    expect(validateMechanics({
+      activation: { mode: 'active', cost: [{ resource: 'self_uses', amount: 1 }] },
+      effects: [{ resolution: 'auto', result: [{ kind: 'stabilize', who: 'target' }] }],
+      uses: { count: 10, per: 'never' },
+    }, { id: 'healer-kit', name: 'Healer Kit', kind: 'action' }).valid).toBe(true);
+  });
+});
+
 // C13: контракт полноты payload.kind в обе стороны (валидатор ↔ рантайм).
 // Ловит регрессию, когда рантайм начинает исполнять kind, забытый в схеме
 // (валидатор молча бракует рабочий контент), и наоборот — kind в схеме без

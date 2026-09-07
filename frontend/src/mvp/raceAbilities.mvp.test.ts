@@ -572,7 +572,6 @@ d('Незаклинательные способности видов: полн�
     const klass = classes[0];
     const dragonL1 = build({ race: dragon }, klass, 1);
     const dragonL5 = build({ race: dragon }, klass, 5);
-    const flight = featuresByNumber.get('RE-dragonborn-4');
     const flightButtonAtL1 = collectRaceSheetActions(dragonL1.assembled, dragonL1.draft)
       .find((action) => action.actionRef?.card_number === 'ACT-dragonborn-draconic-flight');
     const flightButtonAtL5 = collectRaceSheetActions(dragonL5.assembled, dragonL5.draft)
