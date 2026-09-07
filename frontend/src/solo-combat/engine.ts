@@ -3716,8 +3716,7 @@ function executeMonsterStrike(state: SoloCombatState, actorId: string, actionId:
   const monster = state.world.actors[actorId];
   const ai = monsterAIProfile(monster);
   const facts = spatialFacts(state, actorId, targetId);
-  const hasAdvantage = (ai.pack_tactics === true && facts.nearbyEligibleAllyToTarget === true)
-    || (ai.bloodied_frenzy === true && monster.runtime.hp.current <= monster.runtime.hp.max / 2);
+  const hasAdvantage = ai.pack_tactics === true && facts.nearbyEligibleAllyToTarget === true;
   const prepared = hasAdvantage ? withMonsterTacticalAdvantage(state, actorId) : state;
   const result = executeCombatAction({state: prepared, actorId, actionId, targetIds: [targetId], rng});
   return autoResolveSystemDecisions(withoutMonsterTacticalAdvantage(result, actorId), rng);

@@ -62,6 +62,10 @@ export function compileMonsterInstance(input: {
   };
   const aiPassives: Record<string, unknown>[] = [
     { id: 'monster-ai-profile', kind: 'monster_ai', ...input.monster.ai },
+    ...(input.monster.ai.bloodied_frenzy ? ['attack', 'saving_throw'].map(roll => ({
+      id: `monster-bloodied-frenzy:${roll}`, kind: 'modifier', name: 'Ярость раненого',
+      applies_to: {roll}, op: 'advantage', hp_fraction_at_most: 0.5,
+    })) : []),
     ...(input.monster.ai.undead_fortitude ? [{
       id: 'monster-undead-fortitude', kind: 'zero_hp_save', name: 'Стойкость нежити',
       ability: 'con', dc_base: 5, remaining_hp: 1,

@@ -116,8 +116,18 @@ function collectFromPayload(
   opts: CollectOptions,
   sourceName: string,
   out: CollectResult,
+  runtime: RuntimeState,
 ): void {
   if (payload.kind !== 'modifier') return;
+  // Health-gated modifiers belong to the carrier's live runtime, including
+  // saves and reactions. Temporary hit points never change this threshold.
+  if (payload.hp_fraction_at_most !== undefined) {
+    const threshold = payload.hp_fraction_at_most;
+    const {current, max} = runtime.hp;
+    if (typeof threshold !== 'number' || !Number.isFinite(threshold) || threshold < 0 || threshold > 1
+      || !Number.isFinite(current) || !Number.isFinite(max) || max <= 0 || current < 0
+      || current > max * threshold) return;
+  }
   // scope:'target' — проекция на атакующего носителя (фаза E); к своим броскам не относится.
   if (String(payload.scope ?? 'self') === 'target') return;
   const applies = payload.applies_to as Dict | undefined;
@@ -221,7 +231,7 @@ export function collectModifiers(
           conditionSourceId: effect.sourceId,
           conditionOwnerId: effect.ownerId ?? opts.evalCtx?.rollerActorId,
         } } : {}),
-      }, src, out);
+      }, src, out, state);
       // Состояние (kind:'condition') влияет на броски по правилам 2024.
       if (payload.kind === 'condition' && payload.value) {
         // Condition-owned `when` predicates are always evaluated fail-closed,
@@ -243,7 +253,7 @@ export function collectModifiers(
         if (opts.roll === 'attack' && conditionRule(String(payload.value))?.worldFacts?.cannot_see
           && perceivesWithoutSight(state, passives, distance)) continue;
         for (const rule of conditionModifierPayloads(String(payload.value))) {
-          collectFromPayload({ kind: 'modifier', ...rule }, conditionOpts, String(payload.value), out);
+          collectFromPayload({ kind: 'modifier', ...rule }, conditionOpts, String(payload.value), out, state);
         }
       }
     }
@@ -259,7 +269,7 @@ export function collectModifiers(
     if (mode != null && mode !== 'passive') continue;
     const src = String((mech as Dict).name ?? 'пассивка');
     for (const payload of payloadsOf(mech)) {
-      collectFromPayload(payload, opts, src, out);
+      collectFromPayload(payload, opts, src, out, state);
     }
   }
 

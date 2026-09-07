@@ -3490,3 +3490,50 @@ it('resumes a persisted monster route even after Dash has spent its action', asy
   expect(activeId(result)).toBe(participant.character.id);
   expect(result).toEqual(runMonsterTurn(state,()=>0.5));
 });
+
+
+describe('Bloodied Frenzy uses shared saves and opportunity attacks', () => {
+  async function setup(current: number) {
+    const participant = fighterSeed();
+    const actor = participant.canonical.world.actors[participant.character.id];
+    actor.runtime.hp = {current: 100, max: 100, temp: 0};
+    actor.runtime.resources.reaction = 0;
+    participant.character.current_hp = 100;
+    participant.character.max_hp = 100;
+    const saveAction = projectRuleAction({...scimitar(), id: 'test-frenzy-save', name: 'Saving throw probe',
+      mechanics: {activation: {mode: 'active', cost: [{resource: 'action', amount: 1}]},
+        targeting: {domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1, max_targets: 1,
+          range_ft: 30, requires_line_of_sight: true, allowed_relations: ['enemy']},
+        effects: [{resolution: 'save', who: 'target', ability: 'con', dc: 15,
+          on_fail: [{kind: 'damage', amount: 1, type: 'fire'}], on_success: []}]}}, {sourceEntityIds: ['test']});
+    const actions = [...participant.canonical.actions, saveAction];
+    participant.canonical.actions = actions;
+    participant.canonical.catalog = {getAction: id => actions.find(row => row.id === id), listActions: () => actions};
+    actor.capabilities.actionIds.push(saveAction.id);
+    const monster = {...goblin(), max_hp: 67, ai: {bloodied_frenzy: true}};
+    const state = await createSoloCombatState({character: participant.character, participant,
+      selected: [{monster, quantity: 1}], actions: [scimitar()], effects: [], rng: () => 0.5});
+    const monsterId = Object.values(state.world.actors).find(row => row.kind === 'monster')!.id;
+    state.world.actors[monsterId].runtime.hp.current = current;
+    state.tokens[actor.id].position = {x: 4, y: 4};
+    state.tokens[monsterId].position = {x: 5, y: 4};
+    return {state: clone(state), actorId: actor.id, monsterId, actionId: saveAction.id};
+  }
+  it.each([34, 33])('rolls the actual target save with the correct dice at %i/67HP', async current => {
+    const scene = await setup(current);
+    let draws = 0;
+    const rng = () => { draws++; return 0.5; };
+    const state = autoResolveSystemDecisions(executeCombatAction({...scene, targetIds: [scene.monsterId], rng}), rng);
+    expect(state.world.pendingResolution).toBeFalsy();
+    expect(draws).toBe(current === 33 ? 2 : 1);
+  });
+  it.each([34, 33])('uses the same health rule during an opportunity attack at %i/67HP', async current => {
+    const scene = await setup(current);
+    scene.state.world.actors[scene.actorId].ac = 1;
+    let draws = 0;
+    const state = moveActor({...scene, destination: {x: 3, y: 4}, rng: () => {draws++; return 0.5;}});
+    expect(state.world.actors[scene.monsterId].runtime.resources.reaction).toBe(0);
+    expect(draws).toBe(current === 33 ? 3 : 2);
+    expect(state.tokens[scene.actorId].position).toEqual({x: 3, y: 4});
+  });
+});
