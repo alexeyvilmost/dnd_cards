@@ -193,3 +193,14 @@ Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br
 - The combat integration caught missing critical provenance on primary damage. It now reaches the damage recipient (as riders already did). Critical hits do not independently impose concentration disadvantage; explicit rules still can.
 - AI preserves saved extra movement allotments; forced movement preserves voluntary movement. Opportunity eligibility uses the actual action reach and visible target, including a10ft boundary test. Full movement continuation/route work is still outstanding.
 - Zombie remains generator-gated until production acceptance. This does not certify all18 monsters or the four fighter subclasses.
+
+
+## Production rollout: 83fad6b
+
+- Exact TimeWeb/public SHA `83fad6b7e4f5e56cac45a8e9e1fd70405c5389df`; all four containers healthy. Backup `pre-83fad6b7e4f5e56cac45a8e9e1fd70405c5389df-20260907T173412Z.dump`; archive SHA256 `7d7b06bac6afa4983c7acbe7ddff466c22609bc139e6d697f5ffdbacee7f10cb`.
+- Final frozen-source regression passed385 files /3220 tests. TypeScript, lint, headless engine and actual HTTP worker replay gates passed. The earlier concurrent run observed pre-fix modules and failed the two new critical scenarios; the full final rerun passed both and all existing tests.
+- Dedicated three-zombie browser fixture uses1000 playerHP; not a natural run or balance sample. First fatal10damage produced CON5+3 vsDC15, failure; second zombie failed CON2+3 vsDC11 after6damage. Browser success/reload/replay acceptance is still in progress.
+- Stat-block audit found omitted condition immunities and senses in existing seed data. Migration205 adds verified defenses for zombie, skeleton and animated armor, plus zombie Wisdom save proficiency. Its statements were tested against temporary production table copies and rolled back (one row each); Go tests pass. Blindsight execution and broader visibility semantics still require work; declaring a sense is not its behavioral certification.
+
+- Browser acceptance finished: on round8 the last zombie at1HP took5damage, rolled14+3 vsDC10 and stayed at1HP. Reload preserved the state; another fatal8damage produced17+3 vsDC13 and again retained1HP. A later6damage produced3+3 vsDC11, failure. Ordinary result button returned to the existing sheet:150XP,one victory,53gp,one supply; server reward was150XP/35gp, hero965/1000HP.
+- The20 accepted commands replayed with the actual e837ce7c executable: `sha256:c61f06240af040d7bead915e40efdca1bedeb35d4e4e77d5117150074963e5e9`. A transient SSH timeout on the first read did not affect gameplay; the successful read/replay followed without another game mutation.
