@@ -2602,6 +2602,9 @@ describe('solo combat engine vertical integration', () => {
       state, actorId: monsterId, destination: { x: 6, y: 9 }, voluntary: true, rng: () => 0.75,
     });
 
+    expect(state.pendingTriggeredAction?.optionActionIds).toContain(sentinelAttack.id);
+    state = resolveTriggeredCombatAction(clone(state), sentinelAttack.id, () => 0.75);
+    state = resumePendingMovement(clone(state), () => 0.75);
     expect(state.world.actors[fighterId].runtime.resources.reaction).toBe(0);
     expect(state.tokens[monsterId].position).toEqual(before);
     expect(state.world.actors[monsterId].runtime.activeEffects).toContainEqual(expect.objectContaining({
@@ -3735,4 +3738,82 @@ it.each([5, 15])('recomputes the step cost when an opportunity attack knocks the
   expect(result.pendingMovementStep).toBeUndefined();
   expect(result.tokens[player.id].position).toEqual({x: budget === 5 ? 4 : 3, y: 4});
   expect(result.movementRemainingFt[player.id]).toBe(5);
+});
+
+
+describe('canonical character opportunity attacks', () => {
+  it.each([false, true])('offers an optional style-aware unarmed attack with held weapon %s', async held => {
+    const setup = unarmedParticipant();
+    const participant = setup.participant;
+    const source = participant.canonical.world.actors[participant.character.id];
+    source.runtime.equipment.main_hand = held ? CARD_LONGSWORD.id : null;
+    source.runtime.equipment.off_hand = null;
+    let state = await createSoloCombatState({character: participant.character, participant,
+      selected: [{monster: {...goblin(), max_hp: 100}, quantity: 1}], actions: [scimitar()], effects: [], rng: () => 0.5});
+    const monster = Object.values(state.world.actors).find(row => row.kind === 'monster')!;
+    monster.ac = 1;
+    state.tokens[source.id].position = {x: 4, y: 4};
+    state.tokens[monster.id].position = {x: 5, y: 4};
+    state = advanceTurn(state, () => 0.5);
+    const beforeReaction = state.world.actors[source.id].runtime.resources.reaction;
+    const beforeAction = state.world.actors[source.id].runtime.resources.action;
+    state = moveActor({state: clone(state), actorId: monster.id, destination: {x: 6, y: 4},
+      rng: () => {throw Error('The player has not chosen to react');}});
+    const options = state.pendingTriggeredAction!.optionActionIds;
+    expect(options).toHaveLength(held ? 2 : 1);
+    const unarmed = options.find(id => id.endsWith(':unarmed:opportunity'))!;
+    expect(unarmed).toBeTruthy();
+    expect(state.playerActionIds).not.toContain(unarmed);
+    expect(state.tokens[monster.id].position).toEqual({x: 5, y: 4});
+    if (held) {
+      const weapon = options.find(id => id.endsWith(':main:opportunity'))!;
+      const weaponHit = resolveTriggeredCombatAction(clone(state), weapon, () => 0.5);
+      expect(weaponHit.world.actors[monster.id].runtime.hp.current)
+        .toBe(100 - 5 - source.character.abilityMods.str);
+      expect(weaponHit.world.actors[source.id].runtime.resources.reaction).toBe(beforeReaction - 1);
+    }
+    const declined = resumePendingMovement(resolveTriggeredCombatAction(clone(state), null), () => 0.5);
+    expect(declined.world.actors[source.id].runtime.resources.reaction).toBe(beforeReaction);
+    expect(declined.world.actors[monster.id].runtime.hp.current).toBe(100);
+    let accepted = resolveTriggeredCombatAction(clone(state), unarmed, () => 0.5);
+    accepted = resumePendingMovement(clone(accepted), () => 0.5);
+    const damage = Math.floor(0.5 * (held ? 6 : 8)) + 1 + source.character.abilityMods.str;
+    expect(accepted.world.actors[monster.id].runtime.hp.current).toBe(100 - damage);
+    expect(accepted.world.actors[source.id].runtime.resources.reaction).toBe(beforeReaction - 1);
+    expect(accepted.world.actors[source.id].runtime.resources.action).toBe(beforeAction);
+    expect(accepted.tokens[monster.id].position).toEqual({x: 6, y: 4});
+    expect(accepted.pendingTriggeredAction).toBeUndefined();
+    expect(accepted.pendingMovementStep).toBeUndefined();
+  });
+});
+
+
+it.each([false, true])('offers only the melee reaction whose reach was left, ranged-only %s', async ranged => {
+  const setup = unarmedParticipant();
+  const participant = setup.participant;
+  const source = participant.canonical.world.actors[participant.character.id];
+  const weapon = clone(CARD_LONGSWORD);
+  const profile = weapon.mechanics!.weapon_profile as Record<string, unknown>;
+  profile.default_attack_mode = ranged ? 'ranged' : 'melee';
+  profile.attack_modes = ranged ? [{kind: 'ranged', normal_ft: 80, long_ft: 320}] : [{kind: 'melee', reach_ft: 10}];
+  source.character.knownCards = [weapon];
+  source.character.equippedCards = [weapon];
+  let state = await createSoloCombatState({character: participant.character, participant,
+    selected: [{monster: {...goblin(), max_hp: 100}, quantity: 1}], actions: [scimitar()], effects: [], rng: () => 0.5});
+  const monster = Object.values(state.world.actors).find(row => row.kind === 'monster')!;
+  state.tokens[source.id].position = {x: 4, y: 4};
+  state.tokens[monster.id].position = {x: 5, y: 4};
+  state = advanceTurn(state, () => 0.5);
+  const noRoll = () => {throw Error('Choosing or declining has not rolled an attack');};
+  state = moveActor({state, actorId: monster.id, destination: {x: 6, y: 4}, rng: noRoll});
+  expect(state.pendingTriggeredAction?.optionActionIds).toEqual([`${source.id}:melee-reaction:unarmed:opportunity`]);
+  state = resumePendingMovement(resolveTriggeredCombatAction(clone(state), null), noRoll);
+  state = moveActor({state, actorId: monster.id, destination: {x: 7, y: 4}, rng: noRoll});
+  if (ranged) expect(state.pendingTriggeredAction).toBeUndefined();
+  else {
+    expect(state.pendingTriggeredAction?.optionActionIds).toEqual([`${source.id}:melee-reaction:main:opportunity`]);
+    state = resumePendingMovement(resolveTriggeredCombatAction(clone(state), null), noRoll);
+  }
+  expect(state.tokens[monster.id].position).toEqual({x: 7, y: 4});
+  expect(state.world.actors[source.id].runtime.resources.reaction).toBe(1);
 });

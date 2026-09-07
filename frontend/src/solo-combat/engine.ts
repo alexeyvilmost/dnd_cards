@@ -1,3 +1,4 @@
+import {unarmedDamageActionFor, weaponAttackAction} from '../rules-core/attackDefinitions';
 import type { Action, PassiveEffect } from '../types';
 import type { ForgeCharacter } from '../character/types';
 import {
@@ -221,6 +222,43 @@ function opportunityVersion(action: RuleActionDefinition, reachFt = 5): RuleActi
       allowedRelations: ['enemy'],
     },
   } as RuleActionDefinition;
+}
+
+/** The same definitions serve canonical Attack entries and actor-owned reactions. */
+function installCharacterOpportunityAttacks(actor: ActorState, catalog: RuleActionDefinition[]): string {
+  const prefix = `${actor.id}:melee-reaction:`;
+  const cards = [...(actor.character.knownCards ?? []), ...(actor.character.equippedCards ?? [])];
+  const attacks: RuleActionDefinition[] = [];
+  for (const hand of ['main', 'off'] as const) {
+    const cardId = actor.runtime.equipment[hand === 'main' ? 'main_hand' : 'off_hand'];
+    if (hand === 'off' && cardId === actor.runtime.equipment.main_hand) continue;
+    const card = cards.find(row => row.id === cardId);
+    if (!card || card.type !== 'weapon') continue;
+    const parsed = parseWeaponProfile(card);
+    const mode = parsed.valid ? parsed.profile.attackModes.find(row => row.kind === 'melee') : undefined;
+    if (mode?.kind !== 'melee') continue;
+    const base = weaponAttackAction(hand, 'melee');
+    attacks.push(opportunityVersion({...base, id: `${prefix}${hand}`, name: card.name,
+      sourceEntityIds: [...base.sourceEntityIds, card.id]}, mode.reachFt));
+  }
+  attacks.push(opportunityVersion({...unarmedDamageActionFor(actor),
+    id: `${prefix}unarmed`, name: 'Безоружный удар'}, actor.attackProfile?.reachFt ?? 5));
+  for (let index = catalog.length - 1; index >= 0; index--) {
+    if (catalog[index].id.startsWith(prefix)) catalog.splice(index, 1);
+  }
+  catalog.push(...attacks);
+  actor.capabilities.actionIds = [...new Set([
+    ...actor.capabilities.actionIds.filter(id => !id.startsWith(prefix)), ...attacks.map(row => row.id),
+  ])];
+  return attacks[0].id;
+}
+
+function opportunityActionsFor(state: SoloCombatState, actorId: string): RuleActionDefinition[] {
+  const primaryId = state.opportunityActionIds[actorId];
+  if (!primaryId) return [];
+  const prefix = `${actorId}:melee-reaction:`;
+  return state.catalogActions.filter(row => primaryId.startsWith(prefix)
+    ? row.id.startsWith(prefix) : row.id === primaryId);
 }
 
 /** An opportunity attack is one melee attack, never a ranged shot or Multiattack. */
@@ -2732,35 +2770,37 @@ function executeOpportunityAttacks(
   const moverDeniedOrdinaryOpportunity = deniesOpportunityAttack(mover);
   let next = finishMovementOpportunity(state, rng);
   if (monsterMovementPaused(next) || effectiveCombatActorSpeedFt(next, moverId) === 0) return next;
-  const enemies = Object.values(state.world.actors).filter((actor) => {
-    const action = state.catalogActions.find(row => row.id === state.opportunityActionIds[actor.id]);
-    const position = state.tokens[actor.id]?.position;
-    if (!action || !position || next.pendingMovementStep?.processedOpportunityActorIds.includes(actor.id)) return false;
+  const eligibleActions = (actorId: string) => opportunityActionsFor(next, actorId).filter(action => {
+    const position = next.tokens[actorId]?.position;
     const reach = monsterAttackRange(action);
-    return combatRelation(state, moverId, actor.id) === 'enemy' && actor.runtime.hp.current > 0
-      && actor.runtime.resources.reaction > 0
-      && (!moverDeniedOrdinaryOpportunity || actorOwnsSentinel(actor))
-      && gridDistanceFt(position, start) <= reach
-      && gridDistanceFt(position, destination) > reach
-      && spatialFacts(state, actor.id, moverId).canSeeTarget;
+    return position && gridDistanceFt(position, start) <= reach && gridDistanceFt(position, destination) > reach;
   });
+  const enemies = Object.values(next.world.actors).filter(actor => (
+    !next.pendingMovementStep?.processedOpportunityActorIds.includes(actor.id)
+    && combatRelation(next, moverId, actor.id) === 'enemy' && actor.runtime.hp.current > 0
+    && actor.runtime.resources.reaction > 0 && !deniedCapabilities(actor.runtime, actor.passives ?? []).has('reaction')
+    && (!moverDeniedOrdinaryOpportunity || actorOwnsSentinel(actor))
+    && eligibleActions(actor.id).length > 0 && spatialFacts(next, actor.id, moverId).canSeeTarget
+  ));
   for (const enemy of enemies) {
-    const actionId = next.opportunityActionIds[enemy.id];
-    if (!actionId || next.world.actors[moverId].runtime.hp.current <= 0) continue;
-    const action = next.catalogActions.find((candidate) => candidate.id === actionId);
+    if (next.world.actors[moverId].runtime.hp.current <= 0) continue;
+    const options = eligibleActions(enemy.id);
+    const action = options[0];
     if (!action) continue;
+    const actionId = action.id;
     if (next.pendingMovementStep) next = {...next, pendingMovementStep: {...next.pendingMovementStep,
-      processedOpportunityActorIds: [...next.pendingMovementStep.processedOpportunityActorIds, enemy.id]}};
+      processedOpportunityActorIds: [...next.pendingMovementStep.processedOpportunityActorIds, enemy.id],
+      lastOpportunity: {actorId: enemy.id, logStart: combatLogCursor(next)}}};
     const warCasterOptions = enemy.capabilities.actionIds.filter((candidateId) => (
       candidateId.endsWith(':war-caster-opportunity')
       && next.catalogActions.some((candidate) => candidate.id === candidateId)
     ));
-    if (warCasterOptions.length && isControlledCharacter(next, enemy.id)) {
+    if (isControlledCharacter(next, enemy.id)) {
       return {
         ...next,
         pendingTriggeredAction: {
           event: 'opportunity_attack', sourceActorId: enemy.id, sourceActionId: action.id,
-          targetIds: [moverId], optionActionIds: [action.id, ...warCasterOptions],
+          targetIds: [moverId], optionActionIds: [...options.map(row => row.id), ...warCasterOptions],
         },
       };
     }
@@ -2768,8 +2808,6 @@ function executeOpportunityAttacks(
       ...commandBase(next, enemy.id), type: 'UseReactionAction', trigger: 'opportunity_attack', actionId,
       targetIds: [moverId], factsByTarget: { [moverId]: spatialFacts(next, enemy.id, moverId) },
     };
-    if (next.pendingMovementStep) next = {...next, pendingMovementStep: {...next.pendingMovementStep,
-      lastOpportunity: {actorId: enemy.id, logStart: combatLogCursor(next)}}};
     next = dispatch({ state: next, command, rng, label: action.name });
     next = autoResolveSystemDecisions(next, rng);
     if (monsterMovementPaused(next)) return next;
@@ -3492,15 +3530,7 @@ export async function addSoloCombatCharacter(input: {
     if (!actor.capabilities.actionIds.includes(actionId)) actor.capabilities.actionIds.push(actionId);
   }
   const opportunityActionIds = { ...input.state.opportunityActionIds };
-  const attack = input.participant.canonical.actions.find((action) => (
-    primitiveType(action) === 'weapon_attack' && isAttackAction(action)
-  ));
-  if (attack) {
-    const opportunity = opportunityVersion(attack);
-    if (!catalogActions.some((candidate) => candidate.id === opportunity.id)) catalogActions.push(opportunity);
-    actor.capabilities.actionIds.push(opportunity.id);
-    opportunityActionIds[actorId] = opportunity.id;
-  }
+  opportunityActionIds[actorId] = installCharacterOpportunityAttacks(actor, catalogActions);
   const position = availableScenePosition(input.state, 'party');
   const controlledIds = [...new Set([...controlledCharacterIds(input.state), actorId])];
   const playerActionIds = [...new Set([
@@ -3649,21 +3679,7 @@ export async function refreshSoloCombatParticipants(input: {
       sourceActions: participant.canonical.actions,
       catalogActions,
     });
-    const attack = participant.canonical.actions.find((action) => (
-      primitiveType(action) === 'weapon_attack' && isAttackAction(action)
-    ));
-    if (attack) {
-      const opportunity = opportunityVersion(attack);
-      if (!catalogActions.some((candidate) => candidate.id === opportunity.id)) {
-        catalogActions.push(opportunity);
-      }
-      if (!freshActor.capabilities.actionIds.includes(opportunity.id)) {
-        freshActor.capabilities.actionIds.push(opportunity.id);
-      }
-      opportunityActionIds[actorId] = opportunity.id;
-    } else {
-      delete opportunityActionIds[actorId];
-    }
+    opportunityActionIds[actorId] = installCharacterOpportunityAttacks(freshActor, catalogActions);
 
     actors[actorId] = freshActor;
     const playerActionIds = [...new Set([
@@ -3971,16 +3987,8 @@ export async function createSoloCombatState(input: {
       sourceActions: participant.canonical.actions,
       catalogActions,
     });
-    const playerAttack = participant.canonical.actions.find((action) => (
-      primitiveType(action) === 'weapon_attack' && isAttackAction(action)
-    ));
-    if (!playerAttack) continue;
-    const opportunity = opportunityVersion(playerAttack);
-    if (!catalogActions.some((candidate) => candidate.id === opportunity.id)) {
-      catalogActions.push(opportunity);
-    }
-    base.world.actors[participant.character.id].capabilities.actionIds.push(opportunity.id);
-    opportunityActionIds[participant.character.id] = opportunity.id;
+    opportunityActionIds[participant.character.id] = installCharacterOpportunityAttacks(
+      base.world.actors[participant.character.id], catalogActions);
   }
   const basicRows = input.actions.filter((action) => FAMILIAR_BASIC_ACTIONS.has(action.card_number));
   const tacticalBasics = basicRows.map((action) => projectRuleAction(action));
