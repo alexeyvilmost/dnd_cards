@@ -519,6 +519,9 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
 
   test('unarmed strike uses the same scene-target declaration before its roll', async ({ page }) => {
     const api = await installForgeApiFixture(page);
+    await page.addInitScript(() => {
+      Math.random = () => 0.99;
+    });
     api.seedCharacter(character(compiled.roots.fighter, IDS.source, 'Brawler'));
     const unarmed = api.getCatalogRows('actions').find((row) => (
       row.card_number === 'action_basic_unarmed'
