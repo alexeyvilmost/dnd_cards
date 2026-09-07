@@ -53,10 +53,15 @@ interface Props {
   encounterApply?: EncounterApply;
   combatLocked?: boolean;
   itemCards?: readonly Card[];
+  /** Blocks this panel while a sibling action owns the character revision. */
+  disabledReason?: string;
+  /** Reports any runtime/turn write so sibling action panels can pause. */
+  onBusyChange?: (busy: boolean) => void;
 }
 
-export default function SheetRuntimePanel({ character, assembled, ruleState, onUpdated, onEvents, onPersistedEvents, onLongRestComplete, encounterApply, combatLocked, itemCards = [] }: Props) {
+export default function SheetRuntimePanel({ character, assembled, ruleState, onUpdated, onEvents, onPersistedEvents, onLongRestComplete, encounterApply, combatLocked, itemCards = [], disabledReason, onBusyChange }: Props) {
   const [busy, setBusy] = useState(false);
+  const [restBusy, setRestBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedBoon, setSelectedBoon] = useState<RuntimeBoonSpec | null>(null);
   const syncAttempted = useRef(false);
@@ -111,7 +116,13 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
     () => groupActiveEffectsForDisplay(runtime.activeEffects),
     [runtime.activeEffects],
   );
-  const effectMutationBlockReason = manualEffectMutationBlockReason(character.current_encounter_id);
+  const mutationBusy = busy || restBusy;
+  useEffect(() => {
+    onBusyChange?.(mutationBusy);
+  }, [mutationBusy, onBusyChange]);
+  useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
+  const effectMutationBlockReason = disabledReason
+    ?? manualEffectMutationBlockReason(character.current_encounter_id);
 
   const resourceBreakdowns = useMemo(
     () => syncRuntimeResources(
@@ -245,7 +256,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
         {!resourceKeys.length && (
           <p className="forge-note">
             Ресурсы не инициализированы.{' '}
-            <button type="button" className="sheet-link-btn" disabled={busy} onClick={() => syncResources(true)}>
+            <button type="button" className="sheet-link-btn" disabled={mutationBusy || Boolean(disabledReason)} onClick={() => syncResources(true)}>
               Синхронизировать
             </button>
           </p>
@@ -261,9 +272,13 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
         onPersistedEvents={onPersistedEvents}
         onLongRestComplete={onLongRestComplete}
         encounterApply={encounterApply}
-        disabledReason={combatLocked ? 'Управляйте ходами и отдыхом из активного боя' : undefined}
+        disabledReason={combatLocked
+          ? 'Управляйте ходами и отдыхом из активного боя'
+          : disabledReason ?? (busy ? 'Сохраняется состояние листа' : undefined)}
         itemCards={itemCards}
         grantedActions={grantedActions}
+        onBusyChange={setRestBusy}
+        autoSyncResources={false}
       />
 
       {activeEffectGroups.length > 0 && (
@@ -277,7 +292,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
                     <button
                       type="button"
                       className="forge-btn ghost sheet-active-effect-use"
-                      disabled={busy || Boolean(effectMutationBlockReason)}
+                      disabled={mutationBusy || Boolean(effectMutationBlockReason)}
                       onClick={() => setSelectedBoon(group.effects.map(runtimeBoonSpec).find(Boolean) ?? null)}
                     >
                       Использовать
@@ -286,7 +301,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
                   <button
                   type="button"
                   className="sheet-active-effect-dismiss"
-                  disabled={busy || Boolean(effectMutationBlockReason)}
+                  disabled={mutationBusy || Boolean(effectMutationBlockReason)}
                   title={effectMutationBlockReason ?? 'Снять вручную'}
                   onClick={() => handleDismissEffect(group.effects.map((effect) => effect.id))}
                 >
@@ -309,7 +324,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
       </p>
       <BoonActivationDialog
         boon={selectedBoon}
-        busy={busy}
+        busy={mutationBusy}
         onChoose={handleArmBoon}
         onClose={() => setSelectedBoon(null)}
       />

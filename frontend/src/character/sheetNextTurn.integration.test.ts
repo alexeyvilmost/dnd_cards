@@ -7,7 +7,7 @@ import {
   type RulesetReference,
 } from '../rules-core/domain';
 import type { SheetCombatParticipantSeed } from './sheetCombatSession';
-import type { SheetCanonicalRuntime } from './sheetCanonicalWorld';
+import { SHEET_CANONICAL_WORLD_KEY, type SheetCanonicalRuntime } from './sheetCanonicalWorld';
 import { writeSheetCanonicalWorld } from './sheetCanonicalWorld';
 import {
   persistedSourceTurnCharacterIds,
@@ -162,6 +162,19 @@ describe('detached sheet source-turn atomic transition', () => {
     const { source } = fixture(false);
     expect(persistedSourceTurnCharacterIds(source.character.turn_state, SOURCE_ID))
       .toEqual([TARGET_ID]);
+  });
+
+  it('treats an obsolete persisted world as an empty discovery cache', () => {
+    const { source } = fixture(false);
+    const turnState = clone(source.character.turn_state ?? {});
+    turnState[SHEET_CANONICAL_WORLD_KEY] = {
+      schemaVersion: 1,
+      primaryActorId: SOURCE_ID,
+      rulesetContentHash: 'sheet:previous-deployment',
+      world: {},
+    };
+
+    expect(persistedSourceTurnCharacterIds(turnState, SOURCE_ID)).toEqual([]);
   });
 
   it('arms the target on the first new turn and commits caster reset plus target together', async () => {

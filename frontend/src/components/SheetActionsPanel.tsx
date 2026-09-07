@@ -232,6 +232,8 @@ interface Props {
   disableHoverPreviews?: boolean;
   /** Blocks sheet-side mutations while another surface owns the authoritative turn ledger. */
   disabledReason?: string;
+  /** Coordinates this panel's runtime write with sibling sheet surfaces. */
+  onBusyChange?: (busy: boolean) => void;
 }
 
 export function sheetActionPanelLockIssue(
@@ -645,8 +647,14 @@ export default function SheetActionsPanel({
   onInspectAction,
   disableHoverPreviews = false,
   disabledReason: panelDisabledReason,
+  onBusyChange,
 }: Props) {
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusyState] = useState(false);
+  const setBusy = useCallback((next: boolean) => {
+    setBusyState(next);
+    onBusyChange?.(next);
+  }, [onBusyChange]);
+  useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
   const [error, setError] = useState<string | null>(null);
   // Пикер источника оплаты каста (D1 апкаст + freeuse): промис-модалка без нового провайдера.
   // via:'slot' — за ячейку уровня level; via:'free' — из пула бесплатных использований.

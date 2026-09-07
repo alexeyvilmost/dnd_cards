@@ -91,6 +91,10 @@ interface Props {
   itemCards?: readonly Card[];
   /** Reuse a parent surface's resolved grant_action cards when available. */
   grantedActions?: readonly GrantedAction[];
+  /** Coordinates turn/rest writes with sibling action surfaces. */
+  onBusyChange?: (busy: boolean) => void;
+  /** A surrounding runtime panel may own the same initial resource projection. */
+  autoSyncResources?: boolean;
 }
 
 /** Pure adapter used by the real sheet: action mechanics remain the authority. */
@@ -125,8 +129,15 @@ export default function SheetRestButtons({
   disabledReason,
   itemCards = [],
   grantedActions: providedGrantedActions,
+  onBusyChange,
+  autoSyncResources = true,
 }: Props) {
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusyState] = useState(false);
+  const setBusy = useCallback((next: boolean) => {
+    setBusyState(next);
+    onBusyChange?.(next);
+  }, [onBusyChange]);
+  useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
   const [shortRestDraft, setShortRestDraft] = useState<{ state: RuntimeState; events: EngineEvent[] } | null>(null);
   const [shortRestSelections, setShortRestSelections] = useState<Record<string, number[]>>({});
   const [shortRestSpellSwapSelections, setShortRestSpellSwapSelections] = useState<
@@ -317,11 +328,12 @@ export default function SheetRestButtons({
   // набор карточек предметов меняется; buildResourceRuntimePatch остаётся
   // идемпотентным и не пишет состояние, если все пулы уже актуальны.
   useEffect(() => {
+    if (!autoSyncResources) return;
     const signature = `${character.id}:${itemResourceSignature}:${grantedActionResourceSignature}`;
     if (syncAttemptedFor.current === signature) return;
     syncAttemptedFor.current = signature;
     syncResources();
-  }, [character.id, itemResourceSignature, grantedActionResourceSignature, syncResources]);
+  }, [autoSyncResources, character.id, itemResourceSignature, grantedActionResourceSignature, syncResources]);
 
   const restCtx = useMemo(() => ({ ...ctx, passives }), [ctx, passives]);
 

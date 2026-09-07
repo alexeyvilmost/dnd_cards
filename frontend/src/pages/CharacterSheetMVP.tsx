@@ -147,6 +147,8 @@ const CharacterSheetMVP = () => {
   const [unseen, setUnseen] = useState(0);
   const [longRestOpen, setLongRestOpen] = useState(false);
   const [pendingAtomicRetry, setPendingAtomicRetry] = useState<SheetAtomicRetryEnvelope | null>(null);
+  const [sheetActionsBusy, setSheetActionsBusy] = useState(false);
+  const [sheetRuntimeBusy, setSheetRuntimeBusy] = useState(false);
   const { toasts, push: pushToast } = useSheetToasts();
   const { entityDisplay, allowSheetEntityAdditions } = useSiteSettings();
   const diceDialog = useDiceDialog();
@@ -188,6 +190,11 @@ const CharacterSheetMVP = () => {
   const combatLocked = Boolean(activeEncounter || activeSoloCombat);
   const sheetActionDisabledReason = activeSoloCombat
     ? 'Персонаж находится в активном одиночном бою. Применяйте действия и эффекты на поле боя.'
+    : undefined;
+  const coordinatedSheetActionDisabledReason = sheetActionDisabledReason
+    ?? (sheetRuntimeBusy ? 'Сохраняется новый ход, отдых или состояние листа' : undefined);
+  const coordinatedSheetRuntimeDisabledReason = sheetActionsBusy
+    ? 'Сохраняется результат действия'
     : undefined;
   const encStateRef = useRef(encState);
   encStateRef.current = encState;
@@ -1041,7 +1048,8 @@ const CharacterSheetMVP = () => {
       onTargetSaveModChange={setTargetSaveMod}
       encounterId={encId ?? undefined}
       encounterApply={applyEncounter}
-      disabledReason={sheetActionDisabledReason}
+      disabledReason={coordinatedSheetActionDisabledReason}
+      onBusyChange={setSheetActionsBusy}
     />
   ) : null;
 
@@ -1225,6 +1233,8 @@ const CharacterSheetMVP = () => {
             encounterApply={applyEncounter}
             combatLocked={combatLocked}
             itemCards={[...equipCards.values()]}
+            disabledReason={coordinatedSheetRuntimeDisabledReason}
+            onBusyChange={setSheetRuntimeBusy}
           />
           )}
 
@@ -1599,7 +1609,8 @@ const CharacterSheetMVP = () => {
                 onTargetSaveModChange={setTargetSaveMod}
                 encounterId={encId ?? undefined}
                 encounterApply={applyEncounter}
-                disabledReason={sheetActionDisabledReason}
+                disabledReason={coordinatedSheetActionDisabledReason}
+                onBusyChange={setSheetActionsBusy}
               />
             </section>
           )}

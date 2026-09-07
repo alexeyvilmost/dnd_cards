@@ -104,6 +104,8 @@ const CharacterSheetV2 = ({
   const [targetAc, setTargetAc] = useState<number | null>(10);
   const [targetSaveMod, setTargetSaveMod] = useState<number | null>(0);
   const [targetCharacterId, setTargetCharacterId] = useState<string | null>(null);
+  const [actionBusy, setActionBusy] = useState(false);
+  const [restBusy, setRestBusy] = useState(false);
   const { entityDisplay } = useSiteSettings();
   const diceDialog = useDiceDialog();
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -192,6 +194,8 @@ const CharacterSheetV2 = ({
   const initiative = initBreakdown?.value ?? ruleState.initiativeBonus;
   const speed = speedBreakdown?.value ?? ruleState.speed;
   const spellcasting = ruleState.spellcasting;
+  const coordinatedSheetActionDisabledReason = sheetActionDisabledReason
+    ?? (restBusy ? 'Сохраняется новый ход или отдых' : undefined);
   const passivePerceptionBd = sheetCtx && runtimeState
     ? breakdownValue('passive_perception', sheetCtx, runtimeState, passives)
     : null;
@@ -252,7 +256,10 @@ const CharacterSheetV2 = ({
             compact
             onLongRestComplete={() => setLongRestOpen(true)}
             encounterApply={encounterApply}
-            disabledReason={combatActive ? 'Персонаж находится в бою: управляйте ходом и отдыхом на поле' : undefined}
+            disabledReason={combatActive
+              ? 'Персонаж находится в бою: управляйте ходом и отдыхом на поле'
+              : actionBusy ? 'Сохраняется результат действия' : undefined}
+            onBusyChange={setRestBusy}
           />
         )}
 
@@ -377,7 +384,8 @@ const CharacterSheetV2 = ({
               onTargetCharacterChange={setTargetCharacterId}
               encounterId={character.current_encounter_id ?? undefined}
               encounterApply={encounterApply}
-              disabledReason={sheetActionDisabledReason}
+              disabledReason={coordinatedSheetActionDisabledReason}
+              onBusyChange={setActionBusy}
             />}
           </CollapsibleSection>
 
@@ -413,7 +421,8 @@ const CharacterSheetV2 = ({
                 onTargetCharacterChange={setTargetCharacterId}
                 encounterId={character.current_encounter_id ?? undefined}
                 encounterApply={encounterApply}
-                disabledReason={sheetActionDisabledReason}
+                disabledReason={coordinatedSheetActionDisabledReason}
+                onBusyChange={setActionBusy}
               />}
             </CollapsibleSection>
           )}

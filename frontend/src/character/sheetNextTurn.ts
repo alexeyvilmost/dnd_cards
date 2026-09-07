@@ -76,8 +76,11 @@ export function persistedSourceTurnCharacterIds(
   }
   try {
     return sourceTurnCharacterIds(migrateWorldState(clone(envelope.world) as WorldState), sourceActorId);
-  } catch (cause) {
-    throw new Error('Не удалось прочитать участников длительности эффекта', { cause });
+  } catch {
+    // The persisted world is only a discovery index. A cache written by an
+    // older release can be structurally obsolete; the freshly assembled
+    // single-character world remains authoritative for the new turn.
+    return [];
   }
 }
 

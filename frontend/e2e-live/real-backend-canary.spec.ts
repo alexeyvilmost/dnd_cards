@@ -1296,7 +1296,7 @@ test('required production spine: empty Forge reaches sheet and dedicated combat 
     }
 
     await page.getByTestId('open-solo-combat').click();
-    const setup = page.getByRole('dialog', { name: /Противники для/ });
+    const setup = page.getByRole('dialog', { name: /Боевая сцена для/ });
     await expect(setup).toBeVisible();
     const monsterSetupRow = setup.locator('article').filter({
       // `has` is evaluated relative to each candidate article. Do not root the
