@@ -26,7 +26,7 @@ var roguelikeMonsterPool = []roguelikeMonsterEntry{
 	{Slug: "kobold-warrior", XP: 25, MinLevel: 1, MaxCount: 4, GeneratorWeight: 1},
 	{Slug: "goblin-warrior", XP: 50, MinLevel: 1, MaxCount: 4}, // Nimble Escape is not executable yet.
 	{Slug: "skeleton", XP: 50, MinLevel: 1, MaxCount: 4, GeneratorWeight: 1},
-	{Slug: "zombie", XP: 50, MinLevel: 1, MaxCount: 3}, // Undead Fortitude is not executable yet.
+	{Slug: "zombie", XP: 50, MinLevel: 1, MaxCount: 3, GeneratorWeight: 1}, // Undead Fortitude and defenses accepted through browser/replay.
 	{Slug: "wolf", XP: 50, MinLevel: 2, MaxCount: 4, GeneratorWeight: 1},
 	{Slug: "giant-wolf-spider", XP: 50, MinLevel: 3, MaxCount: 3}, // Spider Climb and senses still need certification.
 	{Slug: "hobgoblin-warrior", XP: 100, MinLevel: 2, MaxCount: 3, GeneratorWeight: 1},

@@ -56,5 +56,10 @@ func TestRoguelikeProgressionSeedsReachVictory(t *testing.T) {
 		}
 		total += encounters
 	}
+	for _, entry := range roguelikeMonsterPool {
+		if entry.GeneratorWeight > 0 && visits[entry.Slug] == 0 {
+			t.Fatalf("enabled monster %s never reached a generated encounter", entry.Slug)
+		}
+	}
 	t.Logf("1000 successful-encounter simulations: min=%d max=%d mean=%.2f encounters; monster visits=%v", minimum, maximum, float64(total)/1000, visits)
 }
