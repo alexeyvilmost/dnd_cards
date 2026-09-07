@@ -21,15 +21,14 @@ export const PINNED_MICRO_MVP_L1_CONTENT_PATCH_HASH =
  * Exact release evidence carried by the 15 mechanically certified PHB 2024
  * condition rows in the database.
  *
- * Condition authority intentionally advances only after the condition suite
- * has produced and persisted a new evidence bundle. Unrelated additions to
- * the wider sheet-combat catalog (for example the actor-bound Unarmed Strike)
- * must not silently rewrite that evidence or make the already-certified
- * condition library unavailable.
+ * These remain separate pins so a wider overlay release cannot advance the
+ * condition authority by itself. They are updated only after the condition
+ * suite has produced and persisted a new evidence bundle. The current release
+ * did that, so the two identities intentionally coincide at this checkpoint.
  */
 export const PINNED_MICRO_MVP_CONDITION_RULES_HASH =
-  'sha256:67860317c1e3d1ede6993e688ad305f112186975e561508192e5ec34f4443292' as const;
+  'sha256:475cf792832c0edc32b88d2d4bcd537146d90694b250964221b36291cf8b77c6' as const;
 export const PINNED_MICRO_MVP_CONDITION_RELEASE_CONTENT_HASH =
-  'sha256:2ddba1ce7354f7d3e813a2531329019e6039dc27163259a59989f5557d233ca8' as const;
+  'sha256:9f28e9a8049d662b4e15bc6287838b47bf56e2e65001281bce3e9199f90e9633' as const;
 export const PINNED_MICRO_MVP_CONDITION_RELEASE_HASH =
-  'sha256:313dcc9fff197929b0d59e87246f6aac7ed162eaaf3107a583cba8ad3573d99f' as const;
+  'sha256:b78a359098d0728d6ccf46a942af7dece176a4519531d75bc0f3dd9d0ab15ef8' as const;

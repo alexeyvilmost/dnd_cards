@@ -11,7 +11,7 @@ import {
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
 
 describe('independently pinned release authorities', () => {
-  it('keeps genuine condition evidence pinned while the wider overlay advances', () => {
+  it('advances the explicit condition pins after a condition evidence release', () => {
     const conditionRelease = [
       PINNED_MICRO_MVP_CONDITION_RULES_HASH,
       PINNED_MICRO_MVP_CONDITION_RELEASE_CONTENT_HASH,
@@ -25,6 +25,6 @@ describe('independently pinned release authorities', () => {
 
     expect(conditionRelease.every((hash) => SHA256.test(hash))).toBe(true);
     expect(currentOverlay.every((hash) => SHA256.test(hash))).toBe(true);
-    expect(conditionRelease).not.toEqual(currentOverlay);
+    expect(conditionRelease).toEqual(currentOverlay);
   });
 });
