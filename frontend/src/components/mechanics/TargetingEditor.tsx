@@ -2,14 +2,16 @@ import { TARGETING_SHAPES, AREA_KINDS } from '../../mechanics/registries';
 import type { TargetingForm } from '../../mechanics/blocks';
 import { MECH_INPUT_CLS as cls } from './shared';
 
-// Наведение (mechanics.targeting). ⏳ — движок пока не интерпретирует (описательно).
+// Наведение (mechanics.targeting) материализуется в единый контракт движка.
 
 export default function TargetingEditor({ value, onChange }: { value: TargetingForm; onChange: (v: TargetingForm) => void }) {
   const t = value || {};
   const set = (p: Partial<TargetingForm>) => onChange({ ...t, ...p });
   return (
     <div className="space-y-2">
-      <p className="text-[11px] text-amber-600">⏳ Описательно — движок пока не использует наведение при разрешении.</p>
+      <p className="text-[11px] text-sky-700">
+        Наведение проверяется в листе и бою: форма, дальность, число и тип целей.
+      </p>
       <div className="grid grid-cols-3 gap-1.5">
         <div>
           <label className="block text-[11px] text-gray-500 mb-0.5">Форма</label>
