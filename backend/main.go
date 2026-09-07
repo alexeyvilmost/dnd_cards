@@ -81,7 +81,10 @@ func main() {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = allowedOrigins
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
-	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Request-ID"}
+	corsConfig.AllowHeaders = []string{
+		"Origin", "Content-Type", "Accept", "Authorization", "X-Request-ID",
+		roguelikeRunHeader, roguelikeIntentHeader,
+	}
 	corsConfig.ExposeHeaders = []string{"X-Request-ID", "Retry-After"}
 	corsConfig.AllowCredentials = true
 	r.Use(cors.New(corsConfig))
@@ -107,6 +110,7 @@ func main() {
 	characterController := NewCharacterController(db)
 	characterV2Controller := NewCharacterV2Controller(db)
 	characterV3Controller := NewCharacterV3Controller(db)
+	roguelikeController := NewRoguelikeController(db)
 	imageLibraryController := NewImageLibraryController(db)
 	shopController := NewShopController(db)
 	actionController := NewActionController(db)
@@ -297,6 +301,7 @@ func main() {
 		// требует строгий JWT; контроллер разрешает authenticated read старых
 		// public-листов, но оставляет их неизменяемыми.
 		registerCharacterV3Routes(api, authService, characterV3Controller)
+		registerRoguelikeRoutes(api, authService, roguelikeController)
 		api.POST(
 			"/characters-v3/:id/avatar",
 			StrictAuthMiddleware(authService),

@@ -18,11 +18,13 @@ export function planMonsterTurn(
   state: SoloCombatState,
   monster: ActorState,
   targetActorId: string,
+  attackRangeFt = 5,
 ): MonsterTurnPlan {
   const start = state.tokens[monster.id]?.position;
   const target = state.tokens[targetActorId]?.position;
   if (!start || !target) throw new Error('ИИ не видит участника на тактической сетке');
-  if (gridDistanceFt(start, target) <= 5) {
+  const range = Math.max(5, attackRangeFt);
+  if (gridDistanceFt(start, target) <= range) {
     return { firstMove: [], dashMove: [], usesDash: false, attacks: true };
   }
   const grappled = Object.values(state.world.grapples ?? {}).some((grapple) => (
@@ -30,9 +32,11 @@ export function planMonsterTurn(
   ));
   const speed = grappled ? 0 : effectiveActorSpeedFt(monster);
   const occupied = occupiedPositions(state, monster.id);
-  const firstMove = pathToward({ start, target, maxFeet: speed, occupied });
+  const firstPath = pathToward({ start, target, maxFeet: speed, occupied });
+  const firstInRange = firstPath.findIndex((position) => gridDistanceFt(position, target) <= range);
+  const firstMove = firstInRange >= 0 ? firstPath.slice(0, firstInRange + 1) : firstPath;
   const afterMove = firstMove.at(-1) ?? start;
-  if (gridDistanceFt(afterMove, target) <= 5) {
+  if (gridDistanceFt(afterMove, target) <= range) {
     return { firstMove, dashMove: [], usesDash: false, attacks: true };
   }
   const dashMove = pathToward({ start: afterMove, target, maxFeet: speed, occupied });

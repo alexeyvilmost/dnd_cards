@@ -20,7 +20,19 @@ export interface Monster {
   abilities: Record<MonsterAbility, number>;
   action_ids: string[];
   effect_ids: string[];
-  ai: { strategy?: 'melee_chase'; preferred_range_ft?: number; [key: string]: unknown };
+  ai: {
+    strategy?: 'melee_chase' | 'tactical';
+    preferred_range_ft?: number;
+    reach_ft?: number;
+    pack_tactics?: boolean;
+    damage_immunities?: string[];
+    damage_vulnerabilities?: string[];
+    knock_prone?: boolean;
+    undead_fortitude?: boolean;
+    bloodied_frenzy?: boolean;
+    parry_ac?: number;
+    [key: string]: unknown;
+  };
   token_url: string;
   source: string;
   support?: EntitySupportCertification | null;

@@ -503,6 +503,28 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 			}
 			return err
 		}
+		if locked.CharacterType == "dungeon_crawl" {
+			run, authErr := authorizeRoguelikeCharacterMutation(
+				tx, locked, userID, c.GetHeader(roguelikeRunHeader), c.GetHeader(roguelikeIntentHeader),
+			)
+			if authErr != nil {
+				return authErr
+			}
+			if run == nil || req.Level != locked.Level+1 || req.Level > 5 || req.Level > roguelikeLevelForXP(run.Experience) {
+				return &characterRuntimeCommandError{
+					Status: http.StatusConflict, Code: "roguelike_level_up_forbidden",
+					Message:     "этот уровень ещё не заработан или выбран неверный уровень",
+					CharacterID: locked.ID.String(),
+				}
+			}
+			if req.ClassID == nil || locked.ClassID == nil || *req.ClassID != *locked.ClassID {
+				return &characterRuntimeCommandError{
+					Status: http.StatusConflict, Code: "roguelike_class_change_forbidden",
+					Message:     "в забеге нельзя сменить класс или взять мультикласс",
+					CharacterID: locked.ID.String(),
+				}
+			}
+		}
 
 		if req.Name != "" {
 			locked.Name = req.Name
@@ -601,6 +623,11 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 		c.JSON(http.StatusConflict, gin.H{"error": "владелец персонажа изменился; повторите запрос"})
 		return
 	}
+	var roguelikeConflict *characterRuntimeCommandError
+	if errors.As(txErr, &roguelikeConflict) {
+		writeCharacterRuntimeCommandError(c, txErr)
+		return
+	}
 	if txErr != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка обновления персонажа", "details": txErr.Error()})
 		return
@@ -639,6 +666,13 @@ func (cc *CharacterV3Controller) DeleteCharacterV3(c *gin.Context) {
 		if locked.CurrentEncounterID != nil {
 			return errCharacterV3InEncounter
 		}
+		if locked.CharacterType == "dungeon_crawl" {
+			return &characterRuntimeCommandError{
+				Status: http.StatusConflict, Code: "roguelike_delete_forbidden",
+				Message:     "персонаж забега удаляется вместе с жизненным циклом забега",
+				CharacterID: locked.ID.String(),
+			}
+		}
 		result := tx.Where("id = ? AND user_id = ?", characterID, userID).Delete(&CharacterV3{})
 		if result.Error != nil {
 			return result.Error
@@ -654,6 +688,11 @@ func (cc *CharacterV3Controller) DeleteCharacterV3(c *gin.Context) {
 	}
 	if errors.Is(txErr, errCharacterV3OwnerChanged) {
 		c.JSON(http.StatusConflict, gin.H{"error": "владелец персонажа изменился; повторите запрос"})
+		return
+	}
+	var roguelikeConflict *characterRuntimeCommandError
+	if errors.As(txErr, &roguelikeConflict) {
+		writeCharacterRuntimeCommandError(c, txErr)
 		return
 	}
 	if txErr != nil {
@@ -738,13 +777,20 @@ func (cc *CharacterV3Controller) PostCharacterEvents(c *gin.Context) {
 	defer tx.Rollback()
 	var lockedCharacter CharacterV3
 	if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-		Select("id").Where("id = ? AND user_id = ?", characterID, userID).
+		Select("id", "character_type").Where("id = ? AND user_id = ?", characterID, userID).
 		First(&lockedCharacter).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusConflict, gin.H{"error": "владелец персонажа изменился; повторите запрос"})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка проверки владельца персонажа"})
 		}
+		return
+	}
+	if lockedCharacter.CharacterType == "dungeon_crawl" {
+		c.JSON(http.StatusConflict, gin.H{
+			"code":  "roguelike_authority_required",
+			"error": "журнал персонажа забега изменяется только атомарной командой боя",
+		})
 		return
 	}
 
@@ -812,6 +858,7 @@ func (cc *CharacterV3Controller) PatchCharacterRuntime(c *gin.Context) {
 
 	var full CharacterV3
 	txErr := cc.db.Transaction(func(tx *gorm.DB) error {
+		var roguelikeRun *RoguelikeRun
 		var locked CharacterV3
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("id = ? AND user_id = ?", characterID, userID).
@@ -820,6 +867,13 @@ func (cc *CharacterV3Controller) PatchCharacterRuntime(c *gin.Context) {
 				return errCharacterV3OwnerChanged
 			}
 			return err
+		}
+		var authErr error
+		roguelikeRun, authErr = authorizeRoguelikeCharacterMutation(
+			tx, locked, userID, c.GetHeader(roguelikeRunHeader), c.GetHeader(roguelikeIntentHeader),
+		)
+		if authErr != nil {
+			return authErr
 		}
 		updates := runtimeUpdatesForLockedCharacter(locked, req)
 		if req.ExpectedRuntimeRevision != nil && locked.RuntimeRevision != *req.ExpectedRuntimeRevision {
@@ -843,7 +897,21 @@ func (cc *CharacterV3Controller) PatchCharacterRuntime(c *gin.Context) {
 				return errCharacterV3OwnerChanged
 			}
 		}
-		return tx.Preload("User").Preload("Group").First(&full, locked.ID).Error
+		if err := tx.Preload("User").Preload("Group").First(&full, locked.ID).Error; err != nil {
+			return err
+		}
+		if roguelikeRun != nil && c.GetHeader(roguelikeIntentHeader) == roguelikeIntentLevel {
+			roguelikeRun.Character = &full
+			checkpoint, checkpointErr := roguelikeCheckpoint(roguelikeRun, &full)
+			if checkpointErr != nil {
+				return checkpointErr
+			}
+			if err := tx.Model(&RoguelikeRun{}).Where("id = ?", roguelikeRun.ID).
+				Update("checkpoint", checkpoint).Error; err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 	if errors.Is(txErr, errCharacterV3OwnerChanged) {
 		c.JSON(http.StatusConflict, gin.H{"error": "владелец персонажа изменился; повторите запрос"})

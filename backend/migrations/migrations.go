@@ -1244,6 +1244,18 @@ func GetAllMigrations() []Migration {
 			Up:          repairSecondWindScaling,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     roguelikeRunsMigrationVersion,
+			Description: "Create authoritative roguelike run aggregates and command receipts",
+			Up:          createRoguelikeRuns,
+			Down:        func(db *sql.DB) error { return nil },
+		},
+		{
+			Version:     roguelikeMonstersMigrationVersion,
+			Description: "Materialize the SRD roguelike monster pool and executable attacks",
+			Up:          materializeRoguelikeMonsters,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

@@ -68,6 +68,7 @@ import { effectiveActorSpeedFt, gridDistanceFt } from '../solo-combat/tacticalGr
 import type { ActionWorldInput } from '../rules-core/domain';
 import type { WorldObjectState } from '../rules-core/worldObjects';
 import { bindCombatWorldInputFacts } from '../solo-combat/worldInput';
+import { roguelikeApi } from '../roguelike/api';
 import './CharacterForge.css';
 import './CharacterSheetV2.css';
 import './SoloCombatPage.css';
@@ -118,6 +119,7 @@ export default function SoloCombatPage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const roguelikeRunId = searchParams.get('roguelike');
   const choiceDialog = useChoiceDialog();
   const worldInputDialog = useSheetWorldInputDialog();
   const [character, setCharacter] = useState<ForgeCharacter | null>(null);
@@ -169,6 +171,7 @@ export default function SoloCombatPage() {
         const ruleset = next.world.ruleset;
         const response = await charactersV3Api.postRuntimeCommand({
           command_id: newSheetRuntimeCommandId(),
+			roguelike_run_id: roguelikeRunId ?? undefined,
           ruleset_ref: {
             system_id: ruleset.systemId,
             release_id: ruleset.releaseId,
@@ -234,7 +237,7 @@ export default function SoloCombatPage() {
       predicted,
     );
     try {
-      const saved = await charactersV3Api.patchRuntime(id, {
+		const saved = await charactersV3Api.patchRuntime(id, {
         expected_runtime_revision: next.runtimeRevision,
         current_hp: actor.runtime.hp.current,
         resources: actor.runtime.resources,
@@ -242,7 +245,7 @@ export default function SoloCombatPage() {
         active_effects: actor.runtime.activeEffects,
         inventory_items: runtimeInventoryPayload(actor.runtime),
         turn_state: turnState,
-      });
+		}, roguelikeRunId ? { runId: roguelikeRunId, intent: 'combat' } : undefined);
       const acceptedRevision = Number(saved.runtime_revision ?? predicted.runtimeRevision);
       const accepted = {
         ...predicted,
@@ -261,7 +264,7 @@ export default function SoloCombatPage() {
     } finally {
       setBusy(false);
     }
-  }, [id]);
+	}, [id, roguelikeRunId]);
 
   useEffect(() => {
     if (!id) return;
@@ -337,7 +340,10 @@ export default function SoloCombatPage() {
         setParticipantCharacters(participantCharactersRef.current);
         setState(created);
         await persist(created);
-        navigate(`/characters-v3/${id}/combat`, { replace: true });
+        navigate(
+          `/characters-v3/${id}/combat${roguelikeRunId ? `?roguelike=${encodeURIComponent(roguelikeRunId)}` : ''}`,
+          { replace: true },
+        );
       } catch (reason) {
         if (active) {
           setStaleRulesSnapshot(isIncompatibleCombatRulesError(reason));
@@ -346,7 +352,7 @@ export default function SoloCombatPage() {
       }
     })();
     return () => { active = false; };
-  }, [id, navigate, persist]);
+  }, [id, navigate, persist, roguelikeRunId]);
 
   const resetStaleCombat = useCallback(async () => {
     const current = characterRef.current;
@@ -356,7 +362,7 @@ export default function SoloCombatPage() {
       const saved = await charactersV3Api.patchRuntime(id, {
         expected_runtime_revision: Number(current.runtime_revision ?? 0),
         turn_state: clearIncompatibleCombatSnapshot(current.turn_state),
-      });
+	  }, roguelikeRunId ? { runId: roguelikeRunId, intent: 'combat' } : undefined);
       characterRef.current = saved;
       setCharacter(saved);
       navigate(`/characters-v3/${id}`);
@@ -364,7 +370,7 @@ export default function SoloCombatPage() {
       setError(reason instanceof Error ? reason.message : 'Не удалось сбросить устаревший бой');
       setBusy(false);
     }
-  }, [id, navigate]);
+	}, [id, navigate, roguelikeRunId]);
 
   const apply = useCallback((next: SoloCombatState) => {
     setError(null);
@@ -543,6 +549,12 @@ export default function SoloCombatPage() {
     if (!currentCharacter || !state || !id) return;
     setBusy(true);
     try {
+      if (roguelikeRunId) {
+        const run = await roguelikeApi.get(roguelikeRunId);
+        await roguelikeApi.command(run.id, run.revision, 'complete_encounter');
+        navigate(`/roguelike/${run.id}`);
+        return;
+      }
       const participantIds = controlledCharacterIds(state).sort();
       if (participantIds.length > 1) {
         const rows = participantCharactersRef.current;
@@ -629,7 +641,7 @@ export default function SoloCombatPage() {
     <main className="solo-combat-page forge">
       <MonsterTurnController state={state} disabled={busy || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt)} onTransition={apply} onError={setError} />
       <header className="combat-topbar">
-        <div className="combat-topbar__navigation"><Link to={`/characters-v3/${id}`}><ArrowLeft size={18} /> Лист</Link><button type="button" onClick={() => setSceneConstructorOpen(true)}><SlidersHorizontal size={16} /> Сцена</button></div>
+        <div className="combat-topbar__navigation"><Link to={roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`}><ArrowLeft size={18} /> {roguelikeRunId ? 'Забег' : 'Лист'}</Link>{!roguelikeRunId && <button type="button" onClick={() => setSceneConstructorOpen(true)}><SlidersHorizontal size={16} /> Сцена</button>}</div>
         <div className="initiative-ribbon" aria-label="Порядок инициативы">
           {state.initiative.map((entry) => {
             const participant = state.world.actors[entry.actorId];
@@ -777,7 +789,7 @@ export default function SoloCombatPage() {
       })}<button type="button" disabled={busy} onClick={() => resolveTriggeredChoice(null)}>Пропустить</button></div></section></div>}
       {pendingTurnStart && <div className="combat-reaction-backdrop"><section><p>НАЧАЛО ХОДА</p><h2>Нанести 1к4 урона существу в захвате?</h2><div>{pendingTurnStart.targetActorIds.map((targetActorId) => <button type="button" key={targetActorId} disabled={busy} onClick={() => apply(resolveSoloCombatTurnStart(state, targetActorId))}>{state.world.actors[targetActorId]?.name ?? 'Цель'} · 1к4 дробящего урона</button>)}<button type="button" disabled={busy} onClick={() => apply(resolveSoloCombatTurnStart(state, null))}>Пропустить</button></div></section></div>}
       {worldInputDialog.dialog}
-      {shouldShowSoloCombatOutcome(state) && <div className="combat-outcome"><section><p>БОЙ ЗАВЕРШЁН</p><h1>{state.outcome === 'victory' ? 'Победа' : 'Поражение'}</h1><p>{state.outcome === 'victory' ? 'Все противники уничтожены.' : `${character.name} потерял все хиты.`}</p><button type="button" onClick={finish}>Завершить и вернуться в лист</button><button type="button" onClick={() => navigate(`/characters-v3/${id}`)}><RotateCcw size={16} /> Оставить запись боя</button></section></div>}
+      {shouldShowSoloCombatOutcome(state) && <div className="combat-outcome"><section><p>БОЙ ЗАВЕРШЁН</p><h1>{state.outcome === 'victory' ? 'Победа' : 'Поражение'}</h1><p>{state.outcome === 'victory' ? 'Все противники уничтожены.' : `${character.name} потерял все хиты.`}</p><button type="button" disabled={busy} onClick={finish}>{roguelikeRunId ? 'Получить результат и вернуться в лагерь' : 'Завершить и вернуться в лист'}</button><button type="button" onClick={() => navigate(roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`)}><RotateCcw size={16} /> {roguelikeRunId ? 'Вернуться в забег' : 'Оставить запись боя'}</button></section></div>}
     </main>
   );
 }

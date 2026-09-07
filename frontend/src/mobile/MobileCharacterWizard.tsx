@@ -17,6 +17,7 @@ import { buildCharacterContext } from '../character/runtime';
 import { buildResourceRuntimePatch, syncRuntimeResources } from '../character/resourceInit';
 import { projectCharacterStartingEquipmentPatch } from '../character/startingEquipment';
 import { runtimeSeedFromSavePayload, saveCharacter } from '../character/saveCharacter';
+import { roguelikeApi } from '../roguelike/api';
 import { spellMatchesChoice } from '../character/spellChoices';
 import {
   buildSavePayload, characterToDraft, classSkillChoice, completionIssues,
@@ -246,6 +247,9 @@ export default function MobileCharacterWizard() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
+  const requestedReturnTo = new URLSearchParams(location.search).get('returnTo');
+  const returnTo = requestedReturnTo?.startsWith('/roguelike/') ? requestedReturnTo : null;
+	const roguelikeRunId = returnTo?.match(/^\/roguelike\/([0-9a-f-]{36})$/i)?.[1] ?? null;
   const levelUp = location.pathname.endsWith('/level-up');
   const editing = !!id;
   const mode = levelUp ? 'level-up' : editing ? 'edit' : 'new';
@@ -697,7 +701,7 @@ export default function MobileCharacterWizard() {
           initialRuntime: runtimePatch,
         });
       } else {
-        character = await charactersV3Api.update(original.id, payload);
+		character = await charactersV3Api.update(original.id, payload, roguelikeRunId ?? undefined);
         const runtimePatch = buildResourceRuntimePatch(
           character,
           context,
@@ -707,11 +711,19 @@ export default function MobileCharacterWizard() {
           resolvedRules.freeuseSpells,
         );
         if (runtimePatch) {
-          character = await charactersV3Api.patchRuntime(character.id, runtimePatch);
-        }
+			character = await charactersV3Api.patchRuntime(
+				character.id,
+				runtimePatch,
+				roguelikeRunId ? { runId: roguelikeRunId, intent: 'level_up' } : undefined,
+			);
+		}
       }
+	  if (roguelikeRunId) {
+		const run = await roguelikeApi.get(roguelikeRunId);
+		await roguelikeApi.command(run.id, run.revision, 'confirm_level_up');
+	  }
       localStorage.removeItem(storageKey);
-      navigate(`/m/characters/${character.id}`, { replace: true });
+      navigate(returnTo ?? `/m/characters/${character.id}`, { replace: true });
     } catch (e) {
       console.error(e);
       setError(characterV3ErrorMessage(e, 'Не удалось сохранить персонажа'));

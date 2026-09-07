@@ -159,9 +159,11 @@ export const charactersV3Api = {
     const { data } = await apiClient.post<ForgeCharacter>('/api/characters-v3', payload);
     return data;
   }),
-  update: (id: string, payload: SaveForgeCharacterRequest): Promise<ForgeCharacter> => characterV3Request('update', async () => {
-    const { data } = await apiClient.put<ForgeCharacter>(`/api/characters-v3/${id}`, payload);
-    return data;
+	update: (id: string, payload: SaveForgeCharacterRequest, roguelikeRunId?: string): Promise<ForgeCharacter> => characterV3Request('update', async () => {
+		const { data } = await apiClient.put<ForgeCharacter>(`/api/characters-v3/${id}`, payload, roguelikeRunId ? {
+			headers: { 'X-Roguelike-Run-ID': roguelikeRunId, 'X-Roguelike-Intent': 'level_up' },
+		} : undefined);
+	return data;
   }),
   remove: (id: string): Promise<void> => characterV3Request('delete', async () => {
     await apiClient.delete(`/api/characters-v3/${id}`);
@@ -175,9 +177,15 @@ export const charactersV3Api = {
     const { data } = await apiClient.post<CharacterEventRow[]>(`/api/characters-v3/${characterId}/events`, payload);
     return data ?? [];
   }),
-  patchRuntime: (characterId: string, payload: PatchCharacterRuntimeRequest): Promise<ForgeCharacter> => characterV3Request('runtime', async () => {
-    const { data } = await apiClient.patch<ForgeCharacter>(`/api/characters-v3/${characterId}/runtime`, payload);
-    return data;
+	patchRuntime: (
+		characterId: string,
+		payload: PatchCharacterRuntimeRequest,
+		roguelike?: { runId: string; intent: 'combat' | 'level_up' },
+	): Promise<ForgeCharacter> => characterV3Request('runtime', async () => {
+		const { data } = await apiClient.patch<ForgeCharacter>(`/api/characters-v3/${characterId}/runtime`, payload, roguelike ? {
+			headers: { 'X-Roguelike-Run-ID': roguelike.runId, 'X-Roguelike-Intent': roguelike.intent },
+		} : undefined);
+	return data;
   }),
   postRuntimeCommand: (
     payload: CharacterRuntimeCommandRequest,
@@ -245,6 +253,7 @@ export interface CharacterRuntimeCommandEvent {
 
 export interface CharacterRuntimeCommandRequest {
   command_id: string;
+	roguelike_run_id?: string;
   ruleset_ref: CharacterRuntimeCommandRulesetRef;
   participants: CharacterRuntimeCommandParticipant[];
   events: CharacterRuntimeCommandEvent[];

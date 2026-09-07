@@ -211,7 +211,10 @@ describe('solo combat tactical contract', () => {
     expect(compiled.actor.ac).toBe(15);
     expect(compiled.actor.character.abilityMods.dex).toBe(2);
     expect(compiled.actor.runtime.resources.action).toBe(1);
-    expect(compiled.actor.passives).toEqual([passive.mechanics]);
+    expect(compiled.actor.passives).toEqual(expect.arrayContaining([
+      passive.mechanics,
+      expect.objectContaining({ kind: 'monster_ai' }),
+    ]));
     expect(compiled.actions[0].targeting?.rangeFt).toBe(5);
     expect(compiled.actions[0].mechanics.effects).toEqual(meleeAction().mechanics?.effects);
   });
@@ -231,6 +234,33 @@ describe('solo combat tactical contract', () => {
     expect(plan.usesDash).toBe(true);
     expect(plan.firstMove).toHaveLength(4);
     expect(plan.dashMove).toHaveLength(4);
+  });
+
+  it('keeps a ranged monster in place when its target is already in weapon range', () => {
+    const ranged = aiState({ x: 0, y: 0 }, { x: 8, y: 0 }, 20);
+    expect(planMonsterTurn(ranged.state, ranged.monster, 'player', 60)).toEqual({
+      firstMove: [], dashMove: [], usesDash: false, attacks: true,
+    });
+  });
+
+  it('compiles reach and damage adjustments from the monster contract', () => {
+    const template = {
+      ...goblin(),
+      ai: {
+        strategy: 'tactical' as const,
+        reach_ft: 10,
+        damage_immunities: ['poison'],
+        damage_vulnerabilities: ['bludgeoning'],
+      },
+    };
+    const compiled = compileMonsterInstance({
+      monster: template, instanceId: 'armored-monster', actions: [meleeAction()], effects: [],
+    });
+    expect(compiled.actor.attackProfile?.reachFt).toBe(10);
+    expect(compiled.actor.passives).toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: 'resistance', damage_type: 'poison', value: 'immunity' }),
+      expect.objectContaining({ kind: 'resistance', damage_type: 'bludgeoning', value: 'vulnerability' }),
+    ]));
   });
 
   it('uses active speed modifiers for both movement and monster planning', () => {

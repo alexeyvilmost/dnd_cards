@@ -42,6 +42,17 @@ export function compileMonsterInstance(input: {
     maxResources: { action: 1, bonus_action: 1, reaction: 1 },
     equipment: {}, inventory: [], activeEffects: [],
   };
+  const aiPassives: Record<string, unknown>[] = [
+    { id: 'monster-ai-profile', kind: 'monster_ai', ...input.monster.ai },
+    ...(input.monster.ai.damage_immunities ?? []).map((damageType) => ({
+      id: `monster-immunity:${damageType}`,
+      kind: 'resistance', damage_type: damageType, value: 'immunity',
+    })),
+    ...(input.monster.ai.damage_vulnerabilities ?? []).map((damageType) => ({
+      id: `monster-vulnerability:${damageType}`,
+      kind: 'resistance', damage_type: damageType, value: 'vulnerability',
+    })),
+  ];
   return {
     actions,
     actor: {
@@ -62,11 +73,14 @@ export function compileMonsterInstance(input: {
         saveProficiencies: [], skillProficiencies: [], skillExpertise: [],
       },
       runtime,
-      passives: effects.flatMap((effect) => effect?.mechanics ? [effect.mechanics] : []),
+      passives: [
+        ...effects.flatMap((effect) => effect?.mechanics ? [effect.mechanics] : []),
+        ...aiPassives,
+      ],
       attackProfile: {
         attacksPerAction: 1,
         size: SIZE_INDEX[input.monster.size] ?? 2,
-        reachFt: 5,
+        reachFt: Math.max(5, Number(input.monster.ai.reach_ft ?? 5)),
         graspingParts: [],
         sourceEntityIds: [input.monster.id],
       },

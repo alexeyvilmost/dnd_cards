@@ -2,6 +2,8 @@ import type { Action, Card, PassiveEffect } from '../types';
 import { actionsApi, cardsApi, effectsApi } from '../api/client';
 import { collectPassiveMechanics } from './resourceInit';
 import {
+  collectActionUsesRecharge,
+  collectActionUsesRecovery,
   collectGrantActionSlugs,
   collectGrantEffectSlugs,
   collectSheetActions,
@@ -26,9 +28,12 @@ import { loadMasteryEffectsStrict } from '../utils/mastery';
 import { parseWeaponProfile } from '../rules-core/weaponProfile';
 import { weaponActionAvailability } from '../engine/weapon';
 import { armorClassValue } from '../engine/ac';
+import { buildResourceRecharge, buildResourceRecovery } from '../engine/resources';
+import { collectFreeuseRecharge } from '../engine/freeuse';
 
 export interface SheetCombatActionInventory {
   actions: SheetAction[];
+  grantedActions: GrantedAction[];
   grantedEffects: NonNullable<ActorState['grantedEffects']>;
   masteryEffects: NonNullable<ActorState['masteryEffects']>;
 }
@@ -218,7 +223,7 @@ export async function collectSheetCombatActionInventory(input: {
     // point to the same declaration; no mastery name is interpreted here.
     if (effect.card_number) masteryEffects[effect.card_number] = projected;
   }
-  return { actions, grantedEffects, masteryEffects };
+  return { actions, grantedActions, grantedEffects, masteryEffects };
 }
 
 /**
@@ -292,6 +297,26 @@ export async function loadSheetCombatParticipant(input: {
     ),
     passives,
   };
+  const restItemCardIds = new Set([
+    ...runtime.inventory.map((row) => row.cardId),
+    ...Object.values(runtime.equipment).filter((id): id is string => Boolean(id)),
+  ]);
+  const itemCards = [...restItemCardIds].flatMap((id) => {
+    const card = cardsById.get(id);
+    return card ? [card] : [];
+  });
+  const restContext = {
+    ...characterContext,
+    resourceRecharge: {
+      ...buildResourceRecharge((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
+      ...collectActionUsesRecharge(assembled, itemCards, inventory.grantedActions),
+      ...collectFreeuseRecharge(ruleState.freeuseSpells),
+    },
+    resourceRecovery: {
+      ...buildResourceRecovery((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
+      ...collectActionUsesRecovery(assembled, itemCards, inventory.grantedActions),
+    },
+  };
   // ruleState.armorClass intentionally represents the naked build. Combat must
   // use the same runtime equipment + passive pipeline as the visible sheet,
   // otherwise freshly equipped armor (and Defense) disappears at scene start.
@@ -311,6 +336,7 @@ export async function loadSheetCombatParticipant(input: {
   });
   return {
     character: input.character,
+    restContext,
     // A spell's canonical rule action is identified by the immutable spell
     // entity, while its SheetAction id describes the grant row. Key the UI
     // projection by the executable id so combat renders the very same entity

@@ -357,7 +357,8 @@ export function combatRelation(
 }
 
 export function spatialFacts(
-  state: Pick<SoloCombatState, 'tokens' | 'boardRevision' | 'sideByActorId' | 'combatAreas'>,
+  state: Pick<SoloCombatState, 'tokens' | 'boardRevision' | 'sideByActorId' | 'combatAreas'>
+    & Partial<Pick<SoloCombatState, 'world'>>,
   sourceActorId: string,
   targetActorId: string,
 ): SpatialFacts {
@@ -375,6 +376,13 @@ export function spatialFacts(
     }
     return false;
   });
+  const sourceSide = state.sideByActorId?.[sourceActorId];
+  const nearbyEligibleAllyToTarget = Boolean(sourceSide && state.world && Object.values(state.world.actors).some((actor) => {
+    if (actor.id === sourceActorId || state.sideByActorId?.[actor.id] !== sourceSide) return false;
+    if ((actor.runtime.hp.current ?? 0) <= 0) return false;
+    const position = state.tokens[actor.id]?.position;
+    return Boolean(position && Math.max(Math.abs(position.x - target.x), Math.abs(position.y - target.y)) * TACTICAL_CELL_FT <= 5);
+  }));
   return {
     factsSource: 'board',
     boardRevision: state.boardRevision,
@@ -384,5 +392,6 @@ export function spatialFacts(
     relation: combatRelation(state, sourceActorId, targetActorId),
     canSeeTarget: !obscured,
     targetCanSeeSource: !obscured,
+    nearbyEligibleAllyToTarget,
   };
 }

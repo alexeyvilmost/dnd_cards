@@ -3554,6 +3554,73 @@ export async function refreshSoloCombatParticipants(input: {
   };
 }
 
+type MonsterAIProfile = {
+  preferred_range_ft?: number;
+  pack_tactics?: boolean;
+  bloodied_frenzy?: boolean;
+};
+
+const MONSTER_TACTICAL_ADVANTAGE_ID = 'monster-ai:tactical-attack-advantage';
+
+function monsterAIProfile(actor: ActorState): MonsterAIProfile {
+  const profile = (actor.passives ?? []).find((passive) => passive.kind === 'monster_ai');
+  return (profile ?? {}) as MonsterAIProfile;
+}
+
+function monsterAttackKind(action: RuleActionDefinition): 'melee' | 'ranged' | null {
+  const effects = Array.isArray(action.mechanics.effects) ? action.mechanics.effects : [];
+  for (const raw of effects) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) continue;
+    const effect = raw as Record<string, unknown>;
+    if (effect.resolution !== 'attack_roll') continue;
+    return String(effect.attack_kind ?? '').includes('ranged') ? 'ranged' : 'melee';
+  }
+  return null;
+}
+
+function monsterAttackRange(action: RuleActionDefinition): number {
+  return Math.max(5, Number(action.targeting?.rangeFt ?? 5));
+}
+
+function withMonsterTacticalAdvantage(state: SoloCombatState, actorId: string): SoloCombatState {
+  const actor = state.world.actors[actorId];
+  if (!actor || (actor.passives ?? []).some((passive) => passive.id === MONSTER_TACTICAL_ADVANTAGE_ID)) return state;
+  return {
+    ...state,
+    world: {
+      ...state.world,
+      actors: {
+        ...state.world.actors,
+        [actorId]: {
+          ...actor,
+          passives: [...(actor.passives ?? []), {
+            id: MONSTER_TACTICAL_ADVANTAGE_ID,
+            kind: 'modifier', applies_to: { roll: 'attack' }, op: 'advantage',
+          }],
+        },
+      },
+    },
+  };
+}
+
+function withoutMonsterTacticalAdvantage(state: SoloCombatState, actorId: string): SoloCombatState {
+  const actor = state.world.actors[actorId];
+  if (!actor) return state;
+  return {
+    ...state,
+    world: {
+      ...state.world,
+      actors: {
+        ...state.world.actors,
+        [actorId]: {
+          ...actor,
+          passives: (actor.passives ?? []).filter((passive) => passive.id !== MONSTER_TACTICAL_ADVANTAGE_ID),
+        },
+      },
+    },
+  };
+}
+
 export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
   if (state.outcome !== 'active' || state.world.pendingResolution || state.pendingD20Interrupt) return state;
   const monsterId = activeActorId(state);
@@ -3577,11 +3644,15 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
       targetActorId: actorId,
       capability: 'harm',
     }))
-    .sort((left, right) => (
-      gridDistanceFt(state.tokens[monsterId].position, state.tokens[left].position)
-        - gridDistanceFt(state.tokens[monsterId].position, state.tokens[right].position)
-        || left.localeCompare(right)
-    ))[0];
+    .sort((left, right) => {
+      const score = (actorId: string) => {
+        const actor = state.world.actors[actorId];
+        const distance = gridDistanceFt(state.tokens[monsterId].position, state.tokens[actorId].position);
+        const hpRatio = actor.runtime.hp.current / Math.max(1, actor.runtime.hp.max);
+        return distance + hpRatio * 20;
+      };
+      return score(left) - score(right) || left.localeCompare(right);
+    })[0];
   if (!targetId) {
     return advanceTurn(appendLog(
       state,
@@ -3589,7 +3660,13 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
       'Нет допустимой цели: ход завершён без атаки.',
     ), rng);
   }
-  const plan = planMonsterTurn(state, monster, targetId);
+  const attackActions = (state.monsterActionIds[monsterId] ?? [])
+    .map((id) => state.catalogActions.find((candidate) => candidate.id === id))
+    .filter((action): action is RuleActionDefinition => Boolean(action && isAttackAction(action)));
+  const maximumAttackRange = attackActions.reduce((maximum, action) => (
+    Math.max(maximum, monsterAttackRange(action))
+  ), monster.attackProfile?.reachFt ?? 5);
+  const plan = planMonsterTurn(state, monster, targetId, maximumAttackRange);
   let next = state;
   const firstDestination = plan.firstMove.at(-1);
   if (firstDestination) {
@@ -3604,15 +3681,32 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
       next = moveActor({ state: next, actorId: monsterId, destination: dashDestination, voluntary: true, rng });
     }
   } else if (plan.attacks) {
-    const actionId = next.monsterActionIds[monsterId]?.find((id) => {
-      const action = next.catalogActions.find((candidate) => candidate.id === id);
-      return action && isAttackAction(action);
+    const distance = gridDistanceFt(next.tokens[monsterId].position, next.tokens[targetId].position);
+    const reach = next.world.actors[monsterId].attackProfile?.reachFt ?? 5;
+    const legalActions = attackActions.filter((action) => monsterAttackRange(action) >= distance);
+    legalActions.sort((left, right) => {
+      const preferredKind = distance <= reach ? 'melee' : 'ranged';
+      const leftKind = monsterAttackKind(left);
+      const rightKind = monsterAttackKind(right);
+      return Number(leftKind !== preferredKind) - Number(rightKind !== preferredKind)
+        || monsterAttackRange(left) - monsterAttackRange(right)
+        || left.id.localeCompare(right.id);
     });
+    const actionId = legalActions[0]?.id;
     if (actionId) {
       try {
+        const currentMonster = next.world.actors[monsterId];
+        const ai = monsterAIProfile(currentMonster);
+        const facts = spatialFacts(next, monsterId, targetId);
+        const hasAdvantage = (ai.pack_tactics === true && facts.nearbyEligibleAllyToTarget === true)
+          || (ai.bloodied_frenzy === true
+            && currentMonster.runtime.hp.current <= currentMonster.runtime.hp.max / 2);
+        if (hasAdvantage) next = withMonsterTacticalAdvantage(next, monsterId);
         next = executeCombatAction({ state: next, actorId: monsterId, actionId, targetIds: [targetId], rng });
+        next = withoutMonsterTacticalAdvantage(next, monsterId);
         next = autoResolveSystemDecisions(next, rng);
       } catch (reason) {
+        next = withoutMonsterTacticalAdvantage(next, monsterId);
         if (!(reason instanceof Error) || !reason.message.includes('LineOfSightBlocked')) throw reason;
         next = appendLog(next, monsterId, 'Цель не видна: атака пропущена.');
       }

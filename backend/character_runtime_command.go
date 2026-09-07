@@ -65,10 +65,11 @@ type CharacterRuntimeCommandEvent struct {
 }
 
 type CharacterRuntimeCommandRequest struct {
-	CommandID    string                               `json:"command_id"`
-	RulesetRef   CharacterRuntimeCommandRulesetRef    `json:"ruleset_ref"`
-	Participants []CharacterRuntimeCommandParticipant `json:"participants"`
-	Events       []CharacterRuntimeCommandEvent       `json:"events"`
+	CommandID      string                               `json:"command_id"`
+	RoguelikeRunID string                               `json:"roguelike_run_id,omitempty"`
+	RulesetRef     CharacterRuntimeCommandRulesetRef    `json:"ruleset_ref"`
+	Participants   []CharacterRuntimeCommandParticipant `json:"participants"`
+	Events         []CharacterRuntimeCommandEvent       `json:"events"`
 }
 
 type CharacterRuntimeCommandParticipantResponse struct {
@@ -558,6 +559,20 @@ func (cc *CharacterV3Controller) PostCharacterRuntimeCommand(c *gin.Context) {
 		}
 		for _, participant := range request.Participants {
 			character := byID[participant.CharacterID]
+			if character.CharacterType == "dungeon_crawl" {
+				if len(request.Participants) != 1 {
+					return &characterRuntimeCommandError{
+						Status: http.StatusConflict, Code: "roguelike_solo_required",
+						Message:     "забег поддерживает только одного управляемого героя",
+						CharacterID: participant.CharacterID,
+					}
+				}
+				if _, err := authorizeRoguelikeCharacterMutation(
+					tx, character, userID, request.RoguelikeRunID, roguelikeIntentCombat,
+				); err != nil {
+					return err
+				}
+			}
 			if character.SystemID != request.RulesetRef.SystemID {
 				return invalidRuntimeCommand("ruleset_ref system_id does not match a participant")
 			}

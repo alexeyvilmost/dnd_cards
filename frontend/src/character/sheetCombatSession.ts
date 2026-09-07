@@ -1,4 +1,4 @@
-import type { EngineEvent, RuntimeState } from '../mvp/contracts';
+import type { CharacterContext, EngineEvent, RuntimeState } from '../mvp/contracts';
 import {
   createWorld,
   type ActorState,
@@ -92,6 +92,8 @@ export interface SheetCombatSession {
 export interface SheetCombatParticipantSeed {
   character: ForgeCharacter;
   canonical: SheetCanonicalRuntime;
+  /** Complete data-owned rest context used by the sheet and roguelike camp. */
+  restContext?: CharacterContext & { passives?: Record<string, unknown>[] };
   /** Optional presentation data; mechanics remain owned by canonical.actions. */
   actionPresentation?: Record<string, {
     imageUrl?: string | null;

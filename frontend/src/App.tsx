@@ -77,6 +77,7 @@ const RulesLab = lazy(() => import('./pages/RulesLab'));
 const MonsterLibrary = lazy(() => import('./pages/MonsterLibrary'));
 const MonsterCreator = lazy(() => import('./pages/MonsterCreator'));
 const SoloCombatPage = lazy(() => import('./pages/SoloCombatPage'));
+const RoguelikePage = lazy(() => import('./pages/RoguelikePage'));
 const RULE_BOOTSTRAP_TIMEOUT_MS = 15_000;
 const RULE_BOOTSTRAP_RETRY_MS = 5_000;
 const CONDITION_RELEASE_BINDING = Object.freeze({
@@ -205,6 +206,8 @@ function App() {
         <Route path="/spell/:id" element={<SpellPage />} />
         <Route path="/characters-v3/:id" element={<ProtectedRoute>{withRulesAuthority(<CharacterSheetMVP />)}</ProtectedRoute>} />
         <Route path="/characters-v3/:id/combat" element={<ProtectedRoute>{withRulesAuthority(<SoloCombatPage />)}</ProtectedRoute>} />
+        <Route path="/roguelike" element={<ProtectedRoute>{withRulesAuthority(<Layout><RoguelikePage /></Layout>)}</ProtectedRoute>} />
+        <Route path="/roguelike/:id" element={<ProtectedRoute>{withRulesAuthority(<Layout><RoguelikePage /></Layout>)}</ProtectedRoute>} />
 
         {/* Отдельный мобильный интерфейс игрока */}
         <Route path="/m" element={<Navigate to="/m/characters" replace />} />
