@@ -1040,7 +1040,7 @@ const CharacterSheetMVP = () => {
   const inSec = (s: string) => !mobileSectioned || activeSec === s;
   const combatReturnHref = activeEncounter
     ? `/encounter/${activeEncounter.id}`
-    : `/characters-v3/${character.id}/combat`;
+    : `/characters-v3/${character.id}/combat${roguelikeRunId ? `?roguelike=${roguelikeRunId}` : ""}`;
   const sheetActionsPanel = !readOnly ? (
     <SheetActionsPanel
       character={character}

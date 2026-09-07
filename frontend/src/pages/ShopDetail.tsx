@@ -415,8 +415,8 @@ const ShopDetail = () => {
                                   </span>
                                   <span>{card.name}</span>
                                 </div>
-                                <div className="flex items-center justify-between mt-1 text-xs gap-2">
-                                  <div className="flex items-center gap-2">
+                                <div className="flex flex-wrap items-center justify-between mt-1 text-xs gap-2">
+                                  <div className="flex flex-wrap items-center gap-2">
                                     {card.price != null && card.price > 0 && (() => {
                                       const price = purchasePrice(card, purchasePassives);
                                       return <span className="inline-flex items-center gap-1">
@@ -426,7 +426,7 @@ const ShopDetail = () => {
                                     })()}
                                     {buyButton(card, true)}
                                   </div>
-                                  <span className="font-mono text-gray-400 shrink-0">{card.card_number}</span>
+                                  {!roguelike && <span className="font-mono text-gray-400 shrink-0">{card.card_number}</span>}
                                 </div>
                               </div>
                             </div>
