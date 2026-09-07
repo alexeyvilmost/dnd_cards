@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -147,6 +148,10 @@ func ownedRoguelikeRun(tx *gorm.DB, id, userID uuid.UUID, lock bool) (*Roguelike
 	}
 	if run.Character != nil {
 		run.Character.AccessMode = characterV3AccessOwner
+	}
+	run.TrustedCombatAvailable = os.Getenv("RULES_WORKER_URL") != ""
+	if state, ok := run.CombatEnvelope["state"].(map[string]any); ok {
+		run.CombatState = JSONMap(state)
 	}
 	return &run, nil
 }
@@ -370,8 +375,8 @@ func saveRoguelikeRun(tx *gorm.DB, run *RoguelikeRun) error {
 		"encounters_won": run.EncountersWon, "attempt": run.Attempt,
 		"game_clock_hours": run.GameClockHours, "last_long_rest_hour": run.LastLongRestHour,
 		"paid_refresh_count": run.PaidRefreshCount, "pending_level": run.PendingLevel,
-		"encounter": run.Encounter,
-		"shop":      run.Shop, "checkpoint": run.Checkpoint, "last_reward": run.LastReward,
+		"encounter": run.Encounter, "combat_envelope": nonNilRoguelikeMap(run.CombatEnvelope), "combat_catalog": nonNilRoguelikeMap(run.CombatCatalog),
+		"shop": run.Shop, "checkpoint": run.Checkpoint, "last_reward": run.LastReward,
 		"updated_at": time.Now().UTC(),
 	}).Error
 }
@@ -609,6 +614,8 @@ func startRoguelikeEncounter(tx *gorm.DB, run *RoguelikeRun) error {
 	if err != nil {
 		return err
 	}
+	run.CombatEnvelope = JSONMap{}
+	run.CombatCatalog = JSONMap{}
 	run.Encounter = encounter
 	run.LastReward = JSONMap{}
 	run.Phase = RoguelikePhaseCombat
@@ -808,6 +815,12 @@ func completeRoguelikeEncounter(tx *gorm.DB, run *RoguelikeRun) error {
 		return roguelikeError(http.StatusConflict, "combat_required", "активная встреча не найдена")
 	}
 	outcome := combatOutcome(run.Character)
+	if len(run.CombatEnvelope) > 0 {
+		outcome = ""
+		if state, ok := run.CombatEnvelope["state"].(map[string]any); ok {
+			outcome, _ = state["outcome"].(string)
+		}
+	}
 	switch outcome {
 	case "victory":
 		return rewardRoguelikeVictory(tx, run)
@@ -1194,6 +1207,7 @@ func restoreRoguelikeCheckpoint(run *RoguelikeRun) error {
 	run.PendingLevel = snapshot.PendingLevel
 	run.Shop = snapshot.Shop
 	run.LastReward = JSONMap{}
+	run.CombatEnvelope = JSONMap{}
 	run.Attempt++
 	run.Status = RoguelikeStatusActive
 	run.Phase = RoguelikePhaseCamp
@@ -1259,6 +1273,10 @@ func (rc *RoguelikeController) Command(c *gin.Context) {
 	requestHash, err := roguelikeCommandRequestHash(request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "неверная команда забега", "code": "invalid_command"})
+		return
+	}
+	if request.Type == "initialize_combat" || request.Type == "combat_intent" {
+		rc.trustedCombatCommand(c, runID, userID, request, requestHash)
 		return
 	}
 	var response JSONMap

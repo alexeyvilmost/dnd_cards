@@ -104,3 +104,20 @@ Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br
 - Monster opportunity attacks now select a melee mode and one attack effect, including when a ranged action precedes melee or the monster has Multiattack. An integration scenario covers that ordering.
 - Full offline gate passed 382 files / 3187 tests before the final boundary/opportunity follow-up; focused boundary, resource presentation and tactical scenarios also passed. Updated XP pacing with 12 enabled creatures: 44–57 victories, mean49.76 over1000 successful-encounter simulations.
 - Browser potion acceptance in the mixed encounter: 14→22HP, bonus action1→0, ordinary movement and attack remained available.
+
+
+## Production acceptance: 15f9915
+
+- TimeWeb/public health verified `15f99156faaefb978c355793024cc0c8c0588346`.
+- Built-in browser fixture: Hobgoblin Warrior used its longbow at range, dealt physical and poison packets, and dwarf poison resistance reduced 9 poison to 4. After the player moved adjacent, the same enemy switched to Longsword. No poison save/Poisoned condition appeared.
+- This was a dedicated QA encounter, not a natural full-run acceptance.
+
+## Trusted execution integration (not yet deployed)
+
+- Extracted the existing character assembler and sheet combat loader into dependency-injected factories; browser wrappers retain the original APIs. The worker resolves a complete frozen dependency catalog without React or HTTP imports.
+- Replaced ambient combat identities with deterministic UUIDv8 identities; the worker owns a seeded hash-stream RNG cursor and returns immutable transitions. Failed transitions cannot advance committed entropy.
+- Added server-owned initialization, command execution, runtime projection and private envelope/catalog columns. Go computes before acquiring write locks, then compares both run and character revisions and commits runtime, envelope and idempotency receipt together.
+- Browser actions send intents through the existing combat UI. The compatibility runtime endpoint rejects changes to trusted battles. Completion reads the private outcome. Saving throws retain the existing panel with automatic rolls only for trusted battles.
+- Node dispatcher persists executable bundles by SHA256 separately from Docker image retention and checks requested hashes. Retry retains the saved catalog/artifact. The service is internal-only and authenticated.
+- Local checks: offline initialization/replay and engine integration 69 tests; Go packages pass; Node transport restart/pinning/authentication test passes; headless bundle builds a pinned fighter and executes real engine transitions without browser mocks. Full regression is still running. No claim of production acceptance yet.
+- Still outstanding beyond this increment: full fighter/subclass matrix, remaining gated monster mechanics, combat/economy survival simulations, full natural-run acceptance, full-run future-content pinning and old frontend asset continuity.

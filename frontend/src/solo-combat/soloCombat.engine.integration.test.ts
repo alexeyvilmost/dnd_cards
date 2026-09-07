@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { stepRoguelikeCombat, type RoguelikeCombatEnvelope } from '../roguelike/combatWorker';
 import compiledFixtureJson from '../pages/rulesLabFixture.generated.json';
 import fightingStyleDefinitions from '../../../scripts/content/data/mini-mvp-complex-fighting-styles.v1.json';
 import { createWorld, type ActorState, type RuleActionDefinition, type RulesCatalog, type RulesetReference } from '../rules-core/domain';
@@ -3181,4 +3182,65 @@ it('grants monsters one melee opportunity attack even when a ranged mode is list
   const opportunity = state.catalogActions.find((action) => action.id === state.opportunityActionIds[monsterId]);
   expect(opportunity?.id).toBe(`${melee.id}:opportunity`);
   expect(opportunity?.mechanics.effects).toHaveLength(1);
+});
+
+
+it('replays setup and monster turns to an identical complete snapshot, including all identities', async () => {
+  async function replay() {
+    const participant = fighterSeed();
+    const actor = participant.canonical.world.actors[participant.character.id];
+    actor.runtime.resources.reaction = 0;
+    actor.runtime.hp = {current: 100, max: 100, temp: 0};
+    participant.character.current_hp = 100;
+    participant.character.max_hp = 100;
+    let state = await createSoloCombatState({character: participant.character, participant,
+      selected: [{monster: goblin(), quantity: 1}], actions: [scimitar()], effects: [], rng: () => 0.5});
+    const monsterId = Object.values(state.world.actors).find((entry) => entry.kind === 'monster')!.id;
+    state.tokens[participant.character.id].position = {x: 4, y: 4};
+    state.tokens[monsterId].position = {x: 5, y: 4};
+    state = runMonsterTurn(advanceTurn(state, () => 0.5), () => 0.5);
+    return state;
+  }
+  expect(await replay()).toEqual(await replay());
+});
+
+
+describe('internal combat worker transition', () => {
+  const artifactHash = `sha256:${'a'.repeat(64)}`;
+  async function initial(): Promise<RoguelikeCombatEnvelope> {
+    const participant = fighterSeed();
+    const player = participant.canonical.world.actors[participant.character.id];
+    player.runtime.resources.reaction = 0;
+    player.runtime.hp = {current: 100, max: 100, temp: 0};
+    participant.character.current_hp = 100;
+    participant.character.max_hp = 100;
+    const state = await createSoloCombatState({character: participant.character, participant,
+      selected: [{monster: goblin(), quantity: 1}], actions: [scimitar()], effects: [], rng: () => 0.5});
+    const monsterId = Object.values(state.world.actors).find((entry) => entry.kind === 'monster')!.id;
+    state.tokens[participant.character.id].position = {x: 4, y: 4};
+    state.tokens[monsterId].position = {x: 5, y: 4};
+    return {schemaVersion: 1, artifactHash, entropy: {seed: 'worker-test', cursor: 0}, state};
+  }
+  it('replays an intent and a reloaded continuation with identical world and entropy', async () => {
+    const input = await initial();
+    const untouched = structuredClone(input);
+    const intent = {type: 'end_turn' as const, actorId: input.state.characterId};
+    const first = stepRoguelikeCombat(input, intent, artifactHash);
+    expect(first).toEqual(stepRoguelikeCombat(input, intent, artifactHash));
+    expect(input).toEqual(untouched);
+    expect(first.randomValues.length).toBeGreaterThan(0);
+    expect(first.envelope.entropy.cursor).toBe(first.randomValues.length);
+    const reloaded = JSON.parse(JSON.stringify(first.envelope)) as RoguelikeCombatEnvelope;
+    expect(stepRoguelikeCombat(reloaded, intent, artifactHash))
+      .toEqual(stepRoguelikeCombat(first.envelope, intent, artifactHash));
+  });
+  it('rejects an enemy command and a mismatched artifact without mutating state', async () => {
+    const input = await initial();
+    const before = structuredClone(input);
+    const monsterId = Object.values(input.state.world.actors).find((entry) => entry.kind === 'monster')!.id;
+    expect(() => stepRoguelikeCombat(input, {type: 'end_turn', actorId: monsterId}, artifactHash)).toThrow();
+    expect(() => stepRoguelikeCombat(input, {type: 'resume'}, `sha256:${'b'.repeat(64)}`)).toThrow();
+    expect(() => stepRoguelikeCombat(input, {type: 'action', actorId: input.state.characterId, actionId: 'any', targetIds: [], worldPosition: {x: 999, y: 0}}, artifactHash)).toThrow('Клетка вне поля боя');
+    expect(input).toEqual(before);
+  });
 });

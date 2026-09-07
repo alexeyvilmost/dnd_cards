@@ -1,0 +1,16 @@
+FROM node:20-slim AS build
+WORKDIR /app/frontend
+COPY frontend/package*.json frontend/.npmrc ./
+RUN npm ci --ignore-scripts --include=dev --no-audit --no-fund
+COPY frontend/src ./src
+COPY frontend/worker ./worker
+COPY scripts /app/scripts
+RUN node worker/build.mjs
+
+FROM node:20-slim
+WORKDIR /app
+COPY --from=build /app/frontend/worker/dist ./
+USER node
+ENV PORT=8090
+EXPOSE 8090
+CMD ["node", "server.mjs"]

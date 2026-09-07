@@ -16,6 +16,7 @@ export interface SheetPendingCombatPanelProps {
   decisionProxyCharacterId?: string;
   actorNames?: Readonly<Record<string, string>>;
   busy?: boolean;
+  systemRollsOnly?: boolean;
   decidingRuntime?: RuntimeState;
   onResolve: (response: DecisionResponse) => void | Promise<void>;
 }
@@ -76,6 +77,7 @@ export default function SheetPendingCombatPanel({
   decisionProxyCharacterId,
   actorNames = {},
   busy = false,
+  systemRollsOnly = false,
   decidingRuntime,
   onResolve,
 }: SheetPendingCombatPanelProps) {
@@ -175,7 +177,7 @@ export default function SheetPendingCombatPanel({
             </select>
           </label>
         ) : null}
-        <label className="sheet-target-field">
+        {!systemRollsOnly && <label className="sheet-target-field">
           <span>Результат d20</span>
           <input
             className="forge-input sheet-target-num"
@@ -186,7 +188,7 @@ export default function SheetPendingCombatPanel({
             value={manualD20}
             onChange={(event) => setManualD20(event.target.value)}
           />
-        </label>
+        </label>}
         {afterFailureBoons.length > 0 && (
           <label className="sheet-target-field">
             <span>Милость после провала</span>
@@ -207,7 +209,7 @@ export default function SheetPendingCombatPanel({
           </label>
         )}
         <div className="flex gap-2 flex-wrap mt-2">
-          <button
+          {!systemRollsOnly && <button
             type="button"
             className="forge-btn"
             disabled={busy || !manualValid}
@@ -219,7 +221,7 @@ export default function SheetPendingCombatPanel({
             })}
           >
             Применить d20
-          </button>
+          </button>}
           <button
             type="button"
             className="forge-btn ghost"

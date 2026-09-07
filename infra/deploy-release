@@ -98,7 +98,7 @@ prune_release_history() {
         rm -rf -- "$root/builds/$entry"
       done
 
-  for repository in bagofholding-backend bagofholding-frontend; do
+  for repository in bagofholding-backend bagofholding-frontend bagofholding-rules-worker; do
     docker image ls "$repository" --format '{{.Tag}}' \
       | while IFS= read -r candidate; do
           is_release_sha "$candidate" || continue
@@ -165,7 +165,19 @@ echo "[2/7] Extracting immutable release archive"
 mkdir "$build_root"
 tar -xf "$archive" -C "$build_root"
 
-echo "[3/7] Building backend and frontend images"
+# Persist executable rules independently of image retention so active battles
+# can continue on the exact old artifact after a new deployment.
+worker_env="$root/shared/rules-worker.env"
+if [ ! -f "$worker_env" ]; then
+  printf 'RULES_WORKER_TOKEN=%s\n' "$(openssl rand -hex 32)" > "$worker_env"
+  chmod 600 "$worker_env"
+fi
+mkdir -p "$root/shared/rules-artifacts"
+chown 1000:1000 "$root/shared/rules-artifacts"
+chmod 750 "$root/shared/rules-artifacts"
+
+echo "[3/7] Building backend, frontend and rules worker images"
+docker build -f "$build_root/infra/Dockerfile.rules-worker" -t "bagofholding-rules-worker:$sha" "$build_root"
 docker build -t "bagofholding-backend:$sha" "$build_root/backend"
 docker build \
   --build-arg VITE_API_URL= \
@@ -206,12 +218,13 @@ rollback() {
   rm -rf -- "$release" "$build_root" "$archive"
   docker image rm -f "bagofholding-backend:$sha" >/dev/null 2>&1 || true
   docker image rm -f "bagofholding-frontend:$sha" >/dev/null 2>&1 || true
+  docker image rm -f "bagofholding-rules-worker:$sha" >/dev/null 2>&1 || true
   rm -f "$deploy_env_backup"
 }
 
 release_logs() {
   docker compose --env-file "$deploy_env" -f compose.prod.yml \
-    logs --no-color --tail=200 backend frontend caddy >&2 || true
+    logs --no-color --tail=200 backend frontend rules-worker caddy >&2 || true
 }
 
 echo "[5/7] Atomically switching current release"

@@ -71,7 +71,9 @@
     "content:upgrade:mini-fighting-styles": "node ../scripts/content/upgrade-mini-mvp-fighting-style-primitives.mjs",
     "content:certify:mini-fighting-styles": "node ../scripts/content/certify-mini-mvp-fighting-style-primitives.mjs",
     "content:upgrade:mini-utility": "node ../scripts/content/upgrade-mini-mvp-utility-cantrips.mjs",
-    "content:evidence:micro": "node ../scripts/content/generate-micro-mvp-release-evidence.mjs"
+    "content:evidence:micro": "node ../scripts/content/generate-micro-mvp-release-evidence.mjs",
+    "build:rules-worker": "node worker/build.mjs",
+    "test:rules-worker": "node --test worker/server.test.mjs"
   },
   "dependencies": {
     "@3d-dice/dice-box": "^1.1.4",

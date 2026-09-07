@@ -2,3 +2,5 @@
 # Compiled vite config artifacts (shadow vite.config.ts)
 vite.config.js
 vite.config.d.ts
+
+worker/dist/

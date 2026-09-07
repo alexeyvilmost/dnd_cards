@@ -3,13 +3,13 @@ import type { ForgeCharacter } from '../character/types';
 import {
   createSheetCombatSession,
   executeSheetCombatAction,
-  newSheetRuntimeCommandId,
   type SheetCombatSession,
   type SheetCombatParticipantSeed,
   type SheetCombatTransition,
 } from '../character/sheetCombatSession';
 import type { SheetCanonicalCommandInput } from '../character/sheetCanonicalCommand';
 import {
+  canonicalSha256Sync,
   createLogicalClock,
   createSequentialIdFactory,
 } from '../rules-core/determinism';
@@ -136,6 +136,19 @@ export interface SelectedMonster {
 }
 
 function clone<T>(value: T): T { return JSON.parse(JSON.stringify(value)) as T; }
+
+/** IDs are part of the saved world. Replaying the same transition must not
+ * consult ambient crypto/Math.random or regenerate different effect owners. */
+function combatIdentity(state: SoloCombatState, purpose: string): string {
+  const hash = canonicalSha256Sync({
+    world: state.world.id, revision: state.world.revision,
+    boardRevision: state.boardRevision, previousLog: state.log.at(-1)?.id ?? null, purpose,
+  }).slice('sha256:'.length);
+  // UUIDv8 carries custom deterministic bits and satisfies the sheet transport.
+  const variant = ((Number.parseInt(hash[16], 16) & 3) | 8).toString(16);
+  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-8${hash.slice(13, 16)}-${variant}${hash.slice(17, 20)}-${hash.slice(20, 32)}`;
+}
+
 
 function buildCatalog(
   actions: readonly RuleActionDefinition[],
@@ -286,7 +299,7 @@ function appendLog(
     ...records.flatMap((record) => [record.sourceActorId, record.actorId, ...record.targetIds]),
   ]);
   const entry: CombatLogEntry = {
-    id: newSheetRuntimeCommandId(), round, actorId, text: `${actorName}: ${text}`,
+    id: combatIdentity(state, `log:${actorId}`), round, actorId, text: `${actorName}: ${text}`,
     actorNames: Object.fromEntries([...loggedActorIds].map((loggedActorId) => [
       loggedActorId,
       state.world.actors[loggedActorId]?.name ?? loggedActorId,
@@ -817,7 +830,7 @@ function dispatch(input: {
 function commandBase(state: SoloCombatState, actorId: string) {
   return {
     schemaVersion: 1 as const,
-    commandId: newSheetRuntimeCommandId(),
+    commandId: combatIdentity(state, `command:${actorId}`),
     expectedRevision: state.world.revision,
     rulesetContentHash: state.world.ruleset.contentHash,
     actorId,
@@ -1280,7 +1293,7 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
     && SHEET_PRIMITIVES.has(primitiveType(action) ?? '')) {
     const transition = executeSheetCombatAction({
       session: sheetSession(input.state, input.actorId), actorId: input.actorId, actionId: action.id,
-      declaration, commandId: newSheetRuntimeCommandId(), rng,
+      declaration, commandId: combatIdentity(input.state, `sheet-command:${input.actorId}`), rng,
     });
     return withTriggeredAttackOffer(applySheetTransition(input.state, input.actorId, action, transition));
   }
@@ -1643,7 +1656,7 @@ function armD20InterruptModifier(input: {
           runtime: {
             ...source.runtime,
             activeEffects: [...source.runtime.activeEffects, {
-              id: `d20-interrupt:${input.capability.effectId}:${newSheetRuntimeCommandId()}`,
+              id: `d20-interrupt:${input.capability.effectId}:${combatIdentity(input.state, "interrupt")}`,
               name: input.capability.effectName,
               source: input.capability.effectName,
               sourceId: input.ownerActorId,
@@ -1903,7 +1916,7 @@ export function executeCombatRemoteManipulator(input: {
   const actor = input.state.world.actors[input.actorId];
   if (!actor) throw new Error('Участник боя не найден');
   const result = executeEngineRemoteManipulator(actor.runtime, input.command);
-  const commandId = newSheetRuntimeCommandId();
+  const commandId = combatIdentity(input.state, `remote:${input.actorId}`);
   const nextWorld: WorldState = {
     ...input.state.world,
     revision: input.state.world.revision + 1,
@@ -3251,7 +3264,7 @@ export function addSoloCombatMonster(input: {
   rng?: Rng;
 }): SoloCombatState {
   if (input.state.world.scene.mode !== 'encounter') throw new Error('Бой ещё не начат');
-  const instanceId = `${input.monster.id}:${newSheetRuntimeCommandId()}`;
+  const instanceId = `${input.monster.id}:${combatIdentity(input.state, "add-monster")}`;
   const compiled = compileMonsterInstance({
     monster: input.monster,
     instanceId,
@@ -3805,7 +3818,10 @@ export async function createSoloCombatState(input: {
   const monsters: Array<{ template: Monster; actor: ActorState; actions: RuleActionDefinition[] }> = [];
   for (const selection of input.selected) {
     for (let index = 0; index < selection.quantity; index += 1) {
-      const instanceId = `${selection.monster.id}:${newSheetRuntimeCommandId()}`;
+      const instanceId = `${selection.monster.id}:${canonicalSha256Sync({
+        character: input.character.id, revision: input.character.runtime_revision,
+        monster: selection.monster.id, instance: monsters.length,
+      })}`;
       const compiled = compileMonsterInstance({
         monster: selection.monster, instanceId,
         actions: input.actions, effects: input.effects,

@@ -9,7 +9,7 @@ const temporary = await mkdtemp(path.join(tmpdir(), 'roguelike-headless-'));
 try {
   const outfile = path.join(temporary, 'engine.cjs');
   const result = await build({
-    stdin: { contents: `export * from './src/solo-combat/engine'; export {createWorld} from './src/rules-core/domain';`,
+    stdin: { contents: `export * from './src/solo-combat/engine'; export * from './src/roguelike/combatWorker'; export * from './src/roguelike/combatCatalog'; export * from './src/roguelike/combatInitialization'; export {createWorld} from './src/rules-core/domain';`,
       resolveDir: process.cwd(), loader: 'ts' },
     bundle: true, platform: 'node', format: 'cjs', outfile, metafile: true,
   });
@@ -55,6 +55,15 @@ try {
   state = engine.runMonsterTurn(engine.advanceTurn(state), () => 0.5);
   assert.equal(state.world.actors[actor.id].runtime.hp.current, 97);
   assert.equal(state.outcome, 'active');
+  const pinned = JSON.parse(await readFile('src/roguelike/pinnedFighter.fixture.json', 'utf8'));
+  const hash = `sha256:${'a'.repeat(64)}`;
+  const initialized = await engine.initializeRoguelikeCombat({...pinned,
+    seed: 'headless-initialization', monsters: {version: 1, monsters: [monster], actions: [attack], effects: []},
+    roster: [{monster_id: monster.id, quantity: 1}]}, hash);
+  assert.equal(initialized.status, 'ready');
+  assert.equal(initialized.envelope.entropy.cursor, initialized.randomValues.length);
+  const projected = engine.projectRoguelikeCombatPatch(initialized.envelope, pinned.character);
+  assert.equal(projected.patch.runtime_revision, pinned.character.runtime_revision + 1);
   console.log('Headless rules gate: no React/API imports; setup and a real monster turn passed in Node.');
 } finally {
   assert.equal(path.dirname(path.resolve(temporary)), path.resolve(tmpdir()));

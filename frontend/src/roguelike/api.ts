@@ -1,3 +1,4 @@
+import type { SoloCombatState } from '../solo-combat/types';
 import { apiClient } from '../api/client';
 import type { ForgeCharacter } from '../character/types';
 import type { Monster } from '../monsters/types';
@@ -46,6 +47,8 @@ export interface RoguelikeReward {
 }
 
 export interface RoguelikeRun {
+  combat_state?: SoloCombatState;
+  trusted_combat_available?: boolean;
   id: string;
   user_id: string;
   source_character_id: string;
@@ -71,6 +74,8 @@ export interface RoguelikeRun {
 }
 
 export type RoguelikeCommandType =
+  | 'initialize_combat'
+  | 'combat_intent'
   | 'start_encounter'
   | 'complete_encounter'
   | 'buy'

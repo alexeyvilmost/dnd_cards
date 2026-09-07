@@ -22,6 +22,7 @@ export default mergeConfig(viteConfig, defineConfig({
       // release gates. Vitest must not collect their compatible file names as
       // empty suites.
       'scripts/**/*.test.mjs',
+      'worker/**/*.test.mjs',
       // The milestone suite has its own mandatory `test:mvp` gate. Keeping it
       // out of the generic unit run avoids duplicating live-gated specs as
       // anonymous skips in release evidence.

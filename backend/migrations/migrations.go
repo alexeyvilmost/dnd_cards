@@ -1268,6 +1268,17 @@ func GetAllMigrations() []Migration {
 			Up:          materializeRoguelikeAttackRanges,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "202_roguelike_trusted_combat",
+			Description: "Store private pinned combat envelopes and catalogs",
+			Up: func(db *sql.DB) error {
+				_, err := db.Exec(`ALTER TABLE roguelike_runs
+                  ADD COLUMN IF NOT EXISTS combat_envelope jsonb NOT NULL DEFAULT '{}',
+                  ADD COLUMN IF NOT EXISTS combat_catalog jsonb NOT NULL DEFAULT '{}'`)
+				return err
+			},
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }
