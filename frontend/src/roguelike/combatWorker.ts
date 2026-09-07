@@ -5,7 +5,7 @@ import type { DecisionResponse } from '../rules-core/domain';
 import { canonicalSha256Sync } from '../rules-core/determinism';
 import {
   resumePendingMovement, activeActor, activateCombatBoon, advanceTurn, autoResolveSystemDecisions,
-  executeCombatAction, executeCombatRemoteManipulator, moveCombatDancingLights, revealCombatMagicAura, moveActor, resolveD20Interrupt, resolvePlayerReaction,
+  executeCombatAction, executeCombatRemoteManipulator, moveCombatDancingLights, revealCombatMagicAura, moveActorAlongRoute, resolveD20Interrupt, resolvePlayerReaction,
   resolvePlayerShoveOutcome, resolvePlayerSavingThrow, resolveSoloCombatAlertSwap, resolveSoloCombatInterception,
   resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, standActor,
 } from '../solo-combat/engine';
@@ -82,7 +82,7 @@ export function stepRoguelikeCombat(
   if ('actorId' in intent && intent.actorId !== null) requireOwned(intent.actorId);
   const proactive = new Set(['action', 'move', 'stand', 'end_turn', 'dancing_lights', 'detect_magic', 'remote_manipulator', 'boon']);
   if (proactive.has(intent.type) && 'actorId' in intent
-    && (hasDecision(state) || activeActor(state).id !== intent.actorId)) {
+    && (hasDecision(state) || state.playerMovement || activeActor(state).id !== intent.actorId)) {
     throw new Error('Сначала завершите текущее решение или дождитесь своего хода');
   }
   switch (intent.type) {
@@ -104,7 +104,7 @@ export function stepRoguelikeCombat(
         targetIds: intent.targetIds, choices: intent.choices, worldPosition: intent.worldPosition, worldInput, rng});
       break;
     }
-    case 'move': state = moveActor({state, actorId: intent.actorId, destination: intent.destination, voluntary: true, rng}); break;
+    case 'move': state = moveActorAlongRoute({state, actorId: intent.actorId, destination: intent.destination, rng}); break;
     case 'stand': state = standActor(state, intent.actorId); break;
     case 'end_turn':
       if (hasDecision(state) || activeActor(state).id !== intent.actorId) throw new Error('Сначала завершите текущее решение');

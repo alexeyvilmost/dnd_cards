@@ -57,6 +57,8 @@ import {
   effectiveCombatActorSpeedFt,
   gridDistanceFt,
   occupiedPositions,
+  reachableRoutes,
+  samePosition,
   pullToward,
   pushAway,
 } from './tacticalGrid';
@@ -3111,20 +3113,78 @@ export function moveActor(input: {
   return input.logMovement === false ? next : appendLog(next, input.actorId, `Перемещение на ${distance} фт.${movementCost > distance ? ` С учётом условий движения: потрачено ${movementCost} фт.` : ''}`);
 }
 
+/** Plan once using the shared grid, then execute every cell through normal
+ * movement. Never replace the saved route after an interrupt. */
+export function moveActorAlongRoute(input: {
+  state: SoloCombatState; actorId: string; destination: GridPosition; rng?: Rng;
+}): SoloCombatState {
+  const {state, actorId, destination} = input;
+  const origin = state.tokens[actorId]?.position;
+  if (!origin || !isPlayerControlledCombatActor(state, actorId) || activeActorId(state) !== actorId) {
+    throw new Error('Перемещение доступно только в ход этого персонажа');
+  }
+  if (state.playerMovement || state.pendingMovementStep || monsterMovementPaused(state)) {
+    throw new Error('Сначала завершите прерванное перемещение или решение');
+  }
+  if (samePosition(origin, destination)) return state;
+  const speed = effectiveCombatActorSpeedFt(state, actorId);
+  const feet = speed === 0 ? 0 : state.movementRemainingFt[actorId] ?? speed;
+  const route = reachableRoutes(state, actorId, feet).find(row => samePosition(row.destination, destination));
+  if (!route) throw new Error('До клетки нет доступного маршрута с оставшимся перемещением');
+  return continuePlayerRoute({...state, playerMovement: {actorId, origin: {...origin}, steps: route.path}}, input.rng ?? Math.random);
+}
+
+function continuePlayerRoute(state: SoloCombatState, rng: Rng): SoloCombatState {
+  let next = state;
+  const stop = (value: SoloCombatState) => {
+    const {playerMovement: _route, ...rest} = value;
+    return rest;
+  };
+  for (let step = 0; next.playerMovement && step <= TACTICAL_WIDTH * TACTICAL_HEIGHT; step++) {
+    if (monsterMovementPaused(next) || next.pendingMovementStep) return next;
+    const route = next.playerMovement;
+    const actor = next.world.actors[route.actorId];
+    const position = next.tokens[route.actorId]?.position;
+    if (!actor || !position || actor.runtime.hp.current <= 0 || next.outcome !== 'active'
+      || activeActorId(next) !== route.actorId) return stop(next);
+    // A resumed step may already have reached its cell before an area decision.
+    if (route.steps[0] && samePosition(position, route.steps[0])) {
+      next = {...next, playerMovement: {...route, origin: {...position}, steps: route.steps.slice(1)}};
+      continue;
+    }
+    const destination = route.steps[0];
+    if (!destination) return stop(next);
+    const available = next.movementRemainingFt[route.actorId] ?? effectiveCombatActorSpeedFt(next, route.actorId);
+    const cost = movementCostThroughAreas(next, position, destination, 5) + (actorMustCrawl(actor) ? 5 : 0);
+    if (!samePosition(position, route.origin) || gridDistanceFt(position, destination) !== 5
+      || effectiveCombatActorSpeedFt(next, route.actorId) === 0 || cost > available
+      || occupiedPositions(next, route.actorId).has(`${destination.x}:${destination.y}`)) {
+      return appendLog(stop(next), route.actorId, 'Маршрут остановлен: следующий шаг больше недоступен.');
+    }
+    next = moveActor({state: next, actorId: route.actorId, destination, rng});
+    if (monsterMovementPaused(next) || next.pendingMovementStep) return next;
+    if (!samePosition(next.tokens[route.actorId].position, destination)) return stop(next);
+    next = {...next, playerMovement: {...route, origin: {...destination}, steps: route.steps.slice(1)}};
+  }
+  if (next.playerMovement) throw new Error('Превышен размер маршрута');
+  return next;
+}
+
 /** Continue only after all decisions belonging to the interrupting attack settle. */
 export function resumePendingMovement(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
   const pending = state.pendingMovementStep;
-  if (!pending || monsterMovementPaused(state)) return state;
+  if (monsterMovementPaused(state)) return state;
+  if (!pending) return continuePlayerRoute(state, rng);
   const actor = state.world.actors[pending.actorId];
   const position = state.tokens[pending.actorId]?.position;
   if (state.outcome !== 'active' || !actor || actor.runtime.hp.current <= 0 || !position
     || position.x !== pending.from.x || position.y !== pending.from.y
     || effectiveCombatActorSpeedFt(state, pending.actorId) === 0) {
     const {pendingMovementStep: _stopped, ...stopped} = state;
-    return stopped;
+    return continuePlayerRoute(stopped, rng);
   }
-  return moveActor({state, actorId: pending.actorId, destination: pending.destination,
-    maxFeet: pending.maxFeet, logMovement: true, voluntary: true, rng});
+  return continuePlayerRoute(moveActor({state, actorId: pending.actorId, destination: pending.destination,
+    maxFeet: pending.maxFeet, logMovement: true, voluntary: true, rng}), rng);
 }
 
 function startTurnOrRequestGrappleDamage(
@@ -3202,6 +3262,7 @@ export function resolveSoloCombatTurnStart(
 
 export function advanceTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
   if (state.outcome !== 'active' || state.world.pendingResolution
+    || state.playerMovement
     || state.pendingTurnStartGrappleDamage || state.pendingInterception || state.pendingD20Interrupt
     || state.pendingAlertSwapActorIds?.length) return state;
   const endingActorId = activeActorId(state);

@@ -37,7 +37,7 @@ import {
   executeCombatAction,
   executeCombatRemoteManipulator,
   moveCombatDancingLights,
-  moveActor,
+  moveActorAlongRoute,
   standActor,
   refreshSoloCombatParticipants,
   revealCombatMagicAura,
@@ -512,7 +512,7 @@ export default function SoloCombatPage() {
       if (movementMode) {
         if (actorId) throw new Error('Для перемещения выберите свободную клетку');
         setMovementMode(false); setSelectedActionChoices({});
-        applyIntent({type: 'move', actorId: activeControlledActorId, destination: position}, () => moveActor({state, actorId: activeControlledActorId, destination: position, voluntary: true})); return;
+        applyIntent({type: 'move', actorId: activeControlledActorId, destination: position}, () => moveActorAlongRoute({state, actorId: activeControlledActorId, destination: position})); return;
       }
       if (dancingLightsMoveGroupId) {
         if (dancingLightsMoveGroupId !== activeDancingLightsGroup) {

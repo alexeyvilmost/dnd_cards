@@ -253,6 +253,8 @@ export interface PendingD20Interrupt {
 }
 
 export interface SoloCombatState {
+  /** Player route retained across reactions and per-cell area decisions. */
+  playerMovement?: {actorId: string; origin: GridPosition; steps: GridPosition[]};
   pendingMovementStep?: {
     actorId: string; from: GridPosition; destination: GridPosition; maxFeet?: number; logMovement?: boolean;
     processedOpportunityActorIds: string[];

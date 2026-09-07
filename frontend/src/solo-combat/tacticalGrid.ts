@@ -61,29 +61,7 @@ export function reachablePositions(
   actorId: string,
   maximumFeet: number,
 ): GridPosition[] {
-  const origin = state.tokens[actorId]?.position;
-  if (!origin || maximumFeet < TACTICAL_CELL_FT) return [];
-  const occupied = occupiedPositions(state, actorId);
-  return Array.from({ length: TACTICAL_WIDTH * TACTICAL_HEIGHT }, (_, index) => ({
-    x: index % TACTICAL_WIDTH,
-    y: Math.floor(index / TACTICAL_WIDTH),
-  })).filter((position) => {
-    if (samePosition(position, origin) || occupied.has(`${position.x}:${position.y}`)) return false;
-    const distance = gridDistanceFt(origin, position);
-    const steps = Math.max(Math.abs(position.x - origin.x), Math.abs(position.y - origin.y));
-    const path = Array.from({ length: steps + 1 }, (_, index) => {
-      const ratio = steps === 0 ? 0 : index / steps;
-      return {
-        x: Math.round(origin.x + (position.x - origin.x) * ratio),
-        y: Math.round(origin.y + (position.y - origin.y) * ratio),
-      };
-    });
-    const difficult = Object.values(state.combatAreas ?? {}).some((area) => (
-      area.difficultTerrain && area.cells.some((cell) => path.some((step) => samePosition(cell, step)))
-    ));
-    const crawl = actorMustCrawl(state.world.actors[actorId]);
-    return distance * (1 + Number(difficult) + Number(crawl)) <= maximumFeet;
-  });
+  return reachableRoutes(state, actorId, maximumFeet).map(route => route.destination);
 }
 
 export interface TacticalRoute {

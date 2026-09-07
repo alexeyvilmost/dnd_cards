@@ -13,7 +13,7 @@ import {
   worldZonePayload,
 } from './combatAreas';
 import { spatialFacts, type CombatAreaState, type SoloCombatState } from './types';
-import { autoResolveSystemDecisions, executeCombatAction, moveActor } from './engine';
+import { autoResolveSystemDecisions, executeCombatAction, moveActor, moveActorAlongRoute } from './engine';
 
 function state(): SoloCombatState {
   const runtime = () => ({
@@ -87,6 +87,27 @@ const grease: RuleActionDefinition = {
 afterEach(() => resetConditionsToOfflineFixture('combat_area_test_cleanup'));
 
 describe('persistent combat areas', () => {
+  it('stops a player route on the actual hazardous cell when entry damage drops the mover', () => {
+    const initial = state();
+    initial.world.actors.caster.character.characterSpeed = 30;
+    initial.world.actors.caster.runtime.hp.current = 2;
+    const fire: RuleActionDefinition = {...grease, id: 'route-fire', name: 'Огонь', mechanics: {
+      targeting: {shape: 'area', domain: 'world', actor_targets: false, range_ft: 60,
+        area: {kind: 'cube', size_ft: 5}},
+      effects: [{resolution: 'auto', result: [{kind: 'world_zone', zone_type: 'fire',
+        duration: {type: 'rounds', amount: 10}, tactical: {triggers: ['enter'],
+          auto_effects: [{kind: 'damage', amount: 3, type: 'fire'}]}}]}],
+    }};
+    const area = createCombatArea({state: initial, action: fire, sourceActorId: 'target', origin: {x: 2, y: 0}})!;
+    area.cells = Array.from({length: 10}, (_, y) => ({x: 2, y}));
+    initial.combatAreas = {[area.id]: area};
+    const moved = moveActorAlongRoute({state: initial, actorId: 'caster', destination: {x: 4, y: 0}, rng: () => 0.5});
+    expect(moved.world.actors.caster.runtime.hp.current).toBe(0);
+    expect(moved.tokens.caster.position).toEqual({x: 2, y: 0});
+    expect(moved.movementRemainingFt.caster).toBe(20);
+    expect(moved.playerMovement).toBeUndefined();
+  });
+
   it('materializes data-owned geometry, dynamic spell DC and deduplicated lifecycle triggers', () => {
     const initial = state();
     const area = createCombatArea({ state: initial, action: grease, sourceActorId: 'caster', origin: { x: 3, y: 3 } });

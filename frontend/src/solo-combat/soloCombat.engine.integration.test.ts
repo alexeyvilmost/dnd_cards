@@ -15,7 +15,7 @@ import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { actorMustCrawl, gridDistanceFt } from './tacticalGrid';
 import { isPlayerControlledCombatActor, SOLO_COMBAT_KEY, type SoloCombatState } from './types';
 import { UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
-import {monsterRouteOpportunityRisk} from './engine';
+import {monsterRouteOpportunityRisk, moveActorAlongRoute} from './engine';
 import {planMonsterTurn} from './monsterAi';
 import { STONEWORK_CONTACT_CHOICE_ID } from '../mechanics/collectChoices';
 
@@ -817,6 +817,35 @@ describe('solo combat engine vertical integration', () => {
     expect(state.pendingMovementStep).toBeUndefined();
     expect(activeId(state)).toBe(setup.actorId);
     expect(resumePendingMovement(clone(state))).toEqual(state);
+  });
+
+  it.each([true, false])('resumes an entire player route after Parry without repeating its attack (%s)', async parry => {
+    const setup = await parryEncounter();
+    let state = setup.state;
+    const player = state.world.actors[setup.actorId];
+    player.ac = 15;
+    player.runtime.hp = {current: 100, max: 100, temp: 0};
+    player.capabilities.actionIds.push(setup.parryId);
+    player.runtime.equipment.main_hand = CARD_LONGSWORD.id;
+    player.character.knownCards = [...(player.character.knownCards ?? []), CARD_LONGSWORD];
+    state.tokens[setup.actorId].position = {x: 4, y: 4};
+    state.tokens[setup.monsterId].position = {x: 5, y: 4};
+    const feet = state.movementRemainingFt[setup.actorId];
+    let draws = 0;
+    state = moveActorAlongRoute({state, actorId: setup.actorId, destination: {x: 0, y: 4}, rng: () => {draws++; return 0.2;}});
+    expect(draws).toBe(1);
+    expect(state.tokens[setup.actorId].position).toEqual({x: 4, y: 4});
+    expect(state.playerMovement?.steps).toHaveLength(4);
+    expect(() => moveActorAlongRoute({state, actorId: setup.actorId, destination: {x: 1, y: 4}})).toThrow();
+    const noRoll = () => {throw Error('The saved reaction must not roll again');};
+    state = resolvePlayerReaction(clone(state), {kind: 'reaction', actionId: parry ? setup.parryId : null}, noRoll);
+    state = resumePendingMovement(clone(state), noRoll);
+    expect(state.tokens[setup.actorId].position).toEqual({x: 0, y: 4});
+    expect(state.world.actors[setup.actorId].runtime.hp.current).toBe(parry ? 100 : 97);
+    expect(state.movementRemainingFt[setup.actorId]).toBe(feet - 20);
+    expect(state.playerMovement).toBeUndefined();
+    expect(state.pendingMovementStep).toBeUndefined();
+    expect(resumePendingMovement(clone(state), noRoll)).toEqual(state);
   });
 
   it('preserves the remaining reactors across two saved decisions without moving or rerolling early', async () => {
