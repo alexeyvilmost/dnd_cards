@@ -47,7 +47,9 @@ const ShopDetail = () => {
   const applyRun = useCallback(async (run: RoguelikeRun) => {
     const hydrate = async (offer: RoguelikeOffer): Promise<Card> => {
       const card = offer.card_id ? await cardsApi.getCard(offer.card_id) : {
-        id: offer.id, name: offer.name, rarity: 'common', image_url: '/default_image.png',
+        id: offer.id, name: offer.name, rarity: 'common',
+        image_url: 'https://dnd-cards-images.storage.yandexcloud.net/cards/1783596157_0LfYMOIk.png',
+        description: 'Для долгого отдыха требуется один комплект лагерных припасов.',
       } as Card;
       return { ...card, runOfferId: offer.id, price: offer.price, price_currency: 'gold' } as RunShopCard;
     };
