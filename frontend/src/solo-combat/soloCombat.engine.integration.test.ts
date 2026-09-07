@@ -2474,6 +2474,34 @@ describe('solo combat engine vertical integration', () => {
     expect(state.log.some((entry) => entry.text.includes('Цель не видна'))).toBe(true);
   });
 
+  it('executes the AI movement plan in difficult terrain without exceeding its budget', async () => {
+    const participant = fighterSeed();
+    let state = await createSoloCombatState({
+      character: participant.character, participant,
+      selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar(), dash()], effects: [], dashAction: dash(), rng: () => 0.5,
+    });
+    const monsterId = Object.values(state.world.actors).find((actor) => actor.kind === 'monster')!.id;
+    state.tokens[participant.character.id].position = { x: 11, y: 9 };
+    state.tokens[monsterId].position = { x: 0, y: 0 };
+    state.combatAreas = {
+      mud: {
+        id: 'mud', name: 'Труднопроходимая местность', zoneType: 'test',
+        sourceActorId: participant.character.id, sourceActionId: 'mud', sourceEntityIds: ['test:terrain'],
+        origin: { x: 0, y: 0 },
+        cells: Array.from({ length: 120 }, (_, i) => ({ x: i % 12, y: Math.floor(i / 12) })),
+        duration: { type: 'rounds', roundsLeft: 10 }, triggers: [], difficultTerrain: true,
+      },
+    };
+    state = advanceTurn(state);
+    expect(activeId(state)).toBe(monsterId);
+    expect(() => { state = runMonsterTurn(state, () => 0.5); }).not.toThrow();
+    expect(activeId(state)).toBe(participant.character.id);
+    const position = state.tokens[monsterId].position;
+    expect(Math.max(position.x, position.y) * 5).toBeLessThanOrEqual(30);
+    expect(position).not.toEqual({ x: 0, y: 0 });
+  });
+
   it.each([true, false])('finishes a paused monster turn exactly once after a Shield decision (%s)', async (useShield) => {
     const participant = wizardSeed();
     let state = await createSoloCombatState({

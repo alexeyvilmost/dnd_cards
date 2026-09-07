@@ -3622,7 +3622,7 @@ function withoutMonsterTacticalAdvantage(state: SoloCombatState, actorId: string
 }
 
 export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
-  if (state.outcome !== 'active' || state.world.pendingResolution || state.pendingD20Interrupt) return state;
+  if (state.outcome !== 'active' || state.world.pendingResolution || state.pendingD20Interrupt || state.pendingInterception) return state;
   const monsterId = activeActorId(state);
   const monster = state.world.actors[monsterId];
   if (!monster || monster.kind !== 'monster') return state;
@@ -3666,13 +3666,14 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
   const maximumAttackRange = attackActions.reduce((maximum, action) => (
     Math.max(maximum, monsterAttackRange(action))
   ), monster.attackProfile?.reachFt ?? 5);
-  const plan = planMonsterTurn(state, monster, targetId, maximumAttackRange);
+  const plan = planMonsterTurn(state, monster, targetId, maximumAttackRange, monsterAIProfile(monster).preferred_range_ft);
   let next = state;
   const firstDestination = plan.firstMove.at(-1);
   if (firstDestination) {
     next = moveActor({ state: next, actorId: monsterId, destination: firstDestination, voluntary: true, rng });
   }
-  if (next.world.actors[monsterId].runtime.hp.current <= 0 || next.outcome !== 'active') return next;
+  if (next.world.actors[monsterId].runtime.hp.current <= 0 || next.outcome !== 'active'
+    || next.world.pendingResolution || next.pendingD20Interrupt || next.pendingInterception) return next;
   if (plan.usesDash) {
     if (!next.dashActionId) throw new Error('В боевом каталоге нет data-driven действия «Рывок»');
     next = executeCombatAction({ state: next, actorId: monsterId, actionId: next.dashActionId, targetIds: [monsterId], rng });
@@ -3711,6 +3712,9 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
         next = appendLog(next, monsterId, 'Цель не видна: атака пропущена.');
       }
     }
+  }
+  if (!plan.attacks && !plan.usesDash) {
+    next = appendLog(next, monsterId, 'Цель не видна или недоступна: ход завершён без атаки.');
   }
   return next.world.pendingResolution || next.pendingInterception || next.pendingD20Interrupt || next.outcome !== 'active'
     ? next

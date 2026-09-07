@@ -243,6 +243,49 @@ describe('solo combat tactical contract', () => {
     });
   });
 
+  it('respects spent movement and does not spend Dash while grappled', () => {
+    const partial = aiState({ x: 0, y: 0 }, { x: 8, y: 0 }, 30);
+    partial.state.movementRemainingFt = { monster: 5 };
+    const plan = planMonsterTurn(partial.state, partial.monster, 'player');
+    expect(gridDistanceFt({ x: 0, y: 0 }, plan.firstMove.at(-1)!)).toBe(5);
+    partial.state.world.grapples = {
+      hold: { targetActorId: 'monster' },
+    } as unknown as SoloCombatState['world']['grapples'];
+    expect(planMonsterTurn(partial.state, partial.monster, 'player')).toEqual({
+      firstMove: [], dashMove: [], usesDash: false, attacks: false,
+    });
+  });
+
+  it('budgets difficult terrain for both normal movement and Dash', () => {
+    const difficult = aiState({ x: 0, y: 0 }, { x: 11, y: 9 }, 20);
+    difficult.state.combatAreas = {
+      mud: { difficultTerrain: true, cells: Array.from({ length: 120 }, (_, i) => ({ x: i % 12, y: Math.floor(i / 12) })) },
+    } as unknown as SoloCombatState['combatAreas'];
+    const plan = planMonsterTurn(difficult.state, difficult.monster, 'player');
+    expect(gridDistanceFt({ x: 0, y: 0 }, plan.firstMove.at(-1)!)).toBe(10);
+    expect(gridDistanceFt(plan.firstMove.at(-1)!, plan.dashMove.at(-1)!)).toBe(10);
+  });
+
+  it('moves out of obscurity before a ranged attack and remains deterministic', () => {
+    const obscured = aiState({ x: 1, y: 1 }, { x: 8, y: 1 }, 20);
+    obscured.state.combatAreas = {
+      fog: { heavilyObscured: true, cells: [{ x: 1, y: 1 }] },
+    } as unknown as SoloCombatState['combatAreas'];
+    const plan = planMonsterTurn(obscured.state, obscured.monster, 'player', 60);
+    expect(plan.firstMove.length).toBeGreaterThan(0);
+    expect(plan.attacks).toBe(true);
+    expect(plan.usesDash).toBe(false);
+    expect(planMonsterTurn(obscured.state, obscured.monster, 'player', 60)).toEqual(plan);
+    expect(obscured.state.tokens.monster.position).toEqual({ x: 1, y: 1 });
+  });
+
+  it('closes to the preferred range without spending an action on Dash', () => {
+    const ranged = aiState({ x: 0, y: 0 }, { x: 8, y: 0 }, 20);
+    const plan = planMonsterTurn(ranged.state, ranged.monster, 'player', 60, 20);
+    expect(gridDistanceFt(plan.firstMove.at(-1)!, { x: 8, y: 0 })).toBe(20);
+    expect(plan).toMatchObject({ attacks: true, usesDash: false });
+  });
+
   it('compiles reach and damage adjustments from the monster contract', () => {
     const template = {
       ...goblin(),
