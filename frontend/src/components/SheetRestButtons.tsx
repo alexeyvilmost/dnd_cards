@@ -289,7 +289,7 @@ export default function SheetRestButtons({
         notifyRunUpdated();
       } else {
         updated = await persistCharacterRuntime(character,
-          persistPayload(next, attunementUnlocked, resetDeathSaves, baseTurnState), encounterApply);
+          persistPayload(next, attunementUnlocked, resetDeathSaves, baseTurnState), encounterApply, true);
       }
       for (const [resource, expected] of Object.entries(next.resources)) {
         if (updated.resources?.[resource] !== expected) {

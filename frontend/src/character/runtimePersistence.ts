@@ -5,6 +5,7 @@ import { writeDedicatedCombatTurnState } from '../solo-combat/turnState';
 import { charactersV3Api, type PatchCharacterRuntimeRequest } from './api';
 import type { ForgeCharacter } from './types';
 import { readDeathSaves } from './death';
+import { activeRunId, notifyRunUpdated } from '../roguelike/navigation';
 
 const owns = (value: object, key: PropertyKey): boolean => Object.prototype.hasOwnProperty.call(value, key);
 
@@ -86,11 +87,18 @@ export async function persistCharacterRuntime(
   character: ForgeCharacter,
   payload: PatchCharacterRuntimeRequest,
   applyEncounter?: EncounterApply,
+  sheetAction = false,
 ): Promise<ForgeCharacter> {
   const effectivePayload = character.current_encounter_id
     ? payload
     : soloCombatOwnedPatch(character, payload);
-  const updated = await charactersV3Api.patchRuntime(character.id, effectivePayload);
+  const runId = sheetAction && character.character_type === 'dungeon_crawl' ? activeRunId() : undefined;
+  const updated = runId
+    ? await charactersV3Api.patchRuntime(character.id,
+      { ...effectivePayload, expected_runtime_revision: character.runtime_revision ?? undefined },
+      { runId, intent: 'camp_action' })
+    : await charactersV3Api.patchRuntime(character.id, effectivePayload);
+  if (runId) notifyRunUpdated();
   const encounterID = updated.current_encounter_id ?? character.current_encounter_id;
   const encounterSet = encounterOwnedPatch(effectivePayload);
   if (!encounterID || !encounterSet) return updated;

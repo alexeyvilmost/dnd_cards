@@ -1071,7 +1071,7 @@ const CharacterSheetMVP = () => {
     <CharacterFormulaProvider value={formulaCtxFromCharacter(sheetCtx)}>
     <div className={`${rootCls}${!renderedV2 ? ' sheet-has-bottomnav' : ''}`}>
       <div className="forge-header sheet-header-bar">
-        <button type="button" className="sheet-back" onClick={() => roguelikeRunId ? navigate(`/roguelike/${roguelikeRunId}`) : navigate(-1)} title="Назад">
+        <button type="button" className="sheet-back" onClick={() => roguelikeRunId ? navigate('/roguelike') : navigate(-1)} title="Назад">
           <ArrowLeft size={18} />
         </button>
         <div className="sheet-header-center">

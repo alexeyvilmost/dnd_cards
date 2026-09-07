@@ -890,6 +890,20 @@ func (cc *CharacterV3Controller) PatchCharacterRuntime(c *gin.Context) {
 				return err
 			}
 		}
+		if roguelikeRun != nil && c.GetHeader(roguelikeIntentHeader) == roguelikeIntentCampAction {
+			if req.ExpectedRuntimeRevision == nil || req.Equipment != nil || (req.MaxHP != nil && *req.MaxHP != locked.MaxHP) {
+				return roguelikeMutationError("roguelike_action_patch_invalid", "действие требует актуальной версии листа и не может менять экипировку или максимум хитов", locked.ID)
+			}
+			patch := CharacterRuntimeCommandPatch{CurrentHP: req.CurrentHP, InventoryItems: req.InventoryItems,
+				Resources: req.Resources, MaxResources: req.MaxResources, ActiveEffects: req.ActiveEffects,
+				TurnState: req.TurnState, Currency: req.Currency}
+			if err := validateRoguelikeCampAction(locked, patch); err != nil {
+				return err
+			}
+			if _, err := runtimeCommandUpdates(locked, patch); err != nil {
+				return err
+			}
+		}
 		if roguelikeRun != nil && c.GetHeader(roguelikeIntentHeader) == roguelikeIntentLevel &&
 			roguelikeRun.PendingLevel != locked.Level {
 			return roguelikeMutationError(

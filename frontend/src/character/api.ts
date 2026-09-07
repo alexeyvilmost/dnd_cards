@@ -23,7 +23,7 @@ export interface CharacterV3AccessErrorDetail {
   message: string;
 }
 
-type RoguelikeCharacterIntent = 'combat' | 'level_up' | 'camp';
+type RoguelikeCharacterIntent = 'combat' | 'level_up' | 'camp' | 'camp_action';
 
 function activeRoguelikeCampContext(): { runId: string; intent: 'camp' } | undefined {
   if (typeof window === 'undefined' || !window.location.pathname.startsWith('/characters-v3/')) return undefined;

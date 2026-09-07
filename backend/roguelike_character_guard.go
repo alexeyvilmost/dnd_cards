@@ -142,11 +142,12 @@ func validateRoguelikeCampRuntimePatch(character CharacterV3, req PatchCharacter
 }
 
 const (
-	roguelikeRunHeader    = "X-Roguelike-Run-ID"
-	roguelikeIntentHeader = "X-Roguelike-Intent"
-	roguelikeIntentCombat = "combat"
-	roguelikeIntentLevel  = "level_up"
-	roguelikeIntentCamp   = "camp"
+	roguelikeRunHeader        = "X-Roguelike-Run-ID"
+	roguelikeIntentHeader     = "X-Roguelike-Intent"
+	roguelikeIntentCombat     = "combat"
+	roguelikeIntentLevel      = "level_up"
+	roguelikeIntentCamp       = "camp"
+	roguelikeIntentCampAction = "camp_action"
 )
 
 // Sheet actions may consume items and class resources in camp. Rest recovery
@@ -219,6 +220,8 @@ func authorizeRoguelikeCharacterMutation(
 	case roguelikeIntentLevel:
 		wantPhase = RoguelikePhaseCamp
 	case roguelikeIntentCamp:
+		wantPhase = RoguelikePhaseCamp
+	case roguelikeIntentCampAction:
 		wantPhase = RoguelikePhaseCamp
 	default:
 		return nil, &characterRuntimeCommandError{

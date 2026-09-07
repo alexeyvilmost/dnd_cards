@@ -31,13 +31,13 @@ export default function SheetRunPanel({ runId, characterId }: { runId: string; c
   };
   const level = run?.character?.level ?? 1;
   const threshold = [0, 300, 900, 2700, 6500, 14000][level] ?? 14000;
-  return <section className="sheet-panel" aria-label="Забег">
+  return <section className="csheet-top" aria-label="Забег" style={{ margin: '8px 12px 0' }}>
     <h2 className="sheet-h2">Забег {run ? `· попытка ${run.attempt}` : ''}</h2>
     {error && <p className="issues" role="alert">{error}</p>}
     {run && <>
       <p className="forge-note">{run.experience} / {threshold} XP · {run.encounters_won} побед · {run.gold} зм · {run.supplies} припасов · {run.game_clock_hours} ч.</p>
-      <progress aria-label="Опыт забега" value={run.experience} max={threshold} style={{ width: '100%' }} />
-      <div className="sheet-header-actions">
+      <progress aria-label="Опыт забега" value={run.experience} max={threshold} style={{ width: 120, accentColor: 'var(--forge-gold)' }} />
+      <div className="sheet-runtime-actions">
         {run.status !== 'active' ? <Link className="sheet-header-btn" to={`/roguelike/${run.id}`}>Результат забега</Link>
           : run.phase === 'combat' ? <Link className="sheet-header-btn" to={runCombatURL(run)}><Swords size={16} />Вернуться в бой</Link>
           : <>

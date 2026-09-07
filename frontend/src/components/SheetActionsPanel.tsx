@@ -1225,6 +1225,7 @@ export default function SheetActionsPanel({
           ...(currency ? { currency } : {}),
         },
         encounterApply,
+        true,
       );
       onUpdated(updated);
       onEvents?.(events);
