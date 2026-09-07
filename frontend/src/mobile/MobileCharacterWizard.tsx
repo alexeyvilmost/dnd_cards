@@ -13,6 +13,7 @@ import {
   useAutoRecommendedChoices,
 } from '../character/components';
 import { unavailableChoiceOptions } from '../character/choiceAvailability';
+import { advancePrimaryClassLevelToTotal } from '../character/multiclass';
 import { buildCharacterContext } from '../character/runtime';
 import { buildResourceRuntimePatch, syncRuntimeResources } from '../character/resourceInit';
 import { projectCharacterStartingEquipmentPatch } from '../character/startingEquipment';
@@ -304,10 +305,17 @@ export default function MobileCharacterWizard() {
           }
           setOriginal(character);
           const stored = safeDraft(localStorage.getItem(storageKey));
-          if (!stored) {
-            const fromCharacter = characterToDraft(character);
-			const targetLevel = roguelikeRun?.pending_level ?? fromCharacter.level + 1;
-            setDraft(levelUp ? { ...fromCharacter, level: targetLevel } : fromCharacter);
+          const fromCharacter = characterToDraft(character);
+          const baseDraft = stored ?? fromCharacter;
+          if (levelUp) {
+            const targetLevel = roguelikeRun?.pending_level ?? fromCharacter.level + 1;
+            setDraft({
+              ...baseDraft,
+              level: targetLevel,
+              classLevels: advancePrimaryClassLevelToTotal(baseDraft, targetLevel),
+            });
+          } else if (!stored) {
+            setDraft(fromCharacter);
           }
         }
       } catch (e) {

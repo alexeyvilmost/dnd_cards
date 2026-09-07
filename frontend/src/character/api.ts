@@ -100,7 +100,9 @@ async function characterV3Request<T>(
 
 /** Friendly inline text for screens that already own an error region. */
 export function characterV3ErrorMessage(error: unknown, fallback: string): string {
-  return error instanceof CharacterV3AccessError ? error.message : fallback;
+  return error instanceof CharacterV3AccessError || error instanceof ApiRequestError
+    ? error.message
+    : fallback;
 }
 
 export interface CharacterEventRow {

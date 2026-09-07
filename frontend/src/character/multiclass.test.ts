@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CharacterClass } from '../types';
 import { computeMulticlassMaxHP } from './derive';
-import { addClassLevel, multiclassPrerequisiteIssues, normalizedClassLevels, normalizedSubclassIds, subclassSelectionIssues, totalClassLevel } from './multiclass';
+import { addClassLevel, advancePrimaryClassLevelToTotal, multiclassPrerequisiteIssues, normalizedClassLevels, normalizedSubclassIds, subclassSelectionIssues, totalClassLevel } from './multiclass';
 
 const klass = (id: string, card_number: string): CharacterClass => ({
   id, card_number, name: card_number, description: '', rarity: 'common', created_at: '', updated_at: '',
@@ -17,6 +17,15 @@ describe('multiclass progression', () => {
   it('adds a level to the selected destination class', () => {
     const levels = addClassLevel({ classId: 'fighter-id', classLevels: { 'fighter-id': 1 }, level: 1 }, 'wizard-id');
     expect(levels).toEqual({ 'fighter-id': 1, 'wizard-id': 1 });
+  });
+
+  it('advances the primary class when the level-up wizard raises total level', () => {
+    expect(advancePrimaryClassLevelToTotal({
+      classId: 'fighter-id', classLevels: { 'fighter-id': 1 }, level: 2,
+    }, 2)).toEqual({ 'fighter-id': 2 });
+    expect(advancePrimaryClassLevelToTotal({
+      classId: 'fighter-id', classLevels: { 'fighter-id': 1, 'wizard-id': 1 }, level: 3,
+    }, 3)).toEqual({ 'fighter-id': 2, 'wizard-id': 1 });
   });
 
   it('preserves one subclass per owning class and backfills the legacy primary selection', () => {

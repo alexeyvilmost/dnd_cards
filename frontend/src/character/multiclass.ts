@@ -111,3 +111,14 @@ export function addClassLevel(
   levels[classId] = (levels[classId] ?? 0) + 1;
   return levels;
 }
+
+export function advancePrimaryClassLevelToTotal(
+  draft: Pick<CharacterDraft, 'classLevels' | 'classId' | 'level'>,
+  targetLevel: number,
+): Record<string, number> {
+  const levels = draftClassLevels(draft);
+  if (!draft.classId) return levels;
+  const missingLevels = Math.max(0, Math.floor(targetLevel) - totalClassLevel(levels));
+  levels[draft.classId] = (levels[draft.classId] ?? 0) + missingLevels;
+  return levels;
+}
