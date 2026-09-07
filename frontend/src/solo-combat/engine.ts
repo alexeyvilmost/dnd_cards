@@ -2101,7 +2101,7 @@ export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Ma
       continue;
     }
     const pending = next.world.pendingResolution;
-    if (pending.request.type === 'reaction'
+    if ((pending.request.type === 'reaction' || pending.request.type === 'shove_outcome')
       && isControlledCharacter(next, pending.request.actorId)) break;
     if (pending.request.type === 'saving_throw'
       && isControlledCharacter(next, pending.request.actorId)
@@ -2164,6 +2164,19 @@ export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Ma
     });
   }
   return next;
+}
+
+export function resolvePlayerShoveOutcome(
+  state: SoloCombatState,
+  outcome: Extract<DecisionResponse, {kind: 'shove_outcome'}>['outcome'],
+  rng: Rng = Math.random,
+): SoloCombatState {
+  const pending = state.world.pendingResolution;
+  if (pending?.request.type !== 'shove_outcome'
+    || !isControlledCharacter(state, pending.request.actorId)) {
+    throw new Error('Нет ожидающего выбора результата толчка');
+  }
+  return autoResolveSystemDecisions(resolveDecision(state, {kind: 'shove_outcome', outcome}, rng), rng);
 }
 
 export function resolvePlayerSavingThrow(
@@ -2921,11 +2934,17 @@ export function moveActor(input: {
   const maxFeet = input.voluntary === false
     ? (input.maxFeet ?? available) : Math.min(input.maxFeet ?? available, available);
   if (!Number.isFinite(maxFeet) || maxFeet < 0) throw new Error('Некорректный запас перемещения');
-  const movementCost = input.voluntary === false
+  let movementCost = input.voluntary === false
     ? distance
     : movementCostThroughAreas(input.state, token.position, input.destination, distance)
       + (actorMustCrawl(actor) ? distance : 0);
-  if (movementCost > maxFeet) throw new Error(`За это перемещение доступно ${maxFeet} фт.`);
+  if (movementCost > maxFeet) {
+    if (input.state.pendingMovementStep?.actorId === input.actorId) {
+      const {pendingMovementStep: _stopped, ...stopped} = input.state;
+      return appendLog(stopped, input.actorId, 'Перемещение остановлено: после реакции не хватает оставшейся скорости.');
+    }
+    throw new Error(`За это перемещение доступно ${maxFeet} фт.`);
+  }
   if (occupiedPositions(input.state, input.actorId).has(`${input.destination.x}:${input.destination.y}`)) {
     throw new Error('Клетка занята');
   }
@@ -2951,6 +2970,14 @@ export function moveActor(input: {
   if (next.world.actors[input.actorId].runtime.hp.current <= 0) return outcome(next);
   if (input.voluntary !== false && effectiveCombatActorSpeedFt(next, input.actorId) === 0) {
     return appendLog(next, input.actorId, 'Перемещение остановлено попаданием провоцированной атаки Стража.');
+  }
+  // Reactions happen before the step: a bite can knock the mover prone.
+  // Commit the resolved attacks even when the now-more-expensive step cannot finish.
+  if (input.voluntary !== false) {
+    movementCost = movementCostThroughAreas(next, token.position, input.destination, distance)
+      + (actorMustCrawl(next.world.actors[input.actorId]) ? distance : 0);
+    if (movementCost > maxFeet) return appendLog(next, input.actorId,
+      'Перемещение остановлено: после реакции не хватает оставшейся скорости.');
   }
   const crossed = enteredAndExitedAreas(next, token.position, input.destination, input.actorId);
   const previousStraight = next.recentStraightMovementByActor?.[input.actorId];

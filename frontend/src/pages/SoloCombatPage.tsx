@@ -42,7 +42,7 @@ import {
   refreshSoloCombatParticipants,
   revealCombatMagicAura,
   resolvePlayerReaction,
-  resolvePlayerSavingThrow,
+  resolvePlayerShoveOutcome, resolvePlayerSavingThrow,
   resolveD20Interrupt,
   resolveSoloCombatAlertSwap,
   resolveSoloCombatInterception,
@@ -694,7 +694,7 @@ export default function SoloCombatPage() {
   const reactionOptions = pending?.request.type === 'reaction'
     && isControlledCharacter(state, pending.request.actorId)
     ? sheetReactionDecisionOptions(pending.request.options) : [];
-  const controlledSavePending = pending?.request.type === 'saving_throw'
+  const controlledSavePending = (pending?.request.type === 'saving_throw' || pending?.request.type === 'shove_outcome')
     && isControlledCharacter(state, pending.request.actorId)
     ? pending
     : null;
@@ -843,6 +843,7 @@ export default function SoloCombatPage() {
           decidingRuntime={state.world.actors[controlledSavePending.request.actorId].runtime}
           busy={busy}
           onResolve={(response) => {
+            if (response.kind === 'shove_outcome') applyIntent({type: 'shove_outcome', outcome: response.outcome}, () => resolvePlayerShoveOutcome(state, response.outcome));
             if (response.kind === 'roll') applyIntent({type: 'saving_throw', selectedAbility: response.selectedAbility, boonEffectId: response.boonEffectId}, () => resolvePlayerSavingThrow(state, response));
           }}
         />

@@ -94,7 +94,8 @@ export default function SheetPendingCombatPanel({
   }, [pending.id]);
 
   if (pending.request.type !== 'saving_throw'
-    && pending.request.type !== 'reaction') {
+    && pending.request.type !== 'reaction'
+    && pending.request.type !== 'shove_outcome') {
     return (
       <section className="sheet-group" role="alert" data-testid="sheet-combat-unsupported-pending">
         Продолжение «{pending.type}» не поддержано этим интерфейсом. Состояние сохранено без изменений.
@@ -116,6 +117,18 @@ export default function SheetPendingCombatPanel({
         ) : null}
       </section>
     );
+  }
+
+  if (pending.request.type === 'shove_outcome') {
+    return <section className="sheet-group" role="group" aria-label="Результат толчка">
+      <h3 className="sheet-h3">Выберите результат толчка</h3>
+      <div className="sheet-actions">
+        {pending.request.options.map(outcome => <button type="button" className="forge-btn"
+          key={outcome} disabled={busy} onClick={() => onResolve({kind: 'shove_outcome', outcome})}>
+          {outcome === 'prone' ? 'Сбить с ног' : 'Оттолкнуть на 5 футов'}
+        </button>)}
+      </div>
+    </section>;
   }
 
   if (pending.request.type === 'saving_throw') {

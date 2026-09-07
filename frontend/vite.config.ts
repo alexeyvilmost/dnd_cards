@@ -88,7 +88,7 @@ export default defineConfig({
     ],
     proxy: {
       '/api': {
-        target: 'https://bagofholding.ru',
+        target: process.env.DEV_API_PROXY_TARGET || 'http://127.0.0.1:8080',
         changeOrigin: true,
         secure: true,
       },

@@ -6,7 +6,7 @@ import { canonicalSha256Sync } from '../rules-core/determinism';
 import {
   resumePendingMovement, activeActor, activateCombatBoon, advanceTurn, autoResolveSystemDecisions,
   executeCombatAction, executeCombatRemoteManipulator, moveCombatDancingLights, revealCombatMagicAura, moveActor, resolveD20Interrupt, resolvePlayerReaction,
-  resolvePlayerSavingThrow, resolveSoloCombatAlertSwap, resolveSoloCombatInterception,
+  resolvePlayerShoveOutcome, resolvePlayerSavingThrow, resolveSoloCombatAlertSwap, resolveSoloCombatInterception,
   resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, standActor,
 } from '../solo-combat/engine';
 import { isPlayerControlledCombatActor, type GridPosition, type SoloCombatState } from '../solo-combat/types';
@@ -26,6 +26,7 @@ export type RoguelikeCombatIntent =
   | {type: 'move'; actorId: string; destination: GridPosition}
   | {type: 'stand'; actorId: string}
   | {type: 'end_turn'; actorId: string}
+  | {type: 'shove_outcome'; outcome: Extract<DecisionResponse, {kind: 'shove_outcome'}>['outcome']}
   | {type: 'reaction'; response: Extract<DecisionResponse, {kind: 'reaction'}>}
   | {type: 'saving_throw'; selectedAbility?: Extract<DecisionResponse, {kind: 'roll'}>['selectedAbility']; boonEffectId?: string}
   | {type: 'd20_interrupt'; actorId: string | null}
@@ -109,6 +110,7 @@ export function stepRoguelikeCombat(
       if (hasDecision(state) || activeActor(state).id !== intent.actorId) throw new Error('Сначала завершите текущее решение');
       state = advanceTurn(state, rng);
       break;
+    case 'shove_outcome': state = resolvePlayerShoveOutcome(state, intent.outcome, rng); break;
     case 'reaction': state = resolvePlayerReaction(state, intent.response, rng); break;
     case 'saving_throw':
       if (state.world.pendingResolution?.request.type !== 'saving_throw') throw new Error('Нет ожидающего спасброска');

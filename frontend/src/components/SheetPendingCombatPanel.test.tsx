@@ -149,6 +149,29 @@ describe('SheetPendingCombatPanel', () => {
     container.remove();
   });
 
+  it('keeps a restored shove choice with the attacker and sends only the selected outcome', async () => {
+    const pending: PendingResolution = {
+      id: 'shove:1', type: 'shove_outcome', openedByCommandId: 'command:1',
+      openedAtRevision: 1, deadlineLogicalClock: 5, sourceActorId: SOURCE,
+      targetActorId: TARGET, attackActionId: 'attack:1',
+      facts: {factsSource: 'scenario', boardRevision: 0, relation: 'enemy',
+        distanceFt: 5, lineOfSight: true, cover: 'none'},
+      request: {id: 'request:1', type: 'shove_outcome', actorId: SOURCE, options: ['push_5ft', 'prone']},
+    };
+    const onResolve = vi.fn();
+    await act(async () => root.render(<SheetPendingCombatPanel pending={pending}
+      viewingCharacterId={TARGET} onResolve={onResolve} />));
+    expect(container.querySelector('button')).toBeNull();
+    await act(async () => root.render(<SheetPendingCombatPanel pending={JSON.parse(JSON.stringify(pending))}
+      viewingCharacterId={SOURCE} onResolve={onResolve} />));
+    expect(onResolve).not.toHaveBeenCalled();
+    const buttons = [...container.querySelectorAll<HTMLButtonElement>('button')];
+    await act(async () => buttons.find(button => button.textContent?.includes('Сбить с ног'))!.click());
+    expect(onResolve).toHaveBeenLastCalledWith({kind: 'shove_outcome', outcome: 'prone'});
+    await act(async () => buttons.find(button => button.textContent?.includes('Оттолкнуть'))!.click());
+    expect(onResolve).toHaveBeenLastCalledWith({kind: 'shove_outcome', outcome: 'push_5ft'});
+  });
+
   it('routes the owner sheet to the target sheet while the target owns the save decision', async () => {
     await act(async () => root.render(
       <SheetPendingCombatPanel

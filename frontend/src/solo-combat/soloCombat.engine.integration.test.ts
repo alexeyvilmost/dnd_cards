@@ -10,9 +10,9 @@ import type { SheetCombatParticipantSeed } from '../character/sheetCombatSession
 import type { ForgeCharacter } from '../character/types';
 import type { Action } from '../types';
 import type { Monster } from '../monsters/types';
-import { resumePendingMovement, addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, canStandActor, standActor, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatParticipants, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatAlertSwap, resolveSoloCombatInterception, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectedTargetsForAction, setSoloCombatInitiativeTotals, setSoloCombatMount } from './engine';
+import { resolvePlayerShoveOutcome, resumePendingMovement, addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, canStandActor, standActor, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatParticipants, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatAlertSwap, resolveSoloCombatInterception, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectedTargetsForAction, setSoloCombatInitiativeTotals, setSoloCombatMount } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
-import { gridDistanceFt } from './tacticalGrid';
+import { actorMustCrawl, gridDistanceFt } from './tacticalGrid';
 import { isPlayerControlledCombatActor, SOLO_COMBAT_KEY, type SoloCombatState } from './types';
 import { UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
 import { STONEWORK_CONTACT_CHOICE_ID } from '../mechanics/collectChoices';
@@ -1189,6 +1189,15 @@ describe('solo combat engine vertical integration', () => {
       choices: { [UNARMED_STRIKE_CHOICE_ID]: ['shove'] },
       rng: () => 0,
     }), () => 0);
+    expect(shoveState.world.pendingResolution?.request.type).toBe('shove_outcome');
+    expect(shoveState.tokens[shoveTargetId].position).toEqual(shoveBefore);
+    const savedShove = JSON.parse(JSON.stringify(shoveState));
+    const proneState = resolvePlayerShoveOutcome(savedShove, 'prone', () => 0);
+    expect(proneState.tokens[shoveTargetId].position).toEqual(shoveBefore);
+    expect(actorMustCrawl(proneState.world.actors[shoveTargetId])).toBe(true);
+    expect(proneState.world.pendingResolution).toBeNull();
+    shoveState = resolvePlayerShoveOutcome(savedShove, 'push_5ft', () => 0);
+    expect(() => resolvePlayerShoveOutcome(shoveState, 'prone', () => 0)).toThrow();
     expect(gridDistanceFt(shoveSource, shoveState.tokens[shoveTargetId].position))
       .toBe(gridDistanceFt(shoveSource, shoveBefore) + 5);
     expect(readSoloCombatState(
@@ -3694,4 +3703,30 @@ describe('Pack Tactics is a shared attack rule', () => {
     expect(state.world.actors[ally.id].runtime.resources.reaction).toBe(0);
     expect(state.tokens[player.id].position).toEqual({x: 3, y: 4});
   });
+});
+
+
+it.each([5, 15])('recomputes the step cost when an opportunity attack knocks the mover prone, budget %i', async budget => {
+  const participant = fighterSeed();
+  const player = participant.canonical.world.actors[participant.character.id];
+  player.ac = 1;
+  player.runtime.hp = {current: 100, max: 100, temp: 0};
+  player.runtime.resources.reaction = 0;
+  participant.character.current_hp = 100;
+  participant.character.max_hp = 100;
+  const state = await createSoloCombatState({character: participant.character, participant,
+    selected: [{monster: goblin(), quantity: 1}], actions: [scimitar()], effects: [], rng: () => 0.5});
+  const enemy = Object.values(state.world.actors).find(row => row.kind === 'monster')!;
+  const action = state.catalogActions.find(row => row.id === state.opportunityActionIds[enemy.id])!;
+  const effects = action.mechanics.effects as Array<{on_hit: unknown[]}>;
+  effects[0].on_hit.push({kind: 'condition', value: 'prone'});
+  state.tokens[player.id].position = {x: 4, y: 4};
+  state.tokens[enemy.id].position = {x: 5, y: 4};
+  state.movementRemainingFt[player.id] = budget;
+  const result = moveActor({state: clone(state), actorId: player.id, destination: {x: 3, y: 4}, rng: () => 0.5});
+  expect(actorMustCrawl(result.world.actors[player.id])).toBe(true);
+  expect(result.world.actors[enemy.id].runtime.resources.reaction).toBe(0);
+  expect(result.pendingMovementStep).toBeUndefined();
+  expect(result.tokens[player.id].position).toEqual({x: budget === 5 ? 4 : 3, y: 4});
+  expect(result.movementRemainingFt[player.id]).toBe(5);
 });
