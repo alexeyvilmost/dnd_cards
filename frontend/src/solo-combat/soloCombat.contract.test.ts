@@ -313,6 +313,17 @@ describe('solo combat tactical contract', () => {
     expect(plan).toMatchObject({ attacks: true, usesDash: false });
   });
 
+  it('backs away to the declared range but favors an attack without provoking', () => {
+    const ranged = aiState({x: 4, y: 4}, {x: 5, y: 4}, 30);
+    const retreat = planMonsterTurn(ranged.state, ranged.monster, 'player', 60, 20);
+    expect(gridDistanceFt(retreat.firstMove.at(-1)!, {x: 5, y: 4})).toBe(20);
+    expect(retreat).toMatchObject({attacks: true, usesDash: false});
+    const threatened = planMonsterTurn(ranged.state, ranged.monster, 'player', 60, 20,
+      (_origin, path) => path.some(cell => gridDistanceFt(cell, {x: 5, y: 4}) > 5) ? 1 : 0);
+    expect(threatened).toEqual({firstMove: [], dashMove: [], usesDash: false, attacks: true});
+    expect(ranged.state.tokens.monster.position).toEqual({x: 4, y: 4});
+  });
+
   it('compiles reach and damage adjustments from the monster contract', () => {
     const template = {
       ...goblin(),

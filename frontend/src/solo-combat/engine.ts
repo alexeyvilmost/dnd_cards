@@ -2758,6 +2758,40 @@ function finishMovementOpportunity(state: SoloCombatState, rng: Rng): SoloCombat
   return next;
 }
 
+/** Shared eligibility for the movement executor and the AI's route assessment. */
+function movementOpportunityEnemies(state: SoloCombatState, moverId: string, destination: GridPosition): ActorState[] {
+  const mover = state.world.actors[moverId];
+  const start = state.tokens[moverId]?.position;
+  if (!mover || !start) return [];
+  return Object.values(state.world.actors).filter(actor => (
+    !state.pendingMovementStep?.processedOpportunityActorIds.includes(actor.id)
+    && combatRelation(state, moverId, actor.id) === 'enemy' && actor.runtime.hp.current > 0
+    && actor.runtime.resources.reaction > 0 && !deniedCapabilities(actor.runtime, actor.passives ?? []).has('reaction')
+    && (!deniesOpportunityAttack(mover) || actorOwnsSentinel(actor))
+    && opportunityActionsFor(state, actor.id).some(action => {
+      const position = state.tokens[actor.id]?.position;
+      const reach = monsterAttackRange(action);
+      return position && gridDistanceFt(position, start) <= reach && gridDistanceFt(position, destination) > reach;
+    }) && spatialFacts(state, actor.id, moverId).canSeeTarget
+  ));
+}
+
+/** Counts distinct available reactions along a proposed route without rolling,
+ * spending resources, or modifying the authoritative world. */
+export function monsterRouteOpportunityRisk(
+  state: SoloCombatState, moverId: string, origin: GridPosition, path: GridPosition[],
+): number {
+  const threatenedBy = new Set<string>();
+  let position = origin;
+  for (const destination of path) {
+    const projected = {...state, pendingMovementStep: undefined,
+      tokens: {...state.tokens, [moverId]: {...state.tokens[moverId], position}}};
+    for (const enemy of movementOpportunityEnemies(projected, moverId, destination)) threatenedBy.add(enemy.id);
+    position = destination;
+  }
+  return threatenedBy.size;
+}
+
 function executeOpportunityAttacks(
   state: SoloCombatState,
   moverId: string,
@@ -2767,7 +2801,6 @@ function executeOpportunityAttacks(
   const mover = state.world.actors[moverId];
   const start = state.tokens[moverId]?.position;
   if (!mover || !start) return state;
-  const moverDeniedOrdinaryOpportunity = deniesOpportunityAttack(mover);
   let next = finishMovementOpportunity(state, rng);
   if (monsterMovementPaused(next) || effectiveCombatActorSpeedFt(next, moverId) === 0) return next;
   const eligibleActions = (actorId: string) => opportunityActionsFor(next, actorId).filter(action => {
@@ -2775,13 +2808,7 @@ function executeOpportunityAttacks(
     const reach = monsterAttackRange(action);
     return position && gridDistanceFt(position, start) <= reach && gridDistanceFt(position, destination) > reach;
   });
-  const enemies = Object.values(next.world.actors).filter(actor => (
-    !next.pendingMovementStep?.processedOpportunityActorIds.includes(actor.id)
-    && combatRelation(next, moverId, actor.id) === 'enemy' && actor.runtime.hp.current > 0
-    && actor.runtime.resources.reaction > 0 && !deniedCapabilities(actor.runtime, actor.passives ?? []).has('reaction')
-    && (!moverDeniedOrdinaryOpportunity || actorOwnsSentinel(actor))
-    && eligibleActions(actor.id).length > 0 && spatialFacts(next, actor.id, moverId).canSeeTarget
-  ));
+  const enemies = movementOpportunityEnemies(next, moverId, destination);
   for (const enemy of enemies) {
     if (next.world.actors[moverId].runtime.hp.current <= 0) continue;
     const options = eligibleActions(enemy.id);
@@ -3867,7 +3894,9 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
   const maximumAttackRange = attackActions.reduce((maximum, action) => (
     Math.max(maximum, monsterAttackRange(action))
   ), monster.attackProfile?.reachFt ?? 5);
-  const plan = planMonsterTurn(state, monster, targetId, maximumAttackRange, monsterAIProfile(monster).preferred_range_ft);
+  const plan = planMonsterTurn(state, monster, targetId, maximumAttackRange,
+    monsterAIProfile(monster).preferred_range_ft,
+    (origin, path) => monsterRouteOpportunityRisk(state, monsterId, origin, path));
   let next = state;
   if (plan.firstMove.length) next = executeMonsterRoute(next, monsterId, plan.firstMove, rng);
   if (next.world.actors[monsterId].runtime.hp.current <= 0 || next.outcome !== 'active'

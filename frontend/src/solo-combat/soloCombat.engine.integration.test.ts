@@ -15,6 +15,8 @@ import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { actorMustCrawl, gridDistanceFt } from './tacticalGrid';
 import { isPlayerControlledCombatActor, SOLO_COMBAT_KEY, type SoloCombatState } from './types';
 import { UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
+import {monsterRouteOpportunityRisk} from './engine';
+import {planMonsterTurn} from './monsterAi';
 import { STONEWORK_CONTACT_CHOICE_ID } from '../mechanics/collectChoices';
 
 const fixture = compiledFixtureJson as unknown as {
@@ -3742,6 +3744,33 @@ it.each([5, 15])('recomputes the step cost when an opportunity attack knocks the
 
 
 describe('canonical character opportunity attacks', () => {
+  it('assesses retreat using actual available reactions without changing the saved world', async () => {
+    const {participant} = unarmedParticipant();
+    const state = await createSoloCombatState({character: participant.character, participant,
+      selected: [{monster: goblin(), quantity: 1}], actions: [scimitar()], effects: [], rng: () => 0.5});
+    const monster = Object.values(state.world.actors).find(row => row.kind === 'monster')!;
+    const player = state.world.actors[participant.character.id];
+    state.tokens[player.id].position = {x: 4, y: 4};
+    state.tokens[monster.id].position = {x: 5, y: 4};
+    const origin = state.tokens[monster.id].position;
+    const risk = (start: {x: number; y: number}, path: Array<{x: number; y: number}>) =>
+      monsterRouteOpportunityRisk(state, monster.id, start, path);
+    const before = clone(state);
+    expect(risk(origin, [{x: 6, y: 4}, {x: 5, y: 4}, {x: 6, y: 4}])).toBe(1);
+    expect(planMonsterTurn(state, monster, player.id, 60, 20, risk).firstMove).toEqual([]);
+    expect(state).toEqual(before);
+    player.runtime.resources.reaction = 0;
+    const retreat = planMonsterTurn(state, monster, player.id, 60, 20, risk);
+    expect(gridDistanceFt(retreat.firstMove.at(-1)!, state.tokens[player.id].position)).toBe(20);
+    expect(retreat.attacks).toBe(true);
+    player.runtime.resources.reaction = 1;
+    player.runtime.activeEffects = [{id: 'stunned', name: 'Stunned', source: 'test', mechanics: {kind: 'condition', value: 'stunned'}}];
+    expect(risk(origin, [{x: 6, y: 4}])).toBe(0);
+    player.runtime.activeEffects = [];
+    player.runtime.hp.current = 0;
+    expect(risk(origin, [{x: 6, y: 4}])).toBe(0);
+  });
+
   it.each([false, true])('offers an optional style-aware unarmed attack with held weapon %s', async held => {
     const setup = unarmedParticipant();
     const participant = setup.participant;

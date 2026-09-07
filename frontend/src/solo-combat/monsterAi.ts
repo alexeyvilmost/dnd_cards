@@ -30,13 +30,14 @@ export function planMonsterTurn(
   monster: ActorState,
   targetActorId: string,
   attackRangeFt = 5,
-  preferredRangeFt = attackRangeFt,
+  preferredRangeFt?: number,
+  routeRisk: (origin: GridPosition, path: GridPosition[]) => number = () => 0,
 ): MonsterTurnPlan {
   const start = state.tokens[monster.id]?.position;
   const target = state.tokens[targetActorId]?.position;
   if (!start || !target) throw new Error('ИИ не видит участника на тактической сетке');
   const range = Math.max(5, attackRangeFt);
-  const preferred = Math.max(5, Math.min(range, preferredRangeFt));
+  const preferred = Math.max(5, Math.min(range, preferredRangeFt ?? range));
   const grappled = Object.values(state.world.grapples ?? {}).some((grapple) => (
     grapple.targetActorId === monster.id
   ));
@@ -51,7 +52,8 @@ export function planMonsterTurn(
   const rating = (position: GridPosition) => {
     const distance = gridDistanceFt(position, target);
     // Legal attacks come first; then close to the profile's normal range.
-    return [canAttack(position) ? 0 : 1, Math.max(0, distance - preferred)];
+    return [canAttack(position) ? 0 : 1, preferredRangeFt === undefined
+      ? Math.max(0, distance - preferred) : Math.abs(distance - preferred)];
   };
   const compare = (left: GridPosition, right: GridPosition) => {
     const a = rating(left);
@@ -59,8 +61,12 @@ export function planMonsterTurn(
     return a[0] - b[0] || a[1] - b[1];
   };
   const choose = (origin: GridPosition, feet: number) => (
-    [{destination: origin, path: [] as GridPosition[], costFt: 0}, ...reachableRoutes(at(origin), monster.id, feet)].sort((left, right) => (
-      compare(left.destination, right.destination)
+    [{destination: origin, path: [] as GridPosition[], costFt: 0}, ...reachableRoutes(at(origin), monster.id, feet)]
+      .map(route => ({...route, risk: routeRisk(origin, route.path), rating: rating(route.destination)}))
+      .sort((left, right) => (
+      left.rating[0] - right.rating[0]
+      || left.risk - right.risk
+      || left.rating[1] - right.rating[1]
       || left.costFt - right.costFt
       || left.destination.y - right.destination.y || left.destination.x - right.destination.x
     ))[0]
