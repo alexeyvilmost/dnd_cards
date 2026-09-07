@@ -8,6 +8,15 @@ import {fileURLToPath} from 'node:url';
 const hashOf = bytes => `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
 const require = createRequire(import.meta.url);
 
+// Independent of executable artifact versions, so archived workers also get a
+// verifiable journal. Normalize objects while preserving array order.
+export function snapshotHash(value) {
+  const normalize = item => Array.isArray(item) ? item.map(normalize)
+    : item && typeof item === 'object'
+      ? Object.fromEntries(Object.keys(item).sort().map(key => [key, normalize(item[key])])) : item;
+  return hashOf(JSON.stringify(normalize(value)));
+}
+
 export async function createRulesWorker({artifactFile, artifactsDirectory, token, sourceCommit = 'development'}) {
   if (typeof token !== 'string' || token.length < 32) throw Error('Worker token must contain at least 32 characters');
   const current = await readFile(artifactFile);
@@ -47,11 +56,15 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
       const artifact = await load(hash);
       if (request.url === '/initialize') {
         const result = await artifact.initializeRoguelikeCombat(body.input, hash);
-        return send(200, result.status === 'ready'
-          ? {...result, ...artifact.projectRoguelikeCombatPatch(result.envelope, body.input.character)} : result);
+        if (result.status !== 'ready') return send(200, result);
+        const projected = artifact.projectRoguelikeCombatPatch(result.envelope, body.input.character);
+        return send(200, {...result, ...projected,
+          trace: {beforeHash: '', afterHash: snapshotHash(projected.envelope), runtimeRevision: projected.patch.runtime_revision}});
       }
       const result = artifact.stepRoguelikeCombat(body.envelope, body.intent, hash);
-      return send(200, {...result, ...artifact.projectRoguelikeCombatPatch(result.envelope, body.character)});
+      const projected = artifact.projectRoguelikeCombatPatch(result.envelope, body.character);
+      return send(200, {...result, ...projected,
+        trace: {beforeHash: snapshotHash(body.envelope), afterHash: snapshotHash(projected.envelope), runtimeRevision: projected.patch.runtime_revision}});
     } catch (error) {
       // No request or snapshot logging: the envelope contains private entropy.
       const missing = error.code === 'ENOENT';

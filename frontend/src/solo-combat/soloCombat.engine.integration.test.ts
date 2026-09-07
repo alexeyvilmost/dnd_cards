@@ -2289,6 +2289,29 @@ describe('solo combat engine vertical integration', () => {
     expect(state.log.at(-1)?.text).toContain('Стража');
   });
 
+  it('spends the complete Dash allotment after reload even when its catalog row has no speed modifier', async () => {
+    const participant = fighterSeed();
+    const actorId = participant.character.id;
+    const basicDash = dash();
+    basicDash.mechanics = { ...basicDash.mechanics, effects: [] };
+    let state = await createSoloCombatState({
+      character: participant.character, participant, selected: [{ monster: goblin(), quantity: 1 }],
+      actions: [scimitar(), basicDash], effects: [], dashAction: basicDash, rng: () => 0.5,
+    });
+    state.tokens[actorId].position = { x: 0, y: 9 };
+    state = executeCombatAction({ state, actorId, actionId: basicDash.id, targetIds: [actorId], rng: () => 0 });
+    expect(state.movementRemainingFt[actorId]).toBe(60);
+    state = clone(state);
+    state = moveActor({ state, actorId, destination: { x: 8, y: 9 }, rng: () => 0 });
+    expect(state.movementRemainingFt[actorId]).toBe(20);
+    expect(() => moveActor({ state, actorId, destination: { x: 3, y: 9 }, maxFeet: 999 })).toThrow();
+    for (const x of [NaN, Infinity, 1.5]) {
+      expect(() => moveActor({ state, actorId, destination: { x, y: 9 } })).toThrow();
+    }
+    state = moveActor({ state, actorId, destination: { x: 4, y: 9 }, rng: () => 0 });
+    expect(state.movementRemainingFt[actorId]).toBe(0);
+  });
+
   it('connects the reusable Dash and Disengage data rows to tactical movement', async () => {
     const participant = fighterSeed();
     const selected = [{ monster: goblin(), quantity: 1 }];

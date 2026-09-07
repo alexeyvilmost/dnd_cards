@@ -1329,7 +1329,7 @@ func (rc *RoguelikeController) Command(c *gin.Context) {
 		}
 		return tx.Create(&RoguelikeCommandReceipt{
 			RunID: runID, UserID: userID, CommandID: request.CommandID,
-			CommandType: request.Type, RequestHash: requestHash, Response: response,
+			CommandType: request.Type, RequestHash: requestHash, Response: response, Request: nonNilRoguelikeMap(request.Payload),
 		}).Error
 	})
 	if err != nil {

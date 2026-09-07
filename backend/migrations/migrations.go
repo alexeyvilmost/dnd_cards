@@ -1279,6 +1279,22 @@ func GetAllMigrations() []Migration {
 			},
 			Down: func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "203_roguelike_combat_journal",
+			Description: "Persist private replay baselines and accepted combat decisions atomically",
+			Up: func(db *sql.DB) error {
+				_, err := db.Exec(`ALTER TABLE roguelike_command_receipts ADD COLUMN IF NOT EXISTS request jsonb NOT NULL DEFAULT '{}';
+CREATE TABLE IF NOT EXISTS roguelike_combat_events (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(), run_id uuid NOT NULL REFERENCES roguelike_runs(id) ON DELETE CASCADE,
+ command_id uuid NOT NULL, revision bigint NOT NULL, combat_key char(64) NOT NULL,
+ attempt integer NOT NULL, encounter_number integer NOT NULL, record jsonb NOT NULL,
+ created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(run_id, command_id), UNIQUE(run_id, revision)
+);
+CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_events(run_id, combat_key, revision);`)
+				return err
+			},
+			Down: func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

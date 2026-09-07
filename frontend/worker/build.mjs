@@ -7,3 +7,4 @@ const forbidden = Object.keys(result.metafile.inputs).filter(name => /node_modul
   || /^src\/api\//.test(name) || name === 'src/character/api.ts' || name === 'src/utils/resources.ts');
 if (forbidden.length) throw Error(`Worker imports browser transport: ${forbidden.join(', ')}`);
 await copyFile('worker/server.mjs', 'worker/dist/server.mjs');
+await copyFile('worker/replay.mjs', 'worker/dist/replay.mjs');

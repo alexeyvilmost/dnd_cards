@@ -147,3 +147,18 @@ Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br
 - Proactive worker intents now explicitly reject off-turn actions and unresolved decisions, including movement; direct API calls cannot bypass the hotbar's disabled state.
 - Retain old immutable assets for90days independently of Docker image retention. nginx fallback was tested in an isolated container: retained asset200, missing asset404. Service worker registration no longer skips already-controlled tabs.
 - Remaining movement work still includes full player route/crossing semantics and broader NPC utility/reaction coverage; this increment does not certify all six gated monsters.
+
+
+## Production acceptance: b4aa95a
+
+- Exact TimeWeb/public SHA `b4aa95a1fde053dd424ea3767ea5f91d20fed232`; all four containers healthy. Full offline regression:384 files /3200 tests.
+- The already-open Tough×2 fight survived deployment and reload. Second Wind healed5→10HP and committed revision39 using the original17f22d98 artifact, proving archived worker dispatch after the executable changed.
+- The previous release's `/assets/index-CELMA1pU.js` returned200 as JavaScript (527966bytes). New release asset retention is active. This proves chunk continuity; preservation of unsaved Forge forms still needs separate acceptance.
+- Before that fight, the existing sheet short-rest flow spent one Hit Die, healed6→16HP, restored short-rest resources and advanced the clock10→11h.
+
+## Movement ledger and replay journal (pending deployment)
+
+- Common movement preserves the full Dash allotment when the catalog row does not express a speed modifier. Zero-speed constraints still stop voluntary movement; explicit maximum distance cannot override the ledger; fractional/nonfinite board coordinates are rejected. Regression exercises40ft followed by20ft after JSON reload.
+- Internal append-only combat events record accepted intents, actual RNG values, executable hash and before/after snapshot hashes. One baseline per combat avoids repeating catalogs. Existing fights receive a baseline at the first accepted command after rollout. Events and receipts commit in the same run/character transaction.
+- The private Node replay tool dispatches the pinned artifact and includes the shared runtime projection. A real HTTP worker scenario replays three complete turns after JSON export and detects removed commands or changed hashes. Camp command receipts also retain input payloads.
+- This is snapshot-plus-command replay; initialization starts from its accepted baseline, not an event-only rebuild of character/catalog assembly. No public endpoint exposes entropy.

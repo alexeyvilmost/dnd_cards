@@ -60,10 +60,27 @@ type RoguelikeCommandReceipt struct {
 	CommandType string    `gorm:"type:varchar(40);not null"`
 	RequestHash string    `gorm:"type:char(64);not null"`
 	Response    JSONMap   `gorm:"type:jsonb;not null"`
+	Request     JSONMap   `json:"-" gorm:"type:jsonb;not null;default:'{}'"`
 	CreatedAt   time.Time
 }
 
 func (RoguelikeCommandReceipt) TableName() string { return "roguelike_command_receipts" }
+
+// Internal append-only replay records; never exposed through the run DTO.
+// One baseline per combat keeps the immutable catalog out of every event.
+type RoguelikeCombatEvent struct {
+	ID              uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	RunID           uuid.UUID `gorm:"type:uuid;not null"`
+	CommandID       uuid.UUID `gorm:"type:uuid;not null"`
+	Revision        int64     `gorm:"not null"`
+	CombatKey       string    `gorm:"type:char(64);not null"`
+	Attempt         int       `gorm:"not null"`
+	EncounterNumber int       `gorm:"not null"`
+	Record          JSONMap   `json:"-" gorm:"type:jsonb;not null"`
+	CreatedAt       time.Time
+}
+
+func (RoguelikeCombatEvent) TableName() string { return "roguelike_combat_events" }
 
 type CreateRoguelikeRunRequest struct {
 	SourceCharacterID uuid.UUID `json:"source_character_id" binding:"required"`

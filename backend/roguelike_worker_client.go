@@ -28,6 +28,7 @@ type roguelikeWorkerResult struct {
 	Patch               JSONMap               `json:"patch"`
 	ContentManifestHash string                `json:"contentManifestHash"`
 	RandomValues        []float64             `json:"randomValues"`
+	Trace               JSONMap               `json:"trace"`
 }
 
 func (client roguelikeWorkerClient) call(ctx context.Context, endpoint string, body any) (*roguelikeWorkerResult, error) {

@@ -2874,7 +2874,8 @@ export function moveActor(input: {
 }): SoloCombatState {
   const token = input.state.tokens[input.actorId];
   if (!token) throw new Error('У участника нет токена на поле');
-  if (input.destination.x < 0 || input.destination.y < 0
+  if (!Number.isInteger(input.destination.x) || !Number.isInteger(input.destination.y)
+    || input.destination.x < 0 || input.destination.y < 0
     || input.destination.x >= TACTICAL_WIDTH || input.destination.y >= TACTICAL_HEIGHT) {
     throw new Error('Клетка находится за пределами поля');
   }
@@ -2886,13 +2887,11 @@ export function moveActor(input: {
   // would erase that data-driven action. Effective speed is projected whenever
   // a turn starts (and when combat is created), which is where speed conditions
   // such as Ray of Frost establish the next turn's movement budget.
-  const available = input.voluntary === false
-    ? (input.state.movementRemainingFt[input.actorId] ?? effectiveActorSpeedFt(actor))
-    : Math.min(
-      input.state.movementRemainingFt[input.actorId] ?? effectiveActorSpeedFt(actor),
-      effectiveCombatActorSpeedFt(input.state, input.actorId),
-    );
-  const maxFeet = input.maxFeet ?? available;
+  const available = input.voluntary !== false && effectiveCombatActorSpeedFt(input.state, input.actorId) === 0
+    ? 0 : (input.state.movementRemainingFt[input.actorId] ?? effectiveActorSpeedFt(actor));
+  const maxFeet = input.voluntary === false
+    ? (input.maxFeet ?? available) : Math.min(input.maxFeet ?? available, available);
+  if (!Number.isFinite(maxFeet) || maxFeet < 0) throw new Error('Некорректный запас перемещения');
   const movementCost = input.voluntary === false
     ? distance
     : movementCostThroughAreas(input.state, token.position, input.destination, distance)

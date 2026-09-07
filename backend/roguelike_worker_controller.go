@@ -137,6 +137,9 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 		if err = saveRoguelikeRun(tx, locked); err != nil {
 			return err
 		}
+		if err = appendRoguelikeCombatEvent(tx, locked, request, run.CombatEnvelope, result); err != nil {
+			return err
+		}
 		accepted, err := ownedRoguelikeRun(tx, runID, userID, false)
 		if err != nil {
 			return err
@@ -146,7 +149,7 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 			return err
 		}
 		return tx.Create(&RoguelikeCommandReceipt{RunID: runID, UserID: userID, CommandID: request.CommandID,
-			CommandType: request.Type, RequestHash: requestHash, Response: response}).Error
+			CommandType: request.Type, RequestHash: requestHash, Response: response, Request: nonNilRoguelikeMap(request.Payload)}).Error
 	})
 	if err != nil {
 		writeRoguelikeError(c, err)
