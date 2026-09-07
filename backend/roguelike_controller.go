@@ -357,8 +357,9 @@ func roguelikeCheckpoint(run *RoguelikeRun, character *CharacterV3) (JSONMap, er
 		"experience": run.Experience, "gold": run.Gold, "supplies": run.Supplies,
 		"encounters_won": run.EncountersWon, "game_clock_hours": run.GameClockHours,
 		"last_long_rest_hour": run.LastLongRestHour, "paid_refresh_count": run.PaidRefreshCount,
-		"pending_level": run.PendingLevel,
-		"shop":          run.Shop, "character": characterMap,
+		"pending_level":     run.PendingLevel,
+		"encounter_history": roguelikeEncounterHistory(run.Checkpoint),
+		"shop":              run.Shop, "character": characterMap,
 	})
 }
 
@@ -579,22 +580,31 @@ func startRoguelikeEncounter(tx *gorm.DB, run *RoguelikeRun) error {
 	for _, monster := range monsters {
 		available[monster.Slug] = monster
 	}
-	candidates := roguelikeEncounterCandidates(level, budget, run.EncountersWon, available)
+	candidates := avoidRepeatedRoguelikeComposition(roguelikeEncounterCompositions(level, budget, run.EncountersWon, available), roguelikeEncounterHistory(run.Checkpoint))
 	if len(candidates) == 0 {
 		return roguelikeError(http.StatusConflict, "encounter_pool_unavailable", "для этого этапа нет проверенного состава встречи")
 	}
 	index := roguelikeDeterministicInt(run.RunSeed, "encounter", run.EncountersWon+1, len(candidates))
 	selected := candidates[index]
-	catalog, err := freezeRoguelikeMonsterCatalog(tx, selected.Monster)
+	selectedMonsters := []Monster{}
+	roster := []map[string]any{}
+	names := []string{}
+	for _, member := range selected.Members {
+		selectedMonsters = append(selectedMonsters, member.Monster)
+		roster = append(roster, map[string]any{"monster_id": member.Monster.ID,
+			"monster_slug": member.Entry.Slug, "monster_name": member.Monster.Name,
+			"quantity": member.Quantity, "xp_each": member.Entry.XP})
+		names = append(names, fmt.Sprintf("%s ×%d", member.Monster.Name, member.Quantity))
+	}
+	catalog, err := freezeRoguelikeMonsterCatalog(tx, selectedMonsters)
 	if err != nil {
 		return err
 	}
 	encounter, err := mapFromJSON(map[string]any{
 		"number": run.EncountersWon + 1, "difficulty": difficulty, "budget_xp": budget,
-		"monster_id": selected.Monster.ID, "monster_slug": selected.Monster.Slug,
-		"monster_name": selected.Monster.Name, "quantity": selected.Quantity,
-		"xp_each": selected.Entry.XP, "xp_total": selected.Entry.XP * selected.Quantity,
-		"generator_version": "roguelike-encounters-v2", "catalog": catalog,
+		"monster_name": strings.Join(names, ", "), "quantity": selected.Quantity,
+		"roster": roster, "composition_key": selected.Key, "xp_total": selected.XP,
+		"generator_version": "roguelike-encounters-v3", "catalog": catalog,
 	})
 	if err != nil {
 		return err
@@ -776,10 +786,20 @@ func rewardRoguelikeVictory(tx *gorm.DB, run *RoguelikeRun) error {
 	if err != nil {
 		return err
 	}
+	history := roguelikeEncounterHistory(run.Checkpoint)
+	if key, ok := run.Encounter["composition_key"].(string); ok {
+		history = append(history, key)
+	}
+	if len(history) > 5 {
+		history = history[len(history)-5:]
+	}
 	run.Encounter = JSONMap{}
 	run.Phase = RoguelikePhaseCamp
 	run.Status = RoguelikeStatusActive
 	run.Checkpoint, err = roguelikeCheckpoint(run, run.Character)
+	if err == nil {
+		run.Checkpoint["encounter_history"] = history
+	}
 	return err
 }
 

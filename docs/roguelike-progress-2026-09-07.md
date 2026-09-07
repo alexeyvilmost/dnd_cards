@@ -13,7 +13,7 @@ The original plan is `docs/roguelike-implementation-plan-2026-09-07.md` in the u
 | 5–6: fighter and all choices | Existing Forge and rules engine reused; Champion L3→4→5 checked in production | Partial: do not infer full support for all four subclasses, ten styles, twenty maneuvers, eligible feats and spell choices from this test. Dependency manifest and full roundtrip matrix remain |
 | 7: monsters | 18 materialized records, 11 with positive generation weight | Partial: goblin escape; zombie fortitude; spider/hobgoblin poison clauses; bugbear grab/drag; captain/veteran Parry remain gated |
 | 8: AI | Deterministic target choice, melee/ranged attack choice, pack/frenzy advantages; this change adds legal movement budget, terrain, sight repositioning, preferred range and interrupt stop | Partial: reactions, utility actions, complete path/area traversal and tactical profiles remain |
-| 9: generator/rewards | Separate RNG streams, stage budgets, body caps, one-time rewards | Partial: current encounters contain one monster type. Mixed composition allowlist, history constraints and versioned frozen encounter inputs remain |
+| 9: generator/rewards | Separate RNG streams, stage budgets, body caps, one-time rewards | Mixed composition allowlist, bounded history and frozen monster inputs are implemented below. Remaining: full combat/economy balance and complete rules/player content version pinning |
 | 10: camp/shop | Sheet rests/items/inventory; purchase, refresh, pin; gold/supplies/time persistence checked in browser | Delivered core flow. Full resource/attunement/mastery-change and item matrix still requires validation |
 | 11: completion | Production level 5 + 14000 XP victory and persisted result checked using QA setup | Delivered vertical flow; not a substitute for an unmodified complete playthrough with all subclasses |
 | 12: simulation/rollout | Production SHA checks, tests, browser checks; 1000 XP pacing simulations added here | Partial: full combat simulations across build × level × encounter and economy policy remain |
@@ -60,3 +60,21 @@ Do not enable the remaining monsters or advertise complete original-plan coverag
 Browser acceptance exposed a missing tactical command to stand. The existing combat hotbar now exposes it beside movement while Prone. It costs half effective speed rounded down, spends no action, and is unavailable at zero speed, insufficient remaining movement or a pending decision. The same command is used by monster AI. Crawling costs one extra foot per foot, additive with difficult terrain; reachable-cell projection and actual movement use the same surcharge. Focused engine tests cover standing, persistence, rejection cases, crawling and AI standing before attacking.
 
 Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br-2024/rules-glossary
+
+
+## Production acceptance: 0587551
+
+- TimeWeb verified exact SHA `05875512ec831c1e8939b290c655875ee5e84098`.
+- Full suite: 381 files / 3166 tests. An additional odd-speed rounding scenario passed afterward in the 53-case focused combat suite; TypeScript and lint passed.
+- Built-in browser loaded the existing Prone combat after deployment. Standing consumed 15 of 30 ft., retained 15/22 HP, spent no action/bonus/reaction and removed its button. Reload retained the 15-ft. ledger and removed condition.
+- The screenshot identified a third utility button wrapping beyond the existing hotbar height. The follow-up keeps the three utility controls in one row while Prone.
+- In the actual battle, Unarmed Fighting dealt d8+3 damage. Action Surge granted and then consumed its separate action budget, allowing a second attack that defeated one wolf.
+
+## Mixed compositions
+
+- Added reviewed pairings: bandit/guard; kobold/giant rat; guard/tough; bandit/tough; skeleton/animated armor; wolf/dire wolf; ogre/berserker. Pairs have explicit level gates. Three-body variants only appear at L3+; initial two L1 fights remain single enemies.
+- Every member still requires positive generation weight, an existing record, its minimum level and its own body cap. Total bodies and XP obey the existing encounter envelope.
+- The run stores the full roster and frozen dependencies. Old single-species records still load. The same roster projection is used by navigation and battle setup.
+- Checkpoints retain the last five won composition keys. A third identical composition in a row is excluded when another legal candidate exists; reserve selection cannot become empty.
+- The existing reward transaction uses total roster XP and body count, preserving one-time rewards.
+- 1000 deterministic successful-encounter simulations: 45–57 victories, mean 50.39, all 11 enabled monsters visited. These simulations do not measure combat survival.

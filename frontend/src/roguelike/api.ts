@@ -22,6 +22,8 @@ export interface RoguelikeShop {
 }
 
 export interface RoguelikeEncounter {
+  composition_key?: string;
+  roster?: Array<{ monster_id: string; monster_slug: string; monster_name: string; quantity: number; xp_each: number }>;
   generator_version?: string;
   catalog?: { version: 1; monsters: Monster[]; actions: Action[]; effects: PassiveEffect[] };
   number?: number;

@@ -16,10 +16,11 @@ func TestRoguelikeProgressionSeedsReachVictory(t *testing.T) {
 	for seedIndex := 0; seedIndex < 1000; seedIndex++ {
 		seed := fmt.Sprintf("roguelike-pacing-v1:%d", seedIndex)
 		xp, encounters := 0, 0
+		history := []string{}
 		for xp < roguelikeVictoryXP {
 			level := roguelikeLevelForXP(xp)
 			_, budget := roguelikeEncounterBudget(level, xp)
-			candidates := roguelikeEncounterCandidates(level, budget, encounters, available)
+			candidates := avoidRepeatedRoguelikeComposition(roguelikeEncounterCompositions(level, budget, encounters, available), history)
 			if len(candidates) == 0 {
 				t.Fatalf("seed %d stopped at XP %d", seedIndex, xp)
 			}
@@ -33,11 +34,15 @@ func TestRoguelikeProgressionSeedsReachVictory(t *testing.T) {
 				t.Fatal("camp changed encounter")
 			}
 			selected := candidates[selectedIndex]
-			if selected.Entry.GeneratorWeight <= 0 || selected.Entry.MinLevel > level {
-				t.Fatal("unsupported candidate")
+			for _, member := range selected.Members {
+				if member.Entry.GeneratorWeight <= 0 || member.Entry.MinLevel > level {
+					t.Fatal("unsupported candidate")
+				}
+				visits[member.Entry.Slug]++
 			}
-			xp += selected.Entry.XP * selected.Quantity
-			visits[selected.Entry.Slug]++
+			xp += selected.XP
+			history = append(history, selected.Key)
+
 			encounters++
 			if encounters > 200 {
 				t.Fatalf("seed %d exceeded progression safety limit", seedIndex)

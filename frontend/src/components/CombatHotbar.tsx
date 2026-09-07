@@ -468,7 +468,7 @@ export default function CombatHotbar({
             </span>
           ))}
         </div>
-        <div className="combat-hotbar__utility" role="group" aria-label="Управление полем">
+        <div className={`combat-hotbar__utility${actorMustCrawl(actor) ? ' has-stand' : ''}`} role="group" aria-label="Управление полем">
           {actorMustCrawl(actor) && <button type="button" className="combat-utility-button" disabled={disabled || !canStandActor(state, actorId)} onClick={onStand} title="Встать, потратив половину скорости">
             <ArrowUp /><span>Встать</span><small>{standMovementCost(state, actorId)} фт.</small>
           </button>}

@@ -70,6 +70,7 @@ import type { ActionWorldInput } from '../rules-core/domain';
 import type { WorldObjectState } from '../rules-core/worldObjects';
 import { bindCombatWorldInputFacts } from '../solo-combat/worldInput';
 import { roguelikeApi } from '../roguelike/api';
+import { runEncounterSelection } from '../roguelike/navigation';
 import './CharacterForge.css';
 import './CharacterSheetV2.css';
 import './SoloCombatPage.css';
@@ -285,9 +286,7 @@ export default function SoloCombatPage() {
         participantCharactersRef.current = { [loadedCharacter.id]: loadedCharacter };
         setParticipantCharacters(participantCharactersRef.current);
         const requested = loadedRun
-          ? loadedCharacter.turn_state?.solo_combat_v1 ? []
-            : loadedRun.encounter.monster_id && loadedRun.encounter.quantity
-              ? [{ id: loadedRun.encounter.monster_id, quantity: loadedRun.encounter.quantity }] : []
+          ? loadedCharacter.turn_state?.solo_combat_v1 ? [] : runEncounterSelection(loadedRun.encounter)
           : initialRequestedRef.current;
         const pinnedCatalog = loadedRun?.encounter.catalog;
         if (pinnedCatalog && pinnedCatalog.version !== 1) throw new Error('Версия сохранённого каталога встречи не поддерживается');

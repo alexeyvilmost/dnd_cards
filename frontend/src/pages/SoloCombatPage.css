@@ -1034,3 +1034,14 @@
 .combat-sheet-effect .active-effect-card__summary small,
 .combat-actor-inspector__effects .active-effect-card__summary small { color: #c9b99f; }
 .combat-sheet-drawer__full { display: block !important; position: sticky; bottom: 0; margin: 12px 0 0 !important; padding: 11px; border: 1px solid #8b673c; border-radius: 8px; background: #261d13; color: #e0b66f !important; text-align: center; text-decoration: none; }
+
+
+.combat-hotbar__utility.has-stand {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.combat-hotbar__utility.has-stand .combat-utility-button {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+}
