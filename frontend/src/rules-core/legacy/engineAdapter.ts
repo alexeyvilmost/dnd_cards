@@ -72,4 +72,4 @@ export type {
 export type { ModifierQueryFacts } from '../../engine/modifiers';
 export type { EvalContext } from '../../engine/circumstances';
 
-export {perceivesWithoutSight} from '../../engine/senses';
+export {canHear, perceivesWithoutSight} from '../../engine/senses';

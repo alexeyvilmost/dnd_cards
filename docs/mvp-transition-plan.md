@@ -255,3 +255,6 @@ Damage events may include `calculation` with `beforeResistance` and ordered `adj
 
 
 Held damage events may additionally persist `deferredConsequences` (critical and concentration-disadvantage booleans). Only executions with an eligible damage reaction use it. Damage-dependent expiry, zero-HP survival and damage listeners settle after the final mitigation; declining the reaction settles the original damage. Old snapshots without this marker retain their original execution semantics. No triggering attack or damage dice are rerolled.
+
+
+Targeting may require `requires_target_perception`: the target must see or hear the source. The board supplies directed `targetCanHearSource` in addition to existing visibility. Rules core rejects absent/contradictory observations before cost and RNG; Hearing uses the existing data-owned automatic failure of hearing-dependent checks; certified condition records remain unchanged. Rally uses this requirement and the acting Fighter's class level for temporary HP.

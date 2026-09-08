@@ -260,6 +260,8 @@ export interface SpatialFacts {
    */
   canSeeTarget?: boolean;
   targetCanSeeSource?: boolean;
+  /** Explicit board/GM observation; absence does not establish audibility. */
+  targetCanHearSource?: boolean;
   /**
    * Explicit consent supplied by the board/GM for rules that target a willing
    * creature. Absence is deliberately not treated as consent.
@@ -322,6 +324,8 @@ export interface ActionTargeting {
   /** Content-owned "a target you can see" requirement. This is distinct from
    * geometric line of sight: attacks may still target an unseen creature. */
   requiresSight?: boolean;
+  /** Target must see or hear the source, e.g. Rally. */
+  requiresTargetPerception?: boolean;
   allowedRelations: Relation[];
   /** Catalog-owned legality requirements, never client-declared outcomes. */
   requiresWilling?: boolean;

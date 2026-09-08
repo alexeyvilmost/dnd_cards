@@ -10,7 +10,7 @@ import type { WorldObjectState } from '../rules-core/worldObjects';
 import type { SheetCanonicalResourceBindings } from '../character/sheetCanonicalWorld';
 import type { Action, Spell } from '../types';
 import { activeConditionWorldFactEnabled, expandConditionSet } from '../engine/conditions';
-import {perceivesWithoutSight} from '../engine/senses';
+import {canHear, perceivesWithoutSight} from '../engine/senses';
 
 export const SOLO_COMBAT_KEY = 'solo_combat_v1' as const;
 export const SOLO_COMBAT_SCHEMA_VERSION = 1 as const;
@@ -438,6 +438,9 @@ export function spatialFacts(
     relation: combatRelation(state, sourceActorId, targetActorId),
     canSeeTarget: sees(sourceActorId, targetActorId),
     targetCanSeeSource: sees(targetActorId, sourceActorId),
+    targetCanHearSource: Boolean(state.world?.actors[targetActorId])
+      && canHear(state.world!.actors[targetActorId].runtime, state.world!.actors[targetActorId].passives)
+      && !(sourceActor && activeConditionWorldFactEnabled(sourceActor.runtime, 'cannot_speak')),
     nearbyEligibleAllyToTarget,
   };
 }

@@ -981,7 +981,8 @@
           }
         },
         "filter": { "type": "string", "examples": ["any", "enemy", "ally", "ally_and_self", "creature_type:undead"] },
-        "requires_sight": { "type": "boolean" }
+        "requires_sight": { "type": "boolean" },
+        "requires_target_perception": { "type": "boolean" }
       }
     },
 

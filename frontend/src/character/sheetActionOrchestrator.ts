@@ -216,8 +216,9 @@ function validatePayloadFormula(payload: Dict, context: ExecuteContext, target: 
   } else if (['resource', 'restore_resource', 'spend_resource'].includes(kind)) {
     fields.push('amount', 'value');
   }
+  const sourceFormula = ['damage', 'healing', 'temp_hp', 'reduce_damage', 'damage_reduction'].includes(kind);
   for (const field of fields) {
-    if (payload[field] !== undefined) validateFormula(payload[field], context, `${kind}.${field}`, target);
+    if (payload[field] !== undefined) validateFormula(payload[field], context, `${kind}.${field}`, target && !sourceFormula);
   }
   for (const key of ['result', 'results', 'on_hit', 'on_crit', 'on_miss', 'on_fail', 'on_success']) {
     const nested = payload[key];

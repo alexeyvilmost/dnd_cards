@@ -716,6 +716,27 @@ export function describe(formula: string | number, ctx: FormulaContext = {}): st
     const tok = tokens[i];
     const next = tokens[i + 1];
     const next2 = tokens[i + 2];
+    // Fold known scalar functions inside dice expressions without rolling dice.
+    const scalarFunctions = ['min', 'max', 'floor', 'ceil'];
+    if (tok.t === 'id' && scalarFunctions.includes(tok.v.toLowerCase()) && next?.t === 'lparen') {
+      let depth = 0;
+      let end = i + 1;
+      for (; end < tokens.length; end++) {
+        if (tokens[end].t === 'lparen') depth++;
+        if (tokens[end].t === 'rparen' && --depth === 0) break;
+      }
+      const call = tokens.slice(i, end + 1);
+      const known = end < tokens.length && call.every(token => token.t !== 'dice'
+        && (token.t !== 'id' || scalarFunctions.includes(token.v.toLowerCase()) || isNumericScalarKnown(token.v, ctx)));
+      if (known) {
+        const value = evalTokens(call, ctx, false);
+        if (typeof value === 'number' && Number.isFinite(value)) {
+          parts.push(String(value));
+          i = end;
+          continue;
+        }
+      }
+    }
     // Сворачиваем «N * MкK» / «скаляр * MкK» в «(N×M)кK» для превью.
     if (
       next?.t === 'op' && next.v === '*'

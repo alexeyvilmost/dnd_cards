@@ -2512,6 +2512,14 @@ function applyTempHp(
   const fr = rollFormula(formula, formulaCtx(ctx), { rng: ctx.rng });
   const next = cloneState(state);
   next.hp.temp = Math.max(next.hp.temp, fr.total);
+  if (fr.dice.length) {
+    const diceTotal = fr.dice.reduce((sum, die) => sum + (die.discarded ? 0 : die.result), 0);
+    const modifiers = fr.modifiers.reduce((sum, modifier) => sum + modifier.value, 0) === fr.total - diceTotal
+      ? fr.modifiers : [{ value: fr.total - diceTotal, source: 'по формуле' }];
+    events.push(rollEvent('Временные хиты', formattedRoll({
+      kind: 'other', advantage: 'none', dice: fr.dice, modifiers, total: fr.total,
+    })));
+  }
   events.push(tempHpEvent(fr.total));
   return next;
 }

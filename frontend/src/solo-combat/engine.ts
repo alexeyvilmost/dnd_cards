@@ -4374,6 +4374,11 @@ export function selectedTargetsForAction(input: {
       aimPosition: input.clickedPosition, action,
     }).slice(0, action.targeting?.maxTargets ?? 8);
   }
+  if (input.clickedActorId && action.targeting
+    && !action.targeting.allowedRelations.includes(combatRelation(input.state, actorId, input.clickedActorId))) {
+    throw new Error(action.targeting.allowedRelations.length === 1 && action.targeting.allowedRelations[0] === 'ally'
+      ? 'Выберите союзника.' : 'Это действие нельзя применить к выбранной цели.');
+  }
   return input.clickedActorId ? [input.clickedActorId] : [];
 }
 

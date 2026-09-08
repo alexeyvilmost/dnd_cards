@@ -3,6 +3,8 @@ import {CORE_WEAPON_ATTACK, systemActionAsRuleDefinition, unarmedDamageActionFor
 import {meleeWeaponDefenseEligible, singleAttackDefenseBonus} from './attackDefenseRuntime';
 import {
   activeConditionsOf,
+  activeConditionWorldFactEnabled,
+  canHear,
   applyIncomingDamage,
   applyDamageConsequences,
   armorClassValue,
@@ -368,6 +370,9 @@ function factsIssue(action: RuleActionDefinition, targetId: string, facts?: Spat
   if (!targeting.allowedRelations.includes(facts.relation)) {
     return ['IllegalRelation', `${facts.relation} is not a legal relation for ${action.id}`];
   }
+  if (targeting.requiresTargetPerception && facts.targetCanSeeSource !== true && facts.targetCanHearSource !== true) {
+    return ['InvalidFacts', `${targetId} must be able to see or hear the source`];
+  }
   if (targeting.requiresWilling && facts.willing !== true) {
     return ['TargetNotWilling', `${targetId} has not explicitly consented to ${action.id}`];
   }
@@ -425,6 +430,23 @@ function actionValidation(
     if (!target) return rejected(world, 'ActorNotFound', `Unknown target ${targetId}`);
     const issue = factsIssue(action, targetId, factsByTarget?.[targetId]);
     if (issue) return rejected(world, issue[0], issue[1]);
+    if (targeting?.requiresTargetPerception) {
+      const facts = factsByTarget?.[targetId];
+      const source = sourceActorId ? world.actors[sourceActorId] : undefined;
+      if (!source || (source.id === target.id && !targeting.allowedRelations.includes('self'))) {
+        return rejected(world, 'InvalidTargets', 'A companion must be another actor');
+      }
+      const seesSource = facts?.targetCanSeeSource === true && !conditionTargetingSightIssue({
+        world, sourceActorId: target.id, targetActorId: source.id, requiresSight: true,
+        canSeeTarget: facts.targetCanSeeSource, distanceFt: facts.distanceFt,
+      });
+      const hearsSource = facts?.targetCanHearSource === true
+        && canHear(target.runtime, target.passives)
+        && !activeConditionWorldFactEnabled(source.runtime, 'cannot_speak');
+      if (!seesSource && !hearsSource) {
+        return rejected(world, 'CapabilityDenied', `${targetId} cannot see or hear ${source.id}`);
+      }
+    }
     const sightIssue = conditionTargetingSightIssue({
       world,
       sourceActorId,

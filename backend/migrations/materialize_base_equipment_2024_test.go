@@ -57,7 +57,7 @@ func TestBaseEquipment2024DeclaresEveryOfficialWeaponAndArmor(t *testing.T) {
 func TestLatestMigrationIsRegisteredLast(t *testing.T) {
 	migrations := GetAllMigrations()
 	last := migrations[len(migrations)-1]
-	if last.Version != "216_battle_master_parry" {
+	if last.Version != "217_battle_master_rally" {
 		t.Fatalf("last=%s", last.Version)
 	}
 	if last.Up == nil || last.Down == nil {

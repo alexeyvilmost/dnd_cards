@@ -288,6 +288,15 @@ describe('solo combat tactical contract', () => {
     expect(obscured.state.tokens.monster.position).toEqual({ x: 1, y: 1 });
   });
 
+  it('derives directed hearing independently of fog and deafness of the speaker', () => {
+    const { state, monster } = aiState({ x: 0, y: 0 }, { x: 2, y: 0 });
+    state.combatAreas = { fog: { heavilyObscured: true, cells: [{ x: 1, y: 0 }] } } as unknown as SoloCombatState['combatAreas'];
+    expect(spatialFacts(state, 'monster', 'player')).toMatchObject({ targetCanSeeSource: false, targetCanHearSource: true });
+    monster.runtime.activeEffects = [{ id: 'deaf', name: 'Deafened', source: 'test', mechanics: { kind: 'condition', value: 'deafened' } }];
+    expect(spatialFacts(state, 'monster', 'player').targetCanHearSource).toBe(true);
+    expect(spatialFacts(state, 'player', 'monster').targetCanHearSource).toBe(false);
+  });
+
   it('projects directed Blindsight through fog and invisibility within its declared range', () => {
     const setup = aiState({x: 0, y: 0}, {x: 2, y: 0}, 30);
     const {state, monster} = setup;

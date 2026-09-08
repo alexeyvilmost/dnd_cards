@@ -1,3 +1,4 @@
+import { runCampTargetIssue, sheetTargetBelongsToScope } from '../character/sheetInteractionScope';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { charactersV3Api, type CharacterEventRow } from '../character/api';
@@ -686,21 +687,21 @@ export default function SheetActionsPanel({
   const targetCharsRef = useRef<ForgeCharacter[] | null>(null);
   const targetPreviewsRef = useRef<ForgeCharacterPreview[] | null>(null);
   const loadTargetPreviews = useCallback(async (): Promise<ForgeCharacterPreview[]> => {
-    if (targetPreviewsRef.current) return targetPreviewsRef.current;
+    if (targetPreviewsRef.current) return targetPreviewsRef.current.filter(candidate => sheetTargetBelongsToScope({ id: character.id, character_type: character.character_type }, candidate));
     try {
-      const list = await charactersV3Api.listPreviews();
+      const list = (await charactersV3Api.listPreviews()).filter(candidate => sheetTargetBelongsToScope({ id: character.id, character_type: character.character_type }, candidate));
       targetPreviewsRef.current = list;
       return list;
     } catch { return []; }
-  }, []);
+  }, [character.id, character.character_type]);
   const loadTargetChars = useCallback(async (): Promise<ForgeCharacter[]> => {
-    if (targetCharsRef.current) return targetCharsRef.current;
+    if (targetCharsRef.current) return targetCharsRef.current.filter(candidate => sheetTargetBelongsToScope({ id: character.id, character_type: character.character_type }, candidate));
     try {
-      const list = await charactersV3Api.list();
+      const list = (await charactersV3Api.list()).filter(candidate => sheetTargetBelongsToScope({ id: character.id, character_type: character.character_type }, candidate));
       targetCharsRef.current = list;
       return list;
     } catch { return []; }
-  }, []);
+  }, [character.id, character.character_type]);
   const [availableSheetTargets, setAvailableSheetTargets] = useState<ForgeCharacterPreview[]>([]);
   const [localSelectedSheetTargetId, setLocalSelectedSheetTargetId] = useState('');
   const selectedSheetTargetId = targetCharacterIdProp ?? localSelectedSheetTargetId;
@@ -1345,6 +1346,7 @@ export default function SheetActionsPanel({
       if (next.id === character.id) onUpdated(next);
       if (next.id === selectedSheetTargetId) setSelectedSheetTarget(next);
     }
+    cached = cached.filter(candidate => sheetTargetBelongsToScope(character, candidate));
     targetCharsRef.current = cached;
     setAvailableSheetTargets(cached.filter((candidate) => !isCharacterReadOnly(candidate)));
     setCompanionTargets(cached.filter((candidate) => candidate.id !== character.id));
@@ -1366,7 +1368,7 @@ export default function SheetActionsPanel({
     setAvailableSheetTargets([]);
     setCompanionTargets([]);
     try {
-      const refreshed = await charactersV3Api.list();
+      const refreshed = (await charactersV3Api.list()).filter(candidate => sheetTargetBelongsToScope(character, candidate));
       targetCharsRef.current = refreshed;
       setAvailableSheetTargets(refreshed.filter((candidate) => !isCharacterReadOnly(candidate)));
       setCompanionTargets(refreshed.filter((candidate) => candidate.id !== character.id));
@@ -1657,7 +1659,7 @@ export default function SheetActionsPanel({
   const combatCharacters = async (
     session: SheetCombatSession,
   ): Promise<Record<string, ForgeCharacter>> => {
-    const listed = await charactersV3Api.list();
+    const listed = (await charactersV3Api.list()).filter(candidate => sheetTargetBelongsToScope(character, candidate));
     targetCharsRef.current = listed;
     const byId = Object.fromEntries(listed.map((candidate) => [candidate.id, candidate]));
     // Preserve the render-owned current sheet if list caching ever lags its
@@ -1907,6 +1909,9 @@ export default function SheetActionsPanel({
   };
 
   const runAction = async (action: SheetAction) => {
+    const campIssue = runCampTargetIssue(character.character_type,
+      actionInteractsWithTarget(action.mechanics), sheetMechanicsAllowsSelfTarget(action.mechanics));
+    if (campIssue) { setError(campIssue); return; }
     if (panelDisabledReason) {
       setError(panelDisabledReason);
       return;
@@ -2716,6 +2721,9 @@ export default function SheetActionsPanel({
 
   // Доступность + причина недоступности: сперва экипировка (оружие в руке), затем ресурсы.
   const disabledInfo = (action: SheetAction): { disabled: boolean; reason?: string } => {
+    const campIssue = runCampTargetIssue(character.character_type,
+      actionInteractsWithTarget(action.mechanics), sheetMechanicsAllowsSelfTarget(action.mechanics));
+    if (campIssue) return { disabled: true, reason: campIssue };
     const panelLock = sheetActionPanelLockIssue(panelDisabledReason);
     if (panelLock) return panelLock;
     if (pendingAtomicRetry) {

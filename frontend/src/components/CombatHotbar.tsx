@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
+import { useEffect, useMemo, useState } from 'react';
 import { ArrowUp, Footprints, MoreHorizontal } from 'lucide-react';
 import { canPay, costKey } from '../engine/cost';
 import { FREEUSE_SHOWCASE_KEY, isFreeusePoolKey } from '../engine/freeuse';
@@ -388,6 +389,7 @@ export default function CombatHotbar({
   useEffect(() => setSelectedResourceId(null), [actorId]);
   const resourceOptions = useResourceOptions();
   const actor = state.world.actors[actorId];
+  const formulaContext = useMemo(() => formulaCtxFromCharacter(actor.character), [actor.character]);
   const spellcasting = actor.character.spellcastingMod == null
     ? undefined
     : {
@@ -430,6 +432,7 @@ export default function CombatHotbar({
   ] as const;
 
   return (
+    <CharacterFormulaProvider value={formulaContext}>
     <section className="combat-hotbar" aria-label="Панель действий">
       <div className="combat-hotbar__resource-filter" role="group" aria-label="Фильтр действий по ресурсу">
         <FreeuseSpellsTile
@@ -567,5 +570,6 @@ export default function CombatHotbar({
 
       <button type="button" className="combat-end-turn" disabled={disabled} onClick={onEndTurn}>Завершить ход</button>
     </section>
+    </CharacterFormulaProvider>
   );
 }

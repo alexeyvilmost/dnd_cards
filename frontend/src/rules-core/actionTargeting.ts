@@ -149,7 +149,7 @@ export function compileMechanicsTargeting(mechanics: JsonObject): ActionTargetin
   if (typeof requiresLineOfSight !== 'boolean') {
     throw new ActionTargetingDefinitionError('targeting.requires_line_of_sight must be boolean');
   }
-  for (const key of ['requires_sight', 'requires_willing', 'requires_unarmored'] as const) {
+  for (const key of ['requires_sight', 'requires_willing', 'requires_unarmored', 'requires_target_perception'] as const) {
     if (targeting[key] !== undefined && typeof targeting[key] !== 'boolean') {
       throw new ActionTargetingDefinitionError(`targeting.${key} must be boolean`);
     }
@@ -191,6 +191,7 @@ export function compileMechanicsTargeting(mechanics: JsonObject): ActionTargetin
     rangeFt,
     requiresLineOfSight,
     ...(targeting.requires_sight === true ? { requiresSight: true } : {}),
+    ...(targeting.requires_target_perception === true ? { requiresTargetPerception: true } : {}),
     allowedRelations,
     ...(targeting.requires_willing === true ? { requiresWilling: true } : {}),
     ...(targeting.requires_unarmored === true ? { requiresUnarmored: true } : {}),

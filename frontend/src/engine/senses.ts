@@ -1,3 +1,5 @@
+import { collectModifiers } from './modifiers';
+import { activeConditionWorldFactEnabled } from './conditions';
 import type {RuntimeState} from '../mvp/contracts';
 import {payloadsOf} from './mechanicsView';
 
@@ -25,4 +27,10 @@ export function perceivesWithoutSight(runtime: RuntimeState, passives: readonly 
   const range = senseRangeFt(runtime, passives, 'blindsight');
   return typeof distanceFt === 'number' && Number.isFinite(distanceFt) && distanceFt >= 0
     && range > 0 && distanceFt <= range;
+}
+
+/** Hearing-dependent automatic failure is the existing data-owned Deafened rule. */
+export function canHear(runtime: RuntimeState, passives: readonly Mechanics[] = []): boolean {
+  return !activeConditionWorldFactEnabled(runtime, 'cannot_hear')
+    && !collectModifiers(runtime, [...passives], { roll: 'ability_check', filter: { sense: 'hearing' } }).autoFail;
 }
