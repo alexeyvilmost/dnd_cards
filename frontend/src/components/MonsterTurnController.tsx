@@ -13,7 +13,7 @@ export default function MonsterTurnController({
 }) {
   const handled = useRef('');
   useEffect(() => {
-    if (disabled || state.outcome !== 'active' || state.world.pendingResolution) return undefined;
+    if (disabled || state.outcome !== 'active' || state.pendingAdditionalMovement || state.world.pendingResolution) return undefined;
     const actor = activeActor(state);
     if (actor.kind !== 'monster') return undefined;
     const key = `${state.world.revision}:${actor.id}`;

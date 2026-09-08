@@ -195,6 +195,7 @@ export function describeEngineEvent(event: EngineEvent): string {
     case 'condition_immune':
       return `${src}Иммунитет к состоянию: ${conditionLabel(event.condition)}`;
     case 'movement':
+      if (event.mode === 'additional') return `${src}Дополнительное перемещение: ${event.speedFraction ? `${event.speedFraction * 100}% скорости` : `${event.distanceFt} фт.`}${event.provokeOpportunityAttacks === false ? ', без провоцированных атак' : ''}`;
       return `${src}${describeMovement(event.mode, event.distanceFt)}`;
     case 'stabilized':
       return `${src}Цель стабилизирована`;

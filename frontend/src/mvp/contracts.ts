@@ -81,7 +81,7 @@ export type EngineEvent =
       source?: string;
     }
   /** Geometry adapter consumes this authoritative forced-movement result. */
-  | { type: 'movement'; mode: string; distanceFt: number; source?: string }
+  | { type: 'movement'; mode: string; distanceFt: number; source?: string; speedFraction?: number; provokeOpportunityAttacks?: boolean }
   | { type: 'stabilized'; source?: string }
   | {
       type: 'world_interaction';

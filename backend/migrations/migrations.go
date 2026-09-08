@@ -1313,6 +1313,12 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 			Up:          materializeRoguelikeSensesSkills,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "207_fighter_tactical_shift",
+			Description: "Bind Tactical Shift to Second Wind and immediate additional movement",
+			Up:          repairFighterTacticalShift,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

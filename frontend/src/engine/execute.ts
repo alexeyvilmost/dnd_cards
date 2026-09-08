@@ -210,7 +210,7 @@ const NUMERIC_MODIFIER_OPS = new Set([
   'add', 'set', 'multiply', 'upgrade', 'downgrade', 'crit_range', 'minimum_die', 'die_bonus', 'critical_extra_die',
   'minimum_total',
 ]);
-const MOVEMENT_MODES = new Set(['push', 'pull', 'teleport', 'extra_speed', 'double', 'knock_prone', 'move']);
+const MOVEMENT_MODES = new Set(['push', 'pull', 'teleport', 'extra_speed', 'double', 'knock_prone', 'move', 'additional']);
 const RESISTANCE_LEVELS = new Set(['resistance', 'immunity', 'vulnerability']);
 const TARGETING_WARD_INTERACTIONS = new Set(['attack_roll', 'damaging_spell']);
 const TURN_COMMANDS = new Set(['approach', 'drop', 'flee', 'grovel', 'halt']);
@@ -1175,11 +1175,20 @@ function preflightPayload(
       break;
     }
     case 'movement': {
-      const mode = String(value.value ?? 'move');
+      const mode = String(value.value ?? value.mode ?? 'move');
       if (!MOVEMENT_MODES.has(mode)) {
         throw mechanicsError('INVALID_PAYLOAD', `${path}.value`, `unsupported movement mode «${mode}»`);
       }
       if (value.distance !== undefined) assertFiniteFormula(value.distance, `${path}.distance`, ctx, targetOwned);
+      if (value.speed_fraction !== undefined && (mode !== 'additional'
+        || typeof value.speed_fraction !== 'number' || !Number.isFinite(value.speed_fraction)
+        || value.speed_fraction <= 0 || value.speed_fraction > 1)) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.speed_fraction`, 'additional movement requires a speed fraction in (0, 1]');
+      }
+      if (value.provoke_opportunity_attacks !== undefined
+        && (mode !== 'additional' || typeof value.provoke_opportunity_attacks !== 'boolean')) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.provoke_opportunity_attacks`, 'additional movement requires a boolean opportunity-attack flag');
+      }
       break;
     }
     // These primitives either persist a typed effect or emit an explicit
@@ -3568,6 +3577,9 @@ function applyPayloads(
           // used it before the schema and editor converged on `value`.
           mode: String(p.value ?? p.mode ?? 'move'),
           distanceFt: Math.max(0, evaluated),
+          ...(p.speed_fraction !== undefined ? {speedFraction: Number(p.speed_fraction)} : {}),
+          ...(p.provoke_opportunity_attacks !== undefined
+            ? {provokeOpportunityAttacks: p.provoke_opportunity_attacks as boolean} : {}),
         });
         break;
       }
@@ -4383,7 +4395,7 @@ function runMechanicEffects(
 export const EMITTED_EVENTS = [
   // sneak_attack_hit is emitted by the multi-actor solo-combat adapter after
   // it observes the exact Sneak Attack once-per-turn ledger transition.
-  'hit', 'sneak_attack_hit', 'crit', 'damage_taken', 'miss', 'spell_cast', 'reduced_to_0_hp',
+  'action_resolved', 'hit', 'sneak_attack_hit', 'crit', 'damage_taken', 'miss', 'spell_cast', 'reduced_to_0_hp',
   // Ход и отдыхи через шину (C3 слайс 2 — turn.ts startTurn/endTurn/shortRest/longRest):
   'turn_start', 'turn_end', 'short_rest', 'long_rest',
 ] as const;

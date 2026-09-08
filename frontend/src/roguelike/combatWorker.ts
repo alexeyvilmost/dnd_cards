@@ -4,7 +4,7 @@ import {TACTICAL_WIDTH, TACTICAL_HEIGHT} from '../solo-combat/types';
 import type { DecisionResponse } from '../rules-core/domain';
 import { canonicalSha256Sync } from '../rules-core/determinism';
 import {
-  resumePendingMovement, activeActor, activateCombatBoon, advanceTurn, autoResolveSystemDecisions,
+  declineAdditionalMovement, isTriggeredCombatAction, resumePendingMovement, activeActor, activateCombatBoon, advanceTurn, autoResolveSystemDecisions,
   executeCombatAction, executeCombatRemoteManipulator, moveCombatDancingLights, revealCombatMagicAura, moveActorAlongRoute, resolveD20Interrupt, resolvePlayerReaction,
   resolvePlayerShoveOutcome, resolvePlayerSavingThrow, resolveSoloCombatAlertSwap, resolveSoloCombatInterception,
   resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, standActor,
@@ -24,6 +24,7 @@ export type RoguelikeCombatIntent =
   | {type: 'action'; actorId: string; actionId: string; targetIds: string[];
       choices?: ActionInput['choices']; worldPosition?: GridPosition; worldInput?: ActionInput['worldInput']}
   | {type: 'move'; actorId: string; destination: GridPosition}
+  | {type: 'decline_movement'; actorId: string}
   | {type: 'stand'; actorId: string}
   | {type: 'end_turn'; actorId: string}
   | {type: 'shove_outcome'; outcome: Extract<DecisionResponse, {kind: 'shove_outcome'}>['outcome']}
@@ -42,7 +43,7 @@ export type RoguelikeCombatIntent =
   | {type: 'resume'};
 
 function hasDecision(state: SoloCombatState): boolean {
-  return Boolean(state.world.pendingResolution || state.pendingD20Interrupt || state.pendingInterception
+  return Boolean(state.pendingAdditionalMovement || state.world.pendingResolution || state.pendingD20Interrupt || state.pendingInterception
     || state.pendingTriggeredAction || state.pendingTurnStartGrappleDamage || state.pendingAlertSwapActorIds?.length);
 }
 
@@ -81,12 +82,16 @@ export function stepRoguelikeCombat(
   };
   if ('actorId' in intent && intent.actorId !== null) requireOwned(intent.actorId);
   const proactive = new Set(['action', 'move', 'stand', 'end_turn', 'dancing_lights', 'detect_magic', 'remote_manipulator', 'boon']);
+  const additionalMove = intent.type === 'move' && state.pendingAdditionalMovement?.actorId === intent.actorId;
   if (proactive.has(intent.type) && 'actorId' in intent
-    && (hasDecision(state) || state.playerMovement || state.pendingReachEntry || activeActor(state).id !== intent.actorId)) {
+    && (hasDecision(additionalMove ? {...state, pendingAdditionalMovement: undefined} : state)
+      || state.playerMovement || state.pendingReachEntry || (!additionalMove && activeActor(state).id !== intent.actorId))) {
     throw new Error('Сначала завершите текущее решение или дождитесь своего хода');
   }
   switch (intent.type) {
     case 'action': {
+      const requestedAction = state.catalogActions.find(row => row.id === intent.actionId);
+      if (requestedAction && isTriggeredCombatAction(requestedAction)) throw new Error('Способность доступна только после соответствующего события');
       let worldInput = intent.worldInput;
       if (intent.worldPosition) {
         const position = intent.worldPosition;
@@ -105,6 +110,9 @@ export function stepRoguelikeCombat(
       break;
     }
     case 'move': state = moveActorAlongRoute({state, actorId: intent.actorId, destination: intent.destination, rng}); break;
+    case 'decline_movement':
+      if (state.pendingAdditionalMovement?.actorId !== intent.actorId) throw new Error('Нет ожидающего перемещения участника');
+      state = declineAdditionalMovement(state); break;
     case 'stand': state = standActor(state, intent.actorId); break;
     case 'end_turn':
       if (hasDecision(state) || activeActor(state).id !== intent.actorId) throw new Error('Сначала завершите текущее решение');

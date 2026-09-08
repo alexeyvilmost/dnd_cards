@@ -27,7 +27,7 @@ import TacticalBattleMap from '../components/TacticalBattleMap';
 import { useSheetWorldInputDialog } from '../components/SheetWorldInputDialog';
 import { monstersApi } from '../monsters/api';
 import {
-  activeActor,
+  declineAdditionalMovement, activeActor,
   activateCombatBoon,
   addSoloCombatCharacter,
   addSoloCombatMonster,
@@ -457,9 +457,9 @@ export default function SoloCombatPage() {
     }
   };
 
-  const activeControlledActorId = state && isPlayerControlledCombatActor(state, activeActor(state).id)
+  const activeControlledActorId = state?.pendingAdditionalMovement?.actorId ?? (state && isPlayerControlledCombatActor(state, activeActor(state).id)
     ? activeActor(state).id
-    : state?.characterId ?? '';
+    : state?.characterId ?? '');
   const playerTurn = state ? isPlayerControlledCombatActor(state, activeActor(state).id) : false;
   const activeDancingLights = state ? Object.values(state.world.objects).filter((object) => {
     const concentration = state.world.concentrations[activeControlledActorId];
@@ -507,10 +507,10 @@ export default function SoloCombatPage() {
   };
 
   const clickCell = async (position: GridPosition, actorId?: string) => {
-    if (!state || !playerTurn || busy || state.world.pendingResolution
+    if (!state || (!playerTurn && !state.pendingAdditionalMovement) || busy || state.world.pendingResolution
       || state.pendingTriggeredAction || state.pendingTurnStartGrappleDamage) return;
     try {
-      if (movementMode) {
+      if (movementMode || state.pendingAdditionalMovement) {
         if (actorId) throw new Error('Для перемещения выберите свободную клетку');
         setMovementMode(false); setSelectedActionChoices({});
         applyIntent({type: 'move', actorId: activeControlledActorId, destination: position}, () => moveActorAlongRoute({state, actorId: activeControlledActorId, destination: position})); return;
@@ -731,10 +731,15 @@ export default function SoloCombatPage() {
             state={state}
             actorId={activeControlledActorId}
             selectedActionId={selectedActionId}
-            movementMode={movementMode}
+            movementMode={movementMode || Boolean(state.pendingAdditionalMovement)}
             worldObjectMoveMode={dancingLightsMoveGroupId === activeDancingLightsGroup}
             inspectedActorId={inspectedActorId}
             onCell={clickCell}
+            onDeclineAdditionalMovement={state.pendingAdditionalMovement && !state.playerMovement
+              && !busy && !pending && !pendingTriggered && !pendingD20Interrupt && !state.pendingInterception ? () => {
+                setMovementMode(false);
+                applyIntent({type: 'decline_movement', actorId: state.pendingAdditionalMovement!.actorId}, () => declineAdditionalMovement(state));
+              } : undefined}
             onInspectActor={(actorId) => {
               if (isControlledCharacter(state, actorId)) {
                 setSheetActorId(actorId);
@@ -806,7 +811,7 @@ export default function SoloCombatPage() {
         onAddMonster={addSceneMonster}
         onClose={() => setSceneConstructorOpen(false)}
       />}
-      <CombatHotbar onStand={() => { setMovementMode(false); applyIntent({type: 'stand', actorId: activeControlledActorId}, () => standActor(state, activeControlledActorId)); }} state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); applyIntent({type: 'end_turn', actorId: activeControlledActorId}, () => advanceTurn(state)); }} onSheet={() => {
+      <CombatHotbar onStand={() => { setMovementMode(false); applyIntent({type: 'stand', actorId: activeControlledActorId}, () => standActor(state, activeControlledActorId)); }} state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || Boolean(state.pendingAdditionalMovement) || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); applyIntent({type: 'end_turn', actorId: activeControlledActorId}, () => advanceTurn(state)); }} onSheet={() => {
         if (isControlledCharacter(state, activeControlledActorId)) {
           setSheetActorId(activeControlledActorId);
           setSheetOpen(true);

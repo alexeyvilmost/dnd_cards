@@ -366,7 +366,7 @@ export function eventSummary(records: readonly CombatLogEventRecord[]): string {
     switch (event.type) {
       case 'damage': return [describeEngineEvent(event).replace(/^Урон/u, 'урон')];
       case 'healing': return [`восстановлено HP: ${event.amount}`];
-      case 'movement': return [describeMovement(event.mode, event.distanceFt)];
+      case 'movement': return [event.mode === 'additional' ? describeEngineEvent(event) : describeMovement(event.mode, event.distanceFt)];
       case 'condition_applied': return [describeEngineEvent(event).replace(/^Состояние/u, 'состояние')];
       case 'resource_spent': return [`потрачено: ${describeResource(event.resource)}`];
       case 'roll': return [event.roll.text];
@@ -845,6 +845,19 @@ function transitionState(
     next = { ...next, worldObjectPositions: retainedPositions };
   }
   next = applyForcedMovement(next, rawEvents);
+  for (const envelope of rawEvents) {
+    if (envelope.payload.type !== 'EngineEventRecorded') continue;
+    const event = envelope.payload.event;
+    if (event.type !== 'movement' || event.mode !== 'additional') continue;
+    const moverId = envelope.payload.actorId;
+    const speed = effectiveCombatActorSpeedFt(next, moverId);
+    const remainingFt = speed === 0 ? 0 : Math.floor(event.distanceFt + speed * (event.speedFraction ?? 0));
+    if (remainingFt > 0 && isPlayerControlledCombatActor(next, moverId)) {
+      if (next.pendingAdditionalMovement) throw new Error('Сначала завершите дополнительное перемещение');
+      next = {...next, pendingAdditionalMovement: {actorId: moverId, remainingFt,
+        provokeOpportunityAttacks: event.provokeOpportunityAttacks !== false}};
+    }
+  }
   const summaries = worldObjectSummary(rawEvents, nextWorld);
   next = appendLog(
     next,
@@ -1622,6 +1635,7 @@ function executeCombatActionWithD20Interrupts(
  * same combat persistence path as Shield, Interception, and saving throws.
  */
 export function executeCombatAction(input: CombatActionInput): SoloCombatState {
+  if (input.state.pendingAdditionalMovement) throw new Error('Сначала завершите дополнительное перемещение');
   return executeCombatActionWithD20Interrupts(input);
 }
 
@@ -2429,7 +2443,7 @@ function attackOutcomeEvent(
   return outcomes.at(-1) ?? null;
 }
 
-type AttackTriggerEvent = 'hit' | 'miss' | 'sneak_attack_hit';
+type AttackTriggerEvent = 'hit' | 'miss' | 'sneak_attack_hit' | 'action_resolved';
 
 const SNEAK_ATTACK_EFFECT_ID = 'EFF-sneak-attack';
 
@@ -2669,18 +2683,22 @@ function offerTriggeredAttackActions(input: {
   targetIds: string[];
 }): SoloCombatState {
   const { before, after, sourceActorId, sourceActionId, targetIds } = input;
-  const events = attackTriggerEvents(before, after, sourceActorId);
+  const events: AttackTriggerEvent[] = [...attackTriggerEvents(before, after, sourceActorId), 'action_resolved'];
   if (after.world.pendingResolution || after.pendingTriggeredAction
     || !isControlledCharacter(after, sourceActorId)
     || !events.length) return after;
   const actor = after.world.actors[sourceActorId];
-  if (!actor) return after;
+  if (!actor || actor.runtime.hp.current <= 0 || after.outcome !== 'active') return after;
   const owned = new Set(actor.capabilities.actionIds);
   const options = after.catalogActions.flatMap((action) => {
     if (action.id === sourceActionId || !owned.has(action.id)
       || !events.some((event) => isTriggeredCombatAction(action, event))) return [];
     const activation = action.mechanics.activation as Record<string, unknown> | undefined;
     const trigger = activation?.trigger as Record<string, unknown> | undefined;
+    // A generic completion listener must name its source; otherwise a triggered
+    // action could recursively offer unrelated completion listeners.
+    if (isTriggeredCombatAction(action, 'action_resolved')
+      && !trigger?.source_action_card_number && !Array.isArray(trigger?.source_action_card_numbers)) return [];
     if (!sourceQualifiesForTriggeredAction({
       before, state: after, actor, sourceActionId, targetIds, trigger,
     })) return [];
@@ -2977,7 +2995,7 @@ export function canStandActor(state: SoloCombatState, actorId: string): boolean 
   return Boolean(actor && actorMustCrawl(actor) && actor.runtime.hp.current > 0
     && state.outcome === 'active' && activeActorId(state) === actorId
     && !state.world.pendingResolution && !state.pendingD20Interrupt && !state.pendingInterception
-    && !state.pendingTriggeredAction && !state.pendingTurnStartGrappleDamage
+    && !state.pendingAdditionalMovement && !state.pendingTriggeredAction && !state.pendingTurnStartGrappleDamage
     && !state.pendingAlertSwapActorIds?.length && effectiveCombatActorSpeedFt(state, actorId) > 0
     && (state.movementRemainingFt[actorId] ?? effectiveCombatActorSpeedFt(state, actorId)) >= cost);
 }
@@ -3020,8 +3038,10 @@ export function moveActor(input: {
   // would erase that data-driven action. Effective speed is projected whenever
   // a turn starts (and when combat is created), which is where speed conditions
   // such as Ray of Frost establish the next turn's movement budget.
+  const extra = input.voluntary !== false && input.state.pendingAdditionalMovement?.actorId === input.actorId
+    ? input.state.pendingAdditionalMovement : undefined;
   const available = input.voluntary !== false && effectiveCombatActorSpeedFt(input.state, input.actorId) === 0
-    ? 0 : (input.state.movementRemainingFt[input.actorId] ?? effectiveActorSpeedFt(actor));
+    ? 0 : (extra?.remainingFt ?? input.state.movementRemainingFt[input.actorId] ?? effectiveActorSpeedFt(actor));
   const maxFeet = input.voluntary === false
     ? (input.maxFeet ?? available) : Math.min(input.maxFeet ?? available, available);
   if (!Number.isFinite(maxFeet) || maxFeet < 0) throw new Error('Некорректный запас перемещения');
@@ -3048,7 +3068,7 @@ export function moveActor(input: {
     pendingMovementStep: pending ?? {actorId: input.actorId, from: {...token.position},
       destination: {...input.destination}, maxFeet: input.maxFeet, logMovement: input.logMovement,
       processedOpportunityActorIds: []}};
-  let next = input.voluntary === false ? prepared
+  let next = input.voluntary === false || extra?.provokeOpportunityAttacks === false ? prepared
     : executeOpportunityAttacks(prepared, input.actorId, input.destination, input.rng ?? Math.random);
   if (input.voluntary !== false) {
     if (monsterMovementPaused(next)) return next;
@@ -3099,8 +3119,10 @@ export function moveActor(input: {
     boardRevision: next.boardRevision + 1,
     movementRemainingFt: {
       ...next.movementRemainingFt,
-      [input.actorId]: input.voluntary === false ? available : Math.max(0, available - movementCost),
+      [input.actorId]: extra ? (next.movementRemainingFt[input.actorId] ?? effectiveActorSpeedFt(actor))
+        : input.voluntary === false ? available : Math.max(0, available - movementCost),
     },
+    ...(extra ? {pendingAdditionalMovement: {...extra, remainingFt: Math.max(0, available - movementCost)}} : {}),
     ...(recentStraightMovementByActor ? { recentStraightMovementByActor } : {}),
   };
   next = reanchorSourceCombatAreas(next, input.actorId);
@@ -3134,15 +3156,16 @@ export function moveActorAlongRoute(input: {
 }): SoloCombatState {
   const {state, actorId, destination} = input;
   const origin = state.tokens[actorId]?.position;
-  if (!origin || !isPlayerControlledCombatActor(state, actorId) || activeActorId(state) !== actorId) {
+  const additional = state.pendingAdditionalMovement?.actorId === actorId ? state.pendingAdditionalMovement : undefined;
+  if (!origin || !isPlayerControlledCombatActor(state, actorId) || (!additional && activeActorId(state) !== actorId)) {
     throw new Error('Перемещение доступно только в ход этого персонажа');
   }
-  if (state.playerMovement || state.pendingMovementStep || monsterMovementPaused(state)) {
+  if (state.playerMovement || state.pendingMovementStep || monsterMovementPaused({...state, pendingAdditionalMovement: undefined})) {
     throw new Error('Сначала завершите прерванное перемещение или решение');
   }
   if (samePosition(origin, destination)) return state;
   const speed = effectiveCombatActorSpeedFt(state, actorId);
-  const feet = speed === 0 ? 0 : state.movementRemainingFt[actorId] ?? speed;
+  const feet = speed === 0 ? 0 : additional?.remainingFt ?? state.movementRemainingFt[actorId] ?? speed;
   const route = reachableRoutes(state, actorId, feet).find(row => samePosition(row.destination, destination));
   if (!route) throw new Error('До клетки нет доступного маршрута с оставшимся перемещением');
   return continuePlayerRoute({...state, playerMovement: {actorId, origin: {...origin}, steps: route.path}}, input.rng ?? Math.random);
@@ -3151,7 +3174,7 @@ export function moveActorAlongRoute(input: {
 function continuePlayerRoute(state: SoloCombatState, rng: Rng): SoloCombatState {
   let next = state;
   const stop = (value: SoloCombatState) => {
-    const {playerMovement: _route, ...rest} = value;
+    const {playerMovement: _route, pendingAdditionalMovement: _extra, ...rest} = value;
     return rest;
   };
   for (let step = 0; next.playerMovement && step <= TACTICAL_WIDTH * TACTICAL_HEIGHT; step++) {
@@ -3160,7 +3183,7 @@ function continuePlayerRoute(state: SoloCombatState, rng: Rng): SoloCombatState 
     const actor = next.world.actors[route.actorId];
     const position = next.tokens[route.actorId]?.position;
     if (!actor || !position || actor.runtime.hp.current <= 0 || next.outcome !== 'active'
-      || activeActorId(next) !== route.actorId) return stop(next);
+      || (activeActorId(next) !== route.actorId && next.pendingAdditionalMovement?.actorId !== route.actorId)) return stop(next);
     // A resumed step may already have reached its cell before an area decision.
     if (route.steps[0] && samePosition(position, route.steps[0])) {
       next = {...next, playerMovement: {...route, origin: {...position}, steps: route.steps.slice(1)}};
@@ -3168,7 +3191,9 @@ function continuePlayerRoute(state: SoloCombatState, rng: Rng): SoloCombatState 
     }
     const destination = route.steps[0];
     if (!destination) return stop(next);
-    const available = next.movementRemainingFt[route.actorId] ?? effectiveCombatActorSpeedFt(next, route.actorId);
+    const available = next.pendingAdditionalMovement?.actorId === route.actorId
+      ? next.pendingAdditionalMovement.remainingFt
+      : next.movementRemainingFt[route.actorId] ?? effectiveCombatActorSpeedFt(next, route.actorId);
     const cost = movementCostThroughAreas(next, position, destination, 5) + (actorMustCrawl(actor) ? 5 : 0);
     if (!samePosition(position, route.origin) || gridDistanceFt(position, destination) !== 5
       || effectiveCombatActorSpeedFt(next, route.actorId) === 0 || cost > available
@@ -3185,6 +3210,15 @@ function continuePlayerRoute(state: SoloCombatState, rng: Rng): SoloCombatState 
 }
 
 /** Continue only after all decisions belonging to the interrupting attack settle. */
+export function declineAdditionalMovement(state: SoloCombatState): SoloCombatState {
+  if (!state.pendingAdditionalMovement || state.playerMovement || state.pendingMovementStep
+    || monsterMovementPaused({...state, pendingAdditionalMovement: undefined})) {
+    throw new Error('Нет доступного решения о дополнительном перемещении');
+  }
+  const {pendingAdditionalMovement: _extra, ...next} = state;
+  return next;
+}
+
 export function resumePendingMovement(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
   if (monsterMovementPaused(state)) return state;
   if (state.pendingReachEntry) {
@@ -3283,6 +3317,7 @@ export function resolveSoloCombatTurnStart(
 
 export function advanceTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
   if (state.outcome !== 'active' || state.world.pendingResolution
+    || state.pendingAdditionalMovement
     || state.playerMovement
     || state.pendingTurnStartGrappleDamage || state.pendingInterception || state.pendingD20Interrupt
     || state.pendingAlertSwapActorIds?.length) return state;
@@ -3855,7 +3890,7 @@ function monsterAttackRange(action: RuleActionDefinition): number {
 }
 
 function monsterMovementPaused(state: SoloCombatState): boolean {
-  return Boolean(state.world.pendingResolution || state.pendingD20Interrupt || state.pendingInterception
+  return Boolean((state.pendingAdditionalMovement && !state.playerMovement) || state.world.pendingResolution || state.pendingD20Interrupt || state.pendingInterception
     || state.pendingTriggeredAction || state.pendingTurnStartGrappleDamage);
 }
 

@@ -179,7 +179,7 @@ export interface PendingCombatAreaTrigger {
  * exposed as proactive hotbar buttons.
  */
 export interface PendingTriggeredAction {
-  event: 'hit' | 'miss' | 'sneak_attack_hit' | 'opportunity_attack' | 'reach_entry';
+  event: 'hit' | 'miss' | 'sneak_attack_hit' | 'opportunity_attack' | 'reach_entry' | 'action_resolved';
   sourceActorId: string;
   sourceActionId: string;
   targetIds: string[];
@@ -253,6 +253,8 @@ export interface PendingD20Interrupt {
 }
 
 export interface SoloCombatState {
+  /** Immediate additional movement: consumed by one route or declined, never added to the turn ledger. */
+  pendingAdditionalMovement?: {actorId: string; remainingFt: number; provokeOpportunityAttacks: boolean};
   /** Player route retained across reactions and per-cell area decisions. */
   playerMovement?: {actorId: string; origin: GridPosition; steps: GridPosition[]};
   pendingReachEntry?: {moverId: string; from: GridPosition; destination: GridPosition; actorIds: string[]};

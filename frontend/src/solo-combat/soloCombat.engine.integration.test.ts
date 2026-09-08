@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import {readFileSync} from 'node:fs';
 import {projectRuleAction} from '../canon/ruleActionProjection';
 import { stepRoguelikeCombat, type RoguelikeCombatEnvelope } from '../roguelike/combatWorker';
 import compiledFixtureJson from '../pages/rulesLabFixture.generated.json';
@@ -706,6 +707,53 @@ function goblin(): Monster {
 }
 
 describe('solo combat engine vertical integration', () => {
+  it('offers additional movement only after its source action, persists the separate allowance and preserves normal movement/reactions', async () => {
+    const participant = fighterSeed();
+    const actorId = participant.character.id;
+    const owner = participant.canonical.world.actors[actorId];
+    const heal: RuleActionDefinition = {
+      id: 'd2070000-0000-4000-8000-000000000001', name: 'Second Wind', kind: 'nonSpell', sourceEntityIds: ['test-second-wind'],
+      mechanics: {activation: {mode: 'active', cost: [{resource: 'bonus_action'}]},
+        effects: [{resolution: 'auto', result: [{kind: 'healing', amount: 1}]}]},
+    };
+    const shift = projectRuleAction({
+      id: 'd2070000-0000-4000-8000-000000000002', name: 'Tactical Shift', resource: 'free_action', type: 'class_ability',
+      mechanics: JSON.parse(readFileSync(new URL('../../../backend/migrations/fighter_tactical_shift_207.go', import.meta.url), 'utf8').match(/const tacticalShiftMechanics207 = `([^`]+)`/)![1]),
+    } as Action);
+    const actions = [...participant.canonical.actions, heal, shift];
+    owner.capabilities.actionIds.push(heal.id, shift.id);
+    participant.canonical = {...participant.canonical, actions, catalog: {getAction: id => actions.find(a => a.id === id), listActions: () => actions}};
+    let state = await createSoloCombatState({character: participant.character, participant,
+      selected: [{monster: goblin(), quantity: 1}], actions: [scimitar()], effects: [], rng: () => 0.5});
+    const enemyId = Object.values(state.world.actors).find(actor => actor.kind === 'monster')!.id;
+    state = placeAdjacent(state, actorId, enemyId);
+    state.actionPresentation = {...state.actionPresentation, [heal.id]: {actionRef: {card_number: 'ACT-second-wind'} as Action}};
+    const artifactHash = `sha256:${'a'.repeat(64)}`;
+    const envelope = (value: SoloCombatState): RoguelikeCombatEnvelope => ({schemaVersion: 1, artifactHash, entropy: {seed: 'tactical-shift', cursor: 0}, state: value});
+    expect(() => stepRoguelikeCombat(envelope(state), {type: 'action', actorId, actionId: shift.id, targetIds: []}, artifactHash)).toThrow('события');
+    const used = executeCombatAction({state, actorId, actionId: heal.id, targetIds: [], rng: () => 0.5});
+    expect(used.pendingTriggeredAction?.optionActionIds).toEqual([shift.id]);
+    expect(used.world.actors[actorId].runtime.resources.bonus_action).toBe(0);
+    const offered = resolveTriggeredCombatAction(clone(used), shift.id, () => {throw new Error('movement must not roll');});
+    expect(offered.pendingAdditionalMovement?.remainingFt).toBeGreaterThanOrEqual(15);
+    const normal = offered.movementRemainingFt[actorId];
+    const origin = offered.tokens[actorId].position;
+    expect(() => stepRoguelikeCombat(envelope(offered), {type: 'end_turn', actorId}, artifactHash)).toThrow();
+    const moved = moveActorAlongRoute({state: clone(offered), actorId, destination: {x: origin.x - 3, y: origin.y}, rng: () => {throw new Error('no opportunity attack');}});
+    expect(moved.tokens[actorId].position).toEqual({x: origin.x - 3, y: origin.y});
+    expect(moved.pendingAdditionalMovement).toBeUndefined();
+    expect(moved.playerMovement).toBeUndefined();
+    expect(moved.movementRemainingFt[actorId]).toBe(normal);
+    expect(moved.world.actors[enemyId].runtime.resources.reaction).toBe(1);
+    const declined = stepRoguelikeCombat(envelope(clone(offered)), {type: 'decline_movement', actorId}, artifactHash).envelope.state;
+    expect(declined.pendingAdditionalMovement).toBeUndefined();
+    expect(declined.movementRemainingFt[actorId]).toBe(normal);
+    expect(activeId(declined)).toBe(actorId);
+    const ordinary = moveActorAlongRoute({state: declined, actorId, destination: {x: origin.x - 3, y: origin.y}, rng: () => 0});
+    expect(ordinary.world.actors[enemyId].runtime.resources.reaction).toBe(0);
+    expect(ordinary.movementRemainingFt[actorId]).toBe(normal - 15);
+  });
+
   it('keeps a compiled undead monster alive after a lethal hit, then ends combat on a failed save after reload', async () => {
     const participant = fighterSeed();
     const actorId = participant.character.id;
@@ -3349,6 +3397,9 @@ describe('solo combat engine vertical integration', () => {
       sourceActorId: actor.id, sourceActionId: 'alarm', sourceEntityIds: ['SPELL-alarm'],
       origin: {x: 4, y: 5}, cells: [{x: 4, y: 5}], duration: {type: 'permanent'}, triggers: ['enter'],
       notice: 'Вход в сигнальную область'}};
+    entryState.pendingAdditionalMovement = {actorId: enteringId, remainingFt: 15, provokeOpportunityAttacks: false};
+    entryState.playerMovement = {actorId: enteringId, origin: {x: 4, y: 6}, steps: [{x: 4, y: 5}]};
+    const normalEntryMovement = entryState.movementRemainingFt[enteringId];
     entryState = moveActor({
       state: entryState, actorId: enteringId, destination: { x: 4, y: 5 }, rng: () => 0.6,
     });
@@ -3361,6 +3412,8 @@ describe('solo combat engine vertical integration', () => {
     ));
     expect(entryAction?.sourceEntityIds).toContain('EFF-general-FEAT-0028');
     expect(entryState.pendingReachEntry?.actorIds).toEqual([allyId]);
+    expect(entryState.pendingAdditionalMovement?.remainingFt).toBe(10);
+    expect(entryState.movementRemainingFt[enteringId]).toBe(normalEntryMovement);
     expect(entryState.log.some(row => row.text.includes('Вход в сигнальную область'))).toBe(false);
     const noRoll = () => {throw Error('Declining an entry reaction does not roll');};
     const declined = resolveTriggeredCombatAction(clone(entryState), null, noRoll);

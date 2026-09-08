@@ -12,6 +12,7 @@ export default function TacticalBattleMap({
   inspectedActorId,
   onCell,
   onInspectActor,
+  onDeclineAdditionalMovement,
 }: {
   state: SoloCombatState;
   actorId: string;
@@ -21,6 +22,7 @@ export default function TacticalBattleMap({
   inspectedActorId?: string | null;
   onCell: (position: GridPosition, actorId?: string) => void;
   onInspectActor?: (actorId: string) => void;
+  onDeclineAdditionalMovement?: () => void;
 }) {
   const [hovered, setHovered] = useState<GridPosition | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -73,7 +75,7 @@ export default function TacticalBattleMap({
       ? reachablePositions(
         state,
         actorId,
-        state.movementRemainingFt[actorId] ?? 0,
+        (state.pendingAdditionalMovement?.actorId === actorId ? state.pendingAdditionalMovement.remainingFt : state.movementRemainingFt[actorId]) ?? 0,
       ).map((position) => `${position.x}:${position.y}`)
       : [],
   ), [actorId, movementMode, state]);
@@ -187,6 +189,10 @@ export default function TacticalBattleMap({
         const position = state.tokens[actorId]?.position;
         if (position) centerOn([position]);
       }}>К персонажу</button>
+      {state.pendingAdditionalMovement && !state.playerMovement && <>
+        <span role="status">Выберите клетку · до {state.pendingAdditionalMovement.remainingFt} фт.</span>
+        <button type="button" disabled={!onDeclineAdditionalMovement} onClick={onDeclineAdditionalMovement}>Остаться на месте</button>
+      </>}
     </div>
     <div
       className={`tactical-map${selectedActionId ? ' is-targeting' : ''}${movementMode ? ' is-moving' : ''}${worldObjectMoveMode ? ' is-world-object-moving' : ''}`}

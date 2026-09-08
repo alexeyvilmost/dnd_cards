@@ -141,7 +141,9 @@
   top: 8px;
   left: 8px;
   width: max-content;
+  max-width: calc(100% - 16px);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 4px;
   padding: 4px;
