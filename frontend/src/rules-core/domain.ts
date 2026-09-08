@@ -918,6 +918,13 @@ export type UseReactionActionCommand = Omit<UseActionCommand, 'type'> & {
   trigger: 'opportunity_attack' | 'reach_entry';
 };
 
+/** Catalog-owned optional ability selected by a persisted combat event window.
+ * Unlike a reaction, a triggered free ability need not spend the reaction resource. */
+export type UseTriggeredActionCommand = Omit<UseActionCommand, 'type'> & {
+  type: 'UseTriggeredAction';
+  trigger: string;
+};
+
 /**
  * Takes the Attack action and replaces one of its compiled attacks with the
  * named catalog capability. The command supplies targets/facts only; sequence
@@ -1277,6 +1284,7 @@ export type GameCommand =
   | EndTurnCommand
   | UseActionCommand
   | UseReactionActionCommand
+  | UseTriggeredActionCommand
   | UseAttackReplacementCommand
   | BeginAttackActionCommand
   | PerformWeaponAttackCommand

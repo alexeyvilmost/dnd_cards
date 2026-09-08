@@ -179,11 +179,12 @@ export interface PendingCombatAreaTrigger {
  * exposed as proactive hotbar buttons.
  */
 export interface PendingTriggeredAction {
-  event: 'hit' | 'miss' | 'sneak_attack_hit' | 'opportunity_attack' | 'reach_entry' | 'action_resolved';
+  event: 'hit' | 'miss' | 'sneak_attack_hit' | 'opportunity_attack' | 'reach_entry' | 'action_resolved' | 'crit';
   sourceActorId: string;
   sourceActionId: string;
   targetIds: string[];
   optionActionIds: string[];
+  optionEvents?: Record<string, string>;
   /**
    * Exact replacement HP after foregoing one rolled Sneak Attack d6. The
    * combat adapter derives this from the committed damage packet sequence and
@@ -231,6 +232,7 @@ export interface PendingD20Interrupt {
   timing: 'before_roll' | 'after_outcome';
   operation: 'impose_disadvantage' | 'subtract_die';
   command: {
+    triggerEvent?: string;
     actorId: string;
     actionId: string;
     targetIds: string[];
@@ -252,9 +254,19 @@ export interface PendingD20Interrupt {
   };
 }
 
+export interface AdditionalCombatMovement {
+  actorId: string;
+  remainingFt: number;
+  provokeOpportunityAttacks: boolean;
+  /** A critical reaction may interrupt another creature's movement, including
+   * another additional route. The stack contains only serializable continuations. */
+  interrupted?: Pick<SoloCombatState, 'playerMovement' | 'pendingMovementStep' | 'pendingReachEntry'
+    | 'pendingAdditionalMovement' | 'pendingCombatAreaTriggers' | 'pendingCombatAreaTurnContinuation'>;
+}
+
 export interface SoloCombatState {
   /** Immediate additional movement: consumed by one route or declined, never added to the turn ledger. */
-  pendingAdditionalMovement?: {actorId: string; remainingFt: number; provokeOpportunityAttacks: boolean};
+  pendingAdditionalMovement?: AdditionalCombatMovement;
   /** Player route retained across reactions and per-cell area decisions. */
   playerMovement?: {actorId: string; origin: GridPosition; steps: GridPosition[]};
   pendingReachEntry?: {moverId: string; from: GridPosition; destination: GridPosition; actorIds: string[]};

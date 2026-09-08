@@ -111,6 +111,8 @@ import { materializeOwnedSummon, reconcileOwnedSummons } from './ownedSummons';
 
 type Rng = () => number;
 type CombatActionInput = {
+  /** Supplied only by the persisted event-window resolver, never by a proactive intent. */
+  triggerEvent?: string;
   state: SoloCombatState;
   actorId: string;
   actionId: string;
@@ -853,9 +855,18 @@ function transitionState(
     const speed = effectiveCombatActorSpeedFt(next, moverId);
     const remainingFt = speed === 0 ? 0 : Math.floor(event.distanceFt + speed * (event.speedFraction ?? 0));
     if (remainingFt > 0 && isPlayerControlledCombatActor(next, moverId)) {
-      if (next.pendingAdditionalMovement) throw new Error('Сначала завершите дополнительное перемещение');
-      next = {...next, pendingAdditionalMovement: {actorId: moverId, remainingFt,
-        provokeOpportunityAttacks: event.provokeOpportunityAttacks !== false}};
+      const {playerMovement, pendingMovementStep, pendingReachEntry, pendingAdditionalMovement,
+        pendingCombatAreaTriggers, pendingCombatAreaTurnContinuation, ...ready} = next;
+      next = {...ready, pendingAdditionalMovement: {actorId: moverId, remainingFt,
+        provokeOpportunityAttacks: event.provokeOpportunityAttacks !== false,
+        interrupted: {
+          ...(playerMovement ? {playerMovement} : {}),
+          ...(pendingMovementStep ? {pendingMovementStep} : {}),
+          ...(pendingReachEntry ? {pendingReachEntry} : {}),
+          ...(pendingAdditionalMovement ? {pendingAdditionalMovement} : {}),
+          ...(pendingCombatAreaTriggers?.length ? {pendingCombatAreaTriggers} : {}),
+          ...(pendingCombatAreaTurnContinuation ? {pendingCombatAreaTurnContinuation} : {}),
+        }}};
     }
   }
   const summaries = worldObjectSummary(rawEvents, nextWorld);
@@ -1132,6 +1143,7 @@ function serializableCombatCommand(input: CombatActionInput): PendingD20Interrup
     ? Object.fromEntries(Object.entries(input.choices).map(([key, values]) => [key, [...values]]))
     : undefined;
   return clone({
+    ...(input.triggerEvent ? {triggerEvent: input.triggerEvent} : {}),
     actorId: input.actorId,
     actionId: input.actionId,
     targetIds: input.targetIds,
@@ -1262,7 +1274,7 @@ function removeMountedCombatantAttackProjection(
 
 function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
   if (input.state.outcome !== 'active') return input.state;
-  if (activeActorId(input.state) !== input.actorId) throw new Error('Сейчас ход другого участника');
+  if (!input.triggerEvent && activeActorId(input.state) !== input.actorId) throw new Error('Сейчас ход другого участника');
   const action = input.state.catalogActions.find((candidate) => candidate.id === input.actionId);
   if (!action) throw new Error('Действие отсутствует в снимке боя');
   const actorPosition = input.state.tokens[input.actorId]?.position;
@@ -1362,7 +1374,7 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
   }
   const command: GameCommand = {
     ...commandBase(input.state, input.actorId),
-    type: 'UseAction', actionId: action.id,
+    ...(input.triggerEvent ? {type: 'UseTriggeredAction' as const, trigger: input.triggerEvent} : {type: 'UseAction' as const}), actionId: action.id,
     targetIds: declaration.targetIds,
     ...(declaration.factsByTarget ? { factsByTarget: declaration.factsByTarget } : {}),
     ...(declaration.protectionCandidates ? { protectionCandidates: declaration.protectionCandidates } : {}),
@@ -2038,7 +2050,9 @@ export function resolveTriggeredCombatAction(
         },
       } : {}),
     };
-    return dispatch({ state: cleared as SoloCombatState, command, rng, label: action.name });
+    const next = dispatch({ state: cleared as SoloCombatState, command, rng, label: action.name });
+    return offerTriggeredAttackActions({before: state, after: next,
+      sourceActorId: pending.sourceActorId, sourceActionId: action.id, targetIds: pending.targetIds});
   }
   const chosen = state.catalogActions.find((candidate) => candidate.id === actionId);
   if (!chosen) throw new Error('Способность отсутствует в снимке боя');
@@ -2073,11 +2087,12 @@ export function resolveTriggeredCombatAction(
   }
   const targeting = chosen.mechanics.targeting as Record<string, unknown> | undefined;
   const chosenTargetIds = targeting?.actor_targets === false ? [] : pending.targetIds;
-  const next = executeCombatAction({
+  const next = executeCombatActionWithD20Interrupts({
     state: prepared,
     actorId: pending.sourceActorId,
     actionId,
     targetIds: chosenTargetIds,
+    triggerEvent: pending.optionEvents?.[actionId] ?? (chosenTrigger.includes(pending.event) ? pending.event : chosenTrigger[0]),
     rng,
   });
   const useKey = chosen ? generalFeatTriggeredUseKey(chosen) : null;
@@ -2443,7 +2458,7 @@ function attackOutcomeEvent(
   return outcomes.at(-1) ?? null;
 }
 
-type AttackTriggerEvent = 'hit' | 'miss' | 'sneak_attack_hit' | 'action_resolved';
+type AttackTriggerEvent = 'hit' | 'miss' | 'sneak_attack_hit' | 'action_resolved' | 'crit';
 
 const SNEAK_ATTACK_EFFECT_ID = 'EFF-sneak-attack';
 
@@ -2457,10 +2472,13 @@ function attackTriggerEvents(
   if (outcomeEvent === 'miss') return ['miss'];
   const beforeFired = before.world.actors[sourceActorId]?.runtime.firedThisTurn ?? [];
   const afterFired = after.world.actors[sourceActorId]?.runtime.firedThisTurn ?? [];
-  return !beforeFired.includes(SNEAK_ATTACK_EFFECT_ID)
-    && afterFired.includes(SNEAK_ATTACK_EFFECT_ID)
-    ? ['hit', 'sneak_attack_hit']
-    : ['hit'];
+  const events: AttackTriggerEvent[] = ['hit'];
+  const critical = combatLogSince(after, combatLogCursor(before)).flatMap(entry => entry.records ?? [])
+    .some(record => record.sourceActorId === sourceActorId && record.event?.type === 'roll'
+      && record.event.roll.kind === 'd20' && record.event.roll.outcome === 'crit');
+  if (critical) events.push('crit');
+  if (!beforeFired.includes(SNEAK_ATTACK_EFFECT_ID) && afterFired.includes(SNEAK_ATTACK_EFFECT_ID)) events.push('sneak_attack_hit');
+  return events;
 }
 
 function applyDamageToHp(
@@ -2695,6 +2713,9 @@ function offerTriggeredAttackActions(input: {
       || !events.some((event) => isTriggeredCombatAction(action, event))) return [];
     const activation = action.mechanics.activation as Record<string, unknown> | undefined;
     const trigger = activation?.trigger as Record<string, unknown> | undefined;
+    // Sentinel is a mandatory movement interruption, committed by the saved
+    // opportunity-step continuation rather than offered as an optional rider.
+    if (trigger?.feat_sentinel_opportunity === true) return [];
     // A generic completion listener must name its source; otherwise a triggered
     // action could recursively offer unrelated completion listeners.
     if (isTriggeredCombatAction(action, 'action_resolved')
@@ -2724,6 +2745,7 @@ function offerTriggeredAttackActions(input: {
       sourceActorId, sourceActionId,
       targetIds: [...targetIds],
       optionActionIds: executableOptions.map(({ actionId }) => actionId),
+      optionEvents: Object.fromEntries(executableOptions.map(({actionId, event}) => [actionId, event])),
       ...(tradeoff ? { sneakAttackTradeoff: tradeoff } : {}),
     },
   } : after;
@@ -3174,7 +3196,8 @@ export function moveActorAlongRoute(input: {
 function continuePlayerRoute(state: SoloCombatState, rng: Rng): SoloCombatState {
   let next = state;
   const stop = (value: SoloCombatState) => {
-    const {playerMovement: _route, pendingAdditionalMovement: _extra, ...rest} = value;
+    if (value.pendingAdditionalMovement) return finishAdditionalMovement(value);
+    const {playerMovement: _route, ...rest} = value;
     return rest;
   };
   for (let step = 0; next.playerMovement && step <= TACTICAL_WIDTH * TACTICAL_HEIGHT; step++) {
@@ -3210,16 +3233,35 @@ function continuePlayerRoute(state: SoloCombatState, rng: Rng): SoloCombatState 
 }
 
 /** Continue only after all decisions belonging to the interrupting attack settle. */
+function finishAdditionalMovement(state: SoloCombatState): SoloCombatState {
+  const {pendingAdditionalMovement, playerMovement: _route, pendingMovementStep: _step,
+    pendingReachEntry: _entry, pendingCombatAreaTriggers, pendingCombatAreaTurnContinuation: _turn, ...rest} = state;
+  const interrupted = pendingAdditionalMovement?.interrupted;
+  const areaTriggers = [...(interrupted?.pendingCombatAreaTriggers ?? []), ...(pendingCombatAreaTriggers ?? [])];
+  return {...rest, ...interrupted, ...(areaTriggers.length ? {pendingCombatAreaTriggers: areaTriggers} : {})};
+}
+
 export function declineAdditionalMovement(state: SoloCombatState): SoloCombatState {
   if (!state.pendingAdditionalMovement || state.playerMovement || state.pendingMovementStep
     || monsterMovementPaused({...state, pendingAdditionalMovement: undefined})) {
     throw new Error('Нет доступного решения о дополнительном перемещении');
   }
-  const {pendingAdditionalMovement: _extra, ...next} = state;
-  return next;
+  return finishAdditionalMovement(state);
 }
 
 export function resumePendingMovement(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
+  let next = state;
+  for (let depth = 0; depth < 32; depth++) {
+    const additional = next.pendingAdditionalMovement;
+    next = resumePendingMovementOnce(next, rng);
+    if (!additional || next.pendingAdditionalMovement === additional || monsterMovementPaused(next)) return next;
+    next = autoResolveSystemDecisions(next, rng);
+    if (!next.playerMovement && !next.pendingMovementStep && !next.pendingReachEntry) return next;
+  }
+  throw new Error('Превышена вложенность прерванных перемещений');
+}
+
+function resumePendingMovementOnce(state: SoloCombatState, rng: Rng): SoloCombatState {
   if (monsterMovementPaused(state)) return state;
   if (state.pendingReachEntry) {
     const entry = state.pendingReachEntry;

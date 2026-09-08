@@ -295,7 +295,7 @@ function validateCommon(world: WorldState, command: GameCommand): CommandResult 
 function validateTurn(world: WorldState, command: GameCommand): CommandResult | null {
   if (command.type === 'ResolveDecision') return null;
   // Reaction actions are catalog-gated in the UseReactionAction handler below.
-  if (command.type === 'UseReactionAction') return null;
+  if (command.type === 'UseReactionAction' || command.type === 'UseTriggeredAction') return null;
   if (command.type === 'SwapInitiative') return null;
   // A catalog-owned environmental area can force a save when it appears or
   // when another creature moves; the affected creature need not own the turn.
@@ -11066,6 +11066,7 @@ function executeCommand(
     case 'ObserveProtectionProximity':
       return observeProtectionProximity(world, command);
     case 'UseReactionAction':
+    case 'UseTriggeredAction':
     case 'UseAction': {
       if (actor.warlockPacts?.blade?.bondActionId === command.actionId) {
         return rejected(
@@ -11100,7 +11101,14 @@ function executeCommand(
           `${action.id} must replace an attack through the Attack-action sequence`,
         );
       }
-      if (command.type === 'UseReactionAction') {
+      if (command.type === 'UseTriggeredAction') {
+        const activation = action.mechanics.activation as Record<string, unknown> | undefined;
+        const trigger = activation?.trigger as Record<string, unknown> | undefined;
+        const events = [trigger?.event, ...(Array.isArray(trigger?.events) ? trigger.events : [])];
+        if (activationMode(action) !== 'triggered' || !events.includes(command.trigger)) {
+          return rejected(world, 'InvalidActionTiming', `${action.id} does not declare the ${command.trigger} ability trigger`);
+        }
+      } else if (command.type === 'UseReactionAction') {
         if (activationMode(action) !== 'reaction' || !hasReactionTrigger(action, command.trigger)) {
           return rejected(
             world,

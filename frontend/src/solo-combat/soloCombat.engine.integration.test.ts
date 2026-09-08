@@ -16,7 +16,7 @@ import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { actorMustCrawl, gridDistanceFt } from './tacticalGrid';
 import { isPlayerControlledCombatActor, SOLO_COMBAT_KEY, type SoloCombatState } from './types';
 import { UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
-import {monsterRouteOpportunityRisk, moveActorAlongRoute} from './engine';
+import {declineAdditionalMovement, monsterRouteOpportunityRisk, moveActorAlongRoute} from './engine';
 import {planMonsterTurn} from './monsterAi';
 import { STONEWORK_CONTACT_CHOICE_ID } from '../mechanics/collectChoices';
 
@@ -706,7 +706,76 @@ function goblin(): Monster {
   };
 }
 
+async function championMovementEncounter() {
+  const participant = fighterSeed();
+  const actorId = participant.character.id;
+  const movement = projectRuleAction({id: '20800000-0000-4000-8000-000000000001',
+    name: 'Champion movement', resource: 'free_action', type: 'class_feature',
+    mechanics: JSON.parse(readFileSync(new URL('../../../backend/migrations/champion_critical_movement_208.go', import.meta.url), 'utf8').match(/const championCriticalMovement208 = `([^`]+)`/)![1]),
+  } as Action);
+  const attack = projectRuleAction({...scimitar(), id: 'd2080000-0000-4000-8000-000000000001'});
+  const reaction = {...clone(attack), id: 'd2080000-0000-4000-8000-000000000002', mechanics: {...clone(attack.mechanics),
+    activation: {mode: 'reaction', cost: [{resource: 'reaction'}], trigger: {events: ['opportunity_attack']}}}};
+  const actions = [...participant.canonical.actions, movement, attack, reaction];
+  participant.canonical.world.actors[actorId].capabilities.actionIds.push(movement.id, attack.id, reaction.id);
+  participant.canonical = {...participant.canonical, actions, catalog: {getAction: id => actions.find(a => a.id === id), listActions: () => actions}};
+  const state = await createSoloCombatState({character: participant.character, participant,
+    selected: [{monster: {...goblin(), max_hp: 100}, quantity: 1}], actions: [scimitar()], effects: [], rng: () => 0.5});
+  const enemyId = Object.values(state.world.actors).find(actor => actor.kind === 'monster')!.id;
+  state.tokens[actorId].position = {x: 4, y: 4};
+  state.tokens[enemyId].position = {x: 4, y: 5};
+  state.opportunityActionIds[actorId] = reaction.id;
+  return {state, actorId, enemyId, movement, attack, reaction};
+}
+
 describe('solo combat engine vertical integration', () => {
+  it('offers Champion movement on a critical hit, including a 19 with Improved Critical, without spending another action', async () => {
+    const setup = await championMovementEncounter();
+    const {actorId, enemyId, movement, attack} = setup;
+    const ordinary = executeCombatAction({state: clone(setup.state), actorId, actionId: attack.id, targetIds: [enemyId], rng: () => 0.6});
+    expect(ordinary.pendingTriggeredAction).toBeUndefined();
+    setup.state.world.actors[actorId].passives = [...(setup.state.world.actors[actorId].passives ?? []),
+      {kind: 'modifier', op: 'crit_range', value: -1, applies_to: {roll: 'attack', filter: {attackKind: 'weapon'}}}];
+    const critical = executeCombatAction({state: setup.state, actorId, actionId: attack.id, targetIds: [enemyId], rng: () => 0.90});
+    expect(critical.pendingTriggeredAction?.optionEvents?.[movement.id]).toBe('crit');
+    const moved = resolveTriggeredCombatAction(clone(critical), movement.id, () => {throw Error('no new roll');});
+    expect(moved.pendingAdditionalMovement?.actorId).toBe(actorId);
+    expect(moved.world.actors[actorId].runtime.resources.action).toBe(0);
+    const completed = moveActorAlongRoute({state: clone(moved), actorId, destination: {x: 7, y: 4}, rng: () => {throw Error('no opportunity attack');}});
+    expect(completed.pendingAdditionalMovement).toBeUndefined();
+    expect(completed.movementRemainingFt[actorId]).toBe(critical.movementRemainingFt[actorId]);
+  });
+
+  it.each([true, false])('resumes an interrupted enemy step after Champion critical movement, accepted=%s', async accept => {
+    const {state: initial, actorId, enemyId, movement, reaction} = await championMovementEncounter();
+    let state = advanceTurn(initial, () => 0.5);
+    expect(activeId(state)).toBe(enemyId);
+    const noRoll = () => {throw Error('the committed attack must not reroll');};
+    state = moveActor({state, actorId: enemyId, destination: {x: 4, y: 6}, rng: noRoll});
+    expect(state.pendingTriggeredAction?.optionActionIds).toContain(reaction.id);
+    state = resolveTriggeredCombatAction(clone(state), reaction.id, () => 0.99);
+    expect(state.pendingTriggeredAction?.optionEvents?.[movement.id]).toBe('crit');
+    const committedHp = state.world.actors[enemyId].runtime.hp.current;
+    const enemyFeet = state.movementRemainingFt[enemyId];
+    const heroFeet = state.movementRemainingFt[actorId];
+    state = resolveTriggeredCombatAction(clone(state), movement.id, noRoll);
+    expect(state.pendingAdditionalMovement?.interrupted?.pendingMovementStep?.actorId).toBe(enemyId);
+    expect(state.pendingMovementStep).toBeUndefined();
+    state = accept
+      ? moveActorAlongRoute({state: clone(state), actorId, destination: {x: 7, y: 4}, rng: noRoll})
+      : declineAdditionalMovement(clone(state));
+    state = resumePendingMovement(clone(state), noRoll);
+    expect(state.tokens[actorId].position).toEqual(accept ? {x: 7, y: 4} : {x: 4, y: 4});
+    expect(state.tokens[enemyId].position).toEqual({x: 4, y: 6});
+    expect(state.world.actors[enemyId].runtime.hp.current).toBe(committedHp);
+    expect(state.world.actors[actorId].runtime.resources.reaction).toBe(0);
+    expect(state.movementRemainingFt[actorId]).toBe(heroFeet);
+    expect(state.movementRemainingFt[enemyId]).toBe(enemyFeet - 5);
+    expect(state.pendingAdditionalMovement).toBeUndefined();
+    expect(state.pendingMovementStep).toBeUndefined();
+    expect(activeId(state)).toBe(enemyId);
+  });
+
   it('offers additional movement only after its source action, persists the separate allowance and preserves normal movement/reactions', async () => {
     const participant = fighterSeed();
     const actorId = participant.character.id;
