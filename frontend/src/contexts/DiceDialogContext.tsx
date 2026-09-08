@@ -219,7 +219,7 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
                   </button>
                 </div>
                 <p className="dice-dialog-note">
-                  Если атака промахнётся, значения костей урона не понадобятся. Окно можно отключить в настройках сайта.
+                  Окно можно отключить в настройках сайта.
                 </p>
               </>
             )}
