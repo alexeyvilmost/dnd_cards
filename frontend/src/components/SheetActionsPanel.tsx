@@ -1406,7 +1406,7 @@ export default function SheetActionsPanel({
     if (committed) reconcileCommittedAtomicCommand(committed);
   };
 
-  const commitOrdinarySpellInteraction = async (prepared: PreparedSheetAtomicWorldCommit) => {
+  const commitOrdinarySpellInteraction = async (prepared: PreparedSheetAtomicWorldCommit, kind: 'ordinary_spell' | 'check' = 'ordinary_spell') => {
     setBusy(true);
     setError(null);
     let committed: CommittedSheetRuntimeCommand | null = null;
@@ -1424,7 +1424,7 @@ export default function SheetActionsPanel({
     } catch (cause) {
       const message = playerFacingSheetActionError(cause);
       if (sheetCompanionRetryPolicy(cause) === 'retain_exact_retry') {
-        setPendingAtomicRetry({ characterId: character.id, kind: 'ordinary_spell', prepared });
+        setPendingAtomicRetry({ characterId: character.id, kind, prepared });
         setError(`${message}. Безопасный повтор сохранён.`);
       } else {
         await refreshAfterDefinitiveAtomicRejection(message);
@@ -2975,7 +2975,7 @@ export default function SheetActionsPanel({
       {showAtomicRetryControl && pendingAtomicRetry && (
         <section className="sheet-group" role="alert" data-testid="sheet-atomic-retry">
           <h3 className="sheet-h3">Ответ {sheetAtomicRetryLabel(pendingAtomicRetry)} не подтверждён</h3>
-          <p>Повтор использует тот же command_id и те же CAS-снимки всех участников.</p>
+          <p>Повтор использует сохранённый результат действия и не спишет ресурсы повторно.</p>
           <button
             type="button"
             className="forge-btn"
@@ -2986,7 +2986,7 @@ export default function SheetActionsPanel({
               } else if (pendingAtomicRetry.kind === 'companion') {
                 void commitCompanionInteraction(pendingAtomicRetry.prepared);
               } else {
-                void commitOrdinarySpellInteraction(pendingAtomicRetry.prepared);
+                void commitOrdinarySpellInteraction(pendingAtomicRetry.prepared, pendingAtomicRetry.kind);
               }
             }}
           >

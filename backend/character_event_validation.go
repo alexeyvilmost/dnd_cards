@@ -405,8 +405,14 @@ func validateModifiers(raw any, path string) error {
 		if !ok || modifier == nil {
 			return invalidCharacterEvent(modifierPath, "must be an object")
 		}
-		if err := exactKeys(modifier, modifierPath, []string{"value", "source"}, []string{"reason"}); err != nil {
+		if err := exactKeys(modifier, modifierPath, []string{"value", "source"}, []string{"reason", "kind"}); err != nil {
 			return err
+		}
+		if rawKind, exists := modifier["kind"]; exists {
+			kind, ok := rawKind.(string)
+			if !ok || !oneOf(kind, "base", "ability", "proficiency", "expertise", "effect") {
+				return invalidCharacterEvent(modifierPath+".kind", "must be a supported modifier role")
+			}
 		}
 		if err := requiredFiniteNumber(modifier, "value", modifierPath+".value"); err != nil {
 			return err

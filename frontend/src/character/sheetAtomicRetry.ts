@@ -16,7 +16,7 @@ export type SheetAtomicRetryEnvelope =
   }
   | {
     characterId: string;
-    kind: 'ordinary_spell';
+    kind: 'ordinary_spell' | 'check';
     prepared: PreparedSheetAtomicWorldCommit;
   };
 
@@ -25,5 +25,6 @@ export function sheetAtomicRetryLabel(retry: SheetAtomicRetryEnvelope): string {
     case 'combat': return 'атомарной боевой команды';
     case 'companion': return 'атомарной операции спутника';
     case 'ordinary_spell': return 'атомарного заклинания';
+    case 'check': return 'проверки навыка';
   }
 }

@@ -13,6 +13,8 @@ vi.mock('../settings', () => ({
   useSiteSettings: () => ({ entityDisplay: { effects: 'cards', actions: 'cards' } }),
 }));
 
+vi.mock('../contexts/ChoiceDialogContext', () => ({useChoiceDialog: () => ({request: vi.fn()})}));
+
 vi.mock('../contexts/DiceDialogContext', () => ({
   useDiceDialog: () => ({ request: vi.fn() }),
 }));

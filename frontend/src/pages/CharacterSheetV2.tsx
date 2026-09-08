@@ -13,6 +13,11 @@ import { collectRollModifiers } from '../engine/modifiers';
 import { rollD20 } from '../engine/roll';
 import { finalizeSheetD20Roll } from '../character/sheetD20Roll';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
+import {activeRunId} from '../roguelike/navigation';
+import {commitSheetRuntimeCommand} from '../character/sheetRuntimeCommand';
+import {sheetCompanionRetryPolicy} from '../character/sheetCompanionInteraction';
+import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
+import {availableCheckManeuvers, checkManeuverChoice, prepareCheckManeuver, prepareSheetCheckCommit} from '../character/checkManeuvers';
 import { getSkillGrantSource, grantReason } from '../character/rules/resolveCharacterRules';
 import { type Card, type Spell } from '../types';
 import { useSiteSettings } from '../settings';
@@ -116,6 +121,10 @@ const CharacterSheetV2 = ({
   const [restBusy, setRestBusy] = useState(false);
   const { entityDisplay } = useSiteSettings();
   const diceDialog = useDiceDialog();
+  const checkChoiceDialog = useChoiceDialog();
+  const checkBusyRef = useRef(false);
+  const [checkBusy, setCheckBusy] = useState(false);
+  const [checkError, setCheckError] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
@@ -142,53 +151,101 @@ const CharacterSheetV2 = ({
     rollKind: 'saving_throw' | 'ability_check',
     filter?: Record<string, unknown>,
   ) => {
-    if (readOnly) return;
-    const parts = breakdown.parts;
-    // C14: числовые модификаторы эффектов УЖЕ входят в parts (breakdownSave/Skill добавляют
-    // effectModifiers). collected нужен только для advantage — его модификаторы НЕ подмешиваем,
-    // иначе литеральные бонусы задваивались бы (parts + collected).
-    const collected = runtimeState
-      ? collectRollModifiers(runtimeState, passives, { roll: rollKind, ...(filter ? { filter } : {}) })
-      : { advantage: 'none' as const, modifiers: [], rules: [] as Record<string, unknown>[] };
-    const plan: PlannedDie[] = Array.from(
-      { length: collected.advantage === 'none' ? 1 : 2 },
-      (_, index) => ({
-        sides: 20,
-        label,
-        resultGroup: 'check',
-        advantage: collected.advantage,
-        ...(index === 0 ? { modifier: parts.reduce((sum, part) => sum + part.value, 0) } : {}),
-      }),
-    );
-    plan.push(...plannedD20BonusDice(collected.rules, label, 'check'));
-    const decision = await diceDialog.request(
-      plan,
-      label,
-      <ValueBreakdownPanel breakdown={breakdown} label={label} />,
-    );
-    if (decision.mode === 'cancel') return;
-    const rng = decision.mode === 'manual'
-      ? plannedValuesRng(plan, decision.values)
-      : () => Math.random();
-    const roll = rollD20({
-      advantage: collected.advantage,
-      modifiers: [...parts],
-      rng,
-      rules: collected.rules,
-    });
-    const rollEvents: EngineEvent[] = [rollEvent(label, roll)];
-    if (runtimeState) {
-      const finalized = finalizeSheetD20Roll(runtimeState, rollKind, filter);
-      rollEvents.push(...finalized.events);
-      if (finalized.state !== runtimeState) {
-        const updated = await persistCharacterRuntime(character, {
-          active_effects: finalized.state.activeEffects,
-          turn_state: writeRulesEngineRuntimeTurnState(character.turn_state, finalized.state),
-        }, encounterApply);
-        onUpdated(updated);
+    if (readOnly || pendingAtomicRetry || checkBusyRef.current || actionBusy || restBusy || (combatActive && character.character_type === 'dungeon_crawl')) return;
+    checkBusyRef.current = true;
+    setCheckBusy(true); setCheckError(null);
+    try {
+      let checkState = runtimeState;
+      const preparationEvents: EngineEvent[] = [];
+      if (checkState && sheetCtx) {
+        const ownedActions = abilityActions.map(entry => entry.action);
+        const options = availableCheckManeuvers(ownedActions, checkState, rollKind, filter ?? {});
+        if (options.length) {
+          const selection = await checkChoiceDialog.request([checkManeuverChoice(options)], label);
+          if (!selection) return;
+          const selectedId = selection.check_maneuver?.[0];
+          if (selectedId !== 'none') {
+            const chosen = options.find(action => action.id === selectedId);
+            if (!chosen) throw Error('Выберите приём или бросок без приёма.');
+            const prepared = prepareCheckManeuver(chosen, ownedActions, checkState, sheetCtx, filter ?? {}, character.id);
+            checkState = prepared.state;
+            preparationEvents.push(...prepared.events);
+          }
+        }
       }
+      const parts = breakdown.parts;
+      // C14: числовые модификаторы эффектов УЖЕ входят в parts (breakdownSave/Skill добавляют
+      // effectModifiers). collected нужен только для advantage — его модификаторы НЕ подмешиваем,
+      // иначе литеральные бонусы задваивались бы (parts + collected).
+      const collected = checkState
+        ? collectRollModifiers(checkState, passives, { roll: rollKind, ...(filter ? { filter } : {}) })
+        : { advantage: 'none' as const, modifiers: [], rules: [] as Record<string, unknown>[] };
+      const plan: PlannedDie[] = Array.from(
+        { length: collected.advantage === 'none' ? 1 : 2 },
+        (_, index) => ({
+          sides: 20,
+          label,
+          resultGroup: 'check',
+          advantage: collected.advantage,
+          ...(index === 0 ? { modifier: parts.reduce((sum, part) => sum + part.value, 0) } : {}),
+        }),
+      );
+      plan.push(...plannedD20BonusDice(collected.rules, label, 'check'));
+      const decision = await diceDialog.request(
+        plan,
+        label,
+        <ValueBreakdownPanel breakdown={breakdown} label={label} />,
+      );
+      if (decision.mode === 'cancel') return;
+      const rng = decision.mode === 'manual'
+        ? plannedValuesRng(plan, decision.values)
+        : () => Math.random();
+      const roll = rollD20({
+        advantage: collected.advantage,
+        modifiers: [...parts],
+        rng,
+        rules: collected.rules,
+      });
+      const rollEvents: EngineEvent[] = [...preparationEvents, rollEvent(label, roll)];
+      if (checkState) {
+        const finalized = finalizeSheetD20Roll(checkState, rollKind, filter);
+        rollEvents.push(...finalized.events);
+        if (!character.current_encounter_id) {
+          const prepared = prepareSheetCheckCommit({character, state: finalized.state, events: rollEvents,
+            commandId: crypto.randomUUID(), runId: character.character_type === 'dungeon_crawl' ? activeRunId() : undefined,
+            rulesContent: {rollKind, filter, parts, rules: collected.rules, passives}});
+          try {
+            const committed = await commitSheetRuntimeCommand({request: prepared.request,
+              commit: () => charactersV3Api.postRuntimeCommand(prepared.request), loadCurrent: charactersV3Api.get,
+              viewingCharacterId: character.id, loadPersistedEvents: charactersV3Api.getEvents});
+            onPendingAtomicRetryChange(null);
+            onUpdated(committed.characters[character.id]);
+            if (committed.persistedEvents) onPersistedEvents(committed.persistedEvents);
+          } catch (reason) {
+            if (sheetCompanionRetryPolicy(reason) === 'retain_exact_retry') {
+              onPendingAtomicRetryChange({characterId: character.id, kind: 'check', prepared});
+            } else {
+              onUpdated(await charactersV3Api.get(character.id));
+            }
+            throw reason;
+          }
+          return;
+        }
+        if (finalized.state !== runtimeState) {
+          const updated = await persistCharacterRuntime(character, {
+            resources: finalized.state.resources,
+            active_effects: finalized.state.activeEffects,
+            turn_state: writeRulesEngineRuntimeTurnState(character.turn_state, finalized.state),
+          }, encounterApply, true);
+          onUpdated(updated);
+        }
+      }
+      onEvents(rollEvents);
+    } catch (reason) {
+      setCheckError(reason instanceof Error ? reason.message : 'Не удалось сохранить проверку.');
+    } finally {
+      checkBusyRef.current = false; setCheckBusy(false);
     }
-    onEvents(rollEvents);
   };
 
   const scores = ruleState.abilities; // D3: с учётом grant_ability_score (ASI/раса), не «сырые» из драфта
@@ -203,7 +260,7 @@ const CharacterSheetV2 = ({
   const speed = speedBreakdown?.value ?? ruleState.speed;
   const spellcasting = ruleState.spellcasting;
   const coordinatedSheetActionDisabledReason = sheetActionDisabledReason
-    ?? (restBusy ? 'Сохраняется новый ход или отдых' : undefined);
+    ?? (checkBusy ? 'Выполняется проверка навыка' : restBusy ? 'Сохраняется новый ход или отдых' : undefined);
   const passivePerceptionBd = sheetCtx && runtimeState
     ? breakdownValue('passive_perception', sheetCtx, runtimeState, passives)
     : null;
@@ -266,7 +323,7 @@ const CharacterSheetV2 = ({
             encounterApply={encounterApply}
             disabledReason={combatActive
               ? 'Персонаж находится в бою: управляйте ходом и отдыхом на поле'
-              : actionBusy ? 'Сохраняется результат действия' : undefined}
+              : (actionBusy || checkBusy) ? 'Сохраняется результат действия' : undefined}
             onBusyChange={setRestBusy}
           />
         )}
@@ -297,6 +354,7 @@ const CharacterSheetV2 = ({
           {spellcasting && pill('Атака закл.', fmtMod(spellcasting.attack), spellAttackBd)}
         </div>
       </div>
+      {checkError && <p className="issues" role="alert">{checkError}</p>}
       {avatarError && <p className="issues cs-avatar-error" role="alert">{avatarError}</p>}
 
       <div className="csheet-cols">
@@ -335,7 +393,7 @@ const CharacterSheetV2 = ({
             `Спасбросок (${ABILITY_LABEL_RU[ability]})`, breakdown, 'saving_throw', { ability },
           ); }}
           onRollSkill={readOnly ? undefined : (skillId, label, _ability, breakdown) => { void rollCheck(
-            `Проверка (${label})`, breakdown, 'ability_check', { skill: skillId },
+            `Проверка (${label})`, breakdown, 'ability_check', { skill: skillId, ability: _ability },
           ); }}
           initiative={!readOnly && onRollInitiative
             ? {

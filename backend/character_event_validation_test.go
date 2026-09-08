@@ -114,3 +114,18 @@ func TestCharacterEventModelHookUsesSameValidator(t *testing.T) {
 		t.Fatalf("BeforeCreate error=%v, want characterEventValidationError", err)
 	}
 }
+
+func TestCharacterEventModifierSemanticRole(t *testing.T) {
+	for _, kind := range []string{"base", "ability", "proficiency", "expertise", "effect"} {
+		payload := JSONMap{"type": "roll", "label": "History", "roll": map[string]any{
+			"kind": "d20", "dice": []any{map[string]any{"sides": 20, "result": 10}, map[string]any{"sides": 8, "result": 5, "source": "Tactical Assessment", "sign": 1}}, "advantage": "none",
+			"modifiers": []any{map[string]any{"value": 2, "source": "PB", "kind": kind}}, "total": 17, "text": "10+5+2=17"}}
+		if err := validateCharacterEvent("roll", payload); err != nil {
+			t.Fatalf("valid role %s: %v", kind, err)
+		}
+		payload["roll"].(map[string]any)["modifiers"].([]any)[0].(map[string]any)["kind"] = "unrecognized"
+		if err := validateCharacterEvent("roll", payload); err == nil {
+			t.Fatal("unknown semantic role accepted")
+		}
+	}
+}
