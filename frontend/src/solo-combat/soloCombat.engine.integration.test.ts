@@ -4240,3 +4240,108 @@ it.each(['learned', 'unknown', 'exhausted', 'incapacitated'])('validates Ambush 
   expect(JSON.parse(JSON.stringify(state)).initiative).toEqual(state.initiative);
   expect((await initialize()).initiative).toEqual(state.initiative);
 });
+
+
+describe('Precision Attack preserves the held attack roll', () => {
+  async function setup(canonical = false) {
+    const unarmed = unarmedParticipant();
+    const participant = canonical ? unarmed.participant : fighterSeed();
+    const actorId = participant.character.id;
+    const actor = participant.canonical.world.actors[actorId];
+    actor.runtime.resources.superiority_die = 4; actor.runtime.maxResources.superiority_die = 4;
+    const attack = canonical ? unarmed.action : projectRuleAction({...scimitar(),id:'precision-source',name:'Attack probe',mechanics:{
+      activation:{mode:'active',cost:[{resource:'action'}]},
+      targeting:{domain:'actor',actor_targets:true,shape:'single',min_targets:1,max_targets:1,range_ft:5,requires_line_of_sight:true,allowed_relations:['enemy']},
+      effects:[{resolution:'attack_roll',ability:'str',attack_kind:'weapon_melee',attack_bonus_override:5,vs:'ac',
+        on_hit:[{kind:'damage',dice:'1d6',type:'slashing'}]}],
+    }} as Action);
+    const precision = projectRuleAction({id:'22200000-0000-4000-8000-000000000001',name:'Precision',type:'class_feature',resource:'free_action',
+      mechanics:JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_precision_222.go',import.meta.url),'utf8').match(/const battleMasterPrecision222 = `([^`]+)`/)![1])} as unknown as Action);
+    const trip = projectRuleAction({id:'precision-trip',name:'Trip',type:'class_feature',resource:'free_action',
+      mechanics:JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_trip_212.go',import.meta.url),'utf8').match(/const battleMasterTrip212 = `([^`]+)`/)![1])} as unknown as Action);
+    const actions=[...participant.canonical.actions,attack,precision,trip];
+    actor.capabilities.actionIds.push(attack.id,precision.id,trip.id);
+    participant.canonical={...participant.canonical,actions,catalog:{getAction:id=>actions.find(action=>action.id===id),listActions:()=>actions}};
+    let state=await createSoloCombatState({character:participant.character,participant,selected:[{monster:{...goblin(),armor_class:18,max_hp:100},quantity:1}],actions:[scimitar()],effects:[],rng:()=>0.5});
+    const targetId=Object.values(state.world.actors).find(actor=>actor.kind==='monster')!.id;
+    state=placeAdjacent(state,actorId,targetId);
+    return {state,actorId,targetId,attack,precision,trip};
+  }
+  it('resumes the canonical Attack-action ledger without charging another action',async()=>{
+    const {state,actorId,targetId,attack,precision}=await setup(true);
+    const pending=executeCombatAction({state,actorId,actionId:attack.id,targetIds:[targetId],choices:{[UNARMED_STRIKE_CHOICE_ID]:['damage']},rng:()=>0.45});
+    expect(pending.world.pendingResolution).toMatchObject({type:'attack_reaction',attackAdjustment:true});
+    const held=pending.world.pendingResolution;
+    if(held?.type !== 'attack_reaction') throw Error('missing held attack');
+    expect(held.attackActionId).toBeTruthy();
+    const result=resolvePlayerReaction(clone(pending),{kind:'reaction',actionId:precision.id},()=>0.99);
+    expect(result.world.pendingResolution).toBeNull();
+    expect(result.world.attackActions[held.attackActionId!].status).toBe('completed');
+    expect(result.world.actors[actorId].runtime.resources.action).toBe(0);
+    expect(result.world.actors[actorId].runtime.resources.superiority_die).toBe(3);
+    expect(result.world.actors[targetId].runtime.hp.current).toBeLessThan(100);
+  });
+  it.each([true,false])('offers defender interruption after Precision, preserves the original roll: %s', async useShield=>{
+    const {state,actorId,targetId,attack,precision,trip}=await setup();
+    const shield=projectRuleAction(basicAction('precision-shield','Shield probe',{
+      activation:{mode:'reaction',cost:[{resource:'reaction'}],trigger:{event:'hit_by_attack'}},
+      targeting:{domain:'actor',actor_targets:false,shape:'self',min_targets:0,max_targets:1,range_ft:0,requires_line_of_sight:false,allowed_relations:['self']},
+      effects:[],attack_defense:{scope:'triggering_attack',ac_bonus:5},
+    }));
+    state.catalogActions.push(shield);
+    state.world.actors[targetId].capabilities.actionIds.push(shield.id);
+    state.controlledCharacterIds=[actorId,targetId];
+    let pending=executeCombatAction({state,actorId,actionId:attack.id,targetIds:[targetId],rng:()=>0.45});
+    pending=resolvePlayerReaction(clone(pending),{kind:'reaction',actionId:precision.id},()=>0.5);
+    expect(pending.world.pendingResolution).toMatchObject({type:'attack_reaction',request:{actorId:targetId,trigger:{type:'hit_by_attack'}},
+      attackRoll:{total:20,attackManeuverActionId:precision.id}});
+    expect(pending.world.actors[actorId].runtime.resources.superiority_die).toBe(3);
+    expect(pending.world.actors[targetId].runtime.hp.current).toBe(100);
+    let draws=0;
+    const result=resolvePlayerReaction(clone(pending),{kind:'reaction',actionId:useShield?shield.id:null},()=>{draws++;return 0.5;});
+    expect(draws).toBe(useShield?0:1);
+    expect(result.world.actors[targetId].runtime.hp.current).toBe(useShield?100:96);
+    expect(result.world.actors[actorId].runtime.resources.superiority_die).toBe(3);
+    expect(result.world.pendingResolution).toBeNull();
+    expect(result.pendingTriggeredAction?.optionActionIds??[]).not.toContain(trip.id);
+  });
+  it('rejects a forged selection before bonus or damage RNG',async()=>{
+    const {state,actorId,targetId,attack}=await setup();
+    const pending=executeCombatAction({state,actorId,actionId:attack.id,targetIds:[targetId],rng:()=>0.45});
+    expect(()=>resolvePlayerReaction(clone(pending),{kind:'reaction',actionId:'not-owned'},()=>{throw Error('unexpected RNG');})).toThrow(/not available/);
+    expect(pending.world.actors[actorId].runtime.resources.superiority_die).toBe(4);
+    expect(pending.world.actors[targetId].runtime.hp.current).toBe(100);
+  });
+  it.each(['hit','still_miss','natural_one','decline'])('resumes exactly once: %s', async mode=>{
+    const {state,actorId,targetId,attack,precision,trip}=await setup();
+    if(mode==='natural_one') (state.catalogActions.find(action=>action.id===attack.id)!.mechanics.effects as Record<string,unknown>[])[0].attack_bonus_override=20;
+    let attackDraws=0;
+    const pending=executeCombatAction({state,actorId,actionId:attack.id,targetIds:[targetId],rng:()=>{attackDraws++;return mode==='natural_one'?0:0.45;}});
+    expect(attackDraws).toBe(1);
+    expect(pending.world.pendingResolution).toMatchObject({type:'attack_reaction',attackAdjustment:true,request:{actorId,trigger:{type:'attack_missed'}}});
+    expect(pending.world.actors[targetId].runtime.hp.current).toBe(100);
+    expect(pending.world.actors[actorId].runtime.resources.superiority_die).toBe(4);
+    const saved=clone(pending); let draws=0;
+    const result=resolvePlayerReaction(saved,{kind:'reaction',actionId:mode==='decline'?null:precision.id},()=>{draws++;return mode==='still_miss'?0:0.5;});
+    expect(draws).toBe(mode==='hit'?2:mode==='decline'?0:1);
+    expect(result.world.actors[actorId].runtime.resources.superiority_die).toBe(mode==='decline'?4:3);
+    expect(result.world.actors[actorId].runtime.resources.action).toBe(0);
+    expect(result.world.actors[actorId].runtime.resources.reaction).toBe(pending.world.actors[actorId].runtime.resources.reaction);
+    expect(result.world.actors[targetId].runtime.hp.current).toBe(mode==='hit'?96:100);
+    expect(result.world.pendingResolution).toBeNull();
+    expect(result.pendingTriggeredAction?.optionActionIds??[]).not.toContain(trip.id);
+    const rolls=result.log.flatMap(entry=>entry.records??[]).flatMap(record=>record.event?.type==='roll'&&record.event.roll.kind==='d20'?[record.event.roll]:[]);
+    expect(rolls.at(-1)?.dice.find(die=>die.sides===20&&!die.discarded)?.result).toBe(mode==='natural_one'?1:10);
+    expect(()=>resolvePlayerReaction(result,{kind:'reaction',actionId:precision.id},()=>{throw Error('no duplicate RNG');})).toThrow();
+    expect(pending.world.actors[actorId].runtime.resources.superiority_die).toBe(4);
+  });
+  it.each(['unknown','exhausted','prepared_feint'])('does not offer unavailable precision: %s', async mode=>{
+    const {state,actorId,targetId,attack,precision}=await setup();
+    if(mode==='unknown') state.world.actors[actorId].capabilities.actionIds=state.world.actors[actorId].capabilities.actionIds.filter(id=>id!==precision.id);
+    if(mode==='exhausted') state.world.actors[actorId].runtime.resources.superiority_die=0;
+    if(mode==='prepared_feint') state.world.actors[targetId].runtime.activeEffects.push({id:'feint-marker',name:'Feint',source:'Feint',sourceId:actorId,
+      mechanics:{kind:'damage_rider',trigger:'hit_by_attack_roll',scope:'target',source_actor_only:true,consume:'next_attack',attack_maneuver:true,dice:'1d8',type:'slashing',duration:{type:'until_end_of_source_turn'}}});
+    const result=executeCombatAction({state,actorId,actionId:attack.id,targetIds:[targetId],rng:()=>0.45});
+    expect(result.world.pendingResolution).toBeNull();
+  });
+});

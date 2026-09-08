@@ -1,3 +1,6 @@
+import {readFileSync} from 'node:fs';
+import {projectRuleAction} from '../canon/ruleActionProjection';
+import type {Action} from '../types';
 import { describe, expect, it } from 'vitest';
 import { CARD_DAGGER, CARD_LONGSWORD } from '../mvp/fixtures';
 import type { EngineEvent } from '../mvp/contracts';
@@ -544,4 +547,35 @@ describe('canonical Light-property Bonus Action attack vertical', () => {
     );
     expect(canonicalStringify(replay)).toBe(canonicalStringify(shieldRestored.getState()));
   });
+});
+
+
+it('resumes a saved Light extra attack through Precision without a second bonus action',()=>{
+ const test=ready({id:'light-precision',dice:[{label:'main attack',sides:20,value:10},{label:'main damage',sides:4,value:2}]});
+ test.tape.assertExhausted();
+ const state=copy(test.session.getState());
+ state.actors.target.ac=10;
+ const precision=projectRuleAction({id:'precision-light',name:'Precision',type:'class_feature',resource:'free_action',
+  mechanics:JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_precision_222.go',import.meta.url),'utf8').match(/const battleMasterPrecision222 = `([^`]+)`/)![1])} as unknown as Action);
+ state.actors.attacker.capabilities.actionIds.push(precision.id);
+ state.actors.attacker.runtime.resources.superiority_die=4;
+ state.actors.attacker.runtime.maxResources.superiority_die=4;
+ const catalog:RulesCatalog={getAction:id=>id===precision.id?precision:CATALOG.getAction(id)};
+ const tape=createStrictRngTape([{label:'off-hand attack',sides:20,value:2},{label:'precision',sides:8,value:5},{label:'off-hand damage',sides:6,value:4}]);
+ const env={rng:tape.rng,clock:createLogicalClock(80_000),nextId:createSequentialIdFactory('light-precision')};
+ const session=new InMemoryRulesSession(state,catalog,env);
+ dispatch(session,'attacker',{type:'PerformLightWeaponExtraAttack',commandId:'precision:extra',attackActionId:test.attackActionId,
+  weaponCardId:SCIMITAR.id,targetActorId:'target',facts:facts(session.getState())});
+ const saved=copy(session.getState());
+ const pending=saved.pendingResolution;
+ expect(pending).toMatchObject({type:'attack_reaction',attackAdjustment:true,weaponHand:'off',weaponCardId:SCIMITAR.id});
+ if(!pending) throw Error('missing precision');
+ const restored=new InMemoryRulesSession(saved,catalog,env);
+ const result=dispatch(restored,'attacker',{type:'ResolveDecision',commandId:'precision:accept',resolutionId:pending.id,requestId:pending.request.id,response:{kind:'reaction',actionId:precision.id}});
+ expect(damageEvent(result).amount).toBe(4);
+ expect(restored.getState().actors.attacker.runtime.resources.bonus_action).toBe(0);
+ expect(restored.getState().actors.attacker.runtime.resources.superiority_die).toBe(3);
+ expect(restored.getState().pendingResolution).toBeNull();
+ expect(restored.getState().attackActions[test.attackActionId]).toEqual(saved.attackActions[test.attackActionId]);
+ tape.assertExhausted();
 });

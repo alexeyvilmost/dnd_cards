@@ -183,7 +183,8 @@ export function addBonusDieToD20Roll(
   let outcome = roll.outcome;
   if (roll.target?.type === 'dc') outcome = total >= roll.target.value ? 'success' : 'fail';
   else if (roll.target?.type === 'ac' && outcome !== 'crit' && outcome !== 'crit_miss') {
-    outcome = total >= roll.target.value ? 'hit' : 'miss';
+    const natural = roll.dice.find(die => die.sides === 20 && !die.discarded)?.result;
+    outcome = natural === 1 ? 'miss' : total >= roll.target.value ? 'hit' : 'miss';
   }
   const baseText = roll.text.replace(/ против (?:КЗ|СЛ) .*$/, '');
   const targetText = roll.target

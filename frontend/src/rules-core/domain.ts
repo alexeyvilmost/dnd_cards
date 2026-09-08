@@ -438,7 +438,7 @@ export interface ReactionDecisionRequest {
   actorId: string;
   trigger:
     | {
-      type: 'hit_by_attack';
+      type: 'hit_by_attack' | 'attack_missed';
       sourceActorId: string;
       actionId: string;
       attackTotal: number;
@@ -550,6 +550,8 @@ export interface PendingAttackReactionResolution {
   choices?: Record<string, string | string[]>;
   spell?: SpellCastContext;
   attackRoll: RollLog;
+  /** Source-side post-miss adjustment, before defender reactions and damage. */
+  attackAdjustment?: true;
   request: ReactionDecisionRequest;
   attackActionId?: string;
   /** Exact weapon selection retained while Shield or another hit Reaction is pending. */

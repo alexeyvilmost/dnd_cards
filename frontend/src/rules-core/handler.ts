@@ -3326,6 +3326,23 @@ function protectionEndEvent(input: {
  * Attack roll is committed first; hit effects stay suspended until the target
  * has accepted or declined interrupt reactions. This avoids damage rollback.
  */
+/** Post-miss maneuvers are source choices, not Reaction-resource actions. */
+function attackAdjustmentOptions(source: ActorState, target: ActorState, catalog: RulesCatalog): RuleActionDefinition[] {
+  if (target.runtime.activeEffects.some(effect => {
+    const payload = effect.mechanics as Record<string, unknown>;
+    return payload.attack_maneuver === true && payload.consume === 'next_attack' && effect.sourceId === source.id;
+  })) return [];
+  return source.capabilities.actionIds.flatMap(id => {
+    const action = catalog.getAction(id);
+    const activation = action?.mechanics.activation as Record<string, unknown> | undefined;
+    const trigger = activation?.trigger as Record<string, unknown> | undefined;
+    const faces = Number(trigger?.attack_roll_bonus_die);
+    return action && activation?.mode === 'triggered' && Array.isArray(trigger?.events)
+      && trigger.events.includes('attack_missed') && Number.isInteger(faces) && faces >= 2 && faces <= 100
+      && !actionDefinitionIssue(action) && canPay(source.runtime, activationCost(action)).ok ? [action] : [];
+  });
+}
+
 function pendingAttackEvents(
   world: WorldState,
   command: AuthoritativeUseActionCommand,
@@ -3431,6 +3448,7 @@ function pendingAttackEvents(
   // once.  The normal path now defers nested mastery saves itself; previewing
   // and replaying a multiattack would otherwise duplicate attack rolls and
   // incorrectly reuse the first roll for later attacks.
+  const availableAdjustments = attackAdjustmentOptions(source, target, catalog);
   const availableReactions = hitReactionOptions(target, catalog, action, facts);
   const availableDamageReactions = damageReactionOptions(target, catalog, {
     delivery: 'attack',
@@ -3438,6 +3456,7 @@ function pendingAttackEvents(
     source_visible: facts.targetCanSeeSource ?? true,
   });
   if (!availableReactions.length
+    && !availableAdjustments.length
     && !availableDamageReactions.length
     && !options.forceExecution
     && !protectionDisadvantage
@@ -3477,7 +3496,8 @@ function pendingAttackEvents(
   const reactions = attackRoll.outcome === 'hit' || attackRoll.outcome === 'crit'
     ? availableReactions
     : [];
-  if (reactions.length) {
+  const adjustments = attackRoll.outcome === 'miss' || attackRoll.outcome === 'crit_miss' ? availableAdjustments : [];
+  if (reactions.length || adjustments.length) {
     const resolutionId = env.nextId();
     const requestId = env.nextId();
     return [
@@ -3513,18 +3533,20 @@ function pendingAttackEvents(
             choices: command.choices,
             spell: command.spell,
             attackRoll,
+            ...(adjustments.length ? {attackAdjustment: true as const} : {}),
             request: {
               id: requestId,
               type: 'reaction',
-              actorId: target.id,
+              actorId: adjustments.length ? source.id : target.id,
               trigger: {
-                type: 'hit_by_attack',
+                type: adjustments.length ? 'attack_missed' : 'hit_by_attack',
                 sourceActorId: source.id,
                 actionId: action.id,
                 attackTotal: attackRoll.total,
                 originalAc: effectiveArmorClass(target),
               },
-              options: reactions.map(({ option }) => cloneReactionOption(option)),
+              options: adjustments.length ? adjustments.map(action => ({actionId:action.id,label:action.name}))
+                : reactions.map(({ option }) => cloneReactionOption(option)),
             },
             ...(options.attackActionId ? { attackActionId: options.attackActionId } : {}),
             ...(options.weaponHand ? { weaponHand: options.weaponHand } : {}),
@@ -4641,6 +4663,77 @@ function resolvePendingSave(
   return events;
 }
 
+/** Resume the existing attack continuation after a source-side adjustment.
+ * The original attack roll is retained; only the bonus die and eventual damage draw RNG. */
+function resolveAttackAdjustment(
+  world: WorldState, command: Extract<GameCommand, {type:'ResolveDecision'}>,
+  catalog: RulesCatalog, env: DeterministicEnvironment,
+): CommandResult | EventInput[] {
+  const pending = world.pendingResolution;
+  if (!pending || pending.type !== 'attack_reaction' || !pending.attackAdjustment
+    || pending.id !== command.resolutionId || pending.request.id !== command.requestId
+    || command.actorId !== pending.sourceActorId || pending.request.actorId !== command.actorId
+    || command.response.kind !== 'reaction' || command.response.spell !== undefined) {
+    return rejected(world,'InvalidDecision','The decision does not match the source attack adjustment');
+  }
+  const source = world.actors[pending.sourceActorId];
+  const target = world.actors[pending.targetActorId];
+  const obligations = ['system:attack-resolution','system:pending-resolution'];
+  let attackRoll = pending.attackRoll;
+  const prefix: EventInput[] = [{sourceActorId:source.id,obligationIds:obligations,payload:{
+    type:'DecisionRecorded',resolutionId:pending.id,requestId:pending.request.id,actorId:source.id,response:command.response,
+  }}];
+  const adjustmentId = command.response.actionId;
+  if(adjustmentId !== null) {
+    const chosen = attackAdjustmentOptions(source,target,catalog).find(action=>action.id===adjustmentId);
+    if (!chosen || !pending.request.options.some(option=>option.actionId===chosen.id) || attackRoll.attackManeuverActionId
+      || (attackRoll.outcome !== 'miss' && attackRoll.outcome !== 'crit_miss')) {
+      return rejected(world,'InvalidDecision','This attack adjustment is not available');
+    }
+    const activation = chosen.mechanics.activation as Record<string, unknown>;
+    const trigger = activation.trigger as Record<string, unknown>;
+    const paid = pay(source.runtime,activationCost(chosen));
+    attackRoll = {...addBonusDieToD20Roll(attackRoll,Number(trigger.attack_roll_bonus_die),chosen.name,env.rng),attackManeuverActionId:chosen.id};
+    prefix.push(...runtimeTransition(source.id,source.id,source.runtime,paid.state,'action',obligations),
+      ...engineTrace(source.id,[target.id],paid.events,obligations));
+  }
+  const adjustedWorld = foldEvents(world,prefix.map((event,ordinal)=>({...event,ordinal})));
+  const adjustedPending = {...pending,attackRoll,attackAdjustment:undefined,
+    request:{...pending.request,actorId:target.id,trigger:{type:'hit_by_attack' as const,sourceActorId:source.id,
+      actionId:pending.actionId,attackTotal:attackRoll.total,originalAc:effectiveArmorClass(target)},options:[]}};
+  const adjustedSource = adjustedWorld.actors[source.id];
+  const heldWeapon = pending.weaponCardId ? actorCard(adjustedSource,pending.weaponCardId) : undefined;
+  const heldRange = heldWeapon ? weaponRanges(heldWeapon,pending.facts.distanceFt) : null;
+  const attack = pending.actionId === SYSTEM_ACTION_IDS.unarmedDamage ? unarmedDamageActionFor(adjustedSource)
+    : pending.actionId === SYSTEM_ACTION_IDS.weaponAttack
+      ? pending.weaponHand && heldRange ? weaponAttackAction(pending.weaponHand,heldRange.kind) : CORE_WEAPON_ATTACK
+    : pending.actionId === SYSTEM_ACTION_IDS.lightExtraAttack
+      ? pending.weaponHand && heldWeapon && heldRange ? lightWeaponExtraAttackAction(adjustedSource,pending.weaponHand,heldRange.kind,
+        selectedWeaponUsesMastery(adjustedSource,heldWeapon.id,'nick') ? 'attack_action' : 'bonus_action') : undefined
+    : catalog.getAction(pending.actionId) ?? familiarAttackRuleAction(adjustedSource,pending.actionId);
+  if (!attack) return rejected(world,'ActionNotFound','The held attack definition is missing');
+  const reactions = attackRoll.outcome === 'hit' || attackRoll.outcome === 'crit'
+    ? hitReactionOptions(target,catalog,attack,pending.facts) : [];
+  if(reactions.length) {
+    const nextId=env.nextId();
+    prefix.push(...engineTrace(source.id,[target.id],[{type:'roll',label:'Атака — после приёма',roll:attackRoll}],obligations),
+      {sourceActorId:source.id,obligationIds:obligations,payload:{type:'ResolutionClosed',resolutionId:pending.id}});
+    if(pending.attackActionId) prefix.push(...attackResolutionFinishedEvents({
+      attackAction:world.attackActions[pending.attackActionId],resolutionId:pending.id,actorId:source.id,obligations,closeIfComplete:false,
+    }));
+    prefix.push({sourceActorId:source.id,obligationIds:obligations,payload:{type:'ResolutionOpened',resolution:{
+      ...adjustedPending,id:nextId,request:{...adjustedPending.request,id:env.nextId(),options:reactions.map(({option})=>cloneReactionOption(option))},
+    }}});
+    if(pending.attackActionId) prefix.push(blockAttackActionEvent({actorId:source.id,attackActionId:pending.attackActionId,resolutionId:nextId,obligations}));
+    return prefix;
+  }
+  // Reuse damage, mastery saves, retaliation and Attack-action ledger settlement.
+  // Its synthetic decline is internal; only the actual source decision is journaled.
+  const finished = resolvePendingAttack({...adjustedWorld,pendingResolution:adjustedPending},
+    {...command,actorId:target.id,response:{kind:'reaction',actionId:null}},catalog,env);
+  return Array.isArray(finished) ? [...prefix,...finished.filter(event=>event.payload.type !== 'DecisionRecorded')] : finished;
+}
+
 function resolvePendingAttack(
   world: WorldState,
   command: Extract<GameCommand, { type: 'ResolveDecision' }>,
@@ -4651,6 +4744,7 @@ function resolvePendingAttack(
   if (!pending || pending.type !== 'attack_reaction') {
     return rejected(world, 'NoPendingResolution', 'There is no attack reaction to resolve');
   }
+  if (pending.attackAdjustment) return resolveAttackAdjustment(world,command,catalog,env);
   if (pending.id !== command.resolutionId || pending.request.id !== command.requestId) {
     return rejected(world, 'StaleDecision', 'Decision does not match the active request');
   }

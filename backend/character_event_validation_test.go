@@ -129,3 +129,18 @@ func TestCharacterEventModifierSemanticRole(t *testing.T) {
 		}
 	}
 }
+
+func TestAttackManeuverRollIdentityValidation(t *testing.T) {
+	payload := completeRollPayload()
+	roll := payload["roll"].(map[string]any)
+	roll["attackManeuverActionId"] = "22200000-0000-4000-8000-000000000001@learned-choice"
+	if err := validateCharacterEvent("roll", payload); err != nil {
+		t.Fatal(err)
+	}
+	for _, invalid := range []any{"", true, float64(1), map[string]any{}} {
+		roll["attackManeuverActionId"] = invalid
+		if err := validateCharacterEvent("roll", payload); err == nil {
+			t.Fatalf("accepted invalid maneuver identity: %v", invalid)
+		}
+	}
+}

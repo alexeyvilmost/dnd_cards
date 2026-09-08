@@ -2234,7 +2234,10 @@ export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Ma
         sourceActionId: pending.request.trigger.actionId,
         targetIds: [pending.request.actorId],
       });
-    } else if (pending.type === 'damage_reaction') {
+    } else if (pending.type === 'attack_reaction' && pending.attackAdjustment) {
+    next = offerTriggeredAttackActions({before: state, after: next, sourceActorId: pending.sourceActorId,
+      sourceActionId: pending.actionId, targetIds: [pending.targetActorId]});
+  } else if (pending.type === 'damage_reaction') {
       next = offerTriggeredAttackActions({
         before: beforeDecision,
         after: next,
@@ -2745,7 +2748,9 @@ function offerTriggeredAttackActions(input: {
     const trigger = activation?.trigger as Record<string, unknown> | undefined;
     const usesSuperiorityDie = Array.isArray(activation?.cost) && activation.cost.some(cost =>
       (cost as Record<string, unknown>).resource === 'superiority_die');
-    const attackAlreadyHasManeuver = targetIds.some(targetId =>
+    const attackAlreadyHasManeuver = combatLogSince(after, combatLogCursor(before)).some(entry =>
+      entry.records?.some(record => record.sourceActorId === sourceActorId && record.event?.type === 'roll'
+        && Boolean(record.event.roll.attackManeuverActionId))) || targetIds.some(targetId =>
       before.world.actors[targetId]?.runtime.activeEffects.some(effect => {
         const payload = effect.mechanics as Record<string, unknown>;
         return payload.attack_maneuver === true && payload.consume === 'next_attack'

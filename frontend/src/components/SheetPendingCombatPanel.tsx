@@ -265,6 +265,8 @@ export default function SheetPendingCombatPanel({
           detail: `${decidingName}: входящий урон — ${trigger.amount}`
             + `${trigger.damageTypes.length ? ` (${trigger.damageTypes.join(', ')})` : ''}.`,
         };
+      case 'attack_missed':
+        return {title:'Промах',detail:`Результат атаки ${trigger.attackTotal}; КД цели ${trigger.originalAc}. Можно добавить кость превосходства.`};
       case 'hit_by_attack':
         return {
           title: 'Реакция на попадание',

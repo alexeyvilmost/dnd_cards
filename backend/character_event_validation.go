@@ -286,7 +286,7 @@ func requiredRoll(parent map[string]any, key, path string) error {
 	}
 	if err := exactKeys(roll, path,
 		[]string{"kind", "dice", "advantage", "modifiers", "total", "text"},
-		[]string{"target", "outcome", "triggered"}); err != nil {
+		[]string{"target", "outcome", "triggered", "attackManeuverActionId"}); err != nil {
 		return err
 	}
 	kind, err := requiredString(roll, "kind", path+".kind", false)
@@ -338,6 +338,11 @@ func requiredRoll(parent map[string]any, key, path string) error {
 		outcome, ok := rawOutcome.(string)
 		if !ok || !oneOf(outcome, "hit", "miss", "crit", "crit_miss", "success", "fail") {
 			return invalidCharacterEvent(path+".outcome", "is unsupported")
+		}
+	}
+	if _, exists := roll["attackManeuverActionId"]; exists {
+		if _, err := requiredString(roll, "attackManeuverActionId", path+".attackManeuverActionId", false); err != nil {
+			return err
 		}
 	}
 	if rawTriggered, exists := roll["triggered"]; exists {

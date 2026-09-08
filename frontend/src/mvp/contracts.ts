@@ -44,6 +44,8 @@ export interface DieRoll {
 export type AdvantageState = 'none' | 'advantage' | 'disadvantage';
 
 export interface RollLog {
+  /** Exact learned maneuver already committed to this attack roll. */
+  attackManeuverActionId?: string;
   kind: 'd20' | 'damage' | 'healing' | 'check' | 'save' | 'other';
   dice: DieRoll[];
   advantage: AdvantageState;
