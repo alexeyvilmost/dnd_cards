@@ -654,6 +654,14 @@ function preflightPayload(
   switch (kind) {
     case 'damage': {
       const base = value.amount ?? value.dice;
+      if (value.type === 'triggering_attack') {
+        const attack = ctx.triggeringAttack;
+        if (!attack || attack.targetActorId !== ctx.target?.id || !targetOwned
+          || typeof attack.critical !== 'boolean' || !attack.damageType
+          || attack.damageType === 'triggering_attack' || attack.damageType === 'weapon') {
+          throw mechanicsError('INVALID_MECHANICS', path, 'triggering attack damage requires its saved target, type and critical outcome');
+        }
+      }
       if (base == null) throw mechanicsError('INVALID_PAYLOAD', path, 'damage requires amount or dice');
       if (typeof value.type !== 'string' || !value.type.trim()) {
         throw mechanicsError(
@@ -2873,7 +2881,9 @@ function resolveDamageAmounts(
   attackFacts?: AttackDamageQueryFacts,
 ): DamageInstance[] {
   const handWeapon = weaponContext(ctx.character, hand, state.equipment, state);
-  const declaredDamageType = transmutedSpellDamageType(state, ctx, String(payload.type).trim());
+  const declaredDamageType = payload.type === 'triggering_attack'
+    ? ctx.triggeringAttack!.damageType
+    : transmutedSpellDamageType(state, ctx, String(payload.type).trim());
   const explodeLimit = explodeLimitOf(payload, ctx);
   const damageRng = ctx.damageRng ?? ctx.rng;
 
@@ -3282,6 +3292,7 @@ function applyPayloads(
     switch (kind) {
       case 'damage': {
         const damageEventStart = events.length;
+        const damageCritical = p.type === 'triggering_attack' ? ctx.triggeringAttack?.critical === true : crit;
         // Оружейный урон может раскрыться в несколько строк (основной + стихийный) —
         // каждую наносим отдельным событием (сопротивления по типам, план кубов, №4).
         const routedTarget = whoTarget
@@ -3297,13 +3308,13 @@ function applyPayloads(
             passives: ctx.target?.passives ?? ctx.passives,
           };
           let damagedTarget = routedTarget;
-          for (const dmg of resolveDamageAmounts(p, ctx, next, hand, crit, attackFacts)) {
+          for (const dmg of resolveDamageAmounts(p, ctx, next, hand, damageCritical, attackFacts)) {
             const amount = halfDamage ? Math.floor(dmg.amount / 2) : dmg.amount;
             const res = applyIncomingDamage(damagedTarget, amount, tctx, {
-              crit,
+              crit: damageCritical,
               damageType: dmg.damageType,
               roll: dmg.roll,
-              delivery: attackFacts ? 'attack' : 'other',
+              delivery: attackFacts || p.type === 'triggering_attack' ? 'attack' : 'other',
               ignoreResistance: ignoresDamageResistance(ctx, dmg.damageType)
                 || hasGeneralSpellFeatRule(ctx, 'ignore_spell_damage_resistance', dmg.damageType),
               imposeConcentrationDisadvantage: hasGeneralSpellFeatRule(
@@ -3320,7 +3331,7 @@ function applyPayloads(
             targetRef.mutated = true;
           }
         } else {
-          for (const dmg of resolveDamageAmounts(p, ctx, next, hand, crit, attackFacts)) {
+          for (const dmg of resolveDamageAmounts(p, ctx, next, hand, damageCritical, attackFacts)) {
             const amount = halfDamage ? Math.floor(dmg.amount / 2) : dmg.amount;
             events.push(damageEvent(amount, dmg.damageType, dmg.roll));
           }

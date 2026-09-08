@@ -1,4 +1,4 @@
-import type { EngineEvent } from '../mvp/contracts';
+import type { EngineEvent, TriggeringAttackContext } from '../mvp/contracts';
 import type {
   ActionWorldInput,
   RuleActionDefinition,
@@ -185,6 +185,7 @@ export interface PendingTriggeredAction {
   targetIds: string[];
   optionActionIds: string[];
   optionEvents?: Record<string, string>;
+  triggeringAttack?: TriggeringAttackContext;
   /**
    * Exact replacement HP after foregoing one rolled Sneak Attack d6. The
    * combat adapter derives this from the committed damage packet sequence and
@@ -233,6 +234,7 @@ export interface PendingD20Interrupt {
   operation: 'impose_disadvantage' | 'subtract_die';
   command: {
     triggerEvent?: string;
+    triggeringAttack?: TriggeringAttackContext;
     actorId: string;
     actionId: string;
     targetIds: string[];

@@ -113,6 +113,7 @@ type Rng = () => number;
 type CombatActionInput = {
   /** Supplied only by the persisted event-window resolver, never by a proactive intent. */
   triggerEvent?: string;
+  triggeringAttack?: PendingTriggeredAction['triggeringAttack'];
   state: SoloCombatState;
   actorId: string;
   actionId: string;
@@ -1144,6 +1145,7 @@ function serializableCombatCommand(input: CombatActionInput): PendingD20Interrup
     : undefined;
   return clone({
     ...(input.triggerEvent ? {triggerEvent: input.triggerEvent} : {}),
+    ...(input.triggeringAttack ? {triggeringAttack: input.triggeringAttack} : {}),
     actorId: input.actorId,
     actionId: input.actionId,
     targetIds: input.targetIds,
@@ -1374,7 +1376,8 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
   }
   const command: GameCommand = {
     ...commandBase(input.state, input.actorId),
-    ...(input.triggerEvent ? {type: 'UseTriggeredAction' as const, trigger: input.triggerEvent} : {type: 'UseAction' as const}), actionId: action.id,
+    ...(input.triggerEvent ? {type: 'UseTriggeredAction' as const, trigger: input.triggerEvent,
+      ...(input.triggeringAttack ? {triggeringAttack: input.triggeringAttack} : {})} : {type: 'UseAction' as const}), actionId: action.id,
     targetIds: declaration.targetIds,
     ...(declaration.factsByTarget ? { factsByTarget: declaration.factsByTarget } : {}),
     ...(declaration.protectionCandidates ? { protectionCandidates: declaration.protectionCandidates } : {}),
@@ -2093,6 +2096,7 @@ export function resolveTriggeredCombatAction(
     actionId,
     targetIds: chosenTargetIds,
     triggerEvent: pending.optionEvents?.[actionId] ?? (chosenTrigger.includes(pending.event) ? pending.event : chosenTrigger[0]),
+    triggeringAttack: pending.triggeringAttack,
     rng,
   });
   const useKey = chosen ? generalFeatTriggeredUseKey(chosen) : null;
@@ -2736,6 +2740,14 @@ function offerTriggeredAttackActions(input: {
   const executableOptions = tradeoff
     ? options
     : options.filter(({ event }) => event !== 'sneak_attack_hit');
+  const damageRecord = targetIds.length === 1 && events.includes('hit')
+    ? combatLogSince(after, combatLogCursor(before)).flatMap(entry => entry.records ?? [])
+      .find(record => record.sourceActorId === sourceActorId && record.targetIds.includes(targetIds[0])
+        && record.event?.type === 'damage')
+    : undefined;
+  const triggeringAttack = damageRecord?.event?.type === 'damage' ? {
+    targetActorId: targetIds[0], damageType: damageRecord.event.damageType, critical: events.includes('crit'),
+  } : undefined;
   return executableOptions.length ? {
     ...after,
     pendingTriggeredAction: {
@@ -2746,6 +2758,7 @@ function offerTriggeredAttackActions(input: {
       targetIds: [...targetIds],
       optionActionIds: executableOptions.map(({ actionId }) => actionId),
       optionEvents: Object.fromEntries(executableOptions.map(({actionId, event}) => [actionId, event])),
+      ...(triggeringAttack ? {triggeringAttack} : {}),
       ...(tradeoff ? { sneakAttackTradeoff: tradeoff } : {}),
     },
   } : after;

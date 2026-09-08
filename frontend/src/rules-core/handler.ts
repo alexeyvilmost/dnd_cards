@@ -577,7 +577,7 @@ type CanonicalSpellContext = SpellCastContext & {
 type AuthoritativeUseActionCommand = Omit<
   Extract<GameCommand, { type: 'UseAction' }>,
   'spell'
-> & { spell?: CanonicalSpellContext };
+> & { spell?: CanonicalSpellContext; triggeringAttack?: ExecuteContext['triggeringAttack'] };
 
 function spellDeclarationIssue(
   action: RuleActionDefinition,
@@ -2211,6 +2211,7 @@ function executeUseAction(
         ),
         actionName: action.name,
         choices: command.choices,
+        triggeringAttack: command.triggeringAttack,
         spell: command.spell,
         suppressSpellCastEvent: index > 0,
         deferTargetSaves: true,
@@ -3786,6 +3787,7 @@ function pendingSaveEvents(
     if (!facts) return rejected(world, 'MissingSpatialFacts', `Missing spatial facts for target ${target.id}`);
     const save = readTargetSave(action.mechanics, {
       ...actionContext(source, env, target, target.runtime, facts, command.spell),
+      triggeringAttack: command.triggeringAttack,
       choices: command.choices,
       spell: command.spell,
     });
@@ -3874,6 +3876,7 @@ function pendingSaveEvents(
         actionId: action.id,
         facts: first.facts,
         choices: command.choices,
+        triggeringAttack: command.triggeringAttack,
         spell: command.spell,
         request: {
           id: requestId,
@@ -4359,6 +4362,7 @@ function resolvePendingSave(
     withoutActivationCost(action.mechanics),
     {
       ...actionContext(source, env, targetForResolution, targetRuntimeForResolution, pending.facts, pending.spell),
+      triggeringAttack: pending.triggeringAttack,
       choices: pending.choices,
       spell: pending.spell,
       suppressSpellCastEvent: pending.spellCastEmitted === true,
@@ -11334,7 +11338,8 @@ function executeCommand(
         preparedSpell,
         spellAudit,
       );
-      const authoritativeCommand: AuthoritativeUseActionCommand = { ...command, type: 'UseAction', spell };
+      const authoritativeCommand: AuthoritativeUseActionCommand = { ...command, type: 'UseAction', spell,
+        triggeringAttack: command.type === 'UseTriggeredAction' ? command.triggeringAttack : undefined };
       const executablePrimitiveType = (
         executableAction.mechanics.primitive as Record<string, unknown> | undefined
       )?.type;

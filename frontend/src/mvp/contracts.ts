@@ -325,7 +325,15 @@ export interface SpellCastContext {
   payment?: { kind: 'none' | 'free_use' | 'slot'; resource?: string };
 }
 
+/** Captured by an authoritative event adapter, never chosen by the action UI. */
+export interface TriggeringAttackContext {
+  targetActorId: string;
+  damageType: string;
+  critical: boolean;
+}
+
 export interface ExecuteContext {
+  triggeringAttack?: TriggeringAttackContext;
   character: CharacterContext;
   /** Immutable catalog display name for effects and audit events. */
   actionName?: string;

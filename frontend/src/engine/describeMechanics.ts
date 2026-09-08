@@ -67,6 +67,9 @@ function damagePhrase(p: Dict, ctx?: FormulaContext | null): string {
   const val = p.dice ?? p.amount ?? p.formula;
   if (val == null || val === '') return '';
   const type = String(p.type ?? p.damage_type ?? '');
+  if (type === 'triggering_attack') {
+    return `${RES_RU[String(val)] ?? diceRu(String(val), ctx)} к урону исходной атаки`;
+  }
   const label = getDamageLabel(type);
   const body = `${diceRu(String(val), ctx)}${label ? ` ${label.toLowerCase()}` : ''}`;
   return type ? `[${type}]${body}[/${type}]` : body;

@@ -1,5 +1,6 @@
 import type {
   CharacterContext,
+  TriggeringAttackContext,
   EngineEvent,
   RollLog,
   RuntimeState,
@@ -494,6 +495,7 @@ export interface QueuedTargetSaveResolution {
 }
 
 export interface PendingTargetSaveResolution {
+  triggeringAttack?: TriggeringAttackContext;
   id: string;
   type: 'target_save';
   openedByCommandId: string;
@@ -923,6 +925,7 @@ export type UseReactionActionCommand = Omit<UseActionCommand, 'type'> & {
 export type UseTriggeredActionCommand = Omit<UseActionCommand, 'type'> & {
   type: 'UseTriggeredAction';
   trigger: string;
+  triggeringAttack?: TriggeringAttackContext;
 };
 
 /**

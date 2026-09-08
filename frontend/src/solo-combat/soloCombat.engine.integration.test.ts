@@ -4031,3 +4031,62 @@ it.each([false, true])('offers only the melee reaction whose reach was left, ran
   expect(state.tokens[monster.id].position).toEqual({x: 7, y: 4});
   expect(state.world.actors[source.id].runtime.resources.reaction).toBe(1);
 });
+
+it.each([{ critical: false, withSave: false }, { critical: true, withSave: false },
+  { critical: false, withSave: true }, { critical: true, withSave: true }])(
+  'preserves original damage type and critical=$critical with save=$withSave across reload', async ({critical, withSave}) => {
+  const participant = fighterSeed();
+  const actorId = participant.character.id;
+  const actor = participant.canonical.world.actors[actorId];
+  actor.character.variables = { ...actor.character.variables, superiority_die: { count: 1, sides: 8 } };
+  actor.runtime.resources.superiority_die = 4;
+  actor.runtime.maxResources.superiority_die = 4;
+  const targeting = { domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1,
+    max_targets: 1, range_ft: 5, requires_line_of_sight: true, allowed_relations: ['enemy'] };
+  const attack = projectRuleAction({ id: '21100000-0000-4000-8000-000000000091', name: 'Source attack',
+    type: 'class_feature', resource: 'action', mechanics: {
+      activation: { mode: 'active', cost: [{ resource: 'action' }] }, targeting,
+      effects: [{ resolution: 'attack_roll', ability: 'str', attack_kind: 'weapon_melee', who: 'target',
+        on_hit: [{ kind: 'damage', amount: 2, type: 'bludgeoning' }] }],
+    } } as unknown as Action);
+  const rider = projectRuleAction({ id: '21100000-0000-4000-8000-000000000092', name: 'Post-hit die',
+    type: 'class_feature', resource: 'free_action', mechanics: withSave
+      ? JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_menacing_211.go', import.meta.url), 'utf8').match(/const battleMasterMenacing211 = `([^`]+)`/)![1]) : {
+      activation: { mode: 'triggered', cost: [{ resource: 'superiority_die' }], trigger: { events: ['hit'] } }, targeting,
+      effects: [{ resolution: 'auto', who: 'target', result: [{ kind: 'damage', amount: 'superiority_die',
+        type: 'triggering_attack', suppress_damage_modifiers: true }] }],
+    } } as unknown as Action);
+  const actions = [...participant.canonical.actions, attack, rider];
+  actor.capabilities.actionIds.push(attack.id, rider.id);
+  participant.canonical = { ...participant.canonical, actions,
+    catalog: { getAction: id => actions.find(action => action.id === id), listActions: () => actions } };
+  let state = await createSoloCombatState({ character: participant.character, participant,
+    selected: [{ monster: goblin(), quantity: 1 }], actions: [scimitar()], effects: [], rng: () => 0.5 });
+  const targetId = Object.values(state.world.actors).find(candidate => candidate.kind === 'monster')!.id;
+  state = placeAdjacent(state, actorId, targetId);
+  state = executeCombatAction({ state, actorId, actionId: attack.id, targetIds: [targetId], rng: () => critical ? 0.99 : 0.6 });
+  expect(state.pendingTriggeredAction?.triggeringAttack).toEqual({ targetActorId: targetId, damageType: 'bludgeoning', critical });
+  const hpBefore = state.world.actors[targetId].runtime.hp.current;
+  let rolls = 0;
+  state = resolveTriggeredCombatAction(clone(state), rider.id, () => { rolls++; return 0; });
+  if (withSave) {
+    expect(state.world.pendingResolution).toMatchObject({ type: 'target_save',
+      triggeringAttack: { targetActorId: targetId, damageType: 'bludgeoning', critical } });
+    state = autoResolveSystemDecisions(clone(state), () => { rolls++; return 0; });
+  }
+  expect(rolls).toBe((critical ? 2 : 1) + (withSave ? 1 : 0));
+  expect(state.world.actors[targetId].runtime.hp.current).toBe(hpBefore - (critical ? 2 : 1));
+  expect(state.world.actors[actorId].runtime.resources.superiority_die).toBe(3);
+  expect(state.pendingTriggeredAction).toBeUndefined();
+  if (withSave) {
+    const fears = () => state.world.actors[targetId].runtime.activeEffects.filter(effect => effect.mechanics.value === 'frightened');
+    expect(fears()).toHaveLength(1);
+    expect(fears()[0]).toMatchObject({ sourceId: actorId, ownerId: targetId });
+    state = advanceTurn(state, () => 0.5);
+    expect(fears()).toHaveLength(1);
+    state = advanceTurn(state, () => 0.5);
+    expect(fears()).toHaveLength(1);
+    state = advanceTurn(state, () => 0.5);
+    expect(fears()).toHaveLength(0);
+  }
+});
