@@ -1325,6 +1325,12 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 			Up:          materializeChampionCriticalMovement,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{
+			Version:     "209_battle_master_foundations",
+			Description: "Bind superiority dice to subclass rest resources and Student of War to real choices",
+			Up:          materializeBattleMasterFoundations,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

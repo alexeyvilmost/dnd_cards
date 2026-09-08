@@ -344,3 +344,12 @@ Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br
 ## Shared dice dialog wording
 
 - Removed the attack-miss note from the common dice dialog: it was also shown for Hit Dice and saving throws. The settings hint remains. Verified in the built-in browser by opening a Strength save in the progression character sheet and canceling without a roll. Text-only change; no rules-worker rebuild or additional rules regression required.
+
+
+### 2026-09-08 — Battle Master foundations (local, migration 209)
+
+- Combat Superiority now belongs to the subclass resource declaration: four dice at Fighter levels 3–5, full short/long rest recovery. Removed the duplicate passive grant; other classes cannot increase the pool. Resource has its existing-sheet catalog label.
+- Student of War now uses normal Forge choices: one of 17 artisan tools and one of eight Fighter skills. Existing proficiency conflict checks disable already known skills.
+- Browser acceptance: isolated source `cebf27d3-b51d-4dda-9a28-0c054169860a`, run `d2f2f908-3549-4e68-8d01-9b5e52b12350`, character `d436f9c0-80b6-4162-adda-ff5a161c9e65`. Set 900 XP locally solely to reach level-up. Levels 2 and 3 confirmed using the existing desktop Forge; chose Battle Master, smith tools and History. Both required choices block confirmation while missing. History now displays INT -1 + proficiency 2 = +1; superiority dice 4/4. Reload retains choices and pool.
+- Separate guarded local fixture set this character's superiority dice to 0. Browser short rest without Hit Dice restored 4/4, advanced run time to one hour, preserved 18 gold and one supply. This is a rest/progression fixture, not maneuver execution or a natural run.
+- Validation: Go migration suite, two migration-derived TypeScript tests (real Forge choice extraction and resource/rest behavior), TypeScript compilation passed. Maneuver implementation and full-plan acceptance remain in progress. No TimeWeb deployment.
