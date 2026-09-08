@@ -1595,7 +1595,15 @@ export function migrateWorldState(value: unknown): WorldState {
         throw new Error('world.pendingResolution damage packets must match held engine events');
       }
       for (const rawEvent of pending.attackEvents as JsonRecord[]) {
-        if (rawEvent?.type !== 'damage' || rawEvent.calculation === undefined) continue;
+        if (rawEvent?.type !== 'damage') continue;
+        if (rawEvent.deferredConsequences !== undefined) {
+          const deferred = rawEvent.deferredConsequences as JsonRecord;
+          if (!deferred || typeof deferred !== 'object' || Array.isArray(deferred)
+            || typeof deferred.critical !== 'boolean' || typeof deferred.concentrationDisadvantage !== 'boolean') {
+            throw new Error('world.pendingResolution deferred damage consequences are invalid');
+          }
+        }
+        if (rawEvent.calculation === undefined) continue;
         if (!isDamageCalculation(rawEvent.calculation)
           || typeof rawEvent.damageType !== 'string'
           || resolveDamageCalculation(rawEvent.calculation, rawEvent.damageType).amount !== rawEvent.amount) {

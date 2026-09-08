@@ -771,3 +771,63 @@ it.each([...['weapon_melee', 'spell_melee', 'unarmed', 'weapon_ranged', 'spell_r
     expect(restored.getState().actors.defender.runtime.resources).toMatchObject({ reaction: 0, superiority_die: 3 });
     expect(restored.getState().pendingResolution).toBeNull();
   });
+
+
+it.each([true, false])('settles zero-HP survival and damage expiry only after mitigation (reduce=%s)', reduce => {
+  const initial = world();
+  initial.actors.defender.runtime.hp.current = 4;
+  initial.actors.defender.passives = [{ kind: 'zero_hp_save', name: 'Survival', ability: 'con',
+    dc_base: 5, remaining_hp: 1 }, {
+      id: 'damage-listener', name: 'After damage',
+      activation: { mode: 'triggered', trigger: { event: 'damage_taken' } },
+      effects: [{ resolution: 'auto', result: [{ kind: 'temp_hp', amount: '1' }] }],
+    }];
+  initial.actors.defender.runtime.activeEffects.push({ id: 'damage-breaks-effect', name: 'Protective effect',
+    source: 'test', mechanics: { kind: 'modifier', op: 'add', value: 1,
+      applies_to: { roll: 'ability_check' }, end_triggers: ['actor_takes_damage'] } });
+  const openingTape = createStrictRngTape([{ label: 'attack', sides: 20, value: 15 },
+    { label: 'damage', sides: 8, value: 8 }]);
+  const catalog: RulesCatalog = { getAction: id => id === STRIKE.id ? STRIKE : id === STONE_ENDURANCE.id ? STONE_ENDURANCE : undefined };
+  const opening = new InMemoryRulesSession(initial, catalog, { rng: openingTape.rng,
+    clock: createLogicalClock(), nextId: createSequentialIdFactory('consequences-open') });
+  begin(opening);
+  expect(useStrike(opening).status).toBe('accepted');
+  openingTape.assertExhausted();
+  expect(opening.getState().actors.defender.runtime.hp.current).toBe(4);
+  expect(opening.getState().pendingResolution?.type).toBe('damage_reaction');
+  const checkpoint = migrateWorldState(JSON.parse(JSON.stringify(opening.getState())));
+  const tape = createStrictRngTape(reduce
+    ? [{ label: 'reduction', sides: 12, value: 8 }]
+    : [{ label: 'survival', sides: 20, value: 15 }]);
+  const restored = new InMemoryRulesSession(checkpoint, catalog, { rng: tape.rng,
+    clock: createLogicalClock(checkpoint.logicalClock), nextId: createSequentialIdFactory('consequences-resume') });
+  expect(resolveReaction(restored, reduce ? STONE_ENDURANCE.id : null, 'finish').status).toBe('accepted');
+  tape.assertExhausted();
+  const after = restored.getState().actors.defender.runtime;
+  expect(after.hp.current).toBe(reduce ? 4 : 1);
+  expect(after.hp.temp).toBe(reduce ? 0 : 1);
+  expect(after.activeEffects.some(effect => effect.id === 'damage-breaks-effect')).toBe(reduce);
+});
+
+
+it.each([1, 8])('concentration uses final damage after a restored reduction roll of %i', reductionDie => {
+  const initial = world();
+  initial.concentrations.defender = { id: 'concentration:held', sourceActorId: 'defender',
+    actionId: 'spell:test', startedAtRevision: 0, effectLinks: [] };
+  const catalog: RulesCatalog = { getAction: id => id === STRIKE.id ? STRIKE : id === STONE_ENDURANCE.id ? STONE_ENDURANCE : undefined };
+  const openingTape = createStrictRngTape([{ label: 'attack', sides: 20, value: 15 }, { label: 'damage', sides: 8, value: 8 }]);
+  const opening = new InMemoryRulesSession(initial, catalog, { rng: openingTape.rng,
+    clock: createLogicalClock(), nextId: createSequentialIdFactory('concentration-open') });
+  begin(opening);
+  expect(useStrike(opening).status).toBe('accepted');
+  openingTape.assertExhausted();
+  const checkpoint = migrateWorldState(JSON.parse(JSON.stringify(opening.getState())));
+  const tape = createStrictRngTape([{ label: 'reduction', sides: 12, value: reductionDie }]);
+  const restored = new InMemoryRulesSession(checkpoint, catalog, { rng: tape.rng,
+    clock: createLogicalClock(checkpoint.logicalClock), nextId: createSequentialIdFactory('concentration-resume') });
+  expect(resolveReaction(restored, STONE_ENDURANCE.id, 'finish').status).toBe('accepted');
+  tape.assertExhausted();
+  expect(restored.getState().concentrations.defender?.id).toBe('concentration:held');
+  if (reductionDie === 8) expect(restored.getState().pendingResolution).toBeNull();
+  else expect(restored.getState().pendingResolution).toMatchObject({ type: 'concentration_save', damage: 5, request: { dc: 10 } });
+});

@@ -4826,7 +4826,6 @@ export function applyIncomingDamage(
   beginCascade(ctx); // C4: свежий бюджет каскада событий на это получение урона
   let next = cloneState(state);
   const events: EngineEvent[] = [];
-  const pending: ReactionOffer[] = [];
 
   const raw = Math.max(0, Math.floor(amount));
   const damageType = opts?.damageType ?? 'урон';
@@ -4852,12 +4851,37 @@ export function applyIncomingDamage(
   events.push({ ...damageEvent(dmg, damageType, opts?.roll),
     ...(calculation.adjustments.length ? { calculation } : {}),
   } as EngineEvent);
+  if (ctx.deferIncomingDamageConsequences) {
+    const damage = [...events].reverse().find(event => event.type === 'damage');
+    if (damage?.type === 'damage') damage.deferredConsequences = {
+      critical: opts?.crit === true,
+      concentrationDisadvantage: opts?.imposeConcentrationDisadvantage === true,
+    };
+    return { state: next, events };
+  }
+  const consequences = applyDamageConsequences(next, dmg, state.hp, ctx, opts);
+  return { ...consequences, events: [...events, ...consequences.events] };
+}
+
+/** Apply effects of the final damage, after the defender has chosen mitigation. */
+export function applyDamageConsequences(
+  state: RuntimeState,
+  dmg: number,
+  hpBefore: RuntimeState['hp'],
+  ctx: ExecuteContext,
+  opts?: { crit?: boolean; damageType?: string; conSaveBonus?: number; imposeConcentrationDisadvantage?: boolean },
+): ExecuteResult {
+  beginCascade(ctx);
+  let next = cloneState(state);
+  const events: EngineEvent[] = [];
+  const pending: ReactionOffer[] = [];
+  const damageType = opts?.damageType ?? 'урон';
   if (dmg > 0) {
     next = expireEffectsForTrigger(next, 'actor_takes_damage', events);
   }
   // A survival save changes the zero-HP result of this damage instance; it is
   // neither healing nor a reaction and must precede reduced_to_0_hp listeners.
-  if (state.hp.current > 0 && next.hp.current === 0 && dmg > 0) {
+  if (hpBefore.current > 0 && next.hp.current === 0 && dmg > 0) {
     const survival = passivesFromCtx(ctx).flatMap(payloadsOf).find(payload =>
       payload.kind === 'zero_hp_save'
       && !(payload.except_critical === true && opts?.crit)
@@ -4924,15 +4948,17 @@ export function applyIncomingDamage(
   }
 
   // Событие получения урона → реакции (Адское возмездие, Невероятное уклонение…).
-  next = emitEvent({
-    kind: 'damage_taken',
-    source: 'self',
-    data: { amount: dmg, damageType },
-  }, next, ctx, events, pending);
+  if (dmg > 0) {
+    next = emitEvent({
+      kind: 'damage_taken',
+      source: 'self',
+      data: { amount: dmg, damageType },
+    }, next, ctx, events, pending);
+  }
 
   // Падение до 0 HP → триггеры «при 0 HP» (напр. Отчаянная стойкость, срабатывания черт).
   // Гейт «был >0, стал 0» — чтобы не дублировать эмиссию на добивании уже бессознательного.
-  if (next.hp.current === 0 && state.hp.current > 0) {
+  if (next.hp.current === 0 && hpBefore.current > 0) {
     next = emitEvent({ kind: 'reduced_to_0_hp', source: 'self' }, next, ctx, events, pending);
   }
 

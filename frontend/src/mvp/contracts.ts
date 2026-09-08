@@ -68,7 +68,7 @@ export interface DamageCalculation {
 
 export type EngineEvent =
   | { type: 'roll'; label: string; roll: RollLog }
-  | { type: 'damage'; amount: number; damageType: string; roll?: RollLog; source?: string; calculation?: DamageCalculation }
+  | { type: 'damage'; amount: number; damageType: string; roll?: RollLog; source?: string; calculation?: DamageCalculation; deferredConsequences?: { critical: boolean; concentrationDisadvantage: boolean } }
   | { type: 'healing'; amount: number; roll?: RollLog; source?: string }
   | { type: 'damage_reduction'; amount: number; roll?: RollLog; source?: string }
   | { type: 'temp_hp'; amount: number; source?: string }
@@ -361,6 +361,8 @@ export interface ExecuteContext {
    * declarative formulas as incoming_damage; absent outside that reaction
    * window so ordinary actions cannot invent an incoming-damage value. */
   incomingDamage?: number;
+  /** Hold damage-dependent expiry and survival until the authoritative reaction resolves. */
+  deferIncomingDamageConsequences?: boolean;
   /** Триггерные способности-СЛУШАТЕЛИ (заклинания вроде Божественной кары): пул для emitEvent/реакций.
    *  В ОТЛИЧИЕ от passives их НЕ читает collectModifiers — чтобы модификатор-эффект реакции (напр. +5 КЗ
    *  Щита) не применялся пассивно до активации. */

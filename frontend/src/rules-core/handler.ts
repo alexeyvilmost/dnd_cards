@@ -4,6 +4,7 @@ import {meleeWeaponDefenseEligible, singleAttackDefenseBonus} from './attackDefe
 import {
   activeConditionsOf,
   applyIncomingDamage,
+  applyDamageConsequences,
   armorClassValue,
   breakdownValue,
   bindEquippedWeaponActionContext,
@@ -2215,6 +2216,8 @@ function executeUseAction(
         triggeringAttack: command.triggeringAttack,
         spell: command.spell,
         suppressSpellCastEvent: index > 0,
+        deferIncomingDamageConsequences: executions.length === 0 && executionTargets.length === 1
+          && shouldDeferDamageConsequences(sourceAtStep, target, action, catalog, target ? command.factsByTarget?.[target.id] : undefined),
         deferTargetSaves: true,
         ...(options.externalPrimitiveHandled ? { externalPrimitiveHandled: true as const } : {}),
       },
@@ -2289,6 +2292,11 @@ function executeUseAction(
         obligations: obligationIds,
       });
       if (opened) return opened;
+      if (execution.result.targetState) {
+        const completed = settleDamageConsequences(target, execution.result.targetState, execution.result.events, env);
+        execution.result.targetState = completed.state;
+        execution.result.events = completed.events;
+      }
     }
   }
   const events: EventInput[] = actionStateEvents({
@@ -2925,6 +2933,55 @@ function applyReactionRuntimeDelta(
   };
 }
 
+function shouldDeferDamageConsequences(
+  source: ActorState, target: ActorState | undefined, action: RuleActionDefinition,
+  catalog: RulesCatalog, facts?: SpatialFacts,
+): boolean {
+  if (!target || source.id === target.id || !facts) return false;
+  // Mixed healing/damage transitions cannot use the exact-HP continuation.
+  const changesHpOtherwise = (value: unknown): boolean => {
+    if (Array.isArray(value)) return value.some(changesHpOtherwise);
+    if (!value || typeof value !== 'object') return false;
+    const record = value as Record<string, unknown>;
+    return ['healing', 'heal', 'temp_hp'].includes(String(record.kind))
+      || Object.values(record).some(changesHpOtherwise);
+  };
+  return !changesHpOtherwise(action.mechanics) && damageReactionOptions(target, catalog, {
+    delivery: hasAttackRoll(action) ? 'attack' : 'other',
+    melee_attack: isMeleeAttackRollAction(action),
+    source_visible: facts.targetCanSeeSource ?? true,
+  }).length > 0;
+}
+
+function settleDamageConsequences(
+  target: ActorState,
+  after: ActorState['runtime'],
+  events: readonly EngineEvent[],
+  env: DeterministicEnvironment,
+): { state: ActorState['runtime']; events: EngineEvent[] } {
+  if (!events.some(event => event.type === 'damage' && event.deferredConsequences)) {
+    return { state: after, events: [...events] };
+  }
+  let state = { ...after, hp: { ...target.runtime.hp } };
+  const completed: EngineEvent[] = [];
+  for (const event of events) {
+    completed.push(event);
+    if (event.type !== 'damage') continue;
+    const hpBefore = state.hp;
+    state = { ...state, hp: hpAfterDamage(hpBefore, event.amount) };
+    if (!event.deferredConsequences) continue;
+    const consequence = applyDamageConsequences(state, event.amount, hpBefore,
+      actionContext({ ...target, runtime: state }, env), {
+        damageType: event.damageType,
+        crit: event.deferredConsequences.critical,
+        imposeConcentrationDisadvantage: event.deferredConsequences.concentrationDisadvantage,
+      });
+    state = consequence.state;
+    completed.push(...consequence.events);
+  }
+  return { state, events: completed };
+}
+
 interface DamageReactionContinuationInput {
   world: WorldState;
   commandId: string;
@@ -3466,6 +3523,7 @@ function pendingAttackEvents(
     choices: command.choices,
     spell: command.spell,
     forcedAttackRoll: attackRoll,
+    deferIncomingDamageConsequences: shouldDeferDamageConsequences(sourceForRoll, target, action, catalog, facts),
     deferTargetSaves: true,
     ...(options.externalPrimitiveHandled ? { externalPrimitiveHandled: true as const } : {}),
   });
@@ -3492,6 +3550,11 @@ function pendingAttackEvents(
     obligations,
   });
   if (damageWindow) return [...protectionLifecycleEvents, ...damageWindow];
+  if (resumed.targetState) {
+    const completed = settleDamageConsequences(target, resumed.targetState, resumedEvents, env);
+    resumed.targetState = completed.state;
+    resumedEvents.splice(0, resumedEvents.length, ...completed.events);
+  }
   const events: EventInput[] = [
     ...protectionLifecycleEvents,
     ...actionStateEvents({
@@ -4709,6 +4772,7 @@ function resolvePendingAttack(
     choices: pending.choices,
     spell: pending.spell,
     forcedAttackRoll: pending.attackRoll,
+    deferIncomingDamageConsequences: shouldDeferDamageConsequences(sourceForAttack, targetAfterReaction, attack, catalog, pending.facts),
     deferTargetSaves: true,
     ...(worldActionPrimitive(attack) ? { externalPrimitiveHandled: true as const } : {}),
   });
@@ -4725,7 +4789,7 @@ function resolvePendingAttack(
   const sourceAfter = pending.pactBladeProjection
     ? withoutPactBladeEquipmentProjection(armor.attackerAfter, source.runtime)
     : armor.attackerAfter;
-  const finalTargetRuntime = armor.defenderAfter ?? targetRuntime;
+  let finalTargetRuntime = armor.defenderAfter ?? targetRuntime;
   const obligations = [...new Set([
     ...actionObligationIds(
       attack,
@@ -4818,6 +4882,10 @@ function resolvePendingAttack(
     }
     return chained;
   }
+  const completedDamage = settleDamageConsequences(targetAfterReaction, finalTargetRuntime, resumedAttackEvents, env);
+  finalTargetRuntime = completedDamage.state;
+  resumedAttackEvents.splice(0, resumedAttackEvents.length, ...completedDamage.events);
+
   const events: EventInput[] = [];
   events.push({
     sourceActorId: target.id,
@@ -5007,6 +5075,11 @@ function resolvePendingDamageReaction(
     ...targetAfter,
     hp: hpAfterDamage(targetReactionRuntime.hp, adjusted.amount),
   };
+  const completedDamage = settleDamageConsequences(
+    { ...target, runtime: targetReactionRuntime }, targetAfter, adjusted.events, env,
+  );
+  targetAfter = completedDamage.state;
+  adjusted.events = completedDamage.events;
   const obligations = [...new Set([
     ...pending.obligationIds,
     ...(selectedReaction ? actionObligationIds(selectedReaction) : []),

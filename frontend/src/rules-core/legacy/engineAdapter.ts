@@ -6,6 +6,7 @@ export { isDamageCalculation, resolveDamageCalculation } from '../../engine/dama
 export { canPay, pay } from '../../engine/cost';
 export {
   applyIncomingDamage,
+  applyDamageConsequences,
   consumeNextRollEffects,
   executeAction,
   expireEffectsForTrigger,

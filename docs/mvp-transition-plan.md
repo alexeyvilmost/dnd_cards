@@ -252,3 +252,6 @@ PATCH runtime nil-safe, PUT runtime-поля не трогает. Найденн
 
 ### Damage calculation provenance (local 2026-09-08)
 Damage events may include `calculation` with `beforeResistance` and ordered `adjustments` (immunity, or resistance then vulnerability, with source entity IDs). Flat reductions precede these adjustments. Held-damage reactions reuse this immutable calculation to apply their reduction before resistance without rerolling attack or damage. Legacy events without the optional calculation retain their prior continuation behavior.
+
+
+Held damage events may additionally persist `deferredConsequences` (critical and concentration-disadvantage booleans). Only executions with an eligible damage reaction use it. Damage-dependent expiry, zero-HP survival and damage listeners settle after the final mitigation; declining the reaction settles the original damage. Old snapshots without this marker retain their original execution semantics. No triggering attack or damage dice are rerolled.
