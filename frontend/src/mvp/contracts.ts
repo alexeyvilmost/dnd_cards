@@ -334,6 +334,9 @@ export interface SpellCastContext {
 
 /** Captured by an authoritative event adapter, never chosen by the action UI. */
 export interface TriggeringAttackContext {
+  /** Original committed attack, used by secondary-target damage without another attack roll. */
+  roll?: RollLog;
+  meleeReachFt?: number;
   targetActorId: string;
   damageType: string;
   critical: boolean;

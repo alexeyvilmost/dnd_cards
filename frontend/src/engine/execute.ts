@@ -657,6 +657,9 @@ function preflightPayload(
       const base = value.amount ?? value.dice;
       if (value.type === 'triggering_attack') {
         const attack = ctx.triggeringAttack;
+        if (value.requires_triggering_attack_hit === true && (!attack?.roll || !Number.isFinite(ctx.target?.ac))) {
+          throw mechanicsError('INVALID_MECHANICS', path, 'secondary damage requires the saved attack roll and target AC');
+        }
         if (!attack || attack.targetActorId !== ctx.target?.id || !targetOwned
           || typeof attack.critical !== 'boolean' || !attack.damageType
           || attack.damageType === 'triggering_attack' || attack.damageType === 'weapon') {
@@ -3294,7 +3297,15 @@ function applyPayloads(
     switch (kind) {
       case 'damage': {
         const damageEventStart = events.length;
-        const damageCritical = p.type === 'triggering_attack' ? ctx.triggeringAttack?.critical === true : crit;
+        if (p.requires_triggering_attack_hit === true) {
+          const compared = retargetAttackRoll(ctx.triggeringAttack!.roll!, ctx.target!.ac!);
+          if (compared.outcome !== 'hit' && compared.outcome !== 'crit') {
+            events.push(narrativeEvent(`Размашистая атака: исходный результат ${compared.total} не достигает КЗ ${ctx.target!.ac}; урона нет.`));
+            break;
+          }
+        }
+        const damageCritical = p.inherit_attack_critical === false ? false
+          : p.type === 'triggering_attack' ? ctx.triggeringAttack?.critical === true : crit;
         // Оружейный урон может раскрыться в несколько строк (основной + стихийный) —
         // каждую наносим отдельным событием (сопротивления по типам, план кубов, №4).
         const routedTarget = whoTarget

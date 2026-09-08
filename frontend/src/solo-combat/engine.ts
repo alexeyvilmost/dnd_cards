@@ -42,7 +42,7 @@ import { projectRuleAction } from '../canon/ruleActionProjection';
 import type { Monster } from '../monsters/types';
 import { canPay, pay } from '../engine/cost';
 import { payloadsOf } from '../engine/mechanicsView';
-import { weaponAttackKind } from '../engine/weapon';
+import { attackRangeFromEffect, weaponAttackKind } from '../engine/weapon';
 import { deniedCapabilities } from '../engine/modifiers';
 import {
   executeRemoteManipulator as executeEngineRemoteManipulator,
@@ -2029,12 +2029,46 @@ export function executeCombatRemoteManipulator(input: {
   return appendLog({ ...input.state, world: nextWorld }, input.actorId, summary, records);
 }
 
+/** Shared board selection domain; recomputed by the trusted resolver before paying. */
+export function triggeredSecondaryTargetIds(state: SoloCombatState, actionId: string): string[] {
+  const pending = state.pendingTriggeredAction;
+  const action = state.catalogActions.find(row => row.id === actionId);
+  const activation = action?.mechanics.activation as Record<string, unknown> | undefined;
+  const trigger = activation?.trigger as Record<string, unknown> | undefined;
+  if (!pending || !pending.optionActionIds.includes(actionId) || trigger?.secondary_target !== true) return [];
+  const first = state.tokens[pending.triggeringAttack?.targetActorId ?? '']?.position;
+  const source = state.tokens[pending.sourceActorId]?.position;
+  const reach = pending.triggeringAttack?.meleeReachFt;
+  if (!first || !source || !reach || !pending.triggeringAttack?.roll) return [];
+  return Object.values(state.world.actors).filter(actor => {
+    const position = state.tokens[actor.id]?.position;
+    return actor.id !== pending.sourceActorId && actor.id !== pending.triggeringAttack!.targetActorId
+      && actor.runtime.hp.current > 0 && position
+      && gridDistanceFt(first, position) <= 5 && gridDistanceFt(source, position) <= reach;
+  }).map(actor => actor.id);
+}
+
+function triggeringMeleeReach(actor: ActorState, action: RuleActionDefinition | undefined): number | undefined {
+  if (!action) return undefined;
+  const kind = weaponAttackKind(action.mechanics);
+  if (kind === 'unarmed') return actor.attackProfile?.reachFt ?? 5;
+  if (!kind) return undefined;
+  const effects = action.mechanics.effects as Record<string, unknown>[] | undefined;
+  if (!effects?.some(effect => attackRangeFromEffect(effect, kind, actor.character, actor.runtime.equipment) === 'melee')) return undefined;
+  const id = actor.runtime.equipment[kind === 'off' ? 'off_hand' : 'main_hand'];
+  const card = [...(actor.character.knownCards ?? []), ...(actor.character.equippedCards ?? [])].find(row => row.id === id);
+  const parsed = card ? parseWeaponProfile(card) : undefined;
+  const mode = parsed?.valid ? parsed.profile.attackModes.find(row => row.kind === 'melee') : undefined;
+  return mode?.kind === 'melee' ? mode.reachFt : undefined;
+}
+
 /** Resolve (or skip) a source-side optional action opened by an observed hit. */
 export function resolveTriggeredCombatAction(
   state: SoloCombatState,
   actionId: string | null,
   rng: Rng = Math.random,
   choices?: Readonly<Record<string, readonly string[]>>,
+  targetIds?: string[],
 ): SoloCombatState {
   const pending = state.pendingTriggeredAction;
   if (!pending) throw new Error('Нет ожидающей способности после попадания');
@@ -2084,6 +2118,16 @@ export function resolveTriggeredCombatAction(
       throw new Error(`Завершите выбор: ${choice.prompt}`);
     }
   }
+  const activation = chosen.mechanics.activation as Record<string, unknown> | undefined;
+  const trigger = activation?.trigger as Record<string, unknown> | undefined;
+  const secondary = trigger?.secondary_target === true;
+  if (secondary) {
+    if (targetIds?.length !== 1 || !triggeredSecondaryTargetIds(state, actionId).includes(targetIds[0])) {
+      throw new Error('Выберите другую цель в 5 футах от первой и в досягаемости исходной атаки');
+    }
+  } else if (targetIds !== undefined) {
+    throw new Error('Это действие не позволяет менять исходную цель');
+  }
   const chosenTrigger = triggerEvents(chosen);
   let prepared = cleared as SoloCombatState;
   if (chosenTrigger.includes('sneak_attack_hit')) {
@@ -2114,14 +2158,14 @@ export function resolveTriggeredCombatAction(
       + `урон уменьшен на ${tradeoff.effectiveDamage}.`);
   }
   const targeting = chosen.mechanics.targeting as Record<string, unknown> | undefined;
-  const chosenTargetIds = targeting?.actor_targets === false ? [] : pending.targetIds;
+  const chosenTargetIds = secondary ? targetIds! : targeting?.actor_targets === false ? [] : pending.targetIds;
   const next = executeCombatActionWithD20Interrupts({
     state: prepared,
     actorId: pending.sourceActorId,
     actionId,
     targetIds: chosenTargetIds,
     triggerEvent: pending.optionEvents?.[actionId] ?? (chosenTrigger.includes(pending.event) ? pending.event : chosenTrigger[0]),
-    triggeringAttack: pending.triggeringAttack,
+    triggeringAttack: secondary ? {...pending.triggeringAttack!, targetActorId: chosenTargetIds[0]} : pending.triggeringAttack,
     choices,
     rng,
   });
@@ -2793,10 +2837,16 @@ function offerTriggeredAttackActions(input: {
       .find(record => record.sourceActorId === sourceActorId && record.targetIds.includes(targetIds[0])
         && record.event?.type === 'damage')
     : undefined;
+  const attackRecord = combatLogSince(after, combatLogCursor(before)).flatMap(entry => entry.records ?? [])
+    .find(record => record.sourceActorId === sourceActorId && record.event?.type === 'roll'
+      && record.event.roll.kind === 'd20' && (record.event.roll.outcome === 'hit' || record.event.roll.outcome === 'crit'));
+  const attackRoll = attackRecord?.event?.type === 'roll' ? attackRecord.event.roll : undefined;
+  const meleeReachFt = triggeringMeleeReach(actor, after.catalogActions.find(row => row.id === sourceActionId));
   const triggeringAttack = damageRecord?.event?.type === 'damage' ? {
+    ...(attackRoll ? {roll: attackRoll} : {}), ...(meleeReachFt ? {meleeReachFt} : {}),
     targetActorId: targetIds[0], damageType: damageRecord.event.damageType, critical: events.includes('crit'),
   } : undefined;
-  return executableOptions.length ? {
+  const offered: SoloCombatState = executableOptions.length ? {
     ...after,
     pendingTriggeredAction: {
       event: executableOptions.some(({ event }) => event === 'sneak_attack_hit')
@@ -2810,6 +2860,13 @@ function offerTriggeredAttackActions(input: {
       ...(tradeoff ? { sneakAttackTradeoff: tradeoff } : {}),
     },
   } : after;
+  if (!offered.pendingTriggeredAction) return offered;
+  const validOptions = offered.pendingTriggeredAction.optionActionIds.filter(id => {
+    const activation = after.catalogActions.find(row => row.id === id)?.mechanics.activation as Record<string, unknown> | undefined;
+    return (activation?.trigger as Record<string, unknown> | undefined)?.secondary_target !== true
+      || triggeredSecondaryTargetIds(offered, id).length > 0;
+  });
+  return validOptions.length ? {...offered, pendingTriggeredAction: {...offered.pendingTriggeredAction, optionActionIds: validOptions}} : after;
 }
 
 function deniesOpportunityAttack(actor: ActorState): boolean {

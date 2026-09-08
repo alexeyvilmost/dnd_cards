@@ -1047,3 +1047,15 @@
   justify-content: center;
   gap: 0;
 }
+
+.combat-map-wrap.is-selecting-secondary {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 6px;
+}
+.combat-world-control--selection {
+  position: static;
+  max-width: none;
+  flex-wrap: nowrap;
+}
+.combat-world-control--selection em { flex: 1; }

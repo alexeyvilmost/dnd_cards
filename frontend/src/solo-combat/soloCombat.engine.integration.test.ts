@@ -4065,7 +4065,7 @@ it.each([{ critical: false, withSave: false }, { critical: true, withSave: false
   const targetId = Object.values(state.world.actors).find(candidate => candidate.kind === 'monster')!.id;
   state = placeAdjacent(state, actorId, targetId);
   state = executeCombatAction({ state, actorId, actionId: attack.id, targetIds: [targetId], rng: () => critical ? 0.99 : 0.6 });
-  expect(state.pendingTriggeredAction?.triggeringAttack).toEqual({ targetActorId: targetId, damageType: 'bludgeoning', critical });
+  expect(state.pendingTriggeredAction?.triggeringAttack).toMatchObject({ targetActorId: targetId, damageType: 'bludgeoning', critical });
   const hpBefore = state.world.actors[targetId].runtime.hp.current;
   let rolls = 0;
   state = resolveTriggeredCombatAction(clone(state), rider.id, () => { rolls++; return 0; });
@@ -4378,4 +4378,39 @@ it.each(['fresh_move','no_second_move','intervening_action'])('Lunging Dash uses
  expect(state.world.actors[actorId].runtime.resources.superiority_die).toBe(3);
  state=advanceTurn(state,()=>0.5);
  expect(state.world.actors[actorId].runtime.activeEffects.some(effect=>(effect.mechanics as Record<string,unknown>).attack_maneuver_id==='ACT-bm-lunging')).toBe(false);
+});
+
+
+it.each(['hit','high_ac','crit','invalid','no_secondary','primary_dead'])('Sweeping selects a second board target: %s',async mode=>{
+ const {participant,action}=unarmedParticipant();const actorId=participant.character.id;
+ const actor=participant.canonical.world.actors[actorId];
+ actor.character.variables={...actor.character.variables,superiority_die:{count:1,sides:8}};
+ actor.runtime.resources.superiority_die=4;actor.runtime.maxResources.superiority_die=4;
+ const sweep=projectRuleAction({id:'22400000-0000-4000-8000-000000000001',name:'Sweep',type:'class_feature',resource:'free_action',
+  mechanics:JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_sweeping_224.go',import.meta.url),'utf8').match(/const battleMasterSweeping224 = `([^`]+)`/)![1])} as unknown as Action);
+ const actions=[...participant.canonical.actions,sweep];actor.capabilities.actionIds.push(sweep.id);
+ participant.canonical={...participant.canonical,actions,catalog:{getAction:id=>actions.find(action=>action.id===id),listActions:()=>actions}};
+ let state=await createSoloCombatState({character:participant.character,participant,selected:[{monster:{...goblin(),armor_class:10,max_hp:100},quantity:2}],actions:[scimitar()],effects:[],rng:()=>0.5});
+ const [first,second]=Object.values(state.world.actors).filter(actor=>actor.kind==='monster').map(actor=>actor.id);
+ state.tokens[actorId].position={x:1,y:9};state.tokens[first].position={x:2,y:9};state.tokens[second].position=mode==='no_secondary'?{x:5,y:9}:{x:2,y:8};
+ state.world.actors[first].runtime.resources.reaction=0;state.world.actors[second].runtime.resources.reaction=0;
+ if(mode==='high_ac') state.world.actors[second].ac=30;
+ if(mode==='primary_dead') state.world.actors[first].runtime.hp.current=1;
+ state=executeCombatAction({state,actorId,actionId:action.id,targetIds:[first],choices:{[UNARMED_STRIKE_CHOICE_ID]:['damage']},rng:()=>mode==='crit'?0.99:0.5});
+ if(mode==='no_secondary'){expect(state.pendingTriggeredAction?.optionActionIds??[]).not.toContain(sweep.id);return;}
+ expect(state.pendingTriggeredAction?.optionActionIds).toContain(sweep.id);
+ state=clone(state);let draws=0;const rng=()=>{draws++;return 0.5;};
+ if(mode==='invalid'){
+  expect(()=>resolveTriggeredCombatAction(state,sweep.id,rng,undefined,[first])).toThrow();
+  expect(()=>resolveTriggeredCombatAction(state,sweep.id,rng,undefined,[second,first])).toThrow();
+  expect(draws).toBe(0);expect(state.world.actors[actorId].runtime.resources.superiority_die).toBe(4);return;
+ }
+ const firstHp=state.world.actors[first].runtime.hp.current;
+ const result=resolveTriggeredCombatAction(state,sweep.id,rng,undefined,[second]);
+ expect(result.pendingTriggeredAction).toBeUndefined();
+ expect(result.world.actors[actorId].runtime.resources.superiority_die).toBe(3);
+ expect(result.world.actors[first].runtime.hp.current).toBe(firstHp);
+ expect(result.world.actors[second].runtime.hp.current).toBe(mode==='high_ac'?100:95);
+ expect(draws).toBe(mode==='high_ac'?0:1);
+ expect(()=>resolveTriggeredCombatAction(result,sweep.id,rng,undefined,[second])).toThrow();
 });
