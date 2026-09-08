@@ -81,6 +81,12 @@ function modifierPhrase(p: Dict): string {
   const applies = (p.applies_to as Dict) ?? {};
   const roll = rollRu(applies.roll);
   const op = String(p.op ?? 'add');
+  if (op === 'deny' && applies.interaction === 'opportunity_attack' && applies.trigger === 'self_movement') {
+    return 'перемещение не провоцирует атаки';
+  }
+  const value = p.value_timing === 'on_apply'
+    ? (RES_RU[String(p.value)] ?? diceRu(String(p.value ?? '')))
+    : p.value ?? '';
   const projected = String(p.scope ?? 'self') === 'target';
   const rng = p.range === 'melee' ? ' (рукопашные)' : p.range === 'ranged' ? ' (дальнобойные)' : '';
   let core: string;
@@ -91,7 +97,7 @@ function modifierPhrase(p: Dict): string {
   else if (op === 'deny') return `запрет: ${roll}`;
   else if (op === 'set') core = `${roll} = ${p.value ?? ''}`;
   else if (op === 'multiply') core = `${roll} ×${p.value ?? ''}`;
-  else core = `${p.value ?? ''} к ${roll}`;
+  else core = `${value} к ${roll}`;
   const base = projected ? `атакующим по вам — ${core}` : core;
   const when = p.when as Dict[] | undefined;
   return when?.length ? `${base} (при условии)` : base;

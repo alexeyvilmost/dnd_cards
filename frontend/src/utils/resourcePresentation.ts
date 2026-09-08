@@ -12,6 +12,7 @@ export type ResourceOption = {
 };
 
 const actionDefaults: ResourceOption[] = [
+  { id: 'superiority_die', label: 'Кости превосходства', description: 'Кости манёвров Мастера боя.', category: 'class_resource', recharge: 'short_rest', sortOrder: 180 },
   { id: 'action', label: 'Действие', description: 'Основное действие в ход.', category: 'action_cost', imageUrl: '/charges/main_action.png', sortOrder: 10 },
   { id: 'main_action', label: 'Основное действие', description: 'Основное действие в ход.', category: 'action_cost', imageUrl: '/charges/main_action.png', sortOrder: 11 },
   { id: 'bonus_action', label: 'Бонусное действие', description: 'Бонусное действие в ход.', category: 'action_cost', imageUrl: '/charges/bonus_action.png', sortOrder: 20 },

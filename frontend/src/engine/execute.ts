@@ -534,6 +534,10 @@ function preflightModifier(
   if (!isDict(payload.applies_to)) {
     throw mechanicsError('INVALID_PAYLOAD', `${path}.applies_to`, 'modifier must declare its engine query');
   }
+  if (payload.value_timing !== undefined
+    && (payload.value_timing !== 'on_apply' || !NUMERIC_MODIFIER_OPS.has(op))) {
+    throw mechanicsError('INVALID_PAYLOAD', `${path}.value_timing`, 'on_apply requires a numeric modifier');
+  }
   if (NUMERIC_MODIFIER_OPS.has(op)) {
     const formula = typeof payload.value === 'string'
       ? payload.value.replace(/^\+/, '')
@@ -1841,6 +1845,14 @@ function applyModifierPayload(
   ctx: ExecuteContext,
   ownerActorId?: string,
 ): RuntimeState {
+  // A rolled persistent bonus is resolved once, using the action's source
+  // context. Queries and reloaded snapshots subsequently read the same number.
+  if (payload.value_timing === 'on_apply') {
+    const rolled = rollFormula(String(payload.value), formulaCtx(ctx), { rng: ctx.rng });
+    events.push(rollEvent(source, formattedRoll({ kind: 'other', advantage: 'none',
+      dice: rolled.dice, modifiers: rolled.modifiers, total: rolled.total })));
+    payload = { ...payload, value: rolled.total };
+  }
   const duration = payload.duration as Dict | undefined;
   const relative = sourceTurnMetadata(duration, ctx, ownerActorId);
   const resolved = relative ? { expiry: relative.expiry } : resolveDuration(duration);
