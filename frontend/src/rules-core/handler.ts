@@ -3495,7 +3495,8 @@ function pendingAttackEvents(
   const reactions = attackRoll.outcome === 'hit' || attackRoll.outcome === 'crit'
     ? availableReactions
     : [];
-  const adjustments = attackRoll.outcome === 'miss' || attackRoll.outcome === 'crit_miss' ? availableAdjustments : [];
+  const adjustments = !attackRoll.attackManeuverActionId
+    && (attackRoll.outcome === 'miss' || attackRoll.outcome === 'crit_miss') ? availableAdjustments : [];
   if (reactions.length || adjustments.length) {
     const resolutionId = env.nextId();
     const requestId = env.nextId();

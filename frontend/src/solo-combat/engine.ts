@@ -1,5 +1,6 @@
 import type {EngineEvent} from '../mvp/contracts';
 import {collectRollModifiers} from '../engine/modifiers';
+import {activeConditionsOf} from '../engine/circumstances';
 import {rollD20} from '../engine/roll';
 import {rollEvent} from '../engine/events';
 import {availableCheckManeuvers, prepareCheckManeuver} from '../character/checkManeuvers';
@@ -2397,6 +2398,9 @@ export function resolvePlayerReaction(
       sourceActionId: pending.request.trigger.actionId,
       targetIds: [pending.request.actorId],
     });
+  } else if (pending.type === 'attack_reaction' && pending.attackAdjustment) {
+    next = offerTriggeredAttackActions({before: state, after: next, sourceActorId: pending.sourceActorId,
+      sourceActionId: pending.actionId, targetIds: [pending.targetActorId]});
   } else if (pending.type === 'damage_reaction') {
     next = offerTriggeredAttackActions({
       before: state,
@@ -2778,7 +2782,69 @@ function sourceQualifiesForTriggeredAction(input: {
         && parsed.profile.properties.includes('light')));
 }
 
+/** An incoming miss is final only after Precision/defensive continuations close. */
 function offerTriggeredAttackActions(input: {
+  before: SoloCombatState; after: SoloCombatState; sourceActorId: string; sourceActionId: string; targetIds: string[];
+}): SoloCombatState {
+  const after = offerSourceTriggeredAttackActions(input);
+  if (after.outcome !== 'active' || after.world.pendingResolution || after.pendingTriggeredAction || input.targetIds.length !== 1) return after;
+  const defender = after.world.actors[input.targetIds[0]];
+  const attacker = after.world.actors[input.sourceActorId];
+  if (!defender || !attacker || defender.id === attacker.id || !isControlledCharacter(after, defender.id)
+    || defender.runtime.hp.current <= 0 || attacker.runtime.hp.current <= 0
+    || activeConditionsOf(defender.runtime).has('incapacitated')) return after;
+  const attack = after.catalogActions.find(row => row.id === input.sourceActionId);
+  const kind = attack ? weaponAttackKind(attack.mechanics) : null;
+  const effects = attack?.mechanics.effects as Record<string, unknown>[] | undefined;
+  const melee = kind === 'unarmed' || effects?.some(effect => effect.resolution === 'attack_roll'
+    && (attackRangeFromEffect(effect, kind === 'off' ? 'off' : 'main', attacker.character, attacker.runtime.equipment) === 'melee'
+      || effect.attack_kind === 'weapon_melee'));
+  if (!melee) return after;
+  const rolls = combatLogSince(after, combatLogCursor(input.before)).flatMap(entry => entry.records ?? [])
+    .filter(record => record.sourceActorId === attacker.id && record.targetIds.includes(defender.id))
+    .flatMap(record => record.event?.type === 'roll' && record.event.roll.kind === 'd20' ? [record.event.roll] : []);
+  const roll = rolls.at(-1);
+  if (!roll || (roll.outcome !== 'miss' && roll.outcome !== 'crit_miss')) return after;
+  const learned = after.catalogActions.find(action => {
+    const activation = action.mechanics.activation as Record<string, unknown> | undefined;
+    const trigger = activation?.trigger as Record<string, unknown> | undefined;
+    return defender.capabilities.actionIds.includes(action.id) && trigger?.melee_counterattack === true
+      && canPay(defender.runtime, activation?.cost as Record<string, unknown>[] ?? []).ok;
+  });
+  if (!learned) return after;
+  const distance = gridDistanceFt(after.tokens[defender.id].position, after.tokens[attacker.id].position);
+  const options = after.catalogActions.filter(action => action.id.startsWith(`${defender.id}:melee-reaction:`)
+    && defender.capabilities.actionIds.includes(action.id) && distance <= (action.targeting?.rangeFt ?? 5))
+    .map(action => {
+      const mechanics = clone(action.mechanics);
+      const effect = (mechanics.effects as Record<string, unknown>[])[0];
+      const unarmed = effect.attack_kind === 'unarmed';
+      const originalDamage = (effect.on_hit as Record<string, unknown>[]).find(payload => payload.kind === 'damage');
+      effect.attack_maneuver_id = learned.id;
+      effect.on_hit = [...effect.on_hit as Record<string, unknown>[], {kind: 'damage', amount: 'superiority_die',
+        type: unarmed ? originalDamage?.type ?? 'bludgeoning' : 'weapon', suppress_damage_modifiers: true}];
+      mechanics.activation = {mode: 'triggered', cost: clone((learned.mechanics.activation as Record<string, unknown>).cost),
+        trigger: {events: ['enemy_melee_miss']}};
+      mechanics.targeting = {...mechanics.targeting as Record<string, unknown>, allowed_relations: ['enemy', 'ally']};
+      return {...action, id: `${learned.id}:counter:${action.id}`, name: `${learned.name} — ${action.name.replace(/ — провоцированная атака$/u, '')}`,
+        sourceEntityIds: [...learned.sourceEntityIds, ...action.sourceEntityIds], mechanics,
+        targeting: {...action.targeting!, allowedRelations: ['enemy', 'ally']}} as RuleActionDefinition;
+    });
+  if (!options.length) return after;
+  return {...after,
+    catalogActions: [...after.catalogActions.filter(action => !options.some(option => option.id === action.id)), ...options],
+    actionPresentation: {...after.actionPresentation, ...Object.fromEntries(options.map(option => [option.id, {
+      ...after.actionPresentation?.[learned.id], sourceLabel: defender.name,
+    }]))},
+    world: {...after.world, actors: {...after.world.actors, [defender.id]: {...defender,
+      capabilities: {...defender.capabilities, actionIds: [...new Set([...defender.capabilities.actionIds, ...options.map(option => option.id)])]},
+    }}},
+    pendingTriggeredAction: {event: 'enemy_melee_miss', sourceActorId: defender.id, sourceActionId: learned.id,
+      targetIds: [attacker.id], optionActionIds: options.map(option => option.id)},
+  };
+}
+
+function offerSourceTriggeredAttackActions(input: {
   before: SoloCombatState;
   after: SoloCombatState;
   sourceActorId: string;

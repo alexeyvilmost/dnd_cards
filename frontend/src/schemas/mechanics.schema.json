@@ -928,6 +928,7 @@
         "timing": { "enum": ["before", "during", "after", "replaces"] },
         "requires_weapon_or_unarmed_hit": { "type": "boolean" },
         "secondary_target": { "type": "boolean" },
+        "melee_counterattack": { "type": "boolean" },
         "event": { "enum": ["action_resolved", "attack_roll_made", "hit_by_attack", "targeted_by_magic_missile", "hit", "sneak_attack_hit", "miss", "crit", "damage_dealt", "damage_taken", "saving_throw_made", "forced_save", "ability_check_made", "reduced_to_0_hp", "creature_enters_reach", "creature_leaves_reach", "creature_moves", "fall_started", "turn_start", "turn_end", "spell_cast", "condition_applied", "initiative_roll", "short_rest", "long_rest", "on_acquire", "level_gained"] },
         "events": {
           "type": "array", "minItems": 1, "uniqueItems": true,
@@ -1044,6 +1045,7 @@
 
         "attack_kind": { "enum": ["weapon_melee", "weapon_ranged", "unarmed", "spell_melee", "spell_ranged"] },
         "part_of_attack_action": { "type": "boolean" },
+        "attack_maneuver_id": { "type": "string", "minLength": 1 },
         "ability": { "$ref": "#/$defs/ability" },
         "vs": { "type": "string" },
         "advantage": { "enum": ["none", "advantage", "disadvantage"] },

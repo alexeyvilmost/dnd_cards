@@ -4414,3 +4414,78 @@ it.each(['hit','high_ac','crit','invalid','no_secondary','primary_dead'])('Sweep
  expect(draws).toBe(mode==='high_ac'?0:1);
  expect(()=>resolveTriggeredCombatAction(result,sweep.id,rng,undefined,[second])).toThrow();
 });
+
+
+describe('Riposte responds to a final incoming melee miss',()=>{
+ async function setup(mode='normal') {
+  const {participant}=unarmedParticipant();const actorId=participant.character.id;
+  const actor=participant.canonical.world.actors[actorId];
+  actor.character.variables={...actor.character.variables,superiority_die:{count:1,sides:8}};
+  actor.runtime.resources.superiority_die=mode==='exhausted'?0:4;actor.runtime.maxResources.superiority_die=4;
+  actor.ac=30;
+  if(mode==='incapacitated') actor.runtime.activeEffects=[{id:'stunned',name:'Stunned',source:'test',mechanics:{kind:'condition',value:'stunned'}}];
+  const riposte=projectRuleAction({id:'22500000-0000-4000-8000-000000000001',name:'Riposte',type:'class_feature',resource:'free_action',
+   mechanics:JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_riposte_225.go',import.meta.url),'utf8').match(/const battleMasterRiposte225 = `([^`]+)`/)![1])} as unknown as Action);
+  const precision=projectRuleAction({id:'22200000-0000-4000-8000-000000000001',name:'Precision',type:'class_feature',resource:'free_action',
+   mechanics:JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_precision_222.go',import.meta.url),'utf8').match(/const battleMasterPrecision222 = `([^`]+)`/)![1])} as unknown as Action);
+  const actions=[...participant.canonical.actions,riposte,precision];if(mode!=='unknown')actor.capabilities.actionIds.push(riposte.id);
+  actor.capabilities.actionIds.push(precision.id);
+  participant.canonical={...participant.canonical,actions,catalog:{getAction:id=>actions.find(action=>action.id===id),listActions:()=>actions}};
+  let state=await createSoloCombatState({character:participant.character,participant,selected:[{monster:{...goblin(),armor_class:10,max_hp:100},quantity:1}],actions:[scimitar()],effects:[],rng:()=>0.5});
+  const monster=Object.values(state.world.actors).find(actor=>actor.kind==='monster')!;
+  state.tokens[actorId].position={x:4,y:4};state.tokens[monster.id].position={x:5,y:4};
+  state=advanceTurn(state,()=>0.5);
+  if(mode==='no_reaction')state.world.actors[actorId].runtime.resources.reaction=0;
+  const attackId=state.monsterActionIds[monster.id][0];
+  if(mode==='ranged') (state.catalogActions.find(action=>action.id===attackId)!.mechanics.effects as Record<string,unknown>[])[0].attack_kind='weapon_ranged';
+  if(mode.startsWith('incoming_precision')) {
+    state.controlledCharacterIds=[actorId,monster.id];
+    state.world.actors[monster.id].capabilities.actionIds.push(precision.id);
+    state.world.actors[monster.id].runtime.resources.superiority_die=4;
+    state.world.actors[monster.id].runtime.maxResources.superiority_die=4;
+    if(mode==='incoming_precision_hit')state.world.actors[actorId].ac=10;
+  }
+  const pending=executeCombatAction({state,actorId:monster.id,actionId:attackId,targetIds:[actorId],rng:()=>0.1});
+  return {state,pending,actorId,monsterId:monster.id,riposte,precision,attackId};
+ }
+ it('allows a lethal counterattack to finish the encounter before the monster resumes',async()=>{
+  const {pending,actorId,monsterId}=await setup();
+  pending.world.actors[monsterId].runtime.hp.current=1;
+  const option=pending.pendingTriggeredAction!.optionActionIds.find(id=>id.endsWith(':unarmed:opportunity'))!;
+  const next=resolveTriggeredCombatAction(clone(pending),option,()=>0.5);
+  expect(next.outcome).toBe('victory');expect(next.world.actors[monsterId].runtime.hp.current).toBe(0);
+  expect(next.world.actors[actorId].runtime.resources.superiority_die).toBe(3);
+  expect(runMonsterTurn(next,()=>{throw Error('Dead attacker cannot resume');})).toEqual(next);
+ });
+ it.each(['incoming_precision_miss','incoming_precision_hit'])('waits until Precision resolves: %s',async mode=>{
+  const {pending,precision}=await setup(mode);
+  expect(pending.pendingTriggeredAction).toBeUndefined();
+  expect(pending.world.pendingResolution).toMatchObject({type:'attack_reaction',attackAdjustment:true});
+  const next=resolvePlayerReaction(clone(pending),{kind:'reaction',actionId:precision.id},()=>0.99);
+  expect(next.pendingTriggeredAction?.event).toBe(mode==='incoming_precision_miss'?'enemy_melee_miss':undefined);
+ });
+ it.each(['unknown','exhausted','no_reaction','incapacitated','ranged'])('does not offer an unavailable reaction: %s',async mode=>{
+  const {pending}=await setup(mode);expect(pending.pendingTriggeredAction).toBeUndefined();
+ });
+ it.each(['unarmed','weapon','miss','crit','decline'])('persists, spends once and resumes monster turn: %s',async mode=>{
+  const {pending,actorId,monsterId}=await setup();
+  expect(pending.pendingTriggeredAction?.event).toBe('enemy_melee_miss');
+  expect(pending.world.actors[actorId].runtime.resources.superiority_die).toBe(4);
+  const options=pending.pendingTriggeredAction!.optionActionIds;
+  expect(options).toHaveLength(2);
+  const option=options.find(id=>id.endsWith(mode==='weapon'?':main:opportunity':':unarmed:opportunity'))!;
+  const beforeAction=pending.world.actors[actorId].runtime.resources.action;
+  let draws=0;
+  const result=resolveTriggeredCombatAction(clone(pending),mode==='decline'?null:option,()=>{draws++;return mode==='miss'?0:mode==='crit'?0.99:0.5;});
+  expect(result.world.actors[actorId].runtime.resources.superiority_die).toBe(mode==='decline'?4:3);
+  expect(result.world.actors[actorId].runtime.resources.reaction).toBe(mode==='decline'?1:0);
+  expect(result.world.actors[actorId].runtime.resources.action).toBe(beforeAction);
+  expect(result.world.actors[monsterId].runtime.hp.current).toBe(mode==='decline'||mode==='miss'?100:mode==='weapon'?87:mode==='crit'?69:88);
+  expect(draws).toBe(mode==='decline'?0:mode==='miss'?1:mode==='crit'?5:3);
+  expect(result.pendingTriggeredAction).toBeUndefined();
+  const resumed=runMonsterTurn(clone(result),()=>{throw Error('A resolved monster action must not be repeated');});
+  expect(activeId(resumed)).toBe(actorId);
+  expect(resumed.world.actors[actorId].runtime.hp.current).toBe(result.world.actors[actorId].runtime.hp.current);
+  expect(()=>resolveTriggeredCombatAction(result,option,()=>{throw Error('Duplicate RNG');})).toThrow();
+ });
+});

@@ -3830,6 +3830,7 @@ function runAttackRoll(
     rng: ctx.rng,
     rules: [...collected.rules, ...projected.rules], // свои правила + проекция цели (Blade Ward)
     });
+  if (typeof effect.attack_maneuver_id === 'string') roll.attackManeuverActionId = effect.attack_maneuver_id;
   events.push(rollEvent('Атака', roll));
 
   let next = consumeNextRollEffects(state, 'attack', events, {
@@ -3924,7 +3925,7 @@ function runAttackRoll(
     }
     const originalDamage = events.slice(damageEventStart).find(event => event.type === 'damage');
     const riderContext: ExecuteContext = originalDamage?.type === 'damage' && ctx.target?.id
-      ? {...ctx, triggeringAttack: {targetActorId: ctx.target.id, damageType: originalDamage.damageType, critical: outcome === 'crit'}}
+      ? {...ctx, ...(roll.attackManeuverActionId ? {forcedAttackRoll: roll} : {}), triggeringAttack: {targetActorId: ctx.target.id, damageType: originalDamage.damageType, critical: outcome === 'crit'}}
       : ctx;
     next = applyAttackDamageRiders(
       next,
