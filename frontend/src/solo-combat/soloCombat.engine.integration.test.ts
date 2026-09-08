@@ -4345,3 +4345,37 @@ describe('Precision Attack preserves the held attack roll', () => {
     expect(result.world.pendingResolution).toBeNull();
   });
 });
+
+
+it.each(['fresh_move','no_second_move','intervening_action'])('Lunging Dash uses exact immediate movement and the Attack action: %s',async mode=>{
+ const {participant,action}=unarmedParticipant();const actorId=participant.character.id;
+ const actor=participant.canonical.world.actors[actorId];actor.attackProfile!.attacksPerAction=2;
+ actor.character.variables={...actor.character.variables,superiority_die:{count:1,sides:8}};
+ actor.runtime.resources.superiority_die=4;actor.runtime.maxResources.superiority_die=4;
+ const lunge=projectRuleAction({id:'22300000-0000-4000-8000-000000000001',name:'Lunge',type:'class_feature',resource:'bonus_action',
+  mechanics:JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_lunging_223.go',import.meta.url),'utf8').match(/const battleMasterLunging223 = `([^`]+)`/)![1])} as unknown as Action);
+ const observe=projectRuleAction({...basicAction('observe-test','Observe',{activation:{mode:'active',cost:[]},targeting:{domain:'actor',actor_targets:false,shape:'self',min_targets:0,max_targets:1,range_ft:0,requires_line_of_sight:false,allowed_relations:['self']},effects:[{resolution:'auto',result:[{kind:'narrative',description:'Observe'}]}]}),id:'lunge-observe'});
+ const actions=[...participant.canonical.actions,lunge,observe];actor.capabilities.actionIds.push(lunge.id,observe.id);
+ participant.canonical={...participant.canonical,actions,catalog:{getAction:id=>actions.find(action=>action.id===id),listActions:()=>actions}};
+ let state=await createSoloCombatState({character:participant.character,participant,selected:[{monster:{...goblin(),armor_class:10,max_hp:100},quantity:1}],actions:[scimitar()],effects:[],rng:()=>0.5});
+ const targetId=Object.values(state.world.actors).find(actor=>actor.kind==='monster')!.id;
+ state.tokens[actorId].position={x:0,y:9};state.tokens[targetId].position={x:2,y:9};
+ state.world.actors[targetId].runtime.resources.reaction=0;
+ state=executeCombatAction({state,actorId,actionId:lunge.id,targetIds:[actorId],rng:()=>{throw Error('No Dash dice');}});
+ expect(state.movementRemainingFt[actorId]).toBe(60);
+ expect(state.world.actors[actorId].runtime.resources.superiority_die).toBe(3);
+ state=moveActor({state,actorId,destination:{x:1,y:9},rng:()=>0.5});
+ if(mode==='intervening_action') state=executeCombatAction({state,actorId,actionId:observe.id,targetIds:[actorId],rng:()=>0.5});
+ state=clone(state);
+ const before=state.world.actors[targetId].runtime.hp.current;
+ state=executeCombatAction({state,actorId,actionId:action.id,targetIds:[targetId],choices:{[UNARMED_STRIKE_CHOICE_ID]:['damage']},rng:()=>0.5});
+ const firstDamage=before-state.world.actors[targetId].runtime.hp.current;
+ expect(firstDamage).toBe(mode==='intervening_action'?7:12);
+ if(mode==='fresh_move') state=moveActor({state,actorId,destination:{x:1,y:8},rng:()=>0.5});
+ const hp=state.world.actors[targetId].runtime.hp.current;
+ state=executeCombatAction({state,actorId,actionId:action.id,targetIds:[targetId],choices:{[UNARMED_STRIKE_CHOICE_ID]:['damage']},rng:()=>0.5});
+ expect(hp-state.world.actors[targetId].runtime.hp.current).toBe(mode==='fresh_move'?12:7);
+ expect(state.world.actors[actorId].runtime.resources.superiority_die).toBe(3);
+ state=advanceTurn(state,()=>0.5);
+ expect(state.world.actors[actorId].runtime.activeEffects.some(effect=>(effect.mechanics as Record<string,unknown>).attack_maneuver_id==='ACT-bm-lunging')).toBe(false);
+});

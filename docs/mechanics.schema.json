@@ -891,6 +891,7 @@
       "required": ["mode"],
       "properties": {
         "mode": { "enum": ["active", "passive", "reaction", "triggered", "rest_decision"] },
+        "counts_as": { "enum": ["dash"] },
         "while": { "enum": ["equipped", "carried", "attuned"], "description": "Гейт применимости предмета (S2): пока надет | пока в сумке | пока настроен. Нет → equipped." },
         "consumes_self": { "type": "boolean", "deprecated": true, "description": "Legacy authoring marker without runtime semantics. Migrate to activation.cost {resource:'self_item'}." },
         "cost": { "type": "array", "items": { "$ref": "#/$defs/cost" } },
@@ -1041,6 +1042,7 @@
         "resolution": { "enum": ["attack_roll", "save", "ability_check", "auto"] },
 
         "attack_kind": { "enum": ["weapon_melee", "weapon_ranged", "unarmed", "spell_melee", "spell_ranged"] },
+        "part_of_attack_action": { "type": "boolean" },
         "ability": { "$ref": "#/$defs/ability" },
         "vs": { "type": "string" },
         "advantage": { "enum": ["none", "advantage", "disadvantage"] },
@@ -1161,6 +1163,9 @@
               "type": { "type": "string", "minLength": 1 },
               "scope": { "enum": ["self", "target"] },
               "source_actor_only": { "type": "boolean" },
+              "attack_maneuver": { "type": "boolean" },
+              "attack_maneuver_id": { "type": "string", "minLength": 1 },
+              "requires_attack_action_approach_ft": { "type": "number", "exclusiveMinimum": 0 },
               "filter": { "type": "object" },
               "when": { "type": "array", "items": { "$ref": "#/$defs/condition" } },
               "duration": { "$ref": "#/$defs/duration" }

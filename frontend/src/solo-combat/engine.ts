@@ -651,7 +651,7 @@ function applyForcedMovement(
   }
   if (!changed) return state;
   let next = { ...state, tokens, boardRevision: state.boardRevision + 1 };
-  for (const actorId of movedActorIds) next = reanchorSourceCombatAreas(next, actorId);
+  for (const actorId of movedActorIds) next = interruptStraightMovement(reanchorSourceCombatAreas(next, actorId), actorId);
   return next;
 }
 
@@ -1574,7 +1574,8 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
     };
   };
   next = restoreFamiliarCapabilities(next);
-  if (action.id !== next.dashActionId) return withTriggeredAttackOffer(next);
+  const activation = action.mechanics.activation as Record<string, unknown> | undefined;
+  if (action.id !== next.dashActionId && activation?.counts_as !== 'dash') return withTriggeredAttackOffer(next);
   const movementBeforeDash = input.state.movementRemainingFt[input.actorId]
     ?? effectiveCombatActorSpeedFt(input.state, input.actorId);
   const dashAllotment = effectiveCombatActorSpeedFt(input.state, input.actorId)
@@ -1656,9 +1657,16 @@ function executeCombatActionWithD20Interrupts(
  * interrupt. The held continuation is JSON-safe and therefore survives the
  * same combat persistence path as Shield, Interception, and saving throws.
  */
+function interruptStraightMovement(state: SoloCombatState, actorId: string): SoloCombatState {
+  const previous = state.recentStraightMovementByActor?.[actorId];
+  return previous && !previous.interrupted ? {...state, recentStraightMovementByActor: {
+    ...state.recentStraightMovementByActor, [actorId]: {...previous, interrupted: true},
+  }} : state;
+}
+
 export function executeCombatAction(input: CombatActionInput): SoloCombatState {
   if (input.state.pendingAdditionalMovement) throw new Error('Сначала завершите дополнительное перемещение');
-  return executeCombatActionWithD20Interrupts(input);
+  return interruptStraightMovement(executeCombatActionWithD20Interrupts(input), input.actorId);
 }
 
 function interruptDieFaces(
@@ -3082,11 +3090,11 @@ export function standActor(state: SoloCombatState, actorId: string): SoloCombatS
   const result = executeEngineAction(actor.runtime, {
     name: 'Встать', effects: [{ resolution: 'auto', result: [{ kind: 'condition', value: 'prone', op: 'remove' }] }],
   }, { character: actor.character, selfId: actorId, rng: () => { throw new Error('Вставание не требует броска'); } });
-  return appendLog({
+  return interruptStraightMovement(appendLog({
     ...state,
     world: { ...state.world, actors: { ...state.world.actors, [actorId]: { ...actor, runtime: result.state } } },
     movementRemainingFt: { ...state.movementRemainingFt, [actorId]: (state.movementRemainingFt[actorId] ?? effectiveCombatActorSpeedFt(state, actorId)) - cost },
-  }, actorId, `Встал: потрачено ${cost} фт. движения.`);
+  }, actorId, `Встал: потрачено ${cost} фт. движения.`), actorId);
 }
 
 export function moveActor(input: {
@@ -3171,13 +3179,14 @@ export function moveActor(input: {
   const dx = Math.sign(input.destination.x - token.position.x) as -1 | 0 | 1;
   const dy = Math.sign(input.destination.y - token.position.y) as -1 | 0 | 1;
   const continuesStraight = input.voluntary !== false
+    && !previousStraight?.interrupted
     && previousStraight?.round === round
     && previousStraight.to.x === token.position.x
     && previousStraight.to.y === token.position.y
     && previousStraight.direction.x === dx
     && previousStraight.direction.y === dy;
   const recentStraightMovementByActor = input.voluntary === false
-    ? next.recentStraightMovementByActor
+    ? interruptStraightMovement(next, input.actorId).recentStraightMovementByActor
     : {
       ...(next.recentStraightMovementByActor ?? {}),
       [input.actorId]: {

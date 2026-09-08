@@ -373,6 +373,7 @@ export interface ExecuteContext {
   /** Explicit board/GM facts for rules that need relationships but not full geometry. */
   attackFacts?: {
     nearbyEligibleAllyToTarget?: boolean;
+    immediateStraightMovementFt?: number;
   };
   /** Explicit board/GM observations keyed by the stable actor that imposed a
    * relational condition. Required by source-aware rules such as Frightened. */

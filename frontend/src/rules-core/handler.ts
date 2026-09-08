@@ -1157,9 +1157,8 @@ function actionContext(
     masteryEffects: source.masteryEffects,
     rng: env.rng,
     nextId: env.nextId,
-    ...(facts?.nearbyEligibleAllyToTarget != null ? {
-      attackFacts: { nearbyEligibleAllyToTarget: facts.nearbyEligibleAllyToTarget },
-    } : {}),
+    ...(facts ? {attackFacts: {nearbyEligibleAllyToTarget: facts.nearbyEligibleAllyToTarget,
+      immediateStraightMovementFt: facts.immediateStraightMovementFt}} : {}),
     ...(target && facts ? {
       // Relational condition clauses consume the same board/GM observations as
       // targeting. The executor receives facts, never a condition-specific UI
@@ -6526,6 +6525,7 @@ function spatialFactShapeIssue(facts: SpatialFacts | undefined): string | null {
   }
   if (!Number.isInteger(facts.boardRevision) || facts.boardRevision < 0
     || !Number.isFinite(facts.distanceFt) || facts.distanceFt < 0
+    || (facts.immediateStraightMovementFt !== undefined && (!Number.isFinite(facts.immediateStraightMovementFt) || facts.immediateStraightMovementFt < 0))
     || typeof facts.lineOfSight !== 'boolean'
     || !['none', 'half', 'three_quarters', 'total'].includes(facts.cover)
     || !['self', 'ally', 'enemy', 'neutral'].includes(facts.relation)) {
@@ -6914,6 +6914,7 @@ function lightWeaponExtraAttackAction(
       },
       effects: [{
         ...effect,
+        part_of_attack_action: actionEconomy === 'attack_action',
         attack_kind: rangeKind === 'ranged' ? 'weapon_ranged' : 'weapon_melee',
         tags: [
           'light_property_extra_attack',
@@ -8349,6 +8350,8 @@ function executeUnarmedStrike(
     }
     const result = executeAction(source.runtime, ruleAction.mechanics, {
       ...actionContext(sourceForAttack, env, targetForAttack, target.runtime, command.facts),
+      attackActionId: attackAction.id,
+      attackCommandId: command.commandId,
     });
     const armor = resolveTemporaryHpMeleeRetaliationAfterAttack({
       world,

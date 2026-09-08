@@ -2788,6 +2788,8 @@ type AttackDamageQueryFacts = Pick<ModifierQueryFacts,
 > & {
   /** Folded Advantage state of the parent attack, for hit-gated riders such as Frenzy. */
   advantage?: AdvantageState;
+  attackRange?: 'melee' | 'ranged';
+  partOfAttackAction?: boolean;
   /** Ability used by the parent attack. Flat on-hit payloads inherit it. */
   ability?: AbilityKey;
   /** Ability modifier used for this attack, independent of the weapon's default ability. */
@@ -3042,6 +3044,17 @@ function damageRiders(
         || !riderFilterMatches(payload.filter as Dict | undefined, facts)) continue;
       if (expectedScope === 'target' && payload.source_actor_only === true
         && (!ctx.selfId || sourceId !== ctx.selfId)) continue;
+      if (payload.attack_maneuver === true && (ctx.forcedAttackRoll?.attackManeuverActionId
+        || (expectedScope === 'self' && (ctx.target?.runtimeState?.activeEffects ?? []).some(effect => {
+          const prepared = effect.mechanics as Dict;
+          return prepared.attack_maneuver === true && prepared.consume === 'next_attack' && effect.sourceId === ctx.selfId;
+        })))) continue;
+      if (payload.requires_attack_action_approach_ft !== undefined) {
+        const minimum = Number(payload.requires_attack_action_approach_ft);
+        const moved = ctx.attackFacts?.immediateStraightMovementFt;
+        if (!Number.isFinite(minimum) || minimum <= 0 || !facts.partOfAttackAction || facts.attackRange !== 'melee'
+          || !Number.isFinite(moved) || Number(moved) < minimum) continue;
+      }
       const oncePerTurnKey = typeof payload.once_per_turn === 'string'
         ? payload.once_per_turn.trim()
         : '';
@@ -3085,6 +3098,10 @@ function applyDamageRiders(
       ? `damage-rider:${rider.oncePerTurnKey}`
       : undefined;
     if (firedKey && (next.firedThisTurn ?? []).includes(firedKey)) continue;
+    if (rider.payload.attack_maneuver === true && typeof rider.payload.attack_maneuver_id === 'string') {
+      const attackEvent = [...events].reverse().find(event => event.type === 'roll' && event.roll.target?.type === 'ac');
+      if (attackEvent?.type === 'roll') attackEvent.roll = {...attackEvent.roll, attackManeuverActionId: rider.payload.attack_maneuver_id};
+    }
     const payload = {
       ...rider.payload,
       kind: 'damage',
@@ -3855,6 +3872,8 @@ function runAttackRoll(
     const attackDamageFacts: AttackDamageQueryFacts = {
       attackKind: attackFacts.attackKind,
       advantage: roll.advantage,
+      attackRange,
+      partOfAttackAction: typeof effect.part_of_attack_action === 'boolean' ? effect.part_of_attack_action : Boolean(ctx.attackActionId),
       critical: outcome === 'crit',
       ...(usedAttackAbility ? { ability: usedAttackAbility } : {}),
       extraAttackSource: extraAttackSourceFromEffect(

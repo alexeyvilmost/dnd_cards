@@ -21,6 +21,7 @@ export const TACTICAL_HEIGHT = 10;
 export interface GridPosition { x: number; y: number }
 
 export interface RecentStraightMovement {
+  interrupted?: boolean;
   from: GridPosition;
   to: GridPosition;
   distanceFt: number;
@@ -389,7 +390,7 @@ export function combatRelation(
 
 export function spatialFacts(
   state: Pick<SoloCombatState, 'tokens' | 'boardRevision' | 'sideByActorId' | 'combatAreas'>
-    & Partial<Pick<SoloCombatState, 'world'>>,
+    & Partial<Pick<SoloCombatState, 'world' | 'recentStraightMovementByActor'>>,
   sourceActorId: string,
   targetActorId: string,
 ): SpatialFacts {
@@ -430,6 +431,10 @@ export function spatialFacts(
     const position = state.tokens[actor.id]?.position;
     return Boolean(position && Math.max(Math.abs(position.x - target.x), Math.abs(position.y - target.y)) * TACTICAL_CELL_FT <= 5);
   }));
+  const movement = state.recentStraightMovementByActor?.[sourceActorId];
+  const immediateStraightMovementFt = movement && !movement.interrupted
+    && state.world?.scene.mode === 'encounter' && movement.round === state.world.scene.round
+    && movement.to.x === source.x && movement.to.y === source.y ? movement.distanceFt : 0;
   return {
     factsSource: 'board',
     boardRevision: state.boardRevision,
@@ -443,5 +448,6 @@ export function spatialFacts(
       && canHear(state.world!.actors[targetActorId].runtime, state.world!.actors[targetActorId].passives)
       && !(sourceActor && activeConditionWorldFactEnabled(sourceActor.runtime, 'cannot_speak')),
     nearbyEligibleAllyToTarget,
+    immediateStraightMovementFt,
   };
 }

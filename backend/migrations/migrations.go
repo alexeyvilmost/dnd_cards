@@ -1410,6 +1410,13 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 			Up:          materializeBattleMasterPrecision,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+
+		{
+			Version:     "223_battle_master_lunging",
+			Description: "Materialize Battle Master Lunging Attack and immediate movement facts",
+			Up:          materializeBattleMasterLunging,
+			Down:        func(db *sql.DB) error { return nil },
+		},
 		// Здесь можно добавлять новые миграции
 	}
 }

@@ -272,6 +272,8 @@ export interface SpatialFacts {
    * derives weapon qualification and roll advantage itself.
    */
   nearbyEligibleAllyToTarget?: boolean;
+  /** Continuous voluntary movement immediately preceding this attack. */
+  immediateStraightMovementFt?: number;
   /**
    * Explicit actor-to-surface observation used while board geometry does not
    * own material/contact data. Rules core still decides whether it is legal.
