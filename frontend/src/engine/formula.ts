@@ -102,6 +102,7 @@ interface EvalSink {
   dice: DieRoll[];
   modifiers: FormulaModifier[];
   detailed: boolean;
+  diceMultiplier?: 1 | 2;
 }
 
 function defaultRng(): number {
@@ -200,7 +201,7 @@ function tokenize(input: string): Token[] {
 
 function rollDice(count: number, sides: number, sink: EvalSink): number {
   let sum = 0;
-  const n = Math.max(0, Math.floor(count));
+  const n = Math.max(0, Math.floor(count)) * (sink.diceMultiplier ?? 1);
   for (let i = 0; i < n; i++) {
     const result = drawDie(sink.rng, sides);
     if (sink.detailed) sink.dice.push({ sides, result });
@@ -564,8 +565,11 @@ function buildRollText(dice: DieRoll[], modifiers: FormulaModifier[], total: num
 export function rollFormula(
   formula: string,
   ctx: FormulaContext | Record<string, unknown> = {},
-  opts?: { modifiers?: FormulaModifier[]; rng?: () => number },
+  opts?: { modifiers?: FormulaModifier[]; rng?: () => number; diceMultiplier?: 1 | 2 },
 ): FormulaRollResult {
+  if (opts?.diceMultiplier !== undefined && opts.diceMultiplier !== 1 && opts.diceMultiplier !== 2) {
+    throw new FormulaError('Множитель количества костей должен быть 1 или 2');
+  }
   const trimmed = formula.trim();
   const fctx: FormulaContext = { ...(ctx as FormulaContext), rng: opts?.rng ?? (ctx as FormulaContext).rng };
   const sink: EvalSink = {
@@ -574,6 +578,7 @@ export function rollFormula(
     dice: [],
     modifiers: [],
     detailed: true,
+    diceMultiplier: opts?.diceMultiplier,
   };
 
   if (MARKERS.has(trimmed.toLowerCase())) {

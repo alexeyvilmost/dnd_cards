@@ -2856,15 +2856,6 @@ function explodeLimitOf(payload: Dict, ctx: ExecuteContext): number | undefined 
 }
 
 /**
- * Критическое попадание (PHB 2024): кости урона броска бросаются ДВАЖДЫ, а модификаторы
- * (мод характеристики, зачарование, плоские бонусы) прибавляются один раз. Удваиваем число
- * костей в формуле («2d6+3» → «4d6+3»); константы/бонусы не трогаем.
- */
-function doubleDice(formula: string): string {
-  return String(formula).replace(/(\d+)d(\d+)/gi, (_m, n: string, s: string) => `${Number(n) * 2}d${s}`);
-}
-
-/**
  * Одна payload-строка урона → одна ИЛИ несколько нанесённых инстанций.
  * dice:"weapon" раскрывается в оружие в руке: основная строка (кость + мод характеристики
  * + зачарование) плюс отдельная инстанция на каждый стихийный урон (без мода и зачарования).
@@ -2910,7 +2901,7 @@ function resolveDamageAmounts(
         weaponDamageLine: i === 0 ? 'base' : 'extra',
       };
       const dmgRules = damageRules(ctx, state, damageFilter, attackFacts?.weaponMod);
-      const fr = rollFormula(crit ? doubleDice(line.dice) : line.dice, formulaCtx(ctx), { rng: damageRng });
+      const fr = rollFormula(line.dice, formulaCtx(ctx), { rng: damageRng, diceMultiplier: crit ? 2 : 1 });
       // Правила кости (die_bonus/explode) — на кости строки, до модов характеристики/зачарования.
       const ruled = applyDamageDieRules(fr.dice, dmgRules, { explodeLimit, rng: damageRng });
       recordUsedDamageRules(state, ruled.usedRuleKeys);
@@ -2985,7 +2976,7 @@ function resolveDamageAmounts(
       weaponDamageLine: 'none',
     };
     const dmgRules = damageRules(ctx, state, damageFilter, attackFacts?.weaponMod);
-    const fr = rollFormula(crit ? doubleDice(scaled) : scaled, formulaCtx(ctx), { rng: damageRng });
+    const fr = rollFormula(scaled, formulaCtx(ctx), { rng: damageRng, diceMultiplier: crit ? 2 : 1 });
     const ruled = applyDamageDieRules(fr.dice, dmgRules, { explodeLimit, rng: damageRng });
     recordUsedDamageRules(state, ruled.usedRuleKeys);
     // C1: модификаторы урона из эффектов. Для не-оружейного урона ability берём из payload,

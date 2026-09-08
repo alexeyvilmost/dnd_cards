@@ -22,6 +22,20 @@ const run = (rng: () => number, mech: Record<string, unknown> = ATTACK): EngineE
   executeAction(fresh(), mech, { character: char, target: { ac: 1 }, rng } as ExecuteContext).events;
 
 describe('Критическое попадание — удвоение костей урона', () => {
+  it('doubles named and scaled dice without doubling flat modifiers', () => {
+    const mechanics = { effects: [{ resolution: 'attack_roll', ability: 'str', on_hit: [
+      { kind: 'damage', dice: 'superiority_die + 2d6 + str', type: 'slashing' },
+    ] }] };
+    const events = executeAction(fresh(), mechanics, {
+      character: { ...char, abilityMods: { ...char.abilityMods, str: 3 },
+        variables: { superiority_die: { count: 1, sides: 8 } } },
+      target: { ac: 1 }, rng: seq(0.99, 0),
+    }).events;
+    const damage = events.find(event => event.type === 'damage');
+    expect(damage?.type === 'damage' && damage.roll?.dice.map(die => die.sides)).toEqual([8, 8, 6, 6, 6, 6]);
+    expect(damageTotal(events)).toBe(9);
+  });
+
   it('нат.20: 2d6 → 4d6 (кости дважды)', () => {
     // rng 0.96 → к20 = 20 (крит), каждая d6 = floor(0.96*6)+1 = 6 → 4d6 = 24.
     expect(damageTotal(run(() => 0.96))).toBe(24);
