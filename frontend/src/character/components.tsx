@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { optionsForChoiceSource, labelOf, SKILLS, type RegistryItem } from '../mechanics/registries';
 import { requiresInitialCharacterChoice, type PendingChoice } from '../mechanics/collectChoices';
 import type { AssembledCharacter } from './assemble';
@@ -8,7 +8,9 @@ import {
   ABILITY_KEYS, ABILITY_LABEL_RU,
   type AbilityBonuses, type AbilityGenMethod, type AbilityKey, type CharacterDraft,
 } from './types';
-import type { Feat, FeatCategory, Spell } from '../types';
+import type { Action, Feat, FeatCategory, Spell } from '../types';
+import { actionsApi } from '../api/client';
+import ActionPreview from '../components/ActionPreview';
 import { abilityMod } from './derive';
 import {
   POINT_BUY_BUDGET, POINT_BUY_MAX, POINT_BUY_MIN,
@@ -163,6 +165,24 @@ export function ChoiceResolver({
   feats?: Feat[];
 }) {
   const options = optionsForChoice(choice, feats);
+  const actionReferences = JSON.stringify((choice.items ?? []).flatMap(item => {
+    const grants = item.grants ?? [];
+    const actionGrant = grants.find(grant => grant.kind === 'grant_action' && typeof grant.value === 'string');
+    return actionGrant ? [[item.id, actionGrant.value]] : [];
+  }));
+  const [actionPreviews, setActionPreviews] = useState<Record<string, Action>>({});
+  useEffect(() => {
+    let stale = false;
+    const references = JSON.parse(actionReferences) as [string, string][];
+    if (!references.length) return;
+    Promise.all(references.map(async ([id, reference]) => {
+      try { return [id, await actionsApi.getAction(reference)] as const; }
+      catch { return null; }
+    })).then(loaded => {
+      if (!stale) setActionPreviews(Object.fromEntries(loaded.filter(entry => entry !== null)));
+    });
+    return () => { stale = true; };
+  }, [actionReferences]);
   const recommendedIds = new Set((choice.recommended ?? []).flatMap((reference) => {
     const optionId = choiceOptionIdByReference(options, reference);
     return optionId ? [optionId] : [];
@@ -194,7 +214,19 @@ export function ChoiceResolver({
       <div className="choice-title">
         {choice.prompt} <span className="origin">· {choice.origin.name}</span>
       </div>
-      {featTiles.length > 0 ? (
+      {actionReferences !== '[]' ? (
+        <div className="forge-square-grid">
+          {options.map(option => {
+            const action = actionPreviews[option.id];
+            return <EntitySquareCard key={option.id} name={option.label}
+              imageUrl={action?.image_url} selected={value.includes(option.id)}
+              disabled={!!unavailableOptions[option.id] && !value.includes(option.id)}
+              disabledReason={unavailableOptions[option.id]}
+              onClick={() => toggle(option.id)}
+              preview={action ? <ActionPreview action={action} disableHover /> : undefined} />;
+          })}
+        </div>
+      ) : featTiles.length > 0 ? (
         <div className="forge-square-grid">
           {featTiles.map((f) => (
             <EntitySquareCard

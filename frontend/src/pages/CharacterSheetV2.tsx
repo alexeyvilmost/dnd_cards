@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode } from 'react';
 import type { AssembledCharacter } from '../character/assemble';
 import { effectAbilityPresentation } from '../character/abilityDisplay';
+import { useGrantedActions } from '../character/grantedActions';
 import type { CharacterRuleState } from '../character/rules/types';
 import type { CharacterDraft, ForgeCharacter } from '../character/types';
 import { ABILITY_LABEL_RU } from '../character/types';
@@ -98,6 +99,13 @@ const CharacterSheetV2 = ({
   pendingAtomicRetry, onPendingAtomicRetryChange, readOnly, encounterApply,
   combatActive, sheetActionDisabledReason, onRollInitiative, rollingInitiative,
 }: Props) => {
+  const learnedActions = useGrantedActions({ assembled, characterLevel: character.level,
+    resolvedChoices: draft.resolvedChoices });
+  const abilityActions = [
+    ...assembled.actions.map(({ action, origin }) => ({ action,
+      sourceLabel: `${originLabel(origin.kind)} · ${origin.name}` })),
+    ...learnedActions.filter(({ action }) => !assembled.actions.some(entry => entry.action.id === action.id)),
+  ];
   const [hpOpen, setHpOpen] = useState(false);
   const [longRestOpen, setLongRestOpen] = useState(false);
   // E4/E5: единый «КЗ/Спас цели» на обе панели листа (Действия + Заклинания).
@@ -476,15 +484,15 @@ const CharacterSheetV2 = ({
             <ForgeAbilityDisplay
               mode={entityDisplay.actions}
               linesClassName="cs-lines"
-              entries={assembled.actions.map(({ action, origin }) => ({
+              entries={abilityActions.map(({ action, sourceLabel }) => ({
                 key: action.id,
                 name: action.name,
                 imageUrl: action.image_url,
-                sourceLabel: `${originLabel(origin.kind)} · ${origin.name}`,
+                sourceLabel,
                 action,
               }))}
             />
-            {assembled.feats.length === 0 && assembled.effects.length === 0 && assembled.actions.length === 0 && (
+            {assembled.feats.length === 0 && assembled.effects.length === 0 && abilityActions.length === 0 && (
               <p className="cs-hook-note">Нет привязанных способностей.</p>
             )}
           </CollapsibleSection>

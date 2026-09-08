@@ -21,6 +21,7 @@ export interface GrantedActionRequest {
 }
 
 const NO_RESOLVED_CHOICES: Readonly<Record<string, readonly string[]>> = {};
+const NO_ITEM_MECHANICS: readonly GrantedActionItemMechanics[] = [];
 
 function grantGateLevel(
   origin: AssembledCharacter['effects'][number]['origin'],
@@ -89,7 +90,7 @@ export function useGrantedActions({
   assembled,
   characterLevel,
   resolvedChoices,
-  itemMechanics = [],
+  itemMechanics = NO_ITEM_MECHANICS,
   disabled = false,
 }: {
   assembled: AssembledCharacter;

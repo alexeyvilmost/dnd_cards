@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { collectGrantActionSlugs } from './actionSheet';
 import { initResources, buildResourceRecharge } from '../engine/resources';
 import { longRest, shortRest } from '../engine/turn';
 import { collectChoices } from '../mechanics/collectChoices';
@@ -40,4 +41,19 @@ describe('Battle Master catalog foundations', () => {
     expect(selectedChoicePayloads(student.effects[0], ['smith'])).toEqual([{ kind: 'grant_proficiency', prof: 'tool', value: 'smith' }]);
     expect(selectedChoicePayloads(student.effects[1], ['perception'])).toEqual([{ kind: 'grant_proficiency', prof: 'skill', value: 'perception' }]);
   });
+});
+
+const choiceMigration = readFileSync(new URL('../../../backend/migrations/battle_master_choices_214.go', import.meta.url), 'utf8');
+const maneuverChoices = JSON.parse(choiceMigration.match(/const battleMasterChoices214 = `([^`]+)`/)![1]);
+it('grants only selected Battle Master maneuvers using the shared choice key', () => {
+  const origin = { kind: 'class' as const, id: 'battle-master', name: 'Мастер боя', featureId: 'combat-superiority' };
+  const choices = collectChoices(maneuverChoices, origin, {});
+  expect(choices).toHaveLength(1);
+  expect(choices[0].count).toBe(3);
+  expect(collectGrantActionSlugs(maneuverChoices, 3, { origin, resolvedChoices: {} })).toEqual([]);
+  const selected = ['ACT-bm-evasive-footwork', 'ACT-bm-goading-attack', 'ACT-bm-trip-attack'];
+  expect(collectGrantActionSlugs(maneuverChoices, 3, { origin,
+    resolvedChoices: { [choices[0].id]: selected } })).toEqual(selected);
+  expect(collectGrantActionSlugs(maneuverChoices, 3, { origin,
+    resolvedChoices: { [choices[0].id]: ['unknown-maneuver'] } })).toEqual([]);
 });

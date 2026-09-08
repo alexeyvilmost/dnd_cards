@@ -110,8 +110,10 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
                     {i > 0 && <span className="sp-dmgsep">+</span>}
                     <span className="sp-dmgitem" style={{ color: getDamageColorOnDark(d.type) }}>
                       {fmt(d.value)}
-                      <img className="sp-dmgicon" src={getDamageIconPath(d.type)} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
-                      {getDamageLabel(d.type).toLowerCase()}
+                      {d.type === 'triggering_attack' ? ' к урону исходной атаки' : <>
+                        <img className="sp-dmgicon" src={getDamageIconPath(d.type)} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+                        {getDamageLabel(d.type).toLowerCase()}
+                      </>}
                     </span>
                   </React.Fragment>
                 ))}
