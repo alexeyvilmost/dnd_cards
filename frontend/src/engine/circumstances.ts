@@ -145,6 +145,9 @@ export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
     case 'roller_is_condition_source':
       return !!ctx.conditionSourceId && !!ctx.rollerActorId
         && ctx.rollerActorId === ctx.conditionSourceId;
+    case 'roller_is_not_condition_source':
+      return !!ctx.conditionSourceId && !!ctx.rollerActorId
+        && ctx.rollerActorId !== ctx.conditionSourceId;
     case 'distance_to_condition_owner': {
       const ownerId = ctx.conditionOwnerId;
       const subjectId = cond.subject === 'roll_target' ? ctx.rollTargetActorId : ctx.rollerActorId;

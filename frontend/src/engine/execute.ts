@@ -3670,7 +3670,12 @@ export function consumeNextRollEffects(
   const activeEffects = state.activeEffects.filter((entry) => {
     const consumes = payloadsOf(entry.mechanics).some((payload) => (
       (!options.onlyConditional || payload.consume === 'next_on_failure') && modifierMatchesRoll(
-        payload, roll, options.filter, options.evalCtx, options.scope, options.failed,
+        payload, roll, options.filter, options.evalCtx ? {
+          ...options.evalCtx,
+          conditionSourceId: entry.sourceId,
+          conditionOwnerId: entry.ownerId ?? (options.scope === 'target'
+            ? options.evalCtx.rollTargetActorId : options.evalCtx.rollerActorId),
+        } : undefined, options.scope, options.failed,
       )
     ));
     if (consumes) expired.push(entry);

@@ -405,3 +405,13 @@ Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br
 - Page initially crashed while the dependency loop was present. Fixed before acceptance; reopened local URL in tab4, stable long rest, combat and return verified. Tab3 remains on its browser-generated crash page; do not reload that data URL.
 - Replay verified all 25 commands, artifact `sha256:bf1e7ae2e00ef2b601cf090e7d4f0091745026a4b6a7deb17b6a6a347a983491`, final `sha256:cc6eb5d951b673856b94d816049307e12e10090ae9863c5cab97e24b92524976`.
 - Validation: full 393 files / 3291 tests, TypeScript, lint, Go migrations passed. Local API now applies 214; no TimeWeb changes. Full original plan and natural 0→14000 XP run remain unfinished.
+
+
+### Local continuation: Distracting Strike (215)
+
+- Fifth selectable maneuver: inherited bonus damage, target-scoped next-attack advantage restricted to another attacker, expiry at the start of the source's next turn. Reused the learned-choice cards.
+- Fixed one-shot modifier consumption to evaluate the persisted effect's source/owner identities, matching modifier projection. Tests serialize the marker, make the source attack without advantage or consumption, then another attacker consumes advantage even on a miss; a third attack receives none. Normal and critical bonus damage covered.
+- Browser targeted fixture: run `26003d56-43e1-4304-bf82-0ebaa5ff4d8c`, character `dd5a9e4f-73be-4921-8cfc-f764deea61b5`, source `2f9cc099-27d4-4c55-b8ee-c1efa740e153`. Copied validated level-3 build, replaced Goading with Distracting in the local choice fixture, fixed one 67-HP berserker. Normal 31 HP and actual random rolls; not natural progression or encounter generation.
+- Browser attack 17+5 hit for4; Distracting rolled3, pool4→3, target60HP. Reloaded; Action Surge attack16+5 used exactly one d20 and dealt6; target54HP, opening still present with exact owner/source. Skipped another maneuver. At next source turn the journal removed Distracting Strike. Hero22/31HP after two Second Winds. Fixture remains active at this verified checkpoint; no victory claimed.
+- Replay verified 11 commands: artifact `sha256:ceee663ca55a7477890d451dbbdcb2636563b200521d4313cf04532a2c11e7a9`, final `sha256:800d42398d358d1d97e85b23197ccb20c712530e15e2672a0eaefd08a0d3ffb7`.
+- Full 394 files /3293 tests, TypeScript, lint, Go migrations, worker HTTP/replay passed. API/worker updated locally to215. Fifteen maneuvers and other original-plan items still remain.
