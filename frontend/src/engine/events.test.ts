@@ -105,4 +105,19 @@ describe('events serialization', () => {
       text: 'к4: 2 + к6: 5 = 7',
     })).toBe('к4: 2, к6: 5');
   });
+  it('renders the actual reduction when a legacy max formula lists both ability arguments', () => {
+    const event: EngineEvent = {
+      type: 'damage_reduction', amount: 8,
+      roll: {
+        kind: 'other', dice: [{ sides: 8, result: 5 }], advantage: 'none',
+        modifiers: [{ value: 3, source: 'СИЛ' }, { value: 2, source: 'ЛВК' }],
+        total: 8, text: 'к8: 5 +3 СИЛ +2 ЛВК = 8',
+      },
+    };
+    const description = describeEngineEvent(event);
+    expect(description).toContain('к8: 5 → +3 по формуле = 8');
+    expect(description).not.toContain('+2 ЛВК');
+    expect(deserializeEngineEvent(serializeEngineEvent(event))).toEqual(event);
+  });
+
 });

@@ -61,9 +61,14 @@ export interface RollLog {
 
 // `source` — необязательная атрибуция «кто это сделал» (напр. имя атакующего в бою). Используется
 // в журнале ЦЕЛИ, чтобы показать «Тест: Урон 6 (яд)». Не влияет на механику, только на текст.
+export interface DamageCalculation {
+  beforeResistance: number;
+  adjustments: Array<{ level: 'immunity' | 'resistance' | 'vulnerability'; sourceEntityIds: string[] }>;
+}
+
 export type EngineEvent =
   | { type: 'roll'; label: string; roll: RollLog }
-  | { type: 'damage'; amount: number; damageType: string; roll?: RollLog; source?: string }
+  | { type: 'damage'; amount: number; damageType: string; roll?: RollLog; source?: string; calculation?: DamageCalculation }
   | { type: 'healing'; amount: number; roll?: RollLog; source?: string }
   | { type: 'damage_reduction'; amount: number; roll?: RollLog; source?: string }
   | { type: 'temp_hp'; amount: number; source?: string }

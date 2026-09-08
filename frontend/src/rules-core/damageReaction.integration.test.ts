@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { projectRuleAction } from '../canon/ruleActionProjection';
+import type { Action } from '../types';
 import { describe, expect, it } from 'vitest';
 import type {
   ActorState,
@@ -725,3 +728,46 @@ describe('canonical pre-damage reaction lifecycle', () => {
     }
   });
 });
+
+const parryMechanics = JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_parry_216.go', import.meta.url), 'utf8').match(/const battleMasterParry216 = `([^`]+)`/)![1]);
+it.each([...['weapon_melee', 'spell_melee', 'unarmed', 'weapon_ranged', 'spell_ranged'].map(attackKind => ({ attackKind, resistant: false })),
+  { attackKind: 'weapon_melee', resistant: true }])(
+  'Battle Master Parry: $attackKind resistant=$resistant', ({ attackKind, resistant }) => {
+    const parry = projectRuleAction({ id: '21600000-0000-4000-8000-000000000001', name: 'Парирование',
+      type: 'class_feature', resource: 'reaction', mechanics: parryMechanics } as unknown as Action);
+    const strike = structuredClone(STRIKE);
+    (strike.mechanics.effects as Record<string, unknown>[])[0].attack_kind = attackKind;
+    const catalog: RulesCatalog = { getAction: id => id === parry.id ? parry : id === strike.id ? strike : undefined };
+    const initial = world([parry.id]);
+    const defender = initial.actors.defender;
+    if (resistant) defender.passives = [{ kind: 'resistance', damage_type: 'bludgeoning', value: 'resistance' }];
+    defender.character.variables = { superiority_die: { count: 1, sides: 8 } };
+    defender.runtime.resources.superiority_die = 4;
+    defender.runtime.maxResources.superiority_die = 4;
+    const openingTape = createStrictRngTape([{ label: 'attack', sides: 20, value: 15 }, { label: 'damage', sides: 8, value: 8 }]);
+    const opening = new InMemoryRulesSession(initial, catalog, { rng: openingTape.rng,
+      clock: createLogicalClock(), nextId: createSequentialIdFactory('parry-open') });
+    begin(opening, [parry.id]);
+    expect(useStrike(opening).status).toBe('accepted');
+    openingTape.assertExhausted();
+    const eligible = !attackKind.includes('ranged');
+    const checkpoint = opening.getState();
+    if (!eligible) {
+      expect(checkpoint.pendingResolution).toBeNull();
+      expect(checkpoint.actors.defender.runtime.hp.current).toBe(12);
+      expect(checkpoint.actors.defender.runtime.resources.superiority_die).toBe(4);
+      return;
+    }
+    expect(checkpoint.actors.defender.runtime.hp.current).toBe(20);
+    expect(checkpoint.pendingResolution).toMatchObject({ type: 'damage_reaction',
+      request: { options: [{ actionId: parry.id }] } });
+    const migrated = migrateWorldState(JSON.parse(JSON.stringify(checkpoint)));
+    const tape = createStrictRngTape([{ label: 'parry', sides: 8, value: 2 }]);
+    const restored = new InMemoryRulesSession(migrated, catalog, { rng: tape.rng,
+      clock: createLogicalClock(migrated.logicalClock), nextId: createSequentialIdFactory('parry-resume') });
+    expect(resolveReaction(restored, parry.id, 'parry').status).toBe('accepted');
+    tape.assertExhausted();
+    expect(restored.getState().actors.defender.runtime.hp.current).toBe(resistant ? 19 : 17);
+    expect(restored.getState().actors.defender.runtime.resources).toMatchObject({ reaction: 0, superiority_die: 3 });
+    expect(restored.getState().pendingResolution).toBeNull();
+  });

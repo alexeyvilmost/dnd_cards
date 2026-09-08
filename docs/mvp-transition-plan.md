@@ -248,3 +248,7 @@ PATCH runtime nil-safe, PUT runtime-поля не трогает. Найденн
 
 Каждой сессии давать: этот документ + конкретный шаг + «Общие правила»
 из §5 + ссылки на `unified-mechanics-schema.md` и существующие тесты.
+
+
+### Damage calculation provenance (local 2026-09-08)
+Damage events may include `calculation` with `beforeResistance` and ordered `adjustments` (immunity, or resistance then vulnerability, with source entity IDs). Flat reductions precede these adjustments. Held-damage reactions reuse this immutable calculation to apply their reduction before resistance without rerolling attack or damage. Legacy events without the optional calculation retain their prior continuation behavior.

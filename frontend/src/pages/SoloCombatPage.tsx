@@ -1,3 +1,5 @@
+import SheetActionLine from '../components/SheetActionLine';
+import { getDamageLabel } from '../utils/damageTypes';
 import type { RoguelikeCombatIntent } from '../roguelike/combatWorker';
 import type { RoguelikeRun } from '../roguelike/api';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -700,14 +702,14 @@ export default function SoloCombatPage() {
     ? pending
     : null;
   const reactionTitle = pending?.type === 'damage_reaction'
-    ? 'Вам нанесен урон'
+    ? 'Реакция на урон'
     : pending?.request.type === 'reaction'
       && pending.request.trigger.type === 'hit_by_attack'
       ? 'По вам попали'
       : 'Открыто окно реакции';
   const reactionDetails = pending?.type === 'damage_reaction'
-    ? `Получено урона: ${pending.damage.reduce((sum, packet) => sum + packet.amount, 0)}${pending.damage.length
-      ? ` · ${[...new Set(pending.damage.map((packet) => packet.damageType))].join(', ')}`
+    ? `Входящий урон: ${pending.damage.reduce((sum, packet) => sum + packet.amount, 0)}${pending.damage.length
+      ? ` · ${[...new Set(pending.damage.map((packet) => getDamageLabel(packet.damageType).toLocaleLowerCase('ru-RU')))].join(', ')}`
       : ''}`
     : null;
   return (
@@ -839,7 +841,19 @@ export default function SoloCombatPage() {
           }}
         /><Link className="combat-sheet-drawer__full" target="_blank" to={`/characters-v3/${drawerActorId}`}>Открыть полный лист ↗</Link></aside>;
       })()}
-      {reactionOptions.length > 0 && <div className="combat-reaction-backdrop"><section><p>РЕАКЦИЯ</p><h2>{reactionTitle}</h2>{reactionDetails && <p>{reactionDetails}</p>}<div>{reactionOptions.map((option) => <button type="button" key={option.id} disabled={busy} onClick={() => applyIntent({type: 'reaction', response: option.response}, () => resolvePlayerReaction(state, option.response))}>{option.label}</button>)}<button type="button" onClick={() => applyIntent({type: 'reaction', response: {kind: 'reaction', actionId: null}}, () => resolvePlayerReaction(state, { kind: 'reaction', actionId: null }))}>Пропустить</button></div></section></div>}
+      {reactionOptions.length > 0 && <div className="combat-reaction-backdrop"><section aria-label={reactionTitle}>
+        <p>РЕАКЦИЯ</p><h2>{reactionTitle}</h2>{reactionDetails && <p>{reactionDetails}</p>}
+        <div className="combat-reaction-actions">{reactionOptions.map(option => {
+          const presentation = state.actionPresentation?.[option.response.actionId ?? ''];
+          return <SheetActionLine key={option.id} name={option.label}
+            imageUrl={presentation?.imageUrl} description={presentation?.description}
+            actionRef={presentation?.actionRef} spellRef={presentation?.spellRef}
+            sourceLabel={pending ? state.world.actors[pending.request.actorId]?.name : undefined}
+            disabled={busy} onActivate={() => applyIntent({type: 'reaction', response: option.response}, () => resolvePlayerReaction(state, option.response))} />;
+        })}</div>
+        <button type="button" disabled={busy} onClick={() => applyIntent({type: 'reaction', response: {kind: 'reaction', actionId: null}}, () => resolvePlayerReaction(state, { kind: 'reaction', actionId: null }))}>Пропустить</button>
+      </section></div>}
+
       {controlledSavePending && <div className="combat-reaction-backdrop"><section>
         <SheetPendingCombatPanel
           systemRollsOnly={Boolean(trustedRunRef.current)}

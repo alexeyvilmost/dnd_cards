@@ -174,8 +174,17 @@ export function describeEngineEvent(event: EngineEvent): string {
       return `${src}Урон ${event.amount} (${getDamageLabel(event.damageType).toLocaleLowerCase('ru-RU')})${event.roll ? ` · ${event.roll.text}` : ''}`;
     case 'healing':
       return `${src}Лечение ${event.amount}${event.roll ? ` · ${event.roll.text}` : ''}`;
-    case 'damage_reduction':
-      return `${src}Снижение урона на ${event.amount}${event.roll ? ` · ${event.roll.text}` : ''}`;
+    case 'damage_reduction': {
+      const roll = event.roll;
+      // Legacy formula traces list every max/min argument as a modifier.
+      // Present the actual adjustment, never a sum that contradicts the result.
+      const diceTotal = roll?.dice.reduce((sum, die) => sum + (die.discarded ? 0 : die.result * (die.sign ?? 1)), 0) ?? 0;
+      const modifierTotal = roll?.modifiers.reduce((sum, modifier) => sum + modifier.value, 0) ?? 0;
+      const detail = roll && diceTotal + modifierTotal !== roll.total
+        ? formatRollBreakdown({ ...roll, modifiers: [{ value: roll.total - diceTotal, source: 'по формуле' }] })
+        : roll?.text;
+      return `${src}Снижение урона на ${event.amount}${detail ? ` · ${detail}` : ''}`;
+    }
     case 'temp_hp':
       return `${src}Временные HP +${event.amount}`;
     case 'resource_spent':

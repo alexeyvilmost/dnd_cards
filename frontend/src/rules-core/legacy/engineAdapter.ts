@@ -1,3 +1,4 @@
+export { isDamageCalculation, resolveDamageCalculation } from '../../engine/damageCalculation';
 /**
  * Temporary anti-corruption boundary around the existing single-actor engine.
  * No other rules-core module should import legacy engine modules directly.

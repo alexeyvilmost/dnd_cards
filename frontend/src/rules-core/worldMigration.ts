@@ -1,3 +1,4 @@
+import { isDamageCalculation, resolveDamageCalculation } from './legacy/engineAdapter';
 import {
   defaultAttackProfile,
   type Ability,
@@ -1592,6 +1593,14 @@ export function migrateWorldState(value: unknown): WorldState {
       }));
       if (JSON.stringify(eventDamage) !== JSON.stringify(exactDamage)) {
         throw new Error('world.pendingResolution damage packets must match held engine events');
+      }
+      for (const rawEvent of pending.attackEvents as JsonRecord[]) {
+        if (rawEvent?.type !== 'damage' || rawEvent.calculation === undefined) continue;
+        if (!isDamageCalculation(rawEvent.calculation)
+          || typeof rawEvent.damageType !== 'string'
+          || resolveDamageCalculation(rawEvent.calculation, rawEvent.damageType).amount !== rawEvent.amount) {
+          throw new Error('world.pendingResolution damage calculation does not match its held damage');
+        }
       }
     }
     for (const [attackActionId, attackAction] of Object.entries(attackActions)) {

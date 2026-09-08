@@ -1,3 +1,4 @@
+import { resolveDamageCalculation } from './legacy/engineAdapter';
 import {CORE_WEAPON_ATTACK, systemActionAsRuleDefinition, unarmedDamageActionFor, weaponAttackAction} from './attackDefinitions';
 import {meleeWeaponDefenseEligible, singleAttackDefenseBonus} from './attackDefenseRuntime';
 import {
@@ -2872,15 +2873,29 @@ function adjustedDamageEvents(
 ): { events: EngineEvent[]; amount: number } {
   let remainingReduction = Math.max(0, Math.floor(reduction));
   let amount = 0;
-  const adjusted = events.map((event): EngineEvent => {
-    if (event.type !== 'damage' || event.amount <= 0) return JSON.parse(JSON.stringify(event)) as EngineEvent;
-    const applied = Math.min(event.amount, remainingReduction);
+  const adjusted: EngineEvent[] = [];
+  const calculatedTypes = new Set(events.flatMap(event => event.type === 'damage' && event.calculation ? [event.damageType] : []));
+  for (const event of events) {
+    if (event.type === 'narrative' && event.damageAdjustment && calculatedTypes.has(event.damageAdjustment.damageType)) continue;
+    if (event.type !== 'damage') {
+      adjusted.push(JSON.parse(JSON.stringify(event)) as EngineEvent);
+      continue;
+    }
+    const before = event.calculation?.beforeResistance ?? event.amount;
+    const applied = Math.min(before, remainingReduction);
     remainingReduction -= applied;
-    const nextAmount = event.amount - applied;
-    amount += nextAmount;
-    return { ...event, amount: nextAmount };
-  });
+    const calculation = event.calculation ? { ...event.calculation, beforeResistance: before - applied } : undefined;
+    const resolved = calculation ? resolveDamageCalculation(calculation, event.damageType) : { amount: before - applied, events: [] };
+    amount += resolved.amount;
+    adjusted.push(...resolved.events);
+    adjusted.push({ ...event, amount: resolved.amount, ...(calculation ? { calculation } : {}) });
+  }
   return { events: adjusted, amount };
+}
+
+function damageBeforeResistance(events: readonly EngineEvent[]): number {
+  return events.reduce((sum, event) => event.type === 'damage'
+    ? sum + (event.calculation?.beforeResistance ?? event.amount) : sum, 0);
 }
 
 function applyReactionRuntimeDelta(
@@ -2951,6 +2966,7 @@ function damageReactionOpenedEvents(
   };
   const options = damageReactionOptions(targetAtWindow, input.catalog, {
     delivery: hasAttackRoll(input.action) ? 'attack' : 'other',
+    melee_attack: isMeleeAttackRollAction(input.action),
     source_visible: input.facts.targetCanSeeSource ?? true,
   });
   if (!options.length) return null;
@@ -3339,6 +3355,7 @@ function pendingAttackEvents(
   const availableReactions = hitReactionOptions(target, catalog, action, facts);
   const availableDamageReactions = damageReactionOptions(target, catalog, {
     delivery: 'attack',
+    melee_attack: isMeleeAttackRollAction(action),
     source_visible: facts.targetCanSeeSource ?? true,
   });
   if (!availableReactions.length
@@ -4968,7 +4985,7 @@ function resolvePendingDamageReaction(
       ),
       actionName: prepared.action.name,
       spell: selectedReactionSpell,
-      incomingDamage: pending.damage.reduce((sum, packet) => sum + packet.amount, 0),
+      incomingDamage: damageBeforeResistance(pending.attackEvents),
     });
     targetReactionRuntime = result.state;
     sourceAfter = result.targetState ?? sourceAfter;
@@ -4979,7 +4996,7 @@ function resolvePendingDamageReaction(
     event.type === 'damage_reduction' ? sum + event.amount : sum
   ), 0);
   const originalAmount = pending.damage.reduce((sum, packet) => sum + packet.amount, 0);
-  const reduction = Math.min(originalAmount, Math.max(0, Math.floor(rolledReduction)));
+  const reduction = Math.min(damageBeforeResistance(pending.attackEvents), Math.max(0, Math.floor(rolledReduction)));
   const adjusted = adjustedDamageEvents(pending.attackEvents, reduction);
   let targetAfter = applyReactionRuntimeDelta(
     pending.targetRuntimeAfter,
@@ -5037,7 +5054,7 @@ function resolvePendingDamageReaction(
   if (reduction > 0) {
     events.push(...engineTrace(target.id, [target.id], [{
       type: 'narrative',
-      text: `Снижение урона: ${originalAmount} → ${adjusted.amount} (−${reduction})`,
+      text: `Снижение урона: ${originalAmount} → ${adjusted.amount} (−${originalAmount - adjusted.amount})`,
     }], obligations));
   }
   events.push(...engineTrace(source.id, [target.id], adjusted.events, obligations));

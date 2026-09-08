@@ -1,3 +1,5 @@
+import { resolveDamageCalculation } from './damageCalculation';
+import type { DamageCalculation } from '../mvp/contracts';
 /**
  * Единый исполнитель действий (фазы D4, E1–E5).
  */
@@ -61,7 +63,6 @@ import {
 import { evaluateWeaponHeavyRule } from './weaponProfile';
 import { activeMastery } from './mastery';
 import { turnCommandEffectName, type TurnCommand } from './turnCommands';
-import { getDamageLabel } from '../utils/damageTypes';
 
 type Dict = Record<string, unknown>;
 
@@ -1528,58 +1529,26 @@ export function projectedAgainst(
   return out;
 }
 
-interface DamageAdjustmentRule {
-  level: string | null;
-  sourceEntityIds: string[];
-}
-
-/** Уровень и стабильный источник сопротивления (активные эффекты + пассивки). */
-function resistanceRuleFor(
-  state: RuntimeState,
-  ctx: ExecuteContext,
-  damageType: string,
-): DamageAdjustmentRule {
-  const rank = (l: string | null) => (l === 'immunity' ? 3 : l === 'resistance' ? 2 : l === 'vulnerability' ? 1 : 0);
-  const scan = (mech: Dict | undefined): string | null => {
-    const payloads = mech?.kind === 'condition' && mech.value
-      ? conditionRuntimePayloads(String(mech.value))
-      : payloadsOf(mech);
-    for (const p of payloads) {
-      const declaredType = String(p.damage_type ?? '');
-      if (p.kind === 'resistance' && (declaredType === damageType || declaredType === 'all')) {
-        return String(p.value ?? '');
-      }
+function resistanceRulesFor(state: RuntimeState, ctx: ExecuteContext, damageType: string): DamageCalculation['adjustments'] {
+  const sources = new Map<'immunity' | 'resistance' | 'vulnerability', Set<string>>();
+  const scan = (mechanics: Dict, fallback: string[]) => {
+    const payloads = mechanics.kind === 'condition' && mechanics.value
+      ? conditionRuntimePayloads(String(mechanics.value)) : payloadsOf(mechanics);
+    for (const payload of payloads) {
+      if (payload.kind !== 'resistance' || ![damageType, 'all'].includes(String(payload.damage_type))) continue;
+      const level = payload.value;
+      if (level !== 'immunity' && level !== 'resistance' && level !== 'vulnerability') continue;
+      const ids = Array.isArray(mechanics.sourceEntityIds)
+        ? mechanics.sourceEntityIds.filter((id): id is string => typeof id === 'string' && Boolean(id)) : fallback;
+      const set = sources.get(level) ?? new Set<string>();
+      ids.forEach(id => set.add(id));
+      sources.set(level, set);
     }
-    return null;
   };
-  const stableSources = (owner: Dict, fallback: string[]): string[] => {
-    const declared = Array.isArray(owner.sourceEntityIds)
-      ? owner.sourceEntityIds.filter((id): id is string => typeof id === 'string' && Boolean(id))
-      : [];
-    return [...new Set(declared.length ? declared : fallback)].sort();
-  };
-  let result: DamageAdjustmentRule = { level: null, sourceEntityIds: [] };
-  for (const effect of state.activeEffects) {
-    const level = scan(effect.mechanics as Dict);
-    if (rank(level) > rank(result.level)) {
-      result = { level, sourceEntityIds: stableSources(effect.mechanics as Dict, [effect.id]) };
-    }
-  }
-  for (const passive of passivesFromCtx(ctx)) {
-    const level = scan(passive);
-    if (rank(level) > rank(result.level)) {
-      result = { level, sourceEntityIds: stableSources(passive, []) };
-    }
-  }
-  return result;
-}
-
-/** Применить уровень сопротивления к количеству урона. */
-function applyResistance(amount: number, level: string | null): number {
-  if (level === 'immunity') return 0;
-  if (level === 'resistance') return Math.floor(amount / 2);
-  if (level === 'vulnerability') return amount * 2;
-  return amount;
+  for (const entry of state.activeEffects) scan(entry.mechanics as Dict, [entry.id]);
+  for (const passive of passivesFromCtx(ctx)) scan(passive, []);
+  const levels = sources.has('immunity') ? ['immunity'] as const : ['resistance', 'vulnerability'] as const;
+  return levels.flatMap(level => sources.has(level) ? [{ level, sourceEntityIds: [...sources.get(level)!].sort() }] : []);
 }
 
 /** Модификатор спасброска цели: динамически из её характеристик (фаза E) или из saveMods. */
@@ -4861,49 +4830,28 @@ export function applyIncomingDamage(
 
   const raw = Math.max(0, Math.floor(amount));
   const damageType = opts?.damageType ?? 'урон';
-  // Сопротивление/иммунитет/уязвимость цели (фаза E) — применяется при получении урона.
-  const resistanceRule = opts?.ignoreResistance
-    ? { level: null, sourceEntityIds: [] }
-    : resistanceRuleFor(next, ctx, damageType);
-  const level = resistanceRule.level;
-  const resisted = applyResistance(raw, level);
-  if (level && resisted !== raw) {
-    const label = level === 'immunity' ? 'иммунитет' : level === 'resistance' ? 'сопротивление' : 'уязвимость';
-    const damageLabel = getDamageLabel(damageType).toLocaleLowerCase('ru-RU');
-    events.push({
-      type: 'narrative',
-      text: `${label} (${damageLabel}): ${raw} → ${resisted}`,
-      damageAdjustment: {
-        damageType,
-        adjustment: level as 'resistance' | 'immunity' | 'vulnerability',
-        before: raw,
-        after: resisted,
-        sourceEntityIds: resistanceRule.sourceEntityIds,
-      },
-    });
-  }
   const automaticReduction = resolveAutomaticDamageReductions(
-    next,
-    resisted,
-    damageType,
-    ctx,
-    opts?.delivery ?? 'other',
+    next, raw, damageType, ctx, opts?.delivery ?? 'other',
   );
   next = automaticReduction.state;
   events.push(...automaticReduction.events);
-  // Снижение урона (Каменная стойкость) — ПОСЛЕ сопротивления, ДО списания хитов. Урон не может
-  // уйти ниже 0. Так HP не проседает (нет ложных «Окровален»/падения до 0), и это НЕ лечение.
-  const reduction = Math.max(0, Math.floor(
-    (opts?.damageReduction ?? 0) + automaticReduction.reduction,
-  ));
-  const dmg = Math.max(0, resisted - reduction);
+  const reduction = Math.max(0, Math.floor((opts?.damageReduction ?? 0) + automaticReduction.reduction));
+  const beforeResistance = Math.max(0, raw - reduction);
   if (reduction > 0) {
-    events.push(narrativeEvent(`Снижение урона: ${resisted} → ${dmg} (−${Math.min(reduction, resisted)})`));
+    events.push(narrativeEvent(`Снижение урона: ${raw} → ${beforeResistance} (−${Math.min(reduction, raw)})`));
   }
+  const calculation: DamageCalculation = { beforeResistance,
+    adjustments: resistanceRulesFor(next, ctx, damageType).filter(rule => !(opts?.ignoreResistance && rule.level === 'resistance')),
+  };
+  const resolvedDamage = resolveDamageCalculation(calculation, damageType);
+  events.push(...resolvedDamage.events);
+  const dmg = resolvedDamage.amount;
   const absorbed = Math.min(next.hp.temp, dmg);
   next.hp.temp -= absorbed;
   next.hp.current = Math.max(0, next.hp.current - (dmg - absorbed));
-  events.push(damageEvent(dmg, damageType, opts?.roll));
+  events.push({ ...damageEvent(dmg, damageType, opts?.roll),
+    ...(calculation.adjustments.length ? { calculation } : {}),
+  } as EngineEvent);
   if (dmg > 0) {
     next = expireEffectsForTrigger(next, 'actor_takes_damage', events);
   }
