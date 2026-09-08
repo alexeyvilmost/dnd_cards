@@ -4207,3 +4207,36 @@ it.each(['hit', 'miss', 'unused'])('Feint survives serialization and excludes an
   expect(state.pendingTriggeredAction?.optionActionIds ?? []).not.toContain(rider.id);
 });
 
+
+it.each(['learned', 'unknown', 'exhausted', 'incapacitated'])('validates Ambush before initiative entropy: %s', async mode => {
+  const participant = fighterSeed();
+  const actorId = participant.character.id;
+  const actor = participant.canonical.world.actors[actorId];
+  actor.runtime.resources.superiority_die = mode === 'exhausted' ? 0 : 4;
+  actor.runtime.maxResources.superiority_die = 4;
+  actor.runtime.activeEffects = mode === 'incapacitated'
+    ? [{id:'unconscious',name:'unconscious',source:'test',mechanics:{kind:'condition',value:'unconscious'}} as typeof actor.runtime.activeEffects[number]] : [];
+  const ambush = projectRuleAction({id:'22100000-0000-4000-8000-000000000001',name:'Ambush',type:'class_feature',resource:'free_action',
+    mechanics:JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_ambush_221.go',import.meta.url),'utf8').match(/const battleMasterAmbush221 = `([^`]+)`/)![1])} as unknown as Action);
+  const actions = [...participant.canonical.actions,ambush];
+  if(mode !== 'unknown') actor.capabilities.actionIds.push(ambush.id);
+  participant.canonical = {...participant.canonical,actions,catalog:{getAction:id=>actions.find(action=>action.id===id),listActions:()=>actions}};
+  let draws=0;
+  const initialize = () => createSoloCombatState({character:participant.character,participant,
+    selected:[{monster:goblin(),quantity:1}],actions:[scimitar()],effects:[],
+    initiativeManeuverActionIds:{[actorId]:ambush.id},rng:()=>{draws++; return 0.5;}});
+  if(mode !== 'learned') {
+    await expect(initialize()).rejects.toThrow();
+    expect(draws).toBe(0);
+    return;
+  }
+  const state = await initialize();
+  const entry = state.initiative.find(entry=>entry.actorId===actorId)!;
+  expect(entry.roll?.dice.map(die=>die.sides)).toEqual([20,8]);
+  expect(entry.total).toBe(11+9+5);
+  expect(state.world.actors[actorId].runtime.resources.superiority_die).toBe(3);
+  expect(state.world.actors[actorId].runtime.activeEffects).toEqual([]);
+  expect(actor.runtime.resources.superiority_die).toBe(4);
+  expect(JSON.parse(JSON.stringify(state)).initiative).toEqual(state.initiative);
+  expect((await initialize()).initiative).toEqual(state.initiative);
+});

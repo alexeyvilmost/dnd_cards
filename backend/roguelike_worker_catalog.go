@@ -112,7 +112,7 @@ func (catalog *roguelikeFrozenCatalog) fulfill(tx *gorm.DB, need roguelikeWorker
 
 // Resolve the existing assembler's dependency closure. The final snapshot is
 // immutable; an incomplete optional dependency cannot silently remove a feature.
-func initializeRoguelikeWorker(ctx context.Context, tx *gorm.DB, client roguelikeWorkerClient, run *RoguelikeRun, seed string) (*roguelikeWorkerResult, JSONMap, error) {
+func initializeRoguelikeWorker(ctx context.Context, tx *gorm.DB, client roguelikeWorkerClient, run *RoguelikeRun, seed string, initiativeManeuverActionID string) (*roguelikeWorkerResult, JSONMap, error) {
 	catalog := emptyRoguelikeFrozenCatalog()
 	pinnedHash, _ := run.CombatCatalog["artifactHash"].(string)
 	if len(run.CombatCatalog) > 0 {
@@ -144,7 +144,7 @@ func initializeRoguelikeWorker(ctx context.Context, tx *gorm.DB, client roguelik
 		}
 	}
 	input := map[string]any{"character": run.Character, "catalog": &catalog, "basicActionIds": ids,
-		"monsters": run.Encounter["catalog"], "roster": run.Encounter["roster"], "seed": seed}
+		"monsters": run.Encounter["catalog"], "roster": run.Encounter["roster"], "seed": seed, "initiativeManeuverActionId": initiativeManeuverActionID}
 	for round := 0; round < 16; round++ {
 		result, err := client.call(ctx, "/initialize", map[string]any{"input": input, "artifactHash": pinnedHash})
 		if err != nil {

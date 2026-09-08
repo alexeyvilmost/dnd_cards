@@ -71,3 +71,42 @@ it('prepares one exact command for both the consumed pool and persisted check ev
   expect(prepared.request.ruleset_ref.content_hash).toMatch(/^sha256:[a-f0-9]{64}$/);
   expect(JSON.parse(JSON.stringify(prepared)).request).toEqual(prepared.request);
 });
+
+const ambushSource = readFileSync(new URL('../../../backend/migrations/battle_master_ambush_221.go', import.meta.url), 'utf8');
+const ambush = {id:'ambush', name:'Ambush', card_number:'ACT-bm-ambush',
+  mechanics:JSON.parse(ambushSource.match(/const battleMasterAmbush221 = `([^`]+)`/)![1])} as Action;
+describe('Ambush checks and initiative', () => {
+  it('validates shared mechanics', () => {
+    const result = validateMechanics(ambush.mechanics, {id:ambush.id,name:ambush.name,kind:'action'});
+    expect(result.valid,result.errors.join('; ')).toBe(true);
+  });
+  it.each(['initiative','ability_check'])('adds and consumes exactly one d8 for %s', kind => {
+    const before = fresh();
+    const facts = {ability:'dex',skill:'stealth'};
+    const prepared = prepareCheckManeuver(ambush,[ambush],before,character,facts,'hero',kind);
+    const collected = collectRollModifiers(prepared.state,[],{roll:kind,filter:facts});
+    const plan = [{sides:20,label:'Ambush'},...plannedD20BonusDice(collected.rules,'Ambush','check')];
+    expect(plan.map(die=>die.sides)).toEqual([20,8]);
+    const roll = rollD20({advantage:'none',modifiers:[{value:2,source:'DEX'}],rules:collected.rules,rng:plannedValuesRng(plan,[10,5])});
+    expect(roll.total).toBe(17);
+    const final = finalizeSheetD20Roll(prepared.state,kind as 'initiative'|'ability_check',facts);
+    expect(final.state.activeEffects).toEqual([]);
+    expect(final.state.resources.superiority_die).toBe(3);
+    expect(before.resources.superiority_die).toBe(4);
+  });
+  it.each(['incapacitated','unconscious','stunned','paralyzed'])('rejects %s before preparation', condition => {
+    const state = fresh();
+    state.activeEffects.push({id:'condition',name:'condition',source:'test',mechanics:{kind:'condition',value:condition}} as RuntimeState['activeEffects'][number]);
+    expect(availableCheckManeuvers([ambush],state,'initiative',{})).toEqual([]);
+    expect(availableCheckManeuvers([ambush],state,'ability_check',{ability:'dex',skill:'stealth'})).toEqual([]);
+    expect(()=>prepareCheckManeuver(ambush,[ambush],state,character,{},'hero','initiative')).toThrow();
+    expect(state.resources.superiority_die).toBe(4);
+  });
+  it('rejects exhausted, unlearned and unrelated checks', () => {
+    const state = fresh(); state.resources.superiority_die=0;
+    expect(availableCheckManeuvers([ambush],state,'initiative',{})).toEqual([]);
+    expect(availableCheckManeuvers([],fresh(),'initiative',{})).toEqual([]);
+    expect(availableCheckManeuvers([ambush],fresh(),'ability_check',{ability:'dex',skill:'acrobatics'})).toEqual([]);
+    expect(availableCheckManeuvers([ambush],fresh(),'saving_throw',{ability:'dex'})).toEqual([]);
+  });
+});

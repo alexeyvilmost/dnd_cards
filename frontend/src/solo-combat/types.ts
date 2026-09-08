@@ -1,4 +1,4 @@
-import type { EngineEvent, TriggeringAttackContext } from '../mvp/contracts';
+import type { EngineEvent, RollLog, TriggeringAttackContext } from '../mvp/contracts';
 import type {
   ActionWorldInput,
   RuleActionDefinition,
@@ -37,6 +37,7 @@ export interface TacticalToken {
 }
 
 export interface InitiativeEntry {
+  roll?: RollLog;
   actorId: string;
   die: number;
   bonus: number;

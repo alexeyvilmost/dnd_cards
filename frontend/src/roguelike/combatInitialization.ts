@@ -14,6 +14,7 @@ export interface RoguelikeCombatInitialization {
   monsters: {version: 1; monsters: Monster[]; actions: Action[]; effects: PassiveEffect[]};
   roster: Array<{monster_id: string; quantity: number}>;
   seed: string;
+  initiativeManeuverActionId?: string;
 }
 
 export async function initializeRoguelikeCombat(input: RoguelikeCombatInitialization, artifactHash: string) {
@@ -34,7 +35,8 @@ export async function initializeRoguelikeCombat(input: RoguelikeCombatInitializa
   const random = createRoguelikeCombatRandom(input.seed, 0);
   const state = await createSoloCombatState({character: input.character, participant: prepared.participant,
     selected, actions: [...input.monsters.actions, ...input.catalog.entities.action],
-    effects: input.monsters.effects, rng: random.rng});
+    effects: input.monsters.effects, rng: random.rng,
+    ...(input.initiativeManeuverActionId ? {initiativeManeuverActionIds: {[input.character.id]: input.initiativeManeuverActionId}} : {})});
   const envelope: RoguelikeCombatEnvelope = {schemaVersion: 1, artifactHash,
     entropy: {seed: input.seed, cursor: random.cursor}, state};
   const settled = state.outcome === 'active'

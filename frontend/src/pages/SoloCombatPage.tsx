@@ -1,3 +1,5 @@
+import type {Action} from '../types';
+import {availableCheckManeuvers, checkManeuverChoice} from '../character/checkManeuvers';
 import SheetActionLine from '../components/SheetActionLine';
 import { getDamageLabel } from '../utils/damageTypes';
 import type { RoguelikeCombatIntent } from '../roguelike/combatWorker';
@@ -96,7 +98,7 @@ function queryAllies(params: URLSearchParams, characterId?: string): string[] {
 }
 
 function initiativeLabel(entry: SoloCombatState['initiative'][number]): string {
-  return `${entry.die}${entry.bonus >= 0 ? '+' : ''}${entry.bonus} = ${entry.total}`;
+  return entry.roll?.text ?? `${entry.die}${entry.bonus >= 0 ? '+' : ''}${entry.bonus} = ${entry.total}`;
 }
 
 function combatWorldInputContext(
@@ -293,8 +295,28 @@ export default function SoloCombatPage() {
         participantCharactersRef.current = { [loadedCharacter.id]: loadedCharacter };
         setParticipantCharacters(participantCharactersRef.current);
         if (loadedRun?.combat_state || (loadedRun?.trusted_combat_available && !loadedCharacter.turn_state?.solo_combat_v1)) {
+          let initiativeManeuverActionId: string | undefined;
+          if (!loadedRun.combat_state) {
+            const preview = await loadSheetCombatParticipant({character: loadedCharacter, cards: new Map()});
+            if (!active) return;
+            const actor = preview.canonical.world.actors[loadedCharacter.id];
+            const owned = preview.canonical.actions.map(action => ({...preview.actionPresentation?.[action.id]?.actionRef, id: action.id, name: action.name,
+              mechanics: action.mechanics}) as Action);
+            const options = availableCheckManeuvers(owned, actor.runtime, 'initiative', {});
+            if (options.length) {
+              const selection = await choiceDialog.request([checkManeuverChoice(options, 'Инициатива')], 'Инициатива');
+              if (!active) return;
+              if (!selection) { navigate(`/roguelike/${loadedRun.id}`); return; }
+              const selectedId = selection.check_maneuver?.[0];
+              if (selectedId !== 'none') {
+                if (!options.some(action => action.id === selectedId)) throw Error('Выберите приём инициативы или обычный бросок.');
+                initiativeManeuverActionId = selectedId;
+              }
+            }
+          }
           const accepted = loadedRun.combat_state ? loadedRun
-            : await roguelikeApi.command(loadedRun.id, loadedRun.revision, 'initialize_combat').catch(async reason => {
+            : await roguelikeApi.command(loadedRun.id, loadedRun.revision, 'initialize_combat',
+              initiativeManeuverActionId ? {initiative_maneuver_action_id: initiativeManeuverActionId} : {}).catch(async reason => {
               const current = await roguelikeApi.get(loadedRun.id);
               if (current.combat_state) return current;
               throw reason;
@@ -392,7 +414,7 @@ export default function SoloCombatPage() {
       }
     })();
     return () => { active = false; };
-  }, [id, navigate, persist, roguelikeRunId]);
+  }, [id, navigate, persist, roguelikeRunId, choiceDialog.request]);
 
   const resetStaleCombat = useCallback(async () => {
     const current = characterRef.current;

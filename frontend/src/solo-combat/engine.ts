@@ -1,3 +1,9 @@
+import type {EngineEvent} from '../mvp/contracts';
+import {collectRollModifiers} from '../engine/modifiers';
+import {rollD20} from '../engine/roll';
+import {rollEvent} from '../engine/events';
+import {availableCheckManeuvers, prepareCheckManeuver} from '../character/checkManeuvers';
+import {finalizeSheetD20Roll} from '../character/sheetD20Roll';
 import {unarmedDamageActionFor, weaponAttackAction} from '../rules-core/attackDefinitions';
 import type { Action, PassiveEffect } from '../types';
 import type { ForgeCharacter } from '../character/types';
@@ -4142,15 +4148,38 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
     : advanceTurn(next, rng);
 }
 
-function withInitiativeAndStart(state: SoloCombatState, rng: Rng): SoloCombatState {
-  const initiative = Object.values(state.world.actors).map((actor) => {
-    const bonus = Number(state.initiativeBonuses[actor.id]
-      ?? actor.character.abilityMods.dex
-      ?? 0);
-    const die = Math.floor(rng() * 20) + 1;
-    return { actorId: actor.id, die, bonus, total: die + bonus };
+function withInitiativeAndStart(state: SoloCombatState, rng: Rng,
+  selectedManeuvers: Readonly<Record<string, string>> = {}): SoloCombatState {
+  const actors = {...state.world.actors};
+  const initiativeEvents: Record<string, EngineEvent[]> = {};
+  for (const [actorId, actionId] of Object.entries(selectedManeuvers)) {
+    const actor = actors[actorId];
+    if (!actor || !controlledCharacterIds(state).includes(actorId)) throw Error('Неизвестный участник выбора инициативы.');
+    const owned = state.catalogActions.filter(action => actor.capabilities.actionIds.includes(action.id))
+      .map(action => ({id: action.id, name: action.name, mechanics: action.mechanics}) as Action);
+    const action = availableCheckManeuvers(owned, actor.runtime, 'initiative', {}).find(action => action.id === actionId);
+    if (!action) throw Error('Этот приём недоступен для инициативы.');
+    const prepared = prepareCheckManeuver(action, owned, actor.runtime, actor.character, {}, actorId, 'initiative');
+    actors[actorId] = {...actor, runtime: prepared.state};
+    initiativeEvents[actorId] = [...prepared.events];
+  }
+  const initiative = Object.values(actors).map((actor) => {
+    const bonus = Number(state.initiativeBonuses[actor.id] ?? actor.character.abilityMods.dex ?? 0);
+    const collected = collectRollModifiers(actor.runtime, actor.passives ?? [], {roll: 'initiative'});
+    const roll = rollD20({advantage: collected.advantage, modifiers: [{value: bonus, source: 'инициатива'}],
+      rules: collected.rules, rng});
+    const finalized = finalizeSheetD20Roll(actor.runtime, 'initiative');
+    actors[actor.id] = {...actor, runtime: finalized.state};
+    initiativeEvents[actor.id] = [...(initiativeEvents[actor.id] ?? []), rollEvent('Инициатива', roll), ...finalized.events];
+    const die = roll.dice.find(die => die.sides === 20 && !die.discarded)!.result;
+    return { actorId: actor.id, die, bonus, total: roll.total, roll };
   }).sort((left, right) => right.total - left.total || right.bonus - left.bonus || left.actorId.localeCompare(right.actorId));
-  let next = { ...state, initiative };
+  let next: SoloCombatState = { ...state, world: {...state.world, actors}, initiative };
+  for (const entry of initiative) {
+    next = appendLog(next, entry.actorId, entry.roll.text, initiativeEvents[entry.actorId].map((event, ordinal) => ({
+      kind: 'engine', ordinal, sourceActorId: entry.actorId, actorId: entry.actorId, targetIds: [], event,
+    })));
+  }
   next = dispatch({
     state: next,
     command: {
@@ -4179,6 +4208,7 @@ export async function createSoloCombatState(input: {
   effects: readonly PassiveEffect[];
   dashAction?: Action;
   rng?: Rng;
+  initiativeManeuverActionIds?: Readonly<Record<string, string>>;
 }): Promise<SoloCombatState> {
   const monsters: Array<{ template: Monster; actor: ActorState; actions: RuleActionDefinition[] }> = [];
   for (const selection of input.selected) {
@@ -4372,7 +4402,7 @@ export async function createSoloCombatState(input: {
     },
     initiative: [], log: [], outcome: 'active',
   };
-  return withInitiativeAndStart(state, input.rng ?? Math.random);
+  return withInitiativeAndStart(state, input.rng ?? Math.random, input.initiativeManeuverActionIds);
 }
 
 export function selectedTargetsForAction(input: {

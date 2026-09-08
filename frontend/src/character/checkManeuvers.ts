@@ -1,3 +1,4 @@
+import {activeConditionsOf} from '../engine/circumstances';
 import {canonicalStringify, sha256String} from '../rules-core/determinism';
 import type {ForgeCharacter} from './types';
 import type {PreparedSheetAtomicWorldCommit} from './sheetAtomicWorldCommit';
@@ -15,32 +16,33 @@ export interface CheckFacts {ability?: unknown; skill?: unknown}
 /** Offered only from the character's resolved action grants, never the whole catalog. */
 export function availableCheckManeuvers(actions: readonly Action[], state: RuntimeState,
   rollKind: string, facts: CheckFacts): Action[] {
-  if (rollKind !== 'ability_check') return [];
+  if (rollKind !== 'ability_check' && rollKind !== 'initiative') return [];
   return [...new Map(actions.filter(action => {
     const mechanics = action.mechanics as Dict | undefined;
     const activation = mechanics?.activation as Dict | undefined;
     const trigger = activation?.trigger as Dict | undefined;
     if (activation?.mode !== 'triggered' || !Array.isArray(trigger?.events)
-      || !trigger.events.includes('ability_check_made') || !Array.isArray(trigger.eligible_checks)) return false;
-    if (!trigger.eligible_checks.some(raw => {
+      || !trigger.events.includes(rollKind === 'initiative' ? 'initiative_roll' : 'ability_check_made')) return false;
+    if (trigger.requires_not_incapacitated === true && activeConditionsOf(state).has('incapacitated')) return false;
+    if (rollKind === 'ability_check' && (!Array.isArray(trigger.eligible_checks) || !trigger.eligible_checks.some(raw => {
       const filter = raw as Dict;
       return filter.ability === facts.ability && Array.isArray(filter.skills) && filter.skills.includes(facts.skill);
-    })) return false;
+    }))) return false;
     return Array.isArray(activation.cost) && canPay(state, activation.cost as Dict[]).ok;
   }).map(action => [action.id, action])).values()];
 }
 
-export function checkManeuverChoice(actions: readonly Action[]): PendingChoice {
+export function checkManeuverChoice(actions: readonly Action[], label = 'Проверка навыка'): PendingChoice {
   return {id: 'check_maneuver', prompt: 'Использовать приём?', count: 1, source: 'explicit', context: 'in_play',
-    origin: {kind: 'other', id: 'check-maneuvers', name: 'Проверка навыка'}, recommended: ['none'],
+    origin: {kind: 'other', id: 'check-maneuvers', name: label}, recommended: ['none'],
     items: [{id: 'none', name: 'Без приёма'}, ...actions.map(action => ({id: action.id, name: action.name,
       grants: [{kind: 'grant_action', value: action.card_number || action.id}]}))]};
 }
 
 /** Preparation is speculative: persist only together with the confirmed check. */
 export function prepareCheckManeuver(action: Action, ownedActions: readonly Action[], state: RuntimeState,
-  character: CharacterContext, facts: CheckFacts, selfId: string) {
-  if (!availableCheckManeuvers(ownedActions, state, 'ability_check', facts).some(owned => owned.id === action.id)) {
+  character: CharacterContext, facts: CheckFacts, selfId: string, rollKind = 'ability_check') {
+  if (!availableCheckManeuvers(ownedActions, state, rollKind, facts).some(owned => owned.id === action.id)) {
     throw Error('Этот приём недоступен для выбранной проверки.');
   }
   return executeAction(structuredClone(state), action.mechanics as Dict, {character, selfId,

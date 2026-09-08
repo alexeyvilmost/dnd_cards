@@ -91,7 +91,8 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 			writeRoguelikeError(c, seedErr)
 			return
 		}
-		result, catalog, err = initializeRoguelikeWorker(c.Request.Context(), rc.db, client, run, seed)
+		initiativeManeuverActionID, _ := request.Payload["initiative_maneuver_action_id"].(string)
+		result, catalog, err = initializeRoguelikeWorker(c.Request.Context(), rc.db, client, run, seed, initiativeManeuverActionID)
 	} else {
 		if len(run.CombatEnvelope) == 0 {
 			fail("trusted_combat_missing", "серверный бой не инициализирован")

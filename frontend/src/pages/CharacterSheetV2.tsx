@@ -148,7 +148,7 @@ const CharacterSheetV2 = ({
   const rollCheck = async (
     label: string,
     breakdown: ValueBreakdown,
-    rollKind: 'saving_throw' | 'ability_check',
+    rollKind: 'saving_throw' | 'ability_check' | 'initiative',
     filter?: Record<string, unknown>,
   ) => {
     if (readOnly || pendingAtomicRetry || checkBusyRef.current || actionBusy || restBusy || (combatActive && character.character_type === 'dungeon_crawl')) return;
@@ -161,13 +161,13 @@ const CharacterSheetV2 = ({
         const ownedActions = abilityActions.map(entry => entry.action);
         const options = availableCheckManeuvers(ownedActions, checkState, rollKind, filter ?? {});
         if (options.length) {
-          const selection = await checkChoiceDialog.request([checkManeuverChoice(options)], label);
+          const selection = await checkChoiceDialog.request([checkManeuverChoice(options, label)], label);
           if (!selection) return;
           const selectedId = selection.check_maneuver?.[0];
           if (selectedId !== 'none') {
             const chosen = options.find(action => action.id === selectedId);
             if (!chosen) throw Error('Выберите приём или бросок без приёма.');
-            const prepared = prepareCheckManeuver(chosen, ownedActions, checkState, sheetCtx, filter ?? {}, character.id);
+            const prepared = prepareCheckManeuver(chosen, ownedActions, checkState, sheetCtx, filter ?? {}, character.id, rollKind);
             checkState = prepared.state;
             preparationEvents.push(...prepared.events);
           }
@@ -398,8 +398,8 @@ const CharacterSheetV2 = ({
           initiative={!readOnly && onRollInitiative
             ? {
                 value: initiative,
-                rolling: rollingInitiative,
-                onRoll: onRollInitiative,
+                rolling: rollingInitiative || checkBusy,
+                onRoll: () => { void rollCheck('Инициатива', initBreakdown ?? {value: initiative, parts: [{value: initiative, source: 'инициатива'}]}, 'initiative'); },
                 breakdown: initBreakdown,
               }
             : undefined}
