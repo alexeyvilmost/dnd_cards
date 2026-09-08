@@ -82,6 +82,12 @@ describe('solo combat tactical contract', () => {
     }).at(-1)).toEqual({ x: 1, y: 0 });
   });
 
+  it('pushes along the attack ray for distant off-axis targets in either direction', () => {
+    expect(pushAway({source: {x: 0, y: 0}, target: {x: 4, y: 1}, distanceFt: 15})).toEqual({x: 7, y: 2});
+    expect(pushAway({source: {x: 10, y: 6}, target: {x: 6, y: 5}, distanceFt: 15})).toEqual({x: 3, y: 4});
+    expect(pushAway({source: {x: 0, y: 0}, target: {x: 4, y: 1}, distanceFt: 15, occupied: new Set(['6:2'])})).toEqual({x: 5, y: 1});
+  });
+
   it('stops forced movement at blocking tokens and board edges', () => {
     expect(pushAway({
       source: { x: 0, y: 0 }, target: { x: 1, y: 0 }, distanceFt: 15,

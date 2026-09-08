@@ -2737,6 +2737,15 @@ function offerTriggeredAttackActions(input: {
       || !events.some((event) => isTriggeredCombatAction(action, event))) return [];
     const activation = action.mechanics.activation as Record<string, unknown> | undefined;
     const trigger = activation?.trigger as Record<string, unknown> | undefined;
+    const usesSuperiorityDie = Array.isArray(activation?.cost) && activation.cost.some(cost =>
+      (cost as Record<string, unknown>).resource === 'superiority_die');
+    const attackAlreadyHasManeuver = targetIds.some(targetId =>
+      before.world.actors[targetId]?.runtime.activeEffects.some(effect => {
+        const payload = effect.mechanics as Record<string, unknown>;
+        return payload.attack_maneuver === true && payload.consume === 'next_attack'
+          && effect.sourceId === sourceActorId;
+      }));
+    if (usesSuperiorityDie && attackAlreadyHasManeuver) return [];
     // Sentinel is a mandatory movement interruption, committed by the saved
     // opportunity-step continuation rather than offered as an optional rider.
     if (trigger?.feat_sentinel_opportunity === true) return [];

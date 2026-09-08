@@ -4161,3 +4161,49 @@ it.each([0, 5, 10, 15])('Pushing Attack carries a saved distance through the tri
   expect(state.world.actors[targetId].runtime.hp.current).toBe(47);
   expect(state.world.pendingResolution).toBeNull();
 });
+
+it.each(['hit', 'miss', 'unused'])('Feint survives serialization and excludes another maneuver from the same attack: %s', async outcome => {
+  const attackKind = 'unarmed';
+  const participant = fighterSeed();
+  const actorId = participant.character.id;
+  const actor = participant.canonical.world.actors[actorId];
+  actor.character.variables = { ...actor.character.variables, superiority_die: { count: 1, sides: 8 } };
+  actor.runtime.resources.superiority_die = 4;
+  actor.runtime.maxResources.superiority_die = 4;
+  const targeting = { domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1,
+    max_targets: 1, range_ft: 5, requires_line_of_sight: true, allowed_relations: ['enemy'] };
+  const attack = projectRuleAction({ id: '21100000-0000-4000-8000-000000000091', name: 'Source attack',
+    type: 'class_feature', resource: 'action', mechanics: {
+      activation: { mode: 'active', cost: [{ resource: 'action' }] }, targeting,
+      effects: [{ resolution: 'attack_roll', ability: 'str', attack_kind: attackKind, who: 'target',
+        on_hit: [{ kind: 'damage', amount: 2, type: 'bludgeoning' }] }],
+    } } as unknown as Action);
+  const rider = projectRuleAction({ id: '21100000-0000-4000-8000-000000000092', name: 'Post-hit die',
+    type: 'class_feature', resource: 'free_action', mechanics: JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_trip_212.go', import.meta.url), 'utf8').match(/const battleMasterTrip212 = `([^`]+)`/)![1]) } as unknown as Action);
+  const feint = projectRuleAction({id: '21900000-0000-4000-8000-000000000001', name: 'Feint', type: 'class_feature', resource: 'bonus_action', mechanics: JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_feint_219.go', import.meta.url), 'utf8').match(/const battleMasterFeint219 = `([^`]+)`/)![1])} as unknown as Action);
+  const actions = [...participant.canonical.actions, attack, rider, feint];
+  actor.capabilities.actionIds.push(attack.id, rider.id, feint.id);
+  participant.canonical = { ...participant.canonical, actions,
+    catalog: { getAction: id => actions.find(action => action.id === id), listActions: () => actions } };
+  let state = await createSoloCombatState({ character: participant.character, participant,
+    selected: [{ monster: goblin(), quantity: 1 }], actions: [scimitar()], effects: [], rng: () => 0.5 });
+  const targetId = Object.values(state.world.actors).find(candidate => candidate.kind === 'monster')!.id;
+  state = placeAdjacent(state, actorId, targetId);
+  state.world.actors[targetId].runtime.hp = {current: 50, max: 50, temp: 0};
+  state = executeCombatAction({state, actorId, actionId: feint.id, targetIds: [targetId], rng: () => {throw Error('No die before hit');}});
+  state = JSON.parse(JSON.stringify(state)) as SoloCombatState;
+  if (outcome === 'unused') {
+    state = advanceTurn(state, () => 0.5);
+    expect(state.world.actors[targetId].runtime.activeEffects).toHaveLength(0);
+    expect(state.world.actors[actorId].runtime.resources.superiority_die).toBe(3);
+    return;
+  }
+  let rolls = 0;
+  state = autoResolveSystemDecisions(executeCombatAction({state, actorId, actionId: attack.id, targetIds: [targetId],
+    rng: () => {rolls++; return rolls <= 2 ? outcome === 'hit' ? 0.7 : 0 : 0.5;}}), () => 0.5);
+  expect(state.world.actors[actorId].runtime.resources.superiority_die).toBe(3);
+  expect(state.world.actors[targetId].runtime.hp.current).toBe(outcome === 'hit' ? 43 : 50);
+  expect(state.world.actors[targetId].runtime.activeEffects).toHaveLength(0);
+  expect(state.pendingTriggeredAction?.optionActionIds ?? []).not.toContain(rider.id);
+});
+

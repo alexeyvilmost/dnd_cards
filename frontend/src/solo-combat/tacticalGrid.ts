@@ -285,14 +285,15 @@ export function pushAway(input: {
   occupied?: ReadonlySet<string>;
 }): GridPosition {
   const occupied = input.occupied ?? new Set<string>();
-  const direction = {
-    x: Math.sign(input.target.x - input.source.x),
-    y: Math.sign(input.target.y - input.source.y),
-  };
-  if (direction.x === 0 && direction.y === 0) return { ...input.target };
+  const delta = {x: input.target.x - input.source.x, y: input.target.y - input.source.y};
+  const span = Math.max(Math.abs(delta.x), Math.abs(delta.y));
+  if (span === 0) return { ...input.target };
+  // Rasterize the source-to-target ray; a distant off-axis hit must not turn
+  // into a 45-degree diagonal just because both coordinate differences are nonzero.
+  const offset = (value: number, steps: number) => Math.sign(value) * Math.round(Math.abs(value) * steps / span);
   let current = { ...input.target };
   for (let index = 0; index < Math.floor(input.distanceFt / TACTICAL_CELL_FT); index += 1) {
-    const next = { x: current.x + direction.x, y: current.y + direction.y };
+    const next = {x: input.target.x + offset(delta.x, index + 1), y: input.target.y + offset(delta.y, index + 1)};
     if (!inside(next) || occupied.has(`${next.x}:${next.y}`)) break;
     current = next;
   }

@@ -1617,7 +1617,7 @@ function sourceTurnMetadata(
   const type = String(duration?.type ?? '');
   const boundary = type === 'until_start_of_source_next_turn'
     ? 'start' as const
-    : type === 'until_end_of_source_next_turn'
+    : type === 'until_end_of_source_next_turn' || type === 'until_end_of_source_turn'
       ? 'end' as const
       : null;
   if (!boundary || !ctx.selfId || !ownerActorId) return undefined;
@@ -1629,6 +1629,7 @@ function sourceTurnMetadata(
       sourceActorId: ctx.selfId,
       ownerActorId,
       boundary,
+      ...(type === 'until_end_of_source_turn' ? {armed: true as const} : {}),
     },
   };
 }
@@ -1887,6 +1888,7 @@ function applyDamageRiderPayload(
     source,
     ...(ownerActorId ? { ownerId: ownerActorId } : {}),
     ...(ctx.selfId ? { sourceId: ctx.selfId } : {}),
+    ...sourceTurnMetadata(payload.duration as Dict | undefined, ctx, ownerActorId),
   };
   events.push({ type: 'effect_applied', name: source });
   return stackApply(state, entry, payload);
@@ -3890,9 +3892,13 @@ function runAttackRoll(
         attackDamageFacts,
       );
     }
+    const originalDamage = events.slice(damageEventStart).find(event => event.type === 'damage');
+    const riderContext: ExecuteContext = originalDamage?.type === 'damage' && ctx.target?.id
+      ? {...ctx, triggeringAttack: {targetActorId: ctx.target.id, damageType: originalDamage.damageType, critical: outcome === 'crit'}}
+      : ctx;
     next = applyAttackDamageRiders(
       next,
-      ctx,
+      riderContext,
       events,
       hand,
       targetRef,
@@ -3955,6 +3961,22 @@ function runAttackRoll(
     next = emitEvent(
       { kind: 'miss', source: 'self' }, next, ctx, events, pending, targetRef, deferredSaves,
     );
+  }
+  // A next-attack rider expires after this source's roll even on a miss.
+  // Keep it until after damage (and across a paused attack roll) so a hit can use it.
+  if (targetRef.state) {
+    const retained = targetRef.state.activeEffects.filter(entry => {
+      const payload = entry.mechanics as Dict;
+      const consume = payload.kind === 'damage_rider' && payload.consume === 'next_attack'
+        && payload.scope === 'target' && payload.source_actor_only === true
+        && entry.sourceId === ctx.selfId;
+      if (consume) events.push({type: 'effect_expired', name: entry.name});
+      return !consume;
+    });
+    if (retained.length !== targetRef.state.activeEffects.length) {
+      targetRef.state = {...targetRef.state, activeEffects: retained};
+      targetRef.mutated = true;
+    }
   }
   return next;
 }

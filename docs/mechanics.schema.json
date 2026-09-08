@@ -1720,7 +1720,7 @@
     "duration": {
       "type": "object",
       "properties": {
-        "type": { "enum": ["instantaneous", "rounds", "minutes", "hours", "while_active", "until_long_rest", "until_dispelled", "permanent", "until_start_of_next_turn", "until_start_of_source_next_turn", "until_end_of_source_next_turn", "until_end_of_turn"] },
+        "type": { "enum": ["instantaneous", "rounds", "minutes", "hours", "while_active", "until_long_rest", "until_dispelled", "permanent", "until_start_of_next_turn", "until_start_of_source_next_turn", "until_end_of_source_next_turn", "until_end_of_source_turn", "until_end_of_turn"] },
         "amount": { "type": "number" },
         "concentration": { "type": "boolean" },
         "ends_when": { "type": "array", "items": { "$ref": "#/$defs/condition" } },
