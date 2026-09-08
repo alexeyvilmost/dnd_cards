@@ -32,7 +32,7 @@ export type RoguelikeCombatIntent =
   | {type: 'saving_throw'; selectedAbility?: Extract<DecisionResponse, {kind: 'roll'}>['selectedAbility']; boonEffectId?: string}
   | {type: 'd20_interrupt'; actorId: string | null}
   | {type: 'interception'; actorId: string | null}
-  | {type: 'triggered_action'; actionId: string | null}
+  | {type: 'triggered_action'; actionId: string | null; choices?: Record<string, string[]>}
   | {type: 'turn_start'; targetActorId: string | null}
   | {type: 'alert_swap'; actorId: string; allyActorId: string | null}
   | {type: 'boon'; actorId: string; effectId: string;
@@ -131,7 +131,7 @@ export function stepRoguelikeCombat(
     case 'triggered_action':
       if (!state.pendingTriggeredAction) throw new Error('Нет ожидающей способности');
       requireOwned(state.pendingTriggeredAction.sourceActorId);
-      state = resolveTriggeredCombatAction(state, intent.actionId, rng);
+      state = resolveTriggeredCombatAction(state, intent.actionId, rng, intent.choices);
       break;
     case 'turn_start':
       if (!state.pendingTurnStartGrappleDamage) throw new Error('Нет ожидающего выбора в начале хода');

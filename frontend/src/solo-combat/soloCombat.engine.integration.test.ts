@@ -4121,3 +4121,43 @@ it.each(['weapon_melee', 'weapon_ranged', 'unarmed', 'spell_melee', 'spell_range
   expect(Boolean(state.pendingTriggeredAction?.optionActionIds.includes(rider.id)))
     .toBe(!attackKind.startsWith('spell'));
 });
+
+it.each([0, 5, 10, 15])('Pushing Attack carries a saved distance through the triggered command: %s', async distance => {
+  const attackKind = 'unarmed';
+  const participant = fighterSeed();
+  const actorId = participant.character.id;
+  const actor = participant.canonical.world.actors[actorId];
+  actor.character.variables = { ...actor.character.variables, superiority_die: { count: 1, sides: 8 } };
+  actor.runtime.resources.superiority_die = 4;
+  actor.runtime.maxResources.superiority_die = 4;
+  const targeting = { domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1,
+    max_targets: 1, range_ft: 5, requires_line_of_sight: true, allowed_relations: ['enemy'] };
+  const attack = projectRuleAction({ id: '21100000-0000-4000-8000-000000000091', name: 'Source attack',
+    type: 'class_feature', resource: 'action', mechanics: {
+      activation: { mode: 'active', cost: [{ resource: 'action' }] }, targeting,
+      effects: [{ resolution: 'attack_roll', ability: 'str', attack_kind: attackKind, who: 'target',
+        on_hit: [{ kind: 'damage', amount: 2, type: 'bludgeoning' }] }],
+    } } as unknown as Action);
+  const rider = projectRuleAction({ id: '21100000-0000-4000-8000-000000000092', name: 'Post-hit die',
+    type: 'class_feature', resource: 'free_action', mechanics: JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_pushing_218.go', import.meta.url), 'utf8').match(/const battleMasterPushing218 = `([^`]+)`/)![1]) } as unknown as Action);
+  const actions = [...participant.canonical.actions, attack, rider];
+  actor.capabilities.actionIds.push(attack.id, rider.id);
+  participant.canonical = { ...participant.canonical, actions,
+    catalog: { getAction: id => actions.find(action => action.id === id), listActions: () => actions } };
+  let state = await createSoloCombatState({ character: participant.character, participant,
+    selected: [{ monster: goblin(), quantity: 1 }], actions: [scimitar()], effects: [], rng: () => 0.5 });
+  const targetId = Object.values(state.world.actors).find(candidate => candidate.kind === 'monster')!.id;
+  state = placeAdjacent(state, actorId, targetId);
+  state.tokens[actorId].position = {x: 3, y: 5};
+  state.tokens[targetId].position = {x: 4, y: 5};
+  state.world.actors[targetId].runtime.hp = {current: 50, max: 50, temp: 0};
+  state = executeCombatAction({ state, actorId, actionId: attack.id, targetIds: [targetId], rng: () => 0.6 });
+  expect(state.pendingTriggeredAction?.optionActionIds).toContain(rider.id);
+  const held = JSON.parse(JSON.stringify(state)) as SoloCombatState;
+  expect(() => resolveTriggeredCombatAction(held, rider.id, () => 0)).toThrow();
+  state = autoResolveSystemDecisions(resolveTriggeredCombatAction(held, rider.id, () => 0, {pushing_attack_distance: [String(distance)]}), () => 0);
+  expect(state.world.actors[actorId].runtime.resources.superiority_die).toBe(3);
+  expect(state.tokens[targetId].position).toEqual({x: 4 + distance / 5, y: 5});
+  expect(state.world.actors[targetId].runtime.hp.current).toBe(47);
+  expect(state.world.pendingResolution).toBeNull();
+});

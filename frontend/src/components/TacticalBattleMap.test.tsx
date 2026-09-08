@@ -62,4 +62,28 @@ describe('TacticalBattleMap world-object clarity', () => {
     expect(cell?.querySelector('[data-world-object-id="illusion"]')?.textContent)
       .toContain('Закрытая железная дверь');
   });
+  it.each([false, true])('keeps a living occupant clickable above a fallen token, reversed=%s', async reversed => {
+    const tokens = [
+      ['living', {actorId: 'living', position: {x: 2, y: 3}}],
+      ['fallen', {actorId: 'fallen', position: {x: 2, y: 3}}],
+    ];
+    const state = {
+      world: {scene: {mode: 'encounter', initiative: ['living'], activeIndex: 0, round: 1},
+        actors: {
+          living: {id: 'living', name: 'Живая крыса', runtime: {hp: {current: 7, max: 7}, activeEffects: []}},
+          fallen: {id: 'fallen', name: 'Поверженная крыса', runtime: {hp: {current: 0, max: 7}, activeEffects: []}},
+        }, objects: {}},
+      tokens: Object.fromEntries(reversed ? tokens.reverse() : tokens),
+      catalogActions: [], movementRemainingFt: {},
+    } as unknown as SoloCombatState;
+    const clicks: (string | undefined)[] = [];
+    await act(async () => root.render(<TacticalBattleMap state={state} actorId="living"
+      selectedActionId={null} movementMode={false} onCell={(_position, id) => clicks.push(id)} />));
+    const cell = container.querySelector<HTMLButtonElement>('[aria-label*="Живая крыса"]');
+    expect(cell?.getAttribute('aria-label')).toContain('7/7 HP');
+    await act(async () => cell!.click());
+    expect(clicks).toEqual(['living']);
+    expect(container.querySelector('[aria-label*="Поверженная крыса"]')).toBeNull();
+  });
+
 });

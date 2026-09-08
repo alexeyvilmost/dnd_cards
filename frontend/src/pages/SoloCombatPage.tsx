@@ -451,9 +451,19 @@ export default function SoloCombatPage() {
     });
   }, [apply]);
 
-  const resolveTriggeredChoice = (actionId: string | null) => {
+  const resolveTriggeredChoice = async (actionId: string | null) => {
+    if (!state?.pendingTriggeredAction || busy) return;
     try {
-      applyIntent({type: 'triggered_action', actionId}, () => autoResolveSystemDecisions(resolveTriggeredCombatAction(state!, actionId)));
+      const action = state.catalogActions.find(candidate => candidate.id === actionId);
+      const required = action ? collectSoloCombatActionChoices(
+        state.world.actors[state.pendingTriggeredAction.sourceActorId], action,
+        state.actionPresentation?.[action.id]?.actionRef?.card_number,
+      ) : [];
+      const choices = required.length ? await choiceDialog.request(required, action!.name) : {};
+      if (!choices) return;
+      applyIntent({type: 'triggered_action', actionId, choices}, () => autoResolveSystemDecisions(
+        resolveTriggeredCombatAction(state, actionId, Math.random, choices),
+      ));
     } catch (reason) {
       setError(playerFacingSheetActionError(reason));
     }

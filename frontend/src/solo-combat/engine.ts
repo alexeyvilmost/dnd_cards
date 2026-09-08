@@ -107,7 +107,7 @@ import {
   polearmMasterEntryEligible,
   shieldMasterBashEligible,
 } from '../rules-core/generalFeatReactionRuntime';
-import { projectSoloCombatActionChoices, UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
+import { collectSoloCombatActionChoices, projectSoloCombatActionChoices, UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
 import { materializeOwnedSummon, reconcileOwnedSummons } from './ownedSummons';
 
 type Rng = () => number;
@@ -2020,6 +2020,7 @@ export function resolveTriggeredCombatAction(
   state: SoloCombatState,
   actionId: string | null,
   rng: Rng = Math.random,
+  choices?: Readonly<Record<string, readonly string[]>>,
 ): SoloCombatState {
   const pending = state.pendingTriggeredAction;
   if (!pending) throw new Error('Нет ожидающей способности после попадания');
@@ -2060,6 +2061,15 @@ export function resolveTriggeredCombatAction(
   }
   const chosen = state.catalogActions.find((candidate) => candidate.id === actionId);
   if (!chosen) throw new Error('Способность отсутствует в снимке боя');
+  // Validate all declared choices before a save continuation can spend the die.
+  for (const choice of collectSoloCombatActionChoices(state.world.actors[pending.sourceActorId], chosen)) {
+    const selected = choices?.[choice.id];
+    if (!Array.isArray(selected) || selected.length !== choice.count
+      || new Set(selected).size !== selected.length
+      || (choice.items?.length && selected.some(id => !choice.items!.some(item => item.id === id)))) {
+      throw new Error(`Завершите выбор: ${choice.prompt}`);
+    }
+  }
   const chosenTrigger = triggerEvents(chosen);
   let prepared = cleared as SoloCombatState;
   if (chosenTrigger.includes('sneak_attack_hit')) {
@@ -2098,6 +2108,7 @@ export function resolveTriggeredCombatAction(
     targetIds: chosenTargetIds,
     triggerEvent: pending.optionEvents?.[actionId] ?? (chosenTrigger.includes(pending.event) ? pending.event : chosenTrigger[0]),
     triggeringAttack: pending.triggeringAttack,
+    choices,
     rng,
   });
   const useKey = chosen ? generalFeatTriggeredUseKey(chosen) : null;

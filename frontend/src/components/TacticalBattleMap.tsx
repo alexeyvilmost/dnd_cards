@@ -41,7 +41,11 @@ export default function TacticalBattleMap({
   const activeId = state.world.scene.mode === 'encounter'
     ? state.world.scene.initiative[state.world.scene.activeIndex]
     : '';
-  const tokenByCell = new Map(Object.values(state.tokens).map((token) => [
+  // A fallen creature does not block a cell; a living occupant must remain selectable.
+  const tokenByCell = new Map(Object.values(state.tokens).sort((a, b) =>
+    Number((state.world.actors[a.actorId]?.runtime.hp.current ?? 0) > 0)
+    - Number((state.world.actors[b.actorId]?.runtime.hp.current ?? 0) > 0),
+  ).map((token) => [
     `${token.position.x}:${token.position.y}`, token,
   ]));
   const dancingLightByCell = new Map(Object.values(state.world.objects).flatMap((object) => {
