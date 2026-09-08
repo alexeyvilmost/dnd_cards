@@ -1308,6 +1308,12 @@ function preflightEffect(
       const relation = declaration.if_target_relation;
       const excludedCreatureType = declaration.if_target_creature_type_not;
       const allowedCreatureTypes = declaration.if_target_creature_type_not_in;
+      const maximumSize = declaration.if_target_size_greater_than;
+      const hasMaximumSize = Number.isInteger(maximumSize) && Number(maximumSize) >= 0 && Number(maximumSize) <= 5;
+      if (maximumSize !== undefined && (!hasMaximumSize || !Number.isInteger(ctx.target?.size))) {
+        throw mechanicsError('INVALID_PAYLOAD', `${path}.automatic_success.if_target_size_greater_than`,
+          'size-gated saves require a size index from 0 to 5 and a known target size');
+      }
       const hasRelation = relation === 'self' || relation === 'ally'
         || relation === 'enemy' || relation === 'neutral';
       const hasExcludedCreatureType = typeof excludedCreatureType === 'string'
@@ -1322,7 +1328,7 @@ function preflightEffect(
         );
       }
       if (!noSleep && (typeof immunity !== 'string' || !immunity.trim())
-        && !hasRelation && !hasExcludedCreatureType && !hasAllowedCreatureTypes) {
+        && !hasRelation && !hasExcludedCreatureType && !hasAllowedCreatureTypes && !hasMaximumSize) {
         throw mechanicsError(
           'INVALID_PAYLOAD', `${path}.automatic_success`,
           'automatic save success requires a supported target rule',
@@ -4028,6 +4034,10 @@ function automaticSaveSuccessReason(
     return null;
   }
   const rule = declaration as Dict;
+  if (Number.isInteger(rule.if_target_size_greater_than) && Number.isInteger(target.size)
+    && Number(target.size) > Number(rule.if_target_size_greater_than)) {
+    return { reason: 'размер цели превышает предел способности', sourceEntityIds: [] };
+  }
   if (rule.if_sleep_not_required === true && target.sleepRequired === false) {
     return {
       reason: 'существо не нуждается во сне',

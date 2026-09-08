@@ -36,6 +36,7 @@ import { projectRuleAction } from '../canon/ruleActionProjection';
 import type { Monster } from '../monsters/types';
 import { canPay, pay } from '../engine/cost';
 import { payloadsOf } from '../engine/mechanicsView';
+import { weaponAttackKind } from '../engine/weapon';
 import { deniedCapabilities } from '../engine/modifiers';
 import {
   executeRemoteManipulator as executeEngineRemoteManipulator,
@@ -2628,6 +2629,14 @@ function sourceQualifiesForTriggeredAction(input: {
       || targetSize! > sourceSize! + Number(trigger!.feat_max_relative_size)) return false;
   }
   const sourceAction = state.catalogActions.find((candidate) => candidate.id === sourceActionId);
+  if (trigger?.requires_weapon_or_unarmed_hit === true) {
+    const effects = sourceAction?.mechanics.effects;
+    const explicitWeaponAttack = Array.isArray(effects) && effects.some(effect => {
+      const row = effect as Record<string, unknown>;
+      return row.resolution === 'attack_roll' && ['weapon_melee', 'weapon_ranged'].includes(String(row.attack_kind));
+    });
+    if (!sourceAction || (!weaponAttackKind(sourceAction.mechanics) && !explicitWeaponAttack)) return false;
+  }
   if (trigger?.feat_requires_shield === true || trigger?.feat_requires_melee === true) {
     if (!sourceAction || targetIds.length !== 1 || !shieldMasterBashEligible({
       actor,
