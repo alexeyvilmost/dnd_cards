@@ -4732,3 +4732,32 @@ it('an unequipped monster keeps an unarmed opportunity attack and takes its turn
  expect(activeId(state)).toBe(actorId);
  expect(state.world.actors[actorId].runtime.hp.current).toBe(before-8);
 });
+
+
+it.each(['hit','critical','unarmed','spell','distant','immune'])('Psionic Strike eligibility and separate noncritical damage: %s',async mode=>{
+ const participant=fighterSeed();const actorId=participant.character.id;const actor=participant.canonical.world.actors[actorId];
+ actor.character.variables={...actor.character.variables,psi_warrior_energy_die:{count:1,sides:6}};
+ actor.character.abilityMods.int=2;
+ actor.runtime.resources.psi_warrior_energy_die=4;actor.runtime.maxResources.psi_warrior_energy_die=4;
+ const strike=projectRuleAction({id:'23100000-0000-4000-8000-000000000001',name:'Psionic Strike',type:'class_feature',resource:'free_action',
+ mechanics:JSON.parse(readFileSync(new URL('../../../backend/migrations/psi_warrior_strike_231.go',import.meta.url),'utf8').match(/const psiWarriorStrike231 = `([^`]+)`/)![1])} as unknown as Action);
+ const attack:RuleActionDefinition={id:'psi-test-weapon',name:'Weapon hit',kind:'nonSpell',sourceEntityIds:['psi-test-weapon'],targeting:{minTargets:1,maxTargets:1,rangeFt:60,requiresLineOfSight:false,allowedRelations:['enemy']},mechanics:{activation:{mode:'active',cost:[{resource:'action'}]},effects:[{resolution:'attack_roll',ability:'str',attack_kind:mode==='unarmed'?'unarmed':mode==='spell'?'spell_ranged':'weapon_ranged',attack_bonus:20,on_hit:[{kind:'damage',amount:'2',type:'piercing',suppress_damage_modifiers:true}]}]}};
+ const actions=[...participant.canonical.actions,strike,attack];actor.capabilities.actionIds.push(strike.id,attack.id);
+ participant.canonical={...participant.canonical,actions,catalog:{getAction:id=>actions.find(row=>row.id===id),listActions:()=>actions}};
+ let state=await createSoloCombatState({character:participant.character,participant,selected:[{monster:{...goblin(),armor_class:5,max_hp:100},quantity:1}],actions:[scimitar()],effects:[],rng:()=>0.5});
+ const targetId=Object.values(state.world.actors).find(row=>row.kind==='monster')!.id;
+ state=placeAdjacent(state,actorId,targetId);
+ if(mode==='distant'){state.tokens[actorId].position={x:1,y:1};state.tokens[targetId].position={x:8,y:1};}
+ if(mode==='immune')(state.world.actors[targetId].passives??=[]).push({kind:'resistance',damage_type:'piercing',value:'immunity'});
+ state=executeCombatAction({state,actorId,actionId:attack.id,targetIds:[targetId],rng:()=>mode==='critical'?0.99:0.5});
+ if(['unarmed','spell','distant','immune'].includes(mode)){expect(state.pendingTriggeredAction?.optionActionIds??[]).not.toContain(strike.id);expect(state.world.actors[actorId].runtime.resources.psi_warrior_energy_die).toBe(4);return;}
+ expect(state.pendingTriggeredAction?.optionActionIds).toContain(strike.id);
+ const hp=state.world.actors[targetId].runtime.hp.current;
+ state=resolveTriggeredCombatAction(clone(state),strike.id,()=>0.5);
+ expect(state.world.actors[targetId].runtime.hp.current).toBe(hp-6);
+ expect(state.world.actors[actorId].runtime.resources.psi_warrior_energy_die).toBe(3);
+ expect(state.world.actors[actorId].runtime.firedThisTurn).toContain('psi_warrior.psionic_strike');
+ state.world.actors[actorId].runtime.resources.action=1;
+ state=executeCombatAction({state:clone(state),actorId,actionId:attack.id,targetIds:[targetId],rng:()=>0.5});
+ expect(state.pendingTriggeredAction?.optionActionIds??[]).not.toContain(strike.id);
+});

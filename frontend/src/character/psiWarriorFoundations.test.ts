@@ -14,7 +14,7 @@ describe('Psi Warrior owned dice',()=>{
  it.each([[3,4],[4,4],[5,6]])('level %s owns %s dice and recovers one on short rest', (level,count)=>{
   const ctx=context(level);const initialized=initResources(ctx,resources,[]);
   expect(initialized.maxResources.psi_warrior_energy_die).toBe(count);
-  const spent:RuntimeState={hp:{current:10,max:10,temp:0},...initialized,resources:{...initialized.resources,psi_warrior_energy_die:0,psionic_energy_die:2},maxResources:{...initialized.maxResources,psionic_energy_die:4},equipment:{},inventory:[],activeEffects:[],turn:{}};
+  const spent:RuntimeState={hp:{current:10,max:10,temp:0},...initialized,resources:{...initialized.resources,psi_warrior_energy_die:0,psionic_energy_die:2},maxResources:{...initialized.maxResources,psionic_energy_die:4},equipment:{},inventory:[],activeEffects:[]};
   const rested=shortRest(spent,ctx).state;
   expect(rested.resources.psi_warrior_energy_die).toBe(1);
   expect(rested.resources.psionic_energy_die).toBe(2);

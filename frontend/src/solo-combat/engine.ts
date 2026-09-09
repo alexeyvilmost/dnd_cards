@@ -2884,6 +2884,23 @@ function sourceQualifiesForTriggeredAction(input: {
       || targetSize! > sourceSize! + Number(trigger!.feat_max_relative_size)) return false;
   }
   const sourceAction = state.catalogActions.find((candidate) => candidate.id === sourceActionId);
+  if (trigger?.requires_weapon_damage_own_turn === true) {
+    if (state.world.scene.mode !== 'encounter'
+      || state.world.scene.initiative[state.world.scene.activeIndex] !== actor.id
+      || targetIds.length !== 1) return false;
+    const kind = sourceAction ? weaponAttackKind(sourceAction.mechanics) : null;
+    const explicitWeapon = (sourceAction?.mechanics.effects as Record<string, unknown>[] | undefined)?.some(effect =>
+      effect.resolution === 'attack_roll' && ['weapon_melee', 'weapon_ranged'].includes(String(effect.attack_kind)));
+    if ((!kind || kind === 'unarmed') && !explicitWeapon) return false;
+    const targetId = targetIds[0];
+    const sourcePosition = state.tokens[actor.id]?.position;
+    const targetPosition = state.tokens[targetId]?.position;
+    if (!sourcePosition || !targetPosition || gridDistanceFt(sourcePosition, targetPosition) > 30) return false;
+    const dealtDamage = combatLogSince(state, combatLogCursor(before)).some(entry => entry.records?.some(record =>
+      record.sourceActorId === actor.id && record.targetIds.includes(targetId)
+      && record.event?.type === 'damage' && record.event.amount > 0));
+    if (!dealtDamage) return false;
+  }
   if (trigger?.requires_weapon_or_unarmed_hit === true) {
     const effects = sourceAction?.mechanics.effects;
     const explicitWeaponAttack = Array.isArray(effects) && effects.some(effect => {
