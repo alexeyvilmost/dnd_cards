@@ -929,6 +929,7 @@
       ],
       "properties": {
         "timing": { "enum": ["before", "during", "after", "replaces"] },
+        "protective_field": { "type": "boolean" },
         "requires_weapon_damage_own_turn": { "type": "boolean" },
         "requires_weapon_or_unarmed_hit": { "type": "boolean" },
         "secondary_target": { "type": "boolean" },

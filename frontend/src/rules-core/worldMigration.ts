@@ -1533,13 +1533,21 @@ export function migrateWorldState(value: unknown): WorldState {
         trigger.damageTypes,
         'world.pendingResolution.request.trigger.damageTypes',
       );
-      if (request.type !== 'reaction' || request.actorId !== targetActorId
+      if (request.type !== 'reaction' || typeof request.actorId !== 'string' || !actors[request.actorId]
         || trigger.type !== 'damage_taken'
         || trigger.sourceActorId !== sourceActorId
         || trigger.actionId !== actionId
         || trigger.amount !== amount
         || JSON.stringify(triggerDamageTypes) !== JSON.stringify(damageTypes)) {
         throw new Error('world.pendingResolution damage reaction request is inconsistent');
+      }
+      if (request.actorId !== targetActorId) {
+        const observers = (pending.facts as JsonRecord)?.damageObservers;
+        if (!Array.isArray(observers) || !observers.some(row => row?.actorId === request.actorId && row.canSeeTarget === true && Number.isFinite(row.distanceFt) && row.distanceFt >= 0 && row.distanceFt <= 30)) throw new Error('Damage observer lacks valid frozen visibility');
+      }
+      if (pending.remainingReactorIds !== undefined) {
+        const remaining = uniqueStringArray(pending.remainingReactorIds,'world.pendingResolution.remainingReactorIds');
+        if (remaining.some(id => !actors[id] || id === request.actorId)) throw new Error('Invalid queued damage reactor');
       }
       if (!Array.isArray(request.options) || request.options.length === 0) {
         throw new Error('world.pendingResolution damage reaction must retain offered options');

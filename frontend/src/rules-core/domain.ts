@@ -246,6 +246,7 @@ export type Relation = 'self' | 'ally' | 'enemy' | 'neutral';
  * проверяемые факты конкретной ревизии, а не координаты и не доверенный UI patch.
  */
 export interface SpatialFacts {
+  damageObservers?: Array<{ actorId: string; distanceFt: number; canSeeTarget: boolean }>;
   positionExchangeValidated?: true;
   commandedAttackValidated?: true;
   maneuveringMovementValidated?: true;
@@ -566,6 +567,7 @@ export interface PendingAttackReactionResolution {
 }
 
 export interface PendingDamageReactionResolution {
+  remainingReactorIds?: string[];
   id: string;
   type: 'damage_reaction';
   openedByCommandId: string;

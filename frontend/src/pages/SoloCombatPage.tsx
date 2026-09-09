@@ -905,7 +905,7 @@ export default function SoloCombatPage() {
         /><Link className="combat-sheet-drawer__full" target="_blank" to={`/characters-v3/${drawerActorId}`}>Открыть полный лист ↗</Link></aside>;
       })()}
       {reactionOptions.length > 0 && <div className="combat-reaction-backdrop"><section aria-label={reactionTitle}>
-        <p>{pending?.type === 'attack_reaction' && pending.attackAdjustment ? 'ПРИЁМ' : 'РЕАКЦИЯ'}</p><h2>{reactionTitle}</h2>{reactionDetails && <p>{reactionDetails}</p>}
+        <p>{pending?.type === 'attack_reaction' && pending.attackAdjustment ? 'ПРИЁМ' : 'РЕАКЦИЯ'}</p><h2>{reactionTitle}</h2>{pending?.type === 'damage_reaction' && <p>{state.world.actors[pending.request.actorId]?.name} · Цель: {state.world.actors[pending.targetActorId]?.name}</p>}{reactionDetails && <p>{reactionDetails}</p>}
         <div className="combat-reaction-actions">{reactionOptions.map(option => {
           const presentation = state.actionPresentation?.[option.response.actionId ?? ''];
           return <SheetActionLine key={option.id} name={option.label}

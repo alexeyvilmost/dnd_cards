@@ -831,3 +831,61 @@ it.each([1, 8])('concentration uses final damage after a restored reduction roll
   if (reductionDie === 8) expect(restored.getState().pendingResolution).toBeNull();
   else expect(restored.getState().pendingResolution).toMatchObject({ type: 'concentration_save', damage: 5, request: { dc: 10 } });
 });
+
+
+const PROTECTIVE_FIELD = projectRuleAction({id:'23200000-0000-4000-8000-000000000001',name:'Protective Field',type:'class_feature',resource:'reaction',mechanics:JSON.parse(readFileSync(new URL('../../../backend/migrations/psi_warrior_protective_field_232.go',import.meta.url),'utf8').match(/const psiWarriorProtectiveField232 = `([^`]+)`/)![1])} as unknown as Action);
+
+describe('Protective Field preserves independent reactor costs and held damage',()=>{
+ function make(mode:string){
+  const pulse=structuredClone(DAMAGE_PULSE);
+  pulse.mechanics.effects=[{resolution:'auto',who:'target',result:[{kind:'damage',amount:'8',type:'force'}]}];
+  const initial=world(mode==='self'||mode==='chain'?[PROTECTIVE_FIELD.id]:[]);
+  initial.actors.attacker.capabilities.actionIds=mode==='source'?[pulse.id,PROTECTIVE_FIELD.id]:[pulse.id];
+  initial.actors.defender.runtime.hp.current=4;
+  if(mode!=='self'&&mode!=='source') initial.actors.protector=createWorld({id:'protector-fixture',ruleset:RULESET,actors:[actor('protector',[PROTECTIVE_FIELD.id])]}).actors.protector;
+  for(const person of Object.values(initial.actors))if(person.capabilities.actionIds.includes(PROTECTIVE_FIELD.id)){
+   person.character.variables={psi_warrior_energy_die:{count:1,sides:6}};
+   person.character.abilityMods.int=mode==='self'?-4:2;
+   person.runtime.resources.psi_warrior_energy_die=mode==='empty'?0:4;
+   person.runtime.maxResources.psi_warrior_energy_die=4;
+  }
+  if(mode==='resistant')initial.actors.defender.passives=[{kind:'resistance',damage_type:'force',value:'resistance'}];
+  const catalog:RulesCatalog={getAction:id=>id===pulse.id?pulse:id===PROTECTIVE_FIELD.id?PROTECTIVE_FIELD:undefined};
+  const session=new InMemoryRulesSession(initial,catalog,{rng:()=>0.5,clock:createLogicalClock(),nextId:createSequentialIdFactory('field')});
+  begin(session,mode==='self'||mode==='chain'?[PROTECTIVE_FIELD.id]:[]);
+  const observed:SpatialFacts={...facts,damageObservers:mode==='missing'?[]:[{actorId:mode==='source'?'attacker':'protector',distanceFt:mode==='far'?35:30,canSeeTarget:mode!=='hidden'}]};
+  const result=session.dispatch({schemaVersion:1,type:'UseAction',commandId:'pulse-field',expectedRevision:session.getState().revision,rulesetContentHash:RULESET.contentHash,actorId:'attacker',actionId:pulse.id,targetIds:['defender'],factsByTarget:{defender:observed}});
+  return {session,catalog,result};
+ }
+ function respond(session:InMemoryRulesSession,actionId:string|null,id:string){
+  const pending=session.getState().pendingResolution!;
+  return session.dispatch({schemaVersion:1,type:'ResolveDecision',commandId:id,expectedRevision:session.getState().revision,rulesetContentHash:RULESET.contentHash,actorId:pending.request.actorId,resolutionId:pending.id,requestId:pending.request.id,response:{kind:'reaction',actionId}});
+ }
+ it.each(['normal','resistant','self','source'])('holds lethal damage, reloads and resolves: %s',mode=>{
+  const {session,catalog,result}=make(mode);expect(result.status).toBe('accepted');
+  expect(session.getState().actors.defender.runtime.hp.current).toBe(4);
+  const restored=new InMemoryRulesSession(migrateWorldState(JSON.parse(JSON.stringify(session.getState()))),catalog,{rng:()=>0.5,clock:createLogicalClock(),nextId:createSequentialIdFactory('field-reload')});
+  expect(respond(restored,PROTECTIVE_FIELD.id,'protect').status).toBe('accepted');
+  const final=restored.getState();expect(final.pendingResolution).toBeNull();
+  expect(final.actors.defender.runtime.hp.current).toBe(mode==='self'?0:mode==='resistant'?3:2);
+  const protector=final.actors[mode==='self'?'defender':mode==='source'?'attacker':'protector'];
+  expect(protector.runtime.resources).toMatchObject({reaction:0,psi_warrior_energy_die:3});
+  if(mode!=='self'){expect(protector.runtime.hp.current).toBe(20);expect(final.actors.defender.runtime.resources.reaction).toBe(1);}
+ });
+ it.each(['hidden','far','empty'])('does not offer an unavailable observer: %s',mode=>{
+  const {session,result}=make(mode);expect(result.status).toBe('accepted');expect(session.getState().pendingResolution).toBeNull();expect(session.getState().actors.defender.runtime.hp.current).toBe(0);
+ });
+ it('requires complete observer facts before committing damage',()=>{expect(()=>make('missing')).toThrow(/observation/);});
+ it.each([true,false])('retains an independent observer after target response, including reload: %s',accept=>{
+  const {session,catalog}=make('chain');
+  expect(session.getState().pendingResolution?.request.actorId).toBe('defender');
+  expect(respond(session,accept?PROTECTIVE_FIELD.id:null,'first-field').status).toBe('accepted');
+  expect(session.getState().actors.defender.runtime.hp.current).toBe(4);
+  expect(session.getState().pendingResolution?.request.actorId).toBe('protector');
+  const restored=new InMemoryRulesSession(migrateWorldState(JSON.parse(JSON.stringify(session.getState()))),catalog,{rng:()=>0.5,clock:createLogicalClock(),nextId:createSequentialIdFactory('second-field')});
+  expect(respond(restored,PROTECTIVE_FIELD.id,'second-field').status).toBe('accepted');
+  expect(restored.getState().actors.defender.runtime.hp.current).toBe(accept?4:2);
+  expect(restored.getState().actors.protector.runtime.resources.reaction).toBe(0);
+  expect(restored.getState().actors.defender.runtime.resources.reaction).toBe(accept?0:1);
+ });
+});

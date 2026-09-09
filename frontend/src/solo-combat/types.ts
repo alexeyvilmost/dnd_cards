@@ -396,6 +396,7 @@ export function spatialFacts(
     & Partial<Pick<SoloCombatState, 'world' | 'recentStraightMovementByActor'>>,
   sourceActorId: string,
   targetActorId: string,
+  includeDamageObservers = true,
 ): SpatialFacts {
   const source = state.tokens[sourceActorId]?.position;
   const target = state.tokens[targetActorId]?.position;
@@ -439,6 +440,10 @@ export function spatialFacts(
     && state.world?.scene.mode === 'encounter' && movement.round === state.world.scene.round
     && movement.to.x === source.x && movement.to.y === source.y ? movement.distanceFt : 0;
   return {
+    ...(includeDamageObservers && state.world ? {damageObservers: Object.keys(state.world.actors).filter(id => state.tokens[id]).sort().map(actorId => {
+      const observation = spatialFacts(state, actorId, targetActorId, false);
+      return {actorId, distanceFt: observation.distanceFt, canSeeTarget: observation.canSeeTarget === true};
+    })} : {}),
     factsSource: 'board',
     boardRevision: state.boardRevision,
     distanceFt: Math.max(Math.abs(source.x - target.x), Math.abs(source.y - target.y)) * TACTICAL_CELL_FT,
