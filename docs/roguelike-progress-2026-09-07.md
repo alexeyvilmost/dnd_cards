@@ -579,3 +579,10 @@ Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br
 - Ordinary berserker standalone fixture5938728c-45f0-4e20-8cc9-de70bd0adb8e produced three successful saves, including Bloodied Frenzy advantage, without losing its weapon. No victory claim.
 - Positive browser acceptance uses deliberately synthetic low-Strength, AC5, HP100 monster34805fa7-17d6-4755-9674-af5554d56686 and L3 character12ccfe33-e910-4008-b157-12f15b4bf2fb, created in the local DB/API only. This is not a natural run or balance test. Ordinary UI attack19+5=24 hit for8; selected the actual greataxe card; save10-5=5 against13 failed, superiority die3 dealt damage, target100→89HP and pool4→3. Ground greataxe image visible. Reload retained item, HP and pool. Next enemy turn used unarmed strike16-3=13 versus16, missed, instead of the dropped axe. Hero31HP, active battle. No run victory or trusted-run replay claimed.
 - No TimeWeb deployment. Original-plan work remains open, notably Psi/Eldritch Knight, equipment handling, gated monsters and natural full-run acceptance.
+
+
+## Local continuation — Psi Warrior foundations (230), 2026-09-09
+
+- Separate psi_warrior_energy_die pool prevents spending Soulknife dice on warrior powers. Warrior-level scaling gives4 dice at3–4 and6 at5. Existing partial-rest recovery restores1 on short rest and all on long rest. Removed the old shared passive resource grant; adds owned d6 variable and level5 d8 upgrade. Higher-level abilities remain outside the current level1–5 implementation.
+- Targeted resource/character tests18 passed, migration tests passed; migration230 applied successfully to the local database. TypeScript and changed-file ESLint checked separately. No TimeWeb deployment.
+- Browser fixture f11d0898-e727-43f4-ba11-31e1d840f3ce: synthetic L3 Psi Warrior with depleted dice. Existing sheet showed0/4. Completing the existing short-rest dialog produced1/4, retained on reload; long-rest button restored4/4. Direct local QA level change to5 (not claimed as Forge progression) showed4/6 and the d8 feature on reload. Active powers and their full browser acceptance remain unfinished.

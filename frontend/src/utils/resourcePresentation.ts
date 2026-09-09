@@ -12,6 +12,7 @@ export type ResourceOption = {
 };
 
 const actionDefaults: ResourceOption[] = [
+  { id: 'psi_warrior_energy_die', label: 'Кости псионической энергии воина', description: 'Короткий отдых: одна кость; долгий: все.', category: 'class_resource', recharge: 'long_rest', sortOrder: 181 },
   { id: 'superiority_die', label: 'Кости превосходства', description: 'Кости манёвров Мастера боя.', category: 'class_resource', recharge: 'short_rest', sortOrder: 180 },
   { id: 'action', label: 'Действие', description: 'Основное действие в ход.', category: 'action_cost', imageUrl: '/charges/main_action.png', sortOrder: 10 },
   { id: 'main_action', label: 'Основное действие', description: 'Основное действие в ход.', category: 'action_cost', imageUrl: '/charges/main_action.png', sortOrder: 11 },

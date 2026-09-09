@@ -1453,6 +1453,7 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 			Up:          materializeBattleMasterDisarming,
 			Down:        func(db *sql.DB) error { return nil },
 		},
+		{Version: "230_psi_warrior_foundations", Description: "Materialize separate Psi Warrior dice and rest recovery", Up: materializePsiWarriorFoundations, Down: func(db *sql.DB) error { return nil }},
 		// Здесь можно добавлять новые миграции
 	}
 }
