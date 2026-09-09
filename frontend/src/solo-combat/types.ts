@@ -262,6 +262,9 @@ export interface AdditionalCombatMovement {
   actorId: string;
   remainingFt: number;
   provokeOpportunityAttacks: boolean;
+  /** A reaction is paid on the first legal step, never on decline or an invalid destination. */
+  requiresReaction?: true;
+  immuneOpportunityActorIds?: string[];
   /** A critical reaction may interrupt another creature's movement, including
    * another additional route. The stack contains only serializable continuations. */
   interrupted?: Pick<SoloCombatState, 'playerMovement' | 'pendingMovementStep' | 'pendingReachEntry'

@@ -460,6 +460,9 @@ function preflightActivationCost(mechanics: Dict, ctx: ExecuteContext): Dict[] {
   if ((mechanics.activation as Dict | undefined)?.commanded_attack && !ctx.commandedAttackValidated) {
     throw mechanicsError('INVALID_MECHANICS', 'activation.commanded_attack', 'Удар командующего требует выбора союзника на поле боя');
   }
+  if (((mechanics.activation as Dict | undefined)?.trigger as Dict | undefined)?.maneuvering_movement && !ctx.maneuveringMovementValidated) {
+    throw mechanicsError('INVALID_MECHANICS', 'activation.trigger.maneuvering_movement', 'Маневрирующая атака требует выбора союзника на поле боя');
+  }
   if (mechanics.activation === undefined) return [];
   if (!isDict(mechanics.activation)) {
     throw mechanicsError('INVALID_MECHANICS', 'mechanics.activation', 'activation must be an object');

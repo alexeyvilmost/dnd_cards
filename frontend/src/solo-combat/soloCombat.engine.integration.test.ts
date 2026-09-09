@@ -4620,3 +4620,60 @@ describe('Commander Strike uses an Attack entry and the ally reaction',()=>{
   expect(JSON.stringify(state)).toBe(before);
  });
 });
+
+
+describe('Maneuvering Attack reaction movement',()=>{
+ async function setup(mode='normal') {
+  const {participant,action}=unarmedParticipant();const actorId=participant.character.id;
+  const actor=participant.canonical.world.actors[actorId];
+  actor.character.variables={...actor.character.variables,superiority_die:{count:1,sides:8}};
+  actor.runtime.resources.superiority_die=4;actor.runtime.maxResources.superiority_die=4;
+  const maneuver=projectRuleAction({id:'22800000-0000-4000-8000-000000000001',name:'Maneuvering',type:'class_feature',resource:'free_action',
+   mechanics:JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_maneuvering_228.go',import.meta.url),'utf8').match(/const battleMasterManeuvering228 = `([^`]+)`/)![1])} as unknown as Action);
+  const actions=[...participant.canonical.actions,maneuver];actor.capabilities.actionIds.push(maneuver.id);
+  participant.canonical={...participant.canonical,actions,catalog:{getAction:id=>actions.find(row=>row.id===id),listActions:()=>actions}};
+  let state=await createSoloCombatState({character:participant.character,participant,selected:[{monster:{...goblin(),armor_class:10,max_hp:100},quantity:2}],actions:[scimitar()],effects:[],rng:()=>0.5});
+  const ally=wizardSeed();const allyId=ally.character.id;
+  state=await addSoloCombatCharacter({state,participant:ally,rng:()=>0});
+  const [first,second]=Object.values(state.world.actors).filter(row=>row.kind==='monster').map(row=>row.id);
+  state.tokens[actorId].position={x:4,y:4};state.tokens[first].position={x:5,y:4};
+  state.tokens[second].position={x:5,y:5};state.tokens[allyId].position={x:4,y:5};
+  if(mode==='no_reaction')state.world.actors[allyId].runtime.resources.reaction=0;
+  if(mode==='unperceived')state.world.actors[allyId].runtime.activeEffects=['blinded','deafened'].map(value=>({id:value,name:value,source:'test',mechanics:{kind:'condition',value}}));
+  if(mode==='incapacitated')state.world.actors[allyId].runtime.activeEffects=[{id:'stun',name:'Stunned',source:'test',mechanics:{kind:'condition',value:'stunned'}}];
+  state=executeCombatAction({state,actorId,actionId:action.id,targetIds:[first],choices:{[UNARMED_STRIKE_CHOICE_ID]:['damage']},rng:()=>0.5});
+  return {state,actorId,allyId,first,second,maneuver};
+ }
+ it.each(['no_reaction','unperceived','incapacitated'])('does not offer an unusable reaction: %s',async mode=>{
+  const {state,maneuver}=await setup(mode);
+  expect(state.pendingTriggeredAction?.optionActionIds??[]).not.toContain(maneuver.id);
+ });
+ it.each(['move','decline','invalid','steps'])('retains original damage target and spends reaction only on legal movement: %s',async mode=>{
+  const {state,actorId,allyId,first,second,maneuver}=await setup();
+  expect(state.pendingTriggeredAction?.optionActionIds).toContain(maneuver.id);
+  const hp=state.world.actors[first].runtime.hp.current,allyHp=state.world.actors[allyId].runtime.hp.current;
+  let next=resolveTriggeredCombatAction(clone(state),maneuver.id,()=>0.5,undefined,[allyId]);
+  expect(next.world.actors[first].runtime.hp.current).toBe(hp-5);
+  expect(next.world.actors[allyId].runtime.hp.current).toBe(allyHp);
+  expect(next.world.actors[actorId].runtime.resources.superiority_die).toBe(3);
+  expect(next.pendingAdditionalMovement).toMatchObject({actorId:allyId,remainingFt:15,requiresReaction:true,immuneOpportunityActorIds:[first]});
+  expect(next.world.actors[allyId].runtime.resources.reaction).toBe(1);
+  next=clone(next);const budget=next.movementRemainingFt[allyId];
+  if(mode==='decline'){
+   next=declineAdditionalMovement(next);expect(next.pendingAdditionalMovement).toBeUndefined();
+   expect(next.world.actors[allyId].runtime.resources.reaction).toBe(1);return;
+  }
+  if(mode==='invalid'){
+   const before=JSON.stringify(next);
+   expect(()=>moveActorAlongRoute({state:next,actorId:allyId,destination:{x:5,y:5},rng:()=>{throw Error('No RNG');}})).toThrow();
+   expect(JSON.stringify(next)).toBe(before);return;
+  }
+  next=moveActorAlongRoute({state:next,actorId:allyId,destination:{x:mode==='steps'?3:1,y:5},rng:()=>0});
+  expect(next.world.actors[allyId].runtime.resources.reaction).toBe(0);
+  expect(next.world.actors[first].runtime.resources.reaction).toBe(1);
+  expect(next.world.actors[second].runtime.resources.reaction).toBe(0);
+  expect(next.tokens[allyId].position).toEqual({x:mode==='steps'?3:1,y:5});
+  expect(next.pendingAdditionalMovement).toBeUndefined();
+  expect(next.movementRemainingFt[allyId]).toBe(budget);
+ });
+});

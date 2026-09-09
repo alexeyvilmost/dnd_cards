@@ -1155,6 +1155,7 @@ function actionContext(
       immediateStraightMovementFt: facts.immediateStraightMovementFt}} : {}),
     ...(facts?.positionExchangeValidated ? {positionExchangeValidated: true as const} : {}),
     ...(facts?.commandedAttackValidated ? {commandedAttackValidated: true as const} : {}),
+    ...(facts?.maneuveringMovementValidated ? {maneuveringMovementValidated: true as const} : {}),
     ...(target && facts ? {
       // Relational condition clauses consume the same board/GM observations as
       // targeting. The executor receives facts, never a condition-specific UI
@@ -6524,6 +6525,7 @@ function spatialFactShapeIssue(facts: SpatialFacts | undefined): string | null {
     || !Number.isFinite(facts.distanceFt) || facts.distanceFt < 0
     || (facts.positionExchangeValidated !== undefined && facts.positionExchangeValidated !== true)
     || (facts.commandedAttackValidated !== undefined && facts.commandedAttackValidated !== true)
+    || (facts.maneuveringMovementValidated !== undefined && facts.maneuveringMovementValidated !== true)
     || (facts.immediateStraightMovementFt !== undefined && (!Number.isFinite(facts.immediateStraightMovementFt) || facts.immediateStraightMovementFt < 0))
     || typeof facts.lineOfSight !== 'boolean'
     || !['none', 'half', 'three_quarters', 'total'].includes(facts.cover)

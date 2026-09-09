@@ -346,6 +346,7 @@ export interface ExecuteContext {
   /** The authoritative board has validated the complete exchange before payment. */
   positionExchangeValidated?: true;
   commandedAttackValidated?: true;
+  maneuveringMovementValidated?: true;
   triggeringAttack?: TriggeringAttackContext;
   character: CharacterContext;
   /** Immutable catalog display name for effects and audit events. */

@@ -248,6 +248,7 @@ export type Relation = 'self' | 'ally' | 'enemy' | 'neutral';
 export interface SpatialFacts {
   positionExchangeValidated?: true;
   commandedAttackValidated?: true;
+  maneuveringMovementValidated?: true;
   factsSource: 'scenario' | 'board' | 'gm_ruling';
   boardRevision: number;
   distanceFt: number;

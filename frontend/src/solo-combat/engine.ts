@@ -121,6 +121,7 @@ type Rng = () => number;
 type CombatActionInput = {
   /** Supplied only by the persisted event-window resolver, never by a proactive intent. */
   triggerEvent?: string;
+  maneuveringAllyId?: string;
   triggeringAttack?: PendingTriggeredAction['triggeringAttack'];
   state: SoloCombatState;
   actorId: string;
@@ -1282,6 +1283,16 @@ function removeMountedCombatantAttackProjection(
   };
 }
 
+function maneuveringAllyIds(state: SoloCombatState, sourceId: string): string[] {
+  return Object.values(state.world.actors).filter(ally => {
+    if (ally.id === sourceId || !isPlayerControlledCombatActor(state,ally.id) || combatRelation(state,sourceId,ally.id) !== 'ally'
+      || ally.runtime.hp.current <= 0 || (ally.runtime.resources.reaction ?? 0) < 1
+      || deniedCapabilities(ally.runtime,ally.passives ?? []).has('reaction') || effectiveCombatActorSpeedFt(state,ally.id) <= 0) return false;
+    const facts=spatialFacts(state,sourceId,ally.id);
+    return facts.targetCanSeeSource || facts.targetCanHearSource;
+  }).map(ally=>ally.id);
+}
+
 function commandedAttackTargets(state: SoloCombatState, actorId: string, action: RuleActionDefinition): string[] {
   return Object.values(state.world.actors).filter(target => {
     if (target.id === actorId || target.runtime.hp.current <= 0) return false;
@@ -1410,6 +1421,11 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
   if (!action) throw new Error('Действие отсутствует в снимке боя');
   const positionExchange = preparePositionExchange(input, action);
   const commandedAttack = prepareCommandedAttack(input, action);
+  const activation = action.mechanics.activation as Record<string,unknown> | undefined;
+  const maneuvering = (activation?.trigger as Record<string,unknown> | undefined)?.maneuvering_movement === true;
+  if (maneuvering && (!input.triggerEvent || !input.maneuveringAllyId || !maneuveringAllyIds(input.state,input.actorId).includes(input.maneuveringAllyId))) {
+    throw new Error('Выберите согласного союзника с реакцией, который видит или слышит вас');
+  }
   const actorPosition = input.state.tokens[input.actorId]?.position;
   const verbalBlocked = action.kind === 'spell' && action.spell.components?.verbal === true
     && actorPosition != null
@@ -1435,6 +1451,11 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
     declaration.factsByTarget = {...declaration.factsByTarget,
       [commandedAttack.allyId]: {...spatialFacts(input.state,input.actorId,commandedAttack.allyId),
         ...declaration.factsByTarget?.[commandedAttack.allyId],commandedAttackValidated:true}};
+  }
+  if (maneuvering) {
+    declaration.factsByTarget = {...declaration.factsByTarget,
+      [input.targetIds[0]]:{...spatialFacts(input.state,input.actorId,input.targetIds[0]),
+        ...declaration.factsByTarget?.[input.targetIds[0]],maneuveringMovementValidated:true}};
   }
   const mountedProjection = mountedCombatantAttackState({
     state: input.state, actorId: input.actorId, targetIds: input.targetIds, action,
@@ -1710,7 +1731,6 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
     };
   };
   next = restoreFamiliarCapabilities(next);
-  const activation = action.mechanics.activation as Record<string, unknown> | undefined;
   if (action.id !== next.dashActionId && activation?.counts_as !== 'dash') return withTriggeredAttackOffer(next);
   const movementBeforeDash = input.state.movementRemainingFt[input.actorId]
     ?? effectiveCombatActorSpeedFt(input.state, input.actorId);
@@ -2173,6 +2193,7 @@ export function triggeredSecondaryTargetIds(state: SoloCombatState, actionId: st
   const trigger = activation?.trigger as Record<string, unknown> | undefined;
   if (!pending || !pending.optionActionIds.includes(actionId) || trigger?.secondary_target !== true) return [];
   if (pending.event === 'commanded_attack' && action) return commandedAttackTargets(state,pending.sourceActorId,action);
+  if (trigger?.maneuvering_movement === true) return maneuveringAllyIds(state,pending.sourceActorId);
   const first = state.tokens[pending.triggeringAttack?.targetActorId ?? '']?.position;
   const source = state.tokens[pending.sourceActorId]?.position;
   const reach = pending.triggeringAttack?.meleeReachFt;
@@ -2258,9 +2279,10 @@ export function resolveTriggeredCombatAction(
   const activation = chosen.mechanics.activation as Record<string, unknown> | undefined;
   const trigger = activation?.trigger as Record<string, unknown> | undefined;
   const secondary = trigger?.secondary_target === true;
+  const maneuvering = trigger?.maneuvering_movement === true;
   if (secondary) {
     if (targetIds?.length !== 1 || !triggeredSecondaryTargetIds(state, actionId).includes(targetIds[0])) {
-      throw new Error(pending.event === 'commanded_attack' ? 'Выберите доступную цель атаки союзника' : 'Выберите другую цель в 5 футах от первой и в досягаемости исходной атаки');
+      throw new Error(pending.event === 'commanded_attack' ? 'Выберите доступную цель атаки союзника' : maneuvering ? 'Выберите союзника, который может потратить реакцию на перемещение' : 'Выберите другую цель в 5 футах от первой и в досягаемости исходной атаки');
     }
   } else if (targetIds !== undefined) {
     throw new Error('Это действие не позволяет менять исходную цель');
@@ -2295,17 +2317,24 @@ export function resolveTriggeredCombatAction(
       + `урон уменьшен на ${tradeoff.effectiveDamage}.`);
   }
   const targeting = chosen.mechanics.targeting as Record<string, unknown> | undefined;
-  const chosenTargetIds = secondary ? targetIds! : targeting?.actor_targets === false ? [] : pending.targetIds;
-  const next = executeCombatActionWithD20Interrupts({
+  const chosenTargetIds = secondary && !maneuvering ? targetIds! : targeting?.actor_targets === false ? [] : pending.targetIds;
+  let next = executeCombatActionWithD20Interrupts({
     state: prepared,
+    ...(maneuvering ? {maneuveringAllyId:targetIds![0]} : {}),
     actorId: pending.sourceActorId,
     actionId,
     targetIds: chosenTargetIds,
     triggerEvent: pending.optionEvents?.[actionId] ?? (chosenTrigger.includes(pending.event) ? pending.event : chosenTrigger[0]),
-    triggeringAttack: secondary && pending.triggeringAttack ? {...pending.triggeringAttack, targetActorId: chosenTargetIds[0]} : pending.triggeringAttack,
+    triggeringAttack: secondary && !maneuvering && pending.triggeringAttack ? {...pending.triggeringAttack, targetActorId: chosenTargetIds[0]} : pending.triggeringAttack,
     choices,
     rng,
   });
+  if (maneuvering && next.outcome === 'active' && maneuveringAllyIds(next,pending.sourceActorId).includes(targetIds![0])) {
+    const allyId=targetIds![0];
+    next={...next,pendingAdditionalMovement:{actorId:allyId,remainingFt:Math.floor(effectiveCombatActorSpeedFt(next,allyId)/2),
+      provokeOpportunityAttacks:true,immuneOpportunityActorIds:[pending.targetIds[0]],requiresReaction:true}};
+    next=appendLog(next,allyId,'Маневрирующая атака: можно потратить реакцию на перемещение до половины скорости; атакованная цель не провоцируется.');
+  }
   const useKey = chosen ? generalFeatTriggeredUseKey(chosen) : null;
   if (!useKey) return next;
   const owner = next.world.actors[pending.sourceActorId];
@@ -3127,6 +3156,7 @@ function movementOpportunityEnemies(state: SoloCombatState, moverId: string, des
   if (!mover || !start) return [];
   return Object.values(state.world.actors).filter(actor => (
     !state.pendingMovementStep?.processedOpportunityActorIds.includes(actor.id)
+    && !(state.pendingAdditionalMovement?.actorId === moverId && state.pendingAdditionalMovement.immuneOpportunityActorIds?.includes(actor.id))
     && combatRelation(state, moverId, actor.id) === 'enemy' && actor.runtime.hp.current > 0
     && actor.runtime.resources.reaction > 0 && !deniedCapabilities(actor.runtime, actor.passives ?? []).has('reaction')
     && (!deniesOpportunityAttack(mover) || actorOwnsSentinel(actor))
@@ -3380,7 +3410,7 @@ export function moveActor(input: {
   // would erase that data-driven action. Effective speed is projected whenever
   // a turn starts (and when combat is created), which is where speed conditions
   // such as Ray of Frost establish the next turn's movement budget.
-  const extra = input.voluntary !== false && input.state.pendingAdditionalMovement?.actorId === input.actorId
+  let extra = input.voluntary !== false && input.state.pendingAdditionalMovement?.actorId === input.actorId
     ? input.state.pendingAdditionalMovement : undefined;
   const available = input.voluntary !== false && effectiveCombatActorSpeedFt(input.state, input.actorId) === 0
     ? 0 : (extra?.remainingFt ?? input.state.movementRemainingFt[input.actorId] ?? effectiveActorSpeedFt(actor));
@@ -3406,10 +3436,20 @@ export function moveActor(input: {
     || pending.destination.x !== input.destination.x || pending.destination.y !== input.destination.y)) {
     throw new Error('Сначала завершите прерванное перемещение');
   }
-  const prepared = input.voluntary === false ? input.state : {...input.state,
+  let prepared = input.voluntary === false ? input.state : {...input.state,
     pendingMovementStep: pending ?? {actorId: input.actorId, from: {...token.position},
       destination: {...input.destination}, maxFeet: input.maxFeet, logMovement: input.logMovement,
       processedOpportunityActorIds: []}};
+  if (extra?.requiresReaction && distance > 0) {
+    if (!canPay(actor.runtime,[{resource:'reaction'}]).ok || deniedCapabilities(actor.runtime,actor.passives ?? []).has('reaction')) {
+      throw new Error('Для дополнительного перемещения нужна реакция');
+    }
+    const paid=pay(actor.runtime,[{resource:'reaction'}]);
+    const {requiresReaction:_paid,...remainingExtra}=extra; extra=remainingExtra;
+    prepared=appendLog({...prepared,pendingAdditionalMovement:extra,
+      world:{...prepared.world,actors:{...prepared.world.actors,[actor.id]:{...actor,runtime:paid.state}}}},actor.id,
+      'Маневрирующая атака: потрачена реакция на перемещение.',paid.events.map((event,ordinal)=>({kind:'engine' as const,ordinal,sourceActorId:actor.id,actorId:actor.id,targetIds:[],event})));
+  }
   let next = input.voluntary === false || extra?.provokeOpportunityAttacks === false ? prepared
     : executeOpportunityAttacks(prepared, input.actorId, input.destination, input.rng ?? Math.random);
   if (input.voluntary !== false) {

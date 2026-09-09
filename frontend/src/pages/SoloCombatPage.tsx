@@ -809,7 +809,7 @@ export default function SoloCombatPage() {
           />
           {secondaryActionId && state.pendingTriggeredAction && (
             <section className="combat-world-control combat-world-control--selection" aria-label="Выбор второй цели">
-              <em>{state.pendingTriggeredAction.event === 'commanded_attack' ? 'Выберите цель атаки союзника.' : 'Выберите другую цель рядом с первой и в досягаемости атаки.'}</em>
+              <em>{state.pendingTriggeredAction.event === 'commanded_attack' ? 'Выберите цель атаки союзника.' : ((state.catalogActions.find(row=>row.id===secondaryActionId)?.mechanics.activation as Record<string,unknown> | undefined)?.trigger as Record<string,unknown> | undefined)?.maneuvering_movement ? 'Выберите союзника для перемещения.' : 'Выберите другую цель рядом с первой и в досягаемости атаки.'}</em>
               <button type="button" disabled={busy} onClick={() => setSecondaryActionId(null)}>Отмена</button>
             </section>
           )}

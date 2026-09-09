@@ -196,7 +196,7 @@ export default function TacticalBattleMap({
         if (position) centerOn([position]);
       }}>К персонажу</button>
       {state.pendingAdditionalMovement && !state.playerMovement && <>
-        <span role="status">Выберите клетку · до {state.pendingAdditionalMovement.remainingFt} фт.</span>
+        <span role="status">Выберите клетку · до {state.pendingAdditionalMovement.remainingFt} фт.{state.pendingAdditionalMovement.requiresReaction ? " · реакция" : ""}</span>
         <button type="button" disabled={!onDeclineAdditionalMovement} onClick={onDeclineAdditionalMovement}>Остаться на месте</button>
       </>}
     </div>
