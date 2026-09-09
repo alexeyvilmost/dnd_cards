@@ -892,7 +892,8 @@
       "required": ["mode"],
       "properties": {
         "mode": { "enum": ["active", "passive", "reaction", "triggered", "rest_decision"] },
-        "counts_as": { "enum": ["dash"] },
+        "counts_as": { "enum": ["dash", "magic"] },
+        "telekinetic_movement": { "const": true },
         "position_exchange_ft": { "const": 5 },
         "commanded_attack": { "const": true },
         "while": { "enum": ["equipped", "carried", "attuned"], "description": "Гейт применимости предмета (S2): пока надет | пока в сумке | пока настроен. Нет → equipped." },

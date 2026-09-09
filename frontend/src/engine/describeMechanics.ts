@@ -39,7 +39,7 @@ const DUR_RU: Record<string, string> = {
 };
 const RES_ICON = new Set(['action', 'bonus_action', 'reaction', 'spell_slot']);
 const RES_RU: Record<string, string> = {
-  focus: 'фокус', rage: 'ярость', superiority_die: 'кость превосходства', psi_warrior_energy_die: 'кость псионической энергии воина',
+  focus: 'фокус', rage: 'ярость', superiority_die: 'кость превосходства', psi_warrior_energy_die: 'кость псионической энергии воина', psi_warrior_telekinetic_movement: 'телекинетическое перемещение',
   channel_divinity: 'божественный канал', luck_points: 'очко удачи', bardic_inspiration: 'вдохновение',
   second_wind: 'второе дыхание', action_surge: 'прилив действий', hp: 'хиты',
   self_uses: 'заряд способности', self_item: 'использование предмета',

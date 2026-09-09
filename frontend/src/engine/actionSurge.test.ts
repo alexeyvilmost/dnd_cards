@@ -26,6 +26,11 @@ describe('Action Surge restricted action economy', () => {
     });
   });
 
+  it('does not spend Action Surge on a non-spell Magic action', () => {
+    const magic = {...action, activation:{...action.activation, counts_as:'magic'}};
+    expect(projectActionSurgeCost(magic,state(1),'nonspell')).toBe(magic);
+  });
+
   it('never makes the restricted pool available to a spell', () => {
     expect(projectActionSurgeCost(action, state(1), 'spell')).toBe(action);
   });

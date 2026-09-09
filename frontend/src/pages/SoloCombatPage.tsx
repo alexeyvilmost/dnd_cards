@@ -141,6 +141,7 @@ export default function SoloCombatPage() {
   const trustedBusyRef = useRef(false);
   const [state, setState] = useState<SoloCombatState | null>(null);
   const [secondaryActionId, setSecondaryActionId] = useState<string | null>(null);
+  const [selectedMovementTargetId, setSelectedMovementTargetId] = useState<string | null>(null);
   const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
   const [selectedActionChoices, setSelectedActionChoices] = useState<Record<string, string[]>>({});
   const [movementMode, setMovementMode] = useState(false);
@@ -515,6 +516,7 @@ export default function SoloCombatPage() {
   const chooseAction = async (action: SoloCombatState['catalogActions'][number]) => {
     if (!state || !playerTurn || busy) return;
     const wasSelected = selectedActionId === action.id;
+    setSelectedMovementTargetId(null);
     setError(null);
     setMovementMode(false);
     setDancingLightsMoveGroupId(null);
@@ -586,6 +588,18 @@ export default function SoloCombatPage() {
         return;
       }
       if (!selectedActionId) return;
+      const selectedAction=state.catalogActions.find(row=>row.id===selectedActionId)!;
+      if((selectedAction.mechanics.activation as Record<string,unknown>|undefined)?.telekinetic_movement===true){
+        if(!selectedMovementTargetId){
+          if(!actorId || actorId===activeControlledActorId || !isControlledCharacter(state,actorId))throw new Error('Выберите другое согласное существо');
+          setSelectedMovementTargetId(actorId);return;
+        }
+        if(actorId)throw new Error('Выберите свободную клетку для перемещения');
+        const targetIds=[selectedMovementTargetId];
+        const next=()=>autoResolveSystemDecisions(executeCombatAction({state,actorId:activeControlledActorId,actionId:selectedActionId,targetIds,worldPosition:position,choices:selectedActionChoices}));
+        applyIntent({type:'action',actorId:activeControlledActorId,actionId:selectedActionId,targetIds,worldPosition:position,choices:selectedActionChoices},next);
+        setSelectedActionId(null);setSelectedMovementTargetId(null);setSelectedActionChoices({});return;
+      }
       const targetIds = selectedTargetsForAction({
         state,
         actorId: activeControlledActorId,
@@ -808,6 +822,10 @@ export default function SoloCombatPage() {
               setInspectedActorId((current) => current === actorId ? null : actorId);
             }}
           />
+          {selectedActionId && (state.catalogActions.find(row=>row.id===selectedActionId)?.mechanics.activation as Record<string,unknown>|undefined)?.telekinetic_movement===true && <section className="combat-world-control combat-world-control--selection" aria-label="Выбор перемещения">
+            <em>{selectedMovementTargetId ? `Куда переместить ${state.world.actors[selectedMovementTargetId]?.name}? Выберите свободную клетку в пределах 30 фт. от цели.` : 'Выберите согласного союзника в пределах 30 фт.'}</em>
+            <button type="button" onClick={()=>{setSelectedActionId(null);setSelectedMovementTargetId(null);}}>Отмена</button>
+          </section>}
           {secondaryActionId && state.pendingTriggeredAction && (
             <section className="combat-world-control combat-world-control--selection" aria-label="Выбор второй цели">
               <em>{state.pendingTriggeredAction.event === 'commanded_attack' ? 'Выберите цель атаки союзника.' : ((state.catalogActions.find(row=>row.id===secondaryActionId)?.mechanics.activation as Record<string,unknown> | undefined)?.trigger as Record<string,unknown> | undefined)?.maneuvering_movement ? 'Выберите союзника для перемещения.' : 'Выберите другую цель рядом с первой и в досягаемости атаки.'}</em>

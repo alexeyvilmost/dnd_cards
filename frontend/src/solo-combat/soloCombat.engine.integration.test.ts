@@ -4761,3 +4761,36 @@ it.each(['hit','critical','unarmed','spell','distant','immune'])('Psionic Strike
  state=executeCombatAction({state:clone(state),actorId,actionId:attack.id,targetIds:[targetId],rng:()=>0.5});
  expect(state.pendingTriggeredAction?.optionActionIds??[]).not.toContain(strike.id);
 });
+
+
+it.each(['move','distant_destination','self','enemy','far_target','far_destination','occupied','missing','blind','surge_only','ordinary_and_surge','restrained'])('Telekinetic Movement validates before costs and transports the selected ally: %s',async mode=>{
+ const participant=fighterSeed();const actorId=participant.character.id;const actor=participant.canonical.world.actors[actorId];
+ actor.runtime.resources.psi_warrior_telekinetic_movement=1;actor.runtime.maxResources.psi_warrior_telekinetic_movement=1;
+ actor.runtime.resources.psi_warrior_energy_die=4;actor.runtime.maxResources.psi_warrior_energy_die=4;
+ const migration=readFileSync(new URL('../../../backend/migrations/psi_warrior_movement_233.go',import.meta.url),'utf8');
+ const movement=projectRuleAction({id:'23300000-0000-4000-8000-000000000001',name:'Telekinetic Movement',type:'class_feature',resource:'action',mechanics:JSON.parse(migration.match(/const psiWarriorMovement233 = `([^`]+)`/)![1])} as unknown as Action);
+ const restore=projectRuleAction({id:'23300000-0000-4000-8000-000000000002',name:'Restore movement',type:'class_feature',resource:'free_action',mechanics:JSON.parse(migration.match(/const psiWarriorMovementRestore233 = `([^`]+)`/)![1])} as unknown as Action);
+ const actions=[...participant.canonical.actions,movement,restore];actor.capabilities.actionIds.push(movement.id,restore.id);
+ participant.canonical={...participant.canonical,actions,catalog:{getAction:id=>actions.find(row=>row.id===id),listActions:()=>actions}};
+ let state=await createSoloCombatState({character:participant.character,participant,selected:[{monster:{...goblin(),max_hp:100},quantity:1}],actions:[scimitar()],effects:[],rng:()=>0.5});
+ const ally=wizardSeed();const allyId=ally.character.id;state=await addSoloCombatCharacter({state,participant:ally,rng:()=>0});
+ const enemyId=Object.values(state.world.actors).find(row=>row.kind==='monster')!.id;
+ state.tokens[actorId].position={x:4,y:4};state.tokens[allyId].position={x:5,y:4};state.tokens[enemyId].position={x:3,y:4};
+ if(mode==='far_target')state.tokens[allyId].position={x:11,y:4};
+ if(mode==='far_destination')state.tokens[allyId].position={x:2,y:4};
+ if(mode==='blind')state.world.actors[actorId].runtime.activeEffects=[{id:'blind',name:'Blinded',source:'test',mechanics:{kind:'condition',value:'blinded'}}];
+ if(mode==='restrained'){state.world.actors[allyId].runtime.activeEffects=[{id:'restrained',name:'Restrained',source:'test',mechanics:{kind:'condition',value:'restrained'}}];state.movementRemainingFt[allyId]=0;}
+ if(mode==='surge_only'||mode==='ordinary_and_surge'){state.world.actors[actorId].runtime.resources.action_surge_action=1;state.world.actors[actorId].runtime.resources.action=mode==='surge_only'?0:1;}
+ const targetId=mode==='self'?actorId:mode==='enemy'?enemyId:allyId;
+ const destination=mode==='missing'?undefined:mode==='occupied'?{x:4,y:4}:mode==='distant_destination'?{x:11,y:4}:mode==='far_destination'?{x:11,y:9}:{x:5,y:7};
+ const before=clone(state);let draws=0;
+ const perform=()=>executeCombatAction({state,actorId,actionId:movement.id,targetIds:[targetId],worldPosition:destination,rng:()=>{draws++;return 0.5;}});
+ if(!['move','distant_destination','ordinary_and_surge','restrained'].includes(mode)){expect(perform).toThrow();expect(draws).toBe(0);expect(state).toEqual(before);return;}
+ const next=perform();expect(next.tokens[allyId].position).toEqual(destination);expect(next.tokens[actorId].position).toEqual(before.tokens[actorId].position);
+ expect(next.world.actors[actorId].runtime.resources).toMatchObject({action:0,psi_warrior_telekinetic_movement:0,psi_warrior_energy_die:4});
+ expect(next.movementRemainingFt[allyId]).toBe(before.movementRemainingFt[allyId]);expect(next.world.actors[enemyId].runtime.resources.reaction).toBe(before.world.actors[enemyId].runtime.resources.reaction);
+ if(mode==='ordinary_and_surge')expect(next.world.actors[actorId].runtime.resources.action_surge_action).toBe(1);
+ const restored=executeCombatAction({state:clone(next),actorId,actionId:restore.id,targetIds:[actorId],rng:()=>0.5});
+ expect(restored.world.actors[actorId].runtime.resources).toMatchObject({action:0,psi_warrior_telekinetic_movement:1,psi_warrior_energy_die:3});
+ expect(state).toEqual(before);
+});

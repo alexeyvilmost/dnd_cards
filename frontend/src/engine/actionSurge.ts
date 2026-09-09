@@ -16,7 +16,7 @@ export function projectActionSurgeCost(
   state: RuntimeState,
   kind: 'spell' | 'nonspell',
 ): Dict {
-  if (kind === 'spell' || (state.resources[ACTION_SURGE_ACTION_RESOURCE] ?? 0) < 1) {
+  if (kind === 'spell' || (mechanics.activation as Dict | undefined)?.counts_as === 'magic' || (state.resources[ACTION_SURGE_ACTION_RESOURCE] ?? 0) < 1) {
     return mechanics;
   }
   const activation = mechanics.activation as Dict | undefined;
