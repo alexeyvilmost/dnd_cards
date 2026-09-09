@@ -1,3 +1,4 @@
+import {effectiveArmorClass} from '../rules-core/actorArmorClass';
 import { Heart, Shield, X } from 'lucide-react';
 import { effectiveCombatActorSpeedFt } from '../solo-combat/tacticalGrid';
 import type { SoloCombatState } from '../solo-combat/types';
@@ -106,7 +107,7 @@ export default function CombatActorInspector({
 
       <div className="combat-actor-inspector__vitals">
         <span><Heart size={16} /><b>{actor.runtime.hp.current}/{actor.runtime.hp.max}</b><small>HP{actor.runtime.hp.temp > 0 ? ` · ${actor.runtime.hp.temp} врем.` : ''}</small></span>
-        <span><Shield size={16} /><b>{actor.ac ?? '—'}</b><small>Класс доспеха</small></span>
+        <span><Shield size={16} /><b>{effectiveArmorClass(actor)}</b><small>Класс доспеха</small></span>
         <span><b>{effectiveSpeed}</b><small>Скорость, фт.{effectiveSpeed !== baseSpeed ? ` · базовая ${baseSpeed}` : ''}</small></span>
       </div>
 

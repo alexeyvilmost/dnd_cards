@@ -1,3 +1,4 @@
+import {effectiveArmorClass} from '../rules-core/actorArmorClass';
 import type {Action} from '../types';
 import {availableCheckManeuvers, checkManeuverChoice} from '../character/checkManeuvers';
 import SheetActionLine from '../components/SheetActionLine';
@@ -886,7 +887,7 @@ export default function SoloCombatPage() {
           : activeControlledActorId;
         const drawerCharacter = participantCharacters[drawerActorId] ?? character;
         const drawerActor = state.world.actors[drawerActorId];
-        return <aside className="combat-sheet-drawer"><button type="button" className="combat-sheet-drawer__close" onClick={() => setSheetOpen(false)} aria-label="Закрыть"><X /></button><header><h2>{drawerActor.name}</h2><p>Уровень {drawerCharacter.level} · КЗ {drawerActor.ac} · скорость {effectiveActorSpeedFt(drawerActor)} фт.</p></header><CombatCharacterSidebar
+        return <aside className="combat-sheet-drawer"><button type="button" className="combat-sheet-drawer__close" onClick={() => setSheetOpen(false)} aria-label="Закрыть"><X /></button><header><h2>{drawerActor.name}</h2><p>Уровень {drawerCharacter.level} · КЗ {effectiveArmorClass(drawerActor)} · скорость {effectiveActorSpeedFt(drawerActor)} фт.</p></header><CombatCharacterSidebar
           character={drawerCharacter}
           state={state}
           actorId={drawerActorId}

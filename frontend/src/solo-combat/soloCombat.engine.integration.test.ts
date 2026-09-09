@@ -4489,3 +4489,39 @@ describe('Riposte responds to a final incoming melee miss',()=>{
   expect(()=>resolveTriggeredCombatAction(result,option,()=>{throw Error('Duplicate RNG');})).toThrow();
  });
 });
+
+
+it.each(['self','target','insufficient','far','incapacitated','enemy','no_choice','off_turn','prone'])('Bait and Switch validates movement and recipient before payment: %s',async mode=>{
+ const participant=fighterSeed();const actorId=participant.character.id;const actor=participant.canonical.world.actors[actorId];
+ actor.character.variables={...actor.character.variables,superiority_die:{count:1,sides:8}};
+ actor.runtime.resources.superiority_die=4;actor.runtime.maxResources.superiority_die=4;
+ const bait=projectRuleAction({id:'22600000-0000-4000-8000-000000000001',name:'Bait and Switch',type:'class_feature',resource:'free_action',
+  mechanics:JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_bait_switch_226.go',import.meta.url),'utf8').match(/const battleMasterBaitSwitch226 = `([^`]+)`/)![1])} as unknown as Action);
+ const actions=[...participant.canonical.actions,bait];actor.capabilities.actionIds.push(bait.id);
+ participant.canonical={...participant.canonical,actions,catalog:{getAction:id=>actions.find(action=>action.id===id),listActions:()=>actions}};
+ let state=await createSoloCombatState({character:participant.character,participant,selected:[{monster:{...goblin(),max_hp:100},quantity:1}],actions:[scimitar()],effects:[],rng:()=>0.5});
+ const ally=wizardSeed();const allyId=ally.character.id;
+ state=await addSoloCombatCharacter({state,participant:ally,rng:()=>0});
+ const monsterId=Object.values(state.world.actors).find(actor=>actor.kind==='monster')!.id;
+ state.tokens[actorId].position={x:4,y:4};state.tokens[allyId].position={x:5,y:4};state.tokens[monsterId].position={x:3,y:4};
+ state.movementRemainingFt[actorId]=mode==='insufficient'?4:30;
+ if(mode==='far')state.tokens[allyId].position={x:7,y:4};
+ if(mode==='incapacitated')state.world.actors[allyId].runtime.activeEffects=[{id:'stunned',name:'Stunned',source:'test',mechanics:{kind:'condition',value:'stunned'}}];
+ if(mode==='prone')state.world.actors[actorId].runtime.activeEffects=[{id:'prone',name:'Prone',source:'test',mechanics:{kind:'condition',value:'prone'}}];
+ if(mode==='off_turn')state=advanceTurn(state,()=>0.5);
+ const original=clone(state);let draws=0;
+ const perform=()=>executeCombatAction({state:clone(state),actorId,actionId:bait.id,targetIds:[mode==='enemy'?monsterId:allyId],
+  choices:mode==='no_choice'?{}:{bait_ac_recipient:[mode==='target'?'target':'self']},rng:()=>{draws++;return 0.5;}});
+ if(!['self','target','prone'].includes(mode)) {expect(perform).toThrow();expect(draws).toBe(0);expect(state).toEqual(original);return;}
+ const next=perform();const recipient=mode==='target'?allyId:actorId;const other=mode==='target'?actorId:allyId;
+ expect(next.tokens[actorId].position).toEqual({x:5,y:4});expect(next.tokens[allyId].position).toEqual({x:4,y:4});
+ expect(next.movementRemainingFt[actorId]).toBe(mode==='prone'?20:25);
+ expect(next.world.actors[actorId].runtime.resources.superiority_die).toBe(3);expect(draws).toBe(1);
+ expect(next.world.actors[monsterId].runtime.resources.reaction).toBe(state.world.actors[monsterId].runtime.resources.reaction);
+ const effects=next.world.actors[recipient].runtime.activeEffects.filter(effect=>(effect.mechanics as Record<string,unknown>).stack_id==='maneuver:bait-switch');
+ expect(effects).toHaveLength(1);expect((effects[0].mechanics as Record<string,unknown>).value).toBe(5);
+ expect(next.world.actors[other].runtime.activeEffects.some(effect=>(effect.mechanics as Record<string,unknown>).stack_id==='maneuver:bait-switch')).toBe(false);
+ let roundTrip=clone(next);for(let i=0;i<3;i++)roundTrip=advanceTurn(roundTrip,()=>0.5);
+ expect(roundTrip.world.actors[recipient].runtime.activeEffects.some(effect=>(effect.mechanics as Record<string,unknown>).stack_id==='maneuver:bait-switch')).toBe(false);
+ expect(state).toEqual(original);
+});

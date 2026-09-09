@@ -975,7 +975,7 @@ function declarationFor(
       ...spatialFacts(state, actorId, targetId),
       ...(action.targeting?.requiresWilling
         && (actorId === targetId
-          || (isControlledCharacter(state, actorId) && isControlledCharacter(state, targetId)))
+          || (isPlayerControlledCombatActor(state, actorId) && isPlayerControlledCombatActor(state, targetId)))
         ? { willing: true }
         : {}),
       ...(stonework ? { stonework } : {}),
@@ -1282,11 +1282,61 @@ function removeMountedCombatantAttackProjection(
   };
 }
 
+function preparePositionExchange(input: CombatActionInput, action: RuleActionDefinition): {targetId: string; movementFt: number} | undefined {
+  const exchange = (action.mechanics.activation as Record<string, unknown> | undefined)?.position_exchange_ft;
+  if (exchange === undefined) return undefined;
+  const {state, actorId, targetIds} = input;
+  const source = state.world.actors[actorId];
+  const targetId = targetIds.length === 1 ? targetIds[0] : '';
+  const target = state.world.actors[targetId];
+  if (exchange !== 5 || activeActorId(state) !== actorId || !target || targetId === actorId
+    || !isPlayerControlledCombatActor(state, actorId) || !isPlayerControlledCombatActor(state, targetId)
+    || combatRelation(state, actorId, targetId) !== 'ally'
+    || source.runtime.hp.current <= 0 || target.runtime.hp.current <= 0 || activeConditionsOf(target.runtime).has('incapacitated')
+    || activeConditionsOf(source.runtime).has('incapacitated')
+    || effectiveCombatActorSpeedFt(state, actorId) <= 0) throw new Error('Нужен согласный дееспособный союзник рядом и возможность перемещаться');
+  const from = state.tokens[actorId]?.position;
+  const to = state.tokens[targetId]?.position;
+  if (!from || !to || gridDistanceFt(from, to) > 5) throw new Error('Для обмена позициями союзник должен быть в пределах 5 футов');
+  const movementFt = Math.max(5, movementCostThroughAreas(state, from, to, 5) + (actorMustCrawl(source) ? 5 : 0));
+  if ((state.movementRemainingFt[actorId] ?? 0) < movementFt) throw new Error(`Для обмена нужно ${movementFt} футов перемещения`);
+  return {targetId, movementFt};
+}
+
+function applyPositionExchange(before: SoloCombatState, after: SoloCombatState, actorId: string,
+  exchange: {targetId: string; movementFt: number}, rng: Rng): SoloCombatState {
+  const ids = [actorId, exchange.targetId];
+  const destinations = {[actorId]: before.tokens[exchange.targetId].position, [exchange.targetId]: before.tokens[actorId].position};
+  const crossings = ids.map(id => enteredAndExitedAreas(before, before.tokens[id].position, destinations[id], id));
+  let next: SoloCombatState = {...after,
+    tokens: {...after.tokens, ...Object.fromEntries(ids.map(id => [id, {...after.tokens[id], position: {...destinations[id]}}]))},
+    boardRevision: after.boardRevision + 1,
+    movementRemainingFt: {...after.movementRemainingFt, [actorId]: Math.max(0, (after.movementRemainingFt[actorId] ?? 0) - exchange.movementFt)},
+  };
+  for (const id of ids) {
+    next = interruptStraightMovement(next, id);
+    next = reanchorSourceCombatAreas(next, id);
+    next = breakOutOfRangeGrapples(next, id, rng);
+  }
+  next = reconcileInsideAreaConditions(next);
+  for (let index = 0; index < ids.length; index++) {
+    const crossed = crossings[index];
+    const moved = [ids[index]];
+    const movementAreaIds = Object.keys(crossed.movementOccurrences);
+    if (movementAreaIds.length) next = queueCombatAreaEvent(next, 'move', moved, movementAreaIds, true, crossed.movementOccurrences);
+    if (crossed.exited.length) next = queueCombatAreaEvent(next, 'exit', moved, crossed.exited);
+    if (crossed.entered.length) next = queueCombatAreaEvent(next, 'enter', moved, crossed.entered, true);
+  }
+  next = appendLog(next, actorId, `Обмен позициями с ${after.world.actors[exchange.targetId].name}: потрачено ${exchange.movementFt} фт. перемещения; без провоцированных атак.`);
+  return autoResolveSystemDecisions(next, rng);
+}
+
 function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
   if (input.state.outcome !== 'active') return input.state;
   if (!input.triggerEvent && activeActorId(input.state) !== input.actorId) throw new Error('Сейчас ход другого участника');
   const action = input.state.catalogActions.find((candidate) => candidate.id === input.actionId);
   if (!action) throw new Error('Действие отсутствует в снимке боя');
+  const positionExchange = preparePositionExchange(input, action);
   const actorPosition = input.state.tokens[input.actorId]?.position;
   const verbalBlocked = action.kind === 'spell' && action.spell.components?.verbal === true
     && actorPosition != null
@@ -1303,6 +1353,11 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
     input.choices,
     input.worldInput,
   );
+  if (positionExchange) {
+    declaration.factsByTarget = {...declaration.factsByTarget,
+      [positionExchange.targetId]: {...spatialFacts(input.state, input.actorId, positionExchange.targetId), ...declaration.factsByTarget?.[positionExchange.targetId], positionExchangeValidated: true},
+    };
+  }
   const mountedProjection = mountedCombatantAttackState({
     state: input.state, actorId: input.actorId, targetIds: input.targetIds, action,
   });
@@ -1458,6 +1513,7 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
     };
   }
   let next = dispatch({ state: dispatchState, command, rng, label: action.name });
+  if (positionExchange) next = applyPositionExchange(dispatchState, next, input.actorId, positionExchange, rng);
   next = applyActionTeleport(
     dispatchState,
     next,

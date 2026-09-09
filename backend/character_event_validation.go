@@ -158,7 +158,10 @@ func validateCharacterEvent(eventType string, payload JSONMap) error {
 		return optionalString(normalized, "name", "payload.name", false)
 
 	case "effect_applied":
-		if err := exactKeys(normalized, "payload", []string{"type", "name"}, []string{"sourceAction", "source"}); err != nil {
+		if err := optionalString(normalized, "ownerActorId", "payload.ownerActorId", true); err != nil {
+			return err
+		}
+		if err := exactKeys(normalized, "payload", []string{"type", "name"}, []string{"sourceAction", "source", "ownerActorId"}); err != nil {
 			return err
 		}
 		if _, err := requiredString(normalized, "name", "payload.name", false); err != nil {

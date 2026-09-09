@@ -442,7 +442,21 @@ function resolveCostAmount(value: unknown, path: string, ctx: ExecuteContext): n
 /** Validate and resolve the exact cost array that canPay/pay will receive.
  * Formula prices are reduced once to numeric values, so resources cannot be
  * checked using one amount and consumed using another. */
+function effectRecipient(effect: Dict, ctx: ExecuteContext, fallback: 'self' | 'target'): string {
+  if (effect.who_choice_id === undefined) return String(effect.who ?? fallback);
+  if (effect.resolution !== 'auto') throw mechanicsError('INVALID_MECHANICS', 'who_choice_id', 'Recipient choices require an automatic effect');
+  const choice = typeof effect.who_choice_id === 'string' ? ctx.choices?.[effect.who_choice_id] : undefined;
+  const selected = Array.isArray(choice) && choice.length === 1 ? choice[0] : typeof choice === 'string' ? choice : undefined;
+  if (selected !== 'self' && selected !== 'target') {
+    throw mechanicsError('INVALID_CHOICE', 'who_choice_id', 'Выберите получателя эффекта');
+  }
+  return selected;
+}
+
 function preflightActivationCost(mechanics: Dict, ctx: ExecuteContext): Dict[] {
+  if ((mechanics.activation as Dict | undefined)?.position_exchange_ft !== undefined && !ctx.positionExchangeValidated) {
+    throw mechanicsError('INVALID_MECHANICS', 'activation.position_exchange_ft', 'Обмен позициями требует выбора союзника и проверки перемещения на поле боя');
+  }
   if (mechanics.activation === undefined) return [];
   if (!isDict(mechanics.activation)) {
     throw mechanicsError('INVALID_MECHANICS', 'mechanics.activation', 'activation must be an object');
@@ -543,7 +557,7 @@ function preflightModifier(
     const formula = typeof payload.value === 'string'
       ? payload.value.replace(/^\+/, '')
       : payload.value;
-    assertFiniteFormula(formula, `${path}.value`, ctx, targetOwned);
+    assertFiniteFormula(formula, `${path}.value`, ctx, payload.value_timing === 'on_apply' ? false : targetOwned);
   }
   if (op === 'set_die' || op === 'bonus_die') {
     const faces = Number(payload.faces ?? payload.die ?? payload.value);
@@ -1243,7 +1257,7 @@ function preflightEffect(
   if (!EXECUTABLE_RESOLUTIONS.has(resolution)) {
     throw mechanicsError('UNKNOWN_RESOLUTION', `${path}.resolution`, `executor does not own resolution «${resolution || '?'}»`);
   }
-  const targetOwned = String(value.who ?? (resolution === 'auto' ? 'self' : 'target')) === 'target';
+  const targetOwned = effectRecipient(value, ctx, resolution === 'auto' ? 'self' : 'target') === 'target';
   const outcomes = resolution === 'auto'
     ? ['result', 'results']
     : resolution === 'attack_roll'
@@ -1866,6 +1880,7 @@ function applyModifierPayload(
     type: 'effect_applied',
     name: modifierApplicationLabel(displaySource, payload),
     sourceAction: displaySource,
+    ...(ownerActorId ? {ownerActorId} : {}),
   });
   return stackApply(state, entry, payload);
 }
@@ -4389,7 +4404,7 @@ function runMechanicEffects(
       // Ярус 1.2: choice как самостоятельная интеракция действия — через общий роутер payload-ов
       // (там case 'choice' развернёт выбор из ctx.choices). Иначе бы упал в NOT_IMPLEMENTED resolution.
       if (eff.kind === 'choice') {
-        const whoTarget = String(eff.who ?? 'self') === 'target'
+        const whoTarget = effectRecipient(eff, ctx, 'self') === 'target'
           && (!!targetRef.state || targetRef.aliasesSelf === true);
         next = applyPayloads([eff], next, ctx, events, sourceName, 'main', false, whoTarget, targetRef);
         continue;
@@ -4397,7 +4412,7 @@ function runMechanicEffects(
       if (resolution === 'auto') {
         const results = (eff.result ?? eff.results) as Dict[] | undefined;
         if (Array.isArray(results)) {
-          const whoTarget = String(eff.who ?? 'self') === 'target'
+          const whoTarget = effectRecipient(eff, ctx, 'self') === 'target'
             && (!!targetRef.state || targetRef.aliasesSelf === true);
           next = applyPayloads(results, next, ctx, events, sourceName, 'main', false, whoTarget, targetRef, criticalDamage);
         }

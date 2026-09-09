@@ -35,7 +35,7 @@ func TestValidateCharacterEventAcceptsCurrentEngineEventUnion(t *testing.T) {
 		{"type": "resource_restored", "resource": "second_wind", "amount": float64(1), "current": float64(1)},
 		{"type": "item_consumed", "cardId": "potion", "amount": float64(1), "remaining": float64(0), "name": "Potion"},
 		{"type": "item_added", "cardId": "arrow", "qty": float64(2), "total": float64(20), "name": "Arrow"},
-		{"type": "effect_applied", "name": "Bless", "sourceAction": "Cast", "source": "Cleric"},
+		{"type": "effect_applied", "name": "Bless", "sourceAction": "Cast", "source": "Cleric", "ownerActorId": "ally"},
 		{"type": "effect_expired", "name": "Bless"},
 		{"type": "condition_applied", "condition": "prone", "source": "Topple"},
 		{"type": "condition_immune", "condition": "poisoned", "sourceEntityIds": []any{}, "source": "Dwarf"},

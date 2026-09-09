@@ -1,3 +1,4 @@
+import {effectiveArmorClass} from './actorArmorClass';
 import { resolveDamageCalculation } from './legacy/engineAdapter';
 import {CORE_WEAPON_ATTACK, systemActionAsRuleDefinition, unarmedDamageActionFor, weaponAttackAction} from './attackDefinitions';
 import {meleeWeaponDefenseEligible, singleAttackDefenseBonus} from './attackDefenseRuntime';
@@ -7,7 +8,6 @@ import {
   canHear,
   applyIncomingDamage,
   applyDamageConsequences,
-  armorClassValue,
   breakdownValue,
   bindEquippedWeaponActionContext,
   canPay,
@@ -1113,12 +1113,6 @@ function passiveModifierSourceEntityIds(
   });
 }
 
-function effectiveArmorClass(actor: ActorState, runtime = actor.runtime): number {
-  const withoutTransient = { ...runtime, activeEffects: [] };
-  const baseline = armorClassValue(actor.character, withoutTransient, actor.passives ?? []).value;
-  const projected = armorClassValue(actor.character, runtime, actor.passives ?? []).value;
-  return (actor.ac ?? baseline) + (projected - baseline);
-}
 
 /** Runtime transformations (for example Goliath Large Form) must participate
  * in every relative-size rule, not only in the sheet projection. */
@@ -1159,6 +1153,7 @@ function actionContext(
     nextId: env.nextId,
     ...(facts ? {attackFacts: {nearbyEligibleAllyToTarget: facts.nearbyEligibleAllyToTarget,
       immediateStraightMovementFt: facts.immediateStraightMovementFt}} : {}),
+    ...(facts?.positionExchangeValidated ? {positionExchangeValidated: true as const} : {}),
     ...(target && facts ? {
       // Relational condition clauses consume the same board/GM observations as
       // targeting. The executor receives facts, never a condition-specific UI
@@ -1212,7 +1207,7 @@ function engineTrace(
     payload: {
       type: 'EngineEventRecorded',
       actorId,
-      targetIds,
+      targetIds: event.type === 'effect_applied' && event.ownerActorId ? [event.ownerActorId] : targetIds,
       event,
       ...(audit?.facts ? { facts: audit.facts } : {}),
     },
@@ -6526,6 +6521,7 @@ function spatialFactShapeIssue(facts: SpatialFacts | undefined): string | null {
   }
   if (!Number.isInteger(facts.boardRevision) || facts.boardRevision < 0
     || !Number.isFinite(facts.distanceFt) || facts.distanceFt < 0
+    || (facts.positionExchangeValidated !== undefined && facts.positionExchangeValidated !== true)
     || (facts.immediateStraightMovementFt !== undefined && (!Number.isFinite(facts.immediateStraightMovementFt) || facts.immediateStraightMovementFt < 0))
     || typeof facts.lineOfSight !== 'boolean'
     || !['none', 'half', 'three_quarters', 'total'].includes(facts.cover)

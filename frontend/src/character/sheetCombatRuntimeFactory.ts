@@ -52,7 +52,9 @@ function resolveSheetCombatArmorClass(
   runtime: RuntimeState,
   passives: Record<string, unknown>[],
 ): number {
-  return armorClassValue(character, runtime, passives).value;
+  // Canonical actor.ac is the equipped baseline. The combat engine adds the
+  // current active-effect delta on every attack; baking it here doubles it on reload.
+  return armorClassValue(character, {...runtime, activeEffects: []}, passives).value;
 }
 
 

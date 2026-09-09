@@ -892,6 +892,7 @@
       "properties": {
         "mode": { "enum": ["active", "passive", "reaction", "triggered", "rest_decision"] },
         "counts_as": { "enum": ["dash"] },
+        "position_exchange_ft": { "const": 5 },
         "while": { "enum": ["equipped", "carried", "attuned"], "description": "Гейт применимости предмета (S2): пока надет | пока в сумке | пока настроен. Нет → equipped." },
         "consumes_self": { "type": "boolean", "deprecated": true, "description": "Legacy authoring marker without runtime semantics. Migrate to activation.cost {resource:'self_item'}." },
         "cost": { "type": "array", "items": { "$ref": "#/$defs/cost" } },
@@ -1054,6 +1055,7 @@
         "on_miss": { "$ref": "#/$defs/outcome" },
 
         "who": { "enum": ["target", "self"] },
+        "who_choice_id": { "type": "string", "minLength": 1 },
         "dc": { "$ref": "#/$defs/formula" },
         "on_fail": { "$ref": "#/$defs/outcome" },
         "on_success": { "$ref": "#/$defs/outcome" },

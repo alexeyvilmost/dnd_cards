@@ -63,6 +63,9 @@ describe('combat actor inspector defenses', () => {
     const html = renderToStaticMarkup(createElement(CombatActorInspector, {
       state, actorId: 'goblin', onClose: () => {},
     }));
+    state.world.actors.goblin.runtime.activeEffects.push({id: 'bait', name: 'Bait', source: 'fighter', mechanics: {kind: 'modifier', op: 'add', value: 7, applies_to: {roll: 'ac'}}});
+    const protectedHtml = renderToStaticMarkup(createElement(CombatActorInspector, {state, actorId: 'goblin', onClose: () => {}}));
+    expect(protectedHtml).toContain('<b>22</b><small>Класс доспеха</small>');
     expect(html).toContain('Отравлен');
     expect(html).toContain('Источник: Луч болезни');
     expect(html).toContain('Длительность: до конца следующего хода источника');

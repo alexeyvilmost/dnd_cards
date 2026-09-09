@@ -246,6 +246,7 @@ export type Relation = 'self' | 'ally' | 'enemy' | 'neutral';
  * проверяемые факты конкретной ревизии, а не координаты и не доверенный UI patch.
  */
 export interface SpatialFacts {
+  positionExchangeValidated?: true;
   factsSource: 'scenario' | 'board' | 'gm_ruling';
   boardRevision: number;
   distanceFt: number;

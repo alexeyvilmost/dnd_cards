@@ -1,3 +1,4 @@
+import {effectiveArmorClass} from '../rules-core/actorArmorClass';
 import { describe, expect, it, vi } from 'vitest';
 import type { RuntimeState } from '../mvp/contracts';
 import type { Action, Card, PassiveEffect } from '../types';
@@ -41,6 +42,20 @@ describe('sheet -> combat action inventory adapter', () => {
       knownCards: [...(FIGHTER_CTX_EQUIPPED.knownCards ?? []), CARD_CHAIN_MAIL],
     };
     expect(resolveSheetCombatArmorClass(character, state, [defense])).toBe(17);
+  });
+
+  it('keeps transient AC out of the equipped baseline when rebuilding a saved participant', () => {
+    const {state} = equipItem(freshFighterState(), CARD_CHAIN_MAIL);
+    state.activeEffects = [{id:'bait',name:'Bait and Switch',source:'fighter',mechanics:{kind:'modifier',op:'add',value:5,applies_to:{roll:'ac'}}}];
+    const character={...FIGHTER_CTX_EQUIPPED,knownCards:[...(FIGHTER_CTX_EQUIPPED.knownCards??[]),CARD_CHAIN_MAIL]};
+    expect(resolveSheetCombatArmorClass(character,state,[])).toBe(16);
+    const actor={character,runtime:state,ac:resolveSheetCombatArmorClass(character,state,[]),passives:[]};
+    expect(effectiveArmorClass(actor)).toBe(21);
+    expect(effectiveArmorClass(JSON.parse(JSON.stringify(actor)))).toBe(21);
+    expect(state.activeEffects).toHaveLength(1);
+    state.activeEffects=[];
+    expect(effectiveArmorClass(actor)).toBe(16);
+    expect(resolveSheetCombatArmorClass(character,state,[])).toBe(16);
   });
 
   it('hydrates every carried list row through the detail endpoint before combat', async () => {

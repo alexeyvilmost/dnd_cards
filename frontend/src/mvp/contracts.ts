@@ -78,7 +78,7 @@ export type EngineEvent =
   | { type: 'resource_restored'; resource: string; amount: number; current: number }
   | { type: 'item_consumed'; cardId: string; amount: number; remaining: number; name?: string }
   | { type: 'item_added'; cardId: string; qty: number; total: number; name?: string }
-  | { type: 'effect_applied'; name: string; sourceAction?: string; source?: string }
+  | { type: 'effect_applied'; name: string; sourceAction?: string; source?: string; ownerActorId?: string }
   | { type: 'effect_expired'; name: string }
   | { type: 'condition_applied'; condition: string; source?: string }
   | {
@@ -343,6 +343,8 @@ export interface TriggeringAttackContext {
 }
 
 export interface ExecuteContext {
+  /** The authoritative board has validated the complete exchange before payment. */
+  positionExchangeValidated?: true;
   triggeringAttack?: TriggeringAttackContext;
   character: CharacterContext;
   /** Immutable catalog display name for effects and audit events. */
