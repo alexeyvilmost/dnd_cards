@@ -250,6 +250,8 @@ export interface SpatialFacts {
   positionExchangeValidated?: true;
   telekineticMovementValidated?: true;
   telekineticObjectId?: string;
+  telekineticHandMode?: 'to_hand' | 'from_hand';
+  telekineticHand?: 'main_hand' | 'off_hand';
   commandedAttackValidated?: true;
   maneuveringMovementValidated?: true;
   factsSource: 'scenario' | 'board' | 'gm_ruling';
@@ -1575,6 +1577,7 @@ export interface ProtectionEffectEndedEvent {
 }
 
 export type RuleEventPayload =
+  | {type: 'ActorItemContentRecorded'; actorId: string; card: Card}
   | ActorRuntimePatchedEvent
   | ActorDeathAdjudicatedEvent
   | EquipmentChangedEvent

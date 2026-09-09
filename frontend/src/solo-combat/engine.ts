@@ -1,4 +1,4 @@
-import {isLooseTelekineticObject} from '../rules-core/telekineticMovement';
+import {telekineticObjectIssue} from '../rules-core/telekineticMovement';
 import {heldItemDropIssue} from '../engine/heldItemDrop';
 import {heldItemRequirementIssue} from '../engine/actionRequirements';
 import type {EngineEvent} from '../mvp/contracts';
@@ -1429,7 +1429,7 @@ function applyPositionExchange(before: SoloCombatState, after: SoloCombatState, 
   return autoResolveSystemDecisions(next, rng);
 }
 
-type TelekineticTransport = {targetId: string; destination: GridPosition; objectId?: string};
+type TelekineticTransport = {targetId: string; destination: GridPosition; objectId?: string; handMode?: 'to_hand' | 'from_hand'; hand?: 'main_hand' | 'off_hand'};
 
 function objectSightFacts(state: SoloCombatState, actorId: string, position: GridPosition) {
   let probeId = '__telekinetic_object__';
@@ -1445,18 +1445,27 @@ function prepareTelekineticMovement(input: CombatActionInput, action: RuleAction
   const objectIds = input.choices?.telekinetic_object_id;
   if (objectIds) {
     const objectId = objectIds.length === 1 ? objectIds[0] : '';
-    const object = state.world.objects[objectId];
-    const origin = state.worldObjectPositions?.[objectId];
-    if (targetId !== actorId || !isLooseTelekineticObject(object) || !origin) throw new Error('Выберите незакреплённый предмет не больше Большого, который никто не носит');
+    const handModes = input.choices?.telekinetic_hand_mode;
+    const hands = input.choices?.telekinetic_hand;
+    if (handModes && (handModes.length !== 1 || !['to_hand', 'from_hand'].includes(handModes[0]))) throw new Error('Выберите способ переноса');
+    if (handModes && (!hands || hands.length !== 1 || !['main_hand', 'off_hand'].includes(hands[0]))) throw new Error('Выберите руку');
+    if (!handModes && hands) throw new Error('Не выбран способ переноса в руку');
+    const handMode = handModes?.[0] as TelekineticTransport['handMode'];
+    const hand = hands?.[0] as TelekineticTransport['hand'];
+    const origin = handMode === 'from_hand' ? state.tokens[actorId]?.position : state.worldObjectPositions?.[objectId];
+    if (targetId !== actorId || !origin) throw new Error('Выберите предмет на поле');
     const facts = objectSightFacts(state, actorId, origin);
+    const issue = telekineticObjectIssue(state.world, actorId, {...facts, telekineticObjectId: objectId, telekineticHandMode: handMode, telekineticHand: hand});
+    if (issue) throw new Error(issue);
     if (facts.distanceFt > 30 || !facts.canSeeTarget) throw new Error('Предмет должен быть виден в пределах 30 фт.');
     if (!worldPosition || !Number.isInteger(worldPosition.x) || !Number.isInteger(worldPosition.y)
       || worldPosition.x < 0 || worldPosition.y < 0 || worldPosition.x >= TACTICAL_WIDTH || worldPosition.y >= TACTICAL_HEIGHT) throw new Error('Выберите клетку на поле');
     if (gridDistanceFt(origin, worldPosition) > 30) throw new Error('Предмет можно переместить не более чем на 30 фт.');
-    if (occupiedPositions(state).has(`${worldPosition.x}:${worldPosition.y}`)
-      || Object.entries(state.worldObjectPositions ?? {}).some(([id, point]) => id !== objectId && samePosition(point, worldPosition))) throw new Error('Выберите свободную клетку');
+    if (handMode === 'to_hand' && !samePosition(worldPosition, state.tokens[actorId].position)) throw new Error('Для переноса в руку выберите свою клетку');
+    if (handMode !== 'to_hand' && (occupiedPositions(state).has(`${worldPosition.x}:${worldPosition.y}`)
+      || Object.entries(state.worldObjectPositions ?? {}).some(([id, point]) => id !== objectId && samePosition(point, worldPosition)))) throw new Error('Выберите свободную клетку');
     if (!objectSightFacts(state, actorId, worldPosition).canSeeTarget) throw new Error('Место назначения должно быть видно');
-    return {targetId, destination: worldPosition, objectId};
+    return {targetId, destination: worldPosition, objectId, handMode, hand};
   }
   const target=state.world.actors[targetId];
   if(!target || actorId===targetId || !isPlayerControlledCombatActor(state,targetId)
@@ -1475,9 +1484,11 @@ function prepareTelekineticMovement(input: CombatActionInput, action: RuleAction
 function applyTelekineticMovement(before:SoloCombatState,after:SoloCombatState,prepared:TelekineticTransport,rng:Rng):SoloCombatState {
   const {targetId,destination}=prepared;
   if (prepared.objectId) {
-    return appendLog({...after, worldObjectPositions: {...after.worldObjectPositions,
-      [prepared.objectId]: {...destination}}, boardRevision: after.boardRevision + 1}, targetId,
-      'Предмет перемещён телекинезом.');
+    const positions = {...after.worldObjectPositions};
+    if (prepared.handMode === 'to_hand') delete positions[prepared.objectId];
+    else positions[prepared.objectId] = {...destination};
+    return appendLog({...after, worldObjectPositions: positions, boardRevision: after.boardRevision + 1}, targetId,
+      prepared.handMode === 'to_hand' ? 'Предмет перенесён в руку.' : prepared.handMode === 'from_hand' ? 'Предмет перенесён из руки на поле.' : 'Предмет перемещён телекинезом.');
   }
   const crossing=enteredAndExitedAreas(before,before.tokens[targetId].position,destination,targetId);
   let next:SoloCombatState={...after,tokens:{...after.tokens,[targetId]:{...after.tokens[targetId],position:{...destination}}},boardRevision:after.boardRevision+1};
@@ -1524,11 +1535,11 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
   if (telekineticMovement) {
     const facts = spatialFacts(input.state,input.actorId,telekineticMovement.targetId);
     const objectFacts = telekineticMovement.objectId
-      ? objectSightFacts(input.state, input.actorId, input.state.worldObjectPositions![telekineticMovement.objectId]) : undefined;
+      ? objectSightFacts(input.state, input.actorId, telekineticMovement.handMode === 'from_hand' ? input.state.tokens[input.actorId].position : input.state.worldObjectPositions![telekineticMovement.objectId]) : undefined;
     declaration.factsByTarget = {...declaration.factsByTarget, [telekineticMovement.targetId]: {...facts,
       ...(objectFacts ? {distanceFt: objectFacts.distanceFt, canSeeTarget: objectFacts.canSeeTarget, lineOfSight: objectFacts.lineOfSight} : {}),
       telekineticMovementValidated: true, willing: true,
-      ...(telekineticMovement.objectId ? {telekineticObjectId: telekineticMovement.objectId} : {})}};
+      ...(telekineticMovement.objectId ? {telekineticObjectId: telekineticMovement.objectId, telekineticHandMode: telekineticMovement.handMode, telekineticHand: telekineticMovement.hand} : {})}};
   }
   if (positionExchange) {
     declaration.factsByTarget = {...declaration.factsByTarget,

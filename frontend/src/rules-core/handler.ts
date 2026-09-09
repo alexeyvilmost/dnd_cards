@@ -1,5 +1,5 @@
-import {isLooseTelekineticObject} from './telekineticMovement';
-import {heldItemDropWorldEvents} from './heldItemWorld';
+import {telekineticObjectIssue, telekineticHandEvents} from './telekineticMovement';
+import {heldItemDropWorldEvents, consumedHeldItemWorldEvents} from './heldItemWorld';
 import {effectiveArmorClass} from './actorArmorClass';
 import { resolveDamageCalculation } from './legacy/engineAdapter';
 import {CORE_WEAPON_ATTACK, systemActionAsRuleDefinition, unarmedDamageActionFor, weaponAttackAction} from './attackDefinitions';
@@ -11470,7 +11470,7 @@ function executeCommand(
       if ((action.mechanics.activation as Record<string,unknown>|undefined)?.telekinetic_movement === true) {
         const targetId=command.targetIds.length===1?command.targetIds[0]:'';
         const observed=command.factsByTarget?.[targetId];
-        if(!observed?.telekineticMovementValidated || observed.canSeeTarget!==true || observed.distanceFt>30 || (observed.telekineticObjectId ? targetId!==actor.id || !isLooseTelekineticObject(world.objects[observed.telekineticObjectId]) : targetId===actor.id || observed.willing!==true)) return rejected(world,'InvalidFacts','Телекинетическое перемещение требует выбора согласной цели и свободного места на поле');
+        if(!observed?.telekineticMovementValidated || observed.canSeeTarget!==true || observed.distanceFt>30 || (observed.telekineticObjectId ? targetId!==actor.id || telekineticObjectIssue(world, actor.id, observed) !== null : targetId===actor.id || observed.willing!==true)) return rejected(world,'InvalidFacts','Телекинетическое перемещение требует выбора согласной цели и свободного места на поле');
       }
       const disarmIssue = disarmingSelectionIssue(action.mechanics, world.actors[command.targetIds[0]]?.runtime, command.choices);
       if(disarmIssue)return rejected(world,'InvalidDecision',disarmIssue);
@@ -11825,6 +11825,13 @@ export function handleCommand(
   };
   const execution = executeCommand(world, command, catalog, commandEnv);
   if (!Array.isArray(execution)) return execution;
+  if (command.type === 'UseAction' && (catalog.getAction(command.actionId)?.mechanics.activation as Record<string, unknown> | undefined)?.telekinetic_movement === true) {
+    const facts = command.factsByTarget?.[command.actorId];
+    if (facts?.telekineticObjectId && facts.telekineticHandMode) {
+      const paid = foldEvents(world, execution.map((event, ordinal) => ({...event, ordinal})));
+      execution.push(...telekineticHandEvents(paid, paid.actors[command.actorId], facts));
+    }
+  }
 
   // Cross-cutting lifecycle rules are generic post-conditions of every
   // accepted command, so individual spells/features cannot forget them.
@@ -11911,6 +11918,7 @@ export function handleCommand(
     ...execution,
     ...terminal.events,
     ...heldItemDropWorldEvents(world, postTerminal, execution, command.commandId),
+    ...consumedHeldItemWorldEvents(postTerminal, execution),
     ...automaticArmorOfAgathysEnds,
     ...automaticFamiliarDisappears,
     ...automaticGrappleEnds,

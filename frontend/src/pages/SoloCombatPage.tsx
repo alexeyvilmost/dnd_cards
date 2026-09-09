@@ -1,4 +1,4 @@
-import {isLooseTelekineticObject} from '../rules-core/telekineticMovement';
+import {isLooseTelekineticObject, telekineticHeldObjects} from '../rules-core/telekineticMovement';
 import {effectiveArmorClass} from '../rules-core/actorArmorClass';
 import type {Action} from '../types';
 import {availableCheckManeuvers, checkManeuverChoice} from '../character/checkManeuvers';
@@ -595,9 +595,11 @@ export default function SoloCombatPage() {
           if (actorId && actorId !== activeControlledActorId && isControlledCharacter(state, actorId)) {
             setSelectedMovementTargetId(actorId); return;
           }
-          const objects = Object.values(state.world.objects).filter(object => {
+          const candidates = [...Object.values(state.world.objects), ...telekineticHeldObjects(state.world, activeControlledActorId).filter(object => !state.world.objects[object.id])];
+          const objects = candidates.filter(object => {
             const point = state.worldObjectPositions?.[object.id];
-            return isLooseTelekineticObject(object) && point?.x === position.x && point?.y === position.y;
+            return (isLooseTelekineticObject(object) && point?.x === position.x && point?.y === position.y)
+              || (actorId === activeControlledActorId && object.size === 'tiny' && object.heldByActorId === actorId);
           });
           if (!objects.length) throw new Error('Выберите согласного союзника или свободный предмет на поле');
           const items = objects.map(object => {
@@ -607,13 +609,23 @@ export default function SoloCombatPage() {
           const choice = objects.length === 1 ? {telekinetic_object_id: [objects[0].id]}
             : await choiceDialog.request([{id: 'telekinetic_object_id', prompt: 'Какой предмет переместить?', count: 1, source: 'explicit', context: 'in_play', origin: {kind: 'other', id: selectedAction.id, name: selectedAction.name}, items, recommended: [items[0].id]}], selectedAction.name);
           if (!choice) return;
-          setSelectedActionChoices({...selectedActionChoices, ...choice});
+          const selectedObject = objects.find(object => object.id === choice.telekinetic_object_id[0])!;
+          setSelectedActionChoices({...selectedActionChoices, ...choice, ...(selectedObject.heldByActorId === activeControlledActorId ? {telekinetic_hand_mode: ['from_hand'], telekinetic_hand: [selectedObject.heldInHand!]} : {})});
           setSelectedMovementTargetId(activeControlledActorId); return;
         }
-        if(actorId)throw new Error('Выберите свободную клетку для перемещения');
+        let choices = selectedActionChoices;
+        const object = state.world.objects[choices.telekinetic_object_id?.[0]];
+        if (actorId === activeControlledActorId && object?.size === 'tiny' && !choices.telekinetic_hand_mode) {
+          const hands = (['main_hand', 'off_hand'] as const).filter(hand => !state.world.actors[actorId].runtime.equipment[hand]
+            && !Object.values(state.world.objects).some(row => row.heldByActorId === actorId && row.heldInHand === hand));
+          if (!hands.length) throw new Error('Обе руки заняты');
+          const chosen = hands.length === 1 ? {telekinetic_hand: [hands[0]]} : await choiceDialog.request([{id: 'telekinetic_hand', prompt: 'В какую руку?', count: 1, source: 'explicit', context: 'in_play', origin: {kind: 'other', id: selectedAction.id, name: selectedAction.name}, items: hands.map(hand => ({id: hand, name: hand === 'main_hand' ? 'Основная рука' : 'Вторая рука'})), recommended: [hands[0]]}], selectedAction.name);
+          if (!chosen) return;
+          choices = {...choices, ...chosen, telekinetic_hand_mode: ['to_hand']};
+        } else if(actorId) throw new Error('Выберите свободную клетку для перемещения');
         const targetIds=[selectedMovementTargetId];
-        const next=()=>autoResolveSystemDecisions(executeCombatAction({state,actorId:activeControlledActorId,actionId:selectedActionId,targetIds,worldPosition:position,choices:selectedActionChoices}));
-        applyIntent({type:'action',actorId:activeControlledActorId,actionId:selectedActionId,targetIds,worldPosition:position,choices:selectedActionChoices},next);
+        const next=()=>autoResolveSystemDecisions(executeCombatAction({state,actorId:activeControlledActorId,actionId:selectedActionId,targetIds,worldPosition:position,choices}));
+        applyIntent({type:'action',actorId:activeControlledActorId,actionId:selectedActionId,targetIds,worldPosition:position,choices},next);
         setSelectedActionId(null);setSelectedMovementTargetId(null);setSelectedActionChoices({});return;
       }
       const targetIds = selectedTargetsForAction({
@@ -839,7 +851,7 @@ export default function SoloCombatPage() {
             }}
           />
           {selectedActionId && (state.catalogActions.find(row=>row.id===selectedActionId)?.mechanics.activation as Record<string,unknown>|undefined)?.telekinetic_movement===true && <section className="combat-world-control combat-world-control--selection" aria-label="Выбор перемещения">
-            <em>{selectedMovementTargetId ? `Выберите свободную клетку в пределах 30 фт. от ${selectedActionChoices.telekinetic_object_id ? 'предмета' : 'цели'}.` : 'Выберите согласного союзника или свободный предмет в пределах 30 фт.'}</em>
+            <em>{selectedMovementTargetId ? `Выберите свободную клетку в пределах 30 фт. от ${selectedActionChoices.telekinetic_object_id ? 'предмета' : 'цели'}.${state.world.objects[selectedActionChoices.telekinetic_object_id?.[0]]?.size === 'tiny' && !selectedActionChoices.telekinetic_hand_mode ? ' Чтобы взять предмет в руку, выберите себя.' : ''}` : 'Выберите согласного союзника или свободный предмет в пределах 30 фт. Для переноса из своей руки выберите себя.'}</em>
             <button type="button" onClick={()=>{setSelectedActionId(null);setSelectedMovementTargetId(null);}}>Отмена</button>
           </section>}
           {secondaryActionId && state.pendingTriggeredAction && (

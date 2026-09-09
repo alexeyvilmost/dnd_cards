@@ -1,3 +1,5 @@
+import {telekineticHeldObjects} from '../rules-core/telekineticMovement';
+import {migrateWorldState} from '../rules-core/worldMigration';
 import {withDeclaredTestWeaponProfile} from '../testing/weaponProfileFixtures';
 import { describe, expect, it } from 'vitest';
 import {readFileSync} from 'node:fs';
@@ -4822,4 +4824,62 @@ it.each(['move','large','tiny','owned','huge','secured','held','carried','attend
  expect(next.world.actors[actorId].runtime.resources).toMatchObject({action:0,psi_warrior_telekinetic_movement:0});
  expect(next.world.actors[actorId].runtime.inventory).toEqual(before.world.actors[actorId].runtime.inventory);
  expect(clone(next).worldObjectPositions?.object).toEqual(destination);expect(state).toEqual(before);
+});
+
+
+it.each(['round_trip','existing_card','consume_last','virtual_held','occupied_hand','held_slot','small','held_other','far','wrong_destination','missing_hand','unknown_card'])('Tiny Telekinetic hand transfer keeps one physical object and survives reload: %s', async mode => {
+ const participant=fighterSeed();const actorId=participant.character.id;const actor=participant.canonical.world.actors[actorId];
+ actor.runtime.resources.psi_warrior_telekinetic_movement=1;actor.runtime.maxResources.psi_warrior_telekinetic_movement=1;
+ const migration=readFileSync(new URL('../../../backend/migrations/psi_warrior_movement_233.go',import.meta.url),'utf8');
+ const mechanics=JSON.parse(migration.match(/const psiWarriorMovement233 = `([^`]+)`/)![1]);mechanics.targeting.allowed_relations=['self','ally'];
+ const movement=projectRuleAction({id:'23300000-0000-4000-8000-000000000001',name:'Telekinetic Movement',type:'class_feature',resource:'action',mechanics} as unknown as Action);
+ const actions=[...participant.canonical.actions,movement];actor.capabilities.actionIds.push(movement.id);
+ participant.canonical={...participant.canonical,actions,catalog:{getAction:id=>actions.find(row=>row.id===id),listActions:()=>actions}};
+ const state=await createSoloCombatState({character:participant.character,participant,selected:[{monster:{...goblin(),max_hp:100},quantity:1}],actions:[scimitar()],effects:[],rng:()=>0.5});
+ state.tokens[actorId].position={x:4,y:4};state.world.actors[actorId].runtime.equipment.off_hand=null;
+ const enemyId=Object.values(state.world.actors).find(row=>row.kind==='monster')!.id;
+ const cardId=mode==='unknown_card'?'absent-card':CARD_LONGSWORD.id;
+ state.world.actors[actorId].character.knownCards=[...(state.world.actors[actorId].character.knownCards??[]),CARD_LONGSWORD];
+ state.world.objects.tiny={id:'tiny',name:'Small stone',kind:cardId?'item':'environment',size:mode==='small'?'small':'tiny',unattended:true,secured:false,...(cardId?{itemCardId:cardId}:{}),...(mode==='held_other'?{heldByActorId:enemyId,heldInHand:'off_hand' as const,carriedByActorId:enemyId}:{})};
+ state.worldObjectPositions={tiny:mode==='far'?{x:11,y:4}:{x:5,y:4}};
+ if(mode==='virtual_held'){
+   const runtime=state.world.actors[actorId].runtime;
+   runtime.equipment.off_hand=CARD_LONGSWORD.id;
+   state.world.actors[actorId].character.knownCards=state.world.actors[actorId].character.knownCards!.map(card=>card.id===CARD_LONGSWORD.id?{...card,mechanics:{...card.mechanics,object_size:'tiny'}}:card);
+   state.world.actors[actorId].character.equippedCards=[];
+   if(!runtime.inventory.some(row=>row.cardId===CARD_LONGSWORD.id&&row.containerId==null))runtime.inventory.push({cardId:CARD_LONGSWORD.id,qty:1});
+   const object=telekineticHeldObjects(state.world,actorId)[0];expect(object).toBeDefined();
+   const beforeQty=runtime.inventory.filter(row=>row.cardId===CARD_LONGSWORD.id&&row.containerId==null).reduce((sum,row)=>sum+row.qty,0);
+   const next=executeCombatAction({state,actorId,actionId:movement.id,targetIds:[actorId],worldPosition:{x:7,y:7},choices:{telekinetic_object_id:[object.id],telekinetic_hand_mode:['from_hand'],telekinetic_hand:['off_hand']},rng:()=>.5});
+   expect(next.worldObjectPositions?.[object.id]).toEqual({x:7,y:7});expect(next.world.objects[object.id]).toMatchObject({itemCardId:CARD_LONGSWORD.id,unattended:true});
+   expect(next.world.actors[actorId].runtime.inventory.filter(row=>row.cardId===CARD_LONGSWORD.id&&row.containerId==null).reduce((sum,row)=>sum+row.qty,0)).toBe(beforeQty-1);
+   expect(migrateWorldState(clone(next.world)).objects[object.id]).toEqual(next.world.objects[object.id]);return;
+ }
+ if(mode==='occupied_hand')state.world.actors[actorId].runtime.equipment.off_hand=CARD_SHIELD.id;
+ if(mode==='held_slot')state.world.objects.held={id:'held',name:'Held',kind:'item',size:'tiny',heldByActorId:actorId,heldInHand:'off_hand',carriedByActorId:actorId};
+ const before=clone(state);let draws=0;
+ const perform=()=>executeCombatAction({state,actorId,actionId:movement.id,targetIds:[actorId],worldPosition:mode==='wrong_destination'?{x:5,y:7}:{x:4,y:4},choices:{telekinetic_object_id:['tiny'],telekinetic_hand_mode:['to_hand'],...(mode==='missing_hand'?{}:{telekinetic_hand:['off_hand']})},rng:()=>{draws++;return .5;}});
+ if(!['round_trip','existing_card','consume_last'].includes(mode)){expect(perform).toThrow();expect(draws).toBe(0);expect(state).toEqual(before);return;}
+ const held=perform();const acquiredId=held.world.objects.tiny.itemCardId!;
+ expect(held.world.objects.tiny).toMatchObject({id:'tiny',kind:'item',heldByActorId:actorId,heldInHand:'off_hand',carriedByActorId:actorId,unattended:false});
+ expect(held.worldObjectPositions?.tiny).toBeUndefined();expect(held.world.actors[actorId].runtime.equipment.off_hand).toBe(acquiredId);
+ const qty=(scene:typeof state)=>scene.world.actors[actorId].runtime.inventory.filter(row=>row.cardId===acquiredId&&row.containerId==null).reduce((sum,row)=>sum+row.qty,0);
+ expect(qty(held)).toBe(qty(before)+1);expect(held.world.actors[actorId].character.knownCards?.some(card=>card.id===acquiredId)).toBe(true);
+ if(mode==='consume_last') {
+   const consume=projectRuleAction({id:'test:consume-held',name:'Consume',type:'class_feature',resource:'free_action',mechanics:{activation:{mode:'active',cost:[{resource:'item',card_id:acquiredId,amount:qty(held)}]},targeting:{domain:'actor',actor_targets:false,shape:'self',allowed_relations:['self'],min_targets:0,max_targets:1,range_ft:0,requires_line_of_sight:false},effects:[{resolution:'auto',result:[{kind:'narrative',description:'Consumed'}]}]}} as unknown as Action);
+   held.catalogActions.push(consume);held.world.actors[actorId].capabilities.actionIds.push(consume.id);
+   const used=executeCombatAction({state:held,actorId,actionId:consume.id,targetIds:[actorId],rng:()=>.5});
+   expect(used.world.objects.tiny).toBeUndefined();expect(used.world.actors[actorId].runtime.equipment.off_hand).toBeNull();expect(qty(used)).toBe(0);
+   expect(migrateWorldState(clone(used.world)).objects.tiny).toBeUndefined();return;
+ }
+ const restored=clone(held);restored.world=migrateWorldState(restored.world);
+ expect(restored.world.objects.tiny).toEqual(held.world.objects.tiny);
+ expect(()=>executeCombatAction({state:restored,actorId,actionId:movement.id,targetIds:[actorId],worldPosition:{x:4,y:4},choices:{telekinetic_object_id:['tiny'],telekinetic_hand_mode:['to_hand'],telekinetic_hand:['off_hand']},rng:()=>{throw new Error('Unexpected RNG');}})).toThrow();
+ // Simulate the next eligible use without changing item state; costs are checked independently above.
+ restored.world.actors[actorId].runtime.resources.action=1;restored.world.actors[actorId].runtime.resources.psi_warrior_telekinetic_movement=1;
+ const dropped=executeCombatAction({state:restored,actorId,actionId:movement.id,targetIds:[actorId],worldPosition:{x:7,y:7},choices:{telekinetic_object_id:['tiny'],telekinetic_hand_mode:['from_hand'],telekinetic_hand:['off_hand']},rng:()=>.5});
+ expect(dropped.worldObjectPositions?.tiny).toEqual({x:7,y:7});expect(dropped.world.objects.tiny.id).toBe('tiny');expect(dropped.world.objects.tiny.heldByActorId).toBeUndefined();
+ expect(dropped.world.actors[actorId].runtime.equipment.off_hand).toBeNull();expect(qty(dropped)).toBe(qty(before));
+ expect(dropped.world.actors[actorId].runtime.resources).toMatchObject({action:0,psi_warrior_telekinetic_movement:0});
+ expect(migrateWorldState(clone(dropped.world)).objects.tiny).toEqual(dropped.world.objects.tiny);expect(state).toEqual(before);
 });

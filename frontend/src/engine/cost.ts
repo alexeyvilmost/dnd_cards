@@ -39,7 +39,11 @@ function spendInventory(state: RuntimeState, cardId: string, qty: number): Runti
   const inventory = state.inventory
     .map((row, i) => (take.has(i) ? { ...row, qty: row.qty - (take.get(i) ?? 0) } : { ...row }))
     .filter((row) => row.qty > 0);
-  return { ...state, inventory };
+  const equipment = {...state.equipment};
+  if (!inventory.some(row => row.cardId === cardId && row.containerId == null && row.qty > 0)) {
+    for (const hand of ['main_hand', 'off_hand'] as const) if (equipment[hand] === cardId) equipment[hand] = null;
+  }
+  return { ...state, inventory, equipment };
 }
 
 /** Ключ ресурса: канон схемы {resource:'spell_slot', level:N} → spell_slot_N. */

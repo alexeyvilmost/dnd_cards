@@ -135,6 +135,14 @@ export function evolve(world: WorldState, payload: RuleEventPayload): WorldState
         },
       };
     }
+    case 'ActorItemContentRecorded': {
+      const actor = world.actors[payload.actorId];
+      if (!actor) throw new Error(`Unknown item recipient ${payload.actorId}`);
+      const knownCards = actor.character.knownCards ?? [];
+      if (knownCards.some(card => card.id === payload.card.id)) return world;
+      return {...world, actors: {...world.actors, [actor.id]: {...actor,
+        character: {...actor.character, knownCards: [...knownCards, payload.card]}}}};
+    }
     case 'ActorRuntimePatched': {
       const actor = world.actors[payload.actorId];
       if (!actor) throw new Error(`Cannot evolve unknown actor ${payload.actorId}`);

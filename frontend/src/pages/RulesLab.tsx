@@ -191,6 +191,8 @@ function summarizeEvent(event: UncommittedRuleEvent, world: WorldState | null): 
       return payload.scene.mode === 'encounter'
         ? `Сцена: раунд ${payload.scene.round}, активен ${payload.scene.initiative[payload.scene.activeIndex]}`
         : 'Сцена переведена в исследование';
+    case 'ActorItemContentRecorded':
+      return `${actorName(world, payload.actorId)}: получен предмет ${payload.card.name}`;
     case 'ActorRuntimePatched':
       return `${payload.actorId}: состояние изменено (${payload.reason})`;
     case 'ActorDeathAdjudicated':
