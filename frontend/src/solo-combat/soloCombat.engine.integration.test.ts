@@ -1,3 +1,4 @@
+import {createSheetCombatSession} from '../character/sheetCombatSession';
 import {telekineticHeldObjects} from '../rules-core/telekineticMovement';
 import {migrateWorldState} from '../rules-core/worldMigration';
 import {withDeclaredTestWeaponProfile} from '../testing/weaponProfileFixtures';
@@ -4882,4 +4883,28 @@ it.each(['round_trip','existing_card','consume_last','virtual_held','occupied_ha
  expect(dropped.world.actors[actorId].runtime.equipment.off_hand).toBeNull();expect(qty(dropped)).toBe(qty(before));
  expect(dropped.world.actors[actorId].runtime.resources).toMatchObject({action:0,psi_warrior_telekinetic_movement:0});
  expect(migrateWorldState(clone(dropped.world)).objects.tiny).toEqual(dropped.world.objects.tiny);expect(state).toEqual(before);
+});
+
+
+it('routes a newly scoped spell through ordinary solo rules while keeping the certified session strict', async()=>{
+ const participant=wizardSeed();const actorId=participant.character.id;const actor=participant.canonical.world.actors[actorId];
+ const original=participant.canonical.actions.find(action=>primitive(action)==='magic_missile')!;expect(original).toBeDefined();
+ const alias={...clone(original),id:original.id+'@new-caster-source'};
+ const rewrite=(id:string)=>id===original.id?alias.id:id;
+ const actions=participant.canonical.actions.map(action=>action.id===original.id?alias:action);
+ actor.capabilities.actionIds=actor.capabilities.actionIds.map(rewrite);
+ actor.spellcastingAccess!.grants=actor.spellcastingAccess!.grants.map(grant=>({...grant,actionId:rewrite(grant.actionId)}));
+ for(const source of Object.values(actor.spellcastingAccess!.preparedSources??{})){
+   if(!source)continue;
+   source.availableActionIds=source.availableActionIds.map(rewrite);source.preparedActionIds=source.preparedActionIds.map(rewrite);
+ }
+ participant.canonical={...participant.canonical,actions,catalog:{getAction:id=>actions.find(action=>action.id===id),listActions:()=>actions}};
+ await expect(createSheetCombatSession({source:participant,targets:[]})).rejects.toThrow(/outside the reviewed/);
+ let state=await createSoloCombatState({character:participant.character,participant,selected:[{monster:{...goblin(),max_hp:100},quantity:1}],actions:[scimitar()],effects:[],rng:()=>.5});
+ expect(state.certifiedPlayerActionIds).not.toContain(alias.id);expect(state.playerActionIds).toContain(alias.id);
+ const enemyId=Object.values(state.world.actors).find(row=>row.kind==='monster')!.id;
+ const slots=state.world.actors[actorId].runtime.resources.spell_slot_1;
+ state=autoResolveSystemDecisions(executeCombatAction({state,actorId,actionId:alias.id,targetIds:[enemyId],rng:()=>0}),()=>0);
+ expect(state.world.actors[enemyId].runtime.hp.current).toBeLessThan(100);
+ expect(state.world.actors[actorId].runtime.resources.spell_slot_1).toBe(slots-1);
 });

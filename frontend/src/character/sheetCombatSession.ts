@@ -550,6 +550,8 @@ export async function createSheetCombatSession(input: {
   sceneActors?: readonly ActorState[];
   /** The local two-sheet canary models a real ordered encounter without using online encounter state. */
   sceneMode?: 'exploration' | 'encounter';
+  /** Solo combat separately executes additional data-owned capabilities through rules-core. */
+  allowAdditionalActorActions?: boolean;
 }): Promise<SheetCombatSession> {
   const seeds = [input.source, ...input.targets];
   if (new Set(seeds.map(({ character }) => character.id)).size !== seeds.length) {
@@ -576,6 +578,7 @@ export async function createSheetCombatSession(input: {
     character.id,
     canonical.actions
       .filter(actionBelongsToSheetCombatSlice)
+      .filter(action => !input.allowAdditionalActorActions || certified.catalog.getAction(action.id) !== undefined)
       .map((action) => assertCertifiedSheetCombatActorAction(
         action,
         canonical.world.actors[character.id],

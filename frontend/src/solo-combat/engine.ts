@@ -1629,6 +1629,7 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
     return commandedAttack ? offerCommandedAttack(next,action,commandedAttack) : next;
   }
   if (isControlledCharacter(input.state, input.actorId)
+    && (input.state.certifiedPlayerActionIdsByActor?.[input.actorId] ?? (input.actorId === input.state.characterId ? input.state.certifiedPlayerActionIds : [])).includes(action.id)
     && SHEET_PRIMITIVES.has(primitiveType(action) ?? '')) {
     const transition = executeSheetCombatAction({
       session: sheetSession(input.state, input.actorId), actorId: input.actorId, actionId: action.id,
@@ -4178,6 +4179,7 @@ export async function addSoloCombatCharacter(input: {
   const actorId = input.participant.character.id;
   if (input.state.world.actors[actorId]) throw new Error('Этот персонаж уже участвует в сцене');
   const isolated = await createSheetCombatSession({
+    allowAdditionalActorActions: true,
     source: input.participant,
     targets: [],
     sceneMode: 'exploration',
@@ -4298,6 +4300,7 @@ export async function refreshSoloCombatParticipants(input: {
   }
   const ordered = controlledIds.map((actorId) => byId.get(actorId)!);
   const base = await createSheetCombatSession({
+    allowAdditionalActorActions: true,
     source: ordered[0],
     targets: ordered.slice(1),
     sceneMode: 'exploration',
@@ -4676,6 +4679,7 @@ export async function createSoloCombatState(input: {
   const participants = [input.participant, ...(input.allies ?? [])];
   const controlledIds = participants.map(({ character }) => character.id);
   const base = await createSheetCombatSession({
+    allowAdditionalActorActions: true,
     source: input.participant, targets: participants.slice(1),
     sceneActors: monsters.map((monster) => monster.actor), sceneMode: 'exploration',
   });

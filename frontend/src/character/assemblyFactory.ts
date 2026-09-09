@@ -141,16 +141,41 @@ const MULTICLASS_SPELL_SLOTS: readonly (readonly number[])[] = [
 function multiclassSpellSlotCounts(
   classes: readonly CharacterClass[],
   levels: Readonly<Record<string, number>>,
+  subclasses: readonly CharacterClass[] = [],
+  subclassOwnerClassIds: Readonly<Record<string, string>> = {},
 ): readonly number[] {
   const fullCasters = new Set(['bard', 'cleric', 'druid', 'sorcerer', 'wizard']);
   const halfCasters = new Set(['paladin', 'ranger']);
-  let casterLevel = 0;
-  for (const entry of classes) {
+  const casters = classes.flatMap(entry => {
     const slug = (entry.card_number || '').replace(/^CLASS[-_]/i, '').toLowerCase();
-    const classLevel = Math.max(0, Math.floor(Number(levels[entry.id] ?? 0)));
-    if (fullCasters.has(slug)) casterLevel += classLevel;
-    else if (halfCasters.has(slug)) casterLevel += Math.ceil(classLevel / 2);
+    const level = Math.max(0, Math.floor(Number(levels[entry.id] ?? 0)));
+    if (!level) return [];
+    if (fullCasters.has(slug)) return [{level, divisor: 1, resources: entry.resources}];
+    if (halfCasters.has(slug)) return [{level, divisor: 2, resources: entry.resources}];
+    const subclass = subclasses.find(candidate => {
+      const definition = candidate.resources?.spell_slot_1 as Record<string, unknown> | undefined;
+      return (subclassOwnerClassIds[candidate.id] ?? candidate.parent_class_id) === entry.id
+        && level >= (candidate.subclass_level ?? 3) && definition?.multiclass_divisor === 3;
+    });
+    return subclass ? [{level, divisor: 3, resources: subclass.resources}] : [];
+  });
+  // A lone subclass caster uses its own table, even with noncasting class levels.
+  if (casters.length === 1 && casters[0].divisor === 3) {
+    const row: number[] = [];
+    for (const [key, raw] of Object.entries(casters[0].resources ?? {})) {
+      const match = /^spell_slot_(\d+)$/.exec(key); if (!match) continue;
+      const definition = raw as Record<string, unknown>;
+      const threshold = Object.entries((definition.by_level ?? {}) as Record<string, unknown>)
+        .map(([gate, count]) => [Number(gate), Number(count)] as const)
+        .filter(([gate, count]) => Number.isFinite(gate) && gate <= casters[0].level && Number.isFinite(count))
+        .sort((a,b) => a[0]-b[0]).at(-1);
+      const count = Math.max(0, Math.floor(threshold?.[1] ?? Number(definition.count ?? 0)));
+      if (count > 0) row[Number(match[1])-1] = count;
+    }
+    return Array.from({length: row.length}, (_,index) => row[index] ?? 0);
   }
+  const casterLevel = casters.reduce((sum, caster) => sum + (caster.divisor === 3
+    ? Math.floor(caster.level / 3) : Math.ceil(caster.level / caster.divisor)), 0);
   return MULTICLASS_SPELL_SLOTS[Math.min(20, casterLevel)] ?? [];
 }
 
@@ -529,7 +554,7 @@ async function loadBundle(draft: CharacterDraft): Promise<EntityBundle> {
   for (const key of Object.keys(combinedClassResources)) {
     if (/^spell_slot_\d+$/.test(key)) delete combinedClassResources[key];
   }
-  const slotRow = multiclassSpellSlotCounts(classes, levels);
+  const slotRow = multiclassSpellSlotCounts(classes, levels, subclasses, subclassOwnerClassIds);
   slotRow.forEach((count, index) => {
     if (count > 0) combinedClassResources[`spell_slot_${index + 1}`] = { count, per: 'long_rest' };
   });
