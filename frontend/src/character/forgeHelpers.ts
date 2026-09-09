@@ -36,10 +36,12 @@ export function levelUpChoicesToShow(
   choices: readonly PendingChoice[],
   previousChoiceIds: ReadonlySet<string> | null | undefined,
   resolvedChoices: Readonly<Record<string, readonly string[]>>,
+  previousChoiceCounts?: ReadonlyMap<string, number>,
 ): PendingChoice[] {
   return choices.filter((choice) => (
     previousChoiceIds == null
     || !previousChoiceIds.has(choice.id)
+    || choice.count > (previousChoiceCounts?.get(choice.id) ?? choice.count)
     || (resolvedChoices[choice.id]?.length ?? 0) < choice.count
   ));
 }

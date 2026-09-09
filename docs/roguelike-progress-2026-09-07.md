@@ -641,3 +641,9 @@ Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br
 - All Go packages, TypeScript, changed-file lint, worker HTTP/replay2 and targeted307 tests passed. Final full suite408 files/3560 tests passed in287.59s.
 - Synthetic standalone character666c0e6e-54b5-4382-8319-77083bd9cb0c began at L3. Existing desktop Forge advanced it to L4 with fourth prepared spell, Intelligence ASI and weapon mastery. After fixing slot assembly, sheet showed three L1 slots, DC15/+7. Browser Ray of Frost hit for8; Magic Missile dealt11 and spent one slot3→2. Reload retained state. Not natural progression or authoritative run victory.
 - Local API/worker236b only. Optional spell replacement, expanded-choice visibility and War Bond remain next.
+
+
+## Local continuation — expanded Forge choices, 2026-09-10
+
+- Existing level-up choice helper now compares previous capacities as well as IDs. Expanded spell and other choices remain visible after completion, until confirmation.
+- Nine helper tests, TypeScript and changed-file lint passed. In browser, synthetic L3 clone7d8b6bb9-72ab-45ce-aed3-cc6315524e68 entered existing Forge. Selecting Feather Fall changed3/4 to4/4 without hiding the visual spell grid; confirmation enabled. Clicking the same selected card again remained possible. No level saved for this regression fixture.

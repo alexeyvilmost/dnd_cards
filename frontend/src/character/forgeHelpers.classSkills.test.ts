@@ -183,6 +183,17 @@ describe('Forge level-up feat choices', () => {
     ]);
   });
 
+  it('keeps an expanded spell selection visible after the new slot is filled', () => {
+    const expanded = { ...asiMode, id: 'ek_spells_l1', count: 4 };
+    const unchanged = { ...asiMode, id: 'ek_cantrips', count: 2 };
+    expect(levelUpChoicesToShow(
+      [expanded, unchanged],
+      new Set([expanded.id, unchanged.id]),
+      { [expanded.id]: ['a', 'b', 'c', 'd'], [unchanged.id]: ['e', 'f'] },
+      new Map([[expanded.id, 3], [unchanged.id, 2]]),
+    ).map((choice) => choice.id)).toEqual([expanded.id]);
+  });
+
   it('routes a selected class feat own controls back beside its picker', () => {
     const unrelated = {
       ...asiMode,

@@ -129,6 +129,7 @@ const CharacterForge = () => {
     effects: Set<string>;
     actions: Set<string>;
     choiceIds: Set<string>;
+    choiceCounts: Map<string, number>;
     maxHP: number;
   } | null>(null);
   const [saving, setSaving] = useState(false);
@@ -719,6 +720,7 @@ const CharacterForge = () => {
         effects: new Set(oldBundle.effects.map((e) => e.effect.id)),
         actions: new Set(oldBundle.actions.map((a) => a.action.id)),
         choiceIds: prevChoiceIds,
+        choiceCounts: new Map(oldAssembled.pendingChoices.map((pc) => [pc.id, pc.count])),
         maxHP: resolveCharacterRules({ draft: oldDraft, assembled: oldAssembled }).maxHP,
       });
     })();
@@ -975,6 +977,7 @@ const CharacterForge = () => {
       buildChoices.filter((pc) => !isSpellSelectionChoice(pc)),
       prevRefs?.choiceIds,
       draft.resolvedChoices,
+      prevRefs?.choiceCounts,
     );
     // A subclass selected at this level can introduce its own mandatory
     // choices (for example College of Lore's three bonus skills).  Keep those
@@ -989,14 +992,9 @@ const CharacterForge = () => {
     const otherLevelUpChoices = levelUpOtherChoices.filter((choice) => (
       !selectedSubclassChoices.some((subclassChoice) => subclassChoice.id === choice.id)
     ));
-    // #3: spell-выборы, появившиеся на ЭТОМ уровне (нет в prevRefs), показываем ЦЕЛИКОМ — в т.ч.
-    // уже заполненные, чтобы игрок мог переиграть выбор, не уходя «назад». До загрузки prevRefs —
-    // fallback на незавершённые (как раньше).
+    // Expanded existing choices stay editable after their new slots are filled.
     const newSpellChoices = prevRefs
-      ? spellChoices.filter((pc) => (
-          !prevRefs.choiceIds.has(pc.id)
-          || unresolvedSpells.some((unresolvedChoice) => unresolvedChoice.id === pc.id)
-        ))
+      ? levelUpChoicesToShow(spellChoices, prevRefs.choiceIds, draft.resolvedChoices, prevRefs.choiceCounts)
       : unresolvedSpells;
     const oldMaxHP = prevRefs?.maxHP ?? computeMulticlassMaxHP(
       (assembled.classes ?? []).map((klass) => ({
