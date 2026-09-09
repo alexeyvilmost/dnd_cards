@@ -345,6 +345,7 @@ export interface TriggeringAttackContext {
 export interface ExecuteContext {
   /** The authoritative board has validated the complete exchange before payment. */
   positionExchangeValidated?: true;
+  commandedAttackValidated?: true;
   triggeringAttack?: TriggeringAttackContext;
   character: CharacterContext;
   /** Immutable catalog display name for effects and audit events. */

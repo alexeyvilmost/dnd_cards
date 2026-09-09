@@ -457,6 +457,9 @@ function preflightActivationCost(mechanics: Dict, ctx: ExecuteContext): Dict[] {
   if ((mechanics.activation as Dict | undefined)?.position_exchange_ft !== undefined && !ctx.positionExchangeValidated) {
     throw mechanicsError('INVALID_MECHANICS', 'activation.position_exchange_ft', 'Обмен позициями требует выбора союзника и проверки перемещения на поле боя');
   }
+  if ((mechanics.activation as Dict | undefined)?.commanded_attack && !ctx.commandedAttackValidated) {
+    throw mechanicsError('INVALID_MECHANICS', 'activation.commanded_attack', 'Удар командующего требует выбора союзника на поле боя');
+  }
   if (mechanics.activation === undefined) return [];
   if (!isDict(mechanics.activation)) {
     throw mechanicsError('INVALID_MECHANICS', 'mechanics.activation', 'activation must be an object');

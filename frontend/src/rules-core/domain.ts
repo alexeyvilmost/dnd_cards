@@ -247,6 +247,7 @@ export type Relation = 'self' | 'ally' | 'enemy' | 'neutral';
  */
 export interface SpatialFacts {
   positionExchangeValidated?: true;
+  commandedAttackValidated?: true;
   factsSource: 'scenario' | 'board' | 'gm_ruling';
   boardRevision: number;
   distanceFt: number;
@@ -360,7 +361,7 @@ interface RuleActionDefinitionBase {
     replacementKey: string;
     replacesAttacks: 1;
     totalAttacks: number;
-    oncePerAttackAction: true;
+    oncePerAttackAction: boolean;
   };
   /** Catalog-owned policy resolved only at the declared rest boundary. */
   restDecision?: SlotRecoveryRestDecisionPolicy;

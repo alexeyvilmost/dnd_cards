@@ -82,14 +82,14 @@ function compileAttackReplacement(
     || typeof value.replacement_key !== 'string' || value.replacement_key.length === 0
     || value.replaces_attacks !== 1
     || !Number.isInteger(value.total_attacks) || Number(value.total_attacks) < 1
-    || value.once_per_attack_action !== true) {
+    || typeof value.once_per_attack_action !== 'boolean') {
     throw new RuleActionProjectionError('attack_replacement is malformed');
   }
   return {
     replacementKey: value.replacement_key,
     replacesAttacks: 1,
     totalAttacks: Number(value.total_attacks),
-    oncePerAttackAction: true,
+    oncePerAttackAction: value.once_per_attack_action,
   };
 }
 

@@ -264,7 +264,7 @@ export function combatActionAvailability(
     return combatLightExtraAttackAvailability(state, actorId);
   }
   const actionCardNumber = state.actionPresentation?.[action.id]?.actionRef?.card_number;
-  const isAttackEntry = primitive?.type === 'weapon_attack'
+  const isAttackEntry = !!action.attackReplacement || primitive?.type === 'weapon_attack'
     || primitive?.type === 'unarmed_strike'
     || actionCardNumber === 'action_basic_unarmed';
   const reusesOpenAttack = isAttackEntry && Object.values(state.world.attackActions ?? {}).some((entry) => (

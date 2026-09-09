@@ -549,13 +549,15 @@ export default function SoloCombatPage() {
   const clickCell = async (position: GridPosition, actorId?: string) => {
     if (state?.pendingTriggeredAction && secondaryActionId && !busy) {
       if (!actorId || !triggeredSecondaryTargetIds(state, secondaryActionId).includes(actorId)) {
-        setError('Выберите другую цель в 5 футах от первой и в досягаемости атаки'); return;
+        setError(state.pendingTriggeredAction.event === 'commanded_attack' ? 'Выберите доступную цель атаки союзника' : 'Выберите другую цель в 5 футах от первой и в досягаемости атаки'); return;
       }
       const targetIds = [actorId];
-      applyIntent({type: 'triggered_action', actionId: secondaryActionId, targetIds}, () => autoResolveSystemDecisions(
-        resolveTriggeredCombatAction(state, secondaryActionId, Math.random, undefined, targetIds),
-      ));
-      setSecondaryActionId(null);
+      try {
+        applyIntent({type: 'triggered_action', actionId: secondaryActionId, targetIds}, () => autoResolveSystemDecisions(
+          resolveTriggeredCombatAction(state, secondaryActionId, Math.random, undefined, targetIds),
+        ));
+        setSecondaryActionId(null);
+      } catch (reason) { setError(playerFacingSheetActionError(reason)); }
       return;
     }
     if (!state || (!playerTurn && !state.pendingAdditionalMovement) || busy || state.world.pendingResolution
@@ -807,7 +809,7 @@ export default function SoloCombatPage() {
           />
           {secondaryActionId && state.pendingTriggeredAction && (
             <section className="combat-world-control combat-world-control--selection" aria-label="Выбор второй цели">
-              <em>Выберите другую цель рядом с первой и в досягаемости атаки.</em>
+              <em>{state.pendingTriggeredAction.event === 'commanded_attack' ? 'Выберите цель атаки союзника.' : 'Выберите другую цель рядом с первой и в досягаемости атаки.'}</em>
               <button type="button" disabled={busy} onClick={() => setSecondaryActionId(null)}>Отмена</button>
             </section>
           )}

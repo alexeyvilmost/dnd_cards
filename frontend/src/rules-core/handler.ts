@@ -524,7 +524,7 @@ function actionDefinitionIssue(action: RuleActionDefinition): string | null {
     if (replacement.replacesAttacks !== 1
       || !Number.isInteger(replacement.totalAttacks)
       || replacement.totalAttacks < 1
-      || replacement.oncePerAttackAction !== true) {
+      || typeof replacement.oncePerAttackAction !== 'boolean') {
       return `${action.id} has an invalid attack-replacement policy`;
     }
     const actionCosts = activationCost(action).filter((cost) => (
@@ -533,7 +533,7 @@ function actionDefinitionIssue(action: RuleActionDefinition): string | null {
     if (actionCosts.length !== 1 || Number(actionCosts[0].amount ?? 1) !== 1) {
       return `${action.id} must spend exactly one Action when used as an attack replacement`;
     }
-    if (raw.kind !== 'nonSpell' || !hasTargetSave(action)) {
+    if (raw.kind !== 'nonSpell' || (!hasTargetSave(action) && (action.mechanics.activation as Record<string, unknown> | undefined)?.commanded_attack !== true)) {
       return `${action.id} attack replacement must be a non-spell target-save action`;
     }
   }
@@ -1154,6 +1154,7 @@ function actionContext(
     ...(facts ? {attackFacts: {nearbyEligibleAllyToTarget: facts.nearbyEligibleAllyToTarget,
       immediateStraightMovementFt: facts.immediateStraightMovementFt}} : {}),
     ...(facts?.positionExchangeValidated ? {positionExchangeValidated: true as const} : {}),
+    ...(facts?.commandedAttackValidated ? {commandedAttackValidated: true as const} : {}),
     ...(target && facts ? {
       // Relational condition clauses consume the same board/GM observations as
       // targeting. The executor receives facts, never a condition-specific UI
@@ -6522,6 +6523,7 @@ function spatialFactShapeIssue(facts: SpatialFacts | undefined): string | null {
   if (!Number.isInteger(facts.boardRevision) || facts.boardRevision < 0
     || !Number.isFinite(facts.distanceFt) || facts.distanceFt < 0
     || (facts.positionExchangeValidated !== undefined && facts.positionExchangeValidated !== true)
+    || (facts.commandedAttackValidated !== undefined && facts.commandedAttackValidated !== true)
     || (facts.immediateStraightMovementFt !== undefined && (!Number.isFinite(facts.immediateStraightMovementFt) || facts.immediateStraightMovementFt < 0))
     || typeof facts.lineOfSight !== 'boolean'
     || !['none', 'half', 'three_quarters', 'total'].includes(facts.cover)
@@ -10375,12 +10377,14 @@ function executeAttackReplacement(
     actor.id,
   );
   if (validation) return validation;
-  const conditionDenial = harmfulConditionRejection({
-    world,
-    attackerActorId: actor.id,
-    targetActorIds: command.targetIds,
-  });
-  if (conditionDenial) return conditionDenial;
+  if ((action.mechanics.activation as Record<string, unknown> | undefined)?.commanded_attack !== true) {
+    const conditionDenial = harmfulConditionRejection({
+      world,
+      attackerActorId: actor.id,
+      targetActorIds: command.targetIds,
+    });
+    if (conditionDenial) return conditionDenial;
+  }
 
   let startEvents: EventInput[] = [];
   let worldWithAttack = world;
@@ -10429,6 +10433,15 @@ function executeAttackReplacement(
     ...command,
     type: 'UseAction',
   };
+  if ((action.mechanics.activation as Record<string, unknown> | undefined)?.commanded_attack === true) {
+    const obligations = actionObligationIds(action, 'system:attack-action', 'system:attack-replacement');
+    return [...startEvents,
+      attackEntryEvent({sourceActorId: actor.id, attackActionId: attackAction.id, entry, obligations}),
+      ...executeUseAction(worldWithAttack, authoritativeCommand, entryAction, catalog, env),
+      ...completedAttackActionEvent({actorId: actor.id, attackActionId: attackAction.id,
+        attacksRemaining: nextSequence.attacksRemaining, obligations}),
+    ];
+  }
   const pending = pendingSaveEvents(
     worldWithAttack,
     authoritativeCommand,

@@ -732,7 +732,7 @@
         "replacement_key": { "type": "string", "minLength": 1 },
         "replaces_attacks": { "const": 1 },
         "total_attacks": { "type": "integer", "minimum": 1 },
-        "once_per_attack_action": { "const": true }
+        "once_per_attack_action": { "type": "boolean" }
       }
     },
 
@@ -893,6 +893,7 @@
         "mode": { "enum": ["active", "passive", "reaction", "triggered", "rest_decision"] },
         "counts_as": { "enum": ["dash"] },
         "position_exchange_ft": { "const": 5 },
+        "commanded_attack": { "const": true },
         "while": { "enum": ["equipped", "carried", "attuned"], "description": "Гейт применимости предмета (S2): пока надет | пока в сумке | пока настроен. Нет → equipped." },
         "consumes_self": { "type": "boolean", "deprecated": true, "description": "Legacy authoring marker without runtime semantics. Migrate to activation.cost {resource:'self_item'}." },
         "cost": { "type": "array", "items": { "$ref": "#/$defs/cost" } },

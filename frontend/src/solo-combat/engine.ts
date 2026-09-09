@@ -1282,6 +1282,78 @@ function removeMountedCombatantAttackProjection(
   };
 }
 
+function commandedAttackTargets(state: SoloCombatState, actorId: string, action: RuleActionDefinition): string[] {
+  return Object.values(state.world.actors).filter(target => {
+    if (target.id === actorId || target.runtime.hp.current <= 0) return false;
+    const facts = spatialFacts(state, actorId, target.id);
+    return facts.distanceFt <= (action.targeting?.rangeFt ?? 5) && facts.lineOfSight && facts.cover !== 'total';
+  }).map(target => target.id);
+}
+
+function prepareCommandedAttack(input: CombatActionInput, learned: RuleActionDefinition): {allyId: string; options: RuleActionDefinition[]} | undefined {
+  if ((learned.mechanics.activation as Record<string, unknown> | undefined)?.commanded_attack !== true) return undefined;
+  const {state, actorId, targetIds} = input;
+  const source = state.world.actors[actorId];
+  const allyId = targetIds.length === 1 ? targetIds[0] : '';
+  const ally = state.world.actors[allyId];
+  if (!ally || allyId === actorId || activeActorId(state) !== actorId
+    || !isPlayerControlledCombatActor(state, allyId) || combatRelation(state, actorId, allyId) !== 'ally'
+    || ally.runtime.hp.current <= 0 || activeConditionsOf(ally.runtime).has('incapacitated')
+    || deniedCapabilities(ally.runtime, ally.passives ?? []).has('reaction') || (ally.runtime.resources.reaction ?? 0) < 1) {
+    throw new Error('Нужен согласный союзник с доступной реакцией');
+  }
+  const facts = spatialFacts(state, actorId, allyId);
+  if (!facts.targetCanSeeSource && !facts.targetCanHearSource) throw new Error('Союзник должен видеть или слышать вас');
+  const die = source.character.variables?.superiority_die;
+  if (!die || typeof die !== 'object' || !('sides' in die) || !('count' in die) || die.count !== 1
+    || ![6,8,10,12].includes(Number(die.sides))) throw new Error('Не определена кость превосходства командира');
+  const bases = state.catalogActions.filter(action => action.id.startsWith(`${allyId}:melee-reaction:`));
+  const cards = [...(ally.character.knownCards ?? []), ...(ally.character.equippedCards ?? [])];
+  for (const hand of ['main','off'] as const) {
+    const cardId = ally.runtime.equipment[hand === 'main' ? 'main_hand' : 'off_hand'];
+    if (hand === 'off' && cardId === ally.runtime.equipment.main_hand) continue;
+    const card = cards.find(row => row.id === cardId);
+    const parsed = card ? parseWeaponProfile(card) : undefined;
+    if (!parsed?.valid) continue;
+    const mode = parsed.profile.attackModes.find(row => row.kind === 'ranged');
+    if (mode?.kind !== 'ranged') continue;
+    const base = opportunityVersion({...weaponAttackAction(hand, 'ranged'), id: `${allyId}:commanded-ranged:${hand}`,
+      name: card!.name, sourceEntityIds: [card!.id]}, mode.longFt);
+    const activation = base.mechanics.activation as Record<string, unknown>;
+    // The attack consumes ammunition from the recipient's inventory, not the commander.
+    if (parsed.profile.ammo) activation.cost = [{resource:'reaction'}, {resource:'item', card_id:parsed.profile.ammo.cardId,amount:1}];
+    bases.push(base);
+  }
+  const options = bases.map(base => {
+    const mechanics = clone(base.mechanics);
+    const activation = mechanics.activation as Record<string, unknown>;
+    activation.mode = 'triggered'; activation.trigger = {events:['commanded_attack'], secondary_target:true};
+    const effect = (mechanics.effects as Record<string, unknown>[])[0];
+    effect.attack_maneuver_id = learned.id;
+    const original = (effect.on_hit as Record<string, unknown>[]).find(row => row.kind === 'damage');
+    effect.on_hit = [...effect.on_hit as Record<string, unknown>[], {kind:'damage',amount:`1d${die.sides}`,
+      type:effect.attack_kind === 'unarmed' ? original?.type ?? 'bludgeoning' : 'weapon', suppress_damage_modifiers:true}];
+    mechanics.targeting = {...mechanics.targeting as Record<string, unknown>,allowed_relations:['enemy','ally']};
+    return {...base, id:`${learned.id}:command:${base.id}`, name:`${learned.name} — ${base.name.replace(/ — провоцированная атака$/u,'')}`,
+      sourceEntityIds:[...learned.sourceEntityIds,...base.sourceEntityIds],mechanics,
+      targeting:{...base.targeting!,allowedRelations:['enemy','ally']}} as RuleActionDefinition;
+  }).filter(action => canPay(ally.runtime,(action.mechanics.activation as Record<string,unknown>).cost as Record<string,unknown>[]).ok
+    && commandedAttackTargets(state,allyId,action).length > 0);
+  if (!options.length) throw new Error('У союзника нет доступной атаки и цели');
+  return {allyId,options};
+}
+
+function offerCommandedAttack(state: SoloCombatState, learned: RuleActionDefinition,
+  prepared: {allyId:string;options:RuleActionDefinition[]}): SoloCombatState {
+  const {allyId,options}=prepared;
+  const ally=state.world.actors[allyId];
+  return {...state,catalogActions:[...state.catalogActions.filter(row=>!options.some(option=>option.id===row.id)),...options],
+    world:{...state.world,actors:{...state.world.actors,[allyId]:{...ally,
+      capabilities:{...ally.capabilities,actionIds:[...new Set([...ally.capabilities.actionIds,...options.map(row=>row.id)])]}}}},
+    pendingTriggeredAction:{event:'commanded_attack',sourceActorId:allyId,sourceActionId:learned.id,targetIds:[],optionActionIds:options.map(row=>row.id)},
+  };
+}
+
 function preparePositionExchange(input: CombatActionInput, action: RuleActionDefinition): {targetId: string; movementFt: number} | undefined {
   const exchange = (action.mechanics.activation as Record<string, unknown> | undefined)?.position_exchange_ft;
   if (exchange === undefined) return undefined;
@@ -1337,6 +1409,7 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
   const action = input.state.catalogActions.find((candidate) => candidate.id === input.actionId);
   if (!action) throw new Error('Действие отсутствует в снимке боя');
   const positionExchange = preparePositionExchange(input, action);
+  const commandedAttack = prepareCommandedAttack(input, action);
   const actorPosition = input.state.tokens[input.actorId]?.position;
   const verbalBlocked = action.kind === 'spell' && action.spell.components?.verbal === true
     && actorPosition != null
@@ -1357,6 +1430,11 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
     declaration.factsByTarget = {...declaration.factsByTarget,
       [positionExchange.targetId]: {...spatialFacts(input.state, input.actorId, positionExchange.targetId), ...declaration.factsByTarget?.[positionExchange.targetId], positionExchangeValidated: true},
     };
+  }
+  if (commandedAttack) {
+    declaration.factsByTarget = {...declaration.factsByTarget,
+      [commandedAttack.allyId]: {...spatialFacts(input.state,input.actorId,commandedAttack.allyId),
+        ...declaration.factsByTarget?.[commandedAttack.allyId],commandedAttackValidated:true}};
   }
   const mountedProjection = mountedCombatantAttackState({
     state: input.state, actorId: input.actorId, targetIds: input.targetIds, action,
@@ -1427,7 +1505,8 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
       ...(declaration.factsByTarget ? { factsByTarget: declaration.factsByTarget } : {}),
       ...(declaration.choices ? { choices: declaration.choices } : {}),
     };
-    return withTriggeredAttackOffer(dispatch({ state: input.state, command, rng, label: action.name }));
+    const next = withTriggeredAttackOffer(dispatch({ state: input.state, command, rng, label: action.name }));
+    return commandedAttack ? offerCommandedAttack(next,action,commandedAttack) : next;
   }
   if (isControlledCharacter(input.state, input.actorId)
     && SHEET_PRIMITIVES.has(primitiveType(action) ?? '')) {
@@ -2093,6 +2172,7 @@ export function triggeredSecondaryTargetIds(state: SoloCombatState, actionId: st
   const activation = action?.mechanics.activation as Record<string, unknown> | undefined;
   const trigger = activation?.trigger as Record<string, unknown> | undefined;
   if (!pending || !pending.optionActionIds.includes(actionId) || trigger?.secondary_target !== true) return [];
+  if (pending.event === 'commanded_attack' && action) return commandedAttackTargets(state,pending.sourceActorId,action);
   const first = state.tokens[pending.triggeringAttack?.targetActorId ?? '']?.position;
   const source = state.tokens[pending.sourceActorId]?.position;
   const reach = pending.triggeringAttack?.meleeReachFt;
@@ -2180,7 +2260,7 @@ export function resolveTriggeredCombatAction(
   const secondary = trigger?.secondary_target === true;
   if (secondary) {
     if (targetIds?.length !== 1 || !triggeredSecondaryTargetIds(state, actionId).includes(targetIds[0])) {
-      throw new Error('Выберите другую цель в 5 футах от первой и в досягаемости исходной атаки');
+      throw new Error(pending.event === 'commanded_attack' ? 'Выберите доступную цель атаки союзника' : 'Выберите другую цель в 5 футах от первой и в досягаемости исходной атаки');
     }
   } else if (targetIds !== undefined) {
     throw new Error('Это действие не позволяет менять исходную цель');
@@ -2222,7 +2302,7 @@ export function resolveTriggeredCombatAction(
     actionId,
     targetIds: chosenTargetIds,
     triggerEvent: pending.optionEvents?.[actionId] ?? (chosenTrigger.includes(pending.event) ? pending.event : chosenTrigger[0]),
-    triggeringAttack: secondary ? {...pending.triggeringAttack!, targetActorId: chosenTargetIds[0]} : pending.triggeringAttack,
+    triggeringAttack: secondary && pending.triggeringAttack ? {...pending.triggeringAttack, targetActorId: chosenTargetIds[0]} : pending.triggeringAttack,
     choices,
     rng,
   });
@@ -4108,6 +4188,15 @@ export async function refreshSoloCombatParticipants(input: {
     });
     opportunityActionIds[actorId] = installCharacterOpportunityAttacks(freshActor, catalogActions);
 
+    const pending = input.state.pendingTriggeredAction;
+    if (pending?.sourceActorId === actorId) {
+      // Recompiling the sheet must retain the exact capabilities of a saved
+      // reaction window without making these generated actions proactive.
+      const retained = pending.optionActionIds.filter(id =>
+        input.state.world.actors[actorId].capabilities.actionIds.includes(id)
+        && catalogActions.some(action => action.id === id));
+      freshActor.capabilities.actionIds = [...new Set([...freshActor.capabilities.actionIds, ...retained])];
+    }
     actors[actorId] = freshActor;
     const playerActionIds = [...new Set([
       ...participant.canonical.actions.map(({ id }) => id),

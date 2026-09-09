@@ -29,6 +29,8 @@ export interface UnarmedStrikeSequenceEntry extends AttackSequenceEntryBase {
 export interface AttackReplacementSequenceEntry extends AttackSequenceEntryBase {
   kind: 'replacement';
   replacementKey: string;
+  /** Catalog policy carried into deterministic event replay; omitted means once per action. */
+  repeatable?: true;
 }
 
 export type AttackSequenceEntry =
@@ -70,7 +72,7 @@ export function attackSequenceInvariantHolds(state: AttackSequenceState): boolea
     || (entry.kind === 'weapon_attack'
       && entry.weaponCardId !== undefined
       && !nonBlank(entry.weaponCardId))
-    || (entry.kind === 'replacement' && !nonBlank(entry.replacementKey))
+    || (entry.kind === 'replacement' && (!nonBlank(entry.replacementKey) || (entry.repeatable !== undefined && entry.repeatable !== true)))
     || (entry.kind === 'unarmed_strike' && !UNARMED_STRIKE_OPTIONS.has(entry.option))
   ))) return false;
   if (state.usedReplacementKeys.some((key) => !nonBlank(key))) return false;
@@ -192,6 +194,7 @@ export function replaceSequenceAttack(input: {
     kind: 'replacement',
     actionId: input.actionId,
     replacementKey: input.replacementKey,
+    ...(input.oncePerSequence === false ? {repeatable:true as const} : {}),
     sourceEntityIds: [...input.sourceEntityIds],
   });
   return {

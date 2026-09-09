@@ -1,3 +1,4 @@
+import {withDeclaredTestWeaponProfile} from '../testing/weaponProfileFixtures';
 import { describe, expect, it } from 'vitest';
 import {readFileSync} from 'node:fs';
 import {projectRuleAction} from '../canon/ruleActionProjection';
@@ -4529,4 +4530,93 @@ it.each(['self','target','insufficient','far','incapacitated','enemy','no_choice
  let roundTrip=clone(next);for(let i=0;i<3;i++)roundTrip=advanceTurn(roundTrip,()=>0.5);
  expect(roundTrip.world.actors[recipient].runtime.activeEffects.some(effect=>(effect.mechanics as Record<string,unknown>).stack_id==='maneuver:bait-switch')).toBe(false);
  expect(state).toEqual(original);
+});
+
+
+describe('Commander Strike uses an Attack entry and the ally reaction',()=>{
+ async function setup(mode='normal') {
+  const participant=fighterSeed();const actorId=participant.character.id;const actor=participant.canonical.world.actors[actorId];
+  actor.character.variables={...actor.character.variables,superiority_die:{count:1,sides:8}};
+  actor.runtime.resources.superiority_die=mode==='exhausted'?0:4;actor.runtime.maxResources.superiority_die=4;
+  actor.attackProfile!.attacksPerAction=2;
+  const commander=projectRuleAction({id:'22700000-0000-4000-8000-000000000001',name:'Commander Strike',type:'class_feature',resource:'action',
+    mechanics:JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_commander_227.go',import.meta.url),'utf8').match(/const battleMasterCommander227 = `([^`]+)`/)![1])} as unknown as Action);
+  const actions=[...participant.canonical.actions,commander];actor.capabilities.actionIds.push(commander.id);
+  participant.canonical={...participant.canonical,actions,catalog:{getAction:id=>actions.find(row=>row.id===id),listActions:()=>actions}};
+  let state=await createSoloCombatState({character:participant.character,participant,selected:[{monster:{...goblin(),armor_class:10,max_hp:100},quantity:1}],actions:[scimitar()],effects:[],rng:()=>0.5});
+  const ally=wizardSeed();const allyId=ally.character.id;
+  if(mode==='ranged'||mode==='no_ammo') {
+    const bow=withDeclaredTestWeaponProfile({...CARD_LONGSWORD,id:'qa-bow',name:'Bow',weapon_type:'shortbow',slot:'two_hands',properties:['ammunition','two_handed']},
+      {weaponType:'shortbow',proficiencyCategory:'simple',attackAbility:'dex',damageLines:[{dice:'1d6',type:'piercing'}],
+        defaultAttackMode:'ranged',attackModes:[{kind:'ranged',normal_ft:80,long_ft:320}],properties:['ammunition','two_handed'],
+        masteryEffectId:'qa:vex',ammo:{card_id:'qa-arrow'}});
+    const allyActor=ally.canonical.world.actors[allyId];
+    allyActor.character.knownCards=[...(allyActor.character.knownCards??[]),bow];
+    allyActor.runtime.equipment={main_hand:bow.id,off_hand:null};
+    allyActor.runtime.inventory=[{cardId:bow.id,qty:1},...(mode==='ranged'?[{cardId:'qa-arrow',qty:2}]:[])];
+  }
+  state=await addSoloCombatCharacter({state,participant:ally,rng:()=>0});
+  const monsterId=Object.values(state.world.actors).find(row=>row.kind==='monster')!.id;
+  state.tokens[actorId].position={x:4,y:4};state.tokens[allyId].position={x:5,y:4};state.tokens[monsterId].position={x:6,y:4};
+  if(mode==='ranged'||mode==='no_ammo')state.tokens[monsterId].position={x:10,y:4};
+  if(mode==='unperceived')state.world.actors[allyId].runtime.activeEffects=['blinded','deafened'].map(value=>({id:value,name:value,source:'test',mechanics:{kind:'condition',value}}));
+  if(mode==='no_reaction')state.world.actors[allyId].runtime.resources.reaction=0;
+  if(mode==='incapacitated')state.world.actors[allyId].runtime.activeEffects=[{id:'stun',name:'Stunned',source:'test',mechanics:{kind:'condition',value:'stunned'}}];
+  if(mode==='off_turn')state=advanceTurn(state,()=>0.5);
+  return {state,actorId,allyId,monsterId,commander,participant,ally};
+ }
+ it.each(['normal','miss','crit','decline'])('saves a reaction choice and spends only the right actor resources: %s',async mode=>{
+  const {state,actorId,allyId,monsterId,commander}=await setup();
+  const pending=executeCombatAction({state,actorId,actionId:commander.id,targetIds:[allyId],rng:()=>{throw Error('No die is rolled before the ally hits');}});
+  expect(pending.pendingTriggeredAction?.event).toBe('commanded_attack');
+  expect(pending.world.actors[actorId].runtime.resources).toMatchObject({action:0,bonus_action:1,reaction:1,superiority_die:3});
+  const ledger=Object.values(pending.world.attackActions).find(row=>row.actorId===actorId)!;
+  expect(ledger.sequence.attacksRemaining).toBe(1);
+  const option=pending.pendingTriggeredAction!.optionActionIds.find(id=>id.endsWith(':unarmed:opportunity'))!;
+  const before=JSON.stringify(pending);
+  expect(()=>resolveTriggeredCombatAction(pending,option,()=>{throw Error('Invalid target RNG');},undefined,[allyId])).toThrow();
+  expect(JSON.stringify(pending)).toBe(before);
+  const next=resolveTriggeredCombatAction(clone(pending),mode==='decline'?null:option,()=>mode==='miss'?0:mode==='crit'?0.99:0.5,undefined,[monsterId]);
+  expect(next.world.actors[actorId].runtime.resources.superiority_die).toBe(3);
+  expect(next.world.actors[allyId].runtime.resources.reaction).toBe(mode==='decline'?1:0);
+  expect(next.world.actors[allyId].runtime.resources.action).toBe(pending.world.actors[allyId].runtime.resources.action);
+  expect(next.world.actors[monsterId].runtime.hp.current).toBe(mode==='decline'||mode==='miss'?100:mode==='crit'?83:94);
+  expect(next.pendingTriggeredAction).toBeUndefined();
+  expect(activeId(next)).toBe(actorId);
+ });
+ it('retains the granted reaction when the participating sheets are rebuilt on reload',async()=>{
+  const {state,actorId,allyId,monsterId,commander,participant,ally}=await setup();
+  const pending=executeCombatAction({state,actorId,actionId:commander.id,targetIds:[allyId],rng:()=>0.5});
+  for(const seed of [participant,ally]) seed.canonical.world.actors[seed.character.id].runtime=clone(pending.world.actors[seed.character.id].runtime);
+  const refreshed=await refreshSoloCombatParticipants({state:clone(pending),participants:[participant,ally]});
+  const option=refreshed.pendingTriggeredAction!.optionActionIds.find(id=>id.endsWith(':unarmed:opportunity'))!;
+  expect(refreshed.world.actors[allyId].capabilities.actionIds).toContain(option);
+  const next=resolveTriggeredCombatAction(refreshed,option,()=>0.5,undefined,[monsterId]);
+  expect(next.world.actors[monsterId].runtime.hp.current).toBe(94);
+  expect(next.world.actors[actorId].runtime.resources.superiority_die).toBe(3);
+ });
+ it.each(['ranged','no_ammo'])('offers ranged weapons only with their own ammunition: %s',async mode=>{
+  const {state,actorId,allyId,monsterId,commander}=await setup(mode);
+  const pending=executeCombatAction({state,actorId,actionId:commander.id,targetIds:[allyId],rng:()=>0.5});
+  const option=pending.pendingTriggeredAction!.optionActionIds.find(id=>id.includes(':commanded-ranged:'));
+  if(mode==='no_ammo'){expect(option).toBeUndefined();return;}
+  expect(option).toBeDefined();
+  const next=resolveTriggeredCombatAction(clone(pending),option!,()=>0.5,undefined,[monsterId]);
+  expect(next.world.actors[monsterId].runtime.hp.current).toBeLessThan(100);
+  expect(next.world.actors[allyId].runtime.inventory.find(row=>row.cardId==='qa-arrow')?.qty).toBe(1);
+  expect(next.world.actors[actorId].runtime.resources.superiority_die).toBe(3);
+ });
+ it('permits another replacement in the same Attack action without spending a second action',async()=>{
+  const {state,actorId,allyId,commander}=await setup();
+  const first=executeCombatAction({state,actorId,actionId:commander.id,targetIds:[allyId],rng:()=>0.5});
+  const declined=resolveTriggeredCombatAction(first,null);
+  const second=executeCombatAction({state:declined,actorId,actionId:commander.id,targetIds:[allyId],rng:()=>0.5});
+  expect(second.world.actors[actorId].runtime.resources).toMatchObject({action:0,superiority_die:2});
+  expect(Object.values(second.world.attackActions).find(row=>row.actorId===actorId)).toMatchObject({status:'completed',sequence:{attacksRemaining:0}});
+ });
+ it.each(['exhausted','no_reaction','incapacitated','off_turn','self','enemy','unperceived'])('rejects before any payment or RNG: %s',async mode=>{
+  const {state,actorId,allyId,monsterId,commander}=await setup(mode);const before=JSON.stringify(state);
+  expect(()=>executeCombatAction({state,actorId,actionId:commander.id,targetIds:[mode==='self'?actorId:mode==='enemy'?monsterId:allyId],rng:()=>{throw Error('No RNG');}})).toThrow();
+  expect(JSON.stringify(state)).toBe(before);
+ });
 });

@@ -296,6 +296,7 @@ export function evolve(world: WorldState, payload: RuleEventPayload): WorldState
           sequence: attackAction.sequence,
           actionId: entry.actionId,
           replacementKey: entry.replacementKey,
+          oncePerSequence: entry.repeatable !== true,
           sourceEntityIds: [...entry.sourceEntityIds],
         });
       }

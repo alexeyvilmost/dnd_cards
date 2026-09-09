@@ -10,7 +10,7 @@ export default function CombatTriggeredActionPanel({state, busy, onChoose}: {
   const actor = state.world.actors[pending.sourceActorId];
   const entry = pending.event === 'reach_entry'
     || (pending.event === 'opportunity_attack' && Boolean(state.pendingReachEntry));
-  const title = pending.event === 'enemy_melee_miss' ? 'Противник промахнулся — совершить Ответный удар?' : entry ? 'Выполнить Превентивный удар?'
+  const title = pending.event === 'commanded_attack' ? 'Совершить атаку по команде союзника?' : pending.event === 'enemy_melee_miss' ? 'Противник промахнулся — совершить Ответный удар?' : entry ? 'Выполнить Превентивный удар?'
     : pending.event === 'opportunity_attack' ? 'Совершить провоцированную атаку?'
       : pending.event === 'sneak_attack_hit' ? 'Применить Хитрый удар и отказаться от 1к6 урона?'
         : 'Применить дополнительную способность?';

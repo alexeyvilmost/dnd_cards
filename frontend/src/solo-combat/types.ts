@@ -181,7 +181,7 @@ export interface PendingCombatAreaTrigger {
  * exposed as proactive hotbar buttons.
  */
 export interface PendingTriggeredAction {
-  event: 'enemy_melee_miss' | 'hit' | 'miss' | 'sneak_attack_hit' | 'opportunity_attack' | 'reach_entry' | 'action_resolved' | 'crit';
+  event: 'commanded_attack' | 'enemy_melee_miss' | 'hit' | 'miss' | 'sneak_attack_hit' | 'opportunity_attack' | 'reach_entry' | 'action_resolved' | 'crit';
   sourceActorId: string;
   sourceActionId: string;
   targetIds: string[];
