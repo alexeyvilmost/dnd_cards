@@ -598,3 +598,12 @@ it('combines long-range disadvantage with advantage using the shared cancellatio
   const event = result.events.find((entry) => entry.type === 'roll');
   expect(event?.type === 'roll' ? event.roll.dice.length : 0).toBe(1);
 });
+
+
+it('rejects a stat-block weapon attack after its weapon leaves the hand before cost or RNG',()=>{
+ const state=fresh();state.inventory=[{cardId:'axe',qty:1}];
+ const before=JSON.stringify(state);let draws=0;
+ expect(()=>executeAction(state,{requires_held_item:'axe',activation:{mode:'active',cost:[{resource:'action'}]},effects:[]},
+   {character,rng:()=>{draws++;return 0.5;}})).toThrow(/держать/);
+ expect(draws).toBe(0);expect(JSON.stringify(state)).toBe(before);
+});

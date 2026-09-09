@@ -30,6 +30,7 @@
       "items": { "type": "string", "pattern": "^CLASS-[a-z0-9_-]+$" },
       "description": "Immutable stable class-list identities for a spell; display names are never interpreted as rules data."
     },
+    "requires_held_item": { "type": "string", "minLength": 1, "description": "Exact item card identity that must be held and present in accessible inventory to execute this action." },
     "weapon_mastery": { "$ref": "#/$defs/weaponMasteryPrimitive" },
     "attack_replacement": { "$ref": "#/$defs/attackReplacement" },
     "rest_decision": { "$ref": "#/$defs/restDecision" },

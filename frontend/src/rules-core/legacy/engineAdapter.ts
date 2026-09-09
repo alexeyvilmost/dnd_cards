@@ -1,3 +1,4 @@
+export {disarmingSelectionIssue} from '../../engine/heldItemDrop';
 export { isDamageCalculation, resolveDamageCalculation } from '../../engine/damageCalculation';
 /**
  * Temporary anti-corruption boundary around the existing single-actor engine.

@@ -4677,3 +4677,58 @@ describe('Maneuvering Attack reaction movement',()=>{
   expect(next.movementRemainingFt[allyId]).toBe(budget);
  });
 });
+
+
+it.each(['fail','success','invalid','empty','existing_object'])('Disarming Attack persists a save and a physical dropped item: %s',async mode=>{
+ const {participant,action}=unarmedParticipant();const actorId=participant.character.id;
+ const actor=participant.canonical.world.actors[actorId];actor.character.variables={...actor.character.variables,superiority_die:{count:1,sides:8}};
+ actor.runtime.resources.superiority_die=4;actor.runtime.maxResources.superiority_die=4;
+ const disarm=projectRuleAction({id:'22900000-0000-4000-8000-000000000001',name:'Disarming',type:'class_feature',resource:'free_action',
+  mechanics:JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_disarming_229.go',import.meta.url),'utf8').match(/const battleMasterDisarming229 = `([^`]+)`/)![1])} as unknown as Action);
+ const actions=[...participant.canonical.actions,disarm];actor.capabilities.actionIds.push(disarm.id);
+ participant.canonical={...participant.canonical,actions,catalog:{getAction:id=>actions.find(row=>row.id===id),listActions:()=>actions}};
+ let state=await createSoloCombatState({character:participant.character,participant,selected:[{monster:{...goblin(),armor_class:10,max_hp:100,ai:{...goblin().ai,...(mode==='empty'?{}:{held_weapon_card:CARD_LONGSWORD})}},quantity:1}],actions:[scimitar()],effects:[],rng:()=>0.5});
+ const targetId=Object.values(state.world.actors).find(row=>row.kind==='monster')!.id;
+ state=placeAdjacent(state,actorId,targetId);
+ if(mode==='existing_object')state.world.objects['existing-sword']={id:'existing-sword',name:'Sword',kind:'item',size:'small',itemCardId:CARD_LONGSWORD.id,heldByActorId:targetId,heldInHand:'main_hand',carriedByActorId:targetId,ownerActorId:actorId};
+ state=executeCombatAction({state,actorId,actionId:action.id,targetIds:[targetId],choices:{[UNARMED_STRIKE_CHOICE_ID]:['damage']},rng:()=>0.5});
+ if(mode==='empty'){expect(state.pendingTriggeredAction?.optionActionIds??[]).not.toContain(disarm.id);return;}
+ expect(state.pendingTriggeredAction?.optionActionIds).toContain(disarm.id);
+ if(mode==='invalid'){
+  const before=JSON.stringify(state);let draws=0;
+  expect(()=>resolveTriggeredCombatAction(state,disarm.id,()=>{draws++;return 0.5;},{disarm_held_item:['off_hand']})).toThrow();
+  expect(draws).toBe(0);expect(JSON.stringify(state)).toBe(before);return;
+ }
+ const hp=state.world.actors[targetId].runtime.hp.current;
+ state=resolveTriggeredCombatAction(clone(state),disarm.id,()=>0.5,{disarm_held_item:['main_hand']});
+ expect(state.world.pendingResolution?.type).toBe('target_save');
+ expect(state.world.actors[targetId].runtime.equipment.main_hand).toBe(CARD_LONGSWORD.id);
+ state=autoResolveSystemDecisions(clone(state),()=>mode==='success'?0.99:0);
+ expect(state.world.actors[targetId].runtime.hp.current).toBe(hp-(mode==='success'?8:1));
+ expect(state.world.actors[actorId].runtime.resources.superiority_die).toBe(3);
+ const dropped=Object.values(state.world.objects).filter(object=>object.itemCardId===CARD_LONGSWORD.id);
+ if(mode==='success'){expect(dropped).toHaveLength(0);expect(state.world.actors[targetId].runtime.equipment.main_hand).toBe(CARD_LONGSWORD.id);return;}
+ expect(state.world.actors[targetId].runtime.equipment.main_hand).toBeNull();
+ expect(state.world.actors[targetId].runtime.inventory).toHaveLength(0);
+ expect(dropped).toHaveLength(1);expect(dropped[0].unattended).toBe(true);
+ if(mode==='existing_object')expect(dropped[0].id).toBe('existing-sword');
+ expect(state.worldObjectPositions?.[dropped[0].id]).toEqual(state.tokens[targetId].position);
+ const restored=clone(state);expect(restored.world.objects[dropped[0].id]).toEqual(dropped[0]);
+});
+
+
+it('an unequipped monster keeps an unarmed opportunity attack and takes its turn without a phantom weapon',async()=>{
+ const participant=fighterSeed();const actorId=participant.character.id;
+ const weaponAttack={...scimitar(),mechanics:{...scimitar().mechanics,requires_held_item:CARD_LONGSWORD.id}};
+ let state=await createSoloCombatState({character:participant.character,participant,selected:[{monster:{...goblin(),max_hp:100,abilities:{...goblin().abilities,str:16},ai:{...goblin().ai,held_weapon_card:CARD_LONGSWORD}},quantity:1}],actions:[weaponAttack],effects:[],rng:()=>0.5});
+ const monsterId=Object.values(state.world.actors).find(row=>row.kind==='monster')!.id;
+ state=placeAdjacent(state,actorId,monsterId);state.world.actors[monsterId].runtime.equipment.main_hand=null;state.world.actors[monsterId].runtime.inventory=[];
+ const before=state.world.actors[actorId].runtime.hp.current;
+ state.tokens[actorId].position={x:4,y:4};state.tokens[monsterId].position={x:5,y:4};
+ state=moveActorAlongRoute({state,actorId,destination:{x:2,y:4},rng:()=>0.99});
+ expect(state.world.actors[monsterId].runtime.resources.reaction).toBe(0);
+ expect(state.world.actors[actorId].runtime.hp.current).toBe(before-4);
+ state=advanceTurn(state,()=>0.5);state=runMonsterTurn(state,()=>0.99);
+ expect(activeId(state)).toBe(actorId);
+ expect(state.world.actors[actorId].runtime.hp.current).toBe(before-8);
+});

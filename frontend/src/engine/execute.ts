@@ -1,3 +1,5 @@
+import {dropHeldItem, heldItemDropIssue, selectedHeldItemHand} from './heldItemDrop';
+import {heldItemRequirementIssue} from './actionRequirements';
 import { resolveDamageCalculation } from './damageCalculation';
 import type { DamageCalculation } from '../mvp/contracts';
 /**
@@ -870,6 +872,11 @@ function preflightPayload(
       break;
     }
     case 'world_interaction': {
+      if(value.operation==='drop_held_item'){
+        const hand=selectedHeldItemHand(ctx.choices,(value.parameters as Dict | undefined)?.choice_id);
+        const issue=heldItemDropIssue(targetOwned?ctx.target?.runtimeState:state,hand);
+        if(issue)throw mechanicsError('INVALID_PAYLOAD',path,issue);
+      }
       if (typeof value.operation !== 'string' || !value.operation.trim()
         || !isDict(value.parameters)) {
         throw mechanicsError('INVALID_PAYLOAD', path, 'world interaction requires operation and parameters');
@@ -1436,6 +1443,8 @@ export function preflightMechanicsExecution(
       'legacy executor accepts the effects container only',
     );
   }
+  const heldItemIssue = heldItemRequirementIssue(mechanics, state);
+  if (heldItemIssue) throw mechanicsError('INVALID_MECHANICS', 'mechanics.requires_held_item', heldItemIssue);
   const cost = preflightActivationCost(mechanics, ctx);
   if (mechanics.effects === undefined) {
     if (mechanics.kind !== undefined) {
@@ -3473,6 +3482,13 @@ function applyPayloads(
         whoTarget ? ctx.target?.id : ctx.selfId,
       )); break;
       case 'world_interaction':
+        if(p.operation==='drop_held_item'){
+          const hand=selectedHeldItemHand(ctx.choices,(p.parameters as Dict).choice_id);
+          const ownerActorId=whoTarget?ctx.target?.id:ctx.selfId;
+          if(!ownerActorId)throw new Error('Для разоружения требуется участник боевой сцены');
+          route(s=>{const dropped=dropHeldItem(s,hand,ownerActorId,whoTarget?ctx.target!.characterContext!:ctx.character);events.push(...dropped.events);return dropped.state;});
+          break;
+        }
         events.push({
           type: 'world_interaction',
           operation: String(p.operation),

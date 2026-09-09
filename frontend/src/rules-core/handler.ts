@@ -1,3 +1,4 @@
+import {heldItemDropWorldEvents} from './heldItemWorld';
 import {effectiveArmorClass} from './actorArmorClass';
 import { resolveDamageCalculation } from './legacy/engineAdapter';
 import {CORE_WEAPON_ATTACK, systemActionAsRuleDefinition, unarmedDamageActionFor, weaponAttackAction} from './attackDefinitions';
@@ -37,6 +38,7 @@ import {
   applySourceTurnBoundary,
   matchesWhen,
   activeEffectRequirementIssue,
+  disarmingSelectionIssue,
   projectActionSurgeCost,
   projectQuickenedSpellCost,
   addBonusDieToD20Roll,
@@ -11414,6 +11416,8 @@ function executeCommand(
         preparedSpell = preparation;
         executableAction = preparation.executableAction;
       }
+      const disarmIssue = disarmingSelectionIssue(action.mechanics, world.actors[command.targetIds[0]]?.runtime, command.choices);
+      if(disarmIssue)return rejected(world,'InvalidDecision',disarmIssue);
       const activeEffectIssue = activeEffectRequirementIssue(action.mechanics, actor.runtime);
       if (activeEffectIssue) {
         return rejected(world, 'InvalidActionTiming', activeEffectIssue);
@@ -11850,6 +11854,7 @@ export function handleCommand(
   const rawEvents: EventInput[] = [
     ...execution,
     ...terminal.events,
+    ...heldItemDropWorldEvents(world, postTerminal, execution, command.commandId),
     ...automaticArmorOfAgathysEnds,
     ...automaticFamiliarDisappears,
     ...automaticGrappleEnds,

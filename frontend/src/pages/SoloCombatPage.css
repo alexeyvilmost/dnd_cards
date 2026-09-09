@@ -1059,3 +1059,6 @@
   flex-wrap: nowrap;
 }
 .combat-world-control--selection em { flex: 1; }
+
+.ground-item-token { position:absolute; right:3px; bottom:3px; width:26px; height:26px; border:1px solid #b99a63; border-radius:5px; background:#252018; z-index:3; overflow:hidden; pointer-events:none; }
+.ground-item-token img { width:100%; height:100%; object-fit:cover; }

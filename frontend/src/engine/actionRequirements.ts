@@ -21,6 +21,8 @@ export function activeEffectRequirementIssue(
   mechanics: Dict,
   state: RuntimeState,
 ): string | null {
+  const heldIssue = heldItemRequirementIssue(mechanics, state);
+  if (heldIssue) return heldIssue;
   const forbiddenStack = typeof mechanics.forbids_active_effect_stack === 'string'
     ? mechanics.forbids_active_effect_stack.trim()
     : '';
@@ -46,4 +48,18 @@ export function activeEffectRequirementIssue(
   return required.some((reference) => active.has(reference))
     ? null
     : 'Действие доступно только в соответствующем активном облике';
+}
+
+
+/** Exact content identity binds a stat-block attack to its physical weapon.
+ * An item merely carried in a backpack cannot satisfy a held-item requirement. */
+export function heldItemRequirementIssue(mechanics: Dict, state: RuntimeState): string | null {
+  const required = mechanics.requires_held_item;
+  if (required === undefined) return null;
+  if (typeof required !== 'string' || !required.trim()) return 'Некорректное требование удерживаемого предмета';
+  if (state.equipment.main_hand !== required && state.equipment.off_hand !== required) {
+    return 'Для этой атаки нужно держать соответствующее оружие';
+  }
+  return state.inventory.some(row => row.cardId === required && row.containerId == null && row.qty > 0)
+    ? null : 'Удерживаемого предмета нет в инвентаре';
 }

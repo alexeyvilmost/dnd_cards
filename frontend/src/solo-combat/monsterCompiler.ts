@@ -1,3 +1,4 @@
+import {cardPropertyList} from '../utils/cardProperties';
 import type { Action, PassiveEffect } from '../types';
 import type {RuntimeState} from '../mvp/contracts';
 import { projectRuleAction } from '../canon/ruleActionProjection';
@@ -51,8 +52,17 @@ export function compileMonsterInstance(input: {
     ABILITIES.map((key) => [key, Number(input.monster.abilities[key] ?? 10)]),
   ) as Record<(typeof ABILITIES)[number], number>;
   const mods = Object.fromEntries(ABILITIES.map((key) => [key, abilityMod(scores[key])])) as typeof scores;
-  const heldWeapon = input.monster.ai.held_weapon_card;
+  const storedWeapon = input.monster.ai.held_weapon_card;
+  const heldWeapon = storedWeapon ? {...storedWeapon, properties:cardPropertyList(storedWeapon.properties)} : undefined;
   if (heldWeapon && (!heldWeapon.id || heldWeapon.type !== 'weapon')) throw new Error('Некорректное оружие монстра');
+  if(heldWeapon){
+    actions.push({id:`${input.monster.id}:unarmed-fallback`,name:'Безоружный удар',kind:'nonSpell',sourceEntityIds:[input.monster.id],
+      mechanics:{npc_unarmed_fallback:true,activation:{mode:'active',cost:[{resource:'action'}]},
+        targeting:{domain:'actor',actor_targets:true,shape:'single',min_targets:1,max_targets:1,range_ft:5,requires_line_of_sight:true,allowed_relations:['enemy']},
+        effects:[{resolution:'attack_roll',attack_kind:'unarmed',ability:'str',vs:'ac',attack_bonus_override:mods.str+input.monster.proficiency_bonus,
+          on_hit:[{kind:'damage',amount:Math.max(0,1+mods.str),type:'bludgeoning'}]}]},
+      targeting:{minTargets:1,maxTargets:1,rangeFt:5,requiresLineOfSight:true,allowedRelations:['enemy']}});
+  }
   const runtime: RuntimeState = {
     hp: { current: input.monster.max_hp, max: input.monster.max_hp, temp: 0 },
     resources: { action: 1, bonus_action: 1, reaction: 1 },

@@ -1,3 +1,4 @@
+import {heldItemDropIssue} from '../engine/heldItemDrop';
 import { collectInPlayActionChoices, type PendingChoice } from '../mechanics/collectChoices';
 import type { ActorState, RuleActionDefinition } from '../rules-core/domain';
 import { parseDeclaredWeaponActionPolicy } from '../rules-core/weaponActionPolicies';
@@ -134,8 +135,10 @@ export function collectSoloCombatActionChoices(
   actor: ActorState,
   action: RuleActionDefinition,
   cardNumber?: string,
+  target?: ActorState,
 ): PendingChoice[] {
   const choices = [
+    ...disarmingItemChoices(action,target),
     ...unarmedStrikeChoices(action, cardNumber),
     ...primitiveChoices(action),
     ...collectInPlayActionChoices(action.mechanics, {
@@ -223,4 +226,17 @@ export function immediateSoloCombatTargetIds(
     return [actorId];
   }
   return null;
+}
+
+
+export function disarmingItemChoices(action:RuleActionDefinition,target?:ActorState):PendingChoice[]{
+ const trigger=(action.mechanics.activation as Record<string,unknown>|undefined)?.trigger as Record<string,unknown>|undefined;
+ if(!trigger?.disarm_held_item || !target)return [];
+ const items=(['main_hand','off_hand'] as const).flatMap(hand=>{
+  if(heldItemDropIssue(target.runtime,hand))return [];
+  const cardId=target.runtime.equipment[hand];
+  const card=target.character.knownCards?.find(row=>row.id===cardId)??target.character.equippedCards?.find(row=>row.id===cardId);
+  return [{id:hand,name:card?.name??'Предмет в руке',...(card?{previewCard:card}:{})}];
+ });
+ return items.length?[{id:'disarm_held_item',prompt:'Какой предмет выбить из рук?',count:1,source:'explicit',context:'in_play',origin:{kind:'other',id:action.id,name:action.name},items,recommended:[items[0].id]}]:[];
 }

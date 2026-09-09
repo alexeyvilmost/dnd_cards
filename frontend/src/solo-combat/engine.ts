@@ -1,3 +1,5 @@
+import {heldItemDropIssue} from '../engine/heldItemDrop';
+import {heldItemRequirementIssue} from '../engine/actionRequirements';
 import type {EngineEvent} from '../mvp/contracts';
 import {collectRollModifiers} from '../engine/modifiers';
 import {activeConditionsOf} from '../engine/circumstances';
@@ -271,8 +273,10 @@ function opportunityActionsFor(state: SoloCombatState, actorId: string): RuleAct
   const primaryId = state.opportunityActionIds[actorId];
   if (!primaryId) return [];
   const prefix = `${actorId}:melee-reaction:`;
-  return state.catalogActions.filter(row => primaryId.startsWith(prefix)
-    ? row.id.startsWith(prefix) : row.id === primaryId);
+  return state.catalogActions.filter(row => (primaryId.startsWith(prefix)
+    ? row.id.startsWith(prefix) : row.id === primaryId
+      || (row.mechanics.npc_unarmed_fallback===true && (row.mechanics.activation as Record<string,unknown>)?.mode==='reaction' && state.world.actors[actorId].capabilities.actionIds.includes(row.id)))
+    && !heldItemRequirementIssue(row.mechanics, state.world.actors[actorId].runtime));
 }
 
 /** An opportunity attack is one melee attack, never a ranged shot or Multiattack. */
@@ -855,6 +859,16 @@ function transitionState(
   ));
   if (Object.keys(retainedPositions).length !== Object.keys(positionedObjects).length) {
     next = { ...next, worldObjectPositions: retainedPositions };
+  }
+  for(const envelope of rawEvents){
+    const payload=envelope.payload;
+    if(payload.type!=='WorldObjectMutationRecorded')continue;
+    const event=payload.event;
+    const dropped=event.type==='WorldObjectCreated'&&event.object.tags?.includes('held_item_dropped')?event.object:
+      event.type==='WorldObjectPatched'&&event.reason==='held_item_dropped'?nextWorld.objects[event.objectId]:undefined;
+    const ownerId=event.type==='WorldObjectPatched'?state.world.objects[event.objectId]?.heldByActorId:dropped?.ownerActorId;
+    const position=ownerId?state.tokens[ownerId]?.position:undefined;
+    if(dropped&&position)next={...next,worldObjectPositions:{...next.worldObjectPositions,[dropped.id]:{...position}},boardRevision:next.boardRevision+1};
   }
   next = applyForcedMovement(next, rawEvents);
   for (const envelope of rawEvents) {
@@ -3094,7 +3108,12 @@ function offerSourceTriggeredAttackActions(input: {
   if (!offered.pendingTriggeredAction) return offered;
   const validOptions = offered.pendingTriggeredAction.optionActionIds.filter(id => {
     const activation = after.catalogActions.find(row => row.id === id)?.mechanics.activation as Record<string, unknown> | undefined;
-    return (activation?.trigger as Record<string, unknown> | undefined)?.secondary_target !== true
+    const trigger=activation?.trigger as Record<string,unknown>|undefined;
+    if(trigger?.disarm_held_item){
+      const target=after.world.actors[targetIds[0]];
+      if(!target || !(['main_hand','off_hand'] as const).some(hand=>!heldItemDropIssue(target.runtime,hand)))return false;
+    }
+    return trigger?.secondary_target !== true
       || triggeredSecondaryTargetIds(offered, id).length > 0;
   });
   return validOptions.length ? {...offered, pendingTriggeredAction: {...offered.pendingTriggeredAction, optionActionIds: validOptions}} : after;
@@ -3969,6 +3988,7 @@ export function addSoloCombatMonster(input: {
   if (input.state.dashActionId && !actor.capabilities.actionIds.includes(input.state.dashActionId)) {
     actor.capabilities.actionIds.push(input.state.dashActionId);
   }
+  installMonsterUnarmedReaction(actor, compiled.actions, catalogActions);
   const position = availableScenePosition(input.state, 'opposition');
   let next: SoloCombatState = {
     ...input.state,
@@ -4359,7 +4379,7 @@ function continueMonsterAttackSequence(state: SoloCombatState, rng: Rng): SoloCo
       && spatialFacts(next, sequence.actorId, target.id).lineOfSight)
       .sort((a, b) => Number(b.id === sequence.targetId) - Number(a.id === sequence.targetId) || a.id.localeCompare(b.id));
     next = {...next, monsterAttackSequence: {...sequence, actionIds: sequence.actionIds.slice(1)}};
-    if (candidates[0]) next = executeMonsterStrike(next, sequence.actorId, actionId, candidates[0].id, rng);
+    if (candidates[0] && !heldItemRequirementIssue(action.mechanics, source.runtime)) next = executeMonsterStrike(next, sequence.actorId, actionId, candidates[0].id, rng);
   }
   if (monsterMovementPaused(next)) return next;
   const {monsterAttackSequence: _finished, ...finished} = next;
@@ -4419,7 +4439,8 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
   const attackActions = (state.monsterActionIds[monsterId] ?? [])
     .map((id) => state.catalogActions.find((candidate) => candidate.id === id))
     .filter((action): action is RuleActionDefinition => Boolean(action && isAttackAction(action)
-      && action.mechanics.npc_multiattack_followup !== true));
+      && action.mechanics.npc_multiattack_followup !== true
+      && !heldItemRequirementIssue(action.mechanics, monster.runtime)));
   const maximumAttackRange = attackActions.reduce((maximum, action) => (
     Math.max(maximum, monsterAttackRange(action))
   ), monster.attackProfile?.reachFt ?? 5);
@@ -4437,12 +4458,14 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
   } else if (plan.attacks) {
     const distance = gridDistanceFt(next.tokens[monsterId].position, next.tokens[targetId].position);
     const reach = next.world.actors[monsterId].attackProfile?.reachFt ?? 5;
-    const legalActions = attackActions.filter((action) => monsterAttackRange(action) >= distance);
+    const legalActions = attackActions.filter((action) => monsterAttackRange(action) >= distance
+      && !heldItemRequirementIssue(action.mechanics, next.world.actors[monsterId].runtime));
     legalActions.sort((left, right) => {
       const preferredKind = distance <= reach ? 'melee' : 'ranged';
       const leftKind = monsterAttackKind(left);
       const rightKind = monsterAttackKind(right);
-      return Number(leftKind !== preferredKind) - Number(rightKind !== preferredKind)
+      return Number(left.mechanics.npc_unarmed_fallback===true)-Number(right.mechanics.npc_unarmed_fallback===true)
+        || Number(leftKind !== preferredKind) - Number(rightKind !== preferredKind)
         || monsterAttackRange(left) - monsterAttackRange(right)
         || left.id.localeCompare(right.id);
     });
@@ -4597,6 +4620,7 @@ export async function createSoloCombatState(input: {
       base.world.actors[monster.actor.id].capabilities.actionIds.push(opportunity.id);
       opportunityActionIds[monster.actor.id] = opportunity.id;
     }
+    installMonsterUnarmedReaction(base.world.actors[monster.actor.id], monster.actions, catalogActions);
     if (dash) base.world.actors[monster.actor.id].capabilities.actionIds.push(dash.id);
   }
   const partyColors = ['#3c8ccf', '#8a63c7', '#3f9c68', '#c27a3d'];
@@ -4756,4 +4780,13 @@ export function selectedTargetsForAction(input: {
 
 export function activeActor(state: SoloCombatState): ActorState {
   return state.world.actors[activeActorId(state)];
+}
+
+
+function installMonsterUnarmedReaction(actor:ActorState,actions:RuleActionDefinition[],catalog:RuleActionDefinition[]):void{
+ const fallback=actions.find(action=>action.mechanics.npc_unarmed_fallback===true);
+ if(!fallback)return;
+ const reaction=monsterOpportunityVersion([fallback]);if(!reaction)return;
+ if(!catalog.some(row=>row.id===reaction.id))catalog.push(reaction);
+ if(!actor.capabilities.actionIds.includes(reaction.id))actor.capabilities.actionIds.push(reaction.id);
 }

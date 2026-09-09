@@ -486,6 +486,7 @@ export default function SoloCombatPage() {
       const required = action ? collectSoloCombatActionChoices(
         state.world.actors[state.pendingTriggeredAction.sourceActorId], action,
         state.actionPresentation?.[action.id]?.actionRef?.card_number,
+        state.world.actors[state.pendingTriggeredAction.targetIds[0]],
       ) : [];
       const choices = required.length ? await choiceDialog.request(required, action!.name) : {};
       if (!choices) return;

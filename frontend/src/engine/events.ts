@@ -10,6 +10,7 @@ export type { EngineEvent, RollLog };
 
 const WORLD_INTERACTION_LABELS: Record<string, string> = {
   move_object: 'переместить предмет',
+  drop_held_item: 'предмет выпал из руки',
   open_unlocked_door: 'открыть незапертую дверь',
   open_unlocked_container: 'открыть незапертый контейнер',
   stow_item: 'убрать предмет',

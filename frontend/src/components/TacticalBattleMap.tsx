@@ -58,6 +58,14 @@ export default function TacticalBattleMap({
     const position = state.worldObjectPositions?.[object.id];
     return object.illusion && position ? [[`${position.x}:${position.y}`, object] as const] : [];
   }));
+  const groundItemsByCell = new Map<string, {id:string;name:string;imageUrl?:string}[]>();
+  for(const object of Object.values(state.world.objects)){
+    const position=state.worldObjectPositions?.[object.id];
+    if(object.kind!=='item'||!object.itemCardId||object.carriedByActorId||object.heldByActorId||!position)continue;
+    const card=Object.values(state.world.actors).flatMap(actor=>actor.character.knownCards??actor.character.equippedCards??[]).find(card=>card.id===object.itemCardId);
+    const key=`${position.x}:${position.y}`;
+    groundItemsByCell.set(key,[...(groundItemsByCell.get(key)??[]),{id:object.id,name:object.name,imageUrl:card?.image_url??undefined}]);
+  }
   const areasByCell = new Map<string, CombatAreaState[]>();
   for (const area of Object.values(state.combatAreas ?? {})) {
     for (const cell of area.cells) {
@@ -245,7 +253,7 @@ export default function TacticalBattleMap({
             type="button"
             key={`${position.x}:${position.y}`}
             className={`tactical-cell${token ? ' has-token' : ''}${dancingLight || illusion ? ' has-world-object' : ''}${persistentAreas.length ? ' has-combat-area' : ''}${persistentAreas.some((area) => area.lightlyObscured) ? ' is-lightly-obscured' : ''}${persistentAreas.some((area) => area.heavilyObscured) ? ' is-heavily-obscured' : ''}${persistentAreas.some((area) => area.difficultTerrain) ? ' is-difficult-terrain' : ''}${token?.actorId === activeId ? ' is-active' : ''}${token?.actorId === inspectedActorId ? ' is-inspected' : ''}${dead ? ' is-dead' : ''}${areaCells.has(`${position.x}:${position.y}`) || (token && eligibleTargetIds?.includes(token.actorId)) ? ' is-area-preview' : ''}${reachableCells.has(`${position.x}:${position.y}`) ? ' is-move-reachable' : ''}`}
-            aria-label={[actorLabel, areaLabel, lightLabel, illusionLabel, `Клетка ${position.x + 1}, ${position.y + 1}`].filter(Boolean).join(' · ')}
+            aria-label={[actorLabel, areaLabel, lightLabel, illusionLabel, (groundItemsByCell.get(`${position.x}:${position.y}`)??[]).map(item=>`На земле: ${item.name}`).join(", "), `Клетка ${position.x + 1}, ${position.y + 1}`].filter(Boolean).join(' · ')}
             data-actor-id={token?.actorId}
             onMouseEnter={() => setHovered(position)}
             onMouseLeave={() => setHovered(null)}
@@ -275,6 +283,11 @@ export default function TacticalBattleMap({
                 <small>{illusion.illusion!.description}</small>
               </span>
             )}
+            {(groundItemsByCell.get(`${position.x}:${position.y}`)??[]).map(item=>(
+              <span key={item.id} className="ground-item-token" title={item.name} data-world-object-id={item.id}>
+                {item.imageUrl?<img src={item.imageUrl} alt={item.name}/>:<span aria-label={item.name}>◇</span>}
+              </span>
+            ))}
             {token && actor && (
               <span className="battle-token" style={{ '--token-color': token.color } as React.CSSProperties}>
                 {token.tokenUrl ? <img src={token.tokenUrl} alt="" /> : <b>{actor.name.slice(0, 1)}</b>}

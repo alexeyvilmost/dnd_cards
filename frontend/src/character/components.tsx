@@ -1,3 +1,4 @@
+import ItemPreview from '../components/ItemPreview';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { optionsForChoiceSource, labelOf, SKILLS, type RegistryItem } from '../mechanics/registries';
 import { requiresInitialCharacterChoice, type PendingChoice } from '../mechanics/collectChoices';
@@ -214,7 +215,17 @@ export function ChoiceResolver({
       <div className="choice-title">
         {choice.prompt} <span className="origin">· {choice.origin.name}</span>
       </div>
-      {actionReferences !== '[]' ? (
+      {choice.items?.some(item=>item.previewCard) ? (
+        <div className="forge-square-grid">
+          {options.map(option=>{
+            const card=choice.items?.find(item=>item.id===option.id)?.previewCard;
+            return <EntitySquareCard key={option.id} name={option.label} imageUrl={card?.image_url}
+              selected={value.includes(option.id)} disabled={!!unavailableOptions[option.id]&&!value.includes(option.id)}
+              disabledReason={unavailableOptions[option.id]} onClick={()=>toggle(option.id)}
+              preview={card?<ItemPreview card={card} disableHover/>:undefined}/>;
+          })}
+        </div>
+      ) : actionReferences !== '[]' ? (
         <div className="forge-square-grid">
           {options.map(option => {
             const action = actionPreviews[option.id];

@@ -1,3 +1,4 @@
+import {cardPropertyList} from '../utils/cardProperties';
 import React from 'react';
 import type { Card } from '../types';
 import { RARITY_OPTIONS, getEquipmentSlotLabel } from '../types';
@@ -80,7 +81,8 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
   if (card.weight != null) meta.push({ img: '/icons/weight.png', imgStyle: WEIGHT_ICON_STYLE, label: fmtWeight(card.weight) });
   if (card.slot) meta.push({ emoji: '🎽', label: getEquipmentSlotLabel(card.slot) });
   if (card.range) meta.push({ emoji: '🎯', label: card.range });
-  if (card.properties && card.properties.length) meta.push({ emoji: '✦', label: card.properties.map((p) => getPropertyLabel(p)).join(', ') });
+  const properties=cardPropertyList(card.properties);
+  if (properties.length) meta.push({ emoji: '✦', label: properties.map((p) => getPropertyLabel(p)).join(', ') });
 
   const accent = rarityColor(card);
   const bgGradient = rarityGradient(accent, card.rarity);

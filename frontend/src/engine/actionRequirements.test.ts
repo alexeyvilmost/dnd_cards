@@ -45,3 +45,12 @@ describe('temporary library-effect action requirements', () => {
     }, active)).toContain('другой вариант Метамагии');
   });
 });
+
+
+it.each(['held','backpack','container','missing','wrong','malformed'])('enforces physical weapon availability: %s',mode=>{
+ const runtime=state();runtime.inventory=[{cardId:'weapon',qty:1,...(mode==='container'?{containerId:'bag'}:{})}];
+ if(mode!=='backpack')runtime.equipment.main_hand=mode==='wrong'?'other':'weapon';
+ if(mode==='missing')runtime.inventory=[];
+ const issue=activeEffectRequirementIssue({requires_held_item:mode==='malformed'?[]:'weapon'},runtime);
+ if(mode==='held')expect(issue).toBeNull();else expect(issue).toBeTruthy();
+});
