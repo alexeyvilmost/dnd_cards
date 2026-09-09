@@ -1457,6 +1457,7 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		{Version: "231_psi_warrior_strike", Description: "Materialize own-turn Psionic Strike after weapon damage", Up: materializePsiWarriorStrike, Down: func(db *sql.DB) error { return nil }},
 		{Version: "232_psi_warrior_protective_field", Description: "Materialize Protective Field with damage observer reactions", Up: materializePsiWarriorProtectiveField, Down: func(db *sql.DB) error { return nil }},
 		{Version: "233_psi_warrior_movement", Description: "Materialize Telekinetic Movement creature transport and recharge", Up: materializePsiWarriorMovement, Down: func(db *sql.DB) error { return nil }},
+		{Version: "234_psi_warrior_objects", Description: "Extend Telekinetic Movement to loose physical objects", Up: materializePsiWarriorObjects, Down: func(db *sql.DB) error { return nil }},
 		// Здесь можно добавлять новые миграции
 	}
 }

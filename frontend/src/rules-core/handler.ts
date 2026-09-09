@@ -1,3 +1,4 @@
+import {isLooseTelekineticObject} from './telekineticMovement';
 import {heldItemDropWorldEvents} from './heldItemWorld';
 import {effectiveArmorClass} from './actorArmorClass';
 import { resolveDamageCalculation } from './legacy/engineAdapter';
@@ -11469,7 +11470,7 @@ function executeCommand(
       if ((action.mechanics.activation as Record<string,unknown>|undefined)?.telekinetic_movement === true) {
         const targetId=command.targetIds.length===1?command.targetIds[0]:'';
         const observed=command.factsByTarget?.[targetId];
-        if(targetId===actor.id || !observed?.telekineticMovementValidated || observed.willing!==true || observed.canSeeTarget!==true || observed.distanceFt>30) return rejected(world,'InvalidFacts','Телекинетическое перемещение требует выбора согласной цели и свободного места на поле');
+        if(!observed?.telekineticMovementValidated || observed.canSeeTarget!==true || observed.distanceFt>30 || (observed.telekineticObjectId ? targetId!==actor.id || !isLooseTelekineticObject(world.objects[observed.telekineticObjectId]) : targetId===actor.id || observed.willing!==true)) return rejected(world,'InvalidFacts','Телекинетическое перемещение требует выбора согласной цели и свободного места на поле');
       }
       const disarmIssue = disarmingSelectionIssue(action.mechanics, world.actors[command.targetIds[0]]?.runtime, command.choices);
       if(disarmIssue)return rejected(world,'InvalidDecision',disarmIssue);

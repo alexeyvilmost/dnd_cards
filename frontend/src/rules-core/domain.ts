@@ -249,6 +249,7 @@ export interface SpatialFacts {
   damageObservers?: Array<{ actorId: string; distanceFt: number; canSeeTarget: boolean }>;
   positionExchangeValidated?: true;
   telekineticMovementValidated?: true;
+  telekineticObjectId?: string;
   commandedAttackValidated?: true;
   maneuveringMovementValidated?: true;
   factsSource: 'scenario' | 'board' | 'gm_ruling';

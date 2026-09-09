@@ -1,3 +1,4 @@
+import {isLooseTelekineticObject} from '../rules-core/telekineticMovement';
 import {heldItemDropIssue} from '../engine/heldItemDrop';
 import {heldItemRequirementIssue} from '../engine/actionRequirements';
 import type {EngineEvent} from '../mvp/contracts';
@@ -1428,10 +1429,35 @@ function applyPositionExchange(before: SoloCombatState, after: SoloCombatState, 
   return autoResolveSystemDecisions(next, rng);
 }
 
-function prepareTelekineticMovement(input: CombatActionInput, action: RuleActionDefinition): {targetId:string; destination:GridPosition}|undefined {
+type TelekineticTransport = {targetId: string; destination: GridPosition; objectId?: string};
+
+function objectSightFacts(state: SoloCombatState, actorId: string, position: GridPosition) {
+  let probeId = '__telekinetic_object__';
+  while (state.tokens[probeId] || state.world.actors[probeId]) probeId += '_';
+  return spatialFacts({...state, tokens: {...state.tokens,
+    [probeId]: {...state.tokens[actorId], actorId: probeId, position}}}, actorId, probeId, false);
+}
+
+function prepareTelekineticMovement(input: CombatActionInput, action: RuleActionDefinition): TelekineticTransport|undefined {
   if ((action.mechanics.activation as Record<string,unknown>|undefined)?.telekinetic_movement !== true) return undefined;
   const {state,actorId,targetIds,worldPosition}=input;
   const targetId=targetIds.length===1?targetIds[0]:'';
+  const objectIds = input.choices?.telekinetic_object_id;
+  if (objectIds) {
+    const objectId = objectIds.length === 1 ? objectIds[0] : '';
+    const object = state.world.objects[objectId];
+    const origin = state.worldObjectPositions?.[objectId];
+    if (targetId !== actorId || !isLooseTelekineticObject(object) || !origin) throw new Error('Выберите незакреплённый предмет не больше Большого, который никто не носит');
+    const facts = objectSightFacts(state, actorId, origin);
+    if (facts.distanceFt > 30 || !facts.canSeeTarget) throw new Error('Предмет должен быть виден в пределах 30 фт.');
+    if (!worldPosition || !Number.isInteger(worldPosition.x) || !Number.isInteger(worldPosition.y)
+      || worldPosition.x < 0 || worldPosition.y < 0 || worldPosition.x >= TACTICAL_WIDTH || worldPosition.y >= TACTICAL_HEIGHT) throw new Error('Выберите клетку на поле');
+    if (gridDistanceFt(origin, worldPosition) > 30) throw new Error('Предмет можно переместить не более чем на 30 фт.');
+    if (occupiedPositions(state).has(`${worldPosition.x}:${worldPosition.y}`)
+      || Object.entries(state.worldObjectPositions ?? {}).some(([id, point]) => id !== objectId && samePosition(point, worldPosition))) throw new Error('Выберите свободную клетку');
+    if (!objectSightFacts(state, actorId, worldPosition).canSeeTarget) throw new Error('Место назначения должно быть видно');
+    return {targetId, destination: worldPosition, objectId};
+  }
   const target=state.world.actors[targetId];
   if(!target || actorId===targetId || !isPlayerControlledCombatActor(state,targetId)
     || combatRelation(state,actorId,targetId)!=='ally' || target.runtime.hp.current<=0 || activeConditionsOf(target.runtime).has('incapacitated')) throw new Error('Выберите другое согласное существо');
@@ -1446,8 +1472,13 @@ function prepareTelekineticMovement(input: CombatActionInput, action: RuleAction
   return {targetId,destination:worldPosition};
 }
 
-function applyTelekineticMovement(before:SoloCombatState,after:SoloCombatState,prepared:{targetId:string;destination:GridPosition},rng:Rng):SoloCombatState {
+function applyTelekineticMovement(before:SoloCombatState,after:SoloCombatState,prepared:TelekineticTransport,rng:Rng):SoloCombatState {
   const {targetId,destination}=prepared;
+  if (prepared.objectId) {
+    return appendLog({...after, worldObjectPositions: {...after.worldObjectPositions,
+      [prepared.objectId]: {...destination}}, boardRevision: after.boardRevision + 1}, targetId,
+      'Предмет перемещён телекинезом.');
+  }
   const crossing=enteredAndExitedAreas(before,before.tokens[targetId].position,destination,targetId);
   let next:SoloCombatState={...after,tokens:{...after.tokens,[targetId]:{...after.tokens[targetId],position:{...destination}}},boardRevision:after.boardRevision+1};
   next=interruptStraightMovement(next,targetId);
@@ -1490,7 +1521,15 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
     input.choices,
     input.worldInput,
   );
-  if (telekineticMovement) declaration.factsByTarget={...declaration.factsByTarget,[telekineticMovement.targetId]:{...spatialFacts(input.state,input.actorId,telekineticMovement.targetId),telekineticMovementValidated:true,willing:true}};
+  if (telekineticMovement) {
+    const facts = spatialFacts(input.state,input.actorId,telekineticMovement.targetId);
+    const objectFacts = telekineticMovement.objectId
+      ? objectSightFacts(input.state, input.actorId, input.state.worldObjectPositions![telekineticMovement.objectId]) : undefined;
+    declaration.factsByTarget = {...declaration.factsByTarget, [telekineticMovement.targetId]: {...facts,
+      ...(objectFacts ? {distanceFt: objectFacts.distanceFt, canSeeTarget: objectFacts.canSeeTarget, lineOfSight: objectFacts.lineOfSight} : {}),
+      telekineticMovementValidated: true, willing: true,
+      ...(telekineticMovement.objectId ? {telekineticObjectId: telekineticMovement.objectId} : {})}};
+  }
   if (positionExchange) {
     declaration.factsByTarget = {...declaration.factsByTarget,
       [positionExchange.targetId]: {...spatialFacts(input.state, input.actorId, positionExchange.targetId), ...declaration.factsByTarget?.[positionExchange.targetId], positionExchangeValidated: true},

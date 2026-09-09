@@ -4794,3 +4794,32 @@ it.each(['move','distant_destination','self','enemy','far_target','far_destinati
  expect(restored.world.actors[actorId].runtime.resources).toMatchObject({action:0,psi_warrior_telekinetic_movement:1,psi_warrior_energy_die:3});
  expect(state).toEqual(before);
 });
+
+
+it.each(['move','large','tiny','owned','huge','secured','held','carried','attended','spell_effect','missing_object','far_target','far_destination','occupied','occupied_object','blind','missing','duplicate','surge_only'])('Telekinetic object movement preserves physical identity and validates before costs: %s', async mode => {
+ const participant=fighterSeed(); const actorId=participant.character.id; const actor=participant.canonical.world.actors[actorId];
+ actor.runtime.resources.psi_warrior_telekinetic_movement=1; actor.runtime.maxResources.psi_warrior_telekinetic_movement=1;
+ const migration=readFileSync(new URL('../../../backend/migrations/psi_warrior_movement_233.go',import.meta.url),'utf8');
+ const mechanics=JSON.parse(migration.match(/const psiWarriorMovement233 = `([^`]+)`/)![1]);
+ mechanics.targeting.allowed_relations=['self','ally'];
+ const movement=projectRuleAction({id:'23300000-0000-4000-8000-000000000001',name:'Telekinetic Movement',type:'class_feature',resource:'action',mechanics} as unknown as Action);
+ const actions=[...participant.canonical.actions,movement]; actor.capabilities.actionIds.push(movement.id);
+ participant.canonical={...participant.canonical,actions,catalog:{getAction:id=>actions.find(row=>row.id===id),listActions:()=>actions}};
+ const state=await createSoloCombatState({character:participant.character,participant,selected:[{monster:{...goblin(),max_hp:100},quantity:1}],actions:[scimitar()],effects:[],rng:()=>0.5});
+ state.tokens[actorId].position={x:4,y:4};
+ state.world.objects.object={id:'object',name:'Loose weapon',kind:mode==='spell_effect'?'spell_effect':'item',size:mode==='huge'?'huge':mode==='large'?'large':mode==='tiny'?'tiny':'small',itemCardId:'physical-card',unattended:mode!=='attended',secured:mode==='secured',
+ ...(mode==='held'?{heldByActorId:actorId,heldInHand:'main_hand' as const}:{}),...(mode==='carried'?{carriedByActorId:actorId}:{}),...(mode==='owned'?{ownerActorId:actorId}:{})};
+ state.worldObjectPositions={object:mode==='far_target'?{x:11,y:4}:mode==='far_destination'?{x:1,y:1}:{x:5,y:4}};
+ if(mode==='missing_object')delete state.world.objects.object;
+ if(mode==='occupied_object'){state.world.objects.blocker={id:'blocker',name:'Blocker',kind:'item',size:'small'};state.worldObjectPositions.blocker={x:5,y:7};}
+ if(mode==='blind')state.world.actors[actorId].runtime.activeEffects=[{id:'blind',name:'Blinded',source:'test',mechanics:{kind:'condition',value:'blinded'}}];
+ if(mode==='surge_only'){state.world.actors[actorId].runtime.resources.action=0;state.world.actors[actorId].runtime.resources.action_surge_action=1;}
+ const destination=mode==='missing'?undefined:mode==='occupied'?{x:4,y:4}:mode==='far_destination'?{x:11,y:9}:{x:5,y:7};
+ const before=clone(state);let draws=0;
+ const perform=()=>executeCombatAction({state,actorId,actionId:movement.id,targetIds:[actorId],worldPosition:destination,choices:{telekinetic_object_id:mode==='duplicate'?['object','object']:['object']},rng:()=>{draws++;return 0.5;}});
+ if(!['move','large','tiny','owned'].includes(mode)){expect(perform).toThrow();expect(draws).toBe(0);expect(state).toEqual(before);return;}
+ const next=perform();expect(next.worldObjectPositions?.object).toEqual(destination);expect(next.world.objects).toEqual(before.world.objects);expect(next.tokens).toEqual(before.tokens);
+ expect(next.world.actors[actorId].runtime.resources).toMatchObject({action:0,psi_warrior_telekinetic_movement:0});
+ expect(next.world.actors[actorId].runtime.inventory).toEqual(before.world.actors[actorId].runtime.inventory);
+ expect(clone(next).worldObjectPositions?.object).toEqual(destination);expect(state).toEqual(before);
+});

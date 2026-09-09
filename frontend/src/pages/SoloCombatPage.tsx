@@ -1,3 +1,4 @@
+import {isLooseTelekineticObject} from '../rules-core/telekineticMovement';
 import {effectiveArmorClass} from '../rules-core/actorArmorClass';
 import type {Action} from '../types';
 import {availableCheckManeuvers, checkManeuverChoice} from '../character/checkManeuvers';
@@ -591,8 +592,23 @@ export default function SoloCombatPage() {
       const selectedAction=state.catalogActions.find(row=>row.id===selectedActionId)!;
       if((selectedAction.mechanics.activation as Record<string,unknown>|undefined)?.telekinetic_movement===true){
         if(!selectedMovementTargetId){
-          if(!actorId || actorId===activeControlledActorId || !isControlledCharacter(state,actorId))throw new Error('Выберите другое согласное существо');
-          setSelectedMovementTargetId(actorId);return;
+          if (actorId && actorId !== activeControlledActorId && isControlledCharacter(state, actorId)) {
+            setSelectedMovementTargetId(actorId); return;
+          }
+          const objects = Object.values(state.world.objects).filter(object => {
+            const point = state.worldObjectPositions?.[object.id];
+            return isLooseTelekineticObject(object) && point?.x === position.x && point?.y === position.y;
+          });
+          if (!objects.length) throw new Error('Выберите согласного союзника или свободный предмет на поле');
+          const items = objects.map(object => {
+            const card = Object.values(state.world.actors).flatMap(actor => [...(actor.character.knownCards ?? []), ...(actor.character.equippedCards ?? [])]).find(card => card.id === object.itemCardId);
+            return {id: object.id, name: object.name, ...(card ? {previewCard: card} : {})};
+          });
+          const choice = objects.length === 1 ? {telekinetic_object_id: [objects[0].id]}
+            : await choiceDialog.request([{id: 'telekinetic_object_id', prompt: 'Какой предмет переместить?', count: 1, source: 'explicit', context: 'in_play', origin: {kind: 'other', id: selectedAction.id, name: selectedAction.name}, items, recommended: [items[0].id]}], selectedAction.name);
+          if (!choice) return;
+          setSelectedActionChoices({...selectedActionChoices, ...choice});
+          setSelectedMovementTargetId(activeControlledActorId); return;
         }
         if(actorId)throw new Error('Выберите свободную клетку для перемещения');
         const targetIds=[selectedMovementTargetId];
@@ -823,7 +839,7 @@ export default function SoloCombatPage() {
             }}
           />
           {selectedActionId && (state.catalogActions.find(row=>row.id===selectedActionId)?.mechanics.activation as Record<string,unknown>|undefined)?.telekinetic_movement===true && <section className="combat-world-control combat-world-control--selection" aria-label="Выбор перемещения">
-            <em>{selectedMovementTargetId ? `Куда переместить ${state.world.actors[selectedMovementTargetId]?.name}? Выберите свободную клетку в пределах 30 фт. от цели.` : 'Выберите согласного союзника в пределах 30 фт.'}</em>
+            <em>{selectedMovementTargetId ? `Выберите свободную клетку в пределах 30 фт. от ${selectedActionChoices.telekinetic_object_id ? 'предмета' : 'цели'}.` : 'Выберите согласного союзника или свободный предмет в пределах 30 фт.'}</em>
             <button type="button" onClick={()=>{setSelectedActionId(null);setSelectedMovementTargetId(null);}}>Отмена</button>
           </section>}
           {secondaryActionId && state.pendingTriggeredAction && (
