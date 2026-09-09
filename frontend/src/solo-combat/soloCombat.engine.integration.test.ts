@@ -4438,6 +4438,7 @@ describe('Riposte responds to a final incoming melee miss',()=>{
   if(mode==='no_reaction')state.world.actors[actorId].runtime.resources.reaction=0;
   const attackId=state.monsterActionIds[monster.id][0];
   if(mode==='ranged') (state.catalogActions.find(action=>action.id===attackId)!.mechanics.effects as Record<string,unknown>[])[0].attack_kind='weapon_ranged';
+  if(mode==='spell_melee'||mode==='spell_ranged') (state.catalogActions.find(action=>action.id===attackId)!.mechanics.effects as Record<string,unknown>[])[0].attack_kind=mode;
   if(mode.startsWith('incoming_precision')) {
     state.controlledCharacterIds=[actorId,monster.id];
     state.world.actors[monster.id].capabilities.actionIds.push(precision.id);
@@ -4448,6 +4449,10 @@ describe('Riposte responds to a final incoming melee miss',()=>{
   const pending=executeCombatAction({state,actorId:monster.id,actionId:attackId,targetIds:[actorId],rng:()=>0.1});
   return {state,pending,actorId,monsterId:monster.id,riposte,precision,attackId};
  }
+ it('offers Riposte after a melee spell miss',async()=>{
+  const {pending}=await setup('spell_melee');
+  expect(pending.pendingTriggeredAction?.event).toBe('enemy_melee_miss');
+ });
  it('allows a lethal counterattack to finish the encounter before the monster resumes',async()=>{
   const {pending,actorId,monsterId}=await setup();
   pending.world.actors[monsterId].runtime.hp.current=1;
@@ -4464,7 +4469,7 @@ describe('Riposte responds to a final incoming melee miss',()=>{
   const next=resolvePlayerReaction(clone(pending),{kind:'reaction',actionId:precision.id},()=>0.99);
   expect(next.pendingTriggeredAction?.event).toBe(mode==='incoming_precision_miss'?'enemy_melee_miss':undefined);
  });
- it.each(['unknown','exhausted','no_reaction','incapacitated','ranged'])('does not offer an unavailable reaction: %s',async mode=>{
+ it.each(['unknown','exhausted','no_reaction','incapacitated','ranged','spell_ranged'])('does not offer an unavailable reaction: %s',async mode=>{
   const {pending}=await setup(mode);expect(pending.pendingTriggeredAction).toBeUndefined();
  });
  it.each(['unarmed','weapon','miss','crit','decline'])('persists, spends once and resumes monster turn: %s',async mode=>{

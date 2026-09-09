@@ -2854,7 +2854,7 @@ function offerTriggeredAttackActions(input: {
   const effects = attack?.mechanics.effects as Record<string, unknown>[] | undefined;
   const melee = kind === 'unarmed' || effects?.some(effect => effect.resolution === 'attack_roll'
     && (attackRangeFromEffect(effect, kind === 'off' ? 'off' : 'main', attacker.character, attacker.runtime.equipment) === 'melee'
-      || effect.attack_kind === 'weapon_melee'));
+      || effect.attack_kind === 'weapon_melee' || effect.attack_kind === 'spell_melee'));
   if (!melee) return after;
   const rolls = combatLogSince(after, combatLogCursor(input.before)).flatMap(entry => entry.records ?? [])
     .filter(record => record.sourceActorId === attacker.id && record.targetIds.includes(defender.id))
