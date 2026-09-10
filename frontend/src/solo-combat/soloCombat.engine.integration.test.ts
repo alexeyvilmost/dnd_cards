@@ -21,7 +21,7 @@ import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { actorMustCrawl, gridDistanceFt } from './tacticalGrid';
 import { isPlayerControlledCombatActor, SOLO_COMBAT_KEY, type SoloCombatState } from './types';
 import { UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
-import {declineAdditionalMovement, monsterRouteOpportunityRisk, moveActorAlongRoute} from './engine';
+import {createMonsterRouteRiskEvaluator, declineAdditionalMovement, monsterRouteOpportunityRisk, moveActorAlongRoute} from './engine';
 import {planMonsterTurn} from './monsterAi';
 import {compileMonsterInstance} from './monsterCompiler';
 import { STONEWORK_CONTACT_CHOICE_ID } from '../mechanics/collectChoices';
@@ -4014,10 +4014,19 @@ describe('canonical character opportunity attacks', () => {
     const risk = (start: {x: number; y: number}, path: Array<{x: number; y: number}>) =>
       monsterRouteOpportunityRisk(state, monster.id, start, path);
     const before = clone(state);
+    const cachedRisk = createMonsterRouteRiskEvaluator(state, monster.id);
+    // Crossing out of reach differs from crossing in; repeated prefixes must
+    // still count each reactor once, and a new planning pass observes spending.
+    expect(cachedRisk(origin, [{x: 6, y: 4}])).toBe(1);
+    expect(cachedRisk({x: 6, y: 4}, [origin])).toBe(0);
+    expect(cachedRisk(origin, [{x: 6, y: 4}, origin, {x: 6, y: 4}])).toBe(1);
+    expect(planMonsterTurn(state, monster, player.id, 60, 20, cachedRisk))
+      .toEqual(planMonsterTurn(state, monster, player.id, 60, 20, risk));
     expect(risk(origin, [{x: 6, y: 4}, {x: 5, y: 4}, {x: 6, y: 4}])).toBe(1);
     expect(planMonsterTurn(state, monster, player.id, 60, 20, risk).firstMove).toEqual([]);
     expect(state).toEqual(before);
     player.runtime.resources.reaction = 0;
+    expect(createMonsterRouteRiskEvaluator(state, monster.id)(origin, [{x: 6, y: 4}])).toBe(0);
     const retreat = planMonsterTurn(state, monster, player.id, 60, 20, risk);
     expect(gridDistanceFt(retreat.firstMove.at(-1)!, state.tokens[player.id].position)).toBe(20);
     expect(retreat.attacks).toBe(true);

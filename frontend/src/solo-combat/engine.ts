@@ -3302,15 +3302,31 @@ function movementOpportunityEnemies(state: SoloCombatState, moverId: string, des
 export function monsterRouteOpportunityRisk(
   state: SoloCombatState, moverId: string, origin: GridPosition, path: GridPosition[],
 ): number {
-  const threatenedBy = new Set<string>();
-  let position = origin;
-  for (const destination of path) {
-    const projected = {...state, pendingMovementStep: undefined,
-      tokens: {...state.tokens, [moverId]: {...state.tokens[moverId], position}}};
-    for (const enemy of movementOpportunityEnemies(projected, moverId, destination)) threatenedBy.add(enemy.id);
-    position = destination;
-  }
-  return threatenedBy.size;
+  return createMonsterRouteRiskEvaluator(state, moverId)(origin, path);
+}
+
+/** One immutable planning pass shares directed-edge eligibility across candidate
+ * routes. Discard the evaluator before executing movement/reactions: a later
+ * plan must observe the new resources, visibility and conditions. */
+export function createMonsterRouteRiskEvaluator(state: SoloCombatState, moverId: string) {
+  const edgeThreats = new Map<string, readonly string[]>();
+  return (origin: GridPosition, path: GridPosition[]): number => {
+    const threatenedBy = new Set<string>();
+    let position = origin;
+    for (const destination of path) {
+      const key = `${position.x},${position.y}>${destination.x},${destination.y}`;
+      let threats = edgeThreats.get(key);
+      if (!threats) {
+        const projected = {...state, pendingMovementStep: undefined,
+          tokens: {...state.tokens, [moverId]: {...state.tokens[moverId], position}}};
+        threats = movementOpportunityEnemies(projected, moverId, destination).map(enemy => enemy.id);
+        edgeThreats.set(key, threats);
+      }
+      for (const enemyId of threats) threatenedBy.add(enemyId);
+      position = destination;
+    }
+    return threatenedBy.size;
+  };
 }
 
 function executeOpportunityAttacks(
@@ -4558,7 +4574,7 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
   ), monster.attackProfile?.reachFt ?? 5);
   const plan = planMonsterTurn(state, monster, targetId, maximumAttackRange,
     monsterAIProfile(monster).preferred_range_ft,
-    (origin, path) => monsterRouteOpportunityRisk(state, monsterId, origin, path));
+    createMonsterRouteRiskEvaluator(state, monsterId));
   let next = state;
   if (plan.firstMove.length) next = executeMonsterRoute(next, monsterId, plan.firstMove, rng);
   if (next.world.actors[monsterId].runtime.hp.current <= 0 || next.outcome !== 'active'
