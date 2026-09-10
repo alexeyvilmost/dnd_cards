@@ -265,7 +265,6 @@ async function loadSheetCombatParticipant(input: {
   }
   const draft = characterToDraft(input.character);
   const assembled = await dependencies.loadAssembly(draft);
-  const ruleState = resolveCharacterRules({ draft, assembled });
   const runtime = forgeToRuntimeState(input.character);
   const cardsById = await hydrateSheetCombatCards({
     character: input.character,
@@ -274,14 +273,19 @@ async function loadSheetCombatParticipant(input: {
   });
   const equippedCards = Object.values(runtime.equipment)
     .flatMap((id) => id && cardsById.get(id) ? [cardsById.get(id)!] : []);
+  // Apply the same item sources as the live sheet before deriving ability mods,
+  // proficiencies and action formulas. Forge's persisted build remains unequipped.
+  const permanentItems = collectItemMechanics(runtime.equipment, cardsById, input.character.turn_state, runtime.inventory)
+    .filter(item => {
+      const mode = (item.mechanics.activation as Record<string, unknown> | undefined)?.mode;
+      return mode === undefined || mode === 'passive';
+    });
+  const ruleState = resolveCharacterRules({ draft, assembled, runtimeSources: permanentItems.map(item => ({
+    source: {type: 'item' as const, id: item.card.id, name: item.card.name}, mechanics: item.mechanics,
+  })) });
   const passives = [
     ...collectPassiveMechanics(assembled, input.character.resolved_choices ?? {}),
-    // Reuse the sheet's item gates (equipped/carried/attuned) and deduplication.
-    // Activated item riders must not become permanent merely by being equipped.
-    ...collectItemMechanics(runtime.equipment, cardsById, input.character.turn_state, runtime.inventory)
-      .filter(item => { const mode = (item.mechanics.activation as Record<string, unknown> | undefined)?.mode;
-        return mode === undefined || mode === 'passive'; })
-      .map(item => item.mechanics),
+    ...permanentItems.map(item => item.mechanics),
     ...untrainedArmorPenaltyMechanics(ruleState),
   ];
   const inventory = await collectSheetCombatActionInventory({

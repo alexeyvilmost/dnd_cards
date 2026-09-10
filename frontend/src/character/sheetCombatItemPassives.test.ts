@@ -3,6 +3,7 @@ import {createSheetCombatRuntime} from './sheetCombatRuntimeFactory';
 import type {AssembledCharacter} from './assemble';
 import type {ForgeCharacter} from './types';
 import type {Card} from '../types';
+import {senseRangeFt} from '../engine/senses';
 import {InMemoryRulesSession} from '../rules-core/session';
 import {createLogicalClock, createSequentialIdFactory, createStrictRngTape} from '../rules-core/determinism';
 
@@ -17,6 +18,11 @@ describe('sheet item passives survive combat initialization', () => {
     const card = structuredClone(armor);
     card.requires_attunement = mode === 'unattuned' || mode === 'attuned';
     if (mode === 'active') (card.mechanics!.activation as Record<string, unknown>).mode = 'active';
+    const effects = card.mechanics!.effects as {result: Record<string, unknown>[]}[];
+    effects[0].result.push(
+      {kind: 'grant_ability_score', ability: 'str', amount: 2},
+      {kind: 'grant_sense', sense: 'blindsight', range: 10},
+    );
     const assembled = {race: {id: 'race', name: 'Human', speed: 30}, klass: null, subclass: null,
       background: null, feats: [], effects: [], actions: [], spells: [], pendingChoices: [],
       featAbilityIncreases: [], derived: {}} as unknown as AssembledCharacter;
@@ -32,6 +38,11 @@ describe('sheet item passives survive combat initialization', () => {
     const participant = await factory.loadSheetCombatParticipant({character, cards: new Map([[card.id, card]])});
     const canonical = participant.canonical;
     const enabled = mode === 'equipped' || mode === 'attuned';
+    const actor = canonical.world.actors.hero;
+    expect(actor.character.abilityScores?.str).toBe(enabled ? 18 : 16);
+    expect(actor.character.abilityMods.str).toBe(enabled ? 4 : 3);
+    expect(senseRangeFt(actor.runtime, actor.passives ?? [], 'blindsight')).toBe(enabled ? 10 : 0);
+    expect(character.abilities?.str).toBe(16);
     const tape = createStrictRngTape(enabled ? [{label: 'first d20', sides: 20, value: 18}, {label: 'disadvantage d20', sides: 20, value: 3}]
       : [{label: 'first d20', sides: 20, value: 18}]);
     const world = structuredClone(canonical.world);
