@@ -1,3 +1,4 @@
+import {signedMovementBudget, withMovementBudget} from './movementLedger';
 import { weaponBondProtectsHand } from '../rules-core/weaponBond';
 import {telekineticObjectIssue} from '../rules-core/telekineticMovement';
 import {heldItemDropIssue} from '../engine/heldItemDrop';
@@ -688,22 +689,16 @@ function reconcileMovementForSpeedChanges(
   state: SoloCombatState,
   nextWorld: WorldState,
 ): SoloCombatState {
-  let movementRemainingFt = state.movementRemainingFt;
+  let next = state;
   for (const [actorId, nextActor] of Object.entries(nextWorld.actors)) {
     const previousActor = state.world.actors[actorId];
     if (!previousActor) continue;
     const speedDelta = effectiveActorSpeedFt(nextActor) - effectiveActorSpeedFt(previousActor);
     if (speedDelta === 0) continue;
-    if (movementRemainingFt === state.movementRemainingFt) {
-      movementRemainingFt = { ...state.movementRemainingFt };
-    }
-    const previousRemaining = state.movementRemainingFt[actorId]
-      ?? effectiveActorSpeedFt(previousActor);
-    movementRemainingFt[actorId] = Math.max(0, previousRemaining + speedDelta);
+    const previousRemaining = signedMovementBudget(state, actorId, effectiveActorSpeedFt(previousActor));
+    next = withMovementBudget(next, actorId, previousRemaining + speedDelta);
   }
-  return movementRemainingFt === state.movementRemainingFt
-    ? state
-    : { ...state, movementRemainingFt };
+  return next;
 }
 
 /** Keep the tactical projection in lockstep with canonical summoned actors.
@@ -753,6 +748,12 @@ function reconcileSummonedActorProjection(
     monsterActionIds,
     opportunityActionIds,
   };
+  if (state.movementDeficitFt && removedActorIds.length) {
+    const retained = Object.fromEntries(Object.entries(state.movementDeficitFt)
+      .filter(([actorId]) => nextActorIds.has(actorId)));
+    const {movementDeficitFt: _oldDeficit, ...base} = projection;
+    projection = Object.keys(retained).length ? {...base, movementDeficitFt: retained} : base;
+  }
   let boardChanged = removedActorIds.length > 0;
   const initiativeByActor = new Map(
     state.initiative
@@ -1839,24 +1840,20 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
   };
   next = restoreFamiliarCapabilities(next);
   if (action.id !== next.dashActionId && activation?.counts_as !== 'dash') return withTriggeredAttackOffer(next);
-  const movementBeforeDash = input.state.movementRemainingFt[input.actorId]
-    ?? effectiveCombatActorSpeedFt(input.state, input.actorId);
+  const movementBeforeDash = signedMovementBudget(input.state, input.actorId,
+    effectiveCombatActorSpeedFt(input.state, input.actorId));
   const dashAllotment = effectiveCombatActorSpeedFt(input.state, input.actorId)
     + (actorOwnsCharger(input.state.world.actors[input.actorId]) ? 10 : 0);
-  return withTriggeredAttackOffer({
-    ...next,
-    movementRemainingFt: {
-      ...next.movementRemainingFt,
+  return withTriggeredAttackOffer(withMovementBudget(next, input.actorId,
       // Some catalog rows express Dash's visible speed boon as a modifier and
       // therefore reconcile the ledger during dispatch. Narrative-only rows
       // need the tactical fallback. Both paths converge on exactly one extra
       // pre-Dash Speed allotment instead of stacking the same grant twice.
-      [input.actorId]: Math.max(
-        next.movementRemainingFt[input.actorId] ?? 0,
+      Math.max(
+        signedMovementBudget(next, input.actorId, 0),
         movementBeforeDash + dashAllotment,
       ),
-    },
-  });
+  ));
 }
 
 function executeCombatActionWithD20Interrupts(
@@ -3836,11 +3833,7 @@ function startTurnOrRequestGrappleDamage(
     label: 'Начало хода',
   });
   const started = {
-    ...next,
-    movementRemainingFt: {
-      ...next.movementRemainingFt,
-      [actorId]: effectiveCombatActorSpeedFt(next, actorId),
-    },
+    ...withMovementBudget(next, actorId, effectiveCombatActorSpeedFt(next, actorId)),
     recentStraightMovementByActor: Object.fromEntries(Object.entries(
       next.recentStraightMovementByActor ?? {},
     ).filter(([candidateId]) => candidateId !== actorId)),
@@ -3873,13 +3866,7 @@ export function resolveSoloCombatTurnStart(
     rng,
     label: 'Начало хода',
   });
-  const started = {
-    ...next,
-    movementRemainingFt: {
-      ...next.movementRemainingFt,
-      [pending.actorId]: effectiveCombatActorSpeedFt(next, pending.actorId),
-    },
-  };
+  const started = withMovementBudget(next, pending.actorId, effectiveCombatActorSpeedFt(next, pending.actorId));
   return queueCombatAreaEvent(started, 'start_turn', [pending.actorId]);
 }
 

@@ -2965,6 +2965,47 @@ describe('solo combat engine vertical integration', () => {
     })).not.toThrow();
   });
 
+  it.each([20, 30].flatMap(reduction => ['recover', 'new-turn', 'dash'].map(mode => ({reduction, mode}))))(
+    'retains spent movement after a $reduction ft speed reduction: $mode across reload', async ({reduction, mode}) => {
+    const participant = fighterSeed();
+    const slow = speedModifierAction(-reduction);
+    const restore = {...speedModifierAction(reduction), id: 'restore-speed', name: 'Восстановление скорости'};
+    slow.mechanics.activation = {mode: 'active', cost: []};
+    restore.mechanics.activation = {mode: 'active', cost: []};
+    const actorId = participant.character.id;
+    const actions = [...participant.canonical.actions, slow, restore];
+    const byId = new Map(actions.map(action => [action.id, action]));
+    participant.canonical.world.actors[actorId].capabilities.actionIds.push(slow.id, restore.id);
+    participant.canonical = {...participant.canonical, actions,
+      catalog: {getAction: id => byId.get(id), listActions: () => actions}};
+    const basicDash = dash();
+    basicDash.mechanics = {...basicDash.mechanics, effects: []};
+    let state = await createSoloCombatState({character: participant.character, participant,
+      selected: [{monster: goblin(), quantity: 1}], actions: [scimitar(), basicDash], effects: [], dashAction: basicDash, rng: () => 0.5});
+    const baseSpeed = Number(state.world.actors[actorId].character.characterSpeed);
+    state = moveActor({state, actorId,
+      destination: {...state.tokens[actorId].position, y: state.tokens[actorId].position.y - 4}});
+    expect(state.movementRemainingFt[actorId]).toBe(baseSpeed - 20);
+    state = executeCombatAction({state, actorId, actionId: slow.id, targetIds: [actorId], rng: () => 0.5});
+    expect(state.movementRemainingFt[actorId]).toBe(0);
+    state = readSoloCombatState(writeSoloCombatState({}, state), actorId, state.runtimeRevision)!;
+    if (mode === 'dash') {
+      state = executeCombatAction({state, actorId, actionId: dash().id, targetIds: [], rng: () => 0.5});
+      const budget = 2 * (baseSpeed - reduction) - 20;
+      expect(state.movementRemainingFt[actorId]).toBe(Math.max(0, budget));
+      expect(state.movementDeficitFt?.[actorId] ?? 0).toBe(Math.max(0, -budget));
+      return;
+    }
+    if (mode === 'new-turn') {
+      state = advanceTurn(advanceTurn(state, () => 0.5), () => 0.5);
+      expect(activeId(state)).toBe(actorId);
+      expect(state.movementDeficitFt?.[actorId]).toBeUndefined();
+    }
+    state = executeCombatAction({state, actorId, actionId: restore.id, targetIds: [actorId], rng: () => 0.5});
+    expect(state.movementRemainingFt[actorId]).toBe(baseSpeed - (mode === 'new-turn' ? 0 : 20));
+    expect(state.movementDeficitFt?.[actorId]).toBeUndefined();
+  });
+
   it('lets the separate monster controller move, attack, resolve, and hand back the turn', async () => {
     const participant = fighterSeed();
     let state = await createSoloCombatState({
