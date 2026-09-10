@@ -3940,6 +3940,39 @@ describe('Pack Tactics is a shared attack rule', () => {
   });
 });
 
+it('applies Heavy Armor Master to ordinary monster attacks after save/reload', async () => {
+  const participant = fighterSeed();
+  const player = participant.canonical.world.actors[participant.character.id];
+  player.ac = 1;
+  player.runtime.hp = {current: 100, max: 100, temp: 0};
+  player.runtime.resources.reaction = 0;
+  participant.character.current_hp = 100;
+  participant.character.max_hp = 100;
+  const armor = {id: 'test-heavy-armor', name: 'Heavy armor', defense_type: 'heavy', type: 'chest', slot: 'body', bonus_type: 'defense', bonus_value: '1'};
+  player.character.equippedCards = [...(player.character.equippedCards ?? []), armor as never];
+  player.character.knownCards = [...(player.character.knownCards ?? []), armor as never];
+  player.runtime.equipment.body = armor.id;
+  player.passives = [...(player.passives ?? []), {id: 'test-ham',
+    capabilities: [{id: 'general_feat.heavy_armor_master'}],
+    effects: [{resolution: 'auto', result: [{kind: 'reduce_damage', amount: 'prof',
+      filter: {source: 'attack', armor: 'heavy', damage_types: ['bludgeoning', 'piercing', 'slashing']}}]}]}];
+  let state = await createSoloCombatState({character: participant.character, participant,
+    selected: [{monster: goblin(), quantity: 1}], actions: [scimitar()], effects: [], rng: () => 0.5});
+  const enemy = Object.values(state.world.actors).find(row => row.kind === 'monster')!;
+  state.tokens[player.id].position = {x: 4, y: 4};
+  state.tokens[enemy.id].position = {x: 4, y: 5};
+  const baseline = clone(state);
+  const unprotected = clone(state);
+  unprotected.world.actors[player.id].passives = unprotected.world.actors[player.id].passives?.filter(p => p.id !== 'test-ham');
+  const plain = runMonsterTurn(advanceTurn(unprotected, () => 0.5), () => 0.8);
+  state = runMonsterTurn(advanceTurn(state, () => 0.5), () => 0.8);
+  const reduction = baseline.world.actors[player.id].character.profBonus;
+  expect(state.world.actors[player.id].runtime.hp.current - plain.world.actors[player.id].runtime.hp.current).toBe(reduction);
+  const firstHP = state.world.actors[player.id].runtime.hp.current;
+  state = runMonsterTurn(advanceTurn(clone(state), () => 0.5), () => 0.8);
+  expect(firstHP - state.world.actors[player.id].runtime.hp.current).toBe(100 - firstHP);
+});
+
 
 it.each([5, 15])('recomputes the step cost when an opportunity attack knocks the mover prone, budget %i', async budget => {
   const participant = fighterSeed();

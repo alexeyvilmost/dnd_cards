@@ -2234,6 +2234,10 @@ function executeUseAction(
           command.spell,
         ),
         actionName: action.name,
+        // Ordinary stat-block attacks use this generic path as well. Damage
+        // reducers must receive the same command identity as weapon attacks,
+        // including when one attack emits multiple damage packets.
+        attackCommandId: command.commandId,
         choices: command.choices,
         triggeringAttack: command.triggeringAttack,
         spell: command.spell,
