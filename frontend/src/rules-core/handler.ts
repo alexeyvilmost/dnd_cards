@@ -9295,12 +9295,24 @@ function resolveEscapeGrapple(
     'system:ability-check',
     'system:pending-resolution',
   ];
+  const checkEvents: EngineEvent[] = [{
+    type: 'roll',
+    label: `Escape Grapple (${pending.skill})`,
+    roll: { ...roll, kind: 'check' },
+  }];
+  const after = consumeNextRollEffects(actor.runtime, 'ability_check', checkEvents, {
+    filter: { ability, skill: pending.skill },
+    failed: roll.usedFailureBonus === true,
+    finalFailed: roll.usedFailureBonus === true && roll.outcome === 'fail',
+  });
+  const concentration = consumedConcentrationLifecycle({
+    world, actingActorId: actor.id, changedActorId: actor.id,
+    before: actor.runtime, after, obligations,
+  });
   return [
-    ...engineTrace(actor.id, [], [{
-      type: 'roll',
-      label: `Escape Grapple (${pending.skill})`,
-      roll: { ...roll, kind: 'check' },
-    }], obligations, { facts: { grappleId: grapple.id, escapeDc: grapple.escapeDc } }),
+    ...concentration.transitions,
+    ...engineTrace(actor.id, [], checkEvents, obligations, { facts: { grappleId: grapple.id, escapeDc: grapple.escapeDc } }),
+    ...concentration.lifecycle,
     {
       sourceActorId: actor.id,
       obligationIds: obligations,

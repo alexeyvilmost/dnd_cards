@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { armBoonForNextRoll } from '../engine/boons';
 import { CARD_LONGSWORD } from '../mvp/fixtures';
 import type { Card } from '../types';
 import type { EngineEvent } from '../mvp/contracts';
@@ -686,5 +687,60 @@ describe('schema-v4 canonical Attack runtime', () => {
       }),
     }));
     expect(automatic.getState().grapples).toEqual({});
+  });
+});
+
+describe('escape checks share the ordinary consumable modifier lifecycle', () => {
+  it.each([
+    { baseDie: 20, bonusDie: undefined, escaped: true, consumed: false, restored: 0 },
+    { baseDie: 5, bonusDie: 10, escaped: true, consumed: true, restored: 0 },
+    { baseDie: 1, bonusDie: 1, escaped: false, consumed: true, restored: 1 },
+  ])('persists bonus consumption/refund for $baseDie + $bonusDie and replays after reload', scenario => {
+    const source = actor({ id: 'grappler' });
+    const target = actor({ id: 'fighter' });
+    target.runtime.resources['uses_ACT-second-wind'] = 0;
+    target.runtime.maxResources['uses_ACT-second-wind'] = 2;
+    target.runtime.activeEffects.push({ id: 'tactical-boon', name: 'Тактический ум', source: 'Воин',
+      mechanics: { kind: 'boon', die: '1d10', applies_to: ['ability_check'], timing: ['after_failure'],
+        refund_on_failure: { resource: 'uses_ACT-second-wind', amount: 1 } },
+    });
+    target.runtime = armBoonForNextRoll(target.runtime, 'tactical-boon', 'ability_check', 'after_failure');
+    // An unrelated attack modifier must not be consumed by this check.
+    target.runtime.activeEffects.push({ id: 'next-attack', name: 'Next attack', source: 'test',
+      mechanics: { kind: 'modifier', op: 'add', value: 1, applies_to: { roll: 'attack' }, consume: 'next' },
+    });
+    const grapple: GrappleState = { id: 'grapple', grapplerActorId: source.id, targetActorId: target.id,
+      sourcePart: 'main_hand', escapeDc: 13, reachFt: 5, sourceEntityIds: ['system:dnd5e-2024:unarmed-strike:grapple'], startedAtRevision: 0 };
+    const world = foldEvents(createWorld({ id: 'escape-boon', ruleset: RULESET, actors: [source, target] }), [{
+      ordinal: 0, sourceActorId: source.id, obligationIds: ['system:grapple-lifecycle'],
+      payload: { type: 'GrappleApplied', grapple },
+    }]);
+    const session = new InMemoryRulesSession(world, catalog, environment(() => { throw Error('Manual check must not draw system RNG'); }));
+    accepted(session.dispatch({ schemaVersion: 1, type: 'EscapeGrapple', commandId: 'open-escape',
+      actorId: target.id, expectedRevision: world.revision, rulesetContentHash: RULESET.contentHash,
+      grappleId: grapple.id, skill: 'acrobatics' }));
+    const checkpoint = migrateWorldState(copy(session.getState()));
+    const restored = new InMemoryRulesSession(checkpoint, catalog, environment(() => { throw Error('No reroll'); }));
+    const pending = restored.getState().pendingResolution;
+    if (pending?.type !== 'escape_grapple') throw Error('Expected persisted escape decision');
+    const decision = { schemaVersion: 1 as const, type: 'ResolveDecision' as const, commandId: 'escape-roll',
+      actorId: target.id, expectedRevision: checkpoint.revision, rulesetContentHash: RULESET.contentHash,
+      resolutionId: pending.id, requestId: pending.request.id,
+      response: { kind: 'roll' as const, roll: { mode: 'manual' as const, dice: [
+        { sides: 20, value: scenario.baseDie },
+        ...(scenario.bonusDie == null ? [] : [{ sides: 10, value: scenario.bonusDie }]),
+      ] } } };
+    accepted(restored.dispatch(decision));
+    const final = restored.getState();
+    expect(final.pendingResolution).toBeNull();
+    expect(Boolean(final.grapples[grapple.id])).toBe(!scenario.escaped);
+    expect(final.actors[target.id].runtime.activeEffects.some(effect => effect.id === 'tactical-boon')).toBe(!scenario.consumed);
+    expect(final.actors[target.id].runtime.activeEffects.some(effect => effect.id === 'next-attack')).toBe(true);
+    expect(final.actors[target.id].runtime.resources['uses_ACT-second-wind']).toBe(scenario.restored);
+    expect(final.actors[target.id].runtime.resources.action).toBe(0);
+    expect(foldEvents(checkpoint, copy(restored.getEvents()))).toEqual(final);
+    // The receipt cannot restore a second Second Wind or repeat the check.
+    restored.dispatch(decision);
+    expect(restored.getState()).toEqual(final);
   });
 });
