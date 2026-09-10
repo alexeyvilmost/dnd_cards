@@ -170,6 +170,7 @@ func executeRoguelikeRestWorker(ctx context.Context, tx *gorm.DB, client rogueli
 	for attempt := 0; attempt < 32; attempt++ {
 		result, err := client.call(ctx, "/rest", map[string]any{"input": map[string]any{
 			"character": character, "catalog": catalog, "long": request.Type == "long_rest", "hitDieRolls": request.Payload["hit_die_rolls"], "bindWeapon": binding, "recallWeapon": recall,
+			"masteryChoices": request.Payload["mastery_choices"],
 		}})
 		if err != nil {
 			return nil, err

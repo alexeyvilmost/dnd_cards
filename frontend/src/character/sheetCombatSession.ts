@@ -1,4 +1,5 @@
 import type { CharacterContext, EngineEvent, RuntimeState } from '../mvp/contracts';
+import type { PendingChoice } from '../mechanics/collectChoices';
 import {
   createWorld,
   type ActorState,
@@ -90,6 +91,7 @@ export interface SheetCombatSession {
 }
 
 export interface SheetCombatParticipantSeed {
+  buildChoices?: readonly PendingChoice[];
   character: ForgeCharacter;
   canonical: SheetCanonicalRuntime;
   /** Complete data-owned rest context used by the sheet and roguelike camp. */

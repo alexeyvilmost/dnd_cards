@@ -5,6 +5,9 @@ import { charactersV3Api, type CharacterEventRow } from '../character/api';
 import { persistCharacterRuntime } from '../character/runtimePersistence';
 import { roguelikeApi } from '../roguelike/api';
 import { activeRunId, notifyRunUpdated } from '../roguelike/navigation';
+import SheetWeaponMasteryDialog from './SheetWeaponMasteryDialog';
+import { characterToDraft } from '../character/forgeHelpers';
+import { fighterRestMasteryChoices, validateMasteryRestSelection } from '../roguelike/masteryRest';
 import {
   collectActionUsesRecharge,
   collectActionUsesRecovery,
@@ -152,6 +155,13 @@ export default function SheetRestButtons({
   const syncAttemptedFor = useRef<string | null>(null);
   const diceDialog = useDiceDialog();
   const choiceDialog = useChoiceDialog();
+  const [masteryRestDraft, setMasteryRestDraft] = useState<Record<string, string[]> | null>(null);
+  const masteryRestChoices = fighterRestMasteryChoices(assembled.pendingChoices);
+  let masteryRestError: string | undefined;
+  if (masteryRestDraft) {
+    try { validateMasteryRestSelection(masteryRestChoices, characterToDraft(character).resolvedChoices, masteryRestDraft); }
+    catch (e) { masteryRestError = e instanceof Error ? e.message : 'Проверьте выбор оружия'; }
+  }
   const reactionPrompt = useReactionPrompt();
   const soloCombat = character.turn_state?.solo_combat_v1;
   const activeSoloCombat = Boolean(soloCombat && typeof soloCombat === 'object'
@@ -270,6 +280,7 @@ export default function SheetRestButtons({
     resetDeathSaves?: boolean,
     baseTurnState?: Record<string, unknown> | null,
     restType?: 'short_rest' | 'long_rest',
+    masteryChoices?: Record<string, string[]>,
   ) => {
     setBusy(true);
     setError(null);
@@ -281,6 +292,7 @@ export default function SheetRestButtons({
         const run = await roguelikeApi.get(runId);
         const result = await roguelikeApi.command(runId, run.revision, restType, {
           hit_die_rolls: restType === 'short_rest' ? hitDieRolls.current : [],
+          ...(masteryChoices ? { mastery_choices: masteryChoices } : {}),
         });
         if (!result.character) throw new Error('Сервер не вернул лист после отдыха');
         updated = result.character;
@@ -581,7 +593,7 @@ export default function SheetRestButtons({
     setShortRestError(null);
   };
 
-  const handleLongRest = async () => {
+  const performLongRest = async (masteryChoices?: Record<string, string[]>) => {
     const picked = preparationChoices.length
       ? await choiceDialog.request(
         preparationChoices,
@@ -600,8 +612,18 @@ export default function SheetRestButtons({
       true,
       clearCombatContinuationsForRest(turnState),
       'long_rest',
+      masteryChoices,
     );
-    if (ok) onLongRestComplete?.();
+    if (ok) {
+      setMasteryRestDraft(null);
+      if (character.character_type !== 'dungeon_crawl') onLongRestComplete?.();
+    }
+  };
+  const handleLongRest = () => {
+    if (character.character_type === 'dungeon_crawl' && masteryRestChoices.length) {
+      const resolved = characterToDraft(character).resolvedChoices;
+      setMasteryRestDraft(Object.fromEntries(masteryRestChoices.map((choice) => [choice.id, [...(resolved[choice.id] ?? [])]])));
+    } else void performLongRest();
   };
 
   // KB-037: без сознания (0 HP) нельзя брать короткий/долгий отдых — персонаж умирает/стабилизируется,
@@ -644,6 +666,17 @@ export default function SheetRestButtons({
       </button>
     </div>
     {error && <p className="issues" role="alert">{error}</p>}
+    {masteryRestDraft && (
+      <SheetWeaponMasteryDialog choices={masteryRestChoices} resolved={masteryRestDraft}
+        character={character} equipCards={new Map(itemCards.map((card) => [card.id, card]))}
+        busy={busy} error={masteryRestError ?? error}
+        hint="Долгий отдых: можно заменить один вид оружия или оставить выбор прежним. Будет потрачен 1 припас."
+        onChange={(id, values) => setMasteryRestDraft((current) => ({ ...current, [id]: values }))}
+        onClose={() => { if (!busy) setMasteryRestDraft(null); }}
+        onConfirm={() => { void performLongRest(masteryRestDraft); }}
+        confirmLabel="Завершить долгий отдых" confirmDisabled={!!masteryRestError}
+      />
+    )}
     {shortRestDraft && (
       <div className="dice-dialog-backdrop" onClick={() => !busy && setShortRestDraft(null)}>
         <div className="dice-dialog-wrap" onClick={(event) => event.stopPropagation()}>

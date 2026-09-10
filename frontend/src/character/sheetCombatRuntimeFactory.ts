@@ -353,6 +353,7 @@ async function loadSheetCombatParticipant(input: {
   return {
     character: input.character,
     restContext,
+    buildChoices: assembled.pendingChoices,
     // A spell's canonical rule action is identified by the immutable spell
     // entity, while its SheetAction id describes the grant row. Key the UI
     // projection by the executable id so combat renders the very same entity

@@ -1,4 +1,6 @@
 import { handleCommand } from '../rules-core/handler';
+import { validateMasteryRestSelection } from './masteryRest';
+import { characterToDraft } from '../character/forgeHelpers';
 import { prepareWeaponBond } from '../rules-core/weaponBond';
 import { foldWorldObjectEvents } from '../rules-core/worldObjects';
 import { writeWeaponBondObjects } from '../character/weaponBondPersistence';
@@ -15,6 +17,7 @@ import { prepareRoguelikeCombatParticipant, type FrozenCombatCatalog } from './c
 export async function executeRoguelikeCampRest(input: {
   character: ForgeCharacter; catalog: FrozenCombatCatalog;
   long: boolean; hitDieRolls?: number[];
+  masteryChoices?: unknown;
   recallWeapon?: { objectId: string; hand: string; commandId: string };
   bindWeapon?: { cardId: string; instanceId: string; replaceObjectId?: string };
 }) {
@@ -24,6 +27,11 @@ export async function executeRoguelikeCampRest(input: {
   const prepared = await prepareRoguelikeCombatParticipant(input.character, input.catalog, []);
   if (prepared.status !== 'ready') return prepared;
   const { canonical, restContext } = prepared.participant;
+  const mastery = input.masteryChoices == null ? undefined : (() => {
+    if (!input.long) throw new Error('Заменять искусность можно только на долгом отдыхе');
+    return validateMasteryRestSelection(prepared.participant.buildChoices ?? [],
+      characterToDraft(input.character).resolvedChoices, input.masteryChoices);
+  })();
   if (!restContext) throw new Error('Нет контекста отдыха');
   const actor = canonical.world.actors[canonical.actorId];
   if (input.bindWeapon) {
@@ -65,7 +73,9 @@ export async function executeRoguelikeCampRest(input: {
   return { status: 'ready' as const, contentManifestHash: prepared.contentManifestHash, events,
     patch: { current_hp: state.hp.current, resources: state.resources, max_resources: state.maxResources,
       active_effects: state.activeEffects, inventory_items: runtimeInventoryPayload(state), equipment: state.equipment,
-      turn_state: writeRulesEngineRuntimeTurnState(turnState, state, input.recallWeapon ? {} : { attunement_unlocked: true, death_saves: emptyDeathSaves() }),
+      turn_state: writeRulesEngineRuntimeTurnState(mastery ? { ...turnState,
+        inPlayChoices: { ...(turnState?.inPlayChoices as Record<string, string[]> ?? {}), ...mastery },
+      } : turnState, state, input.recallWeapon ? {} : { attunement_unlocked: true, death_saves: emptyDeathSaves() }),
       runtime_revision: revision },
   };
 }

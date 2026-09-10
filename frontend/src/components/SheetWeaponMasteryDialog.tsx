@@ -21,6 +21,10 @@ interface Props {
   error?: string | null;
   onChange: (choiceId: string, values: string[]) => void;
   onClose: () => void;
+  onConfirm?: () => void;
+  confirmLabel?: string;
+  hint?: string;
+  confirmDisabled?: boolean;
 }
 
 /** Виды оружия, которые сейчас есть в инвентаре или надеты. */
@@ -68,6 +72,7 @@ function imageForWeaponType(
  */
 export default function SheetWeaponMasteryDialog({
   choices, resolved, character, equipCards, busy, error, onChange, onClose,
+  onConfirm, confirmLabel, hint, confirmDisabled,
 }: Props) {
   const templates = useWeaponTemplatesByType();
   const masteryEffects = useMasteryEffects();
@@ -183,7 +188,7 @@ export default function SheetWeaponMasteryDialog({
           Мастерство оружия
         </h2>
         <p className="sheet-settings-hint">
-          Выберите виды оружия, с чьими свойствами искусности вы умеете обращаться.
+          {hint ?? 'Выберите виды оружия, с чьими свойствами искусности вы умеете обращаться.'}
           {' '}
           <span className={done ? 'sheet-mastery-count is-done' : 'sheet-mastery-count'}>
             Выбрано {value.length} из {active.count}
@@ -261,8 +266,8 @@ export default function SheetWeaponMasteryDialog({
         </div>
 
         <div className="sheet-equip-actions">
-          <button type="button" className="forge-btn sheet-equip-primary" onClick={onClose}>
-            {done ? 'Готово' : 'Закрыть'}
+          <button type="button" className="forge-btn sheet-equip-primary" onClick={onConfirm ?? onClose} disabled={!!onConfirm && (busy || confirmDisabled)}>
+            {confirmLabel ?? (done ? 'Готово' : 'Закрыть')}
           </button>
         </div>
       </div>

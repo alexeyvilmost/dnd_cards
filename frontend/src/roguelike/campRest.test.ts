@@ -2,8 +2,9 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import inputJson from './pinnedFighter.fixture.json';
 import type { ForgeCharacter } from '../character/types';
-import type { FrozenCombatCatalog } from './combatCatalog';
+import { prepareRoguelikeCombatParticipant, type FrozenCombatCatalog } from './combatCatalog';
 import { executeRoguelikeCampRest } from './campRest';
+import { characterToDraft } from '../character/forgeHelpers';
 const fixture = inputJson as unknown as { character: ForgeCharacter; catalog: FrozenCombatCatalog };
 function input(long = false) {
   const value = structuredClone(fixture);
@@ -13,6 +14,25 @@ function input(long = false) {
   return { ...value, long };
 }
 describe('authoritative camp rest', () => {
+  it('persists a valid mastery swap with the rest, and rejects short-rest or forged choices without mutation', async () => {
+    const request = input(true);
+    const key = Object.keys(request.character.resolved_choices!).find((id) => id.endsWith(':weapon-mastery'))!;
+    const previous = request.character.resolved_choices![key];
+    const next = [...previous.slice(0, 2), 'maul'];
+    const untouched = structuredClone(request);
+    const result = await executeRoguelikeCampRest({ ...request, masteryChoices: { [key]: next } });
+    expect(result.status).toBe('ready'); if (result.status !== 'ready') return;
+    expect(characterToDraft({ ...request.character, ...result.patch }).resolvedChoices[key]).toEqual(next);
+    const rebuilt = await prepareRoguelikeCombatParticipant({ ...request.character, ...result.patch }, request.catalog, []);
+    expect(rebuilt.status).toBe('ready'); if (rebuilt.status !== 'ready') return;
+    const canonical = rebuilt.participant.canonical;
+    expect(canonical.world.actors[canonical.actorId].character.weaponMasteries).toEqual(next);
+    expect(result.patch.current_hp).toBe(22);
+    expect(request).toEqual(untouched);
+    await expect(executeRoguelikeCampRest({ ...request, long: false, masteryChoices: { [key]: next } })).rejects.toThrow('долгом отдыхе');
+    await expect(executeRoguelikeCampRest({ ...request, masteryChoices: { forged: ['maul'] } })).rejects.toThrow('этот выбор');
+    expect(request).toEqual(untouched);
+  });
   it('recovers one Second Wind and Action Surge, without long-rest dwarf recovery', async () => {
     const request = input();
     const before = structuredClone(request);
