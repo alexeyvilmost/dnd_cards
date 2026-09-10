@@ -38,9 +38,8 @@ export function consumedHeldItemWorldEvents(after: WorldState, execution: readon
   const actor = after.actors[actorId]; if (!actor) continue;
   const equipment = {...actor.runtime.equipment}; let changed = false;
   for (const cardId of cards) {
-   const quantity = actor.runtime.inventory.filter(row => row.cardId === cardId && row.containerId == null).reduce((sum, row) => sum + row.qty, 0);
    const held = Object.values(after.objects).filter(object => object.heldByActorId === actorId && object.itemCardId === cardId).sort((a, b) => a.id.localeCompare(b.id));
-   for (const object of held.slice(quantity)) {
+   for (const object of held.filter((entry) => !entry.heldInHand || equipment[entry.heldInHand] !== cardId)) {
     if (object.heldInHand && equipment[object.heldInHand] === cardId) {equipment[object.heldInHand] = null; changed = true;}
     events.push({sourceActorId: actorId, obligationIds: ['system:consumed-held-item'], payload: {type: 'WorldObjectMutationRecorded', event: {type: 'WorldObjectRemoved', objectId: object.id, reason: 'item_consumed'}}});
    }

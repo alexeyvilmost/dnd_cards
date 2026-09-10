@@ -199,7 +199,12 @@ export function weaponContext(
     const card = cardById(character, equipment[slot]);
     // Хват двумя руками: универсальное оружие в основной руке при пустой второй.
     const twoHandedGrip = hand === 'main' && !equipment.off_hand;
-    if (card?.type === 'weapon') return cardToWeapon(card, character, twoHandedGrip, runtime);
+    if (card?.type === 'weapon') {
+      const weapon = cardToWeapon(card, character, twoHandedGrip, runtime);
+      const other = equipment[hand === 'main' ? 'off_hand' : 'main_hand'];
+      if (weapon?.properties.includes('two_handed') && other && other !== card.id) return null;
+      return weapon;
+    }
     return null;
   }
 
@@ -408,6 +413,11 @@ export function weaponActionAvailability(
   const offCard = offId ? cardsById.get(offId) : undefined;
 
   const modeAvailability = (card: Card): ActionAvailability => {
+    const profile = parseWeaponProfile(card);
+    const other = kind === 'main' ? offId : mainId;
+    if (profile.valid && profile.profile.properties.includes('two_handed') && other && other !== card.id) {
+      return { available: false, reason: 'Для атаки двуручным оружием освободите вторую руку' };
+    }
     const requested = declaredWeaponAttackMode(mechanics);
     if (!requested) return { available: true };
     const parsed = parseWeaponProfile(card);

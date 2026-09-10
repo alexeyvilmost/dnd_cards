@@ -4851,12 +4851,12 @@ it.each(['round_trip','existing_card','consume_last','virtual_held','occupied_ha
    runtime.equipment.off_hand=CARD_LONGSWORD.id;
    state.world.actors[actorId].character.knownCards=state.world.actors[actorId].character.knownCards!.map(card=>card.id===CARD_LONGSWORD.id?{...card,mechanics:{...card.mechanics,object_size:'tiny'}}:card);
    state.world.actors[actorId].character.equippedCards=[];
-   if(!runtime.inventory.some(row=>row.cardId===CARD_LONGSWORD.id&&row.containerId==null))runtime.inventory.push({cardId:CARD_LONGSWORD.id,qty:1});
+   runtime.inventory = runtime.inventory.filter(row => row.cardId !== CARD_LONGSWORD.id);
    const object=telekineticHeldObjects(state.world,actorId)[0];expect(object).toBeDefined();
    const beforeQty=runtime.inventory.filter(row=>row.cardId===CARD_LONGSWORD.id&&row.containerId==null).reduce((sum,row)=>sum+row.qty,0);
    const next=executeCombatAction({state,actorId,actionId:movement.id,targetIds:[actorId],worldPosition:{x:7,y:7},choices:{telekinetic_object_id:[object.id],telekinetic_hand_mode:['from_hand'],telekinetic_hand:['off_hand']},rng:()=>.5});
    expect(next.worldObjectPositions?.[object.id]).toEqual({x:7,y:7});expect(next.world.objects[object.id]).toMatchObject({itemCardId:CARD_LONGSWORD.id,unattended:true});
-   expect(next.world.actors[actorId].runtime.inventory.filter(row=>row.cardId===CARD_LONGSWORD.id&&row.containerId==null).reduce((sum,row)=>sum+row.qty,0)).toBe(beforeQty-1);
+   expect(next.world.actors[actorId].runtime.inventory.filter(row=>row.cardId===CARD_LONGSWORD.id&&row.containerId==null).reduce((sum,row)=>sum+row.qty,0)).toBe(beforeQty);
    expect(migrateWorldState(clone(next.world)).objects[object.id]).toEqual(next.world.objects[object.id]);return;
  }
  if(mode==='occupied_hand')state.world.actors[actorId].runtime.equipment.off_hand=CARD_SHIELD.id;
@@ -4868,9 +4868,9 @@ it.each(['round_trip','existing_card','consume_last','virtual_held','occupied_ha
  expect(held.world.objects.tiny).toMatchObject({id:'tiny',kind:'item',heldByActorId:actorId,heldInHand:'off_hand',carriedByActorId:actorId,unattended:false});
  expect(held.worldObjectPositions?.tiny).toBeUndefined();expect(held.world.actors[actorId].runtime.equipment.off_hand).toBe(acquiredId);
  const qty=(scene:typeof state)=>scene.world.actors[actorId].runtime.inventory.filter(row=>row.cardId===acquiredId&&row.containerId==null).reduce((sum,row)=>sum+row.qty,0);
- expect(qty(held)).toBe(qty(before)+1);expect(held.world.actors[actorId].character.knownCards?.some(card=>card.id===acquiredId)).toBe(true);
+ expect(qty(held)).toBe(qty(before));expect(held.world.actors[actorId].character.knownCards?.some(card=>card.id===acquiredId)).toBe(true);
  if(mode==='consume_last') {
-   const consume=projectRuleAction({id:'test:consume-held',name:'Consume',type:'class_feature',resource:'free_action',mechanics:{activation:{mode:'active',cost:[{resource:'item',card_id:acquiredId,amount:qty(held)}]},targeting:{domain:'actor',actor_targets:false,shape:'self',allowed_relations:['self'],min_targets:0,max_targets:1,range_ft:0,requires_line_of_sight:false},effects:[{resolution:'auto',result:[{kind:'narrative',description:'Consumed'}]}]}} as unknown as Action);
+   const consume=projectRuleAction({id:'test:consume-held',name:'Consume',type:'class_feature',resource:'free_action',mechanics:{activation:{mode:'active',cost:[{resource:'item',bound_self_item:true,card_id:acquiredId,amount:qty(held)+1}]},targeting:{domain:'actor',actor_targets:false,shape:'self',allowed_relations:['self'],min_targets:0,max_targets:1,range_ft:0,requires_line_of_sight:false},effects:[{resolution:'auto',result:[{kind:'narrative',description:'Consumed'}]}]}} as unknown as Action);
    held.catalogActions.push(consume);held.world.actors[actorId].capabilities.actionIds.push(consume.id);
    const used=executeCombatAction({state:held,actorId,actionId:consume.id,targetIds:[actorId],rng:()=>.5});
    expect(used.world.objects.tiny).toBeUndefined();expect(used.world.actors[actorId].runtime.equipment.off_hand).toBeNull();expect(qty(used)).toBe(0);

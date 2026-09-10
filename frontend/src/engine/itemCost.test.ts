@@ -64,7 +64,7 @@ describe('стоимость костью хитов', () => {
 describe('S4 — bindSelfItemCost (явный саморасход зелья)', () => {
   it('связывает явно объявленный self_item с card id', () => {
     const out = bindSelfItemCost({ activation: { mode: 'active', cost: [{ resource: 'self_item' }] }, effects: [] }, 'potion');
-    expect((out.activation as { cost: unknown }).cost).toEqual([{ resource: 'item', card_id: 'potion', amount: 1 }]);
+    expect((out.activation as { cost: unknown }).cost).toEqual([{ resource: 'item', bound_self_item: true, card_id: 'potion', amount: 1 }]);
   });
 
   it('не создаёт цену из legacy consumes_self', () => {
@@ -80,7 +80,7 @@ describe('S4 — bindSelfItemCost (явный саморасход зелья)',
   it('сохраняет существующую стоимость действия (бонусное действие + расход)', () => {
     const mech = { activation: { mode: 'active', cost: [{ resource: 'bonus_action' }, { resource: 'self_item' }] }, effects: [] };
     expect((bindSelfItemCost(mech, 'potion').activation as { cost: unknown }).cost)
-      .toEqual([{ resource: 'bonus_action' }, { resource: 'item', card_id: 'potion', amount: 1 }]);
+      .toEqual([{ resource: 'bonus_action' }, { resource: 'item', bound_self_item: true, card_id: 'potion', amount: 1 }]);
   });
 
   it('отклоняет card_id у относительного self_item', () => {
@@ -142,5 +142,41 @@ describe('S4 — интеграция: зелье лечения (видение
     }, 'potion') as Record<string, unknown>;
     const s: RuntimeState = { hp: { current: 5, max: 30, temp: 0 }, resources: {}, maxResources: {}, equipment: {}, inventory: [], activeEffects: [] } as unknown as RuntimeState;
     expect(() => executeAction(s, potion, ctx)).toThrow();
+  });
+});
+
+
+describe('physical consumables held separately from the bag', () => {
+  const cost = (amount = 1) => (bindSelfItemCost({ activation: { cost: [{ resource: 'self_item', amount }] } }, 'potion').activation as { cost: Record<string, unknown>[] }).cost;
+  it('consumes a held potion with an empty bag, leaving the other hand alone', () => {
+    const before = state([]); before.equipment = { main_hand: 'potion', off_hand: 'shield' };
+    expect(canPay(before, cost()).ok).toBe(true);
+    const used = pay(before, cost());
+    expect(used.state.equipment).toEqual({ main_hand: null, off_hand: 'shield' });
+    expect(used.state.inventory).toEqual([]);
+    expect(canPay(used.state, cost()).ok).toBe(false);
+    expect(before.equipment.main_hand).toBe('potion');
+  });
+  it('uses a bag copy first and then one of two distinct held potions', () => {
+    const before = state([{ cardId: 'potion', qty: 1 }]); before.equipment = { main_hand: 'potion', off_hand: 'potion' };
+    const first = pay(before, cost()).state;
+    expect(first.inventory).toEqual([]); expect(first.equipment).toEqual(before.equipment);
+    const second = pay(first, cost()).state;
+    expect(second.equipment).toEqual({ main_hand: null, off_hand: 'potion' });
+    expect(pay(second, cost()).state.equipment.off_hand).toBeNull();
+  });
+  it.each([false, true])('pays mixed bag-only and self costs without depending on order: %s', (reverse) => {
+    const before = state([{ cardId: 'potion', qty: 1 }]); before.equipment.main_hand = 'potion';
+    const entries = [...cost(), { resource: 'item', card_id: 'potion', amount: 1 }];
+    if (reverse) entries.reverse();
+    expect(canPay(before, entries).ok).toBe(true);
+    const used = pay(before, entries).state;
+    expect(used.inventory).toEqual([]); expect(used.equipment.main_hand).toBeNull();
+  });
+  it('rejects a combined excess before consuming anything and keeps ordinary material costs bag-only', () => {
+    const before = state([]); before.equipment.main_hand = 'potion';
+    expect(canPay(before, cost(2)).ok).toBe(false);
+    expect(pay(before, cost(2)).state).toBe(before);
+    expect(canPay(before, [{ resource: 'item', card_id: 'potion' }]).ok).toBe(false);
   });
 });

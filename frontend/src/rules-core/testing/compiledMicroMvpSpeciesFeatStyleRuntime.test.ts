@@ -1075,122 +1075,62 @@ describe('compiled species, Origin feat, and Fighting Style runtime scenarios', 
       .toEqual(expect.arrayContaining(selected));
   });
 
-  it('applies Archery only to ranged weapon attacks inside one compiled two-PC chronology', {
+  it('applies Archery only to ranged weapon attacks with legal hands in each two-PC chronology', {
     timeout: 60_000,
     meta: { semanticProtocol: 'mandatory-two-pc-v1', scenarioId: 'SC-RUNTIME-ARCHERY-01' },
   }, () => {
     const runtime = foundation(archery, 'archery-complete');
-    const handCrossbow = required(catalogs.cards.find((card) => (
-      card.card_number === 'CARD-0306'
-    )), 'profiled shortbow') as Card;
-    const dagger = required(catalogs.cards.find((card) => (
-      card.card_number === 'CARD-0297'
-    )), 'profiled dagger') as Card;
-    let spec: ScenarioSpec = {
-      ...runtime.spec,
-      steps: [
+    const shortbow = required(catalogs.cards.find((card) => card.card_number === 'CARD-0306'), 'profiled shortbow') as Card;
+    const dagger = required(catalogs.cards.find((card) => card.card_number === 'CARD-0297'), 'profiled dagger') as Card;
+    // A two-handed bow and a held dagger cannot attack together. Run the same
+    // compiled character against the same support actor with each legal loadout.
+    const attackEvents = (weapon: Card, ranged: boolean) => {
+      let spec: ScenarioSpec = { ...runtime.spec, steps: [
         ...runtime.spec.steps,
         { do: 'startTurn', actor: 'subject', assertions: [assertion(
-          `${runtime.spec.id}:MECHANIC-ARCHERY-RANGED-TURN`, 'scene.turnStarted', true,
+          `${runtime.spec.id}:MECHANIC-ARCHERY-TURN`, 'scene.turnStarted', true,
         )] },
         { do: 'beginAttack', actor: 'subject', assertions: [{
-          id: `${runtime.spec.id}:MECHANIC-ARCHERY-RANGED-BEGIN`, type: 'event',
-          match: { payloadType: 'ActionDeclared', actorId: 'subject', payloadSubset: { actionId: 'core.action.attack' } },
-          exactly: 1,
+          id: `${runtime.spec.id}:MECHANIC-ARCHERY-BEGIN`, type: 'event',
+          match: { payloadType: 'ActionDeclared', actorId: 'subject', payloadSubset: { actionId: 'core.action.attack' } }, exactly: 1,
         }] },
-        {
-          do: 'weaponAttack', actor: 'subject', weaponCardId: handCrossbow.id,
-          target: 'support', facts: { ...ENEMY_FACTS, targetCanSeeSource: false },
-          assertions: [{
-            id: `${runtime.spec.id}:MECHANIC-ARCHERY-RANGED-HIT`, type: 'event',
-            match: { engineEventType: 'roll', actorId: 'subject', roll: { kind: 'd20', outcome: 'hit' } },
-            exactly: 1,
-          }],
+        { do: 'weaponAttack', actor: 'subject', weaponCardId: weapon.id, target: 'support',
+          facts: ranged ? { ...ENEMY_FACTS, targetCanSeeSource: false } : { ...ENEMY_FACTS, distanceFt: 5 },
+          assertions: [{ id: `${runtime.spec.id}:MECHANIC-ARCHERY-HIT`, type: 'event',
+            match: { engineEventType: 'roll', actorId: 'subject', roll: { kind: 'd20', outcome: 'hit' } }, exactly: 1 }],
         },
         { do: 'resolveReaction', actor: 'support', actionId: null, assertions: [{
-          id: `${runtime.spec.id}:MECHANIC-ARCHERY-RANGED-REACTION`,
-          type: 'pending', pendingType: null,
+          id: `${runtime.spec.id}:MECHANIC-ARCHERY-REACTION`, type: 'pending', pendingType: null,
         }] },
         { do: 'endTurn', actor: 'subject', assertions: [{
-          id: `${runtime.spec.id}:MECHANIC-ARCHERY-RANGED-END`, type: 'event', eventType: 'turn_ended', exactly: 1,
+          id: `${runtime.spec.id}:MECHANIC-ARCHERY-END`, type: 'event', eventType: 'turn_ended', exactly: 1,
         }] },
-        { do: 'startTurn', actor: 'support', assertions: [assertion(
-          `${runtime.spec.id}:MECHANIC-ARCHERY-SUPPORT-TURN`, 'scene.turnStarted', true,
-        )] },
-        { do: 'endTurn', actor: 'support', assertions: [{
-          id: `${runtime.spec.id}:MECHANIC-ARCHERY-SUPPORT-END`, type: 'event', eventType: 'turn_ended', exactly: 1,
-        }] },
-        { do: 'startTurn', actor: 'subject', assertions: [assertion(
-          `${runtime.spec.id}:MECHANIC-ARCHERY-MELEE-TURN`, 'scene.turnStarted', true,
-        )] },
-        { do: 'beginAttack', actor: 'subject', assertions: [{
-          id: `${runtime.spec.id}:MECHANIC-ARCHERY-MELEE-BEGIN`, type: 'event',
-          match: { payloadType: 'ActionDeclared', actorId: 'subject', payloadSubset: { actionId: 'core.action.attack' } },
-          exactly: 1,
-        }] },
-        {
-          do: 'weaponAttack', actor: 'subject', weaponCardId: dagger.id,
-          target: 'support', facts: { ...ENEMY_FACTS, distanceFt: 5 },
-          assertions: [{
-            id: `${runtime.spec.id}:MECHANIC-ARCHERY-MELEE-HIT`, type: 'event',
-            match: { engineEventType: 'roll', actorId: 'subject', roll: { kind: 'd20', outcome: 'hit' } },
-            exactly: 1,
-          }],
-        },
-        { do: 'resolveReaction', actor: 'support', actionId: null, assertions: [{
-          id: `${runtime.spec.id}:MECHANIC-ARCHERY-MELEE-REACTION`,
-          type: 'pending', pendingType: null,
-        }] },
-        { do: 'endTurn', actor: 'subject', assertions: [{
-          id: `${runtime.spec.id}:MECHANIC-ARCHERY-MELEE-END`, type: 'event', eventType: 'turn_ended', exactly: 1,
-        }] },
-      ],
+      ] };
+      spec = withRolls(spec, { suffix: [
+        { label: 'Archery attack', sides: 20, value: 15 },
+        ...(ranged ? [{ label: 'Archery advantage', sides: 20, value: 14 }] : []),
+        { label: 'Archery damage', sides: ranged ? 6 : 4, value: 2 },
+      ] });
+      const provider = extendCompiledRuntimeProvider({ foundation: runtime, subject: (actor) => {
+        const armed = withEquippedWeapons(actor, weapon, weapon);
+        armed.runtime.equipment.off_hand = null;
+        return armed;
+      } });
+      const run = runCompiledRuntimeScenario({ foundation: runtime, spec, provider });
+      const index = run.events.findIndex((entry) => entry.payload.type === 'ActionDeclared'
+        && (entry.payload.facts as JsonRecord | undefined)?.weaponCardId === weapon.id);
+      expect(index).toBeGreaterThanOrEqual(0);
+      return engineEvents(run.events.slice(index + 1));
     };
-    spec = withRolls(spec, { suffix: [
-      { label: 'Archery ranged attack', sides: 20, value: 15 },
-      { label: 'Archery ranged attack advantage', sides: 20, value: 14 },
-      { label: 'Archery ranged damage', sides: 6, value: 2 },
-      { label: 'Archery melee attack', sides: 20, value: 15 },
-      { label: 'Archery melee damage', sides: 4, value: 2 },
-    ] });
-    const provider = extendCompiledRuntimeProvider({
-      foundation: runtime,
-      subject: (actor) => withEquippedWeapons(actor, handCrossbow, dagger),
-    });
-    const run = runCompiledRuntimeScenario({ foundation: runtime, spec, provider });
-    const weaponDeclarationIndex = (weaponCardId: string) => run.events.findIndex((entry) => (
-      entry.payload.type === 'ActionDeclared'
-        && (entry.payload.facts as JsonRecord | undefined)?.weaponCardId === weaponCardId
-    ));
-    const rangedDeclarationIndex = weaponDeclarationIndex(handCrossbow.id);
-    const meleeDeclarationIndex = weaponDeclarationIndex(dagger.id);
-    expect(rangedDeclarationIndex).toBeGreaterThanOrEqual(0);
-    expect(meleeDeclarationIndex).toBeGreaterThan(rangedDeclarationIndex);
-    const rangedEvents = engineEvents(run.events.slice(
-      rangedDeclarationIndex + 1,
-      meleeDeclarationIndex,
-    ));
-    const meleeEvents = engineEvents(run.events.slice(meleeDeclarationIndex + 1));
-    const rangedAttack = required(rangedEvents.find(({ event }) => (
-      event.type === 'roll' && event.roll.kind === 'd20'
-    )), 'Archery ranged attack roll');
+    const rangedEvents = attackEvents(shortbow, true);
+    const meleeEvents = attackEvents(dagger, false);
+    const rangedAttack = required(rangedEvents.find(({ event }) => event.type === 'roll' && event.roll.kind === 'd20'), 'ranged attack');
+    const meleeAttack = required(meleeEvents.find(({ event }) => event.type === 'roll' && event.roll.kind === 'd20'), 'melee attack');
     const rangedDamage = required(rangedEvents.find(({ event }) => event.type === 'damage'), 'ranged damage');
-    const meleeAttack = required(meleeEvents.find(({ event }) => (
-      event.type === 'roll' && event.roll.kind === 'd20'
-    )), 'Archery melee attack roll');
-    if (rangedAttack.event.type !== 'roll' || meleeAttack.event.type !== 'roll') {
-      throw new Error('Weapon attacks did not roll');
-    }
-    expect(rangedAttack.event.roll.modifiers).toContainEqual({
-      value: 2, source: 'Fighting Style: Archery',
-    });
-    expect(meleeAttack.event.roll.modifiers.some((modifier) => (
-      modifier.source === 'Fighting Style: Archery'
-    ))).toBe(false);
-    if (rangedDamage.event.type !== 'damage') throw new Error('Ranged attack did not deal damage');
-    expect(rangedDamage.event.roll?.modifiers.some((modifier) => (
-      modifier.source === 'Fighting Style: Archery'
-    ))).toBe(false);
+    if (rangedAttack.event.type !== 'roll' || meleeAttack.event.type !== 'roll' || rangedDamage.event.type !== 'damage') throw new Error('Missing attack results');
+    expect(rangedAttack.event.roll.modifiers).toContainEqual({ value: 2, source: 'Fighting Style: Archery' });
+    expect(meleeAttack.event.roll.modifiers.some((modifier) => modifier.source === 'Fighting Style: Archery')).toBe(false);
+    expect(rangedDamage.event.roll?.modifiers.some((modifier) => modifier.source === 'Fighting Style: Archery')).toBe(false);
   });
 
   it('applies Defense only after armor is donned inside one compiled two-PC chronology', {

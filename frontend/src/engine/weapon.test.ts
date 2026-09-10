@@ -163,3 +163,18 @@ describe('C1: модификаторы урона из эффектов (Яро�
     expect(withRage!.damages[0].bonus - withoutRage!.damages[0].bonus).toBe(2);
   });
 });
+
+
+describe('two-handed attacks after a one-hand recall', () => {
+  it('requires the other hand to be available before spending or rolling', () => {
+    const weapon = withDeclaredTestWeaponProfile({ ...CARD_LONGSWORD, id: 'test-two-handed', type: 'weapon' }, { weaponType: 'greatsword', proficiencyCategory: 'martial', attackAbility: 'str', damageLines: [{ dice: '2d6', type: 'slashing' }], defaultAttackMode: 'melee', attackModes: [{ kind: 'melee', reach_ft: 5 }], properties: ['two_handed'], masteryEffectId: 'test:graze' });
+    const character = { ...FIGHTER_CTX_EQUIPPED, knownCards: [weapon], equippedCards: [weapon] };
+    const before = equippedFighterState(); before.equipment = { main_hand: weapon.id, off_hand: 'shield' };
+    expect(weaponContext(character, 'main', before.equipment)).toBeNull();
+    const saved = structuredClone(before);
+    expect(() => executeAction(before, MECH_WEAPON_ATTACK, { character, target: { ac: 10 }, rng: () => { throw new Error('Unexpected random draw'); } })).toThrow();
+    expect(before).toEqual(saved);
+    expect(weaponContext(character, 'main', { main_hand: weapon.id, off_hand: null })).not.toBeNull();
+    expect(weaponContext(character, 'main', { main_hand: weapon.id, off_hand: weapon.id })).not.toBeNull();
+  });
+});

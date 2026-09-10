@@ -19,12 +19,14 @@ export function costAmount(entry: Dict): number {
 function isItemCost(entry: Dict): boolean {
   return String(entry.resource ?? '') === 'item';
 }
-function inventoryQty(state: RuntimeState, cardId: string): number {
-  return state.inventory.reduce((s, r) => (r.cardId === cardId ? s + r.qty : s), 0); // S4: сумма по всем локациям
+function inventoryQty(state: RuntimeState, cardId: string, includeHeld = false): number {
+  const hands = includeHeld ? ['main_hand', 'off_hand'].filter((hand) => state.equipment[hand] === cardId).length : 0;
+  return hands + state.inventory.reduce((s, r) => (r.cardId === cardId ? s + r.qty : s), 0); // S4: сумма по всем локациям
 }
-function spendInventory(state: RuntimeState, cardId: string, qty: number): RuntimeState {
+function spendInventory(state: RuntimeState, cardId: string, qty: number, includeHeld: boolean, reservedBag = 0): RuntimeState {
   // S4: тратим ВСЕГО qty, предпочитая верхний уровень (стопки могут быть в разных контейнерах).
   let remaining = qty;
+  let bagBudget = Math.max(0, inventoryQty(state, cardId) - reservedBag);
   const order = state.inventory
     .map((r, i) => ({ r, i }))
     .filter((x) => x.r.cardId === cardId)
@@ -32,7 +34,8 @@ function spendInventory(state: RuntimeState, cardId: string, qty: number): Runti
   const take = new Map<number, number>();
   for (const { r, i } of order) {
     if (remaining <= 0) break;
-    const t = Math.min(r.qty, remaining);
+    const t = Math.min(r.qty, remaining, bagBudget);
+    bagBudget -= t;
     take.set(i, t);
     remaining -= t;
   }
@@ -40,8 +43,8 @@ function spendInventory(state: RuntimeState, cardId: string, qty: number): Runti
     .map((row, i) => (take.has(i) ? { ...row, qty: row.qty - (take.get(i) ?? 0) } : { ...row }))
     .filter((row) => row.qty > 0);
   const equipment = {...state.equipment};
-  if (!inventory.some(row => row.cardId === cardId && row.containerId == null && row.qty > 0)) {
-    for (const hand of ['main_hand', 'off_hand'] as const) if (equipment[hand] === cardId) equipment[hand] = null;
+  if (includeHeld) for (const hand of ['main_hand', 'off_hand'] as const) {
+    if (remaining > 0 && equipment[hand] === cardId) { equipment[hand] = null; remaining--; }
   }
   return { ...state, inventory, equipment };
 }
@@ -69,12 +72,16 @@ export function canPay(state: RuntimeState, cost: Dict[]): { ok: boolean; missin
   // Суммируем потребность ПО КЛЮЧУ до сравнения: две записи на один card_id/ресурс иначе каждая
   // видела бы полный запас → canPay ложно проходил бы, а pay недосписывал (нарушение атомарности).
   const itemNeed = new Map<string, number>();
+  const bagOnlyNeed = new Map<string, number>();
+  const heldAllowed = new Set<string>();
   const resNeed = new Map<string, number>();
   for (const entry of cost) {
     const need = costAmount(entry);
     if (isItemCost(entry)) {
       const cardId = String(entry.card_id ?? '');
       itemNeed.set(cardId, (itemNeed.get(cardId) ?? 0) + need);
+      if (entry.bound_self_item === true) heldAllowed.add(cardId);
+      else bagOnlyNeed.set(cardId, (bagOnlyNeed.get(cardId) ?? 0) + need);
     } else {
       const key = runtimeCostKey(state, entry);
       resNeed.set(key, (resNeed.get(key) ?? 0) + need);
@@ -82,7 +89,7 @@ export function canPay(state: RuntimeState, cost: Dict[]): { ok: boolean; missin
   }
   const missing: string[] = [];
   for (const [cardId, need] of itemNeed) {
-    if (!cardId || inventoryQty(state, cardId) < need) missing.push(`item:${cardId}`);
+    if (!cardId || inventoryQty(state, cardId, heldAllowed.has(cardId)) < need || inventoryQty(state, cardId) < (bagOnlyNeed.get(cardId) ?? 0)) missing.push(`item:${cardId}`);
   }
   for (const [key, need] of resNeed) {
     if ((state.resources[key] ?? 0) < need) missing.push(key);
@@ -95,6 +102,10 @@ export function pay(state: RuntimeState, cost: Dict[]): { state: RuntimeState; e
   if (!check.ok) return { state, events: [] };
 
   let next = state;
+  const reservedBag = new Map<string, number>();
+  for (const entry of cost) if (isItemCost(entry) && entry.bound_self_item !== true) {
+    const id = String(entry.card_id ?? ''); reservedBag.set(id, (reservedBag.get(id) ?? 0) + costAmount(entry));
+  }
   const resources = { ...state.resources };
   const events: EngineEvent[] = [];
 
@@ -102,9 +113,10 @@ export function pay(state: RuntimeState, cost: Dict[]): { state: RuntimeState; e
     const need = costAmount(entry);
     if (isItemCost(entry)) {
       const cardId = String(entry.card_id ?? '');
-      next = spendInventory(next, cardId, need); // не трогает resources → мёрж ниже безопасен
+      if (entry.bound_self_item !== true) reservedBag.set(cardId, (reservedBag.get(cardId) ?? 0) - need);
+      next = spendInventory(next, cardId, need, entry.bound_self_item === true, reservedBag.get(cardId) ?? 0); // не трогает resources → мёрж ниже безопасен
       const name = typeof entry.name === 'string' ? entry.name : undefined;
-      events.push(itemConsumedEvent(cardId, need, inventoryQty(next, cardId), name));
+      events.push(itemConsumedEvent(cardId, need, inventoryQty(next, cardId, entry.bound_self_item === true), name));
       continue;
     }
     const key = runtimeCostKey(state, entry);
@@ -139,6 +151,7 @@ export function bindSelfItemCost(mech: Dict, selfCardId: string): Dict {
     return {
       ...entry,
       resource: 'item',
+      bound_self_item: true,
       card_id: selfCardId,
       ...(entry.amount === undefined ? { amount: 1 } : {}),
       ...(entry.name === undefined && name ? { name } : {}),

@@ -113,7 +113,7 @@ export const COMPILED_MICRO_MVP_SPECIES_FEAT_STYLE_RUNTIME_EVIDENCE = [
   {
     assertionId: 'SCENARIO-COMPILED-ARCHERY-RUNTIME',
     testFile: COMPILED_MICRO_MVP_SPECIES_FEAT_STYLE_RUNTIME_TEST_FILE,
-    testName: 'applies Archery only to ranged weapon attacks inside one compiled two-PC chronology',
+    testName: 'applies Archery only to ranged weapon attacks with legal hands in each two-PC chronology',
     semanticProtocol: 'mandatory-two-pc-v1',
     scenarioId: 'SC-RUNTIME-ARCHERY-01',
     links: [entityLink('fighting-style.archery')],
