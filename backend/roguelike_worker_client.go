@@ -22,6 +22,7 @@ type roguelikeWorkerNeed struct {
 	EffectType string `json:"effectType"`
 }
 type roguelikeWorkerResult struct {
+	Events              []JSONMap             `json:"events"`
 	Status              string                `json:"status"`
 	Needs               []roguelikeWorkerNeed `json:"needs"`
 	Envelope            JSONMap               `json:"envelope"`
@@ -74,7 +75,7 @@ func (client roguelikeWorkerClient) call(ctx context.Context, endpoint string, b
 		if len(result.Needs) == 0 || len(result.Needs) > 2048 {
 			return nil, fmt.Errorf("invalid dependency request")
 		}
-	} else if (endpoint != "/rest" && len(result.Envelope) == 0) || len(result.Patch) == 0 {
+	} else if (endpoint != "/rest" && endpoint != "/camp-action" && len(result.Envelope) == 0) || len(result.Patch) == 0 {
 		return nil, fmt.Errorf("incomplete rules worker result")
 	}
 	return &result, nil

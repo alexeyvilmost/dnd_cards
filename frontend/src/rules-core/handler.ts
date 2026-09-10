@@ -11110,14 +11110,14 @@ function executeCommand(
         turnContext,
         { advanceRoundDurations: false },
       );
-      const scene = world.scene as EncounterScene;
-      const nextIndex = (scene.activeIndex + 1) % scene.initiative.length;
-      const nextRound = nextIndex === 0 ? scene.round + 1 : scene.round;
+      const scene = world.scene;
+      const nextIndex = scene.mode === 'encounter' ? (scene.activeIndex + 1) % scene.initiative.length : 0;
+      const nextRound = scene.mode === 'encounter' ? (nextIndex === 0 ? scene.round + 1 : scene.round) : 0;
       const sourceRelative = endSourceActorTurnWorldObjects({
         objects: world.objects,
         sourceActorId: actor.id,
       });
-      const elapsed = nextRound > scene.round
+      const elapsed = scene.mode !== 'encounter' || nextRound > scene.round
         ? advanceWorldObjectRounds({ objects: sourceRelative.objects, rounds: 1 })
         : { objects: sourceRelative.objects, events: [] };
       return [
@@ -11148,7 +11148,7 @@ function executeCommand(
         {
           sourceActorId: actor.id,
           obligationIds: ['system:turn-order'],
-          payload: { type: 'SceneSet', scene: { ...scene, activeIndex: nextIndex, round: nextRound, turnStarted: false } },
+          payload: { type: 'SceneSet', scene: scene.mode === 'encounter' ? { ...scene, activeIndex: nextIndex, round: nextRound, turnStarted: false } : scene },
         },
       ];
     }

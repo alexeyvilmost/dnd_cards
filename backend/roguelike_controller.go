@@ -1285,7 +1285,7 @@ func (rc *RoguelikeController) Command(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "неверная команда забега", "code": "invalid_command"})
 		return
 	}
-	if request.Type == "initialize_combat" || request.Type == "combat_intent" || request.Type == "short_rest" || request.Type == "long_rest" || request.Type == "bind_weapon" || request.Type == "recall_weapon" {
+	if request.Type == "initialize_combat" || request.Type == "combat_intent" || request.Type == "short_rest" || request.Type == "long_rest" || request.Type == "bind_weapon" || request.Type == "recall_weapon" || request.Type == "camp_action" || request.Type == "camp_turn" || request.Type == "use_item" {
 		rc.trustedCombatCommand(c, runID, userID, request, requestHash)
 		return
 	}

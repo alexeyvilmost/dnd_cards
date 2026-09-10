@@ -42,7 +42,7 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
     if (request.method === 'GET' && request.url === '/health') return send(200, {status: 'ok', artifactHash, sourceCommit});
     const suppliedAuth = Buffer.from(request.headers.authorization || '');
     if (suppliedAuth.length !== expectedAuth.length || !timingSafeEqual(suppliedAuth, expectedAuth)) return send(401, {error: 'unauthorized'});
-    if (request.method !== 'POST' || !['/initialize', '/transition', '/rest'].includes(request.url)) return send(404, {error: 'not_found'});
+    if (request.method !== 'POST' || !['/initialize', '/transition', '/rest', '/camp-action'].includes(request.url)) return send(404, {error: 'not_found'});
     try {
       let size = 0;
       const chunks = [];
@@ -54,6 +54,10 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
       const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
       const hash = body.artifactHash || artifactHash;
       const artifact = await load(hash);
+      if (request.url === '/camp-action') {
+        const result = await artifact.executeRoguelikeCampAction(body.input);
+        return send(200, {...result, artifactHash: hash});
+      }
       if (request.url === '/rest') {
         const result = await artifact.executeRoguelikeCampRest(body.input);
         return send(200, {...result, artifactHash: hash});

@@ -1,3 +1,4 @@
+import type { CharacterEventRow } from '../character/api';
 import type { SoloCombatState } from '../solo-combat/types';
 import { apiClient } from '../api/client';
 import type { ForgeCharacter } from '../character/types';
@@ -47,6 +48,7 @@ export interface RoguelikeReward {
 }
 
 export interface RoguelikeRun {
+  command_events?: CharacterEventRow[];
   combat_state?: SoloCombatState;
   trusted_combat_available?: boolean;
   id: string;
@@ -81,7 +83,7 @@ export type RoguelikeCommandType =
   | 'buy'
   | 'pin'
   | 'refresh_shop'
-  | 'bind_weapon' | 'recall_weapon'
+  | 'bind_weapon' | 'recall_weapon' | 'camp_action' | 'camp_turn'
   | 'short_rest'
   | 'long_rest'
   | 'use_item'
@@ -110,12 +112,12 @@ export const roguelikeApi = {
     type: RoguelikeCommandType,
     payload: Record<string, unknown> = {},
   ): Promise<RoguelikeRun> => {
-    const { data } = await apiClient.post<{ run: RoguelikeRun }>(`/api/roguelike/runs/${id}/commands`, {
+    const { data } = await apiClient.post<{ run: RoguelikeRun; events?: CharacterEventRow[] }>(`/api/roguelike/runs/${id}/commands`, {
       command_id: crypto.randomUUID(),
       expected_revision: revision,
       type,
       payload,
     });
-    return data.run;
+    return { ...data.run, command_events: data.events };
   },
 };

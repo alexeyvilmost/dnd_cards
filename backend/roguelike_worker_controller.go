@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm/clause"
 	"net/http"
 	"os"
+	"time"
 )
 
 func nonNilRoguelikeMap(value JSONMap) JSONMap {
@@ -70,7 +71,8 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 	}
 	fail := func(code, message string) { writeRoguelikeError(c, roguelikeError(http.StatusConflict, code, message)) }
 	isRest := request.Type == "short_rest" || request.Type == "long_rest" || request.Type == "bind_weapon"
-	isCamp := isRest || request.Type == "recall_weapon"
+	isCampAction := request.Type == "camp_action" || request.Type == "camp_turn" || request.Type == "use_item"
+	isCamp := isRest || request.Type == "recall_weapon" || isCampAction
 	expectedPhase := RoguelikePhaseCombat
 	if isCamp {
 		expectedPhase = RoguelikePhaseCamp
@@ -99,7 +101,9 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 	client := roguelikeWorkerClient{URL: os.Getenv("RULES_WORKER_URL"), Token: os.Getenv("RULES_WORKER_TOKEN")}
 	var result *roguelikeWorkerResult
 	catalog := run.CombatCatalog
-	if isCamp {
+	if isCampAction {
+		result, err = executeRoguelikeCampActionWorker(c.Request.Context(), rc.db, client, run.Character, request)
+	} else if isCamp {
 		result, err = executeRoguelikeRestWorker(c.Request.Context(), rc.db, client, run.Character, request)
 	} else if request.Type == "initialize_combat" {
 		if len(run.CombatEnvelope) > 0 || combatOutcome(run.Character) != "" {
@@ -182,6 +186,19 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 		response, err = roguelikeRunResponse(accepted)
 		if err != nil {
 			return err
+		}
+
+		if isCampAction {
+			rows := []CharacterEvent{}
+			for _, event := range result.Events {
+				eventType, _ := event["type"].(string)
+				row := CharacterEvent{CharacterID: locked.CharacterID, Ts: time.Now(), Type: eventType, Payload: event}
+				if err = tx.Create(&row).Error; err != nil {
+					return err
+				}
+				rows = append(rows, row)
+			}
+			response["events"] = rows
 		}
 		return tx.Create(&RoguelikeCommandReceipt{RunID: runID, UserID: userID, CommandID: request.CommandID,
 			CommandType: request.Type, RequestHash: requestHash, Response: response, Request: nonNilRoguelikeMap(request.Payload)}).Error

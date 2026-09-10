@@ -167,3 +167,98 @@ func TestTrustedWeaponRecallHasNoRestRecoveryOrClockCost(t *testing.T) {
 		t.Fatal("recall applied rest/economy changes")
 	}
 }
+
+func TestTrustedCampActionsCommitEventsOnceAndRejectLegacyPatches(t *testing.T) {
+	t.Setenv("JWT_SECRET", characterV3AccessTestSecret)
+	fixture := openCharacterV3AccessFixture(t)
+	if err := fixture.db.AutoMigrate(&RoguelikeRun{}, &RoguelikeCommandReceipt{}, &CharacterEvent{}, &Action{}); err != nil {
+		t.Fatal(err)
+	}
+	character := fixture.ownerCharacter
+	character.CharacterType = "dungeon_crawl"
+	character.CurrentHP = 4
+	if err := fixture.db.Omit("User", "Group").Save(&character).Error; err != nil {
+		t.Fatal(err)
+	}
+	run := RoguelikeRun{ID: uuid.New(), UserID: fixture.owner.ID, SourceCharacterID: character.ID, CharacterID: character.ID,
+		Status: RoguelikeStatusActive, Phase: RoguelikePhaseCamp, Revision: 1, GameClockHours: 9, Supplies: 1,
+		RunSeed: "private-test", Encounter: JSONMap{}, Shop: JSONMap{}, Checkpoint: JSONMap{}, LastReward: JSONMap{}}
+	if err := fixture.db.Create(&run).Error; err != nil {
+		t.Fatal(err)
+	}
+	if _, err := authorizeRoguelikeCharacterMutation(fixture.db, character, fixture.owner.ID, run.ID.String(), roguelikeIntentCampAction); err == nil {
+		t.Fatal("legacy camp patch accepted")
+	}
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		var body struct {
+			Input struct {
+				Character  CharacterV3 `json:"character"`
+				Seed       string      `json:"seed"`
+				ActionID   string      `json:"actionId"`
+				NextTurn   bool        `json:"nextTurn"`
+				ItemCardID string      `json:"itemCardId"`
+			} `json:"input"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Error(err)
+		}
+		if r.URL.Path != "/camp-action" || body.Input.Seed == "" || body.Input.Seed == "forged" || body.Input.Character.CurrentHP == 999 {
+			t.Error("untrusted camp execution")
+		}
+		if calls == 1 && body.Input.ActionID != "owned-action" {
+			t.Error("missing action")
+		}
+		if calls == 2 && !body.Input.NextTurn {
+			t.Error("missing next turn")
+		}
+		if calls == 3 && body.Input.ItemCardID != "owned-item" {
+			t.Error("missing item")
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any{"status": "ready", "patch": JSONMap{"current_hp": 7, "runtime_revision": body.Input.Character.RuntimeRevision + 1}, "events": []JSONMap{{"type": "healing", "amount": 3, "source": "Second Wind"}}})
+	}))
+	defer server.Close()
+	t.Setenv("RULES_WORKER_URL", server.URL)
+	t.Setenv("RULES_WORKER_TOKEN", strings.Repeat("r", 32))
+	registerRoguelikeRoutes(fixture.router.Group("/api"), fixture.auth, NewRoguelikeController(fixture.db))
+	endpoint := "/api/roguelike/runs/" + run.ID.String() + "/commands"
+	token := fixture.token(t, fixture.owner)
+	for i, kind := range []string{"camp_action", "camp_turn", "use_item"} {
+		command := RoguelikeCommandRequest{CommandID: uuid.New(), ExpectedRevision: int64(i + 1), Type: kind, Payload: JSONMap{"seed": "forged", "runtime": JSONMap{"current_hp": 999}}}
+		if kind == "camp_action" {
+			command.Payload["action_id"] = "owned-action"
+		}
+		if kind == "use_item" {
+			command.Payload["card_id"] = "owned-item"
+		}
+		first := performCharacterV3Request(t, fixture.router, http.MethodPost, endpoint, token, command)
+		if first.Code != 200 {
+			t.Fatalf("%s: %d %s", kind, first.Code, first.Body.String())
+		}
+		again := performCharacterV3Request(t, fixture.router, http.MethodPost, endpoint, token, command)
+		var original, replay JSONMap
+		if err := json.Unmarshal(first.Body.Bytes(), &original); err != nil {
+			t.Fatal(err)
+		}
+		if err := json.Unmarshal(again.Body.Bytes(), &replay); err != nil {
+			t.Fatal(err)
+		}
+		if again.Code != 200 || !roguelikeJSONEqual(original, replay) || calls != i+1 {
+			t.Fatal("non-idempotent camp action")
+		}
+	}
+	stored, err := ownedRoguelikeRun(fixture.db, run.ID, fixture.owner.ID, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stored.GameClockHours != 9 || stored.Supplies != 1 || stored.Revision != 4 || stored.Character.CurrentHP != 7 {
+		t.Fatal("wrong camp action state")
+	}
+	var count int64
+	fixture.db.Model(&CharacterEvent{}).Where("character_id = ?", character.ID).Count(&count)
+	if count != 3 {
+		t.Fatalf("events duplicated or lost: %d", count)
+	}
+}

@@ -1,4 +1,4 @@
-import { weaponBondRecallChoices } from '../solo-combat/actionChoices';
+import { collectSoloCombatActionChoices, projectSoloCombatActionChoices } from '../solo-combat/actionChoices';
 import { activeRunId, notifyRunUpdated } from '../roguelike/navigation';
 import { roguelikeApi } from '../roguelike/api';
 import { runCampTargetIssue, sheetTargetBelongsToScope } from '../character/sheetInteractionScope';
@@ -1923,21 +1923,44 @@ export default function SheetActionsPanel({
       setError('Сначала подтвердите безопасный повтор предыдущей атомарной команды');
       return;
     }
-    if (character.character_type === 'dungeon_crawl'
-      && (action.mechanics.activation as Record<string, unknown> | undefined)?.weapon_bond_recall === true) {
+    if (character.character_type === 'dungeon_crawl') {
       try {
         const runId = activeRunId();
         const canonical = canonicalBuild.runtime;
         if (!runId || !canonical) throw new Error('Состояние забега ещё загружается');
         const definition = canonical.actionFor(action);
-        const picked = await choiceDialog.request(weaponBondRecallChoices(canonical.world.actors[character.id], definition, canonical.world), action.name);
-        if (!picked) return;
+        const choices = collectSoloCombatActionChoices(canonical.world.actors[character.id], definition, action.actionRef?.card_number, undefined, canonical.world);
+        let selected: Record<string, string[]> = {};
+        if (choices.length) {
+          const picked = await choiceDialog.request(choices, action.name);
+          if (!picked) return;
+          selected = picked;
+        }
+        let spell;
+        if (definition.kind === 'spell') {
+          const options = collectSheetSpellCastOptions({ runtime: canonical, action: definition });
+          if (!options.length) throw new Error('Нет доступного способа сотворить заклинание');
+          let option = options[0];
+          if (options.length > 1) {
+            const picked = await choiceDialog.request([{ id: 'camp_spell_cast', prompt: 'Как сотворить заклинание?', count: 1,
+              source: 'explicit', context: 'in_play', origin: { kind: 'other', id: definition.id, name: action.name },
+              items: options.map((entry) => ({ id: entry.id, name: entry.declaration.mode === 'ritual' ? 'Ритуал'
+                : entry.payment.kind === 'free_use' ? 'Бесплатное использование'
+                : entry.payment.kind === 'none' ? 'Без расхода ячейки' : `Ячейка ${entry.declaration.castLevel ?? definition.spell?.level ?? 1}-го круга` })),
+            }], action.name);
+            if (!picked) return;
+            option = options.find((entry) => entry.id === picked.camp_spell_cast?.[0])!;
+            if (!option) throw new Error('Выберите способ сотворения');
+          }
+          spell = { baseLevel: definition.spell!.level, ...option.declaration };
+        }
         const run = await roguelikeApi.get(runId);
-        const updated = await roguelikeApi.command(runId, run.revision, 'recall_weapon', {
-          object_id: picked.weapon_bond_object?.[0], hand: picked.weapon_bond_hand?.[0],
+        const updated = await roguelikeApi.command(runId, run.revision, 'camp_action', {
+          action_id: definition.id, choices: projectSoloCombatActionChoices(definition, selected), ...(spell ? { spell } : {}),
         });
-        if (!updated.character) throw new Error('Сервер не вернул лист после призыва');
+        if (!updated.character) throw new Error('Сервер не вернул лист после действия');
         onUpdated(updated.character); notifyRunUpdated();
+        if (updated.command_events?.length) onPersistedEvents?.(updated.command_events);
       } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); }
       return;
     }

@@ -399,6 +399,15 @@ export default function SheetRestButtons({
     setBusy(true);
     setError(null);
     try {
+      if (character.character_type === 'dungeon_crawl') {
+        const runId = activeRunId(); if (!runId) throw new Error('Не найден активный забег');
+        const run = await roguelikeApi.get(runId);
+        const updated = await roguelikeApi.command(runId, run.revision, 'camp_turn');
+        if (!updated.character) throw new Error('Сервер не вернул лист после нового хода');
+        onUpdated(updated.character); notifyRunUpdated();
+        if (updated.command_events?.length) onPersistedEvents?.(updated.command_events);
+        return;
+      }
       if (pendingAtomicTurn) {
         await commitAtomicTurn(pendingAtomicTurn);
         return;

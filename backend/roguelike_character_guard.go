@@ -231,7 +231,7 @@ func authorizeRoguelikeCharacterMutation(
 	case roguelikeIntentCamp:
 		wantPhase = RoguelikePhaseCamp
 	case roguelikeIntentCampAction:
-		wantPhase = RoguelikePhaseCamp
+		return nil, roguelikeMutationError("roguelike_camp_action_authority_required", "способности в лагере выполняются только командами серверного движка", character.ID)
 	default:
 		return nil, &characterRuntimeCommandError{
 			Status: http.StatusConflict, Code: "roguelike_intent_forbidden",

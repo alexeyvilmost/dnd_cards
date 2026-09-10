@@ -11,7 +11,7 @@ test('internal worker authenticates requests and retains exact executable artifa
   const directory = await mkdtemp(path.join(tmpdir(), 'roguelike-worker-'));
   const artifactFile = path.join(directory, 'current.cjs');
   const artifactsDirectory = path.join(directory, 'artifacts');
-  const artifact = `exports.initializeRoguelikeCombat = async () => ({status:'needs_content', needs:[], version:1});`;
+  const artifact = `exports.initializeRoguelikeCombat = async () => ({status:'needs_content', needs:[], version:1}); exports.executeRoguelikeCampAction = async (input) => ({status:'ready', patch:{current_hp: input.character.current_hp + 1}, events:[{type:'healing',amount:1}]});`;
   await writeFile(artifactFile, artifact);
   const oldHash = `sha256:${createHash('sha256').update(artifact).digest('hex')}`;
   let server;
@@ -28,6 +28,9 @@ test('internal worker authenticates requests and retains exact executable artifa
     assert.equal((await post(url, {}, 'Bearer wrong')).status, 401);
     assert.equal((await (await fetch(`${url}/health`)).json()).artifactHash, oldHash);
     assert.equal((await (await post(url, {})).json()).version, 1);
+    const camp = await fetch(`${url}/camp-action`, {method:'POST', headers:{authorization:`Bearer ${token}`, 'Content-Type':'application/json'}, body:JSON.stringify({input:{character:{current_hp:4}}})});
+    assert.equal(camp.status,200);
+    assert.deepEqual(await camp.json(), {status:'ready',patch:{current_hp:5},events:[{type:'healing',amount:1}],artifactHash:oldHash});
     await stop();
     await writeFile(artifactFile, artifact.replace('version:1', 'version:2'));
     url = await start();
