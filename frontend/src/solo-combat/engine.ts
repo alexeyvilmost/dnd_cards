@@ -1,4 +1,4 @@
-import {signedMovementBudget, withMovementBudget} from './movementLedger';
+import {resetTurnMovement, signedMovementBudget, withMovementBudget} from './movementLedger';
 import {nonMagicActionCost} from '../engine/actionSurge';
 import { weaponBondProtectsHand } from '../rules-core/weaponBond';
 import {telekineticObjectIssue} from '../rules-core/telekineticMovement';
@@ -697,7 +697,7 @@ function reconcileMovementForSpeedChanges(
     const speedDelta = effectiveActorSpeedFt(nextActor) - effectiveActorSpeedFt(previousActor);
     if (speedDelta === 0) continue;
     const previousRemaining = signedMovementBudget(state, actorId, effectiveActorSpeedFt(previousActor));
-    next = withMovementBudget(next, actorId, previousRemaining + speedDelta);
+    next = withMovementBudget(next, actorId, previousRemaining + speedDelta * (1 + (state.dashCountByActor?.[actorId] ?? 0)));
   }
   return next;
 }
@@ -754,6 +754,12 @@ function reconcileSummonedActorProjection(
       .filter(([actorId]) => nextActorIds.has(actorId)));
     const {movementDeficitFt: _oldDeficit, ...base} = projection;
     projection = Object.keys(retained).length ? {...base, movementDeficitFt: retained} : base;
+  }
+  if (state.dashCountByActor && removedActorIds.length) {
+    const retained = Object.fromEntries(Object.entries(state.dashCountByActor)
+      .filter(([actorId]) => nextActorIds.has(actorId)));
+    const {dashCountByActor: _oldCounts, ...base} = projection;
+    projection = Object.keys(retained).length ? {...base, dashCountByActor: retained} : base;
   }
   let boardChanged = removedActorIds.length > 0;
   const initiativeByActor = new Map(
@@ -1845,6 +1851,17 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
     effectiveCombatActorSpeedFt(input.state, input.actorId));
   const dashAllotment = effectiveCombatActorSpeedFt(input.state, input.actorId)
     + (actorOwnsCharger(input.state.world.actors[input.actorId]) ? 10 : 0);
+  // Compatibility for retained legacy catalogs. New Dash data declares its
+  // action category and never adds character_speed to the Speed statistic.
+  const legacySpeedModifier = (action.mechanics.effects as Record<string, unknown>[] | undefined)?.some(effect =>
+    (effect.result as Record<string, unknown>[] | undefined)?.some(result => result.kind === 'modifier'
+      && result.op === 'add' && result.value === 'character_speed'
+      && (result.applies_to as Record<string, unknown> | undefined)?.roll === 'speed'));
+  if (!legacySpeedModifier) {
+    const counted = {...next, dashCountByActor: {...next.dashCountByActor,
+      [input.actorId]: (next.dashCountByActor?.[input.actorId] ?? 0) + 1}};
+    return withTriggeredAttackOffer(withMovementBudget(counted, input.actorId, movementBeforeDash + dashAllotment));
+  }
   return withTriggeredAttackOffer(withMovementBudget(next, input.actorId,
       // Some catalog rows express Dash's visible speed boon as a modifier and
       // therefore reconcile the ledger during dispatch. Narrative-only rows
@@ -3834,7 +3851,7 @@ function startTurnOrRequestGrappleDamage(
     label: 'Начало хода',
   });
   const started = {
-    ...withMovementBudget(next, actorId, effectiveCombatActorSpeedFt(next, actorId)),
+    ...resetTurnMovement(next, actorId, effectiveCombatActorSpeedFt(next, actorId)),
     recentStraightMovementByActor: Object.fromEntries(Object.entries(
       next.recentStraightMovementByActor ?? {},
     ).filter(([candidateId]) => candidateId !== actorId)),
@@ -3867,7 +3884,7 @@ export function resolveSoloCombatTurnStart(
     rng,
     label: 'Начало хода',
   });
-  const started = withMovementBudget(next, pending.actorId, effectiveCombatActorSpeedFt(next, pending.actorId));
+  const started = resetTurnMovement(next, pending.actorId, effectiveCombatActorSpeedFt(next, pending.actorId));
   return queueCombatAreaEvent(started, 'start_turn', [pending.actorId]);
 }
 

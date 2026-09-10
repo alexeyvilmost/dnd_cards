@@ -17,3 +17,10 @@ export function withMovementBudget(state: SoloCombatState, actorId: string, budg
     ...(Object.keys(deficits).length ? {movementDeficitFt: deficits} : {}),
   };
 }
+
+export function resetTurnMovement(state: SoloCombatState, actorId: string, speed: number): SoloCombatState {
+  const counts = {...state.dashCountByActor};
+  delete counts[actorId];
+  const {dashCountByActor: _oldCounts, ...base} = state;
+  return withMovementBudget(Object.keys(counts).length ? {...base, dashCountByActor: counts} : base, actorId, speed);
+}

@@ -20,7 +20,7 @@ import type { Action } from '../types';
 import type { Monster } from '../monsters/types';
 import { resolvePlayerShoveOutcome, resumePendingMovement, addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, canStandActor, standActor, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatParticipants, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatAlertSwap, resolveSoloCombatInterception, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectedTargetsForAction, setSoloCombatInitiativeTotals, setSoloCombatMount } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
-import { actorMustCrawl, gridDistanceFt } from './tacticalGrid';
+import { actorMustCrawl, effectiveCombatActorSpeedFt, gridDistanceFt } from './tacticalGrid';
 import { isPlayerControlledCombatActor, SOLO_COMBAT_KEY, type SoloCombatState } from './types';
 import { UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
 import {createMonsterRouteRiskEvaluator, declineAdditionalMovement, monsterRouteOpportunityRisk, moveActorAlongRoute} from './engine';
@@ -2994,6 +2994,13 @@ describe('solo combat engine vertical integration', () => {
       const budget = 2 * (baseSpeed - reduction) - 20;
       expect(state.movementRemainingFt[actorId]).toBe(Math.max(0, budget));
       expect(state.movementDeficitFt?.[actorId] ?? 0).toBe(Math.max(0, -budget));
+      state = readSoloCombatState(writeSoloCombatState({}, state), actorId, state.runtimeRevision)!;
+      state = executeCombatAction({state, actorId, actionId: restore.id, targetIds: [actorId], rng: () => 0.5});
+      expect(state.movementRemainingFt[actorId]).toBe(2 * baseSpeed - 20);
+      expect(state.movementDeficitFt?.[actorId]).toBeUndefined();
+      state = advanceTurn(advanceTurn(state, () => 0.5), () => 0.5);
+      expect(state.dashCountByActor?.[actorId]).toBeUndefined();
+      expect(state.movementRemainingFt[actorId]).toBe(baseSpeed);
       return;
     }
     if (mode === 'new-turn') {
@@ -3004,6 +3011,30 @@ describe('solo combat engine vertical integration', () => {
     state = executeCombatAction({state, actorId, actionId: restore.id, targetIds: [actorId], rng: () => 0.5});
     expect(state.movementRemainingFt[actorId]).toBe(baseSpeed - (mode === 'new-turn' ? 0 : 20));
     expect(state.movementDeficitFt?.[actorId]).toBeUndefined();
+  });
+
+  it('counts two Dash allotments without changing Speed or the cost of standing', async () => {
+    const participant = fighterSeed(), actorId = participant.character.id;
+    const basicDash = dash();
+    basicDash.mechanics = {...basicDash.mechanics, activation: {mode: 'active', counts_as: 'dash', cost: [{resource: 'action'}]}, effects: []};
+    let state = await createSoloCombatState({character: participant.character, participant,
+      selected: [{monster: goblin(), quantity: 1}], actions: [scimitar(), basicDash], effects: [], dashAction: basicDash, rng: () => 0.5});
+    const speed = effectiveCombatActorSpeedFt(state, actorId);
+    state = moveActor({state, actorId,
+      destination: {...state.tokens[actorId].position, y: state.tokens[actorId].position.y - 4}});
+    state = executeCombatAction({state, actorId, actionId: basicDash.id, targetIds: [], rng: () => 0.5});
+    state.world.actors[actorId].runtime.resources.action_surge_action = 1;
+    state = executeCombatAction({state, actorId, actionId: basicDash.id, targetIds: [], rng: () => 0.5});
+    state = readSoloCombatState(writeSoloCombatState({}, state), actorId, state.runtimeRevision)!;
+    expect(state.dashCountByActor?.[actorId]).toBe(2);
+    expect(effectiveCombatActorSpeedFt(state, actorId)).toBe(speed);
+    expect(state.movementRemainingFt[actorId]).toBe(3 * speed - 20);
+    state.world.actors[actorId].runtime.activeEffects.push({id: 'qa-prone', name: 'Ничком', source: 'fixture', mechanics: {kind: 'condition', value: 'prone'}});
+    state = standActor(state, actorId);
+    expect(state.movementRemainingFt[actorId]).toBe(3 * speed - 20 - Math.floor(speed / 2));
+    state = advanceTurn(advanceTurn(state, () => 0.5), () => 0.5);
+    expect(state.dashCountByActor?.[actorId]).toBeUndefined();
+    expect(state.movementRemainingFt[actorId]).toBe(speed);
   });
 
   it('lets the separate monster controller move, attack, resolve, and hand back the turn', async () => {

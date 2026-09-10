@@ -320,6 +320,8 @@ export interface SoloCombatState {
   movementRemainingFt: Record<string, number>;
   /** Spent distance hidden by a temporary speed reduction; reset each turn. */
   movementDeficitFt?: Record<string, number>;
+  /** Extra Speed allotments from Dash this turn, without modifying Speed itself. */
+  dashCountByActor?: Record<string, number>;
   /** Last contiguous straight voluntary path this turn; used by rules such as Charger. */
   recentStraightMovementByActor?: Record<string, RecentStraightMovement>;
   /** Board-owned mounted relation. The mount remains a normal actor; this map
