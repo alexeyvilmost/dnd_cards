@@ -1,3 +1,4 @@
+import { readWeaponBondObjects } from './weaponBondPersistence';
 import type { Action, Card, PassiveEffect } from '../types';
 import { collectPassiveMechanics } from './resourceInit';
 import {
@@ -66,11 +67,12 @@ function resolveSheetCombatArmorClass(
  * character rules.
  */
 async function hydrateSheetCombatCards(input: {
-  character: Pick<ForgeCharacter, 'name' | 'equipment' | 'inventory_items'>;
+  character: Pick<ForgeCharacter, 'name' | 'equipment' | 'inventory_items'> & Partial<Pick<ForgeCharacter, 'id' | 'turn_state'>>;
   cards: ReadonlyMap<string, Card>;
   loadCard?: (id: string) => Promise<Card>;
 }): Promise<Map<string, Card>> {
   const cardIds = new Set<string>([
+    ...(input.character.id ? readWeaponBondObjects(input.character.turn_state, input.character.id).map((object) => object.itemCardId!) : []),
     ...(input.character.inventory_items ?? []).map((row) => row.card_id),
     ...Object.values(input.character.equipment ?? {})
       .filter((id): id is string => typeof id === 'string' && id.length > 0),

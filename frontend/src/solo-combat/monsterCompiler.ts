@@ -68,7 +68,7 @@ export function compileMonsterInstance(input: {
     resources: { action: 1, bonus_action: 1, reaction: 1 },
     maxResources: { action: 1, bonus_action: 1, reaction: 1 },
     equipment: heldWeapon ? {main_hand: heldWeapon.id} : {},
-    inventory: heldWeapon ? [{cardId: heldWeapon.id, qty: 1}] : [], activeEffects: [],
+    inventory: [], activeEffects: [],
   };
   const aiPassives: Record<string, unknown>[] = [
     { id: 'monster-ai-profile', kind: 'monster_ai', ...input.monster.ai },

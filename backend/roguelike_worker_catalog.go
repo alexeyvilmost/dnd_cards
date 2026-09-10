@@ -177,9 +177,17 @@ func initializeRoguelikeWorker(ctx context.Context, tx *gorm.DB, client roguelik
 // Rest inputs are derived from the saved character; browser runtime patches are never executed.
 func executeRoguelikeRestWorker(ctx context.Context, tx *gorm.DB, client roguelikeWorkerClient, character *CharacterV3, request RoguelikeCommandRequest) (*roguelikeWorkerResult, error) {
 	catalog := emptyRoguelikeFrozenCatalog()
+	var binding any
+	var recall any
+	if request.Type == "recall_weapon" {
+		recall = map[string]any{"objectId": roguelikePayloadString(request, "object_id"), "hand": roguelikePayloadString(request, "hand"), "commandId": request.CommandID.String()}
+	}
+	if request.Type == "bind_weapon" {
+		binding = map[string]any{"cardId": roguelikePayloadString(request, "card_id"), "instanceId": request.CommandID.String() + ":weapon-bond", "replaceObjectId": roguelikePayloadString(request, "replace_object_id")}
+	}
 	for attempt := 0; attempt < 32; attempt++ {
 		result, err := client.call(ctx, "/rest", map[string]any{"input": map[string]any{
-			"character": character, "catalog": catalog, "long": request.Type == "long_rest", "hitDieRolls": request.Payload["hit_die_rolls"],
+			"character": character, "catalog": catalog, "long": request.Type == "long_rest", "hitDieRolls": request.Payload["hit_die_rolls"], "bindWeapon": binding, "recallWeapon": recall,
 		}})
 		if err != nil {
 			return nil, err

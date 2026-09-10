@@ -82,6 +82,7 @@ export type ActorLifecycleState =
 
 export interface ActorState {
   id: string;
+  planeId?: string;
   name: string;
   kind: 'playerCharacter' | 'monster' | 'summonedActor';
   controllerId: string;

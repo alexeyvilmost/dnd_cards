@@ -7,6 +7,7 @@
   "required": ["id", "name", "kind", "activation"],
   "additionalProperties": false,
   "properties": {
+    "weapon_bond": { "type": "object", "required": ["maximum", "ritual_minutes"], "properties": { "maximum": { "const": 2 }, "ritual_minutes": { "const": 60 } }, "additionalProperties": false },
     "object_size": {"enum": ["tiny", "small", "medium", "large", "huge", "gargantuan"], "description": "Explicit physical item size; never inferred from weight."},
     "schema_version": { "type": "string", "default": "1.0" },
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
@@ -898,6 +899,7 @@
         "position_exchange_ft": { "const": 5 },
         "commanded_attack": { "const": true },
         "while": { "enum": ["equipped", "carried", "attuned"], "description": "Гейт применимости предмета (S2): пока надет | пока в сумке | пока настроен. Нет → equipped." },
+        "weapon_bond_recall": { "type": "boolean" },
         "consumes_self": { "type": "boolean", "deprecated": true, "description": "Legacy authoring marker without runtime semantics. Migrate to activation.cost {resource:'self_item'}." },
         "cost": { "type": "array", "items": { "$ref": "#/$defs/cost" } },
         "trigger": { "$ref": "#/$defs/trigger" },

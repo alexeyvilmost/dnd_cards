@@ -1,3 +1,4 @@
+import { weaponBondProtectsHand } from '../rules-core/weaponBond';
 import {telekineticObjectIssue} from '../rules-core/telekineticMovement';
 import {heldItemDropIssue} from '../engine/heldItemDrop';
 import {heldItemRequirementIssue} from '../engine/actionRequirements';
@@ -1715,6 +1716,11 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
   let next = dispatch({ state: dispatchState, command, rng, label: action.name });
   if (positionExchange) next = applyPositionExchange(dispatchState, next, input.actorId, positionExchange, rng);
   if (telekineticMovement) next = applyTelekineticMovement(dispatchState,next,telekineticMovement,rng);
+  if (activation?.weapon_bond_recall === true) {
+    const positions = { ...next.worldObjectPositions };
+    for (const object of Object.values(next.world.objects)) if (object.heldByActorId === input.actorId) delete positions[object.id];
+    next = { ...next, worldObjectPositions: positions, boardRevision: next.boardRevision + 1 };
+  }
   next = applyActionTeleport(
     dispatchState,
     next,
@@ -3215,7 +3221,7 @@ function offerSourceTriggeredAttackActions(input: {
     const trigger=activation?.trigger as Record<string,unknown>|undefined;
     if(trigger?.disarm_held_item){
       const target=after.world.actors[targetIds[0]];
-      if(!target || !(['main_hand','off_hand'] as const).some(hand=>!heldItemDropIssue(target.runtime,hand)))return false;
+      if(!target || !(['main_hand','off_hand'] as const).some(hand=>!heldItemDropIssue(target.runtime,hand) && !weaponBondProtectsHand(after.world, target.id, hand)))return false;
     }
     return trigger?.secondary_target !== true
       || triggeredSecondaryTargetIds(offered, id).length > 0;

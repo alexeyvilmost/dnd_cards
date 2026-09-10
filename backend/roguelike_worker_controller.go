@@ -69,13 +69,14 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 		return
 	}
 	fail := func(code, message string) { writeRoguelikeError(c, roguelikeError(http.StatusConflict, code, message)) }
-	isRest := request.Type == "short_rest" || request.Type == "long_rest"
+	isRest := request.Type == "short_rest" || request.Type == "long_rest" || request.Type == "bind_weapon"
+	isCamp := isRest || request.Type == "recall_weapon"
 	expectedPhase := RoguelikePhaseCombat
-	if isRest {
+	if isCamp {
 		expectedPhase = RoguelikePhaseCamp
 	}
 	if run.Status != RoguelikeStatusActive || run.Phase != expectedPhase || run.Character == nil {
-		if isRest {
+		if isCamp {
 			fail("camp_required", "отдых доступен только в лагере")
 		} else {
 			fail("combat_required", "активный бой не найден")
@@ -86,7 +87,7 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 		fail("run_revision_conflict", "состояние забега изменилось")
 		return
 	}
-	if isRest && run.Character.CurrentHP < 1 {
+	if isCamp && run.Character.CurrentHP < 1 {
 		fail("rest_at_zero_hp", "отдых нельзя начать при 0 хитов")
 		return
 	}
@@ -98,7 +99,7 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 	client := roguelikeWorkerClient{URL: os.Getenv("RULES_WORKER_URL"), Token: os.Getenv("RULES_WORKER_TOKEN")}
 	var result *roguelikeWorkerResult
 	catalog := run.CombatCatalog
-	if isRest {
+	if isCamp {
 		result, err = executeRoguelikeRestWorker(c.Request.Context(), rc.db, client, run.Character, request)
 	} else if request.Type == "initialize_combat" {
 		if len(run.CombatEnvelope) > 0 || combatOutcome(run.Character) != "" {
@@ -157,7 +158,7 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 			if err = restRoguelike(locked, restRequest, request.Type == "long_rest"); err != nil {
 				return err
 			}
-		} else {
+		} else if !isCamp {
 			locked.CombatEnvelope = result.Envelope
 			locked.CombatCatalog = catalog
 		}
@@ -169,7 +170,7 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 		if err = saveRoguelikeRun(tx, locked); err != nil {
 			return err
 		}
-		if !isRest {
+		if !isCamp {
 			if err = appendRoguelikeCombatEvent(tx, locked, request, run.CombatEnvelope, result); err != nil {
 				return err
 			}

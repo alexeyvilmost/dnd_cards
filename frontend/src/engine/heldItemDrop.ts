@@ -13,11 +13,10 @@ export function selectedHeldItemHand(choices: Record<string,string|string[]> | u
 export function heldItemDropIssue(state: RuntimeState | undefined, hand: HeldItemHand): string | null {
   const cardId=state?.equipment[hand];
   if(!cardId) return 'В выбранной руке нет предмета';
-  return state.inventory.some(row=>row.cardId===cardId && row.containerId==null && row.qty>0)
-    ? null : 'Выбранный предмет отсутствует в доступном инвентаре';
+  return null;
 }
 
-/** Remove exactly one accessible item; its physical world object is created by rules-core. */
+/** Remove the equipped instance, leaving bag contents unchanged; its physical world object is created by rules-core. */
 export function dropHeldItem(state: RuntimeState, hand: HeldItemHand, ownerActorId: string, character: CharacterContext): {state: RuntimeState; events: EngineEvent[]} {
   const issue=heldItemDropIssue(state,hand);if(issue)throw new Error(issue);
   const cardId=state.equipment[hand]!;
@@ -25,11 +24,7 @@ export function dropHeldItem(state: RuntimeState, hand: HeldItemHand, ownerActor
   const equipment={...state.equipment,[hand]:null};
   const other=hand==='main_hand'?'off_hand':'main_hand';
   if(equipment[other]===cardId && (card?.slot==='two_hands' || cardPropertyList(card?.properties).some(property=>property==='two_handed'||property==='two-handed'))) equipment[other]=null;
-  let removed=false;
-  const inventory=state.inventory.flatMap(row=>{
-    if(!removed && row.cardId===cardId && row.containerId==null && row.qty>0){removed=true;return row.qty>1?[{...row,qty:row.qty-1}]:[];}
-    return [row];
-  });
+  const inventory = state.inventory;
   return {state:{...state,equipment,inventory},events:[
     {type:'world_interaction',operation:'drop_held_item',parameters:{cardId,hand,ownerActorId}},
     {type:'narrative',text:`Предмет выпал из руки: ${card?.name??cardId}`},

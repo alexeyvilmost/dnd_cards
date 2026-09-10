@@ -21,7 +21,7 @@ const runtime: RuntimeState = {
 
 describe('dedicated combat turn-state ownership', () => {
   it('removes an incompatible sheet continuation when dedicated combat starts', () => {
-    const combat = { schemaVersion: 1, marker: 'dedicated' } as unknown as SoloCombatState;
+    const combat = { schemaVersion: 1, marker: 'dedicated', characterId: 'owner', world: { objects: {} } } as unknown as SoloCombatState;
     const next = writeDedicatedCombatTurnState({
       canonical_pending_combat_v1: { pending: true },
       unrelated: 'preserved',

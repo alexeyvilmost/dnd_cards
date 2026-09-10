@@ -1,3 +1,8 @@
+import { hasWeaponBondPolicy } from '../rules-core/weaponBond';
+import { readWeaponBondObjects } from '../character/weaponBondPersistence';
+import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
+import { roguelikeApi } from '../roguelike/api';
+import { activeRunId, notifyRunUpdated } from '../roguelike/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePinMode } from '../hooks/usePinMode';
 import { Sparkles } from 'lucide-react';
@@ -86,6 +91,9 @@ export default function SheetEquipmentPanel({
 }: Props) {
   const [cards, setCards] = useState<Map<string, Card>>(new Map());
   const [busy, setBusy] = useState(false);
+  const choiceDialog = useChoiceDialog();
+  const weaponBonds = readWeaponBondObjects(character.turn_state, character.id);
+  const canBindWeapons = character.character_type === 'dungeon_crawl' && hasWeaponBondPolicy(passives);
   const [error, setError] = useState<string | null>(null);
   const { entityDisplay, itemPreview } = useSiteSettings();
   const [hoveredItem, setHoveredItem] = useState<Card | null>(null);
@@ -187,6 +195,32 @@ export default function SheetEquipmentPanel({
   const handleUnequip = async (slot: string) => {
     await persist(unequipToInventory(runtime, slot));
     setDialog(null);
+  };
+
+  const handleBindWeapon = async (card: Card) => {
+    const runId = activeRunId(); if (!runId) return;
+    setDialog(null); setBusy(true); setError(null);
+    try {
+      let replaceObjectId: string | undefined;
+      if (weaponBonds.length >= 2) {
+        const items = await Promise.all(weaponBonds.map(async (object) => ({
+          id: object.id, name: object.name, previewCard: await cardsApi.getCard(object.itemCardId!),
+        })));
+        const choice = await choiceDialog.request([{ id: 'replace_weapon_bond', prompt: 'Какую связь разорвать?',
+          count: 1, source: 'explicit', context: 'in_play', origin: { kind: 'other', id: character.id, name: 'Связь с оружием' }, items,
+        }], 'Связь с оружием');
+        if (!choice) return;
+        replaceObjectId = choice.replace_weapon_bond?.[0];
+        if (!replaceObjectId) return;
+      }
+      const run = await roguelikeApi.get(runId);
+      const updated = await roguelikeApi.command(runId, run.revision, 'bind_weapon', {
+        card_id: card.id, ...(replaceObjectId ? { replace_object_id: replaceObjectId } : {}),
+      });
+      if (!updated.character) throw new Error('Сервер не вернул лист после ритуала');
+      onUpdated(updated.character); notifyRunUpdated();
+    } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); }
+    finally { setBusy(false); }
   };
 
   const handleToggleAttune = async (cardId: string) => {
@@ -477,6 +511,8 @@ export default function SheetEquipmentPanel({
           occupant={dialog.mode === 'inventory' ? dialog.occupant : null}
           mode={dialog.mode}
           busy={busy}
+          bondedCopies={weaponBonds.filter((object) => object.itemCardId === dialog.card.id).length}
+          onBindWeapon={canBindWeapons && dialog.card.type === 'weapon' ? () => handleBindWeapon(dialog.card) : undefined}
           needsAttunement={!!dialog.card.requires_attunement}
           attuned={dialogCardAttuned}
           canChangeAttunement={canChangeAttunement}

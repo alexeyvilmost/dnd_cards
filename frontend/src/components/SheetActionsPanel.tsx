@@ -1,3 +1,6 @@
+import { weaponBondRecallChoices } from '../solo-combat/actionChoices';
+import { activeRunId, notifyRunUpdated } from '../roguelike/navigation';
+import { roguelikeApi } from '../roguelike/api';
 import { runCampTargetIssue, sheetTargetBelongsToScope } from '../character/sheetInteractionScope';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { X } from 'lucide-react';
@@ -1918,6 +1921,24 @@ export default function SheetActionsPanel({
     }
     if (pendingAtomicRetry) {
       setError('Сначала подтвердите безопасный повтор предыдущей атомарной команды');
+      return;
+    }
+    if (character.character_type === 'dungeon_crawl'
+      && (action.mechanics.activation as Record<string, unknown> | undefined)?.weapon_bond_recall === true) {
+      try {
+        const runId = activeRunId();
+        const canonical = canonicalBuild.runtime;
+        if (!runId || !canonical) throw new Error('Состояние забега ещё загружается');
+        const definition = canonical.actionFor(action);
+        const picked = await choiceDialog.request(weaponBondRecallChoices(canonical.world.actors[character.id], definition, canonical.world), action.name);
+        if (!picked) return;
+        const run = await roguelikeApi.get(runId);
+        const updated = await roguelikeApi.command(runId, run.revision, 'recall_weapon', {
+          object_id: picked.weapon_bond_object?.[0], hand: picked.weapon_bond_hand?.[0],
+        });
+        if (!updated.character) throw new Error('Сервер не вернул лист после призыва');
+        onUpdated(updated.character); notifyRunUpdated();
+      } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); }
       return;
     }
     const contextualCostIssue = contextualCostProjection.issues.get(action.id);

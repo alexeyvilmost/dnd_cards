@@ -1,6 +1,7 @@
+import { weaponBondProtectsHand } from '../rules-core/weaponBond';
 import {heldItemDropIssue} from '../engine/heldItemDrop';
 import { collectInPlayActionChoices, type PendingChoice } from '../mechanics/collectChoices';
-import type { ActorState, RuleActionDefinition } from '../rules-core/domain';
+import type { ActorState, RuleActionDefinition, WorldState } from '../rules-core/domain';
 import { parseDeclaredWeaponActionPolicy } from '../rules-core/weaponActionPolicies';
 import { weaponContext } from '../engine/weapon';
 import { weaponMasteryPrimitive } from '../engine/weaponMastery2024';
@@ -136,9 +137,11 @@ export function collectSoloCombatActionChoices(
   action: RuleActionDefinition,
   cardNumber?: string,
   target?: ActorState,
+  world?: WorldState,
 ): PendingChoice[] {
   const choices = [
-    ...disarmingItemChoices(action,target),
+    ...weaponBondRecallChoices(actor, action, world),
+    ...disarmingItemChoices(action,target,world),
     ...unarmedStrikeChoices(action, cardNumber),
     ...primitiveChoices(action),
     ...collectInPlayActionChoices(action.mechanics, {
@@ -187,6 +190,7 @@ export function immediateSoloCombatTargetIds(
   actorId: string,
   state?: SoloCombatState,
 ): string[] | null {
+  if ((action.mechanics.activation as Record<string, unknown> | undefined)?.weapon_bond_recall === true) return [actorId];
   const primitive = action.mechanics.primitive;
   if (primitive && typeof primitive === 'object' && !Array.isArray(primitive)
     && (primitive as Record<string, unknown>).type === 'owned_summon') return null;
@@ -229,14 +233,31 @@ export function immediateSoloCombatTargetIds(
 }
 
 
-export function disarmingItemChoices(action:RuleActionDefinition,target?:ActorState):PendingChoice[]{
+export function disarmingItemChoices(action:RuleActionDefinition,target?:ActorState,world?:WorldState):PendingChoice[]{
  const trigger=(action.mechanics.activation as Record<string,unknown>|undefined)?.trigger as Record<string,unknown>|undefined;
  if(!trigger?.disarm_held_item || !target)return [];
  const items=(['main_hand','off_hand'] as const).flatMap(hand=>{
-  if(heldItemDropIssue(target.runtime,hand))return [];
+  if(heldItemDropIssue(target.runtime,hand) || (world && weaponBondProtectsHand(world,target.id,hand)))return [];
   const cardId=target.runtime.equipment[hand];
   const card=target.character.knownCards?.find(row=>row.id===cardId)??target.character.equippedCards?.find(row=>row.id===cardId);
   return [{id:hand,name:card?.name??'Предмет в руке',...(card?{previewCard:card}:{})}];
  });
  return items.length?[{id:'disarm_held_item',prompt:'Какой предмет выбить из рук?',count:1,source:'explicit',context:'in_play',origin:{kind:'other',id:action.id,name:action.name},items,recommended:[items[0].id]}]:[];
+}
+
+export function weaponBondRecallChoices(actor: ActorState, action: RuleActionDefinition, world?: WorldState): PendingChoice[] {
+  if ((action.mechanics.activation as Record<string,unknown> | undefined)?.weapon_bond_recall !== true || !world) return [];
+  const origin = { kind: 'other' as const, id: action.id, name: action.name };
+  const objects = Object.values(world.objects).filter((object) => object.weaponBondActorId === actor.id
+    && (object.planeId ?? 'material') === (actor.planeId ?? 'material'));
+  if (!objects.length) throw new Error('Сначала свяжите оружие во время короткого отдыха');
+  if (['main_hand','off_hand'].every((hand) => actor.runtime.equipment[hand])) throw new Error('Для призыва нужна свободная рука');
+  return [
+    { id: 'weapon_bond_object', prompt: 'Какое оружие призвать?', count: 1, source: 'explicit', context: 'in_play', origin,
+      items: objects.map((object) => ({ id: object.id, name: object.name, previewCard: actor.character.knownCards?.find((card) => card.id === object.itemCardId) })) },
+    { id: 'weapon_bond_hand', prompt: 'В какую руку?', count: 1, source: 'explicit', context: 'in_play', origin,
+      items: (['main_hand','off_hand'] as const).filter((hand) => !actor.runtime.equipment[hand]
+        && !Object.values(world.objects).some((object) => object.heldByActorId === actor.id && object.heldInHand === hand))
+        .map((hand) => ({ id: hand, name: hand === 'main_hand' ? 'Основная рука' : 'Вторая рука' })) },
+  ];
 }

@@ -1,3 +1,4 @@
+import { readWeaponBondObjects, writeWeaponBondObjects, hydrateWeaponBondObjects, reconcileWeaponBondHands } from './weaponBondPersistence';
 import type { AssembledCharacter } from './assemble';
 import type { SheetAction } from './actionSheet';
 import type { ForgeCharacter } from './types';
@@ -1025,7 +1026,7 @@ export function writeSheetCanonicalWorld(
     world,
     ...(Object.keys(resourceBindings).length ? { resourceBindings: cloneJson(resourceBindings) } : {}),
   };
-  return { ...(turnState ?? {}), [SHEET_CANONICAL_WORLD_KEY]: envelope };
+  return { ...writeWeaponBondObjects(turnState, primaryActorId, world.objects), [SHEET_CANONICAL_WORLD_KEY]: envelope };
 }
 
 export function synchronizeSheetCanonicalRuntime(
@@ -1137,7 +1138,7 @@ export function buildSheetCanonicalRuntime(input: {
 
   const pacts: WarlockPactStates = {};
   const featureSources = projectDeclaredFeatureSources(input.assembled, uniqueActions);
-  const initialObjects = [];
+  const initialObjects = readWeaponBondObjects(input.character.turn_state, actorId);
   const tomeActionIds = new Set<string>();
   const deferredTomes: Array<{
     binding: PactBinding;
@@ -1331,7 +1332,7 @@ export function buildSheetCanonicalRuntime(input: {
     id: `character-sheet:${actorId}:world`,
     ruleset,
     actors: [actor],
-    objects: initialObjects,
+    objects: Object.values(reconcileWeaponBondHands(Object.fromEntries(initialObjects.map((object) => [object.id, object])), actorId, actor.runtime, cards)),
   }));
   const persisted = readSheetCanonicalWorld(
     input.character.turn_state,
@@ -1362,6 +1363,7 @@ export function buildSheetCanonicalRuntime(input: {
       // blade bond, objects), but never retain an obsolete access projection.
       spellcastingAccess: actor.spellcastingAccess,
     };
+    hydrated.objects = reconcileWeaponBondHands(hydrateWeaponBondObjects(hydrated.objects, input.character.turn_state, actorId), actorId, actor.runtime, cards);
     world = migrateWorldState(hydrated);
   }
 

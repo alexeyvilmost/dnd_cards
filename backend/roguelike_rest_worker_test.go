@@ -107,3 +107,63 @@ func TestRoguelikeHitDieUsesFloorForNegativeOddConstitution(t *testing.T) {
 		t.Fatal("wrong Constitution modifier")
 	}
 }
+
+func TestTrustedWeaponRecallHasNoRestRecoveryOrClockCost(t *testing.T) {
+	t.Setenv("JWT_SECRET", characterV3AccessTestSecret)
+	fixture := openCharacterV3AccessFixture(t)
+	if err := fixture.db.AutoMigrate(&RoguelikeRun{}, &RoguelikeCommandReceipt{}); err != nil {
+		t.Fatal(err)
+	}
+	character := fixture.ownerCharacter
+	run := RoguelikeRun{ID: uuid.New(), UserID: fixture.owner.ID, SourceCharacterID: character.ID, CharacterID: character.ID,
+		Status: RoguelikeStatusActive, Phase: RoguelikePhaseCamp, Revision: 1, GameClockHours: 9, Supplies: 1,
+		RunSeed: "private-test", Encounter: JSONMap{}, Shop: JSONMap{}, Checkpoint: JSONMap{}, LastReward: JSONMap{}}
+	if err := fixture.db.Create(&run).Error; err != nil {
+		t.Fatal(err)
+	}
+	command := RoguelikeCommandRequest{CommandID: uuid.New(), ExpectedRevision: 1, Type: "recall_weapon", Payload: JSONMap{
+		"object_id": "owned-weapon", "hand": "off_hand", "runtime": JSONMap{"current_hp": 999},
+	}}
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		var body struct {
+			Input struct {
+				Character CharacterV3 `json:"character"`
+				Recall    JSONMap     `json:"recallWeapon"`
+			} `json:"input"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Error(err)
+		}
+		if body.Input.Recall["commandId"] != command.CommandID.String() || body.Input.Recall["objectId"] != "owned-weapon" || body.Input.Recall["hand"] != "off_hand" {
+			t.Error("wrong recall declaration")
+		}
+		if body.Input.Character.CurrentHP == 999 {
+			t.Error("client state trusted")
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any{"status": "ready", "patch": JSONMap{"current_hp": body.Input.Character.CurrentHP, "runtime_revision": body.Input.Character.RuntimeRevision + 1}})
+	}))
+	defer server.Close()
+	t.Setenv("RULES_WORKER_URL", server.URL)
+	t.Setenv("RULES_WORKER_TOKEN", strings.Repeat("r", 32))
+	registerRoguelikeRoutes(fixture.router.Group("/api"), fixture.auth, NewRoguelikeController(fixture.db))
+	endpoint := "/api/roguelike/runs/" + run.ID.String() + "/commands"
+	token := fixture.token(t, fixture.owner)
+	first := performCharacterV3Request(t, fixture.router, http.MethodPost, endpoint, token, command)
+	if first.Code != 200 {
+		t.Fatalf("recall status %d: %s", first.Code, first.Body.String())
+	}
+	again := performCharacterV3Request(t, fixture.router, http.MethodPost, endpoint, token, command)
+	if again.Code != 200 || again.Body.String() != first.Body.String() || calls != 1 {
+		t.Fatal("recall replay changed state")
+	}
+	stored, err := ownedRoguelikeRun(fixture.db, run.ID, fixture.owner.ID, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stored.GameClockHours != 9 || stored.Supplies != 1 || stored.Revision != 2 || stored.Character.CurrentHP != character.CurrentHP {
+		t.Fatal("recall applied rest/economy changes")
+	}
+}

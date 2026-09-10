@@ -1,3 +1,4 @@
+import { weaponBondProtectsHand, weaponBondRecallIssue, weaponBondRecallEvents } from './weaponBond';
 import {telekineticObjectIssue, telekineticHandEvents} from './telekineticMovement';
 import {heldItemDropWorldEvents, consumedHeldItemWorldEvents} from './heldItemWorld';
 import {effectiveArmorClass} from './actorArmorClass';
@@ -11472,8 +11473,17 @@ function executeCommand(
         const observed=command.factsByTarget?.[targetId];
         if(!observed?.telekineticMovementValidated || observed.canSeeTarget!==true || observed.distanceFt>30 || (observed.telekineticObjectId ? targetId!==actor.id || telekineticObjectIssue(world, actor.id, observed) !== null : targetId===actor.id || observed.willing!==true)) return rejected(world,'InvalidFacts','Телекинетическое перемещение требует выбора согласной цели и свободного места на поле');
       }
+      if ((action.mechanics.activation as Record<string, unknown> | undefined)?.weapon_bond_recall === true) {
+        const issue = weaponBondRecallIssue(world, actor.id, command.choices);
+        if (issue || command.targetIds.length !== 1 || command.targetIds[0] !== actor.id) return rejected(world, 'InvalidDecision', issue ?? 'Призыв оружия направлен на себя');
+      }
       const disarmIssue = disarmingSelectionIssue(action.mechanics, world.actors[command.targetIds[0]]?.runtime, command.choices);
       if(disarmIssue)return rejected(world,'InvalidDecision',disarmIssue);
+      if (((action.mechanics.activation as Record<string, unknown> | undefined)?.trigger as Record<string, unknown> | undefined)?.disarm_held_item) {
+        const selected = command.choices?.disarm_held_item;
+        const hand = Array.isArray(selected) ? selected[0] : selected;
+        if (typeof hand === 'string' && weaponBondProtectsHand(world, command.targetIds[0], hand)) return rejected(world, 'InvalidDecision', 'Связанное оружие нельзя выбить из рук');
+      }
       const activeEffectIssue = activeEffectRequirementIssue(action.mechanics, actor.runtime);
       if (activeEffectIssue) {
         return rejected(world, 'InvalidActionTiming', activeEffectIssue);
@@ -11831,6 +11841,11 @@ export function handleCommand(
       const paid = foldEvents(world, execution.map((event, ordinal) => ({...event, ordinal})));
       execution.push(...telekineticHandEvents(paid, paid.actors[command.actorId], facts));
     }
+  }
+
+  if (command.type === 'UseAction' && (catalog.getAction(command.actionId)?.mechanics.activation as Record<string, unknown> | undefined)?.weapon_bond_recall === true) {
+    const paid = foldEvents(world, execution.map((event, ordinal) => ({ ...event, ordinal })));
+    execution.push(...weaponBondRecallEvents(paid, command.actorId, command.choices));
   }
 
   // Cross-cutting lifecycle rules are generic post-conditions of every

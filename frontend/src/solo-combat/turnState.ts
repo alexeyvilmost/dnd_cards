@@ -1,3 +1,4 @@
+import { writeWeaponBondObjects } from '../character/weaponBondPersistence';
 import { clearSheetCombatSession } from '../character/sheetCombatSession';
 import { writeRulesEngineRuntimeTurnState } from '../character/runtime';
 import type { RuntimeState } from '../mvp/contracts';
@@ -10,7 +11,8 @@ export function writeDedicatedCombatTurnState(
   runtime: RuntimeState,
   combat: SoloCombatState | null,
 ): Record<string, unknown> {
-  const sheetSafe = clearSheetCombatSession(turnState);
+  const sheetSafe = clearSheetCombatSession(combat
+    ? writeWeaponBondObjects(turnState, combat.characterId, combat.world.objects) : turnState);
   return writeSoloCombatState(
     writeRulesEngineRuntimeTurnState(sheetSafe, runtime),
     combat,

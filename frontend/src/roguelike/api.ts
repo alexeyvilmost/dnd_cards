@@ -81,6 +81,7 @@ export type RoguelikeCommandType =
   | 'buy'
   | 'pin'
   | 'refresh_shop'
+  | 'bind_weapon' | 'recall_weapon'
   | 'short_rest'
   | 'long_rest'
   | 'use_item'

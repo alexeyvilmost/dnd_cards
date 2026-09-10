@@ -4682,7 +4682,7 @@ describe('Maneuvering Attack reaction movement',()=>{
 });
 
 
-it.each(['fail','success','invalid','empty','existing_object'])('Disarming Attack persists a save and a physical dropped item: %s',async mode=>{
+it.each(['fail','success','invalid','empty','existing_object','bonded','incapacitated_bond'])('Disarming Attack persists a save and a physical dropped item: %s',async mode=>{
  const {participant,action}=unarmedParticipant();const actorId=participant.character.id;
  const actor=participant.canonical.world.actors[actorId];actor.character.variables={...actor.character.variables,superiority_die:{count:1,sides:8}};
  actor.runtime.resources.superiority_die=4;actor.runtime.maxResources.superiority_die=4;
@@ -4693,9 +4693,11 @@ it.each(['fail','success','invalid','empty','existing_object'])('Disarming Attac
  let state=await createSoloCombatState({character:participant.character,participant,selected:[{monster:{...goblin(),armor_class:10,max_hp:100,ai:{...goblin().ai,...(mode==='empty'?{}:{held_weapon_card:CARD_LONGSWORD})}},quantity:1}],actions:[scimitar()],effects:[],rng:()=>0.5});
  const targetId=Object.values(state.world.actors).find(row=>row.kind==='monster')!.id;
  state=placeAdjacent(state,actorId,targetId);
- if(mode==='existing_object')state.world.objects['existing-sword']={id:'existing-sword',name:'Sword',kind:'item',size:'small',itemCardId:CARD_LONGSWORD.id,heldByActorId:targetId,heldInHand:'main_hand',carriedByActorId:targetId,ownerActorId:actorId};
+ if(['existing_object','bonded','incapacitated_bond'].includes(mode))state.world.objects['existing-sword']={id:'existing-sword',name:'Sword',kind:'item',size:'small',itemCardId:CARD_LONGSWORD.id,heldByActorId:targetId,heldInHand:'main_hand',carriedByActorId:targetId,ownerActorId:actorId};
+ if(mode==='bonded'||mode==='incapacitated_bond')state.world.objects['existing-sword'].weaponBondActorId=targetId;
+ if(mode==='incapacitated_bond')state.world.actors[targetId].runtime.activeEffects.push({id:'stunned-test',name:'Stunned',source:'test',mechanics:{kind:'condition',value:'stunned'}});
  state=executeCombatAction({state,actorId,actionId:action.id,targetIds:[targetId],choices:{[UNARMED_STRIKE_CHOICE_ID]:['damage']},rng:()=>0.5});
- if(mode==='empty'){expect(state.pendingTriggeredAction?.optionActionIds??[]).not.toContain(disarm.id);return;}
+ if(mode==='empty'||mode==='bonded'){expect(state.pendingTriggeredAction?.optionActionIds??[]).not.toContain(disarm.id);return;}
  expect(state.pendingTriggeredAction?.optionActionIds).toContain(disarm.id);
  if(mode==='invalid'){
   const before=JSON.stringify(state);let draws=0;
@@ -4714,7 +4716,8 @@ it.each(['fail','success','invalid','empty','existing_object'])('Disarming Attac
  expect(state.world.actors[targetId].runtime.equipment.main_hand).toBeNull();
  expect(state.world.actors[targetId].runtime.inventory).toHaveLength(0);
  expect(dropped).toHaveLength(1);expect(dropped[0].unattended).toBe(true);
- if(mode==='existing_object')expect(dropped[0].id).toBe('existing-sword');
+ if(['existing_object','incapacitated_bond'].includes(mode))expect(dropped[0].id).toBe('existing-sword');
+ if(mode==='incapacitated_bond')expect(dropped[0].weaponBondActorId).toBe(targetId);
  expect(state.worldObjectPositions?.[dropped[0].id]).toEqual(state.tokens[targetId].position);
  const restored=clone(state);expect(restored.world.objects[dropped[0].id]).toEqual(dropped[0]);
 });
@@ -4907,4 +4910,73 @@ it('routes a newly scoped spell through ordinary solo rules while keeping the ce
  state=autoResolveSystemDecisions(executeCombatAction({state,actorId,actionId:alias.id,targetIds:[enemyId],rng:()=>0}),()=>0);
  expect(state.world.actors[enemyId].runtime.hp.current).toBeLessThan(100);
  expect(state.world.actors[actorId].runtime.resources.spell_slot_1).toBe(slots-1);
+});
+
+
+async function weaponBondEncounter() {
+  const participant = fighterSeed();
+  const actorId = participant.character.id;
+  const actor = participant.canonical.world.actors[actorId];
+  const mechanics = JSON.parse(readFileSync(new URL('../../../backend/migrations/warrior_weapon_bond_238.go', import.meta.url), 'utf8').match(/UPDATE actions SET mechanics='([^']+)'::jsonb/)![1]);
+  const recall = projectRuleAction({ id: '23800000-0000-4000-8000-000000000001', name: 'Связь с оружием', type: 'class_feature', resource: 'bonus_action', mechanics } as Action);
+  const card = { ...CARD_LONGSWORD, type: 'weapon' as const };
+  actor.passives ??= []; actor.passives.push({ weapon_bond: { maximum: 2, ritual_minutes: 60 } });
+  actor.character.knownCards = [...(actor.character.knownCards ?? []).filter((entry) => entry.id !== card.id), card];
+  actor.runtime.equipment = {};
+  actor.runtime.inventory = actor.runtime.inventory.filter((entry) => entry.cardId !== card.id);
+  actor.capabilities.actionIds.push(recall.id);
+  participant.canonical.world.objects.bound = { id: 'bound', name: card.name, kind: 'item', size: 'small',
+    itemCardId: card.id, ownerActorId: actorId, weaponBondActorId: actorId, unattended: true, planeId: 'material' };
+  const actions = [...participant.canonical.actions, recall];
+  participant.canonical = { ...participant.canonical, actions, cards: [card], catalog: {
+    getAction: (id) => actions.find((action) => action.id === id), listActions: () => actions, getCard: (id) => id === card.id ? card : undefined,
+  } };
+  const state = await createSoloCombatState({ character: participant.character, participant,
+    selected: [{ monster: { ...goblin(), max_hp: 100 }, quantity: 1 }], actions: [scimitar()], effects: [], rng: () => 0.5 });
+  state.worldObjectPositions = { bound: { x: 0, y: 0 } };
+  return { state, actorId, recall, card };
+}
+
+describe('physical Weapon Bond recall in solo combat', () => {
+  it('recalls the same distant ground instance for one bonus action and survives reload', async () => {
+    const { state, actorId, recall, card } = await weaponBondEncounter();
+    expect(state.world.objects.bound).toBeDefined();
+    const next = executeCombatAction({ state, actorId, actionId: recall.id, targetIds: [actorId],
+      choices: { weapon_bond_object: ['bound'], weapon_bond_hand: ['main_hand'] }, rng: () => 0.5 });
+    const actor = next.world.actors[actorId];
+    expect(actor.runtime.resources.bonus_action).toBe(0);
+    expect(actor.runtime.equipment.main_hand).toBe(card.id);
+    expect(actor.runtime.inventory.filter((row) => row.cardId === card.id)).toHaveLength(0);
+    expect(next.world.objects.bound).toMatchObject({ heldByActorId: actorId, heldInHand: 'main_hand', weaponBondActorId: actorId });
+    expect(next.worldObjectPositions?.bound).toBeUndefined();
+    expect(readSoloCombatState(writeSoloCombatState({}, next), next.characterId, next.runtimeRevision)?.world.objects.bound).toEqual(next.world.objects.bound);
+  });
+  it('takes exactly the same instance from another carrier and clears their hand', async () => {
+    const { state, actorId, recall, card } = await weaponBondEncounter();
+    const enemy = Object.values(state.world.actors).find((actor) => actor.kind === 'monster')!;
+    enemy.runtime.equipment.main_hand = card.id;
+    Object.assign(state.world.objects.bound, { carriedByActorId: enemy.id, heldByActorId: enemy.id, heldInHand: 'main_hand', unattended: false });
+    const next = executeCombatAction({ state, actorId, actionId: recall.id, targetIds: [actorId],
+      choices: { weapon_bond_object: ['bound'], weapon_bond_hand: ['main_hand'] }, rng: () => 0.5 });
+    expect(next.world.actors[enemy.id].runtime.equipment.main_hand).toBeNull();
+    expect(next.world.actors[enemy.id].runtime.inventory.some((row) => row.cardId === card.id)).toBe(false);
+    expect(next.world.actors[actorId].runtime.inventory.some((row) => row.cardId === card.id)).toBe(false);
+    expect(next.world.objects.bound.heldByActorId).toBe(actorId);
+  });
+  it('rejects an occupied hand before spending the bonus action', async () => {
+    const { state, actorId, recall, card } = await weaponBondEncounter();
+    state.world.actors[actorId].runtime.equipment.main_hand = card.id;
+    const before = clone(state);
+    expect(() => executeCombatAction({ state, actorId, actionId: recall.id, targetIds: [actorId],
+      choices: { weapon_bond_object: ['bound'], weapon_bond_hand: ['main_hand'] }, rng: () => 0.5 })).toThrow(/занята/);
+    expect(state).toEqual(before);
+  });
+  it('rejects a different plane before costs or random draws', async () => {
+    const { state, actorId, recall } = await weaponBondEncounter();
+    state.world.objects.bound.planeId = 'astral';
+    const before = clone(state);
+    expect(() => executeCombatAction({ state, actorId, actionId: recall.id, targetIds: [actorId],
+      choices: { weapon_bond_object: ['bound'], weapon_bond_hand: ['main_hand'] }, rng: () => { throw new Error('Unexpected random draw'); } })).toThrow(/другом плане/);
+    expect(state).toEqual(before);
+  });
 });

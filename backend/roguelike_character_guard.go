@@ -153,6 +153,12 @@ const (
 // Sheet actions may consume items and class resources in camp. Rest recovery
 // and the run economy still go through run commands.
 func validateRoguelikeCampAction(character CharacterV3, patch CharacterRuntimeCommandPatch) error {
+	if patch.TurnState != nil {
+		current := cloneJSONMapValue(character.TurnState)
+		if !roguelikeJSONEqual(current["weapon_bonds_v1"], (*patch.TurnState)["weapon_bonds_v1"]) {
+			return roguelikeMutationError("roguelike_weapon_bond_authority_required", "связь с оружием изменяется только через серверное действие", character.ID)
+		}
+	}
 	if (patch.MaxResources != nil && !roguelikeJSONEqual(patch.MaxResources, character.MaxResources)) ||
 		(patch.Currency != nil && !roguelikeJSONEqual(patch.Currency, character.Currency)) {
 		return roguelikeMutationError("roguelike_camp_action_forbidden", "действие не может менять максимумы ресурсов или деньги забега", character.ID)

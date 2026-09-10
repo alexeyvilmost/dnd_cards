@@ -104,3 +104,20 @@ func TestValidateRoguelikeCampRuntimePatchAllowsOwnedAttunementOnly(t *testing.T
 		t.Fatalf("foreign attunement was not rejected: %#v", err)
 	}
 }
+
+func TestRoguelikeCampActionsCannotRewriteWeaponBonds(t *testing.T) {
+	before := JSONMap{"weapon_bonds_v1": JSONMap{"schemaVersion": 1, "objects": []any{JSONMap{"id": "weapon"}}}}
+	character := CharacterV3{ID: uuid.New(), TurnState: &before}
+	retained := cloneJSONMapValue(&before)
+	if err := validateRoguelikeCampAction(character, CharacterRuntimeCommandPatch{TurnState: &retained}); err != nil {
+		t.Fatal(err)
+	}
+	removed := JSONMap{}
+	if err := validateRoguelikeCampAction(character, CharacterRuntimeCommandPatch{TurnState: &removed}); err == nil {
+		t.Fatal("allowed bond deletion")
+	}
+	character.TurnState = nil
+	if err := validateRoguelikeCampAction(character, CharacterRuntimeCommandPatch{TurnState: &before}); err == nil {
+		t.Fatal("allowed forged bond")
+	}
+}

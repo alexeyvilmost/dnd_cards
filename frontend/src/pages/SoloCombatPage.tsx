@@ -489,6 +489,7 @@ export default function SoloCombatPage() {
         state.world.actors[state.pendingTriggeredAction.sourceActorId], action,
         state.actionPresentation?.[action.id]?.actionRef?.card_number,
         state.world.actors[state.pendingTriggeredAction.targetIds[0]],
+        state.world,
       ) : [];
       const choices = required.length ? await choiceDialog.request(required, action!.name) : {};
       if (!choices) return;
@@ -529,6 +530,7 @@ export default function SoloCombatPage() {
         state.world.actors[activeControlledActorId],
         action,
         state.actionPresentation?.[action.id]?.actionRef?.card_number,
+        undefined, state.world,
       );
       const choices = requiredChoices.length
         ? await choiceDialog.request(requiredChoices, action.name)

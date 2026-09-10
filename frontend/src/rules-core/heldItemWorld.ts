@@ -1,3 +1,4 @@
+import { weaponBondProtectsHand } from './weaponBond';
 import type {UncommittedRuleEvent, WorldState} from './domain';
 import type {WorldObjectMutationEvent} from './worldObjects';
 
@@ -10,9 +11,10 @@ export function heldItemDropWorldEvents(before:WorldState,after:WorldState,execu
   if(payload.type!=='EngineEventRecorded' || payload.event.type!=='world_interaction' || payload.event.operation!=='drop_held_item')return [];
   const {ownerActorId,cardId,hand}=payload.event.parameters;
   if(typeof ownerActorId!=='string' || typeof cardId!=='string' || (hand!=='main_hand'&&hand!=='off_hand'))throw new Error('Invalid held-item drop identity');
+  if (weaponBondProtectsHand(before, ownerActorId, hand)) throw new Error('Связанное оружие нельзя выбить из рук');
   const oldActor=before.actors[ownerActorId],newActor=after.actors[ownerActorId];
   const quantity=(actor:typeof oldActor)=>actor?.runtime.inventory.filter(row=>row.cardId===cardId&&row.containerId==null).reduce((sum,row)=>sum+row.qty,0)??0;
-  if(!oldActor || !newActor || oldActor.runtime.equipment[hand]!==cardId || newActor.runtime.equipment[hand]!=null || quantity(oldActor)-quantity(newActor)!==1)throw new Error('Held-item drop must remove exactly one equipped item');
+  if(!oldActor || !newActor || oldActor.runtime.equipment[hand]!==cardId || newActor.runtime.equipment[hand]!=null || quantity(oldActor)!==quantity(newActor))throw new Error('Held-item drop must remove exactly one equipped item');
   const held=Object.values(before.objects).find(object=>object.heldByActorId===ownerActorId&&object.heldInHand===hand&&object.itemCardId===cardId);
   const card=oldActor.character.knownCards?.find(row=>row.id===cardId)??oldActor.character.equippedCards?.find(row=>row.id===cardId);
   const event:WorldObjectMutationEvent=held?{type:'WorldObjectPatched',objectId:held.id,patch:{unattended:true},unset:['heldByActorId','heldInHand','carriedByActorId'],reason:'held_item_dropped'}:

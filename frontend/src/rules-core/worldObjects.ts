@@ -103,6 +103,9 @@ export interface WorldObjectState {
   size: WorldObjectSize;
   /** Immutable content identity for this concrete item instance. */
   itemCardId?: string;
+  /** Fighter War Bond owner of this exact physical weapon. */
+  weaponBondActorId?: string;
+  planeId?: string;
   /** Canonical attunement owner; never accepted as a command-side eligibility claim. */
   attunedToActorId?: string;
   /** Exact holder identity. Both held fields are present together or absent together. */
@@ -191,6 +194,9 @@ function cloneObjects(objects: Readonly<Record<string, WorldObjectState>>): Reco
 const REQUIRED_WORLD_OBJECT_KEYS = new Set<keyof WorldObjectState>(['id', 'name', 'kind', 'size']);
 
 function itemInstanceIssue(object: WorldObjectState): string | null {
+  if (object.planeId !== undefined && (typeof object.planeId !== 'string' || !object.planeId.trim())) return 'Invalid plane identity';
+  if (object.weaponBondActorId !== undefined && (object.kind !== 'item' || !object.itemCardId
+    || typeof object.weaponBondActorId !== 'string' || !object.weaponBondActorId.trim())) return 'Weapon bond requires an item and an owner';
   if (object.itemCardId !== undefined
     && (object.kind !== 'item' || typeof object.itemCardId !== 'string'
       || !object.itemCardId.trim())) {
@@ -217,9 +223,15 @@ export function worldObjectLedgerIssue(
   actorIds?: ReadonlySet<string>,
 ): string | null {
   const occupiedHands = new Set<string>();
+  const bondsByActor = new Map<string, number>();
   for (const object of Object.values(objects)) {
     const itemIssue = itemInstanceIssue(object);
     if (itemIssue) return `${object.id}: ${itemIssue}`;
+    if (object.weaponBondActorId) {
+      const count = (bondsByActor.get(object.weaponBondActorId) ?? 0) + 1;
+      if (count > 2) return 'A Fighter cannot retain more than two weapon bonds';
+      bondsByActor.set(object.weaponBondActorId, count);
+    }
     if (object.attunedToActorId && actorIds && !actorIds.has(object.attunedToActorId)) {
       return `${object.id}: attunement owner is not a world actor`;
     }

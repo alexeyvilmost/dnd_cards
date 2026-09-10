@@ -832,6 +832,11 @@ function normalizeWorldObjects(value: unknown, required: boolean): Record<string
         throw new Error(`world.objects.${objectId}.itemCardId requires an item object`);
       }
     }
+    if (object.planeId !== undefined) nonBlankString(object.planeId, `world.objects.${objectId}.planeId`);
+    if (object.weaponBondActorId !== undefined) {
+      nonBlankString(object.weaponBondActorId, `world.objects.${objectId}.weaponBondActorId`);
+      if (object.kind !== 'item' || !object.itemCardId) throw new Error('Weapon bond requires a physical item');
+    }
     if (object.attunedToActorId !== undefined) {
       nonBlankString(object.attunedToActorId, `world.objects.${objectId}.attunedToActorId`);
       if (object.kind !== 'item') {
@@ -1182,6 +1187,7 @@ export function migrateWorldState(value: unknown): WorldState {
   if (schemaVersion >= 5) record(world.concentrations, 'world.concentrations');
   const actors = Object.fromEntries(Object.entries(actorsRecord).map(([actorId, rawActor]) => {
     const actor = record(rawActor, `world.actors.${actorId}`);
+    if (actor.planeId !== undefined) nonBlankString(actor.planeId, `world.actors.${actorId}.planeId`);
     if (actor.id !== actorId) throw new Error(`world.actors.${actorId}.id must match its key`);
     const capabilities = actor.capabilities && typeof actor.capabilities === 'object'
       ? actor.capabilities as JsonRecord

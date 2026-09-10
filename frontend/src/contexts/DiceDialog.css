@@ -586,3 +586,7 @@
     transition: none;
   }
 }
+
+/* ChoiceResolver also lives outside Forge; keep selected text legible in sheet dialogs. */
+.dice-dialog .chip { border: 1px solid #6b5836; background: #241f18; color: #e8e0d0; }
+.dice-dialog .chip.on { background: #d8b978; border-color: #d8b978; color: #241f18; }

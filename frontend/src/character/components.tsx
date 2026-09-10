@@ -259,6 +259,7 @@ export function ChoiceResolver({
               key={o.id}
               type="button"
               className={`chip ${value.includes(o.id) ? 'on' : ''} ${recommendedIds.has(o.id) ? 'rec' : ''}`}
+              aria-pressed={value.includes(o.id)}
               disabled={!!unavailableOptions[o.id] && !value.includes(o.id)}
               title={unavailableOptions[o.id]}
               onClick={() => toggle(o.id)}

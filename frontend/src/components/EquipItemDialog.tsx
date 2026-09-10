@@ -25,13 +25,15 @@ interface Props {
   onRemove: () => void;
   onToggleAttune: () => void;
   onClose: () => void;
+  onBindWeapon?: () => void;
+  bondedCopies?: number;
 }
 
 export default function EquipItemDialog({
   card, occupant, mode, busy,
   needsAttunement, attuned, canChangeAttunement,
   containerTargets, onMoveToContainer,
-  onEquip, onUnequip, onRemove, onToggleAttune, onClose,
+  onEquip, onUnequip, onRemove, onToggleAttune, onClose, onBindWeapon, bondedCopies = 0,
 }: Props) {
   const mechanicsDescription = describeMechanics(card.mechanics as Record<string, unknown> | null | undefined);
   const showContainer = mode === 'inventory' && card.type !== 'container'
@@ -76,7 +78,13 @@ export default function EquipItemDialog({
           </div>
         )}
 
+        {bondedCopies > 0 && <p className="forge-note">Связанных экземпляров: {bondedCopies}</p>}
         <div className="sheet-equip-actions">
+          {onBindWeapon && (
+            <button type="button" className="forge-btn ghost" disabled={busy} onClick={onBindWeapon}>
+              Связать оружие · короткий отдых
+            </button>
+          )}
           {mode === 'inventory' ? (
             <>
               <button type="button" className="forge-btn sheet-equip-primary" disabled={busy} onClick={onEquip}>
