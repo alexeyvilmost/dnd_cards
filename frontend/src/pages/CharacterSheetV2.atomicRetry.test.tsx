@@ -57,7 +57,9 @@ vi.mock('../components/CharacterSheetFirstColumn', () => ({
 }));
 vi.mock('../components/SheetRestButtons', () => ({ default: () => null }));
 vi.mock('../components/SheetConditionsPanel', () => ({ default: () => null }));
-vi.mock('../components/SheetEquipmentPanel', () => ({ default: () => null }));
+vi.mock('../components/SheetEquipmentPanel', () => ({ default: ({ readOnly }: { readOnly: boolean }) =>
+  <div data-testid="equipment-panel" data-read-only={String(readOnly)} /> }));
+vi.mock('../components/forge/ForgeSpellIconGrid', () => ({ default: () => <div data-testid="spell-preview-grid" /> }));
 vi.mock('../components/SheetInPlayController', () => ({ default: () => null }));
 vi.mock('../components/SheetHpDialog', () => ({ default: () => null }));
 vi.mock('../components/EffectiveSenseValue', () => ({ default: () => null }));
@@ -166,6 +168,15 @@ describe('CharacterSheetV2 atomic retry ownership', () => {
     expect(spells.disabled).toBe(true);
     expect(actions.dataset.commandId).toBe('atomic-command');
     expect(spells.dataset.commandId).toBe('atomic-command');
+  });
+
+  it('keeps visual equipment and spell previews while removing executable panels in read-only mode', async () => {
+    await act(async () => root.render(<CharacterSheetV2 {...baseProps} readOnly
+      pendingAtomicRetry={null} onPendingAtomicRetryChange={vi.fn()} />));
+    expect(container.querySelector('[data-testid="actions-atomic-panel"]')).toBeNull();
+    expect(container.querySelector('[data-testid="spells-atomic-panel"]')).toBeNull();
+    expect(container.querySelector('[data-testid="spell-preview-grid"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="equipment-panel"]')?.getAttribute('data-read-only')).toBe('true');
   });
 
   it('forwards the dedicated-combat lock to both Action and Spells panels', async () => {

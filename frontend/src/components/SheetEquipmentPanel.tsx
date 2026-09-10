@@ -47,6 +47,7 @@ interface Props {
   passives?: Record<string, unknown>[];
   disableHoverPreviews?: boolean;
   encounterApply?: EncounterApply;
+  readOnly?: boolean;
 }
 
 const SLOT_LABELS: Record<string, string> = {
@@ -88,6 +89,7 @@ export default function SheetEquipmentPanel({
   passives = [],
   disableHoverPreviews = false,
   encounterApply,
+  readOnly = false,
 }: Props) {
   const [cards, setCards] = useState<Map<string, Card>>(new Map());
   const [busy, setBusy] = useState(false);
@@ -154,6 +156,7 @@ export default function SheetEquipmentPanel({
   const previewInterface = itemPreview === 'interface';
 
   const persist = useCallback(async (next: RuntimeState) => {
+    if (readOnly) return;
     setBusy(true);
     setError(null);
     try {
@@ -170,14 +173,14 @@ export default function SheetEquipmentPanel({
     } finally {
       setBusy(false);
     }
-  }, [character, encounterApply, onUpdated]);
+  }, [character, encounterApply, onUpdated, readOnly]);
 
   // S5 контейнеры: положить предмет в контейнер / достать обратно (хелперы S4 + общий persist).
   const putInContainer = (cardId: string, containerCardId: string) => persist(moveToContainer(runtime, cardId, containerCardId, 1));
   const takeFromContainer = (cardId: string, containerCardId: string) => persist(moveOutOfContainer(runtime, cardId, containerCardId, 1));
 
   const attuned = readAttunedIds(character.turn_state);
-  const canChangeAttunement = attunementUnlocked(character.turn_state);
+  const canChangeAttunement = !readOnly && attunementUnlocked(character.turn_state);
   // Списки для окна настройки: настроенные предметы и те, на что можно настроиться.
   const presentCards = cardIds.map((id) => cardMap.get(id)).filter((c): c is Card => !!c);
   const attunedCards = attuned.map((id) => cardMap.get(id)).filter((c): c is Card => !!c);
@@ -198,6 +201,7 @@ export default function SheetEquipmentPanel({
   };
 
   const handleBindWeapon = async (card: Card) => {
+    if (readOnly) return;
     const runId = activeRunId(); if (!runId) return;
     setDialog(null); setBusy(true); setError(null);
     try {
@@ -224,6 +228,7 @@ export default function SheetEquipmentPanel({
   };
 
   const handleToggleAttune = async (cardId: string) => {
+    if (readOnly) return;
     setBusy(true);
     setError(null);
     try {
@@ -251,11 +256,12 @@ export default function SheetEquipmentPanel({
 
   // Открыть диалог для предмета инвентаря (с расчётом вытесняемого из слота).
   const openInventoryItem = (card: Card) => {
+    if (readOnly) return;
     const plan = planEquip(runtime, card);
     const occupant = plan.occupantId ? cardMap.get(plan.occupantId) ?? null : null;
     setDialog({ card, mode: 'inventory', occupant });
   };
-  const openEquipped = (slot: string, card: Card) => setDialog({ card, mode: 'equipped', slot });
+  const openEquipped = (slot: string, card: Card) => { if (!readOnly) setDialog({ card, mode: 'equipped', slot }); };
 
   // Режим закрепления (T): превью не закрывается при уходе мыши и становится интерактивным.
   const { pinModeActive } = usePinMode();
@@ -411,7 +417,7 @@ export default function SheetEquipmentPanel({
                       dimmed
                       onClick={() => openInventoryItem(cc)}
                       right={
-                        <button type="button" className="sheet-inv-move" disabled={busy}
+                        <button type="button" className="sheet-inv-move" disabled={busy || readOnly}
                           onClick={(e) => { e.stopPropagation(); takeFromContainer(cr.card_id, row.card_id); }}>
                           достать
                         </button>
@@ -505,7 +511,7 @@ export default function SheetEquipmentPanel({
         </div>
       )}
 
-      {dialog && (
+      {dialog && !readOnly && (
         <EquipItemDialog
           card={dialog.card}
           occupant={dialog.mode === 'inventory' ? dialog.occupant : null}

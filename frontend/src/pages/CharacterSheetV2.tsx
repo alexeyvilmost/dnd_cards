@@ -21,7 +21,10 @@ import {availableCheckManeuvers, checkManeuverChoice, prepareCheckManeuver, prep
 import { getSkillGrantSource, grantReason } from '../character/rules/resolveCharacterRules';
 import { type Card, type Spell } from '../types';
 import { useSiteSettings } from '../settings';
+import { mergeResources, resourceLabel } from '../utils/resourcePresentation';
+import { actionUsesKey } from '../engine/actionUses';
 import ForgeAbilityDisplay from '../components/forge/ForgeAbilityDisplay';
+import ForgeSpellIconGrid from '../components/forge/ForgeSpellIconGrid';
 import ValueBreakdownTip from '../components/ValueBreakdownTip';
 import ValueBreakdownPanel from '../components/ValueBreakdownPanel';
 import CollapsibleSection from '../components/CollapsibleSection';
@@ -54,9 +57,11 @@ const READ_ONLY_RESOURCE_LABEL: Record<string, string> = {
   bonus_action: 'Бонусное действие',
   reaction: 'Реакция',
   heroic_inspiration: 'Героическое вдохновение',
+  action_surge_action: 'Дополнительное действие Всплеска',
 };
 const readOnlyResourceLabel = (key: string) => READ_ONLY_RESOURCE_LABEL[key]
-  ?? key.replaceAll('_', ' ');
+  ?? (/^hit_dice_d(\d+)$/.test(key) ? `Кости хитов (к${key.slice('hit_dice_d'.length)})`
+    : resourceLabel(mergeResources([]), key));
 const originLabel = (kind: string) => {
   switch (kind) {
     case 'race': return 'Вид';
@@ -111,6 +116,10 @@ const CharacterSheetV2 = ({
       sourceLabel: `${originLabel(origin.kind)} · ${origin.name}` })),
     ...learnedActions.filter(({ action }) => !assembled.actions.some(entry => entry.action.id === action.id)),
   ];
+  const resourceNames = new Map([
+    ...abilityActions.map(({ action }) => [actionUsesKey(action.card_number || action.id), action.name] as const),
+    ...assembled.effects.map(({ effect }) => [actionUsesKey(effect.card_number || effect.id), effect.name] as const),
+  ]);
   const [hpOpen, setHpOpen] = useState(false);
   const [longRestOpen, setLongRestOpen] = useState(false);
   // E4/E5: единый «КЗ/Спас цели» на обе панели листа (Действия + Заклинания).
@@ -413,7 +422,7 @@ const CharacterSheetV2 = ({
                 <div className="cs-kv-list">
                   {Object.entries(runtimeState.maxResources).map(([key, maximum]) => (
                     <div key={key} className="cs-kv">
-                      <span>{readOnlyResourceLabel(key)}</span>
+                      <span>{resourceNames.get(key) ?? readOnlyResourceLabel(key)}</span>
                       <b>{runtimeState.resources[key] ?? 0}/{maximum}</b>
                     </div>
                   ))}
@@ -423,12 +432,10 @@ const CharacterSheetV2 = ({
           )}
           <CollapsibleSection title="Действия">
             {readOnly ? (
-              assembled.actions.length ? (
-                <div className="cs-tags">
-                  {assembled.actions.map(({ action, origin }) => (
-                    <span key={`${action.id}:${origin.id}`} className="cs-tag">{action.name}</span>
-                  ))}
-                </div>
+              abilityActions.length ? (
+                <ForgeAbilityDisplay mode={entityDisplay.actions} linesClassName="cs-lines"
+                  entries={abilityActions.map(({ action, sourceLabel }) => ({ key: action.id,
+                    name: action.name, imageUrl: action.image_url, sourceLabel, action }))} />
               ) : <p className="cs-hook-note">Действия не указаны.</p>
             ) : <SheetActionsPanel
               character={character}
@@ -461,11 +468,7 @@ const CharacterSheetV2 = ({
                   SheetActionLine (одна модель отображения строк и иконок), только
                   сгруппировано по кругам. Общий targetAc — поле не дублируется. */}
               {readOnly ? (
-                <div className="cs-tags">
-                  {assembled.spells.map((spell) => (
-                    <span key={spell.id} className="cs-tag">{spell.name}</span>
-                  ))}
-                </div>
+                <ForgeSpellIconGrid spells={assembled.spells} />
               ) : <SheetActionsPanel
                 character={character}
                 assembled={assembled}
@@ -497,25 +500,15 @@ const CharacterSheetV2 = ({
         {/* ПРАВАЯ: инвентарь, черты и способности */}
         <div className="csheet-col">
           <CollapsibleSection title="Инвентарь и экипировка">
-            {readOnly ? (
-              (character.inventory_items?.length ?? 0) > 0 ? (
-                <div className="cs-kv-list">
-                  {(character.inventory_items ?? []).map((item, index) => (
-                    <div key={`${item.card_id}:${item.container_id ?? 'root'}:${index}`} className="cs-kv">
-                      <span>{equipCards.get(item.card_id)?.name ?? item.card_id}</span>
-                      <b>×{item.qty}</b>
-                    </div>
-                  ))}
-                </div>
-              ) : <p className="cs-hook-note">Инвентарь пуст.</p>
-            ) : <SheetEquipmentPanel
+            <SheetEquipmentPanel
               character={character}
               ruleState={ruleState}
               onUpdated={onUpdated}
+              readOnly={readOnly}
               embedded
               passives={passives}
               encounterApply={encounterApply}
-            />}
+            />
           </CollapsibleSection>
 
           <CollapsibleSection title="Черты и способности">

@@ -4,7 +4,9 @@ import { ShoppingCart, Swords, Trophy, ChevronsUp } from 'lucide-react';
 import { roguelikeApi, type RoguelikeRun } from '../roguelike/api';
 import { RUN_UPDATED_EVENT, runCombatURL } from '../roguelike/navigation';
 
-export default function SheetRunPanel({ runId, characterId }: { runId: string; characterId: string }) {
+export default function SheetRunPanel({ runId, characterId, onLoaded }: {
+  runId: string; characterId: string; onLoaded?: (run: RoguelikeRun) => void;
+}) {
   const navigate = useNavigate();
   const [run, setRun] = useState<RoguelikeRun | null>(null);
   const [error, setError] = useState('');
@@ -13,12 +15,12 @@ export default function SheetRunPanel({ runId, characterId }: { runId: string; c
     let active = true;
     const reload = () => { void roguelikeApi.get(runId).then((next) => {
       if (next.character_id !== characterId) throw new Error('Забег принадлежит другому персонажу');
-      if (active) setRun(next);
+      if (active) { setRun(next); onLoaded?.(next); }
     }).catch((e: unknown) => active && setError(e instanceof Error ? e.message : 'Не удалось загрузить забег')); };
     reload();
     window.addEventListener(RUN_UPDATED_EVENT, reload);
     return () => { active = false; window.removeEventListener(RUN_UPDATED_EVENT, reload); };
-  }, [runId, characterId]);
+  }, [runId, characterId, onLoaded]);
   const act = async (type: 'start_encounter' | 'victory') => {
     if (!run || busy) return;
     setBusy(true); setError('');

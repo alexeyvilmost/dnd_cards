@@ -35,7 +35,7 @@ import {
 import { untrainedArmorPenaltyMechanics } from '../character/untrainedArmor';
 import { persistCharacterRuntime } from '../character/runtimePersistence';
 import SheetRunPanel from '../components/SheetRunPanel';
-import { roguelikeApi } from '../roguelike/api';
+import { roguelikeApi, type RoguelikeRun } from '../roguelike/api';
 import { runSheetURL } from '../roguelike/navigation';
 import { finalizeSheetD20Roll } from '../character/sheetD20Roll';
 import { breakdownValue } from '../engine/breakdown';
@@ -137,6 +137,7 @@ const CharacterSheetMVP = () => {
   const location = useLocation();
   const roguelikeRunId = new URLSearchParams(location.search).get('roguelike');
   const [character, setCharacter] = useState<ForgeCharacter | null>(null);
+  const [sheetRun, setSheetRun] = useState<RoguelikeRun | null>(null);
   const characterRef = useRef<ForgeCharacter | null>(character);
   useEffect(() => {
     if (!character || character.character_type !== 'dungeon_crawl' || roguelikeRunId) return;
@@ -181,7 +182,10 @@ const CharacterSheetMVP = () => {
   // (действия и заклинания) целятся в один и тот же AC.
   const [targetAc, setTargetAc] = useState<number | null>(10);
   const [targetSaveMod, setTargetSaveMod] = useState<number | null>(0);
-  const readOnly = character ? isCharacterReadOnly(character) : false;
+  const runReadOnly = character?.character_type === 'dungeon_crawl'
+    && (!roguelikeRunId || sheetRun?.id !== roguelikeRunId || sheetRun.character_id !== character.id
+      || sheetRun.status !== 'active');
+  const readOnly = Boolean(runReadOnly || (character && isCharacterReadOnly(character)));
   // Онлайн-бой: если персонаж в бою (current_encounter_id) — подписываемся на общий стол боя,
   // чтобы (а) показывать индикатор «в бою», (б) отражать боевое HP/temp/состояния на листе в
   // реальном времени (даже если урон нанесли с другого устройства), (в) синхронизировать
@@ -1161,7 +1165,7 @@ const CharacterSheetMVP = () => {
         </div>
       </div>
 
-      {readOnly && (
+      {isCharacterReadOnly(character) && (
         <p className="forge-note" role="note" style={{ margin: '12px auto', maxWidth: 900, padding: '0 16px' }}>
           Архивный публичный лист открыт только для чтения. Создайте свою копию, чтобы менять HP,
           ресурсы, эффекты, экипировку или сборку персонажа.
@@ -1169,7 +1173,7 @@ const CharacterSheetMVP = () => {
       )}
 
       {roguelikeRunId && (
-        <SheetRunPanel runId={roguelikeRunId} characterId={character.id} />
+        <SheetRunPanel runId={roguelikeRunId} characterId={character.id} onLoaded={setSheetRun} />
       )}
 
       {renderedV2 ? (
