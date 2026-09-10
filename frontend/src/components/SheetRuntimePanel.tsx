@@ -155,6 +155,8 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
   }, [character, onUpdated, onEvents]);
 
   const syncResources = useCallback(async (force = false) => {
+    // Run resources are recalculated by the trusted worker, never by a sheet patch.
+    if (character.character_type === 'dungeon_crawl') return;
     const patch = buildResourceRuntimePatch(
       character,
       ctx,

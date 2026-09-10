@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -12,7 +13,7 @@ import (
 func TestTrustedRoguelikeRestIgnoresClientPatchAndCommitsOnce(t *testing.T) {
 	t.Setenv("JWT_SECRET", characterV3AccessTestSecret)
 	fixture := openCharacterV3AccessFixture(t)
-	if err := fixture.db.AutoMigrate(&RoguelikeRun{}, &RoguelikeCommandReceipt{}); err != nil {
+	if err := fixture.db.AutoMigrate(&RoguelikeRun{}, &RoguelikeCommandReceipt{}, &CharacterEvent{}); err != nil {
 		t.Fatal(err)
 	}
 	character := fixture.ownerCharacter
@@ -48,7 +49,7 @@ func TestTrustedRoguelikeRestIgnoresClientPatchAndCommitsOnce(t *testing.T) {
 			hp = body.Input.Character.MaxHP
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{"status": "ready", "patch": JSONMap{
+		json.NewEncoder(w).Encode(map[string]any{"status": "ready", "events": []JSONMap{{"type": "narrative", "text": "Short rest confirmed by worker"}}, "patch": JSONMap{
 			"current_hp": hp, "resources": JSONMap{"hit_dice_d10": 2, "second_wind": 1},
 			"runtime_revision": body.Input.Character.RuntimeRevision + 1,
 		}})
@@ -67,8 +68,21 @@ func TestTrustedRoguelikeRestIgnoresClientPatchAndCommitsOnce(t *testing.T) {
 		t.Fatalf("rest status %d: %s", first.Code, first.Body.String())
 	}
 	second := performCharacterV3Request(t, fixture.router, http.MethodPost, endpoint, token, command)
-	if second.Code != 200 || second.Body.String() != first.Body.String() || calls != 1 {
+	var firstReceipt, secondReceipt any
+	firstDecode := json.Unmarshal(first.Body.Bytes(), &firstReceipt)
+	secondDecode := json.Unmarshal(second.Body.Bytes(), &secondReceipt)
+	if second.Code != 200 || firstDecode != nil || secondDecode != nil || !reflect.DeepEqual(firstReceipt, secondReceipt) || calls != 1 {
 		t.Fatal("rest replay was not idempotent")
+	}
+	var receipt struct {
+		Events []CharacterEvent `json:"events"`
+	}
+	if err := json.Unmarshal(first.Body.Bytes(), &receipt); err != nil || len(receipt.Events) != 1 {
+		t.Fatal("rest receipt must return the persisted journal entry")
+	}
+	var journal []CharacterEvent
+	if err := fixture.db.Where("character_id = ?", character.ID).Find(&journal).Error; err != nil || len(journal) != 1 || journal[0].ID != receipt.Events[0].ID || journal[0].Payload["text"] != "Short rest confirmed by worker" {
+		t.Fatal("rest replay must preserve exactly one authoritative journal entry")
 	}
 	stored, err := ownedRoguelikeRun(fixture.db, run.ID, fixture.owner.ID, false)
 	if err != nil {

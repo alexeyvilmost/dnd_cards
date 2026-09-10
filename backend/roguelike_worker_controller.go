@@ -204,7 +204,7 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 			return err
 		}
 
-		if isCampAction {
+		if isCamp {
 			rows := []CharacterEvent{}
 			for _, event := range result.Events {
 				eventType, _ := event["type"].(string)

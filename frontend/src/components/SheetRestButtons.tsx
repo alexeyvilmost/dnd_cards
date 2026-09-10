@@ -276,6 +276,7 @@ export default function SheetRestButtons({
     try {
       const runId = character.character_type === 'dungeon_crawl' ? activeRunId() : undefined;
       let updated: ForgeCharacter;
+      let persistedRestEvents: CharacterEventRow[] | undefined;
       if (runId && restType) {
         const run = await roguelikeApi.get(runId);
         const result = await roguelikeApi.command(runId, run.revision, restType, {
@@ -283,6 +284,7 @@ export default function SheetRestButtons({
         });
         if (!result.character) throw new Error('Сервер не вернул лист после отдыха');
         updated = result.character;
+        persistedRestEvents = result.command_events ?? [];
         notifyRunUpdated();
       } else {
         updated = await persistCharacterRuntime(character,
@@ -294,7 +296,8 @@ export default function SheetRestButtons({
         }
       }
       onUpdated(updated);
-      onEvents?.(events);
+      if (persistedRestEvents !== undefined) onPersistedEvents?.(persistedRestEvents);
+      else onEvents?.(events);
       return true;
     } catch (e) {
       console.error(e);
@@ -303,9 +306,11 @@ export default function SheetRestButtons({
     } finally {
       setBusy(false);
     }
-  }, [character, encounterApply, onUpdated, onEvents]);
+  }, [character, encounterApply, onUpdated, onEvents, onPersistedEvents]);
 
   const syncResources = useCallback(async (force = false) => {
+    // Run resources are recalculated by the trusted worker, never by a sheet patch.
+    if (character.character_type === 'dungeon_crawl') return;
     const patch = buildResourceRuntimePatch(
       character,
       ctx,
