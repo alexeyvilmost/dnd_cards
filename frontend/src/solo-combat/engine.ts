@@ -1,3 +1,4 @@
+import {combatHideFacts} from './hide';
 import {resetTurnMovement, signedMovementBudget, withMovementBudget} from './movementLedger';
 import {nonMagicActionCost} from '../engine/actionSurge';
 import { weaponBondProtectsHand } from '../rules-core/weaponBond';
@@ -198,6 +199,7 @@ const TACTICAL_BASIC_ACTIONS = new Set([
   'action_basic_dash',
   'action_basic_disengage',
   'action_basic_dodge',
+  'action_basic_hide',
 ]);
 const FAMILIAR_BASIC_ACTIONS = new Set([
   ...TACTICAL_BASIC_ACTIONS,
@@ -1230,6 +1232,7 @@ function actionD20RollKind(
   action: RuleActionDefinition,
 ): D20InterruptRollKind | null {
   if (isAttackAction(action) || isBasicUnarmedStrike(state, action)) return 'attack_roll';
+  if ((action.mechanics.activation as Record<string, unknown> | undefined)?.counts_as === 'hide') return 'ability_check';
   const effects = Array.isArray(action.mechanics.effects) ? action.mechanics.effects : [];
   return effects.some((effect) => (
     Boolean(effect) && typeof effect === 'object'
@@ -1517,6 +1520,13 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
   if (!input.triggerEvent && activeActorId(input.state) !== input.actorId) throw new Error('Сейчас ход другого участника');
   const action = input.state.catalogActions.find((candidate) => candidate.id === input.actionId);
   if (!action) throw new Error('Действие отсутствует в снимке боя');
+  if ((action.mechanics.activation as Record<string, unknown> | undefined)?.counts_as === 'hide') {
+    if (input.triggerEvent || input.targetIds.some(id => id !== input.actorId)) throw new Error('Засада применяется только к себе в свой ход');
+    return dispatch({state: input.state, rng: input.rng ?? Math.random, label: action.name, command: {
+      ...commandBase(input.state, input.actorId), type: 'AttemptHide', actionId: action.id,
+      eligibility: combatHideFacts(input.state, input.actorId),
+    }});
+  }
   const positionExchange = preparePositionExchange(input, action);
   const telekineticMovement = prepareTelekineticMovement(input, action);
   const commandedAttack = prepareCommandedAttack(input, action);

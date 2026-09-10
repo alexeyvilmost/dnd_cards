@@ -1087,6 +1087,8 @@ export interface AbilityCheckCommand extends CommandBase {
 
 export interface AttemptHideCommand extends CommandBase {
   type: 'AttemptHide';
+  /** Owned catalog declaration for an alternate action cost; outcomes stay canonical. */
+  actionId?: string;
   eligibility: HideEligibilityFacts;
 }
 

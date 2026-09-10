@@ -1470,6 +1470,7 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		{Version: "241_fighter_style_replacement", Description: "Allow Fighter fighting style replacement on class level gain", Up: materializeFighterStyleReplacement, Down: func(db *sql.DB) error { return nil }},
 		{Version: "242_fighter_tactical_mind_timing", Description: "Offer Tactical Mind after a failed ability check", Up: materializeFighterTacticalMindTiming, Down: func(db *sql.DB) error { return nil }},
 		{Version: "243_dash_movement_allotment", Description: "Declare Dash as extra movement without changing Speed", Up: materializeDashMovement, Down: func(db *sql.DB) error { return nil }},
+		{Version: "244_canonical_hide_action", Description: "Share canonical Hide eligibility and lifecycle across action costs", Up: materializeHideAction, Down: func(db *sql.DB) error { return nil }},
 		// Здесь можно добавлять новые миграции
 	}
 }

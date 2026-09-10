@@ -1,3 +1,4 @@
+import {hideEligibilityIssue, hideActionDeclarationIssue} from './hide';
 import {applyFailedCheckBoost, failedCheckBoostActions} from './failedCheckBoost';
 import { weaponBondProtectsHand, weaponBondRecallIssue, weaponBondRecallEvents } from './weaponBond';
 import {telekineticObjectIssue, telekineticHandEvents} from './telekineticMovement';
@@ -82,7 +83,6 @@ import type {
   DeterministicEnvironment,
   EncounterScene,
   GameCommand,
-  HideEligibilityFacts,
   PendingResolutionFollowUp,
   PendingProtectionReactionResolution,
   PactBladeAttackContinuationProjection,
@@ -886,30 +886,6 @@ const CORE_WORLD_TIME_ACTION: RuleActionDefinition = {
 };
 
 const ALERT_INITIATIVE_SWAP_CAPABILITY = 'alert.initiative_swap';
-function hideEligibilityIssue(facts: HideEligibilityFacts | undefined): string | null {
-  if (!facts || typeof facts !== 'object') return 'Hide requires explicit eligibility facts';
-  if (!['scenario', 'board', 'gm_ruling'].includes(facts.factsSource)) {
-    return 'Hide facts require a recognized source';
-  }
-  if (!Number.isInteger(facts.boardRevision) || facts.boardRevision < 0) {
-    return 'Hide facts require a non-negative board revision';
-  }
-  if (typeof facts.heavilyObscured !== 'boolean' || typeof facts.visibleToAnyEnemy !== 'boolean'
-    || !['none', 'half', 'three_quarters', 'total'].includes(facts.cover)) {
-    return 'Hide facts are malformed';
-  }
-  const hasRequiredObscurement = facts.heavilyObscured
-    || facts.cover === 'three_quarters'
-    || facts.cover === 'total';
-  if (!hasRequiredObscurement) {
-    return 'Hide requires Heavy Obscurement, Three-Quarters Cover, or Total Cover';
-  }
-  if (facts.visibleToAnyEnemy) {
-    return 'Hide is unavailable while any enemy can see the actor';
-  }
-  return null;
-}
-
 function observableFactProvenanceIssue(facts: unknown): string | null {
   if (!facts || typeof facts !== 'object') return 'Observable event requires explicit facts';
   const record = facts as Record<string, unknown>;
@@ -4063,15 +4039,26 @@ function executeHide(
   if (deniedCapabilities(actor.runtime, actor.passives ?? []).has('action')) {
     return rejected(world, 'CapabilityDenied', `${actor.id} cannot take the Hide action in its current state`);
   }
-  const mechanics = projectActionSurgeCost(CORE_HIDE_ACTION.mechanics, actor.runtime, 'nonspell');
-  const payable = canPay(actor.runtime, activationCost({...CORE_HIDE_ACTION, mechanics}));
+  let hideAction = CORE_HIDE_ACTION;
+  if (command.actionId !== undefined) {
+    const declared = catalog.getAction(command.actionId);
+    if (!declared) return rejected(world, 'ActionNotFound', 'Unknown Hide action');
+    if (!actor.capabilities.actionIds.includes(declared.id)) return rejected(world, 'ActionNotGranted', 'Actor does not own this Hide action');
+    const declarationIssue = actionDefinitionIssue(declared) ?? hideActionDeclarationIssue(declared);
+    if (declarationIssue) return rejected(world, 'InvalidActionDefinition', declarationIssue);
+    hideAction = {...CORE_HIDE_ACTION, id: declared.id, name: declared.name,
+      sourceEntityIds: declared.sourceEntityIds,
+      mechanics: {...CORE_HIDE_ACTION.mechanics, name: declared.name, activation: declared.mechanics.activation}};
+  }
+  const mechanics = projectActionSurgeCost(hideAction.mechanics, actor.runtime, 'nonspell');
+  const payable = canPay(actor.runtime, activationCost({...hideAction, mechanics}));
   if (!payable.ok) {
     return rejected(world, 'InsufficientResources', `Missing resources: ${payable.missing.join(', ')}`);
   }
 
   const result = executeAction(actor.runtime, mechanics, actionContext(actor, env));
   const obligations = actionObligationIds(
-    CORE_HIDE_ACTION,
+    hideAction,
     'system:hide-action',
     'system:ability-check',
   );
@@ -4081,7 +4068,7 @@ function executeHide(
   return [
     actionDeclaredEvent({
       actorId: actor.id,
-      action: CORE_HIDE_ACTION,
+      action: hideAction,
       targetIds: [],
       timing: 'active',
       facts: { hideEligibility: { ...command.eligibility }, dc: 15 },
@@ -11456,6 +11443,10 @@ function executeCommand(
     case 'UseReactionAction':
     case 'UseTriggeredAction':
     case 'UseAction': {
+      const hideDeclaration = catalog.getAction(command.actionId);
+      if ((hideDeclaration?.mechanics.activation as Record<string, unknown> | undefined)?.counts_as === 'hide') {
+        return rejected(world, 'InvalidActionTiming', 'Hide requires AttemptHide with observable eligibility facts');
+      }
       if (actor.warlockPacts?.blade?.bondActionId === command.actionId) {
         return rejected(
           world,

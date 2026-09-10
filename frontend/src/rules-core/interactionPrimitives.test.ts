@@ -3,6 +3,7 @@ import type {
   ActorState,
   GameCommand,
   RuleHazardDefinition,
+  RuleActionDefinition,
   RulesCatalog,
   UncommittedRuleEvent,
 } from './domain';
@@ -58,6 +59,55 @@ function engineEvents(events: readonly UncommittedRuleEvent[]) {
 const noActions: RulesCatalog = { getAction: () => undefined };
 
 describe('rules-core interaction primitives', () => {
+  it.each([10, 9])('uses an owned bonus Hide declaration with the canonical check and lifecycle (d20=%s)', roll => {
+    const declaration: RuleActionDefinition = {id: 'bonus-hide', name: 'Bonus Hide', kind: 'nonSpell',
+      sourceEntityIds: ['nimble-escape'], mechanics: {activation: {mode: 'active', counts_as: 'hide',
+        cost: [{resource: 'bonus_action'}]}, effects: []}};
+    const rogue = actor('rogue', {capabilities: {actionIds: [declaration.id]}});
+    rogue.runtime.resources.action = 0;
+    rogue.runtime.resources.action_surge_action = 1;
+    const initial = createWorld({id: 'bonus-hide', ruleset: RULESET, actors: [rogue]});
+    const tape = createStrictRngTape([{label: 'Hide', sides: 20, value: roll}]);
+    const session = new InMemoryRulesSession(initial, {getAction: id => id === declaration.id ? declaration : undefined},
+      {rng: tape.rng, clock: createLogicalClock(), nextId: createSequentialIdFactory('bonus-hide')});
+    const result = session.dispatch({schemaVersion: 1, commandId: 'hide', expectedRevision: 0,
+      rulesetContentHash: RULESET.contentHash, type: 'AttemptHide', actorId: rogue.id, actionId: declaration.id,
+      eligibility: {factsSource: 'board', boardRevision: 0, heavilyObscured: true, cover: 'none', visibleToAnyEnemy: false}});
+    expect(result.status).toBe('accepted'); tape.assertExhausted();
+    const runtime = session.getState().actors.rogue.runtime;
+    expect(runtime.resources).toMatchObject({action: 0, bonus_action: 0, action_surge_action: 1});
+    expect(runtime.activeEffects).toHaveLength(roll === 10 ? 1 : 0);
+    if (roll === 10) expect(runtime.activeEffects[0].mechanics).toMatchObject({value: 'invisible',
+      hidden_end_triggers: expect.arrayContaining(['actor_makes_attack_roll', 'noise_above_whisper'])});
+    expect(engineEvents(result.status === 'accepted' ? result.events : [])).toContainEqual(expect.objectContaining({
+      type: 'roll', roll: expect.objectContaining({total: roll + 5, target: {type: 'dc', value: 15}})}));
+    expect(JSON.parse(JSON.stringify(foldEvents(initial, result.status === 'accepted' ? result.events : [])))).toEqual(JSON.parse(JSON.stringify(session.getState())));
+  });
+
+  it.each(['unowned', 'unknown', 'extra_effect', 'extra_requirement', 'no_bonus', 'visible', 'use_action', 'target_requirement'] as const)(
+    'rejects invalid alternate Hide without spending or rolling: %s', invalid => {
+      const declaration: RuleActionDefinition = {id: 'bonus-hide', name: 'Bonus Hide', kind: 'nonSpell',
+        sourceEntityIds: ['nimble-escape'], mechanics: {activation: {mode: 'active', counts_as: 'hide',
+          cost: [{resource: 'bonus_action'}]}, effects: []}};
+      if (invalid === 'target_requirement') declaration.mechanics.targeting = {shape: 'self', requires_unarmored: true};
+      if (invalid === 'extra_effect') declaration.mechanics.effects = [{resolution: 'auto', result: []}];
+      if (invalid === 'extra_requirement') (declaration.mechanics.activation as Record<string, unknown>).min_level = 20;
+      const rogue = actor('rogue', {capabilities: {actionIds: invalid === 'unowned' ? [] : [declaration.id]}});
+      if (invalid === 'no_bonus') rogue.runtime.resources.bonus_action = 0;
+      const initial = createWorld({id: 'invalid-hide', ruleset: RULESET, actors: [rogue]});
+      const session = new InMemoryRulesSession(initial, {getAction: () => invalid === 'unknown' ? undefined : declaration},
+        {rng: () => {throw new Error('Rejected Hide cannot roll');}, clock: createLogicalClock(), nextId: createSequentialIdFactory()});
+      if (invalid === 'use_action') {
+        const bypass = session.dispatch({schemaVersion: 1, commandId: 'bypass', expectedRevision: 0, rulesetContentHash: RULESET.contentHash, type: 'UseAction', actorId: rogue.id, actionId: declaration.id, targetIds: []});
+        expect(bypass).toMatchObject({status: 'rejected', code: 'InvalidActionTiming'});
+        expect(session.getState()).toBe(initial); return;
+      }
+      const result = session.dispatch({schemaVersion: 1, commandId: 'hide', expectedRevision: 0,
+        rulesetContentHash: RULESET.contentHash, type: 'AttemptHide', actorId: rogue.id, actionId: declaration.id,
+        eligibility: {factsSource: 'board', boardRevision: 0, heavilyObscured: true, cover: 'none', visibleToAnyEnemy: invalid === 'visible'}});
+      expect(result.status).toBe('rejected'); expect(session.getState()).toBe(initial);
+    });
+
   it('applies Help and a generic one-shot bonus to the matching check and consumes only matching next-check effects', {
     meta: { basicPrimitive: 'ability_check', evidenceKind: 'unit' },
   }, () => {

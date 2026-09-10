@@ -2805,6 +2805,9 @@ export default function SheetActionsPanel({
         reason: `Ожидается безопасный повтор ${sheetAtomicRetryLabel(pendingAtomicRetry)}`,
       };
     }
+    if ((action.mechanics.activation as Record<string, unknown> | undefined)?.counts_as === 'hide') {
+      return {disabled: true, reason: 'Засада требует данных карты: используйте панель боя'};
+    }
     const activeEffectIssue = activeEffectRequirementIssue(action.mechanics, runtime);
     if (activeEffectIssue) return { disabled: true, reason: activeEffectIssue };
     if (action.spellRef && ctx.untrainedArmorCategories?.length) {

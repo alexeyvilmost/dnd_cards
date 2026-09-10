@@ -1,3 +1,4 @@
+import {combatHideFacts, combatHideIssue} from './hide';
 import {foldEvents} from '../rules-core/reducer';
 import {canEscapeActorGrapple, escapeActorGrapple} from './engine';
 import { handleCommand } from '../rules-core/handler';
@@ -5193,5 +5194,42 @@ describe('grapple escape through trusted solo combat commands', () => {
     expect(resolved.envelope.state.movementRemainingFt[actorId]).toBe(
       resolved.envelope.state.world.grapples['escape-test'] ? 0 : 30);
     expect(stepRoguelikeCombat(clone(restored), {type: 'saving_throw'}, artifactHash)).toEqual(resolved);
+  });
+});
+
+
+describe('board-owned Hide', () => {
+  it.each(['open', 'between', 'inside', 'blindsight'] as const)('derives eligibility from %s geometry and senses', async mode => {
+    const participant = fighterSeed();
+    let state = await createSoloCombatState({character: participant.character, participant,
+      selected: [{monster: goblin(), quantity: 1}], actions: [scimitar()], effects: [], rng: () => 0.5});
+    const hero = participant.character.id;
+    const enemy = Object.values(state.world.actors).find(actor => actor.kind === 'monster')!.id;
+    state.tokens[hero].position = {x: 4, y: 4}; state.tokens[enemy].position = {x: 2, y: 4};
+    if (mode !== 'open') state.combatAreas = {fog: {id: 'fog', name: 'Fog', zoneType: 'fog_cloud',
+      sourceActorId: hero, sourceActionId: 'fog', sourceEntityIds: ['fog'], origin: {x: 3, y: 4},
+      cells: [{x: mode === 'between' ? 3 : 4, y: 4}], duration: {type: 'rounds', roundsLeft: 10},
+      triggers: [], heavilyObscured: true}};
+    if (mode === 'blindsight') state.world.actors[enemy].passives = [{kind: 'grant_sense', sense: 'blindsight', range: 10}];
+    const facts = combatHideFacts(state, hero);
+    expect(facts.heavilyObscured).toBe(mode === 'inside' || mode === 'blindsight');
+    expect(facts.visibleToAnyEnemy).toBe(mode === 'open' || mode === 'blindsight');
+    expect(combatHideIssue(state, hero) === null).toBe(mode === 'inside');
+    const hide = projectRuleAction(basicAction('qa-hide', 'Засада', {activation: {mode: 'active', counts_as: 'hide',
+      cost: [{resource: 'bonus_action'}]}, targeting: {shape: 'self', domain: 'actor', actor_targets: false, min_targets: 0, max_targets: 1, range_ft: 0, requires_line_of_sight: false, allowed_relations: ['self']}, effects: []}));
+    state.catalogActions.push(hide); state.world.actors[hero].capabilities.actionIds.push(hide.id);
+    if (mode !== 'inside') {
+      expect(() => executeCombatAction({state, actorId: hero, actionId: hide.id, targetIds: [],
+        rng: () => {throw new Error('Ineligible Hide must not roll');}})).toThrow('HideNotEligible');
+      expect(state.world.actors[hero].runtime.resources.bonus_action).toBe(1);
+      return;
+    }
+    state = executeCombatAction({state, actorId: hero, actionId: hide.id, targetIds: [], rng: () => 0.95});
+    expect(state.world.actors[hero].runtime.resources.bonus_action).toBe(0);
+    expect(state.world.actors[hero].runtime.resources.action).toBe(1);
+    expect(state.world.actors[hero].runtime.activeEffects.some(effect =>
+      (effect.mechanics as Record<string, unknown>).hidden_end_triggers)).toBe(true);
+    const restored = readSoloCombatState(writeSoloCombatState({}, state), hero, state.runtimeRevision);
+    expect(restored?.world.actors[hero].runtime.activeEffects).toEqual(state.world.actors[hero].runtime.activeEffects);
   });
 });

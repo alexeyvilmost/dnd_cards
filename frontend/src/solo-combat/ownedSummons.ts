@@ -16,7 +16,7 @@ export interface OwnedSummonPolicy {
 }
 
 const BASIC_ACTION_CARDS = new Set([
-  'action_basic_dash', 'action_basic_disengage', 'action_basic_dodge',
+  'action_basic_dash', 'action_basic_disengage', 'action_basic_dodge', 'action_basic_hide',
 ]);
 
 function finite(value: unknown, minimum: number): number | null {

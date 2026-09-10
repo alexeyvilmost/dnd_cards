@@ -1,3 +1,4 @@
+import {combatHideIssue} from '../solo-combat/hide';
 import { combatActorDisplayName } from '../character/familiarLabels';
 import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
 import { useEffect, useMemo, useState } from 'react';
@@ -274,6 +275,10 @@ export function combatActionAvailability(
     && entry.sequence.attacksRemaining > 0
     && !entry.blockedByResolutionId
   ));
+  if ((action.mechanics.activation as Record<string, unknown> | undefined)?.counts_as === 'hide') {
+    const issue = combatHideIssue(state, actorId);
+    if (issue) return {enabled: false, reason: issue};
+  }
   const activeEffectIssue = activeEffectRequirementIssue(action.mechanics, actor.runtime);
   if (activeEffectIssue) return { enabled: false, reason: activeEffectIssue };
   const timing = combatActionTimingAvailability(action);
