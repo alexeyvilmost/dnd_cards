@@ -69,19 +69,38 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 		return
 	}
 	fail := func(code, message string) { writeRoguelikeError(c, roguelikeError(http.StatusConflict, code, message)) }
-	if run.Status != RoguelikeStatusActive || run.Phase != RoguelikePhaseCombat || run.Character == nil {
-		fail("combat_required", "активный бой не найден")
+	isRest := request.Type == "short_rest" || request.Type == "long_rest"
+	expectedPhase := RoguelikePhaseCombat
+	if isRest {
+		expectedPhase = RoguelikePhaseCamp
+	}
+	if run.Status != RoguelikeStatusActive || run.Phase != expectedPhase || run.Character == nil {
+		if isRest {
+			fail("camp_required", "отдых доступен только в лагере")
+		} else {
+			fail("combat_required", "активный бой не найден")
+		}
 		return
 	}
 	if run.Revision != request.ExpectedRevision {
 		fail("run_revision_conflict", "состояние забега изменилось")
 		return
 	}
+	if isRest && run.Character.CurrentHP < 1 {
+		fail("rest_at_zero_hp", "отдых нельзя начать при 0 хитов")
+		return
+	}
+	if request.Type == "long_rest" && run.Supplies < 1 {
+		fail("supplies_required", "для долгого отдыха нужны припасы")
+		return
+	}
 	expectedCharacterRevision := run.Character.RuntimeRevision
 	client := roguelikeWorkerClient{URL: os.Getenv("RULES_WORKER_URL"), Token: os.Getenv("RULES_WORKER_TOKEN")}
 	var result *roguelikeWorkerResult
 	catalog := run.CombatCatalog
-	if request.Type == "initialize_combat" {
+	if isRest {
+		result, err = executeRoguelikeRestWorker(c.Request.Context(), rc.db, client, run.Character, request)
+	} else if request.Type == "initialize_combat" {
 		if len(run.CombatEnvelope) > 0 || combatOutcome(run.Character) != "" {
 			fail("combat_already_initialized", "бой уже начат; обновите страницу")
 			return
@@ -102,7 +121,7 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 			"envelope": run.CombatEnvelope, "intent": request.Payload["intent"], "character": run.Character})
 	}
 	if err != nil {
-		fail("combat_execution_failed", "не удалось выполнить команду боя; состояние не изменено")
+		fail("combat_execution_failed", "не удалось выполнить действие; состояние не изменено")
 		return
 	}
 	if err = applyTrustedRoguelikePatch(run.Character, result.Patch); err != nil {
@@ -126,11 +145,23 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 			return err
 		}
 		if locked.Revision != request.ExpectedRevision || character.RuntimeRevision != expectedCharacterRevision {
-			return roguelikeError(http.StatusConflict, "run_revision_conflict", "состояние боя изменилось в другой вкладке")
+			return roguelikeError(http.StatusConflict, "run_revision_conflict", "состояние забега изменилось в другой вкладке")
+		}
+		if isRest {
+			locked.Character = &character
+			restRequest := request
+			restRequest.Payload = JSONMap{"hit_die_rolls": request.Payload["hit_die_rolls"], "runtime": JSONMap{
+				"current_hp": result.Patch["current_hp"], "resources": result.Patch["resources"],
+				"active_effects": result.Patch["active_effects"], "turn_state": result.Patch["turn_state"],
+			}}
+			if err = restRoguelike(locked, restRequest, request.Type == "long_rest"); err != nil {
+				return err
+			}
+		} else {
+			locked.CombatEnvelope = result.Envelope
+			locked.CombatCatalog = catalog
 		}
 		locked.Character = run.Character
-		locked.CombatEnvelope = result.Envelope
-		locked.CombatCatalog = catalog
 		locked.Revision++
 		if err = tx.Omit("User", "Group").Save(locked.Character).Error; err != nil {
 			return err
@@ -138,8 +169,10 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 		if err = saveRoguelikeRun(tx, locked); err != nil {
 			return err
 		}
-		if err = appendRoguelikeCombatEvent(tx, locked, request, run.CombatEnvelope, result); err != nil {
-			return err
+		if !isRest {
+			if err = appendRoguelikeCombatEvent(tx, locked, request, run.CombatEnvelope, result); err != nil {
+				return err
+			}
 		}
 		accepted, err := ownedRoguelikeRun(tx, runID, userID, false)
 		if err != nil {

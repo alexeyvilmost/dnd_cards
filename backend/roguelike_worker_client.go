@@ -74,7 +74,7 @@ func (client roguelikeWorkerClient) call(ctx context.Context, endpoint string, b
 		if len(result.Needs) == 0 || len(result.Needs) > 2048 {
 			return nil, fmt.Errorf("invalid dependency request")
 		}
-	} else if len(result.Envelope) == 0 || len(result.Patch) == 0 {
+	} else if (endpoint != "/rest" && len(result.Envelope) == 0) || len(result.Patch) == 0 {
 		return nil, fmt.Errorf("incomplete rules worker result")
 	}
 	return &result, nil

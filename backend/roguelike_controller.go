@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"os"
 	"sort"
@@ -1030,7 +1031,7 @@ func applyRoguelikeRuntimePatch(run *RoguelikeRun, patch roguelikeRuntimePatch, 
 			if roll < 1 || roll > 10 {
 				return roguelikeError(http.StatusBadRequest, "invalid_hit_die_roll", "результат кости хитов должен быть от 1 до 10")
 			}
-			healing := roll + (conScore-10)/2
+			healing := roll + int(math.Floor(float64(conScore-10)/2))
 			if healing < 1 {
 				healing = 1
 			}
@@ -1284,7 +1285,7 @@ func (rc *RoguelikeController) Command(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "неверная команда забега", "code": "invalid_command"})
 		return
 	}
-	if request.Type == "initialize_combat" || request.Type == "combat_intent" {
+	if request.Type == "initialize_combat" || request.Type == "combat_intent" || request.Type == "short_rest" || request.Type == "long_rest" {
 		rc.trustedCombatCommand(c, runID, userID, request, requestHash)
 		return
 	}

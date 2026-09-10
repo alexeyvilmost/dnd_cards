@@ -62,3 +62,30 @@ test('replays actual HTTP worker transitions, RNG and projected revisions after 
     await rm(directory, {recursive: true, force: true});
   }
 });
+
+
+test('rest HTTP uses saved inputs and ignores forged runtime output', async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'camp-rest-'));
+  const token = 'private-local-camp-rest-token-32-characters';
+  const server = await createRulesWorker({artifactFile: new URL('./dist/artifact.cjs', import.meta.url), artifactsDirectory: directory, token});
+  try {
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    const input = JSON.parse(await readFile(new URL('../src/roguelike/pinnedFighter.fixture.json', import.meta.url), 'utf8'));
+    input.character.current_hp = 4;
+    input.long = false;
+    input.hitDieRolls = [5];
+    input.runtime = {current_hp: 9999, resources: {anything: 999}, turn_state: {forged: true}};
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/rest`, {method: 'POST', headers: {authorization: `Bearer ${token}`, 'Content-Type': 'application/json'}, body: JSON.stringify({input})});
+    assert.equal(response.status, 200);
+    const result = await response.json();
+    assert.equal(result.status, 'ready');
+    assert.equal(result.patch.current_hp, 11);
+    assert.equal(result.patch.resources.hit_dice_d10, 1);
+    assert.equal(result.patch.resources['uses_ACT-second-wind'], 1);
+    assert.equal(result.patch.resources.anything, undefined);
+    assert.equal(result.patch.turn_state.forged, undefined);
+  } finally {
+    await new Promise(resolve => server.close(resolve));
+    await rm(directory, {recursive: true, force: true});
+  }
+});

@@ -278,10 +278,7 @@ export default function SheetRestButtons({
       let updated: ForgeCharacter;
       if (runId && restType) {
         const run = await roguelikeApi.get(runId);
-        const patch = persistPayload(next, attunementUnlocked, resetDeathSaves, baseTurnState);
         const result = await roguelikeApi.command(runId, run.revision, restType, {
-          runtime: { current_hp: patch.current_hp, resources: patch.resources,
-            active_effects: patch.active_effects, turn_state: patch.turn_state },
           hit_die_rolls: restType === 'short_rest' ? hitDieRolls.current : [],
         });
         if (!result.character) throw new Error('Сервер не вернул лист после отдыха');

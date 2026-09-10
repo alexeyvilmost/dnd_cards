@@ -173,3 +173,30 @@ func initializeRoguelikeWorker(ctx context.Context, tx *gorm.DB, client roguelik
 	}
 	return nil, nil, fmt.Errorf("catalog dependency budget exceeded")
 }
+
+// Rest inputs are derived from the saved character; browser runtime patches are never executed.
+func executeRoguelikeRestWorker(ctx context.Context, tx *gorm.DB, client roguelikeWorkerClient, character *CharacterV3, request RoguelikeCommandRequest) (*roguelikeWorkerResult, error) {
+	catalog := emptyRoguelikeFrozenCatalog()
+	for attempt := 0; attempt < 32; attempt++ {
+		result, err := client.call(ctx, "/rest", map[string]any{"input": map[string]any{
+			"character": character, "catalog": catalog, "long": request.Type == "long_rest", "hitDieRolls": request.Payload["hit_die_rolls"],
+		}})
+		if err != nil {
+			return nil, err
+		}
+		if result.Status != "needs_content" {
+			return result, nil
+		}
+		previous, _ := json.Marshal(catalog)
+		for _, need := range result.Needs {
+			if err = catalog.fulfill(tx, need); err != nil {
+				return nil, err
+			}
+		}
+		next, _ := json.Marshal(catalog)
+		if string(previous) == string(next) {
+			return nil, fmt.Errorf("rest catalog resolution made no progress")
+		}
+	}
+	return nil, fmt.Errorf("rest catalog dependency budget exceeded")
+}
