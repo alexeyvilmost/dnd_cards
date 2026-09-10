@@ -150,10 +150,13 @@ export default function SheetPendingCombatPanel({
       : saveRequest.ability;
     const d20 = Number(manualD20);
     const manualValid = Number.isSafeInteger(d20) && d20 >= 1 && d20 <= 20;
-    const title = pending.type === 'concentration_save'
+    const escapeCheck = pending.type === 'escape_grapple';
+    const title = escapeCheck
+      ? `Освобождение: ${pending.skill === 'athletics' ? 'Атлетика' : 'Акробатика'}`
+      : pending.type === 'concentration_save'
       ? `Концентрация: спасбросок ${ability.toUpperCase()}`
       : `Спасбросок ${ability.toUpperCase()}`;
-    const afterFailureBoons = decidingRuntime
+    const afterFailureBoons = decidingRuntime && !escapeCheck
       ? runtimeBoons(decidingRuntime).filter((boon) => (
         boon.appliesTo.includes('saving_throw') && boon.timing.includes('after_failure')
       ))
@@ -162,7 +165,7 @@ export default function SheetPendingCombatPanel({
       <section
         className="sheet-group"
         role="group"
-        aria-label="Ожидающий спасбросок"
+        aria-label={escapeCheck ? 'Ожидающая проверка освобождения' : 'Ожидающий спасбросок'}
         data-testid={pending.type === 'target_save'
           ? 'sheet-combat-target-save'
           : 'sheet-combat-saving-throw'}

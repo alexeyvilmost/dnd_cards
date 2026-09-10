@@ -46,7 +46,7 @@ import {
   executeCombatRemoteManipulator,
   moveCombatDancingLights,
   moveActorAlongRoute,
-  standActor,
+  standActor, escapeActorGrapple,
   refreshSoloCombatParticipants,
   revealCombatMagicAura,
   resolvePlayerReaction,
@@ -506,6 +506,29 @@ export default function SoloCombatPage() {
     ? activeActor(state).id
     : state?.characterId ?? '');
   const playerTurn = state ? isPlayerControlledCombatActor(state, activeActor(state).id) : false;
+  const chooseEscapeGrapple = async () => {
+    if (!state || busy) return;
+    const grapples = Object.values(state.world.grapples).filter(grapple => grapple.targetActorId === activeControlledActorId);
+    if (!grapples.length) return;
+    try {
+      const origin = {kind: 'other' as const, id: 'escape-grapple', name: 'Освобождение из захвата'};
+      const selection = await choiceDialog.request([
+        ...(grapples.length > 1 ? [{id: 'escape_grapple', prompt: 'Из какого захвата освободиться?', count: 1,
+          source: 'explicit' as const, context: 'in_play' as const, origin,
+          items: grapples.map(grapple => ({id: grapple.id, name: state.world.actors[grapple.grapplerActorId]?.name ?? 'Противник'})),
+        }] : []),
+        {id: 'escape_skill', prompt: 'Как освободиться?', count: 1, source: 'explicit' as const, context: 'in_play' as const, origin,
+          items: [{id: 'athletics', name: 'Атлетика (Сила)'}, {id: 'acrobatics', name: 'Акробатика (Ловкость)'}]},
+      ], 'Освобождение из захвата');
+      if (!selection) return;
+      const grappleId = grapples.length === 1 ? grapples[0].id : selection.escape_grapple?.[0];
+      const skill = selection.escape_skill?.[0];
+      if (!grappleId || (skill !== 'athletics' && skill !== 'acrobatics')) return;
+      setMovementMode(false); setSelectedActionId(null); setSelectedActionChoices({});
+      applyIntent({type: 'escape_grapple', actorId: activeControlledActorId, grappleId, skill},
+        () => escapeActorGrapple(state, activeControlledActorId, grappleId, skill));
+    } catch (reason) { setError(playerFacingSheetActionError(reason)); }
+  };
   const activeDancingLights = state ? Object.values(state.world.objects).filter((object) => {
     const concentration = state.world.concentrations[activeControlledActorId];
     return object.sourceActorId === activeControlledActorId
@@ -925,7 +948,7 @@ export default function SoloCombatPage() {
         onAddMonster={addSceneMonster}
         onClose={() => setSceneConstructorOpen(false)}
       />}
-      <CombatHotbar onStand={() => { setMovementMode(false); applyIntent({type: 'stand', actorId: activeControlledActorId}, () => standActor(state, activeControlledActorId)); }} state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || Boolean(state.pendingAdditionalMovement) || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); applyIntent({type: 'end_turn', actorId: activeControlledActorId}, () => advanceTurn(state)); }} onSheet={() => {
+      <CombatHotbar onEscape={() => { void chooseEscapeGrapple(); }} onStand={() => { setMovementMode(false); applyIntent({type: 'stand', actorId: activeControlledActorId}, () => standActor(state, activeControlledActorId)); }} state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || Boolean(state.pendingAdditionalMovement) || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); applyIntent({type: 'end_turn', actorId: activeControlledActorId}, () => advanceTurn(state)); }} onSheet={() => {
         if (isControlledCharacter(state, activeControlledActorId)) {
           setSheetActorId(activeControlledActorId);
           setSheetOpen(true);

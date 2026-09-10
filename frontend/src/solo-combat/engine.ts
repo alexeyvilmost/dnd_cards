@@ -2527,7 +2527,7 @@ export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Ma
       continue;
     }
     const pending = next.world.pendingResolution;
-    if ((pending.request.type === 'reaction' || pending.request.type === 'shove_outcome')
+    if ((pending.request.type === 'reaction' || pending.request.type === 'shove_outcome' || pending.type === 'escape_grapple')
       && isControlledCharacter(next, pending.request.actorId)) break;
     if (pending.request.type === 'saving_throw'
       && isControlledCharacter(next, pending.request.actorId)
@@ -3506,6 +3506,26 @@ function breakOutOfRangeGrapples(
   return next;
 }
 
+export function canEscapeActorGrapple(state: SoloCombatState, actorId: string): boolean {
+  const actor = state.world.actors[actorId];
+  return Boolean(actor && actor.runtime.hp.current > 0 && (actor.runtime.resources.action ?? 0) > 0
+    && !deniedCapabilities(actor.runtime, actor.passives ?? []).has('action')
+    && Object.values(state.world.grapples).some(grapple => grapple.targetActorId === actorId)
+    && state.outcome === 'active' && activeActorId(state) === actorId
+    && !state.world.pendingResolution && !state.pendingD20Interrupt && !state.pendingInterception
+    && !state.pendingAdditionalMovement && !state.pendingTriggeredAction && !state.pendingTurnStartGrappleDamage
+    && !state.pendingAlertSwapActorIds?.length && !state.playerMovement && !state.pendingReachEntry);
+}
+
+export function escapeActorGrapple(
+  state: SoloCombatState, actorId: string, grappleId: string,
+  skill: 'athletics' | 'acrobatics', rng: Rng = Math.random,
+): SoloCombatState {
+  if (!canEscapeActorGrapple(state, actorId)) throw new Error('Освобождение требует доступного действия в свой ход');
+  return dispatch({state, rng, label: 'Освобождение из захвата', command: {
+    ...commandBase(state, actorId), type: 'EscapeGrapple', grappleId, skill,
+  }});
+}
 export function canStandActor(state: SoloCombatState, actorId: string): boolean {
   const actor = state.world.actors[actorId];
   const cost = standMovementCost(state, actorId);

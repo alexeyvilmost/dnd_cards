@@ -1,3 +1,5 @@
+import {foldEvents} from '../rules-core/reducer';
+import {canEscapeActorGrapple, escapeActorGrapple} from './engine';
 import { handleCommand } from '../rules-core/handler';
 import {createSheetCombatSession} from '../character/sheetCombatSession';
 import {telekineticHeldObjects} from '../rules-core/telekineticMovement';
@@ -5071,5 +5073,51 @@ describe('physical Weapon Bond recall in solo combat', () => {
     expect(() => executeCombatAction({ state, actorId, actionId: recall.id, targetIds: [actorId],
       choices: { weapon_bond_object: ['bound'], weapon_bond_hand: ['main_hand'] }, rng: () => { throw new Error('Unexpected random draw'); } })).toThrow(/другом плане/);
     expect(state).toEqual(before);
+  });
+});
+
+describe('grapple escape through trusted solo combat commands', () => {
+  it('opens a durable skill check, charges one action and rejects foreign or interrupted commands', async () => {
+    const setup = await championMovementEncounter();
+    let state = clone(setup.state);
+    const {actorId, enemyId} = setup;
+    if (state.world.scene.mode !== 'encounter') throw Error('Expected encounter');
+    state.world.scene.activeIndex = state.world.scene.initiative.indexOf(actorId);
+    state.world.actors[actorId].runtime.resources.action = 1;
+    // Fixture starts its turn already grappled, so its movement grant is zero.
+    state.movementRemainingFt[actorId] = 0;
+    state.world.actors[enemyId].attackProfile!.graspingParts = ['qa_arm'];
+    state.world = foldEvents(state.world, [{ordinal: 0, sourceActorId: enemyId,
+      obligationIds: ['system:grapple-lifecycle'], payload: {type: 'GrappleApplied', grapple: {
+        id: 'escape-test', grapplerActorId: enemyId, targetActorId: actorId, sourcePart: 'qa_arm',
+        escapeDc: 13, reachFt: state.world.actors[enemyId].attackProfile!.reachFt,
+        sourceEntityIds: ['system:dnd5e-2024:unarmed-strike:grapple'], startedAtRevision: state.world.revision,
+      }}}]);
+    expect(canEscapeActorGrapple(state, actorId)).toBe(true);
+    const artifactHash = `sha256:${'b'.repeat(64)}`;
+    const envelope: RoguelikeCombatEnvelope = {schemaVersion: 1, artifactHash,
+      entropy: {seed: 'escape-262', cursor: 0}, state};
+    const before = clone(envelope);
+    const intent = {type: 'escape_grapple' as const, actorId, grappleId: 'escape-test', skill: 'acrobatics' as const};
+    expect(() => stepRoguelikeCombat(envelope, {...intent, actorId: enemyId}, artifactHash)).toThrow('управлять');
+    expect(() => stepRoguelikeCombat(envelope, {...intent, grappleId: 'foreign'}, artifactHash)).toThrow('GrappleNotFound');
+    expect(() => stepRoguelikeCombat(envelope, {...intent, skill: 'history' as never}, artifactHash)).toThrow('InvalidDecision');
+    const opened = stepRoguelikeCombat(envelope, intent, artifactHash);
+    expect(envelope).toEqual(before);
+    expect(opened.randomValues).toEqual([]);
+    expect(opened.envelope.state.world.pendingResolution).toMatchObject({type: 'escape_grapple', actorId, skill: 'acrobatics'});
+    expect(opened.envelope.state.world.actors[actorId].runtime.resources.action).toBe(0);
+    expect(canEscapeActorGrapple(opened.envelope.state, actorId)).toBe(false);
+    expect(() => escapeActorGrapple(opened.envelope.state, actorId, 'escape-test', 'athletics')).toThrow();
+    expect(() => stepRoguelikeCombat(opened.envelope, {type: 'end_turn', actorId}, artifactHash)).toThrow();
+    const restored = clone(opened.envelope);
+    restored.state.world = migrateWorldState(restored.state.world);
+    const resolved = stepRoguelikeCombat(restored, {type: 'saving_throw'}, artifactHash);
+    expect(resolved.envelope.state.world.pendingResolution).toBeNull();
+    expect(resolved.envelope.state.world.actors[actorId].runtime.resources.action).toBe(0);
+    expect(resolved.randomValues).toHaveLength(1);
+    expect(resolved.envelope.state.movementRemainingFt[actorId]).toBe(
+      resolved.envelope.state.world.grapples['escape-test'] ? 0 : 30);
+    expect(stepRoguelikeCombat(clone(restored), {type: 'saving_throw'}, artifactHash)).toEqual(resolved);
   });
 });

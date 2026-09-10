@@ -5,7 +5,7 @@ import type { DecisionResponse } from '../rules-core/domain';
 import { canonicalSha256Sync } from '../rules-core/determinism';
 import {
   declineAdditionalMovement, isTriggeredCombatAction, resumePendingMovement, activeActor, activateCombatBoon, advanceTurn, autoResolveSystemDecisions,
-  executeCombatAction, executeCombatRemoteManipulator, moveCombatDancingLights, revealCombatMagicAura, moveActorAlongRoute, resolveD20Interrupt, resolvePlayerReaction,
+  escapeActorGrapple, executeCombatAction, executeCombatRemoteManipulator, moveCombatDancingLights, revealCombatMagicAura, moveActorAlongRoute, resolveD20Interrupt, resolvePlayerReaction,
   resolvePlayerShoveOutcome, resolvePlayerSavingThrow, resolveSoloCombatAlertSwap, resolveSoloCombatInterception,
   resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, standActor,
 } from '../solo-combat/engine';
@@ -26,6 +26,7 @@ export type RoguelikeCombatIntent =
   | {type: 'move'; actorId: string; destination: GridPosition}
   | {type: 'decline_movement'; actorId: string}
   | {type: 'stand'; actorId: string}
+  | {type: 'escape_grapple'; actorId: string; grappleId: string; skill: 'athletics' | 'acrobatics'}
   | {type: 'end_turn'; actorId: string}
   | {type: 'shove_outcome'; outcome: Extract<DecisionResponse, {kind: 'shove_outcome'}>['outcome']}
   | {type: 'reaction'; response: Extract<DecisionResponse, {kind: 'reaction'}>}
@@ -81,7 +82,7 @@ export function stepRoguelikeCombat(
     if (!isPlayerControlledCombatActor(state, actorId)) throw new Error('Нельзя управлять этим участником боя');
   };
   if ('actorId' in intent && intent.actorId !== null) requireOwned(intent.actorId);
-  const proactive = new Set(['action', 'move', 'stand', 'end_turn', 'dancing_lights', 'detect_magic', 'remote_manipulator', 'boon']);
+  const proactive = new Set(['action', 'move', 'stand', 'escape_grapple', 'end_turn', 'dancing_lights', 'detect_magic', 'remote_manipulator', 'boon']);
   const additionalMove = intent.type === 'move' && state.pendingAdditionalMovement?.actorId === intent.actorId;
   if (proactive.has(intent.type) && 'actorId' in intent
     && (hasDecision(additionalMove ? {...state, pendingAdditionalMovement: undefined} : state)
@@ -114,6 +115,7 @@ export function stepRoguelikeCombat(
       if (state.pendingAdditionalMovement?.actorId !== intent.actorId) throw new Error('Нет ожидающего перемещения участника');
       state = declineAdditionalMovement(state); break;
     case 'stand': state = standActor(state, intent.actorId); break;
+    case 'escape_grapple': state = escapeActorGrapple(state, intent.actorId, intent.grappleId, intent.skill, rng); break;
     case 'end_turn':
       if (hasDecision(state) || activeActor(state).id !== intent.actorId) throw new Error('Сначала завершите текущее решение');
       state = advanceTurn(state, rng);

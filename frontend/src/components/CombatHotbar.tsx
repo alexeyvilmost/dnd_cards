@@ -1,7 +1,7 @@
 import { combatActorDisplayName } from '../character/familiarLabels';
 import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowUp, Footprints, MoreHorizontal } from 'lucide-react';
+import { ArrowUp, Footprints, MoreHorizontal, Unlink } from 'lucide-react';
 import { canPay, costKey } from '../engine/cost';
 import { FREEUSE_SHOWCASE_KEY, isFreeusePoolKey } from '../engine/freeuse';
 import { bindEquippedWeaponActionContext, weaponAttackPreview, weaponContext } from '../engine/weapon';
@@ -19,8 +19,8 @@ import { parseActivationLevelRequirement } from '../rules-core/activationRequire
 import { parseActivationCastTime } from '../rules-core/activationCastTime';
 import { applyUnarmedDamageProfileToAction } from '../rules-core/fightingStyleComplexPrimitives';
 import { playerActionIdsFor, type SoloCombatState } from '../solo-combat/types';
-import { canStandActor, isTriggeredCombatAction } from '../solo-combat/engine';
-import { actorMustCrawl, standMovementCost } from '../solo-combat/tacticalGrid';
+import { canEscapeActorGrapple, canStandActor, isTriggeredCombatAction } from '../solo-combat/engine';
+import { actorMustCrawl, effectiveCombatActorSpeedFt, standMovementCost } from '../solo-combat/tacticalGrid';
 import { actionCostResourceIds, findResource, resourceLabel as sharedResourceLabel, useResourceOptions } from '../utils/resources';
 import SheetActionLine from './SheetActionLine';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
@@ -373,7 +373,7 @@ export function combatActionAvailability(
 
 export default function CombatHotbar({
   state, actorId, selectedActionId, movementMode, disabled,
-  onAction, onMove, onStand, onEndTurn, onSheet,
+  onAction, onMove, onStand, onEscape, onEndTurn, onSheet,
 }: {
   state: SoloCombatState;
   actorId: string;
@@ -383,6 +383,7 @@ export default function CombatHotbar({
   onAction: (action: RuleActionDefinition) => void;
   onMove: () => void;
   onStand: () => void;
+  onEscape?: () => void;
   onEndTurn: () => void;
   onSheet: () => void;
 }) {
@@ -390,6 +391,8 @@ export default function CombatHotbar({
   useEffect(() => setSelectedResourceId(null), [actorId]);
   const resourceOptions = useResourceOptions();
   const actor = state.world.actors[actorId];
+  const grappled = Object.values(state.world.grapples).some(grapple => grapple.targetActorId === actorId);
+  const movementRemaining = effectiveCombatActorSpeedFt(state, actorId) > 0 ? state.movementRemainingFt[actorId] ?? 0 : 0;
   const formulaContext = useMemo(() => formulaCtxFromCharacter(actor.character), [actor.character]);
   const spellcasting = actor.character.spellcastingMod == null
     ? undefined
@@ -472,12 +475,15 @@ export default function CombatHotbar({
             </span>
           ))}
         </div>
-        <div className={`combat-hotbar__utility${actorMustCrawl(actor) ? ' has-stand' : ''}`} role="group" aria-label="Управление полем">
+        <div className={`combat-hotbar__utility${actorMustCrawl(actor) || grappled ? ' has-stand' : ''}`} role="group" aria-label="Управление полем">
+          {grappled && onEscape && <button type="button" className="combat-utility-button" disabled={disabled || !canEscapeActorGrapple(state, actorId)} onClick={onEscape} title="Действие: проверка Атлетики или Акробатики">
+            <Unlink /><span>Освободиться</span>
+          </button>}
           {actorMustCrawl(actor) && <button type="button" className="combat-utility-button" disabled={disabled || !canStandActor(state, actorId)} onClick={onStand} title="Встать, потратив половину скорости">
             <ArrowUp /><span>Встать</span><small>{standMovementCost(state, actorId)} фт.</small>
           </button>}
-          <button type="button" className={`combat-utility-button${movementMode ? ' is-selected' : ''}`} disabled={disabled} onClick={onMove} title="Перемещение">
-            <Footprints /><span>Движение</span><small>{state.movementRemainingFt[actorId] ?? 0} фт.</small>
+          <button type="button" className={`combat-utility-button${movementMode ? ' is-selected' : ''}`} disabled={disabled || movementRemaining <= 0} onClick={onMove} title="Перемещение">
+            <Footprints /><span>Движение</span><small>{movementRemaining} фт.</small>
           </button>
           <button type="button" className="combat-utility-button" onClick={onSheet} title="Открыть сокращённый лист">
             <MoreHorizontal /><span>Лист</span>
