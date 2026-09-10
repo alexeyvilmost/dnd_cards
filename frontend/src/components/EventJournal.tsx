@@ -31,7 +31,6 @@ const rowTime = (ts: string) => new Date(ts).toLocaleString('ru-RU', { hour: '2-
 /** Одна строка журнала в текст (для копирования): время + сводка + разбивка броска. */
 export function journalRowToText(row: JournalRow): string {
   const roll = rollFromEvent(row.payload);
-          const shownDie = roll?.dice.find((die) => !die.discarded) ?? roll?.dice[0];
   const detail = roll ? `\n  ${formatRollBreakdown(roll)}` : '';
   return `[${rowTime(row.ts)}] ${describeEngineEvent(row.payload)}${detail}`;
 }

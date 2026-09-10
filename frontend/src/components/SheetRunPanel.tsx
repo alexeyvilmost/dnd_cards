@@ -35,7 +35,7 @@ export default function SheetRunPanel({ runId, characterId }: { runId: string; c
     <h2 className="sheet-h2">Забег {run ? `· попытка ${run.attempt}` : ''}</h2>
     {error && <p className="issues" role="alert">{error}</p>}
     {run && <>
-      <p className="forge-note">{run.experience} / {threshold} XP · {run.encounters_won} побед · {run.gold} зм · {run.supplies} припасов · {run.game_clock_hours} ч.</p>
+      <p className="forge-note">{run.experience} / {threshold} XP · {run.encounters_won} побед · {run.gold} зм · {run.supplies} припасов · {run.game_clock_hours} ч.{(run.game_clock_remainder_seconds ?? 0) >= 60 ? ` ${Math.floor((run.game_clock_remainder_seconds ?? 0) / 60)} мин.` : ''}</p>
       <progress aria-label="Опыт забега" value={run.experience} max={threshold} style={{ width: 120, accentColor: 'var(--forge-gold)' }} />
       <div className="sheet-runtime-actions">
         {run.status !== 'active' ? <Link className="sheet-header-btn" to={`/roguelike/${run.id}`}>Результат забега</Link>

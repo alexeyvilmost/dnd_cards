@@ -166,6 +166,22 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 			locked.CombatEnvelope = result.Envelope
 			locked.CombatCatalog = catalog
 		}
+		if result.GoldSpent < 0 || (!isCampAction && result.GoldSpent != 0) {
+			return fmt.Errorf("invalid worker material payment")
+		}
+		if isCampAction && result.GoldSpent > 0 {
+			if locked.Gold < result.GoldSpent || characterGold(&character) != locked.Gold {
+				return roguelikeError(http.StatusConflict, "material_gold_required", "недостаточно золота для материальных компонентов")
+			}
+			locked.Gold -= result.GoldSpent
+			setCharacterGold(run.Character, locked.Gold)
+		}
+		if result.ElapsedSeconds < 0 || result.ElapsedSeconds > 24*3600 || (!isCampAction && result.ElapsedSeconds != 0) {
+			return fmt.Errorf("invalid worker duration")
+		}
+		if isCampAction {
+			advanceRoguelikeClock(locked, result.ElapsedSeconds)
+		}
 		locked.Character = run.Character
 		locked.Revision++
 		if err = tx.Omit("User", "Group").Save(locked.Character).Error; err != nil {

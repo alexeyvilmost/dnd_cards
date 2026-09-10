@@ -85,6 +85,7 @@ import {
 } from '../character/sheetActionOrchestrator';
 import {
   buildSheetPrimitiveCommandInput,
+  sheetPrimitiveType,
   isSheetNoPendingPrimitive,
   isSheetPendingCombatPrimitive,
   sheetActionRequiresActorTargets,
@@ -1268,6 +1269,18 @@ export default function SheetActionsPanel({
   const runSingleCompanionCommand = async (command: GameCommand) => {
     if (!canonicalBuild.runtime || pendingAtomicRetry) return;
     try {
+      if (character.character_type === 'dungeon_crawl') {
+        const runId = activeRunId();
+        if (!runId) throw new Error('Активный забег не найден');
+        if (command.type !== 'DismissFamiliar' && command.type !== 'ReappearFamiliar') throw new Error('Это действие спутника пока недоступно в лагере');
+        const run = await roguelikeApi.get(runId);
+        const result = await roguelikeApi.command(runId,run.revision,'camp_action',{companion:command.type === 'DismissFamiliar'
+          ? {type:command.type,mode:command.mode} : {type:command.type,distanceFt:command.facts.distanceFt}});
+        if (!result.character) throw new Error('Сервер не вернул лист');
+        onUpdated(result.character); notifyRunUpdated();
+        if (result.command_events?.length) onPersistedEvents?.(result.command_events);
+        return;
+      }
       const prepared = prepareSheetCompanionCommand({
         participant: { character, canonical: canonicalBuild.runtime },
         onlineEncounterId: encounterId ?? character.current_encounter_id,
@@ -1929,7 +1942,11 @@ export default function SheetActionsPanel({
         const canonical = canonicalBuild.runtime;
         if (!runId || !canonical) throw new Error('Состояние забега ещё загружается');
         const definition = canonical.actionFor(action);
-        const choices = collectSoloCombatActionChoices(canonical.world.actors[character.id], definition, action.actionRef?.card_number, undefined, canonical.world);
+        const primitive = sheetPrimitiveType(definition.mechanics);
+        const primitiveContext = primitive && isSheetNoPendingPrimitive(primitive) ? { runtime: canonical, action: definition } : undefined;
+        const choices = primitiveContext
+          ? collectSheetPrimitiveChoices(primitiveContext, 'exploration')
+          : collectSoloCombatActionChoices(canonical.world.actors[character.id], definition, action.actionRef?.card_number, undefined, canonical.world);
         let selected: Record<string, string[]> = {};
         if (choices.length) {
           const picked = await choiceDialog.request(choices, action.name);
@@ -1937,7 +1954,18 @@ export default function SheetActionsPanel({
           selected = picked;
         }
         let spell;
-        if (definition.kind === 'spell') {
+        let worldInput;
+        let commandChoices = projectSoloCombatActionChoices(definition, selected);
+        if (primitiveContext) {
+          const form = sheetWorldInputFormContext(primitiveContext);
+          const declaration = form ? await worldInputDialog.request(form, action.name, `camp-object:${uid()}`) : null;
+          if (form && !declaration) return;
+          if (declaration?.scenarioObjects.length) throw new Error('В забеге можно выбрать только существующий предмет');
+          const input = buildSheetPrimitiveCommandInput({ ...primitiveContext, selectedChoices: selected, sceneMode: 'exploration', targetIds: [], ...(declaration ? { worldInput: declaration.worldInput } : {}) });
+          commandChoices = input.choices ?? {};
+          worldInput = input.worldInput;
+          spell = input.spell && definition.kind === 'spell' ? { baseLevel: definition.spell.level, ...input.spell } : undefined;
+        } else if (definition.kind === 'spell') {
           const options = collectSheetSpellCastOptions({ runtime: canonical, action: definition });
           if (!options.length) throw new Error('Нет доступного способа сотворить заклинание');
           let option = options[0];
@@ -1956,7 +1984,7 @@ export default function SheetActionsPanel({
         }
         const run = await roguelikeApi.get(runId);
         const updated = await roguelikeApi.command(runId, run.revision, 'camp_action', {
-          action_id: definition.id, choices: projectSoloCombatActionChoices(definition, selected), ...(spell ? { spell } : {}),
+          action_id: definition.id, choices: commandChoices, ...(spell ? { spell } : {}), ...(worldInput ? { world_input: worldInput } : {}),
         });
         if (!updated.character) throw new Error('Сервер не вернул лист после действия');
         onUpdated(updated.character); notifyRunUpdated();
@@ -2883,7 +2911,8 @@ export default function SheetActionsPanel({
       const nonSlotCost = baseCost.filter((entry) => (
         String(entry.resource ?? '') !== 'spell_slot'
       ));
-      if (nonSlotCost.length && !canPay(runtime, nonSlotCost).ok) {
+      const payableRuntime = canonicalBuild.runtime?.world.actors[character.id]?.runtime ?? runtime;
+      if (nonSlotCost.length && !canPay(payableRuntime, nonSlotCost).ok) {
         return { disabled: true, reason: 'Недостаточно ресурсов' };
       }
       return { disabled: busy };

@@ -22,6 +22,8 @@ type roguelikeWorkerNeed struct {
 	EffectType string `json:"effectType"`
 }
 type roguelikeWorkerResult struct {
+	ElapsedSeconds      int                   `json:"elapsedSeconds"`
+	GoldSpent           int                   `json:"goldSpent"`
 	Events              []JSONMap             `json:"events"`
 	Status              string                `json:"status"`
 	Needs               []roguelikeWorkerNeed `json:"needs"`

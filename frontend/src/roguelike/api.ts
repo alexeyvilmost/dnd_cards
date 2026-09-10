@@ -64,6 +64,8 @@ export interface RoguelikeRun {
   encounters_won: number;
   attempt: number;
   game_clock_hours: number;
+  game_clock_remainder_seconds?: number;
+  last_long_rest_remainder_seconds?: number;
   last_long_rest_hour: number;
   paid_refresh_count: number;
   pending_level?: number;

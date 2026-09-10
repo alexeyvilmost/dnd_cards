@@ -266,3 +266,15 @@ func TestRoguelikeRetryRetainsDrawnEncounterAcrossCatalogChanges(t *testing.T) {
 		t.Fatal("retry replaced the content")
 	}
 }
+
+func TestRoguelikeClockRetainsSubhourCastingTime(t *testing.T) {
+	run := RoguelikeRun{GameClockHours: 1, GameClockRemainderSeconds: 3594}
+	advanceRoguelikeClock(&run, 6)
+	if run.GameClockHours != 2 || run.GameClockRemainderSeconds != 0 {
+		t.Fatal("lost turn duration")
+	}
+	advanceRoguelikeClock(&run, 4200)
+	if run.GameClockHours != 3 || run.GameClockRemainderSeconds != 600 {
+		t.Fatal("lost ritual duration")
+	}
+}

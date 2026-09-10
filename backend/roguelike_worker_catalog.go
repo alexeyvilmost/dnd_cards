@@ -228,7 +228,7 @@ func executeRoguelikeCampActionWorker(ctx context.Context, tx *gorm.DB, client r
 	}
 	input := map[string]any{"character": character, "catalog": &catalog, "basicActionIds": ids, "seed": seed,
 		"commandId": request.CommandID.String(), "actionId": roguelikePayloadString(request, "action_id"), "itemCardId": roguelikePayloadString(request, "card_id"), "nextTurn": request.Type == "camp_turn",
-		"choices": request.Payload["choices"], "spell": request.Payload["spell"], "worldInput": request.Payload["world_input"]}
+		"choices": request.Payload["choices"], "spell": request.Payload["spell"], "worldInput": request.Payload["world_input"], "companion": request.Payload["companion"]}
 	for attempt := 0; attempt < 32; attempt++ {
 		result, err := client.call(ctx, "/camp-action", map[string]any{"input": input})
 		if err != nil {

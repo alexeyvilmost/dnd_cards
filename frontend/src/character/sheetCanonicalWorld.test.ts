@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import contentPatch from '../canon/data/micro-mvp-l1-content-patch.v1.json';
 import compiledFixture from '../pages/rulesLabFixture.generated.json';
-import type { ActorState, RuleActionDefinition } from '../rules-core/domain';
+import { createWorld, type ActorState, type RuleActionDefinition } from '../rules-core/domain';
 import { canonicalStringify } from '../rules-core/determinism';
 import type { CharacterContext } from '../mvp/contracts';
 import type { Action, Card, CharacterClass, Feat, PassiveEffect, Spell } from '../types';
@@ -13,6 +13,7 @@ import {
   buildSheetCanonicalRuntime,
   projectSheetCanonicalPersistence,
   readSheetCanonicalWorld,
+  restoreCompatibleSheetFamiliars,
   SHEET_CANONICAL_WORLD_KEY,
   writeSheetCanonicalWorld,
 } from './sheetCanonicalWorld';
@@ -774,6 +775,27 @@ describe('real sheet canonical world materialization', () => {
     expect(migrated?.actors[familiarActor.id]).toEqual(familiarActor);
     expect(migrated?.actors[reloaded.actorId].warlockPacts?.chain?.activeFamiliar)
       .toEqual(pactChainProjection(familiarState));
+  });
+
+  it('retains a validated base familiar across sheet action subsets, without importing stale capabilities', () => {
+    const root = clone(generated.roots.chain);
+    const owner = root.actor;
+    const actionId = generated.execution.scenarios.chain.findFamiliarActionId;
+    const familiar = castFindFamiliar({ familiarActorId: 'base-owl', ownerActorId: owner.id,
+      policy: {kind:'base',sourceEntityId:'00000000-0000-4000-8000-000000000001'}, method:'spell_slot',formId:'owl',spiritType:'fey',existingFamiliar:null,
+      resources:{level1SpellSlots:1,incenseGp:10},incenseOfferingGp:10,materialCostGp:10,baseCastingTimeSeconds:3600,
+      mechanicsPolicy:{connectionRangeFt:100,reappearRangeFt:30,ritualCastingAddedSeconds:600} }).familiar;
+    const companion = materializeCanonicalFamiliarActor({ familiar, owner, summoningActionId:actionId });
+    companion.lifecycle = {status:'alive'};
+    const base = createWorld({id:'familiar-cache-test',ruleset:{systemId:'dnd5e-2024',releaseId:'test',contentHash:'old-view',errataVersion:'2024'},actors:[owner,companion]});
+    const saved = writeSheetCanonicalWorld({},owner.id,base);
+    const fresh = createWorld({id:base.id,ruleset:{...base.ruleset,contentHash:'new-view'},actors:[owner]});
+    const reloaded = restoreCompatibleSheetFamiliars(fresh,saved,owner.id);
+    expect(reloaded.actors[companion.id]).toEqual(companion);
+    expect(reloaded.ruleset.contentHash).toBe('new-view');
+    expect(Object.keys(fresh.actors)).toEqual([owner.id]);
+    const missing = clone(fresh); missing.actors[owner.id].capabilities.actionIds = [];
+    expect(() => restoreCompatibleSheetFamiliars(missing,saved,owner.id)).toThrow(/summoning action/);
   });
 
   it('materializes Pact Tome from the five resolved Forge choices and round-trips its book/grants', () => {

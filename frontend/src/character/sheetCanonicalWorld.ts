@@ -29,6 +29,7 @@ import {
   type SpellGrantAccess,
 } from '../rules-core/spellcastingAccess';
 import { FAMILIAR_ACTOR_CATALOG } from '../rules-core/familiarActorCatalog';
+import { familiarActorStateIssue } from '../rules-core/familiarRuntime';
 import type { Card, PassiveEffect, Spell } from '../types';
 import {
   applySpellCastingOverride,
@@ -1009,6 +1010,30 @@ export function readSheetCanonicalWorld(
   return world;
 }
 
+/** A sheet view may compile a different action subset than the server. Keep a
+ * base familiar only when its full catalog projection still validates against
+ * the newly compiled owner. Never migrate a pending decision across catalogs. */
+export function restoreCompatibleSheetFamiliars(fresh: WorldState, turnState: Record<string, unknown> | null | undefined, actorId: string): WorldState {
+  const envelope = object(turnState?.[SHEET_CANONICAL_WORLD_KEY]);
+  if (!envelope || !nonBlank(envelope.rulesetContentHash)) return fresh;
+  const previous = readSheetCanonicalWorld(turnState, actorId, envelope.rulesetContentHash);
+  if (!previous) return fresh;
+  const familiars = Object.values(previous.actors).filter((entry) => entry.familiarState?.ownerActorId === actorId && entry.familiarState.extension === 'base');
+  if (!familiars.length) return fresh;
+  if (previous.pendingResolution) throw new SheetCanonicalWorldError('Завершите ожидающее решение до изменения каталога');
+  if (familiars.length > 1) throw new SheetCanonicalWorldError('Персонаж не может иметь нескольких фамильяров');
+  const hydrated = cloneJson(fresh);
+  for (const familiar of familiars) {
+    const issue = familiarActorStateIssue({ actor: familiar, owner: hydrated.actors[actorId] });
+    if (issue) throw new SheetCanonicalWorldError(issue);
+    if (familiar.familiarState!.carriedItemIds.length || familiar.familiarState!.wornItemIds.length) {
+      throw new SheetCanonicalWorldError('Перед изменением каталога верните предметы фамильяра в инвентарь');
+    }
+    hydrated.actors[familiar.id] = cloneJson(familiar);
+  }
+  return migrateWorldState(hydrated);
+}
+
 export function writeSheetCanonicalWorld(
   turnState: Record<string, unknown> | null | undefined,
   primaryActorId: string,
@@ -1340,7 +1365,7 @@ export function buildSheetCanonicalRuntime(input: {
     ruleset.contentHash,
     { contentHash: legacyContentHash, replacementRuleset: ruleset },
   );
-  let world = fresh;
+  let world = persisted ? fresh : restoreCompatibleSheetFamiliars(fresh, input.character.turn_state, actorId);
   if (persisted) {
     assertPersistedPactsMatch(persisted.actors[actorId].warlockPacts, actor.warlockPacts);
     const hydrated = cloneJson(persisted);

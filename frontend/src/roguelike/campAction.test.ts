@@ -71,6 +71,26 @@ describe('authoritative self actions in camp', () => {
     expect(result.patch.resources.action).toBe(request.character.resources.action);
     expect(result.patch.resources.bonus_action).toBe(request.character.resources.bonus_action);
   });
+  it('projects a material debit once and removes the currency alias from persisted pools', async () => {
+    const request = await input();
+    request.character.currency = { gold: 18, silver: 2, copper: 3 };
+    const action = structuredClone(request.catalog.entities.action[0]);
+    action.id = '24200000-0000-4000-8000-000000000001'; action.card_number = 'test-material-action'; action.name = 'Material action';
+    action.mechanics = { activation: { mode: 'active', cost: [{ resource: 'material_gold', amount: 10, recharge: 'never', binding: { kind: 'currency', currency: 'gold' } }] },
+      targeting: { shape: 'self', min_targets: 0, max_targets: 1, allowed_relations: ['self'] },
+      effects: [{ resolution: 'auto', result: [{kind: 'narrative', description: 'Material paid'}] }] };
+    request.catalog.entities.action.push(action); request.character.action_ids = [action.id];
+    const prepared = await prepareRoguelikeCombatParticipant(request.character, request.catalog, []);
+    if (prepared.status !== 'ready') throw new Error('Not ready');
+    request.actionId = prepared.participant.canonical.actions.find((entry) => entry.sourceEntityIds.includes(action.id))!.id;
+    const result = await executeRoguelikeCampAction(request);
+    if (result.status !== 'ready') throw new Error('Not ready');
+    expect(result.goldSpent).toBe(10);
+    expect(result.patch.resources.material_gold).toBeUndefined();
+    expect(result.patch.max_resources.material_gold).toBeUndefined();
+    expect(request.character.currency).toEqual({gold:18,silver:2,copper:3});
+    await expect(executeRoguelikeCampAction({ ...request, character: { ...request.character, ...result.patch, currency: {gold:8,silver:2,copper:3} } })).rejects.toThrow();
+  });
   it('resolves missing content before any execution', async () => {
     const request = await input(); request.catalog.entities.class = [];
     expect((await executeRoguelikeCampAction(request)).status).toBe('needs_content');

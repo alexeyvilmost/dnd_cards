@@ -177,11 +177,12 @@ func TestTrustedCampActionsCommitEventsOnceAndRejectLegacyPatches(t *testing.T) 
 	character := fixture.ownerCharacter
 	character.CharacterType = "dungeon_crawl"
 	character.CurrentHP = 4
+	setCharacterGold(&character, 18)
 	if err := fixture.db.Omit("User", "Group").Save(&character).Error; err != nil {
 		t.Fatal(err)
 	}
 	run := RoguelikeRun{ID: uuid.New(), UserID: fixture.owner.ID, SourceCharacterID: character.ID, CharacterID: character.ID,
-		Status: RoguelikeStatusActive, Phase: RoguelikePhaseCamp, Revision: 1, GameClockHours: 9, Supplies: 1,
+		Status: RoguelikeStatusActive, Phase: RoguelikePhaseCamp, Revision: 1, GameClockHours: 9, Supplies: 1, Gold: 18,
 		RunSeed: "private-test", Encounter: JSONMap{}, Shop: JSONMap{}, Checkpoint: JSONMap{}, LastReward: JSONMap{}}
 	if err := fixture.db.Create(&run).Error; err != nil {
 		t.Fatal(err)
@@ -216,8 +217,20 @@ func TestTrustedCampActionsCommitEventsOnceAndRejectLegacyPatches(t *testing.T) 
 		if calls == 3 && body.Input.ItemCardID != "owned-item" {
 			t.Error("missing item")
 		}
+		goldSpent := 0
+		elapsedSeconds := 0
+		if calls == 1 {
+			goldSpent = 10
+			elapsedSeconds = 4200
+		}
+		if calls == 2 {
+			elapsedSeconds = 6
+		}
+		if calls == 4 {
+			goldSpent = 9
+		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{"status": "ready", "patch": JSONMap{"current_hp": 7, "runtime_revision": body.Input.Character.RuntimeRevision + 1}, "events": []JSONMap{{"type": "healing", "amount": 3, "source": "Second Wind"}}})
+		json.NewEncoder(w).Encode(map[string]any{"status": "ready", "goldSpent": goldSpent, "elapsedSeconds": elapsedSeconds, "patch": JSONMap{"current_hp": 7, "runtime_revision": body.Input.Character.RuntimeRevision + 1}, "events": []JSONMap{{"type": "healing", "amount": 3, "source": "Second Wind"}}})
 	}))
 	defer server.Close()
 	t.Setenv("RULES_WORKER_URL", server.URL)
@@ -253,8 +266,16 @@ func TestTrustedCampActionsCommitEventsOnceAndRejectLegacyPatches(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if stored.GameClockHours != 9 || stored.Supplies != 1 || stored.Revision != 4 || stored.Character.CurrentHP != 7 {
+	if stored.GameClockHours != 10 || stored.GameClockRemainderSeconds != 606 || stored.Supplies != 1 || stored.Revision != 4 || stored.Character.CurrentHP != 7 || stored.Gold != 8 || characterGold(stored.Character) != 8 {
 		t.Fatal("wrong camp action state")
+	}
+	rejected := performCharacterV3Request(t, fixture.router, http.MethodPost, endpoint, token, RoguelikeCommandRequest{CommandID: uuid.New(), ExpectedRevision: 4, Type: "camp_action", Payload: JSONMap{"action_id": "owned-action"}})
+	if rejected.Code != 409 || !strings.Contains(rejected.Body.String(), "material_gold_required") {
+		t.Fatal("overspending accepted")
+	}
+	unchanged, err := ownedRoguelikeRun(fixture.db, run.ID, fixture.owner.ID, false)
+	if err != nil || unchanged.Revision != 4 || unchanged.Gold != 8 {
+		t.Fatal("rejected debit changed state")
 	}
 	var count int64
 	fixture.db.Model(&CharacterEvent{}).Where("character_id = ?", character.ID).Count(&count)

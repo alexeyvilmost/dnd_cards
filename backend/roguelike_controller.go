@@ -361,7 +361,7 @@ func roguelikeCheckpoint(run *RoguelikeRun, character *CharacterV3) (JSONMap, er
 	}
 	return mapFromJSON(map[string]any{
 		"experience": run.Experience, "gold": run.Gold, "supplies": run.Supplies,
-		"encounters_won": run.EncountersWon, "game_clock_hours": run.GameClockHours,
+		"encounters_won": run.EncountersWon, "game_clock_hours": run.GameClockHours, "game_clock_remainder_seconds": run.GameClockRemainderSeconds, "last_long_rest_remainder_seconds": run.LastLongRestRemainderSeconds,
 		"last_long_rest_hour": run.LastLongRestHour, "paid_refresh_count": run.PaidRefreshCount,
 		"pending_level":     run.PendingLevel,
 		"encounter_history": roguelikeEncounterHistory(run.Checkpoint),
@@ -369,12 +369,18 @@ func roguelikeCheckpoint(run *RoguelikeRun, character *CharacterV3) (JSONMap, er
 	})
 }
 
+func advanceRoguelikeClock(run *RoguelikeRun, seconds int) {
+	total := run.GameClockRemainderSeconds + seconds
+	run.GameClockHours += total / 3600
+	run.GameClockRemainderSeconds = total % 3600
+}
+
 func saveRoguelikeRun(tx *gorm.DB, run *RoguelikeRun) error {
 	return tx.Model(&RoguelikeRun{}).Where("id = ?", run.ID).Updates(map[string]any{
 		"status": run.Status, "phase": run.Phase, "revision": run.Revision,
 		"experience": run.Experience, "gold": run.Gold, "supplies": run.Supplies,
 		"encounters_won": run.EncountersWon, "attempt": run.Attempt,
-		"game_clock_hours": run.GameClockHours, "last_long_rest_hour": run.LastLongRestHour,
+		"game_clock_hours": run.GameClockHours, "game_clock_remainder_seconds": run.GameClockRemainderSeconds, "last_long_rest_remainder_seconds": run.LastLongRestRemainderSeconds, "last_long_rest_hour": run.LastLongRestHour,
 		"paid_refresh_count": run.PaidRefreshCount, "pending_level": run.PendingLevel,
 		"encounter": run.Encounter, "combat_envelope": nonNilRoguelikeMap(run.CombatEnvelope), "combat_catalog": nonNilRoguelikeMap(run.CombatCatalog),
 		"shop": run.Shop, "checkpoint": run.Checkpoint, "last_reward": run.LastReward,
@@ -1089,11 +1095,13 @@ func restRoguelike(run *RoguelikeRun, request RoguelikeCommandRequest, long bool
 		if run.Supplies < 1 {
 			return roguelikeError(http.StatusConflict, "supplies_required", "для долгого отдыха нужны припасы")
 		}
-		if since := run.GameClockHours - run.LastLongRestHour; since < 16 {
-			run.GameClockHours += 16 - since
+		since := (run.GameClockHours-run.LastLongRestHour)*3600 + run.GameClockRemainderSeconds - run.LastLongRestRemainderSeconds
+		if since < 16*3600 {
+			advanceRoguelikeClock(run, 16*3600-since)
 		}
-		run.GameClockHours += 8
+		advanceRoguelikeClock(run, 8*3600)
 		run.LastLongRestHour = run.GameClockHours
+		run.LastLongRestRemainderSeconds = run.GameClockRemainderSeconds
 		run.Supplies--
 	} else {
 		run.GameClockHours++
@@ -1187,16 +1195,18 @@ func restoreRoguelikeCheckpoint(run *RoguelikeRun) error {
 		return roguelikeError(http.StatusConflict, "defeat_required", "повтор доступен только после поражения")
 	}
 	var snapshot struct {
-		Experience       int         `json:"experience"`
-		Gold             int         `json:"gold"`
-		Supplies         int         `json:"supplies"`
-		EncountersWon    int         `json:"encounters_won"`
-		GameClockHours   int         `json:"game_clock_hours"`
-		LastLongRestHour int         `json:"last_long_rest_hour"`
-		PaidRefreshCount int         `json:"paid_refresh_count"`
-		PendingLevel     int         `json:"pending_level"`
-		Shop             JSONMap     `json:"shop"`
-		Character        CharacterV3 `json:"character"`
+		Experience                   int         `json:"experience"`
+		Gold                         int         `json:"gold"`
+		Supplies                     int         `json:"supplies"`
+		EncountersWon                int         `json:"encounters_won"`
+		GameClockHours               int         `json:"game_clock_hours"`
+		GameClockRemainderSeconds    int         `json:"game_clock_remainder_seconds"`
+		LastLongRestRemainderSeconds int         `json:"last_long_rest_remainder_seconds"`
+		LastLongRestHour             int         `json:"last_long_rest_hour"`
+		PaidRefreshCount             int         `json:"paid_refresh_count"`
+		PendingLevel                 int         `json:"pending_level"`
+		Shop                         JSONMap     `json:"shop"`
+		Character                    CharacterV3 `json:"character"`
 	}
 	if err := decodeJSONMap(run.Checkpoint, &snapshot); err != nil {
 		return err
@@ -1212,6 +1222,8 @@ func restoreRoguelikeCheckpoint(run *RoguelikeRun) error {
 	run.Supplies = snapshot.Supplies
 	run.EncountersWon = snapshot.EncountersWon
 	run.GameClockHours = snapshot.GameClockHours
+	run.GameClockRemainderSeconds = snapshot.GameClockRemainderSeconds
+	run.LastLongRestRemainderSeconds = snapshot.LastLongRestRemainderSeconds
 	run.LastLongRestHour = snapshot.LastLongRestHour
 	run.PaidRefreshCount = snapshot.PaidRefreshCount
 	run.PendingLevel = snapshot.PendingLevel
