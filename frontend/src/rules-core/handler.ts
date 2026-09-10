@@ -1,3 +1,4 @@
+import {applyFailedCheckBoost, failedCheckBoostActions} from './failedCheckBoost';
 import { weaponBondProtectsHand, weaponBondRecallIssue, weaponBondRecallEvents } from './weaponBond';
 import {telekineticObjectIssue, telekineticHandEvents} from './telekineticMovement';
 import {heldItemDropWorldEvents, consumedHeldItemWorldEvents} from './heldItemWorld';
@@ -4052,6 +4053,7 @@ function pendingSaveEvents(
 function executeHide(
   world: WorldState,
   command: Extract<GameCommand, { type: 'AttemptHide' }>,
+  catalog: RulesCatalog,
   env: DeterministicEnvironment,
 ): CommandResult | EventInput[] {
   const actor = world.actors[command.actorId];
@@ -4071,6 +4073,9 @@ function executeHide(
     'system:hide-action',
     'system:ability-check',
   );
+  const check = result.events.find(event => event.type === 'roll' && event.roll.kind === 'check');
+  const boost = check?.type === 'roll' ? openFailedCheckBoost(world, {...actor, runtime: result.state},
+    {...check.roll, kind: 'd20'}, {type: 'hide'}, command.commandId, catalog, env) : [];
   return [
     actionDeclaredEvent({
       actorId: actor.id,
@@ -4082,6 +4087,7 @@ function executeHide(
     }),
     ...runtimeTransition(actor.id, actor.id, actor.runtime, result.state, 'action', obligations),
     ...engineTrace(actor.id, [], result.events, obligations),
+    ...boost,
   ];
 }
 
@@ -5959,6 +5965,7 @@ function resolveHazardSave(
 function studyWorldObject(
   world: WorldState,
   command: Extract<GameCommand, { type: 'StudyWorldObject' }>,
+  catalog: RulesCatalog,
   env: DeterministicEnvironment,
 ): CommandResult | EventInput[] {
   const actor = world.actors[command.actorId];
@@ -6050,6 +6057,7 @@ function studyWorldObject(
       facts: { objectId: object.id, spellSaveDc: object.illusion.spellSaveDc },
     }),
     ...concentration.lifecycle,
+    ...openFailedCheckBoost(world, {...actor, runtime: after}, roll, {type: 'study', objectId: object.id}, command.commandId, catalog, env),
     ...worldObjectEvents(
       actor.id,
       CORE_STUDY_WORLD_OBJECT_ACTION,
@@ -6429,9 +6437,81 @@ function observeActivePoisonDisease(
   );
 }
 
+function openFailedCheckBoost(
+  world: WorldState, actor: ActorState, roll: RollLog,
+  continuation: import('./domain').PendingCheckBoostResolution['continuation'],
+  commandId: string, catalog: RulesCatalog, env: DeterministicEnvironment,
+): EventInput[] {
+  if (roll.kind !== 'd20' || roll.outcome !== 'fail' || roll.target?.type !== 'dc') return [];
+  const actions = failedCheckBoostActions(actor, catalog);
+  if (!actions.length) return [];
+  return [{sourceActorId: actor.id, obligationIds: ['system:ability-check', 'system:pending-resolution'], payload: {
+    type: 'ResolutionOpened', resolution: {
+      id: env.nextId(), type: 'check_boost', actorId: actor.id, roll,
+      continuation, openedByCommandId: commandId, openedAtRevision: world.revision,
+      deadlineLogicalClock: world.logicalClock + 10,
+      request: {id: env.nextId(), type: 'reaction', actorId: actor.id,
+        trigger: {type: 'ability_check_failed', sourceActorId: actor.id, total: roll.total, dc: roll.target.value},
+        options: actions.map(action => ({actionId: action.id, label: action.name}))},
+    },
+  }}];
+}
+
+function resolveFailedCheckBoost(
+  world: WorldState, command: Extract<GameCommand, {type: 'ResolveDecision'}>,
+  catalog: RulesCatalog, env: DeterministicEnvironment,
+): CommandResult | EventInput[] {
+  const pending = world.pendingResolution;
+  if (!pending || pending.type !== 'check_boost') return rejected(world, 'NoPendingResolution', 'Нет проваленной проверки');
+  if (pending.id !== command.resolutionId || pending.request.id !== command.requestId) return rejected(world, 'StaleDecision', 'Решение устарело');
+  if (pending.actorId !== command.actorId || command.response.kind !== 'reaction' || command.response.spell) return rejected(world, 'InvalidDecision', 'Выберите способность для своей проверки');
+  const actor = world.actors[pending.actorId];
+  const trigger = pending.request.trigger;
+  if (!actor || trigger.type !== 'ability_check_failed' || pending.roll.kind !== 'd20'
+    || pending.roll.outcome !== 'fail' || pending.roll.target?.type !== 'dc'
+    || pending.roll.total !== trigger.total || pending.roll.target.value !== trigger.dc) return rejected(world, 'InvalidDecision', 'Повреждён исходный результат проверки');
+  const grapple = pending.continuation.type === 'escape_grapple' ? world.grapples[pending.continuation.grappleId] : undefined;
+  if (pending.continuation.type === 'escape_grapple' && grapple?.targetActorId !== actor.id) return rejected(world, 'InvalidDecision', 'Захват больше не существует');
+  const studyObject = pending.continuation.type === 'study' ? world.objects[pending.continuation.objectId] : undefined;
+  if (pending.continuation.type === 'study' && studyObject?.illusion?.spellSaveDc !== trigger.dc) return rejected(world, 'InvalidDecision', 'Иллюзия для проверки изменилась');
+  const selected = command.response.actionId;
+  const action = selected ? failedCheckBoostActions(actor, catalog).find(entry => entry.id === selected) : undefined;
+  if (selected && (!action || !pending.request.options.some(option => option.actionId === selected))) return rejected(world, 'InvalidDecision', 'Способность недоступна для этой проверки');
+  const obligations = ['system:ability-check', 'system:pending-resolution'];
+  const events: EventInput[] = [];
+  let roll = pending.roll;
+  let runtime = actor.runtime;
+  if (action) {
+    const result = applyFailedCheckBoost(actor, action, roll, env.rng);
+    roll = result.roll;
+    runtime = result.runtime;
+    events.push(actionDeclaredEvent({actorId: actor.id, action, targetIds: [actor.id], timing: 'active',
+      facts: {failedCheckTotal: pending.roll.total, dc: trigger.dc}, obligationIds: obligations}),
+      ...runtimeTransition(actor.id, actor.id, actor.runtime, result.runtime, 'ability_check', obligations),
+      ...engineTrace(actor.id, [], result.events, obligations));
+  }
+  events.push({sourceActorId: actor.id, obligationIds: obligations, payload: {type: 'DecisionRecorded',
+    resolutionId: pending.id, requestId: pending.request.id, actorId: actor.id, response: command.response}});
+  if (grapple && roll.outcome === 'success') events.push({sourceActorId: actor.id, obligationIds: obligations,
+    payload: {type: 'GrappleEnded', grappleId: grapple.id, reason: 'escaped'}});
+  if (roll.outcome === 'success' && pending.continuation.type === 'hide') {
+    const check = (CORE_HIDE_ACTION.mechanics.effects as Record<string, unknown>[])[0];
+    const applied = executeAction(runtime, {name: CORE_HIDE_ACTION.name,
+      effects: [{resolution: 'auto', result: check.on_success}]}, actionContext({...actor, runtime}, env));
+    events.push(...runtimeTransition(actor.id, actor.id, runtime, applied.state, 'ability_check', obligations),
+      ...engineTrace(actor.id, [], applied.events, obligations));
+  }
+  if (roll.outcome === 'success' && studyObject) {
+    const mutation = studyMinorIllusion({objects: world.objects, objectId: studyObject.id, actorId: actor.id, checkTotal: roll.total});
+    events.push(...worldObjectEvents(actor.id, CORE_STUDY_WORLD_OBJECT_ACTION, mutation.events, 'system:study-action', 'system:minor-illusion'));
+  }
+  events.push({sourceActorId: actor.id, obligationIds: obligations, payload: {type: 'ResolutionClosed', resolutionId: pending.id}});
+  return events;
+}
 function executeCheck(
   world: WorldState,
   command: Extract<GameCommand, { type: 'AbilityCheck' }>,
+  catalog: RulesCatalog,
   env: DeterministicEnvironment,
 ): EventInput[] {
   const actor = world.actors[command.actorId];
@@ -6488,6 +6568,7 @@ function executeCheck(
     ...concentration.transitions,
     ...engineTrace(actor.id, [], checkEvents, obligations),
     ...concentration.lifecycle,
+    ...openFailedCheckBoost(world, {...actor, runtime: after}, roll, {type: 'check'}, command.commandId, catalog, env),
   ];
 }
 
@@ -9244,6 +9325,7 @@ function openEscapeGrapple(
 function resolveEscapeGrapple(
   world: WorldState,
   command: Extract<GameCommand, { type: 'ResolveDecision' }>,
+  catalog: RulesCatalog,
   env: DeterministicEnvironment,
 ): CommandResult | EventInput[] {
   const pending = world.pendingResolution;
@@ -9334,6 +9416,8 @@ function resolveEscapeGrapple(
       obligationIds: obligations,
       payload: { type: 'ResolutionClosed', resolutionId: pending.id },
     },
+    ...openFailedCheckBoost(world, {...actor, runtime: after}, roll,
+      {type: 'escape_grapple', grappleId: grapple.id}, command.commandId, catalog, env),
   ];
 }
 
@@ -11778,9 +11862,9 @@ function executeCommand(
       }
     }
     case 'AbilityCheck':
-      return executeCheck(world, command, env);
+      return executeCheck(world, command, catalog, env);
     case 'AttemptHide':
-      return executeHide(world, command, env);
+      return executeHide(world, command, catalog, env);
     case 'MakeNoise':
       return recordNoise(world, command);
     case 'FindHiddenActor':
@@ -11792,7 +11876,7 @@ function executeCommand(
     case 'SavingThrow':
       return executeSave(world, command, env);
     case 'StudyWorldObject':
-      return studyWorldObject(world, command, env);
+      return studyWorldObject(world, command, catalog, env);
     case 'PhysicallyInteractWorldObject':
       return physicallyInteractWorldObject(world, command);
     case 'RevealMagicAura':
@@ -11812,7 +11896,9 @@ function executeCommand(
     case 'DeliverTouchSpellThroughFamiliar':
       return deliverTouchSpell(world, command, catalog, env);
     case 'ResolveDecision':
-      return world.pendingResolution?.type === 'protection_reaction'
+      return world.pendingResolution?.type === 'check_boost'
+        ? resolveFailedCheckBoost(world, command, catalog, env)
+        : world.pendingResolution?.type === 'protection_reaction'
         ? resolvePendingProtection(world, command, catalog, env)
         : world.pendingResolution?.type === 'attack_reaction'
         ? resolvePendingAttack(world, command, catalog, env)
@@ -11823,7 +11909,7 @@ function executeCommand(
         : world.pendingResolution?.type === 'shove_outcome'
           ? resolveShoveOutcome(world, command, env)
         : world.pendingResolution?.type === 'escape_grapple'
-          ? resolveEscapeGrapple(world, command, env)
+          ? resolveEscapeGrapple(world, command, catalog, env)
         : world.pendingResolution?.type === 'magic_missile_reaction'
           ? resolveMagicMissileReaction(world, command, catalog, env)
         : world.pendingResolution?.type === 'mastery_save'

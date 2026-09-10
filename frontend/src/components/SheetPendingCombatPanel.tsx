@@ -262,6 +262,8 @@ export default function SheetPendingCombatPanel({
   const sourceName = actorNames[trigger.sourceActorId] ?? trigger.sourceActorId;
   const reactionCopy = (() => {
     switch (trigger.type) {
+      case 'ability_check_failed':
+        return {title: 'Проверка провалена', detail: `Результат ${trigger.total} против СЛ ${trigger.dc}. Можно применить способность к этому броску.`};
       case 'damage_taken':
         return {
           title: 'Реакция перед получением урона',

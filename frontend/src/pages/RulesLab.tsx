@@ -174,6 +174,7 @@ function resolutionDecisionActorId(resolution: PendingResolution): string {
       return resolution.targetActorId;
     case 'protection_reaction':
       return resolution.request.actorId;
+    case 'check_boost':
     case 'escape_grapple':
     case 'concentration_save':
       return resolution.actorId;

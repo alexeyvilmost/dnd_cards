@@ -1468,6 +1468,7 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		}, Down: func(db *sql.DB) error { return nil }},
 		{Version: "240_roguelike_magic_weapons", Description: "Declare executable +1 weapon profiles and scope enchantments to their weapon", Up: materializeRoguelikeMagicWeapons, Down: func(db *sql.DB) error { return nil }},
 		{Version: "241_fighter_style_replacement", Description: "Allow Fighter fighting style replacement on class level gain", Up: materializeFighterStyleReplacement, Down: func(db *sql.DB) error { return nil }},
+		{Version: "242_fighter_tactical_mind_timing", Description: "Offer Tactical Mind after a failed ability check", Up: materializeFighterTacticalMindTiming, Down: func(db *sql.DB) error { return nil }},
 		// Здесь можно добавлять новые миграции
 	}
 }

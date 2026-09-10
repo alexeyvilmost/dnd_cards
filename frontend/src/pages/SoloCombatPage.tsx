@@ -821,7 +821,7 @@ export default function SoloCombatPage() {
     && isControlledCharacter(state, pending.request.actorId)
     ? pending
     : null;
-  const reactionTitle = pending?.type === 'attack_reaction' && pending.attackAdjustment
+  const reactionTitle = pending?.type === 'check_boost' ? 'Проверка провалена' : pending?.type === 'attack_reaction' && pending.attackAdjustment
     ? 'Промах — применить приём?'
     : pending?.type === 'damage_reaction'
     ? 'Реакция на урон'
@@ -829,7 +829,7 @@ export default function SoloCombatPage() {
       && pending.request.trigger.type === 'hit_by_attack'
       ? 'По вам попали'
       : 'Открыто окно реакции';
-  const reactionDetails = pending?.type === 'attack_reaction' && pending.attackAdjustment
+  const reactionDetails = pending?.type === 'check_boost' ? pending.roll.text : pending?.type === 'attack_reaction' && pending.attackAdjustment
     ? pending.attackRoll.text
     : pending?.type === 'damage_reaction'
     ? `Входящий урон: ${pending.damage.reduce((sum, packet) => sum + packet.amount, 0)}${pending.damage.length
@@ -977,7 +977,7 @@ export default function SoloCombatPage() {
         /><Link className="combat-sheet-drawer__full" target="_blank" to={`/characters-v3/${drawerActorId}`}>Открыть полный лист ↗</Link></aside>;
       })()}
       {reactionOptions.length > 0 && <div className="combat-reaction-backdrop"><section aria-label={reactionTitle}>
-        <p>{pending?.type === 'attack_reaction' && pending.attackAdjustment ? 'ПРИЁМ' : 'РЕАКЦИЯ'}</p><h2>{reactionTitle}</h2>{pending?.type === 'damage_reaction' && <p>{state.world.actors[pending.request.actorId]?.name} · Цель: {state.world.actors[pending.targetActorId]?.name}</p>}{reactionDetails && <p>{reactionDetails}</p>}
+        <p>{pending?.type === 'check_boost' ? 'ПОСЛЕ БРОСКА' : pending?.type === 'attack_reaction' && pending.attackAdjustment ? 'ПРИЁМ' : 'РЕАКЦИЯ'}</p><h2>{reactionTitle}</h2>{pending?.type === 'damage_reaction' && <p>{state.world.actors[pending.request.actorId]?.name} · Цель: {state.world.actors[pending.targetActorId]?.name}</p>}{reactionDetails && <p>{reactionDetails}</p>}
         <div className="combat-reaction-actions">{reactionOptions.map(option => {
           const presentation = state.actionPresentation?.[option.response.actionId ?? ''];
           return <SheetActionLine key={option.id} name={option.label}

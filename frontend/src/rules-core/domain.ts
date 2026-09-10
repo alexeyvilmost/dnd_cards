@@ -456,6 +456,12 @@ export interface ReactionDecisionRequest {
       originalAc: number;
     }
     | {
+      type: 'ability_check_failed';
+      sourceActorId: string;
+      total: number;
+      dc: number;
+    }
+    | {
       type: 'targeted_by_magic_missile';
       sourceActorId: string;
       actionId: string;
@@ -785,7 +791,21 @@ export interface PendingHazardSaveResolution {
   request: SavingThrowDecisionRequest;
 }
 
+/** A failed result is committed before an optional class ability is chosen. */
+export interface PendingCheckBoostResolution {
+  id: string;
+  type: 'check_boost';
+  openedByCommandId: string;
+  openedAtRevision: number;
+  deadlineLogicalClock: number;
+  actorId: string;
+  roll: RollLog;
+  continuation: { type: 'check' } | { type: 'escape_grapple'; grappleId: string }
+    | {type: 'hide'} | {type: 'study'; objectId: string};
+  request: ReactionDecisionRequest;
+}
 export type PendingResolution =
+  | PendingCheckBoostResolution
   | PendingTargetSaveResolution
   | PendingAttackReactionResolution
   | PendingDamageReactionResolution

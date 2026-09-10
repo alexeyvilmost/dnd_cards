@@ -998,10 +998,7 @@ export function resolveSheetCombatDecision(input: {
 }): SheetCombatTransition {
   const pending = input.session.world.pendingResolution;
   if (!pending) throw new SheetCombatSessionError('There is no pending combat decision');
-  const actorId = pending.type === 'concentration_save'
-    || pending.type === 'escape_grapple'
-    ? pending.actorId
-    : pending.targetActorId;
+  const actorId = pending.request.actorId;
   const command: GameCommand = {
     schemaVersion: 1,
     type: 'ResolveDecision',
