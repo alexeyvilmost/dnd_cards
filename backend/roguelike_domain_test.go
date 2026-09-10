@@ -278,3 +278,24 @@ func TestRoguelikeClockRetainsSubhourCastingTime(t *testing.T) {
 		t.Fatal("lost ritual duration")
 	}
 }
+
+// A manifest weight is a relative selection probability, including rare stock.
+func TestRoguelikeWeightedStockKeepsRareItemsReachable(t *testing.T) {
+	entries := []roguelikeShopManifestEntry{{CardNumber: "common", Weight: 8}, {CardNumber: "rare", Weight: 2}}
+	rareFirst := 0
+	for cursor := 0; cursor < 10000; cursor++ {
+		order := roguelikeWeightedOrder("stock-distribution", "shop", cursor, entries)
+		if len(order) != 2 || order[0].CardNumber == order[1].CardNumber {
+			t.Fatal("stock must sample without replacement")
+		}
+		if order[0].CardNumber == "rare" {
+			rareFirst++
+		}
+	}
+	if rareFirst < 1750 || rareFirst > 2250 {
+		t.Fatalf("weight 2 of total 10 should yield about 20 percent, got %d/10000", rareFirst)
+	}
+	if entries[0].CardNumber != "common" {
+		t.Fatal("selection mutated manifest")
+	}
+}

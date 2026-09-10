@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
+	"math"
 	"sort"
 )
 
@@ -159,9 +160,15 @@ func roguelikeDeterministicInt(seed, stream string, cursor, upper int) int {
 
 func roguelikeWeightedOrder(seed, stream string, cursor int, values []roguelikeShopManifestEntry) []roguelikeShopManifestEntry {
 	ordered := append([]roguelikeShopManifestEntry(nil), values...)
-	scores := make(map[string]int, len(ordered))
+	scores := make(map[string]float64, len(ordered))
 	for index, value := range ordered {
-		scores[value.CardNumber] = roguelikeDeterministicInt(seed, stream, cursor+index*7919, 1_000_000) * value.Weight
+		// Exponential race samples without replacement in proportion to weight.
+		// Uniform*weight would nearly exclude low-weight items in a large pool.
+		uniform := float64(roguelikeDeterministicInt(seed, stream, cursor+index*7919, 1_000_000)+1) / 1_000_001
+		scores[value.CardNumber] = math.Inf(1)
+		if value.Weight > 0 {
+			scores[value.CardNumber] = -math.Log(uniform) / float64(value.Weight)
+		}
 	}
 	sort.SliceStable(ordered, func(left, right int) bool {
 		leftScore := scores[ordered[left].CardNumber]
@@ -169,7 +176,7 @@ func roguelikeWeightedOrder(seed, stream string, cursor int, values []roguelikeS
 		if leftScore == rightScore {
 			return ordered[left].CardNumber < ordered[right].CardNumber
 		}
-		return leftScore > rightScore
+		return leftScore < rightScore
 	})
 	return ordered
 }
