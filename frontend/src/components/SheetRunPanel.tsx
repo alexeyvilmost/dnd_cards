@@ -36,7 +36,11 @@ export default function SheetRunPanel({ runId, characterId }: { runId: string; c
     {error && <p className="issues" role="alert">{error}</p>}
     {run && <>
       <p className="forge-note">{run.experience} / {threshold} XP · {run.encounters_won} побед · {run.gold} зм · {run.supplies} припасов · {run.game_clock_hours} ч.{(run.game_clock_remainder_seconds ?? 0) >= 60 ? ` ${Math.floor((run.game_clock_remainder_seconds ?? 0) / 60)} мин.` : ''}</p>
-      <progress aria-label="Опыт забега" value={run.experience} max={threshold} style={{ width: 120, accentColor: 'var(--forge-gold)' }} />
+      <div className="cs-hp-bar" role="progressbar" aria-label="Опыт забега"
+        aria-valuemin={0} aria-valuemax={threshold} aria-valuenow={Math.max(0, Math.min(run.experience, threshold))}
+        style={{ width: 120 }}>
+        <i style={{ width: `${Math.max(0, Math.min(100, run.experience / threshold * 100))}%`, background: 'var(--forge-gold)' }} />
+      </div>
       <div className="sheet-runtime-actions">
         {run.status !== 'active' ? <Link className="sheet-header-btn" to={`/roguelike/${run.id}`}>Результат забега</Link>
           : run.phase === 'combat' ? <Link className="sheet-header-btn" to={runCombatURL(run)}><Swords size={16} />Вернуться в бой</Link>
