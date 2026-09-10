@@ -31,6 +31,7 @@ const rowTime = (ts: string) => new Date(ts).toLocaleString('ru-RU', { hour: '2-
 /** Одна строка журнала в текст (для копирования): время + сводка + разбивка броска. */
 export function journalRowToText(row: JournalRow): string {
   const roll = rollFromEvent(row.payload);
+          const shownDie = roll?.dice.find((die) => !die.discarded) ?? roll?.dice[0];
   const detail = roll ? `\n  ${formatRollBreakdown(roll)}` : '';
   return `[${rowTime(row.ts)}] ${describeEngineEvent(row.payload)}${detail}`;
 }
@@ -75,6 +76,7 @@ export default function EventJournal({ rows, emptyHint }: EventJournalProps) {
       <ul className="event-journal">
         {rows.map((row) => {
           const roll = rollFromEvent(row.payload);
+          const shownDie = roll?.dice.find((die) => !die.discarded) ?? roll?.dice[0];
           const isOpen = expanded[row.id];
           return (
             <li key={row.id} className="event-journal-item">
@@ -82,7 +84,7 @@ export default function EventJournal({ rows, emptyHint }: EventJournalProps) {
                 <button type="button" className="event-journal-head" onClick={() => toggle(row.id)}>
                   <span className="event-journal-time">{rowTime(row.ts)}</span>
                   {roll && (
-                    <RollFlash value={roll.dice.find((d) => !d.discarded)?.result ?? roll.dice[0]?.result ?? 0} flashKey={row.id} />
+                    <RollFlash value={shownDie?.result ?? 0} sides={shownDie?.sides ?? 20} flashKey={row.id} />
                   )}
                   <span className="event-journal-summary">{resourceEventNode(row.payload, resourceOptions) ?? describeEngineEvent(row.payload)}</span>
                   {roll && <span className="event-journal-chevron">{isOpen ? '▾' : '▸'}</span>}
