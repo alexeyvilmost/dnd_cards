@@ -19,7 +19,8 @@ const hash = `sha256:${'a'.repeat(64)}`;
 async function main() {
   for (const count of counts.split(',').map(Number)) {
     if (!Number.isInteger(count) || count < 1 || count > 3) throw Error('Invalid quantity');
-    let wins = 0, rounds = 0, remainingHP = 0;
+    let wins = 0, rounds = 0, remainingHP = 0, commands = 0, attacks = 0, attackContinuations = 0;
+    const started = performance.now();
     for (let seed = 0; seed < runs; seed++) {
       const input = structuredClone(base);
       input.seed = `roguelike-balance-v1:${seed}`;
@@ -30,7 +31,7 @@ async function main() {
       for (let steps = 0; envelope.state.outcome === 'active'; steps++) {
         if (steps >= 500) throw Error(`Policy stalled: quantity ${count}, seed ${seed}`);
         const s = envelope.state, id = s.characterId, actor = s.world.actors[id];
-        const step = (intent: RoguelikeCombatIntent) => { envelope = stepRoguelikeCombat(envelope, intent, hash).envelope; };
+        const step = (intent: RoguelikeCombatIntent) => { envelope = stepRoguelikeCombat(envelope, intent, hash).envelope; commands++; };
         if (s.pendingTriggeredAction) { step({type: 'triggered_action', actionId: null}); continue; }
         if (s.pendingAdditionalMovement) { step({type: 'decline_movement', actorId: id}); continue; }
         if (s.world.pendingResolution || s.pendingD20Interrupt || s.pendingInterception || s.pendingTurnStartGrappleDamage || s.pendingAlertSwapActorIds?.length) {
@@ -60,7 +61,11 @@ async function main() {
         const enemy = enemies[0];
         if (!enemy) throw Error('Active encounter without opponents');
         const distance = gridDistanceFt(origin, s.tokens[enemy.id].position);
-        if (distance <= 5 && (resources.action > 0 || resources.action_surge_action > 0)) { use('Рукопашная атака оружием', [enemy.id]); continue; }
+        const openAttack = Object.values(s.world.attackActions ?? {}).some(entry => entry.actorId === id
+          && entry.status === 'open' && entry.sequence.attacksRemaining > 0 && !entry.blockedByResolutionId);
+        if (distance <= 5 && (openAttack || resources.action > 0 || resources.action_surge_action > 0)) {
+          use('Рукопашная атака оружием', [enemy.id]); attacks++; if (openAttack) attackContinuations++; continue;
+        }
         if (distance <= 5 && resources['uses_ACT-action-surge'] > 0) { use('Всплеск действий'); continue; }
         if (distance > 5) {
           const routes = reachableRoutes(s, id, s.movementRemainingFt[id] ?? 0)
@@ -76,7 +81,9 @@ async function main() {
       remainingHP += envelope.state.world.actors[envelope.state.characterId].runtime.hp.current;
     }
     console.log(JSON.stringify({quantity: count, runs, wins, winRate: wins / runs, meanRounds: rounds / runs, meanRemainingHP: remainingHP / runs,
-      policy: 'melee-focus-second-wind-surge-owned-potions-v1', scope: 'single supplied build, not whole fighter balance acceptance'}));
+      meanCommands: commands / runs, meanAttacks: attacks / runs, attackContinuations,
+      elapsedMs: Math.round(performance.now() - started),
+      policy: 'melee-focus-second-wind-surge-owned-potions-v2-extra-attack', scope: 'single supplied build, not whole fighter balance acceptance'}));
   }
 }
 main().catch(error => { console.error(String(error)); process.exitCode = 1; });

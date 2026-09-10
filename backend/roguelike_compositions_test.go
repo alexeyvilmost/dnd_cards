@@ -2,6 +2,33 @@ package main
 
 import "testing"
 
+func TestRoguelikeLevelOneZombiesStaySingleWithoutChangingLaterRewards(t *testing.T) {
+	available := map[string]Monster{}
+	for _, entry := range roguelikeMonsterPool {
+		available[entry.Slug] = Monster{Slug: entry.Slug}
+	}
+	for _, won := range []int{0, 2, 5, 20} {
+		for _, budget := range []int{50, 75, 100, 150} {
+			for _, candidate := range roguelikeEncounterCompositions(1, budget, won, available) {
+				for _, member := range candidate.Members {
+					if member.Entry.Slug == "zombie" && (member.Quantity != 1 || member.Entry.XP != 50) {
+						t.Fatalf("unsafe L1 Zombie group or changed XP: %+v", candidate)
+					}
+				}
+			}
+		}
+	}
+	found := false
+	for _, candidate := range roguelikeEncounterCompositions(2, 100, 8, available) {
+		if candidate.Key == "zombie:2" && candidate.XP == 100 {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("level-two Zombie pair must remain available at its exact XP")
+	}
+}
+
 func TestRoguelikeLateCR2PairDoesNotExpandToThree(t *testing.T) {
 	available := map[string]Monster{}
 	for _, entry := range roguelikeMonsterPool {
