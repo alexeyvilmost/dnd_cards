@@ -1082,8 +1082,8 @@ const CharacterSheetMVP = () => {
           <span className="sheet-header-name">{character.name || 'Без имени'}</span>
           <CharacterAccessBadge character={character} />
           {combatLocked ? (
-            <Link to={activeEncounter ? `/encounter/${activeEncounter.id}` : `/characters-v3/${character.id}/combat`} className="sheet-in-battle" title="Вернуться в активный бой">
-              <Swords size={12} /> В бою: {activeEncounter?.name ?? 'одиночная проверка'}
+            <Link to={combatReturnHref} className="sheet-in-battle" title="Вернуться в активный бой">
+              <Swords size={12} /> В бою: {activeEncounter?.name ?? (roguelikeRunId ? 'забег' : 'одиночная проверка')}
             </Link>
           ) : (
             <span className="sheet-header-sub">{characterMetadataLabel(character)}</span>

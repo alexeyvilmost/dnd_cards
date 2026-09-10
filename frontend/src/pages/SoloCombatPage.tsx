@@ -81,7 +81,7 @@ import type { ActionWorldInput } from '../rules-core/domain';
 import type { WorldObjectState } from '../rules-core/worldObjects';
 import { bindCombatWorldInputFacts } from '../solo-combat/worldInput';
 import { roguelikeApi } from '../roguelike/api';
-import { runEncounterSelection } from '../roguelike/navigation';
+import { runEncounterSelection, runSheetURL } from '../roguelike/navigation';
 import './CharacterForge.css';
 import './CharacterSheetV2.css';
 import './SoloCombatPage.css';
@@ -962,6 +962,7 @@ export default function SoloCombatPage() {
           : activeControlledActorId;
         const drawerCharacter = participantCharacters[drawerActorId] ?? character;
         const drawerActor = state.world.actors[drawerActorId];
+        const drawerRun = trustedRunRef.current;
         return <aside className="combat-sheet-drawer"><button type="button" className="combat-sheet-drawer__close" onClick={() => setSheetOpen(false)} aria-label="Закрыть"><X /></button><header><h2>{drawerActor.name}</h2><p>Уровень {drawerCharacter.level} · КЗ {effectiveArmorClass(drawerActor)} · скорость {effectiveActorSpeedFt(drawerActor)} фт.</p></header><CombatCharacterSidebar
           character={drawerCharacter}
           state={state}
@@ -974,7 +975,7 @@ export default function SoloCombatPage() {
           onActivateBoon={(effectId, rollKind, timing) => {
             applyIntent({type: 'boon', actorId: drawerActorId, effectId, rollKind, timing}, () => activateCombatBoon(state, drawerActorId, effectId, rollKind, timing));
           }}
-        /><Link className="combat-sheet-drawer__full" target="_blank" to={`/characters-v3/${drawerActorId}`}>Открыть полный лист ↗</Link></aside>;
+        /><Link className="combat-sheet-drawer__full" target="_blank" to={drawerRun?.character_id === drawerActorId ? runSheetURL(drawerRun) : `/characters-v3/${drawerActorId}`}>Открыть полный лист ↗</Link></aside>;
       })()}
       {reactionOptions.length > 0 && <div className="combat-reaction-backdrop"><section aria-label={reactionTitle}>
         <p>{pending?.type === 'check_boost' ? 'ПОСЛЕ БРОСКА' : pending?.type === 'attack_reaction' && pending.attackAdjustment ? 'ПРИЁМ' : 'РЕАКЦИЯ'}</p><h2>{reactionTitle}</h2>{pending?.type === 'damage_reaction' && <p>{state.world.actors[pending.request.actorId]?.name} · Цель: {state.world.actors[pending.targetActorId]?.name}</p>}{reactionDetails && <p>{reactionDetails}</p>}
