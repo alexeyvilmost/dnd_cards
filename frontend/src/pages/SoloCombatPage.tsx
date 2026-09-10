@@ -1,3 +1,4 @@
+import { combatActorDisplayName } from '../character/familiarLabels';
 import {isLooseTelekineticObject, telekineticHeldObjects} from '../rules-core/telekineticMovement';
 import {effectiveArmorClass} from '../rules-core/actorArmorClass';
 import type {Action} from '../types';
@@ -821,10 +822,10 @@ export default function SoloCombatPage() {
           {state.initiative.map((entry) => {
             const participant = state.world.actors[entry.actorId];
             const isActive = actor.id === entry.actorId;
-            return <div key={entry.actorId} className={`${isActive ? 'is-active ' : ''}${participant.runtime.hp.current <= 0 ? 'is-dead' : ''}`} title={`Инициатива: ${initiativeLabel(entry)}`}><span>{state.tokens[entry.actorId]?.tokenUrl ? <img src={state.tokens[entry.actorId].tokenUrl} alt="" /> : participant.name.slice(0, 1)}</span><b>{entry.total}</b><small>{participant.name}</small></div>;
+            return <div key={entry.actorId} className={`${isActive ? 'is-active ' : ''}${participant.runtime.hp.current <= 0 ? 'is-dead' : ''}`} title={`Инициатива: ${initiativeLabel(entry)}`}><span>{state.tokens[entry.actorId]?.tokenUrl ? <img src={state.tokens[entry.actorId].tokenUrl} alt="" /> : combatActorDisplayName(participant).slice(0, 1)}</span><b>{entry.total}</b><small>{combatActorDisplayName(participant)}</small></div>;
           })}
         </div>
-        <div className="combat-round">Раунд {state.world.scene.mode === 'encounter' ? state.world.scene.round : 1}<b>{busy ? 'Сохраняем…' : `Ход: ${actor.name}`}</b></div>
+        <div className="combat-round">Раунд {state.world.scene.mode === 'encounter' ? state.world.scene.round : 1}<b>{busy ? 'Сохраняем…' : `Ход: ${combatActorDisplayName(actor)}`}</b></div>
       </header>
       {error && <div className="combat-error" role="alert"><span>{error}</span><button type="button" onClick={() => setError(null)}><X size={16} /></button></div>}
       <section className="combat-stage">
@@ -970,7 +971,7 @@ export default function SoloCombatPage() {
           systemRollsOnly={Boolean(trustedRunRef.current)}
           pending={controlledSavePending}
           viewingCharacterId={controlledSavePending.request.actorId}
-          actorNames={Object.fromEntries(Object.values(state.world.actors).map((entry) => [entry.id, entry.name]))}
+          actorNames={Object.fromEntries(Object.values(state.world.actors).map((entry) => [entry.id, combatActorDisplayName(entry)]))}
           decidingRuntime={state.world.actors[controlledSavePending.request.actorId].runtime}
           busy={busy}
           onResolve={(response) => {

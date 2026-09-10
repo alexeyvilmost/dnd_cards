@@ -1,3 +1,4 @@
+import type { ActorState } from '../rules-core/domain';
 /** Display labels only; canonical catalog identities and replay data stay unchanged. */
 const names: Record<string,string> = {
  bat:'Летучая мышь',cat:'Кошка',frog:'Лягушка',hawk:'Ястреб',lizard:'Ящерица',octopus:'Осьминог',owl:'Сова',rat:'Крыса',raven:'Ворон',spider:'Паук',weasel:'Ласка',
@@ -6,4 +7,8 @@ const names: Record<string,string> = {
 export function familiarFormLabel(idOrName:string):string { return names[idOrName.toLowerCase().replaceAll(' ','_')] ?? idOrName; }
 export function familiarPresenceLabel(presence:string):string {
  return ({present:'рядом',pocket_dimension:'в карманном измерении',disappeared_zero_hp:'исчез после потери хитов',dismissed_forever:'отпущен'} as Record<string,string>)[presence] ?? presence;
+}
+
+export function combatActorDisplayName(actor: Pick<ActorState, 'name' | 'familiarState'>): string {
+  return actor.familiarState ? familiarFormLabel(actor.familiarState.form.id) : actor.name;
 }

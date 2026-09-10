@@ -1,3 +1,4 @@
+import { combatActorDisplayName } from '../character/familiarLabels';
 import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowUp, Footprints, MoreHorizontal } from 'lucide-react';
@@ -460,9 +461,9 @@ export default function CombatHotbar({
           <span className="combat-hotbar__portrait">
             {state.tokens[actorId]?.tokenUrl
               ? <img src={state.tokens[actorId].tokenUrl} alt="" />
-              : actor.name.slice(0, 1)}
+              : combatActorDisplayName(actor).slice(0, 1)}
           </span>
-          <div className="combat-hotbar__identity"><b>{actor.name}</b><span>{combatHpLabel(actor.runtime.hp)}</span></div>
+          <div className="combat-hotbar__identity"><b>{combatActorDisplayName(actor)}</b><span>{combatHpLabel(actor.runtime.hp)}</span></div>
         </div>
         <div className="combat-hotbar__economy" aria-label="Экономика хода">
           {actionEconomy.map(([label, key]) => (

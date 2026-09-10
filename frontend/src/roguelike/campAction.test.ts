@@ -4,6 +4,9 @@ import inputJson from './pinnedFighter.fixture.json';
 import type { ForgeCharacter } from '../character/types';
 import { prepareRoguelikeCombatParticipant, type FrozenCombatCatalog } from './combatCatalog';
 import { executeRoguelikeCampAction } from './campAction';
+import { castFindFamiliar } from '../rules-core/findFamiliar';
+import { materializeCanonicalFamiliarActor } from '../rules-core/familiarRuntime';
+import { writeSheetCanonicalWorld } from '../character/sheetCanonicalWorld';
 const fixture = inputJson as unknown as { character: ForgeCharacter; catalog: FrozenCombatCatalog };
 async function input() {
   const request = structuredClone(fixture);
@@ -16,6 +19,35 @@ async function input() {
   return { ...request, commandId: 'camp-action-test', seed: 'private-test-seed', actionId: action.id };
 }
 describe('authoritative self actions in camp', () => {
+  it('passes declared familiar appearance facts to the shared rules without inventing visibility or space', async () => {
+    const request = await input();
+    const prepared = await prepareRoguelikeCombatParticipant(request.character, request.catalog, []);
+    if (prepared.status !== 'ready') throw new Error('Not ready');
+    const canonical = prepared.participant.canonical;
+    const owner = canonical.world.actors[canonical.actorId];
+    // A pre-existing companion isolates transport; actual spell casting and
+    // preparation removal are covered by findFamiliarRuntime.integration.
+    const familiar = castFindFamiliar({ familiarActorId: 'camp-owl', ownerActorId: owner.id,
+      summoningActionId: request.actionId, policy: { kind: 'base', sourceEntityId: 'fixture:summoning' },
+      method: 'ritual', formId: 'owl', spiritType: 'fey', existingFamiliar: null,
+      resources: { level1SpellSlots: 1, incenseGp: 10 }, incenseOfferingGp: 10, materialCostGp: 10,
+      baseCastingTimeSeconds: 3600, mechanicsPolicy: { connectionRangeFt: 100, reappearRangeFt: 30, ritualCastingAddedSeconds: 600 } }).familiar;
+    canonical.world.actors[familiar.actorId] = materializeCanonicalFamiliarActor({ familiar, owner, summoningActionId: request.actionId });
+    canonical.world.actors[familiar.actorId].familiarState!.presence = 'pocket_dimension';
+    canonical.world.actors[familiar.actorId].lifecycle = { status: 'alive' };
+    request.character.turn_state = writeSheetCanonicalWorld({}, owner.id, canonical.world, canonical.resourceBindings);
+    const appearance = { ...request, actionId: undefined,
+      companion: { type: 'ReappearFamiliar' as const, distanceFt: 5, lineOfSight: false, unoccupiedSpace: true } };
+    const before = structuredClone(appearance);
+    await expect(executeRoguelikeCampAction({ ...appearance, companion: { ...appearance.companion, unoccupiedSpace: false } }))
+      .rejects.toThrow(/unoccupied/);
+    const result = await executeRoguelikeCampAction(appearance);
+    if (result.status !== 'ready') throw new Error('Not ready');
+    expect(result.patch.resources.action).toBe(owner.runtime.resources.action - 1);
+    expect(result.goldSpent).toBe(0);
+    expect(appearance).toEqual(before);
+  });
+
   it('executes Second Wind with deterministic dice and no client HP patch', async () => {
     const request = await input(); const before = structuredClone(request);
     const result = await executeRoguelikeCampAction(request);

@@ -12,7 +12,7 @@ type UseAction = Extract<GameCommand, { type: 'UseAction' }>;
 export interface RoguelikeCampActionInput {
   character: ForgeCharacter; catalog: FrozenCombatCatalog; basicActionIds?: string[];
   commandId: string; seed: string; actionId?: string; itemCardId?: string; nextTurn?: boolean;
-  companion?: { type: 'DismissFamiliar'; mode: 'temporary' | 'forever' } | { type: 'ReappearFamiliar'; distanceFt: number };
+  companion?: { type: 'DismissFamiliar'; mode: 'temporary' | 'forever' } | { type: 'ReappearFamiliar'; distanceFt: number; lineOfSight: boolean; unoccupiedSpace: boolean };
   choices?: UseAction['choices']; spell?: UseAction['spell']; worldInput?: UseAction['worldInput'];
 }
 
@@ -43,7 +43,8 @@ export async function executeRoguelikeCampAction(input: RoguelikeCampActionInput
       result = handleCommand(canonical.world, { ...common, type:'DismissFamiliar', familiarActorId, mode:input.companion.mode }, canonical.catalog, environment);
     } else if (input.companion.type === 'ReappearFamiliar' && Number.isFinite(input.companion.distanceFt) && input.companion.distanceFt >= 0) {
       result = handleCommand(canonical.world, { ...common, type:'ReappearFamiliar', familiarActorId,
-        facts:{factsSource:'scenario',boardRevision:canonical.world.revision,distanceFt:input.companion.distanceFt,lineOfSight:true,unoccupiedSpace:true} }, canonical.catalog, environment);
+        facts:{factsSource:'scenario',boardRevision:canonical.world.revision,distanceFt:input.companion.distanceFt,
+          lineOfSight:input.companion.lineOfSight,unoccupiedSpace:input.companion.unoccupiedSpace} }, canonical.catalog, environment);
     } else throw new Error('Неизвестная команда фамильяра');
   } else if (input.nextTurn) {
     if (input.actionId || input.itemCardId || input.spell || input.worldInput || input.choices) throw new Error('Новый ход не может содержать действие');

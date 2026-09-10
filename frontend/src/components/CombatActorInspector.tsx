@@ -1,3 +1,4 @@
+import { combatActorDisplayName } from '../character/familiarLabels';
 import {effectiveArmorClass} from '../rules-core/actorArmorClass';
 import { Heart, Shield, X } from 'lucide-react';
 import { effectiveCombatActorSpeedFt } from '../solo-combat/tacticalGrid';
@@ -86,16 +87,16 @@ export default function CombatActorInspector({
   });
 
   return (
-    <aside className="combat-actor-inspector site-scrollbar" aria-label={`Информация: ${actor.name}`}>
+    <aside className="combat-actor-inspector site-scrollbar" aria-label={`Информация: ${combatActorDisplayName(actor)}`}>
       <button type="button" className="combat-actor-inspector__close" onClick={onClose} aria-label="Закрыть информацию">
         <X size={18} />
       </button>
       <header className="combat-actor-inspector__header">
         <span className="combat-actor-inspector__portrait">
-          {token?.tokenUrl ? <img src={token.tokenUrl} alt="" /> : actor.name.slice(0, 1)}
+          {token?.tokenUrl ? <img src={token.tokenUrl} alt="" /> : combatActorDisplayName(actor).slice(0, 1)}
         </span>
         <div>
-          <h2>{actor.name}</h2>
+          <h2>{combatActorDisplayName(actor)}</h2>
           <p>{[
             presentation?.size,
             presentation?.creatureType ?? actor.character.creatureType,

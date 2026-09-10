@@ -1275,7 +1275,8 @@ export default function SheetActionsPanel({
         if (command.type !== 'DismissFamiliar' && command.type !== 'ReappearFamiliar') throw new Error('Это действие спутника пока недоступно в лагере');
         const run = await roguelikeApi.get(runId);
         const result = await roguelikeApi.command(runId,run.revision,'camp_action',{companion:command.type === 'DismissFamiliar'
-          ? {type:command.type,mode:command.mode} : {type:command.type,distanceFt:command.facts.distanceFt}});
+          ? {type:command.type,mode:command.mode} : {type:command.type,distanceFt:command.facts.distanceFt,
+            lineOfSight:command.facts.lineOfSight,unoccupiedSpace:command.facts.unoccupiedSpace}});
         if (!result.character) throw new Error('Сервер не вернул лист');
         onUpdated(result.character); notifyRunUpdated();
         if (result.command_events?.length) onPersistedEvents?.(result.command_events);

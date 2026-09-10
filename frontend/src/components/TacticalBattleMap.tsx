@@ -1,3 +1,4 @@
+import { combatActorDisplayName } from '../character/familiarLabels';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CombatAreaState, GridPosition, SoloCombatState } from '../solo-combat/types';
 import { TACTICAL_HEIGHT, TACTICAL_WIDTH } from '../solo-combat/types';
@@ -228,7 +229,7 @@ export default function TacticalBattleMap({
         const illusionLabel = illusion
           ? `Малая иллюзия: ${illusion.illusion!.description} · ${illusion.illusion!.form === 'sound' ? 'звук' : 'изображение'} · ${illusion.roundsLeft ?? 0} раундов · Изучение: Интеллект (Расследование) против СЛ ${illusion.illusion!.spellSaveDc}${illusion.illusion!.form === 'image' ? ' · физическое взаимодействие раскрывает иллюзию' : ''}`
           : '';
-        const actorLabel = token ? `${actor?.name}, ${actor?.runtime.hp.current}/${actor?.runtime.hp.max} HP` : '';
+        const actorLabel = token ? `${actor ? combatActorDisplayName(actor) : ''}, ${actor?.runtime.hp.current}/${actor?.runtime.hp.max} HP` : '';
         const areaLabel = persistentAreas.map((area) => {
           const duration = area.duration.type === 'permanent' ? 'постоянная'
             : area.duration.type === 'concentration' ? 'концентрация'
@@ -290,8 +291,8 @@ export default function TacticalBattleMap({
             ))}
             {token && actor && (
               <span className="battle-token" style={{ '--token-color': token.color } as React.CSSProperties}>
-                {token.tokenUrl ? <img src={token.tokenUrl} alt="" /> : <b>{actor.name.slice(0, 1)}</b>}
-                <span className="battle-token__name">{actor.name}</span>
+                {token.tokenUrl ? <img src={token.tokenUrl} alt="" /> : <b>{combatActorDisplayName(actor).slice(0, 1)}</b>}
+                <span className="battle-token__name">{combatActorDisplayName(actor)}</span>
                 <span className="battle-token__hp"><i style={{ width: `${Math.max(0, actor.runtime.hp.current / actor.runtime.hp.max * 100)}%` }} /></span>
               </span>
             )}
