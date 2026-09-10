@@ -5,6 +5,12 @@ type Dict = Record<string, unknown>;
 export const ACTION_SURGE_ACTION_RESOURCE = 'action_surge_action';
 export const QUICKENED_SPELL_ACTION_RESOURCE = 'quickened_spell_action';
 
+/** Cost of a canonical non-Magic Action, following the same token priority as UseAction. */
+export function nonMagicActionCost(state: RuntimeState): Dict[] {
+  const mechanics = projectActionSurgeCost({activation: {cost: [{resource: 'action', amount: 1}]}}, state, 'nonspell');
+  return (mechanics.activation as {cost: Dict[]}).cost;
+}
+
 /**
  * Action Surge grants a second, explicitly non-Magic action in the 2024 rules.
  * Keeping it in a separate turn resource prevents a spell from consuming the

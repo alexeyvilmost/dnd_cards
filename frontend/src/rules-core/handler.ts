@@ -43,6 +43,7 @@ import {
   activeEffectRequirementIssue,
   disarmingSelectionIssue,
   projectActionSurgeCost,
+  nonMagicActionCost,
   projectQuickenedSpellCost,
   addBonusDieToD20Roll,
   armBoonForNextRoll,
@@ -4062,12 +4063,13 @@ function executeHide(
   if (deniedCapabilities(actor.runtime, actor.passives ?? []).has('action')) {
     return rejected(world, 'CapabilityDenied', `${actor.id} cannot take the Hide action in its current state`);
   }
-  const payable = canPay(actor.runtime, activationCost(CORE_HIDE_ACTION));
+  const mechanics = projectActionSurgeCost(CORE_HIDE_ACTION.mechanics, actor.runtime, 'nonspell');
+  const payable = canPay(actor.runtime, activationCost({...CORE_HIDE_ACTION, mechanics}));
   if (!payable.ok) {
     return rejected(world, 'InsufficientResources', `Missing resources: ${payable.missing.join(', ')}`);
   }
 
-  const result = executeAction(actor.runtime, CORE_HIDE_ACTION.mechanics, actionContext(actor, env));
+  const result = executeAction(actor.runtime, mechanics, actionContext(actor, env));
   const obligations = actionObligationIds(
     CORE_HIDE_ACTION,
     'system:hide-action',
@@ -5984,7 +5986,7 @@ function studyWorldObject(
   if (deniedCapabilities(actor.runtime, actor.passives ?? []).has('action')) {
     return rejected(world, 'CapabilityDenied', `${actor.id} cannot take the Study action`);
   }
-  const cost = [{ resource: 'action' }];
+  const cost = nonMagicActionCost(actor.runtime);
   const payable = canPay(actor.runtime, cost);
   if (!payable.ok) {
     return rejected(world, 'InsufficientResources', `Missing resources: ${payable.missing.join(', ')}`);
@@ -9267,7 +9269,7 @@ function openEscapeGrapple(
   if (deniedCapabilities(actor.runtime, actor.passives ?? []).has('action')) {
     return rejected(world, 'CapabilityDenied', `${actor.id} cannot take the Escape action`);
   }
-  const cost = [{ resource: 'action' }];
+  const cost = nonMagicActionCost(actor.runtime);
   const payable = canPay(actor.runtime, cost);
   if (!payable.ok) {
     return rejected(world, 'InsufficientResources', `Missing resources: ${payable.missing.join(', ')}`);

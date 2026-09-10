@@ -81,8 +81,11 @@ describe('optional class boost after a committed failed ability check', () => {
     test.tape.assertExhausted();
   });
 
-  it('resumes escape only after a successful boost and never charges a second action', () => {
-    const test = fixture([{label: 'escape failure', sides: 20, value: 5}, {label: 'recovered escape', sides: 10, value: 10}], true);
+  it.each(['action', 'action_surge_action'])('resumes escape after a successful boost without charging a second %s', resource => {
+    const test = fixture([{label: 'escape failure', sides: 20, value: 5}, {label: 'recovered escape', sides: 10, value: 10}], true, hero => {
+      hero.runtime.resources.action = 0;
+      hero.runtime.resources[resource] = 1;
+    });
     accepted(test.session, {...test.base('escape'), type: 'EscapeGrapple', grappleId: 'grapple', skill: 'athletics'});
     const check = test.session.getState().pendingResolution!;
     accepted(test.session, {...test.base('roll'), type: 'ResolveDecision', resolutionId: check.id, requestId: check.request.id,
@@ -90,7 +93,7 @@ describe('optional class boost after a committed failed ability check', () => {
     const pending = test.session.getState().pendingResolution!;
     expect(pending).toMatchObject({type: 'check_boost', continuation: {type: 'escape_grapple', grappleId: 'grapple'}});
     expect(test.session.getState().grapples.grapple).toBeDefined();
-    expect(test.session.getState().actors.fighter.runtime.resources).toMatchObject({action: 0, second_wind: 2, reaction: 1});
+    expect(test.session.getState().actors.fighter.runtime.resources).toMatchObject({action: 0, [resource]: 0, second_wind: 2, reaction: 1});
     accepted(test.session, {...test.base('boost'), type: 'ResolveDecision', resolutionId: pending.id, requestId: pending.request.id,
       response: {kind: 'reaction', actionId: action.id}});
     expect(test.session.getState().grapples).toEqual({});
@@ -108,8 +111,12 @@ describe('optional class boost after a committed failed ability check', () => {
     test.tape.assertExhausted();
   });
 
-  it.each(['hide', 'study'])('resumes %s from the saved failure without repeating its action or original die', kind => {
-    const test = fixture([{label: 'failure', sides: 20, value: 5}, {label: 'boost', sides: 10, value: 10}], false, undefined, kind === 'study');
+  it.each(['hide', 'study'].flatMap(kind => ['action', 'action_surge_action'].map(resource => ({kind, resource}))))(
+    'resumes $kind from the saved failure without repeating $resource or its original die', ({kind, resource}) => {
+    const test = fixture([{label: 'failure', sides: 20, value: 5}, {label: 'boost', sides: 10, value: 10}], false, hero => {
+      hero.runtime.resources.action = 0;
+      hero.runtime.resources[resource] = 1;
+    }, kind === 'study');
     if (kind === 'hide') accepted(test.session, {...test.base('hide'), type: 'AttemptHide', eligibility: {
       factsSource: 'board', boardRevision: 0, heavilyObscured: true, cover: 'none', visibleToAnyEnemy: false}});
     else accepted(test.session, {...test.base('study'), type: 'StudyWorldObject', objectId: 'illusion',
@@ -118,7 +125,7 @@ describe('optional class boost after a committed failed ability check', () => {
     const restored = new InMemoryRulesSession(checkpoint, catalog, test.env);
     const pending = restored.getState().pendingResolution!;
     expect(pending).toMatchObject({type: 'check_boost', continuation: {type: kind}});
-    expect(restored.getState().actors.fighter.runtime.resources).toMatchObject({action: 0, second_wind: 2});
+    expect(restored.getState().actors.fighter.runtime.resources).toMatchObject({action: 0, [resource]: 0, second_wind: 2});
     accepted(restored, {...test.base('boost'), expectedRevision: checkpoint.revision, type: 'ResolveDecision',
       resolutionId: pending.id, requestId: pending.request.id, response: {kind: 'reaction', actionId: action.id}});
     expect(restored.getState().actors.fighter.runtime.resources).toMatchObject({action: 0, reaction: 1, second_wind: 1});

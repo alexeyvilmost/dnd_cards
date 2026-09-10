@@ -1,4 +1,5 @@
 import {signedMovementBudget, withMovementBudget} from './movementLedger';
+import {nonMagicActionCost} from '../engine/actionSurge';
 import { weaponBondProtectsHand } from '../rules-core/weaponBond';
 import {telekineticObjectIssue} from '../rules-core/telekineticMovement';
 import {heldItemDropIssue} from '../engine/heldItemDrop';
@@ -3505,7 +3506,7 @@ function breakOutOfRangeGrapples(
 
 export function canEscapeActorGrapple(state: SoloCombatState, actorId: string): boolean {
   const actor = state.world.actors[actorId];
-  return Boolean(actor && actor.runtime.hp.current > 0 && (actor.runtime.resources.action ?? 0) > 0
+  return Boolean(actor && actor.runtime.hp.current > 0 && canPay(actor.runtime, nonMagicActionCost(actor.runtime)).ok
     && !deniedCapabilities(actor.runtime, actor.passives ?? []).has('action')
     && Object.values(state.world.grapples).some(grapple => grapple.targetActorId === actorId)
     && state.outcome === 'active' && activeActorId(state) === actorId

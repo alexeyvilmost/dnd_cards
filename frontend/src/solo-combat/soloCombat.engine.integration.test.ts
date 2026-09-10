@@ -5118,13 +5118,14 @@ describe('physical Weapon Bond recall in solo combat', () => {
 });
 
 describe('grapple escape through trusted solo combat commands', () => {
-  it('opens a durable skill check, charges one action and rejects foreign or interrupted commands', async () => {
+  it.each(['action', 'action_surge_action'])('opens a durable skill check, charges one %s and rejects foreign or interrupted commands', async resource => {
     const setup = await championMovementEncounter();
     let state = clone(setup.state);
     const {actorId, enemyId} = setup;
     if (state.world.scene.mode !== 'encounter') throw Error('Expected encounter');
     state.world.scene.activeIndex = state.world.scene.initiative.indexOf(actorId);
-    state.world.actors[actorId].runtime.resources.action = 1;
+    state.world.actors[actorId].runtime.resources.action = 0;
+    state.world.actors[actorId].runtime.resources[resource] = 1;
     // Fixture starts its turn already grappled, so its movement grant is zero.
     state.movementRemainingFt[actorId] = 0;
     state.world.actors[enemyId].attackProfile!.graspingParts = ['qa_arm'];
@@ -5148,6 +5149,7 @@ describe('grapple escape through trusted solo combat commands', () => {
     expect(opened.randomValues).toEqual([]);
     expect(opened.envelope.state.world.pendingResolution).toMatchObject({type: 'escape_grapple', actorId, skill: 'acrobatics'});
     expect(opened.envelope.state.world.actors[actorId].runtime.resources.action).toBe(0);
+    expect(opened.envelope.state.world.actors[actorId].runtime.resources[resource]).toBe(0);
     expect(canEscapeActorGrapple(opened.envelope.state, actorId)).toBe(false);
     expect(() => escapeActorGrapple(opened.envelope.state, actorId, 'escape-test', 'athletics')).toThrow();
     expect(() => stepRoguelikeCombat(opened.envelope, {type: 'end_turn', actorId}, artifactHash)).toThrow();
