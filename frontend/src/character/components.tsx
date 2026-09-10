@@ -249,6 +249,7 @@ export function ChoiceResolver({
               disabledReason={unavailableOptions[f.id]}
               onClick={() => toggle(f.id)}
               preview={<FeatPreview feat={f} disableHover />}
+              supportEntity={f}
             />
           ))}
         </div>

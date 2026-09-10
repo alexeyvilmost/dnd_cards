@@ -198,17 +198,19 @@ const CharacterForge = () => {
     return () => { stale = true; };
   }, [forgeSpellLevelCap]);
 
+  const runProgression = Boolean(levelUp && searchParams.get('roguelike') && draft.level <= 5);
   const visibleRaces = useMemo(
     () => filterEntitiesBySupport(races, showAllContent, [draft.raceId, draft.lineageId].filter(Boolean) as string[]),
     [races, showAllContent, draft.raceId, draft.lineageId],
   );
   const visibleClasses = useMemo(
     () => filterEntitiesBySupport(classes, showAllContent, [
+      ...(runProgression ? classes.filter((entry) => entry.parent_class_id === levelUp?.selectedClassId).map((entry) => entry.id) : []),
       ...Object.keys(draftClassLevels(draft)),
       ...Object.values(draft.subclassIds ?? {}),
       draft.subclassId,
     ].filter(Boolean) as string[]),
-    [classes, showAllContent, draft.classId, draft.classLevels, draft.level, draft.subclassId, draft.subclassIds],
+    [classes, showAllContent, draft.classId, draft.classLevels, draft.level, draft.subclassId, draft.subclassIds, runProgression, levelUp?.selectedClassId],
   );
   const hiddenRootClassCount = useMemo(() => {
     const rootCount = classes.filter((entry) => !entry.parent_class_id && !entry.is_subclass).length;
@@ -223,10 +225,7 @@ const CharacterForge = () => {
     () => Object.values(draft.resolvedChoices).flat(),
     [draft.resolvedChoices],
   );
-  const visibleFeats = useMemo(
-    () => filterEntitiesBySupport(feats, showAllContent, [...draft.featIds, ...resolvedEntityIds]),
-    [feats, showAllContent, draft.featIds, resolvedEntityIds],
-  );
+
   const visibleSpells = useMemo(
     () => filterEntitiesBySupport(spells, showAllContent, resolvedEntityIds),
     [spells, showAllContent, resolvedEntityIds],
@@ -378,6 +377,17 @@ const CharacterForge = () => {
   const assembled: AssembledCharacter = useMemo(
     () => ({ ...baseAssembled, spells: persistedSpells }),
     [baseAssembled, persistedSpells],
+  );
+  // Run progression must expose its declared choices without claiming that the
+  // whole catalog is certified. Existing cards retain their support badges.
+  const visibleFeats = useMemo(
+    () => filterEntitiesBySupport(feats, showAllContent, [
+      ...draft.featIds, ...resolvedEntityIds,
+      ...(runProgression ? assembled.pendingChoices
+        .filter((choice) => choice.source === 'feat' && requiresInitialCharacterChoice(choice))
+        .flatMap((choice) => optionsForChoice(choice, feats).map((option) => option.id)) : []),
+    ]),
+    [feats, showAllContent, draft.featIds, resolvedEntityIds, runProgression, assembled.pendingChoices],
   );
   const ruleState = useMemo(
     () => resolveCharacterRules({ draft, assembled }),
@@ -944,7 +954,9 @@ const CharacterForge = () => {
         <small>
           {showAllContent
             ? ' Непроверенные варианты доступны без дополнительных окон.'
-            : ' Сейчас показан только проверенный каталог.'}
+            : runProgression
+              ? ' Варианты развития воина показаны со статусами проверки; остальной каталог отфильтрован.'
+              : ' Сейчас показан только проверенный каталог.'}
         </small>
       </span>
     </label>
@@ -1201,6 +1213,7 @@ const CharacterForge = () => {
                     setResolved={setLevelResolved}
                     ruleState={ruleState}
                     feats={visibleFeats}
+                    activeFeats={assembled.feats}
                     title="Выборы подкласса"
                   />
                 )}
@@ -1222,6 +1235,7 @@ const CharacterForge = () => {
                 setResolved={setLevelResolved}
                 ruleState={ruleState}
                 feats={visibleFeats}
+                activeFeats={assembled.feats}
                 title="Выборы при повышении уровня"
               />
             )}
@@ -1568,8 +1582,13 @@ function ChoiceList({ choices, resolved, setResolved, ruleState, feats, activeFe
             return [ab.id, capped ? 'Максимум 20' : undefined];
           }).filter(([, reason]) => !!reason)) as Record<string, string>
           : undefined;
-        const weaponUnavailable = pc.source === 'weapon' && pc.filter === 'proficient'
+        const weaponUnavailable = pc.source === 'weapon'
           ? Object.fromEntries(optionIds.flatMap((weaponType) => {
+            if (pc.grantKind === 'weapon_mastery' && !value.includes(weaponType)
+              && ruleState.weaponMasteries.includes(weaponType)) {
+              return [[weaponType, 'Искусность этого вида оружия уже получена']];
+            }
+            if (pc.filter !== 'proficient') return [];
             const category = WEAPON_TYPE_PROFICIENCY_CATEGORY[weaponType];
             const proficient = ruleState.proficiencies.weapons.includes(weaponType)
               || (category != null && ruleState.proficiencies.weapons.includes(category));
