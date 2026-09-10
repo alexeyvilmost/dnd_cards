@@ -1118,14 +1118,23 @@ export function buildSheetCanonicalRuntime(input: {
     .sort((left, right) => left.id.localeCompare(right.id));
   const storedResourceBindings = persistedResourceBindings(input.character.turn_state);
   const resourceBindings = declaredResourceBindings(uniqueActions);
-  if (canonicalStringify(storedResourceBindings) !== canonicalStringify(resourceBindings)
-    && Object.keys(storedResourceBindings).length) {
+  if (Object.keys(resourceBindings).some((key) => storedResourceBindings[key]
+    && canonicalStringify(storedResourceBindings[key]) !== canonicalStringify(resourceBindings[key]))) {
     throw new SheetCanonicalWorldError(
       'Persisted canonical resource bindings do not match current activation-cost declarations',
     );
   }
   const runtime = cloneJson(input.runtime);
   const characterContext = cloneJson(input.characterContext) as CharacterContext & Record<string, unknown>;
+  // Material aliases belong to the currently compiled actions. Removing a
+  // prepared spell must retire its alias, not block the sheet or leave money
+  // available through a stale resource pool. New aliases are rebuilt below
+  // from the authoritative wallet; an existing alias cannot change currency.
+  for (const key of Object.keys(storedResourceBindings)) {
+    delete runtime.resources[key];
+    delete runtime.maxResources[key];
+    if (characterContext.resourceRecharge) delete characterContext.resourceRecharge[key];
+  }
   // `passives` is an execution-context convenience added by the sheet UI, not
   // part of CharacterContext. ActorState already persists the same mechanics in
   // actor.passives, so retaining the excess property duplicated every passive

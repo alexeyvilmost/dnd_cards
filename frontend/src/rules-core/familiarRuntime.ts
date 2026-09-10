@@ -193,9 +193,11 @@ export function familiarActorStateIssue(input: {
     return 'Familiar owner must reference another actor in the same world';
   }
   const metadata = actor.familiarMetadata;
+  const ongoing = actor.familiarState.ongoingSpell;
   if (!metadata.summoningActionId
     || metadata.summoningActionId !== metadata.summoningActionId.trim()
-    || !owner.capabilities.actionIds.includes(metadata.summoningActionId)) {
+    || (ongoing ? ongoing.actionId !== metadata.summoningActionId
+      : !owner.capabilities.actionIds.includes(metadata.summoningActionId))) {
     return 'Familiar summoning action must remain actor-owned by its owner';
   }
   if (metadata.catalogId !== FAMILIAR_ACTOR_CATALOG.catalogId

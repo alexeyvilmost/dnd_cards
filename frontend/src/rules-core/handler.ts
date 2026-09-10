@@ -9638,6 +9638,7 @@ function executeFindFamiliarCast(input: {
       : 0;
     const cast = castFindFamiliar({
       familiarActorId,
+      summoningActionId: action.id,
       ownerActorId: owner.id,
       policy: chainGrant
         ? { kind: 'pact_chain', sourceEntityId: chain!.sourceEntityId }
@@ -9833,6 +9834,12 @@ function familiarPolicyFromSummoningAction(
   familiar: ActorState,
   catalog: RulesCatalog,
 ): { policy: FindFamiliarMechanicsPolicy } | { issue: string } {
+  // An already cast, persistent spell keeps its declared policy even after
+  // its caster changes prepared spells. This grants no casting capability.
+  const ongoing = familiar.familiarState?.ongoingSpell;
+  if (ongoing && ongoing.actionId === familiar.familiarMetadata?.summoningActionId) {
+    return { policy: ongoing.policy };
+  }
   const summoningActionId = familiar.familiarMetadata?.summoningActionId;
   if (!summoningActionId) {
     return { issue: 'Familiar has no summoning-action policy provenance' };

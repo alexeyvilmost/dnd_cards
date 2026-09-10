@@ -406,6 +406,42 @@ describe('canonical compiled Find Familiar world runtime', () => {
     runCompiledRuntimeScenario({ foundation, spec: copy(foundation.spec) });
   }
 
+  it('keeps a cast familiar usable after its summoning spell leaves the owner and catalog', () => {
+    const wizard = actorWithId(wizardRoot.actor, 'wizard');
+    addIncense(wizard, 30);
+    const test = makeSession({ id: 'familiar:changed-preparation', owner: wizard,
+      support: actorWithId(wizardRoot.actor, 'fighter'), catalog: catalogFor(wizardRoot) });
+    accept(test.session, provider.ruleset.contentHash, 'wizard', {
+      type: 'UseAction', commandId: 'cast', actionId: wizardFamiliar.action.id, targetIds: [],
+      spell: { baseLevel: 1, grantId: wizardFamiliar.grantId, mode: 'ritual' },
+      choices: { [FIND_FAMILIAR_FORM_CHOICE]: 'owl', [FIND_FAMILIAR_SPIRIT_CHOICE]: 'fey',
+        [FIND_FAMILIAR_CAST_PATH_CHOICE]: 'ritual' },
+    });
+    const changed = copy(test.session.getState());
+    const owner = changed.actors.wizard;
+    owner.capabilities.actionIds = owner.capabilities.actionIds.filter((id) => id !== wizardFamiliar.action.id);
+    delete owner.spellcastingAccess;
+    const familiar = required(familiarActorsOwnedBy(changed, 'wizard')[0], 'persistent familiar');
+    const withoutSpell = catalogFor(wizardRoot);
+    const session = new InMemoryRulesSession(migrateWorldState(changed), {
+      getAction: (id) => id === wizardFamiliar.action.id ? undefined : withoutSpell.getAction(id),
+    }, { rng: createStrictRngTape([]).rng, clock: createLogicalClock(0), nextId: () => 'unused' });
+    accept(session, provider.ruleset.contentHash, 'wizard', { type: 'StartTurn', commandId: 'turn:1' });
+    accept(session, provider.ruleset.contentHash, 'wizard', { type: 'DismissFamiliar', commandId: 'dismiss',
+      familiarActorId: familiar.id, mode: 'temporary' });
+    accept(session, provider.ruleset.contentHash, 'wizard', { type: 'EndTurn', commandId: 'turn:end' });
+    accept(session, provider.ruleset.contentHash, 'wizard', { type: 'StartTurn', commandId: 'turn:2' });
+    accept(session, provider.ruleset.contentHash, 'wizard', { type: 'ReappearFamiliar', commandId: 'reappear',
+      familiarActorId: familiar.id, facts: { factsSource: 'scenario', boardRevision: 0,
+        distanceFt: 30, lineOfSight: true, unoccupiedSpace: true } });
+    accept(session, provider.ruleset.contentHash, 'wizard', { type: 'UseFamiliarSharedSenses', commandId: 'senses',
+      familiarActorId: familiar.id, facts: { factsSource: 'scenario', boardRevision: 0, distanceFt: 100, lineOfSight: false } });
+    reject(session, provider.ruleset.contentHash, 'wizard', { type: 'UseAction', commandId: 'cannot-recast',
+      actionId: wizardFamiliar.action.id, targetIds: [],
+      spell: { baseLevel: 1, grantId: wizardFamiliar.grantId, mode: 'ritual' } });
+    assertReplay(changed, session);
+  });
+
   it('ritually creates one pinned actor, runs strict turns/senses/dismiss/reappear, and never restores incense', {
     timeout: 60_000,
     meta: { semanticProtocol: 'mandatory-two-pc-v1', scenarioId: 'SC-FAMILIAR-LIFECYCLE-01' },

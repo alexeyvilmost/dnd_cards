@@ -781,7 +781,7 @@ describe('real sheet canonical world materialization', () => {
     const root = clone(generated.roots.chain);
     const owner = root.actor;
     const actionId = generated.execution.scenarios.chain.findFamiliarActionId;
-    const familiar = castFindFamiliar({ familiarActorId: 'base-owl', ownerActorId: owner.id,
+    const familiar = castFindFamiliar({ familiarActorId: 'base-owl', ownerActorId: owner.id, summoningActionId: actionId,
       policy: {kind:'base',sourceEntityId:'00000000-0000-4000-8000-000000000001'}, method:'spell_slot',formId:'owl',spiritType:'fey',existingFamiliar:null,
       resources:{level1SpellSlots:1,incenseGp:10},incenseOfferingGp:10,materialCostGp:10,baseCastingTimeSeconds:3600,
       mechanicsPolicy:{connectionRangeFt:100,reappearRangeFt:30,ritualCastingAddedSeconds:600} }).familiar;
@@ -795,7 +795,15 @@ describe('real sheet canonical world materialization', () => {
     expect(reloaded.ruleset.contentHash).toBe('new-view');
     expect(Object.keys(fresh.actors)).toEqual([owner.id]);
     const missing = clone(fresh); missing.actors[owner.id].capabilities.actionIds = [];
-    expect(() => restoreCompatibleSheetFamiliars(missing,saved,owner.id)).toThrow(/summoning action/);
+    delete missing.actors[owner.id].spellcastingAccess;
+    delete missing.actors[owner.id].warlockPacts;
+    const withoutSpell = restoreCompatibleSheetFamiliars(missing,saved,owner.id);
+    expect(withoutSpell.actors[companion.id]).toEqual(companion);
+    expect(withoutSpell.actors[owner.id].capabilities.actionIds).toEqual([]);
+    const legacy = clone(base);
+    delete legacy.actors[companion.id].familiarState!.ongoingSpell;
+    expect(() => restoreCompatibleSheetFamiliars(missing,writeSheetCanonicalWorld({},owner.id,legacy),owner.id))
+      .toThrow(/summoning action/);
   });
 
   it('materializes Pact Tome from the five resolved Forge choices and round-trips its book/grants', () => {

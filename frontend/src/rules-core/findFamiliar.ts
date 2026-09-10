@@ -102,6 +102,9 @@ export interface FamiliarSharedSensesState {
 
 export interface FamiliarState {
   schemaVersion: 1;
+  /** Rules captured when an ordinary spell creates a persistent companion.
+   * Preparing another spell does not end this already resolved spell. */
+  ongoingSpell?: { actionId: string; policy: FindFamiliarMechanicsPolicy };
   actorId: string;
   ownerActorId: string;
   sourceEntityId: string;
@@ -493,6 +496,17 @@ export function familiarStateIssue(
   if (state.extension !== 'base' && state.extension !== 'pact_chain') {
     return 'Familiar state has an unknown extension policy';
   }
+  if (state.ongoingSpell !== undefined) {
+    const spell = record(state.ongoingSpell);
+    const policy = record(spell?.policy);
+    if (state.extension !== 'base' || !spell || !exactKeys(spell, ['actionId', 'policy'])
+      || typeof spell.actionId !== 'string' || !spell.actionId.trim() || spell.actionId !== spell.actionId.trim()
+      || !policy || !exactKeys(policy, ['connectionRangeFt', 'reappearRangeFt', 'ritualCastingAddedSeconds'])) {
+      return 'Familiar ongoing spell provenance is invalid';
+    }
+    try { validMechanicsPolicy(policy as unknown as FindFamiliarMechanicsPolicy); }
+    catch { return 'Familiar ongoing spell policy is invalid'; }
+  }
   const issue = formIssue(state.form, state.extension, validation);
   if (issue) return issue;
   if (!(FAMILIAR_SPIRIT_TYPES as readonly unknown[]).includes(state.spiritType)) {
@@ -613,6 +627,7 @@ function initialFamiliar(input: {
  */
 export function castFindFamiliar(input: {
   familiarActorId: string;
+  summoningActionId?: string;
   ownerActorId: string;
   policy: FindFamiliarExtensionPolicy;
   method: FindFamiliarCastMethod;
@@ -694,6 +709,10 @@ export function castFindFamiliar(input: {
       actorId, ownerActorId, policy: { ...input.policy, sourceEntityId }, form,
       spiritType: input.spiritType,
     });
+  }
+  delete familiar.ongoingSpell;
+  if (input.policy.kind === 'base' && !wildCompanion && input.summoningActionId) {
+    familiar.ongoingSpell = { actionId: stableId(input.summoningActionId, 'Summoning action'), policy: clone(mechanicsPolicy) };
   }
   validState(familiar, input.validation);
   const castingDuration: FindFamiliarCastResult['castingDuration'] = input.method.endsWith('_magic_action')

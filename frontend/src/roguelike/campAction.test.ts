@@ -89,6 +89,13 @@ describe('authoritative self actions in camp', () => {
     expect(result.patch.resources.material_gold).toBeUndefined();
     expect(result.patch.max_resources.material_gold).toBeUndefined();
     expect(request.character.currency).toEqual({gold:18,silver:2,copper:3});
+    const removed = await executeRoguelikeCampAction({ ...request, actionId: undefined, nextTurn: true,
+      commandId: 'after-removing-material-action', character: { ...request.character, ...result.patch,
+        action_ids: [], currency: { gold: 8, silver: 2, copper: 3 } } });
+    if (removed.status !== 'ready') throw new Error('Not ready after removal');
+    expect(removed.goldSpent).toBe(0);
+    expect(removed.patch.resources.material_gold).toBeUndefined();
+    expect(removed.patch.max_resources.material_gold).toBeUndefined();
     await expect(executeRoguelikeCampAction({ ...request, character: { ...request.character, ...result.patch, currency: {gold:8,silver:2,copper:3} } })).rejects.toThrow();
   });
   it('resolves missing content before any execution', async () => {
