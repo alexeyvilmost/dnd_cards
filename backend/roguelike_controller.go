@@ -1230,6 +1230,7 @@ func restoreRoguelikeCheckpoint(run *RoguelikeRun) error {
 	run.Shop = snapshot.Shop
 	run.LastReward = JSONMap{}
 	run.CombatEnvelope = JSONMap{}
+	run.CombatCatalog = JSONMap{}
 	run.Attempt++
 	run.Status = RoguelikeStatusActive
 	run.Phase = RoguelikePhaseCamp

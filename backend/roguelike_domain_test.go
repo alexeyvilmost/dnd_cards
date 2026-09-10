@@ -246,6 +246,7 @@ func TestRoguelikeRetryRetainsDrawnEncounterAcrossCatalogChanges(t *testing.T) {
 		"catalog": map[string]any{"version": 1, "sentinel": "frozen-before-library-edit"}}
 	run.Encounter = encounter
 	run.Status = RoguelikeStatusDefeat
+	run.CombatCatalog = JSONMap{"artifactHash": "old", "entities": JSONMap{"card": []any{"previous-loadout"}}}
 	run.Gold = 1
 	run.Character.RuntimeRevision = 12
 	if err := restoreRoguelikeCheckpoint(run); err != nil {
@@ -253,6 +254,9 @@ func TestRoguelikeRetryRetainsDrawnEncounterAcrossCatalogChanges(t *testing.T) {
 	}
 	if run.Gold != 80 || run.Attempt != 2 || run.Character.RuntimeRevision != 13 {
 		t.Fatal("checkpoint did not restore economy with a new runtime revision")
+	}
+	if len(run.CombatCatalog) != 0 {
+		t.Fatal("retry retained stale player loadout catalog")
 	}
 	// A nil database proves reuse does not consult the current library or generator.
 	if err := startRoguelikeEncounter(nil, run); err != nil {

@@ -77,3 +77,52 @@ func TestTrustedEncounterRejectsClientOutcomeBeforeAndAfterInitialization(t *tes
 		t.Fatal("accepted browser victory over authoritative active state")
 	}
 }
+
+func TestRetryInitializationResolvesNewLoadoutAndKeepsFrozenOpponents(t *testing.T) {
+	fixture := openCharacterV3AccessFixture(t)
+	for _, statement := range []string{
+		`CREATE TABLE actions(id uuid PRIMARY KEY, type text, deleted_at timestamptz)`,
+		`CREATE TABLE cards(id uuid PRIMARY KEY, card_number text, mechanics jsonb, deleted_at timestamptz)`,
+		`INSERT INTO cards VALUES('c4000000-0000-4000-8000-000000000001','NEW-SHIELD','{"armor_profile":{"category":"shield","base_ac":2}}',NULL)`,
+	} {
+		if err := fixture.db.Exec(statement).Error; err != nil {
+			t.Fatal(err)
+		}
+	}
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		var body struct {
+			ArtifactHash string `json:"artifactHash"`
+			Input        struct {
+				Catalog  roguelikeFrozenCatalog `json:"catalog"`
+				Monsters JSONMap                `json:"monsters"`
+			} `json:"input"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Fatal(err)
+		}
+		if body.ArtifactHash != "" || body.Input.Monsters["sentinel"] != "same-opponents" {
+			t.Error("attempt reused old player artifact or replaced opponents")
+		}
+		w.Header().Set("Content-Type", "application/json")
+		if calls == 1 {
+			if len(body.Input.Catalog.Entities["card"]) != 0 {
+				t.Error("stale player catalog reused")
+			}
+			w.Write([]byte(`{"status":"needs_content","needs":[{"kind":"entity","entityType":"card","reference":"c4000000-0000-4000-8000-000000000001"}]}`))
+			return
+		}
+		cards := body.Input.Catalog.Entities["card"]
+		if len(cards) != 1 || cards[0]["card_number"] != "NEW-SHIELD" {
+			t.Error("newly acquired item was not resolved")
+		}
+		w.Write([]byte(`{"status":"ready","envelope":{"artifactHash":"new-attempt-artifact"},"patch":{"runtime_revision":1}}`))
+	}))
+	defer server.Close()
+	run := RoguelikeRun{Character: &fixture.ownerCharacter, CombatCatalog: JSONMap{"artifactHash": "previous-artifact", "entities": JSONMap{"card": []any{"old-loadout"}}}, Encounter: JSONMap{"catalog": JSONMap{"sentinel": "same-opponents"}}}
+	_, catalog, err := initializeRoguelikeWorker(context.Background(), fixture.db, roguelikeWorkerClient{URL: server.URL, Token: strings.Repeat("a", 32)}, &run, "test-attempt-seed", "")
+	if err != nil || calls != 2 || catalog["artifactHash"] != "new-attempt-artifact" {
+		t.Fatalf("new attempt failed: %v, calls=%d", err, calls)
+	}
+}

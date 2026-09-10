@@ -113,28 +113,13 @@ func (catalog *roguelikeFrozenCatalog) fulfill(tx *gorm.DB, need roguelikeWorker
 // Resolve the existing assembler's dependency closure. The final snapshot is
 // immutable; an incomplete optional dependency cannot silently remove a feature.
 func initializeRoguelikeWorker(ctx context.Context, tx *gorm.DB, client roguelikeWorkerClient, run *RoguelikeRun, seed string, initiativeManeuverActionID string) (*roguelikeWorkerResult, JSONMap, error) {
+	// Each initialization starts a new attempt with its current owned loadout.
+	// The opponent roster/stat blocks remain frozen in run.Encounter. Once this
+	// initialization commits, transitions use its exact artifact/catalog envelope.
 	catalog := emptyRoguelikeFrozenCatalog()
-	pinnedHash, _ := run.CombatCatalog["artifactHash"].(string)
-	if len(run.CombatCatalog) > 0 {
-		if err := decodeJSONMap(run.CombatCatalog, &catalog); err != nil {
-			return nil, nil, err
-		}
-	}
 	var basics []Action
-	if pinnedHash == "" {
-		if err := tx.Where("type = ?", "basic").Order("id").Find(&basics).Error; err != nil {
-			return nil, nil, err
-		}
-	} else {
-		for _, row := range catalog.Entities["action"] {
-			if row["type"] == "basic" {
-				var action Action
-				if err := decodeJSONMap(row, &action); err != nil {
-					return nil, nil, err
-				}
-				basics = append(basics, action)
-			}
-		}
+	if err := tx.Where("type = ?", "basic").Order("id").Find(&basics).Error; err != nil {
+		return nil, nil, err
 	}
 	ids := []string{}
 	for _, action := range basics {
@@ -146,7 +131,7 @@ func initializeRoguelikeWorker(ctx context.Context, tx *gorm.DB, client roguelik
 	input := map[string]any{"character": run.Character, "catalog": &catalog, "basicActionIds": ids,
 		"monsters": run.Encounter["catalog"], "roster": run.Encounter["roster"], "seed": seed, "initiativeManeuverActionId": initiativeManeuverActionID}
 	for round := 0; round < 16; round++ {
-		result, err := client.call(ctx, "/initialize", map[string]any{"input": input, "artifactHash": pinnedHash})
+		result, err := client.call(ctx, "/initialize", map[string]any{"input": input})
 		if err != nil {
 			return nil, nil, err
 		}
@@ -156,9 +141,6 @@ func initializeRoguelikeWorker(ctx context.Context, tx *gorm.DB, client roguelik
 				frozen["artifactHash"] = result.Envelope["artifactHash"]
 			}
 			return result, frozen, err
-		}
-		if pinnedHash != "" {
-			return nil, nil, fmt.Errorf("pinned retry catalog is incomplete")
 		}
 		previous, _ := json.Marshal(catalog)
 		for _, need := range result.Needs {

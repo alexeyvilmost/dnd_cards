@@ -1466,6 +1466,7 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 			_, err := db.Exec(`ALTER TABLE roguelike_runs ADD COLUMN IF NOT EXISTS game_clock_remainder_seconds integer NOT NULL DEFAULT 0 CHECK (game_clock_remainder_seconds BETWEEN 0 AND 3599), ADD COLUMN IF NOT EXISTS last_long_rest_remainder_seconds integer NOT NULL DEFAULT 0 CHECK (last_long_rest_remainder_seconds BETWEEN 0 AND 3599)`)
 			return err
 		}, Down: func(db *sql.DB) error { return nil }},
+		{Version: "240_roguelike_magic_weapons", Description: "Declare executable +1 weapon profiles and scope enchantments to their weapon", Up: materializeRoguelikeMagicWeapons, Down: func(db *sql.DB) error { return nil }},
 		// Здесь можно добавлять новые миграции
 	}
 }
