@@ -46,6 +46,31 @@ export function levelUpChoicesToShow(
   ));
 }
 
+/** Remove superseded choice-owned spell references while preserving explicit additions. */
+export function applyForgeResolvedChoices(
+  draft: CharacterDraft, values: Record<string, string[]>, choices: readonly PendingChoice[],
+): CharacterDraft {
+  const resolvedChoices = { ...draft.resolvedChoices, ...values };
+  const spellChoices = choices.filter((choice) => choice.source === 'spell');
+  const removed = new Set(spellChoices.flatMap((choice) => (
+    values[choice.id] == null ? [] : (draft.resolvedChoices[choice.id] ?? [])
+      .filter((id) => !values[choice.id].includes(id))
+  )));
+  const retained = new Set([
+    ...(draft.manualSpellIds ?? []),
+    ...spellChoices.flatMap((choice) => resolvedChoices[choice.id] ?? []),
+  ]);
+  return { ...draft, resolvedChoices, spellIds: draft.spellIds.filter((id) => !removed.has(id) || retained.has(id)) };
+}
+
+/** Count replaced original selections, not intermediate clicks in the picker. */
+export function levelUpReplacementAllowed(
+  original: readonly string[], next: readonly string[], limit: number,
+): boolean {
+  const selected = new Set(next);
+  return new Set(original.filter((id) => !selected.has(id))).size <= limit;
+}
+
 /**
  * Find the parameter choices owned by feats selected in a particular Forge
  * section.  General feats are selected by a class-owned `source: "feat"`

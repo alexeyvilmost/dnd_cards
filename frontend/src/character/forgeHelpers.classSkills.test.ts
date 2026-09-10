@@ -1,3 +1,4 @@
+import { applyForgeResolvedChoices, levelUpReplacementAllowed } from './forgeHelpers';
 import { describe, expect, it } from 'vitest';
 import type { AssembledCharacter } from './assemble';
 import { recommendedOptionSelection } from './components';
@@ -206,5 +207,39 @@ describe('Forge level-up feat choices', () => {
       { [featSlot.id]: [feat.card_number] },
       [feat],
     ).map((choice) => choice.id)).toEqual([asiMode.id, asiAbility.id]);
+  });
+});
+
+
+describe('level-up spell replacements', () => {
+  it('allows a new slot and one old replacement, independently of ordering', () => {
+    expect(levelUpReplacementAllowed(['a','b','c'], ['b','c','d','e'], 1)).toBe(true);
+    expect(levelUpReplacementAllowed(['a','b','c'], ['c','d','e','f'], 1)).toBe(false);
+    expect(levelUpReplacementAllowed(['a','b','c'], ['c','b','a','d'], 0)).toBe(true);
+  });
+  it('allows undoing a replacement but rejects a second removal', () => {
+    expect(levelUpReplacementAllowed(['a','b'], ['b'], 1)).toBe(true);
+    expect(levelUpReplacementAllowed(['a','b'], [], 1)).toBe(false);
+    expect(levelUpReplacementAllowed(['a','b'], ['a','b'], 1)).toBe(true);
+    expect(levelUpReplacementAllowed(['a','b'], ['b','c'], 0)).toBe(false);
+  });
+});
+
+
+describe('replacing persisted choice-owned spells', () => {
+  const choice = { id: 'spells', source: 'spell' } as PendingChoice;
+  it('removes the old flattened reference and preserves unrelated spells', () => {
+    const draft = { ...emptyDraft(), spellIds: ['old','unrelated'], resolvedChoices: { spells: ['old'] } };
+    const next = applyForgeResolvedChoices(draft, { spells: ['new'] }, [choice]);
+    expect(next.spellIds).toEqual(['unrelated']);
+    expect(next.resolvedChoices.spells).toEqual(['new']);
+  });
+  it('preserves explicit manual and other choice ownership', () => {
+    const draft = { ...emptyDraft(), spellIds: ['manual','shared'], manualSpellIds: ['manual'],
+      resolvedChoices: { spells: ['manual','shared'], other: ['shared'] } };
+    expect(applyForgeResolvedChoices(draft, { spells: ['new'] }, [choice, { ...choice, id: 'other' }]).spellIds)
+      .toEqual(['manual','shared']);
+    expect(applyForgeResolvedChoices(draft, { spells: ['new'], other: [] }, [choice, { ...choice, id: 'other' }]).spellIds)
+      .toEqual(['manual']);
   });
 });

@@ -66,6 +66,7 @@ export type PendingChoice = {
   preparedSpellSourceRawChoiceId?: string;
   /** Optional class-level capacity table for a prepared-spell choice. */
   countByLevel?: Record<string, number>;
+  replaceOnLevelUp?: number;
   /** Immutable option domain projected from the referenced source choice. */
   allowedOptionIds?: string[];
   /** Options already consumed by another instance of the same repeatable,
@@ -189,6 +190,8 @@ function choiceToPending(
     context: ch.context ? String(ch.context) : undefined,
     grantKind: grant?.kind != null ? String(grant.kind) : undefined,
     ...(countByLevel ? { countByLevel } : {}),
+    ...(Number.isSafeInteger(ch.replace_on_level_up) && Number(ch.replace_on_level_up) > 0
+      ? { replaceOnLevelUp: Number(ch.replace_on_level_up) } : {}),
     ...(reservedOptionIds.length ? { reservedOptionIds } : {}),
   };
 }

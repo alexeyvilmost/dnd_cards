@@ -198,9 +198,10 @@ describe('class-level choice capacity', () => {
       effects: [{
         kind: 'choice', id: 'invocations', count: 1,
         count_by_level: { 1: 1, 2: 3 },
+        replace_on_level_up: 1,
         options: { source: 'effect', items: [] },
       }],
     }, { kind: 'class', id: 'warlock', name: 'Warlock', featureId: 'invocations' });
-    expect(choice).toMatchObject({ count: 1, countByLevel: { 1: 1, 2: 3 } });
+    expect(choice).toMatchObject({ count: 1, countByLevel: { 1: 1, 2: 3 }, replaceOnLevelUp: 1 });
   });
 });

@@ -527,6 +527,9 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 					CharacterID: locked.ID.String(),
 				}
 			}
+			if err := validateRoguelikeLevelChoiceReplacements(tx, locked, req.ResolvedChoices, req.Level); err != nil {
+				return err
+			}
 			roguelikeRun = run
 		}
 

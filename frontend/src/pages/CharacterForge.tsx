@@ -39,6 +39,8 @@ import {
   characterToDraft,
   featOwnedChoicesForSelections,
   levelUpChoicesToShow,
+  levelUpReplacementAllowed,
+  applyForgeResolvedChoices,
   requiredChoiceIssues,
   resolveLineageName,
 } from '../character/forgeHelpers';
@@ -124,14 +126,16 @@ const CharacterForge = () => {
   const [active, setActive] = useState('race');
   const isMobile = useIsMobile();
   /** Режим повышения уровня: показываем только новое, база заблокирована. */
-  const [levelUp, setLevelUp] = useState<{ fromLevel: number; fromClassLevels: Record<string, number>; selectedClassId: string } | null>(null);
+  const [levelUp, setLevelUp] = useState<{ fromLevel: number; fromClassLevels: Record<string, number>; selectedClassId: string; committed?: boolean } | null>(null);
   const [prevRefs, setPrevRefs] = useState<{
     effects: Set<string>;
     actions: Set<string>;
     choiceIds: Set<string>;
     choiceCounts: Map<string, number>;
+    choiceLevels: Map<string, number>;
     maxHP: number;
   } | null>(null);
+  const originalLevelChoices = useRef<Record<string, string[]>>({});
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -284,12 +288,13 @@ const CharacterForge = () => {
         restoredClassSkillsRef.current = false;
         const d = characterToDraft(c);
         if (searchParams.get('levelup') === '1') {
+          originalLevelChoices.current = structuredClone(d.resolvedChoices);
           const fromLevel = run?.pending_level ? run.pending_level - 1 : d.level || 1;
           const fromClassLevels = draftClassLevels(d);
           if (run?.pending_level && d.classId) fromClassLevels[d.classId] = fromLevel;
           d.level = Math.min(20, fromLevel + 1);
           if (d.classId && fromLevel < 20) d.classLevels = addClassLevel({ ...d, level: fromLevel, classLevels: fromClassLevels }, d.classId);
-          setLevelUp({ fromLevel, fromClassLevels, selectedClassId: d.classId ?? '' });
+          setLevelUp({ fromLevel, fromClassLevels, selectedClassId: d.classId ?? '', committed: !!run?.pending_level });
           if (!runId) setSearchParams({}, { replace: true });
         }
         setDraft(d);
@@ -498,11 +503,11 @@ const CharacterForge = () => {
   // ─── Апдейтеры черновика ───────────────────────────────────────────────────
   const patch = (p: Partial<CharacterDraft>) => setDraft((d) => ({ ...d, ...p }));
   const setResolved = useCallback((choiceId: string, vals: string[]) => {
-    setDraft((d) => ({ ...d, resolvedChoices: { ...d.resolvedChoices, [choiceId]: vals } }));
-  }, []);
+    setDraft((d) => applyForgeResolvedChoices(d, { [choiceId]: vals }, assembled.pendingChoices));
+  }, [assembled.pendingChoices]);
   const setResolvedBatch = useCallback((values: Record<string, string[]>) => {
-    setDraft((d) => ({ ...d, resolvedChoices: { ...d.resolvedChoices, ...values } }));
-  }, []);
+    setDraft((d) => applyForgeResolvedChoices(d, values, assembled.pendingChoices));
+  }, [assembled.pendingChoices]);
   const recommendedChoicePolicy = useMemo(() => {
     const featByReference = new Map(feats.flatMap((feat) => (
       [[feat.id, feat.id], [feat.card_number, feat.id]] as const
@@ -721,6 +726,7 @@ const CharacterForge = () => {
         actions: new Set(oldBundle.actions.map((a) => a.action.id)),
         choiceIds: prevChoiceIds,
         choiceCounts: new Map(oldAssembled.pendingChoices.map((pc) => [pc.id, pc.count])),
+        choiceLevels: new Map(oldAssembled.pendingChoices.map((pc) => [pc.id, pc.origin.owningClassLevel ?? 0])),
         maxHP: resolveCharacterRules({ draft: oldDraft, assembled: oldAssembled }).maxHP,
       });
     })();
@@ -993,8 +999,14 @@ const CharacterForge = () => {
       !selectedSubclassChoices.some((subclassChoice) => subclassChoice.id === choice.id)
     ));
     // Expanded existing choices stay editable after their new slots are filled.
+    const replacementLimits = Object.fromEntries(spellChoices.flatMap((pc) => (
+      pc.replaceOnLevelUp != null && prevRefs?.choiceIds.has(pc.id)
+        && (pc.origin.owningClassLevel ?? 0) > (prevRefs.choiceLevels.get(pc.id) ?? 0)
+        ? [[pc.id, levelUp.committed ? 0 : pc.replaceOnLevelUp]] : []
+    )));
     const newSpellChoices = prevRefs
-      ? levelUpChoicesToShow(spellChoices, prevRefs.choiceIds, draft.resolvedChoices, prevRefs.choiceCounts)
+      ? spellChoices.filter((pc) => replacementLimits[pc.id] != null
+          || levelUpChoicesToShow([pc], prevRefs.choiceIds, draft.resolvedChoices, prevRefs.choiceCounts).length > 0)
       : unresolvedSpells;
     const oldMaxHP = prevRefs?.maxHP ?? computeMulticlassMaxHP(
       (assembled.classes ?? []).map((klass) => ({
@@ -1226,6 +1238,8 @@ const CharacterForge = () => {
                   ruleState={ruleState}
                   resolved={draft.resolvedChoices}
                   setResolved={setResolved}
+                  replacementLimits={replacementLimits}
+                  originalSelections={originalLevelChoices.current}
                 />
               </div>
             )}
@@ -1894,8 +1908,10 @@ function FeatSection({ feats, draft, onToggle, swapFeat, choices, ownChoices, re
   );
 }
 
-function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 0, ruleState, resolved, setResolved }: {
+function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 0, ruleState, resolved, setResolved, replacementLimits = {}, originalSelections = {} }: {
   spells: Spell[]; granted: Spell[]; choices: PendingChoice[];
+  replacementLimits?: Record<string, number>;
+  originalSelections?: Record<string, string[]>;
   // Полный набор spell-выборов для дедупа (по умолчанию = отображаемые choices). На уровень-апе
   // сюда передаётся ВЕСЬ набор spell-выборов (включая решённые на прошлых уровнях), а choices —
   // лишь незавершённые; так уже известные заклинания исключаются из выбора, как в кузне.
@@ -1946,11 +1962,19 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
     return owners;
   }, [choices, ownerChoices, granted, resolved, canonicalSpellId]);
 
+  const replacementAllowed = (choice: PendingChoice, next: string[]) => (
+    replacementLimits[choice.id] == null || levelUpReplacementAllowed(
+      (originalSelections[choice.id] ?? []).map(canonicalSpellId),
+      next.map(canonicalSpellId), replacementLimits[choice.id],
+    )
+  );
+
   const toggleChoiceSpell = (choice: PendingChoice, spellId: string) => {
     const value = resolved[choice.id] || [];
     const canonicalValue = value.map(canonicalSpellId);
     if (canonicalValue.includes(spellId)) {
-      setResolved(choice.id, value.filter((reference) => canonicalSpellId(reference) !== spellId));
+      const next = value.filter((reference) => canonicalSpellId(reference) !== spellId);
+      if (replacementAllowed(choice, next)) setResolved(choice.id, next);
       return;
     }
     const owner = selectedSpellOwners.get(spellId);
@@ -1974,7 +1998,7 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
     const next = canonicalValue.length >= choice.count
       ? [...canonicalValue.slice(1), spellId]
       : [...canonicalValue, spellId];
-    setResolved(choice.id, next);
+    if (replacementAllowed(choice, next)) setResolved(choice.id, next);
   };
 
   return (
@@ -2038,6 +2062,11 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
         return (
           <div className="forge-block" key={choice.id}>
             <div className="forge-section-h">{choice.prompt}</div>
+            {replacementLimits[choice.id] != null && (
+              <p className="forge-note">{replacementLimits[choice.id] === 0
+                ? "Выбор уже сохранён. Завершите подтверждение уровня."
+                : `Можно заменить ранее выбранные заклинания: ${replacementLimits[choice.id]}. Сначала снимите выбор с заменяемого заклинания.`}</p>
+            )}
             <div className={`choice-count ${done ? 'done' : ''}`}>Выбрано {selected.length} из {choice.count}</div>
             <div className="forge-spell-icon-grid">
               {filtered.map((spell) => {
@@ -2050,9 +2079,12 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
                   canonicalSpellId,
                 );
                 const ownerBlocks = !!owner && owner.choiceId !== choice.id && !ownedByPreparedSource;
-                const disabled = ownerBlocks || (!!disabledReason && !isSelected);
+                const candidate = isSelected ? selected.filter((id) => id !== spell.id)
+                  : selected.length >= choice.count ? [...selected.slice(1), spell.id] : [...selected, spell.id];
+                const replacementBlocked = !replacementAllowed(choice, candidate);
+                const disabled = ownerBlocks || (!!disabledReason && !isSelected) || replacementBlocked;
                 const title = disabled
-                  ? (ownerBlocks ? `Уже выбрано: ${owner?.label}` : disabledReason)
+                  ? (ownerBlocks ? `Уже выбрано: ${owner?.label}` : replacementBlocked ? "Лимит замен на этом уровне исчерпан" : disabledReason)
                   : `${spell.name} · ${getSpellLevelLabel(spell.level)}`;
                 const hoverHandlers = {
                   onMouseEnter: (e: React.MouseEvent) => { setHovered(spell); setMouse({ x: e.clientX, y: e.clientY }); },

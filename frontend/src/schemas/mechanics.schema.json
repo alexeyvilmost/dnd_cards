@@ -1667,6 +1667,7 @@
         "id": { "type": "string" },
         "prompt": { "type": "string" },
         "count": { "type": "integer", "minimum": 1, "default": 1 },
+        "replace_on_level_up": { "type": "integer", "minimum": 1 },
         "count_by_level": {
           "type": "object",
           "additionalProperties": { "type": "integer", "minimum": 1 }
