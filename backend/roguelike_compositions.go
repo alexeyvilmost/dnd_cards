@@ -20,16 +20,18 @@ type roguelikeComposition struct {
 
 // Reviewed pairings, not an unrestricted cross product of the monster library.
 var roguelikeMixedTemplates = []struct {
-	MinLevel int
-	Slugs    [2]string
+	MinLevel   int
+	Slugs      [2]string
+	AllowThree bool
 }{
-	{1, [2]string{"bandit", "guard"}},
-	{2, [2]string{"kobold-warrior", "giant-rat"}},
-	{2, [2]string{"guard", "tough"}},
-	{2, [2]string{"bandit", "tough"}},
-	{3, [2]string{"skeleton", "animated-armor"}},
-	{4, [2]string{"wolf", "dire-wolf"}},
-	{5, [2]string{"ogre", "berserker"}},
+	{1, [2]string{"bandit", "guard"}, true},
+	{2, [2]string{"kobold-warrior", "giant-rat"}, true},
+	{2, [2]string{"guard", "tough"}, true},
+	{2, [2]string{"bandit", "tough"}, true},
+	{3, [2]string{"skeleton", "animated-armor"}, true},
+	{4, [2]string{"wolf", "dire-wolf"}, true},
+	// The late-run CR2 pairing is two opponents (900 XP), not three.
+	{5, [2]string{"ogre", "berserker"}, false},
 }
 
 func roguelikeEncounterCompositions(level, budget, won int, available map[string]Monster) []roguelikeComposition {
@@ -53,7 +55,7 @@ func roguelikeEncounterCompositions(level, budget, won int, available map[string
 			continue
 		}
 		counts := [][2]int{{1, 1}}
-		if level >= 3 {
+		if level >= 3 && template.AllowThree {
 			counts = append(counts, [2]int{2, 1}, [2]int{1, 2})
 		}
 		for _, count := range counts {

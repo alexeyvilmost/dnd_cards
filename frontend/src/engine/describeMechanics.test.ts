@@ -31,6 +31,21 @@ const proneEffect = {
 };
 
 describe('describeMechanics (фаза F)', () => {
+  it('describes class-scaled capacity and bounded recovery using the runtime contract', () => {
+    const mechanics = { uses: {
+      count: 2, by_level: { 1: 2, 4: 3 }, level_source: 'warrior', per: 'short_rest',
+      recovery: { short_rest: { mode: 'fixed', amount: 1 }, long_rest: { mode: 'full' } },
+    } };
+    expect(describeMechanics(mechanics, { selfLevel: 5, classLevels: { warrior: 5 } }).details)
+      .toContain('Использования: 3; короткий отдых: +1; долгий отдых: все');
+    expect(describeMechanics(mechanics, { selfLevel: 5, classLevels: { warrior: 3 } }).details)
+      .toContain('Использования: 2; короткий отдых: +1; долгий отдых: все');
+    expect(describeMechanics(mechanics).details)
+      .toContain('Использования: 2; короткий отдых: +1; долгий отдых: все');
+    expect(describeMechanics({ uses: { ...mechanics.uses, recovery: {} } }).details)
+      .toContain('Использования: 2; восстановление не настроено');
+  });
+
   it('урон + стоимость слота', () => {
     const d = describeMechanics(smite);
     expect(d.summary).toContain('[radiant]2к8');

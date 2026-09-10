@@ -2,6 +2,36 @@ package main
 
 import "testing"
 
+func TestRoguelikeLateCR2PairDoesNotExpandToThree(t *testing.T) {
+	available := map[string]Monster{}
+	for _, entry := range roguelikeMonsterPool {
+		available[entry.Slug] = Monster{Slug: entry.Slug}
+	}
+	foundPair := false
+	for _, budget := range []int{500, 750, 1100} {
+		for _, candidate := range roguelikeEncounterCompositions(5, budget, 40, available) {
+			if len(candidate.Members) != 2 {
+				continue
+			}
+			cr2 := 0
+			for _, member := range candidate.Members {
+				if member.Entry.Slug == "ogre" || member.Entry.Slug == "berserker" {
+					cr2 += member.Quantity
+				}
+			}
+			if cr2 > 2 {
+				t.Fatalf("unapproved CR2 trio: %+v", candidate)
+			}
+			if cr2 == 2 && candidate.XP == 900 {
+				foundPair = true
+			}
+		}
+	}
+	if !foundPair {
+		t.Fatal("the 900 XP pair must remain available")
+	}
+}
+
 func TestRoguelikeEarlyToughGroupsDoNotExceedTwo(t *testing.T) {
 	available := map[string]Monster{}
 	for _, entry := range roguelikeMonsterPool {

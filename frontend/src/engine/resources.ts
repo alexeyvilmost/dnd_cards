@@ -75,7 +75,7 @@ export function resolveByLevel(byLevel: unknown, level: number): number | null {
 }
 
 /** A class-owned resource scales by that class level, never by total character level. */
-export function resourceLevel(row: LeveledCountDefinition, ctx: CharacterContext): number {
+export function resourceLevel(row: LeveledCountDefinition, ctx: Pick<CharacterContext, 'level' | 'classLevels'>): number {
   const declaration = row.level_source;
   const source = typeof declaration === 'string'
     ? declaration

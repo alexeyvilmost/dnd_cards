@@ -8,6 +8,8 @@
 import { getDamageLabel } from '../utils/damageTypes';
 import { conditionLabel } from './conditions';
 import { formatFormulaDisplay, type FormulaContext } from './formula';
+import { resolveByLevel, resourceLevel } from './resources';
+import { resolveActionUsesRecovery } from './actionUses';
 
 type Dict = Record<string, unknown>;
 
@@ -199,7 +201,16 @@ function durationDetail(duration: Dict | undefined): string {
 
 function usesDetail(uses: Dict | undefined, ctx?: FormulaContext | null): string {
   if (!uses) return '';
-  const count = uses.count != null ? diceRu(String(uses.count), ctx) : '';
+  const scaled = ctx ? resolveByLevel(uses.by_level, resourceLevel(uses, {
+    level: ctx.selfLevel ?? 0, classLevels: ctx.classLevels,
+  })) : null;
+  const rawCount = scaled ?? uses.count;
+  const count = rawCount != null ? diceRu(String(rawCount), ctx) : '';
+  const recovery = resolveActionUsesRecovery({ uses });
+  if (recovery.status === 'configured') {
+    return `Использования: ${count}; короткий отдых: +${recovery.recovery.short_rest.amount}; долгий отдых: все`;
+  }
+  if (recovery.status === 'invalid') return `Использования: ${count}; восстановление не настроено`;
   const per = uses.per != null ? `/${PER_RU[String(uses.per)] ?? uses.per}` : '';
   return count || per ? `Использования: ${count}${per}` : '';
 }

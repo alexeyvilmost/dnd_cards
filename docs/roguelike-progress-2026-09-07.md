@@ -2,21 +2,23 @@
 
 The original plan is `docs/roguelike-implementation-plan-2026-09-07.md` in the user's original checkout. The release worktree was created from production and did not include that uncommitted document. This report distinguishes delivered behavior from the larger original acceptance criteria. The requested reuse of the character sheet, desktop Forge and ShopDetail supersedes the plan's separate camp interface.
 
-## Remaining work
+## Current acceptance summary — 2026-09-10
 
-| Original steps | Current evidence | Status / remaining acceptance |
+This table supersedes historical status statements in the chronological appendices below. Testing continues locally against the local PostgreSQL copy; TimeWeb deployment is deferred at the user's request.
+
+| Original steps | Current evidence | Remaining work |
 | --- | --- | --- |
-| 1: baseline and manifests | Isolated production branch; 18 monster candidates, 11 enabled; 27 random shop entries | Partial: fighter dependency closure and a versioned release content manifest remain |
-| 2: vertical slice | Production combat/reward/camp/reload, existing sheet/Forge/shop | Delivered and browser checked |
-| 3: trusted execution | Server owns XP, gold, shop/rest commands, revisions and receipts | Partial: combat resolution still originates in the browser. No trusted TS worker; server replay of battle commands remains |
-| 4: durable decisions and checkpoints | Run revision, retry and checkpoint implementation; existing solo-combat saves and reaction tests | Partial: old rules artifacts, full command replay and every interrupted decision need acceptance coverage |
-| 5–6: fighter and all choices | Existing Forge and rules engine reused; Champion L3→4→5 checked in production | Partial: do not infer full support for all four subclasses, ten styles, twenty maneuvers, eligible feats and spell choices from this test. Dependency manifest and full roundtrip matrix remain |
-| 7: monsters | 18 materialized records, 11 with positive generation weight | Partial: goblin escape; zombie fortitude; spider/hobgoblin poison clauses; bugbear grab/drag; captain/veteran Parry remain gated |
-| 8: AI | Deterministic target choice, melee/ranged attack choice, pack/frenzy advantages; this change adds legal movement budget, terrain, sight repositioning, preferred range and interrupt stop | Partial: reactions, utility actions, complete path/area traversal and tactical profiles remain |
-| 9: generator/rewards | Separate RNG streams, stage budgets, body caps, one-time rewards | Mixed composition allowlist, bounded history and frozen monster inputs are implemented below. Remaining: full combat/economy balance and complete rules/player content version pinning |
-| 10: camp/shop | Sheet rests/items/inventory; purchase, refresh, pin; gold/supplies/time persistence checked in browser | Delivered core flow. Full resource/attunement/mastery-change and item matrix still requires validation |
-| 11: completion | Production level 5 + 14000 XP victory and persisted result checked using QA setup | Delivered vertical flow; not a substitute for an unmodified complete playthrough with all subclasses |
-| 12: simulation/rollout | Production SHA checks, tests, browser checks; 1000 XP pacing simulations added here | Partial: full combat simulations across build × level × encounter and economy policy remain |
+| 1: baseline/manifests | Isolated production branch, 18 monster candidates / 13 enabled, dedicated shop/loot pools | Complete fighter dependency closure and release manifest certification |
+| 2–3: vertical slice/trusted execution | Shared headless TS worker executes combat and camp commands; API owns transitions, rewards, prices, revisions and receipts | Delivered core; extend acceptance across every reachable action |
+| 4: durability | Pinned per-combat artifacts/catalog, append-only command replay, frozen encounter retry, atomic camp receipts; real final battle replay passes | Every interrupted decision; run-wide content-version policy |
+| 5–6: fighter | L1–5 natural Champion run; four subclasses implemented with dedicated scenario suites, 20 maneuvers, EK progression/bond and Psi foundations | Full style/mastery/feat/spell/companion closure and browser matrix; see open limitations below |
+| 7–8: monsters/AI | 13 enabled stat blocks; movement/reactions/ranged planning; real HAM and armed Berserker regressions repaired | Five gated candidates, hazard/cover/performance acceptance |
+| 9: encounters/rewards | Independent RNG, frozen rosters, explicit mixed templates, one-time rewards, weighted stock/loot | Full survival/economy matrix; only L3 Tough quantity comparison measured so far |
+| 10: camp/shop | Existing sheet/Forge/shop reused; natural rests, healing items, equipment, refresh and pinned stock across paid/free refresh | Attunement/mastery replacement, world spell time/effect aging, remaining item matrix |
+| 11: complete run | Natural UI-only 0→14650 XP, 46 wins, L5, attempt11; Victory clicked and retained after reload | Iterative run across fixes is not a single-version balance benchmark |
+| 12: regression/rollout | Latest full runtime gate: 412 files / 3610 tests; actual command replays | Final release gate after remaining changes; local browser acceptance continues |
+
+Concrete open limitations: familiar flight/touch spell delivery and prepared-spell removal; pending camp decisions and world-effect aging during long casts; Weapon Bond external carriers and rest choices; Protective Field mixed packets; Tactical Mind failure timing; physical equipment/attunement/mastery replacement; unarmed/reaction mastery cases and carrying capacity. These must not be silently marked complete by the successful Champion run. Historical appendices record narrower checks and any seeded QA fixtures separately.
 
 ## This increment
 
@@ -762,3 +764,13 @@ Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br
 - Regression tests first failed on held/offhand empty-bag cases and the actual armed AI turn, then passed after the fix. Targeted333 tests, worker HTTP/replay3, TypeScript and changed-file lint passed. Full412 files/3610 tests passed304.99s. A test-only slot literal type annotation was corrected after the full suite; runtime source stayed unchanged.
 - Browser natural encounter44/attempt11 on worker251: Berserker used Greataxe, d12=7+3STR=10slashing, reduced by Heavy Armor Master PB3 to7. The real Ogre+Berserker encounter was won using owned class healing and two potions. Its39 actual commands replay exactly: artifact sha256:47fcd2a9bd95f7d8d2222cccba1919f61048d000d947de2c72ee5d0775b5be13, final sha256:4f680c4d593ea7b21b7a3f3f65ad2b1f3f879eb7a6537e759b9af5d3fd21e227. Private export C:/codex-tools/qa-natural-44-251-replay.json. Earlier natural berserker fights were affected by this regression and must not be counted as correct berserker balance acceptance; the run is an iterative local acceptance run, not a single-version survival benchmark.
 - L5 Tactical Shift was also accepted in browser after Second Wind:15ft movement cell8,1→6,4 left the ordinary30ft budget and Action1 intact; later decline also works. Four attacks after Action Surge were observed (two regular, two surge). Current local API249/worker251; original full-run and remaining catalog/balance acceptance continue. No TimeWeb.
+
+## Natural completion and local follow-up (252), 2026-09-10
+
+- Natural run336e19a2-459c-47d3-ad6a-5e0d7a15aa23 completed through the browser: 14650XP,46wins,423gp,attempt11,L5Champion,22/49HP. No XP/gold/health/roll seeding. Last Ogre+Berserker encounter used worker251, owned class healing and one ordinary potion. Victory replaced next encounter/level-up; clicking ended the run, reload retained Victory, direct sheet remained Fighter5/max49HP. Database independently reports victory/ended with the same totals.
+- All35 actual commands of encounter46 replay exactly: artifact sha256:47fcd2a9bd95f7d8d2222cccba1919f61048d000d947de2c72ee5d0775b5be13; final sha256:3da1ab64915a591bb45601f8f885ea51a6007c72da28617a07263f27dc68e9da. Private export C:/codex-tools/qa-natural-46-251-replay.json.
+- Natural shop pin acceptance: Holy Water retained after paid refresh30gp and then automatic encounter45 refresh (version52), while four other offers changed. Next paid price35gp persisted. Bought four ordinary potions at50gp each normally.
+- Shared mechanics preview now resolves capacity through the existing class-level scaling helper and displays explicit bounded recovery ahead of legacy uses.per. L5 Second Wind reads3 uses, short rest+1, long rest all; multiclass total5/Fighter3 reads2. Focused29 tests, TypeScript and lint pass. No action-name special case or new UI.
+- Generator now explicitly limits the late Ogre+Berserker template to two creatures/900XP, as in the original plan; previously the generic trio expansion could create1350XP. Other template limits and already frozen rosters stay unchanged. All Go packages pass; local API252, worker251 unchanged.
+
+- In-app browser opened Second Wind from the existing Features section of the completed L5 sheet: actual preview shows healing1d10+5 and «Использования: 3; короткий отдых: +1; долгий отдых: все». Final run remains unchanged. API252 health passes after local binary replacement.
