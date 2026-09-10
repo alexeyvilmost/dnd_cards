@@ -1,4 +1,4 @@
-import { applyForgeResolvedChoices, levelUpReplacementAllowed } from './forgeHelpers';
+import { applyForgeResolvedChoices, levelUpReplacementAllowed, levelUpReplacementLimits } from './forgeHelpers';
 import { describe, expect, it } from 'vitest';
 import type { AssembledCharacter } from './assemble';
 import { recommendedOptionSelection } from './components';
@@ -212,6 +212,16 @@ describe('Forge level-up feat choices', () => {
 
 
 describe('level-up spell replacements', () => {
+  it('offers style replacement only on its owning class level gain and locks a committed retry', () => {
+    const style = { id: 'style', source: 'feat', count: 1, replaceOnLevelUp: 1,
+      origin: { kind: 'class', id: 'fighter', name: 'Fighter', owningClassLevel: 2 } } as PendingChoice;
+    const previous = new Map([['style', 1]]);
+    expect(levelUpReplacementLimits([style], previous, false)).toEqual({ style: 1 });
+    expect(levelUpReplacementLimits([style], previous, true)).toEqual({ style: 0 });
+    expect(levelUpReplacementLimits([style], new Map([['style', 2]]), false)).toEqual({});
+    expect(levelUpReplacementLimits([style], new Map(), false)).toEqual({});
+    expect(levelUpReplacementLimits([{ ...style, replaceOnLevelUp: undefined }], previous, false)).toEqual({});
+  });
   it('allows a new slot and one old replacement, independently of ordering', () => {
     expect(levelUpReplacementAllowed(['a','b','c'], ['b','c','d','e'], 1)).toBe(true);
     expect(levelUpReplacementAllowed(['a','b','c'], ['c','d','e','f'], 1)).toBe(false);

@@ -46,6 +46,18 @@ export function levelUpChoicesToShow(
   ));
 }
 
+/** Replacement allowances belong to the class gaining a level, not total level. */
+export function levelUpReplacementLimits(
+  choices: readonly PendingChoice[], previousChoiceLevels: ReadonlyMap<string, number> | undefined,
+  committed: boolean,
+): Record<string, number> {
+  return Object.fromEntries(choices.flatMap((choice) => (
+    choice.replaceOnLevelUp != null && previousChoiceLevels?.has(choice.id)
+      && (choice.origin.owningClassLevel ?? 0) > previousChoiceLevels.get(choice.id)!
+      ? [[choice.id, committed ? 0 : choice.replaceOnLevelUp]] : []
+  )));
+}
+
 /** Remove superseded choice-owned spell references while preserving explicit additions. */
 export function applyForgeResolvedChoices(
   draft: CharacterDraft, values: Record<string, string[]>, choices: readonly PendingChoice[],

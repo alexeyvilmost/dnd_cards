@@ -64,7 +64,7 @@ func validateRoguelikeLevelChoiceReplacements(tx *gorm.DB, before CharacterV3, a
 			selected = (*after)[key]
 		}
 		if !roguelikeChoiceReplacementAllowed(original, selected, limit) {
-			return roguelikeMutationError("roguelike_choice_replacement_forbidden", "Превышено число замен заклинаний на этом уровне", before.ID)
+			return roguelikeMutationError("roguelike_choice_replacement_forbidden", "Превышено число замен ранее выбранных способностей на этом уровне", before.ID)
 		}
 	}
 	return nil

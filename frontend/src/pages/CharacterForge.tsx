@@ -40,6 +40,7 @@ import {
   featOwnedChoicesForSelections,
   levelUpChoicesToShow,
   levelUpReplacementAllowed,
+  levelUpReplacementLimits,
   applyForgeResolvedChoices,
   requiredChoiceIssues,
   resolveLineageName,
@@ -979,12 +980,16 @@ const CharacterForge = () => {
       (pc) => requiresInitialCharacterChoice(pc) && (draft.resolvedChoices[pc.id] || []).length < pc.count,
     );
     const unresolvedSpells = unresolved.filter(isSpellSelectionChoice);
-    const levelUpOtherChoices = levelUpChoicesToShow(
-      buildChoices.filter((pc) => !isSpellSelectionChoice(pc)),
-      prevRefs?.choiceIds,
-      draft.resolvedChoices,
-      prevRefs?.choiceCounts,
-    );
+    const replacementLimits = levelUpReplacementLimits(buildChoices, prevRefs?.choiceLevels, !!levelUp.committed);
+    const levelUpOtherChoices = buildChoices.filter((pc) => !isSpellSelectionChoice(pc)
+      && (replacementLimits[pc.id] > 0 || levelUpChoicesToShow(
+        [pc], prevRefs?.choiceIds, draft.resolvedChoices, prevRefs?.choiceCounts,
+      ).length > 0));
+    const setLevelResolved = (id: string, values: string[]) => {
+      if (replacementLimits[id] == null || levelUpReplacementAllowed(
+        originalLevelChoices.current[id] ?? [], values, replacementLimits[id],
+      )) setResolved(id, values);
+    };
     // A subclass selected at this level can introduce its own mandatory
     // choices (for example College of Lore's three bonus skills).  Keep those
     // controls next to the subclass picker instead of relying on the generic
@@ -999,11 +1004,6 @@ const CharacterForge = () => {
       !selectedSubclassChoices.some((subclassChoice) => subclassChoice.id === choice.id)
     ));
     // Expanded existing choices stay editable after their new slots are filled.
-    const replacementLimits = Object.fromEntries(spellChoices.flatMap((pc) => (
-      pc.replaceOnLevelUp != null && prevRefs?.choiceIds.has(pc.id)
-        && (pc.origin.owningClassLevel ?? 0) > (prevRefs.choiceLevels.get(pc.id) ?? 0)
-        ? [[pc.id, levelUp.committed ? 0 : pc.replaceOnLevelUp]] : []
-    )));
     const newSpellChoices = prevRefs
       ? spellChoices.filter((pc) => replacementLimits[pc.id] != null
           || levelUpChoicesToShow([pc], prevRefs.choiceIds, draft.resolvedChoices, prevRefs.choiceCounts).length > 0)
@@ -1195,10 +1195,10 @@ const CharacterForge = () => {
                   </p>
                 )}
                 {selectedSubclassChoices.length > 0 && (
-                  <ChoiceList
+                <ChoiceList
                     choices={selectedSubclassChoices}
                     resolved={draft.resolvedChoices}
-                    setResolved={setResolved}
+                    setResolved={setLevelResolved}
                     ruleState={ruleState}
                     feats={visibleFeats}
                     title="Выборы подкласса"
@@ -1219,10 +1219,10 @@ const CharacterForge = () => {
               <ChoiceList
                 choices={otherLevelUpChoices}
                 resolved={draft.resolvedChoices}
-                setResolved={setResolved}
+                setResolved={setLevelResolved}
                 ruleState={ruleState}
                 feats={visibleFeats}
-                title="Новые выборы"
+                title="Выборы при повышении уровня"
               />
             )}
 
