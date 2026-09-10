@@ -17,7 +17,7 @@ import { CARD_LONGSWORD, CARD_SHIELD } from '../mvp/fixtures';
 import type { SheetCanonicalRuntime } from '../character/sheetCanonicalWorld';
 import type { SheetCombatParticipantSeed } from '../character/sheetCombatSession';
 import type { ForgeCharacter } from '../character/types';
-import type { Action } from '../types';
+import type { Action, PassiveEffect } from '../types';
 import type { Monster } from '../monsters/types';
 import { resolvePlayerShoveOutcome, resumePendingMovement, addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, canStandActor, standActor, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatParticipants, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatAlertSwap, resolveSoloCombatInterception, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectedTargetsForAction, setSoloCombatInitiativeTotals, setSoloCombatMount } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
@@ -5231,5 +5231,89 @@ describe('board-owned Hide', () => {
       (effect.mechanics as Record<string, unknown>).hidden_end_triggers)).toBe(true);
     const restored = readSoloCombatState(writeSoloCombatState({}, state), hero, state.runtimeRevision);
     expect(restored?.world.actors[hero].runtime.activeEffects).toEqual(state.world.actors[hero].runtime.activeEffects);
+  });
+});
+
+
+describe('Nimble Escape monster controller', () => {
+  function declaration(name: string): Record<string, unknown> {
+    const source = readFileSync(new URL('../../../backend/migrations/goblin_nimble_escape_245.go', import.meta.url), 'utf8');
+    const quote = String.fromCharCode(96);
+    const value = source.match(new RegExp('const ' + name + ' = '+quote+'([^'+quote+']+)'+quote))?.[1];
+    if (!value) throw Error('Missing Goblin declaration');
+    return JSON.parse(value);
+  }
+  async function setup(distance = 5) {
+    const participant = fighterSeed(), hero = participant.character.id;
+    const hide = basicAction('qa-goblin-hide', 'Ловкий побег: Засада', declaration('goblinHide245'));
+    const disengage = basicAction('qa-goblin-disengage', 'Ловкий побег: Отход', declaration('goblinDisengage245'));
+    hide.id = '24500000-0000-4000-8000-000000000001'; disengage.id = '24500000-0000-4000-8000-000000000002';
+    const sword = clone(scimitar());
+    (sword.mechanics!.effects as Record<string, unknown>[])[0].on_hit = [{kind: 'damage', amount: '1d6 + 2', type: 'slashing'}];
+    (sword.mechanics!.effects as Record<string, unknown>[])[0].attack_bonus_override = 4;
+    const bow = clone(sword); bow.id = 'qa-goblin-bow'; bow.card_number = 'qa-goblin-bow'; bow.name = 'Короткий лук';
+    (bow.mechanics!.targeting as Record<string, unknown>).range_ft = 320;
+    const strike = (bow.mechanics!.effects as Record<string, unknown>[])[0]; strike.attack_kind = 'weapon_ranged'; strike.normal_range_ft = 80;
+    (strike.on_hit as Record<string, unknown>[])[0].type = 'piercing';
+    const extra = {id: 'qa-goblin-extra', name: 'Дополнительный урон при преимуществе', card_number: 'qa-goblin-extra', mechanics: declaration('goblinAdvantage245')} as PassiveEffect;
+    const monster = {...goblin(), action_ids: [scimitar().id, bow.id, hide.id, disengage.id], effect_ids: [extra.id],
+      ai: {...goblin().ai, preferred_range_ft: 80, skill_proficiencies: ['stealth'], skill_expertise: ['stealth']}};
+    let state = await createSoloCombatState({character: participant.character, participant,
+      selected: [{monster, quantity: 1}], actions: [sword, bow, hide, disengage], effects: [extra], rng: () => 0.5});
+    const enemy = Object.values(state.world.actors).find(actor => actor.kind === 'monster')!.id;
+    state.tokens[hero].position = {x: 3, y: 4}; state.tokens[enemy].position = {x: 3 + distance / 5, y: 4};
+    state.world.actors[hero].runtime.hp = {current: 100, max: 100, temp: 0};
+    state = advanceTurn(state); expect(activeId(state)).toBe(enemy);
+    return {state, hero, enemy, hide, disengage, bow};
+  }
+  it('uses a Bonus Action to retreat from threatened reach, then attacks normally', async () => {
+    const test = await setup(); let state = test.state;
+    state.world.actors[test.hero].capabilities.actionIds.push(scimitar().id);
+    expect(createMonsterRouteRiskEvaluator(state, test.enemy)(state.tokens[test.enemy].position, [{x: 5, y: 4}])).toBeGreaterThan(0);
+    state = runMonsterTurn(state, () => 0.5);
+    expect(activeId(state)).toBe(test.hero);
+    expect(state.world.actors[test.enemy].runtime.resources).toMatchObject({action: 0, bonus_action: 0});
+    expect(state.world.actors[test.hero].runtime.resources.reaction).toBe(1);
+    expect(state.pendingTriggeredAction).toBeUndefined();
+    const a=state.tokens[test.enemy].position,b=state.tokens[test.hero].position;
+    expect(Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y))*5).toBeGreaterThan(5);
+    expect(state.log.filter(entry => entry.text.includes('Ловкий побег: Отход'))).toHaveLength(1);
+  });
+  it('does not assume Disengage prevents a Sentinel opportunity attack', async () => {
+    const test = await setup(); const player = test.state.world.actors[test.hero];
+    player.capabilities.actionIds.push(scimitar().id);
+    player.capabilities.featureSources = {...player.capabilities.featureSources, 'general_feat.sentinel': ['FEAT-0045']};
+    const state = runMonsterTurn(test.state, () => 0.5);
+    expect(state.world.actors[test.enemy].runtime.resources.bonus_action).toBe(1);
+    expect(state.pendingTriggeredAction).toBeUndefined();
+  });
+  it('does not spend the Bonus Action when retreat needs no Disengage', async () => {
+    const test = await setup(30); const state = runMonsterTurn(test.state, () => 0.5);
+    expect(activeId(state)).toBe(test.hero);
+    expect(state.world.actors[test.enemy].runtime.resources).toMatchObject({action: 0, bonus_action: 1});
+  });
+  it.each([false, true])('finishes a saved spent-action turn with one legal Hide (enemy blindsight=%s)', async blindsight => {
+    const test = await setup(); let state = clone(test.state);
+    state.world.actors[test.enemy].runtime.resources.action = 0;
+    if (blindsight) state.world.actors[test.hero].passives = [{kind: 'grant_sense', sense: 'blindsight', range: 10}];
+    state.combatAreas = {fog: {id: 'fog', name: 'Fog', zoneType: 'fog_cloud', sourceActorId: test.hero,
+      sourceActionId: 'fog', sourceEntityIds: ['fog'], origin: state.tokens[test.enemy].position,
+      cells: [state.tokens[test.enemy].position], duration: {type: 'rounds', roundsLeft: 10}, triggers: [], heavilyObscured: true}};
+    state = runMonsterTurn(clone(state), () => 0.95);
+    expect(activeId(state)).toBe(test.hero);
+    expect(state.world.actors[test.enemy].runtime.resources.bonus_action).toBe(blindsight ? 1 : 0);
+    expect(state.world.actors[test.enemy].runtime.activeEffects.some(effect => Array.isArray((effect.mechanics as Record<string, unknown>).hidden_end_triggers))).toBe(!blindsight);
+    expect(runMonsterTurn(clone(state), () => {throw Error('Completed turn must not roll again');})).toEqual(state);
+  });
+  it.each(['melee', 'ranged'] as const)('adds the printed d4 only for an advantaged %s hit', async kind => {
+    for (const advantage of [false, true]) for (const critical of [false, true]) for (const cancelled of [false, true]) {
+      const test = await setup(kind === 'melee' ? 5 : 30); let state = test.state;
+      state.world.actors[test.hero].ac = 5;
+      if (advantage) state.world.actors[test.enemy].runtime.activeEffects.push({id: 'test-advantage', name: 'Advantage', source: 'test', mechanics: {kind: 'modifier', op: 'advantage', applies_to: {roll: 'attack'}}});
+      if (cancelled) state.world.actors[test.enemy].runtime.activeEffects.push({id: 'test-disadvantage', name: 'Disadvantage', source: 'test', mechanics: {kind: 'modifier', op: 'disadvantage', applies_to: {roll: 'attack'}}});
+      const start = state.world.actors[test.hero].runtime.hp.current;
+      state = executeCombatAction({state, actorId: test.enemy, actionId: kind === 'melee' ? scimitar().id : test.bow.id, targetIds: [test.hero], rng: () => critical ? 0.99 : 0.7});
+      expect(start - state.world.actors[test.hero].runtime.hp.current).toBe((critical ? 14 : 7) + (advantage && !cancelled ? (critical ? 8 : 3) : 0));
+    }
   });
 });

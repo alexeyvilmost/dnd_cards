@@ -542,7 +542,8 @@ func roguelikeEncounterCandidates(level, budget, encountersWon int, available ma
 		// L1 greatsword diagnostic: 97/100 wins against one Zombie versus
 		// 61/100 against two. Keep Undead Fortitude and XP unchanged; delay
 		// the second body until the hero has level-two HP and Action Surge.
-		if entry.Slug == "zombie" && level == 1 && quantity > 1 {
+		// Goblin L1 diagnostic: 91/100 against one versus 61/100 against two.
+		if (entry.Slug == "zombie" || entry.Slug == "goblin-warrior") && level == 1 && quantity > 1 {
 			quantity = 1
 		}
 		bodyLimit := 3

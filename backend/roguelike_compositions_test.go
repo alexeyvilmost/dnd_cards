@@ -161,3 +161,30 @@ func TestRoguelikeCompositionHistoryAndReserve(t *testing.T) {
 		t.Fatal("unnecessary history exclusion")
 	}
 }
+
+func TestRoguelikeLevelOneGoblinsStaySingleWithoutChangingLaterRewards(t *testing.T) {
+	available := map[string]Monster{}
+	for _, entry := range roguelikeMonsterPool {
+		available[entry.Slug] = Monster{Slug: entry.Slug}
+	}
+	for _, won := range []int{0, 2, 5, 20} {
+		for _, budget := range []int{50, 75, 100, 150} {
+			for _, candidate := range roguelikeEncounterCompositions(1, budget, won, available) {
+				for _, member := range candidate.Members {
+					if member.Entry.Slug == "goblin-warrior" && (member.Quantity != 1 || member.Entry.XP != 50) {
+						t.Fatalf("unsafe L1 Goblin group or changed XP: %+v", candidate)
+					}
+				}
+			}
+		}
+	}
+	found := false
+	for _, candidate := range roguelikeEncounterCompositions(2, 100, 8, available) {
+		if candidate.Key == "goblin-warrior:2" && candidate.XP == 100 {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("level-two Goblin pair must remain available at its exact XP")
+	}
+}

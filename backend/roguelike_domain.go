@@ -25,7 +25,7 @@ var roguelikeMonsterPool = []roguelikeMonsterEntry{
 	{Slug: "guard", XP: 25, MinLevel: 1, MaxCount: 4, GeneratorWeight: 1},
 	{Slug: "giant-rat", XP: 25, MinLevel: 1, MaxCount: 4, GeneratorWeight: 1},
 	{Slug: "kobold-warrior", XP: 25, MinLevel: 1, MaxCount: 4, GeneratorWeight: 1},
-	{Slug: "goblin-warrior", XP: 50, MinLevel: 1, MaxCount: 4}, // Nimble Escape is not executable yet.
+	{Slug: "goblin-warrior", XP: 50, MinLevel: 1, MaxCount: 4, GeneratorWeight: 1}, // Shared Nimble Escape and advantage-only damage.
 	{Slug: "skeleton", XP: 50, MinLevel: 1, MaxCount: 4, GeneratorWeight: 1},
 	{Slug: "zombie", XP: 50, MinLevel: 1, MaxCount: 3, GeneratorWeight: 1}, // Undead Fortitude and defenses accepted through browser/replay.
 	{Slug: "wolf", XP: 50, MinLevel: 2, MaxCount: 4, GeneratorWeight: 1},

@@ -1,4 +1,5 @@
-import {combatHideFacts} from './hide';
+import {monsterBonusActions} from './monsterBonusActions';
+import {combatHideFacts, combatHideIssue} from './hide';
 import {resetTurnMovement, signedMovementBudget, withMovementBudget} from './movementLedger';
 import {nonMagicActionCost} from '../engine/actionSurge';
 import { weaponBondProtectsHand } from '../rules-core/weaponBond';
@@ -4549,12 +4550,24 @@ function continueMonsterAttackSequence(state: SoloCombatState, rng: Rng): SoloCo
   return finished;
 }
 
+function finishMonsterTurn(state: SoloCombatState, actorId: string, rng: Rng): SoloCombatState {
+  if (monsterMovementPaused(state) || state.outcome !== 'active') return state;
+  const hide = monsterBonusActions(state, actorId, 'hide')[0];
+  const alreadyHidden = state.world.actors[actorId].runtime.activeEffects.some(effect =>
+    Array.isArray((effect.mechanics as Record<string, unknown>).hidden_end_triggers));
+  if (hide && !alreadyHidden && !combatHideIssue(state, actorId)) {
+    state = executeCombatAction({state, actorId, actionId: hide.id, targetIds: [], rng});
+    if (monsterMovementPaused(state) || state.outcome !== 'active') return state;
+  }
+  return advanceTurn(state, rng);
+}
+
 export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
   if (state.outcome !== 'active' || monsterMovementPaused(state)) return state;
   const monsterId = activeActorId(state);
   if (state.monsterAttackSequence?.actorId === monsterId) {
     state = continueMonsterAttackSequence(state, rng);
-    return monsterMovementPaused(state) || state.outcome !== 'active' ? state : advanceTurn(state, rng);
+    return finishMonsterTurn(state, monsterId, rng);
   }
   if (state.monsterMovement?.actorId === monsterId) {
     state = executeMonsterRoute(state, monsterId, state.monsterMovement.steps, rng);
@@ -4572,7 +4585,7 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
   // one supported turn action; never plan and charge that action a second time.
   if ((monster.runtime.maxResources.action ?? 0) > 0
     && (monster.runtime.resources.action ?? 0) <= 0) {
-    return advanceTurn(state, rng);
+    return finishMonsterTurn(state, monsterId, rng);
   }
   const targetId = Object.keys(state.world.actors)
     .filter((actorId) => isPlayerControlledCombatActor(state, actorId))
@@ -4607,10 +4620,26 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
   const maximumAttackRange = attackActions.reduce((maximum, action) => (
     Math.max(maximum, monsterAttackRange(action))
   ), monster.attackProfile?.reachFt ?? 5);
-  const plan = planMonsterTurn(state, monster, targetId, maximumAttackRange,
-    monsterAIProfile(monster).preferred_range_ft,
-    createMonsterRouteRiskEvaluator(state, monsterId));
+  const preferredRange = monsterAIProfile(monster).preferred_range_ft;
+  let plan = planMonsterTurn(state, monster, targetId, maximumAttackRange,
+    preferredRange, createMonsterRouteRiskEvaluator(state, monsterId));
   let next = state;
+  const disengage = monsterBonusActions(state, monsterId, 'disengage')[0];
+  if (disengage && preferredRange !== undefined) {
+    const candidate = executeCombatAction({state, actorId: monsterId, actionId: disengage.id,
+      targetIds: [monsterId], rng: () => {throw new Error('Disengage route planning cannot roll dice');}});
+    const candidatePlan = planMonsterTurn(candidate, candidate.world.actors[monsterId], targetId, maximumAttackRange,
+      preferredRange, createMonsterRouteRiskEvaluator(candidate, monsterId));
+    const endpoint = (route: typeof plan) => route.firstMove.at(-1) ?? state.tokens[monsterId].position;
+    const distanceFromPreferred = (route: typeof plan) => Math.abs(
+      gridDistanceFt(endpoint(route), state.tokens[targetId].position) - Math.min(maximumAttackRange, preferredRange));
+    const beforeRisk = createMonsterRouteRiskEvaluator(state, monsterId)(state.tokens[monsterId].position, plan.firstMove);
+    const afterRisk = createMonsterRouteRiskEvaluator(candidate, monsterId)(state.tokens[monsterId].position, candidatePlan.firstMove);
+    if (candidatePlan.attacks && (!plan.attacks || afterRisk < beforeRisk
+      || (afterRisk === beforeRisk && distanceFromPreferred(candidatePlan) < distanceFromPreferred(plan)))) {
+      next = candidate; plan = candidatePlan;
+    }
+  }
   if (plan.firstMove.length) next = executeMonsterRoute(next, monsterId, plan.firstMove, rng);
   if (next.world.actors[monsterId].runtime.hp.current <= 0 || next.outcome !== 'active'
     || monsterMovementPaused(next)) return next;
@@ -4651,9 +4680,7 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
   if (!plan.attacks && !plan.usesDash) {
     next = appendLog(next, monsterId, 'Цель не видна или недоступна: ход завершён без атаки.');
   }
-  return monsterMovementPaused(next) || next.outcome !== 'active'
-    ? next
-    : advanceTurn(next, rng);
+  return finishMonsterTurn(next, monsterId, rng);
 }
 
 function withInitiativeAndStart(state: SoloCombatState, rng: Rng,
