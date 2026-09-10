@@ -60,6 +60,8 @@ export function heldItemRequirementIssue(mechanics: Dict, state: RuntimeState): 
   if (state.equipment.main_hand !== required && state.equipment.off_hand !== required) {
     return 'Для этой атаки нужно держать соответствующее оружие';
   }
-  return state.inventory.some(row => row.cardId === required && row.containerId == null && row.qty > 0)
-    ? null : 'Удерживаемого предмета нет в инвентаре';
+  // Equipment stores the held physical instance; inventory stores bag contents
+  // only. Requiring a second copy in the bag makes armed monsters appear
+  // disarmed and incorrectly blocks the same stat-block attacks for players.
+  return null;
 }

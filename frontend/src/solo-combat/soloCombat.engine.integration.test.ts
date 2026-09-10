@@ -23,6 +23,7 @@ import { isPlayerControlledCombatActor, SOLO_COMBAT_KEY, type SoloCombatState } 
 import { UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
 import {declineAdditionalMovement, monsterRouteOpportunityRisk, moveActorAlongRoute} from './engine';
 import {planMonsterTurn} from './monsterAi';
+import {compileMonsterInstance} from './monsterCompiler';
 import { STONEWORK_CONTACT_CHOICE_ID } from '../mechanics/collectChoices';
 
 const fixture = compiledFixtureJson as unknown as {
@@ -4791,12 +4792,27 @@ it.each(['fail','success','invalid','empty','existing_object','bonded','incapaci
 });
 
 
+it.each([false, true])('initializes one physical monster weapon with the declared grip: two-handed=%s', twoHanded => {
+ const weapon: typeof CARD_LONGSWORD={...CARD_LONGSWORD, slot:twoHanded?'two_hands':'one_hand', properties:twoHanded?['two_handed']:[]};
+ const compiled=compileMonsterInstance({monster:{...goblin(),ai:{...goblin().ai,held_weapon_card:weapon}},instanceId:'armed-monster',actions:[scimitar()],effects:[]});
+ expect(compiled.actor.runtime.equipment.main_hand).toBe(weapon.id);
+ expect(compiled.actor.runtime.equipment.off_hand).toBe(twoHanded?weapon.id:undefined);
+ expect(compiled.actor.runtime.inventory).toEqual([]);
+});
+
 it('an unequipped monster keeps an unarmed opportunity attack and takes its turn without a phantom weapon',async()=>{
  const participant=fighterSeed();const actorId=participant.character.id;
  const weaponAttack={...scimitar(),mechanics:{...scimitar().mechanics,requires_held_item:CARD_LONGSWORD.id}};
  let state=await createSoloCombatState({character:participant.character,participant,selected:[{monster:{...goblin(),max_hp:100,abilities:{...goblin().abilities,str:16},ai:{...goblin().ai,held_weapon_card:CARD_LONGSWORD}},quantity:1}],actions:[weaponAttack],effects:[],rng:()=>0.5});
  const monsterId=Object.values(state.world.actors).find(row=>row.kind==='monster')!.id;
- state=placeAdjacent(state,actorId,monsterId);state.world.actors[monsterId].runtime.equipment.main_hand=null;state.world.actors[monsterId].runtime.inventory=[];
+ state=placeAdjacent(state,actorId,monsterId);
+ // The canonical bag excludes the equipped instance. A weapon-owning monster
+ // must prefer that real attack until it actually loses the held weapon.
+ expect(state.world.actors[monsterId].runtime.inventory).toEqual([]);
+ const armed=runMonsterTurn(advanceTurn(clone(state),()=>0.5),()=>0.8);
+ expect(armed.log.some(entry=>entry.actorId===monsterId && entry.text.includes(scimitar().name))).toBe(true);
+ expect(armed.log.some(entry=>entry.actorId===monsterId && entry.text.includes('Безоружный удар:'))).toBe(false);
+ state.world.actors[monsterId].runtime.equipment.main_hand=null;state.world.actors[monsterId].runtime.inventory=[];
  const before=state.world.actors[actorId].runtime.hp.current;
  state.tokens[actorId].position={x:4,y:4};state.tokens[monsterId].position={x:5,y:4};
  state=moveActorAlongRoute({state,actorId,destination:{x:2,y:4},rng:()=>0.99});

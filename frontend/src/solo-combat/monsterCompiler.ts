@@ -55,6 +55,8 @@ export function compileMonsterInstance(input: {
   const storedWeapon = input.monster.ai.held_weapon_card;
   const heldWeapon = storedWeapon ? {...storedWeapon, properties:cardPropertyList(storedWeapon.properties)} : undefined;
   if (heldWeapon && (!heldWeapon.id || heldWeapon.type !== 'weapon')) throw new Error('Некорректное оружие монстра');
+  const twoHanded = heldWeapon && (heldWeapon.slot === 'two_hands'
+    || heldWeapon.properties.some(property => property === 'two_handed' || property === 'two-handed'));
   if(heldWeapon){
     actions.push({id:`${input.monster.id}:unarmed-fallback`,name:'Безоружный удар',kind:'nonSpell',sourceEntityIds:[input.monster.id],
       mechanics:{npc_unarmed_fallback:true,activation:{mode:'active',cost:[{resource:'action'}]},
@@ -67,7 +69,7 @@ export function compileMonsterInstance(input: {
     hp: { current: input.monster.max_hp, max: input.monster.max_hp, temp: 0 },
     resources: { action: 1, bonus_action: 1, reaction: 1 },
     maxResources: { action: 1, bonus_action: 1, reaction: 1 },
-    equipment: heldWeapon ? {main_hand: heldWeapon.id} : {},
+    equipment: heldWeapon ? {main_hand: heldWeapon.id, ...(twoHanded ? {off_hand: heldWeapon.id} : {})} : {},
     inventory: [], activeEffects: [],
   };
   const aiPassives: Record<string, unknown>[] = [

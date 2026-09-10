@@ -47,10 +47,12 @@ describe('temporary library-effect action requirements', () => {
 });
 
 
-it.each(['held','backpack','container','missing','wrong','malformed'])('enforces physical weapon availability: %s',mode=>{
- const runtime=state();runtime.inventory=[{cardId:'weapon',qty:1,...(mode==='container'?{containerId:'bag'}:{})}];
- if(mode!=='backpack')runtime.equipment.main_hand=mode==='wrong'?'other':'weapon';
- if(mode==='missing')runtime.inventory=[];
+it.each(['held','offhand','held_with_spare','backpack','container','missing','wrong','malformed'])('enforces physical weapon availability: %s',mode=>{
+ const runtime=state();
+ if(['backpack','container','held_with_spare'].includes(mode))runtime.inventory=[{cardId:'weapon',qty:1,...(mode==='container'?{containerId:'bag'}:{})}];
+ if(['held','held_with_spare'].includes(mode))runtime.equipment.main_hand='weapon';
+ if(mode==='offhand')runtime.equipment.off_hand='weapon';
+ if(mode==='wrong')runtime.equipment.main_hand='other';
  const issue=activeEffectRequirementIssue({requires_held_item:mode==='malformed'?[]:'weapon'},runtime);
- if(mode==='held')expect(issue).toBeNull();else expect(issue).toBeTruthy();
+ if(['held','offhand','held_with_spare'].includes(mode))expect(issue).toBeNull();else expect(issue).toBeTruthy();
 });
