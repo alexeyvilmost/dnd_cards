@@ -2,6 +2,34 @@ package main
 
 import "testing"
 
+func TestRoguelikeEarlyToughGroupsDoNotExceedTwo(t *testing.T) {
+	available := map[string]Monster{}
+	for _, entry := range roguelikeMonsterPool {
+		available[entry.Slug] = Monster{Slug: entry.Slug}
+	}
+	for _, level := range []int{2, 3} {
+		for _, budget := range []int{100, 150, 200, 225, 400} {
+			for _, candidate := range roguelikeEncounterCompositions(level, budget, 20, available) {
+				for _, member := range candidate.Members {
+					if member.Entry.Slug == "tough" && member.Quantity > 2 {
+						t.Fatalf("uncertified early pack: level %d, %+v", level, candidate)
+					}
+				}
+			}
+		}
+	}
+	// Retain the supported two-Tough encounter and its unmodified reward.
+	found := false
+	for _, candidate := range roguelikeEncounterCompositions(3, 400, 20, available) {
+		if candidate.Key == "tough:2" {
+			found = candidate.XP == 200
+		}
+	}
+	if !found {
+		t.Fatal("two-Tough reserve or exact XP was lost")
+	}
+}
+
 func TestRoguelikeMixedCompositionBounds(t *testing.T) {
 	available := map[string]Monster{}
 	for _, entry := range roguelikeMonsterPool {

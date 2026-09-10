@@ -532,6 +532,13 @@ func roguelikeEncounterCandidates(level, budget, encountersWon int, available ma
 		if quantity > entry.MaxCount {
 			quantity = entry.MaxCount
 		}
+		// Three Toughs combine sustained ranged pressure with Pack Tactics.
+		// The L3 melee-fighter diagnostic fell from 93/100 wins against two to
+		// 50/100 against three. This is a solo generator limit, not a stat-block
+		// change or an XP multiplier; higher-level compositions remain separate.
+		if entry.Slug == "tough" && level <= 3 && quantity > 2 {
+			quantity = 2
+		}
 		bodyLimit := 3
 		if level <= 2 {
 			bodyLimit = 2
