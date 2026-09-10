@@ -276,6 +276,12 @@ async function loadSheetCombatParticipant(input: {
     .flatMap((id) => id && cardsById.get(id) ? [cardsById.get(id)!] : []);
   const passives = [
     ...collectPassiveMechanics(assembled, input.character.resolved_choices ?? {}),
+    // Reuse the sheet's item gates (equipped/carried/attuned) and deduplication.
+    // Activated item riders must not become permanent merely by being equipped.
+    ...collectItemMechanics(runtime.equipment, cardsById, input.character.turn_state, runtime.inventory)
+      .filter(item => { const mode = (item.mechanics.activation as Record<string, unknown> | undefined)?.mode;
+        return mode === undefined || mode === 'passive'; })
+      .map(item => item.mechanics),
     ...untrainedArmorPenaltyMechanics(ruleState),
   ];
   const inventory = await collectSheetCombatActionInventory({
