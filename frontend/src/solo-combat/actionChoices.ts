@@ -1,3 +1,4 @@
+import { familiarFormLabel } from '../character/familiarLabels';
 import { weaponBondProtectsHand } from '../rules-core/weaponBond';
 import {heldItemDropIssue} from '../engine/heldItemDrop';
 import { collectInPlayActionChoices, type PendingChoice } from '../mechanics/collectChoices';
@@ -100,7 +101,7 @@ function primitiveChoices(action: RuleActionDefinition): PendingChoice[] {
     && (primitive as Record<string, unknown>).type === WILD_COMPANION_PRIMITIVE) {
     const forms = FAMILIAR_ACTOR_CATALOG.forms
       .filter((form) => form.eligibility === 'base_standard')
-      .map((form) => ({ id: form.formId, name: form.name }));
+      .map((form) => ({ id: form.formId, name: familiarFormLabel(form.formId) }));
     return [{
       id: FIND_FAMILIAR_FORM_CHOICE,
       prompt: 'Форма дикого спутника',

@@ -4620,7 +4620,9 @@ function withInitiativeAndStart(state: SoloCombatState, rng: Rng,
     actors[actorId] = {...actor, runtime: prepared.state};
     initiativeEvents[actorId] = [...prepared.events];
   }
-  const initiative = Object.values(actors).map((actor) => {
+  const presentFamiliarIds = Object.values(actors).filter(actor => actor.familiarState?.presence === 'present').map(actor => actor.id);
+  // StartEncounter owns familiar initiative. Do not spend a second roll here.
+  const initiative = Object.values(actors).filter(actor => !actor.familiarState).map((actor) => {
     const bonus = Number(state.initiativeBonuses[actor.id] ?? actor.character.abilityMods.dex ?? 0);
     const collected = collectRollModifiers(actor.runtime, actor.passives ?? [], {roll: 'initiative'});
     const roll = rollD20({advantage: collected.advantage, modifiers: [{value: bonus, source: 'инициатива'}],
@@ -4641,11 +4643,23 @@ function withInitiativeAndStart(state: SoloCombatState, rng: Rng,
     state: next,
     command: {
       ...commandBase(next, state.characterId), type: 'StartEncounter',
-      initiative: initiative.map((entry) => entry.actorId),
+      initiative: [...initiative.map((entry) => entry.actorId), ...presentFamiliarIds],
     },
     rng,
     label: 'Инициатива',
   });
+  for (const actorId of presentFamiliarIds) {
+    const rolled = next.world.actors[actorId].familiarState!.initiative;
+    if (rolled.d20Roll === null || rolled.modifier === null || rolled.total === null) throw new Error('Фамильяр не получил инициативу');
+    // Render the core-owned result without consuming another random value.
+    const roll = rollD20({ modifiers: [{ value: rolled.modifier, source: 'инициатива' }], rng: () => (rolled.d20Roll! - 1) / 20 });
+    next = appendLog(next, actorId, roll.text, [{kind:'engine',ordinal:0,sourceActorId:actorId,actorId,targetIds:[],event:rollEvent('Инициатива',roll)}]);
+  }
+  if (next.world.scene.mode === 'encounter') {
+    // Reconciliation preserves an active turn for mid-battle summons. At initial
+    // setup no turn has started, so the highest complete initiative goes first.
+    next = {...next,world:{...next.world,scene:{...next.world.scene,activeIndex:0}}};
+  }
   const alertOwners = controlledCharacterIds(next).filter((actorId) => {
     const actor = next.world.actors[actorId];
     return Boolean(actor?.capabilities.featureSources?.[ALERT_INITIATIVE_SWAP_CAPABILITY])

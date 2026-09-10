@@ -1,3 +1,4 @@
+import { familiarFormLabel, familiarPresenceLabel } from '../character/familiarLabels';
 import { useMemo, useState } from 'react';
 import type { Relation } from '../rules-core/domain';
 import type { SheetCompanionControlModel } from '../character/sheetCompanionActions';
@@ -89,13 +90,13 @@ export default function SheetCompanionControls({
   if (!model.familiar && !model.pactBlade && !model.pactTome) return null;
   return (
     <section className="sheet-group" data-testid="sheet-companion-controls" aria-labelledby="sheet-companion-title">
-      <h3 id="sheet-companion-title" className="sheet-h3">Спутник и дары договора</h3>
+      <h3 id="sheet-companion-title" className="sheet-h3">{model.pactBlade || model.pactTome ? 'Спутник и дары договора' : 'Фамильяр'}</h3>
       {model.blockedReason && <p className="issues" role="status">{model.blockedReason}</p>}
 
       {model.familiar && (
         <div className="sheet-item-cols" data-testid="sheet-familiar-controls">
           <p>
-            {model.familiar.name}: {model.familiar.presence} · Реакция{' '}
+            {familiarFormLabel(model.familiar.name)}: {familiarPresenceLabel(model.familiar.presence)} · Реакция{' '}
             {model.familiar.reactionAvailable ? 'готова' : 'потрачена'}.
           </p>
           {model.familiar.presence === 'present' ? (

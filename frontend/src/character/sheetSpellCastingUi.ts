@@ -34,8 +34,8 @@ function optionId(
 
 function paymentLabel(payment: ResolvedSpellAccess['payment']): string {
   if (payment.kind === 'none') return 'без расхода';
-  if (payment.kind === 'free_use') return `бесплатное использование (${payment.resource})`;
-  return `ячейка (${payment.resource})`;
+  if (payment.kind === 'free_use') return 'бесплатное использование';
+  return `ячейка ${payment.resource?.match(/_(\d+)$/)?.[1] ?? 1}-го круга`;
 }
 
 function castLevel(action: Extract<RuleActionDefinition, { kind: 'spell' }>, resource?: string): number {
@@ -51,6 +51,7 @@ function resolvedOption(input: {
   grant: SpellGrantAccess;
   mode: 'normal' | 'ritual';
   preferFreeUse?: boolean;
+  sourceLabel: string;
   access: NonNullable<SheetCanonicalRuntime['world']['actors'][string]['spellcastingAccess']>;
   resources: Readonly<Record<string, number>>;
 }): SheetSpellCastOption | null {
@@ -66,7 +67,7 @@ function resolvedOption(input: {
   const level = castLevel(input.action, resolved.payment.resource);
   return {
     id: optionId(input.grant, input.mode, resolved.payment),
-    label: `${input.grant.sourceId} · ${input.mode === 'ritual' ? 'ритуал' : paymentLabel(resolved.payment)}`,
+    label: `${input.sourceLabel} · ${input.mode === 'ritual' ? 'ритуал' : paymentLabel(resolved.payment)}`,
     declaration: {
       grantId: input.grant.grantId,
       mode: input.mode,
@@ -97,9 +98,12 @@ export function collectSheetSpellCastOptions(input: {
     .sort((left, right) => left.grantId.localeCompare(right.grantId));
   const result: SheetSpellCastOption[] = [];
   for (const grant of grants) {
+    const source = (actor.passives ?? []).find(entry => entry.id === grant.sourceId || entry.sourceEntityId === grant.sourceId);
+    const sourceLabel = typeof source?.name === 'string' ? source.name : 'Сотворение заклинаний';
     const freeOrNone = resolvedOption({
       action: input.action,
       grant,
+      sourceLabel,
       mode: 'normal',
       preferFreeUse: true,
       access,
@@ -109,6 +113,7 @@ export function collectSheetSpellCastOptions(input: {
     const slot = resolvedOption({
       action: input.action,
       grant,
+      sourceLabel,
       mode: 'normal',
       preferFreeUse: false,
       access,
@@ -119,6 +124,7 @@ export function collectSheetSpellCastOptions(input: {
       const ritual = resolvedOption({
         action: input.action,
         grant,
+        sourceLabel,
         mode: 'ritual',
         access,
         resources: actor.runtime.resources,

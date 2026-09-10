@@ -1,3 +1,4 @@
+import { handleCommand } from '../rules-core/handler';
 import {createSheetCombatSession} from '../character/sheetCombatSession';
 import {telekineticHeldObjects} from '../rules-core/telekineticMovement';
 import {migrateWorldState} from '../rules-core/worldMigration';
@@ -1169,6 +1170,40 @@ describe('solo combat engine vertical integration', () => {
     expect(() => readSoloCombatState(
       writeSoloCombatState({}, created), participant.character.id, 1,
     )).not.toThrow();
+  });
+
+  it.each([true,false])('rolls a present camp familiar once, excludes a dismissed one and respects initiative (present=%s)', async (present) => {
+    const fixture = wildCompanionParticipant();
+    const world = fixture.participant.canonical.world;
+    const cast = handleCommand(world,{schemaVersion:1,type:'UseAction',commandId:'camp-companion-cast',
+      actorId:fixture.participant.character.id,expectedRevision:world.revision,rulesetContentHash:world.ruleset.contentHash,
+      actionId:fixture.action.id,targetIds:[],choices:{find_familiar_form:'owl'}},fixture.participant.canonical.catalog,
+      {rng:()=>0.5,clock:()=>0,nextId:()=> 'camp-owl'});
+    if (cast.status !== 'accepted') throw new Error(cast.message);
+    fixture.participant.canonical.world = cast.nextState;
+    if (!present) Object.values(cast.nextState.actors).find(actor=>actor.familiarState)!.familiarState!.presence = 'pocket_dimension';
+    const samples=[0.1,0.1,0.99]; let used=0;
+    const state = await createSoloCombatState({character:fixture.participant.character,participant:fixture.participant,
+      selected:[{monster:goblin(),quantity:1}],actions:[scimitar(),dash()],effects:[],rng:()=>{
+        if (used >= samples.length) throw new Error('Unexpected extra initiative roll');
+        return samples[used++];
+      }});
+    const familiar = Object.values(state.world.actors).find(actor=>actor.familiarState);
+    if (!present) {
+      expect(used).toBe(2); expect(state.initiative).toHaveLength(2);
+      expect(state.initiative.some(entry=>entry.actorId===familiar!.id)).toBe(false);
+      expect(state.tokens[familiar!.id]).toBeUndefined();
+      return;
+    }
+    expect(familiar?.familiarState?.initiative).toMatchObject({d20Roll:20,modifier:1,total:21});
+    expect(used).toBe(3);
+    expect(state.initiative[0]).toMatchObject({actorId:familiar!.id,die:20,bonus:1,total:21});
+    expect(activeId(state)).toBe(familiar!.id);
+    expect(state.log.filter(entry=>entry.actorId===familiar!.id && entry.text.includes('к20:'))).toHaveLength(1);
+    expect(state.log.find(entry=>entry.actorId===familiar!.id && entry.text.includes('к20:'))?.text).toContain('21');
+    const saved = readSoloCombatState(writeSoloCombatState({},state),state.characterId,state.runtimeRevision)!;
+    expect(activeId(saved)).toBe(familiar!.id);
+    expect(saved.initiative).toEqual(state.initiative);
   });
 
   it('projects a Wild Companion into the tactical map, initiative, allegiance, and player-controlled turn', async () => {

@@ -1,3 +1,4 @@
+import { familiarFormLabel } from './familiarLabels';
 import { extractDiceFromEvents, type PlannedDie } from '../engine/dicePlan';
 import { executeAction } from '../engine/execute';
 import { evaluate, type FormulaContext } from '../engine/formula';
@@ -817,7 +818,7 @@ export function collectSheetPrimitiveChoices(
   if (primitive === WILD_COMPANION_PRIMITIVE) {
     const forms = FAMILIAR_ACTOR_CATALOG.forms
       .filter((form) => form.eligibility === 'base_standard')
-      .map((form) => ({ id: form.formId, name: form.name }));
+      .map((form) => ({ id: form.formId, name: familiarFormLabel(form.formId) }));
     return [choice(
       FIND_FAMILIAR_FORM_CHOICE,
       'Форма дикого спутника',
@@ -893,7 +894,7 @@ export function collectSheetPrimitiveChoices(
   const chain = actor.warlockPacts?.chain?.template.findFamiliarActionId === canonical.action.id;
   const forms = FAMILIAR_ACTOR_CATALOG.forms
     .filter((form) => form.eligibility === 'base_standard' || chain)
-    .map((form) => ({ id: form.formId, name: form.name }));
+    .map((form) => ({ id: form.formId, name: familiarFormLabel(form.formId) }));
   return [
     choice(FIND_FAMILIAR_FORM_CHOICE, 'Форма фамильяра', forms, [forms[0].id]),
     choice(FIND_FAMILIAR_SPIRIT_CHOICE, 'Тип духа', [
