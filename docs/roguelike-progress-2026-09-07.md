@@ -2,7 +2,7 @@
 
 The original plan is `docs/roguelike-implementation-plan-2026-09-07.md` in the user's original checkout. The release worktree was created from production and did not include that uncommitted document. This report distinguishes delivered behavior from the larger original acceptance criteria. The requested reuse of the character sheet, desktop Forge and ShopDetail supersedes the plan's separate camp interface.
 
-## Current acceptance summary — 2026-09-10
+## Current acceptance summary — 2026-09-12
 
 This table supersedes historical status statements in the chronological appendices below. Testing continues locally against the local PostgreSQL copy; TimeWeb deployment is deferred at the user's request.
 
@@ -14,11 +14,11 @@ This table supersedes historical status statements in the chronological appendic
 | 5–6: fighter | L1–5 natural Champion run; four subclasses implemented with dedicated scenario suites, 20 maneuvers, EK progression/bond, Psi foundations, familiar movement and Touch delivery | Remaining feat/spell closure and browser matrix; style replacement (256) and class mastery Long Rest swap (257) accepted; see open limitations below |
 | 7–8: monsters/AI | All 18 planned stat blocks enabled; movement, reactions, reach/range, weapon switching, control and deterministic route-risk planning accepted | Future closed/vertical arenas and broader mixed-build performance samples |
 | 9: encounters/rewards | Independent RNG, frozen rosters, explicit mixed templates, one-time rewards, weighted stock/loot | Full survival/economy matrix; L1 Zombie, L3 Tough and geared L5 Champion quantity comparisons measured (258) |
-| 10: camp/shop | Existing sheet/Forge/shop reused; natural rests, healing items, equipment, physical attunement, refresh and pinned stock across paid/free refresh | World spell time/effect aging and remaining item matrix |
+| 10: camp/shop | Existing sheet/Forge/shop reused; natural rests and their decisions, healing items, equipment, physical attunement, refresh and pinned stock across paid/free refresh; world durations age during rests and long casts | Remaining item matrix |
 | 11: complete run | Natural UI-only 0→14650 XP, 46 wins, L5, attempt11; Victory clicked and retained after reload | Iterative run across fixes is not a single-version balance benchmark |
 | 12: regression/rollout | Latest full runtime gate: 415 files / 3675 tests (275); actual command replays | Final release gate after remaining fighter/item closure; local browser acceptance continues |
 
-Concrete open limitations: pending camp decisions and world-effect aging during long casts; Weapon Bond external carriers and rest choices. These must not be silently marked complete by the successful Champion run. Historical appendices record narrower checks and any seeded QA fixtures separately.
+Camp decisions, world-effect duration aging and in-scene Weapon Bond carriers are accepted in increment 282. A bonded weapon whose external scene disappears becomes an unattended same-plane bonded instance and remains recallable. Remaining release work is the broader fighter/item/browser matrix and the final gate; the successful Champion run alone does not certify those combinations. Historical appendices record narrower checks and any seeded QA fixtures separately.
 
 ## This increment
 
@@ -1009,3 +1009,11 @@ Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br
 - Choosing an owned canonical Touch spell in the existing combat hotbar offers the present familiar as a delivery origin. The shared rules-core command remains authoritative for the owner's action/slot, the familiar's Reaction, its 100-foot connection, the target's 5-foot Touch range, attack/save continuations and reload.
 - A legacy base familiar without captured `ongoingSpell` is upgraded only after its exact persisted actor validates against its previous owner and the pinned familiar catalog. The migration captures the released 100/30-foot and 600-second policy; a forged legacy owner/action relation is still rejected. This lets an already cast familiar survive later prepared-spell changes without importing stale owner capabilities.
 - Focused integration passes 302 scenarios, including worker-routed flight, Flyby, Dash, Touch damage and legacy rejection. TypeScript and changed-file lint pass. Local browser acceptance follows after the worker rebuild; no TimeWeb deployment.
+
+## Increment 282 — authoritative rest choices and elapsed camp time
+
+- The reused sheet rest dialogs now send slot-recovery choices, prepared-spell swaps and Long Rest preparation as intent. The worker rebuilds the same policies from the frozen catalog, rejects foreign decision identities and persists only validated results. Hit dice and Weapon Mastery continue through the same boundary.
+- The API derives the complete elapsed Long Rest interval, including any wait needed to reach 16 hours since the previous Long Rest. Short Rest and the Weapon Bond ritual advance exactly one hour; recall remains instant.
+- Existing actor effects, companion effects, concentrations and persistent world-object durations advance through rests. A long camp cast advances pre-existing durations before the action resolves, so the newly created spell result keeps its full declared duration.
+- Weapon Bond recall now retains the exact external in-scene carrier through canonical reload, removes the item from that carrier and places it in the chosen free hand without duplication. If a content change removes the external scene actor, the durable bond is normalized to an unattended same-plane instance rather than making the sheet unloadable.
+- Focused camp, Weapon Bond and time tests pass, together with TypeScript, changed-file lint and all Go packages. Local worker/API/browser acceptance follows in the final gate; no TimeWeb deployment.
