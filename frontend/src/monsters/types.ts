@@ -34,6 +34,12 @@ export interface Monster {
     skill_expertise?: string[];
     darkvision_ft?: number;
     blindsight_ft?: number;
+    movement_speeds?: Partial<Record<'walk' | 'climb' | 'fly' | 'swim' | 'burrow', number>>;
+    movement_traits?: Array<{
+      id: string;
+      name: string;
+      mechanics: Record<string, unknown>;
+    }>;
     knock_prone?: boolean;
     undead_fortitude?: boolean;
     bloodied_frenzy?: boolean;

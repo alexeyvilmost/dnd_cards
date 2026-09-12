@@ -9,6 +9,7 @@ const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
 const SIZE_INDEX: Record<string, number> = {
   tiny: 0, small: 1, medium: 2, large: 3, huge: 4, gargantuan: 5,
 };
+const MOVEMENT_MODES = ['walk', 'climb', 'fly', 'swim', 'burrow'] as const;
 
 function abilityMod(score: number): number { return Math.floor((score - 10) / 2); }
 
@@ -55,6 +56,23 @@ export function compileMonsterInstance(input: {
   const storedWeapon = input.monster.ai.held_weapon_card;
   const heldWeapon = storedWeapon ? {...storedWeapon, properties:cardPropertyList(storedWeapon.properties)} : undefined;
   if (heldWeapon && (!heldWeapon.id || heldWeapon.type !== 'weapon')) throw new Error('Некорректное оружие монстра');
+  const movementSpeeds = input.monster.ai.movement_speeds;
+  if (movementSpeeds) {
+    for (const [mode, feet] of Object.entries(movementSpeeds)) {
+      if (!MOVEMENT_MODES.includes(mode as (typeof MOVEMENT_MODES)[number])
+        || !Number.isInteger(feet) || Number(feet) <= 0) {
+        throw new Error(`Некорректная скорость ${mode} у «${input.monster.name}»`);
+      }
+    }
+    if (movementSpeeds.walk !== input.monster.speed) {
+      throw new Error(`Скорость ходьбы «${input.monster.name}» расходится со стат-блоком`);
+    }
+  }
+  const movementTraits = input.monster.ai.movement_traits ?? [];
+  if (movementTraits.some((trait) => !trait.id || !trait.name || !trait.mechanics
+    || typeof trait.mechanics !== 'object' || Array.isArray(trait.mechanics))) {
+    throw new Error(`Некорректное свойство перемещения у «${input.monster.name}»`);
+  }
   const twoHanded = heldWeapon && (heldWeapon.slot === 'two_hands'
     || heldWeapon.properties.some(property => property === 'two_handed' || property === 'two-handed'));
   if(heldWeapon){
@@ -91,6 +109,14 @@ export function compileMonsterInstance(input: {
       id: 'monster-blindsight', kind: 'grant_sense', sense: 'blindsight',
       range: input.monster.ai.blindsight_ft,
     }] : []),
+    ...Object.entries(movementSpeeds ?? {}).flatMap(([mode, feet]) => (
+      mode === 'walk' ? [] : [{
+        id: `monster-speed:${mode}`, kind: 'grant_speed', mode, value: feet,
+      }]
+    )),
+    ...movementTraits.map((trait) => ({
+      id: trait.id, name: trait.name, ...trait.mechanics,
+    })),
     ...(input.monster.ai.darkvision_ft ? [{
       id: 'monster-darkvision', kind: 'grant_sense', sense: 'darkvision',
       range: input.monster.ai.darkvision_ft,

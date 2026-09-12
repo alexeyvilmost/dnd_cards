@@ -401,6 +401,28 @@ it('compiles monster proficiencies, expertise, senses and condition immunities a
   expect(actor.traits?.conditionImmunities).toEqual([{ condition: 'poisoned', sourceEntityIds: [monster.id] }]);
 });
 
+it('retains declared monster movement modes and Spider Climb without changing flat-arena walking speed', () => {
+  const monster = goblin();
+  monster.speed = 40;
+  monster.ai = {
+    movement_speeds: {walk: 40, climb: 40},
+    movement_traits: [{id: 'spider_climb', name: 'Паучье лазание', mechanics: {
+      kind: 'movement_trait', mode: 'climb', ignores_ability_checks_on: [
+        'difficult_surfaces', 'vertical_surfaces', 'ceilings',
+      ],
+    }}],
+  };
+  const {actor} = compileMonsterInstance({monster, instanceId: 'test:spider', actions: [meleeAction()], effects: []});
+  expect(actor.character.characterSpeed).toBe(40);
+  expect(actor.passives).toEqual(expect.arrayContaining([
+    expect.objectContaining({id: 'monster-speed:climb', kind: 'grant_speed', mode: 'climb', value: 40}),
+    expect.objectContaining({id: 'spider_climb', kind: 'movement_trait', mode: 'climb'}),
+  ]));
+  const malformed = {...monster, ai: {...monster.ai, movement_speeds: {walk: 30, climb: 40}}};
+  expect(() => compileMonsterInstance({monster: malformed, instanceId: 'bad:spider', actions: [meleeAction()], effects: []}))
+    .toThrow('расходится со стат-блоком');
+});
+
 
 describe('AI path search', () => {
   it('routes around occupied intermediate cells rather than crossing them', () => {

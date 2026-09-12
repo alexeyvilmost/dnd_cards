@@ -10,8 +10,8 @@ import {canStandActor} from '../src/solo-combat/engine';
 import {gridDistanceFt, reachableRoutes} from '../src/solo-combat/tacticalGrid';
 
 const [inputPath, repetitions = '100', counts = '1,2,3'] = process.argv.slice(2);
-if (!inputPath) throw Error('Usage: bundled-balance.cjs private-input.json repetitions quantities');
-const base = JSON.parse(readFileSync(inputPath, 'utf8'));
+if (!inputPath) throw Error('Usage: bundled-balance.cjs private-input.json|- repetitions quantities');
+const base = JSON.parse(readFileSync(inputPath === '-' ? 0 : inputPath, 'utf8'));
 const runs = Number(repetitions);
 if (!Number.isInteger(runs) || runs < 1 || runs > 10000 || base.roster.length !== 1) throw Error('Invalid diagnostic bounds');
 const hash = `sha256:${'a'.repeat(64)}`;
