@@ -861,6 +861,35 @@ describe('Protective Field preserves independent reactor costs and held damage',
   const pending=session.getState().pendingResolution!;
   return session.dispatch({schemaVersion:1,type:'ResolveDecision',commandId:id,expectedRevision:session.getState().revision,rulesetContentHash:RULESET.contentHash,actorId:pending.request.actorId,resolutionId:pending.id,requestId:pending.request.id,response:{kind:'reaction',actionId}});
  }
+ it('preserves mixed damage packets through reload and reapplies resistance after reduction',()=>{
+  const initial=world([PROTECTIVE_FIELD.id]);
+  initial.actors.attacker.capabilities.actionIds=[DUAL_DAMAGE_PULSE.id];
+  initial.actors.defender.character.variables={psi_warrior_energy_die:{count:1,sides:6}};
+  initial.actors.defender.character.abilityMods.int=2;
+  initial.actors.defender.runtime.resources.psi_warrior_energy_die=4;
+  initial.actors.defender.runtime.maxResources.psi_warrior_energy_die=4;
+  initial.actors.defender.passives=[{kind:'resistance',damage_type:'fire',value:'resistance'}];
+  const catalog:RulesCatalog={getAction:id=>id===DUAL_DAMAGE_PULSE.id?DUAL_DAMAGE_PULSE:id===PROTECTIVE_FIELD.id?PROTECTIVE_FIELD:undefined};
+  const opening=new InMemoryRulesSession(initial,catalog,{rng:createStrictRngTape([]).rng,clock:createLogicalClock(),nextId:createSequentialIdFactory('mixed-field')});
+  begin(opening,[PROTECTIVE_FIELD.id]);
+  expect(opening.dispatch({schemaVersion:1,type:'UseAction',commandId:'mixed-pulse',expectedRevision:opening.getState().revision,rulesetContentHash:RULESET.contentHash,actorId:'attacker',actionId:DUAL_DAMAGE_PULSE.id,targetIds:['defender'],factsByTarget:{defender:facts}}).status).toBe('accepted');
+  expect(opening.getState().actors.defender.runtime.hp.current).toBe(20);
+  expect(opening.getState().pendingResolution).toMatchObject({
+   type:'damage_reaction',
+   damage:[{amount:1,damageType:'fire'},{amount:5,damageType:'cold'}],
+   request:{trigger:{amount:6,damageTypes:['fire','cold']}},
+  });
+
+  const checkpoint=migrateWorldState(JSON.parse(JSON.stringify(opening.getState())));
+  const tape=createStrictRngTape([{label:'reduction',sides:6,value:4}]);
+  const restored=new InMemoryRulesSession(checkpoint,catalog,{rng:tape.rng,clock:createLogicalClock(checkpoint.logicalClock),nextId:createSequentialIdFactory('mixed-field-reload')});
+  expect(respond(restored,PROTECTIVE_FIELD.id,'protect-mixed').status).toBe('accepted');
+  tape.assertExhausted();
+  const final=restored.getState();
+  expect(final.pendingResolution).toBeNull();
+  expect(final.actors.defender.runtime.hp.current).toBe(18);
+  expect(final.actors.defender.runtime.resources).toMatchObject({reaction:0,psi_warrior_energy_die:3});
+ });
  it.each(['normal','resistant','self','source'])('holds lethal damage, reloads and resolves: %s',mode=>{
   const {session,catalog,result}=make(mode);expect(result.status).toBe('accepted');
   expect(session.getState().actors.defender.runtime.hp.current).toBe(4);
