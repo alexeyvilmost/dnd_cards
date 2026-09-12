@@ -18,7 +18,7 @@ This table supersedes historical status statements in the chronological appendic
 | 11: complete run | Natural UI-only 0→14650 XP, 46 wins, L5, attempt11; Victory clicked and retained after reload | Iterative run across fixes is not a single-version balance benchmark |
 | 12: regression/rollout | Latest full runtime gate: 415 files / 3675 tests (275); actual command replays | Final release gate after remaining fighter/item closure; local browser acceptance continues |
 
-Concrete open limitations: familiar flight/touch spell delivery; legacy familiars without captured ongoing policy after prepared-spell removal (new casts fixed253); pending camp decisions and world-effect aging during long casts; Weapon Bond external carriers and rest choices; generic action-embedded checks and legacy Tactical Mind boons. These must not be silently marked complete by the successful Champion run. Historical appendices record narrower checks and any seeded QA fixtures separately.
+Concrete open limitations: familiar flight/touch spell delivery; legacy familiars without captured ongoing policy after prepared-spell removal (new casts fixed253); pending camp decisions and world-effect aging during long casts; Weapon Bond external carriers and rest choices. These must not be silently marked complete by the successful Champion run. Historical appendices record narrower checks and any seeded QA fixtures separately.
 
 ## This increment
 
@@ -993,3 +993,11 @@ Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br
 - The exact incoming-damage continuation now has a focused mixed-packet certificate. A single action deals separate Fire and Cold packets while the protected target has Fire Resistance; the pending reaction stores both post-resistance packets and both damage types without mutating HP.
 - After JSON migration and reload, Protective Field rolls its reduction once against the original pre-resistance bundle. Reduction is allocated in the action's stable packet order, then the shared damage calculator reapplies the matching resistance to each remaining packet. The certified case reduces 3 Fire + 5 Cold by 6 to 0 Fire + 2 Cold, for exactly 2 HP damage.
 - The same resolution spends one Reaction and one Psionic Energy Die, closes the pending decision and consumes no triggering-action RNG again. The focused reaction suite, TypeScript and changed-file lint pass. Existing browser acceptance for Protective Field covers the visual reaction flow; this increment closes the engine's mixed-type persistence boundary without introducing another UI.
+
+## Increment 280 — Tactical Mind for action-embedded and legacy checks
+
+- The executor now returns the exact result of each top-level ability-check interaction to the canonical adapter. A single failed check inside an ordinary action can open the existing post-roll Tactical Mind decision after the action's cost and original d20 are committed.
+- The continuation persists the action, effect index, target, board facts, choices and spell context. After reload, a successful d10 resumes only the declared `on_success` payload; it neither rerolls nor pays the original action again. Both fixed-DC checks and contested checks are covered, including applying the resumed consequence to the original target.
+- Contested actions now receive the target's actual ability, proficiency and expertise totals from the canonical actor. Their opposing result is retained as the minimum success threshold for the post-failure decision.
+- A legacy Tactical Mind boon that was armed before the check is consumed once. If its bonus still fails, its Second Wind use is refunded as declared, but the same failed check cannot offer a second Tactical Mind activation.
+- Pending action-check snapshots reject invalid effect indices, missing actors and inconsistent roll/trigger metadata during world migration. Focused engine and rules-core suites pass (35 tests), along with TypeScript and changed-file lint. The existing browser Tactical Mind panel and saved-decision flow were already accepted in increment 263; this closes the remaining generic execution boundary without adding UI.

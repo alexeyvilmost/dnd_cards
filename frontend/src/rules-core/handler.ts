@@ -269,6 +269,22 @@ const ABILITY_LABEL: Record<Ability, string> = {
   str: 'СИЛ', dex: 'ЛВК', con: 'ТЕЛ', int: 'ИНТ', wis: 'МДР', cha: 'ХАР',
 };
 
+const SKILL_ABILITY: Record<string,Ability> = {
+  acrobatics:'dex',animal_handling:'wis',arcana:'int',athletics:'str',deception:'cha',
+  history:'int',insight:'wis',intimidation:'cha',investigation:'int',medicine:'wis',
+  nature:'int',perception:'wis',performance:'cha',persuasion:'cha',religion:'int',
+  sleight_of_hand:'dex',stealth:'dex',survival:'wis',
+};
+
+function actorCheckMods(actor:ActorState):Record<string,number>{
+  return Object.fromEntries(Object.entries(SKILL_ABILITY).map(([skill,ability])=>{
+    const proficiency=actor.character.skillExpertise?.includes(skill)
+      ? actor.character.profBonus*2
+      : actor.character.skillProficiencies?.includes(skill) ? actor.character.profBonus : 0;
+    return [skill,(actor.character.abilityMods[ability]??0)+proficiency];
+  }));
+}
+
 function rejected(world: WorldState, code: CommandRejectionCode, message: string): CommandResult {
   return { status: 'rejected', code, message, state: world };
 }
@@ -1159,6 +1175,7 @@ function actionContext(
     ...(target ? {
       target: {
         id: target.id,
+        checkMods:actorCheckMods(target),
         ...(Number.isInteger(effectiveActorSize(target, targetRuntime))
           ? { size: effectiveActorSize(target, targetRuntime)! }
           : {}),
@@ -2359,6 +2376,29 @@ function executeUseAction(
     followUps,
     env,
   }));
+  const embeddedChecks = executions.flatMap(({target,result}) => (
+    (result.abilityChecks ?? []).map(check => ({target,result,check}))
+  ));
+  if (followUps.length === 0 && embeddedChecks.length === 1) {
+    const [{target,check}] = embeddedChecks;
+    events.push(...openFailedCheckBoost(
+      world,
+      {...source,runtime:sourceAfter},
+      check.roll,
+      {
+        type:'action_ability_check',
+        actionId:action.id,
+        effectIndex:check.effectIndex,
+        ...(target ? {targetActorId:target.id} : {}),
+        ...(target ? {facts:command.factsByTarget?.[target.id]} : {}),
+        ...(command.choices ? {choices:JSON.parse(JSON.stringify(command.choices)) as Record<string,string|string[]>} : {}),
+        ...(command.spell ? {spell:JSON.parse(JSON.stringify(command.spell)) as SpellCastContext} : {}),
+      },
+      command.commandId,
+      catalog,
+      env,
+    ));
+  }
   return events;
 }
 
@@ -6431,7 +6471,8 @@ function openFailedCheckBoost(
   continuation: import('./domain').PendingCheckBoostResolution['continuation'],
   commandId: string, catalog: RulesCatalog, env: DeterministicEnvironment,
 ): EventInput[] {
-  if (roll.kind !== 'd20' || roll.outcome !== 'fail' || roll.target?.type !== 'dc') return [];
+  if (roll.kind !== 'd20' || roll.outcome !== 'fail' || roll.target?.type !== 'dc'
+    || roll.usedFailureBonus === true) return [];
   const actions = failedCheckBoostActions(actor, catalog);
   if (!actions.length) return [];
   return [{sourceActorId: actor.id, obligationIds: ['system:ability-check', 'system:pending-resolution'], payload: {
@@ -6463,6 +6504,18 @@ function resolveFailedCheckBoost(
   if (pending.continuation.type === 'escape_grapple' && grapple?.targetActorId !== actor.id) return rejected(world, 'InvalidDecision', 'Захват больше не существует');
   const studyObject = pending.continuation.type === 'study' ? world.objects[pending.continuation.objectId] : undefined;
   if (pending.continuation.type === 'study' && studyObject?.illusion?.spellSaveDc !== trigger.dc) return rejected(world, 'InvalidDecision', 'Иллюзия для проверки изменилась');
+  const actionContinuation = pending.continuation.type === 'action_ability_check' ? pending.continuation : undefined;
+  const continuedAction = actionContinuation ? catalog.getAction(actionContinuation.actionId) : undefined;
+  const continuedEffect = actionContinuation && continuedAction
+    && Array.isArray(continuedAction.mechanics.effects)
+    ? continuedAction.mechanics.effects[actionContinuation.effectIndex] as Record<string,unknown>|undefined
+    : undefined;
+  if (actionContinuation && (!continuedAction || continuedAction.id !== actionContinuation.actionId
+    || !continuedEffect || continuedEffect.resolution !== 'ability_check'
+    || !Array.isArray(continuedEffect.on_success)
+    || (actionContinuation.targetActorId && !world.actors[actionContinuation.targetActorId]))) {
+    return rejected(world,'InvalidDecision','Исход исходного действия больше нельзя продолжить');
+  }
   const selected = command.response.actionId;
   const action = selected ? failedCheckBoostActions(actor, catalog).find(entry => entry.id === selected) : undefined;
   if (selected && (!action || !pending.request.options.some(option => option.actionId === selected))) return rejected(world, 'InvalidDecision', 'Способность недоступна для этой проверки');
@@ -6493,6 +6546,35 @@ function resolveFailedCheckBoost(
   if (roll.outcome === 'success' && studyObject) {
     const mutation = studyMinorIllusion({objects: world.objects, objectId: studyObject.id, actorId: actor.id, checkTotal: roll.total});
     events.push(...worldObjectEvents(actor.id, CORE_STUDY_WORLD_OBJECT_ACTION, mutation.events, 'system:study-action', 'system:minor-illusion'));
+  }
+  if (roll.outcome === 'success' && actionContinuation && continuedAction && continuedEffect) {
+    const target = actionContinuation.targetActorId ? world.actors[actionContinuation.targetActorId] : undefined;
+    const resumed = executeAction(runtime, {
+      name:continuedAction.name,
+      activation:{mode:'active',cost:[]},
+      effects:[{
+        resolution:'auto',
+        result:continuedEffect.on_success,
+        ...(continuedEffect.who !== undefined ? {who:continuedEffect.who} : {}),
+        ...(continuedEffect.who_choice_id !== undefined ? {who_choice_id:continuedEffect.who_choice_id} : {}),
+      }],
+    }, {
+      ...actionContext(
+        {...actor,runtime},
+        env,
+        target,
+        target?.runtime,
+        actionContinuation.facts,
+        actionContinuation.spell,
+      ),
+      actionName:continuedAction.name,
+      choices:actionContinuation.choices,
+      spell:actionContinuation.spell,
+    });
+    const continuationObligations=[...new Set([...obligations,...actionObligationIds(continuedAction)])];
+    events.push(...runtimeTransition(actor.id,actor.id,runtime,resumed.state,'ability_check',continuationObligations));
+    if(target && resumed.targetState) events.push(...runtimeTransition(actor.id,target.id,target.runtime,resumed.targetState,'ability_check',continuationObligations));
+    events.push(...engineTrace(actor.id,target?[target.id]:[],resumed.events,continuationObligations));
   }
   events.push({sourceActorId: actor.id, obligationIds: obligations, payload: {type: 'ResolutionClosed', resolutionId: pending.id}});
   return events;

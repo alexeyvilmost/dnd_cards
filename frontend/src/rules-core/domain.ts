@@ -805,7 +805,16 @@ export interface PendingCheckBoostResolution {
   actorId: string;
   roll: RollLog;
   continuation: { type: 'check' } | { type: 'escape_grapple'; grappleId: string }
-    | {type: 'hide'} | {type: 'study'; objectId: string};
+    | {type: 'hide'} | {type: 'study'; objectId: string}
+    | {
+      type: 'action_ability_check';
+      actionId: string;
+      effectIndex: number;
+      targetActorId?: string;
+      facts?: SpatialFacts;
+      choices?: Record<string, string | string[]>;
+      spell?: SpellCastContext;
+    };
   request: ReactionDecisionRequest;
 }
 export type PendingResolution =

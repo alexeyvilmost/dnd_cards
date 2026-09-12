@@ -14,6 +14,7 @@ import type {
   ExecuteContext,
   ExecuteResult,
   ReactionOffer,
+  ResolvedAbilityCheck,
   RollLog,
   RollModifier,
   RuntimeState,
@@ -4322,6 +4323,8 @@ function runAbilityCheck(
   events: EngineEvent[],
   source: string,
   targetRef: TargetRef = { mutated: false },
+  resolvedChecks?: ResolvedAbilityCheck[],
+  effectIndex = -1,
 ): RuntimeState {
   const ability = String(effect.ability) as AbilityKey;
   const skill = String(effect.skill ?? '');
@@ -4347,6 +4350,7 @@ function runAbilityCheck(
   });
   let next = state;
   let success: boolean;
+  let resolvedRoll: RollLog | undefined;
   if (collected.autoFail) {
     // Sight/hearing requirements are explicit action facts. A matching
     // condition declares auto_fail; the executor consumes neither RNG nor a
@@ -4366,10 +4370,10 @@ function runAbilityCheck(
       rng: ctx.rng,
       rules: collected.rules,
     });
-    events.push(rollEvent(skill ? `Проверка (${skill})` : 'Проверка', { ...attRoll, kind: 'check' }));
     // Исход: против явно объявленной СЛ или явно объявленного набора защитных навыков.
     if (effect.dc != null) {
       success = attRoll.total >= evalDc(String(effect.dc), ctx);
+      resolvedRoll = attRoll;
     } else {
       // RAW 2024: цель ВЫБИРАЕТ одну защитную характеристику (Атлетика ИЛИ Акробатика) — берёт
       // выгоднейшую по модификатору — и совершает ОДИН бросок.
@@ -4381,15 +4385,28 @@ function runAbilityCheck(
       );
       const defMod = checkMods[defSkill];
       const defRoll = rollD20({ modifiers: [{ value: defMod, source: defSkill }], rng: ctx.rng });
-      events.push(rollEvent(`Ответ (${defSkill})`, { ...defRoll, kind: 'check' }));
       success = attRoll.total > defRoll.total;
+      resolvedRoll = {
+        ...attRoll,
+        target: {type: 'dc', value: defRoll.total + 1},
+        outcome: success ? 'success' : 'fail',
+        text: `${attRoll.text} против ${defRoll.total} — ${success ? 'успех' : 'провал'}`,
+      };
+      events.push(rollEvent(skill ? `Проверка (${skill})` : 'Проверка', { ...resolvedRoll, kind: 'check' }));
+      events.push(rollEvent(`Ответ (${defSkill})`, { ...defRoll, kind: 'check' }));
+    }
+    if (effect.dc != null) {
+      events.push(rollEvent(skill ? `Проверка (${skill})` : 'Проверка', { ...resolvedRoll, kind: 'check' }));
     }
     next = consumeNextRollEffects(state, 'ability_check', events, {
       filter: checkFilter,
       evalCtx: evalCtxOf(state, ctx),
       failed: attRoll.usedFailureBonus === true,
-      finalFailed: attRoll.usedFailureBonus === true && !success,
+      finalFailed: resolvedRoll.usedFailureBonus === true && !success,
     });
+    if (resolvedChecks && effectIndex >= 0) {
+      resolvedChecks.push({effectIndex, roll: JSON.parse(JSON.stringify(resolvedRoll)) as RollLog});
+    }
   }
 
   if (!success) return next;
@@ -4418,9 +4435,10 @@ function runMechanicEffects(
   targetRef: TargetRef = { mutated: false },
   criticalDamage = false,
   deferredSaves: DeferredTargetSave[] = [],
+  resolvedChecks?: ResolvedAbilityCheck[],
 ): RuntimeState {
   let next = state;
-  for (const eff of effects) {
+  for (const [effectIndex, eff] of effects.entries()) {
     const resolution = String(eff.resolution ?? '');
     try {
       // Ярус 1.2: choice как самостоятельная интеракция действия — через общий роутер payload-ов
@@ -4448,7 +4466,7 @@ function runMechanicEffects(
         next = runSave(eff, next, ctx, events, sourceName, targetRef, deferredSaves);
         continue;
       }
-      if (resolution === 'ability_check') { next = runAbilityCheck(eff, next, ctx, events, sourceName, targetRef); continue; }
+      if (resolution === 'ability_check') { next = runAbilityCheck(eff, next, ctx, events, sourceName, targetRef, resolvedChecks, effectIndex); continue; }
       throw mechanicsError(
         'UNKNOWN_RESOLUTION',
         'runtime.effect.resolution',
@@ -4706,6 +4724,7 @@ export function executeAction(
   const events: EngineEvent[] = [];
   const pending: ReactionOffer[] = [];
   const deferredSaves: DeferredTargetSave[] = [];
+  const abilityChecks: ResolvedAbilityCheck[] = [];
   // Состояние ОТДЕЛЬНОЙ цели (C2): клон (не мутируем объект вызывающего). Для self-target
   // отдельная ветка недопустима: она потеряла бы уже оплаченную стоимость source-state, когда
   // handler сведёт две мутации одного actor id. Поэтому who:'target' для самого исполнителя
@@ -4746,7 +4765,7 @@ export function executeAction(
   if (Array.isArray(effects)) {
     const sourceName = String(ctx.actionName ?? mechanics.name ?? 'действие');
     next = runMechanicEffects(
-      effects, next, ctx, events, sourceName, pending, targetRef, false, deferredSaves,
+      effects, next, ctx, events, sourceName, pending, targetRef, false, deferredSaves, abilityChecks,
     );
   }
 
@@ -4765,6 +4784,7 @@ export function executeAction(
     events,
     ...(pending.length ? { pendingReactions: pending } : {}),
     ...(deferredSaves.length ? { deferredTargetSaves: deferredSaves } : {}),
+    ...(abilityChecks.length ? { abilityChecks } : {}),
     ...(targetRef.mutated ? { targetState: targetRef.state } : {}),
   };
 }

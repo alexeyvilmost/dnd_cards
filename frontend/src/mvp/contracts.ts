@@ -489,6 +489,13 @@ export interface DeferredTargetSave {
   avoidsConditions: string[];
 }
 
+/** A completed ability check emitted by an action interaction. The rules
+ * adapter may retain a failed result while an after-failure feature is chosen. */
+export interface ResolvedAbilityCheck {
+  effectIndex: number;
+  roll: RollLog;
+}
+
 /**
  * Предложение реакции/триггера с ценой (фаза A): собирается диспетчером событий и
  * отдаётся UI, который спрашивает игрока (Automatic/Ask/Disabled) и исполняет выбранное.
@@ -508,6 +515,8 @@ export interface ExecuteResult {
   pendingReactions?: ReactionOffer[];
   /** Nested target saves paused before any target roll or consequence. */
   deferredTargetSaves?: DeferredTargetSave[];
+  /** Ability checks embedded in the action's top-level effects, in declaration order. */
+  abilityChecks?: ResolvedAbilityCheck[];
   /** Состояние ЦЕЛИ после payload-ов who:'target' (фаза E/C2). undefined — цель без
    *  runtimeState или без изменений (лист персистит только при наличии). */
   targetState?: RuntimeState;

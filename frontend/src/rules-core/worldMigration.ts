@@ -1465,6 +1465,63 @@ export function migrateWorldState(value: unknown): WorldState {
     const pending = world.pendingResolution === null
       ? null
       : record(world.pendingResolution, 'world.pendingResolution');
+    if (pending?.type === 'check_boost') {
+      const actorId = nonBlankString(pending.actorId, 'world.pendingResolution.actorId');
+      const roll = record(pending.roll, 'world.pendingResolution.roll');
+      const target = record(roll.target, 'world.pendingResolution.roll.target');
+      const request = record(pending.request, 'world.pendingResolution.request');
+      const trigger = record(request.trigger, 'world.pendingResolution.request.trigger');
+      if (!actors[actorId] || roll.kind !== 'd20' || roll.outcome !== 'fail'
+        || roll.usedFailureBonus === true || target.type !== 'dc'
+        || !Number.isFinite(roll.total) || !Number.isFinite(target.value)
+        || request.type !== 'reaction' || request.actorId !== actorId
+        || trigger.type !== 'ability_check_failed' || trigger.sourceActorId !== actorId
+        || trigger.total !== roll.total || trigger.dc !== target.value) {
+        throw new Error('world.pendingResolution failed-check result is inconsistent');
+      }
+      const continuation = record(
+        pending.continuation,
+        'world.pendingResolution.continuation',
+      );
+      if (continuation.type === 'action_ability_check') {
+        nonBlankString(
+          continuation.actionId,
+          'world.pendingResolution.continuation.actionId',
+        );
+        if (!Number.isInteger(continuation.effectIndex)
+          || Number(continuation.effectIndex) < 0) {
+          throw new Error('world.pendingResolution action-check effect index is invalid');
+        }
+        if (continuation.targetActorId !== undefined) {
+          const targetActorId = nonBlankString(
+            continuation.targetActorId,
+            'world.pendingResolution.continuation.targetActorId',
+          );
+          if (!actors[targetActorId]) {
+            throw new Error('world.pendingResolution action-check target is missing');
+          }
+        }
+        if (continuation.facts !== undefined) {
+          record(continuation.facts, 'world.pendingResolution.continuation.facts');
+        }
+        if (continuation.choices !== undefined) {
+          const choices = record(
+            continuation.choices,
+            'world.pendingResolution.continuation.choices',
+          );
+          for (const [key, value] of Object.entries(choices)) {
+            if (!key || (typeof value !== 'string'
+              && (!Array.isArray(value)
+                || value.some((entry) => typeof entry !== 'string')))) {
+              throw new Error('world.pendingResolution action-check choices are invalid');
+            }
+          }
+        }
+        if (continuation.spell !== undefined) {
+          record(continuation.spell, 'world.pendingResolution.continuation.spell');
+        }
+      }
+    }
     if (pending?.type === 'protection_reaction') {
       const issue = pendingProtectionResolutionIssue(pending, { actors });
       if (issue) throw new Error(`world.pendingResolution: ${issue}`);
