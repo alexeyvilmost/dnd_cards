@@ -284,6 +284,13 @@ export interface SoloCombatState {
   };
   monsterAttackSequence?: {actorId: string; targetId: string; actionIds: string[]};
   monsterMovement?: {actorId: string; steps: GridPosition[]};
+  /** A monster's automatic post-hit grapple retained across player reactions. */
+  pendingMonsterOnHitGrapple?: {
+    actorId: string;
+    targetId: string;
+    actionId: string;
+    fromLogCursor: number;
+  };
   schemaVersion: typeof SOLO_COMBAT_SCHEMA_VERSION;
   characterId: string;
   runtimeRevision: number;

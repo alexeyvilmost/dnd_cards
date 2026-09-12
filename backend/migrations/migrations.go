@@ -1474,6 +1474,7 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		{Version: "245_goblin_nimble_escape", Description: "Materialize Goblin Nimble Escape and advantage damage", Up: materializeGoblinNimbleEscape, Down: func(db *sql.DB) error { return nil }},
 		{Version: "246_giant_wolf_spider_movement", Description: "Declare Giant Wolf Spider movement modes and Spider Climb", Up: materializeGiantWolfSpiderMovement, Down: func(db *sql.DB) error { return nil }},
 		{Version: "247_monster_weapon_loadouts", Description: "Bind Bandit Captain and Warrior Veteran attacks to carried weapons", Up: materializeMonsterWeaponLoadouts, Down: func(db *sql.DB) error { return nil }},
+		{Version: "248_bugbear_grab", Description: "Declare Bugbear Grab, hammer Advantage, and Abduct movement", Up: materializeBugbearGrab, Down: func(db *sql.DB) error { return nil }},
 		// Здесь можно добавлять новые миграции
 	}
 }

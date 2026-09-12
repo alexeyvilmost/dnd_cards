@@ -47,6 +47,8 @@ export interface Monster {
     held_weapon_card?: Card;
     held_weapon_cards?: Card[];
     action_weapon_ids?: Record<string, string>;
+    grasping_parts?: string[];
+    free_grapple_drag?: boolean;
     [key: string]: unknown;
   };
   token_url: string;

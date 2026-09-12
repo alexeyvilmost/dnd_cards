@@ -19,7 +19,7 @@ const hash = `sha256:${'a'.repeat(64)}`;
 async function main() {
   for (const count of counts.split(',').map(Number)) {
     if (!Number.isInteger(count) || count < 1 || count > 3) throw Error('Invalid quantity');
-    let wins = 0, rounds = 0, remainingHP = 0, commands = 0, attacks = 0, attackContinuations = 0;
+    let wins = 0, rounds = 0, remainingHP = 0, commands = 0, attacks = 0, attackContinuations = 0, escapeAttempts = 0;
     const started = performance.now();
     for (let seed = 0; seed < runs; seed++) {
       const input = structuredClone(base);
@@ -34,6 +34,10 @@ async function main() {
         const step = (intent: RoguelikeCombatIntent) => { envelope = stepRoguelikeCombat(envelope, intent, hash).envelope; commands++; };
         if (s.pendingTriggeredAction) { step({type: 'triggered_action', actionId: null}); continue; }
         if (s.pendingAdditionalMovement) { step({type: 'decline_movement', actorId: id}); continue; }
+        if (s.world.pendingResolution?.type === 'escape_grapple'
+          && s.world.pendingResolution.request.type === 'saving_throw') {
+          step({type: 'saving_throw'}); continue;
+        }
         if (s.world.pendingResolution || s.pendingD20Interrupt || s.pendingInterception || s.pendingTurnStartGrappleDamage || s.pendingAlertSwapActorIds?.length) {
           throw Error(`Unsupported policy decision: quantity ${count}, seed ${seed}`);
         }
@@ -54,6 +58,12 @@ async function main() {
           catch (error) { if (!/InsufficientResources|предмет|экземпляр|количеств|ресурс/i.test(String(error))) throw error; }
         }
         if (canStandActor(s, id)) { step({type: 'stand', actorId: id}); continue; }
+        const grapple = Object.values(s.world.grapples).filter(row => row.targetActorId === id)
+          .sort((left, right) => left.id.localeCompare(right.id))[0];
+        if (grapple && (resources.action > 0 || resources.action_surge_action > 0)) {
+          step({type: 'escape_grapple', actorId: id, grappleId: grapple.id, skill: 'athletics'});
+          escapeAttempts++; continue;
+        }
         const origin = s.tokens[id].position;
         const enemies = Object.values(s.world.actors).filter(a => a.id !== id && a.runtime.hp.current > 0)
           .sort((a, b) => gridDistanceFt(origin, s.tokens[a.id].position) - gridDistanceFt(origin, s.tokens[b.id].position)
@@ -82,6 +92,7 @@ async function main() {
     }
     console.log(JSON.stringify({quantity: count, runs, wins, winRate: wins / runs, meanRounds: rounds / runs, meanRemainingHP: remainingHP / runs,
       meanCommands: commands / runs, meanAttacks: attacks / runs, attackContinuations,
+      escapeAttempts,
       elapsedMs: Math.round(performance.now() - started),
       policy: 'melee-focus-second-wind-surge-owned-potions-v2-extra-attack', scope: 'single supplied build, not whole fighter balance acceptance'}));
   }

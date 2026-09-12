@@ -423,6 +423,17 @@ it('retains declared monster movement modes and Spider Climb without changing fl
     .toThrow('расходится со стат-блоком');
 });
 
+it('retains declared anatomical grapple capacity and rejects malformed parts', () => {
+  const monster = goblin();
+  monster.ai = {grasping_parts: ['long_arm'], free_grapple_drag: true};
+  const {actor} = compileMonsterInstance({monster, instanceId: 'test:bugbear', actions: [meleeAction()], effects: []});
+  expect(actor.attackProfile?.graspingParts).toEqual(['long_arm']);
+  expect(actor.passives).toContainEqual(expect.objectContaining({kind: 'monster_ai', free_grapple_drag: true}));
+  const malformed = {...monster, ai: {...monster.ai, grasping_parts: ['long_arm', 'long_arm']}};
+  expect(() => compileMonsterInstance({monster: malformed, instanceId: 'bad:bugbear', actions: [meleeAction()], effects: []}))
+    .toThrow('части тела для захвата');
+});
+
 it('binds every stat-block weapon action to one physical carried weapon', () => {
   const sword = {id: 'weapon:sword', name: 'Sword', type: 'weapon', properties: ['two_handed'], slot: 'two_hands'};
   const bow = {id: 'weapon:bow', name: 'Bow', type: 'weapon', properties: ['two_handed'], slot: 'two_hands'};

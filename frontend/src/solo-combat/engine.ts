@@ -41,6 +41,8 @@ import type {
   WorldState,
 } from '../rules-core/domain';
 import { InMemoryRulesSession } from '../rules-core/session';
+import {foldEvents} from '../rules-core/reducer';
+import {getSystemActionDefinition, SYSTEM_ACTION_IDS} from '../rules-core/systemActions';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
 import { canFamiliarUseOrdinaryAction } from '../rules-core/findFamiliar';
 import { turnStartGrappleDamageOpportunity } from '../rules-core/fightingStyleComplexPrimitives';
@@ -288,7 +290,11 @@ function opportunityActionsFor(state: SoloCombatState, actorId: string): RuleAct
 
 /** An opportunity attack is one melee attack, never a ranged shot or Multiattack. */
 function monsterOpportunityVersion(actions: RuleActionDefinition[]): RuleActionDefinition | undefined {
-  const action = actions.find((entry) => isAttackAction(entry) && monsterAttackKind(entry) === 'melee');
+  const melee = actions.filter((entry) => isAttackAction(entry) && monsterAttackKind(entry) === 'melee');
+  // Prefer a plain melee strike when the stat block offers one. Automatic
+  // on-hit riders are settled by the monster-turn adapter, while an
+  // opportunity attack is dispatched directly by the canonical reaction path.
+  const action = melee.find((entry) => entry.mechanics.npc_grapple_on_hit == null) ?? melee[0];
   if (!action) return undefined;
   const effects = action.mechanics.effects as Record<string, unknown>[];
   const attack = effects.find((effect) => effect.resolution === 'attack_roll');
@@ -2111,12 +2117,12 @@ export function resolveD20Interrupt(
     );
   }
   const actionRng = pending.randomValues ? transcriptRng(pending.randomValues) : rng;
-  return executeCombatActionWithD20Interrupts(
+  return settlePendingMonsterOnHitGrapple(executeCombatActionWithD20Interrupts(
     { ...pending.command, state: prepared, rng: actionRng },
     pending.operation === 'impose_disadvantage'
       ? { skipWardingFlare: true }
       : { skipWardingFlare: true, skipCuttingWords: true },
-  );
+  ));
 }
 
 /** Move the caster-owned Dancing Lights group on the tactical board. */
@@ -2716,6 +2722,7 @@ export function resolvePlayerReaction(
       targetIds: [pending.targetActorId],
     });
   }
+  next = settlePendingMonsterOnHitGrapple(next);
 
   // A monster turn pauses inside runMonsterTurn while the player answers a
   // reaction. Once the continuation is complete, that same controller call no
@@ -2794,6 +2801,7 @@ export function resolveSoloCombatInterception(
   } else {
     next = appendLog(next, pending.targetActorId, 'Перехват: реакция пропущена.');
   }
+  next = settlePendingMonsterOnHitGrapple(next);
   const activeId = activeActorId(next);
   return next.world.actors[activeId]?.kind === 'monster'
     && next.outcome === 'active'
@@ -3663,6 +3671,17 @@ export function moveActor(input: {
     if (movementCost > maxFeet) return appendLog(next, input.actorId,
       'Перемещение остановлено: после реакции не хватает оставшейся скорости.');
   }
+  const draggedGrapple = input.voluntary !== false && monsterAIProfile(next.world.actors[input.actorId]).free_grapple_drag
+    ? Object.values(next.world.grapples).find((grapple) => (
+      grapple.grapplerActorId === input.actorId
+      && next.world.actors[grapple.targetActorId]?.runtime.hp.current > 0
+      && next.tokens[grapple.targetActorId]
+    ))
+    : undefined;
+  const draggedToken = draggedGrapple ? next.tokens[draggedGrapple.targetActorId] : undefined;
+  const draggedCrossed = draggedToken
+    ? enteredAndExitedAreas(next, draggedToken.position, token.position, draggedGrapple!.targetActorId)
+    : undefined;
   const crossed = enteredAndExitedAreas(next, token.position, input.destination, input.actorId);
   const previousStraight = next.recentStraightMovementByActor?.[input.actorId];
   const round = next.world.scene.mode === 'encounter' ? next.world.scene.round : 0;
@@ -3687,9 +3706,16 @@ export function moveActor(input: {
         round,
       },
     };
+  if (draggedGrapple && recentStraightMovementByActor) delete recentStraightMovementByActor[draggedGrapple.targetActorId];
   next = {
     ...next,
-    tokens: { ...next.tokens, [input.actorId]: { ...next.tokens[input.actorId], position: input.destination } },
+    tokens: {
+      ...next.tokens,
+      [input.actorId]: { ...next.tokens[input.actorId], position: input.destination },
+      ...(draggedGrapple && draggedToken ? {
+        [draggedGrapple.targetActorId]: {...draggedToken, position: {...token.position}},
+      } : {}),
+    },
     boardRevision: next.boardRevision + 1,
     movementRemainingFt: {
       ...next.movementRemainingFt,
@@ -3700,6 +3726,7 @@ export function moveActor(input: {
     ...(recentStraightMovementByActor ? { recentStraightMovementByActor } : {}),
   };
   next = reanchorSourceCombatAreas(next, input.actorId);
+  if (draggedGrapple) next = reanchorSourceCombatAreas(next, draggedGrapple.targetActorId);
   if (input.voluntary !== false) {
     next = executePolearmEntryAttacks(
       next, input.actorId, token.position, input.destination, input.rng ?? Math.random,
@@ -3717,6 +3744,19 @@ export function moveActor(input: {
   }
   if (crossed.entered.length) {
     next = queueCombatAreaEvent(next, 'enter', [input.actorId], crossed.entered, true);
+  }
+  if (draggedGrapple && draggedCrossed) {
+    const draggedAreaIds = Object.keys(draggedCrossed.movementOccurrences);
+    if (draggedAreaIds.length) {
+      next = queueCombatAreaEvent(next, 'move', [draggedGrapple.targetActorId], draggedAreaIds, true,
+        draggedCrossed.movementOccurrences);
+    }
+    if (draggedCrossed.exited.length) {
+      next = queueCombatAreaEvent(next, 'exit', [draggedGrapple.targetActorId], draggedCrossed.exited);
+    }
+    if (draggedCrossed.entered.length) {
+      next = queueCombatAreaEvent(next, 'enter', [draggedGrapple.targetActorId], draggedCrossed.entered, true);
+    }
   }
   next = autoResolveSystemDecisions(next, input.rng ?? Math.random);
   next = breakOutOfRangeGrapples(next, input.actorId, input.rng ?? Math.random);
@@ -4463,6 +4503,7 @@ export async function refreshSoloCombatParticipants(input: {
 
 type MonsterAIProfile = {
   preferred_range_ft?: number;
+  free_grapple_drag?: boolean;
 };
 
 function monsterAIProfile(actor: ActorState): MonsterAIProfile {
@@ -4522,8 +4563,100 @@ function executeMonsterRoute(state: SoloCombatState, actorId: string, steps: Gri
   return report(finished);
 }
 
+type MonsterOnHitGrapplePolicy = {
+  sourcePart: string;
+  escapeDc: number;
+  maxTargetSize: number;
+};
+
+function monsterOnHitGrapplePolicy(action: RuleActionDefinition): MonsterOnHitGrapplePolicy | null {
+  const raw = action.mechanics.npc_grapple_on_hit;
+  if (raw === undefined) return null;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error(`Некорректный захват у «${action.name}»`);
+  const value = raw as Record<string, unknown>;
+  const sourcePart = String(value.source_part ?? '');
+  const escapeDc = Number(value.escape_dc);
+  const maxTargetSize = Number(value.max_target_size);
+  if (!/^[a-z0-9_:-]{1,64}$/i.test(sourcePart) || !Number.isInteger(escapeDc) || escapeDc < 1 || escapeDc > 30
+    || !Number.isInteger(maxTargetSize) || maxTargetSize < 0 || maxTargetSize > 4) {
+    throw new Error(`Некорректный захват у «${action.name}»`);
+  }
+  return {sourcePart, escapeDc, maxTargetSize};
+}
+
+function targetGrappledBySource(state: SoloCombatState, sourceActorId: string, targetActorId: string): boolean {
+  return Object.values(state.world.grapples).some((grapple) => (
+    grapple.grapplerActorId === sourceActorId && grapple.targetActorId === targetActorId
+  ));
+}
+
+function settlePendingMonsterOnHitGrapple(state: SoloCombatState): SoloCombatState {
+  const pending = state.pendingMonsterOnHitGrapple;
+  if (!pending || state.world.pendingResolution || state.pendingD20Interrupt || state.pendingInterception) return state;
+  const {pendingMonsterOnHitGrapple: _finished, ...finished} = state;
+  const next = finished as SoloCombatState;
+  const action = next.catalogActions.find((candidate) => candidate.id === pending.actionId);
+  if (!action) throw new Error('Действие отложенного захвата отсутствует');
+  const policy = monsterOnHitGrapplePolicy(action);
+  if (!policy || !hasHitRecord(next, pending.fromLogCursor, pending.actorId)) return next;
+  const source = next.world.actors[pending.actorId];
+  const target = next.world.actors[pending.targetId];
+  if (!source || !target || source.runtime.hp.current <= 0 || target.runtime.hp.current <= 0
+    || (effectiveActorSize(target) ?? Number.POSITIVE_INFINITY) > policy.maxTargetSize
+    || targetGrappledBySource(next, source.id, target.id)
+    || !source.attackProfile?.graspingParts?.includes(policy.sourcePart)
+    || Object.values(next.world.grapples).some((grapple) => (
+      grapple.grapplerActorId === source.id && grapple.sourcePart === policy.sourcePart
+    ))) return next;
+  const system = getSystemActionDefinition(SYSTEM_ACTION_IDS.unarmedGrapple)!;
+  const grappleId = combatIdentity(next, `monster-grapple:${source.id}:${target.id}:${action.id}`);
+  const sourceEntityIds = [...new Set([...system.sourceEntityIds, ...action.sourceEntityIds])] as [string, ...string[]];
+  const world = foldEvents(next.world, [{
+    ordinal: 0,
+    sourceActorId: source.id,
+    obligationIds: ['system:grapple-lifecycle', ...sourceEntityIds.map((id) => `entity:${id}`)],
+    payload: {type: 'GrappleApplied', grapple: {
+      id: grappleId,
+      grapplerActorId: source.id,
+      targetActorId: target.id,
+      sourcePart: policy.sourcePart,
+      escapeDc: policy.escapeDc,
+      reachFt: source.attackProfile.reachFt,
+      sourceEntityIds,
+      startedAtRevision: next.world.revision,
+    }},
+  }]);
+  return appendLog({...next, world}, source.id, `Захватывает цель: ${target.name}; освобождение — Сл ${policy.escapeDc}.`);
+}
+
 function executeMonsterStrike(state: SoloCombatState, actorId: string, actionId: string, targetId: string, rng: Rng): SoloCombatState {
-  return autoResolveSystemDecisions(executeCombatAction({state, actorId, actionId, targetIds: [targetId], rng}), rng);
+  const action = state.catalogActions.find((candidate) => candidate.id === actionId);
+  if (!action) throw new Error('Действие монстра отсутствует');
+  const grapplePolicy = monsterOnHitGrapplePolicy(action);
+  const grappleAdvantage = action.mechanics.npc_advantage_if_target_grappled_by_source === true
+    && targetGrappledBySource(state, actorId, targetId);
+  const originalPassives = state.world.actors[actorId].passives ?? [];
+  let prepared = grapplePolicy ? {...state, pendingMonsterOnHitGrapple: {
+    actorId, targetId, actionId, fromLogCursor: combatLogCursor(state),
+  }} : state;
+  if (grappleAdvantage) {
+    prepared = clone(prepared);
+    prepared.world.actors[actorId].passives = [...originalPassives, {
+      id: `monster-grapple-advantage:${action.id}`,
+      name: 'Захваченная цель',
+      kind: 'modifier',
+      op: 'advantage',
+      applies_to: {roll: 'attack'},
+      sourceEntityIds: [...action.sourceEntityIds],
+    }];
+  }
+  let next = autoResolveSystemDecisions(executeCombatAction({state: prepared, actorId, actionId, targetIds: [targetId], rng}), rng);
+  if (grappleAdvantage && next.world.actors[actorId]) {
+    next = {...next, world: {...next.world, actors: {...next.world.actors, [actorId]: {
+      ...next.world.actors[actorId], passives: originalPassives,
+    }}}};
+  }
+  return settlePendingMonsterOnHitGrapple(next);
 }
 
 function monsterPresentationActionIds(actions: RuleActionDefinition[]): string[] {
@@ -4616,6 +4749,7 @@ function finishMonsterTurn(state: SoloCombatState, actorId: string, rng: Rng): S
 }
 
 export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
+  state = settlePendingMonsterOnHitGrapple(state);
   if (state.outcome !== 'active' || monsterMovementPaused(state)) return state;
   const monsterId = activeActorId(state);
   if (state.monsterAttackSequence?.actorId === monsterId) {
@@ -4709,7 +4843,12 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
       const preferredKind = distance <= reach ? 'melee' : 'ranged';
       const leftKind = monsterAttackKind(left);
       const rightKind = monsterAttackKind(right);
-      return Number(left.mechanics.npc_unarmed_fallback===true)-Number(right.mechanics.npc_unarmed_fallback===true)
+      const grappled = targetGrappledBySource(next, monsterId, targetId);
+      const preferredForGrappleState = (action: RuleActionDefinition) => grappled
+        ? action.mechanics.npc_advantage_if_target_grappled_by_source === true
+        : action.mechanics.npc_grapple_on_hit !== undefined;
+      return Number(!preferredForGrappleState(left)) - Number(!preferredForGrappleState(right))
+        || Number(left.mechanics.npc_unarmed_fallback===true)-Number(right.mechanics.npc_unarmed_fallback===true)
         || Number(leftKind !== preferredKind) - Number(rightKind !== preferredKind)
         || monsterAttackRange(left) - monsterAttackRange(right)
         || left.id.localeCompare(right.id);

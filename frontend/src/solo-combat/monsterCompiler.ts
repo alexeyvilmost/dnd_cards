@@ -90,6 +90,12 @@ export function compileMonsterInstance(input: {
     || typeof trait.mechanics !== 'object' || Array.isArray(trait.mechanics))) {
     throw new Error(`Некорректное свойство перемещения у «${input.monster.name}»`);
   }
+  const graspingParts = input.monster.ai.grasping_parts ?? [];
+  if (!Array.isArray(graspingParts) || graspingParts.some((part) => (
+    typeof part !== 'string' || !/^[a-z0-9_:-]{1,64}$/i.test(part)
+  )) || new Set(graspingParts).size !== graspingParts.length) {
+    throw new Error(`Некорректные части тела для захвата у «${input.monster.name}»`);
+  }
   const twoHanded = heldWeapon && (heldWeapon.slot === 'two_hands'
     || heldWeapon.properties.some(property => property === 'two_handed' || property === 'two-handed'));
   if(heldWeapon){
@@ -181,7 +187,7 @@ export function compileMonsterInstance(input: {
         attacksPerAction: 1,
         size: SIZE_INDEX[input.monster.size] ?? 2,
         reachFt: Math.max(5, Number(input.monster.ai.reach_ft ?? 5)),
-        graspingParts: [],
+        graspingParts: [...graspingParts],
         sourceEntityIds: [input.monster.id],
       },
     },

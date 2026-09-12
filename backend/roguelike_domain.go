@@ -34,7 +34,7 @@ var roguelikeMonsterPool = []roguelikeMonsterEntry{
 	{Slug: "tough", XP: 100, MinLevel: 2, MaxCount: 3, GeneratorWeight: 1},
 	{Slug: "animated-armor", XP: 200, MinLevel: 3, MaxCount: 2, GeneratorWeight: 1},
 	{Slug: "dire-wolf", XP: 200, MinLevel: 3, MaxCount: 2, GeneratorWeight: 1},
-	{Slug: "bugbear-warrior", XP: 200, MinLevel: 3, MaxCount: 2}, // Grab and drag are not executable yet.
+	{Slug: "bugbear-warrior", XP: 200, MinLevel: 3, MaxCount: 2, GeneratorWeight: 1}, // Grab, hammer Advantage and Abduct accepted.
 	{Slug: "ogre", XP: 450, MinLevel: 4, MaxCount: 2, GeneratorWeight: 1},
 	{Slug: "berserker", XP: 450, MinLevel: 4, MaxCount: 2, GeneratorWeight: 1},
 	{Slug: "bandit-captain", XP: 450, MinLevel: 4, MaxCount: 2, GeneratorWeight: 1},  // Mixed Multiattack and weapon switching accepted through browser/replay.

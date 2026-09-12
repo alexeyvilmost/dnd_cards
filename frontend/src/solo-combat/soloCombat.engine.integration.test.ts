@@ -4920,6 +4920,52 @@ it('persists a tactical monster switching between carried ranged and melee weapo
  expect(state.log.some(entry=>entry.text.includes(`Подготавливает оружие: ${sword.name}`))).toBe(true);
 });
 
+it('runs Bugbear Grab, Abduct movement and hammer Advantage from declared mechanics',async()=>{
+ const grab={...scimitar(),id:'bugbear:grab',name:'Grab'};
+ grab.mechanics={...grab.mechanics,targeting:{...(grab.mechanics!.targeting as Record<string,unknown>),range_ft:10},
+  npc_grapple_on_hit:{source_part:'long_arm',escape_dc:12,max_target_size:2},
+  effects:[{resolution:'attack_roll',ability:'str',attack_kind:'weapon_melee',attack_bonus_override:20,vs:'ac',
+   on_hit:[{kind:'damage',amount:1,type:'bludgeoning'}]}]};
+ const hammer={...scimitar(),id:'bugbear:hammer',name:'Light Hammer'};
+ hammer.mechanics={...hammer.mechanics,targeting:{...(hammer.mechanics!.targeting as Record<string,unknown>),range_ft:60},
+  npc_advantage_if_target_grappled_by_source:true,
+  effects:[{resolution:'attack_roll',ability:'str',attack_kind:'weapon_ranged',normal_range_ft:20,
+   attack_bonus_override:20,vs:'ac',on_hit:[{kind:'damage',amount:1,type:'bludgeoning'}]}]};
+ const meleeHammer={...hammer,id:'bugbear:hammer-melee',name:'Light Hammer (melee)'};
+ meleeHammer.mechanics={...meleeHammer.mechanics,
+  targeting:{...(meleeHammer.mechanics!.targeting as Record<string,unknown>),range_ft:10},
+  effects:[{resolution:'attack_roll',ability:'str',attack_kind:'weapon_melee',attack_bonus_override:20,vs:'ac',
+   on_hit:[{kind:'damage',amount:1,type:'bludgeoning'}]}]};
+ const participant=fighterSeed();const actorId=participant.character.id;
+ participant.canonical.world.actors[actorId].runtime.hp={current:100,max:100,temp:0};
+ const monster={...goblin(),size:'medium',max_hp:100,action_ids:[grab.id,hammer.id,meleeHammer.id],ai:{strategy:'tactical' as const,
+  preferred_range_ft:10,reach_ft:10,grasping_parts:['long_arm'],free_grapple_drag:true}};
+ let state=await createSoloCombatState({character:participant.character,participant,selected:[{monster,quantity:1}],
+  actions:[grab,hammer,meleeHammer],effects:[],rng:()=>0.5});
+ const monsterId=Object.values(state.world.actors).find(row=>row.kind==='monster')!.id;
+ expect(state.opportunityActionIds[monsterId]).toBe(`${meleeHammer.id}:opportunity`);
+ state.tokens[monsterId].position={x:1,y:1};state.tokens[actorId].position={x:3,y:1};
+ state=runMonsterTurn(advanceTurn(state,()=>0.5),()=>0.5);
+ expect(Object.values(state.world.grapples)).toEqual([expect.objectContaining({
+  grapplerActorId:monsterId,targetActorId:actorId,sourcePart:'long_arm',escapeDc:12,reachFt:10,
+ })]);
+ expect(state.world.actors[actorId].runtime.activeEffects).toEqual(expect.arrayContaining([
+  expect.objectContaining({mechanics:expect.objectContaining({kind:'condition',value:'grappled'})}),
+ ]));
+ const dragged=moveActor({state:clone(state),actorId:monsterId,destination:{x:1,y:2},rng:()=>0.5});
+ expect(dragged.tokens[monsterId].position).toEqual({x:1,y:2});
+ expect(dragged.tokens[actorId].position).toEqual({x:1,y:1});
+ expect(dragged.movementRemainingFt[monsterId]).toBe(state.movementRemainingFt[monsterId]-5);
+ expect(Object.keys(dragged.world.grapples)).toEqual(Object.keys(state.world.grapples));
+ state=runMonsterTurn(advanceTurn(state,()=>0.5),()=>0.5);
+ const hammerRoll=state.log.filter(entry=>entry.actorId===monsterId && entry.text.includes(hammer.name))
+  .flatMap(entry=>entry.records??[]).map(record=>record.event).find(event=>event?.type==='roll' && event.roll.kind==='d20');
+ expect(hammerRoll).toMatchObject({type:'roll',roll:{advantage:'advantage'}});
+ if(hammerRoll?.type!=='roll')throw Error('Expected hammer attack roll');
+ expect(hammerRoll.roll.dice).toHaveLength(2);
+ expect(state.pendingMonsterOnHitGrapple).toBeUndefined();
+});
+
 it('an unequipped monster keeps an unarmed opportunity attack and takes its turn without a phantom weapon',async()=>{
  const participant=fighterSeed();const actorId=participant.character.id;
  const weaponAttack={...scimitar(),mechanics:{...scimitar().mechanics,requires_held_item:CARD_LONGSWORD.id}};
