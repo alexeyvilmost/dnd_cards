@@ -89,6 +89,29 @@ func roguelikeAttunedIDs(turnState *JSONMap) ([]string, error) {
 	return ids, nil
 }
 
+func roguelikeAttunementUnlocked(turnState *JSONMap) bool {
+	if turnState == nil {
+		return false
+	}
+	unlocked, ok := (*turnState)["attunement_unlocked"].(bool)
+	return ok && unlocked
+}
+
+func roguelikeAttunementChanged(character CharacterV3, req PatchCharacterRuntimeRequest) ([]string, bool, error) {
+	if req.TurnState == nil {
+		return nil, false, nil
+	}
+	before, err := roguelikeAttunedIDs(character.TurnState)
+	if err != nil {
+		return nil, false, err
+	}
+	after, err := roguelikeAttunedIDs(req.TurnState)
+	if err != nil {
+		return nil, false, err
+	}
+	return after, !roguelikeJSONEqual(before, after), nil
+}
+
 // validateRoguelikeCampRuntimePatch allows the regular sheet's equipment UI in
 // camp while proving that no HP, resource, currency, effect, or item ownership
 // can be smuggled through the compatibility PATCH endpoint.
@@ -137,6 +160,37 @@ func validateRoguelikeCampRuntimePatch(character CharacterV3, req PatchCharacter
 			}
 			seen[id] = true
 		}
+		_, changed, err := roguelikeAttunementChanged(character, req)
+		if err != nil {
+			return roguelikeMutationError("roguelike_attunement_invalid", "список настроенных предметов повреждён", character.ID)
+		}
+		if changed && !roguelikeAttunementUnlocked(character.TurnState) {
+			return roguelikeMutationError("roguelike_attunement_rest_required", "изменять настройку предметов можно только после отдыха", character.ID)
+		}
+	}
+	return nil
+}
+
+// validateRoguelikeCampAttunementCards proves against the catalog that every
+// newly submitted attunement target actually requires attunement. The check is
+// deliberately performed inside the same transaction and row lock as the
+// character update.
+func validateRoguelikeCampAttunementCards(tx *gorm.DB, character CharacterV3, req PatchCharacterRuntimeRequest) error {
+	ids, changed, err := roguelikeAttunementChanged(character, req)
+	if err != nil {
+		return roguelikeMutationError("roguelike_attunement_invalid", "список настроенных предметов повреждён", character.ID)
+	}
+	if !changed || len(ids) == 0 {
+		return nil
+	}
+	var count int64
+	if err := tx.Model(&Card{}).
+		Where("id IN ? AND requires_attunement IS TRUE", ids).
+		Count(&count).Error; err != nil {
+		return err
+	}
+	if count != int64(len(ids)) {
+		return roguelikeMutationError("roguelike_attunement_invalid", "настройка разрешена только для предметов, которым она требуется", character.ID)
 	}
 	return nil
 }

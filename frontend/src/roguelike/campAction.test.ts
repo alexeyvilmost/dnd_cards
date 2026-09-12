@@ -80,6 +80,7 @@ describe('authoritative self actions in camp', () => {
     expect(result.patch.resources.reaction).toBe(1);
     expect(result.patch.resources['uses_ACT-second-wind']).toBe(0);
     expect(result.patch.resources.hit_dice_d10).toBe(used.patch.resources.hit_dice_d10);
+    expect(result.patch.turn_state.attunement_unlocked).toBe(false);
     await expect(executeRoguelikeCampAction({ ...next, actionId: request.actionId })).rejects.toThrow(/Новый ход/);
   });
   it('restores Telekinetic Movement by paying one psi die, without resting', async () => {

@@ -892,6 +892,9 @@ func (cc *CharacterV3Controller) PatchCharacterRuntime(c *gin.Context) {
 			if err := validateRoguelikeCampRuntimePatch(locked, req); err != nil {
 				return err
 			}
+			if err := validateRoguelikeCampAttunementCards(tx, locked, req); err != nil {
+				return err
+			}
 		}
 		if roguelikeRun != nil && c.GetHeader(roguelikeIntentHeader) == roguelikeIntentCampAction {
 			if req.ExpectedRuntimeRevision == nil || req.Equipment != nil || (req.MaxHP != nil && *req.MaxHP != locked.MaxHP) {

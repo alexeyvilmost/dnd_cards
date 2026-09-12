@@ -90,8 +90,8 @@ func TestValidateRoguelikeCampRuntimePatchRejectsRuntimeSmuggling(t *testing.T) 
 func TestValidateRoguelikeCampRuntimePatchAllowsOwnedAttunementOnly(t *testing.T) {
 	cardID := uuid.New().String()
 	inventory := InventoryItemRows{{CardID: cardID, Qty: 1}}
-	before := JSONMap{"temp_hp": float64(0)}
-	after := JSONMap{"temp_hp": float64(0), "attuned_ids": []any{cardID}}
+	before := JSONMap{"temp_hp": float64(0), "attunement_unlocked": true}
+	after := JSONMap{"temp_hp": float64(0), "attunement_unlocked": true, "attuned_ids": []any{cardID}}
 	character := CharacterV3{ID: uuid.New(), InventoryItems: &inventory, TurnState: &before}
 	if err := validateRoguelikeCampRuntimePatch(character, PatchCharacterRuntimeRequest{TurnState: &after}); err != nil {
 		t.Fatalf("owned attunement rejected: %v", err)
@@ -102,6 +102,50 @@ func TestValidateRoguelikeCampRuntimePatchAllowsOwnedAttunementOnly(t *testing.T
 	var conflict *characterRuntimeCommandError
 	if !errors.As(err, &conflict) || conflict.Code != "roguelike_attunement_invalid" {
 		t.Fatalf("foreign attunement was not rejected: %#v", err)
+	}
+}
+
+func TestValidateRoguelikeCampRuntimePatchRequiresRestForAttunementChange(t *testing.T) {
+	cardID := uuid.New().String()
+	inventory := InventoryItemRows{{CardID: cardID, Qty: 1}}
+	before := JSONMap{"temp_hp": float64(0)}
+	after := JSONMap{"temp_hp": float64(0), "attuned_ids": []any{cardID}}
+	character := CharacterV3{ID: uuid.New(), InventoryItems: &inventory, TurnState: &before}
+	err := validateRoguelikeCampRuntimePatch(character, PatchCharacterRuntimeRequest{TurnState: &after})
+	var conflict *characterRuntimeCommandError
+	if !errors.As(err, &conflict) || conflict.Code != "roguelike_attunement_rest_required" {
+		t.Fatalf("attunement without a rest window was not rejected: %#v", err)
+	}
+}
+
+func TestValidateRoguelikeCampAttunementCardsRequiresCatalogFlag(t *testing.T) {
+	fixture := openCharacterV3AccessFixture(t)
+	if err := fixture.db.AutoMigrate(&Card{}); err != nil {
+		t.Fatal(err)
+	}
+	required := true
+	ordinary := false
+	attunable := Card{ID: uuid.New(), Name: "Attunable", Description: "test", CardNumber: "RL-ATTUNE-YES", Rarity: "common", RequiresAttunement: &required}
+	normal := Card{ID: uuid.New(), Name: "Normal", Description: "test", CardNumber: "RL-ATTUNE-NO", Rarity: "common", RequiresAttunement: &ordinary}
+	if err := fixture.db.Create(&attunable).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := fixture.db.Create(&normal).Error; err != nil {
+		t.Fatal(err)
+	}
+	inventory := InventoryItemRows{{CardID: attunable.ID.String(), Qty: 1}, {CardID: normal.ID.String(), Qty: 1}}
+	before := JSONMap{"attunement_unlocked": true}
+	character := CharacterV3{ID: uuid.New(), InventoryItems: &inventory, TurnState: &before}
+
+	valid := JSONMap{"attunement_unlocked": true, "attuned_ids": []any{attunable.ID.String()}}
+	if err := validateRoguelikeCampAttunementCards(fixture.db, character, PatchCharacterRuntimeRequest{TurnState: &valid}); err != nil {
+		t.Fatalf("catalog attunement flag was rejected: %v", err)
+	}
+	invalid := JSONMap{"attunement_unlocked": true, "attuned_ids": []any{normal.ID.String()}}
+	err := validateRoguelikeCampAttunementCards(fixture.db, character, PatchCharacterRuntimeRequest{TurnState: &invalid})
+	var conflict *characterRuntimeCommandError
+	if !errors.As(err, &conflict) || conflict.Code != "roguelike_attunement_invalid" {
+		t.Fatalf("ordinary catalog item was accepted for attunement: %#v", err)
 	}
 }
 

@@ -92,6 +92,7 @@ export async function executeRoguelikeCampAction(input: RoguelikeCampActionInput
   return { status: 'ready' as const, contentManifestHash: prepared.contentManifestHash, events, goldSpent, elapsedSeconds,
     patch: { current_hp: runtime.hp.current, resources: runtime.resources, max_resources: runtime.maxResources,
       active_effects: runtime.activeEffects, equipment: runtime.equipment, inventory_items: runtimeInventoryPayload(runtime),
-      turn_state: writeRulesEngineRuntimeTurnState(turnState, runtime), runtime_revision: revision },
+      turn_state: writeRulesEngineRuntimeTurnState(turnState, runtime,
+        input.nextTurn ? { attunement_unlocked: false } : {}), runtime_revision: revision },
   };
 }
