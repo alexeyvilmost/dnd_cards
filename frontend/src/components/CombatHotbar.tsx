@@ -21,7 +21,7 @@ import { parseActivationCastTime } from '../rules-core/activationCastTime';
 import { applyUnarmedDamageProfileToAction } from '../rules-core/fightingStyleComplexPrimitives';
 import { playerActionIdsFor, type SoloCombatState } from '../solo-combat/types';
 import { canEscapeActorGrapple, canStandActor, isTriggeredCombatAction } from '../solo-combat/engine';
-import { actorMustCrawl, effectiveCombatActorSpeedFt, standMovementCost } from '../solo-combat/tacticalGrid';
+import { actorMustCrawl, combatActorMovementMode, effectiveCombatActorSpeedFt, standMovementCost } from '../solo-combat/tacticalGrid';
 import { actionCostResourceIds, findResource, resourceLabel as sharedResourceLabel, useResourceOptions } from '../utils/resources';
 import SheetActionLine from './SheetActionLine';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
@@ -398,6 +398,7 @@ export default function CombatHotbar({
   const actor = state.world.actors[actorId];
   const grappled = Object.values(state.world.grapples).some(grapple => grapple.targetActorId === actorId);
   const movementRemaining = effectiveCombatActorSpeedFt(state, actorId) > 0 ? state.movementRemainingFt[actorId] ?? 0 : 0;
+  const movementLabel = ({walk: 'Движение', climb: 'Лазание', fly: 'Полёт', swim: 'Плавание', burrow: 'Рытьё'} as const)[combatActorMovementMode(state, actorId)];
   const formulaContext = useMemo(() => formulaCtxFromCharacter(actor.character), [actor.character]);
   const spellcasting = actor.character.spellcastingMod == null
     ? undefined
@@ -488,7 +489,7 @@ export default function CombatHotbar({
             <ArrowUp /><span>Встать</span><small>{standMovementCost(state, actorId)} фт.</small>
           </button>}
           <button type="button" className={`combat-utility-button${movementMode ? ' is-selected' : ''}`} disabled={disabled || movementRemaining <= 0} onClick={onMove} title="Перемещение">
-            <Footprints /><span>Движение</span><small>{movementRemaining} фт.</small>
+            <Footprints /><span>{movementLabel}</span><small>{movementRemaining} фт.</small>
           </button>
           <button type="button" className="combat-utility-button" onClick={onSheet} title="Открыть сокращённый лист">
             <MoreHorizontal /><span>Лист</span>

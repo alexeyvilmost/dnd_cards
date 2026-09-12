@@ -45,6 +45,7 @@ import {foldEvents} from '../rules-core/reducer';
 import {getSystemActionDefinition, SYSTEM_ACTION_IDS} from '../rules-core/systemActions';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
 import { canFamiliarUseOrdinaryAction } from '../rules-core/findFamiliar';
+import { canonicalTouchSpell } from '../rules-core/familiarRuntime';
 import { turnStartGrappleDamageOpportunity } from '../rules-core/fightingStyleComplexPrimitives';
 import { conditionInteractionDenied } from '../rules-core/conditionsRuntime';
 import { parseWeaponProfile } from '../rules-core/weaponProfile';
@@ -73,6 +74,8 @@ import {
   effectiveActorSize,
   effectiveActorSpeedFt,
   effectiveCombatActorSpeedFt,
+  combatActorMovementMode,
+  combatActorMovementSpeeds,
   gridDistanceFt,
   occupiedPositions,
   reachableRoutes,
@@ -105,6 +108,7 @@ import {
   spatialFacts,
   type CombatLogEntry,
   type CombatLogEventRecord,
+  type CombatMovementMode,
   type GridPosition,
   type PendingD20Interrupt,
   type PendingTriggeredAction,
@@ -3352,6 +3356,12 @@ function movementOpportunityEnemies(state: SoloCombatState, moverId: string, des
   const mover = state.world.actors[moverId];
   const start = state.tokens[moverId]?.position;
   if (!mover || !start) return [];
+  const fliesBy = combatActorMovementMode(state, moverId) === 'fly'
+    && mover.passives?.some((passive) => (
+      passive.id === 'flyby'
+        && (passive.mechanics as Record<string, unknown>).avoidsOpportunityAttackOnFlyOut === true
+    ));
+  if (fliesBy) return [];
   return Object.values(state.world.actors).filter(actor => (
     !state.pendingMovementStep?.processedOpportunityActorIds.includes(actor.id)
     && !(state.pendingAdditionalMovement?.actorId === moverId && state.pendingAdditionalMovement.immuneOpportunityActorIds?.includes(actor.id))
@@ -3620,6 +3630,85 @@ export function standActor(state: SoloCombatState, actorId: string): SoloCombatS
   }, actorId, `Встал: потрачено ${cost} фт. движения.`), actorId);
 }
 
+export function selectCombatMovementMode(
+  state: SoloCombatState,
+  actorId: string,
+  mode: CombatMovementMode,
+): SoloCombatState {
+  const actor = state.world.actors[actorId];
+  if (!actor || !isPlayerControlledCombatActor(state, actorId)) {
+    throw new Error('Нельзя выбрать перемещение этого участника');
+  }
+  if (state.outcome !== 'active' || activeActorId(state) !== actorId
+    || state.world.pendingResolution || state.pendingAdditionalMovement
+    || state.playerMovement || state.pendingMovementStep || state.pendingReachEntry
+    || state.pendingTriggeredAction || state.pendingTurnStartGrappleDamage
+    || state.pendingInterception || state.pendingD20Interrupt || state.pendingAlertSwapActorIds?.length) {
+    throw new Error('Сначала завершите текущее решение или дождитесь своего хода');
+  }
+  const speeds = combatActorMovementSpeeds(actor);
+  const newSpeed = speeds[mode];
+  if (!Number.isFinite(newSpeed) || newSpeed <= 0) throw new Error('Этот способ перемещения недоступен');
+  const previousMode = combatActorMovementMode(state, actorId);
+  if (previousMode === mode) return state;
+  const allotments = 1 + (state.dashCountByActor?.[actorId] ?? 0);
+  const previousBudget = signedMovementBudget(state, actorId, speeds[previousMode] * allotments);
+  const distanceSpent = Math.max(0, speeds[previousMode] * allotments - previousBudget);
+  const selected = {
+    ...state,
+    movementModeByActor: { ...(state.movementModeByActor ?? {}), [actorId]: mode },
+  };
+  return withMovementBudget(selected, actorId, newSpeed * allotments - distanceSpent);
+}
+
+/** Existing rules-core authority exposed to the tactical combat adapter. */
+export function executeCombatTouchSpellThroughFamiliar(input: {
+  state: SoloCombatState;
+  ownerActorId: string;
+  familiarActorId: string;
+  actionId: string;
+  targetActorId: string;
+  choices?: Readonly<Record<string, readonly string[]>>;
+  rng?: Rng;
+}): SoloCombatState {
+  const {state, ownerActorId, familiarActorId, targetActorId} = input;
+  const action = state.catalogActions.find((candidate) => candidate.id === input.actionId);
+  if (!action || !canonicalTouchSpell(action)) throw new Error('Выберите контактное заклинание');
+  if (!state.tokens[ownerActorId] || !state.tokens[familiarActorId] || !state.tokens[targetActorId]) {
+    throw new Error('Заклинатель, фамильяр или цель отсутствует на поле боя');
+  }
+  const choices = projectSoloCombatActionChoices(action, input.choices ?? {});
+  const protectionCandidates = Object.values(state.world.actors)
+    .filter((candidate) => candidate.capabilities.featureSources?.[PROTECTION_REACTION_CAPABILITY])
+    .map((candidate) => ({
+      factsSource: 'board' as const,
+      boardRevision: state.boardRevision,
+      protectorActorId: candidate.id,
+      protectorCanSeeAttacker: true,
+      protectorDistanceToTargetFt: gridDistanceFt(
+        state.tokens[candidate.id].position,
+        state.tokens[targetActorId].position,
+      ),
+    }));
+  return interruptStraightMovement(dispatch({
+    state,
+    command: {
+      ...commandBase(state, ownerActorId),
+      type: 'DeliverTouchSpellThroughFamiliar',
+      familiarActorId,
+      spellActionId: action.id,
+      targetActorId,
+      ownerToFamiliarFacts: spatialFacts(state, ownerActorId, familiarActorId),
+      familiarToTargetFacts: spatialFacts(state, familiarActorId, targetActorId),
+      spell: {baseLevel: action.spell!.level, ...selectedSpellDeclaration(state.world, ownerActorId, action)},
+      ...(Object.keys(choices).length ? {choices} : {}),
+      ...(protectionCandidates.length ? {protectionCandidates} : {}),
+    },
+    rng: input.rng ?? Math.random,
+    label: `${action.name} через фамильяра`,
+  }), ownerActorId);
+}
+
 export function moveActor(input: {
   state: SoloCombatState;
   actorId: string;
@@ -3651,10 +3740,11 @@ export function moveActor(input: {
   const maxFeet = input.voluntary === false
     ? (input.maxFeet ?? available) : Math.min(input.maxFeet ?? available, available);
   if (!Number.isFinite(maxFeet) || maxFeet < 0) throw new Error('Некорректный запас перемещения');
+  const flies = combatActorMovementMode(input.state, input.actorId) === 'fly';
   let movementCost = input.voluntary === false
     ? distance
-    : movementCostThroughAreas(input.state, token.position, input.destination, distance)
-      + (actorMustCrawl(actor) ? distance : 0);
+    : (flies ? distance : movementCostThroughAreas(input.state, token.position, input.destination, distance)
+      + (actorMustCrawl(actor) ? distance : 0));
   if (movementCost > maxFeet) {
     if (input.state.pendingMovementStep?.actorId === input.actorId) {
       const {pendingMovementStep: _stopped, ...stopped} = input.state;
@@ -3701,8 +3791,9 @@ export function moveActor(input: {
   // Reactions happen before the step: a bite can knock the mover prone.
   // Commit the resolved attacks even when the now-more-expensive step cannot finish.
   if (input.voluntary !== false) {
-    movementCost = movementCostThroughAreas(next, token.position, input.destination, distance)
-      + (actorMustCrawl(next.world.actors[input.actorId]) ? distance : 0);
+    movementCost = combatActorMovementMode(next, input.actorId) === 'fly' ? distance
+      : movementCostThroughAreas(next, token.position, input.destination, distance)
+        + (actorMustCrawl(next.world.actors[input.actorId]) ? distance : 0);
     if (movementCost > maxFeet) return appendLog(next, input.actorId,
       'Перемещение остановлено: после реакции не хватает оставшейся скорости.');
   }
@@ -3844,7 +3935,8 @@ function continuePlayerRoute(state: SoloCombatState, rng: Rng): SoloCombatState 
     const available = next.pendingAdditionalMovement?.actorId === route.actorId
       ? next.pendingAdditionalMovement.remainingFt
       : next.movementRemainingFt[route.actorId] ?? effectiveCombatActorSpeedFt(next, route.actorId);
-    const cost = movementCostThroughAreas(next, position, destination, 5) + (actorMustCrawl(actor) ? 5 : 0);
+    const cost = combatActorMovementMode(next, route.actorId) === 'fly' ? 5
+      : movementCostThroughAreas(next, position, destination, 5) + (actorMustCrawl(actor) ? 5 : 0);
     if (!samePosition(position, route.origin) || gridDistanceFt(position, destination) !== 5
       || effectiveCombatActorSpeedFt(next, route.actorId) === 0 || cost > available
       || occupiedPositions(next, route.actorId).has(`${destination.x}:${destination.y}`)) {

@@ -325,6 +325,8 @@ export interface SoloCombatState {
   pendingCombatAreaTurnContinuation?: { endingActorId: string; startingActorId: string };
   boardRevision: number;
   movementRemainingFt: Record<string, number>;
+  /** Current movement speed used by each actor. Missing means walking. */
+  movementModeByActor?: Record<string, CombatMovementMode>;
   /** Spent distance hidden by a temporary speed reduction; reset each turn. */
   movementDeficitFt?: Record<string, number>;
   /** Extra Speed allotments from Dash this turn, without modifying Speed itself. */
@@ -347,6 +349,8 @@ export interface SoloCombatState {
   pendingAlertSwapActorIds?: string[];
   outcome: 'active' | 'victory' | 'defeat';
 }
+
+export type CombatMovementMode = 'walk' | 'climb' | 'fly' | 'swim' | 'burrow';
 
 export function controlledCharacterIds(state: Pick<SoloCombatState, 'characterId' | 'controlledCharacterIds'>): string[] {
   return state.controlledCharacterIds?.length

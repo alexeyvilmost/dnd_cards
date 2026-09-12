@@ -7,6 +7,7 @@ import { areaPositionsForAction, reachablePositions } from '../solo-combat/tacti
 export default function TacticalBattleMap({
   state,
   actorId,
+  targetingActorId,
   selectedActionId,
   eligibleTargetIds,
   movementMode,
@@ -18,6 +19,7 @@ export default function TacticalBattleMap({
 }: {
   state: SoloCombatState;
   actorId: string;
+  targetingActorId?: string;
   selectedActionId: string | null;
   eligibleTargetIds?: string[];
   movementMode: boolean;
@@ -75,7 +77,7 @@ export default function TacticalBattleMap({
     }
   }
   const selectedAction = state.catalogActions.find((action) => action.id === selectedActionId);
-  const sourcePosition = state.tokens[actorId]?.position;
+  const sourcePosition = state.tokens[targetingActorId ?? actorId]?.position;
   const areaCells = useMemo(() => new Set(
     selectedAction && hovered && sourcePosition
       ? areaPositionsForAction({

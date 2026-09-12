@@ -19,7 +19,7 @@ import type { SheetCombatParticipantSeed } from '../character/sheetCombatSession
 import type { ForgeCharacter } from '../character/types';
 import type { Action, PassiveEffect } from '../types';
 import type { Monster } from '../monsters/types';
-import { resolvePlayerShoveOutcome, resumePendingMovement, addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, canStandActor, standActor, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, moveActor, moveCombatDancingLights, refreshSoloCombatParticipants, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatAlertSwap, resolveSoloCombatInterception, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectedTargetsForAction, setSoloCombatInitiativeTotals, setSoloCombatMount } from './engine';
+import { resolvePlayerShoveOutcome, resumePendingMovement, addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, canStandActor, standActor, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, executeCombatTouchSpellThroughFamiliar, moveActor, moveCombatDancingLights, refreshSoloCombatParticipants, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatAlertSwap, resolveSoloCombatInterception, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectedTargetsForAction, setSoloCombatInitiativeTotals, setSoloCombatMount } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { actorMustCrawl, effectiveCombatActorSpeedFt, gridDistanceFt } from './tacticalGrid';
 import { isPlayerControlledCombatActor, SOLO_COMBAT_KEY, type SoloCombatState } from './types';
@@ -1256,18 +1256,29 @@ describe('solo combat engine vertical integration', () => {
 
     state = advanceTurn(state, () => 0.5);
     expect(activeId(state)).toBe(familiar!.id);
+    const movementArtifactHash = `sha256:${'f'.repeat(64)}`;
+    state = stepRoguelikeCombat({schemaVersion: 1, artifactHash: movementArtifactHash,
+      entropy: {seed: 'familiar-flight', cursor: 0}, state},
+    {type: 'movement_mode', actorId: familiar!.id, mode: 'fly'}, movementArtifactHash).envelope.state;
+    expect(state.movementRemainingFt[familiar!.id]).toBe(60);
     state = executeCombatAction({
       state, actorId: familiar!.id, actionId: basicDash.id,
       targetIds: [familiar!.id], rng: () => 0.5,
     });
     expect(state.world.actors[familiar!.id].runtime.resources.action).toBe(0);
-    expect(state.movementRemainingFt[familiar!.id]).toBe(10);
+    expect(state.movementRemainingFt[familiar!.id]).toBe(120);
+    const enemy = Object.values(state.world.actors).find((candidate) => candidate.kind === 'monster')!;
+    const enemyOrigin = {...state.tokens[enemy.id].position};
+    state.tokens[enemy.id].position = {x: state.tokens[familiar!.id].position.x - 1, y: state.tokens[familiar!.id].position.y};
     const destination = { x: state.tokens[familiar!.id].position.x + 1, y: state.tokens[familiar!.id].position.y };
-    state = moveActor({ state, actorId: familiar!.id, destination, voluntary: true, rng: () => 0.5 });
+    state = moveActor({ state, actorId: familiar!.id, destination, voluntary: true, rng: () => { throw new Error('Flyby prevents opportunity attacks'); } });
     expect(state.tokens[familiar!.id].position).toEqual(destination);
+    expect(state.world.actors[enemy.id].runtime.resources.reaction).toBe(1);
+    state.tokens[enemy.id].position = enemyOrigin;
 
     const restored = readSoloCombatState(writeSoloCombatState({}, state), ownerActorId, 9)!;
     expect(restored.tokens[familiar!.id].position).toEqual(destination);
+    expect(restored.movementModeByActor?.[familiar!.id]).toBe('fly');
     expect(restored.initiative.some((entry) => entry.actorId === familiar!.id)).toBe(true);
 
     state = advanceTurn(state, () => 0.5);
@@ -1290,6 +1301,60 @@ describe('solo combat engine vertical integration', () => {
     expect(state.log.find((entry) => entry.text.startsWith('Owl:'))?.actorNames?.[familiar!.id]).toBe('Owl');
     expect(state.world.scene.mode === 'encounter' && state.world.scene.initiative)
       .toEqual(state.initiative.map((entry) => entry.actorId));
+  });
+
+  it('casts an owned Touch spell through the present familiar from its board position', async () => {
+    const fixture = wildCompanionParticipant();
+    const ownerId = fixture.participant.character.id;
+    const owner = fixture.participant.canonical.world.actors[ownerId];
+    const touch: RuleActionDefinition = {
+      id: 'a1000000-0000-4000-8000-000000000006',
+      name: 'Контактный разряд', kind: 'spell', spell: {level: 1},
+      sourceEntityIds: ['SPELL-test-touch'],
+      targeting: {minTargets: 1, maxTargets: 1, rangeFt: 5, requiresLineOfSight: true,
+        requiresTouch: true, allowedRelations: ['enemy']},
+      mechanics: {
+        activation: {mode: 'active', cost: [{resource: 'action'}, {resource: 'spell_slot_1'}]},
+        targeting: {domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1,
+          max_targets: 1, range_ft: 5, requires_line_of_sight: true, requires_touch: true,
+          allowed_relations: ['enemy']},
+        effects: [{resolution: 'attack_roll', ability: 'int', vs: 'ac',
+          on_hit: [{kind: 'damage', dice: '1d4', type: 'lightning', ability: 'none'}]}],
+      },
+    };
+    owner.capabilities.actionIds.push(touch.id);
+    owner.runtime.resources.spell_slot_1 = 1;
+    owner.runtime.maxResources.spell_slot_1 = 1;
+    owner.spellcastingAccess ??= {grants: [], preparedSources: {}};
+    owner.spellcastingAccess.grants.push({grantId: 'grant:test-touch', actionId: touch.id,
+      sourceId: 'SPELL-test-touch', access: 'known', level: 1, spellcastingAbility: 'int',
+      slotResource: 'spell_slot_1'});
+    fixture.participant.character.resources = clone(owner.runtime.resources);
+    fixture.participant.character.max_resources = clone(owner.runtime.maxResources);
+    const actions = [...fixture.participant.canonical.actions, touch];
+    const byId = new Map(actions.map((action) => [action.id, action]));
+    fixture.participant.canonical = {...fixture.participant.canonical, actions,
+      catalog: {getAction: (id) => byId.get(id), listActions: () => actions}};
+
+    let state = await createSoloCombatState({character: fixture.participant.character,
+      participant: fixture.participant, selected: [{monster: goblin(), quantity: 1}],
+      actions: [scimitar()], effects: [], rng: () => 0.5});
+    state = executeCombatAction({state, actorId: ownerId, actionId: fixture.action.id,
+      targetIds: [], choices: {find_familiar_form: ['owl']}, rng: () => 0.5});
+    const familiar = Object.values(state.world.actors).find((actor) => actor.familiarState)!;
+    const target = Object.values(state.world.actors).find((actor) => actor.kind === 'monster')!;
+    state.world.actors[ownerId].runtime.resources.action = 1;
+    state.tokens[familiar.id].position = {x: 4, y: 4};
+    state.tokens[target.id].position = {x: 5, y: 4};
+    const hp = target.runtime.hp.current;
+    state = autoResolveSystemDecisions(executeCombatTouchSpellThroughFamiliar({state,
+      ownerActorId: ownerId, familiarActorId: familiar.id, actionId: touch.id,
+      targetActorId: target.id, rng: () => 0.99}), () => 0.99);
+    expect(state.world.actors[target.id].runtime.hp.current).toBeLessThan(hp);
+    expect(state.world.actors[ownerId].runtime.resources).toMatchObject({action: 0, spell_slot_1: 0});
+    expect(state.world.actors[familiar.id].runtime.resources.reaction).toBe(0);
+    expect(state.world.actors[familiar.id].familiarState?.reactionAvailable).toBe(false);
+    expect(state.log.some((entry) => entry.text.includes('через фамильяра'))).toBe(true);
   });
 
   it('requires and forwards explicit Stonecunning surface facts before spending resources', async () => {

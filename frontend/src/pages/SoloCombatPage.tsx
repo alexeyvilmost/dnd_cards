@@ -43,9 +43,11 @@ import {
   combatDetectMagicStatus,
   createSoloCombatState,
   executeCombatAction,
+  executeCombatTouchSpellThroughFamiliar,
   executeCombatRemoteManipulator,
   moveCombatDancingLights,
   moveActorAlongRoute,
+  selectCombatMovementMode,
   standActor, escapeActorGrapple,
   refreshSoloCombatParticipants,
   revealCombatMagicAura,
@@ -76,7 +78,9 @@ import {
 } from '../solo-combat/actionChoices';
 import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
 import { getCardsIndex } from '../utils/cardsIndex';
-import { effectiveActorSpeedFt, gridDistanceFt } from '../solo-combat/tacticalGrid';
+import { combatActorMovementMode, combatActorMovementSpeeds, effectiveActorSpeedFt, gridDistanceFt } from '../solo-combat/tacticalGrid';
+import { canonicalTouchSpell, familiarActorsOwnedBy } from '../rules-core/familiarRuntime';
+import { familiarFormLabel } from '../character/familiarLabels';
 import type { ActionWorldInput } from '../rules-core/domain';
 import type { WorldObjectState } from '../rules-core/worldObjects';
 import { bindCombatWorldInputFacts } from '../solo-combat/worldInput';
@@ -85,6 +89,10 @@ import { runEncounterSelection, runSheetURL } from '../roguelike/navigation';
 import './CharacterForge.css';
 import './CharacterSheetV2.css';
 import './SoloCombatPage.css';
+
+const FAMILIAR_TOUCH_DELIVERY_CHOICE_ID = 'combat_familiar_touch_delivery';
+const MOVEMENT_MODE_CHOICE_ID = 'combat_movement_mode';
+const movementModeLabels = {walk: 'Ходьба', climb: 'Лазание', fly: 'Полёт', swim: 'Плавание', burrow: 'Рытьё'} as const;
 
 function querySelection(params: URLSearchParams): Array<{ id: string; quantity: number }> {
   return [...params.entries()].flatMap(([id, raw]) => {
@@ -550,24 +558,61 @@ export default function SoloCombatPage() {
     setSelectedActionChoices({});
     if (wasSelected) return;
     try {
-      const requiredChoices = collectSoloCombatActionChoices(
+      const familiarDeliveryChoices = canonicalTouchSpell(action)
+        ? familiarActorsOwnedBy(state.world, activeControlledActorId).filter((familiar) => (
+          familiar.familiarState?.presence === 'present'
+            && familiar.familiarState.reactionAvailable
+            && Boolean(state.tokens[familiar.id])
+        ))
+        : [];
+      const requiredChoices = [
+        ...collectSoloCombatActionChoices(
         state.world.actors[activeControlledActorId],
         action,
         state.actionPresentation?.[action.id]?.actionRef?.card_number,
         undefined, state.world,
-      );
+        ),
+        ...(familiarDeliveryChoices.length ? [{
+          id: FAMILIAR_TOUCH_DELIVERY_CHOICE_ID,
+          prompt: 'Откуда доставить контактное заклинание?',
+          count: 1,
+          source: 'explicit' as const,
+          context: 'in_play' as const,
+          origin: {kind: 'other' as const, id: action.id, name: action.name},
+          items: [
+            {id: 'self', name: 'Самостоятельно'},
+            ...familiarDeliveryChoices.map((familiar) => ({
+              id: familiar.id,
+              name: `Через фамильяра: ${familiarFormLabel(familiar.familiarState!.form.id)}`,
+            })),
+          ],
+          recommended: ['self'],
+        }] : []),
+      ];
       const choices = requiredChoices.length
         ? await choiceDialog.request(requiredChoices, action.name)
         : {};
       if (!choices) return;
       const immediateTargets = immediateSoloCombatTargetIds(action, activeControlledActorId, state);
       if (immediateTargets) {
-        applyIntent({type: 'action', actorId: activeControlledActorId, actionId: action.id, targetIds: immediateTargets, choices}, () => autoResolveSystemDecisions(executeCombatAction({
+        const familiarActorId = choices[FAMILIAR_TOUCH_DELIVERY_CHOICE_ID]?.[0];
+        const actionChoices = Object.fromEntries(Object.entries(choices).filter(([key]) => key !== FAMILIAR_TOUCH_DELIVERY_CHOICE_ID));
+        if (familiarActorId && familiarActorId !== 'self') {
+          if (immediateTargets.length !== 1) throw new Error('Контактное заклинание через фамильяра требует одну цель');
+          applyIntent({type: 'familiar_touch', actorId: activeControlledActorId, familiarActorId,
+            spellActionId: action.id, targetActorId: immediateTargets[0], choices: actionChoices},
+          () => autoResolveSystemDecisions(executeCombatTouchSpellThroughFamiliar({
+            state, ownerActorId: activeControlledActorId, familiarActorId,
+            actionId: action.id, targetActorId: immediateTargets[0], choices: actionChoices,
+          })));
+          return;
+        }
+        applyIntent({type: 'action', actorId: activeControlledActorId, actionId: action.id, targetIds: immediateTargets, choices: actionChoices}, () => autoResolveSystemDecisions(executeCombatAction({
           state,
           actorId: activeControlledActorId,
           actionId: action.id,
           targetIds: immediateTargets,
-          choices,
+          choices: actionChoices,
         })));
         return;
       }
@@ -654,9 +699,11 @@ export default function SoloCombatPage() {
         applyIntent({type:'action',actorId:activeControlledActorId,actionId:selectedActionId,targetIds,worldPosition:position,choices},next);
         setSelectedActionId(null);setSelectedMovementTargetId(null);setSelectedActionChoices({});return;
       }
+      const familiarActorId = selectedActionChoices[FAMILIAR_TOUCH_DELIVERY_CHOICE_ID]?.[0];
+      const deliveryActorId = familiarActorId && familiarActorId !== 'self' ? familiarActorId : null;
       const targetIds = selectedTargetsForAction({
         state,
-        actorId: activeControlledActorId,
+        actorId: deliveryActorId ?? activeControlledActorId,
         actionId: selectedActionId,
         clickedActorId: actorId,
         clickedPosition: position,
@@ -694,6 +741,20 @@ export default function SoloCombatPage() {
           lineOfSight: true,
         });
       }
+      const actionChoices = Object.fromEntries(Object.entries(selectedActionChoices)
+        .filter(([key]) => key !== FAMILIAR_TOUCH_DELIVERY_CHOICE_ID));
+      if (deliveryActorId) {
+        if (targetIds.length !== 1) throw new Error('Контактное заклинание через фамильяра требует одну цель');
+        const next = () => autoResolveSystemDecisions(executeCombatTouchSpellThroughFamiliar({
+          state, ownerActorId: activeControlledActorId, familiarActorId: deliveryActorId,
+          actionId: selectedActionId, targetActorId: targetIds[0], choices: actionChoices,
+        }));
+        setSelectedActionId(null); setSelectedActionChoices({});
+        applyIntent({type: 'familiar_touch', actorId: activeControlledActorId,
+          familiarActorId: deliveryActorId, spellActionId: selectedActionId,
+          targetActorId: targetIds[0], choices: actionChoices}, next);
+        return;
+      }
       const next = () => autoResolveSystemDecisions(executeCombatAction({
         state,
         actorId: activeControlledActorId,
@@ -702,10 +763,10 @@ export default function SoloCombatPage() {
         worldPosition: position,
         worldInput,
         scenarioObjects,
-        choices: selectedActionChoices,
+        choices: actionChoices,
       }));
       setSelectedActionId(null); setSelectedActionChoices({});
-      applyIntent({type: 'action', actorId: activeControlledActorId, actionId: selectedActionId, targetIds, worldPosition: position, worldInput, choices: selectedActionChoices}, next);
+      applyIntent({type: 'action', actorId: activeControlledActorId, actionId: selectedActionId, targetIds, worldPosition: position, worldInput, choices: actionChoices}, next);
     } catch (reason) { setError(playerFacingSheetActionError(reason)); }
   };
 
@@ -856,6 +917,9 @@ export default function SoloCombatPage() {
           <TacticalBattleMap
             state={state}
             actorId={activeControlledActorId}
+            targetingActorId={selectedActionChoices[FAMILIAR_TOUCH_DELIVERY_CHOICE_ID]?.[0] !== 'self'
+              ? selectedActionChoices[FAMILIAR_TOUCH_DELIVERY_CHOICE_ID]?.[0]
+              : undefined}
             selectedActionId={secondaryActionId ?? selectedActionId}
             eligibleTargetIds={secondaryActionId ? triggeredSecondaryTargetIds(state, secondaryActionId) : undefined}
             movementMode={movementMode || Boolean(state.pendingAdditionalMovement)}
@@ -948,7 +1012,36 @@ export default function SoloCombatPage() {
         onAddMonster={addSceneMonster}
         onClose={() => setSceneConstructorOpen(false)}
       />}
-      <CombatHotbar onEscape={() => { void chooseEscapeGrapple(); }} onStand={() => { setMovementMode(false); applyIntent({type: 'stand', actorId: activeControlledActorId}, () => standActor(state, activeControlledActorId)); }} state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || Boolean(state.pendingAdditionalMovement) || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); setMovementMode((value) => !value); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); applyIntent({type: 'end_turn', actorId: activeControlledActorId}, () => advanceTurn(state)); }} onSheet={() => {
+      <CombatHotbar onEscape={() => { void chooseEscapeGrapple(); }} onStand={() => { setMovementMode(false); applyIntent({type: 'stand', actorId: activeControlledActorId}, () => standActor(state, activeControlledActorId)); }} state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || Boolean(state.pendingAdditionalMovement) || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { void (async () => {
+        setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null);
+        if (movementMode) { setMovementMode(false); return; }
+        try {
+          const actorSpeeds = combatActorMovementSpeeds(state.world.actors[activeControlledActorId]);
+          const availableModes = Object.entries(actorSpeeds).filter(([, speed]) => speed > 0) as Array<[keyof typeof movementModeLabels, number]>;
+          const currentMode = combatActorMovementMode(state, activeControlledActorId);
+          let selectedMode = currentMode;
+          if (availableModes.length > 1) {
+            const selection = await choiceDialog.request([{
+              id: MOVEMENT_MODE_CHOICE_ID,
+              prompt: 'Как перемещаться?',
+              count: 1,
+              source: 'explicit',
+              context: 'in_play',
+              origin: {kind: 'other', id: 'combat-movement', name: 'Перемещение'},
+              items: availableModes.map(([mode, speed]) => ({id: mode, name: `${movementModeLabels[mode]} · ${speed} фт.`})),
+              recommended: [currentMode],
+            }], 'Перемещение');
+            if (!selection) return;
+            selectedMode = selection[MOVEMENT_MODE_CHOICE_ID]?.[0] as keyof typeof movementModeLabels;
+            if (!selectedMode) return;
+          }
+          if (selectedMode !== currentMode) {
+            applyIntent({type: 'movement_mode', actorId: activeControlledActorId, mode: selectedMode},
+              () => selectCombatMovementMode(state, activeControlledActorId, selectedMode));
+          }
+          setMovementMode(true);
+        } catch (reason) { setError(playerFacingSheetActionError(reason)); }
+      })(); }} onEndTurn={() => { setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null); applyIntent({type: 'end_turn', actorId: activeControlledActorId}, () => advanceTurn(state)); }} onSheet={() => {
         if (isControlledCharacter(state, activeControlledActorId)) {
           setSheetActorId(activeControlledActorId);
           setSheetOpen(true);

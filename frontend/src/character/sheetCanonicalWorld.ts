@@ -1024,12 +1024,26 @@ export function restoreCompatibleSheetFamiliars(fresh: WorldState, turnState: Re
   if (familiars.length > 1) throw new SheetCanonicalWorldError('Персонаж не может иметь нескольких фамильяров');
   const hydrated = cloneJson(fresh);
   for (const familiar of familiars) {
-    const issue = familiarActorStateIssue({ actor: familiar, owner: hydrated.actors[actorId] });
+    const previousIssue = familiarActorStateIssue({ actor: familiar, owner: previous.actors[actorId] });
+    if (previousIssue) throw new SheetCanonicalWorldError(previousIssue);
+    const restored = cloneJson(familiar);
+    // Schema-v1 base familiars created before ongoing-spell provenance was
+    // persisted still depended on the prepared action remaining on the sheet.
+    // Upgrade only an already valid pinned projection; the old owner check
+    // above proves the action and familiar were genuinely joined before the
+    // new sheet subset is allowed to omit that prepared spell.
+    if (!restored.familiarState!.ongoingSpell) {
+      restored.familiarState!.ongoingSpell = {
+        actionId: restored.familiarMetadata!.summoningActionId,
+        policy: {connectionRangeFt: 100, reappearRangeFt: 30, ritualCastingAddedSeconds: 600},
+      };
+    }
+    const issue = familiarActorStateIssue({ actor: restored, owner: hydrated.actors[actorId] });
     if (issue) throw new SheetCanonicalWorldError(issue);
-    if (familiar.familiarState!.carriedItemIds.length || familiar.familiarState!.wornItemIds.length) {
+    if (restored.familiarState!.carriedItemIds.length || restored.familiarState!.wornItemIds.length) {
       throw new SheetCanonicalWorldError('Перед изменением каталога верните предметы фамильяра в инвентарь');
     }
-    hydrated.actors[familiar.id] = cloneJson(familiar);
+    hydrated.actors[restored.id] = restored;
   }
   return migrateWorldState(hydrated);
 }

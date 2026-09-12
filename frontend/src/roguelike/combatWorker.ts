@@ -5,11 +5,12 @@ import type { DecisionResponse } from '../rules-core/domain';
 import { canonicalSha256Sync } from '../rules-core/determinism';
 import {
   declineAdditionalMovement, isTriggeredCombatAction, resumePendingMovement, activeActor, activateCombatBoon, advanceTurn, autoResolveSystemDecisions,
-  escapeActorGrapple, executeCombatAction, executeCombatRemoteManipulator, moveCombatDancingLights, revealCombatMagicAura, moveActorAlongRoute, resolveD20Interrupt, resolvePlayerReaction,
+  escapeActorGrapple, executeCombatAction, executeCombatRemoteManipulator, executeCombatTouchSpellThroughFamiliar,
+  moveCombatDancingLights, revealCombatMagicAura, moveActorAlongRoute, resolveD20Interrupt, resolvePlayerReaction,
   resolvePlayerShoveOutcome, resolvePlayerSavingThrow, resolveSoloCombatAlertSwap, resolveSoloCombatInterception,
-  resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, standActor,
+  resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectCombatMovementMode, standActor,
 } from '../solo-combat/engine';
-import { isPlayerControlledCombatActor, type GridPosition, type SoloCombatState } from '../solo-combat/types';
+import { isPlayerControlledCombatActor, type CombatMovementMode, type GridPosition, type SoloCombatState } from '../solo-combat/types';
 
 /** Internal worker envelope. Entropy must never be copied into the public run DTO. */
 export interface RoguelikeCombatEnvelope {
@@ -24,6 +25,9 @@ export type RoguelikeCombatIntent =
   | {type: 'action'; actorId: string; actionId: string; targetIds: string[];
       choices?: ActionInput['choices']; worldPosition?: GridPosition; worldInput?: ActionInput['worldInput']}
   | {type: 'move'; actorId: string; destination: GridPosition}
+  | {type: 'movement_mode'; actorId: string; mode: CombatMovementMode}
+  | {type: 'familiar_touch'; actorId: string; familiarActorId: string; spellActionId: string;
+      targetActorId: string; choices?: ActionInput['choices']}
   | {type: 'decline_movement'; actorId: string}
   | {type: 'stand'; actorId: string}
   | {type: 'escape_grapple'; actorId: string; grappleId: string; skill: 'athletics' | 'acrobatics'}
@@ -82,7 +86,7 @@ export function stepRoguelikeCombat(
     if (!isPlayerControlledCombatActor(state, actorId)) throw new Error('Нельзя управлять этим участником боя');
   };
   if ('actorId' in intent && intent.actorId !== null) requireOwned(intent.actorId);
-  const proactive = new Set(['action', 'move', 'stand', 'escape_grapple', 'end_turn', 'dancing_lights', 'detect_magic', 'remote_manipulator', 'boon']);
+  const proactive = new Set(['action', 'move', 'movement_mode', 'familiar_touch', 'stand', 'escape_grapple', 'end_turn', 'dancing_lights', 'detect_magic', 'remote_manipulator', 'boon']);
   const additionalMove = intent.type === 'move' && state.pendingAdditionalMovement?.actorId === intent.actorId;
   if (proactive.has(intent.type) && 'actorId' in intent
     && (hasDecision(additionalMove ? {...state, pendingAdditionalMovement: undefined} : state)
@@ -111,6 +115,12 @@ export function stepRoguelikeCombat(
       break;
     }
     case 'move': state = moveActorAlongRoute({state, actorId: intent.actorId, destination: intent.destination, rng}); break;
+    case 'movement_mode': state = selectCombatMovementMode(state, intent.actorId, intent.mode); break;
+    case 'familiar_touch': state = executeCombatTouchSpellThroughFamiliar({
+      state, ownerActorId: intent.actorId, familiarActorId: intent.familiarActorId,
+      actionId: intent.spellActionId, targetActorId: intent.targetActorId,
+      choices: intent.choices, rng,
+    }); break;
     case 'decline_movement':
       if (state.pendingAdditionalMovement?.actorId !== intent.actorId) throw new Error('Нет ожидающего перемещения участника');
       state = declineAdditionalMovement(state); break;

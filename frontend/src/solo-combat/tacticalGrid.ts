@@ -4,6 +4,7 @@ import {
   TACTICAL_HEIGHT,
   TACTICAL_WIDTH,
   type GridPosition,
+  type CombatMovementMode,
   type SoloCombatState,
 } from './types';
 import { breakdownValue } from '../engine/breakdown';
@@ -34,9 +35,31 @@ export function effectiveActorSpeedFt(actor: ActorState): number {
   return Number.isFinite(value) ? Math.max(0, value) : 0;
 }
 
+const MOVEMENT_MODES: CombatMovementMode[] = ['walk', 'climb', 'fly', 'swim', 'burrow'];
+
+/** Every speed declared by the pinned familiar stat block. Ordinary actors
+ * currently expose their already projected walking speed. */
+export function combatActorMovementSpeeds(actor: ActorState): Record<CombatMovementMode, number> {
+  const walk = effectiveActorSpeedFt(actor);
+  const declared = actor.familiarMetadata?.speeds;
+  return Object.fromEntries(MOVEMENT_MODES.map((mode) => [
+    mode,
+    mode === 'walk' ? walk : Math.max(0, Number(declared?.[mode] ?? 0)),
+  ])) as Record<CombatMovementMode, number>;
+}
+
+export function combatActorMovementMode(
+  state: Pick<SoloCombatState, 'world' | 'movementModeByActor'>,
+  actorId: string,
+): CombatMovementMode {
+  const selected = state.movementModeByActor?.[actorId] ?? 'walk';
+  const actor = state.world.actors[actorId];
+  return actor && combatActorMovementSpeeds(actor)[selected] > 0 ? selected : 'walk';
+}
+
 /** Tactical speed also includes encounter relations such as being grappled. */
 export function effectiveCombatActorSpeedFt(
-  state: Pick<SoloCombatState, 'world'>,
+  state: Pick<SoloCombatState, 'world' | 'movementModeByActor'>,
   actorId: string,
 ): number {
   const actor = state.world.actors[actorId];
@@ -44,7 +67,7 @@ export function effectiveCombatActorSpeedFt(
   const grappled = Object.values(state.world.grapples ?? {}).some((grapple) => (
     grapple.targetActorId === actorId
   ));
-  return grappled ? 0 : effectiveActorSpeedFt(actor);
+  return grappled ? 0 : combatActorMovementSpeeds(actor)[combatActorMovementMode(state, actorId)];
 }
 
 export function occupiedPositions(state: Pick<SoloCombatState, 'tokens' | 'world'>, exceptActorId?: string): Set<string> {
@@ -57,7 +80,7 @@ export function occupiedPositions(state: Pick<SoloCombatState, 'tokens' | 'world
 
 /** Exact destination set accepted by the current five-foot tactical movement rule. */
 export function reachablePositions(
-  state: Pick<SoloCombatState, 'tokens' | 'world' | 'combatAreas'>,
+  state: Pick<SoloCombatState, 'tokens' | 'world' | 'combatAreas' | 'movementModeByActor'>,
   actorId: string,
   maximumFeet: number,
 ): GridPosition[] {
@@ -73,7 +96,7 @@ export interface TacticalRoute {
 /** Bounded Dijkstra search over the 120-cell board. Every returned step is
  * adjacent and unoccupied; cost matches the common movement executor per step. */
 export function reachableRoutes(
-  state: Pick<SoloCombatState, 'tokens' | 'world' | 'combatAreas'>,
+  state: Pick<SoloCombatState, 'tokens' | 'world' | 'combatAreas' | 'movementModeByActor'>,
   actorId: string,
   maximumFeet: number,
 ): TacticalRoute[] {
@@ -84,7 +107,8 @@ export function reachableRoutes(
   const key = (p: GridPosition) => `${p.x}:${p.y}`;
   const difficult = new Set(Object.values(state.combatAreas ?? {}).flatMap(area =>
     area.difficultTerrain ? area.cells.map(key) : []));
-  const crawl = Number(actorMustCrawl(actor));
+  const flies = combatActorMovementMode(state, actorId) === 'fly';
+  const crawl = Number(!flies && actorMustCrawl(actor));
   const routes = new Map<string, TacticalRoute>([[key(origin), {destination: origin, path: [], costFt: 0}]]);
   const queue = [routes.get(key(origin))!];
   while (queue.length) {
@@ -97,7 +121,7 @@ export function reachableRoutes(
       const destination = {x: current.destination.x + dx, y: current.destination.y + dy};
       if (!inside(destination) || occupied.has(key(destination))) continue;
       const costFt = current.costFt + 5 * (1 + crawl
-        + Number(difficult.has(key(current.destination)) || difficult.has(key(destination))));
+        + Number(!flies && (difficult.has(key(current.destination)) || difficult.has(key(destination)))));
       if (costFt > maximumFeet || (routes.get(key(destination))?.costFt ?? Infinity) <= costFt) continue;
       const route = {destination, costFt, path: [...current.path, destination]};
       routes.set(key(destination), route); queue.push(route);

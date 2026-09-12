@@ -802,8 +802,21 @@ describe('real sheet canonical world materialization', () => {
     expect(withoutSpell.actors[owner.id].capabilities.actionIds).toEqual([]);
     const legacy = clone(base);
     delete legacy.actors[companion.id].familiarState!.ongoingSpell;
-    expect(() => restoreCompatibleSheetFamiliars(missing,writeSheetCanonicalWorld({},owner.id,legacy),owner.id))
-      .toThrow(/summoning action/);
+    const withoutPreparedSpell = restoreCompatibleSheetFamiliars(
+      missing, writeSheetCanonicalWorld({}, owner.id, legacy), owner.id,
+    );
+    expect(withoutPreparedSpell.actors[companion.id].familiarState?.ongoingSpell).toEqual({
+      actionId,
+      policy: {connectionRangeFt:100,reappearRangeFt:30,ritualCastingAddedSeconds:600},
+    });
+    const forgedLegacy = clone(base);
+    delete forgedLegacy.actors[companion.id].familiarState!.ongoingSpell;
+    forgedLegacy.actors[owner.id].capabilities.actionIds = [];
+    delete forgedLegacy.actors[owner.id].spellcastingAccess;
+    delete forgedLegacy.actors[owner.id].warlockPacts;
+    expect(() => restoreCompatibleSheetFamiliars(
+      missing, writeSheetCanonicalWorld({}, owner.id, forgedLegacy), owner.id,
+    )).toThrow(/summoning action/);
   });
 
   it('materializes Pact Tome from the five resolved Forge choices and round-trips its book/grants', () => {
