@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -280,6 +282,93 @@ func TestRoguelikeClockRetainsSubhourCastingTime(t *testing.T) {
 	advanceRoguelikeClock(&run, 4200)
 	if run.GameClockHours != 3 || run.GameClockRemainderSeconds != 600 {
 		t.Fatal("lost ritual duration")
+	}
+}
+
+func TestRoguelikeAdditionalWeightUsesRuleCapacityAndPhysicalOwnership(t *testing.T) {
+	fixture := openCharacterV3AccessFixture(t)
+	if err := fixture.db.AutoMigrate(&Card{}); err != nil {
+		t.Fatal(err)
+	}
+	weight := 6.0
+	owned := Card{ID: uuid.New(), Name: "Owned", Description: "test", CardNumber: "RL-WEIGHT-OWNED", Rarity: RarityCommon, Weight: &weight}
+	incoming := Card{ID: uuid.New(), Name: "Incoming", Description: "test", CardNumber: "RL-WEIGHT-INCOMING", Rarity: RarityCommon, Weight: &weight}
+	if err := fixture.db.Create(&owned).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := fixture.db.Create(&incoming).Error; err != nil {
+		t.Fatal(err)
+	}
+	equipment := JSONMap{"main_hand": owned.ID.String(), "off_hand": owned.ID.String()}
+	rules := JSONMap{"carryingCapacity": float64(15)}
+	character := CharacterV3{ID: uuid.New(), Equipment: &equipment, RuleState: &rules}
+	if got, err := roguelikeInventoryWeight(fixture.db, &character); err != nil || got != 6 {
+		t.Fatalf("two-handed physical item weight = %v, error=%v", got, err)
+	}
+	if err := validateRoguelikeAdditionalWeight(fixture.db, &character, &incoming, 1); err != nil {
+		t.Fatalf("item within capacity rejected: %v", err)
+	}
+	err := validateRoguelikeAdditionalWeight(fixture.db, &character, &incoming, 2)
+	var conflict *roguelikeHTTPError
+	if !errors.As(err, &conflict) || conflict.Code != "carrying_capacity_exceeded" {
+		t.Fatalf("overweight addition was not rejected: %#v", err)
+	}
+	overweightInventory := InventoryItemRows{{CardID: owned.ID.String(), Qty: 3}}
+	character.Equipment = nil
+	character.InventoryItems = &overweightInventory
+	err = validateRoguelikeCurrentWeight(fixture.db, &character)
+	if !errors.As(err, &conflict) || conflict.Code != "carrying_capacity_exceeded" {
+		t.Fatalf("overweight starting inventory was not rejected: %#v", err)
+	}
+}
+
+func TestRoguelikeLootSkipsOverweightCandidateForFittingAlternative(t *testing.T) {
+	fixture := openCharacterV3AccessFixture(t)
+	if err := fixture.db.AutoMigrate(&Card{}); err != nil {
+		t.Fatal(err)
+	}
+	heavyWeight, lightWeight := 6.0, 1.0
+	heavy := Card{ID: uuid.New(), Name: "Heavy", Description: "test", CardNumber: "CARD-0319", Rarity: RarityCommon, Weight: &heavyWeight}
+	light := Card{ID: uuid.New(), Name: "Light", Description: "test", CardNumber: "CARD-0313", Rarity: RarityCommon, Weight: &lightWeight}
+	if err := fixture.db.Create(&heavy).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := fixture.db.Create(&light).Error; err != nil {
+		t.Fatal(err)
+	}
+	seed := ""
+	for candidate := 0; candidate < 1000; candidate++ {
+		value := fmt.Sprintf("capacity-loot-%d", candidate)
+		ordered := roguelikeWeightedOrder(value, "loot", 1, roguelikeShopManifest)
+		heavyIndex, lightIndex := -1, -1
+		for index, entry := range ordered {
+			if entry.CardNumber == heavy.CardNumber {
+				heavyIndex = index
+			}
+			if entry.CardNumber == light.CardNumber {
+				lightIndex = index
+			}
+		}
+		if heavyIndex >= 0 && lightIndex >= 0 && heavyIndex < lightIndex {
+			seed = value
+			break
+		}
+	}
+	if seed == "" {
+		t.Fatal("could not construct deterministic heavy-first loot order")
+	}
+	rules := JSONMap{"carryingCapacity": float64(5)}
+	character := CharacterV3{ID: uuid.New(), RuleState: &rules}
+	run := RoguelikeRun{RunSeed: seed}
+	card, err := grantRoguelikeLootByKind(fixture.db, &run, &character, 1, "equipment", "loot", 1, map[string]bool{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if card == nil || card.ID != light.ID {
+		t.Fatalf("fitting fallback loot = %#v, want %s", card, light.ID)
+	}
+	if character.InventoryItems == nil || len(*character.InventoryItems) != 1 || (*character.InventoryItems)[0].CardID != light.ID.String() {
+		t.Fatalf("unexpected awarded inventory: %#v", character.InventoryItems)
 	}
 }
 

@@ -229,6 +229,87 @@ func characterGold(character *CharacterV3) int {
 	return value
 }
 
+func roguelikeCarryingCapacity(character *CharacterV3) float64 {
+	if character.RuleState != nil {
+		if capacity, ok := numberFromJSON((*character.RuleState)["carryingCapacity"]); ok && capacity > 0 {
+			return float64(capacity)
+		}
+	}
+	strength := 10
+	if character.Abilities != nil {
+		if value, ok := numberFromJSON((*character.Abilities)["str"]); ok && value > 0 {
+			strength = value
+		}
+	}
+	size := 2
+	if character.RuleState != nil {
+		if value, ok := numberFromJSON((*character.RuleState)["size"]); ok && value >= 0 {
+			size = value
+		}
+	}
+	multiplier := 1.0
+	if size <= 0 {
+		multiplier = 0.5
+	} else if size > 2 {
+		multiplier = math.Pow(2, float64(size-2))
+	}
+	return float64(strength*15) * multiplier
+}
+
+func roguelikeInventoryWeight(tx *gorm.DB, character *CharacterV3) (float64, error) {
+	owned, err := roguelikeItemOwnership(character.Equipment, character.InventoryItems)
+	if err != nil {
+		return 0, err
+	}
+	if len(owned) == 0 {
+		return 0, nil
+	}
+	ids := make([]string, 0, len(owned))
+	for id := range owned {
+		ids = append(ids, id)
+	}
+	var cards []Card
+	if err := tx.Select("id", "weight").Where("id IN ?", ids).Find(&cards).Error; err != nil {
+		return 0, err
+	}
+	weight := 0.0
+	for _, card := range cards {
+		if card.Weight != nil && *card.Weight > 0 {
+			weight += *card.Weight * float64(owned[card.ID.String()])
+		}
+	}
+	return weight, nil
+}
+
+func validateRoguelikeAdditionalWeight(tx *gorm.DB, character *CharacterV3, card *Card, quantity int) error {
+	if quantity < 1 {
+		return roguelikeError(http.StatusConflict, "invalid_item_quantity", "количество предметов должно быть положительным")
+	}
+	current, err := roguelikeInventoryWeight(tx, character)
+	if err != nil {
+		return err
+	}
+	additional := 0.0
+	if card.Weight != nil && *card.Weight > 0 {
+		additional = *card.Weight * float64(quantity)
+	}
+	if current+additional > roguelikeCarryingCapacity(character)+0.000001 {
+		return roguelikeError(http.StatusConflict, "carrying_capacity_exceeded", "этот предмет превышает грузоподъёмность персонажа")
+	}
+	return nil
+}
+
+func validateRoguelikeCurrentWeight(tx *gorm.DB, character *CharacterV3) error {
+	weight, err := roguelikeInventoryWeight(tx, character)
+	if err != nil {
+		return err
+	}
+	if weight > roguelikeCarryingCapacity(character)+0.000001 {
+		return roguelikeError(http.StatusConflict, "carrying_capacity_exceeded", "инвентарь персонажа превышает его грузоподъёмность")
+	}
+	return nil
+}
+
 func roguelikeCardByNumber(tx *gorm.DB, cardNumber string) (*Card, error) {
 	var card Card
 	if err := tx.Where("card_number = ?", cardNumber).First(&card).Error; err != nil {
@@ -438,6 +519,9 @@ func (rc *RoguelikeController) Create(c *gin.Context) {
 			return err
 		}
 		addInventoryItem(&clone, potion.ID.String(), 1)
+		if err = validateRoguelikeCurrentWeight(tx, &clone); err != nil {
+			return err
+		}
 		if err = tx.Omit("User", "Group").Create(&clone).Error; err != nil {
 			return err
 		}
@@ -711,6 +795,13 @@ func grantRoguelikeLootByKind(
 		if err != nil {
 			return nil, err
 		}
+		if err = validateRoguelikeAdditionalWeight(tx, character, card, 1); err != nil {
+			var problem *roguelikeHTTPError
+			if errors.As(err, &problem) && problem.Code == "carrying_capacity_exceeded" {
+				continue
+			}
+			return nil, err
+		}
 		addInventoryItem(character, card.ID.String(), 1)
 		excluded[entry.CardNumber] = true
 		return card, nil
@@ -909,7 +1000,7 @@ func pinRoguelikeOffer(run *RoguelikeRun, offerID string) error {
 	return roguelikeError(http.StatusNotFound, "offer_not_found", "товар для фиксации не найден")
 }
 
-func buyRoguelikeOffer(run *RoguelikeRun, offerID string) error {
+func buyRoguelikeOffer(tx *gorm.DB, run *RoguelikeRun, offerID string) error {
 	shop, err := currentShop(run)
 	if err != nil {
 		return err
@@ -934,6 +1025,15 @@ func buyRoguelikeOffer(run *RoguelikeRun, offerID string) error {
 	}
 	if run.Gold < offer.Price {
 		return roguelikeError(http.StatusConflict, "insufficient_gold", "недостаточно золота")
+	}
+	if offer.ID != "staple:supplies" {
+		var card Card
+		if err := tx.Where("id = ?", offer.CardID).First(&card).Error; err != nil {
+			return err
+		}
+		if err := validateRoguelikeAdditionalWeight(tx, run.Character, &card, offer.Quantity); err != nil {
+			return err
+		}
 	}
 	run.Gold -= offer.Price
 	if offer.ID == "staple:supplies" {
@@ -1270,7 +1370,7 @@ func applyRoguelikeCommand(tx *gorm.DB, run *RoguelikeRun, request RoguelikeComm
 	case "complete_encounter":
 		return completeRoguelikeEncounter(tx, run)
 	case "buy":
-		return buyRoguelikeOffer(run, roguelikePayloadString(request, "offer_id"))
+		return buyRoguelikeOffer(tx, run, roguelikePayloadString(request, "offer_id"))
 	case "pin":
 		return pinRoguelikeOffer(run, roguelikePayloadString(request, "offer_id"))
 	case "refresh_shop":
