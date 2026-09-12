@@ -4188,7 +4188,7 @@ export function addSoloCombatMonster(input: {
         alignment: input.monster.alignment,
         challengeRating: input.monster.challenge_rating,
         source: input.monster.source,
-        actionIds: compiled.actions.map((action) => action.id),
+        actionIds: monsterPresentationActionIds(compiled.actions),
         traits: input.monster.effect_ids.flatMap((effectId) => {
           const effect = input.effects.find((candidate) => candidate.id === effectId);
           return effect?.mechanics ? [{
@@ -4526,6 +4526,56 @@ function executeMonsterStrike(state: SoloCombatState, actorId: string, actionId:
   return autoResolveSystemDecisions(executeCombatAction({state, actorId, actionId, targetIds: [targetId], rng}), rng);
 }
 
+function monsterPresentationActionIds(actions: RuleActionDefinition[]): string[] {
+  return actions.filter((action) => action.mechanics.npc_multiattack_followup !== true
+    && action.mechanics.npc_unarmed_fallback !== true).map((action) => action.id);
+}
+
+function monsterWeaponActionIssue(action: RuleActionDefinition, actor: ActorState): string | null {
+  const issue = heldItemRequirementIssue(action.mechanics, actor.runtime);
+  if (!issue || action.mechanics.npc_equip_before_action !== true) return issue;
+  const weaponId = action.mechanics.requires_held_item;
+  if (typeof weaponId !== 'string' || !actor.runtime.inventory.some((row) => row.cardId === weaponId && row.qty > 0)) {
+    return issue;
+  }
+  const weapon = actor.character.knownCards?.find((card) => card.id === weaponId);
+  if (!weapon) return issue;
+  return parseWeaponProfile(weapon).valid ? null : issue;
+}
+
+/** Stat-block Multiattack may ready one of the monster's carried weapons as
+ * part of choosing that attack. The resulting hands and bag are saved in the
+ * combat state, so Parry, disarming and replay observe the same physical item. */
+function readyMonsterWeapon(state: SoloCombatState, actorId: string, action: RuleActionDefinition): SoloCombatState {
+  const actor = state.world.actors[actorId];
+  if (!heldItemRequirementIssue(action.mechanics, actor.runtime)) return state;
+  if (monsterWeaponActionIssue(action, actor)) throw new Error('Монстр не может подготовить оружие для выбранной атаки');
+  const weaponId = action.mechanics.requires_held_item as string;
+  const weapon = actor.character.knownCards!.find((card) => card.id === weaponId)!;
+  const parsed = parseWeaponProfile(weapon);
+  if (!parsed.valid) throw new Error(parsed.issue);
+  const inventory = actor.runtime.inventory.map((row) => ({...row}));
+  const requiredIndex = inventory.findIndex((row) => row.cardId === weaponId && row.qty > 0);
+  inventory[requiredIndex].qty--;
+  if (inventory[requiredIndex].qty === 0) inventory.splice(requiredIndex, 1);
+  const previouslyHeld = new Set([actor.runtime.equipment.main_hand, actor.runtime.equipment.off_hand]
+    .filter((id): id is string => Boolean(id) && id !== weaponId));
+  for (const priorId of previouslyHeld) {
+    const row = inventory.find((entry) => entry.cardId === priorId);
+    if (row) row.qty++;
+    else inventory.push({cardId: priorId, qty: 1});
+  }
+  inventory.sort((left, right) => left.cardId.localeCompare(right.cardId));
+  const equipment = {
+    ...actor.runtime.equipment,
+    main_hand: weaponId,
+    off_hand: parsed.profile.properties.includes('two_handed') ? weaponId : null,
+  };
+  const world = clone(state.world);
+  world.actors[actorId].runtime = {...world.actors[actorId].runtime, equipment, inventory};
+  return appendLog({...state, world}, actorId, `Подготавливает оружие: ${weapon.name}.`);
+}
+
 function continueMonsterAttackSequence(state: SoloCombatState, rng: Rng): SoloCombatState {
   let next = state;
   while (next.monsterAttackSequence?.actionIds.length && next.outcome === 'active') {
@@ -4543,7 +4593,10 @@ function continueMonsterAttackSequence(state: SoloCombatState, rng: Rng): SoloCo
       && spatialFacts(next, sequence.actorId, target.id).lineOfSight)
       .sort((a, b) => Number(b.id === sequence.targetId) - Number(a.id === sequence.targetId) || a.id.localeCompare(b.id));
     next = {...next, monsterAttackSequence: {...sequence, actionIds: sequence.actionIds.slice(1)}};
-    if (candidates[0] && !heldItemRequirementIssue(action.mechanics, source.runtime)) next = executeMonsterStrike(next, sequence.actorId, actionId, candidates[0].id, rng);
+    if (candidates[0] && !monsterWeaponActionIssue(action, source)) {
+      next = readyMonsterWeapon(next, sequence.actorId, action);
+      next = executeMonsterStrike(next, sequence.actorId, actionId, candidates[0].id, rng);
+    }
   }
   if (monsterMovementPaused(next)) return next;
   const {monsterAttackSequence: _finished, ...finished} = next;
@@ -4616,7 +4669,7 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
     .map((id) => state.catalogActions.find((candidate) => candidate.id === id))
     .filter((action): action is RuleActionDefinition => Boolean(action && isAttackAction(action)
       && action.mechanics.npc_multiattack_followup !== true
-      && !heldItemRequirementIssue(action.mechanics, monster.runtime)));
+      && !monsterWeaponActionIssue(action, monster)));
   const maximumAttackRange = attackActions.reduce((maximum, action) => (
     Math.max(maximum, monsterAttackRange(action))
   ), monster.attackProfile?.reachFt ?? 5);
@@ -4651,7 +4704,7 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
     const distance = gridDistanceFt(next.tokens[monsterId].position, next.tokens[targetId].position);
     const reach = next.world.actors[monsterId].attackProfile?.reachFt ?? 5;
     const legalActions = attackActions.filter((action) => monsterAttackRange(action) >= distance
-      && !heldItemRequirementIssue(action.mechanics, next.world.actors[monsterId].runtime));
+      && !monsterWeaponActionIssue(action, next.world.actors[monsterId]));
     legalActions.sort((left, right) => {
       const preferredKind = distance <= reach ? 'melee' : 'ranged';
       const leftKind = monsterAttackKind(left);
@@ -4665,6 +4718,7 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
     if (actionId) {
       try {
         const attack = next.catalogActions.find(row => row.id === actionId)!;
+        next = readyMonsterWeapon(next, monsterId, attack);
         const sequence = attack.mechanics.npc_multiattack as {followUpActionIds?: string[]} | undefined;
         if (sequence?.followUpActionIds?.length) next = {...next, monsterAttackSequence: {
           actorId: monsterId, targetId, actionIds: [...sequence.followUpActionIds],
@@ -4904,7 +4958,7 @@ export async function createSoloCombatState(input: {
         alignment: monster.template.alignment,
         challengeRating: monster.template.challenge_rating,
         source: monster.template.source,
-        actionIds: monster.actions.map((action) => action.id),
+        actionIds: monsterPresentationActionIds(monster.actions),
         traits: monster.template.effect_ids.flatMap((effectId) => {
           const effect = input.effects.find((candidate) => candidate.id === effectId);
           return effect?.mechanics ? [{

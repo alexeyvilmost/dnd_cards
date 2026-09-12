@@ -423,6 +423,26 @@ it('retains declared monster movement modes and Spider Climb without changing fl
     .toThrow('расходится со стат-блоком');
 });
 
+it('binds every stat-block weapon action to one physical carried weapon', () => {
+  const sword = {id: 'weapon:sword', name: 'Sword', type: 'weapon', properties: ['two_handed'], slot: 'two_hands'};
+  const bow = {id: 'weapon:bow', name: 'Bow', type: 'weapon', properties: ['two_handed'], slot: 'two_hands'};
+  const ranged = {...meleeAction(), id: 'action:ranged', name: 'Two shots'};
+  const monster = {...goblin(), action_ids: [ACTION_ID, ranged.id], ai: {
+    held_weapon_cards: [sword, bow],
+    action_weapon_ids: {[ACTION_ID]: sword.id, [ranged.id]: bow.id},
+  }} as unknown as Monster;
+  const compiled = compileMonsterInstance({monster, instanceId: 'test:veteran', actions: [meleeAction(), ranged], effects: []});
+  expect(compiled.actor.runtime.equipment).toMatchObject({main_hand: sword.id, off_hand: sword.id});
+  expect(compiled.actor.runtime.inventory).toEqual([{cardId: bow.id, qty: 1}]);
+  expect(compiled.actor.character.knownCards?.map((card) => card.id)).toEqual([sword.id, bow.id]);
+  expect(compiled.actions.find((action) => action.id === ranged.id)?.mechanics).toMatchObject({
+    requires_held_item: bow.id, npc_equip_before_action: true,
+  });
+  const malformed = {...monster, ai: {...monster.ai, action_weapon_ids: {[ACTION_ID]: 'weapon:missing'}}};
+  expect(() => compileMonsterInstance({monster: malformed, instanceId: 'bad:loadout', actions: [meleeAction(), ranged], effects: []}))
+    .toThrow('Некорректная привязка оружия');
+});
+
 
 describe('AI path search', () => {
   it('routes around occupied intermediate cells rather than crossing them', () => {

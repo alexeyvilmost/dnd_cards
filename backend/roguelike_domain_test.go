@@ -66,8 +66,8 @@ func TestRoguelikeContentManifestsAreUniqueAndComplete(t *testing.T) {
 			certified++
 		}
 	}
-	if certified != 15 {
-		t.Fatalf("certified generator pool has %d entries, want 15", certified)
+	if certified != 17 {
+		t.Fatalf("certified generator pool has %d entries, want 17", certified)
 	}
 	items := map[string]bool{}
 	for _, entry := range roguelikeShopManifest {

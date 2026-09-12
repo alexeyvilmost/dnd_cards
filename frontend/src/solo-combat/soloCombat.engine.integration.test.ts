@@ -4884,6 +4884,42 @@ it.each([false, true])('initializes one physical monster weapon with the declare
  expect(compiled.actor.runtime.inventory).toEqual([]);
 });
 
+it('persists a tactical monster switching between carried ranged and melee weapons',async()=>{
+ const sword=withDeclaredTestWeaponProfile({...CARD_LONGSWORD,id:'monster:sword',name:'Greatsword',slot:'two_hands'},
+  {weaponType:'greatsword',proficiencyCategory:'martial',attackAbility:'str',damageLines:[{dice:'2d6',type:'slashing'}],
+   defaultAttackMode:'melee',attackModes:[{kind:'melee',reach_ft:5}],properties:['heavy','two_handed'],masteryEffectId:'mastery:graze'});
+ const bow=withDeclaredTestWeaponProfile({...CARD_LONGSWORD,id:'monster:crossbow',name:'Heavy Crossbow',slot:'two_hands'},
+  {weaponType:'heavy_crossbow',proficiencyCategory:'martial',attackAbility:'dex',damageLines:[{dice:'2d10',type:'piercing'}],
+   defaultAttackMode:'ranged',attackModes:[{kind:'ranged',normal_ft:100,long_ft:400}],properties:['ammunition','heavy','two_handed'],
+   masteryEffectId:'mastery:push',ammo:{card_id:'monster:bolt'}});
+ const melee={...scimitar(),id:'monster:melee',name:'Two Greatsword attacks'};
+ melee.mechanics={...melee.mechanics,effects:Array.from({length:2},()=>({resolution:'attack_roll',ability:'str',attack_kind:'weapon_melee',
+  attack_bonus_override:20,vs:'ac',on_hit:[{kind:'damage',amount:1,type:'slashing'}]}))};
+ const ranged={...scimitar(),id:'monster:ranged',name:'Two Heavy Crossbow attacks'};
+ ranged.mechanics={...ranged.mechanics!,targeting:{...(ranged.mechanics!.targeting as Record<string,unknown>),range_ft:400},
+  effects:Array.from({length:2},()=>({resolution:'attack_roll',ability:'dex',attack_kind:'weapon_ranged',normal_range_ft:100,
+   attack_bonus_override:20,vs:'ac',on_hit:[{kind:'damage',amount:1,type:'piercing'}]}))};
+ const participant=fighterSeed();const actorId=participant.character.id;
+ participant.canonical.world.actors[actorId].runtime.hp={current:100,max:100,temp:0};
+ const monster={...goblin(),max_hp:100,action_ids:[melee.id,ranged.id],ai:{strategy:'tactical' as const,preferred_range_ft:100,
+  held_weapon_cards:[sword,bow],action_weapon_ids:{[melee.id]:sword.id,[ranged.id]:bow.id}}};
+ let state=await createSoloCombatState({character:participant.character,participant,selected:[{monster,quantity:1}],actions:[melee,ranged],effects:[],rng:()=>0.5});
+ const monsterId=Object.values(state.world.actors).find(row=>row.kind==='monster')!.id;
+ expect(state.actorPresentation[monsterId].actionIds).toEqual([melee.id,ranged.id]);
+ state.tokens[monsterId].position={x:1,y:1};state.tokens[actorId].position={x:10,y:1};
+ state=runMonsterTurn(advanceTurn(state,()=>0.5),()=>0.5);
+ expect(state.world.actors[monsterId].runtime.equipment).toMatchObject({main_hand:bow.id,off_hand:bow.id});
+ expect(state.world.actors[monsterId].runtime.inventory).toEqual([{cardId:sword.id,qty:1}]);
+ expect(state.log.filter(entry=>entry.text.includes(ranged.name))).toHaveLength(2);
+ expect(state.log.some(entry=>entry.text.includes(`Подготавливает оружие: ${bow.name}`))).toBe(true);
+ state=clone(state);state.tokens[monsterId].position={x:5,y:5};state.tokens[actorId].position={x:6,y:5};
+ state=runMonsterTurn(advanceTurn(state,()=>0.5),()=>0.5);
+ expect(state.world.actors[monsterId].runtime.equipment).toMatchObject({main_hand:sword.id,off_hand:sword.id});
+ expect(state.world.actors[monsterId].runtime.inventory).toEqual([{cardId:bow.id,qty:1}]);
+ expect(state.log.filter(entry=>entry.text.includes(melee.name))).toHaveLength(2);
+ expect(state.log.some(entry=>entry.text.includes(`Подготавливает оружие: ${sword.name}`))).toBe(true);
+});
+
 it('an unequipped monster keeps an unarmed opportunity attack and takes its turn without a phantom weapon',async()=>{
  const participant=fighterSeed();const actorId=participant.character.id;
  const weaponAttack={...scimitar(),mechanics:{...scimitar().mechanics,requires_held_item:CARD_LONGSWORD.id}};

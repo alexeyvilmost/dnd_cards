@@ -45,6 +45,8 @@ export interface Monster {
     bloodied_frenzy?: boolean;
     parry_ac?: number;
     held_weapon_card?: Card;
+    held_weapon_cards?: Card[];
+    action_weapon_ids?: Record<string, string>;
     [key: string]: unknown;
   };
   token_url: string;

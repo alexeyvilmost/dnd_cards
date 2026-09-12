@@ -28,21 +28,40 @@ export function compileMonsterInstance(input: {
   if (actionRows.some((action) => !action)) {
     throw new Error(`У «${input.monster.name}» есть отсутствующее действие`);
   }
+  const storedWeapons = input.monster.ai.held_weapon_cards
+    ?? (input.monster.ai.held_weapon_card ? [input.monster.ai.held_weapon_card] : []);
+  const heldWeapons = storedWeapons.map((weapon) => ({
+    ...weapon, properties: cardPropertyList(weapon.properties),
+  }));
+  if (heldWeapons.some((weapon) => !weapon.id || weapon.type !== 'weapon')
+    || new Set(heldWeapons.map((weapon) => weapon.id)).size !== heldWeapons.length) {
+    throw new Error('Некорректное оружие монстра');
+  }
+  const actionWeaponIds = input.monster.ai.action_weapon_ids ?? {};
+  for (const [actionId, weaponId] of Object.entries(actionWeaponIds)) {
+    if (!input.monster.action_ids.includes(actionId) || !heldWeapons.some((weapon) => weapon.id === weaponId)) {
+      throw new Error(`Некорректная привязка оружия у «${input.monster.name}»`);
+    }
+  }
   const actions = actionRows.flatMap((action) => {
     const projected = projectRuleAction(action!, {
     sourceEntityIds: [input.monster.id],
     });
-    const effects = projected.mechanics.effects;
+    const weaponId = actionWeaponIds[action!.id];
+    const armed = weaponId ? {...projected, mechanics: {
+      ...projected.mechanics, requires_held_item: weaponId, npc_equip_before_action: true,
+    }} : projected;
+    const effects = armed.mechanics.effects;
     if (!Array.isArray(effects) || effects.length < 2
-      || !effects.every(effect => effect.resolution === 'attack_roll')) return [projected];
+      || !effects.every(effect => effect.resolution === 'attack_roll')) return [armed];
     // Each stat-block strike uses the common single-attack resolver. The
     // controller persists the tail instead of previewing/replaying all dice.
     const followUps = effects.slice(1).map((effect, index): RuleActionDefinition => ({
-      ...projected, id: `${projected.id}:multiattack:${index + 2}`,
-      mechanics: {...projected.mechanics, effects: [effect], npc_multiattack_followup: true,
-        activation: {...(projected.mechanics.activation as Record<string, unknown>), cost: []}},
+      ...armed, id: `${armed.id}:multiattack:${index + 2}`,
+      mechanics: {...armed.mechanics, effects: [effect], npc_multiattack_followup: true,
+        activation: {...(armed.mechanics.activation as Record<string, unknown>), cost: []}},
     }));
-    return [{...projected, mechanics: {...projected.mechanics, effects: [effects[0]],
+    return [{...armed, mechanics: {...armed.mechanics, effects: [effects[0]],
       npc_multiattack: {followUpActionIds: followUps.map(row => row.id)}}}, ...followUps];
   });
   const effects = input.monster.effect_ids.map((id) => input.effects.find((effect) => effect.id === id));
@@ -53,9 +72,7 @@ export function compileMonsterInstance(input: {
     ABILITIES.map((key) => [key, Number(input.monster.abilities[key] ?? 10)]),
   ) as Record<(typeof ABILITIES)[number], number>;
   const mods = Object.fromEntries(ABILITIES.map((key) => [key, abilityMod(scores[key])])) as typeof scores;
-  const storedWeapon = input.monster.ai.held_weapon_card;
-  const heldWeapon = storedWeapon ? {...storedWeapon, properties:cardPropertyList(storedWeapon.properties)} : undefined;
-  if (heldWeapon && (!heldWeapon.id || heldWeapon.type !== 'weapon')) throw new Error('Некорректное оружие монстра');
+  const heldWeapon = heldWeapons[0];
   const movementSpeeds = input.monster.ai.movement_speeds;
   if (movementSpeeds) {
     for (const [mode, feet] of Object.entries(movementSpeeds)) {
@@ -88,7 +105,7 @@ export function compileMonsterInstance(input: {
     resources: { action: 1, bonus_action: 1, reaction: 1 },
     maxResources: { action: 1, bonus_action: 1, reaction: 1 },
     equipment: heldWeapon ? {main_hand: heldWeapon.id, ...(twoHanded ? {off_hand: heldWeapon.id} : {})} : {},
-    inventory: [], activeEffects: [],
+    inventory: heldWeapons.slice(1).map((weapon) => ({cardId: weapon.id, qty: 1})), activeEffects: [],
   };
   const aiPassives: Record<string, unknown>[] = [
     { id: 'monster-ai-profile', kind: 'monster_ai', ...input.monster.ai },
@@ -150,7 +167,7 @@ export function compileMonsterInstance(input: {
         saveProficiencies: input.monster.ai.save_proficiencies ?? [],
         skillProficiencies: input.monster.ai.skill_proficiencies ?? [],
         skillExpertise: input.monster.ai.skill_expertise ?? [],
-        ...(heldWeapon ? {knownCards: [heldWeapon], equippedCards: [heldWeapon]} : {}),
+        ...(heldWeapon ? {knownCards: heldWeapons, equippedCards: heldWeapons} : {}),
       },
       traits: { conditionImmunities: (input.monster.ai.condition_immunities ?? []).map((condition) => ({
         condition, sourceEntityIds: [input.monster.id],
