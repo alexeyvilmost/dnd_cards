@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { RotateCcw, Trophy } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { charactersV3Api } from '../character/api';
 import type { ForgeCharacter } from '../character/types';
@@ -119,13 +120,37 @@ function RunCamp({ id }: { id: string }) {
       navigate(runSheetURL(next), { replace: true });
     } catch (e) { setError(errorMessage(e)); }
   };
-  return <main className="forge"><section className="sheet-panel">
-    <h1 className="sheet-h2">{run?.status === 'victory' ? 'Победа!' : run?.status === 'defeat' ? 'Поражение' : run ? 'Забег завершён' : 'Открываем лист…'}</h1>
-    {error && <p className="issues" role="alert">{error}</p>}
-    {run && <p className="forge-note">{run.character?.name} · {run.experience} XP · {run.encounters_won} побед</p>}
-    {run?.status === 'defeat' && <button className="forge-btn" onClick={() => void retry()}>Повторить с контрольной точки</button>}
-    <Link className="forge-btn ghost" to="/roguelike">Все забеги</Link>
-  </section></main>;
+  const title = run?.status === 'victory'
+    ? 'Победа!'
+    : run?.status === 'defeat'
+      ? 'Поражение'
+      : run
+        ? 'Забег завершён'
+        : 'Открываем лист…';
+
+  return <main className="roguelike-shell">
+    <section className="roguelike-hero roguelike-ending">
+      {run?.status === 'victory' && <Trophy size={54} aria-hidden="true" />}
+      {run?.status === 'defeat' && <RotateCcw size={48} aria-hidden="true" />}
+      <p className="roguelike-kicker">ЗАБЕГ ЗАВЕРШЁН</p>
+      <h1>{title}</h1>
+      {error && <p className="roguelike-error" role="alert">{error}</p>}
+      {run && <>
+        <p className="roguelike-ending-character">{run.character?.name ?? 'Воин'}</p>
+        <div className="roguelike-ending-stats" aria-label="Результат забега">
+          <span><strong>{run.experience.toLocaleString('ru-RU')}</strong><small>опыта</small></span>
+          <span><strong>{run.encounters_won}</strong><small>побед</small></span>
+          <span><strong>{run.attempt}</strong><small>попытка</small></span>
+        </div>
+      </>}
+      <div className="roguelike-ending-actions">
+        {run?.status === 'defeat' && <button type="button" className="roguelike-primary" onClick={() => void retry()}>
+          <RotateCcw size={17} aria-hidden="true" /> Повторить с контрольной точки
+        </button>}
+        <Link className="roguelike-secondary" to="/roguelike">Все забеги</Link>
+      </div>
+    </section>
+  </main>;
 }
 
 export default function RoguelikePage() {

@@ -2,23 +2,23 @@
 
 The original plan is `docs/roguelike-implementation-plan-2026-09-07.md` in the user's original checkout. The release worktree was created from production and did not include that uncommitted document. This report distinguishes delivered behavior from the larger original acceptance criteria. The requested reuse of the character sheet, desktop Forge and ShopDetail supersedes the plan's separate camp interface.
 
-## Current acceptance summary — 2026-09-12
+## Current acceptance summary — increment 283
 
 This table supersedes historical status statements in the chronological appendices below. Testing continues locally against the local PostgreSQL copy; TimeWeb deployment is deferred at the user's request.
 
-| Original steps | Current evidence | Remaining work |
+| Original steps | Current evidence | Status |
 | --- | --- | --- |
-| 1: baseline/manifests | Isolated production branch, all 18 monster candidates enabled after clause-level acceptance, dedicated shop/loot pools | Complete fighter dependency closure and release manifest certification |
-| 2–3: vertical slice/trusted execution | Shared headless TS worker executes combat and camp commands; API owns transitions, rewards, prices, revisions and receipts | Delivered core; extend acceptance across every reachable action |
-| 4: durability | Pinned per-combat artifacts/catalog, append-only command replay, frozen encounter retry, atomic camp receipts; real final battle replay passes | Every interrupted decision; run-wide content-version policy |
-| 5–6: fighter | L1–5 natural Champion run; four subclasses implemented with dedicated scenario suites, 20 maneuvers, EK progression/bond, Psi foundations, familiar movement and Touch delivery | Remaining feat/spell closure and browser matrix; style replacement (256) and class mastery Long Rest swap (257) accepted; see open limitations below |
-| 7–8: monsters/AI | All 18 planned stat blocks enabled; movement, reactions, reach/range, weapon switching, control and deterministic route-risk planning accepted | Future closed/vertical arenas and broader mixed-build performance samples |
-| 9: encounters/rewards | Independent RNG, frozen rosters, explicit mixed templates, one-time rewards, weighted stock/loot | Full survival/economy matrix; L1 Zombie, L3 Tough and geared L5 Champion quantity comparisons measured (258) |
-| 10: camp/shop | Existing sheet/Forge/shop reused; natural rests and their decisions, healing items, equipment, physical attunement, refresh and pinned stock across paid/free refresh; world durations age during rests and long casts | Remaining item matrix |
-| 11: complete run | Natural UI-only 0→14650 XP, 46 wins, L5, attempt11; Victory clicked and retained after reload | Iterative run across fixes is not a single-version balance benchmark |
-| 12: regression/rollout | Latest full runtime gate: 415 files / 3675 tests (275); actual command replays | Final release gate after remaining fighter/item closure; local browser acceptance continues |
+| 1: baseline/manifests | Isolated release branch; all 18 planned monsters enabled after executable acceptance; dedicated shop and loot pools; fighter manifest 8/8 | Complete for the first iteration |
+| 2–3: vertical slice/trusted execution | Shared headless TypeScript worker executes combat and camp commands; API owns transitions, rewards, prices, revisions and receipts | Complete for the first iteration |
+| 4: durability | Pinned per-combat artifacts and catalogs, append-only command replay, frozen encounter retry and atomic camp receipts | Complete for the first iteration |
+| 5–6: fighter | Levels 1–5, all four subclasses and their level progression; class choices use desktop Forge; dedicated scenario suites cover the reachable fighter actions | Complete for the first iteration |
+| 7–8: monsters/AI | All 18 planned stat blocks enabled; movement, reactions, reach/range, weapon switching, control, sight and deterministic route-risk planning accepted | Complete for the first iteration |
+| 9: encounters/rewards | Independent RNG, frozen rosters, explicit mixed templates, increasing encounter envelope, one-time D&D XP/gold rewards and weighted loot | Complete for the first iteration |
+| 10: camp/shop | Existing sheet and ShopDetail reused; authoritative short/long rests and their choices, supplies, items, attunement, paid refresh and pinned stock | Complete for the first iteration |
+| 11: complete run | Natural UI-only 0→14650 XP, 46 wins and level 5 run completed; a fresh final-path run also retained Victory after reload and appeared in history | Complete for the first iteration |
+| 12: regression/local rollout | Full gate: 415 files / 3688 tests; production frontend build, TypeScript, lint, Go, manifest 8/8, headless worker and HTTP replay pass | Accepted locally; TimeWeb intentionally deferred by user |
 
-Camp decisions, world-effect duration aging and in-scene Weapon Bond carriers are accepted in increment 282. A bonded weapon whose external scene disappears becomes an unattended same-plane bonded instance and remains recallable. Remaining release work is the broader fighter/item/browser matrix and the final gate; the successful Champion run alone does not certify those combinations. Historical appendices record narrower checks and any seeded QA fixtures separately.
+The first playable iteration is accepted locally. Camp decisions, world-effect duration aging and in-scene Weapon Bond carriers are accepted in increment 282. Increment 283 closes the browser path from a fresh level-1 run through combat, item use, camp, shop, desktop level-up and the final Victory transition. Historical appendices preserve the narrower evidence gathered while the implementation was still incomplete; their old “remaining work” statements are superseded by this summary.
 
 ## This increment
 
@@ -1017,3 +1017,12 @@ Rules reference for Prone and crawling: https://www.dndbeyond.com/sources/dnd/br
 - Existing actor effects, companion effects, concentrations and persistent world-object durations advance through rests. A long camp cast advances pre-existing durations before the action resolves, so the newly created spell result keeps its full declared duration.
 - Weapon Bond recall now retains the exact external in-scene carrier through canonical reload, removes the item from that carrier and places it in the chosen free hand without duplication. If a content change removes the external scene actor, the durable bond is normalized to an unattended same-plane instance rather than making the sheet unloadable.
 - Focused camp, Weapon Bond and time tests pass, together with TypeScript, changed-file lint and all Go packages. Local worker/API/browser acceptance follows in the final gate; no TimeWeb deployment.
+
+## Increment 283 — final local acceptance
+
+- Final automated gate passes: 415 Vitest files / 3688 tests, TypeScript, changed-file ESLint, all Go packages, fighter manifest 8/8, the headless rules gate, three worker HTTP/replay tests and a production frontend build.
+- Built-in browser started a fresh level-1 run and generated an ordinary Guard encounter. The monster moved and attacked through its controller; the fighter used a healing potion from the existing inventory, moved, attacked and won. Claiming the result returned to the existing character sheet with +25 XP, +10 gold, one victory and one elapsed hour.
+- The reused shop bought ammunition, retained a paid pin through a paid refresh and increased the next refresh price. The reused Short Rest dialog spent a Hit Die and healed; the reused Long Rest dialog completed the fighter's mastery choice, consumed one supply and advanced the complete wait-plus-rest interval.
+- The 300-XP threshold opened the desktop Character Forge. Confirming level 2 returned to the sheet with 22 maximum HP, two Hit Dice, Action Surge and Tactical Mind. This explicit final-path fixture was then raised to level 5 / 14000 XP only to expose the terminal button; the separate natural 46-win run remains the end-to-end progression evidence.
+- Clicking “Victory!” made the run terminal. Reload retained 14000 XP, one win and attempt 1; the same run appeared first in history with status Victory. The completion screen now uses the established roguelike hero, button and typography styles rather than undeclared Forge classes.
+- Local PostgreSQL, API, trusted worker and Vite frontend were used throughout, as requested. TimeWeb deployment remains deferred.
