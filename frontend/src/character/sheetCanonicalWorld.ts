@@ -1169,6 +1169,7 @@ export function buildSheetCanonicalRuntime(input: {
       [resource]: 'never',
     };
   }
+  const initialObjects = readWeaponBondObjects(input.character.turn_state, actorId);
   const cards = canonicalCardClosure(input.cards ?? [], [
     runtime,
     characterContext,
@@ -1176,6 +1177,7 @@ export function buildSheetCanonicalRuntime(input: {
     input.passives,
     input.grantedEffects,
     input.masteryEffects,
+    initialObjects,
   ]);
   const cardById = new Map(cards.map((card) => [card.id, card]));
   const catalog: RulesCatalog = {
@@ -1186,7 +1188,18 @@ export function buildSheetCanonicalRuntime(input: {
 
   const pacts: WarlockPactStates = {};
   const featureSources = projectDeclaredFeatureSources(input.assembled, uniqueActions);
-  const initialObjects = readWeaponBondObjects(input.character.turn_state, actorId);
+  // A durable bond can outlive the scene actor currently carrying it. Fresh
+  // worlds contain only the sheet owner, so defer external placement until an
+  // exact persisted scene is hydrated below. On a catalog change the weapon
+  // remains an unattended, recallable bonded instance on its recorded plane.
+  const standaloneInitialObjects = initialObjects.map((object) => {
+    if (!object.carriedByActorId || object.carriedByActorId === actorId) return object;
+    const standalone = { ...object, unattended: true };
+    delete standalone.carriedByActorId;
+    delete standalone.heldByActorId;
+    delete standalone.heldInHand;
+    return standalone;
+  });
   const tomeActionIds = new Set<string>();
   const deferredTomes: Array<{
     binding: PactBinding;
@@ -1279,7 +1292,7 @@ export function buildSheetCanonicalRuntime(input: {
       tome: result.tome,
     });
     spellGrants.push(...result.grants);
-    initialObjects.push(result.bookObject);
+    standaloneInitialObjects.push(result.bookObject);
   }
 
   const contentIdentity = {
@@ -1380,7 +1393,7 @@ export function buildSheetCanonicalRuntime(input: {
     id: `character-sheet:${actorId}:world`,
     ruleset,
     actors: [actor],
-    objects: Object.values(reconcileWeaponBondHands(Object.fromEntries(initialObjects.map((object) => [object.id, object])), actorId, actor.runtime, cards)),
+    objects: Object.values(reconcileWeaponBondHands(Object.fromEntries(standaloneInitialObjects.map((object) => [object.id, object])), actorId, actor.runtime, cards)),
   }));
   const persisted = readSheetCanonicalWorld(
     input.character.turn_state,

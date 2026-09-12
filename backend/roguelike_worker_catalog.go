@@ -157,7 +157,7 @@ func initializeRoguelikeWorker(ctx context.Context, tx *gorm.DB, client roguelik
 }
 
 // Rest inputs are derived from the saved character; browser runtime patches are never executed.
-func executeRoguelikeRestWorker(ctx context.Context, tx *gorm.DB, client roguelikeWorkerClient, character *CharacterV3, request RoguelikeCommandRequest) (*roguelikeWorkerResult, error) {
+func executeRoguelikeRestWorker(ctx context.Context, tx *gorm.DB, client roguelikeWorkerClient, run *RoguelikeRun, request RoguelikeCommandRequest) (*roguelikeWorkerResult, error) {
 	catalog := emptyRoguelikeFrozenCatalog()
 	var binding any
 	var recall any
@@ -169,8 +169,9 @@ func executeRoguelikeRestWorker(ctx context.Context, tx *gorm.DB, client rogueli
 	}
 	for attempt := 0; attempt < 32; attempt++ {
 		result, err := client.call(ctx, "/rest", map[string]any{"input": map[string]any{
-			"character": character, "catalog": catalog, "long": request.Type == "long_rest", "hitDieRolls": request.Payload["hit_die_rolls"], "bindWeapon": binding, "recallWeapon": recall,
-			"masteryChoices": request.Payload["mastery_choices"],
+			"character": run.Character, "catalog": catalog, "long": request.Type == "long_rest", "hitDieRolls": request.Payload["hit_die_rolls"], "bindWeapon": binding, "recallWeapon": recall,
+			"masteryChoices": request.Payload["mastery_choices"], "elapsedSeconds": roguelikeRestElapsedSeconds(run, request.Type),
+			"slotRecoverySelections": request.Payload["slot_recovery_selections"], "spellSwapSelections": request.Payload["spell_swap_selections"], "spellPreparation": request.Payload["spell_preparation"],
 		}})
 		if err != nil {
 			return nil, err

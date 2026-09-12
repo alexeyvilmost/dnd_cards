@@ -281,6 +281,11 @@ export default function SheetRestButtons({
     baseTurnState?: Record<string, unknown> | null,
     restType?: 'short_rest' | 'long_rest',
     masteryChoices?: Record<string, string[]>,
+    restChoices?: {
+      slotRecoverySelections?: Record<string, number[]>;
+      spellSwapSelections?: Record<string, PreparedSpellSwapSelection>;
+      spellPreparation?: Record<string, string[]>;
+    },
   ) => {
     setBusy(true);
     setError(null);
@@ -293,6 +298,9 @@ export default function SheetRestButtons({
         const result = await roguelikeApi.command(runId, run.revision, restType, {
           hit_die_rolls: restType === 'short_rest' ? hitDieRolls.current : [],
           ...(masteryChoices ? { mastery_choices: masteryChoices } : {}),
+          ...(restChoices?.slotRecoverySelections ? { slot_recovery_selections: restChoices.slotRecoverySelections } : {}),
+          ...(restChoices?.spellSwapSelections ? { spell_swap_selections: restChoices.spellSwapSelections } : {}),
+          ...(restChoices?.spellPreparation ? { spell_preparation: restChoices.spellPreparation } : {}),
         });
         if (!result.character) throw new Error('Сервер не вернул лист после отдыха');
         updated = result.character;
@@ -552,6 +560,11 @@ export default function SheetRestButtons({
         true,
         turnState,
         'short_rest',
+        undefined,
+        {
+          slotRecoverySelections: shortRestSelections,
+          spellSwapSelections: shortRestSpellSwapSelections,
+        },
       );
       if (ok) {
         setShortRestDraft(null);
@@ -613,6 +626,7 @@ export default function SheetRestButtons({
       clearCombatContinuationsForRest(turnState),
       'long_rest',
       masteryChoices,
+      { spellPreparation: picked },
     );
     if (ok) {
       setMasteryRestDraft(null);

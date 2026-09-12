@@ -104,7 +104,7 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 	if isCampAction {
 		result, err = executeRoguelikeCampActionWorker(c.Request.Context(), rc.db, client, run.Character, request)
 	} else if isCamp {
-		result, err = executeRoguelikeRestWorker(c.Request.Context(), rc.db, client, run.Character, request)
+		result, err = executeRoguelikeRestWorker(c.Request.Context(), rc.db, client, run, request)
 	} else if request.Type == "initialize_combat" {
 		if len(run.CombatEnvelope) > 0 || combatOutcome(run.Character) != "" {
 			fail("combat_already_initialized", "бой уже начат; обновите страницу")

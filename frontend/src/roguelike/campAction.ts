@@ -7,6 +7,8 @@ import { clearSheetCombatSession } from '../character/sheetCombatSession';
 import { writeSoloCombatState } from '../solo-combat/persistence';
 import { prepareRoguelikeCombatParticipant, type FrozenCombatCatalog } from './combatCatalog';
 import { createRoguelikeCombatRandom } from './combatWorker';
+import { advanceRoguelikeCampTime } from './campTime';
+import { parseActivationCastTime } from '../rules-core/activationCastTime';
 
 type UseAction = Extract<GameCommand, { type: 'UseAction' }>;
 export interface RoguelikeCampActionInput {
@@ -28,6 +30,17 @@ export async function executeRoguelikeCampAction(input: RoguelikeCampActionInput
   if (!action && !input.nextTurn && !input.companion) throw new Error('У персонажа нет выбранного действия');
   const activation = action?.mechanics.activation as Record<string, unknown> | undefined;
   if (activation?.mode === 'reaction' || activation?.mode === 'triggered' || activation?.trigger || activation?.mode === 'passive') throw new Error('Способность требует соответствующего события');
+  const declaredCastTime = action ? parseActivationCastTime(action.mechanics) : { status: 'none' as const };
+  if (declaredCastTime.status === 'invalid') throw new Error(declaredCastTime.issue);
+  const castSeconds = declaredCastTime.status === 'valid'
+    ? declaredCastTime.policy.seconds + (input.spell?.mode === 'ritual' ? 600 : 0)
+    : 0;
+  let elapsedEvents = [] as ReturnType<typeof advanceRoguelikeCampTime>['events'];
+  if (castSeconds > 6) {
+    const advanced = advanceRoguelikeCampTime({ world: canonical.world, elapsedSeconds: castSeconds });
+    canonical.world = advanced.world;
+    elapsedEvents = advanced.events;
+  }
   const targetIds = !action || action.targeting?.maxTargets === 0 ? [] : [canonical.actorId];
   if (targetIds.length && !action?.targeting?.allowedRelations.includes('self')) throw new Error('Для действия нужна цель на поле боя');
   const random = createRoguelikeCombatRandom(input.seed, 0);
@@ -63,7 +76,7 @@ export async function executeRoguelikeCampAction(input: RoguelikeCampActionInput
     ...(input.choices ? { choices: input.choices } : {}),
     ...(input.spell ? { spell: input.spell } : {}),
     ...(input.worldInput ? { worldInput: input.worldInput } : {}),
-  }, canonical.catalog, environment);
+  } as UseAction, canonical.catalog, environment);
   if (result.status !== 'accepted') throw new Error(result.message);
   if (result.nextState.pendingResolution) throw new Error('Действие требует незавершённого решения');
   const actor = result.nextState.actors[canonical.actorId];
@@ -82,13 +95,10 @@ export async function executeRoguelikeCampAction(input: RoguelikeCampActionInput
   if (!Number.isSafeInteger(revision) || revision < 1) throw new Error('Некорректная ревизия листа');
   const turnState = writeSheetCanonicalWorld(clearSheetCombatSession(writeSoloCombatState(input.character.turn_state, null)),
     canonical.actorId, result.nextState, canonical.resourceBindings);
-  const declared = result.events.find((event) => event.payload.type === 'ActionDeclared' && event.payload.actorId === canonical.actorId);
-  const spellTiming = declared?.payload.type === 'ActionDeclared' ? declared.payload.spell : undefined;
   // Turn-sized actions share the current six-second turn; longer casts advance
   // by their rules-owned duration including the ritual addition.
-  const castSeconds = (spellTiming?.baseCastingTimeSeconds ?? 0) + (spellTiming?.castingTimeAddedSeconds ?? 0);
   const elapsedSeconds = input.nextTurn ? 6 : castSeconds > 6 ? castSeconds : 0;
-  const events = result.events.flatMap((event) => event.payload.type === 'EngineEventRecorded' ? [event.payload.event] : []);
+  const events = [...elapsedEvents, ...result.events.flatMap((event) => event.payload.type === 'EngineEventRecorded' ? [event.payload.event] : [])];
   return { status: 'ready' as const, contentManifestHash: prepared.contentManifestHash, events, goldSpent, elapsedSeconds,
     patch: { current_hp: runtime.hp.current, resources: runtime.resources, max_resources: runtime.maxResources,
       active_effects: runtime.activeEffects, equipment: runtime.equipment, inventory_items: runtimeInventoryPayload(runtime),

@@ -285,6 +285,23 @@ func TestRoguelikeClockRetainsSubhourCastingTime(t *testing.T) {
 	}
 }
 
+func TestRoguelikeRestElapsedIncludesRequiredLongRestWait(t *testing.T) {
+	run := RoguelikeRun{GameClockHours: 9, GameClockRemainderSeconds: 1800, LastLongRestHour: 1, LastLongRestRemainderSeconds: 1800}
+	if got := roguelikeRestElapsedSeconds(&run, "short_rest"); got != 3600 {
+		t.Fatalf("short rest duration = %d", got)
+	}
+	if got := roguelikeRestElapsedSeconds(&run, "long_rest"); got != 16*3600 {
+		t.Fatalf("long rest with wait duration = %d", got)
+	}
+	run.GameClockHours = 20
+	if got := roguelikeRestElapsedSeconds(&run, "long_rest"); got != 8*3600 {
+		t.Fatalf("long rest without wait duration = %d", got)
+	}
+	if got := roguelikeRestElapsedSeconds(&run, "recall_weapon"); got != 0 {
+		t.Fatalf("instant recall duration = %d", got)
+	}
+}
+
 func TestRoguelikeAdditionalWeightUsesRuleCapacityAndPhysicalOwnership(t *testing.T) {
 	fixture := openCharacterV3AccessFixture(t)
 	if err := fixture.db.AutoMigrate(&Card{}); err != nil {

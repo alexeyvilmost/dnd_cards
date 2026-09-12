@@ -5,6 +5,7 @@ import type { ForgeCharacter } from '../character/types';
 import { prepareRoguelikeCombatParticipant, type FrozenCombatCatalog } from './combatCatalog';
 import { executeRoguelikeCampRest } from './campRest';
 import { characterToDraft } from '../character/forgeHelpers';
+import { readSheetCanonicalWorld, writeSheetCanonicalWorld } from '../character/sheetCanonicalWorld';
 const fixture = inputJson as unknown as { character: ForgeCharacter; catalog: FrozenCombatCatalog };
 function input(long = false) {
   const value = structuredClone(fixture);
@@ -60,6 +61,17 @@ describe('authoritative camp rest', () => {
     expect(result.patch.resources['uses_ACT-second-wind']).toBe(2);
     expect(result.patch.resources['uses_RE-dwarf-4']).toBe(2);
   });
+  it('ages the full server-declared long-rest interval, including required waiting time', async () => {
+    const request = input(true);
+    request.character.active_effects = [{ id: 'old-effect', name: 'Old effect', source: 'test', mechanics: {}, roundsLeft: 5_000 }];
+    const result = await executeRoguelikeCampRest({ ...request, elapsedSeconds: 10 * 3600 });
+    expect(result.status).toBe('ready'); if (result.status !== 'ready') return;
+    expect(result.patch.active_effects).toEqual([]);
+  });
+  it('rejects forged rest decisions that are absent from the frozen catalog', async () => {
+    await expect(executeRoguelikeCampRest({ ...input(), slotRecoverySelections: { forged: [1] } })).rejects.toThrow('Недоступный выбор');
+    await expect(executeRoguelikeCampRest({ ...input(true), spellPreparation: { forged: ['spell'] } })).rejects.toThrow('Недоступный выбор');
+  });
   it.each([[0],[11],[1.5],[1,1,1]])('rejects invalid or excessive hit dice %j', async (...rolls) => {
     await expect(executeRoguelikeCampRest({ ...input(), hitDieRolls: rolls })).rejects.toThrow();
   });
@@ -107,5 +119,39 @@ describe('authoritative Weapon Bond camp actions', () => {
     expect(recalled.patch.current_hp).toBe(4);
     expect(recalled.patch.inventory_items.filter((row) => row.card_id === card.id)).toHaveLength(0);
     expect(recalled.patch.turn_state.weapon_bonds_v1).toMatchObject({ objects: [{ id: 'bonded', heldInHand: 'main_hand' }] });
+  });
+  it('recalls the exact bonded instance from another actor in the persisted scene', async () => {
+    const request = bondedInput();
+    const card = request.catalog.entities.card.find((row) => row.type === 'weapon')!;
+    request.character.equipment = {};
+    request.character.inventory_items = [{ card_id: card.id, qty: 1 }];
+    const bound = await executeRoguelikeCampRest({ ...request, bindWeapon: { cardId: card.id, instanceId: 'bonded-external' } });
+    if (bound.status !== 'ready') throw new Error('Not ready');
+    request.character = { ...request.character, ...bound.patch };
+    const prepared = await prepareRoguelikeCombatParticipant(request.character, request.catalog, []);
+    if (prepared.status !== 'ready') throw new Error('Not ready');
+    const canonical = prepared.participant.canonical;
+    const owner = canonical.world.actors[canonical.actorId];
+    request.character.inventory_items = [];
+    owner.runtime.inventory = [];
+    const carrier = structuredClone(owner);
+    carrier.id = 'external-carrier';
+    carrier.name = 'External carrier';
+    carrier.controllerId = 'scene:test';
+    carrier.runtime.inventory = [];
+    carrier.runtime.equipment = { ...carrier.runtime.equipment, main_hand: card.id };
+    canonical.world.actors[carrier.id] = carrier;
+    const weapon = canonical.world.objects['bonded-external'];
+    weapon.carriedByActorId = carrier.id;
+    weapon.heldByActorId = carrier.id;
+    weapon.heldInHand = 'main_hand';
+    request.character.turn_state = writeSheetCanonicalWorld(request.character.turn_state, owner.id, canonical.world, canonical.resourceBindings);
+    const recalled = await executeRoguelikeCampRest({ ...request,
+      recallWeapon: { objectId: weapon.id, hand: 'main_hand', commandId: 'recall-external' } });
+    if (recalled.status !== 'ready') throw new Error('Not ready');
+    expect(recalled.patch.equipment.main_hand).toBe(card.id);
+    const world = readSheetCanonicalWorld(recalled.patch.turn_state, owner.id, canonical.world.ruleset.contentHash)!;
+    expect(world.actors[carrier.id].runtime.equipment.main_hand).toBeNull();
+    expect(world.objects[weapon.id]).toMatchObject({ carriedByActorId: owner.id, heldByActorId: owner.id, heldInHand: 'main_hand' });
   });
 });

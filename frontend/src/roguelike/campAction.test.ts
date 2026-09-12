@@ -7,12 +7,12 @@ import { executeRoguelikeCampAction } from './campAction';
 import { castFindFamiliar } from '../rules-core/findFamiliar';
 import { materializeCanonicalFamiliarActor } from '../rules-core/familiarRuntime';
 import { writeSheetCanonicalWorld } from '../character/sheetCanonicalWorld';
-const fixture = inputJson as unknown as { character: ForgeCharacter; catalog: FrozenCombatCatalog };
+const fixture = inputJson as unknown as { character: ForgeCharacter; catalog: FrozenCombatCatalog; basicActionIds: string[] };
 async function input() {
   const request = structuredClone(fixture);
   request.character.current_hp = 4;
   request.character.resources!['uses_ACT-second-wind'] = 1;
-  const prepared = await prepareRoguelikeCombatParticipant(request.character, request.catalog, []);
+  const prepared = await prepareRoguelikeCombatParticipant(request.character, request.catalog, request.basicActionIds);
   if (prepared.status !== 'ready') throw new Error('Incomplete fixture');
   const action = prepared.participant.canonical.actions.find((entry) => entry.name === 'Второе дыхание');
   if (!action) throw new Error('Second Wind unavailable');
@@ -21,7 +21,7 @@ async function input() {
 describe('authoritative self actions in camp', () => {
   it('passes declared familiar appearance facts to the shared rules without inventing visibility or space', async () => {
     const request = await input();
-    const prepared = await prepareRoguelikeCombatParticipant(request.character, request.catalog, []);
+    const prepared = await prepareRoguelikeCombatParticipant(request.character, request.catalog, request.basicActionIds);
     if (prepared.status !== 'ready') throw new Error('Not ready');
     const canonical = prepared.participant.canonical;
     const owner = canonical.world.actors[canonical.actorId];
@@ -93,7 +93,7 @@ describe('authoritative self actions in camp', () => {
     request.character.action_ids = [action.id];
     request.character.resources = { ...request.character.resources, psi_warrior_energy_die: 2, psi_warrior_telekinetic_movement: 0 };
     request.character.max_resources = { ...request.character.max_resources, psi_warrior_energy_die: 4, psi_warrior_telekinetic_movement: 1 };
-    const prepared = await prepareRoguelikeCombatParticipant(request.character, request.catalog, []);
+    const prepared = await prepareRoguelikeCombatParticipant(request.character, request.catalog, request.basicActionIds);
     if (prepared.status !== 'ready') throw new Error('Not ready');
     request.actionId = prepared.participant.canonical.actions.find((entry) => entry.sourceEntityIds.includes(action.id))!.id;
     const result = await executeRoguelikeCampAction(request);
@@ -113,7 +113,7 @@ describe('authoritative self actions in camp', () => {
       targeting: { shape: 'self', min_targets: 0, max_targets: 1, allowed_relations: ['self'] },
       effects: [{ resolution: 'auto', result: [{kind: 'narrative', description: 'Material paid'}] }] };
     request.catalog.entities.action.push(action); request.character.action_ids = [action.id];
-    const prepared = await prepareRoguelikeCombatParticipant(request.character, request.catalog, []);
+    const prepared = await prepareRoguelikeCombatParticipant(request.character, request.catalog, request.basicActionIds);
     if (prepared.status !== 'ready') throw new Error('Not ready');
     request.actionId = prepared.participant.canonical.actions.find((entry) => entry.sourceEntityIds.includes(action.id))!.id;
     const result = await executeRoguelikeCampAction(request);
@@ -130,6 +130,30 @@ describe('authoritative self actions in camp', () => {
     expect(removed.patch.resources.material_gold).toBeUndefined();
     expect(removed.patch.max_resources.material_gold).toBeUndefined();
     await expect(executeRoguelikeCampAction({ ...request, character: { ...request.character, ...result.patch, currency: {gold:8,silver:2,copper:3} } })).rejects.toThrow();
+  });
+  it('ages existing actor and world durations before a long camp cast resolves', async () => {
+    const request = await input();
+    const initial = await prepareRoguelikeCombatParticipant(request.character, request.catalog, request.basicActionIds);
+    if (initial.status !== 'ready') throw new Error('Not ready');
+    const owned = initial.participant.canonical.actions.find((entry) => entry.id === request.actionId)!;
+    const action = request.catalog.entities.action.find((entry) => owned.sourceEntityIds.includes(entry.id))!;
+    action.mechanics = structuredClone(action.mechanics ?? {});
+    action.mechanics.activation = { ...(action.mechanics?.activation as Record<string, unknown>), cast_time: { unit: 'hour', amount: 1 } };
+    request.character.active_effects = [{ id: 'old-effect', name: 'Old effect', source: 'test', mechanics: {}, roundsLeft: 700 }];
+    const prepared = await prepareRoguelikeCombatParticipant(request.character, request.catalog, request.basicActionIds);
+    if (prepared.status !== 'ready') throw new Error('Not ready');
+    const canonical = prepared.participant.canonical;
+    canonical.world.objects.clock = { id: 'clock', name: 'Old light', kind: 'item', size: 'tiny',
+      illumination: { id: 'old-light', sourceActorId: canonical.actorId, sourceActionId: request.actionId,
+        brightRadiusFt: 20, dimAdditionalRadiusFt: 20, roundsLeft: 700 } };
+    request.character.turn_state = writeSheetCanonicalWorld(request.character.turn_state, canonical.actorId, canonical.world, canonical.resourceBindings);
+    request.actionId = canonical.actions.find((entry) => entry.sourceEntityIds.includes(action.id))!.id;
+    const result = await executeRoguelikeCampAction(request);
+    if (result.status !== 'ready') throw new Error('Not ready');
+    expect(result.elapsedSeconds).toBe(3600);
+    expect(result.patch.active_effects).toEqual([expect.objectContaining({ id: 'old-effect', roundsLeft: 100 })]);
+    const envelope = result.patch.turn_state.canonical_rules_world_v1 as { world: typeof canonical.world };
+    expect(envelope.world.objects.clock).toMatchObject({ illumination: { roundsLeft: 100 } });
   });
   it('resolves missing content before any execution', async () => {
     const request = await input(); request.catalog.entities.class = [];

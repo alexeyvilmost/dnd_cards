@@ -456,6 +456,22 @@ func advanceRoguelikeClock(run *RoguelikeRun, seconds int) {
 	run.GameClockRemainderSeconds = total % 3600
 }
 
+func roguelikeRestElapsedSeconds(run *RoguelikeRun, commandType string) int {
+	switch commandType {
+	case "short_rest", "bind_weapon":
+		return 3600
+	case "long_rest":
+		since := (run.GameClockHours-run.LastLongRestHour)*3600 + run.GameClockRemainderSeconds - run.LastLongRestRemainderSeconds
+		wait := 16*3600 - since
+		if wait < 0 {
+			wait = 0
+		}
+		return wait + 8*3600
+	default:
+		return 0
+	}
+}
+
 func saveRoguelikeRun(tx *gorm.DB, run *RoguelikeRun) error {
 	return tx.Model(&RoguelikeRun{}).Where("id = ?", run.ID).Updates(map[string]any{
 		"status": run.Status, "phase": run.Phase, "revision": run.Revision,
