@@ -23,7 +23,7 @@ import { resolvePlayerShoveOutcome, resumePendingMovement, addSoloCombatCharacte
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
 import { actorMustCrawl, effectiveCombatActorSpeedFt, gridDistanceFt } from './tacticalGrid';
 import { isPlayerControlledCombatActor, SOLO_COMBAT_KEY, type SoloCombatState } from './types';
-import { UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
+import { collectSoloCombatActionChoices, UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
 import {createMonsterRouteRiskEvaluator, declineAdditionalMovement, monsterRouteOpportunityRisk, moveActorAlongRoute} from './engine';
 import {planMonsterTurn} from './monsterAi';
 import {compileMonsterInstance} from './monsterCompiler';
@@ -4131,7 +4131,7 @@ describe('canonical character opportunity attacks', () => {
     state = moveActor({state: clone(state), actorId: monster.id, destination: {x: 6, y: 4},
       rng: () => {throw Error('The player has not chosen to react');}});
     const options = state.pendingTriggeredAction!.optionActionIds;
-    expect(options).toHaveLength(held ? 2 : 1);
+    expect(options).toHaveLength(held ? 4 : 3);
     const unarmed = options.find(id => id.endsWith(':unarmed:opportunity'))!;
     expect(unarmed).toBeTruthy();
     expect(state.playerActionIds).not.toContain(unarmed);
@@ -4156,6 +4156,95 @@ describe('canonical character opportunity attacks', () => {
     expect(accepted.pendingTriggeredAction).toBeUndefined();
     expect(accepted.pendingMovementStep).toBeUndefined();
   });
+
+  it.each(['grapple', 'shove'] as const)(
+    'persists and resolves an opportunity Unarmed Strike: %s',
+    async option => {
+      const {participant} = unarmedParticipant();
+      const source = participant.canonical.world.actors[participant.character.id];
+      let state = await createSoloCombatState({character: participant.character, participant,
+        selected: [{monster: {...goblin(), max_hp: 100}, quantity: 1}], actions: [scimitar()], effects: [], rng: () => 0.5});
+      const monster = Object.values(state.world.actors).find(row => row.kind === 'monster')!;
+      state.tokens[source.id].position = {x: 4, y: 4};
+      state.tokens[monster.id].position = {x: 5, y: 4};
+      state = advanceTurn(state, () => 0.5);
+      const actionBefore = state.world.actors[source.id].runtime.resources.action;
+      state = moveActor({state, actorId: monster.id, destination: {x: 6, y: 4}, rng: () => 0.5});
+      const actionId = `${source.id}:melee-reaction:unarmed-${option}:opportunity`;
+      expect(state.pendingTriggeredAction?.optionActionIds).toContain(actionId);
+
+      state = resolveTriggeredCombatAction(state, actionId, () => 0);
+      expect(state.world.pendingResolution).toMatchObject({
+        type: 'unarmed_save', option, sourceActorId: source.id, targetActorId: monster.id,
+        reactionActionId: actionId,
+      });
+      expect(state.world.pendingResolution).not.toHaveProperty('attackActionId');
+      expect(state.world.actors[source.id].runtime.resources).toMatchObject({
+        reaction: 0, action: actionBefore,
+      });
+      const restored = readSoloCombatState(
+        writeSoloCombatState({}, state), state.characterId, state.runtimeRevision,
+      )!;
+      state = autoResolveSystemDecisions(restored, () => 0);
+      if (option === 'shove') {
+        expect(state.world.pendingResolution).toMatchObject({
+          type: 'shove_outcome', sourceActorId: source.id, targetActorId: monster.id,
+          reactionActionId: actionId,
+        });
+        state = resolvePlayerShoveOutcome(state, 'prone', () => 0);
+        expect(actorMustCrawl(state.world.actors[monster.id])).toBe(true);
+      } else {
+        expect(Object.values(state.world.grapples)).toEqual([
+          expect.objectContaining({grapplerActorId: source.id, targetActorId: monster.id, sourcePart: 'off_hand'}),
+        ]);
+      }
+      state = resumePendingMovement(state, () => 0.5);
+      expect(state.world.pendingResolution).toBeNull();
+      expect(state.world.actors[source.id].runtime.resources).toMatchObject({
+        reaction: 0, action: actionBefore,
+      });
+      expect(state.tokens[monster.id].position).toEqual(option === 'grapple' ? {x: 5, y: 4} : {x: 6, y: 4});
+    },
+  );
+
+  it('forwards an explicit weapon-mastery choice through an opportunity reaction', async () => {
+    const {participant} = unarmedParticipant();
+    const source = participant.canonical.world.actors[participant.character.id];
+    const weapon = source.character.knownCards!.find(card => card.id === CARD_LONGSWORD.id)!;
+    const masteryId = 'effect:test-opportunity-slow';
+    weapon.mechanics = withDeclaredTestWeaponProfile(weapon, {
+      weaponType: 'longsword', proficiencyCategory: 'martial', attackAbility: 'str',
+      damageLines: [{dice: '1d8', type: 'slashing'}], defaultAttackMode: 'melee',
+      attackModes: [{kind: 'melee', reach_ft: 5}], properties: ['versatile'],
+      versatileGrip: {dice: '1d10', type: 'slashing'},
+      masteryEffectId: masteryId,
+    }).mechanics;
+    source.character.equippedCards = [weapon];
+    source.character.weaponMasteries = ['longsword'];
+    source.masteryEffects = {[masteryId]: {
+      id: masteryId, card_number: 'EFFECT-SLOW', name: 'Замедление',
+      mechanics: {weapon_mastery: {
+        type: 'slow', penaltyFt: 10, requiresDamage: true,
+        expires: 'start_of_source_next_turn', choiceId: 'apply-slow',
+      }},
+    }};
+    let state = await createSoloCombatState({character: participant.character, participant,
+      selected: [{monster: {...goblin(), max_hp: 100}, quantity: 1}], actions: [scimitar()], effects: [], rng: () => 0.5});
+    const monster = Object.values(state.world.actors).find(row => row.kind === 'monster')!;
+    state.tokens[source.id].position = {x: 4, y: 4};
+    state.tokens[monster.id].position = {x: 5, y: 4};
+    state = advanceTurn(state, () => 0.5);
+    state = moveActor({state, actorId: monster.id, destination: {x: 6, y: 4}, rng: () => 0.5});
+    const actionId = `${source.id}:melee-reaction:main:opportunity`;
+    const action = state.catalogActions.find(row => row.id === actionId)!;
+    expect(collectSoloCombatActionChoices(source, action)).toEqual([
+      expect.objectContaining({id: 'apply-slow'}),
+    ]);
+    state = resolveTriggeredCombatAction(state, actionId, () => 0.5, {'apply-slow': ['use']});
+    expect(state.world.actors[monster.id].runtime.activeEffects).toEqual(expect.arrayContaining([
+      expect.objectContaining({mechanics: expect.objectContaining({op: 'add', value: '-10'})}),
+    ]));
+  });
 });
 
 
@@ -4177,7 +4266,12 @@ it.each([false, true])('offers only the melee reaction whose reach was left, ran
   state = advanceTurn(state, () => 0.5);
   const noRoll = () => {throw Error('Choosing or declining has not rolled an attack');};
   state = moveActor({state, actorId: monster.id, destination: {x: 6, y: 4}, rng: noRoll});
-  expect(state.pendingTriggeredAction?.optionActionIds).toEqual([`${source.id}:melee-reaction:unarmed:opportunity`]);
+  expect(state.pendingTriggeredAction?.optionActionIds).toEqual(expect.arrayContaining([
+    `${source.id}:melee-reaction:unarmed:opportunity`,
+    `${source.id}:melee-reaction:unarmed-grapple:opportunity`,
+    `${source.id}:melee-reaction:unarmed-shove:opportunity`,
+  ]));
+  expect(state.pendingTriggeredAction?.optionActionIds).toHaveLength(3);
   state = resumePendingMovement(resolveTriggeredCombatAction(clone(state), null), noRoll);
   state = moveActor({state, actorId: monster.id, destination: {x: 7, y: 4}, rng: noRoll});
   if (ranged) expect(state.pendingTriggeredAction).toBeUndefined();

@@ -666,7 +666,9 @@ export interface PendingUnarmedSaveResolution {
   deadlineLogicalClock: number;
   sourceActorId: string;
   targetActorId: string;
-  attackActionId: string;
+  /** Present for a normal Attack entry; opportunity Unarmed Strikes use the reaction action instead. */
+  attackActionId?: string;
+  reactionActionId?: string;
   option: 'grapple' | 'shove';
   facts: SpatialFacts;
   /** Selected source part is persisted before the target can decide. */
@@ -682,7 +684,9 @@ export interface PendingShoveOutcomeResolution {
   deadlineLogicalClock: number;
   sourceActorId: string;
   targetActorId: string;
-  attackActionId: string;
+  /** Present for a normal Attack entry; opportunity Shoves have no Attack-action ledger. */
+  attackActionId?: string;
+  reactionActionId?: string;
   facts: SpatialFacts;
   request: ShoveOutcomeDecisionRequest;
 }

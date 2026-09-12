@@ -13,7 +13,7 @@ import {rollD20} from '../engine/roll';
 import {rollEvent} from '../engine/events';
 import {availableCheckManeuvers, prepareCheckManeuver} from '../character/checkManeuvers';
 import {finalizeSheetD20Roll} from '../character/sheetD20Roll';
-import {unarmedDamageActionFor, weaponAttackAction} from '../rules-core/attackDefinitions';
+import {systemActionAsRuleDefinition, unarmedDamageActionFor, weaponAttackAction} from '../rules-core/attackDefinitions';
 import type { Action, PassiveEffect } from '../types';
 import type { ForgeCharacter } from '../character/types';
 import {
@@ -249,6 +249,11 @@ function opportunityVersion(action: RuleActionDefinition, reachFt = 5): RuleActi
   } as RuleActionDefinition;
 }
 
+function unarmedControlOpportunity(action: RuleActionDefinition): 'grapple' | 'shove' | null {
+  const option = action.mechanics.unarmed_opportunity_option;
+  return option === 'grapple' || option === 'shove' ? option : null;
+}
+
 /** The same definitions serve canonical Attack entries and actor-owned reactions. */
 function installCharacterOpportunityAttacks(actor: ActorState, catalog: RuleActionDefinition[]): string {
   const prefix = `${actor.id}:melee-reaction:`;
@@ -264,10 +269,26 @@ function installCharacterOpportunityAttacks(actor: ActorState, catalog: RuleActi
     if (mode?.kind !== 'melee') continue;
     const base = weaponAttackAction(hand, 'melee');
     attacks.push(opportunityVersion({...base, id: `${prefix}${hand}`, name: card.name,
-      sourceEntityIds: [...base.sourceEntityIds, card.id]}, mode.reachFt));
+      sourceEntityIds: [...base.sourceEntityIds, card.id], mechanics: {
+        ...base.mechanics, opportunity_weapon_hand: hand,
+      }}, mode.reachFt));
   }
   attacks.push(opportunityVersion({...unarmedDamageActionFor(actor),
     id: `${prefix}unarmed`, name: 'Безоружный удар'}, actor.attackProfile?.reachFt ?? 5));
+  for (const [option, name, systemId] of [
+    ['grapple', 'Безоружный удар: захват', SYSTEM_ACTION_IDS.unarmedGrapple],
+    ['shove', 'Безоружный удар: толчок', SYSTEM_ACTION_IDS.unarmedShove],
+  ] as const) {
+    attacks.push(opportunityVersion({
+      ...systemActionAsRuleDefinition(systemId, {
+        activation: {mode: 'attack_entry', cost: []},
+        interaction: {intent: 'harmful'},
+        unarmed_opportunity_option: option,
+      }),
+      id: `${prefix}unarmed-${option}`,
+      name,
+    }, actor.attackProfile?.reachFt ?? 5));
+  }
   for (let index = catalog.length - 1; index >= 0; index--) {
     if (catalog[index].id.startsWith(prefix)) catalog.splice(index, 1);
   }
@@ -285,7 +306,15 @@ function opportunityActionsFor(state: SoloCombatState, actorId: string): RuleAct
   return state.catalogActions.filter(row => (primaryId.startsWith(prefix)
     ? row.id.startsWith(prefix) : row.id === primaryId
       || (row.mechanics.npc_unarmed_fallback===true && (row.mechanics.activation as Record<string,unknown>)?.mode==='reaction' && state.world.actors[actorId].capabilities.actionIds.includes(row.id)))
-    && !heldItemRequirementIssue(row.mechanics, state.world.actors[actorId].runtime));
+    && !heldItemRequirementIssue(row.mechanics, state.world.actors[actorId].runtime)
+    && (unarmedControlOpportunity(row) !== 'grapple' || Boolean(
+      state.world.actors[actorId].attackProfile?.graspingParts.some((part) => (
+        !Object.values(state.world.grapples).some((grapple) => (
+          grapple.grapplerActorId === actorId && grapple.sourcePart === part
+        )) && (part !== 'main_hand' && part !== 'off_hand'
+          || !state.world.actors[actorId].runtime.equipment[part])
+      )),
+    )));
 }
 
 /** An opportunity attack is one melee attack, never a ranged shot or Multiattack. */
@@ -1352,7 +1381,8 @@ function prepareCommandedAttack(input: CombatActionInput, learned: RuleActionDef
   const die = source.character.variables?.superiority_die;
   if (!die || typeof die !== 'object' || !('sides' in die) || !('count' in die) || die.count !== 1
     || ![6,8,10,12].includes(Number(die.sides))) throw new Error('Не определена кость превосходства командира');
-  const bases = state.catalogActions.filter(action => action.id.startsWith(`${allyId}:melee-reaction:`));
+  const bases = state.catalogActions.filter(action => action.id.startsWith(`${allyId}:melee-reaction:`)
+    && !unarmedControlOpportunity(action));
   const cards = [...(ally.character.knownCards ?? []), ...(ally.character.equippedCards ?? [])];
   for (const hand of ['main','off'] as const) {
     const cardId = ally.runtime.equipment[hand === 'main' ? 'main_hand' : 'off_hand'];
@@ -1362,8 +1392,11 @@ function prepareCommandedAttack(input: CombatActionInput, learned: RuleActionDef
     if (!parsed?.valid) continue;
     const mode = parsed.profile.attackModes.find(row => row.kind === 'ranged');
     if (mode?.kind !== 'ranged') continue;
-    const base = opportunityVersion({...weaponAttackAction(hand, 'ranged'), id: `${allyId}:commanded-ranged:${hand}`,
-      name: card!.name, sourceEntityIds: [card!.id]}, mode.longFt);
+    const weaponAttack = weaponAttackAction(hand, 'ranged');
+    const base = opportunityVersion({...weaponAttack, id: `${allyId}:commanded-ranged:${hand}`,
+      name: card!.name, sourceEntityIds: [card!.id], mechanics: {
+        ...weaponAttack.mechanics, opportunity_weapon_hand: hand,
+      }}, mode.longFt);
     const activation = base.mechanics.activation as Record<string, unknown>;
     // The attack consumes ammunition from the recipient's inventory, not the commander.
     if (parsed.profile.ammo) activation.cost = [{resource:'reaction'}, {resource:'item', card_id:parsed.profile.ammo.cardId,amount:1}];
@@ -2387,6 +2420,7 @@ export function resolveTriggeredCombatAction(
       ...commandBase(cleared as SoloCombatState, pending.sourceActorId),
       type: 'UseReactionAction', trigger: pending.event, actionId,
       targetIds: declaration.targetIds,
+      ...(choices ? {choices: projectSoloCombatActionChoices(action, choices)} : {}),
       ...(declaration.factsByTarget ? { factsByTarget: declaration.factsByTarget } : {}),
       ...(declaration.spell ? {
         spell: {
@@ -3137,6 +3171,7 @@ function offerTriggeredAttackActions(input: {
   if (!learned) return after;
   const distance = gridDistanceFt(after.tokens[defender.id].position, after.tokens[attacker.id].position);
   const options = after.catalogActions.filter(action => action.id.startsWith(`${defender.id}:melee-reaction:`)
+    && !unarmedControlOpportunity(action)
     && defender.capabilities.actionIds.includes(action.id) && distance <= (action.targeting?.rangeFt ?? 5))
     .map(action => {
       const mechanics = clone(action.mechanics);

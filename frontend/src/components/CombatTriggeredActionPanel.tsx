@@ -29,7 +29,7 @@ export default function CombatTriggeredActionPanel({state, busy, onChoose}: {
         const presentation = state.actionPresentation?.[actionId];
         const card = [...(actor.character.equippedCards ?? []), ...(actor.character.knownCards ?? [])]
           .find(row => action.sourceEntityIds.includes(row.id));
-        const unarmed = actionId.includes(':melee-reaction:unarmed:')
+        const unarmed = actionId.includes(':melee-reaction:unarmed')
           ? Object.values(state.actionPresentation ?? {}).find(row => row.actionRef?.card_number === 'action_basic_unarmed')
           : undefined;
         const name = action.name.replace(/ — провоцированная атака/gu, '').replace(/ — Превентивный удар$/u, '');

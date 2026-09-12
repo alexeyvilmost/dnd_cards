@@ -39,10 +39,16 @@ function unarmedStrikeChoices(
 
 function masteryChoices(actor: ActorState, action: RuleActionDefinition): PendingChoice[] {
   const declared = parseDeclaredWeaponActionPolicy(action, 'bound');
-  if (declared.status !== 'valid') return [];
+  const reactionHand = action.mechanics.opportunity_weapon_hand;
+  const hand = declared.status === 'valid'
+    ? declared.policy.hand
+    : reactionHand === 'main' || reactionHand === 'off'
+      ? reactionHand
+      : null;
+  if (!hand) return [];
   const weapon = weaponContext(
     actor.character,
-    declared.policy.hand,
+    hand,
     actor.runtime.equipment,
     actor.runtime,
   );

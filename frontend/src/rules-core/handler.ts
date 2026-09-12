@@ -8319,6 +8319,94 @@ function freeGraspingPart(world: WorldState, actor: ActorState): string | undefi
   ));
 }
 
+function executeReactionUnarmedControl(
+  world: WorldState,
+  command: Extract<GameCommand, { type: 'UseReactionAction' }>,
+  action: RuleActionDefinition,
+  option: 'grapple' | 'shove',
+  env: DeterministicEnvironment,
+): CommandResult | EventInput[] {
+  const source = world.actors[command.actorId];
+  const targetId = command.targetIds[0];
+  const target = world.actors[targetId];
+  const facts = command.factsByTarget?.[targetId];
+  const systemId = option === 'grapple'
+    ? SYSTEM_ACTION_IDS.unarmedGrapple
+    : SYSTEM_ACTION_IDS.unarmedShove;
+  const system = getSystemActionDefinition(systemId)!;
+  if (command.targetIds.length !== 1 || !target || !facts) {
+    return rejected(world, 'InvalidTargets', 'Opportunity Unarmed Strike requires one observed target');
+  }
+  if (!action.sourceEntityIds.every((id) => typeof id === 'string')
+    || system.sourceEntityIds.some((id) => !action.sourceEntityIds.includes(id))) {
+    return rejected(world, 'InvalidActionDefinition', `${action.id} does not derive from ${systemId}`);
+  }
+  const sourceSize = effectiveActorSize(source);
+  const targetSize = effectiveActorSize(target);
+  if (!Number.isInteger(sourceSize) || !Number.isInteger(targetSize)) {
+    return rejected(world, 'InvalidActionDefinition', 'Unarmed control requires canonical creature sizes');
+  }
+  if (targetSize! > sourceSize! + 1) {
+    return rejected(world, 'TargetTooLarge', `${target.id} is more than one size larger than ${source.id}`);
+  }
+  const sourcePart = option === 'grapple' ? freeGraspingPart(world, source) : undefined;
+  if (option === 'grapple' && !sourcePart) {
+    return rejected(world, 'NoFreeGraspingPart', `${source.id} has no free part to maintain a grapple`);
+  }
+  const cost = activationCost(action);
+  const paid = pay(source.runtime, cost);
+  const dc = 8 + (source.character.abilityMods.str ?? 0) + source.character.profBonus;
+  const obligations = actionObligationIds(
+    action,
+    'system:unarmed-strike',
+    `system:unarmed-strike:${option}`,
+    'system:target-save',
+    'system:pending-resolution',
+  );
+  const resolutionId = env.nextId();
+  return [
+    actionDeclaredEvent({
+      actorId: source.id,
+      action,
+      targetIds: [target.id],
+      timing: 'reaction',
+      facts: {option, ...(sourcePart ? {sourcePart} : {}), spatial: {...facts}},
+      obligationIds: obligations,
+    }),
+    ...runtimeTransition(source.id, source.id, source.runtime, paid.state, 'action', obligations),
+    ...engineTrace(source.id, [], paid.events, obligations),
+    {
+      sourceActorId: source.id,
+      obligationIds: obligations,
+      payload: {
+        type: 'ResolutionOpened',
+        resolution: {
+          id: resolutionId,
+          type: 'unarmed_save',
+          openedByCommandId: command.commandId,
+          openedAtRevision: world.revision,
+          deadlineLogicalClock: world.logicalClock + 10,
+          sourceActorId: source.id,
+          targetActorId: target.id,
+          reactionActionId: action.id,
+          option,
+          facts: {...facts},
+          ...(sourcePart ? {sourcePart} : {}),
+          request: {
+            id: env.nextId(),
+            type: 'saving_throw',
+            actorId: target.id,
+            ability: 'str',
+            abilityOptions: ['str', 'dex'],
+            dc,
+            avoidsConditions: [option === 'grapple' ? 'grappled' : 'prone'],
+          },
+        },
+      },
+    },
+  ];
+}
+
 function executeUnarmedStrike(
   world: WorldState,
   command: Extract<GameCommand, { type: 'PerformUnarmedStrike' }>,
@@ -8990,10 +9078,12 @@ function resolveUnarmedSave(
   }
   const source = world.actors[pending.sourceActorId];
   const target = world.actors[pending.targetActorId];
-  const attackAction = world.attackActions[pending.attackActionId];
-  if (!source || !target || !attackAction
+  const attackAction = pending.attackActionId
+    ? world.attackActions[pending.attackActionId]
+    : undefined;
+  if (!source || !target || (pending.attackActionId && (!attackAction
     || attackAction.actorId !== source.id
-    || attackAction.blockedByResolutionId !== pending.id) {
+    || attackAction.blockedByResolutionId !== pending.id))) {
     return rejected(world, 'InvalidDecision', 'Unarmed Strike continuation lost its actors or Attack ledger');
   }
   const selectedAbility = command.response.selectedAbility;
@@ -9004,7 +9094,7 @@ function resolveUnarmedSave(
     return rejected(world, 'InvalidDecision', 'A rolled Unarmed Strike save must choose Strength or Dexterity');
   }
   const obligations = [
-    'system:attack-action',
+    ...(attackAction ? ['system:attack-action'] : []),
     'system:unarmed-strike',
     `system:unarmed-strike:${pending.option}`,
     'system:target-save',
@@ -9069,7 +9159,7 @@ function resolveUnarmedSave(
     ));
   }
   if (!failed) {
-    events.push(...attackResolutionFinishedEvents({
+    if (attackAction) events.push(...attackResolutionFinishedEvents({
       attackAction,
       resolutionId: pending.id,
       actorId: source.id,
@@ -9103,7 +9193,7 @@ function resolveUnarmedSave(
       obligationIds: obligations,
       payload: { type: 'GrappleApplied', grapple },
     });
-    events.push(...attackResolutionFinishedEvents({
+    if (attackAction) events.push(...attackResolutionFinishedEvents({
       attackAction,
       resolutionId: pending.id,
       actorId: source.id,
@@ -9113,7 +9203,7 @@ function resolveUnarmedSave(
   }
 
   const shoveResolutionId = env.nextId();
-  events.push(...attackResolutionFinishedEvents({
+  if (attackAction) events.push(...attackResolutionFinishedEvents({
     attackAction,
     resolutionId: pending.id,
     actorId: source.id,
@@ -9133,7 +9223,8 @@ function resolveUnarmedSave(
         deadlineLogicalClock: world.logicalClock + 10,
         sourceActorId: source.id,
         targetActorId: target.id,
-        attackActionId: attackAction.id,
+        ...(attackAction ? {attackActionId: attackAction.id} : {}),
+        ...(pending.reactionActionId ? {reactionActionId: pending.reactionActionId} : {}),
         facts: { ...pending.facts },
         request: {
           id: env.nextId(),
@@ -9144,7 +9235,7 @@ function resolveUnarmedSave(
       },
     },
   });
-  events.push(blockAttackActionEvent({
+  if (attackAction) events.push(blockAttackActionEvent({
     actorId: source.id,
     attackActionId: attackAction.id,
     resolutionId: shoveResolutionId,
@@ -9172,12 +9263,14 @@ function resolveShoveOutcome(
     || !pending.request.options.includes(command.response.outcome)) {
     return rejected(world, 'InvalidDecision', 'Shove requires choosing push_5ft or prone');
   }
-  const attackAction = world.attackActions[pending.attackActionId];
-  if (!attackAction || attackAction.blockedByResolutionId !== pending.id) {
+  const attackAction = pending.attackActionId
+    ? world.attackActions[pending.attackActionId]
+    : undefined;
+  if (pending.attackActionId && (!attackAction || attackAction.blockedByResolutionId !== pending.id)) {
     return rejected(world, 'InvalidDecision', 'Shove choice lost its Attack-action ledger');
   }
   const obligations = [
-    'system:attack-action',
+    ...(attackAction ? ['system:attack-action'] : []),
     'system:unarmed-strike',
     'system:unarmed-strike:shove',
     'system:pending-resolution',
@@ -9217,12 +9310,12 @@ function resolveShoveOutcome(
       obligationIds: obligations,
       payload: { type: 'ResolutionClosed', resolutionId: pending.id },
     },
-    ...attackResolutionFinishedEvents({
+    ...(attackAction ? attackResolutionFinishedEvents({
       attackAction,
       resolutionId: pending.id,
       actorId: command.actorId,
       obligations,
-    }),
+    }) : []),
   ];
 }
 
@@ -11722,6 +11815,24 @@ function executeCommand(
           targetActorIds: command.targetIds,
         });
         if (conditionDenial) return conditionDenial;
+      }
+      const unarmedOpportunityOption = executableAction.mechanics.unarmed_opportunity_option;
+      if (unarmedOpportunityOption !== undefined) {
+        if (command.type !== 'UseReactionAction'
+          || (unarmedOpportunityOption !== 'grapple' && unarmedOpportunityOption !== 'shove')) {
+          return rejected(
+            world,
+            'InvalidActionDefinition',
+            `${executableAction.id} has an invalid opportunity Unarmed Strike declaration`,
+          );
+        }
+        return executeReactionUnarmedControl(
+          world,
+          command,
+          executableAction,
+          unarmedOpportunityOption,
+          env,
+        );
       }
       const spell = canonicalSpellContext(
         executableAction,
