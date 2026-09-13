@@ -1,5 +1,25 @@
 {
   "schemaVersion": 1,
+  "snapshotMechanicsProjections": {
+    "effects:EFF-fighting-style": {
+      "migration": 241,
+      "supersedingHash": "sha256:b670bc3d5f7cd5da8e530c0b3dad6518c14503b8c4c84d5505d34cab4bf6b112",
+      "mechanics": {
+        "activation": { "mode": "passive" },
+        "effects": [
+          {
+            "count": 1,
+            "grant": { "kind": "grant_feat" },
+            "id": "fighter_fighting_style",
+            "kind": "choice",
+            "options": { "filter": "fighting_style", "source": "feat" },
+            "prompt": "Выберите боевой стиль",
+            "resolution": "on_acquire"
+          }
+        ]
+      }
+    }
+  },
   "mechanicsHashes": {
     "effects:EFF-eldritch-invocations": "sha256:daee9871613ffe21a2a6c9bc345c46b795cf1f2625dacbb14193bb9b8290e989",
     "effects:EFF-sneak-attack": "sha256:e471cb013b97d863045247981572b22af572749bc747d9c8de60fcdbfe2de6c9",

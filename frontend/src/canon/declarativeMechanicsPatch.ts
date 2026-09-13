@@ -15,6 +15,12 @@ interface ReviewedSupersedingPostimages {
   schemaVersion: 1;
   mechanicsHashes: Record<string, string>;
   fieldHashes: Record<string, string>;
+  /** Reviewed upgrades of snapshot-owned mechanics outside the L1 patch. */
+  snapshotMechanicsProjections?: Record<string, {
+    migration: number;
+    supersedingHash: string;
+    mechanics: JsonObject;
+  }>;
 }
 
 const REVIEWED_SUPERSEDING_POSTIMAGES = supersedingPostimagesJson as ReviewedSupersedingPostimages;
@@ -106,6 +112,18 @@ const REVIEWED_SUPERSEDING_MECHANICS_BY_HASH = (() => {
       throw new Error(`Reviewed superseding mechanics ${label} is missing, duplicated, or hash-ambiguous`);
     }
     byHash.set(hash, matches[0].patch.mechanics);
+  }
+  for (const [label, projection] of Object.entries(
+    REVIEWED_SUPERSEDING_POSTIMAGES.snapshotMechanicsProjections ?? {},
+  )) {
+    if (!SHA256_HASH.test(projection.supersedingHash)
+      || byHash.has(projection.supersedingHash)
+      || !Number.isInteger(projection.migration) || projection.migration < 1
+      || !projection.mechanics || typeof projection.mechanics !== 'object'
+      || Array.isArray(projection.mechanics)) {
+      throw new Error(`Reviewed snapshot mechanics projection ${label} is invalid or hash-ambiguous`);
+    }
+    byHash.set(projection.supersedingHash, projection.mechanics);
   }
   return byHash;
 })();

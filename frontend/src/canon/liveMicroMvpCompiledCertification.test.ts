@@ -14,6 +14,7 @@ import {
 } from './liveMicroMvpCompiledCertification';
 import {
   MICRO_MVP_L1_CONTENT_PATCH,
+  microMvpL1MechanicsSemanticProjection,
 } from './declarativeMechanicsPatch';
 import {
   materializeReviewedPostMigrationCatalogs,
@@ -39,6 +40,33 @@ function reverseCollections(catalogs: SnapshotCatalogs): SnapshotCatalogs {
 }
 
 describe('live micro-MVP compiled certification boundary', () => {
+  it('attests the exact migration 241 upgrade without changing the L1 fighting style', async () => {
+    const live = reviewedCatalogs();
+    const style = live.effects.find((effect) => effect.card_number === 'EFF-fighting-style');
+    if (!style) throw new Error('missing reviewed Fighter style');
+    const original = copy(style.mechanics);
+    const mechanics = style.mechanics as { effects: Array<Record<string, unknown>> };
+    const choice = mechanics.effects.find((effect) => effect.id === 'fighter_fighting_style');
+    if (!choice) throw new Error('missing fighting style choice');
+    choice.replace_on_level_up = 1;
+    expect(microMvpL1MechanicsSemanticProjection(mechanics)).toEqual(original);
+    const result = await compileLiveMicroMvpCertification({
+      catalogs: live,
+      certificationVersion: 'micro-mvp-l1-rules-core-v4',
+    });
+    expect(result.catalogInput.liveSemanticProjectionHash)
+      .toBe(result.catalogInput.reviewedSemanticProjectionHash);
+    // The attestation must never rewrite runtime mechanics or generalize the
+    // exemption to another count, choice, or an unreviewed future migration.
+    expect(choice.replace_on_level_up).toBe(1);
+    for (const delta of [{ replace_on_level_up: 2 }, { count: 2 }, { id: 'another_choice' }]) {
+      const changed = copy(mechanics);
+      Object.assign(changed.effects[0], delta);
+      expect(microMvpL1MechanicsSemanticProjection(changed)).toEqual(changed);
+      expect(microMvpL1MechanicsSemanticProjection(changed)).not.toEqual(original);
+    }
+  }, 60_000);
+
   it('separates normalized semantic diagnostics from the full raw fingerprint', () => {
     const pinned = readProdSnapshotCatalogs();
     const reordered = reverseCollections(copy(pinned));

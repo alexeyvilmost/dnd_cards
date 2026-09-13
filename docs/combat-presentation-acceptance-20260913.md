@@ -42,3 +42,21 @@ temporarily blocking the board for presentation cannot lose the queued turn.
 Production release checks and evidence are generated against the exact pushed
 commit using the standard TimeWeb immutable archive workflow. Secrets and
 authenticated acceptance artifacts are stored outside the repository.
+
+## Release audit follow-up
+
+The live mechanics sweep needed the facts required by the current monster and
+Battle Master content: held catalog weapons, target size/distance and a
+superiority die. Board-only maneuvers now verify their missing-board rejection
+before testing the executor payload with the adapter's validated context.
+The existing 24 solo-combat integration cases separately verify actual ally
+selection, position exchange, reaction continuation and payment. The live MVP
+sweep passes all 137 tests without adding execution failures to its baseline.
+
+The compiled L1 audit differed in exactly 64 Fighter roots, all at the same
+field: migration 241 adds `replace_on_level_up: 1` to `EFF-fighting-style`.
+The exact reviewed postimage is now registered for L1 semantic comparison;
+runtime retains the replacement choice. The original L1 payload and compiled
+release pins remain unchanged. Regression coverage proves the exact upgrade
+is accepted while another replacement count, acquisition count or choice ID
+remains visible as drift. The 30 live matrix tests and 448-root sheet audit pass.
