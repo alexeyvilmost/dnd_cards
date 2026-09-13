@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { acceptCombatOpening } from '../e2e/combat-presentation-driver';
 import {
   expect,
   test,
@@ -1315,6 +1316,7 @@ test('required production spine: empty Forge reaches sheet and dedicated combat 
       Math.random = () => 0.94;
     });
     await setup.getByRole('button', { name: /Начать бой/ }).click();
+    await acceptCombatOpening(page);
     await expect(page).toHaveURL(new RegExp(`/characters-v3/${character.id}/combat(?:\\?.*)?$`));
     await expect(page.getByRole('region', { name: 'Панель действий' })).toBeVisible();
     await expect.poll(async () => {

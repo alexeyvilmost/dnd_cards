@@ -1,6 +1,7 @@
 import {combatHideFacts, combatHideIssue} from './hide';
 import {foldEvents} from '../rules-core/reducer';
-import {canEscapeActorGrapple, escapeActorGrapple} from './engine';
+import {canEscapeActorGrapple, escapeActorGrapple, previewCombatAttackRoll} from './engine';
+import { presentCombatEntries } from './presentation';
 import { handleCommand } from '../rules-core/handler';
 import {createSheetCombatSession} from '../character/sheetCombatSession';
 import {telekineticHeldObjects} from '../rules-core/telekineticMovement';
@@ -738,6 +739,21 @@ async function championMovementEncounter() {
 }
 
 describe('solo combat engine vertical integration', () => {
+  it('previews the actual attack modifiers without changing the world or spending a resource', async () => {
+    const {state, actorId, enemyId, attack} = await championMovementEncounter();
+    const before = clone(state);
+    const input = {state, actorId, actionId: attack.id, targetIds: [enemyId]};
+    const preview = previewCombatAttackRoll(input);
+    expect(preview).not.toBeNull();
+    expect(state).toEqual(before);
+    const result = executeCombatAction({...input, rng: () => .6});
+    const beats = presentCombatEntries(result, result.log.filter(entry => !before.log.some(old => old.id === entry.id)));
+    expect(beats[0].roll).toMatchObject({modifiers: preview!.modifiers, target: preview!.target, advantage: preview!.advantage});
+    expect(beats[0]).toMatchObject({sourceId: actorId, targetId: enemyId, visual: 'slashing'});
+    expect(beats[0].cues).toContainEqual(expect.objectContaining({actorId: enemyId, kind: 'damage'}));
+    state.tokens[enemyId].position = {x: 20, y: 20};
+    expect(previewCombatAttackRoll(input)).toBeNull();
+  });
   it('offers Champion movement on a critical hit, including a 19 with Improved Critical, without spending another action', async () => {
     const setup = await championMovementEncounter();
     const {actorId, enemyId, movement, attack} = setup;

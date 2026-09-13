@@ -31,6 +31,10 @@ import CombatSceneConstructor from '../components/CombatSceneConstructor';
 import MonsterTurnController from '../components/MonsterTurnController';
 import SheetPendingCombatPanel, { sheetReactionDecisionOptions } from '../components/SheetPendingCombatPanel';
 import TacticalBattleMap from '../components/TacticalBattleMap';
+import CombatPresentationDialog from '../components/CombatPresentationDialog';
+import CombatRewardDialog from '../components/CombatRewardDialog';
+import SheetSettingsDialog from '../components/SheetSettingsDialog';
+import { useCombatPresentation } from '../solo-combat/useCombatPresentation';
 import { useSheetWorldInputDialog } from '../components/SheetWorldInputDialog';
 import { monstersApi } from '../monsters/api';
 import {
@@ -150,6 +154,12 @@ export default function SoloCombatPage() {
   const trustedRunRef = useRef<RoguelikeRun | null>(null);
   const trustedBusyRef = useRef(false);
   const [state, setState] = useState<SoloCombatState | null>(null);
+  const [openingState, setOpeningState] = useState<SoloCombatState | null>(null);
+  const [rewardRun, setRewardRun] = useState<RoguelikeRun | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const presentation = useCombatPresentation(state, openingState);
+  const presentationBlockedRef = useRef(false);
+  presentationBlockedRef.current = presentation.blocked;
   const [secondaryActionId, setSecondaryActionId] = useState<string | null>(null);
   const [selectedMovementTargetId, setSelectedMovementTargetId] = useState<string | null>(null);
   const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
@@ -300,10 +310,13 @@ export default function SoloCombatPage() {
           charactersV3Api.get(id),
           roguelikeRunId ? roguelikeApi.get(roguelikeRunId) : Promise.resolve(null),
         ]);
-        if (loadedRun && (loadedRun.character_id !== id || loadedRun.phase !== 'combat')) {
+        if (loadedRun && loadedRun.character_id !== id) {
           throw new Error('Этот лист не участвует в активной встрече забега');
         }
         if (!active) return;
+        if (loadedRun && loadedRun.phase !== 'combat') {
+          navigate(`/roguelike/${loadedRun.id}`); return;
+        }
         characterRef.current = loadedCharacter;
         setCharacter(loadedCharacter);
         participantCharactersRef.current = { [loadedCharacter.id]: loadedCharacter };
@@ -342,6 +355,7 @@ export default function SoloCombatPage() {
           setCharacter(accepted.character);
           participantCharactersRef.current = {[accepted.character.id]: accepted.character};
           setParticipantCharacters(participantCharactersRef.current);
+          if (!loadedRun.combat_state) setOpeningState(accepted.combat_state);
           setState(accepted.combat_state);
           setBusy(false);
           return;
@@ -414,8 +428,11 @@ export default function SoloCombatPage() {
           [loadedCharacter, ...allyCharacters].map((row) => [row.id, row]),
         );
         setParticipantCharacters(participantCharactersRef.current);
+        setOpeningState(created);
         setState(created);
         await persist(created);
+        initialRequestedRef.current = [];
+        initialAlliesRef.current = [];
         navigate(
           `/characters-v3/${id}/combat${roguelikeRunId ? `?roguelike=${encodeURIComponent(roguelikeRunId)}` : ''}`,
           { replace: true },
@@ -454,6 +471,7 @@ export default function SoloCombatPage() {
   }, [persist]);
 
   const applyIntent = useCallback((intent: RoguelikeCombatIntent, local: () => SoloCombatState) => {
+    if (presentationBlockedRef.current) return;
     const run = trustedRunRef.current;
     if (!run) { apply(resumePendingMovement(local())); return; }
     if (trustedBusyRef.current) return;
@@ -622,6 +640,7 @@ export default function SoloCombatPage() {
   };
 
   const clickCell = async (position: GridPosition, actorId?: string) => {
+    if (presentationBlockedRef.current) return;
     if (state?.pendingTriggeredAction && secondaryActionId && !busy) {
       if (!actorId || !triggeredSecondaryTargetIds(state, secondaryActionId).includes(actorId)) {
         setError(state.pendingTriggeredAction.event === 'commanded_attack' ? 'Выберите доступную цель атаки союзника' : 'Выберите другую цель в 5 футах от первой и в досягаемости атаки'); return;
@@ -807,8 +826,8 @@ export default function SoloCombatPage() {
     try {
       if (roguelikeRunId) {
         const run = await roguelikeApi.get(roguelikeRunId);
-        await roguelikeApi.command(run.id, run.revision, 'complete_encounter');
-        navigate(`/roguelike/${run.id}`);
+        const completed = run.phase === 'combat' ? await roguelikeApi.command(run.id, run.revision, 'complete_encounter') : run;
+        setRewardRun(completed); setBusy(false);
         return;
       }
       const participantIds = controlledCharacterIds(state).sort();
@@ -898,10 +917,14 @@ export default function SoloCombatPage() {
       : ''}`
     : null;
   return (
-    <main className="solo-combat-page forge">
-      <MonsterTurnController state={state} disabled={Boolean(trustedRunRef.current) || busy || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt)} onTransition={apply} onError={setError} />
+    <main className={`solo-combat-page forge${presentation.blocked ? ' combat-input-blocked' : ''}`}>
+      {rewardRun && <CombatRewardDialog run={rewardRun} onClose={() => navigate(`/roguelike/${rewardRun.id}`)} />}
+      {presentation.initiative && <CombatPresentationDialog initiative={presentation.initiative} onClose={presentation.closeInitiative} />}
+      {presentation.beat && <CombatPresentationDialog beat={presentation.beat} onClose={presentation.closeAttack} />}
+      {settingsOpen && <SheetSettingsDialog onClose={() => setSettingsOpen(false)} />}
+      <MonsterTurnController state={state} disabled={presentation.blocked || Boolean(trustedRunRef.current) || busy || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt)} onTransition={apply} onError={setError} />
       <header className="combat-topbar">
-        <div className="combat-topbar__navigation"><Link to={roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`}><ArrowLeft size={18} /> {roguelikeRunId ? 'Забег' : 'Лист'}</Link>{!roguelikeRunId && <button type="button" onClick={() => setSceneConstructorOpen(true)}><SlidersHorizontal size={16} /> Сцена</button>}</div>
+        <div className="combat-topbar__navigation"><Link to={roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`}><ArrowLeft size={18} /> {roguelikeRunId ? 'Забег' : 'Лист'}</Link><button type="button" onClick={() => setSettingsOpen(true)} aria-label="Настройки боя"><SlidersHorizontal size={16} /></button>{!roguelikeRunId && <button type="button" onClick={() => setSceneConstructorOpen(true)}><SlidersHorizontal size={16} /> Сцена</button>}</div>
         <div className="initiative-ribbon" aria-label="Порядок инициативы">
           {state.initiative.map((entry) => {
             const participant = state.world.actors[entry.actorId];
@@ -916,6 +939,8 @@ export default function SoloCombatPage() {
         <div className={`combat-map-wrap${secondaryActionId && state.pendingTriggeredAction ? ' is-selecting-secondary' : ''}`}>
           <TacticalBattleMap
             state={state}
+            feedback={presentation.playing}
+            selectedActionChoices={selectedActionChoices}
             actorId={activeControlledActorId}
             targetingActorId={selectedActionChoices[FAMILIAR_TOUCH_DELIVERY_CHOICE_ID]?.[0] !== 'self'
               ? selectedActionChoices[FAMILIAR_TOUCH_DELIVERY_CHOICE_ID]?.[0]
@@ -1012,7 +1037,7 @@ export default function SoloCombatPage() {
         onAddMonster={addSceneMonster}
         onClose={() => setSceneConstructorOpen(false)}
       />}
-      <CombatHotbar onEscape={() => { void chooseEscapeGrapple(); }} onStand={() => { setMovementMode(false); applyIntent({type: 'stand', actorId: activeControlledActorId}, () => standActor(state, activeControlledActorId)); }} state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={!playerTurn || Boolean(state.pendingAdditionalMovement) || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { void (async () => {
+      <CombatHotbar onEscape={() => { void chooseEscapeGrapple(); }} onStand={() => { setMovementMode(false); applyIntent({type: 'stand', actorId: activeControlledActorId}, () => standActor(state, activeControlledActorId)); }} state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={presentation.blocked || !playerTurn || Boolean(state.pendingAdditionalMovement) || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { void (async () => {
         setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null);
         if (movementMode) { setMovementMode(false); return; }
         try {
@@ -1108,7 +1133,7 @@ export default function SoloCombatPage() {
       {!secondaryActionId && <CombatTriggeredActionPanel state={state} busy={busy} onChoose={resolveTriggeredChoice} />}
       {pendingTurnStart && <div className="combat-reaction-backdrop"><section><p>НАЧАЛО ХОДА</p><h2>Нанести 1к4 урона существу в захвате?</h2><div>{pendingTurnStart.targetActorIds.map((targetActorId) => <button type="button" key={targetActorId} disabled={busy} onClick={() => applyIntent({type: 'turn_start', targetActorId: targetActorId}, () => resolveSoloCombatTurnStart(state, targetActorId))}>{state.world.actors[targetActorId]?.name ?? 'Цель'} · 1к4 дробящего урона</button>)}<button type="button" disabled={busy} onClick={() => applyIntent({type: 'turn_start', targetActorId: null}, () => resolveSoloCombatTurnStart(state, null))}>Пропустить</button></div></section></div>}
       {worldInputDialog.dialog}
-      {shouldShowSoloCombatOutcome(state) && <div className="combat-outcome"><section><p>БОЙ ЗАВЕРШЁН</p><h1>{state.outcome === 'victory' ? 'Победа' : 'Поражение'}</h1><p>{state.outcome === 'victory' ? 'Все противники уничтожены.' : `${character.name} потерял все хиты.`}</p><button type="button" disabled={busy} onClick={finish}>{roguelikeRunId ? 'Получить результат и вернуться в лагерь' : 'Завершить и вернуться в лист'}</button><button type="button" onClick={() => navigate(roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`)}><RotateCcw size={16} /> {roguelikeRunId ? 'Вернуться в забег' : 'Оставить запись боя'}</button></section></div>}
+      {!rewardRun && !presentation.blocked && shouldShowSoloCombatOutcome(state) && <div className="combat-outcome"><section><p>БОЙ ЗАВЕРШЁН</p><h1>{state.outcome === 'victory' ? 'Победа' : 'Поражение'}</h1><p>{state.outcome === 'victory' ? 'Все противники уничтожены.' : `${character.name} потерял все хиты.`}</p><button type="button" disabled={busy} onClick={finish}>{roguelikeRunId ? 'Получить награду' : 'Завершить и вернуться в лист'}</button><button type="button" onClick={() => navigate(roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`)}><RotateCcw size={16} /> {roguelikeRunId ? 'Вернуться в забег' : 'Оставить запись боя'}</button></section></div>}
     </main>
   );
 }

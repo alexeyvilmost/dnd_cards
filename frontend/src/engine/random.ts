@@ -3,9 +3,13 @@
  * Plain seeded RNG functions remain valid. Strict scenario tapes implement
  * `rollDie` so the requested die size is checked before a draw is consumed.
  */
+import type { RollD20Options } from '../mvp/contracts';
+
 export interface DieAwareRandomSource {
   (): number;
   rollDie?: (sides: number) => number;
+  /** Read-only simulations can stop at the fully derived roll, before any draw. */
+  inspectD20?: (options: RollD20Options) => void;
 }
 
 export function drawDie(rng: () => number, sides: number): number {

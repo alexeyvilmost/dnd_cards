@@ -6,7 +6,7 @@ import { weaponBondProtectsHand } from '../rules-core/weaponBond';
 import {telekineticObjectIssue} from '../rules-core/telekineticMovement';
 import {heldItemDropIssue} from '../engine/heldItemDrop';
 import {heldItemRequirementIssue} from '../engine/actionRequirements';
-import type {EngineEvent} from '../mvp/contracts';
+import type {EngineEvent, RollD20Options} from '../mvp/contracts';
 import {collectRollModifiers} from '../engine/modifiers';
 import {activeConditionsOf} from '../engine/circumstances';
 import {rollD20} from '../engine/roll';
@@ -1999,6 +1999,27 @@ function interruptStraightMovement(state: SoloCombatState, actorId: string): Sol
 export function executeCombatAction(input: CombatActionInput): SoloCombatState {
   if (input.state.pendingAdditionalMovement) throw new Error('Сначала завершите дополнительное перемещение');
   return interruptStraightMovement(executeCombatActionWithD20Interrupts(input), input.actorId);
+}
+
+/** Execute only a disposable copy, stopping before the first attack die.
+ * This shares equipment, range, sight, conditions and modifier resolution with
+ * the actual command, without drawing entropy or changing the live world. */
+export function previewCombatAttackRoll(input: Omit<CombatActionInput, 'rng'>): Omit<RollD20Options, 'rng'> | null {
+  let profile: Omit<RollD20Options, 'rng'> | null = null;
+  const stop = new Error('Attack preview complete');
+  const rng = Object.assign((): number => { throw stop; }, {
+    inspectD20(options: RollD20Options) {
+      if (options.target?.type === 'ac') {
+        const {rng: ignored, ...rest} = options;
+        void ignored;
+        profile = rest;
+      }
+      throw stop;
+    },
+  });
+  try { executeCombatActionCore({...input, state: clone(input.state), rng}); }
+  catch { /* Unavailable actions have no preview; the real command validates again. */ }
+  return profile;
 }
 
 function interruptDieFaces(

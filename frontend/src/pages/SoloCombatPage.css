@@ -163,6 +163,7 @@
 }
 .tactical-map-controls span { min-width: 38px; color: #cdbb9e; font-size: 10px; text-align: center; }
 .tactical-map {
+  position: relative;
   grid-area: 1 / 1;
   --tactical-cell-size: 80px;
   width: calc(var(--tactical-cell-size) * 12);

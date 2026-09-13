@@ -13,8 +13,10 @@ export type EntityDisplaySettings = Record<EntityDisplayKind, EntityDisplayMode>
 /** Вид превью предмета при наведении: обычная карточка или «интерфейс» — тёмный стат-блок
  *  в стиле превью заклинания. Отдельная настройка (не путать с раскладкой строка/иконка). */
 export type ItemPreviewStyle = 'card' | 'interface';
+export type CombatRollMode = 'standard' | 'fast' | 'skip';
 
 export interface SiteSettings {
+  combatRollMode: CombatRollMode;
   /** Диалог броска кубов перед действиями (авто или ввод физических кубов). */
   diceDialog: boolean;
   /** Физическая 3D-сцена броска. Если выключена, остаётся обычный диалог и ручной ввод. */
@@ -39,6 +41,7 @@ const KEY = 'site-settings';
 const EVENT = 'site-settings-changed';
 
 const DEFAULTS: SiteSettings = {
+  combatRollMode: 'standard',
   diceDialog: true,
   dice3d: true,
   dice3dAutoThrow: false,
@@ -66,6 +69,7 @@ export function getSettings(): SiteSettings {
       ...parsed,
       entityDisplay: { ...DEFAULTS.entityDisplay, ...(parsed.entityDisplay ?? {}) },
     };
+    if (!['standard', 'fast', 'skip'].includes(merged.combatRollMode)) merged.combatRollMode = 'standard';
     // Миграция: раньше 'interface' было третьим значением entityDisplay.items (раскладка);
     // теперь это отдельная настройка itemPreview. Переносим старое значение.
     if ((merged.entityDisplay.items as string) === 'interface') {

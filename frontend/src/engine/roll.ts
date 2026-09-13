@@ -19,7 +19,7 @@ import {
   rollD20FailureBonusDice,
   d20MinimumTotal,
 } from './rollRules';
-import { drawDie } from './random';
+import { drawDie, type DieAwareRandomSource } from './random';
 
 function formatMod(m: RollModifier): string {
   const sign = m.value >= 0 ? '+' : '';
@@ -78,6 +78,7 @@ function buildD20Text(
 
 /** Бросок d20 с преимуществом/помехой, модификаторами и правилами бросков (см. engine/rollRules.ts). */
 export function rollD20(opts: RollD20Options): RollLog {
+  (opts.rng as DieAwareRandomSource).inspectD20?.(opts);
   const rng = opts.rng;
   const advantage: AdvantageState = opts.advantage ?? 'none';
   const modifiers = [...(opts.modifiers ?? [])];

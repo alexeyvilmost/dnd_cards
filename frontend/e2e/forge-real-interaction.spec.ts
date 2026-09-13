@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page, type Request } from '@playwright/test';
 import { installForgeApiFixture, type ForgeApiFixture } from './forge-api-fixture';
+import { acceptCombatOpening } from './combat-presentation-driver';
 import {
   assertVisibleForgeImagesLoaded,
   completeVisibleForgeChoices,
@@ -220,6 +221,7 @@ test('required real-interaction spine: empty Forge reaches sheet and dedicated c
   const firstMonster = setup.locator('article').first();
   await firstMonster.locator('button').last().click();
   await setup.getByRole('button', { name: /Начать бой/ }).click();
+  await acceptCombatOpening(page);
   await expect(page).toHaveURL(/\/characters-v3\/playwright-character-1\/combat(?:\?.*)?$/);
   await expect(page.getByRole('region', { name: 'Панель действий' })).toBeVisible();
   await expect(page.getByTestId('offline-rules-authority')).toHaveCount(0);

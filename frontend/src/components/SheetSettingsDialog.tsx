@@ -9,6 +9,7 @@ import {
   type ItemPreviewStyle,
 } from '../settings';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
+import CombatRollModeSelect from './CombatRollModeSelect';
 
 // Тёмная модалка настроек отображения на листе персонажа — те же настройки, что
 // на /settings, но рядом с самим отображением.
@@ -47,6 +48,7 @@ export default function SheetSettingsDialog({ onClose }: { onClose: () => void }
           <X size={18} />
         </button>
         <h2 className="sheet-settings-title">Настройки отображения</h2>
+        <div className="sheet-settings-section"><CombatRollModeSelect /></div>
 
         <label className="sheet-settings-check">
           <input

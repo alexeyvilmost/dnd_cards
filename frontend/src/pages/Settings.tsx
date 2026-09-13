@@ -8,6 +8,7 @@ import {
   type ItemPreviewStyle,
 } from '../settings';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
+import CombatRollModeSelect from '../components/CombatRollModeSelect';
 
 const ENTITY_ROWS: Array<{ kind: EntityDisplayKind; label: string; hint: string }> = [
   { kind: 'spells', label: 'Заклинания', hint: 'Лист персонажа и кузница' },
@@ -36,6 +37,7 @@ const Settings = () => {
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Настройки</h1>
 
       <div className="bg-white rounded-lg shadow divide-y divide-gray-100">
+        <div className="p-5"><CombatRollModeSelect /><p className="text-sm text-gray-500 mt-2">Стандарт — 3D-бросок и результат. Быстрый режим — только результат. Пропустить окно — атаки показываются сразу на поле.</p></div>
         <label className="flex items-start gap-4 p-5 cursor-pointer">
           <input
             type="checkbox"

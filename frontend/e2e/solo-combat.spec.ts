@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { installForgeApiFixture } from './forge-api-fixture';
+import { acceptCombatOpening } from './combat-presentation-driver';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -142,6 +143,7 @@ test('combat setup invites an owned ally and keeps shared action cards inside th
   await monsterRow.locator('button').last().click();
   await page.evaluate(() => { Math.random = () => 0.5; });
   await setup.getByRole('button', { name: 'Начать бой' }).click();
+  await acceptCombatOpening(page);
 
   await expect(page).toHaveURL(new RegExp(`/characters-v3/${CHARACTER_ID}/combat`));
   await expect(page.getByLabel('Порядок инициативы')).toContainText('Бард-помощник');
@@ -213,6 +215,7 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
   await expect(setup).toContainText('Гоблин-воин');
   await setup.locator('.lucide-plus').click();
   await setup.getByRole('button', { name: 'Начать бой' }).click();
+  await acceptCombatOpening(page);
 
   await expect(page).toHaveURL(new RegExp(`/characters-v3/${CHARACTER_ID}/combat`));
   await expect(page.getByTestId('tactical-map')).toBeVisible({ timeout: 30_000 });

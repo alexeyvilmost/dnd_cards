@@ -18,8 +18,8 @@ export default function MonsterTurnController({
     if (actor.kind !== 'monster') return undefined;
     const key = `${state.world.revision}:${actor.id}`;
     if (handled.current === key) return undefined;
-    handled.current = key;
     const timer = window.setTimeout(() => {
+      handled.current = key;
       try { onTransition(runMonsterTurn(state)); }
       catch (reason) { onError(reason instanceof Error ? reason.message : 'Ошибка хода монстра'); }
     }, 500);

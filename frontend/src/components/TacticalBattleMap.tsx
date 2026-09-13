@@ -3,9 +3,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CombatAreaState, GridPosition, SoloCombatState } from '../solo-combat/types';
 import { TACTICAL_HEIGHT, TACTICAL_WIDTH } from '../solo-combat/types';
 import { areaPositionsForAction, reachablePositions } from '../solo-combat/tacticalGrid';
+import { previewCombatAttackRoll } from '../solo-combat/engine';
+import { attackHitProbability } from '../engine/attackProbability';
+import type { CombatBeat } from '../solo-combat/presentation';
+import CombatMapFeedback from './CombatMapFeedback';
 
 export default function TacticalBattleMap({
   state,
+  feedback,
+  selectedActionChoices,
   actorId,
   targetingActorId,
   selectedActionId,
@@ -18,6 +24,8 @@ export default function TacticalBattleMap({
   onDeclineAdditionalMovement,
 }: {
   state: SoloCombatState;
+  feedback?: CombatBeat | null;
+  selectedActionChoices?: Record<string, string[]>;
   actorId: string;
   targetingActorId?: string;
   selectedActionId: string | null;
@@ -77,6 +85,15 @@ export default function TacticalBattleMap({
     }
   }
   const selectedAction = state.catalogActions.find((action) => action.id === selectedActionId);
+  const hoveredTarget = hovered ? tokenByCell.get(`${hovered.x}:${hovered.y}`) : undefined;
+  const hoveredActorId = hoveredTarget?.actorId;
+  const hitPreview = useMemo(() => {
+    if (!selectedActionId || !hoveredActorId || hoveredActorId === actorId
+      || (state.world.actors[hoveredActorId]?.runtime.hp.current ?? 0) <= 0) return null;
+    const profile = previewCombatAttackRoll({state, actorId, actionId: selectedActionId,
+      targetIds: [hoveredActorId], choices: selectedActionChoices});
+    return profile ? {probability: attackHitProbability(profile), profile} : null;
+  }, [state, actorId, selectedActionId, hoveredActorId, selectedActionChoices]);
   const sourcePosition = state.tokens[targetingActorId ?? actorId]?.position;
   const areaCells = useMemo(() => new Set(
     selectedAction && hovered && sourcePosition
@@ -217,6 +234,7 @@ export default function TacticalBattleMap({
       data-zoom={zoom}
       style={{ '--tactical-cell-size': `${Math.round(80 * zoom)}px` } as React.CSSProperties}
     >
+      <CombatMapFeedback beat={feedback ?? null} state={state} />
       {Array.from({ length: TACTICAL_WIDTH * TACTICAL_HEIGHT }, (_, index) => {
         const position = { x: index % TACTICAL_WIDTH, y: Math.floor(index / TACTICAL_WIDTH) };
         const token = tokenByCell.get(`${position.x}:${position.y}`);
@@ -260,11 +278,18 @@ export default function TacticalBattleMap({
             data-actor-id={token?.actorId}
             onMouseEnter={() => setHovered(position)}
             onMouseLeave={() => setHovered(null)}
+            onFocus={() => setHovered(position)}
+            onBlur={() => setHovered(null)}
             onClick={() => {
               if (token && !selectedActionId && !movementMode) onInspectActor?.(token.actorId);
               onCell(position, token?.actorId);
             }}
           >
+            {token?.actorId === hoveredTarget?.actorId && hitPreview && <span className={`combat-hit-chance${position.y < 2 ? ' is-below' : ''}`} role="status">
+              Попадание <b>{Math.round(hitPreview.probability * 1000) / 10}%</b>
+              <small>КД {hitPreview.profile.target?.value} · {hitPreview.profile.modifiers?.map(mod => `${mod.value >= 0 ? '+' : ''}${mod.value} ${mod.source}`).join(' · ')}
+                {hitPreview.profile.advantage === 'advantage' ? ' · преимущество' : hitPreview.profile.advantage === 'disadvantage' ? ' · помеха' : ''}</small>
+            </span>}
             {persistentAreas.map((area) => area.origin.x === position.x && area.origin.y === position.y ? (
               <span key={area.id} className={`combat-area-token is-${area.zoneType}`} title={areaLabel} aria-hidden="true">
                 <b>{area.heavilyObscured ? '◉' : area.lightlyObscured ? '◌' : '◇'}</b><small>{area.name}</small>
