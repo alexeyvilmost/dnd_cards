@@ -14,6 +14,7 @@ import { CARD_LONGSWORD, seededRng } from './fixtures';
 import { validateMechanics, type MechanicKind } from '../engine/validateMechanics';
 import { collectInPlayActionChoices } from '../mechanics/collectChoices';
 import { withDeclaredTestWeaponProfile } from '../testing/weaponProfileFixtures';
+import type { Card } from '../types';
 
 const RUN = !!process.env.MVP_CONTENT;
 const BASE = process.env.API_URL || 'http://localhost:8080';
@@ -50,13 +51,13 @@ const SWEEP_CLUB = withDeclaredTestWeaponProfile({
 });
 const SWEEP_WEAPONS = [SWEEP_CLUB, CARD_LONGSWORD] as const;
 
-async function fetchAll(path: string, key: string): Promise<Entity[]> {
-  const items: Entity[] = [];
+async function fetchAll<T extends Entity = Entity>(path: string, key: string): Promise<T[]> {
+  const items: T[] = [];
   for (let page = 1; page < 30; page++) {
     const res = await fetch(`${BASE}${path}?page=${page}&limit=100`);
-    if (!res.ok) break;
+    if (!res.ok) throw new Error(`Catalog ${path} page ${page}: HTTP ${res.status}`);
     const data = await res.json();
-    const batch = (data[key] || []) as Entity[];
+    const batch = (data[key] || []) as T[];
     items.push(...batch);
     if (batch.length < 100) break;
   }
@@ -91,11 +92,13 @@ function richState(equipWeapon = false): RuntimeState {
 // Персонаж высокого уровня — раскрывает scaling заговоров/апкаст.
 const CTX = {
   abilityMods: { str: 3, dex: 3, con: 3, int: 5, wis: 5, cha: 5 },
+  abilityScores: { str: 16, dex: 16, con: 16, int: 20, wis: 20, cha: 20 },
   profBonus: 6, level: 17, classLevels: { wizard: 17 }, characterSpeed: 30,
   spellcastingAbility: 'wis', spellcastingMod: 5,
   hitDie: 'd10',
   variables: {
     martial_arts_die: { count: 1, sides: 10 },
+    superiority_die: { count: 1, sides: 12 },
     rage_damage_modifier: 4,
     speed: 30,
   },
@@ -131,6 +134,8 @@ function firstInPlayChoiceSelections(mechanics: Dict, label: string): Record<str
 }
 
 const TARGET_FACTS = {
+  id: 'mvp-sweep:target',
+  size: 2,
   ac: 1,
   saveMods: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
   checkMods: { athletics: 0, acrobatics: 0 },
@@ -199,6 +204,7 @@ function runSweep(
   kind: MechanicKind,
   checkInert: boolean,
   grantedEffects: NonNullable<ExecuteContext['grantedEffects']>,
+  cards: Card[],
 ): SweepResult {
   const r: SweepResult = {
     total: entities.length, withMechanics: 0,
@@ -219,14 +225,48 @@ function runSweep(
       const label = `${id}: ${e.name}`;
       const choices = firstInPlayChoiceSelections(mech, label);
       if (id === 'ACT-wizard-memorize-spell') choices.wizard_memorize_spell = ['SPELL-0174'];
-      const { events } = executeAction(richState(true), stripCost(mech), {
-        character: { ...CTX, equippedCards: [...SWEEP_WEAPONS], knownCards: [...SWEEP_WEAPONS] },
+      const state = richState(true);
+      const equippedCards: Card[] = [...SWEEP_WEAPONS];
+      if (typeof mech.requires_held_item === 'string') {
+        const required = cards.find((card) => card.id === mech.requires_held_item);
+        if (!required) throw new Error(`Missing declared weapon ${mech.requires_held_item}`);
+        state.equipment.main_hand = required.id;
+        equippedCards.push(required);
+      }
+      const context: ExecuteContext = {
+        selfId: 'mvp-sweep:source',
+        character: { ...CTX, equippedCards, knownCards: [...cards, ...SWEEP_WEAPONS] },
         target: targetForMechanics(mech),
+        conditionRelationFacts: {
+          distancesFt: { 'mvp-sweep:source': { [TARGET_FACTS.id]: 5 } },
+          visibility: { 'mvp-sweep:source': { [TARGET_FACTS.id]: true } },
+        },
         rng: seededRng(7),
         choices,
         grantedEffects,
         ...(spellCtx ? { spell: spellCtx } : {}),
-      } as Parameters<typeof executeAction>[2]);
+      };
+      // This lower-level sweep exercises payloads after the board adapter.
+      // Verify the missing-board guard first, then supply the adapter's facts.
+      // Actual ally selection, movement/payment and reaction continuation are
+      // covered by Bait and Switch / Commander Strike solo-combat integration.
+      const activation = mech.activation as Dict;
+      const boardGuard = activation.position_exchange_ft !== undefined
+        ? { field: 'position_exchange_ft', flag: 'positionExchangeValidated' as const }
+        : activation.commanded_attack
+          ? { field: 'commanded_attack', flag: 'commandedAttackValidated' as const }
+          : null;
+      if (boardGuard) {
+        const before = JSON.stringify(state);
+        expect(() => executeAction(state, stripCost(mech), {
+          ...context,
+          rng: () => { throw new Error('Board preflight must not consume dice'); },
+        })).toThrow(`INVALID_MECHANICS at activation.${boardGuard.field}`);
+        expect(JSON.stringify(state)).toBe(before);
+        context[boardGuard.flag] = true;
+        context.target!.relationToSource = 'ally';
+      }
+      const { events } = executeAction(state, stripCost(mech), context);
 
       for (const ev of events) {
         if (ev.type === 'narrative' && /NOT_IMPLEMENTED/.test(ev.text)) {
@@ -271,16 +311,17 @@ function printReport(label: string, r: SweepResult) {
 
 describe.runIf(RUN)('Свип механик прод-контента через движок', () => {
   it('заклинания / эффекты / действия не создают новых неучтённых падений', async () => {
-    const [spells, effects, actions] = await Promise.all([
+    const [spells, effects, actions, cards] = await Promise.all([
       fetchAll('/api/spells', 'spells'),
       fetchAll('/api/effects', 'effects'),
       fetchAll('/api/actions', 'actions'),
+      fetchAll<Card>('/api/cards', 'cards'),
     ]);
 
     const grantedEffects = grantedEffectRegistry(effects);
-    const rs = runSweep(spells, 'spell', true, grantedEffects);
-    const re = runSweep(effects, 'passive_effect', false, grantedEffects);
-    const ra = runSweep(actions, 'action', false, grantedEffects);
+    const rs = runSweep(spells, 'spell', true, grantedEffects, cards);
+    const re = runSweep(effects, 'passive_effect', false, grantedEffects, cards);
+    const ra = runSweep(actions, 'action', false, grantedEffects, cards);
 
     printReport('ЗАКЛИНАНИЯ', rs);
     printReport('ЭФФЕКТЫ', re);
