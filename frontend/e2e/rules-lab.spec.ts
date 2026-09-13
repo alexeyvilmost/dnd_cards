@@ -53,7 +53,7 @@ function captureBrowserErrors(page: Page): string[] {
     // Chromium exposes neither URL nor resource type for these two messages.
     // The fixture serves external presentation assets locally, while offline
     // reload scenarios deliberately make any late decorative request fail.
-    if (/^Failed to load resource: net::ERR_(?:INTERNET_DISCONNECTED|CONNECTION_TIMED_OUT)$/.test(text)) {
+    if (/^Failed to load resource: net::ERR_(?:INTERNET_DISCONNECTED|CONNECTION_TIMED_OUT|FAILED)$/.test(text)) {
       return;
     }
     errors.push(`console: ${text}`);

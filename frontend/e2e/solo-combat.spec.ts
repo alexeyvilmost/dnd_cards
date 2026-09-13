@@ -255,7 +255,8 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
   await expect(page.locator('.combat-actor-inspector')).toHaveCount(0);
 
   const inspectedMonsterCell = page.locator(`.tactical-cell[data-actor-id^="${MONSTER_ID}:"]`);
-  await inspectedMonsterCell.click();
+  await inspectedMonsterCell.hover();
+  await page.keyboard.press('i');
   const inspector = page.getByRole('complementary', { name: 'Информация: Гоблин-воин' });
   await expect(inspector).toBeVisible();
   await expect(inspector).toContainText('Класс доспеха');
