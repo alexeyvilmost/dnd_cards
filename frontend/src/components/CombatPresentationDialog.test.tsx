@@ -36,7 +36,8 @@ describe('combat roll dialog', () => {
     setSetting('combatRollMode', 'fast');
     const close = vi.fn();
     await act(async () => root.render(<CombatPresentationDialog beat={beat} onClose={close}/>));
-    expect(document.querySelector('.committed-die')).toBeNull();
+    expect(document.querySelector('.committed-die')).not.toBeNull();
+    expect(document.querySelector('.committed-die.is-rolling')).toBeNull();
     expect(document.querySelector<HTMLButtonElement>('.combat-presentation-continue')!.disabled).toBe(false);
     await act(async () => {
       const select = document.querySelector('select')!;
@@ -48,8 +49,22 @@ describe('combat roll dialog', () => {
   it('shows the revised defense immediately without throwing the committed die again', async () => {
     setSetting('combatRollMode', 'standard');
     await act(async () => root.render(<CombatPresentationDialog beat={{...beat, rollPhase: 'after-reaction'}} onClose={() => {}}/>));
-    expect(document.querySelector('.committed-die')).toBeNull();
+    expect(document.querySelector('.committed-die')).not.toBeNull();
+    expect(document.querySelector('.committed-die.is-rolling')).toBeNull();
     expect(document.querySelector<HTMLButtonElement>('.combat-presentation-continue')!.disabled).toBe(false);
     expect(document.body.textContent).toContain('Сохранён исходный бросок.');
+  });
+  it('shows committed damage dice and the final resistance calculation after a hit', async () => {
+    setSetting('combatRollMode', 'fast');
+    const damageBeat: CombatBeat = {...beat,
+      roll: {...beat.roll!, outcome: 'hit'},
+      damage: [{amount: 4, damageType: 'slashing', beforeResistance: 9, adjustment: 'resistance',
+        roll: {kind: 'damage', dice: [{sides: 8, result: 6}], modifiers: [{source: 'Сила', value: 3}],
+          advantage: 'none', total: 9, text: 'к8: 6 +3 [Сила] = 9'}}],
+    };
+    await act(async () => root.render(<CombatPresentationDialog beat={damageBeat} onClose={() => {}}/>));
+    expect(document.querySelector('.combat-damage-breakdown')?.textContent).toContain('к8');
+    expect(document.querySelector('.combat-damage-breakdown')?.textContent).toContain('6 +3 [Сила] = 9');
+    expect(document.querySelector('.combat-damage-breakdown')?.textContent).toContain('9 до сопротивления → 4');
   });
 });

@@ -1,6 +1,6 @@
 import {combatHideFacts, combatHideIssue} from './hide';
 import {foldEvents} from '../rules-core/reducer';
-import {canEscapeActorGrapple, escapeActorGrapple, previewCombatAttackRoll} from './engine';
+import {approachAndExecuteCombatAction, canEscapeActorGrapple, escapeActorGrapple, previewCombatAttackRoll} from './engine';
 import { presentCombatEntries } from './presentation';
 import { handleCommand } from '../rules-core/handler';
 import {createSheetCombatSession} from '../character/sheetCombatSession';
@@ -753,6 +753,25 @@ describe('solo combat engine vertical integration', () => {
     expect(beats[0].cues).toContainEqual(expect.objectContaining({actorId: enemyId, kind: 'damage'}));
     state.tokens[enemyId].position = {x: 20, y: 20};
     expect(previewCombatAttackRoll(input)).toBeNull();
+  });
+  it('approaches the nearest legal attack cell and executes the committed weapon attack', async () => {
+    const {state, actorId, enemyId, attack} = await championMovementEncounter();
+    state.tokens[enemyId].position = {x: 8, y: 4};
+    const initialHp = state.world.actors[enemyId].runtime.hp.current;
+    const initialMovement = state.movementRemainingFt[actorId];
+
+    const result = approachAndExecuteCombatAction({
+      state,
+      actorId,
+      actionId: attack.id,
+      targetActorId: enemyId,
+      rng: () => 0.6,
+    });
+
+    expect(gridDistanceFt(result.tokens[actorId].position, result.tokens[enemyId].position)).toBe(5);
+    expect(result.movementRemainingFt[actorId]).toBe(initialMovement - 15);
+    expect(result.world.actors[actorId].runtime.resources.action).toBe(0);
+    expect(result.world.actors[enemyId].runtime.hp.current).toBeLessThan(initialHp);
   });
   it('offers Champion movement on a critical hit, including a 19 with Improved Critical, without spending another action', async () => {
     const setup = await championMovementEncounter();

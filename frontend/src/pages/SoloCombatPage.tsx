@@ -7,7 +7,7 @@ import SheetActionLine from '../components/SheetActionLine';
 import { getDamageLabel } from '../utils/damageTypes';
 import type { RoguelikeCombatIntent } from '../roguelike/combatWorker';
 import type { RoguelikeRun } from '../roguelike/api';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
 import { actionsApi, effectsApi } from '../api/client';
@@ -22,7 +22,7 @@ import { newSheetRuntimeCommandId } from '../character/sheetCombatSession';
 import type { SheetCanonicalRuntime } from '../character/sheetCanonicalWorld';
 import { sheetWorldInputFormContext } from '../character/sheetWorldInputForm';
 import type { ForgeCharacter } from '../character/types';
-import CombatHotbar from '../components/CombatHotbar';
+import CombatHotbar, { combatActionAvailability } from '../components/CombatHotbar';
 import CombatTriggeredActionPanel from '../components/CombatTriggeredActionPanel';
 import CombatActorInspector from '../components/CombatActorInspector';
 import CombatCharacterSidebar from '../components/CombatCharacterSidebar';
@@ -47,6 +47,7 @@ import {
   combatDetectMagicStatus,
   createSoloCombatState,
   executeCombatAction,
+  approachAndExecuteCombatAction,
   executeCombatTouchSpellThroughFamiliar,
   executeCombatRemoteManipulator,
   moveCombatDancingLights,
@@ -71,6 +72,7 @@ import { shouldShowSoloCombatOutcome } from '../solo-combat/outcomeVisibility';
 import { writeDedicatedCombatTurnState } from '../solo-combat/turnState';
 import {
   controlledCharacterIds,
+  combatRelation,
   isControlledCharacter,
   isPlayerControlledCombatActor,
   type GridPosition,
@@ -78,11 +80,15 @@ import {
 } from '../solo-combat/types';
 import {
   collectSoloCombatActionChoices,
+  combatPassiveTogglesForAction,
+  resolveCombatPassiveChoices,
   immediateSoloCombatTargetIds,
 } from '../solo-combat/actionChoices';
 import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
 import { getCardsIndex } from '../utils/cardsIndex';
 import { combatActorMovementMode, combatActorMovementSpeeds, effectiveActorSpeedFt, gridDistanceFt } from '../solo-combat/tacticalGrid';
+import { combatActionIsAttack, combatApproachRoute, defaultCombatAttackAction } from '../solo-combat/defaultInteraction';
+import { combatIdentity } from '../solo-combat/combatIdentity';
 import { canonicalTouchSpell, familiarActorsOwnedBy } from '../rules-core/familiarRuntime';
 import { familiarFormLabel } from '../character/familiarLabels';
 import type { ActionWorldInput } from '../rules-core/domain';
@@ -96,7 +102,18 @@ import './SoloCombatPage.css';
 
 const FAMILIAR_TOUCH_DELIVERY_CHOICE_ID = 'combat_familiar_touch_delivery';
 const MOVEMENT_MODE_CHOICE_ID = 'combat_movement_mode';
+const COMBAT_PASSIVE_STORAGE_KEY = 'dnd-cards:combat-passive-toggles:v1';
 const movementModeLabels = {walk: 'Ходьба', climb: 'Лазание', fly: 'Полёт', swim: 'Плавание', burrow: 'Рытьё'} as const;
+
+function readCombatPassivePreferences(): Record<string, boolean> {
+  try {
+    if (typeof window === 'undefined') return {};
+    const value = window.localStorage.getItem(COMBAT_PASSIVE_STORAGE_KEY);
+    return value ? JSON.parse(value) as Record<string, boolean> : {};
+  } catch {
+    return {};
+  }
+}
 
 function querySelection(params: URLSearchParams): Array<{ id: string; quantity: number }> {
   return [...params.entries()].flatMap(([id, raw]) => {
@@ -167,6 +184,8 @@ export default function SoloCombatPage() {
   const [movementMode, setMovementMode] = useState(false);
   const [dancingLightsMoveGroupId, setDancingLightsMoveGroupId] = useState<string | null>(null);
   const [inspectedActorId, setInspectedActorId] = useState<string | null>(null);
+  const [hoveredActorId, setHoveredActorId] = useState<string | null>(null);
+  const [combatPassiveEnabled, setCombatPassiveEnabled] = useState<Record<string, boolean>>(readCombatPassivePreferences);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sceneConstructorOpen, setSceneConstructorOpen] = useState(false);
   const [sheetActorId, setSheetActorId] = useState<string | null>(null);
@@ -509,17 +528,25 @@ export default function SoloCombatPage() {
     if (!state?.pendingTriggeredAction || busy) return;
     try {
       const action = state.catalogActions.find(candidate => candidate.id === actionId);
-      if (action && triggeredSecondaryTargetIds(state, action.id).length) {
-        setSelectedActionId(null); setMovementMode(false); setSecondaryActionId(action.id); return;
-      }
       const required = action ? collectSoloCombatActionChoices(
         state.world.actors[state.pendingTriggeredAction.sourceActorId], action,
         state.actionPresentation?.[action.id]?.actionRef?.card_number,
         state.world.actors[state.pendingTriggeredAction.targetIds[0]],
         state.world,
       ) : [];
-      const choices = required.length ? await choiceDialog.request(required, action!.name) : {};
-      if (!choices) return;
+      const toggles = action ? combatPassiveTogglesForAction(
+        state.world.actors[state.pendingTriggeredAction.sourceActorId], action,
+        state.actionPresentation?.[action.id]?.actionRef?.card_number,
+      ) : [];
+      const passiveChoices = resolveCombatPassiveChoices(required, toggles, combatPassiveEnabled);
+      const manualChoices = passiveChoices.pending.length
+        ? await choiceDialog.request(passiveChoices.pending, action!.name) : {};
+      if (!manualChoices) return;
+      const choices = {...passiveChoices.automatic, ...manualChoices};
+      if (action && triggeredSecondaryTargetIds(state, action.id).length) {
+        setSelectedActionId(null); setMovementMode(false); setSelectedActionChoices(choices);
+        setSecondaryActionId(action.id); return;
+      }
       applyIntent({type: 'triggered_action', actionId, choices}, () => autoResolveSystemDecisions(
         resolveTriggeredCombatAction(state, actionId, Math.random, choices),
       ));
@@ -532,6 +559,44 @@ export default function SoloCombatPage() {
     ? activeActor(state).id
     : state?.characterId ?? '');
   const playerTurn = state ? isPlayerControlledCombatActor(state, activeActor(state).id) : false;
+  useEffect(() => {
+    const inspectHoveredEnemy = (event: KeyboardEvent) => {
+      if (!state || !hoveredActorId || !['i', 'ш'].includes(event.key.toLocaleLowerCase('ru-RU'))) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.matches('input, textarea, select, [contenteditable="true"]')) return;
+      if (combatRelation(state, activeControlledActorId, hoveredActorId) !== 'enemy') return;
+      event.preventDefault();
+      setInspectedActorId(hoveredActorId);
+    };
+    window.addEventListener('keydown', inspectHoveredEnemy);
+    return () => window.removeEventListener('keydown', inspectHoveredEnemy);
+  }, [activeControlledActorId, hoveredActorId, state]);
+
+  const setCombatPassive = (id: string, enabled: boolean) => {
+    setCombatPassiveEnabled((current) => {
+      const next = {...current, [id]: enabled};
+      try { window.localStorage.setItem(COMBAT_PASSIVE_STORAGE_KEY, JSON.stringify(next)); } catch { /* private mode */ }
+      return next;
+    });
+  };
+
+  const requestCombatChoices = async (
+    action: SoloCombatState['catalogActions'][number],
+    targetActorId?: string,
+  ): Promise<Record<string, string[]> | null> => {
+    if (!state) return null;
+    const actor = state.world.actors[activeControlledActorId];
+    const cardNumber = state.actionPresentation?.[action.id]?.actionRef?.card_number;
+    const required = collectSoloCombatActionChoices(
+      actor, action, cardNumber,
+      targetActorId ? state.world.actors[targetActorId] : undefined,
+      state.world,
+    );
+    const toggles = combatPassiveTogglesForAction(actor, action, cardNumber);
+    const {automatic, pending} = resolveCombatPassiveChoices(required, toggles, combatPassiveEnabled);
+    const manual = pending.length ? await choiceDialog.request(pending, action.name) : {};
+    return manual ? {...automatic, ...manual} : null;
+  };
   const chooseEscapeGrapple = async () => {
     if (!state || busy) return;
     const grapples = Object.values(state.world.grapples).filter(grapple => grapple.targetActorId === activeControlledActorId);
@@ -583,13 +648,21 @@ export default function SoloCombatPage() {
             && Boolean(state.tokens[familiar.id])
         ))
         : [];
-      const requiredChoices = [
-        ...collectSoloCombatActionChoices(
+      const actor = state.world.actors[activeControlledActorId];
+      const cardNumber = state.actionPresentation?.[action.id]?.actionRef?.card_number;
+      const baseChoices = collectSoloCombatActionChoices(
         state.world.actors[activeControlledActorId],
         action,
-        state.actionPresentation?.[action.id]?.actionRef?.card_number,
+        cardNumber,
         undefined, state.world,
-        ),
+      );
+      const passiveChoices = resolveCombatPassiveChoices(
+        baseChoices,
+        combatPassiveTogglesForAction(actor, action, cardNumber),
+        combatPassiveEnabled,
+      );
+      const requiredChoices = [
+        ...passiveChoices.pending,
         ...(familiarDeliveryChoices.length ? [{
           id: FAMILIAR_TOUCH_DELIVERY_CHOICE_ID,
           prompt: 'Откуда доставить контактное заклинание?',
@@ -607,10 +680,11 @@ export default function SoloCombatPage() {
           recommended: ['self'],
         }] : []),
       ];
-      const choices = requiredChoices.length
+      const selectedChoices = requiredChoices.length
         ? await choiceDialog.request(requiredChoices, action.name)
         : {};
-      if (!choices) return;
+      if (!selectedChoices) return;
+      const choices = {...passiveChoices.automatic, ...selectedChoices};
       const immediateTargets = immediateSoloCombatTargetIds(action, activeControlledActorId, state);
       if (immediateTargets) {
         const familiarActorId = choices[FAMILIAR_TOUCH_DELIVERY_CHOICE_ID]?.[0];
@@ -647,10 +721,10 @@ export default function SoloCombatPage() {
       }
       const targetIds = [actorId];
       try {
-        applyIntent({type: 'triggered_action', actionId: secondaryActionId, targetIds}, () => autoResolveSystemDecisions(
-          resolveTriggeredCombatAction(state, secondaryActionId, Math.random, undefined, targetIds),
+        applyIntent({type: 'triggered_action', actionId: secondaryActionId, targetIds, choices: selectedActionChoices}, () => autoResolveSystemDecisions(
+          resolveTriggeredCombatAction(state, secondaryActionId, Math.random, selectedActionChoices, targetIds),
         ));
-        setSecondaryActionId(null);
+        setSecondaryActionId(null); setSelectedActionChoices({});
       } catch (reason) { setError(playerFacingSheetActionError(reason)); }
       return;
     }
@@ -678,8 +752,40 @@ export default function SoloCombatPage() {
         applyIntent({type: 'dancing_lights', actorId: activeControlledActorId, groupId: dancingLightsMoveGroupId, destination: position}, next);
         return;
       }
-      if (!selectedActionId) return;
+      if (!selectedActionId) {
+        if (!actorId) {
+          applyIntent({type: 'move', actorId: activeControlledActorId, destination: position},
+            () => moveActorAlongRoute({state, actorId: activeControlledActorId, destination: position}));
+          return;
+        }
+        if (combatRelation(state, activeControlledActorId, actorId) !== 'enemy') return;
+        if ((state.world.actors[actorId]?.runtime.hp.current ?? 0) <= 0) return;
+        const action = defaultCombatAttackAction(state, activeControlledActorId);
+        if (!action) throw new Error('Нет доступной атаки оружием или безоружного удара');
+        const availability = combatActionAvailability(state, action, activeControlledActorId);
+        if (!availability.enabled) throw new Error(availability.reason ?? 'Атака сейчас недоступна');
+        const route = combatApproachRoute(state, activeControlledActorId, actorId, action.targeting?.rangeFt ?? 5);
+        if (!route) throw new Error('На поле нет доступной точки для атаки');
+        if (!route.available) throw new Error(`Для атаки нужно пройти ${route.costFt} фт., доступно ${route.availableFt} фт.`);
+        const choices = await requestCombatChoices(action, actorId);
+        if (!choices) return;
+        applyIntent({
+          type: 'approach_action', actorId: activeControlledActorId,
+          actionId: action.id, targetActorId: actorId, choices,
+        }, () => autoResolveSystemDecisions(approachAndExecuteCombatAction({
+          state, actorId: activeControlledActorId, actionId: action.id,
+          targetActorId: actorId, choices,
+        })));
+        return;
+      }
       const selectedAction=state.catalogActions.find(row=>row.id===selectedActionId)!;
+      if (!actorId && combatActionIsAttack(state, selectedAction)
+        && selectedAction.targeting?.maxTargets === 1
+        && !combatWorldInputContext(state, activeControlledActorId, selectedAction)) {
+        applyIntent({type: 'move', actorId: activeControlledActorId, destination: position},
+          () => moveActorAlongRoute({state, actorId: activeControlledActorId, destination: position}));
+        return;
+      }
       if((selectedAction.mechanics.activation as Record<string,unknown>|undefined)?.telekinetic_movement===true){
         if(!selectedMovementTargetId){
           if (actorId && actorId !== activeControlledActorId && isControlledCharacter(state, actorId)) {
@@ -720,6 +826,23 @@ export default function SoloCombatPage() {
       }
       const familiarActorId = selectedActionChoices[FAMILIAR_TOUCH_DELIVERY_CHOICE_ID]?.[0];
       const deliveryActorId = familiarActorId && familiarActorId !== 'self' ? familiarActorId : null;
+      if (actorId && !deliveryActorId
+        && combatRelation(state, activeControlledActorId, actorId) === 'enemy'
+        && combatActionIsAttack(state, selectedAction)
+        && selectedAction.targeting?.maxTargets === 1
+        && !combatWorldInputContext(state, activeControlledActorId, selectedAction)) {
+        const actionChoices = Object.fromEntries(Object.entries(selectedActionChoices)
+          .filter(([key]) => key !== FAMILIAR_TOUCH_DELIVERY_CHOICE_ID));
+        setSelectedActionId(null); setSelectedActionChoices({});
+        applyIntent({
+          type: 'approach_action', actorId: activeControlledActorId,
+          actionId: selectedActionId, targetActorId: actorId, choices: actionChoices,
+        }, () => autoResolveSystemDecisions(approachAndExecuteCombatAction({
+          state, actorId: activeControlledActorId, actionId: selectedActionId,
+          targetActorId: actorId, choices: actionChoices,
+        })));
+        return;
+      }
       const targetIds = selectedTargetsForAction({
         state,
         actorId: deliveryActorId ?? activeControlledActorId,
@@ -894,6 +1017,15 @@ export default function SoloCombatPage() {
   const pendingTriggered = state.pendingTriggeredAction;
   const pendingD20Interrupt = state.pendingD20Interrupt;
   const pendingTurnStart = state.pendingTurnStartGrappleDamage;
+  const implicitAttackCandidate = defaultCombatAttackAction(state, activeControlledActorId);
+  const implicitAttackAction = implicitAttackCandidate
+    && combatActionAvailability(state, implicitAttackCandidate, activeControlledActorId).enabled
+    ? implicitAttackCandidate
+    : undefined;
+  const implicitActionsEnabled = playerTurn && !busy && !presentation.blocked
+    && !secondaryActionId && !dancingLightsMoveGroupId && !state.pendingAdditionalMovement
+    && !pending && !pendingTriggered && !pendingTurnStart && !state.pendingAlertSwapActorIds?.length
+    && !state.pendingInterception && !pendingD20Interrupt && state.outcome === 'active';
   const reactionOptions = pending?.request.type === 'reaction'
     && isControlledCharacter(state, pending.request.actorId)
     ? sheetReactionDecisionOptions(pending.request.options) : [];
@@ -924,12 +1056,24 @@ export default function SoloCombatPage() {
       {settingsOpen && <SheetSettingsDialog onClose={() => setSettingsOpen(false)} />}
       <MonsterTurnController state={state} disabled={presentation.blocked || Boolean(trustedRunRef.current) || busy || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt)} onTransition={apply} onError={setError} />
       <header className="combat-topbar">
-        <div className="combat-topbar__navigation"><Link to={roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`}><ArrowLeft size={18} /> {roguelikeRunId ? 'Забег' : 'Лист'}</Link><button type="button" onClick={() => setSettingsOpen(true)} aria-label="Настройки боя"><SlidersHorizontal size={16} /></button>{!roguelikeRunId && <button type="button" onClick={() => setSceneConstructorOpen(true)}><SlidersHorizontal size={16} /> Сцена</button>}</div>
+        <div className="combat-topbar__navigation"><Link to={roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`}><ArrowLeft size={18} /> {roguelikeRunId ? 'Забег' : 'Лист'}</Link><button type="button" className="combat-settings-button" onClick={() => setSettingsOpen(true)} aria-label="Настройки боя" title="Настройки боя"><SlidersHorizontal size={16} /><span>Настройки</span></button>{!roguelikeRunId && <button type="button" onClick={() => setSceneConstructorOpen(true)}><SlidersHorizontal size={16} /> Сцена</button>}</div>
         <div className="initiative-ribbon" aria-label="Порядок инициативы">
-          {state.initiative.map((entry) => {
+          {state.initiative.map((entry, index) => {
             const participant = state.world.actors[entry.actorId];
             const isActive = actor.id === entry.actorId;
-            return <div key={entry.actorId} className={`${isActive ? 'is-active ' : ''}${participant.runtime.hp.current <= 0 ? 'is-dead' : ''}`} title={`Инициатива: ${initiativeLabel(entry)}`}><span>{state.tokens[entry.actorId]?.tokenUrl ? <img src={state.tokens[entry.actorId].tokenUrl} alt="" /> : combatActorDisplayName(participant).slice(0, 1)}</span><b>{entry.total}</b><small>{combatActorDisplayName(participant)}</small></div>;
+            const identity = combatIdentity(state, entry.actorId);
+            return <button type="button" key={entry.actorId}
+              className={`initiative-card is-${identity.side}${isActive ? ' is-active' : ''}${participant.runtime.hp.current <= 0 ? ' is-dead' : ''}${hoveredActorId === entry.actorId ? ' is-linked-highlight' : ''}`}
+              style={{'--combat-accent': identity.accent} as CSSProperties}
+              title={`${identity.displayName} · инициатива: ${initiativeLabel(entry)}`}
+              aria-label={`${index + 1}. ${identity.displayName}${isActive ? ', текущий ход' : ''}`}
+              onMouseEnter={() => setHoveredActorId(entry.actorId)} onMouseLeave={() => setHoveredActorId(null)}
+              onFocus={() => setHoveredActorId(entry.actorId)} onBlur={() => setHoveredActorId(null)}>
+              <b className="initiative-card__order">{index + 1}</b>
+              <span className="initiative-card__portrait">{state.tokens[entry.actorId]?.tokenUrl ? <img src={state.tokens[entry.actorId].tokenUrl} alt="" /> : combatActorDisplayName(participant).slice(0, 1)}{identity.duplicateIndex && <i>{identity.duplicateIndex}</i>}</span>
+              <span className="initiative-card__name">{identity.displayName}</span>
+              <small>{isActive ? 'ХОД' : `иниц. ${entry.total}`}</small>
+            </button>;
           })}
         </div>
         <div className="combat-round">Раунд {state.world.scene.mode === 'encounter' ? state.world.scene.round : 1}<b>{busy ? 'Сохраняем…' : `Ход: ${combatActorDisplayName(actor)}`}</b></div>
@@ -946,10 +1090,14 @@ export default function SoloCombatPage() {
               ? selectedActionChoices[FAMILIAR_TOUCH_DELIVERY_CHOICE_ID]?.[0]
               : undefined}
             selectedActionId={secondaryActionId ?? selectedActionId}
+            defaultActionId={implicitAttackAction?.id}
+            implicitActionsEnabled={implicitActionsEnabled}
             eligibleTargetIds={secondaryActionId ? triggeredSecondaryTargetIds(state, secondaryActionId) : undefined}
             movementMode={movementMode || Boolean(state.pendingAdditionalMovement)}
             worldObjectMoveMode={dancingLightsMoveGroupId === activeDancingLightsGroup}
             inspectedActorId={inspectedActorId}
+            highlightedActorId={hoveredActorId}
+            onActorHover={setHoveredActorId}
             onCell={clickCell}
             onDeclineAdditionalMovement={state.pendingAdditionalMovement && !state.playerMovement
               && !busy && !pending && !pendingTriggered && !pendingD20Interrupt && !state.pendingInterception ? () => {
@@ -1037,7 +1185,7 @@ export default function SoloCombatPage() {
         onAddMonster={addSceneMonster}
         onClose={() => setSceneConstructorOpen(false)}
       />}
-      <CombatHotbar onEscape={() => { void chooseEscapeGrapple(); }} onStand={() => { setMovementMode(false); applyIntent({type: 'stand', actorId: activeControlledActorId}, () => standActor(state, activeControlledActorId)); }} state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} disabled={presentation.blocked || !playerTurn || Boolean(state.pendingAdditionalMovement) || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { void (async () => {
+      <CombatHotbar onEscape={() => { void chooseEscapeGrapple(); }} onStand={() => { setMovementMode(false); applyIntent({type: 'stand', actorId: activeControlledActorId}, () => standActor(state, activeControlledActorId)); }} state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} passiveEnabled={combatPassiveEnabled} onPassiveToggle={setCombatPassive} disabled={presentation.blocked || !playerTurn || Boolean(state.pendingAdditionalMovement) || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { void (async () => {
         setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null);
         if (movementMode) { setMovementMode(false); return; }
         try {

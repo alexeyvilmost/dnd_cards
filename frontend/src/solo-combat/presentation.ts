@@ -11,6 +11,13 @@ export interface CombatCue {
   damageType?: string;
   kind: 'damage' | 'miss' | 'effect' | 'healing';
 }
+export interface CombatDamagePresentation {
+  amount: number;
+  damageType: string;
+  roll?: RollLog;
+  beforeResistance?: number;
+  adjustment?: 'immunity' | 'resistance' | 'vulnerability';
+}
 export interface CombatBeat {
   id: string;
   sourceId: string;
@@ -24,6 +31,7 @@ export interface CombatBeat {
   from?: GridPosition;
   to?: GridPosition;
   cues: CombatCue[];
+  damage?: CombatDamagePresentation[];
 }
 
 export function presentCombatEntries(state: SoloCombatState, entries: CombatLogEntry[]): CombatBeat[] {
@@ -38,7 +46,7 @@ export function presentCombatEntries(state: SoloCombatState, entries: CombatLogE
     const makeBeat = (ordinal: number, sourceId: string, targetId?: string): CombatBeat => ({
       id: `${entry.id}:${ordinal}`, sourceId, targetId, sourceName: name(sourceId),
       targetName: targetId ? name(targetId) : undefined, actionName,
-      from: state.tokens[sourceId]?.position, to: targetId ? state.tokens[targetId]?.position : undefined, cues: [],
+      from: state.tokens[sourceId]?.position, to: targetId ? state.tokens[targetId]?.position : undefined, cues: [], damage: [],
     });
     for (const record of combatLogRecords(entry)) {
       const event = record.event;
@@ -72,7 +80,7 @@ export function presentCombatEntries(state: SoloCombatState, entries: CombatLogE
             : attackAction?.kind === 'spell' ? 'magic' : 'bludgeoning';
         if (current.rollPhase === 'before-reaction') current.visual = undefined;
         if (['miss', 'crit_miss'].includes(event.roll.outcome ?? '') && current.targetId) {
-          current.cues.push({actorId: current.targetId, text: 'Промах', kind: 'miss'});
+          current.cues.push({actorId: current.targetId, text: `Промах (${event.roll.total})`, kind: 'miss'});
         }
         beats.push(current);
         continue;
@@ -91,6 +99,15 @@ export function presentCombatEntries(state: SoloCombatState, entries: CombatLogE
       if (event.type === 'condition_applied') cues = targets.map(actorId => ({actorId, text: conditionLabel(event.condition), kind: 'effect'}));
       if (!cues.length) continue;
       if (!current) { current = makeBeat(record.ordinal, record.sourceActorId, targets[0]); beats.push(current); }
+      if (event.type === 'damage') current.damage!.push({
+        amount: event.amount,
+        damageType: event.damageType,
+        ...(event.roll ? {roll: event.roll} : {}),
+        ...(event.calculation ? {
+          beforeResistance: event.calculation.beforeResistance,
+          adjustment: event.calculation.adjustments.at(-1)?.level,
+        } : {}),
+      });
       for (const cue of cues) {
         if (cue.kind !== 'effect' || !current.cues.some(old => old.actorId === cue.actorId && old.text === cue.text && old.kind === cue.kind)) current.cues.push(cue);
       }

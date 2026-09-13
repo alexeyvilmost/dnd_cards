@@ -21,7 +21,7 @@ describe('combat presentation from committed events', () => {
     const beats = presentCombatEntries({...state, log: [before, after]}, [before, after]);
     expect(beats[0]).toMatchObject({rollPhase: 'before-reaction', cues: []});
     expect(beats[0].visual).toBeUndefined();
-    expect(beats[1]).toMatchObject({actionName: 'Удар', rollPhase: 'after-reaction', visual: 'slashing', cues: [{actorId: 'enemy', kind: 'miss', text: 'Промах'}]});
+    expect(beats[1]).toMatchObject({actionName: 'Удар', rollPhase: 'after-reaction', visual: 'slashing', cues: [{actorId: 'enemy', kind: 'miss', text: 'Промах (20)'}]});
     expect(beats[1].roll?.dice).toEqual(beats[0].roll?.dice);
   });
   it('retains equal damage packets and associates statuses with the correct target', () => {
@@ -42,7 +42,20 @@ describe('combat presentation from committed events', () => {
       {type: 'roll', label: 'Атака', roll: {...roll, outcome: 'miss', total: 8}}])]);
     expect(beats).toHaveLength(2);
     expect(beats[0].visual).toBe('piercing');
-    expect(beats[1].cues).toEqual([{actorId: 'enemy', kind: 'miss', text: 'Промах'}]);
+    expect(beats[1].cues).toEqual([{actorId: 'enemy', kind: 'miss', text: 'Промах (8)'}]);
+  });
+  it('keeps the committed damage dice and resistance calculation on a successful attack beat', () => {
+    const damageRoll: RollLog = {kind: 'damage', dice: [{sides: 8, result: 6}], total: 9,
+      modifiers: [{source: 'Сила', value: 3}], advantage: 'none', text: 'к8: 6 +3 [Сила] = 9'};
+    const [beat] = presentCombatEntries(state, [entry([
+      {type: 'roll', label: 'Атака', roll},
+      {type: 'damage', amount: 4, damageType: 'slashing', roll: damageRoll,
+        calculation: {beforeResistance: 9, adjustments: [{level: 'resistance', sourceEntityIds: ['armor']}] }},
+    ])]);
+    expect(beat.damage).toEqual([expect.objectContaining({
+      amount: 4, damageType: 'slashing', roll: damageRoll,
+      beforeResistance: 9, adjustment: 'resistance',
+    })]);
   });
   it('displays Dash without inventing an attack roll', () => {
     const beats = presentCombatEntries(state, [entry([], 'Герой: Рывок: выполнено')]);

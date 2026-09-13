@@ -6,6 +6,7 @@ import { canonicalSha256Sync } from '../rules-core/determinism';
 import {
   declineAdditionalMovement, isTriggeredCombatAction, resumePendingMovement, activeActor, activateCombatBoon, advanceTurn, autoResolveSystemDecisions,
   escapeActorGrapple, executeCombatAction, executeCombatRemoteManipulator, executeCombatTouchSpellThroughFamiliar,
+  approachAndExecuteCombatAction,
   moveCombatDancingLights, revealCombatMagicAura, moveActorAlongRoute, resolveD20Interrupt, resolvePlayerReaction,
   resolvePlayerShoveOutcome, resolvePlayerSavingThrow, resolveSoloCombatAlertSwap, resolveSoloCombatInterception,
   resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectCombatMovementMode, standActor,
@@ -25,6 +26,8 @@ export type RoguelikeCombatIntent =
   | {type: 'action'; actorId: string; actionId: string; targetIds: string[];
       choices?: ActionInput['choices']; worldPosition?: GridPosition; worldInput?: ActionInput['worldInput']}
   | {type: 'move'; actorId: string; destination: GridPosition}
+  | {type: 'approach_action'; actorId: string; actionId: string; targetActorId: string;
+      choices?: ActionInput['choices']}
   | {type: 'movement_mode'; actorId: string; mode: CombatMovementMode}
   | {type: 'familiar_touch'; actorId: string; familiarActorId: string; spellActionId: string;
       targetActorId: string; choices?: ActionInput['choices']}
@@ -86,7 +89,7 @@ export function stepRoguelikeCombat(
     if (!isPlayerControlledCombatActor(state, actorId)) throw new Error('Нельзя управлять этим участником боя');
   };
   if ('actorId' in intent && intent.actorId !== null) requireOwned(intent.actorId);
-  const proactive = new Set(['action', 'move', 'movement_mode', 'familiar_touch', 'stand', 'escape_grapple', 'end_turn', 'dancing_lights', 'detect_magic', 'remote_manipulator', 'boon']);
+  const proactive = new Set(['action', 'approach_action', 'move', 'movement_mode', 'familiar_touch', 'stand', 'escape_grapple', 'end_turn', 'dancing_lights', 'detect_magic', 'remote_manipulator', 'boon']);
   const additionalMove = intent.type === 'move' && state.pendingAdditionalMovement?.actorId === intent.actorId;
   if (proactive.has(intent.type) && 'actorId' in intent
     && (hasDecision(additionalMove ? {...state, pendingAdditionalMovement: undefined} : state)
@@ -112,6 +115,15 @@ export function stepRoguelikeCombat(
       } else if (worldInput) throw new Error('Для взаимодействия нужна клетка поля');
       state = executeCombatAction({state, actorId: intent.actorId, actionId: intent.actionId,
         targetIds: intent.targetIds, choices: intent.choices, worldPosition: intent.worldPosition, worldInput, rng});
+      break;
+    }
+    case 'approach_action': {
+      const requestedAction = state.catalogActions.find(row => row.id === intent.actionId);
+      if (requestedAction && isTriggeredCombatAction(requestedAction)) throw new Error('Способность доступна только после соответствующего события');
+      state = approachAndExecuteCombatAction({
+        state, actorId: intent.actorId, actionId: intent.actionId,
+        targetActorId: intent.targetActorId, choices: intent.choices, rng,
+      });
       break;
     }
     case 'move': state = moveActorAlongRoute({state, actorId: intent.actorId, destination: intent.destination, rng}); break;

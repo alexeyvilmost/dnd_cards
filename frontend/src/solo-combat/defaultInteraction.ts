@@ -1,0 +1,127 @@
+import type { RuleActionDefinition } from '../rules-core/domain';
+import { weaponAttackPreview } from '../engine/weapon';
+import { playerActionIdsFor, TACTICAL_HEIGHT, TACTICAL_WIDTH, type SoloCombatState } from './types';
+import {
+  effectiveCombatActorSpeedFt,
+  gridDistanceFt,
+  reachableRoutes,
+  type TacticalRoute,
+} from './tacticalGrid';
+
+function records(value: unknown): Record<string, unknown>[] {
+  if (Array.isArray(value)) return value.flatMap(records);
+  if (!value || typeof value !== 'object') return [];
+  const record = value as Record<string, unknown>;
+  return [record, ...Object.values(record).flatMap(records)];
+}
+
+export function combatActionIsAttack(
+  state: Pick<SoloCombatState, 'actionPresentation'>,
+  action: RuleActionDefinition | undefined,
+): boolean {
+  if (!action) return false;
+  const primitive = action.mechanics.primitive as Record<string, unknown> | undefined;
+  const cardNumber = state.actionPresentation?.[action.id]?.actionRef?.card_number;
+  return primitive?.type === 'weapon_attack'
+    || primitive?.type === 'unarmed_strike'
+    || cardNumber === 'action_basic_unarmed'
+    || records(action.mechanics.effects).some((effect) => effect.resolution === 'attack_roll');
+}
+
+/** The implicit hostile-click action: equipped weapon first, canonical
+ * Unarmed Strike only as a fallback. Availability is validated by the caller. */
+export function defaultCombatAttackAction(
+  state: SoloCombatState,
+  actorId: string,
+): RuleActionDefinition | undefined {
+  const actions = playerActionIdsFor(state, actorId).flatMap((id) => {
+    const action = state.catalogActions.find((candidate) => candidate.id === id);
+    return action ? [action] : [];
+  });
+  const actor = state.world.actors[actorId];
+  const heldCardIds = actor ? new Set([
+    actor.runtime.equipment.main_hand,
+    actor.runtime.equipment.off_hand,
+  ].filter(Boolean)) : new Set<string>();
+  const holdsWeapon = actor ? [
+    ...(actor.character.knownCards ?? []),
+    ...(actor.character.equippedCards ?? []),
+  ].some((card) => heldCardIds.has(card.id) && card.type === 'weapon') : false;
+  return actions.find((action) => (
+    actor
+    && (action.mechanics.primitive as Record<string, unknown> | undefined)?.type === 'weapon_attack'
+    && (holdsWeapon || Boolean(weaponAttackPreview(
+      action.mechanics,
+      actor.character,
+      actor.runtime.equipment,
+      actor.runtime,
+      actor.passives ?? [],
+    )))
+  )) ?? actions.find((action) => (
+    state.actionPresentation?.[action.id]?.actionRef?.card_number === 'action_basic_unarmed'
+      || (action.mechanics.primitive as Record<string, unknown> | undefined)?.type === 'unarmed_strike'
+  ));
+}
+
+export function combatMovementAvailableFt(state: SoloCombatState, actorId: string): number {
+  const speed = effectiveCombatActorSpeedFt(state, actorId);
+  if (speed <= 0) return 0;
+  return state.pendingAdditionalMovement?.actorId === actorId
+    ? state.pendingAdditionalMovement.remainingFt
+    : state.movementRemainingFt[actorId] ?? speed;
+}
+
+export interface CombatApproachRoute extends TacticalRoute {
+  available: boolean;
+  availableFt: number;
+  remainingFt: number;
+}
+
+export function combatMovementRoute(
+  state: SoloCombatState,
+  actorId: string,
+  destination: {x: number; y: number},
+): CombatApproachRoute | null {
+  const availableFt = combatMovementAvailableFt(state, actorId);
+  const maximumBoardRouteFt = TACTICAL_WIDTH * TACTICAL_HEIGHT * 15;
+  const route = reachableRoutes(state, actorId, maximumBoardRouteFt)
+    .find((candidate) => candidate.destination.x === destination.x && candidate.destination.y === destination.y);
+  return route ? {
+    ...route,
+    available: route.costFt <= availableFt,
+    availableFt,
+    remainingFt: Math.max(0, availableFt - route.costFt),
+  } : null;
+}
+
+/** Cheapest legal movement destination from which the action's declared range
+ * reaches the target. The route may exceed this turn's remaining movement so
+ * the UI can explain the exact shortfall instead of only saying “out of range”. */
+export function combatApproachRoute(
+  state: SoloCombatState,
+  actorId: string,
+  targetActorId: string,
+  rangeFt: number,
+): CombatApproachRoute | null {
+  const origin = state.tokens[actorId]?.position;
+  const target = state.tokens[targetActorId]?.position;
+  if (!origin || !target) return null;
+  const availableFt = combatMovementAvailableFt(state, actorId);
+  const maximumBoardRouteFt = TACTICAL_WIDTH * TACTICAL_HEIGHT * 15;
+  const candidates: TacticalRoute[] = [
+    {destination: origin, path: [], costFt: 0},
+    ...reachableRoutes(state, actorId, maximumBoardRouteFt),
+  ];
+  const route = candidates
+    .filter((candidate) => gridDistanceFt(candidate.destination, target) <= Math.max(0, rangeFt))
+    .sort((left, right) => left.costFt - right.costFt
+      || left.path.length - right.path.length
+      || left.destination.y - right.destination.y
+      || left.destination.x - right.destination.x)[0];
+  return route ? {
+    ...route,
+    available: route.costFt <= availableFt,
+    availableFt,
+    remainingFt: Math.max(0, availableFt - route.costFt),
+  } : null;
+}

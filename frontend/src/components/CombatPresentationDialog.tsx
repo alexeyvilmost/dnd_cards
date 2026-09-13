@@ -8,6 +8,7 @@ import CommittedD20 from '../dice/CommittedD20';
 import CombatRollModeSelect from './CombatRollModeSelect';
 import { useSiteSettings } from '../settings';
 import { useCombatDialogFocus } from './useCombatDialogFocus';
+import { getDamageLabel } from '../utils/damageTypes';
 import '../dice/CombatPresentation.css';
 
 export default function CombatPresentationDialog({initiative, beat, onClose}: {
@@ -49,7 +50,7 @@ export default function CombatPresentationDialog({initiative, beat, onClose}: {
         })}</div>
       </> : <>
         <p className="combat-attack-versus"><b>{beat?.sourceName}</b><Swords size={18}/><b>{beat?.targetName}</b></p>
-        {animate&&<div className="combat-attack-dice">{roll?.dice.filter(die=>die.sides===20).map((die,i)=><CommittedD20 key={i} value={die.result} discarded={die.discarded} rolling={!rolled}/>)}</div>}
+        {roll&&<div className="combat-attack-dice">{roll.dice.filter(die=>die.sides===20).map((die,i)=><CommittedD20 key={i} value={die.result} discarded={die.discarded} rolling={animate&&!rolled}/>)}</div>}
         {ready&&roll?<div className={`combat-roll-result ${success?'is-hit':'is-miss'}`}>
           <div className="combat-roll-equation"><strong>{roll.total}</strong><span>{roll.total >= (roll.target?.value ?? 0)?'≥':'<'} <Shield size={18}/> КД {roll.target?.value}</span></div>
           <h3>{roll.outcome==='crit'?'Критическое попадание!':success?'Попадание':'Промах'}</h3>
@@ -58,6 +59,15 @@ export default function CombatPresentationDialog({initiative, beat, onClose}: {
           <p>{roll.text}</p>
           <ul className="combat-roll-modifiers">{roll.modifiers.map((modifier,i)=><li key={i}><span>{modifier.source}</span><b>{modifier.value>=0?'+':''}{modifier.value}</b></li>)}</ul>
           {roll.advantage!=='none'&&<small>{roll.advantage==='advantage'?'Преимущество — выбрана большая кость':'Помеха — выбрана меньшая кость'}</small>}
+          {success && beat?.damage?.length ? <div className="combat-damage-breakdown" aria-label="Расчёт урона">
+            <h4>Бросок урона</h4>
+            {beat.damage.map((packet, packetIndex) => <div className="combat-damage-packet" key={`${packet.damageType}:${packetIndex}`}>
+              {packet.roll?.dice.length ? <div className="combat-damage-dice">{packet.roll.dice.map((die, dieIndex) => <span key={dieIndex} className={die.discarded ? 'is-discarded' : ''}><small>к{die.sides}</small><b>{die.result}</b></span>)}</div> : null}
+              <p>{packet.roll?.text ?? `Фиксированный урон: ${packet.amount}`}</p>
+              <strong>{packet.amount} · {getDamageLabel(packet.damageType).toLocaleLowerCase('ru-RU')}</strong>
+              {packet.beforeResistance !== undefined && packet.beforeResistance !== packet.amount && <small>{packet.beforeResistance} до {packet.adjustment === 'immunity' ? 'иммунитета' : packet.adjustment === 'vulnerability' ? 'уязвимости' : 'сопротивления'} → {packet.amount}</small>}
+            </div>)}
+          </div> : null}
         </div>:<p className="combat-rolling-label">Кубик летит…</p>}
         <CombatRollModeSelect/>
       </>}

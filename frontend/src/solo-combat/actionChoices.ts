@@ -101,6 +101,71 @@ function masteryChoices(actor: ActorState, action: RuleActionDefinition): Pendin
   }];
 }
 
+export interface CombatPassiveToggle {
+  id: string;
+  name: string;
+  description: string;
+  recommended: string[];
+}
+
+/** Choices that may be promoted to persistent hotbar passives. When enabled,
+ * their recommended value is supplied without opening a one-shot dialog. */
+export function combatPassiveTogglesForAction(
+  actor: ActorState,
+  action: RuleActionDefinition,
+  cardNumber?: string,
+): CombatPassiveToggle[] {
+  return [
+    ...unarmedStrikeChoices(action, cardNumber).map((choice) => ({
+      id: choice.id,
+      name: 'Безоружный удар: урон',
+      description: 'Автоматически выбрать «Нанести урон». Выключите, чтобы выбирать захват или толчок.',
+      recommended: [...(choice.recommended ?? [])],
+    })),
+    ...masteryChoices(actor, action).map((choice) => ({
+      id: choice.id,
+      name: choice.origin.name,
+      description: choice.prompt,
+      recommended: [...(choice.recommended ?? [])],
+    })),
+  ].filter((toggle) => toggle.recommended.length > 0);
+}
+
+export function combatPassiveToggles(
+  actor: ActorState,
+  actions: readonly RuleActionDefinition[],
+  cardNumberFor: (actionId: string) => string | undefined,
+): CombatPassiveToggle[] {
+  const byId = new Map<string, CombatPassiveToggle>();
+  for (const action of actions) {
+    for (const toggle of combatPassiveTogglesForAction(actor, action, cardNumberFor(action.id))) {
+      if (!byId.has(toggle.id)) byId.set(toggle.id, toggle);
+    }
+  }
+  return [...byId.values()];
+}
+
+/** Splits action choices into hotbar-controlled defaults and choices that still
+ * need an explicit dialog. Missing preference means enabled for the faster flow. */
+export function resolveCombatPassiveChoices(
+  required: readonly PendingChoice[],
+  toggles: readonly CombatPassiveToggle[],
+  enabledById: Readonly<Record<string, boolean>>,
+): { automatic: Record<string, string[]>; pending: PendingChoice[] } {
+  const byId = new Map(toggles.map((toggle) => [toggle.id, toggle]));
+  const automatic: Record<string, string[]> = {};
+  const pending: PendingChoice[] = [];
+  for (const choice of required) {
+    const toggle = byId.get(choice.id);
+    if (toggle && enabledById[choice.id] !== false && toggle.recommended.length) {
+      automatic[choice.id] = [...toggle.recommended];
+    } else {
+      pending.push(choice);
+    }
+  }
+  return {automatic, pending};
+}
+
 function primitiveChoices(action: RuleActionDefinition): PendingChoice[] {
   const primitive = action.mechanics.primitive;
   if (primitive && typeof primitive === 'object' && !Array.isArray(primitive)

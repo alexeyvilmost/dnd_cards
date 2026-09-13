@@ -1,9 +1,15 @@
 import { combatActorDisplayName } from '../character/familiarLabels';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CombatAreaState, GridPosition, SoloCombatState } from '../solo-combat/types';
-import { TACTICAL_HEIGHT, TACTICAL_WIDTH } from '../solo-combat/types';
+import { combatRelation, TACTICAL_HEIGHT, TACTICAL_WIDTH } from '../solo-combat/types';
 import { areaPositionsForAction, reachablePositions } from '../solo-combat/tacticalGrid';
 import { previewCombatAttackRoll } from '../solo-combat/engine';
+import {
+  combatActionIsAttack,
+  combatApproachRoute,
+  combatMovementRoute,
+} from '../solo-combat/defaultInteraction';
+import { combatIdentity } from '../solo-combat/combatIdentity';
 import { attackHitProbability } from '../engine/attackProbability';
 import type { CombatBeat } from '../solo-combat/presentation';
 import CombatMapFeedback from './CombatMapFeedback';
@@ -15,12 +21,16 @@ export default function TacticalBattleMap({
   actorId,
   targetingActorId,
   selectedActionId,
+  defaultActionId,
+  implicitActionsEnabled = false,
   eligibleTargetIds,
   movementMode,
   worldObjectMoveMode,
   inspectedActorId,
+  highlightedActorId,
   onCell,
   onInspectActor,
+  onActorHover,
   onDeclineAdditionalMovement,
 }: {
   state: SoloCombatState;
@@ -29,12 +39,16 @@ export default function TacticalBattleMap({
   actorId: string;
   targetingActorId?: string;
   selectedActionId: string | null;
+  defaultActionId?: string;
+  implicitActionsEnabled?: boolean;
   eligibleTargetIds?: string[];
   movementMode: boolean;
   worldObjectMoveMode?: boolean;
   inspectedActorId?: string | null;
+  highlightedActorId?: string | null;
   onCell: (position: GridPosition, actorId?: string) => void;
   onInspectActor?: (actorId: string) => void;
+  onActorHover?: (actorId: string | null) => void;
   onDeclineAdditionalMovement?: () => void;
 }) {
   const [hovered, setHovered] = useState<GridPosition | null>(null);
@@ -85,15 +99,47 @@ export default function TacticalBattleMap({
     }
   }
   const selectedAction = state.catalogActions.find((action) => action.id === selectedActionId);
+  const contextualActionId = selectedActionId && combatActionIsAttack(state, selectedAction)
+    ? selectedActionId
+    : !selectedActionId && implicitActionsEnabled
+      ? defaultActionId
+      : undefined;
+  const contextualAction = state.catalogActions.find((action) => action.id === contextualActionId);
   const hoveredTarget = hovered ? tokenByCell.get(`${hovered.x}:${hovered.y}`) : undefined;
   const hoveredActorId = hoveredTarget?.actorId;
+  const hoveredEnemyId = hoveredActorId
+    && combatRelation(state, actorId, hoveredActorId) === 'enemy'
+    && (state.world.actors[hoveredActorId]?.runtime.hp.current ?? 0) > 0
+    ? hoveredActorId
+    : undefined;
+  const approachPreview = useMemo(() => (
+    contextualAction && hoveredEnemyId
+      ? combatApproachRoute(state, actorId, hoveredEnemyId, contextualAction.targeting?.rangeFt ?? 5)
+      : null
+  ), [actorId, contextualAction, hoveredEnemyId, state]);
+  const freeMovePreview = useMemo(() => {
+    if (!hovered || hoveredTarget || (!movementMode && !(implicitActionsEnabled
+      && (!selectedActionId || combatActionIsAttack(state, selectedAction))))) return null;
+    return combatMovementRoute(state, actorId, hovered);
+  }, [actorId, hovered, hoveredTarget, implicitActionsEnabled, movementMode, selectedActionId, state]);
+  const previewRoute = approachPreview ?? freeMovePreview;
+  const routeCells = useMemo(() => new Set(
+    (previewRoute?.path ?? []).map((position) => `${position.x}:${position.y}`),
+  ), [previewRoute]);
+  const ghostPosition = previewRoute?.destination ?? null;
   const hitPreview = useMemo(() => {
-    if (!selectedActionId || !hoveredActorId || hoveredActorId === actorId
-      || (state.world.actors[hoveredActorId]?.runtime.hp.current ?? 0) <= 0) return null;
-    const profile = previewCombatAttackRoll({state, actorId, actionId: selectedActionId,
-      targetIds: [hoveredActorId], choices: selectedActionChoices});
+    if (!contextualActionId || !hoveredEnemyId || !approachPreview) return null;
+    const projectedState = approachPreview.costFt > 0 ? {
+      ...state,
+      tokens: {
+        ...state.tokens,
+        [actorId]: {...state.tokens[actorId], position: approachPreview.destination},
+      },
+    } : state;
+    const profile = previewCombatAttackRoll({state: projectedState, actorId, actionId: contextualActionId,
+      targetIds: [hoveredEnemyId], choices: selectedActionId ? selectedActionChoices : undefined});
     return profile ? {probability: attackHitProbability(profile), profile} : null;
-  }, [state, actorId, selectedActionId, hoveredActorId, selectedActionChoices]);
+  }, [approachPreview, state, actorId, contextualActionId, hoveredEnemyId, selectedActionId, selectedActionChoices]);
   const sourcePosition = state.tokens[targetingActorId ?? actorId]?.position;
   const areaCells = useMemo(() => new Set(
     selectedAction && hovered && sourcePosition
@@ -229,7 +275,7 @@ export default function TacticalBattleMap({
       </>}
     </div>
     <div
-      className={`tactical-map${selectedActionId ? ' is-targeting' : ''}${movementMode ? ' is-moving' : ''}${worldObjectMoveMode ? ' is-world-object-moving' : ''}`}
+      className={`tactical-map${selectedActionId ? ' is-targeting' : ''}${movementMode ? ' is-moving' : ''}${implicitActionsEnabled && !selectedActionId ? ' is-contextual' : ''}${worldObjectMoveMode ? ' is-world-object-moving' : ''}`}
       data-testid="tactical-map"
       data-zoom={zoom}
       style={{ '--tactical-cell-size': `${Math.round(80 * zoom)}px` } as React.CSSProperties}
@@ -273,22 +319,32 @@ export default function TacticalBattleMap({
           <button
             type="button"
             key={`${position.x}:${position.y}`}
-            className={`tactical-cell${token ? ' has-token' : ''}${dancingLight || illusion ? ' has-world-object' : ''}${persistentAreas.length ? ' has-combat-area' : ''}${persistentAreas.some((area) => area.lightlyObscured) ? ' is-lightly-obscured' : ''}${persistentAreas.some((area) => area.heavilyObscured) ? ' is-heavily-obscured' : ''}${persistentAreas.some((area) => area.difficultTerrain) ? ' is-difficult-terrain' : ''}${token?.actorId === activeId ? ' is-active' : ''}${token?.actorId === inspectedActorId ? ' is-inspected' : ''}${dead ? ' is-dead' : ''}${areaCells.has(`${position.x}:${position.y}`) || (token && eligibleTargetIds?.includes(token.actorId)) ? ' is-area-preview' : ''}${reachableCells.has(`${position.x}:${position.y}`) ? ' is-move-reachable' : ''}`}
+            className={`tactical-cell${token ? ' has-token' : ''}${dancingLight || illusion ? ' has-world-object' : ''}${persistentAreas.length ? ' has-combat-area' : ''}${persistentAreas.some((area) => area.lightlyObscured) ? ' is-lightly-obscured' : ''}${persistentAreas.some((area) => area.heavilyObscured) ? ' is-heavily-obscured' : ''}${persistentAreas.some((area) => area.difficultTerrain) ? ' is-difficult-terrain' : ''}${token?.actorId === activeId ? ' is-active' : ''}${token?.actorId === inspectedActorId ? ' is-inspected' : ''}${token?.actorId === highlightedActorId ? ' is-linked-highlight' : ''}${dead ? ' is-dead' : ''}${areaCells.has(`${position.x}:${position.y}`) || (token && eligibleTargetIds?.includes(token.actorId)) ? ' is-area-preview' : ''}${reachableCells.has(`${position.x}:${position.y}`) ? ' is-move-reachable' : ''}${routeCells.has(`${position.x}:${position.y}`) ? ` is-route-preview${previewRoute && !previewRoute.available ? ' is-unavailable' : ''}` : ''}`}
             aria-label={[actorLabel, areaLabel, lightLabel, illusionLabel, (groundItemsByCell.get(`${position.x}:${position.y}`)??[]).map(item=>`На земле: ${item.name}`).join(", "), `Клетка ${position.x + 1}, ${position.y + 1}`].filter(Boolean).join(' · ')}
             data-actor-id={token?.actorId}
-            onMouseEnter={() => setHovered(position)}
-            onMouseLeave={() => setHovered(null)}
-            onFocus={() => setHovered(position)}
-            onBlur={() => setHovered(null)}
+            style={token ? {'--linked-accent': combatIdentity(state, token.actorId).accent} as React.CSSProperties : undefined}
+            onMouseEnter={() => { setHovered(position); onActorHover?.(token?.actorId ?? null); }}
+            onMouseLeave={() => { setHovered(null); onActorHover?.(null); }}
+            onFocus={() => { setHovered(position); onActorHover?.(token?.actorId ?? null); }}
+            onBlur={() => { setHovered(null); onActorHover?.(null); }}
             onClick={() => {
-              if (token && !selectedActionId && !movementMode) onInspectActor?.(token.actorId);
+              if (token && !selectedActionId && !movementMode
+                && combatRelation(state, actorId, token.actorId) !== 'enemy') onInspectActor?.(token.actorId);
               onCell(position, token?.actorId);
             }}
           >
-            {token?.actorId === hoveredTarget?.actorId && hitPreview && <span className={`combat-hit-chance${position.y < 2 ? ' is-below' : ''}`} role="status">
+            {token && token.actorId === hoveredEnemyId && contextualAction && <span className={`combat-hit-chance${position.y < 2 ? ' is-below' : ''}${approachPreview && !approachPreview.available ? ' is-unavailable' : ''}`} role="status">
+              {approachPreview && approachPreview.costFt > 0 && <span className="combat-hit-chance__movement">Подойти {approachPreview.costFt} фт. · останется {approachPreview.remainingFt} фт.</span>}
+              {!approachPreview && <span className="combat-hit-chance__movement">Нет доступной точки для атаки</span>}
+              {approachPreview && !approachPreview.available && <span className="combat-hit-chance__movement">Не хватает {approachPreview.costFt - approachPreview.availableFt} фт. движения</span>}
+              {hitPreview && <>
               Попадание <b>{Math.round(hitPreview.probability * 1000) / 10}%</b>
               <small>КД {hitPreview.profile.target?.value} · {hitPreview.profile.modifiers?.map(mod => `${mod.value >= 0 ? '+' : ''}${mod.value} ${mod.source}`).join(' · ')}
-                {hitPreview.profile.advantage === 'advantage' ? ' · преимущество' : hitPreview.profile.advantage === 'disadvantage' ? ' · помеха' : ''}</small>
+                {hitPreview.profile.advantage === 'advantage' ? ' · преимущество' : hitPreview.profile.advantage === 'disadvantage' ? ' · помеха' : ''}</small></>}
+              <small>I / Ш — изучить противника</small>
+            </span>}
+            {!token && hovered?.x === position.x && hovered.y === position.y && freeMovePreview && <span className={`combat-move-preview${position.y < 2 ? ' is-below' : ''}${!freeMovePreview.available ? ' is-unavailable' : ''}`} role="status">
+              Перемещение <b>{freeMovePreview.costFt} фт.</b><small>Останется {freeMovePreview.remainingFt} фт.{!freeMovePreview.available ? ` · не хватает ${freeMovePreview.costFt - freeMovePreview.availableFt} фт.` : ''}</small>
             </span>}
             {persistentAreas.map((area) => area.origin.x === position.x && area.origin.y === position.y ? (
               <span key={area.id} className={`combat-area-token is-${area.zoneType}`} title={areaLabel} aria-hidden="true">
@@ -316,13 +372,23 @@ export default function TacticalBattleMap({
                 {item.imageUrl?<img src={item.imageUrl} alt={item.name}/>:<span aria-label={item.name}>◇</span>}
               </span>
             ))}
-            {token && actor && (
-              <span className="battle-token" style={{ '--token-color': token.color } as React.CSSProperties}>
-                {token.tokenUrl ? <img src={token.tokenUrl} alt="" /> : <b>{combatActorDisplayName(actor).slice(0, 1)}</b>}
-                <span className="battle-token__name">{combatActorDisplayName(actor)}</span>
-                <span className="battle-token__hp"><i style={{ width: `${Math.max(0, actor.runtime.hp.current / actor.runtime.hp.max * 100)}%` }} /></span>
+            {ghostPosition?.x === position.x && ghostPosition.y === position.y && state.tokens[actorId] && state.world.actors[actorId] && (
+              <span className={`battle-token battle-token--ghost${approachPreview?.costFt === 0 ? ' is-stationary' : ''}${previewRoute && !previewRoute.available ? ' is-unavailable' : ''}`} aria-hidden="true"
+                style={{ '--token-color': combatIdentity(state, actorId).accent } as React.CSSProperties}>
+                {state.tokens[actorId].tokenUrl ? <img src={state.tokens[actorId].tokenUrl} alt="" /> : <b>{combatActorDisplayName(state.world.actors[actorId]).slice(0, 1)}</b>}
               </span>
             )}
+            {token && actor && (() => {
+              const identity = combatIdentity(state, token.actorId);
+              return (
+              <span className={`battle-token is-${identity.side}`} style={{ '--token-color': identity.accent } as React.CSSProperties}>
+                {token.tokenUrl ? <img src={token.tokenUrl} alt="" /> : <b>{combatActorDisplayName(actor).slice(0, 1)}</b>}
+                {identity.duplicateIndex && <span className="battle-token__duplicate">{identity.duplicateIndex}</span>}
+                <span className="battle-token__name">{identity.displayName}</span>
+                <span className="battle-token__hp"><i style={{ width: `${Math.max(0, actor.runtime.hp.current / actor.runtime.hp.max * 100)}%` }} /></span>
+              </span>
+              );
+            })()}
           </button>
         );
       })}

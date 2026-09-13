@@ -115,6 +115,7 @@ import {
   type SoloCombatState,
 } from './types';
 import { warCasterOpportunitySpellVersion } from '../rules-core/generalSpellFeatRuntime';
+import { combatActionIsAttack, combatApproachRoute } from './defaultInteraction';
 import { generalFeatTriggeredUseKey } from '../rules-core/generalFeatDamageRuntime';
 import {
   actorOwnsCharger,
@@ -3930,6 +3931,51 @@ export function moveActorAlongRoute(input: {
   const route = reachableRoutes(state, actorId, feet).find(row => samePosition(row.destination, destination));
   if (!route) throw new Error('До клетки нет доступного маршрута с оставшимся перемещением');
   return continuePlayerRoute({...state, playerMovement: {actorId, origin: {...origin}, steps: route.path}}, input.rng ?? Math.random);
+}
+
+/** One contextual map command used by hostile clicks. Movement and attack are
+ * committed under one trusted intent, while normal interrupt windows still
+ * pause the route before any attack can be made. */
+export function approachAndExecuteCombatAction(input: {
+  state: SoloCombatState;
+  actorId: string;
+  actionId: string;
+  targetActorId: string;
+  choices?: CombatActionInput['choices'];
+  rng?: Rng;
+}): SoloCombatState {
+  const action = input.state.catalogActions.find((candidate) => candidate.id === input.actionId);
+  if (!combatActionIsAttack(input.state, action)) throw new Error('Для автоматического подхода выберите атаку');
+  const rangeFt = action?.targeting?.rangeFt ?? 5;
+  const route = combatApproachRoute(input.state, input.actorId, input.targetActorId, rangeFt);
+  if (!route) throw new Error('На поле нет доступной точки для атаки');
+  if (!route.available) {
+    throw new Error(`Для атаки нужно пройти ${route.costFt} фт., доступно ${route.availableFt} фт.`);
+  }
+  let next = route.costFt > 0
+    ? moveActorAlongRoute({
+      state: input.state,
+      actorId: input.actorId,
+      destination: route.destination,
+      rng: input.rng,
+    })
+    : input.state;
+  const reached = samePosition(next.tokens[input.actorId]?.position ?? {x: -1, y: -1}, route.destination);
+  const interrupted = Boolean(next.playerMovement || next.pendingMovementStep || next.pendingReachEntry
+    || next.pendingAdditionalMovement || next.world.pendingResolution || next.pendingD20Interrupt
+    || next.pendingInterception || next.pendingTriggeredAction || next.pendingTurnStartGrappleDamage
+    || next.pendingAlertSwapActorIds?.length);
+  if (!reached || interrupted || next.outcome !== 'active'
+    || (next.world.actors[input.actorId]?.runtime.hp.current ?? 0) <= 0) return next;
+  next = executeCombatAction({
+    state: next,
+    actorId: input.actorId,
+    actionId: input.actionId,
+    targetIds: [input.targetActorId],
+    choices: input.choices,
+    rng: input.rng,
+  });
+  return next;
 }
 
 function continuePlayerRoute(state: SoloCombatState, rng: Rng): SoloCombatState {

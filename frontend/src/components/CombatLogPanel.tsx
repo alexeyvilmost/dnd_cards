@@ -18,12 +18,12 @@ export default function CombatLogPanel({ state }: { state: SoloCombatState }) {
             <p className="combat-log-entry__summary">{entry.text}</p>
             {records.length > 0 && (
               <div className="combat-log-entry__events">
-                {records.flatMap((record) => combatLogDetails(record, state).map((detail, detailIndex) => {
+                {records.flatMap((record, recordIndex) => combatLogDetails(record, state).map((detail, detailIndex) => {
                   const targets = record.targetIds.map(loggedName);
                   const source = loggedName(record.sourceActorId);
                   return (
                     <div
-                      key={`${record.ordinal}:${detailIndex}`}
+                      key={`${recordIndex}:${record.ordinal}:${detailIndex}`}
                       className={`combat-log-detail combat-log-detail--${detail.kind}`}
                     >
                       <b>{detail.label}</b>

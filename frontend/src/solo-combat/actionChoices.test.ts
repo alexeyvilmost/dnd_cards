@@ -11,6 +11,8 @@ import {
   collectSoloCombatActionChoices,
   immediateSoloCombatTargetIds,
   projectSoloCombatActionChoices,
+  combatPassiveTogglesForAction,
+  resolveCombatPassiveChoices,
 } from './actionChoices';
 import { STONEWORK_CONTACT_CHOICE_ID } from '../mechanics/collectChoices';
 import type { SoloCombatState } from './types';
@@ -39,6 +41,17 @@ describe('solo combat data-owned action choices', () => {
       action,
       'another_action',
     )).toEqual([]);
+    const toggles = combatPassiveTogglesForAction({} as ActorState, action, 'action_basic_unarmed');
+    expect(toggles).toEqual([expect.objectContaining({
+      id: UNARMED_STRIKE_CHOICE_ID, recommended: ['damage'],
+    })]);
+    const required = collectSoloCombatActionChoices({} as ActorState, action, 'action_basic_unarmed');
+    expect(resolveCombatPassiveChoices(required, toggles, {})).toEqual({
+      automatic: {[UNARMED_STRIKE_CHOICE_ID]: ['damage']}, pending: [],
+    });
+    expect(resolveCombatPassiveChoices(required, toggles, {[UNARMED_STRIKE_CHOICE_ID]: false})).toEqual({
+      automatic: {}, pending: required,
+    });
   });
 
   it('projects the equipped weapon mastery declaration into a one-shot choice', () => {
