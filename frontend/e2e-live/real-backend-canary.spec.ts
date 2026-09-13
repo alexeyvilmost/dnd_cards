@@ -1330,7 +1330,7 @@ test('required production spine: empty Forge reaches sheet and dedicated combat 
     const rangedActionButton = page.locator(`[data-action-id="${rangedAction.id}"]:visible`)
       .getByRole('button').first();
     const reactionBackdrop = page.locator('.combat-reaction-backdrop');
-    const damageReactionHeading = reactionBackdrop.getByRole('heading', { name: 'Вам нанесен урон' });
+    const damageReactionHeading = reactionBackdrop.getByRole('heading', { name: 'Реакция на урон', exact: true });
     const endTurnButton = page.getByRole('button', { name: 'Завершить ход', exact: true });
     let damageReactionReached = false;
     // A low-speed monster may need one deterministic approach/dash turn. Each
@@ -1445,7 +1445,7 @@ test('required production spine: empty Forge reaches sheet and dedicated combat 
     const incomingDamage = damagePackets.reduce((sum, packet) => sum + Number(packet.amount ?? 0), 0);
     expect(incomingDamage, 'the qualifying monster hit holds positive incoming damage')
       .toBeGreaterThan(0);
-    await expect(reactionBackdrop).toContainText(`Получено урона: ${incomingDamage}`);
+    await expect(reactionBackdrop).toContainText(`Входящий урон: ${incomingDamage}`);
     const hpCurrentBefore = Number(hpBeforeDamage.current ?? 0);
     const hpTempBefore = Number(hpBeforeDamage.temp ?? 0);
     expect(character.current_hp, 'incoming damage remains held until the reaction decision')
@@ -1486,10 +1486,11 @@ test('required production spine: empty Forge reaches sheet and dedicated combat 
       response.request().method() === 'PATCH'
       && new URL(response.url()).pathname === `/api/characters-v3/${character!.id}/runtime`
     ));
-    await reactionBackdrop.getByRole('button', {
-      name: offeredDamageReaction.label,
-      exact: true,
-    }).click();
+    const reactionButton = reactionBackdrop.getByRole('button').filter({
+      has: page.getByText(offeredDamageReaction.label, {exact: true}),
+    });
+    await expect(reactionButton).toHaveCount(1);
+    await reactionButton.click();
     const reactionResponse = await reactionResponsePromise;
     assertLiveCanaryRequestOrigin(reactionResponse.url(), apiOrigin, 'dedicated-combat damage reaction decision');
     expect(reactionResponse.ok(), 'dedicated-combat damage reaction persistence').toBe(true);
@@ -1498,6 +1499,9 @@ test('required production spine: empty Forge reaches sheet and dedicated combat 
       if (harness.__liveCanaryOriginalRandom) Math.random = harness.__liveCanaryOriginalRandom;
       delete harness.__liveCanaryOriginalRandom;
     });
+
+    await expect(rangedActionButton, 'the equipped ranged weapon action must become executable on the Ranger turn')
+      .toBeEnabled({ timeout: 30_000 });
 
     character = await checkedJSON<CharacterResponse>(
       auth.api, 'get', `/api/characters-v3/${character.id}`,
@@ -1559,9 +1563,6 @@ test('required production spine: empty Forge reaches sheet and dedicated combat 
         && event.remaining === spend.remaining
       )), `one exact ${spend.resource} spend event`).toHaveLength(1);
     }
-    await expect(rangedActionButton, 'the equipped ranged weapon action must become executable on the Ranger turn')
-      .toBeEnabled({ timeout: 30_000 });
-
     character = await checkedJSON<CharacterResponse>(
       auth.api,
       'get',
