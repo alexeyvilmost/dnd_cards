@@ -60,3 +60,11 @@ runtime retains the replacement choice. The original L1 payload and compiled
 release pins remain unchanged. Regression coverage proves the exact upgrade
 is accepted while another replacement count, acquisition count or choice ID
 remains visible as drift. The 30 live matrix tests and 448-root sheet audit pass.
+
+The release coverage review also adds persistence regressions for the existing
+roguelike mechanics: received item content is replayed once, ongoing familiars
+survive unpreparing the summoning spell, physical weapon bonds retain their
+ownership, and saved ability-check/damage reactions reject mismatched actors,
+rolls, targets, observer facts and damage calculations. The strict 100% coverage
+thresholds remain unchanged; valid older continuations without optional fields
+are explicitly exercised alongside malformed-save rejection.

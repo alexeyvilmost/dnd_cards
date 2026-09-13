@@ -575,6 +575,45 @@ describe('canonical pre-damage reaction lifecycle', () => {
       .find((event: { type?: string }) => event.type === 'damage');
     damageEvent.amount -= 1;
     expect(() => migrateWorldState(corruptTrace)).toThrow(/packets must match held engine events/);
+    for (const deferred of [null, [], false, { critical: 'yes' }, { critical: true, concentrationDisadvantage: 0 }]) {
+      const invalid = JSON.parse(JSON.stringify(checkpoint));
+      invalid.pendingResolution.attackEvents.find((event: { type: string }) => event.type === 'damage')
+        .deferredConsequences = deferred;
+      expect(() => migrateWorldState(invalid)).toThrow(/deferred damage consequences/);
+    }
+    for (const calculation of [null, {}, { beforeResistance: 99, adjustments: [] }]) {
+      const invalid = JSON.parse(JSON.stringify(checkpoint));
+      invalid.pendingResolution.attackEvents.find((event: { type: string }) => event.type === 'damage')
+        .calculation = calculation;
+      expect(() => migrateWorldState(invalid)).toThrow(/damage calculation/);
+    }
+    const legacyTrace = JSON.parse(JSON.stringify(checkpoint));
+    const heldDamage = legacyTrace.pendingResolution.attackEvents.find((event: { type: string }) => event.type === 'damage');
+    delete heldDamage.deferredConsequences;
+    delete heldDamage.calculation;
+    expect(migrateWorldState(legacyTrace).pendingResolution).toMatchObject({ type: 'damage_reaction' });
+    for (const damageObservers of [
+      undefined, {}, [], [{ actorId: 'unknown' }],
+      [{ actorId: 'attacker', canSeeTarget: false, distanceFt: 5 }],
+      [{ actorId: 'attacker', canSeeTarget: true, distanceFt: null }],
+      [{ actorId: 'attacker', canSeeTarget: true, distanceFt: -1 }],
+      [{ actorId: 'attacker', canSeeTarget: true, distanceFt: 35 }],
+    ]) {
+      const invalid = JSON.parse(JSON.stringify(checkpoint));
+      invalid.pendingResolution.request.actorId = 'attacker';
+      invalid.pendingResolution.facts = { ...invalid.pendingResolution.facts, damageObservers };
+      expect(() => migrateWorldState(invalid)).toThrow(/frozen visibility/);
+    }
+    for (const remainingReactorIds of [['missing'], ['defender']]) {
+      const invalid = JSON.parse(JSON.stringify(checkpoint));
+      invalid.pendingResolution.remainingReactorIds = remainingReactorIds;
+      expect(() => migrateWorldState(invalid)).toThrow(/Invalid queued damage reactor/);
+    }
+    const queued = JSON.parse(JSON.stringify(checkpoint));
+    queued.pendingResolution.remainingReactorIds = ['attacker'];
+    expect(migrateWorldState(queued).pendingResolution).toMatchObject({ remainingReactorIds: ['attacker'] });
+    delete queued.pendingResolution.remainingReactorIds;
+    expect(migrateWorldState(queued).pendingResolution).toMatchObject({ type: 'damage_reaction' });
   });
 
   it('fails closed for malformed persisted damage continuations and preserves complete runtime snapshots', () => {

@@ -88,6 +88,28 @@ function spellWorld(): WorldState {
   });
 }
 
+it('restores a physical weapon bond and rejects malformed ownership or plane metadata', () => {
+  const initial = spellWorld();
+  initial.actors.a.planeId = 'material';
+  initial.objects.blade = {
+    id: 'blade', name: 'Blade', kind: 'item', size: 'small', itemCardId: 'card:blade',
+    weaponBondActorId: 'a', planeId: 'material',
+  };
+  expect(migrateWorldState(clone(initial)).objects.blade).toEqual(initial.objects.blade);
+  expect(migrateWorldState(clone(initial)).actors.a.planeId).toBe('material');
+  const invalidActorPlane = clone(initial);
+  invalidActorPlane.actors.a.planeId = ' ';
+  expect(() => migrateWorldState(invalidActorPlane)).toThrow(/actors.a.planeId/);
+  for (const patch of [
+    { weaponBondActorId: '' }, { planeId: '' }, { itemCardId: undefined },
+    { itemCardId: undefined, kind: 'environment' },
+  ]) {
+    const malformed = clone(initial);
+    Object.assign(malformed.objects.blade, patch);
+    expect(() => migrateWorldState(malformed)).toThrow(/weaponBondActorId|planeId|Weapon bond/);
+  }
+});
+
 type MutableRecord = Record<string, unknown>;
 
 function clone<T>(value: T): T {

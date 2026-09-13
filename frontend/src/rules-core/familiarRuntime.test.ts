@@ -24,6 +24,18 @@ const SUMMON_ACTION_ID = 'action:find-familiar';
 const CHAIN_SOURCE_ID = 'effect:pact-chain';
 const BASE_SOURCE_ID = 'spell:find-familiar';
 
+it('retains a familiar after its owner unprepares the original spell, requiring the exact persisted spell identity', () => {
+  const { owner, familiar } = actorBundle();
+  familiar.familiarState!.ongoingSpell = {
+    actionId: SUMMON_ACTION_ID,
+    policy: { connectionRangeFt: 100, reappearRangeFt: 30, ritualCastingAddedSeconds: 600 },
+  };
+  owner.capabilities.actionIds = [];
+  expect(familiarActorStateIssue({ actor: familiar, owner })).toBeNull();
+  familiar.familiarState!.ongoingSpell.actionId = 'different-spell';
+  expect(familiarActorStateIssue({ actor: familiar, owner })).toMatch(/summoning action/);
+});
+
 function copy<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }

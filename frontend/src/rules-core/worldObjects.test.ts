@@ -93,6 +93,22 @@ function object(id: string, overrides: Partial<WorldObjectState> = {}): WorldObj
   return { id, name: id, kind: 'environment', size: 'medium', ...overrides };
 }
 
+it('keeps at most two physical weapon bonds per actor and validates plane identities', () => {
+  const blade = object('blade', { kind: 'item', itemCardId: 'card:blade', weaponBondActorId: 'fighter', planeId: 'material' });
+  const second = { ...blade, id: 'second' };
+  expect(worldObjectLedgerIssue({ blade, second })).toBeNull();
+  expect(worldObjectLedgerIssue({ blade, second, third: { ...blade, id: 'third' } })).toMatch(/two weapon bonds/);
+  expect(worldObjectLedgerIssue({ blade, second, other: { ...blade, id: 'other', weaponBondActorId: 'ally' } })).toBeNull();
+  for (const patch of [
+    { planeId: '' }, { planeId: 1 }, { weaponBondActorId: '' }, { weaponBondActorId: 1 },
+    { itemCardId: undefined }, { kind: 'environment' },
+  ]) {
+    const malformed = { ...blade, ...patch } as unknown as WorldObjectState;
+    expect(() => evolveWorldObjectEvent({}, { type: 'WorldObjectCreated', object: malformed }))
+      .toThrow(/plane identity|Weapon bond/);
+  }
+});
+
 describe('data-owned world-object policy mutations', () => {
   it('changes Light, Burning Hands, Detect Magic, and Minor Illusion behavior from policy only', () => {
     const lightPolicy: LightWorldPolicy = {

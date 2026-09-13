@@ -67,6 +67,20 @@ function copy<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
+it('records received item content once without replacing existing canonical content on replay', () => {
+  const initial = createWorld({ id: 'item-replay', ruleset: RULESET, actors: [actor(OWNER)] });
+  const card = { id: 'received-card', name: 'Received item', mechanics: {} } as Card;
+  const payload: RuleEventPayload = { type: 'ActorItemContentRecorded', actorId: OWNER, card };
+  expect(() => evolve(initial, { ...payload, actorId: 'missing' })).toThrow(/Unknown item recipient/);
+  const recorded = evolve(initial, payload);
+  expect(recorded.actors[OWNER].character.knownCards).toEqual([card]);
+  expect(initial.actors[OWNER].character.knownCards).toBeUndefined();
+  expect(evolve(recorded, { ...payload, card: { ...card, name: 'Stale duplicate' } })).toBe(recorded);
+  const second = { ...card, id: 'second-card' };
+  expect(evolve(recorded, { ...payload, card: second }).actors[OWNER].character.knownCards)
+    .toEqual([card, second]);
+});
+
 function actor(id: string, actionIds: string[] = []): ActorState {
   return {
     id,

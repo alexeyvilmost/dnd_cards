@@ -87,6 +87,7 @@ function cast(input: {
   incenseOfferingGp?: number;
   existingFamiliar?: FamiliarState;
   validation?: FamiliarValidationContext;
+  summoningActionId?: string;
 } = {}) {
   return castFindFamiliar({
     familiarActorId: input.familiarActorId ?? 'wizard:familiar',
@@ -101,6 +102,7 @@ function cast(input: {
     baseCastingTimeSeconds,
     mechanicsPolicy,
     existingFamiliar: input.existingFamiliar ?? null,
+    summoningActionId: input.summoningActionId,
     ...(input.validation ? { validation: input.validation } : {}),
   });
 }
@@ -112,6 +114,23 @@ function presentFamiliar(): FamiliarState {
 function jsonRoundTrip<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
+
+it('preserves exact ongoing familiar spell provenance across reload and rejects malformed policies', () => {
+  const result = cast({ summoningActionId: 'action:find-familiar' });
+  expect(result.familiar.ongoingSpell).toEqual({ actionId: 'action:find-familiar', policy: mechanicsPolicy });
+  expect(familiarStateIssue(jsonRoundTrip(result.familiar))).toBeNull();
+  const malformedSpells = [
+    null, [], { actionId: 'a' }, { actionId: 'a', policy: mechanicsPolicy, extra: true },
+    { actionId: 1, policy: mechanicsPolicy }, { actionId: '', policy: mechanicsPolicy },
+    { actionId: ' a ', policy: mechanicsPolicy }, { actionId: 'a', policy: null },
+    { actionId: 'a', policy: {} }, { actionId: 'a', policy: { ...mechanicsPolicy, connectionRangeFt: -1 } },
+  ];
+  for (const ongoingSpell of malformedSpells) {
+    expect(familiarStateIssue({ ...result.familiar, ongoingSpell })).toMatch(/ongoing spell/);
+  }
+  expect(familiarStateIssue({ ...cast({ policy: chainPolicy, method: 'pact_chain_magic_action' }).familiar,
+    ongoingSpell: result.familiar.ongoingSpell })).toMatch(/ongoing spell provenance/);
+});
 
 describe('Find Familiar form extension policy', () => {
   it('parses an exact data-owned primitive and rejects every omission, extra field, and invalid value', () => {

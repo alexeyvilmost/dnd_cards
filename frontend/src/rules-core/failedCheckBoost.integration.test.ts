@@ -117,6 +117,42 @@ describe('optional class boost after a committed failed ability check', () => {
     if(corrupt.pendingResolution?.type!=='check_boost'||corrupt.pendingResolution.continuation.type!=='action_ability_check') throw Error('Expected action check');
     corrupt.pendingResolution.continuation.effectIndex=-1;
     expect(()=>migrateWorldState(corrupt)).toThrow(/action-check effect index/);
+    const mutations: Array<(pending: Record<string, unknown>) => void> = [
+      pending => { pending.actorId = 'missing'; },
+      ...[
+        { kind: 'damage' }, { outcome: 'success' }, { usedFailureBonus: true }, { total: null },
+      ].map(delta => (pending: Record<string, unknown>) => Object.assign(pending.roll as object, delta)),
+      ...[{ type: 'ac' }, { value: null }].map(delta => (pending: Record<string, unknown>) =>
+        Object.assign((pending.roll as Record<string, unknown>).target as object, delta)),
+      ...[{ type: 'choice' }, { actorId: 'enemy' }].map(delta => (pending: Record<string, unknown>) =>
+        Object.assign(pending.request as object, delta)),
+      ...[{ type: 'other' }, { sourceActorId: 'enemy' }, { total: 99 }, { dc: 99 }]
+        .map(delta => (pending: Record<string, unknown>) =>
+          Object.assign((pending.request as Record<string, unknown>).trigger as object, delta)),
+    ];
+    for (const mutate of mutations) {
+      const malformed = copy(checkpoint);
+      mutate(malformed.pendingResolution as unknown as Record<string, unknown>);
+      expect(() => migrateWorldState(malformed)).toThrow(/failed-check result is inconsistent/);
+    }
+    for (const delta of [
+      { actionId: '' }, { effectIndex: 0.5 }, { targetActorId: 'missing' }, { facts: [] },
+      { choices: [] }, { choices: { '': 'a' } }, { choices: { pick: 1 } },
+      { choices: { pick: ['a', 1] } }, { spell: [] },
+    ]) {
+      const malformed = copy(checkpoint);
+      Object.assign((malformed.pendingResolution as unknown as { continuation: object }).continuation, delta);
+      expect(() => migrateWorldState(malformed)).toThrow(/action-check|continuation/);
+    }
+    const withChoices = copy(checkpoint);
+    const continuation = (withChoices.pendingResolution as unknown as { continuation: Record<string, unknown> }).continuation;
+    continuation.choices = { single: 'a', multiple: ['b', 'c'] };
+    continuation.spell = { baseLevel: 0 };
+    delete continuation.targetActorId;
+    delete continuation.facts;
+    expect(migrateWorldState(withChoices).pendingResolution).toMatchObject({ continuation: {
+      choices: { single: 'a', multiple: ['b', 'c'] }, spell: { baseLevel: 0 },
+    } });
     const restored=new InMemoryRulesSession(checkpoint,catalog,test.env);
     const pending=restored.getState().pendingResolution!;
     accepted(restored,{...test.base('embedded-boost'),expectedRevision:checkpoint.revision,type:'ResolveDecision',
