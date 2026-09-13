@@ -15,4 +15,10 @@ export async function acceptCombatOpening(page: Page) {
   });
   await dialog.getByRole('button', {name: 'Начать сражение', exact: true}).click();
   await expect(dialog).not.toBeVisible();
+  // Read-only polling does not invoke Playwright's locator handlers. Choose
+  // the preference explicitly before a scenario waits for the next turn.
+  await page.getByRole('button', {name: 'Настройки боя', exact: true}).click();
+  const settings = page.locator('.sheet-settings-dialog');
+  await settings.getByRole('combobox', {name: 'Показ атак'}).selectOption('skip');
+  await settings.getByRole('button', {name: 'Закрыть (Esc)', exact: true}).click();
 }

@@ -777,6 +777,15 @@ describe('real sheet canonical world materialization', () => {
       .toEqual(pactChainProjection(familiarState));
   });
 
+  it('ignores obsolete empty execution caches while still rejecting malformed declared companions', () => {
+    const owner = clone(generated.roots.magicInitiateFighter.actor);
+    const fresh = createWorld({id: 'new-sheet-view', ruleset: {systemId: 'dnd5e-2024', releaseId: 'test', contentHash: 'new-view', errataVersion: '2024'}, actors: [owner]});
+    const stale = {canonical_rules_world_v1: {schemaVersion: 1, primaryActorId: owner.id, rulesetContentHash: 'sheet:previous-deployment', world: {}}};
+    expect(restoreCompatibleSheetFamiliars(fresh, stale, owner.id)).toBe(fresh);
+    const forged = {...stale, canonical_rules_world_v1: {...stale.canonical_rules_world_v1, world: {actors: {owl: {familiarState: {ownerActorId: owner.id, extension: 'base'}}}}}};
+    expect(() => restoreCompatibleSheetFamiliars(fresh, forged, owner.id)).toThrow('Unsupported world schema');
+  });
+
   it('retains a validated base familiar across sheet action subsets, without importing stale capabilities', () => {
     const root = clone(generated.roots.chain);
     const owner = root.actor;

@@ -1016,6 +1016,15 @@ export function readSheetCanonicalWorld(
 export function restoreCompatibleSheetFamiliars(fresh: WorldState, turnState: Record<string, unknown> | null | undefined, actorId: string): WorldState {
   const envelope = object(turnState?.[SHEET_CANONICAL_WORLD_KEY]);
   if (!envelope || !nonBlank(envelope.rulesetContentHash)) return fresh;
+  // An obsolete execution cache without a base familiar needs no migration.
+  // Current-release worlds are validated by readSheetCanonicalWorld before
+  // this fallback; only declared companions need the strict cross-view check.
+  const cachedActors = object(object(envelope.world)?.actors);
+  const hasBaseFamiliar = Object.values(cachedActors ?? {}).some(entry => {
+    const familiar = object(object(entry)?.familiarState);
+    return familiar?.ownerActorId === actorId && familiar.extension === 'base';
+  });
+  if (!hasBaseFamiliar) return fresh;
   const previous = readSheetCanonicalWorld(turnState, actorId, envelope.rulesetContentHash);
   if (!previous) return fresh;
   const familiars = Object.values(previous.actors).filter((entry) => entry.familiarState?.ownerActorId === actorId && entry.familiarState.extension === 'base');
