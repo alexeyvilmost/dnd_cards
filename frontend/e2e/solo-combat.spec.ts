@@ -267,7 +267,18 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
   await expect(page.locator('.combat-actor-inspector')).toHaveCount(0);
 
   const inspectedMonsterCell = page.locator(`.tactical-cell[data-actor-id^="${MONSTER_ID}:"]`);
-  await inspectedMonsterCell.hover();
+  await inspectedMonsterCell.scrollIntoViewIfNeeded();
+  const inspectedMonsterBox = await inspectedMonsterCell.boundingBox();
+  expect(inspectedMonsterBox).not.toBeNull();
+  await page.mouse.move(
+    inspectedMonsterBox!.x + inspectedMonsterBox!.width / 2 - 2,
+    inspectedMonsterBox!.y + inspectedMonsterBox!.height / 2,
+  );
+  await page.mouse.move(
+    inspectedMonsterBox!.x + inspectedMonsterBox!.width / 2,
+    inspectedMonsterBox!.y + inspectedMonsterBox!.height / 2,
+  );
+  await expect(page.getByText('I / Ш — изучить противника', { exact: true })).toBeVisible();
   await page.keyboard.press('i');
   const inspector = page.getByRole('complementary', { name: 'Информация: Гоблин-воин' });
   await expect(inspector).toBeVisible();

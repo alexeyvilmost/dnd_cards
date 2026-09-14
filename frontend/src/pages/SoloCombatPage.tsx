@@ -186,6 +186,13 @@ export default function SoloCombatPage() {
   const [dancingLightsMoveGroupId, setDancingLightsMoveGroupId] = useState<string | null>(null);
   const [inspectedActorId, setInspectedActorId] = useState<string | null>(null);
   const [hoveredActorId, setHoveredActorId] = useState<string | null>(null);
+  const hoveredActorIdRef = useRef<string | null>(null);
+  const setCombatHoveredActorId = useCallback((actorId: string | null) => {
+    // Keyboard inspection may follow pointer entry in the same frame. Keep a
+    // synchronous authority so the key handler never waits for React state.
+    hoveredActorIdRef.current = actorId;
+    setHoveredActorId(actorId);
+  }, []);
   const [combatPassiveEnabled, setCombatPassiveEnabled] = useState<Record<string, boolean>>(readCombatPassivePreferences);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sceneConstructorOpen, setSceneConstructorOpen] = useState(false);
@@ -563,16 +570,17 @@ export default function SoloCombatPage() {
   const playerTurn = state ? isPlayerControlledCombatActor(state, activeActor(state).id) : false;
   useEffect(() => {
     const inspectHoveredEnemy = (event: KeyboardEvent) => {
-      if (!state || !hoveredActorId || !['i', 'ш'].includes(event.key.toLocaleLowerCase('ru-RU'))) return;
+      const hoveredId = hoveredActorIdRef.current;
+      if (!state || !hoveredId || !['i', 'ш'].includes(event.key.toLocaleLowerCase('ru-RU'))) return;
       const target = event.target as HTMLElement | null;
       if (target?.matches('input, textarea, select, [contenteditable="true"]')) return;
-      if (combatRelation(state, activeControlledActorId, hoveredActorId) !== 'enemy') return;
+      if (combatRelation(state, activeControlledActorId, hoveredId) !== 'enemy') return;
       event.preventDefault();
-      setInspectedActorId(hoveredActorId);
+      setInspectedActorId(hoveredId);
     };
     window.addEventListener('keydown', inspectHoveredEnemy);
     return () => window.removeEventListener('keydown', inspectHoveredEnemy);
-  }, [activeControlledActorId, hoveredActorId, state]);
+  }, [activeControlledActorId, state]);
 
   const setCombatPassive = (id: string, enabled: boolean) => {
     setCombatPassiveEnabled((current) => {
@@ -1069,8 +1077,8 @@ export default function SoloCombatPage() {
               style={{'--combat-accent': identity.accent} as CSSProperties}
               title={`${identity.displayName} · инициатива: ${initiativeLabel(entry)}`}
               aria-label={`${index + 1}. ${identity.displayName}${isActive ? ', текущий ход' : ''}`}
-              onMouseEnter={() => setHoveredActorId(entry.actorId)} onMouseLeave={() => setHoveredActorId(null)}
-              onFocus={() => setHoveredActorId(entry.actorId)} onBlur={() => setHoveredActorId(null)}>
+              onMouseEnter={() => setCombatHoveredActorId(entry.actorId)} onMouseLeave={() => setCombatHoveredActorId(null)}
+              onFocus={() => setCombatHoveredActorId(entry.actorId)} onBlur={() => setCombatHoveredActorId(null)}>
               <b className="initiative-card__order">{index + 1}</b>
               <span className="initiative-card__portrait">{state.tokens[entry.actorId]?.tokenUrl ? <img src={state.tokens[entry.actorId].tokenUrl} alt="" /> : combatActorDisplayName(participant).slice(0, 1)}{identity.duplicateIndex && <i>{identity.duplicateIndex}</i>}</span>
               <span className="initiative-card__name">{identity.displayName}</span>
@@ -1099,7 +1107,7 @@ export default function SoloCombatPage() {
             worldObjectMoveMode={dancingLightsMoveGroupId === activeDancingLightsGroup}
             inspectedActorId={inspectedActorId}
             highlightedActorId={hoveredActorId}
-            onActorHover={setHoveredActorId}
+            onActorHover={setCombatHoveredActorId}
             onCell={clickCell}
             onDeclineAdditionalMovement={state.pendingAdditionalMovement && !state.playerMovement
               && !busy && !pending && !pendingTriggered && !pendingD20Interrupt && !state.pendingInterception ? () => {

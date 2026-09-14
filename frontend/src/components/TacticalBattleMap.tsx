@@ -226,7 +226,13 @@ export default function TacticalBattleMap({
       className={`tactical-map-viewport site-scrollbar${panning ? ' is-panning' : ''}`}
       data-testid="tactical-map-viewport"
       data-panning={panning || undefined}
-      onScroll={() => { setHovered(null); onActorHover?.(null); }}
+      onScroll={() => {
+        // Scrolling caused by focus/scrollIntoView keeps the pointer over the
+        // same cell. Only an active pan invalidates that hover authority.
+        if (!panRef.current) return;
+        setHovered(null);
+        onActorHover?.(null);
+      }}
       title={`Масштаб ${Math.round(zoom * 100)}% · колесо меняет масштаб · перетаскивание двигает карту`}
       onWheel={(event) => {
         event.preventDefault();
