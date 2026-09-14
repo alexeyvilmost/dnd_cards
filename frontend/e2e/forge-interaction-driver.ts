@@ -75,7 +75,20 @@ export async function completeVisibleForgeChoices(page: Page): Promise<void> {
         );
       }
       const before = count.selected;
+      const candidateLabel = (await candidate.textContent())?.trim() ?? '';
       await candidate.click();
+      // Weapon mastery now opens the same focused picker used by the sheet.
+      // Complete its local draft before expecting the Forge counter to change.
+      if (candidateLabel === 'Выбрать') {
+        const mastery = page.getByRole('dialog', { name: 'Искусность оружия' });
+        await expect(mastery).toBeVisible();
+        const expand = mastery.getByRole('button', { name: /Выбрать из всех видов/ });
+        if (await expand.isVisible()) await expand.click();
+        for (let choice = before; choice < count.required; choice += 1) {
+          await mastery.locator('button.sheet-item-row:not(.is-selected):not(:disabled)').first().click();
+        }
+        await mastery.getByRole('button', { name: 'Готово', exact: true }).click();
+      }
       await expect.poll(async () => (
         selectedCount(await counter.textContent())?.selected ?? before
       )).toBeGreaterThan(before);

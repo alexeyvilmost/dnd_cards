@@ -10,15 +10,23 @@ export async function acceptCombatOpening(page: Page) {
   const bounds = await dialog.boundingBox();
   expect(bounds!.x).toBeGreaterThanOrEqual(0);
   expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(page.viewportSize()!.width + 1);
-  await page.addLocatorHandler(page.getByRole('dialog', {name: 'Бросок атаки', exact: true}), async overlay => {
-    await overlay.getByRole('combobox', {name: 'Показ атак'}).selectOption('skip');
+  await page.addLocatorHandler(page.getByRole('dialog', {name: 'Бросок атаки', exact: true}), async () => {
+    // Set the inactive side first, otherwise the active selector closes the overlay.
+    await page.evaluate(() => {
+      const settings = JSON.parse(localStorage.getItem('site-settings') ?? '{}');
+      localStorage.setItem('site-settings', JSON.stringify({...settings, combatRollMode: 'skip', enemyCombatRollMode: 'skip'}));
+      window.dispatchEvent(new CustomEvent('site-settings-changed'));
+    });
   });
   await dialog.getByRole('button', {name: 'Начать сражение', exact: true}).click();
   await expect(dialog).not.toBeVisible();
   // Read-only polling does not invoke Playwright's locator handlers. Choose
   // the preference explicitly before a scenario waits for the next turn.
   await page.getByRole('button', {name: 'Настройки боя', exact: true}).click();
-  const settings = page.locator('.sheet-settings-dialog');
-  await settings.getByRole('combobox', {name: 'Показ атак'}).selectOption('skip');
-  await settings.getByRole('button', {name: 'Закрыть (Esc)', exact: true}).click();
+  const settings = page.getByRole('dialog', {name: 'Настройки', exact: true});
+  await settings.getByRole('button', {name: 'Бой и броски'}).click();
+  await settings.getByRole('button', {name: 'Показ бросков в бою'}).click();
+  await settings.getByRole('combobox', {name: 'Свои действия и союзники'}).selectOption('skip');
+  await settings.getByRole('combobox', {name: 'Действия противников'}).selectOption('skip');
+  await settings.getByRole('button', {name: 'Закрыть настройки', exact: true}).click();
 }

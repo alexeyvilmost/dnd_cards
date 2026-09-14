@@ -84,7 +84,7 @@ export function combatMovementRoute(
 ): CombatApproachRoute | null {
   const availableFt = combatMovementAvailableFt(state, actorId);
   const maximumBoardRouteFt = TACTICAL_WIDTH * TACTICAL_HEIGHT * 15;
-  const route = reachableRoutes(state, actorId, maximumBoardRouteFt)
+  const route = reachableRoutes(state, actorId, maximumBoardRouteFt, destination)
     .find((candidate) => candidate.destination.x === destination.x && candidate.destination.y === destination.y);
   return route ? {
     ...route,
@@ -115,13 +115,15 @@ export function combatApproachRoute(
   const route = candidates
     .filter((candidate) => gridDistanceFt(candidate.destination, target) <= Math.max(0, rangeFt))
     .sort((left, right) => left.costFt - right.costFt
+      || Math.hypot(left.destination.x - target.x, left.destination.y - target.y)
+        - Math.hypot(right.destination.x - target.x, right.destination.y - target.y)
+      || Math.hypot(left.destination.x - origin.x, left.destination.y - origin.y)
+        - Math.hypot(right.destination.x - origin.x, right.destination.y - origin.y)
       || left.path.length - right.path.length
       || left.destination.y - right.destination.y
       || left.destination.x - right.destination.x)[0];
-  return route ? {
-    ...route,
-    available: route.costFt <= availableFt,
-    availableFt,
-    remainingFt: Math.max(0, availableFt - route.costFt),
-  } : null;
+  if (!route) return null;
+  return route.path.length ? combatMovementRoute(state, actorId, route.destination) : {
+    ...route, available: true, availableFt, remainingFt: availableFt,
+  };
 }

@@ -106,8 +106,8 @@ describe('TacticalBattleMap world-object clarity', () => {
     expect(container.querySelector('.combat-hit-chance')).toBeNull();
     const cell = container.querySelector<HTMLButtonElement>('[aria-label="Клетка 3, 1"]')!;
     await act(async () => cell.dispatchEvent(new MouseEvent('mouseover', {bubbles: true})));
-    expect(cell.querySelector('.combat-move-preview')?.textContent).toContain('Перемещение 10 фт.');
-    expect(cell.querySelector('.combat-move-preview')?.textContent).toContain('Останется 20 фт.');
+    expect(document.querySelector('.combat-move-preview')?.textContent).toContain('Перемещение 10 фт.');
+    expect(document.querySelector('.combat-move-preview')?.textContent).toContain('Останется 20 фт.');
     expect(cell.querySelector('.battle-token--ghost')).not.toBeNull();
     expect(container.querySelectorAll('.is-route-preview')).toHaveLength(2);
   });
@@ -132,6 +132,7 @@ describe('TacticalBattleMap world-object clarity', () => {
         enemy: {actorId: 'enemy', color: '#fff', position: {x: 4, y: 0}},
       },
       catalogActions: [defaultAttack],
+      opportunityActionIds: {},
       movementRemainingFt: {hero: 30}, combatAreas: {}, movementModeByActor: {},
     } as unknown as SoloCombatState;
     await act(async () => root.render(<TacticalBattleMap state={state} actorId="hero"
@@ -139,8 +140,8 @@ describe('TacticalBattleMap world-object clarity', () => {
       implicitActionsEnabled movementMode={false} onCell={() => {}} />));
     const targetCell = container.querySelector<HTMLButtonElement>('[data-actor-id="enemy"]')!;
     await act(async () => targetCell.dispatchEvent(new MouseEvent('mouseover', {bubbles: true})));
-    expect(targetCell.querySelector('.combat-hit-chance')?.textContent).toContain('Подойти 15 фт.');
-    expect(targetCell.querySelector('.combat-hit-chance')?.textContent).toContain('останется 15 фт.');
+    expect(document.querySelector('.combat-hit-chance')?.textContent).toContain('Подойти 15 фт.');
+    expect(document.querySelector('.combat-hit-chance')?.textContent).toContain('останется 15 фт.');
     expect(container.querySelectorAll('.is-route-preview')).toHaveLength(3);
     expect(container.querySelector('.battle-token--ghost')).not.toBeNull();
   });

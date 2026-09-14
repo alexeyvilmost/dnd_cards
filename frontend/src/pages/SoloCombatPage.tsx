@@ -95,6 +95,7 @@ import type { ActionWorldInput } from '../rules-core/domain';
 import type { WorldObjectState } from '../rules-core/worldObjects';
 import { bindCombatWorldInputFacts } from '../solo-combat/worldInput';
 import { roguelikeApi } from '../roguelike/api';
+import { commandCombatInteraction } from '../roguelike/combatInteraction';
 import { runEncounterSelection, runSheetURL } from '../roguelike/navigation';
 import './CharacterForge.css';
 import './CharacterSheetV2.css';
@@ -496,7 +497,8 @@ export default function SoloCombatPage() {
     if (trustedBusyRef.current) return;
     trustedBusyRef.current = true;
     setBusy(true); setError(null);
-    void roguelikeApi.command(run.id, run.revision, 'combat_intent', {intent}).then(accepted => {
+    void commandCombatInteraction(run, intent, (current, command) =>
+      roguelikeApi.command(current.id, current.revision, 'combat_intent', {intent: command})).then(accepted => {
       if (!accepted.combat_state || !accepted.character) throw new Error('Сервер не вернул состояние боя');
       trustedRunRef.current = accepted;
       characterRef.current = accepted.character;

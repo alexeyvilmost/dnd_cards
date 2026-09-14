@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import type { Action, PassiveEffect, Spell } from '../types';
+import type { Action, Card, PassiveEffect, Spell } from '../types';
+import type {RuntimeState} from '../mvp/contracts';
+import ItemPreview from './ItemPreview';
+import CardPreview from './CardPreview';
+import {useSiteSettings} from '../settings';
 import type { WeaponAttackPreview } from '../engine/weapon';
 import { usePinMode } from '../hooks/usePinMode';
 import ForgeEntityIcon from './forge/ForgeEntityIcon';
@@ -25,8 +29,11 @@ type Props = {
   detail?: ReactNode;
   disabled?: boolean;
   disabledTitle?: string;
+  inlineDisabledReason?: boolean;
   level?: number;
   actionRef?: Action;
+  itemRef?: Card;
+  runtime?: Pick<RuntimeState,'resources'|'maxResources'>;
   effectRef?: PassiveEffect;
   spellRef?: Spell;
   /** Контекст заклинателя (лист): СЛ спасброска и бонус атаки заклинаниями для превью. */
@@ -49,8 +56,10 @@ const SheetActionLine = ({
   detail,
   disabled,
   disabledTitle,
+  inlineDisabledReason = true,
   level,
   actionRef,
+  itemRef, runtime,
   effectRef,
   spellRef,
   spellcasting,
@@ -61,6 +70,7 @@ const SheetActionLine = ({
   onActivate,
 }: Props) => {
   const [hover, setHover] = useState(false);
+  const settings=useSiteSettings();
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const { popoverRef, popoverPos } = useViewportPopoverPosition(hover, pos);
   // Режим закрепления (T): превью не закрывается при уходе мыши и интерактивно.
@@ -77,6 +87,11 @@ const SheetActionLine = ({
     setPos({ x: e.clientX, y: e.clientY });
   };
   const onLeave = () => { if (!pinModeActive) setHover(false); };
+  const onFocus = (event: React.FocusEvent<HTMLElement>) => {
+    if (disableHover) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    setPos({x: bounds.right, y: bounds.top}); setHover(true);
+  };
 
   return (
     <>
@@ -85,10 +100,13 @@ const SheetActionLine = ({
           type="button"
           className={`cs-action-tile${disabled ? ' cs-action-tile--disabled' : ''}`}
           aria-disabled={(disabled && !inspectMode) || undefined}
+          aria-label={disabled && disabledTitle ? `${name}: ${disabledTitle}` : name}
           title={disabled ? disabledTitle : name}
           onClick={disabled && !inspectMode ? undefined : onActivate}
           onMouseEnter={onEnter}
           onMouseLeave={onLeave}
+          onFocus={onFocus}
+          onBlur={onLeave}
           onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
         >
           <ForgeEntityIcon imageUrl={imageUrl?.trim() || null} alt={name} fill />
@@ -100,18 +118,20 @@ const SheetActionLine = ({
         <SheetEntityRow
           imageUrl={imageUrl}
           name={name}
-          detail={detail}
+          detail={<>{detail}{inlineDisabledReason && disabled && disabledTitle && <span className="cs-action-inline-reason">{disabledTitle}</span>}</>}
           disabled={disabled && !inspectMode}
           title={disabled ? disabledTitle : name}
           onClick={onActivate}
           onMouseEnter={onEnter}
           onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
           onMouseLeave={onLeave}
+          onFocus={onFocus}
+          onBlur={onLeave}
         />
       )}
       {/* Превью доступно ВСЕГДА (в т.ч. когда действие недоступно): показывает суть
           из данных сущности; причина недоступности — отдельным слоем, не вместо. */}
-      {!disableHover && hover && (effectRef || actionRef || spellRef || description) && createPortal((
+      {!disableHover && hover && (itemRef || effectRef || actionRef || spellRef || description) && createPortal((
         <div
           ref={popoverRef}
           className="forge-effect-popover"
@@ -123,7 +143,8 @@ const SheetActionLine = ({
           onMouseLeave={onLeave}
         >
           {effectRef && <EffectPreview effect={effectRef} sourceLabel={sourceLabel} disableHover />}
-          {actionRef && <ActionPreview action={actionRef} sourceLabel={sourceLabel} weaponAttackPreview={weaponAttackPreview} disableHover />}
+          {itemRef && (settings.itemPreview==='interface'?<ItemPreview card={itemRef} disableHover/>:<CardPreview card={itemRef} disableHover/>)}
+          {actionRef && <ActionPreview action={actionRef} runtime={runtime} sourceLabel={sourceLabel} weaponAttackPreview={weaponAttackPreview} disableHover />}
           {spellRef && <SpellPreview spell={spellRef} disableHover spellcasting={spellcasting} />}
           {!effectRef && !actionRef && !spellRef && description && (
             <div className="sp-tip">

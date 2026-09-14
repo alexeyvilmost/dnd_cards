@@ -39,6 +39,7 @@ describe('SupportStatusBadge', () => {
   });
 
   it('shows a percentage without presenting transitive cells as browser scenarios', () => {
+    localStorage.setItem('site-settings', JSON.stringify({ playerMode: false }));
     act(() => root.render(<SupportStatusBadge entity={entity} />));
     expect(container.textContent).toContain('100% evidence');
     expect(container.textContent).not.toContain('12/12');

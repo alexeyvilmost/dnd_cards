@@ -574,6 +574,9 @@ export default function CombatHotbar({
                 description={presentation?.description}
                 level={presentation?.spellRef?.level}
                 actionRef={contextualActionRef}
+                runtime={actor.runtime}
+                itemRef={[...(actor.character.knownCards ?? []),...(actor.character.equippedCards ?? [])].find(card=>
+                  action.sourceEntityIds.includes(card.id) || (isGenericWeaponAttack && card.id===actor.runtime.equipment.main_hand))}
                 weaponAttackPreview={weaponPreview}
                 spellRef={presentation?.spellRef}
                 spellcasting={spellcasting}

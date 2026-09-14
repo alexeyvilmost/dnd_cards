@@ -126,7 +126,12 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 			"envelope": run.CombatEnvelope, "intent": request.Payload["intent"], "character": run.Character})
 	}
 	if err != nil {
-		fail("combat_execution_failed", "не удалось выполнить действие; состояние не изменено")
+		var rejection *roguelikeWorkerRejection
+		if errors.As(err, &rejection) {
+			fail(rejection.Code, rejection.Message)
+		} else {
+			fail("combat_execution_failed", "Не удалось выполнить действие; эта команда не изменила состояние. Попробуйте ещё раз после обновления.")
+		}
 		return
 	}
 	if err = applyTrustedRoguelikePatch(run.Character, result.Patch); err != nil {

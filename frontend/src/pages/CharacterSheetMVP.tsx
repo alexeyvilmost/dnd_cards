@@ -989,12 +989,13 @@ const CharacterSheetMVP = () => {
       plan,
       label,
       <ValueBreakdownPanel breakdown={breakdown} label={label} />,
+      { compactCheck: { kind: rollKind === 'saving_throw' ? 'save' : 'check', roll: () => rollD20({ advantage: collected.advantage, modifiers: [...parts], rules: collected.rules, rng: Math.random }) } },
     );
     if (decision.mode === 'cancel') return;
     const rng = decision.mode === 'manual'
       ? plannedValuesRng(plan, decision.values)
       : () => Math.random();
-    const roll = rollD20({
+    const roll = (decision.mode === 'manual' ? decision.roll : undefined) ?? rollD20({
       advantage: collected.advantage,
       modifiers: [...parts],
       rng,

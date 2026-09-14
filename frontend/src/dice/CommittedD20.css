@@ -1,0 +1,39 @@
+.committed-die:has(canvas) { width: 144px; height: 144px; position: relative; flex: none; filter: none; }
+.committed-die-canvas { display: block; position: relative; width: 100%; height: 100%; z-index: 1; filter: drop-shadow(0 5px 5px #0008); }
+.committed-die-shadow { position: absolute; left: 17%; right: 17%; bottom: 3%; height: 13%; border-radius: 50%; background: radial-gradient(ellipse,#000b,transparent 70%); }
+.committed-die:has(canvas).is-rolling { background: radial-gradient(ellipse,#518ba719,transparent 67%); }
+.committed-die:has(canvas).is-discarded { opacity: .4; filter: grayscale(.7); }
+.committed-die:has(canvas).is-critical { background: radial-gradient(ellipse,#ebc26238,transparent 69%); }
+.committed-die-fallback { position: absolute; inset: 20%; display: grid; place-content: center; border: 1px solid #bda469; border-radius: 12px; background: #152c3b; color: #ffe5a7; font: 700 36px Georgia,serif; }
+.committed-die-fallback small { font: 11px Inter,sans-serif; color: #beac81; }
+.combat-initiative-dice .committed-die:has(canvas) { width: 68px; height: 68px; transform: none; margin: 0; }
+.combat-initiative-dice .committed-die:has(canvas) + .committed-die { margin-left: -20px; }
+.combat-attack-dice:has(canvas) { margin: 4px 0 14px; }
+@media(max-width:600px) { .committed-die:has(canvas) { width: 124px; height: 124px; } .combat-initiative-dice .committed-die:has(canvas) { width: 48px; height: 48px; } }
+.combat-reveal-result { display: block; margin: 8px auto; border: 0; background: transparent; color: #c7d9df; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+.combat-damage-packet:has(.combat-damage-rolls) { display: flex; flex-wrap: wrap; justify-content: center; text-align: center; }
+.combat-damage-packet:has(.combat-damage-rolls) > p { flex-basis: 100%; }
+.combat-damage-rolls { display: flex; flex-wrap: wrap; justify-content: center; width: 100%; gap: 4px; }
+.combat-damage-die { display: grid; justify-items: center; }
+.combat-damage-die .committed-die:has(canvas) { width: 88px; height: 88px; }
+.combat-damage-die > small { font-size: 10px; color: #b5ad9a; }
+.committed-die.is-critical-success { --critical-color: #f4ca6b; background: radial-gradient(ellipse,#eac36240,transparent 70%); }
+.committed-die.is-critical-failure { --critical-color: #ed6e63; background: radial-gradient(ellipse,#b9323d40,transparent 70%); }
+.committed-critical-fx { position: absolute; inset: 0; pointer-events: none; color: var(--critical-color); }
+.committed-critical-ring { position: absolute; inset: 13%; border: 1px solid currentColor; border-radius: 50%; opacity: .45; box-shadow: 0 0 14px currentColor; }
+.is-critical-failure .committed-critical-ring { border-radius: 0; clip-path: polygon(0 0,43% 0,49% 35%,60% 0,100% 0,100% 100%,56% 100%,51% 65%,39% 100%,0 100%); transform: rotate(45deg); }
+.committed-critical-spark { position: absolute; left: 50%; top: 50%; width: 2px; height: 10px; background: currentColor; opacity: 0; transform: rotate(var(--spark-angle)) translateY(-65px); }
+.has-critical-motion.is-critical-success .committed-die-canvas { animation: critical-crown .8s ease-out both; }
+.has-critical-motion.is-critical-failure .committed-die-canvas { animation: critical-fracture .65s ease-out both; }
+.has-critical-motion .committed-critical-ring { animation: critical-wave .9s ease-out both; }
+.has-critical-motion .committed-critical-spark { animation: critical-sparks 1s ease-out both; }
+.combat-critical-banner { margin: 0 0 14px; font: 700 11px/1.6 Inter,sans-serif; letter-spacing: .14em; text-align: center; text-wrap: balance; }
+.combat-critical-banner.is-success { color: #f4ca6b; }
+.combat-critical-banner.is-failure { color: #ed8a80; }
+.combat-critical-banner.is-animated { animation: critical-title .7s ease-out both; }
+@keyframes critical-crown { 0% { transform: scale(.94); filter: drop-shadow(0 0 2px #f4ca6b); } 35% { transform: scale(1.09); filter: drop-shadow(0 0 18px #f4ca6b); } 100% { transform: scale(1); filter: drop-shadow(0 0 6px #b9995070); } }
+@keyframes critical-fracture { 0%,100% { transform: translateX(0) rotate(0); } 18% { transform: translateX(-6px) rotate(-5deg); } 36% { transform: translateX(5px) rotate(4deg); } 54% { transform: translateX(-3px) rotate(-2deg); } 72% { transform: translateX(2px); } }
+@keyframes critical-wave { from { scale: .65; opacity: .85; } to { scale: 1.35; opacity: 0; } }
+@keyframes critical-sparks { 0% { opacity: 0; transform: rotate(var(--spark-angle)) translateY(-38px); } 20% { opacity: .9; } 100% { opacity: 0; transform: rotate(var(--spark-angle)) translateY(-91px) scaleY(.3); } }
+@keyframes critical-title { from { opacity: 0; translate: 0 5px; letter-spacing: .22em; } to { opacity: 1; translate: 0 0; letter-spacing: .14em; } }
+@media(prefers-reduced-motion:reduce) { .has-critical-motion .committed-die-canvas, .has-critical-motion .committed-critical-ring, .has-critical-motion .committed-critical-spark, .combat-critical-banner.is-animated { animation: none; } }

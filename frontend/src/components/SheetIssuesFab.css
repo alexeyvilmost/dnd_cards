@@ -161,6 +161,14 @@
 }
 
 /* Диалог искусности */
+.sheet-mastery-overlay { box-sizing: border-box; min-height: 0; }
+.sheet-settings-dialog.sheet-mastery-dialog {
+  box-sizing: border-box;
+  width: min(960px, 100%);
+  max-width: 100%;
+  max-height: calc(100dvh - 40px);
+  overflow: hidden;
+}
 .sheet-mastery-dialog {
   width: min(96vw, 960px);
   max-height: 92vh;

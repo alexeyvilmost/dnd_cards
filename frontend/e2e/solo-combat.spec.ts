@@ -102,6 +102,18 @@ test('combat setup invites an owned ally and keeps shared action cards inside th
   api.seedCatalogRow('actions', monsterAction);
   api.seedMonster(monster);
 
+  // Icons are the product default; explicitly select rows first so this test
+  // continues to exercise viewport fitting in both supported representations.
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem('e2e:initial-action-rows')) return;
+    sessionStorage.setItem('e2e:initial-action-rows', '1');
+    const current = JSON.parse(localStorage.getItem('site-settings') || '{}');
+    localStorage.setItem('site-settings', JSON.stringify({
+      ...current,
+      entityDisplay: { ...(current.entityDisplay ?? {}), actions: 'row', effects: 'row' },
+    }));
+  });
+
   await page.goto(`/characters-v3/${CHARACTER_ID}`);
   await dismissMobileSuggestion(page);
   const bottomSheetAction = page.locator('[data-action-id] .sheet-item-row:visible').last();

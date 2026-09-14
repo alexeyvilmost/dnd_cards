@@ -5,6 +5,8 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$EnvironmentFile,
     [string]$ArtifactsDirectory,
+    [ValidatePattern('^[a-z][a-z0-9_]*$')]
+    [string]$DatabaseName,
     [switch]$SkipBuild
 )
 $ErrorActionPreference = 'Stop'
@@ -12,6 +14,12 @@ $qaRoot = Split-Path $PSScriptRoot -Parent
 $qaConfig = Get-Content -LiteralPath $EnvironmentFile -Raw | ConvertFrom-Json
 foreach ($qaSetting in $qaConfig.PSObject.Properties) {
     [Environment]::SetEnvironmentVariable($qaSetting.Name, [string]$qaSetting.Value, 'Process')
+}
+if ($DatabaseName) {
+    $qaDatabase = [System.UriBuilder]$env:DATABASE_URL
+    if (!$qaDatabase.Uri.IsLoopback) { throw 'DatabaseName override is allowed only for a local database' }
+    $qaDatabase.Path = $DatabaseName
+    $env:DATABASE_URL = $qaDatabase.Uri.AbsoluteUri
 }
 if (!$ArtifactsDirectory) { $ArtifactsDirectory = Join-Path (Split-Path (Resolve-Path -LiteralPath $EnvironmentFile) -Parent) 'rules-artifacts' }
 $env:SOURCE_COMMIT = 'local-working-tree'
@@ -39,3 +47,4 @@ if ($Service -eq 'api') {
     $env:DEV_API_PROXY_TARGET = 'http://127.0.0.1:8080'
     node node_modules/vite/bin/vite.js --host 127.0.0.1 --port 3000 --strictPort
 }
+exit $LASTEXITCODE

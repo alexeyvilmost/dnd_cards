@@ -28,6 +28,7 @@ export type SheetAction = {
   /** Ключ виртуального пула использований (uses_<card_number|id>), если у механики есть uses. */
   usesKey?: string;
   actionRef?: Action;
+  itemRef?: Card;
   effectRef?: PassiveEffect;
   spellRef?: Spell;
   /** Immutable content provenance used by the canonical rules bridge. */
@@ -383,6 +384,7 @@ export function collectSheetActions(
         name: card.name,
         mechanics: mechanics2,
         group: 'item' as const,
+        itemRef: card,
         imageUrl: card.image_url,
         sourceLabel: 'Предмет',
         usesKey: itemUsesKey,

@@ -5,6 +5,7 @@ import type { SoloCombatState } from './types';
 import {
   combatActionIsAttack,
   combatApproachRoute,
+  combatMovementRoute,
   defaultCombatAttackAction,
 } from './defaultInteraction';
 import { combatIdentity } from './combatIdentity';
@@ -48,6 +49,36 @@ function state(): SoloCombatState {
 }
 
 describe('contextual combat interaction', () => {
+  it('does not return to the diagonal after rounding the blocker in the reported screenshot',()=>{
+    const value=state();
+    value.tokens.hero.position={x:9,y:1}; value.tokens.enemy1.position={x:8,y:1};
+    value.tokens.enemy2.position={x:0,y:0}; value.tokens.ally.position={x:0,y:1};
+    const route=combatMovementRoute(value,'hero',{x:1,y:0})!;
+    expect(route.costFt).toBe(40);
+    expect(route.path).toEqual(Array.from({length:8},(_,i)=>({x:8-i,y:0})));
+  });
+  it('follows the direct ray in the reported guard layout instead of detouring upward', () => {
+    const value = state();
+    value.tokens.hero.position = {x: 1, y: 2};
+    value.tokens.enemy1.position = {x: 1, y: 1};
+    value.tokens.enemy2.position = {x: 5, y: 0};
+    const route = combatMovementRoute(value, 'hero', {x: 7, y: 3})!;
+    expect(route.costFt).toBe(30);
+    expect(route.path).toHaveLength(6);
+    expect(route.path.every(p => p.y === 2 || p.y === 3)).toBe(true);
+    expect(route.path.map(p => p.x)).toEqual([2, 3, 4, 5, 6, 7]);
+  });
+
+  it('uses a straight horizontal route and still detours around an occupied cell', () => {
+    const value=state();
+    value.tokens.hero.position={x:1,y:4};
+    expect(combatMovementRoute(value,'hero',{x:7,y:4})!.path.every(p=>p.y===4)).toBe(true);
+    value.tokens.enemy1.position={x:4,y:4};
+    const route=combatMovementRoute(value,'hero',{x:7,y:4})!;
+    expect(route.path).not.toContainEqual({x:4,y:4});
+    expect(route.costFt).toBe(30);
+    expect(route.path.every(p=>Math.abs(p.y-4)<=1)).toBe(true);
+  });
   it('prefers the equipped weapon contract and recognizes explicit attacks', () => {
     const value = state();
     expect(defaultCombatAttackAction(value, 'hero')?.id).toBe('weapon');

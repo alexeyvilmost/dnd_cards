@@ -176,7 +176,7 @@ export default function MobileCharacterSheet() {
   const [overlay, setOverlay] = useState<
     | { type: 'hp' }
     | { type: 'ac' }
-    | { type: 'check'; label: string; bonus: number; ability: AbilityKey }
+    | { type: 'check'; label: string; bonus: number; ability: AbilityKey; rollKind?: 'save' | 'check' }
     | { type: 'notes'; description: string; notes: string }
     | { type: 'entity'; view: MobileEntityView; apply?: () => void; disabledReason?: string }
     | null
@@ -245,19 +245,19 @@ export default function MobileCharacterSheet() {
     if (first) flash(describeEngineEvent(first));
   }, [data.appendEvents, flash, readOnly]);
 
-  const runCheck = async (label: string, bonus: number, ability: AbilityKey) => {
+  const runCheck = async (label: string, bonus: number, ability: AbilityKey, rollKind: 'save' | 'check' = 'check') => {
     if (readOnly) return;
     const plan: PlannedDie[] = [{
       sides: 20,
       label: `${label} · ${ABILITY_LABEL_RU[ability]}`,
     }];
     setOverlay(null);
-    const decision = await diceDialog.request(plan, label);
+    const decision = await diceDialog.request(plan, label, undefined, { compactCheck: { kind: rollKind, roll: () => rollD20({ modifiers: [{ value: bonus, source: label }], rng: Math.random }) } });
     if (decision.mode === 'cancel') return;
     const rng = decision.mode === 'manual'
       ? plannedValuesRng(plan, decision.values)
       : Math.random;
-    const roll = rollD20({
+    const roll = (decision.mode === 'manual' ? decision.roll : undefined) ?? rollD20({
       modifiers: [{ value: bonus, source: label }],
       rng,
     });
@@ -443,6 +443,7 @@ export default function MobileCharacterSheet() {
                         onClick={() => setOverlay({
                           type: 'check',
                           label: `Спасбросок: ${ABILITY_LABEL_RU[ability]}`,
+                          rollKind: 'save',
                           bonus: save,
                           ability,
                         })}
@@ -769,7 +770,7 @@ export default function MobileCharacterSheet() {
             <button
               type="button"
               className="m-button m-button--wide m-button--gold"
-              onClick={() => runCheck(overlay.label, overlay.bonus, overlay.ability)}
+              onClick={() => runCheck(overlay.label, overlay.bonus, overlay.ability, overlay.rollKind)}
             >
               <Dices size={18} /> Бросить {fmtMod(overlay.bonus)}
             </button>

@@ -24,12 +24,14 @@ interface Props {
   onMouseEnter?: (e: React.MouseEvent) => void;
   onMouseMove?: (e: React.MouseEvent) => void;
   onMouseLeave?: () => void;
+  onFocus?: (e: React.FocusEvent<HTMLElement>) => void;
+  onBlur?: () => void;
 }
 
 export default function SheetEntityRow({
   imageUrl, name, namePrefix, nameSuffix, detail, accent, qty, right, stamp,
   dimmed, disabled, selected, title, className = '',
-  onClick, onMouseEnter, onMouseMove, onMouseLeave,
+  onClick, onMouseEnter, onMouseMove, onMouseLeave, onFocus, onBlur,
 }: Props) {
   const url = imageUrl?.trim();
   const rowClassName = `sheet-item-row${dimmed ? ' is-dimmed' : ''}${disabled ? ' is-disabled' : ''}${selected ? ' is-selected' : ''} ${className}`;
@@ -75,6 +77,8 @@ export default function SheetEntityRow({
         onMouseEnter={onMouseEnter}
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
+        onFocus={onFocus}
+        onBlur={onBlur}
       >
         {rowContent}
       </div>
@@ -92,6 +96,8 @@ export default function SheetEntityRow({
       onMouseEnter={onMouseEnter}
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
+      onFocus={onFocus}
+      onBlur={onBlur}
     >
       {rowContent}
     </button>

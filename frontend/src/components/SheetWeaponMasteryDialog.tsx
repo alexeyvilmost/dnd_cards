@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import {createPortal} from 'react-dom';
+import {useCombatDialogFocus} from './useCombatDialogFocus';
+import './SheetIssuesFab.css';
 import { Check, ChevronDown, Package, Swords, X } from 'lucide-react';
 import type { ForgeCharacter } from '../character/types';
 import type { PendingChoice } from '../mechanics/collectChoices';
@@ -14,7 +17,9 @@ import SheetEntityRow from './SheetEntityRow';
 interface Props {
   choices: PendingChoice[];
   resolved: Record<string, string[]>;
-  character: ForgeCharacter;
+  character?: Pick<ForgeCharacter, 'inventory_items' | 'equipment'>;
+  unavailableOptions?: Record<string, string>;
+  initialShowAll?: boolean;
   /** Карты инвентаря/экипировки — для фильтра «есть у персонажа» и иконок. */
   equipCards?: Map<string, Card>;
   busy?: boolean;
@@ -28,7 +33,7 @@ interface Props {
 }
 
 /** Виды оружия, которые сейчас есть в инвентаре или надеты. */
-function ownedWeaponTypeIds(character: ForgeCharacter, equipCards?: Map<string, Card>): Set<string> {
+function ownedWeaponTypeIds(character: Pick<ForgeCharacter, 'inventory_items' | 'equipment'>, equipCards?: Map<string, Card>): Set<string> {
   const out = new Set<string>();
   if (!equipCards?.size) return out;
   const consider = (cardId: string | null | undefined) => {
@@ -44,7 +49,7 @@ function ownedWeaponTypeIds(character: ForgeCharacter, equipCards?: Map<string, 
 /** Предпочесть картинку из инвентаря, иначе шаблон библиотеки. */
 function imageForWeaponType(
   weaponType: string,
-  character: ForgeCharacter,
+  character: Pick<ForgeCharacter, 'inventory_items' | 'equipment'>,
   equipCards: Map<string, Card> | undefined,
   templates: Map<string, Card>,
 ): string | null | undefined {
@@ -71,7 +76,8 @@ function imageForWeaponType(
  * Сначала — виды из инвентаря; полный каталог — по кнопке.
  */
 export default function SheetWeaponMasteryDialog({
-  choices, resolved, character, equipCards, busy, error, onChange, onClose,
+  choices, resolved, character = {}, equipCards, busy, error, onChange, onClose,
+  unavailableOptions = {}, initialShowAll = false,
   onConfirm, confirmLabel, hint, confirmDisabled,
 }: Props) {
   const templates = useWeaponTemplatesByType();
@@ -82,7 +88,8 @@ export default function SheetWeaponMasteryDialog({
     [character, equipCards],
   );
   const [activeChoiceId, setActiveChoiceId] = useState(choices[0]?.id ?? '');
-  const [showAll, setShowAll] = useState(false);
+  const [showAll, setShowAll] = useState(initialShowAll);
+  const dialogRef = useCombatDialogFocus();
 
   const active = useMemo(
     () => choices.find((c) => c.id === activeChoiceId) ?? choices[0],
@@ -135,12 +142,12 @@ export default function SheetWeaponMasteryDialog({
     }
   }, [choices, activeChoiceId]);
 
-  useEffect(() => { setShowAll(false); }, [activeChoiceId]);
+  useEffect(() => { setShowAll(initialShowAll); }, [activeChoiceId, initialShowAll]);
 
   if (!choices.length || !active) return null;
 
   const toggle = (weaponId: string) => {
-    if (busy) return;
+    if (busy || (unavailableOptions[weaponId] && !value.includes(weaponId))) return;
     if (value.includes(weaponId)) {
       onChange(active.id, value.filter((x) => x !== weaponId));
       return;
@@ -164,19 +171,21 @@ export default function SheetWeaponMasteryDialog({
         name={w.label}
         detail={[w.groupLabel, mastery?.name, inBag ? 'в инвентаре' : null].filter(Boolean).join(' · ')}
         selected={selected}
-        title={mastery?.description || w.label}
+        disabled={busy || (!!unavailableOptions[w.id] && !selected)}
+        title={unavailableOptions[w.id] || mastery?.description || w.label}
         onClick={() => toggle(w.id)}
         right={selected ? <Check size={16} className="sheet-mastery-check" /> : undefined}
       />
     );
   };
 
-  return (
-    <div className="sheet-equip-overlay" onClick={onClose}>
-      <div
+  return createPortal(
+    <div className="forge sheet-equip-overlay sheet-mastery-overlay" onClick={onClose}>
+      <section ref={dialogRef} tabIndex={-1}
         className="sheet-settings-dialog sheet-mastery-dialog"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
+        aria-modal="true"
         aria-label="Искусность оружия"
       >
         <button type="button" className="sheet-equip-close" onClick={onClose} title="Закрыть (Esc)">
@@ -270,7 +279,7 @@ export default function SheetWeaponMasteryDialog({
             {confirmLabel ?? (done ? 'Готово' : 'Закрыть')}
           </button>
         </div>
-      </div>
-    </div>
+      </section>
+    </div>, document.body
   );
 }

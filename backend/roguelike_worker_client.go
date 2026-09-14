@@ -15,6 +15,37 @@ type roguelikeWorkerClient struct {
 	URL, Token string
 	HTTP       *http.Client
 }
+
+// Only fixed, player-facing errors cross the worker boundary. Never forward
+// arbitrary exception messages: snapshots and entropy are private.
+type roguelikeWorkerRejection struct{ Code, Message string }
+
+func (err *roguelikeWorkerRejection) Error() string { return err.Message }
+
+func publicWorkerRejection(code, message string) *roguelikeWorkerRejection {
+	if code == "artifact_unavailable" {
+		return &roguelikeWorkerRejection{"combat_rules_unavailable", "Версия правил этого боя временно недоступна. Действие не применено."}
+	}
+	if code != "invalid_combat_command" {
+		return nil
+	}
+	if message == "Неизвестная команда боя" {
+		return &roguelikeWorkerRejection{"combat_command_unsupported", "Эта версия боя не поддерживает команду. Обновите страницу; действие не применено."}
+	}
+	allowed := map[string]bool{
+		"Сначала завершите текущее решение или дождитесь своего хода": true,
+		"Сначала завершите текущее решение":                           true,
+		"Бой уже завершён":         true,
+		"Цель вне дальности":       true,
+		"Недостаточно перемещения": true,
+		"Способность доступна только после соответствующего события": true,
+	}
+	if allowed[message] {
+		return &roguelikeWorkerRejection{"combat_command_unavailable", message + ". Действие не применено."}
+	}
+	return nil
+}
+
 type roguelikeWorkerNeed struct {
 	Kind       string `json:"kind"`
 	EntityType string `json:"entityType"`
@@ -59,6 +90,15 @@ func (client roguelikeWorkerClient) call(ctx context.Context, endpoint string, b
 	defer response.Body.Close()
 	// Never log response bodies: they can contain private combat entropy.
 	if response.StatusCode != http.StatusOK {
+		var failure struct {
+			Error   string `json:"error"`
+			Message string `json:"message"`
+		}
+		if json.NewDecoder(io.LimitReader(response.Body, 4096)).Decode(&failure) == nil {
+			if rejection := publicWorkerRejection(failure.Error, failure.Message); rejection != nil {
+				return nil, rejection
+			}
+		}
 		return nil, fmt.Errorf("rules worker rejected command (HTTP %d)", response.StatusCode)
 	}
 	const maximum = 16 << 20

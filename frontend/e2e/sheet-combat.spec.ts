@@ -646,8 +646,8 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
     await dismissMobileSuggestion(page);
     const line = page.locator(`[data-action-id="${weaponActionId}"]`);
     await expect(line).toBeVisible({ timeout: 30_000 });
-    await expect(line.getByText('Дальнобойная атака оружием', { exact: true })).toBeVisible();
     const button = line.getByRole('button');
+    await expect(button).toHaveAccessibleName('Дальнобойная атака оружием');
     await expect(button).toBeEnabled({ timeout: 30_000 });
     api.loseNextRuntimeCommandResponse();
     await button.click();

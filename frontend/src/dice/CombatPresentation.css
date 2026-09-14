@@ -18,5 +18,8 @@
 @media(max-width:600px){.combat-presentation-backdrop{padding:10px}.combat-presentation-dialog{padding:20px 15px}.combat-initiative-row{gap:7px;padding:7px}.combat-participant-portrait{width:32px;height:32px}.combat-initiative-dice{width:48px}.combat-initiative-name b{font-size:12px}.combat-initiative-name small{font-size:10px}.combat-roll-mode{flex-wrap:wrap}.combat-floating-stack{max-width:180px}.combat-attack-versus{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.committed-die.is-rolling .committed-die-tumble{animation:none}.combat-attack-fx svg{animation:none;opacity:0}.combat-floating-stack{animation:combat-fade-in .1s ease-out both}.combat-presentation-backdrop,.combat-roll-result{animation:none}}
 .combat-presentation-dialog:focus{outline:none}
+.combat-roll-preferences { display: grid; gap: 6px; margin-top: 18px; }
+.combat-roll-preferences .combat-roll-mode { margin: 0; justify-content: space-between; gap: 8px; }
+.combat-roll-preferences select { max-width: 100%; }
 .combat-presentation-dialog.forge{position:relative;inset:auto;display:block;overflow:visible;background:radial-gradient(ellipse at top,#322a1b,#171510 75%)}.combat-attack-fx svg{left:-80px;top:-30px}.combat-attack-fx.is-ranged svg{left:-61px}
 .combat-floating-cue{max-width:100%;box-sizing:border-box}.combat-floating-cue b{overflow-wrap:anywhere}.combat-floating-cue img{flex:none}

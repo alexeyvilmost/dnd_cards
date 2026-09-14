@@ -17,6 +17,7 @@ export type CombatRollMode = 'standard' | 'fast' | 'skip';
 
 export interface SiteSettings {
   combatRollMode: CombatRollMode;
+  enemyCombatRollMode: CombatRollMode;
   /** Диалог броска кубов перед действиями (авто или ввод физических кубов). */
   diceDialog: boolean;
   /** Физическая 3D-сцена броска. Если выключена, остаётся обычный диалог и ручной ввод. */
@@ -38,21 +39,25 @@ export interface SiteSettings {
 }
 
 const KEY = 'site-settings';
+export function combatRollModeFor(settings: Pick<SiteSettings, 'combatRollMode' | 'enemyCombatRollMode'>, audience?: 'own' | 'enemy'): CombatRollMode {
+  return audience === 'enemy' ? settings.enemyCombatRollMode : settings.combatRollMode;
+}
 const EVENT = 'site-settings-changed';
 
 const DEFAULTS: SiteSettings = {
   combatRollMode: 'standard',
+  enemyCombatRollMode: 'standard',
   diceDialog: true,
   dice3d: true,
   dice3dAutoThrow: false,
   entityDisplay: {
     spells: 'icon',
-    actions: 'row',
-    effects: 'row',
-    items: 'row',
+    actions: 'icon',
+    effects: 'icon',
+    items: 'icon',
   },
-  itemPreview: 'card',
-  playerMode: false,
+  itemPreview: 'interface',
+  playerMode: true,
   showOriginalNames: false,
   allowSheetEntityAdditions: true,
 };
@@ -70,6 +75,10 @@ export function getSettings(): SiteSettings {
       entityDisplay: { ...DEFAULTS.entityDisplay, ...(parsed.entityDisplay ?? {}) },
     };
     if (!['standard', 'fast', 'skip'].includes(merged.combatRollMode)) merged.combatRollMode = 'standard';
+    // Keep the former global preference for both sides when migrating.
+    if (!['standard', 'fast', 'skip'].includes(parsed.enemyCombatRollMode ?? '')) {
+      merged.enemyCombatRollMode = merged.combatRollMode;
+    }
     // Миграция: раньше 'interface' было третьим значением entityDisplay.items (раскладка);
     // теперь это отдельная настройка itemPreview. Переносим старое значение.
     if ((merged.entityDisplay.items as string) === 'interface') {

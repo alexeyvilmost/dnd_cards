@@ -3277,6 +3277,8 @@ export default function SheetActionsPanel({
                   level={action.level}
                   variant={actionsAsIcons ? 'icon' : 'row'}
                   actionRef={action.actionRef}
+                  itemRef={action.itemRef}
+                  runtime={runtime}
                   effectRef={action.effectRef}
                   spellRef={action.spellRef}
                   spellcasting={ruleState.spellcasting
@@ -3285,6 +3287,7 @@ export default function SheetActionsPanel({
                   weaponAttackPreview={weaponPreview}
                   disabled={disabled}
                   disabledTitle={reason ?? 'Недостаточно ресурсов'}
+                  inlineDisabledReason={!panelDisabledReason}
                   disableHover={disableHoverPreviews}
                   inspectMode={!!onInspectAction}
                   onActivate={() => onInspectAction

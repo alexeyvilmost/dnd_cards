@@ -1,7 +1,7 @@
 import {combatHideFacts, combatHideIssue} from './hide';
 import {foldEvents} from '../rules-core/reducer';
-import {approachAndExecuteCombatAction, canEscapeActorGrapple, escapeActorGrapple, previewCombatAttackRoll} from './engine';
-import { presentCombatEntries } from './presentation';
+import {approachAndExecuteCombatAction, canEscapeActorGrapple, escapeActorGrapple, previewCombatAttackRoll, previewMovementThreats} from './engine';
+import { groupCombatSaveBeats, presentCombatEntries } from './presentation';
 import { handleCommand } from '../rules-core/handler';
 import {createSheetCombatSession} from '../character/sheetCombatSession';
 import {telekineticHeldObjects} from '../rules-core/telekineticMovement';
@@ -739,6 +739,17 @@ async function championMovementEncounter() {
 }
 
 describe('solo combat engine vertical integration', () => {
+  it('marks the exact reach-exit edge, once per enemy, without consuming its reaction', async () => {
+    const {state,actorId,enemyId}=await championMovementEncounter();
+    const before=clone(state);
+    const path=[{x:5,y:4},{x:6,y:4},{x:7,y:4}];
+    expect(previewMovementThreats(state,actorId,path)).toEqual([{actorId:enemyId,from:{x:5,y:4},to:{x:6,y:4}}]);
+    expect(state).toEqual(before);
+    const moved=moveActorAlongRoute({state:clone(state),actorId,destination:{x:7,y:4},rng:()=>.6});
+    expect(moved.world.actors[enemyId].runtime.resources.reaction).toBe(0);
+    state.world.actors[enemyId].runtime.resources.reaction=0;
+    expect(previewMovementThreats(state,actorId,path)).toEqual([]);
+  });
   it('previews the actual attack modifiers without changing the world or spending a resource', async () => {
     const {state, actorId, enemyId, attack} = await championMovementEncounter();
     const before = clone(state);
@@ -4040,7 +4051,7 @@ it('resumes a persisted monster route even after Dash has spent its action', asy
 
 
 describe('Bloodied Frenzy uses shared saves and opportunity attacks', () => {
-  async function setup(current: number) {
+  async function setup(current: number, quantity = 1) {
     const participant = fighterSeed();
     const actor = participant.canonical.world.actors[participant.character.id];
     actor.runtime.hp = {current: 100, max: 100, temp: 0};
@@ -4049,7 +4060,7 @@ describe('Bloodied Frenzy uses shared saves and opportunity attacks', () => {
     participant.character.max_hp = 100;
     const saveAction = projectRuleAction({...scimitar(), id: 'test-frenzy-save', name: 'Saving throw probe',
       mechanics: {activation: {mode: 'active', cost: [{resource: 'action', amount: 1}]},
-        targeting: {domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1, max_targets: 1,
+        targeting: {domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1, max_targets: quantity,
           range_ft: 30, requires_line_of_sight: true, allowed_relations: ['enemy']},
         effects: [{resolution: 'save', who: 'target', ability: 'con', dc: 15,
           on_fail: [{kind: 'damage', amount: 1, type: 'fire'}], on_success: []}]}}, {sourceEntityIds: ['test']});
@@ -4059,7 +4070,7 @@ describe('Bloodied Frenzy uses shared saves and opportunity attacks', () => {
     actor.capabilities.actionIds.push(saveAction.id);
     const monster = {...goblin(), max_hp: 67, ai: {bloodied_frenzy: true}};
     const state = await createSoloCombatState({character: participant.character, participant,
-      selected: [{monster, quantity: 1}], actions: [scimitar()], effects: [], rng: () => 0.5});
+      selected: [{monster, quantity}], actions: [scimitar()], effects: [], rng: () => 0.5});
     const monsterId = Object.values(state.world.actors).find(row => row.kind === 'monster')!.id;
     state.world.actors[monsterId].runtime.hp.current = current;
     state.tokens[actor.id].position = {x: 4, y: 4};
@@ -4073,6 +4084,23 @@ describe('Bloodied Frenzy uses shared saves and opportunity attacks', () => {
     const state = autoResolveSystemDecisions(executeCombatAction({...scene, targetIds: [scene.monsterId], rng}), rng);
     expect(state.world.pendingResolution).toBeFalsy();
     expect(draws).toBe(current === 33 ? 2 : 1);
+    const saves=presentCombatEntries(state,state.log).filter(beat=>beat.rollKind==='save');
+    expect(saves).toHaveLength(1);
+    expect(saves[0]).toMatchObject({sourceId:scene.actorId,targetId:scene.monsterId,audience:'own',actionName:'Saving throw probe'});
+    expect(saves[0].damage?.[0].amount).toBe(1);
+  });
+  it('groups a real multi-target command across its separate save continuation logs',async()=>{
+    const scene=await setup(34,3);
+    const targets=Object.values(scene.state.world.actors).filter(actor=>actor.kind==='monster').map(actor=>actor.id);
+    targets.forEach((id,i)=>{scene.state.tokens[id].position={x:5+i,y:4};});
+    const result=autoResolveSystemDecisions(executeCombatAction({...scene,targetIds:targets,rng:()=>.2}),()=>.2);
+    expect(result.world.pendingResolution).toBeFalsy();
+    const beats=presentCombatEntries(result,result.log).filter(beat=>beat.rollKind==='save');
+    expect(beats).toHaveLength(3);
+    const grouped=groupCombatSaveBeats(beats);
+    expect(grouped).toHaveLength(1);
+    expect(grouped[0].saveRows?.map(row=>row.targetId)).toEqual(targets);
+    expect(grouped[0].saveRows?.map(row=>row.damage?.[0].amount)).toEqual([1,1,1]);
   });
   it.each([34, 33])('uses the same health rule during an opportunity attack at %i/67HP', async current => {
     const scene = await setup(current);

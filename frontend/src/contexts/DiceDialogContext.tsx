@@ -11,16 +11,19 @@ import { summarizeDice, type PlannedDie } from '../engine/dicePlan';
 import Dice3DOverlay from '../dice/Dice3DOverlay';
 import { diceEntryMode } from '../dice/diceMode';
 import './DiceDialog.css';
+import SheetCheckRollDialog, { type CompactCheckRequest } from '../components/SheetCheckRollDialog';
+import type { RollLog } from '../mvp/contracts';
 
 /** Кандидат-цель для пикера в окне броска (действие бьёт по другому персонажу). */
 export interface TargetOption { id: string; name: string; disabled?: boolean; reason?: string }
 
 export type DiceDecision =
   | { mode: 'auto'; targetId?: string }
-  | { mode: 'manual'; values: number[]; targetId?: string }
+  | { mode: 'manual'; values: number[]; targetId?: string; roll?: RollLog }
   | { mode: 'cancel' };
 
 export interface DiceRequestOpts {
+  compactCheck?: CompactCheckRequest;
   confirm?: boolean;
   /** Действие взаимодействует с другим персонажем — показать пикер цели. */
   targets?: TargetOption[];
@@ -40,6 +43,7 @@ interface DiceDialogApi {
 }
 
 const Ctx = createContext<DiceDialogApi | null>(null);
+export function useOptionalDiceDialog() { return useContext(Ctx); }
 
 export function useDiceDialog(): DiceDialogApi {
   const api = useContext(Ctx);
@@ -48,6 +52,7 @@ export function useDiceDialog(): DiceDialogApi {
 }
 
 interface DialogState {
+  compactCheck?: CompactCheckRequest;
   id: string;
   plan: PlannedDie[];
   title: string;
@@ -68,10 +73,12 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
   const resolver = useRef<((d: DiceDecision) => void) | null>(null);
 
   const request = useCallback((plan: PlannedDie[], title: string, preview?: ReactNode, opts?: DiceRequestOpts): Promise<DiceDecision> => {
+    // A second request must not replace a pending roll (and orphan its caller).
+    if (resolver.current) return Promise.resolve({ mode: 'cancel' });
     const settings = getSettings();
     const entryMode = diceEntryMode(settings, plan.length > 0);
     // Оба интерфейса выключены (либо бросать нечего) → системный автобросок.
-    if (entryMode === 'auto' && !settings.diceDialog) return Promise.resolve({ mode: 'auto' });
+    if (!opts?.compactCheck && entryMode === 'auto' && !settings.diceDialog) return Promise.resolve({ mode: 'auto' });
     const hasTargets = !!opts?.targets?.length;
     const confirmOnly = plan.length === 0;
     // Пустой план, без подтверждения и без выбора цели (свободное действие) → авто.
@@ -79,12 +86,13 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
     return new Promise((resolve) => {
       resolver.current = resolve;
       setValues(plan.map(() => ''));
-      setShow3dScene(entryMode === '3d');
+      setShow3dScene(!opts?.compactCheck && entryMode === '3d');
       // Один кандидат — выбираем сразу; иначе просим выбрать.
       setTargetId(opts?.targets?.length === 1 ? opts.targets[0].id : '');
       setDialog({
         id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
         plan,
+        compactCheck: opts?.compactCheck,
         title,
         preview,
         confirmOnly,
@@ -113,11 +121,12 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
     return Number.isFinite(n) && n >= 1 && n <= sides ? n : null;
   }) : [];
   const manualReady = dialog ? parsed.every((v) => v !== null) : false;
-  const show3d = !!dialog && !dialog.confirmOnly && dialog.use3d && show3dScene;
+  const show3d = !!dialog && !dialog.compactCheck && !dialog.confirmOnly && dialog.use3d && show3dScene;
 
   return (
     <Ctx.Provider value={{ request }}>
       {children}
+      {dialog?.compactCheck && <SheetCheckRollDialog key={dialog.id} title={dialog.title} preview={dialog.preview} request={dialog.compactCheck} onCancel={() => finish({ mode: 'cancel' })} onComplete={roll => finish({ mode: 'manual', values: roll.dice.map(die => die.result), roll })} />}
       <Dice3DOverlay
         active={show3d}
         requestKey={dialog?.id ?? ''}
@@ -133,7 +142,7 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
         onCancel={() => finish({ mode: 'cancel' })}
         onFallback={() => setShow3dScene(false)}
       />
-      {dialog && !show3d && (
+      {dialog && !dialog.compactCheck && !show3d && (
         <div className="dice-dialog-backdrop" onClick={() => finish({ mode: 'cancel' })}>
           <div className="dice-dialog-wrap" onClick={(e) => e.stopPropagation()}>
             {dialog.preview && <div className="dice-dialog-preview">{dialog.preview}</div>}

@@ -193,7 +193,7 @@ test('required real-interaction spine: empty Forge reaches sheet and dedicated c
   if (await sheetNavigation.count()) {
     await sheetNavigation.getByRole('button', { name: 'Способности', exact: true }).click();
   }
-  const stone = page.getByText('Каменная стойкость', { exact: true });
+  const stone = page.getByTitle('Каменная стойкость', { exact: true });
   await expect(stone, 'one lineage ability must have one user-facing authority').toHaveCount(1);
 
   if (await sheetNavigation.count()) {

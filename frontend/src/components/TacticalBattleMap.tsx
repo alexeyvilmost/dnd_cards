@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CombatAreaState, GridPosition, SoloCombatState } from '../solo-combat/types';
 import { combatRelation, TACTICAL_HEIGHT, TACTICAL_WIDTH } from '../solo-combat/types';
 import { areaPositionsForAction, reachablePositions } from '../solo-combat/tacticalGrid';
-import { previewCombatAttackRoll } from '../solo-combat/engine';
+import { previewCombatAttackRoll, previewMovementThreats } from '../solo-combat/engine';
 import {
   combatActionIsAttack,
   combatApproachRoute,
@@ -13,6 +13,8 @@ import { combatIdentity } from '../solo-combat/combatIdentity';
 import { attackHitProbability } from '../engine/attackProbability';
 import type { CombatBeat } from '../solo-combat/presentation';
 import CombatMapFeedback from './CombatMapFeedback';
+import {createPortal} from 'react-dom';
+import {useViewportPopoverPosition} from '../hooks/useViewportPopoverPosition';
 
 export default function TacticalBattleMap({
   state,
@@ -52,6 +54,8 @@ export default function TacticalBattleMap({
   onDeclineAdditionalMovement?: () => void;
 }) {
   const [hovered, setHovered] = useState<GridPosition | null>(null);
+  const [hoverAnchor, setHoverAnchor] = useState({x: 0, y: 0});
+  const {popoverRef, popoverPos} = useViewportPopoverPosition(Boolean(hovered), hoverAnchor);
   const [zoom, setZoom] = useState(1);
   const [panning, setPanning] = useState(false);
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -123,6 +127,10 @@ export default function TacticalBattleMap({
     return combatMovementRoute(state, actorId, hovered);
   }, [actorId, hovered, hoveredTarget, implicitActionsEnabled, movementMode, selectedActionId, state]);
   const previewRoute = approachPreview ?? freeMovePreview;
+  const movementThreats = useMemo(() => previewMovementThreats(state, actorId, previewRoute?.path ?? []),
+    [state, actorId, previewRoute]);
+  const dangerNames = movementThreats.map(threat => combatIdentity(state, threat.actorId).displayName).join(', ');
+  const routeOrigin = state.tokens[actorId]?.position;
   const routeCells = useMemo(() => new Set(
     (previewRoute?.path ?? []).map((position) => `${position.x}:${position.y}`),
   ), [previewRoute]);
@@ -218,6 +226,7 @@ export default function TacticalBattleMap({
       className={`tactical-map-viewport site-scrollbar${panning ? ' is-panning' : ''}`}
       data-testid="tactical-map-viewport"
       data-panning={panning || undefined}
+      onScroll={() => { setHovered(null); onActorHover?.(null); }}
       title={`Масштаб ${Math.round(zoom * 100)}% · колесо меняет масштаб · перетаскивание двигает карту`}
       onWheel={(event) => {
         event.preventDefault();
@@ -281,6 +290,18 @@ export default function TacticalBattleMap({
       style={{ '--tactical-cell-size': `${Math.round(80 * zoom)}px` } as React.CSSProperties}
     >
       <CombatMapFeedback beat={feedback ?? null} state={state} />
+      {routeOrigin && previewRoute && previewRoute.path.length > 0 && <svg className="combat-route-line"
+        viewBox={`0 0 ${TACTICAL_WIDTH} ${TACTICAL_HEIGHT}`} preserveAspectRatio="none" aria-hidden="true">
+        <line className="combat-route-line__intent" x1={routeOrigin.x + .5} y1={routeOrigin.y + .5}
+          x2={previewRoute.destination.x + .5} y2={previewRoute.destination.y + .5} />
+        <polyline className={`combat-route-line__path${previewRoute.available ? '' : ' is-unavailable'}`}
+          points={[routeOrigin, ...previewRoute.path].map(p => `${p.x + .5},${p.y + .5}`).join(' ')} />
+        {movementThreats.map(threat => <g key={threat.actorId} className="combat-route-line__danger">
+          <line x1={threat.from.x + .5} y1={threat.from.y + .5} x2={threat.to.x + .5} y2={threat.to.y + .5} />
+          <circle cx={(threat.from.x + threat.to.x) / 2 + .5} cy={(threat.from.y + threat.to.y) / 2 + .5} r=".13" />
+          <text x={(threat.from.x + threat.to.x) / 2 + .5} y={(threat.from.y + threat.to.y) / 2 + .55}>!</text>
+        </g>)}
+      </svg>}
       {Array.from({ length: TACTICAL_WIDTH * TACTICAL_HEIGHT }, (_, index) => {
         const position = { x: index % TACTICAL_WIDTH, y: Math.floor(index / TACTICAL_WIDTH) };
         const token = tokenByCell.get(`${position.x}:${position.y}`);
@@ -323,9 +344,9 @@ export default function TacticalBattleMap({
             aria-label={[actorLabel, areaLabel, lightLabel, illusionLabel, (groundItemsByCell.get(`${position.x}:${position.y}`)??[]).map(item=>`На земле: ${item.name}`).join(", "), `Клетка ${position.x + 1}, ${position.y + 1}`].filter(Boolean).join(' · ')}
             data-actor-id={token?.actorId}
             style={token ? {'--linked-accent': combatIdentity(state, token.actorId).accent} as React.CSSProperties : undefined}
-            onMouseEnter={() => { setHovered(position); onActorHover?.(token?.actorId ?? null); }}
+            onMouseEnter={(event) => { setHovered(position); setHoverAnchor({x:event.clientX,y:event.clientY}); onActorHover?.(token?.actorId ?? null); }}
             onMouseLeave={() => { setHovered(null); onActorHover?.(null); }}
-            onFocus={() => { setHovered(position); onActorHover?.(token?.actorId ?? null); }}
+            onFocus={(event) => { const rect=event.currentTarget.getBoundingClientRect(); setHoverAnchor({x:rect.right,y:rect.top}); setHovered(position); onActorHover?.(token?.actorId ?? null); }}
             onBlur={() => { setHovered(null); onActorHover?.(null); }}
             onClick={() => {
               if (token && !selectedActionId && !movementMode
@@ -333,7 +354,7 @@ export default function TacticalBattleMap({
               onCell(position, token?.actorId);
             }}
           >
-            {token && token.actorId === hoveredEnemyId && contextualAction && <span className={`combat-hit-chance${position.y < 2 ? ' is-below' : ''}${approachPreview && !approachPreview.available ? ' is-unavailable' : ''}`} role="status">
+            {token && token.actorId === hoveredEnemyId && contextualAction && createPortal(<div ref={popoverRef} style={popoverPos} className={`combat-map-tooltip combat-hit-chance${approachPreview && !approachPreview.available ? ' is-unavailable' : ''}`} role="status">
               {approachPreview && approachPreview.costFt > 0 && <span className="combat-hit-chance__movement">Подойти {approachPreview.costFt} фт. · останется {approachPreview.remainingFt} фт.</span>}
               {!approachPreview && <span className="combat-hit-chance__movement">Нет доступной точки для атаки</span>}
               {approachPreview && !approachPreview.available && <span className="combat-hit-chance__movement">Не хватает {approachPreview.costFt - approachPreview.availableFt} фт. движения</span>}
@@ -342,10 +363,12 @@ export default function TacticalBattleMap({
               <small>КД {hitPreview.profile.target?.value} · {hitPreview.profile.modifiers?.map(mod => `${mod.value >= 0 ? '+' : ''}${mod.value} ${mod.source}`).join(' · ')}
                 {hitPreview.profile.advantage === 'advantage' ? ' · преимущество' : hitPreview.profile.advantage === 'disadvantage' ? ' · помеха' : ''}</small></>}
               <small>I / Ш — изучить противника</small>
-            </span>}
-            {!token && hovered?.x === position.x && hovered.y === position.y && freeMovePreview && <span className={`combat-move-preview${position.y < 2 ? ' is-below' : ''}${!freeMovePreview.available ? ' is-unavailable' : ''}`} role="status">
+              {dangerNames && <small className="combat-route-warning">Провоцированная атака: {dangerNames}. Выход из досягаемости.</small>}
+            </div>, document.body)}
+            {!token && hovered?.x === position.x && hovered.y === position.y && freeMovePreview && createPortal(<div ref={popoverRef} style={popoverPos} className={`combat-map-tooltip combat-move-preview${!freeMovePreview.available ? ' is-unavailable' : ''}`} role="status">
               Перемещение <b>{freeMovePreview.costFt} фт.</b><small>Останется {freeMovePreview.remainingFt} фт.{!freeMovePreview.available ? ` · не хватает ${freeMovePreview.costFt - freeMovePreview.availableFt} фт.` : ''}</small>
-            </span>}
+              {dangerNames && <small className="combat-route-warning">Провоцированная атака: {dangerNames}. Выход из досягаемости; Отход помогает избежать атаки.</small>}
+            </div>, document.body)}
             {persistentAreas.map((area) => area.origin.x === position.x && area.origin.y === position.y ? (
               <span key={area.id} className={`combat-area-token is-${area.zoneType}`} title={areaLabel} aria-hidden="true">
                 <b>{area.heavilyObscured ? '◉' : area.lightlyObscured ? '◌' : '◇'}</b><small>{area.name}</small>

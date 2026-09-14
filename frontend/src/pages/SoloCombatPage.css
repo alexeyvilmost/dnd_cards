@@ -53,7 +53,8 @@
 }
 .initiative-ribbon {
   display: flex;
-  justify-content: center;
+  justify-content: safe center;
+  min-width: 0;
   gap: 6px;
   overflow: auto;
   padding: 5px;
@@ -67,6 +68,7 @@
   align-items: center;
   min-width: 132px;
   max-width: 170px;
+  flex: 0 0 auto;
   padding: 4px 8px 4px 4px;
   border: 1px solid color-mix(in srgb, var(--combat-accent) 58%, #30291f);
   border-left: 4px solid var(--combat-accent);
@@ -107,7 +109,7 @@
   height: 34px;
   display: grid;
   place-items: center;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 50%;
   border: 2px solid var(--combat-accent);
   background: #2a231b;
@@ -130,6 +132,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 50%;
 }
 .initiative-card__name {
   min-width: 0;
@@ -147,6 +150,16 @@
   font-weight: 800;
   letter-spacing: .08em;
 }
+.combat-route-line { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 6; overflow: visible; }
+.combat-route-line__intent { stroke: #edf6ed50; stroke-width: .025; stroke-dasharray: .09 .10; }
+.combat-route-line__path { fill: none; stroke: #a3e8e3; stroke-width: .045; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 2px #0b1b1b); }
+.combat-route-line__path.is-unavailable { stroke: #cf8170; stroke-dasharray: .13 .09; }
+.combat-route-line__danger line { stroke: #ff966d; stroke-width: .07; }
+.combat-route-line__danger circle { fill: #4b2419; stroke: #ffc090; stroke-width: .025; }
+.combat-route-line__danger text { fill: #ffddb3; text-anchor: middle; font: bold .16px Inter,sans-serif; }
+.combat-route-warning { max-width: 250px; white-space: normal; color: #ffbd91 !important; line-height: 1.45; }
+.tactical-map .tactical-cell.is-route-preview::after { display: none; }
+.tactical-map .tactical-cell.is-route-preview { background: #8ad7d908; box-shadow: none; }
 .combat-stage {
   height: calc(100vh - 286px);
   min-height: 420px;
@@ -1231,3 +1244,9 @@
 
 .ground-item-token { position:absolute; right:3px; bottom:3px; width:26px; height:26px; border:1px solid #b99a63; border-radius:5px; background:#252018; z-index:3; overflow:hidden; pointer-events:none; }
 .ground-item-token img { width:100%; height:100%; object-fit:cover; }
+.combat-map-tooltip.combat-hit-chance, .combat-map-tooltip.combat-move-preview {
+  position: fixed; bottom: auto; transform: none; z-index: 100;
+  width: max-content; max-width: min(290px, calc(100vw - 24px)); white-space: normal;
+  font-family: Inter, sans-serif; line-height: 1.4; text-align: left;
+}
+.combat-map-tooltip .combat-route-warning { color: #f3b57b; margin-top: 7px; }

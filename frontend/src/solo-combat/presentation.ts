@@ -2,6 +2,7 @@ import type { RollLog } from '../mvp/contracts';
 import { combatActorDisplayName } from '../character/familiarLabels';
 import { combatLogRecords } from './combatLog';
 import type { CombatLogEntry, GridPosition, SoloCombatState } from './types';
+import { combatRelation } from './types';
 import { attackRangeFromEffect, weaponContext } from '../engine/weapon';
 import { conditionLabel } from '../engine/conditions';
 
@@ -21,10 +22,16 @@ export interface CombatDamagePresentation {
 export interface CombatBeat {
   id: string;
   sourceId: string;
+  audience?: 'own' | 'enemy';
   targetId?: string;
   sourceName: string;
   targetName?: string;
   actionName: string;
+  rollKind?: 'attack' | 'save' | 'check';
+  saveGroupId?: string;
+  saveRows?: CombatBeat[];
+  rollerName?: string;
+  rollLabel?: string;
   roll?: RollLog;
   rollPhase?: 'before-reaction' | 'after-reaction';
   visual?: 'slashing' | 'piercing' | 'bludgeoning' | 'ranged' | 'magic';
@@ -45,12 +52,35 @@ export function presentCombatEntries(state: SoloCombatState, entries: CombatLogE
     let current: CombatBeat | undefined;
     const makeBeat = (ordinal: number, sourceId: string, targetId?: string): CombatBeat => ({
       id: `${entry.id}:${ordinal}`, sourceId, targetId, sourceName: name(sourceId),
+      audience: combatRelation(state, state.characterId, sourceId) === 'enemy' ? 'enemy' : 'own',
       targetName: targetId ? name(targetId) : undefined, actionName,
       from: state.tokens[sourceId]?.position, to: targetId ? state.tokens[targetId]?.position : undefined, cues: [], damage: [],
     });
     for (const record of combatLogRecords(entry)) {
       const event = record.event;
       if (!event) continue;
+      if (event.type === 'roll' && event.roll.kind === 'save') {
+        // Inline legacy saves are emitted in the caster's trace. Deferred
+        // canonical saves are emitted in the defender's own trace instead.
+        const inline = event.label === 'Спасбросок' && record.targetIds.length > 0;
+        const defenderId = inline ? record.targetIds[0] : record.actorId;
+        const effectSourceId = inline ? record.sourceActorId : record.targetIds[0] ?? record.sourceActorId;
+        current = makeBeat(record.ordinal, effectSourceId, defenderId);
+        current.rollKind = 'save'; current.roll = event.roll;
+        current.rollerName = name(defenderId); current.rollLabel = event.label;
+        // Keep the action owner's display preference: an enemy's save against
+        // the player's breath is still part of the player's action.
+        const saveAction = state.catalogActions.find(row=>event.label.startsWith(`${row.name}:`));
+        current.actionName = saveAction?.name ?? (event.label.includes(': спасбросок') ? event.label.split(': спасбросок')[0] : action?.name ?? 'Спасбросок');
+        const history = state.log ?? entries;
+        const historyIndex = history.findIndex(row => row.id === entry.id);
+        const origin = history.slice(0, historyIndex + 1).reverse().find(row => row.round === entry.round
+          && row.actorId === effectSourceId && row.text.startsWith(`${name(effectSourceId)}: ${current!.actionName}:`));
+        current.saveGroupId = origin?.id ?? entry.id;
+        current.visual = 'magic';
+        current.cues.push({actorId:defenderId,kind:'effect',text:`Спасбросок: ${event.roll.outcome==='success'?'успех':'провал'} (${event.roll.total})`});
+        beats.push(current); continue;
+      }
       if (event.type === 'roll' && event.roll.target?.type === 'ac') {
         current = makeBeat(record.ordinal, record.sourceActorId, record.targetIds[0]);
         current.roll = event.roll;
@@ -98,7 +128,9 @@ export function presentCombatEntries(state: SoloCombatState, entries: CombatLogE
       }
       if (event.type === 'condition_applied') cues = targets.map(actorId => ({actorId, text: conditionLabel(event.condition), kind: 'effect'}));
       if (!cues.length) continue;
-      if (!current) { current = makeBeat(record.ordinal, record.sourceActorId, targets[0]); beats.push(current); }
+      if (!current || (event.type === 'damage' && current.targetId !== targets[0])) {
+        current = makeBeat(record.ordinal, record.sourceActorId, targets[0]); beats.push(current);
+      }
       if (event.type === 'damage') current.damage!.push({
         amount: event.amount,
         damageType: event.damageType,
@@ -119,4 +151,19 @@ export function presentCombatEntries(state: SoloCombatState, entries: CombatLogE
     }
   }
   return beats;
+}
+
+/** Group only one committed application of an effect; never merge repeated casts. */
+export function groupCombatSaveBeats(beats: CombatBeat[]): CombatBeat[] {
+  const grouped: CombatBeat[] = [];
+  for (const beat of beats) {
+    const previous = grouped.at(-1);
+    const rows = previous?.saveRows ?? (previous ? [previous] : []);
+    if (beat.rollKind === 'save' && previous?.rollKind === 'save' && beat.saveGroupId
+      && beat.saveGroupId === previous.saveGroupId && beat.sourceId === previous.sourceId
+      && beat.actionName === previous.actionName && !rows.some(row => row.targetId === beat.targetId)) {
+      grouped[grouped.length - 1] = { ...previous, saveRows: [...rows, ...(beat.saveRows ?? [beat])], cues: [...previous.cues, ...beat.cues] };
+    } else grouped.push(beat);
+  }
+  return grouped;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { presentCombatEntries } from './presentation';
+import { groupCombatSaveBeats, presentCombatEntries } from './presentation';
 import type { CombatLogEntry, SoloCombatState } from './types';
 import type { EngineEvent, RollLog } from '../mvp/contracts';
 import compiled from '../pages/rulesLabFixture.generated.json';
@@ -15,6 +15,39 @@ const entry = (events: EngineEvent[], text = 'Герой: Удар: выполн
   records: events.map((event, ordinal) => ({kind: 'engine', ordinal, sourceActorId: 'hero', actorId: 'hero', targetIds: ['enemy'], event}))});
 
 describe('combat presentation from committed events', () => {
+  it.each(['success','fail'] as const)('presents a defender-owned %s save followed by the caster-owned damage',outcome=>{
+    const save={...roll,kind:'save' as const,outcome,target:{type:'dc' as const,value:15}};
+    const log:CombatLogEntry={id:'save',round:1,actorId:'enemy',text:'Разрешение спасброска',records:[
+      {kind:'engine',ordinal:0,sourceActorId:'enemy',actorId:'enemy',targetIds:['hero'],event:{type:'roll',label:'Дыхание дракона: спасбросок Ловкости',roll:save}},
+      {kind:'engine',ordinal:1,sourceActorId:'hero',actorId:'hero',targetIds:['enemy'],event:{type:'damage',amount:outcome==='success'?3:6,damageType:'fire',roll:{...roll,kind:'damage',dice:[{sides:6,result:6}],total:6}}},
+    ]};
+    const result=presentCombatEntries({...state,characterId:'hero',sideByActorId:{hero:'party',enemy:'enemy'}},[log]);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({sourceId:'hero',targetId:'enemy',rollKind:'save',rollerName:'Враг',audience:'own',actionName:'Дыхание дракона',damage:[{amount:outcome==='success'?3:6}]});
+  });
+  it('keeps different saving targets and their damage separate',()=>{
+    const logs:CombatLogEntry={id:'area',round:1,actorId:'hero',text:'Герой: Удар:',records:['enemy','hero'].flatMap((target,i)=>[
+      {kind:'engine' as const,ordinal:i*2,actorId:target,sourceActorId:target,targetIds:['hero'],event:{type:'roll' as const,label:'Дыхание дракона: спасбросок',roll:{...roll,kind:'save' as const,outcome:'fail' as const}}},
+      {kind:'engine' as const,ordinal:i*2+1,actorId:'hero',sourceActorId:'hero',targetIds:[target],event:{type:'damage' as const,amount:i+2,damageType:'fire'}},
+    ])};
+    const result=presentCombatEntries(state,[logs]);
+    expect(result.map(beat=>[beat.targetId,beat.damage?.[0].amount])).toEqual([['enemy',2],['hero',3]]);
+    const grouped=groupCombatSaveBeats(result);
+    expect(grouped).toHaveLength(1);
+    expect(grouped[0].saveRows?.map(row=>row.damage?.[0].amount)).toEqual([2,3]);
+    expect(grouped[0].cues).toHaveLength(4);
+    expect(groupCombatSaveBeats([result[0],{...result[1],saveGroupId:'different-cast'}])).toHaveLength(2);
+    expect(groupCombatSaveBeats([result[0],result[0]])).toHaveLength(2);
+  });
+  it('classifies the actual attacking source, including opportunity attacks and allies',()=>{
+    const combat={...state,characterId:'hero',sideByActorId:{hero:'party',ally:'party',enemy:'hostile'}};
+    for (const [source,audience] of [['hero','own'],['ally','own'],['enemy','enemy']]) {
+      // The log's main actor can differ from the reaction's source actor.
+      const log=entry([{type:'roll',label:'Атака',roll}]);
+      log.records=log.records!.map(record=>({...record,sourceActorId:source}));
+      expect(presentCombatEntries(combat,[log])[0]).toMatchObject({sourceId:source,audience});
+    }
+  });
   it.each(['Атака — после реакции', 'Атака'])('waits for a defensive reaction or its decline before impact (%s)', (label) => {
     const before = entry([{type: 'roll', label: 'Атака — до реакции', roll}]);
     const after = {...entry([{type: 'roll', label, roll: {...roll, target: {type: 'ac', value: 21}, outcome: 'miss'}}], 'Герой: Разрешение реакции/спасброска: выполнено'), id: 'after'};

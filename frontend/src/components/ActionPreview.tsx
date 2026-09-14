@@ -14,9 +14,12 @@ import OriginalName from './OriginalName';
 import SupportStatusBadge from './forge/SupportStatusBadge';
 import { findMastery, useMasteryEffects } from '../utils/mastery';
 import { getPropertyLabel } from '../utils/propertyLabels';
+import {actionUsagePreview} from '../engine/actionUsagePreview';
+import type {RuntimeState} from '../mvp/contracts';
 
 interface ActionPreviewProps {
   action: Action;
+  runtime?: Pick<RuntimeState,'resources'|'maxResources'>;
   className?: string;
   disableHover?: boolean;
   onClick?: () => void;
@@ -29,7 +32,7 @@ interface ActionPreviewProps {
 
 const fmtBonus = (n: number) => (n >= 0 ? `+${n}` : String(n));
 
-const ActionPreview = ({ action, className = '', disableHover = false, onClick, resources: providedResources, sourceLabel, weaponAttackPreview: wp }: ActionPreviewProps) => {
+const ActionPreview = ({ action, runtime, className = '', disableHover = false, onClick, resources: providedResources, sourceLabel, weaponAttackPreview: wp }: ActionPreviewProps) => {
   const loadedResources = useResourceOptions();
   const resources = providedResources || loadedResources;
   const { playerMode } = useSiteSettings();
@@ -176,6 +179,11 @@ const ActionPreview = ({ action, className = '', disableHover = false, onClick, 
         </div>
       )}
 
+      {actionUsagePreview(action,runtime).map(usage=><div className="sp-desc sp-usage" role="status" key={usage.key}
+        style={{borderTop:'1px solid #a68a454d',paddingTop:12,marginTop:12}}>
+        <strong>{usage.key.startsWith('uses_')?'Использования':resourceLabel(resources,usage.key)}: осталось {usage.remaining} из {usage.maximum}</strong>
+        <div>Израсходовано: {usage.spent}</div>
+      </div>)}
       {resourceIds.length > 0 ? (
         <div className="sp-costbar">
           {resourceIds.map((id, i) => (

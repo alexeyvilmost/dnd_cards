@@ -1,4 +1,5 @@
 import ItemPreview from '../components/ItemPreview';
+import SheetWeaponMasteryDialog from '../components/SheetWeaponMasteryDialog';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { optionsForChoiceSource, labelOf, SKILLS, type RegistryItem } from '../mechanics/registries';
 import { requiresInitialCharacterChoice, type PendingChoice } from '../mechanics/collectChoices';
@@ -172,6 +173,7 @@ export function ChoiceResolver({
     return actionGrant ? [[item.id, actionGrant.value]] : [];
   }));
   const [actionPreviews, setActionPreviews] = useState<Record<string, Action>>({});
+  const [masteryOpen, setMasteryOpen] = useState(false);
   useEffect(() => {
     let stale = false;
     const references = JSON.parse(actionReferences) as [string, string][];
@@ -215,7 +217,12 @@ export function ChoiceResolver({
       <div className="choice-title">
         {choice.prompt} <span className="origin">· {choice.origin.name}</span>
       </div>
-      {choice.items?.some(item=>item.previewCard) ? (
+      {choice.grantKind === 'weapon_mastery' ? <>
+        <button type="button" className="forge-btn" onClick={()=>setMasteryOpen(true)}>Выбрать</button>
+        {value.length > 0 && <p>{options.filter(option=>value.includes(option.id)).map(option=>option.label).join(' · ')}</p>}
+        {masteryOpen && <SheetWeaponMasteryDialog choices={[choice]} resolved={{[choice.id]:value}}
+          unavailableOptions={unavailableOptions} initialShowAll onChange={(_id,next)=>onChange(next)} onClose={()=>setMasteryOpen(false)}/>}
+      </> : choice.items?.some(item=>item.previewCard) ? (
         <div className="forge-square-grid">
           {options.map(option=>{
             const card=choice.items?.find(item=>item.id===option.id)?.previewCard;

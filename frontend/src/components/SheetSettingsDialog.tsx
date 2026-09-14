@@ -1,205 +1,22 @@
 import { useEffect } from 'react';
-import { Dices, LayoutGrid, List, LayoutTemplate, CreditCard, Eye, Languages, PlusCircle, X } from 'lucide-react';
-import {
-  setEntityDisplay,
-  setSetting,
-  useSiteSettings,
-  type EntityDisplayKind,
-  type EntityDisplayMode,
-  type ItemPreviewStyle,
-} from '../settings';
-import { useDiceDialog } from '../contexts/DiceDialogContext';
-import CombatRollModeSelect from './CombatRollModeSelect';
+import { createPortal } from 'react-dom';
+import SettingsPanel, { type SettingsPage } from './SettingsPanel';
+import { useOptionalDiceDialog } from '../contexts/DiceDialogContext';
+import { useCombatDialogFocus } from './useCombatDialogFocus';
 
-// Тёмная модалка настроек отображения на листе персонажа — те же настройки, что
-// на /settings, но рядом с самим отображением.
-
-const ENTITY_ROWS: Array<{ kind: EntityDisplayKind; label: string; hint: string }> = [
-  { kind: 'spells', label: 'Заклинания', hint: 'Лист и кузница' },
-  { kind: 'actions', label: 'Действия', hint: 'Способности-действия' },
-  { kind: 'effects', label: 'Эффекты', hint: 'Пассивные способности' },
-  { kind: 'items', label: 'Предметы', hint: 'Инвентарь и слоты' },
-];
-
-const MODE_OPTIONS: Array<{ mode: EntityDisplayMode; label: string; icon: typeof LayoutGrid }> = [
-  { mode: 'icon', label: 'Иконки', icon: LayoutGrid },
-  { mode: 'row', label: 'Список', icon: List },
-];
-
-const ITEM_PREVIEW_OPTIONS: Array<{ mode: ItemPreviewStyle; label: string; icon: typeof LayoutGrid }> = [
-  { mode: 'card', label: 'Карточка', icon: CreditCard },
-  { mode: 'interface', label: 'Интерфейс', icon: LayoutTemplate },
-];
-
-export default function SheetSettingsDialog({ onClose }: { onClose: () => void }) {
-  const settings = useSiteSettings();
-  const diceDialog = useDiceDialog();
-
+export default function SheetSettingsDialog({ onClose, initialPage, allowDiceTest = true }: { onClose: () => void; initialPage?: SettingsPage; allowDiceTest?: boolean }) {
+  const dice = useOptionalDiceDialog();
+  const ref = useCombatDialogFocus();
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); onClose(); } };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
-
-  return (
-    <div className="sheet-equip-overlay" onClick={onClose}>
-      <div className="sheet-settings-dialog" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="sheet-equip-close" onClick={onClose} title="Закрыть (Esc)">
-          <X size={18} />
-        </button>
-        <h2 className="sheet-settings-title">Настройки отображения</h2>
-        <div className="sheet-settings-section"><CombatRollModeSelect /></div>
-
-        <label className="sheet-settings-check">
-          <input
-            type="checkbox"
-            checked={settings.diceDialog}
-            onChange={(e) => setSetting('diceDialog', e.target.checked)}
-          />
-          <span>
-            <span className="sheet-settings-row-label"><Dices size={16} /> Диалог бросков кубов</span>
-            <span className="sheet-settings-hint">Перед броском показывать окно: авто-бросок или ввод своих кубов.</span>
-          </span>
-        </label>
-
-        <div className="sheet-settings-section">
-          <label className="sheet-settings-check">
-            <input
-              type="checkbox"
-              checked={settings.dice3d}
-              onChange={(e) => setSetting('dice3d', e.target.checked)}
-            />
-            <span>
-              <span className="sheet-settings-row-label"><Dices size={16} /> Физические 3D-кубики</span>
-              <span className="sheet-settings-hint">Бросать кубики поверх листа с физикой и столкновениями.</span>
-            </span>
-          </label>
-          <label className={`sheet-settings-check${settings.dice3d ? '' : ' opacity-50'}`}>
-            <input
-              type="checkbox"
-              checked={settings.dice3dAutoThrow}
-              disabled={!settings.dice3d}
-              onChange={(e) => setSetting('dice3dAutoThrow', e.target.checked)}
-            />
-            <span>
-              <span className="sheet-settings-row-label">Кидать 3D-кубики автоматически</span>
-              <span className="sheet-settings-hint">После загрузки сцены кубики сами начинают бросок.</span>
-            </span>
-          </label>
-          <button
-            type="button"
-            className="forge-btn ghost"
-            disabled={!settings.diceDialog && !settings.dice3d}
-            onClick={() => {
-              void diceDialog.request([
-                { sides: 20, label: 'Бросок атаки' },
-                { sides: 8, label: 'Урон (огонь)' },
-                { sides: 8, label: 'Урон (огонь)' },
-              ], 'Пробный бросок');
-            }}
-          >
-            <Dices size={15} /> Проверить бросок
-          </button>
-        </div>
-
-        <label className="sheet-settings-check">
-          <input
-            type="checkbox"
-            checked={settings.playerMode}
-            onChange={(e) => setSetting('playerMode', e.target.checked)}
-          />
-          <span>
-            <span className="sheet-settings-row-label"><Eye size={16} /> Режим игрока</span>
-            <span className="sheet-settings-hint">Скрывать технические поля механики, сохраняя боевые характеристики.</span>
-          </span>
-        </label>
-
-        <label className="sheet-settings-check">
-          <input
-            type="checkbox"
-            checked={settings.showOriginalNames}
-            onChange={(e) => setSetting('showOriginalNames', e.target.checked)}
-          />
-          <span>
-            <span className="sheet-settings-row-label"><Languages size={16} /> Оригинальные названия</span>
-            <span className="sheet-settings-hint">Под названием показывать оригинальное (английское) — в превью и детальных окнах.</span>
-          </span>
-        </label>
-
-        <label className="sheet-settings-check">
-          <input
-            type="checkbox"
-            checked={settings.allowSheetEntityAdditions}
-            onChange={(e) => setSetting('allowSheetEntityAdditions', e.target.checked)}
-          />
-          <span>
-            <span className="sheet-settings-row-label"><PlusCircle size={16} /> Ручное добавление в лист</span>
-            <span className="sheet-settings-hint">Разрешить добавлять предметы, действия, эффекты, заклинания и черты прямо из листа персонажа.</span>
-          </span>
-        </label>
-
-        <div className="sheet-settings-section">
-          <div className="sheet-settings-row-label"><LayoutGrid size={16} /> Отображение сущностей</div>
-          <p className="sheet-settings-hint">«Иконки» — плитки с карточкой при наведении. «Список» — строки с деталями.</p>
-          <div className="sheet-settings-list">
-            {ENTITY_ROWS.map(({ kind, label, hint }) => (
-              <div key={kind} className="sheet-settings-item">
-                <div className="sheet-settings-item-labels">
-                  <div className="sheet-settings-item-name">{label}</div>
-                  <div className="sheet-settings-hint">{hint}</div>
-                </div>
-                <div className="sheet-settings-toggle" role="radiogroup" aria-label={label}>
-                  {MODE_OPTIONS.map(({ mode, label: modeLabel, icon: Icon }) => {
-                    const active = settings.entityDisplay[kind] === mode;
-                    return (
-                      <button
-                        key={mode}
-                        type="button"
-                        role="radio"
-                        aria-checked={active}
-                        className={`sheet-settings-mode${active ? ' is-active' : ''}`}
-                        onClick={() => setEntityDisplay(kind, mode)}
-                      >
-                        <Icon size={13} /> {modeLabel}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="sheet-settings-section">
-          <div className="sheet-settings-row-label"><LayoutTemplate size={16} /> Превью предмета при наведении</div>
-          <p className="sheet-settings-hint">«Карточка» — обычная карточка. «Интерфейс» — тёмный стат-блок. Не зависит от раскладки.</p>
-          <div className="sheet-settings-list">
-            <div className="sheet-settings-item">
-              <div className="sheet-settings-item-labels">
-                <div className="sheet-settings-item-name">Вид превью</div>
-                <div className="sheet-settings-hint">Только для предметов</div>
-              </div>
-              <div className="sheet-settings-toggle" role="radiogroup" aria-label="Превью предмета">
-                {ITEM_PREVIEW_OPTIONS.map(({ mode, label: modeLabel, icon: Icon }) => {
-                  const active = settings.itemPreview === mode;
-                  return (
-                    <button
-                      key={mode}
-                      type="button"
-                      role="radio"
-                      aria-checked={active}
-                      className={`sheet-settings-mode${active ? ' is-active' : ''}`}
-                      onClick={() => setSetting('itemPreview', mode)}
-                    >
-                      <Icon size={13} /> {modeLabel}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return createPortal(<div className="settings-modal-backdrop" onClick={onClose}>
+    <section ref={ref} tabIndex={-1} className="settings-modal" role="dialog" aria-modal="true" aria-label="Настройки" onClick={e => e.stopPropagation()}>
+      <button type="button" className="settings-modal-close" onClick={onClose} aria-label="Закрыть настройки">×</button>
+      <h2>Настройки</h2>
+      <SettingsPanel initialPage={initialPage} onTestDice={allowDiceTest && dice ? () => { onClose(); void dice.request([{ sides: 20, label: 'Бросок атаки' }, { sides: 8, label: 'Урон' }], 'Пробный бросок'); } : undefined} />
+    </section>
+  </div>, document.body);
 }

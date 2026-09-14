@@ -99,6 +99,7 @@ export function reachableRoutes(
   state: Pick<SoloCombatState, 'tokens' | 'world' | 'combatAreas' | 'movementModeByActor'>,
   actorId: string,
   maximumFeet: number,
+  preferredDestination?: GridPosition,
 ): TacticalRoute[] {
   const origin = state.tokens[actorId]?.position;
   const actor = state.world.actors[actorId];
@@ -109,11 +110,26 @@ export function reachableRoutes(
     area.difficultTerrain ? area.cells.map(key) : []));
   const flies = combatActorMovementMode(state, actorId) === 'fly';
   const crawl = Number(!flies && actorMustCrawl(actor));
-  const routes = new Map<string, TacticalRoute>([[key(origin), {destination: origin, path: [], costFt: 0}]]);
+  // Equal-cost routes minimize geometric length BEFORE deviation from the ray.
+  // Otherwise rounding a blocker can add a down/up zigzag to hug that ray.
+  // Costs remain identical to the executor.
+  const linePenalty = (position: GridPosition) => {
+    if (!preferredDestination) return 0;
+    const dx = preferredDestination.x - origin.x;
+    const dy = preferredDestination.y - origin.y;
+    return (dx * (position.y - origin.y) - dy * (position.x - origin.x)) ** 2;
+  };
+  type RankedRoute = TacticalRoute & { deviation: number; distance: number };
+  const compare = (a: RankedRoute, b: RankedRoute) => a.costFt - b.costFt
+    || (Math.abs(a.distance - b.distance) > 1e-9 ? a.distance - b.distance : 0)
+    || a.deviation - b.deviation || a.path.length - b.path.length
+    || a.destination.y - b.destination.y || a.destination.x - b.destination.x;
+  const routes = new Map<string, RankedRoute>([[key(origin), {
+    destination: origin, path: [], costFt: 0, deviation: 0, distance: 0,
+  }]]);
   const queue = [routes.get(key(origin))!];
   while (queue.length) {
-    queue.sort((a, b) => a.costFt - b.costFt || a.path.length - b.path.length
-      || a.destination.y - b.destination.y || a.destination.x - b.destination.x);
+    queue.sort(compare);
     const current = queue.shift()!;
     if (routes.get(key(current.destination)) !== current) continue;
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
@@ -122,13 +138,17 @@ export function reachableRoutes(
       if (!inside(destination) || occupied.has(key(destination))) continue;
       const costFt = current.costFt + 5 * (1 + crawl
         + Number(!flies && (difficult.has(key(current.destination)) || difficult.has(key(destination)))));
-      if (costFt > maximumFeet || (routes.get(key(destination))?.costFt ?? Infinity) <= costFt) continue;
-      const route = {destination, costFt, path: [...current.path, destination]};
+      if (costFt > maximumFeet) continue;
+      const route: RankedRoute = {destination, costFt, path: [...current.path, destination],
+        deviation: current.deviation + linePenalty(destination),
+        distance: current.distance + (preferredDestination ? Math.hypot(dx, dy) : 0)};
+      const previous = routes.get(key(destination));
+      if (previous && compare(previous, route) <= 0) continue;
       routes.set(key(destination), route); queue.push(route);
     }
   }
   routes.delete(key(origin));
-  return [...routes.values()];
+  return [...routes.values()].map(({destination, path, costFt}) => ({destination, path, costFt}));
 }
 
 function inside(position: GridPosition): boolean {

@@ -3928,9 +3928,27 @@ export function moveActorAlongRoute(input: {
   if (samePosition(origin, destination)) return state;
   const speed = effectiveCombatActorSpeedFt(state, actorId);
   const feet = speed === 0 ? 0 : additional?.remainingFt ?? state.movementRemainingFt[actorId] ?? speed;
-  const route = reachableRoutes(state, actorId, feet).find(row => samePosition(row.destination, destination));
+  const route = reachableRoutes(state, actorId, feet, destination).find(row => samePosition(row.destination, destination));
   if (!route) throw new Error('До клетки нет доступного маршрута с оставшимся перемещением');
   return continuePlayerRoute({...state, playerMovement: {actorId, origin: {...origin}, steps: route.path}}, input.rng ?? Math.random);
+}
+
+/** Read-only preview of the first provoking edge per enemy. Eligibility is
+ * shared with real movement: reach, sight, reactions, Disengage and Flyby. */
+export function previewMovementThreats(state: SoloCombatState, moverId: string, path: GridPosition[]) {
+  let position = state.tokens[moverId]?.position;
+  if (!position) return [];
+  const seen = new Set<string>();
+  const threats: {actorId: string; from: GridPosition; to: GridPosition}[] = [];
+  for (const destination of path) {
+    const projected = {...state, tokens: {...state.tokens, [moverId]: {...state.tokens[moverId], position}}};
+    for (const enemy of movementOpportunityEnemies(projected, moverId, destination)) {
+      if (!seen.has(enemy.id)) threats.push({actorId: enemy.id, from: position, to: destination});
+      seen.add(enemy.id);
+    }
+    position = destination;
+  }
+  return threats;
 }
 
 /** One contextual map command used by hostile clicks. Movement and attack are

@@ -3,13 +3,16 @@ import '../dice/CombatPresentation.css';
 
 export default function CombatRollModeSelect() {
   const settings = useSiteSettings();
-  return <label className="combat-roll-mode">
-    <span>Показ атак</span>
-    <select aria-label="Показ атак" value={settings.combatRollMode}
-      onChange={event => setSetting('combatRollMode', event.target.value as CombatRollMode)}>
+  return <div className="combat-roll-preferences">{([
+    ['combatRollMode', 'Свои действия и союзники'],
+    ['enemyCombatRollMode', 'Действия противников'],
+  ] as const).map(([key, label]) => <label className="combat-roll-mode" key={key}>
+    <span>{label}</span>
+    <select aria-label={label} value={settings[key]}
+      onChange={event => setSetting(key, event.target.value as CombatRollMode)}>
       <option value="standard">Стандарт</option>
       <option value="fast">Быстрый режим</option>
       <option value="skip">Пропустить окно</option>
     </select>
-  </label>;
+  </label>)}</div>;
 }
