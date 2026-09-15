@@ -51,6 +51,10 @@ function rogueSeed(): SheetCombatParticipantSeed {
   actor.character.abilityMods.dex = 4;
   actor.runtime.resources.action = 1;
   actor.runtime.maxResources.action = 1;
+  // This fixture carries Human's Heroic Inspiration. Cunning Strike tests the
+  // post-hit trigger in isolation, so do not pause the attack at the generic
+  // after-roll influence interrupt first.
+  actor.runtime.resources.heroic_inspiration = 0;
   actor.runtime.activeEffects.push({
     id: 'cunning-strike-test-advantage', name: 'Тестовое преимущество', source: 'test',
     mechanics: { kind: 'modifier', op: 'advantage', applies_to: { roll: 'attack' } },

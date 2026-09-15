@@ -86,7 +86,7 @@ export default function SoloCombatSetupDialog({
             const quantity = quantities[monster.id] ?? 0;
             return <article key={monster.id} className={quantity ? 'is-selected' : ''}>
               <div className="solo-setup__token">{monster.token_url ? <img src={monster.token_url} alt="" /> : monster.name.slice(0, 1)}</div>
-              <div><h3>{monster.name}</h3><p>КЗ {monster.armor_class} · {monster.max_hp} HP · скорость {monster.speed} · ПО {monster.challenge_rating}</p></div>
+              <div><h3>{monster.name}</h3><p>КД {monster.armor_class} · {monster.max_hp} HP · скорость {monster.speed} · ПО {monster.challenge_rating}</p></div>
               <div className="solo-setup__counter"><button type="button" onClick={() => adjust(monster.id, -1)} disabled={!quantity}><Minus size={15} /></button><output aria-label={`Количество ${monster.name}`}>{quantity}</output><button type="button" onClick={() => adjust(monster.id, 1)}><Plus size={15} /></button></div>
             </article>;
           })}

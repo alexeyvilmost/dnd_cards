@@ -301,6 +301,7 @@ func main() {
 		// требует строгий JWT; контроллер разрешает authenticated read старых
 		// public-листов, но оставляет их неизменяемыми.
 		registerCharacterV3Routes(api, authService, characterV3Controller)
+		registerCharacterTemplateRoutes(api, authService, db)
 		registerRoguelikeRoutes(api, authService, roguelikeController)
 		api.POST(
 			"/characters-v3/:id/avatar",

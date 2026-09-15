@@ -153,7 +153,7 @@ export function formatRollBreakdown(roll: RollLog): string {
   let text = segments.join(' → ');
   if (roll.modifiers.length) text += ` = ${roll.total}`;
   if (roll.target) {
-    const label = roll.target.type === 'ac' ? 'КЗ' : 'СЛ';
+    const label = roll.target.type === 'ac' ? 'КД' : 'СЛ';
     text += ` vs ${label} ${roll.target.value}`;
     if (roll.outcome === 'crit') text += ' — крит';
     else if (roll.outcome === 'hit') text += ' — попадание';

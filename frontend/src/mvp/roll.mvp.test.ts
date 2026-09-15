@@ -45,7 +45,7 @@ describe('B2: rollD20', () => {
     expect(kept.result).toBeLessThanOrEqual(discarded.result);
   });
 
-  it('цель КЗ: outcome hit/miss; чистая 20 — crit', () => {
+  it('цель КД: outcome hit/miss; чистая 20 — crit', () => {
     // Подбираем сиды: фиксируем поведение, а не конкретные числа
     const log = rollD20({ target: { type: 'ac', value: 10 }, modifiers: [{ value: 5, source: 'тест' }], rng: seededRng(1) });
     expect(log.target).toEqual({ type: 'ac', value: 10 });

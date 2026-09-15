@@ -18,9 +18,9 @@ export function explicitEncounterArmorClass(
 ): number {
   const compiled = character.rule_state?.armorClass;
   if (compiled !== undefined && compiled !== null) {
-    return positiveInteger(compiled, 'Скомпилированный КЗ персонажа');
+    return positiveInteger(compiled, 'Скомпилированный КД персонажа');
   }
-  return positiveInteger(character.armor_class, 'КЗ персонажа');
+  return positiveInteger(character.armor_class, 'КД персонажа');
 }
 
 export function manualGmOverrideCombatant(input: {
@@ -36,7 +36,7 @@ export function manualGmOverrideCombatant(input: {
     isMonster: true,
     hp: positiveInteger(input.hp, 'HP существа'),
     maxHp: positiveInteger(input.hp, 'HP существа'),
-    ac: positiveInteger(input.ac, 'КЗ существа'),
+    ac: positiveInteger(input.ac, 'КД существа'),
     provenance: ENCOUNTER_GM_OVERRIDE_PROVENANCE,
   };
 }

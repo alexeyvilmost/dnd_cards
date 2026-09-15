@@ -7,7 +7,7 @@ import { breakdownValue } from './contracts';
 import { equippedFighterState, FIGHTER_CTX, FIGHTER_CTX_EQUIPPED, freshFighterState } from './fixtures';
 
 describe('F2: breakdownValue', () => {
-  it('КЗ: сумма частей равна значению, у каждой части есть источник', () => {
+  it('КД: сумма частей равна значению, у каждой части есть источник', () => {
     const bd = breakdownValue('ac', FIGHTER_CTX_EQUIPPED, equippedFighterState(), []);
     expect(bd.parts.length).toBeGreaterThanOrEqual(2);
     expect(bd.parts.reduce((s, p) => s + p.value, 0)).toBe(bd.value);

@@ -232,8 +232,11 @@ export interface PendingInterceptionTrigger {
  * refresh or a reaction choice cannot silently reroll the triggering action.
  */
 export interface PendingD20Interrupt {
-  timing: 'before_roll' | 'after_outcome';
-  operation: 'impose_disadvantage' | 'subtract_die';
+  timing: 'before_roll' | 'after_roll_before_outcome' | 'after_outcome';
+  operation: 'impose_disadvantage' | 'subtract_die' | 'roll_influence';
+  held?: {roll: import('../mvp/contracts').RollLog; kind: import('../engine/rollInfluence').InfluenceRollKind; saveResponse?: Extract<import('../rules-core/domain').DecisionResponse, {kind: 'roll'}>};
+  influenceRerolledDie?: number;
+  influenceSource?: string;
   command: {
     triggerEvent?: string;
     triggeringAttack?: TriggeringAttackContext;
@@ -272,6 +275,8 @@ export interface AdditionalCombatMovement {
 }
 
 export interface SoloCombatState {
+  /** Capability marker; archived workers keep their historical command protocol. */
+  conditionActionSchemaVersion?: 1;
   /** Immediate additional movement: consumed by one route or declined, never added to the turn ledger. */
   pendingAdditionalMovement?: AdditionalCombatMovement;
   /** Player route retained across reactions and per-cell area decisions. */

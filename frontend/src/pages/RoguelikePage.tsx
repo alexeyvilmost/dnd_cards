@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { RotateCcw, Trophy } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { charactersV3Api } from '../character/api';
+import {classesApi} from '../api/client';
+import {isRunEligible} from '../roguelike/eligibility';
+import CharacterTemplateLibrary from '../components/CharacterTemplateLibrary';
 import type { ForgeCharacter } from '../character/types';
 import { roguelikeApi, type RoguelikeRun } from '../roguelike/api';
 import { runSheetURL } from '../roguelike/navigation';
@@ -23,13 +26,12 @@ function RunList() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([roguelikeApi.list(), charactersV3Api.list()])
-      .then(([loadedRuns, loadedCharacters]) => {
+    Promise.all([roguelikeApi.list(), charactersV3Api.list(), classesApi.getClasses({limit: 100, fields: 'list'})])
+      .then(([loadedRuns, loadedCharacters, classCatalog]) => {
         if (!active) return;
         setRuns(loadedRuns);
-        const candidates = loadedCharacters.filter((character) => (
-          character.level === 1 && character.character_type !== 'dungeon_crawl'
-        ));
+        const fighterID = classCatalog.classes.find(c => c.card_number === 'CLASS-warrior')?.id;
+        const candidates = loadedCharacters.filter(character => isRunEligible(character, fighterID));
         setCharacters(candidates);
         setSelected(candidates[0]?.id ?? '');
       })
@@ -59,6 +61,7 @@ function RunList() {
         <p>Проведите воина через случайные столкновения, развивайте сборку и наберите 14 000 опыта.</p>
       </section>
 
+      <CharacterTemplateLibrary forRun />
       {error && <div className="roguelike-error" role="alert">{error}</div>}
       {loading ? <p>Загружаем забеги…</p> : (
         <div className="roguelike-grid">
@@ -71,7 +74,7 @@ function RunList() {
                   <span>Персонаж</span>
                   <select value={selected} onChange={(event) => setSelected(event.target.value)}>
                     {characters.map((character) => (
-                      <option key={character.id} value={character.id}>{character.name} · КЗ {character.armor_class ?? 10}</option>
+                      <option key={character.id} value={character.id}>{character.name} · КД {character.armor_class ?? 10}</option>
                     ))}
                   </select>
                 </label>

@@ -1,4 +1,5 @@
-import ItemPreview from '../components/ItemPreview';
+import SheetActionLine from '../components/SheetActionLine';
+import {useSiteSettings} from '../settings';
 import SheetWeaponMasteryDialog from '../components/SheetWeaponMasteryDialog';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { optionsForChoiceSource, labelOf, SKILLS, type RegistryItem } from '../mechanics/registries';
@@ -12,7 +13,6 @@ import {
 } from './types';
 import type { Action, Feat, FeatCategory, Spell } from '../types';
 import { actionsApi } from '../api/client';
-import ActionPreview from '../components/ActionPreview';
 import { abilityMod } from './derive';
 import {
   POINT_BUY_BUDGET, POINT_BUY_MAX, POINT_BUY_MIN,
@@ -166,6 +166,7 @@ export function ChoiceResolver({
   /** Справочник черт для choice(source:"feat") — варианты по категории. */
   feats?: Feat[];
 }) {
+  const {entityDisplay} = useSiteSettings();
   const options = optionsForChoice(choice, feats);
   const actionReferences = JSON.stringify((choice.items ?? []).flatMap(item => {
     const grants = item.grants ?? [];
@@ -222,26 +223,36 @@ export function ChoiceResolver({
         {value.length > 0 && <p>{options.filter(option=>value.includes(option.id)).map(option=>option.label).join(' · ')}</p>}
         {masteryOpen && <SheetWeaponMasteryDialog choices={[choice]} resolved={{[choice.id]:value}}
           unavailableOptions={unavailableOptions} initialShowAll onChange={(_id,next)=>onChange(next)} onClose={()=>setMasteryOpen(false)}/>}
-      </> : choice.items?.some(item=>item.previewCard) ? (
-        <div className="forge-square-grid">
+      </> : choice.items?.some(item=>item.previewSpell) ? (
+        <div className={entityDisplay.spells === 'icon' ? 'cs-action-tiles choice-spell-entities' : 'choice-spell-entities'}>
+          {options.map(option => {
+            const spell = choice.items?.find(item => item.id === option.id)?.previewSpell;
+            return <SheetActionLine key={option.id} name={option.label} imageUrl={spell?.image_url}
+              variant={entityDisplay.spells} spellRef={spell} level={spell?.level}
+              selected={value.includes(option.id)} sourceLabel={value.includes(option.id) ? 'Подготовлено' : 'Доступно для подготовки'}
+              detail={value.includes(option.id) ? 'Подготовлено' : spell ? `${spell.level} ур.` : undefined}
+              disabled={!!unavailableOptions[option.id] && !value.includes(option.id)} disabledTitle={unavailableOptions[option.id]}
+              onActivate={() => toggle(option.id)}/>;
+          })}
+        </div>
+      ) : choice.items?.some(item=>item.previewCard) ? (
+        <div className={entityDisplay.items === 'icon' ? 'cs-action-tiles choice-entity-options' : 'choice-entity-options'}>
           {options.map(option=>{
             const card=choice.items?.find(item=>item.id===option.id)?.previewCard;
-            return <EntitySquareCard key={option.id} name={option.label} imageUrl={card?.image_url}
+            return <SheetActionLine key={option.id} name={option.label} imageUrl={card?.image_url} variant={entityDisplay.items}
               selected={value.includes(option.id)} disabled={!!unavailableOptions[option.id]&&!value.includes(option.id)}
-              disabledReason={unavailableOptions[option.id]} onClick={()=>toggle(option.id)}
-              preview={card?<ItemPreview card={card} disableHover/>:undefined}/>;
+              disabledTitle={unavailableOptions[option.id]} onActivate={()=>toggle(option.id)} itemRef={card}/>;
           })}
         </div>
       ) : actionReferences !== '[]' ? (
-        <div className="forge-square-grid">
+        <div className={entityDisplay.actions === 'icon' ? 'cs-action-tiles choice-entity-options' : 'choice-entity-options'}>
           {options.map(option => {
             const action = actionPreviews[option.id];
-            return <EntitySquareCard key={option.id} name={option.label}
+            return <SheetActionLine key={option.id} name={option.label} variant={entityDisplay.actions}
               imageUrl={action?.image_url} selected={value.includes(option.id)}
               disabled={!!unavailableOptions[option.id] && !value.includes(option.id)}
-              disabledReason={unavailableOptions[option.id]}
-              onClick={() => toggle(option.id)}
-              preview={action ? <ActionPreview action={action} disableHover /> : undefined} />;
+              disabledTitle={unavailableOptions[option.id]}
+              onActivate={() => toggle(option.id)} actionRef={action} />;
           })}
         </div>
       ) : featTiles.length > 0 ? (

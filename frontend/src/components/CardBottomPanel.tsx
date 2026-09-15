@@ -169,7 +169,7 @@ const CardBottomPanel = ({ card, variant }: CardBottomPanelProps) => {
             )}
           {card.bonus_type === 'defense' && card.defense_type && renderDefenseIcons(card.defense_type)}
           {card.bonus_type === 'defense' && (card.type as string | null | undefined) === 'щит' && (
-            <img src="/icons/defense.png" alt="Защита" style={iconStyle} />
+            <img src="/icons/defense.png" alt="КД" style={iconStyle} />
           )}
         </>
       ),

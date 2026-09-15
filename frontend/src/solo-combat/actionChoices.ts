@@ -1,4 +1,5 @@
 import { familiarFormLabel } from '../character/familiarLabels';
+import passivePresentation from '../engine/data/combatPassivePresentation.json';
 import { weaponBondProtectsHand } from '../rules-core/weaponBond';
 import {heldItemDropIssue} from '../engine/heldItemDrop';
 import { collectInPlayActionChoices, type PendingChoice } from '../mechanics/collectChoices';
@@ -38,7 +39,10 @@ function unarmedStrikeChoices(
 }
 
 function masteryChoices(actor: ActorState, action: RuleActionDefinition): PendingChoice[] {
-  const declared = parseDeclaredWeaponActionPolicy(action, 'bound');
+  const bound = parseDeclaredWeaponActionPolicy(action, 'bound');
+  // The hotbar sees catalog templates before the engine binds ammunition costs.
+  // A ranged template still has equipped_weapon_ammo and is not a bound action.
+  const declared = bound.status === 'valid' ? bound : parseDeclaredWeaponActionPolicy(action, 'template');
   const reactionHand = action.mechanics.opportunity_weapon_hand;
   const hand = declared.status === 'valid'
     ? declared.policy.hand
@@ -106,6 +110,10 @@ export interface CombatPassiveToggle {
   name: string;
   description: string;
   recommended: string[];
+  parentActionId?: string;
+  imageUrl?: string;
+  enabledDescription?: string;
+  disabledDescription?: string;
 }
 
 /** Choices that may be promoted to persistent hotbar passives. When enabled,
@@ -118,16 +126,23 @@ export function combatPassiveTogglesForAction(
   return [
     ...unarmedStrikeChoices(action, cardNumber).map((choice) => ({
       id: choice.id,
-      name: 'Безоружный удар: урон',
-      description: 'Автоматически выбрать «Нанести урон». Выключите, чтобы выбирать захват или толчок.',
+      ...passivePresentation.unarmed,
+      parentActionId: action.id,
       recommended: [...(choice.recommended ?? [])],
     })),
-    ...masteryChoices(actor, action).map((choice) => ({
-      id: choice.id,
-      name: choice.origin.name,
-      description: choice.prompt,
-      recommended: [...(choice.recommended ?? [])],
-    })),
+    ...masteryChoices(actor, action).map((choice) => {
+      const source = actor.masteryEffects?.[choice.origin.id];
+      const primitive = weaponMasteryPrimitive(source?.mechanics as Record<string, unknown> | undefined);
+      const display = primitive ? (passivePresentation as Record<string, {description: string; imageUrl?: string}>)[primitive.type] : undefined;
+      const values: Record<string, unknown> = {...primitive,
+        hitRequirement: primitive && 'requiresDamage' in primitive && primitive.requiresDamage ? 'попадания с уроном' : 'попадания'};
+      const description = (display?.description ?? choice.prompt).replace(/\{(\w+)\}/g, (match, key) => String(values[key] ?? match));
+      return {id: choice.id, name: choice.origin.name, description,
+        parentActionId: action.id, imageUrl: display?.imageUrl,
+        enabledDescription: `Автоматически применять свойство без диалога: ${(choice.recommended ?? []).map(id => choice.items?.find(item => item.id === id)?.name ?? id).join(', ')}.`,
+        disabledDescription: 'Перед атакой показывать выбор: применить свойство или пропустить его.',
+        recommended: [...(choice.recommended ?? [])]};
+    }),
   ].filter((toggle) => toggle.recommended.length > 0);
 }
 

@@ -23,7 +23,7 @@ const attackRoll = (events: EngineEvent[]): RollLog => {
 };
 
 describe('E2: attack_roll — три вариации атаки', () => {
-  it('безоружная: к20 + СИЛ + БМ против КЗ; урон 1+СИЛ при попадании', () => {
+  it('безоружная: к20 + СИЛ + БМ против КД; урон 1+СИЛ при попадании', () => {
     const { events } = executeAction(freshFighterState(), MECH_UNARMED_STRIKE, {
       character: FIGHTER_CTX, target: { ac: 5 }, rng: seededRng(3),
     });
@@ -32,7 +32,7 @@ describe('E2: attack_roll — три вариации атаки', () => {
     const modSum = roll.modifiers.reduce((s, m) => s + m.value, 0);
     expect(modSum).toBe(4);
     expect(roll.target).toEqual({ type: 'ac', value: 5 });
-    // КЗ 5 — почти гарантированное попадание; проверяем ветку on_hit
+    // КД 5 — почти гарантированное попадание; проверяем ветку on_hit
     if (roll.outcome === 'hit' || roll.outcome === 'crit') {
       const dmg = events.find((e) => e.type === 'damage');
       expect(dmg).toBeTruthy();

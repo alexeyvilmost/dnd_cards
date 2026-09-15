@@ -78,7 +78,7 @@ describe('2.4 — set_value', () => {
     expect(res.targetState?.hp.current).toBe(1);
   });
 
-  it('#8 Доспех мага: set_value ac_base ставит стоячий метод КЗ (не NOT_IMPLEMENTED), computeAC берёт 13+ЛВК', () => {
+  it('#8 Доспех мага: set_value ac_base ставит стоячий метод КД (не NOT_IMPLEMENTED), computeAC берёт 13+ЛВК', () => {
     const cc: CharacterContext = { abilityMods: { str: 0, dex: 3, con: 0, int: 0, wis: 0, cha: 0 }, profBonus: 2, level: 3 };
     const c = { character: cc, rng: () => 0.5 } as unknown as Ctx;
     const mageArmor: Dict = { name: 'Доспех мага', activation: { cost: [] }, effects: [{ resolution: 'auto', who: 'self', result: [{ kind: 'set_value', target: 'ac_base', formula: '13+dex' }] }] };
@@ -89,7 +89,7 @@ describe('2.4 — set_value', () => {
     expect(computeAC(cc, state, []).value).toBe(16); // 13+ЛВК(3) без доспеха, перебивает базу 10+3
   });
 
-  it('#8 (реальный кейс) Доспехи мага через grant_effect: каст ставит выданный эффект → КЗ 13+ЛВК', () => {
+  it('#8 (реальный кейс) Доспехи мага через grant_effect: каст ставит выданный эффект → КД 13+ЛВК', () => {
     const cc: CharacterContext = { abilityMods: { str: 0, dex: 3, con: 0, int: 0, wis: 0, cha: 0 }, profBonus: 2, level: 3 };
     // Заклинание выдаёт ОТДЕЛЬНЫЙ эффект (как EFFECT-0256) — механику лист кладёт в grantedEffects.
     const spell: Dict = { name: 'Доспехи мага', activation: { cost: [] }, effects: [{ resolution: 'auto', result: [{ kind: 'grant_effect', values: ['EFFECT-0256'] }] }] };

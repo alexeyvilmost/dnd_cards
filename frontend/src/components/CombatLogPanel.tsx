@@ -1,5 +1,6 @@
 import { combatLogDetails, combatLogRecords, combatLogTone } from '../solo-combat/combatLog';
 import type { SoloCombatState } from '../solo-combat/types';
+import {armorClassTerminology} from '../utils/armorClassTerminology';
 
 export default function CombatLogPanel({ state }: { state: SoloCombatState }) {
   return (
@@ -15,7 +16,7 @@ export default function CombatLogPanel({ state }: { state: SoloCombatState }) {
         return (
           <article key={entry.id} className={`combat-log-entry combat-log-entry--${tone}`} data-tone={tone}>
             <header>Раунд {entry.round} · {entry.actorNames?.[entry.actorId] ?? entryActor?.name ?? 'Участник'}</header>
-            <p className="combat-log-entry__summary">{entry.text}</p>
+            <p className="combat-log-entry__summary">{armorClassTerminology(entry.text)}</p>
             {records.length > 0 && (
               <div className="combat-log-entry__events">
                 {records.flatMap((record, recordIndex) => combatLogDetails(record, state).map((detail, detailIndex) => {
@@ -26,8 +27,8 @@ export default function CombatLogPanel({ state }: { state: SoloCombatState }) {
                       key={`${recordIndex}:${record.ordinal}:${detailIndex}`}
                       className={`combat-log-detail combat-log-detail--${detail.kind}`}
                     >
-                      <b>{detail.label}</b>
-                      <span>{detail.text}</span>
+                      <b>{armorClassTerminology(detail.label)}</b>
+                      <span>{armorClassTerminology(detail.text)}</span>
                       {(targets.length > 0 || record.sourceActorId !== entry.actorId) && (
                         <small>{source}{targets.length ? ` → ${targets.join(', ')}` : ''}</small>
                       )}

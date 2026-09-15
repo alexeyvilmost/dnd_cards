@@ -1,5 +1,5 @@
 /**
- * Конвейер КЗ (фаза C4).
+ * Конвейер КД (фаза C4).
  */
 import type { Card } from '../types';
 import type { CharacterContext, RuntimeState, ValueBreakdown } from '../mvp/contracts';
@@ -23,7 +23,7 @@ function formulaCtx(character: CharacterContext) {
 
 function evalNum(formula: string, character: CharacterContext): number {
   const v = evaluate(formula, formulaCtx(character));
-  if (typeof v !== 'number') throw new Error(`Формула КЗ «${formula}» должна быть числом`);
+  if (typeof v !== 'number') throw new Error(`Формула КД «${formula}» должна быть числом`);
   return v;
 }
 
@@ -84,7 +84,7 @@ function resolveCard(id: string, cards: Card[]): Card | undefined {
 
 /**
  * Одежда/ткань — НЕ доспех по RAW 2024: она не «носится как доспех», поэтому не блокирует
- * безоружные методы КЗ (Защита без доспехов варвара/монаха, Доспех мага 13+ЛВК) и не подменяет
+ * безоружные методы КД (Защита без доспехов варвара/монаха, Доспех мага 13+ЛВК) и не подменяет
  * ЛВК-базу плоской десяткой. Сигналы: тег 'cloth' в свойствах ИЛИ формула защиты не даёт ничего
  * сверх базовых 10 (нет dex-масштабирования и плоская база ≤10). Реальный доспех всегда ≥11 базы
  * или с dex (лёгкий/средний), поэтому под это условие не попадает.
@@ -102,7 +102,7 @@ function armorFromState(state: RuntimeState, cards: Card[]): Card | undefined {
   const bodyId = state.equipment.body;
   if (!bodyId) return undefined;
   const card = resolveCard(bodyId, cards);
-  // Одежда в слоте тела = «без доспеха» для расчёта КЗ (иначе клобучил бы Доспех мага и ЛВК-базу).
+  // Одежда в слоте тела = «без доспеха» для расчёта КД (иначе клобучил бы Доспех мага и ЛВК-базу).
   if (!card || isNonArmorBody(card)) return undefined;
   return card;
 }
@@ -178,7 +178,7 @@ function armorAc(
   return fixed;
 }
 
-/** Вычислить КЗ с разбивкой по источникам. */
+/** Вычислить КД с разбивкой по источникам. */
 export function computeAC(
   character: CharacterContext,
   state: RuntimeState,
@@ -192,7 +192,7 @@ export function computeAC(
   const armor = armorFromState(state, cards);
   const shield = shieldFromState(state, cards);
 
-  // Методы-кандидаты базового КЗ (парадигма №3): берётся максимум применимого.
+  // Методы-кандидаты базового КД (парадигма №3): берётся максимум применимого.
   const methods: ValueMethod[] = [];
   // KB-004: методы с непарсируемой формулой не роняют расчёт, а попадают сюда — в breakdown.
   const rejected: { name: string; value: number }[] = [];
@@ -213,7 +213,7 @@ export function computeAC(
     } else {
       // Битая формула доспеха: не роняем лист. Пол = безоружная база (10+ЛВК); безоружные
       // методы (Защита без доспехов) НЕ применяем — доспех формально надет.
-      rejected.push({ name: `${armor.name}: формула КЗ «${armor.bonus_value}» не распознана`, value: 0 });
+      rejected.push({ name: `${armor.name}: формула КД «${armor.bonus_value}» не распознана`, value: 0 });
       methods.push(unarmoredBase());
     }
   } else {
@@ -252,11 +252,11 @@ export function computeAC(
 }
 
 /**
- * Полный КЗ = базовый метод (computeAC: броня/Unarmored Defense/set_value ac_base + щит)
+ * Полный КД = базовый метод (computeAC: броня/Unarmored Defense/set_value ac_base + щит)
  * плюс числовые modifier-эффекты роли 'ac' (formula-aware collectModifiers — ловит и
  * modifier-payload'ы без resolution:'auto', напр. стиль «Оборона» +1).
  *
- * ЕДИНЫЙ источник истины КЗ: и лист (breakdown.ts:breakdownAC), и резолв билда
+ * ЕДИНЫЙ источник истины КД: и лист (breakdown.ts:breakdownAC), и резолв билда
  * (character/rules/resolveCharacterRules) зовут именно его, чтобы КД в кузне, в БД и на
  * листе не расходились (C9).
  */
@@ -282,8 +282,8 @@ export function armorClassValue(
     },
     evalCtx: { character, state },
   });
-  // C5: КЗ — ЗНАЧЕНИЕ, поэтому применяем полную алгебру (аддитивы + set/multiply/upgrade/downgrade),
-  // а не только сумму, иначе «КЗ не ниже 13»/«установить КЗ» из валидного контента тихо терялись бы.
+  // C5: КД — ЗНАЧЕНИЕ, поэтому применяем полную алгебру (аддитивы + set/multiply/upgrade/downgrade),
+  // а не только сумму, иначе «КД не ниже 13»/«установить КД» из валидного контента тихо терялись бы.
   const folded = foldModifiers(base.value, fx);
   return {
     value: folded.value,

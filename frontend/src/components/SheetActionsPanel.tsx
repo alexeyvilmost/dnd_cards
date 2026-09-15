@@ -212,7 +212,7 @@ interface Props {
   showEffects?: boolean;
   /** Только заклинания, сгруппированные по кругам (блок «Заклинания» = 1:1 с блоком «Действия»). */
   spellsOnly?: boolean;
-  /** Явный наблюдаемый факт «КЗ цели». null/undefined означает, что факт ещё не объявлен. */
+  /** Явный наблюдаемый факт «КД цели». null/undefined означает, что факт ещё не объявлен. */
   targetAc?: number | null;
   onTargetAcChange?: (n: number | null) => void;
   /** Контролируемый «Спас цели» (E5): единый модификатор спасброска цели
@@ -344,7 +344,7 @@ export function explicitSheetTargetFactsIssue(
   if (required.attack && (typeof facts.armorClass !== 'number'
     || !Number.isFinite(facts.armorClass)
     || facts.armorClass <= 0)) {
-    return 'Укажите КЗ цели или выберите персонажа с явно рассчитанной КЗ';
+    return 'Укажите КД цели или выберите персонажа с явно рассчитанной КД';
   }
   if (required.save && (typeof facts.savingThrowModifier !== 'number'
     || !Number.isSafeInteger(facts.savingThrowModifier))) {
@@ -673,7 +673,7 @@ export default function SheetActionsPanel({
     new Promise<CastChoice | null>((resolve) => setSlotPick({ baseLevel, options, freeuse, resolve }));
   const resolveCast = (v: CastChoice | null) => { slotPick?.resolve(v); setSlotPick(null); };
   const [localTargetAc, setLocalTargetAc] = useState<number | null>(10);
-  // E4: если родитель управляет «КЗ цели» — используем его; иначе локальный стейт.
+  // E4: если родитель управляет «КД цели» — используем его; иначе локальный стейт.
   const targetAc = targetAcProp ?? localTargetAc;
   const setTargetAc = (n: number | null) => {
     if (onTargetAcChange) onTargetAcChange(n);
@@ -1051,7 +1051,7 @@ export default function SheetActionsPanel({
 
   // Доспехи мага и т.п.: каст выдаёт ОТДЕЛЬНЫЙ эффект через grant_effect. Движок синхронный —
   // предзагружаем механику каждого выдаваемого эффекта по slug (кэш getEffect), кладём в execCtx,
-  // чтобы applyGrantEffect поставил стоячий активный эффект (set_value ac_base → КЗ обновится).
+  // чтобы applyGrantEffect поставил стоячий активный эффект (set_value ac_base → КД обновится).
   const [grantedEffectsBySlug, setGrantedEffectsBySlug] = useState<Record<string, { id?: string; card_number?: string; name?: string; mechanics?: unknown; repeatable?: boolean }>>({});
   // Искусность оружия (Weapon Mastery 2024): движок синхронный, поэтому механику мастерства
   // (как и grantedEffects) резолвим заранее — id эффекта из card.mastery → {name, mechanics}.
@@ -1545,7 +1545,7 @@ export default function SheetActionsPanel({
 
   // Богатая цель из комбатанта: для персонажа — статы из его листа (AC/спасброски/сопротивления),
   // но HP/состояния СИДИМ из комбатанта (боевая истина, иначе можно стартовать от устаревшего HP);
-  // для монстра — минимальная цель (КЗ и спас-мод берём с доски/ручного поля).
+  // для монстра — минимальная цель (КД и спас-мод берём с доски/ручного поля).
   const buildEncounterTarget = useCallback(async (cb: Combatant): Promise<TargetContext> => {
     const battleHp = { current: cb.hp, max: cb.maxHp, temp: cb.temp ?? 0 };
     const effects = (cb.activeEffects as RuntimeState['activeEffects'] | undefined) ?? [];
@@ -3187,7 +3187,7 @@ export default function SheetActionsPanel({
         </section>
       )}
 
-      {/* «КЗ/Спас цели» — только в основной панели действий; блок «Заклинания»
+      {/* «КД/Спас цели» — только в основной панели действий; блок «Заклинания»
           (spellsOnly) переиспользует общий таргет родителя, поле не дублирует. */}
       {!spellsOnly && (
         <div className="sheet-target-inputs">
@@ -3211,7 +3211,7 @@ export default function SheetActionsPanel({
             </select>
           </label>
           <label className="sheet-target-field">
-            <span>КЗ цели</span>
+            <span>КД цели</span>
             <input
               type="number"
               className="forge-input sheet-target-num"
@@ -3382,7 +3382,7 @@ export default function SheetActionsPanel({
       <h2 className="sheet-h2">Действия</h2>
       {body}
       <p className="forge-note" style={{ marginTop: 8 }}>
-        Атаки используют КЗ цели выше. Результаты — в журнале с анимацией броска.
+        Атаки используют КД цели выше. Результаты — в журнале с анимацией броска.
       </p>
     </section>
   );

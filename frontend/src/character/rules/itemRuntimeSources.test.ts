@@ -2,7 +2,7 @@
  * Слайс 1 «предмет = эффект»: механики надетых/настроенных предметов доходят до resolveCharacterRules
  * через input.runtimeSources (source.type='item'). Чинит баг «бонусы характеристик/владений/чувств от
  * предметов не работают» (ветка была пуста). Флагман — value_method ОТ ПРЕДМЕТА (Пояс силы огра): в
- * valueMethod.test это был явно отложенный случай. Плюс анти-задвоение: числовые роли (max_hp/speed) и КЗ
+ * valueMethod.test это был явно отложенный случай. Плюс анти-задвоение: числовые роли (max_hp/speed) и КД
  * от предмета НЕ вливаются в ruleState (их считает канал breakdown/passives листа, там предметы уже есть).
  */
 import { describe, expect, it } from 'vitest';
@@ -72,7 +72,7 @@ describe('Слайс 1 — предмет доходит до резолвера
     expect(withItem.speed).toBe(bare.speed);
   });
 
-  it('АНТИ-ЗАДВОЕНИЕ: КЗ-модификатор предмета НЕ меняет «голый» ruleState.armorClass', () => {
+  it('АНТИ-ЗАДВОЕНИЕ: КД-модификатор предмета НЕ меняет «голый» ruleState.armorClass', () => {
     const bare = resolve(null);
     const withItem = resolve(item({ kind: 'modifier', applies_to: { roll: 'ac' }, value: '+2' }));
     expect(withItem.armorClass).toBe(bare.armorClass);

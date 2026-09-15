@@ -241,7 +241,7 @@ function appliesDuringBuild(entity: PassiveEffect | Action): boolean {
 // Роли числовых значений листа, на которые ВЛИЯЮТ modifier-пассивки эффектов.
 // Фундаментально: любой эффект с числовым self-модификатором (Крепкий → max_hp,
 // Оборона → ac, сапоги скорости → speed) вливается в производное значение.
-// 'ac' здесь НЕТ намеренно: КЗ считается единым примитивом armorClassValue (C9),
+// 'ac' здесь НЕТ намеренно: КД считается единым примитивом armorClassValue (C9),
 // который сам собирает modifier-эффекты роли 'ac' — иначе двойной учёт.
 const NUMERIC_ROLLS = new Set(['max_hp', 'speed', 'initiative', 'size', 'carry']);
 
@@ -796,7 +796,7 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
 
   // Заклинательство объявляется mechanics-примитивом, а не именем класса/подкласса.
   // Несколько разных primary-деклараций и невалидное значение fail closed → null.
-  // spellcastingMod нужен formulaCtx AC-формул (редкие формулы КЗ от заклинательства).
+  // spellcastingMod нужен formulaCtx AC-формул (редкие формулы КД от заклинательства).
   const primarySpellcastingAbility = resolvePrimarySpellcastingAbility([
     ...buildEffects.map(({ effect, origin }) => ({
       mechanics: effect.mechanics,
@@ -872,7 +872,7 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   })) as Record<AbilityKey, number>;
 
   // Числовые модификаторы эффектов вливаются в производные значения листа
-  // (фундаментально, единообразно с расчётом КЗ через breakdown).
+  // (фундаментально, единообразно с расчётом КД через breakdown).
   const maxHP = computeMulticlassMaxHP(
     (assembled.classes ?? (assembled.klass ? [assembled.klass] : [])).map((klass) => ({
       id: klass.id,
@@ -882,16 +882,16 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     draft.classId ?? assembled.klass?.id,
     scores.con,
   ) + (numericMods.max_hp ?? 0);
-  // Единый КЗ (C9): тот же примитив, что на листе (armorClassValue). На этапе резолва
+  // Единый КД (C9): тот же примитив, что на листе (armorClassValue). На этапе резолва
   // билда экипировки нет (стартовое снаряжение уходит в inventory уже после создания) —
-  // считается «голый» КЗ: база / Unarmored Defense / set_value ac_base + modifier-эффекты
+  // считается «голый» КД: база / Unarmored Defense / set_value ac_base + modifier-эффекты
   // (стиль «Оборона» +1 и т.п.); броню лист учтёт позже сам через breakdownValue('ac').
   const acPassives: Dict[] = [
     ...buildEffects.map((e) => e.effect.mechanics),
     ...buildActions.map((a) => a.action.mechanics),
-    // Предметы в КЗ резолвера НЕ вливаем: ruleState.armorClass — «голый» билд-КЗ (см. выше),
-    // а КЗ от предметов лист считает через breakdown('ac')/passives (там предметы уже есть).
-    // Не-предметные runtimeSources (врем. эффекты/условия из боя) в КЗ по-прежнему участвуют.
+    // Предметы в КД резолвера НЕ вливаем: ruleState.armorClass — «голый» билд-КД (см. выше),
+    // а КД от предметов лист считает через breakdown('ac')/passives (там предметы уже есть).
+    // Не-предметные runtimeSources (врем. эффекты/условия из боя) в КД по-прежнему участвуют.
     ...(input.runtimeSources || []).filter((r) => r.source.type !== 'item').map((r) => r.mechanics),
   ].filter((m): m is Dict => !!m && typeof m === 'object');
   const acCharacter: CharacterContext = {

@@ -43,7 +43,7 @@ export default function BoonActivationDialog({
           ])}
         </div>
         {boon.timing.includes('after_failure') && (
-          <p className="forge-note">Вариант «только при провале» бросит кость и расходует эффект, только если основной итог не достиг КЗ/СЛ.</p>
+          <p className="forge-note">Вариант «только при провале» бросит кость и расходует эффект, только если основной итог не достиг КД/СЛ.</p>
         )}
       </div>
     </div>

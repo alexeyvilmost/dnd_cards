@@ -131,7 +131,7 @@ function rollLabel(event: EngineEvent, roll: RollLog): string {
   if (roll.kind === 'check') return 'Проверка характеристики';
   if (roll.kind === 'damage') return 'Бросок урона';
   if (roll.kind === 'healing') return 'Бросок лечения';
-  if (roll.target?.type === 'ac') return `Атака против КЗ ${roll.target.value}`;
+  if (roll.target?.type === 'ac') return `Атака против КД ${roll.target.value}`;
   if (roll.target?.type === 'dc') return `Бросок против СЛ ${roll.target.value}`;
   return event.type === 'roll' ? event.label : 'Бросок';
 }

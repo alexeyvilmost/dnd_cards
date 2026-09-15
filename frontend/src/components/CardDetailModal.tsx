@@ -377,7 +377,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
             })()}
             {card.weight && <p><strong>Вес:</strong> {formatWeight(card.weight)}</p>}
             {card.bonus_type && card.bonus_value && (
-              <p><strong>Бонус:</strong> {card.bonus_value} ({card.bonus_type === 'damage' ? 'Урон' : 'Защита'})</p>
+              <p><strong>Бонус:</strong> {card.bonus_value} ({card.bonus_type === 'damage' ? 'Урон' : 'КД'})</p>
             )}
             {hasElementalDamage(card) && card.elemental_damage_value && card.elemental_damage_type && (
               <p className="flex items-center gap-1">

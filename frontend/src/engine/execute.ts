@@ -2236,7 +2236,7 @@ function applySensePayload(
 /**
  * set_value ac_base из ДЕЙСТВИЯ/ЗАКЛИНАНИЯ (Доспех мага): ставим «стоячий» активный эффект с
  * СЫРОЙ формулой — computeAC (ac.ts) сканирует state.activeEffects и берёт его как метод-кандидат
- * базового КЗ (максимум применимого, только без доспеха). Зеркало applyModifierPayload —
+ * базового КД (максимум применимого, только без доспеха). Зеркало applyModifierPayload —
  * разница лишь в kind полезной нагрузки. Формула НЕ вычисляется здесь: её считает computeAC
  * в контексте владельца (иначе 13+dex застыло бы на момент каста).
  */
@@ -2400,7 +2400,7 @@ function applyResistancePayload(
 /**
  * 2.4: set_value — установить поле состояния значением/формулой. target: hp|current_hp (клампится
  * в [0,max] — Неумолимая стойкость hp=1), temp_hp, max_hp|hp_max, иначе id ресурса. ac_base —
- * пассивное понятие (метод КЗ, acBaseOverrides), в рантайме не хранится. Формула — formula|value.
+ * пассивное понятие (метод КД, acBaseOverrides), в рантайме не хранится. Формула — formula|value.
  */
 function applySetValue(state: RuntimeState, payload: Dict, fctx: FormulaContext, events: EngineEvent[]): RuntimeState {
   const target = String(payload.target ?? '');
@@ -2431,7 +2431,7 @@ function applySetValue(state: RuntimeState, payload: Dict, fctx: FormulaContext,
       events.push(narrativeEvent(`Макс. хиты установлены: ${next.hp.max}`));
       break;
     case 'ac_base':
-      events.push(narrativeEvent('set_value ac_base — вычисляется как метод КЗ (armorClassValue), не рантайм-мутация.'));
+      events.push(narrativeEvent('set_value ac_base — вычисляется как метод КД (armorClassValue), не рантайм-мутация.'));
       break;
     default: {
       // Только ИЗВЕСТНЫЙ ресурс. Иначе — ГРОМКО (narrative), а не тихо создаём фантомный ресурс:
@@ -3331,7 +3331,7 @@ function applyPayloads(
         if (p.requires_triggering_attack_hit === true) {
           const compared = retargetAttackRoll(ctx.triggeringAttack!.roll!, ctx.target!.ac!);
           if (compared.outcome !== 'hit' && compared.outcome !== 'crit') {
-            events.push(narrativeEvent(`Размашистая атака: исходный результат ${compared.total} не достигает КЗ ${ctx.target!.ac}; урона нет.`));
+            events.push(narrativeEvent(`Размашистая атака: исходный результат ${compared.total} не достигает КД ${ctx.target!.ac}; урона нет.`));
             break;
           }
         }
@@ -3528,7 +3528,7 @@ function applyPayloads(
       )); break;
       case 'resistance': route((s) => applyResistancePayload(s, p, source, events, ctx)); break;
       case 'set_value': {
-        // ac_base — не рантайм-мутация, а НОВЫЙ метod расчёта КЗ (Доспех мага 13+ЛВК): ставим
+        // ac_base — не рантайм-мутация, а НОВЫЙ метod расчёта КД (Доспех мага 13+ЛВК): ставим
         // «стоячий» активный эффект с сырой формулой, computeAC подберёт его как метод-кандидат.
         if (p.target === 'ac_base') { route((s) => applyAcBaseMethod(s, p, source, events, ctx)); break; }
         // Значение считаем в контексте того, КОГО меняем: при who:'target' — по статам ЦЕЛИ
@@ -3864,7 +3864,7 @@ function runAttackRoll(
         || declaredAttackRangeDisadvantage(effect, ctx),
     ),
     modifiers: mods,
-    target: { type: 'ac', value: ac },
+    target: { type: 'ac', value: ac, ...(ctx.target?.acBreakdown ? {breakdown: ctx.target.acBreakdown} : {}) },
     rng: ctx.rng,
     rules: [...collected.rules, ...projected.rules], // свои правила + проекция цели (Blade Ward)
     });

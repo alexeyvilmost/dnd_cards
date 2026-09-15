@@ -10,6 +10,9 @@ import type {EngineEvent, RollD20Options} from '../mvp/contracts';
 import {collectRollModifiers} from '../engine/modifiers';
 import {activeConditionsOf} from '../engine/circumstances';
 import {rollD20} from '../engine/roll';
+import {drawDie, type DieAwareRandomSource} from '../engine/random';
+import {availableRollInfluences, spendRollInfluence, withD20Replacement, type InfluenceRollKind} from '../engine/rollInfluence';
+import {conditionGrantedActions} from '../engine/conditionActions';
 import {rollEvent} from '../engine/events';
 import {availableCheckManeuvers, prepareCheckManeuver} from '../character/checkManeuvers';
 import {finalizeSheetD20Roll} from '../character/sheetD20Roll';
@@ -70,7 +73,6 @@ import { projectCombatLogRecords } from './combatLog';
 import {
   areaActorIds,
   actorMustCrawl,
-  standMovementCost,
   effectiveActorSize,
   effectiveActorSpeedFt,
   effectiveCombatActorSpeedFt,
@@ -1234,7 +1236,27 @@ function serializableCombatCommand(input: CombatActionInput): PendingD20Interrup
 
 function recordedRng(source: Rng): { rng: Rng; values: number[] } {
   const values: number[] = [];
-  return { rng: () => { const value = source(); values.push(value); return value; }, values };
+  const rng: DieAwareRandomSource = () => { const value = source(); values.push(value); return value; };
+  rng.inspectD20 = (source as DieAwareRandomSource).inspectD20;
+  rng.rerollD20 = (source as DieAwareRandomSource).rerollD20;
+  rng.rerollD20Source = (source as DieAwareRandomSource).rerollD20Source;
+  if ((source as DieAwareRandomSource).rollDie) rng.rollDie = sides => {
+    const die = drawDie(source, sides); values.push((die - .5) / sides); return die;
+  };
+  return {rng, values};
+}
+
+function heldRollIn(state: SoloCombatState, before: SoloCombatState, actorId: string) {
+  return combatLogSince(state, combatLogCursor(before)).flatMap(entry => entry.records ?? [])
+    .filter(record => record.actorId === actorId || record.sourceActorId === actorId)
+    .flatMap(record => record.event?.type === 'roll' ? [record.event.roll] : [])
+    .find(roll => roll.dice.some(die => die.sides === 20 && !die.discarded));
+}
+
+export function combatRollInfluences(state: SoloCombatState, actorId: string, kind: InfluenceRollKind, roll: import('../mvp/contracts').RollLog) {
+  const actor = state.world.actors[actorId];
+  return actor && isControlledCharacter(state, actorId)
+    ? availableRollInfluences(actor.runtime, actor.passives ?? [], kind, roll) : [];
 }
 
 function transcriptRng(values: readonly number[]): Rng {
@@ -1931,7 +1953,7 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
 
 function executeCombatActionWithD20Interrupts(
   input: CombatActionInput,
-  options: { skipWardingFlare?: boolean; skipCuttingWords?: boolean } = {},
+  options: { skipWardingFlare?: boolean; skipCuttingWords?: boolean; skipInfluence?: boolean; influenceRerolledDie?: number; influenceSource?: string } = {},
 ): SoloCombatState {
   if (input.state.pendingD20Interrupt) {
     throw new Error('Сначала завершите открытую реакцию на бросок к20');
@@ -1963,6 +1985,15 @@ function executeCombatActionWithD20Interrupts(
   if (options.skipCuttingWords) return executeCombatActionCore(input);
   const recorded = recordedRng(input.rng ?? Math.random);
   const previewState = executeCombatActionCore({ ...input, rng: recorded.rng });
+  const heldRoll = !options.skipInfluence
+    ? heldRollIn(previewState, input.state, input.actorId) : undefined;
+  const kind = rollKind === 'attack_roll' ? 'attack' : 'check';
+  const influences = heldRoll ? combatRollInfluences(input.state, input.actorId, kind, heldRoll) : [];
+  if (heldRoll && influences.length) return {...input.state, pendingD20Interrupt: {
+    timing: 'after_roll_before_outcome', operation: 'roll_influence', command: serializableCombatCommand(input),
+    responders: influences.map(action => ({actorId: input.actorId, effectId: action.id, effectName: action.name})),
+    randomValues: recorded.values, held: {roll: heldRoll, kind},
+  }};
   const preview = successfulD20Preview(
     previewState, combatLogCursor(input.state), input.actorId, rollKind,
   );
@@ -1980,6 +2011,8 @@ function executeCombatActionWithD20Interrupts(
         actorId, effectId, effectName,
       })),
       randomValues: recorded.values,
+      influenceRerolledDie: options.influenceRerolledDie,
+      influenceSource: options.influenceSource,
       preview,
     },
   } : previewState;
@@ -2123,17 +2156,46 @@ export function resolveD20Interrupt(
   state: SoloCombatState,
   responderActorId: string | null,
   rng: Rng = Math.random,
+  effectId?: string,
 ): SoloCombatState {
   const pending = state.pendingD20Interrupt;
   if (!pending) throw new Error('Нет ожидающей реакции на бросок к20');
+  if (responderActorId !== null && !effectId && pending.responders.filter(row => row.actorId === responderActorId).length > 1) {
+    throw new Error('Укажите действие влияния на бросок');
+  }
   const chosen = responderActorId === null ? null : pending.responders.find((candidate) => (
-    candidate.actorId === responderActorId
+    candidate.actorId === responderActorId && (!effectId || candidate.effectId === effectId)
   ));
   if (responderActorId !== null && !chosen) {
     throw new Error('Этот участник не может ответить на текущий бросок');
   }
   const { pendingD20Interrupt: _cleared, ...withoutPending } = state;
   let prepared = withoutPending as SoloCombatState;
+  if (pending.operation === 'roll_influence') {
+    const ownerId = pending.command.actorId;
+    if (!pending.held || !pending.randomValues) throw new Error('Повреждён ожидающий бросок');
+    let replacement: number | undefined;
+    let source: string | undefined;
+    if (chosen) {
+      const action = combatRollInfluences(prepared, ownerId, pending.held.kind, pending.held.roll)
+        .find(candidate => candidate.id === chosen.effectId);
+      if (chosen.actorId !== ownerId || !action) throw new Error('Выбранное влияние больше недоступно');
+      prepared = clone(prepared);
+      const paid = spendRollInfluence(prepared.world.actors[ownerId].runtime, action);
+      prepared.world.actors[ownerId].runtime = paid.state;
+      replacement = drawDie(rng, 20);
+      source = action.name;
+      prepared = appendLog(prepared, ownerId, `${action.name}: переброс к20 → ${replacement}.`, paid.events.map((event, ordinal) => ({kind: 'engine', ordinal, sourceActorId: ownerId, actorId: ownerId, targetIds: [], event})));
+    }
+    let cursor = 0;
+    const replay = () => cursor < pending.randomValues!.length ? pending.randomValues![cursor++] : rng();
+    const actionRng = replacement === undefined ? replay : withD20Replacement(replay, replacement, source!);
+    if (pending.held.saveResponse) return autoResolveSystemDecisions(resolveDecision(prepared, pending.held.saveResponse, actionRng), actionRng);
+    return settlePendingMonsterOnHitGrapple(executeCombatActionWithD20Interrupts(
+      {...pending.command, state: prepared, rng: actionRng},
+      {skipWardingFlare: true, skipInfluence: true, influenceRerolledDie: replacement, influenceSource: source},
+    ));
+  }
   const rollKind = pending.preview?.rollKind ?? 'attack_roll';
   if (chosen) {
     const capabilities = d20InterruptCapabilities(
@@ -2175,7 +2237,8 @@ export function resolveD20Interrupt(
       `${pending.responders.map((candidate) => candidate.effectName).join(' / ')}: реакция пропущена.`,
     );
   }
-  const actionRng = pending.randomValues ? transcriptRng(pending.randomValues) : rng;
+  const baseRng = pending.randomValues ? transcriptRng(pending.randomValues) : rng;
+  const actionRng = pending.influenceRerolledDie === undefined ? baseRng : withD20Replacement(baseRng, pending.influenceRerolledDie, pending.influenceSource ?? 'Переброс');
   return settlePendingMonsterOnHitGrapple(executeCombatActionWithD20Interrupts(
     { ...pending.command, state: prepared, rng: actionRng },
     pending.operation === 'impose_disadvantage'
@@ -2705,10 +2768,23 @@ export function resolvePlayerSavingThrow(
   response: Extract<DecisionResponse, { kind: 'roll' }>,
   rng: Rng = Math.random,
 ): SoloCombatState {
+  if (state.pendingD20Interrupt) throw new Error('Сначала завершите открытый бросок к20');
   const pending = state.world.pendingResolution;
   if (!pending || pending.request.type !== 'saving_throw'
     || !isControlledCharacter(state, pending.request.actorId)) return state;
-  return autoResolveSystemDecisions(resolveDecision(state, response, rng), rng);
+  const recorded = recordedRng(rng);
+  const preview = resolveDecision(state, response, recorded.rng);
+  const roll = heldRollIn(preview, state, pending.request.actorId);
+  if (!roll) return autoResolveSystemDecisions(preview, rng);
+  const kind = roll.kind === 'check' ? 'check' : 'save';
+  const influences = combatRollInfluences(state, pending.request.actorId, kind, roll);
+  if (!influences.length) return autoResolveSystemDecisions(preview, rng);
+  return {...state, pendingD20Interrupt: {
+    timing: 'after_roll_before_outcome', operation: 'roll_influence',
+    command: {actorId: pending.request.actorId, actionId: 'actionId' in pending ? pending.actionId : 'saving-throw', targetIds: []},
+    responders: influences.map(action => ({actorId: pending.request.actorId, effectId: action.id, effectName: action.name})),
+    randomValues: recorded.values, held: {roll, kind, saveResponse: response},
+  }};
 }
 
 export function activateCombatBoon(
@@ -3628,28 +3704,47 @@ export function escapeActorGrapple(
   }});
 }
 export function canStandActor(state: SoloCombatState, actorId: string): boolean {
+  const action = state.world.actors[actorId] && conditionGrantedActions(state.world.actors[actorId].runtime)[0];
+  return Boolean(action && canUseConditionAction(state, actorId, action.id));
+}
+
+export function canUseConditionAction(state: SoloCombatState, actorId: string, actionId: string): boolean {
   const actor = state.world.actors[actorId];
-  const cost = standMovementCost(state, actorId);
-  return Boolean(actor && actorMustCrawl(actor) && actor.runtime.hp.current > 0
+  const action = actor && conditionGrantedActions(actor.runtime).find(candidate => candidate.id === actionId);
+  const cost = action ? Math.floor(effectiveCombatActorSpeedFt(state, actorId) * action.movementFraction) : Infinity;
+  return Boolean(actor && action && actor.runtime.hp.current > 0
     && state.outcome === 'active' && activeActorId(state) === actorId
     && !state.world.pendingResolution && !state.pendingD20Interrupt && !state.pendingInterception
     && !state.pendingAdditionalMovement && !state.pendingTriggeredAction && !state.pendingTurnStartGrappleDamage
-    && !state.pendingAlertSwapActorIds?.length && effectiveCombatActorSpeedFt(state, actorId) > 0
+    && !state.pendingAlertSwapActorIds?.length && !state.playerMovement && !state.pendingReachEntry && !state.pendingMovementStep
+    && effectiveCombatActorSpeedFt(state, actorId) > 0
     && (state.movementRemainingFt[actorId] ?? effectiveCombatActorSpeedFt(state, actorId)) >= cost);
 }
 
 export function standActor(state: SoloCombatState, actorId: string): SoloCombatState {
-  if (!canStandActor(state, actorId)) throw new Error('Сейчас нельзя встать: нужна половина скорости и незавершённый ход');
+  // Compatibility entry point for historical commands / AI. New UI sends the granted action id.
+  const action = state.world.actors[actorId] && conditionGrantedActions(state.world.actors[actorId].runtime)[0];
+  if (!action) throw new Error('Состояния не предоставляют действие перемещения');
+  return executeConditionAction(state, actorId, action.id);
+}
+
+export function executeConditionAction(state: SoloCombatState, actorId: string, actionId: string): SoloCombatState {
+  if (!canUseConditionAction(state, actorId, actionId)) throw new Error('Недостаточно перемещения или действие состояния сейчас недоступно');
   const actor = state.world.actors[actorId];
-  const cost = standMovementCost(state, actorId);
-  const result = executeEngineAction(actor.runtime, {
-    name: 'Встать', effects: [{ resolution: 'auto', result: [{ kind: 'condition', value: 'prone', op: 'remove' }] }],
+  const action = conditionGrantedActions(actor.runtime).find(candidate => candidate.id === actionId)!;
+  const cost = Math.floor(effectiveCombatActorSpeedFt(state, actorId) * action.movementFraction);
+  const budget = state.movementRemainingFt[actorId] ?? effectiveCombatActorSpeedFt(state, actorId);
+  const result = executeEngineAction({...actor.runtime, resources:{...actor.runtime.resources, movement:budget}}, {
+    name: action.name, activation:{mode:'active',cost:[{resource:'movement',amount:cost}]}, effects: action.effects,
   }, { character: actor.character, selfId: actorId, rng: () => { throw new Error('Вставание не требует броска'); } });
+  const resources = {...result.state.resources};
+  if (Object.prototype.hasOwnProperty.call(actor.runtime.resources, 'movement')) resources.movement = actor.runtime.resources.movement;
+  else delete resources.movement;
   return interruptStraightMovement(appendLog({
     ...state,
-    world: { ...state.world, actors: { ...state.world.actors, [actorId]: { ...actor, runtime: result.state } } },
+    world: { ...state.world, actors: { ...state.world.actors, [actorId]: { ...actor, runtime: {...result.state, resources} } } },
     movementRemainingFt: { ...state.movementRemainingFt, [actorId]: (state.movementRemainingFt[actorId] ?? effectiveCombatActorSpeedFt(state, actorId)) - cost },
-  }, actorId, `Встал: потрачено ${cost} фт. движения.`), actorId);
+  }, actorId, `${action.name}: потрачено ${cost} фт. движения.`, result.events.map((event, ordinal) => ({kind: 'engine', ordinal, sourceActorId: actorId, actorId, targetIds: [actorId], event}))), actorId);
 }
 
 export function selectCombatMovementMode(
@@ -5252,6 +5347,7 @@ export async function createSoloCombatState(input: {
     };
   });
   const state: SoloCombatState = {
+    conditionActionSchemaVersion: 1,
     schemaVersion: SOLO_COMBAT_SCHEMA_VERSION,
     characterId: input.character.id,
     runtimeRevision: Number(input.character.runtime_revision ?? 0),

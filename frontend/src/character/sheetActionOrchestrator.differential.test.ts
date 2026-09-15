@@ -59,6 +59,7 @@ import {
 import { migrateWorldState } from '../rules-core/worldMigration';
 import { SHEET_SPELL_CAST_CHOICE } from './sheetSpellCastingUi';
 import { WEAPON_ATTACK_PRIMITIVE } from '../rules-core/weaponActionPolicies';
+import {effectiveArmorClassBreakdown} from '../rules-core/actorArmorClass';
 
 const RULESET = {
   systemId: 'dnd5e-2024' as const,
@@ -423,6 +424,7 @@ function sheetContext(input: {
         id: input.target.id,
         size: input.target.attackProfile?.size,
         ac: input.target.ac,
+        acBreakdown: effectiveArmorClassBreakdown(input.target),
         characterContext: input.target.character,
         passives: input.target.passives,
         runtimeState: clone(input.target.runtime),

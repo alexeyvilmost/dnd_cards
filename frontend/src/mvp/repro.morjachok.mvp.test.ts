@@ -1,5 +1,5 @@
 /**
- * Детерминированная регрессия бага «Оборона не даёт +1 КЗ».
+ * Детерминированная регрессия бага «Оборона не даёт +1 КД».
  *
  * Тест берёт канонический контент из прода, но создаёт персонажа в памяти:
  * ему не нужна и не создаётся историческая запись characters_v3.
@@ -50,7 +50,7 @@ let background: Background | undefined;
 let defenseFeat: Feat | undefined;
 let armor: Card | undefined;
 
-describe.skipIf(!RUN)('Репро: Воин со стилем «Оборона» (+1 КЗ)', () => {
+describe.skipIf(!RUN)('Репро: Воин со стилем «Оборона» (+1 КД)', () => {
   beforeAll(async () => {
     const [classes, races, backgrounds, feats, cards] = await Promise.all([
       fetchAll<CharacterClass>('/api/classes', 'classes'),

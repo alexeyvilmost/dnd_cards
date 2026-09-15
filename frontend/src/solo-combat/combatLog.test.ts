@@ -16,7 +16,7 @@ const roll = (overrides: Partial<RollLog> = {}): RollLog => ({
   total: 23,
   target: { type: 'ac', value: 15 },
   outcome: 'hit',
-  text: 'к20: 18 +5 = 23 против КЗ 15',
+  text: 'к20: 18 +5 = 23 против КД 15',
   ...overrides,
 });
 
@@ -68,7 +68,7 @@ describe('structured solo-combat log', () => {
       .toContainEqual({ sides: 20, result: 4, discarded: true });
     expect(combatLogDetails(records[0], state)[0]).toMatchObject({
       kind: 'roll',
-      label: 'Атака против КЗ 15',
+      label: 'Атака против КД 15',
     });
   });
 

@@ -29,6 +29,7 @@ import { SKILLS } from '../mechanics/registries';
 import SheetInPlayController from '../components/SheetInPlayController';
 import EffectiveSenseValue from '../components/EffectiveSenseValue';
 import { rollD20 } from '../engine/roll';
+import {influencedSheetRoll} from '../character/influencedSheetRoll';
 import { rollEvent, describeEngineEvent } from '../engine/events';
 import { plannedValuesRng, type PlannedDie } from '../engine/dicePlan';
 import type { EngineEvent } from '../mvp/contracts';
@@ -252,7 +253,8 @@ export default function MobileCharacterSheet() {
       label: `${label} · ${ABILITY_LABEL_RU[ability]}`,
     }];
     setOverlay(null);
-    const decision = await diceDialog.request(plan, label, undefined, { compactCheck: { kind: rollKind, roll: () => rollD20({ modifiers: [{ value: bonus, source: label }], rng: Math.random }) } });
+    const inspired = influencedSheetRoll(rollKind, {modifiers:[{value:bonus,source:label}]}, runtimeState, data.passives);
+    const decision = await diceDialog.request(plan, label, undefined, {compactCheck:inspired.request});
     if (decision.mode === 'cancel') return;
     const rng = decision.mode === 'manual'
       ? plannedValuesRng(plan, decision.values)
@@ -261,7 +263,13 @@ export default function MobileCharacterSheet() {
       modifiers: [{ value: bonus, source: label }],
       rng,
     });
-    await appendEvents([rollEvent(label, roll)]);
+    const events:EngineEvent[] = [rollEvent(label, roll)];
+    if (inspired.spent() && runtimeState && data.character) {
+      const paid = inspired.finalize(runtimeState);
+      const updated = await charactersV3Api.patchRuntime(data.character.id,{resources:paid.state.resources});
+      data.updateCharacter(updated); events.push(...paid.events);
+    }
+    await appendEvents(events);
     flash(`${label}: ${roll.total}`);
   };
 
@@ -408,7 +416,7 @@ export default function MobileCharacterSheet() {
                 </button>
                 <div><span>Скорость</span><strong>{speed} фт</strong></div>
                 <div><span>БМ</span><strong>{fmtMod(ruleState.proficiencyBonus)}</strong></div>
-                <div><span>КЗ</span><strong>{armorClass}</strong></div>
+                <div><span>КД</span><strong>{armorClass}</strong></div>
                 <div><span>Размер</span><strong>{SIZE_LABELS[size] ?? size}</strong></div>
               </div>
             </Section>

@@ -116,7 +116,7 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
             <div className="sp-srow"><span className="sp-lbl">Спасбросок:</span><span className="sp-bonus">{abilityFullRu(mstats.saveAbility) || 'спасбросок'}</span></div>
           )}
           {defenseBonus && (
-            <div className="sp-srow"><span className="sp-lbl">Защита:</span><span className="sp-bonus">{defenseBonus}</span></div>
+            <div className="sp-srow"><span className="sp-lbl">КД:</span><span className="sp-bonus">{defenseBonus}</span></div>
           )}
           {mastery && (
             <div className="sp-srow">

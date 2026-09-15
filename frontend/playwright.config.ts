@@ -43,7 +43,10 @@ export default defineConfig({
     // a separate opt-in/live gate and must not be inferred from these tests.
     command: 'npm run preview -- --host 127.0.0.1 --port 4173',
     url: 'http://127.0.0.1:4173/rules-lab',
-    reuseExistingServer: !process.env.CI,
+    // Windows CI-like local release gates use system Chrome but supervise the
+    // preview separately: npm's cmd wrapper may otherwise keep Playwright's
+    // webServer teardown alive after every browser context has closed.
+    reuseExistingServer: process.env.PLAYWRIGHT_REUSE_EXISTING_SERVER === '1' || !process.env.CI,
     timeout: 30_000,
   },
 });

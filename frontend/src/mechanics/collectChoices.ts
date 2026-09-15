@@ -1,4 +1,4 @@
-import type {Card} from '../types';
+import type {Card, Spell} from '../types';
 import { optionsToChoiceForm } from './blocks';
 import { choiceKey } from './choiceKey';
 import type { StoneworkContactFacts } from '../rules-core/dwarfTraits';
@@ -45,6 +45,7 @@ export type PendingChoice = {
     id: string;
     name: string;
     previewCard?: Card;
+    previewSpell?: Spell;
     /** Optional payload reference when it intentionally differs from id. */
     value?: string;
     /** Data-owned prerequisite evaluated against the originating class. */

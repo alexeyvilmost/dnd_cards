@@ -1,4 +1,7 @@
 import { combatActorDisplayName } from '../character/familiarLabels';
+import {combatRollInfluences} from '../solo-combat/engine';
+import {persistedRollPresentation} from '../solo-combat/persistedRollPresentation';
+import RollInfluenceActions from '../components/RollInfluenceActions';
 import {isLooseTelekineticObject, telekineticHeldObjects} from '../rules-core/telekineticMovement';
 import {effectiveArmorClass} from '../rules-core/actorArmorClass';
 import type {Action} from '../types';
@@ -7,7 +10,13 @@ import SheetActionLine from '../components/SheetActionLine';
 import { getDamageLabel } from '../utils/damageTypes';
 import type { RoguelikeCombatIntent } from '../roguelike/combatWorker';
 import type { RoguelikeRun } from '../roguelike/api';
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import {decisionOfferVisible, decisionPolicyToggles} from '../solo-combat/decisionPolicies';
+import DecisionPolicyToggles from '../components/DecisionPolicyToggles';
+import AttackRollEquation from '../components/AttackRollEquation';
+import RollCalculationDetails from '../components/RollCalculationDetails';
+import {previewAttackDefense} from '../rules-core/handler';
+import {useSiteSettings} from '../settings';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
 import { actionsApi, effectsApi } from '../api/client';
@@ -53,7 +62,7 @@ import {
   moveCombatDancingLights,
   moveActorAlongRoute,
   selectCombatMovementMode,
-  standActor, escapeActorGrapple,
+  executeConditionAction, escapeActorGrapple,
   refreshSoloCombatParticipants,
   revealCombatMagicAura,
   resolvePlayerReaction,
@@ -194,6 +203,7 @@ export default function SoloCombatPage() {
     setHoveredActorId(actorId);
   }, []);
   const [combatPassiveEnabled, setCombatPassiveEnabled] = useState<Record<string, boolean>>(readCombatPassivePreferences);
+  const siteSettings = useSiteSettings();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sceneConstructorOpen, setSceneConstructorOpen] = useState(false);
   const [sheetActorId, setSheetActorId] = useState<string | null>(null);
@@ -532,6 +542,42 @@ export default function SoloCombatPage() {
       trustedBusyRef.current = false; setBusy(false);
     });
   }, [apply]);
+
+  const heldDecision = persistedRollPresentation(state?.pendingD20Interrupt);
+  const influenceOfferVisible = decisionOfferVisible(decisionPolicyToggles('roll_influence'),
+    combatPassiveEnabled, {roll: heldDecision?.held?.roll});
+  const policyReactionOptions = useMemo(() => {
+    const pending = state?.world.pendingResolution;
+    if (!state || pending?.request.type !== 'reaction' || !isControlledCharacter(state, pending.request.actorId)) return [];
+    return sheetReactionDecisionOptions(pending.request.options).map(option => {
+      const action = state.catalogActions.find(row => row.id === option.response.actionId);
+      const toggles = action ? decisionPolicyToggles('reaction', action) : [];
+      const preview = action && toggles.length && pending.type === 'attack_reaction' && !pending.attackAdjustment
+        ? previewAttackDefense(state.world.actors[pending.request.actorId], action, pending.attackRoll, option.response.spell)
+        : undefined;
+      return {...option, toggles, preview, visible: decisionOfferVisible(toggles, combatPassiveEnabled,
+        {changesOutcome: preview?.changesOutcome})};
+    });
+  }, [state, combatPassiveEnabled]);
+  const automaticDecisionAttempt = useRef<string | null>(null);
+  useEffect(() => {
+    if (!state || busy || error || presentation.blocked) return;
+    const held = persistedRollPresentation(state.pendingD20Interrupt);
+    const pending = state.world.pendingResolution;
+    const skipInfluence = held?.held && !influenceOfferVisible;
+    const skipReaction = policyReactionOptions.length > 0 && policyReactionOptions.every(option => !option.visible);
+    const key = skipInfluence ? `roll:${held.command.actorId}:${state.log.length}`
+      : skipReaction ? `reaction:${pending?.request.id}` : null;
+    if (!key || automaticDecisionAttempt.current === key) return;
+    automaticDecisionAttempt.current = key;
+    // Only decline through the normal revision-checked command. Never pay or
+    // simulate an authoritative outcome on the client; archived workers work too.
+    try {
+      if (skipInfluence) applyIntent({type: 'd20_interrupt', actorId: null}, () => resolveD20Interrupt(state, null));
+      else applyIntent({type: 'reaction', response: {kind: 'reaction', actionId: null}},
+        () => resolvePlayerReaction(state, {kind: 'reaction', actionId: null}));
+    } catch (reason) { setError(playerFacingSheetActionError(reason)); }
+  }, [state, busy, error, presentation.blocked, influenceOfferVisible, policyReactionOptions, applyIntent]);
 
   const resolveTriggeredChoice = async (actionId: string | null) => {
     if (!state?.pendingTriggeredAction || busy) return;
@@ -1025,7 +1071,18 @@ export default function SoloCombatPage() {
   const actor = activeActor(state);
   const pending = state.world.pendingResolution;
   const pendingTriggered = state.pendingTriggeredAction;
-  const pendingD20Interrupt = state.pendingD20Interrupt;
+  const pendingD20Interrupt = persistedRollPresentation(state.pendingD20Interrupt);
+  const interruptActions = (pendingD20Interrupt?.responders ?? []).map(responder => {
+    const source = state.world.actors[responder.actorId]?.passives?.find(row => row.id === responder.effectId) ?? {};
+    return {id:`${responder.actorId}:${responder.effectId}`, name:responder.effectName,
+      description:String(source.description ?? ''), imageUrl:typeof source.image_url === 'string' ? source.image_url : undefined,
+      mechanics:source};
+  });
+  const useInterruptAction = (id: string) => {
+    const responder = pendingD20Interrupt?.responders.find(row => `${row.actorId}:${row.effectId}` === id);
+    if (responder) applyIntent({type:'d20_interrupt',actorId:responder.actorId,effectId:responder.effectId},
+      () => resolveD20Interrupt(state,responder.actorId,Math.random,responder.effectId));
+  };
   const pendingTurnStart = state.pendingTurnStartGrappleDamage;
   const implicitAttackCandidate = defaultCombatAttackAction(state, activeControlledActorId);
   const implicitAttackAction = implicitAttackCandidate
@@ -1036,9 +1093,8 @@ export default function SoloCombatPage() {
     && !secondaryActionId && !dancingLightsMoveGroupId && !state.pendingAdditionalMovement
     && !pending && !pendingTriggered && !pendingTurnStart && !state.pendingAlertSwapActorIds?.length
     && !state.pendingInterception && !pendingD20Interrupt && state.outcome === 'active';
-  const reactionOptions = pending?.request.type === 'reaction'
-    && isControlledCharacter(state, pending.request.actorId)
-    ? sheetReactionDecisionOptions(pending.request.options) : [];
+  // On a failed automatic decline keep controls available for an explicit retry.
+  const reactionOptions = policyReactionOptions.filter(option => option.visible || error);
   const controlledSavePending = (pending?.request.type === 'saving_throw' || pending?.request.type === 'shove_outcome')
     && isControlledCharacter(state, pending.request.actorId)
     ? pending
@@ -1058,11 +1114,23 @@ export default function SoloCombatPage() {
       ? ` · ${[...new Set(pending.damage.map((packet) => getDamageLabel(packet.damageType).toLocaleLowerCase('ru-RU')))].join(', ')}`
       : ''}`
     : null;
+  const heldForDisplay = influenceOfferVisible || error ? heldDecision : undefined;
   return (
     <main className={`solo-combat-page forge${presentation.blocked ? ' combat-input-blocked' : ''}`}>
       {rewardRun && <CombatRewardDialog run={rewardRun} onClose={() => navigate(`/roguelike/${rewardRun.id}`)} />}
       {presentation.initiative && <CombatPresentationDialog initiative={presentation.initiative} onClose={presentation.closeInitiative} />}
-      {presentation.beat && <CombatPresentationDialog beat={presentation.beat} onClose={presentation.closeAttack} />}
+      {(heldForDisplay?.held || presentation.beat) && <CombatPresentationDialog
+        modeOverride={heldForDisplay?.held ? 'standard' : undefined}
+        beat={heldForDisplay?.held ? {id: 'roll-influence-pending', sourceId: heldForDisplay.command.actorId,
+          sourceName: state.world.actors[heldForDisplay.command.actorId]?.name ?? '',
+          targetName: heldForDisplay.command.targetIds.map(id => state.world.actors[id]?.name).filter(Boolean).join(', '),
+          actionName: state.catalogActions.find(action => action.id === heldForDisplay.command.actionId)?.name ?? 'Бросок к20',
+          rollKind: heldForDisplay.held.kind, roll: heldForDisplay.held.roll, cues: []} : presentation.beat}
+        onClose={heldForDisplay?.held ? () => applyIntent({type: 'd20_interrupt', actorId: null}, () => resolveD20Interrupt(state, null)) : presentation.closeAttack}
+        busy={busy} provisional={Boolean(heldForDisplay?.held)}
+        influences={heldForDisplay?.held ? combatRollInfluences(state, heldForDisplay.command.actorId, heldForDisplay.held.kind, heldForDisplay.held.roll) : []}
+        onInfluence={heldForDisplay?.held ? effectId => applyIntent({type: 'd20_interrupt', actorId: heldForDisplay.command.actorId, effectId}, () => resolveD20Interrupt(state, heldForDisplay.command.actorId, Math.random, effectId)) : undefined}
+      />}
       {settingsOpen && <SheetSettingsDialog onClose={() => setSettingsOpen(false)} />}
       <MonsterTurnController state={state} disabled={presentation.blocked || Boolean(trustedRunRef.current) || busy || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt)} onTransition={apply} onError={setError} />
       <header className="combat-topbar">
@@ -1195,7 +1263,7 @@ export default function SoloCombatPage() {
         onAddMonster={addSceneMonster}
         onClose={() => setSceneConstructorOpen(false)}
       />}
-      <CombatHotbar onEscape={() => { void chooseEscapeGrapple(); }} onStand={() => { setMovementMode(false); applyIntent({type: 'stand', actorId: activeControlledActorId}, () => standActor(state, activeControlledActorId)); }} state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} passiveEnabled={combatPassiveEnabled} onPassiveToggle={setCombatPassive} disabled={presentation.blocked || !playerTurn || Boolean(state.pendingAdditionalMovement) || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { void (async () => {
+      <CombatHotbar onEscape={() => { void chooseEscapeGrapple(); }} onConditionAction={actionId => { setMovementMode(false); applyIntent(state.conditionActionSchemaVersion === 1 ? {type: 'condition_action', actorId: activeControlledActorId, actionId} : {type: 'stand', actorId: activeControlledActorId}, () => executeConditionAction(state, activeControlledActorId, actionId)); }} state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} passiveEnabled={combatPassiveEnabled} onPassiveToggle={setCombatPassive} disabled={presentation.blocked || !playerTurn || Boolean(state.pendingAdditionalMovement) || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { void (async () => {
         setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null);
         if (movementMode) { setMovementMode(false); return; }
         try {
@@ -1239,7 +1307,7 @@ export default function SoloCombatPage() {
         const drawerCharacter = participantCharacters[drawerActorId] ?? character;
         const drawerActor = state.world.actors[drawerActorId];
         const drawerRun = trustedRunRef.current;
-        return <aside className="combat-sheet-drawer"><button type="button" className="combat-sheet-drawer__close" onClick={() => setSheetOpen(false)} aria-label="Закрыть"><X /></button><header><h2>{drawerActor.name}</h2><p>Уровень {drawerCharacter.level} · КЗ {effectiveArmorClass(drawerActor)} · скорость {effectiveActorSpeedFt(drawerActor)} фт.</p></header><CombatCharacterSidebar
+        return <aside className="combat-sheet-drawer"><button type="button" className="combat-sheet-drawer__close" onClick={() => setSheetOpen(false)} aria-label="Закрыть"><X /></button><header><h2>{drawerActor.name}</h2><p>Уровень {drawerCharacter.level} · КД {effectiveArmorClass(drawerActor)} · скорость {effectiveActorSpeedFt(drawerActor)} фт.</p></header><CombatCharacterSidebar
           character={drawerCharacter}
           state={state}
           actorId={drawerActorId}
@@ -1253,15 +1321,27 @@ export default function SoloCombatPage() {
           }}
         /><Link className="combat-sheet-drawer__full" target="_blank" to={drawerRun?.character_id === drawerActorId ? runSheetURL(drawerRun) : `/characters-v3/${drawerActorId}`}>Открыть полный лист ↗</Link></aside>;
       })()}
-      {reactionOptions.length > 0 && <div className="combat-reaction-backdrop"><section aria-label={reactionTitle}>
+      {reactionOptions.length > 0 && <div className="combat-reaction-backdrop"><section role="dialog" aria-modal="true" aria-label={reactionTitle}>
         <p>{pending?.type === 'check_boost' ? 'ПОСЛЕ БРОСКА' : pending?.type === 'attack_reaction' && pending.attackAdjustment ? 'ПРИЁМ' : 'РЕАКЦИЯ'}</p><h2>{reactionTitle}</h2>{pending?.type === 'damage_reaction' && <p>{state.world.actors[pending.request.actorId]?.name} · Цель: {state.world.actors[pending.targetActorId]?.name}</p>}{reactionDetails && <p>{reactionDetails}</p>}
+        {pending?.type === 'attack_reaction' && pending.request.trigger.type === 'hit_by_attack' && <div className="combat-reaction-attack-summary">
+          <p>{state.world.actors[pending.sourceActorId]?.name} → {state.world.actors[pending.targetActorId]?.name}</p>
+          <AttackRollEquation roll={{...pending.attackRoll, target: {...pending.attackRoll.target, type:'ac', value:pending.request.trigger.originalAc}}}/>
+          {pending.attackRoll.outcome === 'crit' && <p>Критическое попадание — увеличение КД не отменяет его.</p>}
+          <RollCalculationDetails roll={pending.attackRoll}/>
+        </div>}
         <div className="combat-reaction-actions">{reactionOptions.map(option => {
           const presentation = state.actionPresentation?.[option.response.actionId ?? ''];
-          return <SheetActionLine key={option.id} name={option.label}
+          return <div key={option.id}><SheetActionLine name={option.label}
             imageUrl={presentation?.imageUrl} description={presentation?.description}
             actionRef={presentation?.actionRef} spellRef={presentation?.spellRef}
+            variant={presentation?.spellRef ? siteSettings.entityDisplay.spells : siteSettings.entityDisplay.actions}
             sourceLabel={pending ? state.world.actors[pending.request.actorId]?.name : undefined}
-            disabled={busy} onActivate={() => applyIntent({type: 'reaction', response: option.response}, () => resolvePlayerReaction(state, option.response))} />;
+            disabled={busy} onActivate={() => applyIntent({type: 'reaction', response: option.response}, () => resolvePlayerReaction(state, option.response))} />
+            {option.preview && <p>КД после реакции: {option.preview.ac} · {option.preview.changesOutcome ? 'Удар будет отражён' : 'Попадание сохранится'}</p>}
+            <DecisionPolicyToggles toggles={option.toggles} preferences={combatPassiveEnabled} onChange={setCombatPassive}
+              parent={{name: presentation?.spellRef?.name ?? presentation?.actionRef?.name,
+                imageUrl: presentation?.imageUrl || presentation?.spellRef?.image_url || presentation?.actionRef?.image_url}}/>
+          </div>;
         })}</div>
         <button type="button" disabled={busy} onClick={() => applyIntent({type: 'reaction', response: {kind: 'reaction', actionId: null}}, () => resolvePlayerReaction(state, { kind: 'reaction', actionId: null }))}>Пропустить</button>
       </section></div>}
@@ -1287,7 +1367,7 @@ export default function SoloCombatPage() {
         return <div className="combat-reaction-backdrop"><section><p>БДИТЕЛЬНЫЙ</p><h2>{alertActor.name}: обменять инициативу?</h2><p>Сразу после броска инициативы можно обменяться местами с согласным союзником. Итоговые значения не меняются.</p><div>{allies.map((allyId) => <button type="button" key={allyId} disabled={busy} onClick={() => applyIntent({type: 'alert_swap', actorId: alertActorId, allyActorId: allyId}, () => resolveSoloCombatAlertSwap(state, alertActorId, allyId))}>Обменяться с {state.world.actors[allyId].name}</button>)}<button type="button" disabled={busy} onClick={() => applyIntent({type: 'alert_swap', actorId: alertActorId, allyActorId: null}, () => resolveSoloCombatAlertSwap(state, alertActorId, null))}>Оставить порядок</button></div></section></div>;
       })() : null}
       {state.pendingInterception ? <div className="combat-reaction-backdrop"><section><p>РЕАКЦИЯ</p><h2>Перехватить удар по {state.world.actors[state.pendingInterception.targetActorId].name}?</h2><p>Входящий урон: {state.pendingInterception.incomingDamage}. Перехват снизит его на 1к10 + Бонус владения и потратит реакцию.</p><div>{state.pendingInterception.interceptorActorIds.map((actorId) => <button type="button" key={actorId} disabled={busy} onClick={() => applyIntent({type: 'interception', actorId: actorId}, () => resolveSoloCombatInterception(state, actorId))}>{state.world.actors[actorId].name} · использовать Перехват</button>)}<button type="button" disabled={busy} onClick={() => applyIntent({type: 'interception', actorId: null}, () => resolveSoloCombatInterception(state, null))}>Пропустить</button></div></section></div> : null}
-      {pendingD20Interrupt ? <div className="combat-reaction-backdrop"><section><p>{pendingD20Interrupt.timing === 'before_roll' ? 'ДО БРОСКА АТАКИ' : 'ПОСЛЕ РЕЗУЛЬТАТА'}</p><h2>{pendingD20Interrupt.operation === 'impose_disadvantage' ? 'Наложить Помеху на бросок?' : 'Попытаться изменить успешный бросок?'}</h2>{pendingD20Interrupt.preview && <p>Показанный результат: {pendingD20Interrupt.preview.total} · {pendingD20Interrupt.preview.rollKind === 'attack_roll' ? 'попадание' : 'успех'}. Сохранённый бросок будет продолжен без переброса.</p>}<div>{pendingD20Interrupt.responders.map((responder) => <button type="button" key={`${responder.actorId}:${responder.effectId}`} disabled={busy} onClick={() => applyIntent({type: 'd20_interrupt', actorId: responder.actorId}, () => resolveD20Interrupt(state, responder.actorId))}>{state.world.actors[responder.actorId]?.name ?? responder.actorId} · {responder.effectName}</button>)}<button type="button" disabled={busy} onClick={() => applyIntent({type: 'd20_interrupt', actorId: null}, () => resolveD20Interrupt(state, null))}>Пропустить</button></div></section></div> : null}
+{pendingD20Interrupt && pendingD20Interrupt.operation !== 'roll_influence' ? <div className="combat-reaction-backdrop"><section><p>{pendingD20Interrupt.timing === 'before_roll' ? 'ДО БРОСКА АТАКИ' : 'ПОСЛЕ РЕЗУЛЬТАТА'}</p><h2>{pendingD20Interrupt.operation === 'impose_disadvantage' ? 'Наложить Помеху на бросок?' : 'Попытаться изменить успешный бросок?'}</h2>{pendingD20Interrupt.preview && <p>Показанный результат: {pendingD20Interrupt.preview.total} · {pendingD20Interrupt.preview.rollKind === 'attack_roll' ? 'попадание' : 'успех'}. Сохранённый бросок будет продолжен без переброса.</p>}<div><RollInfluenceActions actions={interruptActions} disabled={busy} onUse={useInterruptAction}/><button type="button" disabled={busy} onClick={() => applyIntent({type: 'd20_interrupt', actorId: null}, () => resolveD20Interrupt(state, null))}>Пропустить</button></div></section></div> : null}
       {!secondaryActionId && <CombatTriggeredActionPanel state={state} busy={busy} onChoose={resolveTriggeredChoice} />}
       {pendingTurnStart && <div className="combat-reaction-backdrop"><section><p>НАЧАЛО ХОДА</p><h2>Нанести 1к4 урона существу в захвате?</h2><div>{pendingTurnStart.targetActorIds.map((targetActorId) => <button type="button" key={targetActorId} disabled={busy} onClick={() => applyIntent({type: 'turn_start', targetActorId: targetActorId}, () => resolveSoloCombatTurnStart(state, targetActorId))}>{state.world.actors[targetActorId]?.name ?? 'Цель'} · 1к4 дробящего урона</button>)}<button type="button" disabled={busy} onClick={() => applyIntent({type: 'turn_start', targetActorId: null}, () => resolveSoloCombatTurnStart(state, null))}>Пропустить</button></div></section></div>}
       {worldInputDialog.dialog}

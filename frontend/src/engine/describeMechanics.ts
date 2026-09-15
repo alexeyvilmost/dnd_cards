@@ -24,7 +24,7 @@ const diceRu = (s: string, ctx?: FormulaContext | null) => formatFormulaDisplay(
 
 const ROLL_RU: Record<string, string> = {
   attack: 'атаку', saving_throw: 'спасбросок', ability_check: 'проверку',
-  damage: 'урон', ac: 'КЗ', speed: 'скорость', initiative: 'инициативу',
+  damage: 'урон', ac: 'КД', speed: 'скорость', initiative: 'инициативу',
   spell_dc: 'СЛ заклинаний', max_hp: 'макс. хиты',
   action: 'действие', bonus_action: 'бонусное действие', reaction: 'реакцию', concentration: 'концентрацию',
 };
@@ -114,6 +114,9 @@ function payloadPhrase(p: Dict, ctx?: FormulaContext | null): string {
     case 'healing': { const v = p.amount ?? p.dice ?? p.formula; return v != null ? `лечение ${diceRu(String(v), ctx)}` : 'лечение'; }
     case 'temp_hp': return `временные хиты ${diceRu(String(p.amount ?? ''), ctx)}`;
     case 'condition': return conditionValuePhrase(p);
+    case 'roll_influence': return p.operation === 'reroll_kept_d20'
+      ? `после броска, до объявления исхода: перебросить одну используемую к20; новый результат обязателен${p.die_max != null ? ` (грань не выше ${p.die_max})` : ''}${p.die_min != null ? ` (грань не ниже ${p.die_min})` : ''}`
+      : 'неподдерживаемая операция влияния на бросок';
     case 'modifier': return modifierPhrase(p);
     case 'resistance': {
       const lvl = String(p.value ?? 'resistance');
@@ -240,7 +243,7 @@ export function describeMechanics(
   const armor = mechanics.armor_profile as Dict | undefined;
   if (armor) {
     const category = ({ light: 'лёгкий доспех', medium: 'средний доспех', heavy: 'тяжёлый доспех', shield: 'щит' } as Record<string, string>)[String(armor.category)] ?? String(armor.category ?? 'доспех');
-    details.push(`Защита: ${category}, КЗ ${String(armor.ac_formula ?? '')}`);
+    details.push(`Защита: ${category}, КД ${String(armor.ac_formula ?? '')}`);
     if (Number(armor.strength_requirement ?? 0) > 0) details.push(`Требование: СИЛ ${armor.strength_requirement}; иначе Скорость −10 фт`);
     if (armor.stealth_disadvantage === true) details.push('Помеха на проверки Скрытности');
     if (armor.training_required === true) details.push('Требуется владение этой категорией доспеха');

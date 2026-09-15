@@ -2102,7 +2102,7 @@ const CardLibrary = () => {
                                       />
                                     )}
                                   {card.bonus_type === 'defense' && card.defense_type && (
-                                    <img src="/icons/defense.png" alt="Защита" className="w-3 h-3" />
+                                    <img src="/icons/defense.png" alt="КД" className="w-3 h-3" />
                                   )}
                                 </div>
                               )}

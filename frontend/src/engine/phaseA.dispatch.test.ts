@@ -149,7 +149,7 @@ describe('Фаза A — interrupt-триггеры: optional и ctx.triggers', 
     expect(res.pendingReactions?.map((r) => r.listenerId)).toContain('smite');
   });
 
-  it('Щит (входящая реакция): исполнение даёт +5 КЗ и тратит реакцию + ячейку', () => {
+  it('Щит (входящая реакция): исполнение даёт +5 КД и тратит реакцию + ячейку', () => {
     const shield: Dict = {
       name: 'Щит',
       activation: { mode: 'reaction', trigger: { event: 'hit_by_attack' }, cost: [{ resource: 'reaction' }, { amount: 1, level: 1, resource: 'spell_slot' }] },
@@ -159,6 +159,6 @@ describe('Фаза A — interrupt-триггеры: optional и ctx.triggers', 
     expect(res.state.resources.spell_slot_1).toBe(1); // была 2 → потрачена 1
     expect(res.state.resources.reaction).toBe(0);
     const acBonus = collectModifiers(res.state, [], { roll: 'ac' }).modifiers.reduce((s, m) => s + m.value, 0);
-    expect(acBonus).toBe(5); // +5 КЗ действует, пока эффект активен
+    expect(acBonus).toBe(5); // +5 КД действует, пока эффект активен
   });
 });

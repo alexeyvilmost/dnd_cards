@@ -64,7 +64,7 @@ function buildD20Text(
   else if (kept.length) text = `${label}: ${kept[0].result}`;
 
   if (target) {
-    const tlabel = target.type === 'ac' ? 'КЗ' : 'СЛ';
+    const tlabel = target.type === 'ac' ? 'КД' : 'СЛ';
     text += ` против ${tlabel} ${target.value}`;
     if (outcome === 'crit') text += ' — крит';
     else if (outcome === 'crit_miss') text += ' — крит. промах';
@@ -108,6 +108,20 @@ export function rollD20(opts: RollD20Options): RollLog {
     if (kept) kept.discarded = true;
     natural = drawDie(rng, faces);
     dice.push({ sides: faces, result: natural });
+  }
+
+  const inspired = faces === 20 ? (rng as DieAwareRandomSource).rerollD20?.(dice) : undefined;
+  if (inspired !== undefined) {
+    if (!Number.isInteger(inspired) || inspired < 1 || inspired > 20) throw new Error('Invalid replacement d20');
+    const kept = dice.find(die => !die.discarded)!;
+    kept.discarded = true;
+    const replacement: DieRoll = {sides: 20, result: inspired, source: (rng as DieAwareRandomSource).rerollD20Source ?? 'Переброс'};
+    // Only one die is rerolled. The other advantage/disadvantage die remains.
+    const other = dice.length === 2 && advantage !== 'none' ? dice[1] : undefined;
+    const useOther = other && (advantage === 'advantage' ? other.result > inspired : other.result < inspired);
+    if (useOther) {other.discarded = false; replacement.discarded = true;}
+    dice.push(replacement);
+    natural = useOther ? other.result : inspired;
   }
 
   // die_bonus к самой d20-кости (+N к каждой к20/к24) — в total, детекцию крита не меняет.
@@ -187,9 +201,9 @@ export function addBonusDieToD20Roll(
     const natural = roll.dice.find(die => die.sides === 20 && !die.discarded)?.result;
     outcome = natural === 1 ? 'miss' : total >= roll.target.value ? 'hit' : 'miss';
   }
-  const baseText = roll.text.replace(/ против (?:КЗ|СЛ) .*$/, '');
+  const baseText = roll.text.replace(/ против (?:К[ДЗ]|СЛ) .*$/, '');
   const targetText = roll.target
-    ? ` против ${roll.target.type === 'ac' ? 'КЗ' : 'СЛ'} ${roll.target.value}`
+    ? ` против ${roll.target.type === 'ac' ? 'КД' : 'СЛ'} ${roll.target.value}`
     : '';
   const outcomeText = outcome === 'success' ? ' — успех'
     : outcome === 'fail' ? ' — провал'
@@ -220,14 +234,16 @@ export function retargetAttackRoll(roll: RollLog, targetAc: number): RollLog {
     : natural <= 1
       ? 'miss'
       : roll.total >= targetAc ? 'hit' : 'miss';
-  const baseText = roll.text.replace(/ против КЗ .*$/, '');
+  const baseText = roll.text.replace(/ против К[ДЗ] .*$/, '');
   const suffix = outcome === 'crit' ? ' — крит'
     : outcome === 'crit_miss' ? ' — крит. промах'
       : outcome === 'hit' ? ' — попадание' : ' — промах';
   return {
     ...roll,
-    target: { type: 'ac', value: targetAc },
+    target: { type: 'ac', value: targetAc,
+      ...(roll.target?.breakdown ? {breakdown: {...roll.target.breakdown, value: targetAc,
+        parts: [...roll.target.breakdown.parts, ...(targetAc !== roll.target.value ? [{source: 'Изменение КД при реакции', value: targetAc - roll.target.value}] : [])]}} : {}) },
     outcome,
-    text: `${baseText} против КЗ ${targetAc}${suffix}`,
+    text: `${baseText} против КД ${targetAc}${suffix}`,
   };
 }

@@ -66,6 +66,7 @@ export default function SheetEntityRow({
         role={onClick ? 'button' : undefined}
         tabIndex={onClick && !disabled ? 0 : undefined}
         aria-disabled={disabled || undefined}
+        aria-pressed={selected}
         onClick={disabled ? undefined : onClick}
         onKeyDown={(event) => {
           if (!disabled && onClick && (event.key === 'Enter' || event.key === ' ')) {
@@ -92,6 +93,7 @@ export default function SheetEntityRow({
       style={accent ? { borderLeftColor: accent } : undefined}
       onClick={disabled ? undefined : onClick}
       aria-disabled={disabled || undefined}
+      aria-pressed={selected}
       title={title ?? name}
       onMouseEnter={onMouseEnter}
       onMouseMove={onMouseMove}

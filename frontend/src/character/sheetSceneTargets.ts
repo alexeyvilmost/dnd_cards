@@ -22,7 +22,7 @@ export const TRAINING_DUMMY_TARGET_ID = 'scene-target:training-dummy' as const;
 export const TRAINING_DUMMY: SheetSceneTargetDefinition = Object.freeze({
   id: TRAINING_DUMMY_TARGET_ID,
   name: 'Пугало',
-  description: 'Тренировочная цель сцены · КЗ 10 · модификаторы спасбросков +0',
+  description: 'Тренировочная цель сцены · КД 10 · модификаторы спасбросков +0',
   armorClass: 10,
   hitPoints: 100,
   size: 2,

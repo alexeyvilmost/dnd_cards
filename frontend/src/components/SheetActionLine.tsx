@@ -28,6 +28,7 @@ type Props = {
   /** Вторая строка ряда (напр. «Базовое действие», «1 уровень · Иллюзия»). */
   detail?: ReactNode;
   disabled?: boolean;
+  selected?: boolean;
   disabledTitle?: string;
   inlineDisabledReason?: boolean;
   level?: number;
@@ -42,6 +43,8 @@ type Props = {
   weaponAttackPreview?: WeaponAttackPreview;
   /** 'row' — строка (по умолчанию); 'icon' — плитка (настройка отображения действий). */
   variant?: 'row' | 'icon';
+  /** Explicit passive-toggle skin; uses the same entity preview and input handlers. */
+  iconShape?: 'square' | 'round';
   disableHover?: boolean;
   /** В режиме просмотра недоступное действие всё равно можно открыть и изучить. */
   inspectMode?: boolean;
@@ -55,6 +58,7 @@ const SheetActionLine = ({
   description,
   detail,
   disabled,
+  selected,
   disabledTitle,
   inlineDisabledReason = true,
   level,
@@ -65,6 +69,7 @@ const SheetActionLine = ({
   spellcasting,
   weaponAttackPreview,
   variant = 'row',
+  iconShape = 'square',
   disableHover = false,
   inspectMode = false,
   onActivate,
@@ -98,10 +103,11 @@ const SheetActionLine = ({
       {variant === 'icon' ? (
         <button
           type="button"
-          className={`cs-action-tile${disabled ? ' cs-action-tile--disabled' : ''}`}
+          className={`cs-action-tile${iconShape === 'round' ? ' cs-action-tile--round' : ''}${disabled ? ' cs-action-tile--disabled' : ''}${selected ? ' is-selected' : ''}`}
+          aria-pressed={selected}
           aria-disabled={(disabled && !inspectMode) || undefined}
           aria-label={disabled && disabledTitle ? `${name}: ${disabledTitle}` : name}
-          title={disabled ? disabledTitle : name}
+          title={disabled ? disabledTitle : iconShape === 'round' ? undefined : name}
           onClick={disabled && !inspectMode ? undefined : onActivate}
           onMouseEnter={onEnter}
           onMouseLeave={onLeave}
@@ -110,12 +116,14 @@ const SheetActionLine = ({
           onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
         >
           <ForgeEntityIcon imageUrl={imageUrl?.trim() || null} alt={name} fill />
+          {iconShape === 'round' && <span className="passive-orbit" aria-hidden="true"/>}
           {level != null && level > 0 && (
             <span className="cs-action-tile-lvl">{TILE_ROMAN[level - 1] ?? level}</span>
           )}
         </button>
       ) : (
         <SheetEntityRow
+          selected={selected}
           imageUrl={imageUrl}
           name={name}
           detail={<>{detail}{inlineDisabledReason && disabled && disabledTitle && <span className="cs-action-inline-reason">{disabledTitle}</span>}</>}

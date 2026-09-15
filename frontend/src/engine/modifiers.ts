@@ -86,7 +86,7 @@ export interface ModifierOp {
 
 /** Аккумулятор сбора: помимо свёрнутого advantage несёт флаги наличия — чтобы
  *  межпроходное объединение (collected + projected) тоже было порядко-независимым (C7).
- *  ops (C5) — не-аддитивные операции над значением (скорость/КЗ/…); в d20-бросках не применяются. */
+ *  ops (C5) — не-аддитивные операции над значением (скорость/КД/…); в d20-бросках не применяются. */
 export interface CollectResult {
   modifiers: RollModifier[];
   advantage: AdvantageState;
@@ -189,7 +189,7 @@ function collectFromPayload(
     }
     return;
   }
-  // C5: не-аддитивная алгебра над значением (скорость 0 у Схвачен, ×2 скорость Ускорения, «КЗ не ниже N»).
+  // C5: не-аддитивная алгебра над значением (скорость 0 у Схвачен, ×2 скорость Ускорения, «КД не ниже N»).
   if (payload.op === 'set' || payload.op === 'multiply' || payload.op === 'upgrade' || payload.op === 'downgrade') {
     if (payload.value == null) return;
     let value: number | undefined;

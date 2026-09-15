@@ -342,10 +342,11 @@ func roguelikeStaples(tx *gorm.DB) ([]RoguelikeOffer, error) {
 }
 
 func generateRoguelikeShop(tx *gorm.DB, run *RoguelikeRun, level int, preserve *RoguelikeOffer) (JSONMap, error) {
-	entries := make([]roguelikeShopManifestEntry, 0, len(roguelikeShopManifest))
-	numbers := make([]string, 0, len(roguelikeShopManifest))
+	manifest := roguelikeMerchantManifest()
+	entries := make([]roguelikeShopManifestEntry, 0, len(manifest))
+	numbers := make([]string, 0, len(manifest))
 	byNumber := map[string]roguelikeShopManifestEntry{}
-	for _, entry := range roguelikeShopManifest {
+	for _, entry := range manifest {
 		if entry.MinLevel <= level {
 			entries = append(entries, entry)
 			numbers = append(numbers, entry.CardNumber)
@@ -361,20 +362,22 @@ func generateRoguelikeShop(tx *gorm.DB, run *RoguelikeRun, level int, preserve *
 		cardByNumber[card.CardNumber] = card
 	}
 	available := make([]roguelikeShopManifestEntry, 0, len(entries))
+	rarities := map[string]string{}
 	for _, entry := range entries {
-		if _, exists := cardByNumber[entry.CardNumber]; exists {
+		if card, exists := cardByNumber[entry.CardNumber]; exists {
 			available = append(available, entry)
+			rarities[entry.CardNumber] = string(card.Rarity)
+		} else {
+			return nil, fmt.Errorf("merchant catalog item %s is missing; apply the shop content migration", entry.CardNumber)
 		}
 	}
-	if len(available) < 5 {
+	if len(available) < roguelikeShopSlots(level) {
 		return nil, fmt.Errorf("roguelike shop has only %d available manifest cards", len(available))
 	}
 	current := RoguelikeShop{}
 	_ = decodeJSONMap(run.Shop, &current)
 	generation := current.Generation + 1
-	ordered := roguelikeWeightedOrder(run.RunSeed, "shop", generation*1009+run.EncountersWon, available)
-	offers := make([]RoguelikeOffer, 0, 5)
-	selected := make([]roguelikeShopManifestEntry, 0, 5)
+	offers := make([]RoguelikeOffer, 0, roguelikeShopSlots(level))
 	pinnedCard := ""
 	shop := RoguelikeShop{Generation: generation}
 	if preserve != nil && !preserve.Sold {
@@ -384,35 +387,9 @@ func generateRoguelikeShop(tx *gorm.DB, run *RoguelikeRun, level int, preserve *
 		shop.PinnedOfferID = copy.ID
 		pinnedCard = copy.CardNumber
 	}
-	selectedCards := map[string]bool{pinnedCard: pinnedCard != ""}
-	hasKind := map[string]bool{}
-	if entry, ok := byNumber[pinnedCard]; ok {
-		hasKind[entry.Kind] = true
-	}
-	// Keep both an immediately usable consumable and an equippable alternative
-	// on the five-slot shelf whenever both pools are available.
-	for _, requiredKind := range []string{"consumable", "equipment"} {
-		if hasKind[requiredKind] {
-			continue
-		}
-		for _, entry := range ordered {
-			if entry.Kind == requiredKind && !selectedCards[entry.CardNumber] {
-				selected = append(selected, entry)
-				selectedCards[entry.CardNumber] = true
-				hasKind[requiredKind] = true
-				break
-			}
-		}
-	}
-	for _, entry := range ordered {
-		if len(offers)+len(selected) == 5 {
-			break
-		}
-		if selectedCards[entry.CardNumber] {
-			continue
-		}
-		selected = append(selected, entry)
-		selectedCards[entry.CardNumber] = true
+	selected, err := selectRoguelikeMerchantStock(run.RunSeed, generation, run.EncountersWon, level, available, rarities, pinnedCard)
+	if err != nil {
+		return nil, err
 	}
 	for _, entry := range selected {
 		card := cardByNumber[entry.CardNumber]

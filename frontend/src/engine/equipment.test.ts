@@ -67,7 +67,7 @@ describe('ac', () => {
     expect(computeAC(FIGHTER_CTX, state, []).value).toBe(18);
   });
 
-  it('KB-004: битая (кириллическая) формула КЗ не роняет расчёт — метод в rejected', () => {
+  it('KB-004: битая (кириллическая) формула КД не роняет расчёт — метод в rejected', () => {
     // До фикса formula.ts бросал FormulaError на «12 + ЛВК», computeAC не ловил → без
     // ErrorBoundary весь лист уходил в белый экран, и снять предмет было нельзя.
     const broken = {

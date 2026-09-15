@@ -79,7 +79,7 @@ export function collectLongRestPreparationChoices(input: {
         const spell = input.assembled.spells.find((candidate) => (
           candidate.id === reference || candidate.card_number === reference
         ));
-        return spell ? [{ id: reference, name: spell.name }] : [];
+        return spell ? [{ id: reference, name: spell.name, previewSpell: spell }] : [];
       });
       return {
         ...choice,

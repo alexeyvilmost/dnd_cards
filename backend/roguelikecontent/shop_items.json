@@ -1,0 +1,1691 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "source": {
+        "id": "f82bbd5f-0493-46da-9c10-3b10516181d7",
+        "name": "Длинный меч +1",
+        "slot": "versatile",
+        "type": "weapon",
+        "price": 15,
+        "rarity": "uncommon",
+        "weight": 3,
+        "mastery": "4cfe0660-ba1c-415b-b1ed-15e3c708a8e3",
+        "mechanics": null,
+        "bonus_type": "damage",
+        "bonus_value": "1d8 (1d10)",
+        "card_number": "CARD-0851",
+        "damage_type": "slashing",
+        "description": "",
+        "weapon_type": "longsword",
+        "defense_type": null,
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0851",
+      "id": "b2490000-0000-4000-8000-000000000001",
+      "name": "Длинный меч +1 (Забег)",
+      "price": 180,
+      "rarity": "uncommon",
+      "min_level": 1,
+      "kind": "magic",
+      "mechanics": {
+        "weapon_profile": {
+          "ammo": null,
+          "attunement": {
+            "required": false
+          },
+          "properties": [
+            "versatile"
+          ],
+          "enchantment": {
+            "attack_bonus": 1,
+            "damage_bonus": 1,
+            "extra_damage_lines": []
+          },
+          "weapon_type": "longsword",
+          "attack_modes": [
+            {
+              "kind": "melee",
+              "reach_ft": 5
+            }
+          ],
+          "damage_lines": [
+            {
+              "dice": "1d8",
+              "type": "slashing"
+            }
+          ],
+          "attack_ability": "str",
+          "versatile_grip": {
+            "dice": "1d10",
+            "type": "slashing"
+          },
+          "mastery_effect_id": "4cfe0660-ba1c-415b-b1ed-15e3c708a8e3",
+          "default_attack_mode": "melee",
+          "proficiency_category": "martial"
+        }
+      }
+    },
+    {
+      "source": {
+        "id": "a98c3b87-7678-4e79-8cf7-bcc8b895ae64",
+        "name": "Двуручный меч +1",
+        "slot": "two_hands",
+        "type": "weapon",
+        "price": 120,
+        "rarity": "uncommon",
+        "weight": 6,
+        "mastery": "651f4b6a-74c1-4ecf-a787-d98580bc9495",
+        "mechanics": null,
+        "bonus_type": "damage",
+        "bonus_value": "2d6",
+        "card_number": "CARD-0182",
+        "damage_type": "slashing",
+        "description": " ",
+        "weapon_type": "greatsword",
+        "defense_type": null,
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0182",
+      "id": "b2490000-0000-4000-8000-000000000002",
+      "name": "Двуручный меч +1 (Забег)",
+      "price": 210,
+      "rarity": "uncommon",
+      "min_level": 1,
+      "kind": "magic",
+      "mechanics": {
+        "weapon_profile": {
+          "ammo": null,
+          "heavy": {
+            "consequence": "attack_disadvantage",
+            "ability_by_mode": {
+              "melee": "str",
+              "ranged": "dex"
+            },
+            "minimum_ability_score": 13
+          },
+          "attunement": {
+            "required": false
+          },
+          "properties": [
+            "heavy",
+            "two_handed"
+          ],
+          "enchantment": {
+            "attack_bonus": 1,
+            "damage_bonus": 1,
+            "extra_damage_lines": []
+          },
+          "weapon_type": "greatsword",
+          "attack_modes": [
+            {
+              "kind": "melee",
+              "reach_ft": 5
+            }
+          ],
+          "damage_lines": [
+            {
+              "dice": "2d6",
+              "type": "slashing"
+            }
+          ],
+          "attack_ability": "str",
+          "mastery_effect_id": "651f4b6a-74c1-4ecf-a787-d98580bc9495",
+          "default_attack_mode": "melee",
+          "proficiency_category": "martial"
+        }
+      }
+    },
+    {
+      "source": {
+        "id": "c8e56d44-ddea-42a3-b5e1-6c243dc28a4b",
+        "name": "Щит +1",
+        "slot": "one_hand",
+        "type": "shield",
+        "price": 550,
+        "rarity": "uncommon",
+        "weight": 6,
+        "mastery": null,
+        "mechanics": null,
+        "bonus_type": "defense",
+        "bonus_value": "+3",
+        "card_number": "CARD-0347",
+        "damage_type": null,
+        "description": " ",
+        "weapon_type": null,
+        "defense_type": "light",
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0347",
+      "id": "b2490000-0000-4000-8000-000000000003",
+      "name": "Щит +1 (Забег)",
+      "price": 220,
+      "rarity": "uncommon",
+      "min_level": 1,
+      "kind": "magic",
+      "mechanics": {
+        "effects": [],
+        "activation": {
+          "mode": "passive",
+          "while": "equipped"
+        },
+        "armor_profile": {
+          "category": "shield",
+          "ac_formula": "+3",
+          "training_required": true,
+          "stealth_disadvantage": false,
+          "strength_requirement": 0
+        }
+      }
+    },
+    {
+      "source": {
+        "id": "f34218ef-3a06-45e2-82c5-84d90f9cbd77",
+        "name": "Отличные латные сапоги",
+        "slot": "feet",
+        "type": "boots",
+        "price": 150,
+        "rarity": "uncommon",
+        "weight": 8,
+        "mastery": null,
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": "+2",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "con"
+                    }
+                  }
+                },
+                {
+                  "kind": "modifier",
+                  "applies_to": {
+                    "op": "add",
+                    "roll": "ability_check",
+                    "value": "+1",
+                    "filter": {
+                      "ability": "str"
+                    }
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "mode": "passive"
+          }
+        },
+        "bonus_type": null,
+        "bonus_value": null,
+        "card_number": "CARD-0106",
+        "damage_type": null,
+        "description": "Спасброски Телосложения +2\nАтлетика +1",
+        "weapon_type": null,
+        "defense_type": null,
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0106",
+      "id": "b2490000-0000-4000-8000-000000000004",
+      "name": "Отличные латные сапоги (Забег)",
+      "price": 120,
+      "rarity": "uncommon",
+      "min_level": 1,
+      "kind": "magic",
+      "mechanics": {
+        "activation": {
+          "mode": "passive",
+          "while": "equipped"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "modifier",
+                "op": "add",
+                "value": 2,
+                "applies_to": {
+                  "roll": "saving_throw",
+                  "filter": {
+                    "ability": "con"
+                  }
+                }
+              },
+              {
+                "kind": "modifier",
+                "op": "add",
+                "value": 1,
+                "applies_to": {
+                  "roll": "ability_check",
+                  "filter": {
+                    "skill": "athletics"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "source": {
+        "id": "0df348b7-5b35-4312-9ba6-22f0fe9c2d14",
+        "name": "Кольцо стремительности",
+        "slot": "ring",
+        "type": "ring",
+        "price": 240,
+        "rarity": "uncommon",
+        "weight": 0.1,
+        "mastery": null,
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": 5,
+                  "applies_to": {
+                    "roll": "speed"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "mode": "passive"
+          }
+        },
+        "bonus_type": null,
+        "bonus_value": null,
+        "card_number": "CARD-0609",
+        "damage_type": null,
+        "description": "Ваша скорость увеличивается на 5 футов.",
+        "weapon_type": null,
+        "defense_type": null,
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0609",
+      "id": "b2490000-0000-4000-8000-000000000005",
+      "name": "Кольцо стремительности (Забег)",
+      "price": 140,
+      "rarity": "uncommon",
+      "min_level": 1,
+      "kind": "magic",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "op": "add",
+                "kind": "modifier",
+                "value": 5,
+                "applies_to": {
+                  "roll": "speed"
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive",
+          "while": "equipped"
+        }
+      }
+    },
+    {
+      "source": {
+        "id": "8e0721ca-1734-40d2-8398-1f47ee2d59da",
+        "name": "Малое кольцо риска",
+        "slot": "ring",
+        "type": "ring",
+        "price": 150,
+        "rarity": "uncommon",
+        "weight": 0.1,
+        "mastery": null,
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": "+3",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "dex"
+                    }
+                  }
+                },
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": "-3",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "wis"
+                    }
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "mode": "passive"
+          }
+        },
+        "bonus_type": null,
+        "bonus_value": null,
+        "card_number": "CARD-0357",
+        "damage_type": null,
+        "description": "Спасброски ЛОВ +3\nСпасброски МДР -3",
+        "weapon_type": null,
+        "defense_type": null,
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0357",
+      "id": "b2490000-0000-4000-8000-000000000006",
+      "name": "Малое кольцо риска (Забег)",
+      "price": 100,
+      "rarity": "uncommon",
+      "min_level": 1,
+      "kind": "magic",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "op": "add",
+                "kind": "modifier",
+                "value": "+3",
+                "applies_to": {
+                  "roll": "saving_throw",
+                  "filter": {
+                    "ability": "dex"
+                  }
+                }
+              },
+              {
+                "op": "add",
+                "kind": "modifier",
+                "value": "-3",
+                "applies_to": {
+                  "roll": "saving_throw",
+                  "filter": {
+                    "ability": "wis"
+                  }
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive",
+          "while": "equipped"
+        }
+      }
+    },
+    {
+      "source": {
+        "id": "a8f62915-0f5b-4f1e-9ddf-aa6750e70c2b",
+        "name": "Малое кольцо риска",
+        "slot": "ring",
+        "type": "ring",
+        "price": 150,
+        "rarity": "uncommon",
+        "weight": 0.1,
+        "mastery": null,
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": "-3",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "dex"
+                    }
+                  }
+                },
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": "+3",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "wis"
+                    }
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "mode": "passive"
+          }
+        },
+        "bonus_type": null,
+        "bonus_value": null,
+        "card_number": "CARD-0358",
+        "damage_type": null,
+        "description": "Спасброски ЛОВ -3\nСпаброски МДР +3",
+        "weapon_type": null,
+        "defense_type": null,
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0358",
+      "id": "b2490000-0000-4000-8000-000000000007",
+      "name": "Малое кольцо риска (Забег)",
+      "price": 100,
+      "rarity": "uncommon",
+      "min_level": 1,
+      "kind": "magic",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "op": "add",
+                "kind": "modifier",
+                "value": "-3",
+                "applies_to": {
+                  "roll": "saving_throw",
+                  "filter": {
+                    "ability": "dex"
+                  }
+                }
+              },
+              {
+                "op": "add",
+                "kind": "modifier",
+                "value": "+3",
+                "applies_to": {
+                  "roll": "saving_throw",
+                  "filter": {
+                    "ability": "wis"
+                  }
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive",
+          "while": "equipped"
+        }
+      }
+    },
+    {
+      "source": {
+        "id": "9310c74a-f23f-4d5c-a5a5-49afb905f998",
+        "name": "Кулон уверенности",
+        "slot": "necklace",
+        "type": "necklace",
+        "price": 130,
+        "rarity": "uncommon",
+        "weight": 0.3,
+        "mastery": null,
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": "+1",
+                  "applies_to": {
+                    "roll": "ability_check",
+                    "filter": {
+                      "skill": "performance"
+                    }
+                  }
+                },
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": "+1",
+                  "applies_to": {
+                    "roll": "ability_check",
+                    "filter": {
+                      "skill": "persuasion"
+                    }
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "mode": "passive"
+          }
+        },
+        "bonus_type": null,
+        "bonus_value": null,
+        "card_number": "CARD-0650",
+        "damage_type": null,
+        "description": "Выступление +1.\nУбеждение +1.",
+        "weapon_type": null,
+        "defense_type": null,
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0650",
+      "id": "b2490000-0000-4000-8000-000000000008",
+      "name": "Кулон уверенности (Забег)",
+      "price": 75,
+      "rarity": "uncommon",
+      "min_level": 1,
+      "kind": "magic",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "op": "add",
+                "kind": "modifier",
+                "value": "+1",
+                "applies_to": {
+                  "roll": "ability_check",
+                  "filter": {
+                    "skill": "performance"
+                  }
+                }
+              },
+              {
+                "op": "add",
+                "kind": "modifier",
+                "value": "+1",
+                "applies_to": {
+                  "roll": "ability_check",
+                  "filter": {
+                    "skill": "persuasion"
+                  }
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive",
+          "while": "equipped"
+        }
+      }
+    },
+    {
+      "source": {
+        "id": "020942a5-128d-4633-b15f-c57dc49b1571",
+        "name": "Зелье большого лечения",
+        "slot": null,
+        "type": "potion",
+        "price": 200,
+        "rarity": "uncommon",
+        "weight": 0.2,
+        "mastery": null,
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "kind": "healing",
+                  "amount": "4d4+4"
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "cost": [
+              {
+                "resource": "bonus_action"
+              },
+              {
+                "amount": 1,
+                "resource": "self_item"
+              }
+            ],
+            "mode": "active",
+            "while": "carried"
+          },
+          "object_size": "tiny"
+        },
+        "bonus_type": null,
+        "bonus_value": null,
+        "card_number": "CARD-0840",
+        "damage_type": null,
+        "description": ":bonus_action:: Исцелиться на [healing]4к4+4:healing:[/healing]",
+        "weapon_type": null,
+        "defense_type": null,
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0840",
+      "id": "b2490000-0000-4000-8000-000000000009",
+      "name": "Зелье большого лечения (Забег)",
+      "price": 65,
+      "rarity": "uncommon",
+      "min_level": 1,
+      "kind": "consumable",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "healing",
+                "amount": "4d4+4"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "amount": 1,
+              "resource": "self_item"
+            }
+          ],
+          "mode": "active",
+          "while": "carried"
+        },
+        "object_size": "tiny"
+      }
+    },
+    {
+      "source": {
+        "id": "765fa82c-b83b-4cae-b2f7-a2570ee9f1b6",
+        "name": "Тканевые наручи",
+        "slot": "arms",
+        "type": "gloves",
+        "price": 60,
+        "rarity": "uncommon",
+        "weight": 1,
+        "mastery": null,
+        "mechanics": null,
+        "bonus_type": null,
+        "bonus_value": null,
+        "card_number": "CARD-0134",
+        "damage_type": null,
+        "description": "Вы получаете +1 к броскам атаки и урона безоружными атаками.",
+        "weapon_type": null,
+        "defense_type": null,
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0134",
+      "id": "b2490000-0000-4000-8000-000000000010",
+      "name": "Тканевые наручи (Забег)",
+      "price": 150,
+      "rarity": "uncommon",
+      "min_level": 1,
+      "kind": "magic",
+      "mechanics": {
+        "activation": {
+          "mode": "passive",
+          "while": "equipped"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "modifier",
+                "op": "add",
+                "value": 1,
+                "applies_to": {
+                  "roll": "attack",
+                  "filter": {
+                    "attackKind": "unarmed"
+                  }
+                }
+              },
+              {
+                "kind": "modifier",
+                "op": "add",
+                "value": 1,
+                "applies_to": {
+                  "roll": "damage",
+                  "filter": {
+                    "attackKind": "unarmed"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "source": {
+        "id": "3fca9bc1-b9a5-421e-9e55-f8a76d1b1da6",
+        "name": "Щит +2",
+        "slot": "one_hand",
+        "type": "shield",
+        "price": 2000,
+        "rarity": "rare",
+        "weight": 6,
+        "mastery": null,
+        "mechanics": null,
+        "bonus_type": "defense",
+        "bonus_value": "+4",
+        "card_number": "CARD-0348",
+        "damage_type": null,
+        "description": " ",
+        "weapon_type": null,
+        "defense_type": "light",
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0348",
+      "id": "b2490000-0000-4000-8000-000000000011",
+      "name": "Щит +2 (Забег)",
+      "price": 350,
+      "rarity": "rare",
+      "min_level": 2,
+      "kind": "magic",
+      "mechanics": {
+        "effects": [],
+        "activation": {
+          "mode": "passive",
+          "while": "equipped"
+        },
+        "armor_profile": {
+          "category": "shield",
+          "ac_formula": "+4",
+          "training_required": true,
+          "stealth_disadvantage": false,
+          "strength_requirement": 0
+        }
+      }
+    },
+    {
+      "source": {
+        "id": "e14788df-ab69-4e0e-9b43-5fdd783fd919",
+        "name": "Плащ защиты",
+        "slot": "cloak",
+        "type": "cloak",
+        "price": 550,
+        "rarity": "rare",
+        "weight": 0.5,
+        "mastery": null,
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": "+1",
+                  "applies_to": {
+                    "roll": "ac"
+                  }
+                },
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": "+1",
+                  "applies_to": {
+                    "roll": "saving_throw"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "mode": "passive"
+          }
+        },
+        "bonus_type": null,
+        "bonus_value": null,
+        "card_number": "CARD-0548",
+        "damage_type": null,
+        "description": "+1 к защите и спасброскам",
+        "weapon_type": null,
+        "defense_type": null,
+        "requires_attunement": true
+      },
+      "card_number": "RL-SHOP-0548",
+      "id": "b2490000-0000-4000-8000-000000000012",
+      "name": "Плащ защиты (Забег)",
+      "price": 300,
+      "rarity": "rare",
+      "min_level": 2,
+      "kind": "magic",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "op": "add",
+                "kind": "modifier",
+                "value": "+1",
+                "applies_to": {
+                  "roll": "ac"
+                }
+              },
+              {
+                "op": "add",
+                "kind": "modifier",
+                "value": "+1",
+                "applies_to": {
+                  "roll": "saving_throw"
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive",
+          "while": "equipped"
+        }
+      }
+    },
+    {
+      "source": {
+        "id": "6dcce6a1-02cc-4b72-abba-fd82444dfd50",
+        "name": "Кольцо защиты",
+        "slot": "ring",
+        "type": "ring",
+        "price": 800,
+        "rarity": "rare",
+        "weight": 0.1,
+        "mastery": null,
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": "+1",
+                  "applies_to": {
+                    "roll": "ac"
+                  }
+                },
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": "+1",
+                  "applies_to": {
+                    "roll": "saving_throw"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "mode": "passive"
+          }
+        },
+        "bonus_type": null,
+        "bonus_value": null,
+        "card_number": "CARD-0624",
+        "damage_type": null,
+        "description": "Защита +1.\nВсе спасброски +1.",
+        "weapon_type": null,
+        "defense_type": null,
+        "requires_attunement": true
+      },
+      "card_number": "RL-SHOP-0624",
+      "id": "b2490000-0000-4000-8000-000000000013",
+      "name": "Кольцо защиты (Забег)",
+      "price": 360,
+      "rarity": "rare",
+      "min_level": 2,
+      "kind": "magic",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "op": "add",
+                "kind": "modifier",
+                "value": "+1",
+                "applies_to": {
+                  "roll": "ac"
+                }
+              },
+              {
+                "op": "add",
+                "kind": "modifier",
+                "value": "+1",
+                "applies_to": {
+                  "roll": "saving_throw"
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive",
+          "while": "equipped"
+        }
+      }
+    },
+    {
+      "source": {
+        "id": "e50a325e-80a1-4979-a40a-d3213cd272fa",
+        "name": "Перстень тени",
+        "slot": "ring",
+        "type": "ring",
+        "price": 300,
+        "rarity": "rare",
+        "weight": 0.1,
+        "mastery": null,
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "kind": "resistance",
+                  "value": "resistance",
+                  "damage_type": "necrotic"
+                },
+                {
+                  "kind": "narrative",
+                  "description": "+1 к Волшебству."
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "mode": "passive"
+          }
+        },
+        "bonus_type": null,
+        "bonus_value": null,
+        "card_number": "CARD-0370",
+        "damage_type": null,
+        "description": "Вы обладаете устойчивостью к некротическому урону.\n+1 к Волшебству.",
+        "weapon_type": null,
+        "defense_type": null,
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0370",
+      "id": "b2490000-0000-4000-8000-000000000014",
+      "name": "Перстень тени (Забег)",
+      "price": 260,
+      "rarity": "rare",
+      "min_level": 2,
+      "kind": "magic",
+      "mechanics": {
+        "activation": {
+          "mode": "passive",
+          "while": "equipped"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "resistance",
+                "value": "resistance",
+                "damage_type": "necrotic"
+              },
+              {
+                "kind": "modifier",
+                "op": "add",
+                "value": 1,
+                "applies_to": {
+                  "roll": "ability_check",
+                  "filter": {
+                    "skill": "arcana"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "source": {
+        "id": "f40bc97e-2b9b-4f7b-9704-71ab68f80ffc",
+        "name": "Ботинки акробата",
+        "slot": "feet",
+        "type": "boots",
+        "price": 850,
+        "rarity": "rare",
+        "weight": 2,
+        "mastery": null,
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "value": "+",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "dex"
+                    }
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "mode": "passive"
+          }
+        },
+        "bonus_type": null,
+        "bonus_value": null,
+        "card_number": "CARD-0476",
+        "damage_type": null,
+        "description": "Спасброски Ловкости с преимуществом.",
+        "weapon_type": null,
+        "defense_type": null,
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0476",
+      "id": "b2490000-0000-4000-8000-000000000015",
+      "name": "Ботинки акробата (Забег)",
+      "price": 280,
+      "rarity": "rare",
+      "min_level": 2,
+      "kind": "magic",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "op": "advantage",
+                "kind": "modifier",
+                "value": "+",
+                "applies_to": {
+                  "roll": "saving_throw",
+                  "filter": {
+                    "ability": "dex"
+                  }
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive",
+          "while": "equipped"
+        }
+      }
+    },
+    {
+      "source": {
+        "id": "3834f4f4-120b-40d2-9a62-1e9e6ec14c3b",
+        "name": "Кольцо стремительности",
+        "slot": "ring",
+        "type": "ring",
+        "price": 480,
+        "rarity": "rare",
+        "weight": 0.1,
+        "mastery": null,
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "initiative"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "mode": "passive"
+          }
+        },
+        "bonus_type": null,
+        "bonus_value": null,
+        "card_number": "CARD-0633",
+        "damage_type": null,
+        "description": "Вы совершаете бросок __Инициативы__ с преимуществом.",
+        "weapon_type": null,
+        "defense_type": null,
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0633",
+      "id": "b2490000-0000-4000-8000-000000000016",
+      "name": "Кольцо стремительности (Забег)",
+      "price": 240,
+      "rarity": "rare",
+      "min_level": 2,
+      "kind": "magic",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "op": "advantage",
+                "kind": "modifier",
+                "applies_to": {
+                  "roll": "initiative"
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive",
+          "while": "equipped"
+        }
+      }
+    },
+    {
+      "source": {
+        "id": "26ee1693-672f-4972-87d8-96cf2a3959d8",
+        "name": "Амулет упорства",
+        "slot": "necklace",
+        "type": "necklace",
+        "price": 200,
+        "rarity": "rare",
+        "weight": 0.3,
+        "mastery": null,
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": "+1",
+                  "applies_to": {
+                    "roll": "saving_throw"
+                  }
+                },
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": "+2",
+                  "applies_to": {
+                    "roll": "ability_check",
+                    "filter": {
+                      "ability": "cha"
+                    }
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "mode": "passive"
+          }
+        },
+        "bonus_type": null,
+        "bonus_value": null,
+        "card_number": "CARD-0112",
+        "damage_type": null,
+        "description": "Все спасброски +1\nУбеждение +2",
+        "weapon_type": null,
+        "defense_type": null,
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0112",
+      "id": "b2490000-0000-4000-8000-000000000017",
+      "name": "Амулет упорства (Забег)",
+      "price": 260,
+      "rarity": "rare",
+      "min_level": 2,
+      "kind": "magic",
+      "mechanics": {
+        "activation": {
+          "mode": "passive",
+          "while": "equipped"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "modifier",
+                "op": "add",
+                "value": 1,
+                "applies_to": {
+                  "roll": "saving_throw"
+                }
+              },
+              {
+                "kind": "modifier",
+                "op": "add",
+                "value": 2,
+                "applies_to": {
+                  "roll": "ability_check",
+                  "filter": {
+                    "skill": "persuasion"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "source": {
+        "id": "1329b275-301e-4184-a656-4cffc8972ed2",
+        "name": "Венец защиты разума",
+        "slot": "head",
+        "type": "helmet",
+        "price": 700,
+        "rarity": "rare",
+        "weight": 0.4,
+        "mastery": null,
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": "+2",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "wis"
+                    }
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "mode": "passive"
+          }
+        },
+        "bonus_type": null,
+        "bonus_value": null,
+        "card_number": "CARD-0764",
+        "damage_type": null,
+        "description": "*Ваш разум крепок, как скала.*\n+2 к спасброскам Мудрости.",
+        "weapon_type": null,
+        "defense_type": null,
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0764",
+      "id": "b2490000-0000-4000-8000-000000000018",
+      "name": "Венец защиты разума (Забег)",
+      "price": 220,
+      "rarity": "rare",
+      "min_level": 2,
+      "kind": "magic",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "op": "add",
+                "kind": "modifier",
+                "value": "+2",
+                "applies_to": {
+                  "roll": "saving_throw",
+                  "filter": {
+                    "ability": "wis"
+                  }
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive",
+          "while": "equipped"
+        }
+      }
+    },
+    {
+      "source": {
+        "id": "a068a6e3-af5e-4ffb-8961-7745f9c75d47",
+        "name": "Зелье отличного лечения",
+        "slot": null,
+        "type": "potion",
+        "price": 2000,
+        "rarity": "rare",
+        "weight": 0.2,
+        "mastery": null,
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "kind": "healing",
+                  "amount": "8d4+8"
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "cost": [
+              {
+                "resource": "bonus_action"
+              },
+              {
+                "amount": 1,
+                "resource": "self_item"
+              }
+            ],
+            "mode": "active",
+            "while": "carried"
+          },
+          "object_size": "tiny"
+        },
+        "bonus_type": null,
+        "bonus_value": null,
+        "card_number": "CARD-0841",
+        "damage_type": null,
+        "description": ":bonus_action:: Исцелиться на [healing]8к4+8:healing:[/healing]",
+        "weapon_type": null,
+        "defense_type": null,
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0841",
+      "id": "b2490000-0000-4000-8000-000000000019",
+      "name": "Зелье отличного лечения (Забег)",
+      "price": 160,
+      "rarity": "rare",
+      "min_level": 2,
+      "kind": "consumable",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "healing",
+                "amount": "8d4+8"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "amount": 1,
+              "resource": "self_item"
+            }
+          ],
+          "mode": "active",
+          "while": "carried"
+        },
+        "object_size": "tiny"
+      }
+    },
+    {
+      "source": {
+        "id": "10f8d896-f5d1-405f-94f7-3ad96a1aa3e9",
+        "name": "Щит +3",
+        "slot": "one_hand",
+        "type": "shield",
+        "price": 15000,
+        "rarity": "very_rare",
+        "weight": 6,
+        "mastery": null,
+        "mechanics": null,
+        "bonus_type": "defense",
+        "bonus_value": "+5",
+        "card_number": "CARD-0349",
+        "damage_type": null,
+        "description": " ",
+        "weapon_type": null,
+        "defense_type": "light",
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0349",
+      "id": "b2490000-0000-4000-8000-000000000020",
+      "name": "Щит +3 (Забег)",
+      "price": 750,
+      "rarity": "very_rare",
+      "min_level": 4,
+      "kind": "magic",
+      "mechanics": {
+        "effects": [],
+        "activation": {
+          "mode": "passive",
+          "while": "equipped"
+        },
+        "armor_profile": {
+          "category": "shield",
+          "ac_formula": "+5",
+          "training_required": true,
+          "stealth_disadvantage": false,
+          "strength_requirement": 0
+        }
+      }
+    },
+    {
+      "source": {
+        "id": "6aa9725d-75da-4c3d-ac15-276aaf9cea23",
+        "name": "Оберег феи",
+        "slot": "necklace",
+        "type": "necklace",
+        "price": 1200,
+        "rarity": "very_rare",
+        "weight": 0.3,
+        "mastery": null,
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "source": "Оберег феи",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "int"
+                    }
+                  }
+                },
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "source": "Оберег феи",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "wis"
+                    }
+                  }
+                },
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "source": "Оберег феи",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "cha"
+                    }
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "mode": "passive"
+          }
+        },
+        "bonus_type": null,
+        "bonus_value": null,
+        "card_number": "CARD-0668",
+        "damage_type": null,
+        "description": "Спасброски **Интеллекта**, **Мудрости** и **Харизмы** вы совершаете с преимуществом.",
+        "weapon_type": null,
+        "defense_type": null,
+        "requires_attunement": true
+      },
+      "card_number": "RL-SHOP-0668",
+      "id": "b2490000-0000-4000-8000-000000000021",
+      "name": "Оберег феи (Забег)",
+      "price": 600,
+      "rarity": "very_rare",
+      "min_level": 4,
+      "kind": "magic",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "op": "advantage",
+                "kind": "modifier",
+                "source": "Оберег феи",
+                "applies_to": {
+                  "roll": "saving_throw",
+                  "filter": {
+                    "ability": "int"
+                  }
+                }
+              },
+              {
+                "op": "advantage",
+                "kind": "modifier",
+                "source": "Оберег феи",
+                "applies_to": {
+                  "roll": "saving_throw",
+                  "filter": {
+                    "ability": "wis"
+                  }
+                }
+              },
+              {
+                "op": "advantage",
+                "kind": "modifier",
+                "source": "Оберег феи",
+                "applies_to": {
+                  "roll": "saving_throw",
+                  "filter": {
+                    "ability": "cha"
+                  }
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive",
+          "while": "equipped"
+        }
+      }
+    },
+    {
+      "source": {
+        "id": "90ccfed1-4e94-4d63-8bd0-cd58d475eaa1",
+        "name": "Зелье превосходного лечения",
+        "slot": null,
+        "type": "potion",
+        "price": 20000,
+        "rarity": "very_rare",
+        "weight": 0.2,
+        "mastery": null,
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "kind": "healing",
+                  "amount": "10d4+20"
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "cost": [
+              {
+                "resource": "bonus_action"
+              },
+              {
+                "amount": 1,
+                "resource": "self_item"
+              }
+            ],
+            "mode": "active",
+            "while": "carried"
+          },
+          "object_size": "tiny"
+        },
+        "bonus_type": null,
+        "bonus_value": null,
+        "card_number": "CARD-0842",
+        "damage_type": null,
+        "description": ":bonus_action:: Исцелиться на [healing]10к4+20:healing:[/healing]",
+        "weapon_type": null,
+        "defense_type": null,
+        "requires_attunement": false
+      },
+      "card_number": "RL-SHOP-0842",
+      "id": "b2490000-0000-4000-8000-000000000022",
+      "name": "Зелье превосходного лечения (Забег)",
+      "price": 350,
+      "rarity": "very_rare",
+      "min_level": 4,
+      "kind": "consumable",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "healing",
+                "amount": "10d4+20"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "amount": 1,
+              "resource": "self_item"
+            }
+          ],
+          "mode": "active",
+          "while": "carried"
+        },
+        "object_size": "tiny"
+      }
+    }
+  ]
+}

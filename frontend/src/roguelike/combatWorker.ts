@@ -3,6 +3,7 @@ import {bindCombatWorldInputFacts} from '../solo-combat/worldInput';
 import {TACTICAL_WIDTH, TACTICAL_HEIGHT} from '../solo-combat/types';
 import type { DecisionResponse } from '../rules-core/domain';
 import { canonicalSha256Sync } from '../rules-core/determinism';
+import {executeConditionAction} from '../solo-combat/engine';
 import {
   declineAdditionalMovement, isTriggeredCombatAction, resumePendingMovement, activeActor, activateCombatBoon, advanceTurn, autoResolveSystemDecisions,
   escapeActorGrapple, executeCombatAction, executeCombatRemoteManipulator, executeCombatTouchSpellThroughFamiliar,
@@ -38,7 +39,8 @@ export type RoguelikeCombatIntent =
   | {type: 'shove_outcome'; outcome: Extract<DecisionResponse, {kind: 'shove_outcome'}>['outcome']}
   | {type: 'reaction'; response: Extract<DecisionResponse, {kind: 'reaction'}>}
   | {type: 'saving_throw'; selectedAbility?: Extract<DecisionResponse, {kind: 'roll'}>['selectedAbility']; boonEffectId?: string}
-  | {type: 'd20_interrupt'; actorId: string | null}
+  | {type: 'd20_interrupt'; actorId: string | null; effectId?: string}
+  | {type: 'condition_action'; actorId: string; actionId: string}
   | {type: 'interception'; actorId: string | null}
   | {type: 'triggered_action'; actionId: string | null; choices?: Record<string, string[]>; targetIds?: string[]}
   | {type: 'turn_start'; targetActorId: string | null}
@@ -89,7 +91,7 @@ export function stepRoguelikeCombat(
     if (!isPlayerControlledCombatActor(state, actorId)) throw new Error('Нельзя управлять этим участником боя');
   };
   if ('actorId' in intent && intent.actorId !== null) requireOwned(intent.actorId);
-  const proactive = new Set(['action', 'approach_action', 'move', 'movement_mode', 'familiar_touch', 'stand', 'escape_grapple', 'end_turn', 'dancing_lights', 'detect_magic', 'remote_manipulator', 'boon']);
+  const proactive = new Set(['action', 'approach_action', 'move', 'movement_mode', 'familiar_touch', 'stand', 'condition_action', 'escape_grapple', 'end_turn', 'dancing_lights', 'detect_magic', 'remote_manipulator', 'boon']);
   const additionalMove = intent.type === 'move' && state.pendingAdditionalMovement?.actorId === intent.actorId;
   if (proactive.has(intent.type) && 'actorId' in intent
     && (hasDecision(additionalMove ? {...state, pendingAdditionalMovement: undefined} : state)
@@ -137,6 +139,7 @@ export function stepRoguelikeCombat(
       if (state.pendingAdditionalMovement?.actorId !== intent.actorId) throw new Error('Нет ожидающего перемещения участника');
       state = declineAdditionalMovement(state); break;
     case 'stand': state = standActor(state, intent.actorId); break;
+    case 'condition_action': state = executeConditionAction(state, intent.actorId, intent.actionId); break;
     case 'escape_grapple': state = escapeActorGrapple(state, intent.actorId, intent.grappleId, intent.skill, rng); break;
     case 'end_turn':
       if (hasDecision(state) || activeActor(state).id !== intent.actorId) throw new Error('Сначала завершите текущее решение');
@@ -150,7 +153,7 @@ export function stepRoguelikeCombat(
       state = resolvePlayerSavingThrow(state, {kind: 'roll', roll: {mode: 'system'},
         selectedAbility: intent.selectedAbility, boonEffectId: intent.boonEffectId}, rng);
       break;
-    case 'd20_interrupt': state = resolveD20Interrupt(state, intent.actorId, rng); break;
+    case 'd20_interrupt': state = resolveD20Interrupt(state, intent.actorId, rng, intent.effectId); break;
     case 'interception': state = resolveSoloCombatInterception(state, intent.actorId, rng); break;
     case 'triggered_action':
       if (!state.pendingTriggeredAction) throw new Error('Нет ожидающей способности');

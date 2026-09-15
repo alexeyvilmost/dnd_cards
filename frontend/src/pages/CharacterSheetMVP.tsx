@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import NavRail, { type NavRailItem } from '../components/NavRail';
 import { useIsMobile } from '../hooks/useIsMobile';
+import StartRunFromSheet from '../components/StartRunFromSheet';
 import { cardsApi } from '../api/client';
 import {
   characterV3ErrorMessage,
@@ -38,6 +39,7 @@ import SheetRunPanel from '../components/SheetRunPanel';
 import { roguelikeApi, type RoguelikeRun } from '../roguelike/api';
 import { runSheetURL } from '../roguelike/navigation';
 import { finalizeSheetD20Roll } from '../character/sheetD20Roll';
+import {influencedSheetRoll} from '../character/influencedSheetRoll';
 import { breakdownValue } from '../engine/breakdown';
 import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import type { RuntimeRuleSource } from '../character/rules/types';
@@ -178,7 +180,7 @@ const CharacterSheetMVP = () => {
   const [sheetSection, setSheetSection] = useState('combat');
   const [rollingInit, setRollingInit] = useState(false);
   const [equipCards, setEquipCards] = useState<Map<string, Card>>(new Map());
-  // E4: единое «КЗ цели» на весь лист — оба инстанса SheetActionsPanel
+  // E4: единое «КД цели» на весь лист — оба инстанса SheetActionsPanel
   // (действия и заклинания) целятся в один и тот же AC.
   const [targetAc, setTargetAc] = useState<number | null>(10);
   const [targetSaveMod, setTargetSaveMod] = useState<number | null>(0);
@@ -401,7 +403,7 @@ const CharacterSheetMVP = () => {
   );
 
   // Механики предметов с учётом настройки — ОБЩИЙ источник двух каналов:
-  //  • passives → breakdown листа (числовые роли: КЗ/хиты/скорость/инициатива/спасброски/навыки);
+  //  • passives → breakdown листа (числовые роли: КД/хиты/скорость/инициатива/спасброски/навыки);
   //  • runtimeSources → resolveCharacterRules (характеристики/владения/чувства/заклинания предметов).
   const itemMechanics = useMemo(
     () => (character ? collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state, runtimeState?.inventory ?? []) : []),
@@ -410,7 +412,7 @@ const CharacterSheetMVP = () => {
 
   // S3 «предмет=эффект»: grant_effect предметов (повязка → эффект «Тёмное зрение», пока надета).
   // Разворачиваем выданные эффекты ТОЙ ЖЕ машинерией, что эффекты класса/черт, и подмешиваем как
-  // item-источник (наследует item-семантику слайса 1: подавление числовых ролей, фильтр КЗ). Async —
+  // item-источник (наследует item-семантику слайса 1: подавление числовых ролей, фильтр КД). Async —
   // эффект грузится по id; sync-предчек отсекает случай «ни у одного предмета нет grant_effect».
   const [itemGrantedEffects, setItemGrantedEffects] = useState<PassiveEffect[]>([]);
   useEffect(() => {
@@ -779,7 +781,7 @@ const CharacterSheetMVP = () => {
   const inPlayChoices = assembled.pendingChoices.filter((pc) => pc.context === 'in_play');
 
   // Входящая реакция «когда по вам попадают»: атакующий доставил pending-«атакован»; цель на
-  // СВОЁМ листе решает применить ли реакцию. Если declarative modifier меняет итоговый КЗ так,
+  // СВОЁМ листе решает применить ли реакцию. Если declarative modifier меняет итоговый КД так,
   // что попадание становится промахом, точные HP/temp-каналы нанесённого урона откатываются.
   const resolveIncomingAttack = async (pa: PendingAttack) => {
     if (!encId || !id || !runtimeState || !sheetCtx) return;
@@ -837,7 +839,7 @@ const CharacterSheetMVP = () => {
       out = executeAction(runtimeForCast, rmech, { character: sheetCtx, passives, rng: () => Math.random(), selfId: id } as import('../mvp/contracts').ExecuteContext & { passives: typeof passives });
     } catch { await clearPending(); return; }
 
-    // Реакция уже материализовала свой modifier КЗ в out.state. Поэтому величина
+    // Реакция уже материализовала свой modifier КД в out.state. Поэтому величина
     // бонуса остаётся данными заклинания/эффекта, а rollback лишь сравнивает итог.
     const newAc = breakdownValue('ac', sheetCtx, out.state, passives).value;
     const negated = isPendingAttackNegated(pa, newAc);
@@ -858,8 +860,8 @@ const CharacterSheetMVP = () => {
     const journal: EngineEvent[] = [
       ...out.events,
       { type: 'narrative', text: negated
-        ? `${reactName}: КЗ ${ac}→${newAc} — атака «${pa.attackName}» (${pa.attackTotal}) промахивается, урон ${pa.damage} возвращён.`
-        : `${reactName}: КЗ ${ac}→${newAc} — атака ${pa.attackTotal} всё же попадает.` },
+        ? `${reactName}: КД ${ac}→${newAc} — атака «${pa.attackName}» (${pa.attackTotal}) промахивается, урон ${pa.damage} возвращён.`
+        : `${reactName}: КД ${ac}→${newAc} — атака ${pa.attackTotal} всё же попадает.` },
     ];
     pushToast(journal);
     if (!journalOpen) setUnseen((u) => u + journal.length);
@@ -985,11 +987,13 @@ const CharacterSheetMVP = () => {
       }),
     );
     plan.push(...plannedD20BonusDice(collected.rules, label, 'check'));
+    const inspired = influencedSheetRoll(rollKind === 'saving_throw' ? 'save' : 'check',
+      {advantage: collected.advantage, modifiers: [...parts], rules: collected.rules}, runtimeState, passives);
     const decision = await diceDialog.request(
       plan,
       label,
       <ValueBreakdownPanel breakdown={breakdown} label={label} />,
-      { compactCheck: { kind: rollKind === 'saving_throw' ? 'save' : 'check', roll: () => rollD20({ advantage: collected.advantage, modifiers: [...parts], rules: collected.rules, rng: Math.random }) } },
+      {compactCheck: inspired.request},
     );
     if (decision.mode === 'cancel') return;
     const rng = decision.mode === 'manual'
@@ -1003,8 +1007,9 @@ const CharacterSheetMVP = () => {
     });
     const rollEvents: EngineEvent[] = [rollEvent(label, roll)];
     if (runtimeState && character) {
-      const finalized = finalizeSheetD20Roll(runtimeState, rollKind, filter);
-      rollEvents.push(...finalized.events);
+      const paid = inspired.finalize(runtimeState);
+      const finalized = finalizeSheetD20Roll(paid.state, rollKind, filter);
+      rollEvents.push(...paid.events, ...finalized.events);
       if (finalized.state !== runtimeState) {
         const updated = await persistCharacterRuntime(character, {
           active_effects: finalized.state.activeEffects,
@@ -1091,6 +1096,7 @@ const CharacterSheetMVP = () => {
           )}
         </div>
         <div className="sheet-header-actions">
+          {!roguelikeRunId && !combatLocked && <StartRunFromSheet character={character} fighterClassId={assembled?.klass?.card_number === 'CLASS-warrior' ? assembled.klass.id : undefined} />}
           {allowSheetEntityAdditions && !readOnly && !roguelikeRunId && (
             <button
               type="button"

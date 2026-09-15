@@ -2,7 +2,7 @@
  * Живой тест боевых стилей (гейт MVP_CONTENT=1, ходит в прод):
  * выбор боевого стиля у Воина 1 уровня — это choice(source:"feat",
  * filter:"fighting_style"); выбранная черта «Оборона» попадает в bundle.feats,
- * её эффект fs_defense — в сборку, а +1 КЗ применяется только в доспехе.
+ * её эффект fs_defense — в сборку, а +1 КД применяется только в доспехе.
  */
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -74,7 +74,7 @@ describe.skipIf(!RUN)('Боевой стиль воина — выбор из ч
     defenseFeat = styles.find((f) => f.name === 'Оборона');
   }, 120_000);
 
-  it('выбор «Оборона»: черта и эффект в сборке, без доспеха бонус КЗ не применяется', async () => {
+  it('выбор «Оборона»: черта и эффект в сборке, без доспеха бонус КД не применяется', async () => {
     expect(fighter && human && bg && defenseFeat).toBeTruthy();
     const draft: CharacterDraft = {
       ...emptyDraft(),
@@ -94,7 +94,7 @@ describe.skipIf(!RUN)('Боевой стиль воина — выбор из ч
     expect(pc!.items ?? []).toHaveLength(0); // явного списка больше нет
     expect(stylesCount, 'в проде есть черты категории fighting_style').toBeGreaterThanOrEqual(6);
 
-    // 2) Выбираем стиль «Оборона» (+1 КЗ в доспехе).
+    // 2) Выбираем стиль «Оборона» (+1 КД в доспехе).
     draft.resolvedChoices[pc!.id] = [defenseFeat!.id];
     bundle = await loadBundle(draft);
     assembled = assemble({ ...bundle, spells: [] }, draft);
@@ -120,7 +120,7 @@ describe.skipIf(!RUN)('Боевой стиль воина — выбор из ч
     console.log('[live] стиль «Оборона»:',
       `feats=[${bundle.feats.map((f) => f.name).join(', ')}]`,
       `эффект=${styleEffect!.effect.name}`,
-      `КЗ ${ruleState.armorClass} → ${ac.value}`,
+      `КД ${ruleState.armorClass} → ${ac.value}`,
       `грантов=${ruleState.appliedGrants.length}, конфликтов=${ruleState.conflicts.length}`);
   }, 120_000);
 });

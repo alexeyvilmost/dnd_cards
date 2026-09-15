@@ -129,7 +129,7 @@ describe('C1: модификаторы урона из эффектов (Яро�
       character, target: { ac: 1 }, rng: seededRng(30),
     });
     const dmg = events.find((e) => e.type === 'damage');
-    expect(dmg).toBeTruthy(); // атака по КЗ 1 обязана попасть — иначе нет строки урона
+    expect(dmg).toBeTruthy(); // атака по КД 1 обязана попасть — иначе нет строки урона
     return dmg && dmg.type === 'damage' ? dmg.roll?.total ?? 0 : 0;
   };
 

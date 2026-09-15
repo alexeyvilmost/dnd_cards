@@ -3,7 +3,7 @@ import {applyFailedCheckBoost, failedCheckBoostActions} from './failedCheckBoost
 import { weaponBondProtectsHand, weaponBondRecallIssue, weaponBondRecallEvents } from './weaponBond';
 import {telekineticObjectIssue, telekineticHandEvents} from './telekineticMovement';
 import {heldItemDropWorldEvents, consumedHeldItemWorldEvents} from './heldItemWorld';
-import {effectiveArmorClass} from './actorArmorClass';
+import {effectiveArmorClass, effectiveArmorClassBreakdown} from './actorArmorClass';
 import { resolveDamageCalculation } from './legacy/engineAdapter';
 import {CORE_WEAPON_ATTACK, systemActionAsRuleDefinition, unarmedDamageActionFor, weaponAttackAction} from './attackDefinitions';
 import {meleeWeaponDefenseEligible, singleAttackDefenseBonus} from './attackDefenseRuntime';
@@ -27,6 +27,7 @@ import {
   longRest,
   pay,
   readTargetSave,
+  retargetAttackRoll,
   resolveNextTurnCommand,
   rollD20,
   shortRest,
@@ -1180,6 +1181,7 @@ function actionContext(
           ? { size: effectiveActorSize(target, targetRuntime)! }
           : {}),
         ac: effectiveArmorClass(target, targetRuntime ?? target.runtime),
+        acBreakdown: effectiveArmorClassBreakdown(target, targetRuntime ?? target.runtime),
         characterContext: target.character,
         passives: target.passives,
         conditionImmunities: target.traits?.conditionImmunities,
@@ -2719,6 +2721,48 @@ type RejectedReactionExecution = {
   code: CommandRejectionCode;
   message: string;
 };
+
+/** Read-only outcome preview using the same spell preparation, executor and AC
+ * projection as resolution. No random draws, costs or events escape this clone.
+ * Unsupported/non-deterministic effects return unknown rather than hiding a choice. */
+export function previewAttackDefense(
+  defender: ActorState, action: RuleActionDefinition, roll: RollLog,
+  declaration?: ReactionSpellDeclaration,
+): {ac: number; changesOutcome: boolean} | undefined {
+  try {
+    // AC projection also evaluates active modifier formulas. Do not allow a
+    // random formula to reach that projection (which has its own RNG default).
+    const randomAc = (value: unknown): boolean => {
+      if (!value || typeof value !== 'object') return false;
+      if (Array.isArray(value)) return value.some(randomAc);
+      const row = value as Record<string, unknown>;
+      if ((row.applies_to as Record<string, unknown> | undefined)?.roll === 'ac'
+        && typeof row.value === 'string' && /(?:\d*\s*[dдк]\s*\d+)/iu.test(row.value)) return true;
+      return Object.values(row).some(randomAc);
+    };
+    if (randomAc(action.mechanics) || randomAc(defender.runtime.activeEffects) || randomAc(defender.passives)) return undefined;
+    const actor = structuredClone(defender);
+    const prepared = prepareReactionExecution(actor, action, declaration);
+    if (prepared.status !== 'ready') return undefined;
+    let id = 0;
+    const result = executeAction(actor.runtime, prepared.action.mechanics, {
+      ...actionContext(actor, {rng: () => {throw new Error('Random preview');}, clock: () => 0,
+        nextId: () => `defense-preview:${++id}`}, undefined, undefined, undefined, prepared.spell),
+      actionName: prepared.action.name, spell: prepared.spell,
+    });
+    const bonus = singleAttackDefenseBonus(prepared.action);
+    const after = {...actor, runtime: result.state,
+      ...(bonus ? {ac: effectiveArmorClass(actor, {...actor.runtime, activeEffects: []}) + bonus} : {})};
+    const ac = effectiveArmorClass(after);
+    // A failed/unsupported modifier formula can be ignored by legacy AC
+    // projections. No demonstrated AC change means no reliable prediction.
+    if (ac === effectiveArmorClass(actor)) return undefined;
+    if (result.pendingReactions?.length || result.deferredTargetSaves?.length) return undefined;
+    const originalHit = roll.outcome === 'hit' || roll.outcome === 'crit';
+    const adjusted = retargetAttackRoll(roll, ac);
+    return {ac, changesOutcome: originalHit !== (adjusted.outcome === 'hit' || adjusted.outcome === 'crit')};
+  } catch { return undefined; }
+}
 
 function prepareReactionExecution(
   actor: ActorState,

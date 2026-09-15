@@ -42,7 +42,7 @@ function itemChips(card: Card): ReactNode {
     );
   }
   if (card.bonus_type === 'defense') {
-    chips.push(<span key="def" className="sheet-item-chip">{card.bonus_value || 'КД'}<img className="sheet-chip-mono" src="/icons/defense.png" alt="защита" onError={hideImg} /></span>);
+    chips.push(<span key="def" className="sheet-item-chip">{card.bonus_value || 'КД'}<img className="sheet-chip-mono" src="/icons/defense.png" alt="КД" onError={hideImg} /></span>);
   }
   if (card.price != null && card.price > 0) {
     chips.push(<span key="p" className="sheet-item-chip">{card.price}<img src={getCurrencyIconPath(card.price_currency)} alt="цена" onError={hideImg} /></span>);

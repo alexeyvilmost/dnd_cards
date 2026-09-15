@@ -1,0 +1,10 @@
+[
+  {
+    "id": "core.heroic-inspiration",
+    "name": "Героическое вдохновение",
+    "image_url": "/icons/actions/heroic-inspiration.svg",
+    "description": "Перебросьте одну используемую к20. Новый результат обязателен. При преимуществе или помехе вторая кость сохраняется. Стоимость: 1 Героическое вдохновение.",
+    "activation": {"mode": "triggered", "cost": [{"resource": "heroic_inspiration", "amount": 1}]},
+    "effects": [{"resolution": "auto", "result": [{"kind": "roll_influence", "operation": "reroll_kept_d20", "timing": "after_roll_before_outcome", "eligible_rolls": ["attack", "save", "check"]}]}]
+  }
+]

@@ -700,10 +700,12 @@ export function weaponAttackPreview(
     const ability = profile?.ability ?? 'str';
     const abilityMod = character.abilityMods[ability] ?? 0;
     return {
-      attack: abilityMod + character.profBonus,
+      attack: abilityMod + character.profBonus + attackModifierBonus(state, passives, character, { attackKind: 'unarmed' }),
       damages: [{
         dice: profile?.dice ?? '1',
-        bonus: abilityMod,
+        bonus: abilityMod + damageModifierBonus(state, passives, character, {
+          attackKind: 'unarmed', ability, hand: 'main', abilityModifierAlreadyIncluded: true,
+        }, abilityMod),
         type: profile?.damageType ?? 'bludgeoning',
       }],
       weaponName: 'Безоружный удар',

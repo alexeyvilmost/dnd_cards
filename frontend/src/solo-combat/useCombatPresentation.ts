@@ -1,23 +1,24 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { combatRollModeFor, useSiteSettings } from '../settings';
 import type { SoloCombatState } from './types';
 import { groupCombatSaveBeats, presentCombatEntries, type CombatBeat } from './presentation';
 
 export function useCombatPresentation(state: SoloCombatState | null, opening: SoloCombatState | null) {
   const settings=useSiteSettings();
-  const previous=useRef<SoloCombatState|null>(null);
+  const [previous,setPrevious]=useState<SoloCombatState|null>(null);
   const [queue,setQueue]=useState<CombatBeat[]>([]);
   const [playing,setPlaying]=useState<CombatBeat|null>(null);
   const [openingDone,setOpeningDone]=useState(false);
-  useEffect(()=>{
-    if(!state || previous.current===state)return;
-    const seen=new Set(previous.current?.log.map(entry=>entry.id)??[]);
-    const isFirst=!previous.current;
-    previous.current=state;
-    if(isFirst&&!opening)return;
-    const incoming=presentCombatEntries(state,state.log.filter(entry=>!seen.has(entry.id)));
-    if(incoming.length)setQueue(current=>groupCombatSaveBeats([...current,...incoming]));
-  },[state,opening]);
+  // Derive incoming beats before committing the render. An effect would leave
+  // one painted frame with neither the held roll nor its confirmed result.
+  if (state && previous !== state) {
+    const seen=new Set(previous?.log.map(entry=>entry.id)??[]);
+    setPrevious(state);
+    if (previous || opening) {
+      const incoming=presentCombatEntries(state,state.log.filter(entry=>!seen.has(entry.id)));
+      if(incoming.length)setQueue(current=>groupCombatSaveBeats([...current,...incoming]));
+    }
+  }
   const next=queue[0];
   const pending=state?.world?.pendingResolution;
   // Let outstanding target decisions resolve before opening the shared result.

@@ -7,7 +7,7 @@
  * отдавал `type=null`, и движок классифицировал щит как НАГРУДНИК:
  *   isShield()    (equipment.ts:28) → false
  *   isBodyArmor() (equipment.ts:32) → !!defense_type && !isShield → TRUE
- * Латы (КЗ 18) + «Щит +2» давали КЗ 11 вместо 20: щит вытеснял доспех из слота тела
+ * Латы (КД 18) + «Щит +2» давали КД 11 вместо 20: щит вытеснял доспех из слота тела
  * и при этом не давал собственный бонус (shieldFromState ищет только isShield в руках).
  *
  * Этот гейт читает снапшот прода — он краснеет, если данные снова разъедутся с движком.
@@ -45,13 +45,13 @@ const effById = (id: string): ProdEffect => {
   return e;
 };
 
-const PLATE = 'd6c302f9-3a73-482a-9113-9510fcc937fe'; // Латы, КЗ 18
+const PLATE = 'd6c302f9-3a73-482a-9113-9510fcc937fe'; // Латы, КД 18
 const SHIELD_PHB = 'b0a5fd06-4b35-480a-8a99-02aa2a60fd6b'; // Щит (базовый PHB), +2
 
 beforeEach(() => clearCardRegistry());
 
 describe('прод-данные: щиты', () => {
-  it('Латы + базовый Щит PHB → КЗ 20, доспех НЕ вытеснен', () => {
+  it('Латы + базовый Щит PHB → КД 20, доспех НЕ вытеснен', () => {
     const plate = byId(PLATE);
     const shield = byId(SHIELD_PHB);
 
@@ -96,13 +96,13 @@ describe('прод-данные: формулы bonus_value только ASCII',
     const offenders = PROD_CARDS
       .filter((c) => /[А-Яа-я]/.test(String((c as { bonus_value?: unknown }).bonus_value ?? '')))
       .map((c) => `${c.name}: «${(c as { bonus_value?: unknown }).bonus_value}»`);
-    expect(offenders, 'кириллица в формуле → FormulaError при расчёте КЗ/урона').toEqual([]);
+    expect(offenders, 'кириллица в формуле → FormulaError при расчёте КД/урона').toEqual([]);
   });
 });
 
 /**
  * Задача B.1 / KB-001 + KB-003. Лёгкий доспех даёт полную ЛВК, средний — с капом +2.
- * До фикса bonus_value были плоскими числами, ЛВК не добавлялась совсем (надевание СНИЖАЛО КЗ).
+ * До фикса bonus_value были плоскими числами, ЛВК не добавлялась совсем (надевание СНИЖАЛО КД).
  * Критично, что KB-003 (кап) сделан вместе: иначе Кираса при ЛВК+5 дала бы 19 вместо 16 (§8.5.19).
  */
 describe('прод-данные: ЛВК в доспехах', () => {
@@ -129,12 +129,12 @@ describe('прод-данные: ЛВК в доспехах', () => {
     expect(acWithArmor(BREASTPLATE, 1)).toBe(15); // 14 + min(1, 2)
   });
 
-  it('надевание доспеха НЕ снижает КЗ ниже безоружного (инвариант KB-001)', () => {
+  it('надевание доспеха НЕ снижает КД ниже безоружного (инвариант KB-001)', () => {
     // Плут ЛВК+5: без доспеха 15, в кожаном 16 — доспех не хуже.
     expect(acWithArmor(LEATHER, 5)).toBeGreaterThanOrEqual(10 + 5);
   });
 
-  it('ни одна карта реального лёгкого/среднего доспеха не осталась с плоским КЗ (без dex)', () => {
+  it('ни одна карта реального лёгкого/среднего доспеха не осталась с плоским КД (без dex)', () => {
     const armor = PROD_CARDS.filter((c) => {
       const cc = c as { bonus_type?: string; defense_type?: string; type?: string; properties?: unknown };
       const props = Array.isArray(cc.properties) ? cc.properties.map(String) : [];
@@ -145,7 +145,7 @@ describe('прод-данные: ЛВК в доспехах', () => {
     });
     expect(armor.length).toBeGreaterThan(0);
     const flat = armor.filter((c) => !/dex/i.test(String((c as { bonus_value?: unknown }).bonus_value ?? ''))).map((c) => c.name);
-    expect(flat, 'реальный доспех с плоским КЗ (не даёт ЛВК)').toEqual([]);
+    expect(flat, 'реальный доспех с плоским КД (не даёт ЛВК)').toEqual([]);
   });
 });
 
@@ -167,15 +167,15 @@ describe('прод-данные: Защита без доспехов', () => {
     return computeAC(ctx(mods), freshFighterState(), [mech]).value;
   };
 
-  it('Варвар: ЛВК+2, ТЕЛ+3, без доспеха → КЗ 15 (10 + ЛВК + ТЕЛ)', () => {
+  it('Варвар: ЛВК+2, ТЕЛ+3, без доспеха → КД 15 (10 + ЛВК + ТЕЛ)', () => {
     expect(acWith(BARBARIAN_UNARMORED, { dex: 2, con: 3 })).toBe(15);
   });
 
-  it('Монах: ЛВК+3, МДР+2, без доспеха → КЗ 15 (10 + ЛВК + МДР)', () => {
+  it('Монах: ЛВК+3, МДР+2, без доспеха → КД 15 (10 + ЛВК + МДР)', () => {
     expect(acWith(MONK_UNARMORED, { dex: 3, wis: 2 })).toBe(15);
   });
 
-  it('метод-кандидат проигрывает, когда обычный КЗ выше (парадигма №3: берётся максимум)', () => {
+  it('метод-кандидат проигрывает, когда обычный КД выше (парадигма №3: берётся максимум)', () => {
     // ЛВК+4, ТЕЛ 0 → «Защита без доспехов» даёт 14, безоружная база 10+ЛВК — тоже 14.
     // Ничего не ломается: берётся максимум, а не первый попавшийся метод.
     expect(acWith(BARBARIAN_UNARMORED, { dex: 4, con: 0 })).toBe(14);

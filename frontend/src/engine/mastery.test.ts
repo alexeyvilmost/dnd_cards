@@ -84,8 +84,8 @@ const WEAPON_ATTACK: Dict = {
   effects: [{ resolution: 'attack_roll', ability: 'auto', on_hit: [{ kind: 'damage', dice: 'weapon', type: 'weapon' }] }],
 };
 
-const HIT = () => 0.5;   // к20 = 11 → попадание по КЗ 5
-const MISS = () => 0.0;  // к20 = 1 → промах по КЗ 30
+const HIT = () => 0.5;   // к20 = 11 → попадание по КД 5
+const MISS = () => 0.0;  // к20 = 1 → промах по КД 30
 
 function run(rng: () => number, ac: number, ctxPatch: Partial<ExecuteContext> = {}, weaponId = 'w-longsword') {
   const ctx = {

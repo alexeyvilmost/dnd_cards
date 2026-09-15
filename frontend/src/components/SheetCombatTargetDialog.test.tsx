@@ -200,7 +200,7 @@ describe('SheetCombatTargetDialog explicit facts', () => {
         candidates: [{
           id: 'scene-target:training-dummy',
           name: 'Пугало',
-          description: 'Тренировочная цель · КЗ 10',
+          description: 'Тренировочная цель · КД 10',
           defaultSelected: true,
           factEntryMode: 'distance_only',
           defaultFacts: {

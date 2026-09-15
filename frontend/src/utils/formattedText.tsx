@@ -1,4 +1,5 @@
 import React from 'react';
+import {armorClassTerminology} from './armorClassTerminology';
 import { COLOR_TOKENS, ICON_TOKENS, ICON_TOKEN_MAP, getDamageColor } from './damageTypes';
 import HoverCard from '../components/HoverCard';
 import EntityRefPreview from '../components/EntityRefPreview';
@@ -236,7 +237,7 @@ const renderParsedNodes = (
     const key = `${keyPrefix}-${index}`;
 
     if (node.type === 'text') {
-      return <React.Fragment key={key}>{node.content}</React.Fragment>;
+      return <React.Fragment key={key}>{armorClassTerminology(node.content)}</React.Fragment>;
     }
 
     if (node.type === 'link') {
@@ -248,7 +249,7 @@ const renderParsedNodes = (
           onClick={onOpenRef ? () => onOpenRef(node.refType, node.refId) : undefined}
           disabled={disableHoverPreviews}
         >
-          {node.label}
+          {armorClassTerminology(node.label)}
         </HoverCard>
       );
     }

@@ -111,6 +111,14 @@ describe('solo combat data-owned action choices', () => {
     } as RuleActionDefinition;
 
     expect(parseDeclaredWeaponActionPolicy(action, 'bound')).toMatchObject({ status: 'valid' });
+    const rangedTemplate = structuredClone(action);
+    (rangedTemplate.mechanics.activation as {cost: unknown[]}).cost.push({resource: 'equipped_weapon_ammo', amount: 1});
+    expect(parseDeclaredWeaponActionPolicy(rangedTemplate, 'bound').status).toBe('invalid');
+    const rangedChoices = collectSoloCombatActionChoices(actor, rangedTemplate);
+    expect(resolveCombatPassiveChoices(rangedChoices, combatPassiveTogglesForAction(actor, rangedTemplate), {}).automatic)
+      .toEqual({'apply-slow': ['use']});
+    expect(resolveCombatPassiveChoices(rangedChoices, combatPassiveTogglesForAction(actor, rangedTemplate), {'apply-slow': false}).pending)
+      .toEqual(rangedChoices);
     expect(parseWeaponProfile(weapon)).toMatchObject({ valid: true });
     const equipped = weaponContext(actor.character, 'main', actor.runtime.equipment, actor.runtime)!;
     expect(equipped).toMatchObject({ weaponType: 'longbow', mastery: masteryId });

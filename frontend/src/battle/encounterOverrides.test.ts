@@ -13,11 +13,11 @@ describe('EncounterBoard explicit GM override boundary', () => {
     })).toBe(17);
     expect(explicitEncounterArmorClass({ rule_state: null, armor_class: 15 })).toBe(15);
     expect(() => explicitEncounterArmorClass({ rule_state: null, armor_class: undefined }))
-      .toThrow(/КЗ персонажа должен быть явно задан/);
+      .toThrow(/КД персонажа должен быть явно задан/);
     expect(() => explicitEncounterArmorClass({
       rule_state: { armorClass: 0 } as never,
       armor_class: 15,
-    })).toThrow(/Скомпилированный КЗ/);
+    })).toThrow(/Скомпилированный КД/);
   });
 
   it('requires explicit positive HP and AC for manual enrollment', () => {

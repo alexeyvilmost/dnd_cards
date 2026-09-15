@@ -118,7 +118,7 @@ describe('resolveCharacterRules — базовые владения и прои�
     expect(rs.proficiencies.tools).toContain('thieves_tools');
   });
 
-  it('скорость берётся от вида, инициатива/КЗ — от ЛВК', () => {
+  it('скорость берётся от вида, инициатива/КД — от ЛВК', () => {
     const rs = build({ race: { id: 'dwarf', name: 'Дварф', speed: 25 } });
     expect(rs.speed).toBe(25);
     expect(rs.initiativeBonus).toBe(abilityMod(STD.dex));
@@ -127,8 +127,8 @@ describe('resolveCharacterRules — базовые владения и прои�
   });
 });
 
-describe('resolveCharacterRules — единый КЗ (C9) и декларативное заклинательство', () => {
-  it('set_value ac_base (Защита без доспехов) попадает в персистируемый КЗ', () => {
+describe('resolveCharacterRules — единый КД (C9) и декларативное заклинательство', () => {
+  it('set_value ac_base (Защита без доспехов) попадает в персистируемый КД', () => {
     const rs = build({
       klass: { id: 'barb', name: 'Варвар', hit_die: 'd12' },
       effects: [fx('unarmored', auto({ kind: 'set_value', target: 'ac_base', formula: '10+dex+con' }))],
@@ -137,7 +137,7 @@ describe('resolveCharacterRules — единый КЗ (C9) и декларати
     expect(rs.armorClass).toBe(10 + abilityMod(STD.dex) + abilityMod(STD.con));
   });
 
-  it('modifier ac БЕЗ resolution:auto (стиль «Оборона») теперь учитывается в КЗ билда', () => {
+  it('modifier ac БЕЗ resolution:auto (стиль «Оборона») теперь учитывается в КД билда', () => {
     // Раньше numericMods.ac брал только auto-payload → сводка кузницы теряла +1.
     const rs = build({
       effects: [fx('defense', { effects: [{ result: [{ kind: 'modifier', applies_to: { roll: 'ac' }, op: 'add', value: '+1' }] }] })],

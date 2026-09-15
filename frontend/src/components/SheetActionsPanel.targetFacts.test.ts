@@ -23,11 +23,11 @@ describe('explicit legacy sheet target facts', () => {
     expect(explicitSheetTargetFactsIssue(attack, {
       armorClass: null,
       savingThrowModifier: null,
-    })).toMatch(/КЗ цели/);
+    })).toMatch(/КД цели/);
     expect(() => explicitSheetTargetContext(attack, {
       armorClass: undefined,
       savingThrowModifier: undefined,
-    })).toThrow(/КЗ цели/);
+    })).toThrow(/КД цели/);
     expect(explicitSheetTargetContext(attack, {
       armorClass: 17,
       savingThrowModifier: null,

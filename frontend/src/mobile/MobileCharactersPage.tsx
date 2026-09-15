@@ -228,7 +228,7 @@ export default function MobileCharactersPage() {
 
               <div className="m-character-stats">
                 <span><strong>{character.current_hp}</strong>/{character.max_hp} HP</span>
-                <span><Shield size={14} /> КЗ <strong>{character.armor_class ?? 10}</strong></span>
+                <span><Shield size={14} /> КД <strong>{character.armor_class ?? 10}</strong></span>
                 {character.current_encounter_id && <span className="is-battle">В бою</span>}
               </div>
 

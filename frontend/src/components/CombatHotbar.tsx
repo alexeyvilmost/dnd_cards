@@ -1,8 +1,14 @@
 import {combatHideIssue} from '../solo-combat/hide';
+import {decisionPolicyToggles} from '../solo-combat/decisionPolicies';
+import DecisionPolicyToggles from './DecisionPolicyToggles';
+import SheetPassiveToggle from './SheetPassiveToggle';
 import { combatActorDisplayName } from '../character/familiarLabels';
 import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowUp, Footprints, MoreHorizontal, Sparkles, Swords, Unlink } from 'lucide-react';
+import { Footprints, MoreHorizontal, Sparkles, Swords, Unlink } from 'lucide-react';
+import {conditionGrantedActions} from '../engine/conditionActions';
+import {grantedActionPresentation} from '../character/actionPresentation';
+import {useSiteSettings} from '../settings';
 import { canPay, costKey } from '../engine/cost';
 import { FREEUSE_SHOWCASE_KEY, isFreeusePoolKey } from '../engine/freeuse';
 import { bindEquippedWeaponActionContext, weaponAttackPreview, weaponContext } from '../engine/weapon';
@@ -20,8 +26,8 @@ import { parseActivationLevelRequirement } from '../rules-core/activationRequire
 import { parseActivationCastTime } from '../rules-core/activationCastTime';
 import { applyUnarmedDamageProfileToAction } from '../rules-core/fightingStyleComplexPrimitives';
 import { playerActionIdsFor, type SoloCombatState } from '../solo-combat/types';
-import { canEscapeActorGrapple, canStandActor, isTriggeredCombatAction } from '../solo-combat/engine';
-import { actorMustCrawl, combatActorMovementMode, effectiveCombatActorSpeedFt, standMovementCost } from '../solo-combat/tacticalGrid';
+import { canEscapeActorGrapple, canUseConditionAction, isTriggeredCombatAction } from '../solo-combat/engine';
+import { combatActorMovementMode, effectiveCombatActorSpeedFt } from '../solo-combat/tacticalGrid';
 import { actionCostResourceIds, findResource, resourceLabel as sharedResourceLabel, useResourceOptions } from '../utils/resources';
 import SheetActionLine from './SheetActionLine';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
@@ -380,7 +386,7 @@ export function combatActionAvailability(
 export default function CombatHotbar({
   state, actorId, selectedActionId, movementMode, disabled,
   passiveEnabled, onPassiveToggle,
-  onAction, onMove, onStand, onEscape, onEndTurn, onSheet,
+  onAction, onMove, onConditionAction, onEscape, onEndTurn, onSheet,
 }: {
   state: SoloCombatState;
   actorId: string;
@@ -391,12 +397,13 @@ export default function CombatHotbar({
   onPassiveToggle?: (id: string, enabled: boolean) => void;
   onAction: (action: RuleActionDefinition) => void;
   onMove: () => void;
-  onStand: () => void;
+  onConditionAction: (id: string) => void;
   onEscape?: () => void;
   onEndTurn: () => void;
   onSheet: () => void;
 }) {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
+  const {entityDisplay} = useSiteSettings();
   const [activeTab, setActiveTab] = useState<'actions' | 'passives'>('actions');
   useEffect(() => setSelectedResourceId(null), [actorId]);
   const resourceOptions = useResourceOptions();
@@ -420,6 +427,13 @@ export default function CombatHotbar({
     actions,
     (actionId) => state.actionPresentation?.[actionId]?.actionRef?.card_number,
   );
+  const decisionToggleGroups = [
+    {id: 'roll-influence', name: undefined, toggles: decisionPolicyToggles('roll_influence')},
+    ...state.catalogActions.filter(action => actor.capabilities.actionIds.includes(action.id))
+      .map(action => ({id: action.id, name: action.name, toggles: decisionPolicyToggles('reaction', action)}))
+      .filter(group => group.toggles.length),
+  ];
+  const passiveCount = passiveToggles.length + decisionToggleGroups.reduce((sum, group) => sum + group.toggles.length, 0);
   const freeuseResources = Object.entries(actor.runtime.maxResources)
     .filter(([key, maximum]) => maximum > 0 && isFreeusePoolKey(key));
   const freeuseSpells = freeuseResources.map(([key, maximum]) => ({
@@ -491,12 +505,9 @@ export default function CombatHotbar({
             </span>
           ))}
         </div>
-        <div className={`combat-hotbar__utility${actorMustCrawl(actor) || grappled ? ' has-stand' : ''}`} role="group" aria-label="Управление полем">
+        <div className={`combat-hotbar__utility${grappled ? ' has-stand' : ''}`} role="group" aria-label="Управление полем">
           {grappled && onEscape && <button type="button" className="combat-utility-button" disabled={disabled || !canEscapeActorGrapple(state, actorId)} onClick={onEscape} title="Действие: проверка Атлетики или Акробатики">
             <Unlink /><span>Освободиться</span>
-          </button>}
-          {actorMustCrawl(actor) && <button type="button" className="combat-utility-button" disabled={disabled || !canStandActor(state, actorId)} onClick={onStand} title="Встать, потратив половину скорости">
-            <ArrowUp /><span>Встать</span><small>{standMovementCost(state, actorId)} фт.</small>
           </button>}
           <button type="button" className={`combat-utility-button${movementMode ? ' is-selected' : ''}`} disabled={disabled || movementRemaining <= 0} onClick={onMove} title="Перемещение">
             <Footprints /><span>{movementLabel}</span><small>{movementRemaining} фт.</small>
@@ -510,9 +521,15 @@ export default function CombatHotbar({
       <div className="combat-hotbar__content">
         <div className="combat-hotbar__tabs" role="tablist" aria-label="Разделы хотбара">
           <button type="button" role="tab" aria-selected={activeTab === 'actions'} className={activeTab === 'actions' ? 'is-active' : ''} onClick={() => setActiveTab('actions')}><Swords /> Действия</button>
-          <button type="button" role="tab" aria-selected={activeTab === 'passives'} className={activeTab === 'passives' ? 'is-active' : ''} onClick={() => setActiveTab('passives')}><Sparkles /> Пассивы{passiveToggles.length ? ` · ${passiveToggles.length}` : ''}</button>
+          <button type="button" role="tab" aria-selected={activeTab === 'passives'} className={activeTab === 'passives' ? 'is-active' : ''} onClick={() => setActiveTab('passives')}><Sparkles /> Пассивы{passiveCount ? ` · ${passiveCount}` : ''}</button>
         </div>
-      {activeTab === 'actions' ? <div className="combat-hotbar__actions cs-action-tiles site-scrollbar" role="tabpanel" aria-label="Действия персонажа">
+      {activeTab === 'actions' ? <div className={`combat-hotbar__actions cs-action-tiles site-scrollbar${entityDisplay.actions === 'row' ? ' is-row-view' : ''}`} role="tabpanel" aria-label="Действия персонажа">
+        {!selectedResourceId && conditionGrantedActions(actor.runtime).map(action => <div className="combat-sheet-action" key={action.id}>
+          <SheetActionLine name={action.name} variant={entityDisplay.actions} actionRef={grantedActionPresentation({...action, mechanics: {effects: action.effects, activation: {mode: 'active', cost: [{resource: 'movement', amount: Math.floor(effectiveCombatActorSpeedFt(state, actorId) * action.movementFraction)}]}}})} sourceLabel="Действие состояния"
+            disabled={disabled || !canUseConditionAction(state, actorId, action.id)} disabledTitle="Недостаточно перемещения или сейчас действие недоступно"
+            onActivate={() => onConditionAction(action.id)}/>
+          <span className="combat-hotbar__action-label">{action.name}</span>
+        </div>)}
         {visibleActions.map((action) => {
           const availability = combatActionAvailability(state, action, actorId);
           const presentation = state.actionPresentation?.[action.id];
@@ -580,7 +597,7 @@ export default function CombatHotbar({
                 weaponAttackPreview={weaponPreview}
                 spellRef={presentation?.spellRef}
                 spellcasting={spellcasting}
-                variant="icon"
+                variant={entityDisplay.actions}
                 disabled={actionDisabled}
                 disabledTitle={availability.reason ?? (disabled ? 'Сейчас действие недоступно' : 'Недостаточно ресурсов')}
                 onActivate={() => onAction(action)}
@@ -598,15 +615,20 @@ export default function CombatHotbar({
           <p className="combat-hotbar__empty-filter">Нет доступных действий для этого ресурса</p>
         )}
       </div> : <div className="combat-hotbar__passives site-scrollbar" role="tabpanel" aria-label="Пассивные эффекты атак">
+        {decisionToggleGroups.map(group => <div key={group.id} className="combat-passive-group">
+          <DecisionPolicyToggles toggles={group.toggles} preferences={passiveEnabled ?? {}}
+            parent={{name: group.name, imageUrl: state.actionPresentation?.[group.id]?.imageUrl
+              || state.actionPresentation?.[group.id]?.spellRef?.image_url || state.actionPresentation?.[group.id]?.actionRef?.image_url}}
+            onChange={(id, enabled) => onPassiveToggle?.(id, enabled)}/></div>)}
         {passiveToggles.map((toggle) => {
           const enabled = passiveEnabled?.[toggle.id] !== false;
-          return <button type="button" key={toggle.id} className={enabled ? 'is-enabled' : ''}
-            aria-pressed={enabled} title={toggle.description}
-            onClick={() => onPassiveToggle?.(toggle.id, !enabled)}>
-            <span><Sparkles /></span><b>{toggle.name}</b><small>{enabled ? 'ВКЛ · применять автоматически' : 'ВЫКЛ · спрашивать перед ударом'}</small>
-          </button>;
+          const parent = state.actionPresentation?.[toggle.parentActionId ?? ''];
+          return <SheetPassiveToggle key={toggle.id} toggle={{...toggle,
+            imageUrl: toggle.imageUrl || parent?.imageUrl || parent?.actionRef?.image_url || parent?.spellRef?.image_url,
+            sourceName: parent?.actionRef?.name ?? parent?.spellRef?.name}}
+            enabled={enabled} onChange={(id, value) => onPassiveToggle?.(id, value)}/>;
         })}
-        {!passiveToggles.length && <p className="combat-hotbar__empty-filter">Для текущего оружия нет переключаемых пассивов</p>}
+        {!passiveCount && <p className="combat-hotbar__empty-filter">Нет переключаемых пассивов</p>}
       </div>}
       </div>
 

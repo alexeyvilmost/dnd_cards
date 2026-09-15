@@ -1,0 +1,18 @@
+.character-template-library { --forge-gold: #d8b978; --forge-line: #897244; padding: 1rem; max-width: 1200px; margin: 1rem auto; }
+.character-template-library .forge-btn { background: #d8b978; color: #201b14; border: 1px solid #d8b978; border-radius: 8px; padding: 10px 18px; font-size: 15px; font-weight: 600; cursor: pointer; }
+.character-template-library .forge-btn.ghost { background: transparent; color: #d8b978; border-color: #897244; }
+.character-template-library .forge-btn:disabled { opacity: .5; cursor: not-allowed; }
+.character-template-library .forge-btn:focus-visible { outline: 2px solid #f4e5c5; outline-offset: 3px; }
+.character-template-library h2 { font-size: 1.4rem; margin-bottom: .5rem; }
+.character-template-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1rem; margin: 1rem 0; }
+.character-template-grid article { display: flex; flex-direction: column; align-items: flex-start; border: 1px solid var(--forge-border, #a88b54); border-radius: 14px; padding: 1.2rem; }
+.character-template-grid h3 { font-size: 1.25rem; font-weight: 700; }
+.character-template-grid p { margin: .7rem 0; line-height: 1.5; white-space: pre-line; }
+.character-template-grid .character-template-summary { margin-top: auto; padding-top: .7rem; }
+.character-template-grid button { margin: .3rem .3rem .3rem 0; }
+.character-template-backdrop { position: fixed; inset: 0; z-index: 200; background: #000a; display: grid; place-items: center; padding: 1rem; }
+.character-template-dialog { background: #201c16; color: #f4e5c5; border: 1px solid #b89b60; border-radius: 16px; padding: 1.5rem; width: min(100%, 580px); max-height: 90dvh; overflow-y: auto; }
+.character-template-dialog label { display: grid; gap: .4rem; margin: 1rem 0; }
+.character-template-dialog input, .character-template-dialog select, .character-template-dialog textarea { width: 100%; border: 1px solid #897244; border-radius: 6px; padding: .65rem; background: #100f0d; color: #f4e5c5; }
+.character-template-dialog-actions { display: flex; gap: .7rem; flex-wrap: wrap; margin-top: 1rem; }
+.character-template-dialog [role=alert], .character-template-library > [role=alert] { color: #d96559; }

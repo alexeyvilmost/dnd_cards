@@ -51,6 +51,8 @@ function activeId(state: { world: { scene: import('../rules-core/domain').SceneS
 
 function fighterSeed(): SheetCombatParticipantSeed {
   const actor = clone(fixture.roots.magicInitiateFighter.actor);
+  // These scenarios exercise other mechanics without an optional player reroll.
+  actor.runtime.resources.heroic_inspiration = 0;
   const actions = clone(fixture.roots.magicInitiateFighter.actions);
   const cantrip: RuleActionDefinition = {
     id: 'd1000000-0000-4000-8000-000000000001',
@@ -96,6 +98,7 @@ function fighterSeed(): SheetCombatParticipantSeed {
 
 function wizardSeed(): SheetCombatParticipantSeed {
   const actor = clone(fixture.roots.wizard.actor);
+  actor.runtime.resources.heroic_inspiration = 0;
   const actions = clone(fixture.roots.wizard.actions);
   const byId = new Map(actions.map((action) => [action.id, action]));
   const canonical: SheetCanonicalRuntime = {
@@ -764,6 +767,24 @@ describe('solo combat engine vertical integration', () => {
     expect(beats[0].cues).toContainEqual(expect.objectContaining({actorId: enemyId, kind: 'damage'}));
     state.tokens[enemyId].position = {x: 20, y: 20};
     expect(previewCombatAttackRoll(input)).toBeNull();
+  });
+  it.each([true,false])('persists an inspiration decision before applying damage, use=%s', async use => {
+    const {resolveD20Interrupt} = await import('./engine');
+    const {state, actorId, enemyId, attack} = await championMovementEncounter();
+    state.world.actors[actorId].runtime.resources.heroic_inspiration = 1;
+    const before = clone(state);
+    const held = executeCombatAction({state,actorId,actionId:attack.id,targetIds:[enemyId],rng:()=>0});
+    expect(held.pendingD20Interrupt?.operation).toBe('roll_influence');
+    expect(held.pendingD20Interrupt?.held?.roll.outcome).toBe('miss');
+    expect(held.world).toEqual(before.world);
+    expect(()=>resolveD20Interrupt(held,enemyId,()=>{throw Error('must not roll');})).toThrow();
+    const settled=resolveD20Interrupt(clone(held),use?actorId:null,use?()=>.95:()=>{throw Error('decline must replay');});
+    expect(settled.pendingD20Interrupt).toBeUndefined();
+    expect(settled.world.actors[actorId].runtime.resources.heroic_inspiration).toBe(use?0:1);
+    expect(settled.world.actors[actorId].runtime.resources.action).toBe(0);
+    expect(settled.world.actors[enemyId].runtime.hp.current < before.world.actors[enemyId].runtime.hp.current).toBe(use);
+    expect(()=>resolveD20Interrupt(settled,actorId)).toThrow();
+    expect(state).toEqual(before);
   });
   it('approaches the nearest legal attack cell and executes the committed weapon attack', async () => {
     const {state, actorId, enemyId, attack} = await championMovementEncounter();
@@ -3896,7 +3917,7 @@ describe('Prone tactical movement', () => {
     state.tokens[monsterId].position = { x: 6, y: 5 };
     state = runMonsterTurn(state, () => 0.5);
     expect(state.world.actors[monsterId].runtime.activeEffects.some((entry) => entry.mechanics.value === 'prone')).toBe(false);
-    expect(state.log.filter((entry) => entry.text.includes('Встал:'))).toHaveLength(1);
+    expect(state.log.filter((entry) => entry.text.includes('Встать:'))).toHaveLength(1);
     expect(activeId(state)).toBe(actorId);
   });
 });
@@ -5454,14 +5475,15 @@ describe('physical Weapon Bond recall in solo combat', () => {
 });
 
 describe('grapple escape through trusted solo combat commands', () => {
-  it.each(['action', 'action_surge_action'])('opens a durable skill check, charges one %s and rejects foreign or interrupted commands', async resource => {
+  it.each(['action', 'action_surge_action', 'heroic'])('opens a durable skill check, charges one %s and rejects foreign or interrupted commands', async resource => {
     const setup = await championMovementEncounter();
     let state = clone(setup.state);
     const {actorId, enemyId} = setup;
     if (state.world.scene.mode !== 'encounter') throw Error('Expected encounter');
     state.world.scene.activeIndex = state.world.scene.initiative.indexOf(actorId);
     state.world.actors[actorId].runtime.resources.action = 0;
-    state.world.actors[actorId].runtime.resources[resource] = 1;
+    state.world.actors[actorId].runtime.resources[resource === 'heroic' ? 'action' : resource] = 1;
+    if(resource === 'heroic') state.world.actors[actorId].runtime.resources.heroic_inspiration = 1;
     // Fixture starts its turn already grappled, so its movement grant is zero.
     state.movementRemainingFt[actorId] = 0;
     state.world.actors[enemyId].attackProfile!.graspingParts = ['qa_arm'];
@@ -5485,13 +5507,25 @@ describe('grapple escape through trusted solo combat commands', () => {
     expect(opened.randomValues).toEqual([]);
     expect(opened.envelope.state.world.pendingResolution).toMatchObject({type: 'escape_grapple', actorId, skill: 'acrobatics'});
     expect(opened.envelope.state.world.actors[actorId].runtime.resources.action).toBe(0);
-    expect(opened.envelope.state.world.actors[actorId].runtime.resources[resource]).toBe(0);
+    expect(opened.envelope.state.world.actors[actorId].runtime.resources[resource === 'heroic' ? 'action' : resource]).toBe(0);
     expect(canEscapeActorGrapple(opened.envelope.state, actorId)).toBe(false);
     expect(() => escapeActorGrapple(opened.envelope.state, actorId, 'escape-test', 'athletics')).toThrow();
     expect(() => stepRoguelikeCombat(opened.envelope, {type: 'end_turn', actorId}, artifactHash)).toThrow();
     const restored = clone(opened.envelope);
     restored.state.world = migrateWorldState(restored.state.world);
     const resolved = stepRoguelikeCombat(restored, {type: 'saving_throw'}, artifactHash);
+    if(resource === 'heroic') {
+      expect(resolved.envelope.state.pendingD20Interrupt?.operation).toBe('roll_influence');
+      expect(resolved.envelope.state.world.pendingResolution).not.toBeNull();
+      const resumed=stepRoguelikeCombat(clone(resolved.envelope),{type:'d20_interrupt',actorId},artifactHash);
+      expect(resumed.envelope.state.pendingD20Interrupt).toBeUndefined();
+      expect(resumed.envelope.state.world.pendingResolution).toBeNull();
+      expect(resumed.envelope.state.world.actors[actorId].runtime.resources.heroic_inspiration).toBe(0);
+      expect(resumed.envelope.state.world.actors[actorId].runtime.resources.action).toBe(0);
+      expect(resumed.randomValues).toHaveLength(1);
+      expect(()=>stepRoguelikeCombat(resumed.envelope,{type:'d20_interrupt',actorId},artifactHash)).toThrow();
+      return;
+    }
     expect(resolved.envelope.state.world.pendingResolution).toBeNull();
     expect(resolved.envelope.state.world.actors[actorId].runtime.resources.action).toBe(0);
     expect(resolved.randomValues).toHaveLength(1);

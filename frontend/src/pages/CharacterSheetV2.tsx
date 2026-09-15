@@ -12,6 +12,7 @@ import { rollEvent } from '../engine/events';
 import { collectRollModifiers } from '../engine/modifiers';
 import { rollD20 } from '../engine/roll';
 import { finalizeSheetD20Roll } from '../character/sheetD20Roll';
+import {influencedSheetRoll} from '../character/influencedSheetRoll';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
 import {activeRunId} from '../roguelike/navigation';
 import {commitSheetRuntimeCommand} from '../character/sheetRuntimeCommand';
@@ -122,7 +123,7 @@ const CharacterSheetV2 = ({
   ]);
   const [hpOpen, setHpOpen] = useState(false);
   const [longRestOpen, setLongRestOpen] = useState(false);
-  // E4/E5: единый «КЗ/Спас цели» на обе панели листа (Действия + Заклинания).
+  // E4/E5: единый «КД/Спас цели» на обе панели листа (Действия + Заклинания).
   const [targetAc, setTargetAc] = useState<number | null>(10);
   const [targetSaveMod, setTargetSaveMod] = useState<number | null>(0);
   const [targetCharacterId, setTargetCharacterId] = useState<string | null>(null);
@@ -200,11 +201,13 @@ const CharacterSheetV2 = ({
         }),
       );
       plan.push(...plannedD20BonusDice(collected.rules, label, 'check'));
+      const inspired = influencedSheetRoll(rollKind === 'saving_throw' ? 'save' : 'check',
+        {advantage: collected.advantage, modifiers: [...parts], rules: collected.rules}, checkState, passives);
       const decision = await diceDialog.request(
         plan,
         label,
         <ValueBreakdownPanel breakdown={breakdown} label={label} />,
-        { compactCheck: { kind: rollKind === 'saving_throw' ? 'save' : 'check', roll: () => rollD20({ advantage: collected.advantage, modifiers: [...parts], rules: collected.rules, rng: Math.random }) } },
+        {compactCheck: inspired.request},
       );
       if (decision.mode === 'cancel') return;
       const rng = decision.mode === 'manual'
@@ -218,8 +221,9 @@ const CharacterSheetV2 = ({
       });
       const rollEvents: EngineEvent[] = [...preparationEvents, rollEvent(label, roll)];
       if (checkState) {
-        const finalized = finalizeSheetD20Roll(checkState, rollKind, filter);
-        rollEvents.push(...finalized.events);
+        const paid = inspired.finalize(checkState);
+        const finalized = finalizeSheetD20Roll(paid.state, rollKind, filter);
+        rollEvents.push(...paid.events, ...finalized.events);
         if (!character.current_encounter_id) {
           const prepared = prepareSheetCheckCommit({character, state: finalized.state, events: rollEvents,
             commandId: crypto.randomUUID(), runId: character.character_type === 'dungeon_crawl' ? activeRunId() : undefined,

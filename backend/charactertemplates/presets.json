@@ -1,0 +1,1597 @@
+[
+  {
+    "id": "d2500000-0000-4000-8000-000000000001",
+    "name": "Мечник",
+    "description": "Красный драконорождённый, воин 1. Сражение большим оружием, Крепкий. Двуручный меч и кольчуга (набор А). Искусность: двуручный меч, цеп, копьё. Предыстория: фермер.",
+    "preset_key": "swordsman",
+    "character": {
+      "name": "Мечник",
+      "avatar_url": "",
+      "description": "",
+      "notes": "",
+      "system_id": "dnd5e-2024",
+      "ruleset_version": "2024",
+      "character_type": "free",
+      "character_schema_version": 1,
+      "race_id": "192243e7-5011-4fc3-a91b-a5d66354aa20",
+      "lineage_id": "b63ce5e6-a325-4ec0-bfd9-4d387e8112f1",
+      "class_id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+      "class_levels": {
+        "2705eb12-1556-40c8-bdae-671e8f5c67eb": 1
+      },
+      "subclass_ids": {},
+      "background_id": "df6ba1f4-e409-4021-8902-045ff5f37dbd",
+      "level": 1,
+      "feat_ids": [],
+      "spell_ids": [],
+      "action_ids": [],
+      "effect_ids": [],
+      "resource_ids": [],
+      "abilities": {
+        "cha": 10,
+        "con": 16,
+        "dex": 10,
+        "int": 8,
+        "str": 17,
+        "wis": 13
+      },
+      "skill_proficiencies": [
+        "athletics",
+        "perception",
+        "nature",
+        "animal_handling"
+      ],
+      "skill_expertise": [],
+      "saving_throw_proficiencies": [
+        "str",
+        "con"
+      ],
+      "tool_proficiencies": [
+        "Инструменты плотника"
+      ],
+      "tool_expertise": [],
+      "languages": [],
+      "resolved_choices": {
+        "builder:ability_bonus": [
+          "mode:two_one",
+          "str:2",
+          "con:1"
+        ],
+        "builder:ability_method": [
+          "point_buy"
+        ],
+        "builder:class_equipment": [
+          "a"
+        ],
+        "builder:class_skills": [
+          "athletics",
+          "perception"
+        ],
+        "builder:equipment_option": [
+          "a"
+        ],
+        "builder:manual_spells": [],
+        "builder:subclass": [],
+        "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
+          "f5e42e2a-9646-4d2f-9561-c47c4f3c1fcd"
+        ],
+        "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:bfd9a78c-4676-4b6f-8318-e5aee7f1d89b:weapon-mastery": [
+          "greatsword",
+          "flail",
+          "spear"
+        ]
+      },
+      "rule_state": {
+        "abilities": {
+          "cha": 10,
+          "con": 16,
+          "dex": 10,
+          "int": 8,
+          "str": 17,
+          "wis": 13
+        },
+        "abilityMethods": {
+          "cha": [],
+          "con": [],
+          "dex": [],
+          "int": [],
+          "str": [],
+          "wis": []
+        },
+        "abilityMods": {
+          "cha": 0,
+          "con": 3,
+          "dex": 0,
+          "int": -1,
+          "str": 3,
+          "wis": 1
+        },
+        "abilitySources": {
+          "cha": [
+            {
+              "reason": "база до бонуса предыстории",
+              "source": "Point-buy",
+              "value": 10
+            }
+          ],
+          "con": [
+            {
+              "reason": "база до бонуса предыстории",
+              "source": "Point-buy",
+              "value": 15
+            },
+            {
+              "reason": "бонус распределения характеристик",
+              "source": "Предыстория: Фермер",
+              "value": 1
+            }
+          ],
+          "dex": [
+            {
+              "reason": "база до бонуса предыстории",
+              "source": "Point-buy",
+              "value": 10
+            }
+          ],
+          "int": [
+            {
+              "reason": "база до бонуса предыстории",
+              "source": "Point-buy",
+              "value": 8
+            }
+          ],
+          "str": [
+            {
+              "reason": "база до бонуса предыстории",
+              "source": "Point-buy",
+              "value": 15
+            },
+            {
+              "reason": "бонус распределения характеристик",
+              "source": "Предыстория: Фермер",
+              "value": 2
+            }
+          ],
+          "wis": [
+            {
+              "reason": "база до бонуса предыстории",
+              "source": "Point-buy",
+              "value": 13
+            }
+          ]
+        },
+        "appliedGrants": [
+          {
+            "choiceId": "class_skill_choices",
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:skill:proficiency:athletics:class_skill_choices",
+            "kind": "skill",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "athletics"
+          },
+          {
+            "choiceId": "class_skill_choices",
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:skill:proficiency:perception:class_skill_choices",
+            "kind": "skill",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "perception"
+          },
+          {
+            "id": "background:df6ba1f4-e409-4021-8902-045ff5f37dbd:skill:proficiency:nature:",
+            "kind": "skill",
+            "mode": "proficiency",
+            "source": {
+              "id": "df6ba1f4-e409-4021-8902-045ff5f37dbd",
+              "name": "Фермер",
+              "type": "background"
+            },
+            "value": "nature"
+          },
+          {
+            "id": "background:df6ba1f4-e409-4021-8902-045ff5f37dbd:skill:proficiency:animal_handling:",
+            "kind": "skill",
+            "mode": "proficiency",
+            "source": {
+              "id": "df6ba1f4-e409-4021-8902-045ff5f37dbd",
+              "name": "Фермер",
+              "type": "background"
+            },
+            "value": "animal_handling"
+          },
+          {
+            "id": "background:df6ba1f4-e409-4021-8902-045ff5f37dbd:tool:proficiency:Инструменты плотника:",
+            "kind": "tool",
+            "mode": "proficiency",
+            "source": {
+              "id": "df6ba1f4-e409-4021-8902-045ff5f37dbd",
+              "name": "Фермер",
+              "type": "background"
+            },
+            "value": "Инструменты плотника"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:saving_throw:proficiency:str:",
+            "kind": "saving_throw",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "str"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:saving_throw:proficiency:con:",
+            "kind": "saving_throw",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "con"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:armor:proficiency:light:",
+            "kind": "armor",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "light"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:armor:proficiency:medium:",
+            "kind": "armor",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "medium"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:armor:proficiency:heavy:",
+            "kind": "armor",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "heavy"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:armor:proficiency:shields:",
+            "kind": "armor",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "shields"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:weapon:proficiency:simple:",
+            "kind": "weapon",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "simple"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:weapon:proficiency:martial:",
+            "kind": "weapon",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "martial"
+          },
+          {
+            "choiceId": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style",
+            "id": "class:class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:feat:proficiency:f5e42e2a-9646-4d2f-9561-c47c4f3c1fcd:class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style",
+            "kind": "feat",
+            "mode": "proficiency",
+            "source": {
+              "featureEntityId": "39be6236-7db8-46c7-a3ab-c84bc51918da",
+              "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da",
+              "name": "Воин: Боевой стиль",
+              "originEntityId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "type": "class"
+            },
+            "value": "f5e42e2a-9646-4d2f-9561-c47c4f3c1fcd"
+          }
+        ],
+        "armorClass": 10,
+        "baseSpeed": 30,
+        "carryingCapacity": 255,
+        "classLevels": {
+          "warrior": 1
+        },
+        "conflicts": [],
+        "expertise": {
+          "skills": [],
+          "tools": []
+        },
+        "freeuseSpells": [],
+        "initiativeBonus": 0,
+        "maxHP": 15,
+        "passivePerception": 13,
+        "proficiencies": {
+          "armor": [
+            "light",
+            "medium",
+            "heavy",
+            "shields"
+          ],
+          "languages": [],
+          "savingThrows": [
+            "str",
+            "con"
+          ],
+          "skills": [
+            "athletics",
+            "perception",
+            "nature",
+            "animal_handling"
+          ],
+          "tools": [
+            "Инструменты плотника"
+          ],
+          "weapons": [
+            "simple",
+            "martial"
+          ]
+        },
+        "proficiencyBonus": 2,
+        "savingThrowBonuses": {
+          "cha": 0,
+          "con": 5,
+          "dex": 0,
+          "int": -1,
+          "str": 5,
+          "wis": 1
+        },
+        "senses": [
+          {
+            "range": 60,
+            "sense": "darkvision"
+          }
+        ],
+        "size": 2,
+        "skillBonuses": {
+          "acrobatics": 0,
+          "animal_handling": 3,
+          "arcana": -1,
+          "athletics": 5,
+          "deception": 0,
+          "history": -1,
+          "insight": 1,
+          "intimidation": 0,
+          "investigation": -1,
+          "medicine": 1,
+          "nature": 1,
+          "perception": 3,
+          "performance": 0,
+          "persuasion": 0,
+          "religion": -1,
+          "sleight_of_hand": 0,
+          "stealth": 0,
+          "survival": 1
+        },
+        "speed": 30,
+        "speeds": {},
+        "spellcasting": null,
+        "spells": {
+          "cantrips": [],
+          "known": [],
+          "leveled": []
+        },
+        "variables": {},
+        "version": 1,
+        "weaponMasteries": [
+          "greatsword",
+          "flail",
+          "spear"
+        ]
+      },
+      "max_hp": 15,
+      "current_hp": 15,
+      "speed": 30,
+      "proficiency_bonus": 2,
+      "armor_class": 16,
+      "initiative_bonus": 0,
+      "passive_perception": 13,
+      "equipment": {
+        "body": "3d4a5854-ac9f-4fc4-b545-8d5c32a08e58",
+        "boots": null,
+        "cloak": null,
+        "gloves": null,
+        "head": null,
+        "main_hand": "6eb3b226-55a6-4c6d-9dde-32e78e014eac",
+        "necklace": null,
+        "off_hand": "6eb3b226-55a6-4c6d-9dde-32e78e014eac",
+        "ring_1": null,
+        "ring_2": null
+      },
+      "inventory_items": [
+        {
+          "card_id": "696f7559-e575-4bed-a77f-7177ad3eb474",
+          "qty": 1
+        },
+        {
+          "card_id": "e1eff72f-982b-44a7-a7a5-890616153d3a",
+          "qty": 1
+        },
+        {
+          "card_id": "6112aaef-39b3-4b91-a0fa-96f56987ebb2",
+          "qty": 1
+        },
+        {
+          "card_id": "8a84417a-3d89-46b4-9744-df4b3eaea38c",
+          "qty": 1
+        },
+        {
+          "card_id": "82d9b938-ad51-4d24-94b9-72d96593b9a1",
+          "qty": 1
+        },
+        {
+          "card_id": "bbc804a1-3a7e-4b09-88c7-21d863ea2d85",
+          "qty": 1
+        },
+        {
+          "card_id": "07cedd56-867c-455e-b639-599ce7f2615e",
+          "qty": 1
+        },
+        {
+          "card_id": "3ea27d6c-5a12-48f2-953a-0b955de6e673",
+          "qty": 8
+        },
+        {
+          "card_id": "b69b42ed-e9b5-4e69-933f-6d95d5e75344",
+          "qty": 1
+        }
+      ],
+      "resources": {
+        "action": 1,
+        "bonus_action": 1,
+        "hit_dice_d10": 1,
+        "reaction": 1,
+        "uses_ACT-breath-fire": 2,
+        "uses_ACT-second-wind": 2,
+        "uses_CARD-0491": 10
+      },
+      "max_resources": {
+        "action": 1,
+        "bonus_action": 1,
+        "hit_dice_d10": 1,
+        "reaction": 1,
+        "uses_ACT-breath-fire": 2,
+        "uses_ACT-second-wind": 2,
+        "uses_CARD-0491": 10
+      },
+      "active_effects": null,
+      "turn_state": null,
+      "currency": {
+        "gold": 34
+      }
+    }
+  },
+  {
+    "id": "d2500000-0000-4000-8000-000000000002",
+    "name": "Лучник",
+    "description": "Человек, воин 1. Стрельба; Посвящённый в магию (МДР): Щит, Леденящее прикосновение, Брызги кислоты. Длинный лук и проклёпанный кожаный доспех (набор Б). Искусность: длинный лук, короткий меч, скимитар. Предыстория: преступник (Бдительный).",
+    "preset_key": "archer",
+    "character": {
+      "name": "Лучник",
+      "avatar_url": "",
+      "description": "",
+      "notes": "",
+      "system_id": "dnd5e-2024",
+      "ruleset_version": "2024",
+      "character_type": "free",
+      "character_schema_version": 1,
+      "race_id": "bda5fc05-255a-45bb-8e90-9b350ba5e14a",
+      "lineage_id": null,
+      "class_id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+      "class_levels": {
+        "2705eb12-1556-40c8-bdae-671e8f5c67eb": 1
+      },
+      "subclass_ids": {},
+      "background_id": "a5d6d5a3-31b8-429c-88a3-6f112618a23c",
+      "level": 1,
+      "feat_ids": [],
+      "spell_ids": [
+        "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+        "e300a1f2-91ae-4c82-9904-057f93a013ba",
+        "d87f4507-849f-450b-b328-0198cb011587"
+      ],
+      "action_ids": [],
+      "effect_ids": [],
+      "resource_ids": [],
+      "abilities": {
+        "cha": 10,
+        "con": 16,
+        "dex": 17,
+        "int": 8,
+        "str": 8,
+        "wis": 14
+      },
+      "skill_proficiencies": [
+        "athletics",
+        "acrobatics",
+        "sleight_of_hand",
+        "stealth",
+        "perception"
+      ],
+      "skill_expertise": [],
+      "saving_throw_proficiencies": [
+        "str",
+        "con"
+      ],
+      "tool_proficiencies": [
+        "Воровские инструменты"
+      ],
+      "tool_expertise": [],
+      "languages": [],
+      "resolved_choices": {
+        "builder:ability_bonus": [
+          "mode:two_one",
+          "dex:2",
+          "con:1"
+        ],
+        "builder:ability_method": [
+          "point_buy"
+        ],
+        "builder:class_equipment": [
+          "b"
+        ],
+        "builder:class_skills": [
+          "athletics",
+          "acrobatics"
+        ],
+        "builder:equipment_option": [
+          "a"
+        ],
+        "builder:manual_spells": [],
+        "builder:subclass": [],
+        "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
+          "bca8edf6-27ce-4399-8e34-bdadd59674b3"
+        ],
+        "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:bfd9a78c-4676-4b6f-8318-e5aee7f1d89b:weapon-mastery": [
+          "longbow",
+          "shortsword",
+          "scimitar"
+        ],
+        "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80#f02c7a7b-c5eb-4291-8caa-e5728dca59c5:magic_initiate_spellcasting_ability": [
+          "wis"
+        ],
+        "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80#f02c7a7b-c5eb-4291-8caa-e5728dca59c5:magic_initiate_wizard_cantrips": [
+          "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+          "e300a1f2-91ae-4c82-9904-057f93a013ba"
+        ],
+        "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80#f02c7a7b-c5eb-4291-8caa-e5728dca59c5:magic_initiate_wizard_level_1": [
+          "d87f4507-849f-450b-b328-0198cb011587"
+        ],
+        "race:bda5fc05-255a-45bb-8e90-9b350ba5e14a:ac97c1f6-6edf-4c3a-b427-bc70dc642db7:human_skill": [
+          "perception"
+        ],
+        "race:bda5fc05-255a-45bb-8e90-9b350ba5e14a:f02c7a7b-c5eb-4291-8caa-e5728dca59c5:human_feat": [
+          "51832580-68f5-4e96-8afe-93e4af045283"
+        ]
+      },
+      "rule_state": {
+        "abilities": {
+          "cha": 10,
+          "con": 16,
+          "dex": 17,
+          "int": 8,
+          "str": 8,
+          "wis": 14
+        },
+        "abilityMethods": {
+          "cha": [],
+          "con": [],
+          "dex": [],
+          "int": [],
+          "str": [],
+          "wis": []
+        },
+        "abilityMods": {
+          "cha": 0,
+          "con": 3,
+          "dex": 3,
+          "int": -1,
+          "str": -1,
+          "wis": 2
+        },
+        "abilitySources": {
+          "cha": [
+            {
+              "reason": "база до бонуса предыстории",
+              "source": "Point-buy",
+              "value": 10
+            }
+          ],
+          "con": [
+            {
+              "reason": "база до бонуса предыстории",
+              "source": "Point-buy",
+              "value": 15
+            },
+            {
+              "reason": "бонус распределения характеристик",
+              "source": "Предыстория: Преступник",
+              "value": 1
+            }
+          ],
+          "dex": [
+            {
+              "reason": "база до бонуса предыстории",
+              "source": "Point-buy",
+              "value": 15
+            },
+            {
+              "reason": "бонус распределения характеристик",
+              "source": "Предыстория: Преступник",
+              "value": 2
+            }
+          ],
+          "int": [
+            {
+              "reason": "база до бонуса предыстории",
+              "source": "Point-buy",
+              "value": 8
+            }
+          ],
+          "str": [
+            {
+              "reason": "база до бонуса предыстории",
+              "source": "Point-buy",
+              "value": 8
+            }
+          ],
+          "wis": [
+            {
+              "reason": "база до бонуса предыстории",
+              "source": "Point-buy",
+              "value": 14
+            }
+          ]
+        },
+        "appliedGrants": [
+          {
+            "choiceId": "class_skill_choices",
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:skill:proficiency:athletics:class_skill_choices",
+            "kind": "skill",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "athletics"
+          },
+          {
+            "choiceId": "class_skill_choices",
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:skill:proficiency:acrobatics:class_skill_choices",
+            "kind": "skill",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "acrobatics"
+          },
+          {
+            "id": "background:a5d6d5a3-31b8-429c-88a3-6f112618a23c:skill:proficiency:sleight_of_hand:",
+            "kind": "skill",
+            "mode": "proficiency",
+            "source": {
+              "id": "a5d6d5a3-31b8-429c-88a3-6f112618a23c",
+              "name": "Преступник",
+              "type": "background"
+            },
+            "value": "sleight_of_hand"
+          },
+          {
+            "id": "background:a5d6d5a3-31b8-429c-88a3-6f112618a23c:skill:proficiency:stealth:",
+            "kind": "skill",
+            "mode": "proficiency",
+            "source": {
+              "id": "a5d6d5a3-31b8-429c-88a3-6f112618a23c",
+              "name": "Преступник",
+              "type": "background"
+            },
+            "value": "stealth"
+          },
+          {
+            "id": "background:a5d6d5a3-31b8-429c-88a3-6f112618a23c:tool:proficiency:Воровские инструменты:",
+            "kind": "tool",
+            "mode": "proficiency",
+            "source": {
+              "id": "a5d6d5a3-31b8-429c-88a3-6f112618a23c",
+              "name": "Преступник",
+              "type": "background"
+            },
+            "value": "Воровские инструменты"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:saving_throw:proficiency:str:",
+            "kind": "saving_throw",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "str"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:saving_throw:proficiency:con:",
+            "kind": "saving_throw",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "con"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:armor:proficiency:light:",
+            "kind": "armor",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "light"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:armor:proficiency:medium:",
+            "kind": "armor",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "medium"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:armor:proficiency:heavy:",
+            "kind": "armor",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "heavy"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:armor:proficiency:shields:",
+            "kind": "armor",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "shields"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:weapon:proficiency:simple:",
+            "kind": "weapon",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "simple"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:weapon:proficiency:martial:",
+            "kind": "weapon",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "martial"
+          },
+          {
+            "choiceId": "race:bda5fc05-255a-45bb-8e90-9b350ba5e14a:ac97c1f6-6edf-4c3a-b427-bc70dc642db7:human_skill",
+            "id": "species:race:bda5fc05-255a-45bb-8e90-9b350ba5e14a:ac97c1f6-6edf-4c3a-b427-bc70dc642db7:skill:proficiency:perception:race:bda5fc05-255a-45bb-8e90-9b350ba5e14a:ac97c1f6-6edf-4c3a-b427-bc70dc642db7:human_skill",
+            "kind": "skill",
+            "mode": "proficiency",
+            "source": {
+              "featureEntityId": "ac97c1f6-6edf-4c3a-b427-bc70dc642db7",
+              "id": "race:bda5fc05-255a-45bb-8e90-9b350ba5e14a:ac97c1f6-6edf-4c3a-b427-bc70dc642db7",
+              "name": "Человек: Умелый",
+              "originEntityId": "bda5fc05-255a-45bb-8e90-9b350ba5e14a",
+              "type": "species"
+            },
+            "value": "perception"
+          },
+          {
+            "choiceId": "race:bda5fc05-255a-45bb-8e90-9b350ba5e14a:f02c7a7b-c5eb-4291-8caa-e5728dca59c5:human_feat",
+            "id": "species:race:bda5fc05-255a-45bb-8e90-9b350ba5e14a:f02c7a7b-c5eb-4291-8caa-e5728dca59c5:feat:proficiency:51832580-68f5-4e96-8afe-93e4af045283:race:bda5fc05-255a-45bb-8e90-9b350ba5e14a:f02c7a7b-c5eb-4291-8caa-e5728dca59c5:human_feat",
+            "kind": "feat",
+            "mode": "proficiency",
+            "source": {
+              "featureEntityId": "f02c7a7b-c5eb-4291-8caa-e5728dca59c5",
+              "id": "race:bda5fc05-255a-45bb-8e90-9b350ba5e14a:f02c7a7b-c5eb-4291-8caa-e5728dca59c5",
+              "name": "Человек: Гибкий",
+              "originEntityId": "bda5fc05-255a-45bb-8e90-9b350ba5e14a",
+              "type": "species"
+            },
+            "value": "51832580-68f5-4e96-8afe-93e4af045283"
+          },
+          {
+            "choiceId": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style",
+            "id": "class:class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:feat:proficiency:bca8edf6-27ce-4399-8e34-bdadd59674b3:class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style",
+            "kind": "feat",
+            "mode": "proficiency",
+            "source": {
+              "featureEntityId": "39be6236-7db8-46c7-a3ab-c84bc51918da",
+              "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da",
+              "name": "Воин: Боевой стиль",
+              "originEntityId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "type": "class"
+            },
+            "value": "bca8edf6-27ce-4399-8e34-bdadd59674b3"
+          },
+          {
+            "choiceId": "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80#f02c7a7b-c5eb-4291-8caa-e5728dca59c5:magic_initiate_wizard_cantrips",
+            "id": "feat:feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80#f02c7a7b-c5eb-4291-8caa-e5728dca59c5:spell:proficiency:3b0ac4ac-73bb-4525-83fa-9f4a9a14c430:feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80#f02c7a7b-c5eb-4291-8caa-e5728dca59c5:magic_initiate_wizard_cantrips",
+            "kind": "spell",
+            "label": "cantrip",
+            "mode": "proficiency",
+            "source": {
+              "featureEntityId": "2023be11-201d-4f3a-b9c3-a8019b972b80",
+              "id": "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80#f02c7a7b-c5eb-4291-8caa-e5728dca59c5",
+              "name": "Посвящённый в магию: Посвященный в магию: Волшебник",
+              "originEntityId": "51832580-68f5-4e96-8afe-93e4af045283",
+              "type": "feat"
+            },
+            "spellcastingAbility": "wis",
+            "value": "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430"
+          },
+          {
+            "choiceId": "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80#f02c7a7b-c5eb-4291-8caa-e5728dca59c5:magic_initiate_wizard_cantrips",
+            "id": "feat:feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80#f02c7a7b-c5eb-4291-8caa-e5728dca59c5:spell:proficiency:e300a1f2-91ae-4c82-9904-057f93a013ba:feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80#f02c7a7b-c5eb-4291-8caa-e5728dca59c5:magic_initiate_wizard_cantrips",
+            "kind": "spell",
+            "label": "cantrip",
+            "mode": "proficiency",
+            "source": {
+              "featureEntityId": "2023be11-201d-4f3a-b9c3-a8019b972b80",
+              "id": "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80#f02c7a7b-c5eb-4291-8caa-e5728dca59c5",
+              "name": "Посвящённый в магию: Посвященный в магию: Волшебник",
+              "originEntityId": "51832580-68f5-4e96-8afe-93e4af045283",
+              "type": "feat"
+            },
+            "spellcastingAbility": "wis",
+            "value": "e300a1f2-91ae-4c82-9904-057f93a013ba"
+          },
+          {
+            "choiceId": "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80#f02c7a7b-c5eb-4291-8caa-e5728dca59c5:magic_initiate_wizard_level_1",
+            "freeuse": {
+              "count": 1,
+              "recharge": "long_rest"
+            },
+            "id": "feat:feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80#f02c7a7b-c5eb-4291-8caa-e5728dca59c5:spell:proficiency:d87f4507-849f-450b-b328-0198cb011587:feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80#f02c7a7b-c5eb-4291-8caa-e5728dca59c5:magic_initiate_wizard_level_1",
+            "kind": "spell",
+            "label": "always_prepared",
+            "mode": "proficiency",
+            "source": {
+              "featureEntityId": "2023be11-201d-4f3a-b9c3-a8019b972b80",
+              "id": "feat:51832580-68f5-4e96-8afe-93e4af045283:2023be11-201d-4f3a-b9c3-a8019b972b80#f02c7a7b-c5eb-4291-8caa-e5728dca59c5",
+              "name": "Посвящённый в магию: Посвященный в магию: Волшебник",
+              "originEntityId": "51832580-68f5-4e96-8afe-93e4af045283",
+              "type": "feat"
+            },
+            "spellcastingAbility": "wis",
+            "value": "d87f4507-849f-450b-b328-0198cb011587"
+          }
+        ],
+        "armorClass": 13,
+        "baseSpeed": 30,
+        "carryingCapacity": 120,
+        "classLevels": {
+          "warrior": 1
+        },
+        "conflicts": [],
+        "expertise": {
+          "skills": [],
+          "tools": []
+        },
+        "freeuseSpells": [
+          {
+            "count": 1,
+            "recharge": "long_rest",
+            "spell": "d87f4507-849f-450b-b328-0198cb011587"
+          }
+        ],
+        "initiativeBonus": 5,
+        "maxHP": 13,
+        "passivePerception": 14,
+        "proficiencies": {
+          "armor": [
+            "light",
+            "medium",
+            "heavy",
+            "shields"
+          ],
+          "languages": [],
+          "savingThrows": [
+            "str",
+            "con"
+          ],
+          "skills": [
+            "athletics",
+            "acrobatics",
+            "sleight_of_hand",
+            "stealth",
+            "perception"
+          ],
+          "tools": [
+            "Воровские инструменты"
+          ],
+          "weapons": [
+            "simple",
+            "martial"
+          ]
+        },
+        "proficiencyBonus": 2,
+        "savingThrowBonuses": {
+          "cha": 0,
+          "con": 5,
+          "dex": 3,
+          "int": -1,
+          "str": 1,
+          "wis": 2
+        },
+        "senses": [],
+        "size": 2,
+        "skillBonuses": {
+          "acrobatics": 5,
+          "animal_handling": 2,
+          "arcana": -1,
+          "athletics": 1,
+          "deception": 0,
+          "history": -1,
+          "insight": 2,
+          "intimidation": 0,
+          "investigation": -1,
+          "medicine": 2,
+          "nature": -1,
+          "perception": 4,
+          "performance": 0,
+          "persuasion": 0,
+          "religion": -1,
+          "sleight_of_hand": 5,
+          "stealth": 5,
+          "survival": 2
+        },
+        "speed": 30,
+        "speeds": {},
+        "spellcasting": null,
+        "spells": {
+          "cantrips": [
+            "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+            "e300a1f2-91ae-4c82-9904-057f93a013ba"
+          ],
+          "known": [
+            "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+            "e300a1f2-91ae-4c82-9904-057f93a013ba",
+            "d87f4507-849f-450b-b328-0198cb011587"
+          ],
+          "leveled": [
+            "d87f4507-849f-450b-b328-0198cb011587"
+          ]
+        },
+        "variables": {},
+        "version": 1,
+        "weaponMasteries": [
+          "longbow",
+          "shortsword",
+          "scimitar"
+        ]
+      },
+      "max_hp": 13,
+      "current_hp": 13,
+      "speed": 30,
+      "proficiency_bonus": 2,
+      "armor_class": 15,
+      "initiative_bonus": 5,
+      "passive_perception": 14,
+      "equipment": {
+        "body": "40f34fed-b99a-47e5-8dc0-a07a809ac1c2",
+        "boots": null,
+        "cloak": null,
+        "gloves": null,
+        "head": null,
+        "main_hand": "cc1ac793-af4f-45aa-87e2-bd563c734bef",
+        "necklace": null,
+        "off_hand": "cc1ac793-af4f-45aa-87e2-bd563c734bef",
+        "ring_1": null,
+        "ring_2": null
+      },
+      "inventory_items": [
+        {
+          "card_id": "db5d576b-3ae1-4402-b4dc-8f7ec7d88b29",
+          "qty": 2
+        },
+        {
+          "card_id": "2be96522-100a-46f4-ba35-6e98cb10186c",
+          "qty": 1
+        },
+        {
+          "card_id": "75873843-f449-4f2f-8237-3d8dac21ec85",
+          "qty": 1
+        },
+        {
+          "card_id": "fdd3770f-0eda-446d-bd78-5944f4d95d9d",
+          "qty": 2
+        },
+        {
+          "card_id": "bbc804a1-3a7e-4b09-88c7-21d863ea2d85",
+          "qty": 1
+        },
+        {
+          "card_id": "72712d28-8155-4ea6-9bb3-a378c10fb33b",
+          "qty": 1
+        },
+        {
+          "card_id": "813a8940-fd7c-4e42-a64d-a759a9318dbc",
+          "qty": 1
+        },
+        {
+          "card_id": "59b10a1e-8669-4bf6-88a5-69d0abfc76a6",
+          "qty": 20
+        },
+        {
+          "card_id": "148bffd3-d797-47a5-b66c-c7d3d04e9c00",
+          "qty": 1
+        },
+        {
+          "card_id": "b69b42ed-e9b5-4e69-933f-6d95d5e75344",
+          "qty": 1
+        }
+      ],
+      "resources": {
+        "action": 1,
+        "bonus_action": 1,
+        "freeuse-d87f4507-849f-450b-b328-0198cb011587": 1,
+        "heroic_inspiration": 1,
+        "hit_dice_d10": 1,
+        "reaction": 1,
+        "uses_ACT-second-wind": 2
+      },
+      "max_resources": {
+        "action": 1,
+        "bonus_action": 1,
+        "freeuse-d87f4507-849f-450b-b328-0198cb011587": 1,
+        "heroic_inspiration": 1,
+        "hit_dice_d10": 1,
+        "reaction": 1,
+        "uses_ACT-second-wind": 2
+      },
+      "active_effects": null,
+      "turn_state": null,
+      "currency": {
+        "gold": 27
+      }
+    }
+  },
+  {
+    "id": "d2500000-0000-4000-8000-000000000003",
+    "name": "Линейный боец",
+    "description": "Орк, воин 1. Оборона, Крепкий. За 100 зм куплены и надеты кольчуга, длинный меч и щит. Искусность: длинный меч, боевой молот, копьё. Предыстория: фермер.",
+    "preset_key": "line",
+    "character": {
+      "name": "Линейный боец",
+      "avatar_url": "",
+      "description": "",
+      "notes": "",
+      "system_id": "dnd5e-2024",
+      "ruleset_version": "2024",
+      "character_type": "free",
+      "character_schema_version": 1,
+      "race_id": "c8664de4-e485-43e5-9dce-d3022d44781a",
+      "lineage_id": null,
+      "class_id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+      "class_levels": {
+        "2705eb12-1556-40c8-bdae-671e8f5c67eb": 1
+      },
+      "subclass_ids": {},
+      "background_id": "df6ba1f4-e409-4021-8902-045ff5f37dbd",
+      "level": 1,
+      "feat_ids": [],
+      "spell_ids": [],
+      "action_ids": [],
+      "effect_ids": [],
+      "resource_ids": [],
+      "abilities": {
+        "cha": 10,
+        "con": 16,
+        "dex": 10,
+        "int": 8,
+        "str": 17,
+        "wis": 13
+      },
+      "skill_proficiencies": [
+        "athletics",
+        "perception",
+        "nature",
+        "animal_handling"
+      ],
+      "skill_expertise": [],
+      "saving_throw_proficiencies": [
+        "str",
+        "con"
+      ],
+      "tool_proficiencies": [
+        "Инструменты плотника"
+      ],
+      "tool_expertise": [],
+      "languages": [],
+      "resolved_choices": {
+        "builder:ability_bonus": [
+          "mode:two_one",
+          "str:2",
+          "con:1"
+        ],
+        "builder:ability_method": [
+          "point_buy"
+        ],
+        "builder:class_equipment": [
+          "c"
+        ],
+        "builder:class_skills": [
+          "athletics",
+          "perception"
+        ],
+        "builder:equipment_option": [
+          "a"
+        ],
+        "builder:manual_spells": [],
+        "builder:subclass": [],
+        "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style": [
+          "25896e04-0c1d-4917-97fc-7feef7f836e1"
+        ],
+        "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:bfd9a78c-4676-4b6f-8318-e5aee7f1d89b:weapon-mastery": [
+          "longsword",
+          "warhammer",
+          "spear"
+        ]
+      },
+      "rule_state": {
+        "abilities": {
+          "cha": 10,
+          "con": 16,
+          "dex": 10,
+          "int": 8,
+          "str": 17,
+          "wis": 13
+        },
+        "abilityMethods": {
+          "cha": [],
+          "con": [],
+          "dex": [],
+          "int": [],
+          "str": [],
+          "wis": []
+        },
+        "abilityMods": {
+          "cha": 0,
+          "con": 3,
+          "dex": 0,
+          "int": -1,
+          "str": 3,
+          "wis": 1
+        },
+        "abilitySources": {
+          "cha": [
+            {
+              "reason": "база до бонуса предыстории",
+              "source": "Point-buy",
+              "value": 10
+            }
+          ],
+          "con": [
+            {
+              "reason": "база до бонуса предыстории",
+              "source": "Point-buy",
+              "value": 15
+            },
+            {
+              "reason": "бонус распределения характеристик",
+              "source": "Предыстория: Фермер",
+              "value": 1
+            }
+          ],
+          "dex": [
+            {
+              "reason": "база до бонуса предыстории",
+              "source": "Point-buy",
+              "value": 10
+            }
+          ],
+          "int": [
+            {
+              "reason": "база до бонуса предыстории",
+              "source": "Point-buy",
+              "value": 8
+            }
+          ],
+          "str": [
+            {
+              "reason": "база до бонуса предыстории",
+              "source": "Point-buy",
+              "value": 15
+            },
+            {
+              "reason": "бонус распределения характеристик",
+              "source": "Предыстория: Фермер",
+              "value": 2
+            }
+          ],
+          "wis": [
+            {
+              "reason": "база до бонуса предыстории",
+              "source": "Point-buy",
+              "value": 13
+            }
+          ]
+        },
+        "appliedGrants": [
+          {
+            "choiceId": "class_skill_choices",
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:skill:proficiency:athletics:class_skill_choices",
+            "kind": "skill",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "athletics"
+          },
+          {
+            "choiceId": "class_skill_choices",
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:skill:proficiency:perception:class_skill_choices",
+            "kind": "skill",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "perception"
+          },
+          {
+            "id": "background:df6ba1f4-e409-4021-8902-045ff5f37dbd:skill:proficiency:nature:",
+            "kind": "skill",
+            "mode": "proficiency",
+            "source": {
+              "id": "df6ba1f4-e409-4021-8902-045ff5f37dbd",
+              "name": "Фермер",
+              "type": "background"
+            },
+            "value": "nature"
+          },
+          {
+            "id": "background:df6ba1f4-e409-4021-8902-045ff5f37dbd:skill:proficiency:animal_handling:",
+            "kind": "skill",
+            "mode": "proficiency",
+            "source": {
+              "id": "df6ba1f4-e409-4021-8902-045ff5f37dbd",
+              "name": "Фермер",
+              "type": "background"
+            },
+            "value": "animal_handling"
+          },
+          {
+            "id": "background:df6ba1f4-e409-4021-8902-045ff5f37dbd:tool:proficiency:Инструменты плотника:",
+            "kind": "tool",
+            "mode": "proficiency",
+            "source": {
+              "id": "df6ba1f4-e409-4021-8902-045ff5f37dbd",
+              "name": "Фермер",
+              "type": "background"
+            },
+            "value": "Инструменты плотника"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:saving_throw:proficiency:str:",
+            "kind": "saving_throw",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "str"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:saving_throw:proficiency:con:",
+            "kind": "saving_throw",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "con"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:armor:proficiency:light:",
+            "kind": "armor",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "light"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:armor:proficiency:medium:",
+            "kind": "armor",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "medium"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:armor:proficiency:heavy:",
+            "kind": "armor",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "heavy"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:armor:proficiency:shields:",
+            "kind": "armor",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "shields"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:weapon:proficiency:simple:",
+            "kind": "weapon",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "simple"
+          },
+          {
+            "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:weapon:proficiency:martial:",
+            "kind": "weapon",
+            "mode": "proficiency",
+            "source": {
+              "id": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "name": "Воин",
+              "type": "class"
+            },
+            "value": "martial"
+          },
+          {
+            "choiceId": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style",
+            "id": "class:class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:feat:proficiency:25896e04-0c1d-4917-97fc-7feef7f836e1:class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da:fighter_fighting_style",
+            "kind": "feat",
+            "mode": "proficiency",
+            "source": {
+              "featureEntityId": "39be6236-7db8-46c7-a3ab-c84bc51918da",
+              "id": "class:2705eb12-1556-40c8-bdae-671e8f5c67eb:39be6236-7db8-46c7-a3ab-c84bc51918da",
+              "name": "Воин: Боевой стиль",
+              "originEntityId": "2705eb12-1556-40c8-bdae-671e8f5c67eb",
+              "type": "class"
+            },
+            "value": "25896e04-0c1d-4917-97fc-7feef7f836e1"
+          }
+        ],
+        "armorClass": 10,
+        "baseSpeed": 30,
+        "carryingCapacity": 255,
+        "classLevels": {
+          "warrior": 1
+        },
+        "conflicts": [],
+        "expertise": {
+          "skills": [],
+          "tools": []
+        },
+        "freeuseSpells": [],
+        "initiativeBonus": 0,
+        "maxHP": 15,
+        "passivePerception": 13,
+        "proficiencies": {
+          "armor": [
+            "light",
+            "medium",
+            "heavy",
+            "shields"
+          ],
+          "languages": [],
+          "savingThrows": [
+            "str",
+            "con"
+          ],
+          "skills": [
+            "athletics",
+            "perception",
+            "nature",
+            "animal_handling"
+          ],
+          "tools": [
+            "Инструменты плотника"
+          ],
+          "weapons": [
+            "simple",
+            "martial"
+          ]
+        },
+        "proficiencyBonus": 2,
+        "savingThrowBonuses": {
+          "cha": 0,
+          "con": 5,
+          "dex": 0,
+          "int": -1,
+          "str": 5,
+          "wis": 1
+        },
+        "senses": [
+          {
+            "range": 120,
+            "sense": "darkvision"
+          }
+        ],
+        "size": 2,
+        "skillBonuses": {
+          "acrobatics": 0,
+          "animal_handling": 3,
+          "arcana": -1,
+          "athletics": 5,
+          "deception": 0,
+          "history": -1,
+          "insight": 1,
+          "intimidation": 0,
+          "investigation": -1,
+          "medicine": 1,
+          "nature": 1,
+          "perception": 3,
+          "performance": 0,
+          "persuasion": 0,
+          "religion": -1,
+          "sleight_of_hand": 0,
+          "stealth": 0,
+          "survival": 1
+        },
+        "speed": 30,
+        "speeds": {},
+        "spellcasting": null,
+        "spells": {
+          "cantrips": [],
+          "known": [],
+          "leveled": []
+        },
+        "variables": {},
+        "version": 1,
+        "weaponMasteries": [
+          "longsword",
+          "warhammer",
+          "spear"
+        ]
+      },
+      "max_hp": 15,
+      "current_hp": 15,
+      "speed": 30,
+      "proficiency_bonus": 2,
+      "armor_class": 19,
+      "initiative_bonus": 0,
+      "passive_perception": 13,
+      "equipment": {
+        "body": "3d4a5854-ac9f-4fc4-b545-8d5c32a08e58",
+        "boots": null,
+        "cloak": null,
+        "gloves": null,
+        "head": null,
+        "main_hand": "e68a30ff-b0e5-41cf-b007-ddc5eb319750",
+        "necklace": null,
+        "off_hand": "b0a5fd06-4b35-480a-8a99-02aa2a60fd6b",
+        "ring_1": null,
+        "ring_2": null
+      },
+      "inventory_items": [
+        {
+          "card_id": "696f7559-e575-4bed-a77f-7177ad3eb474",
+          "qty": 1
+        },
+        {
+          "card_id": "e1eff72f-982b-44a7-a7a5-890616153d3a",
+          "qty": 1
+        },
+        {
+          "card_id": "6112aaef-39b3-4b91-a0fa-96f56987ebb2",
+          "qty": 1
+        },
+        {
+          "card_id": "8a84417a-3d89-46b4-9744-df4b3eaea38c",
+          "qty": 1
+        },
+        {
+          "card_id": "82d9b938-ad51-4d24-94b9-72d96593b9a1",
+          "qty": 1
+        },
+        {
+          "card_id": "bbc804a1-3a7e-4b09-88c7-21d863ea2d85",
+          "qty": 1
+        }
+      ],
+      "resources": {
+        "action": 1,
+        "bonus_action": 1,
+        "hit_dice_d10": 1,
+        "reaction": 1,
+        "uses_ACT-second-wind": 2,
+        "uses_CARD-0491": 10,
+        "uses_RE-orc-2": 2
+      },
+      "max_resources": {
+        "action": 1,
+        "bonus_action": 1,
+        "hit_dice_d10": 1,
+        "reaction": 1,
+        "uses_ACT-second-wind": 2,
+        "uses_CARD-0491": 10,
+        "uses_RE-orc-2": 2
+      },
+      "active_effects": null,
+      "turn_state": null,
+      "currency": {
+        "gold": 85
+      }
+    }
+  }
+]

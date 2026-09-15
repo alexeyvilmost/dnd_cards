@@ -129,7 +129,7 @@ export default function MonsterCreator() {
             <label>ПО<input value={form.challenge_rating} onChange={(event) => patch('challenge_rating', event.target.value)} /></label>
           </div><label>Описание<textarea value={form.description} onChange={(event) => patch('description', event.target.value)} /></label></fieldset>
           <fieldset><legend>Боевые параметры</legend><div className="monster-form-grid monster-form-grid--compact">
-            <label>КЗ<input type="number" min={1} value={form.armor_class} onChange={(event) => patch('armor_class', Number(event.target.value))} /></label>
+            <label>КД<input type="number" min={1} value={form.armor_class} onChange={(event) => patch('armor_class', Number(event.target.value))} /></label>
             <label>HP<input type="number" min={1} value={form.max_hp} onChange={(event) => patch('max_hp', Number(event.target.value))} /></label>
             <label>Скорость<input type="number" min={5} step={5} value={form.speed} onChange={(event) => patch('speed', Number(event.target.value))} /></label>
             <label>Инициатива<input type="number" value={form.initiative_bonus} onChange={(event) => patch('initiative_bonus', Number(event.target.value))} /></label>

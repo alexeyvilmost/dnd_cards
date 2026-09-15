@@ -175,7 +175,7 @@ export default function EncounterBoard() {
       setManualAc('');
       setNotice(null);
     } catch (reason) {
-      setNotice(reason instanceof Error ? reason.message : 'Проверьте явные HP и КЗ существа');
+      setNotice(reason instanceof Error ? reason.message : 'Проверьте явные HP и КД существа');
     }
   };
   const addFromCharacter = async (ch: ForgeCharacter) => {
@@ -265,7 +265,7 @@ export default function EncounterBoard() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <b style={{ fontSize: 15 }}>{c.name}</b>
                 {c.isMonster && <span style={tag}>монстр</span>}
-                {typeof c.ac === 'number' && <span style={{ ...tag, background: '#2b3a2b' }}>КЗ {c.ac}</span>}
+                {typeof c.ac === 'number' && <span style={{ ...tag, background: '#2b3a2b' }}>КД {c.ac}</span>}
                 <span style={{ marginLeft: 'auto', fontSize: 14, color: c.hp <= 0 ? '#c0392b' : '#d8b978' }}>
                   {c.hp}/{c.maxHp}{c.temp ? ` (+${c.temp})` : ''}
                 </span>
@@ -305,11 +305,11 @@ export default function EncounterBoard() {
         <button onClick={() => setAddingChar((v) => !v)} style={btn}>+ Персонаж</button>
         {isEncounterOwner && <>
           <strong style={{ width: '100%', color: '#e8b98a', fontSize: 12 }}>
-            GM override: ручные HP, КЗ и правки ниже обходят сценарный движок и записываются с provenance.
+            GM override: ручные HP, КД и правки ниже обходят сценарный движок и записываются с provenance.
           </strong>
           <input value={manualName} onChange={(e) => setManualName(e.target.value)} placeholder="Имя существа" style={input} />
           <input value={manualHp} onChange={(e) => setManualHp(e.target.value)} type="number" style={{ ...input, width: 70 }} title="HP" />
-          <input value={manualAc} onChange={(e) => setManualAc(e.target.value)} type="number" style={{ ...input, width: 60 }} title="КЗ" />
+          <input value={manualAc} onChange={(e) => setManualAc(e.target.value)} type="number" style={{ ...input, width: 60 }} title="КД" />
           <button onClick={addManual} style={btn}>+ Существо</button>
         </>}
       </div>

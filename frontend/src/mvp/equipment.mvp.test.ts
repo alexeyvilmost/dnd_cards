@@ -1,5 +1,5 @@
 /**
- * Фаза C — предметы: экипировка, вес, КЗ, оружейный контекст (шаги C2–C5).
+ * Фаза C — предметы: экипировка, вес, КД, оружейный контекст (шаги C2–C5).
  * Зелёный набор = «оружие/щиты/доспехи функциональны, надеть/снять работает».
  */
 import { describe, expect, it } from 'vitest';
@@ -52,7 +52,7 @@ describe('C2: вес инвентаря', () => {
   });
 });
 
-describe('C4: КЗ-конвейер с разбивкой', () => {
+describe('C4: КД-конвейер с разбивкой', () => {
   const DEFENSE_STYLE = {
     activation: { mode: 'passive' },
     effects: [{
@@ -107,7 +107,7 @@ describe('C4: КЗ-конвейер с разбивкой', () => {
 
 describe('#8/повтор: одежда в слоте тела ≠ доспех (Доспех мага работает)', () => {
   // «Отличная одежда»: ткань, плоская защита 10 (= без доспеха). По RAW не мешает
-  // безоружным методам КЗ и не подменяет ЛВК-базу.
+  // безоружным методам КД и не подменяет ЛВК-базу.
   const CLOTHING = {
     id: 'card-fine-clothes', name: 'Отличная одежда', type: 'chest', slot: 'body', weight: 1,
     bonus_type: 'defense', bonus_value: '10', defense_type: 'light',
@@ -116,7 +116,7 @@ describe('#8/повтор: одежда в слоте тела ≠ доспех 
   const ctx = { ...FIGHTER_CTX, equippedCards: [CLOTHING] };
   const clothed = () => { const s = freshFighterState(); s.equipment = { ...s.equipment, body: CLOTHING.id }; return s; };
 
-  it('одежда прозрачна для КЗ: 10 + ЛВК (не плоские 10)', () => {
+  it('одежда прозрачна для КД: 10 + ЛВК (не плоские 10)', () => {
     expect(computeAC(ctx, clothed(), []).value).toBe(12); // 10 + 2 ЛВК
   });
 

@@ -28,7 +28,7 @@ export {
   conditionRegistryAuthority,
   conditionThresholdOutcomes,
 } from '../../engine/conditions';
-export { addBonusDieToD20Roll, rollD20 } from '../../engine/roll';
+export { addBonusDieToD20Roll, retargetAttackRoll, rollD20 } from '../../engine/roll';
 export { applySourceTurnBoundary } from '../../engine/sourceTurnExpiry';
 export { activeEffectRequirementIssue } from '../../engine/actionRequirements';
 export { nonMagicActionCost, projectActionSurgeCost, projectQuickenedSpellCost } from '../../engine/actionSurge';

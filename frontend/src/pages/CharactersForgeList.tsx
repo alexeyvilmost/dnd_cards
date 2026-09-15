@@ -10,6 +10,7 @@ import {
 } from '../character/types';
 import type { Race, CharacterClass } from '../types';
 import CharacterAccessBadge from '../components/CharacterAccessBadge';
+import CharacterTemplateLibrary from '../components/CharacterTemplateLibrary';
 import './CharacterForge.css';
 
 const CharactersForgeList = () => {
@@ -20,6 +21,7 @@ const CharactersForgeList = () => {
   const [error, setError] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -73,11 +75,13 @@ const CharactersForgeList = () => {
           <ArrowLeft size={18} />
         </Link>
         <span>Персонажи</span>
+        <button type="button" className="forge-btn ghost" onClick={() => setShowTemplates(v => !v)} aria-expanded={showTemplates}>Создать из шаблона</button>
         <Link to="/character-forge" className="sheet-edit" title="Создать">
           <Plus size={18} />
         </Link>
       </div>
       <div className="sheet-scroll">
+        {showTemplates && <CharacterTemplateLibrary />}
         {loading && <p className="forge-note">Загрузка…</p>}
         {error && <p className="issues">{error}</p>}
         {!loading && !error && chars.length === 0 && (

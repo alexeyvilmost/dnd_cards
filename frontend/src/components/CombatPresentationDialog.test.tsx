@@ -16,12 +16,39 @@ const hit: CombatBeat = {...beat, roll: {...beat.roll!, outcome: 'crit', dice: [
 describe('combat roll dialog', () => {
   let root: Root;
   let container: HTMLDivElement;
+  it('keeps the equation visible and both provenance columns collapsed by default', async()=>{
+    setSetting('combatRollMode','fast');
+    await act(async()=>root.render(<CombatPresentationDialog beat={{...beat,roll:{...beat.roll!,target:{type:'ac',value:15,
+      breakdown:{value:15,parts:[{source:'Кожаный доспех',value:11},{source:'Ловкость цели',value:4}]}}}}} onClose={()=>{}}/>));
+    expect(document.querySelector('.combat-roll-equation')?.textContent).toContain('1 + 20 =21');
+    const details=document.querySelector<HTMLDetailsElement>('.combat-roll-details')!;
+    expect(details.open).toBe(false);
+    await act(async()=>details.querySelector('summary')!.click());
+    expect(details.open).toBe(true);
+    expect(details.querySelectorAll('.combat-roll-detail-columns > section')).toHaveLength(2);
+    expect(details.textContent).toContain('Кожаный доспех');
+  });
   beforeEach(() => {
     vi.useFakeTimers();
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
     let stored: string | null = null;
     vi.stubGlobal('localStorage', {getItem: () => stored, setItem: (_key: string, value: string) => {stored = value;}});
     container = document.createElement('div'); document.body.append(container); root = createRoot(container);
+  });
+  it('keeps the dialog and attack die mounted when accepting a held roll, then rolls only damage', async () => {
+    setSetting('combatRollMode', 'standard');
+    const held = {...hit, id: 'held', damage: undefined};
+    await act(async () => root.render(<CombatPresentationDialog beat={held} provisional onClose={()=>{}}/>));
+    await act(async () => vi.advanceTimersByTime(1450));
+    const dialog = document.querySelector('[role="dialog"]');
+    const die = document.querySelector('.combat-attack-dice .committed-die');
+    await act(async () => root.render(<CombatPresentationDialog beat={{...hit, id:'committed'}} onClose={()=>{}}/>));
+    expect(document.querySelector('[role="dialog"]')).toBe(dialog);
+    expect(document.querySelector('.combat-attack-dice .committed-die')).toBe(die);
+    expect(document.querySelector('.combat-attack-dice .is-rolling')).toBeNull();
+    expect(document.querySelector('.combat-damage-breakdown .is-rolling')).not.toBeNull();
+    await act(async () => vi.advanceTimersByTime(1450));
+    expect(document.querySelector<HTMLButtonElement>('.combat-presentation-continue')!.disabled).toBe(false);
   });
   afterEach(async () => {
     await act(async () => root.unmount()); container.remove(); vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks();

@@ -60,7 +60,7 @@ describe('SoloCombatSetupDialog sheet entry flow', () => {
       await Promise.resolve();
     });
     expect(container.textContent).toContain('Боевая сцена для Лучник-дварф');
-    expect(container.textContent).toContain('КЗ 15 · 10 HP');
+    expect(container.textContent).toContain('КД 15 · 10 HP');
     expect(container.textContent).toContain('Бард-помощник');
     const start = [...container.querySelectorAll('button')].find((button) => button.textContent?.includes('Начать бой'))!;
     expect(start.disabled).toBe(true);

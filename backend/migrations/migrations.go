@@ -1475,6 +1475,9 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		{Version: "246_giant_wolf_spider_movement", Description: "Declare Giant Wolf Spider movement modes and Spider Climb", Up: materializeGiantWolfSpiderMovement, Down: func(db *sql.DB) error { return nil }},
 		{Version: "247_monster_weapon_loadouts", Description: "Bind Bandit Captain and Warrior Veteran attacks to carried weapons", Up: materializeMonsterWeaponLoadouts, Down: func(db *sql.DB) error { return nil }},
 		{Version: "248_bugbear_grab", Description: "Declare Bugbear Grab, hammer Advantage, and Abduct movement", Up: materializeBugbearGrab, Down: func(db *sql.DB) error { return nil }},
+		{Version: "249_roguelike_shop_items", Description: "Executable merchant items and separately priced run copies with audited preimages", Up: materializeRoguelikeShopItems, Down: rollbackRoguelikeShopItems},
+		{Version: "250_character_templates", Description: "Ownerless character templates and three Forge-validated fighter run presets", Up: createCharacterTemplates250, Down: retainCharacterTemplates250},
+		{Version: "251_archer_alert_template", Description: "Forge-validated Criminal/Alert Archer, preserving existing player copies", Up: updateArcherTemplate251, Down: retainCharacterTemplates250},
 		// Здесь можно добавлять новые миграции
 	}
 }

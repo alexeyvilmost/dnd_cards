@@ -50,7 +50,7 @@ function formulaCtxOf(character: CharacterContext): FormulaContext {
  * formula-aware сборщиком collectModifiers. Advantage игнорируется (разбивка показывает только числа).
  * Не-аддитивная алгебра (C5 set/multiply/upgrade/downgrade) здесь НЕ применяется: эти значения имеют
  * отдельный аддитивный расчёт в resolveCharacterRules/бою, и свёртка только на листе разошлась бы с
- * реальным значением. Единственное значение с общим источником — КЗ (armorClassValue) — свёртку C5
+ * реальным значением. Единственное значение с общим источником — КД (armorClassValue) — свёртку C5
  * применяет там. Обобщение алгебры на скорость/хиты/спасброски — вместе с C8 (value_method).
  */
 function effectModifiers(
@@ -73,7 +73,7 @@ function breakdownAC(
   state: RuntimeState,
   passives: Dict[],
 ): ValueBreakdown {
-  // Единый примитив (engine/ac.ts): та же формула КЗ, что персистит резолв билда (C9).
+  // Единый примитив (engine/ac.ts): та же формула КД, что персистит резолв билда (C9).
   return armorClassValue(character, state, passives);
 }
 

@@ -22,7 +22,7 @@ export default function MonsterPreview({ monster }: { monster: Monster }) {
           <SupportStatusBadge entity={monster} compact />
         </div>
         <div className="monster-card__vitals">
-          <span><Shield size={14} /> КЗ {monster.armor_class}</span>
+          <span><Shield size={14} /> КД {monster.armor_class}</span>
           <span><Heart size={14} /> {monster.max_hp} HP</span>
           <span><Footprints size={14} /> {monster.speed} фт.</span>
         </div>

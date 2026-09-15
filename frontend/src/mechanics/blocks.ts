@@ -611,7 +611,7 @@ export const EFFECT_BLOCKS: Block[] = [
         { id: 'hp', label: 'Текущие хиты' },
         { id: 'temp_hp', label: 'Временные хиты' },
         { id: 'max_hp', label: 'Макс. хиты' },
-        { id: 'ac_base', label: 'Базовый КЗ (метод, без доспеха) — напр. Доспех мага 13+dex' },
+        { id: 'ac_base', label: 'Базовый КД (метод, без доспеха) — напр. Доспех мага 13+dex' },
       ], default: 'hp' },
       { key: 'formula', label: 'Значение', type: 'formula', default: '1' },
     ],

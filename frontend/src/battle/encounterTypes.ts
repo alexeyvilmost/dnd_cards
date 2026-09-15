@@ -35,7 +35,7 @@ export interface PendingAttack {
   id: string;
   sourceName: string;   // кто атаковал (для журнала/диалога)
   attackName: string;   // название атаки
-  attackTotal: number;  // итог броска атаки (сравнить с КЗ после исполнения реакции)
+  attackTotal: number;  // итог броска атаки (сравнить с КД после исполнения реакции)
   damage: number;       // нанесённый урон по hp/temp (вернётся, если реакция превратила hit в miss)
   /** Versioned damage channels. A reaction restores temporary-HP damage to
    * the temporary pool and ordinary damage to current HP. `damage` remains a

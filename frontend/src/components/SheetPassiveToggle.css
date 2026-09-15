@@ -1,0 +1,27 @@
+/* Shared circular passive skin: ordinary entities retain their configured view. */
+.cs-action-tile.cs-action-tile--round {
+  position: relative; flex: 0 0 48px; width: 48px; height: 48px; min-width: 48px;
+  padding: 3px; margin: 5px; border-radius: 50%; overflow: visible;
+  border: 1px solid #716044; background: radial-gradient(circle, #30291e, #14120f);
+  box-shadow: inset 0 0 0 2px #17140f, 0 2px 5px #0008;
+  opacity: 1; transition: border-color .2s, box-shadow .2s;
+}
+.cs-action-tile--round > .forge-entity-icon { border-radius: 50%; object-fit: cover; width: 100%; height: 100%; filter: saturate(.35) brightness(.7); }
+.cs-action-tile.cs-action-tile--round.is-selected { border-color: #e2bd70; background: #302416; box-shadow: inset 0 0 0 2px #271c0e, 0 0 9px #d899322d; }
+.cs-action-tile--round.is-selected > .forge-entity-icon { filter: none; }
+.cs-action-tile.cs-action-tile--round:hover { border-color: #ffe0a0; box-shadow: 0 0 0 2px #b8915044; }
+.cs-action-tile.cs-action-tile--round:focus-visible { outline: 2px solid #ffe0a0; outline-offset: 4px; }
+.cs-action-tile--round .passive-orbit { position: absolute; inset: -2px; border-radius: 50%; pointer-events: none; display: none; }
+.cs-action-tile--round.is-selected .passive-orbit { display: block; animation: passive-orbit 3.6s linear infinite; }
+.passive-orbit::before, .passive-orbit::after {
+  content: ''; position: absolute; width: 5px; height: 5px; border-radius: 50%;
+  top: 50%; margin-top: -2.5px; background: #fff4ca;
+  box-shadow: 0 0 4px 1px #ffd778, 0 0 9px 2px #e99526a0;
+}
+.passive-orbit::before { left: -1.5px; }
+.passive-orbit::after { right: -1.5px; }
+@keyframes passive-orbit { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .cs-action-tile--round.is-selected .passive-orbit { animation: none; }
+  .cs-action-tile.cs-action-tile--round { transition: none; }
+}

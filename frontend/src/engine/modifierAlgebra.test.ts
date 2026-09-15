@@ -57,21 +57,21 @@ describe('C5 — foldModifiers', () => {
   });
 });
 
-// Скорость (breakdown листа) и КЗ (armorClassValue) применяют алгебру C5 (set/multiply/…):
+// Скорость (breakdown листа) и КД (armorClassValue) применяют алгебру C5 (set/multiply/…):
 // состояния «Схвачен/Опутан/…» задают Скорость 0 через op:'set'. Хиты/спасброски остаются
 // аддитивными (отдельный расчёт в resolveCharacterRules) — обобщение вместе с C8.
-describe('C5 — КЗ применяет алгебру (armorClassValue)', () => {
+describe('C5 — КД применяет алгебру (armorClassValue)', () => {
   const acMod = (op: string, value: number): Dict => mod(op, value, 'ac');
-  it('база КЗ без модификаторов: 10 + ЛВК (без доспеха)', () => {
+  it('база КД без модификаторов: 10 + ЛВК (без доспеха)', () => {
     expect(breakdownValue('ac', character, fresh(), []).value).toBe(12);
   });
-  it('upgrade: «КЗ не ниже 16» (Барскин) → 16 при базовых 12', () => {
+  it('upgrade: «КД не ниже 16» (Барскин) → 16 при базовых 12', () => {
     expect(breakdownValue('ac', character, fresh(), [acMod('upgrade', 16)]).value).toBe(16);
   });
-  it('set: «КЗ = 13» (Доспех мага) перекрывает базу', () => {
+  it('set: «КД = 13» (Доспех мага) перекрывает базу', () => {
     expect(breakdownValue('ac', character, fresh(), [acMod('set', 13)]).value).toBe(13);
   });
-  it('аддитивный модификатор КЗ (Кольцо защиты +2) по-прежнему работает', () => {
+  it('аддитивный модификатор КД (Кольцо защиты +2) по-прежнему работает', () => {
     expect(breakdownValue('ac', character, fresh(), [acMod('add', 2)]).value).toBe(14); // 12 + 2
   });
   it('add + upgrade вместе: +1 (13), затем не ниже 16 → 16', () => {

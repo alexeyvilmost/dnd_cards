@@ -51,9 +51,9 @@ export interface RollLog {
   advantage: AdvantageState;
   modifiers: RollModifier[];
   total: number;
-  target?: { type: 'ac' | 'dc'; value: number };
+  target?: { type: 'ac' | 'dc'; value: number; breakdown?: ValueBreakdown };
   outcome?: 'hit' | 'miss' | 'crit' | 'crit_miss' | 'success' | 'fail';
-  /** Человекочитаемая разбивка: «к20: 13 +3 [ЛВК] +2 [БМ] = 18 против КЗ 15». */
+  /** Человекочитаемая разбивка: «к20: 13 +3 [ЛВК] +2 [БМ] = 18 против КД 15». */
   text: string;
   /** Payload-ы, сработавшие по значению кости (on_roll-правила) — вызывающий их применяет. */
   triggered?: Record<string, unknown>[];
@@ -128,7 +128,7 @@ export interface RollD20Options {
   /** Правила бросков (data-driven): reroll/set_die/crit_range/outcome/on_roll (см. engine/rollRules.ts).
    *  Собираются пассивами/эффектами; roll.ts применяет их к d20-броску. */
   rules?: Record<string, unknown>[];
-  target?: { type: 'ac' | 'dc'; value: number };
+  target?: { type: 'ac' | 'dc'; value: number; breakdown?: ValueBreakdown };
   rng: () => number;
 }
 
@@ -283,6 +283,7 @@ export interface TargetContext {
   /** Tiny=0, Small=1, Medium=2, Large=3, Huge=4, Gargantuan=5. */
   size?: number;
   ac?: number;
+  acBreakdown?: ValueBreakdown;
   saveMods?: Partial<Record<'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha', number>>;
   checkMods?: Record<string, number>;
   /** Богатая цель (фаза E): контекст характеристик цели — динамические спасброски. */
@@ -373,7 +374,7 @@ export interface ExecuteContext {
   /** Hold damage-dependent expiry and survival until the authoritative reaction resolves. */
   deferIncomingDamageConsequences?: boolean;
   /** Триггерные способности-СЛУШАТЕЛИ (заклинания вроде Божественной кары): пул для emitEvent/реакций.
-   *  В ОТЛИЧИЕ от passives их НЕ читает collectModifiers — чтобы модификатор-эффект реакции (напр. +5 КЗ
+   *  В ОТЛИЧИЕ от passives их НЕ читает collectModifiers — чтобы модификатор-эффект реакции (напр. +5 КД
    *  Щита) не применялся пассивно до активации. */
   triggers?: Record<string, unknown>[];
   target?: TargetContext;
