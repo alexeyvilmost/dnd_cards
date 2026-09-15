@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import './EntityPresentation.css';
 import { createPortal } from 'react-dom';
 import type { Action, Card, PassiveEffect, Spell } from '../types';
 import type {RuntimeState} from '../mvp/contracts';
@@ -154,7 +155,7 @@ const SheetActionLine = ({
           {itemRef && (settings.itemPreview==='interface'?<ItemPreview card={itemRef} disableHover/>:<CardPreview card={itemRef} disableHover/>)}
           {actionRef && <ActionPreview action={actionRef} runtime={runtime} sourceLabel={sourceLabel} weaponAttackPreview={weaponAttackPreview} disableHover />}
           {spellRef && <SpellPreview spell={spellRef} disableHover spellcasting={spellcasting} />}
-          {!effectRef && !actionRef && !spellRef && description && (
+          {!itemRef && !effectRef && !actionRef && !spellRef && description && (
             <div className="sp-tip">
               <style>{SPELL_CARD_CSS}</style>
               <h3>{name}</h3>

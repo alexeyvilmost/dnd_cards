@@ -38,7 +38,7 @@ func (c *ImageLibraryController) GetImageLibrary(ctx *gin.Context) {
 
 	// Поиск по названию карты
 	if search != "" {
-		query = query.Where("card_name ILIKE ?", "%"+search+"%")
+		query = query.Where("(card_name ILIKE ? OR original_name ILIKE ?)", "%"+search+"%", "%"+search+"%")
 	}
 
 	// Фильтр по редкости

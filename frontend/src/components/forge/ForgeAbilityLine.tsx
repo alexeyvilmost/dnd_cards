@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import type { PassiveEffect, Action } from '../../types';
+import type { PassiveEffect, Action, Feat } from '../../types';
+import FeatPreview from '../FeatPreview';
 import { usePinMode } from '../../hooks/usePinMode';
 import EffectPreview from '../EffectPreview';
 import ActionPreview from '../ActionPreview';
@@ -15,9 +16,10 @@ type ForgeAbilityLineProps = {
   detail?: ReactNode;
   effect?: PassiveEffect;
   action?: Action;
+  feat?: Feat;
 };
 
-const ForgeAbilityLine = ({ name, imageUrl, fallbackImageUrl, sourceLabel, detail, effect, action }: ForgeAbilityLineProps) => {
+const ForgeAbilityLine = ({ name, imageUrl, fallbackImageUrl, sourceLabel, detail, effect, action, feat }: ForgeAbilityLineProps) => {
   const [hover, setHover] = useState(false);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const { popoverRef, popoverPos } = useViewportPopoverPosition(hover, pos);
@@ -42,7 +44,7 @@ const ForgeAbilityLine = ({ name, imageUrl, fallbackImageUrl, sourceLabel, detai
         onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
         onMouseLeave={onLeave}
       />
-      {hover && (effect || action) && (
+      {hover && (effect || action || feat) && (
         <div
           ref={popoverRef}
           className="forge-effect-popover"
@@ -54,6 +56,7 @@ const ForgeAbilityLine = ({ name, imageUrl, fallbackImageUrl, sourceLabel, detai
           onMouseLeave={onLeave}
         >
           {effect && <EffectPreview effect={effect} sourceLabel={sourceLabel} disableHover />}
+          {feat && <FeatPreview feat={feat} disableHover />}
           {action && <ActionPreview action={action} sourceLabel={sourceLabel} disableHover />}
         </div>
       )}

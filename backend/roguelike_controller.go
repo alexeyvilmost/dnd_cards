@@ -1322,7 +1322,10 @@ func restoreRoguelikeCheckpoint(run *RoguelikeRun) error {
 		return fmt.Errorf("roguelike checkpoint character identity mismatch")
 	}
 	currentRuntimeRevision := run.Character.RuntimeRevision
+	avatarURL, sourceTemplateID := run.Character.AvatarURL, run.Character.SourceTemplateID
 	*run.Character = snapshot.Character
+	// Checkpoints restore gameplay, not later edits to descriptive artwork.
+	run.Character.AvatarURL, run.Character.SourceTemplateID = avatarURL, sourceTemplateID
 	run.Character.RuntimeRevision = currentRuntimeRevision + 1
 	run.Experience = snapshot.Experience
 	run.Gold = snapshot.Gold

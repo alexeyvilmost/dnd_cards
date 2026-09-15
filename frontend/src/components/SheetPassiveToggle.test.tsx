@@ -7,6 +7,7 @@ import SheetActionLine from './SheetActionLine';
 import DecisionPolicyToggles from './DecisionPolicyToggles';
 import {decisionPolicyToggles} from '../solo-combat/decisionPolicies';
 import type {PassiveEffect} from '../types';
+import type {RuleActionDefinition} from '../rules-core/domain';
 vi.mock('./EffectPreview', () => ({default: ({effect,sourceLabel}: {effect: PassiveEffect; sourceLabel: string}) =>
   <article data-testid="effect-preview">{effect.name}|{sourceLabel}|{effect.description}|{effect.type}|{effect.detailed_description}</article>}));
 (globalThis as typeof globalThis & {IS_REACT_ACT_ENVIRONMENT: boolean}).IS_REACT_ACT_ENVIRONMENT=true;
@@ -34,7 +35,7 @@ describe('shared round passive toggles', () => {
     expect(button.classList.contains('is-selected')).toBe(false);
   });
   it('uses the parent image for a policy but leaves ordinary action tiles square', async () => {
-    const toggles=decisionPolicyToggles('roll_influence');
+    const toggles=decisionPolicyToggles('reaction', {id:'defense',name:'Defense',kind:'nonSpell',sourceEntityIds:['defense'],mechanics:{attack_defense:{ac_bonus:5}}} as RuleActionDefinition);
     await act(async () => root.render(<><DecisionPolicyToggles toggles={toggles} preferences={{}} parent={{name:'Родитель',imageUrl:'/parent-source.png'}} onChange={()=>{}}/>
       <SheetActionLine name="Обычное действие" variant="icon" onActivate={()=>{}}/></>));
     const buttons=host.querySelectorAll('button');

@@ -10,7 +10,7 @@ import test from 'node:test';
 
 const scanner = fileURLToPath(new URL('./check-no-known-credentials.mjs', import.meta.url));
 
-function runScanner(files) {
+function runScanner(files, { argumentsList = [], commitPaths = [] } = {}) {
   const repository = mkdtempSync(join(tmpdir(), 'dnd-credential-policy-'));
   try {
     const init = spawnSync('git', ['init', '--quiet'], {
@@ -25,7 +25,36 @@ function runScanner(files) {
       writeFileSync(absolutePath, source, 'utf8');
     }
 
-    return spawnSync(process.execPath, [scanner], {
+    if (commitPaths.length > 0) {
+      const commit = spawnSync(
+        'git',
+        [
+          '-c', 'user.name=Release Gate Test',
+          '-c', 'user.email=release-gate@example.invalid',
+          'commit', '--quiet', '--no-gpg-sign', '-m', 'baseline', '--', ...commitPaths,
+        ],
+        { cwd: repository, encoding: 'utf8' },
+      );
+      if (commit.status !== 0) {
+        const add = spawnSync('git', ['add', '--', ...commitPaths], {
+          cwd: repository,
+          encoding: 'utf8',
+        });
+        assert.equal(add.status, 0, add.stderr);
+        const retry = spawnSync(
+          'git',
+          [
+            '-c', 'user.name=Release Gate Test',
+            '-c', 'user.email=release-gate@example.invalid',
+            'commit', '--quiet', '--no-gpg-sign', '-m', 'baseline',
+          ],
+          { cwd: repository, encoding: 'utf8' },
+        );
+        assert.equal(retry.status, 0, retry.stderr);
+      }
+    }
+
+    return spawnSync(process.execPath, [scanner, ...argumentsList], {
       cwd: repository,
       encoding: 'utf8',
     });
@@ -95,4 +124,29 @@ test('allows the dedicated registration smoke test without weakening credential 
     'scripts/test_backend.py': `endpoint = ${JSON.stringify(registrationPath)}\n`,
   });
   assert.equal(result.status, 0, result.stderr);
+});
+
+test('changed mode ignores inherited violations in clean tracked files', () => {
+  const registrationPath = ['/api/auth', 'register'].join('/');
+  const result = runScanner(
+    {
+      'scripts/legacy.mjs': `await fetch(${JSON.stringify(registrationPath)});\n`,
+      'scripts/new.mjs': 'const token = process.env.API_TOKEN;\n',
+    },
+    {
+      argumentsList: ['--changed'],
+      commitPaths: ['scripts/legacy.mjs'],
+    },
+  );
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test('changed mode rejects violations introduced by an untracked file', () => {
+  const registrationPath = ['/api/auth', 'register'].join('/');
+  const result = runScanner(
+    { 'scripts/new.mjs': `await fetch(${JSON.stringify(registrationPath)});\n` },
+    { argumentsList: ['--changed'] },
+  );
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /must never auto-register/);
 });

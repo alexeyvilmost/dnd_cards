@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CombatAreaState, GridPosition, SoloCombatState } from '../solo-combat/types';
 import { combatRelation, TACTICAL_HEIGHT, TACTICAL_WIDTH } from '../solo-combat/types';
 import { areaPositionsForAction, reachablePositions } from '../solo-combat/tacticalGrid';
+import {actorFootprint, footprintCells} from '../solo-combat/footprint';
 import { previewCombatAttackRoll, previewMovementThreats } from '../solo-combat/engine';
 import {
   combatActionIsAttack,
@@ -76,9 +77,8 @@ export default function TacticalBattleMap({
   const tokenByCell = new Map(Object.values(state.tokens).sort((a, b) =>
     Number((state.world.actors[a.actorId]?.runtime.hp.current ?? 0) > 0)
     - Number((state.world.actors[b.actorId]?.runtime.hp.current ?? 0) > 0),
-  ).map((token) => [
-    `${token.position.x}:${token.position.y}`, token,
-  ]));
+  ).flatMap((token) => footprintCells(token.position, actorFootprint(state.world.actors[token.actorId], state))
+    .map(p => [`${p.x}:${p.y}`, token] as const)));
   const dancingLightByCell = new Map(Object.values(state.world.objects).flatMap((object) => {
     const position = state.worldObjectPositions?.[object.id];
     return object.dancingLight && position ? [[`${position.x}:${position.y}`, object] as const] : [];
@@ -131,6 +131,7 @@ export default function TacticalBattleMap({
     [state, actorId, previewRoute]);
   const dangerNames = movementThreats.map(threat => combatIdentity(state, threat.actorId).displayName).join(', ');
   const routeOrigin = state.tokens[actorId]?.position;
+  const movingCenter = actorFootprint(state.world.actors[actorId], state) / 2;
   const routeCells = useMemo(() => new Set(
     (previewRoute?.path ?? []).map((position) => `${position.x}:${position.y}`),
   ), [previewRoute]);
@@ -189,7 +190,7 @@ export default function TacticalBattleMap({
 
   useEffect(() => {
     if (initialFitDone.current) return;
-    const positions = Object.values(state.tokens).map((token) => token.position);
+    const positions = Object.values(state.tokens).flatMap((token) => footprintCells(token.position, actorFootprint(state.world.actors[token.actorId], state)));
     if (!positions.length) return;
     initialFitDone.current = true;
     window.requestAnimationFrame(() => {
@@ -298,14 +299,14 @@ export default function TacticalBattleMap({
       <CombatMapFeedback beat={feedback ?? null} state={state} />
       {routeOrigin && previewRoute && previewRoute.path.length > 0 && <svg className="combat-route-line"
         viewBox={`0 0 ${TACTICAL_WIDTH} ${TACTICAL_HEIGHT}`} preserveAspectRatio="none" aria-hidden="true">
-        <line className="combat-route-line__intent" x1={routeOrigin.x + .5} y1={routeOrigin.y + .5}
-          x2={previewRoute.destination.x + .5} y2={previewRoute.destination.y + .5} />
+        <line className="combat-route-line__intent" x1={routeOrigin.x + movingCenter} y1={routeOrigin.y + movingCenter}
+          x2={previewRoute.destination.x + movingCenter} y2={previewRoute.destination.y + movingCenter} />
         <polyline className={`combat-route-line__path${previewRoute.available ? '' : ' is-unavailable'}`}
-          points={[routeOrigin, ...previewRoute.path].map(p => `${p.x + .5},${p.y + .5}`).join(' ')} />
+          points={[routeOrigin, ...previewRoute.path].map(p => `${p.x + movingCenter},${p.y + movingCenter}`).join(' ')} />
         {movementThreats.map(threat => <g key={threat.actorId} className="combat-route-line__danger">
-          <line x1={threat.from.x + .5} y1={threat.from.y + .5} x2={threat.to.x + .5} y2={threat.to.y + .5} />
-          <circle cx={(threat.from.x + threat.to.x) / 2 + .5} cy={(threat.from.y + threat.to.y) / 2 + .5} r=".13" />
-          <text x={(threat.from.x + threat.to.x) / 2 + .5} y={(threat.from.y + threat.to.y) / 2 + .55}>!</text>
+          <line x1={threat.from.x + movingCenter} y1={threat.from.y + movingCenter} x2={threat.to.x + movingCenter} y2={threat.to.y + movingCenter} />
+          <circle cx={(threat.from.x + threat.to.x) / 2 + movingCenter} cy={(threat.from.y + threat.to.y) / 2 + movingCenter} r=".13" />
+          <text x={(threat.from.x + threat.to.x) / 2 + movingCenter} y={(threat.from.y + threat.to.y) / 2 + movingCenter + .05}>!</text>
         </g>)}
       </svg>}
       {Array.from({ length: TACTICAL_WIDTH * TACTICAL_HEIGHT }, (_, index) => {
@@ -315,6 +316,7 @@ export default function TacticalBattleMap({
         const illusion = illusionByCell.get(`${position.x}:${position.y}`);
         const persistentAreas = areasByCell.get(`${position.x}:${position.y}`) ?? [];
         const actor = token ? state.world.actors[token.actorId] : undefined;
+        const tokenAnchor = token?.position.x === position.x && token.position.y === position.y;
         const dead = actor && actor.runtime.hp.current <= 0;
         const lightLabel = dancingLight
           ? `Танцующий огонёк, тусклый свет ${dancingLight.dancingLight!.dimRadiusFt} фт.`
@@ -360,7 +362,7 @@ export default function TacticalBattleMap({
               onCell(position, token?.actorId);
             }}
           >
-            {token && token.actorId === hoveredEnemyId && contextualAction && createPortal(<div ref={popoverRef} style={popoverPos} className={`combat-map-tooltip combat-hit-chance${approachPreview && !approachPreview.available ? ' is-unavailable' : ''}`} role="status">
+            {token && token.actorId === hoveredEnemyId && hovered?.x === position.x && hovered.y === position.y && contextualAction && createPortal(<div ref={popoverRef} style={popoverPos} className={`combat-map-tooltip combat-hit-chance${approachPreview && !approachPreview.available ? ' is-unavailable' : ''}`} role="status">
               {approachPreview && approachPreview.costFt > 0 && <span className="combat-hit-chance__movement">Подойти {approachPreview.costFt} фт. · останется {approachPreview.remainingFt} фт.</span>}
               {!approachPreview && <span className="combat-hit-chance__movement">Нет доступной точки для атаки</span>}
               {approachPreview && !approachPreview.available && <span className="combat-hit-chance__movement">Не хватает {approachPreview.costFt - approachPreview.availableFt} фт. движения</span>}
@@ -403,14 +405,14 @@ export default function TacticalBattleMap({
             ))}
             {ghostPosition?.x === position.x && ghostPosition.y === position.y && state.tokens[actorId] && state.world.actors[actorId] && (
               <span className={`battle-token battle-token--ghost${approachPreview?.costFt === 0 ? ' is-stationary' : ''}${previewRoute && !previewRoute.available ? ' is-unavailable' : ''}`} aria-hidden="true"
-                style={{ '--token-color': combatIdentity(state, actorId).accent } as React.CSSProperties}>
+                style={{ '--token-color': combatIdentity(state, actorId).accent, '--token-size': actorFootprint(state.world.actors[actorId], state) } as React.CSSProperties}>
                 {state.tokens[actorId].tokenUrl ? <img src={state.tokens[actorId].tokenUrl} alt="" /> : <b>{combatActorDisplayName(state.world.actors[actorId]).slice(0, 1)}</b>}
               </span>
             )}
-            {token && actor && (() => {
+            {token && actor && tokenAnchor && (() => {
               const identity = combatIdentity(state, token.actorId);
               return (
-              <span className={`battle-token is-${identity.side}`} style={{ '--token-color': identity.accent } as React.CSSProperties}>
+              <span className={`battle-token is-${identity.side}`} style={{ '--token-color': identity.accent, '--token-size': actorFootprint(actor, state) } as React.CSSProperties}>
                 {token.tokenUrl ? <img src={token.tokenUrl} alt="" /> : <b>{combatActorDisplayName(actor).slice(0, 1)}</b>}
                 {identity.duplicateIndex && <span className="battle-token__duplicate">{identity.duplicateIndex}</span>}
                 <span className="battle-token__name">{identity.displayName}</span>
@@ -422,6 +424,7 @@ export default function TacticalBattleMap({
         );
       })}
     </div>
+    {!state.tacticalFootprints && Object.values(state.world.actors).some(actor=>actorFootprint(actor)>1) && <p className="text-sm p-2" role="note">Этот бой сохранён по прежним правилам размещения. Области 2×2 и 3×3 будут использоваться со следующей встречи.</p>}
     </div>
   );
 }

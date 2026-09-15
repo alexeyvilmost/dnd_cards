@@ -681,6 +681,9 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		return
 	}
 
+	if rejectLockedMechanicsMutation(c, card.Support, card.Mechanics, req.Mechanics) {
+		return
+	}
 	// Обновление полей
 	if req.Name != "" {
 		card.Name = req.Name

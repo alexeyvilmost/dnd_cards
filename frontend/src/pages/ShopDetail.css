@@ -1,0 +1,30 @@
+.merchant-shop { --shop-gold: #d9b975; min-height: calc(100vh - 7rem); padding: clamp(18px, 3vw, 42px); border: 1px solid #6d5533; border-radius: 18px; color: #d8cbb3; background: radial-gradient(ellipse at 12% 0%, #63432255, transparent 48%), radial-gradient(ellipse at 95% 25%, #a9702720, transparent 45%), #151410; box-shadow: 0 12px 50px #0008; }
+main:has(.merchant-shop) { background: #121310; }
+.site-layout:has(.merchant-shop) { background: #121310 !important; }
+.site-layout:has(.merchant-shop) > header { background: #1c1812; border-color: #57452d; }
+.site-layout:has(.merchant-shop) > header :is(a,button) { color: #cbbb9c; }
+.merchant-shop h1 { color: #efd39b; font: 2.3rem Pangolin, serif; margin: 0; }
+.merchant-shop h2 { color: #d9b975; font-family: Pangolin, serif; letter-spacing: .03em; padding-bottom: 12px; border-bottom: 1px solid #a381443b; }
+.merchant-shop__eyebrow { color: #a68a59; font-size: .68rem; letter-spacing: .23em; }
+.merchant-shop__welcome { color: #a69a83; margin-top: .5rem; font-size: .9rem; }
+.shop-counter { padding: 20px; background: linear-gradient(110deg,#332619,#211c15); border: 1px solid #775831; border-radius: 10px; box-shadow: inset 0 1px #b1924940; }
+.merchant-shop button:not(.cs-action-tile), .merchant-shop select { color: #d9c394; border: 1px solid #755b36; background: #252019; border-radius: 6px; }
+.merchant-shop button:not(.cs-action-tile) { transition: background .2s, box-shadow .2s; }
+.merchant-shop button:not(.cs-action-tile):hover:not(:disabled) { background: #47331e; box-shadow: 0 0 12px #c58a3530; }
+.merchant-shop button:disabled { opacity: .42; cursor: not-allowed; }
+.merchant-shop .shop-buy { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 14px; background: linear-gradient(#755129,#463019); border-color: #b38a48; color: #ffe1a5; font-weight: 600; }
+.shop-refresh { margin-left: auto; padding: 9px 15px; }
+.shop-reserve { padding: 5px 8px; font-size: .72rem; }
+.shop-reserve[aria-pressed=true] { outline: 1px solid #cea153; }
+.shop-shelves { display: grid; grid-template-columns: repeat(auto-fill,minmax(145px,1fr)); gap: 25px 0; }
+.shop-shelf-item { min-width: 0; padding: 25px 12px 18px; display: flex; flex-direction: column; align-items: center; gap: 25px; position: relative; background: radial-gradient(ellipse at 50% 35%,#8f602221,transparent 68%); }
+.shop-shelf-item::before { content: ''; position: absolute; left: 0; right: 0; top: 143px; height: 12px; background: linear-gradient(#8a6538,#4d311d 35%,#291e15); border-top: 1px solid #be915440; box-shadow: 0 8px 9px #0009; }
+.shop-shelf-item .cs-action-tile { width: 110px; height: 110px; padding: 0; overflow: hidden; border: 1px solid #7f633b66; background: #211c16; border-radius: 9px; box-shadow: 0 10px 16px #0008; transition: transform .22s,box-shadow .22s,border-color .22s; }
+.shop-shelf-item .cs-action-tile img { width: 100%; height: 100%; object-fit: contain; }
+.shop-shelf-item .cs-action-tile:hover,.shop-shelf-item .cs-action-tile:focus-visible { transform: translateY(-7px); border-color: #d9b975; box-shadow: 0 8px 28px #e3ac4b44, 0 0 14px #e3ac4b30; outline: 2px solid #d9b97555; }
+.shop-shelf-item__trade { display: flex; flex-direction: column; gap: 7px; justify-content: center; align-items: center; font-size: .8rem; }
+.merchant-shop :is(.text-gray-900,.text-gray-700,.text-gray-600) { color: #d4c4a5; }
+.merchant-shop :is(.text-gray-500,.text-gray-400) { color: #a99a81; }
+.merchant-shop :is(.text-blue-600,.text-green-700) { color: #d1b879; }
+.merchant-shop .bg-white { background: #211d17; border-color: #695235; }
+@media (prefers-reduced-motion: reduce) { .shop-shelf-item .cs-action-tile { transition: none; } }

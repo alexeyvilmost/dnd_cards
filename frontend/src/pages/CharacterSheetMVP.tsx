@@ -1,3 +1,4 @@
+import SheetFeatureSections from '../components/SheetFeatureSections';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
@@ -23,7 +24,6 @@ import { useReactionPrompt } from '../contexts/ReactionPromptContext';
 import { executeAction } from '../engine/execute';
 import type { EngineEvent, RuntimeState, ValueBreakdown } from '../mvp/contracts';
 import { loadAssembly, expandItemGrantedEffects, collectEffectGrantRefs, type AssembledCharacter } from '../character/assemble';
-import { effectAbilityPresentation } from '../character/abilityDisplay';
 import { characterToDraft, resolveLineageName } from '../character/forgeHelpers';
 import { collectEquippedCards } from '../character/inventory';
 import { collectPassiveMechanics } from '../character/resourceInit';
@@ -55,8 +55,6 @@ import { labelOf, SKILLS } from '../mechanics/registries';
 import { type Card, type PassiveEffect, type Spell } from '../types';
 import { spellsApi } from '../api/client';
 import { useSiteSettings } from '../settings';
-import ForgeAbilityDisplay from '../components/forge/ForgeAbilityDisplay';
-import SheetEntityRow from '../components/SheetEntityRow';
 import SheetSettingsDialog from '../components/SheetSettingsDialog';
 import SheetEntityAddDialog from '../components/SheetEntityAddDialog';
 import SheetConditionsPanel from '../components/SheetConditionsPanel';
@@ -111,27 +109,6 @@ const SIZE_LABEL = ['Крошечный', 'Маленький', 'Средний'
 const armorLabel = (v: string) => ARMOR_LABEL_RU[v] || v;
 const weaponLabel = (v: string) => WEAPON_LABEL_RU[v] || v;
 
-const originLabel = (kind: string) => {
-  switch (kind) {
-    case 'race': return 'Способность вида';
-    case 'class': return 'Способность класса';
-    case 'feat': return 'Способность черты';
-    case 'background': return 'Способность предыстории';
-    default: return 'Способность';
-  }
-};
-
-// Короткая подпись источника для второй строки ряда (Вид · Эльф).
-const originKindShort = (kind: string) => {
-  switch (kind) {
-    case 'race': return 'Вид';
-    case 'class': return 'Класс';
-    case 'feat': return 'Черта';
-    case 'background': return 'Предыстория';
-    default: return 'Способность';
-  }
-};
-const originDetail = (kind: string, name: string) => `${originKindShort(kind)} · ${name}`;
 
 const CharacterSheetMVP = () => {
   const { id } = useParams<{ id: string }>();
@@ -167,7 +144,7 @@ const CharacterSheetMVP = () => {
   const [sheetActionsBusy, setSheetActionsBusy] = useState(false);
   const [sheetRuntimeBusy, setSheetRuntimeBusy] = useState(false);
   const { toasts, push: pushToast } = useSheetToasts();
-  const { entityDisplay, allowSheetEntityAdditions } = useSiteSettings();
+  const { allowSheetEntityAdditions } = useSiteSettings();
   const diceDialog = useDiceDialog();
   const reactionPrompt = useReactionPrompt();
   // Рефы, чтобы loadJournal оставался стабильным (иначе смена journalOpen/pushToast пересоздавала бы
@@ -1512,64 +1489,7 @@ const CharacterSheetMVP = () => {
           {inSec('features') && (
           <section className="sheet-panel sheet-panel-wide">
             <h2 className="sheet-h2">Черты и способности</h2>
-            {assembled.feats.length > 0 && (
-              <div className="sheet-group">
-                <h3 className="sheet-h3">Черты</h3>
-                <div className="sheet-item-cols">
-                  {assembled.feats.map((f) => (
-                    <SheetEntityRow
-                      key={f.id}
-                      imageUrl={(f as { image_url?: string | null }).image_url}
-                      name={f.name}
-                      detail="Черта"
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-            {assembled.effects.length > 0 && (
-              <div className="sheet-group">
-                <h3 className="sheet-h3">Эффекты</h3>
-                <ForgeAbilityDisplay
-                  mode={entityDisplay.effects}
-                  linesClassName="sheet-item-cols"
-                  entries={assembled.effects.map(({ effect, origin }) => {
-                    const p = effectAbilityPresentation(effect, origin, assembled.feats, originLabel);
-                    return {
-                      key: effect.id,
-                      name: p.name,
-                      imageUrl: effect.image_url,
-                      fallbackImageUrl: p.fallbackImageUrl,
-                      sourceLabel: p.sourceLabel,
-                      detail: p.sourceLabel.includes('Боевой стиль')
-                        ? p.sourceLabel
-                        : originDetail(origin.kind, origin.name),
-                      effect: p.effect,
-                    };
-                  })}
-                />
-              </div>
-            )}
-            {assembled.actions.length > 0 && (
-              <div className="sheet-group">
-                <h3 className="sheet-h3">Способности (описание)</h3>
-                <ForgeAbilityDisplay
-                  mode={entityDisplay.actions}
-                  linesClassName="sheet-item-cols"
-                  entries={assembled.actions.map(({ action, origin }) => ({
-                    key: action.id,
-                    name: action.name,
-                    imageUrl: action.image_url,
-                    sourceLabel: `${originLabel(origin.kind)} · ${origin.name}`,
-                    detail: originDetail(origin.kind, origin.name),
-                    action,
-                  }))}
-                />
-              </div>
-            )}
-            {assembled.feats.length === 0 && assembled.effects.length === 0 && assembled.actions.length === 0 && (
-              <p className="forge-note">Нет привязанных способностей.</p>
-            )}
+            <SheetFeatureSections assembled={assembled}/>
           </section>
           )}
 

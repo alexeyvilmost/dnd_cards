@@ -1,4 +1,5 @@
 import type { EngineEvent, RollLog, TriggeringAttackContext } from '../mvp/contracts';
+import {actorFootprint, footprintDistanceFt} from './footprint';
 import type {
   ActionWorldInput,
   RuleActionDefinition,
@@ -297,6 +298,8 @@ export interface SoloCombatState {
     fromLogCursor: number;
   };
   schemaVersion: typeof SOLO_COMBAT_SCHEMA_VERSION;
+  /** Missing on archived encounters: their executable still uses one cell. */
+  tacticalFootprints?: 'sized';
   characterId: string;
   runtimeRevision: number;
   world: WorldState;
@@ -432,7 +435,7 @@ export function spatialFacts(
     }
     return false;
   });
-  const distanceFt = Math.max(Math.abs(source.x - target.x), Math.abs(source.y - target.y)) * TACTICAL_CELL_FT;
+  const distanceFt = footprintDistanceFt(source, target, actorFootprint(state.world?.actors[sourceActorId], state), actorFootprint(state.world?.actors[targetActorId], state));
   const sees = (observerId: string, observedId: string): boolean => {
     const observer = state.world?.actors[observerId];
     const observed = state.world?.actors[observedId];
@@ -453,7 +456,7 @@ export function spatialFacts(
     });
     if (expandConditionSet(conditions).has('incapacitated')) return false;
     const position = state.tokens[actor.id]?.position;
-    return Boolean(position && Math.max(Math.abs(position.x - target.x), Math.abs(position.y - target.y)) * TACTICAL_CELL_FT <= 5);
+    return Boolean(position && footprintDistanceFt(position, target, actorFootprint(actor, state), actorFootprint(state.world?.actors[targetActorId], state)) <= 5);
   }));
   const movement = state.recentStraightMovementByActor?.[sourceActorId];
   const immediateStraightMovementFt = movement && !movement.interrupted
@@ -466,7 +469,7 @@ export function spatialFacts(
     })} : {}),
     factsSource: 'board',
     boardRevision: state.boardRevision,
-    distanceFt: Math.max(Math.abs(source.x - target.x), Math.abs(source.y - target.y)) * TACTICAL_CELL_FT,
+    distanceFt,
     lineOfSight: !obscured || sourceNonvisual,
     cover: 'none',
     relation: combatRelation(state, sourceActorId, targetActorId),

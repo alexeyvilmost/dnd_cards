@@ -55,6 +55,7 @@ const ShopNew = lazy(() => import('./pages/ShopNew'));
 const ShopDetail = lazy(() => import('./pages/ShopDetail'));
 const ActionCreator = lazy(() => import('./pages/ActionCreator'));
 const EffectCreator = lazy(() => import('./pages/EffectCreator'));
+const PassiveCreator = lazy(() => import('./pages/PassiveCreator'));
 const SpellCreator = lazy(() => import('./pages/SpellCreator'));
 const SpellPage = lazy(() => import('./pages/SpellPage'));
 const FeatCreator = lazy(() => import('./pages/FeatCreator'));
@@ -468,6 +469,7 @@ function App() {
         } />
 
         {/* Effect routes */}
+        <Route path="/passive-creator" element={<ProtectedRoute><Layout><PassiveCreator/></Layout></ProtectedRoute>}/>
         <Route path="/effect-creator" element={
           <ProtectedRoute>
             <Layout>

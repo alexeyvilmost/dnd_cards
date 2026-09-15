@@ -12,12 +12,16 @@ import { collectPassiveMechanics } from '../character/resourceInit';
 import { runtimeInventoryPayload } from '../character/runtime';
 import type { ForgeCharacter } from '../character/types';
 import type { Card } from '../types';
+import SheetActionLine from '../components/SheetActionLine';
+import ItemPreview from '../components/ItemPreview';
 import CardPreview from '../components/CardPreview';
+import {EntityDetailShell} from '../components/EntityDetailShell';
+import './ShopDetail.css';
 import CurrencyPriceInline from '../components/CurrencyPriceInline';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
 import { getRarityColor } from '../utils/rarityColors';
 import { getCurrencyInfo } from '../utils/currencies';
-import { getSettings } from '../settings';
+import { getSettings, useSiteSettings } from '../settings';
 
 type VendorsResponse = Record<string, Card[]>;
 type RunShopCard = Card & { runOfferId?: string };
@@ -26,6 +30,7 @@ const offerId = (card: Card) => (card as RunShopCard).runOfferId ?? card.id;
 const STARTING_GOLD = 150;
 
 const ShopDetail = () => {
+  const settings = useSiteSettings();
   const { slug } = useParams();
   const [vendors, setVendors] = useState<VendorsResponse>({});
   const [characters, setCharacters] = useState<ForgeCharacter[]>([]);
@@ -35,6 +40,7 @@ const ShopDetail = () => {
     () => (getSettings().entityDisplay.items === 'icon' ? 'grid' : 'list'),
   );
   const [error, setError] = useState<string | null>(null);
+  const [inspectedCard, setInspectedCard] = useState<Card | null>(null);
   const [shopMsg, setShopMsg] = useState<string | null>(null);
   const [buyingId, setBuyingId] = useState<string | null>(null);
   const [purchasePassives, setPurchasePassives] = useState<Record<string, unknown>[]>([]);
@@ -72,8 +78,8 @@ const ShopDetail = () => {
   };
 
   const selectedCharacter = useMemo(
-    () => characters.find((c) => c.id === characterId) ?? null,
-    [characters, characterId],
+    () => roguelike?.character ?? characters.find((c) => c.id === characterId) ?? null,
+    [characters, characterId, roguelike],
   );
 
   const wallet = useMemo(
@@ -262,13 +268,7 @@ const ShopDetail = () => {
         type="button"
         disabled={!selectedCharacter || Boolean(buyingId) || (price > 0 && !affordable) || Boolean(offer?.sold) || Boolean(roguelike && (roguelike.phase !== 'camp' || roguelike.status !== 'active'))}
         onClick={() => runId ? void runCommand('buy', { offer_id: offerId(card) }) : void handleBuy(card)}
-        className={`inline-flex items-center gap-1 rounded-lg border transition-colors ${
-          compact ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm'
-        } ${
-          !selectedCharacter || (price > 0 && !affordable)
-            ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-            : 'border-green-600 text-green-700 hover:bg-green-50'
-        }`}
+        className="shop-buy"
         title={!selectedCharacter ? 'Выберите персонажа' : price > 0 && !affordable ? 'Недостаточно средств' : 'Купить'}
       >
         <ShoppingCart size={compact ? 14 : 16} />
@@ -276,18 +276,19 @@ const ShopDetail = () => {
       </button>
       {offer && <span className="text-xs text-gray-500">{roguelike?.shop.staples.some((entry) => entry.id === offer.id) ? '∞' : `${offer.quantity} шт.`}</span>}
       {offer && roguelike?.shop.offers.some((entry) => entry.id === offer.id) && <button type="button"
-        className="text-xs border rounded-lg px-2 py-1" disabled={Boolean(buyingId) || offer.sold || (!offer.pinned && roguelike.gold < 5) || roguelike.phase !== 'camp' || roguelike.status !== 'active'}
+        className="shop-reserve" aria-pressed={offer.pinned} disabled={Boolean(buyingId) || offer.sold || (!offer.pinned && roguelike.gold < 5) || roguelike.phase !== 'camp' || roguelike.status !== 'active'}
         onClick={() => void runCommand('pin', { offer_id: offer.pinned ? '' : offer.id })}>
-        {offer.pinned ? 'Снять фиксацию' : 'Зафиксировать · 5 зм'}
+        {offer.pinned ? 'Снять резерв' : 'В резерв · 5 зм'}
       </button>}
       </>
     );
   };
 
   return (
-    <div className="space-y-6">
+    <div className="merchant-shop space-y-6">
+      <p className="merchant-shop__eyebrow">ПРИПАСЫ · СНАРЯЖЕНИЕ · РЕДКОСТИ</p>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl sm:text-3xl font-fantasy font-bold text-gray-900">Магазин</h1>
+        <div><h1>Лавка странника</h1><p className="merchant-shop__welcome">Загляните на полки. Хорошая находка может спасти следующий бой.</p></div>
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setViewMode('grid')}
@@ -306,17 +307,17 @@ const ShopDetail = () => {
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+      <div className="shop-counter space-y-3">
         {roguelike && <div className="flex items-center gap-3 flex-wrap">
           <span>Припасы: {roguelike.supplies} · Обновление {roguelike.shop.generation}</span>
-          <button className="border rounded-lg px-3 py-2" disabled={Boolean(buyingId) || roguelike.gold < 5 * (roguelike.paid_refresh_count + 1) || roguelike.phase !== 'camp' || roguelike.status !== 'active'}
+          <button className="shop-refresh" disabled={Boolean(buyingId) || roguelike.gold < 5 * (roguelike.paid_refresh_count + 1) || roguelike.phase !== 'camp' || roguelike.status !== 'active'}
             onClick={() => void runCommand('refresh_shop')}>Обновить ассортимент · {5 * (roguelike.paid_refresh_count + 1)} зм</button>
         </div>}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <label className="text-sm font-medium text-gray-700 shrink-0">Покупатель:</label>
           <select
             className="flex-1 max-w-md border border-gray-300 rounded-lg px-3 py-2 text-sm"
-            value={characterId}
+            value={selectedCharacter?.id ?? characterId}
             disabled={Boolean(runId)}
             onChange={(e) => selectCharacter(e.target.value)}
           >
@@ -367,34 +368,15 @@ const ShopDetail = () => {
                 <h2 className="text-xl font-semibold text-gray-900">{vendorName}</h2>
 
                 {viewMode === 'grid' ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-1 gap-y-4">
-                    {cards.map((card) => {
-                      const isExtended = Boolean(card.is_extended);
-                      return (
-                        <div
-                          key={card.id}
-                          className={`relative flex flex-col items-center gap-2 ${isExtended ? 'col-span-2 sm:col-span-2 md:col-span-2 lg:col-span-2 xl:col-span-2' : ''}`}
-                        >
-                          <div className={`relative group flex justify-center ${isExtended ? '' : 'w-full max-w-[198px]'}`}>
-                            {isExtended ? (
-                              <CardPreview card={card as Card} />
-                            ) : (
-                              <CardPreview card={card as Card} />
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 flex-wrap justify-center">
-                            {card.price != null && card.price > 0 && (() => {
-                              const price = purchasePrice(card, purchasePassives);
-                              return <span className="inline-flex items-center gap-1">
-                                <CurrencyPriceInline price={price.payable} currency={card.price_currency} />
-                                {price.discounted && <span className="text-xs text-green-700" title={`Цена до скидки: ${price.listed}`}>Самоделкин −20%</span>}
-                              </span>;
-                            })()}
-                            {buyButton(card, true)}
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div className="shop-shelves">
+                    {cards.map(card => <article className="shop-shelf-item" key={offerId(card)}>
+                      <SheetActionLine name={card.name} imageUrl={card.image_url || '/default_image.png'} itemRef={card}
+                        variant="icon" onActivate={() => setInspectedCard(card)}/>
+                      <div className="shop-shelf-item__trade">
+                        <span className="inline-flex items-center gap-1"><CurrencyPriceInline price={purchasePrice(card, purchasePassives).payable} currency={card.price_currency}/></span>
+                        {buyButton(card, true)}
+                      </div>
+                    </article>)}
                   </div>
                 ) : (
                   <div className="relative">
@@ -443,6 +425,12 @@ const ShopDetail = () => {
           })}
         </div>
       )}
+      {inspectedCard && <EntityDetailShell isOpen onClose={()=>setInspectedCard(null)} title={inspectedCard.name}
+        titleEn={inspectedCard.name_en} labelledById="shop-item-title"
+        preview={settings.itemPreview==='interface'?<ItemPreview card={inspectedCard} disableHover/>:<CardPreview card={inspectedCard} disableHover/>}
+        actions={buyButton(inspectedCard)}>
+        <span className="inline-flex items-center gap-1"><CurrencyPriceInline price={purchasePrice(inspectedCard,purchasePassives).payable} currency={inspectedCard.price_currency}/></span>
+      </EntityDetailShell>}
     </div>
   );
 };

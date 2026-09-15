@@ -40,7 +40,7 @@ func templateSnapshot(character CharacterV3) (JSONMap, error) {
 	if err = json.Unmarshal(raw, &snapshot); err != nil {
 		return nil, err
 	}
-	for _, key := range []string{"id", "user_id", "user", "group_id", "group", "current_encounter_id", "runtime_revision", "access_mode", "created_at", "updated_at"} {
+	for _, key := range []string{"id", "user_id", "user", "group_id", "group", "source_template_id", "current_encounter_id", "runtime_revision", "access_mode", "created_at", "updated_at"} {
 		delete(snapshot, key)
 	}
 	return snapshot, nil
@@ -57,6 +57,7 @@ func characterFromTemplate(t CharacterTemplate, userID uuid.UUID, name string) (
 	}
 	// Even a malformed catalog entry must never carry ownership or combat state.
 	character.ID = uuid.New()
+	character.SourceTemplateID = &t.ID
 	character.UserID = userID
 	character.User = User{}
 	character.GroupID, character.Group, character.CurrentEncounterID = nil, nil, nil

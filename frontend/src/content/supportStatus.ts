@@ -210,7 +210,8 @@ export function testCoverageOf(
 export function isMechanicsLocked(
   entity: SupportableEntity | null | undefined,
 ): boolean {
-  return entity?.support?.mechanics_locked === true && testCoverageOf(entity)?.percent === 100;
+  // Match the durable server lock, even if a historical certificate is incomplete.
+  return entity?.support?.mechanics_locked === true;
 }
 
 export function isDefaultVisibleSupportStatus(status: EntitySupportStatus): boolean {

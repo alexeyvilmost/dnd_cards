@@ -85,7 +85,7 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
       title={spell.name}
       titleEn={spell.name_en}
       preview={(
-        locked ? <SpellPreview spell={spell} disableHover /> : <EntityImageEditor
+        <EntityImageEditor
           entityId={spell.id}
           initialUrl={spell.image_url || ''}
           persist={async (id, url) => (await spellsApi.updateSpell(id, { image_url: url })).image_url || url}
@@ -96,15 +96,16 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
       )}
       actions={(
         <>
-          {locked ? (
+          {locked && (
             <span className="edm-btn" title="Механика закреплена полной тестовой сертификацией">
               <Lock size={18} /><span>Закреплено</span>
             </span>
-          ) : (
+          )}
+          {
             <Link to={`/spell-creator?edit=${spell.id}`} className="edm-btn">
               <Edit size={18} /><span>Редактировать</span>
             </Link>
-          )}
+          }
           <Link to={`/spell-creator?template_id=${spell.id}`} className="edm-btn">
             <Copy size={18} /><span>Использовать как шаблон</span>
           </Link>

@@ -15,6 +15,7 @@ import { registryItems, useResourceOptions } from '../utils/resources';
 import { validateMechanics } from '../engine/validateMechanics';
 import { isEntityIdTaken, validateEntityIdFormat } from '../utils/entityId';
 import { isMechanicsLocked } from '../content/supportStatus';
+import LockedMechanicsViewer from '../components/LockedMechanicsViewer';
 
 const EffectCreator = () => {
   const navigate = useNavigate();
@@ -164,7 +165,7 @@ const EffectCreator = () => {
       }
     }
 
-    if (data.mechanics && typeof data.mechanics === 'object') {
+    if (!lockedEntity && data.mechanics && typeof data.mechanics === 'object') {
       const check = validateMechanics(data.mechanics as Record<string, unknown>, {
         id: data.card_number || 'draft-effect',
         name: data.name || 'effect',
@@ -477,9 +478,7 @@ const EffectCreator = () => {
                       Соберите способность из блоков. JSON сохраняется в поле mechanics.
                     </p>
                     {lockedEntity ? (
-                      <p className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900" role="status">
-                        Исполняемая механика закреплена тестовой сертификацией. Название, иконку, описание и остальные поля можно редактировать.
-                      </p>
+                      <LockedMechanicsViewer value={watch('mechanics')} />
                     ) : (
                       <MechanicsBuilder
                         value={(watch('mechanics') as Record<string, unknown>) || null}

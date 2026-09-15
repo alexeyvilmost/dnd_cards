@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Search, Filter, Trash2, Edit3, Check, X as XIcon } from 'lucide-react';
 import { getImageLibrary, deleteFromLibrary, updateImageLibrary, getRarities, ImageLibraryItem, ImageLibraryFilters } from '../api/imageLibraryApi';
 import { ITEM_TYPE_OPTIONS } from '../constants/itemTypes';
@@ -34,47 +34,45 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
   const [selectedImage, setSelectedImage] = useState<ImageLibraryItem | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const appliedFilters = useRef<ImageLibraryFilters>({search: '', rarity: '', item_type: '', weapon_type: '', armor_type: '', slot: ''});
+  const requestSequence = useRef(0);
+  const debouncePending = useRef(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Загрузка изображений
   const loadImages = async (filters: ImageLibraryFilters = {}, append = false) => {
+    const sequence = ++requestSequence.current;
+    const query = {...appliedFilters.current, ...filters, page: filters.page ?? 1, limit: 100};
+    appliedFilters.current = query;
+    setLoadError(null);
     if (append) {
       setLoadingMore(true);
     } else {
       setLoading(true);
+      setSelectedImage(null);
     }
     
     try {
-      const response = await getImageLibrary({
-        page: filters.page || pagination.page,
-        limit: filters.limit || pagination.limit,
-        search: filters.search !== undefined ? filters.search : searchTerm,
-        rarity: filters.rarity !== undefined ? filters.rarity : selectedRarity,
-        item_type: filters.item_type !== undefined ? filters.item_type : selectedItemType,
-        weapon_type: filters.weapon_type !== undefined ? filters.weapon_type : selectedWeaponType,
-        armor_type: filters.armor_type !== undefined ? filters.armor_type : selectedArmorType,
-        slot: filters.slot !== undefined ? filters.slot : selectedSlot,
-      });
+      const response = await getImageLibrary(query);
+      if (sequence !== requestSequence.current) return;
       
       if (append) {
-        setImages(prev => [...prev, ...response.images]);
+        setImages(prev => [...prev, ...response.images.filter(image => !prev.some(row => row.id === image.id))]);
       } else {
         setImages(response.images);
       }
       
       setPagination(response.pagination);
-      const limit = filters.limit || pagination.limit;
+      const limit = response.pagination.limit;
       const page = response.pagination.page;
       setHasMore(page * limit < response.pagination.total);
       
       // Автоматически выбираем первое изображение, если ничего не выбрано
-      if (response.images.length > 0 && !selectedImage) {
-        setSelectedImage(response.images[0]);
-      }
+      if (!append) setSelectedImage(response.images[0] ?? null);
     } catch (error) {
-      console.error('Ошибка загрузки изображений:', error);
+      if (sequence === requestSequence.current) setLoadError('Не удалось загрузить библиотеку. Повторите поиск.');
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (sequence === requestSequence.current) { setLoading(false); setLoadingMore(false); }
     }
   };
 
@@ -118,7 +116,20 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
       loadImages({ page: 1, search: '', rarity: '', item_type: '', weapon_type: '', armor_type: '', slot: '' });
       loadRarities();
     }
+    return () => { requestSequence.current++; };
   }, [isOpen]);
+
+  // Search the entire server catalog, independently of loaded thumbnails and
+  // draft filter suggestions. Paging always reuses the applied query.
+  useEffect(() => {
+    if (!isOpen || (searchTerm.trim() === (appliedFilters.current.search ?? '') && !debouncePending.current)) return;
+    requestSequence.current++;
+    debouncePending.current = true;
+    setLoading(true);
+    setSelectedImage(null);
+    const timer = window.setTimeout(() => { debouncePending.current = false; void loadImages({page: 1, search: searchTerm.trim()}); }, 250);
+    return () => window.clearTimeout(timer);
+  }, [isOpen, searchTerm]);
 
   // Автоматическая подгрузка при прокрутке
   useEffect(() => {
@@ -249,6 +260,7 @@ const ImageLibraryModal: React.FC<ImageLibraryModalProps> = ({ isOpen, onClose, 
         </div>
 
         {/* Фильтры */}
+        {loadError && <p role="alert" className="p-4 text-red-700">{loadError}</p>}
         <div className="p-4 border-b bg-gray-50">
           <div className="flex flex-wrap gap-4 items-end">
             <div className="flex-1 min-w-64">

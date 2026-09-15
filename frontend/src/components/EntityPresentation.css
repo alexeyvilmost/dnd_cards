@@ -1,0 +1,102 @@
+/* Canonical entity presentation travels with its components, including lazy routes. */
+.forge-entity-icon {
+  flex-shrink: 0; border-radius: 50%; object-fit: cover;
+  background: rgba(255, 255, 255, 0.06);
+}
+.forge-entity-icon--placeholder {
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: rgba(255, 255, 255, 0.08);
+  color: var(--forge-text, #e8e0d0); line-height: 1;
+}
+/* Заполнение квадратной плитки: изображение до границ квадрата, углы как у плитки. */
+.forge-entity-icon--fill { width: 100%; height: 100%; border-radius: 7px; }
+/* Позиционная обёртка ховер-превью (действие/эффект/черта). Ширину задаёт сама карточка
+   превью (.sp-tip = 340px); max-content не даёт max-width:100% схлопнуть её. */
+.forge-effect-popover {
+  position: fixed; z-index: 9999; pointer-events: none; width: max-content;
+  max-width: calc(100vw - 16px); max-height: calc(100vh - 16px);
+  overflow: visible; padding: 28px 20px 0 0;
+}
+.forge-effect-popover > .sp-tip { max-width: 100%; box-sizing: border-box; }
+.forge-effect-popover .sp-desc { max-height: min(48vh, 460px); overflow-y: auto; }
+
+/* Ряд-предмет в стиле библиотеки (тёмная тема) */
+.sheet-item-row {
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; gap: 9px; width: 100%; text-align: left;
+  padding: 6px 8px; border: 1px solid var(--forge-line, #6b5836); border-left: 3px solid #5a4a38;
+  border-radius: 8px; background: var(--forge-panel-2, #241f18); cursor: pointer; color: var(--forge-text, #e8e0d0);
+  transition: border-color .14s, background .14s, transform .1s;
+}
+/* Лого-штамп слота на заднем фоне справа (текст перекрывает его). */
+.sheet-item-stamp {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  height: 66%; width: auto; max-width: 44px; object-fit: contain;
+  opacity: .07; filter: brightness(0) invert(1); pointer-events: none; z-index: 0;
+}
+.sheet-item-row-thumb, .sheet-item-row-body, .sheet-item-row-right { position: relative; z-index: 1; }
+.sheet-item-row:hover {
+  background: rgba(201,162,39,.08); transform: translateY(-1px);
+  border-top-color: var(--forge-gold-dim, #c9a45f); border-right-color: var(--forge-gold-dim, #c9a45f); border-bottom-color: var(--forge-gold-dim, #c9a45f);
+}
+.sheet-item-row.is-empty { cursor: default; opacity: .72; }
+.sheet-item-row.is-empty:hover { transform: none; background: var(--forge-panel-2, #241f18); border-color: var(--forge-line, #6b5836); border-left-color: #5a4a38; }
+.sheet-item-row.is-dimmed { opacity: .4; }
+.sheet-item-row.is-selected { border-color: var(--forge-gold, #d8b978); }
+.sheet-item-row-thumb {
+  flex: 0 0 auto; width: 42px; height: 42px; border-radius: 6px; overflow: hidden;
+  border: none; background: transparent;
+}
+.sheet-item-row-thumb img { width: 100%; height: 100%; object-fit: contain; transform: scale(1.02); }
+.sheet-item-row-thumb.is-slot img { object-fit: contain; transform: none; opacity: .62; filter: brightness(0) invert(0.66); padding: 4px; }
+.sheet-chip-mono { filter: brightness(0) invert(0.78); }
+.sheet-item-row-qty {
+  position: absolute; right: -3px; bottom: -3px; min-width: 16px; height: 16px; padding: 0 3px;
+  border-radius: 8px; background: #1a1410; border: 1px solid var(--forge-gold-dim, #c9a45f);
+  color: var(--forge-gold, #d8b978); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+}
+.sheet-item-row-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.sheet-item-row-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px; }
+.sheet-item-row-detail { font-size: 11.5px; color: var(--forge-text-dim, #a99f8b); overflow: hidden; line-height: 1.3; white-space: nowrap; text-overflow: ellipsis; }
+.sheet-item-row-thumb-ph {
+  display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
+  color: var(--forge-gold-dim, #c9a45f); font-weight: 700; font-size: 17px; text-transform: uppercase;
+}
+.sheet-item-row.is-disabled { opacity: .5; cursor: not-allowed; }
+.sheet-item-row.is-disabled:hover { transform: none; background: var(--forge-panel-2, #241f18); border-color: var(--forge-line, #6b5836); border-left-color: #5a4a38; }
+.sheet-item-rarity { font-size: 13px; flex: 0 0 auto; }
+.sheet-item-attune { width: 12px; height: 12px; flex: 0 0 auto; filter: brightness(0) invert(1); }
+.sheet-item-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; font-size: 11.5px; }
+.sheet-item-chip { display: inline-flex; align-items: center; gap: 3px; color: #d8cdb9; }
+.sheet-item-chip img { width: 13px; height: 13px; object-fit: contain; }
+.sheet-item-row-right { flex: 0 0 auto; }
+
+/* Плиточный режим действий (настройка «Иконки») */
+.cs-action-tiles { display: flex; flex-wrap: wrap; gap: 8px; }
+.cs-action-tile {
+  position: relative; width: 52px; height: 52px; box-sizing: border-box;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 8px; cursor: pointer; padding: 0;
+  /* Фон и золотая граница — как у иконок предметов/эффектов (.forge-spell-icon). */
+  background: radial-gradient(circle at 50% 38%, #3a3027, #221a14);
+  border: 1px solid var(--forge-gold-dim, #8a7320);
+  transition: border-color .15s, transform .1s;
+}
+.cs-action-tile:hover:not(:disabled) { border-color: var(--forge-gold, #c9a227); transform: translateY(-1px); }
+.cs-action-tile--disabled { opacity: .4; cursor: not-allowed; }
+/* Причина недоступности действия — слой поверх превью (не вместо него). */
+.cs-action-disabled-reason {
+  margin-top: 6px; padding: 5px 9px;
+  font-size: 12px; font-weight: 700; text-align: center;
+  color: #ffb4a2; background: #2a0d08;
+  border: 1px solid #c0442a; border-radius: 6px;
+}
+/* Уровень заклинания — белой римской цифрой с чёрным контуром в правом нижнем углу (без плашки). */
+.cs-action-tile-lvl {
+  position: absolute; bottom: 0; right: 4px; z-index: 2;
+  font-size: 16px; line-height: 1.1; font-weight: 800; text-align: center;
+  color: #fff;
+  -webkit-text-stroke: 0.6px #000; paint-order: stroke fill;
+  text-shadow: 0 1px 2px #000;
+  pointer-events: none;
+}

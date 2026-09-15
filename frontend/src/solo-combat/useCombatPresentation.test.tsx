@@ -58,4 +58,17 @@ describe('per-source combat presentation queue',()=>{
     await act(async()=>root.render(<Harness combat={state([first,second])}/>));
     expect(current.beat?.saveRows).toHaveLength(2);expect(current.blocked).toBe(true);
   });
+  it('keeps a held roll continuation ahead of unfinished map feedback',async()=>{
+    setSetting('combatRollMode','standard');
+    await act(async()=>root.render(<Harness combat={state([])}/>));
+    const movement={...beats[0],id:'movement',roll:undefined};
+    const held={...state([movement]),pendingD20Interrupt:{operation:'roll_influence',command:{actorId:'hero'},held:{kind:'attack',roll}}} as unknown as SoloCombatState;
+    await act(async()=>root.render(<Harness combat={held}/>));
+    expect(current.playing?.id).toBe('movement');
+    const confirmed={...beats[0],id:'confirmed',sourceId:'hero',damage:[{amount:4,damageType:'piercing'}]};
+    await act(async()=>root.render(<Harness combat={state([movement,confirmed])}/>));
+    expect(current.playing).toBeNull();
+    expect(current.beat?.id).toBe('confirmed');
+    expect(current.beat?.damage?.[0].amount).toBe(4);
+  });
 });

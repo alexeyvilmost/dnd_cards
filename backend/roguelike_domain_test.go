@@ -251,11 +251,15 @@ func TestRoguelikeRetryRetainsDrawnEncounterAcrossCatalogChanges(t *testing.T) {
 	run.CombatCatalog = JSONMap{"artifactHash": "old", "entities": JSONMap{"card": []any{"previous-loadout"}}}
 	run.Gold = 1
 	run.Character.RuntimeRevision = 12
+	run.Character.AvatarURL = "/portraits/presets/archer.png"
 	if err := restoreRoguelikeCheckpoint(run); err != nil {
 		t.Fatal(err)
 	}
 	if run.Gold != 80 || run.Attempt != 2 || run.Character.RuntimeRevision != 13 {
 		t.Fatal("checkpoint did not restore economy with a new runtime revision")
+	}
+	if run.Character.AvatarURL != "/portraits/presets/archer.png" {
+		t.Fatal("checkpoint erased later portrait update")
 	}
 	if len(run.CombatCatalog) != 0 {
 		t.Fatal("retry retained stale player loadout catalog")

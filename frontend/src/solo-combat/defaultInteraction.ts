@@ -1,9 +1,9 @@
 import type { RuleActionDefinition } from '../rules-core/domain';
+import {actorFootprint, footprintDistanceFt} from './footprint';
 import { weaponAttackPreview } from '../engine/weapon';
 import { playerActionIdsFor, TACTICAL_HEIGHT, TACTICAL_WIDTH, type SoloCombatState } from './types';
 import {
   effectiveCombatActorSpeedFt,
-  gridDistanceFt,
   reachableRoutes,
   type TacticalRoute,
 } from './tacticalGrid';
@@ -113,7 +113,7 @@ export function combatApproachRoute(
     ...reachableRoutes(state, actorId, maximumBoardRouteFt),
   ];
   const route = candidates
-    .filter((candidate) => gridDistanceFt(candidate.destination, target) <= Math.max(0, rangeFt))
+    .filter((candidate) => footprintDistanceFt(candidate.destination, target, actorFootprint(state.world.actors[actorId], state), actorFootprint(state.world.actors[targetActorId], state)) <= Math.max(0, rangeFt))
     .sort((left, right) => left.costFt - right.costFt
       || Math.hypot(left.destination.x - target.x, left.destination.y - target.y)
         - Math.hypot(right.destination.x - target.x, right.destination.y - target.y)

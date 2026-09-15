@@ -107,6 +107,7 @@ function masteryChoices(actor: ActorState, action: RuleActionDefinition): Pendin
 
 export interface CombatPassiveToggle {
   id: string;
+  presentationKey?: string;
   name: string;
   description: string;
   recommended: string[];
@@ -126,6 +127,7 @@ export function combatPassiveTogglesForAction(
   return [
     ...unarmedStrikeChoices(action, cardNumber).map((choice) => ({
       id: choice.id,
+      presentationKey: 'choice.unarmed',
       ...passivePresentation.unarmed,
       parentActionId: action.id,
       recommended: [...(choice.recommended ?? [])],
@@ -137,7 +139,7 @@ export function combatPassiveTogglesForAction(
       const values: Record<string, unknown> = {...primitive,
         hitRequirement: primitive && 'requiresDamage' in primitive && primitive.requiresDamage ? 'попадания с уроном' : 'попадания'};
       const description = (display?.description ?? choice.prompt).replace(/\{(\w+)\}/g, (match, key) => String(values[key] ?? match));
-      return {id: choice.id, name: choice.origin.name, description,
+      return {id: choice.id, presentationKey: primitive ? `mastery.${primitive.type}` : undefined, name: choice.origin.name, description,
         parentActionId: action.id, imageUrl: display?.imageUrl,
         enabledDescription: `Автоматически применять свойство без диалога: ${(choice.recommended ?? []).map(id => choice.items?.find(item => item.id === id)?.name ?? id).join(', ')}.`,
         disabledDescription: 'Перед атакой показывать выбор: применить свойство или пропустить его.',

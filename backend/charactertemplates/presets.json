@@ -6,7 +6,7 @@
     "preset_key": "swordsman",
     "character": {
       "name": "Мечник",
-      "avatar_url": "",
+      "avatar_url": "/portraits/presets/swordsman.png",
       "description": "",
       "notes": "",
       "system_id": "dnd5e-2024",
@@ -503,7 +503,7 @@
     "preset_key": "archer",
     "character": {
       "name": "Лучник",
-      "avatar_url": "",
+      "avatar_url": "/portraits/presets/archer.png",
       "description": "",
       "notes": "",
       "system_id": "dnd5e-2024",
@@ -1116,7 +1116,7 @@
     "preset_key": "line",
     "character": {
       "name": "Линейный боец",
-      "avatar_url": "",
+      "avatar_url": "/portraits/presets/line.png",
       "description": "",
       "notes": "",
       "system_id": "dnd5e-2024",

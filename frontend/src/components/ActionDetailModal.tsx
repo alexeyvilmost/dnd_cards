@@ -48,7 +48,7 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
       title={action.name}
       titleEn={action.name_en}
       preview={(
-        locked ? <ActionPreview action={action} disableHover resources={resources} /> : <EntityImageEditor
+        <EntityImageEditor
           entityId={action.id}
           initialUrl={action.image_url || ''}
           persist={async (id, url) => (await actionsApi.updateAction(id, { image_url: url })).image_url || url}
@@ -59,15 +59,16 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
       )}
       actions={(
         <>
-          {locked ? (
+          {locked && (
             <span className="edm-btn" title="Механика закреплена полной тестовой сертификацией">
               <Lock size={18} /><span>Закреплено</span>
             </span>
-          ) : (
+          )}
+          {
             <Link to={`/action-creator?edit=${action.id}`} className="edm-btn">
               <Edit size={18} /><span>Редактировать</span>
             </Link>
-          )}
+          }
           <Link to={`/action-creator?template_id=${action.id}`} className="edm-btn">
             <Copy size={18} /><span>Использовать как шаблон</span>
           </Link>

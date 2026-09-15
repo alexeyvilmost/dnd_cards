@@ -47,6 +47,7 @@ import {
   parseLibrarySearchParams,
 } from '../utils/libraryUrlParams';
 import ItemPreview from '../components/ItemPreview';
+import PassiveLibrary from '../components/PassiveLibrary';
 import { useSiteSettings } from '../settings';
 
 /** «Интерфейс» рисуем только для предметов; для прочих типов (в т.ч. из ссылки) — «Список». */
@@ -783,6 +784,8 @@ const CardLibrary = () => {
       loadCards(1, false);
     } else if (contentType === 'effects') {
       loadEffects(1, false);
+    } else if (contentType === 'passives') {
+      setLoading(false); setLoadingMore(false); setHasMore(false);
     } else if (contentType === 'actions') {
       loadActions(1, false);
     } else if (contentType === 'spells') {
@@ -1299,6 +1302,7 @@ const CardLibrary = () => {
   const createTargetByType: Record<LibraryContentType, { to: string; label: string }> = {
     cards: { to: '/create', label: 'Создать карту' },
     effects: { to: '/effect-creator', label: 'Создать эффект' },
+    passives: { to: '/?type=passives', label: 'Оформление пассивов' },
     actions: { to: '/action-creator', label: 'Создать действие' },
     spells: { to: '/spell-creator', label: 'Создать заклинание' },
     feats: { to: '/feat-creator', label: 'Создать черту' },
@@ -1316,6 +1320,7 @@ const CardLibrary = () => {
   const contentTypeItems: NavRailItem[] = [
     { id: 'cards', label: 'Предметы', icon: <Package size={18} /> },
     { id: 'effects', label: 'Эффекты', icon: <Sparkles size={18} /> },
+    { id: 'passives', label: 'Переключаемые пассивы', icon: <Sparkles size={18} /> },
     { id: 'actions', label: 'Действия', icon: <Zap size={18} /> },
     { id: 'spells', label: 'Заклинания', icon: <Wand2 size={18} /> },
     { id: 'feats', label: 'Черты', icon: <Star size={18} /> },
@@ -1378,13 +1383,13 @@ const CardLibrary = () => {
         <h1 className="text-2xl sm:text-3xl font-fantasy font-bold text-gray-900">
           Библиотека карточек
         </h1>
-        <Link
+        {contentType !== 'passives' && <Link
           to={createTarget.to}
           className="btn-primary flex items-center space-x-2 w-full sm:w-auto justify-center"
         >
           <Plus size={18} />
           <span>{createTarget.label}</span>
-        </Link>
+        </Link>}
       </div>
 
       {/* Поиск и фильтры */}
@@ -1791,6 +1796,7 @@ const CardLibrary = () => {
       )}
 
       {/* Загрузка */}
+      {contentType === 'passives' && <PassiveLibrary search={search} mode={viewMode === 'list' ? 'row' : 'icon'}/>}
       {loading && (
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

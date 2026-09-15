@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import type { Action, PassiveEffect } from '../../types';
+import type { Action, PassiveEffect, Feat } from '../../types';
+import FeatPreview from '../FeatPreview';
 import type { EntityDisplayMode } from '../../settings';
 import { usePinMode } from '../../hooks/usePinMode';
 import ForgeAbilityLine from './ForgeAbilityLine';
@@ -17,6 +18,7 @@ export type AbilityEntry = {
   detail?: ReactNode;
   effect?: PassiveEffect;
   action?: Action;
+  feat?: Feat;
 };
 
 type Props = {
@@ -59,6 +61,7 @@ const ForgeAbilityDisplay = ({ entries, mode, linesClassName = 'forge-ability-li
             detail={entry.detail}
             effect={entry.effect}
             action={entry.action}
+            feat={entry.feat}
           />
         ))}
       </div>
@@ -88,7 +91,7 @@ const ForgeAbilityDisplay = ({ entries, mode, linesClassName = 'forge-ability-li
           );
         })}
       </div>
-      {hovered && (hovered.effect || hovered.action) && (
+      {hovered && (hovered.effect || hovered.action || hovered.feat) && (
         <div
           ref={popoverRef}
           className="forge-effect-popover"
@@ -100,6 +103,7 @@ const ForgeAbilityDisplay = ({ entries, mode, linesClassName = 'forge-ability-li
           onMouseLeave={onLeave}
         >
           {hovered.effect && <EffectPreview effect={hovered.effect} sourceLabel={hovered.sourceLabel} disableHover />}
+          {hovered.feat && <FeatPreview feat={hovered.feat} disableHover />}
           {hovered.action && !hovered.effect && (
             <ActionPreview action={hovered.action} sourceLabel={hovered.sourceLabel} disableHover />
           )}

@@ -37,7 +37,7 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
       title={effect.name}
       titleEn={effect.name_en}
       preview={(
-        locked ? <EffectPreview effect={effect} disableHover /> : <EntityImageEditor
+        <EntityImageEditor
           entityId={effect.id}
           initialUrl={effect.image_url || ''}
           persist={async (id, url) => (await effectsApi.updateEffect(id, { image_url: url })).image_url || url}
@@ -48,15 +48,16 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
       )}
       actions={(
         <>
-          {locked ? (
+          {locked && (
             <span className="edm-btn" title="Механика закреплена полной тестовой сертификацией">
               <Lock size={18} /><span>Закреплено</span>
             </span>
-          ) : (
+          )}
+          {
             <Link to={`/effect-creator?edit=${effect.id}`} className="edm-btn">
               <Edit size={18} /><span>Редактировать</span>
             </Link>
-          )}
+          }
           <Link to={`/effect-creator?template_id=${effect.id}`} className="edm-btn">
             <Copy size={18} /><span>Использовать как шаблон</span>
           </Link>

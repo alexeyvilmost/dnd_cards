@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { combatRollModeFor, useSiteSettings } from '../settings';
 import type { SoloCombatState } from './types';
 import { groupCombatSaveBeats, presentCombatEntries, type CombatBeat } from './presentation';
+import {persistedRollPresentation} from './persistedRollPresentation';
 
 export function useCombatPresentation(state: SoloCombatState | null, opening: SoloCombatState | null) {
   const settings=useSiteSettings();
@@ -16,7 +17,15 @@ export function useCombatPresentation(state: SoloCombatState | null, opening: So
     setPrevious(state);
     if (previous || opening) {
       const incoming=presentCombatEntries(state,state.log.filter(entry=>!seen.has(entry.id)));
-      if(incoming.length)setQueue(current=>groupCombatSaveBeats([...current,...incoming]));
+      const held = persistedRollPresentation(previous?.pendingD20Interrupt);
+      if (held?.held && !persistedRollPresentation(state.pendingD20Interrupt)?.held) {
+        // The confirmed phase belongs to the dialog already on screen, ahead
+        // of unrelated queued movement/resource feedback. Do not remount it.
+        const confirmation = incoming.filter(beat => beat.roll && beat.sourceId === held.command.actorId);
+        const remainder = incoming.filter(beat => !confirmation.includes(beat));
+        if (confirmation.length) setPlaying(null);
+        setQueue(current=>groupCombatSaveBeats([...confirmation,...current,...remainder]));
+      } else if(incoming.length)setQueue(current=>groupCombatSaveBeats([...current,...incoming]));
     }
   }
   const next=queue[0];

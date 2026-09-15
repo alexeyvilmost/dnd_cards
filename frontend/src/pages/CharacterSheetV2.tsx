@@ -1,6 +1,6 @@
+import SheetFeatureSections from '../components/SheetFeatureSections';
 import { useRef, useState, type ReactNode } from 'react';
 import type { AssembledCharacter } from '../character/assemble';
-import { effectAbilityPresentation } from '../character/abilityDisplay';
 import { useGrantedActions } from '../character/grantedActions';
 import type { CharacterRuleState } from '../character/rules/types';
 import type { CharacterDraft, ForgeCharacter } from '../character/types';
@@ -517,40 +517,7 @@ const CharacterSheetV2 = ({
           </CollapsibleSection>
 
           <CollapsibleSection title="Черты и способности">
-            {assembled.feats.length > 0 && (
-              <div className="cs-tags">
-                {assembled.feats.map((f) => <span key={f.id} className="cs-tag">{f.name}</span>)}
-              </div>
-            )}
-            <ForgeAbilityDisplay
-              mode={entityDisplay.effects}
-              linesClassName="cs-lines"
-              entries={assembled.effects.map(({ effect, origin }) => {
-                const p = effectAbilityPresentation(effect, origin, assembled.feats, originLabel);
-                return {
-                  key: effect.id,
-                  name: p.name,
-                  imageUrl: effect.image_url,
-                  fallbackImageUrl: p.fallbackImageUrl,
-                  sourceLabel: p.sourceLabel,
-                  effect: p.effect,
-                };
-              })}
-            />
-            <ForgeAbilityDisplay
-              mode={entityDisplay.actions}
-              linesClassName="cs-lines"
-              entries={abilityActions.map(({ action, sourceLabel }) => ({
-                key: action.id,
-                name: action.name,
-                imageUrl: action.image_url,
-                sourceLabel,
-                action,
-              }))}
-            />
-            {assembled.feats.length === 0 && assembled.effects.length === 0 && abilityActions.length === 0 && (
-              <p className="cs-hook-note">Нет привязанных способностей.</p>
-            )}
+            <SheetFeatureSections assembled={assembled}/>
           </CollapsibleSection>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import type { ActiveEffectEntry } from '../mvp/contracts';
+import {actorFootprint, footprintCells} from './footprint';
 import type {
   RuleActionDefinition,
   RuleHazardDefinition,
@@ -244,8 +245,8 @@ export function createCombatArea(input: {
   };
 }
 
-export function areaContains(area: CombatAreaState, position: GridPosition): boolean {
-  return area.cells.some((cell) => samePosition(cell, position));
+export function areaContains(area: CombatAreaState, position: GridPosition, size = 1): boolean {
+  return footprintCells(position, size).some(p => area.cells.some(cell => samePosition(cell, p)));
 }
 
 export function turnKey(state: SoloCombatState): string {
@@ -277,7 +278,7 @@ export function queueCombatAreaEvent(
     const triggered = new Set(area.triggeredTurnKeys ?? []);
     for (const actorId of eventActorIds) {
       const token = state.tokens[actorId];
-      if (!token || (!assumeMembership && event !== 'exit' && !areaContains(area, token.position))) continue;
+      if (!token || (!assumeMembership && event !== 'exit' && !areaContains(area, token.position, actorFootprint(state.world.actors[actorId], state)))) continue;
       const occurrences = Math.max(1, Math.floor(occurrencesByArea[area.id] ?? 1));
       for (let occurrence = 0; occurrence < occurrences; occurrence += 1) {
         const movementIdentity = event === 'move' ? `:${state.boardRevision}:${occurrence}` : '';
@@ -355,7 +356,7 @@ export function reanchorSourceCombatAreas(
     if (!area.sourceAnchored || area.sourceActorId !== sourceActorId
       || !area.sourceAnchorRadiusFt || samePosition(area.origin, position)) continue;
     actorsBefore.set(areaId, new Set(Object.entries(state.tokens).flatMap(([actorId, token]) => (
-      actorId !== sourceActorId && areaContains(area, token.position) ? [actorId] : []
+      actorId !== sourceActorId && areaContains(area, token.position, actorFootprint(state.world.actors[actorId], state)) ? [actorId] : []
     ))));
     areas[areaId] = {
       ...area,
@@ -374,7 +375,7 @@ export function reanchorSourceCombatAreas(
     const area = areas[areaId];
     const before = actorsBefore.get(areaId) ?? new Set<string>();
     const after = new Set(Object.entries(state.tokens).flatMap(([actorId, token]) => (
-      actorId !== sourceActorId && areaContains(area, token.position) ? [actorId] : []
+      actorId !== sourceActorId && areaContains(area, token.position, actorFootprint(state.world.actors[actorId], state)) ? [actorId] : []
     )));
     const exited = [...before].filter((actorId) => !after.has(actorId));
     const entered = [...after].filter((actorId) => !before.has(actorId));
@@ -418,7 +419,7 @@ export function reconcileInsideAreaConditions(state: SoloCombatState): SoloComba
   const actors = Object.fromEntries(Object.entries(state.world.actors).map(([actorId, actor]) => {
     const required = areas.filter((area) => {
       const token = state.tokens[actorId];
-      return token && areaContains(area, token.position);
+      return token && areaContains(area, token.position, actorFootprint(state.world.actors[actorId], state));
     });
     const requiredIds = new Set(required.flatMap((area) => [
       ...(area.insideEffect ? [`combat-area:${area.id}:condition:${actorId}`] : []),
@@ -434,7 +435,7 @@ export function reconcileInsideAreaConditions(state: SoloCombatState): SoloComba
       if ((effect.mechanics as Dict).area_linked === true && effect.sourceId) {
         const sourceArea = hazardAreaBySource.get(effect.sourceId);
         const token = state.tokens[actorId];
-        if (sourceArea && (!token || !areaContains(sourceArea, token.position))) return false;
+        if (sourceArea && (!token || !areaContains(sourceArea, token.position, actorFootprint(actor, state)))) return false;
       }
       const areaId = (effect.mechanics as Dict).area_id;
       return typeof areaId !== 'string' || requiredIds.has(effect.id);
@@ -486,9 +487,10 @@ export function movementCostThroughAreas(
   from: GridPosition,
   to: GridPosition,
   baseFeet: number,
+  actorId?: string,
 ): number {
   const difficult = Object.values(state.combatAreas ?? {}).some((area) => (
-    area.difficultTerrain && movementCells(from, to).some((cell) => areaContains(area, cell))
+    area.difficultTerrain && movementCells(from, to).some((cell) => areaContains(area, cell, actorFootprint(actorId ? state.world.actors[actorId] : undefined, state)))
   ));
   return difficult ? baseFeet * 2 : baseFeet;
 }
@@ -503,12 +505,13 @@ export function enteredAndExitedAreas(
     !movingActorId || !area.sourceAnchored || area.sourceActorId !== movingActorId
   ));
   const traversed = movementCells(from, to);
+  const size = actorFootprint(movingActorId ? state.world.actors[movingActorId] : undefined, state);
   return {
-    entered: areas.filter((area) => !areaContains(area, from)
-      && traversed.some((cell) => areaContains(area, cell))).map((area) => area.id),
-    exited: areas.filter((area) => areaContains(area, from) && !areaContains(area, to)).map((area) => area.id),
+    entered: areas.filter((area) => !areaContains(area, from, size)
+      && traversed.some((cell) => areaContains(area, cell, size))).map((area) => area.id),
+    exited: areas.filter((area) => areaContains(area, from, size) && !areaContains(area, to, size)).map((area) => area.id),
     movementOccurrences: Object.fromEntries(areas.flatMap((area) => {
-      const count = traversed.filter((cell) => !samePosition(cell, from) && areaContains(area, cell)).length;
+      const count = traversed.filter((cell) => !samePosition(cell, from) && areaContains(area, cell, size)).length;
       return count > 0 ? [[area.id, count]] : [];
     })),
   };

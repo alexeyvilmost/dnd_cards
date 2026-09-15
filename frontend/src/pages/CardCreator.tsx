@@ -14,6 +14,8 @@ import ImageLibraryModal from '../components/ImageLibraryModal';
 import NavRail, { type NavRailItem } from '../components/NavRail';
 import { useIsMobile } from '../hooks/useIsMobile';
 import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
+import LockedMechanicsViewer from '../components/LockedMechanicsViewer';
+import {isMechanicsLocked} from '../content/supportStatus';
 import { validateMechanics } from '../engine/validateMechanics';
 import { MainSection } from '../components/cardCreator/MainSection';
 import { ImageSection } from '../components/cardCreator/ImageSection';
@@ -36,6 +38,7 @@ const CardCreator = () => {
   const [previewCard, setPreviewCard] = useState<any>(null);
   const [cardImage, setCardImage] = useState<string>('');
   const [originalCard, setOriginalCard] = useState<any>(null);
+  const lockedEntity = Boolean(id && isMechanicsLocked(originalCard));
   const [showImageLibrary, setShowImageLibrary] = useState(false);
   const [createdCardId, setCreatedCardId] = useState<string | null>(null); // ID карты, созданной при генерации изображения
   const [isPollingImage, setIsPollingImage] = useState(false); // Флаг активного polling'а
@@ -316,7 +319,7 @@ const CardCreator = () => {
     effects: effects.length > 0
       ? effects.filter((effect) => effect.targetType && effect.targetSpecific && effect.modifier && effect.value > 0)
       : null,
-    mechanics: mechanics ?? null,
+    ...(lockedEntity ? {} : {mechanics: mechanics ?? null}),
   });
 
   // Обработка отправки формы
@@ -331,7 +334,7 @@ const CardCreator = () => {
 
       // Паритет с конструкторами заклинания/действия/эффекта: не даём сохранить механику,
       // не проходящую схему (раньше предмет был единственным без этой проверки).
-      if (mechanics && typeof mechanics === 'object') {
+      if (!lockedEntity && mechanics && typeof mechanics === 'object') {
         // kind='passive_effect': у предмета своего вида в схеме нет — механика предмета
         // и есть эффект с гейтом (while: equipped/attuned).
         const check = validateMechanics(mechanics as Record<string, unknown>, {
@@ -581,7 +584,7 @@ const CardCreator = () => {
                     {' '}(и требуется настройка, если она включена в «Снаряжении»); активируемые
                     попадают в действия на листе персонажа.
                   </p>
-                  <MechanicsBuilder
+                  {lockedEntity ? <LockedMechanicsViewer value={mechanics}/> : <MechanicsBuilder
                     value={mechanics}
                     onChange={setMechanics}
                     onValidationChange={setMechanicsEditorValid}
@@ -594,7 +597,7 @@ const CardCreator = () => {
                         watchedValues.requires_attunement ? 'Требует настройки' : '',
                       ].filter(Boolean).join('; '),
                     }}
-                  />
+                  />}
                 </div>
               )}
 

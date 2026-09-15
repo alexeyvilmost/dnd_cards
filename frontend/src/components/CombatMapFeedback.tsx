@@ -2,17 +2,22 @@ import type { CSSProperties } from 'react';
 import type { CombatBeat } from '../solo-combat/presentation';
 import type { SoloCombatState } from '../solo-combat/types';
 import { getDamageIconPath, getDamageLabel } from '../utils/damageTypes';
+import {actorFootprint} from '../solo-combat/footprint';
 
 export default function CombatMapFeedback({beat,state}: {beat:CombatBeat|null;state:SoloCombatState}) {
   if(!beat)return null;
-  const from=beat.from,to=beat.to;
+  const centre=(position: NonNullable<CombatBeat['from']>, actorId?: string)=>{
+    const offset=actorFootprint(actorId ? state.world.actors[actorId] : undefined, state)/2;
+    return {x:position.x+offset,y:position.y+offset};
+  };
+  const from=beat.from&&centre(beat.from,beat.sourceId),to=beat.to&&centre(beat.to,beat.targetId);
   const angle=from&&to?Math.atan2(to.y-from.y,to.x-from.x)*180/Math.PI:0;
   const distance=from&&to?Math.hypot(to.x-from.x,to.y-from.y):0;
   const grouped=new Map<string,typeof beat.cues>();
   for(const cue of beat.cues)grouped.set(cue.actorId,[...(grouped.get(cue.actorId)??[]),cue]);
   return <div key={beat.id} className="combat-map-feedback" aria-live="polite">
     {beat.roll&&beat.visual&&from&&to&&<div className={`combat-attack-fx is-${beat.visual}`}
-      style={{left:`calc((${from.x} + .5) * var(--tactical-cell-size))`,top:`calc((${from.y} + .5) * var(--tactical-cell-size))`,
+      style={{left:`calc(${from.x} * var(--tactical-cell-size))`,top:`calc(${from.y} * var(--tactical-cell-size))`,
         '--attack-angle':`${angle}deg`,'--attack-distance':`calc(${distance} * var(--tactical-cell-size))`} as CSSProperties}>
       <svg viewBox="0 0 100 60" aria-hidden="true">
         {beat.visual==='slashing'?<path d="M10 52 Q68 -6 93 12 Q74 10 22 56 Z"/>:
@@ -25,7 +30,7 @@ export default function CombatMapFeedback({beat,state}: {beat:CombatBeat|null;st
     {[...grouped].map(([actorId,cues])=>{
       const pos=state.tokens[actorId]?.position;
       if(!pos)return null;
-      return <div key={actorId} className="combat-floating-stack" style={{left:`clamp(116px, calc((${pos.x} + .5) * var(--tactical-cell-size)), calc(100% - 116px))`,top:`calc(${pos.y < 1 ? pos.y + 1 : pos.y} * var(--tactical-cell-size))`}}>
+      return <div key={actorId} className="combat-floating-stack" style={{left:`clamp(116px, calc(${centre(pos,actorId).x} * var(--tactical-cell-size)), calc(100% - 116px))`,top:`calc(${pos.y < 1 ? pos.y + 1 : pos.y} * var(--tactical-cell-size))`}}>
         {cues.map((cue,i)=><span key={i} className={`combat-floating-cue is-${cue.kind}`}>
           {cue.damageType&&<img src={getDamageIconPath(cue.damageType)} alt={getDamageLabel(cue.damageType)}/>}<b>{cue.text}</b>
         </span>)}

@@ -316,7 +316,12 @@
 .battle-token {
   --token-color: #a64737;
   position: absolute;
-  inset: 6%;
+  top: 6%;
+  left: 6%;
+  width: calc(var(--token-size, 1) * 100% - 12%);
+  height: calc(var(--token-size, 1) * 100% - 12%);
+  z-index: 4;
+  pointer-events: none;
   display: grid;
   place-items: center;
   border: 3px solid var(--token-color);

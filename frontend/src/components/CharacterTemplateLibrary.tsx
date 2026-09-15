@@ -63,6 +63,7 @@ export default function CharacterTemplateLibrary({forRun = false}: {forRun?: boo
     {error && <p role="alert">{error}</p>}
     <div className="character-template-grid">
       {templates.filter(t => !forRun || t.preset_key).map(template => <article className="roguelike-card" key={template.id}>
+        {template.character.avatar_url && <img className="character-template-portrait" src={template.character.avatar_url} alt={template.name} />}
         <h3>{template.name}</h3><p>{template.description}</p>
         <p className="character-template-summary">Уровень {template.character.level} · Хиты {template.character.max_hp}</p>
         <button className="forge-btn" type="button" onClick={() => {setSelected(template); setName(template.name); setCreatedCopy(null); setError('');}}>

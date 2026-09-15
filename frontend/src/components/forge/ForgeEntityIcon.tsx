@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import '../EntityPresentation.css';
 
 type ForgeEntityIconProps = {
   imageUrl?: string | null;
@@ -10,11 +11,11 @@ type ForgeEntityIconProps = {
 };
 
 const ForgeEntityIcon = ({ imageUrl, alt, size = 22, className = '', fill = false }: ForgeEntityIconProps) => {
-  const [failed, setFailed] = useState(false);
+  const [failedUrl, setFailedUrl] = useState<string | undefined>();
   const url = imageUrl?.trim();
   const cls = (base: string) => `${base}${fill ? ' forge-entity-icon--fill' : ''}${className ? ` ${className}` : ''}`;
 
-  if (!url || failed) {
+  if (!url || failedUrl === url) {
     return (
       <span
         className={cls('forge-entity-icon forge-entity-icon--placeholder')}
@@ -32,7 +33,7 @@ const ForgeEntityIcon = ({ imageUrl, alt, size = 22, className = '', fill = fals
       alt={alt}
       className={cls('forge-entity-icon')}
       style={fill ? undefined : { width: size, height: size }}
-      onError={() => setFailed(true)}
+      onError={() => setFailedUrl(url)}
     />
   );
 };

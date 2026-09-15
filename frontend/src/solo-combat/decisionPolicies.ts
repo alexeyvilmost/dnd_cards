@@ -5,6 +5,7 @@ import type {RuleActionDefinition} from '../rules-core/domain';
 
 export interface DecisionPolicyToggle {
   id: string;
+  presentationKey?: string;
   name: string;
   description: string;
   defaultEnabled: boolean;
@@ -20,7 +21,7 @@ export function decisionPolicyToggles(scope: string, action?: RuleActionDefiniti
     || (rule.selector === 'ac_defense' && action && (Boolean(action.mechanics.attack_defense)
       || payloadsOf(action.mechanics).some(payload => payload.kind === 'modifier'
         && (payload.applies_to as Record<string, unknown> | undefined)?.roll === 'ac')))))
-    .map(rule => ({...rule, id: action ? `${rule.id}:${action.id}` : rule.id}));
+    .map(rule => ({...rule, presentationKey:rule.id, id: action ? `${rule.id}:${action.id}` : rule.id}));
 }
 export function decisionPolicyEnabled(toggle: DecisionPolicyToggle, preferences: Readonly<Record<string, boolean>>) {
   return preferences[toggle.id] ?? toggle.defaultEnabled;

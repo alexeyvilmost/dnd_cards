@@ -26,13 +26,14 @@ var validCharacterTypes = map[string]bool{
 // предыстория/черты/заклинания) и хранящая разрешённые выборы из механики.
 // Низкоуровневые умения этих сущностей — это эффекты и действия.
 type CharacterV3 struct {
-	ID          uuid.UUID  `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	UserID      uuid.UUID  `json:"user_id" gorm:"type:uuid;not null"`
-	GroupID     *uuid.UUID `json:"group_id" gorm:"type:uuid"`
-	Name        string     `json:"name" gorm:"not null"`
-	AvatarURL   string     `json:"avatar_url" gorm:"type:text"`
-	Description string     `json:"description" gorm:"type:text"`
-	Notes       string     `json:"notes" gorm:"type:text"`
+	ID               uuid.UUID  `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	UserID           uuid.UUID  `json:"user_id" gorm:"type:uuid;not null"`
+	GroupID          *uuid.UUID `json:"group_id" gorm:"type:uuid"`
+	Name             string     `json:"name" gorm:"not null"`
+	AvatarURL        string     `json:"avatar_url" gorm:"type:text"`
+	SourceTemplateID *uuid.UUID `json:"source_template_id,omitempty" gorm:"type:uuid"`
+	Description      string     `json:"description" gorm:"type:text"`
+	Notes            string     `json:"notes" gorm:"type:text"`
 
 	// Системная принадлежность. system_id неизменяем после создания; смена
 	// системы выполняется только созданием нового персонажа/явной конвертацией.

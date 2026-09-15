@@ -53,7 +53,7 @@ const Layout = ({ children }: LayoutProps) => {
   const isActive = (path?: string) => !!path && location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-gray-50" style={{
+    <div className="site-layout min-h-screen bg-gray-50" style={{
       backgroundImage: 'linear-gradient(rgba(245, 241, 235, 0.7), rgba(245, 241, 235, 0.7)), url(/groovepaper.png)',
       backgroundRepeat: 'repeat',
       backgroundSize: 'auto',

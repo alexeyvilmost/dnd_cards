@@ -247,35 +247,6 @@
   border: 1px solid var(--forge-gold-dim); border-radius: 6px; padding: 0 5px;
 }
 
-/* Плиточный режим действий (настройка «Иконки») */
-.cs-action-tiles { display: flex; flex-wrap: wrap; gap: 8px; }
-.cs-action-tile {
-  position: relative; width: 52px; height: 52px; box-sizing: border-box;
-  display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 8px; cursor: pointer; padding: 0;
-  /* Фон и золотая граница — как у иконок предметов/эффектов (.forge-spell-icon). */
-  background: radial-gradient(circle at 50% 38%, #3a3027, #221a14);
-  border: 1px solid var(--forge-gold-dim, #8a7320);
-  transition: border-color .15s, transform .1s;
-}
-.cs-action-tile:hover:not(:disabled) { border-color: var(--forge-gold, #c9a227); transform: translateY(-1px); }
-.cs-action-tile--disabled { opacity: .4; cursor: not-allowed; }
-/* Причина недоступности действия — слой поверх превью (не вместо него). */
-.cs-action-disabled-reason {
-  margin-top: 6px; padding: 5px 9px;
-  font-size: 12px; font-weight: 700; text-align: center;
-  color: #ffb4a2; background: #2a0d08;
-  border: 1px solid #c0442a; border-radius: 6px;
-}
-/* Уровень заклинания — белой римской цифрой с чёрным контуром в правом нижнем углу (без плашки). */
-.cs-action-tile-lvl {
-  position: absolute; bottom: 0; right: 4px; z-index: 2;
-  font-size: 16px; line-height: 1.1; font-weight: 800; text-align: center;
-  color: #fff;
-  -webkit-text-stroke: 0.6px #000; paint-order: stroke fill;
-  text-shadow: 0 1px 2px #000;
-  pointer-events: none;
-}
 
 /* ── Конфликты ── */
 .cs-conflicts { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--forge-danger); padding: 2px 4px; }

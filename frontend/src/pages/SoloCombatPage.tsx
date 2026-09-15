@@ -508,9 +508,15 @@ export default function SoloCombatPage() {
   }, [persist]);
 
   const applyIntent = useCallback((intent: RoguelikeCombatIntent, local: () => SoloCombatState) => {
-    if (presentationBlockedRef.current) return;
+    // An open held-roll dialog owns this continuation. Cosmetic map feedback
+    // must not swallow its decision; the engine still validates the pending id.
+    if (presentationBlockedRef.current && intent.type !== 'd20_interrupt') return;
     const run = trustedRunRef.current;
-    if (!run) { apply(resumePendingMovement(local())); return; }
+    if (!run) {
+      try { apply(resumePendingMovement(local())); }
+      catch (reason) { setError(playerFacingSheetActionError(reason)); }
+      return;
+    }
     if (trustedBusyRef.current) return;
     trustedBusyRef.current = true;
     setBusy(true); setError(null);
@@ -1006,6 +1012,11 @@ export default function SoloCombatPage() {
       if (roguelikeRunId) {
         const run = await roguelikeApi.get(roguelikeRunId);
         const completed = run.phase === 'combat' ? await roguelikeApi.command(run.id, run.revision, 'complete_encounter') : run;
+        if (completed.status === 'defeat') {
+          const retried = await roguelikeApi.command(completed.id, completed.revision, 'retry');
+          navigate(`/characters-v3/${retried.character_id}?roguelike=${retried.id}`, {replace: true});
+          return;
+        }
         setRewardRun(completed); setBusy(false);
         return;
       }
@@ -1115,6 +1126,9 @@ export default function SoloCombatPage() {
       : ''}`
     : null;
   const heldForDisplay = influenceOfferVisible || error ? heldDecision : undefined;
+  // Cosmetic projection only: never patch archived combat envelopes for a portrait.
+  const displayState = {...state,tokens:Object.fromEntries(Object.entries(state.tokens).map(([actorId,token]) => [actorId,
+    {...token,tokenUrl:participantCharacters[actorId]?.avatar_url || token.tokenUrl}]))};
   return (
     <main className={`solo-combat-page forge${presentation.blocked ? ' combat-input-blocked' : ''}`}>
       {rewardRun && <CombatRewardDialog run={rewardRun} onClose={() => navigate(`/roguelike/${rewardRun.id}`)} />}
@@ -1148,7 +1162,7 @@ export default function SoloCombatPage() {
               onMouseEnter={() => setCombatHoveredActorId(entry.actorId)} onMouseLeave={() => setCombatHoveredActorId(null)}
               onFocus={() => setCombatHoveredActorId(entry.actorId)} onBlur={() => setCombatHoveredActorId(null)}>
               <b className="initiative-card__order">{index + 1}</b>
-              <span className="initiative-card__portrait">{state.tokens[entry.actorId]?.tokenUrl ? <img src={state.tokens[entry.actorId].tokenUrl} alt="" /> : combatActorDisplayName(participant).slice(0, 1)}{identity.duplicateIndex && <i>{identity.duplicateIndex}</i>}</span>
+              <span className="initiative-card__portrait">{displayState.tokens[entry.actorId]?.tokenUrl ? <img src={displayState.tokens[entry.actorId].tokenUrl} alt="" /> : combatActorDisplayName(participant).slice(0, 1)}{identity.duplicateIndex && <i>{identity.duplicateIndex}</i>}</span>
               <span className="initiative-card__name">{identity.displayName}</span>
               <small>{isActive ? 'ХОД' : `иниц. ${entry.total}`}</small>
             </button>;
@@ -1160,7 +1174,7 @@ export default function SoloCombatPage() {
       <section className="combat-stage">
         <div className={`combat-map-wrap${secondaryActionId && state.pendingTriggeredAction ? ' is-selecting-secondary' : ''}`}>
           <TacticalBattleMap
-            state={state}
+            state={displayState}
             feedback={presentation.playing}
             selectedActionChoices={selectedActionChoices}
             actorId={activeControlledActorId}
@@ -1371,7 +1385,7 @@ export default function SoloCombatPage() {
       {!secondaryActionId && <CombatTriggeredActionPanel state={state} busy={busy} onChoose={resolveTriggeredChoice} />}
       {pendingTurnStart && <div className="combat-reaction-backdrop"><section><p>НАЧАЛО ХОДА</p><h2>Нанести 1к4 урона существу в захвате?</h2><div>{pendingTurnStart.targetActorIds.map((targetActorId) => <button type="button" key={targetActorId} disabled={busy} onClick={() => applyIntent({type: 'turn_start', targetActorId: targetActorId}, () => resolveSoloCombatTurnStart(state, targetActorId))}>{state.world.actors[targetActorId]?.name ?? 'Цель'} · 1к4 дробящего урона</button>)}<button type="button" disabled={busy} onClick={() => applyIntent({type: 'turn_start', targetActorId: null}, () => resolveSoloCombatTurnStart(state, null))}>Пропустить</button></div></section></div>}
       {worldInputDialog.dialog}
-      {!rewardRun && !presentation.blocked && shouldShowSoloCombatOutcome(state) && <div className="combat-outcome"><section><p>БОЙ ЗАВЕРШЁН</p><h1>{state.outcome === 'victory' ? 'Победа' : 'Поражение'}</h1><p>{state.outcome === 'victory' ? 'Все противники уничтожены.' : `${character.name} потерял все хиты.`}</p><button type="button" disabled={busy} onClick={finish}>{roguelikeRunId ? 'Получить награду' : 'Завершить и вернуться в лист'}</button><button type="button" onClick={() => navigate(roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`)}><RotateCcw size={16} /> {roguelikeRunId ? 'Вернуться в забег' : 'Оставить запись боя'}</button></section></div>}
+      {!rewardRun && !presentation.blocked && shouldShowSoloCombatOutcome(state) && <div className="combat-outcome"><section><p>БОЙ ЗАВЕРШЁН</p><h1>{state.outcome === 'victory' ? 'Победа' : 'Поражение'}</h1><p>{state.outcome === 'victory' ? 'Все противники уничтожены.' : `${character.name} потерял все хиты.`}</p><button type="button" disabled={busy} onClick={finish}>{roguelikeRunId ? state.outcome === 'victory' ? 'Получить награду' : 'Повторить с контрольной точки' : 'Завершить и вернуться в лист'}</button><button type="button" onClick={() => navigate(roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`)}><RotateCcw size={16} /> {roguelikeRunId ? 'Вернуться в забег' : 'Оставить запись боя'}</button></section></div>}
     </main>
   );
 }

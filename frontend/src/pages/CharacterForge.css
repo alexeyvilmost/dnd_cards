@@ -127,26 +127,6 @@
   color: var(--forge-gold-dim); font-size: 15px;
 }
 .forge-ability-link { text-decoration: underline; cursor: default; }
-.forge-entity-icon {
-  flex-shrink: 0; border-radius: 50%; object-fit: cover;
-  background: rgba(255, 255, 255, 0.06);
-}
-.forge-entity-icon--placeholder {
-  display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 50%; background: rgba(255, 255, 255, 0.08);
-  color: var(--forge-text); line-height: 1;
-}
-/* Заполнение квадратной плитки: изображение до границ квадрата, углы как у плитки. */
-.forge-entity-icon--fill { width: 100%; height: 100%; border-radius: 7px; }
-/* Позиционная обёртка ховер-превью (действие/эффект/черта). Ширину задаёт сама карточка
-   превью (.sp-tip = 340px); max-content не даёт max-width:100% схлопнуть её. */
-.forge-effect-popover {
-  position: fixed; z-index: 9999; pointer-events: none; width: max-content;
-  max-width: calc(100vw - 16px); max-height: calc(100vh - 16px);
-  overflow: visible; padding: 28px 20px 0 0;
-}
-.forge-effect-popover > .sp-tip { max-width: 100%; box-sizing: border-box; }
-.forge-effect-popover .sp-desc { max-height: min(48vh, 460px); overflow-y: auto; }
 .sum-divider { border: none; border-top: 1px solid var(--forge-line); margin: 14px 0; }
 .sum-abilities { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
 .sum-ab { text-align: center; border: 1px solid var(--forge-line); border-radius: 6px; padding: 4px 8px; min-width: 46px; }
@@ -423,56 +403,6 @@
 .sheet-inv-move:hover:not(:disabled) { background: rgba(231, 221, 199, 0.16); }
 .sheet-inv-move:disabled { opacity: 0.5; cursor: default; }
 
-/* Ряд-предмет в стиле библиотеки (тёмная тема) */
-.sheet-item-row {
-  position: relative; overflow: hidden;
-  display: flex; align-items: center; gap: 9px; width: 100%; text-align: left;
-  padding: 6px 8px; border: 1px solid var(--forge-line); border-left: 3px solid #5a4a38;
-  border-radius: 8px; background: var(--forge-panel-2); cursor: pointer; color: var(--forge-text);
-  transition: border-color .14s, background .14s, transform .1s;
-}
-/* Лого-штамп слота на заднем фоне справа (текст перекрывает его). */
-.sheet-item-stamp {
-  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-  height: 66%; width: auto; max-width: 44px; object-fit: contain;
-  opacity: .07; filter: brightness(0) invert(1); pointer-events: none; z-index: 0;
-}
-.sheet-item-row-thumb, .sheet-item-row-body, .sheet-item-row-right { position: relative; z-index: 1; }
-.sheet-item-row:hover {
-  background: rgba(201,162,39,.08); transform: translateY(-1px);
-  border-top-color: var(--forge-gold-dim); border-right-color: var(--forge-gold-dim); border-bottom-color: var(--forge-gold-dim);
-}
-.sheet-item-row.is-empty { cursor: default; opacity: .72; }
-.sheet-item-row.is-empty:hover { transform: none; background: var(--forge-panel-2); border-color: var(--forge-line); border-left-color: #5a4a38; }
-.sheet-item-row.is-dimmed { opacity: .4; }
-.sheet-item-row.is-selected { border-color: var(--forge-gold); }
-.sheet-item-row-thumb {
-  flex: 0 0 auto; width: 42px; height: 42px; border-radius: 6px; overflow: hidden;
-  border: none; background: transparent;
-}
-.sheet-item-row-thumb img { width: 100%; height: 100%; object-fit: contain; transform: scale(1.02); }
-.sheet-item-row-thumb.is-slot img { object-fit: contain; transform: none; opacity: .62; filter: brightness(0) invert(0.66); padding: 4px; }
-.sheet-chip-mono { filter: brightness(0) invert(0.78); }
-.sheet-item-row-qty {
-  position: absolute; right: -3px; bottom: -3px; min-width: 16px; height: 16px; padding: 0 3px;
-  border-radius: 8px; background: #1a1410; border: 1px solid var(--forge-gold-dim);
-  color: var(--forge-gold); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;
-}
-.sheet-item-row-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.sheet-item-row-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px; }
-.sheet-item-row-detail { font-size: 11.5px; color: var(--forge-text-dim); overflow: hidden; line-height: 1.3; white-space: nowrap; text-overflow: ellipsis; }
-.sheet-item-row-thumb-ph {
-  display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
-  color: var(--forge-gold-dim); font-weight: 700; font-size: 17px; text-transform: uppercase;
-}
-.sheet-item-row.is-disabled { opacity: .5; cursor: not-allowed; }
-.sheet-item-row.is-disabled:hover { transform: none; background: var(--forge-panel-2); border-color: var(--forge-line); border-left-color: #5a4a38; }
-.sheet-item-rarity { font-size: 13px; flex: 0 0 auto; }
-.sheet-item-attune { width: 12px; height: 12px; flex: 0 0 auto; filter: brightness(0) invert(1); }
-.sheet-item-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; font-size: 11.5px; }
-.sheet-item-chip { display: inline-flex; align-items: center; gap: 3px; color: #d8cdb9; }
-.sheet-item-chip img { width: 13px; height: 13px; object-fit: contain; }
-.sheet-item-row-right { flex: 0 0 auto; }
 .sheet-slot-tag { font-size: 10px; color: var(--forge-text-dim); border: 1px solid var(--forge-line); border-radius: 5px; padding: 2px 5px; white-space: nowrap; }
 .sheet-slot-empty { font-size: 11px; color: var(--forge-text-dim); font-style: italic; }
 

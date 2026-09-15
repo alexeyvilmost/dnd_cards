@@ -1,3 +1,4 @@
+import SheetFeatureSections from '../components/SheetFeatureSections';
 import { useCallback, useEffect, useMemo, useRef, useState, type TouchEvent } from 'react';
 import {
   ArrowLeft, Backpack, BookOpen, ChevronRight, Dices, Heart,
@@ -16,7 +17,6 @@ import type { EntityRefType } from '../components/EntityRefRegistry';
 import type { SheetAction } from '../character/actionSheet';
 import { charactersV3Api } from '../character/api';
 import type { SheetAtomicRetryEnvelope } from '../character/sheetAtomicRetry';
-import { effectAbilityPresentation } from '../character/abilityDisplay';
 import { buildSavePayload, characterToDraft } from '../character/forgeHelpers';
 import {
   ABILITY_KEYS,
@@ -609,30 +609,7 @@ export default function MobileCharacterSheet() {
         {page === 'passives' && (
           <>
             <Section title="Черты и способности" action={addButton('feats')} wide>
-              <div className="m-entity-list">
-                {assembled.feats.map((feat) => (
-                  <EntityRow
-                    key={feat.id}
-                    name={feat.name}
-                    detail="Черта"
-                    imageUrl={feat.image_url}
-                    onClick={() => setOverlay({ type: 'entity', view: { kind: 'feat', entity: feat } })}
-                  />
-                ))}
-                {assembled.effects.map(({ effect, origin }) => {
-                  const p = effectAbilityPresentation(effect, origin, assembled.feats, (k) => k);
-                  return (
-                  <EntityRow
-                    key={`${effect.id}:${origin.id}`}
-                    name={p.name}
-                    detail={p.sourceLabel}
-                    imageUrl={effect.image_url?.trim() || p.fallbackImageUrl}
-                    onClick={() => setOverlay({ type: 'entity', view: { kind: 'effect', entity: p.effect, sourceLabel: p.sourceLabel } })}
-                  />
-                  );
-                })}
-                {!assembled.feats.length && !assembled.effects.length && <p className="m-muted">Нет черт и способностей.</p>}
-              </div>
+            <SheetFeatureSections assembled={assembled}/>
             </Section>
 
             <Section title="Чувства">

@@ -10,6 +10,7 @@ import {
 import { breakdownValue } from '../engine/breakdown';
 import type { ActorState } from '../rules-core/domain';
 import { activeConditionWorldFactValues } from '../engine/conditions';
+import {actorFootprint, footprintCells, footprintFits, footprintDistanceFt} from './footprint';
 
 export function actorMustCrawl(actor: ActorState): boolean {
   if (!actor.runtime.activeEffects?.length) return false;
@@ -25,6 +26,11 @@ export function gridDistanceFt(left: GridPosition, right: GridPosition): number 
 }
 export function samePosition(left: GridPosition, right: GridPosition): boolean {
   return left.x === right.x && left.y === right.y;
+}
+
+export function actorDistanceFt(state: Pick<SoloCombatState, 'tokens' | 'world'>, leftId: string, rightId: string,
+  left = state.tokens[leftId].position, right = state.tokens[rightId].position): number {
+  return footprintDistanceFt(left, right, actorFootprint(state.world.actors[leftId], state), actorFootprint(state.world.actors[rightId], state));
 }
 
 /** Effective tactical speed, including generic active/passive speed modifiers. */
@@ -74,8 +80,12 @@ export function occupiedPositions(state: Pick<SoloCombatState, 'tokens' | 'world
   return new Set(Object.values(state.tokens).flatMap((token) => {
     const actor = state.world.actors[token.actorId];
     if (token.actorId === exceptActorId || !actor || actor.runtime.hp.current <= 0) return [];
-    return [`${token.position.x}:${token.position.y}`];
+    return footprintCells(token.position, actorFootprint(actor, state)).map(p => `${p.x}:${p.y}`);
   }));
+}
+
+export function canOccupyPosition(state: Pick<SoloCombatState, 'tokens' | 'world' | 'tacticalFootprints'>, actorId: string, position: GridPosition): boolean {
+  return footprintFits(position, actorFootprint(state.world.actors[actorId], state), occupiedPositions(state, actorId), TACTICAL_WIDTH, TACTICAL_HEIGHT);
 }
 
 /** Exact destination set accepted by the current five-foot tactical movement rule. */
@@ -105,6 +115,7 @@ export function reachableRoutes(
   const actor = state.world.actors[actorId];
   if (!origin || !actor || maximumFeet < 5 || !Number.isFinite(maximumFeet)) return [];
   const occupied = occupiedPositions(state, actorId);
+  const size = actorFootprint(actor, state);
   const key = (p: GridPosition) => `${p.x}:${p.y}`;
   const difficult = new Set(Object.values(state.combatAreas ?? {}).flatMap(area =>
     area.difficultTerrain ? area.cells.map(key) : []));
@@ -135,9 +146,9 @@ export function reachableRoutes(
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
       if (dx === 0 && dy === 0) continue;
       const destination = {x: current.destination.x + dx, y: current.destination.y + dy};
-      if (!inside(destination) || occupied.has(key(destination))) continue;
+      if (!footprintFits(destination, size, occupied, TACTICAL_WIDTH, TACTICAL_HEIGHT)) continue;
       const costFt = current.costFt + 5 * (1 + crawl
-        + Number(!flies && (difficult.has(key(current.destination)) || difficult.has(key(destination)))));
+        + Number(!flies && [...footprintCells(current.destination, size), ...footprintCells(destination, size)].some(p => difficult.has(key(p)))));
       if (costFt > maximumFeet) continue;
       const route: RankedRoute = {destination, costFt, path: [...current.path, destination],
         deviation: current.deviation + linePenalty(destination),
@@ -327,6 +338,7 @@ export function pushAway(input: {
   target: GridPosition;
   distanceFt: number;
   occupied?: ReadonlySet<string>;
+  targetSize?: number;
 }): GridPosition {
   const occupied = input.occupied ?? new Set<string>();
   const delta = {x: input.target.x - input.source.x, y: input.target.y - input.source.y};
@@ -338,7 +350,7 @@ export function pushAway(input: {
   let current = { ...input.target };
   for (let index = 0; index < Math.floor(input.distanceFt / TACTICAL_CELL_FT); index += 1) {
     const next = {x: input.target.x + offset(delta.x, index + 1), y: input.target.y + offset(delta.y, index + 1)};
-    if (!inside(next) || occupied.has(`${next.x}:${next.y}`)) break;
+    if (!footprintFits(next, input.targetSize ?? 1, occupied, TACTICAL_WIDTH, TACTICAL_HEIGHT)) break;
     current = next;
   }
   return current;
@@ -350,6 +362,7 @@ export function pullToward(input: {
   target: GridPosition;
   distanceFt: number;
   occupied?: ReadonlySet<string>;
+  targetSize?: number;
 }): GridPosition {
   const occupied = input.occupied ?? new Set<string>();
   const direction = {
@@ -360,7 +373,7 @@ export function pullToward(input: {
   let current = { ...input.target };
   for (let index = 0; index < Math.floor(input.distanceFt / TACTICAL_CELL_FT); index += 1) {
     const next = { x: current.x + direction.x, y: current.y + direction.y };
-    if (!inside(next) || occupied.has(`${next.x}:${next.y}`)) break;
+    if (!footprintFits(next, input.targetSize ?? 1, occupied, TACTICAL_WIDTH, TACTICAL_HEIGHT)) break;
     current = next;
   }
   return current;
@@ -386,6 +399,6 @@ export function areaActorIds(input: {
     if (!actor || actor.runtime.hp.current <= 0) return [];
     const relation = combatRelation(input.state, input.sourceActorId, token.actorId);
     if (allowedRelations?.length && !allowedRelations.includes(relation)) return [];
-    return area.has(`${token.position.x}:${token.position.y}`) ? [token.actorId] : [];
+    return footprintCells(token.position, actorFootprint(actor, input.state)).some(p => area.has(`${p.x}:${p.y}`)) ? [token.actorId] : [];
   });
 }

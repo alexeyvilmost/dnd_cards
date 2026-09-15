@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { basename, extname, join } from 'node:path';
 
@@ -10,17 +10,46 @@ const repositoryRoot = execFileSync(
   { encoding: 'utf8' },
 ).trim();
 
+const cliArguments = process.argv.slice(2);
+const changedOnly = cliArguments.includes('--changed');
+const unknownArguments = cliArguments.filter((argument) => argument !== '--changed');
+if (unknownArguments.length > 0) {
+  process.stderr.write(`Unknown argument(s): ${unknownArguments.join(', ')}\n`);
+  process.exit(2);
+}
+
+function gitPaths(argumentsList) {
+  return execFileSync('git', argumentsList, {
+    cwd: repositoryRoot,
+    encoding: 'utf8',
+  })
+    .split('\0')
+    .filter(Boolean);
+}
+
+function hasGitRef(reference) {
+  const result = spawnSync(
+    'git',
+    ['rev-parse', '--verify', '--quiet', reference],
+    { cwd: repositoryRoot, encoding: 'utf8' },
+  );
+  return result.status === 0 && Boolean(result.stdout.trim());
+}
+
 // Include untracked files locally so the check also protects work before it is
 // staged. In CI this is equivalent to scanning the complete checked-out tree.
 const sourcePaths = [
   ...new Set(
-    execFileSync(
-      'git',
-      ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
-      { cwd: repositoryRoot, encoding: 'utf8' },
-    )
-      .split('\0')
-      .filter(Boolean),
+    changedOnly
+      ? [
+        ...gitPaths(['diff', '--name-only', '--diff-filter=ACMR', '-z']),
+        ...gitPaths(['diff', '--cached', '--name-only', '--diff-filter=ACMR', '-z']),
+        ...gitPaths(['ls-files', '--others', '--exclude-standard', '-z']),
+        ...(hasGitRef('origin/main')
+          ? gitPaths(['diff', '--name-only', '--diff-filter=ACMR', '-z', 'origin/main...HEAD'])
+          : []),
+      ]
+      : gitPaths(['ls-files', '--cached', '--others', '--exclude-standard', '-z']),
   ),
 ];
 
@@ -199,5 +228,7 @@ if (violations.length > 0) {
   );
   process.exitCode = 1;
 } else {
-  process.stdout.write('No repository-known credentials or implicit script registration found.\n');
+  process.stdout.write(
+    `No repository-known credentials or implicit script registration found${changedOnly ? ' in changed files' : ''}.\n`,
+  );
 }

@@ -1,6 +1,7 @@
 import type { ActorState } from '../rules-core/domain';
 import {singleAttackDefenseBonus} from '../rules-core/attackDefenseRuntime';
-import { effectiveActorSpeedFt, gridDistanceFt, reachableRoutes } from './tacticalGrid';
+import { effectiveActorSpeedFt, reachableRoutes } from './tacticalGrid';
+import {actorFootprint, footprintDistanceFt} from './footprint';
 import { spatialFacts, type GridPosition, type SoloCombatState } from './types';
 
 export interface MonsterTurnPlan {
@@ -37,6 +38,7 @@ export function planMonsterTurn(
   const target = state.tokens[targetActorId]?.position;
   if (!start || !target) throw new Error('ИИ не видит участника на тактической сетке');
   const range = Math.max(5, attackRangeFt);
+  const distanceToTarget = (position: GridPosition) => footprintDistanceFt(position, target, actorFootprint(monster, state), actorFootprint(state.world.actors[targetActorId], state));
   const preferred = Math.max(5, Math.min(range, preferredRangeFt ?? range));
   const grappled = Object.values(state.world.grapples ?? {}).some((grapple) => (
     grapple.targetActorId === monster.id
@@ -47,10 +49,10 @@ export function planMonsterTurn(
     ...state,
     tokens: { ...state.tokens, [monster.id]: { ...state.tokens[monster.id], position } },
   });
-  const canAttack = (position: GridPosition) => gridDistanceFt(position, target) <= range
+  const canAttack = (position: GridPosition) => distanceToTarget(position) <= range
     && spatialFacts(at(position), monster.id, targetActorId).lineOfSight;
   const rating = (position: GridPosition) => {
-    const distance = gridDistanceFt(position, target);
+    const distance = distanceToTarget(position);
     // Legal attacks come first; then close to the profile's normal range.
     return [canAttack(position) ? 0 : 1, preferredRangeFt === undefined
       ? Math.max(0, distance - preferred) : Math.abs(distance - preferred)];

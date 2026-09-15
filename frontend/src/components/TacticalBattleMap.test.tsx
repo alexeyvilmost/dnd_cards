@@ -24,6 +24,23 @@ describe('TacticalBattleMap world-object clarity', () => {
     container.remove();
   });
 
+  it.each([[3,2],[4,3]])('renders size %i as one token over %i squared clickable cells',async(size,side)=>{
+    const base=structuredClone(compiled.roots.magicInitiateFighter.actor);
+    const state={tacticalFootprints:'sized',world:{actors:{hero:{...base,id:'hero',character:{...base.character,baseSize:size}}},objects:{},
+      scene:{mode:'encounter',initiative:['hero'],activeIndex:0,round:1}},
+      tokens:{hero:{actorId:'hero',position:{x:1,y:1},tokenUrl:'/portrait.png'}},
+      characterId:'hero',sideByActorId:{hero:'party'},catalogActions:[],combatAreas:{}} as unknown as SoloCombatState;
+    let clicked='';
+    await act(async()=>root.render(<TacticalBattleMap state={state} actorId="hero" selectedActionId={null} movementMode={false}
+      onCell={(_position,id)=>{clicked=id??'';}}/>));
+    expect(container.querySelectorAll('[data-actor-id="hero"]')).toHaveLength(side*side);
+    expect(container.querySelectorAll('.battle-token')).toHaveLength(1);
+    expect((container.querySelector('.battle-token') as HTMLElement).style.getPropertyValue('--token-size')).toBe(String(side));
+    const cells=container.querySelectorAll<HTMLButtonElement>('[data-actor-id="hero"]');
+    await act(async()=>cells[cells.length-1].click());
+    expect(clicked).toBe('hero');
+  });
+
   it('shows an inspectable Minor Illusion token with its description and counterplay', async () => {
     const state = {
       world: {

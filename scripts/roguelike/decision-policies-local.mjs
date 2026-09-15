@@ -9,7 +9,7 @@ const base='http://127.0.0.1:3001';
 const access=JSON.parse(await readFile(new URL('../../outputs/presets-250/acceptance.json',import.meta.url),'utf8'));
 const auth=await (await fetch(`${base}/api/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:access.username,password:access.password})})).json();
 async function api(method,path,body){const response=await fetch(`${base}/api${path}`,{method,headers:{Authorization:`Bearer ${auth.token}`,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const data=await response.json();assert(response.ok,JSON.stringify(data));return data;}
-const runID=access.created.find(row=>row.preset==='Лучник').runID;
+const runID=process.env.BOH_QA_RUN_ID || access.created.find(row=>row.preset==='Лучник').runID;
 let run=(await api('GET',`/roguelike/runs/${runID}`)).run;
 const command=async(type,payload={})=>{run=(await api('POST',`/roguelike/runs/${runID}/commands`,{command_id:randomUUID(),expected_revision:run.revision,type,payload})).run;};
 const browser=await chromium.launch({channel:'chrome',headless:true});

@@ -15,6 +15,7 @@ import { useIsMobile } from '../hooks/useIsMobile';
 import { validateMechanics } from '../engine/validateMechanics';
 import { isEntityIdTaken, validateEntityIdFormat } from '../utils/entityId';
 import { isMechanicsLocked } from '../content/supportStatus';
+import LockedMechanicsViewer from '../components/LockedMechanicsViewer';
 
 // Секции конструктора действия для сквозного рейла (как у эффекта: основное + механика).
 const SECTIONS: NavRailItem[] = [
@@ -199,7 +200,7 @@ const ActionCreator = () => {
       }
     }
 
-    if (data.mechanics && typeof data.mechanics === 'object') {
+    if (!lockedEntity && data.mechanics && typeof data.mechanics === 'object') {
       const check = validateMechanics(data.mechanics as Record<string, unknown>, {
         id: data.card_number || 'draft-action',
         name: data.name || 'action',
@@ -523,9 +524,7 @@ const ActionCreator = () => {
               <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">Механика (унифицированная)</h2>
                 {lockedEntity ? (
-                  <p className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900" role="status">
-                    Исполняемая механика закреплена тестовой сертификацией. Название, иконку, описание и остальные поля можно редактировать.
-                  </p>
+                  <LockedMechanicsViewer value={watch('mechanics')} />
                 ) : (
                   <MechanicsBuilder
                     value={(watch('mechanics') as Record<string, unknown>) || null}
@@ -585,8 +584,6 @@ const ActionCreator = () => {
 };
 
 export default ActionCreator;
-
-
 
 
 

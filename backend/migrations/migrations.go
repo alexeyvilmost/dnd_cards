@@ -1478,6 +1478,8 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		{Version: "249_roguelike_shop_items", Description: "Executable merchant items and separately priced run copies with audited preimages", Up: materializeRoguelikeShopItems, Down: rollbackRoguelikeShopItems},
 		{Version: "250_character_templates", Description: "Ownerless character templates and three Forge-validated fighter run presets", Up: createCharacterTemplates250, Down: retainCharacterTemplates250},
 		{Version: "251_archer_alert_template", Description: "Forge-validated Criminal/Alert Archer, preserving existing player copies", Up: updateArcherTemplate251, Down: retainCharacterTemplates250},
+		{Version: "252_template_portraits", Description: "Preset portraits and copy provenance; preserve personal artwork and combat history", Up: updateTemplatePortraits252, Down: retainCharacterTemplates250},
+		{Version: "253_passive_presentations", Description: "Editable presentation catalog for data-owned combat toggles", Up: createPassivePresentations253, Down: retainCharacterTemplates250},
 		// Здесь можно добавлять новые миграции
 	}
 }

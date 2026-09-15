@@ -7,6 +7,7 @@
 .character-template-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1rem; margin: 1rem 0; }
 .character-template-grid article { display: flex; flex-direction: column; align-items: flex-start; border: 1px solid var(--forge-border, #a88b54); border-radius: 14px; padding: 1.2rem; }
 .character-template-grid h3 { font-size: 1.25rem; font-weight: 700; }
+.character-template-portrait { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 9px; margin-bottom: 1rem; }
 .character-template-grid p { margin: .7rem 0; line-height: 1.5; white-space: pre-line; }
 .character-template-grid .character-template-summary { margin-top: auto; padding-top: .7rem; }
 .character-template-grid button { margin: .3rem .3rem .3rem 0; }

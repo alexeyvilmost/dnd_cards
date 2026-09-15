@@ -26,6 +26,7 @@ import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
 import { validateMechanics } from '../engine/validateMechanics';
 import { validateEntityIdFormat } from '../utils/entityId';
 import { isMechanicsLocked } from '../content/supportStatus';
+import LockedMechanicsViewer from '../components/LockedMechanicsViewer';
 
 type ScalarForm = {
   name: string;
@@ -209,7 +210,7 @@ const SpellCreator = () => {
       }
     }
 
-    if (mechanics && typeof mechanics === 'object') {
+    if (!lockedEntity && mechanics && typeof mechanics === 'object') {
       const check = validateMechanics(mechanics, {
         id: data.card_number || 'draft-spell',
         name: data.name || 'spell',
@@ -557,9 +558,7 @@ const SpellCreator = () => {
                       JSON сохраняется в поле mechanics.
                     </p>
                     {lockedEntity ? (
-                      <p className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900" role="status">
-                        Исполняемая механика закреплена тестовой сертификацией. Название, иконку, описание и остальные поля можно редактировать.
-                      </p>
+                      <LockedMechanicsViewer value={mechanics} />
                     ) : (
                       <MechanicsBuilder
                         value={mechanics}

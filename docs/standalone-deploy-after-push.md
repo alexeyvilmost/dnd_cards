@@ -285,26 +285,28 @@ if ($Sha -ne $RemoteSha) {
 
 ### 2. Пройти обязательные проверки до выкладки
 
-Минимальный локальный барьер:
+Обычная выкладка использует быстрый риск-ориентированный gate:
 
 ```powershell
-Push-Location backend
-go test ./...
-go vet ./...
-Pop-Location
-
-Push-Location frontend
-npm test -- --run
-npm run test:rules:coverage
-npm run test:rules:primitives
-npm run lint
-npm run build
-$env:CI = '1'
-node node_modules/@playwright/test/cli.js test --reporter=line
-Remove-Item Env:CI
-Pop-Location
+& scripts/release/quick-gate.ps1
 ```
 
+Он всегда проверяет diff и отсутствие известных секретов/dump-файлов в
+изменённых файлах. Для
+затронутого backend запускаются все Go-тесты; для frontend — изменённые тесты и
+три критических smoke-набора, lint только изменённых TypeScript-файлов,
+typecheck и production build. Worker проверяется только при его изменении.
+Coverage, полный Vitest и весь Playwright не дублируются перед каждой небольшой
+выкладкой.
+
+Полный локальный набор запускается явно:
+
+```powershell
+& scripts/release/quick-gate.ps1 -Full
+```
+
+Он обязателен для изменений replay-critical ядра правил, схем сертификации,
+генераторов release evidence, инфраструктуры деплоя и перед крупным релизом.
 Для сертифицируемого релиза дополнительно используется полный
 `scripts/content/generate-micro-mvp-release-evidence.mjs` с изолированными
 PostgreSQL DSN. Финальный deployment-health gate этого сценария запускается уже

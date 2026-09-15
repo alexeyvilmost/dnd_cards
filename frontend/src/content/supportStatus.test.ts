@@ -181,7 +181,7 @@ describe('content support status', () => {
     expect(certificationContractIssues(partial)).toContain(
       'mechanics_locked требует 100% покрытия заявленного scope',
     );
-    expect(isMechanicsLocked({ support: partial })).toBe(false);
+    expect(isMechanicsLocked({ support: partial })).toBe(true);
   });
 
   it('basic-actions certificate fails closed without its exact browser evidence', () => {
