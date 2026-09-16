@@ -165,9 +165,33 @@ describe('combat roll dialog', () => {
   it('marks only the kept natural one, not a discarded twenty',async()=>{
     await act(async()=>root.render(<CombatPresentationDialog beat={{...beat,roll:{...beat.roll!,advantage:'disadvantage',dice:[{sides:20,result:20,discarded:true},{sides:20,result:1}]}}} onClose={()=>{}}/>));
     await act(async()=>vi.advanceTimersByTime(1450));
+    expect(document.querySelector('.is-critical-failure,.is-discarded')).toBeNull();
+    await act(async()=>vi.advanceTimersByTime(400));
     expect(document.querySelectorAll('.is-critical-failure')).toHaveLength(1);
     expect(document.querySelector('.is-critical-success')).toBeNull();
     expect(document.querySelector('.combat-critical-banner')?.textContent).toContain('КРИТИЧЕСКИЙ ПРОВАЛ');
+  });
+  it.each(['advantage','disadvantage'] as const)('reveals both %s faces before selecting, and rolls data-owned bonus dice in their own tray',async advantage=>{
+    const withBonus = {...beat,roll:{...beat.roll!,advantage,total:19,dice:[{sides:20,result:12},{sides:20,result:5,discarded:true},{sides:4,result:3,source:'Благословение'},{sides:6,result:1,sign:-1 as const,source:'Помеха предмета'}]}};
+    await act(async()=>root.render(<CombatPresentationDialog beat={withBonus} onClose={()=>{}}/>));
+    expect(document.querySelector(`.d20-roll-tray.is-${advantage}.is-tumbling`)).not.toBeNull();
+    expect(document.querySelector('.is-discarded,.is-rejected,.is-kept')).toBeNull();
+    expect(document.querySelectorAll('.d20-primary-dice .is-rolling')).toHaveLength(2);
+    expect(document.querySelectorAll('.d20-bonus-tray .is-rolling')).toHaveLength(2);
+    expect(document.querySelector('.combat-roll-result')).toBeNull();
+    await act(async()=>vi.advanceTimersByTime(1450));
+    expect(document.querySelector('[aria-label="к20: 12"]')).not.toBeNull();
+    expect(document.querySelector('[aria-label="к20: 5"]')).not.toBeNull();
+    expect(document.querySelector('.is-rejected,.is-kept')).toBeNull();
+    expect(document.querySelector('.combat-roll-result')).toBeNull();
+    await act(async()=>vi.advanceTimersByTime(400));
+    expect(document.querySelectorAll('.is-rejected')).toHaveLength(1);
+    expect(document.querySelectorAll('.is-kept')).toHaveLength(1);
+    expect(document.querySelector('.d20-bonus-slot > span')?.textContent).toBe('Благословение');
+    expect(document.querySelector('.d20-bonus-slot > small')?.textContent).toBe('+ к4: 3');
+    expect(document.querySelector('.d20-bonus-slot.is-penalty > span')?.textContent).toBe('Помеха предмета');
+    expect(document.querySelector('.d20-bonus-slot.is-penalty > small')?.textContent).toBe('− к6: 1');
+    expect(document.querySelector('.combat-roll-result')).not.toBeNull();
   });
   it('honors reduced motion for both phases and critical effects',async()=>{
     vi.stubGlobal('matchMedia',()=>({matches:true}));

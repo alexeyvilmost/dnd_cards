@@ -79,7 +79,7 @@ describe('CharacterV3 read-only list controls', () => {
     await render(<CharactersForgeList />);
 
     expect(container.textContent).toContain('Архивный публичный лист · только чтение');
-    expect(container.querySelector('[title="Удалить персонажа"]')).toBeNull();
+    expect(container.querySelector('[aria-label="Удалить персонажа"]')).toBeNull();
   });
 
   it('mobile exposes clone-as-owned but no edit, level-up, or delete actions', async () => {

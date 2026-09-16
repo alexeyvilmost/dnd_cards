@@ -18,7 +18,8 @@ const CONCEPT_CSS = `
   object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.6)); }
 .concept-tip-title { margin: 0 0 2px; font-size: 18px; font-weight: 700; color: #d8b978; padding-right: 56px; }
 .concept-tip-type { font-size: 12px; color: #a99f8b; margin-bottom: 8px; }
-.concept-tip-desc { font-size: 13.5px; line-height: 1.4; color: #d8cdb6; white-space: pre-wrap; }
+.concept-tip-desc { font-size: 13.5px; line-height: 1.4; color: #d8cdb6; white-space: pre-wrap;
+  max-height: min(48vh, 320px); overflow-y: auto; }
 `;
 
 const ConceptPreview: React.FC<ConceptPreviewProps> = ({ concept, className = '', onClick }) => (

@@ -50,7 +50,7 @@ export function planMonsterTurn(
     tokens: { ...state.tokens, [monster.id]: { ...state.tokens[monster.id], position } },
   });
   const canAttack = (position: GridPosition) => distanceToTarget(position) <= range
-    && spatialFacts(at(position), monster.id, targetActorId).lineOfSight;
+    && spatialFacts(at(position), monster.id, targetActorId, false).lineOfSight;
   const rating = (position: GridPosition) => {
     const distance = distanceToTarget(position);
     // Legal attacks come first; then close to the profile's normal range.

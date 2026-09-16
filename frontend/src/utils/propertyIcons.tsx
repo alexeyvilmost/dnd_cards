@@ -97,7 +97,7 @@ export const renderProperties = (properties: string[], isExtended: boolean = fal
         const isImage = iconPath.startsWith('/');
         
         return (
-          <span key={index} className="inline-flex items-center justify-center" title={getPropertyLabel(property)}>
+          <span key={index} className="inline-flex items-center justify-center" aria-description={getPropertyLabel(property)}>
             {isImage ? (
               <img 
                 src={iconPath} 

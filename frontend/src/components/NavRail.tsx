@@ -81,7 +81,8 @@ export function NavRail({
               ].filter(Boolean).join(' ')}
               style={style}
               onClick={() => onSelect(it.id)}
-              title={it.sub ? `${it.label} · ${it.sub}` : it.label}
+              aria-label={it.label}
+              aria-description={it.sub ? `${it.label} · ${it.sub}` : it.label}
             >
               <span className="navrail-medal" aria-hidden>
                 <span className="navrail-medal-icon">{it.icon}</span>

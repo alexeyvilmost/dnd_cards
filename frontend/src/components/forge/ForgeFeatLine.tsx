@@ -1,3 +1,4 @@
+import { previewAnchor } from '../../utils/previewAnchor';
 import { useState } from 'react';
 import type { Feat } from '../../types';
 import ForgeEntityIcon from './ForgeEntityIcon';
@@ -18,9 +19,8 @@ const ForgeFeatLine = ({ feat }: { feat: Feat }) => {
       <span
         className="sum-sub forge-ability-line"
         style={{ display: 'inline-flex' }}
-        onMouseEnter={(e) => { setHover(true); setPos({ x: e.clientX, y: e.clientY }); }}
+        onMouseEnter={(e) => { setHover(true); setPos(previewAnchor(e.currentTarget)); }}
         onMouseLeave={() => setHover(false)}
-        onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
       >
         <ForgeEntityIcon imageUrl={feat.image_url ?? null} alt={feat.name} size={20} />
         <span className="forge-ability-link">{feat.name}</span>

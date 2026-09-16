@@ -60,6 +60,7 @@ type roguelikeWorkerResult struct {
 	Needs               []roguelikeWorkerNeed `json:"needs"`
 	Envelope            JSONMap               `json:"envelope"`
 	Patch               JSONMap               `json:"patch"`
+	Patches             map[string]JSONMap    `json:"patches"`
 	ContentManifestHash string                `json:"contentManifestHash"`
 	RandomValues        []float64             `json:"randomValues"`
 	Trace               JSONMap               `json:"trace"`

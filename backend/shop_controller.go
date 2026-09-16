@@ -1,6 +1,7 @@
 package main
 
 import (
+	"dnd-cards-backend/weapondata"
 	"encoding/json"
 	"math/rand"
 	"net/http"
@@ -89,16 +90,29 @@ func hasProperty(card *Card, prop string) bool {
 	return false
 }
 
-func hasTag(card *Card, tag string) bool {
-	if card.Tags == nil {
-		return false
+func cardWeaponProfileField(card *Card, key string) (string, bool) {
+	if card == nil {
+		return "", false
 	}
-	for _, t := range *card.Tags {
-		if t == tag {
-			return true
+	if card.Mechanics != nil {
+		if profile, ok := (*card.Mechanics)["weapon_profile"].(map[string]any); ok {
+			if value, ok := profile[key].(string); ok {
+				return value, true
+			}
 		}
 	}
-	return false
+	if card.WeaponType != nil {
+		parts := strings.Split(weapondata.Category(*card.WeaponType), "_")
+		if len(parts) == 2 {
+			if key == "proficiency_category" {
+				return parts[0], true
+			}
+			if key == "default_attack_mode" {
+				return parts[1], true
+			}
+		}
+	}
+	return "", false
 }
 
 func rarityGEUncommon(r Rarity) bool {
@@ -151,8 +165,8 @@ func (sc *ShopController) CreateShop(c *gin.Context) {
 		if card.Type != nil && *card.Type == string(ItemTypeWeapon) {
 			vendors["Оруженик"] = append(vendors["Оруженик"], card)
 		}
-		// Кузнец-оружейник: type weapon and tag Воинское
-		if card.Type != nil && *card.Type == string(ItemTypeWeapon) && hasTag(card, "Воинское") {
+		category, _ := cardWeaponProfileField(card, "proficiency_category")
+		if card.Type != nil && *card.Type == string(ItemTypeWeapon) && category == "martial" {
 			vendors["Кузнец-оружейник"] = append(vendors["Кузнец-оружейник"], card)
 		}
 		// Кузнец-броневик: properties medium_armor or heavy_armor or type shield

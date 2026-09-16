@@ -2225,7 +2225,11 @@ function executeUseAction(
         ...actionContext(
           sourceAtStep,
           env,
-          target,
+          target && hasAttackRoll(action)
+            ? attackTargetWithCover(target, action.kind === 'spell'
+              && spellAttackIgnoresCover(sourceAtStep.passives ?? [], command.factsByTarget?.[target.id]?.cover ?? 'none')
+              ? 'none' : command.factsByTarget?.[target.id]?.cover ?? 'none')
+            : target,
           target?.runtime,
           target ? command.factsByTarget?.[target.id] : undefined,
           command.spell,
@@ -2753,10 +2757,13 @@ export function previewAttackDefense(
     const bonus = singleAttackDefenseBonus(prepared.action);
     const after = {...actor, runtime: result.state,
       ...(bonus ? {ac: effectiveArmorClass(actor, {...actor.runtime, activeEffects: []}) + bonus} : {})};
-    const ac = effectiveArmorClass(after);
+    // The saved roll already includes situational AC (e.g. cover). A defense
+    // changes that target by its own delta, not by replacing it with sheet AC.
+    const ac = (roll.target?.value ?? effectiveArmorClass(actor))
+      + effectiveArmorClass(after) - effectiveArmorClass(actor);
     // A failed/unsupported modifier formula can be ignored by legacy AC
     // projections. No demonstrated AC change means no reliable prediction.
-    if (ac === effectiveArmorClass(actor)) return undefined;
+    if (effectiveArmorClass(after) === effectiveArmorClass(actor)) return undefined;
     if (result.pendingReactions?.length || result.deferredTargetSaves?.length) return undefined;
     const originalHit = roll.outcome === 'hit' || roll.outcome === 'crit';
     const adjusted = retargetAttackRoll(roll, ac);
@@ -2904,6 +2911,10 @@ function catalogActionForActor(
   });
   return applyUnarmedDamageProfileToAction(action, actor.passives ?? [], {
     holdingWeaponOrShield: holdsWeapon || actorHoldsCanonicalShield(actor),
+    wearingArmorOrShield: Object.values(actor.runtime.equipment).some(cardId =>
+      !!cardId && actorCard(actor, cardId)?.defense_type != null),
+    variables: actor.character.variables,
+    abilityMods: actor.character.abilityMods,
   });
 }
 
@@ -2921,7 +2932,15 @@ function damageReactionOptions(
     // Incoming damage is held before HP mutation. Reactions declared for an
     // after-damage window cannot be offered through this pre-damage protocol.
     if (trigger?.timing != null && trigger.timing !== 'before') return [];
+    // Before simulation, packet types are unknown: hold provisionally. Once
+    // computed, offer only declarations matching the immutable damage bundle.
+    if (trigger?.damage_types_any !== undefined) {
+      if (!Array.isArray(trigger.damage_types_any) || !trigger.damage_types_any.length) return [];
+      const types = eventData.damage_types;
+      if (Array.isArray(types) && !types.some(type => (trigger.damage_types_any as unknown[]).includes(type))) return [];
+    }
     if (!matchesWhen(trigger?.circumstances as Record<string, unknown>[] | undefined, {
+      character: target.character, state: target.runtime, activeConditions: activeConditionsOf(target.runtime),
       event: { kind: 'damage_taken', data: eventData },
     })) return [];
     const [option] = sourceScopedReactionOptions(target, action);
@@ -2929,8 +2948,9 @@ function damageReactionOptions(
   });
 }
 
-function damageReactors(world: WorldState, target: ActorState, catalog: RulesCatalog, facts: SpatialFacts, action: RuleActionDefinition): Array<{actor: ActorState; options: Array<{action: RuleActionDefinition; option: ReactionActionOption}>}> {
-  const eventData = {delivery: hasAttackRoll(action) ? 'attack' : 'other', melee_attack: isMeleeAttackRollAction(action), source_visible: facts.targetCanSeeSource ?? true};
+function damageReactors(world: WorldState, target: ActorState, catalog: RulesCatalog, facts: SpatialFacts, action: RuleActionDefinition, damageEvents?: readonly EngineEvent[]): Array<{actor: ActorState; options: Array<{action: RuleActionDefinition; option: ReactionActionOption}>}> {
+  const eventData = {delivery: hasAttackRoll(action) ? 'attack' : 'other', melee_attack: isMeleeAttackRollAction(action), source_visible: facts.targetCanSeeSource ?? true,
+    ...(damageEvents ? {damage_types: damagePackets(damageEvents).map(p => p.damageType)} : {})};
   return [target, ...Object.values(world.actors).filter(actor => actor.id !== target.id).sort((a,b) => a.id.localeCompare(b.id))].flatMap(actor => {
     const observer = actor.id !== target.id;
     const ownedObserver = actor.capabilities.actionIds.some(id => {
@@ -3129,7 +3149,7 @@ function damageReactionOpenedEvents(
     runtime: input.targetRuntimeBeforeDamage,
   };
   const observerWorld = {...input.world,actors:{...input.world.actors,[input.source.id]:{...input.source,runtime:input.sourceRuntimeAfter}}};
-  const reactors = damageReactors(observerWorld,targetAtWindow,input.catalog,input.facts,input.action);
+  const reactors = damageReactors(observerWorld,targetAtWindow,input.catalog,input.facts,input.action,input.attackEvents);
   if (!reactors.length) return null;
   const {actor:reactor,options} = reactors[0];
 
@@ -3491,7 +3511,7 @@ function pendingAttackEvents(
     : facts.cover;
   const target = action.kind === 'spell'
     ? attackTargetWithCover(effectiveWorld.actors[targetId], spellCover)
-    : options.protectionWindowResolved
+    : options.protectionWindowResolved || !options.continuationKind || options.continuationKind === 'catalog'
       ? attackTargetWithCover(effectiveWorld.actors[targetId], facts.cover)
       : effectiveWorld.actors[targetId];
   const obligations = actionObligationIds(
@@ -4983,8 +5003,14 @@ function resolvePendingAttack(
   const defenseBonus = selectedReaction ? singleAttackDefenseBonus(selectedReaction) : 0;
   const targetAfterReaction: ActorState = { ...target, runtime: targetRuntime,
     ...(defenseBonus ? {ac: effectiveArmorClass(target, {...target.runtime, activeEffects: []}) + defenseBonus} : {}) };
+  // Weapon/stat-block cover is an execution projection, never durable actor AC.
+  // Preserve the committed attack's situational offset across accepting/declining
+  // a reaction; only the actual defense delta may change its AC/outcome.
+  const attackAcOffset = (pending.attackRoll.target?.value ?? effectiveArmorClass(target)) - effectiveArmorClass(target);
+  const targetForResolution: ActorState = attackAcOffset ? {...targetAfterReaction,
+    ac: (targetAfterReaction.ac ?? effectiveArmorClass(targetAfterReaction, {...targetRuntime, activeEffects: []})) + attackAcOffset} : targetAfterReaction;
   const resumed = executeAction(sourceForAttack.runtime, withoutActivationCost(attack.mechanics), {
-    ...actionContext(sourceForAttack, env, targetAfterReaction, targetRuntime, pending.facts, pending.spell),
+    ...actionContext(sourceForAttack, env, targetForResolution, targetRuntime, pending.facts, pending.spell),
     ...(pending.attackActionId ? { attackActionId: pending.attackActionId } : {}),
     attackCommandId: pending.openedByCommandId,
     choices: pending.choices,
@@ -5248,7 +5274,7 @@ function resolvePendingDamageReaction(
     const declarationIssue = spellDeclarationIssue(reaction);
     if (declarationIssue) return rejected(world, 'InvalidSpellDeclaration', declarationIssue);
     const targetAtWindow: ActorState = { ...reactor, runtime: reactorRuntime };
-    const available = damageReactors({...world, actors:{...world.actors,[reactor.id]:targetAtWindow}}, {...target,runtime:targetReactionRuntime}, catalog, pending.facts, pending.action);
+    const available = damageReactors({...world, actors:{...world.actors,[reactor.id]:targetAtWindow}}, {...target,runtime:targetReactionRuntime}, catalog, pending.facts, pending.action,pending.attackEvents);
     if (!available.some(row=>row.actor.id===reactor.id && row.options.some(option=>option.action.id===selectedId))) return rejected(world,'InvalidDecision','Damage reaction is no longer eligible');
     if (deniedCapabilities(reactorRuntime, reactor.passives ?? []).has('reaction')) {
       return rejected(world, 'CapabilityDenied', `${reactor.id} cannot take reactions in its current state`);
@@ -5309,7 +5335,7 @@ function resolvePendingDamageReaction(
     ...engineTrace(reactor.id,reactionTargetIds,reactionEvents,reactionObligations),
   ];
   const worldAfterReaction = {...world,actors:{...world.actors,[reactor.id]:{...reactor,runtime:reactorRuntime}}};
-  const remaining = adjusted.amount > 0 ? damageReactors(worldAfterReaction,{...target,runtime:targetReactionRuntime},catalog,pending.facts,pending.action)
+  const remaining = adjusted.amount > 0 ? damageReactors(worldAfterReaction,{...target,runtime:targetReactionRuntime},catalog,pending.facts,pending.action,adjusted.events)
     .filter(row => pending.remainingReactorIds?.includes(row.actor.id)) : [];
   if (remaining.length) {
     const [nextReactor,...later] = remaining;
@@ -6992,7 +7018,7 @@ function attackDisadvantagePassive(reason: string): Record<string, unknown> {
 
 function attackTargetWithCover(target: ActorState, cover: SpatialFacts['cover']): ActorState {
   const bonus = cover === 'half' ? 2 : cover === 'three_quarters' ? 5 : 0;
-  return bonus ? { ...target, ac: (target.ac ?? effectiveArmorClass(target)) + bonus } : target;
+  return bonus ? { ...target, ac: (target.ac ?? effectiveArmorClass(target, {...target.runtime, activeEffects: []})) + bonus } : target;
 }
 
 function pactBladeWeaponAttackAction(
@@ -7150,7 +7176,7 @@ function lightWeaponExtraAttackAction(
   rangeKind: 'melee' | 'ranged',
   actionEconomy: 'bonus_action' | 'attack_action' = 'bonus_action',
 ): RuleActionDefinition | null {
-  const weapon = weaponContext(source.character, hand, source.runtime.equipment, source.runtime);
+  const weapon = weaponContext(source.character, hand, source.runtime.equipment, source.runtime, source.passives);
   if (!weapon) return null;
   const effect = (
     CORE_LIGHT_WEAPON_EXTRA_ATTACK.mechanics.effects as Record<string, unknown>[]
@@ -7198,7 +7224,7 @@ function selectedWeaponUsesMastery(
       : null;
   if (!hand) return false;
   return actorWeaponHasMasteryPrimitive({
-    weapon: weaponContext(actor.character, hand, actor.runtime.equipment, actor.runtime),
+    weapon: weaponContext(actor.character, hand, actor.runtime.equipment, actor.runtime, actor.passives),
     selectedWeaponTypes: actor.character.weaponMasteries,
     masteryEffects: actor.masteryEffects,
     type,
@@ -7228,7 +7254,7 @@ function cleaveWeaponAttackAction(
   source: ActorState,
   hand: 'main' | 'off',
 ): RuleActionDefinition | null {
-  const weapon = weaponContext(source.character, hand, source.runtime.equipment, source.runtime);
+  const weapon = weaponContext(source.character, hand, source.runtime.equipment, source.runtime, source.passives);
   if (!weapon) return null;
   const base = weaponAttackAction(hand, 'melee');
   const effect = (base.mechanics.effects as Record<string, unknown>[])[0];
@@ -7520,7 +7546,7 @@ function performWeaponAttack(
       && !Object.values(source.runtime.equipment).includes(card.id)) {
       return rejected(world, 'ItemNotOwned', `${source.id} does not own ${card.id}`);
     }
-    if (!weaponContext(source.character, hand, source.runtime.equipment, source.runtime)) {
+    if (!weaponContext(source.character, hand, source.runtime.equipment, source.runtime, source.passives)) {
       return rejected(world, 'InvalidEquipmentState', `${card.id} cannot resolve from ${hand}_hand`);
     }
   }
@@ -7536,6 +7562,7 @@ function performWeaponAttack(
     hand,
     executionSource.runtime.equipment,
     executionSource.runtime,
+    executionSource.passives,
   );
   if (!resolvedWeapon || resolvedWeapon.cardId !== card.id) {
     return rejected(world, 'InvalidEquipmentState', `${card.id} has no valid equipped weapon_profile`);
@@ -7912,7 +7939,7 @@ function performLightWeaponExtraAttack(
     && !Object.values(source.runtime.equipment).includes(extraWeapon.id)) {
     return rejected(world, 'ItemNotOwned', `${source.id} does not own ${extraWeapon.id}`);
   }
-  const selectedWeapon = weaponContext(source.character, hand, source.runtime.equipment, source.runtime);
+  const selectedWeapon = weaponContext(source.character, hand, source.runtime.equipment, source.runtime, source.passives);
   if (!selectedWeapon || selectedWeapon.cardId !== extraWeapon.id) {
     return rejected(world, 'InvalidEquipmentState', `${extraWeapon.id} cannot resolve from ${hand}_hand`);
   }
@@ -11803,7 +11830,7 @@ function executeCommand(
         const hand = Array.isArray(selected) ? selected[0] : selected;
         if (typeof hand === 'string' && weaponBondProtectsHand(world, command.targetIds[0], hand)) return rejected(world, 'InvalidDecision', 'Связанное оружие нельзя выбить из рук');
       }
-      const activeEffectIssue = activeEffectRequirementIssue(action.mechanics, actor.runtime);
+      const activeEffectIssue = activeEffectRequirementIssue(action.mechanics, actor.runtime, actor.character);
       if (activeEffectIssue) {
         return rejected(world, 'InvalidActionTiming', activeEffectIssue);
       }

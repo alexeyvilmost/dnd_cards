@@ -95,7 +95,6 @@ const CardCreator = () => {
       attunement: null,
       requires_attunement: false,
       range: null,
-      tags: searchParams.get('tags') ? searchParams.get('tags')!.split(',') as Properties : [],
       slot: null,
       is_template: 'false',
       effects: [],
@@ -170,7 +169,6 @@ const CardCreator = () => {
             attunement: card.attunement,
             requires_attunement: card.requires_attunement === true,
             range: card.range || null,
-            tags: card.tags || [],
             slot: card.slot,
             is_template: card.is_template || 'false',
             battle_profile: card.battle_profile || null,
@@ -230,7 +228,6 @@ const CardCreator = () => {
           setValue('attunement', template.attunement);
           setValue('requires_attunement', template.requires_attunement === true);
           setValue('range', template.range || null);
-          setValue('tags', template.tags || []);
           setValue('slot', template.slot);
           setValue('is_template', 'false'); // Новая карта не является шаблоном
           setValue('battle_profile', template.battle_profile || null);
@@ -309,7 +306,6 @@ const CardCreator = () => {
     attunement: src.attunement || null,
     requires_attunement: src.requires_attunement === true,
     range: src.range || null,
-    tags: src.tags && src.tags.length > 0 ? src.tags : null,
     slot: src.slot || null,
     is_template: src.is_template || 'false',
     image_prompt_extra: src.image_prompt_extra || null,

@@ -490,7 +490,7 @@ export const classesApi = {
 };
 
 export const resourcesApi = {
-  getResources: async (params?: { category?: string; fields?: 'list' }): Promise<ResourcesResponse> => cached(
+  getResources: async (params?: { category?: string; fields?: 'list';tag?:string }): Promise<ResourcesResponse> => cached(
     catalogListCacheKey('/api/resources', params),
     60_000,
     async () => {
@@ -520,8 +520,8 @@ export const resourcesApi = {
 };
 
 export const variablesApi = {
-  getVariables: async (params?: { var_type?: string }): Promise<VariablesResponse> =>
-    cached(`/api/variables?var_type=${params?.var_type ?? ''}`, 60000, async () => {
+  getVariables: async (params?: { var_type?: string;tag?:string }): Promise<VariablesResponse> =>
+    cached(catalogListCacheKey('/api/variables',params), 60000, async () => {
       const response = await apiClient.get<VariablesResponse>('/api/variables', { params });
       return response.data;
     }),
@@ -544,8 +544,8 @@ export const variablesApi = {
 };
 
 export const conceptsApi = {
-  getConcepts: async (): Promise<ConceptsResponse> => {
-    const response = await apiClient.get<ConceptsResponse>('/api/concepts');
+  getConcepts: async (params?:{tag?:string}): Promise<ConceptsResponse> => {
+    const response = await apiClient.get<ConceptsResponse>('/api/concepts',{params});
     return response.data;
   },
   getConcept: async (id: string): Promise<Concept> => {

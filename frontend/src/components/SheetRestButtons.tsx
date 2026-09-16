@@ -4,7 +4,7 @@ import type { EncounterApply } from '../battle/encountersApi';
 import { charactersV3Api, type CharacterEventRow } from '../character/api';
 import { persistCharacterRuntime } from '../character/runtimePersistence';
 import { roguelikeApi } from '../roguelike/api';
-import { activeRunId, notifyRunUpdated } from '../roguelike/navigation';
+import { activeRunId, notifyRunUpdated,runCharacter } from '../roguelike/navigation';
 import SheetWeaponMasteryDialog from './SheetWeaponMasteryDialog';
 import { characterToDraft } from '../character/forgeHelpers';
 import { fighterRestMasteryChoices, validateMasteryRestSelection } from '../roguelike/masteryRest';
@@ -296,14 +296,16 @@ export default function SheetRestButtons({
       if (runId && restType) {
         const run = await roguelikeApi.get(runId);
         const result = await roguelikeApi.command(runId, run.revision, restType, {
+          actor_id:character.id,
           hit_die_rolls: restType === 'short_rest' ? hitDieRolls.current : [],
           ...(masteryChoices ? { mastery_choices: masteryChoices } : {}),
           ...(restChoices?.slotRecoverySelections ? { slot_recovery_selections: restChoices.slotRecoverySelections } : {}),
           ...(restChoices?.spellSwapSelections ? { spell_swap_selections: restChoices.spellSwapSelections } : {}),
           ...(restChoices?.spellPreparation ? { spell_preparation: restChoices.spellPreparation } : {}),
         });
-        if (!result.character) throw new Error('Сервер не вернул лист после отдыха');
-        updated = result.character;
+        const member=runCharacter(result,character.id);
+        if (!member) throw new Error('Сервер не вернул лист после отдыха');
+        updated = member;
         persistedRestEvents = result.command_events ?? [];
         notifyRunUpdated();
       } else {
@@ -427,9 +429,10 @@ export default function SheetRestButtons({
       if (character.character_type === 'dungeon_crawl') {
         const runId = activeRunId(); if (!runId) throw new Error('Не найден активный забег');
         const run = await roguelikeApi.get(runId);
-        const updated = await roguelikeApi.command(runId, run.revision, 'camp_turn');
-        if (!updated.character) throw new Error('Сервер не вернул лист после нового хода');
-        onUpdated(updated.character); notifyRunUpdated();
+        const updated = await roguelikeApi.command(runId, run.revision, 'camp_turn',{actor_id:character.id});
+        const member=runCharacter(updated,character.id);
+        if (!member) throw new Error('Сервер не вернул лист после нового хода');
+        onUpdated(member); notifyRunUpdated();
         if (updated.command_events?.length) onPersistedEvents?.(updated.command_events);
         return;
       }
@@ -657,7 +660,7 @@ export default function SheetRestButtons({
   return (
     <>
     <div className={cls}>
-      <button type="button" className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'} disabled={busy || Boolean(lockReason)} title={lockReason} onClick={() => { void handleStartTurn(); }}>
+      <button type="button" className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'} disabled={busy || Boolean(lockReason)} aria-description={lockReason} onClick={() => { void handleStartTurn(); }}>
         <Swords size={14} /> {pendingAtomicTurn ? 'Повторить ход' : 'Новый ход'}
       </button>
       <button
@@ -665,7 +668,7 @@ export default function SheetRestButtons({
         className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'}
         disabled={busy || Boolean(pendingAtomicTurn) || unconscious || Boolean(lockReason)}
         onClick={handleShortRest}
-        title={lockReason ?? restTitle('Короткий отдых: добровольная трата костей хитов и заряды умений')}
+        aria-description={lockReason ?? restTitle('Короткий отдых: добровольная трата костей хитов и заряды умений')}
       >
         <Sun size={14} /> Короткий отдых
       </button>
@@ -674,7 +677,7 @@ export default function SheetRestButtons({
         className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'}
         disabled={busy || Boolean(pendingAtomicTurn) || unconscious || Boolean(lockReason)}
         onClick={handleLongRest}
-        title={lockReason ?? restTitle('Долгий отдых')}
+        aria-description={lockReason ?? restTitle('Долгий отдых')}
       >
         <Moon size={14} /> Долгий отдых
       </button>

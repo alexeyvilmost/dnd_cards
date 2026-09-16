@@ -4,11 +4,11 @@ import {roguelikeApi} from '../roguelike/api';
 import {isRunEligible} from '../roguelike/eligibility';
 import type {ForgeCharacter} from '../character/types';
 
-export default function StartRunFromSheet({character, fighterClassId}: {character: ForgeCharacter; fighterClassId?: string}) {
+export default function StartRunFromSheet({character, eligibleClassId}: {character: ForgeCharacter; eligibleClassId?: string}) {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  if (!isRunEligible(character, fighterClassId)) return null;
+  if (!isRunEligible(character, eligibleClassId)) return null;
   const start = async () => {
     if (busy) return;
     setBusy(true); setError('');
@@ -21,7 +21,7 @@ export default function StartRunFromSheet({character, fighterClassId}: {characte
   };
   return <>
     <button type="button" className="sheet-header-btn" disabled={busy} onClick={() => void start()}
-      title="Начать отдельный забег за этого воина. Исходный лист не изменится.">{busy ? 'Создаём…' : 'Начать забег'}</button>
+      aria-description="Начать отдельный забег за этого персонажа. Исходный лист не изменится.">{busy ? 'Создаём…' : 'Начать забег'}</button>
     {error && <span role="alert">{error}</span>}
   </>;
 }

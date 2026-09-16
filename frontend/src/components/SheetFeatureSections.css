@@ -1,3 +1,11 @@
-.sheet-feature-section { padding: 1rem 0; border-top: 1px solid #bba06b55; }
-.sheet-feature-section h3 { margin: 0 0 .8rem; font-size: .85rem; letter-spacing: .09em; text-transform: uppercase; color: var(--sheet-text-muted, #b69c70); }
-.sheet-feature-section > div + div { margin-top: .75rem; }
+.sheet-feature-section { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-top: 1px solid #bba06b35; min-width: 0; }
+.sheet-feature-section h3 { flex: 0 0 145px; margin: 0; padding: 0; font-size: .82rem; line-height: 1.4; font-weight: 500; letter-spacing: normal; text-transform: none; color: var(--sheet-text-muted,#b69c70); }
+.sheet-feature-section__entities { display: flex; flex: 1; flex-wrap: wrap; gap: 8px; align-items: center; min-width: 0; padding-left: 14px; border-left: 1px solid #bba06b35; }
+.sheet-feature-section__entities .sheet-item-cols { flex: 1 1 230px; min-width: 0; max-width: 100%; margin: 0; grid-template-columns: repeat(auto-fit,minmax(min(100%,230px),1fr)); }
+.sheet-feature-section__entities .forge-spell-icon-grid { margin: 0; gap: 6px; }
+.sheet-feature-section__entities .forge-spell-icon { width: 44px; height: 44px; }
+.sheet-feature-section__entities .combat-decision-policies { margin: 0; }
+@media(max-width:600px) { .sheet-feature-section { gap: 8px; } .sheet-feature-section h3 { flex-basis: 100px; font-size: .75rem; } .sheet-feature-section__entities { padding-left: 8px; } }
+.cs-card:has(.sheet-feature-sections) > .cs-card-h .cs-card-toggle,
+.sheet-panel:has(.sheet-feature-sections) > .sheet-h2,
+.m-section:has(.sheet-feature-sections) > .m-section-header h2 { text-transform: none; letter-spacing: normal; }

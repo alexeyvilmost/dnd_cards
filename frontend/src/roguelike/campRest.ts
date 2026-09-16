@@ -27,6 +27,7 @@ export async function executeRoguelikeCampRest(input: {
   spellSwapSelections?: unknown;
   spellPreparation?: unknown;
   masteryChoices?: unknown;
+  preservePreparation?: boolean;
   recallWeapon?: { objectId: string; hand: string; commandId: string };
   bindWeapon?: { cardId: string; instanceId: string; replaceObjectId?: string };
 }) {
@@ -97,7 +98,10 @@ export async function executeRoguelikeCampRest(input: {
   }
 
   let turnState = input.character.turn_state;
-  const preparation = input.spellPreparation == null ? {} : input.spellPreparation;
+  const preparation = input.spellPreparation == null && input.preservePreparation && input.long
+    ? (input.character.turn_state?.sheet_spell_preparation_v1 as {choices?:Record<string,string[]>}|undefined)?.choices
+      ?? Object.fromEntries((prepared.participant.buildChoices??[]).filter(c=>c.source==='prepared_spell').map(c=>[c.id,input.character.resolved_choices?.[c.id]??[]]))
+    : input.spellPreparation == null ? {} : input.spellPreparation;
   if (!preparation || typeof preparation !== 'object' || Array.isArray(preparation)) throw new Error('Некорректная подготовка заклинаний');
   const preparedChoices = (prepared.participant.buildChoices ?? []).filter((choice) => choice.source === 'prepared_spell');
   const preparedChoiceIds = new Set(preparedChoices.map((choice) => choice.id));

@@ -43,6 +43,7 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
 
   return (
     <EntityDetailShell
+      entity={{type:'action',id:action.id}}
       isOpen={isOpen}
       onClose={onClose}
       title={action.name}
@@ -60,7 +61,7 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
       actions={(
         <>
           {locked && (
-            <span className="edm-btn" title="Механика закреплена полной тестовой сертификацией">
+            <span className="edm-btn" aria-description="Механика закреплена полной тестовой сертификацией">
               <Lock size={18} /><span>Закреплено</span>
             </span>
           )}

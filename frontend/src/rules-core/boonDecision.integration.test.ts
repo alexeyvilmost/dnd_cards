@@ -94,7 +94,7 @@ describe('data-driven boon decision', () => {
         total: 16,
         outcome: 'success',
         dice: expect.arrayContaining([
-          { sides: 6, result: 6, source: 'Вдохновение барда', sign: 1 },
+          { sides: 6, result: 6, source: 'Вдохновение барда', sign: 1, role: 'bonus' },
         ]),
       }),
     }));

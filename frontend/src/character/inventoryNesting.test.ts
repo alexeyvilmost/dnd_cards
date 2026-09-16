@@ -15,6 +15,18 @@ const st = (inv: Row[]): RuntimeState =>
   ({ hp: { current: 1, max: 1, temp: 0 }, resources: {}, maxResources: {}, equipment: {}, inventory: inv, activeEffects: [] } as unknown as RuntimeState);
 
 describe('S4 — вложенность инвентаря (containerId)', () => {
+  it('splits and merges arbitrary stacks without loss across serialization',()=>{
+    for(const id of ['arrow','potion']){const initial=st([{cardId:id,qty:20},{cardId:'bag',qty:1}]);
+      const inside=moveToContainer(initial,id,'bag',13);expect(inventoryQty(inside,id)).toBe(20);
+      const restored=forgeToRuntimeState({inventory_items:runtimeInventoryPayload(inside)} as never);
+      const outside=moveOutOfContainer(restored,id,'bag',8);expect(outside.inventory.find(r=>r.cardId===id&&!r.containerId)?.qty).toBe(15);expect(containerContents(outside,'bag')[0].qty).toBe(5);
+      expect(initial.inventory[0].qty).toBe(20);
+    }
+  });
+  it('rejects bad quantities and cycles',()=>{const initial=st([{cardId:'bag',qty:1},{cardId:'pouch',qty:1,containerId:'bag'}]);
+    expect(moveToContainer(initial,'bag','pouch')).toBe(initial);
+    for(const n of [0,-1,1.5,NaN,Infinity]){expect(moveToContainer(initial,'bag','box',n)).toBe(initial);expect(moveOutOfContainer(initial,'pouch','bag',n)).toBe(initial)}
+  });
   it('inventoryQty суммирует по ВСЕМ локациям', () => {
     expect(inventoryQty(st([{ cardId: 'arrow', qty: 5 }, { cardId: 'arrow', qty: 3, containerId: 'quiver' }]), 'arrow')).toBe(8);
   });

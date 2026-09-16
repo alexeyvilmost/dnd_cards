@@ -53,7 +53,7 @@ func (cc *CharacterV2Controller) CreateCharacterV2(c *gin.Context) {
 	// Инициализируем ресурсы в зависимости от класса
 	resources := CharacterResources{}
 	maxResources := CharacterResources{}
-	
+
 	// Для варвара устанавливаем начальное количество зарядов ярости
 	if strings.ToLower(req.Class) == "barbarian" || strings.ToLower(req.Class) == "варвар" {
 		var rageCharges int
@@ -792,23 +792,14 @@ func (controller *CharacterV2Controller) EquipItem(c *gin.Context) {
 	})
 }
 
-// getWeaponType определяет тип оружия (ближний/дальний бой) по тегам
+// getWeaponType uses the canonical weapon profile, never library metadata tags.
 func getWeaponType(card *Card) string {
 	if card == nil || card.Type == nil || *card.Type != "weapon" {
 		return ""
 	}
 
-	// Проверяем теги
-	if card.Tags != nil {
-		tags := *card.Tags
-		for _, tag := range tags {
-			if tag == "Дальнобойное" {
-				return "ranged"
-			}
-			if tag == "Ближнее" {
-				return "melee"
-			}
-		}
+	if mode, ok := cardWeaponProfileField(card, "default_attack_mode"); ok && (mode == "ranged" || mode == "melee") {
+		return mode
 	}
 
 	// Если тегов нет, проверяем свойства
@@ -1220,7 +1211,6 @@ func (controller *CharacterV2Controller) GetCharacterArmor(c *gin.Context) {
 
 	c.JSON(http.StatusOK, armorResult)
 }
-
 
 // GetActiveEffects получает активные эффекты персонажа
 func (cc *CharacterV2Controller) GetActiveEffects(c *gin.Context) {

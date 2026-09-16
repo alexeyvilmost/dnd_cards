@@ -89,7 +89,7 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
         onClick={() => onMoveUp(character.id)}
         disabled={!canMoveUp}
         className="p-0.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-        title="Выше в порядке"
+        aria-label="Выше в порядке"
       >
         <ChevronUp size={16} />
       </button>
@@ -98,7 +98,7 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
         onClick={() => onMoveDown(character.id)}
         disabled={!canMoveDown}
         className="p-0.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-        title="Ниже в порядке"
+        aria-label="Ниже в порядке"
       >
         <ChevronDown size={16} />
       </button>
@@ -111,7 +111,7 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
       <div
         className="flex-shrink-0 w-9 h-9 rounded-md flex items-center justify-center text-base font-bold"
         style={{ backgroundColor: color.hex, color: color.text }}
-        title="Инициатива"
+        aria-description="Инициатива"
       >
         {character.initiative}
       </div>
@@ -126,7 +126,7 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
 
       <span
         className="flex-shrink-0 text-xs font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded"
-        title="Класс доспеха"
+        aria-description="Класс доспеха"
       >
         КД {character.ac}
       </span>
@@ -140,13 +140,13 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
           onChange={(e) => setHpDelta(e.target.value)}
           onFocus={(e) => e.target.select()}
           className="w-11 px-1 py-0.5 text-xs tabular-nums text-center border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-          title="Сколько хитов добавить/убрать"
+              aria-label="Сколько хитов добавить/убрать"
         />
         <button
           type="button"
           onClick={() => onHeal(character.id, deltaAmount())}
           className="w-6 h-6 rounded border border-green-300 text-green-700 hover:bg-green-50 text-sm font-medium leading-none"
-          title="Восстановить HP"
+          aria-description="Восстановить HP"
         >
           +
         </button>
@@ -154,13 +154,13 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
           type="button"
           onClick={() => onDamage(character.id, deltaAmount())}
           className="w-6 h-6 rounded border border-red-300 text-red-700 hover:bg-red-50 text-sm font-medium leading-none"
-          title="Нанести урон"
+          aria-description="Нанести урон"
         >
           −
         </button>
       </div>
 
-      <div className="flex-shrink-0 flex items-center gap-0.5" title="Текущие / макс. HP">
+      <div className="flex-shrink-0 flex items-center gap-0.5" aria-description="Текущие / макс. HP">
         <input
           type="number"
           min={0}
@@ -177,7 +177,7 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
           }}
           className="w-11 sm:w-12 px-1 py-0.5 text-xs font-medium tabular-nums text-center border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
           style={{ color: hpColor }}
-          title="Текущие HP — введите значение напрямую"
+              aria-label="Текущие HP — введите значение напрямую"
         />
         <span className="text-xs text-gray-400">/</span>
         <span className="text-xs font-medium text-gray-500 tabular-nums min-w-[1.5rem]">
@@ -191,7 +191,7 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
           type="button"
           onClick={() => onAttack(character.id, 'melee')}
           className="flex-shrink-0 p-1 rounded text-amber-700 hover:bg-amber-50"
-          title={`Рукопашная атака: ${attacks.melee.name}`}
+          aria-label={`Рукопашная атака: ${attacks.melee.name}`}
         >
           <Sword size={16} />
         </button>
@@ -201,7 +201,7 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
           type="button"
           onClick={() => onAttack(character.id, 'ranged')}
           className="flex-shrink-0 p-1 rounded text-amber-700 hover:bg-amber-50"
-          title={`Дальнобойная атака: ${attacks.ranged.name}`}
+          aria-label={`Дальнобойная атака: ${attacks.ranged.name}`}
         >
           <Crosshair size={16} />
         </button>
@@ -227,7 +227,7 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
         type="button"
         onClick={() => setIsExpanded((v) => !v)}
         className="flex-shrink-0 p-1 rounded hover:bg-gray-100 text-gray-500"
-        title={isExpanded ? 'Свернуть' : 'Развернуть'}
+        aria-label={isExpanded ? 'Свернуть' : 'Развернуть'}
       >
         {isExpanded ? <ChevronsUp size={16} /> : <ChevronsDown size={16} />}
       </button>
@@ -236,7 +236,7 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
         type="button"
         onClick={() => onCopy(character.id)}
         className="flex-shrink-0 p-1 rounded text-gray-600 hover:bg-gray-100"
-        title="Копировать"
+        aria-label="Копировать"
       >
         <Copy size={16} />
       </button>
@@ -245,7 +245,7 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
         type="button"
         onClick={() => onSaveToLibrary(character.id)}
         className="flex-shrink-0 p-1 rounded text-gray-600 hover:bg-gray-100"
-        title="Сохранить в библиотеку"
+        aria-label="Сохранить в библиотеку"
       >
         <BookmarkPlus size={16} />
       </button>
@@ -254,7 +254,7 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
         type="button"
         onClick={() => onRemove(character.id)}
         className="flex-shrink-0 p-1 rounded text-red-500 hover:bg-red-50"
-        title="Удалить"
+        aria-label="Удалить"
       >
         <Trash2 size={16} />
       </button>
@@ -272,7 +272,7 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
               <button
                 key={c.id}
                 type="button"
-                title={c.label}
+                aria-label={c.label}
                 onClick={() => onUpdate(character.id, { color: c.id as InitiativeColorId })}
                 className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${
                   character.color === c.id ? 'border-blue-600 scale-110' : 'border-gray-300'
@@ -325,7 +325,7 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
                   type="button"
                   onClick={() => onRollInitiative(character.id)}
                   className="px-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-600"
-                  title="Бросить d20 + бонус"
+                  aria-label="Бросить d20 + бонус"
                 >
                   <Dices size={18} />
                 </button>
@@ -339,7 +339,8 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
                 value={character.initiativeBonus}
                 onChange={(e) => handleNumberChange('initiativeBonus', e.target.value)}
                 className="input-field"
-                title="Прибавляется к d20 при броске инициативы"
+                  aria-label="Модификатор инициативы"
+                  aria-description="Прибавляется к d20 при броске инициативы"
               />
             </label>
 

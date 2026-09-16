@@ -121,7 +121,7 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
           {mastery && (
             <div className="sp-srow">
               <span className="sp-lbl">Мастерство:</span>
-              <span className="sp-bonus" title={mastery.description ?? undefined}>{mastery.name}</span>
+              <span className="sp-bonus" aria-description={mastery.description ?? undefined}>{mastery.name}</span>
             </div>
           )}
           {dmgEntries.length > 0 && (

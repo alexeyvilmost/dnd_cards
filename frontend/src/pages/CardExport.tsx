@@ -548,7 +548,7 @@ const CardExport = () => {
                       <button
                         className="px-2 py-1 hover:bg-blue-700"
                         onClick={() => changeCopies(card, -1)}
-                        title="Убрать копию"
+                        aria-label="Убрать копию"
                       >
                         <Minus size={12} />
                       </button>
@@ -558,7 +558,7 @@ const CardExport = () => {
                       <button
                         className="px-2 py-1 hover:bg-blue-700"
                         onClick={() => changeCopies(card, 1)}
-                        title="Добавить копию"
+                        aria-label="Добавить копию"
                       >
                         <Plus size={12} />
                       </button>

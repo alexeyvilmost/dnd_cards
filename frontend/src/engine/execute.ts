@@ -1,5 +1,5 @@
 import {dropHeldItem, heldItemDropIssue, selectedHeldItemHand} from './heldItemDrop';
-import {heldItemRequirementIssue} from './actionRequirements';
+import {heldItemRequirementIssue, activationCircumstanceIssue} from './actionRequirements';
 import { resolveDamageCalculation } from './damageCalculation';
 import type { DamageCalculation } from '../mvp/contracts';
 /**
@@ -698,7 +698,7 @@ function preflightPayload(
         );
       }
       if ((base === 'weapon' || value.type === 'weapon')
-        && !weaponContext(ctx.character, hand, state.equipment, state)) {
+        && !weaponContext(ctx.character, hand, state.equipment, state, ctx.passives)) {
         throw mechanicsError(
           'INVALID_MECHANICS',
           'context.character.equipment',
@@ -1307,7 +1307,7 @@ function preflightEffect(
       );
     }
     if (ability === 'auto') {
-      const weapon = weaponContext(ctx.character, resolveHand(value), state.equipment, state);
+      const weapon = weaponContext(ctx.character, resolveHand(value), state.equipment, state, ctx.passives);
       if (!weapon) {
         throw mechanicsError(
           'INVALID_MECHANICS',
@@ -1446,6 +1446,8 @@ export function preflightMechanicsExecution(
   }
   const heldItemIssue = heldItemRequirementIssue(mechanics, state);
   if (heldItemIssue) throw mechanicsError('INVALID_MECHANICS', 'mechanics.requires_held_item', heldItemIssue);
+  const circumstanceIssue = activationCircumstanceIssue(mechanics, state, ctx.character);
+  if (circumstanceIssue) throw mechanicsError('INVALID_MECHANICS', 'mechanics.activation.when', circumstanceIssue);
   const cost = preflightActivationCost(mechanics, ctx);
   if (mechanics.effects === undefined) {
     if (mechanics.kind !== undefined) {
@@ -1705,7 +1707,7 @@ function attackAbilityMods(effect: Dict, ctx: ExecuteContext, hand: 'main' | 'of
   const ability = String(effect.ability);
   const attackKind = attackRollQueryFacts(effect, hand, ctx.character, state.equipment).attackKind;
   const currentWeapon = attackKind === 'weapon'
-    ? weaponContext(ctx.character, hand, state.equipment, state)
+    ? weaponContext(ctx.character, hand, state.equipment, state, ctx.passives)
     : null;
   const proficiencyBonus = attackKind !== 'weapon'
     || (currentWeapon !== null
@@ -1723,7 +1725,7 @@ function attackAbilityMods(effect: Dict, ctx: ExecuteContext, hand: 'main' | 'of
       mods.push({ value: proficiencyBonus, source: 'БМ', reason: 'бонус мастерства' });
     }
   } else if (ability === 'auto') {
-    const w = currentWeapon ?? weaponContext(ctx.character, hand, state.equipment, state);
+    const w = currentWeapon ?? weaponContext(ctx.character, hand, state.equipment, state, ctx.passives);
     if (w) {
       mods.push({
         value: ctx.character.abilityMods[w.ability],
@@ -2901,7 +2903,7 @@ function resolveDamageAmounts(
   crit = false,
   attackFacts?: AttackDamageQueryFacts,
 ): DamageInstance[] {
-  const handWeapon = weaponContext(ctx.character, hand, state.equipment, state);
+  const handWeapon = weaponContext(ctx.character, hand, state.equipment, state, ctx.passives);
   const declaredDamageType = payload.type === 'triggering_attack'
     ? ctx.triggeringAttack!.damageType
     : transmutedSpellDamageType(state, ctx, String(payload.type).trim());
@@ -3813,7 +3815,7 @@ function runAttackRoll(
   const hand = resolveHand(effect);
   const ac = ctx.target!.ac!;
   const passives = passivesFromCtx(ctx);
-  const currentWeapon = weaponContext(ctx.character, hand, state.equipment, state);
+  const currentWeapon = weaponContext(ctx.character, hand, state.equipment, state, ctx.passives);
   const attackRange = attackRangeFromEffect(effect, hand, ctx.character, state.equipment);
   const heavy = currentWeapon ? evaluateWeaponHeavyRule(
     currentWeapon,

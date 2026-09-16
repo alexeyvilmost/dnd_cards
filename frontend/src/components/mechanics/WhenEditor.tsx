@@ -102,7 +102,7 @@ function CondRow({
           {isRaw && <option value="__raw__">Сырое условие: {String(cond?.kind ?? '?')}</option>}
         </select>
         {onRemove && (
-          <button type="button" className="p-1 text-red-400 hover:text-red-600" onClick={onRemove} title="Удалить условие">
+          <button type="button" className="p-1 text-red-400 hover:text-red-600" onClick={onRemove} aria-label="Удалить условие">
             <Trash2 size={15} />
           </button>
         )}

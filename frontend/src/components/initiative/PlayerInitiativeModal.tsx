@@ -103,7 +103,7 @@ const PlayerInitiativeModal: React.FC<PlayerInitiativeModalProps> = ({
                   type="button"
                   onClick={() => rollFor(player.id, player.initiativeBonus)}
                   className="rounded-md border border-gray-300 p-1.5 text-gray-600 hover:bg-gray-50"
-                  title="Бросить d20 + бонус"
+                  aria-label="Бросить d20 + бонус"
                 >
                   <Dices size={16} />
                 </button>

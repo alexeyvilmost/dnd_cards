@@ -267,6 +267,11 @@ export async function installForgeApiFixture(page: Page): Promise<ForgeApiFixtur
       return;
     }
 
+    if (segments[1] === 'passive-presentations' && request.method() === 'GET') {
+      await json(route, 200, { passives: [], can_manage: false });
+      return;
+    }
+
     if (segments[1] === 'characters-v3') {
       const id = segments[2];
       if (id === 'runtime-commands' && request.method() === 'POST') {

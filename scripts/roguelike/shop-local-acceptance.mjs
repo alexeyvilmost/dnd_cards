@@ -33,9 +33,9 @@ async function api(method, path, body, status = 200) {
   assert.equal(response.status, status, `${method} ${path}: ${JSON.stringify(payload)}`);
   return payload;
 }
-const username = `shopqa${randomUUID().slice(0, 8)}`;
-const password = `ShopQA!${randomUUID()}`;
-await api('POST', '/auth/register', {username, email: `${username}@example.invalid`, password, display_name: 'QA магазин 249'}, 201);
+const username = process.env.SHOP_QA_USERNAME;
+const password = process.env.SHOP_QA_PASSWORD;
+assert(username && password, 'Pre-provisioned SHOP_QA_USERNAME and SHOP_QA_PASSWORD are required');
 const login = await api('POST', '/auth/login', {username, password});
 token = login.token;
 const sourceId = randomUUID();

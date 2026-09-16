@@ -26,7 +26,10 @@ export function replayCombatRecords(records, artifact) {
     assert.equal(snapshotHash(envelope), record.beforeHash, 'Missing or reordered command');
     const result = artifact.stepRoguelikeCombat(envelope, record.intent, record.artifactHash);
     assert.deepEqual(result.randomValues, record.randomValues, 'Random stream mismatch');
-    const projected = artifact.projectRoguelikeCombatPatch(result.envelope, {
+    const projected = record.participantRuntimeRevisions
+      ? artifact.projectRoguelikePartyCombatPatch(result.envelope, Object.entries(record.participantRuntimeRevisions)
+        .map(([id, revision])=>({id,runtime_revision:revision-1,turn_state:{}})))
+      : artifact.projectRoguelikeCombatPatch(result.envelope, {
       id: envelope.state.characterId, runtime_revision: record.runtimeRevision - 1, turn_state: {},
     });
     assert.equal(snapshotHash(projected.envelope), record.afterHash, 'Combat replay diverged');

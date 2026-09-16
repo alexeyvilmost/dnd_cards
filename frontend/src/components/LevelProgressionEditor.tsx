@@ -203,7 +203,7 @@ const LevelProgressionEditor = ({
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-semibold text-gray-900">Уровень {level}</h4>
                 {!showAllLevels && (
-                  <button type="button" className="text-gray-400 hover:text-red-500" onClick={() => removeLevel(level)} title="Удалить уровень">
+                  <button type="button" className="text-gray-400 hover:text-red-500" onClick={() => removeLevel(level)} aria-label="Удалить уровень">
                     <X size={16} />
                   </button>
                 )}

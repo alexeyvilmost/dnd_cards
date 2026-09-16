@@ -1107,7 +1107,7 @@ export default function MobileCharacterWizard() {
                       type="button"
                       className="m-wizard-option-select"
                       disabled={!!disabledReason && !selected}
-                      title={disabledReason}
+                      aria-description={disabledReason}
                       onClick={() => {
                         if (disabledReason && !selected) return;
                         const nextValues = selected
@@ -1160,7 +1160,7 @@ export default function MobileCharacterWizard() {
                         type="button"
                         className="m-wizard-option-select"
                         disabled={!!disabledReason && !selected}
-                        title={disabledReason}
+                        aria-description={disabledReason}
                         onClick={() => {
                           if (disabledReason && !selected) return;
                           const nextValues = selected

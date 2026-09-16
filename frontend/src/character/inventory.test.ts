@@ -39,6 +39,16 @@ const sword: Card = {
 } as Card;
 
 describe('purchaseItem', () => {
+  it('buys chosen quantities of two different copper-priced items with change',()=>{
+    for(const id of ['arrow','bolt']){
+      const card:Card={...sword,id,price:5,price_currency:'copper'};
+      const one=purchaseItem({...baseChar(),currency:{gold:5}},card);
+      expect(one.currency).toMatchObject({gold:4,silver:9,copper:5});
+      const pack=purchaseItem({...baseChar(),currency:{gold:5}},card,[],20);
+      expect(pack.currency).toMatchObject({gold:4,silver:0,copper:0});
+      expect(pack.runtime.inventory).toEqual([{cardId:id,qty:20}]);
+    }
+  });
   it('списывает золото и добавляет в инвентарь', () => {
     const { runtime, currency, error } = purchaseItem(baseChar(), sword);
     expect(error).toBeUndefined();
@@ -79,7 +89,7 @@ describe('purchaseItem', () => {
   });
 
   it('не применяет скидку Самоделкина к явно магическому предмету', () => {
-    const magical = { ...sword, tags: ['magical'] };
+    const magical = { ...sword, mechanics: {magical:true} };
     const crafter = [{
       effects: [{ result: [{
         kind: 'modifier', applies_to: { value: 'nonmagical_purchase_price' }, op: 'multiply', value: 0.8,

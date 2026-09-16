@@ -21,6 +21,8 @@ const (
 
 // Feat - модель черты D&D
 type Feat struct {
+	// Frozen wire snapshot for pre-258 certification hashes; never used as library tags.
+	LegacyTags *Properties `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
 	ID                    uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                  string         `json:"name" gorm:"not null"`
 	NameEn                *string        `json:"name_en" gorm:"type:varchar(255)"`
@@ -43,7 +45,6 @@ type Feat struct {
 	Type                  *string        `json:"type" gorm:"type:varchar(50)"`
 	Author                string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                *string        `json:"source" gorm:"type:varchar(255)"`
-	Tags                  *Properties    `json:"tags" gorm:"type:jsonb"`
 	IsExtended            *bool          `json:"is_extended" gorm:"type:boolean;default:null"`
 	CreatedAt             time.Time      `json:"created_at"`
 	UpdatedAt             time.Time      `json:"updated_at"`
@@ -71,7 +72,6 @@ type CreateFeatRequest struct {
 	Type                *string      `json:"type"`
 	Author              string       `json:"author"`
 	Source              *string      `json:"source"`
-	Tags                *Properties  `json:"tags"`
 	IsExtended          *bool        `json:"is_extended"`
 }
 
@@ -92,12 +92,12 @@ type UpdateFeatRequest struct {
 	Type                *string      `json:"type"`
 	Author              string       `json:"author"`
 	Source              *string      `json:"source"`
-	Tags                *Properties  `json:"tags"`
 	IsExtended          *bool        `json:"is_extended"`
 }
 
 // FeatResponse - ответ с чертой
 type FeatResponse struct {
+	LegacyTags *Properties `json:"tags"`
 	ID                  uuid.UUID    `json:"id"`
 	Name                string       `json:"name"`
 	NameEn              *string      `json:"name_en"`
@@ -116,7 +116,6 @@ type FeatResponse struct {
 	Type                *string      `json:"type"`
 	Author              string       `json:"author"`
 	Source              *string      `json:"source"`
-	Tags                *Properties  `json:"tags"`
 	IsExtended          *bool        `json:"is_extended"`
 	CreatedAt           time.Time    `json:"created_at"`
 	UpdatedAt           time.Time    `json:"updated_at"`
@@ -125,11 +124,12 @@ type FeatResponse struct {
 // ToFeatResponse преобразует модель черты в API-ответ.
 func (f Feat) ToFeatResponse() FeatResponse {
 	return FeatResponse{
+		LegacyTags: f.LegacyTags,
 		ID: f.ID, Name: f.Name, NameEn: f.NameEn, Description: f.Description, DetailedDescription: f.DetailedDescription,
 		ImageURL: f.ImageURL, Rarity: f.Rarity, CardNumber: f.CardNumber, Category: f.Category,
 		Prerequisite: f.Prerequisite, AbilityIncrease: f.AbilityIncrease,
 		RelatedEffects: f.RelatedEffects, RelatedActions: f.RelatedActions, Repeatable: f.Repeatable, Support: f.Support,
-		Type: f.Type, Author: f.Author, Source: f.Source, Tags: f.Tags, IsExtended: f.IsExtended,
+		Type: f.Type, Author: f.Author, Source: f.Source, IsExtended: f.IsExtended,
 		CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt,
 	}
 }
@@ -138,6 +138,8 @@ func (f Feat) ToFeatResponse() FeatResponse {
 
 // Background - модель предыстории D&D
 type Background struct {
+	// Frozen wire snapshot for pre-258 certification hashes; never used as library tags.
+	LegacyTags *Properties `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
 	ID                    uuid.UUID                   `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                  string                      `json:"name" gorm:"not null"`
 	NameEn                *string                     `json:"name_en" gorm:"type:varchar(255)"`
@@ -160,7 +162,6 @@ type Background struct {
 	Type                  *string                     `json:"type" gorm:"type:varchar(50)"`
 	Author                string                      `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                *string                     `json:"source" gorm:"type:varchar(255)"`
-	Tags                  *Properties                 `json:"tags" gorm:"type:jsonb"`
 	IsExtended            *bool                       `json:"is_extended" gorm:"type:boolean;default:null"`
 	CreatedAt             time.Time                   `json:"created_at"`
 	UpdatedAt             time.Time                   `json:"updated_at"`
@@ -188,7 +189,6 @@ type CreateBackgroundRequest struct {
 	Type                *string                     `json:"type"`
 	Author              string                      `json:"author"`
 	Source              *string                     `json:"source"`
-	Tags                *Properties                 `json:"tags"`
 	IsExtended          *bool                       `json:"is_extended"`
 }
 
@@ -209,12 +209,12 @@ type UpdateBackgroundRequest struct {
 	Type                *string                     `json:"type"`
 	Author              string                      `json:"author"`
 	Source              *string                     `json:"source"`
-	Tags                *Properties                 `json:"tags"`
 	IsExtended          *bool                       `json:"is_extended"`
 }
 
 // BackgroundResponse - ответ с предысторией
 type BackgroundResponse struct {
+	LegacyTags *Properties `json:"tags"`
 	ID                  uuid.UUID                   `json:"id"`
 	Name                string                      `json:"name"`
 	NameEn              *string                     `json:"name_en"`
@@ -233,7 +233,6 @@ type BackgroundResponse struct {
 	Type                *string                     `json:"type"`
 	Author              string                      `json:"author"`
 	Source              *string                     `json:"source"`
-	Tags                *Properties                 `json:"tags"`
 	IsExtended          *bool                       `json:"is_extended"`
 	CreatedAt           time.Time                   `json:"created_at"`
 	UpdatedAt           time.Time                   `json:"updated_at"`
@@ -242,10 +241,10 @@ type BackgroundResponse struct {
 // ToBackgroundResponse преобразует модель предыстории в API-ответ.
 func (b Background) ToBackgroundResponse() BackgroundResponse {
 	return BackgroundResponse{
+		LegacyTags: b.LegacyTags,
 		ID: b.ID, Name: b.Name, NameEn: b.NameEn, Description: b.Description, DetailedDescription: b.DetailedDescription,
 		ImageURL: b.ImageURL, Rarity: b.Rarity, CardNumber: b.CardNumber, AbilityScores: b.AbilityScores,
 		OriginFeat: b.OriginFeat, SkillProficiencies: b.SkillProficiencies, ToolProficiency: b.ToolProficiency,
-		Equipment: b.Equipment, EquipmentOptions: b.EquipmentOptions, Support: b.Support, Type: b.Type, Author: b.Author, Source: b.Source, Tags: b.Tags,
-		IsExtended: b.IsExtended, CreatedAt: b.CreatedAt, UpdatedAt: b.UpdatedAt,
+		Equipment: b.Equipment, EquipmentOptions: b.EquipmentOptions, Support: b.Support, Type: b.Type, Author: b.Author, Source: b.Source, IsExtended: b.IsExtended, CreatedAt: b.CreatedAt, UpdatedAt: b.UpdatedAt,
 	}
 }

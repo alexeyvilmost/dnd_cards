@@ -49,36 +49,6 @@ type roguelikeShopManifestEntry struct {
 	Kind       string
 }
 
-var roguelikeShopManifest = []roguelikeShopManifestEntry{
-	{"CARD-0319", 15, 1, 8, "equipment"},   // Longsword
-	{"CARD-0313", 25, 1, 8, "equipment"},   // Rapier
-	{"CARD-0311", 25, 1, 8, "equipment"},   // Scimitar
-	{"CARD-0297", 2, 1, 6, "equipment"},    // Dagger
-	{"CARD-0295", 5, 1, 6, "equipment"},    // Handaxe
-	{"CARD-0317", 50, 1, 7, "equipment"},   // Greatsword
-	{"CARD-0315", 10, 1, 7, "equipment"},   // Maul
-	{"CARD-0323", 15, 1, 7, "equipment"},   // Warhammer
-	{"CARD-0325", 20, 1, 6, "equipment"},   // Halberd
-	{"CARD-0321", 20, 1, 6, "equipment"},   // Glaive
-	{"CARD-0306", 25, 1, 7, "equipment"},   // Shortbow
-	{"CARD-0327", 50, 1, 7, "equipment"},   // Longbow
-	{"CARD-0307", 25, 1, 7, "equipment"},   // Light crossbow
-	{"CARD-0200", 10, 1, 8, "equipment"},   // Shield
-	{"CARD-0276", 45, 1, 7, "equipment"},   // Studded leather
-	{"CARD-0283", 75, 1, 7, "equipment"},   // Chain mail
-	{"CARD-0791", 25, 1, 5, "consumable"},  // Acid
-	{"CARD-0815", 25, 1, 4, "consumable"},  // Holy water
-	{"CARD-0714", 50, 2, 5, "consumable"},  // Alchemist's fire
-	{"CARD-0290", 200, 3, 5, "equipment"},  // Splint
-	{"CARD-0271", 400, 3, 4, "equipment"},  // Breastplate
-	{"CARD-0840", 200, 3, 5, "consumable"}, // Greater healing potion
-	{"CARD-0081", 415, 3, 2, "magic"},      // Longsword +1, executable +1 attack/damage
-	{"CARD-0118", 415, 3, 2, "magic"},      // Warhammer +1, executable +1 attack/damage
-	{"CARD-0548", 400, 4, 1, "magic"},      // Cloak of Protection, attunement required
-	{"CARD-0624", 400, 4, 1, "magic"},      // Ring of Protection, attunement required
-	{"CARD-0291", 1500, 5, 1, "equipment"}, // Plate
-}
-
 func roguelikeLootKind(level, roll int) string {
 	if level <= 2 {
 		if roll < 80 {

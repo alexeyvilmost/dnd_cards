@@ -47,7 +47,7 @@ export default function EquipItemDialog({
   return (
     <div className="sheet-equip-overlay" onClick={onClose}>
       <div className="sheet-equip-dialog" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="sheet-equip-close" onClick={onClose} title="Закрыть (Esc)">
+        <button type="button" className="sheet-equip-close" onClick={onClose} aria-label="Закрыть (Esc)">
           <X size={18} />
         </button>
 
@@ -94,7 +94,7 @@ export default function EquipItemDialog({
                 <Trash2 size={15} /> Удалить
               </button>
               {showContainer && (
-                <label className="sheet-equip-container" title="Убрать предмет в контейнер">
+                <label className="sheet-equip-container" aria-description="Убрать предмет в контейнер">
                   <PackagePlus size={15} />
                   <span>В контейнер:</span>
                   <select
@@ -119,7 +119,7 @@ export default function EquipItemDialog({
                   type="button"
                   className={`forge-btn ghost${attuned ? ' is-on' : ''}`}
                   disabled={busy || !canChangeAttunement}
-                  title={canChangeAttunement ? undefined : 'Настройка меняется только на отдыхе'}
+                  aria-description={canChangeAttunement ? undefined : 'Настройка меняется только на отдыхе'}
                   onClick={onToggleAttune}
                 >
                   <Sparkles size={14} /> {attuned ? 'Настроен' : 'Настроиться'}

@@ -59,7 +59,7 @@ var contentMigrationExactUpdateColumns = map[string]map[string]string{
 		"weapon_type": "weapon_type", "mastery": "mastery", "related_cards": "related_cards",
 		"related_actions": "related_actions", "related_effects": "related_effects",
 		"attunement": "attunement", "requires_attunement": "requires_attunement",
-		"range": "range", "tags": "tags", "is_template": "is_template", "slot": "slot",
+		"range": "range", "is_template": "is_template", "slot": "slot",
 		"effects": "effects", "mechanics": "mechanics", "battle_profile": "battle_profile",
 		"container_mode": "container_mode", "contents": "contents",
 	},
@@ -68,7 +68,7 @@ var contentMigrationExactUpdateColumns = map[string]map[string]string{
 		"detailed_description": "detailed_description", "image_url": "image_url", "rarity": "rarity",
 		"effect_type": "effect_type", "condition_description": "condition_description",
 		"script": "script", "mechanics": "mechanics", "type": "type", "author": "author",
-		"source": "source", "tags": "tags", "price": "price", "weight": "weight",
+		"source": "source", "price": "price", "weight": "weight",
 		"properties": "properties", "related_cards": "related_cards",
 		"related_actions": "related_actions", "related_effects": "related_effects",
 		"repeatable": "repeatable", "is_extended": "is_extended",
@@ -83,7 +83,7 @@ var contentMigrationExactUpdateColumns = map[string]map[string]string{
 		"resources": "resource", "distance": "distance", "recharge": "recharge",
 		"recharge_custom": "recharge_custom", "script": "script", "mechanics": "mechanics",
 		"action_type": "action_type", "type": "type", "author": "author", "source": "source",
-		"tags": "tags", "price": "price", "weight": "weight", "properties": "properties",
+		"price": "price", "weight": "weight", "properties": "properties",
 		"related_cards": "related_cards", "related_actions": "related_actions",
 		"is_extended": "is_extended", "description_font_size": "description_font_size",
 		"text_alignment": "text_alignment", "text_font_size": "text_font_size",
@@ -102,7 +102,7 @@ var contentMigrationExactUpdateColumns = map[string]map[string]string{
 		"damage": "damage", "area": "area", "is_healing": "is_healing", "heal_dice": "heal_dice",
 		"save_outcome": "save_outcome", "upcast_description": "upcast_description",
 		"mechanics": "mechanics", "type": "type", "author": "author", "source": "source",
-		"tags": "tags", "is_extended": "is_extended",
+		"is_extended": "is_extended",
 	},
 	"race": {
 		"name": "name", "name_en": "name_en", "description": "description",
@@ -112,7 +112,7 @@ var contentMigrationExactUpdateColumns = map[string]map[string]string{
 		"lineages": "lineages", "is_subrace": "is_subrace", "parent_race_id": "parent_race_id",
 		"subrace_level": "subrace_level", "related_effects": "related_effects",
 		"related_actions": "related_actions", "level_progression": "level_progression",
-		"type": "type", "author": "author", "source": "source", "tags": "tags",
+		"type": "type", "author": "author", "source": "source",
 		"is_extended": "is_extended",
 	},
 	"class": {
@@ -127,7 +127,7 @@ var contentMigrationExactUpdateColumns = map[string]map[string]string{
 		"is_subclass": "is_subclass", "parent_class_id": "parent_class_id",
 		"subclass_level": "subclass_level", "related_effects": "related_effects",
 		"related_actions": "related_actions", "type": "type", "author": "author",
-		"source": "source", "tags": "tags", "is_extended": "is_extended",
+		"source": "source", "is_extended": "is_extended",
 	},
 	"feat": {
 		"name": "name", "name_en": "name_en", "description": "description",
@@ -135,7 +135,7 @@ var contentMigrationExactUpdateColumns = map[string]map[string]string{
 		"category": "category", "prerequisite": "prerequisite", "ability_increase": "ability_increase",
 		"related_effects": "related_effects", "related_actions": "related_actions",
 		"repeatable": "repeatable", "type": "type", "author": "author", "source": "source",
-		"tags": "tags", "is_extended": "is_extended",
+		"is_extended": "is_extended",
 	},
 	"background": {
 		"name": "name", "name_en": "name_en", "description": "description",
@@ -143,7 +143,7 @@ var contentMigrationExactUpdateColumns = map[string]map[string]string{
 		"ability_scores": "ability_scores", "origin_feat": "origin_feat",
 		"skill_proficiencies": "skill_proficiencies", "tool_proficiency": "tool_proficiency",
 		"equipment": "equipment", "equipment_options": "equipment_options", "type": "type",
-		"author": "author", "source": "source", "tags": "tags", "is_extended": "is_extended",
+		"author": "author", "source": "source", "is_extended": "is_extended",
 	},
 }
 

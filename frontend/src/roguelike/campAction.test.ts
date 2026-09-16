@@ -19,6 +19,33 @@ async function input() {
   return { ...request, commandId: 'camp-action-test', seed: 'private-test-seed', actionId: action.id };
 }
 describe('authoritative self actions in camp', () => {
+  it.each(['2d4+2','4d4+4'])('administers a data-owned %s healing potion to an ally, debiting only the source', async dice => {
+    const request=await input();
+    const card=structuredClone(request.catalog.entities.card[0]);
+    card.id='a2550000-0000-4000-8000-000000000001';card.card_number='QA-party-potion';card.name='QA healing';card.type=null;
+    card.mechanics={activation:{mode:'active',while:'carried',cost:[{resource:'bonus_action'},{resource:'self_item',amount:1}]},
+      targeting:JSON.parse(readFileSync(new URL('../../../backend/migrations/party_potion_targets_255.go',import.meta.url),'utf8').match(/const partyPotionTargeting255 = `([^`]+)`/)![1]),
+      effects:[{resolution:'auto',who:'target',result:[{kind:'healing',amount:dice}]}]};
+    request.catalog.entities.card.push(card);
+    request.character.inventory_items=[...(request.character.inventory_items??[]),{card_id:card.id,qty:2}];
+    const ally=structuredClone(request.character);ally.id='a2550000-0000-4000-8000-000000000002';ally.name='Ally';ally.current_hp=0;ally.inventory_items=[];
+    const partyRequest={...request,actionId:undefined,itemCardId:card.id,characters:[request.character,ally],targetIds:[ally.id]};
+    const before=structuredClone(partyRequest);
+    const result=await executeRoguelikeCampAction(partyRequest);
+    expect(result.status).toBe('ready');if(result.status!=='ready')return;
+    expect(result.patch.current_hp).toBe(4);
+    expect(result.patches[ally.id].current_hp).toBeGreaterThan(0);
+    expect(result.patch.inventory_items.find(r=>r.card_id===card.id)?.qty).toBe(1);
+    expect(result.patch.resources.bonus_action).toBe(0);
+    expect(result.patches[ally.id].resources.bonus_action).toBe(1);
+    const sourceWorld=result.patch.turn_state.canonical_rules_world_v1 as {world:{actors:Record<string,unknown>}};
+    const allyWorld=result.patches[ally.id].turn_state.canonical_rules_world_v1 as {world:{actors:Record<string,unknown>}};
+    expect(Object.keys(sourceWorld.world.actors)).toEqual([request.character.id]);
+    expect(Object.keys(allyWorld.world.actors)).toEqual([ally.id]);
+    expect(await executeRoguelikeCampAction(partyRequest)).toEqual(result);
+    expect(partyRequest).toEqual(before);
+    await expect(executeRoguelikeCampAction({...partyRequest,targetIds:['foreign']})).rejects.toThrow(/не состоит/);
+  });
   it('passes declared familiar appearance facts to the shared rules without inventing visibility or space', async () => {
     const request = await input();
     const prepared = await prepareRoguelikeCombatParticipant(request.character, request.catalog, request.basicActionIds);

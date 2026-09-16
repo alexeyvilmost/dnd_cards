@@ -1,6 +1,5 @@
 // Creates isolated QA personal sheets/runs in the local review DB; never use production.
 import {readFile,writeFile} from 'node:fs/promises';
-import {randomUUID} from 'node:crypto';
 import {createRequire} from 'node:module';
 import assert from 'node:assert/strict';
 const require = createRequire(new URL('../../frontend/package.json',import.meta.url));
@@ -11,8 +10,8 @@ async function api(method,path,body,status=200) {
  const response=await fetch(`${base}/api${path}`,{method,headers:{'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{})},body:body==null?undefined:JSON.stringify(body)});
  const result=await response.json(); assert.equal(response.status,status,`${method} ${path}: ${JSON.stringify(result)}`);return result;
 }
-const username=`templatesqa${randomUUID().slice(0,8)}`,password=`TemplatesQA!${randomUUID()}`;
-await api('POST','/auth/register',{username,password,email:`${username}@example.invalid`,display_name:'QA шаблоны 250'},201);
+const username=process.env.TEMPLATES_QA_USERNAME,password=process.env.TEMPLATES_QA_PASSWORD;
+assert(username&&password,'Pre-provisioned TEMPLATES_QA_USERNAME and TEMPLATES_QA_PASSWORD are required');
 const login=await api('POST','/auth/login',{username,password});token=login.token;
 const catalog=await api('GET','/character-templates');assert.equal(catalog.templates.length,3);assert.equal(catalog.can_manage,false);
 for(const template of catalog.templates) for(const key of ['id','user_id','user','group_id','access_mode']) assert(!(key in template.character));
@@ -66,6 +65,6 @@ try {
  await page.getByRole('button',{name:'Создать из шаблона',exact:true}).click();
  await expect(page.locator('.character-template-grid article')).toHaveCount(3);
  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'mobile page overflows');
- await writeFile(new URL('../../outputs/presets-250/acceptance.json',import.meta.url),JSON.stringify({username,password,created},null,2));
+ await writeFile(new URL('../../outputs/presets-250/acceptance.json',import.meta.url),JSON.stringify({created},null,2));
  console.log('PASS: three templates, personal copy/rename, three run launches, source preservation, resume, non-admin protection, mobile layout');
 } finally {await browser.close();}

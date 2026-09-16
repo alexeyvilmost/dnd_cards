@@ -26,6 +26,7 @@ func (fc *FeatController) GetFeats(c *gin.Context) {
 	var feats []Feat
 	light := wantsListView(c)
 	query := fc.db.Model(&Feat{})
+	query = entityTagFilter(query, c, "feat", "feats")
 	if light {
 		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt")
 	}
@@ -145,7 +146,7 @@ func (fc *FeatController) CreateFeat(c *gin.Context) {
 		ImageURL: req.ImageURL, Rarity: req.Rarity, CardNumber: cardNumber, Category: req.Category,
 		Prerequisite: req.Prerequisite, AbilityIncrease: req.AbilityIncrease, Repeatable: req.Repeatable,
 		RelatedEffects: req.RelatedEffects, RelatedActions: req.RelatedActions,
-		Type: req.Type, Author: req.Author, Source: req.Source, Tags: req.Tags, IsExtended: req.IsExtended,
+		Type: req.Type, Author: req.Author, Source: req.Source, IsExtended: req.IsExtended,
 	}
 	if f.Author == "" {
 		f.Author = "Admin"
@@ -225,9 +226,6 @@ func (fc *FeatController) UpdateFeat(c *gin.Context) {
 	if req.Source != nil {
 		f.Source = req.Source
 	}
-	if req.Tags != nil {
-		f.Tags = req.Tags
-	}
 	if req.IsExtended != nil {
 		f.IsExtended = req.IsExtended
 	}
@@ -263,6 +261,7 @@ func (bc *BackgroundController) GetBackgrounds(c *gin.Context) {
 	var backgrounds []Background
 	light := wantsListView(c)
 	query := bc.db.Model(&Background{})
+	query = entityTagFilter(query, c, "background", "backgrounds")
 	if light {
 		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt")
 	}
@@ -373,8 +372,7 @@ func (bc *BackgroundController) CreateBackground(c *gin.Context) {
 		Name: req.Name, NameEn: req.NameEn, Description: req.Description, DetailedDescription: req.DetailedDescription,
 		ImageURL: req.ImageURL, Rarity: req.Rarity, CardNumber: cardNumber, AbilityScores: req.AbilityScores,
 		OriginFeat: req.OriginFeat, SkillProficiencies: req.SkillProficiencies, ToolProficiency: req.ToolProficiency,
-		Equipment: req.Equipment, EquipmentOptions: req.EquipmentOptions, Type: req.Type, Author: req.Author, Source: req.Source, Tags: req.Tags,
-		IsExtended: req.IsExtended,
+		Equipment: req.Equipment, EquipmentOptions: req.EquipmentOptions, Type: req.Type, Author: req.Author, Source: req.Source, IsExtended: req.IsExtended,
 	}
 	if b.Author == "" {
 		b.Author = "Admin"
@@ -453,9 +451,6 @@ func (bc *BackgroundController) UpdateBackground(c *gin.Context) {
 	}
 	if req.Source != nil {
 		b.Source = req.Source
-	}
-	if req.Tags != nil {
-		b.Tags = req.Tags
 	}
 	if req.IsExtended != nil {
 		b.IsExtended = req.IsExtended

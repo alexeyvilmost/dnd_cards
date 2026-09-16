@@ -15,6 +15,7 @@ import SpellPreview from './SpellPreview';
 import SheetEntityRow from './SheetEntityRow';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 import { useViewportPopoverPosition } from '../hooks/useViewportPopoverPosition';
+import { previewAnchor } from '../utils/previewAnchor';
 
 export { fitActionPopoverToViewport } from '../hooks/useViewportPopoverPosition';
 
@@ -90,13 +91,12 @@ const SheetActionLine = ({
   const onEnter = (e: React.MouseEvent) => {
     if (disableHover) return;
     setHover(true);
-    setPos({ x: e.clientX, y: e.clientY });
+    setPos(previewAnchor(e.currentTarget));
   };
   const onLeave = () => { if (!pinModeActive) setHover(false); };
   const onFocus = (event: React.FocusEvent<HTMLElement>) => {
     if (disableHover) return;
-    const bounds = event.currentTarget.getBoundingClientRect();
-    setPos({x: bounds.right, y: bounds.top}); setHover(true);
+    setPos(previewAnchor(event.currentTarget)); setHover(true);
   };
 
   return (
@@ -108,13 +108,12 @@ const SheetActionLine = ({
           aria-pressed={selected}
           aria-disabled={(disabled && !inspectMode) || undefined}
           aria-label={disabled && disabledTitle ? `${name}: ${disabledTitle}` : name}
-          title={disabled ? disabledTitle : iconShape === 'round' ? undefined : name}
+          aria-description={disabled ? disabledTitle : iconShape === 'round' ? undefined : name}
           onClick={disabled && !inspectMode ? undefined : onActivate}
           onMouseEnter={onEnter}
           onMouseLeave={onLeave}
           onFocus={onFocus}
           onBlur={onLeave}
-          onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
         >
           <ForgeEntityIcon imageUrl={imageUrl?.trim() || null} alt={name} fill />
           {iconShape === 'round' && <span className="passive-orbit" aria-hidden="true"/>}
@@ -132,7 +131,6 @@ const SheetActionLine = ({
           title={disabled ? disabledTitle : name}
           onClick={onActivate}
           onMouseEnter={onEnter}
-          onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
           onMouseLeave={onLeave}
           onFocus={onFocus}
           onBlur={onLeave}

@@ -1,4 +1,5 @@
 import SheetFeatureSections from '../components/SheetFeatureSections';
+import SheetTogglePassives from '../components/SheetTogglePassives';
 import { useRef, useState, type ReactNode } from 'react';
 import type { AssembledCharacter } from '../character/assemble';
 import { useGrantedActions } from '../character/grantedActions';
@@ -311,7 +312,7 @@ const CharacterSheetV2 = ({
     <div className="csheet">
       <div className="csheet-top">
         <div className="cs-ident">
-          <button type="button" className="cs-portrait cs-portrait-btn" disabled={readOnly || avatarBusy} onClick={() => avatarInputRef.current?.click()} title={readOnly ? 'Лист открыт только для чтения' : 'Загрузить токен персонажа'}>
+          <button type="button" className="cs-portrait cs-portrait-btn" disabled={readOnly || avatarBusy} onClick={() => avatarInputRef.current?.click()} aria-label="Загрузить токен персонажа" aria-description={readOnly ? 'Лист открыт только для чтения' : undefined}>
             {character.avatar_url
               ? <img src={character.avatar_url} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
               : <span>{(character.name || '?').slice(0, 1)}</span>}
@@ -351,7 +352,7 @@ const CharacterSheetV2 = ({
               <span className="cs-ac-l">КД</span>
             </div>
           </div>
-          <button type="button" className="cs-hp cs-hp-btn" disabled={readOnly} onClick={() => setHpOpen(true)} title={readOnly ? 'Лист открыт только для чтения' : 'Управление хитами'}>
+          <button type="button" className="cs-hp cs-hp-btn" disabled={readOnly} onClick={() => setHpOpen(true)} aria-description={readOnly ? 'Лист открыт только для чтения' : 'Управление хитами'}>
             <div className="cs-hp-top">
               <span className="cs-hp-cur">{currentHP}</span>
               <span className="cs-hp-max">/ {maxHP}</span>
@@ -518,6 +519,7 @@ const CharacterSheetV2 = ({
 
           <CollapsibleSection title="Черты и способности">
             <SheetFeatureSections assembled={assembled}/>
+            <SheetTogglePassives character={character} assembled={assembled} ruleState={ruleState} runtime={runtimeState} characterContext={sheetCtx} passives={passives} cards={equipCards} readOnly={readOnly}/>
           </CollapsibleSection>
         </div>
       </div>

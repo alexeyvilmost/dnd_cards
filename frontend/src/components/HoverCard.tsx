@@ -9,6 +9,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNo
 import { createPortal } from 'react-dom';
 import { usePinMode } from '../hooks/usePinMode';
 import { useEntityDetail } from '../contexts/entityDetail';
+import { previewAnchor } from '../utils/previewAnchor';
 
 interface HoverCardProps {
   children: ReactNode;   // триггер (inline)
@@ -18,15 +19,15 @@ interface HoverCardProps {
   disabled?: boolean;
 }
 
-function computePosition(trigger: DOMRect, card: { width: number; height: number }) {
+function computePosition(trigger: { x: number; y: number }, card: { width: number; height: number }) {
   const M = 8;
-  let left = trigger.left;
-  let top = trigger.bottom + 6;
+  let left = trigger.x;
+  let top = trigger.y + 6;
   if (left + card.width > window.innerWidth - M) left = window.innerWidth - M - card.width;
   if (left < M) left = M;
   // не влезает вниз — разворачиваем вверх
   if (top + card.height > window.innerHeight - M) {
-    const above = trigger.top - card.height - 6;
+    const above = trigger.y - card.height - 6;
     top = above >= M ? above : Math.max(M, window.innerHeight - M - card.height);
   }
   return { left, top };
@@ -70,11 +71,18 @@ const HoverCard = ({ children, content, className, onClick, disabled = false }: 
   // Позиционирование после монтирования карточки (когда известен её размер).
   useLayoutEffect(() => {
     if (!open) { setPos(null); return; }
-    const t = triggerRef.current?.getBoundingClientRect();
+    const t = triggerRef.current;
     const c = cardRef.current;
     if (!t || !c) return;
-    const rect = c.getBoundingClientRect();
-    setPos(computePosition(t, { width: rect.width, height: rect.height }));
+    const place = () => {
+      const rect = c.getBoundingClientRect();
+      setPos(computePosition(previewAnchor(t), { width: rect.width, height: rect.height }));
+    };
+    place();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(place);
+    observer?.observe(c);
+    window.addEventListener('resize', place);
+    return () => { observer?.disconnect(); window.removeEventListener('resize', place); };
   }, [open]);
 
   return (
@@ -91,6 +99,7 @@ const HoverCard = ({ children, content, className, onClick, disabled = false }: 
       {!hoverDisabled && open && createPortal(
         <div
           ref={cardRef}
+          className="entity-preview-enter"
           style={{
             position: 'fixed',
             left: pos?.left ?? -9999,

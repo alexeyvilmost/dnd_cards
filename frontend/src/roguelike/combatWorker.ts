@@ -1,6 +1,6 @@
 import {gridDistanceFt} from '../solo-combat/tacticalGrid';
 import {bindCombatWorldInputFacts} from '../solo-combat/worldInput';
-import {TACTICAL_WIDTH, TACTICAL_HEIGHT} from '../solo-combat/types';
+import {boardDimensions, terrainSight} from '../solo-combat/boardGeometry';
 import type { DecisionResponse } from '../rules-core/domain';
 import { canonicalSha256Sync } from '../rules-core/determinism';
 import {executeConditionAction} from '../solo-combat/engine';
@@ -106,9 +106,10 @@ export function stepRoguelikeCombat(
       if (intent.worldPosition) {
         const position = intent.worldPosition;
         if (!Number.isInteger(position.x) || !Number.isInteger(position.y) || position.x < 0 || position.y < 0
-          || position.x >= TACTICAL_WIDTH || position.y >= TACTICAL_HEIGHT) throw new Error('Клетка вне поля боя');
+          || position.x >= boardDimensions(state).width || position.y >= boardDimensions(state).height) throw new Error('Клетка вне поля боя');
         const source = state.tokens[intent.actorId]?.position;
         if (!source) throw new Error('Участник отсутствует на поле');
+        if(terrainSight(state,source,position).blocked)throw new Error('Место назначения закрыто препятствием');
         const distanceFt = gridDistanceFt(source, position);
         const action = state.catalogActions.find(row => row.id === intent.actionId);
         if (action?.targeting?.rangeFt !== undefined && distanceFt > action.targeting.rangeFt) throw new Error('Цель вне дальности');

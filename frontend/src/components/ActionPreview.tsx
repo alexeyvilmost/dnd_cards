@@ -145,7 +145,7 @@ const ActionPreview = ({ action, runtime, className = '', disableHover = false, 
             ? `дальний ${wp.normalRangeFt ?? '?'} / ${wp.longRangeFt ?? '?'} фт`
             : `рукопашный · досягаемость ${wp.reachFt ?? 5} фт`}</div>
           {!!wp.properties?.length && <div><strong>Свойства:</strong> {wp.properties.map(getPropertyLabel).join(', ')}</div>}
-          {mastery && <div title={mastery.description ?? undefined}><strong>Мастерство:</strong> {mastery.name}</div>}
+          {mastery && <div aria-description={mastery.description ?? undefined}><strong>Мастерство:</strong> {mastery.name}</div>}
         </div>
       )}
 

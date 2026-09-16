@@ -109,7 +109,7 @@ export default function SheetConflictResolveDialog({
         role="dialog"
         aria-label="Разрешить конфликт навыка"
       >
-        <button type="button" className="sheet-equip-close" onClick={onClose} title="Закрыть (Esc)">
+        <button type="button" className="sheet-equip-close" onClick={onClose} aria-label="Закрыть (Esc)">
           <X size={18} />
         </button>
 

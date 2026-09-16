@@ -80,7 +80,7 @@ export default function EntityImageEditor({ entityId, initialUrl, persist, gener
               onClick={handleGenerate}
               disabled={busy !== null}
               className="edm-btn edm-btn--sm edm-btn--grow"
-              title="Сгенерировать иконку (ИИ)"
+              aria-description="Сгенерировать иконку (ИИ)"
             >
               <RefreshCw size={16} className={busy === 'gen' ? 'animate-spin' : ''} />
               <span>{busy === 'gen' ? 'Генерация…' : 'Перегенерировать'}</span>
@@ -91,7 +91,7 @@ export default function EntityImageEditor({ entityId, initialUrl, persist, gener
             onClick={() => setShowUpload((v) => !v)}
             disabled={busy !== null}
             className="edm-btn edm-btn--sm edm-btn--grow"
-            title="Загрузить своё изображение"
+            aria-description="Загрузить своё изображение"
           >
             <ImagePlus size={16} />
             <span>Загрузить</span>

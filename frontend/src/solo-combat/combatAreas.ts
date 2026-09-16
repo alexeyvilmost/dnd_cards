@@ -13,7 +13,7 @@ import type {
   PendingCombatAreaTrigger,
   SoloCombatState,
 } from './types';
-import { TACTICAL_HEIGHT, TACTICAL_WIDTH } from './types';
+import {boardCells, type BoardState} from './boardGeometry';
 
 type Dict = Record<string, unknown>;
 
@@ -183,8 +183,9 @@ export function createCombatArea(input: {
   }
   const origin = sourceAnchored ? sourcePosition : input.origin;
   const cells = sourceAnchored
-    ? sourceAnchoredCells(origin, sourceAnchorRadiusFt!)
+    ? sourceAnchoredCells(origin, sourceAnchorRadiusFt!, input.state)
     : areaPositionsForAction({
+      board: input.state,
       action: input.action,
       sourcePosition,
       aimPosition: origin,
@@ -310,11 +311,8 @@ function areaConditionEffect(area: CombatAreaState, actorId: string): ActiveEffe
   };
 }
 
-function sourceAnchoredCells(origin: GridPosition, radiusFt: number): GridPosition[] {
-  return Array.from({ length: TACTICAL_WIDTH * TACTICAL_HEIGHT }, (_, index) => ({
-    x: index % TACTICAL_WIDTH,
-    y: Math.floor(index / TACTICAL_WIDTH),
-  })).filter((position) => gridDistanceFt(origin, position) <= radiusFt);
+function sourceAnchoredCells(origin: GridPosition, radiusFt: number, board?:BoardState): GridPosition[] {
+  return boardCells(board).filter((position) => gridDistanceFt(origin, position) <= radiusFt);
 }
 
 /** Rebuild source-following geometry at the persistence boundary. Saved cells
@@ -334,7 +332,7 @@ export function normalizeSourceAnchoredCombatAreas(state: SoloCombatState): Solo
     areas[areaId] = {
       ...area,
       origin: { ...position },
-      cells: sourceAnchoredCells(position, radiusFt!),
+      cells: sourceAnchoredCells(position, radiusFt!, state),
     };
     changed = true;
   }
@@ -361,7 +359,7 @@ export function reanchorSourceCombatAreas(
     areas[areaId] = {
       ...area,
       origin: { ...position },
-      cells: sourceAnchoredCells(position, area.sourceAnchorRadiusFt),
+      cells: sourceAnchoredCells(position, area.sourceAnchorRadiusFt, state),
     };
     changedAreaIds.push(areaId);
   }

@@ -80,6 +80,7 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
 
   return (
     <EntityDetailShell
+      entity={{type:'spell',id:spell.id}}
       isOpen={isOpen}
       onClose={onClose}
       title={spell.name}
@@ -97,7 +98,7 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
       actions={(
         <>
           {locked && (
-            <span className="edm-btn" title="Механика закреплена полной тестовой сертификацией">
+            <span className="edm-btn" aria-description="Механика закреплена полной тестовой сертификацией">
               <Lock size={18} /><span>Закреплено</span>
             </span>
           )}

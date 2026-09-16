@@ -158,7 +158,7 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
                 >
                   <option value="">— выберите цель —</option>
                   {dialog.targets.map((t) => (
-                    <option key={t.id} value={t.id} disabled={t.disabled} title={t.reason}>
+                    <option key={t.id} value={t.id} disabled={t.disabled} aria-description={t.reason}>
                       {t.name}{t.disabled && t.reason ? ` — ${t.reason}` : ''}
                     </option>
                   ))}
@@ -170,7 +170,7 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
               <>
                 <div className="dice-dialog-summary">Потратить ресурсы и применить действие?</div>
                 <div className="dice-dialog-actions">
-                  <button type="button" className="dice-dialog-btn primary" disabled={mustPickTarget} title={mustPickTarget ? 'Выберите цель' : undefined} onClick={() => finish(withTarget({ mode: 'auto' }))}>
+                  <button type="button" className="dice-dialog-btn primary" disabled={mustPickTarget} aria-description={mustPickTarget ? 'Выберите цель' : undefined} onClick={() => finish(withTarget({ mode: 'auto' }))}>
                     Применить
                   </button>
                   <button type="button" className="dice-dialog-btn ghost" onClick={() => finish({ mode: 'cancel' })}>
@@ -202,7 +202,7 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
                   ))}
                 </div>
                 <div className="dice-dialog-actions">
-                  <button type="button" className="dice-dialog-btn primary" disabled={mustPickTarget} title={mustPickTarget ? 'Выберите цель' : undefined} onClick={() => finish(withTarget({ mode: 'auto' }))}>
+                  <button type="button" className="dice-dialog-btn primary" disabled={mustPickTarget} aria-description={mustPickTarget ? 'Выберите цель' : undefined} onClick={() => finish(withTarget({ mode: 'auto' }))}>
                     Автобросок
                   </button>
                   {dialog.use3d && (
@@ -218,7 +218,7 @@ export function DiceDialogProvider({ children }: { children: ReactNode }) {
                     type="button"
                     className="dice-dialog-btn"
                     disabled={!manualReady || mustPickTarget}
-                    title={mustPickTarget ? 'Выберите цель' : manualReady ? undefined : 'Заполните значения всех кубов'}
+                    aria-description={mustPickTarget ? 'Выберите цель' : manualReady ? undefined : 'Заполните значения всех кубов'}
                     onClick={() => finish(withTarget({ mode: 'manual', values: parsed as number[] }))}
                   >
                     Использовать мои кубы

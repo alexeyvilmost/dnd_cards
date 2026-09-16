@@ -1,6 +1,7 @@
 import type { ActorState, RuleActionDefinition } from '../rules-core/domain';
 import type { GridPosition, InitiativeEntry, SoloCombatState } from './types';
-import { TACTICAL_HEIGHT, TACTICAL_WIDTH } from './types';
+import {boardDimensions, terrainFits,terrainSight} from './boardGeometry';
+import {actorFootprint,footprintCells} from './footprint';
 
 type Dict = Record<string, unknown>;
 
@@ -87,13 +88,14 @@ function summonPosition(
   action: RuleActionDefinition,
   requested?: GridPosition,
 ): GridPosition {
-  const occupied = new Set(Object.values(state.tokens).map(({ position }) => `${position.x}:${position.y}`));
+  const occupied = new Set(Object.values(state.tokens).flatMap(token=>footprintCells(token.position,actorFootprint(state.world.actors[token.actorId],state))).map(p=>`${p.x}:${p.y}`));
+  const size=state.tacticalFootprints==='sized'?Math.max(1,(ownedSummonPolicy(action)?.size??2)-1):1;
   if (!requested) throw new Error('Выберите свободную клетку для призванного существа');
-  if (requested.x < 0 || requested.x >= TACTICAL_WIDTH
-    || requested.y < 0 || requested.y >= TACTICAL_HEIGHT) {
+  if (requested.x < 0 || requested.x >= boardDimensions(state).width
+    || requested.y < 0 || requested.y >= boardDimensions(state).height || !terrainFits(state,requested,size)) {
     throw new Error('Клетка призыва находится за пределами поля');
   }
-  if (occupied.has(`${requested.x}:${requested.y}`)) {
+  if (footprintCells(requested,size).some(p=>occupied.has(`${p.x}:${p.y}`))) {
     throw new Error('Для призванного существа нужна свободная клетка');
   }
   const source = state.tokens[ownerActorId]?.position;
@@ -116,7 +118,7 @@ function summonPosition(
         return false;
       })
     ));
-    if (blocked) throw new Error('Клетка призыва не видна владельцу');
+    if (blocked||terrainSight(state,source,requested,actorFootprint(state.world.actors[ownerActorId],state),size).blocked) throw new Error('Клетка призыва не видна владельцу');
   }
   return { ...requested };
 }

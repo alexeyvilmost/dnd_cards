@@ -261,7 +261,7 @@ const renderParsedNodes = (
           key={key}
           src={info?.path ?? ''}
           alt={info?.label ?? node.dmg}
-          title={info?.label ?? node.dmg}
+          aria-description={info?.label ?? node.dmg}
           style={{
             display: 'inline-block',
             height: '1em',

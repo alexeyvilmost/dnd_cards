@@ -328,6 +328,26 @@ function engineEvents(events: readonly UncommittedRuleEvent[]) {
 }
 
 describe('canonical pre-damage reaction lifecycle', () => {
+  it.each(['bludgeoning','fire'])('filters held packets by the declared damage types: %s', type => {
+    const reaction = structuredClone(STONE_ENDURANCE);
+    reaction.id = 'different-protection';
+    (reaction.mechanics.activation as Record<string,unknown>).trigger = {event:'damage_taken',timing:'before',damage_types_any:[type]};
+    const catalog: RulesCatalog = {getAction:id => id === reaction.id ? reaction : CATALOG.getAction(id)};
+    const tape = createStrictRngTape([{label:'attack',sides:20,value:15},{label:'damage',sides:8,value:8},
+      ...(type === 'bludgeoning' ? [{label:'reduction',sides:12,value:12}] : [])]);
+    const session = new InMemoryRulesSession(world([reaction.id]),catalog,{rng:tape.rng,clock:createLogicalClock(),nextId:createSequentialIdFactory('typed')});
+    begin(session,[reaction.id]); expect(useStrike(session).status).toBe('accepted');
+    if(type === 'bludgeoning') {
+      expect(session.getState().pendingResolution?.type).toBe('damage_reaction');
+      expect(resolveReaction(session,reaction.id,'reduce').status).toBe('accepted');
+      expect(session.getState().actors.defender.runtime.hp.current).toBe(20);
+    } else {
+      expect(session.getState().pendingResolution).toBeNull();
+      expect(session.getState().actors.defender.runtime.hp.current).toBe(12);
+      expect(session.getState().actors.defender.runtime.resources.reaction).toBe(1);
+    }
+    tape.assertExhausted();
+  });
   it('offers Uncanny Dodge only for a visible attack and halves the held damage', () => {
     const tape = createStrictRngTape([
       { label: 'attack', sides: 20, value: 15 },

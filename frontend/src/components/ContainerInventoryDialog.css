@@ -1,0 +1,13 @@
+.container-inventory {padding:16px;background:#211c15;border:1px solid #806239;border-radius:12px;color:#ded1b8;}
+.container-inventory h3 {border-bottom:1px solid #85683b66;padding:10px 0;color:#e2c389;margin-top:14px;}
+.container-items {display:grid;gap:12px;margin:16px 0;}
+.container-items.is-icon {grid-template-columns:repeat(auto-fill,minmax(125px,1fr));}
+.container-item {display:flex;align-items:center;gap:8px;min-width:0;}
+.container-items.is-icon .container-item {flex-direction:column;text-align:center;font-size:.8rem;}
+.container-item .cs-action-tile img {object-fit:contain;}
+.container-items.is-row .container-item > :first-child {flex:1;min-width:0;}
+.quantity-transfer {padding:16px;background:#211c15;border:1px solid #806239;border-radius:12px;display:grid;gap:18px;}
+.quantity-transfer label {display:flex;align-items:center;gap:12px;}
+.quantity-transfer input[type=number] {width:90px;padding:6px;background:#151410;border:1px solid #806239;border-radius:5px;color:#ead7b5;}
+.quantity-transfer input[type=range] {width:100%;accent-color:#d4ad5e;}
+.quantity-transfer-actions {display:flex;gap:10px;flex-wrap:wrap;}

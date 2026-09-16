@@ -27,6 +27,7 @@ export default function SheetFeatureSections({assembled}: {assembled: Pick<Assem
     if (!effects.length && !actions.length && !feats.length) return null;
     return <section className="sheet-feature-section" key={section.id} aria-label={section.label}>
       <h3>{section.label}</h3>
+      <div className="sheet-feature-section__entities">
       <ForgeAbilityDisplay mode={entityDisplay.effects} linesClassName="sheet-item-cols" entries={[
         ...effects.map(({effect, origin}) => ({key:`effect:${effect.id}:${origin.id}`, imageUrl:effect.image_url,
           ...effectAbilityPresentation(effect, origin, assembled.feats, sourceLabel)})),
@@ -36,6 +37,7 @@ export default function SheetFeatureSections({assembled}: {assembled: Pick<Assem
         key:`action:${action.id}:${origin.id}`, name:action.name, imageUrl:action.image_url,
         sourceLabel:`${sourceLabel(origin.kind)} · ${origin.name}`, action,
       }))}/>
+      </div>
     </section>;
   })}{!assembled.feats.length && !assembled.effects.length && !assembled.actions.length && <p>Нет привязанных способностей.</p>}</div>;
 }

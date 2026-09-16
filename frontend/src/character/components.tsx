@@ -280,7 +280,7 @@ export function ChoiceResolver({
               className={`chip ${value.includes(o.id) ? 'on' : ''} ${recommendedIds.has(o.id) ? 'rec' : ''}`}
               aria-pressed={value.includes(o.id)}
               disabled={!!unavailableOptions[o.id] && !value.includes(o.id)}
-              title={unavailableOptions[o.id]}
+              aria-description={unavailableOptions[o.id]}
               onClick={() => toggle(o.id)}
             >
               {o.label}
@@ -512,7 +512,7 @@ export function AbilityAssigner({
             </span>
             <button type="button" className="chip rec" onClick={applyRecommended}
               disabled={!Object.keys(recommended).length}
-              title={Object.keys(recommended).length ? 'Заполнить оптимальным раскладом класса' : 'Сначала выберите класс'}>
+              aria-description={Object.keys(recommended).length ? 'Заполнить оптимальным раскладом класса' : 'Сначала выберите класс'}>
               Оптимально для класса
             </button>
             <button type="button" className="chip" onClick={resetBases}>Сбросить (все 8)</button>
@@ -752,7 +752,7 @@ export function SummaryPanel({
           return (
             <div key={k} className="sum-ab">
               <div className="k">{ABILITY_LABEL_RU[k].slice(0, 3).toUpperCase()}</div>
-              <div className="v" title={boosted ? `База ${base}` : undefined} style={boosted ? { color: 'var(--forge-gold, #c9a227)' } : undefined}>{typeof v === 'number' ? v : '—'}</div>
+              <div className="v" aria-description={boosted ? `База ${base}` : undefined} style={boosted ? { color: 'var(--forge-gold, #c9a227)' } : undefined}>{typeof v === 'number' ? v : '—'}</div>
               <div className="m">{m === null ? '' : m >= 0 ? `+${m}` : m}</div>
             </div>
           );

@@ -1,3 +1,4 @@
+import { previewAnchor } from '../../utils/previewAnchor';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { PassiveEffect, Action, Feat } from '../../types';
 import FeatPreview from '../FeatPreview';
@@ -36,12 +37,12 @@ const ForgeAbilityLine = ({ name, imageUrl, fallbackImageUrl, sourceLabel, detai
   return (
     <>
       <SheetEntityRow
+        className={effect || feat ? 'is-passive' : undefined}
         imageUrl={iconUrl}
         name={name}
         detail={detail}
         title={name}
-        onMouseEnter={(e) => { setHover(true); setPos({ x: e.clientX, y: e.clientY }); }}
-        onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
+        onMouseEnter={(e) => { setHover(true); setPos(previewAnchor(e.currentTarget)); }}
         onMouseLeave={onLeave}
       />
       {hover && (effect || action || feat) && (

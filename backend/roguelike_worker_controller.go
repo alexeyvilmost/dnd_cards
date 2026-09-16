@@ -69,6 +69,10 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 		writeRoguelikeError(c, err)
 		return
 	}
+	if roguelikePartySize(run) > 1 {
+		rc.trustedPartyCommand(c, run, request, requestHash)
+		return
+	}
 	fail := func(code, message string) { writeRoguelikeError(c, roguelikeError(http.StatusConflict, code, message)) }
 	isRest := request.Type == "short_rest" || request.Type == "long_rest" || request.Type == "bind_weapon"
 	isCampAction := request.Type == "camp_action" || request.Type == "camp_turn" || request.Type == "use_item"

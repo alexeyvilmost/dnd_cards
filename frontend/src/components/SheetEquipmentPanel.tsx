@@ -1,8 +1,9 @@
+import { previewAnchor } from '../utils/previewAnchor';
 import { hasWeaponBondPolicy } from '../rules-core/weaponBond';
 import { readWeaponBondObjects } from '../character/weaponBondPersistence';
 import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
 import { roguelikeApi } from '../roguelike/api';
-import { activeRunId, notifyRunUpdated } from '../roguelike/navigation';
+import { activeRunId, notifyRunUpdated,runCharacter } from '../roguelike/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePinMode } from '../hooks/usePinMode';
 import { Sparkles } from 'lucide-react';
@@ -37,6 +38,8 @@ import ItemPreview from './ItemPreview';
 import SheetItemRow from './SheetItemRow';
 import EquipItemDialog from './EquipItemDialog';
 import SheetAttunementDialog from './SheetAttunementDialog';
+import ContainerInventoryDialog from './ContainerInventoryDialog';
+import QuantityTransferDialog from './QuantityTransferDialog';
 
 interface Props {
   character: ForgeCharacter;
@@ -103,14 +106,8 @@ export default function SheetEquipmentPanel({
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [attuneOpen, setAttuneOpen] = useState(false);
   const [showEmptySlots, setShowEmptySlots] = useState(false);
-  // S5 контейнеры: какие контейнеры раскрыты (показывают содержимое) в инвентаре.
-  const [expandedContainers, setExpandedContainers] = useState<Set<string>>(new Set());
-  const toggleContainer = (cardId: string) =>
-    setExpandedContainers((prev) => {
-      const next = new Set(prev);
-      if (next.has(cardId)) next.delete(cardId); else next.add(cardId);
-      return next;
-    });
+  const [containerOpen,setContainerOpen]=useState<Card|null>(null);
+  const [transfer,setTransfer]=useState<{card:Card;containerId:string;direction:'in'|'out'}|null>(null);
 
   const runtime = useMemo(() => forgeToRuntimeState(character), [character]);
   void passives; void ruleState; // КД/оружие считаются в шапке листа
@@ -156,28 +153,37 @@ export default function SheetEquipmentPanel({
   const previewInterface = itemPreview === 'interface';
 
   const persist = useCallback(async (next: RuntimeState) => {
-    if (readOnly) return;
+    if (readOnly) return false;
     setBusy(true);
     setError(null);
     try {
       const updated = await persistCharacterRuntime(character, {
+        expected_runtime_revision:character.runtime_revision??undefined,
         equipment: next.equipment,
         inventory_items: runtimeInventoryPayload(next),
         current_hp: next.hp.current,
         max_hp: next.hp.max,
       }, encounterApply);
       onUpdated(updated);
+      return true;
     } catch (e) {
       console.error(e);
       setError('Не удалось сохранить экипировку');
+      return false;
     } finally {
       setBusy(false);
     }
   }, [character, encounterApply, onUpdated, readOnly]);
 
   // S5 контейнеры: положить предмет в контейнер / достать обратно (хелперы S4 + общий persist).
-  const putInContainer = (cardId: string, containerCardId: string) => persist(moveToContainer(runtime, cardId, containerCardId, 1));
-  const takeFromContainer = (cardId: string, containerCardId: string) => persist(moveOutOfContainer(runtime, cardId, containerCardId, 1));
+  const beginTransfer=(card:Card,containerId:string,direction:'in'|'out')=>{if(readOnly||busy)return;setHoveredItem(null);setError(null);setTransfer({card,containerId,direction});setDialog(null)};
+  const transferMax=transfer?runtime.inventory.find(r=>r.cardId===transfer.card.id&&(transfer.direction==='in'?!r.containerId:r.containerId===transfer.containerId))?.qty??0:0;
+  const confirmTransfer=async(quantity:number)=>{
+    if(!transfer||busy||!Number.isSafeInteger(quantity)||quantity<1||quantity>transferMax)return;
+    const next=transfer.direction==='in'?moveToContainer(runtime,transfer.card.id,transfer.containerId,quantity):moveOutOfContainer(runtime,transfer.card.id,transfer.containerId,quantity);
+    if(next===runtime){setError('Перемещение недоступно. Проверьте содержимое инвентаря.');return;}
+    if(await persist(next))setTransfer(null);
+  };
 
   const attuned = readAttunedIds(character.turn_state);
   const canChangeAttunement = !readOnly && attunementUnlocked(character.turn_state);
@@ -219,10 +225,12 @@ export default function SheetEquipmentPanel({
       }
       const run = await roguelikeApi.get(runId);
       const updated = await roguelikeApi.command(runId, run.revision, 'bind_weapon', {
+        actor_id:character.id,
         card_id: card.id, ...(replaceObjectId ? { replace_object_id: replaceObjectId } : {}),
       });
-      if (!updated.character) throw new Error('Сервер не вернул лист после ритуала');
-      onUpdated(updated.character); notifyRunUpdated();
+      const member=runCharacter(updated,character.id);
+      if (!member) throw new Error('Сервер не вернул лист после ритуала');
+      onUpdated(member); notifyRunUpdated();
     } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); }
     finally { setBusy(false); }
   };
@@ -256,6 +264,7 @@ export default function SheetEquipmentPanel({
 
   // Открыть диалог для предмета инвентаря (с расчётом вытесняемого из слота).
   const openInventoryItem = (card: Card) => {
+    if(card.type==='container'){setHoveredItem(null);setContainerOpen(card);return;}
     if (readOnly) return;
     const plan = planEquip(runtime, card);
     const occupant = plan.occupantId ? cardMap.get(plan.occupantId) ?? null : null;
@@ -272,10 +281,7 @@ export default function SheetEquipmentPanel({
   }, [pinModeActive]);
   const hoverHandlers = (card?: Card | null) => ({
     onMouseEnter: (e: React.MouseEvent) => {
-      if (!disableHoverPreviews && card) { setHoveredItem(card); setItemMouse({ x: e.clientX, y: e.clientY }); }
-    },
-    onMouseMove: (e: React.MouseEvent) => {
-      if (!disableHoverPreviews) setItemMouse({ x: e.clientX, y: e.clientY });
+      if (!disableHoverPreviews && card) { setHoveredItem(card); setItemMouse(previewAnchor(e.currentTarget)); }
     },
     onMouseLeave: () => { if (!disableHoverPreviews && !pinModeActive) setHoveredItem(null); },
   });
@@ -297,7 +303,7 @@ export default function SheetEquipmentPanel({
                 key={slot}
                 type="button"
                 className={`sheet-slot-tile${card ? ' filled' : ''}`}
-                title={card ? `${label}: ${card.name}` : label}
+                aria-description={card ? `${label}: ${card.name}` : label}
                 onClick={() => { if (card) openEquipped(slot, card); }}
                 {...hoverHandlers(card)}
               >
@@ -332,7 +338,7 @@ export default function SheetEquipmentPanel({
               {...hoverHandlers(card)}
             />
           ) : (
-            <div key={slot} className="sheet-item-row is-empty" title={label}>
+            <div key={slot} className="sheet-item-row is-empty" aria-description={label}>
               <span className="sheet-item-row-thumb is-slot">
                 <img src={SLOT_ICON[slot]} alt={label} />
               </span>
@@ -356,7 +362,7 @@ export default function SheetEquipmentPanel({
     for (const r of rows) if (r.container_id) { const arr = nested.get(r.container_id) ?? []; arr.push(r); nested.set(r.container_id, arr); }
 
     if (asIcons) {
-      // Иконочный режим: только верхний уровень (вложенность — в списочном режиме).
+      // Container contents use the same dedicated inventory in either mode.
       return (
         <div className="forge-spell-icon-grid sheet-inv-icon-grid">
           {topLevel.map((row) => {
@@ -366,7 +372,8 @@ export default function SheetEquipmentPanel({
                 key={`${row.card_id}|${row.container_id ?? ''}`}
                 type="button"
                 className="forge-spell-icon ready sheet-inv-tile-icon"
-                title={card?.name ?? row.card_id}
+                aria-description={card?.name ?? row.card_id}
+                aria-label={card?.type==='container'?`Открыть контейнер: ${card.name}`:card?.name??row.card_id}
                 onClick={() => { if (card) openInventoryItem(card); }}
                 {...hoverHandlers(card)}
               >
@@ -389,7 +396,6 @@ export default function SheetEquipmentPanel({
           if (!card) return null;
           const isContainer = card.type === 'container';
           const contents = isContainer ? (nested.get(row.card_id) ?? []) : [];
-          const open = expandedContainers.has(row.card_id);
           return (
             <div key={`${row.card_id}|${row.container_id ?? ''}`}>
               <SheetItemRow
@@ -399,34 +405,13 @@ export default function SheetEquipmentPanel({
                 right={
                   isContainer ? (
                     <button type="button" className="sheet-inv-move" disabled={busy}
-                      onClick={(e) => { e.stopPropagation(); toggleContainer(row.card_id); }}>
-                      {open ? '▾' : '▸'} {contents.length}
+                      onClick={(e) => { e.stopPropagation(); setContainerOpen(card); }}>
+                      Открыть ({contents.length})
                     </button>
                   ) : undefined
                 }
                 {...hoverHandlers(card)}
               />
-              {isContainer && open && contents.map((cr) => {
-                const cc = cardMap.get(cr.card_id);
-                if (!cc) return null;
-                return (
-                  <div key={`${cr.card_id}|${cr.container_id}`} className="sheet-inv-nested">
-                    <SheetItemRow
-                      card={cc}
-                      qty={cr.qty}
-                      dimmed
-                      onClick={() => openInventoryItem(cc)}
-                      right={
-                        <button type="button" className="sheet-inv-move" disabled={busy || readOnly}
-                          onClick={(e) => { e.stopPropagation(); takeFromContainer(cr.card_id, row.card_id); }}>
-                          достать
-                        </button>
-                      }
-                      {...hoverHandlers(cc)}
-                    />
-                  </div>
-                );
-              })}
             </div>
           );
         })}
@@ -448,12 +433,12 @@ export default function SheetEquipmentPanel({
           type="button"
           className="sheet-stat sheet-attune-open"
           onClick={() => setAttuneOpen(true)}
-          title="Управление настройкой на предметы"
+          aria-description="Управление настройкой на предметы"
         >
           <span><Sparkles size={12} /> Настройка</span>
           <strong>{attuned.length} / {MAX_ATTUNED}</strong>
         </button>
-        <div className="sheet-stat sheet-stat-wallet" title="Кошелёк (золото / серебро / медь)">
+        <div className="sheet-stat sheet-stat-wallet" aria-description="Кошелёк (золото / серебро / медь)">
           <span>Кошелёк</span>
           <strong className="sheet-wallet">
             {(['gold', 'silver', 'copper'] as const).map((cur) => (
@@ -462,7 +447,7 @@ export default function SheetEquipmentPanel({
                 <img
                   src={getCurrencyIconPath(cur)}
                   alt={getCurrencyInfo(cur).short}
-                  title={getCurrencyInfo(cur).label}
+                  aria-description={getCurrencyInfo(cur).label}
                   style={currencyIconStyle}
                 />
               </span>
@@ -494,9 +479,9 @@ export default function SheetEquipmentPanel({
         {renderInventory()}
       </div>
 
-      {!disableHoverPreviews && hoveredItem && !dialog && (
+      {!disableHoverPreviews && hoveredItem && !dialog && !containerOpen && !transfer && (
         <div
-          className="fixed z-50"
+          className="fixed z-50 entity-preview-enter"
           style={{
             left: Math.min(itemMouse.x + 16, window.innerWidth - (previewInterface ? 360 : 220)),
             top: Math.min(Math.max(itemMouse.y - 40, 10), window.innerHeight - 20),
@@ -525,7 +510,7 @@ export default function SheetEquipmentPanel({
           containerTargets={dialog.mode === 'inventory'
             ? containerTargets.filter((c) => c.id !== dialog.card.id)
             : undefined}
-          onMoveToContainer={(containerId) => { putInContainer(dialog.card.id, containerId); setDialog(null); }}
+          onMoveToContainer={(containerId) => beginTransfer(dialog.card,containerId,'in')}
           onEquip={() => handleEquip(dialog.card)}
           onUnequip={() => { if (dialog.mode === 'equipped') handleUnequip(dialog.slot); }}
           onRemove={() => handleRemove(dialog.card.id)}
@@ -533,6 +518,9 @@ export default function SheetEquipmentPanel({
           onClose={() => setDialog(null)}
         />
       )}
+
+      {containerOpen&&!transfer&&<ContainerInventoryDialog container={containerOpen} runtime={runtime} cards={cardMap} busy={busy||readOnly} onClose={()=>setContainerOpen(null)} onOpenContainer={setContainerOpen} onTransfer={(card,direction)=>beginTransfer(card,containerOpen.id,direction)}/>}
+      {transfer&&<QuantityTransferDialog key={`${transfer.card.id}:${transfer.containerId}:${transfer.direction}`} card={transfer.card} max={transferMax} from={transfer.direction==='in'?'Инвентарь':cardMap.get(transfer.containerId)?.name??'Контейнер'} to={transfer.direction==='out'?'Инвентарь':cardMap.get(transfer.containerId)?.name??'Контейнер'} busy={busy} error={error} onConfirm={quantity=>void confirmTransfer(quantity)} onClose={()=>setTransfer(null)}/>}
 
       {attuneOpen && (
         <SheetAttunementDialog

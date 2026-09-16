@@ -3,12 +3,14 @@ import { RotateCcw, Trophy } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { charactersV3Api } from '../character/api';
 import {classesApi} from '../api/client';
-import {isRunEligible} from '../roguelike/eligibility';
+import {isRunEligible,isRunClass} from '../roguelike/eligibility';
 import CharacterTemplateLibrary from '../components/CharacterTemplateLibrary';
+import RunPartyCamp from '../components/RunPartyCamp';
 import type { ForgeCharacter } from '../character/types';
 import { roguelikeApi, type RoguelikeRun } from '../roguelike/api';
-import { runSheetURL } from '../roguelike/navigation';
 import './RoguelikePage.css';
+import MerchantSettingsDialog from '../components/MerchantSettingsDialog';
+import {merchantSettingsApi} from '../api/entityTags';
 
 function errorMessage(reason: unknown): string {
   if (reason instanceof Error) return reason.message;
@@ -16,10 +18,12 @@ function errorMessage(reason: unknown): string {
 }
 
 function RunList() {
+  const [manageShop,setManageShop]=useState(false),[shopSettingsOpen,setShopSettingsOpen]=useState(false);
+  useEffect(()=>{void merchantSettingsApi.get().then(s=>setManageShop(s.can_manage)).catch(()=>{})},[]);
   const navigate = useNavigate();
   const [runs, setRuns] = useState<RoguelikeRun[]>([]);
   const [characters, setCharacters] = useState<ForgeCharacter[]>([]);
-  const [selected, setSelected] = useState('');
+  const [selected, setSelected] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,10 +34,10 @@ function RunList() {
       .then(([loadedRuns, loadedCharacters, classCatalog]) => {
         if (!active) return;
         setRuns(loadedRuns);
-        const fighterID = classCatalog.classes.find(c => c.card_number === 'CLASS-warrior')?.id;
-        const candidates = loadedCharacters.filter(character => isRunEligible(character, fighterID));
+        const classIds = classCatalog.classes.filter(c => isRunClass(c.card_number)).map(c=>c.id);
+        const candidates = loadedCharacters.filter(character => isRunEligible(character, classIds));
         setCharacters(candidates);
-        setSelected(candidates[0]?.id ?? '');
+        setSelected(candidates[0]?[candidates[0].id]:[]);
       })
       .catch((reason) => active && setError(errorMessage(reason)))
       .finally(() => active && setLoading(false));
@@ -41,7 +45,7 @@ function RunList() {
   }, []);
 
   const create = async () => {
-    if (!selected) return;
+    if (!selected.length) return;
     setBusy(true);
     setError(null);
     try {
@@ -58,32 +62,32 @@ function RunList() {
       <section className="roguelike-hero">
         <p className="roguelike-kicker">РЕЖИМ ЗАБЕГА</p>
         <h1>Дорога до шестого уровня</h1>
-        <p>Проведите воина через случайные столкновения, развивайте сборку и наберите 14 000 опыта.</p>
+        <p>Проведите героев через случайные столкновения, развивайте сборки и наберите 14 000 опыта.</p>
       </section>
 
       <CharacterTemplateLibrary forRun />
+      {manageShop&&<button className="roguelike-secondary" onClick={()=>setShopSettingsOpen(true)}>Настройки магазина забега</button>}
+      {shopSettingsOpen&&<MerchantSettingsDialog onClose={()=>setShopSettingsOpen(false)}/>}
       {error && <div className="roguelike-error" role="alert">{error}</div>}
       {loading ? <p>Загружаем забеги…</p> : (
         <div className="roguelike-grid">
           <section className="roguelike-card">
             <h2>Новый забег</h2>
-            <p>Нужен готовый воин 1 уровня. Будет создан отдельный игровой лист.</p>
+            <p>Выберите от 1 до 6 персонажей 1 уровня: Воин, Варвар или Монах. Для каждого будет создан отдельный игровой лист; исходные персонажи останутся без изменений.</p>
             {characters.length ? (
               <>
-                <label className="roguelike-field">
-                  <span>Персонаж</span>
-                  <select value={selected} onChange={(event) => setSelected(event.target.value)}>
-                    {characters.map((character) => (
-                      <option key={character.id} value={character.id}>{character.name} · КД {character.armor_class ?? 10}</option>
-                    ))}
-                  </select>
-                </label>
-                <button type="button" className="roguelike-primary" disabled={busy} onClick={create}>
-                  {busy ? 'Создаём…' : 'Начать забег'}
+                <div className="run-party-selection" role="group" aria-label="Состав группы">
+                  {characters.map(character=><label key={character.id}><input type="checkbox" checked={selected.includes(character.id)} disabled={!selected.includes(character.id)&&selected.length>=6}
+                    onChange={e=>setSelected(ids=>e.target.checked?[...ids,character.id]:ids.filter(id=>id!==character.id))}/>
+                    {character.avatar_url&&<img src={character.avatar_url} alt=""/>}<span>{character.name} · КД {character.armor_class??10}</span></label>)}
+                </div>
+                <p>Выбрано {selected.length} / 6</p>
+                <button type="button" className="roguelike-primary" disabled={busy||!selected.length} onClick={create}>
+                  {busy ? 'Создаём…' : `Начать забег · ${selected.length}`}
                 </button>
               </>
             ) : (
-              <p>Нет подходящего персонажа. <Link to="/character-forge">Создать воина</Link></p>
+              <p>Нет подходящего персонажа. <Link to="/character-forge">Создать персонажа</Link></p>
             )}
           </section>
 
@@ -111,8 +115,7 @@ function RunCamp({ id }: { id: string }) {
     let active = true;
     void roguelikeApi.get(id).then((next) => {
       if (!active) return;
-      if (next.status === 'active') navigate(runSheetURL(next), { replace: true });
-      else setRun(next);
+      setRun(next);
     }).catch((e: unknown) => active && setError(errorMessage(e)));
     return () => { active = false; };
   }, [id, navigate]);
@@ -120,9 +123,10 @@ function RunCamp({ id }: { id: string }) {
     if (!run) return;
     try {
       const next = await roguelikeApi.command(run.id, run.revision, 'retry');
-      navigate(runSheetURL(next), { replace: true });
+      setRun(next);
     } catch (e) { setError(errorMessage(e)); }
   };
+  if(run?.status==='active')return <RunPartyCamp run={run} onUpdated={setRun}/>;
   const title = run?.status === 'victory'
     ? 'Победа!'
     : run?.status === 'defeat'

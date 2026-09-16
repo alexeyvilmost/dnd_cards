@@ -31,6 +31,8 @@ export interface RollModifier {
 }
 
 export interface DieRoll {
+  /** Additive role: a bonus die can itself be a d20. Absent in historical logs. */
+  role?: 'bonus';
   sides: number;
   result: number;
   /** true — кость отброшена (преимущество/помеха, переброс). */

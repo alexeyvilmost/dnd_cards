@@ -6,7 +6,6 @@ from __future__ import annotations
 import json
 import os
 import subprocess
-import time
 import urllib.error
 import urllib.request
 import uuid
@@ -57,15 +56,8 @@ def count_item(character: dict, card_id: str) -> int:
 
 
 def main() -> None:
-    suffix = f"{int(time.time())}{uuid.uuid4().hex[:5]}"
-    username = f"roguee2e{suffix}"
-    password = "RogueE2E!2026"
-    api("POST", "/auth/register", {
-        "username": username,
-        "email": f"{username}@example.invalid",
-        "password": password,
-        "display_name": "Roguelike E2E",
-    }, expected=201)
+    username = os.environ["ROGUELIKE_E2E_USERNAME"]
+    password = os.environ["ROGUELIKE_E2E_PASSWORD"]
     login = api("POST", "/auth/login", {"username": username, "password": password})
     token, user_id = login["token"], login["user"]["id"]
     sql(

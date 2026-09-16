@@ -445,13 +445,13 @@ export default function SheetHpPanel({
             <span>/ {maxHp}</span>
           )}
           {runtime.hp.temp > 0 && (
-            <span className="sheet-hp-temp" title="Временные HP">
+            <span className="sheet-hp-temp" aria-description="Временные HP">
               <Shield size={14} /> +{runtime.hp.temp}
             </span>
           )}
         </div>
         {concentration && !unconscious && (
-          <p className="sheet-hp-concentration" title="При уроне — проверка ТЕЛ СЛ max(10, урон/2)">
+          <p className="sheet-hp-concentration" aria-description="При уроне — проверка ТЕЛ СЛ max(10, урон/2)">
             ✦ {concentration.name}
           </p>
         )}
@@ -491,11 +491,12 @@ export default function SheetHpPanel({
             className="forge-input sheet-hp-dmgtype"
             value={damageType}
             onChange={(e) => setDamageType(e.target.value)}
-            title="Тип урона — для сопротивлений/иммунитетов/уязвимостей цели"
+                  aria-label="Тип урона"
+                  aria-description="Тип урона — для сопротивлений/иммунитетов/уязвимостей цели"
           >
             {DAMAGE_TYPES.map((d) => <option key={d.v} value={d.v}>{d.label}</option>)}
           </select>
-          <label className="sheet-hp-crit" title="Критический удар: концентрация проверяется с помехой">
+          <label className="sheet-hp-crit" aria-description="Критический удар: концентрация проверяется с помехой">
             <input type="checkbox" checked={crit} onChange={(e) => setCrit(e.target.checked)} /> крит
           </label>
         </div>
@@ -529,7 +530,7 @@ export default function SheetHpPanel({
       </div>
 
       {sheetCtx && (
-        <div className="sheet-hp-condition" title="Наложение через цель (executeAction who:target) — как входящее действие другого персонажа">
+        <div className="sheet-hp-condition" aria-description="Наложение через цель (executeAction who:target) — как входящее действие другого персонажа">
           <div className="sheet-hp-condition-row">
             <select
               className="forge-input sheet-hp-cond-select"
@@ -540,7 +541,7 @@ export default function SheetHpPanel({
                 <option key={o.id} value={o.id}>{o.label}</option>
               ))}
             </select>
-            <label className="sheet-hp-crit" title="Спасбросок цели с пассивками (save_avoids_condition)">
+            <label className="sheet-hp-crit" aria-description="Спасбросок цели с пассивками (save_avoids_condition)">
               <input type="checkbox" checked={withSave} onChange={(e) => setWithSave(e.target.checked)} />
               спас
             </label>
@@ -551,7 +552,7 @@ export default function SheetHpPanel({
                 className="forge-input sheet-hp-dmgtype"
                 value={saveAbility}
                 onChange={(e) => setSaveAbility(e.target.value as AbilityKey)}
-                title="Характеристика спасброска"
+                aria-label="Характеристика спасброска"
               >
                 {ABILITY_KEYS.map((k) => (
                   <option key={k} value={k}>{ABILITY_LABEL_RU[k]}</option>

@@ -211,7 +211,9 @@ describe('actor-specific unarmed profile certification', () => {
     effect.on_hit = [{ kind: 'damage', amount: '1d8 + dex', type: 'bludgeoning' }];
 
     expect(assertCertifiedSheetCombatActorAction(live, monk, certified(unarmed)))
-      .toMatchObject({ mechanics: live.mechanics });
+      .toMatchObject({ mechanics: unarmed.mechanics });
+    expect(assertCertifiedSheetCombatActorAction(unarmed, monk, certified(unarmed)))
+      .toMatchObject({ mechanics: unarmed.mechanics });
 
     const forged = structuredClone(live);
     const forgedEffect = (forged.mechanics.effects as Record<string, unknown>[])[0];

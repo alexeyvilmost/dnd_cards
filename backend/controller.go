@@ -134,6 +134,7 @@ func (cc *CardController) GetCards(c *gin.Context) {
 	var cards []Card
 
 	query := cc.db.Model(&Card{})
+	query = entityTagFilter(query, c, "card", "cards")
 	light := wantsListView(c)
 	if light {
 		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt", "Mechanics")
@@ -572,7 +573,6 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		Attunement:                   req.Attunement,
 		RequiresAttunement:           req.RequiresAttunement,
 		Range:                        req.Range,
-		Tags:                         NormalizeProperties(req.Tags),
 		IsTemplate:                   req.IsTemplate,
 		Slot:                         req.Slot,
 		Effects:                      req.Effects,
@@ -796,9 +796,6 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		}
 	}
 	applyNullableStringUpdate(&card.Range, req.Range)
-	if req.Tags != nil {
-		card.Tags = NormalizeProperties(req.Tags)
-	}
 	if req.IsTemplate != "" {
 		card.IsTemplate = req.IsTemplate
 	}
@@ -1003,6 +1000,7 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 	var actions []Action
 
 	query := ac.db.Model(&Action{})
+	query = entityTagFilter(query, c, "action", "actions")
 	light := wantsListView(c)
 	runtimeView := wantsRuntimeView(c)
 	if light {
@@ -1250,7 +1248,6 @@ func (ac *ActionController) CreateAction(c *gin.Context) {
 		Type:                         req.Type,
 		Author:                       req.Author,
 		Source:                       req.Source,
-		Tags:                         req.Tags,
 		Price:                        req.Price,
 		Weight:                       req.Weight,
 		Properties:                   req.Properties,
@@ -1364,11 +1361,6 @@ func (ac *ActionController) UpdateAction(c *gin.Context) {
 	if req.Source != nil {
 		action.Source = req.Source
 	}
-	if req.Tags != nil {
-		if ValidateProperties(req.Tags) {
-			action.Tags = req.Tags
-		}
-	}
 	if req.Price != nil {
 		if ValidatePrice(req.Price) {
 			action.Price = req.Price
@@ -1468,6 +1460,7 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 	var effects []Effect
 
 	query := ec.db.Model(&Effect{})
+	query = entityTagFilter(query, c, "effect", "effects")
 	light := wantsListView(c)
 	runtimeView := wantsRuntimeView(c)
 	if light {
@@ -1659,7 +1652,6 @@ func (ec *EffectController) CreateEffect(c *gin.Context) {
 		Type:                         req.Type,
 		Author:                       req.Author,
 		Source:                       req.Source,
-		Tags:                         req.Tags,
 		Price:                        req.Price,
 		Weight:                       req.Weight,
 		Properties:                   req.Properties,
@@ -1762,11 +1754,6 @@ func (ec *EffectController) UpdateEffect(c *gin.Context) {
 	}
 	if req.Source != nil {
 		effect.Source = req.Source
-	}
-	if req.Tags != nil {
-		if ValidateProperties(req.Tags) {
-			effect.Tags = req.Tags
-		}
 	}
 	if req.Price != nil {
 		if ValidatePrice(req.Price) {

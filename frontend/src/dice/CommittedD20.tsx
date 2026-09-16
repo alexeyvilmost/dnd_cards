@@ -4,12 +4,13 @@ import {supportedDieSides} from './polyhedralGeometry';
 import './CommittedD20.css';
 
 export const D20_ROLL_DURATION_MS = 1450;
+export const D20_SELECTION_DURATION_MS = 400;
 
 /** Displays the authoritative roll on a real 20-faced mesh; never rerolls it. */
-type DieProps = {value: number; rolling: boolean; discarded?: boolean; critical?: 'success' | 'failure'; animateEffects?: boolean};
+type DieProps = {value: number; rolling: boolean; discarded?: boolean; selectionPending?: boolean; critical?: 'success' | 'failure'; animateEffects?: boolean};
 export default function CommittedD20(props: DieProps) { return <CommittedDie {...props} sides={20}/>; }
 
-export function CommittedDie({value, rolling, sides, discarded = false, critical, animateEffects = true}: DieProps & {sides: number}) {
+export function CommittedDie({value, rolling, sides, discarded = false, selectionPending = false, critical, animateEffects = true}: DieProps & {sides: number}) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const renderer = useRef<ReturnType<typeof createCommittedDieRenderer>>(null);
   const [unavailable, setUnavailable] = useState(false);
@@ -46,9 +47,10 @@ export function CommittedDie({value, rolling, sides, discarded = false, critical
     draw(start);
     return () => cancelAnimationFrame(frame);
   }, [value, rolling, sides]);
-  const revealedCritical = !rolling && !discarded && sides===20 ? critical : undefined;
-  return <div className={`committed-die${rolling ? ' is-rolling' : ''}${discarded ? ' is-discarded' : ''}${revealedCritical ? ` is-critical-${revealedCritical}${animateEffects ? ' has-critical-motion' : ''}` : ''}`}
-    data-sides={sides} role="img" aria-label={rolling ? `Бросок к${sides}` : `к${sides}: ${value}${discarded ? ' — отброшено' : ''}`}>
+  const revealedDiscard = !rolling && !selectionPending && discarded;
+  const revealedCritical = !rolling && !selectionPending && !discarded && sides===20 ? critical : undefined;
+  return <div className={`committed-die${rolling ? ' is-rolling' : ''}${revealedDiscard ? ' is-discarded' : ''}${revealedCritical ? ` is-critical-${revealedCritical}${animateEffects ? ' has-critical-motion' : ''}` : ''}`}
+    data-sides={sides} role="img" aria-label={rolling ? `Бросок к${sides}` : `к${sides}: ${value}${revealedDiscard ? ' — отброшено' : ''}`}>
     {revealedCritical && <span className="committed-critical-fx" aria-hidden="true"><i className="committed-critical-ring"/>{Array.from({length:8},(_,i)=><i key={i} className="committed-critical-spark" style={{'--spark-angle': `${i*45}deg`} as CSSProperties}/>)}</span>}
     <span className="committed-die-shadow" aria-hidden="true" />
     <canvas ref={canvas} className="committed-die-canvas" aria-hidden="true" />

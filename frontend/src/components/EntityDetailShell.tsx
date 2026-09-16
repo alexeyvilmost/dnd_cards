@@ -2,6 +2,8 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import OriginalName from './OriginalName';
 import './entityDetailModal.css';
+import EntityTags from './EntityTags';
+import type {TaggedEntityType} from '../api/entityTags';
 
 /**
  * Единое детальное окно сущности — в стиле предметов (CardDetailModal): БЕЗ
@@ -20,6 +22,7 @@ export function EntityDetailShell({
   children,
   maxWidth,
   labelledById,
+  entity,
 }: {
   title: ReactNode;
   /** Оригинальное (английское) название — под заголовком, если включена настройка. */
@@ -33,6 +36,7 @@ export function EntityDetailShell({
   children: ReactNode;
   maxWidth?: number;
   labelledById?: string;
+  entity?: {type:TaggedEntityType;id:string};
 }) {
   // Закрытие по клику на фон — только если и нажатие, и отпускание были на самом
   // оверлее (иначе перетаскивание/выделение, начатое внутри и завершённое на
@@ -77,6 +81,8 @@ export function EntityDetailShell({
           <OriginalName nameEn={titleEn} size="detail" />
 
           {children}
+
+          {entity && <EntityTags type={entity.type} id={entity.id}/>}
 
           {actions && <div className="edm-actions">{actions}</div>}
         </div>

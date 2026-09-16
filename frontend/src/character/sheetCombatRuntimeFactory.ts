@@ -360,6 +360,7 @@ async function loadSheetCombatParticipant(input: {
     cards: [...cardsById.values()],
     ac: armorClass,
   });
+  const unboundActions = new Map(inventory.actions.map(action => [action.id, action]));
   return {
     character: input.character,
     restContext,
@@ -372,11 +373,17 @@ async function loadSheetCombatParticipant(input: {
       (canonical.actionsFor?.(action) ?? [canonical.actionFor(action)])
         .map((canonicalAction) => [canonicalAction.id, {
         imageUrl: action.imageUrl,
-        description: action.description,
+        description: unboundActions.get(action.id)?.description ?? action.description,
         sourceLabel: action.sourceLabel,
         entityType: action.group === 'spell' ? 'spell' as const : 'action' as const,
         entityId: action.spellRef?.id ?? action.actionRef?.id ?? action.effectRef?.id,
-        actionRef: action.actionRef,
+        // This presentation is shared by the party. Profile it only after the
+        // viewing/acting participant is known, never with the last seed's die.
+        actionRef: action.actionRef ? {
+          ...action.actionRef,
+          description: unboundActions.get(action.id)?.actionRef?.description ?? action.actionRef.description,
+          mechanics: action.canonicalMechanics ?? action.actionRef.mechanics,
+        } : undefined,
         spellRef: action.spellRef,
         }] as const)
     ))),

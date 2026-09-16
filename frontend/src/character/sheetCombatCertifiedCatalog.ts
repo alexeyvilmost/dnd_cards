@@ -800,14 +800,17 @@ export function assertCertifiedSheetCombatActorAction(
     );
     const expectedExecution = certifiedExecutionProjection(expectedBound);
     const actualExecution = certifiedExecutionProjection(action);
-    if (canonicalStringify(actualExecution) !== canonicalStringify(expectedExecution)) {
+    if (canonicalStringify(actualExecution) !== canonicalStringify(expectedExecution)
+      && canonicalStringify(actualExecution) !== canonicalStringify(certifiedExecutionProjection(expected))) {
       throw new Error(
         `Action ${action.id} differs from its actor-specific certified unarmed binding at ${
           firstExecutionDifference(expectedExecution, actualExecution)
         }`,
       );
     }
-    return certifiedActionWithLiveMetadata(expectedBound, action);
+    // As with contextual weapons, persist the template, never one actor's die
+    // and ability under the shared entity identity.
+    return certifiedActionWithLiveMetadata(expected, action);
   }
   if (primitive !== WEAPON_ATTACK_PRIMITIVE
     && primitive !== LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE) {

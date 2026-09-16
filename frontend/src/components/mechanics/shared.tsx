@@ -22,7 +22,7 @@ export function rowList<T extends object>(value: T[] | undefined, onChange: (v: 
 }
 
 export const RowDeleteButton = ({ onClick, title = 'Удалить' }: { onClick: () => void; title?: string }) => (
-  <button type="button" className="p-1 text-red-400 hover:text-red-600" onClick={onClick} title={title}>
+  <button type="button" className="p-1 text-red-400 hover:text-red-600" onClick={onClick} aria-label={title}>
     <Trash2 size={15} />
   </button>
 );

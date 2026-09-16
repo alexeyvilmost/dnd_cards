@@ -1,5 +1,5 @@
 import { collectSoloCombatActionChoices, projectSoloCombatActionChoices } from '../solo-combat/actionChoices';
-import { activeRunId, notifyRunUpdated } from '../roguelike/navigation';
+import { activeRunId, notifyRunUpdated,runCharacters,runCharacter,RUN_UPDATED_EVENT } from '../roguelike/navigation';
 import { roguelikeApi } from '../roguelike/api';
 import { runCampTargetIssue, sheetTargetBelongsToScope } from '../character/sheetInteractionScope';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -715,6 +715,15 @@ export default function SheetActionsPanel({
   };
   const diceDialog = useDiceDialog();
   const choiceDialog = useChoiceDialog();
+  const [campParty,setCampParty]=useState<ForgeCharacter[]>([]);
+  useEffect(()=>{
+    const runId=character.character_type==='dungeon_crawl'?activeRunId():undefined;
+    if(!runId){setCampParty([]);return;}
+    let active=true;
+    const reload=()=>{void roguelikeApi.get(runId).then(run=>{if(active)setCampParty(runCharacters(run));}).catch(()=>{});};
+    reload();window.addEventListener(RUN_UPDATED_EVENT,reload);
+    return()=>{active=false;window.removeEventListener(RUN_UPDATED_EVENT,reload);};
+  },[character.id,character.character_type]);
   const worldInputDialog = useSheetWorldInputDialog();
   const combatTargetDialog = useSheetCombatTargetDialog();
   const reactionPrompt = useReactionPrompt();
@@ -1274,11 +1283,12 @@ export default function SheetActionsPanel({
         if (!runId) throw new Error('Активный забег не найден');
         if (command.type !== 'DismissFamiliar' && command.type !== 'ReappearFamiliar') throw new Error('Это действие спутника пока недоступно в лагере');
         const run = await roguelikeApi.get(runId);
-        const result = await roguelikeApi.command(runId,run.revision,'camp_action',{companion:command.type === 'DismissFamiliar'
+        const result = await roguelikeApi.command(runId,run.revision,'camp_action',{actor_id:character.id,companion:command.type === 'DismissFamiliar'
           ? {type:command.type,mode:command.mode} : {type:command.type,distanceFt:command.facts.distanceFt,
             lineOfSight:command.facts.lineOfSight,unoccupiedSpace:command.facts.unoccupiedSpace}});
-        if (!result.character) throw new Error('Сервер не вернул лист');
-        onUpdated(result.character); notifyRunUpdated();
+        const member=runCharacter(result,character.id);
+        if (!member) throw new Error('Сервер не вернул лист');
+        onUpdated(member); notifyRunUpdated();
         if (result.command_events?.length) onPersistedEvents?.(result.command_events);
         return;
       }
@@ -1925,8 +1935,12 @@ export default function SheetActionsPanel({
     }
   };
 
+  const campActionAllowsAlly=(action:SheetAction)=>{
+    if(campParty.length<2)return false;
+    try{return canonicalBuild.runtime?.actionFor(action).targeting?.allowedRelations.includes('ally')===true;}catch{return false;}
+  };
   const runAction = async (action: SheetAction) => {
-    const campIssue = runCampTargetIssue(character.character_type,
+    const campIssue = campActionAllowsAlly(action)?null:runCampTargetIssue(character.character_type,
       actionInteractsWithTarget(action.mechanics), sheetMechanicsAllowsSelfTarget(action.mechanics));
     if (campIssue) { setError(campIssue); return; }
     if (panelDisabledReason) {
@@ -1984,11 +1998,19 @@ export default function SheetActionsPanel({
           spell = { baseLevel: definition.spell!.level, ...option.declaration };
         }
         const run = await roguelikeApi.get(runId);
+        let targetIds: string[] | undefined;
+        if(runCharacters(run).length>1 && definition.targeting?.allowedRelations.includes('ally')){
+          const targets=runCharacters(run).filter(c=>c.id!==character.id||definition.targeting?.allowedRelations.includes('self'));
+          const picked=await choiceDialog.request([{id:'camp_target',prompt:'Кому помочь в лагере?',count:1,source:'explicit',context:'in_play',
+            origin:{kind:'other',id:definition.id,name:definition.name},items:targets.map(c=>({id:c.id,name:`${c.name} · ${c.current_hp}/${c.max_hp} хитов`,image_url:c.avatar_url}))}],definition.name);
+          if(!picked)return;targetIds=picked.camp_target;
+        }
         const updated = await roguelikeApi.command(runId, run.revision, 'camp_action', {
-          action_id: definition.id, choices: commandChoices, ...(spell ? { spell } : {}), ...(worldInput ? { world_input: worldInput } : {}),
+          actor_id:character.id, ...(targetIds?{target_ids:targetIds}:{}),action_id: definition.id, choices: commandChoices, ...(spell ? { spell } : {}), ...(worldInput ? { world_input: worldInput } : {}),
         });
-        if (!updated.character) throw new Error('Сервер не вернул лист после действия');
-        onUpdated(updated.character); notifyRunUpdated();
+        const member=runCharacter(updated,character.id);
+        if (!member) throw new Error('Сервер не вернул лист после действия');
+        onUpdated(member); notifyRunUpdated();
         if (updated.command_events?.length) onPersistedEvents?.(updated.command_events);
       } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); }
       return;
@@ -2794,7 +2816,7 @@ export default function SheetActionsPanel({
 
   // Доступность + причина недоступности: сперва экипировка (оружие в руке), затем ресурсы.
   const disabledInfo = (action: SheetAction): { disabled: boolean; reason?: string } => {
-    const campIssue = runCampTargetIssue(character.character_type,
+    const campIssue = campActionAllowsAlly(action)?null:runCampTargetIssue(character.character_type,
       actionInteractsWithTarget(action.mechanics), sheetMechanicsAllowsSelfTarget(action.mechanics));
     if (campIssue) return { disabled: true, reason: campIssue };
     const panelLock = sheetActionPanelLockIssue(panelDisabledReason);
@@ -3360,7 +3382,7 @@ export default function SheetActionsPanel({
                   type="button"
                   className="sheet-active-effect-dismiss"
                   disabled={Boolean(panelDisabledReason) || busy}
-                  title={panelDisabledReason ?? 'Снять вручную'}
+                  aria-label={panelDisabledReason ?? 'Снять вручную'}
                   onClick={() => handleDismissEffect(group.effects.map((effect) => effect.id))}
                 >
                   <X size={14} />

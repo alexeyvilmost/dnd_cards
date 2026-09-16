@@ -28,6 +28,7 @@ func validConceptID(id string) bool {
 func (cc *ConceptController) GetConcepts(c *gin.Context) {
 	var concepts []ConceptEntity
 	query := cc.db.Model(&ConceptEntity{}).Where("deleted_at IS NULL")
+	query = entityTagFilter(query, c, "concept", "concepts")
 	// Preserve the pre-pagination complete glossary response for UI callers that
 	// omit page/limit, while giving snapshot clients a bounded stable contract.
 	explicitPagination := c.Query("page") != "" || c.Query("limit") != ""

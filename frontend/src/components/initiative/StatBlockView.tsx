@@ -49,7 +49,7 @@ const StatBlockView: React.FC<StatBlockViewProps> = ({ statblock }) => {
                   {ABILITY_LABELS[key]}
                 </div>
                 <div className="text-base font-bold text-gray-900">{a.score}</div>
-                <div className="text-xs text-gray-600" title="Модификатор / спасбросок">
+                <div className="text-xs text-gray-600" aria-description="Модификатор / спасбросок">
                   {signed(a.mod)} <span className="text-gray-300">/</span> {signed(a.save)}
                 </div>
               </div>

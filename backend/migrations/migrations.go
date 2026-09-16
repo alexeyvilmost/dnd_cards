@@ -1480,6 +1480,12 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		{Version: "251_archer_alert_template", Description: "Forge-validated Criminal/Alert Archer, preserving existing player copies", Up: updateArcherTemplate251, Down: retainCharacterTemplates250},
 		{Version: "252_template_portraits", Description: "Preset portraits and copy provenance; preserve personal artwork and combat history", Up: updateTemplatePortraits252, Down: retainCharacterTemplates250},
 		{Version: "253_passive_presentations", Description: "Editable presentation catalog for data-owned combat toggles", Up: createPassivePresentations253, Down: retainCharacterTemplates250},
+		{Version: "254_roguelike_party", Description: "Immutable party membership; preserve solo runs and their archived combat artifacts", Up: createRoguelikeParty254, Down: retainCharacterTemplates250},
+		{Version: "255_party_potion_targets", Description: "Allow healing potions to target an adjacent ally through canonical actions", Up: materializePartyPotionTargets255, Down: retainCharacterTemplates250},
+		{Version: "256_martial_classes", Description: "Barbarian and Monk run progression and shared action contracts", Up: materializeMartialClasses256, Down: retainCharacterTemplates250},
+		{Version: "257_glossary_concepts", Description: "Seed 5e24 glossary concepts with formatted descriptions and cross references", Up: seedGlossaryConcepts257, Down: func(db *sql.DB) error { return nil }},
+		{Version: "258_entity_tags_shop", Description: "Registered entity tags, archived legacy metadata, tag-driven run pools and merchant settings", Up: createEntityTags258, Down: retainCharacterTemplates250},
+		{Version: "259_merchant_copper", Description: "Unit ammunition prices and copper-denominated merchant offers", Up: merchantCopper259, Down: retainCharacterTemplates250},
 		// Здесь можно добавлять новые миграции
 	}
 }

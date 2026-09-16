@@ -1,3 +1,5 @@
+import LibraryTagFilter from '../components/LibraryTagFilter';
+import { previewAnchor } from '../utils/previewAnchor';
 import { Fragment, useState, useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import {
   Search, Filter, Plus, Grid3X3, List, LayoutTemplate, X,
@@ -164,6 +166,9 @@ const CardLibrary = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState(initialFilters.search);
+  const [tagFilter,setTagFilter]=useState(initialFilters.tag??'');
+  const [tagRevision,setTagRevision]=useState(0);
+  useEffect(()=>{const refresh=()=>setTagRevision(v=>v+1);window.addEventListener('entity-tags-changed',refresh);return()=>window.removeEventListener('entity-tags-changed',refresh)},[]);
   const [searchDraft, setSearchDraft] = useState(initialFilters.search);
   const catalogRequestSequence = useRef(0);
   const previousContentType = useRef<LibraryContentType>(initialFilters.contentType);
@@ -246,12 +251,10 @@ const CardLibrary = () => {
     ...base,
     pointerEvents: pinModeActive ? 'auto' : 'none',
   });
-  // B6: позицию курсора для превью обновляем не чаще кадра (rAF). Иначе каждый
-  // mousemove по строке списка дёргал setState и перерисовывал весь большой
-  // (2000+ строк) компонент — на быстрой мыши это сотни ре-рендеров в секунду.
+  // Position once from the trigger centre; keep the existing frame-based fitting.
   const pendingMouse = useRef({ x: 0, y: 0 });
   const mouseRafRef = useRef<number | null>(null);
-  const trackMouse = (x: number, y: number) => {
+  const placePreview = ({x, y}: {x: number; y: number}) => {
     pendingMouse.current = { x, y };
     if (mouseRafRef.current != null) return;
     mouseRafRef.current = requestAnimationFrame(() => {
@@ -274,6 +277,7 @@ const CardLibrary = () => {
   const prevPinRef = useRef(pinModeActive);
   useEffect(() => {
     if (prevPinRef.current && !pinModeActive) {
+      setHoveredConcept(null);
       setHoveredCard(null); setHoveredSpell(null); setHoveredFeat(null);
       setHoveredBackground(null); setHoveredRace(null); setHoveredClass(null);
     }
@@ -310,6 +314,7 @@ const CardLibrary = () => {
         limit: 50
       };
       
+      if (tagFilter) params.tag = tagFilter;
       if (search) params.search = search;
       if (rarityFilter) params.rarity = rarityFilter;
       if (propertiesFilter) params.properties = propertiesFilter;
@@ -385,6 +390,7 @@ const CardLibrary = () => {
         limit: 50
       };
       
+      if (tagFilter) params.tag = tagFilter;
       if (search) params.search = search;
       if (rarityFilter) params.rarity = rarityFilter;
       
@@ -440,6 +446,7 @@ const CardLibrary = () => {
         limit: 50
       };
       
+      if (tagFilter) params.tag = tagFilter;
       if (search) params.search = search;
       if (rarityFilter) params.rarity = rarityFilter;
       if (effectTypeFilter) params.effect_type = effectTypeFilter;
@@ -490,6 +497,7 @@ const CardLibrary = () => {
       }
 
       const params: any = { page, limit: 50 };
+      if (tagFilter) params.tag = tagFilter;
       if (search) params.search = search;
       if (spellLevel !== '') params.level = Number(spellLevel);
       if (spellClass) params.class = spellClass;
@@ -534,6 +542,7 @@ const CardLibrary = () => {
     try {
       if (page === 1) setLoading(true); else setLoadingMore(true);
       const params: any = { page, limit: 50 };
+      if (tagFilter) params.tag = tagFilter;
       if (search) params.search = search;
       if (featCategory) params.category = featCategory;
       if (featRepeatable) params.repeatable = featRepeatable;
@@ -571,6 +580,7 @@ const CardLibrary = () => {
     try {
       if (page === 1) setLoading(true); else setLoadingMore(true);
       const params: any = { page, limit: 50 };
+      if (tagFilter) params.tag = tagFilter;
       if (search) params.search = search;
       if (bgAbility) params.ability = bgAbility;
       if (bgSkill) params.skill = bgSkill;
@@ -606,6 +616,7 @@ const CardLibrary = () => {
     try {
       if (page === 1) setLoading(true); else setLoadingMore(true);
       const params: any = { page, limit: 50 };
+      if (tagFilter) params.tag = tagFilter;
       if (search) params.search = search;
       const response = await racesApi.getRaces(params);
       if (requestSequence !== catalogRequestSequence.current) return;
@@ -639,6 +650,7 @@ const CardLibrary = () => {
     try {
       if (page === 1) setLoading(true); else setLoadingMore(true);
       const params: any = { page, limit: 50 };
+      if (tagFilter) params.tag = tagFilter;
       if (search) params.search = search;
       const response = await classesApi.getClasses(params);
       if (requestSequence !== catalogRequestSequence.current) return;
@@ -671,7 +683,7 @@ const CardLibrary = () => {
     const requestSequence = catalogRequestSequence.current;
     try {
       setLoading(true);
-      const response = await resourcesApi.getResources(resourceCategoryFilter ? { category: resourceCategoryFilter } : undefined);
+      const response = await resourcesApi.getResources({ category: resourceCategoryFilter || undefined, tag:tagFilter||undefined });
       if (requestSequence !== catalogRequestSequence.current) return;
       const normalizedSearch = search.trim().toLowerCase();
       const filtered = normalizedSearch
@@ -709,7 +721,7 @@ const CardLibrary = () => {
     const requestSequence = catalogRequestSequence.current;
     try {
       setLoading(true);
-      const response = await variablesApi.getVariables();
+      const response = await variablesApi.getVariables({tag:tagFilter||undefined});
       if (requestSequence !== catalogRequestSequence.current) return;
       const list = response.variables || [];
       const normalizedSearch = search.trim().toLowerCase();
@@ -740,7 +752,7 @@ const CardLibrary = () => {
     const requestSequence = catalogRequestSequence.current;
     try {
       setLoading(true);
-      const response = await conceptsApi.getConcepts();
+      const response = await conceptsApi.getConcepts({tag:tagFilter||undefined});
       if (requestSequence !== catalogRequestSequence.current) return;
       const list = response.concepts || [];
       const normalizedSearch = search.trim().toLowerCase();
@@ -805,12 +817,13 @@ const CardLibrary = () => {
     } else if (contentType === 'concepts') {
       loadConcepts();
     }
-  }, [contentType, search, rarityFilter, effectTypeFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, resourceCategoryFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable, featAbility, bgAbility, bgSkill]);
+  }, [contentType, search, tagFilter, tagRevision, rarityFilter, effectTypeFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, resourceCategoryFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable, featAbility, bgAbility, bgSkill]);
 
   const currentFilters = useMemo(
     () => ({
       contentType,
       search,
+      tag:tagFilter,
       rarity: rarityFilter,
       effectType: effectTypeFilter,
       properties: propertiesFilter,
@@ -835,6 +848,7 @@ const CardLibrary = () => {
     [
       contentType,
       search,
+      tagFilter,
       rarityFilter,
       effectTypeFilter,
       propertiesFilter,
@@ -896,6 +910,7 @@ const CardLibrary = () => {
     skipFilterUrlSync.current = true;
     setContentType(parsed.contentType);
     setSearch(parsed.search);
+    setTagFilter(parsed.tag??"");
     setSearchDraft(parsed.search);
     setRarityFilter(parsed.rarity);
     setEffectTypeFilter(parsed.effectType);
@@ -1343,9 +1358,10 @@ const CardLibrary = () => {
     rarityFilter, effectTypeFilter, propertiesFilter, slotFilter,
     armorTypeFilter, resourceCategoryFilter, spellLevel, spellClass, spellSubclass,
     spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable,
-    featAbility, bgAbility, bgSkill,
+    featAbility, bgAbility, bgSkill, tagFilter,
   ].filter(Boolean).length;
   const resetFilters = () => {
+    setTagFilter('');
     setRarityFilter('');
     setEffectTypeFilter('');
     setPropertiesFilter('');
@@ -1418,7 +1434,7 @@ const CardLibrary = () => {
                   ? 'bg-blue-100 border-blue-300 text-blue-700' 
                   : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
               }`}
-              title="Сетка"
+              aria-label="Сетка"
             >
               <Grid3X3 size={18} />
             </button>
@@ -1429,7 +1445,7 @@ const CardLibrary = () => {
                   ? 'bg-blue-100 border-blue-300 text-blue-700'
                   : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
               }`}
-              title="Список"
+              aria-label="Список"
             >
               <List size={18} />
             </button>
@@ -1441,7 +1457,7 @@ const CardLibrary = () => {
                     ? 'bg-blue-100 border-blue-300 text-blue-700'
                     : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
                 }`}
-                title="Интерфейс (стат-блок)"
+                aria-label="Интерфейс (стат-блок)"
               >
                 <LayoutTemplate size={18} />
               </button>
@@ -1483,6 +1499,7 @@ const CardLibrary = () => {
               </div>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <LibraryTagFilter value={tagFilter} onChange={setTagFilter}/>
             {/* Фильтр по редкости - не для заклинаний */}
             {contentType !== 'spells' && contentType !== 'resources' && (
               <div>
@@ -1796,7 +1813,7 @@ const CardLibrary = () => {
       )}
 
       {/* Загрузка */}
-      {contentType === 'passives' && <PassiveLibrary search={search} mode={viewMode === 'list' ? 'row' : 'icon'}/>}
+      {contentType === 'passives' && <PassiveLibrary tag={tagFilter} search={search} mode={viewMode === 'list' ? 'row' : 'icon'}/>}
       {loading && (
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -1924,9 +1941,8 @@ const CardLibrary = () => {
                   <div
                     key={concept.concept_id}
                     onClick={() => handleConceptClick(concept)}
-                    onMouseEnter={() => setHoveredConcept(concept)}
+                    onMouseEnter={(e) => { setHoveredConcept(concept); placePreview(previewAnchor(e.currentTarget)); }}
                     onMouseLeave={leaveHover(() => setHoveredConcept(null))}
-                    onMouseMove={(e) => trackMouse(e.clientX, e.clientY)}
                     className="w-full text-left p-3 rounded-lg border border-gray-200 bg-white cursor-pointer transition-all duration-200 hover:shadow-md hover:bg-gray-50"
                   >
                     <div className="flex items-center gap-3">
@@ -1956,7 +1972,7 @@ const CardLibrary = () => {
               {hoveredConcept && (
                 <div
                   ref={previewPositionRef}
-                  className="fixed z-50"
+                  className="fixed z-50 entity-preview-enter"
                   style={previewStyle({
                     left: -10_000,
                     top: 10,
@@ -2025,9 +2041,8 @@ const CardLibrary = () => {
                   <div
                     key={card.id}
                     className="relative"
-                    onMouseEnter={() => setHoveredCard(card)}
+                    onMouseEnter={(e) => { setHoveredCard(card); placePreview(previewAnchor(e.currentTarget)); }}
                     onMouseLeave={leaveHover(() => setHoveredCard(null))}
-                    onMouseMove={(e) => trackMouse(e.clientX, e.clientY)}
                   >
                     <button
                       onClick={() => handleCardClick(card)}
@@ -2060,7 +2075,7 @@ const CardLibrary = () => {
                           <div className={`font-medium truncate ${getRarityColor(card.rarity)} flex items-center gap-1`}>
                             <span 
                               className="text-lg" 
-                              title={getRaritySymbolDescription(card.rarity)}
+                              aria-description={getRaritySymbolDescription(card.rarity)}
                               aria-label={getRaritySymbolDescription(card.rarity)}
                             >
                               {getRaritySymbol(card.rarity)}
@@ -2138,7 +2153,7 @@ const CardLibrary = () => {
               {hoveredCard && (
                 <div
                   ref={previewPositionRef}
-                  className="fixed z-50"
+                  className="fixed z-50 entity-preview-enter"
                   style={previewStyle({
                     left: -10_000,
                     top: 10,
@@ -2360,9 +2375,8 @@ const CardLibrary = () => {
                       <button
                         key={spell.id}
                         onClick={() => handleSpellClick(spell)}
-                        onMouseEnter={() => setHoveredSpell(spell)}
+                        onMouseEnter={(e) => { setHoveredSpell(spell); placePreview(previewAnchor(e.currentTarget)); }}
                         onMouseLeave={leaveHover(() => setHoveredSpell(null))}
-                        onMouseMove={(e) => trackMouse(e.clientX, e.clientY)}
                         className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                       >
                         <div className="flex items-center space-x-3">
@@ -2404,7 +2418,7 @@ const CardLibrary = () => {
               {hoveredSpell && (
                 <div
                   ref={previewPositionRef}
-                  className="fixed z-50"
+                  className="fixed z-50 entity-preview-enter"
                   style={previewStyle({
                     left: -10_000,
                     top: 10,
@@ -2503,9 +2517,8 @@ const CardLibrary = () => {
                       <button
                         key={feat.id}
                         onClick={() => handleFeatClick(feat)}
-                        onMouseEnter={() => setHoveredFeat(feat)}
+                        onMouseEnter={(e) => { setHoveredFeat(feat); placePreview(previewAnchor(e.currentTarget)); }}
                         onMouseLeave={leaveHover(() => setHoveredFeat(null))}
-                        onMouseMove={(e) => trackMouse(e.clientX, e.clientY)}
                         className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                       >
                         <div className="flex items-center space-x-3">
@@ -2523,7 +2536,7 @@ const CardLibrary = () => {
                 ))}
               </div>
               {hoveredFeat && (
-                <div ref={previewPositionRef} className="fixed z-50" style={previewStyle({ left: -10_000, top: 10 })}>
+                <div ref={previewPositionRef} className="fixed z-50 entity-preview-enter" style={previewStyle({ left: -10_000, top: 10 })}>
                   <FeatPreview feat={hoveredFeat} disableHover={true} />
                 </div>
               )}
@@ -2554,9 +2567,8 @@ const CardLibrary = () => {
                   <button
                     key={bg.id}
                     onClick={() => handleBackgroundClick(bg)}
-                    onMouseEnter={() => setHoveredBackground(bg)}
+                    onMouseEnter={(e) => { setHoveredBackground(bg); placePreview(previewAnchor(e.currentTarget)); }}
                     onMouseLeave={leaveHover(() => setHoveredBackground(null))}
-                    onMouseMove={(e) => trackMouse(e.clientX, e.clientY)}
                     className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
                     <div className="flex items-center space-x-3">
@@ -2572,7 +2584,7 @@ const CardLibrary = () => {
                 ))}
               </div>
               {hoveredBackground && (
-                <div ref={previewPositionRef} className="fixed z-50" style={previewStyle({ left: -10_000, top: 10 })}>
+                <div ref={previewPositionRef} className="fixed z-50 entity-preview-enter" style={previewStyle({ left: -10_000, top: 10 })}>
                   <BackgroundPreview background={hoveredBackground} disableHover={true} />
                 </div>
               )}
@@ -2630,9 +2642,8 @@ const CardLibrary = () => {
                   <button
                     key={race.id}
                     onClick={() => handleRaceClick(race)}
-                    onMouseEnter={() => setHoveredRace(race)}
+                    onMouseEnter={(e) => { setHoveredRace(race); placePreview(previewAnchor(e.currentTarget)); }}
                     onMouseLeave={leaveHover(() => setHoveredRace(null))}
-                    onMouseMove={(e) => trackMouse(e.clientX, e.clientY)}
                     className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
                     <div className="flex items-center space-x-3">
@@ -2655,9 +2666,8 @@ const CardLibrary = () => {
                   <button
                     key={race.id}
                     onClick={() => handleRaceClick(race)}
-                    onMouseEnter={() => setHoveredRace(race)}
+                    onMouseEnter={(e) => { setHoveredRace(race); placePreview(previewAnchor(e.currentTarget)); }}
                     onMouseLeave={leaveHover(() => setHoveredRace(null))}
-                    onMouseMove={(e) => trackMouse(e.clientX, e.clientY)}
                     className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
                     <div className="flex items-center space-x-3">
@@ -2673,7 +2683,7 @@ const CardLibrary = () => {
                 ))}
               </div>
               {hoveredRace && (
-                <div ref={previewPositionRef} className="fixed z-50" style={previewStyle({ left: -10_000, top: 10 })}>
+                <div ref={previewPositionRef} className="fixed z-50 entity-preview-enter" style={previewStyle({ left: -10_000, top: 10 })}>
                   <RacePreview
                     race={hoveredRace}
                     parentRaceName={hoveredRace.parent_race_id ? raceParentById.get(hoveredRace.parent_race_id)?.name : undefined}
@@ -2714,9 +2724,8 @@ const CardLibrary = () => {
                   <button
                     key={characterClass.id}
                     onClick={() => handleClassClick(characterClass)}
-                    onMouseEnter={() => setHoveredClass(characterClass)}
+                    onMouseEnter={(e) => { setHoveredClass(characterClass); placePreview(previewAnchor(e.currentTarget)); }}
                     onMouseLeave={leaveHover(() => setHoveredClass(null))}
-                    onMouseMove={(e) => trackMouse(e.clientX, e.clientY)}
                     className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
                     <div className="flex items-center space-x-3">
@@ -2746,9 +2755,8 @@ const CardLibrary = () => {
                   <button
                     key={characterClass.id}
                     onClick={() => handleClassClick(characterClass)}
-                    onMouseEnter={() => setHoveredClass(characterClass)}
+                    onMouseEnter={(e) => { setHoveredClass(characterClass); placePreview(previewAnchor(e.currentTarget)); }}
                     onMouseLeave={leaveHover(() => setHoveredClass(null))}
-                    onMouseMove={(e) => trackMouse(e.clientX, e.clientY)}
                     className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
                     <div className="flex items-center space-x-3">
@@ -2771,7 +2779,7 @@ const CardLibrary = () => {
                 ))}
               </div>
               {hoveredClass && (
-                <div ref={previewPositionRef} className="fixed z-50" style={previewStyle({ left: -10_000, top: 10 })}>
+                <div ref={previewPositionRef} className="fixed z-50 entity-preview-enter" style={previewStyle({ left: -10_000, top: 10 })}>
                   <ClassPreview characterClass={hoveredClass} disableHover={true} />
                 </div>
               )}

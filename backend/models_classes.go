@@ -40,6 +40,8 @@ func (o ClassEquipmentOptions) Value() (driver.Value, error) {
 
 // Class - модель класса персонажа D&D.
 type Class struct {
+	// Frozen wire snapshot for pre-258 certification hashes; never used as library tags.
+	LegacyTags *Properties `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
 	ID                      uuid.UUID              `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                    string                 `json:"name" gorm:"not null"`
 	NameEn                  *string                `json:"name_en" gorm:"type:varchar(255)"`
@@ -74,7 +76,6 @@ type Class struct {
 	Type                    *string                `json:"type" gorm:"type:varchar(50)"`
 	Author                  string                 `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                  *string                `json:"source" gorm:"type:varchar(255)"`
-	Tags                    *Properties            `json:"tags" gorm:"type:jsonb"`
 	IsExtended              *bool                  `json:"is_extended" gorm:"type:boolean;default:null"`
 	CreatedAt               time.Time              `json:"created_at"`
 	UpdatedAt               time.Time              `json:"updated_at"`
@@ -112,7 +113,6 @@ type CreateClassRequest struct {
 	Type                    *string                `json:"type"`
 	Author                  string                 `json:"author"`
 	Source                  *string                `json:"source"`
-	Tags                    *Properties            `json:"tags"`
 	IsExtended              *bool                  `json:"is_extended"`
 }
 
@@ -144,11 +144,11 @@ type UpdateClassRequest struct {
 	Type                    *string                `json:"type"`
 	Author                  string                 `json:"author"`
 	Source                  *string                `json:"source"`
-	Tags                    *Properties            `json:"tags"`
 	IsExtended              *bool                  `json:"is_extended"`
 }
 
 type ClassResponse struct {
+	LegacyTags *Properties `json:"tags"`
 	ID                      uuid.UUID              `json:"id"`
 	Name                    string                 `json:"name"`
 	NameEn                  *string                `json:"name_en"`
@@ -180,7 +180,6 @@ type ClassResponse struct {
 	Type                    *string                `json:"type"`
 	Author                  string                 `json:"author"`
 	Source                  *string                `json:"source"`
-	Tags                    *Properties            `json:"tags"`
 	IsExtended              *bool                  `json:"is_extended"`
 	CreatedAt               time.Time              `json:"created_at"`
 	UpdatedAt               time.Time              `json:"updated_at"`
@@ -188,6 +187,7 @@ type ClassResponse struct {
 
 func (cl Class) ToClassResponse() ClassResponse {
 	return ClassResponse{
+		LegacyTags: cl.LegacyTags,
 		ID: cl.ID, Name: cl.Name, NameEn: cl.NameEn, Description: cl.Description, DetailedDescription: cl.DetailedDescription,
 		ImageURL: cl.ImageURL, Rarity: cl.Rarity, CardNumber: cl.CardNumber, HitDie: cl.HitDie,
 		PrimaryAbilities: cl.PrimaryAbilities, RecommendedAbilities: cl.RecommendedAbilities,
@@ -198,7 +198,7 @@ func (cl Class) ToClassResponse() ClassResponse {
 		LevelProgression: cl.LevelProgression, Resources: cl.Resources, Support: cl.Support,
 		IsSubclass: cl.IsSubclass, ParentClassID: cl.ParentClassID, SubclassLevel: cl.SubclassLevel,
 		RelatedEffects: cl.RelatedEffects, RelatedActions: cl.RelatedActions,
-		Type: cl.Type, Author: cl.Author, Source: cl.Source, Tags: cl.Tags, IsExtended: cl.IsExtended,
+		Type: cl.Type, Author: cl.Author, Source: cl.Source, IsExtended: cl.IsExtended,
 		CreatedAt: cl.CreatedAt, UpdatedAt: cl.UpdatedAt,
 	}
 }

@@ -1,3 +1,4 @@
+import { previewAnchor } from '../utils/previewAnchor';
 import { useEffect, useState } from 'react';
 import type { Card, EquipmentOption } from '../types';
 import { getCardsIndex } from '../utils/cardsIndex';
@@ -24,9 +25,8 @@ const ItemIcon: React.FC<{ card: Card; quantity: number }> = ({ card, quantity }
   return (
     <div
       className="bgeq-item"
-      onMouseEnter={(e) => { setHover(true); setPos({ x: e.clientX, y: e.clientY }); }}
+      onMouseEnter={(e) => { setHover(true); setPos(previewAnchor(e.currentTarget)); }}
       onMouseLeave={() => setHover(false)}
-      onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
     >
       <img
         src={card.image_url || '/default_image.png'}
@@ -36,6 +36,7 @@ const ItemIcon: React.FC<{ card: Card; quantity: number }> = ({ card, quantity }
       {quantity > 1 && <span className="bgeq-qty">{quantity}</span>}
       {hover && (
         <div
+          className="entity-preview-enter"
           style={{
             position: 'fixed', zIndex: 100, pointerEvents: 'none',
             left: Math.min(pos.x + 14, window.innerWidth - (asInterface ? 360 : 210)),
@@ -70,7 +71,7 @@ const Variant: React.FC<{
           {items.length === 0 && <span className="bgeq-only-gold">только золото</span>}
         </div>
         {gold > 0 && (
-          <div className="bgeq-gold" title={`${gold} золота`}>
+          <div className="bgeq-gold" aria-description={`${gold} золота`}>
             <img src={getCurrencyIconPath('gold')} alt="золото" style={currencyIconStyle} />
             <span className="bgeq-gold-amount">{gold}</span>
           </div>

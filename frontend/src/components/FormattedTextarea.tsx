@@ -5,6 +5,7 @@ import { cardsApi, spellsApi, actionsApi, effectsApi, conceptsApi } from '../api
 import type { EntityRefType } from './EntityRefRegistry';
 
 interface FormattedTextareaProps {
+  id?: string;
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
@@ -61,6 +62,7 @@ async function searchLinkTargets(query: string): Promise<LinkResult[]> {
 }
 
 export const FormattedTextarea: React.FC<FormattedTextareaProps> = ({
+  id,
   value,
   onChange,
   onBlur,
@@ -160,7 +162,7 @@ export const FormattedTextarea: React.FC<FormattedTextareaProps> = ({
           <button
             key={action.label}
             type="button"
-            title={action.label}
+            aria-label={action.label}
             onClick={() => wrap(action.marker, action.marker)}
             className={btnCls}
           >
@@ -172,7 +174,7 @@ export const FormattedTextarea: React.FC<FormattedTextareaProps> = ({
         <div className="relative">
           <button
             type="button"
-            title="Окрасить выделенный текст в цвет типа урона"
+            aria-label="Окрасить выделенный текст в цвет типа урона"
             onClick={() => setMenu(menu === 'color' ? null : 'color')}
             className={btnCls}
           >
@@ -199,7 +201,7 @@ export const FormattedTextarea: React.FC<FormattedTextareaProps> = ({
         <div className="relative">
           <button
             type="button"
-            title="Вставить иконку типа урона"
+            aria-label="Вставить иконку типа урона"
             onClick={() => setMenu(menu === 'icon' ? null : 'icon')}
             className={btnCls}
           >
@@ -238,7 +240,7 @@ export const FormattedTextarea: React.FC<FormattedTextareaProps> = ({
         <div className="relative">
           <button
             type="button"
-            title="Вставить ссылку на сущность (предмет/заклинание/действие/эффект/понятие)"
+            aria-label="Вставить ссылку на сущность (предмет/заклинание/действие/эффект/понятие)"
             onClick={() => { if (menu === 'link') setMenu(null); else openLinkMenu(); }}
             className={btnCls}
           >
@@ -275,6 +277,7 @@ export const FormattedTextarea: React.FC<FormattedTextareaProps> = ({
       </div>
 
       <textarea
+        id={id}
         ref={textareaRef}
         value={value}
         onChange={(event) => onChange(event.target.value)}

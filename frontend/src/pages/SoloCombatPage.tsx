@@ -96,7 +96,7 @@ import {
 import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
 import { getCardsIndex } from '../utils/cardsIndex';
 import { combatActorMovementMode, combatActorMovementSpeeds, effectiveActorSpeedFt, gridDistanceFt } from '../solo-combat/tacticalGrid';
-import { combatActionIsAttack, combatApproachRoute, defaultCombatAttackAction } from '../solo-combat/defaultInteraction';
+import { combatActionIsAttack, combatApproachRoute, defaultCombatAttackAction,combatActionRangeFt } from '../solo-combat/defaultInteraction';
 import { combatIdentity } from '../solo-combat/combatIdentity';
 import { canonicalTouchSpell, familiarActorsOwnedBy } from '../rules-core/familiarRuntime';
 import { familiarFormLabel } from '../character/familiarLabels';
@@ -105,25 +105,15 @@ import type { WorldObjectState } from '../rules-core/worldObjects';
 import { bindCombatWorldInputFacts } from '../solo-combat/worldInput';
 import { roguelikeApi } from '../roguelike/api';
 import { commandCombatInteraction } from '../roguelike/combatInteraction';
-import { runEncounterSelection, runSheetURL } from '../roguelike/navigation';
+import { runEncounterSelection, runSheetURL,runCharacters,runHasCharacter } from '../roguelike/navigation';
 import './CharacterForge.css';
 import './CharacterSheetV2.css';
 import './SoloCombatPage.css';
 
 const FAMILIAR_TOUCH_DELIVERY_CHOICE_ID = 'combat_familiar_touch_delivery';
 const MOVEMENT_MODE_CHOICE_ID = 'combat_movement_mode';
-const COMBAT_PASSIVE_STORAGE_KEY = 'dnd-cards:combat-passive-toggles:v1';
 const movementModeLabels = {walk: 'Ходьба', climb: 'Лазание', fly: 'Полёт', swim: 'Плавание', burrow: 'Рытьё'} as const;
 
-function readCombatPassivePreferences(): Record<string, boolean> {
-  try {
-    if (typeof window === 'undefined') return {};
-    const value = window.localStorage.getItem(COMBAT_PASSIVE_STORAGE_KEY);
-    return value ? JSON.parse(value) as Record<string, boolean> : {};
-  } catch {
-    return {};
-  }
-}
 
 function querySelection(params: URLSearchParams): Array<{ id: string; quantity: number }> {
   return [...params.entries()].flatMap(([id, raw]) => {
@@ -202,7 +192,7 @@ export default function SoloCombatPage() {
     hoveredActorIdRef.current = actorId;
     setHoveredActorId(actorId);
   }, []);
-  const [combatPassiveEnabled, setCombatPassiveEnabled] = useState<Record<string, boolean>>(readCombatPassivePreferences);
+  const [combatPassiveEnabled, setCombatPassive] = usePassivePreferences();
   const siteSettings = useSiteSettings();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sceneConstructorOpen, setSceneConstructorOpen] = useState(false);
@@ -390,7 +380,7 @@ export default function SoloCombatPage() {
           trustedRunRef.current = accepted;
           characterRef.current = accepted.character;
           setCharacter(accepted.character);
-          participantCharactersRef.current = {[accepted.character.id]: accepted.character};
+          participantCharactersRef.current = Object.fromEntries(runCharacters(accepted).map(c=>[c.id,c]));
           setParticipantCharacters(participantCharactersRef.current);
           if (!loadedRun.combat_state) setOpeningState(accepted.combat_state);
           setState(accepted.combat_state);
@@ -526,7 +516,7 @@ export default function SoloCombatPage() {
       trustedRunRef.current = accepted;
       characterRef.current = accepted.character;
       setCharacter(accepted.character);
-      participantCharactersRef.current = {[accepted.character.id]: accepted.character};
+      participantCharactersRef.current = Object.fromEntries(runCharacters(accepted).map(c=>[c.id,c]));
       setParticipantCharacters(participantCharactersRef.current);
       setState(accepted.combat_state);
     }).catch(async reason => {
@@ -538,7 +528,7 @@ export default function SoloCombatPage() {
           trustedRunRef.current = current;
           characterRef.current = current.character;
           setCharacter(current.character);
-          participantCharactersRef.current = {[current.character.id]: current.character};
+          participantCharactersRef.current = Object.fromEntries(runCharacters(current).map(c=>[c.id,c]));
           setParticipantCharacters(participantCharactersRef.current);
           setState(current.combat_state);
         }
@@ -634,13 +624,6 @@ export default function SoloCombatPage() {
     return () => window.removeEventListener('keydown', inspectHoveredEnemy);
   }, [activeControlledActorId, state]);
 
-  const setCombatPassive = (id: string, enabled: boolean) => {
-    setCombatPassiveEnabled((current) => {
-      const next = {...current, [id]: enabled};
-      try { window.localStorage.setItem(COMBAT_PASSIVE_STORAGE_KEY, JSON.stringify(next)); } catch { /* private mode */ }
-      return next;
-    });
-  };
 
   const requestCombatChoices = async (
     action: SoloCombatState['catalogActions'][number],
@@ -826,7 +809,7 @@ export default function SoloCombatPage() {
         if (!action) throw new Error('Нет доступной атаки оружием или безоружного удара');
         const availability = combatActionAvailability(state, action, activeControlledActorId);
         if (!availability.enabled) throw new Error(availability.reason ?? 'Атака сейчас недоступна');
-        const route = combatApproachRoute(state, activeControlledActorId, actorId, action.targeting?.rangeFt ?? 5);
+        const route = combatApproachRoute(state, activeControlledActorId, actorId, combatActionRangeFt(state,activeControlledActorId,action));
         if (!route) throw new Error('На поле нет доступной точки для атаки');
         if (!route.available) throw new Error(`Для атаки нужно пройти ${route.costFt} фт., доступно ${route.availableFt} фт.`);
         const choices = await requestCombatChoices(action, actorId);
@@ -1014,7 +997,7 @@ export default function SoloCombatPage() {
         const completed = run.phase === 'combat' ? await roguelikeApi.command(run.id, run.revision, 'complete_encounter') : run;
         if (completed.status === 'defeat') {
           const retried = await roguelikeApi.command(completed.id, completed.revision, 'retry');
-          navigate(`/characters-v3/${retried.character_id}?roguelike=${retried.id}`, {replace: true});
+          navigate(`/roguelike/${retried.id}`, {replace: true});
           return;
         }
         setRewardRun(completed); setBusy(false);
@@ -1148,7 +1131,7 @@ export default function SoloCombatPage() {
       {settingsOpen && <SheetSettingsDialog onClose={() => setSettingsOpen(false)} />}
       <MonsterTurnController state={state} disabled={presentation.blocked || Boolean(trustedRunRef.current) || busy || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt)} onTransition={apply} onError={setError} />
       <header className="combat-topbar">
-        <div className="combat-topbar__navigation"><Link to={roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`}><ArrowLeft size={18} /> {roguelikeRunId ? 'Забег' : 'Лист'}</Link><button type="button" className="combat-settings-button" onClick={() => setSettingsOpen(true)} aria-label="Настройки боя" title="Настройки боя"><SlidersHorizontal size={16} /><span>Настройки</span></button>{!roguelikeRunId && <button type="button" onClick={() => setSceneConstructorOpen(true)}><SlidersHorizontal size={16} /> Сцена</button>}</div>
+        <div className="combat-topbar__navigation"><Link to={roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`}><ArrowLeft size={18} /> {roguelikeRunId ? 'Забег' : 'Лист'}</Link><button type="button" className="combat-settings-button" onClick={() => setSettingsOpen(true)} aria-label="Настройки боя" aria-description="Настройки боя"><SlidersHorizontal size={16} /><span>Настройки</span></button>{!roguelikeRunId && <button type="button" onClick={() => setSceneConstructorOpen(true)}><SlidersHorizontal size={16} /> Сцена</button>}</div>
         <div className="initiative-ribbon" aria-label="Порядок инициативы">
           {state.initiative.map((entry, index) => {
             const participant = state.world.actors[entry.actorId];
@@ -1157,7 +1140,7 @@ export default function SoloCombatPage() {
             return <button type="button" key={entry.actorId}
               className={`initiative-card is-${identity.side}${isActive ? ' is-active' : ''}${participant.runtime.hp.current <= 0 ? ' is-dead' : ''}${hoveredActorId === entry.actorId ? ' is-linked-highlight' : ''}`}
               style={{'--combat-accent': identity.accent} as CSSProperties}
-              title={`${identity.displayName} · инициатива: ${initiativeLabel(entry)}`}
+              aria-description={`${identity.displayName} · инициатива: ${initiativeLabel(entry)}`}
               aria-label={`${index + 1}. ${identity.displayName}${isActive ? ', текущий ход' : ''}`}
               onMouseEnter={() => setCombatHoveredActorId(entry.actorId)} onMouseLeave={() => setCombatHoveredActorId(null)}
               onFocus={() => setCombatHoveredActorId(entry.actorId)} onBlur={() => setCombatHoveredActorId(null)}>
@@ -1237,7 +1220,7 @@ export default function SoloCombatPage() {
             <section className="combat-world-control" aria-label="Обнаружение магии">
               <span>
                 <b>✦ {activeDetectMagic.actionName}</b>
-                <small title={activeDetectMagic.sensedObjectNames.join(', ')}>
+                <small aria-description={activeDetectMagic.sensedObjectNames.join(', ')}>
                   Концентрация · {activeDetectMagic.radiusFt} фт. · {activeDetectMagic.sensedObjectNames.length
                     ? `ощущается магия: ${activeDetectMagic.sensedObjectNames.length}`
                     : 'магия не ощущается'}
@@ -1333,7 +1316,7 @@ export default function SoloCombatPage() {
           onActivateBoon={(effectId, rollKind, timing) => {
             applyIntent({type: 'boon', actorId: drawerActorId, effectId, rollKind, timing}, () => activateCombatBoon(state, drawerActorId, effectId, rollKind, timing));
           }}
-        /><Link className="combat-sheet-drawer__full" target="_blank" to={drawerRun?.character_id === drawerActorId ? runSheetURL(drawerRun) : `/characters-v3/${drawerActorId}`}>Открыть полный лист ↗</Link></aside>;
+        /><Link className="combat-sheet-drawer__full" target="_blank" to={drawerRun && runHasCharacter(drawerRun,drawerActorId) ? runSheetURL(drawerRun,drawerActorId) : `/characters-v3/${drawerActorId}`}>Открыть полный лист ↗</Link></aside>;
       })()}
       {reactionOptions.length > 0 && <div className="combat-reaction-backdrop"><section role="dialog" aria-modal="true" aria-label={reactionTitle}>
         <p>{pending?.type === 'check_boost' ? 'ПОСЛЕ БРОСКА' : pending?.type === 'attack_reaction' && pending.attackAdjustment ? 'ПРИЁМ' : 'РЕАКЦИЯ'}</p><h2>{reactionTitle}</h2>{pending?.type === 'damage_reaction' && <p>{state.world.actors[pending.request.actorId]?.name} · Цель: {state.world.actors[pending.targetActorId]?.name}</p>}{reactionDetails && <p>{reactionDetails}</p>}
@@ -1374,7 +1357,7 @@ export default function SoloCombatPage() {
           }}
         />
       </section></div>}
-      {state.pendingAlertSwapActorIds?.length ? (() => {
+      {state.pendingAlertSwapActorIds?.length && !presentation.blocked ? (() => {
         const alertActorId = state.pendingAlertSwapActorIds[0];
         const alertActor = state.world.actors[alertActorId];
         const allies = controlledCharacterIds(state).filter((actorId) => actorId !== alertActorId);
@@ -1389,3 +1372,4 @@ export default function SoloCombatPage() {
     </main>
   );
 }
+import {usePassivePreferences} from '../character/passivePreferences';

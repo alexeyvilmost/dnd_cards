@@ -11,9 +11,11 @@ export interface RoguelikeOffer {
   card_number?: string;
   name: string;
   price: number;
+  price_currency?: string;
   quantity: number;
   pinned: boolean;
   sold: boolean;
+  starting_only?: boolean;
 }
 
 export interface RoguelikeShop {
@@ -55,6 +57,8 @@ export interface RoguelikeRun {
   user_id: string;
   source_character_id: string;
   character_id: string;
+  party?: {members?:Array<{character_id:string;source_character_id:string}>};
+  characters?: ForgeCharacter[];
   status: 'active' | 'victory' | 'defeat' | 'abandoned';
   phase: 'camp' | 'combat' | 'ended';
   revision: number;
@@ -83,6 +87,8 @@ export type RoguelikeCommandType =
   | 'start_encounter'
   | 'complete_encounter'
   | 'buy'
+  | 'buy_cart'
+  | 'transfer_item'
   | 'pin'
   | 'refresh_shop'
   | 'bind_weapon' | 'recall_weapon' | 'camp_action' | 'camp_turn'
@@ -102,9 +108,9 @@ export const roguelikeApi = {
     const { data } = await apiClient.get<{ run: RoguelikeRun }>(`/api/roguelike/runs/${id}`);
     return data.run;
   },
-  create: async (sourceCharacterId: string): Promise<RoguelikeRun> => {
+  create: async (sourceCharacterId: string | string[]): Promise<RoguelikeRun> => {
     const { data } = await apiClient.post<{ run: RoguelikeRun }>('/api/roguelike/runs', {
-      source_character_id: sourceCharacterId,
+      ...(Array.isArray(sourceCharacterId)?{source_character_ids:sourceCharacterId}:{source_character_id: sourceCharacterId}),
     });
     return data.run;
   },
@@ -113,9 +119,10 @@ export const roguelikeApi = {
     revision: number,
     type: RoguelikeCommandType,
     payload: Record<string, unknown> = {},
+    commandId: string = crypto.randomUUID(),
   ): Promise<RoguelikeRun> => {
     const { data } = await apiClient.post<{ run: RoguelikeRun; events?: CharacterEventRow[] }>(`/api/roguelike/runs/${id}/commands`, {
-      command_id: crypto.randomUUID(),
+      command_id: commandId,
       expected_revision: revision,
       type,
       payload,

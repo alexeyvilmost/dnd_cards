@@ -1,4 +1,6 @@
 import {actorFootprint} from './footprint';
+import {boardCells, boardDimensions, terrainStepFits} from './boardGeometry';
+import {selectBattleMap, materializeMapAreas} from './battleMaps';
 import {monsterBonusActions} from './monsterBonusActions';
 import {combatHideFacts, combatHideIssue} from './hide';
 import {resetTurnMovement, signedMovementBudget, withMovementBudget} from './movementLedger';
@@ -120,7 +122,7 @@ import {
   type SoloCombatState,
 } from './types';
 import { warCasterOpportunitySpellVersion } from '../rules-core/generalSpellFeatRuntime';
-import { combatActionIsAttack, combatApproachRoute } from './defaultInteraction';
+import { combatActionIsAttack, combatApproachRoute, combatActionRangeFt } from './defaultInteraction';
 import { generalFeatTriggeredUseKey } from '../rules-core/generalFeatDamageRuntime';
 import {
   actorOwnsCharger,
@@ -697,6 +699,7 @@ function applyForcedMovement(
       const target = tokens[targetId]?.position;
       if (!source || !target) continue;
       const position = (forced.mode === 'pull' ? pullToward : pushAway)({
+        board: state,
         source, target, distanceFt: forced.distanceFt,
         occupied: occupiedPositions({ ...state, tokens }, targetId),
         targetSize: actorFootprint(state.world.actors[targetId], state),
@@ -1545,7 +1548,7 @@ function prepareTelekineticMovement(input: CombatActionInput, action: RuleAction
     if (issue) throw new Error(issue);
     if (facts.distanceFt > 30 || !facts.canSeeTarget) throw new Error('Предмет должен быть виден в пределах 30 фт.');
     if (!worldPosition || !Number.isInteger(worldPosition.x) || !Number.isInteger(worldPosition.y)
-      || worldPosition.x < 0 || worldPosition.y < 0 || worldPosition.x >= TACTICAL_WIDTH || worldPosition.y >= TACTICAL_HEIGHT) throw new Error('Выберите клетку на поле');
+      || worldPosition.x < 0 || worldPosition.y < 0 || worldPosition.x >= boardDimensions(state).width || worldPosition.y >= boardDimensions(state).height) throw new Error('Выберите клетку на поле');
     if (gridDistanceFt(origin, worldPosition) > 30) throw new Error('Предмет можно переместить не более чем на 30 фт.');
     if (handMode === 'to_hand' && !samePosition(worldPosition, state.tokens[actorId].position)) throw new Error('Для переноса в руку выберите свою клетку');
     if (handMode !== 'to_hand' && (occupiedPositions(state).has(`${worldPosition.x}:${worldPosition.y}`)
@@ -1559,7 +1562,7 @@ function prepareTelekineticMovement(input: CombatActionInput, action: RuleAction
   const facts=spatialFacts(state,actorId,targetId);
   if(facts.distanceFt>30 || !facts.canSeeTarget) throw new Error('Цель должна быть видна в пределах 30 фт.');
   if(!worldPosition || !Number.isInteger(worldPosition.x) || !Number.isInteger(worldPosition.y)
-    || worldPosition.x<0 || worldPosition.y<0 || worldPosition.x>=TACTICAL_WIDTH || worldPosition.y>=TACTICAL_HEIGHT) throw new Error('Выберите клетку на поле');
+    || worldPosition.x<0 || worldPosition.y<0 || worldPosition.x>=boardDimensions(state).width || worldPosition.y>=boardDimensions(state).height) throw new Error('Выберите клетку на поле');
   if(gridDistanceFt(state.tokens[targetId].position,worldPosition)>30) throw new Error('Цель можно переместить не более чем на 30 фт.');
   if(!canOccupyPosition(state,targetId,worldPosition)) throw new Error('Выберите свободную область');
   const destinationState={...state,tokens:{...state.tokens,[targetId]:{...state.tokens[targetId],position:worldPosition}}};
@@ -2461,6 +2464,10 @@ export function triggeredSecondaryTargetIds(state: SoloCombatState, actionId: st
   const trigger = activation?.trigger as Record<string, unknown> | undefined;
   if (!pending || !pending.optionActionIds.includes(actionId) || trigger?.secondary_target !== true) return [];
   if (pending.event === 'commanded_attack' && action) return commandedAttackTargets(state,pending.sourceActorId,action);
+  if (trigger?.target_domain === 'action_range' && action) {
+    return commandedAttackTargets(state, pending.sourceActorId, action).filter(id =>
+      action.targeting?.allowedRelations.includes(combatRelation(state, pending.sourceActorId, id)));
+  }
   if (trigger?.maneuvering_movement === true) return maneuveringAllyIds(state,pending.sourceActorId);
   const first = state.tokens[pending.triggeringAttack?.targetActorId ?? '']?.position;
   const source = state.tokens[pending.sourceActorId]?.position;
@@ -2825,6 +2832,7 @@ export function resolvePlayerReaction(
   const actingActorId = activeActorId(state);
   const monsterWasActing = state.world.actors[actingActorId]?.kind === 'monster';
   let next = autoResolveSystemDecisions(resolveDecision(state, response, rng), rng);
+  next = offerZeroDamageFollowUps(state, next, response.actionId);
   const interceptionTrigger = state.pendingInterceptionTrigger;
   if (interceptionTrigger && !next.world.pendingResolution && !next.pendingInterception) {
     const action = next.catalogActions.find((candidate) => candidate.id === interceptionTrigger.sourceActionId);
@@ -3119,6 +3127,9 @@ function sourceQualifiesForTriggeredAction(input: {
   trigger: Record<string, unknown> | undefined;
 }): boolean {
   const { before, state, actor, sourceActionId, targetIds, trigger } = input;
+  // This listener requires an exact held-damage reaction receipt, not a generic
+  // successful action. It is offered by offerZeroDamageFollowUps below.
+  if (trigger?.damage_reduced_to_zero === true) return false;
   const sourceCardNumber = state.actionPresentation?.[sourceActionId]?.actionRef?.card_number;
   const requiredSources = [
     ...(typeof trigger?.source_action_card_number === 'string'
@@ -3246,6 +3257,42 @@ function sourceQualifiesForTriggeredAction(input: {
     && (parsed.profile.proficiencyCategory === 'simple'
       || (parsed.profile.proficiencyCategory === 'martial'
         && parsed.profile.properties.includes('light')));
+}
+
+/** A saved pre-damage decision is the authority for zero-damage follow-ups.
+ * Reuse the normal triggered-action dialog, target picker, costs and saves. */
+export function offerZeroDamageFollowUps(before: SoloCombatState, after: SoloCombatState, reactionId: string | null): SoloCombatState {
+  const pending = before.world.pendingResolution;
+  if (!reactionId || pending?.type !== 'damage_reaction' || after.world.pendingResolution
+    || after.pendingTriggeredAction || after.outcome !== 'active') return after;
+  const actor = after.world.actors[pending.request.actorId];
+  if (!actor || actor.id !== pending.targetActorId || !isControlledCharacter(after, actor.id)
+    || actor.runtime.hp.current <= 0 || activeConditionsOf(actor.runtime).has('incapacitated')) return after;
+  const records = combatLogSince(after, combatLogCursor(before)).flatMap(row => row.records ?? []);
+  const reductions = records.filter(r => r.sourceActorId === actor.id).flatMap(r =>
+    r.event?.type === 'damage_reduction' ? [r.event.amount] : []);
+  const damage = records.filter(r => r.sourceActorId === pending.sourceActorId && r.targetIds.includes(actor.id))
+    .flatMap(r => r.event?.type === 'damage' ? [r.event] : []);
+  if (!reductions.some(n => n > 0) || !damage.length || damage.some(d => d.amount > 0)) return after;
+  const reaction = after.catalogActions.find(a => a.id === reactionId);
+  const sourceCard = after.actionPresentation?.[reactionId]?.actionRef?.card_number;
+  const sourceRefs = new Set([reactionId, sourceCard, ...(reaction?.sourceEntityIds ?? [])]);
+  const options = after.catalogActions.filter(a => {
+    const activation = a.mechanics.activation as Record<string, unknown> | undefined;
+    const trigger = activation?.trigger as Record<string, unknown> | undefined;
+    const sources = trigger?.source_action_card_numbers;
+    return actor.capabilities.actionIds.includes(a.id) && isTriggeredCombatAction(a, 'action_resolved')
+      && trigger?.damage_reduced_to_zero === true && Array.isArray(sources) && sources.some(s => sourceRefs.has(String(s)))
+      && canPay(actor.runtime, (activation?.cost ?? []) as Record<string, unknown>[]).ok;
+  });
+  if (!options.length) return after;
+  const offered: SoloCombatState = {...after, pendingTriggeredAction: {
+    event: 'action_resolved', sourceActorId: actor.id, sourceActionId: reactionId,
+    targetIds: [pending.sourceActorId], optionActionIds: options.map(a => a.id),
+    triggeringAttack: {targetActorId: pending.sourceActorId, damageType: pending.damage[0].damageType, critical: false},
+  }};
+  const available = options.filter(a => triggeredSecondaryTargetIds(offered, a.id).length > 0);
+  return available.length ? {...offered, pendingTriggeredAction: {...offered.pendingTriggeredAction!, optionActionIds: available.map(a => a.id)}} : after;
 }
 
 /** An incoming miss is final only after Precision/defensive continuations close. */
@@ -3840,7 +3887,7 @@ export function moveActor(input: {
   if (!token) throw new Error('У участника нет токена на поле');
   if (!Number.isInteger(input.destination.x) || !Number.isInteger(input.destination.y)
     || input.destination.x < 0 || input.destination.y < 0
-    || input.destination.x >= TACTICAL_WIDTH || input.destination.y >= TACTICAL_HEIGHT) {
+    || input.destination.x >= boardDimensions(input.state).width || input.destination.y >= boardDimensions(input.state).height) {
     throw new Error('Клетка находится за пределами поля');
   }
   const distance = gridDistanceFt(token.position, input.destination);
@@ -3872,6 +3919,15 @@ export function moveActor(input: {
   }
   if (!canOccupyPosition(input.state, input.actorId, input.destination)) {
     throw new Error('Область занята или не вмещает существо');
+  }
+  if (input.state.battleMap) {
+    const steps=distance/5;
+    let previous=token.position;
+    for(let n=1;n<=steps;n++){
+      const cell={x:Math.round(token.position.x+(input.destination.x-token.position.x)*n/steps),y:Math.round(token.position.y+(input.destination.y-token.position.y)*n/steps)};
+      if(!terrainStepFits(input.state,previous,cell,actorFootprint(actor,input.state)))throw Error('Путь преграждает препятствие');
+      previous=cell;
+    }
   }
   const pending = input.state.pendingMovementStep;
   if (input.voluntary !== false && pending && (pending.actorId !== input.actorId
@@ -4060,7 +4116,7 @@ export function approachAndExecuteCombatAction(input: {
 }): SoloCombatState {
   const action = input.state.catalogActions.find((candidate) => candidate.id === input.actionId);
   if (!combatActionIsAttack(input.state, action)) throw new Error('Для автоматического подхода выберите атаку');
-  const rangeFt = action?.targeting?.rangeFt ?? 5;
+  const rangeFt = combatActionRangeFt(input.state,input.actorId,action!);
   const route = combatApproachRoute(input.state, input.actorId, input.targetActorId, rangeFt);
   if (!route) throw new Error('На поле нет доступной точки для атаки');
   if (!route.available) {
@@ -4099,7 +4155,7 @@ function continuePlayerRoute(state: SoloCombatState, rng: Rng): SoloCombatState 
     const {playerMovement: _route, ...rest} = value;
     return rest;
   };
-  for (let step = 0; next.playerMovement && step <= TACTICAL_WIDTH * TACTICAL_HEIGHT; step++) {
+  for (let step = 0; next.playerMovement && step <= boardDimensions(state).width * boardDimensions(state).height; step++) {
     if (monsterMovementPaused(next) || next.pendingMovementStep) return next;
     const route = next.playerMovement;
     const actor = next.world.actors[route.actorId];
@@ -4117,7 +4173,7 @@ function continuePlayerRoute(state: SoloCombatState, rng: Rng): SoloCombatState 
       ? next.pendingAdditionalMovement.remainingFt
       : next.movementRemainingFt[route.actorId] ?? effectiveCombatActorSpeedFt(next, route.actorId);
     const cost = combatActorMovementMode(next, route.actorId) === 'fly' ? 5
-      : movementCostThroughAreas(next, position, destination, 5) + (actorMustCrawl(actor) ? 5 : 0);
+      : movementCostThroughAreas(next, position, destination, 5, route.actorId) + (actorMustCrawl(actor) ? 5 : 0);
     if (!samePosition(position, route.origin) || gridDistanceFt(position, destination) !== 5
       || effectiveCombatActorSpeedFt(next, route.actorId) === 0 || cost > available
       || !canOccupyPosition(next, route.actorId, destination)) {
@@ -4427,11 +4483,12 @@ export function setSoloCombatMount(
 
 function availableScenePosition(state: SoloCombatState, side: 'party' | 'opposition', actor?: ActorState): GridPosition {
   const projection = actor ? {...state,world:{...state.world,actors:{...state.world.actors,[actor.id]:actor}}} : state;
+  const {width,height}=boardDimensions(state);
   const rows = side === 'party'
-    ? Array.from({ length: TACTICAL_HEIGHT }, (_, index) => TACTICAL_HEIGHT - 1 - index)
-    : Array.from({ length: TACTICAL_HEIGHT }, (_, index) => index);
+    ? Array.from({ length: height }, (_, index) => height - 1 - index)
+    : Array.from({ length: height }, (_, index) => index);
   for (const y of rows) {
-    for (let x = 0; x < TACTICAL_WIDTH; x += 1) {
+    for (let x = 0; x < width; x += 1) {
       if (canOccupyPosition(projection, actor?.id ?? 'new-participant', {x,y})) return { x, y };
     }
   }
@@ -5250,6 +5307,8 @@ function withInitiativeAndStart(state: SoloCombatState, rng: Rng,
 }
 
 export async function createSoloCombatState(input: {
+  mapIndex?: number;
+  mapSeed?: number;
   character: ForgeCharacter;
   participant: SheetCombatParticipantSeed;
   allies?: readonly SheetCombatParticipantSeed[];
@@ -5330,6 +5389,7 @@ export async function createSoloCombatState(input: {
     if (dash) base.world.actors[monster.actor.id].capabilities.actionIds.push(dash.id);
   }
   const partyColors = ['#3c8ccf', '#8a63c7', '#3f9c68', '#c27a3d'];
+  const chosenMap=input.mapIndex===undefined?undefined:selectBattleMap(Object.values(base.world.actors),controlledIds,input.mapIndex,input.mapSeed);
   const tokens: SoloCombatState['tokens'] = Object.fromEntries(participants.map((participant, index) => {
     const centeredOffset = (index - (participants.length - 1) / 2) * 2;
     const x = Math.max(1, Math.min(TACTICAL_WIDTH - 2, Math.round(TACTICAL_WIDTH / 2 + centeredOffset)));
@@ -5351,10 +5411,10 @@ export async function createSoloCombatState(input: {
   // or shift an already saved battlefield when it is loaded.
   const placed: SoloCombatState['tokens'] = {};
   for (const token of Object.values(tokens)) {
-    const candidates = Array.from({length: TACTICAL_WIDTH * TACTICAL_HEIGHT}, (_, i) => ({x: i % TACTICAL_WIDTH, y: Math.floor(i / TACTICAL_WIDTH)}))
+    const candidates = boardCells({battleMap:chosenMap?.map})
       .sort((a, b) => gridDistanceFt(a, token.position) - gridDistanceFt(b, token.position)
         || a.y - b.y || a.x - b.x);
-    const position = candidates.find(p => canOccupyPosition({world: base.world, tokens: placed, tacticalFootprints: 'sized'}, token.actorId, p));
+    const position = chosenMap?.positions[token.actorId] ?? candidates.find(p => canOccupyPosition({world: base.world, tokens: placed, tacticalFootprints: 'sized'}, token.actorId, p));
     if (!position) throw new Error('На поле недостаточно места для всех участников');
     token.position = position;
     placed[token.actorId] = token;
@@ -5362,6 +5422,8 @@ export async function createSoloCombatState(input: {
   const state: SoloCombatState = {
     conditionActionSchemaVersion: 1,
     tacticalFootprints: 'sized',
+    routeCommandVersion: 1,
+    ...(chosenMap?{battleMap:chosenMap.map}:{}),
     schemaVersion: SOLO_COMBAT_SCHEMA_VERSION,
     characterId: input.character.id,
     runtimeRevision: Number(input.character.runtime_revision ?? 0),
@@ -5448,7 +5510,7 @@ export async function createSoloCombatState(input: {
       clone(base.resourceBindingsByActor[participant.character.id] ?? {}),
     ])),
     resourceBindings: clone(base.resourceBindingsByActor[input.character.id]),
-    tokens, worldObjectPositions: {}, combatAreas: {}, pendingCombatAreaTriggers: [], boardRevision: 1,
+    tokens, worldObjectPositions: {}, combatAreas: chosenMap?materializeMapAreas(chosenMap.map):{}, pendingCombatAreaTriggers: [], boardRevision: 1,
     movementRemainingFt: Object.fromEntries(Object.values(base.world.actors).map((actor) => [
       actor.id, effectiveActorSpeedFt(actor),
     ])),

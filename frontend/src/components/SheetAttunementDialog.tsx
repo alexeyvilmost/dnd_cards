@@ -28,7 +28,7 @@ export default function SheetAttunementDialog({ attunedCards, attunableCards, ma
   return (
     <div className="sheet-equip-overlay" onClick={onClose}>
       <div className="sheet-settings-dialog" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="sheet-equip-close" onClick={onClose} title="Закрыть (Esc)">
+        <button type="button" className="sheet-equip-close" onClick={onClose} aria-label="Закрыть (Esc)">
           <X size={18} />
         </button>
         <h2 className="sheet-settings-title">

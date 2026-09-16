@@ -95,6 +95,7 @@ export function rollD20BonusDice(rules: Dict[], rng: () => number): DieRoll[] {
     const sign: 1 | -1 = num(rule.sign, 1) < 0 ? -1 : 1;
     for (let index = 0; index < count; index += 1) {
       dice.push({
+        role: 'bonus',
         sides: faces,
         result: drawDie(rng, faces),
         ...(source ? { source } : {}),

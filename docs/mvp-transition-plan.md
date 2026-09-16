@@ -258,3 +258,6 @@ Held damage events may additionally persist `deferredConsequences` (critical and
 
 
 Targeting may require `requires_target_perception`: the target must see or hear the source. The board supplies directed `targetCanHearSource` in addition to existing visibility. Rules core rejects absent/contradictory observations before cost and RNG; Hearing uses the existing data-owned automatic failure of hearing-dependent checks; certified condition records remain unchanged. Rally uses this requirement and the acting Fighter's class level for temporary HP.
+# Дополнение к протоколу отображения бросков (2026-09-15)
+
+`DieRoll.role?: 'bonus'` помечает дополнительные кости до объявления результата, в том числе дополнительную к20. Поле аддитивное: для старых журналов UI отделяет кости с отличным от основной кости числом граней. Расчёт, стоимость, случайные значения и уже записанные артефакты не меняются. Все кости берутся из авторитетного `RollLog`; визуальный порядок двух основных костей не изменяет журнал. Обе останавливаются до выбора при преимуществе/помехе.

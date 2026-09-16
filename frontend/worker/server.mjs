@@ -65,12 +65,16 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
       if (request.url === '/initialize') {
         const result = await artifact.initializeRoguelikeCombat(body.input, hash);
         if (result.status !== 'ready') return send(200, result);
-        const projected = artifact.projectRoguelikeCombatPatch(result.envelope, body.input.character);
+        const projected = body.input.characters?.length > 1
+          ? artifact.projectRoguelikePartyCombatPatch(result.envelope, body.input.characters)
+          : artifact.projectRoguelikeCombatPatch(result.envelope, body.input.character);
         return send(200, {...result, ...projected,
           trace: {beforeHash: '', afterHash: snapshotHash(projected.envelope), runtimeRevision: projected.patch.runtime_revision}});
       }
       const result = artifact.stepRoguelikeCombat(body.envelope, body.intent, hash);
-      const projected = artifact.projectRoguelikeCombatPatch(result.envelope, body.character);
+      const projected = body.characters?.length > 1
+        ? artifact.projectRoguelikePartyCombatPatch(result.envelope, body.characters)
+        : artifact.projectRoguelikeCombatPatch(result.envelope, body.character);
       return send(200, {...result, ...projected,
         trace: {beforeHash: snapshotHash(body.envelope), afterHash: snapshotHash(projected.envelope), runtimeRevision: projected.patch.runtime_revision}});
     } catch (error) {

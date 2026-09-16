@@ -188,7 +188,7 @@ export default function SheetWeaponMasteryDialog({
         aria-modal="true"
         aria-label="Искусность оружия"
       >
-        <button type="button" className="sheet-equip-close" onClick={onClose} title="Закрыть (Esc)">
+        <button type="button" className="sheet-equip-close" onClick={onClose} aria-label="Закрыть (Esc)">
           <X size={18} />
         </button>
 

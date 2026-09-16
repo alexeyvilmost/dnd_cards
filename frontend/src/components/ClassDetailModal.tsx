@@ -18,6 +18,7 @@ const ClassDetailModal = ({ characterClass, isOpen, onClose, onDelete }: ClassDe
 
   return (
     <EntityDetailShell
+      entity={{type:'class',id:characterClass.id}}
       isOpen={isOpen}
       onClose={onClose}
       title={cl.name}

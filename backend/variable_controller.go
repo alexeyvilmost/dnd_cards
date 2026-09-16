@@ -27,6 +27,7 @@ func validVariableID(id string) bool {
 func (vc *VariableController) GetVariables(c *gin.Context) {
 	var variables []Variable
 	query := vc.db.Model(&Variable{}).Where("deleted_at IS NULL")
+	query = entityTagFilter(query, c, "variable", "variables")
 	if varType := c.Query("var_type"); varType != "" {
 		query = query.Where("var_type = ?", varType)
 	}

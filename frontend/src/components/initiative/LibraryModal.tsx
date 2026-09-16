@@ -149,7 +149,7 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
                         })
                       }
                       className="flex-shrink-0 rounded border border-gray-300 px-1.5 py-0.5 text-xs text-gray-600 hover:bg-gray-100"
-                      title="Переключить тип (влияет на цвет при добавлении)"
+                      aria-description="Переключить тип (влияет на цвет при добавлении)"
                     >
                       {TYPE_LABEL[creature.type]}
                     </button>
@@ -165,7 +165,7 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
                       type="button"
                       onClick={() => addToCombat(creature)}
                       className="flex flex-shrink-0 items-center gap-1 rounded-md bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700"
-                      title="Добавить в бой"
+                      aria-description="Добавить в бой"
                     >
                       <Plus size={14} /> В бой
                     </button>
@@ -174,7 +174,7 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
                       type="button"
                       onClick={() => onRemove(creature.id)}
                       className="flex-shrink-0 rounded p-1 text-red-500 hover:bg-red-50"
-                      title="Удалить из библиотеки"
+                      aria-label="Удалить из библиотеки"
                     >
                       <Trash2 size={15} />
                     </button>

@@ -193,7 +193,7 @@ export function addBonusDieToD20Roll(
     throw new Error('Invalid post-roll bonus die');
   }
   const result = drawDie(rng, faces);
-  const bonusDie: DieRoll = { sides: faces, result, source, sign: 1 };
+  const bonusDie: DieRoll = { sides: faces, result, source, sign: 1, role: 'bonus' };
   const total = roll.total + result;
   let outcome = roll.outcome;
   if (roll.target?.type === 'dc') outcome = total >= roll.target.value ? 'success' : 'fail';

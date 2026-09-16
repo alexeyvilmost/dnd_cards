@@ -112,7 +112,7 @@ export default function SheetEntityAddDialog({
   return (
     <div className="sheet-equip-overlay" onClick={() => !addingId && onClose()}>
       <div className="sheet-entity-add-dialog" onClick={(event) => event.stopPropagation()}>
-        <button type="button" className="sheet-equip-close" onClick={onClose} disabled={!!addingId} title="Закрыть (Esc)">
+        <button type="button" className="sheet-equip-close" onClick={onClose} disabled={!!addingId} aria-label="Закрыть (Esc)">
           <X size={18} />
         </button>
         <h2 className="sheet-settings-title">Добавить в лист</h2>

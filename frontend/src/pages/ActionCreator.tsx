@@ -97,7 +97,6 @@ const ActionCreator = () => {
             type: action.type || null,
             author: action.author || 'Admin',
             source: action.source || null,
-            tags: action.tags || null,
             price: action.price || null,
             weight: action.weight || null,
             properties: action.properties || null,
@@ -141,7 +140,6 @@ const ActionCreator = () => {
     type: formData.type || null,
     author: formData.author || 'Admin',
     source: formData.source || null,
-    tags: formData.tags || null,
     price: formData.price || null,
     weight: formData.weight || null,
     properties: formData.properties || null,
@@ -233,7 +231,6 @@ const ActionCreator = () => {
           type: data.type || null,
           author: data.author || 'Admin',
           source: data.source || null,
-          tags: data.tags || null,
           price: data.price || null,
           weight: data.weight || null,
           properties: data.properties || null,
@@ -584,7 +581,6 @@ const ActionCreator = () => {
 };
 
 export default ActionCreator;
-
 
 
 

@@ -1,6 +1,6 @@
 import {combatHideFacts, combatHideIssue} from './hide';
 import {foldEvents} from '../rules-core/reducer';
-import {approachAndExecuteCombatAction, canEscapeActorGrapple, escapeActorGrapple, previewCombatAttackRoll, previewMovementThreats} from './engine';
+import {approachAndExecuteCombatAction, canEscapeActorGrapple, escapeActorGrapple, previewCombatAttackRoll, previewMovementThreats, offerZeroDamageFollowUps, triggeredSecondaryTargetIds} from './engine';
 import { groupCombatSaveBeats, presentCombatEntries } from './presentation';
 import { handleCommand } from '../rules-core/handler';
 import {createSheetCombatSession} from '../character/sheetCombatSession';
@@ -95,6 +95,33 @@ function fighterSeed(): SheetCombatParticipantSeed {
   } as unknown as ForgeCharacter;
   return { character, canonical };
 }
+
+it.each(['test-reflector', 'different-ward'])('offers zero-damage follow-ups from data, after reload: %s', async card => {
+  const participant=fighterSeed();
+  const state=await createSoloCombatState({character:participant.character,participant,
+    selected:[{monster:goblin(),quantity:1}],actions:[scimitar()],effects:[],rng:()=>0.5});
+  const actor=state.world.actors[participant.character.id];
+  const enemy=Object.values(state.world.actors).find(a=>a.kind==='monster')!;
+  state.tokens[actor.id].position={x:4,y:4}; state.tokens[enemy.id].position={x:5,y:4};
+  actor.runtime.resources.test_charge=1;
+  const followUp:RuleActionDefinition={id:'follow-up',name:'Generic follow-up',kind:'nonSpell',sourceEntityIds:[card],
+    targeting:{minTargets:1,maxTargets:1,rangeFt:60,requiresLineOfSight:true,allowedRelations:['enemy']},
+    mechanics:{activation:{mode:'triggered',cost:[{resource:'test_charge'}],trigger:{event:'action_resolved',source_action_card_numbers:[card],damage_reduced_to_zero:true,secondary_target:true,target_domain:'action_range'}},effects:[]}};
+  actor.capabilities.actionIds.push(followUp.id);
+  state.catalogActions.push(followUp,{...followUp,id:'reaction',sourceEntityIds:[card]});
+  const before={...state,world:{...state.world,pendingResolution:{type:'damage_reaction',request:{actorId:actor.id},targetActorId:actor.id,sourceActorId:enemy.id,damage:[{damageType:'cold',amount:4}]}}} as unknown as SoloCombatState;
+  const after={...state,world:{...state.world,pendingResolution:null},log:[{id:'result',sequence:100000,round:1,actorId:actor.id,text:'test',records:[
+    {kind:'engine',ordinal:0,sourceActorId:actor.id,actorId:actor.id,targetIds:[actor.id],event:{type:'damage_reduction',amount:8}},
+    {kind:'engine',ordinal:1,sourceActorId:enemy.id,actorId:enemy.id,targetIds:[actor.id],event:{type:'damage',amount:0,damageType:'cold'}},
+  ]}]} as SoloCombatState;
+  const offered=offerZeroDamageFollowUps(clone(before),clone(after),'reaction');
+  expect(offered.pendingTriggeredAction?.optionActionIds).toEqual(['follow-up']);
+  expect(offered.pendingTriggeredAction?.triggeringAttack?.damageType).toBe('cold');
+  expect(triggeredSecondaryTargetIds(offered,'follow-up')).toContain(enemy.id);
+  expect(offerZeroDamageFollowUps(before,after,null).pendingTriggeredAction).toBeUndefined();
+  after.world.actors[actor.id].runtime.resources.test_charge=0;
+  expect(offerZeroDamageFollowUps(before,after,'reaction').pendingTriggeredAction).toBeUndefined();
+});
 
 function wizardSeed(): SheetCombatParticipantSeed {
   const actor = clone(fixture.roots.wizard.actor);

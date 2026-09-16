@@ -10,11 +10,12 @@ export function writeDedicatedCombatTurnState(
   turnState: Record<string, unknown> | null | undefined,
   runtime: RuntimeState,
   combat: SoloCombatState | null,
+  options: {actorId?: string; includeSnapshot?: boolean} = {},
 ): Record<string, unknown> {
   const sheetSafe = clearSheetCombatSession(combat
-    ? writeWeaponBondObjects(turnState, combat.characterId, combat.world.objects) : turnState);
+    ? writeWeaponBondObjects(turnState, options.actorId ?? combat.characterId, combat.world.objects) : turnState);
   return writeSoloCombatState(
     writeRulesEngineRuntimeTurnState(sheetSafe, runtime),
-    combat,
+    options.includeSnapshot === false ? null : combat,
   );
 }

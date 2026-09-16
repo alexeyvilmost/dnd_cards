@@ -3,6 +3,7 @@ import type { ForgeCharacter } from './types';
 import { equipItem, planEquip, unequipSlot } from '../engine/equipment';
 import type { Card } from '../types';
 import type { RuntimeState } from '../mvp/contracts';
+import { priceInCopper, spendCopper } from '../utils/money';
 
 type MechanicsRecord = Record<string, unknown>;
 
@@ -30,7 +31,7 @@ export function nonmagicalPurchasePriceMultiplier(
 export function isExplicitlyMagicalItem(card: Card): boolean {
   const mechanics = card.mechanics as MechanicsRecord | null | undefined;
   if (mechanics?.magical === true) return true;
-  const labels = [...(card.tags ?? []), ...(card.properties ?? [])]
+  const labels = [...(card.properties ?? [])]
     .map((value) => String(value).trim().toLocaleLowerCase('ru'));
   return labels.some((value) => ['magic', 'magical', 'магия', 'магический', 'магическое'].includes(value));
 }
@@ -43,7 +44,8 @@ export function purchasePrice(
   const multiplier = isExplicitlyMagicalItem(card)
     ? 1
     : nonmagicalPurchasePriceMultiplier(passives);
-  const payable = Math.max(0, Math.floor(listed * multiplier));
+  const rate = priceInCopper(1, card.price_currency || 'gold');
+  const payable = Math.max(0, Math.ceil(listed * multiplier * rate - 1e-8) / rate);
   return { listed, payable, multiplier, discounted: payable < listed };
 }
 
@@ -80,7 +82,11 @@ export function containerWeight(
 /** Перенести qty предмета с ВЕРХНЕГО уровня внутрь контейнера (S4). Нельзя вложить контейнер в себя. */
 export function moveToContainer(state: RuntimeState, cardId: string, containerCardId: string, qty = 1): RuntimeState {
   if (!cardId || !containerCardId || cardId === containerCardId) return state;
-  const need = Math.max(1, Math.floor(qty) || 1);
+  if(!Number.isSafeInteger(qty)||qty<1)return state;
+  // Moving a parent into its descendant would make its contents unreachable.
+  const visited=new Set<string>();const ancestors=[containerCardId];
+  while(ancestors.length){const id=ancestors.pop()!;if(id===cardId)return state;if(visited.has(id))continue;visited.add(id);for(const r of state.inventory)if(r.cardId===id&&r.containerId)ancestors.push(r.containerId);}
+  const need = qty;
   const src = state.inventory.find((r) => r.cardId === cardId && r.containerId == null);
   if (!src || src.qty < need) return state; // недостаточно на верхнем уровне
   const inventory = state.inventory
@@ -94,7 +100,8 @@ export function moveToContainer(state: RuntimeState, cardId: string, containerCa
 
 /** Достать qty предмета из контейнера на верхний уровень (S4). */
 export function moveOutOfContainer(state: RuntimeState, cardId: string, containerCardId: string, qty = 1): RuntimeState {
-  const need = Math.max(1, Math.floor(qty) || 1);
+  if(!Number.isSafeInteger(qty)||qty<1)return state;
+  const need = qty;
   const src = state.inventory.find((r) => r.cardId === cardId && r.containerId === containerCardId);
   if (!src || src.qty < need) return state;
   const inventory = state.inventory
@@ -182,6 +189,7 @@ export function purchaseItem(
   character: ForgeCharacter,
   card: Card,
   passives: readonly MechanicsRecord[] = [],
+  quantity = 1,
 ): {
   runtime: RuntimeState;
   currency: Record<string, number>;
@@ -190,10 +198,12 @@ export function purchaseItem(
   error?: string;
 } {
   const runtime = forgeToRuntimeState(character);
-  const currency = characterCurrency(character);
+  let currency = characterCurrency(character);
   const price = purchasePrice(card, passives);
   const curKey = card.price_currency || 'gold';
-  if (price.payable > 0 && (currency[curKey] ?? 0) < price.payable) {
+  const nextCurrency = Number.isSafeInteger(quantity) && quantity >= 1 && quantity <= 1000
+    ? spendCopper(currency, priceInCopper(price.payable * quantity, curKey)) : null;
+  if (!nextCurrency) {
     return {
       runtime,
       currency,
@@ -202,11 +212,11 @@ export function purchaseItem(
       error: 'Недостаточно средств',
     };
   }
-  if (price.payable > 0) currency[curKey] = (currency[curKey] ?? 0) - price.payable;
+  currency = nextCurrency;
   return {
-    runtime: addToInventory(runtime, card.id, 1),
+    runtime: addToInventory(runtime, card.id, quantity),
     currency,
-    pricePaid: price.payable,
+    pricePaid: price.payable * quantity,
     discountApplied: price.discounted,
   };
 }

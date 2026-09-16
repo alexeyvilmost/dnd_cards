@@ -1,0 +1,115 @@
+[
+  {
+    "id":"forest-v2", "name":"Мшистый лес", "width":18, "height":12, "maxFootprint":4, "maxActors":32,
+    "artVersion":2, "procedural":{"movable":["oak-1","oak-2","oak-3","oak-4","oak-5","mud-1","mud-2"]},
+    "background":"/assets/battle-maps/forest-floor-v1.png",
+    "description":"Стволы преграждают путь и обзор; грязь удваивает стоимость движения. Кроны не закрывают поле.",
+    "features":[
+      {"id":"oak-1","name":"Ствол дуба","x":4,"y":3,"width":1,"height":1,"sprite":"trunk","blocksMovement":true,"blocksSight":true},
+      {"id":"oak-2","name":"Ствол дуба","x":12,"y":3,"width":1,"height":1,"sprite":"trunk","blocksMovement":true,"blocksSight":true},
+      {"id":"oak-3","name":"Старый ствол","x":8,"y":5,"width":2,"height":2,"sprite":"trunk","blocksMovement":true,"blocksSight":true},
+      {"id":"oak-4","name":"Ствол дуба","x":3,"y":8,"width":1,"height":1,"sprite":"trunk","blocksMovement":true,"blocksSight":true},
+      {"id":"oak-5","name":"Ствол дуба","x":14,"y":8,"width":1,"height":1,"sprite":"trunk","blocksMovement":true,"blocksSight":true},
+      {"id":"mud-1","name":"Грязь","x":4,"y":5,"width":3,"height":2,"sprite":"mud","zone":{"zoneType":"mud","difficultTerrain":true,"triggers":[]}},
+      {"id":"mud-2","name":"Грязь","x":11,"y":6,"width":3,"height":2,"sprite":"mud","zone":{"zoneType":"mud","difficultTerrain":true,"triggers":[]}}
+    ]
+  },
+  {
+    "id":"crypt-v2", "name":"Забытый склеп", "width":16, "height":12, "maxFootprint":2, "maxActors":22,
+    "artVersion":2, "procedural":{"movable":["sarcophagus"]},
+    "background":"/assets/battle-maps/crypt-floor-v1.png",
+    "description":"Каменные стены перекрывают обзор. В паутине движение стоит вдвое дороже: ЛВК СЛ 12 при входе и в начале хода; провал опутывает до конца хода.",
+    "features":[
+      {"id":"wall-west","name":"Каменная стена","x":5,"y":0,"width":1,"height":4,"sprite":"wall","blocksMovement":true,"blocksSight":true},
+      {"id":"wall-west-south","name":"Каменная стена","x":5,"y":6,"width":1,"height":6,"sprite":"wall","blocksMovement":true,"blocksSight":true},
+      {"id":"wall-east","name":"Каменная стена","x":10,"y":0,"width":1,"height":6,"sprite":"wall","blocksMovement":true,"blocksSight":true},
+      {"id":"wall-east-south","name":"Каменная стена","x":10,"y":8,"width":1,"height":4,"sprite":"wall","blocksMovement":true,"blocksSight":true},
+      {"id":"web-west","name":"Липкая паутина","x":5,"y":4,"width":2,"height":2,"sprite":"web","zone":{"zoneType":"web","difficultTerrain":true,"lightlyObscured":true,"triggers":["enter","start_turn"],"hazard":{"resolution":"save","save":{"ability":"dex","dc":12},"onFailure":[{"kind":"condition","value":"restrained","duration":{"type":"rounds","amount":1}}],"onSuccess":[]}}},
+      {"id":"web-east","name":"Липкая паутина","x":9,"y":6,"width":2,"height":2,"sprite":"web","zone":{"zoneType":"web","difficultTerrain":true,"lightlyObscured":true,"triggers":["enter","start_turn"],"hazard":{"resolution":"save","save":{"ability":"dex","dc":12},"onFailure":[{"kind":"condition","value":"restrained","duration":{"type":"rounds","amount":1}}],"onSuccess":[]}}},
+      {"id":"sarcophagus","name":"Низкий саркофаг","x":7,"y":3,"width":2,"height":1,"sprite":"stone","blocksMovement":true,"cover":"half"}
+    ]
+  },
+  {
+    "id":"goblin-camp-v2", "name":"Лагерь в долине", "width":20, "height":12, "maxFootprint":4, "maxActors":32,
+    "artVersion":2, "procedural":{"movable":["campfire","supplies-1","supplies-2","rock"]},
+    "background":"/assets/battle-maps/valley-river-v2.png",
+    "description":"Мелкая речка — труднопроходимая местность. Костёр наносит 1к6 огнём за каждые 5 фт. движения через него и в начале хода. Бочки дают половинное укрытие.",
+    "features":[
+      {"id":"river","name":"Мелкая речка","x":8,"y":0,"width":4,"height":12,"sprite":"water","baked":true,
+       "cells":[{"x":1,"y":0},{"x":2,"y":0},{"x":2,"y":1},{"x":3,"y":1},{"x":2,"y":2},{"x":3,"y":2},{"x":2,"y":3},{"x":3,"y":3},{"x":1,"y":4},{"x":2,"y":4},{"x":0,"y":5},{"x":1,"y":5},{"x":0,"y":6},{"x":1,"y":6},{"x":1,"y":7},{"x":2,"y":7},{"x":2,"y":8},{"x":3,"y":8},{"x":2,"y":9},{"x":3,"y":9},{"x":2,"y":10},{"x":3,"y":10},{"x":2,"y":11},{"x":3,"y":11}],
+       "zone":{"zoneType":"water","difficultTerrain":true,"triggers":[]}},
+      {"id":"campfire","name":"Костёр","x":13,"y":5,"width":2,"height":2,"sprite":"fire","zone":{"zoneType":"fire","triggers":["move","start_turn"],"hazard":{"resolution":"automatic","effects":[{"kind":"damage","dice":"1d6","type":"fire"}]}}},
+      {"id":"supplies-1","name":"Бочки с припасами","x":4,"y":3,"width":2,"height":1,"sprite":"barrel","blocksMovement":true,"cover":"half"},
+      {"id":"supplies-2","name":"Бочки с припасами","x":16,"y":8,"width":2,"height":1,"sprite":"barrel","blocksMovement":true,"cover":"half"},
+      {"id":"rock","name":"Валун","x":3,"y":8,"width":2,"height":2,"sprite":"rock","blocksMovement":true,"cover":"three_quarters"}
+    ]
+  },
+  {
+    "id":"tavern-v2", "name":"Таверна «Последний привал»", "width":12, "height":9, "maxFootprint":2, "maxActors":14,
+    "artVersion":2, "procedural":{"movable":["table-1","table-2","table-3","table-4"]},
+    "background":"/assets/battle-maps/tavern-floor-v1.png",
+    "description":"Столы и стойка непроходимы и дают половинное укрытие. Огонь в камине наносит 1к6 огнём при движении через него и в начале хода.",
+    "features":[
+      {"id":"table-1","name":"Дубовый стол","x":3,"y":2,"width":2,"height":1,"sprite":"table","blocksMovement":true,"cover":"half"},
+      {"id":"table-2","name":"Дубовый стол","x":7,"y":2,"width":2,"height":1,"sprite":"table","blocksMovement":true,"cover":"half"},
+      {"id":"table-3","name":"Дубовый стол","x":3,"y":6,"width":2,"height":1,"sprite":"table","blocksMovement":true,"cover":"half"},
+      {"id":"table-4","name":"Дубовый стол","x":7,"y":6,"width":2,"height":1,"sprite":"table","blocksMovement":true,"cover":"half"},
+      {"id":"bar","name":"Барная стойка","x":11,"y":2,"width":1,"height":5,"sprite":"counter","blocksMovement":true,"cover":"half"},
+      {"id":"hearth","name":"Огонь в камине","x":0,"y":3,"width":1,"height":2,"sprite":"fire","zone":{"zoneType":"fire","triggers":["move","start_turn"],"hazard":{"resolution":"automatic","effects":[{"kind":"damage","dice":"1d6","type":"fire"}]}}},
+      {"id":"pillar","name":"Несущая колонна","x":6,"y":4,"width":1,"height":1,"sprite":"wall","blocksMovement":true,"blocksSight":true}
+    ]
+  },
+  {
+    "id":"sanctuary-v1", "name":"Заросшее святилище", "width":18, "height":12, "maxFootprint":4, "maxActors":32,
+    "artVersion":2, "procedural":{"movable":["column-west","column-east","debris-west","debris-east"]},
+    "background":"/assets/battle-maps/sanctuary-floor-v1.png",
+    "description":"Разрушенные стены и колонны перекрывают обзор. Каменная крошка — труднопроходимая местность. Центральный двор остаётся открытым.",
+    "features":[
+      {"id":"wall-west","name":"Старая стена","x":0,"y":3,"width":2,"height":4,"sprite":"wall","blocksMovement":true,"blocksSight":true},
+      {"id":"wall-east","name":"Старая стена","x":16,"y":4,"width":2,"height":4,"sprite":"wall","blocksMovement":true,"blocksSight":true},
+      {"id":"column-west","name":"Каменная колонна","x":5,"y":3,"width":1,"height":1,"sprite":"wall","blocksMovement":true,"blocksSight":true},
+      {"id":"column-east","name":"Каменная колонна","x":12,"y":8,"width":1,"height":1,"sprite":"wall","blocksMovement":true,"blocksSight":true},
+      {"id":"debris-west","name":"Каменная крошка","x":3,"y":6,"width":3,"height":2,"sprite":"rubble","zone":{"zoneType":"rubble","difficultTerrain":true,"triggers":[]}},
+      {"id":"debris-east","name":"Каменная крошка","x":12,"y":3,"width":2,"height":2,"sprite":"rubble","zone":{"zoneType":"rubble","difficultTerrain":true,"triggers":[]}}
+    ]
+  },
+  {
+    "id":"quarry-v1", "name":"Заброшенный карьер", "width":20, "height":12, "maxFootprint":4, "maxActors":32,
+    "artVersion":2, "procedural":{"movable":["boulder-west","boulder-east","boulder-center","scree-west","scree-east"]},
+    "background":"/assets/battle-maps/quarry-floor-v1.png",
+    "description":"Высокие валуны закрывают путь и обзор; между ними лежат труднопроходимые осыпи. Широкие проходы подходят крупным существам.",
+    "features":[
+      {"id":"boulder-west","name":"Высокий валун","x":3,"y":3,"width":2,"height":2,"sprite":"rock","blocksMovement":true,"blocksSight":true},
+      {"id":"boulder-east","name":"Высокий валун","x":15,"y":7,"width":2,"height":2,"sprite":"rock","blocksMovement":true,"blocksSight":true},
+      {"id":"boulder-center","name":"Низкий валун","x":10,"y":3,"width":2,"height":2,"sprite":"rock","blocksMovement":true,"cover":"three_quarters"},
+      {"id":"scree-west","name":"Осыпь","x":4,"y":7,"width":3,"height":2,"sprite":"rubble","zone":{"zoneType":"rubble","difficultTerrain":true,"triggers":[]}},
+      {"id":"scree-east","name":"Осыпь","x":14,"y":3,"width":3,"height":2,"sprite":"rubble","zone":{"zoneType":"rubble","difficultTerrain":true,"triggers":[]}}
+    ]
+  },
+  {
+    "id":"cavern-v1", "name":"Светящийся грот", "width":16, "height":12, "maxFootprint":3, "maxActors":24,
+    "artVersion":2, "procedural":{"movable":["rock-west","rock-east","web-west","web-east","rubble"]},
+    "background":"/assets/battle-maps/cavern-floor-v1.png",
+    "description":"В свете грибницы видны скалы и паутина. Скалы перекрывают обзор; паутина замедляет и опутывает при провале спасброска ЛВК СЛ 12.",
+    "features":[
+      {"id":"rock-west","name":"Скальный выступ","x":3,"y":3,"width":2,"height":2,"sprite":"rock","blocksMovement":true,"blocksSight":true},
+      {"id":"rock-east","name":"Скальный выступ","x":11,"y":7,"width":2,"height":2,"sprite":"rock","blocksMovement":true,"blocksSight":true},
+      {"id":"web-west","name":"Пещерная паутина","x":3,"y":7,"width":2,"height":2,"sprite":"web","zone":{"zoneType":"web","difficultTerrain":true,"lightlyObscured":true,"triggers":["enter","start_turn"],"hazard":{"resolution":"save","save":{"ability":"dex","dc":12},"onFailure":[{"kind":"condition","value":"restrained","duration":{"type":"rounds","amount":1}}],"onSuccess":[]}}},
+      {"id":"web-east","name":"Пещерная паутина","x":10,"y":3,"width":2,"height":2,"sprite":"web","zone":{"zoneType":"web","difficultTerrain":true,"lightlyObscured":true,"triggers":["enter","start_turn"],"hazard":{"resolution":"save","save":{"ability":"dex","dc":12},"onFailure":[{"kind":"condition","value":"restrained","duration":{"type":"rounds","amount":1}}],"onSuccess":[]}}},
+      {"id":"rubble","name":"Каменная крошка","x":7,"y":5,"width":2,"height":2,"sprite":"rubble","zone":{"zoneType":"rubble","difficultTerrain":true,"triggers":[]}}
+    ]
+  },
+  {
+    "id":"snow-pass-v1", "name":"Снежный перевал", "width":18, "height":12, "maxFootprint":4, "maxActors":32,
+    "artVersion":2, "procedural":{"movable":["rock-west","rock-east","scree","fire","supplies"]},
+    "background":"/assets/battle-maps/snow-floor-v1.png",
+    "description":"Протоптанный снег проходим. Каменная осыпь замедляет движение, валуны закрывают обзор. Оставленный путниками костёр обжигает при движении и в начале хода.",
+    "features":[
+      {"id":"rock-west","name":"Скала","x":3,"y":3,"width":2,"height":2,"sprite":"rock","blocksMovement":true,"blocksSight":true},
+      {"id":"rock-east","name":"Скала","x":13,"y":7,"width":2,"height":2,"sprite":"rock","blocksMovement":true,"blocksSight":true},
+      {"id":"scree","name":"Каменная осыпь","x":7,"y":4,"width":3,"height":2,"sprite":"rubble","zone":{"zoneType":"rubble","difficultTerrain":true,"triggers":[]}},
+      {"id":"fire","name":"Костёр путников","x":11,"y":3,"width":1,"height":1,"sprite":"fire","zone":{"zoneType":"fire","triggers":["move","start_turn"],"hazard":{"resolution":"automatic","effects":[{"kind":"damage","dice":"1d6","type":"fire"}]}}},
+      {"id":"supplies","name":"Припасы путников","x":5,"y":8,"width":2,"height":1,"sprite":"barrel","blocksMovement":true,"cover":"half"}
+    ]
+  }
+]

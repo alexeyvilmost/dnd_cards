@@ -1,3 +1,4 @@
+import { previewAnchor } from '../../utils/previewAnchor';
 import { useState, type ReactNode } from 'react';
 import type { SupportableEntity } from '../../content/supportStatus';
 import SupportStatusBadge from './SupportStatusBadge';
@@ -26,7 +27,7 @@ const EntitySquareCard = ({ name, imageUrl, selected, onClick, preview, disabled
   const onEnter = (e: React.MouseEvent) => {
     if (preview) {
       setHover(true);
-      setPos({ x: e.clientX, y: e.clientY });
+      setPos(previewAnchor(e.currentTarget));
     }
   };
 
@@ -36,13 +37,12 @@ const EntitySquareCard = ({ name, imageUrl, selected, onClick, preview, disabled
         type="button"
         className={`forge-square-card ${selected ? 'selected' : ''}${disabled ? ' disabled' : ''}`}
         style={disabled ? { opacity: 0.4, filter: 'grayscale(1)' } : undefined}
-        title={disabled ? disabledReason : undefined}
+        aria-description={disabled ? disabledReason : undefined}
         aria-disabled={disabled || undefined}
         data-image-state={url ? (failed ? 'error' : 'declared') : 'missing'}
         onClick={disabled ? undefined : onClick}
         onMouseEnter={onEnter}
         onMouseLeave={() => setHover(false)}
-        onMouseMove={(e) => preview && setPos({ x: e.clientX, y: e.clientY })}
       >
         <div className="forge-square-card-media">
           {showImage ? (

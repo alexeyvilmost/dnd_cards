@@ -13,8 +13,12 @@ export function runEncounterSelection(encounter: RoguelikeEncounter): Array<{ id
   });
 }
 
-export const runSheetURL = (run: Pick<RoguelikeRun, 'id' | 'character_id'>) =>
-  `/characters-v3/${run.character_id}?roguelike=${encodeURIComponent(run.id)}`;
+export const runSheetURL = (run: Pick<RoguelikeRun, 'id' | 'character_id'>,characterId=run.character_id) =>
+  `/characters-v3/${characterId}?roguelike=${encodeURIComponent(run.id)}`;
+
+export const runCharacters=(run:RoguelikeRun)=>run.characters?.length?run.characters:run.character?[run.character]:[];
+export const runCharacter=(run:RoguelikeRun,id:string)=>runCharacters(run).find(c=>c.id===id);
+export const runHasCharacter=(run:RoguelikeRun,id:string)=>run.character_id===id||run.party?.members?.some(m=>m.character_id===id)===true;
 
 export function runCombatURL(run: RoguelikeRun): string {
   const params = new URLSearchParams({ roguelike: run.id });

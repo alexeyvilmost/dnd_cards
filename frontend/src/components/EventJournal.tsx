@@ -91,7 +91,7 @@ export default function EventJournal({ rows, emptyHint }: EventJournalProps) {
                 <button
                   type="button"
                   className="event-journal-copy"
-                  title="Скопировать строку"
+                  aria-label="Скопировать строку"
                   onClick={() => doCopy(journalRowToText(row), row.id)}
                 >
                   {copied === row.id ? <Check size={13} /> : <Copy size={13} />}

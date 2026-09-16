@@ -12,7 +12,7 @@ export default function CharacterAccessBadge({
     <span
       role="status"
       className="character-access-badge"
-      title="Изменение этого архивного публичного листа отключено; создайте свою копию."
+      aria-description="Изменение этого архивного публичного листа отключено; создайте свою копию."
       style={{
         display: 'inline-flex',
         alignItems: 'center',

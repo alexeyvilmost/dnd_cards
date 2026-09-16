@@ -43,7 +43,7 @@ export default function SheetJournalFab({
                 className="forge-btn ghost sheet-journal-popup-init"
                 onClick={onRollInitiative}
                 disabled={rollingInit}
-                title="Бросок инициативы"
+                aria-description="Бросок инициативы"
               >
                 <Dices size={15} />
                 {rollingInit ? '…' : 'Инициатива'}
@@ -64,7 +64,7 @@ export default function SheetJournalFab({
         type="button"
         className={`sheet-journal-fab${open ? ' open' : ''}`}
         onClick={() => onOpenChange(!open)}
-        title={open ? 'Закрыть журнал' : 'Журнал действий'}
+        aria-description={open ? 'Закрыть журнал' : 'Журнал действий'}
         aria-expanded={open}
         aria-label={open ? 'Закрыть журнал' : 'Открыть журнал'}
       >

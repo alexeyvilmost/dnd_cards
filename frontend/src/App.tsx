@@ -180,7 +180,7 @@ function App() {
         Офлайн-набор правил: сертифицированные данные сервера сейчас недоступны.{' '}
         Повторяем подключение автоматически.
         {conditionAuthority.reason && (
-          <span title={conditionAuthority.reason}> Причина: {conditionAuthority.reason}</span>
+          <span aria-description={conditionAuthority.reason}> Причина: {conditionAuthority.reason}</span>
         )}
       </div>
     )}

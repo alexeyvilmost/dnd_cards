@@ -143,6 +143,39 @@ function attackSession(input: {
 }
 
 describe('complex Fighting Styles in the canonical RulesSession', () => {
+  it('binds one shared catalog strike to each acting character, including variable dice', () => {
+    const combatants = [actor('ordinary'), actor('dexterity'), actor('strength')];
+    combatants[1].character.abilityMods = { str: 1, dex: 4, con: 0, int: 0, wis: 0, cha: 0 };
+    combatants[1].character.variables = { training_die: { count: 1, sides: 6 } };
+    combatants[1].passives = [{ effects: [{ resolution: 'auto', result: [{
+      kind: 'unarmed_damage_profile', dice: 'training_die', ability_options: ['str', 'dex'],
+      damage_type: 'bludgeoning', source: 'Variable training', requires_unarmored: true,
+    }] }] }];
+    combatants[2].passives = [{ effects: [{ resolution: 'auto', result: [{
+      kind: 'unarmed_damage_profile', dice: '1d8', ability: 'str',
+      damage_type: 'bludgeoning', source: 'Different training',
+    }] }] }];
+    combatants.forEach(a => { a.capabilities.actionIds = [catalogUnarmed.id]; });
+    const target = actor('target');
+    const world = createWorld({ id: 'shared-profile', ruleset: RULESET, actors: [...combatants, target] });
+    let serial = 0;
+    const session = new InMemoryRulesSession(world, { getAction: id => id === catalogUnarmed.id ? catalogUnarmed : undefined }, {
+      rng: () => 0.5, clock: () => 42000, nextId: () => `shared:${serial++}`,
+    });
+    const damage: number[] = [];
+    for (const combatant of combatants) {
+      const result = accepted(session.dispatch({
+        schemaVersion: 1, type: 'UseAction', commandId: `attack:${combatant.id}`,
+        expectedRevision: session.getState().revision, rulesetContentHash: RULESET.contentHash,
+        actorId: combatant.id, actionId: catalogUnarmed.id, targetIds: [target.id],
+        factsByTarget: { [target.id]: FACTS },
+      }));
+      damage.push(...engineEvents(result.events).flatMap(e => e.type === 'damage' ? [e.amount] : []));
+    }
+    expect(damage).toEqual([4, 8, 8]); // 1+STR; d6(4)+DEX; d8(5)+STR.
+    expect(catalogUnarmed.mechanics.effects).toEqual([expect.objectContaining({ ability: 'str' })]);
+  });
+
   it('applies the profile to a data-owned catalog Unarmed Strike used by sheet and solo combat', () => {
     const attacker = actor('attacker', { passives: [unarmedMechanics] });
     attacker.capabilities.actionIds = [catalogUnarmed.id];

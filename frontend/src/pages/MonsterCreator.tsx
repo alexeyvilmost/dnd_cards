@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import EntityTags from '../components/EntityTags';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, Trash2 } from 'lucide-react';
 import { actionsApi, effectsApi } from '../api/client';
@@ -118,6 +119,7 @@ export default function MonsterCreator() {
         </div>
       </header>
       {error && <p className="monster-error" role="alert">{error}</p>}
+      {savedId&&<EntityTags type="monster" id={savedId}/>}
       <div className="monster-forge__layout">
         <div className="monster-forge__main">
           <fieldset><legend>Идентичность</legend><div className="monster-form-grid">

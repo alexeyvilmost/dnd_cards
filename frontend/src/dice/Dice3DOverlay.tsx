@@ -298,7 +298,7 @@ export default function Dice3DOverlay({
             <select value={targetId} onChange={(event) => onTargetChange(event.target.value)}>
               <option value="">— выберите цель —</option>
               {targets.map((target) => (
-                <option key={target.id} value={target.id} disabled={target.disabled} title={target.reason}>
+                <option key={target.id} value={target.id} disabled={target.disabled} aria-description={target.reason}>
                   {target.name}{target.disabled && target.reason ? ` — ${target.reason}` : ''}
                 </option>
               ))}
@@ -428,7 +428,7 @@ export default function Dice3DOverlay({
               type="button"
               className="dice-dialog-btn primary"
               disabled={mustPickTarget}
-              title={mustPickTarget ? 'Сначала выберите цель' : undefined}
+              aria-description={mustPickTarget ? 'Сначала выберите цель' : undefined}
               onClick={() => onComplete(values)}
             >
               Далее

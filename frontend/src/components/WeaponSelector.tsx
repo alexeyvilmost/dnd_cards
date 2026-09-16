@@ -4,6 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { cardsApi } from '../api/client';
 import type { Card } from '../types';
 import TemplateViewer from './TemplateViewer';
+import weaponTypes from '../../utils/weapon_types.json';
+
+export function libraryWeaponCategory(card:Card):string {
+  const profile=(card.mechanics as {weapon_profile?:{proficiency_category?:string;default_attack_mode?:string}}|null)?.weapon_profile;
+  if(profile?.proficiency_category&&profile.default_attack_mode)return `${profile.proficiency_category}_${profile.default_attack_mode}`;
+  return weaponTypes.basic.find(category=>category.weapons.some(weapon=>weapon.name===card.weapon_type))?.name??'';
+}
 
 interface WeaponSelectorProps {
   onClose?: () => void;
@@ -37,28 +44,28 @@ const WeaponSelector: React.FC<WeaponSelectorProps> = ({ onClose }) => {
       name: '⚔️ Простое рукопашное',
       description: 'Базовое оружие ближнего боя',
       filter: (card: Card) =>
-        (card.tags as string[] | null | undefined)?.includes('Простое') && (card.tags as string[] | null | undefined)?.includes('Ближнее')
+        libraryWeaponCategory(card)==='simple_melee'
     },
     {
       id: 'simple_ranged',
       name: '🏹 Простое дальнобойное',
       description: 'Базовое оружие дальнего боя',
       filter: (card: Card) =>
-        (card.tags as string[] | null | undefined)?.includes('Простое') && (card.tags as string[] | null | undefined)?.includes('Дальнобойное')
+        libraryWeaponCategory(card)==='simple_ranged'
     },
     {
       id: 'martial_melee',
       name: '⚔️ Воинское рукопашное',
       description: 'Профессиональное оружие ближнего боя',
       filter: (card: Card) =>
-        (card.tags as string[] | null | undefined)?.includes('Воинское') && (card.tags as string[] | null | undefined)?.includes('Ближнее')
+        libraryWeaponCategory(card)==='martial_melee'
     },
     {
       id: 'martial_ranged',
       name: '🏹 Воинское дальнобойное',
       description: 'Профессиональное оружие дальнего боя',
       filter: (card: Card) =>
-        (card.tags as string[] | null | undefined)?.includes('Воинское') && (card.tags as string[] | null | undefined)?.includes('Дальнобойное')
+        libraryWeaponCategory(card)==='martial_ranged'
     }
   ];
 

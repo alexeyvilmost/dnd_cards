@@ -21,6 +21,7 @@ func (cc *ClassController) GetClasses(c *gin.Context) {
 	var classes []Class
 	light := wantsListView(c)
 	query := cc.db.Model(&Class{})
+	query = entityTagFilter(query, c, "class", "classes")
 	if light {
 		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt")
 	}
@@ -161,7 +162,7 @@ func (cc *ClassController) CreateClass(c *gin.Context) {
 		LevelProgression: req.LevelProgression, Resources: req.Resources,
 		IsSubclass: req.IsSubclass, ParentClassID: req.ParentClassID, SubclassLevel: req.SubclassLevel,
 		RelatedEffects: req.RelatedEffects, RelatedActions: req.RelatedActions,
-		Type: req.Type, Author: req.Author, Source: req.Source, Tags: req.Tags, IsExtended: req.IsExtended,
+		Type: req.Type, Author: req.Author, Source: req.Source, IsExtended: req.IsExtended,
 	}
 	if cl.Author == "" {
 		cl.Author = "Admin"
@@ -284,9 +285,6 @@ func (cc *ClassController) UpdateClass(c *gin.Context) {
 	}
 	if req.Source != nil {
 		cl.Source = req.Source
-	}
-	if req.Tags != nil {
-		cl.Tags = req.Tags
 	}
 	if req.IsExtended != nil {
 		cl.IsExtended = req.IsExtended

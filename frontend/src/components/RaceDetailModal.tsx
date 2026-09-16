@@ -20,6 +20,7 @@ const RaceDetailModal: React.FC<RaceDetailModalProps> = ({ race, isOpen, onClose
 
   return (
     <EntityDetailShell
+      entity={{type:'race',id:race.id}}
       isOpen={isOpen}
       onClose={onClose}
       title={r.name}

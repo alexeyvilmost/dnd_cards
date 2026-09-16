@@ -15,8 +15,8 @@ export interface PassiveTogglePresentation {
 }
 
 /** A display skin for a data-owned preference, not an executable action. */
-export default function SheetPassiveToggle({toggle, enabled, onChange}: {
-  toggle: PassiveTogglePresentation; enabled: boolean; onChange: (id: string, enabled: boolean) => void;
+export default function SheetPassiveToggle({toggle, enabled, onChange, disabled = false}: {
+  toggle: PassiveTogglePresentation; enabled: boolean; disabled?: boolean; onChange: (id: string, enabled: boolean) => void;
 }) {
   const {passives} = usePassiveCatalog();
   const presentation = passives.find(row => row.key === toggle.presentationKey);
@@ -34,5 +34,5 @@ export default function SheetPassiveToggle({toggle, enabled, onChange}: {
   };
   return <SheetActionLine name={toggle.name} imageUrl={toggle.imageUrl} effectRef={effect}
     sourceLabel={toggle.sourceName ? `Пассив · ${toggle.sourceName}` : 'Пассив · Настройка боя'}
-    variant="icon" iconShape="round" selected={enabled} onActivate={() => onChange(toggle.id, !enabled)}/>;
+    variant="icon" iconShape="round" selected={enabled} disabled={disabled} onActivate={() => onChange(toggle.id, !enabled)}/>;
 }

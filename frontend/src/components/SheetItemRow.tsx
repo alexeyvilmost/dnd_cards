@@ -81,11 +81,11 @@ export default function SheetItemRow({ card, qty, dimmed, selected, onClick, rig
       onMouseLeave={onMouseLeave}
       detail={itemChips(card)}
       namePrefix={
-        <span className="sheet-item-rarity" title={getRaritySymbolDescription(card.rarity)}>{getRaritySymbol(card.rarity)}</span>
+        <span className="sheet-item-rarity" aria-description={getRaritySymbolDescription(card.rarity)}>{getRaritySymbol(card.rarity)}</span>
       }
       nameSuffix={
         card.requires_attunement
-          ? <img className="sheet-item-attune" src="/icons/attunement.png" alt="настройка" title="Требуется настройка" />
+          ? <img className="sheet-item-attune" src="/icons/attunement.png" alt="настройка" aria-description="Требуется настройка" />
           : undefined
       }
     />

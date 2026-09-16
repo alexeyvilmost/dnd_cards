@@ -22,6 +22,7 @@ func (rc *RaceController) GetRaces(c *gin.Context) {
 	var races []Race
 	light := wantsListView(c)
 	query := rc.db.Model(&Race{})
+	query = entityTagFilter(query, c, "race", "races")
 	if light {
 		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt")
 	}
@@ -140,7 +141,7 @@ func (rc *RaceController) CreateRace(c *gin.Context) {
 		Darkvision: req.Darkvision, Traits: req.Traits, Lineages: req.Lineages,
 		IsSubrace: req.IsSubrace, ParentRaceID: req.ParentRaceID, SubraceLevel: req.SubraceLevel,
 		RelatedEffects: req.RelatedEffects, RelatedActions: req.RelatedActions, LevelProgression: req.LevelProgression,
-		Type: req.Type, Author: req.Author, Source: req.Source, Tags: req.Tags, IsExtended: req.IsExtended,
+		Type: req.Type, Author: req.Author, Source: req.Source, IsExtended: req.IsExtended,
 	}
 	if r.Author == "" {
 		r.Author = "Admin"
@@ -242,9 +243,6 @@ func (rc *RaceController) UpdateRace(c *gin.Context) {
 	}
 	if req.Source != nil {
 		r.Source = req.Source
-	}
-	if req.Tags != nil {
-		r.Tags = req.Tags
 	}
 	if req.IsExtended != nil {
 		r.IsExtended = req.IsExtended

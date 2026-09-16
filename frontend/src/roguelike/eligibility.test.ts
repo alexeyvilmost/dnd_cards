@@ -1,8 +1,15 @@
 import {describe,expect,it} from 'vitest';
-import {isRunEligible} from './eligibility';
+import {isRunEligible,isRunClass} from './eligibility';
 import type {ForgeCharacter} from '../character/types';
 
 describe('start a run from a personal sheet',()=>{
+ it.each(['warrior','barbarian','monk'])('admits %s from the shared mode policy',name=>{
+  expect(isRunClass(`CLASS-${name}`)).toBe(true);
+  const character={class_id:name,class_levels:{[name]:1},level:1,character_type:'free',access_mode:'owner'} as unknown as ForgeCharacter;
+  expect(isRunEligible(character,['warrior','barbarian','monk'])).toBe(true);
+  expect(isRunEligible({...character,level:2},['warrior','barbarian','monk'])).toBe(false);
+ });
+ it('keeps unsupported classes out of the mode',()=>{expect(isRunClass('CLASS-wizard')).toBe(false);expect(isRunClass(undefined)).toBe(false)});
  const fighter={class_id:'fighter',class_levels:{fighter:1},level:1,character_type:'free',access_mode:'owner'} as unknown as ForgeCharacter;
  it('accepts a pure level-one fighter and legacy class-level representation',()=>{
   expect(isRunEligible(fighter,'fighter')).toBe(true);

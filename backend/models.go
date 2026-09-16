@@ -346,6 +346,8 @@ const (
 
 // Card - модель карточки
 type Card struct {
+	// Frozen wire snapshot for pre-258 certification hashes; never used as library tags.
+	LegacyTags *Properties `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
 	ID                           uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                         string         `json:"name" gorm:"not null"`
 	NameEn                       *string        `json:"name_en" gorm:"type:varchar(255)"`
@@ -389,11 +391,10 @@ type Card struct {
 	Attunement                   *string        `json:"attunement" gorm:"type:text"`
 	RequiresAttunement           *bool          `json:"requires_attunement" gorm:"type:boolean;default:false"` // Требуется ли настройка
 	Range                        *string        `json:"range" gorm:"column:range;type:varchar(50)"`            // Дальность (например, "30/120")
-	Tags                         *Properties    `json:"tags" gorm:"type:text"`
-	IsTemplate                   TemplateType   `json:"is_template" gorm:"type:varchar(20);default:'false'"` // Тип шаблона
-	Slot                         *EquipmentSlot `json:"slot" gorm:"type:varchar(20)"`                        // Слот экипировки
-	Effects                      *CardEffects   `json:"effects" gorm:"type:jsonb"`                           // Эффекты предмета
-	Mechanics                    *JSONMap       `json:"mechanics" gorm:"type:jsonb"`                         // Унифицированная механика (как у effects/actions)
+	IsTemplate                   TemplateType   `json:"is_template" gorm:"type:varchar(20);default:'false'"`   // Тип шаблона
+	Slot                         *EquipmentSlot `json:"slot" gorm:"type:varchar(20)"`                          // Слот экипировки
+	Effects                      *CardEffects   `json:"effects" gorm:"type:jsonb"`                             // Эффекты предмета
+	Mechanics                    *JSONMap       `json:"mechanics" gorm:"type:jsonb"`                           // Унифицированная механика (как у effects/actions)
 	Support                      *JSONMap       `json:"support" gorm:"type:jsonb"`
 	BattleProfile                *JSONMap       `json:"battle_profile" gorm:"type:jsonb"`       // Боевой профиль предмета для сервиса battle
 	ContainerMode                *string        `json:"container_mode" gorm:"type:varchar(20)"` // Режим контейнера: all | choice
@@ -442,7 +443,6 @@ type CreateCardRequest struct {
 	Attunement                   *string        `json:"attunement"`
 	RequiresAttunement           *bool          `json:"requires_attunement"`
 	Range                        *string        `json:"range"`
-	Tags                         *Properties    `json:"tags"`
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
 	Effects                      *CardEffects   `json:"effects"`
@@ -493,7 +493,6 @@ type UpdateCardRequest struct {
 	Attunement                   *string        `json:"attunement"`
 	RequiresAttunement           *bool          `json:"requires_attunement"`
 	Range                        *string        `json:"range"`
-	Tags                         *Properties    `json:"tags"`
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
 	Effects                      *CardEffects   `json:"effects"`
@@ -516,6 +515,7 @@ type ExportCardsRequest struct {
 
 // CardResponse - ответ с карточкой
 type CardResponse struct {
+	LegacyTags *Properties `json:"tags"`
 	ID                           uuid.UUID      `json:"id"`
 	Name                         string         `json:"name"`
 	NameEn                       *string        `json:"name_en"`
@@ -555,7 +555,6 @@ type CardResponse struct {
 	Attunement                   *string        `json:"attunement"`
 	RequiresAttunement           *bool          `json:"requires_attunement"`
 	Range                        *string        `json:"range"`
-	Tags                         *Properties    `json:"tags"`
 	IsTemplate                   TemplateType   `json:"is_template"`
 	Slot                         *EquipmentSlot `json:"slot"`
 	Effects                      *CardEffects   `json:"effects"`
@@ -810,6 +809,7 @@ func ResolveCustomRarityColor(rarity Rarity, requested *string, existing *string
 // ToCardResponse преобразует модель карты в API-ответ.
 func (card Card) ToCardResponse() CardResponse {
 	return CardResponse{
+		LegacyTags: card.LegacyTags,
 		ID:                           card.ID,
 		Name:                         card.Name,
 		NameEn:                       card.NameEn,
@@ -849,7 +849,6 @@ func (card Card) ToCardResponse() CardResponse {
 		Attunement:                   card.Attunement,
 		RequiresAttunement:           card.RequiresAttunement,
 		Range:                        card.Range,
-		Tags:                         card.Tags,
 		IsTemplate:                   card.IsTemplate,
 		Slot:                         card.Slot,
 		Effects:                      card.Effects,
@@ -1702,6 +1701,8 @@ func (cr CharacterResources) Value() (driver.Value, error) {
 
 // Action - модель действия D&D
 type Action struct {
+	// Frozen wire snapshot for pre-258 certification hashes; never used as library tags.
+	LegacyTags *Properties `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
 	ID                           uuid.UUID       `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                         string          `json:"name" gorm:"not null"`
 	NameEn                       *string         `json:"name_en" gorm:"type:varchar(255)"`
@@ -1725,7 +1726,6 @@ type Action struct {
 	Type                         *string         `json:"type" gorm:"type:varchar(50)"`
 	Author                       string          `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                       *string         `json:"source" gorm:"type:varchar(255)"`
-	Tags                         *Properties     `json:"tags" gorm:"type:text[]"`
 	Price                        *int            `json:"price" gorm:"type:int"`
 	Weight                       *float64        `json:"weight" gorm:"type:decimal(5,2)"`
 	Properties                   *Properties     `json:"properties" gorm:"type:text[]"`
@@ -1767,7 +1767,6 @@ type CreateActionRequest struct {
 	Type                         *string          `json:"type"`
 	Author                       string           `json:"author"`
 	Source                       *string          `json:"source"`
-	Tags                         *Properties      `json:"tags"`
 	Price                        *int             `json:"price"`
 	Weight                       *float64         `json:"weight"`
 	Properties                   *Properties      `json:"properties"`
@@ -1800,7 +1799,6 @@ type UpdateActionRequest struct {
 	Type                         *string          `json:"type"`
 	Author                       string           `json:"author"`
 	Source                       *string          `json:"source"`
-	Tags                         *Properties      `json:"tags"`
 	Price                        *int             `json:"price"`
 	Weight                       *float64         `json:"weight"`
 	Properties                   *Properties      `json:"properties"`
@@ -1817,6 +1815,7 @@ type UpdateActionRequest struct {
 
 // ActionResponse - ответ с действием
 type ActionResponse struct {
+	LegacyTags *Properties `json:"tags"`
 	ID                           uuid.UUID        `json:"id"`
 	Name                         string           `json:"name"`
 	NameEn                       *string          `json:"name_en"`
@@ -1836,7 +1835,6 @@ type ActionResponse struct {
 	Type                         *string          `json:"type"`
 	Author                       string           `json:"author"`
 	Source                       *string          `json:"source"`
-	Tags                         *Properties      `json:"tags"`
 	Price                        *int             `json:"price"`
 	Weight                       *float64         `json:"weight"`
 	Properties                   *Properties      `json:"properties"`
@@ -1856,11 +1854,12 @@ type ActionResponse struct {
 // ToActionResponse преобразует модель действия в API-ответ.
 func (a Action) ToActionResponse() ActionResponse {
 	return ActionResponse{
+		LegacyTags: a.LegacyTags,
 		ID: a.ID, Name: a.Name, NameEn: a.NameEn, Description: a.Description, DetailedDescription: a.DetailedDescription,
 		ImageURL: a.ImageURL, Rarity: a.Rarity, CardNumber: a.CardNumber,
 		Resources: a.Resource, Distance: a.Distance, Recharge: a.Recharge, RechargeCustom: a.RechargeCustom,
 		Script: a.Script, Mechanics: a.Mechanics, Support: a.Support, ActionType: a.ActionType, Type: a.Type,
-		Author: a.Author, Source: a.Source, Tags: a.Tags, Price: a.Price, Weight: a.Weight, Properties: a.Properties,
+		Author: a.Author, Source: a.Source, Price: a.Price, Weight: a.Weight, Properties: a.Properties,
 		RelatedCards: a.RelatedCards, RelatedActions: a.RelatedActions, IsExtended: a.IsExtended,
 		DescriptionFontSize: a.DescriptionFontSize, TextAlignment: a.TextAlignment, TextFontSize: a.TextFontSize,
 		ShowDetailedDescription: a.ShowDetailedDescription, DetailedDescriptionAlignment: a.DetailedDescriptionAlignment,
@@ -1938,6 +1937,8 @@ const (
 
 // Effect - модель пассивного эффекта D&D
 type Effect struct {
+	// Frozen wire snapshot for pre-258 certification hashes; never used as library tags.
+	LegacyTags *Properties `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
 	ID                           uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                         string         `json:"name" gorm:"not null"`
 	NameEn                       *string        `json:"name_en" gorm:"type:varchar(255)"`
@@ -1958,7 +1959,6 @@ type Effect struct {
 	Type                         *string        `json:"type" gorm:"type:varchar(50)"`
 	Author                       string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                       *string        `json:"source" gorm:"type:varchar(255)"`
-	Tags                         *Properties    `json:"tags" gorm:"type:text[]"`
 	Price                        *int           `json:"price" gorm:"type:int"`
 	Weight                       *float64       `json:"weight" gorm:"type:decimal(5,2)"`
 	Properties                   *Properties    `json:"properties" gorm:"type:text[]"`
@@ -1999,7 +1999,6 @@ type CreateEffectRequest struct {
 	Type                         *string     `json:"type"`
 	Author                       string      `json:"author"`
 	Source                       *string     `json:"source"`
-	Tags                         *Properties `json:"tags"`
 	Price                        *int        `json:"price"`
 	Weight                       *float64    `json:"weight"`
 	Properties                   *Properties `json:"properties"`
@@ -2031,7 +2030,6 @@ type UpdateEffectRequest struct {
 	Type                         *string     `json:"type"`
 	Author                       string      `json:"author"`
 	Source                       *string     `json:"source"`
-	Tags                         *Properties `json:"tags"`
 	Price                        *int        `json:"price"`
 	Weight                       *float64    `json:"weight"`
 	Properties                   *Properties `json:"properties"`
@@ -2050,6 +2048,7 @@ type UpdateEffectRequest struct {
 
 // EffectResponse - ответ с эффектом
 type EffectResponse struct {
+	LegacyTags *Properties `json:"tags"`
 	ID                           uuid.UUID             `json:"id"`
 	Name                         string                `json:"name"`
 	NameEn                       *string               `json:"name_en"`
@@ -2067,7 +2066,6 @@ type EffectResponse struct {
 	Type                         *string               `json:"type"`
 	Author                       string                `json:"author"`
 	Source                       *string               `json:"source"`
-	Tags                         *Properties           `json:"tags"`
 	Price                        *int                  `json:"price"`
 	Weight                       *float64              `json:"weight"`
 	Properties                   *Properties           `json:"properties"`
@@ -2089,11 +2087,12 @@ type EffectResponse struct {
 // ToEffectResponse преобразует модель эффекта в API-ответ.
 func (e Effect) ToEffectResponse() EffectResponse {
 	return EffectResponse{
+		LegacyTags: e.LegacyTags,
 		ID: e.ID, Name: e.Name, NameEn: e.NameEn, Description: e.Description, DetailedDescription: e.DetailedDescription,
 		ImageURL: e.ImageURL, Rarity: e.Rarity, CardNumber: e.CardNumber, EffectType: e.EffectType,
 		ConditionDescription: e.ConditionDescription, Script: e.Script, Mechanics: e.Mechanics, Support: e.Support,
 		Type: e.Type, Author: e.Author, Source: e.Source,
-		Tags: e.Tags, Price: e.Price, Weight: e.Weight, Properties: e.Properties,
+		Price: e.Price, Weight: e.Weight, Properties: e.Properties,
 		RelatedCards: e.RelatedCards, RelatedActions: e.RelatedActions, RelatedEffects: e.RelatedEffects,
 		Repeatable: e.Repeatable,
 		IsExtended: e.IsExtended, DescriptionFontSize: e.DescriptionFontSize, TextAlignment: e.TextAlignment,
@@ -2236,6 +2235,8 @@ func (sd SpellDamage) Value() (driver.Value, error) {
 
 // Spell - модель заклинания D&D
 type Spell struct {
+	// Frozen wire snapshot for pre-258 certification hashes; never used as library tags.
+	LegacyTags *Properties `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
 	ID                    uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                  string         `json:"name" gorm:"not null"`
 	NameEn                *string        `json:"name_en" gorm:"type:varchar(255)"`
@@ -2273,7 +2274,6 @@ type Spell struct {
 	Type                  *string        `json:"type" gorm:"type:varchar(50)"`
 	Author                string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                *string        `json:"source" gorm:"type:varchar(255)"`
-	Tags                  *Properties    `json:"tags" gorm:"type:jsonb"`
 	IsExtended            *bool          `json:"is_extended" gorm:"type:boolean;default:null"`
 	CreatedAt             time.Time      `json:"created_at"`
 	UpdatedAt             time.Time      `json:"updated_at"`
@@ -2318,7 +2318,6 @@ type CreateSpellRequest struct {
 	Type                *string      `json:"type"`
 	Author              string       `json:"author"`
 	Source              *string      `json:"source"`
-	Tags                *Properties  `json:"tags"`
 	IsExtended          *bool        `json:"is_extended"`
 }
 
@@ -2355,12 +2354,12 @@ type UpdateSpellRequest struct {
 	Type                *string      `json:"type"`
 	Author              string       `json:"author"`
 	Source              *string      `json:"source"`
-	Tags                *Properties  `json:"tags"`
 	IsExtended          *bool        `json:"is_extended"`
 }
 
 // SpellResponse - ответ с заклинанием
 type SpellResponse struct {
+	LegacyTags *Properties `json:"tags"`
 	ID                  uuid.UUID    `json:"id"`
 	Name                string       `json:"name"`
 	NameEn              *string      `json:"name_en"`
@@ -2394,7 +2393,6 @@ type SpellResponse struct {
 	Type                *string      `json:"type"`
 	Author              string       `json:"author"`
 	Source              *string      `json:"source"`
-	Tags                *Properties  `json:"tags"`
 	IsExtended          *bool        `json:"is_extended"`
 	CreatedAt           time.Time    `json:"created_at"`
 	UpdatedAt           time.Time    `json:"updated_at"`
@@ -2403,6 +2401,7 @@ type SpellResponse struct {
 // ToSpellResponse преобразует модель заклинания в API-ответ.
 func (spell Spell) ToSpellResponse() SpellResponse {
 	return SpellResponse{
+		LegacyTags: spell.LegacyTags,
 		ID:                  spell.ID,
 		Name:                spell.Name,
 		NameEn:              spell.NameEn,
@@ -2436,7 +2435,6 @@ func (spell Spell) ToSpellResponse() SpellResponse {
 		Type:                spell.Type,
 		Author:              spell.Author,
 		Source:              spell.Source,
-		Tags:                spell.Tags,
 		IsExtended:          spell.IsExtended,
 		CreatedAt:           spell.CreatedAt,
 		UpdatedAt:           spell.UpdatedAt,

@@ -1,15 +1,19 @@
 import {Link, useNavigate} from 'react-router-dom';
+import {useEffect,useState} from 'react';
+import {apiClient} from '../api/client';
 import {loadPassiveCatalog, passivePresentationEffect, usePassiveCatalog} from '../character/passiveCatalog';
 import SheetActionLine from './SheetActionLine';
 import {useSiteSettings} from '../settings';
 import './SheetPassiveToggle.css';
 
-export default function PassiveLibrary({search='',mode}:{search?:string;mode?:'icon'|'row'}) {
+export default function PassiveLibrary({search='',mode,tag=''}:{search?:string;mode?:'icon'|'row';tag?:string}) {
+  const [tagged,setTagged]=useState<string[]>([]);
+  useEffect(()=>{let live=true;setTagged([]);if(tag)void apiClient.get(`/api/entity-tag-members/${encodeURIComponent(tag)}`,{params:{type:'passive'}}).then(r=>{if(live)setTagged(r.data.ids)});return()=>{live=false}},[tag]);
   const catalog=usePassiveCatalog();
   const navigate=useNavigate();
   const {entityDisplay}=useSiteSettings();
   const displayMode=mode??entityDisplay.effects;
-  const rows=catalog.passives.filter(row=>row.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
+  const rows=catalog.passives.filter(row=>(!tag||tagged.includes(row.key))&&row.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
   return <section className="passive-library">
     <h2>Переключаемые пассивы</h2>
     <p>Оформление настроек боя. Изменение карточки не меняет правила её срабатывания.</p>

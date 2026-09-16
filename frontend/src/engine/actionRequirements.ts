@@ -1,4 +1,5 @@
-import type { RuntimeState } from '../mvp/contracts';
+import type { CharacterContext, RuntimeState } from '../mvp/contracts';
+import { activeConditionsOf, matchesWhen } from './circumstances';
 
 type Dict = Record<string, unknown>;
 
@@ -20,7 +21,10 @@ function requiredEffectReferences(mechanics: Dict): string[] {
 export function activeEffectRequirementIssue(
   mechanics: Dict,
   state: RuntimeState,
+  character?: CharacterContext,
 ): string | null {
+  const whenIssue = activationCircumstanceIssue(mechanics, state, character);
+  if (whenIssue) return whenIssue;
   const heldIssue = heldItemRequirementIssue(mechanics, state);
   if (heldIssue) return heldIssue;
   const forbiddenStack = typeof mechanics.forbids_active_effect_stack === 'string'
@@ -48,6 +52,16 @@ export function activeEffectRequirementIssue(
   return required.some((reference) => active.has(reference))
     ? null
     : 'Действие доступно только в соответствующем активном облике';
+}
+
+/** The same content-owned prerequisites govern previews and authoritative payment. */
+export function activationCircumstanceIssue(mechanics: Dict, state: RuntimeState, character?: CharacterContext): string | null {
+  const activation = mechanics.activation as Dict | undefined;
+  const when = activation?.when;
+  if (when === undefined) return null;
+  if (!Array.isArray(when) || !when.every(p => p && typeof p === 'object' && !Array.isArray(p))) return 'Некорректные условия действия';
+  return matchesWhen(when, {state, character, activeConditions: activeConditionsOf(state)})
+    ? null : 'Не выполнены условия использования действия';
 }
 
 

@@ -144,6 +144,7 @@ func monsterFromRequest(req MonsterUpsertRequest) Monster {
 
 func (mc *MonsterController) List(c *gin.Context) {
 	query := mc.db.Model(&Monster{})
+	query = entityTagFilter(query, c, "monster", "monsters")
 	if search := strings.TrimSpace(c.Query("search")); search != "" {
 		query = query.Where("name ILIKE ? OR slug = ?", "%"+search+"%", strings.ToLower(search))
 	}

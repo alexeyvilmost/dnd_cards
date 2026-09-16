@@ -2,6 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { pickBestMethod } from './derivedValue';
 import { computeAC } from './ac';
 import type { CharacterContext, RuntimeState } from '../mvp/contracts';
+import type { Card } from '../types';
+
+it('gates AC methods by content predicates, including an unrelated ward', () => {
+  const shield = {id:'shield',type:'shield',defense_type:'shield',bonus_value:'2',name:'Щит'} as Card;
+  const ctx = {...character,abilityMods:{...character.abilityMods,wis:4},knownCards:[shield]};
+  const passive = {effects:[{result:[{kind:'set_value',target:'ac_base',formula:'10 + dex + wis',when:[{kind:'not',of:{kind:'wielding_shield'}}]}]}]};
+  expect(computeAC(ctx,freshState(),[passive]).value).toBe(17);
+  expect(computeAC(ctx,{...freshState(),equipment:{off_hand:shield.id}},[passive]).value).toBe(15);
+  const ward = {kind:'set_value',target:'ac_base',formula:'19',when:[{kind:'you_have_effect_stack',value:'test-ward'}]};
+  expect(computeAC(ctx,freshState(),[ward]).value).toBe(13);
+  const active = {...freshState(),activeEffects:[{id:'ward',name:'Ward',source:'Test',mechanics:{stack_id:'test-ward'}}]};
+  expect(computeAC(ctx,active,[ward]).value).toBe(19);
+});
 
 describe('pickBestMethod (парадигма №3)', () => {
   it('берёт максимум применимого метода + аддитив', () => {

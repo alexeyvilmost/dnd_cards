@@ -54,7 +54,7 @@ const RaritySelector = ({
               key={option.value}
               className="flex flex-col items-center space-y-1 cursor-pointer"
               onClick={() => onChange(option.value as Rarity)}
-              title={option.label}
+              aria-description={option.label}
             >
               <div
                 className={`w-8 h-8 rounded-full transition-all duration-200 ${

@@ -304,7 +304,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
                   type="button"
                   className="sheet-active-effect-dismiss"
                   disabled={mutationBusy || Boolean(effectMutationBlockReason)}
-                  title={effectMutationBlockReason ?? 'Снять вручную'}
+                  aria-label={effectMutationBlockReason ?? 'Снять вручную'}
                   onClick={() => handleDismissEffect(group.effects.map((effect) => effect.id))}
                 >
                   <X size={14} />

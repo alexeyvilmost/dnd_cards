@@ -1,4 +1,5 @@
 import SheetFeatureSections from '../components/SheetFeatureSections';
+import SheetTogglePassives from '../components/SheetTogglePassives';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
@@ -8,6 +9,7 @@ import {
 import NavRail, { type NavRailItem } from '../components/NavRail';
 import { useIsMobile } from '../hooks/useIsMobile';
 import StartRunFromSheet from '../components/StartRunFromSheet';
+import {isRunClass} from '../roguelike/eligibility';
 import { cardsApi } from '../api/client';
 import {
   characterV3ErrorMessage,
@@ -37,7 +39,7 @@ import { untrainedArmorPenaltyMechanics } from '../character/untrainedArmor';
 import { persistCharacterRuntime } from '../character/runtimePersistence';
 import SheetRunPanel from '../components/SheetRunPanel';
 import { roguelikeApi, type RoguelikeRun } from '../roguelike/api';
-import { runSheetURL } from '../roguelike/navigation';
+import { runSheetURL,runHasCharacter } from '../roguelike/navigation';
 import { finalizeSheetD20Roll } from '../character/sheetD20Roll';
 import {influencedSheetRoll} from '../character/influencedSheetRoll';
 import { breakdownValue } from '../engine/breakdown';
@@ -122,8 +124,8 @@ const CharacterSheetMVP = () => {
     if (!character || character.character_type !== 'dungeon_crawl' || roguelikeRunId) return;
     let active = true;
     void roguelikeApi.list().then((runs) => {
-      const run = runs.find((entry) => entry.character_id === character.id);
-      if (active && run) navigate(runSheetURL(run), { replace: true });
+      const run = runs.find((entry) => runHasCharacter(entry,character.id));
+      if (active && run) navigate(runSheetURL(run,character.id), { replace: true });
     }).catch((e: unknown) => active && setError(e instanceof Error ? e.message : 'Не удалось загрузить забег'));
     return () => { active = false; };
   }, [character?.id, character?.character_type, roguelikeRunId, navigate]);
@@ -162,7 +164,7 @@ const CharacterSheetMVP = () => {
   const [targetAc, setTargetAc] = useState<number | null>(10);
   const [targetSaveMod, setTargetSaveMod] = useState<number | null>(0);
   const runReadOnly = character?.character_type === 'dungeon_crawl'
-    && (!roguelikeRunId || sheetRun?.id !== roguelikeRunId || sheetRun.character_id !== character.id
+    && (!roguelikeRunId || sheetRun?.id !== roguelikeRunId || !runHasCharacter(sheetRun,character.id)
       || sheetRun.status !== 'active');
   const readOnly = Boolean(runReadOnly || (character && isCharacterReadOnly(character)));
   // Онлайн-бой: если персонаж в бою (current_encounter_id) — подписываемся на общий стол боя,
@@ -1058,14 +1060,14 @@ const CharacterSheetMVP = () => {
     <CharacterFormulaProvider value={formulaCtxFromCharacter(sheetCtx)}>
     <div className={`${rootCls}${!renderedV2 ? ' sheet-has-bottomnav' : ''}`}>
       <div className="forge-header sheet-header-bar">
-        <button type="button" className="sheet-back" onClick={() => roguelikeRunId ? navigate('/roguelike') : navigate(-1)} title="Назад">
+        <button type="button" className="sheet-back" onClick={() => roguelikeRunId ? navigate('/roguelike') : navigate(-1)} aria-label="Назад">
           <ArrowLeft size={18} />
         </button>
         <div className="sheet-header-center">
           <span className="sheet-header-name">{character.name || 'Без имени'}</span>
           <CharacterAccessBadge character={character} />
           {combatLocked ? (
-            <Link to={combatReturnHref} className="sheet-in-battle" title="Вернуться в активный бой">
+            <Link to={combatReturnHref} className="sheet-in-battle" aria-description="Вернуться в активный бой">
               <Swords size={12} /> В бою: {activeEncounter?.name ?? (roguelikeRunId ? 'забег' : 'одиночная проверка')}
             </Link>
           ) : (
@@ -1073,13 +1075,14 @@ const CharacterSheetMVP = () => {
           )}
         </div>
         <div className="sheet-header-actions">
-          {!roguelikeRunId && !combatLocked && <StartRunFromSheet character={character} fighterClassId={assembled?.klass?.card_number === 'CLASS-warrior' ? assembled.klass.id : undefined} />}
+          {!roguelikeRunId && !combatLocked && <StartRunFromSheet character={character} eligibleClassId={isRunClass(assembled?.klass?.card_number) ? assembled?.klass?.id : undefined} />}
           {allowSheetEntityAdditions && !readOnly && !roguelikeRunId && (
             <button
               type="button"
               className="sheet-header-btn"
               onClick={() => setEntityAddOpen(true)}
-              title="Добавить предмет, действие, эффект, заклинание или черту"
+              aria-label="Добавить"
+              aria-description="Добавить предмет, действие, эффект, заклинание или черту"
             >
               <Plus size={16} />
               <span className="sheet-header-btn-label">Добавить</span>
@@ -1089,7 +1092,8 @@ const CharacterSheetMVP = () => {
             type="button"
             className="sheet-header-btn"
             onClick={() => setSettingsOpen(true)}
-            title="Настройки отображения"
+            aria-label="Настройки"
+            aria-description="Настройки отображения"
           >
             <SettingsIcon size={16} />
             <span className="sheet-header-btn-label">Настройки</span>
@@ -1099,7 +1103,8 @@ const CharacterSheetMVP = () => {
               type="button"
               className="sheet-header-btn"
               onClick={toggleLayout}
-              title={useV2 ? 'Классический макет' : 'Новый макет (кокпит)'}
+              aria-label={useV2 ? 'Классический макет' : 'Новый макет'}
+              aria-description={useV2 ? 'Классический макет' : 'Новый макет (кокпит)'}
             >
               <LayoutGrid size={16} />
               <span className="sheet-header-btn-label">{useV2 ? 'Классический' : '✦ Новый'}</span>
@@ -1109,7 +1114,8 @@ const CharacterSheetMVP = () => {
             type="button"
             className="sheet-header-btn"
             onClick={toggleTheme}
-            title={paperTheme ? 'Тёмная тема' : 'Светлая (бумажная) тема'}
+            aria-label={paperTheme ? 'Тёмная тема' : 'Бумага — светлая тема'}
+            aria-description={paperTheme ? 'Тёмная тема' : 'Светлая (бумажная) тема'}
           >
             {paperTheme ? <Moon size={16} /> : <Sun size={16} />}
             <span className="sheet-header-btn-label">{paperTheme ? 'Тёмная' : 'Бумага'}</span>
@@ -1125,8 +1131,9 @@ const CharacterSheetMVP = () => {
                 type="button"
                 className="sheet-header-btn"
                 onClick={() => setCombatSetupOpen(true)}
+                aria-label="Проверить в бою"
                 disabled={Boolean(activeEncounter)}
-                title={activeEncounter ? 'Персонаж уже находится в онлайн-бою' : 'Запустить одиночную проверку персонажа в бою'}
+                aria-description={activeEncounter ? 'Персонаж уже находится в онлайн-бою' : 'Запустить одиночную проверку персонажа в бою'}
                 data-testid="open-solo-combat"
               >
                 <Swords size={16} />
@@ -1136,12 +1143,13 @@ const CharacterSheetMVP = () => {
               <Link
                 to={`/character-forge/${character.id}?levelup=1`}
                 className="sheet-header-btn"
-                title={`Поднять уровень (сейчас ${character.level})`}
+                aria-description={`Поднять уровень (сейчас ${character.level})`}
+                aria-label={`Уровень ${character.level} ↑`}
               >
                 <ChevronsUp size={16} />
                 <span className="sheet-header-btn-label">Уровень {character.level} ↑</span>
               </Link>
-              <Link to={`/character-forge/${character.id}`} className="sheet-edit" title="Редактировать">
+              <Link to={`/character-forge/${character.id}`} className="sheet-edit" aria-label="Редактировать">
                 <Pencil size={16} />
               </Link>
             </>
@@ -1282,7 +1290,7 @@ const CharacterSheetMVP = () => {
                   ? breakdownValue(`ability_mod:${k}`, sheetCtx, runtimeState, passives)
                   : null;
                 return (
-                  <div key={k} className="sheet-ab" title={`${ABILITY_LABEL_RU[k]}: значение ${score}, модификатор ${fmtMod(mod)}`}>
+                  <div key={k} className="sheet-ab" aria-description={`${ABILITY_LABEL_RU[k]}: значение ${score}, модификатор ${fmtMod(mod)}`}>
                     <div className="sheet-ab-label">{ABILITY_LABEL_RU[k]}</div>
                     <div className="sheet-ab-score">
                       {scoreBd ? (
@@ -1330,7 +1338,7 @@ const CharacterSheetMVP = () => {
                   className="sheet-stat sheet-stat--clickable"
                   role="button"
                   tabIndex={0}
-                  title="Все скорости перемещения"
+                  aria-description="Все скорости перемещения"
                   onClick={() => setSpeedDialogOpen(true)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSpeedDialogOpen(true); }}
                 >
@@ -1424,7 +1432,7 @@ const CharacterSheetMVP = () => {
                       <button
                         type="button"
                         className="sheet-dice-btn"
-                        title={`Бросить спасбросок ${ABILITY_LABEL_RU[k]}`}
+                        aria-label={`Бросить спасбросок ${ABILITY_LABEL_RU[k]}`}
                         onClick={() => rollCheck(`Спасбросок (${ABILITY_LABEL_RU[k]})`, saveBreakdown, 'saving_throw', { ability: k })}
                       >
                         <Dices size={13} />
@@ -1459,7 +1467,7 @@ const CharacterSheetMVP = () => {
                   ?? [{ value: bonus, source: skill.label, reason: 'навык' }];
                 const skillBreakdown = skillBd ?? { value: bonus, parts };
                 return (
-                  <li key={skill.id} title={`${fmtMod(bonus)} = ${formula}`}>
+                  <li key={skill.id} aria-description={`${fmtMod(bonus)} = ${formula}`}>
                     <span className={proficient ? 'sheet-prof' : ''}>{skill.label}{expert ? ' (эксп.)' : ''}</span>
                     <span className="sheet-roll-cell">
                       {skillBd ? (
@@ -1473,7 +1481,7 @@ const CharacterSheetMVP = () => {
                       <button
                         type="button"
                         className="sheet-dice-btn"
-                        title={`Проверка: ${skill.label}`}
+                        aria-label={`Проверка: ${skill.label}`}
                         onClick={() => rollCheck(`Проверка (${skill.label})`, skillBreakdown, 'ability_check', { skill: skill.id })}
                       >
                         <Dices size={13} />
@@ -1490,6 +1498,7 @@ const CharacterSheetMVP = () => {
           <section className="sheet-panel sheet-panel-wide">
             <h2 className="sheet-h2">Черты и способности</h2>
             <SheetFeatureSections assembled={assembled}/>
+            <SheetTogglePassives character={character} assembled={assembled} ruleState={ruleState} runtime={runtimeState} characterContext={sheetCtx} passives={passives} cards={equipCards} readOnly={readOnly}/>
           </section>
           )}
 

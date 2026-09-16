@@ -100,3 +100,6 @@
   text-shadow: 0 1px 2px #000;
   pointer-events: none;
 }
+.forge-spell-icon.is-passive { border-radius: 50%; }
+.forge-spell-icon.is-passive img { border-radius: inherit; }
+.sheet-item-row.is-passive .sheet-item-row-thumb { border-radius: 50%; overflow: hidden; }

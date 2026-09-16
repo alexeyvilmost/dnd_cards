@@ -22,6 +22,11 @@ function sender() {
   });
 }
 describe('pinned combat transport compatibility',()=>{
+  it.each([attack, {type:'move',actorId:'hero',destination:{x:8,y:3}} as const])('sends an entire supported route exactly once', async intent=>{
+    const value=run(); value.combat_state!.routeCommandVersion=1; const send=sender();
+    await commandCombatInteraction(value,intent,send);
+    expect(send).toHaveBeenCalledExactlyOnceWith(value,intent);
+  });
   it('uses the original action command for an adjacent hostile click',async()=>{
     const value=run(); value.combat_state!.tokens.enemy.position={x:2,y:3}; const send=sender();
     await commandCombatInteraction(value,attack,send);

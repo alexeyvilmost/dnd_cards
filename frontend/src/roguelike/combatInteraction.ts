@@ -1,6 +1,6 @@
 import type {RoguelikeRun} from './api';
 import type {RoguelikeCombatIntent} from './combatWorker';
-import {combatActionIsAttack, combatApproachRoute, combatMovementRoute} from '../solo-combat/defaultInteraction';
+import {combatActionIsAttack, combatApproachRoute, combatMovementRoute,combatActionRangeFt} from '../solo-combat/defaultInteraction';
 import type {SoloCombatState} from '../solo-combat/types';
 
 type Send = (run: RoguelikeRun, intent: RoguelikeCombatIntent) => Promise<RoguelikeRun>;
@@ -20,11 +20,14 @@ function paused(state: SoloCombatState, actorId: string, additional: boolean) {
 export async function commandCombatInteraction(run: RoguelikeRun, intent: RoguelikeCombatIntent, send: Send): Promise<RoguelikeRun> {
   const state = run.combat_state;
   if (!state || (intent.type !== 'move' && intent.type !== 'approach_action')) return send(run, intent);
+  // Explicit executable capability. Legacy encounters retain their saved
+  // compatibility protocol; do not infer it from a date, name or artifact hash.
+  if (state.routeCommandVersion === 1) return send(run, intent);
   const action = intent.type === 'approach_action' ? state.catalogActions.find(a => a.id === intent.actionId) : undefined;
   if (intent.type === 'approach_action' && !combatActionIsAttack(state, action)) throw Error('Для автоматического подхода выберите атаку');
   const route = intent.type === 'move'
     ? combatMovementRoute(state, intent.actorId, intent.destination)
-    : combatApproachRoute(state, intent.actorId, intent.targetActorId, action?.targeting?.rangeFt ?? 5);
+    : combatApproachRoute(state, intent.actorId, intent.targetActorId, combatActionRangeFt(state,intent.actorId,action!));
   if (!route) throw Error('На поле нет доступного пути');
   if (!route.available) throw Error(`Нужно пройти ${route.costFt} фт., доступно ${route.availableFt} фт.`);
   const additional = intent.type === 'move' && state.pendingAdditionalMovement?.actorId === intent.actorId;

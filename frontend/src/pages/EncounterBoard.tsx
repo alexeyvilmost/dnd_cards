@@ -231,7 +231,7 @@ export default function EncounterBoard() {
     <div style={{ maxWidth: 760, margin: '0 auto', color: '#e8e0d0' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: '#d8b978', margin: 0 }}>{meta?.name ?? 'Бой'}</h1>
-        <span title={connected ? 'подключено (realtime)' : 'переподключение…'} style={{
+        <span aria-description={connected ? 'подключено (realtime)' : 'переподключение…'} style={{
           width: 10, height: 10, borderRadius: '50%', background: connected ? '#3fb950' : '#c9a227',
         }} />
         <span style={{ fontSize: 13, color: '#a99f8b' }}>Раунд {state.round}</span>
@@ -239,7 +239,7 @@ export default function EncounterBoard() {
         {isEncounterOwner && <button
           onClick={() => { void copyInvite(); }}
           disabled={inviteBusy}
-          title="Создать подписанное приглашение на 15 минут"
+          aria-description="Создать подписанное приглашение на 15 минут"
           style={{ ...btnGhost, marginLeft: 'auto' }}
         >{inviteBusy ? 'Создаём…' : 'Скопировать приглашение'}</button>}
       </div>
@@ -269,7 +269,7 @@ export default function EncounterBoard() {
                 <span style={{ marginLeft: 'auto', fontSize: 14, color: c.hp <= 0 ? '#c0392b' : '#d8b978' }}>
                   {c.hp}/{c.maxHp}{c.temp ? ` (+${c.temp})` : ''}
                 </span>
-                {canRemove && <button onClick={() => removeCombatant(c)} title="Убрать из боя" style={btnGhost}>✕</button>}
+                {canRemove && <button onClick={() => removeCombatant(c)} aria-description="Убрать из боя" style={btnGhost}>✕</button>}
               </div>
               <div style={{ height: 8, borderRadius: 5, background: '#3a332a', overflow: 'hidden', margin: '6px 0' }}>
                 <div style={{ height: '100%', width: `${pct}%`, background: pct > 50 ? '#3fb950' : pct > 20 ? '#c9a227' : '#c0392b', transition: 'width .2s' }} />
@@ -284,7 +284,7 @@ export default function EncounterBoard() {
                         type="button"
                         style={btnGhost}
                         onClick={() => removeConditions(c, group.effects.map((effect) => effect.id))}
-                        title="Снять"
+                        aria-description="Снять"
                       >✕</button> : undefined}
                     />
                   ))}
@@ -308,8 +308,8 @@ export default function EncounterBoard() {
             GM override: ручные HP, КД и правки ниже обходят сценарный движок и записываются с provenance.
           </strong>
           <input value={manualName} onChange={(e) => setManualName(e.target.value)} placeholder="Имя существа" style={input} />
-          <input value={manualHp} onChange={(e) => setManualHp(e.target.value)} type="number" style={{ ...input, width: 70 }} title="HP" />
-          <input value={manualAc} onChange={(e) => setManualAc(e.target.value)} type="number" style={{ ...input, width: 60 }} title="КД" />
+          <input value={manualHp} onChange={(e) => setManualHp(e.target.value)} type="number" style={{ ...input, width: 70 }} aria-label="HP" />
+          <input value={manualAc} onChange={(e) => setManualAc(e.target.value)} type="number" style={{ ...input, width: 60 }} aria-label="КД" />
           <button onClick={addManual} style={btn}>+ Существо</button>
         </>}
       </div>

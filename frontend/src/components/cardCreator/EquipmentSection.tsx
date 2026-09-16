@@ -1,12 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from 'react-hook-form';
-import { CreateCardRequest, Properties, CardRef } from '../../types';
+import { CreateCardRequest, CardRef } from '../../types';
 import { BONUS_TYPE_OPTIONS, EQUIPMENT_SLOTS } from '../../types';
 import { ITEM_TYPE_OPTIONS, CONTAINER_MODE_OPTIONS } from '../../constants/itemTypes';
 import ItemRefSelector from '../ItemRefSelector';
 import { PHYSICAL_DAMAGE_TYPES, ELEMENTAL_DAMAGE_TYPES } from '../../utils/damageTypes';
 import PropertySelector from '../PropertySelector';
-import TagsInput from '../TagsInput';
 import weaponTypesData from '../../../utils/weapon_types.json';
 import { useToast } from '../../contexts/ToastContext';
 import { useMasteryEffects } from '../../utils/mastery';
@@ -20,7 +19,6 @@ interface EquipmentSectionProps {
 
 export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, setValue, watch }) => {
   const properties = watch('properties');
-  const tags = watch('tags');
   const bonus_type = watch('bonus_type');
   const name = watch('name');
   const weapon_type = watch('weapon_type');
@@ -151,17 +149,7 @@ export const EquipmentSection: React.FC<EquipmentSectionProps> = ({ register, se
         </div>
       )}
 
-      {/* Теги */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Теги
-        </label>
-        <TagsInput
-          value={tags || []}
-          onChange={(tags) => setValue('tags', tags as Properties)}
-          placeholder="Короткий меч, Магическое, Одноручное"
-        />
-      </div>
+      <p className="text-sm text-gray-500">Теги назначаются в детальном окне сохранённой сущности (режим игрока выключен).</p>
 
       {/* Требуется настройка */}
       <div>

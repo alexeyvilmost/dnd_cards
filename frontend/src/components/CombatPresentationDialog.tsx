@@ -4,7 +4,8 @@ import { Shield, Swords } from 'lucide-react';
 import type { SoloCombatState } from '../solo-combat/types';
 import type { CombatBeat } from '../solo-combat/presentation';
 import { combatActorDisplayName } from '../character/familiarLabels';
-import CommittedD20, {CommittedDie, D20_ROLL_DURATION_MS} from '../dice/CommittedD20';
+import {CommittedDie, D20_ROLL_DURATION_MS, D20_SELECTION_DURATION_MS} from '../dice/CommittedD20';
+import D20RollTray from '../dice/D20RollTray';
 import SheetSettingsDialog from './SheetSettingsDialog';
 import { combatRollModeFor, useSiteSettings, type CombatRollMode } from '../settings';
 import { useCombatDialogFocus } from './useCombatDialogFocus';
@@ -31,6 +32,7 @@ export default function CombatPresentationDialog({initiative, beat, onClose, mod
   const [settingsOpen, setSettingsOpen] = useState(false);
   const dialogRef = useCombatDialogFocus(!settingsOpen);
   const [rolled,setRolled]=useState(false);
+  const [landed,setLanded]=useState(false);
   const [damageRolled,setDamageRolled]=useState(false);
   const revealKey=useRef<string | null>(null);
   const buttonRef=useRef<HTMLButtonElement>(null);
@@ -49,13 +51,16 @@ export default function CombatPresentationDialog({initiative, beat, onClose, mod
   const ready = attackReady && (!animateDamage || damageRolled);
   // Held -> committed is the same throw. A replacement changes its provenance
   // or dice; adding damage must not remount or spin the attack die again.
-  const rollKey = JSON.stringify([roll?.dice, roll?.total, roll?.modifiers]);
+  const rollKey = JSON.stringify(saveRows ? saveRows.map(row => [row.roll?.dice,row.roll?.total,row.roll?.modifiers]) : [roll?.dice, roll?.total, roll?.modifiers]);
+  const hasSelection = (initiative?.initiative.map(entry => entry.roll) ?? saveRows?.map(row => row.roll) ?? [roll])
+    .some(entry => entry && entry.advantage !== 'none');
   useEffect(()=>{
-    setRolled(false);
+    setRolled(false); setLanded(false);
     const attackDuration=animate?D20_ROLL_DURATION_MS:0;
-    const timer=window.setTimeout(()=>setRolled(true),attackDuration);
-    return ()=>window.clearTimeout(timer);
-  },[initiative,rollKey,animate]);
+    const landing=window.setTimeout(()=>setLanded(true),attackDuration);
+    const timer=window.setTimeout(()=>setRolled(true),attackDuration + (animate && hasSelection ? D20_SELECTION_DURATION_MS : 0));
+    return ()=>{window.clearTimeout(timer);window.clearTimeout(landing);};
+  },[initiative,rollKey,animate,hasSelection]);
   const damageKey = JSON.stringify(saveRows?.map(row=>row.damage) ?? beat?.damage);
   const revealResultKey = `${rollKey}:${damageKey}`;
   useEffect(()=>{
@@ -81,11 +86,11 @@ export default function CombatPresentationDialog({initiative, beat, onClose, mod
         <p className="combat-presentation-muted">Участники бросают к20. Сражение начнётся в порядке инициативы.</p>
         <div className="combat-initiative-list">{initiative.initiative.map(entry=>{
           const actor=initiative.world.actors[entry.actorId];
-          const dice=entry.roll?.dice.filter(die=>die.sides===20)??[{sides:20,result:entry.die}];
+          const entryRoll=entry.roll ?? {kind:'d20' as const,dice:[{sides:20,result:entry.die}],advantage:'none' as const,total:entry.total,modifiers:[],text:''};
           return <div className="combat-initiative-row" key={entry.actorId}>
             <span className="combat-participant-portrait">{initiative.tokens[entry.actorId]?.tokenUrl?<img src={initiative.tokens[entry.actorId].tokenUrl} alt=""/>:<Swords/>}</span>
             <span className="combat-initiative-name"><b>{combatActorDisplayName(actor)}</b><small>{rolled?(entry.roll?.text??`${entry.die} ${entry.bonus>=0?'+':''}${entry.bonus} = ${entry.total}`):'Бросок инициативы…'}</small></span>
-            <div className="combat-initiative-dice">{dice.map((die,i)=><CommittedD20 key={i} value={die.result} discarded={die.discarded} rolling={!rolled}/>)}</div>
+            <div className="combat-initiative-dice"><D20RollTray roll={entryRoll} rolling={animate&&!landed} selecting={!rolled} animate={animate}/></div>
             <strong className="combat-initiative-total">{rolled?entry.total:'…'}</strong>
           </div>;
         })}</div>
@@ -93,7 +98,7 @@ export default function CombatPresentationDialog({initiative, beat, onClose, mod
         <p className="combat-presentation-muted">{beat?.sourceName} · Целей: {saveRows.length}</p>
         <div className="combat-save-rows">{saveRows.map(row => <div className="combat-save-row" key={row.id}>
           <div className="combat-save-name"><b>{row.rollerName ?? row.targetName}</b><small>{row.rollLabel}</small></div>
-          <div className="combat-save-dice">{row.roll?.dice.map((die,i)=><CommittedDie key={i} sides={die.sides} value={die.result} discarded={die.discarded} rolling={!attackReady}/>)}</div>
+          {row.roll && <D20RollTray key={`${row.id}:${rollKey}`} roll={row.roll} rolling={animate&&!landed} selecting={!attackReady} animate={animate}/>}
           <div className="combat-save-outcome">{attackReady ? <><strong>{row.roll?.total} / СЛ {row.roll?.target?.value}</strong><span>{row.roll?.outcome==='success'?'Успех':'Провал'}</span><small>{row.roll?.text}</small></> : 'Спасбросок…'}</div>
           <div className="combat-save-damage" aria-label={`Урон: ${row.targetName}`}>{attackReady ? row.damage?.length ? row.damage.map((packet,i)=><div key={i}>
             <div className="combat-save-dice">{packet.roll?.dice.map((die,j)=><CommittedDie key={j} sides={die.sides} value={die.result} discarded={die.discarded} rolling={animateDamage&&!damageRolled}/>)}</div>
@@ -103,7 +108,7 @@ export default function CombatPresentationDialog({initiative, beat, onClose, mod
       </> : <>
         {beat?.sourceName&&<p className="combat-attack-versus"><b>{beat.sourceName}</b>{beat.targetName&&<><Swords size={18}/><b>{beat.targetName}</b></>}</p>}
         {isSave&&beat?.rollerName&&<p className="combat-presentation-muted">Бросает: {beat.rollerName} · {beat.rollLabel}</p>}
-        {roll&&<div className="combat-attack-dice">{roll.dice.map((die,i)=><CommittedDie key={`${rollKey}:${i}`} sides={die.sides} value={die.result} discarded={die.discarded} rolling={!attackReady} critical={die.sides===20?critical:undefined} animateEffects={animate}/>)}</div>}
+        {roll&&<div className="combat-attack-dice"><D20RollTray key={rollKey} roll={roll} rolling={animate&&!landed} selecting={!attackReady} critical={critical} animate={animate}/></div>}
         {attackReady&&critical&&!provisional&&<p role="status" className={`combat-critical-banner is-${critical}${animate?' is-animated':''}`}>{critical==='success'?'НАТУРАЛЬНАЯ 20 · КРИТИЧЕСКИЙ УСПЕХ':'НАТУРАЛЬНАЯ 1 · КРИТИЧЕСКИЙ ПРОВАЛ'}</p>}
         {attackReady&&roll?<div className={`combat-roll-result ${success?'is-hit':'is-miss'}`}>
           {!isSave && !isCheck ? <AttackRollEquation roll={roll}/> : <div className="combat-roll-equation"><strong>{roll.total}</strong>{!isUntargeted&&<span>{roll.total >= (roll.target?.value ?? 0)?'≥':'<'} <Shield size={18}/> СЛ {roll.target?.value}</span>}</div>}
@@ -112,7 +117,6 @@ export default function CombatPresentationDialog({initiative, beat, onClose, mod
           {beat?.rollPhase==='before-reaction'&&<p>Цель может применить защитную реакцию до получения урона.</p>}
           {beat?.rollPhase==='after-reaction'&&<p>Итог после защитной реакции. Сохранён исходный бросок.</p>}
           <RollCalculationDetails roll={roll} provisional={provisional}/>
-          {roll.advantage!=='none'&&<small>{roll.advantage==='advantage'?'Преимущество — выбрана большая кость':'Помеха — выбрана меньшая кость'}</small>}
           {hasDamage && beat?.damage?.length ? <div className="combat-damage-breakdown" aria-label="Расчёт урона">
             <h4>Бросок урона</h4>
             {beat.damage.map((packet, packetIndex) => <div className="combat-damage-packet" key={`${packet.damageType}:${packetIndex}`}>
@@ -125,7 +129,7 @@ export default function CombatPresentationDialog({initiative, beat, onClose, mod
           </div> : null}
         </div>:<p className="combat-rolling-label">Кубик летит…</p>}
       </>}
-      {!ready && <button type="button" className="combat-reveal-result" onClick={()=>{revealKey.current=revealResultKey;setRolled(true);setDamageRolled(true);}}>Показать результат</button>}
+      {!ready && <button type="button" className="combat-reveal-result" onClick={()=>{revealKey.current=revealResultKey;setLanded(true);setRolled(true);setDamageRolled(true);}}>Показать результат</button>}
       {onInfluence && <RollInfluenceActions actions={influences} onUse={onInfluence} disabled={!ready || busy}/>}
       <div className="combat-presentation-actions"><button ref={buttonRef} type="button" className="combat-presentation-continue" disabled={!ready || busy} onClick={onClose}>{initiative?'Начать сражение':'Продолжить'}</button><button type="button" className="combat-presentation-settings" onClick={()=>setSettingsOpen(true)}>Настройки</button></div>
       {settingsOpen&&<SheetSettingsDialog initialPage="combat-rolls" allowDiceTest={false} onClose={()=>setSettingsOpen(false)}/>}

@@ -188,6 +188,16 @@ function engineEvents(events: readonly UncommittedRuleEvent[]): EngineEvent[] {
 }
 
 describe('schema-v4 canonical Attack runtime', () => {
+  it.each([['half', 14], ['three_quarters', 17]] as const)('canonical weapon attack applies %s cover exactly once', (cover, ac) => {
+    const test = started({weapon:true});
+    const {attackAction} = begin(test.session);
+    const executed = accepted(test.session.dispatch({schemaVersion:1,type:'PerformWeaponAttack',commandId:'cover-weapon',
+      expectedRevision:test.session.getState().revision,rulesetContentHash:RULESET.contentHash,actorId:test.attacker.id,
+      attackActionId:attackAction.id,weaponCardId:CARD_LONGSWORD.id,targetActorId:test.target.id,facts:{...FACTS,cover}}));
+    expect(engineEvents(executed.events).find(e=>e.type==='roll' && e.roll.target?.type==='ac'))
+      .toMatchObject({roll:{target:{value:ac}}});
+    expect(test.session.getState().actors.target.ac).toBe(12);
+  });
   it('uses the ruleset-owned weapon action, actor proficiency, durable budget, and byte-stable replay', {
     meta: { basicPrimitive: 'attack', evidenceKind: 'two_pc' },
   }, () => {

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { RuntimeState } from '../mvp/contracts';
+import type { CharacterContext, RuntimeState } from '../mvp/contracts';
+import type { Card } from '../types';
+import { executeAction } from './execute';
 import { activeEffectRequirementIssue } from './actionRequirements';
 
 const state = (cardNumber?: string): RuntimeState => ({
@@ -55,4 +57,16 @@ it.each(['held','offhand','held_with_spare','backpack','container','missing','wr
  if(mode==='wrong')runtime.equipment.main_hand='other';
  const issue=activeEffectRequirementIssue({requires_held_item:mode==='malformed'?[]:'weapon'},runtime);
  if(['held','offhand','held_with_spare'].includes(mode))expect(issue).toBeNull();else expect(issue).toBeTruthy();
+});
+
+it.each(['heavy', 'shield'])('content-owned activation predicates are checked before payment: %s', kind => {
+  const runtime = state(); runtime.resources = {bonus_action: 1};
+  const card = {id:'equipment', type: kind === 'shield' ? 'shield' : 'chest', defense_type:kind} as Card;
+  runtime.equipment[kind === 'shield' ? 'off_hand' : 'body'] = card.id;
+  const character: CharacterContext = {abilityMods:{str:3,dex:2,con:1,int:0,wis:1,cha:0},level:1,profBonus:2,knownCards:[card]};
+  const mechanics = {activation:{mode:'active',cost:[{resource:'bonus_action'}],when:[{kind:'not',of:kind === 'shield' ? {kind:'wielding_shield'} : {kind:'wearing_armor',category:'heavy'}}]},effects:[]};
+  expect(activeEffectRequirementIssue(mechanics,runtime,character)).toBeTruthy();
+  expect(() => executeAction(runtime,mechanics,{character,rng:() => 0.5})).toThrow('условия');
+  expect(runtime.resources.bonus_action).toBe(1);
+  expect(activeEffectRequirementIssue(mechanics,{...runtime,equipment:{}},character)).toBeNull();
 });

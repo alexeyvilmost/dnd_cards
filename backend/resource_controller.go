@@ -25,6 +25,7 @@ func validResourceID(id string) bool {
 func (rc *ResourceController) GetResources(c *gin.Context) {
 	var resources []ResourceDefinition
 	query := rc.db.Model(&ResourceDefinition{}).Where("deleted_at IS NULL")
+	query = entityTagFilter(query, c, "resource", "resources")
 	if category := c.Query("category"); category != "" {
 		query = query.Where("category = ?", category)
 	}

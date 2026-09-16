@@ -71,12 +71,12 @@ const CharactersForgeList = () => {
   return (
     <div className="forge">
       <div className="forge-header sheet-header-bar">
-        <Link to="/" className="sheet-back" title="На главную">
+        <Link to="/" className="sheet-back" aria-label="На главную">
           <ArrowLeft size={18} />
         </Link>
         <span>Персонажи</span>
         <button type="button" className="forge-btn ghost" onClick={() => setShowTemplates(v => !v)} aria-expanded={showTemplates}>Создать из шаблона</button>
-        <Link to="/character-forge" className="sheet-edit" title="Создать">
+        <Link to="/character-forge" className="sheet-edit" aria-label="Создать">
           <Plus size={18} />
         </Link>
       </div>
@@ -119,7 +119,7 @@ const CharactersForgeList = () => {
                 <button
                   type="button"
                   className="forge-char-card-delete"
-                  title="Удалить персонажа"
+                  aria-label="Удалить персонажа"
                   onClick={() => setConfirmId(c.id)}
                 >
                   <Trash2 size={14} />

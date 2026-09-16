@@ -1,0 +1,27 @@
+{
+  "legacy": {
+    "trunk": {"image":"/assets/battle-maps/props-atlas-v1.png","columns":3,"rows":3,"view":[0,0,1,1]},
+    "wall": {"image":"/assets/battle-maps/props-atlas-v1.png","columns":3,"rows":3,"view":[1,0,1,1],"repeat":true},
+    "table": {"image":"/assets/battle-maps/table-v2.png","columns":2,"rows":1,"view":[0,0,2,1]},
+    "mud": {"image":"/assets/battle-maps/props-atlas-v1.png","columns":3,"rows":3,"view":[0,1,1,1],"repeat":true},
+    "web": {"image":"/assets/battle-maps/props-atlas-v1.png","columns":3,"rows":3,"view":[1,1,1,1],"repeat":true},
+    "water": {"image":"/assets/battle-maps/props-atlas-v1.png","columns":3,"rows":3,"view":[2,1,1,1],"repeat":true},
+    "fire": {"image":"/assets/battle-maps/props-atlas-v1.png","columns":3,"rows":3,"view":[0,2,1,1]},
+    "barrel": {"image":"/assets/battle-maps/props-atlas-v1.png","columns":3,"rows":3,"view":[1,2,1,1],"repeat":true},
+    "stone": {"image":"/assets/battle-maps/props-atlas-v1.png","columns":3,"rows":3,"view":[2,2.1,1,0.8]}
+  },
+  "current": {
+    "trunk": {"image":"/assets/battle-maps/props-atlas-v1.png","columns":3,"rows":3,"view":[0,0,1,1]},
+    "wall": {"image":"/assets/battle-maps/masonry-atlas-v2.png","columns":2,"rows":2,"view":[1.085,0.11,0.83,0.81],"repeat":true},
+    "table": {"image":"/assets/battle-maps/table-v2.png","columns":2,"rows":1,"view":[0,0,2,1]},
+    "mud": {"image":"/assets/battle-maps/props-atlas-v1.png","columns":3,"rows":3,"view":[0,1,1,1],"repeat":true},
+    "web": {"image":"/assets/battle-maps/props-atlas-v1.png","columns":3,"rows":3,"view":[1,1,1,1],"repeat":true},
+    "water": {"image":"/assets/battle-maps/props-atlas-v1.png","columns":3,"rows":3,"view":[2,1,1,1],"repeat":true},
+    "fire": {"image":"/assets/battle-maps/props-atlas-v1.png","columns":3,"rows":3,"view":[0,2,1,1]},
+    "barrel": {"image":"/assets/battle-maps/props-atlas-v1.png","columns":3,"rows":3,"view":[1,2,1,1],"repeat":true},
+    "stone": {"image":"/assets/battle-maps/props-atlas-v1.png","columns":3,"rows":3,"view":[2,2.1,1,0.8]},
+    "rock": {"image":"/assets/battle-maps/masonry-atlas-v2.png","columns":2,"rows":2,"view":[0,0,1,1]},
+    "counter": {"image":"/assets/battle-maps/masonry-atlas-v2.png","columns":2,"rows":2,"view":[0.09,1.07,0.85,0.84],"repeat":true},
+    "rubble": {"image":"/assets/battle-maps/masonry-atlas-v2.png","columns":2,"rows":2,"view":[1,1,1,1],"repeat":true}
+  }
+}

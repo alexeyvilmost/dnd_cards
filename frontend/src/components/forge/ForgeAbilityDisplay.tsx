@@ -1,3 +1,4 @@
+import { previewAnchor } from '../../utils/previewAnchor';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Action, PassiveEffect, Feat } from '../../types';
 import FeatPreview from '../FeatPreview';
@@ -76,10 +77,12 @@ const ForgeAbilityDisplay = ({ entries, mode, linesClassName = 'forge-ability-li
           return (
             <div
               key={entry.key}
-              className="forge-spell-icon ready"
-              title={entry.name}
-              onMouseEnter={(e) => { setHovered(entry); setPos({ x: e.clientX, y: e.clientY }); }}
-              onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
+              className={`forge-spell-icon ready${entry.effect || entry.feat ? ' is-passive' : ''}`}
+              aria-description={entry.name}
+              tabIndex={0}
+              onFocus={e => { setHovered(entry); setPos(previewAnchor(e.currentTarget)); }}
+              onBlur={onLeave}
+              onMouseEnter={(e) => { setHovered(entry); setPos(previewAnchor(e.currentTarget)); }}
               onMouseLeave={onLeave}
             >
               <img

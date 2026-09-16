@@ -33,6 +33,7 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 
 	light := wantsListView(c)
 	query := sc.db.Model(&Spell{})
+	query = entityTagFilter(query, c, "spell", "spells")
 	if light {
 		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt", "Mechanics")
 	}
@@ -241,7 +242,6 @@ func (sc *SpellController) CreateSpell(c *gin.Context) {
 		Type:                req.Type,
 		Author:              req.Author,
 		Source:              req.Source,
-		Tags:                req.Tags,
 		IsExtended:          req.IsExtended,
 	}
 
@@ -397,9 +397,6 @@ func (sc *SpellController) UpdateSpell(c *gin.Context) {
 	}
 	if req.Source != nil {
 		spell.Source = req.Source
-	}
-	if req.Tags != nil {
-		spell.Tags = req.Tags
 	}
 	if req.IsExtended != nil {
 		spell.IsExtended = req.IsExtended

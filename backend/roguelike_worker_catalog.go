@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"sort"
+	"strings"
 )
 
 type roguelikeFrozenCatalog struct {
@@ -32,6 +33,15 @@ func (catalog *roguelikeFrozenCatalog) add(kind string, entity any) error {
 	id, _ := row["id"].(string)
 	if id == "" {
 		return fmt.Errorf("catalog entity missing id")
+	}
+	// Art is loaded independently by the canonical image endpoint. Freeze the
+	// complete mechanics/text, not hundreds of KB of base64 on every 5ft move.
+	// Only new catalogs use this projection; historical envelopes stay intact.
+	if image, ok := row["image_url"].(string); ok && strings.HasPrefix(image, "data:image/") {
+		tables := map[string]string{"race": "races", "class": "classes", "background": "backgrounds", "feat": "feats", "effect": "effects", "action": "actions", "spell": "spells", "card": "cards", "resource": "resources"}
+		if table := tables[kind]; table != "" {
+			row["image_url"] = "/api/content-images/" + table + "/" + id
+		}
 	}
 	for _, existing := range catalog.Entities[kind] {
 		if existing["id"] == id {
@@ -130,6 +140,15 @@ func initializeRoguelikeWorker(ctx context.Context, tx *gorm.DB, client roguelik
 	}
 	input := map[string]any{"character": run.Character, "catalog": &catalog, "basicActionIds": ids,
 		"monsters": run.Encounter["catalog"], "roster": run.Encounter["roster"], "seed": seed, "initiativeManeuverActionId": initiativeManeuverActionID}
+	if index, ok := run.Encounter["map_index"]; ok {
+		input["mapIndex"] = index
+	}
+	if seed, ok := run.Encounter["map_seed"]; ok {
+		input["mapSeed"] = seed
+	}
+	if roguelikePartySize(run) > 1 {
+		input["characters"] = run.Characters
+	}
 	for round := 0; round < 16; round++ {
 		result, err := client.call(ctx, "/initialize", map[string]any{"input": input})
 		if err != nil {
@@ -170,7 +189,7 @@ func executeRoguelikeRestWorker(ctx context.Context, tx *gorm.DB, client rogueli
 	for attempt := 0; attempt < 32; attempt++ {
 		result, err := client.call(ctx, "/rest", map[string]any{"input": map[string]any{
 			"character": run.Character, "catalog": catalog, "long": request.Type == "long_rest", "hitDieRolls": request.Payload["hit_die_rolls"], "bindWeapon": binding, "recallWeapon": recall,
-			"masteryChoices": request.Payload["mastery_choices"], "elapsedSeconds": roguelikeRestElapsedSeconds(run, request.Type),
+			"masteryChoices": request.Payload["mastery_choices"], "elapsedSeconds": roguelikeRestElapsedSeconds(run, request.Type), "preservePreparation": roguelikePartySize(run) > 1 || request.Payload["preserve_preparation"] == true,
 			"slotRecoverySelections": request.Payload["slot_recovery_selections"], "spellSwapSelections": request.Payload["spell_swap_selections"], "spellPreparation": request.Payload["spell_preparation"],
 		}})
 		if err != nil {
@@ -193,7 +212,7 @@ func executeRoguelikeRestWorker(ctx context.Context, tx *gorm.DB, client rogueli
 	return nil, fmt.Errorf("rest catalog dependency budget exceeded")
 }
 
-func executeRoguelikeCampActionWorker(ctx context.Context, tx *gorm.DB, client roguelikeWorkerClient, character *CharacterV3, request RoguelikeCommandRequest) (*roguelikeWorkerResult, error) {
+func executeRoguelikeCampActionWorker(ctx context.Context, tx *gorm.DB, client roguelikeWorkerClient, character *CharacterV3, request RoguelikeCommandRequest, party ...*CharacterV3) (*roguelikeWorkerResult, error) {
 	catalog := emptyRoguelikeFrozenCatalog()
 	seed, err := newRoguelikeSeed()
 	if err != nil {
@@ -213,6 +232,10 @@ func executeRoguelikeCampActionWorker(ctx context.Context, tx *gorm.DB, client r
 	input := map[string]any{"character": character, "catalog": &catalog, "basicActionIds": ids, "seed": seed,
 		"commandId": request.CommandID.String(), "actionId": roguelikePayloadString(request, "action_id"), "itemCardId": roguelikePayloadString(request, "card_id"), "nextTurn": request.Type == "camp_turn",
 		"choices": request.Payload["choices"], "spell": request.Payload["spell"], "worldInput": request.Payload["world_input"], "companion": request.Payload["companion"]}
+	if len(party) > 0 {
+		input["characters"] = party
+		input["targetIds"] = request.Payload["target_ids"]
+	}
 	for attempt := 0; attempt < 32; attempt++ {
 		result, err := client.call(ctx, "/camp-action", map[string]any{"input": input})
 		if err != nil {

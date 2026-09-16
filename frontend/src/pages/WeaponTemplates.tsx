@@ -157,7 +157,7 @@ const WeaponTemplates: React.FC = () => {
                     ? 'bg-blue-100 border-blue-300 text-blue-700' 
                     : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
                 }`}
-                title="Сетка"
+                aria-label="Сетка"
               >
                 <Grid3X3 size={18} />
               </button>
@@ -168,7 +168,7 @@ const WeaponTemplates: React.FC = () => {
                     ? 'bg-blue-100 border-blue-300 text-blue-700' 
                     : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
                 }`}
-                title="Список"
+                aria-label="Список"
               >
                 <List size={18} />
               </button>
@@ -199,7 +199,7 @@ const WeaponTemplates: React.FC = () => {
                       e.stopPropagation();
                     }}
                     className="p-1.5 bg-blue-500 text-white rounded-full hover:bg-blue-600 shadow-lg"
-                    title="Редактировать шаблон"
+                    aria-label="Редактировать шаблон"
                   >
                     <Edit size={14} />
                   </Link>
@@ -209,7 +209,7 @@ const WeaponTemplates: React.FC = () => {
                       handleTemplateDelete(template);
                     }}
                     className="p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg"
-                    title="Удалить шаблон"
+                    aria-label="Удалить шаблон"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -306,7 +306,7 @@ const WeaponTemplates: React.FC = () => {
                         e.stopPropagation();
                       }}
                       className="p-1.5 bg-blue-500 text-white rounded-full hover:bg-blue-600 shadow-lg"
-                      title="Редактировать шаблон"
+                      aria-label="Редактировать шаблон"
                     >
                       <Edit size={14} />
                     </Link>
@@ -316,7 +316,7 @@ const WeaponTemplates: React.FC = () => {
                         handleTemplateDelete(template);
                       }}
                       className="p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg"
-                      title="Удалить шаблон"
+                      aria-label="Удалить шаблон"
                     >
                       <Trash2 size={14} />
                     </button>

@@ -9,7 +9,7 @@ export default function EffectiveSenseValue({ sense }: { sense: EffectiveSense }
   return (
     <span
       data-testid={`effective-sense-${sense.sense}`}
-      title={roundsLeft == null ? 'Постоянное чувство' : `Осталось раундов: ${roundsLeft}`}
+      aria-description={roundsLeft == null ? 'Постоянное чувство' : `Осталось раундов: ${roundsLeft}`}
     >
       {sense.range} фт{temporary}
     </span>

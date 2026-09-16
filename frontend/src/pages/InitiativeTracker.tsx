@@ -362,7 +362,7 @@ const InitiativeTracker: React.FC = () => {
             onClick={startCombat}
             disabled={orderedCharacters.length === 0}
             className="btn-primary bg-amber-600 hover:bg-amber-700 flex items-center justify-center gap-2 flex-1 sm:flex-none disabled:opacity-50"
-            title="Монстры кидают инициативу сами, для игроков откроется окно ввода"
+            aria-description="Монстры кидают инициативу сами, для игроков откроется окно ввода"
           >
             <Play size={18} />
             Начать бой
@@ -390,7 +390,7 @@ const InitiativeTracker: React.FC = () => {
             onClick={shareCombat}
             disabled={orderedCharacters.length === 0}
             className="btn-secondary flex items-center justify-center gap-2 flex-1 sm:flex-none disabled:opacity-50"
-            title="Скопировать ссылку на текущий бой"
+            aria-description="Скопировать ссылку на текущий бой"
           >
             <Share2 size={18} />
             Поделиться
@@ -403,7 +403,7 @@ const InitiativeTracker: React.FC = () => {
           type="button"
           onClick={() => setIsLibraryOpen(true)}
           className="btn-secondary flex items-center gap-2"
-          title="Библиотека существ"
+          aria-description="Библиотека существ"
         >
           <BookOpen size={18} />
           Библиотека
@@ -412,7 +412,7 @@ const InitiativeTracker: React.FC = () => {
           type="button"
           onClick={() => setIsTtgOpen(true)}
           className="btn-secondary flex items-center gap-2"
-          title="Поиск монстра на ttg.club"
+          aria-description="Поиск монстра на ttg.club"
         >
           <Swords size={18} />
           TTG

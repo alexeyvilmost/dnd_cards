@@ -80,7 +80,7 @@ export function ChoiceDialogProvider({ children }: { children: ReactNode }) {
                   type="button"
                   className="dice-dialog-btn primary"
                   disabled={!ready}
-                  title={ready ? undefined : 'Сделайте выбор'}
+                  aria-description={ready ? undefined : 'Сделайте выбор'}
                   onClick={() => finish(values)}
                 >
                   Применить

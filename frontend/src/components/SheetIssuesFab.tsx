@@ -59,7 +59,7 @@ export default function SheetIssuesFab({ open, onOpenChange, items }: FabProps) 
         type="button"
         className={`sheet-issues-fab${open ? ' open' : ''}`}
         onClick={() => onOpenChange(!open)}
-        title={open ? 'Закрыть' : 'Ошибки и незавершённые выборы'}
+        aria-description={open ? 'Закрыть' : 'Ошибки и незавершённые выборы'}
         aria-expanded={open}
         aria-label={open ? 'Закрыть список проблем' : 'Открыть ошибки и незавершённые выборы'}
       >
@@ -98,7 +98,7 @@ export function SheetLongRestDialog({
         role="dialog"
         aria-label="Долгий отдых"
       >
-        <button type="button" className="sheet-equip-close" onClick={onClose} title="Закрыть (Esc)">
+        <button type="button" className="sheet-equip-close" onClick={onClose} aria-label="Закрыть (Esc)">
           <X size={18} />
         </button>
         <h2 className="sheet-settings-title">

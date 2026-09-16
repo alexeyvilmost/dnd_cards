@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { shopsApi } from '../api/client';
+import {shopURLFromPage} from '../utils/shopNavigation';
 
 const VENDORS = [
   'Кожевник',
@@ -14,6 +15,7 @@ const VENDORS = [
 
 const ShopNew = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [params] = useSearchParams();
   const [selectedVendor, setSelectedVendor] = useState<string>('');
   const [creating, setCreating] = useState(false);
@@ -31,7 +33,7 @@ const ShopNew = () => {
     setCreating(true);
     try {
       const data = await shopsApi.createShop();
-      navigate(`/shop/${data.slug}?vendor=${encodeURIComponent(selectedVendor)}`);
+      navigate(shopURLFromPage(`/shop/${data.slug}?vendor=${encodeURIComponent(selectedVendor)}`,location));
     } catch (e) {
       console.error(e);
       setCreating(false);
@@ -77,5 +79,4 @@ const ShopNew = () => {
 };
 
 export default ShopNew;
-
 

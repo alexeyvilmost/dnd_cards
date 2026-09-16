@@ -32,7 +32,7 @@ const SupportStatusBadge = ({ entity, compact = false }: SupportStatusBadgeProps
   return (
     <span
       className={`support-status-badge support-status-badge--${presentation.tone}${compact ? ' support-status-badge--compact' : ''}`}
-      title={title}
+      aria-description={title}
       aria-label={presentation.label}
     >
       <span className="support-status-badge__dot" aria-hidden />

@@ -44,9 +44,10 @@ describe('SupportStatusBadge', () => {
     expect(container.textContent).toContain('100% evidence');
     expect(container.textContent).not.toContain('12/12');
     expect(container.textContent).toContain('закреплено');
-    expect(container.querySelector('[title]')?.getAttribute('title'))
+    expect(container.querySelector('[title]')).toBeNull();
+    expect(container.querySelector('[aria-description]')?.getAttribute('aria-description'))
       .toContain('Ячейки evidence заявленного scope: 12/12 (100%)');
-    expect(container.querySelector('[title]')?.getAttribute('title'))
+    expect(container.querySelector('[aria-description]')?.getAttribute('aria-description'))
       .toContain('Это не число браузерных сценариев');
   });
 

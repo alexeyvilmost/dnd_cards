@@ -167,7 +167,7 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, p
                   type="button"
                   className="sheet-active-effect-dismiss"
                   disabled={busy || Boolean(mutationBlockReason)}
-                  title={mutationBlockReason ?? 'Снять эффект'}
+                  aria-label={mutationBlockReason ?? 'Снять эффект'}
                   onClick={() => removeConditions(group.effects.map((effect) => effect.id))}
                 >
                   <X size={13} />

@@ -121,7 +121,6 @@ const EffectCreator = () => {
     type: formData.type || null,
     author: formData.author || 'Admin',
     source: formData.source || null,
-    tags: formData.tags || null,
     price: formData.price || null,
     weight: formData.weight || null,
     properties: formData.properties || null,

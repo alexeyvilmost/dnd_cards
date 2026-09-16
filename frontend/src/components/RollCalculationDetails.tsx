@@ -1,5 +1,6 @@
 import type {RollLog} from '../mvp/contracts';
 import {armorClassTerminology} from '../utils/armorClassTerminology';
+import {splitD20Dice} from '../dice/rollTray';
 
 export default function RollCalculationDetails({roll, provisional = false}: {roll: RollLog; provisional?: boolean}) {
   const natural = roll.dice.find(die => die.sides === 20 && !die.discarded)?.result;
@@ -7,6 +8,7 @@ export default function RollCalculationDetails({roll, provisional = false}: {rol
     <div className="combat-roll-detail-columns">
       <section aria-label="Модификаторы броска"><h4>Бонусы к броску</h4>{!provisional && <p>{armorClassTerminology(roll.text)}</p>}
         <ul className="combat-roll-modifiers">{roll.modifiers.map((modifier,i)=><li key={i}><span>{modifier.source}</span><b>{modifier.value>=0?'+':''}{modifier.value}</b></li>)}</ul>
+        {splitD20Dice(roll).bonus.length > 0 && <ul className="combat-roll-modifiers">{splitD20Dice(roll).bonus.map(({die,index}) => <li key={index}><span>{die.source || 'Дополнительная кость'} · к{die.sides}</span><b>{die.discarded ? 'Отброшено' : `${die.sign === -1 ? '−' : '+'}${die.result}`}</b></li>)}</ul>}
         <p>Итого модификаторы: {roll.total - (natural ?? roll.total)}</p>
       </section>
       {roll.target?.type === 'ac' && <section aria-label="Расчёт КД цели"><h4>КД цели · {roll.target.value}</h4>

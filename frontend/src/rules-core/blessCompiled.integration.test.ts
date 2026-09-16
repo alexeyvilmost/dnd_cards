@@ -255,6 +255,7 @@ describe('compiled PHB 2024 Bless runtime', () => {
       factsByTarget: { [cleric.id]: facts('enemy') },
     }))).find((roll) => roll.kind === 'd20'), 'Blessed attack roll');
     expect(attackRoll.dice).toContainEqual({
+      role: 'bonus',
       sides: 4,
       result: 3,
       source: 'Благословение',
@@ -283,6 +284,7 @@ describe('compiled PHB 2024 Bless runtime', () => {
       dc: 10,
     })))[0], 'Blessed saving throw');
     expect(saveRoll.dice).toContainEqual({
+      role: 'bonus',
       sides: 4,
       result: 4,
       source: 'Благословение',

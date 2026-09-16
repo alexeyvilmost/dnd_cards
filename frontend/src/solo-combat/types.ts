@@ -12,6 +12,7 @@ import type { SheetCanonicalResourceBindings } from '../character/sheetCanonical
 import type { Action, Spell } from '../types';
 import { activeConditionWorldFactEnabled, expandConditionSet } from '../engine/conditions';
 import {canHear, perceivesWithoutSight} from '../engine/senses';
+import {terrainSight, type BattleMapDefinition} from './boardGeometry';
 
 export const SOLO_COMBAT_KEY = 'solo_combat_v1' as const;
 export const SOLO_COMBAT_SCHEMA_VERSION = 1 as const;
@@ -121,6 +122,7 @@ export type CombatAreaEvent = 'created' | 'enter' | 'exit' | 'move' | 'start_tur
 /** A board-owned persistent area. Creature conditions remain ordinary catalog
  * effects; this record only owns geometry, lifecycle and hazard provenance. */
 export interface CombatAreaState {
+  sceneryFeatureId?: string;
   id: string;
   name: string;
   zoneType: string;
@@ -300,6 +302,10 @@ export interface SoloCombatState {
   schemaVersion: typeof SOLO_COMBAT_SCHEMA_VERSION;
   /** Missing on archived encounters: their executable still uses one cell. */
   tacticalFootprints?: 'sized';
+  /** New workers execute a route in one atomic command, stopping at decisions. */
+  routeCommandVersion?: 1;
+  /** Frozen, data-owned geometry; absent on historical empty battlefields. */
+  battleMap?: BattleMapDefinition;
   characterId: string;
   runtimeRevision: number;
   world: WorldState;
@@ -415,7 +421,7 @@ export function combatRelation(
 }
 
 export function spatialFacts(
-  state: Pick<SoloCombatState, 'tokens' | 'boardRevision' | 'sideByActorId' | 'combatAreas'>
+  state: Pick<SoloCombatState, 'tokens' | 'boardRevision' | 'sideByActorId' | 'combatAreas' | 'battleMap'>
     & Partial<Pick<SoloCombatState, 'world' | 'recentStraightMovementByActor'>>,
   sourceActorId: string,
   targetActorId: string,
@@ -424,6 +430,7 @@ export function spatialFacts(
   const source = state.tokens[sourceActorId]?.position;
   const target = state.tokens[targetActorId]?.position;
   if (!source || !target) throw new Error('На поле отсутствует участник действия');
+  const terrain = terrainSight(state, source, target, actorFootprint(state.world?.actors[sourceActorId], state), actorFootprint(state.world?.actors[targetActorId], state));
   const obscured = Object.values(state.combatAreas ?? {}).some((area) => {
     if (!area.heavilyObscured) return false;
     const cells = new Set(area.cells.map((cell) => `${cell.x}:${cell.y}`));
@@ -437,6 +444,7 @@ export function spatialFacts(
   });
   const distanceFt = footprintDistanceFt(source, target, actorFootprint(state.world?.actors[sourceActorId], state), actorFootprint(state.world?.actors[targetActorId], state));
   const sees = (observerId: string, observedId: string): boolean => {
+    if (terrain.blocked) return false;
     const observer = state.world?.actors[observerId];
     const observed = state.world?.actors[observedId];
     if (observer && perceivesWithoutSight(observer.runtime, observer.passives ?? [], distanceFt)) return true;
@@ -470,8 +478,8 @@ export function spatialFacts(
     factsSource: 'board',
     boardRevision: state.boardRevision,
     distanceFt,
-    lineOfSight: !obscured || sourceNonvisual,
-    cover: 'none',
+    lineOfSight: !terrain.blocked && (!obscured || sourceNonvisual),
+    cover: terrain.cover,
     relation: combatRelation(state, sourceActorId, targetActorId),
     canSeeTarget: sees(sourceActorId, targetActorId),
     targetCanSeeSource: sees(targetActorId, sourceActorId),

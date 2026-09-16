@@ -1,3 +1,4 @@
+import { previewAnchor } from '../utils/previewAnchor';
 import { useEffect, useState } from 'react';
 import type { Card, CardRef } from '../types';
 import { getCardsIndex } from '../utils/cardsIndex';
@@ -37,7 +38,7 @@ export const ItemIconRow: React.FC<{ refs: CardRef[]; size?: number }> = ({ refs
   return (
     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
       {resolved.map(({ ref, card }) => (
-        <div key={ref.card_id} title={card.name} style={{ position: 'relative', flex: '0 0 auto' }}>
+        <div key={ref.card_id} aria-description={card.name} style={{ position: 'relative', flex: '0 0 auto' }}>
           <img
             src={card.image_url || '/default_image.png'}
             alt={card.name}
@@ -76,8 +77,7 @@ export const RelatedCardsList: React.FC<{ refs: CardRef[]; title?: string }> = (
           <li key={ref.card_id}>
             <span
               className="text-sm text-blue-700 hover:underline cursor-help"
-              onMouseEnter={(e) => { setHovered(card); setPos({ x: e.clientX, y: e.clientY }); }}
-              onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
+              onMouseEnter={(e) => { setHovered(card); setPos(previewAnchor(e.currentTarget)); }}
               onMouseLeave={() => setHovered(null)}
             >
               {card.name}{ref.quantity > 1 ? ` ×${ref.quantity}` : ''}
@@ -88,6 +88,7 @@ export const RelatedCardsList: React.FC<{ refs: CardRef[]; title?: string }> = (
 
       {hovered && (
         <div
+          className="entity-preview-enter"
           style={{
             position: 'fixed',
             left: Math.min(pos.x + 16, window.innerWidth - 220),

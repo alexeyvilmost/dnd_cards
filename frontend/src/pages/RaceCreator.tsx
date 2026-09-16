@@ -43,7 +43,7 @@ const TraitEditor = ({ title, items, onChange, namePlaceholder }: {
           <div key={i} className="border border-gray-200 rounded-lg p-3 space-y-2">
             <div className="flex items-center gap-2">
               <input value={t.name} onChange={(e) => set(i, { name: e.target.value })} className={inputCls} placeholder={namePlaceholder} />
-              <button type="button" onClick={() => onChange(items.filter((_, idx) => idx !== i))} className="p-2 text-gray-400 hover:text-red-500" title="Удалить">
+              <button type="button" onClick={() => onChange(items.filter((_, idx) => idx !== i))} className="p-2 text-gray-400 hover:text-red-500" aria-label="Удалить">
                 <X size={18} />
               </button>
             </div>

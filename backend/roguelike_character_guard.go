@@ -258,8 +258,8 @@ func authorizeRoguelikeCharacterMutation(
 	}
 	var run RoguelikeRun
 	if err := tx.Where(
-		"id = ? AND character_id = ? AND user_id = ?", runID, character.ID, userID,
-	).First(&run).Error; err != nil {
+		"id = ? AND user_id = ?", runID, userID,
+	).First(&run).Error; err != nil || !roguelikeHasCharacter(&run, character.ID) {
 		return nil, &characterRuntimeCommandError{
 			Status: http.StatusConflict, Code: "roguelike_authority_mismatch",
 			Message:     "забег не владеет этим персонажем",

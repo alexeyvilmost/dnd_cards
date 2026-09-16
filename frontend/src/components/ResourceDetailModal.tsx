@@ -18,6 +18,7 @@ const ResourceDetailModal: React.FC<ResourceDetailModalProps> = ({ resource, isO
 
   return (
     <EntityDetailShell
+      entity={{type:'resource',id:resource.id}}
       isOpen={isOpen}
       onClose={onClose}
       title={resource.name}

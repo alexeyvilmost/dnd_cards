@@ -75,7 +75,7 @@ export default function SheetEntityRow({
             onClick();
           }
         }}
-        title={title ?? name}
+        aria-description={title ?? name}
         onMouseEnter={onMouseEnter}
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
@@ -95,7 +95,7 @@ export default function SheetEntityRow({
       onClick={disabled ? undefined : onClick}
       aria-disabled={disabled || undefined}
       aria-pressed={selected}
-      title={title ?? name}
+      aria-description={title ?? name}
       onMouseEnter={onMouseEnter}
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}

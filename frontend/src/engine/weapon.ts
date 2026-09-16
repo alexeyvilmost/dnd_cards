@@ -16,6 +16,8 @@ import {
   type WeaponProfile,
 } from './weaponProfile';
 import { resolveUnarmedDamageProfile } from '../rules-core/fightingStyleComplexPrimitives';
+import { payloadsOf } from './mechanicsView';
+import { matchesWhen } from './circumstances';
 
 type Dict = Record<string, unknown>;
 
@@ -133,6 +135,7 @@ function cardToWeapon(
   character: CharacterContext,
   twoHandedGrip = false,
   runtime?: RuntimeState,
+  passives: Dict[] = [],
 ): WeaponContext | null {
   const parsed = parseWeaponProfile(card);
   if (!parsed.valid) return null;
@@ -156,11 +159,35 @@ function cardToWeapon(
   const enchantedType = enchantment?.damage_type === 'force'
     ? 'force'
     : damages[0].type;
+  let trainedAbility = pickAbility(profile, character);
+  for (const payload of passives.flatMap(payloadsOf)) {
+    if (payload.kind !== 'weapon_attack_profile' || !runtime
+      || !matchesWhen(payload.when as Dict[] | undefined, {character, state:runtime})) continue;
+    const selectors = payload.weapon_selectors;
+    if (!Array.isArray(selectors) || !selectors.some(raw => {
+      if (!raw || typeof raw !== 'object') return false;
+      const selector=raw as Dict;
+      return (selector.category === undefined || selector.category === profile.proficiencyCategory)
+        && (selector.mode === undefined || selector.mode === profile.defaultAttackMode)
+        && (selector.property === undefined || profile.properties.includes(String(selector.property)))
+        && (selector.weapon_type === undefined || selector.weapon_type === profile.weaponType);
+    })) continue;
+    const abilities: unknown[] = Array.isArray(payload.ability_options) ? payload.ability_options : [];
+    for (const ability of abilities) {
+      if ((ability === 'str' || ability === 'dex')
+        && (character.abilityMods[ability] ?? 0) > (character.abilityMods[trainedAbility] ?? 0)) trainedAbility=ability;
+    }
+    const variable = character.variables?.[String(payload.minimum_damage_dice)];
+    const rawDice = variable && typeof variable !== 'number' ? `${variable.count}d${variable.sides}` : String(payload.minimum_damage_dice ?? '');
+    const candidate = /^(\d+)d(\d+)$/.exec(rawDice), current = /^(\d+)d(\d+)$/.exec(damages[0].dice);
+    if (candidate && current && Number(candidate[1]) > 0 && Number(candidate[2]) >= 2
+      && Number(candidate[1]) * (Number(candidate[2])+1) > Number(current[1]) * (Number(current[2])+1)) damages[0]={...damages[0],dice:rawDice};
+  }
   const enchantedAbility = typeof enchantment?.attack_ability === 'string'
     && ['str', 'dex', 'con', 'int', 'wis', 'cha'].includes(enchantment.attack_ability)
     ? enchantment.attack_ability as WeaponContext['ability']
-    : pickAbility(profile, character);
-  damages[0] = { dice: enchantedDice, type: enchantedType };
+    : trainedAbility;
+  damages[0] = { dice: enchantment?.damage_dice ? enchantedDice : damages[0].dice, type: enchantedType };
   return {
     cardId: card.id,
     name: card.name,
@@ -193,6 +220,7 @@ export function weaponContext(
   hand: 'main' | 'off',
   equipment?: Record<string, string | null | undefined>,
   runtime?: RuntimeState,
+  passives: Dict[] = [],
 ): WeaponContext | null {
   const slot = hand === 'main' ? 'main_hand' : 'off_hand';
   if (equipment) {
@@ -200,7 +228,7 @@ export function weaponContext(
     // Хват двумя руками: универсальное оружие в основной руке при пустой второй.
     const twoHandedGrip = hand === 'main' && !equipment.off_hand;
     if (card?.type === 'weapon') {
-      const weapon = cardToWeapon(card, character, twoHandedGrip, runtime);
+      const weapon = cardToWeapon(card, character, twoHandedGrip, runtime, passives);
       const other = equipment[hand === 'main' ? 'off_hand' : 'main_hand'];
       if (weapon?.properties.includes('two_handed') && other && other !== card.id) return null;
       return weapon;
@@ -211,7 +239,7 @@ export function weaponContext(
   const weapons = (character.equippedCards ?? []).filter((c) => c.type === 'weapon');
   const card = hand === 'main' ? weapons[0] : weapons[1];
   if (!card) return null;
-  return cardToWeapon(card, character, false, runtime);
+  return cardToWeapon(card, character, false, runtime, passives);
 }
 
 /** Data-driven option domain for in-play choices over currently equipped weapons. */
@@ -716,7 +744,7 @@ export function weaponAttackPreview(
   }
 
   const hand: 'main' | 'off' = kind === 'off' ? 'off' : 'main';
-  const w = weaponContext(character, hand, equipment, state);
+  const w = weaponContext(character, hand, equipment, state, passives);
   if (!w) return null;
   const prof = isWeaponProficient(
     character,

@@ -1,3 +1,4 @@
+import { previewAnchor } from '../../utils/previewAnchor';
 import { useState } from 'react';
 import type { Spell } from '../../types';
 import { getSpellLevelLabel, SPELL_SCHOOL_OPTIONS } from '../../types';
@@ -31,8 +32,7 @@ const ForgeSpellIconGrid = ({ spells, className }: Props) => {
   if (!spells.length) return null;
 
   const hoverProps = (spell: Spell) => ({
-    onMouseEnter: (e: React.MouseEvent) => { setHovered(spell); setMouse({ x: e.clientX, y: e.clientY }); },
-    onMouseMove: (e: React.MouseEvent) => setMouse({ x: e.clientX, y: e.clientY }),
+    onMouseEnter: (e: React.MouseEvent) => { setHovered(spell); setMouse(previewAnchor(e.currentTarget)); },
     onMouseLeave: () => setHovered(null),
   });
 
@@ -57,7 +57,7 @@ const ForgeSpellIconGrid = ({ spells, className }: Props) => {
             <div
               key={spell.id}
               className="forge-spell-icon ready"
-              title={`${spell.name} · ${getSpellLevelLabel(spell.level)}`}
+              aria-description={`${spell.name} · ${getSpellLevelLabel(spell.level)}`}
               {...hoverProps(spell)}
             >
               <img
@@ -72,7 +72,7 @@ const ForgeSpellIconGrid = ({ spells, className }: Props) => {
       )}
       {hovered && (
         <div
-          className="fixed z-50 pointer-events-none"
+          className="fixed z-50 pointer-events-none entity-preview-enter"
           style={{
             left: Math.min(mouse.x + 16, window.innerWidth - 360),
             top: Math.min(Math.max(mouse.y - 40, 10), window.innerHeight - 20),

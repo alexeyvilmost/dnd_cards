@@ -1,6 +1,5 @@
 import {combatHideIssue} from '../solo-combat/hide';
-import {decisionPolicyToggles} from '../solo-combat/decisionPolicies';
-import DecisionPolicyToggles from './DecisionPolicyToggles';
+import {actorPassiveToggles} from '../character/actorPassiveToggles';
 import SheetPassiveToggle from './SheetPassiveToggle';
 import { combatActorDisplayName } from '../character/familiarLabels';
 import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
@@ -41,7 +40,6 @@ import {
   ownsGeneralFeatCapability,
 } from '../rules-core/generalFeatDamageRuntime';
 import { LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE } from '../rules-core/weaponActionPolicies';
-import { combatPassiveToggles } from '../solo-combat/actionChoices';
 
 function resourceLabel(resource: string): string {
   if (resource === 'spell_slot') return 'Ячейка';
@@ -422,18 +420,8 @@ export default function CombatHotbar({
     const action = state.catalogActions.find((candidate) => candidate.id === id);
     return action && !isTriggeredCombatAction(action) ? [action] : [];
   }).map((action) => projectCombatHotbarAction(state, action, actorId));
-  const passiveToggles = combatPassiveToggles(
-    actor,
-    actions,
-    (actionId) => state.actionPresentation?.[actionId]?.actionRef?.card_number,
-  );
-  const decisionToggleGroups = [
-    {id: 'roll-influence', name: undefined, toggles: decisionPolicyToggles('roll_influence')},
-    ...state.catalogActions.filter(action => actor.capabilities.actionIds.includes(action.id))
-      .map(action => ({id: action.id, name: action.name, toggles: decisionPolicyToggles('reaction', action)}))
-      .filter(group => group.toggles.length),
-  ];
-  const passiveCount = passiveToggles.length + decisionToggleGroups.reduce((sum, group) => sum + group.toggles.length, 0);
+  const passiveToggles = actorPassiveToggles(actor, state.catalogActions, state.actionPresentation, actions);
+  const passiveCount = passiveToggles.length;
   const freeuseResources = Object.entries(actor.runtime.maxResources)
     .filter(([key, maximum]) => maximum > 0 && isFreeusePoolKey(key));
   const freeuseSpells = freeuseResources.map(([key, maximum]) => ({
@@ -506,13 +494,13 @@ export default function CombatHotbar({
           ))}
         </div>
         <div className={`combat-hotbar__utility${grappled ? ' has-stand' : ''}`} role="group" aria-label="Управление полем">
-          {grappled && onEscape && <button type="button" className="combat-utility-button" disabled={disabled || !canEscapeActorGrapple(state, actorId)} onClick={onEscape} title="Действие: проверка Атлетики или Акробатики">
+          {grappled && onEscape && <button type="button" className="combat-utility-button" disabled={disabled || !canEscapeActorGrapple(state, actorId)} onClick={onEscape} aria-description="Действие: проверка Атлетики или Акробатики">
             <Unlink /><span>Освободиться</span>
           </button>}
-          <button type="button" className={`combat-utility-button${movementMode ? ' is-selected' : ''}`} disabled={disabled || movementRemaining <= 0} onClick={onMove} title="Перемещение">
+          <button type="button" className={`combat-utility-button${movementMode ? ' is-selected' : ''}`} disabled={disabled || movementRemaining <= 0} onClick={onMove} aria-description="Перемещение">
             <Footprints /><span>{movementLabel}</span><small>{movementRemaining} фт.</small>
           </button>
-          <button type="button" className="combat-utility-button" onClick={onSheet} title="Открыть сокращённый лист">
+          <button type="button" className="combat-utility-button" onClick={onSheet} aria-description="Открыть сокращённый лист">
             <MoreHorizontal /><span>Лист</span>
           </button>
         </div>
@@ -550,6 +538,11 @@ export default function CombatHotbar({
                 holdingWeaponOrShield: heldCards.some((card) => (
                   card.type === 'weapon' || card.type === 'shield' || card.defense_type === 'shield'
                 )),
+                wearingArmorOrShield: Object.values(actor.runtime.equipment).some(id =>
+                  [...(actor.character.knownCards ?? []), ...(actor.character.equippedCards ?? [])]
+                    .some(card => card.id === id && card.defense_type != null)),
+                variables: actor.character.variables,
+                abilityMods: actor.character.abilityMods,
               },
             )
             : undefined;
@@ -588,7 +581,7 @@ export default function CombatHotbar({
                 name={displayedName}
                 imageUrl={presentation?.imageUrl}
                 sourceLabel={presentation?.sourceLabel ?? (action.kind === 'spell' ? 'Заклинание' : 'Действие')}
-                description={presentation?.description}
+                description={contextualActionRef?.description ?? presentation?.description}
                 level={presentation?.spellRef?.level}
                 actionRef={contextualActionRef}
                 runtime={actor.runtime}
@@ -615,17 +608,9 @@ export default function CombatHotbar({
           <p className="combat-hotbar__empty-filter">Нет доступных действий для этого ресурса</p>
         )}
       </div> : <div className="combat-hotbar__passives site-scrollbar" role="tabpanel" aria-label="Пассивные эффекты атак">
-        {decisionToggleGroups.map(group => <div key={group.id} className="combat-passive-group">
-          <DecisionPolicyToggles toggles={group.toggles} preferences={passiveEnabled ?? {}}
-            parent={{name: group.name, imageUrl: state.actionPresentation?.[group.id]?.imageUrl
-              || state.actionPresentation?.[group.id]?.spellRef?.image_url || state.actionPresentation?.[group.id]?.actionRef?.image_url}}
-            onChange={(id, enabled) => onPassiveToggle?.(id, enabled)}/></div>)}
         {passiveToggles.map((toggle) => {
-          const enabled = passiveEnabled?.[toggle.id] !== false;
-          const parent = state.actionPresentation?.[toggle.parentActionId ?? ''];
-          return <SheetPassiveToggle key={toggle.id} toggle={{...toggle,
-            imageUrl: toggle.imageUrl || parent?.imageUrl || parent?.actionRef?.image_url || parent?.spellRef?.image_url,
-            sourceName: parent?.actionRef?.name ?? parent?.spellRef?.name}}
+          const enabled = passiveEnabled?.[toggle.id] ?? toggle.defaultEnabled;
+          return <SheetPassiveToggle key={toggle.id} toggle={toggle}
             enabled={enabled} onChange={(id, value) => onPassiveToggle?.(id, value)}/>;
         })}
         {!passiveCount && <p className="combat-hotbar__empty-filter">Нет переключаемых пассивов</p>}

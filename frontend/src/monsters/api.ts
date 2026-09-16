@@ -2,7 +2,7 @@ import { apiClient } from '../api/client';
 import type { Monster, MonsterInput, MonstersResponse } from './types';
 
 export const monstersApi = {
-  list: async (params?: { search?: string; page?: number; limit?: number }): Promise<MonstersResponse> => {
+  list: async (params?: { search?: string; page?: number; limit?: number;tag?:string }): Promise<MonstersResponse> => {
     const { data } = await apiClient.get<MonstersResponse>('/api/monsters', { params });
     return data;
   },

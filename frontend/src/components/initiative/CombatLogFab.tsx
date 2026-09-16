@@ -46,7 +46,7 @@ const CombatLogFab: React.FC<CombatLogFabProps> = ({ entries, open, onToggle }) 
         type="button"
         onClick={onToggle}
         className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-900 text-white shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-gray-800"
-        title={open ? 'Скрыть журнал' : 'Журнал боя'}
+        aria-label={open ? 'Скрыть журнал' : 'Журнал боя'}
         aria-expanded={open}
       >
         {open ? <X size={24} /> : <BookOpen size={24} />}

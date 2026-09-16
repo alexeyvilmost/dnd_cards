@@ -107,7 +107,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
           <img
             src="/icons/attunement.png"
             alt="Требуется настройка"
-            title="Требуется настройка"
+            aria-description="Требуется настройка"
             className="w-4 h-4"
           />
         </div>

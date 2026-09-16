@@ -379,6 +379,7 @@ func TestRoguelikeLootSkipsOverweightCandidateForFittingAlternative(t *testing.T
 		t.Fatal("could not construct deterministic heavy-first loot order")
 	}
 	rules := JSONMap{"carryingCapacity": float64(5)}
+	seedTaggedShopTest(t,fixture.db,heavy,light)
 	character := CharacterV3{ID: uuid.New(), RuleState: &rules}
 	run := RoguelikeRun{RunSeed: seed}
 	card, err := grantRoguelikeLootByKind(fixture.db, &run, &character, 1, "equipment", "loot", 1, map[string]bool{})

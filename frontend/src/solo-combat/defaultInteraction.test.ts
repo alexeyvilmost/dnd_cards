@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import compiled from '../pages/rulesLabFixture.generated.json';
+import pinned from '../roguelike/pinnedFighter.fixture.json';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import type { SoloCombatState } from './types';
 import {
   combatActionIsAttack,
+  combatActionRangeFt,
   combatApproachRoute,
   combatMovementRoute,
   defaultCombatAttackAction,
@@ -49,6 +51,15 @@ function state(): SoloCombatState {
 }
 
 describe('contextual combat interaction', () => {
+  it.each([5,10])('binds %i ft weapon reach instead of the shared template ceiling',reach=>{
+    const value=state();const card=structuredClone(pinned.catalog.entities.card[0]);
+    const mechanics=card.mechanics as any;mechanics.weapon_profile.attack_modes.find((m:any)=>m.kind==='melee').reach_ft=reach;
+    const source=pinned.catalog.entities.action.find(a=>a.id==='ae7b59a2-2eee-412f-aee6-6323b4c1fb4d')!;
+    const action={...weapon,mechanics:source.mechanics,targeting:{...weapon.targeting,rangeFt:600}} as RuleActionDefinition;
+    value.world.actors.hero.character.knownCards=[card as any];value.world.actors.hero.character.equippedCards=[];
+    value.world.actors.hero.runtime.equipment={main_hand:card.id};
+    expect(combatActionRangeFt(value,'hero',action)).toBe(reach);
+  });
   it('does not return to the diagonal after rounding the blocker in the reported screenshot',()=>{
     const value=state();
     value.tokens.hero.position={x:9,y:1}; value.tokens.enemy1.position={x:8,y:1};

@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { Grid3X3, List, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Grid3X3, LayoutGrid, ShoppingCart } from 'lucide-react';
 import { shopsApi, cardsApi } from '../api/client';
 import { roguelikeApi, type RoguelikeRun, type RoguelikeOffer } from '../roguelike/api';
 import { runSheetURL } from '../roguelike/navigation';
 import { charactersV3Api } from '../character/api';
-import { characterCurrency, purchaseItem, purchasePrice } from '../character/inventory';
+import { characterCurrency, purchaseItem } from '../character/inventory';
 import { loadAssembly } from '../character/assemble';
 import { characterToDraft } from '../character/forgeHelpers';
 import { collectPassiveMechanics } from '../character/resourceInit';
@@ -17,28 +17,38 @@ import ItemPreview from '../components/ItemPreview';
 import CardPreview from '../components/CardPreview';
 import {EntityDetailShell} from '../components/EntityDetailShell';
 import './ShopDetail.css';
-import CurrencyPriceInline from '../components/CurrencyPriceInline';
-import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
-import { getRarityColor } from '../utils/rarityColors';
+import CoinAmount from '../components/CoinAmount';
 import { getCurrencyInfo } from '../utils/currencies';
-import { getSettings, useSiteSettings } from '../settings';
+import { useSiteSettings } from '../settings';
+import MerchantSettingsDialog from '../components/MerchantSettingsDialog';
+import {merchantSettingsApi,type MerchantSettings} from '../api/entityTags';
+import ShopCart, {type CartRow} from '../components/ShopCart';
+import {walletInCopper} from '../utils/money';
+import {runMoneyCopper} from '../roguelike/money';
+import {shopReturnTo} from '../utils/shopNavigation';
+import {offerId,cardForOffer,shopPriceCopper} from '../roguelike/shopPresentation';
 
 type VendorsResponse = Record<string, Card[]>;
-type RunShopCard = Card & { runOfferId?: string };
-const offerId = (card: Card) => (card as RunShopCard).runOfferId ?? card.id;
 
 const STARTING_GOLD = 150;
 
 const ShopDetail = () => {
+  const [merchantSettings,setMerchantSettings]=useState<MerchantSettings|null>(null);
+  const [settingsOpen,setSettingsOpen]=useState(false);
+  useEffect(()=>{void merchantSettingsApi.get().then(setMerchantSettings).catch(()=>{});},[settingsOpen]);
   const settings = useSiteSettings();
   const { slug } = useParams();
   const [vendors, setVendors] = useState<VendorsResponse>({});
   const [characters, setCharacters] = useState<ForgeCharacter[]>([]);
   const [loading, setLoading] = useState(true);
-  // Начальный режим — из настройки «Отображение сущностей → Предметы»; переключатель работает поверх.
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>(
-    () => (getSettings().entityDisplay.items === 'icon' ? 'grid' : 'list'),
-  );
+  const [viewMode, setViewMode] = useState<'grid' | 'full'>(() => {
+    try { return localStorage.getItem('dnd-cards:shop-view') === 'full' ? 'full' : 'grid'; }
+    catch { return 'grid'; }
+  });
+  const changeViewMode = (mode: 'grid' | 'full') => {
+    setViewMode(mode);
+    try { localStorage.setItem('dnd-cards:shop-view', mode); } catch { /* private mode */ }
+  };
   const [error, setError] = useState<string | null>(null);
   const [inspectedCard, setInspectedCard] = useState<Card | null>(null);
   const [shopMsg, setShopMsg] = useState<string | null>(null);
@@ -49,22 +59,37 @@ const ShopDetail = () => {
   const [roguelike, setRoguelike] = useState<RoguelikeRun | null>(null);
   const selectedVendor = params.get('vendor') || '';
   const characterId = params.get('character') || '';
+  const returnTo = shopReturnTo(params.get('returnTo'))
+    ?? (runId && (characterId || roguelike?.character_id)
+      ? runSheetURL({id:runId,character_id:characterId || roguelike!.character_id})
+      : characterId ? `/characters-v3/${characterId}` : '/shop/new');
+  const basketKey=runId??characterId??'unselected';
+  const [baskets,setBaskets]=useState<Record<string,Record<string,number>>>(()=>{try{return JSON.parse(localStorage.getItem('boh:shop-baskets')||'{}')}catch{return {}}});
+  const basket=baskets[basketKey]??{};
+  const pendingCart=useRef<{signature:string;revision:number;commandId:string}|null>(null);
+  const forgetPendingCart=()=>{pendingCart.current=null;try{localStorage.removeItem('boh:shop-pending:'+basketKey)}catch{/* storage unavailable */}};
+  const changeBasket=(id:string,quantity:number)=>{if(buyingId)return;setShopMsg(null);setBaskets(all=>{const next={...(all[basketKey]??{})};if(quantity<0)delete next[id];else next[id]=Math.max(0,Math.min(1000,Math.floor(quantity)||0));return {...all,[basketKey]:next}});pendingCart.current=null;};
+  useEffect(()=>{try{localStorage.setItem('boh:shop-baskets',JSON.stringify(baskets))}catch{/* storage unavailable */}},[baskets]);
 
   const applyRun = useCallback(async (run: RoguelikeRun) => {
     const hydrate = async (offer: RoguelikeOffer): Promise<Card> => {
       const card = offer.card_id ? await cardsApi.getCard(offer.card_id) : {
         id: offer.id, name: offer.name, rarity: 'common',
+        price:offer.price,price_currency:offer.price_currency||'gold',
         image_url: 'https://dnd-cards-images.storage.yandexcloud.net/cards/1783596157_0LfYMOIk.png',
         description: 'Для долгого отдыха требуется один комплект лагерных припасов.',
       } as Card;
-      return { ...card, runOfferId: offer.id, price: offer.price, price_currency: 'gold' } as RunShopCard;
+      return cardForOffer(card,offer);
     };
     const [staples, offers] = await Promise.all([
       Promise.all(run.shop.staples.map(hydrate)), Promise.all(run.shop.offers.map(hydrate)),
     ]);
     setRoguelike(run);
     setCharacters(run.character ? [run.character] : []);
-    setVendors({ 'Постоянный ассортимент': staples, 'Случайный ассортимент': offers });
+    const starterIDs=new Set(run.shop.staples.filter(o=>o.starting_only).map(o=>o.id));
+    setVendors({ 'Постоянный ассортимент': staples.filter(c=>!starterIDs.has(offerId(c))),
+      ...(starterIDs.size ? {'Стартовая экипировка':staples.filter(c=>starterIDs.has(offerId(c)))} : {}),
+      'Случайный ассортимент': offers });
   }, []);
 
   const runCommand = async (type: 'buy' | 'pin' | 'refresh_shop', payload: Record<string, unknown> = {}) => {
@@ -145,7 +170,7 @@ const ShopDetail = () => {
       const currency = { ...characterCurrency(selectedCharacter), gold: STARTING_GOLD };
       const updated = await charactersV3Api.patchRuntime(selectedCharacter.id, { currency });
       setCharacters((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
-      setShopMsg(`Выдано ${STARTING_GOLD} зм для теста покупок.`);
+      setShopMsg('Кошелёк пополнен для теста покупок.');
     } catch (e) {
       console.error(e);
       setShopMsg('Не удалось выдать золото');
@@ -154,83 +179,69 @@ const ShopDetail = () => {
     }
   };
 
-  const handleBuy = useCallback(async (card: Card) => {
+  const checkout = async () => {
     if (!selectedCharacter) {
       setShopMsg('Выберите персонажа для покупки');
       return;
     }
-    setBuyingId(card.id);
+    if(buyingId||!cartRows.length)return;
+    setBuyingId('cart');
     setShopMsg(null);
     try {
-      const fresh = await charactersV3Api.get(selectedCharacter.id);
+      if(runId){
+        const items=cartRows.map(row=>({offer_id:row.id,quantity:row.quantity}));
+        const signature=JSON.stringify([runId,items]);
+        if(!pendingCart.current){try{pendingCart.current=JSON.parse(localStorage.getItem('boh:shop-pending:'+basketKey)||'null')}catch{/* storage unavailable */}}
+        if(pendingCart.current?.signature!==signature){const fresh=await roguelikeApi.get(runId);pendingCart.current={signature,revision:fresh.revision,commandId:crypto.randomUUID()};}
+        try{localStorage.setItem('boh:shop-pending:'+basketKey,JSON.stringify(pendingCart.current))}catch{/* storage unavailable */}
+        const pending=pendingCart.current!;
+        await roguelikeApi.command(runId,pending.revision,'buy_cart',{items},pending.commandId);
+        await applyRun(await roguelikeApi.get(runId));
+        forgetPendingCart();
+      }else{
+      let fresh = await charactersV3Api.get(selectedCharacter.id);
+      const expectedRevision=fresh.runtime_revision;
       const draft = characterToDraft(fresh);
       const assembled = await loadAssembly(draft);
       const passives = collectPassiveMechanics(assembled, draft.resolvedChoices);
+      for(const row of cartRows){
+      if(!row.card)throw new Error('Товар недоступен');
       const {
         runtime,
         currency,
-        pricePaid,
-        discountApplied,
         error: buyErr,
-      } = purchaseItem(fresh, card, passives);
+      } = purchaseItem(fresh, row.card, passives,row.quantity);
       if (buyErr) {
         setShopMsg(buyErr);
         return;
       }
+      fresh={...fresh,inventory_items:runtimeInventoryPayload(runtime),currency};
+      }
       const updated = await charactersV3Api.patchRuntime(fresh.id, {
-        inventory_items: runtimeInventoryPayload(runtime),
-        currency,
+        inventory_items: fresh.inventory_items??[],
+        currency:fresh.currency??{},
+        expected_runtime_revision:expectedRevision??undefined,
       });
       setCharacters((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
-      const currencyLabel = getCurrencyInfo(card.price_currency || 'gold').short;
-      setShopMsg(discountApplied
-        ? `«${card.name}» добавлен в инвентарь. Самоделкин: скидка 20%, уплачено ${pricePaid} ${currencyLabel}.`
-        : `«${card.name}» добавлен в инвентарь.`);
+      }
+      setBaskets(all=>({...all,[basketKey]:{}}));
+      setShopMsg('Корзина куплена. Предметы добавлены в инвентарь, сдача — в кошелёк.');
     } catch (e) {
       console.error(e);
-      setShopMsg('Ошибка покупки');
+      const status=(e as {response?:{status:number;data?:{error?:string}}})?.response?.status;
+      if(status&&status>=400&&status<500)forgetPendingCart();
+      setShopMsg((e as {response?:{data?:{error?:string}}})?.response?.data?.error??(e instanceof Error?e.message:'Ошибка покупки'));
     } finally {
       setBuyingId(null);
     }
-  }, [selectedCharacter]);
+  };
 
   const vendorNames = useMemo(() => Object.keys(vendors), [vendors]);
 
-  const canAfford = (card: Card) => {
-    if (!wallet) return false;
-    const price = purchasePrice(card, purchasePassives).payable;
-    if (price <= 0) return true;
-    const cur = card.price_currency || 'gold';
-    return (wallet[cur] ?? 0) >= price;
-  };
-
-  const getRarityBorderColor = (rarity: string): string => {
-    switch (rarity?.toLowerCase()) {
-      case 'common':
-      case 'обычное':
-        return 'border-l-gray-400';
-      case 'uncommon':
-      case 'необычное':
-        return 'border-l-green-500';
-      case 'rare':
-      case 'редкое':
-        return 'border-l-blue-500';
-      case 'very_rare':
-      case 'очень редкое':
-        return 'border-l-purple-500';
-      case 'epic':
-      case 'эпическое':
-        return 'border-l-purple-500';
-      case 'legendary':
-      case 'легендарное':
-        return 'border-l-orange-500';
-      case 'artifact':
-      case 'артефакт':
-        return 'border-l-orange-500';
-      default:
-        return 'border-l-gray-400';
-    }
-  };
+  const offers=roguelike?[...roguelike.shop.staples,...roguelike.shop.offers]:[];
+  const cartRows:CartRow[]=Object.entries(basket).map(([id,quantity])=>{const card=Object.values(vendors).flat().find(c=>offerId(c)===id);const offer=offers.find(o=>o.id===id);return {id,card,quantity,bundle:offer?.quantity??1,max:offer?.sold?0:offer&&!roguelike?.shop.staples.some(o=>o.id===id)?1:1000,priceCopper:card?shopPriceCopper(card,offers,purchasePassives):0}});
+  let canResumeCart=false;
+  try{const saved=JSON.parse(localStorage.getItem('boh:shop-pending:'+basketKey)||'null');canResumeCart=Boolean(runId&&saved?.signature===JSON.stringify([runId,cartRows.map(row=>({offer_id:row.id,quantity:row.quantity}))]));}catch{/* storage unavailable */}
 
   const walletLine = wallet && (
     <div className="flex flex-wrap items-center gap-3 text-sm text-gray-700">
@@ -240,7 +251,6 @@ const ShopDetail = () => {
           <span key={key} className="inline-flex items-center gap-1">
             <img src={cur.icon} alt={cur.label} className="w-4 h-4" />
             <strong>{wallet[key] ?? 0}</strong>
-            <span className="text-gray-500">{cur.short}</span>
           </span>
         );
       })}
@@ -251,7 +261,7 @@ const ShopDetail = () => {
           disabled={buyingId === 'grant'}
           onClick={grantStartingGold}
         >
-          Выдать {STARTING_GOLD} зм (тест)
+          Выдать <CoinAmount copper={STARTING_GOLD*100}/> (тест)
         </button>
       )}
     </div>
@@ -259,26 +269,24 @@ const ShopDetail = () => {
 
   const buyButton = (card: Card, compact = false) => {
     const offer = roguelike && [...roguelike.shop.staples, ...roguelike.shop.offers].find((entry) => entry.id === offerId(card));
-    const price = purchasePrice(card, purchasePassives).payable;
-    const affordable = canAfford(card);
     const busy = buyingId === offerId(card);
     return (
       <>
       <button
         type="button"
-        disabled={!selectedCharacter || Boolean(buyingId) || (price > 0 && !affordable) || Boolean(offer?.sold) || Boolean(roguelike && (roguelike.phase !== 'camp' || roguelike.status !== 'active'))}
-        onClick={() => runId ? void runCommand('buy', { offer_id: offerId(card) }) : void handleBuy(card)}
+        disabled={!selectedCharacter || Boolean(buyingId) || canResumeCart || Boolean(offer?.sold) || Boolean(roguelike && (roguelike.phase !== 'camp' || roguelike.status !== 'active'))}
+        onClick={() => {const max=offer&&!roguelike?.shop.staples.some(o=>o.id===offer.id)?1:1000;changeBasket(offerId(card),Math.min(max,(basket[offerId(card)]??0)+1));}}
         className="shop-buy"
-        title={!selectedCharacter ? 'Выберите персонажа' : price > 0 && !affordable ? 'Недостаточно средств' : 'Купить'}
+        aria-description={!selectedCharacter ? 'Выберите персонажа' : 'Добавить товар в корзину'}
       >
         <ShoppingCart size={compact ? 14 : 16} />
-        {busy ? '…' : offer?.sold ? 'Продано' : 'Купить'}
+        {busy ? '…' : offer?.sold ? 'Продано' : basket[offerId(card)] ? `В корзине: ${basket[offerId(card)]}` : 'В корзину'}
       </button>
-      {offer && <span className="text-xs text-gray-500">{roguelike?.shop.staples.some((entry) => entry.id === offer.id) ? '∞' : `${offer.quantity} шт.`}</span>}
+      {offer && <span className="text-xs text-gray-500">{offer.quantity>1?`Пачка: ${offer.quantity} шт. · `:''}{roguelike?.shop.staples.some((entry) => entry.id === offer.id) ? '∞' : '1 предложение'}</span>}
       {offer && roguelike?.shop.offers.some((entry) => entry.id === offer.id) && <button type="button"
-        className="shop-reserve" aria-pressed={offer.pinned} disabled={Boolean(buyingId) || offer.sold || (!offer.pinned && roguelike.gold < 5) || roguelike.phase !== 'camp' || roguelike.status !== 'active'}
+        className="shop-reserve" aria-pressed={offer.pinned} disabled={Boolean(buyingId) || offer.sold || (!offer.pinned && runMoneyCopper(roguelike) < 500) || roguelike.phase !== 'camp' || roguelike.status !== 'active'}
         onClick={() => void runCommand('pin', { offer_id: offer.pinned ? '' : offer.id })}>
-        {offer.pinned ? 'Снять резерв' : 'В резерв · 5 зм'}
+        {offer.pinned ? 'Снять резерв' : <>В резерв · <CoinAmount copper={500}/></>}
       </button>}
       </>
     );
@@ -286,23 +294,30 @@ const ShopDetail = () => {
 
   return (
     <div className="merchant-shop space-y-6">
+      <Link
+        className="shop-back"
+        to={returnTo}
+        aria-description="Вернуться на страницу, с которой открыт магазин"
+      ><ArrowLeft size={18} aria-hidden="true"/>Назад</Link>
+      {merchantSettings?.can_manage&&<button type="button" className="shop-refresh" onClick={()=>setSettingsOpen(true)}>Настройки магазина забега</button>}
+      {settingsOpen&&<MerchantSettingsDialog onClose={()=>setSettingsOpen(false)}/>}
       <p className="merchant-shop__eyebrow">ПРИПАСЫ · СНАРЯЖЕНИЕ · РЕДКОСТИ</p>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div><h1>Лавка странника</h1><p className="merchant-shop__welcome">Загляните на полки. Хорошая находка может спасти следующий бой.</p></div>
         <div className="flex items-center space-x-2">
           <button
-            onClick={() => setViewMode('grid')}
+            onClick={() => changeViewMode('grid')}
             className={`p-2 rounded-lg border ${viewMode === 'grid' ? 'bg-blue-100 border-blue-300 text-blue-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
-            title="Сетка"
+            aria-description="Предметы на полках" aria-label="Предметы на полках" aria-pressed={viewMode === 'grid'}
           >
             <Grid3X3 size={18} />
           </button>
           <button
-            onClick={() => setViewMode('list')}
-            className={`p-2 rounded-lg border ${viewMode === 'list' ? 'bg-blue-100 border-blue-300 text-blue-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`}
-            title="Список"
+            onClick={() => changeViewMode('full')}
+            className="p-2 rounded-lg border"
+            aria-description="Полные карточки — вид из настроек превью предметов" aria-label="Полные карточки" aria-pressed={viewMode === 'full'}
           >
-            <List size={18} />
+            <LayoutGrid size={18} />
           </button>
         </div>
       </div>
@@ -310,8 +325,9 @@ const ShopDetail = () => {
       <div className="shop-counter space-y-3">
         {roguelike && <div className="flex items-center gap-3 flex-wrap">
           <span>Припасы: {roguelike.supplies} · Обновление {roguelike.shop.generation}</span>
-          <button className="shop-refresh" disabled={Boolean(buyingId) || roguelike.gold < 5 * (roguelike.paid_refresh_count + 1) || roguelike.phase !== 'camp' || roguelike.status !== 'active'}
-            onClick={() => void runCommand('refresh_shop')}>Обновить ассортимент · {5 * (roguelike.paid_refresh_count + 1)} зм</button>
+          {roguelike.encounters_won===0&&<span>Стартовая экипировка доступна до первой победы.</span>}
+          <button className="shop-refresh" disabled={!merchantSettings || Boolean(buyingId) || runMoneyCopper(roguelike) < (merchantSettings?.config.refresh_price ?? 0) * (roguelike.paid_refresh_count + 1)*100 || roguelike.phase !== 'camp' || roguelike.status !== 'active'}
+            onClick={() => void runCommand('refresh_shop')}>Обновить ассортимент · {merchantSettings ? <CoinAmount copper={merchantSettings.config.refresh_price * (roguelike.paid_refresh_count + 1)*100}/> : '…'}</button>
         </div>}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <label className="text-sm font-medium text-gray-700 shrink-0">Покупатель:</label>
@@ -349,6 +365,8 @@ const ShopDetail = () => {
         </div>
       )}
 
+      <ShopCart key={basketKey} rows={cartRows} busy={Boolean(buyingId)||Boolean(roguelike&&(roguelike.phase!=='camp'||roguelike.status!=='active'))} availableMoney={wallet?walletInCopper(wallet):0} onQuantity={changeBasket} onRemove={id=>changeBasket(id,-1)} onBuy={()=>void checkout()} onInspect={setInspectedCard} canResume={canResumeCart} message={shopMsg}/>
+
       {loading && (
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
@@ -373,51 +391,22 @@ const ShopDetail = () => {
                       <SheetActionLine name={card.name} imageUrl={card.image_url || '/default_image.png'} itemRef={card}
                         variant="icon" onActivate={() => setInspectedCard(card)}/>
                       <div className="shop-shelf-item__trade">
-                        <span className="inline-flex items-center gap-1"><CurrencyPriceInline price={purchasePrice(card, purchasePassives).payable} currency={card.price_currency}/></span>
+                        <CoinAmount copper={shopPriceCopper(card,offers,purchasePassives)}/>
                         {buyButton(card, true)}
                       </div>
                     </article>)}
                   </div>
                 ) : (
-                  <div className="relative">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
-                      {cards.map((card) => (
-                        <div key={card.id} className="relative">
-                          <div className={`w-full text-left p-3 rounded-lg border border-gray-200 bg-white border-l-4 ${getRarityBorderColor(card.rarity)}`}>
-                            <div className="flex items-center space-x-3">
-                              <div className="flex-shrink-0 w-12 h-12 rounded border border-gray-200 overflow-hidden">
-                                {card.image_url?.trim() ? (
-                                  <img src={card.image_url} alt={card.name} className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
-                                ) : (
-                                  <img src="/default_image.png" alt="" className="w-full h-full object-contain" />
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className={`font-medium truncate ${getRarityColor(card.rarity)} flex items-center gap-1`}>
-                                  <span className="text-lg" title={getRaritySymbolDescription(card.rarity)}>
-                                    {getRaritySymbol(card.rarity)}
-                                  </span>
-                                  <span>{card.name}</span>
-                                </div>
-                                <div className="flex flex-wrap items-center justify-between mt-1 text-xs gap-2">
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    {card.price != null && card.price > 0 && (() => {
-                                      const price = purchasePrice(card, purchasePassives);
-                                      return <span className="inline-flex items-center gap-1">
-                                        <CurrencyPriceInline price={price.payable} currency={card.price_currency} textClassName="text-yellow-600 font-bold" />
-                                        {price.discounted && <span className="text-green-700">Самоделкин −20%</span>}
-                                      </span>;
-                                    })()}
-                                    {buyButton(card, true)}
-                                  </div>
-                                  {!roguelike && <span className="font-mono text-gray-400 shrink-0">{card.card_number}</span>}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                  <div className={`shop-full-items is-${settings.itemPreview}`}>
+                    {cards.map(card => <article className="shop-full-item" key={offerId(card)} aria-label={card.name}>
+                      {settings.itemPreview === 'interface'
+                        ? <ItemPreview card={card} disableHover/>
+                        : <CardPreview card={card} disableHover/>}
+                      <div className="shop-full-item__trade">
+                        <CoinAmount copper={shopPriceCopper(card,offers,purchasePassives)}/>
+                        {buyButton(card)}
+                      </div>
+                    </article>)}
                   </div>
                 )}
               </div>
@@ -429,7 +418,7 @@ const ShopDetail = () => {
         titleEn={inspectedCard.name_en} labelledById="shop-item-title"
         preview={settings.itemPreview==='interface'?<ItemPreview card={inspectedCard} disableHover/>:<CardPreview card={inspectedCard} disableHover/>}
         actions={buyButton(inspectedCard)}>
-        <span className="inline-flex items-center gap-1"><CurrencyPriceInline price={purchasePrice(inspectedCard,purchasePassives).payable} currency={inspectedCard.price_currency}/></span>
+        <span className="inline-flex items-center gap-1">Цена предложения: <CoinAmount copper={shopPriceCopper(inspectedCard,offers,purchasePassives)}/></span>
       </EntityDetailShell>}
     </div>
   );

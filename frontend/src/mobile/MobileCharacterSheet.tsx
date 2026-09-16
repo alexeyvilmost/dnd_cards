@@ -1,4 +1,5 @@
 import SheetFeatureSections from '../components/SheetFeatureSections';
+import SheetTogglePassives from '../components/SheetTogglePassives';
 import { useCallback, useEffect, useMemo, useRef, useState, type TouchEvent } from 'react';
 import {
   ArrowLeft, Backpack, BookOpen, ChevronRight, Dices, Heart,
@@ -31,7 +32,8 @@ import EffectiveSenseValue from '../components/EffectiveSenseValue';
 import { rollD20 } from '../engine/roll';
 import {influencedSheetRoll} from '../character/influencedSheetRoll';
 import { rollEvent, describeEngineEvent } from '../engine/events';
-import { plannedValuesRng, type PlannedDie } from '../engine/dicePlan';
+import { plannedD20BonusDice, plannedValuesRng, type PlannedDie } from '../engine/dicePlan';
+import {collectRollModifiers} from '../engine/modifiers';
 import type { EngineEvent } from '../mvp/contracts';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
 import { useSiteSettings } from '../settings';
@@ -177,7 +179,7 @@ export default function MobileCharacterSheet() {
   const [overlay, setOverlay] = useState<
     | { type: 'hp' }
     | { type: 'ac' }
-    | { type: 'check'; label: string; bonus: number; ability: AbilityKey; rollKind?: 'save' | 'check' }
+    | { type: 'check'; label: string; bonus: number; ability: AbilityKey; rollKind?: 'save' | 'check'; skill?: string }
     | { type: 'notes'; description: string; notes: string }
     | { type: 'entity'; view: MobileEntityView; apply?: () => void; disabledReason?: string }
     | null
@@ -246,21 +248,26 @@ export default function MobileCharacterSheet() {
     if (first) flash(describeEngineEvent(first));
   }, [data.appendEvents, flash, readOnly]);
 
-  const runCheck = async (label: string, bonus: number, ability: AbilityKey, rollKind: 'save' | 'check' = 'check') => {
+  const runCheck = async (label: string, bonus: number, ability: AbilityKey, rollKind: 'save' | 'check' = 'check', skill?: string) => {
     if (readOnly) return;
-    const plan: PlannedDie[] = [{
-      sides: 20,
-      label: `${label} · ${ABILITY_LABEL_RU[ability]}`,
-    }];
+    const collected=collectRollModifiers(runtimeState, data.passives, {
+      roll: rollKind === 'save' ? 'saving_throw' : 'ability_check', filter: {ability, ...(skill ? {skill} : {})},
+    });
+    const options={modifiers:[{value:bonus,source:label}],advantage:collected.advantage,rules:collected.rules};
+    const plan: PlannedDie[] = Array.from({length:collected.advantage==='none'?1:2},()=>({
+      sides:20,label:`${label} · ${ABILITY_LABEL_RU[ability]}`,resultGroup:'check',advantage:collected.advantage,
+    }));
+    plan.push(...plannedD20BonusDice(collected.rules,label,'check'));
     setOverlay(null);
-    const inspired = influencedSheetRoll(rollKind, {modifiers:[{value:bonus,source:label}]}, runtimeState, data.passives);
+    if (rollKind==='save' && collected.autoFail) {await appendEvents([{type:'narrative',text:`${label} — автопровал (состояние)`}]);return;}
+    const inspired = influencedSheetRoll(rollKind, options, runtimeState, data.passives);
     const decision = await diceDialog.request(plan, label, undefined, {compactCheck:inspired.request});
     if (decision.mode === 'cancel') return;
     const rng = decision.mode === 'manual'
       ? plannedValuesRng(plan, decision.values)
       : Math.random;
     const roll = (decision.mode === 'manual' ? decision.roll : undefined) ?? rollD20({
-      modifiers: [{ value: bonus, source: label }],
+      ...options,
       rng,
     });
     const events:EngineEvent[] = [rollEvent(label, roll)];
@@ -482,6 +489,7 @@ export default function MobileCharacterSheet() {
                       onClick={() => setOverlay({
                         type: 'check',
                         label: `Проверка: ${skill.label}`,
+                        skill: skill.id,
                         bonus,
                         ability,
                       })}
@@ -610,6 +618,7 @@ export default function MobileCharacterSheet() {
           <>
             <Section title="Черты и способности" action={addButton('feats')} wide>
             <SheetFeatureSections assembled={assembled}/>
+            <SheetTogglePassives character={character} assembled={assembled} ruleState={ruleState} runtime={runtimeState} characterContext={data.sheetCtx} passives={data.passives} cards={data.equipCards} readOnly={readOnly}/>
             </Section>
 
             <Section title="Чувства">
@@ -755,7 +764,7 @@ export default function MobileCharacterSheet() {
             <button
               type="button"
               className="m-button m-button--wide m-button--gold"
-              onClick={() => runCheck(overlay.label, overlay.bonus, overlay.ability, overlay.rollKind)}
+              onClick={() => runCheck(overlay.label, overlay.bonus, overlay.ability, overlay.rollKind, overlay.skill)}
             >
               <Dices size={18} /> Бросить {fmtMod(overlay.bonus)}
             </button>
@@ -778,7 +787,7 @@ export default function MobileCharacterSheet() {
               type="button"
               className="m-button m-button--wide m-button--gold"
               disabled={!!overlay.disabledReason}
-              title={overlay.disabledReason}
+              aria-description={overlay.disabledReason}
               onClick={() => {
                 const apply = overlay.apply;
                 setOverlay(null);

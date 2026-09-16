@@ -193,7 +193,7 @@ const ImageStudio = () => {
                       <div className="text-sm font-medium text-gray-800 truncate">{r.subject}</div>
                       <button
                         onClick={() => download(r.url, r.subject)}
-                        title="Скачать"
+                        aria-label="Скачать"
                         className="p-1.5 rounded hover:bg-gray-100 text-gray-600"
                       >
                         <Download size={16} />

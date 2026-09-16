@@ -1,20 +1,24 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {shopURLFromPage} from '../utils/shopNavigation';
 import { ShoppingCart, Swords, Trophy, ChevronsUp } from 'lucide-react';
 import { roguelikeApi, type RoguelikeRun } from '../roguelike/api';
-import { RUN_UPDATED_EVENT, runCombatURL } from '../roguelike/navigation';
+import { RUN_UPDATED_EVENT, runCombatURL,runHasCharacter,runCharacter } from '../roguelike/navigation';
+import {formatCopper} from '../utils/money';
+import {runMoneyCopper} from '../roguelike/money';
 
 export default function SheetRunPanel({ runId, characterId, onLoaded }: {
   runId: string; characterId: string; onLoaded?: (run: RoguelikeRun) => void;
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [run, setRun] = useState<RoguelikeRun | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     let active = true;
     const reload = () => { void roguelikeApi.get(runId).then((next) => {
-      if (next.character_id !== characterId) throw new Error('Забег принадлежит другому персонажу');
+      if (!runHasCharacter(next,characterId)) throw new Error('Забег принадлежит другому персонажу');
       if (active) { setRun(next); onLoaded?.(next); }
     }).catch((e: unknown) => active && setError(e instanceof Error ? e.message : 'Не удалось загрузить забег')); };
     reload();
@@ -31,13 +35,13 @@ export default function SheetRunPanel({ runId, characterId, onLoaded }: {
     } catch (e) { setError(e instanceof Error ? e.message : 'Не удалось выполнить действие'); }
     finally { setBusy(false); }
   };
-  const level = run?.character?.level ?? 1;
+  const level = run?runCharacter(run,characterId)?.level??1:1;
   const threshold = [0, 300, 900, 2700, 6500, 14000][level] ?? 14000;
   return <section className="csheet-top" aria-label="Забег" style={{ margin: '8px 12px 0' }}>
     <h2 className="sheet-h2">Забег {run ? `· попытка ${run.attempt}` : ''}</h2>
     {error && <p className="issues" role="alert">{error}</p>}
     {run && <>
-      <p className="forge-note">{run.experience} / {threshold} XP · {run.encounters_won} побед · {run.gold} зм · {run.supplies} припасов · {run.game_clock_hours} ч.{(run.game_clock_remainder_seconds ?? 0) >= 60 ? ` ${Math.floor((run.game_clock_remainder_seconds ?? 0) / 60)} мин.` : ''}</p>
+      <p className="forge-note">{run.experience} / {threshold} XP · {run.encounters_won} побед · {formatCopper(runMoneyCopper(run))} · {run.supplies} припасов · {run.game_clock_hours} ч.{(run.game_clock_remainder_seconds ?? 0) >= 60 ? ` ${Math.floor((run.game_clock_remainder_seconds ?? 0) / 60)} мин.` : ''}</p>
       <div className="cs-hp-bar" role="progressbar" aria-label="Опыт забега"
         aria-valuemin={0} aria-valuemax={threshold} aria-valuenow={Math.max(0, Math.min(run.experience, threshold))}
         style={{ width: 120 }}>
@@ -49,11 +53,13 @@ export default function SheetRunPanel({ runId, characterId, onLoaded }: {
           : <>
             {level === 5 && run.experience >= 14000
               ? <button className="sheet-header-btn" disabled={busy} onClick={() => void act('victory')}><Trophy size={16} />Победа!</button>
-              : run.pending_level || run.experience >= threshold
+              : run.experience >= threshold
                 ? <Link className="sheet-header-btn" to={`/character-forge/${characterId}?levelup=1&roguelike=${run.id}`}><ChevronsUp size={16} />{run.pending_level ? 'Продолжить повышение' : `Уровень ${level + 1}`}</Link>
+                : run.pending_level ? <Link className="sheet-header-btn" to={`/roguelike/${run.id}`}>Дождаться повышения союзников</Link>
                 : <button className="sheet-header-btn" disabled={busy} onClick={() => void act('start_encounter')}><Swords size={16} />Следующее столкновение</button>}
-            <Link className="sheet-header-btn" to={`/shop/roguelike?roguelike=${run.id}&character=${characterId}`}><ShoppingCart size={16} />Магазин</Link>
+            <Link className="sheet-header-btn" to={shopURLFromPage(`/shop/roguelike?roguelike=${run.id}&character=${characterId}`,location)}><ShoppingCart size={16} />Магазин</Link>
           </>}
+        <Link className="sheet-header-btn" to={`/roguelike/${run.id}`}>Группа и лагерь</Link>
         <Link className="sheet-header-btn" to="/roguelike">Все забеги</Link>
       </div>
     </>}

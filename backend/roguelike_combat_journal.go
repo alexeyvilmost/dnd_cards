@@ -35,6 +35,13 @@ func roguelikeCombatJournalRecord(request RoguelikeCommandRequest, before JSONMa
 	record := JSONMap{"schemaVersion": 1, "type": request.Type, "intent": request.Payload["intent"],
 		"artifactHash": result.Envelope["artifactHash"], "beforeHash": beforeHash, "afterHash": afterHash,
 		"randomValues": result.RandomValues, "runtimeRevision": result.Trace["runtimeRevision"]}
+	if len(result.Patches) > 1 {
+		revisions := JSONMap{}
+		for id, patch := range result.Patches {
+			revisions[id] = patch["runtime_revision"]
+		}
+		record["participantRuntimeRevisions"] = revisions
+	}
 	if request.Type == "initialize_combat" {
 		record["baseline"] = result.Envelope
 		record["baselinePosition"] = "after"

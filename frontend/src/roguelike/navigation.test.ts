@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { RoguelikeEncounter, RoguelikeRun } from './api';
-import { runCombatURL, runEncounterSelection } from './navigation';
+import { runCombatURL, runEncounterSelection, runSheetURL } from './navigation';
 
 describe('run-owned encounter roster', () => {
+  it('returns from the shop to the character sheet with run context, independent of browser history', () => {
+    expect(runSheetURL({id:'run-id',character_id:'shop-character'}))
+      .toBe('/characters-v3/shop-character?roguelike=run-id');
+    expect(runSheetURL({id:'run-id',character_id:'leader'},'party-member'))
+      .toBe('/characters-v3/party-member?roguelike=run-id');
+  });
   const roster = [
     { monster_id: 'guard', monster_slug: 'guard', monster_name: 'Стражник', quantity: 1, xp_each: 25 },
     { monster_id: 'bandit', monster_slug: 'bandit', monster_name: 'Бандит', quantity: 2, xp_each: 25 },

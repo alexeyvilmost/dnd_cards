@@ -120,7 +120,7 @@ export default function CharacterSheetFirstColumn({
                 </div>
                 <div
                   className={`cs-abil-save${proficient ? ' on' : ''}${saveInteractive ? ' cs-rollable' : ''}`}
-                  title={saveInteractive ? `Бросить спасбросок ${ABILITY_LABEL_RU[ability]}` : undefined}
+                  aria-description={saveInteractive ? `Бросить спасбросок ${ABILITY_LABEL_RU[ability]}` : undefined}
                   role={saveInteractive ? 'button' : undefined}
                   tabIndex={saveInteractive ? 0 : -1}
                   onClick={saveInteractive ? () => onRollSave?.(ability, resolvedSaveBreakdown) : undefined}
@@ -164,7 +164,7 @@ export default function CharacterSheetFirstColumn({
                 {initiative && initiativeBreakdown && ability === 'dex' && previousAbility !== 'dex' && (
                   <li
                     className={`${initiativeProficient ? 'on ' : ''}${initiative.onRoll ? 'cs-rollable ' : ''}cs-initiative-skill cs-skill-sep`}
-                    title={initiative.onRoll ? 'Бросить инициативу (Ловкость)' : undefined}
+                    aria-description={initiative.onRoll ? 'Бросить инициативу (Ловкость)' : undefined}
                     onClick={initiative.rolling ? undefined : initiative.onRoll}
                   >
                     <i className="cs-dot" />
@@ -177,7 +177,7 @@ export default function CharacterSheetFirstColumn({
                 )}
                 <li
                   className={`${proficient ? 'on ' : ''}${skillInteractive ? 'cs-rollable' : ''}${abilitySeparator ? ' cs-skill-sep' : ''}`.trim()}
-                  title={skillInteractive ? `${formatModifier(bonus)} = ${tip} · клик — бросок` : undefined}
+                  aria-description={skillInteractive ? `${formatModifier(bonus)} = ${tip} · клик — бросок` : undefined}
                   onClick={skillInteractive ? () => onRollSkill?.(skill.id, skill.label, ability, resolvedSkillBreakdown) : undefined}
                 >
                   <i className="cs-dot" />

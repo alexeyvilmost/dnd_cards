@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { BookOpen, Dices, LogOut, User, Users, Store, ChevronDown, Menu, X, Sparkles, Swords, Radio, MoreHorizontal, PawPrint, type LucideIcon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import {shopURLFromPage} from '../utils/shopNavigation';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -63,7 +64,7 @@ const Layout = ({ children }: LayoutProps) => {
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-12">
             {/* Логотип → библиотека */}
-            <Link to="/" title="В библиотеку" className="text-lg sm:text-xl font-bold text-gray-900 truncate hover:text-gray-700 transition-colors">
+            <Link to="/" aria-description="В библиотеку" className="text-lg sm:text-xl font-bold text-gray-900 truncate hover:text-gray-700 transition-colors">
               Bag of Holding
             </Link>
 
@@ -124,7 +125,7 @@ const Layout = ({ children }: LayoutProps) => {
                 return (
                   <Link
                     key={item.path}
-                    to={item.path!}
+                    to={item.path === '/shop/new' ? shopURLFromPage(item.path,location) : item.path!}
                     className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors ${
                       isActive(item.path) ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                     }`}
@@ -178,7 +179,7 @@ const Layout = ({ children }: LayoutProps) => {
                 return (
                   <Link
                     key={item.path}
-                    to={item.path!}
+                    to={item.path === '/shop/new' ? shopURLFromPage(item.path,location) : item.path!}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       isActive(item.path) ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'

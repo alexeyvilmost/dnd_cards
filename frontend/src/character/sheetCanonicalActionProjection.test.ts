@@ -204,6 +204,7 @@ describe('runnable canonical sheet-action projection', () => {
     const armoredDamage = (armoredAttack.on_hit as Record<string, unknown>[])[0];
 
     expect(attack.ability).toBe('dex');
+    expect(projected.actions[0].canonicalMechanics?.effects).toEqual(unarmed.mechanics.effects);
     expect(damage.amount).toBe('1d6 + dex');
     expect(projected.actions[0].description).toContain('Урон: 1d6 + модификатор Ловкости');
     expect(armoredAttack.ability).toBe('str');

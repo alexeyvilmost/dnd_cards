@@ -1,0 +1,345 @@
+[
+  {
+    "card_number": "CARD-0319",
+    "price": 15,
+    "min_level": 1,
+    "weight": 8,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "CARD-0313",
+    "price": 25,
+    "min_level": 1,
+    "weight": 8,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "CARD-0311",
+    "price": 25,
+    "min_level": 1,
+    "weight": 8,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "CARD-0297",
+    "price": 2,
+    "min_level": 1,
+    "weight": 6,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "CARD-0295",
+    "price": 5,
+    "min_level": 1,
+    "weight": 6,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "CARD-0317",
+    "price": 50,
+    "min_level": 1,
+    "weight": 7,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "CARD-0315",
+    "price": 10,
+    "min_level": 1,
+    "weight": 7,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "CARD-0323",
+    "price": 15,
+    "min_level": 1,
+    "weight": 7,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "CARD-0325",
+    "price": 20,
+    "min_level": 1,
+    "weight": 6,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "CARD-0321",
+    "price": 20,
+    "min_level": 1,
+    "weight": 6,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "CARD-0306",
+    "price": 25,
+    "min_level": 1,
+    "weight": 7,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "CARD-0327",
+    "price": 50,
+    "min_level": 1,
+    "weight": 7,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "CARD-0307",
+    "price": 25,
+    "min_level": 1,
+    "weight": 7,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "CARD-0200",
+    "price": 10,
+    "min_level": 1,
+    "weight": 8,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "CARD-0276",
+    "price": 45,
+    "min_level": 1,
+    "weight": 7,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "CARD-0283",
+    "price": 75,
+    "min_level": 1,
+    "weight": 7,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "CARD-0791",
+    "price": 25,
+    "min_level": 1,
+    "weight": 5,
+    "kind": "consumable"
+  },
+  {
+    "card_number": "CARD-0815",
+    "price": 25,
+    "min_level": 1,
+    "weight": 4,
+    "kind": "consumable"
+  },
+  {
+    "card_number": "CARD-0714",
+    "price": 50,
+    "min_level": 2,
+    "weight": 5,
+    "kind": "consumable"
+  },
+  {
+    "card_number": "CARD-0290",
+    "price": 200,
+    "min_level": 3,
+    "weight": 5,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "CARD-0271",
+    "price": 400,
+    "min_level": 3,
+    "weight": 4,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "CARD-0840",
+    "price": 200,
+    "min_level": 3,
+    "weight": 5,
+    "kind": "consumable"
+  },
+  {
+    "card_number": "CARD-0081",
+    "price": 415,
+    "min_level": 3,
+    "weight": 2,
+    "kind": "magic"
+  },
+  {
+    "card_number": "CARD-0118",
+    "price": 415,
+    "min_level": 3,
+    "weight": 2,
+    "kind": "magic"
+  },
+  {
+    "card_number": "CARD-0548",
+    "price": 400,
+    "min_level": 4,
+    "weight": 1,
+    "kind": "magic"
+  },
+  {
+    "card_number": "CARD-0624",
+    "price": 400,
+    "min_level": 4,
+    "weight": 1,
+    "kind": "magic"
+  },
+  {
+    "card_number": "CARD-0291",
+    "price": 1500,
+    "min_level": 5,
+    "weight": 1,
+    "kind": "equipment"
+  },
+  {
+    "card_number": "RL-SHOP-0851",
+    "price": 180,
+    "min_level": 1,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0182",
+    "price": 210,
+    "min_level": 1,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0347",
+    "price": 220,
+    "min_level": 1,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0106",
+    "price": 120,
+    "min_level": 1,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0609",
+    "price": 140,
+    "min_level": 1,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0357",
+    "price": 100,
+    "min_level": 1,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0358",
+    "price": 100,
+    "min_level": 1,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0650",
+    "price": 75,
+    "min_level": 1,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0840",
+    "price": 65,
+    "min_level": 1,
+    "kind": "consumable",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0134",
+    "price": 150,
+    "min_level": 1,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0348",
+    "price": 350,
+    "min_level": 2,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0548",
+    "price": 300,
+    "min_level": 2,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0624",
+    "price": 360,
+    "min_level": 2,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0370",
+    "price": 260,
+    "min_level": 2,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0476",
+    "price": 280,
+    "min_level": 2,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0633",
+    "price": 240,
+    "min_level": 2,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0112",
+    "price": 260,
+    "min_level": 2,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0764",
+    "price": 220,
+    "min_level": 2,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0841",
+    "price": 160,
+    "min_level": 2,
+    "kind": "consumable",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0349",
+    "price": 750,
+    "min_level": 4,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0668",
+    "price": 600,
+    "min_level": 4,
+    "kind": "magic",
+    "weight": 1
+  },
+  {
+    "card_number": "RL-SHOP-0842",
+    "price": 350,
+    "min_level": 4,
+    "kind": "consumable",
+    "weight": 1
+  }
+]

@@ -671,7 +671,7 @@ function ruleActions(input: {
       action: projectRuleAction({
         ...entity,
         mechanics: restoreSelfUsesCost(
-          cloneJson(input.sheet.mechanics),
+          cloneJson(input.sheet.canonicalMechanics ?? input.sheet.mechanics),
           actionUsesKey(entity.card_number || entity.id),
         ),
       } as never, {
@@ -680,7 +680,7 @@ function ruleActions(input: {
       }),
     }];
   }
-  const mechanics = cloneJson(input.sheet.mechanics);
+  const mechanics = cloneJson(input.sheet.canonicalMechanics ?? input.sheet.mechanics);
   const primitive = primitiveType(mechanics);
   const targetingDeclaration = object(mechanics.targeting);
   if (primitive && !targetingDeclaration) {
@@ -1331,7 +1331,6 @@ export function buildSheetCanonicalRuntime(input: {
       weaponType: card.weapon_type,
       damageType: card.damage_type,
       properties: card.properties,
-      tags: card.tags,
       enchantBonus: card.enchant_bonus,
       attunement: card.attunement,
       requiresAttunement: card.requires_attunement,

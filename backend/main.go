@@ -157,6 +157,8 @@ func main() {
 		// Глобальные справочники читаются публично, но любое изменение требует
 		// строгий JWT без public fallback и UUID из server-side admin allowlist.
 		contentAdminAuth := ContentAdminAuthMiddleware(authService)
+		registerEntityTagRoutes(api, authService, db)
+		registerRoguelikeShopSettingsRoutes(api, authService, db)
 		// The atomic certification request contains exact full API preimages for
 		// the complete dependency closure. Keep its larger bound isolated from the
 		// ordinary 2 MiB API group and authenticate before reading the body.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { CharacterContext } from '../mvp/contracts';
+import type { CharacterContext, RuntimeState } from '../mvp/contracts';
 import {
   CARD_DAGGER, CARD_FROST_HAMMER, CARD_LONGSWORD, CARD_SHIELD, FIGHTER_CTX,
   MECH_OFFHAND_ATTACK, MECH_UNARMED_STRIKE, MECH_WEAPON_ATTACK, ALL_CARDS,
@@ -12,6 +12,20 @@ const CTX: CharacterContext = {
   ...FIGHTER_CTX,
   equippedCards: [CARD_LONGSWORD, CARD_DAGGER, CARD_FROST_HAMMER, CARD_SHIELD],
 };
+
+it.each(['dagger', 'longsword'])('data-owned weapon training changes only qualified weapons: %s', type => {
+  const card=type==='dagger'?CARD_DAGGER:CARD_LONGSWORD;
+  const ctx={...CTX,abilityMods:{...CTX.abilityMods,str:1,dex:4}};
+  const runtime: RuntimeState={hp:{current:10,max:10,temp:0},resources:{},maxResources:{},equipment:{main_hand:card.id,off_hand:CARD_DAGGER.id},inventory:[],activeEffects:[]};
+  const training={effects:[{resolution:'auto',result:[{kind:'weapon_attack_profile',weapon_selectors:[{weapon_type:type}],ability_options:['dex'],minimum_damage_dice:'1d10',when:[{kind:'not',of:{kind:'wielding_shield'}}]}]}]};
+  const trained=weaponContext(ctx,'main',runtime.equipment,runtime,[training])!;
+  expect(trained.ability).toBe('dex');expect(trained.dice).toBe('1d10');
+  const shielded={...runtime,equipment:{...runtime.equipment,off_hand:CARD_SHIELD.id}};
+  const base=weaponContext(ctx,'main',shielded.equipment,shielded,[training])!;
+  expect(base.dice).not.toBe('1d10');
+  const preview=weaponAttackPreview(MECH_WEAPON_ATTACK,ctx,runtime.equipment,runtime,[training])!;
+  expect(preview.attack).toBe(6);expect(preview.damages[0]).toMatchObject({dice:'1d10',bonus:4});
+});
 
 describe('weaponContext: многострочный урон + зачарование', () => {
   it('Молот мороза +1: основной 2d6 дробящий + стихийный 1d6 холод, enchant=1', () => {

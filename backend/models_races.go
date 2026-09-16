@@ -45,6 +45,8 @@ func (t RaceTraits) Value() (driver.Value, error) {
 
 // Race - модель вида (расы) D&D
 type Race struct {
+	// Frozen wire snapshot for pre-258 certification hashes; never used as library tags.
+	LegacyTags *Properties `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
 	ID                    uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                  string         `json:"name" gorm:"not null"`
 	NameEn                *string        `json:"name_en" gorm:"type:varchar(255)"`
@@ -74,7 +76,6 @@ type Race struct {
 	Type                  *string        `json:"type" gorm:"type:varchar(50)"`
 	Author                string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Source                *string        `json:"source" gorm:"type:varchar(255)"`
-	Tags                  *Properties    `json:"tags" gorm:"type:jsonb"`
 	IsExtended            *bool          `json:"is_extended" gorm:"type:boolean;default:null"`
 	CreatedAt             time.Time      `json:"created_at"`
 	UpdatedAt             time.Time      `json:"updated_at"`
@@ -109,7 +110,6 @@ type CreateRaceRequest struct {
 	Type                *string     `json:"type"`
 	Author              string      `json:"author"`
 	Source              *string     `json:"source"`
-	Tags                *Properties `json:"tags"`
 	IsExtended          *bool       `json:"is_extended"`
 }
 
@@ -137,12 +137,12 @@ type UpdateRaceRequest struct {
 	Type                *string     `json:"type"`
 	Author              string      `json:"author"`
 	Source              *string     `json:"source"`
-	Tags                *Properties `json:"tags"`
 	IsExtended          *bool       `json:"is_extended"`
 }
 
 // RaceResponse - ответ с видом
 type RaceResponse struct {
+	LegacyTags *Properties `json:"tags"`
 	ID                  uuid.UUID   `json:"id"`
 	Name                string      `json:"name"`
 	NameEn              *string     `json:"name_en"`
@@ -168,7 +168,6 @@ type RaceResponse struct {
 	Type                *string     `json:"type"`
 	Author              string      `json:"author"`
 	Source              *string     `json:"source"`
-	Tags                *Properties `json:"tags"`
 	IsExtended          *bool       `json:"is_extended"`
 	CreatedAt           time.Time   `json:"created_at"`
 	UpdatedAt           time.Time   `json:"updated_at"`
@@ -177,13 +176,13 @@ type RaceResponse struct {
 // ToRaceResponse преобразует модель вида в API-ответ.
 func (r Race) ToRaceResponse() RaceResponse {
 	return RaceResponse{
+		LegacyTags: r.LegacyTags,
 		ID: r.ID, Name: r.Name, NameEn: r.NameEn, Description: r.Description, DetailedDescription: r.DetailedDescription,
 		ImageURL: r.ImageURL, Rarity: r.Rarity, CardNumber: r.CardNumber,
 		CreatureType: r.CreatureType, Size: r.Size, Speed: r.Speed, ExtraSpeeds: r.ExtraSpeeds,
 		Darkvision: r.Darkvision, Traits: r.Traits, Lineages: r.Lineages,
 		IsSubrace: r.IsSubrace, ParentRaceID: r.ParentRaceID, SubraceLevel: r.SubraceLevel,
 		RelatedEffects: r.RelatedEffects, RelatedActions: r.RelatedActions, LevelProgression: r.LevelProgression, Support: r.Support,
-		Type: r.Type, Author: r.Author, Source: r.Source, Tags: r.Tags,
-		IsExtended: r.IsExtended, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
+		Type: r.Type, Author: r.Author, Source: r.Source, IsExtended: r.IsExtended, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
 	}
 }

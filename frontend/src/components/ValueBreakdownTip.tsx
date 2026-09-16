@@ -111,7 +111,7 @@ export default function ValueBreakdownTip({ breakdown, children, label }: Props)
       onBlur={() => setOpen(false)}
       onKeyDown={(event) => { if (event.key === 'Escape') setOpen(false); }}
       tabIndex={0}
-      title={breakdown.parts.length ? undefined : tip}
+      aria-description={breakdown.parts.length ? undefined : tip}
       aria-describedby={open && breakdown.parts.length ? tooltipId : undefined}
     >
       {children}

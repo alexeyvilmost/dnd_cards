@@ -14,6 +14,7 @@ import type {
 } from './api';
 import { buildSheetCombatDeclaration } from './sheetCombatDeclaration';
 import { loadCertifiedSheetCombatCatalog } from './sheetCombatCertifiedCatalog';
+import { applyUnarmedDamageProfileToAction } from '../rules-core/fightingStyleComplexPrimitives';
 import type { SheetCanonicalRuntime } from './sheetCanonicalWorld';
 import {
   acceptedSheetCombatCharacters,
@@ -281,6 +282,28 @@ describe('CharacterV3 atomic pending-combat session', () => {
     expect(clearSheetCombatSession(turnState)).toEqual({ ordinary_runtime: { kept: true } });
     expect(hasSheetCombatSession(clearSheetCombatSession(turnState))).toBe(false);
     expect(turnState).toHaveProperty(SHEET_COMBAT_SESSION_KEY);
+  });
+  it('shares an actor-neutral unarmed template across different die and ability profiles', async () => {
+    const certified = await loadCertifiedSheetCombatCatalog();
+    const template = certified.catalog.listActions!().find(a => primitive(a) === 'unarmed_strike')!;
+    expect(template).toBeDefined();
+    const participants = [IDS.source, IDS.target].map((id, index) => {
+      const value = actor('fighter', id);
+      const profile = { effects: [{ resolution: 'auto', result: [{
+        kind: 'unarmed_damage_profile', dice: index ? '1d8' : '1d6',
+        ability: index ? 'str' : 'dex', damage_type: 'bludgeoning', source: `profile-${index}`,
+      }] }] };
+      value.passives = [profile];
+      value.capabilities.actionIds = [template.id];
+      const bound = applyUnarmedDamageProfileToAction(template, [profile], { holdingWeaponOrShield: false });
+      return { character: character(value), canonical: canonical(value, [bound]) };
+    });
+    const session = await createSheetCombatSession({ source: participants[0], targets: [participants[1]] });
+    expect(session.catalogActions).toHaveLength(1);
+    expect(session.catalogActions[0].mechanics).toEqual(template.mechanics);
+    const restored = readSheetCombatSession(writeSheetCombatSession({}, session), IDS.source, 0)!;
+    expect(restored.world.actors[IDS.source].passives).not.toEqual(restored.world.actors[IDS.target].passives);
+    expect(() => assertCertifiedSheetCombatSession(restored, certified)).not.toThrow();
   });
   it('drops a completed continuation after an ordinary sheet revision changes', async () => {
     const source = seed('wizard', IDS.source);

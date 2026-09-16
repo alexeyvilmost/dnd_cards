@@ -16,6 +16,8 @@ import { upgradeLegacyActionMechanics } from './legacyActionMechanics';
 type Dict = Record<string, unknown>;
 
 export type SheetAction = {
+  /** Unbound entity mechanics before actor-specific preview substitutions. */
+  canonicalMechanics?: Record<string, unknown>;
   id: string;
   name: string;
   mechanics: Record<string, unknown>;

@@ -11,6 +11,7 @@ import { breakdownValue } from '../engine/breakdown';
 import type { ActorState } from '../rules-core/domain';
 import { activeConditionWorldFactValues } from '../engine/conditions';
 import {actorFootprint, footprintCells, footprintFits, footprintDistanceFt} from './footprint';
+import {boardCells, boardDimensions, boardObstacles, terrainSight, terrainStepFits, type BoardState} from './boardGeometry';
 
 export function actorMustCrawl(actor: ActorState): boolean {
   if (!actor.runtime.activeEffects?.length) return false;
@@ -76,21 +77,22 @@ export function effectiveCombatActorSpeedFt(
   return grappled ? 0 : combatActorMovementSpeeds(actor)[combatActorMovementMode(state, actorId)];
 }
 
-export function occupiedPositions(state: Pick<SoloCombatState, 'tokens' | 'world'>, exceptActorId?: string): Set<string> {
-  return new Set(Object.values(state.tokens).flatMap((token) => {
+export function occupiedPositions(state: Pick<SoloCombatState, 'tokens' | 'world'> & BoardState, exceptActorId?: string): Set<string> {
+  return new Set([...boardObstacles(state), ...Object.values(state.tokens).flatMap((token) => {
     const actor = state.world.actors[token.actorId];
     if (token.actorId === exceptActorId || !actor || actor.runtime.hp.current <= 0) return [];
     return footprintCells(token.position, actorFootprint(actor, state)).map(p => `${p.x}:${p.y}`);
-  }));
+  })]);
 }
 
-export function canOccupyPosition(state: Pick<SoloCombatState, 'tokens' | 'world' | 'tacticalFootprints'>, actorId: string, position: GridPosition): boolean {
-  return footprintFits(position, actorFootprint(state.world.actors[actorId], state), occupiedPositions(state, actorId), TACTICAL_WIDTH, TACTICAL_HEIGHT);
+export function canOccupyPosition(state: Pick<SoloCombatState, 'tokens' | 'world' | 'tacticalFootprints'> & BoardState, actorId: string, position: GridPosition): boolean {
+  const {width,height}=boardDimensions(state);
+  return footprintFits(position, actorFootprint(state.world.actors[actorId], state), occupiedPositions(state, actorId), width, height);
 }
 
 /** Exact destination set accepted by the current five-foot tactical movement rule. */
 export function reachablePositions(
-  state: Pick<SoloCombatState, 'tokens' | 'world' | 'combatAreas' | 'movementModeByActor'>,
+  state: Pick<SoloCombatState, 'tokens' | 'world' | 'combatAreas' | 'movementModeByActor'> & BoardState,
   actorId: string,
   maximumFeet: number,
 ): GridPosition[] {
@@ -106,7 +108,7 @@ export interface TacticalRoute {
 /** Bounded Dijkstra search over the 120-cell board. Every returned step is
  * adjacent and unoccupied; cost matches the common movement executor per step. */
 export function reachableRoutes(
-  state: Pick<SoloCombatState, 'tokens' | 'world' | 'combatAreas' | 'movementModeByActor'>,
+  state: Pick<SoloCombatState, 'tokens' | 'world' | 'combatAreas' | 'movementModeByActor'> & BoardState,
   actorId: string,
   maximumFeet: number,
   preferredDestination?: GridPosition,
@@ -116,6 +118,7 @@ export function reachableRoutes(
   if (!origin || !actor || maximumFeet < 5 || !Number.isFinite(maximumFeet)) return [];
   const occupied = occupiedPositions(state, actorId);
   const size = actorFootprint(actor, state);
+  const {width,height}=boardDimensions(state);
   const key = (p: GridPosition) => `${p.x}:${p.y}`;
   const difficult = new Set(Object.values(state.combatAreas ?? {}).flatMap(area =>
     area.difficultTerrain ? area.cells.map(key) : []));
@@ -146,7 +149,8 @@ export function reachableRoutes(
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
       if (dx === 0 && dy === 0) continue;
       const destination = {x: current.destination.x + dx, y: current.destination.y + dy};
-      if (!footprintFits(destination, size, occupied, TACTICAL_WIDTH, TACTICAL_HEIGHT)) continue;
+      if (!footprintFits(destination, size, occupied, width, height)
+        || !terrainStepFits(state, current.destination, destination, size)) continue;
       const costFt = current.costFt + 5 * (1 + crawl
         + Number(!flies && [...footprintCells(current.destination, size), ...footprintCells(destination, size)].some(p => difficult.has(key(p)))));
       if (costFt > maximumFeet) continue;
@@ -173,6 +177,7 @@ type TacticalAreaAction = {
 };
 
 export interface TacticalAreaProjectionInput {
+  board?: BoardState;
   action: TacticalAreaAction;
   /** The action owner's cell. Cones use it as their immutable origin. */
   sourcePosition: GridPosition;
@@ -218,18 +223,20 @@ function tacticalAreaGeometry(action: TacticalAreaAction): TacticalAreaGeometry 
   return null;
 }
 
-function boardPositions(): GridPosition[] {
-  return Array.from({ length: TACTICAL_WIDTH * TACTICAL_HEIGHT }, (_, index) => ({
-    x: index % TACTICAL_WIDTH,
-    y: Math.floor(index / TACTICAL_WIDTH),
-  }));
-}
+function boardPositions(board?: BoardState): GridPosition[] { return boardCells(board); }
 
 /**
  * Single tactical geometry authority shared by hover preview and target resolution.
  * Geometry comes only from mechanics.targeting.area; names and spell identities are irrelevant.
  */
 export function areaPositionsForAction(input: TacticalAreaProjectionInput): GridPosition[] {
+  const geometry = tacticalAreaGeometry(input.action);
+  const origin = geometry?.kind === 'cone' || geometry?.kind === 'line' || geometry?.kind === 'emanation'
+    ? input.sourcePosition : input.aimPosition;
+  return unclippedAreaPositions(input).filter(p=>!terrainSight(input.board??{},origin,p).blocked);
+}
+
+function unclippedAreaPositions(input: TacticalAreaProjectionInput): GridPosition[] {
   const geometry = tacticalAreaGeometry(input.action);
   if (!geometry) return [];
 
@@ -244,7 +251,7 @@ export function areaPositionsForAction(input: TacticalAreaProjectionInput): Grid
     const sideCells = Math.max(1, Math.ceil(geometry.sizeFt / TACTICAL_CELL_FT));
     const before = Math.floor((sideCells - 1) / 2);
     const after = sideCells - before - 1;
-    return boardPositions().filter((position) => (
+    return boardPositions(input.board).filter((position) => (
       position.x >= input.aimPosition.x - before
       && position.x <= input.aimPosition.x + after
       && position.y >= input.aimPosition.y - before
@@ -253,13 +260,13 @@ export function areaPositionsForAction(input: TacticalAreaProjectionInput): Grid
   }
 
   if (geometry.kind === 'emanation') {
-    return boardPositions().filter((position) => (
+    return boardPositions(input.board).filter((position) => (
       gridDistanceFt(input.sourcePosition, position) <= geometry.radiusFt
     ));
   }
 
   if (geometry.kind === 'sphere' || geometry.kind === 'cylinder') {
-    return boardPositions().filter((position) => (
+    return boardPositions(input.board).filter((position) => (
       Math.hypot(
         position.x - input.aimPosition.x,
         position.y - input.aimPosition.y,
@@ -274,7 +281,7 @@ export function areaPositionsForAction(input: TacticalAreaProjectionInput): Grid
   const magnitude = Math.hypot(direction.x, direction.y);
   if (magnitude === 0) return [];
   const unit = { x: direction.x / magnitude, y: direction.y / magnitude };
-  return boardPositions().filter((position) => {
+  return boardPositions(input.board).filter((position) => {
     if (samePosition(position, input.sourcePosition)) return false;
     const delta = {
       x: (position.x - input.sourcePosition.x) * TACTICAL_CELL_FT,
@@ -334,6 +341,7 @@ export function pathToward(input: {
 }
 
 export function pushAway(input: {
+  board?: BoardState;
   source: GridPosition;
   target: GridPosition;
   distanceFt: number;
@@ -350,7 +358,9 @@ export function pushAway(input: {
   let current = { ...input.target };
   for (let index = 0; index < Math.floor(input.distanceFt / TACTICAL_CELL_FT); index += 1) {
     const next = {x: input.target.x + offset(delta.x, index + 1), y: input.target.y + offset(delta.y, index + 1)};
-    if (!footprintFits(next, input.targetSize ?? 1, occupied, TACTICAL_WIDTH, TACTICAL_HEIGHT)) break;
+    const {width,height}=boardDimensions(input.board);
+    if (!footprintFits(next, input.targetSize ?? 1, occupied, width, height)
+      || !terrainStepFits(input.board ?? {},current,next,input.targetSize ?? 1)) break;
     current = next;
   }
   return current;
@@ -358,6 +368,7 @@ export function pushAway(input: {
 
 /** Resolve forced movement toward its source without entering an occupied cell. */
 export function pullToward(input: {
+  board?: BoardState;
   source: GridPosition;
   target: GridPosition;
   distanceFt: number;
@@ -373,7 +384,9 @@ export function pullToward(input: {
   let current = { ...input.target };
   for (let index = 0; index < Math.floor(input.distanceFt / TACTICAL_CELL_FT); index += 1) {
     const next = { x: current.x + direction.x, y: current.y + direction.y };
-    if (!footprintFits(next, input.targetSize ?? 1, occupied, TACTICAL_WIDTH, TACTICAL_HEIGHT)) break;
+    const {width,height}=boardDimensions(input.board);
+    if (!footprintFits(next, input.targetSize ?? 1, occupied, width, height)
+      || !terrainStepFits(input.board ?? {},current,next,input.targetSize ?? 1)) break;
     current = next;
   }
   return current;
@@ -388,6 +401,7 @@ export function areaActorIds(input: {
   const sourcePosition = input.state.tokens[input.sourceActorId]?.position;
   if (!sourcePosition) return [];
   const area = new Set(areaPositionsForAction({
+    board: input.state,
     action: input.action,
     sourcePosition,
     aimPosition: input.aimPosition,

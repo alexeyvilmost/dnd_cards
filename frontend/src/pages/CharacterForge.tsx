@@ -1,3 +1,4 @@
+import { previewAnchor } from '../utils/previewAnchor';
 import { useDeferredValue, useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, User, Swords, Shield, ScrollText, Star, Zap, Sparkles, Sun, Moon, FileText, Settings } from 'lucide-react';
@@ -955,7 +956,7 @@ const CharacterForge = () => {
           {showAllContent
             ? ' Непроверенные варианты доступны без дополнительных окон.'
             : runProgression
-              ? ' Варианты развития воина показаны со статусами проверки; остальной каталог отфильтрован.'
+              ? ' Варианты развития класса показаны со статусами проверки; остальной каталог отфильтрован.'
               : ' Сейчас показан только проверенный каталог.'}
         </small>
       </span>
@@ -1069,7 +1070,7 @@ const CharacterForge = () => {
       <CharacterFormulaProvider value={formulaCtx}>
       <div className={rootCls}>
         <div className="forge-header sheet-header-bar">
-          <button type="button" className="sheet-back" title="Отмена"
+          <button type="button" className="sheet-back" aria-label="Отмена"
             onClick={() => navigate(`/characters-v3/${draft.id}`)}>
             <ArrowLeft size={18} />
           </button>
@@ -1090,7 +1091,7 @@ const CharacterForge = () => {
             </div>
             <div className="forge-block">
               <div className="forge-section-h">Уровень класса</div>
-              <p className="forge-note">{searchParams.get('roguelike') ? 'Продолжите развитие воина.' : 'Продолжите текущий класс или возьмите первый уровень другого класса.'}</p>
+              <p className="forge-note">{searchParams.get('roguelike') ? 'Продолжите развитие своего класса.' : 'Продолжите текущий класс или возьмите первый уровень другого класса.'}</p>
               <div className="forge-square-grid">
                 {rootClasses.filter((entry) => !searchParams.get('roguelike') || entry.id === draft.classId).map((entry) => {
                   const requirements = entry.id === draft.classId ? [] : multiclassPrerequisiteIssues(entry, draft.abilities);
@@ -1265,7 +1266,7 @@ const CharacterForge = () => {
                 </ul>
               )}
               {conflictWarnings.length > 0 && (
-                <p className="forge-note" title={conflictWarnings.join('\n')}>
+                <p className="forge-note" aria-description={conflictWarnings.join('\n')}>
                   ⚠ Унаследованные замечания ({conflictWarnings.length}) — не блокируют повышение;
                   их можно поправить в полном редакторе.
                 </p>
@@ -1351,7 +1352,8 @@ const CharacterForge = () => {
             type="button"
             className="sheet-header-btn"
             onClick={() => setSettingsOpen(true)}
-            title="Настройки отображения"
+            aria-label="Настройки"
+            aria-description="Настройки отображения"
           >
             <Settings size={16} />
             <span className="sheet-header-btn-label">Настройки</span>
@@ -1360,13 +1362,14 @@ const CharacterForge = () => {
             type="button"
             className="sheet-header-btn"
             onClick={toggleTheme}
-            title={paper ? 'Тёмная тема' : 'Светлая тема'}
+            aria-label={paper ? 'Тёмная тема' : 'Светлая тема'}
+            aria-description={paper ? 'Тёмная тема' : 'Светлая тема'}
           >
             {paper ? <Moon size={16} /> : <Sun size={16} />}
             <span className="sheet-header-btn-label">{paper ? 'Тёмная' : 'Светлая'}</span>
           </button>
           {(savedId || draft.id) && (
-            <Link to={`/characters-v3/${savedId || draft.id}`} className="sheet-edit forge-header-sheet-link" title="Открыть лист персонажа">
+            <Link to={`/characters-v3/${savedId || draft.id}`} className="sheet-edit forge-header-sheet-link" aria-description="Открыть лист персонажа">
               <FileText size={16} />
               <span>Лист</span>
             </Link>
@@ -1814,7 +1817,7 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
               const disabled = !!existing && !selected;
               return (
                 <button key={skill} type="button" className={`chip ${selected ? 'on' : ''} ${sc.recommended.includes(skill) ? 'rec' : ''}`} disabled={disabled}
-                  title={disabled ? grantReason(existing) : undefined} onClick={() => onToggleSkill(skill)}>
+                  aria-description={disabled ? grantReason(existing) : undefined} onClick={() => onToggleSkill(skill)}>
                   {labelOf(SKILLS, skill)}
                 </button>
               );
@@ -2039,8 +2042,7 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
                   nameSuffix={<SupportStatusBadge entity={spell} compact />}
                   detail={spellDetail(spell)}
                   title={`${spell.name} · ${getSpellLevelLabel(spell.level)}`}
-                  onMouseEnter={(e) => { setHovered(spell); setMouse({ x: e.clientX, y: e.clientY }); }}
-                  onMouseMove={(e) => setMouse({ x: e.clientX, y: e.clientY })}
+                  onMouseEnter={(e) => { setHovered(spell); setMouse(previewAnchor(e.currentTarget)); }}
                   onMouseLeave={() => setHovered(null)}
                 />
               ))}
@@ -2048,9 +2050,8 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
           ) : (
             <div className="forge-spell-icon-grid">
               {grantedFiltered.map((spell) => (
-                <div key={spell.id} className="forge-spell-icon ready" title={`${spell.name} · ${getSpellLevelLabel(spell.level)}`}
-                  onMouseEnter={(e) => { setHovered(spell); setMouse({ x: e.clientX, y: e.clientY }); }}
-                  onMouseMove={(e) => setMouse({ x: e.clientX, y: e.clientY })}
+                <div key={spell.id} className="forge-spell-icon ready" aria-description={`${spell.name} · ${getSpellLevelLabel(spell.level)}`}
+                  onMouseEnter={(e) => { setHovered(spell); setMouse(previewAnchor(e.currentTarget)); }}
                   onMouseLeave={() => setHovered(null)}>
                   <img src={spell.image_url?.trim() || '/default_image.png'} alt={spell.name}
                     onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
@@ -2106,8 +2107,7 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
                   ? (ownerBlocks ? `Уже выбрано: ${owner?.label}` : replacementBlocked ? "Лимит замен на этом уровне исчерпан" : disabledReason)
                   : `${spell.name} · ${getSpellLevelLabel(spell.level)}`;
                 const hoverHandlers = {
-                  onMouseEnter: (e: React.MouseEvent) => { setHovered(spell); setMouse({ x: e.clientX, y: e.clientY }); },
-                  onMouseMove: (e: React.MouseEvent) => setMouse({ x: e.clientX, y: e.clientY }),
+                  onMouseEnter: (e: React.MouseEvent) => { setHovered(spell); setMouse(previewAnchor(e.currentTarget)); },
                   onMouseLeave: () => setHovered(null),
                 };
                 return (
@@ -2115,7 +2115,7 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
                     className={`forge-spell-icon ${isSelected ? 'selected' : disabled ? 'disabled' : 'ready'}`}
                     aria-disabled={disabled || undefined}
                     onClick={disabled ? undefined : () => toggleChoiceSpell(choice, spell.id)}
-                    {...hoverHandlers} title={title}>
+                    {...hoverHandlers} aria-description={title}>
                     <img src={spell.image_url?.trim() || '/default_image.png'} alt={spell.name}
                       onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
                     {spell.level > 0 && <span className="forge-spell-badge">{spell.level}</span>}
@@ -2129,7 +2129,7 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
         );
       })}
       {hovered && (
-        <div className="fixed z-50 pointer-events-none" style={{
+        <div className="fixed z-50 pointer-events-none entity-preview-enter" style={{
           left: Math.min(mouse.x + 16, window.innerWidth - 360),
           top: Math.min(Math.max(mouse.y - 40, 10), window.innerHeight - 20),
           transform: mouse.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',

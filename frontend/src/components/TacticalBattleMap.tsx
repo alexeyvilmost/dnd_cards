@@ -1,12 +1,15 @@
 import { combatActorDisplayName } from '../character/familiarLabels';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CombatAreaState, GridPosition, SoloCombatState } from '../solo-combat/types';
-import { combatRelation, TACTICAL_HEIGHT, TACTICAL_WIDTH } from '../solo-combat/types';
+import { combatRelation } from '../solo-combat/types';
+import {boardDimensions, featureCells} from '../solo-combat/boardGeometry';
+import BattleMapScenery from './BattleMapScenery';
 import { areaPositionsForAction, reachablePositions } from '../solo-combat/tacticalGrid';
 import {actorFootprint, footprintCells} from '../solo-combat/footprint';
 import { previewCombatAttackRoll, previewMovementThreats } from '../solo-combat/engine';
 import {
   combatActionIsAttack,
+  combatActionRangeFt,
   combatApproachRoute,
   combatMovementRoute,
 } from '../solo-combat/defaultInteraction';
@@ -55,6 +58,14 @@ export default function TacticalBattleMap({
   onDeclineAdditionalMovement?: () => void;
 }) {
   const [hovered, setHovered] = useState<GridPosition | null>(null);
+  const {width:boardWidth,height:boardHeight}=boardDimensions(state);
+  const featuresByCell=useMemo(()=>{
+    const rows=new Map<string,NonNullable<SoloCombatState['battleMap']>['features']>();
+    for(const feature of state.battleMap?.features??[])for(const p of featureCells(feature)){
+      const key=`${p.x}:${p.y}`;rows.set(key,[...(rows.get(key)??[]),feature]);
+    }
+    return rows;
+  },[state.battleMap]);
   const [hoverAnchor, setHoverAnchor] = useState({x: 0, y: 0});
   const {popoverRef, popoverPos} = useViewportPopoverPosition(Boolean(hovered), hoverAnchor);
   const [zoom, setZoom] = useState(1);
@@ -118,7 +129,7 @@ export default function TacticalBattleMap({
     : undefined;
   const approachPreview = useMemo(() => (
     contextualAction && hoveredEnemyId
-      ? combatApproachRoute(state, actorId, hoveredEnemyId, contextualAction.targeting?.rangeFt ?? 5)
+      ? combatApproachRoute(state, actorId, hoveredEnemyId, combatActionRangeFt(state,actorId,contextualAction))
       : null
   ), [actorId, contextualAction, hoveredEnemyId, state]);
   const freeMovePreview = useMemo(() => {
@@ -153,6 +164,7 @@ export default function TacticalBattleMap({
   const areaCells = useMemo(() => new Set(
     selectedAction && hovered && sourcePosition
       ? areaPositionsForAction({
+        board: state,
         action: selectedAction,
         sourcePosition,
         aimPosition: hovered,
@@ -234,7 +246,7 @@ export default function TacticalBattleMap({
         setHovered(null);
         onActorHover?.(null);
       }}
-      title={`Масштаб ${Math.round(zoom * 100)}% · колесо меняет масштаб · перетаскивание двигает карту`}
+      aria-description={`Масштаб ${Math.round(zoom * 100)}% · колесо меняет масштаб · перетаскивание двигает карту`}
       onWheel={(event) => {
         event.preventDefault();
         setZoom((current) => Math.min(1.8, Math.max(0.35, Number((current + (event.deltaY < 0 ? 0.1 : -0.1)).toFixed(2)))));
@@ -278,6 +290,7 @@ export default function TacticalBattleMap({
       }}
     >
     <div className="tactical-map-controls" role="group" aria-label="Навигация по полю">
+      {state.battleMap&&<details className="tactical-map-legend"><summary>{state.battleMap.name} · {boardWidth}×{boardHeight}</summary><p>{state.battleMap.description}</p></details>}
       <button type="button" onClick={() => setZoom((current) => Math.max(0.35, Number((current - 0.1).toFixed(2))))} aria-label="Уменьшить масштаб">−</button>
       <span>{Math.round(zoom * 100)}%</span>
       <button type="button" onClick={() => setZoom((current) => Math.min(1.8, Number((current + 0.1).toFixed(2))))} aria-label="Увеличить масштаб">+</button>
@@ -294,11 +307,13 @@ export default function TacticalBattleMap({
       className={`tactical-map${selectedActionId ? ' is-targeting' : ''}${movementMode ? ' is-moving' : ''}${implicitActionsEnabled && !selectedActionId ? ' is-contextual' : ''}${worldObjectMoveMode ? ' is-world-object-moving' : ''}`}
       data-testid="tactical-map"
       data-zoom={zoom}
-      style={{ '--tactical-cell-size': `${Math.round(80 * zoom)}px` } as React.CSSProperties}
+      style={{ '--tactical-cell-size': `${Math.round(80 * zoom)}px`, '--board-width':boardWidth,'--board-height':boardHeight,
+        ...(state.battleMap?{backgroundImage:`url("${state.battleMap.background}")`,backgroundSize:'100% 100%'}:{}) } as React.CSSProperties}
     >
+      <BattleMapScenery map={state.battleMap}/>
       <CombatMapFeedback beat={feedback ?? null} state={state} />
       {routeOrigin && previewRoute && previewRoute.path.length > 0 && <svg className="combat-route-line"
-        viewBox={`0 0 ${TACTICAL_WIDTH} ${TACTICAL_HEIGHT}`} preserveAspectRatio="none" aria-hidden="true">
+        viewBox={`0 0 ${boardWidth} ${boardHeight}`} preserveAspectRatio="none" aria-hidden="true">
         <line className="combat-route-line__intent" x1={routeOrigin.x + movingCenter} y1={routeOrigin.y + movingCenter}
           x2={previewRoute.destination.x + movingCenter} y2={previewRoute.destination.y + movingCenter} />
         <polyline className={`combat-route-line__path${previewRoute.available ? '' : ' is-unavailable'}`}
@@ -309,8 +324,10 @@ export default function TacticalBattleMap({
           <text x={(threat.from.x + threat.to.x) / 2 + movingCenter} y={(threat.from.y + threat.to.y) / 2 + movingCenter + .05}>!</text>
         </g>)}
       </svg>}
-      {Array.from({ length: TACTICAL_WIDTH * TACTICAL_HEIGHT }, (_, index) => {
-        const position = { x: index % TACTICAL_WIDTH, y: Math.floor(index / TACTICAL_WIDTH) };
+      {Array.from({ length: boardWidth * boardHeight }, (_, index) => {
+        const position = { x: index % boardWidth, y: Math.floor(index / boardWidth) };
+        const features=featuresByCell.get(`${position.x}:${position.y}`)??[];
+        const terrainLabel=features.map(f=>`${f.name}${f.blocksMovement?' · непроходимо':''}${f.blocksSight?' · закрывает обзор':''}${f.cover==='half'?' · половинное укрытие, +2 КД':f.cover==='three_quarters'?' · укрытие на три четверти, +5 КД':''}`).join('; ');
         const token = tokenByCell.get(`${position.x}:${position.y}`);
         const dancingLight = dancingLightByCell.get(`${position.x}:${position.y}`);
         const illusion = illusionByCell.get(`${position.x}:${position.y}`);
@@ -348,15 +365,18 @@ export default function TacticalBattleMap({
           <button
             type="button"
             key={`${position.x}:${position.y}`}
-            className={`tactical-cell${token ? ' has-token' : ''}${dancingLight || illusion ? ' has-world-object' : ''}${persistentAreas.length ? ' has-combat-area' : ''}${persistentAreas.some((area) => area.lightlyObscured) ? ' is-lightly-obscured' : ''}${persistentAreas.some((area) => area.heavilyObscured) ? ' is-heavily-obscured' : ''}${persistentAreas.some((area) => area.difficultTerrain) ? ' is-difficult-terrain' : ''}${token?.actorId === activeId ? ' is-active' : ''}${token?.actorId === inspectedActorId ? ' is-inspected' : ''}${token?.actorId === highlightedActorId ? ' is-linked-highlight' : ''}${dead ? ' is-dead' : ''}${areaCells.has(`${position.x}:${position.y}`) || (token && eligibleTargetIds?.includes(token.actorId)) ? ' is-area-preview' : ''}${reachableCells.has(`${position.x}:${position.y}`) ? ' is-move-reachable' : ''}${routeCells.has(`${position.x}:${position.y}`) ? ` is-route-preview${previewRoute && !previewRoute.available ? ' is-unavailable' : ''}` : ''}`}
-            aria-label={[actorLabel, areaLabel, lightLabel, illusionLabel, (groundItemsByCell.get(`${position.x}:${position.y}`)??[]).map(item=>`На земле: ${item.name}`).join(", "), `Клетка ${position.x + 1}, ${position.y + 1}`].filter(Boolean).join(' · ')}
+            className={`tactical-cell${token ? ' has-token' : ''}${dancingLight || illusion ? ' has-world-object' : ''}${persistentAreas.length ? ' has-combat-area' : ''}${persistentAreas.some((area) => area.lightlyObscured) ? ' is-lightly-obscured' : ''}${persistentAreas.some((area) => area.heavilyObscured) ? ' is-heavily-obscured' : ''}${persistentAreas.some((area) => area.difficultTerrain) ? ' is-difficult-terrain' : ''}${token && token.actorId === activeId ? ' is-active' : ''}${token && token.actorId === inspectedActorId ? ' is-inspected' : ''}${token && token.actorId === highlightedActorId ? ' is-linked-highlight' : ''}${dead ? ' is-dead' : ''}${areaCells.has(`${position.x}:${position.y}`) || (token && eligibleTargetIds?.includes(token.actorId)) ? ' is-area-preview' : ''}${reachableCells.has(`${position.x}:${position.y}`) ? ' is-move-reachable' : ''}${routeCells.has(`${position.x}:${position.y}`) ? ` is-route-preview${previewRoute && !previewRoute.available ? ' is-unavailable' : ''}` : ''}`}
+            aria-label={[actorLabel, terrainLabel, areaLabel, lightLabel, illusionLabel, (groundItemsByCell.get(`${position.x}:${position.y}`)??[]).map(item=>`На земле: ${item.name}`).join(", "), `Клетка ${position.x + 1}, ${position.y + 1}`].filter(Boolean).join(' · ')}
+            aria-description={terrainLabel||undefined}
             data-actor-id={token?.actorId}
+            data-scenery-zone={persistentAreas.length>0&&persistentAreas.every(area=>area.sceneryFeatureId)?'true':undefined}
             style={token ? {'--linked-accent': combatIdentity(state, token.actorId).accent} as React.CSSProperties : undefined}
             onMouseEnter={(event) => { setHovered(position); setHoverAnchor({x:event.clientX,y:event.clientY}); onActorHover?.(token?.actorId ?? null); }}
             onMouseLeave={() => { setHovered(null); onActorHover?.(null); }}
             onFocus={(event) => { const rect=event.currentTarget.getBoundingClientRect(); setHoverAnchor({x:rect.right,y:rect.top}); setHovered(position); onActorHover?.(token?.actorId ?? null); }}
             onBlur={() => { setHovered(null); onActorHover?.(null); }}
             onClick={() => {
+              if(features.some(f=>f.blocksMovement)&&!token)return;
               if (token && !selectedActionId && !movementMode
                 && combatRelation(state, actorId, token.actorId) !== 'enemy') onInspectActor?.(token.actorId);
               onCell(position, token?.actorId);
@@ -377,20 +397,20 @@ export default function TacticalBattleMap({
               Перемещение <b>{freeMovePreview.costFt} фт.</b><small>Останется {freeMovePreview.remainingFt} фт.{!freeMovePreview.available ? ` · не хватает ${freeMovePreview.costFt - freeMovePreview.availableFt} фт.` : ''}</small>
               {dangerNames && <small className="combat-route-warning">Провоцированная атака: {dangerNames}. Выход из досягаемости; Отход помогает избежать атаки.</small>}
             </div>, document.body)}
-            {persistentAreas.map((area) => area.origin.x === position.x && area.origin.y === position.y ? (
-              <span key={area.id} className={`combat-area-token is-${area.zoneType}`} title={areaLabel} aria-hidden="true">
+            {persistentAreas.filter(area=>!area.sceneryFeatureId).map((area) => area.origin.x === position.x && area.origin.y === position.y ? (
+              <span key={area.id} className={`combat-area-token is-${area.zoneType}`} aria-description={areaLabel} aria-hidden="true">
                 <b>{area.heavilyObscured ? '◉' : area.lightlyObscured ? '◌' : '◇'}</b><small>{area.name}</small>
               </span>
             ) : null)}
             {dancingLight && (
-              <span className="dancing-light-token" title={lightLabel} aria-hidden="true">
+              <span className="dancing-light-token" aria-description={lightLabel} aria-hidden="true">
                 <b>✦</b><small>{dancingLight.dancingLight!.dimRadiusFt} фт.</small>
               </span>
             )}
             {illusion && (
               <span
                 className={`minor-illusion-token is-${illusion.illusion!.form}`}
-                title={illusionLabel}
+                aria-description={illusionLabel}
                 data-world-object-id={illusion.id}
                 aria-hidden="true"
               >
@@ -399,7 +419,7 @@ export default function TacticalBattleMap({
               </span>
             )}
             {(groundItemsByCell.get(`${position.x}:${position.y}`)??[]).map(item=>(
-              <span key={item.id} className="ground-item-token" title={item.name} data-world-object-id={item.id}>
+              <span key={item.id} className="ground-item-token" aria-description={item.name} data-world-object-id={item.id}>
                 {item.imageUrl?<img src={item.imageUrl} alt={item.name}/>:<span aria-label={item.name}>◇</span>}
               </span>
             ))}

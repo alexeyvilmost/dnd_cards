@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import EntityTags from './EntityTags';
 import { createPortal } from 'react-dom';
 import { X, Edit, Trash2, Shield, ShieldOff, Wand2, Loader2, Download, Copy } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -282,7 +283,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
             <div className="flex items-center gap-2">
               <span 
                 className="text-3xl sm:text-4xl md:text-5xl font-bold text-orange-500" 
-                title={getRaritySymbolDescription(card.rarity)}
+                aria-description={getRaritySymbolDescription(card.rarity)}
                 aria-label={getRaritySymbolDescription(card.rarity)}
                 style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}
               >
@@ -403,13 +404,11 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
             )}
             {/* Искусность (Weapon Mastery 2024) — структурное поле card.mastery. */}
             {masteryEffect && (
-              <p title={masteryEffect.description ?? undefined}>
+              <p aria-description={masteryEffect.description ?? undefined}>
                 <strong>Мастерство:</strong> {masteryEffect.name}
               </p>
             )}
-            {card.tags && card.tags.length > 0 && (
-              <p><strong>Теги:</strong> {card.tags.join(', ')}</p>
-            )}
+            <EntityTags type="card" id={card.id}/>
             {card.attunement && (
               <div>
                 <p><strong>Настройка:</strong></p>

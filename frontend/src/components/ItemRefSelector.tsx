@@ -69,14 +69,14 @@ const ItemRefSelector: React.FC<ItemRefSelectorProps> = ({
                   value={ref.quantity}
                   onChange={(e) => setQty(ref.card_id, parseInt(e.target.value || '1', 10))}
                   className="w-14 px-2 py-1 border border-gray-300 rounded text-sm"
-                  title="Количество"
+                    aria-label="Количество"
                 />
               )}
               <button
                 type="button"
                 onClick={() => removeItem(ref.card_id)}
                 className="p-1 text-gray-400 hover:text-red-500"
-                title="Убрать"
+                aria-label="Убрать"
               >
                 <X size={16} />
               </button>

@@ -430,7 +430,7 @@ const MechanicsBuilder = ({ value, onChange, onValidationChange, resourceOptions
             type="button"
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-gray-700 text-white hover:bg-gray-800 disabled:bg-gray-300"
             disabled={aiBusy}
-            title="Сгенерировать механику по описанию (OpenAI)"
+            aria-description="Сгенерировать механику по описанию (OpenAI)"
             onClick={generateWithAi}
           >
             <Wand2 size={14} />
@@ -608,12 +608,12 @@ const MechanicsBuilder = ({ value, onChange, onValidationChange, resourceOptions
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-gray-800">{block.label}</span>
                   <div className="flex gap-1">
-                    <button type="button" title="Выше" className="p-1 text-gray-400 hover:text-gray-700"
+                    <button type="button" aria-label="Выше" className="p-1 text-gray-400 hover:text-gray-700"
                       disabled={idx === 0}
                       onClick={() => moveEffect(idx, -1)}>
                       <ChevronUp size={16} />
                     </button>
-                    <button type="button" title="Ниже" className="p-1 text-gray-400 hover:text-gray-700"
+                    <button type="button" aria-label="Ниже" className="p-1 text-gray-400 hover:text-gray-700"
                       disabled={idx === effectEntries.length - 1}
                       onClick={() => moveEffect(idx, 1)}>
                       <ChevronDown size={16} />

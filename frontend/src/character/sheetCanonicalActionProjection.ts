@@ -179,6 +179,9 @@ export function projectRunnableSheetCanonicalActions(input: {
         : undefined;
       actions.push({
         ...profiled,
+        // Keep the catalog actor-neutral. The rules handler reapplies the
+        // profile from the acting participant, including after equipment changes.
+        canonicalMechanics: mechanics,
         mechanics: profiled.mechanics,
         ...(profiledActionRef
           ? { actionRef: { ...profiledActionRef, mechanics: profiled.mechanics } }
