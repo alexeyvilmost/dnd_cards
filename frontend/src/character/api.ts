@@ -1,4 +1,5 @@
 import { ApiRequestError, apiClient } from '../api/client';
+import {playCommittedEvents} from '../audio/commandSounds';
 import { cached } from '../api/apiCache';
 import { activeRunId, notifyRunUpdated } from '../roguelike/navigation';
 import type { EngineEvent } from '../mvp/contracts';
@@ -217,7 +218,8 @@ export const charactersV3Api = {
         ? { ...payload, roguelike_run_id: activeRunId(), roguelike_intent: 'camp' }
         : payload,
     );
-    notifyRunUpdated();
+      if (!data.replayed) playCommittedEvents(payload.events.map(e=>e.payload),data.command_id);
+      notifyRunUpdated();
     return data;
   }),
   uploadAvatar: (characterId: string, file: File): Promise<string> => characterV3Request('update', async () => {

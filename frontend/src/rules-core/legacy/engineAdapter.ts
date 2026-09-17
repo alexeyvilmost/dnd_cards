@@ -74,3 +74,4 @@ export type { ModifierQueryFacts } from '../../engine/modifiers';
 export type { EvalContext } from '../../engine/circumstances';
 
 export {canHear, perceivesWithoutSight} from '../../engine/senses';
+export {applyDeathSaveRoll,emptyDeathSaves,rollDeathSaveDie,describeDeathSaveOutcome} from '../../engine/deathSaves';

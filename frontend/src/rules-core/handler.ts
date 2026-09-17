@@ -7,6 +7,7 @@ import {effectiveArmorClass, effectiveArmorClassBreakdown} from './actorArmorCla
 import { resolveDamageCalculation } from './legacy/engineAdapter';
 import {CORE_WEAPON_ATTACK, systemActionAsRuleDefinition, unarmedDamageActionFor, weaponAttackAction} from './attackDefinitions';
 import {meleeWeaponDefenseEligible, singleAttackDefenseBonus} from './attackDefenseRuntime';
+import {applyDeathSaveRoll,emptyDeathSaves,rollDeathSaveDie,describeDeathSaveOutcome} from './legacy/engineAdapter';
 import {
   activeConditionsOf,
   activeConditionWorldFactEnabled,
@@ -383,12 +384,18 @@ function factsIssue(action: RuleActionDefinition, targetId: string, facts?: Spat
   const targeting = action.targeting;
   if (!targeting) return null;
   if (!facts) return ['MissingSpatialFacts', `Missing spatial facts for target ${targetId}`];
+  const rawTargeting=action.mechanics.targeting as Record<string,unknown> | undefined;
+  const delivery=rawTargeting?.shape==='area' ? facts.areaDelivery : undefined;
   const targetRangeFt = factualTargetRangeFt(action);
-  if (facts.distanceFt < 0 || facts.distanceFt > targetRangeFt) {
+  const distanceFt=delivery?.distanceFt ?? facts.distanceFt;
+  if (!Number.isFinite(distanceFt) || distanceFt < 0 || distanceFt > (delivery ? targeting.rangeFt : targetRangeFt)) {
     return ['OutOfRange', `${targetId} is outside ${targetRangeFt} ft range`];
   }
   if (targeting.requiresLineOfSight && (!facts.lineOfSight || facts.cover === 'total')) {
     return ['LineOfSightBlocked', `Line of sight to ${targetId} is blocked`];
+  }
+  if (delivery && (!delivery.lineOfSight || delivery.cover==='total')) {
+    return ['LineOfSightBlocked', 'The area origin is blocked'];
   }
   if (!targeting.allowedRelations.includes(facts.relation)) {
     return ['IllegalRelation', `${facts.relation} is not a legal relation for ${action.id}`];
@@ -1242,6 +1249,7 @@ function differs(before: unknown, after: unknown): boolean {
 
 function runtimePatch(before: ActorState['runtime'], after: ActorState['runtime']): ActorRuntimePatch {
   const patch: ActorRuntimePatch = {};
+  if (differs(before.deathSaves, after.deathSaves)) patch.deathSaves = after.deathSaves ?? emptyDeathSaves();
   if (differs(before.hp, after.hp)) patch.hp = after.hp;
   if (differs(before.resources, after.resources)) patch.resources = after.resources;
   if (differs(before.maxResources, after.maxResources)) patch.maxResources = after.maxResources;
@@ -1251,6 +1259,11 @@ function runtimePatch(before: ActorState['runtime'], after: ActorState['runtime'
   if (differs(before.firedThisTurn, after.firedThisTurn)) patch.firedThisTurn = after.firedThisTurn ?? null;
   if (differs(before.firedThisRest, after.firedThisRest)) patch.firedThisRest = after.firedThisRest ?? null;
   if (differs(before.firedByPeriod, after.firedByPeriod)) patch.firedByPeriod = after.firedByPeriod ?? null;
+  // Regaining HP ends this dying episode, regardless of which entity healed.
+  if(before.hp.current===0 && after.hp.current>0 && !after.deathSaves?.dead){
+    patch.deathSaves=emptyDeathSaves();
+    patch.firedThisTurn=(after.firedThisTurn??[]).filter(id=>id!=='system:death-save-due');
+  }
   return patch;
 }
 
@@ -11304,6 +11317,22 @@ function executeCommand(
         },
       }];
     }
+    case 'DeathSavingThrow': {
+      const before=actor.runtime,ds=before.deathSaves??emptyDeathSaves();
+      if(actor.kind!=='playerCharacter'||before.hp.current!==0||ds.dead||ds.stable
+        ||!before.firedThisTurn?.includes('system:death-save-due')
+        ||before.firedThisTurn?.includes('system:death-save'))return rejected(world,'InvalidActionTiming','Death save is not due');
+      const roll=rollDeathSaveDie(before,actor.passives??[],actorFormulaContext(actor.character),env.rng);
+      const natural=roll.dice.find(d=>d.sides===20&&!d.discarded)!.result;
+      const result=applyDeathSaveRoll(ds,natural);
+      roll.kind='save';roll.deathSave=true;roll.target={type:'dc',value:10};roll.outcome=natural>=10?'success':'fail';
+      roll.text=describeDeathSaveOutcome(result.outcome,natural);
+      const after={...before,deathSaves:result.next,
+        hp:result.outcome==='revive'?{...before.hp,current:1}:before.hp,
+        firedThisTurn:[...(before.firedThisTurn??[]),'system:death-save']};
+      return [...runtimeTransition(actor.id,actor.id,before,after,'start_turn',['system:death-save']),
+        ...engineTrace(actor.id,[],[{type:'roll',label:'Спасбросок от смерти',roll}],['system:death-save'])];
+    }
     case 'StartTurn': {
       const boundary = sourceTurnBoundary(world, actor.id, 'start');
       const before = boundary.runtimes.get(actor.id) ?? actor.runtime;
@@ -11323,6 +11352,9 @@ function executeCommand(
           events: [...started.events, ...commandResolution.events],
         }
         : started;
+      if(actor.kind==='playerCharacter' && before.hp.current===0 && !before.deathSaves?.dead && !before.deathSaves?.stable){
+        result.state={...result.state,firedThisTurn:[...(result.state.firedThisTurn??[]),'system:death-save-due']};
+      }
       const scene = world.scene as EncounterScene;
       const turnStartChoices = command.turnStartChoices ?? [];
       if (turnStartChoices.length > 1) {

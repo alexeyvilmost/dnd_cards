@@ -108,6 +108,7 @@ export default function SheetEquipmentPanel({
   const [showEmptySlots, setShowEmptySlots] = useState(false);
   const [containerOpen,setContainerOpen]=useState<Card|null>(null);
   const [transfer,setTransfer]=useState<{card:Card;containerId:string;direction:'in'|'out'}|null>(null);
+  const transferSaving=useRef(false);
 
   const runtime = useMemo(() => forgeToRuntimeState(character), [character]);
   void passives; void ruleState; // КД/оружие считаются в шапке листа
@@ -176,13 +177,22 @@ export default function SheetEquipmentPanel({
   }, [character, encounterApply, onUpdated, readOnly]);
 
   // S5 контейнеры: положить предмет в контейнер / достать обратно (хелперы S4 + общий persist).
-  const beginTransfer=(card:Card,containerId:string,direction:'in'|'out')=>{if(readOnly||busy)return;setHoveredItem(null);setError(null);setTransfer({card,containerId,direction});setDialog(null)};
-  const transferMax=transfer?runtime.inventory.find(r=>r.cardId===transfer.card.id&&(transfer.direction==='in'?!r.containerId:r.containerId===transfer.containerId))?.qty??0:0;
-  const confirmTransfer=async(quantity:number)=>{
-    if(!transfer||busy||!Number.isSafeInteger(quantity)||quantity<1||quantity>transferMax)return;
-    const next=transfer.direction==='in'?moveToContainer(runtime,transfer.card.id,transfer.containerId,quantity):moveOutOfContainer(runtime,transfer.card.id,transfer.containerId,quantity);
+  const transferQuantity=(request:NonNullable<typeof transfer>)=>runtime.inventory.find(r=>r.cardId===request.card.id&&(request.direction==='in'?!r.containerId:r.containerId===request.containerId))?.qty??0;
+  const beginTransfer=(card:Card,containerId:string,direction:'in'|'out')=>{
+    if(readOnly||busy||transferSaving.current)return;
+    const request={card,containerId,direction},max=transferQuantity(request);
+    if(max<1)return;
+    setHoveredItem(null);setError(null);setDialog(null);
+    if(max===1)void confirmTransfer(1,request);
+    else setTransfer(request);
+  };
+  const transferMax=transfer?transferQuantity(transfer):0;
+  const confirmTransfer=async(quantity:number,request=transfer)=>{
+    if(!request||readOnly||busy||transferSaving.current||!Number.isSafeInteger(quantity)||quantity<1||quantity>transferQuantity(request))return;
+    const next=request.direction==='in'?moveToContainer(runtime,request.card.id,request.containerId,quantity):moveOutOfContainer(runtime,request.card.id,request.containerId,quantity);
     if(next===runtime){setError('Перемещение недоступно. Проверьте содержимое инвентаря.');return;}
-    if(await persist(next))setTransfer(null);
+    transferSaving.current=true;
+    try {if(await persist(next))setTransfer(null);}finally{transferSaving.current=false;}
   };
 
   const attuned = readAttunedIds(character.turn_state);
@@ -519,7 +529,7 @@ export default function SheetEquipmentPanel({
         />
       )}
 
-      {containerOpen&&!transfer&&<ContainerInventoryDialog container={containerOpen} runtime={runtime} cards={cardMap} busy={busy||readOnly} onClose={()=>setContainerOpen(null)} onOpenContainer={setContainerOpen} onTransfer={(card,direction)=>beginTransfer(card,containerOpen.id,direction)}/>}
+      {containerOpen&&!transfer&&<ContainerInventoryDialog container={containerOpen} runtime={runtime} cards={cardMap} busy={busy||readOnly} error={error} onClose={()=>setContainerOpen(null)} onOpenContainer={setContainerOpen} onTransfer={(card,direction)=>beginTransfer(card,containerOpen.id,direction)}/>}
       {transfer&&<QuantityTransferDialog key={`${transfer.card.id}:${transfer.containerId}:${transfer.direction}`} card={transfer.card} max={transferMax} from={transfer.direction==='in'?'Инвентарь':cardMap.get(transfer.containerId)?.name??'Контейнер'} to={transfer.direction==='out'?'Инвентарь':cardMap.get(transfer.containerId)?.name??'Контейнер'} busy={busy} error={error} onConfirm={quantity=>void confirmTransfer(quantity)} onClose={()=>setTransfer(null)}/>}
 
       {attuneOpen && (

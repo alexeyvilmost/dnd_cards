@@ -16,7 +16,8 @@ export function useCombatPresentation(state: SoloCombatState | null, opening: So
     const seen=new Set(previous?.log.map(entry=>entry.id)??[]);
     setPrevious(state);
     if (previous || opening) {
-      const incoming=presentCombatEntries(state,state.log.filter(entry=>!seen.has(entry.id)));
+      const incoming=presentCombatEntries(state,state.log.filter(entry=>!seen.has(entry.id)))
+        .filter(beat=>!beat.roll?.deathSave); // persistent death-save dialog owns this result
       const held = persistedRollPresentation(previous?.pendingD20Interrupt);
       if (held?.held && !persistedRollPresentation(state.pendingD20Interrupt)?.held) {
         // The confirmed phase belongs to the dialog already on screen, ahead

@@ -2,6 +2,7 @@ import type { SoloCombatState } from './types';
 
 interface OutcomeVisibilityState {
   outcome: SoloCombatState['outcome'];
+  pendingDeathSave?: SoloCombatState['pendingDeathSave'];
   pendingTriggeredAction?: SoloCombatState['pendingTriggeredAction'];
   pendingTurnStartGrappleDamage?: SoloCombatState['pendingTurnStartGrappleDamage'];
   pendingAlertSwapActorIds?: SoloCombatState['pendingAlertSwapActorIds'];
@@ -12,6 +13,7 @@ interface OutcomeVisibilityState {
 /** Keep the result overlay behind every decision that still belongs to the combat. */
 export function shouldShowSoloCombatOutcome(state: OutcomeVisibilityState): boolean {
   return state.outcome !== 'active'
+    && !state.pendingDeathSave
     && !state.world.pendingResolution
     && !state.pendingTriggeredAction
     && !state.pendingTurnStartGrappleDamage

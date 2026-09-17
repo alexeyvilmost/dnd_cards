@@ -2,6 +2,7 @@ import {useEffect, useRef, useState, type CSSProperties} from 'react';
 import {createCommittedDieRenderer} from './d20Renderer';
 import {supportedDieSides} from './polyhedralGeometry';
 import './CommittedD20.css';
+import {soundPlayer} from '../audio/player';
 
 export const D20_ROLL_DURATION_MS = 1450;
 export const D20_SELECTION_DURATION_MS = 400;
@@ -11,6 +12,7 @@ type DieProps = {value: number; rolling: boolean; discarded?: boolean; selection
 export default function CommittedD20(props: DieProps) { return <CommittedDie {...props} sides={20}/>; }
 
 export function CommittedDie({value, rolling, sides, discarded = false, selectionPending = false, critical, animateEffects = true}: DieProps & {sides: number}) {
+  useEffect(()=>{if(rolling)soundPlayer.play('dice.roll');},[rolling,value]);
   const canvas = useRef<HTMLCanvasElement>(null);
   const renderer = useRef<ReturnType<typeof createCommittedDieRenderer>>(null);
   const [unavailable, setUnavailable] = useState(false);

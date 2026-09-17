@@ -260,6 +260,9 @@ export interface SpatialFacts {
   distanceFt: number;
   lineOfSight: boolean;
   cover: 'none' | 'half' | 'three_quarters' | 'total';
+  /** Board-authoritative delivery to an area origin. Per-target cover/LoS then
+   * describe propagation from that origin, not the caster-to-creature ray. */
+  areaDelivery?: {distanceFt:number; lineOfSight:boolean; cover:'none'|'half'|'three_quarters'|'total'};
   relation: Relation;
   /**
    * Directed visibility facts are distinct from geometric line of sight.
@@ -1335,6 +1338,7 @@ export interface ArmBoonCommand extends CommandBase {
 }
 
 export type GameCommand =
+  | (CommandBase & {type:'DeathSavingThrow'})
   | StartEncounterCommand
   | StartTurnCommand
   | EndTurnCommand
@@ -1379,6 +1383,7 @@ export type GameCommand =
   | ArmBoonCommand;
 
 export interface ActorRuntimePatch {
+  deathSaves?: import('../mvp/contracts').DeathSaveState;
   hp?: RuntimeState['hp'];
   resources?: RuntimeState['resources'];
   maxResources?: RuntimeState['maxResources'];

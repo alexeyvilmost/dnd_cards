@@ -1486,6 +1486,7 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		{Version: "257_glossary_concepts", Description: "Seed 5e24 glossary concepts with formatted descriptions and cross references", Up: seedGlossaryConcepts257, Down: func(db *sql.DB) error { return nil }},
 		{Version: "258_entity_tags_shop", Description: "Registered entity tags, archived legacy metadata, tag-driven run pools and merchant settings", Up: createEntityTags258, Down: retainCharacterTemplates250},
 		{Version: "259_merchant_copper", Description: "Unit ammunition prices and copper-denominated merchant offers", Up: merchantCopper259, Down: retainCharacterTemplates250},
+		{Version: "260_audio_presentations", Description: "Audio library and entity sound metadata independent of certified mechanics", Up: createAudio260, Down: retainCharacterTemplates250},
 		// Здесь можно добавлять новые миграции
 	}
 }

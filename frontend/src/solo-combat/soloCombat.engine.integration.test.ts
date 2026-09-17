@@ -1,4 +1,5 @@
 import {combatHideFacts, combatHideIssue} from './hide';
+import {previewAttackCover,attackCoverLabel} from './attackCoverPreview';
 import {foldEvents} from '../rules-core/reducer';
 import {approachAndExecuteCombatAction, canEscapeActorGrapple, escapeActorGrapple, previewCombatAttackRoll, previewMovementThreats, offerZeroDamageFollowUps, triggeredSecondaryTargetIds} from './engine';
 import { groupCombatSaveBeats, presentCombatEntries } from './presentation';
@@ -769,6 +770,21 @@ async function championMovementEncounter() {
 }
 
 describe('solo combat engine vertical integration', () => {
+  it.each([['half',2],['three_quarters',5]] as const)('explains %s cover using the real attack preview without spending or mutation',async(cover,bonus)=>{
+    const {state,actorId,enemyId}=await championMovementEncounter();
+    const attack:RuleActionDefinition={id:'preview-shot-'+cover,name:'Произвольный снаряд',kind:'nonSpell',sourceEntityIds:['preview-shot'],
+      targeting:{minTargets:1,maxTargets:1,rangeFt:80,requiresLineOfSight:true,allowedRelations:['enemy']},
+      mechanics:{activation:{mode:'active',cost:[{resource:'action'}]},effects:[{resolution:'attack_roll',vs:'ac',ability:'dex',attack_kind:'weapon_ranged',attack_bonus_override:4,on_hit:[]}]}};
+    state.catalogActions.push(attack);state.world.actors[actorId].capabilities.actionIds.push(attack.id);state.playerActionIds.push(attack.id);
+    state.tokens[actorId].position={x:1,y:4};state.tokens[enemyId].position={x:6,y:4};
+    state.battleMap={id:'preview',name:'Preview',description:'',width:12,height:10,background:'',maxFootprint:3,maxActors:10,
+      features:[{id:'obstacle',name:'Препятствие',sprite:'table',x:3,y:3,width:1,height:3,cover}]};
+    const before=clone(state),input={state,actorId,actionId:attack.id,targetIds:[enemyId]};
+    const profile=previewCombatAttackRoll(input);expect(profile).not.toBeNull();
+    const preview=previewAttackCover(input,profile);
+    expect(preview).toMatchObject({cover,bonus,ac:profile!.target!.value,baseAc:profile!.target!.value-bonus});
+    expect(attackCoverLabel(preview)).toContain(`+${bonus} к КД`);expect(state).toEqual(before);
+  });
   it('marks the exact reach-exit edge, once per enemy, without consuming its reaction', async () => {
     const {state,actorId,enemyId}=await championMovementEncounter();
     const before=clone(state);
@@ -4140,7 +4156,8 @@ describe('Bloodied Frenzy uses shared saves and opportunity attacks', () => {
   it('groups a real multi-target command across its separate save continuation logs',async()=>{
     const scene=await setup(34,3);
     const targets=Object.values(scene.state.world.actors).filter(actor=>actor.kind==='monster').map(actor=>actor.id);
-    targets.forEach((id,i)=>{scene.state.tokens[id].position={x:5+i,y:4};});
+    // Fan out: medium bodies now provide full cover to a target directly behind them.
+    targets.forEach((id,i)=>{scene.state.tokens[id].position={x:5,y:3+i};});
     const result=autoResolveSystemDecisions(executeCombatAction({...scene,targetIds:targets,rng:()=>.2}),()=>.2);
     expect(result.world.pendingResolution).toBeFalsy();
     const beats=presentCombatEntries(result,result.log).filter(beat=>beat.rollKind==='save');

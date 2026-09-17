@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
+import AudioDirector from './audio/AudioDirector';
 import {
   loadConditions,
   MICRO_MVP_CONDITION_CERTIFICATION_VERSION,
@@ -185,6 +186,7 @@ function App() {
       </div>
     )}
     <AuthProvider>
+      <AudioDirector/>
       <ToastProvider>
         <CharacterV3AccessNotice />
         <CharacterFormulaRoot>

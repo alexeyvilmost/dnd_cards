@@ -5,6 +5,7 @@ import type { RuleActionDefinition } from '../rules-core/domain';
 import type { SoloCombatState } from './types';
 import {
   combatActionIsAttack,
+  combatActionIsRanged,
   combatActionRangeFt,
   combatApproachRoute,
   combatMovementRoute,
@@ -51,6 +52,10 @@ function state(): SoloCombatState {
 }
 
 describe('contextual combat interaction', () => {
+  it.each(['weapon_ranged','spell_ranged','weapon_melee','spell_melee','unarmed'])('projectile preview follows declared mode %s, not name or distance',attack_kind=>{
+    const value=state();const action={...weapon,name:'Любое имя',mechanics:{effects:[{resolution:'attack_roll',attack_kind}]}} as RuleActionDefinition;
+    expect(combatActionIsRanged(value,'hero',action)).toBe(attack_kind.endsWith('_ranged'));
+  });
   it.each([5,10])('binds %i ft weapon reach instead of the shared template ceiling',reach=>{
     const value=state();const card=structuredClone(pinned.catalog.entities.card[0]);
     const mechanics=card.mechanics as any;mechanics.weapon_profile.attack_modes.find((m:any)=>m.kind==='melee').reach_ft=reach;

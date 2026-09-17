@@ -1,0 +1,50 @@
+// Render the real map against an isolated local combat snapshot. No game writes.
+import {readFile,mkdir} from 'node:fs/promises';
+import {createRequire} from 'node:module';
+import assert from 'node:assert/strict';
+const require=createRequire(new URL('../../frontend/package.json',import.meta.url));
+const {chromium,expect}=require('@playwright/test');
+const state=JSON.parse(await readFile('outputs/cover-symmetry/battle-before.json','utf8')).events[0].record.baseline.state;
+const actorId=state.characterId,enemyId=Object.keys(state.tokens).find(id=>id!==actorId);
+state.tokens[actorId].position={x:2,y:5};state.tokens[enemyId].position={x:8,y:5};
+state.battleMap={...state.battleMap,width:12,height:10,features:[{id:'screen',name:'Укрытие',sprite:'stone',x:5,y:5,width:1,height:1,cover:'half',blocksMovement:true}]};
+state.combatAreas={};state.world.pendingResolution=null;
+const browser=await chromium.launch({channel:'chrome',headless:true});
+await mkdir('outputs/projectile-preview',{recursive:true});
+try{
+ const page=await browser.newPage({viewport:{width:1440,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('http://127.0.0.1:3001/login');
+ await page.evaluate(async({state,actorId,enemyId})=>{
+  const React=(await import('/node_modules/.vite/deps/react.js')).default;
+  const client=await import('/node_modules/.vite/deps/react-dom_client.js');
+  const {default:Map}=await import('/src/components/TacticalBattleMap.tsx');
+  const {combatActionIsRanged}=await import('/src/solo-combat/defaultInteraction.ts');
+  await import('/src/pages/SoloCombatPage.css');
+  const action=state.catalogActions.find(a=>state.playerActionIds.includes(a.id)&&combatActionIsRanged(state,actorId,a));
+  if(!action)throw Error('No ranged action in fixture');
+  const host=document.createElement('div');host.style.cssText='position:fixed;inset:0;padding:20px;background:#121411;z-index:100;color:#eed9b3;';document.body.append(host);
+  const root=(client.createRoot??client.default.createRoot)(host);let movement=false;
+  const render=()=>root.render(React.createElement('div',{className:'combat-stage',style:{height:'90vh'}},React.createElement(Map,{state,actorId,selectedActionId:movement?null:action.id,defaultActionId:action.id,implicitActionsEnabled:!movement,movementMode:movement,onCell:()=>{}})));
+  window.projectileQA={actorId,enemyId,render,setCover:cover=>{state={...state,battleMap:{...state.battleMap,features:state.battleMap.features.map(f=>({...f,cover}))}};render();},setMovement:value=>{movement=value;render();}};
+  render();
+ },{state,actorId,enemyId});
+ const target=page.locator(`[data-actor-id="${enemyId}"]`).first();
+ await target.hover();
+ const ray=page.locator('.combat-projectile-preview');
+ await expect(ray).toBeVisible();await expect(ray.locator('.combat-projectile-preview__cover')).toHaveCount(1);
+ await expect(page.locator('.combat-hit-chance__cover')).toContainText('Половинное укрытие · +2 к КД: 15 → 17');
+ const spark=ray.locator('.combat-projectile-preview__spark');
+ const position=()=>spark.evaluate(el=>({x:el.getCTM().e,y:el.getCTM().f}));
+ const start=await position();await expect.poll(position).not.toEqual(start);
+ assert.equal(await ray.evaluate(el=>getComputedStyle(el).pointerEvents),'none');
+ await page.screenshot({path:'outputs/projectile-preview/half-cover.png'});
+ await page.evaluate(()=>window.projectileQA.setCover('three_quarters'));await target.hover();
+ await expect(page.locator('.combat-hit-chance__cover')).toContainText('+5 к КД: 15 → 20');
+ await page.evaluate(()=>window.projectileQA.setCover(undefined));await target.hover();
+ await expect(ray.locator('.combat-projectile-preview__cover')).toHaveCount(0);
+ await expect(page.locator('.combat-hit-chance__cover')).toHaveText('Без укрытия · +0 к КД');
+ await page.emulateMedia({reducedMotion:'reduce'});await expect(spark).toBeHidden();await expect(ray).toBeVisible();
+ await page.evaluate(()=>window.projectileQA.setMovement(true));await target.hover();await expect(ray).toHaveCount(0);
+ assert.deepEqual(errors,[]);
+ console.log('PASS: real ranged attack hover, moving firefly, exact yellow cover segment, canonical +2/+5/no cover AC, pointer transparency, reduced motion, explicit movement suppresses shot; no writes.');
+}finally{await browser.close();}

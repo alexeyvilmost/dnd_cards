@@ -3,6 +3,7 @@ import type { CombatBeat } from '../solo-combat/presentation';
 import type { SoloCombatState } from '../solo-combat/types';
 import { getDamageIconPath, getDamageLabel } from '../utils/damageTypes';
 import {actorFootprint} from '../solo-combat/footprint';
+import '../audio/healing.css';
 
 export default function CombatMapFeedback({beat,state}: {beat:CombatBeat|null;state:SoloCombatState}) {
   if(!beat)return null;
@@ -16,6 +17,10 @@ export default function CombatMapFeedback({beat,state}: {beat:CombatBeat|null;st
   const grouped=new Map<string,typeof beat.cues>();
   for(const cue of beat.cues)grouped.set(cue.actorId,[...(grouped.get(cue.actorId)??[]),cue]);
   return <div key={beat.id} className="combat-map-feedback" aria-live="polite">
+    {[...grouped].filter(([,cues])=>cues.some(c=>c.kind==='healing')).map(([id])=>{
+      const pos=state.tokens[id]?.position;if(!pos)return null;
+      return <div key={`heal:${id}`} className="combat-healing-aura" aria-hidden="true" style={{left:`calc(${pos.x} * var(--tactical-cell-size))`,top:`calc(${pos.y} * var(--tactical-cell-size))`,'--healing-size':actorFootprint(state.world.actors[id],state)} as CSSProperties}/>;
+    })}
     {beat.roll&&beat.visual&&from&&to&&<div className={`combat-attack-fx is-${beat.visual}`}
       style={{left:`calc(${from.x} * var(--tactical-cell-size))`,top:`calc(${from.y} * var(--tactical-cell-size))`,
         '--attack-angle':`${angle}deg`,'--attack-distance':`calc(${distance} * var(--tactical-cell-size))`} as CSSProperties}>

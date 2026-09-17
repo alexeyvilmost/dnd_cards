@@ -27,12 +27,15 @@ export interface CombatBeat {
   sourceName: string;
   targetName?: string;
   actionName: string;
+  actionId?: string;
+  sourceEntryId?: string;
   rollKind?: 'attack' | 'save' | 'check';
   saveGroupId?: string;
   saveRows?: CombatBeat[];
   rollerName?: string;
   rollLabel?: string;
   roll?: RollLog;
+  deathSave?: {successes:number; failures:number; stable:boolean; dead:boolean};
   rollPhase?: 'before-reaction' | 'after-reaction';
   visual?: 'slashing' | 'piercing' | 'bludgeoning' | 'ranged' | 'magic';
   from?: GridPosition;
@@ -54,6 +57,8 @@ export function presentCombatEntries(state: SoloCombatState, entries: CombatLogE
       id: `${entry.id}:${ordinal}`, sourceId, targetId, sourceName: name(sourceId),
       audience: combatRelation(state, state.characterId, sourceId) === 'enemy' ? 'enemy' : 'own',
       targetName: targetId ? name(targetId) : undefined, actionName,
+      actionId: action?.id,
+      sourceEntryId: entry.id, visual: action?.kind === 'spell' ? 'magic' : undefined,
       from: state.tokens[sourceId]?.position, to: targetId ? state.tokens[targetId]?.position : undefined, cues: [], damage: [],
     });
     for (const record of combatLogRecords(entry)) {
@@ -71,6 +76,7 @@ export function presentCombatEntries(state: SoloCombatState, entries: CombatLogE
         // Keep the action owner's display preference: an enemy's save against
         // the player's breath is still part of the player's action.
         const saveAction = state.catalogActions.find(row=>event.label.startsWith(`${row.name}:`));
+        current.actionId = saveAction?.id ?? action?.id;
         current.actionName = saveAction?.name ?? (event.label.includes(': спасбросок') ? event.label.split(': спасбросок')[0] : action?.name ?? 'Спасбросок');
         const history = state.log ?? entries;
         const historyIndex = history.findIndex(row => row.id === entry.id);
@@ -97,6 +103,7 @@ export function presentCombatEntries(state: SoloCombatState, entries: CombatLogE
         if (previousAttack) current.rollPhase = 'after-reaction';
         const attackAction = previousAttack ? state.catalogActions.find(row => previousAttack.text.startsWith(`${name(record.sourceActorId)}: ${row.name}:`)) : action;
         current.actionName = attackAction?.name ?? actionName;
+        current.actionId = attackAction?.id ?? action?.id;
         const source = state.world.actors[record.sourceActorId];
         const effects = attackAction?.mechanics.effects as Record<string, unknown>[] | undefined;
         const attack = effects?.find(effect => effect.resolution === 'attack_roll');

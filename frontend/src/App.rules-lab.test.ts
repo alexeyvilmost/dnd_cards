@@ -110,6 +110,7 @@ describe('/rules-lab route', () => {
   });
 
   it('renders login while condition authority is still loading', async () => {
+    mocks.useAuth.mockReturnValue({ isAuthenticated: false, isLoading: false });
     mocks.loadConditions.mockReturnValue(new Promise(() => undefined));
     const container = document.createElement('div');
     document.body.append(container);
@@ -133,6 +134,7 @@ describe('/rules-lab route', () => {
   });
 
   it('makes the offline rules authority visible after a fail-closed bootstrap', async () => {
+    mocks.useAuth.mockReturnValue({ isAuthenticated: false, isLoading: false });
     mocks.loadConditions.mockResolvedValue({
       mode: 'offline_fixture',
       reason: 'condition release is incomplete',

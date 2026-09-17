@@ -46,6 +46,8 @@ export interface DieRoll {
 export type AdvantageState = 'none' | 'advantage' | 'disadvantage';
 
 export interface RollLog {
+  /** System death save, with its special natural-1/20 consequences. */
+  deathSave?: true;
   /** Exact learned maneuver already committed to this attack roll. */
   attackManeuverActionId?: string;
   kind: 'd20' | 'damage' | 'healing' | 'check' | 'save' | 'other';

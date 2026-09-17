@@ -23,4 +23,11 @@ describe('shared settings categories',()=>{
     await click('Все настройки');await click('Лист персонажа');await click('Режим и редактирование');
     expect(container.querySelectorAll('input')).toHaveLength(2);
   });
+  it('explains the temporary mute and preserves personal sound settings',async()=>{
+    const before=getSettings();
+    await click('Звук и музыка');
+    expect(container.textContent).toContain('Звук временно отключён');
+    expect(container.querySelectorAll('input')).toHaveLength(0);
+    expect(getSettings()).toEqual(before);
+  });
 });

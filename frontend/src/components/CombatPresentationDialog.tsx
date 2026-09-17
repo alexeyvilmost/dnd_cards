@@ -76,7 +76,7 @@ export default function CombatPresentationDialog({initiative, beat, onClose, mod
   },[initiative,combatRollMode,onClose]);
   const natural=roll?.dice.find(die=>die.sides===20&&!die.discarded)?.result;
   // Natural 1/20 do not automatically fail/succeed on ordinary saving throws.
-  const critical=isSave||isCheck?undefined:natural===20?'success':natural===1?'failure':undefined;
+  const critical=(isSave||isCheck)&&!roll?.deathSave?undefined:natural===20?'success':natural===1?'failure':undefined;
   if (!initiative && combatRollMode==='skip') return null;
   return createPortal(<div className="combat-presentation-backdrop">
     <section ref={dialogRef} tabIndex={-1} className={`combat-presentation-dialog${saveRows ? ' is-mass-effect' : ''}`} role="dialog" aria-modal="true" aria-label={initiative?'Инициатива':isSave?'Спасбросок':isCheck?'Проверка':'Бросок атаки'}>
@@ -117,6 +117,14 @@ export default function CombatPresentationDialog({initiative, beat, onClose, mod
           {beat?.rollPhase==='before-reaction'&&<p>Цель может применить защитную реакцию до получения урона.</p>}
           {beat?.rollPhase==='after-reaction'&&<p>Итог после защитной реакции. Сохранён исходный бросок.</p>}
           <RollCalculationDetails roll={roll} provisional={provisional}/>
+          {beat?.deathSave && <div className="combat-death-saves" aria-label="Спасброски от смерти">
+            <div><span>Успехи</span><strong aria-label={`Успехи: ${beat.deathSave.successes} из 3`}>{[0,1,2].map(i=><i key={i} className={`death-save-dot success ${i<beat.deathSave!.successes?'filled':''}`}/>)} {beat.deathSave.successes}/3</strong></div>
+            <div><span>Провалы</span><strong aria-label={`Провалы: ${beat.deathSave.failures} из 3`}>{[0,1,2].map(i=><i key={i} className={`death-save-dot failure ${i<beat.deathSave!.failures?'filled':''}`}/>)} {beat.deathSave.failures}/3</strong></div>
+            <p>{provisional?'Счётчики до подтверждения броска.':roll.text}</p>
+            <small>Натуральная 1: два провала. Натуральная 20: 1 HP и возвращение в сознание.</small>
+            {beat.deathSave.stable&&<p>Стабилизирован — спасброски больше не требуются.</p>}
+            {beat.deathSave.dead&&<p>Персонаж погиб.</p>}
+          </div>}
           {hasDamage && beat?.damage?.length ? <div className="combat-damage-breakdown" aria-label="Расчёт урона">
             <h4>Бросок урона</h4>
             {beat.damage.map((packet, packetIndex) => <div className="combat-damage-packet" key={`${packet.damageType}:${packetIndex}`}>

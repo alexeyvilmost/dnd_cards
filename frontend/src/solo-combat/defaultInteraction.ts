@@ -38,6 +38,16 @@ export function combatActionIsAttack(
     || records(action.mechanics.effects).some((effect) => effect.resolution === 'attack_roll');
 }
 
+/** Mode is declared by the attack effect, with the same equipped-weapon binding as execution. */
+export function combatActionIsRanged(state:SoloCombatState,actorId:string,action:RuleActionDefinition):boolean {
+  const actor=state.world.actors[actorId];
+  if(!actor)return false;
+  const cards=new Map([...(actor.character.knownCards??[]),...(actor.character.equippedCards??[])].map(c=>[c.id,c]));
+  const mechanics=bindEquippedWeaponActionContext(action.mechanics,actor.runtime.equipment,cards);
+  return records(mechanics.effects).some(effect=>effect.resolution==='attack_roll'
+    && (effect.attack_kind==='weapon_ranged'||effect.attack_kind==='spell_ranged'));
+}
+
 /** The implicit hostile-click action: equipped weapon first, canonical
  * Unarmed Strike only as a fallback. Availability is validated by the caller. */
 export function defaultCombatAttackAction(
@@ -126,7 +136,10 @@ export function combatApproachRoute(
   ];
   const route = candidates
     .filter((candidate) => footprintDistanceFt(candidate.destination, target, actorFootprint(state.world.actors[actorId], state), actorFootprint(state.world.actors[targetActorId], state)) <= Math.max(0, rangeFt))
-    .filter(candidate=>spatialFacts({...state,tokens:{...state.tokens,[actorId]:{...state.tokens[actorId],position:candidate.destination}}},actorId,targetActorId,false).lineOfSight)
+    .filter(candidate=>{
+      const facts=spatialFacts({...state,tokens:{...state.tokens,[actorId]:{...state.tokens[actorId],position:candidate.destination}}},actorId,targetActorId,false);
+      return facts.lineOfSight&&facts.cover!=='total';
+    })
     .sort((left, right) => left.costFt - right.costFt
       || Math.hypot(left.destination.x - target.x, left.destination.y - target.y)
         - Math.hypot(right.destination.x - target.x, right.destination.y - target.y)

@@ -16,6 +16,11 @@ export type ItemPreviewStyle = 'card' | 'interface';
 export type CombatRollMode = 'standard' | 'fast' | 'skip';
 
 export interface SiteSettings {
+  audioEnabled: boolean;
+  audioMaster: number;
+  audioMusic: number;
+  audioEffects: number;
+  audioUI: number;
   combatRollMode: CombatRollMode;
   enemyCombatRollMode: CombatRollMode;
   /** Диалог броска кубов перед действиями (авто или ввод физических кубов). */
@@ -45,6 +50,11 @@ export function combatRollModeFor(settings: Pick<SiteSettings, 'combatRollMode' 
 const EVENT = 'site-settings-changed';
 
 const DEFAULTS: SiteSettings = {
+  audioEnabled: true,
+  audioMaster: .65,
+  audioMusic: .3,
+  audioEffects: .8,
+  audioUI: .35,
   combatRollMode: 'standard',
   enemyCombatRollMode: 'standard',
   diceDialog: true,
@@ -75,6 +85,10 @@ export function getSettings(): SiteSettings {
       entityDisplay: { ...DEFAULTS.entityDisplay, ...(parsed.entityDisplay ?? {}) },
     };
     if (!['standard', 'fast', 'skip'].includes(merged.combatRollMode)) merged.combatRollMode = 'standard';
+    for (const key of ['audioMaster','audioMusic','audioEffects','audioUI'] as const) {
+      merged[key] = typeof merged[key] === 'number' && Number.isFinite(merged[key]) ? Math.max(0,Math.min(1,merged[key])) : DEFAULTS[key];
+    }
+    if (typeof merged.audioEnabled !== 'boolean') merged.audioEnabled = DEFAULTS.audioEnabled;
     // Keep the former global preference for both sides when migrating.
     if (!['standard', 'fast', 'skip'].includes(parsed.enemyCombatRollMode ?? '')) {
       merged.enemyCombatRollMode = merged.combatRollMode;

@@ -1,4 +1,5 @@
 import SheetFeatureSections from '../components/SheetFeatureSections';
+import HealingPulse from '../audio/HealingPulse';
 import SheetTogglePassives from '../components/SheetTogglePassives';
 import { useRef, useState, type ReactNode } from 'react';
 import type { AssembledCharacter } from '../character/assemble';
@@ -353,6 +354,7 @@ const CharacterSheetV2 = ({
             </div>
           </div>
           <button type="button" className="cs-hp cs-hp-btn" disabled={readOnly} onClick={() => setHpOpen(true)} aria-description={readOnly ? 'Лист открыт только для чтения' : 'Управление хитами'}>
+            <HealingPulse id={character.id} hp={currentHP}/>
             <div className="cs-hp-top">
               <span className="cs-hp-cur">{currentHP}</span>
               <span className="cs-hp-max">/ {maxHP}</span>

@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { setEntityDisplay, setSetting, useSiteSettings, type SiteSettings } from '../settings';
 import CombatRollModeSelect from './CombatRollModeSelect';
 import './SettingsPanel.css';
+import AudioSettings from '../audio/AudioSettings';
 
 const pages = {
   home: { title: 'Все настройки', parent: 'home' },
+  audio: { title: 'Звук и музыка', parent: 'home' },
   combat: { title: 'Бой и броски', parent: 'home' },
   display: { title: 'Отображение', parent: 'home' },
   sheet: { title: 'Лист персонажа', parent: 'home' },
@@ -28,6 +30,7 @@ export default function SettingsPanel({ initialPage = 'home', onTestDice }: { in
   return <div className="settings-panel">
     <nav aria-label="Разделы настроек">{page !== 'home' && <><button type="button" onClick={() => setPage(pages[page].parent)}>← Назад</button><button type="button" onClick={() => setPage('home')}>Все настройки</button></>}</nav>
     <h3>{pages[page].title}</h3>
+    {page === 'audio' && <AudioSettings/>}
     {children.length > 0 && <div className="settings-panel-categories">{children.map(key => <button type="button" key={key} onClick={() => setPage(key)}>{pages[key].title}<span aria-hidden="true">→</span></button>)}</div>}
     {page === 'combat-rolls' && <><CombatRollModeSelect /><p>Режим зависит от владельца действия или эффекта, включая спасброски его целей. Стандарт — анимация и расчёт, быстрый режим — готовый результат, пропуск — результат на поле.</p></>}
     {page === 'dice' && <>

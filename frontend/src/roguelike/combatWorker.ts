@@ -8,6 +8,7 @@ import {
   declineAdditionalMovement, isTriggeredCombatAction, resumePendingMovement, activeActor, activateCombatBoon, advanceTurn, autoResolveSystemDecisions,
   escapeActorGrapple, executeCombatAction, executeCombatRemoteManipulator, executeCombatTouchSpellThroughFamiliar,
   approachAndExecuteCombatAction,
+  resolveCombatDeathSave,
   moveCombatDancingLights, revealCombatMagicAura, moveActorAlongRoute, resolveD20Interrupt, resolvePlayerReaction,
   resolvePlayerShoveOutcome, resolvePlayerSavingThrow, resolveSoloCombatAlertSwap, resolveSoloCombatInterception,
   resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectCombatMovementMode, standActor,
@@ -24,6 +25,7 @@ export interface RoguelikeCombatEnvelope {
 
 type ActionInput = Parameters<typeof executeCombatAction>[0];
 export type RoguelikeCombatIntent =
+  | {type:'death_save'; actorId:string; effectId?:string; phase:'rolled'|'resolved'}
   | {type: 'action'; actorId: string; actionId: string; targetIds: string[];
       choices?: ActionInput['choices']; worldPosition?: GridPosition; worldInput?: ActionInput['worldInput']}
   | {type: 'move'; actorId: string; destination: GridPosition}
@@ -53,6 +55,7 @@ export type RoguelikeCombatIntent =
   | {type: 'resume'};
 
 function hasDecision(state: SoloCombatState): boolean {
+  if(state.pendingDeathSave)return true;
   return Boolean(state.pendingAdditionalMovement || state.world.pendingResolution || state.pendingD20Interrupt || state.pendingInterception
     || state.pendingTriggeredAction || state.pendingTurnStartGrappleDamage || state.pendingAlertSwapActorIds?.length);
 }
@@ -86,7 +89,7 @@ export function stepRoguelikeCombat(
   const random = createRoguelikeCombatRandom(envelope.entropy.seed, envelope.entropy.cursor);
   const {rng, randomValues} = random;
   let state = structuredClone(envelope.state);
-  if (state.outcome !== 'active') throw new Error('Бой уже завершён');
+  if (state.outcome !== 'active' && !(intent.type==='death_save'&&state.pendingDeathSave?.phase==='resolved')) throw new Error('Бой уже завершён');
   const requireOwned = (actorId: string) => {
     if (!isPlayerControlledCombatActor(state, actorId)) throw new Error('Нельзя управлять этим участником боя');
   };
@@ -99,6 +102,10 @@ export function stepRoguelikeCombat(
     throw new Error('Сначала завершите текущее решение или дождитесь своего хода');
   }
   switch (intent.type) {
+    case 'death_save':
+      if(state.pendingDeathSave?.actorId!==intent.actorId||state.pendingDeathSave?.phase!==intent.phase)throw new Error('Решение о спасброске уже изменилось');
+      state=resolveCombatDeathSave(state,intent.effectId,rng);
+      break;
     case 'action': {
       const requestedAction = state.catalogActions.find(row => row.id === intent.actionId);
       if (requestedAction && isTriggeredCombatAction(requestedAction)) throw new Error('Способность доступна только после соответствующего события');
@@ -109,10 +116,14 @@ export function stepRoguelikeCombat(
           || position.x >= boardDimensions(state).width || position.y >= boardDimensions(state).height) throw new Error('Клетка вне поля боя');
         const source = state.tokens[intent.actorId]?.position;
         if (!source) throw new Error('Участник отсутствует на поле');
-        if(terrainSight(state,source,position).blocked)throw new Error('Место назначения закрыто препятствием');
+        const areaTargeting=requestedAction?.mechanics.targeting as Record<string,unknown> | undefined;
+        const actorArea=areaTargeting?.shape==='area' && areaTargeting.actor_targets!==false && areaTargeting.domain!=='world';
+        // Area actions validate delivery to their own origin in the shared
+        // executor. A cone's aim cell is a direction handle, not its origin.
+        if(!actorArea && terrainSight(state,source,position).blocked)throw new Error('Место назначения закрыто препятствием');
         const distanceFt = gridDistanceFt(source, position);
         const action = state.catalogActions.find(row => row.id === intent.actionId);
-        if (action?.targeting?.rangeFt !== undefined && distanceFt > action.targeting.rangeFt) throw new Error('Цель вне дальности');
+        if (!actorArea && action?.targeting?.rangeFt !== undefined && distanceFt > action.targeting.rangeFt) throw new Error('Цель вне дальности');
         if (worldInput) worldInput = bindCombatWorldInputFacts(worldInput,
           {factsSource: 'board', boardRevision: state.boardRevision, distanceFt, lineOfSight: true});
       } else if (worldInput) throw new Error('Для взаимодействия нужна клетка поля');

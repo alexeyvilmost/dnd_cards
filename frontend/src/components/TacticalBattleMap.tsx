@@ -9,6 +9,7 @@ import {actorFootprint, footprintCells} from '../solo-combat/footprint';
 import { previewCombatAttackRoll, previewMovementThreats } from '../solo-combat/engine';
 import {
   combatActionIsAttack,
+  combatActionIsRanged,
   combatActionRangeFt,
   combatApproachRoute,
   combatMovementRoute,
@@ -19,6 +20,9 @@ import type { CombatBeat } from '../solo-combat/presentation';
 import CombatMapFeedback from './CombatMapFeedback';
 import {createPortal} from 'react-dom';
 import {useViewportPopoverPosition} from '../hooks/useViewportPopoverPosition';
+import {projectileTrajectory} from '../solo-combat/projectilePreview';
+import {creatureCoverObstacles} from '../solo-combat/creatureCover';
+import {previewAttackCover,attackCoverLabel} from '../solo-combat/attackCoverPreview';
 
 export default function TacticalBattleMap({
   state,
@@ -147,19 +151,32 @@ export default function TacticalBattleMap({
     (previewRoute?.path ?? []).map((position) => `${position.x}:${position.y}`),
   ), [previewRoute]);
   const ghostPosition = previewRoute?.destination ?? null;
-  const hitPreview = useMemo(() => {
-    if (!contextualActionId || !hoveredEnemyId || !approachPreview) return null;
-    const projectedState = approachPreview.costFt > 0 ? {
+  const attackPreviewState = useMemo(() => approachPreview && approachPreview.costFt > 0 ? {
       ...state,
       tokens: {
         ...state.tokens,
         [actorId]: {...state.tokens[actorId], position: approachPreview.destination},
       },
-    } : state;
-    const profile = previewCombatAttackRoll({state: projectedState, actorId, actionId: contextualActionId,
+    } : state, [state,actorId,approachPreview]);
+  const hitPreview = useMemo(() => {
+    if (!contextualActionId || !hoveredEnemyId || !approachPreview) return null;
+    const profile = previewCombatAttackRoll({state: attackPreviewState, actorId, actionId: contextualActionId,
       targetIds: [hoveredEnemyId], choices: selectedActionId ? selectedActionChoices : undefined});
     return profile ? {probability: attackHitProbability(profile), profile} : null;
-  }, [approachPreview, state, actorId, contextualActionId, hoveredEnemyId, selectedActionId, selectedActionChoices]);
+  }, [approachPreview, attackPreviewState, actorId, contextualActionId, hoveredEnemyId, selectedActionId, selectedActionChoices]);
+  const coverPreview=useMemo(()=>contextualActionId&&hoveredEnemyId
+    ?previewAttackCover({state:attackPreviewState,actorId,actionId:contextualActionId,targetIds:[hoveredEnemyId],
+      choices:selectedActionId?selectedActionChoices:undefined},hitPreview?.profile??null):null,
+    [attackPreviewState,actorId,contextualActionId,hoveredEnemyId,selectedActionId,selectedActionChoices,hitPreview]);
+  const trajectory=useMemo(()=>{
+    if(movementMode||worldObjectMoveMode||!contextualAction||!hoveredEnemyId
+      ||!combatActionIsRanged(attackPreviewState,actorId,contextualAction))return null;
+    const source=attackPreviewState.tokens[actorId],target=attackPreviewState.tokens[hoveredEnemyId];
+    if(!source||!target)return null;
+    return projectileTrajectory(attackPreviewState,source.position,target.position,
+      actorFootprint(state.world.actors[actorId],state),actorFootprint(state.world.actors[hoveredEnemyId],state),
+      creatureCoverObstacles(attackPreviewState,actorId,hoveredEnemyId));
+  },[attackPreviewState,actorId,contextualAction,hoveredEnemyId,movementMode,worldObjectMoveMode,state]);
   const sourcePosition = state.tokens[targetingActorId ?? actorId]?.position;
   const areaCells = useMemo(() => new Set(
     selectedAction && hovered && sourcePosition
@@ -312,6 +329,14 @@ export default function TacticalBattleMap({
     >
       <BattleMapScenery map={state.battleMap}/>
       <CombatMapFeedback beat={feedback ?? null} state={state} />
+      {trajectory&&<svg className="combat-projectile-preview" viewBox={`0 0 ${boardWidth} ${boardHeight}`} preserveAspectRatio="none" aria-hidden="true">
+        <line className="combat-projectile-preview__line" x1={trajectory.from.x} y1={trajectory.from.y} x2={trajectory.to.x} y2={trajectory.to.y}/>
+        {trajectory.covered.map((segment,index)=><line key={index} className="combat-projectile-preview__cover" x1={segment.from.x} y1={segment.from.y} x2={segment.to.x} y2={segment.to.y}/>)}
+        <circle key={`${trajectory.from.x}:${trajectory.from.y}:${trajectory.to.x}:${trajectory.to.y}`} className="combat-projectile-preview__spark" r=".07">
+          <animateMotion dur="1.4s" repeatCount="indefinite" path={`M ${trajectory.from.x} ${trajectory.from.y} L ${trajectory.to.x} ${trajectory.to.y}`}/>
+        </circle>
+        {trajectory.blocked&&<circle className="combat-projectile-preview__blocked" cx={trajectory.to.x} cy={trajectory.to.y} r=".09"/>}
+      </svg>}
       {routeOrigin && previewRoute && previewRoute.path.length > 0 && <svg className="combat-route-line"
         viewBox={`0 0 ${boardWidth} ${boardHeight}`} preserveAspectRatio="none" aria-hidden="true">
         <line className="combat-route-line__intent" x1={routeOrigin.x + movingCenter} y1={routeOrigin.y + movingCenter}
@@ -390,6 +415,7 @@ export default function TacticalBattleMap({
               Попадание <b>{Math.round(hitPreview.probability * 1000) / 10}%</b>
               <small>КД {hitPreview.profile.target?.value} · {hitPreview.profile.modifiers?.map(mod => `${mod.value >= 0 ? '+' : ''}${mod.value} ${mod.source}`).join(' · ')}
                 {hitPreview.profile.advantage === 'advantage' ? ' · преимущество' : hitPreview.profile.advantage === 'disadvantage' ? ' · помеха' : ''}</small></>}
+              {coverPreview&&<small className={`combat-hit-chance__cover${coverPreview.cover!=='none'?' is-covered':''}`}>{attackCoverLabel(coverPreview)}</small>}
               <small>I / Ш — изучить противника</small>
               {dangerNames && <small className="combat-route-warning">Провоцированная атака: {dangerNames}. Выход из досягаемости.</small>}
             </div>, document.body)}

@@ -10,6 +10,7 @@ import {runCharacters,runCombatURL,runSheetURL,notifyRunUpdated} from '../roguel
 import {useSiteSettings} from '../settings';
 import SheetActionLine from './SheetActionLine';
 import './RunPartyCamp.css';
+import HealingPulse from '../audio/HealingPulse';
 import {formatCopper} from '../utils/money';
 import {runMoneyCopper} from '../roguelike/money';
 
@@ -71,6 +72,7 @@ export default function RunPartyCamp({run,onUpdated}:{run:RoguelikeRun;onUpdated
     {downed&&camp&&<p className="run-party-help">Есть участник с 0 хитов: сначала помогите ему действием союзника. Все изменения сохраняются в его листе.</p>}
     <section className="run-party-roster" aria-label="Участники группы">
       {members.map(c=><article key={c.id} className={`run-party-member${c.current_hp<1?' is-downed':''}`}>
+        <HealingPulse id={c.id} hp={c.current_hp}/>
         <Link to={runSheetURL(run,c.id)} className="run-party-portrait">{c.avatar_url?<img src={c.avatar_url} alt={c.name}/>:<Users size={48}/>}</Link>
         <div className="run-party-member-info"><h2>{c.name}</h2><p>{classNames[c.class_id??'']??'Персонаж'} · уровень {c.level} · КД {c.armor_class??10}</p>
           <div className="run-party-hp" role="progressbar" aria-label={`Хиты: ${c.name}`} aria-valuemin={0} aria-valuemax={c.max_hp} aria-valuenow={c.current_hp}><i style={{width:`${Math.min(100,100*c.current_hp/Math.max(1,c.max_hp))}%`}}/></div>

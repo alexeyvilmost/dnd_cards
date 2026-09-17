@@ -53,6 +53,20 @@ describe('combat roll dialog', () => {
   afterEach(async () => {
     await act(async () => root.unmount()); container.remove(); vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks();
   });
+  it.each([1,20])('shows death-save counters and natural-%i consequence in the same dialog',async natural=>{
+    const death:CombatBeat={...beat,rollKind:'save',actionName:'Спасбросок от смерти',targetId:undefined,targetName:undefined,
+      roll:{kind:'save',deathSave:true,dice:[{sides:20,result:natural}],modifiers:[],advantage:'none',total:natural,target:{type:'dc',value:10},outcome:natural===20?'success':'fail',text:natural===20?'1 хит':'два провала'},
+      deathSave:{successes:0,failures:0,stable:false,dead:false}};
+    await act(async()=>root.render(<CombatPresentationDialog beat={death} modeOverride="standard" provisional onClose={()=>{}}/>));
+    await act(async()=>vi.advanceTimersByTime(1450));
+    const dialog=document.querySelector('[role="dialog"]'),die=document.querySelector('.committed-die');
+    expect(document.querySelector('[aria-label="Провалы: 0 из 3"]')).not.toBeNull();
+    await act(async()=>root.render(<CombatPresentationDialog beat={{...death,deathSave:{...death.deathSave!,failures:natural===1?2:0}}} modeOverride="standard" onClose={()=>{}}/>));
+    expect(document.querySelector('[role="dialog"]')).toBe(dialog);expect(document.querySelector('.committed-die')).toBe(die);
+    expect(document.querySelector('.is-rolling')).toBeNull();
+    expect(document.querySelector('.combat-critical-banner')?.textContent).toContain(`НАТУРАЛЬНАЯ ${natural}`);
+    expect(document.querySelector(`[aria-label="Провалы: ${natural===1?2:0} из 3"]`)).not.toBeNull();
+  });
   it('animates all area saves together then all damage together in one dialog',async()=>{
     const rows=[1,2,3].map(n=>({...hit,id:`save-${n}`,rollKind:'save' as const,targetName:`Враг ${n}`,roll:{...hit.roll!,kind:'save' as const,outcome:n===1?'success' as const:'fail' as const,target:{type:'dc' as const,value:15}}}));
     await act(async()=>root.render(<CombatPresentationDialog beat={{...rows[0],saveRows:rows}} onClose={()=>{}}/>));

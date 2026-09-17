@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { Dices, RotateCcw, X } from 'lucide-react';
+import {soundPlayer} from '../audio/player';
 import type DiceBox from '@3d-dice/dice-box';
 import type { PlannedDie } from '../engine/dicePlan';
 import { calculatePlannedRollTotals, summarizeDice } from '../engine/dicePlan';
@@ -208,6 +209,7 @@ export default function Dice3DOverlay({
       setValues([]);
       setDrag(null);
       setStage('rolling');
+      soundPlayer.play('dice.roll');
       box.updateConfig({
         throwForce: throwConfig.throwForce,
         spinForce: throwConfig.spinForce,

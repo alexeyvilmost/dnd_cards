@@ -21,6 +21,7 @@ export interface BattleMapDefinition {
   generation?: {version: 'scatter-v1'; seed: number; attempt: number; templateId: string};
 }
 export type BoardState = {battleMap?: BattleMapDefinition};
+export type CoverObstacle = Pick<BattleMapFeature,'x'|'y'|'width'|'height'|'cells'|'blocksSight'|'cover'>;
 export function boardDimensions(state: BoardState = {}) {return {width:state.battleMap?.width ?? 12,height:state.battleMap?.height ?? 10};}
 export function boardCells(state: BoardState = {}): GridPosition[] {
   const {width,height}=boardDimensions(state);
@@ -49,32 +50,35 @@ export function terrainStepFits(state: BoardState, from: GridPosition, to: GridP
   return true;
 }
 
-function crosses(from: GridPosition,to: GridPosition,rect: BattleMapFeature): boolean {
+/** Segment/rectangle intersection, in fractions of the segment. Shared by sight and its visual trace. */
+export function terrainSegmentInterval(from: GridPosition,to: GridPosition,rect: Pick<BattleMapFeature,'x'|'y'|'width'|'height'>): {start:number;end:number}|null {
   let lo=0,hi=1;
   for(const [a,d,min,max] of [[from.x,to.x-from.x,rect.x+.001,rect.x+rect.width-.001],[from.y,to.y-from.y,rect.y+.001,rect.y+rect.height-.001]]){
-    if(Math.abs(d)<1e-9){if(a<min||a>max)return false;continue;}
-    const l=(min-a)/d,r=(max-a)/d;lo=Math.max(lo,Math.min(l,r));hi=Math.min(hi,Math.max(l,r));if(lo>hi)return false;
+    if(Math.abs(d)<1e-9){if(a<min||a>max)return null;continue;}
+    const l=(min-a)/d,r=(max-a)/d;lo=Math.max(lo,Math.min(l,r));hi=Math.min(hi,Math.max(l,r));if(lo>hi)return null;
   }
-  return hi>0&&lo<1;
+  return hi>0&&lo<1?{start:lo,end:hi}:null;
 }
-function corners(p:GridPosition,size:number):GridPosition[]{return [.05,size-.05].flatMap(x=>[.05,size-.05].map(y=>({x:p.x+x,y:p.y+y})));}
+/** One center ray for both authoritative cover and the displayed projectile.
+ * Large creatures use the center of their occupied footprint. Tangency alone
+ * does not cross an obstacle (terrainSegmentInterval uses an inset). */
+export function centerCoverTrace(state:BoardState,from:GridPosition,to:GridPosition,sourceSize=1,targetSize=1,extraObstacles:CoverObstacle[]=[]){
+  const origin={x:from.x+sourceSize/2,y:from.y+sourceSize/2};
+  const target={x:to.x+targetSize/2,y:to.y+targetSize/2};
+  const obstacles=[...(state.battleMap?.features??[]),...extraObstacles].filter(f=>f.blocksSight||f.cover)
+    .flatMap(f=>f.cells?featureCells(f).map(p=>({...f,...p,width:1,height:1})): [f]);
+  const hits=obstacles.flatMap(f=>{
+    const interval=terrainSegmentInterval(origin,target,f);
+    return interval?[{...interval,opaque:Boolean(f.blocksSight),cover:f.cover}]:[];
+  });
+  return {origin,target,hits};
+}
 
-/** Best source corner to four target corners: no ray goes through a wall.
- * Low obstacles supply their declared cover but never erase sight. */
-export function terrainSight(state:BoardState,from:GridPosition,to:GridPosition,sourceSize=1,targetSize=1): {blocked:boolean;cover:SpatialFacts['cover']} {
-  const features=state.battleMap?.features.filter(f=>f.blocksSight||f.cover)??[];
-  if(!features.length)return {blocked:false,cover:'none'};
-  let best=6;
-  for(const origin of corners(from,sourceSize)){
-    let blocked=0,low=0;
-    for(const target of corners(to,targetSize)){
-      const crossed=features.filter(f=>f.cells?featureCells(f).some(p=>crosses(origin,target,{...f,...p,width:1,height:1})):crosses(origin,target,f));
-      if(crossed.some(f=>f.blocksSight))blocked++;
-      low=Math.max(low,...crossed.map(f=>f.cover==='three_quarters'?5:f.cover==='half'?2:0));
-    }
-    best=Math.min(best,Math.max(blocked===4?6:blocked===3?5:blocked>=2?2:0,low));
-  }
-  return {blocked:best===6,cover:best===6?'total':best===5?'three_quarters':best===2?'half':'none'};
+/** Low obstacles supply their declared cover but never erase sight. */
+export function terrainSight(state:BoardState,from:GridPosition,to:GridPosition,sourceSize=1,targetSize=1,extraObstacles:CoverObstacle[]=[]): {blocked:boolean;cover:SpatialFacts['cover']} {
+  const {hits}=centerCoverTrace(state,from,to,sourceSize,targetSize,extraObstacles);
+  const blocked=hits.some(h=>h.opaque);
+  return {blocked,cover:blocked?'total':hits.some(h=>h.cover==='three_quarters')?'three_quarters':hits.some(h=>h.cover==='half')?'half':'none'};
 }
 
 /** All footprint cells, never only the NW anchor, participate in fog/terrain. */

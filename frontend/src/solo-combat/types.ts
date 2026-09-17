@@ -13,6 +13,7 @@ import type { Action, Spell } from '../types';
 import { activeConditionWorldFactEnabled, expandConditionSet } from '../engine/conditions';
 import {canHear, perceivesWithoutSight} from '../engine/senses';
 import {terrainSight, type BattleMapDefinition} from './boardGeometry';
+import {creatureCoverObstacles} from './creatureCover';
 
 export const SOLO_COMBAT_KEY = 'solo_combat_v1' as const;
 export const SOLO_COMBAT_SCHEMA_VERSION = 1 as const;
@@ -302,6 +303,8 @@ export interface SoloCombatState {
   schemaVersion: typeof SOLO_COMBAT_SCHEMA_VERSION;
   /** Missing on archived encounters: their executable still uses one cell. */
   tacticalFootprints?: 'sized';
+  /** Medium+ bodies are opaque to attacks; Tiny/Small bodies grant half cover. */
+  creatureCoverVersion?: 1;
   /** New workers execute a route in one atomic command, stopping at decisions. */
   routeCommandVersion?: 1;
   /** Frozen, data-owned geometry; absent on historical empty battlefields. */
@@ -359,6 +362,12 @@ export interface SoloCombatState {
   pendingInterceptionTrigger?: PendingInterceptionTrigger;
   /** Cross-actor pre/post-roll reaction continuation (for example Warding Flare or Cutting Words). */
   pendingD20Interrupt?: PendingD20Interrupt;
+  deathSavesVersion?: 1;
+  pendingDeathSave?: {
+    actorId:string; round:number; phase:'rolled'|'resolved';
+    roll:import('../mvp/contracts').RollLog; randomValues:number[];
+    before:import('../mvp/contracts').DeathSaveState;
+  };
   /** Alert owners waiting to accept or decline their post-Initiative swap before turn one starts. */
   pendingAlertSwapActorIds?: string[];
   outcome: 'active' | 'victory' | 'defeat';
@@ -422,7 +431,7 @@ export function combatRelation(
 
 export function spatialFacts(
   state: Pick<SoloCombatState, 'tokens' | 'boardRevision' | 'sideByActorId' | 'combatAreas' | 'battleMap'>
-    & Partial<Pick<SoloCombatState, 'world' | 'recentStraightMovementByActor'>>,
+    & Partial<Pick<SoloCombatState, 'world' | 'recentStraightMovementByActor' | 'tacticalFootprints' | 'creatureCoverVersion'>>,
   sourceActorId: string,
   targetActorId: string,
   includeDamageObservers = true,
@@ -431,6 +440,9 @@ export function spatialFacts(
   const target = state.tokens[targetActorId]?.position;
   if (!source || !target) throw new Error('На поле отсутствует участник действия');
   const terrain = terrainSight(state, source, target, actorFootprint(state.world?.actors[sourceActorId], state), actorFootprint(state.world?.actors[targetActorId], state));
+  const bodies = creatureCoverObstacles(state, sourceActorId, targetActorId);
+  const attackCover = bodies.length ? terrainSight(state, source, target,
+    actorFootprint(state.world?.actors[sourceActorId], state), actorFootprint(state.world?.actors[targetActorId], state), bodies).cover : terrain.cover;
   const obscured = Object.values(state.combatAreas ?? {}).some((area) => {
     if (!area.heavilyObscured) return false;
     const cells = new Set(area.cells.map((cell) => `${cell.x}:${cell.y}`));
@@ -479,7 +491,7 @@ export function spatialFacts(
     boardRevision: state.boardRevision,
     distanceFt,
     lineOfSight: !terrain.blocked && (!obscured || sourceNonvisual),
-    cover: terrain.cover,
+    cover: attackCover,
     relation: combatRelation(state, sourceActorId, targetActorId),
     canSeeTarget: sees(sourceActorId, targetActorId),
     targetCanSeeSource: sees(targetActorId, sourceActorId),

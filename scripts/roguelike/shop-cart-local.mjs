@@ -44,10 +44,10 @@ try {
  await page.goto(base+`/characters-v3/${run.character_id}?roguelike=${run.id}`);
  await page.getByRole('button',{name:'Открыть контейнер: '+bag.name,exact:true}).click({timeout:30000});
  const bagItem=()=>page.locator('.container-item').filter({has:page.getByRole('button',{name:arrow.name,exact:true})});
- await bagItem().getByRole('button',{name:'Положить',exact:true}).click();await expect(page.getByRole('dialog',{name:'Переместить предметы'})).toBeVisible();
+ await page.locator('.container-items.is-in').getByRole('button',{name:arrow.name,exact:true}).click();await expect(page.getByRole('dialog',{name:'Переместить предметы'})).toBeVisible();
  await page.getByLabel('Количество для переноса',{exact:true}).fill('13');await expect(page.getByText('Переместить:',{exact:false})).toContainText('Оставить: 8');
  await page.getByRole('button',{name:'Переместить',exact:true}).click();await expect(page.locator('.container-inventory')).toBeVisible();await readRun();assert.equal(run.character.inventory_items.find(r=>r.card_id===arrow.id&&r.container_id===bag.id)?.qty,13);checks.push('container splits chosen quantity, leaves 8 outside');
- await page.reload();await page.getByRole('button',{name:'Открыть контейнер: '+bag.name,exact:true}).click();await bagItem().filter({has:page.getByRole('button',{name:'Выложить',exact:true})}).getByRole('button',{name:'Выложить',exact:true}).click();
+ await page.reload();await page.getByRole('button',{name:'Открыть контейнер: '+bag.name,exact:true}).click();await page.locator('.container-items.is-out').getByRole('button',{name:arrow.name,exact:true}).click();
  await page.getByLabel('Выбрать количество ползунком',{exact:true}).fill('8');await page.screenshot({path:out+'/container-transfer.png'});await page.getByRole('button',{name:'Переместить',exact:true}).click();await expect(page.locator('.container-inventory')).toBeVisible();await readRun();assert.equal(run.character.inventory_items.find(r=>r.card_id===arrow.id&&r.container_id===bag.id)?.qty,5);assert.equal(run.character.inventory_items.find(r=>r.card_id===arrow.id&&!r.container_id)?.qty,16);checks.push('slider extraction and persistence preserve all 21 arrows');
  await page.locator('.container-inventory img').evaluateAll(images=>Promise.all(images.map(i=>i.decode().catch(()=>{}))));await page.screenshot({path:out+'/container-inventory.png'});
  await page.evaluate(async()=>{const {getSettings,setSetting}=await import('/src/settings.ts');setSetting('entityDisplay',{...getSettings().entityDisplay,items:'row'})});

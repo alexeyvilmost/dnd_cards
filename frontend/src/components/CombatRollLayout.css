@@ -22,3 +22,10 @@
 .combat-reaction-attack-summary .combat-roll-equation { flex-wrap: wrap; gap: 8px; margin: 12px 0; }
 .combat-reaction-attack-summary .combat-roll-equation strong { font-size: 32px; }
 .combat-reaction-attack-summary .combat-roll-details { font-size: 12px; }
+.combat-death-saves {margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #74603b;}
+.combat-death-saves > div {display:flex; justify-content:space-between; align-items:center; gap:1rem; margin:.5rem 0;}
+.combat-death-saves strong {display:flex; align-items:center; gap:.4rem;}
+.death-save-dot {width:.7rem; height:.7rem; border:1px solid currentColor; border-radius:50%; display:inline-block;}
+.death-save-dot.success {color:#69b683;}
+.death-save-dot.failure {color:#dc756e;}
+.death-save-dot.filled {background:currentColor; box-shadow:0 0 7px currentColor;}

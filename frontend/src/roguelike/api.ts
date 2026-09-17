@@ -4,6 +4,7 @@ import { apiClient } from '../api/client';
 import type { ForgeCharacter } from '../character/types';
 import type { Monster } from '../monsters/types';
 import type { Action, PassiveEffect } from '../types';
+import {playCommandSound,playCommittedEvents} from '../audio/commandSounds';
 
 export interface RoguelikeOffer {
   id: string;
@@ -127,6 +128,8 @@ export const roguelikeApi = {
       type,
       payload,
     });
+    playCommandSound(type,commandId);
+    if(type==='camp_action'||type==='use_item')playCommittedEvents((data.events??[]).map(e=>e.payload),commandId);
     return { ...data.run, command_events: data.events };
   },
 };

@@ -272,6 +272,11 @@ export async function installForgeApiFixture(page: Page): Promise<ForgeApiFixtur
       return;
     }
 
+    if (segments[1] === 'audio' && segments.length === 2 && request.method() === 'GET') {
+      await json(route, 200, { cues: [], bindings: [], can_manage: false });
+      return;
+    }
+
     if (segments[1] === 'characters-v3') {
       const id = segments[2];
       if (id === 'runtime-commands' && request.method() === 'POST') {

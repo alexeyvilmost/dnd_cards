@@ -3,6 +3,7 @@ import {Link} from 'react-router-dom';
 import {entityTagsApi,merchantSettingsApi,tagError,type EntityTag,type TaggedEntityType,type MerchantItemRule} from '../api/entityTags';
 import {useSiteSettings} from '../settings';
 import './EntityTags.css';
+import EntitySoundEditor from '../audio/EntitySoundEditor';
 
 export function NewTagForm({onCreated}:{onCreated:(tag:EntityTag)=>void}) {
  const [name,setName]=useState(''),[description,setDescription]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
@@ -43,6 +44,7 @@ export default function EntityTags({type,id}:{type:TaggedEntityType;id:string}) 
    <NewTagForm onCreated={tag=>{setCatalog(prev=>[...prev.filter(t=>t.id!==tag.id),tag]);void save([...selected.filter(t=>t.id!==tag.id),tag]);}}/>
   </details>}
   {canManage&&type==='card'&&<ItemRuleEditor id={id}/>}
+  {canManage&&(type==='action'||type==='spell')&&<EntitySoundEditor type={type} id={id}/>}
   {error&&<p role="alert">{error}</p>}
  </section>;
 }

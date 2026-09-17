@@ -1,5 +1,6 @@
 import { combatActorDisplayName } from '../character/familiarLabels';
-import {combatRollInfluences} from '../solo-combat/engine';
+import {combatRollInfluences,resolveCombatDeathSave} from '../solo-combat/engine';
+import {emptyDeathSaves} from '../engine/deathSaves';
 import {persistedRollPresentation} from '../solo-combat/persistedRollPresentation';
 import RollInfluenceActions from '../components/RollInfluenceActions';
 import {isLooseTelekineticObject, telekineticHeldObjects} from '../rules-core/telekineticMovement';
@@ -44,6 +45,7 @@ import CombatPresentationDialog from '../components/CombatPresentationDialog';
 import CombatRewardDialog from '../components/CombatRewardDialog';
 import SheetSettingsDialog from '../components/SheetSettingsDialog';
 import { useCombatPresentation } from '../solo-combat/useCombatPresentation';
+import {useAutomaticCombatDecision} from '../solo-combat/useAutomaticCombatDecision';
 import { useSheetWorldInputDialog } from '../components/SheetWorldInputDialog';
 import { monstersApi } from '../monsters/api';
 import {
@@ -78,6 +80,7 @@ import {
 import { readSoloCombatState } from '../solo-combat/persistence';
 import { clearIncompatibleCombatSnapshot, isIncompatibleCombatRulesError } from '../solo-combat/rulesUpgrade';
 import { shouldShowSoloCombatOutcome } from '../solo-combat/outcomeVisibility';
+import {useCombatAudio} from '../audio/useCombatAudio';
 import { writeDedicatedCombatTurnState } from '../solo-combat/turnState';
 import {
   controlledCharacterIds,
@@ -175,6 +178,7 @@ export default function SoloCombatPage() {
   const [rewardRun, setRewardRun] = useState<RoguelikeRun | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const presentation = useCombatPresentation(state, openingState);
+  useCombatAudio(state,presentation.playing,presentation.initiative,presentation.blocked);
   const presentationBlockedRef = useRef(false);
   presentationBlockedRef.current = presentation.blocked;
   const [secondaryActionId, setSecondaryActionId] = useState<string | null>(null);
@@ -500,7 +504,7 @@ export default function SoloCombatPage() {
   const applyIntent = useCallback((intent: RoguelikeCombatIntent, local: () => SoloCombatState) => {
     // An open held-roll dialog owns this continuation. Cosmetic map feedback
     // must not swallow its decision; the engine still validates the pending id.
-    if (presentationBlockedRef.current && intent.type !== 'd20_interrupt') return;
+    if (presentationBlockedRef.current && intent.type !== 'd20_interrupt' && intent.type !== 'death_save') return;
     const run = trustedRunRef.current;
     if (!run) {
       try { apply(resumePendingMovement(local())); }
@@ -555,25 +559,19 @@ export default function SoloCombatPage() {
         {changesOutcome: preview?.changesOutcome})};
     });
   }, [state, combatPassiveEnabled]);
-  const automaticDecisionAttempt = useRef<string | null>(null);
-  useEffect(() => {
-    if (!state || busy || error || presentation.blocked) return;
-    const held = persistedRollPresentation(state.pendingD20Interrupt);
-    const pending = state.world.pendingResolution;
-    const skipInfluence = held?.held && !influenceOfferVisible;
-    const skipReaction = policyReactionOptions.length > 0 && policyReactionOptions.every(option => !option.visible);
-    const key = skipInfluence ? `roll:${held.command.actorId}:${state.log.length}`
-      : skipReaction ? `reaction:${pending?.request.id}` : null;
-    if (!key || automaticDecisionAttempt.current === key) return;
-    automaticDecisionAttempt.current = key;
+  const skipInfluence = Boolean(heldDecision?.held && !influenceOfferVisible);
+  const skipReaction = policyReactionOptions.length > 0 && policyReactionOptions.every(option => !option.visible);
+  useAutomaticCombatDecision(state, skipInfluence ? 'roll_influence' : skipReaction ? 'reaction' : null,
+    busy || Boolean(error) || presentation.blocked, kind => {
+    if (!state) return;
     // Only decline through the normal revision-checked command. Never pay or
     // simulate an authoritative outcome on the client; archived workers work too.
     try {
-      if (skipInfluence) applyIntent({type: 'd20_interrupt', actorId: null}, () => resolveD20Interrupt(state, null));
+      if (kind === 'roll_influence') applyIntent({type: 'd20_interrupt', actorId: null}, () => resolveD20Interrupt(state, null));
       else applyIntent({type: 'reaction', response: {kind: 'reaction', actionId: null}},
         () => resolvePlayerReaction(state, {kind: 'reaction', actionId: null}));
     } catch (reason) { setError(playerFacingSheetActionError(reason)); }
-  }, [state, busy, error, presentation.blocked, influenceOfferVisible, policyReactionOptions, applyIntent]);
+  });
 
   const resolveTriggeredChoice = async (actionId: string | null) => {
     if (!state?.pendingTriggeredAction || busy) return;
@@ -609,7 +607,17 @@ export default function SoloCombatPage() {
   const activeControlledActorId = state?.pendingAdditionalMovement?.actorId ?? (state && isPlayerControlledCombatActor(state, activeActor(state).id)
     ? activeActor(state).id
     : state?.characterId ?? '');
-  const playerTurn = state ? isPlayerControlledCombatActor(state, activeActor(state).id) : false;
+  const playerTurn = state ? isPlayerControlledCombatActor(state, activeActor(state).id) && activeActor(state).runtime.hp.current>0 && !state.pendingDeathSave : false;
+  const deathResumeKey=useRef<string|null>(null);
+  useEffect(()=>{
+    if(!state||state.deathSavesVersion!==1||state.outcome!=='active'||busy||error||presentation.blocked
+      ||state.pendingDeathSave||state.world.pendingResolution||state.pendingD20Interrupt
+      ||!isPlayerControlledCombatActor(state,activeActor(state).id)||activeActor(state).runtime.hp.current>0)return;
+    const key=`${state.world.id}:${state.world.revision}`;
+    if(deathResumeKey.current===key)return;
+    deathResumeKey.current=key;
+    applyIntent({type:'resume'},()=>autoResolveSystemDecisions(state));
+  },[state,busy,error,presentation.blocked,applyIntent]);
   useEffect(() => {
     const inspectHoveredEnemy = (event: KeyboardEvent) => {
       const hoveredId = hoveredActorIdRef.current;
@@ -1116,6 +1124,15 @@ export default function SoloCombatPage() {
     <main className={`solo-combat-page forge${presentation.blocked ? ' combat-input-blocked' : ''}`}>
       {rewardRun && <CombatRewardDialog run={rewardRun} onClose={() => navigate(`/roguelike/${rewardRun.id}`)} />}
       {presentation.initiative && <CombatPresentationDialog initiative={presentation.initiative} onClose={presentation.closeInitiative} />}
+      {state.pendingDeathSave && !presentation.blocked && (()=>{
+        const death=state.pendingDeathSave,actor=state.world.actors[death.actorId];
+        const respond=(effectId?:string)=>applyIntent({type:'death_save',actorId:actor.id,phase:death.phase,effectId},()=>resolveCombatDeathSave(state,effectId));
+        return <CombatPresentationDialog modeOverride="standard" busy={busy} provisional={death.phase==='rolled'}
+          beat={{id:`death:${actor.id}:${death.round}`,sourceId:actor.id,sourceName:actor.name,audience:'own',actionName:'Спасбросок от смерти',rollKind:'save',roll:death.roll,cues:[],
+            deathSave:death.phase==='rolled'?death.before:actor.runtime.deathSaves??emptyDeathSaves()}}
+          influences={death.phase==='rolled'?combatRollInfluences(state,actor.id,'save',death.roll):[]}
+          onInfluence={death.phase==='rolled'?respond:undefined} onClose={()=>respond()}/>;
+      })()}
       {(heldForDisplay?.held || presentation.beat) && <CombatPresentationDialog
         modeOverride={heldForDisplay?.held ? 'standard' : undefined}
         beat={heldForDisplay?.held ? {id: 'roll-influence-pending', sourceId: heldForDisplay.command.actorId,

@@ -1,5 +1,6 @@
 import {actorFootprint} from './footprint';
 import {boardCells, boardDimensions, terrainStepFits} from './boardGeometry';
+import {emptyDeathSaves} from '../engine/deathSaves';
 import {selectBattleMap, materializeMapAreas} from './battleMaps';
 import {monsterBonusActions} from './monsterBonusActions';
 import {combatHideFacts, combatHideIssue} from './hide';
@@ -75,6 +76,9 @@ import { planMonsterTurn, chooseMonsterReaction } from './monsterAi';
 import { projectCombatLogRecords } from './combatLog';
 import {
   areaActorIds,
+  areaEffectOrigin,
+  areaPointSight,
+  tacticalAreaGeometry,
   actorDistanceFt,
   actorMustCrawl,
   effectiveActorSize,
@@ -721,6 +725,9 @@ function outcome(state: SoloCombatState): SoloCombatState {
   const partyIds = controlledCharacterIds(state);
   const livingPlayer = partyIds.some((actorId) => (
     (state.world.actors[actorId]?.runtime.hp.current ?? 0) > 0
+      || (state.deathSavesVersion===1 && Boolean(state.world.actors[actorId])
+        && !state.world.actors[actorId].runtime.deathSaves?.dead
+        && !state.world.actors[actorId].runtime.deathSaves?.stable)
   ));
   if (!livingPlayer) return { ...state, outcome: 'defeat' };
   const livingOpponent = Object.values(state.world.actors).some((actor) => (
@@ -1047,9 +1054,21 @@ function declarationFor(
   if (action.targeting?.requiresStoneworkContact && !stonework) {
     throw new Error('Укажите, как персонаж соприкасается с каменной поверхностью.');
   }
+  const areaGeometry=tacticalAreaGeometry(action);
+  const areaOrigin=areaGeometry && worldPosition ? areaEffectOrigin({action,sourcePosition:state.tokens[actorId].position,aimPosition:worldPosition}) : undefined;
+  const areaDelivery=areaOrigin ? {
+    distanceFt:gridDistanceFt(state.tokens[actorId].position,areaOrigin),
+    lineOfSight:!areaPointSight(state,actorId,state.tokens[actorId].position,areaOrigin).blocked,
+    cover:areaPointSight(state,actorId,state.tokens[actorId].position,areaOrigin).cover,
+  } : undefined;
   const factsByTarget = Object.fromEntries(targetIds.map((targetId) => [
     targetId, {
       ...spatialFacts(state, actorId, targetId),
+      ...(areaOrigin ? {
+        areaDelivery,
+        lineOfSight:!areaPointSight(state,actorId,areaOrigin,state.tokens[targetId].position,targetId).blocked,
+        cover:areaPointSight(state,actorId,areaOrigin,state.tokens[targetId].position,targetId).cover,
+      } : {}),
       ...(action.targeting?.requiresWilling
         && (actorId === targetId
           || (isPlayerControlledCombatActor(state, actorId) && isPlayerControlledCombatActor(state, targetId)))
@@ -1597,6 +1616,22 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
   if (!input.triggerEvent && activeActorId(input.state) !== input.actorId) throw new Error('Сейчас ход другого участника');
   const action = input.state.catalogActions.find((candidate) => candidate.id === input.actionId);
   if (!action) throw new Error('Действие отсутствует в снимке боя');
+  const rawTargeting=action.mechanics.targeting as Record<string,unknown> | undefined;
+  if(rawTargeting?.shape==='area' && rawTargeting.actor_targets!==false && rawTargeting.domain!=='world'){
+    const geometry=tacticalAreaGeometry(action);
+    if(!geometry)throw new Error('В данных действия отсутствует геометрия области');
+    const sourcePosition=input.state.tokens[input.actorId].position;
+    const aimPosition=input.worldPosition ?? (geometry.kind==='emanation' ? sourcePosition : input.state.tokens[input.targetIds[0]]?.position);
+    const {width,height}=boardDimensions(input.state);
+    if(!aimPosition || !Number.isInteger(aimPosition.x)||!Number.isInteger(aimPosition.y)
+      ||aimPosition.x<0||aimPosition.y<0||aimPosition.x>=width||aimPosition.y>=height)throw new Error('Выберите клетку области на поле');
+    const origin=areaEffectOrigin({action,sourcePosition,aimPosition});
+    if(gridDistanceFt(sourcePosition,origin)>(action.targeting?.rangeFt??0))throw new Error('Центр области вне дальности');
+    if(areaPointSight(input.state,input.actorId,sourcePosition,origin).blocked)throw new Error('Центр области закрыт полным укрытием');
+    const targetIds=areaActorIds({state:input.state,sourceActorId:input.actorId,aimPosition,action}).slice(0,action.targeting?.maxTargets??8);
+    // The board, not a client-provided list, owns which creatures are affected.
+    input={...input,targetIds,worldPosition:aimPosition};
+  }
   if ((action.mechanics.activation as Record<string, unknown> | undefined)?.counts_as === 'hide') {
     if (input.triggerEvent || input.targetIds.some(id => id !== input.actorId)) throw new Error('Засада применяется только к себе в свой ход');
     return dispatch({state: input.state, rng: input.rng ?? Math.random, label: action.name, command: {
@@ -2681,6 +2716,7 @@ function openNextCombatAreaTrigger(state: SoloCombatState, rng: Rng): SoloCombat
 }
 
 export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
+  if(state.pendingDeathSave)return state;
   let next = state;
   for (let guard = 0; guard < 48; guard += 1) {
     next = openNextCombatAreaTrigger(next, rng);
@@ -2761,7 +2797,50 @@ export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Ma
       isAttack: Boolean(action && isAttackAction(action)),
     });
   }
-  return next;
+  return prepareCombatDeathSave(next,rng);
+}
+
+/** Death saves are held across reloads before applying counters/HP. The same
+ * canonical command is replayed on acceptance, with the original random tape. */
+export function prepareCombatDeathSave(state:SoloCombatState,rng:Rng=Math.random):SoloCombatState {
+  if(state.deathSavesVersion!==1 || state.outcome!=='active' || state.pendingDeathSave
+    || state.world.pendingResolution || state.pendingD20Interrupt || state.pendingInterception
+    || state.pendingTriggeredAction || state.pendingTurnStartGrappleDamage || state.pendingCombatAreaTriggers?.length
+    || state.world.scene.mode!=='encounter' || !state.world.scene.turnStarted)return state;
+  const actor=activeActor(state);
+  if(!isControlledCharacter(state,actor.id)||actor.runtime.hp.current>0)return state;
+  const before=actor.runtime.deathSaves??emptyDeathSaves();
+  if(before.dead||before.stable||actor.runtime.firedThisTurn?.includes('system:death-save')
+    ||!actor.runtime.firedThisTurn?.includes('system:death-save-due'))return advanceTurn(state,rng);
+  const recorded=recordedRng(rng);
+  const preview=dispatch({state,command:{...commandBase(state,actor.id),type:'DeathSavingThrow'},rng:recorded.rng,label:'Спасбросок от смерти'});
+  const roll=heldRollIn(preview,state,actor.id);
+  if(!roll)throw new Error('Нет результата спасброска от смерти');
+  return {...state,pendingDeathSave:{actorId:actor.id,round:state.world.scene.round,phase:'rolled',before,roll,randomValues:recorded.values}};
+}
+
+export function resolveCombatDeathSave(state:SoloCombatState,effectId?:string,rng:Rng=Math.random):SoloCombatState {
+  const pending=state.pendingDeathSave;
+  if(!pending || activeActorId(state)!==pending.actorId || state.world.scene.mode!=='encounter'
+    ||state.world.scene.round!==pending.round)throw new Error('Нет ожидающего спасброска от смерти');
+  const {pendingDeathSave:_cleared,...rest}=state;
+  let ready=rest as SoloCombatState;
+  if(pending.phase==='resolved'){
+    if(effectId)throw new Error('Результат уже подтверждён');
+    return ready.world.actors[pending.actorId].runtime.hp.current>0 || ready.outcome!=='active' ? ready : advanceTurn(ready,rng);
+  }
+  let replay:Rng=transcriptRng(pending.randomValues);
+  if(effectId){
+    const influence=combatRollInfluences(ready,pending.actorId,'save',pending.roll).find(a=>a.id===effectId);
+    if(!influence)throw new Error('Влияние на бросок недоступно');
+    ready=clone(ready);
+    const paid=spendRollInfluence(ready.world.actors[pending.actorId].runtime,influence);
+    ready.world.actors[pending.actorId].runtime=paid.state;
+    ready=appendLog(ready,pending.actorId,`${influence.name}: переброс спасброска от смерти`,paid.events.map((event,ordinal)=>({kind:'engine',ordinal,sourceActorId:pending.actorId,actorId:pending.actorId,targetIds:[],event})));
+    replay=withD20Replacement(replay,drawDie(rng,20),influence.name);
+  }
+  const next=dispatch({state:ready,command:{...commandBase(ready,pending.actorId),type:'DeathSavingThrow'},rng:replay,label:'Спасбросок от смерти'});
+  return {...next,pendingDeathSave:{...pending,phase:'resolved',roll:heldRollIn(next,ready,pending.actorId)!}};
 }
 
 export function resolvePlayerShoveOutcome(
@@ -4246,7 +4325,7 @@ function startTurnOrRequestGrappleDamage(
   rng: Rng,
 ): SoloCombatState {
   const actor = state.world.actors[actorId];
-  const opportunity = isControlledCharacter(state, actorId)
+  const opportunity = isControlledCharacter(state, actorId) && actor.runtime.hp.current>0
     ? turnStartGrappleDamageOpportunity({
       passives: actor.passives ?? [],
       sourceActorId: actorId,
@@ -4304,6 +4383,7 @@ export function resolveSoloCombatTurnStart(
 }
 
 export function advanceTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
+  if(state.pendingDeathSave)return state;
   if (state.outcome !== 'active' || state.world.pendingResolution
     || state.pendingAdditionalMovement
     || state.playerMovement
@@ -5088,7 +5168,7 @@ function continueMonsterAttackSequence(state: SoloCombatState, rng: Rng): SoloCo
       && combatRelation(next, sequence.actorId, target.id) === 'enemy'
       && !conditionInteractionDenied({world: next.world, actorId: sequence.actorId, targetActorId: target.id, capability: 'harm'})
       && actorDistanceFt(next, sequence.actorId, target.id) <= monsterAttackRange(action)
-      && spatialFacts(next, sequence.actorId, target.id).lineOfSight)
+      && (()=>{const facts=spatialFacts(next,sequence.actorId,target.id,false);return facts.lineOfSight&&facts.cover!=='total';})())
       .sort((a, b) => Number(b.id === sequence.targetId) - Number(a.id === sequence.targetId) || a.id.localeCompare(b.id));
     next = {...next, monsterAttackSequence: {...sequence, actionIds: sequence.actionIds.slice(1)}};
     if (candidates[0] && !monsterWeaponActionIssue(action, source)) {
@@ -5422,6 +5502,8 @@ export async function createSoloCombatState(input: {
   const state: SoloCombatState = {
     conditionActionSchemaVersion: 1,
     tacticalFootprints: 'sized',
+    creatureCoverVersion: 1,
+    deathSavesVersion: 1,
     routeCommandVersion: 1,
     ...(chosenMap?{battleMap:chosenMap.map}:{}),
     schemaVersion: SOLO_COMBAT_SCHEMA_VERSION,

@@ -12,6 +12,7 @@ import type { ActorState } from '../rules-core/domain';
 import { activeConditionWorldFactValues } from '../engine/conditions';
 import {actorFootprint, footprintCells, footprintFits, footprintDistanceFt} from './footprint';
 import {boardCells, boardDimensions, boardObstacles, terrainSight, terrainStepFits, type BoardState} from './boardGeometry';
+import {creatureCoverObstacles} from './creatureCover';
 
 export function actorMustCrawl(actor: ActorState): boolean {
   if (!actor.runtime.activeEffects?.length) return false;
@@ -199,7 +200,7 @@ function positiveNumber(value: unknown): number | null {
 }
 
 /** Fail closed when content has no complete, data-owned tactical geometry. */
-function tacticalAreaGeometry(action: TacticalAreaAction): TacticalAreaGeometry | null {
+export function tacticalAreaGeometry(action: TacticalAreaAction): TacticalAreaGeometry | null {
   const targeting = action.mechanics.targeting as Record<string, unknown> | undefined;
   if (targeting?.shape !== 'area') return null;
   const area = targeting.area as Record<string, unknown> | undefined;
@@ -230,10 +231,23 @@ function boardPositions(board?: BoardState): GridPosition[] { return boardCells(
  * Geometry comes only from mechanics.targeting.area; names and spell identities are irrelevant.
  */
 export function areaPositionsForAction(input: TacticalAreaProjectionInput): GridPosition[] {
-  const geometry = tacticalAreaGeometry(input.action);
-  const origin = geometry?.kind === 'cone' || geometry?.kind === 'line' || geometry?.kind === 'emanation'
-    ? input.sourcePosition : input.aimPosition;
+  const origin = areaEffectOrigin(input);
   return unclippedAreaPositions(input).filter(p=>!terrainSight(input.board??{},origin,p).blocked);
+}
+
+export function areaEffectOrigin(input: TacticalAreaProjectionInput): GridPosition {
+  const kind=tacticalAreaGeometry(input.action)?.kind;
+  return kind==='cone'||kind==='line'||kind==='emanation' ? input.sourcePosition : input.aimPosition;
+}
+
+/** Trace delivery/propagation separately. An occupant of the origin or impact
+ * cell is not an obstacle to the effect that originates/hits inside that cell. */
+export function areaPointSight(state:SoloCombatState,sourceActorId:string,from:GridPosition,to:GridPosition,targetActorId='') {
+  const contains=(f:{x:number;y:number;width:number;height:number},p:GridPosition)=>
+    p.x>=f.x&&p.x<f.x+f.width&&p.y>=f.y&&p.y<f.y+f.height;
+  const bodies=creatureCoverObstacles(state,sourceActorId,targetActorId)
+    .filter(f=>!contains(f,from)&&!contains(f,to));
+  return terrainSight(state,from,to,1,targetActorId?actorFootprint(state.world.actors[targetActorId],state):1,bodies);
 }
 
 function unclippedAreaPositions(input: TacticalAreaProjectionInput): GridPosition[] {
@@ -413,6 +427,8 @@ export function areaActorIds(input: {
     if (!actor || actor.runtime.hp.current <= 0) return [];
     const relation = combatRelation(input.state, input.sourceActorId, token.actorId);
     if (allowedRelations?.length && !allowedRelations.includes(relation)) return [];
-    return footprintCells(token.position, actorFootprint(actor, input.state)).some(p => area.has(`${p.x}:${p.y}`)) ? [token.actorId] : [];
+    const origin=areaEffectOrigin({action:input.action,sourcePosition,aimPosition:input.aimPosition});
+    return footprintCells(token.position, actorFootprint(actor, input.state)).some(p => area.has(`${p.x}:${p.y}`))
+      && !areaPointSight(input.state,input.sourceActorId,origin,token.position,token.actorId).blocked ? [token.actorId] : [];
   });
 }

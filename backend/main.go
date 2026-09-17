@@ -305,6 +305,7 @@ func main() {
 		registerCharacterV3Routes(api, authService, characterV3Controller)
 		registerCharacterTemplateRoutes(api, authService, db)
 		registerPassivePresentationRoutes(api, authService, db)
+		registerAudioRoutes(api, authService, db)
 		registerRoguelikeRoutes(api, authService, roguelikeController)
 		api.POST(
 			"/characters-v3/:id/avatar",
