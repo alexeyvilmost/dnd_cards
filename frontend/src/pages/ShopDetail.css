@@ -1,8 +1,6 @@
 .merchant-shop { --shop-gold: #d9b975; min-height: calc(100vh - 7rem); padding: clamp(18px, 3vw, 42px); border: 1px solid #6d5533; border-radius: 18px; color: #d8cbb3; background: radial-gradient(ellipse at 12% 0%, #63432255, transparent 48%), radial-gradient(ellipse at 95% 25%, #a9702720, transparent 45%), #151410; box-shadow: 0 12px 50px #0008; }
-main:has(.merchant-shop) { background: #121310; }
-.site-layout:has(.merchant-shop) { background: #121310 !important; }
-.site-layout:has(.merchant-shop) > header { background: #1c1812; border-color: #57452d; }
-.site-layout:has(.merchant-shop) > header :is(a,button) { color: #cbbb9c; }
+.merchant-shop { border-color: var(--site-line); }
+.merchant-shop > .flex h1 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
 .merchant-shop h1 { color: #efd39b; font: 2.3rem Pangolin, serif; margin: 0; }
 .merchant-shop h2 { color: #d9b975; font-family: Pangolin, serif; letter-spacing: .03em; padding-bottom: 12px; border-bottom: 1px solid #a381443b; }
 .merchant-shop__eyebrow { color: #a68a59; font-size: .68rem; letter-spacing: .23em; }

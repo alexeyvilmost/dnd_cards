@@ -50,7 +50,7 @@ const Groups: React.FC = () => {
       <div className="flex items-center justify-center min-h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Загрузка групп...</p>
+          <p className="site-muted text-gray-600">Загрузка групп...</p>
         </div>
       </div>
     );
@@ -85,14 +85,14 @@ const Groups: React.FC = () => {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="site-page-head flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Мои группы</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">Управляйте своими группами D&D</p>
+          <h1 className="site-heading text-2xl sm:text-3xl font-bold text-gray-900">Мои группы</h1>
+          <p className="site-muted text-sm sm:text-base text-gray-600 mt-1">Управляйте своими группами D&D</p>
         </div>
         <Link
           to="/groups/create"
-          className="btn-primary bg-blue-600 hover:bg-blue-700 flex items-center justify-center space-x-2 w-full sm:w-auto"
+          className="site-button site-button-primary btn-primary bg-blue-600 hover:bg-blue-700 flex items-center justify-center space-x-2 w-full sm:w-auto"
         >
           <Plus size={20} />
           <span>Создать группу</span>
@@ -101,21 +101,21 @@ const Groups: React.FC = () => {
 
       {/* Groups list */}
       {groups.length === 0 ? (
-        <div className="text-center py-12">
-          <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">У вас пока нет групп</h3>
-          <p className="text-gray-600 mb-6">Создайте новую группу или присоединитесь к существующей</p>
+        <div className="site-empty text-center py-12">
+          <Users className="site-muted h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="site-heading text-lg font-medium text-gray-900 mb-2">У вас пока нет групп</h3>
+          <p className="site-muted text-gray-600 mb-6">Создайте новую группу или присоединитесь к существующей</p>
           <div className="space-x-4">
             <Link
               to="/groups/create"
-              className="btn-primary bg-blue-600 hover:bg-blue-700 inline-flex items-center space-x-2"
+              className="site-button site-button-primary btn-primary bg-blue-600 hover:bg-blue-700 inline-flex items-center space-x-2"
             >
               <Plus size={20} />
               <span>Создать группу</span>
             </Link>
             <Link
               to="/groups/join"
-              className="btn-secondary border-gray-300 text-gray-700 hover:bg-gray-50 inline-flex items-center space-x-2"
+              className="site-button site-muted btn-secondary border-gray-300 text-gray-700 hover:bg-gray-50 inline-flex items-center space-x-2"
             >
               <Users size={20} />
               <span>Присоединиться</span>
@@ -127,17 +127,17 @@ const Groups: React.FC = () => {
           {groups.map((group) => (
             <div
               key={group.id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+              className="site-surface bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
             >
               <div className="p-6">
                 {/* Group header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    <h3 className="site-heading text-lg font-semibold text-gray-900 mb-1">
                       {group.name}
                     </h3>
                     {group.description && (
-                      <p className="text-sm text-gray-600 line-clamp-2">
+                      <p className="site-muted text-sm text-gray-600 line-clamp-2">
                         {group.description}
                       </p>
                     )}
@@ -151,15 +151,15 @@ const Groups: React.FC = () => {
 
                 {/* Group info */}
                 <div className="space-y-3 mb-4">
-                  <div className="flex items-center text-sm text-gray-600">
+                  <div className="site-muted flex items-center text-sm text-gray-600">
                     <User size={16} className="mr-2" />
                     <span>ДМ: {group.dm.display_name}</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-600">
+                  <div className="site-muted flex items-center text-sm text-gray-600">
                     <Users size={16} className="mr-2" />
                     <span>{group.members.length} участников</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-600">
+                  <div className="site-muted flex items-center text-sm text-gray-600">
                     <Calendar size={16} className="mr-2" />
                     <span>Создана {formatDate(group.created_at)}</span>
                   </div>
@@ -190,7 +190,7 @@ const Groups: React.FC = () => {
                 <div className="flex space-x-2">
                   <Link
                     to={`/groups/${group.id}`}
-                    className="flex-1 btn-primary bg-blue-600 hover:bg-blue-700 flex items-center justify-center space-x-2"
+                    className="site-button site-button-primary flex-1 btn-primary bg-blue-600 hover:bg-blue-700 flex items-center justify-center space-x-2"
                   >
                     <span>Открыть</span>
                     <ArrowRight size={16} />

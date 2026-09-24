@@ -1,13 +1,43 @@
 import { cardsApi } from '../api/client';
+import { readPersistedAuthToken } from '../api/authSession';
+import { subscribeApiCacheInvalidation } from '../api/apiCache';
 import type { Card } from '../types';
 
 // Кэш индекса карт (id -> Card) для резолва ссылок (контейнеры, снаряжение предысторий).
 let cache: Map<string, Card> | null = null;
 let inflight: Promise<Map<string, Card>> | null = null;
+let sessionKey: string | null | undefined;
+let generation = 0;
+
+function invalidateIndex() {
+  generation++;
+  cache = null;
+  inflight = null;
+}
+
+// Acquisitions, templates and shop/reward changes can alter private additions
+// without changing the signed-in user. Public HTTP pages keep their own cache.
+const unsubscribe = subscribeApiCacheInvalidation(({ prefix }) => {
+  if (prefix === null || prefix === '/api/' || ['/api/cards', '/api/characters-v3',
+    '/api/character-templates', '/api/roguelike', '/api/entity-tags', '/api/my-item-catalog'].includes(prefix)) invalidateIndex();
+});
+if (import.meta.hot) import.meta.hot.dispose(unsubscribe);
+
+function syncSession() {
+  const current = readPersistedAuthToken();
+  if (current !== sessionKey) {
+    sessionKey = current;
+    invalidateIndex();
+  }
+  return current;
+}
 
 export async function getCardsIndex(force = false): Promise<Map<string, Card>> {
+  const requestSession = syncSession();
   if (cache && !force) return cache;
   if (inflight) return inflight;
+  const requestGeneration = generation;
+  const stale = () => generation !== requestGeneration || readPersistedAuthToken() !== requestSession;
   inflight = (async () => {
     try {
       const all: Card[] = [];
@@ -24,17 +54,36 @@ export async function getCardsIndex(force = false): Promise<Map<string, Card>> {
         if (res.cards.length < 100 || all.length >= res.total || page > 40) break;
         page++;
       }
+      // Personal additions serve runtime references only, never CardLibrary.
+      if (stale()) return getCardsIndex();
+      if (requestSession) {
+        let ownedPage = 1;
+        let ownedCount = 0;
+        let hasMoreOwnedItems = true;
+        while (hasMoreOwnedItems) {
+          const res = await cardsApi.getMyItemCatalog({ page: ownedPage, limit: 100, fields: 'list' });
+          all.push(...res.cards);
+          ownedCount += res.cards.length;
+          if (stale()) return getCardsIndex();
+          hasMoreOwnedItems = res.cards.length === 100 && ownedCount < res.total;
+          if (hasMoreOwnedItems) ownedPage++;
+        }
+      }
+      // A response started by an administrator cannot populate a player's index
+      // after logout or an account switch, even if the old request finishes last.
+      if (stale()) return getCardsIndex();
       cache = new Map(all.map((c) => [c.id, c]));
       return cache;
     } finally {
       // A transient request failure must not poison the process-wide resolver
       // with the same rejected promise for the rest of the browser session.
-      inflight = null;
+      if (sessionKey === requestSession && generation === requestGeneration) inflight = null;
     }
   })();
   return inflight;
 }
 
 export function getCachedCardsIndex(): Map<string, Card> | null {
+  syncSession();
   return cache;
 }

@@ -1,6 +1,8 @@
 import {actorFootprint} from './footprint';
 import {boardCells, boardDimensions, terrainStepFits} from './boardGeometry';
 import {emptyDeathSaves} from '../engine/deathSaves';
+import {applyHealing} from '../engine/hp';
+import {shouldShowSoloCombatOutcome} from './outcomeVisibility';
 import {selectBattleMap, materializeMapAreas} from './battleMaps';
 import {monsterBonusActions} from './monsterBonusActions';
 import {combatHideFacts, combatHideIssue} from './hide';
@@ -723,6 +725,16 @@ function applyForcedMovement(
 
 function outcome(state: SoloCombatState): SoloCombatState {
   const partyIds = controlledCharacterIds(state);
+  if (partyIds.some(id => {
+    const actor = state.world.actors[id];
+    return actor?.runtime.deathSaves?.dead || (actor?.runtime.deathSaves?.failures ?? 0) >= 3
+      || actor?.lifecycle?.status === 'dead';
+  })) return {...state, outcome: 'defeat'};
+  const livingOpponent = Object.values(state.world.actors).some((actor) => (
+    actor.runtime.hp.current > 0
+      && combatRelation(state, state.characterId, actor.id) === 'enemy'
+  ));
+  if (!livingOpponent) return {...state, outcome: 'victory'};
   const livingPlayer = partyIds.some((actorId) => (
     (state.world.actors[actorId]?.runtime.hp.current ?? 0) > 0
       || (state.deathSavesVersion===1 && Boolean(state.world.actors[actorId])
@@ -730,11 +742,30 @@ function outcome(state: SoloCombatState): SoloCombatState {
         && !state.world.actors[actorId].runtime.deathSaves?.stable)
   ));
   if (!livingPlayer) return { ...state, outcome: 'defeat' };
-  const livingOpponent = Object.values(state.world.actors).some((actor) => (
-    actor.runtime.hp.current > 0
-      && combatRelation(state, state.characterId, actor.id) === 'enemy'
-  ));
-  return livingOpponent ? state : { ...state, outcome: 'victory' };
+  return state;
+}
+
+/** Encounter recovery is a committed, RNG-free rule, not a UI reward. Never
+ * recover during a held roll/reaction: those can still change the outcome. */
+export function finalizeCombatOutcome(state: SoloCombatState): SoloCombatState {
+  if (state.outcomeFinalized) return state;
+  let next = state.outcome === 'active' ? outcome(state) : state;
+  if (!shouldShowSoloCombatOutcome(next) || next.pendingD20Interrupt || next.pendingAdditionalMovement
+    || next.pendingCombatAreaTriggers?.length || next.pendingCombatAreaTurnContinuation) return next;
+  for (const id of controlledCharacterIds(next)) {
+    const actor = next.world.actors[id];
+    if (!actor || actor.runtime.hp.current !== 0 || actor.runtime.hp.max < 1
+      || actor.runtime.deathSaves?.dead || (actor.runtime.deathSaves?.failures ?? 0) >= 3
+      || actor.lifecycle?.status === 'dead') continue;
+    const healed = applyHealing(actor.runtime, 1);
+    const runtime = {...healed.state, deathSaves: emptyDeathSaves(),
+      firedThisTurn: (actor.runtime.firedThisTurn ?? []).filter(flag => flag !== 'system:death-save-due')};
+    next = appendLog({...next, world: {...next.world, revision: next.world.revision + 1,
+      actors: {...next.world.actors, [id]: {...actor, runtime}}}}, id,
+      'Бой завершён: выживший персонаж восстанавливает 1 хит.',
+      healed.events.map((event, ordinal) => ({kind: 'engine', ordinal, sourceActorId: id, actorId: id, targetIds: [id], event})));
+  }
+  return {...next, outcomeFinalized: true};
 }
 
 function isBasicUnarmedStrike(state: SoloCombatState, action: RuleActionDefinition): boolean {
@@ -2797,7 +2828,9 @@ export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Ma
       isAttack: Boolean(action && isAttackAction(action)),
     });
   }
-  return prepareCombatDeathSave(next,rng);
+  // Only adjudicate here. Recovery belongs to the outer command boundary, after
+  // movement and post-hit choices have finished collecting their continuations.
+  return prepareCombatDeathSave(outcome(next),rng);
 }
 
 /** Death saves are held across reloads before applying counters/HP. The same
@@ -2827,7 +2860,7 @@ export function resolveCombatDeathSave(state:SoloCombatState,effectId?:string,rn
   let ready=rest as SoloCombatState;
   if(pending.phase==='resolved'){
     if(effectId)throw new Error('Результат уже подтверждён');
-    return ready.world.actors[pending.actorId].runtime.hp.current>0 || ready.outcome!=='active' ? ready : advanceTurn(ready,rng);
+    return ready.world.actors[pending.actorId].runtime.hp.current>0 || ready.outcome!=='active' ? finalizeCombatOutcome(ready) : advanceTurn(ready,rng);
   }
   let replay:Rng=transcriptRng(pending.randomValues);
   if(effectId){

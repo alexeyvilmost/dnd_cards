@@ -5,6 +5,7 @@ import { registerSW } from 'virtual:pwa-register'
 import App from './App.tsx'
 import './fonts.css'
 import './index.css'
+import './SiteTheme.css'
 
 // Keep long-lived character-sheet tabs on the same certified engine release as
 // the server. In auto-update mode Workbox reloads only after a newer worker has

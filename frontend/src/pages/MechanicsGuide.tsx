@@ -1,3 +1,4 @@
+import './UtilityPages.css';
 /**
  * Страница документации «Унифицированная механика». Рендерит markdown-руководство
  * (frontend/src/docs/mechanics-guide.md) через react-markdown + remark-gfm (таблицы).
@@ -9,7 +10,7 @@ import guideMd from '../docs/mechanics-guide.md?raw';
 
 export default function MechanicsGuide() {
   return (
-    <div className="mechanics-guide">
+    <div className="site-page-theme mechanics-guide utility-guide site-surface">
       <style>{MG_STYLES}</style>
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{guideMd}</ReactMarkdown>
     </div>

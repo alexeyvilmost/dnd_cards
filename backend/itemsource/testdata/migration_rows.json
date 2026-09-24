@@ -1,0 +1,521 @@
+[
+  {
+    "slot": "one_hand",
+    "type": "weapon",
+    "range": "20/60",
+    "effects": null,
+    "mastery": "c00b501c-2e9a-4f32-89e7-1c5ed898d7b2",
+    "contents": null,
+    "mechanics": {
+      "weapon_profile": {
+        "ammo": null,
+        "attunement": {
+          "required": false
+        },
+        "properties": [
+          "finesse",
+          "light",
+          "thrown"
+        ],
+        "enchantment": {
+          "attack_bonus": 0,
+          "damage_bonus": 0,
+          "extra_damage_lines": []
+        },
+        "weapon_type": "dagger",
+        "attack_modes": [
+          {
+            "kind": "melee",
+            "reach_ft": 5
+          },
+          {
+            "kind": "ranged",
+            "long_ft": 60,
+            "normal_ft": 20
+          }
+        ],
+        "damage_lines": [
+          {
+            "dice": "1d4",
+            "type": "piercing"
+          }
+        ],
+        "attack_ability": "finesse",
+        "mastery_effect_id": "c00b501c-2e9a-4f32-89e7-1c5ed898d7b2",
+        "default_attack_mode": "melee",
+        "proficiency_category": "simple"
+      }
+    },
+    "attunement": null,
+    "bonus_type": "damage",
+    "properties": "[\"light\",\"thrown\",\"finesse\"]",
+    "bonus_value": "1d4",
+    "damage_type": "piercing",
+    "weapon_type": "dagger",
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": null,
+    "battle_profile": null,
+    "container_mode": null,
+    "related_actions": null,
+    "related_effects": null,
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null,
+    "id": "7ac95f8a-0b8a-4653-b683-19f09ccfb447",
+    "card_number": "CARD-0297",
+    "name": "Кинжал",
+    "name_en": null,
+    "description": " ",
+    "detailed_description": null,
+    "source": null,
+    "deleted_at": null,
+    "support": {
+      "status": "verified_mechanical",
+      "mechanics_locked": true,
+      "content_hash": "sha256:unchanged-original-hash",
+      "dependency_hash": "sha256:unchanged-dependencies"
+    },
+    "legacy_tags": [
+      "frozen"
+    ],
+    "price": "999",
+    "updated_at": "2026-09-24T00:00:00Z"
+  },
+  {
+    "slot": "one_hand",
+    "type": "weapon",
+    "range": "20/60",
+    "effects": null,
+    "mastery": "c00b501c-2e9a-4f32-89e7-1c5ed898d7b2",
+    "contents": null,
+    "mechanics": {
+      "weapon_profile": {
+        "ammo": null,
+        "attunement": {
+          "required": false
+        },
+        "properties": [
+          "finesse",
+          "light",
+          "thrown"
+        ],
+        "enchantment": {
+          "attack_bonus": 0,
+          "damage_bonus": 0,
+          "extra_damage_lines": []
+        },
+        "weapon_type": "dagger",
+        "attack_modes": [
+          {
+            "kind": "melee",
+            "reach_ft": 5
+          },
+          {
+            "kind": "ranged",
+            "long_ft": 60,
+            "normal_ft": 20
+          }
+        ],
+        "damage_lines": [
+          {
+            "dice": "1d4",
+            "type": "piercing"
+          }
+        ],
+        "attack_ability": "finesse",
+        "mastery_effect_id": "c00b501c-2e9a-4f32-89e7-1c5ed898d7b2",
+        "default_attack_mode": "melee",
+        "proficiency_category": "simple"
+      }
+    },
+    "attunement": null,
+    "bonus_type": "damage",
+    "properties": "[\"light\",\"thrown\",\"finesse\"]",
+    "bonus_value": "1d4",
+    "damage_type": "piercing",
+    "weapon_type": "dagger",
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": null,
+    "battle_profile": null,
+    "container_mode": null,
+    "related_actions": null,
+    "related_effects": null,
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null,
+    "id": "db5d576b-3ae1-4402-b4dc-8f7ec7d88b29",
+    "card_number": "CARD-0492",
+    "name": "Кинжал",
+    "name_en": null,
+    "description": "",
+    "detailed_description": null,
+    "source": null,
+    "deleted_at": null,
+    "support": {
+      "status": "verified_mechanical",
+      "mechanics_locked": true,
+      "content_hash": "sha256:unchanged-original-hash",
+      "dependency_hash": "sha256:unchanged-dependencies"
+    },
+    "legacy_tags": [
+      "frozen"
+    ],
+    "price": "999",
+    "updated_at": "2026-09-24T00:00:00Z"
+  },
+  {
+    "slot": null,
+    "type": null,
+    "range": null,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": {
+      "effects": [
+        {
+          "result": [
+            {
+              "kind": "narrative",
+              "description": "Связывает подходящую цель или объект; побег и разрыв разрешаются проверками по правилу верёвки."
+            }
+          ],
+          "resolution": "auto"
+        }
+      ],
+      "activation": {
+        "cost": [
+          {
+            "resource": "action"
+          }
+        ],
+        "mode": "active",
+        "while": "carried"
+      }
+    },
+    "attunement": null,
+    "bonus_type": null,
+    "properties": "[\"equipment\"]",
+    "bonus_value": null,
+    "damage_type": null,
+    "weapon_type": null,
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": "[]",
+    "battle_profile": null,
+    "container_mode": null,
+    "related_actions": "[]",
+    "related_effects": "[]",
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null,
+    "id": "6a65d4e3-1744-455e-8b80-4ed4245271b4",
+    "card_number": "CARD-0706",
+    "name": "Веревка",
+    "name_en": null,
+    "description": "50 футов пеньковой веревки. Можно использовать для связывания целей.",
+    "detailed_description": null,
+    "source": null,
+    "deleted_at": null,
+    "support": {
+      "status": "verified_mechanical",
+      "mechanics_locked": true,
+      "content_hash": "sha256:unchanged-original-hash",
+      "dependency_hash": "sha256:unchanged-dependencies"
+    },
+    "legacy_tags": [
+      "frozen"
+    ],
+    "price": "999",
+    "updated_at": "2026-09-24T00:00:00Z"
+  },
+  {
+    "slot": null,
+    "type": null,
+    "range": null,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": null,
+    "attunement": null,
+    "bonus_type": null,
+    "properties": null,
+    "bonus_value": null,
+    "damage_type": null,
+    "weapon_type": null,
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": "[]",
+    "battle_profile": null,
+    "container_mode": null,
+    "related_actions": "[]",
+    "related_effects": "[]",
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null,
+    "id": "c1d07845-8b1e-4ea5-b96b-df447c821c79",
+    "card_number": "CARD-0400",
+    "name": "Шелковая веревка",
+    "name_en": null,
+    "description": "50 фт. длины\nОт предыстории",
+    "detailed_description": null,
+    "source": null,
+    "deleted_at": null,
+    "support": {
+      "status": "verified_mechanical",
+      "mechanics_locked": true,
+      "content_hash": "sha256:unchanged-original-hash",
+      "dependency_hash": "sha256:unchanged-dependencies"
+    },
+    "legacy_tags": [
+      "frozen"
+    ],
+    "price": "999",
+    "updated_at": "2026-09-24T00:00:00Z"
+  },
+  {
+    "slot": "body",
+    "type": "chest",
+    "range": null,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": null,
+    "attunement": null,
+    "bonus_type": "defense",
+    "properties": "[\"light_armor\"]",
+    "bonus_value": "11 + dex",
+    "damage_type": null,
+    "weapon_type": null,
+    "defense_type": "light",
+    "enchant_bonus": null,
+    "related_cards": null,
+    "battle_profile": null,
+    "container_mode": null,
+    "related_actions": null,
+    "related_effects": null,
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null,
+    "id": "2692f0bb-7d5b-40d3-9ade-27a1f6be3655",
+    "card_number": "CARD-0249",
+    "name": "Кожаный доспех",
+    "name_en": null,
+    "description": "Ваша скрытая атака наносит на 1 урона больше.",
+    "detailed_description": null,
+    "source": null,
+    "deleted_at": null,
+    "support": {
+      "status": "verified_mechanical",
+      "mechanics_locked": true,
+      "content_hash": "sha256:unchanged-original-hash",
+      "dependency_hash": "sha256:unchanged-dependencies"
+    },
+    "legacy_tags": [
+      "frozen"
+    ],
+    "price": "999",
+    "updated_at": "2026-09-24T00:00:00Z"
+  },
+  {
+    "slot": "body",
+    "type": "chest",
+    "range": null,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": null,
+    "attunement": null,
+    "bonus_type": "defense",
+    "properties": "[\"light_armor\"]",
+    "bonus_value": "10 + dex",
+    "damage_type": null,
+    "weapon_type": null,
+    "defense_type": "light",
+    "enchant_bonus": null,
+    "related_cards": null,
+    "battle_profile": null,
+    "container_mode": null,
+    "related_actions": null,
+    "related_effects": null,
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null,
+    "id": "6b8399f8-4a60-42e1-b522-f7c156c8d5cf",
+    "card_number": "CARD-0778",
+    "name": "Стёганый доспех",
+    "name_en": null,
+    "description": "Описание эффекта",
+    "detailed_description": null,
+    "source": null,
+    "deleted_at": null,
+    "support": {
+      "status": "verified_mechanical",
+      "mechanics_locked": true,
+      "content_hash": "sha256:unchanged-original-hash",
+      "dependency_hash": "sha256:unchanged-dependencies"
+    },
+    "legacy_tags": [
+      "frozen"
+    ],
+    "price": "999",
+    "updated_at": "2026-09-24T00:00:00Z"
+  },
+  {
+    "slot": null,
+    "type": "potion",
+    "range": null,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": {
+      "effects": [
+        {
+          "who": "target",
+          "result": [
+            {
+              "kind": "healing",
+              "amount": "2d4+2"
+            }
+          ],
+          "resolution": "auto"
+        }
+      ],
+      "targeting": {
+        "shape": "single",
+        "domain": "actor",
+        "range_ft": 5,
+        "max_targets": 1,
+        "min_targets": 1,
+        "actor_targets": true,
+        "allowed_relations": [
+          "self",
+          "ally"
+        ],
+        "requires_line_of_sight": false
+      },
+      "activation": {
+        "cost": [
+          {
+            "resource": "bonus_action"
+          },
+          {
+            "amount": 1,
+            "resource": "self_item"
+          }
+        ],
+        "mode": "active",
+        "while": "carried"
+      },
+      "object_size": "tiny"
+    },
+    "attunement": null,
+    "bonus_type": null,
+    "properties": "[\"consumable\",\"single_use\"]",
+    "bonus_value": null,
+    "damage_type": null,
+    "weapon_type": null,
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": null,
+    "battle_profile": null,
+    "container_mode": null,
+    "related_actions": null,
+    "related_effects": null,
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null,
+    "id": "1a15acec-a0f1-4424-a92f-50afeab5a827",
+    "card_number": "CARD-0839",
+    "name": "Малое зелье лечения",
+    "name_en": null,
+    "description": ":bonus_action:: Исцелиться на [healing]2к4+2:healing:[/healing]",
+    "detailed_description": null,
+    "source": null,
+    "deleted_at": null,
+    "support": {
+      "status": "verified_mechanical",
+      "mechanics_locked": true,
+      "content_hash": "sha256:unchanged-original-hash",
+      "dependency_hash": "sha256:unchanged-dependencies"
+    },
+    "legacy_tags": [
+      "frozen"
+    ],
+    "price": "999",
+    "updated_at": "2026-09-24T00:00:00Z"
+  },
+  {
+    "slot": "cloak",
+    "type": "cloak",
+    "range": null,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": {
+      "effects": [
+        {
+          "result": [
+            {
+              "op": "add",
+              "kind": "modifier",
+              "value": "+1",
+              "applies_to": {
+                "roll": "ac"
+              }
+            },
+            {
+              "op": "add",
+              "kind": "modifier",
+              "value": "+1",
+              "applies_to": {
+                "roll": "saving_throw"
+              }
+            }
+          ],
+          "resolution": "auto"
+        }
+      ],
+      "activation": {
+        "mode": "passive",
+        "while": "equipped"
+      }
+    },
+    "attunement": null,
+    "bonus_type": null,
+    "properties": "[\"cloak\"]",
+    "bonus_value": null,
+    "damage_type": null,
+    "weapon_type": null,
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": null,
+    "battle_profile": null,
+    "container_mode": null,
+    "related_actions": null,
+    "related_effects": null,
+    "requires_attunement": true,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null,
+    "id": "e14788df-ab69-4e0e-9b43-5fdd783fd919",
+    "card_number": "CARD-0548",
+    "name": "Плащ защиты",
+    "name_en": null,
+    "description": "+1 к защите и спасброскам",
+    "detailed_description": null,
+    "source": null,
+    "deleted_at": null,
+    "support": {
+      "status": "verified_mechanical",
+      "mechanics_locked": true,
+      "content_hash": "sha256:unchanged-original-hash",
+      "dependency_hash": "sha256:unchanged-dependencies"
+    },
+    "legacy_tags": [
+      "frozen"
+    ],
+    "price": "999",
+    "updated_at": "2026-09-24T00:00:00Z"
+  }
+]

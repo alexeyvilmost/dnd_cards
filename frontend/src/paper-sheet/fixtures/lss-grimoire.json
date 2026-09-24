@@ -1,0 +1,51 @@
+[
+  {
+    "name": "BOH QA — Светлячок",
+    "type": "spell",
+    "system": {
+      "description": {
+        "value": "Тестовое заклинание: создаёт синий свет. Проверяем перенос кириллицы, <угловых скобок> и формулы 1d4 + @mod.\nВторая строка сохраняется."
+      },
+      "source": {
+        "book": "HB"
+      },
+      "activation": {
+        "type": "bonus",
+        "cost": 1,
+        "condition": ""
+      },
+      "duration": {
+        "units": "inst"
+      },
+      "target": {
+        "units": "ft"
+      },
+      "range": {
+        "value": null,
+        "long": null,
+        "units": "sight"
+      },
+      "actionType": "util",
+      "level": 0,
+      "school": "evo"
+    },
+    "classes": [
+      "artificer",
+      "bard",
+      "barbarian",
+      "cleric",
+      "druid",
+      "fighter",
+      "monk",
+      "paladin",
+      "ranger",
+      "rogue",
+      "sorcerer",
+      "warlock",
+      "wizard"
+    ],
+    "_id": "6ab56fbce8ac8e090a3b97a4",
+    "createdAt": "2026-09-24T18:45:16.656Z",
+    "updatedAt": "2026-09-24T18:45:16.656Z"
+  }
+]

@@ -6,8 +6,11 @@ import type {ForgeCharacterPreview} from '../character/types';
 import {roguelikeApi} from '../roguelike/api';
 import {useCombatDialogFocus} from './useCombatDialogFocus';
 import './CharacterTemplateLibrary.css';
+import RunCharacterIdentity from './RunCharacterIdentity';
 
-export default function CharacterTemplateLibrary({forRun = false}: {forRun?: boolean}) {
+export default function CharacterTemplateLibrary({forRun = false, runSelection}: {forRun?: boolean; runSelection?: {
+  selectedIds: string[]; full: boolean; busy: boolean; onToggle: (template: CharacterTemplate) => void;
+}}) {
   const navigate = useNavigate();
   const [templates, setTemplates] = useState<CharacterTemplate[]>([]);
   const [canManage, setCanManage] = useState(false);
@@ -56,13 +59,22 @@ export default function CharacterTemplateLibrary({forRun = false}: {forRun?: boo
     } catch (e) {setError(characterV3ErrorMessage(e, 'Не удалось сохранить шаблон'));}
     finally {setBusy(false);}
   };
-  return <section className="character-template-library">
-    <h2>{forRun ? 'Начать за пресет' : 'Библиотека шаблонов'}</h2>
-    <p>Общие готовые листы. Копия с выбранным именем принадлежит вам; оригинал шаблона не изменяется.</p>
+  return <section className={`character-template-library${forRun ? ' character-template-library--run' : ''}`}>
+    {forRun ? <h3>Пресеты</h3> : <h2>Библиотека шаблонов</h2>}
+    {!forRun && <p>Общие готовые листы. Копия с выбранным именем принадлежит вам; оригинал шаблона не изменяется.</p>}
     {loading && <p>Загрузка шаблонов…</p>}
     {error && <p role="alert">{error}</p>}
-    <div className="character-template-grid">
-      {templates.filter(t => !forRun || t.preset_key).map(template => <article className="roguelike-card" key={template.id}>
+    <div className={forRun ? 'run-preset-list' : 'character-template-grid'}>
+      {templates.filter(t => !forRun || t.preset_key).map(template => forRun && runSelection ? <label key={template.id} className="run-preset-row">
+        <input type="checkbox" checked={runSelection.selectedIds.includes(template.id)}
+          disabled={runSelection.busy || (runSelection.full && !runSelection.selectedIds.includes(template.id))}
+          onChange={() => runSelection.onToggle(template)} />
+        <RunCharacterIdentity character={template.character} name={template.name} />
+      </label> : forRun ? <button key={template.id} type="button" className="run-preset-row"
+        onClick={() => {setSelected(template); setName(template.name); setCreatedCopy(null); setError('');}}>
+        <RunCharacterIdentity character={template.character} name={template.name} />
+        <span className="run-preset-arrow" aria-hidden="true">→</span>
+      </button> : <article className="roguelike-card" key={template.id}>
         {template.character.avatar_url && <img className="character-template-portrait" src={template.character.avatar_url} alt={template.name} />}
         <h3>{template.name}</h3><p>{template.description}</p>
         <p className="character-template-summary">Уровень {template.character.level} · Хиты {template.character.max_hp}</p>

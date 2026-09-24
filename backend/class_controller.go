@@ -1,10 +1,7 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -120,7 +117,7 @@ func (cc *ClassController) GetClass(c *gin.Context) {
 func (cc *ClassController) CreateClass(c *gin.Context) {
 	var req CreateClassRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		writeEntityCreateBindingError(c, "класс", err)
 		return
 	}
 	if req.Rarity == "" {
@@ -168,12 +165,7 @@ func (cc *ClassController) CreateClass(c *gin.Context) {
 		cl.Author = "Admin"
 	}
 	if err := cc.db.Create(&cl).Error; err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Класс с таким ID уже существует"})
-			return
-		}
-		log.Printf("Ошибка создания класса: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Ошибка создания класса: %v", err)})
+		writeEntityCreateDatabaseError(c, "класс", err)
 		return
 	}
 	c.JSON(http.StatusCreated, cl.ToClassResponse())

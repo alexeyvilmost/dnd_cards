@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { RefreshCw, ImagePlus } from 'lucide-react';
 import { imagesApi, type StandaloneImageRequest } from '../api/imagesApi';
 import ImageUploader from './ImageUploader';
+import { useEntityDetail } from '../contexts/entityDetail';
 
 // Общий блок смены изображения в детальном окне сущности (как у заклинаний):
 // превью + «Перегенерировать» (ИИ) + «Загрузить», с частичным PUT сущности.
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export default function EntityImageEditor({ entityId, initialUrl, persist, generateReq, renderPreview, onUpdated }: Props) {
+  const { readOnly = false } = useEntityDetail();
   const [imageUrl, setImageUrl] = useState(initialUrl);
   const [busy, setBusy] = useState<null | 'gen' | 'save'>(null);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +37,7 @@ export default function EntityImageEditor({ entityId, initialUrl, persist, gener
   }, [entityId, initialUrl]);
 
   const applyImage = async (url: string) => {
-    if (!url) return;
+    if (readOnly || !url) return;
     setBusy('save');
     setError(null);
     try {
@@ -52,7 +54,7 @@ export default function EntityImageEditor({ entityId, initialUrl, persist, gener
   };
 
   const handleGenerate = async () => {
-    if (!generateReq) return;
+    if (readOnly || !generateReq) return;
     setBusy('gen');
     setError(null);
     try {
@@ -68,6 +70,8 @@ export default function EntityImageEditor({ entityId, initialUrl, persist, gener
       setBusy(null);
     }
   };
+
+  if (readOnly) return <>{renderPreview(imageUrl)}</>;
 
   return (
     <>

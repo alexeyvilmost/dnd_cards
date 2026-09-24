@@ -8,6 +8,7 @@ export const entityTagsApi={
  create:async(name:string,description:string):Promise<EntityTag>=>(await apiClient.post('/api/entity-tags',{name,description})).data,
  get:async(type:TaggedEntityType,id:string):Promise<EntityTag[]>=>(await apiClient.get(`/api/entity-tags/${type}/${encodeURIComponent(id)}`)).data.tags,
  set:async(type:TaggedEntityType,id:string,tag_ids:string[])=>{await apiClient.put(`/api/entity-tags/${type}/${encodeURIComponent(id)}`,{tag_ids});bustPrefix('/api/');window.dispatchEvent(new Event('entity-tags-changed'));},
+ bulk:async(type:TaggedEntityType,entity_ids:string[],tag_ids:string[],operation:'add'|'remove'='add')=>{await apiClient.post('/api/entity-tags/bulk',{entity_type:type,entity_ids,tag_ids,operation});bustPrefix('/api/');window.dispatchEvent(new Event('entity-tags-changed'));},
 };
 export interface MerchantLevel {level:number;slots:number;magic_limit:number;uncommon_bp:number;rare_bp:number;epic_bp:number}
 export interface MerchantConfig {pool_tag:string;starting_tag:string;staple_tag:string;supplies_price:number;refresh_price:number;levels:MerchantLevel[]}

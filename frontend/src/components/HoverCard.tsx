@@ -17,6 +17,8 @@ interface HoverCardProps {
   className?: string;    // класс триггера
   onClick?: () => void;  // клик по триггеру (напр. открыть детальное окно)
   disabled?: boolean;
+  /** Passive selectors can show the canonical preview without opening nested dialogs. */
+  allowPin?: boolean;
 }
 
 function computePosition(trigger: { x: number; y: number }, card: { width: number; height: number }) {
@@ -33,14 +35,15 @@ function computePosition(trigger: { x: number; y: number }, card: { width: numbe
   return { left, top };
 }
 
-const HoverCard = ({ children, content, className, onClick, disabled = false }: HoverCardProps) => {
+const HoverCard = ({ children, content, className, onClick, disabled = false, allowPin = true }: HoverCardProps) => {
   const { pinModeActive } = usePinMode();
+  const pinned = allowPin && pinModeActive;
   const { disableHoverPreviews = false } = useEntityDetail();
   const hoverDisabled = disabled || disableHoverPreviews;
   const triggerRef = useRef<HTMLSpanElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const timer = useRef<number | null>(null);
-  const prevPin = useRef(pinModeActive);
+  const prevPin = useRef(pinned);
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
 
@@ -58,15 +61,15 @@ const HoverCard = ({ children, content, className, onClick, disabled = false }: 
   // Уход мыши: в обычном режиме закрываем; в режиме закрепления НЕ закрываем —
   // превью остаётся, пока курсор был на триггере (можно дойти до ссылок внутри).
   const handleLeave = useCallback(() => {
-    if (!pinModeActive) scheduleClose(90);
-  }, [pinModeActive, scheduleClose]);
+    if (!pinned) scheduleClose(90);
+  }, [pinned, scheduleClose]);
 
   // Закрываем «закреплённые» карточки при ВЫХОДЕ из режима (транзиция true→false),
   // не мешая обычным открытиям в обычном режиме.
   useEffect(() => {
-    if (prevPin.current && !pinModeActive) setOpen(false);
-    prevPin.current = pinModeActive;
-  }, [pinModeActive]);
+    if (prevPin.current && !pinned) setOpen(false);
+    prevPin.current = pinned;
+  }, [pinned]);
 
   // Позиционирование после монтирования карточки (когда известен её размер).
   useLayoutEffect(() => {
@@ -106,7 +109,7 @@ const HoverCard = ({ children, content, className, onClick, disabled = false }: 
             top: pos?.top ?? -9999,
             zIndex: 9999,
             // видимость превью не должна воровать курсор, пока не режим закрепления
-            pointerEvents: pinModeActive ? 'auto' : 'none',
+            pointerEvents: pinned ? 'auto' : 'none',
             visibility: pos ? 'visible' : 'hidden',
           }}
           onMouseEnter={openNow}

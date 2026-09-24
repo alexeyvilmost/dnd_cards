@@ -21,16 +21,15 @@ export default function EncounterList() {
   };
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto', color: '#e8e0d0' }}>
-      <h1 style={{ fontSize: 26, fontWeight: 700, color: '#d8b978' }}>Онлайн-бои</h1>
+    <div className="site-surface" style={{ maxWidth: 820, margin: '0 auto', padding: 28 }}>
+      <h1 className="site-heading" style={{ fontSize: 32 }}>Онлайн-бои</h1>
       <p style={{ color: '#a99f8b', fontSize: 14 }}>
         Общий стол боя в реальном времени: изменения видны всем участникам на разных устройствах без обновления страницы.
       </p>
       <div style={{ display: 'flex', gap: 8, margin: '12px 0 20px' }}>
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Название боя"
-          style={{ flex: 1, padding: '8px 10px', borderRadius: 6, border: '1px solid #6b5836', background: '#1c1813', color: '#e8e0d0' }} />
-        <button onClick={create} disabled={busy}
-          style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid #8a7320', background: '#2b2520', color: '#e8e0d0', cursor: 'pointer' }}>
+          className="site-control" style={{ flex: 1, minWidth: 0, padding: '8px 10px' }} />
+        <button onClick={create} disabled={busy} className="site-button site-button-primary">
           Создать бой
         </button>
       </div>
@@ -39,7 +38,7 @@ export default function EncounterList() {
           {encs.map((e) => (
             <Link key={e.id} to={`/encounter/${e.id}`} style={{
               display: 'flex', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 8,
-              border: '1px solid #3a332a', background: '#1c1813', color: '#e8e0d0', textDecoration: 'none',
+              border: '1px solid var(--site-line)', background: 'var(--site-bg)', color: 'var(--site-text)', textDecoration: 'none',
             }}>
               <span>{e.name}</span>
               <span style={{ color: '#a99f8b', fontSize: 13 }}>{(e.state?.combatants?.length ?? 0)} участн. · раунд {e.state?.round ?? 1}</span>

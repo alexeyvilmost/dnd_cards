@@ -210,7 +210,7 @@ function itemInstanceIssue(object: WorldObjectState): string | null {
   if ((object.heldByActorId === undefined) !== (object.heldInHand === undefined)
     || (object.heldByActorId !== undefined
       && (typeof object.heldByActorId !== 'string' || !object.heldByActorId.trim()
-        || !['main_hand', 'off_hand'].includes(object.heldInHand ?? '')
+        || !['main_hand', 'off_hand'].includes(object.heldInHand!)
         || object.carriedByActorId !== object.heldByActorId))) {
     return 'World object held identity must match its canonical carrier and hand';
   }

@@ -117,8 +117,13 @@ func registerCharacterTemplateRoutes(api *gin.RouterGroup, auth *AuthService, db
 			c.JSON(409, gin.H{"error": "шаблон содержит неверный подкласс"})
 			return
 		}
-		if err = db.Omit("User", "Group").Create(&character).Error; err != nil {
-			c.JSON(500, gin.H{"error": "не удалось скопировать шаблон"})
+		if err = db.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Omit("User", "Group").Create(&character).Error; err != nil {
+				return err
+			}
+			return grantOrdinaryCharacterItems(tx, character, character.Equipment, character.InventoryItems, canManageEntityTags(c))
+		}); err != nil {
+			writeCharacterRuntimeCommandError(c, err)
 			return
 		}
 		c.JSON(http.StatusCreated, character)

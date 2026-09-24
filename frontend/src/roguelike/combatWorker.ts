@@ -9,6 +9,7 @@ import {
   escapeActorGrapple, executeCombatAction, executeCombatRemoteManipulator, executeCombatTouchSpellThroughFamiliar,
   approachAndExecuteCombatAction,
   resolveCombatDeathSave,
+  finalizeCombatOutcome,
   moveCombatDancingLights, revealCombatMagicAura, moveActorAlongRoute, resolveD20Interrupt, resolvePlayerReaction,
   resolvePlayerShoveOutcome, resolvePlayerSavingThrow, resolveSoloCombatAlertSwap, resolveSoloCombatInterception,
   resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectCombatMovementMode, standActor,
@@ -193,5 +194,6 @@ export function stepRoguelikeCombat(
     state = runMonsterTurn(state, rng);
     if (canonicalSha256Sync(state) === canonicalSha256Sync(before)) throw new Error('ИИ не смог завершить ход');
   }
+  state = finalizeCombatOutcome(state);
   return {envelope: {...envelope, entropy: {...envelope.entropy, cursor: random.cursor}, state}, randomValues};
 }

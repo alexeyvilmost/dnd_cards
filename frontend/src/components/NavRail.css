@@ -6,10 +6,10 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 .navrail {
-  --nr-bg: #171310;
-  --nr-bg-2: #1f1a13;
-  --nr-surface: #241f18;
-  --nr-line: #6b5836;
+  --nr-bg: var(--site-bg, #101513);
+  --nr-bg-2: var(--site-panel, #17201b);
+  --nr-surface: var(--site-panel-raised, #202b23);
+  --nr-line: var(--site-line, #bfa6714a);
   --nr-line-soft: rgba(107, 88, 54, 0.35);
   --nr-accent: #d8b978;
   --nr-accent-dim: #c9a45f;

@@ -1,12 +1,9 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -170,7 +167,7 @@ func (sc *SpellController) GetSpell(c *gin.Context) {
 func (sc *SpellController) CreateSpell(c *gin.Context) {
 	var req CreateSpellRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		writeEntityCreateBindingError(c, "заклинание", err)
 		return
 	}
 
@@ -250,12 +247,7 @@ func (sc *SpellController) CreateSpell(c *gin.Context) {
 	}
 
 	if err := sc.db.Create(&spell).Error; err != nil {
-		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "UNIQUE constraint") {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Заклинание с таким ID уже существует"})
-			return
-		}
-		log.Printf("Ошибка создания заклинания: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Ошибка создания заклинания: %v", err)})
+		writeEntityCreateDatabaseError(c, "заклинание", err)
 		return
 	}
 

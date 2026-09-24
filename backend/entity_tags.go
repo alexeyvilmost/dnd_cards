@@ -73,9 +73,11 @@ func validateTaggedEntity(db *gorm.DB, kind, id string, lock bool) error {
 	return nil
 }
 func registerEntityTagRoutes(api *gin.RouterGroup, auth *AuthService, db *gorm.DB) {
-	api.GET("/entity-tag-members/:id", func(c *gin.Context) {
+	registerBulkEntityTagRoutes(api, auth, db)
+	api.GET("/entity-tag-members/:id", OptionalAuthMiddleware(auth), func(c *gin.Context) {
 		rows := []string{}
 		q := db.Model(&EntityTagAssignment{}).Where("tag_id::text=?", c.Param("id"))
+		q = q.Where("entity_type <> 'card' OR entity_id IN (?)", itemLibraryQuery(db, c).Select("cards.id::text"))
 		if kind := c.Query("type"); kind != "" {
 			q = q.Where("entity_type=?", kind)
 		}
@@ -122,8 +124,19 @@ func registerEntityTagRoutes(api *gin.RouterGroup, auth *AuthService, db *gorm.D
 		}
 		c.JSON(200, saved)
 	})
-	api.GET("/entity-tags/:type/:id", func(c *gin.Context) {
+	api.GET("/entity-tags/:type/:id", OptionalAuthMiddleware(auth), func(c *gin.Context) {
 		kind, id := c.Param("type"), c.Param("id")
+		if kind == "card" {
+			var count int64
+			if err := itemLibraryQuery(db, c).Where("cards.id::text = ?", id).Count(&count).Error; err != nil {
+				writeRoguelikeError(c, err)
+				return
+			}
+			if count == 0 {
+				c.JSON(404, gin.H{"error": "Сущность не найдена"})
+				return
+			}
+		}
 		if err := validateTaggedEntity(db, kind, id, false); err != nil {
 			writeRoguelikeError(c, err)
 			return

@@ -1,0 +1,22 @@
+.card-library { width: 100%; min-width: 0; }
+.library-rarities { display: flex; flex-wrap: wrap; gap: 8px 12px; min-width: 0; }
+.library-rarities legend { margin-bottom: 8px; font-size: .875rem; font-weight: 500; }
+.library-rarities label { display: flex; align-items: center; gap: 6px; font-size: .875rem; }
+.library-bulk-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.library-bulk-tags > .library-chrome-tag-control { flex-basis: 100%; min-width: 0; }
+.library-bulk-tags p { flex-basis: 100%; }
+.library-bulk-tags > [role=alert] { color: #f2a8a0; }
+.library-selectable { min-width: 0; }
+.library-selectable[data-selected=true] { outline: 3px solid #b78c34; outline-offset: 2px; border-radius: 8px; }
+.library-selection-checkbox { position: absolute; z-index: 2; top: 3px; left: 3px; display: flex; padding: 7px; background: var(--site-panel, #17201b); border: 1px solid var(--site-gold, #c9ad74); border-radius: 6px; cursor: pointer; }
+.library-selection-checkbox input { width: 18px; height: 18px; accent-color: var(--site-gold, #c9ad74); color-scheme: dark; }
+.library-chrome-filters { color: var(--site-text, #efe6d3); background-color: var(--site-panel, #17201b); border-color: var(--site-line, #bfa6714a); }
+.library-chrome-filters.lib-filters-sheet,
+.library-chrome-filters .lib-filters-head,
+.library-chrome-filters .lib-filters-foot { background-color: var(--site-panel, #17201b); border-color: var(--site-line, #bfa6714a); }
+.library-chrome-filters label,
+.library-chrome-filters .lib-filters-head > span { color: var(--site-text, #efe6d3); }
+.library-chrome-filters .input-field { color: var(--site-text, #efe6d3); background-color: var(--site-bg, #101513); border-color: var(--site-line, #bfa6714a); color-scheme: dark; }
+.library-chrome-filters .input-field:focus { border-color: var(--site-gold, #c9ad74); --tw-ring-color: #c9ad7445; }
+.library-chrome-filters .library-rarities input { accent-color: var(--site-gold, #c9ad74); color-scheme: dark; }
+.library-chrome-filters.lib-filters-sheet::before { background-color: var(--site-gold, #c9ad74); }

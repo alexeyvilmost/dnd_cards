@@ -33,6 +33,23 @@ func roguelikePartyMembers(run *RoguelikeRun) []roguelikePartyMember {
 	return party.Members
 }
 func roguelikePartySize(run *RoguelikeRun) int { return len(roguelikePartyMembers(run)) }
+
+func roguelikeOccupiedSources(runs []RoguelikeRun) []string {
+	seen := map[string]bool{}
+	for i := range runs {
+		for _, member := range roguelikePartyMembers(&runs[i]) {
+			if member.SourceCharacterID != uuid.Nil {
+				seen[member.SourceCharacterID.String()] = true
+			}
+		}
+	}
+	ids := make([]string, 0, len(seen))
+	for id := range seen {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	return ids
+}
 func roguelikeHasCharacter(run *RoguelikeRun, id uuid.UUID) bool {
 	for _, m := range roguelikePartyMembers(run) {
 		if m.CharacterID == id {

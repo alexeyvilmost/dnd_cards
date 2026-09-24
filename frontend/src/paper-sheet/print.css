@@ -1,0 +1,30 @@
+.ps-print-snapshot { position: absolute; left: -20000px; top: 0; width: 880px; background: white; }
+.ps-print-snapshot .paper-page { transform: none !important; overflow: hidden; }
+.ps-print-snapshot .ps-cog, .ps-print-snapshot .ps-row-add, .ps-print-snapshot .ps-row-remove,
+.ps-print-snapshot .ps-font-controls, .ps-print-snapshot .ps-note-heading button,
+.ps-print-snapshot .ps-attunement-label button, .ps-print-snapshot .ps-manage-coins,
+.ps-print-snapshot .ps-entity-field-tools, .ps-print-snapshot .ps-slots-edit,
+.ps-print-snapshot .ps-table-row-tools, .ps-print-snapshot .ps-portrait-remove,
+.ps-print-snapshot .ps-coin-manager, .ps-print-snapshot .ps-lss-preview,
+.ps-print-snapshot .ps-inline-textarea, .ps-print-snapshot .ps-inline-tools,
+.ps-print-snapshot .ps-note-line-measure, .ps-print-snapshot .ps-previous-notes,
+.ps-print-snapshot .ps-inventory-controls, .ps-print-snapshot .ps-autofill-status { display: none !important; }
+.ps-print-snapshot .ps-note-text, .ps-print-snapshot .ps-spell-table-body, .ps-print-snapshot .ps-inventory-rows { overflow: hidden; }
+.ps-print-snapshot .ps-note-line-active { display: block; outline: none; }
+.ps-print-snapshot .ps-note-line-print { display: block; visibility: visible; }
+.ps-print-snapshot .ps-inventory-equip, .ps-print-snapshot .ps-inventory-clear, .ps-print-snapshot .ps-equipment-slot > button { visibility: hidden; }
+.ps-print-snapshot .paper-page.ps-print-appendix { padding: 30px 48px; font: 15px/20px Arial, sans-serif; }
+.ps-print-appendix h2 { height: 44px; font: bold 18px/22px Arial, sans-serif !important; text-transform: none !important; }
+.ps-print-appendix p { margin: 0; height: 20px; white-space: pre; }
+.ps-print-appendix .ps-print-section-title { font-weight: bold; }
+.ps-lss-extra { max-width: 880px; margin: 20px auto; padding: 16px; border: 1px solid #ccc; }
+.ps-lss-extra section { margin: 12px 0; }
+.ps-lss-extra pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
+.ps-lss-preview { font-size: 8px !important; position: absolute; right: 2px; bottom: -1px; color: #53699a !important; }
+@media print {
+  body:has(> .ps-print-snapshot) > #root { display: none !important; }
+  body:has(> .ps-print-snapshot) > .ps-print-snapshot:not(#root) { display: block !important; position: static; width: 210mm; }
+  .ps-print-snapshot .paper-page { margin: 0 auto !important; break-after: page; break-inside: avoid; }
+  .ps-print-snapshot .paper-page:last-child { break-after: auto; }
+  .ps-lss-extra { display: none; }
+}

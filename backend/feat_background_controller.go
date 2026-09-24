@@ -1,11 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"regexp"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -111,7 +108,7 @@ func (fc *FeatController) GetFeat(c *gin.Context) {
 func (fc *FeatController) CreateFeat(c *gin.Context) {
 	var req CreateFeatRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		writeEntityCreateBindingError(c, "черту", err)
 		return
 	}
 	if req.Rarity == "" {
@@ -152,12 +149,7 @@ func (fc *FeatController) CreateFeat(c *gin.Context) {
 		f.Author = "Admin"
 	}
 	if err := fc.db.Create(&f).Error; err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Черта с таким ID уже существует"})
-			return
-		}
-		log.Printf("Ошибка создания черты: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Ошибка создания черты: %v", err)})
+		writeEntityCreateDatabaseError(c, "черту", err)
 		return
 	}
 	c.JSON(http.StatusCreated, f.ToFeatResponse())
@@ -341,7 +333,7 @@ func (bc *BackgroundController) GetBackground(c *gin.Context) {
 func (bc *BackgroundController) CreateBackground(c *gin.Context) {
 	var req CreateBackgroundRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		writeEntityCreateBindingError(c, "предысторию", err)
 		return
 	}
 	if req.Rarity == "" {
@@ -378,12 +370,7 @@ func (bc *BackgroundController) CreateBackground(c *gin.Context) {
 		b.Author = "Admin"
 	}
 	if err := bc.db.Create(&b).Error; err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Предыстория с таким ID уже существует"})
-			return
-		}
-		log.Printf("Ошибка создания предыстории: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Ошибка создания предыстории: %v", err)})
+		writeEntityCreateDatabaseError(c, "предысторию", err)
 		return
 	}
 	c.JSON(http.StatusCreated, b.ToBackgroundResponse())

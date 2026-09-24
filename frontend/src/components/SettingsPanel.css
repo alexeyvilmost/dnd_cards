@@ -2,3 +2,10 @@
 .audio-volume {display:grid;gap:8px;margin:18px 0;max-width:480px;}
 .audio-volume span {display:flex;justify-content:space-between;gap:16px;}
 .audio-volume input {width:100%;accent-color:#c8a35e;}
+.settings-site-page { padding: 30px; border: 1px solid var(--site-line); border-radius: 18px; background: var(--site-panel); box-shadow: 0 20px 60px #0003; color: var(--site-text); }
+.settings-site-page > h1, .settings-modal h2, .settings-panel h3 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; color: var(--site-text); }
+.settings-site-page > h1 { font-size: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--site-line); }
+.settings-modal { background: var(--site-panel, #17201b); color: var(--site-text, #efe6d3); border-color: var(--site-line, #bfa6714a); }
+.settings-panel-categories button { background: #ffffff03; border-color: var(--site-line); }
+.settings-panel-categories button:hover { background: #c9ad7410; border-color: var(--site-gold); }
+@media (max-width: 600px) { .settings-site-page { margin: 0 auto; padding: 20px; } }

@@ -1,6 +1,8 @@
 import {describe,it,expect,vi} from 'vitest';
 import {createWorld,type ActorState} from '../rules-core/domain';
-import {prepareCombatDeathSave,resolveCombatDeathSave,autoResolveSystemDecisions,advanceTurn,combatRollInfluences,executeCombatAction} from './engine';
+import {prepareCombatDeathSave,resolveCombatDeathSave,autoResolveSystemDecisions,advanceTurn,combatRollInfluences,executeCombatAction,finalizeCombatOutcome} from './engine';
+import {projectRoguelikePartyCombatPatch} from '../roguelike/combatInitialization';
+import type {ForgeCharacter} from '../character/types';
 import {emptyDeathSaves} from '../engine/deathSaves';
 import {type SoloCombatState} from './types';
 import {stepRoguelikeCombat} from '../roguelike/combatWorker';
@@ -42,7 +44,8 @@ describe('persisted combat death-save lifecycle',()=>{
   const state=setup();state.world.actors.hero.runtime.deathSaves={...emptyDeathSaves(),successes:kind==='stable'?2:0,failures:kind==='dead'?2:0};
   const held=prepareCombatDeathSave(state,rng(kind==='stable'?12:1));const result=resolveCombatDeathSave(held);
   expect(result.world.actors.hero.runtime.deathSaves?.[kind]).toBe(true);
-  const closed=resolveCombatDeathSave(result);expect(active(closed)).toBe('ally');expect(closed.pendingDeathSave).toBeUndefined();
+  const closed=resolveCombatDeathSave(result);expect(active(closed)).toBe(kind==='dead'?'hero':'ally');expect(closed.pendingDeathSave).toBeUndefined();
+  expect(closed.outcome).toBe(kind==='dead'?'defeat':'active');
  });
  it('stable and dead participants skip the turn without RNG',()=>{
   for(const key of ['stable','dead'] as const){const state=setup();state.world.actors.hero.runtime.deathSaves![key]=true;
@@ -87,5 +90,61 @@ describe('persisted combat death-save lifecycle',()=>{
     mechanics:{activation:{mode:'active',cost:[{resource:'action'}]},effects:[{resolution:'auto',who:'target',result:[{kind:'healing',amount:2}]}]}}];
   const result=executeCombatAction({state,actorId:'ally',actionId:id,targetIds:['hero'],rng:rng(10)});
   expect(result.world.actors.hero.runtime.hp.current).toBe(2);expect(result.world.actors.hero.runtime.deathSaves).toEqual(emptyDeathSaves());
+ });
+});
+
+describe('party combat conclusion',()=>{
+ it.each(['hero','ally'])('death of %s defeats the whole party, despite living allies',id=>{
+  const state=setup();state.world.actors[id].runtime.hp.current=0;
+  state.world.actors[id].runtime.deathSaves={...emptyDeathSaves(),failures:3,dead:true};
+  const before=JSON.stringify(state),next=finalizeCombatOutcome(state);
+  expect(next.outcome).toBe('defeat');expect(next.outcomeFinalized).toBe(true);
+  expect(next.world.actors[id].runtime.hp.current).toBe(0);
+  expect(next.world.actors[id==='hero'?'ally':'hero'].runtime.hp.current).toBeGreaterThan(0);
+  expect(JSON.stringify(state)).toBe(before);expect(finalizeCombatOutcome(next)).toBe(next);
+ });
+ it.each([false,true])('victory restores an unconscious survivor (stable=%s) and resets saves',stable=>{
+  const state=setup();state.world.actors.enemy.runtime.hp.current=0;
+  state.world.actors.hero.runtime.deathSaves={successes:stable?3:1,failures:2,stable,dead:false};
+  const next=finalizeCombatOutcome(state);
+  expect(next.outcome).toBe('victory');expect(next.world.actors.hero.runtime.hp.current).toBe(1);
+  expect(next.world.actors.hero.runtime.deathSaves).toEqual(emptyDeathSaves());
+  expect(next.world.actors.ally.runtime.hp.current).toBe(10);expect(next.world.actors.enemy.runtime.hp.current).toBe(0);
+  expect(next.log.at(-1)?.records?.[0]).toMatchObject({actorId:'hero',event:{type:'healing',amount:1}});
+  expect(finalizeCombatOutcome(structuredClone(next))).toEqual(next);
+ });
+ it('death wins over the last enemy dying; no resurrection even with an inconsistent dead flag',()=>{
+  const state=setup();state.world.actors.enemy.runtime.hp.current=0;
+  state.world.actors.hero.runtime.deathSaves={...emptyDeathSaves(),failures:3};
+  const next=finalizeCombatOutcome(state);expect(next.outcome).toBe('defeat');expect(next.world.actors.hero.runtime.hp.current).toBe(0);
+ });
+ it('no premature recovery while unconscious in an active encounter',()=>{
+  const state=setup();expect(finalizeCombatOutcome(state)).toEqual(state);
+ });
+ it('all stabilized survivors recover when the last enemy is gone',()=>{
+  const state=setup();state.world.actors.enemy.runtime.hp.current=0;
+  for(const id of ['hero','ally']) {state.world.actors[id].runtime.hp.current=0;state.world.actors[id].runtime.deathSaves={...emptyDeathSaves(),stable:true};}
+  const next=finalizeCombatOutcome(state);expect(next.outcome).toBe('victory');
+  expect(['hero','ally'].map(id=>next.world.actors[id].runtime.hp.current)).toEqual([1,1]);
+ });
+ it('held fatal save does not finish the encounter until confirmed, then recovers the surviving ally after acknowledgement',()=>{
+  const state=setup();state.world.actors.hero.runtime.deathSaves={...emptyDeathSaves(),failures:2};
+  state.world.actors.ally.runtime.hp.current=0;
+  const pending=prepareCombatDeathSave(state,rng(1));
+  expect(finalizeCombatOutcome(pending).outcome).toBe('active');
+  const confirmed=resolveCombatDeathSave(pending);expect(confirmed.outcome).toBe('defeat');
+  expect(finalizeCombatOutcome(confirmed).world.actors.ally.runtime.hp.current).toBe(0);
+  expect(confirmed.outcomeFinalized).toBeUndefined();
+  const done=resolveCombatDeathSave(confirmed);expect(done.outcomeFinalized).toBe(true);
+  expect(done.world.actors.ally.runtime.hp.current).toBe(1);expect(done.world.actors.hero.runtime.hp.current).toBe(0);
+ });
+ it('the worker commits recovery and mirrors it into every personal sheet',()=>{
+  const state=setup();state.world.actors.enemy.runtime.hp.current=0;
+  const hash=`sha256:${'b'.repeat(64)}`;
+  const result=stepRoguelikeCombat({schemaVersion:1,artifactHash:hash,entropy:{seed:'recovery',cursor:0},state},{type:'resume'},hash);
+  expect(result.randomValues).toEqual([]);expect(result.envelope.state.outcome).toBe('victory');
+  const chars=['hero','ally'].map(id=>({id,runtime_revision:0,turn_state:{}} as ForgeCharacter));
+  const projection=projectRoguelikePartyCombatPatch(result.envelope,chars);
+  expect(projection.patches.hero.current_hp).toBe(1);expect(projection.patches.ally.current_hp).toBe(10);
  });
 });

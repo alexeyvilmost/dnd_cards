@@ -120,6 +120,9 @@ describe('Protection reducer and checkpoint integrity', () => {
       ['shield mismatch', (_value, payload) => { payload.facts.protectorHoldingShield = false; }],
       ['reaction fact', (_value, payload) => { payload.facts.protectorReactionAvailable = false; }],
       ['reaction resource', (value) => { value.actors.protector.runtime.resources.reaction = 0; }],
+      ['missing reaction resource', (value) => {
+        delete value.actors.protector.runtime.resources.reaction;
+      }],
       ['duplicate effect', (value) => {
         value.actors.protector.runtime.activeEffects.push(protectionEffectEntry(effect()));
       }],

@@ -69,7 +69,7 @@ const CharactersForgeList = () => {
   };
 
   return (
-    <div className="forge">
+    <div className="forge characters-roster-page">
       <div className="forge-header sheet-header-bar">
         <Link to="/" className="sheet-back" aria-label="На главную">
           <ArrowLeft size={18} />
@@ -81,6 +81,11 @@ const CharactersForgeList = () => {
         </Link>
       </div>
       <div className="sheet-scroll">
+        <section className="characters-roster-intro" aria-labelledby="characters-roster-heading">
+          <span>ВАША КОЛЛЕКЦИЯ ГЕРОЕВ</span>
+          <h1 id="characters-roster-heading">Истории начинаются здесь.</h1>
+          <p>Создайте нового героя или продолжите приключение с теми, кто уже в пути.</p>
+        </section>
         {showTemplates && <CharacterTemplateLibrary />}
         {loading && <p className="forge-note">Загрузка…</p>}
         {error && <p className="issues">{error}</p>}
@@ -90,7 +95,7 @@ const CharactersForgeList = () => {
             <Link to="/character-forge" className="forge-btn">Создать первого</Link>
           </div>
         )}
-        <div className="forge-grid" style={{ maxWidth: 900, margin: '0 auto' }}>
+        <div className="forge-grid characters-roster-grid">
           {chars.map((c) => (
             <div key={c.id} className="entity-card forge-char-card">
               <Link to={`/characters-v3/${c.id}`} className="forge-char-card-link">

@@ -21,6 +21,7 @@ import { PinModeProvider } from './hooks/usePinMode';
 import { EntityDetailProvider } from './components/EntityDetailProvider';
 import { CharacterFormulaRoot } from './contexts/CharacterFormulaContext';
 import Layout from './components/Layout';
+import AuthenticatedSectionGate from './components/AuthenticatedSectionGate';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from './pages/NotFound';
 import MobileSuggestion from './mobile/MobileSuggestion';
@@ -29,6 +30,7 @@ import CharacterV3AccessNotice from './components/CharacterV3AccessNotice';
 // Ленивая загрузка страниц (code-splitting по роутам) — уменьшает основной чанк.
 const Settings = lazy(() => import('./pages/Settings'));
 const CardLibrary = lazy(() => import('./pages/CardLibrary'));
+const HomePage = lazy(() => import('./pages/HomePage'));
 const CardCreator = lazy(() => import('./pages/CardCreator'));
 const CardExport = lazy(() => import('./pages/CardExport'));
 const WeaponTemplates = lazy(() => import('./pages/WeaponTemplates'));
@@ -44,6 +46,7 @@ const InventoryDetail = lazy(() => import('./pages/InventoryDetail'));
 const AddItemToInventory = lazy(() => import('./pages/AddItemToInventory'));
 const CharacterForge = lazy(() => import('./pages/CharacterForge'));
 const CharacterSheetMVP = lazy(() => import('./pages/CharacterSheetMVP'));
+const PaperSheetEntry = lazy(() => import('./pages/PaperSheetEntry'));
 const CharactersForgeList = lazy(() => import('./pages/CharactersForgeList'));
 const InitiativeTracker = lazy(() => import('./pages/InitiativeTracker'));
 const CardTypeSelection = lazy(() => import('./pages/CardTypeSelection'));
@@ -102,6 +105,8 @@ function App() {
   const location = useLocation();
   const isRulesLab = location.pathname === '/rules-lab'
     || location.pathname.startsWith('/rules-lab/');
+  const isPaperSheet = /^\/paper-sheet(?:\/[^/]+)?\/?$/.test(location.pathname);
+  const isHome = location.pathname === '/';
   const [conditionsReady, setConditionsReady] = useState(false);
   const [conditionAuthority, setConditionAuthority] = useState<ConditionLoadResult | null>(null);
   const conditionLoadRef = useRef<ReturnType<typeof loadConditions> | null>(null);
@@ -110,7 +115,7 @@ function App() {
   // автоматически повторяет bootstrap. Временный cold start backend не должен
   // оставлять вкладку в offline-режиме до ручной перезагрузки.
   useEffect(() => {
-    if (isRulesLab) return undefined;
+    if (isRulesLab || isPaperSheet || isHome) return undefined;
     let active = true;
     let retryTimer: number | undefined;
     setConditionsReady(false);
@@ -147,7 +152,7 @@ function App() {
       active = false;
       if (retryTimer !== undefined) window.clearTimeout(retryTimer);
     };
-  }, [isRulesLab]);
+  }, [isRulesLab, isPaperSheet, isHome]);
 
   // Acceptance lab deliberately has no API/auth dependency or application-wide providers.
   if (isRulesLab) {
@@ -162,13 +167,35 @@ function App() {
     );
   }
 
+  // The paper editor has its own document storage, independent of game-rule authority.
+  // Reuse the catalog's previews and detail host without bootstrapping game rules.
+  if (isPaperSheet) {
+    return (
+      <AuthProvider>
+        <ErrorBoundary resetKey={location.pathname}>
+          <CharacterFormulaRoot>
+            <PinModeProvider>
+              <EntityDetailProvider readOnly>
+                <Suspense fallback={<div style={{ padding: '60px 24px', textAlign: 'center' }}>Загрузка листа…</div>}>
+                  <Routes>
+                    <Route path="/paper-sheet/:id?" element={<Layout><PaperSheetEntry /></Layout>} />
+                  </Routes>
+                </Suspense>
+              </EntityDetailProvider>
+            </PinModeProvider>
+          </CharacterFormulaRoot>
+        </ErrorBoundary>
+      </AuthProvider>
+    );
+  }
+
   const withRulesAuthority = (children: ReactNode) => (
     <RulesAuthorityBoundary ready={conditionsReady}>{children}</RulesAuthorityBoundary>
   );
 
   return (
     <>
-    {conditionAuthority?.mode === 'offline_fixture' && (
+    {!isHome && conditionAuthority?.mode === 'offline_fixture' && (
       <div
         role="status"
         data-testid="offline-rules-authority"
@@ -205,12 +232,12 @@ function App() {
         {/* CharacterV3 хранит личные листы/журналы и требует валидную сессию. */}
         <Route path="/character-forge" element={<ProtectedRoute>{withRulesAuthority(<CharacterForge />)}</ProtectedRoute>} />
         <Route path="/character-forge/:id" element={<ProtectedRoute>{withRulesAuthority(<CharacterForge />)}</ProtectedRoute>} />
-        <Route path="/characters-forge" element={<ProtectedRoute><CharactersForgeList /></ProtectedRoute>} />
+        <Route path="/characters-forge" element={<AuthenticatedSectionGate section="characters"><CharactersForgeList /></AuthenticatedSectionGate>} />
         <Route path="/spell/:id" element={<SpellPage />} />
         <Route path="/characters-v3/:id" element={<ProtectedRoute>{withRulesAuthority(<CharacterSheetMVP />)}</ProtectedRoute>} />
         <Route path="/characters-v3/:id/combat" element={<ProtectedRoute>{withRulesAuthority(<SoloCombatPage />)}</ProtectedRoute>} />
-        <Route path="/roguelike" element={<ProtectedRoute>{withRulesAuthority(<Layout><RoguelikePage /></Layout>)}</ProtectedRoute>} />
-        <Route path="/roguelike/:id" element={<ProtectedRoute>{withRulesAuthority(<Layout><RoguelikePage /></Layout>)}</ProtectedRoute>} />
+        <Route path="/roguelike" element={<AuthenticatedSectionGate section="runs">{withRulesAuthority(<Layout><RoguelikePage /></Layout>)}</AuthenticatedSectionGate>} />
+        <Route path="/roguelike/:id" element={<AuthenticatedSectionGate section="runs">{withRulesAuthority(<Layout><RoguelikePage /></Layout>)}</AuthenticatedSectionGate>} />
 
         {/* Отдельный мобильный интерфейс игрока */}
         <Route path="/m" element={<Navigate to="/m/characters" replace />} />
@@ -223,13 +250,8 @@ function App() {
         <Route path="/m/characters/:id/add/:type" element={<ProtectedRoute>{withRulesAuthority(<MobileEntityCatalog />)}</ProtectedRoute>} />
 
         {/* Защищенные маршруты */}
-        <Route path="/" element={
-          <ProtectedRoute>
-            <Layout>
-              <CardLibrary />
-            </Layout>
-          </ProtectedRoute>
-        } />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/library" element={<Layout><CardLibrary /></Layout>} />
         <Route path="/docs/mechanics" element={
           <ProtectedRoute>
             <Layout>
@@ -414,7 +436,7 @@ function App() {
         } />
 
         <Route path="/monsters" element={
-          <ProtectedRoute><Layout><MonsterLibrary /></Layout></ProtectedRoute>
+          <Layout><MonsterLibrary /></Layout>
         } />
         <Route path="/monster-forge" element={
           <ProtectedRoute><Layout><MonsterCreator /></Layout></ProtectedRoute>

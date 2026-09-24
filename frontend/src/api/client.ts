@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { cached, bustPrefix } from './apiCache';
 import { readPersistedAuthToken, signalUnauthorized } from './authSession';
+import { cachedItemRead } from './ownedItemCache';
 import { shouldAttachAuthToken } from './authPolicy';
 import {
   isTransientReadFailure,
@@ -88,7 +89,13 @@ function catalogListCacheKey(path: string, params?: object): string {
  * private response shape.
  */
 export class ApiRequestError extends Error {
-  constructor(message: string, readonly status?: number) {
+  constructor(
+    message: string,
+    readonly status?: number,
+    readonly code?: string,
+    readonly field?: string,
+    readonly requestId?: string,
+  ) {
     super(message);
     this.name = 'ApiRequestError';
   }
@@ -136,17 +143,26 @@ apiClient.interceptors.response.use(
     if (status === 401) {
       signalUnauthorized();
     }
-    const responseMessage = typeof error.response?.data?.error === 'string'
-      ? error.response.data.error
+    const responseData = error.response?.data;
+    const responseMessage = typeof responseData?.error === 'string'
+      ? responseData.error
       : null;
     throw new ApiRequestError(
       responseMessage || 'Произошла ошибка при выполнении запроса',
       status,
+      typeof responseData?.code === 'string' ? responseData.code : undefined,
+      typeof responseData?.field === 'string' ? responseData.field : undefined,
+      typeof responseData?.request_id === 'string' ? responseData.request_id : undefined,
     );
   }
 );
 
 export const cardsApi = {
+  // Runtime-only additions; CardLibrary must continue to use the public list.
+  getMyItemCatalog: async (params: { page: number; limit: number; fields: 'list' }): Promise<CardsResponse> => {
+    const response = await apiClient.get<CardsResponse>('/api/my-item-catalog', { params });
+    return response.data;
+  },
   // Получение списка карточек
   getCards: async (params?: {
     page?: number;
@@ -160,9 +176,8 @@ export const cardsApi = {
     template_only?: boolean;
     exclude_template_only?: boolean;
     fields?: 'list';
-  }): Promise<CardsResponse> => cached(
+  }): Promise<CardsResponse> => cachedItemRead(
     catalogListCacheKey('/api/cards', params),
-    60_000,
     async () => {
       const response = await apiClient.get<CardsResponse>('/api/cards', { params });
       return response.data;
@@ -171,7 +186,7 @@ export const cardsApi = {
 
   // Получение карточки по ID
   getCard: async (id: string): Promise<Card> =>
-    cached(`/api/cards/${id}`, 60000, async () => {
+    cachedItemRead(`/api/cards/${id}`, async () => {
       const response = await apiClient.get<Card>(`/api/cards/${id}`);
       return response.data;
     }),

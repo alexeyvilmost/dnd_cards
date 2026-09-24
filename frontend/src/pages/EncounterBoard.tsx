@@ -228,9 +228,9 @@ export default function EncounterBoard() {
   if (error) return <div style={{ padding: 24, color: '#c0392b' }}>{error}</div>;
 
   return (
-    <div style={{ maxWidth: 760, margin: '0 auto', color: '#e8e0d0' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#d8b978', margin: 0 }}>{meta?.name ?? 'Бой'}</h1>
+    <div style={{ maxWidth: 960, margin: '0 auto', color: 'var(--site-text)' }}>
+      <div className="site-page-head" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+        <h1 className="site-heading" style={{ fontSize: 30, margin: 0 }}>{meta?.name ?? 'Бой'}</h1>
         <span aria-description={connected ? 'подключено (realtime)' : 'переподключение…'} style={{
           width: 10, height: 10, borderRadius: '50%', background: connected ? '#3fb950' : '#c9a227',
         }} />
@@ -362,7 +362,7 @@ function RowActions({ onDamage, onHeal, onCondition }: { onDamage: (n: number) =
   );
 }
 
-const btn: React.CSSProperties = { padding: '5px 10px', borderRadius: 6, border: '1px solid #6b5836', background: '#2b2520', color: '#e8e0d0', fontSize: 13, cursor: 'pointer' };
-const btnGhost: React.CSSProperties = { padding: '4px 8px', borderRadius: 6, border: '1px solid #4a4237', background: 'transparent', color: '#a99f8b', fontSize: 12, cursor: 'pointer' };
-const input: React.CSSProperties = { padding: '5px 8px', borderRadius: 6, border: '1px solid #6b5836', background: '#1c1813', color: '#e8e0d0', fontSize: 13 };
+const btn: React.CSSProperties = { padding: '5px 10px', borderRadius: 6, border: '1px solid var(--site-line)', background: 'var(--site-panel-raised)', color: 'var(--site-text)', fontSize: 13, cursor: 'pointer' };
+const btnGhost: React.CSSProperties = { padding: '4px 8px', borderRadius: 6, border: '1px solid var(--site-line)', background: 'transparent', color: 'var(--site-muted)', fontSize: 12, cursor: 'pointer' };
+const input: React.CSSProperties = { padding: '5px 8px', borderRadius: 6, border: '1px solid var(--site-line)', background: 'var(--site-panel)', color: 'var(--site-text)', fontSize: 13 };
 const tag: React.CSSProperties = { fontSize: 11, padding: '1px 6px', borderRadius: 4, background: '#2b2520', color: '#c9b98a' };

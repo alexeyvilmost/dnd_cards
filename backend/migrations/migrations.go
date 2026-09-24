@@ -1487,6 +1487,11 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		{Version: "258_entity_tags_shop", Description: "Registered entity tags, archived legacy metadata, tag-driven run pools and merchant settings", Up: createEntityTags258, Down: retainCharacterTemplates250},
 		{Version: "259_merchant_copper", Description: "Unit ammunition prices and copper-denominated merchant offers", Up: merchantCopper259, Down: retainCharacterTemplates250},
 		{Version: "260_audio_presentations", Description: "Audio library and entity sound metadata independent of certified mechanics", Up: createAudio260, Down: retainCharacterTemplates250},
+		{Version: "261_card_price_contract", Description: "Align numeric card prices with the public editor contract", Up: alignCardPriceContract261, Down: func(db *sql.DB) error { return nil }},
+		{Version: itemSourceClassification262Version, Description: "Classify reviewed PH equipment sources and seed player availability tag", Up: classifyItemSources262, Down: refuseItemSourceClassification262Down},
+		OAuth263Migration(),
+		{Version: "264_paper_documents", Description: "Persistent paper documents with private ownership and anonymous edit links", Up: addPaperDocuments264, Down: func(db *sql.DB) error { return nil }},
+		{Version: "265_owned_item_grants", Description: "Preserve existing item access for owned sheets separately from the public library", Up: AddOwnedItemGrants265, Down: RefuseOwnedItemGrants265Down},
 		// Здесь можно добавлять новые миграции
 	}
 }

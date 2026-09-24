@@ -1,10 +1,7 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -107,7 +104,7 @@ func (rc *RaceController) GetRace(c *gin.Context) {
 func (rc *RaceController) CreateRace(c *gin.Context) {
 	var req CreateRaceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		writeEntityCreateBindingError(c, "вид", err)
 		return
 	}
 	if req.Rarity == "" {
@@ -147,12 +144,7 @@ func (rc *RaceController) CreateRace(c *gin.Context) {
 		r.Author = "Admin"
 	}
 	if err := rc.db.Create(&r).Error; err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Вид с таким ID уже существует"})
-			return
-		}
-		log.Printf("Ошибка создания вида: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Ошибка создания вида: %v", err)})
+		writeEntityCreateDatabaseError(c, "вид", err)
 		return
 	}
 	c.JSON(http.StatusCreated, r.ToRaceResponse())

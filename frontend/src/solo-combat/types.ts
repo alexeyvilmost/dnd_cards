@@ -371,6 +371,8 @@ export interface SoloCombatState {
   /** Alert owners waiting to accept or decline their post-Initiative swap before turn one starts. */
   pendingAlertSwapActorIds?: string[];
   outcome: 'active' | 'victory' | 'defeat';
+  /** All terminal choices settled and survivor recovery committed. */
+  outcomeFinalized?: true;
 }
 
 export type CombatMovementMode = 'walk' | 'climb' | 'fly' | 'swim' | 'burrow';

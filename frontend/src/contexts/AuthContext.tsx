@@ -8,6 +8,7 @@ import {
   readPersistedAuthToken,
 } from '../api/authSession';
 import type { User, AuthRequest, RegisterRequest } from '../types';
+import { completeOAuth, hasOAuthCallback } from '../auth/oauth';
 
 interface AuthContextType {
   user: User | null;
@@ -17,6 +18,8 @@ interface AuthContextType {
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  oauthError: string | null;
+  oauthReturnPath: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +32,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [oauthError, setOAuthError] = useState<string | null>(null);
+  const [oauthReturnPath, setOAuthReturnPath] = useState<string | null>(null);
+  const [oauthCallback] = useState(() => hasOAuthCallback());
 
   // A persisted token is only a bootstrap candidate.  The server profile is
   // authoritative, so stale JWTs and stale/forged cached users never make the
@@ -49,6 +55,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     window.addEventListener(AUTH_UNAUTHORIZED_EVENT, clearAuthState);
 
     const bootstrap = async () => {
+      if (oauthCallback) {
+        clearApiCache();
+        clearPersistedAuthSession();
+        try {
+          const result = await completeOAuth();
+          if (!active || invalidated) return;
+          clearApiCache();
+          persistAuthSession(result.token, result.user);
+          setToken(result.token);
+          setUser(result.user);
+          setOAuthReturnPath(result.return_path);
+        } catch (error) {
+          if (active) setOAuthError(error instanceof Error ? error.message : 'Ошибка входа');
+        } finally {
+          if (active) setIsLoading(false);
+        }
+        return;
+      }
       const savedToken = readPersistedAuthToken();
       if (!savedToken) {
         clearPersistedAuthSession();
@@ -79,10 +103,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       active = false;
       window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, clearAuthState);
     };
-  }, []);
+  }, [oauthCallback]);
 
   const login = async (data: AuthRequest) => {
     const response = await authApi.login(data);
+    setOAuthError(null);
+    setOAuthReturnPath(null);
     clearApiCache();
     setToken(response.token);
     setUser(response.user);
@@ -97,6 +123,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
+    setOAuthError(null);
+    setOAuthReturnPath(null);
     clearApiCache();
     setToken(null);
     setUser(null);
@@ -111,6 +139,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     isAuthenticated: !!user && !!token,
+    oauthError,
+    oauthReturnPath,
   };
 
   return (

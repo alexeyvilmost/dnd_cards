@@ -1,3 +1,4 @@
+import './UtilityPages.css';
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Grid3X3, List, Edit, Trash2 } from 'lucide-react';
@@ -110,16 +111,16 @@ const WeaponTemplates: React.FC = () => {
 
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="site-page-theme max-w-7xl mx-auto px-4 py-8">
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="text-lg">Загрузка шаблонов...</div>
         </div>
       ) : (
         <>
-          <div className="mb-8">
-            <h1 className="text-3xl font-fantasy font-bold text-gray-900 mb-4">Шаблоны оружия</h1>
-            <p className="text-gray-600">Выберите шаблон оружия для создания карты</p>
+          <div className="site-page-head mb-8">
+            <h1 className="site-heading text-3xl font-fantasy font-bold text-gray-900 mb-4">Шаблоны оружия</h1>
+            <p className="site-muted text-gray-600">Выберите шаблон оружия для создания карты</p>
           </div>
 
           {/* Фильтры */}
@@ -130,14 +131,14 @@ const WeaponTemplates: React.FC = () => {
                 placeholder="Поиск по названию..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="site-control w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div className="sm:w-64">
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="site-control w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Все категории</option>
                 {ITEM_TYPE_OPTIONS.map(category => (
@@ -152,9 +153,9 @@ const WeaponTemplates: React.FC = () => {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg border ${
+                className={`site-control p-2 rounded-lg border ${
                   viewMode === 'grid' 
-                    ? 'bg-blue-100 border-blue-300 text-blue-700' 
+                    ? 'utility-choice--selected bg-blue-100 border-blue-300 text-blue-700'
                     : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
                 }`}
                 aria-label="Сетка"
@@ -163,9 +164,9 @@ const WeaponTemplates: React.FC = () => {
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded-lg border ${
+                className={`site-control p-2 rounded-lg border ${
                   viewMode === 'list' 
-                    ? 'bg-blue-100 border-blue-300 text-blue-700' 
+                    ? 'utility-choice--selected bg-blue-100 border-blue-300 text-blue-700'
                     : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
                 }`}
                 aria-label="Список"
@@ -176,7 +177,7 @@ const WeaponTemplates: React.FC = () => {
           </div>
 
         {/* Счетчик результатов */}
-        <div className="mb-4 text-sm text-gray-600">
+        <div className="site-muted mb-4 text-sm text-gray-600">
           Найдено: {filteredTemplates.length} из {templates.length}
         </div>
 
@@ -219,7 +220,7 @@ const WeaponTemplates: React.FC = () => {
           </div>
         ) : (
           /* Список названий в три колонки */
-          <div className="relative">
+          <div className="utility-entity-island relative">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
               {filteredTemplates.map((template) => (
                 <div
@@ -340,8 +341,8 @@ const WeaponTemplates: React.FC = () => {
         )}
 
         {filteredTemplates.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-500 text-lg">
+          <div className="site-empty text-center py-12">
+            <div className="site-muted text-gray-500 text-lg">
               {searchTerm || selectedCategory ? 'Шаблоны не найдены' : 'Шаблоны не загружены'}
             </div>
           </div>

@@ -600,7 +600,13 @@ func (rc *RoguelikeController) List(c *gin.Context) {
 			runs[index].Character.AccessMode = characterV3AccessOwner
 		}
 	}
-	c.JSON(http.StatusOK, gin.H{"runs": runs})
+	// Availability must cover every active run, not just the last 50 displayed.
+	var activeRuns []RoguelikeRun
+	if err := rc.db.Select("character_id", "source_character_id", "party").Where("user_id = ? AND status = ?", userID, RoguelikeStatusActive).Find(&activeRuns).Error; err != nil {
+		writeRoguelikeError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"runs": runs, "unavailable_source_character_ids": roguelikeOccupiedSources(activeRuns)})
 }
 
 func (rc *RoguelikeController) Get(c *gin.Context) {

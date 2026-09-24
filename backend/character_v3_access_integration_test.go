@@ -233,12 +233,17 @@ func TestCharacterV3TokenIsRevokedWhenUserIsDeleted(t *testing.T) {
 func TestCharacterV3OwnerAndLegacyPublicAccessPolicy(t *testing.T) {
 	t.Setenv("JWT_SECRET", characterV3AccessTestSecret)
 	fixture := openCharacterV3AccessFixture(t)
+	if err := fixture.db.AutoMigrate(&Card{}, &EntityTag{}, &EntityTagAssignment{}); err != nil {
+		t.Fatal(err)
+	}
+	installOwnedItemAccess(t, fixture.db)
+	sword, rope := ownedTestCard(t, fixture.db, true), ownedTestCard(t, fixture.db, true)
 	ownerToken := fixture.token(t, fixture.owner)
 
 	created := performCharacterV3Request(t, fixture.router, http.MethodPost, "/api/characters-v3", ownerToken, map[string]any{
 		"name":            "Authenticated creation",
-		"equipment":       map[string]any{"main_hand": "card-sword"},
-		"inventory_items": []any{map[string]any{"card_id": "card-rope", "qty": 2}},
+		"equipment":       map[string]any{"main_hand": sword.ID.String()},
+		"inventory_items": []any{map[string]any{"card_id": rope.ID.String(), "qty": 2}},
 		"resources":       map[string]any{"spell_slot_1": 1},
 		"max_resources":   map[string]any{"spell_slot_1": 2},
 		"active_effects": []any{map[string]any{
@@ -260,7 +265,7 @@ func TestCharacterV3OwnerAndLegacyPublicAccessPolicy(t *testing.T) {
 	if createdCharacter.AccessMode != characterV3AccessOwner {
 		t.Fatalf("created access_mode=%q, want owner", createdCharacter.AccessMode)
 	}
-	if createdCharacter.Equipment == nil || (*createdCharacter.Equipment)["main_hand"] != "card-sword" ||
+	if createdCharacter.Equipment == nil || (*createdCharacter.Equipment)["main_hand"] != sword.ID.String() ||
 		createdCharacter.InventoryItems == nil || len(*createdCharacter.InventoryItems) != 1 ||
 		createdCharacter.Resources == nil || (*createdCharacter.Resources)["spell_slot_1"] != float64(1) ||
 		createdCharacter.ActiveEffects == nil || len(*createdCharacter.ActiveEffects) != 1 ||

@@ -4,6 +4,7 @@ import {entityTagsApi,merchantSettingsApi,tagError,type EntityTag,type TaggedEnt
 import {useSiteSettings} from '../settings';
 import './EntityTags.css';
 import EntitySoundEditor from '../audio/EntitySoundEditor';
+import {useEntityDetail} from '../contexts/entityDetail';
 
 export function NewTagForm({onCreated}:{onCreated:(tag:EntityTag)=>void}) {
  const [name,setName]=useState(''),[description,setDescription]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
@@ -31,20 +32,21 @@ function ItemRuleEditor({id}:{id:string}) {
 
 export default function EntityTags({type,id}:{type:TaggedEntityType;id:string}) {
  const {playerMode}=useSiteSettings();
+ const {readOnly=false}=useEntityDetail();
  const [selected,setSelected]=useState<EntityTag[]>([]),[catalog,setCatalog]=useState<EntityTag[]>([]),[canManage,setCanManage]=useState(false),[error,setError]=useState(''),[busy,setBusy]=useState(false),[search,setSearch]=useState('');
- useEffect(()=>{if(playerMode)return;let live=true;setError('');setSelected([]);Promise.all([entityTagsApi.get(type,id),entityTagsApi.list()]).then(([tags,all])=>{if(live){setSelected(tags);setCatalog(all.tags);setCanManage(all.can_manage)}}).catch(e=>{if(live)setError(tagError(e))});return()=>{live=false}},[type,id,playerMode]);
+ useEffect(()=>{if(playerMode)return;let live=true;setError('');setSelected([]);setCanManage(false);Promise.all([entityTagsApi.get(type,id),readOnly?Promise.resolve({tags:[],can_manage:false}):entityTagsApi.list()]).then(([tags,all])=>{if(live){setSelected(tags);setCatalog(all.tags);setCanManage(all.can_manage)}}).catch(e=>{if(live)setError(tagError(e))});return()=>{live=false}},[type,id,playerMode,readOnly]);
  if(playerMode)return null;
- const save=async(tags:EntityTag[])=>{const previous=selected;setSelected(tags);setBusy(true);setError('');try{await entityTagsApi.set(type,id,tags.map(t=>t.id))}catch(e){setSelected(previous);setError(tagError(e))}finally{setBusy(false)}};
+ const save=async(tags:EntityTag[])=>{if(readOnly)return;const previous=selected;setSelected(tags);setBusy(true);setError('');try{await entityTagsApi.set(type,id,tags.map(t=>t.id))}catch(e){setSelected(previous);setError(tagError(e))}finally{setBusy(false)}};
  const contentType=({card:'cards',action:'actions',effect:'effects',spell:'spells',feat:'feats',background:'backgrounds',race:'races',class:'classes',resource:'resources',variable:'variables',concept:'concepts',passive:'passives',monster:'monsters'} as const)[type];
  return <section className="entity-tags" aria-label="Теги сущности">
   <h3>Теги</h3><div className="entity-tag-chips">{selected.map(t=><Link key={t.id} to={type==='monster'?`/monsters?tag=${t.id}`:`/?type=${contentType}&tag=${t.id}`} aria-description={t.description}>{t.name}</Link>)}{!selected.length&&<span>Не назначены</span>}</div>
-  {canManage&&<details className="entity-tag-editor"><summary>Изменить теги</summary>
+  {!readOnly&&canManage&&<details className="entity-tag-editor"><summary>Изменить теги</summary>
    <label>Найти тег<input value={search} onChange={e=>setSearch(e.target.value)}/></label>
    <div className="entity-tag-options">{catalog.filter(t=>(t.name+' '+t.description).toLocaleLowerCase().includes(search.toLocaleLowerCase())).map(t=><label key={t.id}><input type="checkbox" disabled={busy} checked={selected.some(s=>s.id===t.id)} onChange={e=>void save(e.target.checked?[...selected,t]:selected.filter(s=>s.id!==t.id))}/><span>{t.name}{t.description&&<small>{t.description}</small>}</span></label>)}</div>
    <NewTagForm onCreated={tag=>{setCatalog(prev=>[...prev.filter(t=>t.id!==tag.id),tag]);void save([...selected.filter(t=>t.id!==tag.id),tag]);}}/>
   </details>}
-  {canManage&&type==='card'&&<ItemRuleEditor id={id}/>}
-  {canManage&&(type==='action'||type==='spell')&&<EntitySoundEditor type={type} id={id}/>}
+  {!readOnly&&canManage&&type==='card'&&<ItemRuleEditor id={id}/>}
+  {!readOnly&&canManage&&(type==='action'||type==='spell')&&<EntitySoundEditor type={type} id={id}/>}
   {error&&<p role="alert">{error}</p>}
  </section>;
 }

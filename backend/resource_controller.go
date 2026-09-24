@@ -99,7 +99,7 @@ func (rc *ResourceController) GetResource(c *gin.Context) {
 func (rc *ResourceController) CreateResource(c *gin.Context) {
 	var req CreateResourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса", "details": err.Error()})
+		writeEntityCreateBindingError(c, "ресурс", err)
 		return
 	}
 	if !validResourceID(req.ResourceID) {
@@ -121,7 +121,7 @@ func (rc *ResourceController) CreateResource(c *gin.Context) {
 		SortOrder:     req.SortOrder,
 	}
 	if err := rc.db.Create(&resource).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания ресурса", "details": err.Error()})
+		writeEntityCreateDatabaseError(c, "ресурс", err)
 		return
 	}
 	c.JSON(http.StatusCreated, resource)

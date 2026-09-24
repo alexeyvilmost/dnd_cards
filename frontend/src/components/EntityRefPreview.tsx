@@ -6,7 +6,9 @@ import type { CSSProperties } from 'react';
 import type { Card, Spell, Action, PassiveEffect, Concept, ResourceDefinition, Variable } from '../types';
 import type { EntityRefType } from './EntityRefRegistry';
 import { useEntityRef } from './EntityRefRegistry';
+import { useSiteSettings } from '../settings';
 import CardPreview from './CardPreview';
+import ItemPreview from './ItemPreview';
 import SpellPreview from './SpellPreview';
 import ActionPreview from './ActionPreview';
 import EffectPreview from './EffectPreview';
@@ -26,12 +28,13 @@ const pillStyle: CSSProperties = {
 
 const EntityRefPreview: React.FC<EntityRefPreviewProps> = ({ type, id }) => {
   const { entity, loading, error } = useEntityRef(type, id);
+  const asInterface = useSiteSettings().itemPreview === 'interface';
 
   if (loading) return <div style={pillStyle}>Загрузка…</div>;
   if (error || !entity) return <div style={{ ...pillStyle, color: '#e0a0a0' }}>Ссылка не найдена</div>;
 
   switch (type) {
-    case 'card': return <CardPreview card={entity as Card} disableHover />;
+    case 'card': return asInterface ? <ItemPreview card={entity as Card} disableHover /> : <CardPreview card={entity as Card} disableHover />;
     case 'spell': return <SpellPreview spell={entity as Spell} disableHover />;
     case 'action': return <ActionPreview action={entity as Action} disableHover />;
     case 'effect': return <EffectPreview effect={entity as PassiveEffect} disableHover />;

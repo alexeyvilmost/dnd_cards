@@ -1,3 +1,4 @@
+import './UtilityPages.css';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Plus, Package, User, Users, Edit, Trash2, Weight, Coins } from 'lucide-react';
@@ -93,7 +94,7 @@ const InventoryDetail: React.FC = () => {
       <div className="flex items-center justify-center min-h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Загрузка инвентаря...</p>
+          <p className="site-muted text-gray-600">Загрузка инвентаря...</p>
         </div>
       </div>
     );
@@ -102,10 +103,10 @@ const InventoryDetail: React.FC = () => {
   if (error || !inventory) {
     return (
       <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
+        <div className="site-page-head mb-8">
           <button
             onClick={() => navigate('/inventory')}
-            className="flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+            className="site-muted flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
           >
             <ArrowLeft size={20} className="mr-2" />
             Назад к инвентарям
@@ -131,10 +132,10 @@ const InventoryDetail: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
+      <div className="site-page-head mb-8">
         <button
           onClick={() => navigate('/inventory')}
-          className="flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+          className="site-muted flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
         >
           <ArrowLeft size={20} className="mr-2" />
           Назад к инвентарям
@@ -147,20 +148,20 @@ const InventoryDetail: React.FC = () => {
               ) : (
                 <Users size={24} className="text-green-600" />
               )}
-              <h1 className="text-3xl font-bold text-gray-900">{inventory.name}</h1>
+              <h1 className="site-heading text-3xl font-bold text-gray-900">{inventory.name}</h1>
             </div>
-            <p className="text-gray-600 text-lg">
+            <p className="site-muted text-gray-600 text-lg">
               {inventory.type === 'personal' ? 'Личный инвентарь' : 'Групповой инвентарь'}
             </p>
             {inventory.group && (
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="site-muted text-sm text-gray-500 mt-1">
                 Группа: {inventory.group.name}
               </p>
             )}
           </div>
           <Link
             to={`/inventory/${inventory.id}/add-item`}
-            className="btn-primary bg-blue-600 hover:bg-blue-700 flex items-center space-x-2"
+            className="site-button site-button-primary btn-primary bg-blue-600 hover:bg-blue-700 flex items-center space-x-2"
           >
             <Plus size={20} />
             <span>Добавить предмет</span>
@@ -170,36 +171,36 @@ const InventoryDetail: React.FC = () => {
 
       {/* Stats */}
       <div className="grid gap-6 md:grid-cols-3 mb-8">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="site-surface bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center">
             <Package className="h-8 w-8 text-blue-600" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Всего предметов</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="site-muted text-sm font-medium text-gray-600">Всего предметов</p>
+              <p className="site-label text-2xl font-bold text-gray-900">
                 {inventory.items.reduce((total, item) => total + item.quantity, 0)}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="site-surface bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center">
             <Weight className="h-8 w-8 text-green-600" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Общий вес</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="site-muted text-sm font-medium text-gray-600">Общий вес</p>
+              <p className="site-label text-2xl font-bold text-gray-900">
                 {formatWeight(getTotalWeight())}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="site-surface bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center">
             <Coins className="h-8 w-8 text-yellow-600" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Общая стоимость</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="site-muted text-sm font-medium text-gray-600">Общая стоимость</p>
+              <p className="site-label text-2xl font-bold text-gray-900">
                 {formatPrice(getTotalValue())}
               </p>
             </div>
@@ -208,26 +209,26 @@ const InventoryDetail: React.FC = () => {
       </div>
 
       {/* Items list */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="site-surface bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Предметы</h2>
+          <h2 className="site-heading text-lg font-semibold text-gray-900">Предметы</h2>
         </div>
         
         {inventory.items.length === 0 ? (
-          <div className="text-center py-12">
-            <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Инвентарь пуст</h3>
-            <p className="text-gray-600 mb-6">Добавьте предметы из библиотеки карточек</p>
+          <div className="site-empty text-center py-12">
+            <Package className="site-muted h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="site-heading text-lg font-medium text-gray-900 mb-2">Инвентарь пуст</h3>
+            <p className="site-muted text-gray-600 mb-6">Добавьте предметы из библиотеки карточек</p>
             <Link
               to={`/inventory/${inventory.id}/add-item`}
-              className="btn-primary bg-blue-600 hover:bg-blue-700 inline-flex items-center space-x-2"
+              className="site-button site-button-primary btn-primary bg-blue-600 hover:bg-blue-700 inline-flex items-center space-x-2"
             >
               <Plus size={20} />
               <span>Добавить предмет</span>
             </Link>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
+          <div className="utility-entity-island divide-y divide-gray-200">
             {inventory.items.map((item) => (
               <div key={item.id} className="p-6">
                 {editingItem?.id === item.id ? (

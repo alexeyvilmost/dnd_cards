@@ -964,8 +964,9 @@ async function expandEffectGrants(
     );
     const next: OriginEffect[] = [];
     resolved.forEach((eff, i) => {
+      const alreadySeenEffect = eff ? seen.has(eff.id) : false;
       seen.add(wanted[i].slug); // помечаем slug, чтобы не перезапрашивать (в т.ч. битые ссылки)
-      if (!eff || seen.has(eff.id)) return;
+      if (!eff || alreadySeenEffect) return;
       const oe: OriginEffect = { effect: eff, origin: wanted[i].origin };
       mark(oe);
       result.push(oe);

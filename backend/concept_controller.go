@@ -81,7 +81,7 @@ func (cc *ConceptController) GetConcept(c *gin.Context) {
 func (cc *ConceptController) CreateConcept(c *gin.Context) {
 	var req CreateConceptRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса", "details": err.Error()})
+		writeEntityCreateBindingError(c, "понятие", err)
 		return
 	}
 	if !validConceptID(req.ConceptID) {
@@ -97,7 +97,7 @@ func (cc *ConceptController) CreateConcept(c *gin.Context) {
 		SortOrder:   req.SortOrder,
 	}
 	if err := cc.db.Create(&concept).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания понятия", "details": err.Error()})
+		writeEntityCreateDatabaseError(c, "понятие", err)
 		return
 	}
 	c.JSON(http.StatusCreated, concept)

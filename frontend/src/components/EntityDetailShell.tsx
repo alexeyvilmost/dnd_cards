@@ -4,6 +4,7 @@ import OriginalName from './OriginalName';
 import './entityDetailModal.css';
 import EntityTags from './EntityTags';
 import type {TaggedEntityType} from '../api/entityTags';
+import { useEntityDetail } from '../contexts/entityDetail';
 
 /**
  * Единое детальное окно сущности — в стиле предметов (CardDetailModal): БЕЗ
@@ -38,6 +39,7 @@ export function EntityDetailShell({
   labelledById?: string;
   entity?: {type:TaggedEntityType;id:string};
 }) {
+  const { readOnly = false } = useEntityDetail();
   // Закрытие по клику на фон — только если и нажатие, и отпускание были на самом
   // оверлее (иначе перетаскивание/выделение, начатое внутри и завершённое на
   // фоне, ошибочно закрывало бы окно).
@@ -84,7 +86,7 @@ export function EntityDetailShell({
 
           {entity && <EntityTags type={entity.type} id={entity.id}/>}
 
-          {actions && <div className="edm-actions">{actions}</div>}
+          {!readOnly && actions && <div className="edm-actions">{actions}</div>}
         </div>
       </div>
     </div>

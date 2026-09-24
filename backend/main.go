@@ -59,9 +59,13 @@ func main() {
 		log.Fatal("Ошибка выполнения миграций:", err)
 	}
 	log.Println("Миграции выполнены успешно")
+	if err := verifyCatalogEntityCreates(db); err != nil {
+		log.Fatal("Релизная проверка создания сущностей не пройдена: ", err)
+	}
+	log.Println("Релизная проверка создания сущностей пройдена")
 
 	// Настройка Gin
-	r := gin.Default()
+	r := newOAuthSafeRouter()
 	if err := configureTrustedClientIPs(r); err != nil {
 		log.Fatal("Ошибка настройки доверенных reverse proxy:", err)
 	}
@@ -148,6 +152,7 @@ func main() {
 	api.Use(MutationAuditMiddleware())
 	api.Use(JSONBodyLimitMiddleware(2 << 20))
 	api.Use(NewFixedWindowRateLimiter(180, time.Minute).MutationsOnly())
+	registerPaperDocumentRoutes(r, authService, db)
 	{
 		// Публичные маршруты (без авторизации)
 		authRateLimit := NewFixedWindowRateLimiter(20, 10*time.Minute)
@@ -158,6 +163,7 @@ func main() {
 		// строгий JWT без public fallback и UUID из server-side admin allowlist.
 		contentAdminAuth := ContentAdminAuthMiddleware(authService)
 		registerEntityTagRoutes(api, authService, db)
+		registerOwnedItemRoutes(api, authService, db)
 		registerRoguelikeShopSettingsRoutes(api, authService, db)
 		// The atomic certification request contains exact full API preimages for
 		// the complete dependency closure. Keep its larger bound isolated from the
@@ -174,6 +180,7 @@ func main() {
 		)
 		api.POST("/auth/register", authRateLimit.Handler(), authController.Register)
 		api.POST("/auth/login", authRateLimit.Handler(), authController.Login)
+		registerOAuthRoutes(api, authService, authRateLimit.Handler())
 		api.GET("/content-images/:entityType/:id", contentImageController.Get)
 		api.GET("/integrations/ttg/bestiary/:slug", ttgBestiaryRateLimit.Handler(), ttgBestiaryController.Get)
 

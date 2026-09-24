@@ -404,7 +404,6 @@ function weaponSnapshotIssue(card: PactBladeImmutableWeaponCardSnapshot): string
     || !['melee', 'ranged'].includes(card.range)
     || !Array.isArray(card.properties) || !Array.isArray(card.tags) || card.tags.length !== 0
     || card.properties.some((value) => !nonBlank(value))
-    || card.tags.some((value) => !nonBlank(value))
     || canonicalStringify(card.properties) !== canonicalStringify(sortedUnique(card.properties))
     || canonicalStringify(card.tags) !== canonicalStringify(sortedUnique(card.tags))
     || (card.enchantBonus !== null

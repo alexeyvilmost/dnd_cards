@@ -1,8 +1,8 @@
 .solo-combat-page {
   min-height: 100vh;
   overflow: hidden;
-  background: #0e1111;
-  color: #eee5d8;
+  background: var(--site-bg, #101513);
+  color: var(--site-text, #efe6d3);
   font-family: Inter, system-ui, sans-serif;
 }
 .combat-topbar {
@@ -12,8 +12,8 @@
   align-items: center;
   gap: 14px;
   padding: 8px 18px;
-  border-bottom: 1px solid #59472f;
-  background: linear-gradient(#1a1814, #100f0d);
+  border-bottom: 1px solid var(--site-line, #bfa6714a);
+  background: linear-gradient(#202b23, #111914);
   position: relative;
   z-index: 4;
 }

@@ -383,9 +383,9 @@ const CardCreator = () => {
       }
 
       // Перенаправляем на страницу библиотеки
-      navigate('/');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Ошибка сохранения карты');
+      navigate('/library');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Ошибка сохранения карты');
     } finally {
       setSaving(false);
     }
@@ -460,21 +460,21 @@ const CardCreator = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-8">
+    <div className="site-creator-page min-h-screen p-2 sm:p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
       {/* Заголовок */}
-        <div className="mb-4 sm:mb-8">
+        <div className="site-page-head mb-4 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center space-x-2 sm:space-x-4">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/library')}
                 className="flex items-center space-x-1 sm:space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
                 <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
                 <span className="text-sm sm:text-base">Назад</span>
           </button>
             </div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
+            <h1 className="site-heading text-xl sm:text-2xl md:text-3xl">
               {isEditMode ? 'Редактирование' : 'Создание'}
           </h1>
             <div className="flex items-center space-x-2 sm:space-x-4">
@@ -515,7 +515,7 @@ const CardCreator = () => {
           active={activeSection}
           onSelect={setActiveSection}
           layout="compact"
-          variant="light"
+          variant="dark"
           mobileDock="bottom"
           ariaLabel="Разделы конструктора карты"
           className="creator-rail"
@@ -523,7 +523,7 @@ const CardCreator = () => {
 
         {/* Форма */}
         <div className="flex-1 min-w-0">
-          <div className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6">
+          <div className="site-surface site-creator-form p-3 sm:p-4 md:p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* Рендер активной секции */}
               {activeSection === 'main' && (
@@ -608,7 +608,7 @@ const CardCreator = () => {
               <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
                 <button
                   type="button"
-                  onClick={() => navigate('/')}
+                  onClick={() => navigate('/library')}
                   className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Отмена
@@ -629,16 +629,17 @@ const CardCreator = () => {
         {/* Превью */}
         {showPreview && (
           <div className={isMobile ? 'w-full' : 'w-[420px] flex-none'}>
-            <div className="bg-white rounded-lg shadow p-6 lg:sticky lg:top-6">
+            <div className="site-surface p-6 lg:sticky lg:top-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Превью карты</h3>
-                <div className="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
+                <h3 className="site-heading text-lg">Превью карты</h3>
+                <div className="site-segmented flex overflow-hidden text-sm">
                   {([['card', 'Карточка'], ['interface', 'Интерфейс']] as const).map(([mode, label]) => (
                     <button
                       key={mode}
                       type="button"
                       onClick={() => setPreviewMode(mode)}
-                      className={`px-3 py-1 transition-colors ${previewMode === mode ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                      aria-pressed={previewMode === mode}
+                      className="px-3 py-1 transition-colors"
                     >
                       {label}
                     </button>
@@ -658,7 +659,7 @@ const CardCreator = () => {
                 </div>
                 )
               ) : (
-                <div className="text-center text-gray-500 py-8">
+                <div className="text-center site-muted py-8">
                   Заполните название карты для просмотра превью
             </div>
               )}

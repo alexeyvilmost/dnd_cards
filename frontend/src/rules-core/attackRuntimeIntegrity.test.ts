@@ -270,12 +270,21 @@ describe('Attack/grapple reducer integrity guards', () => {
     largeTarget.actors.b.attackProfile!.size = 4;
     const missingProfile = copyWorld(base);
     missingProfile.actors.a.attackProfile = undefined;
+    const missingTargetProfile = copyWorld(base);
+    missingTargetProfile.actors.b.attackProfile = undefined;
+    const missingGrapplerSize = copyWorld(base);
+    missingGrapplerSize.actors.a.attackProfile = {
+      ...missingGrapplerSize.actors.a.attackProfile!,
+      size: undefined,
+    } as unknown as NonNullable<ActorState['attackProfile']>;
     const malformedSecondary: Array<[WorldState, GrappleState]> = [
       [base, { ...valid, sourcePart: 'tail' }],
       [occupiedOther, { ...valid, id: 'other' }],
       [equipped, valid],
       [largeTarget, valid],
       [missingProfile, valid],
+      [missingTargetProfile, valid],
+      [missingGrapplerSize, valid],
       [base, { ...valid, escapeDc: 1.5 }],
       [base, { ...valid, escapeDc: 0 }],
       [base, { ...valid, reachFt: Number.NaN }],

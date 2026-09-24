@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './UtilityPages.css';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Package, Users, User, AlertCircle } from 'lucide-react';
 import { inventoryApi } from '../api/inventoryApi';
@@ -74,22 +75,22 @@ const CreateInventory: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="site-page-theme max-w-2xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
+      <div className="site-page-head mb-8">
         <button
           onClick={() => navigate('/inventory')}
-          className="flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+          className="site-muted flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
         >
           <ArrowLeft size={20} className="mr-2" />
           Назад к инвентарям
         </button>
-        <h1 className="text-3xl font-bold text-gray-900">Создать новый инвентарь</h1>
-        <p className="text-gray-600 mt-1">Создайте личный или групповой инвентарь</p>
+        <h1 className="site-heading text-3xl font-bold text-gray-900">Создать новый инвентарь</h1>
+        <p className="site-muted text-gray-600 mt-1">Создайте личный или групповой инвентарь</p>
       </div>
 
       {/* Form */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="site-surface bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Error message */}
           {error && (
@@ -107,24 +108,24 @@ const CreateInventory: React.FC = () => {
 
           {/* Inventory type selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="site-muted block text-sm font-medium text-gray-700 mb-3">
               Тип инвентаря *
             </label>
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
                 onClick={() => handleTypeChange('personal')}
-                className={`p-4 border-2 rounded-lg text-left transition-colors ${
+                className={`site-control p-4 border-2 rounded-lg text-left transition-colors ${
                   formData.type === 'personal'
-                    ? 'border-blue-500 bg-blue-50'
+                    ? 'utility-choice--selected border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
                 <div className="flex items-center space-x-3">
                   <User className={`h-6 w-6 ${formData.type === 'personal' ? 'text-blue-600' : 'text-gray-400'}`} />
                   <div>
-                    <h3 className="font-medium text-gray-900">Личный инвентарь</h3>
-                    <p className="text-sm text-gray-600">Для вашего персонажа</p>
+                    <h3 className="site-heading font-medium text-gray-900">Личный инвентарь</h3>
+                    <p className="site-muted text-sm text-gray-600">Для вашего персонажа</p>
                   </div>
                 </div>
               </button>
@@ -132,17 +133,17 @@ const CreateInventory: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleTypeChange('group')}
-                className={`p-4 border-2 rounded-lg text-left transition-colors ${
+                className={`site-control p-4 border-2 rounded-lg text-left transition-colors ${
                   formData.type === 'group'
-                    ? 'border-green-500 bg-green-50'
+                    ? 'utility-choice--selected border-green-500 bg-green-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
                 <div className="flex items-center space-x-3">
                   <Users className={`h-6 w-6 ${formData.type === 'group' ? 'text-green-600' : 'text-gray-400'}`} />
                   <div>
-                    <h3 className="font-medium text-gray-900">Групповой инвентарь</h3>
-                    <p className="text-sm text-gray-600">Для группы игроков</p>
+                    <h3 className="site-heading font-medium text-gray-900">Групповой инвентарь</h3>
+                    <p className="site-muted text-sm text-gray-600">Для группы игроков</p>
                   </div>
                 </div>
               </button>
@@ -152,7 +153,7 @@ const CreateInventory: React.FC = () => {
           {/* Group selection (only for group inventory) */}
           {formData.type === 'group' && (
             <div>
-              <label htmlFor="group_id" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="group_id" className="site-muted block text-sm font-medium text-gray-700 mb-2">
                 Группа *
               </label>
               <select
@@ -161,7 +162,7 @@ const CreateInventory: React.FC = () => {
                 required
                 value={formData.group_id}
                 onChange={handleChange}
-                className="input-field"
+                className="site-control input-field"
                 disabled={isLoadingGroups}
               >
                 <option value="">Выберите группу</option>
@@ -172,10 +173,10 @@ const CreateInventory: React.FC = () => {
                 ))}
               </select>
               {isLoadingGroups && (
-                <p className="text-xs text-gray-500 mt-1">Загрузка групп...</p>
+                <p className="site-muted text-xs text-gray-500 mt-1">Загрузка групп...</p>
               )}
               {groups.length === 0 && !isLoadingGroups && (
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="site-muted text-xs text-gray-500 mt-1">
                   У вас нет групп. <a href="/groups/create" className="text-blue-600 hover:underline">Создайте группу</a>
                 </p>
               )}
@@ -184,12 +185,12 @@ const CreateInventory: React.FC = () => {
 
           {/* Inventory name */}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="name" className="site-muted block text-sm font-medium text-gray-700 mb-2">
               Название инвентаря *
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Package className="h-5 w-5 text-gray-400" />
+                <Package className="site-muted h-5 w-5 text-gray-400" />
               </div>
               <input
                 id="name"
@@ -199,7 +200,7 @@ const CreateInventory: React.FC = () => {
                 maxLength={100}
                 value={formData.name}
                 onChange={handleChange}
-                className="input-field pl-10"
+                className="site-control input-field pl-10"
                 placeholder="Введите название инвентаря"
               />
             </div>
@@ -236,14 +237,14 @@ const CreateInventory: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/inventory')}
-              className="btn-secondary border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="site-button site-muted btn-secondary border-gray-300 text-gray-700 hover:bg-gray-50"
             >
               Отмена
             </button>
             <button
               type="submit"
               disabled={isLoading || !formData.name.trim() || (formData.type === 'group' && !formData.group_id)}
-              className="btn-primary bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="site-button site-button-primary btn-primary bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <div className="flex items-center">

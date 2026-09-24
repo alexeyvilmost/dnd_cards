@@ -133,7 +133,7 @@ func NewCardController(db *gorm.DB) *CardController {
 func (cc *CardController) GetCards(c *gin.Context) {
 	var cards []Card
 
-	query := cc.db.Model(&Card{})
+	query := itemLibraryQuery(cc.db, c)
 	query = entityTagFilter(query, c, "card", "cards")
 	light := wantsListView(c)
 	if light {
@@ -141,8 +141,8 @@ func (cc *CardController) GetCards(c *gin.Context) {
 	}
 
 	// Фильтрация по редкости
-	if rarity := c.Query("rarity"); rarity != "" {
-		query = query.Where("rarity = ?", rarity)
+	if rarities := itemLibraryRarities(c); len(rarities) > 0 {
+		query = query.Where("cards.rarity IN ?", rarities)
 	}
 
 	// Фильтрация по свойствам
@@ -216,6 +216,17 @@ func (cc *CardController) GetCards(c *gin.Context) {
 		return
 	}
 	log.Printf("Загружено карточек: %d", len(cards))
+	responses, err := cc.cardListResponses(cards, light)
+	if err != nil {
+		log.Printf("Ошибка проверки изображений карточек: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения карточек"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"cards": responses, "total": total, "page": page, "limit": limit})
+}
+
+// Both public and personal indexes use the canonical card/list projection.
+func (cc *CardController) cardListResponses(cards []Card, light bool) ([]CardResponse, error) {
 	legacyImageIDs := map[uuid.UUID]bool{}
 	if light {
 		ids := make([]uuid.UUID, 0, len(cards))
@@ -227,9 +238,7 @@ func (cc *CardController) GetCards(c *gin.Context) {
 		var imageErr error
 		legacyImageIDs, imageErr = listLegacyImageIDs(cc.db, "cards", ids)
 		if imageErr != nil {
-			log.Printf("Ошибка проверки изображений карточек: %v", imageErr)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения карточек"})
-			return
+			return nil, imageErr
 		}
 	}
 
@@ -245,12 +254,7 @@ func (cc *CardController) GetCards(c *gin.Context) {
 		responses = append(responses, r)
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"cards": responses,
-		"total": total,
-		"page":  page,
-		"limit": limit,
-	})
+	return responses, nil
 }
 
 // GetCard - получение карточки по ID
@@ -262,7 +266,7 @@ func (cc *CardController) GetCard(c *gin.Context) {
 	}
 
 	var card Card
-	if err := cc.db.Where("id = ?", id).First(&card).Error; err != nil {
+	if err := itemAccessQuery(cc.db, c).Where("cards.id = ?", id).First(&card).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Карточка не найдена"})
 			return
@@ -283,7 +287,7 @@ func (cc *CardController) GetCardBattleStats(c *gin.Context) {
 	}
 
 	var card Card
-	if err := cc.db.Where("id = ?", id).First(&card).Error; err != nil {
+	if err := itemAccessQuery(cc.db, c).Where("cards.id = ?", id).First(&card).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Карточка не найдена"})
 			return
@@ -307,7 +311,7 @@ func (cc *CardController) GetBatchCardBattleStats(c *gin.Context) {
 		return
 	}
 	var cards []Card
-	if err := cc.db.Where("id IN ?", req.CardIDs).Find(&cards).Error; err != nil {
+	if err := itemAccessQuery(cc.db, c).Where("cards.id IN ?", req.CardIDs).Find(&cards).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения карточек"})
 		return
 	}
@@ -454,64 +458,64 @@ func normalizeCreateCardTemplateType(value TemplateType) (TemplateType, bool) {
 func (cc *CardController) CreateCard(c *gin.Context) {
 	var req CreateCardRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		writeEntityCreateBindingError(c, "карточку", err)
 		return
 	}
 
 	// Валидация данных
 	if !IsValidRarity(req.Rarity) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая редкость"})
+		writeEntityCreateValidationError(c, "Не удалось создать карточку: выберите поддерживаемую редкость.", "invalid_rarity", "rarity")
 		return
 	}
 
 	customRarityColor, colorErr := ResolveCustomRarityColor(req.Rarity, req.CustomRarityColor, nil)
 	if colorErr != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": colorErr.Error()})
+		writeEntityCreateValidationError(c, "Не удалось создать карточку: "+colorErr.Error(), "invalid_rarity_color", "custom_rarity_color")
 		return
 	}
 
 	if req.BonusType != nil && !IsValidBonusType(*req.BonusType) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый тип бонуса"})
+		writeEntityCreateValidationError(c, "Не удалось создать карточку: тип бонуса должен быть damage или defense.", "invalid_bonus_type", "bonus_type")
 		return
 	}
 
 	if req.ElementalDamageType != nil && *req.ElementalDamageType != "" && !IsValidElementalDamageType(*req.ElementalDamageType) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый тип стихийного урона"})
+		writeEntityCreateValidationError(c, "Не удалось создать карточку: выбран неподдерживаемый тип стихийного урона.", "invalid_elemental_damage_type", "elemental_damage_type")
 		return
 	}
 
 	if req.DamageType != nil && *req.DamageType != "" && !IsValidDamageType(*req.DamageType) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый тип урона"})
+		writeEntityCreateValidationError(c, "Не удалось создать карточку: тип физического урона должен быть slashing, piercing или bludgeoning.", "invalid_damage_type", "damage_type")
 		return
 	}
 
 	if !ValidateProperties(req.Properties) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимые свойства"})
+		writeEntityCreateValidationError(c, "Не удалось создать карточку: список свойств содержит неподдерживаемое значение.", "invalid_properties", "properties")
 		return
 	}
 
 	if !ValidateCardPrice(req.Price) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая цена"})
+		writeEntityCreateValidationError(c, "Не удалось создать карточку: цена должна быть больше 0 и не превышать 1 000 000.", "invalid_price", "price")
 		return
 	}
 	if !ValidateCurrency(req.PriceCurrency) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимая валюта"})
+		writeEntityCreateValidationError(c, "Не удалось создать карточку: выберите поддерживаемую валюту.", "invalid_currency", "price_currency")
 		return
 	}
 
 	if !ValidateWeight(req.Weight) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый вес (должен быть от 0.01 до 1000)"})
+		writeEntityCreateValidationError(c, "Не удалось создать карточку: вес должен быть от 0,01 до 1 000.", "invalid_weight", "weight")
 		return
 	}
 
 	if req.Slot != nil && !IsValidEquipmentSlot(*req.Slot) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый слот экипировки"})
+		writeEntityCreateValidationError(c, "Не удалось создать карточку: выбран неподдерживаемый слот экипировки.", "invalid_slot", "slot")
 		return
 	}
 
 	templateType, validTemplateType := normalizeCreateCardTemplateType(req.IsTemplate)
 	if !validTemplateType {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Недопустимый тип шаблона"})
+		writeEntityCreateValidationError(c, "Не удалось создать карточку: выбран неподдерживаемый режим шаблона.", "invalid_template_type", "is_template")
 		return
 	}
 	req.IsTemplate = templateType
@@ -521,7 +525,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		fmt.Printf("🔍 [CREATE CARD] Валидируем эффекты: %+v\n", req.Effects)
 		if err := ValidateEffects(req.Effects); err != nil {
 			fmt.Printf("❌ [CREATE CARD] Ошибка валидации эффектов: %v\n", err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Ошибка валидации эффектов: %v", err)})
+			writeEntityCreateValidationError(c, fmt.Sprintf("Не удалось создать карточку: ошибка в эффектах предмета — %v", err), "invalid_effects", "effects")
 			return
 		}
 		fmt.Printf("✅ [CREATE CARD] Эффекты прошли валидацию\n")
@@ -563,7 +567,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		DetailedDescriptionFontSize:  req.DetailedDescriptionFontSize,
 		IsExtended:                   req.IsExtended,
 		Author:                       req.Author,
-		Source:                       req.Source,
+		Source:                       defaultItemSource(req.Source),
 		Type:                         req.Type,
 		WeaponType:                   req.WeaponType,
 		Mastery:                      req.Mastery,
@@ -584,8 +588,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 	}
 
 	if err := cc.db.Create(&card).Error; err != nil {
-		fmt.Printf("❌ [CREATE CARD] Ошибка БД: %v\n", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания карточки"})
+		writeEntityCreateDatabaseError(c, "карточку", err)
 		return
 	}
 
@@ -763,7 +766,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 		card.Author = req.Author
 	}
 	if req.Source != nil {
-		card.Source = req.Source
+		card.Source = defaultItemSource(req.Source)
 	}
 	if req.Type != nil {
 		card.Type = req.Type
@@ -937,7 +940,7 @@ func (cc *CardController) ExportCards(c *gin.Context) {
 	}
 
 	var cards []Card
-	if err := cc.db.Where("id IN ?", req.CardIDs).Find(&cards).Error; err != nil {
+	if err := itemLibraryQuery(cc.db, c).Where("cards.id IN ?", req.CardIDs).Find(&cards).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения карточек"})
 		return
 	}
@@ -1120,8 +1123,7 @@ func (ac *ActionController) CreateAction(c *gin.Context) {
 	var req CreateActionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Printf("❌ [CREATE_ACTION] Ошибка парсинга JSON: %v", err)
-		log.Printf("❌ [CREATE_ACTION] Тело запроса: %s", c.GetString("request_body"))
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса", "details": err.Error()})
+		writeEntityCreateBindingError(c, "действие", err)
 		return
 	}
 	normalizeActionRecharge(&req.Recharge, &req.RechargeCustom)
@@ -1269,8 +1271,7 @@ func (ac *ActionController) CreateAction(c *gin.Context) {
 
 	log.Printf("🔍 [CREATE_ACTION] Сохранение действия в БД: Name=%s, CardNumber=%s", action.Name, action.CardNumber)
 	if err := ac.db.Create(&action).Error; err != nil {
-		log.Printf("❌ [CREATE_ACTION] Ошибка создания действия в БД: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания действия", "details": err.Error()})
+		writeEntityCreateDatabaseError(c, "действие", err)
 		return
 	}
 	log.Printf("✅ [CREATE_ACTION] Действие успешно создано: ID=%s, CardNumber=%s", action.ID, action.CardNumber)
@@ -1586,7 +1587,7 @@ func (ec *EffectController) GetEffect(c *gin.Context) {
 func (ec *EffectController) CreateEffect(c *gin.Context) {
 	var req CreateEffectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		writeEntityCreateBindingError(c, "эффект", err)
 		return
 	}
 
@@ -1673,13 +1674,7 @@ func (ec *EffectController) CreateEffect(c *gin.Context) {
 	}
 
 	if err := ec.db.Create(&effect).Error; err != nil {
-		// Проверяем, является ли ошибка нарушением уникальности
-		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "UNIQUE constraint") {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Эффект с таким ID уже существует"})
-			return
-		}
-		log.Printf("Ошибка создания эффекта: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Ошибка создания эффекта: %v", err)})
+		writeEntityCreateDatabaseError(c, "эффект", err)
 		return
 	}
 

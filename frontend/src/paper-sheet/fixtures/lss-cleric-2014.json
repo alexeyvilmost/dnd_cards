@@ -1,0 +1,26 @@
+{
+  "disabledBlocks": {
+    "info-left": [],
+    "info-right": [],
+    "subinfo-left": [],
+    "subinfo-right": [],
+    "notes-left": [],
+    "notes-right": [],
+    "_id": "6ab56da4e8ac8e090a3b19c5"
+  },
+  "edition": "2024",
+  "sheetEdition": "2014",
+  "spells": {
+    "mode": "text",
+    "prepared": [],
+    "book": [],
+    "granted": [],
+    "slotless": [],
+    "edition": "2024"
+  },
+  "linkAccess": "none",
+  "data": "{\"jsonType\":\"character\",\"template\":\"default\",\"name\":{\"value\":\"BOH QA — Жрец 2014\"},\"info\":{\"charClass\":{\"name\":\"charClass\",\"value\":\"Жрец\"},\"charSubclass\":{\"name\":\"charSubclass\",\"value\":\"\"},\"level\":{\"name\":\"level\",\"value\":5},\"background\":{\"name\":\"background\",\"value\":\"Послушник\"},\"playerName\":{\"name\":\"playerName\",\"value\":\"\"},\"race\":{\"name\":\"race\",\"value\":\"Дварф\"},\"alignment\":{\"name\":\"alignment\",\"value\":\"\"},\"experience\":{\"name\":\"experience\",\"value\":\"\"}},\"subInfo\":{\"age\":{\"name\":\"age\",\"value\":\"\"},\"height\":{\"name\":\"height\",\"value\":\"\"},\"weight\":{\"name\":\"weight\",\"value\":\"\"},\"eyes\":{\"name\":\"eyes\",\"value\":\"\"},\"skin\":{\"name\":\"skin\",\"value\":\"\"},\"hair\":{\"name\":\"hair\",\"value\":\"\"}},\"spellsInfo\":{\"base\":{\"name\":\"base\",\"value\":\"\",\"code\":\"wis\"},\"save\":{\"name\":\"save\",\"value\":\"\"},\"mod\":{\"name\":\"mod\",\"value\":\"\"}},\"spells\":{\"slots-1\":{\"value\":4},\"slots-2\":{\"value\":3},\"slots-3\":{\"value\":2}},\"spellsPact\":{},\"bonuses\":[],\"proficiency\":3,\"stats\":{\"str\":{\"name\":\"str\",\"score\":10},\"dex\":{\"name\":\"dex\",\"score\":10},\"con\":{\"name\":\"con\",\"score\":10},\"int\":{\"name\":\"int\",\"score\":10},\"wis\":{\"name\":\"wis\",\"score\":10},\"cha\":{\"name\":\"cha\",\"score\":10}},\"saves\":{\"str\":{\"name\":\"str\",\"isProf\":false},\"dex\":{\"name\":\"dex\",\"isProf\":false},\"con\":{\"name\":\"con\",\"isProf\":false},\"int\":{\"name\":\"int\",\"isProf\":false},\"wis\":{\"name\":\"wis\",\"isProf\":false},\"cha\":{\"name\":\"cha\",\"isProf\":false}},\"skills\":{\"acrobatics\":{\"baseStat\":\"dex\",\"name\":\"acrobatics\"},\"investigation\":{\"baseStat\":\"int\",\"name\":\"investigation\"},\"athletics\":{\"baseStat\":\"str\",\"name\":\"athletics\"},\"perception\":{\"baseStat\":\"wis\",\"name\":\"perception\"},\"survival\":{\"baseStat\":\"wis\",\"name\":\"survival\"},\"performance\":{\"baseStat\":\"cha\",\"name\":\"performance\"},\"intimidation\":{\"baseStat\":\"cha\",\"name\":\"intimidation\"},\"history\":{\"baseStat\":\"int\",\"name\":\"history\"},\"sleight of hand\":{\"baseStat\":\"dex\",\"name\":\"sleight of hand\"},\"arcana\":{\"baseStat\":\"int\",\"name\":\"arcana\"},\"medicine\":{\"baseStat\":\"wis\",\"name\":\"medicine\"},\"deception\":{\"baseStat\":\"cha\",\"name\":\"deception\"},\"nature\":{\"baseStat\":\"int\",\"name\":\"nature\"},\"insight\":{\"baseStat\":\"wis\",\"name\":\"insight\"},\"religion\":{\"baseStat\":\"int\",\"name\":\"religion\"},\"stealth\":{\"baseStat\":\"dex\",\"name\":\"stealth\"},\"persuasion\":{\"baseStat\":\"cha\",\"name\":\"persuasion\"},\"animal handling\":{\"baseStat\":\"wis\",\"name\":\"animal handling\"}},\"vitality\":{\"hp-dice-current\":{\"value\":5},\"hp-dice-multi\":{},\"darkvision\":{\"value\":0},\"hp-max\":{\"value\":38}},\"attunementsList\":[{\"id\":\"attunement-1790274825702\",\"checked\":false,\"value\":\"\"}],\"weaponsList\":[{\"id\":\"weapon-1790274825702\",\"name\":{\"value\":\"\"},\"dmg\":{\"value\":\"\"}}],\"text\":{\"equipment\":{\"value\":{\"data\":{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Кольчуга — 1\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Щит — 1\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Булава — 1\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Зелье лечения — 3\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Святой символ — 1\"}]}]}}},\"spells-level-0\":{\"value\":{\"data\":{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Свет\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Указание\"}]}]}}},\"spells-level-1\":{\"value\":{\"data\":{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Благословение — концентрация, до 1 минуты\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Лечение ран — 1d8+[WIS]\"}]}]}}},\"spells-level-3\":{\"value\":{\"data\":{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Возрождение — алмаз стоимостью 300 зм\"}]}]}}}},\"coins\":{},\"resources\":{},\"conditions\":[],\"createdAt\":\"2026-09-24T18:36:20.985Z\"}",
+  "wizard": {},
+  "jsonType": "character",
+  "version": "2"
+}

@@ -1,0 +1,127 @@
+/* Legacy utility page chrome only. Never target CardPreview / TemplateViewer
+   descendants or broaden these selectors to arbitrary .bg-white elements. */
+.utility-entity-island {
+  background-color: #fff;
+  color: #111827;
+  color-scheme: light;
+}
+
+.utility-export-bar.site-surface {
+  border-radius: 0;
+  border-width: 1px 0 0;
+}
+
+.site-page-theme .utility-choice--selected.site-control {
+  background: #c9ad7424;
+  border-color: var(--site-accent, #c9ad74);
+  color: var(--site-text, #efe6d3);
+}
+
+/* Route wrappers own these direct-child selectors because the shared selectors
+   also run outside these routes. Category buttons are navigation, not entities.
+   Stop at the category heading/divider; TemplateViewer is a separate sibling. */
+.site-page-theme.utility-selection-page > div {
+  background: transparent;
+  color: var(--site-text, #efe6d3);
+}
+
+.site-page-theme.utility-selection-page > div > :is(.max-w-4xl, .max-w-6xl) > div:first-child > h1,
+.site-page-theme.utility-selection-page > div > :is(.max-w-4xl, .max-w-6xl) > .grid > button h3,
+.site-page-theme.utility-selection-page--categories > div > .max-w-6xl > div:last-child > .mb-6 > h2,
+.site-page-theme.utility-selection-page--weapon > div > .max-w-6xl > .space-y-8 > .space-y-4 > .flex > div > h2 {
+  color: var(--site-text, #efe6d3);
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.site-page-theme.utility-selection-page > div > .text-center > p,
+.site-page-theme.utility-selection-page > div > :is(.max-w-4xl, .max-w-6xl) > div:first-child > :is(p, button),
+.site-page-theme.utility-selection-page > div > :is(.max-w-4xl, .max-w-6xl) > .grid > button :is(p, .text-right),
+.site-page-theme.utility-selection-page > div > :is(.max-w-4xl, .max-w-6xl) > .grid > button .text-right > div,
+.site-page-theme.utility-selection-page--categories > div > .max-w-6xl > div:last-child > .mb-6 > p,
+.site-page-theme.utility-selection-page--weapon > div > .max-w-6xl > .space-y-8 > .space-y-4 > .flex > .text-sm,
+.site-page-theme.utility-selection-page--weapon > div > .max-w-6xl > .space-y-8 > .space-y-4 > .flex > div > p,
+.site-page-theme.utility-selection-page--types > div > .max-w-4xl > .text-center:last-child > button {
+  color: var(--site-muted, #a9b0a5);
+}
+
+.site-page-theme.utility-selection-page > div > :is(.max-w-4xl, .max-w-6xl) > .grid > button {
+  background: var(--site-surface, #17201b);
+  border-color: var(--site-border, #bfa6714a);
+}
+
+.site-page-theme.utility-selection-page > div > :is(.max-w-4xl, .max-w-6xl) > .grid > button:hover {
+  background: #202b23;
+  border-color: var(--site-accent, #c9ad74);
+}
+
+.site-page-theme.utility-selection-page > div > :is(.max-w-4xl, .max-w-6xl) > .grid > button:focus-visible,
+.site-page-theme.utility-selection-page > div > :is(.max-w-4xl, .max-w-6xl) > div:first-child > button:focus-visible {
+  outline: 2px solid var(--site-accent, #c9ad74);
+  outline-offset: 3px;
+  --tw-ring-color: #c9ad7445;
+  --tw-ring-offset-color: var(--site-surface, #17201b);
+}
+
+.site-page-theme.utility-selection-page--weapon > div > .max-w-6xl > .space-y-8 > .space-y-4 > .border-t {
+  border-color: var(--site-border, #bfa6714a);
+}
+
+/* The guides carry their original styles in a style tag. Screen-only, scoped
+   overrides keep their markdown layout, print rules and Mermaid palette intact. */
+@media screen {
+  .site-page-theme.utility-guide {
+    color: var(--site-text, #efe6d3);
+  }
+
+  .site-page-theme.utility-guide :is(h1, h2, h3, h4, strong):not(.engine-diagram *) {
+    color: var(--site-text, #efe6d3);
+    border-color: var(--site-border, #bfa6714a);
+  }
+
+  .site-page-theme.utility-guide :is(h1, h2, h3, h4) {
+    font-family: Georgia, 'Times New Roman', serif;
+  }
+
+  .site-page-theme.utility-guide a {
+    color: var(--site-accent, #c9ad74);
+  }
+
+  .site-page-theme.utility-guide blockquote {
+    background: #c9ad7414;
+    color: var(--site-muted, #a9b0a5);
+    border-color: var(--site-accent, #c9ad74);
+  }
+
+  .site-page-theme.utility-guide code:not(pre code) {
+    background: #c9ad741a;
+    color: #e5c992;
+  }
+
+  .site-page-theme.utility-guide pre {
+    background: #101513;
+    color: var(--site-text, #efe6d3);
+    border-color: var(--site-border, #bfa6714a);
+  }
+
+  .site-page-theme.utility-guide :is(th, td, hr) {
+    border-color: var(--site-border, #bfa6714a);
+  }
+
+  .site-page-theme.utility-guide th {
+    background: #202b23;
+    color: var(--site-text, #efe6d3);
+  }
+
+  .site-page-theme.utility-guide tr:nth-child(even) td {
+    background: #c9ad740a;
+  }
+}
+
+@media print {
+  .utility-guide.site-surface {
+    background: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}

@@ -476,6 +476,13 @@ export async function installForgeApiFixture(page: Page): Promise<ForgeApiFixtur
       return;
     }
 
+    if (segments[1] === 'my-item-catalog' && request.method() === 'GET') {
+      const pageNumber = Number(url.searchParams.get('page')) || 1;
+      const limit = Number(url.searchParams.get('limit')) || 100;
+      await json(route, 200, { cards: [], total: 0, page: pageNumber, limit });
+      return;
+    }
+
     const collection = COLLECTIONS[segments[1]];
     if (!collection || request.method() !== 'GET') {
       await json(route, 404, { error: `unsupported isolated API path ${url.pathname}` });

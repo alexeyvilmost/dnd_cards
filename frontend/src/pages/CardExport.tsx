@@ -1,3 +1,4 @@
+import './UtilityPages.css';
 import { useState, useEffect, useRef } from 'react';
 import { Search, Filter, Download, Minus, Plus, Trash2, Loader2 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
@@ -342,34 +343,34 @@ const CardExport = () => {
   return (
     <div className="space-y-4 sm:space-y-6 pb-24">
       {/* Заголовок */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl sm:text-3xl font-fantasy font-bold text-gray-900">
+      <div className="site-page-head flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="site-heading text-2xl sm:text-3xl font-fantasy font-bold text-gray-900">
           Экспорт карточек
         </h1>
-        <div className="text-sm text-gray-500">
+        <div className="site-muted text-sm text-gray-500">
           18 карт на лист A4 (альбомный), разметка для резки, PDF в реальном размере
         </div>
       </div>
 
       {/* Поиск и фильтры */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
+      <div className="site-surface bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <Search className="site-muted absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="text"
                 placeholder="Поиск..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="input-field pl-10 text-sm sm:text-base"
+                className="site-control input-field pl-10 text-sm sm:text-base"
               />
             </div>
           </div>
 
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="btn-secondary flex items-center justify-center space-x-2 text-sm sm:text-base"
+            className="site-button btn-secondary flex items-center justify-center space-x-2 text-sm sm:text-base"
           >
             <Filter size={18} />
             <span>Фильтры</span>
@@ -379,13 +380,13 @@ const CardExport = () => {
         {showFilters && (
           <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="site-muted block text-sm font-medium text-gray-700 mb-2">
                 Редкость
               </label>
               <select
                 value={rarityFilter}
                 onChange={(e) => setRarityFilter(e.target.value)}
-                className="input-field"
+                className="site-control input-field"
               >
                 <option value="">Все редкости</option>
                 {RARITY_OPTIONS.map((option) => (
@@ -397,13 +398,13 @@ const CardExport = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="site-muted block text-sm font-medium text-gray-700 mb-2">
                 Свойства
               </label>
               <select
                 value={propertiesFilter}
                 onChange={(e) => setPropertiesFilter(e.target.value)}
-                className="input-field"
+                className="site-control input-field"
               >
                 <option value="">Все свойства</option>
                 {PROPERTIES_OPTIONS.map((option) => (
@@ -415,13 +416,13 @@ const CardExport = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="site-muted block text-sm font-medium text-gray-700 mb-2">
                 Тип шаблона
               </label>
               <select
                 value={templateTypeFilter}
                 onChange={(e) => setTemplateTypeFilter(e.target.value)}
-                className="input-field"
+                className="site-control input-field"
               >
                 <option value="cards">Обычные карты</option>
                 <option value="templates">Только шаблоны</option>
@@ -431,13 +432,13 @@ const CardExport = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="site-muted block text-sm font-medium text-gray-700 mb-2">
                 Слот экипировки
               </label>
               <select
                 value={slotFilter}
                 onChange={(e) => setSlotFilter(e.target.value)}
-                className="input-field"
+                className="site-control input-field"
               >
                 <option value="">Все слоты</option>
                 <option value="none">Не экипируется</option>
@@ -455,13 +456,13 @@ const CardExport = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="site-muted block text-sm font-medium text-gray-700 mb-2">
                 Тип брони
               </label>
               <select
                 value={armorTypeFilter}
                 onChange={(e) => setArmorTypeFilter(e.target.value)}
-                className="input-field"
+                className="site-control input-field"
               >
                 <option value="">Все типы</option>
                 <option value="light">Лёгкая</option>
@@ -472,13 +473,13 @@ const CardExport = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="site-muted block text-sm font-medium text-gray-700 mb-2">
                 Сортировка
               </label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="input-field"
+                className="site-control input-field"
               >
                 <option value="created_desc">По дате добавления (новые)</option>
                 <option value="created_asc">По дате добавления (старые)</option>
@@ -509,8 +510,8 @@ const CardExport = () => {
       )}
 
       {!loading && cards.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">Карточки не найдены</p>
+        <div className="site-empty text-center py-12">
+          <p className="site-muted text-gray-500 text-lg">Карточки не найдены</p>
         </div>
       )}
 
@@ -518,7 +519,7 @@ const CardExport = () => {
       {!loading && cards.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-fantasy font-semibold text-gray-900">
+            <h2 className="site-heading text-lg font-fantasy font-semibold text-gray-900">
               Выберите карточки ({totalCards} в библиотеке)
             </h2>
           </div>
@@ -578,9 +579,9 @@ const CardExport = () => {
       )}
 
       {/* Нижняя панель действий */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg">
+      <div className="site-surface utility-export-bar fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="text-sm text-gray-700">
+          <div className="site-muted text-sm text-gray-700">
             Выбрано: <span className="font-semibold">{selectedEntries.length}</span> карт,{' '}
             <span className="font-semibold">{totalCopies}</span> копий —{' '}
             <span className="font-semibold">{estimatePages()}</span> лист(ов) A4
@@ -589,7 +590,7 @@ const CardExport = () => {
             <button
               onClick={clearSelection}
               disabled={exporting || selectedEntries.length === 0}
-              className="btn-secondary flex items-center space-x-2 disabled:opacity-50"
+              className="site-button btn-secondary flex items-center space-x-2 disabled:opacity-50"
             >
               <Trash2 size={16} />
               <span>Очистить</span>
@@ -597,7 +598,7 @@ const CardExport = () => {
             <button
               onClick={handleExport}
               disabled={exporting || selectedEntries.length === 0}
-              className="btn-primary flex items-center space-x-2 disabled:opacity-50"
+              className="site-button site-button-primary btn-primary flex items-center space-x-2 disabled:opacity-50"
             >
               {exporting ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
               <span>Экспорт PDF</span>
@@ -609,7 +610,7 @@ const CardExport = () => {
       {/* Контейнер захвата: карта рендерится как в превью и снимается в PNG.
           Находится в видимой области, но закрыта оверлеем прогресса */}
       {captureCard && (
-        <div className="fixed top-4 left-4 z-[90] bg-white pointer-events-none">
+        <div className="utility-entity-island fixed top-4 left-4 z-[90] bg-white pointer-events-none">
           <div ref={captureRef}>
             <CardPreview card={captureCard} disableHover />
           </div>
@@ -619,9 +620,9 @@ const CardExport = () => {
       {/* Оверлей прогресса экспорта */}
       {exporting && (
         <div className="fixed inset-0 z-[100] bg-gray-900/80 flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-2xl p-6 w-80 text-center space-y-4">
+          <div className="site-surface bg-white rounded-xl shadow-2xl p-6 w-80 text-center space-y-4">
             <Loader2 size={32} className="animate-spin mx-auto text-blue-600" />
-            <div className="text-gray-900 font-medium">
+            <div className="site-heading text-gray-900 font-medium">
               {progress?.stage === 'render'
                 ? `Подготовка карт: ${progress.current} из ${progress.total}`
                 : `Сборка PDF: лист ${progress?.current ?? 0} из ${progress?.total ?? 0}`}
@@ -636,7 +637,7 @@ const CardExport = () => {
                 }}
               />
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="site-muted text-xs text-gray-500">
               Не закрывайте вкладку до завершения экспорта
             </div>
           </div>

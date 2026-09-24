@@ -1,0 +1,5207 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-09-24",
+  "scope": "Original PH equipment in either 2014 or 2024 by reviewed identity and similar description, including listed pack components. Price, duplicate, shortened-text and erroneous-profile differences may be accepted as provenance without certifying mechanics. Genuine enhanced/custom item identities remain Bag Of Holding.",
+  "references": {
+    "ph2024": "https://www.dndbeyond.com/sources/dnd/free-rules/equipment",
+    "ph2014": "https://www.dndbeyond.com/sources/dnd/basic-rules-2014/equipment",
+    "local2024": "officials/kb/phb-2024-en/pages/page-213.txt through page-229.txt; PH2024 chapter 6",
+    "base146": "backend/migrations/materialize_base_equipment_2024.go; candidate evidence only, never sufficient by itself"
+  },
+  "entries": [
+    {
+      "key": "acid",
+      "canonical": "Acid",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Флакон кислоты"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0791",
+          "name": "Флакон кислоты",
+          "name_en": "",
+          "description": "Флакон можно метнуть, если цель не пройдёт спасбросок ЛОВ (Сл 8 + мод. ЛОВ + Бонус владения), то получит урон.",
+          "detailed_description": "",
+          "rules_fingerprint": "c2fae03d5363899797a8e9726a8f803e5ca4c3cc0673b67b2aee2c6b2ce434f5",
+          "decision": "ph",
+          "reason": "Thrown acid with Dex-based save."
+        }
+      ]
+    },
+    {
+      "key": "alchemist-s-fire",
+      "canonical": "Alchemist's Fire",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Алхимический огонь"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0714",
+          "name": "Алхимический огонь",
+          "name_en": "",
+          "description": "Когда вы совершаете действие Атака, можете заменить одну из своих атак метанием фляжки Алхимического огня.\n\nВыберите один объект или существо, видимые вами в пределах 20 футов от вас.\n\nЦель должна преуспеть в спасброске Ловкости (Сл 8 + мод Ловкости и Бонус Владения), иначе получит [fire]1к4:fire:огнём[/fire] и начнёт **гореть**.",
+          "detailed_description": "",
+          "rules_fingerprint": "d5e30db101717c4f96209a12a90302e393b22d6b0c0706f61f48f3ed21694617",
+          "decision": "ph",
+          "reason": "Attack replacement, Dex save, fire d4 and burning."
+        }
+      ]
+    },
+    {
+      "key": "alchemist-s-supplies",
+      "canonical": "Alchemist's Supplies",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Инструменты алхимика"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0732",
+          "name": "Инструменты алхимика",
+          "name_en": "",
+          "description": "**Изготовление**: __Алхимический огонь__, __Бумага__, __Духи__, __Кислота__, __Масло__, __Мешочек с компонентами__.",
+          "detailed_description": "",
+          "rules_fingerprint": "4774934880052af6b24869104c61d8d22938610d09116740baf7cd393467c6dc",
+          "decision": "ph",
+          "reason": "Listed original crafting options."
+        }
+      ]
+    },
+    {
+      "key": "antitoxin",
+      "canonical": "Antitoxin",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Противоядие"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0811",
+          "name": "Противоядие",
+          "name_en": "",
+          "description": ":bonus_action::получите Преимущество на спасброски против Отравления на 1 час.",
+          "detailed_description": "",
+          "rules_fingerprint": "5a7a44f597288bfddf08b5a1d96fe77db5f48f851f0be7eb51fc3cc955eb7eb6",
+          "decision": "ph",
+          "reason": "Bonus action, one-hour poison saves advantage."
+        }
+      ]
+    },
+    {
+      "key": "arcane-focus",
+      "canonical": "Arcane Focus",
+      "edition": "2014+2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Магическая фокусировка"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0826",
+          "name": "Магическая фокусировка",
+          "name_en": "",
+          "description": "Фокусировка для тайных заклинаний: кристалл, сфера, жезл (по 10 ЗМ), посох (5 ЗМ), волшебная палочка (10 ЗМ).",
+          "detailed_description": "",
+          "rules_fingerprint": "3b01c3219b7c4645d1ef38a4646cb1f814c258f3a2e472687aa76c85e1c82b9f",
+          "decision": "ph",
+          "reason": "Listed arcane-focus forms; price differences explicitly ignored."
+        }
+      ]
+    },
+    {
+      "key": "arrows",
+      "canonical": "Arrows",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Стрела"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0728",
+          "name": "Стрела",
+          "name_en": "",
+          "description": "Боеприпас для коротких и длинных луков. Хранятся в Колчане.",
+          "detailed_description": "",
+          "rules_fingerprint": "b70dddb6928dfe2cf98a2135a00309bf2cefec9dfbaa4a79932b253c6feb9da7",
+          "decision": "ph",
+          "reason": "Ammunition for shortbows and longbows, kept in a quiver; unit pricing allowed."
+        }
+      ]
+    },
+    {
+      "key": "backpack",
+      "canonical": "Backpack",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Рюкзак"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0813",
+          "name": "Рюкзак",
+          "name_en": "",
+          "description": "Вмещает не более 30 фунтов или 1 кубического фута.",
+          "detailed_description": "",
+          "rules_fingerprint": "f34f9f0f414fe196b42016ea131832b85a72af5da6920659a8bbc138c9aea789",
+          "decision": "ph",
+          "reason": "Thirty pounds / one cubic foot."
+        }
+      ]
+    },
+    {
+      "key": "bagpipes",
+      "canonical": "Bagpipes",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Волынка"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0689",
+          "name": "Волынка",
+          "name_en": "",
+          "description": "Вариант музыкального инструмента.",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Listed musical instrument."
+        }
+      ]
+    },
+    {
+      "key": "ball-bearings",
+      "canonical": "Ball Bearings",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Металлические шарики"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0799",
+          "name": "Металлические шарики",
+          "name_en": "",
+          "description": "Действием высыпаются на площадь 10×10 футов. Существо, идущее через область, должно преуспеть в Спасброске Ловкости Сл 10, иначе [[падает Ничком|effect:d7222978-b165-427c-b890-179db45a789f]].",
+          "detailed_description": "",
+          "rules_fingerprint": "f5c64e5450de1b3c53a058e696af6c5e89601d6da62b8c15ea410623a3053010",
+          "decision": "ph",
+          "reason": "Ten-foot square, Dex10 or Prone."
+        }
+      ]
+    },
+    {
+      "key": "bandura",
+      "canonical": "Bandura",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Бандура"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0686",
+          "name": "Бандура",
+          "name_en": "",
+          "description": "Вариант музыкального инструмента",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "non_ph",
+          "reason": "A bandura is not one of the PH listed musical instrument variants; do not silently equate it to lute/viol."
+        }
+      ]
+    },
+    {
+      "key": "barrel",
+      "canonical": "Barrel",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Бочка"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0716",
+          "name": "Бочка",
+          "name_en": "",
+          "description": "Бочка вмещает до 40 галлонов жидкости или до 4 кубических фута объема.",
+          "detailed_description": "",
+          "rules_fingerprint": "ef5a450513b521b8076b4b460c3e45b4205f63f007096a76deafa7b6dd55a37d",
+          "decision": "ph",
+          "reason": "Forty gallons or four cubic feet."
+        }
+      ]
+    },
+    {
+      "key": "basket",
+      "canonical": "Basket",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Корзина"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0794",
+          "name": "Корзина",
+          "name_en": "",
+          "description": "Вмещает не более 40 фунтов или 2 кубических футов.",
+          "detailed_description": "",
+          "rules_fingerprint": "62ff73b922b148dc4c29d08e841aea4cec3f0bb984c3a3d6e67f7846d87a40f9",
+          "decision": "ph",
+          "reason": "Forty pounds / two cubic feet."
+        }
+      ]
+    },
+    {
+      "key": "battleaxe",
+      "canonical": "Battleaxe",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Боевой топор"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0020",
+          "name": "Боевой топор",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "e9a0c6de123ecdb4ee77888524e2b162cf5cab07808774dd277f8ee2dad1cb37",
+          "decision": "ph",
+          "reason": "Plain versatile battleaxe."
+        },
+        {
+          "card_number": "CARD-0322",
+          "name": "Боевой топор",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "8df0d3ce6ec28df6099b11bde10dc9d1537d3fa837186bb224932f30488b8e0e",
+          "decision": "ph",
+          "reason": "Plain versatile battleaxe."
+        }
+      ]
+    },
+    {
+      "key": "bedroll",
+      "canonical": "Bedroll",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Спальник"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0703",
+          "name": "Спальник",
+          "name_en": "",
+          "description": "Позволяет спать одному Маленькому или Среднему существу.",
+          "detailed_description": "",
+          "rules_fingerprint": "f1e95d410104eb710c27ee37b56515debaccd3a79304e99d43d33437ef521414",
+          "decision": "ph",
+          "reason": "Sleeps one Small or Medium creature."
+        }
+      ]
+    },
+    {
+      "key": "bell",
+      "canonical": "Bell",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Колокольчик"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0792",
+          "name": "Колокольчик",
+          "name_en": "",
+          "description": "Маленький металлический колокольчик.",
+          "detailed_description": "",
+          "rules_fingerprint": "4326a5a6ab73b6cab0f52349d62c79b9b6b99506a9f3a3f8dfe42a8ff58fd774",
+          "decision": "ph",
+          "reason": "Ordinary small metal bell."
+        }
+      ]
+    },
+    {
+      "key": "blanket",
+      "canonical": "Blanket",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Теплое одеяло",
+        "Одеяло"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0406",
+          "name": "Теплое одеяло",
+          "name_en": "",
+          "description": "Помогает справиться в холода",
+          "detailed_description": "",
+          "rules_fingerprint": "3326d923a9706496ae831b5e462633d8fe893852ccb7d610a7e48e7a4795100d",
+          "decision": "ph",
+          "reason": "Plain warm blanket."
+        },
+        {
+          "card_number": "CARD-0808",
+          "name": "Одеяло",
+          "name_en": "",
+          "description": "Тёплое шерстяное одеяло.",
+          "detailed_description": "",
+          "rules_fingerprint": "e5d7070608b4c92ed881ef50ba4e47928d8c9ac079a4c53f971538680782eef4",
+          "decision": "ph",
+          "reason": "Plain warm blanket."
+        }
+      ]
+    },
+    {
+      "key": "block-and-tackle",
+      "canonical": "Block and Tackle",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Блок и лебёдка"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0715",
+          "name": "Блок и лебёдка",
+          "name_en": "",
+          "description": "Блок и лебедка позволяют вам поднять вес в четыре раза больший, чем обычно.",
+          "detailed_description": "",
+          "rules_fingerprint": "3ca40c9de40963a993410232d78184c5c4496804b6ba8c0778a9e6d002722b1e",
+          "decision": "ph",
+          "reason": "Quadruples hoisted weight."
+        }
+      ]
+    },
+    {
+      "key": "blowgun",
+      "canonical": "Blowgun",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Духовая трубка"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0326",
+          "name": "Духовая трубка",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "1d4a76bf5c9b69ae3df855677e1793d6c85ef7b3dc921d36b65960549a7f5f29",
+          "decision": "ph",
+          "reason": "Plain blowgun, one piercing damage."
+        },
+        {
+          "card_number": "CARD-0836",
+          "name": "Духовая трубка",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "1e34f97e7d33d41a7c61af4d3efe800a2bdb5fae5bc8933b073178b5c8b79c28",
+          "decision": "ph",
+          "reason": "Plain blowgun, one piercing damage."
+        }
+      ]
+    },
+    {
+      "key": "bolts",
+      "canonical": "Bolts",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Арбалетный болт"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0749",
+          "name": "Арбалетный болт",
+          "name_en": "",
+          "description": "Используется для арбалетов, хранится в футляре.",
+          "detailed_description": "",
+          "rules_fingerprint": "2cfb3f21a5d7415146e253b0f953a30d497b332d2959547270ba4fb6ea72e57c",
+          "decision": "ph",
+          "reason": "Crossbow ammunition kept in a case; unit pricing allowed."
+        }
+      ]
+    },
+    {
+      "key": "book",
+      "canonical": "Book",
+      "edition": "2014+2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Книга (история)",
+        "Книга (молитвенник)",
+        "Книга знаний",
+        "Книга (оккультные знания)",
+        "Книга (философия)"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0708",
+          "name": "Книга (история)",
+          "name_en": "",
+          "description": "Прочтение этой книги даёт +5 к проверке Истории на ваш выбор.",
+          "detailed_description": "",
+          "rules_fingerprint": "ef5a450513b521b8076b4b460c3e45b4205f63f007096a76deafa7b6dd55a37d",
+          "decision": "ph",
+          "reason": "History/Religion bonuses or ordinary nonfiction lore; philosophy Insight variant excluded."
+        },
+        {
+          "card_number": "CARD-0726",
+          "name": "Книга (молитвенник)",
+          "name_en": "",
+          "description": "Прочтение этой книги даёт +5 к проверке Религии на ваш выбор.",
+          "detailed_description": "",
+          "rules_fingerprint": "ef5a450513b521b8076b4b460c3e45b4205f63f007096a76deafa7b6dd55a37d",
+          "decision": "ph",
+          "reason": "History/Religion bonuses or ordinary nonfiction lore; philosophy Insight variant excluded."
+        },
+        {
+          "card_number": "CARD-0847",
+          "name": "Книга знаний",
+          "name_en": "",
+          "description": "Книга с записями знаний по некоторой теме.",
+          "detailed_description": "",
+          "rules_fingerprint": "69e84f76ababb2e3962e82f220660da526e4c31689cf1b3dfcd80e55e8af653c",
+          "decision": "ph",
+          "reason": "History/Religion bonuses or ordinary nonfiction lore; philosophy Insight variant excluded."
+        },
+        {
+          "card_number": "CARD-0976",
+          "name": "Книга (оккультные знания)",
+          "name_en": "Book (occult lore)",
+          "description": "Книга с записями о скрытых знаниях и тайнах мультивселенной.",
+          "detailed_description": "",
+          "rules_fingerprint": "4788e5b1e0ee01c4edece905028029ab22059b382db9146ad9399e25a25685ce",
+          "decision": "ph",
+          "reason": "History/Religion bonuses or ordinary nonfiction lore; philosophy Insight variant excluded."
+        },
+        {
+          "card_number": "CARD-0724",
+          "name": "Книга (философия)",
+          "name_en": "",
+          "description": "Прочтение этой книги даёт +5 к проверке Проницательности на ваш выбор.",
+          "detailed_description": "",
+          "rules_fingerprint": "ef5a450513b521b8076b4b460c3e45b4205f63f007096a76deafa7b6dd55a37d",
+          "decision": "non_ph",
+          "reason": "The bonus is to Wisdom (Insight), outside the PH2024 Book Intelligence skill list."
+        }
+      ]
+    },
+    {
+      "key": "bottle-glass",
+      "canonical": "Bottle, Glass",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Бутылка, стеклянная"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0788",
+          "name": "Бутылка, стеклянная",
+          "name_en": "",
+          "description": "*Вмещает не более 1½ пинты (0,75 л).*",
+          "detailed_description": "",
+          "rules_fingerprint": "62ff73b922b148dc4c29d08e841aea4cec3f0bb984c3a3d6e67f7846d87a40f9",
+          "decision": "ph",
+          "reason": "One and a half pints."
+        }
+      ]
+    },
+    {
+      "key": "breastplate",
+      "canonical": "Breastplate",
+      "edition": "2024",
+      "section": "Armor",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Кираса"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0271",
+          "name": "Кираса",
+          "name_en": "",
+          "description": "Категория: средний доспех. КЗ: 14 + min(dex, 2). Без владения: помеха на проверки d20, связанные с Силой или Ловкостью, и нельзя сотворять заклинания.",
+          "detailed_description": "",
+          "rules_fingerprint": "6eca1cc81bd42a95d437d5891b0769ef2fbaef4b25d0f59b1dda2c8dd3447070",
+          "decision": "ph",
+          "reason": "Standard breastplate; damage-reduction variant excluded."
+        },
+        {
+          "card_number": "CARD-0941",
+          "name": "Кираса",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "945da3696b816653d606b1a6e4f0f7d87a578e795307cc33c910fd2638ce8d77",
+          "decision": "ph",
+          "reason": "Standard breastplate; damage-reduction variant excluded."
+        },
+        {
+          "card_number": "CARD-0270",
+          "name": "Кираса",
+          "name_en": "",
+          "description": "Входящий рубящий урон -1",
+          "detailed_description": "",
+          "rules_fingerprint": "c4de359e81aecc3299cdbdbb6c2c715f6ff647cb3dea7a34b7262abfe33d2355",
+          "decision": "non_ph",
+          "reason": "Same base name, but description adds a custom bonus, damage reduction, altered speed/health, or knockback absent from original equipment."
+        }
+      ]
+    },
+    {
+      "key": "brewer-s-supplies",
+      "canonical": "Brewer's Supplies",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Инструменты пивовара"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0737",
+          "name": "Инструменты пивовара",
+          "name_en": "",
+          "description": "\n**Изготовление:** __Противоядие__",
+          "detailed_description": "",
+          "rules_fingerprint": "4774934880052af6b24869104c61d8d22938610d09116740baf7cd393467c6dc",
+          "decision": "ph",
+          "reason": "Antitoxin crafting."
+        }
+      ]
+    },
+    {
+      "key": "bucket",
+      "canonical": "Bucket",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Деревянное ведро"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0719",
+          "name": "Деревянное ведро",
+          "name_en": "",
+          "description": "Вмещает до половины кубического фута содержимого.",
+          "detailed_description": "",
+          "rules_fingerprint": "ef5a450513b521b8076b4b460c3e45b4205f63f007096a76deafa7b6dd55a37d",
+          "decision": "ph",
+          "reason": "Half cubic foot capacity."
+        }
+      ]
+    },
+    {
+      "key": "bullets-firearm",
+      "canonical": "Bullets, Firearm",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Пуля для мушкета"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0785",
+          "name": "Пуля для мушкета",
+          "name_en": "",
+          "description": "*Боеприпасы для пистолей и мушкетов. Хранятся в кошеле.*",
+          "detailed_description": "",
+          "rules_fingerprint": "b44d32fb17bb838e6f1cc4e82ec2d5e9f9369da82b096851e0418ed3db55f20a",
+          "decision": "ph",
+          "reason": "Musket/pistol ammunition; unit pricing allowed."
+        }
+      ]
+    },
+    {
+      "key": "bullets-sling",
+      "canonical": "Bullets, Sling",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Снаряд для пращи"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0786",
+          "name": "Снаряд для пращи",
+          "name_en": "",
+          "description": "*Боеприпас для пращи. Хранятся в кошеле.*",
+          "detailed_description": "",
+          "rules_fingerprint": "7d93029835bee33b295db88712b1f7cd074fa799b8cfbf2015b6e3204e17fe1a",
+          "decision": "ph",
+          "reason": "Sling ammunition; unit pricing allowed."
+        }
+      ]
+    },
+    {
+      "key": "burglar-s-pack",
+      "canonical": "Burglar's Pack",
+      "edition": "2014+2024",
+      "section": "Equipment Packs",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Набор взломщика"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0803",
+          "name": "Набор взломщика",
+          "name_en": "",
+          "description": "Рюкзак, мешочек с 1000 металлических шариков, 10 футов лески, колокольчик, 5 свечей, ломик, трутница, 2 факела, кандалы.",
+          "detailed_description": "",
+          "rules_fingerprint": "b7d5ccdfe00c20b6d843148674edd86ee8d4710354b3bbb2550034beaa36682c",
+          "decision": "ph",
+          "reason": "Owner-reviewed provenance match (2026-09-24): same original equipment identity and similar description; the documented wording/quantity/profile discrepancy does not change source identity. This is NOT certification of mechanics. Earlier discrepancy: Adds manacles/two torches and omits original pack contents; neither 2014 nor 2024 composition."
+        }
+      ]
+    },
+    {
+      "key": "calligrapher-s-supplies",
+      "canonical": "Calligrapher's Supplies",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Инструменты каллиграфа"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0707",
+          "name": "Инструменты каллиграфа",
+          "name_en": "",
+          "description": "Позволяет писать текст росчерками, усложняя его подделку.",
+          "detailed_description": "",
+          "rules_fingerprint": "4774934880052af6b24869104c61d8d22938610d09116740baf7cd393467c6dc",
+          "decision": "ph",
+          "reason": "Writing flourishes to resist forgery."
+        }
+      ]
+    },
+    {
+      "key": "caltrops",
+      "canonical": "Caltrops",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Калтропы"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0790",
+          "name": "Калтропы",
+          "name_en": "",
+          "description": "Действием рассыпаются на площадь 5×5 футов. Существо, вошедшее в область, должно преуспеть в спасброске Ловкости Сл 15, иначе получает 1 колющего урона и его Скорость становится 0 до начала его следующего хода.\nНа сбор Калтропов уходит 10 минут.",
+          "detailed_description": "",
+          "rules_fingerprint": "0b7abd763dd2d99f14afb64ad26e0723123e1a4e62d9bf16ac7026ae54a0ec03",
+          "decision": "ph",
+          "reason": "Five-foot square, Dex15, one piercing, stop speed until next turn."
+        }
+      ]
+    },
+    {
+      "key": "candle",
+      "canonical": "Candle",
+      "edition": "2014+2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Свеча"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0814",
+          "name": "Свеча",
+          "name_en": "",
+          "description": "Горит 1 час, даёт Тусклый свет в радиусе 5 футов.",
+          "detailed_description": "",
+          "rules_fingerprint": "540f034ac907312d6033f23386e5b373b60e7f1545aa9198bdc734a8d81cc800",
+          "decision": "ph",
+          "reason": "Owner-reviewed provenance match (2026-09-24): same original equipment identity and similar description; the documented wording/quantity/profile discrepancy does not change source identity. This is NOT certification of mechanics. Earlier discrepancy: Description says only dim light at five feet; both PH editions say bright five plus dim five. Existing mechanics say the original lighting; no text fix in this migration."
+        }
+      ]
+    },
+    {
+      "key": "carpenter-s-tools",
+      "canonical": "Carpenter's Tools",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Инструменты плотника"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0738",
+          "name": "Инструменты плотника",
+          "name_en": "",
+          "description": "**Изготовление:** __Боевой посох__, __Бочка__, __Дубинка__, __Лестница__, __Палица__, __Сундук__, __Факел__, __Шест__.",
+          "detailed_description": "",
+          "rules_fingerprint": "4774934880052af6b24869104c61d8d22938610d09116740baf7cd393467c6dc",
+          "decision": "ph",
+          "reason": "Abbreviated original wooden-item crafting list."
+        }
+      ]
+    },
+    {
+      "key": "cartographer-s-tools",
+      "canonical": "Cartographer's Tools",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Инструменты картографа"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0730",
+          "name": "Инструменты картографа",
+          "name_en": "",
+          "description": "Позволяет нарисовать карту небольшой области.\n*Мудрость, Сл 15*",
+          "detailed_description": "",
+          "rules_fingerprint": "4774934880052af6b24869104c61d8d22938610d09116740baf7cd393467c6dc",
+          "decision": "ph",
+          "reason": "Wisdom DC15 small-area map."
+        }
+      ]
+    },
+    {
+      "key": "case-crossbow-bolt",
+      "canonical": "Case, Crossbow Bolt",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Футляр для арбалетных болтов"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0828",
+          "name": "Футляр для арбалетных болтов",
+          "name_en": "",
+          "description": "Вмещает до 20 арбалетных болтов.",
+          "detailed_description": "",
+          "rules_fingerprint": "84ccb16bdb5e516d13c2cd701930fbdaca38dfd4df352517170b90e75499c4fb",
+          "decision": "ph",
+          "reason": "Twenty bolts."
+        }
+      ]
+    },
+    {
+      "key": "case-map-or-scroll",
+      "canonical": "Case, Map or Scroll",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Тубус для карт и свитков"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0821",
+          "name": "Тубус для карт и свитков",
+          "name_en": "",
+          "description": "Вмещает до 10 листов бумаги или 5 листов пергамента.",
+          "detailed_description": "",
+          "rules_fingerprint": "b587c876074371d427717a2cc7a90881c5239a5ac5ba6663a956658b3c315453",
+          "decision": "ph",
+          "reason": "Ten paper or five parchment sheets."
+        }
+      ]
+    },
+    {
+      "key": "chain",
+      "canonical": "Chain",
+      "edition": "2014+2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Цепь"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0829",
+          "name": "Цепь",
+          "name_en": "",
+          "description": "Цепь 10 футов, выдерживает до 4000 фунтов. Существо в кандалах из цепи может вырваться успешной проверкой Силы (Атлетика) Сл 18.",
+          "detailed_description": "",
+          "rules_fingerprint": "e74fd220f79eef1dba25624932aa7f3baf6a90acb3e8789674e4e0b65d7046f7",
+          "decision": "ph",
+          "reason": "Owner-reviewed provenance match (2026-09-24): same original equipment identity and similar description; the documented wording/quantity/profile discrepancy does not change source identity. This is NOT certification of mechanics. Earlier discrepancy: Description gives Strength DC18 to escape and 4000-pound capacity. PH2024 uses Dexterity18 or Strength20; PH2014 Strength20. Do not silently certify the alternate rule."
+        }
+      ]
+    },
+    {
+      "key": "chain-mail",
+      "canonical": "Chain Mail",
+      "edition": "2024",
+      "section": "Armor",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Кольчуга",
+        "Кольчужный доспех"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0283",
+          "name": "Кольчуга",
+          "name_en": "",
+          "description": "Категория: тяжёлый доспех. КЗ: 16. При Силе ниже 13 скорость снижается на 10 футов. Помеха на проверки Скрытности. Без владения: помеха на проверки d20, связанные с Силой или Ловкостью, и нельзя сотворять заклинания.",
+          "detailed_description": "",
+          "rules_fingerprint": "f25ba123d2fa9a29c496cd907db2619841ba91492d7e9b7520f38d9ef7665ffe",
+          "decision": "ph",
+          "reason": "Standard chain mail; explicit Russian translation alias."
+        },
+        {
+          "card_number": "CARD-0945",
+          "name": "Кольчужный доспех",
+          "name_en": "",
+          "description": "Скрытность с помехой.",
+          "detailed_description": "",
+          "rules_fingerprint": "2f0572747c4103cfcbd1b5ac0f24cdf179a49d8d190f523f72f087b561ca6c4d",
+          "decision": "ph",
+          "reason": "Standard chain mail; explicit Russian translation alias."
+        },
+        {
+          "card_number": "CARD-0288",
+          "name": "Кольчуга",
+          "name_en": "",
+          "description": "Скрытность: помеха\nВходящий колющий урон -1",
+          "detailed_description": "",
+          "rules_fingerprint": "29ad5e0cc360b06b24295aa889e968b36721ffbe52738d8437f8139379b44c97",
+          "decision": "non_ph",
+          "reason": "Same base name, but description adds a custom bonus, damage reduction, altered speed/health, or knockback absent from original equipment."
+        }
+      ]
+    },
+    {
+      "key": "chain-shirt",
+      "canonical": "Chain Shirt",
+      "edition": "2024",
+      "section": "Armor",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Кольчужная рубаха"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0278",
+          "name": "Кольчужная рубаха",
+          "name_en": "",
+          "description": "Категория: средний доспех. КЗ: 13 + min(dex, 2). Без владения: помеха на проверки d20, связанные с Силой или Ловкостью, и нельзя сотворять заклинания.",
+          "detailed_description": "",
+          "rules_fingerprint": "356de0d055ee9442e9a82148eecfc2cf7bf95303a5582a6b90bf55b453604082",
+          "decision": "ph",
+          "reason": "Standard medium armor; older row stores base value separately from category."
+        },
+        {
+          "card_number": "CARD-0940",
+          "name": "Кольчужная рубаха",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "a7ab60634711e5940c7ac726d11299d963a1d52f8b7e2789cede19b258a3010d",
+          "decision": "ph",
+          "reason": "Standard medium armor; older row stores base value separately from category."
+        },
+        {
+          "card_number": "CARD-0256",
+          "name": "Кольчужная рубаха",
+          "name_en": "",
+          "description": "+2 к максимальному здоровью.",
+          "detailed_description": "",
+          "rules_fingerprint": "34a98533f5bf260dab27f9261ebe9587894bd9d1af27fdeebdb0b1f91ec59633",
+          "decision": "non_ph",
+          "reason": "Same base name, but description adds a custom bonus, damage reduction, altered speed/health, or knockback absent from original equipment."
+        },
+        {
+          "card_number": "CARD-0267",
+          "name": "Кольчужная рубаха",
+          "name_en": "",
+          "description": "-5 фт. скорости\nАтлетика +1\nСпасброски Силы +1",
+          "detailed_description": "",
+          "rules_fingerprint": "c2b9b51cab411e43277c11202b0084166b792c251cc4cdbb35db988a54c39aea",
+          "decision": "non_ph",
+          "reason": "Same base name, but description adds a custom bonus, damage reduction, altered speed/health, or knockback absent from original equipment."
+        }
+      ]
+    },
+    {
+      "key": "chest",
+      "canonical": "Chest",
+      "edition": "2014+2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Сундук"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0818",
+          "name": "Сундук",
+          "name_en": "",
+          "description": "Вмещает не более 300 фунтов или 12 кубических футов.",
+          "detailed_description": "",
+          "rules_fingerprint": "62ff73b922b148dc4c29d08e841aea4cec3f0bb984c3a3d6e67f7846d87a40f9",
+          "decision": "ph",
+          "reason": "Twelve cubic feet, PH2014 three hundred pounds."
+        }
+      ]
+    },
+    {
+      "key": "climber-s-kit",
+      "canonical": "Climber's Kit",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Комплект для лазания"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0793",
+          "name": "Комплект для лазания",
+          "name_en": "",
+          "description": "Специальные шипы, носки ботинок, перчатки и упряжь. Действием можно закрепиться.",
+          "detailed_description": "",
+          "rules_fingerprint": "0416d17eaa74dc780d3686c9c26167b9dd438fe5779dc896f65acf12f380e46b",
+          "decision": "ph",
+          "reason": "Climbing tips, gloves, pitons and harness; anchoring."
+        }
+      ]
+    },
+    {
+      "key": "clothes-common",
+      "canonical": "Clothes, Common",
+      "edition": "2014",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014"
+      ],
+      "aliases": [
+        "Комплект обычной одежды"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0391",
+          "name": "Комплект обычной одежды",
+          "name_en": "",
+          "description": "Обычная одежда от предыстории",
+          "detailed_description": "",
+          "rules_fingerprint": "f00de2571ca6b94ded4d75ba9bd038dec8d24034c25ed3d5aba5ecabd645e942",
+          "decision": "ph",
+          "reason": "Plain common clothes, including dark hooded clothes; PH2014 listing."
+        },
+        {
+          "card_number": "CARD-0408",
+          "name": "Комплект обычной одежды",
+          "name_en": "",
+          "description": "Темная одежда с капюшоном",
+          "detailed_description": "",
+          "rules_fingerprint": "f00de2571ca6b94ded4d75ba9bd038dec8d24034c25ed3d5aba5ecabd645e942",
+          "decision": "ph",
+          "reason": "Plain common clothes, including dark hooded clothes; PH2014 listing."
+        }
+      ]
+    },
+    {
+      "key": "clothes-fine",
+      "canonical": "Clothes, Fine",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Отличная одежда"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0392",
+          "name": "Отличная одежда",
+          "name_en": "",
+          "description": "Отличная одежда изготавливается из дорогих тканей и иcкусно украшается.",
+          "detailed_description": "",
+          "rules_fingerprint": "c5ac929f6f052ef197956cb95e3a16cefabbfb7d3a8fd188aba64443add1f84d",
+          "decision": "ph",
+          "reason": "Expensive fabric and ornamentation."
+        }
+      ]
+    },
+    {
+      "key": "clothes-traveler-s",
+      "canonical": "Clothes, Traveler's",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Дорожная одежда"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0395",
+          "name": "Дорожная одежда",
+          "name_en": "",
+          "description": "Дорожная одежда — это одеяния из крепкой ткани, предназначенные для путешествий в различных условиях.",
+          "detailed_description": "",
+          "rules_fingerprint": "f00de2571ca6b94ded4d75ba9bd038dec8d24034c25ed3d5aba5ecabd645e942",
+          "decision": "ph",
+          "reason": "Resilient travel garments."
+        }
+      ]
+    },
+    {
+      "key": "club",
+      "canonical": "Club",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Дубинка"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0568",
+          "name": "Дубинка",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "7fa1d8d2fd787652b7b79e21bd2bf2bc8942f6e19368c4874ca180dd82caab8e",
+          "decision": "ph",
+          "reason": "Empty/placeholder summary; standard club d4 profile."
+        },
+        {
+          "card_number": "CARD-0857",
+          "name": "Дубинка",
+          "name_en": "",
+          "description": "Описание эффекта",
+          "detailed_description": "",
+          "rules_fingerprint": "7212417d0f56af523a3fe90ac0f1fdb66586f9315c533a8f0cbb2cfcab8db746",
+          "decision": "ph",
+          "reason": "Empty/placeholder summary; standard club d4 profile."
+        }
+      ]
+    },
+    {
+      "key": "cobbler-s-tools",
+      "canonical": "Cobbler's Tools",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Инструменты сапожника"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0742",
+          "name": "Инструменты сапожника",
+          "name_en": "",
+          "description": "**Изготовление:** __Комплект для лазания__",
+          "detailed_description": "",
+          "rules_fingerprint": "4774934880052af6b24869104c61d8d22938610d09116740baf7cd393467c6dc",
+          "decision": "ph",
+          "reason": "Climber kit crafting."
+        }
+      ]
+    },
+    {
+      "key": "component-pouch",
+      "canonical": "Component Pouch",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Мешочек с компонентами"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0801",
+          "name": "Мешочек с компонентами",
+          "name_en": "",
+          "description": "Водонепроницаемый мешочек с компонентами для заклинаний (без указанной стоимости).",
+          "detailed_description": "",
+          "rules_fingerprint": "46d76c86eee5f53ec181a0c806f3da519c9c1fec835ba2a80bf74aa4116bbc0f",
+          "decision": "ph",
+          "reason": "Waterproof free-material spell components."
+        }
+      ]
+    },
+    {
+      "key": "cook-s-utensils",
+      "canonical": "Cook's Utensils",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Инструменты повара"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0739",
+          "name": "Инструменты повара",
+          "name_en": "",
+          "description": "\n**Изготовление:** __Рационы__",
+          "detailed_description": "",
+          "rules_fingerprint": "4774934880052af6b24869104c61d8d22938610d09116740baf7cd393467c6dc",
+          "decision": "ph",
+          "reason": "Rations crafting."
+        }
+      ]
+    },
+    {
+      "key": "costume",
+      "canonical": "Costume",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Костюм"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0387",
+          "name": "Костюм",
+          "name_en": "",
+          "description": "Повседневный костюм",
+          "detailed_description": "",
+          "rules_fingerprint": "f00de2571ca6b94ded4d75ba9bd038dec8d24034c25ed3d5aba5ecabd645e942",
+          "decision": "non_ph",
+          "reason": "Owner-reviewed non-match (2026-09-24): everyday clothing is a different identity from the PH impersonation/disguise Costume."
+        }
+      ]
+    },
+    {
+      "key": "crowbar",
+      "canonical": "Crowbar",
+      "edition": "2014+2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Ломик"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0407",
+          "name": "Ломик",
+          "name_en": "",
+          "description": "Ломик можно использовать как рычаг. В этом случае получите преимущество.",
+          "detailed_description": "",
+          "rules_fingerprint": "f5ad515bcf3c4256d91f053baa251102c35b5a6990a4c56b12a7a73c3d4cca05",
+          "decision": "ph",
+          "reason": "Advantage when using leverage; improvised damage field in older row is noted, no special power."
+        },
+        {
+          "card_number": "CARD-0725",
+          "name": "Ломик",
+          "name_en": "",
+          "description": "Вы совершаете с преимуществом проверки Силы, используя Ломик как рычаг.",
+          "detailed_description": "",
+          "rules_fingerprint": "ef5a450513b521b8076b4b460c3e45b4205f63f007096a76deafa7b6dd55a37d",
+          "decision": "ph",
+          "reason": "Advantage when using leverage; improvised damage field in older row is noted, no special power."
+        }
+      ]
+    },
+    {
+      "key": "dagger",
+      "canonical": "Dagger",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Кинжал"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0297",
+          "name": "Кинжал",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "111d28fe7a83b9a168efbe660f7491daf23d18ab5a9ba8616ee4b485f186e7d3",
+          "decision": "ph",
+          "reason": "Plain dagger profile; no added effect."
+        },
+        {
+          "card_number": "CARD-0492",
+          "name": "Кинжал",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "111d28fe7a83b9a168efbe660f7491daf23d18ab5a9ba8616ee4b485f186e7d3",
+          "decision": "ph",
+          "reason": "Plain dagger profile; no added effect."
+        }
+      ]
+    },
+    {
+      "key": "dart",
+      "canonical": "Dart",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Дротик"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0308",
+          "name": "Дротик",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "3f24915180c2e80d0c07e2db8c5fcbc1b7c459c5e246cdf0540e208ebbbb2a2e",
+          "decision": "ph",
+          "reason": "Plain dart d4."
+        },
+        {
+          "card_number": "CARD-0572",
+          "name": "Дротик",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "245bbcdd0cc03339d1153bf493ca5bb86b32ff425609dc4648219375d444ab5b",
+          "decision": "ph",
+          "reason": "Plain dart d4."
+        }
+      ]
+    },
+    {
+      "key": "dice-set",
+      "canonical": "Dice Set",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Игральные кости"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0697",
+          "name": "Игральные кости",
+          "name_en": "",
+          "description": "Вариант игрового набора.",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Listed gaming set."
+        }
+      ]
+    },
+    {
+      "key": "diplomat-s-pack",
+      "canonical": "Diplomat's Pack",
+      "edition": "2014",
+      "section": "Equipment Packs",
+      "references": [
+        "ph2014"
+      ],
+      "aliases": [
+        "Набор дипломата"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0804",
+          "name": "Набор дипломата",
+          "name_en": "",
+          "description": "Сундук, 2 тубуса, отличная одежда, флакон чернил, чернильная ручка, лампа, 2 фляги масла, 5 листов бумаги, флакон духов, воск, мыло.",
+          "detailed_description": "",
+          "rules_fingerprint": "b26d14cd32eb05bc555e8b73f0e2d2fdb2433cbefdd419acf23724d75e82a175",
+          "decision": "ph",
+          "reason": "Exact PH2014 contents, including wax and soap."
+        }
+      ]
+    },
+    {
+      "key": "disguise-kit",
+      "canonical": "Disguise Kit",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Набор для грима"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0412",
+          "name": "Набор для грима",
+          "name_en": "",
+          "description": "Содержит все необходимое для грима и маскировки.",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Makeup and disguise kit summary."
+        }
+      ]
+    },
+    {
+      "key": "dragonchess-set",
+      "canonical": "Dragonchess Set",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Драконьи шахматы"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0698",
+          "name": "Драконьи шахматы",
+          "name_en": "",
+          "description": "Вариант игрового набора.",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Listed gaming set."
+        }
+      ]
+    },
+    {
+      "key": "druidic-focus",
+      "canonical": "Druidic Focus",
+      "edition": "2014",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014"
+      ],
+      "aliases": [
+        "Фокусировка друидов"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0827",
+          "name": "Фокусировка друидов",
+          "name_en": "",
+          "description": "Фокусировка для друидических заклинаний: веточка омелы (1 ЗМ), тотем (5 ЗМ), деревянный посох (5 ЗМ), жезл из тиса (10 ЗМ).",
+          "detailed_description": "",
+          "rules_fingerprint": "53c4d18415b3a8f33cdb95880f799a4486ace5f30c0ea4e849a7934d6a625317",
+          "decision": "ph",
+          "reason": "PH2014 focus variants including totem."
+        }
+      ]
+    },
+    {
+      "key": "drum",
+      "canonical": "Drum",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Барабан"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0687",
+          "name": "Барабан",
+          "name_en": "",
+          "description": "Вариант музыкального инструмента",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Listed musical instrument."
+        }
+      ]
+    },
+    {
+      "key": "dulcimer",
+      "canonical": "Dulcimer",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Дульцимер"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0690",
+          "name": "Дульцимер",
+          "name_en": "",
+          "description": "Вариант музыкального инструмента",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Listed musical instrument."
+        }
+      ]
+    },
+    {
+      "key": "dungeoneer-s-pack",
+      "canonical": "Dungeoneer's Pack",
+      "edition": "2014+2024",
+      "section": "Equipment Packs",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Набор исследователя подземелий"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0805",
+          "name": "Набор исследователя подземелий",
+          "name_en": "",
+          "description": "Рюкзак, ломик, молоток, 10 шипов, 2 факела, трутница, 10 дней рационов, бурдюк, 50 футов пеньковой верёвки.",
+          "detailed_description": "",
+          "rules_fingerprint": "7f6435487f4d519f478bbec7a96dea03101936c03dc723d607f89612dbb5c962",
+          "decision": "ph",
+          "reason": "Owner-reviewed provenance match (2026-09-24): same original equipment identity and similar description; the documented wording/quantity/profile discrepancy does not change source identity. This is NOT certification of mechanics. Earlier discrepancy: PH2014 composition except two torches instead of ten; quantity differs beyond allowed price differences."
+        }
+      ]
+    },
+    {
+      "key": "entertainer-s-pack",
+      "canonical": "Entertainer's Pack",
+      "edition": "2014",
+      "section": "Equipment Packs",
+      "references": [
+        "ph2014"
+      ],
+      "aliases": [
+        "Набор артиста"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0802",
+          "name": "Набор артиста",
+          "name_en": "",
+          "description": "Рюкзак, спальник, 2 костюма, 5 свечей, 5 дней рационов, бурдюк, набор для грима.",
+          "detailed_description": "",
+          "rules_fingerprint": "b8f4c28f1f427ac6a6bb9d3b6b7bb487d5846c79881082371fd68adeac91f8eb",
+          "decision": "ph",
+          "reason": "Exact PH2014 contents, not PH2024 pack contents."
+        }
+      ]
+    },
+    {
+      "key": "explorer-s-pack",
+      "canonical": "Explorer's Pack",
+      "edition": "2014+2024",
+      "section": "Equipment Packs",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Набор путешественника",
+        "Набор авантюриста"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0806",
+          "name": "Набор путешественника",
+          "name_en": "",
+          "description": "Рюкзак, спальник, столовый набор, трутница, 2 факела, 10 дней рационов, бурдюк, 50 футов пеньковой верёвки.",
+          "detailed_description": "",
+          "rules_fingerprint": "abb2d1d65315ece6134470be54cbd4b2d911ece9c51fc4c76e7c500c80365151",
+          "decision": "ph",
+          "reason": "Owner-reviewed provenance match (2026-09-24): same original equipment identity and similar description; the documented wording/quantity/profile discrepancy does not change source identity. This is NOT certification of mechanics. Earlier discrepancy: PH2014 composition except two torches instead of ten; quantity differs beyond allowed price differences."
+        },
+        {
+          "card_number": "CARD-0415",
+          "name": "Набор авантюриста",
+          "name_en": "",
+          "description": "Содержит в себе:\n- Рюкзак\n- Спальник\n- Столовый набор\n- Трутницу\n- 10 факелов\n- 10 рационов\n- Бурдюк\n\nТакже входит 50-футовая пеньковая веревка",
+          "detailed_description": "Набор авантюриста - это хлеб и соль любого путешественника. В нем находится все самое необходимое для приключения.",
+          "rules_fingerprint": "3326d923a9706496ae831b5e462633d8fe893852ccb7d610a7e48e7a4795100d",
+          "decision": "ph",
+          "reason": "Additional audited Russian translation of Explorer's Pack. Description lists the exact PH2014 contents: backpack, bedroll, mess kit, tinderbox, ten torches, ten days of rations, waterskin and fifty-foot hemp rope. Detailed description adds ordinary travel flavor only."
+        }
+      ]
+    },
+    {
+      "key": "flail",
+      "canonical": "Flail",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Цеп"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0309",
+          "name": "Цеп",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "0439c90e96a722b431c96a83188f00541639e6ca354c5f5ac217e94bf0f917c9",
+          "decision": "ph",
+          "reason": "Plain flail."
+        },
+        {
+          "card_number": "CARD-0488",
+          "name": "Цеп",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "bfe71f27fe493e9b77a2534274697cac63077f103e97869e87e12d4b1e084bf6",
+          "decision": "ph",
+          "reason": "Plain flail."
+        }
+      ]
+    },
+    {
+      "key": "flask",
+      "canonical": "Flask",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Фляга"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0825",
+          "name": "Фляга",
+          "name_en": "",
+          "description": "Вмещает не более 1 пинты.",
+          "detailed_description": "",
+          "rules_fingerprint": "62ff73b922b148dc4c29d08e841aea4cec3f0bb984c3a3d6e67f7846d87a40f9",
+          "decision": "ph",
+          "reason": "One pint."
+        }
+      ]
+    },
+    {
+      "key": "flute",
+      "canonical": "Flute",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Флейта"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0694",
+          "name": "Флейта",
+          "name_en": "",
+          "description": "Вариант музыкального инструмента",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Plain flute; enhanced flute is not this entry."
+        }
+      ]
+    },
+    {
+      "key": "forgery-kit",
+      "canonical": "Forgery Kit",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Набор для фальсификации"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0751",
+          "name": "Набор для фальсификации",
+          "name_en": "",
+          "description": "**Использование:** Подделка не более 10 слов чужим почерком\nСоздание дубликата печати.",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Ten-word handwriting imitation and duplicate seal."
+        }
+      ]
+    },
+    {
+      "key": "glaive",
+      "canonical": "Glaive",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Глефа"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0021",
+          "name": "Глефа",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "148e0ce4a7943d25f6d732b0e66a8d9655527476aab0e7355503c76e0fc56344",
+          "decision": "ph",
+          "reason": "Plain glaive."
+        },
+        {
+          "card_number": "CARD-0321",
+          "name": "Глефа",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "1536249be4e0fdd7e71d5adb4f20ccfb2dc54cead5fb3b41efdab3fd0fb50220",
+          "decision": "ph",
+          "reason": "Plain glaive."
+        }
+      ]
+    },
+    {
+      "key": "glassblower-s-tools",
+      "canonical": "Glassblower's Tools",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Инструменты стеклодува"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0743",
+          "name": "Инструменты стеклодува",
+          "name_en": "",
+          "description": "**Изготовление**: __Подзорная труба__, __Стеклянная бутылка__, __Увеличительное стекло__",
+          "detailed_description": "",
+          "rules_fingerprint": "4774934880052af6b24869104c61d8d22938610d09116740baf7cd393467c6dc",
+          "decision": "ph",
+          "reason": "Abbreviated original glass crafting list."
+        }
+      ]
+    },
+    {
+      "key": "grappling-hook",
+      "canonical": "Grappling Hook",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Крюк-кошка"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0795",
+          "name": "Крюк-кошка",
+          "name_en": "",
+          "description": "Крюк с креплением для верёвки, выдерживает до 500 фунтов.",
+          "detailed_description": "",
+          "rules_fingerprint": "0a9d6d7dd98e64570d7691e8801541fc45f5a5cc6a0c62c045e03aadae1f948f",
+          "decision": "ph",
+          "reason": "Owner-reviewed provenance match (2026-09-24): same original equipment identity and similar description; the documented wording/quantity/profile discrepancy does not change source identity. This is NOT certification of mechanics. Earlier discrepancy: Mundane hook identity matches, but description adds an unsupported 500-pound limit; review whether to treat as harmless summary."
+        }
+      ]
+    },
+    {
+      "key": "greataxe",
+      "canonical": "Greataxe",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Секира"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0030",
+          "name": "Секира",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "a03c91c8000a78f699c6e52354be9f23214e3722e0ea5c3d1bc8581be4c9746e",
+          "decision": "ph",
+          "reason": "Plain greataxe."
+        },
+        {
+          "card_number": "CARD-0312",
+          "name": "Секира",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "a0c743ed55df41dbf49317877beacf21c5083018c3346664f6484c5319907a5f",
+          "decision": "ph",
+          "reason": "Plain greataxe."
+        }
+      ]
+    },
+    {
+      "key": "greatclub",
+      "canonical": "Greatclub",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Палица"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0300",
+          "name": "Палица",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "c6616042ef8aef1e261d8758d69929e55851b7d4deacf91dfc7c316f93d8153a",
+          "decision": "ph",
+          "reason": "Plain greatclub d8 profile."
+        },
+        {
+          "card_number": "CARD-0566",
+          "name": "Палица",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "c6616042ef8aef1e261d8758d69929e55851b7d4deacf91dfc7c316f93d8153a",
+          "decision": "ph",
+          "reason": "Plain greatclub d8 profile."
+        }
+      ]
+    },
+    {
+      "key": "greatsword",
+      "canonical": "Greatsword",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Двуручный меч"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0317",
+          "name": "Двуручный меч",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "31e2efa9280c23e509b0ba4f5f0ce4fe4e8151e176b9a1ace37c3d6025aef615",
+          "decision": "ph",
+          "reason": "Plain greatsword."
+        },
+        {
+          "card_number": "CARD-0485",
+          "name": "Двуручный меч",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "31e2efa9280c23e509b0ba4f5f0ce4fe4e8151e176b9a1ace37c3d6025aef615",
+          "decision": "ph",
+          "reason": "Plain greatsword."
+        }
+      ]
+    },
+    {
+      "key": "halberd",
+      "canonical": "Halberd",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Алебарда"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0017",
+          "name": "Алебарда",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "f77688221cc1373d95f4f3169541197eee47be9a34936234869b034b9687ab04",
+          "decision": "ph",
+          "reason": "Plain halberd."
+        },
+        {
+          "card_number": "CARD-0325",
+          "name": "Алебарда",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "1e550faec8c71a29e971f8c8c999ce6698726241e6cc60c9f9013fb760613fe2",
+          "decision": "ph",
+          "reason": "Plain halberd."
+        }
+      ]
+    },
+    {
+      "key": "half-plate-armor",
+      "canonical": "Half Plate Armor",
+      "edition": "2024",
+      "section": "Armor",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Полулаты"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0286",
+          "name": "Полулаты",
+          "name_en": "",
+          "description": "Категория: средний доспех. КЗ: 15 + min(dex, 2). Помеха на проверки Скрытности. Без владения: помеха на проверки d20, связанные с Силой или Ловкостью, и нельзя сотворять заклинания.",
+          "detailed_description": "",
+          "rules_fingerprint": "8617445b352e5d0d6be620f31d9092d7b9095e963ec8aa74893b1d43cf3c438d",
+          "decision": "ph",
+          "reason": "Standard half plate; damage-reduction variant excluded."
+        },
+        {
+          "card_number": "CARD-0943",
+          "name": "Полулаты",
+          "name_en": "",
+          "description": "Скрытность с помехой.",
+          "detailed_description": "",
+          "rules_fingerprint": "917a64e9881e454afc5952f737d21e9d3656b86dabca0600baf99dd85e631c9f",
+          "decision": "ph",
+          "reason": "Standard half plate; damage-reduction variant excluded."
+        },
+        {
+          "card_number": "CARD-0272",
+          "name": "Полулаты",
+          "name_en": "",
+          "description": "Скрытность: помеха\nВходящий физический урон -1",
+          "detailed_description": "",
+          "rules_fingerprint": "a0aa3bc51d4aa315f61a537de074ca7ed502fe08ced23f6e02e26e10d393bb14",
+          "decision": "non_ph",
+          "reason": "Same base name, but description adds a custom bonus, damage reduction, altered speed/health, or knockback absent from original equipment."
+        }
+      ]
+    },
+    {
+      "key": "hammer",
+      "canonical": "Hammer",
+      "edition": "2014",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014"
+      ],
+      "aliases": [
+        "Молоток"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0845",
+          "name": "Молоток",
+          "name_en": "",
+          "description": "Молоток для забивания шипов и мелких работ.",
+          "detailed_description": "",
+          "rules_fingerprint": "31c04c71fdb70ec943eae43e591288dce4b113f7f8084022fd3e082d7d88669d",
+          "decision": "ph",
+          "reason": "Mundane hammer for pitons."
+        }
+      ]
+    },
+    {
+      "key": "hand-crossbow",
+      "canonical": "Hand Crossbow",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Ручной арбалет",
+        "Арбалет, ручной"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0034",
+          "name": "Ручной арбалет",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "cf55296150e72047a1e57218809097c79b76610623c4d0b8acd49656a64a7c99",
+          "decision": "ph",
+          "reason": "Explicit Russian word-order aliases; no substring matching."
+        },
+        {
+          "card_number": "CARD-0329",
+          "name": "Арбалет, ручной",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "f238f9a500da372e8e896ba6f5eccbff1f3d78d27acad732d624e69b4167e76f",
+          "decision": "ph",
+          "reason": "Explicit Russian word-order aliases; no substring matching."
+        }
+      ]
+    },
+    {
+      "key": "handaxe",
+      "canonical": "Handaxe",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Ручной топор"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0295",
+          "name": "Ручной топор",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "dc0b84df5283e9c003685f6268bf82600c1c9e4d88f9505af3cdd6789a5f8343",
+          "decision": "ph",
+          "reason": "Plain thrown handaxe d6 profile."
+        },
+        {
+          "card_number": "CARD-0564",
+          "name": "Ручной топор",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "dc0b84df5283e9c003685f6268bf82600c1c9e4d88f9505af3cdd6789a5f8343",
+          "decision": "ph",
+          "reason": "Plain thrown handaxe d6 profile."
+        }
+      ]
+    },
+    {
+      "key": "healer-s-kit",
+      "canonical": "Healer's Kit",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Комплект целителя"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0491",
+          "name": "Комплект целителя",
+          "name_en": "",
+          "description": "__Действием__ :action: вы можете **Стабилизировать** цель без проверок Медицины.",
+          "detailed_description": "",
+          "rules_fingerprint": "fb6f6cb53518e670ad800d81e49a4d39554b7ecc62c7fdbae32fe7fd7225ab10",
+          "decision": "ph",
+          "reason": "Stabilization without a Medicine check."
+        }
+      ]
+    },
+    {
+      "key": "heavy-crossbow",
+      "canonical": "Heavy Crossbow",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Тяжелый арбалет",
+        "Арбалет, тяжёлый"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0035",
+          "name": "Тяжелый арбалет",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "0f5bd1ac8a258aa6c254b21bb8e0552d84f890184571f0b0948f9dae8c3eb417",
+          "decision": "ph",
+          "reason": "Explicit Russian word-order aliases; no substring matching."
+        },
+        {
+          "card_number": "CARD-0328",
+          "name": "Арбалет, тяжёлый",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "c89ab65ded261b5cecb87c9fe4cac11ce9e3afe1b952160ecd113059b035be00",
+          "decision": "ph",
+          "reason": "Explicit Russian word-order aliases; no substring matching."
+        }
+      ]
+    },
+    {
+      "key": "herbalism-kit",
+      "canonical": "Herbalism Kit",
+      "edition": "2014+2024",
+      "section": "Tools",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Набор травника"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0405",
+          "name": "Набор травника",
+          "name_en": "",
+          "description": "Включает в себя кожанные перчатки, тяпку и мешки. Также ступку и пестик",
+          "detailed_description": "",
+          "rules_fingerprint": "3326d923a9706496ae831b5e462633d8fe893852ccb7d610a7e48e7a4795100d",
+          "decision": "ph",
+          "reason": "Herbal tools or original crafting list."
+        },
+        {
+          "card_number": "CARD-0712",
+          "name": "Набор травника",
+          "name_en": "",
+          "description": "Можно изготовить: __Зелье лечения__, __Комплект целителя__, __Противоядие__, __Свеча__.",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Herbal tools or original crafting list."
+        }
+      ]
+    },
+    {
+      "key": "hide-armor",
+      "canonical": "Hide Armor",
+      "edition": "2024",
+      "section": "Armor",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Шкурный доспех"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0254",
+          "name": "Шкурный доспех",
+          "name_en": "",
+          "description": "Категория: средний доспех. КЗ: 12 + min(dex, 2). Без владения: помеха на проверки d20, связанные с Силой или Ловкостью, и нельзя сотворять заклинания.",
+          "detailed_description": "",
+          "rules_fingerprint": "74c6aa840143399ee22890816d0ac2c6e8a63786b047386203d3979869a45bae",
+          "decision": "ph",
+          "reason": "Standard medium armor; older row stores base value separately from category."
+        },
+        {
+          "card_number": "CARD-0939",
+          "name": "Шкурный доспех",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "0c922283a605dc769a115461d4a248369af6b5507e518b84e2fce7a3752d6a8a",
+          "decision": "ph",
+          "reason": "Standard medium armor; older row stores base value separately from category."
+        },
+        {
+          "card_number": "CARD-0255",
+          "name": "Шкурный доспех",
+          "name_en": "",
+          "description": "Ловкость рук +1.\nАкробатика +1.\nИспытания Ловкости +1.",
+          "detailed_description": "",
+          "rules_fingerprint": "3d9839e3bf7570a2aba996cb593c18416162c856eab0b4b4fe732d24bc2a446d",
+          "decision": "non_ph",
+          "reason": "Same base name, but description adds a custom bonus, damage reduction, altered speed/health, or knockback absent from original equipment."
+        }
+      ]
+    },
+    {
+      "key": "holy-symbol",
+      "canonical": "Holy Symbol",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Священный символ (эмблема)",
+        "Священный символ"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0727",
+          "name": "Священный символ (эмблема)",
+          "name_en": "",
+          "description": "Священный символ является заклинательной фокусировкой для жрецов и паладинов.",
+          "detailed_description": "",
+          "rules_fingerprint": "64a3826c21827196ba533b9021c1df8cc202e26964201d26d960e55ccacd0357",
+          "decision": "ph",
+          "reason": "Spellcasting focus; emblem and family of listed variants."
+        },
+        {
+          "card_number": "CARD-0816",
+          "name": "Священный символ",
+          "name_en": "",
+          "description": "Фокусировка для божественных заклинаний: амулет (5 ЗМ), эмблема (5 ЗМ) или реликварий (5 ЗМ).",
+          "detailed_description": "",
+          "rules_fingerprint": "08df149b62cb21287cfa390fe1af9a19d1f155d50a1c284c4f4c5a72fb80ba86",
+          "decision": "ph",
+          "reason": "Spellcasting focus; emblem and family of listed variants."
+        }
+      ]
+    },
+    {
+      "key": "holy-water",
+      "canonical": "Holy Water",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Святая вода"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0815",
+          "name": "Святая вода",
+          "name_en": "",
+          "description": ":action:: Исчадие или Нежить совершает спасбросок ЛОВ (Сл 8 + мод. ЛОВ + бонус владения), получая урон при провале.",
+          "detailed_description": "",
+          "rules_fingerprint": "5d6652eb045e489b534ce670a88ee0107ca5fff11fabd5aff9fa37853cc7f84a",
+          "decision": "ph",
+          "reason": "Dex-based save vs fiends/undead; abbreviated action wording."
+        }
+      ]
+    },
+    {
+      "key": "horn",
+      "canonical": "Horn",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Горн"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0693",
+          "name": "Горн",
+          "name_en": "",
+          "description": "Вариант музыкального инструмента",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Listed musical instrument."
+        }
+      ]
+    },
+    {
+      "key": "hunting-trap",
+      "canonical": "Hunting Trap",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Капкан"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0411",
+          "name": "Капкан",
+          "name_en": "",
+          "description": "Можно использовать как ловушку при охоте на средних и крупных животных.",
+          "detailed_description": "",
+          "rules_fingerprint": "4b2159d2946ea3f33bb7dc2257a93d11803a24bdd988ebf46ab0a459571dd8bb",
+          "decision": "ph",
+          "reason": "Mundane hunting trap summary."
+        }
+      ]
+    },
+    {
+      "key": "ink",
+      "canonical": "Ink",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Чернила"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0830",
+          "name": "Чернила",
+          "name_en": "",
+          "description": "Флакон чернил на 500 страниц.",
+          "detailed_description": "",
+          "rules_fingerprint": "c6f4ac68fc293358b5192c5262b10fe12d3a21a5ef5f36fce77e4906261de325",
+          "decision": "ph",
+          "reason": "Five hundred pages."
+        }
+      ]
+    },
+    {
+      "key": "ink-pen",
+      "canonical": "Ink Pen",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Писчее перо"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0809",
+          "name": "Писчее перо",
+          "name_en": "",
+          "description": "Перо для письма чернилами.",
+          "detailed_description": "",
+          "rules_fingerprint": "c6f4ac68fc293358b5192c5262b10fe12d3a21a5ef5f36fce77e4906261de325",
+          "decision": "ph",
+          "reason": "Writing with ink."
+        }
+      ]
+    },
+    {
+      "key": "javelin",
+      "canonical": "Javelin",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Метательное копьё"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0301",
+          "name": "Метательное копьё",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "7f4c18e7ea125a8186a6027eeb87b90c3f4d60a24c3d7523c58e1ae910484a96",
+          "decision": "ph",
+          "reason": "Plain thrown javelin."
+        },
+        {
+          "card_number": "CARD-0487",
+          "name": "Метательное копьё",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "84304797e32ca02486791bb6d84fb2a74a84433e6d21904b81a2ec19a91278b6",
+          "decision": "ph",
+          "reason": "Plain thrown javelin."
+        }
+      ]
+    },
+    {
+      "key": "jeweler-s-tools",
+      "canonical": "Jeweler's Tools",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Инструменты ювелира"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0746",
+          "name": "Инструменты ювелира",
+          "name_en": "",
+          "description": "**Изготовление**: __Магическая фокусировка__, __Священный символ__.",
+          "detailed_description": "",
+          "rules_fingerprint": "4774934880052af6b24869104c61d8d22938610d09116740baf7cd393467c6dc",
+          "decision": "ph",
+          "reason": "Arcane focus and holy symbol crafting."
+        }
+      ]
+    },
+    {
+      "key": "jug",
+      "canonical": "Jug",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Кувшин"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0796",
+          "name": "Кувшин",
+          "name_en": "",
+          "description": "Вмещает не более 1 галлона.",
+          "detailed_description": "",
+          "rules_fingerprint": "62ff73b922b148dc4c29d08e841aea4cec3f0bb984c3a3d6e67f7846d87a40f9",
+          "decision": "ph",
+          "reason": "One gallon."
+        }
+      ]
+    },
+    {
+      "key": "ladder",
+      "canonical": "Ladder",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Лестница"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0798",
+          "name": "Лестница",
+          "name_en": "",
+          "description": "Приставная лестница 10 футов.",
+          "detailed_description": "",
+          "rules_fingerprint": "c6f4ac68fc293358b5192c5262b10fe12d3a21a5ef5f36fce77e4906261de325",
+          "decision": "ph",
+          "reason": "Ten-foot ladder."
+        }
+      ]
+    },
+    {
+      "key": "lamp",
+      "canonical": "Lamp",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Лампа"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0713",
+          "name": "Лампа",
+          "name_en": "",
+          "description": "Заправляется маслом.\nПри горении: __Яркий свет__ на 15 фт и __Тусклый__ ещё на 30 фт.",
+          "detailed_description": "",
+          "rules_fingerprint": "c257f60fbb69318bdda057ba99bbdde17ec3360843a7005b12efb213ebf7c5a3",
+          "decision": "ph",
+          "reason": "Oil fuel, bright 15ft plus dim 30ft."
+        }
+      ]
+    },
+    {
+      "key": "lance",
+      "canonical": "Lance",
+      "edition": "2014+2024",
+      "section": "Weapons",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Длинное копьё"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0023",
+          "name": "Длинное копьё",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "0877cd5763f47e22b999ca1250b923b21c3b8162cc773b2ab8715cc48c282039",
+          "decision": "ph",
+          "reason": "2014 d12 and 2024 d10 lance are both original editions."
+        },
+        {
+          "card_number": "CARD-0320",
+          "name": "Длинное копьё",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "311617f1a8c73c9144e74a02fb1881a584abeedf85adfc51282118c267d37253",
+          "decision": "ph",
+          "reason": "2014 d12 and 2024 d10 lance are both original editions."
+        }
+      ]
+    },
+    {
+      "key": "lantern-bullseye",
+      "canonical": "Lantern, Bullseye",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Фонарь, направленный"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-B24-BULLSEYE",
+          "name": "Фонарь, направленный",
+          "name_en": "Bullseye Lantern",
+          "description": "На масле даёт яркий свет конусом 60 футов и тусклый свет ещё на 60 футов.",
+          "detailed_description": "",
+          "rules_fingerprint": "14b2b8c9aa53012a0f92cc69180cf16dd4c259788abd6db0e98c9955dde5dab8",
+          "decision": "ph",
+          "reason": "Oil, bright60 cone plus dim60."
+        }
+      ]
+    },
+    {
+      "key": "lantern-hooded",
+      "canonical": "Lantern, Hooded",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Закрытый фонарь"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0722",
+          "name": "Закрытый фонарь",
+          "name_en": "",
+          "description": "Заправляется маслом.\nПри горении: Яркий свет в 30 фт и Тусклый в ещё 30 фт.",
+          "detailed_description": "",
+          "rules_fingerprint": "045e947544b4ffad5692dac96796c679d033df4a040a3e409730cbbc465797a0",
+          "decision": "ph",
+          "reason": "Oil, bright 30ft plus dim 30ft."
+        }
+      ]
+    },
+    {
+      "key": "leather-armor",
+      "canonical": "Leather Armor",
+      "edition": "2024",
+      "section": "Armor",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Кожаный доспех"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0275",
+          "name": "Кожаный доспех",
+          "name_en": "",
+          "description": "Категория: лёгкий доспех. КЗ: 11 + dex. Без владения: помеха на проверки d20, связанные с Силой или Ловкостью, и нельзя сотворять заклинания.",
+          "detailed_description": "",
+          "rules_fingerprint": "585a63ccf25fef65790814c9f4dc6acf31706f1faf3c8e7672861288466883ce",
+          "decision": "ph",
+          "reason": "Canonical rules text, ordinary leather prose and placeholder template all have standard armor values."
+        },
+        {
+          "card_number": "CARD-0493",
+          "name": "Кожаный доспех",
+          "name_en": "",
+          "description": "Хороший доспех из кожи, который защищает от простых ударов и не сковывает.",
+          "detailed_description": "",
+          "rules_fingerprint": "3e679ab431de3f28bec63a2ae87f98f0b5e0f3db84fd56306f135eb2d7d8f3ce",
+          "decision": "ph",
+          "reason": "Canonical rules text, ordinary leather prose and placeholder template all have standard armor values."
+        },
+        {
+          "card_number": "CARD-0777",
+          "name": "Кожаный доспех",
+          "name_en": "",
+          "description": "Описание эффекта",
+          "detailed_description": "",
+          "rules_fingerprint": "3e679ab431de3f28bec63a2ae87f98f0b5e0f3db84fd56306f135eb2d7d8f3ce",
+          "decision": "ph",
+          "reason": "Canonical rules text, ordinary leather prose and placeholder template all have standard armor values."
+        },
+        {
+          "card_number": "CARD-0249",
+          "name": "Кожаный доспех",
+          "name_en": "",
+          "description": "Ваша скрытая атака наносит на 1 урона больше.",
+          "detailed_description": "",
+          "rules_fingerprint": "3e679ab431de3f28bec63a2ae87f98f0b5e0f3db84fd56306f135eb2d7d8f3ce",
+          "decision": "non_ph",
+          "reason": "Same base name, but description adds a custom bonus, damage reduction, altered speed/health, or knockback absent from original equipment."
+        },
+        {
+          "card_number": "CARD-0250",
+          "name": "Кожаный доспех",
+          "name_en": "",
+          "description": "С вероятностью 1% атака может не нанести вам урона.",
+          "detailed_description": "",
+          "rules_fingerprint": "3e679ab431de3f28bec63a2ae87f98f0b5e0f3db84fd56306f135eb2d7d8f3ce",
+          "decision": "non_ph",
+          "reason": "Same base name, but description adds a custom bonus, damage reduction, altered speed/health, or knockback absent from original equipment."
+        }
+      ]
+    },
+    {
+      "key": "leatherworker-s-tools",
+      "canonical": "Leatherworker's Tools",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Инструменты кожевника"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0735",
+          "name": "Инструменты кожевника",
+          "name_en": "",
+          "description": "**Изготовление**: __Бурдюк__, __Кнут__, __Кожанный доспех__, __Колчан__, __Кошель__, __Пергамент__, __Праща__",
+          "detailed_description": "",
+          "rules_fingerprint": "4774934880052af6b24869104c61d8d22938610d09116740baf7cd393467c6dc",
+          "decision": "ph",
+          "reason": "Abbreviated original leather crafting list."
+        }
+      ]
+    },
+    {
+      "key": "light-crossbow",
+      "canonical": "Light Crossbow",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Арбалет, лёгкий"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0307",
+          "name": "Арбалет, лёгкий",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "9cab4010e379063a9c7eb44b01219d56f21ba360c8311b04aa658be3787a788b",
+          "decision": "ph",
+          "reason": "Plain light crossbow; custom knockback variant excluded."
+        },
+        {
+          "card_number": "CARD-0570",
+          "name": "Арбалет, лёгкий",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "5507237eb517c30d2f425340ac8398890aafac2d337e5d2319bc4827cff06474",
+          "decision": "ph",
+          "reason": "Plain light crossbow; custom knockback variant excluded."
+        },
+        {
+          "card_number": "CARD-0147",
+          "name": "Арбалет, лёгкий",
+          "name_en": "",
+          "description": "Отталкивает вас и цель на 5 фт",
+          "detailed_description": "",
+          "rules_fingerprint": "9452cdcd406dd110fcd42e4b4408021a3684e424d68552df7d2c63d94a60698b",
+          "decision": "non_ph",
+          "reason": "Same base name, but description adds a custom bonus, damage reduction, altered speed/health, or knockback absent from original equipment."
+        }
+      ]
+    },
+    {
+      "key": "light-hammer",
+      "canonical": "Light Hammer",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Лёгкий молот"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0296",
+          "name": "Лёгкий молот",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "f7e8194e7304cc0ce0e511459b26abec75e25da52cf538dbf8ca8272c707ceec",
+          "decision": "ph",
+          "reason": "Plain light hammer."
+        },
+        {
+          "card_number": "CARD-0565",
+          "name": "Лёгкий молот",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "f7fd7ddc505fc91d69fa850a7a785c2797e6b3396c4c7c05692c53455143ad55",
+          "decision": "ph",
+          "reason": "Plain light hammer."
+        }
+      ]
+    },
+    {
+      "key": "little-bag-of-sand",
+      "canonical": "Little Bag of Sand",
+      "edition": "2014",
+      "section": "Equipment Packs",
+      "references": [
+        "ph2014"
+      ],
+      "aliases": [
+        "Мешочек с песком"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0848",
+          "name": "Мешочек с песком",
+          "name_en": "",
+          "description": "Небольшой мешочек мелкого песка (для просушки чернил и т.п.).",
+          "detailed_description": "",
+          "rules_fingerprint": "c6f4ac68fc293358b5192c5262b10fe12d3a21a5ef5f36fce77e4906261de325",
+          "decision": "ph",
+          "reason": "Explicit Scholar pack component."
+        }
+      ]
+    },
+    {
+      "key": "lock",
+      "canonical": "Lock",
+      "edition": "2014+2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Замок"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0789",
+          "name": "Замок",
+          "name_en": "",
+          "description": "Без ключа его можно открыть проверкой Ловкости (Воровские инструменты) Сл 15.",
+          "detailed_description": "",
+          "rules_fingerprint": "18c33b2be79bb81e7141fa3b043a4b94c281e4fbb381a1cc710426a050e67077",
+          "decision": "ph",
+          "reason": "Dexterity/thieves tools DC15."
+        }
+      ]
+    },
+    {
+      "key": "longbow",
+      "canonical": "Longbow",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Длинный лук"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0001",
+          "name": "Длинный лук",
+          "name_en": "",
+          "description": "__Замедляющее:__ При попадании скорость цели уменьшается на 10 фт на ход. ",
+          "detailed_description": "",
+          "rules_fingerprint": "cc5661f3f2109cd154e81e02d473a87ed5dfccfe5d467a6b9006ea77b2eefd95",
+          "decision": "ph",
+          "reason": "Plain longbow; Slow summary is an original mastery."
+        },
+        {
+          "card_number": "CARD-0327",
+          "name": "Длинный лук",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "49c10692c36b96e7e4963512571e50de14ed8f7afb4faf4192ac7c9f94c98446",
+          "decision": "ph",
+          "reason": "Plain longbow; Slow summary is an original mastery."
+        },
+        {
+          "card_number": "CARD-0563",
+          "name": "Длинный лук",
+          "name_en": "",
+          "description": "__Замедляющее:__ При попадании скорость цели уменьшается на 10 фт на ход.",
+          "detailed_description": "",
+          "rules_fingerprint": "6940ed235f1be0597fac140e973ec304cde5329154ddd85f9501246164439a97",
+          "decision": "ph",
+          "reason": "Plain longbow; Slow summary is an original mastery."
+        }
+      ]
+    },
+    {
+      "key": "longsword",
+      "canonical": "Longsword",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Длинный меч"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0319",
+          "name": "Длинный меч",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "46194ea595c44ef434512ed8811aeb625ce4ca3dc0a9aae379430b01012dd932",
+          "decision": "ph",
+          "reason": "Plain versatile longsword."
+        },
+        {
+          "card_number": "CARD-0483",
+          "name": "Длинный меч",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "80a99f7aa69627760dc92589c35edd638615c8ed6853d8d3a03f817e7f96a8e9",
+          "decision": "ph",
+          "reason": "Plain versatile longsword."
+        }
+      ]
+    },
+    {
+      "key": "lute",
+      "canonical": "Lute",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Лютня"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0385",
+          "name": "Лютня",
+          "name_en": "",
+          "description": "Вариант музыкального инструмента.\nХарактеристика: Харизма.",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Ordinary musical instrument, including abbreviated Charisma summary."
+        },
+        {
+          "card_number": "CARD-0692",
+          "name": "Лютня",
+          "name_en": "",
+          "description": "Вариант музыкального инструмента.",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Ordinary musical instrument, including abbreviated Charisma summary."
+        }
+      ]
+    },
+    {
+      "key": "lyre",
+      "canonical": "Lyre",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Лира"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0691",
+          "name": "Лира",
+          "name_en": "",
+          "description": "Вариант музыкального инструмента",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Listed musical instrument."
+        }
+      ]
+    },
+    {
+      "key": "mace",
+      "canonical": "Mace",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Булава"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0009",
+          "name": "Булава",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "04f1dd9fdfe598d97227e0ac677442950094583bb7fa7d13ccb94c94da3b7e66",
+          "decision": "ph",
+          "reason": "Plain mace d6."
+        },
+        {
+          "card_number": "CARD-0298",
+          "name": "Булава",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "f1486c097619da2afef023bb89438116048f23ca24e495f2dd13444364687c37",
+          "decision": "ph",
+          "reason": "Plain mace d6."
+        }
+      ]
+    },
+    {
+      "key": "magnifying-glass",
+      "canonical": "Magnifying Glass",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Увеличительное стекло"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0822",
+          "name": "Увеличительное стекло",
+          "name_en": "",
+          "description": "Даёт Преимущество на проверки характеристик для оценки или изучения мелких деталей. Может разжечь огонь при ярком солнце.",
+          "detailed_description": "",
+          "rules_fingerprint": "6d13e8574dd4465dc18df07b25188bdeff4382690573b27c952070dc437760c1",
+          "decision": "ph",
+          "reason": "Appraisal/detail advantage and sunlight fire."
+        }
+      ]
+    },
+    {
+      "key": "manacles",
+      "canonical": "Manacles",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Кандалы"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0748",
+          "name": "Кандалы",
+          "name_en": "",
+          "description": "В комплекте идёт ключ.\nДействием можно оковать существо, преуспев в проверке",
+          "detailed_description": "",
+          "rules_fingerprint": "345e4864436e7234125bc44d3af0cadbc841aa09cd62ce95db6cca19fe27ed1b",
+          "decision": "ph",
+          "reason": "Binding restraints with a key; unfinished check text is abbreviated, no alternate effect."
+        }
+      ]
+    },
+    {
+      "key": "map",
+      "canonical": "Map",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Карта родного города"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0389",
+          "name": "Карта родного города",
+          "name_en": "",
+          "description": "Небольшая карта вашего родного города",
+          "detailed_description": "",
+          "rules_fingerprint": "2b44aa33610fb04f2ea865e38fb7a0383a8908a0f232393a6458c29d02b46768",
+          "decision": "ph",
+          "reason": "Local town map is a mundane instance of Map."
+        }
+      ]
+    },
+    {
+      "key": "marked-playing-cards",
+      "canonical": "Marked Playing Cards",
+      "edition": "2014",
+      "section": "Tools",
+      "references": [
+        "ph2014"
+      ],
+      "aliases": [
+        "Колода крапленных карт"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0413",
+          "name": "Колода крапленных карт",
+          "name_en": "",
+          "description": "Если цель пройдет проверку Расследования (Сл 12), то узнает, что вы жульничаете",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "non_ph",
+          "reason": "Marked cards with a custom DC12 Investigation rule are not the plain PH gaming set."
+        }
+      ]
+    },
+    {
+      "key": "mason-s-tools",
+      "canonical": "Mason's Tools",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Инструменты каменщика"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0734",
+          "name": "Инструменты каменщика",
+          "name_en": "",
+          "description": "\n**Изготовление**: __Блок и лебедка__",
+          "detailed_description": "",
+          "rules_fingerprint": "4774934880052af6b24869104c61d8d22938610d09116740baf7cd393467c6dc",
+          "decision": "ph",
+          "reason": "Block and tackle crafting."
+        }
+      ]
+    },
+    {
+      "key": "maul",
+      "canonical": "Maul",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Молот"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0027",
+          "name": "Молот",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "1e67dd17baeadefe6fbae30fd2e4864103c786a5ed2f967f1058baa69da52850",
+          "decision": "ph",
+          "reason": "Plain two-handed maul."
+        },
+        {
+          "card_number": "CARD-0315",
+          "name": "Молот",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "9b15084d9e35634c124a2033311c5e60f0fde386b28b3e1ad47bb79d254fa2b8",
+          "decision": "ph",
+          "reason": "Plain two-handed maul."
+        }
+      ]
+    },
+    {
+      "key": "mess-kit",
+      "canonical": "Mess Kit",
+      "edition": "2014",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014"
+      ],
+      "aliases": [
+        "Столовый набор"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0846",
+          "name": "Столовый набор",
+          "name_en": "",
+          "description": "Жестяная коробка с чашкой и столовыми приборами; складывается в котелок.",
+          "detailed_description": "",
+          "rules_fingerprint": "62ff73b922b148dc4c29d08e841aea4cec3f0bb984c3a3d6e67f7846d87a40f9",
+          "decision": "ph",
+          "reason": "Tin box, cup/cutlery and cooking-pan use."
+        }
+      ]
+    },
+    {
+      "key": "mirror",
+      "canonical": "Mirror",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Зеркало"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0695",
+          "name": "Зеркало",
+          "name_en": "",
+          "description": "Кроме нанесения косметики, зеркалом можно заглядывать за углы.",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Cosmetics and looking around corners."
+        }
+      ]
+    },
+    {
+      "key": "morningstar",
+      "canonical": "Morningstar",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Моргенштерн"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-B24-MORNINGSTAR",
+          "name": "Моргенштерн",
+          "name_en": "Morningstar",
+          "description": "Воинское рукопашное оружие. 1к8 колющего урона. Мастерство: Ослабляющее.",
+          "detailed_description": "",
+          "rules_fingerprint": "de55010256a160009887bfa1c72a8a8762cfbe75331c61977a9ab1515bc4d0bd",
+          "decision": "ph",
+          "reason": "Name, piercing d8 and Sap summary match manifest146."
+        }
+      ]
+    },
+    {
+      "key": "musket",
+      "canonical": "Musket",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Мушкет"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0837",
+          "name": "Мушкет",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "d15935c38c6e69f96d81d3757b9b91ef4d189c76fc2e7dd21d8f3fd8d987873a",
+          "decision": "ph",
+          "reason": "Firearm is in PH2024 Weapons table."
+        }
+      ]
+    },
+    {
+      "key": "navigator-s-tools",
+      "canonical": "Navigator's Tools",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Инструменты навигатора"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0705",
+          "name": "Инструменты навигатора",
+          "name_en": "",
+          "description": "Используется для определения местоположения или прокладывания курса.",
+          "detailed_description": "",
+          "rules_fingerprint": "4774934880052af6b24869104c61d8d22938610d09116740baf7cd393467c6dc",
+          "decision": "ph",
+          "reason": "Navigation and determining position."
+        }
+      ]
+    },
+    {
+      "key": "needles",
+      "canonical": "Needles",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Игла для трубки"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0787",
+          "name": "Игла для трубки",
+          "name_en": "",
+          "description": "*Боеприпасы для духовой трубки. Хранятся в кошеле.*",
+          "detailed_description": "",
+          "rules_fingerprint": "1b0709c5232d02c1e010ddb089ac1e03045de94d770eeb8b6a0c722a8c4dcd6e",
+          "decision": "ph",
+          "reason": "Blowgun ammunition; unit pricing allowed."
+        }
+      ]
+    },
+    {
+      "key": "net",
+      "canonical": "Net",
+      "edition": "2014+2024",
+      "section": "Weapons / Adventuring Gear",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Сеть"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0330",
+          "name": "Сеть",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "361a01864e1f761fa4c098270784798942107491ea70dec608e929e7a8fc1e98",
+          "decision": "ph",
+          "reason": "PH2014 weapon and PH2024 adventuring item; ordinary restraining net."
+        }
+      ]
+    },
+    {
+      "key": "oil",
+      "canonical": "Oil",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Фляга масла"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0723",
+          "name": "Фляга масла",
+          "name_en": "",
+          "description": "Можно использовать как топливо или розжиг.",
+          "detailed_description": "",
+          "rules_fingerprint": "4ce5babed86bf3386f2b2f17eda34ed4f51d2d608bacf1bc44361636bf3f6293",
+          "decision": "ph",
+          "reason": "Fuel / kindling summary."
+        }
+      ]
+    },
+    {
+      "key": "padded-armor",
+      "canonical": "Padded Armor",
+      "edition": "2024",
+      "section": "Armor",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Стёганый доспех"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0247",
+          "name": "Стёганый доспех",
+          "name_en": "",
+          "description": "Категория: лёгкий доспех. КЗ: 11 + dex. Помеха на проверки Скрытности. Без владения: помеха на проверки d20, связанные с Силой или Ловкостью, и нельзя сотворять заклинания.",
+          "detailed_description": "",
+          "rules_fingerprint": "bbbd1713c1d946671f045fbecea9b4528ec0e13f44d4562599cd81d55654d05b",
+          "decision": "ph",
+          "reason": "Standard light armor and stealth disadvantage."
+        },
+        {
+          "card_number": "CARD-0248",
+          "name": "Стёганый доспех",
+          "name_en": "",
+          "description": "Скрытность: помеха\n-2 к броскам атаки.\n-2 к входящему урону.",
+          "detailed_description": "",
+          "rules_fingerprint": "3e679ab431de3f28bec63a2ae87f98f0b5e0f3db84fd56306f135eb2d7d8f3ce",
+          "decision": "non_ph",
+          "reason": "Same base name, but description adds a custom bonus, damage reduction, altered speed/health, or knockback absent from original equipment."
+        },
+        {
+          "card_number": "CARD-0778",
+          "name": "Стёганый доспех",
+          "name_en": "",
+          "description": "Описание эффекта",
+          "detailed_description": "",
+          "rules_fingerprint": "f795d4a3565d7722e86d61cd6d30adb01bdd7699f4dd38b681cf1238ee3434e6",
+          "decision": "ph",
+          "reason": "Owner-reviewed provenance match (2026-09-24): same original equipment identity and similar description; the documented wording/quantity/profile discrepancy does not change source identity. This is NOT certification of mechanics. Earlier discrepancy: Placeholder description and base armor value 10+Dex conflict with original 11+Dex; keep for review."
+        }
+      ]
+    },
+    {
+      "key": "painter-s-supplies",
+      "canonical": "Painter's Supplies",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Инструменты художника"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0745",
+          "name": "Инструменты художника",
+          "name_en": "",
+          "description": "**Изготовление**: __Друидическая фокусировка__, __Священный символ__.",
+          "detailed_description": "",
+          "rules_fingerprint": "4774934880052af6b24869104c61d8d22938610d09116740baf7cd393467c6dc",
+          "decision": "ph",
+          "reason": "Druidic focus and holy symbol crafting."
+        }
+      ]
+    },
+    {
+      "key": "paper",
+      "canonical": "Paper",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Бумага"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0717",
+          "name": "Бумага",
+          "name_en": "",
+          "description": "Один лист вмещает около 250 рукописных слов.",
+          "detailed_description": "",
+          "rules_fingerprint": "ef5a450513b521b8076b4b460c3e45b4205f63f007096a76deafa7b6dd55a37d",
+          "decision": "ph",
+          "reason": "One sheet with about 250 words."
+        }
+      ]
+    },
+    {
+      "key": "parchment",
+      "canonical": "Parchment",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Пергамент"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0709",
+          "name": "Пергамент",
+          "name_en": "",
+          "description": "Один лист пергамента вмещает около 250 рукописных слов.",
+          "detailed_description": "",
+          "rules_fingerprint": "ef5a450513b521b8076b4b460c3e45b4205f63f007096a76deafa7b6dd55a37d",
+          "decision": "ph",
+          "reason": "One sheet with about 250 words."
+        }
+      ]
+    },
+    {
+      "key": "perfume",
+      "canonical": "Perfume",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Духи"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0696",
+          "name": "Духи",
+          "name_en": "",
+          "description": ":action::Вы на 1 час совершаете с преимуществом проверки __Убеждения__ безразличных гуманоидов.",
+          "detailed_description": "",
+          "rules_fingerprint": "1cb69cb3784fe75dc22c21be96e479d02c91123725044767e156ea7b7d594ca0",
+          "decision": "ph",
+          "reason": "One-hour Persuasion advantage against indifferent humanoids."
+        }
+      ]
+    },
+    {
+      "key": "pick-miner-s",
+      "canonical": "Pick, Miner's",
+      "edition": "2014",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014"
+      ],
+      "aliases": [
+        "Шахтерская кирка"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0142",
+          "name": "Шахтерская кирка",
+          "name_en": "",
+          "description": "Обычная кирка, немного истрепана",
+          "detailed_description": "",
+          "rules_fingerprint": "0854bd83863cbba7ad42620e3837abaf80631ac4998782b52e64a60d711a9cd3",
+          "decision": "ph",
+          "reason": "Ordinary worn mining pick; original gear name and mundane description. Legacy improvised damage presentation is not a new named power."
+        }
+      ]
+    },
+    {
+      "key": "pike",
+      "canonical": "Pike",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Пика"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0028",
+          "name": "Пика",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "c2e049a0a4e7464b858059163c4886d313d6a4efef5f1df91c35309d1e2ced6b",
+          "decision": "ph",
+          "reason": "Plain pike."
+        },
+        {
+          "card_number": "CARD-0314",
+          "name": "Пика",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "3fa9ba3621fca0fdf4b79b6740d471842ee60283e2f35c4d65159fc4cdcc31c8",
+          "decision": "ph",
+          "reason": "Plain pike."
+        }
+      ]
+    },
+    {
+      "key": "pistol",
+      "canonical": "Pistol",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Пистоль"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0838",
+          "name": "Пистоль",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "cded6653c9c460ca1c8fde4e374ac0a8e22642e5d5337000384e7646fd52cf41",
+          "decision": "ph",
+          "reason": "Firearm is in PH2024 Weapons table."
+        }
+      ]
+    },
+    {
+      "key": "plate-armor",
+      "canonical": "Plate Armor",
+      "edition": "2024",
+      "section": "Armor",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Латы",
+        "Латный доспех"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0291",
+          "name": "Латы",
+          "name_en": "",
+          "description": "Категория: тяжёлый доспех. КЗ: 18. При Силе ниже 15 скорость снижается на 10 футов. Помеха на проверки Скрытности. Без владения: помеха на проверки d20, связанные с Силой или Ловкостью, и нельзя сотворять заклинания.",
+          "detailed_description": "",
+          "rules_fingerprint": "8dcdb9651db68d50d6f63536ae8976936b9072e29a1e4ce2dd740650bc5363c7",
+          "decision": "ph",
+          "reason": "Standard plate; explicit Russian translation alias."
+        },
+        {
+          "card_number": "CARD-0947",
+          "name": "Латный доспех",
+          "name_en": "",
+          "description": "Скрытность с помехой.",
+          "detailed_description": "",
+          "rules_fingerprint": "f5b9240df4920e1e72bfd9dda090387565778febc0b11190775a7d93d3c03ef4",
+          "decision": "ph",
+          "reason": "Standard plate; explicit Russian translation alias."
+        }
+      ]
+    },
+    {
+      "key": "playing-cards",
+      "canonical": "Playing Cards",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Колода карт",
+        "Игральные карты"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0410",
+          "name": "Колода карт",
+          "name_en": "",
+          "description": "Колода из 54 игральных карт",
+          "detailed_description": "",
+          "rules_fingerprint": "3326d923a9706496ae831b5e462633d8fe893852ccb7d610a7e48e7a4795100d",
+          "decision": "ph",
+          "reason": "Ordinary deck; marked deck excluded."
+        },
+        {
+          "card_number": "CARD-0699",
+          "name": "Игральные карты",
+          "name_en": "",
+          "description": "Вариант игрового набора.",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Ordinary deck; marked deck excluded."
+        }
+      ]
+    },
+    {
+      "key": "poison-basic",
+      "canonical": "Poison, Basic",
+      "edition": "2014+2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Яд, простой"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0832",
+          "name": "Яд, простой",
+          "name_en": "",
+          "description": "Флаконом можно покрыть одно оружие или до 3 боеприпасов (бонусное действие). Цель, получившая урон, совершает спасбросок Телосложения Сл 10, при провале получает 1к4 урона Ядом. Высыхает через 1 минуту.",
+          "detailed_description": "",
+          "rules_fingerprint": "785b07db57f9d944337464a2c0d07a23e9cbb6e5c28932f4829d14b96b16dd26",
+          "decision": "ph",
+          "reason": "Owner-reviewed provenance match (2026-09-24): same original equipment identity and similar description; the documented wording/quantity/profile discrepancy does not change source identity. This is NOT certification of mechanics. Earlier discrepancy: Mixes PH2024 bonus-action application with PH2014 Constitution DC10 save; the complete combination is in neither edition."
+        }
+      ]
+    },
+    {
+      "key": "pole",
+      "canonical": "Pole",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Шест"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0831",
+          "name": "Шест",
+          "name_en": "",
+          "description": "Шест 10 футов.",
+          "detailed_description": "",
+          "rules_fingerprint": "0c1269116f1e991becf67a7d7704aa9a5d80cb4d123412edaa3e9ab58e538ab4",
+          "decision": "ph",
+          "reason": "Ten-foot pole."
+        }
+      ]
+    },
+    {
+      "key": "pot-iron",
+      "canonical": "Pot, Iron",
+      "edition": "2014+2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Железный горшок",
+        "Железный котелок"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0404",
+          "name": "Железный горшок",
+          "name_en": "",
+          "description": "Небольшой железный горшок. Можно использовать для приготовления еды.",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Cooking vessel / one-gallon iron pot."
+        },
+        {
+          "card_number": "CARD-0721",
+          "name": "Железный котелок",
+          "name_en": "",
+          "description": "Железный котелок вмещает до 1 галлона.",
+          "detailed_description": "",
+          "rules_fingerprint": "ef5a450513b521b8076b4b460c3e45b4205f63f007096a76deafa7b6dd55a37d",
+          "decision": "ph",
+          "reason": "Cooking vessel / one-gallon iron pot."
+        }
+      ]
+    },
+    {
+      "key": "potion-of-healing",
+      "canonical": "Potion of Healing",
+      "edition": "2014+2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Зелье лечения",
+        "Малое зелье лечения"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0039",
+          "name": "Зелье лечения",
+          "name_en": "",
+          "description": "Восстанавливает здоровье при употреблении.",
+          "detailed_description": "Зелье лечения - одно из самых распространенных магических зелий в мире D&D. При употреблении восстанавливает от 2d4+2 до 4d4+4 хитов в зависимости от редкости. Зелье имеет красный цвет и сладкий вкус. Стандартное зелье лечения восстанавливает 2d4+2 хитов, большое зелье лечения - 4d4+4 хитов, а зелье высшего лечения - 8d4+8 хитов.",
+          "rules_fingerprint": "468bc16fdff63827d3a4b86c2a2e46f6b6da39a3fa60599217f6711e8fd69592",
+          "decision": "ph",
+          "reason": "Basic 2d4+2 healing. CARD0039 overview mentions larger potions, but its own profile is basic; higher-tier cards excluded."
+        },
+        {
+          "card_number": "CARD-0839",
+          "name": "Малое зелье лечения",
+          "name_en": "",
+          "description": ":bonus_action:: Исцелиться на [healing]2к4+2:healing:[/healing]",
+          "detailed_description": "",
+          "rules_fingerprint": "b52711cb01fb764f342a6b1731d032adb5aed45797457cc258f576b7297fb8f4",
+          "decision": "ph",
+          "reason": "Basic 2d4+2 healing. CARD0039 overview mentions larger potions, but its own profile is basic; higher-tier cards excluded."
+        }
+      ]
+    },
+    {
+      "key": "potter-s-tools",
+      "canonical": "Potter's Tools",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Инструменты гончара"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0733",
+          "name": "Инструменты гончара",
+          "name_en": "",
+          "description": "\n**Изготовление:** __Кувшин__, __Лампа__",
+          "detailed_description": "",
+          "rules_fingerprint": "4774934880052af6b24869104c61d8d22938610d09116740baf7cd393467c6dc",
+          "decision": "ph",
+          "reason": "Jug and lamp crafting."
+        }
+      ]
+    },
+    {
+      "key": "pouch",
+      "canonical": "Pouch",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Кошель"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0704",
+          "name": "Кошель",
+          "name_en": "",
+          "description": "Вмещает до 6 фунтов веса и до 0.2 кубических футов объема.",
+          "detailed_description": "",
+          "rules_fingerprint": "ef5a450513b521b8076b4b460c3e45b4205f63f007096a76deafa7b6dd55a37d",
+          "decision": "ph",
+          "reason": "Six pounds and one-fifth cubic foot."
+        }
+      ]
+    },
+    {
+      "key": "priest-s-pack",
+      "canonical": "Priest's Pack",
+      "edition": "2014+2024",
+      "section": "Equipment Packs",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Набор священника"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0409",
+          "name": "Набор священника",
+          "name_en": "",
+          "description": "Священный символ, трутница, пять свечей, рационы питания",
+          "detailed_description": "",
+          "rules_fingerprint": "77e09f4c76439cc2669fcbcd7394783ea24a3b93b5c036a322622c7a58f2e231",
+          "decision": "ph",
+          "reason": "Owner-reviewed provenance match (2026-09-24): same original equipment identity and similar description; the documented wording/quantity/profile discrepancy does not change source identity. This is NOT certification of mechanics. Earlier discrepancy: Symbol, tinderbox, five candles and rations do not match either PH2014 or PH2024 pack contents."
+        }
+      ]
+    },
+    {
+      "key": "quarterstaff",
+      "canonical": "Quarterstaff",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Боевой посох"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0305",
+          "name": "Боевой посох",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "746c15da0c2b72306f6c20057ef10a9edd9da89b3eca28da38dca310fb04c99b",
+          "decision": "ph",
+          "reason": "Plain versatile quarterstaff."
+        },
+        {
+          "card_number": "CARD-0569",
+          "name": "Боевой посох",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "4e56ecbdf99186f116091760e00192fb759d621812ab1c6ae825188ddbaf4c49",
+          "decision": "ph",
+          "reason": "Plain versatile quarterstaff."
+        }
+      ]
+    },
+    {
+      "key": "quiver",
+      "canonical": "Quiver",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Колчан"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0729",
+          "name": "Колчан",
+          "name_en": "",
+          "description": "Вмещает до 20 стрел.",
+          "detailed_description": "",
+          "rules_fingerprint": "1dc395484f56855db710bd5b960c69113e12f430fe45c7e8da4f34e6122773ec",
+          "decision": "ph",
+          "reason": "Twenty arrows."
+        }
+      ]
+    },
+    {
+      "key": "ram-portable",
+      "canonical": "Ram, Portable",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Портативный таран"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0819",
+          "name": "Портативный таран",
+          "name_en": "",
+          "description": "Даёт +4 к проверкам Силы для выламывания дверей; помощник даёт Преимущество на эту проверку.",
+          "detailed_description": "",
+          "rules_fingerprint": "8c090584996aaaebcb124479f8981e60c817f89f1ea276debab16168d3921c8d",
+          "decision": "ph",
+          "reason": "Plus four for doors, helper grants advantage."
+        }
+      ]
+    },
+    {
+      "key": "rapier",
+      "canonical": "Rapier",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Рапира"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0029",
+          "name": "Рапира",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "7258cee06ede832038cd9a604ccdc831015c1d637d206769453428b4f6f29b5c",
+          "decision": "ph",
+          "reason": "Plain rapier."
+        },
+        {
+          "card_number": "CARD-0313",
+          "name": "Рапира",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "e080d5734ab56f41a70a6b7704d7141d96645f63633512bd8d71e6de0cd639d3",
+          "decision": "ph",
+          "reason": "Plain rapier."
+        }
+      ]
+    },
+    {
+      "key": "rations",
+      "canonical": "Rations",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Рационы"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0812",
+          "name": "Рационы",
+          "name_en": "",
+          "description": "Сушёная еда на 1 день (вяленое мясо, сухари, орехи).",
+          "detailed_description": "",
+          "rules_fingerprint": "23a3ae23d0ea46e7445bd5e8a8ec69bf4f9d789305bff35d8132c9e389e30d3f",
+          "decision": "ph",
+          "reason": "One day of dried travel food."
+        }
+      ]
+    },
+    {
+      "key": "ring-mail",
+      "canonical": "Ring Mail",
+      "edition": "2024",
+      "section": "Armor",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Колечный доспех"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0287",
+          "name": "Колечный доспех",
+          "name_en": "",
+          "description": "Категория: тяжёлый доспех. КЗ: 14. Помеха на проверки Скрытности. Без владения: помеха на проверки d20, связанные с Силой или Ловкостью, и нельзя сотворять заклинания.",
+          "detailed_description": "",
+          "rules_fingerprint": "e0e42b0c6e18135e88dd081cad135aa25dc1ef4084a8cb710b2329010416e9d5",
+          "decision": "ph",
+          "reason": "Standard ring mail."
+        },
+        {
+          "card_number": "CARD-0944",
+          "name": "Колечный доспех",
+          "name_en": "",
+          "description": "Скрытность с помехой.",
+          "detailed_description": "",
+          "rules_fingerprint": "dba0c1119bb20089990ec60415b020ba47fc04107b512ce0841c5514a80db67f",
+          "decision": "ph",
+          "reason": "Standard ring mail."
+        }
+      ]
+    },
+    {
+      "key": "robe",
+      "canonical": "Robe",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Мантия"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0710",
+          "name": "Мантия",
+          "name_en": "",
+          "description": "Мантия имеет профессиональное или церемониальное значение.",
+          "detailed_description": "",
+          "rules_fingerprint": "c504bd62ec016a1a95c4bb9bfebb90b7de34a8687aaf20d5bc14d25ed4a0ee63",
+          "decision": "ph",
+          "reason": "Professional or ceremonial clothing."
+        }
+      ]
+    },
+    {
+      "key": "rope",
+      "canonical": "Rope",
+      "edition": "2014+2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Веревка"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0706",
+          "name": "Веревка",
+          "name_en": "",
+          "description": "50 футов пеньковой веревки. Можно использовать для связывания целей.",
+          "detailed_description": "",
+          "rules_fingerprint": "6d11cdf3dfac681c9dbe3b0cde9b8ca0917279184b28b0c4fc94fdfe6940f773",
+          "decision": "ph",
+          "reason": "Fifty-foot hemp rope; binding use."
+        }
+      ]
+    },
+    {
+      "key": "rope-silk",
+      "canonical": "Rope, Silk",
+      "edition": "2014",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014"
+      ],
+      "aliases": [
+        "Шелковая веревка"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0400",
+          "name": "Шелковая веревка",
+          "name_en": "",
+          "description": "50 фт. длины\nОт предыстории",
+          "detailed_description": "",
+          "rules_fingerprint": "3326d923a9706496ae831b5e462633d8fe893852ccb7d610a7e48e7a4795100d",
+          "decision": "ph",
+          "reason": "Fifty-foot silk rope."
+        }
+      ]
+    },
+    {
+      "key": "sack",
+      "canonical": "Sack",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Мешок"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0800",
+          "name": "Мешок",
+          "name_en": "",
+          "description": "Вмещает не более 30 фунтов или 1 кубического фута.",
+          "detailed_description": "",
+          "rules_fingerprint": "e0ca11536dca4f7ff2c231c6681721a5402275f6b5ddd3038c1738dff3bc5583",
+          "decision": "ph",
+          "reason": "Thirty pounds / one cubic foot."
+        }
+      ]
+    },
+    {
+      "key": "scale-mail",
+      "canonical": "Scale Mail",
+      "edition": "2024",
+      "section": "Armor",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Чешуйчатый доспех"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0269",
+          "name": "Чешуйчатый доспех",
+          "name_en": "",
+          "description": "Категория: средний доспех. КЗ: 14 + min(dex, 2). Помеха на проверки Скрытности. Без владения: помеха на проверки d20, связанные с Силой или Ловкостью, и нельзя сотворять заклинания.",
+          "detailed_description": "",
+          "rules_fingerprint": "719c8d58880d0b7be60d1c95170ed7ce5a8aa7100bb0ab067a060dd7b7270cf1",
+          "decision": "ph",
+          "reason": "Standard medium armor with stealth disadvantage."
+        },
+        {
+          "card_number": "CARD-0942",
+          "name": "Чешуйчатый доспех",
+          "name_en": "",
+          "description": "Скрытность с помехой.",
+          "detailed_description": "",
+          "rules_fingerprint": "945da3696b816653d606b1a6e4f0f7d87a578e795307cc33c910fd2638ce8d77",
+          "decision": "ph",
+          "reason": "Standard medium armor with stealth disadvantage."
+        }
+      ]
+    },
+    {
+      "key": "scholar-s-pack",
+      "canonical": "Scholar's Pack",
+      "edition": "2014",
+      "section": "Equipment Packs",
+      "references": [
+        "ph2014"
+      ],
+      "aliases": [
+        "Набор учёного"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0807",
+          "name": "Набор учёного",
+          "name_en": "",
+          "description": "Рюкзак, книга знаний, флакон чернил, чернильная ручка, 10 листов пергамента, мешочек песка, маленький нож.",
+          "detailed_description": "",
+          "rules_fingerprint": "da9678a7a2961354f00650a750f6b4a3abfcf4bddbb2be00a65d0dcf5b663451",
+          "decision": "ph",
+          "reason": "Exact PH2014 book/ink/parchment/sand/knife contents."
+        }
+      ]
+    },
+    {
+      "key": "scimitar",
+      "canonical": "Scimitar",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Скимитар"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0031",
+          "name": "Скимитар",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "4bd4e0022b6cdf1fb39524758d78439d90aa6a5d85b4e4ddeb91a48b6af11ee2",
+          "decision": "ph",
+          "reason": "Plain scimitar."
+        },
+        {
+          "card_number": "CARD-0311",
+          "name": "Скимитар",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "bf7fc66e178e6f1cb839fac3aa21bb95dcc648b1135bfb2b220266cf40550b8f",
+          "decision": "ph",
+          "reason": "Plain scimitar."
+        }
+      ]
+    },
+    {
+      "key": "sealing-wax",
+      "canonical": "Sealing Wax",
+      "edition": "2014",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014"
+      ],
+      "aliases": [
+        "Запечатывающий воск"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0843",
+          "name": "Запечатывающий воск",
+          "name_en": "",
+          "description": "Воск для запечатывания писем печатью.",
+          "detailed_description": "",
+          "rules_fingerprint": "c6f4ac68fc293358b5192c5262b10fe12d3a21a5ef5f36fce77e4906261de325",
+          "decision": "ph",
+          "reason": "PH2014 listed gear."
+        }
+      ]
+    },
+    {
+      "key": "shield",
+      "canonical": "Shield",
+      "edition": "2024",
+      "section": "Armor",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Щит"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0200",
+          "name": "Щит",
+          "name_en": "",
+          "description": "Категория: щит. КЗ: +2. Без владения: помеха на проверки d20, связанные с Силой или Ловкостью, и нельзя сотворять заклинания.",
+          "detailed_description": "",
+          "rules_fingerprint": "e370075de08ea76d5a4e2968c27057ee1c8fcfc1d643caeb308ab77cfcf5b607",
+          "decision": "ph",
+          "reason": "Standard +2 shield. Legacy proficiency wording is an inherited summary, not an added item power."
+        }
+      ]
+    },
+    {
+      "key": "shortbow",
+      "canonical": "Shortbow",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Короткий лук"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0306",
+          "name": "Короткий лук",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "5dccd1fb79c2072b282b8e34fe6206a3147cb5604204db843fd2d7608239d07b",
+          "decision": "ph",
+          "reason": "Plain shortbow."
+        },
+        {
+          "card_number": "CARD-0490",
+          "name": "Короткий лук",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "2a3fdff91c581b0fea03bb609b8c5cc3112b6d8ebf1f8d58e2e31de895bec465",
+          "decision": "ph",
+          "reason": "Plain shortbow."
+        }
+      ]
+    },
+    {
+      "key": "shortsword",
+      "canonical": "Shortsword",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Короткий меч"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0026",
+          "name": "Короткий меч",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "57e64daffe1427834550b61f998df52e0e3c1545584a3fc2f323c3618357676f",
+          "decision": "ph",
+          "reason": "Three plain shortsword records, independent of prices/templates."
+        },
+        {
+          "card_number": "CARD-0294",
+          "name": "Короткий меч",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "223861f3c21e09731de9e0e330611029ab47723d20dcc6c420e5b0d8017867d2",
+          "decision": "ph",
+          "reason": "Three plain shortsword records, independent of prices/templates."
+        },
+        {
+          "card_number": "CARD-0316",
+          "name": "Короткий меч",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "ef06b0c0bc77ba6e475341e3cad2f107329f80ed4c23793054d00a86e514b9ce",
+          "decision": "ph",
+          "reason": "Three plain shortsword records, independent of prices/templates."
+        }
+      ]
+    },
+    {
+      "key": "shovel",
+      "canonical": "Shovel",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Лопата"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0750",
+          "name": "Лопата",
+          "name_en": "",
+          "description": "За час работы можно выкопать яму в виде куба со стороной 5 футов.",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Ordinary digging tool, including an older summary mentioning use as an improvised weapon."
+        },
+        {
+          "card_number": "CARD-0403",
+          "name": "Лопата",
+          "name_en": "",
+          "description": "Лопата для копания\nМожно использовать в качестве оружия",
+          "detailed_description": "",
+          "rules_fingerprint": "dde40ecc39a7903caf09fc295b94cfacf13c359f97815da2fabc86d508f2fbc6",
+          "decision": "ph",
+          "reason": "Ordinary digging tool, including an older summary mentioning use as an improvised weapon."
+        }
+      ]
+    },
+    {
+      "key": "sickle",
+      "canonical": "Sickle",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Серп"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0299",
+          "name": "Серп",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "740d65fc34edaa3a800dea5fbc07a40a58aef9ec3ba316160d1ec678ba2eb871",
+          "decision": "ph",
+          "reason": "Plain sickle d4."
+        },
+        {
+          "card_number": "CARD-0567",
+          "name": "Серп",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "740d65fc34edaa3a800dea5fbc07a40a58aef9ec3ba316160d1ec678ba2eb871",
+          "decision": "ph",
+          "reason": "Plain sickle d4."
+        }
+      ]
+    },
+    {
+      "key": "signal-whistle",
+      "canonical": "Signal Whistle",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Сигнальный свисток"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0817",
+          "name": "Сигнальный свисток",
+          "name_en": "",
+          "description": "Громкий свисток для подачи сигналов.",
+          "detailed_description": "",
+          "rules_fingerprint": "c6f4ac68fc293358b5192c5262b10fe12d3a21a5ef5f36fce77e4906261de325",
+          "decision": "ph",
+          "reason": "Mundane signaling whistle."
+        }
+      ]
+    },
+    {
+      "key": "signet-ring",
+      "canonical": "Signet Ring",
+      "edition": "2014",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014"
+      ],
+      "aliases": [
+        "Фамильный перстень"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0393",
+          "name": "Фамильный перстень",
+          "name_en": "",
+          "description": "Кольцо-печатка с гербом вашего дома.\nОт предыстории.",
+          "detailed_description": "",
+          "rules_fingerprint": "90d95f29b2636667fd027af90c67ab3c85ae5250235669553ee96d2d90188d23",
+          "decision": "ph",
+          "reason": "Family seal ring; no magical property."
+        }
+      ]
+    },
+    {
+      "key": "sling",
+      "canonical": "Sling",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Праща"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0293",
+          "name": "Праща",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "2768efcdca6f410cfc6f6b61a1ad99d25269e8ab79acdac4cb9cef15255ddc2e",
+          "decision": "ph",
+          "reason": "Plain sling."
+        },
+        {
+          "card_number": "CARD-0571",
+          "name": "Праща",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "294a0af223106346df6699710d4720ada4530526515ee2cbc1196e4b63969ca6",
+          "decision": "ph",
+          "reason": "Plain sling."
+        }
+      ]
+    },
+    {
+      "key": "small-knife",
+      "canonical": "Small Knife",
+      "edition": "2014",
+      "section": "Equipment Packs",
+      "references": [
+        "ph2014"
+      ],
+      "aliases": [
+        "Маленький нож"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0388",
+          "name": "Маленький нож",
+          "name_en": "",
+          "description": "Нож от предыстории",
+          "detailed_description": "",
+          "rules_fingerprint": "c28e5c1f729ad22fbfeebecec416e24df024490ab000dfadd8a11c5e0eba7040",
+          "decision": "ph",
+          "reason": "Explicit Scholar pack component; fixed 2 damage is an improvised presentation, not a special item effect."
+        }
+      ]
+    },
+    {
+      "key": "smith-s-tools",
+      "canonical": "Smith's Tools",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Инструменты кузнеца"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0736",
+          "name": "Инструменты кузнеца",
+          "name_en": "",
+          "description": "**Изготовление:** __Простое и воинское оружие__, __Средние и Тяжелые доспехи__.",
+          "detailed_description": "",
+          "rules_fingerprint": "4774934880052af6b24869104c61d8d22938610d09116740baf7cd393467c6dc",
+          "decision": "ph",
+          "reason": "Owner-reviewed provenance match (2026-09-24): same original equipment identity and similar description; the documented wording/quantity/profile discrepancy does not change source identity. This is NOT certification of mechanics. Earlier discrepancy: Text grants crafting all simple/martial weapons, broader than PH2024 melee-only list with named exceptions; could be over-shortened summary."
+        }
+      ]
+    },
+    {
+      "key": "soap",
+      "canonical": "Soap",
+      "edition": "2014",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014"
+      ],
+      "aliases": [
+        "Мыло"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0844",
+          "name": "Мыло",
+          "name_en": "",
+          "description": "Брусок мыла.",
+          "detailed_description": "",
+          "rules_fingerprint": "c6f4ac68fc293358b5192c5262b10fe12d3a21a5ef5f36fce77e4906261de325",
+          "decision": "ph",
+          "reason": "PH2014 listed gear."
+        }
+      ]
+    },
+    {
+      "key": "spear",
+      "canonical": "Spear",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Копьё"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0004",
+          "name": "Копьё",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "b41a047a65296bcaa0439ad3d30e0422e3166f786737ae4e722a02a0c95a1f1c",
+          "decision": "ph",
+          "reason": "Plain versatile thrown spear."
+        },
+        {
+          "card_number": "CARD-0304",
+          "name": "Копьё",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "2934e0c3e9eb3ca56e0e3f17fafb9fce3503386eaca4f61f117f31818b2922e3",
+          "decision": "ph",
+          "reason": "Plain versatile thrown spear."
+        }
+      ]
+    },
+    {
+      "key": "spellbook",
+      "canonical": "Spellbook",
+      "edition": "2014+2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Книга заклинаний"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0975",
+          "name": "Книга заклинаний",
+          "name_en": "",
+          "description": "Книга волшебника на 100 страниц, в которой записаны известные ему заклинания 1+ уровня.",
+          "detailed_description": "",
+          "rules_fingerprint": "4788e5b1e0ee01c4edece905028029ab22059b382db9146ad9399e25a25685ce",
+          "decision": "ph",
+          "reason": "Wizard hundred-page spellbook, levels one and higher."
+        }
+      ]
+    },
+    {
+      "key": "spikes-iron",
+      "canonical": "Spikes, Iron",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Железный шип"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0720",
+          "name": "Железный шип",
+          "name_en": "",
+          "description": "Действием:action: вы можете вбить Шип в дерево или землю, заклинить механизм или привязать к шипу веревку.",
+          "detailed_description": "",
+          "rules_fingerprint": "ef5a450513b521b8076b4b460c3e45b4205f63f007096a76deafa7b6dd55a37d",
+          "decision": "ph",
+          "reason": "Hammer into wood/earth or jam a mechanism."
+        }
+      ]
+    },
+    {
+      "key": "splint-armor",
+      "canonical": "Splint Armor",
+      "edition": "2024",
+      "section": "Armor",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Наборный доспех",
+        "Пластинчатый доспех"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0290",
+          "name": "Наборный доспех",
+          "name_en": "",
+          "description": "Категория: тяжёлый доспех. КЗ: 17. При Силе ниже 15 скорость снижается на 10 футов. Помеха на проверки Скрытности. Без владения: помеха на проверки d20, связанные с Силой или Ловкостью, и нельзя сотворять заклинания.",
+          "detailed_description": "",
+          "rules_fingerprint": "cd48d35e95b446d3df4e7c60b260dfe2f5dfcf667f3555f78570fe296cd8ec0c",
+          "decision": "ph",
+          "reason": "Standard splint; explicit Russian translation alias."
+        },
+        {
+          "card_number": "CARD-0946",
+          "name": "Пластинчатый доспех",
+          "name_en": "",
+          "description": "Скрытность с помехой.",
+          "detailed_description": "",
+          "rules_fingerprint": "eaf79d2ee6342f340b504951052b56780b75cee25c0fb1a5296cb0211754ffb6",
+          "decision": "ph",
+          "reason": "Standard splint; explicit Russian translation alias."
+        },
+        {
+          "card_number": "CARD-0289",
+          "name": "Наборный доспех",
+          "name_en": "",
+          "description": "Скрытность: помеха\nАтаки по вам с преимуществом\n-3 к входящему урону",
+          "detailed_description": "",
+          "rules_fingerprint": "f538b0a2c62838fb0334a80763164d6962cc0cac7a649719b85cd10a4f7002a1",
+          "decision": "non_ph",
+          "reason": "Same base name, but description adds a custom bonus, damage reduction, altered speed/health, or knockback absent from original equipment."
+        }
+      ]
+    },
+    {
+      "key": "spyglass",
+      "canonical": "Spyglass",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Подзорная труба"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0810",
+          "name": "Подзорная труба",
+          "name_en": "",
+          "description": "Объекты при просмотре через подзорную трубу увеличиваются вдвое.",
+          "detailed_description": "",
+          "rules_fingerprint": "c6f4ac68fc293358b5192c5262b10fe12d3a21a5ef5f36fce77e4906261de325",
+          "decision": "ph",
+          "reason": "Doubles apparent size."
+        }
+      ]
+    },
+    {
+      "key": "string",
+      "canonical": "String",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Леска"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0797",
+          "name": "Леска",
+          "name_en": "",
+          "description": "Леска с крючком, 50 футов.",
+          "detailed_description": "",
+          "rules_fingerprint": "c6f4ac68fc293358b5192c5262b10fe12d3a21a5ef5f36fce77e4906261de325",
+          "decision": "ph",
+          "reason": "Owner-reviewed provenance match (2026-09-24): same original equipment identity and similar description; the documented wording/quantity/profile discrepancy does not change source identity. This is NOT certification of mechanics. Earlier discrepancy: Fifty-foot fishing line with a hook; PH2024 String is ten feet without fishing gear, and Fishing Tackle is a larger kit."
+        }
+      ]
+    },
+    {
+      "key": "studded-leather-armor",
+      "canonical": "Studded Leather Armor",
+      "edition": "2024",
+      "section": "Armor",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Проклёпанный кожаный доспех"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0276",
+          "name": "Проклёпанный кожаный доспех",
+          "name_en": "",
+          "description": "Категория: лёгкий доспех. КЗ: 12 + dex. Без владения: помеха на проверки d20, связанные с Силой или Ловкостью, и нельзя сотворять заклинания.",
+          "detailed_description": "",
+          "rules_fingerprint": "8ea580e72c51cbebf11d62c9a92d58b438a9c2c293efa1cf553e0d09eb6da2a9",
+          "decision": "ph",
+          "reason": "Canonical formula or don/doff summary with standard value."
+        },
+        {
+          "card_number": "CARD-0938",
+          "name": "Проклёпанный кожаный доспех",
+          "name_en": "",
+          "description": "**Лёгкий доспех.** Вам требуется 1 минута, чтобы надеть или снять этот доспех.",
+          "detailed_description": "",
+          "rules_fingerprint": "c2064153e81d9ad53d2c15e564189e483ef32ca76faebbfd2f01c1d8b99a1b5c",
+          "decision": "ph",
+          "reason": "Canonical formula or don/doff summary with standard value."
+        },
+        {
+          "card_number": "CARD-0251",
+          "name": "Проклёпанный кожаный доспех",
+          "name_en": "",
+          "description": "Выживание +1",
+          "detailed_description": "",
+          "rules_fingerprint": "4c5c51517082d0c1f7d9368b5a497e92553a1baee99e04579b2813a353796c13",
+          "decision": "non_ph",
+          "reason": "Same base name, but description adds a custom bonus, damage reduction, altered speed/health, or knockback absent from original equipment."
+        },
+        {
+          "card_number": "CARD-0252",
+          "name": "Проклёпанный кожаный доспех",
+          "name_en": "",
+          "description": "Акробатика +1",
+          "detailed_description": "",
+          "rules_fingerprint": "f058c7635830022f95949f1ecb785035b38211b91c83df2df557179c91a283cf",
+          "decision": "non_ph",
+          "reason": "Same base name, but description adds a custom bonus, damage reduction, altered speed/health, or knockback absent from original equipment."
+        },
+        {
+          "card_number": "CARD-0253",
+          "name": "Проклёпанный кожаный доспех",
+          "name_en": "",
+          "description": "Спасброски Ловкости +1.",
+          "detailed_description": "",
+          "rules_fingerprint": "c2064153e81d9ad53d2c15e564189e483ef32ca76faebbfd2f01c1d8b99a1b5c",
+          "decision": "non_ph",
+          "reason": "Same base name, but description adds a custom bonus, damage reduction, altered speed/health, or knockback absent from original equipment."
+        }
+      ]
+    },
+    {
+      "key": "tent",
+      "canonical": "Tent",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Палатка"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0731",
+          "name": "Палатка",
+          "name_en": "",
+          "description": "В палатке может спать до двух существ Маленького или Среднего размера.",
+          "detailed_description": "",
+          "rules_fingerprint": "ef5a450513b521b8076b4b460c3e45b4205f63f007096a76deafa7b6dd55a37d",
+          "decision": "ph",
+          "reason": "Two Small or Medium creatures."
+        }
+      ]
+    },
+    {
+      "key": "thieves-tools",
+      "canonical": "Thieves' Tools",
+      "edition": "2014+2024",
+      "section": "Tools",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Воровские инструменты"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0702",
+          "name": "Воровские инструменты",
+          "name_en": "",
+          "description": "Ломаются при провальной проверке.",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "non_ph",
+          "reason": "Breaking on a failed check is an added rule absent from either PH edition."
+        }
+      ]
+    },
+    {
+      "key": "three-dragon-ante",
+      "canonical": "Three-Dragon Ante",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Ставка трёх драконов"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0700",
+          "name": "Ставка трёх драконов",
+          "name_en": "",
+          "description": "Вариант игрового набора",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Listed gaming set."
+        }
+      ]
+    },
+    {
+      "key": "tinderbox",
+      "canonical": "Tinderbox",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Трутница"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0820",
+          "name": "Трутница",
+          "name_en": "",
+          "description": "Кремень, кресало и трут. За действие можно зажечь от огня, иначе - 1 минута.",
+          "detailed_description": "",
+          "rules_fingerprint": "98b81e47cd751c178ba04fef0db8dcb581b7795980f0b1593fe427a317f551a4",
+          "decision": "ph",
+          "reason": "Flint, steel, tinder; action/minute lighting."
+        }
+      ]
+    },
+    {
+      "key": "tinker-s-tools",
+      "canonical": "Tinker's Tools",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Инструменты ремонтника"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0741",
+          "name": "Инструменты ремонтника",
+          "name_en": "",
+          "description": "**Изготовление**: __Фонарь__, __Замок__, __Зеркало__, __Кандалы__, __Лопата__, __Мушкет__, __Трутница__, __Фляга__.",
+          "detailed_description": "",
+          "rules_fingerprint": "4774934880052af6b24869104c61d8d22938610d09116740baf7cd393467c6dc",
+          "decision": "ph",
+          "reason": "Abbreviated original crafting list."
+        }
+      ]
+    },
+    {
+      "key": "torch",
+      "canonical": "Torch",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Факел"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0823",
+          "name": "Факел",
+          "name_en": "",
+          "description": "Горит 1 час: Яркий свет в радиусе 20 футов и Тусклый ещё на 20.",
+          "detailed_description": "",
+          "rules_fingerprint": "8e20d18ec093387c1a9b8bcf1efb5f138b2392c186c8e0a3aab264d1dd59a202",
+          "decision": "ph",
+          "reason": "One hour, bright20 plus dim20."
+        }
+      ]
+    },
+    {
+      "key": "trident",
+      "canonical": "Trident",
+      "edition": "2014+2024",
+      "section": "Weapons",
+      "references": [
+        "ph2014",
+        "ph2024"
+      ],
+      "aliases": [
+        "Трезубец"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0032",
+          "name": "Трезубец",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "dc8974ee422d7341b4f7f29aa3dd74d8c1b7547c649f800842b25ce2115b3ca9",
+          "decision": "ph",
+          "reason": "2014 d6/d8 and 2024 d8/d10 original trident editions."
+        },
+        {
+          "card_number": "CARD-0310",
+          "name": "Трезубец",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "fa41fc96cbe819991af5f5be4385f2481144eef6ecf4b4f9e14a76da06c5a7a5",
+          "decision": "ph",
+          "reason": "2014 d6/d8 and 2024 d8/d10 original trident editions."
+        }
+      ]
+    },
+    {
+      "key": "vial",
+      "canonical": "Vial",
+      "edition": "2024",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Флакон"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0824",
+          "name": "Флакон",
+          "name_en": "",
+          "description": "Вмещает не более 4 унций.",
+          "detailed_description": "",
+          "rules_fingerprint": "62ff73b922b148dc4c29d08e841aea4cec3f0bb984c3a3d6e67f7846d87a40f9",
+          "decision": "ph",
+          "reason": "Four ounces."
+        }
+      ]
+    },
+    {
+      "key": "viol",
+      "canonical": "Viol",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Виола да гамба"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0688",
+          "name": "Виола да гамба",
+          "name_en": "",
+          "description": "Вариант музыкального инструмента",
+          "detailed_description": "",
+          "rules_fingerprint": "65b6603d3c652520ab841f818ebc130978fe72f61b8b4b3b1562df76a54ac867",
+          "decision": "ph",
+          "reason": "Viola da gamba is an explicit translation of Viol."
+        }
+      ]
+    },
+    {
+      "key": "war-pick",
+      "canonical": "War Pick",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Боевая кирка"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0018",
+          "name": "Боевая кирка",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "b0e111ee6cb0a7a4294ba80d03ab15c8b99f1f046dcb93d1c201c5a4220609fd",
+          "decision": "ph",
+          "reason": "Plain war pick."
+        },
+        {
+          "card_number": "CARD-0324",
+          "name": "Боевая кирка",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "2796dd04637bb29e164761f41be7e024325efde6dea599bdd0a36f7999e92330",
+          "decision": "ph",
+          "reason": "Plain war pick."
+        }
+      ]
+    },
+    {
+      "key": "warhammer",
+      "canonical": "Warhammer",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Боевой молот"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0019",
+          "name": "Боевой молот",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "da69a457357a11fd44fc51196f6ee8d998af2dc92bb7d0d8b76aa0aa25030938",
+          "decision": "ph",
+          "reason": "Plain versatile warhammer."
+        },
+        {
+          "card_number": "CARD-0323",
+          "name": "Боевой молот",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "0b72bbc6bfa8f33d92bb7e8b223ef25def38cc0250718cdf87007a0331d927b5",
+          "decision": "ph",
+          "reason": "Plain versatile warhammer."
+        }
+      ]
+    },
+    {
+      "key": "waterskin",
+      "canonical": "Waterskin",
+      "edition": "2014",
+      "section": "Adventuring Gear",
+      "references": [
+        "ph2014"
+      ],
+      "aliases": [
+        "Бурдюк"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0718",
+          "name": "Бурдюк",
+          "name_en": "",
+          "description": "Бурдюк вмещает до 4 пинт жидкости.",
+          "detailed_description": "",
+          "rules_fingerprint": "ef5a450513b521b8076b4b460c3e45b4205f63f007096a76deafa7b6dd55a37d",
+          "decision": "ph",
+          "reason": "Four pints; matches PH2014 capacity."
+        }
+      ]
+    },
+    {
+      "key": "weaver-s-tools",
+      "canonical": "Weaver's Tools",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Инструменты ткача"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0744",
+          "name": "Инструменты ткача",
+          "name_en": "",
+          "description": "**Изготовление:** __Веревка__, __Дорожная одежда__, __Корзина__, __Леска__, __Мантия__, __Мешок__, __Одеяло__.",
+          "detailed_description": "",
+          "rules_fingerprint": "4774934880052af6b24869104c61d8d22938610d09116740baf7cd393467c6dc",
+          "decision": "ph",
+          "reason": "Abbreviated original fabric/rope crafting list."
+        }
+      ]
+    },
+    {
+      "key": "whip",
+      "canonical": "Whip",
+      "edition": "2024",
+      "section": "Weapons",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Кнут"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0025",
+          "name": "Кнут",
+          "name_en": "",
+          "description": "",
+          "detailed_description": "",
+          "rules_fingerprint": "bc50117878f3e79648e4c228d7288a2e9ecf581676b582b393cfde761b8f88bd",
+          "decision": "ph",
+          "reason": "Plain whip."
+        },
+        {
+          "card_number": "CARD-0318",
+          "name": "Кнут",
+          "name_en": "",
+          "description": " ",
+          "detailed_description": "",
+          "rules_fingerprint": "09087c0a1112e88c0c3948fd8f35f2609bb8b2bd768a60cefd0166e99b3b3e26",
+          "decision": "ph",
+          "reason": "Plain whip."
+        }
+      ]
+    },
+    {
+      "key": "woodcarver-s-tools",
+      "canonical": "Woodcarver's Tools",
+      "edition": "2024",
+      "section": "Tools",
+      "references": [
+        "ph2024"
+      ],
+      "aliases": [
+        "Инструменты резчика по дереву"
+      ],
+      "reviews": [
+        {
+          "card_number": "CARD-0740",
+          "name": "Инструменты резчика по дереву",
+          "name_en": "",
+          "description": "**Использование:** Вырезание узора на дереве.",
+          "detailed_description": "",
+          "rules_fingerprint": "4774934880052af6b24869104c61d8d22938610d09116740baf7cd393467c6dc",
+          "decision": "ph",
+          "reason": "Carving a wooden pattern."
+        }
+      ]
+    }
+  ]
+}

@@ -376,6 +376,10 @@ func (cc *CharacterV3Controller) CreateCharacterV3(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка создания персонажа", "details": err.Error()})
 		return
 	}
+	if err := grantOrdinaryCharacterItems(tx, character, character.Equipment, character.InventoryItems, canManageEntityTags(c)); err != nil {
+		writeCharacterRuntimeCommandError(c, err)
+		return
+	}
 
 	var full CharacterV3
 	if err := tx.Preload("User").Preload("Group").First(&full, character.ID).Error; err != nil {
@@ -925,6 +929,13 @@ func (cc *CharacterV3Controller) PatchCharacterRuntime(c *gin.Context) {
 				Message: "character runtime revision is stale", CharacterID: characterID.String(),
 				ExpectedRuntimeRevision: &expected, ActualRuntimeRevision: &actual,
 			}
+		}
+		if roguelikeRun != nil {
+			if err := validateRunItemPatch(locked, req); err != nil {
+				return err
+			}
+		} else if err := grantOrdinaryCharacterItems(tx, locked, req.Equipment, req.InventoryItems, canManageEntityTags(c)); err != nil {
+			return err
 		}
 		if len(updates) > 0 {
 			updates["runtime_revision"] = locked.RuntimeRevision + 1

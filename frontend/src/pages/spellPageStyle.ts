@@ -1,8 +1,8 @@
 // Вики-страница заклинания — тёмно-золотая палитра листа персонажа (--forge-*).
 export const SPELLPAGE_CSS = `
 .spellpage {
-  --sp-bg:#141210; --sp-panel:#1c1813; --sp-panel2:#241f18; --sp-line:#6b5836;
-  --sp-gold:#d8b978; --sp-gold-dim:#c9a45f; --sp-text:#e8e0d0; --sp-dim:#a99f8b;
+  --sp-bg:var(--site-bg,#101513); --sp-panel:var(--site-panel,#17201b); --sp-panel2:var(--site-panel-raised,#202b23); --sp-line:var(--site-line,#bfa6714a);
+  --sp-gold:var(--site-gold,#c9ad74); --sp-gold-dim:#b7a371; --sp-text:var(--site-text,#efe6d3); --sp-dim:var(--site-muted,#a9b0a5);
   position:fixed; inset:0; overflow:auto; background:
     radial-gradient(1200px 500px at 50% -10%, rgba(201,162,39,.06), transparent 60%),
     var(--sp-bg);

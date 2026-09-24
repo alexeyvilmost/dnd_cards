@@ -8,6 +8,8 @@ export interface EntityDetailApi {
   openEntity: (type: EntityRefType, id: string) => void;
   /** Мобильный интерфейс открывает сущности отдельной страницей и не показывает hover-превью. */
   disableHoverPreviews?: boolean;
+  /** Inspection contexts keep canonical detail windows without catalogue authoring. */
+  readOnly?: boolean;
 }
 
 export const EntityDetailContext = createContext<EntityDetailApi>({ openEntity: () => {} });

@@ -84,7 +84,7 @@ const GroupDetail: React.FC = () => {
       <div className="flex items-center justify-center min-h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Загрузка группы...</p>
+          <p className="site-muted text-gray-600">Загрузка группы...</p>
         </div>
       </div>
     );
@@ -93,10 +93,10 @@ const GroupDetail: React.FC = () => {
   if (error || !group) {
     return (
       <div className="max-w-2xl mx-auto">
-        <div className="mb-8">
+        <div className="site-page-head mb-8">
           <button
             onClick={() => navigate('/groups')}
-            className="flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+            className="site-muted flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
           >
             <ArrowLeft size={20} className="mr-2" />
             Назад к группам
@@ -122,10 +122,10 @@ const GroupDetail: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
+      <div className="site-page-head mb-8">
         <button
           onClick={() => navigate('/groups')}
-          className="flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+          className="site-muted flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
         >
           <ArrowLeft size={20} className="mr-2" />
           Назад к группам
@@ -133,7 +133,7 @@ const GroupDetail: React.FC = () => {
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center space-x-3 mb-2">
-              <h1 className="text-3xl font-bold text-gray-900">{group.name}</h1>
+              <h1 className="site-heading text-3xl font-bold text-gray-900">{group.name}</h1>
               {isDM() && (
                 <div className="flex items-center text-yellow-600">
                   <Crown size={20} />
@@ -141,7 +141,7 @@ const GroupDetail: React.FC = () => {
               )}
             </div>
             {group.description && (
-              <p className="text-gray-600 text-lg">{group.description}</p>
+              <p className="site-muted text-gray-600 text-lg">{group.description}</p>
             )}
           </div>
           <div className="flex space-x-3">
@@ -157,7 +157,7 @@ const GroupDetail: React.FC = () => {
             )}
             <Link
               to={`/groups/${group.id}/inventory`}
-              className="btn-primary bg-blue-600 hover:bg-blue-700 flex items-center space-x-2"
+              className="site-button site-button-primary btn-primary bg-blue-600 hover:bg-blue-700 flex items-center space-x-2"
             >
               <Users size={16} />
               <span>Инвентарь группы</span>
@@ -169,22 +169,22 @@ const GroupDetail: React.FC = () => {
       {/* Group info */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Group details */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Информация о группе</h2>
+        <div className="site-surface bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 className="site-heading text-lg font-semibold text-gray-900 mb-4">Информация о группе</h2>
           <div className="space-y-4">
-            <div className="flex items-center text-sm text-gray-600">
+            <div className="site-muted flex items-center text-sm text-gray-600">
               <Crown size={16} className="mr-3 text-yellow-600" />
               <span>Мастер игры: {group.dm.display_name}</span>
             </div>
-            <div className="flex items-center text-sm text-gray-600">
+            <div className="site-muted flex items-center text-sm text-gray-600">
               <Users size={16} className="mr-3" />
               <span>{group.members.length} участников</span>
             </div>
-            <div className="flex items-center text-sm text-gray-600">
+            <div className="site-muted flex items-center text-sm text-gray-600">
               <Calendar size={16} className="mr-3" />
               <span>Создана {formatDate(group.created_at)}</span>
             </div>
-            <div className="flex items-center text-sm text-gray-600">
+            <div className="site-muted flex items-center text-sm text-gray-600">
               <User size={16} className="mr-3" />
               <span>Ваша роль: {
                 getUserRole() === 'dm' ? 'Мастер игры' : 'Игрок'
@@ -194,17 +194,17 @@ const GroupDetail: React.FC = () => {
         </div>
 
         {/* Group ID */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">ID группы</h2>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <p className="text-sm text-gray-600 mb-2">Поделитесь этим ID с игроками:</p>
+        <div className="site-surface bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 className="site-heading text-lg font-semibold text-gray-900 mb-4">ID группы</h2>
+          <div className="site-surface bg-gray-50 rounded-lg p-4">
+            <p className="site-muted text-sm text-gray-600 mb-2">Поделитесь этим ID с игроками:</p>
             <div className="flex items-center space-x-2">
-              <code className="flex-1 text-sm font-mono bg-white border border-gray-200 rounded px-3 py-2">
+              <code className="site-control flex-1 text-sm font-mono bg-white border border-gray-200 rounded px-3 py-2">
                 {group.id}
               </code>
               <button
                 onClick={() => navigator.clipboard.writeText(group.id)}
-                className="btn-secondary border-gray-300 text-gray-700 hover:bg-gray-50 text-sm px-3 py-2"
+                className="site-button site-muted btn-secondary border-gray-300 text-gray-700 hover:bg-gray-50 text-sm px-3 py-2"
               >
                 Копировать
               </button>
@@ -215,9 +215,9 @@ const GroupDetail: React.FC = () => {
 
       {/* Members list */}
       <div className="mt-8">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="site-surface bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Участники группы</h2>
+            <h2 className="site-heading text-lg font-semibold text-gray-900">Участники группы</h2>
           </div>
           <div className="divide-y divide-gray-200">
             {members.map((member) => (
@@ -235,10 +235,10 @@ const GroupDetail: React.FC = () => {
                     )}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="site-label text-sm font-medium text-gray-900">
                       {member.user.display_name}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="site-muted text-xs text-gray-500">
                       @{member.user.username}
                     </p>
                   </div>
@@ -252,7 +252,7 @@ const GroupDetail: React.FC = () => {
                     {member.role === 'dm' ? 'Мастер игры' : 'Игрок'}
                   </span>
                   {member.user_id === user?.id && (
-                    <span className="text-xs text-gray-500">(Вы)</span>
+                    <span className="site-muted text-xs text-gray-500">(Вы)</span>
                   )}
                 </div>
               </div>

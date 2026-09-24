@@ -174,6 +174,7 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 		} else if !isCamp {
 			locked.CombatEnvelope = result.Envelope
 			locked.CombatCatalog = catalog
+			applyTrustedCombatConclusion(locked)
 		}
 		if result.GoldSpent < 0 || (!isCampAction && result.GoldSpent != 0) {
 			return fmt.Errorf("invalid worker material payment")

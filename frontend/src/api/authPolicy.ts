@@ -1,7 +1,6 @@
 const PUBLIC_CATALOG_ROOTS = new Set([
   'actions',
   'backgrounds',
-  'cards',
   'classes',
   'concepts',
   'content-images',
@@ -34,7 +33,7 @@ function apiPath(url: string | undefined): string | null {
   }
 }
 
-/** Public catalog GETs must remain anonymous even in an authenticated UI. */
+/** Item reads are identity-aware; other public catalogs remain anonymous. */
 export function shouldAttachAuthToken(method: string | undefined, url: string | undefined): boolean {
   const normalizedMethod = (method ?? 'get').toLowerCase();
   if (normalizedMethod !== 'get' && normalizedMethod !== 'head') return true;

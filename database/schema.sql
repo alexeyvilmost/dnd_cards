@@ -15,7 +15,7 @@ CREATE TABLE cards (
     rarity VARCHAR(50) NOT NULL CHECK (rarity IN ('common', 'uncommon', 'rare', 'very_rare', 'artifact', 'relic', 'custom')),
     custom_rarity_color VARCHAR(7),
     card_number VARCHAR(20) NOT NULL,
-    price INTEGER CHECK (price >= 1 AND price <= 50000),
+    price NUMERIC CHECK (price > 0 AND price <= 1000000),
     weight DECIMAL(5,2) CHECK (weight >= 0.01 AND weight <= 1000),
     bonus_type VARCHAR(50) CHECK (bonus_type IN ('damage', 'defense') OR bonus_type IS NULL),
     bonus_value VARCHAR(20),

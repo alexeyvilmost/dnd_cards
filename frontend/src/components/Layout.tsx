@@ -1,38 +1,28 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BookOpen, Dices, LogOut, User, Users, Store, ChevronDown, Menu, X, Sparkles, Swords, Radio, MoreHorizontal, PawPrint, type LucideIcon } from 'lucide-react';
+import { BookOpen, Dices, LogOut, User, Users, ChevronDown, Menu, X, MoreHorizontal, ScrollText, type LucideIcon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import {shopURLFromPage} from '../utils/shopNavigation';
 
 interface LayoutProps {
   children: React.ReactNode;
+  landing?: boolean;
 }
 
 type SubItem = { label: string; path?: string; onClick?: () => void };
 type NavItem = { label: string; icon: LucideIcon; path?: string; submenu?: SubItem[] };
 
-const Layout = ({ children }: LayoutProps) => {
+const Layout = ({ children, landing = false }: LayoutProps) => {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // The paper editor keeps its existing page frame and print-friendly appearance.
+  const paperLayout = /^\/paper-sheet(?:\/|$)/.test(location.pathname);
 
-  // Библиотека открывается кликом по названию сайта; «Создать *» убраны из панели.
-  // Прямые пункты — в один клик; редкие инструменты и аккаунт — в компактных меню.
   const navItems: NavItem[] = [
+    { path: '/library', label: 'Библиотека', icon: BookOpen },
     { path: '/characters-forge', label: 'Персонажи', icon: Users },
+    { path: '/paper-sheet', label: 'Бумажный лист', icon: ScrollText },
     { path: '/roguelike', label: 'Забег', icon: Dices },
-    { path: '/encounters', label: 'Бои', icon: Radio },
-    { path: '/monsters', label: 'Монстры', icon: PawPrint },
-    { path: '/shop/new', label: 'Магазин', icon: Store },
-    { path: '/initiative', label: 'Инициатива', icon: Swords },
-    { path: '/image-generator', label: 'Генерация', icon: Sparkles },
-    {
-      label: 'Документация', icon: BookOpen,
-      submenu: [
-        { path: '/docs/engine', label: 'Архитектура движка' },
-        { path: '/docs/mechanics', label: 'Справочник механик' },
-      ],
-    },
     {
       label: 'Ещё', icon: MoreHorizontal,
       submenu: [
@@ -40,7 +30,7 @@ const Layout = ({ children }: LayoutProps) => {
         { path: '/export', label: 'Экспорт' },
       ],
     },
-    {
+    user ? {
       label: 'Аккаунт', icon: User,
       submenu: [
         { path: '/groups', label: 'Мои группы' },
@@ -48,37 +38,51 @@ const Layout = ({ children }: LayoutProps) => {
         { path: '/settings', label: 'Настройки' },
         { label: 'Выйти', onClick: logout },
       ],
-    },
+    } : { path: '/login', label: 'Войти', icon: User },
   ];
 
-  const isActive = (path?: string) => !!path && location.pathname === path;
+  const isActive = (path?: string) => !!path && (location.pathname === path
+    || (path === '/library' && location.pathname === '/monsters')
+    || (path === '/roguelike' && location.pathname.startsWith('/roguelike/')));
 
   return (
-    <div className="site-layout min-h-screen bg-gray-50" style={{
+    <div className={`site-layout min-h-screen ${paperLayout ? 'site-layout-paper bg-gray-50' : 'site-page-theme'} ${landing ? 'site-layout-landing' : ''}`} style={paperLayout ? {
       backgroundImage: 'linear-gradient(rgba(245, 241, 235, 0.7), rgba(245, 241, 235, 0.7)), url(/groovepaper.png)',
-      backgroundRepeat: 'repeat',
-      backgroundSize: 'auto',
-    }}>
+      backgroundRepeat: 'repeat', backgroundSize: 'auto', color: '#111827',
+    } : undefined}>
       {/* Header (компактный) */}
       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-12">
-            {/* Логотип → библиотека */}
-            <Link to="/" aria-description="В библиотеку" className="text-lg sm:text-xl font-bold text-gray-900 truncate hover:text-gray-700 transition-colors">
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center gap-2 h-12">
+            <Link to="/" aria-description="На главную" className="site-brand text-lg sm:text-xl font-bold text-gray-900 truncate hover:text-gray-700 transition-colors">
               Bag of Holding
+            </Link>
+
+            <Link
+              to="/paper-sheet"
+              aria-label="Бумажный лист"
+              aria-current={isActive('/paper-sheet') ? 'page' : undefined}
+              className={`min-[1100px]:hidden ml-auto flex shrink-0 items-center gap-1.5 px-2 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${
+                isActive('/paper-sheet') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <ScrollText size={16} />
+              <span className="max-[379px]:hidden">Бумажный лист</span>
             </Link>
 
             {/* Кнопка мобильного меню */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              className="min-[1100px]:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
               aria-label="Меню"
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="site-mobile-navigation"
             >
               {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
 
             {/* Десктоп-навигация */}
-            <nav className="hidden lg:flex items-center gap-0.5">
+            <nav aria-label="Главная навигация" className="hidden min-[1100px]:flex items-center gap-0.5 whitespace-nowrap">
               {navItems.map((item) => {
                 const Icon = item.icon;
 
@@ -90,7 +94,7 @@ const Layout = ({ children }: LayoutProps) => {
                         <span>{item.label}</span>
                         <ChevronDown size={13} />
                       </button>
-                      <div className="absolute top-full right-0 mt-1 w-44 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50">
+                      <div className="absolute top-full right-0 mt-1 w-44 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-150 z-50">
                         {item.label === 'Аккаунт' && (
                           <div className="px-4 py-2 text-xs text-gray-500 border-b border-gray-100 flex items-center gap-2 truncate">
                             <User size={13} /><span className="truncate">{user?.display_name || user?.username}</span>
@@ -125,7 +129,8 @@ const Layout = ({ children }: LayoutProps) => {
                 return (
                   <Link
                     key={item.path}
-                    to={item.path === '/shop/new' ? shopURLFromPage(item.path,location) : item.path!}
+                    to={item.path!}
+                    aria-current={isActive(item.path) ? 'page' : undefined}
                     className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors ${
                       isActive(item.path) ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                     }`}
@@ -141,7 +146,7 @@ const Layout = ({ children }: LayoutProps) => {
 
         {/* Мобильное меню */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden border-t border-gray-200 bg-white">
+          <div id="site-mobile-navigation" className="min-[1100px]:hidden border-t border-gray-200 bg-white">
             <div className="px-4 py-3 space-y-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -179,7 +184,8 @@ const Layout = ({ children }: LayoutProps) => {
                 return (
                   <Link
                     key={item.path}
-                    to={item.path === '/shop/new' ? shopURLFromPage(item.path,location) : item.path!}
+                    to={item.path!}
+                    aria-current={isActive(item.path) ? 'page' : undefined}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       isActive(item.path) ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
@@ -195,7 +201,7 @@ const Layout = ({ children }: LayoutProps) => {
       </header>
 
       {/* Основной контент */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <main className={landing ? 'landing-main' : 'max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8'}>
         {children}
       </main>
     </div>

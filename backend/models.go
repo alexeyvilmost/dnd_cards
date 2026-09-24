@@ -981,7 +981,7 @@ const (
 type User struct {
 	ID           uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Username     string         `json:"username" gorm:"uniqueIndex;not null"`
-	Email        string         `json:"email" gorm:"uniqueIndex;not null"`
+	Email        string         `json:"email" gorm:"uniqueIndex"` // NULL for OAuth-only accounts; never used for automatic linking.
 	PasswordHash string         `json:"-" gorm:"not null"` // Хеш пароля (не возвращаем в JSON)
 	DisplayName  string         `json:"display_name" gorm:"not null"`
 	CreatedAt    time.Time      `json:"created_at"`

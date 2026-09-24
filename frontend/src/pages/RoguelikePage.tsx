@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { RotateCcw, Trophy } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { charactersV3Api } from '../character/api';
@@ -11,6 +11,13 @@ import { roguelikeApi, type RoguelikeRun } from '../roguelike/api';
 import './RoguelikePage.css';
 import MerchantSettingsDialog from '../components/MerchantSettingsDialog';
 import {merchantSettingsApi} from '../api/entityTags';
+import RunCharacterIdentity from '../components/RunCharacterIdentity';
+import {runCharacters} from '../roguelike/navigation';
+import {characterTemplatesApi, type CharacterTemplate} from '../character/templatesApi';
+import HoverCard from '../components/HoverCard';
+import {useCombatDialogFocus} from '../components/useCombatDialogFocus';
+
+const RUN_SELECTION_HELP = 'Выберите от 1 до 6 персонажей 1 уровня: Воин, Варвар или Монах. Можно сочетать пресеты и своих персонажей. Для каждого будет создан отдельный игровой лист; исходные персонажи останутся без изменений.';
 
 function errorMessage(reason: unknown): string {
   if (reason instanceof Error) return reason.message;
@@ -24,20 +31,30 @@ function RunList() {
   const [runs, setRuns] = useState<RoguelikeRun[]>([]);
   const [characters, setCharacters] = useState<ForgeCharacter[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
+  const [presets, setPresets] = useState<CharacterTemplate[]>([]);
+  const [names, setNames] = useState<Record<string, string>>({});
+  const [naming, setNaming] = useState(false);
+  const copies = useRef(new Map<string, string>());
+  const dialogRef = useCombatDialogFocus(naming);
+  const count = selected.length + presets.length;
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
-    Promise.all([roguelikeApi.list(), charactersV3Api.list(), classesApi.getClasses({limit: 100, fields: 'list'})])
-      .then(([loadedRuns, loadedCharacters, classCatalog]) => {
+    Promise.all([roguelikeApi.listSelection(), charactersV3Api.list(), classesApi.getClasses({limit: 100, fields: 'list'})])
+      .then(([selection, loadedCharacters, classCatalog]) => {
         if (!active) return;
-        setRuns(loadedRuns);
+        setRuns(selection.runs);
+        const occupied = new Set(selection.unavailable_source_character_ids);
+        for (const run of selection.runs.filter(run => run.status === 'active')) {
+          occupied.add(run.source_character_id);
+          for (const member of run.party?.members ?? []) occupied.add(member.source_character_id);
+        }
         const classIds = classCatalog.classes.filter(c => isRunClass(c.card_number)).map(c=>c.id);
-        const candidates = loadedCharacters.filter(character => isRunEligible(character, classIds));
+        const candidates = loadedCharacters.filter(character => isRunEligible(character, classIds) && !occupied.has(character.id));
         setCharacters(candidates);
-        setSelected(candidates[0]?[candidates[0].id]:[]);
       })
       .catch((reason) => active && setError(errorMessage(reason)))
       .finally(() => active && setLoading(false));
@@ -45,11 +62,22 @@ function RunList() {
   }, []);
 
   const create = async () => {
-    if (!selected.length) return;
+    if (!count || count > 6 || busy || presets.some(preset => !names[preset.id]?.trim())) return;
     setBusy(true);
     setError(null);
     try {
-      const run = await roguelikeApi.create(selected);
+      const sources = [...selected];
+      for (const preset of presets) {
+        const name = names[preset.id].trim();
+        const key = `${preset.id}:${name}`;
+        let sourceId = copies.current.get(key);
+        if (!sourceId) {
+          sourceId = (await characterTemplatesApi.copy(preset.id, name)).id;
+          copies.current.set(key, sourceId);
+        }
+        sources.push(sourceId);
+      }
+      const run = await roguelikeApi.create(sources);
       navigate(`/roguelike/${run.id}`);
     } catch (reason) {
       setError(errorMessage(reason));
@@ -58,51 +86,72 @@ function RunList() {
   };
 
   return (
-    <main className="roguelike-shell">
+    <main className="roguelike-shell roguelike-start">
       <section className="roguelike-hero">
         <p className="roguelike-kicker">РЕЖИМ ЗАБЕГА</p>
         <h1>Дорога до шестого уровня</h1>
         <p>Проведите героев через случайные столкновения, развивайте сборки и наберите 14 000 опыта.</p>
       </section>
 
-      <CharacterTemplateLibrary forRun />
-      {manageShop&&<button className="roguelike-secondary" onClick={()=>setShopSettingsOpen(true)}>Настройки магазина забега</button>}
       {shopSettingsOpen&&<MerchantSettingsDialog onClose={()=>setShopSettingsOpen(false)}/>}
       {error && <div className="roguelike-error" role="alert">{error}</div>}
       {loading ? <p>Загружаем забеги…</p> : (
-        <div className="roguelike-grid">
+        <div className="roguelike-grid roguelike-start-columns">
           <section className="roguelike-card">
-            <h2>Новый забег</h2>
-            <p>Выберите от 1 до 6 персонажей 1 уровня: Воин, Варвар или Монах. Для каждого будет создан отдельный игровой лист; исходные персонажи останутся без изменений.</p>
+            <div className="run-start-heading"><h2>Начать новый забег</h2>
+              <HoverCard content={<div className="run-selection-help" role="tooltip">{RUN_SELECTION_HELP}</div>}>
+                <button type="button" className="run-help-button" aria-label="Как собрать группу" aria-description={RUN_SELECTION_HELP}>?</button>
+              </HoverCard>
+            </div>
+            <CharacterTemplateLibrary forRun runSelection={{selectedIds: presets.map(preset => preset.id), full: count >= 6, busy,
+              onToggle: preset => {setPresets(rows => rows.some(row => row.id === preset.id) ? rows.filter(row => row.id !== preset.id) : [...rows, preset]);
+                setNames(current => ({...current, [preset.id]: current[preset.id] ?? preset.name}));}}} />
+            <div className="run-selection-divider"><h3>Ваши персонажи</h3></div>
             {characters.length ? (
               <>
                 <div className="run-party-selection" role="group" aria-label="Состав группы">
-                  {characters.map(character=><label key={character.id}><input type="checkbox" checked={selected.includes(character.id)} disabled={!selected.includes(character.id)&&selected.length>=6}
+                  {characters.map(character=><label key={character.id}><input type="checkbox" checked={selected.includes(character.id)} disabled={busy || (!selected.includes(character.id)&&count>=6)}
                     onChange={e=>setSelected(ids=>e.target.checked?[...ids,character.id]:ids.filter(id=>id!==character.id))}/>
-                    {character.avatar_url&&<img src={character.avatar_url} alt=""/>}<span>{character.name} · КД {character.armor_class??10}</span></label>)}
+                    <RunCharacterIdentity character={character} /></label>)}
                 </div>
-                <p>Выбрано {selected.length} / 6</p>
-                <button type="button" className="roguelike-primary" disabled={busy||!selected.length} onClick={create}>
-                  {busy ? 'Создаём…' : `Начать забег · ${selected.length}`}
-                </button>
               </>
             ) : (
-              <p>Нет подходящего персонажа. <Link to="/character-forge">Создать персонажа</Link></p>
+              <p>Нет свободных подходящих персонажей. Выберите пресеты выше или <Link to="/character-forge">создайте персонажа</Link>.</p>
             )}
+            <div className="run-start-footer"><span>Выбрано {count} / 6</span>
+              <button type="button" className="roguelike-primary" disabled={busy || !count} onClick={() => presets.length ? setNaming(true) : void create()}>
+                {busy ? 'Создаём…' : `Начать забег · ${count}`}
+              </button>
+            </div>
           </section>
 
           <section className="roguelike-card roguelike-runs">
-            <h2>Ваши забеги</h2>
-            {runs.length === 0 ? <p>Здесь появится история прохождений.</p> : runs.map((run) => (
+            <h2>Продолжить забег</h2>
+            {runs.length === 0 ? <p>Здесь появятся ваши забеги.</p> : runs.map((run) => {
+              const members = runCharacters(run);
+              return (
               <Link className="roguelike-run-row" to={`/roguelike/${run.id}`} key={run.id}>
-                <strong>{run.character?.name ?? 'Воин'}</strong>
-                <span>{run.experience} XP · {run.encounters_won} побед · попытка {run.attempt}</span>
-                <em>{run.status === 'victory' ? 'Победа' : run.status === 'defeat' ? 'Поражение' : 'В пути'}</em>
+                <div className="run-row-heading"><strong>{members.length > 1 ? `Группа · участников: ${members.length}` : 'Одиночный забег'}</strong>
+                  <em data-status={run.status}>{run.status === 'victory' ? 'Победа' : run.status === 'defeat' ? 'Поражение' : run.status === 'abandoned' ? 'Завершён' : run.phase === 'combat' ? 'В бою' : 'В лагере'}</em></div>
+                <span className="run-row-members">{members.map(member => <RunCharacterIdentity key={member.id} character={member} />)}</span>
+                <span className="run-row-progress">{run.experience.toLocaleString('ru-RU')} XP · {run.encounters_won} побед · попытка {run.attempt}</span>
               </Link>
-            ))}
+            );})}
           </section>
         </div>
       )}
+      {manageShop&&<button className="roguelike-secondary run-shop-settings" onClick={()=>setShopSettingsOpen(true)}>Настройки магазина забега</button>}
+      {naming && <div className="character-template-backdrop"><section className="character-template-dialog" role="dialog" aria-modal="true" aria-label="Имена участников группы" ref={dialogRef} tabIndex={-1}
+        onKeyDown={event => {if (event.key === 'Escape' && !busy) setNaming(false);}}>
+        <h2>Имена участников группы</h2>
+        {presets.map(preset => <label key={preset.id}>{preset.name}<input maxLength={100} value={names[preset.id] ?? preset.name} disabled={busy}
+          onChange={event => setNames(current => ({...current, [preset.id]: event.target.value}))} /></label>)}
+        {selected.length > 0 && <p>Также в группе: {characters.filter(c => selected.includes(c.id)).map(c => c.name).join(', ')}.</p>}
+        {error && <p role="alert">{error}</p>}
+        <div className="character-template-dialog-actions"><button type="button" className="roguelike-primary" disabled={busy || presets.some(p => !names[p.id]?.trim())} onClick={() => void create()}>
+          {busy ? 'Создаём…' : 'Создать и начать забег'}</button>
+          <button type="button" className="roguelike-secondary" disabled={busy} onClick={() => setNaming(false)}>Отмена</button></div>
+      </section></div>}
     </main>
   );
 }

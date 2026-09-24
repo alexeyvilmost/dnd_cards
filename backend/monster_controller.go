@@ -183,7 +183,7 @@ func (mc *MonsterController) Get(c *gin.Context) {
 func (mc *MonsterController) Create(c *gin.Context) {
 	var req MonsterUpsertRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса", "details": err.Error()})
+		writeEntityCreateBindingError(c, "монстра", err)
 		return
 	}
 	normalizeMonsterRequest(&req)
@@ -200,7 +200,7 @@ func (mc *MonsterController) Create(c *gin.Context) {
 	}
 	monster := monsterFromRequest(req)
 	if err := mc.db.Create(&monster).Error; err != nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "Не удалось создать монстра", "details": err.Error()})
+		writeEntityCreateDatabaseError(c, "монстра", err)
 		return
 	}
 	c.JSON(http.StatusCreated, monster)

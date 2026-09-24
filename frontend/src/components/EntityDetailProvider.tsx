@@ -8,7 +8,7 @@ import type { Card, Spell, Action, PassiveEffect, Concept, ResourceDefinition, V
 import { cardsApi, spellsApi, actionsApi, effectsApi, conceptsApi, resourcesApi, variablesApi } from '../api/client';
 import type { EntityRefType } from './EntityRefRegistry';
 import { useEntityRef, evictEntity } from './EntityRefRegistry';
-import { EntityDetailContext } from '../contexts/entityDetail';
+import { EntityDetailContext, useEntityDetail } from '../contexts/entityDetail';
 const SpellDetailModal = lazy(() => import('./SpellDetailModal'));
 const ActionDetailModal = lazy(() => import('./ActionDetailModal'));
 const EffectDetailModal = lazy(() => import('./EffectDetailModal'));
@@ -63,12 +63,13 @@ function DetailState({ children, onClose }: { children: ReactNode; onClose: () =
 }
 
 /** Загружает сущность по ссылке и рендерит подходящую детальную модалку. */
-const DetailHost = ({ type, id, onClose }: { type: EntityRefType; id: string; onClose: () => void }) => {
+const DetailHost = ({ type, id, onClose, readOnly }: { type: EntityRefType; id: string; onClose: () => void; readOnly: boolean }) => {
   const { entity, loading, error } = useEntityRef(type, id);
 
   const handleDelete = useCallback(async (entId: string) => {
+    if (readOnly) return;
     try { await DELETERS[type](entId); evictEntity(type, id); evictEntity(type, entId); } finally { onClose(); }
-  }, [type, id, onClose]);
+  }, [type, id, onClose, readOnly]);
 
   if (loading) {
     return <DetailState onClose={onClose}><div role="status">Загрузка карточки…</div></DetailState>;
@@ -102,15 +103,17 @@ const DetailHost = ({ type, id, onClose }: { type: EntityRefType; id: string; on
   );
 };
 
-export function EntityDetailProvider({ children }: { children: ReactNode }) {
+export function EntityDetailProvider({ children, readOnly = false }: { children: ReactNode; readOnly?: boolean }) {
+  const parent = useEntityDetail();
+  const effectiveReadOnly = readOnly || Boolean(parent.readOnly);
   const [ref, setRef] = useState<{ type: EntityRefType; id: string } | null>(null);
   const openEntity = useCallback((type: EntityRefType, id: string) => setRef({ type, id }), []);
   const close = useCallback(() => setRef(null), []);
 
   return (
-    <EntityDetailContext.Provider value={{ openEntity }}>
+    <EntityDetailContext.Provider value={{ openEntity, readOnly: effectiveReadOnly }}>
       {children}
-      {ref && <DetailHost key={`${ref.type}:${ref.id}`} type={ref.type} id={ref.id} onClose={close} />}
+      {ref && <DetailHost key={`${ref.type}:${ref.id}`} type={ref.type} id={ref.id} onClose={close} readOnly={effectiveReadOnly} />}
     </EntityDetailContext.Provider>
   );
 }

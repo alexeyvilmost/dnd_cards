@@ -201,7 +201,6 @@ describe('/rules-lab route', () => {
   it.each([
     '/character-forge',
     '/character-forge/character-id',
-    '/characters-forge',
     '/characters-v3/character-id',
     '/characters-v3/character-id/edit',
     '/m/characters',
@@ -234,6 +233,23 @@ describe('/rules-lab route', () => {
     });
     expect(container.textContent).toContain(`login from ${path}`);
 
+    await act(async () => root.unmount());
+  });
+
+  it.each(['/characters-forge', '/roguelike', '/roguelike/run-id'])('shows a public introduction at %s without waiting for game rules', async path => {
+    mocks.loadConditions.mockReturnValue(new Promise(() => undefined));
+    mocks.useAuth.mockReturnValue({ isAuthenticated: false, isLoading: false, user: null });
+    const container = document.createElement('div');
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(createElement(MemoryRouter, { initialEntries: [path] }, createElement(App)));
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+    await vi.waitFor(() => expect(container.querySelector('.guest-section-hero')).not.toBeNull());
+    expect(container.querySelector('[data-testid="login-route-marker"]')).toBeNull();
+    expect(container.querySelector('.guest-section-actions a[href="/login"]')).not.toBeNull();
+    expect(container.textContent).not.toContain('Проверяем правила для игрового экрана…');
     await act(async () => root.unmount());
   });
 });

@@ -1,13 +1,13 @@
-/* Тёмно-золотой дизайн конструктора персонажа (по макету). */
+/* Shared site palette for forge and interactive sheets; paper-sheet is separate. */
 .forge {
-  --forge-bg: #141210;
-  --forge-panel: #1c1813;
-  --forge-panel-2: #241f18;
-  --forge-line: #6b5836;
-  --forge-gold: #d8b978;
-  --forge-gold-dim: #c9a45f;
-  --forge-text: #e8e0d0;
-  --forge-text-dim: #a99f8b;
+  --forge-bg: var(--site-bg, #101513);
+  --forge-panel: var(--site-panel, #17201b);
+  --forge-panel-2: var(--site-panel-raised, #202b23);
+  --forge-line: var(--site-line, #bfa6714a);
+  --forge-gold: var(--site-gold, #c9ad74);
+  --forge-gold-dim: #b7a371;
+  --forge-text: var(--site-text, #efe6d3);
+  --forge-text-dim: var(--site-muted, #a9b0a5);
   --forge-danger: #d98a6a;
 
   position: fixed;
@@ -21,6 +21,8 @@
 }
 
 .forge-header {
+  font-family: Georgia, 'Times New Roman', serif;
+  background: linear-gradient(110deg, #26342966, transparent);
   text-align: center;
   padding: 12px 16px;
   font-size: 22px;
@@ -35,13 +37,24 @@
   align-items: center;
   text-align: center;
 }
+.forge-header :is(button, a) { font-family: Inter, system-ui, sans-serif; letter-spacing: normal; }
 .forge-header-spacer { grid-column: 1; }
 .forge-header-title {
+  font-family: Georgia, 'Times New Roman', serif;
   grid-column: 2;
   font-size: 22px;
   letter-spacing: 0.04em;
   color: var(--forge-gold);
 }
+.characters-roster-page .sheet-scroll { width: 100%; max-width: 1360px; margin: 0 auto; }
+.characters-roster-intro { padding: 30px; margin-bottom: 24px; border: 1px solid var(--forge-line); border-radius: 14px; background: linear-gradient(90deg, #111b17f7 20%, #111b1799 68%, #111b1740), url('/images/home/interactive.jpg') right 36% / cover; }
+.characters-roster-intro > span { color: var(--forge-gold); font-size: 10px; letter-spacing: .15em; }
+.characters-roster-intro h1 { margin: 12px 0; font: 400 clamp(26px, 3vw, 38px)/1.15 Georgia, 'Times New Roman', serif; color: var(--forge-text); }
+.characters-roster-intro p { margin: 0; max-width: 490px; color: #c1c9b9; font-size: 13px; line-height: 1.6; }
+.characters-roster-page .characters-roster-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 245px), 1fr)); gap: 16px; }
+.characters-roster-grid .forge-char-card { padding: 16px; border-radius: 12px; box-shadow: 0 8px 22px #0002; }
+.characters-roster-grid .ec-name { font: 400 21px/1.25 Georgia, 'Times New Roman', serif; }
+@media (max-width: 600px) { .characters-roster-intro { padding: 22px; } }
 .forge-header-layout .sheet-header-actions {
   grid-column: 3;
   justify-self: end;

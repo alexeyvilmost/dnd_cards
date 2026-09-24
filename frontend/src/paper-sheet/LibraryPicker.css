@@ -1,0 +1,47 @@
+.ps-library-backdrop { position: fixed; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgb(16 22 34 / 40%); }
+.ps-library-picker { width: 620px; max-width: 100%; max-height: min(760px, calc(100dvh - 48px)); display: flex; flex-direction: column; overflow: hidden; background: #fff; color: #25262b; border: 1px solid #d2d5dd; border-radius: 12px; box-shadow: 0 16px 64px #0003; font: 14px/1.45 'Paper Open Sans', Arial, sans-serif; }
+.ps-library-picker * { box-sizing: border-box; }
+.ps-library-picker button, .ps-library-picker input { font: inherit; }
+.ps-library-picker button { cursor: pointer; }
+.ps-library-picker button:disabled { cursor: default; opacity: .35; }
+.ps-library-picker :focus-visible { outline: 2px solid #587eff; outline-offset: 2px; }
+.ps-library-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 20px 22px 12px; }
+.ps-library-header h2 { margin: 0; color: #24252a; font-size: 19px; line-height: 1.35; font-weight: 600; }
+.ps-library-header p { margin: 5px 0 0; color: #727682; font-size: 12px; }
+.ps-library-close { border: 0; background: transparent; color: #737783; display: grid; place-items: center; width: 28px; height: 28px; padding: 3px; border-radius: 4px; }
+.ps-library-close:hover { background: #f0f2f7; }
+.ps-library-tabs { display: flex; gap: 20px; margin: 0 22px; border-bottom: 1px solid #e3e5e9; }
+.ps-library-tabs button { position: relative; border: 0; background: transparent; color: #797c86; padding: 10px 0; font-weight: 600; }
+.ps-library-tabs button[aria-selected="true"] { color: #365fd7; }
+.ps-library-tabs button[aria-selected="true"]::after { content: ''; position: absolute; height: 2px; background: #587eff; left: 0; right: 0; bottom: -1px; }
+.ps-library-search { display: flex; gap: 10px; align-items: center; margin: 16px 22px 12px; padding: 9px 11px; border: 1px solid #d8dce5; border-radius: 6px; color: #8d929e; background: #fff; }
+.ps-library-search:focus-within { border-color: #7f9afd; box-shadow: 0 0 0 2px #edf1ff; }
+.ps-library-search input { min-width: 0; width: 100%; outline: none; color: #25262b; border: 0; background: transparent; padding: 0; }
+.ps-library-search input:focus-visible { outline: none; }
+.ps-library-search input::placeholder { color: #9296a0; }
+.ps-library-results { min-height: 200px; flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 0 14px; scrollbar-width: thin; }
+.ps-library-results ul { margin: 0; padding: 0; list-style: none; }
+.ps-library-results li + li { border-top: 1px solid #eceef2; }
+.ps-library-result-preview { display: block; }
+.ps-library-result { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 11px 9px; border: 0; border-radius: 4px; background: #fff; color: #292c35; text-align: left; }
+.ps-library-result:hover, .ps-library-result:focus-visible { background: #f2f5ff; }
+.ps-library-result strong { font-weight: 700; overflow-wrap: anywhere; }
+.ps-library-result > span { color: #8094cd; font-size: 18px; line-height: 18px; }
+.ps-library-state { padding: 45px 16px; margin: 0; text-align: center; color: #858996; }
+.ps-library-error p { margin: 0 0 12px; color: #ac4242; }
+.ps-library-error button { border: 1px solid #c3cef0; background: #f5f7ff; border-radius: 5px; padding: 6px 15px; color: #4265c6; }
+.ps-library-footer { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; gap: 12px; padding: 12px 22px; margin-top: 10px; border-top: 1px solid #e3e5e9; color: #787e8b; font-size: 12px; }
+.ps-library-footer nav { display: flex; align-items: center; gap: 10px; }
+.ps-library-footer button { display: grid; place-items: center; border: 1px solid #dce0e9; background: #fff; color: #657395; width: 28px; height: 28px; padding: 0; border-radius: 5px; }
+@media (max-width: 480px) {
+  .ps-library-backdrop { padding: 12px; }
+  .ps-library-picker { max-height: calc(100dvh - 24px); }
+  .ps-library-header { padding: 16px 15px 8px; }
+  .ps-library-tabs { margin: 0 15px; }
+  .ps-library-search { margin: 13px 15px 10px; }
+  .ps-library-footer { padding: 10px 15px; gap: 7px; }
+  .ps-library-footer nav { gap: 6px; }
+}
+@media print {
+  .ps-library-backdrop { display: none !important; }
+}

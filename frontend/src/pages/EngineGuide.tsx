@@ -1,3 +1,4 @@
+import './UtilityPages.css';
 import { Children, isValidElement, useEffect, useId, useState, type ReactElement, type ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -88,7 +89,7 @@ function MarkdownPre({ children }: { children?: ReactNode }) {
 
 export default function EngineGuide() {
   return (
-    <article className="engine-guide">
+    <article className="site-page-theme engine-guide utility-guide site-surface">
       <style>{ENGINE_GUIDE_STYLES}</style>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}

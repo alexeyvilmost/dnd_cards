@@ -1,3 +1,4 @@
+import './UtilityPages.css';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Search, Package, Weight, Coins } from 'lucide-react';
@@ -99,7 +100,7 @@ const AddItemToInventory: React.FC = () => {
       <div className="flex items-center justify-center min-h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Загрузка...</p>
+          <p className="site-muted text-gray-600">Загрузка...</p>
         </div>
       </div>
     );
@@ -108,10 +109,10 @@ const AddItemToInventory: React.FC = () => {
   if (error || !inventory) {
     return (
       <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
+        <div className="site-page-head mb-8">
           <button
             onClick={() => navigate('/inventory')}
-            className="flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+            className="site-muted flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
           >
             <ArrowLeft size={20} className="mr-2" />
             Назад к инвентарям
@@ -137,40 +138,40 @@ const AddItemToInventory: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
+      <div className="site-page-head mb-8">
         <button
           onClick={() => navigate(`/inventory/${inventory.id}`)}
-          className="flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+          className="site-muted flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
         >
           <ArrowLeft size={20} className="mr-2" />
           Назад к инвентарю
         </button>
-        <h1 className="text-3xl font-bold text-gray-900">Добавить предмет в инвентарь</h1>
-        <p className="text-gray-600 mt-1">Выберите предмет из библиотеки карточек</p>
+        <h1 className="site-heading text-3xl font-bold text-gray-900">Добавить предмет в инвентарь</h1>
+        <p className="site-muted text-gray-600 mt-1">Выберите предмет из библиотеки карточек</p>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Cards list */}
         <div className="space-y-4">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Библиотека карточек</h2>
+          <div className="site-surface bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="site-heading text-lg font-semibold text-gray-900 mb-4">Библиотека карточек</h2>
             
             {/* Search */}
             <div className="relative mb-4">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
+                <Search className="site-muted h-5 w-5 text-gray-400" />
               </div>
               <input
                 type="text"
                 placeholder="Поиск карточек..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="input-field pl-10"
+                className="site-control input-field pl-10"
               />
             </div>
 
             {/* Cards grid */}
-            <div className="max-h-96 overflow-y-auto space-y-2">
+            <div className="utility-entity-island max-h-96 overflow-y-auto space-y-2">
               {filteredCards.map((card) => (
                 <div
                   key={card.id}
@@ -219,9 +220,9 @@ const AddItemToInventory: React.FC = () => {
           {selectedCard ? (
             <>
               {/* Selected card info */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Выбранный предмет</h2>
-                <div className="flex items-start space-x-4">
+              <div className="site-surface bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="site-heading text-lg font-semibold text-gray-900 mb-4">Выбранный предмет</h2>
+                <div className="utility-entity-island flex items-start space-x-4">
                   {selectedCard.image_url && (
                     <img
                       src={selectedCard.image_url}
@@ -251,8 +252,8 @@ const AddItemToInventory: React.FC = () => {
               </div>
 
               {/* Add to inventory form */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Добавить в инвентарь</h2>
+              <div className="site-surface bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="site-heading text-lg font-semibold text-gray-900 mb-4">Добавить в инвентарь</h2>
                 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {/* Error message */}
@@ -264,7 +265,7 @@ const AddItemToInventory: React.FC = () => {
 
                   {/* Quantity */}
                   <div>
-                    <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="quantity" className="site-muted block text-sm font-medium text-gray-700 mb-2">
                       Количество
                     </label>
                     <input
@@ -274,13 +275,13 @@ const AddItemToInventory: React.FC = () => {
                       required
                       value={formData.quantity}
                       onChange={(e) => setFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
-                      className="input-field"
+                      className="site-control input-field"
                     />
                   </div>
 
                   {/* Notes */}
                   <div>
-                    <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="notes" className="site-muted block text-sm font-medium text-gray-700 mb-2">
                       Заметки (необязательно)
                     </label>
                     <textarea
@@ -288,7 +289,7 @@ const AddItemToInventory: React.FC = () => {
                       rows={3}
                       value={formData.notes}
                       onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                      className="input-field resize-none"
+                      className="site-control input-field resize-none"
                       placeholder="Добавьте заметки о предмете..."
                     />
                   </div>
@@ -297,7 +298,7 @@ const AddItemToInventory: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full btn-primary bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="site-button site-button-primary w-full btn-primary bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? (
                       <div className="flex items-center justify-center">
@@ -315,11 +316,11 @@ const AddItemToInventory: React.FC = () => {
               </div>
             </>
           ) : (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="text-center py-8">
-                <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Выберите предмет</h3>
-                <p className="text-gray-600">Выберите карточку из библиотеки, чтобы добавить её в инвентарь</p>
+            <div className="site-surface bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="site-empty text-center py-8">
+                <Package className="site-muted h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="site-heading text-lg font-medium text-gray-900 mb-2">Выберите предмет</h3>
+                <p className="site-muted text-gray-600">Выберите карточку из библиотеки, чтобы добавить её в инвентарь</p>
               </div>
             </div>
           )}

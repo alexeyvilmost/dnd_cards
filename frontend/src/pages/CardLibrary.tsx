@@ -1,12 +1,13 @@
-import LibraryTagFilter from '../components/LibraryTagFilter';
+import LibraryTagControl from '../components/library/LibraryTagControl';
 import { previewAnchor } from '../utils/previewAnchor';
 import { Fragment, useState, useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import {
-  Search, Filter, Plus, Grid3X3, List, LayoutTemplate, X,
-  Package, Sparkles, Zap, Wand2, Star, ScrollText, Users, Shield, Gem, Variable as VariableIcon, Lightbulb,
+  Filter, Plus, Grid3X3, List, LayoutTemplate, X,
 } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
-import NavRail, { type NavRailItem } from '../components/NavRail';
+import { Link } from 'react-router-dom';
+import LibrarySidebar from '../components/library/LibrarySidebar';
+import LibrarySearch from '../components/library/LibrarySearch';
+import LibrarySectionHero from '../components/library/LibrarySectionHero';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { cardsApi, effectsApi, actionsApi, spellsApi, featsApi, backgroundsApi, racesApi, classesApi, resourcesApi, variablesApi, conceptsApi } from '../api/client';
 import type { Card, PassiveEffect, Action, Spell, Feat, Background, Race, CharacterClass, ResourceDefinition, Variable, Concept } from '../types';
@@ -43,11 +44,15 @@ import ElementalDamageDisplay from '../components/ElementalDamageDisplay';
 import CurrencyPriceInline from '../components/CurrencyPriceInline';
 import { hasElementalDamage } from '../utils/elementalDamage';
 import {
-  buildLibrarySearchParams,
   type LibraryContentType,
   type LibraryViewMode,
-  parseLibrarySearchParams,
 } from '../utils/libraryUrlParams';
+import { buildLibrarySearchParams, parseLibrarySearchParams, useLibrarySearchParams } from '../components/library/libraryNavigation';
+import LibraryRarityFilter from '../components/library/LibraryRarityFilter';
+import LibraryBulkTags, { LibrarySelectionCheckbox, useLibrarySelection } from '../components/library/LibraryBulkTags';
+import { itemLibraryApi } from '../components/library/itemLibraryApi';
+import { useAuth } from '../contexts/AuthContext';
+import './CardLibrary.css';
 import ItemPreview from '../components/ItemPreview';
 import PassiveLibrary from '../components/PassiveLibrary';
 import { useSiteSettings } from '../settings';
@@ -142,16 +147,18 @@ function classSubtypeLabel(characterClass: CharacterClass, parentById: Map<strin
 }
 
 const CardLibrary = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useLibrarySearchParams();
+  const { token } = useAuth();
   const initialFilters = useMemo(() => parseLibrarySearchParams(searchParams), []);
   const resourceOptions = useResourceOptions();
   const isMobile = useIsMobile();
   const urlInitialized = useRef(false);
   const skipFilterUrlSync = useRef(false);
-  const openingCardFromUrl = useRef(false);
+  const openedCardIdentity = useRef(token);
 
   const [contentType, setContentType] = useState<LibraryContentType>(initialFilters.contentType);
   const [cards, setCards] = useState<Card[]>([]);
+  const cardsIdentity = useRef(token);
   const [effects, setEffects] = useState<PassiveEffect[]>([]);
   const [actions, setActions] = useState<Action[]>([]);
   const [spells, setSpells] = useState<Spell[]>([]);
@@ -169,7 +176,6 @@ const CardLibrary = () => {
   const [tagFilter,setTagFilter]=useState(initialFilters.tag??'');
   const [tagRevision,setTagRevision]=useState(0);
   useEffect(()=>{const refresh=()=>setTagRevision(v=>v+1);window.addEventListener('entity-tags-changed',refresh);return()=>window.removeEventListener('entity-tags-changed',refresh)},[]);
-  const [searchDraft, setSearchDraft] = useState(initialFilters.search);
   const catalogRequestSequence = useRef(0);
   const previousContentType = useRef<LibraryContentType>(initialFilters.contentType);
   const [rarityFilter, setRarityFilter] = useState<string>(initialFilters.rarity);
@@ -338,8 +344,9 @@ const CardLibrary = () => {
           break;
       }
       
-      const response = await cardsApi.getCards(params);
+      const response = await itemLibraryApi.list(params);
       if (requestSequence !== catalogRequestSequence.current) return;
+      cardsIdentity.current = token;
       
       if (append) {
         setCards(prev => {
@@ -780,13 +787,12 @@ const CardLibrary = () => {
   };
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setSearch(searchDraft), 250);
-    return () => window.clearTimeout(timer);
-  }, [searchDraft]);
-
-  useEffect(() => {
     catalogRequestSequence.current += 1;
     setCurrentPage(1);
+    if (cardsIdentity.current !== token) {
+      setCards([]);
+      setTotalCards(0);
+    }
     if (previousContentType.current !== contentType) {
       setCards([]); setEffects([]); setActions([]); setSpells([]); setFeats([]);
       setBackgrounds([]); setRaces([]); setClasses([]); setResources([]); setConcepts([]);
@@ -817,7 +823,7 @@ const CardLibrary = () => {
     } else if (contentType === 'concepts') {
       loadConcepts();
     }
-  }, [contentType, search, tagFilter, tagRevision, rarityFilter, effectTypeFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, resourceCategoryFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable, featAbility, bgAbility, bgSkill]);
+  }, [token, contentType, search, tagFilter, tagRevision, rarityFilter, effectTypeFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, resourceCategoryFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable, featAbility, bgAbility, bgSkill]);
 
   const currentFilters = useMemo(
     () => ({
@@ -873,6 +879,7 @@ const CardLibrary = () => {
   );
 
   const lastWrittenParamsRef = useRef(searchParams.toString());
+  const selection = useLibrarySelection(token, JSON.stringify({ ...currentFilters, viewMode: undefined }));
 
   // Синхронизация фильтров → URL (можно скопировать ссылку и вернуться к тому же набору)
   useEffect(() => {
@@ -886,6 +893,9 @@ const CardLibrary = () => {
       return;
     }
 
+    // An external navigation must hydrate filters before they write the URL.
+    if (searchParams.toString() !== lastWrittenParamsRef.current) return;
+
     const built = buildLibrarySearchParams(currentFilters, searchParams);
     const cardId = searchParams.get('card');
     if (cardId) {
@@ -895,7 +905,9 @@ const CardLibrary = () => {
     const nextStr = built.toString();
     if (nextStr !== searchParams.toString()) {
       lastWrittenParamsRef.current = nextStr;
-      setSearchParams(built, { replace: true });
+      // Committed searches are history entries; other filters retain their
+      // established replace behavior. Back/forward hydrate the common control.
+      setSearchParams(built, { replace: currentFilters.search === searchParams.get('q') || (!currentFilters.search && !searchParams.has('q')) });
     }
   }, [currentFilters, searchParams, setSearchParams]);
 
@@ -911,7 +923,6 @@ const CardLibrary = () => {
     setContentType(parsed.contentType);
     setSearch(parsed.search);
     setTagFilter(parsed.tag??"");
-    setSearchDraft(parsed.search);
     setRarityFilter(parsed.rarity);
     setEffectTypeFilter(parsed.effectType);
     setPropertiesFilter(parsed.properties);
@@ -937,6 +948,10 @@ const CardLibrary = () => {
 
   // Открытие / закрытие карты по параметру ?card=
   useEffect(() => {
+    let active = true;
+    const identityChanged = openedCardIdentity.current !== token;
+    openedCardIdentity.current = token;
+    if (identityChanged) { setSelectedCard(null); setIsModalOpen(false); }
     const cardId = searchParams.get('card');
 
     if (!cardId) {
@@ -947,39 +962,34 @@ const CardLibrary = () => {
       return;
     }
 
-    if (selectedCard?.id === cardId && isModalOpen) {
+    if (!identityChanged && selectedCard?.id === cardId && isModalOpen) {
       return;
     }
 
-    const found = cards.find((c) => c.id === cardId);
+    const found = !identityChanged && cardsIdentity.current === token && cards.find((c) => c.id === cardId);
     if (found) {
       setSelectedCard(found);
       setIsModalOpen(true);
       return;
     }
 
-    if (openingCardFromUrl.current) {
-      return;
-    }
-
-    openingCardFromUrl.current = true;
-    cardsApi
-      .getCard(cardId)
+    itemLibraryApi
+      .detail(cardId)
       .then((card) => {
+        if (!active) return;
         setSelectedCard(card);
         setIsModalOpen(true);
       })
       .catch(() => {
+        if (!active) return;
         setSearchParams((prev) => {
           const next = new URLSearchParams(prev);
           next.delete('card');
           return next;
         }, { replace: true });
-      })
-      .finally(() => {
-        openingCardFromUrl.current = false;
       });
-  }, [searchParams, cards, selectedCard?.id, setSearchParams]);
+    return () => { active = false; };
+  }, [token, searchParams, cards, selectedCard?.id, setSearchParams]);
 
   // Автоматическая подгрузка при прокрутке
   useEffect(() => {
@@ -1049,6 +1059,7 @@ const CardLibrary = () => {
 
   // Открытие модального окна
   const handleCardClick = (card: Card) => {
+    if (selection.enabled) { selection.toggle(card.id); return; }
     setSelectedCard(card);
     setIsModalOpen(true);
     setSearchParams((prev) => {
@@ -1317,7 +1328,7 @@ const CardLibrary = () => {
   const createTargetByType: Record<LibraryContentType, { to: string; label: string }> = {
     cards: { to: '/create', label: 'Создать карту' },
     effects: { to: '/effect-creator', label: 'Создать эффект' },
-    passives: { to: '/?type=passives', label: 'Оформление пассивов' },
+    passives: { to: '/library?type=passives', label: 'Оформление пассивов' },
     actions: { to: '/action-creator', label: 'Создать действие' },
     spells: { to: '/spell-creator', label: 'Создать заклинание' },
     feats: { to: '/feat-creator', label: 'Создать черту' },
@@ -1330,23 +1341,8 @@ const CardLibrary = () => {
   };
   const createTarget = createTargetByType[contentType];
 
-  // Категории контента как сквозной рейл (десктоп — вертикальный слева,
-  // ≤820px — горизонтальная лента сверху). Заменяет выпадающий список.
-  const contentTypeItems: NavRailItem[] = [
-    { id: 'cards', label: 'Предметы', icon: <Package size={18} /> },
-    { id: 'effects', label: 'Эффекты', icon: <Sparkles size={18} /> },
-    { id: 'passives', label: 'Переключаемые пассивы', icon: <Sparkles size={18} /> },
-    { id: 'actions', label: 'Действия', icon: <Zap size={18} /> },
-    { id: 'spells', label: 'Заклинания', icon: <Wand2 size={18} /> },
-    { id: 'feats', label: 'Черты', icon: <Star size={18} /> },
-    { id: 'backgrounds', label: 'Предыстории', icon: <ScrollText size={18} /> },
-    { id: 'races', label: 'Виды', icon: <Users size={18} /> },
-    { id: 'classes', label: 'Классы', icon: <Shield size={18} /> },
-    { id: 'resources', label: 'Ресурсы', icon: <Gem size={18} /> },
-    { id: 'variables', label: 'Переменные', icon: <VariableIcon size={18} /> },
-    { id: 'concepts', label: 'Понятия', icon: <Lightbulb size={18} /> },
-  ];
   const handleContentTypeChange = (next: LibraryContentType) => {
+    if (next !== 'cards') setRarityFilter(value => value.split(',')[0] ?? '');
     setContentType(next);
     // Выбранный вручную режим держим между вкладками; «Интерфейс» есть только у предметов,
     // поэтому при уходе на другой тип сбрасываем его в «Список».
@@ -1382,69 +1378,40 @@ const CardLibrary = () => {
   };
 
   return (
-    <div className={isMobile ? 'flex flex-col gap-3' : 'flex flex-row gap-4 items-start'}>
-      <NavRail
-        items={contentTypeItems}
-        active={contentType}
-        onSelect={(id) => handleContentTypeChange(id as LibraryContentType)}
-        layout="compact"
-        variant="light"
-        mobileDock="top"
-        ariaLabel="Тип содержимого"
-        className="lib-rail"
-      />
-      <div className="flex-1 min-w-0 space-y-4 sm:space-y-6">
+    <div className="card-library library-shell">
+      <LibrarySidebar active={contentType} onSelectContent={handleContentTypeChange} />
+      <div className="library-shell__content">
       {/* Заголовок */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl sm:text-3xl font-fantasy font-bold text-gray-900">
-          Библиотека карточек
-        </h1>
-        {contentType !== 'passives' && <Link
+      <LibrarySectionHero type={contentType} subtitle="Библиотека" action={contentType !== 'passives' && <Link
           to={createTarget.to}
-          className="btn-primary flex items-center space-x-2 w-full sm:w-auto justify-center"
+          className="library-chrome-button library-chrome-button--primary"
         >
           <Plus size={18} />
           <span>{createTarget.label}</span>
-        </Link>}
-      </div>
+        </Link>} />
+
+      {contentType === 'cards' && <LibraryBulkTags selection={selection} visibleIDs={loading ? [] : cards.map(card => card.id)} />}
 
       {/* Поиск и фильтры */}
-      <div className="lib-toolbar bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
+      <div className="lib-toolbar library-chrome-panel">
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
           {/* Поиск */}
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="text"
-                placeholder="Поиск..."
-                value={searchDraft}
-                onChange={(e) => setSearchDraft(e.target.value)}
-                className="input-field pl-10 text-sm sm:text-base"
-              />
-            </div>
-          </div>
+          <LibrarySearch value={search} onSearch={setSearch} />
 
           {/* Переключатель режимов отображения */}
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg border ${
-                viewMode === 'grid' 
-                  ? 'bg-blue-100 border-blue-300 text-blue-700' 
-                  : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
-              }`}
+              className="library-chrome-button"
+              aria-pressed={viewMode === 'grid'}
               aria-label="Сетка"
             >
               <Grid3X3 size={18} />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2 rounded-lg border ${
-                viewMode === 'list'
-                  ? 'bg-blue-100 border-blue-300 text-blue-700'
-                  : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
-              }`}
+              className="library-chrome-button"
+              aria-pressed={viewMode === 'list'}
               aria-label="Список"
             >
               <List size={18} />
@@ -1452,11 +1419,8 @@ const CardLibrary = () => {
             {contentType === 'cards' && (
               <button
                 onClick={() => setViewMode('interface')}
-                className={`p-2 rounded-lg border ${
-                  viewMode === 'interface'
-                    ? 'bg-blue-100 border-blue-300 text-blue-700'
-                    : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
-                }`}
+                className="library-chrome-button"
+                aria-pressed={viewMode === 'interface'}
                 aria-label="Интерфейс (стат-блок)"
               >
                 <LayoutTemplate size={18} />
@@ -1467,12 +1431,13 @@ const CardLibrary = () => {
           {/* Кнопка фильтров */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="btn-secondary flex items-center justify-center space-x-2 text-sm sm:text-base"
+            className="library-chrome-button"
+            aria-expanded={showFilters}
           >
             <Filter size={18} />
             <span>Фильтры</span>
             {activeFilterCount > 0 && (
-              <span className="ml-0.5 inline-flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full bg-blue-600 text-white text-xs font-bold">
+              <span className="library-chrome-badge">
                 {activeFilterCount}
               </span>
             )}
@@ -1484,14 +1449,14 @@ const CardLibrary = () => {
           <div className="lib-scrim" onClick={() => setShowFilters(false)} />
         )}
         {showFilters && (
-          <div className={isMobile ? 'lib-filters-sheet' : 'mt-4 pt-4 border-t border-gray-200'}>
+          <div className={`library-chrome-filters ${isMobile ? 'lib-filters-sheet' : 'mt-4 pt-4 border-t'}`}>
             {isMobile && (
               <div className="lib-filters-head">
                 <span className="text-base font-semibold text-gray-800">Фильтры</span>
                 <button
                   type="button"
                   onClick={() => setShowFilters(false)}
-                  className="p-1 text-gray-500 hover:text-gray-800"
+                  className="library-chrome-button"
                   aria-label="Закрыть фильтры"
                 >
                   <X size={20} />
@@ -1499,9 +1464,10 @@ const CardLibrary = () => {
               </div>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <LibraryTagFilter value={tagFilter} onChange={setTagFilter}/>
+            <LibraryTagControl value={tagFilter} onChange={setTagFilter}/>
             {/* Фильтр по редкости - не для заклинаний */}
-            {contentType !== 'spells' && contentType !== 'resources' && (
+            {contentType === 'cards' && <LibraryRarityFilter value={rarityFilter} onChange={setRarityFilter} />}
+            {contentType !== 'cards' && contentType !== 'spells' && contentType !== 'resources' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Редкость
@@ -1793,10 +1759,10 @@ const CardLibrary = () => {
             </div>
             {isMobile && (
               <div className="lib-filters-foot">
-                <button type="button" onClick={resetFilters} className="btn-secondary flex-1">
+                <button type="button" onClick={resetFilters} className="library-chrome-button flex-1">
                   Сбросить
                 </button>
-                <button type="button" onClick={() => setShowFilters(false)} className="btn-primary flex-1">
+                <button type="button" onClick={() => setShowFilters(false)} className="library-chrome-button library-chrome-button--primary flex-1">
                   Показать
                 </button>
               </div>
@@ -1872,7 +1838,7 @@ const CardLibrary = () => {
 
       {!loading && contentType === 'variables' && variables.length > 0 && (
         <>
-          <div className="mb-4 text-sm text-gray-600">
+          <div className="mb-4 text-sm library-chrome-status">
             Показано: {variables.length} из {totalCards} переменных
           </div>
 
@@ -1922,7 +1888,7 @@ const CardLibrary = () => {
 
       {!loading && contentType === 'concepts' && concepts.length > 0 && (
         <>
-          <div className="mb-4 text-sm text-gray-600">
+          <div className="mb-4 text-sm library-chrome-status">
             Показано: {concepts.length} из {totalCards} понятий
           </div>
 
@@ -1989,7 +1955,7 @@ const CardLibrary = () => {
       {!loading && contentType === 'cards' && cards.length > 0 && (
         <>
           {/* Счетчик карт */}
-          <div className="mb-4 text-sm text-gray-600">
+          <div className="mb-4 text-sm library-chrome-status">
             Показано: {cards.length} из {totalCards} карт
           </div>
           
@@ -2002,9 +1968,11 @@ const CardLibrary = () => {
                 return (
                   <div 
                     key={card.id} 
-                    className={`relative group flex justify-center cursor-pointer ${isExtended ? 'col-span-2 sm:col-span-2 md:col-span-2 lg:col-span-2 xl:col-span-2' : ''}`}
+                    className={`library-selectable relative group flex justify-center cursor-pointer ${isExtended ? 'col-span-2 sm:col-span-2 md:col-span-2 lg:col-span-2 xl:col-span-2' : ''}`}
+                    data-selected={selection.enabled && selection.selected.has(card.id)}
                     onClick={() => handleCardClick(card)}
                   >
+                    <LibrarySelectionCheckbox selection={selection} id={card.id} name={card.name} />
                     {isExtended ? (
                       <CardPreview card={card} />
                     ) : (
@@ -2020,7 +1988,8 @@ const CardLibrary = () => {
             /* Стат-блок в стиле превью заклинания (только предметы) */
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-10 pt-7">
               {cards.map((card) => (
-                <div key={card.id} className="flex justify-center">
+                <div key={card.id} className="library-selectable relative flex justify-center" data-selected={selection.enabled && selection.selected.has(card.id)}>
+                  <LibrarySelectionCheckbox selection={selection} id={card.id} name={card.name} />
                   <ItemPreview card={card} onClick={() => handleCardClick(card)} />
                 </div>
               ))}
@@ -2040,10 +2009,12 @@ const CardLibrary = () => {
                 {cards.map((card) => (
                   <div
                     key={card.id}
-                    className="relative"
+                    className="library-selectable relative"
+                    data-selected={selection.enabled && selection.selected.has(card.id)}
                     onMouseEnter={(e) => { setHoveredCard(card); placePreview(previewAnchor(e.currentTarget)); }}
                     onMouseLeave={leaveHover(() => setHoveredCard(null))}
                   >
+                    <LibrarySelectionCheckbox selection={selection} id={card.id} name={card.name} />
                     <button
                       onClick={() => handleCardClick(card)}
                       className={`w-full text-left p-3 rounded-lg border border-gray-200 bg-white transition-all duration-200 hover:shadow-md hover:bg-gray-50 border-l-4 ${getRarityBorderColor(card.rarity)}`}
@@ -2178,7 +2149,7 @@ const CardLibrary = () => {
       {!loading && contentType === 'effects' && effects.length > 0 && (
         <>
           {/* Счетчик эффектов */}
-          <div className="mb-4 text-sm text-gray-600">
+          <div className="mb-4 text-sm library-chrome-status">
             Показано: {effects.length} из {totalCards} эффектов
           </div>
           
@@ -2260,7 +2231,7 @@ const CardLibrary = () => {
       {!loading && contentType === 'actions' && actions.length > 0 && (
         <>
           {/* Счетчик действий */}
-          <div className="mb-4 text-sm text-gray-600">
+          <div className="mb-4 text-sm library-chrome-status">
             Показано: {actions.length} из {totalCards} действий
           </div>
           
@@ -2342,7 +2313,7 @@ const CardLibrary = () => {
       {!loading && contentType === 'spells' && spells.length > 0 && (
         <>
           {/* Счетчик заклинаний */}
-          <div className="mb-4 text-sm text-gray-600">
+          <div className="mb-4 text-sm library-chrome-status">
             Показано: {spells.length} из {totalCards} заклинаний
           </div>
 
@@ -2436,7 +2407,7 @@ const CardLibrary = () => {
       {/* ── Ресурсы ── */}
       {!loading && contentType === 'resources' && resources.length > 0 && (
         <>
-          <div className="mb-4 text-sm text-gray-600">
+          <div className="mb-4 text-sm library-chrome-status">
             Показано: {resources.length} из {totalCards} ресурсов
           </div>
 
@@ -2489,7 +2460,7 @@ const CardLibrary = () => {
       )}
       {!loading && contentType === 'feats' && feats.length > 0 && (
         <>
-          <div className="mb-4 text-sm text-gray-600">Показано: {feats.length} из {totalCards} черт</div>
+          <div className="mb-4 text-sm library-chrome-status">Показано: {feats.length} из {totalCards} черт</div>
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-8">
               {featGroups.map((group, groupIndex) => (
@@ -2551,7 +2522,7 @@ const CardLibrary = () => {
       )}
       {!loading && contentType === 'backgrounds' && backgrounds.length > 0 && (
         <>
-          <div className="mb-4 text-sm text-gray-600">Показано: {backgrounds.length} из {totalCards} предысторий</div>
+          <div className="mb-4 text-sm library-chrome-status">Показано: {backgrounds.length} из {totalCards} предысторий</div>
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-8">
               {backgrounds.map((bg) => (
@@ -2606,7 +2577,7 @@ const CardLibrary = () => {
       )}
       {!loading && contentType === 'races' && races.length > 0 && (
         <>
-          <div className="mb-4 text-sm text-gray-600">
+          <div className="mb-4 text-sm library-chrome-status">
             Показано: {mainRaces.length} {mainRaces.length === 1 ? 'вид' : mainRaces.length < 5 ? 'вида' : 'видов'}
             {subraceRaces.length > 0 && (
               <>, {subraceRaces.length} {subraceRaces.length === 1 ? 'подвид' : subraceRaces.length < 5 ? 'подвида' : 'подвидов'}</>
@@ -2698,7 +2669,7 @@ const CardLibrary = () => {
 
       {!loading && contentType === 'classes' && classes.length > 0 && (
         <>
-          <div className="mb-4 text-sm text-gray-600">Показано: {classes.length} из {totalCards} классов</div>
+          <div className="mb-4 text-sm library-chrome-status">Показано: {classes.length} из {totalCards} классов</div>
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-8">
               {mainClasses.map((characterClass) => (

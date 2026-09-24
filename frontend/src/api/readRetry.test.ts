@@ -58,4 +58,38 @@ describe('safe read retry policy', () => {
     })).rejects.toBeInstanceOf(ApiRequestError);
     expect(attempts).toBe(1);
   });
+
+  it('preserves actionable create-error metadata returned by the API', async () => {
+    let caught: unknown;
+    try {
+      await apiClient.post('/api/cards', { price: 1_000_001 }, {
+        adapter: async (config: InternalAxiosRequestConfig): Promise<AxiosResponse> => {
+          const response: AxiosResponse = {
+            data: {
+              error: 'Цена должна быть больше 0 и не превышать 1 000 000.',
+              code: 'constraint_violation',
+              field: 'price',
+              request_id: 'request-price-test',
+            },
+            status: 422,
+            statusText: 'Unprocessable Entity',
+            headers: {},
+            config,
+          };
+          throw new AxiosError('Request failed', 'ERR_BAD_REQUEST', config, undefined, response);
+        },
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toMatchObject({
+      name: 'ApiRequestError',
+      message: 'Цена должна быть больше 0 и не превышать 1 000 000.',
+      status: 422,
+      code: 'constraint_violation',
+      field: 'price',
+      requestId: 'request-price-test',
+    });
+  });
 });

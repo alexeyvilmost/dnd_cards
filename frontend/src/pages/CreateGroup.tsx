@@ -38,20 +38,20 @@ const CreateGroup: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
+      <div className="site-page-head mb-8">
         <button
           onClick={() => navigate('/groups')}
-          className="flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+          className="site-muted flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
         >
           <ArrowLeft size={20} className="mr-2" />
           Назад к группам
         </button>
-        <h1 className="text-3xl font-bold text-gray-900">Создать новую группу</h1>
-        <p className="text-gray-600 mt-1">Создайте новую группу для игры в D&D</p>
+        <h1 className="site-heading text-3xl font-bold text-gray-900">Создать новую группу</h1>
+        <p className="site-muted text-gray-600 mt-1">Создайте новую группу для игры в D&D</p>
       </div>
 
       {/* Form */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="site-surface bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Error message */}
           {error && (
@@ -62,12 +62,12 @@ const CreateGroup: React.FC = () => {
 
           {/* Group name */}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="name" className="site-muted block text-sm font-medium text-gray-700 mb-2">
               Название группы *
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Users className="h-5 w-5 text-gray-400" />
+                <Users className="site-muted h-5 w-5 text-gray-400" />
               </div>
               <input
                 id="name"
@@ -77,7 +77,7 @@ const CreateGroup: React.FC = () => {
                 maxLength={100}
                 value={formData.name}
                 onChange={handleChange}
-                className="input-field pl-10"
+                className="site-control input-field pl-10"
                 placeholder="Введите название группы"
               />
             </div>
@@ -85,12 +85,12 @@ const CreateGroup: React.FC = () => {
 
           {/* Group description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="description" className="site-muted block text-sm font-medium text-gray-700 mb-2">
               Описание группы
             </label>
             <div className="relative">
               <div className="absolute top-3 left-3 pointer-events-none">
-                <FileText className="h-5 w-5 text-gray-400" />
+                <FileText className="site-muted h-5 w-5 text-gray-400" />
               </div>
               <textarea
                 id="description"
@@ -99,11 +99,11 @@ const CreateGroup: React.FC = () => {
                 maxLength={500}
                 value={formData.description}
                 onChange={handleChange}
-                className="input-field pl-10 resize-none"
+                className="site-control input-field pl-10 resize-none"
                 placeholder="Опишите вашу группу, кампанию или особенности игры..."
               />
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="site-muted text-xs text-gray-500 mt-1">
               {formData.description.length}/500 символов
             </p>
           </div>
@@ -132,14 +132,14 @@ const CreateGroup: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/groups')}
-              className="btn-secondary border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="site-button site-muted btn-secondary border-gray-300 text-gray-700 hover:bg-gray-50"
             >
               Отмена
             </button>
             <button
               type="submit"
               disabled={isLoading || !formData.name.trim()}
-              className="btn-primary bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="site-button site-button-primary btn-primary bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <div className="flex items-center">

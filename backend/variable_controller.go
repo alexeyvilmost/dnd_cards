@@ -83,7 +83,7 @@ func (vc *VariableController) GetVariable(c *gin.Context) {
 func (vc *VariableController) CreateVariable(c *gin.Context) {
 	var req CreateVariableRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса", "details": err.Error()})
+		writeEntityCreateBindingError(c, "переменную", err)
 		return
 	}
 	if !validVariableID(req.VariableID) {
@@ -104,7 +104,7 @@ func (vc *VariableController) CreateVariable(c *gin.Context) {
 		SortOrder:    req.SortOrder,
 	}
 	if err := vc.db.Create(&variable).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка создания переменной", "details": err.Error()})
+		writeEntityCreateDatabaseError(c, "переменную", err)
 		return
 	}
 	c.JSON(http.StatusCreated, variable)

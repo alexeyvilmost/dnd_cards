@@ -283,8 +283,8 @@ const ActionCreator = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="site-creator-page max-w-7xl mx-auto px-4 py-8">
+      <div className="site-page-head mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <button
           type="button"
           onClick={() => navigate('/?type=actions')}
@@ -293,7 +293,7 @@ const ActionCreator = () => {
           <ArrowLeft size={18} />
           <span className="text-sm sm:text-base">Назад</span>
         </button>
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
+        <h1 className="site-heading text-xl sm:text-2xl md:text-3xl">
           {isEditMode ? 'Редактирование действия' : 'Создание действия'}
         </h1>
         <span className="hidden sm:block sm:w-20" aria-hidden />
@@ -306,7 +306,7 @@ const ActionCreator = () => {
           active={activeSection}
           onSelect={setActiveSection}
           layout="compact"
-          variant="light"
+          variant="dark"
           mobileDock="bottom"
           ariaLabel="Разделы конструктора действия"
           className="creator-rail"
@@ -314,9 +314,9 @@ const ActionCreator = () => {
 
         {/* Форма */}
         <div className="flex-1 min-w-0">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="site-creator-form space-y-6">
             {activeSection === 'main' && (
-              <div className="bg-white rounded-lg shadow p-6">
+              <div className="site-surface p-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4">Основная информация</h2>
 
                 <div className="space-y-4">
@@ -518,7 +518,7 @@ const ActionCreator = () => {
             )}
 
             {activeSection === 'mechanics' && (
-              <div className="bg-white rounded-lg shadow p-6">
+              <div className="site-surface p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">Механика (унифицированная)</h2>
                 {lockedEntity ? (
                   <LockedMechanicsViewer value={watch('mechanics')} />
@@ -568,8 +568,8 @@ const ActionCreator = () => {
 
         {/* Превью */}
         <div className={isMobile ? 'w-full' : 'w-[420px] flex-none'}>
-          <div className="bg-white rounded-lg shadow p-6 lg:sticky lg:top-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Превью действия</h3>
+          <div className="site-surface p-6 lg:sticky lg:top-6">
+            <h3 className="site-heading text-lg mb-4">Превью действия</h3>
             <div className="flex justify-center">
               <ActionPreview action={previewAction} disableHover={true} resources={resources} />
             </div>
@@ -581,6 +581,5 @@ const ActionCreator = () => {
 };
 
 export default ActionCreator;
-
 
 

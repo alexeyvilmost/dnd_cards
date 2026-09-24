@@ -31,6 +31,29 @@ func TestRoguelikePartyIdentityAndBounds(t *testing.T) {
 		t.Fatal("membership")
 	}
 }
+
+func TestRoguelikeOccupiedSourcesIncludesEntireHistoryAndEveryPartyMember(t *testing.T) {
+	runs := make([]RoguelikeRun, 51)
+	for i := range runs {
+		runs[i] = RoguelikeRun{SourceCharacterID: uuid.New(), CharacterID: uuid.New()}
+	}
+	leader, ally := uuid.New(), uuid.New()
+	runs[50].Party, _ = mapFromJSON(map[string]any{"members": []roguelikePartyMember{
+		{CharacterID: uuid.New(), SourceCharacterID: leader},
+		{CharacterID: uuid.New(), SourceCharacterID: ally},
+	}})
+	ids := roguelikeOccupiedSources(runs)
+	if len(ids) != 52 {
+		t.Fatalf("expected all sources, got %d", len(ids))
+	}
+	seen := map[string]bool{}
+	for _, id := range ids {
+		seen[id] = true
+	}
+	if !seen[runs[0].SourceCharacterID.String()] || !seen[leader.String()] || !seen[ally.String()] {
+		t.Fatal("history or party source missing")
+	}
+}
 func TestRoguelikePartyCheckpointRestoresEveryMember(t *testing.T) {
 	user := uuid.New()
 	leader := &CharacterV3{ID: uuid.New(), UserID: user, CurrentHP: 14, RuntimeRevision: 2, AvatarURL: "leader"}

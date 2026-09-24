@@ -101,6 +101,10 @@ export type RoguelikeCommandType =
   | 'victory';
 
 export const roguelikeApi = {
+  listSelection: async (): Promise<{runs: RoguelikeRun[]; unavailable_source_character_ids: string[]}> => {
+    const {data} = await apiClient.get<{runs: RoguelikeRun[]; unavailable_source_character_ids?: string[]}>('/api/roguelike/runs');
+    return {runs: data.runs ?? [], unavailable_source_character_ids: data.unavailable_source_character_ids ?? []};
+  },
   list: async (): Promise<RoguelikeRun[]> => {
     const { data } = await apiClient.get<{ runs: RoguelikeRun[] }>('/api/roguelike/runs');
     return data.runs ?? [];

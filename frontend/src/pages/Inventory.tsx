@@ -1,3 +1,4 @@
+import './UtilityPages.css';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Package, Users, User, ArrowRight } from 'lucide-react';
@@ -52,7 +53,7 @@ const Inventory: React.FC = () => {
       <div className="flex items-center justify-center min-h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Загрузка инвентарей...</p>
+          <p className="site-muted text-gray-600">Загрузка инвентарей...</p>
         </div>
       </div>
     );
@@ -87,14 +88,14 @@ const Inventory: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="site-page-head flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Мои инвентари</h1>
-          <p className="text-gray-600 mt-1">Управляйте предметами ваших персонажей и групп</p>
+          <h1 className="site-heading text-3xl font-bold text-gray-900">Мои инвентари</h1>
+          <p className="site-muted text-gray-600 mt-1">Управляйте предметами ваших персонажей и групп</p>
         </div>
         <Link
           to="/inventory/create"
-          className="btn-primary bg-blue-600 hover:bg-blue-700 flex items-center space-x-2"
+          className="site-button site-button-primary btn-primary bg-blue-600 hover:bg-blue-700 flex items-center space-x-2"
         >
           <Plus size={20} />
           <span>Создать инвентарь</span>
@@ -103,13 +104,13 @@ const Inventory: React.FC = () => {
 
       {/* Inventories list */}
       {inventories.length === 0 ? (
-        <div className="text-center py-12">
-          <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">У вас пока нет инвентарей</h3>
-          <p className="text-gray-600 mb-6">Создайте личный инвентарь или групповой инвентарь для ваших групп</p>
+        <div className="site-empty text-center py-12">
+          <Package className="site-muted h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="site-heading text-lg font-medium text-gray-900 mb-2">У вас пока нет инвентарей</h3>
+          <p className="site-muted text-gray-600 mb-6">Создайте личный инвентарь или групповой инвентарь для ваших групп</p>
           <Link
             to="/inventory/create"
-            className="btn-primary bg-blue-600 hover:bg-blue-700 inline-flex items-center space-x-2"
+            className="site-button site-button-primary btn-primary bg-blue-600 hover:bg-blue-700 inline-flex items-center space-x-2"
           >
             <Plus size={20} />
             <span>Создать инвентарь</span>
@@ -120,7 +121,7 @@ const Inventory: React.FC = () => {
           {inventories.map((inventory) => (
             <div
               key={inventory.id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+              className="site-surface bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
             >
               <div className="p-6">
                 {/* Inventory header */}
@@ -132,15 +133,15 @@ const Inventory: React.FC = () => {
                       ) : (
                         <Users size={16} className="text-green-600" />
                       )}
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="site-heading text-lg font-semibold text-gray-900">
                         {inventory.name}
                       </h3>
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="site-muted text-sm text-gray-600">
                       {inventory.type === 'personal' ? 'Личный инвентарь' : 'Групповой инвентарь'}
                     </p>
                     {inventory.group && (
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="site-muted text-xs text-gray-500 mt-1">
                         Группа: {inventory.group.name}
                       </p>
                     )}
@@ -150,24 +151,24 @@ const Inventory: React.FC = () => {
                 {/* Inventory stats */}
                 <div className="space-y-3 mb-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Предметов:</span>
-                    <span className="font-medium text-gray-900">{getTotalItems(inventory)}</span>
+                    <span className="site-muted text-gray-600">Предметов:</span>
+                    <span className="site-label font-medium text-gray-900">{getTotalItems(inventory)}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Общий вес:</span>
-                    <span className="font-medium text-gray-900">
+                    <span className="site-muted text-gray-600">Общий вес:</span>
+                    <span className="site-label font-medium text-gray-900">
                       {getTotalWeight(inventory).toFixed(1)} фнт.
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Создан:</span>
-                    <span className="font-medium text-gray-900">{formatDate(inventory.created_at)}</span>
+                    <span className="site-muted text-gray-600">Создан:</span>
+                    <span className="site-label font-medium text-gray-900">{formatDate(inventory.created_at)}</span>
                   </div>
                 </div>
 
                 {/* Recent items preview */}
                 {inventory.items.length > 0 && (
-                  <div className="mb-4">
+                  <div className="utility-entity-island mb-4">
                     <p className="text-xs text-gray-500 mb-2">Последние предметы:</p>
                     <div className="space-y-1">
                       {inventory.items.slice(0, 3).map((item) => (
@@ -193,7 +194,7 @@ const Inventory: React.FC = () => {
                 <div className="flex space-x-2">
                   <Link
                     to={`/inventory/${inventory.id}`}
-                    className="flex-1 btn-primary bg-blue-600 hover:bg-blue-700 flex items-center justify-center space-x-2"
+                    className="site-button site-button-primary flex-1 btn-primary bg-blue-600 hover:bg-blue-700 flex items-center justify-center space-x-2"
                   >
                     <span>Открыть</span>
                     <ArrowRight size={16} />

@@ -221,6 +221,7 @@ func (rc *RoguelikeController) trustedPartyCommand(c *gin.Context, run *Roguelik
 		if !camp {
 			locked.CombatEnvelope = result.Envelope
 			locked.CombatCatalog = catalog
+			applyTrustedCombatConclusion(locked)
 		}
 		locked.Revision++
 		if err = saveRoguelikeParty(tx, locked); err != nil {

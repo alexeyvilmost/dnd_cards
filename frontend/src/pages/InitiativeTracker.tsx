@@ -343,14 +343,14 @@ const InitiativeTracker: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="site-initiative-page space-y-4 sm:space-y-6">
+      <div className="site-page-head flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="site-heading text-2xl sm:text-3xl flex items-center gap-2">
             <Swords className="text-blue-600" />
             Трекер инициативы
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">
+          <p className="site-muted text-sm sm:text-base mt-1">
             Порядок ходов в бою — раунд {state.round}
             {orderedCharacters.length > 0 && ` · ${orderedCharacters.length} участников`}
           </p>
@@ -427,7 +427,7 @@ const InitiativeTracker: React.FC = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 space-y-2">
+      <div className="site-surface site-initiative-controls p-3 sm:p-4 space-y-2">
         <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="url"
@@ -440,7 +440,7 @@ const InitiativeTracker: React.FC = () => {
               if (e.key === 'Enter') void importFromTtgClub();
             }}
             placeholder="https://new.ttg.club/bestiary/skeleton-mm"
-            className="input-field flex-1 text-sm"
+            className="site-control input-field flex-1 text-sm"
           />
           <button
             type="button"
@@ -453,16 +453,16 @@ const InitiativeTracker: React.FC = () => {
           </button>
         </div>
         {importError && <p className="text-sm text-red-600">{importError}</p>}
-        <p className="text-xs text-gray-500">
+        <p className="site-muted text-xs">
           Импорт добавляет монстра (красный) с КД, макс. HP, бонусом инициативы и разделом «Действия».
         </p>
       </div>
 
       {orderedCharacters.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-lg border border-gray-200">
+        <div className="site-empty text-center py-16">
           <Swords className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Нет участников боя</h3>
-          <p className="text-gray-600 mb-6">Добавьте персонажей и NPC, чтобы отслеживать инициативу</p>
+          <h3 className="site-heading text-lg mb-2">Нет участников боя</h3>
+          <p className="site-muted mb-6">Добавьте персонажей и NPC, чтобы отслеживать инициативу</p>
           <button type="button" onClick={addCharacter} className="btn-primary inline-flex items-center gap-2">
             <Plus size={18} />
             Добавить участника
