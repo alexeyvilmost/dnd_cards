@@ -12,7 +12,7 @@
 .ps-print-snapshot .ps-note-text, .ps-print-snapshot .ps-spell-table-body, .ps-print-snapshot .ps-inventory-rows { overflow: hidden; }
 .ps-print-snapshot .ps-note-line-active { display: block; outline: none; }
 .ps-print-snapshot .ps-note-line-print { display: block; visibility: visible; }
-.ps-print-snapshot .ps-inventory-equip, .ps-print-snapshot .ps-inventory-clear, .ps-print-snapshot .ps-equipment-slot > button { visibility: hidden; }
+.ps-print-snapshot .ps-inventory-equip, .ps-print-snapshot .ps-inventory-clear, .ps-print-snapshot .ps-equipment-slot > button { visibility: hidden !important; }
 .ps-print-snapshot .paper-page.ps-print-appendix { padding: 30px 48px; font: 15px/20px Arial, sans-serif; }
 .ps-print-appendix h2 { height: 44px; font: bold 18px/22px Arial, sans-serif !important; text-transform: none !important; }
 .ps-print-appendix p { margin: 0; height: 20px; white-space: pre; }

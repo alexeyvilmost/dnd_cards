@@ -54,6 +54,7 @@ export function buildPrintSnapshot(workspace: HTMLElement, doc: PaperSheetDocume
         if (control instanceof HTMLSelectElement) {
           const source = sources[i] as HTMLSelectElement;
           const label = document.createElement('span');
+          label.className = control.className;
           // foreignObject/canvas renderers do not reliably paint a selected <option>.
           const style = getComputedStyle(source);
           for (const property of style) label.style.setProperty(property, style.getPropertyValue(property));
