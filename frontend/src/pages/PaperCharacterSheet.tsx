@@ -169,7 +169,8 @@ export default function PaperCharacterSheet({ initialDocument, onDocumentChange,
   const extraSections = useMemo(() => paperExtraSections(doc), [doc]);
   const download = (format: 'boh' | 'lss' = 'boh') => {
     try {
-      const url = URL.createObjectURL(new Blob([format === 'lss' ? exportLssSheet(doc) : exportPaperSheet(doc)], { type: 'application/json' }));
+      if (format === 'lss' && (itemLoading || itemIds.some(id => !itemCards.has(id)) || grantedEffects?.key !== effectsKey || itemLoadError || effectLoadError)) throw new Error('Дождитесь загрузки снаряжения или устраните ошибку перед экспортом расчётов в LSS. JSON Bag of Holding доступен всегда.');
+      const url = URL.createObjectURL(new Blob([format === 'lss' ? exportLssSheet(doc, calculations) : exportPaperSheet(doc)], { type: 'application/json' }));
       const anchor = document.createElement('a');
       anchor.href = url; anchor.download = `${(doc.fields.name || 'Бумажный лист').replace(/[<>:"/\\|?*]/g, '_')}${format === 'lss' ? ' — LSS' : ''}.json`; anchor.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);

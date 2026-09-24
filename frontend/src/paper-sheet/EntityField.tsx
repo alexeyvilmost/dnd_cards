@@ -9,7 +9,7 @@ export function EntityField({ field, label, initialType = 'card', onSelect, onUn
   const { doc, setField } = usePaperSheet();
   const [picking, setPicking] = useState(false);
   const entity = parsePaperEntityToken(doc.fields[field] ?? '');
-  return <div className="ps-entity-field">
+  return <div className="ps-entity-field" data-paper-field={field} data-paper-label={label}>
     {entity ? <EntityName entity={entity} /> : <Field field={field} label={label} />}
     <div className="ps-entity-field-tools">
       {entity && <button type="button" aria-label={`Убрать ссылку: ${label}`} onClick={() => { if (onUnlink) onUnlink(); else setField(field, entity.name); }}><Unlink size={10} /></button>}

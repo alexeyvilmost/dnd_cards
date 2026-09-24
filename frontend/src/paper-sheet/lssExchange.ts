@@ -1,5 +1,5 @@
 import { ABILITY_IDS, SKILL_IDS, SKILL_ABILITY } from '../character/rules/foundation';
-import { calculateSheet, createPaperSheet, exportPaperSheet, importPaperSheet, type PaperSheetDocument } from './model';
+import { calculateSheet, createPaperSheet, exportPaperSheet, importPaperSheet, type PaperSheetDocument, type SheetCalculation } from './model';
 import type { Spell } from '../types';
 
 type Obj = Record<string, any>;
@@ -168,19 +168,23 @@ export function paperExtraSections(doc: PaperSheetDocument): { title: string; te
       const r = object(resource);
       result.push({ title: str(r.name || 'Ресурс LSS'), text: `${str(r.current)} / ${str(r.max ?? r.maxExpr)}\n${str(r.notes)}` });
     }
-    if (array(root.spells?.book).length) result.push({ title: 'Книга заклинаний LSS — известные', text: array(root.spells.book).map(str).join('\n') });
+    if (array(root.spells?.book).length) {
+      const names = new Map(paperLssSpells(doc).map(spell => [spell.id, spell.name]));
+      result.push({ title: 'Книга заклинаний LSS — известные', text: array(root.spells.book).map(id => names.get(id) || str(id)).join('\n') });
+    }
   }
   return result;
 }
 
 const UNIT: Record<string, string> = { action: 'действие', bonus: 'бонусное действие', reaction: 'реакция', minute: 'мин.', hour: 'ч.', round: 'раунд', ft: 'фт.', self: 'на себя', touch: 'касание', sight: 'видимость', inst: 'мгновенно', spec: 'особая', perm: 'постоянно' };
+const SCHOOL: Record<string, string> = { abj: 'abjuration', con: 'conjuration', div: 'divination', enc: 'enchantment', evo: 'evocation', ill: 'illusion', nec: 'necromancy', trs: 'transmutation' };
 const measure = (v: Obj) => [v.value ?? v.cost ?? '', UNIT[v.units || v.type] ?? v.units ?? v.type ?? ''].filter(v => v !== '').join(' ');
 function spellDefinition(raw: Obj): Spell {
   const system = object(raw.system ?? raw.data);
   const properties = new Set(array(system.properties));
   // Text from LSS is inert; strip actual HTML tags from Foundry descriptions, retaining line breaks.
   const description = str(system.description?.value).replace(/<\/(p|div|li)>|<br\s*\/?\s*>/gi, '\n').replace(/<\/?(?:p|div|li|ul|ol|strong|em|b|i|span|a|h[1-6])\b[^>]*>/gi, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
-  return { id: str(raw._id || raw.id), name: str(raw.name), level: Number(system.level) || 0, description, rarity: 'common', card_number: '', component_verbal: !!system.components?.vocal || properties.has('vocal'), component_somatic: !!system.components?.somatic || properties.has('somatic'), component_material: !!system.components?.material || properties.has('material'), material_text: str(system.materials?.value), concentration: !!system.components?.concentration || properties.has('concentration'), ritual: !!system.components?.ritual || properties.has('ritual'), school: str(system.school), casting_time: measure(object(system.activation)), range: measure(object(system.range)), duration: measure(object(system.duration)), is_healing: system.actionType === 'heal', source: 'Long Story Short', created_at: '', updated_at: '' };
+  return { id: str(raw._id || raw.id), name: str(raw.name), level: Number(system.level) || 0, description, rarity: 'common', card_number: '', component_verbal: !!system.components?.vocal || properties.has('vocal'), component_somatic: !!system.components?.somatic || properties.has('somatic'), component_material: !!system.components?.material || properties.has('material'), material_text: str(system.materials?.value), concentration: !!system.components?.concentration || properties.has('concentration'), ritual: !!system.components?.ritual || properties.has('ritual'), school: SCHOOL[str(system.school)] || str(system.school), casting_time: measure(object(system.activation)), range: measure(object(system.range)), duration: measure(object(system.duration)), is_healing: system.actionType === 'heal', source: 'Long Story Short', created_at: '', updated_at: '' };
 }
 export function paperLssSpells(doc: PaperSheetDocument): Spell[] {
   try { return doc.exchange?.spells ? array(parseExchangeJSON(doc.exchange.spells)).map(spellDefinition) : []; } catch { return []; }
@@ -211,15 +215,17 @@ export function attachLssSpells(doc: PaperSheetDocument, text: string): PaperShe
   return importPaperSheet(exportPaperSheet(next));
 }
 
-export function exportLssSheet(doc: PaperSheetDocument): string {
+export function exportLssSheet(doc: PaperSheetDocument, calculations?: SheetCalculation): string {
   // Preserve unknown fields, full rich text, IDs, statuses and custom mechanics unchanged.
   const saved = doc.exchange ? envelope(parseExchangeJSON(doc.exchange.source)) : null;
   const original = doc.exchange ? importPaperSheet(doc.exchange.baseline) : null;
-  if (original && JSON.stringify({ ...doc, exchange: undefined }) === JSON.stringify({ ...original, exchange: undefined })) return JSON.stringify(saved!.root, null, 2);
+  const baseCalc = calculateSheet(doc);
+  const calc = calculations ?? baseCalc;
+  const projected = (key: string) => calc.values[key] !== baseCalc.values[key];
+  if (original && !Object.keys(calc.values).some(projected) && JSON.stringify({ ...doc, exchange: undefined }) === JSON.stringify({ ...original, exchange: undefined })) return JSON.stringify(saved!.root, null, 2);
   const root: Obj = saved?.root ?? { jsonType: 'character', version: '2', edition: '2024', sheetEdition: '2024', spells: { mode: 'text', prepared: [], book: [], granted: [], slotless: [] } };
   const data: Obj = saved?.data ?? { jsonType: 'character', template: 'default', name: { value: '' }, info: {}, stats: {}, saves: {}, skills: {}, vitality: {}, spellsInfo: {}, spells: {}, text: {}, coins: {}, bonuses: [] };
-  const changed = (field: string) => !original || (doc.fields[field] ?? '') !== (original.fields[field] ?? '');
-  const calc = calculateSheet(doc);
+  const changed = (field: string) => !original || (doc.fields[field] ?? '') !== (original.fields[field] ?? '') || projected(field);
   const numeric = (key: string) => {
     const number = calc.values[key] ?? Number(doc.fields[key] || 0);
     if (calc.errors[key] || !Number.isFinite(number)) throw new Error(`Исправьте поле «${key}» перед экспортом LSS: ${calc.errors[key] || 'не число'}`);
@@ -231,12 +237,12 @@ export function exportLssSheet(doc: PaperSheetDocument): string {
   for (const id of ABILITY_IDS) {
     data.stats = object(data.stats); data.saves = object(data.saves);
     if (changed(id)) data.stats[id] = { ...object(data.stats[id]), name: id, score: numeric(id) };
-    if (!original || doc.training[`save.${id}`] !== original.training[`save.${id}`] || changed(`save.${id}`)) data.saves[id] = { ...object(data.saves[id]), name: id, isProf: doc.training[`save.${id}`] || false, ...(doc.fields[`save.${id}`] ? { customModifier: numeric(`save.${id}`) } : { customModifier: '' }) };
+    if (!original || doc.training[`save.${id}`] !== original.training[`save.${id}`] || changed(`save.${id}`)) data.saves[id] = { ...object(data.saves[id]), name: id, isProf: doc.training[`save.${id}`] || false, ...(doc.fields[`save.${id}`] || projected(`save.${id}`) ? { customModifier: numeric(`save.${id}`) } : { customModifier: '' }) };
   }
   data.skills = object(data.skills);
   for (const id of SKILL_IDS) {
     const key = skillLss(id);
-    if (!original || doc.training[id] !== original.training[id] || changed(`skill.${id}`)) data.skills[key] = { ...object(data.skills[key]), name: key, baseStat: SKILL_ABILITY[id], isProf: doc.training[id] || false, ...(doc.fields[`skill.${id}`] ? { customModifier: numeric(`skill.${id}`) } : { customModifier: '' }) };
+    if (!original || doc.training[id] !== original.training[id] || changed(`skill.${id}`)) data.skills[key] = { ...object(data.skills[key]), name: key, baseStat: SKILL_ABILITY[id], isProf: doc.training[id] || false, ...(doc.fields[`skill.${id}`] || projected(`skill.${id}`) ? { customModifier: numeric(`skill.${id}`) } : { customModifier: '' }) };
   }
   if (changed('proficiency')) { data.proficiency = numeric('proficiency'); data.proficiencyCustom = numeric('proficiency'); }
   if (changed('conditions')) data.conditions = (doc.fields.conditions || '').split(',').map(s => s.trim()).filter(Boolean);

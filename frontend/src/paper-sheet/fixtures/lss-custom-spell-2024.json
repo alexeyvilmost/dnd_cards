@@ -1,0 +1,33 @@
+{
+  "disabledBlocks": {
+    "info-left": [],
+    "info-right": [],
+    "subinfo-left": [],
+    "subinfo-right": [],
+    "notes-left": [],
+    "notes-right": [],
+    "_id": "6ab56b97e8ac8e090a3a9f16"
+  },
+  "edition": "2024",
+  "sheetEdition": "2024",
+  "spells": {
+    "mode": "cards",
+    "prepared": [
+      "698197f4a5dc6923c702931c",
+      "698197cda5dc6923c7028e1b",
+      "698197d3a5dc6923c7028ed1",
+      "6ab56fbce8ac8e090a3b97a4"
+    ],
+    "book": [
+      "6ab56fbce8ac8e090a3b97a4"
+    ],
+    "granted": [],
+    "slotless": [],
+    "edition": "2024"
+  },
+  "linkAccess": "none",
+  "data": "{\"jsonType\":\"character\",\"template\":\"default\",\"name\":{\"value\":\"BOH QA — Волшебник — обмен\"},\"info\":{\"charClass\":{\"name\":\"charClass\",\"value\":\"Волшебник\"},\"charSubclass\":{\"name\":\"charSubclass\",\"value\":\"\"},\"level\":{\"name\":\"level\",\"value\":3},\"background\":{\"name\":\"background\",\"value\":\"Мудрец\"},\"playerName\":{\"name\":\"playerName\",\"value\":\"\"},\"race\":{\"name\":\"race\",\"value\":\"Высший эльф\"},\"alignment\":{\"name\":\"alignment\",\"value\":\"\"},\"experience\":{\"name\":\"experience\",\"value\":\"\"}},\"subInfo\":{\"age\":{\"name\":\"age\",\"value\":\"\"},\"height\":{\"name\":\"height\",\"value\":\"\"},\"weight\":{\"name\":\"weight\",\"value\":\"\"},\"eyes\":{\"name\":\"eyes\",\"value\":\"\"},\"skin\":{\"name\":\"skin\",\"value\":\"\"},\"hair\":{\"name\":\"hair\",\"value\":\"\"}},\"spellsInfo\":{\"base\":{\"name\":\"base\",\"value\":\"\",\"code\":\"int\"},\"save\":{\"name\":\"save\",\"value\":\"\"},\"mod\":{\"name\":\"mod\",\"value\":\"\"},\"available\":{\"spells\":[\"698197f4a5dc6923c702931c\",\"698197cda5dc6923c7028e1b\",\"698197d3a5dc6923c7028ed1\"],\"classes\":[\"wizard\"]}},\"spells\":{\"slots-1\":{\"value\":4},\"slots-2\":{\"value\":2}},\"spellsPact\":{},\"bonuses\":[],\"proficiency\":2,\"stats\":{\"str\":{\"name\":\"str\",\"score\":10},\"dex\":{\"name\":\"dex\",\"score\":14},\"con\":{\"name\":\"con\",\"score\":13},\"int\":{\"name\":\"int\",\"score\":16},\"wis\":{\"name\":\"wis\",\"score\":10},\"cha\":{\"name\":\"cha\",\"score\":10}},\"saves\":{\"str\":{\"name\":\"str\",\"isProf\":false},\"dex\":{\"name\":\"dex\",\"isProf\":false},\"con\":{\"name\":\"con\",\"isProf\":false},\"int\":{\"name\":\"int\",\"isProf\":false},\"wis\":{\"name\":\"wis\",\"isProf\":false},\"cha\":{\"name\":\"cha\",\"isProf\":false}},\"skills\":{\"acrobatics\":{\"baseStat\":\"dex\",\"name\":\"acrobatics\"},\"investigation\":{\"baseStat\":\"int\",\"name\":\"investigation\"},\"athletics\":{\"baseStat\":\"str\",\"name\":\"athletics\"},\"perception\":{\"baseStat\":\"wis\",\"name\":\"perception\"},\"survival\":{\"baseStat\":\"wis\",\"name\":\"survival\"},\"performance\":{\"baseStat\":\"cha\",\"name\":\"performance\"},\"intimidation\":{\"baseStat\":\"cha\",\"name\":\"intimidation\"},\"history\":{\"baseStat\":\"int\",\"name\":\"history\"},\"sleight of hand\":{\"baseStat\":\"dex\",\"name\":\"sleight of hand\"},\"arcana\":{\"baseStat\":\"int\",\"name\":\"arcana\"},\"medicine\":{\"baseStat\":\"wis\",\"name\":\"medicine\"},\"deception\":{\"baseStat\":\"cha\",\"name\":\"deception\"},\"nature\":{\"baseStat\":\"int\",\"name\":\"nature\"},\"insight\":{\"baseStat\":\"wis\",\"name\":\"insight\"},\"religion\":{\"baseStat\":\"int\",\"name\":\"religion\"},\"stealth\":{\"baseStat\":\"dex\",\"name\":\"stealth\"},\"persuasion\":{\"baseStat\":\"cha\",\"name\":\"persuasion\"},\"animal handling\":{\"baseStat\":\"wis\",\"name\":\"animal handling\"}},\"vitality\":{\"hp-dice-current\":{\"value\":3},\"hp-dice-multi\":{},\"darkvision\":{\"value\":0},\"hp-current\":{\"value\":12},\"hp-temp\":{},\"isDying\":false,\"deathFails\":0,\"deathSuccesses\":0,\"hp-max\":{\"value\":20},\"hit-die\":{\"value\":\"d6\"}},\"attunementsList\":[{\"id\":\"attunement-1790274377114\",\"checked\":false,\"value\":\"\"}],\"weaponsList\":[{\"id\":\"weapon-1790274377114\",\"name\":{\"value\":\"Посох QA\"},\"dmg\":{\"value\":\"1d6+[STR]\"},\"dmgType\":{\"value\":\"дробящий\"},\"notes\":{\"value\":\"Универсальное (1d8); руны <не HTML> & кириллица\"},\"isProf\":true}],\"text\":{},\"coins\":{},\"resources\":{},\"conditions\":[],\"createdAt\":\"2026-09-24T19:11:51.605Z\",\"prof\":{}}",
+  "wizard": {},
+  "jsonType": "character",
+  "version": "2"
+}

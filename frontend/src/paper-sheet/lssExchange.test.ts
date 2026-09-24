@@ -2,12 +2,13 @@ import { describe, expect, it } from 'vitest';
 import wizard from './fixtures/lss-wizard-2024.json';
 import cleric from './fixtures/lss-cleric-2014.json';
 import grimoire from './fixtures/lss-grimoire.json';
+import customWizard from './fixtures/lss-custom-spell-2024.json';
 import { attachLssSpells, exportLssSheet, importSheetJSON, lssText, paperExtraSections, paperLssSpells, parseExchangeJSON } from './lssExchange';
 import { calculateSheet, createPaperSheet, exportPaperSheet, importPaperSheet } from './model';
 import { printSections, wrapPrintText } from './print';
 
 describe('real Long Story Short exports', () => {
-  it.each([wizard, cleric])('preserves the complete original on an unchanged round trip: $sheetEdition', fixture => {
+  it.each([wizard, cleric, customWizard])('preserves the complete original on an unchanged round trip: $sheetEdition', fixture => {
     const imported = importSheetJSON(JSON.stringify(fixture));
     const persisted = importPaperSheet(exportPaperSheet(imported.document));
     expect(JSON.parse(exportLssSheet(persisted))).toEqual(fixture);
@@ -42,7 +43,7 @@ describe('real Long Story Short exports', () => {
     expect(paperExtraSections(doc)).toContainEqual({ title: 'Заряды', text: '0 / 3\n' });
   });
   it('attaches exported custom spells by ID, retains content and never overwrites edited fields', () => {
-    const source = structuredClone(wizard) as any; source.spells.prepared.push(grimoire[0]._id);
+    const source = structuredClone(customWizard);
     let doc = importSheetJSON(JSON.stringify(source)).document;
     const index = Object.keys(doc.fields).find(k => doc.fields[k] === grimoire[0]._id)!.match(/\d+/)![0];
     doc.fields[`spellRow${index}Notes`] = 'Моя заметка';
@@ -50,6 +51,7 @@ describe('real Long Story Short exports', () => {
     expect(doc.fields[`spellRow${index}Name`]).toBe('BOH QA — Светлячок');
     expect(doc.fields[`spellRow${index}Notes`]).toBe('Моя заметка');
     expect(paperLssSpells(doc)[0].description).toContain('<угловых скобок>');
+    expect(paperLssSpells(doc)[0].school).toBe('evocation');
     const persisted = importPaperSheet(exportPaperSheet(doc));
     expect(paperLssSpells(persisted)).toEqual(paperLssSpells(doc));
     expect(JSON.parse(exportLssSheet(persisted)).spells).toEqual(source.spells);
@@ -71,6 +73,16 @@ describe('real Long Story Short exports', () => {
     expect(importSheetJSON('\uFEFF' + JSON.stringify(data)).document.fields.hpCurrent).toBe('0');
     const native = createPaperSheet(); native.fields.name = 'Старый';
     expect(importSheetJSON('\uFEFF' + exportPaperSheet(native)).document).toEqual(native);
+  });
+  it('exports the authoritative equipment projection, without losing passive bonuses', () => {
+    const doc = createPaperSheet(); doc.fields.ac = '10';
+    const calculation = calculateSheet(doc, { abilityScores: { str: 19 }, fieldOverrides: { ac: 18, 'save.wis': 3, 'skill.stealth': 4 } });
+    const data = JSON.parse(JSON.parse(exportLssSheet(doc, calculation)).data);
+    expect(data.stats.str.score).toBe(19);
+    expect(data.vitality.ac.value).toBe('18');
+    expect(data.saves.wis.customModifier).toBe(3);
+    expect(data.skills.stealth.customModifier).toBe(4);
+    expect(doc.fields.str).toBe('10');
   });
   it('rejects unsupported/malformed files before replacing the current document', () => {
     for (const text of ['{}', '[]', '{', '{"jsonType":"character","version":"3","data":{}}', '{"__proto__":{"polluted":true}}']) expect(() => importSheetJSON(text)).toThrow();

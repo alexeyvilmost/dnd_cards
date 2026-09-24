@@ -66,7 +66,12 @@ export function buildPrintSnapshot(workspace: HTMLElement, doc: PaperSheetDocume
       host.append(page);
       for (const note of page.querySelectorAll<HTMLElement>('[data-note-section]')) {
         const body = note.querySelector<HTMLElement>('.ps-note-text');
-        if (body && (body.scrollHeight > body.clientHeight + 2 || body.scrollWidth > body.clientWidth + 2)) clipped.push(note.dataset.noteSection!);
+        if (body && (body.scrollHeight > body.clientHeight + 2 || body.scrollWidth > body.clientWidth + 2)) {
+          const key = note.dataset.noteSection!;
+          clipped.push(key);
+          const heading = note.querySelector<HTMLInputElement>('.ps-note-heading input')?.value;
+          if (heading) doc = { ...doc, fields: { ...doc.fields, [`heading.${key}`]: heading } };
+        }
       }
       for (const [selector, key] of [['.ps-inventory-rows', 'inventory'], ['.ps-spell-table-body', 'spells'], ['.ps-right-block', 'weapons']]) {
         const el = page.querySelector<HTMLElement>(selector);
@@ -79,6 +84,13 @@ export function buildPrintSnapshot(workspace: HTMLElement, doc: PaperSheetDocume
         clipped.push(key);
         doc = { ...doc, sections: { ...doc.sections, [key]: { text: input.value, fontSize: 11 } }, fields: { ...doc.fields, [`heading.${key}`]: input.getAttribute('aria-label') || 'Полное значение поля' } };
       });
+      for (const field of page.querySelectorAll<HTMLElement>('[data-paper-field]')) {
+        const name = field.querySelector<HTMLElement>('.ps-entity-name');
+        if (!name || name.scrollWidth <= name.clientWidth + 2) continue;
+        const key = `overflow.${field.dataset.paperField}`;
+        clipped.push(key);
+        doc = { ...doc, sections: { ...doc.sections, [key]: { text: plain(doc.fields[field.dataset.paperField!] || ''), fontSize: 11 } }, fields: { ...doc.fields, [`heading.${key}`]: field.dataset.paperLabel || 'Полное название' } };
+      }
     }
     const context = document.createElement('canvas').getContext('2d')!;
     context.font = '15px Arial';
