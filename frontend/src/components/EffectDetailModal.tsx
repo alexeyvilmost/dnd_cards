@@ -32,7 +32,7 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
 
   return (
     <EntityDetailShell
-      entity={{type:'effect',id:effect.id}}
+      entity={{type:'effect',id:effect.id,author:effect.author}}
       isOpen={isOpen}
       onClose={onClose}
       title={effect.name}
@@ -40,6 +40,7 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
       preview={(
         <EntityImageEditor
           entityId={effect.id}
+          author={effect.author}
           initialUrl={effect.image_url || ''}
           persist={async (id, url) => (await effectsApi.updateEffect(id, { image_url: url })).image_url || url}
           generateReq={{ style: 'spell_icon', subject: effect.name, quality: 'medium', extra: ICON_EXTRA }}

@@ -25,6 +25,9 @@ vi.mock('../api/client', () => ({
   variablesApi: { deleteVariable: mocks.deleteVariable },
 }));
 vi.mock('../api/imagesApi', () => ({ imagesApi: { generateStandalone: mocks.generate, generateImage: mocks.generateCard } }));
+vi.mock('../hooks/useContentPermissions', () => ({
+  useContentPermissions: () => ({ admin: true, canEdit: () => true, canCreate: () => true, ready: true }),
+}));
 vi.mock('../api/entityTags', () => ({
   entityTagsApi: { get: mocks.tagGet, list: mocks.tagList, set: mocks.tagWrite, create: mocks.tagWrite },
   merchantSettingsApi: { item: async () => ({ card_id: 'card-one', min_level: 1, weight: 1, kind: 'equipment', quantity: 1, price: null }), saveItem: mocks.tagWrite },

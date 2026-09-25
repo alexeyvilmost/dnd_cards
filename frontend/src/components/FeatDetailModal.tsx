@@ -26,7 +26,7 @@ const FeatDetailModal: React.FC<FeatDetailModalProps> = ({ feat, isOpen, onClose
 
   return (
     <EntityDetailShell
-      entity={{type:'feat',id:feat.id}}
+      entity={{type:'feat',id:feat.id,author:feat.author}}
       isOpen={isOpen}
       onClose={onClose}
       title={feat.name}
@@ -34,6 +34,7 @@ const FeatDetailModal: React.FC<FeatDetailModalProps> = ({ feat, isOpen, onClose
       preview={(
         <EntityImageEditor
           entityId={feat.id}
+          author={feat.author}
           initialUrl={feat.image_url || ''}
           persist={async (id, url) => (await featsApi.updateFeat(id, { image_url: url })).image_url || url}
           generateReq={{ style: 'spell_icon', subject: feat.name, quality: 'medium', extra: ICON_EXTRA }}

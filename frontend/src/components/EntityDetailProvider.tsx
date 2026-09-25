@@ -9,6 +9,7 @@ import { cardsApi, spellsApi, actionsApi, effectsApi, conceptsApi, resourcesApi,
 import type { EntityRefType } from './EntityRefRegistry';
 import { useEntityRef, evictEntity } from './EntityRefRegistry';
 import { EntityDetailContext, useEntityDetail } from '../contexts/entityDetail';
+import { useContentPermissions } from '../hooks/useContentPermissions';
 const SpellDetailModal = lazy(() => import('./SpellDetailModal'));
 const ActionDetailModal = lazy(() => import('./ActionDetailModal'));
 const EffectDetailModal = lazy(() => import('./EffectDetailModal'));
@@ -65,11 +66,12 @@ function DetailState({ children, onClose }: { children: ReactNode; onClose: () =
 /** Загружает сущность по ссылке и рендерит подходящую детальную модалку. */
 const DetailHost = ({ type, id, onClose, readOnly }: { type: EntityRefType; id: string; onClose: () => void; readOnly: boolean }) => {
   const { entity, loading, error } = useEntityRef(type, id);
+  const { canEdit } = useContentPermissions();
 
   const handleDelete = useCallback(async (entId: string) => {
-    if (readOnly) return;
+    if (readOnly || !entity || !canEdit(entity as { author?: string })) return;
     try { await DELETERS[type](entId); evictEntity(type, id); evictEntity(type, entId); } finally { onClose(); }
-  }, [type, id, onClose, readOnly]);
+  }, [type, id, onClose, readOnly, entity, canEdit]);
 
   if (loading) {
     return <DetailState onClose={onClose}><div role="status">Загрузка карточки…</div></DetailState>;

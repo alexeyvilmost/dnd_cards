@@ -18,7 +18,7 @@
 .library-sidebar__toggle:hover { background-color: var(--site-bg, #101513); }
 .library-sidebar__toggle-label { overflow: hidden; white-space: nowrap; transition: opacity 160ms ease; }
 .library-sidebar[data-collapsed=true] .library-sidebar__toggle-label { opacity: 0; width: 0; }
-.library-sidebar[data-collapsed=true] .library-sidebar__toggle { gap: 0; }
+.library-sidebar[data-collapsed=true] .library-sidebar__toggle { gap: 0; width: calc(100% - 8px); justify-content: center; padding: 10px 0; }
 .library-sidebar__sections { min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
 .library-sidebar .library-sidebar__nav {
   width: 100%; border: 0; overflow: visible;
@@ -36,7 +36,7 @@
 .library-sidebar__nav .navrail-label { white-space: normal; overflow-wrap: anywhere; font-size: 13px; line-height: 1.3; }
 .library-sidebar[data-collapsed=true] .navrail-txt { display: none; }
 .library-sidebar[data-collapsed=true] .navrail-track { padding-left: 2px; padding-right: 2px; }
-.library-sidebar[data-collapsed=true] .navrail-item { gap: 0; height: 50px; min-height: 50px; flex-shrink: 0; padding: 7px 4px; }
+.library-sidebar[data-collapsed=true] .navrail-item { gap: 0; height: 50px; min-height: 50px; flex-shrink: 0; padding: 7px 0; display: flex; align-items: center; justify-content: center; width: 100%; }
 .library-sidebar__toggle:focus-visible, .library-sidebar__nav .navrail-item:focus-visible,
 .library-search__clear:focus-visible, .library-chrome-button:focus-visible,
 .library-chrome-tag-control > .tag-filter > button:focus-visible {

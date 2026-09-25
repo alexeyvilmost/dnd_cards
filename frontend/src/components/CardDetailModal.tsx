@@ -23,6 +23,7 @@ import { getCurrencyInfo, formatPriceAmount, currencyIconStyle } from '../utils/
 import { findMastery, useMasteryEffects } from '../utils/mastery';
 import { describeMechanics } from '../engine/describeMechanics';
 import { useEntityDetail } from '../contexts/entityDetail';
+import { useContentPermissions } from '../hooks/useContentPermissions';
 
 interface CardDetailModalProps {
   card: Card | null;
@@ -43,6 +44,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
   onEquip
 }) => {
   const { readOnly = false } = useEntityDetail();
+  const { admin, canEdit, canCreate } = useContentPermissions();
   const containerSum = useContainerTotals(card); // S6: сумма веса/цены содержимого контейнера
   // Искусность (Weapon Mastery 2024): структурное поле card.mastery → эффект-мастерство.
   const masteryEffect = findMastery(useMasteryEffects(), card?.mastery);
@@ -95,7 +97,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
 
   // Функция генерации изображения
   const handleGenerateImage = async () => {
-    if (readOnly || !card) return;
+    if (readOnly || !admin || !card) return;
     
     try {
       setIsGenerating(true);
@@ -436,28 +438,28 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
               )}
               <span>{isDownloading ? 'Скачивание...' : 'Скачать карту'}</span>
             </button>
-            {!readOnly && <><Link
+            {!readOnly && canEdit(card) && <Link
               to={`/edit/${card.id}`}
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center space-x-2"
             >
               <Edit size={18} />
               <span>Изменить</span>
-            </Link>
-            <Link
+            </Link>}
+            {!readOnly && canCreate('cards') && <Link
               to={`/card-creator?template_id=${card.id}`}
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center space-x-2"
             >
               <Copy size={18} />
               <span>Использовать как шаблон</span>
-            </Link>
-            <button
+            </Link>}
+            {!readOnly && canEdit(card) && <button
               onClick={() => onDelete(card.id)}
               className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center space-x-2"
             >
               <Trash2 size={18} />
               <span>Удалить</span>
-            </button>
-            {!card.image_url && (
+            </button>}
+            {!readOnly && admin && !card.image_url && (
               <button
                 onClick={handleGenerateImage}
                 disabled={isGenerating}
@@ -471,7 +473,6 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
                 <span>{isGenerating ? 'Генерация...' : 'Сгенерировать изображение'}</span>
               </button>
             )}
-            </>}
             
             {/* Кнопка экипировки - только для предметов в инвентаре */}
             {inventoryItem && onEquip && card.slot && (

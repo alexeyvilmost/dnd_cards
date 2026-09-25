@@ -23,6 +23,7 @@ import { CharacterFormulaRoot } from './contexts/CharacterFormulaContext';
 import Layout from './components/Layout';
 import AuthenticatedSectionGate from './components/AuthenticatedSectionGate';
 import ProtectedRoute from './components/ProtectedRoute';
+import ContentEditorGate from './components/ContentEditorGate';
 import NotFound from './pages/NotFound';
 import MobileSuggestion from './mobile/MobileSuggestion';
 import CharacterV3AccessNotice from './components/CharacterV3AccessNotice';
@@ -61,7 +62,7 @@ const ActionCreator = lazy(() => import('./pages/ActionCreator'));
 const EffectCreator = lazy(() => import('./pages/EffectCreator'));
 const PassiveCreator = lazy(() => import('./pages/PassiveCreator'));
 const SpellCreator = lazy(() => import('./pages/SpellCreator'));
-const SpellPage = lazy(() => import('./pages/SpellPage'));
+const EntityPage = lazy(() => import('./pages/EntityPage'));
 const FeatCreator = lazy(() => import('./pages/FeatCreator'));
 const BackgroundCreator = lazy(() => import('./pages/BackgroundCreator'));
 const RaceCreator = lazy(() => import('./pages/RaceCreator'));
@@ -232,10 +233,11 @@ function App() {
         {/* CharacterV3 хранит личные листы/журналы и требует валидную сессию. */}
         <Route path="/character-forge" element={<ProtectedRoute>{withRulesAuthority(<CharacterForge />)}</ProtectedRoute>} />
         <Route path="/character-forge/:id" element={<ProtectedRoute>{withRulesAuthority(<CharacterForge />)}</ProtectedRoute>} />
-        <Route path="/characters-forge" element={<AuthenticatedSectionGate section="characters"><CharactersForgeList /></AuthenticatedSectionGate>} />
-        <Route path="/spell/:id" element={<SpellPage />} />
-        <Route path="/characters-v3/:id" element={<ProtectedRoute>{withRulesAuthority(<CharacterSheetMVP />)}</ProtectedRoute>} />
-        <Route path="/characters-v3/:id/combat" element={<ProtectedRoute>{withRulesAuthority(<SoloCombatPage />)}</ProtectedRoute>} />
+        <Route path="/characters-forge" element={<AuthenticatedSectionGate section="characters"><Layout><CharactersForgeList /></Layout></AuthenticatedSectionGate>} />
+        <Route path="/spell/:id" element={<Layout><EntityPage fixedType="spells" /></Layout>} />
+        <Route path="/entity/:type/:id" element={<Layout><EntityPage /></Layout>} />
+        <Route path="/characters-v3/:id" element={<ProtectedRoute>{withRulesAuthority(<Layout workspace><CharacterSheetMVP /></Layout>)}</ProtectedRoute>} />
+        <Route path="/characters-v3/:id/combat" element={<ProtectedRoute>{withRulesAuthority(<Layout workspace><SoloCombatPage /></Layout>)}</ProtectedRoute>} />
         <Route path="/roguelike" element={<AuthenticatedSectionGate section="runs">{withRulesAuthority(<Layout><RoguelikePage /></Layout>)}</AuthenticatedSectionGate>} />
         <Route path="/roguelike/:id" element={<AuthenticatedSectionGate section="runs">{withRulesAuthority(<Layout><RoguelikePage /></Layout>)}</AuthenticatedSectionGate>} />
 
@@ -295,7 +297,7 @@ function App() {
         <Route path="/edit/:id" element={
           <ProtectedRoute>
             <Layout>
-              <CardCreator />
+              <ContentEditorGate kind="cards"><CardCreator /></ContentEditorGate>
             </Layout>
           </ProtectedRoute>
         } />
@@ -439,10 +441,10 @@ function App() {
           <Layout><MonsterLibrary /></Layout>
         } />
         <Route path="/monster-forge" element={
-          <ProtectedRoute><Layout><MonsterCreator /></Layout></ProtectedRoute>
+          <ProtectedRoute><ContentEditorGate kind="monsters"><Layout><MonsterCreator /></Layout></ContentEditorGate></ProtectedRoute>
         } />
         <Route path="/monster-forge/:id" element={
-          <ProtectedRoute><Layout><MonsterCreator /></Layout></ProtectedRoute>
+          <ProtectedRoute><ContentEditorGate kind="monsters"><Layout><MonsterCreator /></Layout></ContentEditorGate></ProtectedRoute>
         } />
 
         {/* Shop routes */}
@@ -465,21 +467,21 @@ function App() {
         <Route path="/action-creator" element={
           <ProtectedRoute>
             <Layout>
-              <ActionCreator />
+              <ContentEditorGate kind="actions"><ActionCreator /></ContentEditorGate>
             </Layout>
           </ProtectedRoute>
         } />
         <Route path="/resource-creator" element={
           <ProtectedRoute>
             <Layout>
-              <ResourceCreator />
+              <ContentEditorGate kind="resources"><ResourceCreator /></ContentEditorGate>
             </Layout>
           </ProtectedRoute>
         } />
         <Route path="/variable-creator" element={
           <ProtectedRoute>
             <Layout>
-              <VariableCreator />
+              <ContentEditorGate kind="variables"><VariableCreator /></ContentEditorGate>
             </Layout>
           </ProtectedRoute>
         } />
@@ -487,17 +489,17 @@ function App() {
         <Route path="/concept-creator" element={
           <ProtectedRoute>
             <Layout>
-              <ConceptCreator />
+              <ContentEditorGate kind="concepts"><ConceptCreator /></ContentEditorGate>
             </Layout>
           </ProtectedRoute>
         } />
 
         {/* Effect routes */}
-        <Route path="/passive-creator" element={<ProtectedRoute><Layout><PassiveCreator/></Layout></ProtectedRoute>}/>
+        <Route path="/passive-creator" element={<ProtectedRoute><ContentEditorGate kind="passives"><Layout><PassiveCreator/></Layout></ContentEditorGate></ProtectedRoute>}/>
         <Route path="/effect-creator" element={
           <ProtectedRoute>
             <Layout>
-              <EffectCreator />
+              <ContentEditorGate kind="effects"><EffectCreator /></ContentEditorGate>
             </Layout>
           </ProtectedRoute>
         } />
@@ -515,7 +517,7 @@ function App() {
         <Route path="/spell-creator" element={
           <ProtectedRoute>
             <Layout>
-              <SpellCreator />
+              <ContentEditorGate kind="spells"><SpellCreator /></ContentEditorGate>
             </Layout>
           </ProtectedRoute>
         } />
@@ -524,7 +526,7 @@ function App() {
         <Route path="/feat-creator" element={
           <ProtectedRoute>
             <Layout>
-              <FeatCreator />
+              <ContentEditorGate kind="feats"><FeatCreator /></ContentEditorGate>
             </Layout>
           </ProtectedRoute>
         } />
@@ -533,21 +535,21 @@ function App() {
         <Route path="/background-creator" element={
           <ProtectedRoute>
             <Layout>
-              <BackgroundCreator />
+              <ContentEditorGate kind="backgrounds"><BackgroundCreator /></ContentEditorGate>
             </Layout>
           </ProtectedRoute>
         } />
         <Route path="/race-creator" element={
           <ProtectedRoute>
             <Layout>
-              <RaceCreator />
+              <ContentEditorGate kind="races"><RaceCreator /></ContentEditorGate>
             </Layout>
           </ProtectedRoute>
         } />
         <Route path="/class-creator" element={
           <ProtectedRoute>
             <Layout>
-              <ClassCreator />
+              <ContentEditorGate kind="classes"><ClassCreator /></ContentEditorGate>
             </Layout>
           </ProtectedRoute>
         } />

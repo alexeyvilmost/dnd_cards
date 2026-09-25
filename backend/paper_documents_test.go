@@ -3,8 +3,81 @@ package main
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"net/http"
+	"strings"
 	"testing"
 )
+
+func TestPaperDocumentTrashOwnershipAndRestore(t *testing.T) {
+	t.Setenv("JWT_SECRET", characterV3AccessTestSecret)
+	f := openCharacterV3AccessFixture(t)
+	if err := f.db.AutoMigrate(&paperDocument{}); err != nil {
+		t.Fatal(err)
+	}
+	router := gin.New()
+	registerPaperDocumentRoutes(router, f.auth, f.db)
+	owner, other := f.token(t, f.owner), f.token(t, f.other)
+	doc := map[string]any{"version": 1, "fields": map[string]string{"name": "Удаляемый лист", "hpCurrent": "7"}}
+	for _, anonymous := range []bool{false, true} {
+		created := performCharacterV3Request(t, router, "POST", "/api/paper-sheets", owner, map[string]any{"document": doc, "anonymous": anonymous})
+		var row struct {
+			ID string `json:"id"`
+		}
+		if created.Code != 201 || json.Unmarshal(created.Body.Bytes(), &row) != nil {
+			t.Fatal(created.Body.String())
+		}
+		path := "/api/paper-sheets/" + row.ID
+		for _, token := range []string{"", other} {
+			want := 404
+			if token == "" {
+				want = 401
+			}
+			for _, command := range []struct{ method, path string }{{"DELETE", path}, {"POST", path + "/restore"}} {
+				if got := performCharacterV3Request(t, router, command.method, command.path, token, nil); got.Code != want {
+					t.Fatalf("foreign mutation: %d %s", got.Code, got.Body.String())
+				}
+			}
+		}
+		removed := performCharacterV3Request(t, router, "DELETE", path, owner, nil)
+		if anonymous {
+			if removed.Code != 404 {
+				t.Fatal("anonymous edit link must not grant ownership")
+			}
+			continue
+		}
+		if removed.Code != http.StatusNoContent {
+			t.Fatal(removed.Body.String())
+		}
+		for _, command := range []struct {
+			method string
+			body   any
+		}{{"GET", nil}, {"PUT", map[string]any{"document": doc, "revision": 1}}} {
+			if got := performCharacterV3Request(t, router, command.method, path, owner, command.body); got.Code != 404 {
+				t.Fatalf("deleted sheet accessible: %d", got.Code)
+			}
+		}
+		active := performCharacterV3Request(t, router, "GET", "/api/paper-sheets", owner, nil)
+		trash := performCharacterV3Request(t, router, "GET", "/api/paper-sheets?deleted=true", owner, nil)
+		foreignTrash := performCharacterV3Request(t, router, "GET", "/api/paper-sheets?deleted=true", other, nil)
+		if strings.Contains(active.Body.String(), row.ID) || !strings.Contains(trash.Body.String(), row.ID) || strings.Contains(foreignTrash.Body.String(), row.ID) {
+			t.Fatal("trash ownership/list isolation failed")
+		}
+		if got := performCharacterV3Request(t, router, "POST", path+"/restore", owner, nil); got.Code != 204 {
+			t.Fatal(got.Body.String())
+		}
+		restored := performCharacterV3Request(t, router, "GET", path, owner, nil)
+		var saved struct {
+			Revision int64          `json:"revision"`
+			Document map[string]any `json:"document"`
+		}
+		if restored.Code != 200 || json.Unmarshal(restored.Body.Bytes(), &saved) != nil || saved.Revision != 3 || saved.Document["fields"].(map[string]any)["hpCurrent"] != "7" {
+			t.Fatalf("restore changed data: %s", restored.Body.String())
+		}
+		if got := performCharacterV3Request(t, router, "PUT", path, owner, map[string]any{"document": doc, "revision": 1}); got.Code != 409 {
+			t.Fatal("stale editor must not overwrite restored document")
+		}
+	}
+}
 
 func TestPaperDocumentValidation(t *testing.T) {
 	for _, test := range []struct {

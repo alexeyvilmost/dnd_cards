@@ -7,7 +7,7 @@ const ABILITY_LABELS = { str: 'СИЛ', dex: 'ЛВК', con: 'ТЕЛ', int: 'ИН
 
 export default function MonsterPreview({ monster }: { monster: Monster }) {
   return (
-    <article className="monster-card" data-testid={`monster-card-${monster.slug}`}>
+    <Link className="monster-card" data-testid={`monster-card-${monster.slug}`} to={`/entity/monsters/${monster.id}`} aria-label={`Открыть: ${monster.name}`}>
       <div className="monster-card__token">
         {monster.token_url
           ? <img src={monster.token_url} alt={`Токен: ${monster.name}`} />
@@ -34,9 +34,8 @@ export default function MonsterPreview({ monster }: { monster: Monster }) {
         <p className="monster-card__description">{monster.description}</p>
         <div className="monster-card__footer">
           <span>{monster.action_ids.length} действий · {monster.effect_ids.length} эффектов</span>
-          <Link to={`/monster-forge/${monster.id}`}>Открыть конструктор</Link>
         </div>
       </div>
-    </article>
+    </Link>
   );
 }

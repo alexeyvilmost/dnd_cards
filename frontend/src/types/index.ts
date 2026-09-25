@@ -686,6 +686,7 @@ export type ActionType = 'base_action' | 'class_feature' | 'item_property';
 
 export interface ResourceDefinition {
   id: string;
+  author?: string;
   resource_id: string;
   name: string;
   name_en?: string | null;
@@ -725,6 +726,7 @@ export type UpdateResourceRequest = Partial<CreateResourceRequest>;
 // См. docs/variables.md.
 export interface Variable {
   id: string;
+  author?: string;
   variable_id: string;
   name: string;
   name_en?: string | null;
@@ -761,6 +763,7 @@ export type UpdateVariableRequest = Partial<CreateVariableRequest>;
 // На него ссылаются из текстов: [[Спасбросок|concept:saving_throw]]. Аналог переменных.
 export interface Concept {
   id: string;
+  author?: string;
   concept_id: string;
   name: string;
   name_en?: string | null;

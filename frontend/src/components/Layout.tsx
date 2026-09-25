@@ -1,20 +1,43 @@
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { BookOpen, Dices, LogOut, User, Users, ChevronDown, Menu, X, MoreHorizontal, ScrollText, type LucideIcon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { WORKSPACE_EXPANDED_KEY, WorkspaceNavigationContext } from './WorkspaceNavigation';
+import './WorkspaceNavigation.css';
 
 interface LayoutProps {
   children: React.ReactNode;
   landing?: boolean;
+  workspace?: boolean;
 }
 
 type SubItem = { label: string; path?: string; onClick?: () => void };
 type NavItem = { label: string; icon: LucideIcon; path?: string; submenu?: SubItem[] };
 
-const Layout = ({ children, landing = false }: LayoutProps) => {
+const Layout = ({ children, landing = false, workspace = false }: LayoutProps) => {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [expanded, setExpanded] = useState(() => { try { return sessionStorage.getItem(WORKSPACE_EXPANDED_KEY) === 'true'; } catch { return false; } });
+  const navigation = useRef<HTMLElement>(null);
+  const [navigationHeight, setNavigationHeight] = useState(64);
+  const hiddenNavigation = workspace && expanded;
+  useLayoutEffect(() => {
+    if (!workspace || !navigation.current) return;
+    const measure = () => setNavigationHeight(navigation.current?.getBoundingClientRect().height ?? 0);
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(navigation.current);
+    return () => observer.disconnect();
+  }, [workspace, hiddenNavigation]);
+  const toggleNavigation = () => {
+    setIsMobileMenuOpen(false);
+    setExpanded(value => {
+      try { sessionStorage.setItem(WORKSPACE_EXPANDED_KEY, String(!value)); } catch { /* In-memory mode remains usable. */ }
+      return !value;
+    });
+  };
   // The paper editor keeps its existing page frame and print-friendly appearance.
   const paperLayout = /^\/paper-sheet(?:\/|$)/.test(location.pathname);
 
@@ -43,15 +66,17 @@ const Layout = ({ children, landing = false }: LayoutProps) => {
 
   const isActive = (path?: string) => !!path && (location.pathname === path
     || (path === '/library' && location.pathname === '/monsters')
+    || (path === '/characters-forge' && /^\/characters-v3\//.test(location.pathname))
     || (path === '/roguelike' && location.pathname.startsWith('/roguelike/')));
 
   return (
-    <div className={`site-layout min-h-screen ${paperLayout ? 'site-layout-paper bg-gray-50' : 'site-page-theme'} ${landing ? 'site-layout-landing' : ''}`} style={paperLayout ? {
+    <WorkspaceNavigationContext.Provider value={workspace ? { expanded, toggle: toggleNavigation } : null}>
+    <div className={`site-layout min-h-screen ${workspace ? 'site-layout-workspace' : ''} ${paperLayout ? 'site-layout-paper bg-gray-50' : 'site-page-theme'} ${landing ? 'site-layout-landing' : ''}`} style={paperLayout ? {
       backgroundImage: 'linear-gradient(rgba(245, 241, 235, 0.7), rgba(245, 241, 235, 0.7)), url(/groovepaper.png)',
       backgroundRepeat: 'repeat', backgroundSize: 'auto', color: '#111827',
-    } : undefined}>
+    } : workspace ? { '--site-navigation-height': `${hiddenNavigation ? 0 : navigationHeight}px` } as React.CSSProperties : undefined}>
       {/* Header (компактный) */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+      <header id="site-navigation" ref={navigation} hidden={hiddenNavigation} className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center gap-2 h-12">
             <Link to="/" aria-description="На главную" className="site-brand text-lg sm:text-xl font-bold text-gray-900 truncate hover:text-gray-700 transition-colors">
@@ -205,6 +230,7 @@ const Layout = ({ children, landing = false }: LayoutProps) => {
         {children}
       </main>
     </div>
+    </WorkspaceNavigationContext.Provider>
   );
 };
 

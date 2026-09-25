@@ -9,8 +9,10 @@ import MonsterPreview from '../components/MonsterPreview';
 import { monstersApi } from '../monsters/api';
 import type { Monster } from '../monsters/types';
 import './MonsterLibrary.css';
+import { useContentPermissions } from '../hooks/useContentPermissions';
 
 export default function MonsterLibrary() {
+  const { admin } = useContentPermissions();
   const [params, setParams] = useSearchParams();
   const tag = params.get('tag') ?? '';
   const search = params.get('q') ?? '';
@@ -33,7 +35,7 @@ export default function MonsterLibrary() {
     <section className="monster-library library-shell">
       <LibrarySidebar active="monsters" />
       <div className="library-shell__content">
-      <LibrarySectionHero type="monsters" subtitle="Бестиарий" action={
+      <LibrarySectionHero type="monsters" subtitle="Бестиарий" action={admin &&
         <Link className="library-chrome-button library-chrome-button--primary" to="/monster-forge"><Plus size={17} /> Создать монстра</Link>
       } />
       <div className="library-chrome-panel monster-library__controls">

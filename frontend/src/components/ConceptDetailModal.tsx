@@ -18,7 +18,7 @@ const ConceptDetailModal: React.FC<ConceptDetailModalProps> = ({ concept, isOpen
 
   return (
     <EntityDetailShell
-      entity={{type:'concept',id:concept.id}}
+      entity={{type:'concept',id:concept.id,author:concept.author}}
       isOpen={isOpen}
       onClose={onClose}
       title={concept.name}

@@ -40,7 +40,7 @@ func (rc *ResourceController) GetResources(c *gin.Context) {
 	}
 	rows := query.Order("sort_order ASC, name ASC, id ASC")
 	if wantsListView(c) {
-		rows = rows.Select("id, resource_id, name, name_en, description, category, recharge, sort_order, created_at, updated_at")
+		rows = rows.Select("id, resource_id, name, name_en, description, category, recharge, sort_order, author, created_at, updated_at")
 	}
 	if explicitPagination {
 		rows = rows.Offset(offset).Limit(limit)

@@ -1,4 +1,43 @@
 .card-library { width: 100%; min-width: 0; }
+
+/* One row grammar for all ordinary library entities. Item and monster rows
+   retain their own composition and are deliberately excluded. */
+.card-library[data-view-mode="list"] .library-entity-row {
+  border: 1px solid #8a7320;
+  background: linear-gradient(135deg, #2b2520, #191410);
+  color: #ece3d4;
+  box-shadow: 0 4px 12px #0002;
+}
+.card-library[data-view-mode="list"] .library-entity-row:hover,
+.card-library[data-view-mode="list"] .library-entity-row:focus-visible {
+  border-color: #c9a227;
+  background: linear-gradient(135deg, #352d23, #211a13);
+  box-shadow: 0 8px 22px #0005;
+}
+.card-library[data-view-mode="list"] .library-entity-row .text-gray-900,
+.card-library[data-view-mode="list"] .library-entity-row .text-white { color: #f3ead4; }
+.card-library[data-view-mode="list"] .library-entity-row .text-gray-500,
+.card-library[data-view-mode="list"] .library-entity-row .text-gray-400,
+.card-library[data-view-mode="list"] .library-entity-row .text-gray-300,
+.card-library[data-view-mode="list"] .library-entity-row .text-amber-200 { color: #a59886; }
+.card-library[data-view-mode="list"] .library-entity-row img { border-color: #8a7320; }
+.card-library[data-view-mode="list"] .library-entity-fallback {
+  display: inline-flex; flex: 0 0 55px; align-items: center; justify-content: center;
+  width: 55px; height: 55px; border: 1px solid #8a7320; border-radius: 8px;
+  background: radial-gradient(circle, #413222, #211a13); color: #d8b978;
+}
+.card-library[data-view-mode="list"] .library-item-row {
+  border-top: 1px solid #c8b58f;
+  border-right: 1px solid #c8b58f;
+  border-bottom: 1px solid #c8b58f;
+  background: linear-gradient(145deg, #fffaf0, #eee1cc);
+  box-shadow: 0 4px 12px #36281824;
+}
+.card-library[data-view-mode="list"] .library-item-row:hover,
+.card-library[data-view-mode="list"] .library-item-row:focus-visible {
+  background: #f6e9d1;
+  box-shadow: 0 8px 18px #36281838;
+}
 .library-rarities { display: flex; flex-wrap: wrap; gap: 8px 12px; min-width: 0; }
 .library-rarities legend { margin-bottom: 8px; font-size: .875rem; font-weight: 500; }
 .library-rarities label { display: flex; align-items: center; gap: 6px; font-size: .875rem; }

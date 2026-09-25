@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -188,43 +189,47 @@ func main() {
 		api.GET("/shops/:slug", shopController.GetShop)
 
 		// Карточки (публичные, но с опциональной авторизацией)
+		api.GET("/content-capabilities", StrictAuthMiddleware(authService), func(c *gin.Context) {
+			id, _ := GetCurrentUserID(c)
+			c.JSON(http.StatusOK, gin.H{"admin": canManageEntityTags(c), "user_id": id.String()})
+		})
 		api.GET("/cards", OptionalAuthMiddleware(authService), cardController.GetCards)
 		api.GET("/cards/:id", OptionalAuthMiddleware(authService), cardController.GetCard)
 		api.GET("/cards/:id/battle-stats", OptionalAuthMiddleware(authService), cardController.GetCardBattleStats)
 		api.POST("/cards/battle-stats", OptionalAuthMiddleware(authService), cardController.GetBatchCardBattleStats)
-		api.POST("/cards", contentAdminAuth, cardController.CreateCard)
-		api.PUT("/cards/:id", contentAdminAuth, cardController.UpdateCard)
-		api.DELETE("/cards/:id", contentAdminAuth, cardController.DeleteCard)
+		api.POST("/cards", ContentEntityMutation(authService, db, "cards", true), cardController.CreateCard)
+		api.PUT("/cards/:id", ContentEntityMutation(authService, db, "cards", false), cardController.UpdateCard)
+		api.DELETE("/cards/:id", ContentEntityMutation(authService, db, "cards", false), cardController.DeleteCard)
 		api.POST("/cards/generate-image", contentAdminAuth, imageRateLimit.Handler(), cardController.GenerateImage)
 		api.POST("/cards/export", AuthMiddleware(authService), cardController.ExportCards)
 
 		// Действия (публичные, но с опциональной авторизацией)
 		api.GET("/actions", OptionalAuthMiddleware(authService), actionController.GetActions)
 		api.GET("/actions/:id", OptionalAuthMiddleware(authService), actionController.GetAction)
-		api.POST("/actions", contentAdminAuth, actionController.CreateAction)
-		api.PUT("/actions/:id", contentAdminAuth, actionController.UpdateAction)
-		api.DELETE("/actions/:id", contentAdminAuth, actionController.DeleteAction)
+		api.POST("/actions", ContentEntityMutation(authService, db, "actions", true), actionController.CreateAction)
+		api.PUT("/actions/:id", ContentEntityMutation(authService, db, "actions", false), actionController.UpdateAction)
+		api.DELETE("/actions/:id", ContentEntityMutation(authService, db, "actions", false), actionController.DeleteAction)
 
 		// Монстры — data-driven stat blocks, ссылающиеся на общие действия и эффекты.
 		api.GET("/monsters", OptionalAuthMiddleware(authService), monsterController.List)
 		api.GET("/monsters/:id", OptionalAuthMiddleware(authService), monsterController.Get)
-		api.POST("/monsters", contentAdminAuth, monsterController.Create)
-		api.PUT("/monsters/:id", contentAdminAuth, monsterController.Update)
-		api.DELETE("/monsters/:id", contentAdminAuth, monsterController.Delete)
+		api.POST("/monsters", ContentEntityMutation(authService, db, "monsters", true), monsterController.Create)
+		api.PUT("/monsters/:id", ContentEntityMutation(authService, db, "monsters", false), monsterController.Update)
+		api.DELETE("/monsters/:id", ContentEntityMutation(authService, db, "monsters", false), monsterController.Delete)
 
 		// Эффекты (публичные, но с опциональной авторизацией)
 		api.GET("/effects", OptionalAuthMiddleware(authService), effectController.GetEffects)
 		api.GET("/effects/:id", OptionalAuthMiddleware(authService), effectController.GetEffect)
-		api.POST("/effects", contentAdminAuth, effectController.CreateEffect)
-		api.PUT("/effects/:id", contentAdminAuth, effectController.UpdateEffect)
-		api.DELETE("/effects/:id", contentAdminAuth, effectController.DeleteEffect)
+		api.POST("/effects", ContentEntityMutation(authService, db, "effects", true), effectController.CreateEffect)
+		api.PUT("/effects/:id", ContentEntityMutation(authService, db, "effects", false), effectController.UpdateEffect)
+		api.DELETE("/effects/:id", ContentEntityMutation(authService, db, "effects", false), effectController.DeleteEffect)
 
 		// Заклинания (публичные, но с опциональной авторизацией)
 		api.GET("/spells", OptionalAuthMiddleware(authService), spellController.GetSpells)
 		api.GET("/spells/:id", OptionalAuthMiddleware(authService), spellController.GetSpell)
-		api.POST("/spells", contentAdminAuth, spellController.CreateSpell)
-		api.PUT("/spells/:id", contentAdminAuth, spellController.UpdateSpell)
-		api.DELETE("/spells/:id", contentAdminAuth, spellController.DeleteSpell)
+		api.POST("/spells", ContentEntityMutation(authService, db, "spells", true), spellController.CreateSpell)
+		api.PUT("/spells/:id", ContentEntityMutation(authService, db, "spells", false), spellController.UpdateSpell)
+		api.DELETE("/spells/:id", ContentEntityMutation(authService, db, "spells", false), spellController.DeleteSpell)
 
 		// Standalone-генерация изображений (вкладка «Генерация изображений»)
 		api.POST("/images/generate-standalone", contentAdminAuth, imageRateLimit.Handler(), imageController.GenerateStandaloneImage)
@@ -240,30 +245,30 @@ func main() {
 		// Черты (публичные, но с опциональной авторизацией)
 		api.GET("/feats", OptionalAuthMiddleware(authService), featController.GetFeats)
 		api.GET("/feats/:id", OptionalAuthMiddleware(authService), featController.GetFeat)
-		api.POST("/feats", contentAdminAuth, featController.CreateFeat)
-		api.PUT("/feats/:id", contentAdminAuth, featController.UpdateFeat)
-		api.DELETE("/feats/:id", contentAdminAuth, featController.DeleteFeat)
+		api.POST("/feats", ContentEntityMutation(authService, db, "feats", true), featController.CreateFeat)
+		api.PUT("/feats/:id", ContentEntityMutation(authService, db, "feats", false), featController.UpdateFeat)
+		api.DELETE("/feats/:id", ContentEntityMutation(authService, db, "feats", false), featController.DeleteFeat)
 
 		// Предыстории (публичные, но с опциональной авторизацией)
 		api.GET("/backgrounds", OptionalAuthMiddleware(authService), backgroundController.GetBackgrounds)
 		api.GET("/backgrounds/:id", OptionalAuthMiddleware(authService), backgroundController.GetBackground)
-		api.POST("/backgrounds", contentAdminAuth, backgroundController.CreateBackground)
-		api.PUT("/backgrounds/:id", contentAdminAuth, backgroundController.UpdateBackground)
-		api.DELETE("/backgrounds/:id", contentAdminAuth, backgroundController.DeleteBackground)
+		api.POST("/backgrounds", ContentEntityMutation(authService, db, "backgrounds", true), backgroundController.CreateBackground)
+		api.PUT("/backgrounds/:id", ContentEntityMutation(authService, db, "backgrounds", false), backgroundController.UpdateBackground)
+		api.DELETE("/backgrounds/:id", ContentEntityMutation(authService, db, "backgrounds", false), backgroundController.DeleteBackground)
 
 		// Виды (расы)
 		api.GET("/races", OptionalAuthMiddleware(authService), raceController.GetRaces)
 		api.GET("/races/:id", OptionalAuthMiddleware(authService), raceController.GetRace)
-		api.POST("/races", contentAdminAuth, raceController.CreateRace)
-		api.PUT("/races/:id", contentAdminAuth, raceController.UpdateRace)
-		api.DELETE("/races/:id", contentAdminAuth, raceController.DeleteRace)
+		api.POST("/races", ContentEntityMutation(authService, db, "races", true), raceController.CreateRace)
+		api.PUT("/races/:id", ContentEntityMutation(authService, db, "races", false), raceController.UpdateRace)
+		api.DELETE("/races/:id", ContentEntityMutation(authService, db, "races", false), raceController.DeleteRace)
 
 		// Классы
 		api.GET("/classes", OptionalAuthMiddleware(authService), classController.GetClasses)
 		api.GET("/classes/:id", OptionalAuthMiddleware(authService), classController.GetClass)
-		api.POST("/classes", contentAdminAuth, classController.CreateClass)
-		api.PUT("/classes/:id", contentAdminAuth, classController.UpdateClass)
-		api.DELETE("/classes/:id", contentAdminAuth, classController.DeleteClass)
+		api.POST("/classes", ContentEntityMutation(authService, db, "classes", true), classController.CreateClass)
+		api.PUT("/classes/:id", ContentEntityMutation(authService, db, "classes", false), classController.UpdateClass)
+		api.DELETE("/classes/:id", ContentEntityMutation(authService, db, "classes", false), classController.DeleteClass)
 
 		// Отдельный путь сертификации: обычный CRUD не принимает support и
 		// миграционный trigger инвалидирует прежний статус после правки контента.
@@ -281,16 +286,16 @@ func main() {
 		// Ресурсы действий/персонажа
 		api.GET("/resources", OptionalAuthMiddleware(authService), resourceController.GetResources)
 		api.GET("/resources/:id", OptionalAuthMiddleware(authService), resourceController.GetResource)
-		api.POST("/resources", contentAdminAuth, resourceController.CreateResource)
-		api.PUT("/resources/:id", contentAdminAuth, resourceController.UpdateResource)
-		api.DELETE("/resources/:id", contentAdminAuth, resourceController.DeleteResource)
+		api.POST("/resources", ContentEntityMutation(authService, db, "resources", true), resourceController.CreateResource)
+		api.PUT("/resources/:id", ContentEntityMutation(authService, db, "resources", false), resourceController.UpdateResource)
+		api.DELETE("/resources/:id", ContentEntityMutation(authService, db, "resources", false), resourceController.DeleteResource)
 
 		// Переменные (числовые/dice), выдаваемые классами/эффектами
 		api.GET("/variables", OptionalAuthMiddleware(authService), variableController.GetVariables)
 		api.GET("/variables/:id", OptionalAuthMiddleware(authService), variableController.GetVariable)
-		api.POST("/variables", contentAdminAuth, variableController.CreateVariable)
-		api.PUT("/variables/:id", contentAdminAuth, variableController.UpdateVariable)
-		api.DELETE("/variables/:id", contentAdminAuth, variableController.DeleteVariable)
+		api.POST("/variables", ContentEntityMutation(authService, db, "variables", true), variableController.CreateVariable)
+		api.PUT("/variables/:id", ContentEntityMutation(authService, db, "variables", false), variableController.UpdateVariable)
+		api.DELETE("/variables/:id", ContentEntityMutation(authService, db, "variables", false), variableController.DeleteVariable)
 
 		// Онлайн-бои (encounters) содержат состояние и журналы конкретных персонажей,
 		// поэтому весь контур, включая SSE-handshake, требует строгий JWT. Доступ к
@@ -329,9 +334,9 @@ func main() {
 		// Понятия (глоссарий): публичное чтение, строгая авторизация записи.
 		api.GET("/concepts", OptionalAuthMiddleware(authService), conceptController.GetConcepts)
 		api.GET("/concepts/:id", OptionalAuthMiddleware(authService), conceptController.GetConcept)
-		api.POST("/concepts", contentAdminAuth, conceptController.CreateConcept)
-		api.PUT("/concepts/:id", contentAdminAuth, conceptController.UpdateConcept)
-		api.DELETE("/concepts/:id", contentAdminAuth, conceptController.DeleteConcept)
+		api.POST("/concepts", ContentEntityMutation(authService, db, "concepts", true), conceptController.CreateConcept)
+		api.PUT("/concepts/:id", ContentEntityMutation(authService, db, "concepts", false), conceptController.UpdateConcept)
+		api.DELETE("/concepts/:id", ContentEntityMutation(authService, db, "concepts", false), conceptController.DeleteConcept)
 
 		// Маршруты с контекстом пользователя. В публичном режиме AuthMiddleware
 		// подставляет общего пользователя public; валидный JWT по-прежнему учитывается.
@@ -387,9 +392,9 @@ func main() {
 			protected.GET("/characters-v2/:id/active-effects", characterV2Controller.GetActiveEffects)
 
 			// Изображения
-			protected.POST("/images/upload", contentAdminAuth, RequestBodyLimitMiddleware(12<<20), uploadRateLimit.Handler(), imageController.UploadImage)
+			protected.POST("/images/upload", StrictAuthMiddleware(authService), RequestBodyLimitMiddleware(12<<20), ContentEntityImageMutation(db), uploadRateLimit.Handler(), imageController.UploadImage)
 			protected.POST("/images/generate", contentAdminAuth, imageRateLimit.Handler(), imageController.GenerateImage)
-			protected.DELETE("/images/:entity_type/:entity_id", contentAdminAuth, imageController.DeleteImage)
+			protected.DELETE("/images/:entity_type/:entity_id", StrictAuthMiddleware(authService), ContentEntityImageMutation(db), imageController.DeleteImage)
 			protected.POST("/images/setup-cors", contentAdminAuth, imageController.SetupCORS)
 			protected.GET("/images/status", contentAdminAuth, imageController.GetStatus)
 

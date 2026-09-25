@@ -1,10 +1,10 @@
 import LibraryTagControl from '../components/library/LibraryTagControl';
 import { previewAnchor } from '../utils/previewAnchor';
-import { Fragment, useState, useEffect, useMemo, useRef, type CSSProperties } from 'react';
+import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, type CSSProperties } from 'react';
 import {
-  Filter, Plus, Grid3X3, List, LayoutTemplate, X,
+  Filter, Plus, Grid3X3, List, LayoutTemplate, X, Dices, Hash, Lightbulb,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import LibrarySidebar from '../components/library/LibrarySidebar';
 import LibrarySearch from '../components/library/LibrarySearch';
 import LibrarySectionHero from '../components/library/LibrarySectionHero';
@@ -36,7 +36,6 @@ import VariablePreview, { variableTypeLabel } from '../components/VariablePrevie
 import ResourceDetailModal from '../components/ResourceDetailModal';
 import VariableDetailModal from '../components/VariableDetailModal';
 import { evictEntity } from '../components/EntityRefRegistry';
-import { FormattedText } from '../utils/formattedText';
 import { resourceIcon, resourceLabel, useResourceOptions } from '../utils/resources';
 import { getRarityColor } from '../utils/rarityColors';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
@@ -52,6 +51,7 @@ import LibraryRarityFilter from '../components/library/LibraryRarityFilter';
 import LibraryBulkTags, { LibrarySelectionCheckbox, useLibrarySelection } from '../components/library/LibraryBulkTags';
 import { itemLibraryApi } from '../components/library/itemLibraryApi';
 import { useAuth } from '../contexts/AuthContext';
+import { useContentPermissions } from '../hooks/useContentPermissions';
 import './CardLibrary.css';
 import ItemPreview from '../components/ItemPreview';
 import PassiveLibrary from '../components/PassiveLibrary';
@@ -147,6 +147,8 @@ function classSubtypeLabel(characterClass: CharacterClass, parentById: Map<strin
 }
 
 const CardLibrary = () => {
+  const navigate = useNavigate();
+  const { admin, canCreate } = useContentPermissions();
   const [searchParams, setSearchParams] = useLibrarySearchParams();
   const { token } = useAuth();
   const initialFilters = useMemo(() => parseLibrarySearchParams(searchParams), []);
@@ -154,7 +156,6 @@ const CardLibrary = () => {
   const isMobile = useIsMobile();
   const urlInitialized = useRef(false);
   const skipFilterUrlSync = useRef(false);
-  const openedCardIdentity = useRef(token);
 
   const [contentType, setContentType] = useState<LibraryContentType>(initialFilters.contentType);
   const [cards, setCards] = useState<Card[]>([]);
@@ -244,6 +245,10 @@ const CardLibrary = () => {
     clampView(initialFilters.viewMode, initialFilters.contentType),
   );
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
+  const [hoveredEffect, setHoveredEffect] = useState<PassiveEffect | null>(null);
+  const [hoveredAction, setHoveredAction] = useState<Action | null>(null);
+  const [hoveredResource, setHoveredResource] = useState<ResourceDefinition | null>(null);
+  const [hoveredVariable, setHoveredVariable] = useState<Variable | null>(null);
   const [hoveredSpell, setHoveredSpell] = useState<Spell | null>(null);
   const [hoveredFeat, setHoveredFeat] = useState<Feat | null>(null);
   const [hoveredBackground, setHoveredBackground] = useState<Background | null>(null);
@@ -279,6 +284,17 @@ const CardLibrary = () => {
       preview.style.transform = 'none';
     });
   };
+  // Position after React has mounted the newly hovered card. The previous
+  // animation-frame-only path raced the first render and failed intermittently.
+  useLayoutEffect(() => {
+    const preview = previewPositionRef.current;
+    if (!preview) return;
+    const { x, y } = pendingMouse.current;
+    const width = preview.offsetWidth || 360;
+    const height = preview.offsetHeight || 320;
+    preview.style.left = `${Math.max(10, Math.min(x + 16, window.innerWidth - width - 10))}px`;
+    preview.style.top = `${y > window.innerHeight / 2 ? Math.max(10, y - height - 16) : Math.min(y + 16, window.innerHeight - height - 10)}px`;
+  }, [hoveredCard, hoveredEffect, hoveredAction, hoveredResource, hoveredVariable, hoveredConcept, hoveredSpell, hoveredFeat, hoveredBackground, hoveredRace, hoveredClass]);
   useEffect(() => () => { if (mouseRafRef.current != null) cancelAnimationFrame(mouseRafRef.current); }, []);
   const prevPinRef = useRef(pinModeActive);
   useEffect(() => {
@@ -946,50 +962,11 @@ const CardLibrary = () => {
     lastWrittenParamsRef.current = currentStr;
   }, [searchParams]);
 
-  // Открытие / закрытие карты по параметру ?card=
+  // Older links to ?card= now resolve to the canonical full entity page.
   useEffect(() => {
-    let active = true;
-    const identityChanged = openedCardIdentity.current !== token;
-    openedCardIdentity.current = token;
-    if (identityChanged) { setSelectedCard(null); setIsModalOpen(false); }
     const cardId = searchParams.get('card');
-
-    if (!cardId) {
-      if (isModalOpen) {
-        setIsModalOpen(false);
-        setSelectedCard(null);
-      }
-      return;
-    }
-
-    if (!identityChanged && selectedCard?.id === cardId && isModalOpen) {
-      return;
-    }
-
-    const found = !identityChanged && cardsIdentity.current === token && cards.find((c) => c.id === cardId);
-    if (found) {
-      setSelectedCard(found);
-      setIsModalOpen(true);
-      return;
-    }
-
-    itemLibraryApi
-      .detail(cardId)
-      .then((card) => {
-        if (!active) return;
-        setSelectedCard(card);
-        setIsModalOpen(true);
-      })
-      .catch(() => {
-        if (!active) return;
-        setSearchParams((prev) => {
-          const next = new URLSearchParams(prev);
-          next.delete('card');
-          return next;
-        }, { replace: true });
-      });
-    return () => { active = false; };
-  }, [token, searchParams, cards, selectedCard?.id, setSearchParams]);
+    if (cardId) navigate(`/entity/cards/${encodeURIComponent(cardId)}`, { replace: true });
+  }, [searchParams, navigate]);
 
   // Автоматическая подгрузка при прокрутке
   useEffect(() => {
@@ -1060,14 +1037,7 @@ const CardLibrary = () => {
   // Открытие модального окна
   const handleCardClick = (card: Card) => {
     if (selection.enabled) { selection.toggle(card.id); return; }
-    setSelectedCard(card);
-    setIsModalOpen(true);
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.set('card', card.id);
-      lastWrittenParamsRef.current = next.toString();
-      return next;
-    }, { replace: false });
+    navigate(`/entity/cards/${card.id}`);
   };
 
   // Закрытие модального окна
@@ -1084,8 +1054,7 @@ const CardLibrary = () => {
 
   // Обработчики для эффектов
   const handleEffectClick = (effect: PassiveEffect) => {
-    setSelectedEffect(effect);
-    setIsEffectModalOpen(true);
+    navigate(`/entity/effects/${effect.id}`);
   };
 
   const handleCloseEffectModal = () => {
@@ -1109,8 +1078,7 @@ const CardLibrary = () => {
 
   // Обработчики для действий
   const handleActionClick = (action: Action) => {
-    setSelectedAction(action);
-    setIsActionModalOpen(true);
+    navigate(`/entity/actions/${action.id}`);
   };
 
   const handleCloseActionModal = () => {
@@ -1134,8 +1102,7 @@ const CardLibrary = () => {
 
   // Обработчики для заклинаний
   const handleSpellClick = (spell: Spell) => {
-    setSelectedSpell(spell);
-    setIsSpellModalOpen(true);
+    navigate(`/entity/spells/${spell.id}`);
   };
 
   const handleCloseSpellModal = () => {
@@ -1145,8 +1112,7 @@ const CardLibrary = () => {
 
   // Обработчики для черт
   const handleFeatClick = (feat: Feat) => {
-    setSelectedFeat(feat);
-    setIsFeatModalOpen(true);
+    navigate(`/entity/feats/${feat.id}`);
   };
   const handleDeleteFeat = async (featId: string) => {
     if (!confirm('Вы уверены, что хотите удалить эту черту?')) return;
@@ -1161,8 +1127,7 @@ const CardLibrary = () => {
 
   // Обработчики для предысторий
   const handleBackgroundClick = (bg: Background) => {
-    setSelectedBackground(bg);
-    setIsBackgroundModalOpen(true);
+    navigate(`/entity/backgrounds/${bg.id}`);
   };
   const handleDeleteBackground = async (bgId: string) => {
     if (!confirm('Вы уверены, что хотите удалить эту предысторию?')) return;
@@ -1177,8 +1142,7 @@ const CardLibrary = () => {
 
   // Обработчики для видов (рас)
   const handleRaceClick = (race: Race) => {
-    setSelectedRace(race);
-    setIsRaceModalOpen(true);
+    navigate(`/entity/races/${race.id}`);
   };
   const handleDeleteRace = async (raceId: string) => {
     if (!confirm('Вы уверены, что хотите удалить этот вид?')) return;
@@ -1192,8 +1156,7 @@ const CardLibrary = () => {
   };
 
   const handleClassClick = (characterClass: CharacterClass) => {
-    setSelectedClass(characterClass);
-    setIsClassModalOpen(true);
+    navigate(`/entity/classes/${characterClass.id}`);
   };
   const handleDeleteClass = async (classId: string) => {
     if (!confirm('Вы уверены, что хотите удалить этот класс?')) return;
@@ -1240,13 +1203,11 @@ const CardLibrary = () => {
   };
 
   const handleResourceClick = (resource: ResourceDefinition) => {
-    setSelectedResource(resource);
-    setIsResourceModalOpen(true);
+    navigate(`/entity/resources/${resource.id}`);
   };
 
   const handleVariableClick = (variable: Variable) => {
-    setSelectedVariable(variable);
-    setIsVariableModalOpen(true);
+    navigate(`/entity/variables/${variable.id}`);
   };
 
   const handleDeleteVariable = async (variableId: string) => {
@@ -1263,8 +1224,7 @@ const CardLibrary = () => {
   };
 
   const handleConceptClick = (concept: Concept) => {
-    setSelectedConcept(concept);
-    setIsConceptModalOpen(true);
+    navigate(`/entity/concepts/${concept.id}`);
   };
 
   const handleDeleteConcept = async (conceptId: string) => {
@@ -1378,11 +1338,11 @@ const CardLibrary = () => {
   };
 
   return (
-    <div className="card-library library-shell">
+    <div className="card-library library-shell" data-content-type={contentType} data-view-mode={viewMode}>
       <LibrarySidebar active={contentType} onSelectContent={handleContentTypeChange} />
       <div className="library-shell__content">
       {/* Заголовок */}
-      <LibrarySectionHero type={contentType} subtitle="Библиотека" action={contentType !== 'passives' && <Link
+      <LibrarySectionHero type={contentType} subtitle="Библиотека" action={canCreate(contentType) && <Link
           to={createTarget.to}
           className="library-chrome-button library-chrome-button--primary"
         >
@@ -1390,7 +1350,7 @@ const CardLibrary = () => {
           <span>{createTarget.label}</span>
         </Link>} />
 
-      {contentType === 'cards' && <LibraryBulkTags selection={selection} visibleIDs={loading ? [] : cards.map(card => card.id)} />}
+      {admin && contentType === 'cards' && <LibraryBulkTags selection={selection} visibleIDs={loading ? [] : cards.map(card => card.id)} />}
 
       {/* Поиск и фильтры */}
       <div className="lib-toolbar library-chrome-panel">
@@ -1790,7 +1750,7 @@ const CardLibrary = () => {
       {!loading && contentType === 'cards' && cards.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">Карточки не найдены</p>
-          <Link to="/create" className="btn-primary mt-4 inline-block">
+          <Link to="/create" className="btn-primary mt-4 inline-block" style={{ display: canCreate('cards') ? undefined : 'none' }}>
             Создать первую карточку
           </Link>
         </div>
@@ -1799,7 +1759,7 @@ const CardLibrary = () => {
       {!loading && contentType === 'effects' && effects.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">Эффекты не найдены</p>
-          <Link to="/effect-creator" className="btn-primary mt-4 inline-block">
+          <Link to="/effect-creator" className="btn-primary mt-4 inline-block" style={{ display: canCreate('effects') ? undefined : 'none' }}>
             Создать первый эффект
           </Link>
         </div>
@@ -1808,7 +1768,7 @@ const CardLibrary = () => {
       {!loading && contentType === 'actions' && actions.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">Действия не найдены</p>
-          <Link to="/action-creator" className="btn-primary mt-4 inline-block">
+          <Link to="/action-creator" className="btn-primary mt-4 inline-block" style={{ display: canCreate('actions') ? undefined : 'none' }}>
             Создать первое действие
           </Link>
         </div>
@@ -1817,7 +1777,7 @@ const CardLibrary = () => {
       {!loading && contentType === 'spells' && spells.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">Заклинания не найдены</p>
-          <Link to="/spell-creator" className="btn-primary mt-4 inline-block">
+          <Link to="/spell-creator" className="btn-primary mt-4 inline-block" style={{ display: canCreate('spells') ? undefined : 'none' }}>
             Создать первое заклинание
           </Link>
         </div>
@@ -1826,7 +1786,7 @@ const CardLibrary = () => {
       {!loading && contentType === 'resources' && resources.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">Ресурсы не найдены</p>
-          <Link to="/resource-creator" className="btn-primary mt-4 inline-block">
+          <Link to="/resource-creator" className="btn-primary mt-4 inline-block" style={{ display: canCreate('resources') ? undefined : 'none' }}>
             Создать первый ресурс
           </Link>
         </div>
@@ -1851,20 +1811,25 @@ const CardLibrary = () => {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
               {variables.map((variable) => (
                 <button
                   type="button"
                   key={variable.variable_id}
-                  onClick={() => handleVariableClick(variable)}
-                  className="w-full text-left p-3 rounded-lg border border-gray-200 bg-white transition-all duration-200 hover:shadow-md hover:bg-gray-50"
+                 onClick={() => handleVariableClick(variable)}
+                  onMouseEnter={(e) => { setHoveredVariable(variable); placePreview(previewAnchor(e.currentTarget)); }}
+                  onMouseLeave={leaveHover(() => setHoveredVariable(null))}
+                  className="library-entity-row w-full text-left p-3 rounded-lg transition-all duration-200"
                 >
-                  <div className="font-medium truncate text-gray-900">{variable.name}</div>
-                  <div className="text-xs text-gray-500 truncate">
-                    {variable.variable_id} · {variableTypeLabel(variable.var_type)}
-                  </div>
-                  <div className="text-xs text-gray-400 truncate">
-                    По умолчанию: {variable.default_value || '—'}
+                  <div className="flex items-center gap-3">
+                    {variable.image_url?.trim()
+                      ? <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent"><img src={variable.image_url} alt="" className="w-full h-full object-contain" onError={(event) => { event.currentTarget.style.display = 'none'; }} /></div>
+                      : <span className="library-entity-fallback" aria-hidden="true">{variable.var_type === 'dice' ? <Dices size={25} /> : <Hash size={25} />}</span>}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate text-gray-900">{variable.name}</div>
+                      <div className="text-xs text-gray-500 truncate">{variable.variable_id} · {variableTypeLabel(variable.var_type)}</div>
+                      <div className="text-xs text-gray-400 truncate">По умолчанию: {variable.default_value || '—'}</div>
+                    </div>
                   </div>
                 </button>
               ))}
@@ -1880,7 +1845,7 @@ const CardLibrary = () => {
             Понятие — это пояснение, не выражаемое отдельной сущностью (напр. «Спасбросок»).
             На него ссылаются из любого текста: <code>[[Спасбросок|concept:saving_throw]]</code>.
           </p>
-          <Link to="/concept-creator" className="btn-primary inline-block">
+          <Link to="/concept-creator" className="btn-primary inline-block" style={{ display: canCreate('concepts') ? undefined : 'none' }}>
             Создать понятие
           </Link>
         </div>
@@ -1902,37 +1867,25 @@ const CardLibrary = () => {
             </div>
           ) : (
             <div className="relative">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
                 {concepts.map((concept) => (
-                  <div
+                  <button type="button"
                     key={concept.concept_id}
                     onClick={() => handleConceptClick(concept)}
                     onMouseEnter={(e) => { setHoveredConcept(concept); placePreview(previewAnchor(e.currentTarget)); }}
                     onMouseLeave={leaveHover(() => setHoveredConcept(null))}
-                    className="w-full text-left p-3 rounded-lg border border-gray-200 bg-white cursor-pointer transition-all duration-200 hover:shadow-md hover:bg-gray-50"
+                    className="library-entity-row w-full text-left p-3 rounded-lg transition-all duration-200"
                   >
                     <div className="flex items-center gap-3">
-                      {concept.image_url?.trim() && (
-                        <div className="flex-shrink-0 w-12 h-12 rounded border border-gray-200 bg-white overflow-hidden flex items-center justify-center">
-                          <img
-                            src={concept.image_url}
-                            alt=""
-                            className="w-9 h-9 object-contain"
-                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                          />
-                        </div>
-                      )}
+                      {concept.image_url?.trim()
+                        ? <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent"><img src={concept.image_url} alt="" className="w-full h-full object-contain" onError={(event) => { event.currentTarget.style.display = 'none'; }} /></div>
+                        : <span className="library-entity-fallback" aria-hidden="true"><Lightbulb size={25} /></span>}
                       <div className="flex-1 min-w-0">
                         <div className="font-medium truncate text-gray-900">{concept.name}</div>
                         <div className="text-xs font-mono text-gray-500 truncate">{concept.concept_id}</div>
-                        {concept.description?.trim() && (
-                          <div className="text-xs text-gray-500 line-clamp-2 mt-0.5">
-                            <FormattedText text={concept.description} />
-                          </div>
-                        )}
                       </div>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
               {hoveredConcept && (
@@ -2017,7 +1970,7 @@ const CardLibrary = () => {
                     <LibrarySelectionCheckbox selection={selection} id={card.id} name={card.name} />
                     <button
                       onClick={() => handleCardClick(card)}
-                      className={`w-full text-left p-3 rounded-lg border border-gray-200 bg-white transition-all duration-200 hover:shadow-md hover:bg-gray-50 border-l-4 ${getRarityBorderColor(card.rarity)}`}
+                      className={`library-item-row w-full text-left p-3 rounded-lg transition-all duration-200 border-l-4 ${getRarityBorderColor(card.rarity)}`}
                     >
                       <div className="flex items-center space-x-3">
                         {/* Картинка слева: без рамки, крупнее относительно строки */}
@@ -2170,8 +2123,10 @@ const CardLibrary = () => {
                 {effects.map((effect) => (
                   <button
                     key={effect.id}
-                    onClick={() => handleEffectClick(effect)}
-                    className="w-full text-left p-3 rounded-lg border-2 border-black bg-slate-800 text-white transition-all duration-200 hover:shadow-md hover:bg-slate-700"
+                   onClick={() => handleEffectClick(effect)}
+                    onMouseEnter={(e) => { setHoveredEffect(effect); placePreview(previewAnchor(e.currentTarget)); }}
+                    onMouseLeave={leaveHover(() => setHoveredEffect(null))}
+                    className="library-entity-row w-full text-left p-3 rounded-lg transition-all duration-200"
                   >
                     <div className="flex items-center space-x-3">
                       {/* Маленькая картинка слева */}
@@ -2252,8 +2207,10 @@ const CardLibrary = () => {
                 {actions.map((action) => (
                   <button
                     key={action.id}
-                    onClick={() => handleActionClick(action)}
-                    className="w-full text-left p-3 rounded-lg border-2 border-black bg-amber-900 text-white transition-all duration-200 hover:shadow-md hover:bg-amber-800"
+                   onClick={() => handleActionClick(action)}
+                    onMouseEnter={(e) => { setHoveredAction(action); placePreview(previewAnchor(e.currentTarget)); }}
+                    onMouseLeave={leaveHover(() => setHoveredAction(null))}
+                    className="library-entity-row w-full text-left p-3 rounded-lg transition-all duration-200"
                   >
                     <div className="flex items-center space-x-3">
                       {/* Маленькая картинка слева */}
@@ -2420,20 +2377,22 @@ const CardLibrary = () => {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
               {resources.map((resource) => (
                 <button
                   type="button"
                   key={resource.resource_id}
-                  onClick={() => handleResourceClick(resource)}
-                  className="w-full text-left p-3 rounded-lg border border-gray-200 bg-white transition-all duration-200 hover:shadow-md hover:bg-gray-50"
+                 onClick={() => handleResourceClick(resource)}
+                  onMouseEnter={(e) => { setHoveredResource(resource); placePreview(previewAnchor(e.currentTarget)); }}
+                  onMouseLeave={leaveHover(() => setHoveredResource(null))}
+                  className="library-entity-row w-full text-left p-3 rounded-lg transition-all duration-200"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-12 h-12 rounded border border-gray-200 bg-white overflow-hidden flex items-center justify-center">
+                    <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
                       <img
                         src={resource.image_url || resourceIcon(resourceOptions, resource.resource_id)}
-                        alt={resource.name}
-                        className="w-9 h-9 object-contain"
+                        alt=""
+                        className="w-full h-full object-contain"
                         onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }}
                       />
                     </div>
@@ -2570,7 +2529,7 @@ const CardLibrary = () => {
       {!loading && contentType === 'classes' && classes.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">Классы не найдены</p>
-          <Link to="/class-creator" className="btn-primary mt-4 inline-block">
+          <Link to="/class-creator" className="btn-primary mt-4 inline-block" style={{ display: canCreate('classes') ? undefined : 'none' }}>
             Создать первый класс
           </Link>
         </div>
@@ -2768,6 +2727,15 @@ const CardLibrary = () => {
       />
 
       {/* Модальное окно с детальной информацией об эффекте */}
+      {(hoveredEffect || hoveredAction || hoveredResource || hoveredVariable) && viewMode === 'list' && (
+        <div ref={previewPositionRef} className="fixed z-50 entity-preview-enter" style={previewStyle({ left: -10_000, top: 10 })}>
+          {hoveredEffect && contentType === 'effects' && <EffectPreview effect={hoveredEffect} disableHover />}
+          {hoveredAction && contentType === 'actions' && <ActionPreview action={hoveredAction} resources={resourceOptions} disableHover />}
+          {hoveredResource && contentType === 'resources' && <ResourcePreview resource={hoveredResource} disableHover />}
+          {hoveredVariable && contentType === 'variables' && <VariablePreview variable={hoveredVariable} disableHover />}
+        </div>
+      )}
+
       <EffectDetailModal
         effect={selectedEffect}
         isOpen={isEffectModalOpen}

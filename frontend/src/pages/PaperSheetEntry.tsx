@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { ArrowRight, FilePlus2, LogIn, ScrollText } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowRight, FilePlus2, LogIn, RotateCcw, ScrollText, Trash2 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { createPaperSheet, loadPaperSheet, PAPER_SHEET_STORAGE_KEY } from '../paper-sheet/model';
@@ -34,6 +34,11 @@ export default function PaperSheetEntry() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
+  const [deleted, setDeleted] = useState(false);
+  const [removeSheet, setRemoveSheet] = useState<PaperDocumentSummary | null>(null);
+  const [changing, setChanging] = useState(false);
+  const changingRef = useRef(false);
+  const [mutationError, setMutationError] = useState('');
   const [hasLegacy] = useState(() => { try { return localStorage.getItem(PAPER_SHEET_STORAGE_KEY) !== null; } catch { return false; } });
   useEffect(() => {
     if (isLoading) return;
@@ -41,10 +46,21 @@ export default function PaperSheetEntry() {
     setSaved(null); setError(''); setSheets([]);
     if (!id && !isAuthenticated) { setLoading(false); return; }
     setLoading(true);
-    const request = id ? paperDocumentApi.get(id).then(doc => { if (active) setSaved(doc); }) : paperDocumentApi.list().then(rows => { if (active) setSheets(rows); });
+    const request = id ? paperDocumentApi.get(id).then(doc => { if (active) setSaved(doc); }) : paperDocumentApi.list(deleted).then(rows => { if (active) setSheets(rows); });
     void request.catch(cause => { if (active) setError(paperDocumentError(cause)); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [id, isAuthenticated, isLoading, retry]);
+  }, [id, isAuthenticated, isLoading, retry, deleted]);
+  const changeDeletion = async (sheet: PaperDocumentSummary, restore = false) => {
+    if (changingRef.current) return;
+    changingRef.current = true; setChanging(true); setMutationError('');
+    try {
+      if (restore) await paperDocumentApi.restore(sheet.id);
+      else await paperDocumentApi.remove(sheet.id);
+      setSheets(current => current.filter(row => row.id !== sheet.id));
+      setRemoveSheet(null);
+    } catch (cause) { setMutationError(paperDocumentError(cause)); }
+    finally { changingRef.current = false; setChanging(false); }
+  };
   const create = async (legacy = false) => {
     if (creating) return;
     setCreating(true); setError('');
@@ -65,6 +81,12 @@ export default function PaperSheetEntry() {
     </div></section>
     {error && <div className="paper-entry-error" role="alert">{error}<button onClick={() => setRetry(value => value + 1)}>Повторить загрузку</button></div>}
     {hasLegacy && <div className="paper-entry-legacy"><span>В этом браузере есть лист из прежней версии. Он остался без изменений.</span><button disabled={creating} onClick={() => { void create(true); }}>Сохранить его отдельным листом <ArrowRight size={15} /></button></div>}
-    {isAuthenticated && <section className="paper-entry-list"><h2>Ваши листы</h2>{loading ? <p role="status">Загружаем листы…</p> : sheets.length ? <ul>{sheets.map(sheet => <li key={sheet.id}><Link to={`/paper-sheet/${sheet.id}`}><ScrollText size={20} /><span>{sheet.name}<small>Изменён {new Date(sheet.updated_at).toLocaleDateString('ru-RU')}</small></span><ArrowRight size={18} /></Link></li>)}</ul> : <p>Пока здесь пусто. Начните с нового листа или перенесите существующий из браузера.</p>}</section>}
+    {isAuthenticated && <section className="paper-entry-list"><div className="paper-entry-list-heading"><h2>{deleted ? 'Удалённые листы' : 'Ваши листы'}</h2><button disabled={changing} aria-pressed={deleted} onClick={() => { setDeleted(value => !value); setMutationError(''); setRemoveSheet(null); }}>{deleted ? <ScrollText size={16} /> : <Trash2 size={16} />}{deleted ? 'Ваши листы' : 'Удалённые'}</button></div>
+      {mutationError && !removeSheet && <p className="paper-entry-error" role="alert">{mutationError}</p>}
+      {loading ? <p role="status">Загружаем листы…</p> : sheets.length ? <ul>{sheets.map(sheet => <li key={sheet.id}>
+        {deleted ? <div className="paper-entry-sheet-name"><ScrollText size={20} /><span>{sheet.name}<small>Удалён {new Date(sheet.updated_at).toLocaleDateString('ru-RU')}</small></span></div> : <Link to={`/paper-sheet/${sheet.id}`}><ScrollText size={20} /><span>{sheet.name}<small>Изменён {new Date(sheet.updated_at).toLocaleDateString('ru-RU')}</small></span><ArrowRight size={18} /></Link>}
+        <button className="paper-entry-sheet-action" disabled={changing} aria-label={`${deleted ? 'Восстановить' : 'Удалить'} лист «${sheet.name}»`} onClick={() => { if (deleted) void changeDeletion(sheet, true); else { setMutationError(''); setRemoveSheet(sheet); } }}>{deleted ? <RotateCcw size={18} /> : <Trash2 size={18} />}<span>{deleted ? 'Восстановить' : 'Удалить'}</span></button>
+      </li>)}</ul> : <p>{deleted ? 'Удалённых листов нет.' : 'Пока здесь пусто. Начните с нового листа или перенесите существующий из браузера.'}</p>}</section>}
+    {removeSheet && <Dialog heading="Удалить лист?" onClose={() => { if (!changingRef.current) setRemoveSheet(null); }}><p>Лист «{removeSheet.name}» будет перемещён в раздел «Удалённые». Вы сможете восстановить его вместе со всеми записями.</p>{mutationError && <p className="paper-entry-error" role="alert">{mutationError}</p>}<div className="ps-dialog-actions"><button disabled={changing} onClick={() => setRemoveSheet(null)}>Отмена</button><button className="paper-entry-delete-confirm" disabled={changing} onClick={() => { void changeDeletion(removeSheet); }}>{changing ? 'Удаляем…' : 'Удалить лист'}</button></div></Dialog>}
   </div>;
 }

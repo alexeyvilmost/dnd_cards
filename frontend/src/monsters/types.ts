@@ -5,6 +5,7 @@ export type MonsterAbility = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
 
 export interface Monster {
   id: string;
+  author?: string;
   slug: string;
   name: string;
   name_en?: string | null;

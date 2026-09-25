@@ -237,12 +237,12 @@ func (sc *SpellController) CreateSpell(c *gin.Context) {
 		UpcastDescription:   req.UpcastDescription,
 		Mechanics:           req.Mechanics,
 		Type:                req.Type,
-		Author:              req.Author,
+		Author:              contentEntityAuthor(c, req.Author),
 		Source:              req.Source,
 		IsExtended:          req.IsExtended,
 	}
 
-	if req.Author == "" {
+	if spell.Author == "" {
 		spell.Author = "Admin"
 	}
 

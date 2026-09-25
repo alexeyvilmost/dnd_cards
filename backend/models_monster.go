@@ -12,6 +12,7 @@ import (
 // row only owns creature facts and references.
 type Monster struct {
 	ID               uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Author           string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	Slug             string         `json:"slug" gorm:"type:varchar(100);uniqueIndex;not null"`
 	Name             string         `json:"name" gorm:"type:varchar(255);not null"`
 	NameEn           *string        `json:"name_en" gorm:"type:varchar(255)"`

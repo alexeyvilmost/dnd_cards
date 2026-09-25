@@ -7,7 +7,9 @@ function parseDocument(data: SavedPaperDocument): SavedPaperDocument {
   return { ...data, document: importPaperSheet(JSON.stringify(data.document)) };
 }
 export const paperDocumentApi = {
-  async list(): Promise<PaperDocumentSummary[]> { return (await apiClient.get('/api/paper-sheets')).data.sheets; },
+  async list(deleted = false): Promise<PaperDocumentSummary[]> { return (await apiClient.get('/api/paper-sheets', { params: deleted ? { deleted: true } : undefined })).data.sheets; },
+  async remove(id: string): Promise<void> { await apiClient.delete(`/api/paper-sheets/${encodeURIComponent(id)}`); },
+  async restore(id: string): Promise<void> { await apiClient.post(`/api/paper-sheets/${encodeURIComponent(id)}/restore`); },
   async get(id: string): Promise<SavedPaperDocument> { return parseDocument((await apiClient.get(`/api/paper-sheets/${encodeURIComponent(id)}`)).data); },
   async create(document: PaperSheetDocument, anonymous: boolean): Promise<SavedPaperDocument> {
     return parseDocument((await apiClient.post('/api/paper-sheets', { document, anonymous })).data);

@@ -29,7 +29,7 @@ const BackgroundDetailModal: React.FC<BackgroundDetailModalProps> = ({ backgroun
 
   return (
     <EntityDetailShell
-      entity={{type:'background',id:background.id}}
+      entity={{type:'background',id:background.id,author:background.author}}
       isOpen={isOpen}
       onClose={onClose}
       title={b.name}

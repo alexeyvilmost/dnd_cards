@@ -33,6 +33,7 @@ import type { SheetCanonicalRuntime } from '../character/sheetCanonicalWorld';
 import { sheetWorldInputFormContext } from '../character/sheetWorldInputForm';
 import type { ForgeCharacter } from '../character/types';
 import CombatHotbar, { combatActionAvailability } from '../components/CombatHotbar';
+import { WorkspaceExpandButton } from '../components/WorkspaceNavigation';
 import CombatTriggeredActionPanel from '../components/CombatTriggeredActionPanel';
 import CombatActorInspector from '../components/CombatActorInspector';
 import CombatCharacterSidebar from '../components/CombatCharacterSidebar';
@@ -1149,7 +1150,7 @@ export default function SoloCombatPage() {
       {settingsOpen && <SheetSettingsDialog onClose={() => setSettingsOpen(false)} />}
       <MonsterTurnController state={state} disabled={presentation.blocked || Boolean(trustedRunRef.current) || busy || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt)} onTransition={apply} onError={setError} />
       <header className="combat-topbar">
-        <div className="combat-topbar__navigation"><Link to={roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`}><ArrowLeft size={18} /> {roguelikeRunId ? 'Забег' : 'Лист'}</Link><button type="button" className="combat-settings-button" onClick={() => setSettingsOpen(true)} aria-label="Настройки боя" aria-description="Настройки боя"><SlidersHorizontal size={16} /><span>Настройки</span></button>{!roguelikeRunId && <button type="button" onClick={() => setSceneConstructorOpen(true)}><SlidersHorizontal size={16} /> Сцена</button>}</div>
+        <div className="combat-topbar__navigation"><Link to={roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`}><ArrowLeft size={18} /> {roguelikeRunId ? 'Забег' : 'Лист'}</Link>{!roguelikeRunId && <button type="button" onClick={() => setSceneConstructorOpen(true)}><SlidersHorizontal size={16} /> Сцена</button>}</div>
         <div className="initiative-ribbon" aria-label="Порядок инициативы">
           {state.initiative.map((entry, index) => {
             const participant = state.world.actors[entry.actorId];
@@ -1169,7 +1170,7 @@ export default function SoloCombatPage() {
             </button>;
           })}
         </div>
-        <div className="combat-round">Раунд {state.world.scene.mode === 'encounter' ? state.world.scene.round : 1}<b>{busy ? 'Сохраняем…' : `Ход: ${combatActorDisplayName(actor)}`}</b></div>
+        <div className="combat-topbar__right"><div className="combat-topbar__actions"><button type="button" className="combat-settings-button" onClick={() => setSettingsOpen(true)} aria-label="Настройки боя"><SlidersHorizontal size={16} /><span className="sheet-header-btn-label">Настройки</span></button><WorkspaceExpandButton className="combat-settings-button" /></div><div className="combat-round">Раунд {state.world.scene.mode === 'encounter' ? state.world.scene.round : 1}<b>{busy ? 'Сохраняем…' : `Ход: ${combatActorDisplayName(actor)}`}</b></div></div>
       </header>
       {error && <div className="combat-error" role="alert"><span>{error}</span><button type="button" onClick={() => setError(null)}><X size={16} /></button></div>}
       <section className="combat-stage">

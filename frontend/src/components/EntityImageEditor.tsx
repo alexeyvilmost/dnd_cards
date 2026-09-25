@@ -3,6 +3,7 @@ import { RefreshCw, ImagePlus } from 'lucide-react';
 import { imagesApi, type StandaloneImageRequest } from '../api/imagesApi';
 import ImageUploader from './ImageUploader';
 import { useEntityDetail } from '../contexts/entityDetail';
+import { useContentPermissions } from '../hooks/useContentPermissions';
 
 // Общий блок смены изображения в детальном окне сущности (как у заклинаний):
 // превью + «Перегенерировать» (ИИ) + «Загрузить», с частичным PUT сущности.
@@ -12,6 +13,7 @@ export const ICON_EXTRA =
 
 interface Props {
   entityId: string;
+  author?: string;
   initialUrl: string;
   /** Частичный PUT сущности с новым image_url; возвращает сохранённый url. */
   persist: (id: string, url: string) => Promise<string>;
@@ -22,8 +24,10 @@ interface Props {
   onUpdated?: (url: string) => void;
 }
 
-export default function EntityImageEditor({ entityId, initialUrl, persist, generateReq, renderPreview, onUpdated }: Props) {
+export default function EntityImageEditor({ entityId, author, initialUrl, persist, generateReq, renderPreview, onUpdated }: Props) {
   const { readOnly = false } = useEntityDetail();
+  const { admin, canEdit } = useContentPermissions();
+  const locked = readOnly || !canEdit({ author });
   const [imageUrl, setImageUrl] = useState(initialUrl);
   const [busy, setBusy] = useState<null | 'gen' | 'save'>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +41,7 @@ export default function EntityImageEditor({ entityId, initialUrl, persist, gener
   }, [entityId, initialUrl]);
 
   const applyImage = async (url: string) => {
-    if (readOnly || !url) return;
+    if (locked || !url) return;
     setBusy('save');
     setError(null);
     try {
@@ -54,7 +58,7 @@ export default function EntityImageEditor({ entityId, initialUrl, persist, gener
   };
 
   const handleGenerate = async () => {
-    if (readOnly || !generateReq) return;
+    if (locked || !admin || !generateReq) return;
     setBusy('gen');
     setError(null);
     try {
@@ -71,14 +75,14 @@ export default function EntityImageEditor({ entityId, initialUrl, persist, gener
     }
   };
 
-  if (readOnly) return <>{renderPreview(imageUrl)}</>;
+  if (locked) return <>{renderPreview(imageUrl)}</>;
 
   return (
     <>
       {renderPreview(imageUrl)}
       <div className="w-full max-w-xs space-y-2">
         <div className="flex gap-2">
-          {generateReq && (
+          {admin && generateReq && (
             <button
               type="button"
               onClick={handleGenerate}

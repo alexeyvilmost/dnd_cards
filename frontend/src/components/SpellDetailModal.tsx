@@ -80,7 +80,7 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
 
   return (
     <EntityDetailShell
-      entity={{type:'spell',id:spell.id}}
+      entity={{type:'spell',id:spell.id,author:spell.author}}
       isOpen={isOpen}
       onClose={onClose}
       title={spell.name}
@@ -88,6 +88,7 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
       preview={(
         <EntityImageEditor
           entityId={spell.id}
+          author={spell.author}
           initialUrl={spell.image_url || ''}
           persist={async (id, url) => (await spellsApi.updateSpell(id, { image_url: url })).image_url || url}
           generateReq={{ style: 'spell_icon', subject: spell.name, element: spellElement(spell), extra: SPELL_ICON_EXTRA, quality: 'medium' }}

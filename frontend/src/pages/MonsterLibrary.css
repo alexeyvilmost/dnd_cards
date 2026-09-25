@@ -3,6 +3,7 @@
 .monster-secondary{display:inline-flex;align-items:center;justify-content:center;margin-top:8px;border:1px solid #b99f79;border-radius:10px;padding:9px 13px;background:#fff8eb;color:#70402c;font-weight:700;cursor:pointer}.monster-secondary:disabled{opacity:.45;cursor:not-allowed}
 
 /* Preserve canonical entity appearance under the dark shared page chrome. */
-.monster-card { color: #2d241a; }
+.monster-card { color: #2d241a; text-decoration: none; transition: transform .18s ease, box-shadow .18s ease; }
+.monster-card:hover, .monster-card:focus-visible { color: #2d241a; text-decoration: none; transform: translateY(-2px); box-shadow: 0 10px 28px #5b462344; }
 .monster-library__controls { display: flex; flex-direction: column; gap: 14px; }
 .monster-library__grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }

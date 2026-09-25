@@ -5,6 +5,7 @@ import './entityDetailModal.css';
 import EntityTags from './EntityTags';
 import type {TaggedEntityType} from '../api/entityTags';
 import { useEntityDetail } from '../contexts/entityDetail';
+import { useContentPermissions } from '../hooks/useContentPermissions';
 
 /**
  * Единое детальное окно сущности — в стиле предметов (CardDetailModal): БЕЗ
@@ -37,9 +38,10 @@ export function EntityDetailShell({
   children: ReactNode;
   maxWidth?: number;
   labelledById?: string;
-  entity?: {type:TaggedEntityType;id:string};
+  entity?: {type:TaggedEntityType;id:string;author?:string};
 }) {
   const { readOnly = false } = useEntityDetail();
+  const { canEdit } = useContentPermissions();
   // Закрытие по клику на фон — только если и нажатие, и отпускание были на самом
   // оверлее (иначе перетаскивание/выделение, начатое внутри и завершённое на
   // фоне, ошибочно закрывало бы окно).
@@ -86,7 +88,7 @@ export function EntityDetailShell({
 
           {entity && <EntityTags type={entity.type} id={entity.id}/>}
 
-          {!readOnly && actions && <div className="edm-actions">{actions}</div>}
+          {!readOnly && entity && canEdit(entity) && actions && <div className="edm-actions">{actions}</div>}
         </div>
       </div>
     </div>

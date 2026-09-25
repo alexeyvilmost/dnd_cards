@@ -43,7 +43,7 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
 
   return (
     <EntityDetailShell
-      entity={{type:'action',id:action.id}}
+      entity={{type:'action',id:action.id,author:action.author}}
       isOpen={isOpen}
       onClose={onClose}
       title={action.name}
@@ -51,6 +51,7 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
       preview={(
         <EntityImageEditor
           entityId={action.id}
+          author={action.author}
           initialUrl={action.image_url || ''}
           persist={async (id, url) => (await actionsApi.updateAction(id, { image_url: url })).image_url || url}
           generateReq={{ style: 'spell_icon', subject: action.name, quality: 'medium', extra: ICON_EXTRA }}

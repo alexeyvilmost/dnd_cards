@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, User } from 'lucide-react';
+import { Plus, Trash2, User, Users } from 'lucide-react';
 import { characterV3ErrorMessage, charactersV3Api } from '../character/api';
 import { racesApi, classesApi } from '../api/client';
 import {
@@ -70,21 +70,13 @@ const CharactersForgeList = () => {
 
   return (
     <div className="forge characters-roster-page">
-      <div className="forge-header sheet-header-bar">
-        <Link to="/" className="sheet-back" aria-label="На главную">
-          <ArrowLeft size={18} />
-        </Link>
-        <span>Персонажи</span>
-        <button type="button" className="forge-btn ghost" onClick={() => setShowTemplates(v => !v)} aria-expanded={showTemplates}>Создать из шаблона</button>
-        <Link to="/character-forge" className="sheet-edit" aria-label="Создать">
-          <Plus size={18} />
-        </Link>
-      </div>
       <div className="sheet-scroll">
         <section className="characters-roster-intro" aria-labelledby="characters-roster-heading">
+          <Users size={30} strokeWidth={1.3} aria-hidden="true" />
           <span>ВАША КОЛЛЕКЦИЯ ГЕРОЕВ</span>
-          <h1 id="characters-roster-heading">Истории начинаются здесь.</h1>
+          <h1 id="characters-roster-heading">Персонажи</h1>
           <p>Создайте нового героя или продолжите приключение с теми, кто уже в пути.</p>
+          <div className="characters-roster-actions"><Link to="/character-forge" className="forge-btn"><Plus size={17} />Создать персонажа</Link><button type="button" className="forge-btn ghost" onClick={() => setShowTemplates(v => !v)} aria-expanded={showTemplates}>Создать из шаблона</button></div>
         </section>
         {showTemplates && <CharacterTemplateLibrary />}
         {loading && <p className="forge-note">Загрузка…</p>}

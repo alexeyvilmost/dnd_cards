@@ -7,6 +7,7 @@ import CardLibrary from '../../pages/CardLibrary';
 
 const mocks = vi.hoisted(() => ({ token: 'admin' as string | null, canManage: true, mobile: false, list: vi.fn(), detail: vi.fn(), bulk: vi.fn(), catalog: vi.fn() }));
 vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ token: mocks.token }) }));
+vi.mock('../../hooks/useContentPermissions', () => ({ useContentPermissions: () => ({ admin: mocks.canManage, canCreate: (kind: string) => Boolean(mocks.token && (mocks.canManage || kind === 'cards' || kind === 'spells')) }) }));
 vi.mock('../../settings', () => ({ useSiteSettings: () => ({ itemPreview: 'interface' }) }));
 vi.mock('../../hooks/useIsMobile', () => ({ useIsMobile: () => mocks.mobile }));
 vi.mock('../../hooks/usePinMode', () => ({ usePinMode: () => ({ pinModeActive: false }) }));
@@ -170,7 +171,7 @@ describe('item library interactions', () => {
     expect(items).toHaveLength(2);
     for(const item of items){
       expect(item.closest('.library-chrome-panel,.library-chrome-filters')).toBeNull();
-      expect(item.querySelector('.bg-white')).not.toBeNull();
+      expect(item.querySelector('.library-item-row')).not.toBeNull();
     }
   });
 });

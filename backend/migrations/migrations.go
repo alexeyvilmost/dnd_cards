@@ -1492,6 +1492,8 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		OAuth263Migration(),
 		{Version: "264_paper_documents", Description: "Persistent paper documents with private ownership and anonymous edit links", Up: addPaperDocuments264, Down: func(db *sql.DB) error { return nil }},
 		{Version: "265_owned_item_grants", Description: "Preserve existing item access for owned sheets separately from the public library", Up: AddOwnedItemGrants265, Down: RefuseOwnedItemGrants265Down},
+		{Version: "266_paper_document_trash", Description: "Recoverable deletion of owned paper sheets", Up: addPaperDocumentTrash266, Down: refusePaperDocumentTrash266Down},
+		{Version: "267_content_entity_authorship", Description: "Authorship on all library entities for owner editing", Up: addContentEntityAuthorship267, Down: refuseContentEntityAuthorship267Down},
 		// Здесь можно добавлять новые миграции
 	}
 }

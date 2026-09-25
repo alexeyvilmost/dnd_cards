@@ -1,0 +1,8 @@
+#site-navigation[hidden] { display: none !important; }
+.site-layout-workspace > main { max-width: none; padding: 0; }
+.site-layout-workspace > main > .forge { top: var(--site-navigation-height, 0px); }
+.site-layout-workspace .solo-combat-page { min-height: calc(100dvh - var(--site-navigation-height, 0px)); }
+.site-layout-workspace .combat-stage { height: calc(100dvh - var(--site-navigation-height, 0px) - 286px); min-height: 260px; }
+@media (max-width: 560px) {
+  .site-layout-workspace .combat-stage { height: calc(100dvh - var(--site-navigation-height, 0px) - 323px - env(safe-area-inset-bottom)); }
+}

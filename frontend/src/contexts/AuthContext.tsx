@@ -157,3 +157,6 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+
+/** Read-only public previews may render outside the app provider in tests. */
+export const useOptionalAuth = (): AuthContextType | null => useContext(AuthContext) ?? null;

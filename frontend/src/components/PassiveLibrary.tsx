@@ -18,10 +18,10 @@ export default function PassiveLibrary({search='',mode,tag=''}:{search?:string;m
     <h2>Переключаемые пассивы</h2>
     <p>Оформление настроек боя. Изменение карточки не меняет правила её срабатывания.</p>
     {catalog.error && <p role="alert">{catalog.error} <button onClick={()=>void loadPassiveCatalog(true)}>Повторить</button></p>}
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">{rows.map(row=><article key={row.key} className="rounded-lg border p-4 flex items-center gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">{rows.map(row=><article key={row.key} className={displayMode === 'row' ? 'library-entity-row rounded-lg p-3 flex items-center gap-3' : 'rounded-lg border p-4 flex items-center gap-3'}>
       <SheetActionLine name={row.name} effectRef={passivePresentationEffect(row)} imageUrl={row.image_url || '/icons/resources/action.png'}
-        variant={displayMode} iconShape="round" onActivate={()=>navigate(`/passive-creator?edit=${encodeURIComponent(row.key)}`)}/>
-      {displayMode === 'icon' && <div><Link to={`/passive-creator?edit=${encodeURIComponent(row.key)}`}>{row.name}</Link><small className="block">{catalog.can_manage?'Открыть в конструкторе':'Посмотреть оформление'}</small></div>}
+        variant={displayMode} iconShape="round" onActivate={()=>navigate(`/entity/passives/${encodeURIComponent(row.key)}`)}/>
+      {displayMode === 'icon' && <div><Link to={`/entity/passives/${encodeURIComponent(row.key)}`}>{row.name}</Link></div>}
     </article>)}</div>
     {!rows.length && <p>{catalog.loading ? 'Загрузка оформления…' : 'Пассивы не найдены.'}</p>}
   </section>;

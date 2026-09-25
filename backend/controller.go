@@ -566,7 +566,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		DetailedDescriptionAlignment: req.DetailedDescriptionAlignment,
 		DetailedDescriptionFontSize:  req.DetailedDescriptionFontSize,
 		IsExtended:                   req.IsExtended,
-		Author:                       req.Author,
+		Author:                       contentEntityAuthor(c, req.Author),
 		Source:                       defaultItemSource(req.Source),
 		Type:                         req.Type,
 		WeaponType:                   req.WeaponType,

@@ -20,6 +20,7 @@ type paperDocument struct {
 	Revision  int64           `json:"revision"`
 	CreatedAt time.Time       `json:"created_at"`
 	UpdatedAt time.Time       `json:"updated_at"`
+	DeletedAt gorm.DeletedAt  `gorm:"index" json:"-"`
 }
 
 func (paperDocument) TableName() string { return "paper_documents" }
@@ -84,7 +85,13 @@ func registerPaperDocumentRoutes(r *gin.Engine, auth *AuthService, db *gorm.DB) 
 			Name      string    `json:"name"`
 			UpdatedAt time.Time `json:"updated_at"`
 		}
-		err := db.Table("paper_documents").Select("id, COALESCE(NULLIF(document->'fields'->>'name', ''), 'Безымянный персонаж') AS name, updated_at").Where("owner_id = ?", userID).Order("updated_at DESC").Limit(100).Scan(&rows).Error
+		query := db.Table("paper_documents").Select("id, COALESCE(NULLIF(document->'fields'->>'name', ''), 'Безымянный персонаж') AS name, updated_at").Where("owner_id = ?", userID)
+		if c.Query("deleted") == "true" {
+			query = query.Where("deleted_at IS NOT NULL")
+		} else {
+			query = query.Where("deleted_at IS NULL")
+		}
+		err := query.Order("updated_at DESC").Limit(100).Scan(&rows).Error
 		if err != nil {
 			c.JSON(500, gin.H{"error": "Не удалось загрузить листы"})
 			return
@@ -95,6 +102,38 @@ func registerPaperDocumentRoutes(r *gin.Engine, auth *AuthService, db *gorm.DB) 
 		}
 		c.JSON(200, gin.H{"sheets": rows})
 	})
+	// Only an owner may remove/restore a private document. Anonymous edit links
+	// do not confer ownership. Keep data intact and invalidate stale editor revisions.
+	setDeleted := func(deleted bool) gin.HandlerFunc {
+		return func(c *gin.Context) {
+			id, err := uuid.Parse(c.Param("id"))
+			if err != nil {
+				c.JSON(404, gin.H{"error": "Лист не найден"})
+				return
+			}
+			userID, _ := GetCurrentUserID(c)
+			query := db.Unscoped().Model(&paperDocument{}).Where("id = ? AND owner_id = ?", id, userID)
+			var deletedAt any
+			if deleted {
+				query = query.Where("deleted_at IS NULL")
+				deletedAt = time.Now()
+			} else {
+				query = query.Where("deleted_at IS NOT NULL")
+			}
+			result := query.Updates(map[string]any{"deleted_at": deletedAt, "updated_at": time.Now(), "revision": gorm.Expr("revision + 1")})
+			if result.Error != nil {
+				c.JSON(500, gin.H{"error": "Не удалось изменить состояние листа"})
+				return
+			}
+			if result.RowsAffected == 0 {
+				c.JSON(404, gin.H{"error": "Лист не найден, уже перемещён или доступен только владельцу"})
+				return
+			}
+			c.Status(http.StatusNoContent)
+		}
+	}
+	group.DELETE("/:id", StrictAuthMiddleware(auth), setDeleted(true))
+	group.POST("/:id/restore", StrictAuthMiddleware(auth), setDeleted(false))
 	group.POST("", NewFixedWindowRateLimiter(20, time.Hour).Handler(), func(c *gin.Context) {
 		var req struct {
 			Document  json.RawMessage `json:"document"`

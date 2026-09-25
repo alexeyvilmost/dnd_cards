@@ -347,7 +347,7 @@ const (
 // Card - модель карточки
 type Card struct {
 	// Frozen wire snapshot for pre-258 certification hashes; never used as library tags.
-	LegacyTags *Properties `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
+	LegacyTags                   *Properties    `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
 	ID                           uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                         string         `json:"name" gorm:"not null"`
 	NameEn                       *string        `json:"name_en" gorm:"type:varchar(255)"`
@@ -515,7 +515,7 @@ type ExportCardsRequest struct {
 
 // CardResponse - ответ с карточкой
 type CardResponse struct {
-	LegacyTags *Properties `json:"tags"`
+	LegacyTags                   *Properties    `json:"tags"`
 	ID                           uuid.UUID      `json:"id"`
 	Name                         string         `json:"name"`
 	NameEn                       *string        `json:"name_en"`
@@ -809,7 +809,7 @@ func ResolveCustomRarityColor(rarity Rarity, requested *string, existing *string
 // ToCardResponse преобразует модель карты в API-ответ.
 func (card Card) ToCardResponse() CardResponse {
 	return CardResponse{
-		LegacyTags: card.LegacyTags,
+		LegacyTags:                   card.LegacyTags,
 		ID:                           card.ID,
 		Name:                         card.Name,
 		NameEn:                       card.NameEn,
@@ -982,7 +982,7 @@ type User struct {
 	ID           uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Username     string         `json:"username" gorm:"uniqueIndex;not null"`
 	Email        string         `json:"email" gorm:"uniqueIndex"` // NULL for OAuth-only accounts; never used for automatic linking.
-	PasswordHash string         `json:"-" gorm:"not null"` // Хеш пароля (не возвращаем в JSON)
+	PasswordHash string         `json:"-" gorm:"not null"`        // Хеш пароля (не возвращаем в JSON)
 	DisplayName  string         `json:"display_name" gorm:"not null"`
 	CreatedAt    time.Time      `json:"created_at"`
 	UpdatedAt    time.Time      `json:"updated_at"`
@@ -1461,6 +1461,7 @@ func (ar ActionResources) Value() (driver.Value, error) {
 // ResourceDefinition — справочник ресурсов, которые тратят действия и механики.
 type ResourceDefinition struct {
 	ID          uuid.UUID `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Author      string    `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	ResourceID  string    `json:"resource_id" gorm:"uniqueIndex;not null;type:varchar(100)"`
 	Name        string    `json:"name" gorm:"not null;type:varchar(255)"`
 	NameEn      *string   `json:"name_en" gorm:"type:varchar(255)"`
@@ -1507,6 +1508,7 @@ type UpdateResourceRequest struct {
 // привязанные к уровням класса. Доступна в формулах. См. docs/variables.md.
 type Variable struct {
 	ID           uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Author       string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	VariableID   string         `json:"variable_id" gorm:"uniqueIndex;not null;type:varchar(100)"` // slug для ссылок в формулах
 	Name         string         `json:"name" gorm:"not null;type:varchar(255)"`
 	NameEn       *string        `json:"name_en" gorm:"type:varchar(255)"`
@@ -1549,6 +1551,7 @@ type UpdateVariableRequest struct {
 // переменных: глобальный общий справочник (name + описание + иконка).
 type ConceptEntity struct {
 	ID          uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Author      string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	ConceptID   string         `json:"concept_id" gorm:"uniqueIndex;not null;type:varchar(100)"` // slug для ссылок
 	Name        string         `json:"name" gorm:"not null;type:varchar(255)"`
 	NameEn      *string        `json:"name_en" gorm:"type:varchar(255)"`
@@ -1702,7 +1705,7 @@ func (cr CharacterResources) Value() (driver.Value, error) {
 // Action - модель действия D&D
 type Action struct {
 	// Frozen wire snapshot for pre-258 certification hashes; never used as library tags.
-	LegacyTags *Properties `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
+	LegacyTags                   *Properties     `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
 	ID                           uuid.UUID       `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                         string          `json:"name" gorm:"not null"`
 	NameEn                       *string         `json:"name_en" gorm:"type:varchar(255)"`
@@ -1815,7 +1818,7 @@ type UpdateActionRequest struct {
 
 // ActionResponse - ответ с действием
 type ActionResponse struct {
-	LegacyTags *Properties `json:"tags"`
+	LegacyTags                   *Properties      `json:"tags"`
 	ID                           uuid.UUID        `json:"id"`
 	Name                         string           `json:"name"`
 	NameEn                       *string          `json:"name_en"`
@@ -1855,7 +1858,7 @@ type ActionResponse struct {
 func (a Action) ToActionResponse() ActionResponse {
 	return ActionResponse{
 		LegacyTags: a.LegacyTags,
-		ID: a.ID, Name: a.Name, NameEn: a.NameEn, Description: a.Description, DetailedDescription: a.DetailedDescription,
+		ID:         a.ID, Name: a.Name, NameEn: a.NameEn, Description: a.Description, DetailedDescription: a.DetailedDescription,
 		ImageURL: a.ImageURL, Rarity: a.Rarity, CardNumber: a.CardNumber,
 		Resources: a.Resource, Distance: a.Distance, Recharge: a.Recharge, RechargeCustom: a.RechargeCustom,
 		Script: a.Script, Mechanics: a.Mechanics, Support: a.Support, ActionType: a.ActionType, Type: a.Type,
@@ -1938,7 +1941,7 @@ const (
 // Effect - модель пассивного эффекта D&D
 type Effect struct {
 	// Frozen wire snapshot for pre-258 certification hashes; never used as library tags.
-	LegacyTags *Properties `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
+	LegacyTags                   *Properties    `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
 	ID                           uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                         string         `json:"name" gorm:"not null"`
 	NameEn                       *string        `json:"name_en" gorm:"type:varchar(255)"`
@@ -2048,7 +2051,7 @@ type UpdateEffectRequest struct {
 
 // EffectResponse - ответ с эффектом
 type EffectResponse struct {
-	LegacyTags *Properties `json:"tags"`
+	LegacyTags                   *Properties           `json:"tags"`
 	ID                           uuid.UUID             `json:"id"`
 	Name                         string                `json:"name"`
 	NameEn                       *string               `json:"name_en"`
@@ -2088,7 +2091,7 @@ type EffectResponse struct {
 func (e Effect) ToEffectResponse() EffectResponse {
 	return EffectResponse{
 		LegacyTags: e.LegacyTags,
-		ID: e.ID, Name: e.Name, NameEn: e.NameEn, Description: e.Description, DetailedDescription: e.DetailedDescription,
+		ID:         e.ID, Name: e.Name, NameEn: e.NameEn, Description: e.Description, DetailedDescription: e.DetailedDescription,
 		ImageURL: e.ImageURL, Rarity: e.Rarity, CardNumber: e.CardNumber, EffectType: e.EffectType,
 		ConditionDescription: e.ConditionDescription, Script: e.Script, Mechanics: e.Mechanics, Support: e.Support,
 		Type: e.Type, Author: e.Author, Source: e.Source,
@@ -2236,7 +2239,7 @@ func (sd SpellDamage) Value() (driver.Value, error) {
 // Spell - модель заклинания D&D
 type Spell struct {
 	// Frozen wire snapshot for pre-258 certification hashes; never used as library tags.
-	LegacyTags *Properties `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
+	LegacyTags            *Properties    `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
 	ID                    uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Name                  string         `json:"name" gorm:"not null"`
 	NameEn                *string        `json:"name_en" gorm:"type:varchar(255)"`
@@ -2359,7 +2362,7 @@ type UpdateSpellRequest struct {
 
 // SpellResponse - ответ с заклинанием
 type SpellResponse struct {
-	LegacyTags *Properties `json:"tags"`
+	LegacyTags          *Properties  `json:"tags"`
 	ID                  uuid.UUID    `json:"id"`
 	Name                string       `json:"name"`
 	NameEn              *string      `json:"name_en"`
@@ -2401,7 +2404,7 @@ type SpellResponse struct {
 // ToSpellResponse преобразует модель заклинания в API-ответ.
 func (spell Spell) ToSpellResponse() SpellResponse {
 	return SpellResponse{
-		LegacyTags: spell.LegacyTags,
+		LegacyTags:          spell.LegacyTags,
 		ID:                  spell.ID,
 		Name:                spell.Name,
 		NameEn:              spell.NameEn,

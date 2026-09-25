@@ -10,7 +10,7 @@ import (
 // main currently wires concrete controllers directly, so this source-level
 // route contract protects the authorization boundary without constructing the
 // full application (which would require PostgreSQL and external services).
-func TestGlobalContentCRUDMutationsUseContentAdminAllowlist(t *testing.T) {
+func TestGlobalContentCRUDMutationsUseContentOwnershipBoundary(t *testing.T) {
 	sourceBytes, err := os.ReadFile("main.go")
 	if err != nil {
 		t.Fatal(err)
@@ -22,7 +22,7 @@ func TestGlobalContentCRUDMutationsUseContentAdminAllowlist(t *testing.T) {
 
 	collections := []string{
 		"cards", "actions", "effects", "spells", "feats", "backgrounds",
-		"races", "classes", "resources", "variables", "concepts",
+		"races", "classes", "resources", "variables", "concepts", "monsters",
 	}
 	for _, collection := range collections {
 		for _, route := range []struct {
@@ -34,10 +34,10 @@ func TestGlobalContentCRUDMutationsUseContentAdminAllowlist(t *testing.T) {
 			{method: "DELETE", path: "/" + collection + "/:id"},
 		} {
 			pattern := regexp.MustCompile(
-				`api\.` + route.method + `\("` + regexp.QuoteMeta(route.path) + `",\s*contentAdminAuth,`,
+				`api\.` + route.method + `\("` + regexp.QuoteMeta(route.path) + `",\s*ContentEntityMutation\(authService, db, "` + collection + `", (?:true|false)\),`,
 			)
 			if !pattern.MatchString(source) {
-				t.Errorf("%s %s must use contentAdminAuth", route.method, route.path)
+				t.Errorf("%s %s must use ContentEntityMutation", route.method, route.path)
 			}
 		}
 	}
@@ -54,9 +54,7 @@ func TestGlobalContentCRUDMutationsUseContentAdminAllowlist(t *testing.T) {
 		}
 	}
 	for _, routePattern := range []string{
-		`protected\.POST\("/images/upload",\s*contentAdminAuth,`,
 		`protected\.POST\("/images/generate",\s*contentAdminAuth,`,
-		`protected\.DELETE\("/images/:entity_type/:entity_id",\s*contentAdminAuth,`,
 		`protected\.POST\("/images/setup-cors",\s*contentAdminAuth,`,
 		`protected\.GET\("/images/status",\s*contentAdminAuth,`,
 		`protected\.POST\("/image-library",\s*contentAdminAuth,`,
@@ -67,6 +65,14 @@ func TestGlobalContentCRUDMutationsUseContentAdminAllowlist(t *testing.T) {
 	} {
 		if !regexp.MustCompile(routePattern).MatchString(source) {
 			t.Errorf("global image-library mutation is not content-admin-only: %s", routePattern)
+		}
+	}
+	for _, routePattern := range []string{
+		`protected\.POST\("/images/upload",\s*StrictAuthMiddleware\(authService\),\s*RequestBodyLimitMiddleware\(12<<20\),\s*ContentEntityImageMutation\(db\),`,
+		`protected\.DELETE\("/images/:entity_type/:entity_id",\s*StrictAuthMiddleware\(authService\),\s*ContentEntityImageMutation\(db\),`,
+	} {
+		if !regexp.MustCompile(routePattern).MatchString(source) {
+			t.Errorf("owned image route lacks strict owner boundary: %s", routePattern)
 		}
 	}
 	for _, routePattern := range []string{

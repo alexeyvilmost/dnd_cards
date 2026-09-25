@@ -1,5 +1,6 @@
 import SheetFeatureSections from '../components/SheetFeatureSections';
 import SheetTogglePassives from '../components/SheetTogglePassives';
+import { WorkspaceExpandButton } from '../components/WorkspaceNavigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
@@ -215,7 +216,7 @@ const CharacterSheetMVP = () => {
       return next;
     });
   }, []);
-  const rootCls = isMobile && paperTheme ? 'forge sheet-paper' : 'forge';
+  const rootCls = isMobile && paperTheme ? 'forge interactive-sheet sheet-paper' : 'forge interactive-sheet';
   const [useV2, setUseV2] = useState<boolean>(() => {
     try { return localStorage.getItem('sheet-layout') === 'v2'; } catch { return false; }
   });
@@ -1098,6 +1099,7 @@ const CharacterSheetMVP = () => {
             <SettingsIcon size={16} />
             <span className="sheet-header-btn-label">Настройки</span>
           </button>
+          <WorkspaceExpandButton />
           {!readOnly && isMobile && (
             <button
               type="button"
