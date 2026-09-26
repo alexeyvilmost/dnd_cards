@@ -2,14 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"io"
-	"net/http"
-	"strings"
 )
 
 type AudioCue struct {
@@ -93,9 +95,14 @@ func registerAudioRoutes(api *gin.RouterGroup, auth *AuthService, db *gorm.DB) {
 		c.JSON(200, gin.H{"saved": true})
 	})
 	routes.POST("/upload", ContentAdminAuthMiddleware(auth), func(c *gin.Context) {
-		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 16<<20)
-		if err := c.Request.ParseMultipartForm(16 << 20); err != nil {
-			c.JSON(400, gin.H{"error": "Максимальный размер — 15 МБ"})
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxMultipartSafetyBytes)
+		if err := c.Request.ParseMultipartForm(8 << 20); err != nil {
+			var sizeError *http.MaxBytesError
+			if errors.As(err, &sizeError) {
+				c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "Загрузка превышает защитный предел сервера"})
+			} else {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Не удалось прочитать файл звука"})
+			}
 			return
 		}
 		defer c.Request.MultipartForm.RemoveAll()
@@ -105,8 +112,8 @@ func registerAudioRoutes(api *gin.RouterGroup, auth *AuthService, db *gorm.DB) {
 			return
 		}
 		f, err := c.FormFile("file")
-		if err != nil || f.Size > 15<<20 {
-			c.JSON(400, gin.H{"error": "Выберите WAV, MP3 или OGG до 15 МБ"})
+		if err != nil {
+			c.JSON(400, gin.H{"error": "Выберите WAV, MP3 или OGG"})
 			return
 		}
 		src, err := f.Open()
@@ -115,12 +122,13 @@ func registerAudioRoutes(api *gin.RouterGroup, auth *AuthService, db *gorm.DB) {
 			return
 		}
 		defer src.Close()
-		data, err := io.ReadAll(io.LimitReader(src, (15<<20)+1))
-		if err != nil || len(data) > 15<<20 {
-			c.JSON(400, gin.H{"error": "Слишком большой файл"})
+		header := make([]byte, 16)
+		n, err := io.ReadFull(src, header)
+		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
+			c.JSON(400, gin.H{"error": "Не удалось прочитать звук"})
 			return
 		}
-		contentType, ext := audioMediaType(data)
+		contentType, ext := audioMediaType(header[:n])
 		if ext == "" {
 			c.JSON(400, gin.H{"error": "Нужен WAV, MP3 или OGG, а не файл другого типа"})
 			return
@@ -130,7 +138,7 @@ func registerAudioRoutes(api *gin.RouterGroup, auth *AuthService, db *gorm.DB) {
 			c.JSON(503, gin.H{"error": "Ключи Yandex Storage не настроены на сервере"})
 			return
 		}
-		url, objectKey, err := storage.UploadImageFromBytes(c.Request.Context(), data, "sound"+ext, contentType, "audio/entities")
+		url, objectKey, err := storage.UploadFile(c.Request.Context(), f, "audio/entities", ext, contentType)
 		if err != nil {
 			c.JSON(502, gin.H{"error": "Не удалось загрузить звук в хранилище"})
 			return

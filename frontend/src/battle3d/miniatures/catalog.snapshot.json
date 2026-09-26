@@ -1,0 +1,161 @@
+{
+  "capturedAt": "2026-09-26",
+  "source": "Local API /api/monsters?limit=500, development snapshot",
+  "total": 22,
+  "monsters": [
+    {
+      "id": "40d15b33-bfac-4438-a3ea-7ed0c0d3ff0a",
+      "slug": "audit-20260905-dummy",
+      "name": "AUDIT-20260905 — Манекен",
+      "size": "medium",
+      "creature_type": "construct"
+    },
+    {
+      "id": "6e4161b2-07be-4b8a-86b0-6488f7b0e761",
+      "slug": "audit-release-dummy-20260906",
+      "name": "AUDIT-20260906 — Манекен после релиза",
+      "size": "medium",
+      "creature_type": "humanoid"
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000014",
+      "slug": "bugbear-warrior",
+      "name": "Багбир-воин",
+      "size": "medium",
+      "creature_type": "fey (goblinoid)"
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000013",
+      "slug": "dire-wolf",
+      "name": "Лютый волк",
+      "size": "large",
+      "creature_type": "beast"
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000012",
+      "slug": "animated-armor",
+      "name": "Оживший доспех",
+      "size": "medium",
+      "creature_type": "construct"
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000011",
+      "slug": "tough",
+      "name": "Громила",
+      "size": "medium",
+      "creature_type": "humanoid"
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000010",
+      "slug": "hobgoblin-warrior",
+      "name": "Хобгоблин-воин",
+      "size": "medium",
+      "creature_type": "fey (goblinoid)"
+    },
+    {
+      "id": "24b39706-f71a-4813-9994-efa831b42604",
+      "slug": "qa-l2-skeleton-20260903",
+      "name": "QA-L2-Скелет",
+      "size": "medium",
+      "creature_type": "undead"
+    },
+    {
+      "id": "c1000000-0000-4000-8000-000000000003",
+      "slug": "wolf",
+      "name": "Волк",
+      "size": "medium",
+      "creature_type": "beast"
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000009",
+      "slug": "giant-wolf-spider",
+      "name": "Гигантский волчий паук",
+      "size": "medium",
+      "creature_type": "beast"
+    },
+    {
+      "id": "c1000000-0000-4000-8000-000000000001",
+      "slug": "goblin-warrior",
+      "name": "Гоблин-воин",
+      "size": "small",
+      "creature_type": "fey (goblinoid)"
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000007",
+      "slug": "zombie",
+      "name": "Зомби",
+      "size": "medium",
+      "creature_type": "undead"
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000006",
+      "slug": "skeleton",
+      "name": "Скелет",
+      "size": "medium",
+      "creature_type": "undead"
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000001",
+      "slug": "bandit",
+      "name": "Бандит",
+      "size": "medium",
+      "creature_type": "humanoid"
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000003",
+      "slug": "giant-rat",
+      "name": "Гигантская крыса",
+      "size": "small",
+      "creature_type": "beast"
+    },
+    {
+      "id": "c1000000-0000-4000-8000-000000000002",
+      "slug": "goblin-minion",
+      "name": "Гоблин-прислужник",
+      "size": "small",
+      "creature_type": "fey (goblinoid)"
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000004",
+      "slug": "kobold-warrior",
+      "name": "Кобольд-воин",
+      "size": "small",
+      "creature_type": "dragon"
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000002",
+      "slug": "guard",
+      "name": "Стражник",
+      "size": "medium",
+      "creature_type": "humanoid"
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000016",
+      "slug": "berserker",
+      "name": "Берсерк",
+      "size": "medium",
+      "creature_type": "humanoid"
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000017",
+      "slug": "bandit-captain",
+      "name": "Капитан бандитов",
+      "size": "medium",
+      "creature_type": "humanoid"
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000015",
+      "slug": "ogre",
+      "name": "Огр",
+      "size": "large",
+      "creature_type": "giant"
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000018",
+      "slug": "warrior-veteran",
+      "name": "Воин-ветеран",
+      "size": "medium",
+      "creature_type": "humanoid"
+    }
+  ]
+}

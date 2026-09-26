@@ -8,6 +8,40 @@ import { calculateSheet, createPaperSheet, exportPaperSheet, importPaperSheet } 
 import { printSections, wrapPrintText } from './print';
 
 describe('real Long Story Short exports', () => {
+  it('parses valid exchange JSON larger than the old 10 MB quota', () => {
+    const imported = parseExchangeJSON(JSON.stringify({ text: 'A'.repeat(10_500_000) }));
+    expect(imported.text).toHaveLength(10_500_000);
+  });
+  it('round-trips hidden blocks through LSS without clearing their text or unknown layout keys', () => {
+    const source = structuredClone(wizard) as any;
+    const data = JSON.parse(source.data);
+    data.text.features = { value: { data: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Скрытая способность' }] }] } } };
+    source.data = JSON.stringify(data);
+    source.disabledBlocks['info-right'] = ['foreign-block'];
+    const doc = importSheetJSON(JSON.stringify(source)).document;
+    doc.hiddenBlocks = ['features', 'notes1', 'spell-slots'];
+    const exported = JSON.parse(exportLssSheet(importPaperSheet(exportPaperSheet(doc))));
+    expect(exported.disabledBlocks['info-right']).toContain('features');
+    expect(exported.disabledBlocks['info-right']).toContain('foreign-block');
+    expect(exported.disabledBlocks['notes-left']).toContain('notes-1');
+    expect(exported.bohHiddenBlocks).toContain('spell-slots');
+    expect(JSON.parse(exported.data).text.features).toEqual(data.text.features);
+    const imported = importSheetJSON(JSON.stringify(exported)).document;
+    expect(imported.hiddenBlocks).toEqual(['features', 'notes1', 'spell-slots']);
+    expect(imported.sections.features.text).toBe('Скрытая способность');
+    expect(JSON.parse(exportLssSheet(imported)).disabledBlocks['info-right']).toContain('foreign-block');
+  });
+  it('imports LSS visibility without removing the hidden block content', () => {
+    const source = structuredClone(wizard) as any;
+    const data = JSON.parse(source.data);
+    data.text.features = { value: { data: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Содержимое из LSS' }] }] } } };
+    source.data = JSON.stringify(data);
+    source.disabledBlocks['info-right'] = ['features'];
+    const doc = importSheetJSON(JSON.stringify(source)).document;
+    expect(doc.hiddenBlocks).toContain('features');
+    expect(doc.sections.features.text).toBe('Содержимое из LSS');
+    expect(JSON.parse(exportLssSheet(doc)).disabledBlocks['info-right']).toContain('features');
+  });
   it.each([wizard, cleric, customWizard])('preserves the complete original on an unchanged round trip: $sheetEdition', fixture => {
     const imported = importSheetJSON(JSON.stringify(fixture));
     const persisted = importPaperSheet(exportPaperSheet(imported.document));

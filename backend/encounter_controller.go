@@ -321,7 +321,7 @@ func (ec *EncounterController) List(c *gin.Context) {
 	var encs []Encounter
 	if err := ec.db.
 		Where("owner_user_id = ? OR jsonb_exists(COALESCE(member_user_ids, '[]'::jsonb), ?)", userID, userID.String()).
-		Order("updated_at desc").Limit(100).Find(&encs).Error; err != nil {
+		Order("updated_at desc").Find(&encs).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка загрузки"})
 		return
 	}

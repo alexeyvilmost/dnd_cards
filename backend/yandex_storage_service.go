@@ -5,7 +5,6 @@ import (
 	"context"
 	crand "crypto/rand"
 	"fmt"
-	"io"
 	"mime/multipart"
 	"os"
 	"path/filepath"
@@ -68,6 +67,12 @@ func NewYandexStorageService() (*YandexStorageService, error) {
 
 // UploadImage загружает изображение в Yandex Cloud Storage
 func (s *YandexStorageService) UploadImage(ctx context.Context, file *multipart.FileHeader, folder string) (string, string, error) {
+	return s.UploadFile(ctx, file, folder, filepath.Ext(file.Filename), file.Header.Get("Content-Type"))
+}
+
+// UploadFile streams a multipart file to Object Storage. Large uploads must not
+// be copied into a second, unbounded in-memory byte buffer.
+func (s *YandexStorageService) UploadFile(ctx context.Context, file *multipart.FileHeader, folder, ext, contentType string) (string, string, error) {
 	// Открываем файл
 	src, err := file.Open()
 	if err != nil {
@@ -75,24 +80,18 @@ func (s *YandexStorageService) UploadImage(ctx context.Context, file *multipart.
 	}
 	defer src.Close()
 
-	// Читаем содержимое файла
-	buf := bytes.NewBuffer(nil)
-	if _, err := io.Copy(buf, src); err != nil {
-		return "", "", fmt.Errorf("ошибка чтения файла: %v", err)
-	}
-
 	// Генерируем уникальное имя файла
-	ext := filepath.Ext(file.Filename)
 	timestamp := time.Now().Unix()
 	filename := fmt.Sprintf("%s/%d_%s%s", folder, timestamp, generateRandomString(8), ext)
 
 	// Загружаем файл в Yandex Cloud Storage
 	_, err = s.s3Client.PutObjectWithContext(ctx, &s3.PutObjectInput{
-		Bucket:      aws.String(s.bucket),
-		Key:         aws.String(filename),
-		Body:        bytes.NewReader(buf.Bytes()),
-		ContentType: aws.String(file.Header.Get("Content-Type")),
-		ACL:         aws.String("public-read"),
+		Bucket:        aws.String(s.bucket),
+		Key:           aws.String(filename),
+		Body:          src,
+		ContentLength: aws.Int64(file.Size),
+		ContentType:   aws.String(contentType),
+		ACL:           aws.String("public-read"),
 	})
 
 	if err != nil {

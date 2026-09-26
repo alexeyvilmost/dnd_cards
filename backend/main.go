@@ -152,13 +152,10 @@ func main() {
 	api := r.Group("/api")
 	api.Use(MutationAuditMiddleware())
 	api.Use(JSONBodyLimitMiddleware(2 << 20))
-	api.Use(NewFixedWindowRateLimiter(180, time.Minute).MutationsOnly())
 	registerPaperDocumentRoutes(r, authService, db)
 	{
 		// Публичные маршруты (без авторизации)
 		authRateLimit := NewFixedWindowRateLimiter(20, 10*time.Minute)
-		imageRateLimit := NewFixedWindowRateLimiter(3, 10*time.Minute)
-		uploadRateLimit := NewFixedWindowRateLimiter(20, time.Hour)
 		ttgBestiaryRateLimit := newTTGBestiaryRateLimiter()
 		// Глобальные справочники читаются публично, но любое изменение требует
 		// строгий JWT без public fallback и UUID из server-side admin allowlist.
@@ -171,7 +168,6 @@ func main() {
 		// ordinary 2 MiB API group and authenticate before reading the body.
 		contentSupportBatchAPI := r.Group("/api/content-support")
 		contentSupportBatchAPI.Use(MutationAuditMiddleware())
-		contentSupportBatchAPI.Use(NewFixedWindowRateLimiter(10, time.Hour).MutationsOnly())
 		contentSupportBatchAPI.POST(
 			"/batch-exact",
 			contentAdminAuth,
@@ -203,7 +199,7 @@ func main() {
 		api.POST("/cards", ContentEntityMutation(authService, db, "cards", true), cardController.CreateCard)
 		api.PUT("/cards/:id", ContentEntityMutation(authService, db, "cards", false), cardController.UpdateCard)
 		api.DELETE("/cards/:id", ContentEntityMutation(authService, db, "cards", false), cardController.DeleteCard)
-		api.POST("/cards/generate-image", contentAdminAuth, imageRateLimit.Handler(), cardController.GenerateImage)
+		api.POST("/cards/generate-image", contentAdminAuth, cardController.GenerateImage)
 		api.POST("/cards/export", AuthMiddleware(authService), cardController.ExportCards)
 
 		// Действия (публичные, но с опциональной авторизацией)
@@ -235,15 +231,14 @@ func main() {
 		api.DELETE("/spells/:id", ContentEntityMutation(authService, db, "spells", false), spellController.DeleteSpell)
 
 		// Standalone-генерация изображений (вкладка «Генерация изображений»)
-		api.POST("/images/generate-standalone", contentAdminAuth, imageRateLimit.Handler(), imageController.GenerateStandaloneImage)
+		api.POST("/images/generate-standalone", contentAdminAuth, imageController.GenerateStandaloneImage)
 		// Роут /images/upload-base64 удалён (KB-202): анонимная неограниченная запись любых данных
 		// в облачный бакет (OptionalAuthMiddleware = аноним) — поверхность абьюза и расходов. Фронт
 		// его не использовал; служил одноразовой миграции base64→S3 (см. историю git при надобности).
 
 		// AI-генерация механики по описанию (кнопка «AI» в редакторах)
 		aiMechanicsController := NewAIMechanicsController()
-		aiRateLimit := NewFixedWindowRateLimiter(8, 10*time.Minute)
-		api.POST("/ai/mechanics", contentAdminAuth, aiRateLimit.Handler(), aiMechanicsController.GenerateMechanics)
+		api.POST("/ai/mechanics", contentAdminAuth, aiMechanicsController.GenerateMechanics)
 
 		// Черты (публичные, но с опциональной авторизацией)
 		api.GET("/feats", OptionalAuthMiddleware(authService), featController.GetFeats)
@@ -325,8 +320,7 @@ func main() {
 		api.POST(
 			"/characters-v3/:id/avatar",
 			StrictAuthMiddleware(authService),
-			RequestBodyLimitMiddleware(12<<20),
-			uploadRateLimit.Handler(),
+			RequestBodyLimitMiddleware(maxMultipartSafetyBytes),
 			imageController.UploadCharacterAvatar,
 		)
 		if canonicalTransportEnabled() {
@@ -348,7 +342,7 @@ func main() {
 		protected.Use(AuthMiddleware(authService))
 		{
 			// Магазины
-			protected.POST("/shops", shopCreateRateLimit.Handler(), shopController.CreateShop)
+			protected.POST("/shops", shopCreateRateLimit.AnonymousOnly(), shopController.CreateShop)
 			// Авторизация
 			protected.GET("/auth/profile", authController.GetProfile)
 			protected.POST("/auth/logout", authController.Logout)
@@ -395,8 +389,8 @@ func main() {
 			protected.GET("/characters-v2/:id/active-effects", characterV2Controller.GetActiveEffects)
 
 			// Изображения
-			protected.POST("/images/upload", StrictAuthMiddleware(authService), RequestBodyLimitMiddleware(12<<20), ContentEntityImageMutation(db), uploadRateLimit.Handler(), imageController.UploadImage)
-			protected.POST("/images/generate", contentAdminAuth, imageRateLimit.Handler(), imageController.GenerateImage)
+			protected.POST("/images/upload", StrictAuthMiddleware(authService), RequestBodyLimitMiddleware(maxMultipartSafetyBytes), ContentEntityImageMutation(db), imageController.UploadImage)
+			protected.POST("/images/generate", contentAdminAuth, imageController.GenerateImage)
 			protected.DELETE("/images/:entity_type/:entity_id", StrictAuthMiddleware(authService), ContentEntityImageMutation(db), imageController.DeleteImage)
 			protected.POST("/images/setup-cors", contentAdminAuth, imageController.SetupCORS)
 			protected.GET("/images/status", contentAdminAuth, imageController.GetStatus)

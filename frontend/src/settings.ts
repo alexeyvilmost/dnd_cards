@@ -21,6 +21,8 @@ export interface SiteSettings {
   audioMusic: number;
   audioEffects: number;
   audioUI: number;
+  /** Объёмное поле боя с миниатюрами и управляемой камерой. */
+  combat3d: boolean;
   combatRollMode: CombatRollMode;
   enemyCombatRollMode: CombatRollMode;
   /** Диалог броска кубов перед действиями (авто или ввод физических кубов). */
@@ -55,6 +57,7 @@ const DEFAULTS: SiteSettings = {
   audioMusic: .3,
   audioEffects: .8,
   audioUI: .35,
+  combat3d: false,
   combatRollMode: 'standard',
   enemyCombatRollMode: 'standard',
   diceDialog: true,
@@ -89,6 +92,7 @@ export function getSettings(): SiteSettings {
       merged[key] = typeof merged[key] === 'number' && Number.isFinite(merged[key]) ? Math.max(0,Math.min(1,merged[key])) : DEFAULTS[key];
     }
     if (typeof merged.audioEnabled !== 'boolean') merged.audioEnabled = DEFAULTS.audioEnabled;
+    if (typeof merged.combat3d !== 'boolean') merged.combat3d = DEFAULTS.combat3d;
     // Keep the former global preference for both sides when migrating.
     if (!['standard', 'fast', 'skip'].includes(parsed.enemyCombatRollMode ?? '')) {
       merged.enemyCombatRollMode = merged.combatRollMode;

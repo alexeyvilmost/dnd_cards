@@ -49,8 +49,34 @@ describe('paper sheet inventory, equipment, and spell pages', () => {
     expect(container.querySelectorAll('.ps-equipment-slot')).toHaveLength(9);
     expect(container.querySelectorAll('.ps-inventory-row')).toHaveLength(28);
     for (const slot of ['Голова', 'Тело', 'Плащ', 'Руки', 'Ноги', 'Рука 1', 'Рука 2', 'Ожерелье', 'Кольцо']) expect(label(`Снаряжение: ${slot}`)).toBeTruthy();
-    expect([...container.querySelectorAll('.ps-previous-notes summary')].map(element => element.textContent)).toEqual(['Прежние записи: Сокровища', 'Прежние записи: Цели и задачи']);
+    expect([...container.querySelectorAll('.ps-previous-notes summary')].map(element => element.textContent)).toEqual(['Прежние записи: Цели и задачи', 'Прежние записи: Сокровища']);
     expect(current.sections).toEqual(doc.sections);
+  });
+
+  it('promotes the next story block in each column without removing inventory or equipment data', async () => {
+    const doc = createPaperSheet();
+    doc.hiddenBlocks = ['portrait', 'equipped-items'];
+    doc.fields['equipment.head'] = 'Шлем';
+    doc.fields['inventory.0.item'] = 'Зелье';
+    doc.sections.allies = { text: 'Гильдия', fontSize: 12 };
+    await render(doc);
+    expect([...container.querySelectorAll('.ps-story-left [data-paper-block]')].map(node => node.getAttribute('data-paper-block'))).toEqual(['inventory']);
+    expect([...container.querySelectorAll('.ps-story-right [data-paper-block]')].map(node => node.getAttribute('data-paper-block'))).toEqual(['allies', 'additional']);
+    expect(current.fields['equipment.head']).toBe('Шлем');
+    expect(current.fields['inventory.0.item']).toBe('Зелье');
+    expect(current.sections.allies.text).toBe('Гильдия');
+  });
+
+  it('keeps movement fields visible when spell-statistic and slot blocks are hidden', async () => {
+    const doc = createPaperSheet();
+    doc.hiddenBlocks = ['spell-statistics', 'spell-slots', 'appearance'];
+    doc.fields.size = 'large';
+    await render(doc, SpellPage);
+    expect(label<HTMLSelectElement>('Размер персонажа').value).toBe('large');
+    expect(container.querySelector('.ps-spells-top-right .ps-movement-stats')).not.toBeNull();
+    expect(container.querySelector('.ps-spell-statistics')).toBeNull();
+    expect(container.querySelector('.ps-spell-slots')).toBeNull();
+    expect(container.querySelector('.ps-spells-right [data-note-section]')?.getAttribute('data-note-section')).toBe('backstory');
   });
 
   it('selects canonical inventory items, normalizes quantity, and preserves stable links through export/import', async () => {

@@ -22,6 +22,9 @@ function gitPaths(argumentsList) {
   return execFileSync('git', argumentsList, {
     cwd: repositoryRoot,
     encoding: 'utf8',
+    // Generated local assets may make the untracked-path list exceed Node's
+    // small default buffer. Keep the scan complete instead of truncating it.
+    maxBuffer: 64 * 1024 * 1024,
   })
     .split('\0')
     .filter(Boolean);

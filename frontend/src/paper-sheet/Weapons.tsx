@@ -4,7 +4,7 @@ import { RollTextField } from './RollTextField';
 
 export function Weapons() {
   const { doc, setDoc } = usePaperSheet();
-  return <Frame heading="Оружие и боевые заговоры" className="ps-weapons">
+  return <Frame heading="Оружие и боевые заговоры" className="ps-weapons" blockId="weapons">
     <button type="button" className="ps-row-add" aria-label="Добавить оружие" disabled={doc.weaponRows >= 8} onClick={() => setDoc(current => ({ ...current, weaponRows: Math.min(8, current.weaponRows + 1) }))}>+</button>
     <button type="button" className="ps-row-remove" aria-label="Убрать последнюю строку оружия" disabled={doc.weaponRows <= 1} onClick={() => setDoc(current => ({ ...current, weaponRows: Math.max(1, current.weaponRows - 1) }))}>−</button>
     <div className="ps-weapon-table"><div className="ps-weapon-table-header"><span>Название</span><span>Бонус /<br />Сложность</span><span>Урон / Вид</span><span>Заметки</span></div>

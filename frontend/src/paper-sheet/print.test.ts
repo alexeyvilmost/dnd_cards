@@ -29,3 +29,15 @@ it('captures current controls and full clipped linked names without mutating the
   expect(JSON.stringify(doc)).toBe(original);
   expect(workspace.querySelectorAll('select')).toHaveLength(2);
 });
+
+it('prints the formatted note preview instead of an active multiline editor', () => {
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ measureText: (s: string) => ({ width: s.length * 7 }) } as never);
+  const workspace = document.createElement('div');
+  workspace.innerHTML = '<article class="paper-page"><section class="ps-note ps-note-editing" data-note-section="features"><div class="ps-note-text">Текст для печати</div><textarea class="ps-inline-textarea">Сырой текст</textarea><div class="ps-inline-tools">Готово</div></section></article>';
+  document.body.append(workspace);
+  const snapshot = buildPrintSnapshot(workspace, createPaperSheet());
+  expect(snapshot.querySelector('.ps-note-editing')).toBeNull();
+  expect(snapshot.querySelector('.ps-inline-textarea')).toBeNull();
+  expect(snapshot.querySelector('.ps-inline-tools')).toBeNull();
+  expect(snapshot.querySelector('.ps-note-text')?.textContent).toBe('Текст для печати');
+});

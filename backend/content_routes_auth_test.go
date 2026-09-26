@@ -68,7 +68,7 @@ func TestGlobalContentCRUDMutationsUseContentOwnershipBoundary(t *testing.T) {
 		}
 	}
 	for _, routePattern := range []string{
-		`protected\.POST\("/images/upload",\s*StrictAuthMiddleware\(authService\),\s*RequestBodyLimitMiddleware\(12<<20\),\s*ContentEntityImageMutation\(db\),`,
+		`protected\.POST\("/images/upload",\s*StrictAuthMiddleware\(authService\),\s*RequestBodyLimitMiddleware\(maxMultipartSafetyBytes\),\s*ContentEntityImageMutation\(db\),`,
 		`protected\.DELETE\("/images/:entity_type/:entity_id",\s*StrictAuthMiddleware\(authService\),\s*ContentEntityImageMutation\(db\),`,
 	} {
 		if !regexp.MustCompile(routePattern).MatchString(source) {
@@ -95,9 +95,9 @@ func TestGlobalContentCRUDMutationsUseContentOwnershipBoundary(t *testing.T) {
 		t.Error("atomic certification batch must authenticate before its isolated hard body limit")
 	}
 	if !regexp.MustCompile(
-		`protected\.POST\("/shops",\s*shopCreateRateLimit\.Handler\(\),`,
+		`protected\.POST\("/shops",\s*shopCreateRateLimit\.AnonymousOnly\(\),`,
 	).MatchString(source) {
-		t.Error("public shop creation must remain rate-limited")
+		t.Error("public shop creation must retain anonymous-only abuse protection")
 	}
 	shopSourceBytes, err := os.ReadFile("shop_controller.go")
 	if err != nil {

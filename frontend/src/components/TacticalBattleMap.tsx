@@ -1,5 +1,9 @@
 import { combatActorDisplayName } from '../character/familiarLabels';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {useSiteSettings} from '../settings';
+import BattleSceneBoundary from '../battle3d/BattleSceneBoundary';
+
+const BattleScene = lazy(() => import('../battle3d/BattleScene'));
 import type { CombatAreaState, GridPosition, SoloCombatState } from '../solo-combat/types';
 import { combatRelation } from '../solo-combat/types';
 import {boardDimensions, featureCells} from '../solo-combat/boardGeometry';
@@ -61,6 +65,9 @@ export default function TacticalBattleMap({
   onActorHover?: (actorId: string | null) => void;
   onDeclineAdditionalMovement?: () => void;
 }) {
+  const {combat3d} = useSiteSettings();
+  const [rendererError, setRendererError] = useState<string | null>(null);
+  useEffect(() => { setRendererError(null); }, [combat3d]);
   const [hovered, setHovered] = useState<GridPosition | null>(null);
   const {width:boardWidth,height:boardHeight}=boardDimensions(state);
   const featuresByCell=useMemo(()=>{
@@ -250,6 +257,123 @@ export default function TacticalBattleMap({
     suppressClickRef.current = pan.moved && event.type === 'pointerup';
   };
 
+  const cells = Array.from({length: boardWidth * boardHeight}, (_, index) => {
+    const position = { x: index % boardWidth, y: Math.floor(index / boardWidth) };
+    const features=featuresByCell.get(`${position.x}:${position.y}`)??[];
+    const terrainLabel=features.map(f=>`${f.name}${f.blocksMovement?' · непроходимо':''}${f.blocksSight?' · закрывает обзор':''}${f.cover==='half'?' · половинное укрытие, +2 КД':f.cover==='three_quarters'?' · укрытие на три четверти, +5 КД':''}`).join('; ');
+    const token = tokenByCell.get(`${position.x}:${position.y}`);
+    const dancingLight = dancingLightByCell.get(`${position.x}:${position.y}`);
+    const illusion = illusionByCell.get(`${position.x}:${position.y}`);
+    const persistentAreas = areasByCell.get(`${position.x}:${position.y}`) ?? [];
+    const actor = token ? state.world.actors[token.actorId] : undefined;
+    const tokenAnchor = token?.position.x === position.x && token.position.y === position.y;
+    const dead = actor && actor.runtime.hp.current <= 0;
+    const lightLabel = dancingLight
+      ? `Танцующий огонёк, тусклый свет ${dancingLight.dancingLight!.dimRadiusFt} фт.`
+      : '';
+    const illusionLabel = illusion
+      ? `Малая иллюзия: ${illusion.illusion!.description} · ${illusion.illusion!.form === 'sound' ? 'звук' : 'изображение'} · ${illusion.roundsLeft ?? 0} раундов · Изучение: Интеллект (Расследование) против СЛ ${illusion.illusion!.spellSaveDc}${illusion.illusion!.form === 'image' ? ' · физическое взаимодействие раскрывает иллюзию' : ''}`
+      : '';
+    const actorLabel = token ? `${actor ? combatActorDisplayName(actor) : ''}, ${actor?.runtime.hp.current}/${actor?.runtime.hp.max} HP` : '';
+    const areaLabel = persistentAreas.map((area) => {
+      const duration = area.duration.type === 'permanent' ? 'постоянная'
+        : area.duration.type === 'concentration' ? 'концентрация'
+          : `${area.duration.roundsLeft} раундов`;
+      const triggerLabels = area.triggers.map((trigger) => (
+        trigger === 'end_turn' && area.sourceTurnAffectsAllInside
+          ? 'в конце хода источника — всем внутри'
+          : ({
+        created: 'при создании', enter: 'при входе', exit: 'при выходе',
+        move: 'за каждые 5 фт. движения', start_turn: 'в начале хода', end_turn: 'в конце хода',
+          })[trigger]
+      )).join(', ');
+      const hazard = area.hazard?.resolution === 'save'
+        ? ` · спасбросок ${area.hazard.save.ability.toUpperCase()} СЛ ${area.hazard.save.dc}`
+        : area.hazard?.resolution === 'automatic' ? ' · без спасброска' : '';
+      const immunities = area.damageImmunities?.length
+        ? ` · иммунитеты в области: ${area.damageImmunities.join(', ')}` : '';
+      return `${area.name}: ${duration}${area.sourceAnchored ? ' · следует за источником' : ''}${area.difficultTerrain ? ' · труднопроходимая местность' : ''}${area.lightlyObscured ? ' · слабо заслонённая область' : ''}${area.heavilyObscured ? ' · сильно заслонённая область' : ''}${area.blocksVerbalComponents ? ' · блокирует Вербальные компоненты' : ''}${immunities}${hazard}${triggerLabels ? ` · ${triggerLabels}` : ''}`;
+    }).join(' · ');
+    const key = `${position.x}:${position.y}`;
+    return {position, features, token, dancingLight, illusion, persistentAreas, actor,
+      tokenAnchor: Boolean(tokenAnchor), dead: Boolean(dead), terrainLabel, actorLabel, areaLabel, lightLabel, illusionLabel,
+      label: [actorLabel, terrainLabel, areaLabel, lightLabel, illusionLabel,
+        (groundItemsByCell.get(key) ?? []).map(item => `На земле: ${item.name}`).join(', '),
+        `Клетка ${position.x + 1}, ${position.y + 1}`].filter(Boolean).join(' · '),
+      actorId: token?.actorId, footprint: actorFootprint(actor, state),
+      blocked: features.some(f => f.blocksMovement), reachable: reachableCells.has(key),
+      areaPreview: areaCells.has(key) || Boolean(token && eligibleTargetIds?.includes(token.actorId)),
+      route: routeCells.has(key), unavailable: Boolean(previewRoute && !previewRoute.available),
+      active: Boolean(token && token.actorId === activeId),
+      inspected: Boolean(token && token.actorId === inspectedActorId),
+      highlighted: Boolean(token && token.actorId === highlightedActorId),
+      light: dancingLight ? {label: lightLabel, radiusFt: dancingLight.dancingLight!.dimRadiusFt} : undefined,
+      groundItems: groundItemsByCell.get(key) ?? [], areas: persistentAreas,
+      // Keep source objects locally for the legacy renderer; the scene consumes
+      // only their descriptive projection below.
+      illusionView: illusion ? {id: illusion.id, label: illusionLabel,
+        description: illusion.illusion!.description, form: illusion.illusion!.form} : undefined,
+    };
+  });
+  const sceneCells = cells.map(({illusion, illusionView, ...cell}) => ({...cell, illusion: illusionView}));
+  const activateCell = (position: GridPosition) => {
+    const cell = cells[position.y * boardWidth + position.x];
+    if (!cell || (cell.blocked && !cell.token)) return;
+    if (cell.token && !selectedActionId && !movementMode
+      && combatRelation(state, actorId, cell.token.actorId) !== 'enemy') onInspectActor?.(cell.token.actorId);
+    onCell(position, cell.token?.actorId);
+  };
+  const hoverCell = (position: GridPosition | null, anchor?: {x: number; y: number}) => {
+    setHovered(position);
+    if (anchor) setHoverAnchor(anchor);
+    onActorHover?.(position ? tokenByCell.get(`${position.x}:${position.y}`)?.actorId ?? null : null);
+  };
+  const hoverTooltip = <>
+            {hoveredTarget && hoveredTarget.actorId === hoveredEnemyId && contextualAction && createPortal(<div ref={popoverRef} style={popoverPos} className={`combat-map-tooltip combat-hit-chance${approachPreview && !approachPreview.available ? ' is-unavailable' : ''}`} role="status">
+              {approachPreview && approachPreview.costFt > 0 && <span className="combat-hit-chance__movement">Подойти {approachPreview.costFt} фт. · останется {approachPreview.remainingFt} фт.</span>}
+              {!approachPreview && <span className="combat-hit-chance__movement">Нет доступной точки для атаки</span>}
+              {approachPreview && !approachPreview.available && <span className="combat-hit-chance__movement">Не хватает {approachPreview.costFt - approachPreview.availableFt} фт. движения</span>}
+              {hitPreview && <>
+              Попадание <b>{Math.round(hitPreview.probability * 1000) / 10}%</b>
+              <small>КД {hitPreview.profile.target?.value} · {hitPreview.profile.modifiers?.map(mod => `${mod.value >= 0 ? '+' : ''}${mod.value} ${mod.source}`).join(' · ')}
+                {hitPreview.profile.advantage === 'advantage' ? ' · преимущество' : hitPreview.profile.advantage === 'disadvantage' ? ' · помеха' : ''}</small></>}
+              {coverPreview&&<small className={`combat-hit-chance__cover${coverPreview.cover!=='none'?' is-covered':''}`}>{attackCoverLabel(coverPreview)}</small>}
+              <small>I / Ш — изучить противника</small>
+              {dangerNames && <small className="combat-route-warning">Провоцированная атака: {dangerNames}. Выход из досягаемости.</small>}
+            </div>, document.body)}
+            {!hoveredTarget && hovered && freeMovePreview && createPortal(<div ref={popoverRef} style={popoverPos} className={`combat-map-tooltip combat-move-preview${!freeMovePreview.available ? ' is-unavailable' : ''}`} role="status">
+              Перемещение <b>{freeMovePreview.costFt} фт.</b><small>Останется {freeMovePreview.remainingFt} фт.{!freeMovePreview.available ? ` · не хватает ${freeMovePreview.costFt - freeMovePreview.availableFt} фт.` : ''}</small>
+              {dangerNames && <small className="combat-route-warning">Провоцированная атака: {dangerNames}. Выход из досягаемости; Отход помогает избежать атаки.</small>}
+            </div>, document.body)}
+  </>;
+
+  if (combat3d && !rendererError) return <div className="battle-map-3d" data-testid="battle-map-3d">
+    <BattleSceneBoundary onUnavailable={setRendererError}>
+      <Suspense fallback={<div className="battle-map-3d-loading" role="status">Подготавливаем трёхмерное поле…</div>}>
+        <BattleScene state={state} actorId={actorId} activeId={activeId} feedback={feedback ?? null}
+          cells={sceneCells} hovered={hovered}
+          ghost={ghostPosition ? {position: ghostPosition, footprint: movingCenter * 2, available: previewRoute?.available ?? true} : null}
+          route={routeOrigin && previewRoute ? {points: [routeOrigin, ...previewRoute.path], footprint: movingCenter * 2, available: previewRoute.available} : null}
+          trajectory={trajectory} onHover={hoverCell} onCell={activateCell} onInspectActor={onInspectActor}
+          onUnavailable={setRendererError} onDeclineAdditionalMovement={onDeclineAdditionalMovement}/>
+      </Suspense>
+    </BattleSceneBoundary>
+    {hoverTooltip}
+    <details className="battle-map-3d-keyboard">
+      <summary>Поле для клавиатуры</summary>
+      <div className="battle-map-3d-keyboard-grid" style={{gridTemplateColumns: `repeat(${boardWidth}, minmax(32px, 1fr))`}}>
+        {cells.map(cell => <button key={`${cell.position.x}:${cell.position.y}`} type="button"
+          aria-label={cell.label} aria-description={cell.terrainLabel || undefined}
+          data-actor-id={cell.actorId} disabled={cell.blocked && !cell.token}
+          onFocus={event => {const rect = event.currentTarget.getBoundingClientRect(); hoverCell(cell.position, {x:rect.right,y:rect.top});}}
+          onBlur={() => hoverCell(null)} onClick={() => activateCell(cell.position)}>
+          {cell.actor ? combatActorDisplayName(cell.actor).slice(0, 2) : cell.blocked ? '×' : `${cell.position.x + 1},${cell.position.y + 1}`}
+        </button>)}
+      </div>
+    </details>
+    {!state.tacticalFootprints && Object.values(state.world.actors).some(actor=>actorFootprint(actor)>1) && <p className="text-sm p-2" role="note">Этот бой сохранён по прежним правилам размещения. Области 2×2 и 3×3 будут использоваться со следующей встречи.</p>}
+  </div>;
+
   return (
     <div
       ref={viewportRef}
@@ -306,6 +430,7 @@ export default function TacticalBattleMap({
         event.stopPropagation();
       }}
     >
+    {rendererError && <p className="battle-map-3d-fallback" role="status">{rendererError} Используется обычная карта.</p>}
     <div className="tactical-map-controls" role="group" aria-label="Навигация по полю">
       {state.battleMap&&<details className="tactical-map-legend"><summary>{state.battleMap.name} · {boardWidth}×{boardHeight}</summary><p>{state.battleMap.description}</p></details>}
       <button type="button" onClick={() => setZoom((current) => Math.max(0.35, Number((current - 0.1).toFixed(2))))} aria-label="Уменьшить масштаб">−</button>
@@ -349,49 +474,14 @@ export default function TacticalBattleMap({
           <text x={(threat.from.x + threat.to.x) / 2 + movingCenter} y={(threat.from.y + threat.to.y) / 2 + movingCenter + .05}>!</text>
         </g>)}
       </svg>}
-      {Array.from({ length: boardWidth * boardHeight }, (_, index) => {
-        const position = { x: index % boardWidth, y: Math.floor(index / boardWidth) };
-        const features=featuresByCell.get(`${position.x}:${position.y}`)??[];
-        const terrainLabel=features.map(f=>`${f.name}${f.blocksMovement?' · непроходимо':''}${f.blocksSight?' · закрывает обзор':''}${f.cover==='half'?' · половинное укрытие, +2 КД':f.cover==='three_quarters'?' · укрытие на три четверти, +5 КД':''}`).join('; ');
-        const token = tokenByCell.get(`${position.x}:${position.y}`);
-        const dancingLight = dancingLightByCell.get(`${position.x}:${position.y}`);
-        const illusion = illusionByCell.get(`${position.x}:${position.y}`);
-        const persistentAreas = areasByCell.get(`${position.x}:${position.y}`) ?? [];
-        const actor = token ? state.world.actors[token.actorId] : undefined;
-        const tokenAnchor = token?.position.x === position.x && token.position.y === position.y;
-        const dead = actor && actor.runtime.hp.current <= 0;
-        const lightLabel = dancingLight
-          ? `Танцующий огонёк, тусклый свет ${dancingLight.dancingLight!.dimRadiusFt} фт.`
-          : '';
-        const illusionLabel = illusion
-          ? `Малая иллюзия: ${illusion.illusion!.description} · ${illusion.illusion!.form === 'sound' ? 'звук' : 'изображение'} · ${illusion.roundsLeft ?? 0} раундов · Изучение: Интеллект (Расследование) против СЛ ${illusion.illusion!.spellSaveDc}${illusion.illusion!.form === 'image' ? ' · физическое взаимодействие раскрывает иллюзию' : ''}`
-          : '';
-        const actorLabel = token ? `${actor ? combatActorDisplayName(actor) : ''}, ${actor?.runtime.hp.current}/${actor?.runtime.hp.max} HP` : '';
-        const areaLabel = persistentAreas.map((area) => {
-          const duration = area.duration.type === 'permanent' ? 'постоянная'
-            : area.duration.type === 'concentration' ? 'концентрация'
-              : `${area.duration.roundsLeft} раундов`;
-          const triggerLabels = area.triggers.map((trigger) => (
-            trigger === 'end_turn' && area.sourceTurnAffectsAllInside
-              ? 'в конце хода источника — всем внутри'
-              : ({
-                created: 'при создании', enter: 'при входе', exit: 'при выходе',
-                move: 'за каждые 5 фт. движения', start_turn: 'в начале хода', end_turn: 'в конце хода',
-              })[trigger]
-          )).join(', ');
-          const hazard = area.hazard?.resolution === 'save'
-            ? ` · спасбросок ${area.hazard.save.ability.toUpperCase()} СЛ ${area.hazard.save.dc}`
-            : area.hazard?.resolution === 'automatic' ? ' · без спасброска' : '';
-          const immunities = area.damageImmunities?.length
-            ? ` · иммунитеты в области: ${area.damageImmunities.join(', ')}` : '';
-          return `${area.name}: ${duration}${area.sourceAnchored ? ' · следует за источником' : ''}${area.difficultTerrain ? ' · труднопроходимая местность' : ''}${area.lightlyObscured ? ' · слабо заслонённая область' : ''}${area.heavilyObscured ? ' · сильно заслонённая область' : ''}${area.blocksVerbalComponents ? ' · блокирует Вербальные компоненты' : ''}${immunities}${hazard}${triggerLabels ? ` · ${triggerLabels}` : ''}`;
-        }).join(' · ');
+      {cells.map(({position, token, dancingLight, illusion, persistentAreas, actor,
+        tokenAnchor, dead, terrainLabel, areaLabel, lightLabel, illusionLabel, label}) => {
         return (
           <button
             type="button"
             key={`${position.x}:${position.y}`}
             className={`tactical-cell${token ? ' has-token' : ''}${dancingLight || illusion ? ' has-world-object' : ''}${persistentAreas.length ? ' has-combat-area' : ''}${persistentAreas.some((area) => area.lightlyObscured) ? ' is-lightly-obscured' : ''}${persistentAreas.some((area) => area.heavilyObscured) ? ' is-heavily-obscured' : ''}${persistentAreas.some((area) => area.difficultTerrain) ? ' is-difficult-terrain' : ''}${token && token.actorId === activeId ? ' is-active' : ''}${token && token.actorId === inspectedActorId ? ' is-inspected' : ''}${token && token.actorId === highlightedActorId ? ' is-linked-highlight' : ''}${dead ? ' is-dead' : ''}${areaCells.has(`${position.x}:${position.y}`) || (token && eligibleTargetIds?.includes(token.actorId)) ? ' is-area-preview' : ''}${reachableCells.has(`${position.x}:${position.y}`) ? ' is-move-reachable' : ''}${routeCells.has(`${position.x}:${position.y}`) ? ` is-route-preview${previewRoute && !previewRoute.available ? ' is-unavailable' : ''}` : ''}`}
-            aria-label={[actorLabel, terrainLabel, areaLabel, lightLabel, illusionLabel, (groundItemsByCell.get(`${position.x}:${position.y}`)??[]).map(item=>`На земле: ${item.name}`).join(", "), `Клетка ${position.x + 1}, ${position.y + 1}`].filter(Boolean).join(' · ')}
+            aria-label={label}
             aria-description={terrainLabel||undefined}
             data-actor-id={token?.actorId}
             data-scenery-zone={persistentAreas.length>0&&persistentAreas.every(area=>area.sceneryFeatureId)?'true':undefined}
@@ -400,29 +490,8 @@ export default function TacticalBattleMap({
             onMouseLeave={() => { setHovered(null); onActorHover?.(null); }}
             onFocus={(event) => { const rect=event.currentTarget.getBoundingClientRect(); setHoverAnchor({x:rect.right,y:rect.top}); setHovered(position); onActorHover?.(token?.actorId ?? null); }}
             onBlur={() => { setHovered(null); onActorHover?.(null); }}
-            onClick={() => {
-              if(features.some(f=>f.blocksMovement)&&!token)return;
-              if (token && !selectedActionId && !movementMode
-                && combatRelation(state, actorId, token.actorId) !== 'enemy') onInspectActor?.(token.actorId);
-              onCell(position, token?.actorId);
-            }}
+            onClick={() => activateCell(position)}
           >
-            {token && token.actorId === hoveredEnemyId && hovered?.x === position.x && hovered.y === position.y && contextualAction && createPortal(<div ref={popoverRef} style={popoverPos} className={`combat-map-tooltip combat-hit-chance${approachPreview && !approachPreview.available ? ' is-unavailable' : ''}`} role="status">
-              {approachPreview && approachPreview.costFt > 0 && <span className="combat-hit-chance__movement">Подойти {approachPreview.costFt} фт. · останется {approachPreview.remainingFt} фт.</span>}
-              {!approachPreview && <span className="combat-hit-chance__movement">Нет доступной точки для атаки</span>}
-              {approachPreview && !approachPreview.available && <span className="combat-hit-chance__movement">Не хватает {approachPreview.costFt - approachPreview.availableFt} фт. движения</span>}
-              {hitPreview && <>
-              Попадание <b>{Math.round(hitPreview.probability * 1000) / 10}%</b>
-              <small>КД {hitPreview.profile.target?.value} · {hitPreview.profile.modifiers?.map(mod => `${mod.value >= 0 ? '+' : ''}${mod.value} ${mod.source}`).join(' · ')}
-                {hitPreview.profile.advantage === 'advantage' ? ' · преимущество' : hitPreview.profile.advantage === 'disadvantage' ? ' · помеха' : ''}</small></>}
-              {coverPreview&&<small className={`combat-hit-chance__cover${coverPreview.cover!=='none'?' is-covered':''}`}>{attackCoverLabel(coverPreview)}</small>}
-              <small>I / Ш — изучить противника</small>
-              {dangerNames && <small className="combat-route-warning">Провоцированная атака: {dangerNames}. Выход из досягаемости.</small>}
-            </div>, document.body)}
-            {!token && hovered?.x === position.x && hovered.y === position.y && freeMovePreview && createPortal(<div ref={popoverRef} style={popoverPos} className={`combat-map-tooltip combat-move-preview${!freeMovePreview.available ? ' is-unavailable' : ''}`} role="status">
-              Перемещение <b>{freeMovePreview.costFt} фт.</b><small>Останется {freeMovePreview.remainingFt} фт.{!freeMovePreview.available ? ` · не хватает ${freeMovePreview.costFt - freeMovePreview.availableFt} фт.` : ''}</small>
-              {dangerNames && <small className="combat-route-warning">Провоцированная атака: {dangerNames}. Выход из досягаемости; Отход помогает избежать атаки.</small>}
-            </div>, document.body)}
             {persistentAreas.filter(area=>!area.sceneryFeatureId).map((area) => area.origin.x === position.x && area.origin.y === position.y ? (
               <span key={area.id} className={`combat-area-token is-${area.zoneType}`} aria-description={areaLabel} aria-hidden="true">
                 <b>{area.heavilyObscured ? '◉' : area.lightlyObscured ? '◌' : '◇'}</b><small>{area.name}</small>
@@ -470,6 +539,7 @@ export default function TacticalBattleMap({
         );
       })}
     </div>
+    {hoverTooltip}
     {!state.tacticalFootprints && Object.values(state.world.actors).some(actor=>actorFootprint(actor)>1) && <p className="text-sm p-2" role="note">Этот бой сохранён по прежним правилам размещения. Области 2×2 и 3×3 будут использоваться со следующей встречи.</p>}
     </div>
   );

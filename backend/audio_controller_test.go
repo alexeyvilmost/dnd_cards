@@ -2,10 +2,14 @@ package main
 
 import (
 	"bytes"
-	"dnd-cards-backend/passivepresentation"
 	"mime/multipart"
+	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"dnd-cards-backend/passivepresentation"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func TestAudioBindingIsAdminOnlyAndIndependentFromMechanics(t *testing.T) {
@@ -104,5 +108,47 @@ func TestAudioUploadRejectsUnauthorisedUsersAndDisguisedFilesBeforeStorage(t *te
 		if result.Code != test.status {
 			t.Fatalf("got %d wanted %d: %s", result.Code, test.status, result.Body.String())
 		}
+	}
+}
+
+func TestAudioUploadAcceptsFormerFifteenMegabyteLimitBeforeStorage(t *testing.T) {
+	t.Setenv("JWT_SECRET", characterV3AccessTestSecret)
+	t.Setenv("YANDEX_CLOUD_ACCESS_KEY_ID", "")
+	t.Setenv("YANDEX_CLOUD_SECRET_ACCESS_KEY", "")
+	t.Setenv("YANDEX_CLOUD_BUCKET_NAME", "")
+	adminID := uuid.New()
+	t.Setenv("CONTENT_ADMIN_USER_IDS", adminID.String())
+	auth := activeSecurityTestAuthService()
+	token, err := auth.generateJWTToken(User{ID: adminID, Username: "audio-admin"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	router := gin.New()
+	registerAudioRoutes(router.Group("/api"), auth, nil)
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+	file, err := writer.CreateFormFile("file", "large.wav")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := file.Write(append([]byte("RIFFxxxxWAVE"), bytes.Repeat([]byte{0}, 16<<20)...)); err != nil {
+		t.Fatal(err)
+	}
+	if err := writer.WriteField("name", "Large audio"); err != nil {
+		t.Fatal(err)
+	}
+	if err := writer.WriteField("license", "Own recording"); err != nil {
+		t.Fatal(err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatal(err)
+	}
+	request := httptest.NewRequest(http.MethodPost, "/api/audio/upload", &body)
+	request.Header.Set("Content-Type", writer.FormDataContentType())
+	request.Header.Set("Authorization", "Bearer "+token)
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, request)
+	if response.Code != http.StatusServiceUnavailable {
+		t.Fatalf("large valid audio was rejected before storage configuration: %d %s", response.Code, response.Body.String())
 	}
 }

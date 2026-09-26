@@ -82,6 +82,25 @@ func TestJSONBodyLimitRejectsKnownAndChunkedOversizeBodies(t *testing.T) {
 	}
 }
 
+func TestMultipartSafetyBoundaryAllowsFormerUploadLimit(t *testing.T) {
+	router := securityTestRouter(RequestBodyLimitMiddleware(maxMultipartSafetyBytes))
+	request := httptest.NewRequest(http.MethodPost, "/write", nil)
+	request.ContentLength = 16 << 20 // Previously rejected by the 12 MiB upload quota.
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, request)
+	if response.Code != http.StatusNoContent {
+		t.Fatalf("former upload quota should no longer reject this request, got %d", response.Code)
+	}
+
+	request = httptest.NewRequest(http.MethodPost, "/write", nil)
+	request.ContentLength = maxMultipartSafetyBytes + 1
+	response = httptest.NewRecorder()
+	router.ServeHTTP(response, request)
+	if response.Code != http.StatusRequestEntityTooLarge {
+		t.Fatalf("operational safety boundary should reject oversized request, got %d", response.Code)
+	}
+}
+
 func TestFixedWindowRateLimiterResets(t *testing.T) {
 	limiter := NewFixedWindowRateLimiter(2, time.Minute)
 	now := time.Date(2026, time.August, 3, 12, 0, 0, 0, time.UTC)
@@ -105,6 +124,37 @@ func TestFixedWindowRateLimiterResets(t *testing.T) {
 	router.ServeHTTP(response, request)
 	if response.Code != http.StatusNoContent {
 		t.Fatalf("expected limiter to reset after its window, got %d", response.Code)
+	}
+}
+
+func TestAnonymousOnlyRateLimitDoesNotQuotaAuthenticatedWrites(t *testing.T) {
+	limiter := NewFixedWindowRateLimiter(1, time.Minute)
+	router := securityTestRouter(func(c *gin.Context) {
+		if c.GetHeader("Authorization") == "Bearer valid" {
+			c.Set("user_id", uuid.New())
+		}
+		c.Next()
+	}, limiter.AnonymousOnly())
+	for _, row := range []struct {
+		authorization string
+		want          int
+	}{
+		{"Bearer valid", http.StatusNoContent},
+		{"Bearer valid", http.StatusNoContent},
+		{"", http.StatusNoContent},
+		{"", http.StatusTooManyRequests},
+		{"Bearer forged", http.StatusTooManyRequests},
+	} {
+		request := httptest.NewRequest(http.MethodPost, "/write", nil)
+		request.RemoteAddr = "192.0.2.10:1234"
+		if row.authorization != "" {
+			request.Header.Set("Authorization", row.authorization)
+		}
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, request)
+		if response.Code != row.want {
+			t.Fatalf("authorization %q: expected %d, got %d", row.authorization, row.want, response.Code)
+		}
 	}
 }
 

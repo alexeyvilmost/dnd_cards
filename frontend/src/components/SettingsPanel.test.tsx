@@ -30,4 +30,17 @@ describe('shared settings categories',()=>{
     expect(container.querySelectorAll('input')).toHaveLength(0);
     expect(getSettings()).toEqual(before);
   });
+  it('saves the 3D combat choice across settings panel remounts',async()=>{
+    const before=getSettings();
+    await click('Бой и броски');
+    expect(container.textContent).toContain('3D бои');
+    expect(container.textContent).toContain('Камеру можно вращать и приближать.');
+    expect(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.checked).toBe(false);
+    await act(async()=>container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click());
+    expect(getSettings()).toEqual({...before,combat3d:true});
+    await act(async()=>root.unmount());
+    root=createRoot(container);
+    await act(async()=>root.render(<SettingsPanel initialPage="combat"/>));
+    expect(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.checked).toBe(true);
+  });
 });

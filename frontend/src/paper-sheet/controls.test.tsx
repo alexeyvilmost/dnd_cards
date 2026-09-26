@@ -128,7 +128,7 @@ describe('editable paper sheet controls', () => {
     await controls(<><Field field="wis" label="Мудрость" /><Note section="features" heading="Умения" /></>);
     await click(labelled<HTMLButtonElement>('Редактировать: Умения'));
     const text = 'СЛ {{8 + [PROF] + [WIS]}}\n<img src=x onerror=alert(1)>';
-    await input(labelled<HTMLTextAreaElement>('Текст: Умения, строка 1'), text);
+    await input(labelled<HTMLTextAreaElement>('Текст: Умения'), text);
     await click(button('Готово'));
     expect(container.querySelector('.ps-inline-formula')?.textContent).toBe('10');
     expect(container.querySelector('.ps-note-text')?.textContent).toContain('<img src=x onerror=alert(1)>');
@@ -145,7 +145,7 @@ describe('editable paper sheet controls', () => {
     const preview = labelled<HTMLElement>('Умения и способности');
     const block = preview.closest('.ps-note')!;
     await click(preview);
-    let editor = labelled<HTMLTextAreaElement>('Текст: Умения и способности, строка 1');
+    let editor = labelled<HTMLTextAreaElement>('Текст: Умения и способности');
     expect(editor.closest('.ps-note-body')).toBe(preview.parentElement);
     expect(block.querySelector('[role="group"]')?.getAttribute('aria-label')).toBe('Редактирование: Умения и способности');
     expect(container.querySelector('dialog, [role="dialog"]')).toBeNull();
@@ -165,9 +165,8 @@ describe('editable paper sheet controls', () => {
     expect(loadPaperSheet().document.sections.features.text).toBe(text);
     await act(async () => preview.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })));
     editor = block.querySelector<HTMLTextAreaElement>('textarea')!;
-    const sourceLine = Number(editor.getAttribute('aria-label')!.match(/строка (\d+)$/)![1]) - 1;
     await input(editor, `${editor.value} дополнено`);
-    const expected = text.split('\n').map((line, index) => index === sourceLine ? `${line} дополнено` : line).join('\n');
+    const expected = `${text} дополнено`;
     await act(async () => labelled('Имя персонажа').focus());
     expect(block.querySelector('textarea')).toBeNull();
     expect(document.activeElement).toBe(labelled('Имя персонажа'));
@@ -177,13 +176,13 @@ describe('editable paper sheet controls', () => {
   it('switches between two inline notes and finishes on an outside pointer click without changing either note', async () => {
     await controls(<><Note section="first" heading="Первая заметка" /><Note section="second" heading="Вторая заметка" /><div data-outside-note>За пределами заметок</div></>);
     await click(labelled<HTMLButtonElement>('Редактировать: Первая заметка'));
-    const firstEditor = labelled<HTMLTextAreaElement>('Текст: Первая заметка, строка 1');
+    const firstEditor = labelled<HTMLTextAreaElement>('Текст: Первая заметка');
     await input(firstEditor, 'Первый текст');
     const secondPreview = labelled<HTMLElement>('Вторая заметка');
     await act(async () => secondPreview.dispatchEvent(new Event('pointerdown', { bubbles: true })));
     await click(secondPreview);
-    expect(container.querySelector('[aria-label^="Текст: Первая заметка,"]')).toBeNull();
-    const secondEditor = labelled<HTMLTextAreaElement>('Текст: Вторая заметка, строка 1');
+    expect(container.querySelector('[aria-label="Текст: Первая заметка"]')).toBeNull();
+    const secondEditor = labelled<HTMLTextAreaElement>('Текст: Вторая заметка');
     expect(secondEditor.closest('.ps-note-body')).toBe(secondPreview.parentElement);
     expect(container.querySelectorAll('textarea')).toHaveLength(1);
     expect(document.activeElement).toBe(secondEditor);
@@ -199,92 +198,57 @@ describe('editable paper sheet controls', () => {
     expect(labelled<HTMLElement>('Вторая заметка').textContent).toBe('Второй текст');
   });
 
-  it('shows raw text only on the active line while other lines retain working formulas, links and resources', async () => {
+  it('edits and selects all lines in one field while preview keeps formulas, links and resources', async () => {
     const sheet = createPaperSheet();
     const source = 'Первая строка\nСЛ {{8 + [PROF] + [WIS]}}\n[[Клинок|card:silver-blade]]\n{{ресурс:Заряды|2|3}}';
     sheet.sections.features = { text: source, fontSize: 12 };
     await controls(<Note section="features" heading="Умения" />, sheet);
     const lines = () => [...container.querySelectorAll<HTMLElement>('.ps-note-line')];
     expect(lines()).toHaveLength(4);
-    await click(lines()[0]);
-    const editor = labelled<HTMLTextAreaElement>('Текст: Умения, строка 1');
-    expect(editor.value).toBe('Первая строка');
-    expect(container.querySelectorAll('.ps-inline-textarea')).toHaveLength(1);
-    expect(lines()[0].querySelector('.ps-note-line-print')).not.toBeNull();
     expect(lines()[1].querySelector('.ps-inline-formula')?.textContent).toBe('10');
     expect(lines()[2].querySelector('.ps-entity-name strong')?.textContent).toBe('Клинок');
     expect(lines()[3].querySelector('.ps-resource')?.textContent).toContain('2 / 3');
+    await click(lines()[0]);
+    const editor = labelled<HTMLTextAreaElement>('Текст: Умения');
+    expect(editor.value).toBe(source);
+    expect(container.querySelectorAll('.ps-inline-textarea')).toHaveLength(1);
+    editor.select();
+    expect([editor.selectionStart, editor.selectionEnd]).toEqual([0, source.length]);
     expect(container.querySelector('.ps-inline-tools')?.parentElement).toBe(container.querySelector('.ps-note-text')?.parentElement);
     expect(container.querySelector('dialog, [role="dialog"]')).toBeNull();
-    await input(editor, 'Первая строка изменена');
+    await input(editor, source.replace('Первая строка', 'Первая строка изменена'));
+    await click(button('Готово'));
     await click(labelled<HTMLButtonElement>('Потратить: Заряды'));
     expect(currentDocument.sections.features.text).toBe(source.replace('Первая строка', 'Первая строка изменена').replace('|2|3', '|1|3'));
-    expect(labelled<HTMLTextAreaElement>('Текст: Умения, строка 1').value).toBe('Первая строка изменена');
-    expect(container.querySelectorAll('.ps-note-line-active')).toHaveLength(1);
-    await click(lines()[1]);
-    expect(labelled<HTMLTextAreaElement>('Текст: Умения, строка 2').value).toBe('СЛ {{8 + [PROF] + [WIS]}}');
-    expect(lines()[0].querySelector('textarea')).toBeNull();
-    expect(lines()[0].textContent).toBe('Первая строка изменена');
+    expect(container.querySelectorAll('.ps-note-line')).toHaveLength(4);
   });
 
-  it('navigates logical lines and preserves text and caret through split, merge and a trailing blank line', async () => {
+  it('uses native multiline editing for splitting, merging and copying the whole note', async () => {
     const sheet = createPaperSheet();
     sheet.sections.features = { text: 'abcd\nxy\nlast', fontSize: 12 };
     await controls(<Note section="features" heading="Умения" />, sheet);
-    const line = (index: number) => container.querySelectorAll<HTMLElement>('.ps-note-line')[index];
-    const key = async (editor: HTMLTextAreaElement, value: string) => {
-      await act(async () => editor.dispatchEvent(new KeyboardEvent('keydown', { key: value, bubbles: true, cancelable: true })));
-    };
-    await click(line(0));
-    let editor = labelled<HTMLTextAreaElement>('Текст: Умения, строка 1');
-    editor.setSelectionRange(3, 3);
-    await key(editor, 'ArrowDown');
-    editor = labelled<HTMLTextAreaElement>('Текст: Умения, строка 2');
-    expect(editor.value).toBe('xy');
-    expect([editor.selectionStart, editor.selectionEnd]).toEqual([2, 2]);
-    editor.setSelectionRange(1, 1);
-    await key(editor, 'ArrowUp');
-    editor = labelled<HTMLTextAreaElement>('Текст: Умения, строка 1');
-    expect([editor.selectionStart, editor.selectionEnd]).toEqual([1, 1]);
-    editor.setSelectionRange(2, 3);
-    await key(editor, 'Enter');
-    expect(currentDocument.sections.features.text).toBe('ab\nd\nxy\nlast');
-    editor = labelled<HTMLTextAreaElement>('Текст: Умения, строка 2');
-    expect(editor.value).toBe('d');
-    expect([editor.selectionStart, editor.selectionEnd]).toEqual([0, 0]);
-    await key(editor, 'Backspace');
-    expect(currentDocument.sections.features.text).toBe('abd\nxy\nlast');
-    editor = labelled<HTMLTextAreaElement>('Текст: Умения, строка 1');
-    expect([editor.selectionStart, editor.selectionEnd]).toEqual([2, 2]);
-    editor.setSelectionRange(3, 3);
-    await key(editor, 'Delete');
-    expect(currentDocument.sections.features.text).toBe('abdxy\nlast');
-    editor = labelled<HTMLTextAreaElement>('Текст: Умения, строка 1');
-    expect([editor.selectionStart, editor.selectionEnd]).toEqual([3, 3]);
-    await click(line(1));
-    editor = labelled<HTMLTextAreaElement>('Текст: Умения, строка 2');
-    editor.setSelectionRange(editor.value.length, editor.value.length);
-    await key(editor, 'Enter');
-    expect(currentDocument.sections.features.text).toBe('abdxy\nlast\n');
-    editor = labelled<HTMLTextAreaElement>('Текст: Умения, строка 3');
-    expect(editor.value).toBe('');
-    await key(editor, 'Escape');
+    await click(container.querySelectorAll<HTMLElement>('.ps-note-line')[0]);
+    const editor = labelled<HTMLTextAreaElement>('Текст: Умения');
+    await input(editor, 'ab\nd\nxy\nlast\n');
+    expect(currentDocument.sections.features.text).toBe('ab\nd\nxy\nlast\n');
+    editor.select();
+    expect(editor.value.slice(editor.selectionStart, editor.selectionEnd)).toBe(currentDocument.sections.features.text);
+    await act(async () => editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })));
     expect(container.querySelector('textarea')).toBeNull();
-    expect(container.querySelectorAll('.ps-note-line')).toHaveLength(3);
-    expect(currentDocument.sections.features.text).toBe('abdxy\nlast\n');
+    expect(container.querySelectorAll('.ps-note-line')).toHaveLength(5);
   });
 
   it('formats only selected note text with toolbar and keyboard shortcuts while preserving safe source markup', async () => {
     await controls(<Note section="features" heading="Умения" />);
     await click(labelled<HTMLButtonElement>('Редактировать: Умения'));
-    const editor = labelled<HTMLTextAreaElement>('Текст: Умения, строка 1');
+    const editor = labelled<HTMLTextAreaElement>('Текст: Умения');
     expect(editor.closest('.ps-note-body')).not.toBeNull();
     expect(container.querySelector('dialog, [role="dialog"]')).toBeNull();
     await input(editor, 'Смелый тихий забытый <img src=x onerror=alert(1)>');
     editor.setSelectionRange(0, 'Смелый'.length);
     const bold = labelled<HTMLButtonElement>('Полужирный текст');
     await act(async () => bold.focus());
-    expect(labelled<HTMLTextAreaElement>('Текст: Умения, строка 1')).toBe(editor);
+    expect(labelled<HTMLTextAreaElement>('Текст: Умения')).toBe(editor);
     expect([editor.selectionStart, editor.selectionEnd]).toEqual([0, 6]);
     await click(bold);
     expect(editor.value).toBe('**Смелый** тихий забытый <img src=x onerror=alert(1)>');
@@ -319,22 +283,23 @@ describe('editable paper sheet controls', () => {
     sheet.sections.features = { text: 'Верх {{8 + [PROF] + [WIS]}}\nДо слово после\nНиз {{ресурс:Кости|2|3}}', fontSize: 12 };
     await controls(<Note section="features" heading="Умения" />, sheet);
     await click(container.querySelectorAll<HTMLElement>('.ps-note-line')[1]);
-    let editor = labelled<HTMLTextAreaElement>('Текст: Умения, строка 2');
-    editor.setSelectionRange(3, 8);
+    let editor = labelled<HTMLTextAreaElement>('Текст: Умения');
+    const wordStart = editor.value.indexOf('слово');
+    editor.setSelectionRange(wordStart, wordStart + 5);
     await click(labelled<HTMLButtonElement>('Полужирный текст'));
-    expect(editor.value).toBe('До **слово** после');
-    expect([editor.selectionStart, editor.selectionEnd]).toEqual([12, 12]);
+    expect(editor.value).toBe('Верх {{8 + [PROF] + [WIS]}}\nДо **слово** после\nНиз {{ресурс:Кости|2|3}}');
+    expect([editor.selectionStart, editor.selectionEnd]).toEqual([wordStart + 9, wordStart + 9]);
     expect(currentDocument.sections.features.text).toBe('Верх {{8 + [PROF] + [WIS]}}\nДо **слово** после\nНиз {{ресурс:Кости|2|3}}');
+    const caret = 'Верх {{8 + [PROF] + [WIS]}}\nДо **слово**\nновая строка'.length;
     await act(async () => {
-      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(editor, 'До **слово**\nновая строка после');
-      const caret = 'До **слово**\nновая строка'.length;
+      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(editor, 'Верх {{8 + [PROF] + [WIS]}}\nДо **слово**\nновая строка после\nНиз {{ресурс:Кости|2|3}}');
       editor.setSelectionRange(caret, caret);
       editor.dispatchEvent(new Event('input', { bubbles: true }));
     });
     expect(currentDocument.sections.features.text).toBe('Верх {{8 + [PROF] + [WIS]}}\nДо **слово**\nновая строка после\nНиз {{ресурс:Кости|2|3}}');
-    editor = labelled<HTMLTextAreaElement>('Текст: Умения, строка 3');
-    expect(editor.value).toBe('новая строка после');
-    expect([editor.selectionStart, editor.selectionEnd]).toEqual(['новая строка'.length, 'новая строка'.length]);
+    editor = labelled<HTMLTextAreaElement>('Текст: Умения');
+    expect([editor.selectionStart, editor.selectionEnd]).toEqual([caret, caret]);
+    await click(button('Готово'));
     expect(container.querySelector('.ps-inline-formula')?.textContent).toBe('10');
     expect(container.querySelector('.ps-resource')?.textContent).toContain('2 / 3');
   });
@@ -346,7 +311,7 @@ describe('editable paper sheet controls', () => {
     sheet.sections.features = { text: source, fontSize: 12 };
     await controls(<Note section="features" heading="Умения" />, sheet);
     await click(labelled<HTMLButtonElement>('Редактировать: Умения'));
-    const editor = labelled<HTMLTextAreaElement>('Текст: Умения, строка 1');
+    const editor = labelled<HTMLTextAreaElement>('Текст: Умения');
     const end = 3 + token.length;
     editor.setSelectionRange(3, end);
     const formula = button('ƒ Формула');
@@ -371,7 +336,7 @@ describe('editable paper sheet controls', () => {
     await controls(<Note section="features" heading="Умения" />, sheet);
     const pencil = labelled<HTMLButtonElement>('Редактировать: Умения');
     await click(pencil);
-    const editor = labelled<HTMLTextAreaElement>('Текст: Умения, строка 1');
+    const editor = labelled<HTMLTextAreaElement>('Текст: Умения');
     editor.setSelectionRange(3, 3);
     await act(async () => pencil.focus());
     await click(pencil);
@@ -428,6 +393,25 @@ describe('editable paper sheet controls', () => {
     expect(labelled('Бонус: Атлетика').value).toBe('+4');
     await click(labelled<HTMLButtonElement>('Владение: Атлетика'));
     expect(labelled('Бонус: Атлетика').value).toBe('+0');
+  });
+
+  it('removes a note block from the layout, shifts the next one into its place and restores its saved text', async () => {
+    const sheet = createPaperSheet();
+    sheet.sections.notes1 = { text: 'Не стирать при скрытии', fontSize: 12 };
+    savePaperSheet(sheet);
+    await renderPage();
+    const noteOrder = () => [...container.querySelectorAll<HTMLElement>('.ps-notes-page [data-note-section]')].map(element => element.dataset.noteSection);
+    expect(noteOrder()).toEqual(['notes1', 'notes2', 'notes3', 'notes4', 'notes5', 'notes6']);
+    await click(labelled<HTMLButtonElement>('Убрать блок: Заметки 1'));
+    expect(noteOrder()).toEqual(['notes2', 'notes3', 'notes4', 'notes5', 'notes6']);
+    expect(loadPaperSheet().document.sections.notes1.text).toBe('Не стирать при скрытии');
+    expect(loadPaperSheet().document.hiddenBlocks).toEqual(['notes1']);
+    await click(labelled<HTMLButtonElement>('Скрытые блоки: 1'));
+    expect(container.querySelector('dialog')?.textContent).toContain('Заметки 1');
+    await click(button('Вернуть'));
+    expect(noteOrder()).toEqual(['notes1', 'notes2', 'notes3', 'notes4', 'notes5', 'notes6']);
+    expect(labelled<HTMLElement>('Заметки').textContent).toContain('Не стирать при скрытии');
+    expect(loadPaperSheet().document.hiddenBlocks).toEqual([]);
   });
 
   it('never overwrites an unreadable saved document during StrictMode effect replay', async () => {

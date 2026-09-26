@@ -1,0 +1,38 @@
+.battle-map-3d{display:flex;flex-direction:column;width:100%;height:100%;min-width:0;min-height:0;gap:5px}
+.battle-scene-3d{position:relative;display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;isolation:isolate;border:1px solid rgba(192,166,112,.24);border-radius:14px;background:#1c2029;color:#e6dfcd;box-shadow:0 12px 34px #0003}
+.battle-scene-3d__toolbar{display:flex;flex-shrink:0;align-items:center;gap:5px;min-height:45px;padding:6px 10px;background:linear-gradient(90deg,#302c28,#20242c);border-bottom:1px solid #ffffff0e;flex-wrap:wrap}
+.battle-scene-3d__map-name{margin-left:auto;font-size:11px;color:#c9b999;max-width:35%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.battle-scene-3d__toolbar button{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:31px;padding:5px;border:1px solid #dac79c24;border-radius:7px;color:#ded5c0;background:#ffffff05;cursor:pointer;transition:background .15s,color .15s}
+.battle-scene-3d__toolbar button:hover{background:#dcc38e20;color:#fff2d2}
+.battle-scene-3d__toolbar button:focus-visible{outline:2px solid #f1d58e;outline-offset:2px}
+.battle-scene-3d__badge{font-size:11px;font-weight:800;letter-spacing:1.5px;color:#d8bd83;margin-right:7px}
+.battle-scene-3d__separator{height:19px;width:1px;background:#d9c39024;margin:0 3px}
+.battle-scene-3d__toolbar .battle-scene-3d__decline{font-size:12px;padding:4px 10px;margin-left:auto;min-width:auto}
+.battle-scene-3d__viewport{position:relative;flex:1;width:100%;height:clamp(350px,62vh,760px);min-height:160px;touch-action:none;cursor:grab}
+.battle-scene-3d__viewport:active{cursor:grabbing}
+.battle-scene-3d__viewport>div:first-child{position:absolute!important;inset:0}
+.battle-scene-3d__viewport canvas{display:block;width:100%;height:100%;touch-action:none}
+.battle-scene-3d__labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.battle-scene-3d__label{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;width:max-content;max-width:120px;pointer-events:none;will-change:transform;visibility:hidden}
+.battle-scene-3d__name{display:none;max-width:120px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:10px;font-weight:650;line-height:1.45;padding:1px 5px;border-radius:4px 4px 0 0;color:#ede6d7;background:#171b25bd;box-shadow:0 1px 5px #0003;text-shadow:0 1px 2px #000;backdrop-filter:blur(3px)}
+.battle-scene-3d__label.is-expanded .battle-scene-3d__name{display:block}
+.battle-scene-3d__health{display:block;width:28px;height:3px;border-radius:0 0 3px 3px;overflow:hidden;background:#22232bea;box-shadow:0 1px 3px #0005}
+.battle-scene-3d__label.is-expanded .battle-scene-3d__health{width:100%;min-width:28px}
+.battle-scene-3d__health>span{display:block;height:100%;transition:width .25s ease}
+.battle-scene-3d__label.is-active .battle-scene-3d__name{color:#e2f4ff;background:#203a4cdd}
+.battle-scene-3d__label.is-fallen{opacity:.6}
+.battle-scene-3d__cue{max-width:170px;min-width:70px;margin-bottom:5px;padding:3px 7px;text-align:center;font-size:12px;font-weight:750;line-height:1.2;color:#ffe8b4;background:#251e1be8;border:1px solid #e7bf6655;border-radius:6px;box-shadow:0 2px 8px #0005;animation:battle-3d-cue .2s ease-out}
+.battle-scene-3d__help{flex-shrink:0;margin:0;padding:7px 12px;text-align:center;font-size:10px;line-height:1.4;color:#a9a597;background:#191d25;border-top:1px solid #ffffff08}
+.battle-map-3d-keyboard{flex:0 0 auto;color:#c6b491;font-size:11px;border:1px solid #9e825933;border-radius:8px;background:#211e1a}
+.battle-map-3d-keyboard summary{cursor:pointer;padding:6px 10px;min-height:28px}
+.battle-map-3d-keyboard summary:focus-visible{outline:2px solid #e6c681;outline-offset:-2px}
+.battle-map-3d-keyboard-grid{display:grid;gap:3px;max-height:170px;overflow:auto;padding:5px;overscroll-behavior:contain}
+.battle-map-3d-keyboard-grid button{min-height:32px;border:1px solid #ad977455;border-radius:4px;background:#302b24;color:#dfd0b5;font-size:10px;cursor:pointer}
+.battle-map-3d-keyboard-grid button[data-actor-id]{background:#3d4646;border-color:#9ac0b8}
+.battle-map-3d-keyboard-grid button:disabled{background:#191816;color:#716759;cursor:not-allowed}
+.battle-map-3d-keyboard-grid button:focus-visible{outline:2px solid #ffe29b;outline-offset:-2px;background:#6d5334}
+.battle-map-3d-loading{display:grid;place-items:center;flex:1;min-height:200px;color:#d8c39a;background:#1c2029;border-radius:14px;font-size:13px}
+.battle-map-3d-fallback{margin:0;padding:7px 10px;color:#ead4a8;background:#342b20;border:1px solid #a9894f66;border-radius:8px;font-size:12px;z-index:9;position:relative}
+@keyframes battle-3d-cue{from{opacity:0;translate:0 4px}to{opacity:1;translate:0 0}}
+@media(max-width:640px){.battle-scene-3d__viewport{height:clamp(300px,56vh,550px);min-height:160px}.battle-scene-3d__name{font-size:9px;max-width:90px}.battle-scene-3d__toolbar{gap:4px;padding:5px 7px}.battle-scene-3d__help{font-size:9px}.battle-map-3d-keyboard-grid{max-height:140px}}
+@media(prefers-reduced-motion:reduce){.battle-scene-3d__cue{animation:none}.battle-scene-3d__health>span{transition:none}}

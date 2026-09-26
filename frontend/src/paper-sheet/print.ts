@@ -63,6 +63,12 @@ export function buildPrintSnapshot(workspace: HTMLElement, doc: PaperSheetDocume
           control.replaceWith(label);
         }
       });
+      // PDF capture uses screen styles, not @media print: show the formatted preview
+      // even if the author was editing its single multiline textarea.
+      for (const note of page.querySelectorAll<HTMLElement>('.ps-note-editing')) {
+        note.classList.remove('ps-note-editing');
+        note.querySelectorAll('.ps-inline-textarea, .ps-inline-tools').forEach(element => element.remove());
+      }
       host.append(page);
       for (const note of page.querySelectorAll<HTMLElement>('[data-note-section]')) {
         const body = note.querySelector<HTMLElement>('.ps-note-text');

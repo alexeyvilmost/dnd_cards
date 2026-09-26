@@ -11,7 +11,9 @@ import (
 	"gorm.io/gorm"
 )
 
-const maxPaperDocumentBytes = 10_000_000
+// JSON documents are decoded and stored as one value; keep an operational
+// memory/database boundary while allowing large imported character histories.
+const maxPaperDocumentBytes = 64_000_000
 
 type paperDocument struct {
 	ID        uuid.UUID       `gorm:"type:uuid;primaryKey" json:"id"`
@@ -72,7 +74,7 @@ func registerPaperDocumentRoutes(r *gin.Engine, auth *AuthService, db *gorm.DB) 
 	// Portraits in imported paper documents can be larger than normal entity mutations.
 	group := r.Group("/api/paper-sheets")
 	group.Use(OptionalAuthMiddleware(auth), JSONBodyLimitMiddleware(maxPaperDocumentBytes+2048),
-		RequestBodyLimitMiddleware(maxPaperDocumentBytes+2048), NewFixedWindowRateLimiter(120, time.Minute).MutationsOnly())
+		RequestBodyLimitMiddleware(maxPaperDocumentBytes+2048), NewFixedWindowRateLimiter(120, time.Minute).AnonymousMutationsOnly())
 	group.Use(func(c *gin.Context) {
 		c.Header("Cache-Control", "no-store")
 		c.Header("Referrer-Policy", "no-referrer")
@@ -91,7 +93,7 @@ func registerPaperDocumentRoutes(r *gin.Engine, auth *AuthService, db *gorm.DB) 
 		} else {
 			query = query.Where("deleted_at IS NULL")
 		}
-		err := query.Order("updated_at DESC").Limit(100).Scan(&rows).Error
+		err := query.Order("updated_at DESC").Scan(&rows).Error
 		if err != nil {
 			c.JSON(500, gin.H{"error": "Не удалось загрузить листы"})
 			return
@@ -134,7 +136,7 @@ func registerPaperDocumentRoutes(r *gin.Engine, auth *AuthService, db *gorm.DB) 
 	}
 	group.DELETE("/:id", StrictAuthMiddleware(auth), setDeleted(true))
 	group.POST("/:id/restore", StrictAuthMiddleware(auth), setDeleted(false))
-	group.POST("", NewFixedWindowRateLimiter(20, time.Hour).Handler(), func(c *gin.Context) {
+	group.POST("", NewFixedWindowRateLimiter(20, time.Hour).AnonymousOnly(), func(c *gin.Context) {
 		var req struct {
 			Document  json.RawMessage `json:"document"`
 			Anonymous bool            `json:"anonymous"`

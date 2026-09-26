@@ -1147,7 +1147,7 @@ export default function SoloCombatPage() {
         influences={heldForDisplay?.held ? combatRollInfluences(state, heldForDisplay.command.actorId, heldForDisplay.held.kind, heldForDisplay.held.roll) : []}
         onInfluence={heldForDisplay?.held ? effectId => applyIntent({type: 'd20_interrupt', actorId: heldForDisplay.command.actorId, effectId}, () => resolveD20Interrupt(state, heldForDisplay.command.actorId, Math.random, effectId)) : undefined}
       />}
-      {settingsOpen && <SheetSettingsDialog onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && <SheetSettingsDialog initialPage="combat" onClose={() => setSettingsOpen(false)} />}
       <MonsterTurnController state={state} disabled={presentation.blocked || Boolean(trustedRunRef.current) || busy || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt)} onTransition={apply} onError={setError} />
       <header className="combat-topbar">
         <div className="combat-topbar__navigation"><Link to={roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`}><ArrowLeft size={18} /> {roguelikeRunId ? 'Забег' : 'Лист'}</Link>{!roguelikeRunId && <button type="button" onClick={() => setSceneConstructorOpen(true)}><SlidersHorizontal size={16} /> Сцена</button>}</div>

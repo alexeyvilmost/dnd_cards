@@ -18,6 +18,10 @@ import (
 
 const requestIDContextKey = "request_id"
 
+// Multipart bodies are spooled by net/http before handlers can inspect a file.
+// This is an operational disk-exhaustion boundary, not a per-user upload quota.
+const maxMultipartSafetyBytes int64 = 256 << 20
+
 func validRequestID(value string) bool {
 	if value == "" || len(value) > 128 {
 		return false
@@ -186,6 +190,34 @@ func (limiter *FixedWindowRateLimiter) Handler() gin.HandlerFunc {
 
 func (limiter *FixedWindowRateLimiter) MutationsOnly() gin.HandlerFunc {
 	handler := limiter.Handler()
+	return func(c *gin.Context) {
+		switch c.Request.Method {
+		case http.MethodGet, http.MethodHead, http.MethodOptions:
+			c.Next()
+		default:
+			handler(c)
+		}
+	}
+}
+
+// AnonymousOnly protects public write routes without imposing a quota on
+// authenticated users. It must run after OptionalAuthMiddleware/AuthMiddleware:
+// a forged or invalid Authorization header must never be enough to bypass it.
+func (limiter *FixedWindowRateLimiter) AnonymousOnly() gin.HandlerFunc {
+	handler := limiter.Handler()
+	return func(c *gin.Context) {
+		if strings.TrimSpace(c.GetHeader("Authorization")) != "" {
+			if _, err := GetCurrentUserID(c); err == nil {
+				c.Next()
+				return
+			}
+		}
+		handler(c)
+	}
+}
+
+func (limiter *FixedWindowRateLimiter) AnonymousMutationsOnly() gin.HandlerFunc {
+	handler := limiter.AnonymousOnly()
 	return func(c *gin.Context) {
 		switch c.Request.Method {
 		case http.MethodGet, http.MethodHead, http.MethodOptions:

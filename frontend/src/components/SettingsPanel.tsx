@@ -32,6 +32,7 @@ export default function SettingsPanel({ initialPage = 'home', onTestDice }: { in
     <h3>{pages[page].title}</h3>
     {page === 'audio' && <AudioSettings/>}
     {children.length > 0 && <div className="settings-panel-categories">{children.map(key => <button type="button" key={key} onClick={() => setPage(key)}>{pages[key].title}<span aria-hidden="true">→</span></button>)}</div>}
+    {page === 'combat' && check('combat3d', '3D бои', 'Объёмное поле, препятствия и миниатюры. Камеру можно вращать и приближать.')}
     {page === 'combat-rolls' && <><CombatRollModeSelect /><p>Режим зависит от владельца действия или эффекта, включая спасброски его целей. Стандарт — анимация и расчёт, быстрый режим — готовый результат, пропуск — результат на поле.</p></>}
     {page === 'dice' && <>
       <p>Проверки навыков и спасброски из листа всегда открываются с кнопкой «Бросить». Эти настройки управляют другими бросками.</p>

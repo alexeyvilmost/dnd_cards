@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/gin-gonic/gin"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/gin-gonic/gin"
 )
 
 func TestPaperDocumentTrashOwnershipAndRestore(t *testing.T) {
@@ -97,6 +99,20 @@ func TestPaperDocumentValidation(t *testing.T) {
 				t.Fatalf("valid=%v, want %v", got, test.valid)
 			}
 		})
+	}
+}
+
+func TestPaperDocumentValidationAcceptsFormerTenMegabyteQuota(t *testing.T) {
+	sections := make(map[string]any, 60)
+	for index := 0; index < 60; index++ {
+		sections[fmt.Sprintf("notes-%d", index)] = map[string]any{"text": strings.Repeat("A", 190_000), "fontSize": 12}
+	}
+	raw, err := json.Marshal(map[string]any{"version": 1, "fields": map[string]string{}, "sections": sections})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(raw) <= 10_000_000 || !validPaperDocument(raw) {
+		t.Fatal("valid paper document larger than the old 10 MB quota was rejected")
 	}
 }
 

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useId, useLayoutEffect, useRef, useState, type Dispatch, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type SetStateAction } from 'react';
-import { BookOpen, Pencil, Settings2, X } from 'lucide-react';
+import { BookOpen, Pencil, Settings2, Trash2, X } from 'lucide-react';
 import { calculateSheet, defaultFormula, evaluatePaperFormula, fieldValue, type PaperEquipmentProjection, type PaperSheetDocument } from './model';
+import { PAPER_BLOCKS, blockVisible, hideBlock, isPaperBlockId, type PaperBlockId } from './blocks';
 import { EntityName } from './EntityName';
 import { LibraryPicker } from './LibraryPicker';
 import { PAPER_ENTITY_TOKEN_PATTERN, paperEntityToken, parsePaperEntityToken, type PaperLibraryEntity } from './references';
@@ -19,8 +20,12 @@ export function usePaperSheet() {
   return context;
 }
 
-export function Frame({ heading, children, className = '' }: { heading?: string; children?: ReactNode; className?: string }) {
-  return <section className={`ps-frame ${className}`}>{heading && <h2 className="ps-heading">{heading}</h2>}{children}</section>;
+export function Frame({ heading, children, className = '', blockId }: { heading?: string; children?: ReactNode; className?: string; blockId?: PaperBlockId }) {
+  const { doc, setDoc } = usePaperSheet();
+  if (blockId && !blockVisible(doc, blockId)) return null;
+  return <section className={`ps-frame ${className}`} data-paper-block={blockId}>{heading && <h2 className="ps-heading">{heading}</h2>}{children}
+    {blockId && <button type="button" className="ps-block-remove" aria-label={`Убрать блок: ${heading || PAPER_BLOCKS.find(block => block.id === blockId)?.label}`} onClick={() => setDoc(current => hideBlock(current, blockId))}><Trash2 size={12} /></button>}
+  </section>;
 }
 
 export function Field({ field, label, signed = false, className = '', placeholder }: {
@@ -117,30 +122,22 @@ function NoteText({ text, onChange }: { text: string; onChange: (value: string) 
   })}</>;
 }
 
-function sourcePosition(text: string, offset: number) {
-  const before = text.slice(0, Math.max(0, Math.min(text.length, offset))).split('\n');
-  return { line: before.length - 1, column: before[before.length - 1].length };
-}
-
 export function Note({ section, heading, className = '', children }: { section: string; heading: string; className?: string; children?: ReactNode }) {
   const { doc, setDoc, setField } = usePaperSheet();
-  const [activeLine, setActiveLine] = useState<number | null>(null);
+  const [editing, setEditing] = useState(false);
   const [picking, setPicking] = useState(false);
   const [resourceOpen, setResourceOpen] = useState(false);
   const [resourceName, setResourceName] = useState('Ресурс');
   const [resourceMax, setResourceMax] = useState('3');
-  const [toolbarTop, setToolbarTop] = useState(0);
   const insertion = useRef<{ start: number; end: number; fromEditor: boolean } | null>(null);
-  const selection = useRef<{ line: number; start: number; end: number } | null>(null);
+  const selection = useRef<{ start: number; end: number } | null>(null);
   const returnFocus = useRef(false);
   const note = useRef<HTMLElement>(null);
-  const body = useRef<HTMLDivElement>(null);
   const preview = useRef<HTMLDivElement>(null);
-  const currentLine = useRef<HTMLDivElement>(null);
   const textarea = useRef<HTMLTextAreaElement>(null);
   const data = doc.sections[section] ?? { text: '', fontSize: 12 };
   const lines = data.text.split('\n');
-  const editing = activeLine !== null;
+  const removable = isPaperBlockId(section);
 
   const change = (patch: Partial<typeof data>) => setDoc(current => ({ ...current, sections: { ...current.sections, [section]: { ...(current.sections[section] ?? { text: '', fontSize: 12 }), ...patch } } }));
   const replaceLine = (index: number, value: string) => setDoc(current => {
@@ -149,37 +146,22 @@ export function Note({ section, heading, className = '', children }: { section: 
     nextLines.splice(index, 1, ...value.split('\n'));
     return { ...current, sections: { ...current.sections, [section]: { ...old, text: nextLines.join('\n') } } };
   });
-  const editLine = (index: number, value: string, cursor: number) => {
-    if (value === lines[index]) {
-      selection.current = null;
-      textarea.current?.setSelectionRange(cursor, cursor);
-      return;
-    }
-    const position = sourcePosition(value, cursor);
-    const nextLine = index + position.line;
-    selection.current = { line: nextLine, start: position.column, end: position.column };
-    setActiveLine(nextLine);
-    replaceLine(index, value);
-  };
-  const activate = (index: number, column = lines[index]?.length ?? 0) => {
-    if (index === activeLine) {
-      textarea.current?.focus({ preventScroll: true });
-      return;
-    }
-    selection.current = { line: index, start: column, end: column };
-    setActiveLine(index);
+  const activate = (offset = data.text.length) => {
+    if (editing) { textarea.current?.focus({ preventScroll: true }); return; }
+    selection.current = { start: offset, end: offset };
+    setEditing(true);
   };
   const finishEditing = () => {
     returnFocus.current = true;
     setResourceOpen(false);
-    setActiveLine(null);
+    setEditing(false);
   };
 
   useEffect(() => {
     if (!editing) return;
     const finishOutside = (event: Event) => {
       if (event.target instanceof Node && !note.current?.contains(event.target)) {
-        setActiveLine(null);
+        setEditing(false);
         setResourceOpen(false);
       }
     };
@@ -192,61 +174,33 @@ export function Note({ section, heading, className = '', children }: { section: 
   }, [editing]);
 
   useLayoutEffect(() => {
-    if (activeLine === null) {
+    if (!editing) {
       if (returnFocus.current) preview.current?.focus({ preventScroll: true });
       returnFocus.current = false;
       return;
     }
     const element = textarea.current;
     if (element && document.activeElement !== element) element.focus({ preventScroll: true });
-    if (element && selection.current?.line === activeLine) {
+    if (element && selection.current) {
       element.setSelectionRange(selection.current.start, selection.current.end);
       selection.current = null;
     }
-  }, [activeLine, data.text]);
-
-  useLayoutEffect(() => {
-    if (activeLine === null) return;
-    const placeToolbar = () => {
-      const container = body.current;
-      const line = currentLine.current;
-      if (!container || !line) return;
-      const containerRect = container.getBoundingClientRect();
-      const lineRect = line.getBoundingClientRect();
-      const scale = containerRect.width ? container.offsetWidth / containerRect.width : 1;
-      setToolbarTop(Math.max(0, (lineRect.bottom - containerRect.top) * scale));
-    };
-    placeToolbar();
-    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(placeToolbar);
-    if (body.current) observer?.observe(body.current);
-    if (currentLine.current) observer?.observe(currentLine.current);
-    const scrollbox = preview.current;
-    scrollbox?.addEventListener('scroll', placeToolbar);
-    window.addEventListener('resize', placeToolbar);
-    return () => {
-      observer?.disconnect();
-      scrollbox?.removeEventListener('scroll', placeToolbar);
-      window.removeEventListener('resize', placeToolbar);
-    };
-  }, [activeLine, data.text, data.fontSize]);
+  }, [editing, data.text]);
 
   const openLibrary = (fromEditor: boolean) => {
-    const base = activeLine === null ? data.text.length : lines.slice(0, activeLine).reduce((total, line) => total + line.length + 1, 0);
     insertion.current = {
-      start: fromEditor ? base + (textarea.current?.selectionStart ?? lines[activeLine ?? 0].length) : data.text.length,
-      end: fromEditor ? base + (textarea.current?.selectionEnd ?? lines[activeLine ?? 0].length) : data.text.length,
+      start: fromEditor ? (textarea.current?.selectionStart ?? data.text.length) : data.text.length,
+      end: fromEditor ? (textarea.current?.selectionEnd ?? data.text.length) : data.text.length,
       fromEditor,
     };
-    setActiveLine(null);
+    setEditing(false);
     setPicking(true);
   };
   const closeLibrary = (nextText = data.text) => {
     setPicking(false);
     if (insertion.current?.fromEditor) {
-      const start = sourcePosition(nextText, insertion.current.start);
-      const end = sourcePosition(nextText, insertion.current.end);
-      selection.current = { line: start.line, start: start.column, end: end.line === start.line ? end.column : start.column };
-      setActiveLine(start.line);
+      selection.current = { start: Math.min(insertion.current.start, nextText.length), end: Math.min(insertion.current.end, nextText.length) };
+      setEditing(true);
     }
     insertion.current = null;
   };
@@ -260,71 +214,32 @@ export function Note({ section, heading, className = '', children }: { section: 
     closeLibrary(nextText);
   };
   const insert = (text: string) => {
-    if (activeLine === null) return;
+    if (!editing) return;
     const element = textarea.current;
-    const line = lines[activeLine];
-    const start = element?.selectionStart ?? line.length;
+    const start = element?.selectionStart ?? data.text.length;
     const end = element?.selectionEnd ?? start;
-    const nextText = line.slice(0, start) + text + line.slice(end);
-    if (nextText === line) {
+    const nextText = data.text.slice(0, start) + text + data.text.slice(end);
+    if (nextText === data.text) {
       selection.current = null;
       element?.focus({ preventScroll: true });
       element?.setSelectionRange(start + text.length, start + text.length);
       return;
     }
-    editLine(activeLine, nextText, start + text.length);
+    selection.current = { start: start + text.length, end: start + text.length };
+    change({ text: nextText });
   };
   const format = (marker: string) => {
-    if (activeLine === null) return;
+    if (!editing) return;
     const element = textarea.current;
-    const start = element?.selectionStart ?? lines[activeLine].length;
+    const start = element?.selectionStart ?? data.text.length;
     const end = element?.selectionEnd ?? start;
-    insert(`${marker}${lines[activeLine].slice(start, end) || 'текст'}${marker}`);
+    insert(`${marker}${data.text.slice(start, end) || 'текст'}${marker}`);
   };
-  const moveLine = (index: number, column: number) => {
-    const nextColumn = Math.min(column, lines[index].length);
-    selection.current = { line: index, start: nextColumn, end: nextColumn };
-    setActiveLine(index);
-  };
-  const handleEditorKey = (event: ReactKeyboardEvent<HTMLTextAreaElement>, index: number) => {
+  const handleEditorKey = (event: ReactKeyboardEvent<HTMLTextAreaElement>) => {
     if (event.nativeEvent.isComposing) return;
     if ((event.ctrlKey || event.metaKey) && ['b', 'i'].includes(event.key.toLowerCase())) {
       event.preventDefault();
       format(event.key.toLowerCase() === 'b' ? '**' : '_');
-      return;
-    }
-    const element = event.currentTarget;
-    const start = element.selectionStart;
-    const end = element.selectionEnd;
-    if (event.key === 'Enter' && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
-      event.preventDefault();
-      editLine(index, lines[index].slice(0, start) + '\n' + lines[index].slice(end), start + 1);
-    } else if (event.key === 'Backspace' && start === 0 && end === 0 && index > 0) {
-      event.preventDefault();
-      const previousLength = lines[index - 1].length;
-      selection.current = { line: index - 1, start: previousLength, end: previousLength };
-      setActiveLine(index - 1);
-      setDoc(current => {
-        const old = current.sections[section] ?? { text: '', fontSize: 12 };
-        const nextLines = old.text.split('\n');
-        nextLines.splice(index - 1, 2, nextLines[index - 1] + nextLines[index]);
-        return { ...current, sections: { ...current.sections, [section]: { ...old, text: nextLines.join('\n') } } };
-      });
-    } else if (event.key === 'Delete' && start === lines[index].length && end === start && index < lines.length - 1) {
-      event.preventDefault();
-      selection.current = { line: index, start, end: start };
-      setDoc(current => {
-        const old = current.sections[section] ?? { text: '', fontSize: 12 };
-        const nextLines = old.text.split('\n');
-        nextLines.splice(index, 2, nextLines[index] + nextLines[index + 1]);
-        return { ...current, sections: { ...current.sections, [section]: { ...old, text: nextLines.join('\n') } } };
-      });
-    } else if (event.key === 'ArrowUp' && index > 0 && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
-      event.preventDefault();
-      moveLine(index - 1, start);
-    } else if (event.key === 'ArrowDown' && index < lines.length - 1 && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
-      event.preventDefault();
-      moveLine(index + 1, start);
     }
   };
   const clickColumn = (element: HTMLElement, raw: string, x: number, y: number) => {
@@ -337,27 +252,26 @@ export function Note({ section, heading, className = '', children }: { section: 
     return Math.min(raw.length, range.toString().length);
   };
 
-  return <section ref={note} data-note-section={section} className={`ps-frame ps-note ${editing ? 'ps-note-editing' : ''} ${className}`}
+  if (removable && !blockVisible(doc, section)) return null;
+
+  return <section ref={note} data-note-section={section} data-paper-block={removable ? section : undefined} className={`ps-frame ps-note ${editing ? 'ps-note-editing' : ''} ${className}`}
     onKeyDown={event => { if (editing && event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); finishEditing(); } }}>
     <div className="ps-heading ps-note-heading"><input aria-label={`Заголовок: ${heading}`} value={doc.fields[`heading.${section}`] ?? heading} onChange={event => setField(`heading.${section}`, event.target.value)} />
       <button type="button" className="ps-note-library" aria-label={`Добавить из библиотеки: ${heading}`} onClick={() => openLibrary(editing)}><BookOpen size={12} /></button>
-      <button type="button" aria-label={`Редактировать: ${heading}`} onClick={() => activate(0)}><Pencil size={12} fill="currentColor" /></button></div>
-    <div ref={body} className={`ps-note-body ${doc.settings.grid ? 'ps-grid' : ''}`} style={{ fontSize: data.fontSize }}>
-      <div ref={preview} className="ps-note-text" tabIndex={0} role="textbox" aria-label={heading} aria-multiline="true"
-        onClick={event => { if (event.target === event.currentTarget) activate(lines.length - 1); }}
+      <button type="button" aria-label={`Редактировать: ${heading}`} onClick={() => activate(0)}><Pencil size={12} fill="currentColor" /></button>
+      {removable && <button type="button" className="ps-note-remove" aria-label={`Убрать блок: ${PAPER_BLOCKS.find(block => block.id === section)?.label || heading}`} onClick={() => setDoc(current => hideBlock(current, section))}><Trash2 size={12} /></button>}</div>
+    <div className={`ps-note-body ${doc.settings.grid ? 'ps-grid' : ''}`} style={{ fontSize: data.fontSize }}>
+      <div ref={preview} className="ps-note-text" tabIndex={editing ? -1 : 0} role="textbox" aria-label={heading} aria-multiline="true"
+        onClick={event => { if (event.target === event.currentTarget) activate(); }}
         onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); activate(0); } }}>
-        {lines.map((line, index) => <div key={index} ref={index === activeLine ? currentLine : undefined}
-          className={`ps-note-line ${index === activeLine ? 'ps-note-line-active' : ''} ${/\[\[|\{\{/.test(line) ? 'ps-note-line-token' : ''}`}
-          onClick={event => { if (index !== activeLine && !(event.target as HTMLElement).closest('button')) activate(index, clickColumn(event.currentTarget, line, event.clientX, event.clientY)); }}>
-          {index === activeLine ? <>
-            <div className="ps-note-line-print" aria-hidden="true"><NoteText text={line} onChange={text => replaceLine(index, text)} /></div>
-            <div className="ps-note-line-measure" aria-hidden="true">{line || '\u200b'}</div>
-            <textarea ref={textarea} className="ps-inline-textarea" rows={1} aria-label={`Текст: ${heading}, строка ${index + 1}`}
-              value={line} onChange={event => editLine(index, event.target.value, event.target.selectionStart)} onKeyDown={event => handleEditorKey(event, index)} />
-          </> : <NoteText text={line} onChange={text => replaceLine(index, text)} />}
+        {lines.map((line, index) => <div key={index} className="ps-note-line"
+          onClick={event => { if (!(event.target as HTMLElement).closest('button')) { const base = lines.slice(0, index).reduce((total, value) => total + value.length + 1, 0); activate(base + clickColumn(event.currentTarget, line, event.clientX, event.clientY)); } }}>
+          <NoteText text={line} onChange={text => replaceLine(index, text)} />
         </div>)}
       </div>
-      {editing && <div className="ps-inline-tools" style={{ top: toolbarTop }} role="group" aria-label={`Редактирование: ${heading}`}>
+      {editing && <textarea ref={textarea} className="ps-inline-textarea" aria-label={`Текст: ${heading}`} value={data.text}
+        onChange={event => change({ text: event.target.value })} onKeyDown={handleEditorKey} />}
+      {editing && <div className="ps-inline-tools" role="group" aria-label={`Редактирование: ${heading}`}>
         <div className="ps-editor-tools"><button type="button" aria-label="Полужирный текст" onClick={() => format('**')}><b>Ж</b></button><button type="button" aria-label="Курсив" onClick={() => format('_')}><i>К</i></button><button type="button" aria-label="Зачёркнутый текст" onClick={() => format('~~')}><s>А</s></button><button type="button" aria-label="Маркированный список" onClick={() => insert('\n• ')}>☷</button><button type="button" onClick={() => insert('{{8 + [PROF] + [WIS]}}')}>ƒ Формула</button><button type="button" aria-expanded={resourceOpen} onClick={() => setResourceOpen(!resourceOpen)}>＋ Ресурс</button><button type="button" onClick={() => openLibrary(true)}><BookOpen size={12} /> Из библиотеки</button><button type="button" onClick={finishEditing}>Готово</button></div>
         {resourceOpen && <div className="ps-resource-editor"><input aria-label="Название ресурса" value={resourceName} onChange={event => setResourceName(event.target.value)} /><input aria-label="Максимум ресурса" type="number" min="0" value={resourceMax} onChange={event => setResourceMax(event.target.value)} /><button type="button" onClick={() => { const count = Math.max(0, Number(resourceMax) || 0); insert(`{{ресурс:${resourceName.replace(/[|{}]/g, '')}|${count}|${count}}}`); setResourceOpen(false); }}>Вставить</button></div>}
       </div>}

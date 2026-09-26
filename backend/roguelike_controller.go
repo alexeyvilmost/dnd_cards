@@ -585,7 +585,7 @@ func (rc *RoguelikeController) List(c *gin.Context) {
 		return
 	}
 	var runs []RoguelikeRun
-	if err := rc.db.Preload("Character").Where("user_id = ?", userID).Order("updated_at DESC").Limit(50).Find(&runs).Error; err != nil {
+	if err := rc.db.Preload("Character").Where("user_id = ?", userID).Order("updated_at DESC").Find(&runs).Error; err != nil {
 		writeRoguelikeError(c, err)
 		return
 	}
@@ -600,7 +600,7 @@ func (rc *RoguelikeController) List(c *gin.Context) {
 			runs[index].Character.AccessMode = characterV3AccessOwner
 		}
 	}
-	// Availability must cover every active run, not just the last 50 displayed.
+	// Availability still uses the authoritative active-run set, independent of presentation.
 	var activeRuns []RoguelikeRun
 	if err := rc.db.Select("character_id", "source_character_id", "party").Where("user_id = ? AND status = ?", userID, RoguelikeStatusActive).Find(&activeRuns).Error; err != nil {
 		writeRoguelikeError(c, err)

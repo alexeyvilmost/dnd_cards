@@ -24,4 +24,12 @@ describe('per-side roll preferences',()=>{
     vi.stubGlobal('localStorage',{getItem:()=>JSON.stringify({combatRollMode:'invalid',enemyCombatRollMode:'invalid'})});
     expect(getSettings().enemyCombatRollMode).toBe('standard');
   });
+  it('keeps 3D combat opt-in for new, legacy and malformed settings',()=>{
+    for (const stored of [null, {}, { combat3d: 'false' }]) {
+      vi.stubGlobal('localStorage',{getItem:()=>stored === null ? null : JSON.stringify(stored)});
+      expect(getSettings().combat3d).toBe(false);
+    }
+    vi.stubGlobal('localStorage',{getItem:()=>JSON.stringify({combat3d:true,enemyCombatRollMode:'skip'})});
+    expect(getSettings()).toMatchObject({combat3d:true,enemyCombatRollMode:'skip'});
+  });
 });

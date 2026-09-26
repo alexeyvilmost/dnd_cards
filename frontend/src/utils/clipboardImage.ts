@@ -16,7 +16,6 @@ export async function readClipboardImageFile(): Promise<File> {
     if (!mime) continue;
     const blob = await item.getType(mime);
     if (!blob.size) throw new Error('Изображение в буфере пустое');
-    if (blob.size > 10 * 1024 * 1024) throw new Error('Изображение должно быть меньше 10 МБ');
     return new File([blob], `clipboard.${IMAGE_EXTENSIONS[mime]}`, { type: mime });
   }
   throw new Error('Скопируйте изображение PNG, JPEG, WebP или GIF');

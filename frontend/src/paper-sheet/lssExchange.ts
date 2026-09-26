@@ -1,5 +1,6 @@
 import { ABILITY_IDS, SKILL_IDS, SKILL_ABILITY } from '../character/rules/foundation';
-import { calculateSheet, createPaperSheet, exportPaperSheet, importPaperSheet, type PaperSheetDocument, type SheetCalculation } from './model';
+import { calculateSheet, createPaperSheet, exportPaperSheet, importPaperSheet, PAPER_DOCUMENT_SAFETY_BYTES, type PaperSheetDocument, type SheetCalculation } from './model';
+import { PAPER_BLOCKS, isPaperBlockId } from './blocks';
 import type { Spell } from '../types';
 
 type Obj = Record<string, any>;
@@ -14,7 +15,7 @@ const specified = (v: unknown) => v !== null && v !== undefined && v !== '';
 
 /** All external data stays inert. Bound depth/size before traversing nested editor documents. */
 export function parseExchangeJSON(text: string): any {
-  if (new TextEncoder().encode(text).length > 10_000_000) throw new Error('Файл больше 10 МБ.');
+  if (new TextEncoder().encode(text).length > PAPER_DOCUMENT_SAFETY_BYTES) throw new Error('Файл превышает защитный предел загрузки.');
   let value: unknown;
   try { value = JSON.parse(text.replace(/^\uFEFF/, '')); } catch { throw new Error('Не удалось прочитать JSON.'); }
   let nodes = 0;
@@ -104,6 +105,8 @@ export function importSheetJSON(text: string): PaperImportResult {
     doc.sections[field] = { text: lssText(block.value?.data ?? block.value).trimEnd(), fontSize: 11 };
     if (block.customLabel) doc.fields[`heading.${field}`] = str(block.customLabel);
   }
+  const disabled = object(root.disabledBlocks);
+  doc.hiddenBlocks = PAPER_BLOCKS.filter(block => (block.zone && array(disabled[block.zone]).includes(block.lssKey)) || array(root.bohHiddenBlocks).includes(block.id)).map(block => block.id);
   const weapons = array(data.weaponsList);
   if (weapons.length > 30) throw new Error('В листе больше 30 строк оружия. Исходный файл не изменён.');
   doc.weaponRows = Math.max(1, weapons.length);
@@ -225,6 +228,17 @@ export function exportLssSheet(doc: PaperSheetDocument, calculations?: SheetCalc
   if (original && !Object.keys(calc.values).some(projected) && JSON.stringify({ ...doc, exchange: undefined }) === JSON.stringify({ ...original, exchange: undefined })) return JSON.stringify(saved!.root, null, 2);
   const root: Obj = saved?.root ?? { jsonType: 'character', version: '2', edition: '2024', sheetEdition: '2024', spells: { mode: 'text', prepared: [], book: [], granted: [], slotless: [] } };
   const data: Obj = saved?.data ?? { jsonType: 'character', template: 'default', name: { value: '' }, info: {}, stats: {}, saves: {}, skills: {}, vitality: {}, spellsInfo: {}, spells: {}, text: {}, coins: {}, bonuses: [] };
+  const disabled = object(root.disabledBlocks);
+  for (const block of PAPER_BLOCKS) {
+    if (!block.zone) continue;
+    const entries = array(disabled[block.zone]).filter((key): key is string => typeof key === 'string' && key !== block.lssKey);
+    if (doc.hiddenBlocks.includes(block.id)) entries.push(block.lssKey);
+    disabled[block.zone] = entries;
+  }
+  root.disabledBlocks = disabled;
+  const localHidden = doc.hiddenBlocks.filter(id => isPaperBlockId(id) && !PAPER_BLOCKS.find(block => block.id === id)?.zone);
+  if (localHidden.length) root.bohHiddenBlocks = localHidden;
+  else delete root.bohHiddenBlocks;
   const changed = (field: string) => !original || (doc.fields[field] ?? '') !== (original.fields[field] ?? '') || projected(field);
   const numeric = (key: string) => {
     const number = calc.values[key] ?? Number(doc.fields[key] || 0);

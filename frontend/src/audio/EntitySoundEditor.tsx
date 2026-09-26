@@ -18,7 +18,7 @@ export default function EntitySoundEditor({type,id}:{type:string;id:string}){
   <h4>Загрузить свой звук</h4>
   <label>Название<input value={name} maxLength={200} onChange={e=>setName(e.target.value)}/></label>
   <label>Источник и лицензия<input value={license} maxLength={2000} onChange={e=>setLicense(e.target.value)} placeholder="Например: собственная запись"/></label>
-  <label>WAV, MP3 или OGG, до 15 МБ<input type="file" accept="audio/wav,audio/mpeg,audio/ogg,.wav,.mp3,.ogg" onChange={e=>setFile(e.target.files?.[0]??null)}/></label>
+  <label>WAV, MP3 или OGG<input type="file" accept="audio/wav,audio/mpeg,audio/ogg,.wav,.mp3,.ogg" onChange={e=>setFile(e.target.files?.[0]??null)}/></label>
   <button type="button" disabled={busy||!file||!name.trim()||!license.trim()} onClick={async()=>{if(!file)return;setBusy(true);setError('');try{await audioApi.upload(file,name,license);await refresh();setName('');setLicense('');}catch(e){setError((e as {response?:{data?:{error?:string}}}).response?.data?.error??'Не удалось загрузить звук');}finally{setBusy(false);}}}>Загрузить в Yandex Storage</button>
   {error&&<p role="alert">{error}</p>}
  </div></details>;

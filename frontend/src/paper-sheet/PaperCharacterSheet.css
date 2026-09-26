@@ -33,6 +33,8 @@
 .paper-sheet .ps-frame { position: relative; border: 2px solid var(--ps-line); padding: 4px 5px; border-radius: 8px 0 0 0; min-width: 0; background: #fff; }
 .paper-sheet .ps-frame::before { content: ''; position: absolute; left: -2px; top: -2px; width: 8px; height: 8px; border-bottom: 2px solid var(--ps-line); background: white; transform: translate(-2px, -2px) rotate(-45deg); pointer-events: none; }
 .paper-sheet .ps-frame::after { content: ''; position: absolute; right: -3px; bottom: -3px; width: 9px; height: 9px; background: linear-gradient(135deg, transparent 43%, var(--ps-line) 44%, var(--ps-line) 61%, white 62%); pointer-events: none; }
+.paper-sheet .ps-block-remove { position: absolute; z-index: 3; top: 1px; right: 1px; display: grid; place-items: center; width: 17px; height: 17px; padding: 0; border: 0; background: #fff; color: #8b8f98; opacity: 0; }
+.paper-sheet .ps-frame:hover > .ps-block-remove, .paper-sheet .ps-block-remove:focus-visible { opacity: 1; }
 .paper-sheet .ps-heading { height: 17px; flex-shrink: 0; border-bottom: 1px solid #111; text-align: center; margin: 0 0 4px; font-size: 11px; font-weight: 400; text-transform: uppercase; line-height: 13px; white-space: nowrap; }
 .paper-sheet .ps-field { display: inline-flex; align-items: center; position: relative; min-width: 0; }
 .paper-sheet .ps-field > input { width: 100%; min-width: 0; height: 100%; text-overflow: ellipsis; }
@@ -45,10 +47,13 @@
 .paper-sheet .ps-check.ps-diamond { width: 12px; height: 12px; transform: rotate(45deg); border-radius: 1px; margin: 0 3px; }
 .paper-sheet .ps-grid { background-image: linear-gradient(#eeeef0 1px, transparent 1px), linear-gradient(90deg, #eeeef0 1px, transparent 1px); background-size: 16px 16px; background-position: left top; }
 .paper-sheet .ps-note { display: flex; flex-direction: column; padding: 5px 4px 0; min-height: 0; }
-.paper-sheet .ps-note-heading { position: relative; margin-left: 1px; margin-right: 1px; }
-.paper-sheet .ps-note-heading input { width: 100%; text-transform: uppercase; text-align: center; font-size: 11px; height: 14px; padding: 0 29px; }
-.paper-sheet .ps-note-heading button { position: absolute; top: -1px; right: 0; background: #fff; border: 0; padding: 0; color: #9c9ea2; }
-.paper-sheet .ps-note-heading .ps-note-library { right: 17px; }
+.paper-sheet .ps-note-heading { position: relative; z-index: 2; margin-left: 1px; margin-right: 1px; }
+.paper-sheet .ps-note-heading input { width: 100%; text-transform: uppercase; text-align: center; font-size: 11px; height: 14px; padding: 0 48px; }
+.paper-sheet .ps-note-heading button { position: absolute; top: -1px; right: 0; display: grid; place-items: center; width: 17px; height: 17px; background: #fff; border: 0; padding: 0; color: #9c9ea2; }
+.paper-sheet .ps-note-heading .ps-note-remove { right: 0; opacity: 0; scroll-margin-top: 80px; }
+.paper-sheet .ps-note-heading > button:not(.ps-note-library):not(.ps-note-remove) { right: 17px; }
+.paper-sheet .ps-note-heading .ps-note-library { right: 34px; }
+.paper-sheet .ps-note:hover .ps-note-remove, .paper-sheet .ps-note-remove:focus-visible { opacity: 1; }
 .paper-sheet .ps-note-heading button:hover { color: #4266ac; }
 .paper-sheet .ps-entity-name { display: inline; background: transparent; padding: 0; border: 0; text-align: left; font: inherit; font-weight: 700; color: inherit; line-height: inherit; cursor: pointer; }
 .paper-sheet .ps-entity-name:hover { text-decoration: underline; text-underline-offset: 2px; }
@@ -60,17 +65,13 @@
 .paper-sheet .ps-entity-field:hover .ps-entity-field-tools, .paper-sheet .ps-entity-field:focus-within .ps-entity-field-tools { opacity: 1; }
 .paper-sheet .ps-weapon-row > .ps-entity-field { border-right: 1px solid #b6b6b8; padding: 0 4px; }
 .ps-editor-tools > button { display: inline-flex; align-items: center; gap: 5px; }
-@media (hover: none) { .paper-sheet .ps-entity-field-tools { position: static; opacity: 1; } }
+@media (hover: none) { .paper-sheet .ps-entity-field-tools { position: static; opacity: 1; } .paper-sheet .ps-note-heading .ps-note-remove, .paper-sheet .ps-block-remove { opacity: 1; } }
 .paper-sheet .ps-note-body { flex: 1; min-height: 0; position: relative; overflow: visible; }
 .paper-sheet .ps-note-text { width: 100%; height: 100%; padding: 4px 5px 25px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; overflow-y: auto; cursor: text; }
+.paper-sheet .ps-note-editing .ps-note-text { visibility: hidden; }
 .paper-sheet .ps-note-editing { z-index: 30; }
 .paper-sheet .ps-note-line { position: relative; min-height: 1.5em; margin: 0; padding: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: inherit; }
-.paper-sheet .ps-note-line-active { display: grid; grid-template-columns: minmax(0, 1fr); outline: none; }
-.paper-sheet .ps-note-line-measure { display: block; grid-area: 1 / 1; min-width: 0; min-height: 1.5em; visibility: hidden; pointer-events: none; white-space: inherit; overflow-wrap: inherit; font: inherit; letter-spacing: inherit; word-spacing: inherit; }
-.paper-sheet .ps-note-line-print { display: block; grid-area: 1 / 1; min-width: 0; visibility: hidden; pointer-events: none; }
-.paper-sheet .ps-inline-textarea, .paper-sheet .ps-inline-textarea:focus-visible { position: absolute; inset: 0; display: block; width: 100%; height: 100%; min-height: 1.5em; margin: 0; padding: 0; border: 0; resize: none; outline: none; font: inherit; line-height: inherit; letter-spacing: inherit; word-spacing: inherit; white-space: pre-wrap; overflow-wrap: anywhere; overflow: hidden; background: transparent; }
-.paper-sheet .ps-note-line-token .ps-note-line-measure { white-space: pre; overflow-wrap: normal; word-break: normal; overflow: hidden; }
-.paper-sheet .ps-note-line-token .ps-inline-textarea { white-space: pre; overflow-wrap: normal; word-break: normal; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+.paper-sheet .ps-inline-textarea, .paper-sheet .ps-inline-textarea:focus-visible { position: absolute; inset: 0; display: block; width: 100%; height: 100%; margin: 0; padding: 4px 5px 25px; border: 0; resize: none; outline: none; font: inherit; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; overflow-y: auto; background: transparent; }
 /* A sibling of the scrolling text: its anchor is supplied by the active line. */
 .paper-sheet .ps-inline-tools { position: absolute; z-index: 40; top: 100%; right: 0; width: max-content; max-width: 100%; padding: 4px; background: #fff; border: 1px solid #d7dae0; border-radius: 4px; box-shadow: 0 3px 10px #0002; color: #303644; font-size: 10px; line-height: 1.3; white-space: normal; }
 .paper-sheet .ps-inline-tools .ps-editor-tools { gap: 2px; margin: 0; }
@@ -136,6 +137,7 @@
 .ps-wordmark span { font-family: Georgia, serif; font-size: 24px; font-weight: 700; white-space: nowrap; }
 .ps-main-body { height: 1087px; display: grid; grid-template-columns: 318px 524px; gap: 14px; }
 .ps-left-block { display: grid; grid-template-rows: 734px 1fr; gap: 16px; min-height: 0; }
+.ps-left-block-expanded { grid-template-rows: minmax(0, 1fr); }
 .ps-abilities { display: grid; grid-template-columns: 152px 152px; gap: 14px; min-height: 0; }
 .ps-physical { display: grid; grid-template-rows: 70px 156px 200px 126px 55px 74px; gap: 10px; }
 .ps-mental { display: grid; grid-template-rows: 246px 246px 222px; gap: 10px; }
@@ -167,7 +169,7 @@
 .paper-sheet .ps-inspiration .ps-heading { height: 30px; white-space: normal; width: 100%; padding: 0 15px; margin-bottom: 0; }
 .ps-inspiration > div { margin: -1px auto 0; display: grid; place-items: center; border: 2px solid var(--ps-line); border-radius: 50%; height: 36px; width: 45px; }
 .paper-sheet .ps-proficiencies .ps-heading { font-size: 10px; }
-.ps-proficiencies .ps-note-heading button { display: none; }
+.ps-proficiencies .ps-note-heading button:not(.ps-note-remove) { display: none; }
 .ps-proficiencies .ps-note-footer { order: -1; padding-bottom: 0; }
 .ps-proficiencies .ps-note-heading { order: -2; }
 .ps-proficiency-options > div { display: flex; gap: 5px; align-items: center; height: 17px; font-size: 9px; white-space: nowrap; }
@@ -185,6 +187,7 @@
 .paper-sheet .ps-weapons { min-height: 85px; flex-shrink: 0; padding-bottom: 5px; }
 .ps-row-add, .ps-row-remove { position: absolute; top: -2px; padding: 0; width: 17px; height: 17px; line-height: 13px; border: 1px solid #888; background: white; border-radius: 3px; font-size: 14px; }
 .ps-row-add { left: -2px; }.ps-row-remove { right: -2px; }
+.paper-sheet .ps-weapons > .ps-block-remove { right: 21px; }
 .ps-weapon-table { font-size: 9px; padding-top: 0; }
 .ps-weapon-table-header, .ps-weapon-row { display: grid; grid-template-columns: 31% 12% 25% 32%; }
 .ps-weapon-table-header { height: 24px; color: #777; text-decoration: underline; }
@@ -194,6 +197,8 @@
 .ps-weapon-row input { border-bottom: 1px solid #b6b6b8; font-size: 11px; }
 .paper-sheet .ps-main-features { flex: 1; min-height: 160px; }
 .ps-bottom-notes { height: 402px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; flex-shrink: 0; }
+.ps-bottom-notes-single { grid-template-columns: minmax(0, 1fr); }
+.ps-bottom-notes-expanded { flex: 1; min-height: 0; height: auto; }
 
 .ps-bottom-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; max-width: 880px; margin: 12px auto 0; font-size: 11px; color: #929292; }
 .ps-bottom-bar label { white-space: nowrap; }
@@ -223,6 +228,11 @@
 .ps-resource-editor { display: flex; gap: 6px; margin-bottom: 10px; }
 .ps-resource-editor input[type=number] { width: 75px; }
 .ps-settings { display: grid; gap: 12px; }
+.ps-hidden-blocks { display: grid; gap: 7px; max-height: 55vh; overflow: auto; }
+.ps-hidden-blocks > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 8px; background: #f5f6f8; border: 1px solid #e2e4e8; border-radius: 5px; }
+.ps-hidden-blocks span { display: grid; gap: 1px; }
+.ps-hidden-blocks small { color: #7b8089; }
+.ps-hidden-blocks button { border: 1px solid #b9c4de; border-radius: 4px; background: white; padding: 5px 8px; color: #405a91; }
 .ps-settings > label { display: flex; align-items: center; gap: 8px; }
 .ps-settings input[type=checkbox] { accent-color: #5b7ad0; }
 .ps-settings > button { display: flex; gap: 8px; align-items: center; }
@@ -246,11 +256,10 @@
   .paper-sheet .ps-page-holder, .paper-sheet .ps-page-holder.ps-page-hidden { display: block !important; width: 210mm !important; height: 297mm !important; margin: 0; box-shadow: none; break-after: page; break-inside: avoid; overflow: hidden; }
   .paper-sheet .ps-page-holder:last-child { break-after: auto; }
   .paper-sheet .paper-page { transform: none !important; zoom: .8825; margin: 0 auto; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-  .paper-sheet .ps-cog, .paper-sheet .ps-row-add, .paper-sheet .ps-row-remove, .paper-sheet .ps-font-controls, .paper-sheet .ps-note-heading button, .paper-sheet .ps-attunement-label button, .paper-sheet .ps-manage-coins, .paper-sheet .ps-entity-field-tools { display: none !important; }
+  .paper-sheet .ps-cog, .paper-sheet .ps-row-add, .paper-sheet .ps-row-remove, .paper-sheet .ps-font-controls, .paper-sheet .ps-note-heading button, .paper-sheet .ps-block-remove, .paper-sheet .ps-attunement-label button, .paper-sheet .ps-manage-coins, .paper-sheet .ps-entity-field-tools { display: none !important; }
   .paper-sheet .ps-note-text { overflow: hidden; }
   .paper-sheet .ps-note-editing { z-index: auto; }
-  .paper-sheet .ps-note-line-active { display: block; outline: none; }
-  .paper-sheet .ps-inline-textarea, .paper-sheet .ps-inline-tools, .paper-sheet .ps-note-line-measure { display: none !important; }
-  .paper-sheet .ps-note-line-print { display: block; visibility: visible; }
+  .paper-sheet .ps-note-editing .ps-note-text { visibility: visible; }
+  .paper-sheet .ps-inline-textarea, .paper-sheet .ps-inline-tools { display: none !important; }
   .paper-sheet .ps-portrait-upload { background: white; }
 }

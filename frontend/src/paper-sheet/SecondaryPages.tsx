@@ -7,6 +7,8 @@ import { EntityField } from './EntityField';
 import { AutofillEntityField } from './AutofillEntityField';
 import { paperEntityToken, parsePaperEntityToken, type PaperLibraryEntity } from './references';
 import { MAX_PAPER_INVENTORY_ROWS, equipPaperItem, paperInventoryQuantity, paperInventoryRows, unequipPaperItem } from './paperEquipment';
+import { blockVisible, visibleBlocks } from './blocks';
+import { preparePaperPortrait } from './portrait';
 import './SecondaryPages.css';
 
 const ABILITIES = [
@@ -30,7 +32,7 @@ function SpellSlots() {
         ? `Введите целое число от 0 до ${limit} или формулу с таким результатом.` : '');
     return { value, error };
   };
-  return <Frame heading="Ячейки заклинаний" className="ps-spell-slots">
+  return <Frame heading="Ячейки заклинаний" className="ps-spell-slots" blockId="spell-slots">
     <button type="button" className="ps-slots-edit ps-paper-edit" aria-label="Настроить ячейки заклинаний" aria-expanded={editing} onClick={() => setEditing(!editing)}>⚙</button>
     <div className="ps-slot-columns">
       {[0, 1, 2].map(column => <div className="ps-slot-column" key={column}>
@@ -58,7 +60,7 @@ function SpellSlots() {
 
 function SpellStatistics() {
   const { doc, setField } = usePaperSheet();
-  return <Frame className="ps-spell-statistics">
+  return <Frame className="ps-spell-statistics" blockId="spell-statistics">
     <label className="ps-spell-ability"><select aria-label="Заклинательная характеристика" value={doc.fields.spellAbility ?? ''} onChange={event => setField('spellAbility', event.target.value)}>
       <option value=""> </option>
       {ABILITIES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
@@ -72,7 +74,7 @@ function SpellStatistics() {
 function PreparedSpells() {
   const { doc, setDoc } = usePaperSheet();
   const rows = Math.max(1, doc.spellRows);
-  return <Frame heading="Заговоры и подготовленные заклинания" className="ps-prepared-spells">
+  return <Frame heading="Заговоры и подготовленные заклинания" className="ps-prepared-spells" blockId="prepared-spells">
     <div className="ps-spell-table" role="table" aria-label="Заговоры и подготовленные заклинания">
       <div className="ps-spell-table-head" role="row">
         <span role="columnheader">Ур.</span><span role="columnheader">Название</span><span role="columnheader">Время<br />сотворения</span><span role="columnheader">Дистанция</span><span role="columnheader">Концентрация, Ритуал,<br />Материальный компонент</span><span role="columnheader">Заметки</span>
@@ -124,7 +126,7 @@ function Coins() {
     setError('');
     setManaging(false);
   };
-  return <Frame heading="Монеты" className="ps-coins">
+  return <Frame heading="Монеты" className="ps-coins" blockId="coins">
     <div className="ps-coin-fields">{COINS.map(([key, short, full]) => <label key={key}><span>{short}</span><Field field={key} label={`${full} монеты`} /></label>)}</div>
     <button type="button" className="ps-manage-coins" aria-expanded={managing} onClick={() => { setError(''); setManaging(!managing); }}>Управлять</button>
     {managing && <Dialog heading="Управление монетами" onClose={() => setManaging(false)}><div className="ps-coin-manager">
@@ -138,9 +140,11 @@ function Coins() {
 
 export function SpellPage() {
   const { doc, setField } = usePaperSheet();
+  const right = visibleBlocks(doc, ['appearance', 'backstory', 'equipment', 'coins']);
+  const rightRows = right.map(id => id === 'appearance' ? '128px' : id === 'coins' ? '114px' : id === 'backstory' ? 'minmax(0, 2fr)' : 'minmax(0, 3fr)').join(' ');
   return <div className="ps-secondary-page ps-spells-page">
-    <div className="ps-spells-left">
-      <div className="ps-spells-top"><SpellStatistics /><div className="ps-spells-top-right">
+    <div className="ps-spells-left" style={{ gridTemplateRows: blockVisible(doc, 'prepared-spells') ? '171px minmax(0, 1fr)' : 'minmax(0, 1fr)' }}>
+      <div className="ps-spells-top" style={{ gridTemplateColumns: blockVisible(doc, 'spell-statistics') ? '164px minmax(0, 1fr)' : 'minmax(0, 1fr)' }}><SpellStatistics /><div className="ps-spells-top-right" style={{ gridTemplateRows: blockVisible(doc, 'spell-slots') ? '56px minmax(0, 1fr)' : 'minmax(0, 1fr)' }}>
         <div className="ps-movement-stats">
           <Frame heading="Размер" className="ps-size"><select aria-label="Размер персонажа" value={doc.fields.size ?? ''} onChange={event => setField('size', event.target.value)}><option value=""></option>{[['tiny', 'Крошечный'], ['small', 'Маленький'], ['medium', 'Средний'], ['large', 'Большой'], ['huge', 'Огромный'], ['gargantuan', 'Громадный']].map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></Frame>
           <Frame heading="Грузоподъёмность" className="ps-capacity"><Field field="capacity" label="Грузоподъёмность" /></Frame>
@@ -150,7 +154,7 @@ export function SpellPage() {
       </div></div>
       <PreparedSpells />
     </div>
-    <div className="ps-spells-right">
+    <div className="ps-spells-right" style={{ gridTemplateRows: rightRows }}>
       <Note section="appearance" heading="Внешность" className="ps-appearance" />
       <Note section="backstory" heading="Предыстория и личные качества" className="ps-backstory"><label className="ps-alignment"><span>Мировоззрение</span><Field field="alignment" label="Мировоззрение" /></label></Note>
       <Note section="equipment" heading="Снаряжение" className="ps-equipment"><Attunement /></Note>
@@ -163,18 +167,20 @@ function Portrait() {
   const { doc, setDoc } = usePaperSheet();
   const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState('');
-  const upload = (event: ChangeEvent<HTMLInputElement>) => {
+  const upload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
     if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type)) { setError('Выберите изображение PNG, JPG, WebP или GIF.'); return; }
-    if (file.size > 2 * 1024 * 1024) { setError('Изображение должно быть не больше 2 МБ.'); return; }
-    const reader = new FileReader();
-    reader.onload = () => { if (typeof reader.result === 'string') { const portrait = reader.result; setDoc(current => ({ ...current, portrait })); setError(''); } };
-    reader.onerror = () => setError('Не удалось прочитать изображение.');
-    reader.readAsDataURL(file);
+    try {
+      const portrait = await preparePaperPortrait(file);
+      setDoc(current => ({ ...current, portrait }));
+      setError('');
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Не удалось обработать изображение.');
+    }
   };
-  return <Frame heading="Портрет" className="ps-portrait">
+  return <Frame heading="Портрет" className="ps-portrait" blockId="portrait">
     <button type="button" className="ps-portrait-upload" aria-label={doc.portrait ? 'Изменить портрет персонажа' : 'Загрузить портрет персонажа'} onClick={() => input.current?.click()}>
       {doc.portrait ? <img src={doc.portrait} alt="Портрет персонажа" /> : <svg className="ps-wizard" viewBox="0 0 140 220" aria-hidden="true">
         <path d="M82 3c4-4 7-3 5 2L76 32l11 35c1 3 0 4-3 4H42c-3 0-3-2-2-4l12-36zM40 83h51l5 9h29c3 0 3 3 1 6-5 8-14 12-25 15-1 18-13 32-31 32-20 0-31-14-32-32C25 110 16 106 12 98c-2-3-1-6 2-6h23zM44 76h40l2 4H42zM69 156c35 0 64 12 64 37v20H6v-20c0-25 27-37 63-37z" />
@@ -211,7 +217,7 @@ function Inventory({ busy, transferError, onEquip }: { busy: boolean; transferEr
     });
   };
   const clearRow = (index: number) => setDoc(current => ({ ...current, fields: { ...current.fields, [`inventory.${index}.item`]: '', [`inventory.${index}.quantity`]: '' } }));
-  return <Frame heading="Инвентарь" className="ps-inventory">
+  return <Frame heading="Инвентарь" className="ps-inventory" blockId="inventory">
     <div className="ps-inventory-header" aria-hidden="true"><span>Предмет</span><span>Кол.</span><span></span><span></span></div>
     <div className="ps-inventory-rows">
       {Array.from({ length: rows }, (_, index) => {
@@ -243,7 +249,7 @@ function Equipment({ busy, transferError, onEquip, onUnequip }: { busy: boolean;
     setError('');
     onEquip(entity, slot);
   };
-  return <Frame heading="Снаряжение" className="ps-equipped-items">
+  return <Frame heading="Снаряжение" className="ps-equipped-items" blockId="equipped-items">
     <div className="ps-equipment-slots">{EQUIPMENT_SLOTS.map(([slot, label]) => <div className="ps-equipment-slot" key={slot}>
       <span className="ps-equipment-slot-label">{label}</span><EntityField field={`equipment.${slot}`} label={`Снаряжение: ${label}`} onSelect={selected => selectItem(slot, selected)} onUnlink={() => onUnequip(slot)} /><button type="button" aria-label={`Снять предмет: ${label}`} disabled={busy || !doc.fields[`equipment.${slot}`]} onClick={() => onUnequip(slot)}>×</button>
     </div>)}</div>
@@ -255,6 +261,8 @@ function Equipment({ busy, transferError, onEquip, onUnequip }: { busy: boolean;
 
 export function StoryPage() {
   const { doc, setDoc } = usePaperSheet();
+  const left = visibleBlocks(doc, ['portrait', 'inventory']);
+  const right = visibleBlocks(doc, ['equipped-items', 'allies', 'additional']);
   const latest = useRef(doc);
   latest.current = doc;
   const pending = useRef(false);
@@ -286,16 +294,15 @@ export function StoryPage() {
     }
   };
   return <div className="ps-secondary-page ps-story-page">
-    <Portrait />
-    <Equipment busy={busy} transferError={error.area === 'equipment' ? error.message : ''} onEquip={(entity, slot) => void transfer(slot, entity)} onUnequip={slot => void transfer(slot)} />
-    <Inventory busy={busy} transferError={error.area === 'inventory' ? error.message : ''} onEquip={(entity, slot, row) => void transfer(slot, entity, row)} />
-    <Note section="allies" heading="Союзники и организации" className="ps-allies" />
-    <Note section="additional" heading="Дополнительные способности и умения" className="ps-additional" />
+    <div className="ps-story-left" style={{ gridTemplateRows: left.length === 2 ? 'minmax(0, 1fr) minmax(0, 2fr)' : 'minmax(0, 1fr)' }}><Portrait /><Inventory busy={busy} transferError={error.area === 'inventory' ? error.message : ''} onEquip={(entity, slot, row) => void transfer(slot, entity, row)} /></div>
+    <div className="ps-story-right" style={{ gridTemplateRows: `repeat(${Math.max(1, right.length)}, minmax(0, 1fr))` }}><Equipment busy={busy} transferError={error.area === 'equipment' ? error.message : ''} onEquip={(entity, slot) => void transfer(slot, entity)} onUnequip={slot => void transfer(slot)} /><Note section="allies" heading="Союзники и организации" className="ps-allies" /><Note section="additional" heading="Дополнительные способности и умения" className="ps-additional" /></div>
   </div>;
 }
 
 export function NotesPage() {
+  const { doc } = usePaperSheet();
+  const remaining = visibleBlocks(doc, ['notes1', 'notes2', 'notes3', 'notes4', 'notes5', 'notes6']);
   return <div className="ps-secondary-page ps-notes-page">
-    {Array.from({ length: 6 }, (_, index) => <Note key={index} section={`notes${index + 1}`} heading="Заметки" className={`ps-notes-section ps-notes-section-${index + 1}`} />)}
+    {remaining.map((section) => <Note key={section} section={section} heading="Заметки" className={`ps-notes-section ps-notes-section-${section}`} />)}
   </div>;
 }

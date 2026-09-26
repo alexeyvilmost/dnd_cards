@@ -1,6 +1,7 @@
 import { evaluate, FormulaError, type AbilityKey } from '../engine/formula';
 import { ABILITY_IDS, SKILL_IDS, SKILL_ABILITY, abilityMod, proficiencyBonusForLevel } from '../character/rules/foundation';
 import { carryingCapacity, carrySizeMultiplier } from '../character/runtime';
+import { isPaperBlockId, type PaperBlockId } from './blocks';
 
 /** An editable document, deliberately separate from a certified character or combat state. */
 export interface PaperSheetDocument {
@@ -9,6 +10,8 @@ export interface PaperSheetDocument {
   checks: Record<string, boolean>;
   training: Record<string, 0 | 1 | 2>;
   sections: Record<string, { text: string; fontSize: number }>;
+  /** Visual layout only: hidden blocks keep their fields and text. */
+  hiddenBlocks: PaperBlockId[];
   settings: { grid: boolean };
   weaponRows: number;
   spellRows: number;
@@ -30,7 +33,7 @@ export interface PaperEquipmentProjection {
 }
 
 export const PAPER_SHEET_STORAGE_KEY = 'bagofholding.paper-sheet.v1';
-const MAX_DOCUMENT_LENGTH = 10_000_000;
+export const PAPER_DOCUMENT_SAFETY_BYTES = 64_000_000;
 const MAX_FORMULA_LENGTH = 2_000;
 const NUMBER = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/;
 const FORBIDDEN_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
@@ -61,7 +64,7 @@ const SIZE_CATEGORIES = new Map<string, number>([
 /** Blank derived fields mean automatic calculation; other blank fields remain blank. */
 export function createPaperSheet(): PaperSheetDocument {
   return {
-    version: 1, fields: { ...DEFAULT_FIELDS }, checks: {}, training: {}, sections: {},
+    version: 1, fields: { ...DEFAULT_FIELDS }, checks: {}, training: {}, sections: {}, hiddenBlocks: [],
     settings: { grid: true }, weaponRows: 1, spellRows: 38, portrait: '',
   };
 }
@@ -293,6 +296,10 @@ function validateDocument(value: unknown): PaperSheetDocument {
     const section = record(raw, key);
     document.sections[key] = { text: stringValue(section.text, key, 200_000), fontSize: integer(section.fontSize, key, 6, 48) };
   }
+  if (input.hiddenBlocks !== undefined) {
+    if (!Array.isArray(input.hiddenBlocks) || input.hiddenBlocks.length > 30 || input.hiddenBlocks.some(value => typeof value !== 'string' || !isPaperBlockId(value))) throw new Error('Некорректный список скрытых блоков.');
+    document.hiddenBlocks = [...new Set(input.hiddenBlocks)] as PaperBlockId[];
+  }
   if (input.settings !== undefined) {
     const settings = record(input.settings, 'настройки');
     if (typeof settings.grid !== 'boolean') throw new Error('Некорректная настройка клеток листа.');
@@ -310,16 +317,16 @@ function validateDocument(value: unknown): PaperSheetDocument {
     const exchange = record(input.exchange, 'данные обмена');
     if (exchange.format !== 'lss') throw new Error('Неизвестный формат данных обмена.');
     document.exchange = {
-      format: 'lss', source: stringValue(exchange.source, 'оригинал LSS', MAX_DOCUMENT_LENGTH),
-      baseline: stringValue(exchange.baseline, 'снимок импорта', MAX_DOCUMENT_LENGTH),
-      ...(exchange.spells === undefined ? {} : { spells: stringValue(exchange.spells, 'гримуар LSS', MAX_DOCUMENT_LENGTH) }),
+      format: 'lss', source: stringValue(exchange.source, 'оригинал LSS', PAPER_DOCUMENT_SAFETY_BYTES),
+      baseline: stringValue(exchange.baseline, 'снимок импорта', PAPER_DOCUMENT_SAFETY_BYTES),
+      ...(exchange.spells === undefined ? {} : { spells: stringValue(exchange.spells, 'гримуар LSS', PAPER_DOCUMENT_SAFETY_BYTES) }),
     };
   }
   return document;
 }
 
 export function importPaperSheet(json: string): PaperSheetDocument {
-  if (new TextEncoder().encode(json).length > MAX_DOCUMENT_LENGTH) throw new Error('Файл листа слишком большой (максимум 10 МБ).');
+  if (new TextEncoder().encode(json).length > PAPER_DOCUMENT_SAFETY_BYTES) throw new Error('Файл листа превышает защитный предел хранилища.');
   let parsed: unknown;
   try { parsed = JSON.parse(json.replace(/^\uFEFF/, '')); } catch { throw new Error('Не удалось прочитать JSON листа.'); }
   return validateDocument(parsed);
@@ -327,7 +334,7 @@ export function importPaperSheet(json: string): PaperSheetDocument {
 
 export function exportPaperSheet(document: PaperSheetDocument): string {
   const json = JSON.stringify(validateDocument(document), null, 2);
-  if (new TextEncoder().encode(json).length > MAX_DOCUMENT_LENGTH) throw new Error('Лист слишком большой для сохранения (максимум 10 МБ).');
+  if (new TextEncoder().encode(json).length > PAPER_DOCUMENT_SAFETY_BYTES) throw new Error('Лист превышает защитный предел хранилища.');
   return json;
 }
 

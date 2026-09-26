@@ -5,6 +5,30 @@ import {
 } from './model';
 
 describe('editable paper document calculations', () => {
+  it('imports and exports a valid document larger than the old 10 MB quota', () => {
+    const sheet = createPaperSheet();
+    for (let index = 0; index < 60; index++) {
+      sheet.sections[`large-note-${index}`] = { text: 'A'.repeat(190_000), fontSize: 12 };
+    }
+    const json = exportPaperSheet(sheet);
+    expect(json.length).toBeGreaterThan(10_000_000);
+    expect(importPaperSheet(json).sections['large-note-59'].text).toHaveLength(190_000);
+  });
+  it('keeps block visibility through native JSON and accepts older version-1 sheets', () => {
+    const sheet = createPaperSheet();
+    sheet.sections.notes1 = { text: 'Скрытый, но сохранённый текст', fontSize: 12 };
+    sheet.hiddenBlocks = ['notes1', 'features'];
+    const restored = importPaperSheet(exportPaperSheet(sheet));
+    expect(restored.hiddenBlocks).toEqual(['notes1', 'features']);
+    expect(restored.sections.notes1.text).toBe('Скрытый, но сохранённый текст');
+    const old = JSON.parse(exportPaperSheet(sheet));
+    delete old.hiddenBlocks;
+    expect(importPaperSheet(JSON.stringify(old)).hiddenBlocks).toEqual([]);
+    old.hiddenBlocks = ['notes1', 'notes1'];
+    expect(importPaperSheet(JSON.stringify(old)).hiddenBlocks).toEqual(['notes1']);
+    old.hiddenBlocks = ['not-a-block'];
+    expect(() => importPaperSheet(JSON.stringify(old))).toThrow(/скрытых блоков/);
+  });
   it('starts with a blank paper form and the standard calculated ability/skill values', () => {
     const sheet = createPaperSheet();
     const { values, errors } = calculateSheet(sheet);
