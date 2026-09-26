@@ -24,6 +24,7 @@ var (
 type JWTClaims struct {
 	UserID   uuid.UUID `json:"user_id"`
 	Username string    `json:"username"`
+	IsAdmin  bool      `json:"-"` // DB authority, never trusted from signed token payload.
 	jwt.RegisteredClaims
 }
 
@@ -216,15 +217,17 @@ func (s *AuthService) ValidateActiveIdentity(claims *JWTClaims) error {
 		return ErrAuthenticationStoreUnavailable
 	}
 
-	var matches int64
-	if err := s.db.Model(&User{}).
+	var account struct{ IsAdmin bool }
+	result := s.db.Model(&User{}).Select("is_admin").
 		Where("id = ? AND username = ?", claims.UserID, claims.Username).
-		Count(&matches).Error; err != nil {
-		return fmt.Errorf("%w: %v", ErrAuthenticationStoreUnavailable, err)
+		Take(&account)
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("%w: %v", ErrAuthenticationStoreUnavailable, result.Error)
 	}
-	if matches != 1 {
+	if result.RowsAffected != 1 {
 		return ErrAuthenticatedUserInactive
 	}
+	claims.IsAdmin = account.IsAdmin
 	return nil
 }
 

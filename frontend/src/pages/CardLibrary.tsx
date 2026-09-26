@@ -148,7 +148,7 @@ function classSubtypeLabel(characterClass: CharacterClass, parentById: Map<strin
 
 const CardLibrary = () => {
   const navigate = useNavigate();
-  const { admin, canCreate } = useContentPermissions();
+  const { admin, canCreate, canEdit } = useContentPermissions();
   const [searchParams, setSearchParams] = useLibrarySearchParams();
   const { token } = useAuth();
   const initialFilters = useMemo(() => parseLibrarySearchParams(searchParams), []);
@@ -1037,7 +1037,9 @@ const CardLibrary = () => {
   // Открытие модального окна
   const handleCardClick = (card: Card) => {
     if (selection.enabled) { selection.toggle(card.id); return; }
-    navigate(`/entity/cards/${card.id}`);
+    if (!canEdit(card)) { navigate(`/entity/cards/${card.id}`); return; }
+    setSelectedCard(card);
+    setIsModalOpen(true);
   };
 
   // Закрытие модального окна
@@ -1054,7 +1056,9 @@ const CardLibrary = () => {
 
   // Обработчики для эффектов
   const handleEffectClick = (effect: PassiveEffect) => {
-    navigate(`/entity/effects/${effect.id}`);
+    if (!canEdit(effect)) { navigate(`/entity/effects/${effect.id}`); return; }
+    setSelectedEffect(effect);
+    setIsEffectModalOpen(true);
   };
 
   const handleCloseEffectModal = () => {
@@ -1078,7 +1082,9 @@ const CardLibrary = () => {
 
   // Обработчики для действий
   const handleActionClick = (action: Action) => {
-    navigate(`/entity/actions/${action.id}`);
+    if (!canEdit(action)) { navigate(`/entity/actions/${action.id}`); return; }
+    setSelectedAction(action);
+    setIsActionModalOpen(true);
   };
 
   const handleCloseActionModal = () => {
@@ -1102,7 +1108,9 @@ const CardLibrary = () => {
 
   // Обработчики для заклинаний
   const handleSpellClick = (spell: Spell) => {
-    navigate(`/entity/spells/${spell.id}`);
+    if (!canEdit(spell)) { navigate(`/entity/spells/${spell.id}`); return; }
+    setSelectedSpell(spell);
+    setIsSpellModalOpen(true);
   };
 
   const handleCloseSpellModal = () => {
@@ -1112,7 +1120,9 @@ const CardLibrary = () => {
 
   // Обработчики для черт
   const handleFeatClick = (feat: Feat) => {
-    navigate(`/entity/feats/${feat.id}`);
+    if (!canEdit(feat)) { navigate(`/entity/feats/${feat.id}`); return; }
+    setSelectedFeat(feat);
+    setIsFeatModalOpen(true);
   };
   const handleDeleteFeat = async (featId: string) => {
     if (!confirm('Вы уверены, что хотите удалить эту черту?')) return;
@@ -1127,7 +1137,9 @@ const CardLibrary = () => {
 
   // Обработчики для предысторий
   const handleBackgroundClick = (bg: Background) => {
-    navigate(`/entity/backgrounds/${bg.id}`);
+    if (!canEdit(bg)) { navigate(`/entity/backgrounds/${bg.id}`); return; }
+    setSelectedBackground(bg);
+    setIsBackgroundModalOpen(true);
   };
   const handleDeleteBackground = async (bgId: string) => {
     if (!confirm('Вы уверены, что хотите удалить эту предысторию?')) return;
@@ -1142,7 +1154,9 @@ const CardLibrary = () => {
 
   // Обработчики для видов (рас)
   const handleRaceClick = (race: Race) => {
-    navigate(`/entity/races/${race.id}`);
+    if (!canEdit(race)) { navigate(`/entity/races/${race.id}`); return; }
+    setSelectedRace(race);
+    setIsRaceModalOpen(true);
   };
   const handleDeleteRace = async (raceId: string) => {
     if (!confirm('Вы уверены, что хотите удалить этот вид?')) return;
@@ -1156,7 +1170,9 @@ const CardLibrary = () => {
   };
 
   const handleClassClick = (characterClass: CharacterClass) => {
-    navigate(`/entity/classes/${characterClass.id}`);
+    if (!canEdit(characterClass)) { navigate(`/entity/classes/${characterClass.id}`); return; }
+    setSelectedClass(characterClass);
+    setIsClassModalOpen(true);
   };
   const handleDeleteClass = async (classId: string) => {
     if (!confirm('Вы уверены, что хотите удалить этот класс?')) return;
@@ -1203,11 +1219,15 @@ const CardLibrary = () => {
   };
 
   const handleResourceClick = (resource: ResourceDefinition) => {
-    navigate(`/entity/resources/${resource.id}`);
+    if (!canEdit(resource)) { navigate(`/entity/resources/${resource.id}`); return; }
+    setSelectedResource(resource);
+    setIsResourceModalOpen(true);
   };
 
   const handleVariableClick = (variable: Variable) => {
-    navigate(`/entity/variables/${variable.id}`);
+    if (!canEdit(variable)) { navigate(`/entity/variables/${variable.id}`); return; }
+    setSelectedVariable(variable);
+    setIsVariableModalOpen(true);
   };
 
   const handleDeleteVariable = async (variableId: string) => {
@@ -1224,7 +1244,9 @@ const CardLibrary = () => {
   };
 
   const handleConceptClick = (concept: Concept) => {
-    navigate(`/entity/concepts/${concept.id}`);
+    if (!canEdit(concept)) { navigate(`/entity/concepts/${concept.id}`); return; }
+    setSelectedConcept(concept);
+    setIsConceptModalOpen(true);
   };
 
   const handleDeleteConcept = async (conceptId: string) => {
@@ -2724,6 +2746,10 @@ const CardLibrary = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onDelete={handleDeleteCard}
+        onImageUpdated={(cardId, imageUrl) => {
+          setCards(rows => rows.map(row => row.id === cardId ? { ...row, image_url: imageUrl } : row));
+          setSelectedCard(row => row?.id === cardId ? { ...row, image_url: imageUrl } : row);
+        }}
       />
 
       {/* Модальное окно с детальной информацией об эффекте */}

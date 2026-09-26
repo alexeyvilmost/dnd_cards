@@ -28,29 +28,6 @@ const labelFrom = (
   value?: string | null,
 ) => opts.find((o) => o.value === value)?.label || value || '';
 
-// Школа → тип энергии (цвет иконки), как в scripts/content/gen-spell-icons.mjs.
-const SPELL_SCHOOL_ELEMENT: Record<string, string> = {
-  abjuration: 'cold',
-  conjuration: 'force',
-  divination: 'radiant',
-  enchantment: 'psychic',
-  evocation: 'force',
-  illusion: 'psychic',
-  necromancy: 'necrotic',
-  transmutation: '',
-};
-
-// Стихия иконки: по типу урона → лечение → школа (совпадает с батч-генерацией).
-const spellElement = (spell: Spell): string => {
-  const dt = spell.damage?.[0]?.damage_type;
-  if (dt) return dt;
-  if (spell.is_healing) return 'healing';
-  return SPELL_SCHOOL_ELEMENT[spell.school ?? ''] ?? '';
-};
-
-const SPELL_ICON_EXTRA =
-  'Thin elegant strokes of energy. The symbol occupies about two-thirds of the frame, centered, with clear margins on all sides.';
-
 const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
   spell,
   isOpen,
@@ -87,11 +64,11 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
       titleEn={spell.name_en}
       preview={(
         <EntityImageEditor
+          entityType="spell"
           entityId={spell.id}
           author={spell.author}
           initialUrl={spell.image_url || ''}
           persist={async (id, url) => (await spellsApi.updateSpell(id, { image_url: url })).image_url || url}
-          generateReq={{ style: 'spell_icon', subject: spell.name, element: spellElement(spell), extra: SPELL_ICON_EXTRA, quality: 'medium' }}
           renderPreview={(url) => <SpellPreview spell={{ ...spell, image_url: url }} disableHover />}
           onUpdated={(url) => onUpdated?.({ ...spell, image_url: url })}
         />

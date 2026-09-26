@@ -6,19 +6,21 @@ import LibrarySidebar from '../components/library/LibrarySidebar';
 import LibrarySearch from '../components/library/LibrarySearch';
 import LibrarySectionHero from '../components/library/LibrarySectionHero';
 import MonsterPreview from '../components/MonsterPreview';
+import LibraryQuickDetail from '../components/library/LibraryQuickDetail';
 import { monstersApi } from '../monsters/api';
 import type { Monster } from '../monsters/types';
 import './MonsterLibrary.css';
 import { useContentPermissions } from '../hooks/useContentPermissions';
 
 export default function MonsterLibrary() {
-  const { admin } = useContentPermissions();
+  const { admin, canEdit } = useContentPermissions();
   const [params, setParams] = useSearchParams();
   const tag = params.get('tag') ?? '';
   const search = params.get('q') ?? '';
   const [monsters, setMonsters] = useState<Monster[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Monster | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -49,7 +51,8 @@ export default function MonsterLibrary() {
       {loading && <p className="library-chrome-status" role="status">Загрузка бестиария…</p>}
       {error && <p className="monster-error" role="alert">{error}</p>}
       {!loading && !error && !monsters.length && <p className="library-chrome-status">Монстры не найдены.</p>}
-      <div className="monster-library__grid">{monsters.map((monster) => <MonsterPreview key={monster.id} monster={monster} />)}</div>
+      <div className="monster-library__grid">{monsters.map((monster) => <MonsterPreview key={monster.id} monster={monster} onOpen={canEdit(monster) ? () => setSelected(monster) : undefined} />)}</div>
+      {selected && <LibraryQuickDetail name={selected.name} pageTo={`/entity/monsters/${selected.id}`} editTo={`/monster-forge/${selected.id}`} onClose={() => setSelected(null)}><MonsterPreview monster={selected} staticCard /></LibraryQuickDetail>}
       </div>
     </section>
   );

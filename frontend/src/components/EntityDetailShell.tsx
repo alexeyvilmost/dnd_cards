@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import OriginalName from './OriginalName';
 import './entityDetailModal.css';
 import EntityTags from './EntityTags';
@@ -56,6 +57,10 @@ export function EntityDetailShell({
 
   if (!isOpen) return null;
 
+  const pageType = entity && ({ card: 'cards', action: 'actions', effect: 'effects', spell: 'spells',
+    feat: 'feats', background: 'backgrounds', race: 'races', class: 'classes',
+    resource: 'resources', variable: 'variables', concept: 'concepts', monster: 'monsters', passive: 'passives' } as Record<string, string>)[entity.type];
+
   return (
     <div
       className="edm-overlay"
@@ -87,6 +92,8 @@ export function EntityDetailShell({
           {children}
 
           {entity && <EntityTags type={entity.type} id={entity.id}/>}
+
+          {entity && pageType && <div className="edm-actions"><Link className="edm-btn" to={`/entity/${pageType}/${encodeURIComponent(entity.id)}`} onClick={onClose}>На полную страницу</Link></div>}
 
           {!readOnly && entity && canEdit(entity) && actions && <div className="edm-actions">{actions}</div>}
         </div>

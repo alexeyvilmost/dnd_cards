@@ -9,7 +9,7 @@ import { LIBRARY_SIDEBAR_STORAGE_KEY } from './LibrarySidebar';
 
 const mocks=vi.hoisted(()=>({list:vi.fn()}));
 vi.mock('../../monsters/api',()=>({monstersApi:{list:mocks.list}}));
-vi.mock('../../hooks/useContentPermissions',()=>({useContentPermissions:()=>({admin:false})}));
+vi.mock('../../hooks/useContentPermissions',()=>({useContentPermissions:()=>({admin:false,canEdit:()=>false})}));
 vi.mock('../LibraryTagFilter',()=>({default:({value,onChange}:{value:string;onChange:(value:string)=>void})=><select aria-label="Фильтр по тегу" value={value} onChange={e=>onChange(e.target.value)}><option value="">Все теги</option><option value="stable">Общий тег</option><option value="second">Второй тег</option></select>}));
 (globalThis as typeof globalThis & {IS_REACT_ACT_ENVIRONMENT:boolean}).IS_REACT_ACT_ENVIRONMENT=true;
 const monster:Monster={id:'wolf',slug:'wolf',name:'Волк',description:'Каноническое описание',size:'medium',creature_type:'beast',alignment:'unaligned',challenge_rating:'1/4',armor_class:13,max_hp:11,speed:40,initiative_bonus:2,proficiency_bonus:2,abilities:{str:12,dex:15,con:12,int:3,wis:12,cha:6},action_ids:['bite'],effect_ids:[],ai:{},token_url:'',source:'test',created_at:'',updated_at:''};

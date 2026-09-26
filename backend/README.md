@@ -36,6 +36,7 @@ OPENAI_API_KEY=your_openai_api_key_here
 JWT_SECRET=replace_with_at_least_32_random_characters
 ENCOUNTER_INVITE_SECRET=replace_with_an_independent_random_secret
 CONTENT_ADMIN_USER_IDS=00000000-0000-4000-8000-000000000001
+ADMIN_ELEVATION_PASSWORD_HASH=<bcrypt hash of a separate administrator password>
 CONTENT_CERTIFICATION_KEY=replace_with_an_independent_random_secret
 ```
 
@@ -44,15 +45,20 @@ CONTENT_CERTIFICATION_KEY=replace_with_an_independent_random_secret
 подписанные приглашения в бой используют доменно-разделённый HMAC на
 `JWT_SECRET`; явно заданный короткий/пустой ключ закрывает invite endpoints.
 
-`CONTENT_ADMIN_USER_IDS` — список UUID через запятую. Только эти пользователи
-с валидным строгим JWT могут изменять глобальные каталоги и связанные
-изображения; публичное чтение и игровые character/encounter routes от этого
-allowlist не зависят. При этом `/api/characters-v3/**` и `/api/encounters/**`
+`CONTENT_ADMIN_USER_IDS` — прежний серверный список UUID через запятую.
+Дополнительно пользователь с валидным JWT может подтвердить отдельный пароль
+администратора на странице `/account`: сервер сверяет его только с bcrypt-хешем
+`ADMIN_ELEVATION_PASSWORD_HASH` и сохраняет роль в `users.is_admin`. Если хеш
+не настроен, выдача роли через форму недоступна. Не кладите сам пароль, JWT
+secret или пароль пользовательского аккаунта в эту настройку. Попытки ввода
+ограничены; изменение обычного профиля не может назначить роль. Существующие
+UUID в allowlist продолжают работать. Публичное чтение и игровые
+character/encounter routes от этих прав не зависят. При этом `/api/characters-v3/**` и `/api/encounters/**`
 всегда требуют валидный JWT. Авторизованный пользователь читает свои и legacy
 `public`-листы, но legacy-листы доступны только для чтения; новые листы всегда
 принадлежат создавшему их пользователю. Ответ явно сообщает `access_mode`, а
-начальный runtime входит в атомарный POST создания. Пустая или невалидная
-настройка закрывает глобальную запись с HTTP 503. Certification/migration
+начальный runtime входит в атомарный POST создания. Без allowlist и без
+сохранённой роли глобальная запись закрыта. Certification/migration
 endpoints дополнительно требуют `CONTENT_CERTIFICATION_KEY`. Используйте
 отдельного content-admin пользователя:
 не сохраняйте в allowlist UUID учётной записи с известным, тестовым или когда-либо

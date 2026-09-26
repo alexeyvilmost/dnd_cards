@@ -7,7 +7,7 @@ import CardLibrary from '../../pages/CardLibrary';
 
 const mocks = vi.hoisted(() => ({ token: 'admin' as string | null, canManage: true, mobile: false, list: vi.fn(), detail: vi.fn(), bulk: vi.fn(), catalog: vi.fn() }));
 vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ token: mocks.token }) }));
-vi.mock('../../hooks/useContentPermissions', () => ({ useContentPermissions: () => ({ admin: mocks.canManage, canCreate: (kind: string) => Boolean(mocks.token && (mocks.canManage || kind === 'cards' || kind === 'spells')) }) }));
+vi.mock('../../hooks/useContentPermissions', () => ({ useContentPermissions: () => ({ admin: mocks.canManage, canEdit: (entity: {author?: string}) => mocks.canManage || entity.author === 'player', canCreate: (kind: string) => Boolean(mocks.token && (mocks.canManage || kind === 'cards' || kind === 'spells')) }) }));
 vi.mock('../../settings', () => ({ useSiteSettings: () => ({ itemPreview: 'interface' }) }));
 vi.mock('../../hooks/useIsMobile', () => ({ useIsMobile: () => mocks.mobile }));
 vi.mock('../../hooks/usePinMode', () => ({ usePinMode: () => ({ pinModeActive: false }) }));
@@ -115,6 +115,17 @@ describe('item library interactions', () => {
     mocks.canManage=false; mocks.token='player'; await render();
     expect(container.querySelector('.library-bulk-tags')).toBeNull();
     await click('Монстры'); expect(location()).toBe('/monsters');
+  });
+
+  it('opens the detail dialog for an editor, but the full entity page for a reader', async () => {
+    await render('/library?view=list');
+    await click('Первый предмет');
+    expect(container.querySelector('[role=dialog]')?.textContent).toContain('Первый предмет');
+    expect(location()).toBe('/library?view=list');
+    mocks.canManage = false;
+    await act(async () => root.render(<MemoryRouter initialEntries={['/library?view=list']}><NavigationProbe/><CardLibrary/></MemoryRouter>));
+    await click('Первый предмет');
+    expect(location()).toBe('/entity/cards/first');
   });
 
   it('drops administrator data and selection on logout even when the guest read fails', async () => {

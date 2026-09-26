@@ -93,7 +93,7 @@ export const imagesApi = {
 
   // Загрузка изображения
   uploadImage: async (
-    entityType: 'card' | 'weapon_template' | 'monster',
+    entityType: 'card' | 'weapon_template' | 'monster' | 'spell' | 'action' | 'effect' | 'feat',
     entityId: string,
     imageFile: File
   ): Promise<ImageUploadResponse> => {

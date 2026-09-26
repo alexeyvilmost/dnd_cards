@@ -31,6 +31,20 @@ export const authApi = {
     return response.data;
   },
 
+  updateProfile: async (data: { display_name: string; email: string }): Promise<User> => {
+    const response = await apiClient.put<User>('/api/auth/profile', data);
+    return response.data;
+  },
+
+  changePassword: async (current_password: string, new_password: string): Promise<void> => {
+    await apiClient.post('/api/auth/change-password', { current_password, new_password });
+  },
+
+  elevateAdmin: async (password: string): Promise<User> => {
+    const response = await apiClient.post<User>('/api/auth/elevate-admin', { password });
+    return response.data;
+  },
+
   // Выход из системы
   logout: async (): Promise<{ message: string }> => {
     const response = await apiClient.post<{ message: string }>('/api/auth/logout');

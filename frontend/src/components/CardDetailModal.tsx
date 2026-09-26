@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import EntityTags from './EntityTags';
 import { createPortal } from 'react-dom';
-import { X, Edit, Trash2, Shield, ShieldOff, Wand2, Loader2, Download, Copy } from 'lucide-react';
+import { X, Edit, Trash2, Shield, ShieldOff, ClipboardPaste, Loader2, Download, Copy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Card, InventoryItem } from '../types';
 import { getItemTypeLabel } from '../constants/itemTypes';
@@ -11,7 +11,6 @@ import CardPreview from './CardPreview';
 import ItemPreview from './ItemPreview';
 import { useSiteSettings } from '../settings';
 import { imagesApi } from '../api/imagesApi';
-import { cardsApi } from '../api/client';
 import { toBlob } from 'html-to-image';
 import { getCardCaptureOptions } from '../utils/exportFonts';
 import { getRaritySymbol, getRaritySymbolDescription } from '../utils/raritySymbols';
@@ -24,6 +23,7 @@ import { findMastery, useMasteryEffects } from '../utils/mastery';
 import { describeMechanics } from '../engine/describeMechanics';
 import { useEntityDetail } from '../contexts/entityDetail';
 import { useContentPermissions } from '../hooks/useContentPermissions';
+import { readClipboardImageFile } from '../utils/clipboardImage';
 
 interface CardDetailModalProps {
   card: Card | null;
@@ -33,6 +33,7 @@ interface CardDetailModalProps {
   onDelete: (cardId: string) => void;
   inventoryItem?: InventoryItem | null;
   onEquip?: (itemId: string, isEquipped: boolean) => void;
+  onImageUpdated?: (cardId: string, imageUrl: string) => void;
 }
 
 const CardDetailModal: React.FC<CardDetailModalProps> = ({
@@ -41,17 +42,18 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
   onClose,
   onDelete,
   inventoryItem,
-  onEquip
+  onEquip,
+  onImageUpdated
 }) => {
   const { readOnly = false } = useEntityDetail();
-  const { admin, canEdit, canCreate } = useContentPermissions();
+  const { canEdit, canCreate } = useContentPermissions();
   const containerSum = useContainerTotals(card); // S6: сумма веса/цены содержимого контейнера
   // Искусность (Weapon Mastery 2024): структурное поле card.mastery → эффект-мастерство.
   const masteryEffect = findMastery(useMasteryEffects(), card?.mastery);
   const mechanicsDescription = describeMechanics(card?.mechanics as Record<string, unknown> | null | undefined);
   const asInterface = useSiteSettings().itemPreview === 'interface'; // #4: детальное превью как стат-блок
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generateError, setGenerateError] = useState<string | null>(null);
+  const [isPasting, setIsPasting] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
   const [cardImage, setCardImage] = useState<string>(card?.image_url || '');
   const [isDownloading, setIsDownloading] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -83,11 +85,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
   }, [onClose, isOpen]);
 
   // Синхронизируем cardImage с card.image_url
-  useEffect(() => {
-    if (card?.image_url) {
-      setCardImage(card.image_url);
-    }
-  }, [card?.image_url]);
+  useEffect(() => { setCardImage(card?.image_url || ''); }, [card?.id, card?.image_url]);
 
   if (!isOpen || !card) return null;
 
@@ -95,32 +93,21 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
     return `${weight} фнт.`;
   };
 
-  // Функция генерации изображения
-  const handleGenerateImage = async () => {
-    if (readOnly || !admin || !card) return;
-    
+  // Paste the image using the same owner-gated Storage upload as the editor.
+  const handlePasteImage = async () => {
+    if (readOnly || !card || !canEdit(card)) return;
     try {
-      setIsGenerating(true);
-      setGenerateError(null);
-
-      const response = await imagesApi.generateImage('card', card.id, undefined, {
-        name: card.name,
-        description: card.description,
-        rarity: card.rarity,
-        image_prompt_extra: card.image_prompt_extra || undefined,
-      });
-      
-      if (response.success) {
-        // Обновляем карту с URL изображения
-        await cardsApi.updateCard(card.id, { image_url: response.image_url });
-        setCardImage(response.image_url);
-      } else {
-        setGenerateError('Не удалось сгенерировать изображение');
-      }
+      setIsPasting(true);
+      setImageError(null);
+      const file = await readClipboardImageFile();
+      const response = await imagesApi.uploadImage('card', card.id, file);
+      if (!response.success || !response.image_url) throw new Error('Не удалось загрузить изображение');
+      setCardImage(response.image_url);
+      onImageUpdated?.(card.id, response.image_url);
     } catch (err) {
-      setGenerateError(err instanceof Error ? err.message : 'Ошибка генерации изображения');
+      setImageError(err instanceof Error ? err.message : 'Не удалось вставить изображение');
     } finally {
-      setIsGenerating(false);
+      setIsPasting(false);
     }
   };
 
@@ -130,7 +117,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
 
     try {
       setIsDownloading(true);
-      setGenerateError(null);
+      setImageError(null);
 
       const exportCard = cardRef.current.querySelector('.card-preview') as HTMLElement | null;
       if (!exportCard) {
@@ -151,7 +138,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
       link.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      setGenerateError(err instanceof Error ? err.message : 'Ошибка при скачивании карты');
+      setImageError(err instanceof Error ? err.message : 'Ошибка при скачивании карты');
     } finally {
       setIsDownloading(false);
     }
@@ -256,31 +243,44 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Левая часть: карточка со свечением (без 3D-наклона — мешает ссылкам в тексте) */}
-        <div className={`flex-shrink-0 flex items-center justify-center p-2 sm:p-4 ${card.is_extended ? 'lg:w-2/3' : 'lg:w-1/2'}`}>
+        <div data-testid="card-detail-preview" className={`flex-shrink-0 flex items-center justify-center p-2 sm:p-4 ${card.is_extended ? 'lg:w-2/3' : 'lg:w-1/2'}`}>
           <div
             ref={cardRef}
-            className="relative flex items-center justify-center origin-center scale-100 sm:scale-110 md:scale-125 lg:scale-150"
+            className="relative flex flex-col items-center gap-5 origin-center scale-100 sm:scale-110 md:scale-125 lg:scale-150"
           >
-            {glowSettings && (
-              <div
-                aria-hidden
-                className="pointer-events-none absolute left-1/2 -translate-x-1/2 transition-all duration-300 ease-out"
-                style={{
-                  bottom: '-8%',
-                  width: `${100 * glowSettings.spread}%`,
-                  height: '45%',
-                  background: `radial-gradient(ellipse at center, ${glowColor} 0%, transparent 72%)`,
-                  opacity: glowSettings.idleOpacity,
-                  filter: `blur(${glowSettings.blur}px)`,
-                  transform: 'translateX(-50%) scale(1)',
-                }}
-              />
-            )}
-            <div className="relative z-10">
-              {asInterface
-                ? <ItemPreview card={{ ...card, image_url: cardImage }} disableHover />
-                : <CardPreview card={{ ...card, image_url: cardImage }} disableHover={true} />}
+            <div className="relative flex items-center justify-center">
+              {glowSettings && (
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute left-1/2 -translate-x-1/2 transition-all duration-300 ease-out"
+                  style={{
+                    bottom: '-8%',
+                    width: `${100 * glowSettings.spread}%`,
+                    height: '45%',
+                    background: `radial-gradient(ellipse at center, ${glowColor} 0%, transparent 72%)`,
+                    opacity: glowSettings.idleOpacity,
+                    filter: `blur(${glowSettings.blur}px)`,
+                    transform: 'translateX(-50%) scale(1)',
+                  }}
+                />
+              )}
+              <div className="relative z-10">
+                {asInterface
+                  ? <ItemPreview card={{ ...card, image_url: cardImage }} disableHover />
+                  : <CardPreview card={{ ...card, image_url: cardImage }} disableHover={true} />}
+              </div>
             </div>
+            {!readOnly && canEdit(card) && (
+              <button
+                type="button"
+                onClick={handlePasteImage}
+                disabled={isPasting}
+                className="inline-flex items-center gap-2 rounded border border-amber-600/60 bg-neutral-900/80 px-3 py-1.5 text-xs text-amber-100 hover:border-amber-400 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isPasting ? <Loader2 size={16} className="animate-spin" /> : <ClipboardPaste size={16} />}
+                <span>{isPasting ? 'Загрузка…' : 'Вставить из буфера'}</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -426,6 +426,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
 
           {/* Кнопки действий */}
           <div className="flex flex-wrap gap-2 mt-4">
+            <Link to={`/entity/cards/${encodeURIComponent(card.id)}`} onClick={onClose} className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded flex items-center">На полную страницу</Link>
             <button
               onClick={handleDownloadCard}
               disabled={isDownloading}
@@ -459,21 +460,6 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
               <Trash2 size={18} />
               <span>Удалить</span>
             </button>}
-            {!readOnly && admin && !card.image_url && (
-              <button
-                onClick={handleGenerateImage}
-                disabled={isGenerating}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-4 py-2 rounded flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isGenerating ? (
-                  <Loader2 size={18} className="animate-spin" />
-                ) : (
-                  <Wand2 size={18} />
-                )}
-                <span>{isGenerating ? 'Генерация...' : 'Сгенерировать изображение'}</span>
-              </button>
-            )}
-            
             {/* Кнопка экипировки - только для предметов в инвентаре */}
             {inventoryItem && onEquip && card.slot && (
               <button
@@ -509,10 +495,10 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
             )}
           </div>
           
-          {/* Отображение ошибки генерации */}
-          {generateError && (
+          {/* Ошибка вставки изображения или скачивания карты. */}
+          {imageError && (
             <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600 text-sm">{generateError}</p>
+              <p className="text-red-600 text-sm">{imageError}</p>
             </div>
           )}
         </div>

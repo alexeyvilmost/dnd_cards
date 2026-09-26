@@ -81,6 +81,7 @@ func requireStrictJWT(authService *AuthService, c *gin.Context) (*JWTClaims, boo
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "пользователь токена больше не активен"})
 		return nil, false
 	}
+	c.Set("is_admin", claims.IsAdmin)
 	return claims, true
 }
 
@@ -108,20 +109,21 @@ func parseContentAdminUserIDs(raw string) (map[uuid.UUID]struct{}, error) {
 
 // ContentAdminAuthMiddleware is the short-term production authorization
 // boundary for global catalog mutations. Authentication is still the strict
-// HS256/issuer/identity contract; authorization is an immutable user UUID
-// allowlist supplied only through server configuration.
+// HS256/issuer/identity contract. The legacy UUID allowlist and persistent
+// account grants are both checked server-side after authentication.
 func ContentAdminAuthMiddleware(authService *AuthService) gin.HandlerFunc {
 	allowed, configErr := parseContentAdminUserIDs(os.Getenv("CONTENT_ADMIN_USER_IDS"))
 	return func(c *gin.Context) {
-		if configErr != nil {
-			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "авторизация администраторов контента не настроена"})
-			return
-		}
 		claims, ok := requireStrictJWT(authService, c)
 		if !ok {
 			return
 		}
-		if _, authorized := allowed[claims.UserID]; !authorized {
+		_, listed := allowed[claims.UserID]
+		if !listed && !c.GetBool("is_admin") {
+			if configErr != nil && authService.db == nil {
+				c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "авторизация администраторов контента не настроена"})
+				return
+			}
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "нет прав администратора контента"})
 			return
 		}

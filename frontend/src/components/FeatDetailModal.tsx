@@ -6,7 +6,7 @@ import { getFeatCategoryLabel, getAbilityLabel } from '../types';
 import { featsApi } from '../api/client';
 import { FormattedText } from '../utils/formattedText';
 import FeatPreview from './FeatPreview';
-import EntityImageEditor, { ICON_EXTRA } from './EntityImageEditor';
+import EntityImageEditor from './EntityImageEditor';
 import { EntityDetailShell, EdmField, EdmFields, EdmDesc, EdmBlock, EdmTag } from './EntityDetailShell';
 
 interface FeatDetailModalProps {
@@ -33,11 +33,11 @@ const FeatDetailModal: React.FC<FeatDetailModalProps> = ({ feat, isOpen, onClose
       titleEn={feat.name_en}
       preview={(
         <EntityImageEditor
+          entityType="feat"
           entityId={feat.id}
           author={feat.author}
           initialUrl={feat.image_url || ''}
           persist={async (id, url) => (await featsApi.updateFeat(id, { image_url: url })).image_url || url}
-          generateReq={{ style: 'spell_icon', subject: feat.name, quality: 'medium', extra: ICON_EXTRA }}
           renderPreview={(url) => <FeatPreview feat={{ ...feat, image_url: url }} disableHover />}
           onUpdated={() => onUpdated?.()}
         />

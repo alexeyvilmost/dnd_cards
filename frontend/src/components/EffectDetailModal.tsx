@@ -6,7 +6,7 @@ import { PASSIVE_EFFECT_TYPE_OPTIONS } from '../types';
 import { effectsApi } from '../api/client';
 import { FormattedText } from '../utils/formattedText';
 import EffectPreview from './EffectPreview';
-import EntityImageEditor, { ICON_EXTRA } from './EntityImageEditor';
+import EntityImageEditor from './EntityImageEditor';
 import { EntityDetailShell, EdmField, EdmFields, EdmDesc, EdmBlock } from './EntityDetailShell';
 import { isMechanicsLocked } from '../content/supportStatus';
 
@@ -39,11 +39,11 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
       titleEn={effect.name_en}
       preview={(
         <EntityImageEditor
+          entityType="effect"
           entityId={effect.id}
           author={effect.author}
           initialUrl={effect.image_url || ''}
           persist={async (id, url) => (await effectsApi.updateEffect(id, { image_url: url })).image_url || url}
-          generateReq={{ style: 'spell_icon', subject: effect.name, quality: 'medium', extra: ICON_EXTRA }}
           renderPreview={(url) => <EffectPreview effect={{ ...effect, image_url: url }} disableHover />}
           onUpdated={() => onUpdated?.()}
         />

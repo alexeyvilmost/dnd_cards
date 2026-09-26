@@ -32,15 +32,16 @@ export function useContentPermissions() {
         .finally(() => { if (active) setResolvedToken(token); });
     }
     return () => { active = false; };
-  }, [token, user?.id]);
+  }, [token, user?.id, user?.is_admin]);
 
+  const admin = Boolean(token && (capabilities?.admin === true || user?.is_admin === true));
   const canEdit = (entity: { author?: string | null }) => Boolean(
-    capabilities?.admin || (user && entity.author === user.id),
+    admin || (user && entity.author === user.id),
   );
   return {
-    admin: capabilities?.admin === true,
+    admin,
     canEdit,
-    canCreate: (type: string) => Boolean(token && user && (capabilities?.admin || type === 'cards' || type === 'spells')),
+    canCreate: (type: string) => Boolean(token && user && (admin || type === 'cards' || type === 'spells')),
     ready: !token || resolvedToken === token,
   };
 }

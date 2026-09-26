@@ -984,6 +984,7 @@ type User struct {
 	Email        string         `json:"email" gorm:"uniqueIndex"` // NULL for OAuth-only accounts; never used for automatic linking.
 	PasswordHash string         `json:"-" gorm:"not null"`        // Хеш пароля (не возвращаем в JSON)
 	DisplayName  string         `json:"display_name" gorm:"not null"`
+	IsAdmin      bool           `json:"is_admin" gorm:"not null;default:false"`
 	CreatedAt    time.Time      `json:"created_at"`
 	UpdatedAt    time.Time      `json:"updated_at"`
 	DeletedAt    gorm.DeletedAt `json:"-" gorm:"index"`

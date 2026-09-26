@@ -1,35 +1,32 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { RefreshCw, ImagePlus } from 'lucide-react';
-import { imagesApi, type StandaloneImageRequest } from '../api/imagesApi';
+import { ClipboardPaste, ImagePlus } from 'lucide-react';
+import { imagesApi } from '../api/imagesApi';
 import ImageUploader from './ImageUploader';
 import { useEntityDetail } from '../contexts/entityDetail';
 import { useContentPermissions } from '../hooks/useContentPermissions';
+import { readClipboardImageFile } from '../utils/clipboardImage';
 
-// Общий блок смены изображения в детальном окне сущности (как у заклинаний):
-// превью + «Перегенерировать» (ИИ) + «Загрузить», с частичным PUT сущности.
-// Универсальная иконка-подсказка для ИИ (совпадает со стилем иконок заклинаний).
-export const ICON_EXTRA =
-  'Thin elegant strokes of energy. The symbol occupies about two-thirds of the frame, centered, with clear margins on all sides.';
+// Общий блок смены изображения в детальном окне сущности.
+// Вставка из буфера сохраняет оригинальный файл в Storage, без data URL в БД.
 
 interface Props {
+  entityType: 'spell' | 'action' | 'effect' | 'feat';
   entityId: string;
   author?: string;
   initialUrl: string;
   /** Частичный PUT сущности с новым image_url; возвращает сохранённый url. */
   persist: (id: string, url: string) => Promise<string>;
-  /** Параметры ИИ-генерации; без него кнопка «Перегенерировать» не показывается. */
-  generateReq?: StandaloneImageRequest;
   /** Рендер превью карточки с текущим изображением. */
   renderPreview: (imageUrl: string) => ReactNode;
   onUpdated?: (url: string) => void;
 }
 
-export default function EntityImageEditor({ entityId, author, initialUrl, persist, generateReq, renderPreview, onUpdated }: Props) {
+export default function EntityImageEditor({ entityType, entityId, author, initialUrl, persist, renderPreview, onUpdated }: Props) {
   const { readOnly = false } = useEntityDetail();
-  const { admin, canEdit } = useContentPermissions();
+  const { canEdit } = useContentPermissions();
   const locked = readOnly || !canEdit({ author });
   const [imageUrl, setImageUrl] = useState(initialUrl);
-  const [busy, setBusy] = useState<null | 'gen' | 'save'>(null);
+  const [busy, setBusy] = useState<null | 'paste' | 'save'>(null);
   const [error, setError] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(false);
 
@@ -57,19 +54,18 @@ export default function EntityImageEditor({ entityId, author, initialUrl, persis
     }
   };
 
-  const handleGenerate = async () => {
-    if (locked || !admin || !generateReq) return;
-    setBusy('gen');
+  const handlePaste = async () => {
+    if (locked) return;
+    setBusy('paste');
     setError(null);
     try {
-      const res = await imagesApi.generateStandalone(generateReq);
-      if (!res.image_url) throw new Error('нет image_url');
-      const saved = await persist(entityId, res.image_url);
-      setImageUrl(saved || res.image_url);
-      onUpdated?.(saved || res.image_url);
+      const file = await readClipboardImageFile();
+      const result = await imagesApi.uploadImage(entityType, entityId, file);
+      if (!result.success || !result.image_url) throw new Error('Не удалось загрузить изображение');
+      setImageUrl(result.image_url);
+      onUpdated?.(result.image_url);
     } catch (e) {
-      console.error(e);
-      setError('Не удалось перегенерировать изображение');
+      setError(e instanceof Error ? e.message : 'Не удалось вставить изображение');
     } finally {
       setBusy(null);
     }
@@ -80,20 +76,17 @@ export default function EntityImageEditor({ entityId, author, initialUrl, persis
   return (
     <>
       {renderPreview(imageUrl)}
-      <div className="w-full max-w-xs space-y-2">
+      <div className="w-full max-w-sm space-y-2">
         <div className="flex gap-2">
-          {admin && generateReq && (
-            <button
-              type="button"
-              onClick={handleGenerate}
-              disabled={busy !== null}
-              className="edm-btn edm-btn--sm edm-btn--grow"
-              aria-description="Сгенерировать иконку (ИИ)"
-            >
-              <RefreshCw size={16} className={busy === 'gen' ? 'animate-spin' : ''} />
-              <span>{busy === 'gen' ? 'Генерация…' : 'Перегенерировать'}</span>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handlePaste}
+            disabled={busy !== null}
+            className="edm-btn edm-btn--sm edm-btn--grow"
+          >
+            <ClipboardPaste size={16} />
+            <span>{busy === 'paste' ? 'Загрузка…' : 'Вставить из буфера'}</span>
+          </button>
           <button
             type="button"
             onClick={() => setShowUpload((v) => !v)}

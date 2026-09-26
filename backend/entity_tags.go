@@ -37,6 +37,9 @@ type EntityTagAssignment struct {
 
 func (EntityTagAssignment) TableName() string { return "entity_tag_assignments" }
 func canManageEntityTags(c *gin.Context) bool {
+	if c.GetBool("is_admin") {
+		return true
+	}
 	id, _ := GetCurrentUserID(c)
 	admins, _ := parseContentAdminUserIDs(os.Getenv("CONTENT_ADMIN_USER_IDS"))
 	_, ok := admins[id]

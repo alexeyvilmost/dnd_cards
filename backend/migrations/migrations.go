@@ -1494,6 +1494,7 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		{Version: "265_owned_item_grants", Description: "Preserve existing item access for owned sheets separately from the public library", Up: AddOwnedItemGrants265, Down: RefuseOwnedItemGrants265Down},
 		{Version: "266_paper_document_trash", Description: "Recoverable deletion of owned paper sheets", Up: addPaperDocumentTrash266, Down: refusePaperDocumentTrash266Down},
 		{Version: "267_content_entity_authorship", Description: "Authorship on all library entities for owner editing", Up: addContentEntityAuthorship267, Down: refuseContentEntityAuthorship267Down},
+		{Version: "268_account_admin_status", Description: "Persistent administrator status granted only by server-side password verification", Up: addAccountAdminStatus268, Down: refuseAccountAdminStatus268Down},
 		// Здесь можно добавлять новые миграции
 	}
 }

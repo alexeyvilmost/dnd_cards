@@ -2,6 +2,9 @@
 
 .monster-secondary{display:inline-flex;align-items:center;justify-content:center;margin-top:8px;border:1px solid #b99f79;border-radius:10px;padding:9px 13px;background:#fff8eb;color:#70402c;font-weight:700;cursor:pointer}.monster-secondary:disabled{opacity:.45;cursor:not-allowed}
 
+button.monster-card { width: 100%; text-align: left; color: inherit; cursor: pointer; }
+button.monster-card:hover, button.monster-card:focus-visible { border-color: #b78c43; box-shadow: 0 10px 28px #5b462338; }
+
 /* Preserve canonical entity appearance under the dark shared page chrome. */
 .monster-card { color: #2d241a; text-decoration: none; transition: transform .18s ease, box-shadow .18s ease; }
 .monster-card:hover, .monster-card:focus-visible { color: #2d241a; text-decoration: none; transform: translateY(-2px); box-shadow: 0 10px 28px #5b462344; }

@@ -7,7 +7,7 @@ import { actionsApi } from '../api/client';
 import { resourceIcon, resourceLabel, useResourceOptions } from '../utils/resources';
 import { FormattedText } from '../utils/formattedText';
 import ActionPreview from './ActionPreview';
-import EntityImageEditor, { ICON_EXTRA } from './EntityImageEditor';
+import EntityImageEditor from './EntityImageEditor';
 import { EntityDetailShell, EdmField, EdmFields, EdmDesc, EdmBlock } from './EntityDetailShell';
 import { isMechanicsLocked } from '../content/supportStatus';
 
@@ -50,11 +50,11 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
       titleEn={action.name_en}
       preview={(
         <EntityImageEditor
+          entityType="action"
           entityId={action.id}
           author={action.author}
           initialUrl={action.image_url || ''}
           persist={async (id, url) => (await actionsApi.updateAction(id, { image_url: url })).image_url || url}
-          generateReq={{ style: 'spell_icon', subject: action.name, quality: 'medium', extra: ICON_EXTRA }}
           renderPreview={(url) => <ActionPreview action={{ ...action, image_url: url }} disableHover resources={resources} />}
           onUpdated={() => onUpdated?.()}
         />

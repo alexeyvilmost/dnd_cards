@@ -50,7 +50,7 @@ func NewImageController(db *gorm.DB, yandexStorage *YandexStorageService, openAI
 	}
 }
 
-// UploadImage загружает изображение для карты или шаблона оружия
+// UploadImage загружает изображение для сущности библиотеки.
 func (ic *ImageController) UploadImage(c *gin.Context) {
 	// Получаем параметры из формы
 	entityType := c.PostForm("entity_type")
@@ -58,6 +58,23 @@ func (ic *ImageController) UploadImage(c *gin.Context) {
 
 	if entityType == "" || entityID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "необходимо указать entity_type и entity_id"})
+		return
+	}
+	folder, supported := map[string]string{
+		"card": "cards", "monster": "monster_tokens",
+		"spell": "spell_icons", "action": "action_icons",
+		"effect": "effect_icons", "feat": "feat_icons",
+	}[entityType]
+	if !supported {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неподдерживаемый тип сущности"})
+		return
+	}
+	if _, err := uuid.Parse(entityID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный ID сущности"})
+		return
+	}
+	if ic.yandexStorage == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "хранилище изображений не настроено"})
 		return
 	}
 
@@ -72,14 +89,6 @@ func (ic *ImageController) UploadImage(c *gin.Context) {
 	if !isValidImageType(file.Header.Get("Content-Type")) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "неподдерживаемый тип файла"})
 		return
-	}
-
-	// Определяем папку для загрузки
-	folder := "cards"
-	if entityType == "weapon_template" {
-		folder = "weapon_templates"
-	} else if entityType == "monster" {
-		folder = "monster_tokens"
 	}
 
 	// Загружаем изображение в Yandex Cloud Storage
@@ -464,6 +473,28 @@ func (ic *ImageController) updateEntityImage(entityType, entityID, imageURL, clo
 		return ic.db.Model(&Monster{}).Where("id = ?", monsterID).Updates(map[string]interface{}{
 			"token_url": imageURL, "token_storage_id": cloudinaryID,
 		}).Error
+	case "spell", "action", "effect", "feat":
+		id, err := uuid.Parse(entityID)
+		if err != nil {
+			return fmt.Errorf("неверный ID сущности: %w", err)
+		}
+		models := map[string]interface{}{
+			"spell": &Spell{}, "action": &Action{}, "effect": &Effect{}, "feat": &Feat{},
+		}
+		updates := map[string]interface{}{
+			"image_url": imageURL, "image_cloudinary_id": cloudinaryID, "image_generated": isGenerated,
+		}
+		if isGenerated {
+			updates["image_generation_prompt"] = prompt
+		}
+		result := ic.db.Model(models[entityType]).Where("id = ? AND deleted_at IS NULL", id).Updates(updates)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return gorm.ErrRecordNotFound
+		}
+		return nil
 
 	default:
 		return fmt.Errorf("неподдерживаемый тип сущности: %s", entityType)
@@ -529,6 +560,16 @@ func (ic *ImageController) getEntityInfo(entityType, entityID string) (map[strin
 			"name": monster.Name, "description": monster.Description,
 			"type": monster.CreatureType, "rarity": "common",
 		}, nil
+	case "spell", "action", "effect", "feat":
+		id, err := uuid.Parse(entityID)
+		if err != nil {
+			return nil, err
+		}
+		var info struct{ Name, Rarity string }
+		if err := ic.db.Table(entityType+"s").Select("name, rarity").Where("id = ? AND deleted_at IS NULL", id).Take(&info).Error; err != nil {
+			return nil, err
+		}
+		return map[string]interface{}{"name": info.Name, "rarity": info.Rarity}, nil
 
 	default:
 		return nil, fmt.Errorf("неподдерживаемый тип сущности: %s", entityType)

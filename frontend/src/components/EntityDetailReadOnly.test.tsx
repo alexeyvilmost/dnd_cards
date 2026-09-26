@@ -7,12 +7,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EntityDetailProvider } from './EntityDetailProvider';
 import { EntityDetailContext, useEntityDetail } from '../contexts/entityDetail';
 import EntityImageEditor from './EntityImageEditor';
+import { EntityDetailShell } from './EntityDetailShell';
+import LibraryQuickDetail from './library/LibraryQuickDetail';
 import type { EntityRefType } from './EntityRefRegistry';
 
 const mocks = vi.hoisted(() => ({
   deleteCard: vi.fn(), deleteSpell: vi.fn(), deleteAction: vi.fn(), deleteEffect: vi.fn(),
   deleteConcept: vi.fn(), deleteResource: vi.fn(), deleteVariable: vi.fn(), update: vi.fn(),
-  generate: vi.fn(), generateCard: vi.fn(), tagList: vi.fn(), tagGet: vi.fn(), tagWrite: vi.fn(), evict: vi.fn(),
+  generate: vi.fn(), generateCard: vi.fn(), upload: vi.fn(), tagList: vi.fn(), tagGet: vi.fn(), tagWrite: vi.fn(), evict: vi.fn(),
 }));
 
 vi.mock('../api/client', () => ({
@@ -24,7 +26,7 @@ vi.mock('../api/client', () => ({
   resourcesApi: { deleteResource: mocks.deleteResource },
   variablesApi: { deleteVariable: mocks.deleteVariable },
 }));
-vi.mock('../api/imagesApi', () => ({ imagesApi: { generateStandalone: mocks.generate, generateImage: mocks.generateCard } }));
+vi.mock('../api/imagesApi', () => ({ imagesApi: { generateStandalone: mocks.generate, generateImage: mocks.generateCard, uploadImage: mocks.upload } }));
 vi.mock('../hooks/useContentPermissions', () => ({
   useContentPermissions: () => ({ admin: true, canEdit: () => true, canCreate: () => true, ready: true }),
 }));
@@ -110,7 +112,7 @@ describe('canonical entity details in an inspection context', () => {
 
   function expectNoAuthoring() {
     const text = document.body.textContent ?? '';
-    for (const label of ['Редактировать', 'Использовать как шаблон', 'Удалить', 'Сгенерировать изображение', 'Перегенерировать', 'Загрузить', 'Изменить теги', 'Сохранить звук', 'Параметры товара забега']) {
+    for (const label of ['Редактировать', 'Использовать как шаблон', 'Удалить', 'Сгенерировать изображение', 'Перегенерировать', 'Вставить из буфера', 'Загрузить', 'Изменить теги', 'Сохранить звук', 'Параметры товара забега']) {
       expect(text, label).not.toContain(label);
     }
     expect(document.querySelector('a[href*="creator"], a[href^="/edit/"]')).toBeNull();
@@ -128,10 +130,29 @@ describe('canonical entity details in an inspection context', () => {
       expect(document.querySelector('button[aria-label="Закрыть"]')).not.toBeNull();
     }
     expect(document.body.textContent).toContain('Метка библиотеки');
+    expect([...document.querySelectorAll('a')].find(link => link.textContent === 'На полную страницу')?.getAttribute('href'))
+      .toBe(`/entity/${type === 'card' ? 'cards' : type === 'resource' ? 'resources' : type === 'concept' ? 'concepts' : `${type}s`}/${type}-one`);
     expectNoAuthoring();
     expect(mocks.generate).not.toHaveBeenCalled();
     expect(mocks.update).not.toHaveBeenCalled();
     expect(mocks.tagWrite).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['card', 'cards'], ['spell', 'spells'], ['action', 'actions'], ['effect', 'effects'],
+    ['feat', 'feats'], ['background', 'backgrounds'], ['race', 'races'], ['class', 'classes'],
+    ['concept', 'concepts'], ['resource', 'resources'], ['variable', 'variables'],
+    ['monster', 'monsters'], ['passive', 'passives'],
+  ] as const)('links the %s detail to its full entity page', async (type, slug) => {
+    await render(<EntityDetailShell title="Сущность" isOpen onClose={() => {}} entity={{ type, id: 'entity-one' }}><p>Описание</p></EntityDetailShell>);
+    expect([...document.querySelectorAll('a')].find(link => link.textContent === 'На полную страницу')?.getAttribute('href'))
+      .toBe(`/entity/${slug}/entity-one`);
+  });
+
+  it('links the monster and passive quick detail to their full pages', async () => {
+    await render(<LibraryQuickDetail name="Сущность" pageTo="/entity/monsters/monster-one" editTo="/monster-forge/monster-one" onClose={() => {}}><p>Превью</p></LibraryQuickDetail>);
+    expect([...document.querySelectorAll('a')].find(link => link.textContent === 'На полную страницу')?.getAttribute('href'))
+      .toBe('/entity/monsters/monster-one');
   });
 
   it('keeps linked detail windows in inspection mode when following a spell reference', async () => {
@@ -149,10 +170,33 @@ describe('canonical entity details in an inspection context', () => {
     await render(<EntityDetailProvider><Opener type={type} /></EntityDetailProvider>);
     await click(button('Открыть'));
     expect(document.querySelector('a[href*="creator"], a[href^="/edit/"]')).not.toBeNull();
-    expect(document.body.textContent).toContain(type === 'card' ? 'Сгенерировать изображение' : 'Перегенерировать');
+    expect(document.body.textContent).toContain('Вставить из буфера');
+    expect(document.body.textContent).not.toContain('Перегенерировать');
     expect(document.body.textContent).toContain('Изменить теги');
     await click(button('Удалить'));
     expect(type === 'card' ? mocks.deleteCard : mocks.deleteSpell).toHaveBeenCalledExactlyOnceWith(`${type}-one`);
+  });
+
+  it('replaces an owned item image from the clipboard and updates its preview', async () => {
+    const previousClipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { read: vi.fn().mockResolvedValue([{
+      types: ['image/png'], getType: async () => new Blob(['image-data'], { type: 'image/png' }),
+    }]) } });
+    mocks.upload.mockResolvedValue({ success: true, image_url: 'https://example.test/pasted.png' });
+    try {
+      await render(<EntityDetailProvider><Opener type="card" /></EntityDetailProvider>);
+      await click(button('Открыть'));
+      expect(document.querySelector('[data-testid="card-detail-preview"]')?.contains(button('Вставить из буфера'))).toBe(true);
+      await click(button('Вставить из буфера'));
+      expect(mocks.upload).toHaveBeenCalledTimes(1);
+      expect(mocks.upload.mock.calls[0][0]).toBe('card');
+      expect(mocks.upload.mock.calls[0][1]).toBe('card-one');
+      expect(mocks.upload.mock.calls[0][2]).toBeInstanceOf(File);
+      expect(mocks.generateCard).not.toHaveBeenCalled();
+    } finally {
+      if (previousClipboard) Object.defineProperty(navigator, 'clipboard', previousClipboard);
+      else Reflect.deleteProperty(navigator, 'clipboard');
+    }
   });
 
   it('inherits inspection mode through nested providers and rejects a direct delete callback', async () => {
@@ -173,12 +217,41 @@ describe('canonical entity details in an inspection context', () => {
     expect(mocks.evict).toHaveBeenCalledWith('variable', 'variable-one');
   });
 
-  it('leaves image generation and persistence available outside inspection contexts', async () => {
+  it.each(['spell', 'action', 'effect', 'feat'] as const)('uploads a pasted %s image to Storage and refreshes its preview', async entityType => {
+    const previousClipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { read: vi.fn().mockResolvedValue([{
+      types: ['image/png'], getType: async () => new Blob(['image-data'], { type: 'image/png' }),
+    }]) } });
     const persist = vi.fn().mockResolvedValue('https://example.test/saved.png');
-    await render(<EntityDetailContext.Provider value={{ openEntity: () => {} }}><EntityImageEditor entityId="spell-one" initialUrl="" persist={persist} generateReq={{ style: 'spell_icon', subject: 'Свет' }} renderPreview={url => <img alt="Каноничное превью" src={url || undefined} />} /></EntityDetailContext.Provider>);
-    await click(button('Перегенерировать'));
-    expect(mocks.generate).toHaveBeenCalledTimes(1);
-    expect(persist).toHaveBeenCalledExactlyOnceWith('spell-one', 'https://example.test/image.png');
-    expect(document.querySelector('img')?.getAttribute('src')).toBe('https://example.test/saved.png');
+    mocks.upload.mockResolvedValue({ success: true, image_url: 'https://example.test/saved.png' });
+    try {
+      await render(<EntityDetailContext.Provider value={{ openEntity: () => {} }}><EntityImageEditor entityType={entityType} entityId={`${entityType}-one`} initialUrl="" persist={persist} renderPreview={url => <img alt="Каноничное превью" src={url || undefined} />} /></EntityDetailContext.Provider>);
+      expect(document.body.textContent).not.toContain('Перегенерировать');
+      await click(button('Вставить из буфера'));
+      expect(mocks.upload).toHaveBeenCalledExactlyOnceWith(entityType, `${entityType}-one`, expect.any(File));
+      expect(persist).not.toHaveBeenCalled();
+      expect(mocks.generate).not.toHaveBeenCalled();
+      expect(document.querySelector('img')?.getAttribute('src')).toBe('https://example.test/saved.png');
+    } finally {
+      if (previousClipboard) Object.defineProperty(navigator, 'clipboard', previousClipboard);
+      else Reflect.deleteProperty(navigator, 'clipboard');
+    }
+  });
+
+  it('keeps the previous image when the clipboard has no supported image', async () => {
+    const previousClipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { read: vi.fn().mockResolvedValue([
+      { types: ['text/plain'], getType: async () => new Blob(['not an image']) },
+    ]) } });
+    try {
+      await render(<EntityDetailContext.Provider value={{ openEntity: () => {} }}><EntityImageEditor entityType="spell" entityId="spell-one" initialUrl="https://example.test/old.png" persist={vi.fn()} renderPreview={url => <img alt="Превью" src={url} />} /></EntityDetailContext.Provider>);
+      await click(button('Вставить из буфера'));
+      expect(document.querySelector('img')?.getAttribute('src')).toBe('https://example.test/old.png');
+      expect(document.body.textContent).toContain('Скопируйте изображение PNG, JPEG, WebP или GIF');
+      expect(mocks.upload).not.toHaveBeenCalled();
+    } finally {
+      if (previousClipboard) Object.defineProperty(navigator, 'clipboard', previousClipboard);
+      else Reflect.deleteProperty(navigator, 'clipboard');
+    }
   });
 });

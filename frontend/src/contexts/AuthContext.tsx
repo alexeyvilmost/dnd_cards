@@ -20,6 +20,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   oauthError: string | null;
   oauthReturnPath: string | null;
+  refreshProfile: () => Promise<User>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -131,6 +132,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     clearPersistedAuthSession();
   };
 
+  const refreshProfile = async () => {
+    const profile = await authApi.getProfile();
+    const currentToken = readPersistedAuthToken();
+    if (currentToken) {
+      setUser(profile);
+      persistAuthSession(currentToken, profile);
+    }
+    return profile;
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -141,6 +152,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated: !!user && !!token,
     oauthError,
     oauthReturnPath,
+    refreshProfile,
   };
 
   return (

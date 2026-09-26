@@ -30,6 +30,7 @@ import CharacterV3AccessNotice from './components/CharacterV3AccessNotice';
 
 // Ленивая загрузка страниц (code-splitting по роутам) — уменьшает основной чанк.
 const Settings = lazy(() => import('./pages/Settings'));
+const AccountPage = lazy(() => import('./pages/AccountPage'));
 const CardLibrary = lazy(() => import('./pages/CardLibrary'));
 const HomePage = lazy(() => import('./pages/HomePage'));
 const CardCreator = lazy(() => import('./pages/CardCreator'));
@@ -229,6 +230,7 @@ function App() {
         {/* Публичные маршруты */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/account" element={<ProtectedRoute><Layout><AccountPage /></Layout></ProtectedRoute>} />
 
         {/* CharacterV3 хранит личные листы/журналы и требует валидную сессию. */}
         <Route path="/character-forge" element={<ProtectedRoute>{withRulesAuthority(<CharacterForge />)}</ProtectedRoute>} />

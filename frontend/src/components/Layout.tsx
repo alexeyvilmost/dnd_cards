@@ -56,6 +56,7 @@ const Layout = ({ children, landing = false, workspace = false }: LayoutProps) =
     user ? {
       label: 'Аккаунт', icon: User,
       submenu: [
+        { path: '/account', label: 'Профиль' },
         { path: '/groups', label: 'Мои группы' },
         { path: '/inventory', label: 'Инвентарь' },
         { path: '/settings', label: 'Настройки' },

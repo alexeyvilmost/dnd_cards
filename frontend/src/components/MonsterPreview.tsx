@@ -5,9 +5,8 @@ import SupportStatusBadge from './forge/SupportStatusBadge';
 
 const ABILITY_LABELS = { str: 'СИЛ', dex: 'ЛВК', con: 'ТЕЛ', int: 'ИНТ', wis: 'МДР', cha: 'ХАР' } as const;
 
-export default function MonsterPreview({ monster }: { monster: Monster }) {
-  return (
-    <Link className="monster-card" data-testid={`monster-card-${monster.slug}`} to={`/entity/monsters/${monster.id}`} aria-label={`Открыть: ${monster.name}`}>
+export default function MonsterPreview({ monster, staticCard = false, onOpen }: { monster: Monster; staticCard?: boolean; onOpen?: () => void }) {
+  const content = <>
       <div className="monster-card__token">
         {monster.token_url
           ? <img src={monster.token_url} alt={`Токен: ${monster.name}`} />
@@ -36,6 +35,8 @@ export default function MonsterPreview({ monster }: { monster: Monster }) {
           <span>{monster.action_ids.length} действий · {monster.effect_ids.length} эффектов</span>
         </div>
       </div>
-    </Link>
-  );
+  </>;
+  if (staticCard) return <div className="monster-card" data-testid={`monster-card-${monster.slug}`}>{content}</div>;
+  if (onOpen) return <button type="button" className="monster-card" data-testid={`monster-card-${monster.slug}`} onClick={onOpen} aria-label={`Открыть: ${monster.name}`}>{content}</button>;
+  return <Link className="monster-card" data-testid={`monster-card-${monster.slug}`} to={`/entity/monsters/${monster.id}`} aria-label={`Открыть: ${monster.name}`}>{content}</Link>;
 }
