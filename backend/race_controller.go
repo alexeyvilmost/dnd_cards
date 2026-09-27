@@ -158,7 +158,7 @@ func (rc *RaceController) UpdateRace(c *gin.Context) {
 	}
 	var req UpdateRaceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		writeEntityUpdateBindingError(c, "вид", err)
 		return
 	}
 	var r Race
@@ -240,7 +240,7 @@ func (rc *RaceController) UpdateRace(c *gin.Context) {
 		r.IsExtended = req.IsExtended
 	}
 	if err := rc.db.Save(&r).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления вида"})
+		writeEntityUpdateDatabaseError(c, "вид", err)
 		return
 	}
 	c.JSON(http.StatusOK, r.ToRaceResponse())

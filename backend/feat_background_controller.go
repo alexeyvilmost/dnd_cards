@@ -163,7 +163,7 @@ func (fc *FeatController) UpdateFeat(c *gin.Context) {
 	}
 	var req UpdateFeatRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		writeEntityUpdateBindingError(c, "черту", err)
 		return
 	}
 	var f Feat
@@ -222,7 +222,7 @@ func (fc *FeatController) UpdateFeat(c *gin.Context) {
 		f.IsExtended = req.IsExtended
 	}
 	if err := fc.db.Save(&f).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления черты"})
+		writeEntityUpdateDatabaseError(c, "черту", err)
 		return
 	}
 	c.JSON(http.StatusOK, f.ToFeatResponse())
@@ -384,7 +384,7 @@ func (bc *BackgroundController) UpdateBackground(c *gin.Context) {
 	}
 	var req UpdateBackgroundRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		writeEntityUpdateBindingError(c, "предысторию", err)
 		return
 	}
 	var b Background
@@ -443,7 +443,7 @@ func (bc *BackgroundController) UpdateBackground(c *gin.Context) {
 		b.IsExtended = req.IsExtended
 	}
 	if err := bc.db.Save(&b).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления предыстории"})
+		writeEntityUpdateDatabaseError(c, "предысторию", err)
 		return
 	}
 	c.JSON(http.StatusOK, b.ToBackgroundResponse())

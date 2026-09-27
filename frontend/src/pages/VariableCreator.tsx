@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { variablesApi } from '../api/client';
+import { formatEntityEditorError } from '../utils/entityEditorError';
 import type { CreateVariableRequest, Variable } from '../types';
 
 // Библиотека + конструктор переменных (см. docs/variables.md). Переменная — это
@@ -69,7 +70,7 @@ const VariableCreator = () => {
       else await variablesApi.createVariable(payload);
       navigate(returnPath);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка сохранения переменной');
+      setError(formatEntityEditorError(err, 'Ошибка сохранения переменной'));
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,7 @@ import ImageUploader from '../components/ImageUploader';
 import EffectPreview from '../components/EffectPreview';
 import {FormattedTextarea} from '../components/FormattedTextarea';
 import EntityTags from '../components/EntityTags';
+import {formatEntityEditorError} from '../utils/entityEditorError';
 
 export default function PassiveCreator() {
   const [params]=useSearchParams();
@@ -21,7 +22,7 @@ export default function PassiveCreator() {
     <EntityTags type="passive" id={draft.key}/>
     <p>Редактируется только оформление. Правила предложения выбора и сохранённые настройки игроков не меняются.</p>
     {catalog.error && <p role="alert">{catalog.error}</p>}
-    <div className="grid md:grid-cols-2 gap-8"><form onSubmit={async event=>{event.preventDefault();if(!catalog.can_manage||busy)return;setBusy(true);setMessage('');try{await savePassivePresentation(draft);setMessage('Оформление сохранено.');}catch{setMessage('Не удалось сохранить. Проверьте доступ или откройте карточку заново.');}finally{setBusy(false);}}}>
+    <div className="grid md:grid-cols-2 gap-8"><form onSubmit={async event=>{event.preventDefault();if(!catalog.can_manage||busy)return;setBusy(true);setMessage('');try{await savePassivePresentation(draft);setMessage('Оформление сохранено.');}catch(error){setMessage(formatEntityEditorError(error, 'Не удалось сохранить. Проверьте доступ или откройте карточку заново.'));}finally{setBusy(false);}}}>
       <fieldset disabled={!catalog.can_manage||busy} className="space-y-4">
         <label className="block">Название<input className="block w-full border rounded p-2" required maxLength={200} value={draft.name} onChange={e=>field('name',e.target.value)}/></label>
         {(['description','enabled_description','disabled_description'] as const).map((name,index)=><div key={name}><label htmlFor={`passive-${name}`} className="block">{['Описание','Когда включён','Когда выключен'][index]}</label><FormattedTextarea id={`passive-${name}`} rows={4} value={draft[name]} onChange={value=>field(name,value)}/></div>)}

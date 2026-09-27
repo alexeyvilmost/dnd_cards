@@ -219,7 +219,7 @@ func (mc *MonsterController) Update(c *gin.Context) {
 	}
 	var req MonsterUpsertRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса", "details": err.Error()})
+		writeEntityUpdateBindingError(c, "монстра", err)
 		return
 	}
 	normalizeMonsterRequest(&req)
@@ -236,7 +236,7 @@ func (mc *MonsterController) Update(c *gin.Context) {
 	}
 	updates := monsterFromRequest(req)
 	if err := mc.db.Model(&current).Select(monsterEditableColumns).Updates(&updates).Error; err != nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "Не удалось обновить монстра", "details": err.Error()})
+		writeEntityUpdateDatabaseError(c, "монстра", err)
 		return
 	}
 	if err := mc.db.First(&current, "id = ?", current.ID).Error; err != nil {

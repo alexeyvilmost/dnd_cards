@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Plus, X } from 'lucide-react';
 import { racesApi } from '../api/client';
+import { formatEntityEditorError } from '../utils/entityEditorError';
 import { useEffectActionLoaders } from '../hooks/useEffectActionLoaders';
 import type { CreateRaceRequest, UpdateRaceRequest, Race, RaceTrait, LevelProgression } from '../types';
 import { CREATURE_TYPE_OPTIONS, RACE_SIZE_OPTIONS } from '../types';
@@ -176,7 +177,7 @@ const RaceCreator = () => {
       }
       navigate('/?type=races');
     } catch (err: any) {
-      setError(err.response?.data?.error || err.message || 'Ошибка сохранения вида');
+      setError(formatEntityEditorError(err, 'Ошибка сохранения вида'));
       setLoading(false);
     }
   };

@@ -1495,6 +1495,7 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		{Version: "266_paper_document_trash", Description: "Recoverable deletion of owned paper sheets", Up: addPaperDocumentTrash266, Down: refusePaperDocumentTrash266Down},
 		{Version: "267_content_entity_authorship", Description: "Authorship on all library entities for owner editing", Up: addContentEntityAuthorship267, Down: refuseContentEntityAuthorship267Down},
 		{Version: "268_account_admin_status", Description: "Persistent administrator status granted only by server-side password verification", Up: addAccountAdminStatus268, Down: refuseAccountAdminStatus268Down},
+		{Version: "269_restore_certified_guard_projection", Description: "Restore certified support guard to the versioned metadata projection after later content migrations", Up: alignCertifiedMetadataProjection, Down: func(db *sql.DB) error { return nil }},
 		// Здесь можно добавлять новые миграции
 	}
 }

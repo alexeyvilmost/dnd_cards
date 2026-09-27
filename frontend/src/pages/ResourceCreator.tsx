@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { resourcesApi } from '../api/client';
+import { formatEntityEditorError } from '../utils/entityEditorError';
 import type { CreateResourceRequest, ResourceDefinition } from '../types';
 import ImageUploader from '../components/ImageUploader';
 
@@ -86,7 +87,7 @@ const ResourceCreator = () => {
       }
       navigate(returnPath);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка сохранения ресурса');
+      setError(formatEntityEditorError(err, 'Ошибка сохранения ресурса'));
     } finally {
       setLoading(false);
     }

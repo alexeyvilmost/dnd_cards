@@ -124,5 +124,10 @@ func alignCertifiedMetadataProjection(db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("align certified metadata support projection: %w", err)
 	}
+	// Use the same generated guard that later content migrations reinstall.
+	// This avoids a successful projection migration being undone later.
+	if _, err := db.Exec(certifiedContentMechanicsOnlyLockDDL); err != nil {
+		return fmt.Errorf("install certified metadata guard: %w", err)
+	}
 	return nil
 }

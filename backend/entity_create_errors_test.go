@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -81,5 +82,52 @@ func TestEntityCreateDatabaseErrorDoesNotExposePostgresDetails(t *testing.T) {
 	}
 	if body := recorder.Body.String(); body == "" || strings.Contains(body, "secret database detail") {
 		t.Fatalf("database detail leaked: %s", body)
+	}
+}
+
+func TestEntityUpdateDatabaseErrorsAreActionableAndSafe(t *testing.T) {
+	tests := []struct {
+		name, entity string
+		pg           *pgconn.PgError
+		status       int
+		code, field  string
+	}{
+		{"spell lock", "заклинание", &pgconn.PgError{Code: "23514", Message: "certified content mechanics lock cannot be removed", Detail: "secret"}, 423, "content_mechanics_locked", "mechanics"},
+		{"card duplicate", "карточку", &pgconn.PgError{Code: "23505", ConstraintName: "cards_card_number_key", Detail: "secret"}, 409, "already_exists", "card_number"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			context, _ := gin.CreateTestContext(recorder)
+			context.Set(requestIDContextKey, "trace-123")
+			writeEntityUpdateDatabaseError(context, tc.entity, tc.pg)
+			if recorder.Code != tc.status {
+				t.Fatalf("status = %d, want %d", recorder.Code, tc.status)
+			}
+			var body entityCreateErrorBody
+			if err := json.Unmarshal(recorder.Body.Bytes(), &body); err != nil {
+				t.Fatal(err)
+			}
+			if body.Code != tc.code || body.Field != tc.field || body.RequestID != "trace-123" || body.Error == "" || strings.Contains(recorder.Body.String(), "secret") {
+				t.Fatalf("unexpected response: %+v", body)
+			}
+		})
+	}
+}
+
+func TestEntityUpdateBindingErrorNamesRequest(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	context, _ := gin.CreateTestContext(recorder)
+	context.Set(requestIDContextKey, "trace-invalid-json")
+	writeEntityUpdateBindingError(context, "эффект", errors.New("invalid request"))
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400", recorder.Code)
+	}
+	var body entityCreateErrorBody
+	if err := json.Unmarshal(recorder.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if body.Code != "invalid_payload" || body.RequestID != "trace-invalid-json" || !strings.Contains(body.Error, "обновить эффект") {
+		t.Fatalf("unexpected response: %+v", body)
 	}
 }

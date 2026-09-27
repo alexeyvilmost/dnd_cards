@@ -1,11 +1,22 @@
 package migrations
 
-import "database/sql"
+import (
+	"database/sql"
+	"fmt"
+)
 
-// certifiedContentMechanicsOnlyLockDDL narrows certification protection to the
-// mechanics JSON itself. Descriptive fields and images remain ordinary content
-// and can evolve without falsifying the tested rules contract.
-const certifiedContentMechanicsOnlyLockDDL = `
+// Every later content migration reinstalls this trigger. Build it from the
+// same versioned projection as the support invalidator, so those migrations
+// cannot silently restore the obsolete guard that rejected structural edits.
+var certifiedContentMechanicsOnlyLockDDL = projectedCertifiedContentGuardDDL()
+
+func projectedCertifiedContentGuardDDL() string {
+	metadataFields, err := certifiedMutableMetadataFields()
+	if err != nil {
+		panic(fmt.Errorf("certified guard projection: %w", err))
+	}
+	structuralFields := append([]string{"support", "updated_at", "mechanics"}, metadataFields...)
+	return fmt.Sprintf(`
 CREATE OR REPLACE FUNCTION protect_certified_content_mechanics()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -18,12 +29,17 @@ BEGIN
         RAISE EXCEPTION 'certified content mechanics are locked'
             USING ERRCODE = 'check_violation';
     END IF;
-    IF COALESCE(NEW.support->>'mechanics_locked', 'false') <> 'true' THEN
-        RAISE EXCEPTION 'certified content mechanics lock cannot be removed'
-            USING ERRCODE = 'check_violation';
-    END IF;
     IF NEW.mechanics IS DISTINCT FROM OLD.mechanics THEN
         RAISE EXCEPTION 'certified content mechanics cannot be changed'
+            USING ERRCODE = 'check_violation';
+    END IF;
+    -- A structural edit invalidates the old certificate. A standalone
+    -- certificate removal still cannot unlock the mechanics.
+    IF COALESCE(NEW.support->>'mechanics_locked', 'false') <> 'true'
+        AND (to_jsonb(NEW) - ARRAY[%s]::text[])
+            IS NOT DISTINCT FROM
+            (to_jsonb(OLD) - ARRAY[%s]::text[]) THEN
+        RAISE EXCEPTION 'certified content mechanics lock cannot be removed'
             USING ERRCODE = 'check_violation';
     END IF;
     RETURN NEW;
@@ -42,7 +58,8 @@ DROP TRIGGER IF EXISTS protect_spells_certified_mechanics ON spells;
 CREATE TRIGGER protect_spells_certified_mechanics
     BEFORE UPDATE OR DELETE ON spells
     FOR EACH ROW EXECUTE FUNCTION protect_certified_content_mechanics();
-`
+`, quotedTextArray(structuralFields), quotedTextArray(structuralFields))
+}
 
 func splitWeaponActionsAndUnlockMetadata(db *sql.DB) error {
 	// This policy migration is the explicit authority that may replace the old

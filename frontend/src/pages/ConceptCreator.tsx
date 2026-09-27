@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { conceptsApi } from '../api/client';
+import { formatEntityEditorError } from '../utils/entityEditorError';
 import type { CreateConceptRequest, Concept } from '../types';
 import { FormattedTextarea } from '../components/FormattedTextarea';
 import { evictEntity } from '../components/EntityRefRegistry';
@@ -66,7 +67,7 @@ const ConceptCreator = () => {
       else await conceptsApi.createConcept(payload);
       navigate(returnPath);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка сохранения понятия');
+      setError(formatEntityEditorError(err, 'Ошибка сохранения понятия'));
     } finally {
       setLoading(false);
     }

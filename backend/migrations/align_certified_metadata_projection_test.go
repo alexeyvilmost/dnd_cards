@@ -86,6 +86,11 @@ func TestCertifiedMetadataProjectionPreservesOnlyMetadataSupport(t *testing.T) {
 	if err := alignCertifiedMetadataProjection(db); err != nil {
 		t.Fatalf("migration 117 is not idempotent: %v", err)
 	}
+	// Later content migrations reinstall this guard. Doing so must not undo
+	// the metadata/structural projection established by migration 117.
+	if _, err := db.Exec(certifiedContentMechanicsOnlyLockDDL); err != nil {
+		t.Fatalf("reinstall certified guard: %v", err)
+	}
 
 	const lockedSupport = `{
 		"status":"verified_mechanical",

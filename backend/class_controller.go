@@ -179,7 +179,7 @@ func (cc *ClassController) UpdateClass(c *gin.Context) {
 	}
 	var req UpdateClassRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		writeEntityUpdateBindingError(c, "класс", err)
 		return
 	}
 	var cl Class
@@ -283,7 +283,7 @@ func (cc *ClassController) UpdateClass(c *gin.Context) {
 	}
 
 	if err := cc.db.Save(&cl).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления класса"})
+		writeEntityUpdateDatabaseError(c, "класс", err)
 		return
 	}
 	c.JSON(http.StatusOK, cl.ToClassResponse())

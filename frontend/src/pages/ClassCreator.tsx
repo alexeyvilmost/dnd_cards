@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { classesApi } from '../api/client';
+import { formatEntityEditorError } from '../utils/entityEditorError';
 import { useEffectActionLoaders } from '../hooks/useEffectActionLoaders';
 import type { CharacterClass, ClassEquipmentOptions, CreateClassRequest, EquipmentOption, LevelProgression, UpdateClassRequest } from '../types';
 import EquipmentOptionsEditor from '../components/EquipmentOptionsEditor';
@@ -196,7 +197,7 @@ const ClassCreator = () => {
       }
       navigate('/?type=classes');
     } catch (err: any) {
-      setError(err.message || 'Ошибка сохранения класса');
+      setError(formatEntityEditorError(err, 'Ошибка сохранения класса'));
       setLoading(false);
     }
   };

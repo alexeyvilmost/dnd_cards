@@ -2,6 +2,7 @@ package main
 
 import (
 	"dnd-cards-backend/passivepresentation"
+	"encoding/json"
 	"testing"
 )
 
@@ -33,6 +34,13 @@ func TestPassivePresentationAdminOnlyVersionedMetadata(t *testing.T) {
 	response := performCharacterV3Request(t, f.router, "PUT", root, f.token(t, f.owner), body)
 	if response.Code != 400 {
 		t.Fatalf("mechanics accepted: %d %s", response.Code, response.Body.String())
+	}
+	var rejection entityCreateErrorBody
+	if err := json.Unmarshal(response.Body.Bytes(), &rejection); err != nil {
+		t.Fatal(err)
+	}
+	if rejection.Code != "invalid_payload" || rejection.Field != "mechanics" {
+		t.Fatalf("missing field-specific rejection: %+v", rejection)
 	}
 	var saved passivepresentation.Presentation
 	if err := f.db.First(&saved, "key = ?", row.Key).Error; err != nil {

@@ -3,6 +3,7 @@ import EntityTags from '../components/EntityTags';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, Trash2 } from 'lucide-react';
 import { actionsApi, effectsApi } from '../api/client';
+import { formatEntityEditorError } from '../utils/entityEditorError';
 import { imagesApi } from '../api/imagesApi';
 import ImageUploader from '../components/ImageUploader';
 import { monstersApi } from '../monsters/api';
@@ -100,7 +101,7 @@ export default function MonsterCreator() {
       }
       setSavedId(result.id);
       if (!id) navigate(`/monster-forge/${result.id}`, { replace: true });
-    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Не удалось сохранить монстра'); }
+    } catch (reason) { setError(formatEntityEditorError(reason, 'Не удалось сохранить монстра')); }
     finally { setBusy(false); }
   };
   const remove = async () => {

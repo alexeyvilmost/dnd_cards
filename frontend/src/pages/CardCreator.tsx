@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { cardsApi } from '../api/client';
+import { formatEntityEditorError } from '../utils/entityEditorError';
 import { imagesApi } from '../api/imagesApi';
 import type { CreateCardRequest, Properties, Effect } from '../types';
 import CardPreview from '../components/CardPreview';
@@ -385,7 +386,7 @@ const CardCreator = () => {
       // Перенаправляем на страницу библиотеки
       navigate('/library');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Ошибка сохранения карты');
+      setError(formatEntityEditorError(err, 'Ошибка сохранения карты'));
     } finally {
       setSaving(false);
     }

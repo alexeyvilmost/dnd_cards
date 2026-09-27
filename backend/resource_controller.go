@@ -142,7 +142,7 @@ func (rc *ResourceController) UpdateResource(c *gin.Context) {
 	}
 	var req UpdateResourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса", "details": err.Error()})
+		writeEntityUpdateBindingError(c, "ресурс", err)
 		return
 	}
 	if req.ResourceID != "" {
@@ -165,7 +165,7 @@ func (rc *ResourceController) UpdateResource(c *gin.Context) {
 	resource.Recharge = req.Recharge
 	resource.SortOrder = req.SortOrder
 	if err := rc.db.Save(&resource).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления ресурса"})
+		writeEntityUpdateDatabaseError(c, "ресурс", err)
 		return
 	}
 	c.JSON(http.StatusOK, resource)

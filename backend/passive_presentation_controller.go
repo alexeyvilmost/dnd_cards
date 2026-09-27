@@ -35,8 +35,16 @@ func registerPassivePresentationRoutes(api *gin.RouterGroup, auth *AuthService, 
 		}
 		decoder := json.NewDecoder(c.Request.Body)
 		decoder.DisallowUnknownFields()
-		if decoder.Decode(&request) != nil || strings.TrimSpace(request.Name) == "" || len([]rune(request.Name)) > 200 || request.Version < 1 {
-			c.JSON(400, gin.H{"error": "Некорректное оформление пассива. Механика недоступна для изменения."})
+		if err := decoder.Decode(&request); err != nil {
+			writeEntityUpdateBindingError(c, "пассив", err)
+			return
+		}
+		if strings.TrimSpace(request.Name) == "" || len([]rune(request.Name)) > 200 {
+			writeEntityCreateValidationError(c, "Название пассива должно содержать от 1 до 200 символов.", "invalid_name", "name")
+			return
+		}
+		if request.Version < 1 {
+			writeEntityCreateValidationError(c, "Версия оформления должна быть положительным числом. Откройте пассив заново.", "invalid_version", "version")
 			return
 		}
 		image := strings.TrimSpace(request.ImageURL)
@@ -48,13 +56,13 @@ func registerPassivePresentationRoutes(api *gin.RouterGroup, auth *AuthService, 
 				inlinePNG = decodeErr == nil && len(decoded) >= 8 && string(decoded[:8]) == "\x89PNG\r\n\x1a\n"
 			}
 			if err != nil || (!inlinePNG && parsed.Scheme != "https" && parsed.Scheme != "http" && !(strings.HasPrefix(image, "/") && !strings.HasPrefix(image, "//"))) {
-				c.JSON(400, gin.H{"error": "Укажите относительный путь или HTTP(S) адрес изображения"})
+				writeEntityCreateValidationError(c, "Укажите относительный путь или HTTP(S) адрес изображения.", "invalid_image_url", "image_url")
 				return
 			}
 		}
 		var row passivepresentation.Presentation
 		if db.First(&row, "key = ?", c.Param("key")).Error != nil {
-			c.JSON(404, gin.H{"error": "Пассив не найден"})
+			c.JSON(404, entityCreateErrorBody{Error: "Пассив не найден.", Code: "not_found", RequestID: c.GetString(requestIDContextKey)})
 			return
 		}
 		result := db.Model(&row).Where("version = ?", request.Version).Updates(map[string]any{
@@ -62,11 +70,11 @@ func registerPassivePresentationRoutes(api *gin.RouterGroup, auth *AuthService, 
 			"enabled_description": request.EnabledDescription, "disabled_description": request.DisabledDescription, "version": request.Version + 1,
 		})
 		if result.Error != nil {
-			c.JSON(500, gin.H{"error": "Не удалось сохранить пассив"})
+			writeEntityUpdateDatabaseError(c, "пассив", result.Error)
 			return
 		}
 		if result.RowsAffected != 1 {
-			c.JSON(409, gin.H{"error": "Оформление изменено в другой вкладке. Откройте его заново."})
+			c.JSON(409, entityCreateErrorBody{Error: "Оформление изменено в другой вкладке. Откройте его заново.", Code: "stale_version", Field: "version", RequestID: c.GetString(requestIDContextKey)})
 			return
 		}
 		db.First(&row, "key = ?", c.Param("key"))

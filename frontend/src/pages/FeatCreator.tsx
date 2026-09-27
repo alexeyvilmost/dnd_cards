@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { featsApi } from '../api/client';
+import { formatEntityEditorError } from '../utils/entityEditorError';
 import { useEffectActionLoaders } from '../hooks/useEffectActionLoaders';
 import type { CreateFeatRequest, UpdateFeatRequest, Feat, FeatCategory } from '../types';
 import { FEAT_CATEGORY_OPTIONS, ABILITY_OPTIONS } from '../types';
@@ -120,7 +121,7 @@ const FeatCreator = () => {
       }
       navigate('/?type=feats');
     } catch (err: any) {
-      setError(err.response?.data?.error || err.message || 'Ошибка сохранения черты');
+      setError(formatEntityEditorError(err, 'Ошибка сохранения черты'));
       setLoading(false);
     }
   };

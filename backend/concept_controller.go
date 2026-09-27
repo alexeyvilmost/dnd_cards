@@ -118,7 +118,7 @@ func (cc *ConceptController) UpdateConcept(c *gin.Context) {
 	}
 	var req UpdateConceptRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса", "details": err.Error()})
+		writeEntityUpdateBindingError(c, "понятие", err)
 		return
 	}
 	if req.ConceptID != "" {
@@ -136,7 +136,7 @@ func (cc *ConceptController) UpdateConcept(c *gin.Context) {
 	concept.ImageURL = req.ImageURL
 	concept.SortOrder = req.SortOrder
 	if err := cc.db.Save(&concept).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления понятия"})
+		writeEntityUpdateDatabaseError(c, "понятие", err)
 		return
 	}
 	c.JSON(http.StatusOK, concept)

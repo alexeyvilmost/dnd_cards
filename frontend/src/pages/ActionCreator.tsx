@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, FileText, Puzzle } from 'lucide-react';
 import { actionsApi } from '../api/client';
+import { formatEntityEditorError } from '../utils/entityEditorError';
 import type { CreateActionRequest, UpdateActionRequest } from '../types';
 import { RARITY_OPTIONS, ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
 import { registryItems, useResourceOptions } from '../utils/resources';
@@ -265,8 +266,7 @@ const ActionCreator = () => {
         navigate('/?type=actions');
       }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || err.message || (isEditMode ? 'Ошибка обновления действия' : 'Ошибка создания действия');
-      setError(errorMessage);
+      setError(formatEntityEditorError(err, isEditMode ? 'Ошибка обновления действия' : 'Ошибка создания действия'));
     } finally {
       setLoading(false);
     }
@@ -581,5 +581,3 @@ const ActionCreator = () => {
 };
 
 export default ActionCreator;
-
-

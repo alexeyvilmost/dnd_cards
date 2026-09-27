@@ -620,7 +620,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 
 	var req UpdateCardRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		writeEntityUpdateBindingError(c, "карточку", err)
 		return
 	}
 
@@ -834,8 +834,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	card.CustomRarityColor = customRarityColor
 
 	if err := cc.db.Save(&card).Error; err != nil {
-		log.Printf("Ошибка обновления карточки %s: %v", id, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления карточки"})
+		writeEntityUpdateDatabaseError(c, "карточку", err)
 		return
 	}
 
@@ -1289,7 +1288,7 @@ func (ac *ActionController) UpdateAction(c *gin.Context) {
 
 	var req UpdateActionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		writeEntityUpdateBindingError(c, "действие", err)
 		return
 	}
 	normalizeActionRecharge(&req.Recharge, &req.RechargeCustom)
@@ -1406,7 +1405,7 @@ func (ac *ActionController) UpdateAction(c *gin.Context) {
 	}
 
 	if err := ac.db.Save(&action).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления действия"})
+		writeEntityUpdateDatabaseError(c, "действие", err)
 		return
 	}
 
@@ -1691,7 +1690,7 @@ func (ec *EffectController) UpdateEffect(c *gin.Context) {
 
 	var req UpdateEffectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		writeEntityUpdateBindingError(c, "эффект", err)
 		return
 	}
 
@@ -1800,7 +1799,7 @@ func (ec *EffectController) UpdateEffect(c *gin.Context) {
 	}
 
 	if err := ec.db.Save(&effect).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления эффекта"})
+		writeEntityUpdateDatabaseError(c, "эффект", err)
 		return
 	}
 

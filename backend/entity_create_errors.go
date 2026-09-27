@@ -38,10 +38,18 @@ func jsonFieldName(goField string) string {
 }
 
 func writeEntityCreateBindingError(c *gin.Context, entityName string, err error) {
-	body := entityCreateErrorBody{Code: "invalid_payload"}
+	writeEntityBindingError(c, "создать", entityName, err)
+}
+
+func writeEntityUpdateBindingError(c *gin.Context, entityName string, err error) {
+	writeEntityBindingError(c, "обновить", entityName, err)
+}
+
+func writeEntityBindingError(c *gin.Context, operation, entityName string, err error) {
+	body := entityCreateErrorBody{Code: "invalid_payload", RequestID: c.GetString(requestIDContextKey)}
 	switch {
 	case errors.Is(err, io.EOF):
-		body.Error = fmt.Sprintf("Не удалось создать %s: тело запроса пустое.", entityName)
+		body.Error = fmt.Sprintf("Не удалось %s %s: тело запроса пустое.", operation, entityName)
 	default:
 		var validationErrors validator.ValidationErrors
 		var typeError *json.UnmarshalTypeError
@@ -50,17 +58,20 @@ func writeEntityCreateBindingError(c *gin.Context, entityName string, err error)
 		case errors.As(err, &validationErrors) && len(validationErrors) > 0:
 			body.Field = jsonFieldName(validationErrors[0].Field())
 			if validationErrors[0].Tag() == "required" {
-				body.Error = fmt.Sprintf("Не удалось создать %s: обязательное поле «%s» не заполнено.", entityName, body.Field)
+				body.Error = fmt.Sprintf("Не удалось %s %s: обязательное поле «%s» не заполнено.", operation, entityName, body.Field)
 			} else {
-				body.Error = fmt.Sprintf("Не удалось создать %s: поле «%s» не прошло проверку %s.", entityName, body.Field, validationErrors[0].Tag())
+				body.Error = fmt.Sprintf("Не удалось %s %s: поле «%s» не прошло проверку %s.", operation, entityName, body.Field, validationErrors[0].Tag())
 			}
 		case errors.As(err, &typeError):
 			body.Field = typeError.Field
-			body.Error = fmt.Sprintf("Не удалось создать %s: поле «%s» имеет неверный тип.", entityName, typeError.Field)
+			body.Error = fmt.Sprintf("Не удалось %s %s: поле «%s» имеет неверный тип.", operation, entityName, typeError.Field)
 		case errors.As(err, &syntaxError):
-			body.Error = fmt.Sprintf("Не удалось создать %s: JSON содержит синтаксическую ошибку около позиции %d.", entityName, syntaxError.Offset)
+			body.Error = fmt.Sprintf("Не удалось %s %s: JSON содержит синтаксическую ошибку около позиции %d.", operation, entityName, syntaxError.Offset)
+		case strings.HasPrefix(err.Error(), `json: unknown field "`):
+			body.Field = strings.TrimSuffix(strings.TrimPrefix(err.Error(), `json: unknown field "`), `"`)
+			body.Error = fmt.Sprintf("Не удалось %s %s: поле «%s» не поддерживается в этом конструкторе.", operation, entityName, body.Field)
 		default:
-			body.Error = fmt.Sprintf("Не удалось создать %s: проверьте заполнение полей формы.", entityName)
+			body.Error = fmt.Sprintf("Не удалось %s %s: проверьте заполнение полей формы.", operation, entityName)
 		}
 	}
 	c.JSON(http.StatusBadRequest, body)
@@ -100,12 +111,22 @@ func uniqueFieldFromConstraint(constraint string) string {
 // actionable API errors. Full PostgreSQL details stay in server logs and are
 // correlated through request_id instead of being exposed to the browser.
 func writeEntityCreateDatabaseError(c *gin.Context, entityName string, err error) {
+	writeEntityDatabaseError(c, "создать", "create_failed", entityName, err)
+}
+
+// Update failures use the same public error contract as creation. PostgreSQL
+// diagnostics are logged with request_id but never returned to the client.
+func writeEntityUpdateDatabaseError(c *gin.Context, entityName string, err error) {
+	writeEntityDatabaseError(c, "обновить", "update_failed", entityName, err)
+}
+
+func writeEntityDatabaseError(c *gin.Context, operation, fallbackCode, entityName string, err error) {
 	requestID := c.GetString(requestIDContextKey)
-	log.Printf("create %s failed request_id=%q: %v", entityName, requestID, err)
+	log.Printf("%s %s failed request_id=%q: %v", operation, entityName, requestID, err)
 
 	body := entityCreateErrorBody{
-		Error:     fmt.Sprintf("Не удалось создать %s из-за внутренней ошибки. Повторите попытку.", entityName),
-		Code:      "create_failed",
+		Error:     fmt.Sprintf("Не удалось %s %s из-за внутренней ошибки. Повторите попытку. Если ошибка повторится, сообщите код запроса в поддержку.", operation, entityName),
+		Code:      fallbackCode,
 		RequestID: requestID,
 	}
 	status := http.StatusInternalServerError
@@ -118,39 +139,44 @@ func writeEntityCreateDatabaseError(c *gin.Context, entityName string, err error
 			body.Code = "already_exists"
 			body.Field = uniqueFieldFromConstraint(pgError.ConstraintName)
 			if body.Field == "" {
-				body.Error = fmt.Sprintf("Не удалось создать %s: такая запись уже существует.", entityName)
+				body.Error = fmt.Sprintf("Не удалось %s %s: такая запись уже существует.", operation, entityName)
 			} else {
-				body.Error = fmt.Sprintf("Не удалось создать %s: значение поля «%s» уже используется.", entityName, createFieldLabel(body.Field))
+				body.Error = fmt.Sprintf("Не удалось %s %s: значение поля «%s» уже используется.", operation, entityName, createFieldLabel(body.Field))
 			}
 		case "23514":
 			status = http.StatusUnprocessableEntity
 			body.Code = "constraint_violation"
-			if pgError.ConstraintName == "cards_price_check" {
+			if strings.Contains(pgError.Message, "certified content mechanics") {
+				status = http.StatusLocked
+				body.Code = "content_mechanics_locked"
+				body.Field = "mechanics"
+				body.Error = "Механика закреплённой сущности недоступна для изменения. Проверьте поля механики и повторите попытку."
+			} else if pgError.ConstraintName == "cards_price_check" {
 				body.Field = "price"
-				body.Error = "Не удалось создать карточку: цена должна быть больше 0 и не превышать 1 000 000."
+				body.Error = fmt.Sprintf("Не удалось %s карточку: цена должна быть больше 0 и не превышать 1 000 000.", operation)
 			} else {
-				body.Error = fmt.Sprintf("Не удалось создать %s: одно из значений находится вне допустимого диапазона.", entityName)
+				body.Error = fmt.Sprintf("Не удалось %s %s: одно из значений находится вне допустимого диапазона.", operation, entityName)
 			}
 		case "23502":
 			status = http.StatusUnprocessableEntity
 			body.Code = "required_field"
 			body.Field = pgError.ColumnName
-			body.Error = fmt.Sprintf("Не удалось создать %s: обязательное поле «%s» не заполнено.", entityName, createFieldLabel(pgError.ColumnName))
+			body.Error = fmt.Sprintf("Не удалось %s %s: обязательное поле «%s» не заполнено.", operation, entityName, createFieldLabel(pgError.ColumnName))
 		case "23503":
 			status = http.StatusUnprocessableEntity
 			body.Code = "missing_reference"
 			body.Field = pgError.ColumnName
-			body.Error = fmt.Sprintf("Не удалось создать %s: одна из связанных сущностей не найдена.", entityName)
+			body.Error = fmt.Sprintf("Не удалось %s %s: одна из связанных сущностей не найдена.", operation, entityName)
 		case "22001":
 			status = http.StatusUnprocessableEntity
 			body.Code = "value_too_long"
 			body.Field = pgError.ColumnName
-			body.Error = fmt.Sprintf("Не удалось создать %s: значение одного из полей слишком длинное.", entityName)
+			body.Error = fmt.Sprintf("Не удалось %s %s: значение одного из полей слишком длинное.", operation, entityName)
 		case "22003":
 			status = http.StatusUnprocessableEntity
 			body.Code = "number_out_of_range"
 			body.Field = pgError.ColumnName
-			body.Error = fmt.Sprintf("Не удалось создать %s: числовое значение находится вне допустимого диапазона.", entityName)
+			body.Error = fmt.Sprintf("Не удалось %s %s: числовое значение находится вне допустимого диапазона.", operation, entityName)
 		}
 	}
 

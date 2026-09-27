@@ -264,7 +264,7 @@ func (sc *SpellController) UpdateSpell(c *gin.Context) {
 
 	var req UpdateSpellRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные запроса"})
+		writeEntityUpdateBindingError(c, "заклинание", err)
 		return
 	}
 
@@ -280,6 +280,7 @@ func (sc *SpellController) UpdateSpell(c *gin.Context) {
 	if rejectLockedMechanicsMutation(c, spell.Support, spell.Mechanics, req.Mechanics) {
 		return
 	}
+	preserveNullSpellLists(spell, &req)
 
 	// Обновление полей
 	if req.Name != "" {
@@ -395,11 +396,29 @@ func (sc *SpellController) UpdateSpell(c *gin.Context) {
 	}
 
 	if err := sc.db.Save(&spell).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления заклинания"})
+		writeEntityUpdateDatabaseError(c, "заклинание", err)
 		return
 	}
 
 	c.JSON(http.StatusOK, spell.ToSpellResponse())
+}
+
+// A nullable JSON list and an empty JSON list are semantically equivalent in
+// the editor. Preserve NULL only when the request is an empty list and the
+// stored value was NULL; otherwise explicit nonempty edits remain meaningful.
+func preserveNullSpellLists(current Spell, req *UpdateSpellRequest) {
+	if current.Classes == nil && req.Classes != nil && len(*req.Classes) == 0 {
+		req.Classes = nil
+	}
+	if current.Subclasses == nil && req.Subclasses != nil && len(*req.Subclasses) == 0 {
+		req.Subclasses = nil
+	}
+	if current.Resources == nil && req.Resources != nil && len(*req.Resources) == 0 {
+		req.Resources = nil
+	}
+	if current.Damage == nil && req.Damage != nil && len(*req.Damage) == 0 {
+		req.Damage = nil
+	}
 }
 
 // DeleteSpell - удаление заклинания

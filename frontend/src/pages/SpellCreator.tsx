@@ -26,6 +26,7 @@ import MechanicsBuilder from '../components/mechanics/MechanicsBuilder';
 import { validateMechanics } from '../engine/validateMechanics';
 import { validateEntityIdFormat } from '../utils/entityId';
 import { isMechanicsLocked } from '../content/supportStatus';
+import { formatEntityEditorError } from '../utils/entityEditorError';
 import LockedMechanicsViewer from '../components/LockedMechanicsViewer';
 
 type ScalarForm = {
@@ -261,7 +262,7 @@ const SpellCreator = () => {
       }
       navigate('/?type=spells');
     } catch (err: any) {
-      setError(err.response?.data?.error || err.message || 'Ошибка сохранения заклинания');
+      setError(formatEntityEditorError(err, 'Ошибка сохранения заклинания'));
       setLoading(false);
     }
   };

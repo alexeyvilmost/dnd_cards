@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { backgroundsApi } from '../api/client';
+import { formatEntityEditorError } from '../utils/entityEditorError';
 import type { CreateBackgroundRequest, UpdateBackgroundRequest, Background, BackgroundEquipmentOptions, EquipmentOption } from '../types';
 import { ABILITY_OPTIONS, SKILL_OPTIONS } from '../types';
 import EquipmentOptionsEditor, { type EquipOptSpec } from '../components/EquipmentOptionsEditor';
@@ -136,7 +137,7 @@ const BackgroundCreator = () => {
       }
       navigate('/?type=backgrounds');
     } catch (err: any) {
-      setError(err.response?.data?.error || err.message || 'Ошибка сохранения предыстории');
+      setError(formatEntityEditorError(err, 'Ошибка сохранения предыстории'));
       setLoading(false);
     }
   };

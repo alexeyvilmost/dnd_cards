@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, Eye, EyeOff, FileText, Puzzle } from 'lucide-react';
 import { effectsApi } from '../api/client';
+import { formatEntityEditorError } from '../utils/entityEditorError';
 import type { CreatePassiveEffectRequest, UpdatePassiveEffectRequest, PassiveEffect } from '../types';
 import { PASSIVE_EFFECT_TYPE_OPTIONS } from '../types';
 import EffectPreview from '../components/EffectPreview';
@@ -216,8 +217,7 @@ const EffectCreator = () => {
       }
       navigate('/?type=effects');
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || err.message || (isEditMode ? 'Ошибка обновления эффекта' : 'Ошибка создания эффекта');
-      setError(errorMessage);
+      setError(formatEntityEditorError(err, isEditMode ? 'Ошибка обновления эффекта' : 'Ошибка создания эффекта'));
       setLoading(false);
       // Не выходим из редактора при ошибке - остаемся на странице
     }
