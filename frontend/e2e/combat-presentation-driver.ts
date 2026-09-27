@@ -24,7 +24,6 @@ export async function acceptCombatOpening(page: Page) {
   // the preference explicitly before a scenario waits for the next turn.
   await page.getByRole('button', {name: 'Настройки боя', exact: true}).click();
   const settings = page.getByRole('dialog', {name: 'Настройки', exact: true});
-  await settings.getByRole('button', {name: 'Бой и броски'}).click();
   await settings.getByRole('button', {name: 'Показ бросков в бою'}).click();
   await settings.getByRole('combobox', {name: 'Свои действия и союзники'}).selectOption('skip');
   await settings.getByRole('combobox', {name: 'Действия противников'}).selectOption('skip');

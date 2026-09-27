@@ -4,7 +4,7 @@ import { installForgeApiFixture } from './forge-api-fixture';
 const MONSTER_ID = 'c1000000-0000-4000-8000-000000000001';
 
 test('monster constructor preserves the durable token until a selected file upload succeeds', async ({ page }) => {
-  const api = await installForgeApiFixture(page);
+  const api = await installForgeApiFixture(page, { admin: true });
   api.seedMonster({
     id: MONSTER_ID,
     slug: 'goblin-warrior',

@@ -227,7 +227,10 @@ async function installPresentationAssetFixture(page: Page): Promise<void> {
  * Character writes are captured in memory and never reach a backend or
  * production DB.
  */
-export async function installForgeApiFixture(page: Page): Promise<ForgeApiFixture> {
+export async function installForgeApiFixture(
+  page: Page,
+  options: { admin?: boolean } = {},
+): Promise<ForgeApiFixture> {
   const createdCharacters: JsonRecord[] = [];
   const charactersById = new Map<string, JsonRecord>();
   const runtimeCommandRequests: JsonRecord[] = [];
@@ -261,6 +264,7 @@ export async function installForgeApiFixture(page: Page): Promise<ForgeApiFixtur
         username: 'playwright',
         email: 'playwright@example.test',
         display_name: 'Playwright',
+        ...(options.admin ? { is_admin: true } : {}),
         created_at: '2026-08-05T00:00:00Z',
         updated_at: '2026-08-05T00:00:00Z',
       });
