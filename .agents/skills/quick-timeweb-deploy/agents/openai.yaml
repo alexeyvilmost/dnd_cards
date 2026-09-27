@@ -1,0 +1,6 @@
+interface:
+  display_name: "Быстрая выкладка TimeWeb"
+  short_description: "Быстрый релиз с проверкой только затронутых рисков"
+  default_prompt: "Use $quick-timeweb-deploy to release verified changes quickly."
+policy:
+  allow_implicit_invocation: true
