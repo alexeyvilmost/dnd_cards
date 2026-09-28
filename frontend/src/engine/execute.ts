@@ -2816,6 +2816,7 @@ function transmutedSpellDamageType(
 }
 type AttackDamageQueryFacts = Pick<ModifierQueryFacts,
   | 'attackKind'
+  | 'attackDamage'
   | 'weaponCategory'
   | 'extraAttackSource'
   | 'weaponHasThrownProperty'
@@ -3922,6 +3923,7 @@ function runAttackRoll(
         ? ctx.character.abilityMods[currentWeapon!.ability]
         : ctx.character.abilityMods[attackAbility as AbilityKey];
     const attackDamageFacts: AttackDamageQueryFacts = {
+      attackDamage: true,
       attackKind: attackFacts.attackKind,
       advantage: roll.advantage,
       attackRange,

@@ -16,6 +16,13 @@ const hit: CombatBeat = {...beat, roll: {...beat.roll!, outcome: 'crit', dice: [
 describe('combat roll dialog', () => {
   let root: Root;
   let container: HTMLDivElement;
+  it.each(['success','fail'] as const)('labels a targeted ability check as %s, not a weapon hit/miss',async outcome=>{
+    const check:CombatBeat={...beat,rollKind:'check',actionName:'Скрытность',roll:{...beat.roll!,target:{type:'dc',value:12},outcome,total:outcome==='success'?15:8}};
+    await act(async()=>root.render(<CombatPresentationDialog beat={check} modeOverride="standard" onClose={()=>{}}/>));
+    await act(async()=>vi.advanceTimersByTime(1450));
+    expect(document.querySelector('h3')?.textContent).toBe(outcome==='success'?'Проверка успешна':'Проверка провалена');
+    expect(document.querySelector('.combat-critical-banner')).toBeNull();
+  });
   it('keeps the equation visible and both provenance columns collapsed by default', async()=>{
     setSetting('combatRollMode','fast');
     await act(async()=>root.render(<CombatPresentationDialog beat={{...beat,roll:{...beat.roll!,target:{type:'ac',value:15,

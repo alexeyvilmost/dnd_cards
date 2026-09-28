@@ -8,6 +8,7 @@ import type { CombatAreaState, GridPosition, SoloCombatState } from '../solo-com
 import { combatRelation } from '../solo-combat/types';
 import {boardDimensions, featureCells} from '../solo-combat/boardGeometry';
 import BattleMapScenery from './BattleMapScenery';
+import BattleMapCellPreview, {coverLine} from './BattleMapCellPreview';
 import { areaPositionsForAction, reachablePositions } from '../solo-combat/tacticalGrid';
 import {actorFootprint, footprintCells} from '../solo-combat/footprint';
 import { previewCombatAttackRoll, previewMovementThreats } from '../solo-combat/engine';
@@ -27,6 +28,8 @@ import {useViewportPopoverPosition} from '../hooks/useViewportPopoverPosition';
 import {projectileTrajectory} from '../solo-combat/projectilePreview';
 import {creatureCoverObstacles} from '../solo-combat/creatureCover';
 import {previewAttackCover,attackCoverLabel} from '../solo-combat/attackCoverPreview';
+
+const MAP_CELL_PREVIEW_DELAY_MS = 500;
 
 export default function TacticalBattleMap({
   state,
@@ -78,7 +81,23 @@ export default function TacticalBattleMap({
     return rows;
   },[state.battleMap]);
   const [hoverAnchor, setHoverAnchor] = useState({x: 0, y: 0});
-  const {popoverRef, popoverPos} = useViewportPopoverPosition(Boolean(hovered), hoverAnchor);
+  const [previewCell, setPreviewCell] = useState<GridPosition | null>(null);
+  const previewTimerRef = useRef<number | null>(null);
+  const clearPreviewTimer = () => {
+    if (previewTimerRef.current != null) {
+      window.clearTimeout(previewTimerRef.current);
+      previewTimerRef.current = null;
+    }
+  };
+  useEffect(() => () => clearPreviewTimer(), []);
+  const scheduleCellPreview = (position: GridPosition | null) => {
+    clearPreviewTimer();
+    setPreviewCell(null);
+    if (!position) return;
+    previewTimerRef.current = window.setTimeout(() => setPreviewCell(position), MAP_CELL_PREVIEW_DELAY_MS);
+  };
+  const cellPreviewContentKey = previewCell ? `cell:${previewCell.x}:${previewCell.y}` : null;
+  const {popoverRef, popoverPos} = useViewportPopoverPosition(Boolean(hovered), hoverAnchor, cellPreviewContentKey);
   const [zoom, setZoom] = useState(1);
   const [panning, setPanning] = useState(false);
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -325,9 +344,60 @@ export default function TacticalBattleMap({
   };
   const hoverCell = (position: GridPosition | null, anchor?: {x: number; y: number}) => {
     setHovered(position);
+    scheduleCellPreview(position);
     if (anchor) setHoverAnchor(anchor);
     onActorHover?.(position ? tokenByCell.get(`${position.x}:${position.y}`)?.actorId ?? null : null);
   };
+  const cellPreview = previewCell
+    ? cells[previewCell.y * boardWidth + previewCell.x]
+    : undefined;
+  const cellPreviewCards = useMemo(() => {
+    if (!cellPreview) return [];
+    const cards: {title: string; subtype?: string; lines: string[]}[] = [];
+    for (const feature of cellPreview.features) {
+      const lines = [
+        coverLine(feature.cover === 'half' || feature.cover === 'three_quarters' ? feature.cover : feature.blocksSight ? 'total' : null),
+        feature.blocksMovement ? 'Непроходимо' : null,
+        feature.blocksSight && feature.cover !== 'half' && feature.cover !== 'three_quarters' ? 'Закрывает обзор' : null,
+      ].filter(Boolean) as string[];
+      cards.push({title: feature.name, subtype: 'Объект местности', lines: lines.length ? lines : ['Элемент местности']});
+    }
+    for (const area of cellPreview.persistentAreas) {
+      const duration = area.duration.type === 'permanent' ? 'Постоянная область'
+        : area.duration.type === 'concentration' ? 'Длится, пока сохраняется концентрация'
+          : `Осталось раундов: ${area.duration.roundsLeft}`;
+      const lines = [
+        duration,
+        area.difficultTerrain ? 'Труднопроходимая местность' : null,
+        area.lightlyObscured ? 'Слабо заслонённая область' : null,
+        area.heavilyObscured ? 'Сильно заслонённая область' : null,
+        area.blocksVerbalComponents ? 'Блокирует вербальные компоненты' : null,
+        area.hazard?.resolution === 'save'
+          ? `Опасность: спасбросок ${area.hazard.save.ability.toUpperCase()} СЛ ${area.hazard.save.dc}`
+          : area.hazard?.resolution === 'automatic' ? 'Опасность без спасброска' : null,
+        area.triggers.length
+          ? `Срабатывает: ${area.triggers.map((trigger) => ({
+            created: 'при создании', enter: 'при входе', exit: 'при выходе',
+            move: 'за каждые 5 фт. движения', start_turn: 'в начале хода', end_turn: 'в конце хода',
+          })[trigger]).join(', ')}`
+          : null,
+      ].filter(Boolean) as string[];
+      cards.push({title: area.name, subtype: 'Область / эффект', lines});
+    }
+    if (cellPreview.lightLabel) {
+      cards.push({title: 'Танцующий огонёк', subtype: 'Мировой объект', lines: [cellPreview.lightLabel]});
+    }
+    if (cellPreview.illusionLabel) {
+      cards.push({title: 'Малая иллюзия', subtype: 'Мировой объект', lines: [cellPreview.illusionLabel]});
+    }
+    for (const item of cellPreview.groundItems) {
+      cards.push({title: item.name, subtype: 'Предмет на земле', lines: ['Лежит на клетке']});
+    }
+    return cards;
+  }, [cellPreview]);
+  const showCellPreview = cellPreviewCards.length > 0
+    && !(hoveredTarget && hoveredTarget.actorId === hoveredEnemyId && contextualAction)
+    && !(freeMovePreview && !hoveredTarget);
   const hoverTooltip = <>
             {hoveredTarget && hoveredTarget.actorId === hoveredEnemyId && contextualAction && createPortal(<div ref={popoverRef} style={popoverPos} className={`combat-map-tooltip combat-hit-chance${approachPreview && !approachPreview.available ? ' is-unavailable' : ''}`} role="status">
               {approachPreview && approachPreview.costFt > 0 && <span className="combat-hit-chance__movement">Подойти {approachPreview.costFt} фт. · останется {approachPreview.remainingFt} фт.</span>}
@@ -344,6 +414,11 @@ export default function TacticalBattleMap({
             {!hoveredTarget && hovered && freeMovePreview && createPortal(<div ref={popoverRef} style={popoverPos} className={`combat-map-tooltip combat-move-preview${!freeMovePreview.available ? ' is-unavailable' : ''}`} role="status">
               Перемещение <b>{freeMovePreview.costFt} фт.</b><small>Останется {freeMovePreview.remainingFt} фт.{!freeMovePreview.available ? ` · не хватает ${freeMovePreview.costFt - freeMovePreview.availableFt} фт.` : ''}</small>
               {dangerNames && <small className="combat-route-warning">Провоцированная атака: {dangerNames}. Выход из досягаемости; Отход помогает избежать атаки.</small>}
+            </div>, document.body)}
+            {showCellPreview && createPortal(<div ref={popoverRef} style={popoverPos} className="forge-effect-popover battle-map-cell-previews entity-preview-enter">
+              {cellPreviewCards.map((card) => (
+                <BattleMapCellPreview key={`${card.subtype}:${card.title}`} title={card.title} subtype={card.subtype} lines={card.lines} />
+              ))}
             </div>, document.body)}
   </>;
 
@@ -373,6 +448,7 @@ export default function TacticalBattleMap({
         // same cell. Only an active pan invalidates that hover authority.
         if (!panRef.current) return;
         setHovered(null);
+        scheduleCellPreview(null);
         onActorHover?.(null);
       }}
       aria-description={`Масштаб ${Math.round(zoom * 100)}% · колесо меняет масштаб · перетаскивание двигает карту`}
@@ -474,10 +550,11 @@ export default function TacticalBattleMap({
             data-actor-id={token?.actorId}
             data-scenery-zone={persistentAreas.length>0&&persistentAreas.every(area=>area.sceneryFeatureId)?'true':undefined}
             style={token ? {'--linked-accent': combatIdentity(state, token.actorId).accent} as React.CSSProperties : undefined}
-            onMouseEnter={(event) => { setHovered(position); setHoverAnchor({x:event.clientX,y:event.clientY}); onActorHover?.(token?.actorId ?? null); }}
-            onMouseLeave={() => { setHovered(null); onActorHover?.(null); }}
-            onFocus={(event) => { const rect=event.currentTarget.getBoundingClientRect(); setHoverAnchor({x:rect.right,y:rect.top}); setHovered(position); onActorHover?.(token?.actorId ?? null); }}
-            onBlur={() => { setHovered(null); onActorHover?.(null); }}
+            onMouseEnter={(event) => { setHovered(position); scheduleCellPreview(position); setHoverAnchor({x:event.clientX,y:event.clientY}); onActorHover?.(token?.actorId ?? null); }}
+            onMouseMove={(event) => { setHoverAnchor({x:event.clientX,y:event.clientY}); }}
+            onMouseLeave={() => { setHovered(null); scheduleCellPreview(null); onActorHover?.(null); }}
+            onFocus={(event) => { const rect=event.currentTarget.getBoundingClientRect(); setHoverAnchor({x:rect.right,y:rect.top}); setHovered(position); scheduleCellPreview(position); onActorHover?.(token?.actorId ?? null); }}
+            onBlur={() => { setHovered(null); scheduleCellPreview(null); onActorHover?.(null); }}
             onClick={() => activateCell(position)}
           >
             {persistentAreas.filter(area=>!area.sceneryFeatureId).map((area) => area.origin.x === position.x && area.origin.y === position.y ? (

@@ -142,17 +142,6 @@ func createRoguelikeParty(tx *gorm.DB, userID uuid.UUID, ids []uuid.UUID) (*Rogu
 		}
 		sources[id] = c
 	}
-	var active []RoguelikeRun
-	if err := tx.Where("user_id = ? AND status = ?", userID, RoguelikeStatusActive).Find(&active).Error; err != nil {
-		return nil, err
-	}
-	for _, r := range active {
-		for _, m := range roguelikePartyMembers(&r) {
-			if _, ok := sources[m.SourceCharacterID]; ok {
-				return nil, roguelikeError(http.StatusConflict, "active_run_exists", "У одного из персонажей уже есть активный забег")
-			}
-		}
-	}
 	seed, err := newRoguelikeSeed()
 	if err != nil {
 		return nil, err

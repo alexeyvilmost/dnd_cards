@@ -39,11 +39,17 @@ export async function prepareRoguelikeCombatParticipant(
   const needs = new Map<string, CombatCatalogNeed>();
   const need = (entry: CombatCatalogNeed) => {needs.set(canonicalSha256Sync(entry), entry);};
   const indexes = new Map<CombatCatalogKind, Map<string, unknown>>();
+  const englishSlug = (nameEn: unknown) => {
+    if (typeof nameEn !== 'string' || !nameEn.trim()) return null;
+    return nameEn.toLowerCase().replace(/'/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || null;
+  };
   for (const kind of Object.keys(catalog.entities) as CombatCatalogKind[]) {
     const index = new Map<string, unknown>();
     for (const entity of catalog.entities[kind]) {
       const row = entity as unknown as Record<string, unknown>;
-      for (const reference of [row.id, row.card_number, row.resource_id]) {
+      const aliases = [row.id, row.card_number, row.resource_id];
+      if (kind === 'spell') aliases.push(englishSlug(row.name_en));
+      for (const reference of aliases) {
         if (typeof reference !== 'string' || !reference) continue;
         if (index.has(reference) && index.get(reference) !== entity) throw new Error(`Неоднозначная ссылка каталога: ${kind}/${reference}`);
         index.set(reference, entity);

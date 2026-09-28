@@ -403,9 +403,24 @@ func generateRoguelikeShop(tx *gorm.DB, run *RoguelikeRun, level int, preserve *
 		shop.PinnedOfferID = copy.ID
 		pinned = copy.CardNumber
 	}
-	selected, err := selectConfiguredMerchantStock(run.RunSeed, generation, run.EncountersWon, level, available, rarities, pinned, cfg.level(level))
+	stockPolicy := cfg.level(level)
+	if run.Mode == urvinMode {
+		definition, modeErr := urvinRules(run)
+		if modeErr != nil {
+			return nil, modeErr
+		}
+		stockPolicy.Slots *= definition.Shop.OfferMultiplier
+		stockPolicy.MagicLimit += definition.Shop.ExtraMagicSlots
+	}
+	selected, err := selectConfiguredMerchantStock(run.RunSeed, generation, run.EncountersWon, level, available, rarities, pinned, stockPolicy)
 	if err != nil {
 		return nil, err
+	}
+	if run.Mode == urvinMode {
+		selected, err = urvinFeaturedStock(run, generation, level, available, rarities, selected, pinned)
+		if err != nil {
+			return nil, err
+		}
 	}
 	for _, entry := range selected {
 		card := cardByNumber[entry.CardNumber]
@@ -437,6 +452,7 @@ func roguelikeCheckpoint(run *RoguelikeRun, character *CharacterV3) (JSONMap, er
 		"pending_level":     run.PendingLevel,
 		"encounter_history": roguelikeEncounterHistory(run.Checkpoint),
 		"shop":              run.Shop, "character": characterMap, "characters": run.Characters,
+		"journey": run.Journey, "journey_private": run.JourneyPrivate,
 	})
 }
 
@@ -471,6 +487,7 @@ func saveRoguelikeRun(tx *gorm.DB, run *RoguelikeRun) error {
 		"paid_refresh_count": run.PaidRefreshCount, "pending_level": run.PendingLevel,
 		"encounter": run.Encounter, "combat_envelope": nonNilRoguelikeMap(run.CombatEnvelope), "combat_catalog": nonNilRoguelikeMap(run.CombatCatalog),
 		"shop": run.Shop, "checkpoint": run.Checkpoint, "last_reward": run.LastReward,
+		"mode": run.Mode, "journey": nonNilRoguelikeMap(run.Journey), "mode_rules": nonNilRoguelikeMap(run.ModeRules), "journey_private": nonNilRoguelikeMap(run.JourneyPrivate),
 		"updated_at": time.Now().UTC(),
 	}).Error
 }
@@ -493,6 +510,9 @@ func (rc *RoguelikeController) Create(c *gin.Context) {
 			}
 			var err error
 			created, err = createRoguelikeParty(tx, userID, request.SourceCharacterIDs)
+			if err == nil {
+				err = configureRoguelikeMode(tx, created, request)
+			}
 			return err
 		}
 		var source CharacterV3
@@ -504,24 +524,6 @@ func (rc *RoguelikeController) Create(c *gin.Context) {
 		}
 		if err := validateRoguelikeSource(tx, &source, userID); err != nil {
 			return err
-		}
-		var activeCount int64
-		if err := tx.Model(&RoguelikeRun{}).Where("source_character_id = ? AND status = ?", source.ID, RoguelikeStatusActive).Count(&activeCount).Error; err != nil {
-			return err
-		}
-		if activeCount > 0 {
-			return roguelikeError(http.StatusConflict, "active_run_exists", "у этого персонажа уже есть активный забег")
-		}
-		var partyRuns []RoguelikeRun
-		if err := tx.Where("user_id = ? AND status = ?", userID, RoguelikeStatusActive).Find(&partyRuns).Error; err != nil {
-			return err
-		}
-		for _, r := range partyRuns {
-			for _, m := range roguelikePartyMembers(&r) {
-				if m.SourceCharacterID == source.ID {
-					return roguelikeError(409, "active_run_exists", "У персонажа уже есть активный забег")
-				}
-			}
 		}
 		seed, err := newRoguelikeSeed()
 		if err != nil {
@@ -574,7 +576,7 @@ func (rc *RoguelikeController) Create(c *gin.Context) {
 		run.Character = &clone
 		run.Character.AccessMode = characterV3AccessOwner
 		created = run
-		return nil
+		return configureRoguelikeMode(tx, run, request)
 	})
 	if err != nil {
 		writeRoguelikeError(c, err)
@@ -604,13 +606,8 @@ func (rc *RoguelikeController) List(c *gin.Context) {
 			runs[index].Character.AccessMode = characterV3AccessOwner
 		}
 	}
-	// Availability still uses the authoritative active-run set, independent of presentation.
-	var activeRuns []RoguelikeRun
-	if err := rc.db.Select("character_id", "source_character_id", "party").Where("user_id = ? AND status = ?", userID, RoguelikeStatusActive).Find(&activeRuns).Error; err != nil {
-		writeRoguelikeError(c, err)
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"runs": runs, "unavailable_source_character_ids": roguelikeOccupiedSources(activeRuns)})
+	// Kept for older clients; source sheets are reusable run templates and are never occupied.
+	c.JSON(http.StatusOK, gin.H{"runs": runs, "unavailable_source_character_ids": []string{}})
 }
 
 func (rc *RoguelikeController) Get(c *gin.Context) {
@@ -897,6 +894,9 @@ func appendRoguelikeLoot(
 }
 
 func rewardRoguelikeVictory(tx *gorm.DB, run *RoguelikeRun) error {
+	if run.Mode == urvinMode {
+		return rewardUrvinVictory(tx, run)
+	}
 	encounterNo, err := encounterNumber(run, "number")
 	if err != nil {
 		return err
@@ -1434,6 +1434,8 @@ func restoreRoguelikeCheckpoint(run *RoguelikeRun) error {
 		return roguelikeError(http.StatusConflict, "defeat_required", "повтор доступен только после поражения")
 	}
 	var snapshot struct {
+		Journey                      JSONMap       `json:"journey"`
+		JourneyPrivate               JSONMap       `json:"journey_private"`
 		Experience                   int           `json:"experience"`
 		Gold                         int           `json:"gold"`
 		Supplies                     int           `json:"supplies"`
@@ -1496,6 +1498,28 @@ func restoreRoguelikeCheckpoint(run *RoguelikeRun) error {
 	run.PaidRefreshCount = snapshot.PaidRefreshCount
 	run.PendingLevel = snapshot.PendingLevel
 	run.Shop = snapshot.Shop
+	if run.Mode == urvinMode {
+		run.Journey = snapshot.Journey
+		run.JourneyPrivate = snapshot.JourneyPrivate
+		// An event may have turned into combat after the entrance checkpoint.
+		// Retain that encounter and resume it, rather than charge/reward a second
+		// event choice against the same frozen enemies.
+		if kind, ok := run.Encounter["urvin_room"].(string); ok && kind != "" {
+			j, err := urvinJourney(run)
+			if err != nil {
+				return err
+			}
+			if node := j.current(); node != nil {
+				node.ResolvedKind = kind
+				if j.Event != nil {
+					j.Event.Finished = true
+				}
+			}
+			if err := saveUrvinJourney(run, j); err != nil {
+				return err
+			}
+		}
+	}
 	run.LastReward = JSONMap{}
 	run.CombatEnvelope = JSONMap{}
 	run.CombatCatalog = JSONMap{}
@@ -1518,12 +1542,19 @@ func applyRoguelikeCommand(tx *gorm.DB, run *RoguelikeRun, request RoguelikeComm
 	if run.Character == nil {
 		return fmt.Errorf("roguelike character is missing")
 	}
+	if err := urvinCommandAllowed(run, request.Type); err != nil {
+		return err
+	}
 	if request.Type == "buy" || request.Type == "buy_cart" || request.Type == "pin" || request.Type == "refresh_shop" {
 		if run.Status != RoguelikeStatusActive || run.Phase != RoguelikePhaseCamp {
 			return roguelikeError(409, "camp_required", "магазин доступен только в лагере активного забега")
 		}
 	}
 	switch request.Type {
+	case "enter_room":
+		return enterUrvinRoom(tx, run, roguelikePayloadString(request, "node_id"))
+	case "leave_room", "resume_room", "claim_stash", "event_choice", "event_roll", "event_resolve", "event_continue":
+		return applyUrvinRoomCommand(tx, run, request)
 	case "start_encounter":
 		return startRoguelikeEncounter(tx, run)
 	case "complete_encounter":
@@ -1584,7 +1615,7 @@ func (rc *RoguelikeController) Command(c *gin.Context) {
 		return
 	}
 	var response JSONMap
-	err = rc.db.Transaction(func(tx *gorm.DB) error {
+	err = rc.db.WithContext(c.Request.Context()).Transaction(func(tx *gorm.DB) error {
 		var receipt RoguelikeCommandReceipt
 		receiptResult := tx.Where("run_id = ? AND user_id = ? AND command_id = ?", runID, userID, request.CommandID).First(&receipt)
 		if receiptResult.Error == nil {

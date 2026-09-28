@@ -273,6 +273,15 @@ func authorizeRoguelikeCharacterMutation(
 			CharacterID: character.ID.String(),
 		}
 	}
+	if run.Mode == urvinMode {
+		j, err := urvinJourney(&run)
+		if err != nil {
+			return nil, err
+		}
+		if j.Event != nil && j.Event.Pending != nil {
+			return nil, roguelikeMutationError("event_decision_pending", "Сначала завершите проверку события", character.ID)
+		}
+	}
 	if (len(run.CombatEnvelope) > 0 || run.Encounter["trusted_required"] == true) && run.Phase == RoguelikePhaseCombat {
 		return nil, roguelikeMutationError("trusted_combat_required", "бой изменяется только командами серверного движка", character.ID)
 	}

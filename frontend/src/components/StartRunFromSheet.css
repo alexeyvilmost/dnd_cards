@@ -1,0 +1,55 @@
+.start-run-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: min(520px, 92vw);
+  max-width: 560px;
+  color: #e8e0d0;
+}
+.start-run-dialog h2 { margin: 0; font-size: 1.25rem; }
+.start-run-dialog h3 { margin: 0 0 8px; font-size: 1rem; color: #e7cf9a; }
+.start-run-dialog h4 { margin: 0 0 8px; font-size: 0.95rem; }
+.start-run-dialog__lead { margin: 0; color: #b8ad9a; line-height: 1.45; }
+.start-run-dialog__error {
+  padding: 8px 10px;
+  border: 1px solid #a85a4a;
+  border-radius: 8px;
+  background: rgba(168, 90, 74, 0.15);
+}
+.start-run-dialog__section {
+  padding: 12px;
+  border: 1px solid #4a3f35;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.18);
+}
+.start-run-dialog__empty { margin: 0; color: #a59886; }
+.start-run-dialog__runs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.start-run-dialog__run {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #6a5a3a;
+  background: rgba(201, 162, 39, 0.08);
+  color: inherit;
+  cursor: pointer;
+}
+.start-run-dialog__run:hover { border-color: #c9a227; background: rgba(201, 162, 39, 0.16); }
+.start-run-dialog__run span { color: #b8ad9a; font-size: 0.85rem; }
+.start-run-dialog__auras { margin-top: 12px; }
+.start-run-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}

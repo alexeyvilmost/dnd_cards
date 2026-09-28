@@ -1,0 +1,236 @@
+[
+  {
+    "id": "urvin-archive-v1",
+    "procedural": {"movable": ["ruin"]},
+    "name": "Зал безмолвных летописей",
+    "width": 18,
+    "height": 12,
+    "maxFootprint": 4,
+    "maxActors": 32,
+    "artVersion": 2,
+    "background": "/assets/battle-maps/urvin-archive-v1.png",
+    "description": "Просторный зал: колонны перекрывают обзор, обломки замедляют движение, низкие каменные столы дают укрытие.",
+    "features": [
+      {
+        "id": "pillar-west",
+        "name": "Каменная колонна",
+        "x": 4,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "sprite": "wall",
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": "pillar-east",
+        "name": "Каменная колонна",
+        "x": 12,
+        "y": 8,
+        "width": 1,
+        "height": 1,
+        "sprite": "wall",
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": "desk-west",
+        "name": "Каменный стол",
+        "x": 4,
+        "y": 8,
+        "width": 2,
+        "height": 1,
+        "sprite": "stone",
+        "blocksMovement": true,
+        "cover": "half"
+      },
+      {
+        "id": "desk-east",
+        "name": "Каменный стол",
+        "x": 12,
+        "y": 3,
+        "width": 2,
+        "height": 1,
+        "sprite": "stone",
+        "blocksMovement": true,
+        "cover": "half"
+      },
+      {
+        "id": "ruin",
+        "name": "Обломки летописей",
+        "x": 8,
+        "y": 5,
+        "width": 2,
+        "height": 2,
+        "sprite": "rubble",
+        "zone": {
+          "zoneType": "rubble",
+          "difficultTerrain": true,
+          "triggers": []
+        }
+      }
+    ]
+  },
+  {
+    "id": "urvin-causeway-v1",
+    "procedural": {"movable": ["scree-west", "scree-east", "ember"]},
+    "name": "Пепельный тракт",
+    "width": 18,
+    "height": 12,
+    "maxFootprint": 4,
+    "maxActors": 32,
+    "artVersion": 2,
+    "background": "/assets/battle-maps/urvin-causeway-v1.png",
+    "description": "Открытый пепельный тракт. Валуны скрывают противников, осыпи замедляют, тлеющие угли наносят 1к4 огнём при движении и начале хода.",
+    "features": [
+      {
+        "id": "rock-north",
+        "name": "Высокая скала",
+        "x": 5,
+        "y": 2,
+        "width": 2,
+        "height": 2,
+        "sprite": "rock",
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": "rock-south",
+        "name": "Высокая скала",
+        "x": 11,
+        "y": 8,
+        "width": 2,
+        "height": 2,
+        "sprite": "rock",
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": "scree-west",
+        "name": "Пепельная осыпь",
+        "x": 5,
+        "y": 8,
+        "width": 3,
+        "height": 2,
+        "sprite": "rubble",
+        "zone": {
+          "zoneType": "rubble",
+          "difficultTerrain": true,
+          "triggers": []
+        }
+      },
+      {
+        "id": "scree-east",
+        "name": "Пепельная осыпь",
+        "x": 10,
+        "y": 2,
+        "width": 3,
+        "height": 2,
+        "sprite": "rubble",
+        "zone": {
+          "zoneType": "rubble",
+          "difficultTerrain": true,
+          "triggers": []
+        }
+      },
+      {
+        "id": "ember",
+        "name": "Тлеющий разлом",
+        "x": 8,
+        "y": 5,
+        "width": 2,
+        "height": 2,
+        "sprite": "fire",
+        "zone": {
+          "zoneType": "fire",
+          "triggers": [
+            "move",
+            "start_turn"
+          ],
+          "hazard": {
+            "resolution": "automatic",
+            "effects": [
+              {
+                "kind": "damage",
+                "dice": "1d4",
+                "type": "fire"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "urvin-court-v1",
+    "procedural": {"movable": ["scree"]},
+    "name": "Двор Чёрных врат",
+    "width": 21,
+    "height": 14,
+    "maxFootprint": 4,
+    "maxActors": 32,
+    "artVersion": 2,
+    "background": "/assets/battle-maps/urvin-court-v1.png",
+    "description": "Широкий двор хранителя. Разрушенные пилоны закрывают обзор; низкие баррикады дают половинное укрытие. Центральный проход открыт даже огромным существам.",
+    "features": [
+      {
+        "id": "pylon-north",
+        "name": "Разрушенный пилон",
+        "x": 6,
+        "y": 2,
+        "width": 2,
+        "height": 2,
+        "sprite": "wall",
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": "pylon-south",
+        "name": "Разрушенный пилон",
+        "x": 13,
+        "y": 10,
+        "width": 2,
+        "height": 2,
+        "sprite": "wall",
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": "barricade-north",
+        "name": "Обломки парапета",
+        "x": 14,
+        "y": 2,
+        "width": 3,
+        "height": 1,
+        "sprite": "stone",
+        "blocksMovement": true,
+        "cover": "half"
+      },
+      {
+        "id": "barricade-south",
+        "name": "Обломки парапета",
+        "x": 4,
+        "y": 11,
+        "width": 3,
+        "height": 1,
+        "sprite": "stone",
+        "blocksMovement": true,
+        "cover": "half"
+      },
+      {
+        "id": "scree",
+        "name": "Каменная крошка",
+        "x": 10,
+        "y": 6,
+        "width": 2,
+        "height": 2,
+        "sprite": "rubble",
+        "zone": {
+          "zoneType": "rubble",
+          "difficultTerrain": true,
+          "triggers": []
+        }
+      }
+    ]
+  }
+]

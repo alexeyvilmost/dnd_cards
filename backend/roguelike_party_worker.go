@@ -15,6 +15,10 @@ import (
 // All calculations use the ordinary worker. Only orchestration, membership and
 // the shared wallet/clock live here. CAS includes every participant, not just the leader.
 func (rc *RoguelikeController) trustedPartyCommand(c *gin.Context, run *RoguelikeRun, request RoguelikeCommandRequest, requestHash string) {
+	if err := urvinCommandAllowed(run, request.Type); err != nil {
+		writeRoguelikeError(c, err)
+		return
+	}
 	fail := func(code, message string) { writeRoguelikeError(c, roguelikeError(409, code, message)) }
 	rest := request.Type == "short_rest" || request.Type == "long_rest" || request.Type == "bind_weapon"
 	campAction := request.Type == "camp_action" || request.Type == "camp_turn" || request.Type == "use_item"
@@ -137,8 +141,7 @@ func (rc *RoguelikeController) trustedPartyCommand(c *gin.Context, run *Roguelik
 	if err != nil {
 		// Client errors contain status/category only, never worker bodies or entropy.
 		log.Printf("roguelike party command %s failed: %v", request.Type, err)
-		var rejection *roguelikeWorkerRejection
-		if errors.As(err, &rejection) {
+		if rejection := publicRoguelikeWorkerFailure(err); rejection != nil {
 			fail(rejection.Code, rejection.Message)
 		} else {
 			fail("party_execution_failed", "Не удалось выполнить действие группы. Ничего не списано; обновите страницу.")
@@ -217,6 +220,10 @@ func (rc *RoguelikeController) trustedPartyCommand(c *gin.Context, run *Roguelik
 		}
 		locked.Characters = run.Characters
 		locked.Character = run.Character
+		syncUrvinAura(locked)
+		if err = finishUrvinRest(locked, request.Type); err != nil {
+			return err
+		}
 		setCharacterGold(locked.Character, locked.Gold)
 		if !camp {
 			locked.CombatEnvelope = result.Envelope

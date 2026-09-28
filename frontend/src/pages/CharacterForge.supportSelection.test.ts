@@ -13,5 +13,6 @@ describe('CharacterForge uncertified entity selection', () => {
     expect(source).not.toContain('window.confirm');
     expect(source).not.toContain('supportSelectionWarning');
     expect(source).toContain('Непроверенные варианты доступны без дополнительных окон.');
+    expect(source).toContain('!runHasCharacter(run, c.id)');
   });
 });

@@ -7,6 +7,7 @@ func registerRoguelikeRoutes(api *gin.RouterGroup, authService *AuthService, con
 	routes.Use(StrictAuthMiddleware(authService))
 	routes.POST("", controller.Create)
 	routes.GET("", controller.List)
+	routes.GET("/modes", controller.Modes)
 	routes.GET("/:id", controller.Get)
 	routes.POST("/:id/commands", controller.Command)
 }

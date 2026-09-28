@@ -6,7 +6,10 @@ import {isRunEligible} from '../roguelike/eligibility';
 import CharacterTemplateLibrary from '../components/CharacterTemplateLibrary';
 import RunPartyCamp from '../components/RunPartyCamp';
 import type { ForgeCharacter } from '../character/types';
-import { roguelikeApi, type RoguelikeRun } from '../roguelike/api';
+import { roguelikeApi, type RoguelikeRun, type UrvinDefinition } from '../roguelike/api';
+import SheetActionLine from '../components/SheetActionLine';
+import {useSiteSettings} from '../settings';
+import '../components/UrvinJourney.css';
 import './RoguelikePage.css';
 import MerchantSettingsDialog from '../components/MerchantSettingsDialog';
 import {merchantSettingsApi} from '../api/entityTags';
@@ -24,6 +27,11 @@ function errorMessage(reason: unknown): string {
 }
 
 function RunList() {
+  const settings=useSiteSettings();
+  const [mode,setMode]=useState<'classic'|'urvin'>('classic'),[definition,setDefinition]=useState<UrvinDefinition>(),[aura,setAura]=useState('');
+  const [modeError,setModeError]=useState('');
+  const loadModes=()=>{setModeError('');void roguelikeApi.modes().then(setDefinition).catch(()=>setModeError('Не удалось загрузить ауры.'));};
+  useEffect(loadModes,[]);
   const [manageShop,setManageShop]=useState(false),[shopSettingsOpen,setShopSettingsOpen]=useState(false);
   useEffect(()=>{void merchantSettingsApi.get().then(s=>setManageShop(s.can_manage)).catch(()=>{})},[]);
   const navigate = useNavigate();
@@ -46,12 +54,7 @@ function RunList() {
       .then(([selection, loadedCharacters]) => {
         if (!active) return;
         setRuns(selection.runs);
-        const occupied = new Set(selection.unavailable_source_character_ids);
-        for (const run of selection.runs.filter(run => run.status === 'active')) {
-          occupied.add(run.source_character_id);
-          for (const member of run.party?.members ?? []) occupied.add(member.source_character_id);
-        }
-        const candidates = loadedCharacters.filter(character => isRunEligible(character) && !occupied.has(character.id));
+        const candidates = loadedCharacters.filter(isRunEligible);
         setCharacters(candidates);
       })
       .catch((reason) => active && setError(errorMessage(reason)))
@@ -64,6 +67,7 @@ function RunList() {
     setBusy(true);
     setError(null);
     try {
+      if(mode==='urvin'&&!aura)throw Error('Выберите стартовую ауру');
       const sources = [...selected];
       for (const preset of presets) {
         const name = names[preset.id].trim();
@@ -75,7 +79,7 @@ function RunList() {
         }
         sources.push(sourceId);
       }
-      const run = await roguelikeApi.create(sources);
+      const run = mode==='urvin'?await roguelikeApi.create(sources,{mode,aura_id:aura}):await roguelikeApi.create(sources);
       navigate(`/roguelike/${run.id}`);
     } catch (reason) {
       setError(errorMessage(reason));
@@ -87,8 +91,12 @@ function RunList() {
     <main className="roguelike-shell roguelike-start">
       <section className="roguelike-hero">
         <p className="roguelike-kicker">РЕЖИМ ЗАБЕГА</p>
-        <h1>Дорога до шестого уровня</h1>
-        <p>Проведите героев через случайные столкновения, развивайте сборки и наберите 14 000 опыта.</p>
+        <h1>{mode==='urvin'?'Урвинский забег':'Дорога до шестого уровня'}</h1>
+        <p>{mode==='urvin'?'Выберите ауру и проложите собственный путь через битвы, события и привалы к финальному хранителю.':'Проведите героев через случайные столкновения, развивайте сборки и наберите 14 000 опыта.'}</p>
+        <div className="urvin-mode-switch" role="group" aria-label="Вариант забега">
+          <button aria-pressed={mode==='classic'} onClick={()=>setMode('classic')}>Классический</button>
+          <button aria-pressed={mode==='urvin'} onClick={()=>setMode('urvin')}>Урвинский забег</button>
+        </div>
       </section>
 
       {shopSettingsOpen&&<MerchantSettingsDialog onClose={()=>setShopSettingsOpen(false)}/>}
@@ -101,6 +109,15 @@ function RunList() {
                 <button type="button" className="run-help-button" aria-label="Как собрать группу" aria-description={RUN_SELECTION_HELP}>?</button>
               </HoverCard>
             </div>
+            {mode==='urvin'&&<section className="urvin-aura-picker"><h3>Стартовая аура</h3>
+              {!definition?<p>{modeError||'Загружаем ауры…'}{modeError&&<button onClick={loadModes}>Повторить</button>}</p>:<div className="cs-action-tiles">{definition.auras.map(effect=>{
+                const limit=(effect.mechanics.journey as {max_party_size?:number}|undefined)?.max_party_size;
+                return <SheetActionLine key={effect.id} effectRef={effect} name={effect.name} imageUrl={effect.image_url}
+                  description={effect.description} variant={settings.entityDisplay.effects} iconShape="round" selected={aura===effect.id}
+                  disabled={busy||!!limit&&count>limit} disabledTitle="Эта аура доступна только одиночному герою" onActivate={()=>setAura(effect.id)}/>;
+              })}</div>}
+              <p>{definition?.auras.find(a=>a.id===aura)?.description??'Выберите одну ауру. Она действует на всю группу.'}</p>
+            </section>}
             <CharacterTemplateLibrary forRun runSelection={{selectedIds: presets.map(preset => preset.id), full: count >= 6, busy,
               onToggle: preset => {setPresets(rows => rows.some(row => row.id === preset.id) ? rows.filter(row => row.id !== preset.id) : [...rows, preset]);
                 setNames(current => ({...current, [preset.id]: current[preset.id] ?? preset.name}));}}} />
@@ -117,7 +134,7 @@ function RunList() {
               <p>Нет свободных подходящих персонажей. Выберите пресеты выше или <Link to="/character-forge">создайте персонажа</Link>.</p>
             )}
             <div className="run-start-footer"><span>Выбрано {count} / 6</span>
-              <button type="button" className="roguelike-primary" disabled={busy || !count} onClick={() => presets.length ? setNaming(true) : void create()}>
+              <button type="button" className="roguelike-primary" disabled={busy || !count || mode==='urvin'&&(!aura||!definition||Number((definition.auras.find(a=>a.id===aura)?.mechanics.journey as {max_party_size?:number})?.max_party_size??6)<count)} onClick={() => presets.length ? setNaming(true) : void create()}>
                 {busy ? 'Создаём…' : `Начать забег · ${count}`}
               </button>
             </div>
@@ -129,7 +146,7 @@ function RunList() {
               const members = runCharacters(run);
               return (
               <Link className="roguelike-run-row" to={`/roguelike/${run.id}`} key={run.id}>
-                <div className="run-row-heading"><strong>{members.length > 1 ? `Группа · участников: ${members.length}` : 'Одиночный забег'}</strong>
+                <div className="run-row-heading"><strong>{run.mode==='urvin'?'Урвинский · ':''}{members.length > 1 ? `Группа · участников: ${members.length}` : 'Одиночный забег'}</strong>
                   <em data-status={run.status}>{run.status === 'victory' ? 'Победа' : run.status === 'defeat' ? 'Поражение' : run.status === 'abandoned' ? 'Завершён' : run.phase === 'combat' ? 'В бою' : 'В лагере'}</em></div>
                 <span className="run-row-members">{members.map(member => <RunCharacterIdentity key={member.id} character={member} />)}</span>
                 <span className="run-row-progress">{run.experience.toLocaleString('ru-RU')} XP · {run.encounters_won} побед · попытка {run.attempt}</span>

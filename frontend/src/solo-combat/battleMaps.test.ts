@@ -3,7 +3,7 @@ import fixture from '../pages/rulesLabFixture.generated.json';
 import {createWorld,type ActorState} from '../rules-core/domain';
 import {BATTLE_MAPS,packBattleMap,selectBattleMap,materializeMapAreas,mapConnectedPositions,generateBattleMap} from './battleMaps';
 import {boardCells,terrainFits,terrainSight,terrainStepFits,featureCells,type BattleMapDefinition} from './boardGeometry';
-import {actorFootprint,footprintCells} from './footprint';
+import {actorFootprint,footprintCells,footprintDistanceFt} from './footprint';
 import {reachableRoutes,areaActorIds} from './tacticalGrid';
 import {spatialFacts,type SoloCombatState} from './types';
 import {movementCostThroughAreas,queueCombatAreaEvent} from './combatAreas';
@@ -26,6 +26,16 @@ function battlefield(index=0):SoloCombatState{
   combatAreas:materializeMapAreas(map),boardRevision:1,movementRemainingFt:{hero:60,enemy:30},initiativeBonuses:{},initiative:[],log:[],outcome:'active'} as unknown as SoloCombatState;
 }
 describe('data-owned battle maps',()=>{
+ it.each(BATTLE_MAPS.filter(map=>map.id.startsWith('urvin-')))('$id directly packs every Urvin group/guardian size without a fallback arena',map=>{
+  for(const count of [1,2,3,4,5,6])for(const footprint of [1,2,3,4])for(const seed of [1,17,891]){
+   const generated=generateBattleMap(map,seed)!;
+   const heroes=Array.from({length:count},(_,i)=>actor(`hero-${i}`));
+   const enemies=Array.from({length:count},(_,i)=>actor(`warden-${i}`,footprint+1));
+   const positions=packBattleMap(generated,[...heroes,...enemies],heroes.map(h=>h.id));
+   expect(positions,`${map.id}, ${count} heroes, footprint ${footprint}, seed ${seed}`).not.toBeNull();
+   for(const enemy of enemies)expect(Math.min(...heroes.map(hero=>footprintDistanceFt(positions![enemy.id],positions![hero.id],footprint,1)))).toBeLessThanOrEqual(60);
+  }
+ },30000);
  it('retains river bends as authoritative cells, not its bounding box',()=>{
   const map=BATTLE_MAPS[2],river=map.features.find(f=>f.id==='river')!;
   expect(river.baked).toBe(true);expect(featureCells(river)).toHaveLength(24);
@@ -39,7 +49,8 @@ describe('data-owned battle maps',()=>{
  it.each(BATTLE_MAPS)('$id generates deterministic distinct layouts without moving baked scenery',map=>{
   const original=JSON.stringify(map),first=generateBattleMap(map,123)!;
   expect(first).not.toBeNull();expect(generateBattleMap(map,123)).toEqual(first);
-  expect(generateBattleMap(map,456)?.features).not.toEqual(first.features);
+  if(map.procedural?.movable.length)expect(generateBattleMap(map,456)?.features).not.toEqual(first.features);
+  else expect(generateBattleMap(map,456)?.features).toEqual(first.features);
   expect(JSON.stringify(map)).toBe(original);
   for(const feature of map.features.filter(f=>f.baked))expect(first.features.find(f=>f.id===feature.id)).toEqual(feature);
   const cells=first.features.flatMap(featureCells).map(p=>`${p.x}:${p.y}`);
@@ -49,6 +60,24 @@ describe('data-owned battle maps',()=>{
  it('rejects crowded procedural candidates instead of silently overlapping props',()=>{
   const map={...BATTLE_MAPS[0],width:3,height:3};
   expect(generateBattleMap(map,1)).toBeNull();
+ });
+ it('randomizes starting cells inside each side’s authored arena region with a reproducible seed',()=>{
+  const map=BATTLE_MAPS.find(entry=>entry.id==='clearing-v1')!;
+  const heroes=Array.from({length:4},(_,i)=>actor(`hero-${i}`)),enemies=Array.from({length:3},(_,i)=>actor(`enemy-${i}`));
+  const first=packBattleMap(map,[...heroes,...enemies],heroes.map(a=>a.id),17)!;
+  expect(packBattleMap(map,[...heroes,...enemies],heroes.map(a=>a.id),17)).toEqual(first);
+  expect(packBattleMap(map,[...heroes,...enemies],heroes.map(a=>a.id),18)).not.toEqual(first);
+  for(const hero of heroes)expect(map.spawnZones!.filter(z=>z.side==='heroes').some(z=>first[hero.id].x>=z.x&&first[hero.id].x<z.x+z.width&&first[hero.id].y>=z.y&&first[hero.id].y<z.y+z.height)).toBe(true);
+  for(const enemy of enemies)expect(map.spawnZones!.filter(z=>z.side==='monsters').some(z=>first[enemy.id].x>=z.x&&first[enemy.id].x<z.x+z.width&&first[enemy.id].y>=z.y&&first[enemy.id].y<z.y+z.height)).toBe(true);
+ });
+ it.each(['watchpost-rooms-v1','crypt-annex-rooms-v1'])('%s connects separate spawn rooms by a one-cell route and excludes large footprints',id=>{
+  const map=BATTLE_MAPS.find(entry=>entry.id===id)!;
+  const hero=actor('hero'),enemy=actor('enemy');
+  const packed=packBattleMap(map,[hero,enemy],['hero'],41)!;
+  expect(packed).toBeTruthy();
+  expect(mapConnectedPositions(map,1,packed.hero)).toContainEqual(packed.enemy);
+  const largePacked=packBattleMap(map,[hero,actor('giant',3)],['hero'],41);
+  expect(largePacked).toBeNull();
  });
  it.each([1,2,3,4])('generated selection safely packs footprint %i with a six-member party',footprint=>{
   const heroes=Array.from({length:6},(_,i)=>actor(`hero-${i}`));
@@ -121,8 +150,8 @@ describe('data-owned battle maps',()=>{
    expect(paths.every(r=>r.path.every(p=>terrainFits(state,p)))).toBe(true);
   }
  });
- it('campfire and fireplace resolve ordinary zone damage and survive serialization',()=>{
-  for(const index of [2,3]){
+ it('campfire, fireplace and Urvin embers resolve ordinary zone damage and survive serialization',()=>{
+  for(const index of [2,3,BATTLE_MAPS.findIndex(m=>m.id==='urvin-causeway-v1')]){
    let state=battlefield(index);const fire=Object.values(state.combatAreas!).find(a=>a.hazard)!;
    state.tokens.hero.position=fire.cells[0];
    state=JSON.parse(JSON.stringify(state));

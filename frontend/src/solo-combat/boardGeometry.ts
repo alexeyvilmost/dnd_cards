@@ -13,9 +13,14 @@ export interface BattleMapFeature extends GridPosition {
   zone?: {zoneType: string; triggers: CombatAreaState['triggers']; difficultTerrain?: boolean;
     lightlyObscured?: boolean; hazard?: Omit<RuleSavingHazardDefinition, 'id'|'name'|'sourceKind'|'sourceEntityIds'> | Omit<RuleAutomaticHazardDefinition, 'id'|'name'|'sourceKind'|'sourceEntityIds'>};
 }
+/** Authored anchor-cell region in which a side is initially placed. */
+export interface BattleMapSpawnZone {
+  side: 'heroes'|'monsters'; x: number; y: number; width: number; height: number;
+}
 export interface BattleMapDefinition {
   id: string; name: string; description: string; width: number; height: number;
   background: string; maxFootprint: number; maxActors: number; features: BattleMapFeature[];
+  spawnZones?: BattleMapSpawnZone[];
   artVersion?: 2;
   procedural?: {movable: string[]};
   generation?: {version: 'scatter-v1'; seed: number; attempt: number; templateId: string};

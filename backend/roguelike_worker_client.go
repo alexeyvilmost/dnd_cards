@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
+	"unicode"
 )
 
 type roguelikeWorkerClient struct {
@@ -22,6 +25,11 @@ type roguelikeWorkerRejection struct{ Code, Message string }
 
 func (err *roguelikeWorkerRejection) Error() string { return err.Message }
 
+var (
+	missingPinnedPattern = regexp.MustCompile(`(?i)missing pinned ([a-z0-9_]+) ([^\s:]+)`)
+	workerHTTPPattern    = regexp.MustCompile(`(?i)rules worker rejected command \(HTTP (\d+)\)`)
+)
+
 func publicWorkerRejection(code, message string) *roguelikeWorkerRejection {
 	if code == "artifact_unavailable" {
 		return &roguelikeWorkerRejection{"combat_rules_unavailable", "Версия правил этого боя временно недоступна. Действие не применено."}
@@ -31,6 +39,37 @@ func publicWorkerRejection(code, message string) *roguelikeWorkerRejection {
 	}
 	if message == "Неизвестная команда боя" {
 		return &roguelikeWorkerRejection{"combat_command_unsupported", "Эта версия боя не поддерживает команду. Обновите страницу; действие не применено."}
+	}
+	board := map[string]string{
+		"Карта столкновения отсутствует":                     "combat_map_missing",
+		"Нет карты, вмещающей всех участников и их размеры": "combat_map_unfit",
+		"Некорректное зерно карты":                          "combat_map_seed_invalid",
+		"Некорректный состав столкновения":                   "combat_roster_invalid",
+		"Некорректный участник столкновения":                 "combat_roster_invalid",
+		"Некорректная группа":                               "combat_party_invalid",
+		"Слишком много противников":                         "combat_roster_invalid",
+		"Несовместимая версия каталога":                     "combat_catalog_version",
+		"Несовместимая версия каталога боя":                 "combat_catalog_version",
+		"Несовместимая версия правил боя":                   "combat_rules_version",
+		"Некорректная ревизия персонажа":                    "combat_revision_invalid",
+		"Чужой персонаж в снимке боя":                       "combat_character_mismatch",
+		"Повреждён поток случайности боя":                   "combat_entropy_corrupt",
+		"Неполный каталог искусностей оружия":               "combat_catalog_incomplete",
+	}
+	if mapped, ok := board[message]; ok {
+		return &roguelikeWorkerRejection{mapped, message + ". Действие не применено."}
+	}
+	for _, prefix := range []struct {
+		prefix string
+		code   string
+	}{
+		{"Каталог не содержит ", "combat_catalog_missing_ref"},
+		{"Неоднозначная ссылка каталога: ", "combat_catalog_ambiguous_ref"},
+		{"Каталог требует ", "combat_catalog_incomplete"},
+	} {
+		if strings.HasPrefix(message, prefix.prefix) && looksLikePublicCombatMessage(message) {
+			return &roguelikeWorkerRejection{prefix.code, message + ". Действие не применено."}
+		}
 	}
 	allowed := map[string]bool{
 		"Сначала завершите текущее решение или дождитесь своего хода": true,
@@ -43,6 +82,84 @@ func publicWorkerRejection(code, message string) *roguelikeWorkerRejection {
 	if allowed[message] {
 		return &roguelikeWorkerRejection{"combat_command_unavailable", message + ". Действие не применено."}
 	}
+	if looksLikePublicCombatMessage(message) {
+		return &roguelikeWorkerRejection{"combat_command_rejected", message + ". Действие не применено."}
+	}
+	return nil
+}
+
+func looksLikePublicCombatMessage(message string) bool {
+	trimmed := strings.TrimSpace(message)
+	if trimmed == "" || len(trimmed) > 240 || strings.ContainsAny(trimmed, "\n\r\t") {
+		return false
+	}
+	lower := strings.ToLower(trimmed)
+	for _, bad := range []string{
+		"entropy", "private-", "sha256:", "stack", " at ", "\\", ".go:", ".mjs", ".ts:",
+		"snapshot", "secret", "token", "password", "bearer", "postgres", "sqlstate",
+	} {
+		if strings.Contains(lower, bad) {
+			return false
+		}
+	}
+	hasCyrillic := false
+	for _, r := range trimmed {
+		if unicode.In(r, unicode.Cyrillic) {
+			hasCyrillic = true
+			break
+		}
+	}
+	return hasCyrillic
+}
+
+// Maps worker/catalog/init failures to fixed client-visible codes without leaking
+// private combat entropy or infrastructure internals.
+func publicRoguelikeWorkerFailure(err error) *roguelikeWorkerRejection {
+	if err == nil {
+		return nil
+	}
+	var rejection *roguelikeWorkerRejection
+	if errors.As(err, &rejection) {
+		return rejection
+	}
+	msg := err.Error()
+	if match := missingPinnedPattern.FindStringSubmatch(msg); len(match) == 3 {
+		kind, reference := match[1], match[2]
+		return &roguelikeWorkerRejection{
+			"combat_catalog_incomplete",
+			fmt.Sprintf("Не удалось собрать каталог боя: в библиотеке нет %s «%s». Действие не применено.", kind, reference),
+		}
+	}
+	switch {
+	case strings.Contains(msg, "rules worker is not configured"):
+		return &roguelikeWorkerRejection{"combat_worker_unconfigured", "Сервис правил боя не настроен на сервере. Действие не применено."}
+	case strings.Contains(msg, "rules worker unavailable"):
+		return &roguelikeWorkerRejection{"combat_worker_unavailable", "Сервис правил боя недоступен. Действие не применено."}
+	case workerHTTPPattern.MatchString(msg):
+		status := workerHTTPPattern.FindStringSubmatch(msg)[1]
+		return &roguelikeWorkerRejection{
+			"combat_worker_rejected",
+			fmt.Sprintf("Сервис правил отклонил команду начала боя (HTTP %s). Действие не применено.", status),
+		}
+	case strings.Contains(msg, "incomplete rules worker result"):
+		return &roguelikeWorkerRejection{"combat_worker_incomplete", "Сервис правил вернул неполный результат инициализации боя. Действие не применено."}
+	case strings.Contains(msg, "invalid rules worker response"):
+		return &roguelikeWorkerRejection{"combat_worker_invalid", "Сервис правил вернул некорректный ответ. Действие не применено."}
+	case strings.Contains(msg, "rules worker response too large"):
+		return &roguelikeWorkerRejection{"combat_worker_oversized", "Ответ сервиса правил слишком большой. Действие не применено."}
+	case strings.Contains(msg, "catalog resolution made no progress"):
+		return &roguelikeWorkerRejection{"combat_catalog_stalled", "Сбор каталога боя зациклился: зависимость не разрешается. Действие не применено."}
+	case strings.Contains(msg, "catalog dependency budget exceeded"):
+		return &roguelikeWorkerRejection{"combat_catalog_budget", "Слишком много зависимостей каталога боя. Действие не применено."}
+	case strings.Contains(msg, "unknown catalog dependency"):
+		return &roguelikeWorkerRejection{"combat_catalog_unknown_need", "Каталог боя запросил неизвестный тип зависимости. Действие не применено."}
+	case strings.Contains(msg, "unknown catalog entity type"):
+		return &roguelikeWorkerRejection{"combat_catalog_unknown_entity", "Каталог боя запросил неизвестный тип сущности. Действие не применено."}
+	case strings.Contains(msg, "invalid dependency request"):
+		return &roguelikeWorkerRejection{"combat_catalog_invalid_need", "Сервис правил запросил некорректный набор зависимостей. Действие не применено."}
+	case strings.Contains(msg, "catalog entity missing id"):
+		return &roguelikeWorkerRejection{"combat_catalog_invalid_entity", "В каталог боя попала сущность без идентификатора. Действие не применено."}
+	}
 	return nil
 }
 
@@ -53,6 +170,8 @@ type roguelikeWorkerNeed struct {
 	EffectType string `json:"effectType"`
 }
 type roguelikeWorkerResult struct {
+	Public              JSONMap               `json:"public"`
+	ArtifactHash        string                `json:"artifactHash"`
 	ElapsedSeconds      int                   `json:"elapsedSeconds"`
 	GoldSpent           int                   `json:"goldSpent"`
 	Events              []JSONMap             `json:"events"`
@@ -118,7 +237,11 @@ func (client roguelikeWorkerClient) call(ctx context.Context, endpoint string, b
 		if len(result.Needs) == 0 || len(result.Needs) > 2048 {
 			return nil, fmt.Errorf("invalid dependency request")
 		}
-	} else if (endpoint != "/rest" && endpoint != "/camp-action" && len(result.Envelope) == 0) || len(result.Patch) == 0 {
+	} else if endpoint == "/journey-check" {
+		if len(result.Envelope) == 0 || len(result.Public) == 0 {
+			return nil, fmt.Errorf("incomplete journey check")
+		}
+	} else if (endpoint != "/rest" && endpoint != "/camp-action" && endpoint != "/journey-effect" && len(result.Envelope) == 0) || len(result.Patch) == 0 {
 		return nil, fmt.Errorf("incomplete rules worker result")
 	}
 	return &result, nil

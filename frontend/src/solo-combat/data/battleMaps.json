@@ -111,5 +111,52 @@
       {"id":"fire","name":"Костёр путников","x":11,"y":3,"width":1,"height":1,"sprite":"fire","zone":{"zoneType":"fire","triggers":["move","start_turn"],"hazard":{"resolution":"automatic","effects":[{"kind":"damage","dice":"1d6","type":"fire"}]}}},
       {"id":"supplies","name":"Припасы путников","x":5,"y":8,"width":2,"height":1,"sprite":"barrel","blocksMovement":true,"cover":"half"}
     ]
+  },
+  {
+    "id":"clearing-v1", "name":"Лесная поляна", "width":10, "height":8, "maxFootprint":2, "maxActors":16,
+    "artVersion":2, "background":"/assets/battle-maps/clearing-floor-v1.png",
+    "description":"Небольшая лесная поляна с грязью и упавшими стволами. Компактная арена для быстрых стычек.",
+    "spawnZones":[{"side":"heroes","x":1,"y":1,"width":3,"height":6},{"side":"monsters","x":6,"y":1,"width":3,"height":6}],
+    "features":[
+      {"id":"fallen-trunk","name":"Упавший ствол","x":4,"y":2,"width":1,"height":2,"sprite":"trunk","blocksMovement":true,"blocksSight":true},
+      {"id":"mud-patch","name":"Размокшая земля","x":3,"y":5,"width":2,"height":1,"sprite":"mud","zone":{"zoneType":"mud","difficultTerrain":true,"triggers":[]}}
+    ]
+  },
+  {
+    "id":"courtyard-small-v1", "name":"Тихий внутренний двор", "width":10, "height":8, "maxFootprint":2, "maxActors":16,
+    "artVersion":2, "background":"/assets/battle-maps/courtyard-floor-v1.png",
+    "description":"Компактный мощёный двор с колоннами и низкой каменной кладкой, дающей укрытие.",
+    "spawnZones":[{"side":"heroes","x":1,"y":1,"width":3,"height":6},{"side":"monsters","x":6,"y":1,"width":3,"height":6}],
+    "features":[
+      {"id":"broken-column","name":"Обломок колонны","x":4,"y":1,"width":1,"height":2,"sprite":"wall","blocksMovement":true,"blocksSight":true},
+      {"id":"low-wall","name":"Низкая кладка","x":4,"y":5,"width":2,"height":1,"sprite":"stone","blocksMovement":true,"cover":"half"},
+      {"id":"moss","name":"Замшелые плиты","x":6,"y":4,"width":2,"height":2,"sprite":"rubble","zone":{"zoneType":"rubble","difficultTerrain":true,"triggers":[]}}
+    ]
+  },
+  {
+    "id":"watchpost-rooms-v1", "name":"Караульные палаты", "width":15, "height":9, "maxFootprint":1, "maxActors":24,
+    "artVersion":2, "background":"/assets/battle-maps/watchpost-floor-v1.png",
+    "description":"Две караульные комнаты соединяет одноклеточный проход. Узкая планировка не подходит крупным существам.",
+    "spawnZones":[{"side":"heroes","x":1,"y":1,"width":4,"height":7},{"side":"monsters","x":10,"y":1,"width":4,"height":7}],
+    "features":[
+      {"id":"partition-north","name":"Каменная перегородка","x":7,"y":0,"width":1,"height":4,"sprite":"wall","blocksMovement":true,"blocksSight":true},
+      {"id":"partition-south","name":"Каменная перегородка","x":7,"y":5,"width":1,"height":4,"sprite":"wall","blocksMovement":true,"blocksSight":true},
+      {"id":"west-rubble","name":"Разбитые камни","x":3,"y":6,"width":2,"height":1,"sprite":"rubble","zone":{"zoneType":"rubble","difficultTerrain":true,"triggers":[]}},
+      {"id":"east-barricade","name":"Караульный стол","x":11,"y":2,"width":2,"height":1,"sprite":"table","blocksMovement":true,"cover":"half"}
+    ]
+  },
+  {
+    "id":"crypt-annex-rooms-v1", "name":"Крипта трёх залов", "width":15, "height":9, "maxFootprint":1, "maxActors":24,
+    "artVersion":2, "background":"/assets/battle-maps/crypt-annex-floor-v1.png",
+    "description":"Залы крипты связаны узким ломаным коридором. Крупные существа не могут пройти через его повороты.",
+    "spawnZones":[{"side":"heroes","x":1,"y":1,"width":3,"height":7},{"side":"monsters","x":11,"y":1,"width":3,"height":7}],
+    "features":[
+      {"id":"west-partition-north","name":"Склеповая стена","x":5,"y":0,"width":1,"height":6,"sprite":"wall","blocksMovement":true,"blocksSight":true},
+      {"id":"west-partition-south","name":"Склеповая стена","x":5,"y":7,"width":1,"height":2,"sprite":"wall","blocksMovement":true,"blocksSight":true},
+      {"id":"east-partition-north","name":"Склеповая стена","x":10,"y":0,"width":1,"height":3,"sprite":"wall","blocksMovement":true,"blocksSight":true},
+      {"id":"east-partition-south","name":"Склеповая стена","x":10,"y":4,"width":1,"height":5,"sprite":"wall","blocksMovement":true,"blocksSight":true},
+      {"id":"web-west","name":"Склеповая паутина","x":2,"y":6,"width":2,"height":1,"sprite":"web","zone":{"zoneType":"web","difficultTerrain":true,"lightlyObscured":true,"triggers":["enter","start_turn"],"hazard":{"resolution":"save","save":{"ability":"dex","dc":12},"onFailure":[{"kind":"condition","value":"restrained","duration":{"type":"rounds","amount":1}}],"onSuccess":[]}}},
+      {"id":"crypt-table","name":"Каменная плита","x":12,"y":5,"width":2,"height":1,"sprite":"stone","blocksMovement":true,"cover":"half"}
+    ]
   }
 ]

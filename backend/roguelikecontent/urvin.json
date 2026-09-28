@@ -1,0 +1,739 @@
+{
+  "version": 1,
+  "id": "urvin",
+  "name": "Урвинский забег",
+  "description": "Выберите путь через Урвинские земли. Каждая комната — решение, последняя — бой с хранителем карты.",
+  "rows": 15,
+  "lanes": 3,
+  "event_combat_chance": 8,
+  "event_elite_chance": 2,
+  "shop": {
+    "offer_multiplier": 2,
+    "extra_magic_slots": 2,
+    "minimum_magic_items": 2
+  },
+  "rooms": [
+    {
+      "id": "normal",
+      "name": "Обычная",
+      "icon": "swords",
+      "description": "Обычное сражение и награда.",
+      "weight": 48,
+      "xp_multiplier": 1,
+      "gold_multiplier": 1
+    },
+    {
+      "id": "elite",
+      "name": "Элитная",
+      "icon": "skull",
+      "description": "Опасный противник, двойная награда и предмет не ниже необычного.",
+      "weight": 10,
+      "xp_multiplier": 2,
+      "gold_multiplier": 2,
+      "loot_min_rarity": "uncommon"
+    },
+    {
+      "id": "shop",
+      "name": "Магазин",
+      "icon": "store",
+      "description": "Расширенный ассортимент. Покупки доступны до ухода из комнаты.",
+      "weight": 9
+    },
+    {
+      "id": "treasure",
+      "name": "Сокровищница",
+      "icon": "gem",
+      "description": "Немного опыта, золото и случайный предмет.",
+      "weight": 7,
+      "reward": {
+        "experience": 35,
+        "gold": [
+          20,
+          45
+        ],
+        "loot_min_rarity": "common"
+      }
+    },
+    {
+      "id": "pass",
+      "name": "Перевал",
+      "icon": "mountain",
+      "description": "Общий короткий отдых. Кости хитов можно выбрать в листе героя.",
+      "weight": 8
+    },
+    {
+      "id": "camp",
+      "name": "Лагерь",
+      "icon": "tent",
+      "description": "Общий долгий отдых. Укрытие и припасы уже подготовлены.",
+      "weight": 6
+    },
+    {
+      "id": "event",
+      "name": "Событие",
+      "icon": "sparkles",
+      "description": "Выбор, проверки и тайны. Иногда — внезапное сражение.",
+      "weight": 12
+    },
+    {
+      "id": "boss",
+      "name": "Босс",
+      "icon": "crown",
+      "description": "Победа над хранителем завершит забег.",
+      "weight": 0,
+      "xp_multiplier": 2,
+      "gold_multiplier": 3,
+      "loot_min_rarity": "rare"
+    }
+  ],
+  "auras": [
+    {
+      "id": "d2730000-0000-4000-8000-000000000001",
+      "card_number": "URVIN-AURA-PHOENIX",
+      "key": "phoenix",
+      "name": "Аура Феникса",
+      "description": "Если последний стоящий герой падает до 0 хитов, он остаётся с 1 хитом, а аура исчезает у всей группы. Сначала срабатывают личные способности и предметы.",
+      "type": "Эффект",
+      "rarity": "uncommon",
+      "image_url": "/assets/urvin/auras/phoenix.png",
+      "mechanics": {
+        "activation": {
+          "mode": "passive"
+        },
+        "effects": [],
+        "journey": {
+          "operations": [
+            {
+              "kind": "last_conscious_survival",
+              "remaining_hp": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "d2730000-0000-4000-8000-000000000002",
+      "card_number": "URVIN-AURA-RESTORATION",
+      "key": "restoration",
+      "name": "Аура Восстановления",
+      "description": "После каждой победы все выжившие герои восстанавливают 1к6 хитов.",
+      "type": "Эффект",
+      "rarity": "uncommon",
+      "image_url": "/assets/urvin/auras/restoration.png",
+      "mechanics": {
+        "activation": {
+          "mode": "passive"
+        },
+        "effects": [],
+        "journey": {
+          "operations": [
+            {
+              "kind": "combat_victory_heal",
+              "dice": "1d6"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "d2730000-0000-4000-8000-000000000003",
+      "card_number": "URVIN-AURA-FEROCITY",
+      "key": "ferocity",
+      "name": "Аура Свирепости",
+      "description": "Все атаки ваших героев получают +1 к броску атаки и наносимому этой атакой урону.",
+      "type": "Эффект",
+      "rarity": "uncommon",
+      "image_url": "/assets/urvin/auras/ferocity.png",
+      "mechanics": {
+        "activation": {
+          "mode": "passive"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "modifier",
+                "applies_to": {
+                  "roll": "attack"
+                },
+                "op": "add",
+                "value": 1
+              },
+              {
+                "kind": "modifier",
+                "applies_to": {
+                  "roll": "damage",
+                  "filter": {"attackDamage": true}
+                },
+                "op": "add",
+                "value": 1
+              }
+            ]
+          }
+        ],
+        "journey": {
+          "operations": []
+        }
+      }
+    },
+    {
+      "id": "d2730000-0000-4000-8000-000000000004",
+      "card_number": "URVIN-AURA-WEALTH",
+      "key": "wealth",
+      "name": "Аура Богатства",
+      "description": "Общий кошелёк получает 200 дополнительных золотых в начале забега.",
+      "type": "Эффект",
+      "rarity": "uncommon",
+      "image_url": "/assets/urvin/auras/wealth.png",
+      "mechanics": {
+        "activation": {
+          "mode": "passive"
+        },
+        "effects": [],
+        "journey": {
+          "operations": [
+            {
+              "kind": "starting_gold",
+              "amount": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "d2730000-0000-4000-8000-000000000005",
+      "card_number": "URVIN-AURA-SOLITUDE",
+      "key": "solitude",
+      "name": "Аура Одиночества",
+      "description": "Только для одного героя. Весь опыт, полученный в забеге, удваивается.",
+      "type": "Эффект",
+      "rarity": "uncommon",
+      "image_url": "/assets/urvin/auras/solitude.png",
+      "mechanics": {
+        "activation": {
+          "mode": "passive"
+        },
+        "effects": [],
+        "journey": {
+          "max_party_size": 1,
+          "operations": [
+            {
+              "kind": "experience_multiplier",
+              "value": 2
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "id": "sleeping-goblins",
+      "name": "Сундук под храп",
+      "description": "Гоблины уснули у запертого сундука. Один обнял ржавый горн; ключа не видно.",
+      "options": [
+        {
+          "id": "quiet",
+          "name": "Прокрасться и вскрыть замок",
+          "description": "Скрытность СЛ 12, затем Ловкость рук СЛ 13. Провал поднимет тревогу.",
+          "checks": [
+            {
+              "skill": "stealth",
+              "ability": "dex",
+              "dc": 12
+            },
+            {
+              "skill": "sleight_of_hand",
+              "ability": "dex",
+              "dc": 13
+            }
+          ],
+          "success": {
+            "reward": {
+              "experience": 45,
+              "gold": [
+                25,
+                45
+              ],
+              "loot_min_rarity": "common"
+            }
+          },
+          "failure": {
+            "combat": "normal",
+            "encounter_id": "goblin-watch"
+          }
+        },
+        {
+          "id": "force",
+          "name": "Взломать сундук и припугнуть стражу",
+          "description": "Атлетика СЛ 13, затем Запугивание СЛ 12. Провал приведёт к бою.",
+          "checks": [
+            {
+              "skill": "athletics",
+              "ability": "str",
+              "dc": 13
+            },
+            {
+              "skill": "intimidation",
+              "ability": "cha",
+              "dc": 12
+            }
+          ],
+          "success": {
+            "reward": {
+              "experience": 45,
+              "gold": [
+                25,
+                45
+              ],
+              "loot_min_rarity": "common"
+            }
+          },
+          "failure": {
+            "combat": "normal",
+            "encounter_id": "goblin-watch"
+          }
+        },
+        {
+          "id": "ambush",
+          "name": "Напасть, пока они спят",
+          "description": "Начать бой. Застигнутые врасплох гоблины получают помеху к инициативе.",
+          "success": {
+            "combat": "normal",
+            "encounter_id": "goblin-watch",
+            "surprise": true
+          }
+        },
+        {
+          "id": "leave",
+          "name": "Пройти мимо",
+          "description": "Ничего не получить и не рисковать.",
+          "success": {}
+        }
+      ]
+    },
+    {
+      "id": "drowned-purse",
+      "name": "Золото под тиной",
+      "description": "В мелком омуте блестит тяжёлая сумка. На берегу видны обломки ловушки.",
+      "options": [
+        {
+          "id": "recover",
+          "name": "Достать сумку шестом",
+          "description": "Анализ СЛ 12, затем Ловкость рук СЛ 12. Неудача: порезы, 1к4 урона.",
+          "checks": [
+            {
+              "skill": "investigation",
+              "ability": "int",
+              "dc": 12
+            },
+            {
+              "skill": "sleight_of_hand",
+              "ability": "dex",
+              "dc": 12
+            }
+          ],
+          "success": {
+            "reward": {
+              "experience": 35,
+              "gold": [
+                40,
+                65
+              ]
+            }
+          },
+          "failure": {
+            "damage": "1d4"
+          }
+        },
+        {
+          "id": "wade",
+          "name": "Зайти в воду",
+          "description": "Получить 1к4 урона и забрать 30–45 золотых.",
+          "success": {
+            "damage": "1d4",
+            "reward": {
+              "experience": 20,
+              "gold": [
+                30,
+                45
+              ]
+            }
+          }
+        },
+        {
+          "id": "leave",
+          "name": "Оставить сумку",
+          "description": "Продолжить путь.",
+          "success": {}
+        }
+      ]
+    },
+    {
+      "id": "wayside-healer",
+      "name": "Хранительница тропы",
+      "description": "Путница греет травяной отвар. Она предлагает перевязать раны в обмен на монеты или помощь.",
+      "options": [
+        {
+          "id": "pay",
+          "name": "Оплатить лечение",
+          "description": "30 золотых за группу. Каждый герой восстанавливает 2к6 хитов.",
+          "cost_gold": 30,
+          "success": {
+            "healing": "2d6"
+          }
+        },
+        {
+          "id": "help",
+          "name": "Помочь приготовить отвар",
+          "description": "Медицина СЛ 13. При успехе каждый восстановит 1к6 хитов; при провале травы испортятся.",
+          "checks": [
+            {
+              "skill": "medicine",
+              "ability": "wis",
+              "dc": 13
+            }
+          ],
+          "success": {
+            "healing": "1d6",
+            "reward": {
+              "experience": 35,
+              "gold": [
+                0,
+                0
+              ]
+            }
+          },
+          "failure": {}
+        },
+        {
+          "id": "leave",
+          "name": "Поблагодарить и уйти",
+          "description": "Продолжить путь.",
+          "success": {}
+        }
+      ]
+    },
+    {
+      "id": "sealed-shrine",
+      "name": "Печать забытого храма",
+      "description": "Амулет покоится в каменной нише. Вокруг выгравированы предупреждения, а из глубины слышен скрежет.",
+      "options": [
+        {
+          "id": "ritual",
+          "name": "Разобраться в печати",
+          "description": "Магия СЛ 13, затем Религия СЛ 12. Провал пробудит элитного стража.",
+          "checks": [
+            {
+              "skill": "arcana",
+              "ability": "int",
+              "dc": 13
+            },
+            {
+              "skill": "religion",
+              "ability": "int",
+              "dc": 12
+            }
+          ],
+          "success": {
+            "reward": {
+              "experience": 60,
+              "gold": [
+                20,
+                35
+              ],
+              "loot_min_rarity": "uncommon"
+            }
+          },
+          "failure": {
+            "combat": "elite"
+          }
+        },
+        {
+          "id": "break",
+          "name": "Сорвать печать",
+          "description": "Получить 1к6 урона; забрать необычный предмет.",
+          "success": {
+            "damage": "1d6",
+            "reward": {
+              "experience": 25,
+              "gold": [
+                0,
+                0
+              ],
+              "loot_min_rarity": "uncommon"
+            }
+          }
+        },
+        {
+          "id": "leave",
+          "name": "Не тревожить храм",
+          "description": "Продолжить путь.",
+          "success": {}
+        }
+      ]
+    },
+    {
+      "id": "broken-bridge",
+      "name": "Мост над ущельем",
+      "description": "Мост держится на одном канате. На дальней опоре оставлен заплечный мешок.",
+      "options": [
+        {
+          "id": "balance",
+          "name": "Пройти по балке",
+          "description": "Акробатика СЛ 13. Неудача: 1к6 урона; герой успеет вернуться на уступ.",
+          "checks": [
+            {
+              "skill": "acrobatics",
+              "ability": "dex",
+              "dc": 13
+            }
+          ],
+          "success": {
+            "reward": {
+              "experience": 40,
+              "gold": [
+                20,
+                40
+              ],
+              "loot_min_rarity": "common"
+            }
+          },
+          "failure": {
+            "damage": "1d6"
+          }
+        },
+        {
+          "id": "repair",
+          "name": "Найти надёжную переправу",
+          "description": "Выживание СЛ 12, затем Атлетика СЛ 12. При провале награды не будет.",
+          "checks": [
+            {
+              "skill": "survival",
+              "ability": "wis",
+              "dc": 12
+            },
+            {
+              "skill": "athletics",
+              "ability": "str",
+              "dc": 12
+            }
+          ],
+          "success": {
+            "reward": {
+              "experience": 50,
+              "gold": [
+                15,
+                30
+              ],
+              "loot_min_rarity": "common"
+            }
+          },
+          "failure": {}
+        },
+        {
+          "id": "leave",
+          "name": "Обойти ущелье",
+          "description": "Безопасно продолжить путь без награды.",
+          "success": {}
+        }
+      ]
+    }
+  ],
+  "encounters": [
+    {
+      "id": "goblin-watch",
+      "kind": "normal",
+      "min_level": 1,
+      "max_level": 5,
+      "monsters": [{"slug": "goblin-warrior", "quantity": 2, "per_member": true}],
+      "map_ids": ["urvin-archive-v1", "urvin-causeway-v1"]
+    },
+    {
+      "kind": "elite",
+      "min_level": 1,
+      "max_level": 1,
+      "monsters": [
+        {
+          "slug": "urvin-goblin-warden",
+          "quantity": 1,
+          "per_member": true
+        }
+      ],
+      "map_ids": [
+        "urvin-archive-v1",
+        "urvin-causeway-v1",
+        "urvin-court-v1"
+      ]
+    },
+    {
+      "kind": "elite",
+      "min_level": 2,
+      "max_level": 2,
+      "monsters": [
+        {
+          "slug": "urvin-stone-warden",
+          "quantity": 1,
+          "per_member": true
+        }
+      ],
+      "map_ids": [
+        "urvin-archive-v1",
+        "urvin-causeway-v1",
+        "urvin-court-v1"
+      ]
+    },
+    {
+      "kind": "elite",
+      "min_level": 3,
+      "max_level": 3,
+      "monsters": [
+        {
+          "slug": "urvin-ash-hound",
+          "quantity": 1,
+          "per_member": true
+        }
+      ],
+      "map_ids": [
+        "urvin-archive-v1",
+        "urvin-causeway-v1",
+        "urvin-court-v1"
+      ]
+    },
+    {
+      "kind": "elite",
+      "min_level": 4,
+      "max_level": 4,
+      "monsters": [
+        {
+          "slug": "urvin-harbinger",
+          "quantity": 1,
+          "per_member": true
+        }
+      ],
+      "map_ids": [
+        "urvin-archive-v1",
+        "urvin-causeway-v1",
+        "urvin-court-v1"
+      ]
+    },
+    {
+      "kind": "elite",
+      "min_level": 5,
+      "max_level": 5,
+      "monsters": [
+        {
+          "slug": "urvin-dreadlord",
+          "quantity": 1,
+          "per_member": true
+        }
+      ],
+      "map_ids": [
+        "urvin-archive-v1",
+        "urvin-causeway-v1",
+        "urvin-court-v1"
+      ]
+    },
+    {
+      "kind": "boss",
+      "min_level": 1,
+      "max_level": 1,
+      "monsters": [
+        {
+          "slug": "urvin-stone-warden",
+          "quantity": 1,
+          "hp_per_extra_member": 0.75
+        },
+        {
+          "slug": "goblin-warrior",
+          "quantity": 1,
+          "per_extra_member": true
+        }
+      ],
+      "map_ids": [
+        "urvin-court-v1"
+      ]
+    },
+    {
+      "kind": "boss",
+      "min_level": 2,
+      "max_level": 2,
+      "monsters": [
+        {
+          "slug": "urvin-ash-hound",
+          "quantity": 1,
+          "hp_per_extra_member": 0.75
+        },
+        {
+          "slug": "goblin-warrior",
+          "quantity": 1,
+          "per_extra_member": true
+        }
+      ],
+      "map_ids": [
+        "urvin-court-v1"
+      ]
+    },
+    {
+      "kind": "boss",
+      "min_level": 3,
+      "max_level": 3,
+      "monsters": [
+        {
+          "slug": "urvin-harbinger",
+          "quantity": 1,
+          "hp_per_extra_member": 0.75
+        },
+        {
+          "slug": "goblin-warrior",
+          "quantity": 1,
+          "per_extra_member": true
+        }
+      ],
+      "map_ids": [
+        "urvin-court-v1"
+      ]
+    },
+    {
+      "kind": "boss",
+      "min_level": 4,
+      "max_level": 4,
+      "monsters": [
+        {
+          "slug": "urvin-dreadlord",
+          "quantity": 1,
+          "hp_per_extra_member": 0.75
+        },
+        {
+          "slug": "goblin-warrior",
+          "quantity": 1,
+          "per_extra_member": true
+        }
+      ],
+      "map_ids": [
+        "urvin-court-v1"
+      ]
+    },
+    {
+      "kind": "boss",
+      "min_level": 5,
+      "max_level": 5,
+      "monsters": [
+        {
+          "slug": "urvin-dreadlord",
+          "quantity": 1,
+          "hp_per_extra_member": 0.75
+        },
+        {
+          "slug": "goblin-warrior",
+          "quantity": 1,
+          "per_extra_member": true
+        }
+      ],
+      "map_ids": [
+        "urvin-court-v1"
+      ]
+    }
+  ]
+}

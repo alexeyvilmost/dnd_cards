@@ -259,6 +259,45 @@ Runner рассчитан на уже инициализированный produ
 Все команды этого раздела выполняются локально в PowerShell из корня
 репозитория.
 
+### Постоянный SSH-ключ для выкладки
+
+Для повторных релизов используется одна отдельная Ed25519-пара вне репозитория:
+
+```powershell
+$KeyDir = Join-Path $env:USERPROFILE '.ssh'
+$SshKey = Join-Path $KeyDir 'bagofholding_timeweb_ed25519'
+$PublicKey = "$SshKey.pub"
+```
+
+Создай её один раз только если пара отсутствует; никогда не перезаписывай
+существующий ключ:
+
+```powershell
+if ((Test-Path -LiteralPath $SshKey) -or (Test-Path -LiteralPath $PublicKey)) {
+    throw "Deploy key already exists; refusing to overwrite"
+}
+ssh-keygen -t ed25519 -N "" -C "dnd_cards-timeweb-production-deploy" -f $SshKey
+if ($LASTEXITCODE -ne 0) { throw "ssh-keygen failed" }
+icacls.exe $SshKey /inheritance:r /grant:r "$($env:USERNAME):(R)"
+if ($LASTEXITCODE -ne 0) { throw "Could not restrict private-key ACL" }
+```
+
+Ключ без passphrase нужен для неинтерактивных релизов; доступ к закрытому файлу
+ограничен ACL текущего Windows-пользователя. Не копируй приватный файл в проект,
+`.env`, временный каталог или TimeWeb. Передай в панель только `$PublicKey`:
+открой сервер → «Доступ» → «Изменить», добавь публичный ключ и сохрани. Панель
+TimeWeb устанавливает его на существующий сервер; дождись распространения и
+проверь доступ до первой выкладки:
+
+```powershell
+ssh -i $SshKey -o IdentitiesOnly=yes -o BatchMode=yes root@77.95.206.239 "id -u"
+if ($LASTEXITCODE -ne 0) { throw "Persistent deploy SSH access is not ready" }
+```
+
+Ожидаемый вывод — `0`. Этот ключ является постоянным root-доступом для выкладки:
+обычный релиз его не меняет и не удаляет. Если установка или проверка не прошла,
+остановись; не сбрасывай пароль и не меняй политику SSH.
+
 ### 1. Убедиться, что выкладывается точный `origin/main`
 
 ```powershell
@@ -316,7 +355,7 @@ PostgreSQL DSN. Финальный deployment-health gate этого сцена�
 
 ```powershell
 $Server = 'root@77.95.206.239'
-$SshKey = 'C:\Users\Алексей\.ssh\bagofholding_timeweb_ed25519'
+$SshKey = Join-Path (Join-Path $env:USERPROFILE '.ssh') 'bagofholding_timeweb_ed25519'
 $TempDir = Join-Path $env:TEMP ("bagofholding-deploy-" + [guid]::NewGuid())
 $Archive = Join-Path $TempDir "$Sha.tar"
 
@@ -494,7 +533,8 @@ Remove-Item Env:LIVE_BROWSER_PASSWORD_A
 SHA, несовпавший certificate release и выкаченный, но сломанный UX одинаково
 блокируют закрытие релиза.
 
-После успешной проверки временный локальный каталог можно удалить:
+После успешной проверки временный локальный каталог с архивом можно удалить. В нём
+не должно быть SSH-ключей; постоянный ключ находится в `$env:USERPROFILE\.ssh`:
 
 ```powershell
 $ResolvedTemp = [IO.Path]::GetFullPath($TempDir)

@@ -51,13 +51,13 @@ export default function SheetRunPanel({ runId, characterId, onLoaded }: {
         {run.status !== 'active' ? <Link className="sheet-header-btn" to={`/roguelike/${run.id}`}>Результат забега</Link>
           : run.phase === 'combat' ? <Link className="sheet-header-btn" to={runCombatURL(run)}><Swords size={16} />Вернуться в бой</Link>
           : <>
-            {level === 5 && run.experience >= 14000
+            {run.mode==='urvin'?<><Link className="sheet-header-btn" to={`/roguelike/${run.id}`}>Карта Урвинского забега</Link>{level<5&&run.experience>=threshold&&<Link className="sheet-header-btn" to={`/character-forge/${characterId}?levelup=1&roguelike=${run.id}`}><ChevronsUp size={16}/>{run.pending_level?'Продолжить повышение':`Уровень ${level+1}`}</Link>}</>:level === 5 && run.experience >= 14000
               ? <button className="sheet-header-btn" disabled={busy} onClick={() => void act('victory')}><Trophy size={16} />Победа!</button>
               : run.experience >= threshold
                 ? <Link className="sheet-header-btn" to={`/character-forge/${characterId}?levelup=1&roguelike=${run.id}`}><ChevronsUp size={16} />{run.pending_level ? 'Продолжить повышение' : `Уровень ${level + 1}`}</Link>
                 : run.pending_level ? <Link className="sheet-header-btn" to={`/roguelike/${run.id}`}>Дождаться повышения союзников</Link>
                 : <button className="sheet-header-btn" disabled={busy} onClick={() => void act('start_encounter')}><Swords size={16} />Следующее столкновение</button>}
-            <Link className="sheet-header-btn" to={shopURLFromPage(`/shop/roguelike?roguelike=${run.id}&character=${characterId}`,location)}><ShoppingCart size={16} />Магазин</Link>
+            {run.mode!=='urvin'&&<Link className="sheet-header-btn" to={shopURLFromPage(`/shop/roguelike?roguelike=${run.id}&character=${characterId}`,location)}><ShoppingCart size={16} />Магазин</Link>}
           </>}
         <Link className="sheet-header-btn" to={`/roguelike/${run.id}`}>Группа и лагерь</Link>
         <Link className="sheet-header-btn" to="/roguelike">Все забеги</Link>

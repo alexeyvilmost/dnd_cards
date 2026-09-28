@@ -18,6 +18,8 @@ export interface RoguelikeCombatInitialization {
   initiativeManeuverActionId?: string;
   mapIndex?: number;
   mapSeed?: number;
+  mapId?: string;
+  enemyEffects?: import('../mvp/contracts').ActiveEffectEntry[];
 }
 
 export async function initializeRoguelikeCombat(input: RoguelikeCombatInitialization, artifactHash: string) {
@@ -44,7 +46,7 @@ export async function initializeRoguelikeCombat(input: RoguelikeCombatInitializa
   const random = createRoguelikeCombatRandom(input.seed, 0);
   const state = await createSoloCombatState({character: input.character, participant: prepared.participant,
     selected, actions: [...input.monsters.actions, ...input.catalog.entities.action],
-    effects: input.monsters.effects, rng: random.rng, mapIndex: input.mapIndex, mapSeed:input.mapSeed, allies,
+    effects: input.monsters.effects, rng: random.rng, mapIndex: input.mapIndex, mapSeed:input.mapSeed, mapId:input.mapId, enemyEffects:input.enemyEffects, allies,
     ...(input.initiativeManeuverActionId ? {initiativeManeuverActionIds: {[input.character.id]: input.initiativeManeuverActionId}} : {})});
   const envelope: RoguelikeCombatEnvelope = {schemaVersion: 1, artifactHash,
     entropy: {seed: input.seed, cursor: random.cursor}, state};

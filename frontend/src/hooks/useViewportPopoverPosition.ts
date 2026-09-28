@@ -20,6 +20,8 @@ export function fitActionPopoverToViewport(
 export function useViewportPopoverPosition(
   open: boolean,
   anchor: { x: number; y: number },
+  /** Remeasure when portal content mounts or changes after `open` was already true. */
+  contentKey: string | number | boolean | null | undefined = null,
 ) {
   const popoverRef = useRef<HTMLDivElement | null>(null);
   const [popoverPos, setPopoverPos] = useState({ left: 8, top: 8 });
@@ -50,7 +52,7 @@ export function useViewportPopoverPosition(
       observer?.disconnect();
       window.removeEventListener('resize', place);
     };
-  }, [open, anchor.x, anchor.y]);
+  }, [open, anchor.x, anchor.y, contentKey]);
 
   return { popoverRef, popoverPos };
 }

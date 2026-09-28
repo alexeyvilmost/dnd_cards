@@ -38,6 +38,8 @@ import { getSpellLevelLabel } from '../types';
 import { FormattedText } from '../utils/formattedText';
 import { findResource, useResourceOptions } from '../utils/resources';
 import { BackgroundEquipment } from '../components/BackgroundEquipment';
+import { equipmentWeaponMasterySeed, weaponTypesFromEquipmentOption } from '../character/equipmentWeaponMastery';
+import { getCardsIndex } from '../utils/cardsIndex';
 import MobileOverlay from './MobileOverlay';
 import {
   MobileEntityOverlay,
@@ -527,6 +529,51 @@ export default function MobileCharacterWizard() {
     setResolvedBatch,
     recommendedChoicePolicy,
   );
+  const equipmentMasteryAutoRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!assemblyMatchesDraft || !assembled?.klass) return;
+    const masteryChoice = buildChoices.find((choice) => (
+      choice.grantKind === 'weapon_mastery' && requiresInitialCharacterChoice(choice)
+    ));
+    if (!masteryChoice) return;
+    let stale = false;
+    void getCardsIndex().then((cards) => {
+      if (stale) return;
+      const optionKey = draft.classEquipmentOption === 'b'
+        ? 'option_b'
+        : draft.classEquipmentOption === 'c' ? 'option_c' : 'option_a';
+      const option = assembled.klass?.equipment_options?.[optionKey]
+        ?? assembled.klass?.equipment_options?.option_a;
+      const weaponTypes = weaponTypesFromEquipmentOption(option, cards);
+      const seed = equipmentWeaponMasterySeed({
+        choiceId: masteryChoice.id,
+        count: masteryChoice.count,
+        optionKey: `${assembled.klass?.id}:${draft.classEquipmentOption}`,
+        weaponTypes,
+        autoFillEnabled: draft.classEquipmentOption === 'a',
+        resolved: draft.resolvedChoices,
+        previousAutoKey: equipmentMasteryAutoRef.current,
+      });
+      equipmentMasteryAutoRef.current = seed.autoKey;
+      if (seed.next) setResolvedBatch(seed.next);
+      else if (seed.clearChoiceId) {
+        setDraft((current) => {
+          if (!Object.prototype.hasOwnProperty.call(current.resolvedChoices, seed.clearChoiceId!)) return current;
+          const resolvedChoices = { ...current.resolvedChoices };
+          delete resolvedChoices[seed.clearChoiceId!];
+          return { ...current, resolvedChoices };
+        });
+      }
+    });
+    return () => { stale = true; };
+  }, [
+    assemblyMatchesDraft,
+    assembled?.klass,
+    buildChoices,
+    draft.classEquipmentOption,
+    draft.resolvedChoices,
+    setResolvedBatch,
+  ]);
   const activePickerChoice = picker?.kind === 'mechanic'
     ? buildChoices.find((choice) => choice.id === picker.choiceId)
     : undefined;

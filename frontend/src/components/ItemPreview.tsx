@@ -57,6 +57,7 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
   // Содержимое контейнера рисуем ИНЛАЙН в тёмной теме стат-блока (не через RelatedCardsList —
   // тот несёт свой светлый заголовок «Связанные карты» и светлое CardPreview-превью, чужеродные тут).
   const contents = useResolvedRefs(card.type === 'container' ? (card.contents ?? []) : []);
+  const hasDescription = Boolean(card.description?.trim());
 
   const subtype = [card.type ? getItemTypeLabel(card.type) : '', rarityLabel(card.rarity)].filter(Boolean).join(' · ');
 
@@ -150,9 +151,9 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
         </div>
       )}
 
-      <div className="sp-desc">
-        <FormattedText text={card.description || 'Описание предмета'} emptyText="Описание предмета" />
-      </div>
+      {hasDescription && <div className="sp-desc">
+        <FormattedText text={card.description} />
+      </div>}
 
       {contents.length > 0 && (
         <div className="sp-classes">

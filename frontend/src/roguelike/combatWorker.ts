@@ -194,6 +194,6 @@ export function stepRoguelikeCombat(
     state = runMonsterTurn(state, rng);
     if (canonicalSha256Sync(state) === canonicalSha256Sync(before)) throw new Error('ИИ не смог завершить ход');
   }
-  state = finalizeCombatOutcome(state);
+  state = finalizeCombatOutcome(state, rng);
   return {envelope: {...envelope, entropy: {...envelope.entropy, cursor: random.cursor}, state}, randomValues};
 }

@@ -115,7 +115,17 @@ func (catalog *roguelikeFrozenCatalog) fulfill(tx *gorm.DB, need roguelikeWorker
 		column = "id"
 	}
 	if err := tx.Where(column+" = ?", need.Reference).First(entity).Error; err != nil {
-		return fmt.Errorf("missing pinned %s: %w", need.EntityType, err)
+		// grant_spell values often use the English-name slug (bane, hunters_mark)
+		// while the library row keeps a SPELL-xxxx card_number. Resolve that alias
+		// for spells only; other kinds stay exact card_number/id lookups.
+		if need.EntityType == "spell" && column == "card_number" {
+			var spell Spell
+			if aliasErr := tx.Where(`lower(regexp_replace(regexp_replace(coalesce(name_en, ''), '''', '', 'g'), '[^a-zA-Z0-9]+', '_', 'g')) = ?`,
+				strings.ToLower(need.Reference)).First(&spell).Error; aliasErr == nil {
+				return catalog.add(need.EntityType, spell)
+			}
+		}
+		return fmt.Errorf("missing pinned %s %s: %w", need.EntityType, need.Reference, err)
 	}
 	return catalog.add(need.EntityType, entity)
 }
@@ -140,6 +150,8 @@ func initializeRoguelikeWorker(ctx context.Context, tx *gorm.DB, client roguelik
 	}
 	input := map[string]any{"character": run.Character, "catalog": &catalog, "basicActionIds": ids,
 		"monsters": run.Encounter["catalog"], "roster": run.Encounter["roster"], "seed": seed, "initiativeManeuverActionId": initiativeManeuverActionID}
+	input["mapId"] = run.Encounter["map_id"]
+	input["enemyEffects"] = run.Encounter["enemy_effects"]
 	if index, ok := run.Encounter["map_index"]; ok {
 		input["mapIndex"] = index
 	}

@@ -11,6 +11,7 @@ import {useSiteSettings} from '../settings';
 import SheetActionLine from './SheetActionLine';
 import './RunPartyCamp.css';
 import HealingPulse from '../audio/HealingPulse';
+import UrvinJourney from './UrvinJourney';
 import {formatCopper} from '../utils/money';
 import {runMoneyCopper} from '../roguelike/money';
 
@@ -43,7 +44,7 @@ export default function RunPartyCamp({run,onUpdated}:{run:RoguelikeRun;onUpdated
     if(busy)return;setBusy(true);setError('');
     try{
       const next=await roguelikeApi.command(run.id,run.revision,type,payload);onUpdated(next);notifyRunUpdated();
-      if(type==='start_encounter')navigate(runCombatURL(next));
+      if(type==='start_encounter'||(next.phase==='combat'&&run.phase!=='combat'))navigate(runCombatURL(next));
     }catch(e){setError(e instanceof Error?e.message:'Не удалось выполнить действие');
       try{onUpdated(await roguelikeApi.get(run.id));}catch{/* keep last confirmed state */}
     }finally{setBusy(false)}
@@ -53,22 +54,25 @@ export default function RunPartyCamp({run,onUpdated}:{run:RoguelikeRun;onUpdated
   return <main className="roguelike-shell run-party-camp">
     <Link className="roguelike-back" to="/roguelike">← Все забеги</Link>
     <header className="roguelike-camp-header">
-      <div><p className="roguelike-kicker">{camp?'ОБЩИЙ ЛАГЕРЬ':'ГРУППА В БОЮ'}</p><h1><Users size={30}/> {members.length===1?'Одинокий путник':`Группа · ${members.length} героев`}</h1>
+      <div><p className="roguelike-kicker">{run.mode==='urvin'?'УРВИНСКИЙ ЗАБЕГ':camp?'ОБЩИЙ ЛАГЕРЬ':'ГРУППА В БОЮ'}</p><h1><Users size={30}/> {members.length===1?'Одинокий путник':`Группа · ${members.length} героев`}</h1>
         <p>Попытка {run.attempt} · {run.encounters_won} побед · {run.experience} опыта каждому · {run.game_clock_hours} ч.</p></div>
       <div className="roguelike-wallet"><strong>{formatCopper(runMoneyCopper(run))}</strong><span>в общем кошельке</span><strong>{run.supplies}</strong><span>комплектов припасов</span></div>
     </header>
     {error&&<p role="alert" className="roguelike-error">{error}</p>}
+    {run.mode==='urvin'&&run.journey&&<UrvinJourney run={run} busy={busy} command={command}/>}
     <div className="run-party-controls">
       {camp?<>
+        {run.mode!=='urvin'&&<>
         {run.experience>=14000?<button className="roguelike-primary" disabled={busy} onClick={()=>void command('victory')}>Завершить забег</button>
           :<button className="roguelike-primary" disabled={busy||!!run.pending_level||members.some(c=>c.level!==earned)} onClick={()=>void command('start_encounter')}><Swords size={17}/> Следующее столкновение</button>}
         <Link className="roguelike-secondary" to={shopURLFromPage(`/shop/roguelike?roguelike=${run.id}&character=${run.character_id}`,location)}>Магазин</Link>
+        </>}
         {members.length>1&&<button className="roguelike-secondary" onClick={()=>setTransferOpen(v=>!v)}><Backpack size={17}/> Передать предметы</button>}
-        <button className="roguelike-secondary" disabled={busy||downed} onClick={()=>void command('short_rest')}>Короткий отдых · 1 ч.</button>
-        <button className="roguelike-secondary" disabled={busy||downed||run.supplies<members.length} onClick={()=>void command('long_rest',{preserve_preparation:true})}><Flame size={17}/> Долгий отдых · {members.length} припасов</button>
-      </>:<Link className="roguelike-primary" to={runCombatURL(run)}><Swords size={17}/> Продолжить бой</Link>}
+        {run.mode!=='urvin'&&<><button className="roguelike-secondary" disabled={busy||downed} onClick={()=>void command('short_rest')}>Короткий отдых · 1 ч.</button>
+        <button className="roguelike-secondary" disabled={busy||downed||run.supplies<members.length} onClick={()=>void command('long_rest',{preserve_preparation:true})}><Flame size={17}/> Долгий отдых · {members.length} припасов</button></>}
+      </>:run.mode!=='urvin'&&<Link className="roguelike-primary" to={runCombatURL(run)}><Swords size={17}/> Продолжить бой</Link>}
     </div>
-    <p className="run-party-help">Отдых общий и синхронный. В листе участника можно потратить его кости хитов, выбрать подготовку или применить способность к союзнику. Кнопки отдыха здесь сохраняют текущую подготовку; короткий отдых не тратит кости хитов.</p>
+    {run.mode!=='urvin'&&<p className="run-party-help">Отдых общий и синхронный. В листе участника можно потратить его кости хитов, выбрать подготовку или применить способность к союзнику. Кнопки отдыха здесь сохраняют текущую подготовку; короткий отдых не тратит кости хитов.</p>}
     {downed&&camp&&<p className="run-party-help">Есть участник с 0 хитов: сначала помогите ему действием союзника. Все изменения сохраняются в его листе.</p>}
     <section className="run-party-roster" aria-label="Участники группы">
       {members.map(c=><article key={c.id} className={`run-party-member${c.current_hp<1?' is-downed':''}`}>

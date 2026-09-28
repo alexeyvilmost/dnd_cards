@@ -54,6 +54,15 @@
 }
 .forge-header :is(button, a) { font-family: Inter, system-ui, sans-serif; letter-spacing: normal; }
 .forge-header-spacer { grid-column: 1; }
+.forge-brand-link {
+  justify-self: start;
+  color: var(--forge-text);
+  font: 700 16px/1.2 Inter, system-ui, sans-serif;
+  letter-spacing: normal;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+.forge-brand-link:hover { color: var(--forge-gold); }
 .forge-header-title {
   font-family: Georgia, 'Times New Roman', serif;
   grid-column: 2;
@@ -586,6 +595,7 @@
   gap: 12px;
   position: relative;
 }
+.forge-header-layout { grid-template-columns: minmax(140px, 210px) minmax(0, 1fr) min(390px, 414px); }
 .sheet-header-bar .sheet-back { position: static; transform: none; }
 .sheet-header-bar .sheet-header-actions { position: static; transform: none; justify-content: flex-end; }
 .sheet-header-center {
@@ -1192,6 +1202,9 @@
     gap: 8px;
     padding: 10px 12px;
   }
+  .forge-header-layout { grid-template-columns: minmax(0, 1fr) auto; }
+  .forge-header-layout .forge-brand-link { font-size: 13px; }
+  .forge-header-layout .forge-header-title { font-size: 18px; }
   .sheet-header-bar .sheet-header-actions { grid-column: 1 / -1; justify-content: flex-end; }
   .sheet-header-center { max-width: 100%; }
   .sheet-header-actions {

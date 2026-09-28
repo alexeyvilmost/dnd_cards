@@ -20,7 +20,7 @@ import {previewAttackDefense} from '../rules-core/handler';
 import {useSiteSettings} from '../settings';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
-import { actionsApi, effectsApi } from '../api/client';
+import { actionsApi, effectsApi, ApiRequestError } from '../api/client';
 import { charactersV3Api } from '../character/api';
 import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
 import { playerFacingSheetActionError } from '../character/sheetActionError';
@@ -28,7 +28,13 @@ import {
   runtimeInventoryPayload,
   writeRulesEngineRuntimeTurnState,
 } from '../character/runtime';
-import { newSheetRuntimeCommandId } from '../character/sheetCombatSession';
+
+function combatBootstrapError(reason: unknown): string {
+  if (reason instanceof ApiRequestError) {
+    return reason.code ? `${reason.code}: ${reason.message}` : reason.message;
+  }
+  return reason instanceof Error ? reason.message : 'Не удалось начать бой';
+}import { newSheetRuntimeCommandId } from '../character/sheetCombatSession';
 import type { SheetCanonicalRuntime } from '../character/sheetCanonicalWorld';
 import { sheetWorldInputFormContext } from '../character/sheetWorldInputForm';
 import type { ForgeCharacter } from '../character/types';
@@ -190,6 +196,8 @@ export default function SoloCombatPage() {
   }, [monsterTemplateKey]);
   const [openingState, setOpeningState] = useState<SoloCombatState | null>(null);
   const [rewardRun, setRewardRun] = useState<RoguelikeRun | null>(null);
+  const [rewardTransitionFailed, setRewardTransitionFailed] = useState(false);
+  const autoRewardStartedRef = useRef(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const presentation = useCombatPresentation(state, openingState);
   useCombatAudio(state,presentation.playing,presentation.initiative,presentation.blocked);
@@ -486,7 +494,7 @@ export default function SoloCombatPage() {
       } catch (reason) {
         if (active) {
           setStaleRulesSnapshot(isIncompatibleCombatRulesError(reason));
-          setError(reason instanceof Error ? reason.message : 'Не удалось начать бой'); setBusy(false);
+          setError(combatBootstrapError(reason)); setBusy(false);
         }
       }
     })();
@@ -1020,6 +1028,7 @@ export default function SoloCombatPage() {
     const currentCharacter = characterRef.current;
     if (!currentCharacter || !state || !id) return;
     setBusy(true);
+    setRewardTransitionFailed(false);
     try {
       if (roguelikeRunId) {
         const run = await roguelikeApi.get(roguelikeRunId);
@@ -1085,8 +1094,18 @@ export default function SoloCombatPage() {
       });
       characterRef.current = saved;
       navigate(`/characters-v3/${id}`);
-    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Не удалось завершить бой'); setBusy(false); }
+    } catch (reason) {
+      if (roguelikeRunId && state.outcome === 'victory') setRewardTransitionFailed(true);
+      setError(reason instanceof Error ? reason.message : 'Не удалось завершить бой'); setBusy(false);
+    }
   };
+
+  useEffect(() => {
+    if (state?.outcome === 'active') autoRewardStartedRef.current = false;
+    if (!state || state.outcome !== 'victory' || !roguelikeRunId || !character || !id || rewardRun || busy || presentation.blocked || autoRewardStartedRef.current) return;
+    autoRewardStartedRef.current = true;
+    void finish();
+  }, [state?.outcome, roguelikeRunId, character, id, rewardRun, busy, presentation.blocked, finish]);
 
   if (!state || !character) {
     return <main className="solo-combat-loading"><h1>Подготовка поля боя</h1><p>{error ?? 'Компилируем лист, монстров и инициативу…'}</p>{staleRulesSnapshot && <button type="button" onClick={() => void resetStaleCombat()}>Сбросить устаревший бой</button>}{error && <Link to={`/characters-v3/${id}`}>Вернуться в лист</Link>}</main>;
@@ -1406,10 +1425,10 @@ export default function SoloCombatPage() {
       {!secondaryActionId && <CombatTriggeredActionPanel state={state} busy={busy} onChoose={resolveTriggeredChoice} />}
       {pendingTurnStart && <div className="combat-reaction-backdrop"><section><p>НАЧАЛО ХОДА</p><h2>Нанести 1к4 урона существу в захвате?</h2><div>{pendingTurnStart.targetActorIds.map((targetActorId) => <button type="button" key={targetActorId} disabled={busy} onClick={() => applyIntent({type: 'turn_start', targetActorId: targetActorId}, () => resolveSoloCombatTurnStart(state, targetActorId))}>{state.world.actors[targetActorId]?.name ?? 'Цель'} · 1к4 дробящего урона</button>)}<button type="button" disabled={busy} onClick={() => applyIntent({type: 'turn_start', targetActorId: null}, () => resolveSoloCombatTurnStart(state, null))}>Пропустить</button></div></section></div>}
       {worldInputDialog.dialog}
-      {!rewardRun && !presentation.blocked && shouldShowSoloCombatOutcome(state) && <div className="combat-outcome"><section><p>БОЙ ЗАВЕРШЁН</p><h1>{state.outcome === 'victory' ? 'Победа' : 'Поражение'}</h1><p>{state.outcome === 'victory' ? 'Все противники уничтожены.' : controlledCharacterIds(state).some(actorId => {
+      {!rewardRun && !presentation.blocked && shouldShowSoloCombatOutcome(state) && !(roguelikeRunId && state.outcome === 'victory' && !rewardTransitionFailed) && <div className="combat-outcome"><section><p>БОЙ ЗАВЕРШЁН</p><h1>{state.outcome === 'victory' ? 'Победа' : 'Поражение'}</h1><p>{state.outcome === 'victory' ? rewardTransitionFailed ? 'Не удалось открыть награды. Можно повторить попытку.' : 'Все противники уничтожены.' : controlledCharacterIds(state).some(actorId => {
         const actor = state.world.actors[actorId];
         return actor?.runtime.deathSaves?.dead || (actor?.runtime.deathSaves?.failures ?? 0) >= 3 || actor?.lifecycle?.status === 'dead';
-      }) ? 'Один из участников погиб. Забег завершён поражением.' : 'Никто из участников не может продолжать бой.'}</p><button type="button" disabled={busy} onClick={finish}>{roguelikeRunId ? state.outcome === 'victory' ? 'Получить награду' : 'Повторить с контрольной точки' : 'Завершить и вернуться в лист'}</button><button type="button" onClick={() => navigate(roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`)}><RotateCcw size={16} /> {roguelikeRunId ? 'Вернуться в забег' : 'Оставить запись боя'}</button></section></div>}
+      }) ? 'Один из участников погиб. Забег завершён поражением.' : 'Никто из участников не может продолжать бой.'}</p><button type="button" disabled={busy} onClick={finish}>{roguelikeRunId ? state.outcome === 'victory' ? 'Повторить получение наград' : 'Повторить с контрольной точки' : 'Завершить и вернуться в лист'}</button><button type="button" onClick={() => navigate(roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`)}><RotateCcw size={16} /> {roguelikeRunId ? 'Вернуться в забег' : 'Оставить запись боя'}</button></section></div>}
     </main>
   );
 }
