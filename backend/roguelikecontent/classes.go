@@ -8,13 +8,16 @@ import (
 //go:embed classes.json
 var runClassesJSON []byte
 
-// Shared with frontend eligibility. This is mode admission, not class mechanics.
-func StartingClassCards() []string {
+// Shared with frontend eligibility. Admission depends on level, not class.
+func StartingLevel() int {
 	var policy struct {
-		ClassCards []string `json:"class_cards"`
+		StartingLevel int `json:"starting_level"`
 	}
 	if err := json.Unmarshal(runClassesJSON, &policy); err != nil {
 		panic(err)
 	}
-	return policy.ClassCards
+	if policy.StartingLevel < 1 {
+		panic("invalid roguelike starting level")
+	}
+	return policy.StartingLevel
 }

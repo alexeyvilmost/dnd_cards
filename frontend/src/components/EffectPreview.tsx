@@ -115,22 +115,22 @@ const EffectPreview = ({ effect, className = '', disableHover = false, onClick, 
       {/* Авто-описание механики (сырые id/стоимость/использования) — прячем в режиме игрока. */}
       {!playerMode && (mechDesc.summary || mechDesc.details.length > 0) && (
         <div className="sp-desc" style={{ marginBottom: 4 }}>
-          {mechDesc.summary && <FormattedText text={mechDesc.summary} emptyText="" />}
+          {mechDesc.summary && <FormattedText onDark text={mechDesc.summary} emptyText="" />}
           {mechDesc.details.map((d, i) => (
             <div key={i} style={{ fontSize: '0.85em', opacity: 0.75 }}>
-              <FormattedText text={d} emptyText="" />
+              <FormattedText onDark text={d} emptyText="" />
             </div>
           ))}
         </div>
       )}
 
       <div className="sp-desc" style={descStyle}>
-        <FormattedText text={effect.description || 'Описание эффекта'} emptyText="Описание эффекта" />
+        <FormattedText onDark text={effect.description || 'Описание эффекта'} emptyText="Описание эффекта" />
       </div>
 
       {effect.show_detailed_description && effect.detailed_description && (
         <div className="sp-upcast" style={detailStyle}>
-          <FormattedText text={effect.detailed_description} emptyText="" />
+          <FormattedText onDark text={effect.detailed_description} emptyText="" />
         </div>
       )}
 

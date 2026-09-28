@@ -17,11 +17,12 @@ import {setSetting} from '../settings';
 import SoloCombatPage from './SoloCombatPage';
 
 const mocks = vi.hoisted(() => ({
-  characterGet:vi.fn(), runGet:vi.fn(), command:vi.fn(),
+  characterGet:vi.fn(), runGet:vi.fn(), command:vi.fn(), monsterGet:vi.fn(),
   choiceRequest:vi.fn(async () => ({})), scene:{current:null as BattleSceneProps | null},
 }));
 vi.mock('../character/api', () => ({charactersV3Api:{get:mocks.characterGet}}));
 vi.mock('../roguelike/api', () => ({roguelikeApi:{get:mocks.runGet, command:mocks.command}}));
+vi.mock('../monsters/api', () => ({monstersApi:{get:mocks.monsterGet}}));
 vi.mock('../api/client', async original => ({...await original<typeof import('../api/client')>(),
   resourcesApi:{getResources:async () => ({resources:[]})},
 }));
@@ -140,7 +141,7 @@ describe('real combat page uses one canonical pipeline in 2D and 3D', () => {
     expect(container.querySelector('[data-action-id="parity-shot"]')!.className).toContain('is-selected');
     await click(button('Настройки боя'));
     const dialog=document.querySelector('[role="dialog"][aria-label="Настройки"]')!;
-    expect(dialog.textContent).toContain('3D бои');
+    expect(dialog.textContent).toContain('Монетки на поле');
     await click(dialog.querySelector<HTMLInputElement>('input[type="checkbox"]')!);
     expect(container.querySelector('[data-testid="mock-r3f"]')).not.toBeNull();
     expect(container.querySelector('[data-action-id="parity-shot"]')!.className).toContain('is-selected');
@@ -151,6 +152,22 @@ describe('real combat page uses one canonical pipeline in 2D and 3D', () => {
     await act(async()=>setSetting('combat3d',false));mocks.scene.current=null;
     expect(container.querySelector('[data-testid="tactical-map"]')).not.toBeNull();
     expect(container.querySelector('[data-action-id="parity-shot"]')!.className).toContain('is-selected');
+  });
+
+  it('uses refreshed bestiary portraits for old combat tokens without rewriting the saved state', async () => {
+    const state=fixtureState();
+    state.tokens[ENEMY].templateId='guard-template';
+    state.tokens[ENEMY].tokenUrl='old-guard.png';
+    state.tokens[OTHER].templateId='other-template';
+    state.tokens[OTHER].tokenUrl=undefined;
+    mocks.monsterGet.mockImplementation(async (id:string) => ({token_url:`fresh-${id}.png`}));
+    await mount(true,state);
+    await settle();
+    expect(mocks.scene.current?.state.tokens[ENEMY].tokenUrl).toBe('fresh-guard-template.png');
+    expect(mocks.scene.current?.state.tokens[OTHER].tokenUrl).toBe('fresh-other-template.png');
+    expect(envelope.state.tokens[ENEMY].tokenUrl).toBe('old-guard.png');
+    expect(envelope.state.tokens[OTHER].tokenUrl).toBeUndefined();
+    expect(mocks.command).not.toHaveBeenCalled();
   });
 
   it.each([false,true])('ranged selection, canonical command and real roll dialog work with 3D=%s', async three => {

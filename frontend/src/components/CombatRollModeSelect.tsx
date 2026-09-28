@@ -13,6 +13,7 @@ export default function CombatRollModeSelect() {
       <option value="standard">Стандарт</option>
       <option value="fast">Быстрый режим</option>
       <option value="skip">Пропустить окно</option>
+      <option value="field" disabled={!settings.combat3d}>Кубики на поле</option>
     </select>
   </label>)}</div>;
 }

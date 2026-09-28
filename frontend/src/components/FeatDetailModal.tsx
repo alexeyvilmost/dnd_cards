@@ -53,7 +53,7 @@ const FeatDetailModal: React.FC<FeatDetailModalProps> = ({ feat, isOpen, onClose
         </>
       )}
     >
-      <EdmDesc><FormattedText text={feat.description || ''} emptyText="—" /></EdmDesc>
+      <EdmDesc><FormattedText onDark text={feat.description || ''} emptyText="—" /></EdmDesc>
 
       {feat.repeatable && (
         <div className="edm-tags"><EdmTag>Повторяемая</EdmTag></div>
@@ -67,7 +67,7 @@ const FeatDetailModal: React.FC<FeatDetailModalProps> = ({ feat, isOpen, onClose
       </EdmFields>
 
       {feat.detailed_description && (
-        <EdmBlock label="Дополнительное описание"><FormattedText text={feat.detailed_description} emptyText="" /></EdmBlock>
+        <EdmBlock label="Дополнительное описание"><FormattedText onDark text={feat.detailed_description} emptyText="" /></EdmBlock>
       )}
     </EntityDetailShell>
   );

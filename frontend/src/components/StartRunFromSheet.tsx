@@ -4,11 +4,11 @@ import {roguelikeApi} from '../roguelike/api';
 import {isRunEligible} from '../roguelike/eligibility';
 import type {ForgeCharacter} from '../character/types';
 
-export default function StartRunFromSheet({character, eligibleClassId}: {character: ForgeCharacter; eligibleClassId?: string}) {
+export default function StartRunFromSheet({character}: {character: ForgeCharacter}) {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  if (!isRunEligible(character, eligibleClassId)) return null;
+  if (!isRunEligible(character)) return null;
   const start = async () => {
     if (busy) return;
     setBusy(true); setError('');

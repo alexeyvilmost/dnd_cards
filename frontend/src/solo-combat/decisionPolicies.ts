@@ -2,6 +2,7 @@ import definitions from '../engine/data/decisionPolicies.json';
 import {payloadsOf} from '../engine/mechanicsView';
 import type {RollLog} from '../mvp/contracts';
 import type {RuleActionDefinition} from '../rules-core/domain';
+import type {InfluenceRollKind,RollInfluence} from '../engine/rollInfluence';
 
 export interface DecisionPolicyToggle {
   id: string;
@@ -10,6 +11,8 @@ export interface DecisionPolicyToggle {
   description: string;
   defaultEnabled: boolean;
   predicate: string;
+  resource?: string;
+  eligibleRolls?: readonly string[];
   imageUrl?: string;
   enabledDescription?: string;
   disabledDescription?: string;
@@ -25,6 +28,12 @@ export function decisionPolicyToggles(scope: string, action?: RuleActionDefiniti
 }
 export function decisionPolicyEnabled(toggle: DecisionPolicyToggle, preferences: Readonly<Record<string, boolean>>) {
   return preferences[toggle.id] ?? toggle.defaultEnabled;
+}
+export function offeredRollInfluences(influences: readonly RollInfluence[], toggles: readonly DecisionPolicyToggle[],
+  preferences: Readonly<Record<string, boolean>>, kind: InfluenceRollKind): RollInfluence[] {
+  return influences.filter(influence=>!toggles.some(toggle=>toggle.predicate==='exclude_resource_offer'
+    && decisionPolicyEnabled(toggle,preferences) && toggle.eligibleRolls?.includes(kind)
+    && toggle.resource && influence.cost.some(cost=>cost.resource===toggle.resource)));
 }
 /** Unknown context always leaves the choice with the player. These are offer
  * policies, never permission to spend a resource or alter a saved die. */

@@ -349,7 +349,7 @@ export default function TacticalBattleMap({
 
   if (combat3d && !rendererError) return <div className="battle-map-3d" data-testid="battle-map-3d">
     <BattleSceneBoundary onUnavailable={setRendererError}>
-      <Suspense fallback={<div className="battle-map-3d-loading" role="status">Подготавливаем трёхмерное поле…</div>}>
+      <Suspense fallback={<div className="battle-map-3d-loading" role="status">Подготавливаем поле с монетками…</div>}>
         <BattleScene state={state} actorId={actorId} activeId={activeId} feedback={feedback ?? null}
           cells={sceneCells} hovered={hovered}
           ghost={ghostPosition ? {position: ghostPosition, footprint: movingCenter * 2, available: previewRoute?.available ?? true} : null}
@@ -359,18 +359,6 @@ export default function TacticalBattleMap({
       </Suspense>
     </BattleSceneBoundary>
     {hoverTooltip}
-    <details className="battle-map-3d-keyboard">
-      <summary>Поле для клавиатуры</summary>
-      <div className="battle-map-3d-keyboard-grid" style={{gridTemplateColumns: `repeat(${boardWidth}, minmax(32px, 1fr))`}}>
-        {cells.map(cell => <button key={`${cell.position.x}:${cell.position.y}`} type="button"
-          aria-label={cell.label} aria-description={cell.terrainLabel || undefined}
-          data-actor-id={cell.actorId} disabled={cell.blocked && !cell.token}
-          onFocus={event => {const rect = event.currentTarget.getBoundingClientRect(); hoverCell(cell.position, {x:rect.right,y:rect.top});}}
-          onBlur={() => hoverCell(null)} onClick={() => activateCell(cell.position)}>
-          {cell.actor ? combatActorDisplayName(cell.actor).slice(0, 2) : cell.blocked ? '×' : `${cell.position.x + 1},${cell.position.y + 1}`}
-        </button>)}
-      </div>
-    </details>
     {!state.tacticalFootprints && Object.values(state.world.actors).some(actor=>actorFootprint(actor)>1) && <p className="text-sm p-2" role="note">Этот бой сохранён по прежним правилам размещения. Области 2×2 и 3×3 будут использоваться со следующей встречи.</p>}
   </div>;
 

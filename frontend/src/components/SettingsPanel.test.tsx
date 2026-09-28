@@ -10,37 +10,38 @@ describe('shared settings categories',()=>{
   const click=async(text:string)=>act(async()=>Array.from(container.querySelectorAll('button')).find(b=>b.textContent?.includes(text))!.click());
   beforeEach(async()=>{let stored:string|null=null;vi.stubGlobal('localStorage',{getItem:()=>stored,setItem:(_k:string,v:string)=>{stored=v;}});container=document.createElement('div');document.body.append(container);root=createRoot(container);await act(async()=>root.render(<SettingsPanel/>));});
   afterEach(async()=>{await act(async()=>root.unmount());container.remove();vi.unstubAllGlobals();});
-  it('navigates subpages and preserves independent saved choices',async()=>{
-    expect(container.querySelector('select')).toBeNull();
-    await click('Бой и броски');await click('Показ бросков в бою');
+  it('shows one scrolling panel with section links and preserves independent saved choices',async()=>{
+    expect(container.querySelectorAll('.settings-panel__section')).toHaveLength(7);
+    await click('Показ бросков в бою');
     expect(container.querySelectorAll('select')).toHaveLength(2);
     await act(async()=>{const select=container.querySelectorAll('select')[1];select.value='skip';select.dispatchEvent(new Event('change',{bubbles:true}));});
-    await click('Все настройки');await click('Отображение');await click('Отображение сущностей');
-    expect(container.querySelectorAll('fieldset')).toHaveLength(4);
-    await act(async()=>container.querySelectorAll<HTMLInputElement>('input')[1].click());
+    await click('Отображение сущностей');
+    expect(container.querySelectorAll('#settings-section-entities fieldset')).toHaveLength(4);
+    await act(async()=>container.querySelectorAll<HTMLInputElement>('input[name="display-spells"]')[1].click());
     expect(getSettings().entityDisplay.spells).toBe('row');
     expect(getSettings().enemyCombatRollMode).toBe('skip');
-    await click('Все настройки');await click('Лист персонажа');await click('Режим и редактирование');
-    expect(container.querySelectorAll('input')).toHaveLength(2);
+    await click('Лист и редактирование');
+    expect(container.querySelector('#settings-section-editing input')).not.toBeNull();
   });
   it('explains the temporary mute and preserves personal sound settings',async()=>{
     const before=getSettings();
     await click('Звук и музыка');
     expect(container.textContent).toContain('Звук временно отключён');
-    expect(container.querySelectorAll('input')).toHaveLength(0);
+    expect(container.querySelector('#settings-section-audio input')).toBeNull();
     expect(getSettings()).toEqual(before);
   });
-  it('saves the 3D combat choice across settings panel remounts',async()=>{
+  it('saves the coin-board choice across settings panel remounts',async()=>{
     const before=getSettings();
-    await click('Бой и броски');
-    expect(container.textContent).toContain('3D бои');
-    expect(container.textContent).toContain('Камеру можно вращать и приближать.');
-    expect(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.checked).toBe(false);
-    await act(async()=>container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click());
+    await click('Бой и поле');
+    expect(container.textContent).toContain('Монетки на поле');
+    expect(container.textContent).toContain('Камера смотрит строго сверху');
+    const combat3d=()=>container.querySelector<HTMLInputElement>('#settings-section-combat input[type="checkbox"]')!;
+    expect(combat3d().checked).toBe(false);
+    await act(async()=>combat3d().click());
     expect(getSettings()).toEqual({...before,combat3d:true});
     await act(async()=>root.unmount());
     root=createRoot(container);
     await act(async()=>root.render(<SettingsPanel initialPage="combat"/>));
-    expect(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.checked).toBe(true);
+    expect(combat3d().checked).toBe(true);
   });
 });

@@ -32,4 +32,12 @@ describe('per-side roll preferences',()=>{
     vi.stubGlobal('localStorage',{getItem:()=>JSON.stringify({combat3d:true,enemyCombatRollMode:'skip'})});
     expect(getSettings()).toMatchObject({combat3d:true,enemyCombatRollMode:'skip'});
   });
+  it('shows field dice only while the 3D battle is enabled',()=>{
+    vi.stubGlobal('localStorage',{getItem:()=>JSON.stringify({combat3d:false,combatRollMode:'field',enemyCombatRollMode:'field'})});
+    const stored=getSettings();
+    expect(stored.combatRollMode).toBe('field');
+    expect(combatRollModeFor(stored,'own')).toBe('standard');
+    expect(combatRollModeFor(stored,'enemy')).toBe('standard');
+    expect(combatRollModeFor({...stored,combat3d:true},'own')).toBe('field');
+  });
 });

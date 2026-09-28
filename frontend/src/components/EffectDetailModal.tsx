@@ -71,7 +71,7 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
         </>
       )}
     >
-      <EdmDesc><FormattedText text={effect.description || ''} emptyText="—" /></EdmDesc>
+      <EdmDesc><FormattedText onDark text={effect.description || ''} emptyText="—" /></EdmDesc>
 
       <EdmFields>
         <EdmField label="Тип эффекта">{typeLabel}</EdmField>
@@ -82,7 +82,7 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
       </EdmFields>
 
       {effect.detailed_description && (
-        <EdmBlock label="Детальное описание"><FormattedText text={effect.detailed_description} emptyText="" /></EdmBlock>
+        <EdmBlock label="Детальное описание"><FormattedText onDark text={effect.detailed_description} emptyText="" /></EdmBlock>
       )}
     </EntityDetailShell>
   );

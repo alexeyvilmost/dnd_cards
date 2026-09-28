@@ -13,7 +13,7 @@ export type EntityDisplaySettings = Record<EntityDisplayKind, EntityDisplayMode>
 /** Вид превью предмета при наведении: обычная карточка или «интерфейс» — тёмный стат-блок
  *  в стиле превью заклинания. Отдельная настройка (не путать с раскладкой строка/иконка). */
 export type ItemPreviewStyle = 'card' | 'interface';
-export type CombatRollMode = 'standard' | 'fast' | 'skip';
+export type CombatRollMode = 'standard' | 'fast' | 'skip' | 'field';
 
 export interface SiteSettings {
   audioEnabled: boolean;
@@ -21,7 +21,7 @@ export interface SiteSettings {
   audioMusic: number;
   audioEffects: number;
   audioUI: number;
-  /** Объёмное поле боя с миниатюрами и управляемой камерой. */
+  /** Альтернативное поле боя с объёмными токенами и управляемой камерой; старый ключ сохранён для настроек браузера. */
   combat3d: boolean;
   combatRollMode: CombatRollMode;
   enemyCombatRollMode: CombatRollMode;
@@ -46,8 +46,9 @@ export interface SiteSettings {
 }
 
 const KEY = 'site-settings';
-export function combatRollModeFor(settings: Pick<SiteSettings, 'combatRollMode' | 'enemyCombatRollMode'>, audience?: 'own' | 'enemy'): CombatRollMode {
-  return audience === 'enemy' ? settings.enemyCombatRollMode : settings.combatRollMode;
+export function combatRollModeFor(settings: Pick<SiteSettings, 'combatRollMode' | 'enemyCombatRollMode'> & Partial<Pick<SiteSettings,'combat3d'>>, audience?: 'own' | 'enemy'): CombatRollMode {
+  const selected=audience === 'enemy' ? settings.enemyCombatRollMode : settings.combatRollMode;
+  return selected==='field' && !settings.combat3d ? 'standard' : selected;
 }
 const EVENT = 'site-settings-changed';
 
@@ -87,14 +88,14 @@ export function getSettings(): SiteSettings {
       ...parsed,
       entityDisplay: { ...DEFAULTS.entityDisplay, ...(parsed.entityDisplay ?? {}) },
     };
-    if (!['standard', 'fast', 'skip'].includes(merged.combatRollMode)) merged.combatRollMode = 'standard';
+    if (!['standard', 'fast', 'skip', 'field'].includes(merged.combatRollMode)) merged.combatRollMode = 'standard';
     for (const key of ['audioMaster','audioMusic','audioEffects','audioUI'] as const) {
       merged[key] = typeof merged[key] === 'number' && Number.isFinite(merged[key]) ? Math.max(0,Math.min(1,merged[key])) : DEFAULTS[key];
     }
     if (typeof merged.audioEnabled !== 'boolean') merged.audioEnabled = DEFAULTS.audioEnabled;
     if (typeof merged.combat3d !== 'boolean') merged.combat3d = DEFAULTS.combat3d;
     // Keep the former global preference for both sides when migrating.
-    if (!['standard', 'fast', 'skip'].includes(parsed.enemyCombatRollMode ?? '')) {
+    if (!['standard', 'fast', 'skip', 'field'].includes(parsed.enemyCombatRollMode ?? '')) {
       merged.enemyCombatRollMode = merged.combatRollMode;
     }
     // Миграция: раньше 'interface' было третьим значением entityDisplay.items (раскладка);

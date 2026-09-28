@@ -12,7 +12,7 @@ import { getDamageLabel } from '../utils/damageTypes';
 import type { RoguelikeCombatIntent } from '../roguelike/combatWorker';
 import type { RoguelikeRun } from '../roguelike/api';
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import {decisionOfferVisible, decisionPolicyToggles} from '../solo-combat/decisionPolicies';
+import {decisionOfferVisible, decisionPolicyToggles, offeredRollInfluences} from '../solo-combat/decisionPolicies';
 import DecisionPolicyToggles from '../components/DecisionPolicyToggles';
 import AttackRollEquation from '../components/AttackRollEquation';
 import RollCalculationDetails from '../components/RollCalculationDetails';
@@ -175,6 +175,19 @@ export default function SoloCombatPage() {
   const trustedRunRef = useRef<RoguelikeRun | null>(null);
   const trustedBusyRef = useRef(false);
   const [state, setState] = useState<SoloCombatState | null>(null);
+  const [monsterPortraits, setMonsterPortraits] = useState<Record<string, string>>({});
+  const monsterTemplateKey = [...new Set(Object.values(state?.tokens ?? {}).flatMap(token => token.templateId ? [token.templateId] : []))].sort().join('|');
+  useEffect(() => {
+    if (!monsterTemplateKey) { setMonsterPortraits({}); return; }
+    let live = true;
+    Promise.all(monsterTemplateKey.split('|').map(async templateId => {
+      try { return [templateId, (await monstersApi.get(templateId)).token_url] as const; }
+      catch { return [templateId, ''] as const; }
+    })).then(rows => {
+      if (live) setMonsterPortraits(Object.fromEntries(rows.filter((row): row is readonly [string, string] => Boolean(row[1]))));
+    });
+    return () => { live = false; };
+  }, [monsterTemplateKey]);
   const [openingState, setOpeningState] = useState<SoloCombatState | null>(null);
   const [rewardRun, setRewardRun] = useState<RoguelikeRun | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -546,8 +559,13 @@ export default function SoloCombatPage() {
   }, [apply]);
 
   const heldDecision = persistedRollPresentation(state?.pendingD20Interrupt);
-  const influenceOfferVisible = decisionOfferVisible(decisionPolicyToggles('roll_influence'),
+  const rollInfluencePolicies=decisionPolicyToggles('roll_influence');
+  const influenceOfferVisible = decisionOfferVisible(rollInfluencePolicies,
     combatPassiveEnabled, {roll: heldDecision?.held?.roll});
+  const availableHeldInfluences=state&&heldDecision?.held
+    ? combatRollInfluences(state,heldDecision.command.actorId,heldDecision.held.kind,heldDecision.held.roll):[];
+  const offeredHeldInfluences=heldDecision?.held
+    ? offeredRollInfluences(availableHeldInfluences,rollInfluencePolicies,combatPassiveEnabled,heldDecision.held.kind):[];
   const policyReactionOptions = useMemo(() => {
     const pending = state?.world.pendingResolution;
     if (!state || pending?.request.type !== 'reaction' || !isControlledCharacter(state, pending.request.actorId)) return [];
@@ -561,7 +579,8 @@ export default function SoloCombatPage() {
         {changesOutcome: preview?.changesOutcome})};
     });
   }, [state, combatPassiveEnabled]);
-  const skipInfluence = Boolean(heldDecision?.held && !influenceOfferVisible);
+  const skipInfluence = Boolean(heldDecision?.held && (!influenceOfferVisible
+    || (availableHeldInfluences.length>0&&offeredHeldInfluences.length===0)));
   const skipReaction = policyReactionOptions.length > 0 && policyReactionOptions.every(option => !option.visible);
   useAutomaticCombatDecision(state, skipInfluence ? 'roll_influence' : skipReaction ? 'reaction' : null,
     busy || Boolean(error) || presentation.blocked, kind => {
@@ -1119,11 +1138,11 @@ export default function SoloCombatPage() {
       : ''}`
     : null;
   const heldForDisplay = influenceOfferVisible || error ? heldDecision : undefined;
-  // Cosmetic projection only: never patch archived combat envelopes for a portrait.
+  // Cosmetic projection only: a refreshed library portrait never patches the archived combat envelope.
   const displayState = {...state,tokens:Object.fromEntries(Object.entries(state.tokens).map(([actorId,token]) => [actorId,
-    {...token,tokenUrl:participantCharacters[actorId]?.avatar_url || token.tokenUrl}]))};
+    {...token,tokenUrl:participantCharacters[actorId]?.avatar_url || (token.templateId && monsterPortraits[token.templateId]) || token.tokenUrl}]))};
   return (
-    <main className={`solo-combat-page forge${presentation.blocked ? ' combat-input-blocked' : ''}`}>
+    <main className={`solo-combat-page forge${presentation.blocked ? ' combat-input-blocked' : ''}${siteSettings.combat3d ? ' is-3d-field' : ''}`}>
       {rewardRun && <CombatRewardDialog run={rewardRun} onClose={() => navigate(`/roguelike/${rewardRun.id}`)} />}
       {presentation.initiative && <CombatPresentationDialog initiative={presentation.initiative} onClose={presentation.closeInitiative} />}
       {state.pendingDeathSave && !presentation.blocked && (()=>{
@@ -1144,7 +1163,7 @@ export default function SoloCombatPage() {
           rollKind: heldForDisplay.held.kind, roll: heldForDisplay.held.roll, cues: []} : presentation.beat}
         onClose={heldForDisplay?.held ? () => applyIntent({type: 'd20_interrupt', actorId: null}, () => resolveD20Interrupt(state, null)) : presentation.closeAttack}
         busy={busy} provisional={Boolean(heldForDisplay?.held)}
-        influences={heldForDisplay?.held ? combatRollInfluences(state, heldForDisplay.command.actorId, heldForDisplay.held.kind, heldForDisplay.held.roll) : []}
+        influences={heldForDisplay?.held ? offeredHeldInfluences : []}
         onInfluence={heldForDisplay?.held ? effectId => applyIntent({type: 'd20_interrupt', actorId: heldForDisplay.command.actorId, effectId}, () => resolveD20Interrupt(state, heldForDisplay.command.actorId, Math.random, effectId)) : undefined}
       />}
       {settingsOpen && <SheetSettingsDialog initialPage="combat" onClose={() => setSettingsOpen(false)} />}
@@ -1166,7 +1185,7 @@ export default function SoloCombatPage() {
               <b className="initiative-card__order">{index + 1}</b>
               <span className="initiative-card__portrait">{displayState.tokens[entry.actorId]?.tokenUrl ? <img src={displayState.tokens[entry.actorId].tokenUrl} alt="" /> : combatActorDisplayName(participant).slice(0, 1)}{identity.duplicateIndex && <i>{identity.duplicateIndex}</i>}</span>
               <span className="initiative-card__name">{identity.displayName}</span>
-              <small>{isActive ? 'ХОД' : `иниц. ${entry.total}`}</small>
+              {isActive && <small>ХОД</small>}
             </button>;
           })}
         </div>

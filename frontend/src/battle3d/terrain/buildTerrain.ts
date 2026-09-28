@@ -94,7 +94,21 @@ function tree(s:TerrainSculpt,feature:BattleMapFeature,random:Random) {
     positions.setXYZ(i,px*ridge,py+(py>height/2-.01&&r>.02?Math.sin(a*5)*.045:0),pz*ridge);
   }
   trunk.computeVertexNormals();s.add(trunk,'bark','#81755d',[x,height/2,z]);
-  s.add(new CylinderGeometry(radius*.77,radius*.77,.014,36),'endgrain','#b3a17e',[x,height/2+height/2-.012,z]);
+  // One continuous end-grain surface hides the cylinder cap and gives every stump
+  // the same top-down PBR grain as the other cut timber on the board.
+  s.add(new CircleGeometry(radius*.77,48),'endgrain','#ad9874',[x,height+.012,z],[1,1,1],[-Math.PI/2,0,0]);
+  for(const [scale,tint] of [[.3,'#6f6149'],[.49,'#8d7757'],[.67,'#75684f']] as const)
+    s.ring([x,height+.018,z],radius*scale,.004,tint,'endgrain');
+  for(let i=0;i<5;i++){
+    const angle=random()*Math.PI*2,start=radius*(.12+random()*.2),end=radius*(.48+random()*.21);
+    s.rod([x+Math.cos(angle)*start,height+.021,z+Math.sin(angle)*start],
+      [x+Math.cos(angle+.12)*end,height+.021,z+Math.sin(angle+.12)*end],.002,'charcoal','#5e513f',.0015,5);
+  }
+  for(let i=0;i<8;i++){
+    const angle=random()*Math.PI*2,at=radius*(.69+random()*.08);
+    s.add(new CircleGeometry(.014+random()*.022,7),'moss',choice(['#5d6745','#777b55','#4c6047'],random),
+      [x+Math.cos(angle)*at,height+.02,z+Math.sin(angle)*at],[1,1,1],[-Math.PI/2,0,0]);
+  }
   for(let i=0;i<7;i++){
     const a=i*Math.PI*2/7+random()*.17,reach=Math.min(feature.width,feature.height)*(.37+random()*.09);
     const points:Point[]=[[x+Math.sin(a)*radius*.66,.17,z+Math.cos(a)*radius*.66],[x+Math.sin(a)*reach*.73,.07,z+Math.cos(a)*reach*.73],[x+Math.sin(a)*reach,.032,z+Math.cos(a)*reach]];

@@ -7,7 +7,8 @@ import SettingsPanel from '../../src/components/SettingsPanel';
 import compiled from '../../src/pages/rulesLabFixture.generated.json';
 import monsterCatalog from '../../src/battle3d/miniatures/catalog.snapshot.json';
 import {BATTLE_MAPS, materializeMapAreas, packBattleMap} from '../../src/solo-combat/battleMaps';
-import {boardCells, terrainFits} from '../../src/solo-combat/boardGeometry';
+import {terrainFits} from '../../src/solo-combat/boardGeometry';
+import {reachableRoutes} from '../../src/solo-combat/tacticalGrid';
 import type {CombatBeat} from '../../src/solo-combat/presentation';
 import type {GridPosition, SoloCombatState} from '../../src/solo-combat/types';
 import type {ActorState} from '../../src/rules-core/domain';
@@ -66,17 +67,19 @@ function Preview() {
   const [inspected, setInspected] = useState<string | null>(null);
   const sequence = useRef(0);
   const targetId = 'monster-goblin-warrior';
-  const beat = (kind: 'before' | 'hit' | 'miss') => {
+  const beat = (kind: 'before' | 'hit' | 'miss', visual:CombatBeat['visual']='slashing') => {
     const held = kind === 'before';
+    const sourceId=visual==='ranged'?'hero-1':'hero-0';
     setFeedback({
-      id:`fixture-${++sequence.current}`, sourceId:'hero-0', targetId,
-      sourceName:'Мечник', targetName:'Гоблин-воин', actionName:'Атака мечом', visual:'slashing', rollKind:'attack',
-      rollPhase:held ? 'before-reaction' : 'after-reaction',
-      from:state.tokens['hero-0'].position, to:state.tokens[targetId].position,
+      id:`fixture-${++sequence.current}`, sourceId, targetId,
+      sourceName:visual==='ranged'?'Лучник':'Мечник', targetName:'Гоблин-воин', actionName:visual==='ranged'?'Выстрел':'Атака мечом', visual, rollKind:'attack',
+      rollPhase:held ? 'before-reaction' : undefined,
+      from:state.tokens[sourceId].position, to:state.tokens[targetId].position,
       roll:{kind:'d20', dice:[{sides:20,result:kind === 'miss' ? 3 : 17}], modifiers:[{source:'Сила',value:3}],
         advantage:'none', total:kind === 'miss' ? 6 : 20, target:{type:'ac',value:15},
         outcome:kind === 'miss' ? 'miss' : 'hit', text:'Сохранённый бросок для визуальной проверки'},
       cues:held ? [] : [{actorId:targetId, kind:kind === 'miss' ? 'miss' : 'damage', text:kind === 'miss' ? 'Промах' : '−5', damageType:kind === 'hit' ? 'slashing' : undefined}],
+      damage:kind==='hit'?[{amount:5,damageType:'slashing',roll:{kind:'damage',dice:[{sides:6,result:5}],modifiers:[],advantage:'none',total:5,text:'Сохранённый урон'}}]:[],
     });
   };
   const setHp = (current:number) => setState(previous => ({...previous, world:{...previous.world,
@@ -84,8 +87,9 @@ function Preview() {
       runtime:{...previous.world.actors[targetId].runtime, hp:{current,max:20,temp:0}}}}}}));
   const move = () => setState(previous => {
     const occupied = new Set(Object.values(previous.tokens).map(token => `${token.position.x}:${token.position.y}`));
-    const destination = boardCells(previous).find(position => position.y > 2 && position.y < 7
-      && terrainFits(previous, position, 1) && !occupied.has(`${position.x}:${position.y}`));
+    const destination = reachableRoutes(previous,'hero-0',30).filter(route=>route.path.length>=3)
+      .map(route=>route.destination).find(position=>position.y>2&&position.y<7
+        && terrainFits(previous,position,1)&&!occupied.has(`${position.x}:${position.y}`));
     return destination ? {...previous, tokens:{...previous.tokens, 'hero-0':{...previous.tokens['hero-0'],position:destination}}} : previous;
   });
   return <main className="solo-combat-page battle-3d-fixture">
@@ -95,14 +99,14 @@ function Preview() {
       .fixture-toolbar {display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
       .fixture-toolbar button,.fixture-toolbar select {padding:8px;border-radius:6px;border:1px solid #655039;background:#31271e;color:#f0dfc4}
       .fixture-controls {display:grid;grid-template-columns:minmax(260px,1fr) 2fr;gap:16px}
-      .fixture-controls .settings-panel {max-width:620px}
+      .fixture-controls .settings-panel {max-width:620px;height:260px}
       .fixture-controls .settings-panel-categories,.fixture-controls nav {display:none}
       .fixture-results {display:flex;flex-wrap:wrap;gap:12px;font-size:12px;margin:8px 0}
       .fixture-results output {white-space:pre-wrap;overflow-wrap:anywhere}
       .battle-3d-fixture .combat-map-wrap {height:min(72vh,760px);min-height:440px;border:1px solid #63513b;border-radius:12px;overflow:hidden}
       @media(max-width:600px){.battle-3d-fixture{padding:8px}.fixture-controls{grid-template-columns:1fr;gap:0}.battle-3d-fixture .combat-map-wrap{height:64vh;min-height:440px}.fixture-controls .settings-panel-saved{display:none}}
     `}</style>
-    <h1>3D бои · локальная проверка</h1>
+    <h1>Монетки на поле · локальная проверка</h1>
     <div className="fixture-controls">
       <SettingsPanel initialPage="combat"/>
       <div className="fixture-toolbar" aria-label="Контролы визуальной проверки">
@@ -112,11 +116,12 @@ function Preview() {
         <button onClick={() => beat('before')}>До реакции</button>
         <button onClick={() => beat('hit')}>Подтверждённое попадание</button>
         <button onClick={() => beat('miss')}>Подтверждённый промах</button>
+        <button onClick={() => beat('hit','ranged')}>Выстрел из лука</button>
         <button onClick={() => setFeedback(null)}>Убрать эффект</button>
         <button onClick={() => setHp(10)}>50% здоровья</button>
         <button onClick={() => setHp(0)}>0% здоровья</button>
         <button onClick={() => setHp(20)}>Восстановить</button>
-        <button onClick={move}>Переместить миниатюру</button>
+        <button onClick={move}>Переместить монетку</button>
       </div>
     </div>
     <div className="fixture-results">

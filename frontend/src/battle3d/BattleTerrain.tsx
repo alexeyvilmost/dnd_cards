@@ -36,11 +36,20 @@ function BoardGrid({width,height}:{width:number;height:number}) {
 export default function BattleTerrain({map,width,height}:{map?:BattleMapDefinition;width:number;height:number}) {
   const signature=JSON.stringify([width,height,map?.id,map?.features]);
   const parts=useMemo(()=>buildTerrain(map,width,height),[signature]);
+  const wood=terrainMaterial('wood');
   useEffect(()=>()=>{for(const part of parts)part.geometry.dispose();},[parts]);
   return <group name="sculpted-battle-terrain">
+    <group name="carved-board-frame">
+      <mesh position={[width/2,-.25,height/2]} receiveShadow castShadow><boxGeometry args={[width+.72,.43,height+.72]}/><meshStandardMaterial color="#72533b" map={wood.map} bumpMap={wood.bumpMap} bumpScale={.025} roughness={.76} metalness={.03}/></mesh>
+      {[-.27,width+.27].map(x=><mesh key={`rail-x-${x}`} position={[x,.035,height/2]} castShadow receiveShadow><boxGeometry args={[.28,.25,height+.82]}/><meshStandardMaterial color="#af8053" map={wood.map} bumpMap={wood.bumpMap} bumpScale={.02} roughness={.7}/></mesh>)}
+      {[-.27,height+.27].map(z=><mesh key={`rail-z-${z}`} position={[width/2,.035,z]} castShadow receiveShadow><boxGeometry args={[width+.82,.25,.28]}/><meshStandardMaterial color="#af8053" map={wood.map} bumpMap={wood.bumpMap} bumpScale={.02} roughness={.7}/></mesh>)}
+      {[-.08,width+.08].map(x=><mesh key={`inlay-x-${x}`} position={[x,.165,height/2]}><boxGeometry args={[.018,.008,height+.18]}/><meshStandardMaterial color="#ac8c57" metalness={.63} roughness={.38}/></mesh>)}
+      {[-.08,height+.08].map(z=><mesh key={`inlay-z-${z}`} position={[width/2,.165,z]}><boxGeometry args={[width+.18,.008,.018]}/><meshStandardMaterial color="#ac8c57" metalness={.63} roughness={.38}/></mesh>)}
+      {[-.27,width+.27].flatMap(x=>[-.27,height+.27].map(z=><mesh key={`stud-${x}-${z}`} position={[x,.178,z]}><cylinderGeometry args={[.08,.08,.026,16]}/><meshStandardMaterial color="#b69a62" metalness={.68} roughness={.34}/></mesh>))}
+    </group>
     {parts.map(part=><mesh key={part.paint} geometry={part.geometry} material={terrainMaterial(part.paint)} dispose={null} castShadow={part.paint!=='web'&&part.paint!=='water'} receiveShadow/>)}
     <BoardArtwork url={map?.background} width={width} height={height}/>
     <BoardGrid width={width} height={height}/>
-    <mesh receiveShadow rotation={[-Math.PI/2,0,0]} position={[width/2,-.55,height/2]}><planeGeometry args={[500,500]}/><meshStandardMaterial color="#101712" roughness={.96}/></mesh>
+    <mesh receiveShadow rotation={[-Math.PI/2,0,0]} position={[width/2,-.55,height/2]}><planeGeometry args={[500,500]}/><meshStandardMaterial color="#171b1c" roughness={.96}/></mesh>
   </group>;
 }

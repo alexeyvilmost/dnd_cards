@@ -2,12 +2,14 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 func TestTrustedRoguelikeRestIgnoresClientPatchAndCommitsOnce(t *testing.T) {
@@ -119,6 +121,29 @@ func TestRoguelikeHitDieUsesFloorForNegativeOddConstitution(t *testing.T) {
 	}
 	if run.Character.CurrentHP != 7 {
 		t.Fatal("wrong Constitution modifier")
+	}
+}
+
+func TestRoguelikeShortRestUsesTheCharactersHitDie(t *testing.T) {
+	for _, sides := range []int{6, 8, 12} {
+		key := fmt.Sprintf("hit_dice_d%d", sides)
+		run := RoguelikeRun{Character: &CharacterV3{CurrentHP: 3, MaxHP: 20, Abilities: &JSONMap{"con": 10},
+			Resources: &JSONMap{key: 1}, MaxResources: &JSONMap{key: 1}}}
+		hp := 3 + sides
+		patch := roguelikeRuntimePatch{CurrentHP: &hp, Resources: &JSONMap{key: 0}}
+		if err := applyRoguelikeRuntimePatch(&run, patch, false, []int{sides}); err != nil {
+			t.Fatalf("d%d rest rejected: %v", sides, err)
+		}
+		if run.Character.CurrentHP != hp {
+			t.Fatalf("d%d healing = %d, want %d", sides, run.Character.CurrentHP, hp)
+		}
+		oversized := sides + 1
+		run.Character.CurrentHP = 3
+		run.Character.Resources = &JSONMap{key: 1}
+		patch.CurrentHP = &oversized
+		if err := applyRoguelikeRuntimePatch(&run, patch, false, []int{oversized}); err == nil {
+			t.Fatalf("d%d accepted an impossible roll", sides)
+		}
 	}
 }
 

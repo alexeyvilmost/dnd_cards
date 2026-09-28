@@ -54,12 +54,12 @@ const FeatPreview: React.FC<FeatPreviewProps> = ({ feat, className = '', disable
       )}
 
       <div className="bg3-desc">
-        <FormattedText text={feat.description || 'Описание черты'} emptyText="Описание черты" />
+        <FormattedText onDark text={feat.description || 'Описание черты'} emptyText="Описание черты" />
       </div>
 
       {feat.detailed_description && (
         <div className="bg3-extra">
-          <FormattedText text={feat.detailed_description} emptyText="" />
+          <FormattedText onDark text={feat.detailed_description} emptyText="" />
         </div>
       )}
     </Bg3Card>

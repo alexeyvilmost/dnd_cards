@@ -82,7 +82,7 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
         </>
       )}
     >
-      <EdmDesc><FormattedText text={action.description || ''} emptyText="—" /></EdmDesc>
+      <EdmDesc><FormattedText onDark text={action.description || ''} emptyText="—" /></EdmDesc>
 
       <EdmFields>
         <EdmField label="Тип действия">{typeLabel}</EdmField>
@@ -109,7 +109,7 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
       </EdmFields>
 
       {action.detailed_description && (
-        <EdmBlock label="Детальное описание"><FormattedText text={action.detailed_description} emptyText="" /></EdmBlock>
+        <EdmBlock label="Детальное описание"><FormattedText onDark text={action.detailed_description} emptyText="" /></EdmBlock>
       )}
     </EntityDetailShell>
   );

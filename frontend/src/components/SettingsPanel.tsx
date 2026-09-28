@@ -1,57 +1,81 @@
-import { useState } from 'react';
-import { setEntityDisplay, setSetting, useSiteSettings, type SiteSettings } from '../settings';
+import {useEffect,useRef,useState,type ReactNode} from 'react';
+import {setEntityDisplay,setSetting,useSiteSettings,type SiteSettings} from '../settings';
+import {usePassivePreferences} from '../character/passivePreferences';
+import {decisionPolicyEnabled,decisionPolicyToggles} from '../solo-combat/decisionPolicies';
 import CombatRollModeSelect from './CombatRollModeSelect';
-import './SettingsPanel.css';
 import AudioSettings from '../audio/AudioSettings';
+import './SettingsPanel.css';
 
-const pages = {
-  home: { title: 'Все настройки', parent: 'home' },
-  audio: { title: 'Звук и музыка', parent: 'home' },
-  combat: { title: 'Бой и броски', parent: 'home' },
-  display: { title: 'Отображение', parent: 'home' },
-  sheet: { title: 'Лист персонажа', parent: 'home' },
-  'combat-rolls': { title: 'Показ бросков в бою', parent: 'combat' },
-  dice: { title: 'Другие броски кубов', parent: 'combat' },
-  entities: { title: 'Отображение сущностей', parent: 'display' },
-  previews: { title: 'Превью и названия', parent: 'display' },
-  editing: { title: 'Режим и редактирование', parent: 'sheet' },
-} as const;
-export type SettingsPage = keyof typeof pages;
-type BooleanSetting = { [K in keyof SiteSettings]: SiteSettings[K] extends boolean ? K : never }[keyof SiteSettings];
+const sections=[
+  {id:'audio',title:'Звук и музыка'},
+  {id:'combat',title:'Бой и поле'},
+  {id:'combat-rolls',title:'Показ бросков в бою'},
+  {id:'dice',title:'Другие броски кубов'},
+  {id:'entities',title:'Отображение сущностей'},
+  {id:'previews',title:'Превью и названия'},
+  {id:'editing',title:'Лист и редактирование'},
+] as const;
+export type SettingsPage='home'|typeof sections[number]['id'];
+type BooleanSetting={ [K in keyof SiteSettings]:SiteSettings[K] extends boolean ? K : never }[keyof SiteSettings];
 
-export default function SettingsPanel({ initialPage = 'home', onTestDice }: { initialPage?: SettingsPage; onTestDice?: () => void }) {
-  const [page, setPage] = useState<SettingsPage>(initialPage);
-  const settings = useSiteSettings();
-  const check = (key: BooleanSetting, label: string, hint: string, disabled = false) => <label className="settings-panel-check">
-    <input type="checkbox" checked={settings[key]} disabled={disabled} onChange={e => setSetting(key, e.target.checked)} />
+export default function SettingsPanel({initialPage='home',onTestDice}:{initialPage?:SettingsPage;onTestDice?:()=>void}) {
+  const settings=useSiteSettings();
+  const [preferences,setPreference]=usePassivePreferences();
+  const [active,setActive]=useState<SettingsPage>(initialPage);
+  const anchors=useRef<Partial<Record<SettingsPage,HTMLElement|null>>>({});
+  useEffect(()=>{
+    if(initialPage==='home')return;
+    const frame=requestAnimationFrame(()=>anchors.current[initialPage]?.scrollIntoView?.({block:'start'}));
+    return ()=>cancelAnimationFrame(frame);
+  },[initialPage]);
+  const check=(key:BooleanSetting,label:string,hint:string,disabled=false)=><label className="settings-panel-check">
+    <input type="checkbox" checked={settings[key]} disabled={disabled} onChange={event=>setSetting(key,event.target.checked)}/>
     <span>{label}<small>{hint}</small></span>
   </label>;
-  const children = (Object.keys(pages) as SettingsPage[]).filter(key => key !== 'home' && pages[key].parent === page);
+  const section=(id:SettingsPage,content:ReactNode)=><section key={id} id={`settings-section-${id}`}
+    className="settings-panel__section" ref={element=>{anchors.current[id]=element;}} tabIndex={-1}>
+    <h3>{sections.find(row=>row.id===id)?.title}</h3>{content}
+  </section>;
   return <div className="settings-panel">
-    <nav aria-label="Разделы настроек">{page !== 'home' && <><button type="button" onClick={() => setPage(pages[page].parent)}>← Назад</button><button type="button" onClick={() => setPage('home')}>Все настройки</button></>}</nav>
-    <h3>{pages[page].title}</h3>
-    {page === 'audio' && <AudioSettings/>}
-    {children.length > 0 && <div className="settings-panel-categories">{children.map(key => <button type="button" key={key} onClick={() => setPage(key)}>{pages[key].title}<span aria-hidden="true">→</span></button>)}</div>}
-    {page === 'combat' && check('combat3d', '3D бои', 'Объёмное поле, препятствия и миниатюры. Камеру можно вращать и приближать.')}
-    {page === 'combat-rolls' && <><CombatRollModeSelect /><p>Режим зависит от владельца действия или эффекта, включая спасброски его целей. Стандарт — анимация и расчёт, быстрый режим — готовый результат, пропуск — результат на поле.</p></>}
-    {page === 'dice' && <>
-      <p>Проверки навыков и спасброски из листа всегда открываются с кнопкой «Бросить». Эти настройки управляют другими бросками.</p>
-      {check('diceDialog', 'Диалог бросков кубов', 'Выбор автоброска или ввода своих кубов.')}
-      {check('dice3d', 'Физические 3D-кубики', 'Сцена с физикой и столкновениями.')}
-      {check('dice3dAutoThrow', 'Кидать 3D-кубики автоматически', 'Запускать бросок после загрузки сцены.', !settings.dice3d)}
-      {onTestDice && <button type="button" disabled={!settings.diceDialog && !settings.dice3d} onClick={onTestDice}>Проверить бросок</button>}
-    </>}
-    {page === 'editing' && <>
-      {check('playerMode', 'Режим игрока', 'Скрывать технические поля механики, сохраняя боевые характеристики.')}
-      {check('allowSheetEntityAdditions', 'Ручное добавление в лист', 'Разрешить добавление предметов, действий, эффектов, заклинаний и черт.')}
-    </>}
-    {page === 'entities' && (['spells', 'actions', 'effects', 'items'] as const).map((kind, i) => <fieldset key={kind}><legend>{['Заклинания', 'Действия', 'Эффекты', 'Предметы'][i]}</legend>
-      {(['icon', 'row'] as const).map((mode, j) => <label key={mode}><input type="radio" name={`display-${kind}`} checked={settings.entityDisplay[kind] === mode} onChange={() => setEntityDisplay(kind, mode)} />{['Иконки', 'Список'][j]}</label>)}
-    </fieldset>)}
-    {page === 'previews' && <>
-      <fieldset><legend>Превью предмета при наведении</legend>{(['card', 'interface'] as const).map((mode, i) => <label key={mode}><input type="radio" name="item-preview" checked={settings.itemPreview === mode} onChange={() => setSetting('itemPreview', mode)} />{['Карточка', 'Интерфейс'][i]}</label>)}</fieldset>
-      {check('showOriginalNames', 'Оригинальные названия', 'Показывать английское название в превью и детальных окнах.')}
-    </>}
-    <p className="settings-panel-saved">Изменения сохраняются автоматически в этом браузере.</p>
+    <nav className="settings-panel__nav" aria-label="Разделы настроек">
+      {sections.map(item=><button key={item.id} type="button" aria-current={active===item.id?'location':undefined}
+        onClick={()=>{setActive(item.id);anchors.current[item.id]?.scrollIntoView?.({behavior:'smooth',block:'start'});anchors.current[item.id]?.focus({preventScroll:true});}}>
+        {item.title}
+      </button>)}
+    </nav>
+    <div className="settings-panel__content site-scrollbar">
+      {section('audio',<AudioSettings/>)}
+      {section('combat',<>
+        {check('combat3d','Монетки на поле','Объёмное поле на фоне страницы. Камера смотрит строго сверху; поле можно сдвигать и масштабировать.')}
+        {decisionPolicyToggles('roll_influence').map(policy=><label className="settings-panel-check" key={policy.id}>
+          <input type="checkbox" checked={decisionPolicyEnabled(policy,preferences)} onChange={event=>setPreference(policy.id,event.target.checked)}/>
+          <span>{policy.name}<small>{policy.description}</small></span>
+        </label>)}
+      </>)}
+      {section('combat-rolls',<><CombatRollModeSelect/><p>Режим выбирается отдельно для союзников и противников. Кубики на поле доступны при включённых монетках; исход берётся из сохранённого броска.</p></>)}
+      {section('dice',<>
+        <p>Проверки навыков и спасброски из листа всегда открываются с кнопкой «Бросить». Эти настройки управляют другими бросками.</p>
+        {check('diceDialog','Диалог бросков кубов','Выбор автоброска или ввода своих кубов.')}
+        {check('dice3d','Физические 3D-кубики','Сцена с физикой и столкновениями.')}
+        {check('dice3dAutoThrow','Кидать 3D-кубики автоматически','Запускать бросок после загрузки сцены.',!settings.dice3d)}
+        {onTestDice&&<button type="button" disabled={!settings.diceDialog&&!settings.dice3d} onClick={onTestDice}>Проверить бросок</button>}
+      </>)}
+      {section('entities',(['spells','actions','effects','items'] as const).map((kind,index)=><fieldset key={kind}>
+        <legend>{['Заклинания','Действия','Эффекты','Предметы'][index]}</legend>
+        {(['icon','row'] as const).map((mode,choice)=><label key={mode}><input type="radio" name={`display-${kind}`}
+          checked={settings.entityDisplay[kind]===mode} onChange={()=>setEntityDisplay(kind,mode)}/>{['Иконки','Список'][choice]}</label>)}
+      </fieldset>))}
+      {section('previews',<>
+        <fieldset><legend>Превью предмета при наведении</legend>{(['card','interface'] as const).map((mode,index)=><label key={mode}>
+          <input type="radio" name="item-preview" checked={settings.itemPreview===mode} onChange={()=>setSetting('itemPreview',mode)}/>{['Карточка','Интерфейс'][index]}
+        </label>)}</fieldset>
+        {check('showOriginalNames','Оригинальные названия','Показывать английское название в превью и детальных окнах.')}
+      </>)}
+      {section('editing',<>
+        {check('playerMode','Режим игрока','Скрывать технические поля механики, сохраняя боевые характеристики.')}
+        {check('allowSheetEntityAdditions','Ручное добавление в лист','Разрешить добавление предметов, действий, эффектов, заклинаний и черт.')}
+      </>)}
+      <p className="settings-panel-saved">Изменения сохраняются автоматически в этом браузере.</p>
+    </div>
   </div>;
 }

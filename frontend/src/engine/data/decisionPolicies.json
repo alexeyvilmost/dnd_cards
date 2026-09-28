@@ -11,6 +11,19 @@
     "defaultEnabled": false
   },
   {
+    "id": "roll-influence.preserve-heroic-in-combat",
+    "scope": "roll_influence",
+    "imageUrl": "/icons/passives/roll-influence.svg",
+    "name": "Не использовать героическое вдохновение в бою",
+    "description": "Не предлагать перебросить бросок атаки за героическое вдохновение. Другие доступные воздействия на бросок остаются.",
+    "enabledDescription": "Предложение переброса атаки за героическое вдохновение скрыто. Ресурс не расходуется.",
+    "disabledDescription": "Если правила позволяют, героическое вдохновение можно потратить на переброс атаки.",
+    "predicate": "exclude_resource_offer",
+    "resource": "heroic_inspiration",
+    "eligibleRolls": ["attack"],
+    "defaultEnabled": false
+  },
+  {
     "id": "reaction.changes-outcome",
     "scope": "reaction",
     "enabledDescription": "Предлагать защиту, если она превращает текущее попадание в промах. Критическое попадание не отменяется ростом КД; неизвестные исходы и другие триггеры не скрываются.",

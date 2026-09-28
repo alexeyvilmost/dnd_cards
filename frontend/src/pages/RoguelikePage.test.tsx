@@ -9,11 +9,11 @@ import {characterTemplatesApi} from '../character/templatesApi';
 
 (globalThis as typeof globalThis & {IS_REACT_ACT_ENVIRONMENT:boolean}).IS_REACT_ACT_ENVIRONMENT=true;
 const fixtures=vi.hoisted(()=>{
- const characters=Array.from({length:9},(_,index)=>({id:`hero-${index}`,name:`Герой ${index}`,class_id:'fighter',race_id:'human',level:1,access_mode:'owner',character_type:'free',system_id:'dnd5e',ruleset_version:'2024'}));
+ const characters=Array.from({length:9},(_,index)=>({id:`hero-${index}`,name:`Герой ${index}`,class_id:index===4?'wizard':index===5?'cleric':'fighter',race_id:'human',level:1,access_mode:'owner',character_type:'free',system_id:'dnd5e',ruleset_version:'2024'}));
  return {characters};
 });
 vi.mock('../character/api',()=>({charactersV3Api:{list:vi.fn(async()=>fixtures.characters)},characterV3ErrorMessage:()=> 'Ошибка'}));
-vi.mock('../api/client',()=>({classesApi:{getClasses:vi.fn(async()=>({classes:[{id:'fighter',card_number:'CLASS-warrior'}]})),getClass:vi.fn(async()=>({name:'Воин'}))},racesApi:{getRace:vi.fn(async()=>({name:'Человек'}))}}));
+vi.mock('../api/client',()=>({classesApi:{getClass:vi.fn(async(id:string)=>({name:id==='wizard'?'Волшебник':id==='cleric'?'Жрец':'Воин'}))},racesApi:{getRace:vi.fn(async()=>({name:'Человек'}))}}));
 vi.mock('../api/entityTags',()=>({merchantSettingsApi:{get:vi.fn(async()=>({can_manage:false}))}}));
 vi.mock('../components/RunPartyCamp',()=>({default:()=>null}));
 vi.mock('../components/MerchantSettingsDialog',()=>({default:()=>null}));
@@ -51,6 +51,8 @@ it('creates a group entirely from presets through one naming dialog',async()=>{
 });
 it('keeps the six-member limit and submits selected personal characters',async()=>{
  const boxes=[...container.querySelectorAll<HTMLInputElement>('.run-party-selection input')];expect(boxes).toHaveLength(7);
+ expect(container.querySelector('.run-party-selection')?.textContent).toContain('Герой 4');
+ expect(container.querySelector('.run-party-selection')?.textContent).toContain('Герой 5');
  for(const box of boxes.slice(0,6)) await act(async()=>box.click());
  expect(boxes[6].disabled).toBe(true);
  const launch=[...container.querySelectorAll('button')].find(button=>button.textContent==='Начать забег · 6')!;

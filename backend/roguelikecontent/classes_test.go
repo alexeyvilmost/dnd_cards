@@ -23,7 +23,7 @@ func TestAdmissionPolicyParity(t *testing.T) {
 	if !reflect.DeepEqual(backend, frontend) {
 		t.Fatal("Run admission policies differ")
 	}
-	if len(StartingClassCards()) != 3 {
-		t.Fatal("Expected three starting classes")
+	if StartingLevel() != 1 {
+		t.Fatal("Expected first-level admission without a class allowlist")
 	}
 }

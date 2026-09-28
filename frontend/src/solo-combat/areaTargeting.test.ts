@@ -25,6 +25,21 @@ function cast(state:SoloCombatState,position={x:4,y:4},targetIds=['three']){
  return autoResolveSystemDecisions(executeCombatAction({state,actorId:'caster',actionId:'area',targetIds,worldPosition:position,rng:()=>.1}),()=>.1);
 }
 describe('area delivery and propagation are distinct authoritative checks',()=>{
+ it.each(['fire','cold'])('%s cone reaches two aligned creatures even when the near one grants cover', damage=>{
+  const {state,action}=setup('sphere',damage);
+  (action.mechanics.targeting as Record<string,unknown>).area={kind:'cone',size_ft:15};
+  action.targeting!.rangeFt=15;
+  action.targeting!.requiresLineOfSight=false;
+  state.tokens.caster.position={x:10,y:2};
+  state.tokens.two.position={x:9,y:1};
+  state.tokens.three.position={x:9,y:0};
+  state.tokens.ally.position={x:10,y:1};
+  const aim={x:8,y:0};
+  expect(selectedTargetsForAction({state,actorId:'caster',actionId:'area',clickedPosition:aim})).toEqual(['two','three']);
+  const after=cast(state,aim,['two']);
+  expect(after.world.actors.two.runtime.hp.current).toBe(17);
+  expect(after.world.actors.three.runtime.hp.current).toBe(17);
+ });
  it.each([['sphere','acid'],['cylinder','cold']])('%s / %s affects both enemies despite caster-to-secondary cover', (kind,damage)=>{
   const {state}=setup(kind,damage),before=JSON.stringify(state);
   expect(spatialFacts(state,'caster','two',false).cover).toBe('total');

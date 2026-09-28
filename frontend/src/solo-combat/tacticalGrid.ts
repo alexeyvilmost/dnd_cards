@@ -427,8 +427,10 @@ export function areaActorIds(input: {
     if (!actor || actor.runtime.hp.current <= 0) return [];
     const relation = combatRelation(input.state, input.sourceActorId, token.actorId);
     if (allowedRelations?.length && !allowedRelations.includes(relation)) return [];
-    const origin=areaEffectOrigin({action:input.action,sourcePosition,aimPosition:input.aimPosition});
+    // areaPositionsForAction already clips every occupied cell against solid
+    // terrain. Creature cover may affect a save, but must not stop a cone or
+    // burst from reaching another creature behind it.
     return footprintCells(token.position, actorFootprint(actor, input.state)).some(p => area.has(`${p.x}:${p.y}`))
-      && !areaPointSight(input.state,input.sourceActorId,origin,token.position,token.actorId).blocked ? [token.actorId] : [];
+      ? [token.actorId] : [];
   });
 }

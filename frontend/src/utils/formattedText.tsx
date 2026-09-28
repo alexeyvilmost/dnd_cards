@@ -1,6 +1,6 @@
 import React from 'react';
 import {armorClassTerminology} from './armorClassTerminology';
-import { COLOR_TOKENS, ICON_TOKENS, ICON_TOKEN_MAP, getDamageColor } from './damageTypes';
+import { COLOR_TOKENS, ICON_TOKENS, ICON_TOKEN_MAP, getDamageColor, getDamageColorOnDark } from './damageTypes';
 import HoverCard from '../components/HoverCard';
 import EntityRefPreview from '../components/EntityRefPreview';
 import type { EntityRefType } from '../components/EntityRefRegistry';
@@ -232,6 +232,7 @@ const renderParsedNodes = (
   useInlineStyles: boolean,
   onOpenRef?: (type: EntityRefType, id: string) => void,
   disableHoverPreviews = false,
+  onDark = false,
 ): React.ReactNode[] => {
   return nodes.map((node, index) => {
     const key = `${keyPrefix}-${index}`;
@@ -276,8 +277,8 @@ const renderParsedNodes = (
 
     if (node.type === 'color') {
       return (
-        <span key={key} style={{ color: getDamageColor(node.dmg) }}>
-          {renderParsedNodes(node.children, key, useInlineStyles, onOpenRef, disableHoverPreviews)}
+        <span key={key} style={{ color: onDark ? getDamageColorOnDark(node.dmg) : getDamageColor(node.dmg) }}>
+          {renderParsedNodes(node.children, key, useInlineStyles, onOpenRef, disableHoverPreviews, onDark)}
         </span>
       );
     }
@@ -288,7 +289,7 @@ const renderParsedNodes = (
 
     return (
       <span key={key} {...styleProps}>
-        {renderParsedNodes(node.children, key, useInlineStyles, onOpenRef, disableHoverPreviews)}
+        {renderParsedNodes(node.children, key, useInlineStyles, onOpenRef, disableHoverPreviews, onDark)}
       </span>
     );
   });
@@ -302,6 +303,8 @@ interface FormattedTextProps {
   emptyText?: string;
   /** Клик по ссылке [[label|type:id]] — открыть детальное окно сущности. */
   onOpenRef?: (type: EntityRefType, id: string) => void;
+  /** Use the readable physical-damage palette on dark entity surfaces. */
+  onDark?: boolean;
 }
 
 export const FormattedText: React.FC<FormattedTextProps> = ({
@@ -311,6 +314,7 @@ export const FormattedText: React.FC<FormattedTextProps> = ({
   useInlineStyles = false,
   emptyText = 'Нет описания',
   onOpenRef,
+  onDark = false,
 }) => {
   // По умолчанию клик по ссылке открывает деталь через глобальный хост (если он смонтирован).
   const { openEntity, disableHoverPreviews = false } = useEntityDetail();
@@ -324,7 +328,7 @@ export const FormattedText: React.FC<FormattedTextProps> = ({
 
   return (
     <span className={className} style={style}>
-      {renderParsedNodes(nodes, 'formatted', useInlineStyles, effectiveOpenRef, disableHoverPreviews)}
+      {renderParsedNodes(nodes, 'formatted', useInlineStyles, effectiveOpenRef, disableHoverPreviews, onDark)}
     </span>
   );
 };

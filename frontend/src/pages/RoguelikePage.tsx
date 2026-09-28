@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { RotateCcw, Trophy } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { charactersV3Api } from '../character/api';
-import {classesApi} from '../api/client';
-import {isRunEligible,isRunClass} from '../roguelike/eligibility';
+import {isRunEligible} from '../roguelike/eligibility';
 import CharacterTemplateLibrary from '../components/CharacterTemplateLibrary';
 import RunPartyCamp from '../components/RunPartyCamp';
 import type { ForgeCharacter } from '../character/types';
@@ -17,7 +16,7 @@ import {characterTemplatesApi, type CharacterTemplate} from '../character/templa
 import HoverCard from '../components/HoverCard';
 import {useCombatDialogFocus} from '../components/useCombatDialogFocus';
 
-const RUN_SELECTION_HELP = 'Выберите от 1 до 6 персонажей 1 уровня: Воин, Варвар или Монах. Можно сочетать пресеты и своих персонажей. Для каждого будет создан отдельный игровой лист; исходные персонажи останутся без изменений.';
+const RUN_SELECTION_HELP = 'Выберите от 1 до 6 персонажей 1-го уровня любого класса. Можно сочетать пресеты и своих персонажей. Для каждого будет создан отдельный игровой лист; исходные персонажи останутся без изменений.';
 
 function errorMessage(reason: unknown): string {
   if (reason instanceof Error) return reason.message;
@@ -43,8 +42,8 @@ function RunList() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([roguelikeApi.listSelection(), charactersV3Api.list(), classesApi.getClasses({limit: 100, fields: 'list'})])
-      .then(([selection, loadedCharacters, classCatalog]) => {
+    Promise.all([roguelikeApi.listSelection(), charactersV3Api.list()])
+      .then(([selection, loadedCharacters]) => {
         if (!active) return;
         setRuns(selection.runs);
         const occupied = new Set(selection.unavailable_source_character_ids);
@@ -52,8 +51,7 @@ function RunList() {
           occupied.add(run.source_character_id);
           for (const member of run.party?.members ?? []) occupied.add(member.source_character_id);
         }
-        const classIds = classCatalog.classes.filter(c => isRunClass(c.card_number)).map(c=>c.id);
-        const candidates = loadedCharacters.filter(character => isRunEligible(character, classIds) && !occupied.has(character.id));
+        const candidates = loadedCharacters.filter(character => isRunEligible(character) && !occupied.has(character.id));
         setCharacters(candidates);
       })
       .catch((reason) => active && setError(errorMessage(reason)))
@@ -192,7 +190,7 @@ function RunCamp({ id }: { id: string }) {
       <h1>{title}</h1>
       {error && <p className="roguelike-error" role="alert">{error}</p>}
       {run && <>
-        <p className="roguelike-ending-character">{run.character?.name ?? 'Воин'}</p>
+        <p className="roguelike-ending-character">{run.character?.name ?? 'Персонаж'}</p>
         <div className="roguelike-ending-stats" aria-label="Результат забега">
           <span><strong>{run.experience.toLocaleString('ru-RU')}</strong><small>опыта</small></span>
           <span><strong>{run.encounters_won}</strong><small>побед</small></span>

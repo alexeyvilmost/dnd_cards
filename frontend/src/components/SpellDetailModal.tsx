@@ -96,7 +96,7 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
         </>
       )}
     >
-      <EdmDesc><FormattedText text={spell.description || ''} emptyText="—" /></EdmDesc>
+      <EdmDesc><FormattedText onDark text={spell.description || ''} emptyText="—" /></EdmDesc>
 
       {hasTags && (
         <div className="edm-tags">
@@ -124,8 +124,12 @@ const SpellDetailModal: React.FC<SpellDetailModalProps> = ({
         <EdmField label="ID заклинания" hidden={!spell.card_number} mono>{spell.card_number}</EdmField>
       </EdmFields>
 
+      {spell.detailed_description && (
+        <EdmBlock label="Дополнительное описание"><FormattedText onDark text={spell.detailed_description} emptyText="" /></EdmBlock>
+      )}
+
       {spell.upcast_description && (
-        <EdmBlock label="Повышение уровня"><FormattedText text={spell.upcast_description} emptyText="" /></EdmBlock>
+        <EdmBlock label="Повышение уровня"><FormattedText onDark text={spell.upcast_description} emptyText="" /></EdmBlock>
       )}
     </EntityDetailShell>
   );

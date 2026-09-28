@@ -1,10 +1,11 @@
 import {describe, expect, it} from 'vitest';
-import {decisionOfferVisible, decisionPolicyToggles} from './decisionPolicies';
+import {decisionOfferVisible, decisionPolicyToggles, offeredRollInfluences} from './decisionPolicies';
 import {previewAttackDefense} from '../rules-core/handler';
 import {effectiveArmorClass} from '../rules-core/actorArmorClass';
 import fixture from '../pages/rulesLabFixture.generated.json';
 import type {ActorState, RuleActionDefinition} from '../rules-core/domain';
 import type {RollLog} from '../mvp/contracts';
+import type {RollInfluence} from '../engine/rollInfluence';
 
 const roll = (outcome: RollLog['outcome'], total = 16, natural = 12): RollLog => ({
   kind: 'd20', dice: [{sides: 20, result: natural}], modifiers: [{source: 'Атака', value: total-natural}],
@@ -18,6 +19,15 @@ function defense(value: string, id = 'defense'): RuleActionDefinition {
   }};
 }
 describe('data-owned decision policies', () => {
+  it('hides only the configured resource offer for attack rolls, leaving other sources and saves available',()=>{
+    const policies=decisionPolicyToggles('roll_influence');
+    const policy=policies.find(row=>row.predicate==='exclude_resource_offer')!;
+    const influence=(id:string,resource:string):RollInfluence=>({id,name:id,description:'',cost:[{resource,amount:1}],operation:'reroll_kept_d20',mechanics:{}});
+    const candidates=[influence('one','heroic_inspiration'),influence('two','luck_point')];
+    expect(offeredRollInfluences(candidates,policies,{},'attack')).toEqual(candidates);
+    expect(offeredRollInfluences(candidates,policies,{[policy.id]:true},'attack')).toEqual([candidates[1]]);
+    expect(offeredRollInfluences(candidates,policies,{[policy.id]:true},'save')).toEqual(candidates);
+  });
   it('defaults to asking; only attacks with actual hit outcomes are suppressed', () => {
     const toggles = decisionPolicyToggles('roll_influence');
     const prefs = {[toggles[0].id]: true};

@@ -80,12 +80,12 @@ const SpellPage = () => {
             <section className="spw-panel">
               <div className="spw-panel-h">Кратко</div>
               <div className="spw-desc">
-                <FormattedText text={spell.description || ''} emptyText="Нет описания" />
+                <FormattedText onDark text={spell.description || ''} emptyText="Нет описания" />
               </div>
               {spell.upcast_description && (
                 <div className="spw-upcast">
                   <span className="spw-upcast-l">{spell.level === 0 ? 'Усиление заговора. ' : 'Повышение уровня. '}</span>
-                  <FormattedText text={spell.upcast_description} emptyText="" />
+                  <FormattedText onDark text={spell.upcast_description} emptyText="" />
                 </div>
               )}
               {spell.save_outcome && <div className="spw-saveline">{spell.save_outcome}</div>}
@@ -95,7 +95,7 @@ const SpellPage = () => {
               <section className="spw-panel">
                 <div className="spw-panel-h">Полное описание</div>
                 <div className="spw-desc spw-desc-full">
-                  <FormattedText text={spell.detailed_description} emptyText="" />
+                  <FormattedText onDark text={spell.detailed_description} emptyText="" />
                 </div>
               </section>
             )}

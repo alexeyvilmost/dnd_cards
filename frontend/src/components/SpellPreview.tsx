@@ -177,13 +177,13 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
       )}
 
       <div className="sp-desc">
-        <FormattedText text={spell.description || 'Описание заклинания'} emptyText="Описание заклинания" />
+        <FormattedText onDark text={spell.description || 'Описание заклинания'} emptyText="Описание заклинания" />
       </div>
 
       {spell.upcast_description && (
         <div className="sp-upcast">
           <span className="sp-uplbl">{spell.level === 0 ? 'Усиление заговора. ' : 'Повышение уровня. '}</span>
-          <FormattedText text={spell.upcast_description} emptyText="" />
+          <FormattedText onDark text={spell.upcast_description} emptyText="" />
         </div>
       )}
 

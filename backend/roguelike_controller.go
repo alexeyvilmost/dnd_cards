@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -186,19 +187,22 @@ func validateRoguelikeSource(tx *gorm.DB, source *CharacterV3, userID uuid.UUID)
 	if source.CharacterType == "dungeon_crawl" {
 		return roguelikeError(http.StatusBadRequest, "source_is_run_character", "нельзя начать забег с персонажа другого забега")
 	}
-	if source.Level != 1 || source.ClassID == nil {
+	if source.Level != roguelikecontent.StartingLevel() || source.ClassID == nil {
 		return roguelikeError(http.StatusBadRequest, "starting_level_required", "для старта нужен персонаж 1 уровня")
 	}
 	var class Class
-	if err := tx.Where("id = ? AND card_number IN ?", *source.ClassID, roguelikecontent.StartingClassCards()).First(&class).Error; err != nil {
-		return roguelikeError(http.StatusBadRequest, "class_not_available", "в Забеге доступны Воин, Варвар и Монах")
+	if err := tx.Select("id").Where("id = ?", *source.ClassID).First(&class).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return roguelikeError(http.StatusBadRequest, "class_not_found", "класс персонажа не найден в библиотеке")
+		}
+		return err
 	}
 	if source.ClassLevels != nil {
 		if len(*source.ClassLevels) != 1 {
 			return roguelikeError(http.StatusBadRequest, "single_class_required", "мультикласс для этого режима недоступен")
 		}
 		level, ok := numberFromJSON((*source.ClassLevels)[source.ClassID.String()])
-		if !ok || level != 1 {
+		if !ok || level != roguelikecontent.StartingLevel() {
 			return roguelikeError(http.StatusBadRequest, "starting_level_required", "для старта нужен персонаж 1 уровня")
 		}
 	}
@@ -1160,6 +1164,35 @@ type roguelikeRuntimePatch struct {
 	TurnState     *JSONMap          `json:"turn_state"`
 }
 
+// The sheet owns its Hit Die type. The trusted rest result may spend dice of
+// only one type per command because hit_die_rolls has no per-roll die labels.
+func roguelikeSpentHitDice(current, next, maximum *JSONMap) (spent, sides int, valid bool) {
+	if current == nil || next == nil || maximum == nil {
+		return 0, 0, false
+	}
+	found := false
+	for key := range *maximum {
+		if !strings.HasPrefix(key, "hit_dice_d") {
+			continue
+		}
+		found = true
+		dieSides, err := strconv.Atoi(strings.TrimPrefix(key, "hit_dice_d"))
+		oldDice, oldOK := numberFromJSON((*current)[key])
+		newDice, newOK := numberFromJSON((*next)[key])
+		if err != nil || dieSides < 2 || dieSides > 1000 || !oldOK || !newOK || newDice > oldDice {
+			return 0, 0, false
+		}
+		if oldDice > newDice {
+			if spent > 0 {
+				return 0, 0, false
+			}
+			spent = oldDice - newDice
+			sides = dieSides
+		}
+	}
+	return spent, sides, found
+}
+
 func resourceMapWithinMaximum(current, maximum *JSONMap) bool {
 	if current == nil || maximum == nil {
 		return current == nil && maximum == nil
@@ -1207,12 +1240,11 @@ func applyRoguelikeRuntimePatch(run *RoguelikeRun, patch roguelikeRuntimePatch, 
 		if *patch.CurrentHP < run.Character.CurrentHP {
 			return roguelikeError(http.StatusBadRequest, "invalid_short_rest", "короткий отдых не может уменьшить хиты")
 		}
-		if run.Character.Resources == nil || patch.Resources == nil {
+		if run.Character.Resources == nil || run.Character.MaxResources == nil || patch.Resources == nil {
 			return roguelikeError(http.StatusBadRequest, "invalid_hit_dice", "в листе отсутствует ресурс костей хитов")
 		}
-		oldDice, oldOK := numberFromJSON((*run.Character.Resources)["hit_dice_d10"])
-		newDice, newOK := numberFromJSON((*patch.Resources)["hit_dice_d10"])
-		if !oldOK || !newOK || oldDice-newDice != len(hitDieRolls) {
+		spentDice, dieSides, validDice := roguelikeSpentHitDice(run.Character.Resources, patch.Resources, run.Character.MaxResources)
+		if !validDice || spentDice != len(hitDieRolls) {
 			return roguelikeError(http.StatusBadRequest, "invalid_hit_dice", "расход костей хитов не совпадает с бросками")
 		}
 		conScore := 10
@@ -1223,8 +1255,8 @@ func applyRoguelikeRuntimePatch(run *RoguelikeRun, patch roguelikeRuntimePatch, 
 		}
 		maximumHealing := 0
 		for _, roll := range hitDieRolls {
-			if roll < 1 || roll > 10 {
-				return roguelikeError(http.StatusBadRequest, "invalid_hit_die_roll", "результат кости хитов должен быть от 1 до 10")
+			if roll < 1 || roll > dieSides {
+				return roguelikeError(http.StatusBadRequest, "invalid_hit_die_roll", fmt.Sprintf("результат кости хитов должен быть от 1 до %d", dieSides))
 			}
 			healing := roll + int(math.Floor(float64(conScore-10)/2))
 			if healing < 1 {

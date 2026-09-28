@@ -44,14 +44,18 @@ export function useCombatPresentation(state: SoloCombatState | null, opening: So
     setQueue(current=>current[0]?.id === next.id ? current.slice(1) : current);
   },[next]);
   useEffect(()=>{
-    if(!collecting&&!initiative&&!playing&&next&&(!next.roll||combatRollMode==='skip'))playNext();
+    if(!collecting&&!initiative&&!playing&&next&&(!next.roll||combatRollMode==='skip'||combatRollMode==='field'))playNext();
   },[collecting,initiative,playing,next,combatRollMode,playNext]);
   useEffect(()=>{
     if(!playing)return;
-    const timer=window.setTimeout(()=>setPlaying(null),playing.rollPhase==='before-reaction'?0:1800);
+    const field=combatRollModeFor(settings,playing.audience)==='field';
+    const hasAttack=playing.roll?.target?.type==='ac';
+    const hasDice=(playing.saveRows?.flatMap(row=>row.damage??[])??playing.damage)?.some(packet=>packet.roll?.dice.length);
+    const duration=field&&hasAttack&&hasDice?3200:field&&hasAttack?2200:1800;
+    const timer=window.setTimeout(()=>setPlaying(null),playing.rollPhase==='before-reaction'?0:duration);
     return ()=>window.clearTimeout(timer);
-  },[playing]);
-  return {initiative,beat:!collecting&&!initiative&&!playing&&next?.roll&&combatRollMode!=='skip'?next:undefined,
+  },[playing,settings]);
+  return {initiative,beat:!collecting&&!initiative&&!playing&&next?.roll&&combatRollMode!=='skip'&&combatRollMode!=='field'?next:undefined,
     playing,blocked:Boolean(initiative||(!collecting&&queue.length)||playing),
     closeInitiative:useCallback(()=>setOpeningDone(true),[]),closeAttack:playNext};
 }

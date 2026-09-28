@@ -9,3 +9,16 @@
 .settings-panel-categories button { background: #ffffff03; border-color: var(--site-line); }
 .settings-panel-categories button:hover { background: #c9ad7410; border-color: var(--site-gold); }
 @media (max-width: 600px) { .settings-site-page { margin: 0 auto; padding: 20px; } }
+.settings-modal{width:min(1020px,calc(100vw - 32px));height:min(820px,90dvh);display:flex;flex-direction:column;overflow:hidden}
+.settings-panel{display:grid;grid-template-columns:220px minmax(0,1fr);flex:1;min-height:0}
+.settings-panel .settings-panel__nav{display:flex;flex-direction:column;align-items:stretch;gap:4px;flex-wrap:nowrap;min-height:0;overflow:auto;padding:8px 14px 12px 0;border-right:1px solid var(--site-line,#a68a454d)}
+.settings-panel__nav button{text-align:left;width:100%;font-size:13px;line-height:1.3}
+.settings-panel__nav button[aria-current="location"]{color:var(--site-gold,#dfc38a);background:#c9ad741c;border-color:#c9ad7470}
+.settings-panel__content{min-width:0;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 12px 28px 28px}
+.settings-panel__section{scroll-margin-top:10px;padding:6px 0 24px;border-bottom:1px solid var(--site-line,#a68a454d);outline:none}
+.settings-panel__section h3{margin:8px 0 18px}
+.settings-panel__section p{max-width:65ch}
+.settings-site-page .settings-panel{min-height:auto}
+.settings-site-page .settings-panel__nav{position:sticky;top:12px;align-self:start;max-height:80dvh}
+.settings-site-page .settings-panel__content{overflow:visible}
+@media(max-width:700px){.settings-modal{padding:18px;width:calc(100vw - 20px);height:calc(100dvh - 20px)}.settings-panel{display:flex;flex-direction:column}.settings-panel .settings-panel__nav{flex-direction:row;flex:none;overflow-x:auto;overflow-y:hidden;gap:5px;white-space:nowrap;padding:4px 0 10px;border-right:0;border-bottom:1px solid var(--site-line,#a68a454d)}.settings-panel__nav button{width:auto;flex:none;padding:8px 10px}.settings-panel__content{padding:10px 4px 18px}.settings-site-page .settings-panel__nav{position:static;max-height:none}}

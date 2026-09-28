@@ -1,11 +1,9 @@
 import {expect, test, type Page} from '@playwright/test';
 import {PerspectiveCamera, Vector3} from 'three';
 import {frameBattleCamera} from '../src/battle3d/BattleCamera';
-import {MINIATURE_RECIPES} from '../src/battle3d/miniatures/recipes';
-import {getMiniatureHeight} from '../src/battle3d/miniatures/geometry';
 
 const fixture = '/e2e/fixtures/battle-3d-preview.html';
-const setting = (page:Page) => page.getByRole('checkbox', {name:/3D бои/});
+const setting = (page:Page) => page.getByRole('checkbox', {name:/Монетки на поле/});
 const scene = (page:Page) => page.getByTestId('battle-scene-3d');
 
 test.beforeEach(({baseURL}, testInfo) => {
@@ -34,27 +32,6 @@ async function capture(page:Page, path:string) {
   await page.locator('section[aria-label="Проверочное поле боя"]').screenshot({path});
 }
 
-async function changedPixels(page:Page, first:Buffer, second:Buffer) {
-  return page.evaluate(async ({before, after}) => {
-    const images = await Promise.all([before, after].map(bytes => createImageBitmap(new Blob([new Uint8Array(bytes)], {type:'image/png'}))));
-    const canvas = document.createElement('canvas');
-    canvas.width = images[0].width;
-    canvas.height = images[0].height;
-    const context = canvas.getContext('2d', {willReadFrequently:true})!;
-    const frames = images.map(image => {
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(image, 0, 0);
-      return context.getImageData(0, 0, canvas.width, canvas.height).data;
-    });
-    let changed = 0;
-    for (let i = 0; i < frames[0].length; i += 4) {
-      if (Math.abs(frames[0][i] - frames[1][i]) + Math.abs(frames[0][i+1] - frames[1][i+1]) + Math.abs(frames[0][i+2] - frames[1][i+2]) > 40) changed++;
-    }
-    images.forEach(image => image.close());
-    return changed;
-  }, {before:Array.from(first), after:Array.from(second)});
-}
-
 test('3D setting persists and both presentations dispatch the same actor and grid cell', async ({page}, testInfo) => {
   const errors = errorsFrom(page);
   await page.goto(fixture);
@@ -65,8 +42,14 @@ test('3D setting persists and both presentations dispatch the same actor and gri
   expect(JSON.parse(from2d!)).toMatchObject({actorId:'monster-goblin-warrior'});
   await enable3d(page);
   await capture(page, testInfo.outputPath('battle-3d-desktop.png'));
-  await page.getByText('Поле для клавиатуры', {exact:true}).click();
-  await page.locator('.battle-map-3d-keyboard-grid button[data-actor-id="monster-goblin-warrior"]').first().click();
+  const selected = JSON.parse(from2d!) as {position:{x:number;y:number}};
+  const canvas = scene(page).locator('canvas');
+  const box = (await canvas.boundingBox())!;
+  const camera = new PerspectiveCamera(42, box.width / box.height, .1, 250);
+  frameBattleCamera(camera, 18, 12, 2.4);
+  camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+  const projected = new Vector3(selected.position.x+.5,.3,selected.position.y+.5).project(camera);
+  await page.mouse.click(box.x+(projected.x+1)*box.width/2,box.y+(1-projected.y)*box.height/2);
   await expect(page.getByTestId('selection')).toHaveText(from2d!);
   await expect(page.getByTestId('selection-count')).toHaveText('2');
   await page.reload();
@@ -88,7 +71,13 @@ test('canvas raycasts the intended board cell, camera controls work and dragging
   await expect.poll(async () => JSON.stringify(await heroLabel.boundingBox())).not.toBe(JSON.stringify(original));
   await page.getByRole('button', {name:'Показать всё поле', exact:true}).click();
   const reset = await heroLabel.boundingBox();
-  await page.getByRole('button', {name:'Повернуть камеру влево', exact:true}).click();
+  await expect(page.getByRole('button', {name:/Повернуть камеру/})).toHaveCount(0);
+  const panCanvas=scene(page).locator('canvas');
+  const panBox=(await panCanvas.boundingBox())!;
+  await page.mouse.move(panBox.x+panBox.width*.5,panBox.y+panBox.height*.5);
+  await page.mouse.down();
+  await page.mouse.move(panBox.x+panBox.width*.5+95,panBox.y+panBox.height*.5-35,{steps:10});
+  await page.mouse.up();
   await expect.poll(async () => JSON.stringify(await heroLabel.boundingBox())).not.toBe(JSON.stringify(reset));
   await page.getByRole('button', {name:'Показать всё поле', exact:true}).click();
   await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
@@ -98,7 +87,7 @@ test('canvas raycasts the intended board cell, camera controls work and dragging
   const canvas = scene(page).locator('canvas');
   const box = (await canvas.boundingBox())!;
   const camera = new PerspectiveCamera(42, box.width / box.height, .1, 250);
-  frameBattleCamera(camera, 18, 12, Math.max(1.6, getMiniatureHeight(MINIATURE_RECIPES.ogre) * 2 * .95 + .2));
+  frameBattleCamera(camera, 18, 12, 2.4);
   camera.updateProjectionMatrix();
   camera.updateMatrixWorld();
   const projected = new Vector3(2.5, .02, 6.5).project(camera);
@@ -121,23 +110,14 @@ test('a held roll shows no outcome animation; confirmed attacks and health chang
   await enable3d(page);
   await page.getByRole('button', {name:'До реакции', exact:true}).click();
   await expect(scene(page).locator('[data-animation="attack"], [data-animation="hit"]')).toHaveCount(0);
-  // Exclude the DOM cue labels, so this comparison checks actual rendered
-  // miniature movement rather than a prop mirrored into a data attribute.
-  const hiddenLabels = await page.addStyleTag({content:'.battle-scene-3d__labels {opacity:0 !important;}'});
-  const beforeAttack = await scene(page).locator('canvas').screenshot();
   await page.getByRole('button', {name:'Подтверждённое попадание', exact:true}).click();
-  await page.evaluate(() => new Promise<void>(resolve => {
-    const start = performance.now();
-    const tick = () => performance.now() - start >= 220 ? resolve() : requestAnimationFrame(tick);
-    requestAnimationFrame(tick);
-  }));
-  const duringAttack = await scene(page).locator('canvas').screenshot();
-  expect(await changedPixels(page, beforeAttack, duringAttack), 'A confirmed hit visibly moves the rendered miniature').toBeGreaterThan(30);
-  await hiddenLabels.evaluate(element => element.remove());
   await expect(scene(page).locator('[data-actor-id="hero-0"]')).toHaveAttribute('data-animation', 'attack');
   await expect(scene(page).locator('[data-actor-id="monster-goblin-warrior"]')).toHaveAttribute('data-animation', 'hit');
   await page.getByRole('button', {name:'Подтверждённый промах', exact:true}).click();
   await expect(scene(page).locator('[data-actor-id="monster-goblin-warrior"]')).not.toHaveAttribute('data-animation', 'hit');
+  await page.getByRole('button', {name:'Выстрел из лука', exact:true}).click();
+  await expect(scene(page).locator('[data-actor-id="hero-1"]')).toHaveAttribute('data-animation', 'attack');
+  await expect(scene(page).locator('canvas')).toBeVisible();
   await page.getByRole('button', {name:'Убрать эффект', exact:true}).click();
   await page.getByRole('button', {name:'50% здоровья', exact:true}).click();
   await expect(page.getByTestId('fixture-health')).toHaveText('10');
@@ -145,12 +125,48 @@ test('a held roll shows no outcome animation; confirmed attacks and health chang
   await expect(page.getByTestId('fixture-health')).toHaveText('0');
   await capture(page, testInfo.outputPath('battle-3d-fallen.png'));
   await page.getByRole('button', {name:'Восстановить', exact:true}).click();
-  await page.getByRole('button', {name:'Переместить миниатюру', exact:true}).click();
+  await page.getByRole('button', {name:'Переместить монетку', exact:true}).click();
   await expect(scene(page).locator('canvas')).toBeVisible();
   expect(errors).toEqual([]);
 });
 
-test('all miniatures and narrow maps render, with usable 2D fallback after losing WebGL', async ({page}, testInfo) => {
+test('field mode shows committed attack and damage dice over the board', async ({page},testInfo) => {
+  const errors=errorsFrom(page);
+  await page.goto(fixture);
+  await enable3d(page);
+  await expect(scene(page).locator('[data-actor-id="hero-0"] .battle-scene-3d__name')).toBeHidden();
+  await page.getByRole('combobox',{name:'Свои действия и союзники'}).selectOption('field');
+  await page.getByRole('button',{name:'Подтверждённое попадание',exact:true}).click();
+  const dice=scene(page).locator('.battle-scene-3d__field-dice');
+  await expect(dice.getByText('Атака · Атака мечом')).toBeVisible();
+  await expect(dice.locator('.committed-die[data-sides="20"]')).toBeVisible();
+  await expect(dice.getByText('Урон · Атака мечом')).toBeVisible({timeout:10_000});
+  await expect(dice.locator('.committed-die[data-sides="6"]')).toBeVisible();
+  await capture(page,testInfo.outputPath('battle-3d-field-dice.png'));
+  await page.getByRole('button',{name:'Убрать эффект',exact:true}).click();
+  await expect(dice).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('a moving coin crosses visible intermediate positions', async ({page}) => {
+  const errors=errorsFrom(page);
+  await page.goto(fixture);
+  await enable3d(page);
+  await page.getByRole('button',{name:'Переместить монетку',exact:true}).click();
+  const transforms=await page.evaluate(async()=>{
+    const label=document.querySelector<HTMLElement>('.battle-scene-3d__label[data-actor-id="hero-0"]')!;
+    const samples:string[]=[];
+    for(let index=0;index<14;index++){
+      samples.push(label.style.transform);
+      await new Promise(resolve=>setTimeout(resolve,70));
+    }
+    return samples;
+  });
+  expect(new Set(transforms).size).toBeGreaterThan(2);
+  expect(errors).toEqual([]);
+});
+
+test('all portrait coins and narrow maps render, with usable 2D fallback after losing WebGL', async ({page}, testInfo) => {
   const errors = errorsFrom(page);
   await page.goto(`${fixture}?gallery`);
   await enable3d(page);
@@ -189,14 +205,15 @@ test('a browser without WebGL opens the ordinary map and preserves its click beh
   await expect(page.getByTestId('selection')).toContainText('hero-0');
 });
 
-test('miniature hover ends in empty canvas space and resumes on the board', async ({page}) => {
+test('coin hover ends in empty canvas space and resumes on the board', async ({page}) => {
   const errors = errorsFrom(page);
   await page.goto(fixture);
   await enable3d(page);
+  await scene(page).scrollIntoViewIfNeeded();
   const canvas = scene(page).locator('canvas');
   const box = (await canvas.boundingBox())!;
   const camera = new PerspectiveCamera(42, box.width / box.height, .1, 250);
-  frameBattleCamera(camera, 18, 12, Math.max(1.6, getMiniatureHeight(MINIATURE_RECIPES.ogre) * 2 * .95 + .2));
+  frameBattleCamera(camera, 18, 12, 2.4);
   camera.updateProjectionMatrix();
   camera.updateMatrixWorld();
   const project = (x:number, z:number) => {

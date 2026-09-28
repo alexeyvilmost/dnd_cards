@@ -10,7 +10,6 @@ import {
 import NavRail, { type NavRailItem } from '../components/NavRail';
 import { useIsMobile } from '../hooks/useIsMobile';
 import StartRunFromSheet from '../components/StartRunFromSheet';
-import {isRunClass} from '../roguelike/eligibility';
 import { cardsApi } from '../api/client';
 import {
   characterV3ErrorMessage,
@@ -1076,7 +1075,7 @@ const CharacterSheetMVP = () => {
           )}
         </div>
         <div className="sheet-header-actions">
-          {!roguelikeRunId && !combatLocked && <StartRunFromSheet character={character} eligibleClassId={isRunClass(assembled?.klass?.card_number) ? assembled?.klass?.id : undefined} />}
+          {!roguelikeRunId && !combatLocked && <StartRunFromSheet character={character} />}
           {allowSheetEntityAdditions && !readOnly && !roguelikeRunId && (
             <button
               type="button"

@@ -152,22 +152,22 @@ const ActionPreview = ({ action, runtime, className = '', disableHover = false, 
       {/* Авто-описание механики (сырые id/стоимость/использования) — прячем в режиме игрока. */}
       {!playerMode && (mechDesc.summary || mechDesc.details.length > 0) && (
         <div className="sp-desc" style={{ marginBottom: 4 }}>
-          {mechDesc.summary && <FormattedText text={mechDesc.summary} emptyText="" />}
+          {mechDesc.summary && <FormattedText onDark text={mechDesc.summary} emptyText="" />}
           {mechDesc.details.map((d, i) => (
             <div key={i} style={{ fontSize: '0.85em', opacity: 0.75 }}>
-              <FormattedText text={d} emptyText="" />
+              <FormattedText onDark text={d} emptyText="" />
             </div>
           ))}
         </div>
       )}
 
       <div className="sp-desc">
-        <FormattedText text={action.description || 'Описание действия'} emptyText="Описание действия" />
+        <FormattedText onDark text={action.description || 'Описание действия'} emptyText="Описание действия" />
       </div>
 
       {action.show_detailed_description && action.detailed_description && (
         <div className="sp-upcast">
-          <FormattedText text={action.detailed_description} emptyText="" />
+          <FormattedText onDark text={action.detailed_description} emptyText="" />
         </div>
       )}
 
