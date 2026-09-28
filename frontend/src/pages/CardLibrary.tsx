@@ -279,7 +279,6 @@ const CardLibrary = () => {
           case 'concept': patchList(setConcepts); patchOne(setSelectedConcept); patchOne(setHoveredConcept); break;
         }
       }
-      setTagRevision(value => value + 1);
     };
     window.addEventListener(REVIEW_STATUS_CHANGED, refresh);
     return () => window.removeEventListener(REVIEW_STATUS_CHANGED, refresh);

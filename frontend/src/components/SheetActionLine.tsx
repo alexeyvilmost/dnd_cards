@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import './EntityPresentation.css';
+import './SheetPassiveToggle.css';
 import { createPortal } from 'react-dom';
 import type { Action, Card, PassiveEffect, Spell } from '../types';
 import type {RuntimeState} from '../mvp/contracts';

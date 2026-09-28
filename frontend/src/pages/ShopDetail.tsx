@@ -72,6 +72,7 @@ const ShopDetail = () => {
   useEffect(()=>{try{localStorage.setItem('boh:shop-baskets',JSON.stringify(baskets))}catch{/* storage unavailable */}},[baskets]);
 
   const applyRun = useCallback(async (run: RoguelikeRun) => {
+    if(run.mode==='urvin'&&!run.journey?.nodes.some(node=>node.id===run.journey?.current_node&&node.kind==='shop'&&!node.completed))throw Error('Торговец доступен только в комнате магазина. Вернитесь на карту забега.');
     const hydrate = async (offer: RoguelikeOffer): Promise<Card> => {
       const card = offer.card_id ? await cardsApi.getCard(offer.card_id) : {
         id: offer.id, name: offer.name, rarity: 'common',

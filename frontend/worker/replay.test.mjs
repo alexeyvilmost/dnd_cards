@@ -8,6 +8,52 @@ import {fileURLToPath} from 'node:url';
 import {createRulesWorker, snapshotHash} from './server.mjs';
 import {replayCombatRecords} from './replay.mjs';
 
+test('journey HTTP preserves a held check across worker restart and uses the retained artifact for consequences', async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'journey-worker-'));
+  const token = 'private-local-journey-test-token-32-characters';
+  const options = {artifactFile: new URL('./dist/artifact.cjs', import.meta.url), artifactsDirectory: directory, token};
+  let server;
+  const start = async () => {
+    server = await createRulesWorker(options);
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    return `http://127.0.0.1:${server.address().port}`;
+  };
+  try {
+    let url = await start();
+    const post = async (endpoint, body) => {
+      const response = await fetch(url + endpoint, {method: 'POST', headers: {authorization: `Bearer ${token}`, 'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+      assert.equal(response.status, 200);
+      return response.json();
+    };
+    const input = JSON.parse(await readFile(new URL('../src/roguelike/pinnedFighter.fixture.json', import.meta.url), 'utf8'));
+    Object.assign(input, {seed: 'saved-journey-check', commandId: 'journey:hold', check: {ability: 'str', skill: 'athletics', dc: 1}});
+    const held = await post('/journey-check', {input});
+    assert.equal(held.status, 'ready');
+    assert.equal(held.public.phase, 'influence');
+    assert.equal(held.patch, undefined);
+    await new Promise(resolve => server.close(resolve));
+    url = await start();
+    const resolveInput = {...input, commandId: 'journey:accept', resolve: true, envelope: held.envelope};
+    const accepted = await post('/journey-check', {artifactHash: held.artifactHash, input: resolveInput});
+    assert.equal(accepted.public.phase, 'resolved');
+    assert.deepEqual(accepted.public.roll, held.public.roll);
+    assert.equal(accepted.patch.runtime_revision, Number(input.character.runtime_revision) + 1);
+    assert.deepEqual(await post('/journey-check', {artifactHash: held.artifactHash, input: resolveInput}), accepted);
+    const effectInput = {...input, character: {...input.character, current_hp: 1}, commandId: 'journey:effect',
+      hazard: {id: 'fountain', name: 'Фонтан', sourceKind: 'environment', sourceEntityIds: ['fountain'], resolution: 'automatic', effects: [{kind: 'healing', amount: '1d4'}]}};
+    const consequence = await post('/journey-effect', {artifactHash: held.artifactHash, input: effectInput});
+    assert.equal(consequence.status, 'ready');
+    assert.ok(consequence.patch.current_hp > 1);
+    assert.equal(consequence.artifactHash, held.artifactHash);
+    assert.deepEqual(await post('/journey-effect', {artifactHash: held.artifactHash, input: effectInput}), consequence);
+  } finally {
+    if (server?.listening) await new Promise(resolve => server.close(resolve));
+    assert.equal(path.dirname(directory), tmpdir());
+    assert.ok(path.basename(directory).startsWith('journey-worker-'));
+    await rm(directory, {recursive: true, force: true});
+  }
+});
+
 test('replays actual HTTP worker transitions, RNG and projected revisions after JSON export', async () => {
   const directory = await mkdtemp(path.join(tmpdir(), 'combat-replay-'));
   const token = 'private-local-replay-test-token-32-characters';

@@ -1,13 +1,8 @@
-import { previewAnchor } from '../../utils/previewAnchor';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import type { Action, PassiveEffect, Feat } from '../../types';
-import FeatPreview from '../FeatPreview';
-import type { EntityDisplayMode } from '../../settings';
-import { usePinMode } from '../../hooks/usePinMode';
+import SheetActionLine from '../SheetActionLine';
 import ForgeAbilityLine from './ForgeAbilityLine';
-import EffectPreview from '../EffectPreview';
-import ActionPreview from '../ActionPreview';
-import { useViewportPopoverPosition } from '../../hooks/useViewportPopoverPosition';
+import type { Action, PassiveEffect, Feat } from '../../types';
+import type { EntityDisplayMode } from '../../settings';
+import type { ReactNode } from 'react';
 
 export type AbilityEntry = {
   key: string;
@@ -24,95 +19,57 @@ export type AbilityEntry = {
 
 type Props = {
   entries: AbilityEntry[];
-  /** 'row' — строки с маленькой иконкой (ForgeAbilityLine), 'icon' — плитки в стиле заклинаний. */
+  /** 'row' — строки с маленькой иконкой, 'icon' — плитки в стиле заклинаний. */
   mode: EntityDisplayMode;
   /** Класс контейнера для строчного режима (sheet-ability-lines / forge-ability-lines). */
   linesClassName?: string;
 };
 
 /**
- * Список способностей (эффектов/действий) с переключаемым режимом отображения.
- * Ховер-карточки (EffectPreview/ActionPreview) работают в обоих режимах.
+ * Список способностей каноничными интерактивными строками SheetActionLine
+ * (как правая панель листа). Черты без action/effect остаются на ForgeAbilityLine.
  */
 const ForgeAbilityDisplay = ({ entries, mode, linesClassName = 'forge-ability-lines' }: Props) => {
-  const [hovered, setHovered] = useState<AbilityEntry | null>(null);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-  const { popoverRef, popoverPos } = useViewportPopoverPosition(Boolean(hovered), pos);
-  // Режим закрепления (T): превью не закрывается при уходе мыши и становится интерактивным.
-  const { pinModeActive } = usePinMode();
-  const prevPin = useRef(pinModeActive);
-  useEffect(() => {
-    if (prevPin.current && !pinModeActive) setHovered(null);
-    prevPin.current = pinModeActive;
-  }, [pinModeActive]);
-  const onLeave = () => { if (!pinModeActive) setHovered(null); };
-
   if (!entries.length) return null;
 
-  if (mode === 'row') {
+  const lines = entries.map((entry) => {
+    if (entry.feat && !entry.effect && !entry.action) {
+      return (
+        <ForgeAbilityLine
+          key={entry.key}
+          name={entry.name}
+          imageUrl={entry.imageUrl}
+          fallbackImageUrl={entry.fallbackImageUrl}
+          sourceLabel={entry.sourceLabel}
+          detail={entry.detail}
+          feat={entry.feat}
+        />
+      );
+    }
     return (
-      <div className={linesClassName}>
-        {entries.map((entry) => (
-          <ForgeAbilityLine
-            key={entry.key}
-            name={entry.name}
-            imageUrl={entry.imageUrl}
-            fallbackImageUrl={entry.fallbackImageUrl}
-            sourceLabel={entry.sourceLabel}
-            detail={entry.detail}
-            effect={entry.effect}
-            action={entry.action}
-            feat={entry.feat}
-          />
-        ))}
-      </div>
+      <SheetActionLine
+        key={entry.key}
+        name={entry.name}
+        imageUrl={entry.imageUrl?.trim() || entry.fallbackImageUrl}
+        sourceLabel={entry.sourceLabel}
+        detail={entry.detail}
+        effectRef={entry.effect}
+        actionRef={entry.action}
+        variant={mode}
+        inspectMode
+        onActivate={() => undefined}
+      />
     );
+  });
+
+  if (mode === 'row') {
+    return <div className={linesClassName}>{lines}</div>;
   }
 
   return (
-    <>
-      <div className="forge-spell-icon-grid sheet-spell-grid">
-        {entries.map((entry) => {
-          const url = entry.imageUrl?.trim() || entry.fallbackImageUrl?.trim() || '/default_image.png';
-          return (
-            <div
-              key={entry.key}
-              className={`forge-spell-icon ready${entry.effect || entry.feat ? ' is-passive' : ''}`}
-              aria-description={entry.name}
-              tabIndex={0}
-              onFocus={e => { setHovered(entry); setPos(previewAnchor(e.currentTarget)); }}
-              onBlur={onLeave}
-              onMouseEnter={(e) => { setHovered(entry); setPos(previewAnchor(e.currentTarget)); }}
-              onMouseLeave={onLeave}
-            >
-              <img
-                src={url}
-                alt={entry.name}
-                onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }}
-              />
-            </div>
-          );
-        })}
-      </div>
-      {hovered && (hovered.effect || hovered.action || hovered.feat) && (
-        <div
-          ref={popoverRef}
-          className="forge-effect-popover"
-          style={{
-            left: popoverPos.left,
-            top: popoverPos.top,
-            pointerEvents: pinModeActive ? 'auto' : 'none',
-          }}
-          onMouseLeave={onLeave}
-        >
-          {hovered.effect && <EffectPreview effect={hovered.effect} sourceLabel={hovered.sourceLabel} disableHover />}
-          {hovered.feat && <FeatPreview feat={hovered.feat} disableHover />}
-          {hovered.action && !hovered.effect && (
-            <ActionPreview action={hovered.action} sourceLabel={hovered.sourceLabel} disableHover />
-          )}
-        </div>
-      )}
-    </>
+    <div className="cs-action-tiles forge-spell-icon-grid sheet-spell-grid">
+      {lines}
+    </div>
   );
 };
 

@@ -688,7 +688,7 @@ function damageModifierBonus(
   if (!state) return 0;
   const collected = collectModifiers(state, passives ?? [], {
     roll: 'damage',
-    filter,
+    filter: {...filter, attackDamage: true},
     formulaCtx: previewFormulaContext(character, weaponMod),
     evalCtx: { character, state },
   });

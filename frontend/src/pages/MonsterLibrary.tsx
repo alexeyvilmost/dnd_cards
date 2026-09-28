@@ -22,7 +22,6 @@ export default function MonsterLibrary() {
   const tag = params.get('tag') ?? '';
   const { showReviewStatus } = useSiteSettings();
   const statuses = parseReviewStatuses(params.getAll('status').join(','));
-  const [revision, setRevision] = useState(0);
   useEffect(() => {
     const refresh = (event: Event) => {
       const change = (event as CustomEvent<ReviewStatusChange>).detail;
@@ -31,7 +30,6 @@ export default function MonsterLibrary() {
         setMonsters(rows => rows.map(patch));
         setSelected(row => row ? patch(row) : row);
       }
-      setRevision(value => value + 1);
     };
     window.addEventListener(REVIEW_STATUS_CHANGED, refresh);
     return () => window.removeEventListener(REVIEW_STATUS_CHANGED, refresh);
@@ -51,7 +49,7 @@ export default function MonsterLibrary() {
       .catch((reason) => { if (active) setError(reason instanceof Error ? reason.message : 'Не удалось загрузить бестиарий'); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [search,tag,revision]);
+  }, [search,tag]);
   const visibleMonsters = filterReviewStatuses(monsters, showReviewStatus ? statuses : []);
 
   return (

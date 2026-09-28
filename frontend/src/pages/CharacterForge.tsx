@@ -88,6 +88,8 @@ import { FormattedText } from '../utils/formattedText';
 import { writeSoloCombatState } from '../solo-combat/persistence';
 import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
 import { loadCatalogPages } from '../api/catalogPages';
+import { equipmentWeaponMasterySeed, weaponTypesFromEquipmentOption } from '../character/equipmentWeaponMastery';
+import { getCardsIndex } from '../utils/cardsIndex';
 import './CharacterForge.css';
 
 const EMPTY_BUNDLE: EntityBundle = { race: null, klass: null, background: null, feats: [], effects: [], actions: [], spells: [] };
@@ -542,6 +544,53 @@ const CharacterForge = () => {
     setResolvedBatch,
     recommendedChoicePolicy,
   );
+  const equipmentMasteryAutoRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!bundleReady || !assembled.klass) return;
+    const masteryChoice = assembled.pendingChoices.find((choice) => (
+      choice.grantKind === 'weapon_mastery' && requiresInitialCharacterChoice(choice)
+    ));
+    if (!masteryChoice) return;
+    let stale = false;
+    void getCardsIndex().then((cards) => {
+      if (stale) return;
+      const optionKey = draft.classEquipmentOption === 'b'
+        ? 'option_b'
+        : draft.classEquipmentOption === 'c' ? 'option_c' : 'option_a';
+      const option = assembled.klass?.equipment_options?.[optionKey]
+        ?? assembled.klass?.equipment_options?.option_a;
+      const weaponTypes = weaponTypesFromEquipmentOption(option, cards);
+      const seed = equipmentWeaponMasterySeed({
+        choiceId: masteryChoice.id,
+        count: masteryChoice.count,
+        optionKey: `${assembled.klass?.id}:${draft.classEquipmentOption}`,
+        weaponTypes,
+        autoFillEnabled: draft.classEquipmentOption === 'a',
+        resolved: draft.resolvedChoices,
+        previousAutoKey: equipmentMasteryAutoRef.current,
+      });
+      equipmentMasteryAutoRef.current = seed.autoKey;
+      if (seed.next) setResolvedBatch(seed.next);
+      else if (seed.clearChoiceId) {
+        setDraft((current) => {
+          if (!Object.prototype.hasOwnProperty.call(current.resolvedChoices, seed.clearChoiceId!)) {
+            return current;
+          }
+          const resolvedChoices = { ...current.resolvedChoices };
+          delete resolvedChoices[seed.clearChoiceId!];
+          return { ...current, resolvedChoices };
+        });
+      }
+    });
+    return () => { stale = true; };
+  }, [
+    bundleReady,
+    assembled.klass,
+    assembled.pendingChoices,
+    draft.classEquipmentOption,
+    draft.resolvedChoices,
+    setResolvedBatch,
+  ]);
   const recommendedClassSkillChoice = classSkillChoice(assembled);
   const recommendedClassSkillKey = recommendedClassSkillChoice
     ? `${recommendedClassSkillChoice.count}:${recommendedClassSkillChoice.recommended.join(',')}`
@@ -1017,7 +1066,7 @@ const CharacterForge = () => {
             <ArrowLeft size={18} />
           </button>
           <span>Повышение уровня — {draft.name || 'Без имени'}</span>
-          <span />
+          <Link to="/" className="forge-brand-link" aria-description="На главную страницу">Bag of Holding</Link>
         </div>
         <div className="sheet-scroll">
           <div className="levelup-wrap">
@@ -1278,7 +1327,7 @@ const CharacterForge = () => {
         </div>
       )}
       <div className="forge-header sheet-header-bar forge-header-layout">
-        <div className="forge-header-spacer" aria-hidden />
+        <Link to="/" className="forge-brand-link" aria-description="На главную страницу">Bag of Holding</Link>
         <span className="forge-header-title">Создание персонажа</span>
         <div className="sheet-header-actions">
           <button
@@ -1323,6 +1372,7 @@ const CharacterForge = () => {
           <div className="forge-editor">
               {act === 'race' && (
                 <RaceSection races={visibleRaces} draft={draft} onSelect={selectRace}
+                  assembled={assembled}
                   subraces={selectableSubraces} subraceUnlocked={subraceUnlocked} subraceLevel={subraceLevel}
                   onPickSubrace={selectLineage}
                   choices={raceOtherChoices} subChoices={raceSubChoices}
@@ -1554,7 +1604,7 @@ function ChoiceList({ choices, resolved, setResolved, ruleState, feats, activeFe
 
 // ─── Секции ────────────────────────────────────────────────────────────────
 
-function RaceSection({ races, draft, onSelect, subraces, subraceUnlocked, subraceLevel, onPickSubrace, choices, ownChoices, subChoices, resolved, setResolved, ruleState, allFeats, activeFeats }: any) {
+function RaceSection({ races, draft, onSelect, assembled, subraces, subraceUnlocked, subraceLevel, onPickSubrace, choices, ownChoices, subChoices, resolved, setResolved, ruleState, allFeats, activeFeats }: any) {
   const topRaces = races.filter((r: Race) => !r.is_subrace);
   const race = races.find((r: Race) => r.id === draft.raceId) as Race | undefined;
   const subrace = (subraces as Race[]).find((r) => r.id === draft.lineageId);
@@ -1645,6 +1695,10 @@ function RaceSection({ races, draft, onSelect, subraces, subraceUnlocked, subrac
             <ForgeTraitsBlock traits={subrace.traits} />
           )}
         </div>
+      )}
+
+      {assembled && (
+        <ForgeOriginAbilities assembled={assembled} kind="race" fallbackImageUrl={race?.image_url} />
       )}
 
       <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={allFeats} activeFeats={activeFeats} />

@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import type { Card, Spell, Action, PassiveEffect, Concept, ResourceDefinition, Variable } from '../types';
 import { cardsApi, spellsApi, actionsApi, effectsApi, conceptsApi, resourcesApi, variablesApi } from '../api/client';
 import { subscribeApiCacheInvalidation } from '../api/apiCache';
+import { REVIEW_STATUS_CHANGED, type ReviewStatusChange } from '../api/contentReview';
 
 export type EntityRefType = 'card' | 'spell' | 'action' | 'effect' | 'concept' | 'resource' | 'variable';
 export type EntityData = Card | Spell | Action | PassiveEffect | Concept | ResourceDefinition | Variable;
@@ -31,6 +32,7 @@ type CacheEntry = {
   data?: EntityData;
   promise?: Promise<EntityData>;
   expires?: number;
+  reviewChanges?: ReviewStatusChange[];
 };
 const cache = new Map<string, CacheEntry>();
 const listeners = new Map<string, Set<() => void>>();
@@ -74,6 +76,18 @@ subscribeApiCacheInvalidation(({ prefix }) => {
     || API_PREFIX_BY_TYPE[type].startsWith(prefix));
 });
 
+if (typeof window !== 'undefined') window.addEventListener(REVIEW_STATUS_CHANGED, (event: Event) => {
+  const change = (event as CustomEvent<ReviewStatusChange>).detail;
+  if (!change) return;
+  for (const [key, entry] of cache) {
+    if (!key.startsWith(`${change.entity_type}:`)) continue;
+    if (entry.promise) entry.reviewChanges?.push(change);
+    if (entry.data?.id !== change.entity_id) continue;
+    cache.set(key, { ...entry, data: { ...entry.data, support: change.support } });
+    notify(key);
+  }
+});
+
 /** Запросить сущность (с дедупликацией конкурентных запросов и кэшем). */
 function fetchEntity(type: EntityRefType, id: string): Promise<EntityData> {
   const key = keyOf(type, id);
@@ -83,8 +97,11 @@ function fetchEntity(type: EntityRefType, id: string): Promise<EntityData> {
   }
   if (existing?.promise) return existing.promise;
 
+  const reviewChanges: ReviewStatusChange[] = [];
   const promise = FETCHERS[type](id)
-    .then((data) => {
+    .then((loaded) => {
+      const data = reviewChanges.reduce((entity, change) => entity.id === change.entity_id
+        ? { ...entity, support: change.support } : entity, loaded);
       // A mutation/eviction can replace this request while it is in flight.
       // Its caller may finish, but it must not restore either cache identity.
       if (cache.get(key)?.promise !== promise) return data;
@@ -106,7 +123,7 @@ function fetchEntity(type: EntityRefType, id: string): Promise<EntityData> {
       }
       throw e;
     });
-  cache.set(key, { status: 'loading', promise });
+  cache.set(key, { status: 'loading', promise, reviewChanges });
   notify(key);
   return promise;
 }

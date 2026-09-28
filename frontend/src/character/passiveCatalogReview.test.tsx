@@ -9,14 +9,13 @@ const mocks = vi.hoisted(() => ({ get: vi.fn() }));
 vi.mock('../api/client', () => ({ apiClient: mocks }));
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-it('keeps a saved passive review during a pending stale catalog read and fetches a fresh snapshot', async () => {
+it('keeps a saved passive review during a pending stale catalog read without reloading the catalog', async () => {
   const row = { key: 'shared-policy', name: 'Политика', description: '', image_url: '', enabled_description: '', disabled_description: '', version: 1, support: { status: 'not_verified' as const } };
   const reviewed = { ...row, support: { status: 'verified' as const } };
   const initial = { data: { passives: [row], can_manage: true } };
   let releaseStale!: (value: typeof initial) => void;
   mocks.get.mockResolvedValueOnce(initial)
-    .mockImplementationOnce(() => new Promise(resolve => { releaseStale = resolve; }))
-    .mockResolvedValueOnce({ data: { passives: [reviewed], can_manage: true } });
+    .mockImplementationOnce(() => new Promise(resolve => { releaseStale = resolve; }));
   await loadPassiveCatalog();
   const host = document.createElement('div');
   const root = createRoot(host);
@@ -36,7 +35,7 @@ it('keeps a saved passive review during a pending stale catalog read and fetches
     });
     expect(host.textContent).toBe('verified');
     await act(async () => { releaseStale(initial); await pending; });
-    expect(mocks.get).toHaveBeenCalledTimes(3);
+    expect(mocks.get).toHaveBeenCalledTimes(2);
     expect(host.textContent).toBe('verified');
   } finally { await act(async () => root.unmount()); }
 });

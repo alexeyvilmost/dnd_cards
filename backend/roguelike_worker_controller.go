@@ -69,6 +69,10 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 		writeRoguelikeError(c, err)
 		return
 	}
+	if err = urvinCommandAllowed(run, request.Type); err != nil {
+		writeRoguelikeError(c, err)
+		return
+	}
 	if roguelikePartySize(run) > 1 {
 		rc.trustedPartyCommand(c, run, request, requestHash)
 		return
@@ -130,8 +134,7 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 			"envelope": run.CombatEnvelope, "intent": request.Payload["intent"], "character": run.Character})
 	}
 	if err != nil {
-		var rejection *roguelikeWorkerRejection
-		if errors.As(err, &rejection) {
+		if rejection := publicRoguelikeWorkerFailure(err); rejection != nil {
 			fail(rejection.Code, rejection.Message)
 		} else {
 			fail("combat_execution_failed", "Не удалось выполнить действие; эта команда не изменила состояние. Попробуйте ещё раз после обновления.")
@@ -193,6 +196,11 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 			advanceRoguelikeClock(locked, result.ElapsedSeconds)
 		}
 		locked.Character = run.Character
+		locked.Characters = []*CharacterV3{run.Character}
+		syncUrvinAura(locked)
+		if err = finishUrvinRest(locked, request.Type); err != nil {
+			return err
+		}
 		locked.Revision++
 		if err = tx.Omit("User", "Group").Save(locked.Character).Error; err != nil {
 			return err

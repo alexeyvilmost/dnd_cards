@@ -8,9 +8,9 @@ import { EntityDetailContext } from '../contexts/entityDetail';
 import { getSettings, setSetting } from '../settings';
 import { REVIEW_STATUS_CHANGED } from '../api/contentReview';
 
-const mocks = vi.hoisted(() => ({ patch: vi.fn(), bust: vi.fn(), canEdit: true }));
+const mocks = vi.hoisted(() => ({ patch: vi.fn(), patchCache: vi.fn(), canEdit: true }));
 vi.mock('../api/client', () => ({ apiClient: { patch: mocks.patch } }));
-vi.mock('../api/apiCache', () => ({ bustPrefix: mocks.bust }));
+vi.mock('../api/apiCache', () => ({ patchCachedValues: mocks.patchCache }));
 vi.mock('../hooks/useContentPermissions', () => ({ useContentPermissions: () => ({ canEdit: () => mocks.canEdit }) }));
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -55,7 +55,7 @@ describe('review status preference, editor and preview', () => {
     await render(<><ReviewStatusEditor entity={entity} /><ReviewStatusCorner entity={entity} /></>);
     await choose('narrative');
     expect(mocks.patch).toHaveBeenCalledWith(`/api/content-review/${type}/${entity.id}`, { status: 'narrative' });
-    expect(mocks.bust).toHaveBeenCalledWith('/api/');
+    expect(mocks.patchCache).toHaveBeenCalledWith(`/api/${type === 'spell' ? 'spells' : 'resources'}`, expect.any(Function));
     expect(host.querySelector('select')?.value).toBe('narrative');
     expect(host.querySelector('[data-review-status]')?.getAttribute('data-review-status')).toBe('narrative');
     expect(host.textContent).not.toMatch(/100%|evidence|закреплено/i);

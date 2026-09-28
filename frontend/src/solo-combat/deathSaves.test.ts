@@ -7,6 +7,7 @@ import {emptyDeathSaves} from '../engine/deathSaves';
 import {type SoloCombatState} from './types';
 import {stepRoguelikeCombat} from '../roguelike/combatWorker';
 import {shouldShowSoloCombatOutcome} from './outcomeVisibility';
+import urvinDefinitions from '../../../backend/roguelikecontent/urvin.json';
 
 function setup():SoloCombatState {
  const actors=['hero','ally','enemy'].map((id):ActorState=>({id,name:id,kind:id==='enemy'?'monster':'playerCharacter',controllerId:id,ac:12,
@@ -21,6 +22,17 @@ function setup():SoloCombatState {
 const rng=(natural:number)=>()=> (natural-.5)/20;
 const active=(s:SoloCombatState)=>s.world.scene.mode==='encounter'?s.world.scene.initiative[s.world.scene.activeIndex]:'';
 describe('persisted combat death-save lifecycle',()=>{
+ it('commits restoration rolls after victory once, including after serialization',()=>{
+  const state=setup(),aura=urvinDefinitions.auras.find(a=>a.key==='restoration')!;
+  state.world.actors.enemy.runtime.hp.current=0;
+  for(const id of ['hero','ally'])state.world.actors[id].runtime.activeEffects=[{id:aura.id,name:aura.name,source:aura.name,mechanics:aura.mechanics}];
+  const random=vi.fn(()=>.5),done=finalizeCombatOutcome(state,random);
+  expect(done.outcome).toBe('victory');expect(done.outcomeFinalized).toBe(true);
+  expect(random).toHaveBeenCalledTimes(2);expect(done.world.actors.hero.runtime.hp.current).toBe(5);
+  expect(done.world.actors.ally.runtime.hp.current).toBe(10);
+  expect(finalizeCombatOutcome(JSON.parse(JSON.stringify(done)),random)).toEqual(done);
+  expect(random).toHaveBeenCalledTimes(2);expect(state.world.actors.hero.runtime.hp.current).toBe(0);
+ });
  it.each([['hero',1,0,2],['hero',9,0,1],['ally',10,1,0],['ally',19,1,0]] as const)('%s rolls %i once, with counters persisted', (id,natural,successes,failures)=>{
   const state=setup();state.world.actors[id].runtime.hp.current=0;
   if(state.world.scene.mode==='encounter')state.world.scene.activeIndex=id==='hero'?0:1;

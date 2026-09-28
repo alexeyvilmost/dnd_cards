@@ -2,7 +2,7 @@
 
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SoloCombatState } from '../solo-combat/types';
 import TacticalBattleMap from './TacticalBattleMap';
 import compiled from '../pages/rulesLabFixture.generated.json';
@@ -129,38 +129,33 @@ describe('TacticalBattleMap world-object clarity', () => {
     expect(container.querySelectorAll('.is-route-preview')).toHaveLength(2);
   });
 
-  it('previews the approach distance to the first legal attack cell', async () => {
-    const sourceActor = compiled.roots.magicInitiateFighter.actor;
-    const hero = {...sourceActor, id: 'hero', name: 'Герой'};
-    const enemy = {...sourceActor, id: 'enemy', name: 'Гоблин'};
-    const defaultAttack = {
-      id: 'default-attack', name: 'Атака оружием',
-      targeting: {minTargets: 1, maxTargets: 1, rangeFt: 5},
-      mechanics: {primitive: {type: 'weapon_attack'}},
-    };
+  it('shows terrain hover preview after 500ms over cover scenery', async () => {
+    vi.useFakeTimers();
+    const actor = compiled.roots.magicInitiateFighter.actor;
     const state = {
-      characterId: 'hero', sideByActorId: {hero: 'party', enemy: 'enemy'},
-      world: {
-        scene: {mode: 'encounter', initiative: ['hero', 'enemy'], activeIndex: 0, round: 1},
-        actors: {hero, enemy}, objects: {},
+      characterId: 'hero', sideByActorId: {hero: 'party'},
+      world: {scene: {mode: 'encounter', initiative: ['hero'], activeIndex: 0, round: 1},
+        actors: {hero: {...actor, id: 'hero', name: 'Герой'}}, objects: {}},
+      tokens: {hero: {actorId: 'hero', color: '#fff', position: {x: 0, y: 0}}},
+      battleMap: {
+        id: 'preview-map', name: 'Тест', width: 6, height: 4, maxFootprint: 1, maxActors: 4,
+        background: '', description: '',
+        features: [{id: 'crate', name: 'Ящик', x: 2, y: 1, width: 1, height: 1, sprite: 'barrel',
+          blocksMovement: true, cover: 'half'}],
       },
-      tokens: {
-        hero: {actorId: 'hero', color: '#fff', position: {x: 0, y: 0}},
-        enemy: {actorId: 'enemy', color: '#fff', position: {x: 4, y: 0}},
-      },
-      catalogActions: [defaultAttack],
-      opportunityActionIds: {},
-      movementRemainingFt: {hero: 30}, combatAreas: {}, movementModeByActor: {},
+      catalogActions: [], movementRemainingFt: {hero: 30}, combatAreas: {},
     } as unknown as SoloCombatState;
     await act(async () => root.render(<TacticalBattleMap state={state} actorId="hero"
-      selectedActionId={null} defaultActionId={defaultAttack.id}
-      implicitActionsEnabled movementMode={false} onCell={() => {}} />));
-    const targetCell = container.querySelector<HTMLButtonElement>('[data-actor-id="enemy"]')!;
-    await act(async () => targetCell.dispatchEvent(new MouseEvent('mouseover', {bubbles: true})));
-    expect(document.querySelector('.combat-hit-chance')?.textContent).toContain('Подойти 15 фт.');
-    expect(document.querySelector('.combat-hit-chance')?.textContent).toContain('останется 15 фт.');
-    expect(container.querySelectorAll('.is-route-preview')).toHaveLength(3);
-    expect(container.querySelector('.battle-token--ghost')).not.toBeNull();
+      selectedActionId={null} movementMode={false} onCell={() => {}} />));
+    const cell = container.querySelector<HTMLButtonElement>('[aria-label*="Ящик"]')!;
+    await act(async () => {
+      cell.dispatchEvent(new MouseEvent('mouseover', {bubbles: true, clientX: 120, clientY: 80}));
+    });
+    expect(document.querySelector('.battle-map-cell-preview')).toBeNull();
+    await act(async () => { await vi.advanceTimersByTimeAsync(500); });
+    expect(document.querySelector('.battle-map-cell-preview')?.textContent).toContain('Ящик');
+    expect(document.querySelector('.battle-map-cell-preview')?.textContent).toContain('Половинное укрытие');
+    vi.useRealTimers();
   });
 
 });

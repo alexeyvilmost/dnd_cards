@@ -1308,6 +1308,14 @@
   font-family: Inter, sans-serif; line-height: 1.4; text-align: left;
 }
 .combat-map-tooltip .combat-route-warning { color: #f3b57b; margin-top: 7px; }
+.forge-effect-popover.battle-map-cell-previews {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+.battle-map-cell-preview .sp-desc p { margin: 0 0 6px; }
+.battle-map-cell-preview .sp-desc p:last-child { margin-bottom: 0; }
 .combat-hotbar__actions.is-row-view { display:grid; grid-auto-flow:column; grid-template-rows:repeat(2,minmax(52px,auto)); grid-auto-columns:240px; }
 .combat-hotbar__actions.is-row-view .combat-sheet-action { display:flex; flex-direction:row; width:240px; min-width:240px; align-items:stretch; }
 .combat-hotbar__actions.is-row-view .sheet-item-row { width:100%; text-align:left; }

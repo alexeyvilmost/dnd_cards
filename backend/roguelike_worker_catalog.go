@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -115,7 +116,26 @@ func (catalog *roguelikeFrozenCatalog) fulfill(tx *gorm.DB, need roguelikeWorker
 		column = "id"
 	}
 	if err := tx.Where(column+" = ?", need.Reference).First(entity).Error; err != nil {
-		return fmt.Errorf("missing pinned %s: %w", need.EntityType, err)
+		// grant_spell values often use the English-name slug (bane, hunters_mark)
+		// while the library row keeps a SPELL-xxxx card_number. Resolve that alias
+		// for spells only; other kinds stay exact card_number/id lookups.
+		if errors.Is(err, gorm.ErrRecordNotFound) && need.EntityType == "spell" && column == "card_number" {
+			alias := strings.ToLower(strings.TrimSpace(need.Reference))
+			if alias != "" {
+				var spells []Spell
+				if aliasErr := tx.Where(`trim(both '_' from lower(regexp_replace(regexp_replace(coalesce(name_en, ''), '''', '', 'g'), '[^a-zA-Z0-9]+', '_', 'g'))) = ?`, alias).
+					Order("id").Limit(2).Find(&spells).Error; aliasErr != nil {
+					return aliasErr
+				}
+				if len(spells) > 1 {
+					return &roguelikeWorkerRejection{"combat_catalog_ambiguous_ref", "Английское имя заклинания неоднозначно. Укажите его ID или номер в данных способности. Действие не применено."}
+				}
+				if len(spells) == 1 {
+					return catalog.add(need.EntityType, spells[0])
+				}
+			}
+		}
+		return fmt.Errorf("missing pinned %s %s: %w", need.EntityType, need.Reference, err)
 	}
 	return catalog.add(need.EntityType, entity)
 }
@@ -140,6 +160,8 @@ func initializeRoguelikeWorker(ctx context.Context, tx *gorm.DB, client roguelik
 	}
 	input := map[string]any{"character": run.Character, "catalog": &catalog, "basicActionIds": ids,
 		"monsters": run.Encounter["catalog"], "roster": run.Encounter["roster"], "seed": seed, "initiativeManeuverActionId": initiativeManeuverActionID}
+	input["mapId"] = run.Encounter["map_id"]
+	input["enemyEffects"] = run.Encounter["enemy_effects"]
 	if index, ok := run.Encounter["map_index"]; ok {
 		input["mapIndex"] = index
 	}

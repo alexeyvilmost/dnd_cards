@@ -17,7 +17,7 @@ vi.mock('../api/client',()=>({classesApi:{getClass:vi.fn(async(id:string)=>({nam
 vi.mock('../api/entityTags',()=>({merchantSettingsApi:{get:vi.fn(async()=>({can_manage:false}))}}));
 vi.mock('../components/RunPartyCamp',()=>({default:()=>null}));
 vi.mock('../components/MerchantSettingsDialog',()=>({default:()=>null}));
-vi.mock('../roguelike/api',()=>({roguelikeApi:{create:vi.fn(async()=>({id:'new-run'})),listSelection:vi.fn(async()=>({unavailable_source_character_ids:['hero-6'],runs:[
+vi.mock('../roguelike/api',()=>({roguelikeApi:{modes:vi.fn(async()=>({id:'urvin',auras:[]})),create:vi.fn(async()=>({id:'new-run'})),listSelection:vi.fn(async()=>({unavailable_source_character_ids:['hero-6'],runs:[
   {id:'party-run',source_character_id:'hero-7',characters:fixtures.characters.slice(0,3),experience:150,encounters_won:2,attempt:1,status:'active',phase:'camp'},
   {id:'solo-run',character:fixtures.characters[3],experience:0,encounters_won:0,attempt:2,status:'defeat',phase:'ended'},
  ]}))}}));
@@ -50,7 +50,7 @@ it('creates a group entirely from presets through one naming dialog',async()=>{
  expect(roguelikeApi.create).toHaveBeenCalledWith(['copy-preset','copy-archer']);
 });
 it('keeps the six-member limit and submits selected personal characters',async()=>{
- const boxes=[...container.querySelectorAll<HTMLInputElement>('.run-party-selection input')];expect(boxes).toHaveLength(7);
+ const boxes=[...container.querySelectorAll<HTMLInputElement>('.run-party-selection input')];expect(boxes).toHaveLength(9);
  expect(container.querySelector('.run-party-selection')?.textContent).toContain('Герой 4');
  expect(container.querySelector('.run-party-selection')?.textContent).toContain('Герой 5');
  for(const box of boxes.slice(0,6)) await act(async()=>box.click());
@@ -59,9 +59,9 @@ it('keeps the six-member limit and submits selected personal characters',async()
  await act(async()=>launch.click());
  expect(roguelikeApi.create).toHaveBeenCalledWith(fixtures.characters.slice(0,6).map(c=>c.id));
 });
-it('combines presets with a personal character and excludes occupied sources including those outside the displayed runs',async()=>{
+it('keeps source characters available for additional runs and combines presets with personal characters',async()=>{
  const personal=container.querySelector('.run-party-selection')!;
- expect(personal.textContent).not.toContain('Герой 6');expect(personal.textContent).not.toContain('Герой 7');
+ expect(personal.textContent).toContain('Герой 6');expect(personal.textContent).toContain('Герой 7');
  await act(async()=>personal.querySelector<HTMLInputElement>('input')!.click());
  await act(async()=>container.querySelector<HTMLInputElement>('.run-preset-row input')!.click());
  await act(async()=>container.querySelector<HTMLButtonElement>('.run-start-footer button')!.click());

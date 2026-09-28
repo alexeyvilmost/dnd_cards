@@ -8,7 +8,8 @@
  * поэтому правки сущностей сразу видны (безопасно для редакторского приложения).
  */
 type Entry = { value: unknown; expires: number };
-type InFlight = { promise: Promise<unknown>; version: number; epoch: number };
+type CachePatch = (value: unknown) => unknown;
+type InFlight = { promise: Promise<unknown>; version: number; epoch: number; patches: CachePatch[] };
 export type ApiCacheInvalidation = { prefix: string | null };
 
 const store = new Map<string, Entry>();
@@ -45,7 +46,9 @@ export async function cached<T>(key: string, ttlMs: number, loader: () => Promis
 
   const startedAtEpoch = epoch;
   const startedAtVersion = version;
-  const promise = loader().then((value) => {
+  const patches: CachePatch[] = [];
+  const promise = loader().then((loaded) => {
+    const value = patches.reduce((current, patch) => patch(current), loaded as unknown) as T;
     // A mutation that happened while this GET was running makes the response
     // unsuitable for the shared cache, even though its original caller may
     // still consume the response it requested.
@@ -56,8 +59,18 @@ export async function cached<T>(key: string, ttlMs: number, loader: () => Promis
   }).finally(() => {
     if (inFlight.get(key)?.promise === promise) inFlight.delete(key);
   });
-  inFlight.set(key, { promise, version: startedAtVersion, epoch: startedAtEpoch });
+  inFlight.set(key, { promise, version: startedAtVersion, epoch: startedAtEpoch, patches });
   return promise;
+}
+
+/** Apply authoritative metadata without invalidating mounted readers or restarting their GETs. */
+export function patchCachedValues(prefix: string, patch: CachePatch): void {
+  for (const [key, entry] of store) {
+    if (key.startsWith(prefix)) store.set(key, { ...entry, value: patch(entry.value) });
+  }
+  for (const [key, entry] of inFlight) {
+    if (key.startsWith(prefix)) entry.patches.push(patch);
+  }
 }
 
 /** Сбросить все записи, чей ключ начинается с prefix (напр. '/api/cards'). */

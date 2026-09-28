@@ -2,8 +2,9 @@ import {actorFootprint} from './footprint';
 import {boardCells, boardDimensions, terrainStepFits} from './boardGeometry';
 import {emptyDeathSaves} from '../engine/deathSaves';
 import {applyHealing} from '../engine/hp';
+import {settleJourneyAuras} from '../engine/journeyAuras';
 import {shouldShowSoloCombatOutcome} from './outcomeVisibility';
-import {selectBattleMap, materializeMapAreas} from './battleMaps';
+import {selectBattleMap, materializeMapAreas, BATTLE_MAPS} from './battleMaps';
 import {monsterBonusActions} from './monsterBonusActions';
 import {combatHideFacts, combatHideIssue} from './hide';
 import {resetTurnMovement, signedMovementBudget, withMovementBudget} from './movementLedger';
@@ -725,6 +726,10 @@ function applyForcedMovement(
 
 function outcome(state: SoloCombatState): SoloCombatState {
   const partyIds = controlledCharacterIds(state);
+  const lastDamaged=partyIds.every(id=>(state.world.actors[id]?.runtime.hp.current??0)===0)?[...state.log].reverse().flatMap(entry=>[...(entry.records??[])].reverse())
+    .find(record=>record.event?.type==='damage'&&partyIds.includes(record.actorId))?.actorId:undefined;
+  const survival=settleJourneyAuras(state.world,partyIds,'last_conscious',()=>{throw Error('Survival must not roll');},lastDamaged);
+  if(survival.world!==state.world){state={...state,world:survival.world};for(const record of survival.records)state=appendLog(state,record.actorId,record.source,record.events.map((event,ordinal)=>({kind:'engine',ordinal,sourceActorId:record.actorId,actorId:record.actorId,targetIds:[record.actorId],event})));}
   if (partyIds.some(id => {
     const actor = state.world.actors[id];
     return actor?.runtime.deathSaves?.dead || (actor?.runtime.deathSaves?.failures ?? 0) >= 3
@@ -745,9 +750,9 @@ function outcome(state: SoloCombatState): SoloCombatState {
   return state;
 }
 
-/** Encounter recovery is a committed, RNG-free rule, not a UI reward. Never
- * recover during a held roll/reaction: those can still change the outcome. */
-export function finalizeCombatOutcome(state: SoloCombatState): SoloCombatState {
+/** Encounter recovery is committed once, not a UI reward. Aura dice use the
+ * authoritative command RNG. Held rolls/reactions can still change the outcome. */
+export function finalizeCombatOutcome(state: SoloCombatState, rng?:()=>number): SoloCombatState {
   if (state.outcomeFinalized) return state;
   let next = state.outcome === 'active' ? outcome(state) : state;
   if (!shouldShowSoloCombatOutcome(next) || next.pendingD20Interrupt || next.pendingAdditionalMovement
@@ -764,6 +769,10 @@ export function finalizeCombatOutcome(state: SoloCombatState): SoloCombatState {
       actors: {...next.world.actors, [id]: {...actor, runtime}}}}, id,
       'Бой завершён: выживший персонаж восстанавливает 1 хит.',
       healed.events.map((event, ordinal) => ({kind: 'engine', ordinal, sourceActorId: id, actorId: id, targetIds: [id], event})));
+  }
+  if(next.outcome==='victory'&&rng){
+    const result=settleJourneyAuras(next.world,controlledCharacterIds(next),'victory',rng);
+    next={...next,world:result.world};for(const record of result.records)next=appendLog(next,record.actorId,record.source,record.events.map((event,ordinal)=>({kind:'engine',ordinal,sourceActorId:record.actorId,actorId:record.actorId,targetIds:[record.actorId],event})));
   }
   return {...next, outcomeFinalized: true};
 }
@@ -2860,7 +2869,7 @@ export function resolveCombatDeathSave(state:SoloCombatState,effectId?:string,rn
   let ready=rest as SoloCombatState;
   if(pending.phase==='resolved'){
     if(effectId)throw new Error('Результат уже подтверждён');
-    return ready.world.actors[pending.actorId].runtime.hp.current>0 || ready.outcome!=='active' ? finalizeCombatOutcome(ready) : advanceTurn(ready,rng);
+    return ready.world.actors[pending.actorId].runtime.hp.current>0 || ready.outcome!=='active' ? finalizeCombatOutcome(ready,rng) : advanceTurn(ready,rng);
   }
   let replay:Rng=transcriptRng(pending.randomValues);
   if(effectId){
@@ -5420,6 +5429,8 @@ function withInitiativeAndStart(state: SoloCombatState, rng: Rng,
 }
 
 export async function createSoloCombatState(input: {
+  mapId?: string;
+  enemyEffects?: import('../mvp/contracts').ActiveEffectEntry[];
   mapIndex?: number;
   mapSeed?: number;
   character: ForgeCharacter;
@@ -5443,6 +5454,7 @@ export async function createSoloCombatState(input: {
         monster: selection.monster, instanceId,
         actions: input.actions, effects: input.effects,
       });
+      if(input.enemyEffects?.length)compiled.actor.runtime.activeEffects.push(...structuredClone(input.enemyEffects));
       monsters.push({ template: selection.monster, ...compiled });
     }
   }
@@ -5502,7 +5514,9 @@ export async function createSoloCombatState(input: {
     if (dash) base.world.actors[monster.actor.id].capabilities.actionIds.push(dash.id);
   }
   const partyColors = ['#3c8ccf', '#8a63c7', '#3f9c68', '#c27a3d'];
-  const chosenMap=input.mapIndex===undefined?undefined:selectBattleMap(Object.values(base.world.actors),controlledIds,input.mapIndex,input.mapSeed);
+  const declaredMapIndex=input.mapId?BATTLE_MAPS.findIndex(map=>map.id===input.mapId):input.mapIndex;
+  if(declaredMapIndex===-1)throw Error('Карта столкновения отсутствует');
+  const chosenMap=declaredMapIndex===undefined?undefined:selectBattleMap(Object.values(base.world.actors),controlledIds,declaredMapIndex,input.mapSeed);
   const tokens: SoloCombatState['tokens'] = Object.fromEntries(participants.map((participant, index) => {
     const centeredOffset = (index - (participants.length - 1) / 2) * 2;
     const x = Math.max(1, Math.min(TACTICAL_WIDTH - 2, Math.round(TACTICAL_WIDTH / 2 + centeredOffset)));

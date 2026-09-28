@@ -43,7 +43,7 @@ export default function CombatPresentationDialog({initiative, beat, onClose, mod
   const isCheck=beat?.rollKind==='check';
   const isUntargeted=(isSave || isCheck) && !roll?.target;
   const saveRows=beat?.saveRows;
-  const success=isSave?roll?.outcome==='success':roll?.outcome==='hit'||roll?.outcome==='crit';
+  const success=(isSave||isCheck)?roll?.outcome==='success':roll?.outcome==='hit'||roll?.outcome==='crit';
   const hasDamage=(isSave || success) && Boolean(saveRows?.some(row=>row.damage?.length) || beat?.damage?.length);
   const animateDamage=!initiative && !reducedMotion && combatRollMode==='standard' && hasDamage
     && beat?.rollPhase!=='before-reaction' && Boolean((saveRows ?? (beat ? [beat] : [])).some(row=>row.damage?.some(packet=>packet.roll?.dice.length)));
@@ -112,7 +112,7 @@ export default function CombatPresentationDialog({initiative, beat, onClose, mod
         {attackReady&&critical&&!provisional&&<p role="status" className={`combat-critical-banner is-${critical}${animate?' is-animated':''}`}>{critical==='success'?'НАТУРАЛЬНАЯ 20 · КРИТИЧЕСКИЙ УСПЕХ':'НАТУРАЛЬНАЯ 1 · КРИТИЧЕСКИЙ ПРОВАЛ'}</p>}
         {attackReady&&roll?<div className={`combat-roll-result ${success?'is-hit':'is-miss'}`}>
           {!isSave && !isCheck ? <AttackRollEquation roll={roll}/> : <div className="combat-roll-equation"><strong>{roll.total}</strong>{!isUntargeted&&<span>{roll.total >= (roll.target?.value ?? 0)?'≥':'<'} <Shield size={18}/> СЛ {roll.target?.value}</span>}</div>}
-          <h3>{provisional ? 'Результат ещё не подтверждён' : isUntargeted?(isSave?'Результат спасброска':'Результат проверки'):isSave?(success?'Спасбросок успешен':'Спасбросок провален'):roll.outcome==='crit'?'Критическое попадание!':success?'Попадание':'Промах'}</h3>
+          <h3>{provisional ? 'Результат ещё не подтверждён' : isUntargeted?(isSave?'Результат спасброска':'Результат проверки'):isSave?(success?'Спасбросок успешен':'Спасбросок провален'):isCheck?(success?'Проверка успешна':'Проверка провалена'):roll.outcome==='crit'?'Критическое попадание!':success?'Попадание':'Промах'}</h3>
           {!isSave && !isCheck && roll.dice.some(die=>die.sides===20 && !die.discarded && die.result===1) && <p>Натуральная 1 — автоматический промах, даже если сумма достигает КД.</p>}
           {beat?.rollPhase==='before-reaction'&&<p>Цель может применить защитную реакцию до получения урона.</p>}
           {beat?.rollPhase==='after-reaction'&&<p>Итог после защитной реакции. Сохранён исходный бросок.</p>}

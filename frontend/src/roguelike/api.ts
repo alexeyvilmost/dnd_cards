@@ -5,6 +5,19 @@ import type { ForgeCharacter } from '../character/types';
 import type { Monster } from '../monsters/types';
 import type { Action, PassiveEffect } from '../types';
 import {playCommandSound,playCommittedEvents} from '../audio/commandSounds';
+import type {RollInfluence} from '../engine/rollInfluence';
+import type {RollLog} from '../mvp/contracts';
+
+export interface JourneyAura extends PassiveEffect {key:string;mechanics:NonNullable<PassiveEffect['mechanics']>}
+export interface JourneyRoom {id:string;name:string;description:string;icon:string}
+export interface JourneyNode {id:string;row:number;lane:number;kind:string;next:string[];completed:boolean;resolved_kind?:string}
+export interface JourneyCheck {skill:string;ability:string;dc:number}
+export interface JourneyOption {id:string;name:string;description:string;cost_gold?:number;checks?:JourneyCheck[]}
+export interface UrvinDefinition {id:string;name:string;description:string;auras:JourneyAura[]}
+export interface UrvinJourney {version:1;name:string;nodes:JourneyNode[];current_node:string;aura:JourneyAura;aura_active:boolean;rooms:JourneyRoom[];
+  stash?:Array<{card_id:string;name:string}>;
+  event?:{definition:{id:string;name:string;description:string;options:JourneyOption[]};choice_id?:string;actor_id?:string;check_index:number;finished:boolean;
+    pending?:{phase:'influence'|'boost'|'resolved';roll:RollLog;influences:RollInfluence[]};rolls:Array<{roll:RollLog}>};}
 
 export interface RoguelikeOffer {
   id: string;
@@ -51,6 +64,8 @@ export interface RoguelikeReward {
 }
 
 export interface RoguelikeRun {
+  mode?: 'classic'|'urvin';
+  journey?: UrvinJourney;
   command_events?: CharacterEventRow[];
   combat_state?: SoloCombatState;
   trusted_combat_available?: boolean;
@@ -83,6 +98,7 @@ export interface RoguelikeRun {
 }
 
 export type RoguelikeCommandType =
+  | 'enter_room' | 'leave_room' | 'resume_room' | 'claim_stash' | 'event_choice' | 'event_roll' | 'event_resolve' | 'event_continue'
   | 'initialize_combat'
   | 'combat_intent'
   | 'start_encounter'
@@ -101,6 +117,7 @@ export type RoguelikeCommandType =
   | 'victory';
 
 export const roguelikeApi = {
+  modes: async ():Promise<UrvinDefinition> => (await apiClient.get<{mode:UrvinDefinition}>('/api/roguelike/runs/modes')).data.mode,
   listSelection: async (): Promise<{runs: RoguelikeRun[]; unavailable_source_character_ids: string[]}> => {
     const {data} = await apiClient.get<{runs: RoguelikeRun[]; unavailable_source_character_ids?: string[]}>('/api/roguelike/runs');
     return {runs: data.runs ?? [], unavailable_source_character_ids: data.unavailable_source_character_ids ?? []};
@@ -113,9 +130,10 @@ export const roguelikeApi = {
     const { data } = await apiClient.get<{ run: RoguelikeRun }>(`/api/roguelike/runs/${id}`);
     return data.run;
   },
-  create: async (sourceCharacterId: string | string[]): Promise<RoguelikeRun> => {
+  create: async (sourceCharacterId: string | string[], options?:{mode:string;aura_id?:string}): Promise<RoguelikeRun> => {
     const { data } = await apiClient.post<{ run: RoguelikeRun }>('/api/roguelike/runs', {
       ...(Array.isArray(sourceCharacterId)?{source_character_ids:sourceCharacterId}:{source_character_id: sourceCharacterId}),
+      ...options,
     });
     return data.run;
   },

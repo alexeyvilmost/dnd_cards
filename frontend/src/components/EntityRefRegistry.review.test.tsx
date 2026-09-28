@@ -2,7 +2,7 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { clearApiCache } from '../api/apiCache';
+import { bustPrefix, clearApiCache } from '../api/apiCache';
 import { updateReviewStatus } from '../api/contentReview';
 import { getCachedEntity, useEntityRef, type EntityRefType } from './EntityRefRegistry';
 
@@ -32,6 +32,24 @@ describe('entity reference cache after a successful review update', () => {
   });
   afterEach(async () => { await act(async () => root.unmount()); });
 
+  it.each([false,true])('patches a nested preview without loading again (read pending=%s)', async pending => {
+    const stale = { id: 'resource-one', support: { status: 'not_verified' } };
+    let finish!: (value: typeof stale) => void;
+    if (pending) mocks.read.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+    else mocks.read.mockResolvedValue(stale);
+    mocks.patch.mockResolvedValue({ data: { entity_type: 'resource', entity_id: stale.id, support: {status:'verified'} } });
+    await act(async () => root.render(<NestedReference type="resource" id="resource-slug" />));
+    const node=host.querySelector('p');
+    await act(async () => { await updateReviewStatus('resource',stale.id,'verified'); });
+    if (pending) await act(async () => { finish(stale); });
+    expect(host.textContent).toBe('verified');
+    expect(host.querySelector('p')).toBe(node);
+    await act(async () => root.render(null));
+    await act(async () => root.render(<NestedReference type="resource" id={stale.id} />));
+    expect(host.textContent).toBe('verified');
+    expect(mocks.read).toHaveBeenCalledTimes(1);
+  });
+
   it.each(['response', 'rejection'] as const)('ignores an old %s after refresh, including the canonical identity on remount', async outcome => {
     const stale = { id: 'canonical-resource-id', name: 'Ресурс', support: { status: 'not_verified' } };
     const fresh = { ...stale, support: { status: 'verified' } };
@@ -44,7 +62,7 @@ describe('entity reference cache after a successful review update', () => {
     await act(async () => root.render(<NestedReference type="resource" id="resource-slug" />));
     expect(host.textContent).toBe('loading');
     await act(async () => root.render(null));
-    await act(async () => { await updateReviewStatus('resource', stale.id, 'verified'); });
+    await act(async () => { bustPrefix('/api/resources'); await updateReviewStatus('resource', stale.id, 'verified'); });
     await act(async () => root.render(<NestedReference type="resource" id="resource-slug" />));
     expect(host.textContent).toBe('verified');
     await act(async () => {

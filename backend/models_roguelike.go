@@ -20,6 +20,10 @@ const (
 // dedicated dungeon_crawl CharacterV3 so the existing certified rules engine is
 // reused without introducing a second implementation of D&D mechanics.
 type RoguelikeRun struct {
+	Mode                         string         `json:"mode" gorm:"type:varchar(24);not null;default:'classic'"`
+	Journey                      JSONMap        `json:"journey" gorm:"type:jsonb;not null;default:'{}'"`
+	ModeRules                    JSONMap        `json:"-" gorm:"type:jsonb;not null;default:'{}'"`
+	JourneyPrivate               JSONMap        `json:"-" gorm:"type:jsonb;not null;default:'{}'"`
 	ID                           uuid.UUID      `json:"id" gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	UserID                       uuid.UUID      `json:"user_id" gorm:"type:uuid;not null;index"`
 	SourceCharacterID            uuid.UUID      `json:"source_character_id" gorm:"type:uuid;not null"`
@@ -87,6 +91,8 @@ type RoguelikeCombatEvent struct {
 func (RoguelikeCombatEvent) TableName() string { return "roguelike_combat_events" }
 
 type CreateRoguelikeRunRequest struct {
+	Mode               string      `json:"mode"`
+	AuraID             string      `json:"aura_id"`
 	SourceCharacterID  uuid.UUID   `json:"source_character_id"`
 	SourceCharacterIDs []uuid.UUID `json:"source_character_ids"`
 }

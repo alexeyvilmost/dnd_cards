@@ -20,7 +20,7 @@ import {previewAttackDefense} from '../rules-core/handler';
 import {useSiteSettings} from '../settings';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
-import { actionsApi, effectsApi } from '../api/client';
+import { actionsApi, effectsApi, ApiRequestError } from '../api/client';
 import { charactersV3Api } from '../character/api';
 import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
 import { playerFacingSheetActionError } from '../character/sheetActionError';
@@ -28,6 +28,13 @@ import {
   runtimeInventoryPayload,
   writeRulesEngineRuntimeTurnState,
 } from '../character/runtime';
+
+function combatBootstrapError(reason: unknown): string {
+  if (reason instanceof ApiRequestError) {
+    return reason.code ? `${reason.code}: ${reason.message}` : reason.message;
+  }
+  return reason instanceof Error ? reason.message : 'Не удалось начать бой';
+}
 import { newSheetRuntimeCommandId } from '../character/sheetCombatSession';
 import type { SheetCanonicalRuntime } from '../character/sheetCanonicalWorld';
 import { sheetWorldInputFormContext } from '../character/sheetWorldInputForm';
@@ -486,7 +493,7 @@ export default function SoloCombatPage() {
       } catch (reason) {
         if (active) {
           setStaleRulesSnapshot(isIncompatibleCombatRulesError(reason));
-          setError(reason instanceof Error ? reason.message : 'Не удалось начать бой'); setBusy(false);
+          setError(combatBootstrapError(reason)); setBusy(false);
         }
       }
     })();

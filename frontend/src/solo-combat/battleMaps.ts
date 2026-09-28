@@ -1,10 +1,11 @@
 import rawMaps from './data/battleMaps.json';
+import urvinMaps from './data/urvinMaps.json';
 import type {ActorState} from '../rules-core/domain';
 import type {CombatAreaState, SoloCombatState} from './types';
 import {actorFootprint, footprintCells} from './footprint';
 import {boardCells, boardObstacles, featureCells, terrainFits, terrainStepFits, type BattleMapDefinition} from './boardGeometry';
 
-export const BATTLE_MAPS = rawMaps as unknown as readonly BattleMapDefinition[];
+export const BATTLE_MAPS = [...rawMaps,...urvinMaps] as unknown as readonly BattleMapDefinition[];
 
 /** Flood the anchor-space of this footprint, not the one-cell navigation mesh. */
 export function mapConnectedPositions(map:BattleMapDefinition,size:number,containing?:{x:number;y:number}) {

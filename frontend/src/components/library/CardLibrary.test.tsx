@@ -138,7 +138,7 @@ describe('item library interactions', () => {
   });
 
 
-  it('loads all filtered pages for status counts, combines statuses, and refreshes after a status edit', async () => {
+  it('loads all filtered pages for status counts, combines statuses, and patches counts and filtered rows without fetching again', async () => {
     mocks.showReviewStatus = true;
     const rows = [
       {...cards[0], support:{status:'verified'}},
@@ -153,15 +153,15 @@ describe('item library interactions', () => {
     expect(container.querySelector('.library-review-summary p')?.textContent).toContain('3 сущностей');
     expect(container.querySelector('.library-review-summary [data-status=verified] strong')?.textContent).toBe('1');
     expect(container.querySelectorAll('.library-item-row .review-status-corner')).toHaveLength(2);
-    rows[1].support.status='verified';
-    await act(async()=>{window.dispatchEvent(new CustomEvent('entity-review-status-changed'));});
+    await act(async()=>{window.dispatchEvent(new CustomEvent('entity-review-status-changed',{detail:{entity_type:'card',entity_id:rows[1].id,support:{status:'verified'}}}));});
+    expect(mocks.list).toHaveBeenCalledTimes(3);
     expect(container.querySelectorAll('.library-item-row')).toHaveLength(1);
     expect(container.querySelector('.library-review-summary [data-status=verified] strong')?.textContent).toBe('2');
     expect(new URLSearchParams(location().split('?')[1]).get('status')).toBe('not_verified,narrative');
   });
 
 
-  it('keeps the authoritative status in the open detail even if the catalog refresh fails', async () => {
+  it('keeps the same open detail and scroll position while patching support without a catalog reload', async () => {
     mocks.showReviewStatus=true;
     const card={...cards[0],support:{status:'not_verified'}};
     mocks.list.mockResolvedValue({cards:[card],total:1});
@@ -169,8 +169,18 @@ describe('item library interactions', () => {
     await render();
     await click('Первый предмет');
     expect(container.querySelector('[role=dialog]')?.getAttribute('data-support-status')).toBe('not_verified');
-    mocks.list.mockRejectedValueOnce(new Error('refresh failed'));
+    const dialog=container.querySelector('[role=dialog]')!;
+    const row=container.querySelector('.library-item-row')!;
+    container.scrollTop=480;
+    dialog.scrollTop=125;
+    const url=location();
     await act(async()=>window.dispatchEvent(new CustomEvent('entity-review-status-changed', {detail:{entity_type:'card',entity_id:card.id,support:{status:'verified'}}})));
+    expect(container.querySelector('[role=dialog]')).toBe(dialog);
+    expect(container.querySelector('.library-item-row')).toBe(row);
+    expect(container.scrollTop).toBe(480);
+    expect(dialog.scrollTop).toBe(125);
+    expect(location()).toBe(url);
+    expect(mocks.list).toHaveBeenCalledTimes(1);
     expect(container.querySelector('[role=dialog]')?.getAttribute('data-support-status')).toBe('verified');
     expect(container.querySelector('.library-item-row .review-status-corner')?.getAttribute('data-review-status')).toBe('verified');
   });

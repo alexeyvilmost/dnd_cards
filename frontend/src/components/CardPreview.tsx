@@ -20,6 +20,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
   const propertiesArray = (Array.isArray(card.properties) ? card.properties : (card.properties ? [card.properties] : []))
     .filter((property) => typeof property === 'string' && property.trim() !== '');
   const hasProperties = propertiesArray.length > 0;
+  const hasDescription = Boolean(card.description?.trim());
   const hasDetailedDescription = Boolean(card.show_detailed_description && card.detailed_description?.trim());
   const isExtended = Boolean(card.is_extended);
 
@@ -129,7 +130,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
               </div>
 
               {/* Изображение - стандартный размер */}
-              <div className="flex items-center justify-center w-full h-36">
+              <div className={`flex items-center justify-center w-full ${hasDescription ? 'h-36' : 'flex-1 min-h-0'}`}>
                 {card.image_url && card.image_url.trim() !== '' ? (
                   <img
                     src={card.image_url}
@@ -174,7 +175,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
             </div>
 
             {/* Правая половина - только описание */}
-            <div className="w-1/2 min-w-0 p-2 bg-gray-50 border-l border-gray-200 flex flex-col min-h-[280px]">
+            {hasDescription && <div className="w-1/2 min-w-0 p-2 bg-gray-50 border-l border-gray-200 flex flex-col min-h-[280px]">
               {/* Описание и детальное описание */}
               <div className="flex-1 overflow-hidden flex flex-col justify-start pt-2 space-y-2">
                 {/* Основное описание */}
@@ -189,7 +190,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
                 </p>
                 
               </div>
-            </div>
+            </div>}
           </div>
 
           <CardBottomPanel card={card} variant="absolute" />
@@ -210,7 +211,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
           </div>
 
           {/* Изображение - без отступов */}
-          <div className="flex items-center justify-center w-full h-36">
+          <div className={`flex items-center justify-center w-full ${hasDescription ? 'h-36' : 'flex-1 min-h-0'}`}>
             {card.image_url && card.image_url.trim() !== '' ? (
               <img
                 src={card.image_url}
@@ -232,7 +233,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
           </div>
 
           {/* Описание */}
-          <div className="px-1 pt-2 pb-8 bg-gray-50 flex-1 relative overflow-hidden flex flex-col justify-start">
+          {hasDescription && <div className="px-1 pt-2 pb-8 bg-gray-50 flex-1 relative overflow-hidden flex flex-col justify-start">
             <p 
               className={`text-gray-700 leading-tight font-fantasy whitespace-pre-wrap`}
               style={{
@@ -242,7 +243,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
             >
               <FormattedText text={card.description || ''} />
             </p>
-          </div>
+          </div>}
 
           <CardBottomPanel card={card} variant="flow" />
         </>

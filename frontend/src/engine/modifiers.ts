@@ -31,6 +31,8 @@ const MODIFIER_KINDS = new Set<NonNullable<RollModifier['kind']>>([
 export interface ModifierQueryFacts {
   [key: string]: unknown;
   attackKind?: 'weapon' | 'spell' | 'unarmed';
+  /** Damage follows a successful attack roll, including spell attacks. */
+  attackDamage?: boolean;
   weaponCategory?: 'melee' | 'ranged';
   wearingArmor?: boolean;
   extraAttackSource?: 'light_property' | 'other' | 'none';
