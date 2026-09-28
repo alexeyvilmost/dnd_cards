@@ -34,6 +34,7 @@ describe('data-owned battle maps',()=>{
    const positions=packBattleMap(generated,[...heroes,...enemies],heroes.map(h=>h.id));
    expect(positions,`${map.id}, ${count} heroes, footprint ${footprint}, seed ${seed}`).not.toBeNull();
    for(const enemy of enemies)expect(Math.min(...heroes.map(hero=>footprintDistanceFt(positions![enemy.id],positions![hero.id],footprint,1)))).toBeLessThanOrEqual(60);
+   for(const enemy of enemies)expect(mapConnectedPositions(generated,footprint,positions![enemy.id]).some(p=>footprintDistanceFt(p,positions![heroes[0].id],footprint)===5)).toBe(true);
   }
  },30000);
  it('retains river bends as authoritative cells, not its bounding box',()=>{

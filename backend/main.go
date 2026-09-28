@@ -173,7 +173,7 @@ func main() {
 			contentAdminAuth,
 			JSONBodyLimitMiddleware(maxContentSupportBatchBodyBytes),
 			RequestBodyLimitMiddleware(maxContentSupportBatchBodyBytes),
-			contentMigrationController.ApplyExactSupportBatch,
+			retiredContentCertification,
 		)
 		api.POST("/auth/register", authRateLimit.Handler(), authController.Register)
 		api.POST("/auth/login", authRateLimit.Handler(), authController.Login)
@@ -268,9 +268,10 @@ func main() {
 		api.PUT("/classes/:id", ContentEntityMutation(authService, db, "classes", false), classController.UpdateClass)
 		api.DELETE("/classes/:id", ContentEntityMutation(authService, db, "classes", false), classController.DeleteClass)
 
-		// Отдельный путь сертификации: обычный CRUD не принимает support и
-		// миграционный trigger инвалидирует прежний статус после правки контента.
-		api.PUT("/content-support/:entityType/:id", contentAdminAuth, contentSupportController.Update)
+		// Ручная проверка использует права редактирования сущности. Прежние
+		// certification-маршруты больше не записывают статусы и блокировки.
+		api.PUT("/content-support/:entityType/:id", contentAdminAuth, retiredContentCertification)
+		api.PATCH("/content-review/:entityType/:id", ContentReviewMutation(authService, db), contentSupportController.UpdateReview)
 		// Create и физический rollback создаваемых migration-сущностей связаны
 		// server-issued receipt в одной транзакции для разрешённых patch-схемой
 		// коллекций с crash-safe apply/rollback протоколом.
@@ -279,7 +280,7 @@ func main() {
 		api.POST("/content-migrations/:bundleId/:entityType/:id/exact-update", contentAdminAuth, contentMigrationController.ExactUpdate)
 		api.POST("/content-rollback/effect/:id/hard-delete-created", contentAdminAuth, contentMigrationController.RollbackCreatedEffect)
 		api.POST("/content-rollback/action/:id/hard-delete-created", contentAdminAuth, contentMigrationController.RollbackCreatedAction)
-		api.POST("/content-rollback/:entityType/:id/support", contentAdminAuth, contentMigrationController.RestoreSupport)
+		api.POST("/content-rollback/:entityType/:id/support", contentAdminAuth, retiredContentCertification)
 
 		// Ресурсы действий/персонажа
 		api.GET("/resources", OptionalAuthMiddleware(authService), resourceController.GetResources)

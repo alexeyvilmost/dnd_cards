@@ -34,7 +34,8 @@ function combatBootstrapError(reason: unknown): string {
     return reason.code ? `${reason.code}: ${reason.message}` : reason.message;
   }
   return reason instanceof Error ? reason.message : 'Не удалось начать бой';
-}import { newSheetRuntimeCommandId } from '../character/sheetCombatSession';
+}
+import { newSheetRuntimeCommandId } from '../character/sheetCombatSession';
 import type { SheetCanonicalRuntime } from '../character/sheetCanonicalWorld';
 import { sheetWorldInputFormContext } from '../character/sheetWorldInputForm';
 import type { ForgeCharacter } from '../character/types';

@@ -1,3 +1,4 @@
+import ReviewStatusCorner from './ReviewStatusCorner';
 import React from 'react';
 import type { Spell } from '../types';
 import {
@@ -13,7 +14,6 @@ import { parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics'
 import { formatFormulaDisplay } from '../engine/formula';
 import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
-import SupportStatusBadge from './forge/SupportStatusBadge';
 
 // Класс → русская подпись
 const SPELL_CLASS_LABEL: Record<string, string> = Object.fromEntries(
@@ -110,6 +110,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
       style={onClick ? { cursor: 'pointer' } : undefined}
     >
       <style>{SPELL_CARD_CSS}</style>
+      <ReviewStatusCorner entity={spell} entityType="spell" />
 
       {spell.image_url && spell.image_url.trim() !== '' && (
         <img
@@ -124,7 +125,6 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
 
       <h3>{spell.name || 'Название заклинания'}</h3>
       <div className="sp-subtype"><OriginalName nameEn={spell.name_en} suffix={subtype || 'Заговор'} /></div>
-      <SupportStatusBadge entity={spell} />
 
       {hasStats && (
         <div className="sp-stats">

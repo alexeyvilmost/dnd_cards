@@ -1,3 +1,4 @@
+import ReviewStatusCorner from './ReviewStatusCorner';
 import type { Card } from '../types';
 import { FormattedText } from '../utils/formattedText';
 import { renderProperties } from '../utils/propertyIcons';
@@ -102,6 +103,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
       onClick={onClick}
     >
       <div className="relative bg-white rounded-[6px] overflow-hidden flex flex-col h-full w-full">
+      <ReviewStatusCorner entity={card} entityType="card" />
       {/* Значок необходимости настройки */}
       {card.requires_attunement && (
         <div className="absolute top-1 right-1 select-none z-10">

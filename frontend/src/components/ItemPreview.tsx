@@ -1,3 +1,4 @@
+import ReviewStatusCorner from './ReviewStatusCorner';
 import {cardPropertyList} from '../utils/cardProperties';
 import React from 'react';
 import type { Card } from '../types';
@@ -95,6 +96,7 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
       style={{ ...(onClick ? { cursor: 'pointer' } : {}), ...(bgGradient ? { background: bgGradient } : {}) }}
     >
       <style>{SPELL_CARD_CSS}</style>
+      <ReviewStatusCorner entity={card} entityType="card" />
 
       {card.image_url && card.image_url.trim() !== '' && (
         <img

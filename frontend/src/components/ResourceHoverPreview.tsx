@@ -17,7 +17,7 @@ interface ResourceHoverPreviewProps {
 /** Ресурсная плитка с тем же превью, что используется в библиотеке ресурсов. */
 export default function ResourceHoverPreview({ resourceId, option, maximum, sources, children }: ResourceHoverPreviewProps) {
   const resource = useMemo<ResourceDefinition>(() => ({
-    id: resourceId,
+    id: option?.entityId ?? resourceId,
     resource_id: resourceId,
     name: option?.label || resourceId,
     description: option?.description,
@@ -26,6 +26,7 @@ export default function ResourceHoverPreview({ resourceId, option, maximum, sour
     image_url_spent: option?.imageUrlSpent,
     recharge: option?.recharge,
     sort_order: option?.sortOrder,
+    support: option?.support,
   }), [resourceId, option]);
 
   return (

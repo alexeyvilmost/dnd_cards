@@ -1,3 +1,4 @@
+import { loadCatalogPages } from '../api/catalogPages';
 import { actionsApi, cardsApi, effectsApi, featsApi, spellsApi } from '../api/client';
 import type { Action, Card, Feat, FeatCategory, PassiveEffect, Spell } from '../types';
 import { charactersV3Api } from './api';
@@ -64,22 +65,22 @@ export async function loadManualEntities(
 ): Promise<ManualEntity[]> {
   const query = search.trim() || undefined;
   if (type === 'items') {
-    const response = await cardsApi.getCards({ limit, search: query, exclude_template_only: true });
+    const response = await loadCatalogPages((page: number) => cardsApi.getCards({ page, limit, search: query, exclude_template_only: true }), 'cards');
     return (response.cards ?? []).map((entity) => normalize(entity, type));
   }
   if (type === 'actions') {
-    const response = await actionsApi.getActions({ limit, search: query });
+    const response = await loadCatalogPages((page: number) => actionsApi.getActions({ page, limit, search: query }), 'actions');
     return (response.actions ?? []).map((entity) => normalize(entity, type));
   }
   if (type === 'spells') {
-    const response = await spellsApi.getSpells({ limit, search: query });
+    const response = await loadCatalogPages((page: number) => spellsApi.getSpells({ page, limit, search: query }), 'spells');
     return (response.spells ?? []).map((entity) => normalize(entity, type));
   }
   if (type === 'feats') {
-    const response = await featsApi.getFeats({ limit, search: query });
+    const response = await loadCatalogPages((page: number) => featsApi.getFeats({ page, limit, search: query }), 'feats');
     return (response.feats ?? []).map((entity) => normalize(entity, type));
   }
-  const response = await effectsApi.getEffects({ limit, search: query });
+  const response = await loadCatalogPages((page: number) => effectsApi.getEffects({ page, limit, search: query }), 'effects');
   return (response.effects ?? [])
     .filter((entity) => entity.effect_type !== 'condition')
     .map((entity) => normalize(entity, type));

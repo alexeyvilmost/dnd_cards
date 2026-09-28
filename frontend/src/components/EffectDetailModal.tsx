@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Edit, Trash2, Copy, Lock } from 'lucide-react';
+import { Edit, Trash2, Copy } from 'lucide-react';
 import type { PassiveEffect } from '../types';
 import { PASSIVE_EFFECT_TYPE_OPTIONS } from '../types';
 import { effectsApi } from '../api/client';
@@ -8,7 +8,6 @@ import { FormattedText } from '../utils/formattedText';
 import EffectPreview from './EffectPreview';
 import EntityImageEditor from './EntityImageEditor';
 import { EntityDetailShell, EdmField, EdmFields, EdmDesc, EdmBlock } from './EntityDetailShell';
-import { isMechanicsLocked } from '../content/supportStatus';
 
 interface EffectDetailModalProps {
   effect: PassiveEffect | null;
@@ -26,13 +25,12 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
   onUpdated,
 }) => {
   if (!isOpen || !effect) return null;
-  const locked = isMechanicsLocked(effect);
 
   const typeLabel = PASSIVE_EFFECT_TYPE_OPTIONS.find((o) => o.value === effect.effect_type)?.label || effect.effect_type;
 
   return (
     <EntityDetailShell
-      entity={{type:'effect',id:effect.id,author:effect.author}}
+      entity={{type:'effect',id:effect.id,author:effect.author,support:effect.support}}
       isOpen={isOpen}
       onClose={onClose}
       title={effect.name}
@@ -50,11 +48,6 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
       )}
       actions={(
         <>
-          {locked && (
-            <span className="edm-btn" aria-description="Механика закреплена полной тестовой сертификацией">
-              <Lock size={18} /><span>Закреплено</span>
-            </span>
-          )}
           {
             <Link to={`/effect-creator?edit=${effect.id}`} className="edm-btn">
               <Edit size={18} /><span>Редактировать</span>
@@ -63,11 +56,9 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
           <Link to={`/effect-creator?template_id=${effect.id}`} className="edm-btn">
             <Copy size={18} /><span>Использовать как шаблон</span>
           </Link>
-          {!locked && (
-            <button type="button" onClick={() => onDelete(effect.id)} className="edm-btn edm-btn--danger">
+          <button type="button" onClick={() => onDelete(effect.id)} className="edm-btn edm-btn--danger">
               <Trash2 size={18} /><span>Удалить</span>
             </button>
-          )}
         </>
       )}
     >

@@ -33,6 +33,6 @@ export default function PassiveCreator() {
       </fieldset>
       {!catalog.can_manage && <p>Изменять библиотеку может администратор.</p>}
       {message && <p role="status">{message}</p>}
-    </form><EffectPreview effect={passivePresentationEffect(draft)} disableHover/></div>
+    </form><EffectPreview reviewEntityType="passive" effect={passivePresentationEffect(draft)} disableHover/></div>
   </div>;
 }

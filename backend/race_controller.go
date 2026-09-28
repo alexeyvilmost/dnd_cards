@@ -143,7 +143,7 @@ func (rc *RaceController) CreateRace(c *gin.Context) {
 	if r.Author == "" {
 		r.Author = "Admin"
 	}
-	if err := rc.db.Create(&r).Error; err != nil {
+	if err := contentEntityWrite(rc.db).Create(&r).Error; err != nil {
 		writeEntityCreateDatabaseError(c, "вид", err)
 		return
 	}
@@ -239,7 +239,7 @@ func (rc *RaceController) UpdateRace(c *gin.Context) {
 	if req.IsExtended != nil {
 		r.IsExtended = req.IsExtended
 	}
-	if err := rc.db.Save(&r).Error; err != nil {
+	if err := contentEntityWrite(rc.db).Save(&r).Error; err != nil {
 		writeEntityUpdateDatabaseError(c, "вид", err)
 		return
 	}

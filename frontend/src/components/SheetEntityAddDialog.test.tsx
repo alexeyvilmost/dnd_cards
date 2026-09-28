@@ -56,7 +56,7 @@ describe('SheetEntityAddDialog uncertified entity flow', () => {
     vi.restoreAllMocks();
   });
 
-  it('adds an explicitly revealed uncertified entity without a second confirmation window', async () => {
+  it('shows and adds an unverified entity immediately without confirmation', async () => {
     const confirm = vi.spyOn(window, 'confirm');
     await act(async () => {
       root.render(<SheetEntityAddDialog character={character} onUpdated={() => undefined} onClose={() => undefined} />);
@@ -72,8 +72,7 @@ describe('SheetEntityAddDialog uncertified entity flow', () => {
       await Promise.resolve();
     });
 
-    const showAll = container.querySelector<HTMLInputElement>('.sheet-entity-add-all input')!;
-    await act(async () => showAll.click());
+    expect(container.querySelector('.sheet-entity-add-all')).toBeNull();
     const add = [...container.querySelectorAll<HTMLButtonElement>('button')]
       .find((button) => button.textContent?.includes('Добавить'))!;
     await act(async () => {

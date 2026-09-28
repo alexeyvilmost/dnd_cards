@@ -207,7 +207,7 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, p
       </div>
       {!pickedEntity && (
         <p className="issues" role="alert">
-          Состояния доступны только для просмотра: сертифицированный каталог БД не загружен.
+          Состояния доступны только для просмотра: каталог состояний БД не загружен.
         </p>
       )}
       {mutationBlockReason && (

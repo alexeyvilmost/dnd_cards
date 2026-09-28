@@ -5,14 +5,15 @@ import {readFile,writeFile} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
 import {randomUUID} from 'node:crypto';
 import assert from 'node:assert/strict';
-const base='http://127.0.0.1:3001',out=new URL('../../outputs/urvin-273/',import.meta.url);
+const base=process.env.ROGUELIKE_TEST_ORIGIN||'http://127.0.0.1:3001',out=new URL('../../outputs/urvin-273/',import.meta.url);
+assert(['localhost','127.0.0.1','[::1]'].includes(new URL(base).hostname),'Local test origin required');
 const access=JSON.parse(await readFile(new URL('access.json',out),'utf8'));
 const auth=await(await fetch(base+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(access)})).json();assert(auth.token);
-const config=JSON.parse(await readFile('C:/Users/alexe/AppData/Local/dnd-cards-dev/local-env.json','utf8'));
-const db=new URL(config.DATABASE_URL);assert(['localhost','127.0.0.1'].includes(db.hostname));
-const psql='C:/Users/alexe/AppData/Local/dnd-cards-dev/tools/postgresql-17.11/pgsql/bin/psql.exe';
+assert(process.env.ROGUELIKE_TEST_DATABASE_URL,'ROGUELIKE_TEST_DATABASE_URL must name the isolated local test database');
+const db=new URL(process.env.ROGUELIKE_TEST_DATABASE_URL);assert(['localhost','127.0.0.1','[::1]'].includes(db.hostname));
+const psql=process.env.PSQL||'psql';
 const literal=v=>`'${String(v).replaceAll("'","''")}'`;
-function sql(query){const r=spawnSync(psql,['-h',db.hostname,'-p',db.port,'-U',decodeURIComponent(db.username),'-d','shop_review_249_20260915','-At','-v','ON_ERROR_STOP=1'],{input:query,encoding:'utf8',env:{...process.env,PGPASSWORD:decodeURIComponent(db.password)}});assert.equal(r.status,0,r.stderr);return r.stdout.trim();}
+function sql(query){const r=spawnSync(psql,['-h',db.hostname,'-p',db.port||'5432','-U',decodeURIComponent(db.username),'-d',decodeURIComponent(db.pathname.slice(1)),'-At','-v','ON_ERROR_STOP=1'],{input:query,encoding:'utf8',env:{...process.env,PGPASSWORD:decodeURIComponent(db.password)}});assert.equal(r.status,0,r.stderr);return r.stdout.trim();}
 async function api(path,method='GET',body,status=200){const r=await fetch(base+'/api'+path,{method,headers:{'Content-Type':'application/json',Authorization:`Bearer ${auth.token}`},...(body?{body:JSON.stringify(body)}:{})});const value=await r.json();assert.equal(r.status,status,`${method} ${path}: ${JSON.stringify(value)}`);return value;}
 async function command(run,type,payload={},status=200,id=randomUUID()){return api(`/roguelike/runs/${run.id}/commands`,'POST',{type,payload,command_id:id,expected_revision:run.revision},status);}
 const {mode}=await api('/roguelike/runs/modes'),{templates}=await api('/character-templates');

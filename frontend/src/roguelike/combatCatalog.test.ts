@@ -5,6 +5,31 @@ import {prepareRoguelikeCombatParticipant, type FrozenCombatCatalog} from './com
 
 const fixture = inputJson as unknown as {character: ForgeCharacter; catalog: FrozenCombatCatalog; basicActionIds: string[]};
 describe('pinned fighter dependency closure', () => {
+  const spell = (id: string, cardNumber: string) => ({id, card_number: cardNumber,
+    name: 'Свет', name_en: "  Traveler's Light  ", description: '', level: 0, mechanics: {},
+  } as FrozenCombatCatalog['entities']['spell'][number]);
+
+  it.each(['11111111-1111-4111-8111-111111111111', 'travelers_light'])('keeps an exact spell reference %s usable despite duplicate English aliases', async reference => {
+    const input = structuredClone(fixture);
+    input.catalog.entities.spell = [spell('11111111-1111-4111-8111-111111111111', 'travelers_light'), spell('22222222-2222-4222-8222-222222222222', 'other-card')];
+    input.character.spell_ids = [reference];
+    expect((await prepareRoguelikeCombatParticipant(input.character, input.catalog, input.basicActionIds)).status).toBe('ready');
+  });
+
+  it('resolves a unique trimmed case-insensitive English alias', async () => {
+    const input = structuredClone(fixture);
+    input.catalog.entities.spell = [spell('11111111-1111-4111-8111-111111111111', 'spell-card')];
+    input.character.spell_ids = ['  TRAVELERS_LIGHT  '];
+    expect((await prepareRoguelikeCombatParticipant(input.character, input.catalog, input.basicActionIds)).status).toBe('ready');
+  });
+
+  it('rejects an actually requested ambiguous alias even when assembly catches optional loads', async () => {
+    const input = structuredClone(fixture);
+    input.catalog.entities.spell = [spell('11111111-1111-4111-8111-111111111111', 'spell-card'), spell('22222222-2222-4222-8222-222222222222', 'other-card')];
+    input.character.spell_ids = ['travelers_light'];
+    await expect(prepareRoguelikeCombatParticipant(input.character, input.catalog, input.basicActionIds)).rejects.toThrow('Неоднозначная ссылка');
+  });
+
   it('builds the existing fighter from an immutable offline catalog', async () => {
     const input = structuredClone(fixture);
     const result = await prepareRoguelikeCombatParticipant(input.character, input.catalog, input.basicActionIds);

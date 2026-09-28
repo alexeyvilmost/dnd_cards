@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Heart, Shield, Footprints } from 'lucide-react';
 import type { Monster } from '../monsters/types';
-import SupportStatusBadge from './forge/SupportStatusBadge';
+import ReviewStatusCorner from './ReviewStatusCorner';
 
 const ABILITY_LABELS = { str: 'СИЛ', dex: 'ЛВК', con: 'ТЕЛ', int: 'ИНТ', wis: 'МДР', cha: 'ХАР' } as const;
 
@@ -18,7 +18,7 @@ export default function MonsterPreview({ monster, staticCard = false, onOpen }: 
             <h3>{monster.name}</h3>
             <p>{monster.size} · {monster.creature_type} · ПО {monster.challenge_rating}</p>
           </div>
-          <SupportStatusBadge entity={monster} compact />
+          <ReviewStatusCorner entity={monster} entityType="monster" />
         </div>
         <div className="monster-card__vitals">
           <span><Shield size={14} /> КД {monster.armor_class}</span>

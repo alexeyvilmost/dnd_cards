@@ -18,6 +18,9 @@ func TestWorkerRejectionDoesNotExposePrivateException(t *testing.T) {
 		{`{"error":"invalid_combat_command","message":"Неизвестная команда боя"}`, true},
 		{`{"error":"artifact_unavailable","message":"private-path"}`, true},
 		{`{"error":"invalid_combat_command","message":"private-entropy-secret"}`, false},
+		{`{"error":"invalid_combat_command","message":"Случайные значения [0.34,0.51], ключ внутреннего сервиса: abc123"}`, false},
+		{`{"error":"invalid_combat_command","message":"Каталог не содержит spell/bane; закрытые значения: 123"}`, false},
+		{`{"error":"invalid_combat_command","message":"Проверка уже завершена"}`, true},
 		{`{"error":"invalid_combat_command","message":"Карта столкновения отсутствует"}`, true},
 		{`{"error":"invalid_combat_command","message":"Каталог не содержит spell/hunters_mark"}`, true},
 		{`{"error":"invalid_combat_command","message":"Несовместимая версия каталога"}`, true},
@@ -63,5 +66,10 @@ func TestPublicRoguelikeWorkerFailureDetails(t *testing.T) {
 	}
 	if publicRoguelikeWorkerFailure(fmt.Errorf("unexpected internal boom")) != nil {
 		t.Fatal("unknown errors must stay opaque")
+	}
+	for _, message := range []string{"missing pinned spell https://internal/key: failure", "missing pinned spell " + strings.Repeat("x", 200) + ": failure"} {
+		if publicRoguelikeWorkerFailure(errors.New(message)) != nil {
+			t.Fatal("malformed catalog references must stay opaque")
+		}
 	}
 }

@@ -1,4 +1,5 @@
 import {useEffect, useState} from 'react';
+import {createPortal} from 'react-dom';
 import {useNavigate} from 'react-router-dom';
 import {roguelikeApi, type RoguelikeRun, type UrvinDefinition} from '../roguelike/api';
 import {isRunEligible} from '../roguelike/eligibility';
@@ -6,6 +7,7 @@ import type {ForgeCharacter} from '../character/types';
 import DialogShell from './DialogShell';
 import SheetActionLine from './SheetActionLine';
 import {useSiteSettings} from '../settings';
+import './UrvinJourney.css';
 import './StartRunFromSheet.css';
 
 function runBelongsToSource(run: RoguelikeRun, sourceId: string): boolean {
@@ -28,23 +30,27 @@ export default function StartRunFromSheet({character}: {character: ForgeCharacte
   const [mode, setMode] = useState<'classic' | 'urvin'>('classic');
   const [definition, setDefinition] = useState<UrvinDefinition>();
   const [aura, setAura] = useState('');
+  const [modeError, setModeError] = useState('');
+  const [modeAttempt, setModeAttempt] = useState(0);
 
   useEffect(() => {
     if (!open || !eligible) return;
     let active = true;
     setError('');
-    void Promise.all([
-      roguelikeApi.list(),
-      roguelikeApi.modes().catch(() => null),
-    ]).then(([listed, modes]) => {
+    setModeError('');
+    void roguelikeApi.list().then((listed) => {
       if (!active) return;
       setRuns(listed.filter((run) => runBelongsToSource(run, character.id)));
-      if (modes) setDefinition(modes);
     }).catch((reason) => {
       if (active) setError(reason instanceof Error ? reason.message : 'Не удалось загрузить забеги');
     });
+    void roguelikeApi.modes().then((modes) => {
+      if (active) setDefinition(modes);
+    }).catch(() => {
+      if (active) setModeError('Не удалось загрузить ауры.');
+    });
     return () => { active = false; };
-  }, [open, eligible, character.id]);
+  }, [open, eligible, character.id, modeAttempt]);
 
   if (!eligible) return null;
 
@@ -72,7 +78,7 @@ export default function StartRunFromSheet({character}: {character: ForgeCharacte
       aria-description="Выбрать существующий забег или начать новый на основе этого листа.">
       Начать забег
     </button>
-    {open && <DialogShell label="Забег персонажа" onCancel={() => !busy && setOpen(false)} wrap>
+    {open && createPortal(<DialogShell label="Забег персонажа" onCancel={() => !busy && setOpen(false)} wrap>
       <div className="start-run-dialog" tabIndex={-1}>
         <h2>Забег · {character.name}</h2>
         <p className="start-run-dialog__lead">
@@ -109,12 +115,12 @@ export default function StartRunFromSheet({character}: {character: ForgeCharacte
               {mode === 'urvin' && (
                 <div className="start-run-dialog__auras">
                   <h4>Стартовая аура</h4>
-                  {!definition ? <p>Загружаем ауры…</p> : (
+                  {!definition ? <p>{modeError || 'Загружаем ауры…'}{modeError && <button type="button" onClick={() => setModeAttempt(value => value + 1)}>Повторить</button>}</p> : (
                     <div className={entityDisplay.effects === 'icon' ? 'cs-action-tiles' : undefined}>
                       {definition.auras.map((effect) => (
                         <SheetActionLine key={effect.id} effectRef={effect} name={effect.name}
                           imageUrl={effect.image_url} variant={entityDisplay.effects}
-                          selected={aura === effect.id} onActivate={() => setAura(effect.id)} />
+                          selected={aura === effect.id} disabled={busy} onActivate={() => setAura(effect.id)} />
                       ))}
                     </div>
                   )}
@@ -130,6 +136,6 @@ export default function StartRunFromSheet({character}: {character: ForgeCharacte
           </>
         </section>
       </div>
-    </DialogShell>}
+    </DialogShell>, document.body)}
   </>;
 }

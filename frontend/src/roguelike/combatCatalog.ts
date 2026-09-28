@@ -39,6 +39,8 @@ export async function prepareRoguelikeCombatParticipant(
   const needs = new Map<string, CombatCatalogNeed>();
   const need = (entry: CombatCatalogNeed) => {needs.set(canonicalSha256Sync(entry), entry);};
   const indexes = new Map<CombatCatalogKind, Map<string, unknown>>();
+  const spellAliases = new Map<string, Spell | null>();
+  let ambiguousReference: Error | undefined;
   const englishSlug = (nameEn: unknown) => {
     if (typeof nameEn !== 'string' || !nameEn.trim()) return null;
     return nameEn.toLowerCase().replace(/'/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || null;
@@ -47,9 +49,12 @@ export async function prepareRoguelikeCombatParticipant(
     const index = new Map<string, unknown>();
     for (const entity of catalog.entities[kind]) {
       const row = entity as unknown as Record<string, unknown>;
-      const aliases = [row.id, row.card_number, row.resource_id];
-      if (kind === 'spell') aliases.push(englishSlug(row.name_en));
-      for (const reference of aliases) {
+      if (kind === 'spell') {
+        const alias = englishSlug(row.name_en);
+        if (alias) spellAliases.set(alias, spellAliases.has(alias) && spellAliases.get(alias) !== entity ? null : entity as Spell);
+      }
+      // Stable references (including resource_id) always win over display aliases.
+      for (const reference of [row.id, row.card_number, row.resource_id]) {
         if (typeof reference !== 'string' || !reference) continue;
         if (index.has(reference) && index.get(reference) !== entity) throw new Error(`Неоднозначная ссылка каталога: ${kind}/${reference}`);
         index.set(reference, entity);
@@ -58,7 +63,17 @@ export async function prepareRoguelikeCombatParticipant(
     indexes.set(kind, index);
   }
   const get = async <K extends CombatCatalogKind>(kind: K, reference: string): Promise<CombatCatalogEntities[K]> => {
-    const entity = indexes.get(kind)?.get(reference);
+    let entity = indexes.get(kind)?.get(reference);
+    if (!entity && kind === 'spell') {
+      const alias = spellAliases.get(reference.trim().toLowerCase());
+      if (alias === null) {
+        // Assembly tolerates some missing optional loads; ambiguity must still
+        // reject the worker build rather than silently omit a spell.
+        ambiguousReference = new Error(`Неоднозначная ссылка каталога: spell/${reference}`);
+        throw ambiguousReference;
+      }
+      entity = alias;
+    }
     if (!entity) {
       need({kind: 'entity', entityType: kind, reference});
       throw new Error(`Каталог не содержит ${kind}/${reference}`);
@@ -102,9 +117,11 @@ export async function prepareRoguelikeCombatParticipant(
     const basicActions = await Promise.all(basicActionIds.map(id => get('action', id)));
     const participant = await sheet.loadSheetCombatParticipant({character: structuredClone(character), basicActions,
       cards: new Map(catalog.entities.card.map(card => [card.id, card]))});
+    if (ambiguousReference) throw ambiguousReference;
     if (needs.size) return {status: 'needs_content', needs: [...needs.values()]};
     return {status: 'ready', participant, contentManifestHash: canonicalSha256Sync(catalog)};
   } catch (error) {
+    if (ambiguousReference) throw ambiguousReference;
     if (needs.size) return {status: 'needs_content', needs: [...needs.values()]};
     throw error;
   }

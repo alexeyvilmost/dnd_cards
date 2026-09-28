@@ -686,6 +686,7 @@ export type ActionRecharge = 'custom' | 'per_turn' | 'per_battle' | 'short_rest'
 export type ActionType = 'base_action' | 'class_feature' | 'item_property';
 
 export interface ResourceDefinition {
+  support?: EntitySupportCertification | null;
   id: string;
   author?: string;
   resource_id: string;
@@ -726,6 +727,7 @@ export type UpdateResourceRequest = Partial<CreateResourceRequest>;
 // (payload kind:'variable', op set/add/remove), привязанные к уровням класса.
 // См. docs/variables.md.
 export interface Variable {
+  support?: EntitySupportCertification | null;
   id: string;
   author?: string;
   variable_id: string;
@@ -763,6 +765,7 @@ export type UpdateVariableRequest = Partial<CreateVariableRequest>;
 // Понятие (глоссарий) — пояснение, не выражаемое отдельной сущностью (напр. «Спасбросок»).
 // На него ссылаются из текстов: [[Спасбросок|concept:saving_throw]]. Аналог переменных.
 export interface Concept {
+  support?: EntitySupportCertification | null;
   id: string;
   author?: string;
   concept_id: string;

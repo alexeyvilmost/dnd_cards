@@ -1,3 +1,4 @@
+import ReviewStatusCorner from './ReviewStatusCorner';
 import type { Concept } from '../types';
 import { FormattedText } from '../utils/formattedText';
 import OriginalName from './OriginalName';
@@ -29,6 +30,7 @@ const ConceptPreview: React.FC<ConceptPreviewProps> = ({ concept, className = ''
     style={onClick ? { cursor: 'pointer' } : undefined}
   >
     <style>{CONCEPT_CSS}</style>
+    <ReviewStatusCorner entity={concept} entityType="concept" />
     {concept.image_url?.trim() && (
       <img
         className="concept-tip-icon"

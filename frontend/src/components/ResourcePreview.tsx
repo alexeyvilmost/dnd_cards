@@ -51,6 +51,8 @@ const ResourcePreview: React.FC<ResourcePreviewProps> = ({
 
   return (
     <Bg3Card
+      entityType="resource"
+      entity={resource}
       title={resource.name || 'Название ресурса'}
       titleEn={resource.name_en}
       subtype={resourceCategoryLabel(resource.category)}

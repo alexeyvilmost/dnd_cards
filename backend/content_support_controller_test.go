@@ -291,7 +291,7 @@ func TestValidateContentSupportRequest(t *testing.T) {
 	}
 }
 
-func TestContentMechanicsLockMarkerFailsClosed(t *testing.T) {
+func TestContentMechanicsLockMarkersAreRetired(t *testing.T) {
 	if isContentMechanicsLocked(nil) {
 		t.Fatal("nil support must not be locked")
 	}
@@ -300,8 +300,8 @@ func TestContentMechanicsLockMarkerFailsClosed(t *testing.T) {
 		t.Fatal("legacy verified status must not become locked implicitly")
 	}
 	locked := JSONMap{"status": "verified_partial", "mechanics_locked": true}
-	if !isContentMechanicsLocked(&locked) {
-		t.Fatal("explicit durable mechanics lock was ignored")
+	if isContentMechanicsLocked(&locked) {
+		t.Fatal("archived mechanics lock became an active edit restriction")
 	}
 	malformed := JSONMap{"mechanics_locked": "true"}
 	if isContentMechanicsLocked(&malformed) {

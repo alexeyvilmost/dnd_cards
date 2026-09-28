@@ -1,0 +1,14 @@
+.library-review-filter { min-width: 0; grid-column: 1 / -1; border: 0; padding: 0; }
+.library-review-filter legend { font-weight: 600; margin-bottom: 8px; }
+.library-review-filter__options { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.library-review-filter label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; }
+.library-review-filter input { accent-color: var(--library-accent, #c9a227); }
+.library-review-filter button { margin-top: 8px; text-decoration: underline; font-size: 13px; }
+.library-review-swatch { flex: 0 0 10px; width: 10px; height: 10px; border-radius: 2px; }
+.library-review-summary { margin: 16px 0; color: inherit; }
+.library-review-summary p { margin: 0 0 8px; font-size: 12px; opacity: .8; }
+.library-review-summary__bar { display: flex; height: 14px; border-radius: 5px; overflow: hidden; background: #6b728033; }
+.library-review-summary__bar span { flex-basis: 0; min-width: 2px; }
+.library-review-summary ul { display: flex; flex-wrap: wrap; gap: 7px 20px; list-style: none; padding: 0; margin: 9px 0 0; font-size: 12px; }
+.library-review-summary li { display: flex; align-items: center; gap: 6px; }
+.library-review-row { position: relative; overflow: hidden; }

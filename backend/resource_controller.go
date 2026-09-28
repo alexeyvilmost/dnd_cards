@@ -40,7 +40,7 @@ func (rc *ResourceController) GetResources(c *gin.Context) {
 	}
 	rows := query.Order("sort_order ASC, name ASC, id ASC")
 	if wantsListView(c) {
-		rows = rows.Select("id, resource_id, name, name_en, description, category, recharge, sort_order, author, created_at, updated_at")
+		rows = rows.Select("id, resource_id, name, name_en, description, category, recharge, sort_order, author, support, created_at, updated_at")
 	}
 	if explicitPagination {
 		rows = rows.Offset(offset).Limit(limit)
@@ -120,7 +120,7 @@ func (rc *ResourceController) CreateResource(c *gin.Context) {
 		Recharge:      req.Recharge,
 		SortOrder:     req.SortOrder,
 	}
-	if err := rc.db.Create(&resource).Error; err != nil {
+	if err := contentEntityWrite(rc.db).Create(&resource).Error; err != nil {
 		writeEntityCreateDatabaseError(c, "ресурс", err)
 		return
 	}
@@ -164,7 +164,7 @@ func (rc *ResourceController) UpdateResource(c *gin.Context) {
 	resource.ImageURLSpent = req.ImageURLSpent
 	resource.Recharge = req.Recharge
 	resource.SortOrder = req.SortOrder
-	if err := rc.db.Save(&resource).Error; err != nil {
+	if err := contentEntityWrite(rc.db).Save(&resource).Error; err != nil {
 		writeEntityUpdateDatabaseError(c, "ресурс", err)
 		return
 	}

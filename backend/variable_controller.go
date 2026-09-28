@@ -103,7 +103,7 @@ func (vc *VariableController) CreateVariable(c *gin.Context) {
 		ImageURL:     req.ImageURL,
 		SortOrder:    req.SortOrder,
 	}
-	if err := vc.db.Create(&variable).Error; err != nil {
+	if err := contentEntityWrite(vc.db).Create(&variable).Error; err != nil {
 		writeEntityCreateDatabaseError(c, "переменную", err)
 		return
 	}
@@ -146,7 +146,7 @@ func (vc *VariableController) UpdateVariable(c *gin.Context) {
 	variable.DefaultValue = req.DefaultValue
 	variable.ImageURL = req.ImageURL
 	variable.SortOrder = req.SortOrder
-	if err := vc.db.Save(&variable).Error; err != nil {
+	if err := contentEntityWrite(vc.db).Save(&variable).Error; err != nil {
 		writeEntityUpdateDatabaseError(c, "переменную", err)
 		return
 	}

@@ -1,14 +1,13 @@
 import { apiClient } from '../api/client';
 import type { Monster, MonsterInput, MonstersResponse } from './types';
+import { readWithReviewUpdates } from '../api/contentReview';
 
 export const monstersApi = {
   list: async (params?: { search?: string; page?: number; limit?: number;tag?:string }): Promise<MonstersResponse> => {
-    const { data } = await apiClient.get<MonstersResponse>('/api/monsters', { params });
-    return data;
+    return readWithReviewUpdates('monster', async () => (await apiClient.get<MonstersResponse>('/api/monsters', { params })).data);
   },
   get: async (id: string): Promise<Monster> => {
-    const { data } = await apiClient.get<Monster>(`/api/monsters/${id}`);
-    return data;
+    return readWithReviewUpdates('monster', async () => (await apiClient.get<Monster>(`/api/monsters/${id}`)).data);
   },
   create: async (payload: MonsterInput): Promise<Monster> => {
     const { data } = await apiClient.post<Monster>('/api/monsters', payload);

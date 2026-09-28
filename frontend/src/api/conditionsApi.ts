@@ -6,7 +6,6 @@ import {
   replaceConditionsFromDatabase,
   resetConditionsToOfflineFixture,
 } from '../engine/conditions';
-import type { EntitySupportCertification } from '../content/supportStatus';
 import {
   conditionRecordContentHash,
   isCompleteConditionRule,
@@ -28,15 +27,6 @@ const CONDITION_IDS = Object.keys(BUILTIN_CONDITION_RULES).sort();
 const CONDITION_PAGE_LIMIT = 200;
 const CONDITION_MAX_PAGES = 10_000;
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const RFC3339_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/;
-const RELEASE_EVIDENCE_FIELDS = [
-  'certification_version', 'certified_at', 'evidence_id', 'evidence_hash',
-  'evidence_completed_at', 'gate_source_hash', 'source_content_hash',
-  'rules_hash', 'release_content_hash', 'release_hash', 'patch_hash',
-  'catalog_hash',
-] as const satisfies readonly (keyof EntitySupportCertification)[];
-
 export interface ExpectedConditionReleaseBinding {
   certificationVersion: typeof MICRO_MVP_CONDITION_CERTIFICATION_VERSION;
   /** Hash of the rules/overlay executable policy certified by the release. */
@@ -54,7 +44,7 @@ type CertifiedConditionEntityCatalog = {
 
 let certifiedConditionEntityCatalog: CertifiedConditionEntityCatalog | null = null;
 
-/** Exact certified DB entity behind a registered condition. Offline fixture
+/** Current DB entity behind a registered condition. Offline fixture
  * rules remain available for recovery/tips, but can never authorize a runtime
  * mutation because they have no current DB entity provenance. */
 export function certifiedConditionEffectEntity(
@@ -69,61 +59,12 @@ export function certifiedConditionEffectEntity(
   return entity ? structuredClone(entity) : null;
 }
 
-function releaseEvidenceIdentity(effect: ConditionEffectRecord): string {
-  return JSON.stringify(RELEASE_EVIDENCE_FIELDS.map((field) => effect.support?.[field] ?? null));
-}
-
 function validExpectedReleaseBinding(
   expected: ExpectedConditionReleaseBinding,
 ): boolean {
   return expected?.certificationVersion === MICRO_MVP_CONDITION_CERTIFICATION_VERSION
     && [expected.rulesHash, expected.releaseContentHash, expected.releaseHash]
       .every((hash) => typeof hash === 'string' && SHA256.test(hash));
-}
-
-async function certifiedHashes(
-  effect: ConditionEffectRecord,
-  expected: ExpectedConditionReleaseBinding,
-): Promise<{
-  contentHash: string;
-  dependencyHash: string;
-} | null> {
-  const support = effect.support;
-  if (support?.status !== 'verified_mechanical'
-    || support.certification_version !== MICRO_MVP_CONDITION_CERTIFICATION_VERSION
-    || support.rules_hash !== expected.rulesHash
-    || support.release_content_hash !== expected.releaseContentHash
-    || support.release_hash !== expected.releaseHash
-    || !support.certified_at
-    || !RFC3339_UTC.test(support.certified_at)
-    || Number.isNaN(Date.parse(support.certified_at))
-    || !support.content_hash
-    || !SHA256.test(support.content_hash)
-    || !support.dependency_hash
-    || !SHA256.test(support.dependency_hash)
-    || !support.evidence_id
-    || !UUID.test(support.evidence_id)
-    || !support.evidence_completed_at
-    || !RFC3339_UTC.test(support.evidence_completed_at)
-    || Number.isNaN(Date.parse(support.evidence_completed_at))
-    || ![
-      support.evidence_hash,
-      support.gate_source_hash,
-      support.source_content_hash,
-      support.rules_hash,
-      support.release_content_hash,
-      support.release_hash,
-      support.patch_hash,
-      support.catalog_hash,
-    ].every((hash) => typeof hash === 'string' && SHA256.test(hash))) {
-    return null;
-  }
-  const actualContentHash = await conditionRecordContentHash(effect);
-  if (actualContentHash !== support.content_hash) return null;
-  return {
-    contentHash: support.content_hash,
-    dependencyHash: support.dependency_hash,
-  };
 }
 
 async function sha256(value: string): Promise<string> {
@@ -182,30 +123,28 @@ export async function loadConditions(
   },
 ): Promise<ConditionLoadResult> {
   // A reload never leaves the previous mutation catalog usable while the new
-  // release is being fetched/certified.
+  // catalog is being fetched.
   certifiedConditionEntityCatalog = null;
   try {
     if (!validExpectedReleaseBinding(options.expectedRelease)) {
       throw new Error('current compiled condition release binding is invalid or missing');
     }
     const rows = await fetchAllConditionRows(options.timeoutMs);
-    // The table may also contain homebrew or future conditions. They remain
-    // ordinary content, but only rows attested by this exact release suite can
-    // participate in the authoritative PHB registry.
-    const releaseRows = rows.filter((row) => (
-      row.support?.certification_version === MICRO_MVP_CONDITION_CERTIFICATION_VERSION
-    ));
+    // Review status is human metadata, not permission to execute a condition.
+    // Materialize the existing engine registry from current DB declarations;
+    // keep completeness/uniqueness checks independently of legacy certificates.
+    const releaseRows = rows.filter((row) => {
+      const rule = materializeConditionRule(row);
+      return rule !== null && CONDITION_IDS.includes(rule.id);
+    });
     const materialized = await Promise.all(releaseRows.map(async (row) => ({
       row,
       rule: materializeConditionRule(row),
-      hashes: await certifiedHashes(row, options.expectedRelease),
+      contentHash: await conditionRecordContentHash(row),
     })));
     const ids = materialized.flatMap(({ rule }) => rule ? [rule.id] : []).sort();
-    const evidenceIdentities = new Set(materialized.map(({ row }) => (
-      releaseEvidenceIdentity(row)
-    )));
     const exact = materialized.length === CONDITION_IDS.length
-      && materialized.every(({ row, rule, hashes }) => (
+      && materialized.every(({ row, rule }) => (
         row.effect_type === 'condition'
           && typeof row.id === 'string'
           && row.id.trim().length > 0
@@ -215,18 +154,14 @@ export async function loadConditions(
           && typeof row.mechanics === 'object'
           && !Array.isArray(row.mechanics)
           && isCompleteConditionRule(rule)
-          && hashes !== null
       ))
       && new Set(ids).size === CONDITION_IDS.length
-      && evidenceIdentities.size === 1
       && ids.every((id, index) => id === CONDITION_IDS[index]);
-    if (!exact) throw new Error('condition release is incomplete, duplicated, invalid, or uncertified');
+    if (!exact) throw new Error('condition catalog is incomplete, duplicated, or invalid');
 
     const defs = materialized.map(({ rule }) => rule!);
     const hashInput = materialized
-      .map(({ rule, hashes }) => (
-        `${rule!.id}\0${hashes!.contentHash}\0${hashes!.dependencyHash}`
-      ))
+      .map(({ rule, contentHash }) => `${rule!.id}\0${contentHash}`)
       .sort()
       .join('\n');
     const setHash = await sha256(hashInput);

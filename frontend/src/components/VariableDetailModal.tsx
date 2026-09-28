@@ -18,7 +18,7 @@ const VariableDetailModal: React.FC<VariableDetailModalProps> = ({ variable, isO
 
   return (
     <EntityDetailShell
-      entity={{type:'variable',id:variable.id,author:variable.author}}
+      entity={{type:'variable',id:variable.id,author:variable.author,support:variable.support}}
       isOpen={isOpen}
       onClose={onClose}
       title={variable.name}

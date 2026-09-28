@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Backpack,
   CircleDot,
@@ -17,10 +17,6 @@ import {
   type ManualEntityType,
 } from '../character/manualEntityAddition';
 import type { ForgeCharacter } from '../character/types';
-import {
-  filterEntitiesBySupport,
-  type SupportableEntity,
-} from '../content/supportStatus';
 
 const TYPES: Array<{
   type: ManualEntityType;
@@ -59,7 +55,6 @@ export default function SheetEntityAddDialog({
   const [loading, setLoading] = useState(true);
   const [addingId, setAddingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showAll, setShowAll] = useState(false);
 
   const config = TYPES.find((entry) => entry.type === type)!;
 
@@ -87,14 +82,7 @@ export default function SheetEntityAddDialog({
     return () => window.removeEventListener('keydown', onKey);
   }, [addingId, onClose]);
 
-  const visibleEntities = useMemo(() => {
-    const sources = filterEntitiesBySupport(
-      entities.map((entity) => entity.source as SupportableEntity & { id: string }),
-      showAll,
-    );
-    const visibleIds = new Set(sources.map((entity) => entity.id));
-    return entities.filter((entity) => visibleIds.has(entity.id));
-  }, [entities, showAll]);
+  const visibleEntities = entities;
 
   const add = async (entity: ManualEntity) => {
     setAddingId(entity.id);
@@ -146,11 +134,6 @@ export default function SheetEntityAddDialog({
             placeholder={`Поиск: ${config.search}`}
             autoFocus
           />
-        </label>
-
-        <label className="sheet-entity-add-all">
-          <input type="checkbox" checked={showAll} onChange={(event) => setShowAll(event.target.checked)} />
-          Показать неподтверждённые сущности
         </label>
 
         {error && <p className="issues">{error}</p>}

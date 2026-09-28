@@ -28,6 +28,10 @@ type JWTClaims struct {
 	jwt.RegisteredClaims
 }
 
+// Session tokens survive normal day-to-day use without a daily sign-in.
+// Both password login and OAuth use this issuance path.
+const authTokenLifetime = 30 * 24 * time.Hour
+
 // AuthService - сервис для работы с авторизацией
 type AuthService struct {
 	db                      *gorm.DB
@@ -149,14 +153,15 @@ func (s *AuthService) generateJWTToken(user User) (string, error) {
 		return "", ErrJWTSecretNotConfigured
 	}
 
+	now := time.Now()
 	// Создаем claims
 	claims := JWTClaims{
 		UserID:   user.ID,
 		Username: user.Username,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)), // Токен действует 24 часа
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			NotBefore: jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(now.Add(authTokenLifetime)),
+			IssuedAt:  jwt.NewNumericDate(now),
+			NotBefore: jwt.NewNumericDate(now),
 			Issuer:    "dnd-cards-backend",
 			Subject:   user.ID.String(),
 		},

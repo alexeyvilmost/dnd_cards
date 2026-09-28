@@ -33,6 +33,20 @@ jobs:
     name: Быстрый gate изменённых границ
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: content_review_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d content_review_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -51,10 +65,16 @@ jobs:
         working-directory: frontend
         run: |
           npx tsc --noEmit
-          npx vitest run src/character/rules/resolveCharacterRules.test.ts src/solo-combat/soloCombat.engine.integration.test.ts src/components/CombatHotbar.test.ts
-      - name: Контракты новых content-миграций
+          npx vitest run src/contexts/AuthContext.test.tsx src/api/authPolicy.test.ts src/components/CombatHotbar.test.ts src/content/reviewStatus.test.ts src/components/ReviewStatusEditor.test.tsx src/components/library/LibraryReviewStatus.test.tsx src/api/catalogPages.test.ts src/api/conditionsReviewStatus.test.ts src/character/passiveCatalogReview.test.tsx src/utils/resourcesReview.test.tsx
+      - name: Авторизация и ручная проверка каталога
         working-directory: backend
-        run: go test ./migrations -run 'Test(Bard|RepairBard|Sleep|RepairSleep)' -count=1
+        env:
+          CANONICAL_RUNTIME_TEST_DSN: postgres://postgres:test@127.0.0.1:5432/content_review_test?sslmode=disable
+          CONTENT_MIGRATION_TEST_DSN: postgres://postgres:test@127.0.0.1:5432/content_review_test?sslmode=disable
+        run: |
+          go test ./... -run '^$'
+          go test . -run 'Test(AuthTokenLifetime|StrictAuth|JWTIssuance|ContentReview|ManualContentReview)' -count=1
+          go test ./migrations -run 'TestManualContentReview' -count=1
 
   offline:
     name: Полная историческая диагностика (только вручную)

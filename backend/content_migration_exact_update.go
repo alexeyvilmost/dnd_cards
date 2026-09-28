@@ -239,9 +239,9 @@ func contentMigrationDesiredUpdate(
 		mutableMetadata[field] = true
 	}
 	for field := range fields {
-		if !mutableMetadata[field] {
-			// Structural and mechanical writes invalidate prior certification.
-			desired["support"] = nil
+		if !mutableMetadata[field] && !reflect.DeepEqual(expected[field], desired[field]) {
+			// Match the live manual-review invalidator installed by migration 274.
+			desired["support"] = map[string]any{"status": "not_verified"}
 			break
 		}
 	}

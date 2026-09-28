@@ -1,3 +1,4 @@
+import ReviewStatusCorner from './ReviewStatusCorner';
 import React from 'react';
 import type { Action } from '../types';
 import { ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
@@ -11,7 +12,6 @@ import { SPELL_CARD_CSS } from './spellCardStyle';
 import { useSiteSettings } from '../settings';
 import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
-import SupportStatusBadge from './forge/SupportStatusBadge';
 import { findMastery, useMasteryEffects } from '../utils/mastery';
 import { getPropertyLabel } from '../utils/propertyLabels';
 import {actionUsagePreview} from '../engine/actionUsagePreview';
@@ -75,6 +75,7 @@ const ActionPreview = ({ action, runtime, className = '', disableHover = false, 
       style={onClick ? { cursor: 'pointer' } : undefined}
     >
       <style>{SPELL_CARD_CSS}</style>
+      <ReviewStatusCorner entity={action} entityType="action" />
 
       {action.image_url && action.image_url.trim() !== '' && (
         <img
@@ -87,7 +88,6 @@ const ActionPreview = ({ action, runtime, className = '', disableHover = false, 
 
       <h3>{action.name || 'Название действия'}</h3>
       <div className="sp-subtype"><OriginalName nameEn={action.name_en} suffix={subtype || 'Действие'} /></div>
-      <SupportStatusBadge entity={action} />
 
       {hasStats && (
         <div className="sp-stats">

@@ -199,7 +199,7 @@ func (mc *MonsterController) Create(c *gin.Context) {
 		return
 	}
 	monster := monsterFromRequest(req)
-	if err := mc.db.Create(&monster).Error; err != nil {
+	if err := contentEntityWrite(mc.db).Create(&monster).Error; err != nil {
 		writeEntityCreateDatabaseError(c, "монстра", err)
 		return
 	}

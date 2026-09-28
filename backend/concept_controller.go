@@ -96,7 +96,7 @@ func (cc *ConceptController) CreateConcept(c *gin.Context) {
 		ImageURL:    req.ImageURL,
 		SortOrder:   req.SortOrder,
 	}
-	if err := cc.db.Create(&concept).Error; err != nil {
+	if err := contentEntityWrite(cc.db).Create(&concept).Error; err != nil {
 		writeEntityCreateDatabaseError(c, "понятие", err)
 		return
 	}
@@ -135,7 +135,7 @@ func (cc *ConceptController) UpdateConcept(c *gin.Context) {
 	concept.Description = req.Description
 	concept.ImageURL = req.ImageURL
 	concept.SortOrder = req.SortOrder
-	if err := cc.db.Save(&concept).Error; err != nil {
+	if err := contentEntityWrite(cc.db).Save(&concept).Error; err != nil {
 		writeEntityUpdateDatabaseError(c, "понятие", err)
 		return
 	}

@@ -164,7 +164,7 @@ func (cc *ClassController) CreateClass(c *gin.Context) {
 	if cl.Author == "" {
 		cl.Author = "Admin"
 	}
-	if err := cc.db.Create(&cl).Error; err != nil {
+	if err := contentEntityWrite(cc.db).Create(&cl).Error; err != nil {
 		writeEntityCreateDatabaseError(c, "класс", err)
 		return
 	}
@@ -282,7 +282,7 @@ func (cc *ClassController) UpdateClass(c *gin.Context) {
 		cl.IsExtended = req.IsExtended
 	}
 
-	if err := cc.db.Save(&cl).Error; err != nil {
+	if err := contentEntityWrite(cc.db).Save(&cl).Error; err != nil {
 		writeEntityUpdateDatabaseError(c, "класс", err)
 		return
 	}

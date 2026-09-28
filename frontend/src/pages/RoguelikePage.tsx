@@ -5,6 +5,7 @@ import { charactersV3Api } from '../character/api';
 import {isRunEligible} from '../roguelike/eligibility';
 import CharacterTemplateLibrary from '../components/CharacterTemplateLibrary';
 import RunPartyCamp from '../components/RunPartyCamp';
+import {UrvinStash} from '../components/UrvinJourney';
 import type { ForgeCharacter } from '../character/types';
 import { roguelikeApi, type RoguelikeRun, type UrvinDefinition } from '../roguelike/api';
 import SheetActionLine from '../components/SheetActionLine';
@@ -14,7 +15,7 @@ import './RoguelikePage.css';
 import MerchantSettingsDialog from '../components/MerchantSettingsDialog';
 import {merchantSettingsApi} from '../api/entityTags';
 import RunCharacterIdentity from '../components/RunCharacterIdentity';
-import {runCharacters} from '../roguelike/navigation';
+import {runCharacters,notifyRunUpdated} from '../roguelike/navigation';
 import {characterTemplatesApi, type CharacterTemplate} from '../character/templatesApi';
 import HoverCard from '../components/HoverCard';
 import {useCombatDialogFocus} from '../components/useCombatDialogFocus';
@@ -175,6 +176,7 @@ function RunCamp({ id }: { id: string }) {
   const navigate = useNavigate();
   const [run, setRun] = useState<RoguelikeRun | null>(null);
   const [error, setError] = useState('');
+  const [claimBusy,setClaimBusy] = useState(false);
   useEffect(() => {
     let active = true;
     void roguelikeApi.get(id).then((next) => {
@@ -189,6 +191,17 @@ function RunCamp({ id }: { id: string }) {
       const next = await roguelikeApi.command(run.id, run.revision, 'retry');
       setRun(next);
     } catch (e) { setError(errorMessage(e)); }
+  };
+  const claimStash = async (cardId:string,characterId:string) => {
+    if(!run||run.status!=='victory'||claimBusy)return;
+    setClaimBusy(true);setError('');
+    try{
+      setRun(await roguelikeApi.command(run.id,run.revision,'claim_stash',{card_id:cardId,character_id:characterId}));
+      notifyRunUpdated();
+    }catch(reason){
+      setError(errorMessage(reason));
+      try{setRun(await roguelikeApi.get(run.id));}catch{/* Preserve the last confirmed run. */}
+    }finally{setClaimBusy(false);}
   };
   if(run?.status==='active')return <RunPartyCamp run={run} onUpdated={setRun}/>;
   const title = run?.status === 'victory'
@@ -221,6 +234,9 @@ function RunCamp({ id }: { id: string }) {
         <Link className="roguelike-secondary" to="/roguelike">Все забеги</Link>
       </div>
     </section>
+    {run?.status==='victory'&&run.mode==='urvin'&&!!run.journey?.stash?.length&&<section className="roguelike-card urvin-room-panel">
+      <UrvinStash run={run} busy={claimBusy} onClaim={(cardId,characterId)=>void claimStash(cardId,characterId)}/>
+    </section>}
   </main>;
 }
 

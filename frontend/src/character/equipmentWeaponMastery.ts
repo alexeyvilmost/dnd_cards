@@ -36,7 +36,7 @@ export function equipmentWeaponMasterySeed(input: {
   const autoKey = seed.length >= count ? `${optionKey}:${seed.join(',')}` : null;
   const current = resolved[choiceId];
   const currentMatchesPreviousAuto = previousAutoKey != null
-    && current?.join(',') === previousAutoKey.slice(previousAutoKey.indexOf(':') + 1);
+    && current?.join(',') === previousAutoKey.slice(previousAutoKey.lastIndexOf(':') + 1);
 
   if (!autoFillEnabled) {
     if (previousAutoKey && currentMatchesPreviousAuto) {
@@ -47,7 +47,7 @@ export function equipmentWeaponMasterySeed(input: {
 
   if (autoKey) {
     if (Object.prototype.hasOwnProperty.call(resolved, choiceId) && !currentMatchesPreviousAuto
-      && previousAutoKey !== autoKey && current?.length) {
+      && current?.length) {
       // Player already chose; do not overwrite.
       return { next: null, autoKey: previousAutoKey };
     }

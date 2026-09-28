@@ -20,6 +20,8 @@ const ClassPreview: React.FC<ClassPreviewProps> = ({ characterClass, className =
 
   return (
     <Bg3Card
+      entityType="class"
+      entity={characterClass}
       title={characterClass.name || 'Название класса'}
       titleEn={characterClass.name_en}
       subtype="Класс"

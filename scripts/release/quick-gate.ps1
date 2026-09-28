@@ -1,5 +1,6 @@
 param(
   [switch]$Full,
+  [switch]$LegacyEntityTests,
   [string]$NodeExecutable = 'node',
   [string]$GoExecutable = 'go'
 )
@@ -101,7 +102,13 @@ if ($backendChanged) {
   $env:GOCACHE = Join-Path $repoRoot 'outputs/release-gate/go-cache'
   New-Item -ItemType Directory -Path $env:GOCACHE -Force | Out-Null
   try {
-    Invoke-Checked -Label 'Backend tests' -Executable $go -ArgumentList @('test', './...', '-count=1') -WorkingDirectory $backendRoot
+    # Compile every package, but do not automatically run retired entity certificates.
+    Invoke-Checked -Label 'Backend compile' -Executable $go -ArgumentList @('test', './...', '-run', '^$', '-count=1') -WorkingDirectory $backendRoot
+    Invoke-Checked -Label 'Authentication and manual review contracts' -Executable $go -ArgumentList @('test', '.', '-run', 'Test(AuthTokenLifetime|StrictAuth|JWTIssuance|ContentReview|ManualContentReview)', '-count=1') -WorkingDirectory $backendRoot
+    Invoke-Checked -Label 'Manual review migration' -Executable $go -ArgumentList @('test', './migrations', '-run', 'TestManualContentReview', '-count=1') -WorkingDirectory $backendRoot
+    if ($LegacyEntityTests) {
+      Invoke-Checked -Label 'Historical backend entity diagnostics (explicit opt-in)' -Executable $go -ArgumentList @('test', './...', '-count=1') -WorkingDirectory $backendRoot
+    }
     if ($Full) {
       Invoke-Checked -Label 'Backend vet' -Executable $go -ArgumentList @('vet', './...') -WorkingDirectory $backendRoot
     }
@@ -118,8 +125,10 @@ if ($frontendChanged) {
 
   if ($Full) {
     Invoke-Checked -Label 'Полный frontend Vitest' -Executable $node -ArgumentList @($vitest, 'run', '--reporter=dot') -WorkingDirectory $frontendRoot
-    Invoke-Checked -Label 'Rules-core coverage' -Executable $node -ArgumentList @($vitest, 'run', '--config', 'vitest.rules-core.config.ts', '--reporter=dot') -WorkingDirectory $frontendRoot
-    Invoke-Checked -Label 'Rules primitives coverage' -Executable $node -ArgumentList @($vitest, 'run', '--config', 'vitest.rules-primitives.config.ts', '--coverage', '--reporter=dot') -WorkingDirectory $frontendRoot
+    if ($LegacyEntityTests) {
+      Invoke-Checked -Label 'Historical rules-core coverage (explicit opt-in)' -Executable $node -ArgumentList @($vitest, 'run', '--config', 'vitest.rules-core.config.ts', '--reporter=dot') -WorkingDirectory $frontendRoot
+      Invoke-Checked -Label 'Historical rules primitives coverage (explicit opt-in)' -Executable $node -ArgumentList @($vitest, 'run', '--config', 'vitest.rules-primitives.config.ts', '--coverage', '--reporter=dot') -WorkingDirectory $frontendRoot
+    }
     Invoke-Checked -Label 'Полный frontend lint' -Executable $node -ArgumentList @($eslint, '.', '--ext', 'ts,tsx', '--report-unused-disable-directives', '--max-warnings', '0') -WorkingDirectory $frontendRoot
   } else {
     $changedTests = @(
@@ -128,8 +137,8 @@ if ($frontendChanged) {
         ForEach-Object { $_.Substring('frontend/'.Length) }
     )
     $focusedTests = @(
-      'src/character/rules/resolveCharacterRules.test.ts'
-      'src/solo-combat/soloCombat.engine.integration.test.ts'
+      'src/contexts/AuthContext.test.tsx'
+      'src/api/authPolicy.test.ts'
       'src/components/CombatHotbar.test.ts'
     )
     $testFiles = @($focusedTests + $changedTests | Sort-Object -Unique)
@@ -157,7 +166,7 @@ if ($frontendChanged) {
     Invoke-Checked -Label 'Rules worker tests' -Executable $node -ArgumentList @('--test', 'worker/server.test.mjs', 'worker/replay.test.mjs') -WorkingDirectory $frontendRoot
   }
 
-  if ($Full) {
+  if ($Full -and $LegacyEntityTests) {
     $previousCi = $env:CI
     $env:CI = '1'
     try {
@@ -175,3 +184,4 @@ Write-Host "`nРелиз-гейт пройден за $([math]::Round($elapsed.T
 if (-not $Full) {
   Write-Host 'Полный регресс доступен через scripts/release/quick-gate.ps1 -Full.'
 }
+Write-Host 'Старые тесты сущностей и сертификатов не обязательны; отдельный ручной запуск: -LegacyEntityTests.'

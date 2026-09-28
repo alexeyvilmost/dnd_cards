@@ -352,6 +352,9 @@ func urvinCommandAllowed(run *RoguelikeRun, kind string) error {
 	if run.Mode != urvinMode {
 		return nil
 	}
+	if run.Status == RoguelikeStatusVictory && kind != "claim_stash" {
+		return roguelikeError(409, "run_inactive", "Забег завершён; можно только забрать оставшуюся добычу")
+	}
 	j, err := urvinJourney(run)
 	if err != nil {
 		return err
@@ -817,7 +820,9 @@ func rewardUrvinVictory(tx *gorm.DB, run *RoguelikeRun) error {
 }
 
 func applyUrvinRoomCommand(tx *gorm.DB, run *RoguelikeRun, request RoguelikeCommandRequest) error {
-	if run.Mode != urvinMode || run.Status != RoguelikeStatusActive || run.Phase != RoguelikePhaseCamp {
+	activeCamp := run.Status == RoguelikeStatusActive && run.Phase == RoguelikePhaseCamp
+	victoryStash := request.Type == "claim_stash" && run.Status == RoguelikeStatusVictory && run.Phase == RoguelikePhaseEnded
+	if run.Mode != urvinMode || (!activeCamp && !victoryStash) {
 		return roguelikeError(409, "route_unavailable", "Комната сейчас недоступна")
 	}
 	j, err := urvinJourney(run)

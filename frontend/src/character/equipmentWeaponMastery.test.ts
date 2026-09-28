@@ -22,6 +22,24 @@ describe('weaponTypesFromEquipmentOption', () => {
 });
 
 describe('equipmentWeaponMasterySeed', () => {
+  it('clears the real class-qualified auto-fill when switching to a manual package', () => {
+    expect(equipmentWeaponMasterySeed({
+      choiceId: 'weapon-mastery', count: 2, optionKey: 'fighter:b',
+      weaponTypes: [], autoFillEnabled: false,
+      resolved: { 'weapon-mastery': ['longsword', 'spear'] },
+      previousAutoKey: 'fighter:a:longsword,spear',
+    })).toEqual({ next: null, autoKey: null, clearChoiceId: 'weapon-mastery' });
+  });
+
+  it('preserves a player edit after auto-filling the same equipment package', () => {
+    expect(equipmentWeaponMasterySeed({
+      choiceId: 'weapon-mastery', count: 2, optionKey: 'fighter:a',
+      weaponTypes: ['longsword', 'spear'], autoFillEnabled: true,
+      resolved: { 'weapon-mastery': ['greataxe', 'battleaxe'] },
+      previousAutoKey: 'fighter:a:longsword,spear',
+    })).toEqual({ next: null, autoKey: 'fighter:a:longsword,spear' });
+  });
+
   it('auto-fills when the package supplies enough weapons', () => {
     expect(equipmentWeaponMasterySeed({
       choiceId: 'weapon-mastery',

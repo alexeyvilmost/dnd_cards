@@ -3,8 +3,8 @@
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {randomUUID,randomBytes} from 'node:crypto';
 import assert from 'node:assert/strict';
-const base='http://127.0.0.1:3001';
-assert(new URL(base).hostname==='127.0.0.1');
+const base=process.env.ROGUELIKE_TEST_ORIGIN||'http://127.0.0.1:3001';
+assert(['localhost','127.0.0.1','[::1]'].includes(new URL(base).hostname),'Local test origin required');
 const out=new URL('../../outputs/urvin-273/',import.meta.url);
 await mkdir(out,{recursive:true});
 let access;
@@ -41,6 +41,12 @@ for(const aura of mode.auras){
   created.push({key:aura.key,id:run.id,character_id:run.character_id,gold:run.gold});
 }
 assert.equal(created.find(r=>r.key==='wealth').gold-created.find(r=>r.key==='ferocity').gold,200);
+const repeatedSource=sourceIds[0];
+const {run:secondUrvin}=await api('/roguelike/runs','POST',{source_character_id:repeatedSource,mode:'urvin',aura_id:mode.auras[0].id},201);
+const {run:classicFromSameSource}=await api('/roguelike/runs','POST',{source_character_id:repeatedSource},201);
+assert.equal(new Set([created[0].character_id,secondUrvin.character_id,classicFromSameSource.character_id]).size,3);
+assert.equal(secondUrvin.source_character_id,repeatedSource);
+assert.equal(classicFromSameSource.source_character_id,repeatedSource);
 let {run}=await api('/roguelike/runs/'+created[0].id);
 for(const type of ['start_encounter','long_rest','short_rest','buy','victory'])await command(run,type,{},409);
 await command(run,'enter_room',{node_id:'r14-l0'},409);
@@ -51,6 +57,6 @@ assert.equal(run.phase,'combat');assert.deepEqual(await command(before,'enter_ro
 assert(run.combat_state);assert(run.combat_state.battleMap.id.startsWith('urvin-'));
 const again=(await api('/roguelike/runs/'+run.id)).run;
 assert.deepEqual(again.combat_state,run.combat_state);
-const evidence={created,sourceIds,battle:run.id,checks:['5 auras created','solitude party rejected','wealth +200 once','private saves not exposed','room gates','adjacency enforced','duplicate command replay','combat initialized on generated arena','combat survives reload']};
+const evidence={created,sourceIds,battle:run.id,checks:['5 auras created','solitude party rejected','wealth +200 once','multiple active classic/urvin runs from one source have independent copies','private saves not exposed','room gates','adjacency enforced','duplicate command replay','combat initialized on generated arena','combat survives reload']};
 await writeFile(new URL('integration.json',out),JSON.stringify(evidence,null,2));
 console.log(JSON.stringify(evidence,null,2));

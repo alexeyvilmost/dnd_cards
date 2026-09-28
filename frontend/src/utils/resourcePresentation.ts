@@ -1,7 +1,9 @@
+import type {EntitySupportCertification} from '../content/supportStatus';
 import { getAllCharges } from './charges';
 
 export type ResourceOption = {
   id: string;
+  entityId?: string;
   label: string;
   description?: string;
   category?: string;
@@ -9,6 +11,7 @@ export type ResourceOption = {
   imageUrlSpent?: string;
   recharge?: string;
   sortOrder?: number;
+  support?: EntitySupportCertification | null;
 };
 
 const actionDefaults: ResourceOption[] = [

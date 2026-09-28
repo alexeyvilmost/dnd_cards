@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 describe('CharacterForge uncertified entity selection', () => {
-  it('never introduces a second confirmation window after the user reveals all entities', () => {
+  it('does not gate catalog choices behind verification status', () => {
     const source = readFileSync(
       fileURLToPath(new URL('./CharacterForge.tsx', import.meta.url)),
       'utf8',
@@ -12,7 +12,9 @@ describe('CharacterForge uncertified entity selection', () => {
 
     expect(source).not.toContain('window.confirm');
     expect(source).not.toContain('supportSelectionWarning');
-    expect(source).toContain('Непроверенные варианты доступны без дополнительных окон.');
     expect(source).toContain('!runHasCharacter(run, c.id)');
+    expect(source).not.toContain('filterEntitiesBySupport');
+    expect(source).not.toContain('showAllContent');
+    expect(source).not.toContain('проверенного каталога');
   });
 });

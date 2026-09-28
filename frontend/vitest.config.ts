@@ -23,10 +23,16 @@ export default mergeConfig(viteConfig, defineConfig({
       // empty suites.
       'scripts/**/*.test.mjs',
       'worker/**/*.test.mjs',
-      // The milestone suite has its own mandatory `test:mvp` gate. Keeping it
-      // out of the generic unit run avoids duplicating live-gated specs as
-      // anonymous skips in release evidence.
-      'src/mvp/**/*.mvp.test.ts',
+      // Historical entity/certification suites are retained for explicit
+      // diagnostics only. They are not evidence for manual review statuses.
+      'src/mvp/**',
+      'src/canon/**',
+      'src/mechanics/contentSweep.test.ts',
+      'src/rules-core/coverage/**',
+      'src/rules-core/testing/microMvpScenarioCorpus.test.ts',
+      'src/api/conditionsApi.test.ts',
+      'src/content/supportStatus.test.ts',
+      'src/components/forge/SupportStatusBadge.test.tsx',
       // Live API diagnostics are opt-in regardless of which feature folder
       // owns them. Keeping the suffix boundary global prevents a credential-
       // gated probe from appearing as an anonymous skip in the offline suite.

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import EntityTags from './EntityTags';
+import ReviewStatusEditor from './ReviewStatusEditor';
 import { createPortal } from 'react-dom';
 import { X, Edit, Trash2, Shield, ShieldOff, ClipboardPaste, Loader2, Download, Copy } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -415,6 +416,7 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
                 <strong>Мастерство:</strong> {masteryEffect.name}
               </p>
             )}
+            <ReviewStatusEditor entity={{type:"card",id:card.id,author:card.author,support:card.support}} />
             <EntityTags type="card" id={card.id}/>
             {card.attunement && (
               <div>

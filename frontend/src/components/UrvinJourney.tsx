@@ -23,6 +23,18 @@ function JourneyLoot({items,onClaim,busy}:{items:Array<{card_id:string;name:stri
     {onClaim&&<button className="roguelike-secondary" disabled={busy} onClick={()=>onClaim(item.card_id)}>Забрать</button>}
   </div>)}</div>;
 }
+
+export function UrvinStash({run,busy,onClaim}:{run:RoguelikeRun;busy:boolean;onClaim:(cardId:string,characterId:string)=>void}){
+  const members=runCharacters(run),[actor,setActor]=useState(run.character_id);
+  if(!run.journey?.stash?.length)return null;
+  return <article aria-label="Невместившаяся добыча"><h3>Невместившаяся добыча</h3>
+    <p>{run.status==='active'?'Освободите место в рюкзаке и заберите награду.':'Выберите участника со свободным местом в рюкзаке.'}</p>
+    <select aria-label="Получатель добычи" value={actor} disabled={busy} onChange={e=>setActor(e.target.value)}>{members.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select>
+    {run.status==='active'&&<div className="urvin-room-actions">{members.map(c=><Link key={c.id} className="roguelike-secondary" to={runSheetURL(run,c.id)}>Лист · {c.name}</Link>)}</div>}
+    <JourneyLoot items={run.journey.stash} busy={busy} onClaim={id=>onClaim(id,actor)}/>
+  </article>;
+}
+
 export default function UrvinJourney({run,busy,command}:{run:RoguelikeRun;busy:boolean;command:(type:RoguelikeCommandType,payload?:Record<string,unknown>)=>Promise<void>}){
   const j=run.journey!,settings=useSiteSettings(),location=useLocation(),members=runCharacters(run);
   const [actor,setActor]=useState(run.character_id);
@@ -97,7 +109,7 @@ export default function UrvinJourney({run,busy,command}:{run:RoguelikeRun;busy:b
           </>}
           {current.completed&&run.last_reward&&<div className="urvin-reward">{Boolean(run.last_reward.experience)&&<span>+{run.last_reward.experience} опыта каждому</span>}{Boolean(run.last_reward.gold)&&<span>+{run.last_reward.gold} золотых</span>}{!!run.last_reward.items?.length&&<JourneyLoot items={run.last_reward.items}/>}</div>}
         </article>}
-      {!!j.stash?.length&&<article><h3>Невместившаяся добыча</h3><p>Освободите место в рюкзаке и заберите награду.</p><select aria-label="Получатель добычи" value={actor} onChange={e=>setActor(e.target.value)}>{members.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select><JourneyLoot items={j.stash} busy={busy} onClaim={id=>void command('claim_stash',{card_id:id,character_id:actor})}/></article>}
+      <UrvinStash run={run} busy={busy} onClaim={(cardId,characterId)=>void command('claim_stash',{card_id:cardId,character_id:characterId})}/>
     </div>
     {pending&&event&&<CombatPresentationDialog modeOverride="standard" busy={busy} provisional={pending.phase!=='resolved'}
       beat={{id:`${current?.id}:${event.check_index}`,sourceId:event.actor_id!,sourceName:participant?.name??'Персонаж',actionName:skills[choice?.checks?.[event.check_index]?.skill??'']??event.definition.name,

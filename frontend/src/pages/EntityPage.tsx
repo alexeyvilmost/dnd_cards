@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
+import { REVIEW_STATUS_CHANGED, type ReviewStatusChange } from '../api/contentReview';
 import { RARITY_OPTIONS, SPELL_SCHOOL_OPTIONS, SPELL_CLASS_OPTIONS, getSpellLevelLabel, type Action, type Background, type Card, type CharacterClass, type Concept, type Feat, type PassiveEffect, type Race, type ResourceDefinition, type Spell, type Variable } from '../types';
 import type { Monster } from '../monsters/types';
 import { useContentPermissions } from '../hooks/useContentPermissions';
@@ -20,6 +21,8 @@ import VariablePreview from '../components/VariablePreview';
 import ConceptPreview from '../components/ConceptPreview';
 import MonsterPreview from '../components/MonsterPreview';
 import EntityTags from '../components/EntityTags';
+import ReviewStatusEditor from '../components/ReviewStatusEditor';
+import type {EntitySupportCertification} from '../content/supportStatus';
 import type { TaggedEntityType } from '../api/entityTags';
 import CurrencyPriceInline from '../components/CurrencyPriceInline';
 import { passivePresentationEffect, savePassivePresentation, type PassivePresentation } from '../character/passiveCatalog';
@@ -111,7 +114,7 @@ function CanonicalPreview({ kind, entity }: { kind: EntityKind; entity: Entity }
     case 'variables': return <VariablePreview variable={entity as unknown as Variable} disableHover />;
     case 'concepts': return <ConceptPreview concept={entity as unknown as Concept} disableHover />;
     case 'monsters': return <MonsterPreview monster={entity as unknown as Monster} />;
-    case 'passives': return <EffectPreview effect={passivePresentationEffect(entity as unknown as PassivePresentation)} disableHover />;
+    case 'passives': return <EffectPreview reviewEntityType="passive" effect={passivePresentationEffect(entity as unknown as PassivePresentation)} disableHover />;
   }
 }
 
@@ -238,6 +241,19 @@ export default function EntityPage({ fixedType }: { fixedType?: EntityKind }) {
     return () => { active = false; };
   }, [kind, id]);
 
+  useEffect(() => {
+    const onReviewChanged = (event: Event) => {
+      const change = (event as CustomEvent<ReviewStatusChange>).detail;
+      if (!kind || change?.entity_type !== TAG_KIND[kind]) return;
+      const update = (value: Entity | null) => value && asText(value.id || value.key) === change.entity_id
+        ? { ...value, support: change.support } : value;
+      setEntity(update);
+      setDraft(update);
+    };
+    window.addEventListener(REVIEW_STATUS_CHANGED, onReviewChanged);
+    return () => window.removeEventListener(REVIEW_STATUS_CHANGED, onReviewChanged);
+  }, [kind]);
+
   const shown = (editing ? draft : entity) || entity;
   const canManage = Boolean(shown && (kind === 'passives' ? canEdit({}) : canEdit(shown as { author?: string })));
   const relations = useMemo(() => shown ? relatedEntities(shown) : [], [shown]);
@@ -341,6 +357,7 @@ export default function EntityPage({ fixedType }: { fixedType?: EntityKind }) {
             <div key={key}><span>{FIELD_LABELS[key] || key.replaceAll('_', ' ')}</span><strong>{key === 'price' && typeof value === 'number'
               ? <CurrencyPriceInline price={value} currency={asText(shown.price_currency)} abbreviate={shown.price_abbreviated !== false} iconClassName="entity-page__coin" />
               : visibleValue(key, value)}</strong></div>)}</section>
+          <ReviewStatusEditor entity={{type:TAG_KIND[kind],id:asText(shown.id || shown.key) || id,author:asText(shown.author),support:shown.support as EntitySupportCertification | undefined}} />
           {!playerMode && <section className="entity-page__panel"><EntityTags type={TAG_KIND[kind]} id={asText(shown.id || shown.key) || id} /></section>}
         </aside>
       </div>

@@ -11,7 +11,6 @@ import (
 	"regexp"
 	"strings"
 	"time"
-	"unicode"
 )
 
 type roguelikeWorkerClient struct {
@@ -26,7 +25,8 @@ type roguelikeWorkerRejection struct{ Code, Message string }
 func (err *roguelikeWorkerRejection) Error() string { return err.Message }
 
 var (
-	missingPinnedPattern = regexp.MustCompile(`(?i)missing pinned ([a-z0-9_]+) ([^\s:]+)`)
+	missingPinnedPattern = regexp.MustCompile(`^missing pinned (race|class|background|feat|effect|action|spell|card|resource) ([A-Za-z0-9][A-Za-z0-9_.-]{0,127}): `)
+	publicCatalogPattern = regexp.MustCompile(`^(Каталог не содержит |Неоднозначная ссылка каталога: )(race|class|background|feat|effect|action|spell|card|resource)/[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$`)
 	workerHTTPPattern    = regexp.MustCompile(`(?i)rules worker rejected command \(HTTP (\d+)\)`)
 )
 
@@ -41,11 +41,11 @@ func publicWorkerRejection(code, message string) *roguelikeWorkerRejection {
 		return &roguelikeWorkerRejection{"combat_command_unsupported", "Эта версия боя не поддерживает команду. Обновите страницу; действие не применено."}
 	}
 	board := map[string]string{
-		"Карта столкновения отсутствует":                     "combat_map_missing",
+		"Карта столкновения отсутствует":                    "combat_map_missing",
 		"Нет карты, вмещающей всех участников и их размеры": "combat_map_unfit",
 		"Некорректное зерно карты":                          "combat_map_seed_invalid",
-		"Некорректный состав столкновения":                   "combat_roster_invalid",
-		"Некорректный участник столкновения":                 "combat_roster_invalid",
+		"Некорректный состав столкновения":                  "combat_roster_invalid",
+		"Некорректный участник столкновения":                "combat_roster_invalid",
 		"Некорректная группа":                               "combat_party_invalid",
 		"Слишком много противников":                         "combat_roster_invalid",
 		"Несовместимая версия каталога":                     "combat_catalog_version",
@@ -55,6 +55,7 @@ func publicWorkerRejection(code, message string) *roguelikeWorkerRejection {
 		"Чужой персонаж в снимке боя":                       "combat_character_mismatch",
 		"Повреждён поток случайности боя":                   "combat_entropy_corrupt",
 		"Неполный каталог искусностей оружия":               "combat_catalog_incomplete",
+		"Каталог требует явный тип эффекта":                 "combat_catalog_incomplete",
 	}
 	if mapped, ok := board[message]; ok {
 		return &roguelikeWorkerRejection{mapped, message + ". Действие не применено."}
@@ -65,9 +66,8 @@ func publicWorkerRejection(code, message string) *roguelikeWorkerRejection {
 	}{
 		{"Каталог не содержит ", "combat_catalog_missing_ref"},
 		{"Неоднозначная ссылка каталога: ", "combat_catalog_ambiguous_ref"},
-		{"Каталог требует ", "combat_catalog_incomplete"},
 	} {
-		if strings.HasPrefix(message, prefix.prefix) && looksLikePublicCombatMessage(message) {
+		if strings.HasPrefix(message, prefix.prefix) && publicCatalogPattern.MatchString(message) {
 			return &roguelikeWorkerRejection{prefix.code, message + ". Действие не применено."}
 		}
 	}
@@ -78,38 +78,25 @@ func publicWorkerRejection(code, message string) *roguelikeWorkerRejection {
 		"Цель вне дальности":       true,
 		"Недостаточно перемещения": true,
 		"Способность доступна только после соответствующего события": true,
+		"Сейчас ход другого участника":                               true,
+		"Выберите свободную клетку":                                  true,
+		"Выберите клетку на поле":                                    true,
+		"Центр области вне дальности":                                true,
+		"Центр области закрыт полным укрытием":                       true,
+		"Сначала завершите открытую реакцию на бросок к20":           true,
+		"Сначала завершите дополнительное перемещение":               true,
+		"Ресурсы для этой реакции больше недоступны":                 true,
+		"Укажите действие влияния на бросок":                         true,
+		"Выбранное влияние больше недоступно":                        true,
+		"Проверка уже завершена":                                     true,
+		"Воздействие недоступно":                                     true,
+		"Нет ожидающей проверки":                                     true,
+		"Событие требует решения":                                    true,
 	}
 	if allowed[message] {
 		return &roguelikeWorkerRejection{"combat_command_unavailable", message + ". Действие не применено."}
 	}
-	if looksLikePublicCombatMessage(message) {
-		return &roguelikeWorkerRejection{"combat_command_rejected", message + ". Действие не применено."}
-	}
 	return nil
-}
-
-func looksLikePublicCombatMessage(message string) bool {
-	trimmed := strings.TrimSpace(message)
-	if trimmed == "" || len(trimmed) > 240 || strings.ContainsAny(trimmed, "\n\r\t") {
-		return false
-	}
-	lower := strings.ToLower(trimmed)
-	for _, bad := range []string{
-		"entropy", "private-", "sha256:", "stack", " at ", "\\", ".go:", ".mjs", ".ts:",
-		"snapshot", "secret", "token", "password", "bearer", "postgres", "sqlstate",
-	} {
-		if strings.Contains(lower, bad) {
-			return false
-		}
-	}
-	hasCyrillic := false
-	for _, r := range trimmed {
-		if unicode.In(r, unicode.Cyrillic) {
-			hasCyrillic = true
-			break
-		}
-	}
-	return hasCyrillic
 }
 
 // Maps worker/catalog/init failures to fixed client-visible codes without leaking
