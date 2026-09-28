@@ -6,8 +6,29 @@
  * Состояние — в turn_state (attuned_ids, attunement_unlocked).
  */
 import type { Card } from '../types';
+import { payloadsOf } from '../engine/mechanicsView';
 
 export const MAX_ATTUNED = 3;
+
+/** Capacity is derived from the same eligible item mechanics as their other
+ * passives. Losing a provider never silently deletes the player's choices. */
+export function attunementCapacity(
+  equipment: ItemGateContext['equipment'], cardMap: Map<string, Card>,
+  turnState: Record<string, unknown> | null | undefined,
+  inventory: ItemGateContext['inventory'] = [],
+): number {
+  let capacity = MAX_ATTUNED;
+  for (const {mechanics} of collectItemMechanics(equipment, cardMap, turnState, inventory)) {
+    const mode = (mechanics.activation as Dict | undefined)?.mode;
+    if (mode && mode !== 'passive') continue;
+    for (const payload of payloadsOf(mechanics)) {
+      if (payload.kind === 'attunement_capacity' && Number.isSafeInteger(payload.amount)) {
+        capacity += Number(payload.amount);
+      }
+    }
+  }
+  return Math.max(0, capacity);
+}
 
 export function readAttunedIds(turnState: Record<string, unknown> | null | undefined): string[] {
   const raw = turnState?.attuned_ids;

@@ -15,7 +15,7 @@ import (
 )
 
 func TestManualContentReviewDoesNotRequireCertificationOrLockMechanics(t *testing.T) {
-	for _, status := range []string{"verified", "verified_partial", "not_verified", "not_tested", "narrative", "partial_narrative_verified", "partial_narrative_not_verified"} {
+	for _, status := range []string{"verified", "verified_partial", "not_verified", "not_tested", "narrative", "partial_narrative_verified", "partial_narrative_not_verified", "partial_narrative_verified_partial"} {
 		if !validContentReviewStatuses[status] {
 			t.Fatalf("missing manual status %s", status)
 		}
@@ -68,7 +68,7 @@ func TestManualContentReviewAPIStatusesOwnershipAndPersistence(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, migration := range migrations.GetAllMigrations() {
-		if migration.Version == "274_manual_content_review" {
+		if migration.Version == "274_manual_content_review" || migration.Version == "277_partial_narrative_review" {
 			if err := migration.Up(sqlDB); err != nil {
 				t.Fatal(err)
 			}
@@ -93,7 +93,7 @@ func TestManualContentReviewAPIStatusesOwnershipAndPersistence(t *testing.T) {
 	for kind, id := range ids {
 		// Start with the migration's baseline: an explicit human review must
 		// record its actor/time even when the selected status does not change.
-		for _, status := range []string{"not_verified", "verified", "verified_partial", "not_tested", "narrative", "partial_narrative_verified", "partial_narrative_not_verified"} {
+		for _, status := range []string{"not_verified", "verified", "verified_partial", "not_tested", "narrative", "partial_narrative_verified", "partial_narrative_not_verified", "partial_narrative_verified_partial"} {
 			result := request(&f.other, kind, id, status)
 			if result.Code != http.StatusOK {
 				t.Fatalf("%s %s: %d %s", kind, status, result.Code, result.Body.String())
@@ -104,6 +104,14 @@ func TestManualContentReviewAPIStatusesOwnershipAndPersistence(t *testing.T) {
 			}
 			if err := json.Unmarshal(result.Body.Bytes(), &body); err != nil || body.EntityID != id || body.Support["status"] != status || body.Support["reviewed_by"] != f.other.ID.String() || body.Support["reviewed_at"] == nil {
 				t.Fatalf("unexpected persisted review for %s: %s, %v", kind, result.Body.String(), err)
+			}
+			column := "id"
+			if kind == "passive" {
+				column = "key"
+			}
+			var persisted JSONMap
+			if err := f.db.Raw("SELECT support FROM "+contentReviewTables[kind]+" WHERE "+column+" = ?", id).Row().Scan(&persisted); err != nil || persisted["status"] != status {
+				t.Fatalf("%s %s was not persisted: %+v, %v", kind, status, persisted, err)
 			}
 			again := request(&f.other, kind, id, status)
 			if again.Code != http.StatusOK || again.Body.String() != result.Body.String() {
@@ -119,6 +127,8 @@ func TestManualContentReviewAPIStatusesOwnershipAndPersistence(t *testing.T) {
 		{nil, "spell", ids["spell"], "verified", http.StatusUnauthorized},
 		{&f.public, "spell", ids["spell"], "verified", http.StatusForbidden},
 		{&f.owner, "spell", ids["spell"], "verified", http.StatusOK},
+		{&f.owner, "spell", ids["spell"], "partial_narrative_verified_partial", http.StatusOK},
+		{&f.public, "spell", ids["spell"], "partial_narrative_verified_partial", http.StatusForbidden},
 		{&f.owner, "passive", ids["passive"], "verified", http.StatusForbidden},
 		{&f.other, "spell", ids["spell"], "verified_mechanical", http.StatusBadRequest},
 		{&f.other, "spell", uuid.NewString(), "verified", http.StatusNotFound},

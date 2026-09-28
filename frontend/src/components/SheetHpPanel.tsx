@@ -415,7 +415,7 @@ export default function SheetHpPanel({
       : {};
     const roll = rollDeathSaveDie(runtime, passives ?? [], formulaCtx, rng);
     const natural = roll.dice.find((d) => !d.discarded)?.result ?? roll.total;
-    const { next, outcome } = applyDeathSaveRoll(deathSaves, natural);
+    const { next, outcome } = applyDeathSaveRoll(deathSaves, natural, roll.total, roll.outcome);
 
     let state = runtime;
     const events: EngineEvent[] = [

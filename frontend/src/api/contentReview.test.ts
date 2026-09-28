@@ -2,12 +2,13 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { cached, clearApiCache, subscribeApiCacheInvalidation } from './apiCache';
 import { readWithReviewUpdates, updateReviewStatus } from './contentReview';
+import { ENTITY_SUPPORT_STATUSES } from '../content/supportStatus';
 
 const mocks = vi.hoisted(() => ({ patch: vi.fn() }));
 vi.mock('./client', () => ({ apiClient: mocks }));
 afterEach(() => { clearApiCache(); vi.clearAllMocks(); });
 
-it('patches only the saved entity in ready detail/list caches without invalidation or extra reads', async () => {
+it.each(ENTITY_SUPPORT_STATUSES)('patches %s only in the saved entity caches without invalidation or extra reads', async status => {
   const row = { id: 'one', support: { status: 'not_verified' }, name: 'Первый' };
   const other = { id: 'two', support: { status: 'narrative' }, name: 'Второй' };
   const loader = vi.fn(async () => row);
@@ -17,13 +18,13 @@ it('patches only the saved entity in ready detail/list caches without invalidati
   await cached('/api/resources/one', 60_000, loader);
   const invalidated = vi.fn();
   const unsubscribe = subscribeApiCacheInvalidation(invalidated);
-  mocks.patch.mockResolvedValue({ data: { entity_type: 'spell', entity_id: 'one', support: { status: 'verified' } } });
+  mocks.patch.mockResolvedValue({ data: { entity_type: 'spell', entity_id: 'one', support: { status } } });
   try {
-    await updateReviewStatus('spell', 'one', 'verified');
+    await updateReviewStatus('spell', 'one', status);
     expect(invalidated).not.toHaveBeenCalled();
-    expect((await cached('/api/spells/one', 60_000, loader)).support.status).toBe('verified');
+    expect((await cached('/api/spells/one', 60_000, loader)).support.status).toBe(status);
     const list = await cached('/api/spells?school=abjuration', 60_000, listLoader);
-    expect(list.spells[0]).toEqual({...row,support:{status:'verified'}});
+    expect(list.spells[0]).toEqual({...row,support:{status}});
     expect(list.spells[1]).toBe(other);
     expect(await cached('/api/resources/one', 60_000, loader)).toBe(row);
     expect(loader).toHaveBeenCalledTimes(2);

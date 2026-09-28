@@ -13,6 +13,7 @@ import {readFileSync} from 'node:fs';
 import {projectRuleAction} from '../canon/ruleActionProjection';
 import { stepRoguelikeCombat, type RoguelikeCombatEnvelope } from '../roguelike/combatWorker';
 import compiledFixtureJson from '../pages/rulesLabFixture.generated.json';
+import itemTriggerPatches from '../../../scripts/content/data/item-triggers-20260929.json';
 import fightingStyleDefinitions from '../../../scripts/content/data/mini-mvp-complex-fighting-styles.v1.json';
 import { createWorld, type ActorState, type RuleActionDefinition, type RulesCatalog, type RulesetReference } from '../rules-core/domain';
 import { CARD_LONGSWORD, CARD_SHIELD } from '../mvp/fixtures';
@@ -40,6 +41,29 @@ const fixture = compiledFixtureJson as unknown as {
 };
 
 function clone<T>(value: T): T { return JSON.parse(JSON.stringify(value)) as T; }
+
+it('encounter lifecycle runs once during solo creation and never retroactively when loading a saved fight',async()=>{
+  const participant=fighterSeed(),id=participant.character.id;
+  const source=participant.canonical.world.actors[id];
+  source.runtime.hp={current:21,max:40,temp:7};participant.character.current_hp=21;participant.character.max_hp=40;
+  source.passives=[...(source.passives??[]),...(['CARD-0770','CARD-0897'] as const).map(number=>({
+    id:number,name:number,activation:{mode:'passive'},effects:[{resolution:'auto',result:itemTriggerPatches[number].append_payloads}],
+  }))];
+  source.character.resourceRecharge={...source.character.resourceRecharge,per_encounter:'encounter'};
+  source.runtime.resources.per_encounter=0;source.runtime.maxResources.per_encounter=3;
+  participant.character.resources={...participant.character.resources,per_encounter:0};
+  participant.character.max_resources={...participant.character.max_resources,per_encounter:3};
+  const baseSpeed=source.character.characterSpeed??30;
+  const created=await createSoloCombatState({character:participant.character,participant,selected:[{monster:goblin(),quantity:1}],actions:[scimitar()],effects:[],rng:()=>0.5});
+  expect(created.world.actors[id].runtime.hp.current).toBe(11);
+  expect(created.world.actors[id].runtime.resources.per_encounter).toBe(3);
+  expect(effectiveCombatActorSpeedFt(created,id)).toBe(baseSpeed+10);
+  const spent=clone(created);spent.world.actors[id].runtime.resources.per_encounter=0;
+  const loaded=readSoloCombatState(writeSoloCombatState({},spent),id,spent.runtimeRevision)!;
+  expect(loaded.world.actors[id].runtime.hp.current).toBe(11);
+  expect(loaded.world.actors[id].runtime.resources.per_encounter).toBe(0);
+  expect(loaded.log).toEqual(spent.log);
+});
 
 function primitive(action: RuleActionDefinition): string {
   return String((action.mechanics.primitive as Record<string, unknown> | undefined)?.type ?? '');

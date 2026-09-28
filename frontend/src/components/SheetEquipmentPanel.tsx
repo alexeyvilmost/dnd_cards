@@ -7,7 +7,7 @@ import { activeRunId, notifyRunUpdated,runCharacter } from '../roguelike/navigat
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePinMode } from '../hooks/usePinMode';
 import { Sparkles } from 'lucide-react';
-import { MAX_ATTUNED, attunementUnlocked, readAttunedIds, toggleAttuned } from '../character/attunement';
+import { attunementCapacity, attunementUnlocked, readAttunedIds, toggleAttuned } from '../character/attunement';
 import { cardsApi } from '../api/client';
 import { charactersV3Api } from '../character/api';
 import type { EncounterApply } from '../battle/encountersApi';
@@ -196,6 +196,7 @@ export default function SheetEquipmentPanel({
   };
 
   const attuned = readAttunedIds(character.turn_state);
+  const maxAttuned = attunementCapacity(runtime.equipment, cardMap, character.turn_state, runtime.inventory);
   const canChangeAttunement = !readOnly && attunementUnlocked(character.turn_state);
   // Списки для окна настройки: настроенные предметы и те, на что можно настроиться.
   const presentCards = cardIds.map((id) => cardMap.get(id)).filter((c): c is Card => !!c);
@@ -251,8 +252,9 @@ export default function SheetEquipmentPanel({
     setError(null);
     try {
       const next = toggleAttuned(attuned, cardId);
-      if (next.length > MAX_ATTUNED) {
-        setError(`Настроиться можно максимум на ${MAX_ATTUNED} предмета`);
+      const capacity = attunementCapacity(runtime.equipment, cardMap, {...character.turn_state, attuned_ids: next}, runtime.inventory);
+      if (next.length > attuned.length && next.length > capacity) {
+        setError(`Доступно мест настройки: ${capacity}`);
         return;
       }
       const updated = await charactersV3Api.patchRuntime(character.id, {
@@ -446,7 +448,7 @@ export default function SheetEquipmentPanel({
           aria-description="Управление настройкой на предметы"
         >
           <span><Sparkles size={12} /> Настройка</span>
-          <strong>{attuned.length} / {MAX_ATTUNED}</strong>
+          <strong>{attuned.length} / {maxAttuned}</strong>
         </button>
         <div className="sheet-stat sheet-stat-wallet" aria-description="Кошелёк (золото / серебро / медь)">
           <span>Кошелёк</span>
@@ -536,7 +538,7 @@ export default function SheetEquipmentPanel({
         <SheetAttunementDialog
           attunedCards={attunedCards}
           attunableCards={attunableCards}
-          max={MAX_ATTUNED}
+          max={maxAttuned}
           canChange={canChangeAttunement}
           busy={busy}
           onToggle={handleToggleAttune}

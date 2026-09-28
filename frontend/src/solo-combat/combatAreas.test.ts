@@ -4,6 +4,7 @@ import { applyIncomingDamage } from '../engine/execute';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import {
   createCombatArea,
+  decrementSourceAreas,
   movementCostThroughAreas,
   queueCombatAreaEvent,
   reanchorSourceCombatAreas,
@@ -87,6 +88,51 @@ const grease: RuleActionDefinition = {
 afterEach(() => resetConditionsToOfflineFixture('combat_area_test_cleanup'));
 
 describe('persistent combat areas', () => {
+  it('takes terrain cost from two distinct actor-owned declarations, keeping hazards and other actors intact',()=>{
+    const snapshot=state();
+    snapshot.combatAreas={mud:{id:'mud',cells:[{x:3,y:3}],difficultTerrain:true} as CombatAreaState};
+    for(const [id,multiplier] of [['boots',1],['curse',3]] as const){
+      snapshot.world.actors.caster.passives=[{id,name:id,effects:[{resolution:'auto',result:[{kind:'modifier',op:'set',value:multiplier,applies_to:{roll:'movement_cost',filter:{terrain:'difficult'}}}]}]}];
+      expect(movementCostThroughAreas(snapshot,{x:2,y:3},{x:3,y:3},5,'caster')).toBe(5*multiplier);
+      expect(movementCostThroughAreas(snapshot,{x:2,y:3},{x:3,y:3},5,'target')).toBe(10);
+      expect(movementCostThroughAreas(snapshot,{x:0,y:0},{x:1,y:0},5,'caster')).toBe(5);
+    }
+  });
+  it.each([
+    { id: 'sticky-ground', unit: 'minutes', amount: 1, concentration: false, rounds: 10 },
+    { id: 'mist-bank', unit: 'hours', amount: 1, concentration: true, rounds: 600 },
+  ])('expires $id after its data-owned finite duration across a save/reload', (example) => {
+    const initial = state();
+    const action: RuleActionDefinition = { ...grease, id: example.id, concentration: example.concentration,
+      mechanics: { targeting: grease.mechanics.targeting, effects: [{ resolution: 'auto', result: [{
+        kind: 'world_zone', zone_type: 'test-area', geometry: { shape: 'cube', size_ft: 10 },
+        duration: { type: example.unit, amount: example.amount }, tactical: { difficult_terrain: true },
+      }] }] },
+    };
+    const area = createCombatArea({ state: initial, action, sourceActorId: 'caster', origin: { x: 3, y: 3 } })!;
+    expect(area.duration).toEqual({ type: example.concentration ? 'concentration' : 'rounds', roundsLeft: example.rounds });
+    let active: SoloCombatState = { ...initial, combatAreas: { [area.id]: area } };
+    expect(decrementSourceAreas(active, 'target').combatAreas?.[area.id]).toEqual(area);
+    active = decrementSourceAreas(active, 'caster');
+    active = JSON.parse(JSON.stringify(active)) as SoloCombatState;
+    expect(active.combatAreas?.[area.id].duration).toMatchObject({ roundsLeft: example.rounds - 1 });
+    for (let round = 1; round < example.rounds - 1; round++) active = decrementSourceAreas(active, 'caster');
+    expect(active.combatAreas?.[area.id].duration).toMatchObject({ roundsLeft: 1 });
+    active = decrementSourceAreas(active, 'caster');
+    expect(active.combatAreas).toEqual({});
+    expect(movementCostThroughAreas(active, { x: 2, y: 3 }, { x: 3, y: 3 }, 5)).toBe(5);
+  });
+
+  it('removes a timed concentration zone immediately when concentration ends, preserving old untimed snapshots', () => {
+    const initial = state();
+    const area = createCombatArea({ state: initial, action: grease, sourceActorId: 'caster', origin: { x: 3, y: 3 } })!;
+    area.duration = { type: 'concentration', roundsLeft: 10 };
+    initial.combatAreas = { [area.id]: area };
+    expect(removeInactiveCombatAreas(initial).combatAreas).toEqual({});
+    area.duration = { type: 'concentration' };
+    expect(decrementSourceAreas(initial, 'caster').combatAreas?.[area.id].duration).toEqual({ type: 'concentration' });
+  });
+
   it('stops a player route on the actual hazardous cell when entry damage drops the mover', () => {
     const initial = state();
     initial.world.actors.caster.character.characterSpeed = 30;

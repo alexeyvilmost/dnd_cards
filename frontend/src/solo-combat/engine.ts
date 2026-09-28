@@ -12,13 +12,13 @@ import {nonMagicActionCost} from '../engine/actionSurge';
 import { weaponBondProtectsHand } from '../rules-core/weaponBond';
 import {telekineticObjectIssue} from '../rules-core/telekineticMovement';
 import {heldItemDropIssue} from '../engine/heldItemDrop';
-import {heldItemRequirementIssue} from '../engine/actionRequirements';
+import {heldItemRequirementIssue,activeEffectRequirementIssue} from '../engine/actionRequirements';
 import type {EngineEvent, RollD20Options} from '../mvp/contracts';
 import {collectRollModifiers} from '../engine/modifiers';
 import {activeConditionsOf} from '../engine/circumstances';
 import {rollD20} from '../engine/roll';
 import {drawDie, type DieAwareRandomSource} from '../engine/random';
-import {availableRollInfluences, spendRollInfluence, withD20Replacement, type InfluenceRollKind} from '../engine/rollInfluence';
+import {availableRollInfluences, spendRollInfluence, withD20Replacement, withD20Influences, applyInfluenceConsequences, type InfluenceRollKind, type InfluenceContext, type RollInfluence} from '../engine/rollInfluence';
 import {conditionGrantedActions} from '../engine/conditionActions';
 import {rollEvent} from '../engine/events';
 import {availableCheckManeuvers, prepareCheckManeuver} from '../character/checkManeuvers';
@@ -1225,6 +1225,7 @@ function d20InterruptCapabilities(
   operation: D20InterruptOperation,
   rollKind: D20InterruptRollKind,
   outcome?: string,
+  targetIds: readonly string[] = [],
 ): D20InterruptCapability[] {
   return Object.values(state.world.actors).flatMap((actor) => {
     if (actor.id === sourceActorId || !isControlledCharacter(state, actor.id)
@@ -1242,6 +1243,7 @@ function d20InterruptCapabilities(
       if (!effectId || !effectName || activation?.mode !== 'triggered'
         || !cost.some((entry) => entry.resource === 'reaction')
         || !canPay(actor.runtime, cost).ok) return [];
+      if (activeEffectRequirementIssue(mechanics,actor.runtime,actor.character)) return [];
       return payloadsOf(mechanics).flatMap((payload) => {
         if (payload.kind !== 'd20_interrupt' || payload.operation !== operation
           || payload.timing !== (operation === 'impose_disadvantage' ? 'before_roll' : 'after_outcome')) {
@@ -1251,6 +1253,8 @@ function d20InterruptCapabilities(
           ? payload.eligible_rolls.map(String)
           : [];
         if (!eligibleRolls.includes(rollKind)) return [];
+        if (payload.target_self === true && !targetIds.includes(actor.id)) return [];
+        if (payload.once_per_encounter === true && (state.d20InterruptUses?.[`${actor.id}:${effectId}`] ?? 0) > 0) return [];
         const eligibleOutcomes = Array.isArray(payload.eligible_outcomes)
           ? payload.eligible_outcomes.map(String)
           : [];
@@ -1301,6 +1305,7 @@ function recordedRng(source: Rng): { rng: Rng; values: number[] } {
   const values: number[] = [];
   const rng: DieAwareRandomSource = () => { const value = source(); values.push(value); return value; };
   rng.inspectD20 = (source as DieAwareRandomSource).inspectD20;
+  rng.transformD20 = (source as DieAwareRandomSource).transformD20;
   rng.rerollD20 = (source as DieAwareRandomSource).rerollD20;
   rng.rerollD20Source = (source as DieAwareRandomSource).rerollD20Source;
   if ((source as DieAwareRandomSource).rollDie) rng.rollDie = sides => {
@@ -1316,10 +1321,34 @@ function heldRollIn(state: SoloCombatState, before: SoloCombatState, actorId: st
     .find(roll => roll.dice.some(die => die.sides === 20 && !die.discarded));
 }
 
-export function combatRollInfluences(state: SoloCombatState, actorId: string, kind: InfluenceRollKind, roll: import('../mvp/contracts').RollLog) {
+export function combatRollInfluences(state: SoloCombatState, actorId: string, kind: InfluenceRollKind, roll?: import('../mvp/contracts').RollLog, context: InfluenceContext = {}) {
+  context = {...context,inEncounter:state.world.scene.mode==='encounter',turnKey:state.world.scene.mode==='encounter' ? `${state.world.scene.round}:${state.world.scene.activeIndex}` : undefined};
   const actor = state.world.actors[actorId];
-  return actor && isControlledCharacter(state, actorId)
-    ? availableRollInfluences(actor.runtime, actor.passives ?? [], kind, roll) : [];
+  const own = actor && isControlledCharacter(state, actorId)
+    ? availableRollInfluences(actor.runtime, actor.passives ?? [], kind, roll, {...context,character:actor.character}) : [];
+  if (!context.allowOtherActors || context.timing === 'before_roll') return own;
+  const others = Object.values(state.world.actors).flatMap(candidate => candidate.id !== actorId
+    && isControlledCharacter(state,candidate.id) && candidate.runtime.hp.current > 0
+    ? availableRollInfluences(candidate.runtime,candidate.passives ?? [],kind,roll,{...context,character:candidate.character,otherActorRoll:true})
+      .map(influence=>({...influence,id:`${candidate.id}::${influence.id}`,ownerId:candidate.id})) : []);
+  return [...own,...others];
+}
+
+function actionInfluenceContext(action: RuleActionDefinition, actor?: ActorState): InfluenceContext {
+  const effect = (Array.isArray(action.mechanics.effects) ? action.mechanics.effects : []).find(row => row && typeof row === 'object'
+    && ['attack_roll','ability_check'].includes(String((row as Record<string,unknown>).resolution))) as Record<string,unknown> | undefined;
+  const weapon = action.mechanics.weapon_profile as Record<string,unknown> | undefined;
+  return {allowOtherActors:true,ability: typeof effect?.ability === 'string' ? effect.ability : undefined,
+    weaponId: typeof weapon?.card_id === 'string' ? weapon.card_id : typeof action.mechanics.requires_held_item === 'string' ? action.mechanics.requires_held_item
+      : effect?.attack_kind === 'weapon_melee' || effect?.attack_kind === 'weapon_ranged' ? actor?.runtime.equipment[Array.isArray(effect.tags) && effect.tags.includes('off_hand') ? 'off_hand' : 'main_hand'] ?? undefined : undefined};
+}
+
+function settleInfluenceConsequences(state: SoloCombatState, before: SoloCombatState, actorId: string, influences: readonly RollInfluence[] = []): SoloCombatState {
+  const roll = heldRollIn(state,before,actorId);
+  const actor = state.world.actors[actorId];
+  if (!roll || !actor || !influences.length) return state;
+  const runtime = applyInfluenceConsequences(actor.runtime,influences,roll);
+  return runtime === actor.runtime ? state : {...state,world:{...state.world,actors:{...state.world.actors,[actorId]:{...actor,runtime}}}};
 }
 
 function transcriptRng(values: readonly number[]): Rng {
@@ -2038,7 +2067,7 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
 
 function executeCombatActionWithD20Interrupts(
   input: CombatActionInput,
-  options: { skipWardingFlare?: boolean; skipCuttingWords?: boolean; skipInfluence?: boolean; influenceRerolledDie?: number; influenceSource?: string } = {},
+  options: { skipWardingFlare?: boolean; skipCuttingWords?: boolean; skipInfluence?: boolean; skipBeforeInfluence?: boolean; influenceRerolledDie?: number; influenceSource?: string; d20Influences?: RollInfluence[] } = {},
 ): SoloCombatState {
   if (input.state.pendingD20Interrupt) {
     throw new Error('Сначала завершите открытую реакцию на бросок к20');
@@ -2047,10 +2076,20 @@ function executeCombatActionWithD20Interrupts(
   if (!action) throw new Error('Действие отсутствует в снимке боя');
   const rollKind = actionD20RollKind(input.state, action);
   if (!rollKind) return executeCombatActionCore(input);
+  const context = actionInfluenceContext(action,input.state.world.actors[input.actorId]);
+  const kind = rollKind === 'attack_roll' ? 'attack' : 'check';
+  if (!options.skipBeforeInfluence) {
+    const choices = combatRollInfluences(input.state,input.actorId,kind,undefined,{...context,timing:'before_roll'});
+    if (choices.length) return {...input.state,pendingD20Interrupt: {
+      timing:'before_roll',operation:'roll_choice',command:serializableCombatCommand(input),influenceContext:context,
+      responders:choices.map(choice=>({actorId:input.actorId,effectId:choice.id,effectName:choice.name})),
+    }};
+  }
 
   if (!options.skipWardingFlare && rollKind === 'attack_roll') {
     const responders = d20InterruptCapabilities(
       input.state, input.actorId, 'impose_disadvantage', rollKind,
+      undefined,input.targetIds,
     );
     if (responders.length) {
       return {
@@ -2058,6 +2097,7 @@ function executeCombatActionWithD20Interrupts(
         pendingD20Interrupt: {
           timing: 'before_roll',
           operation: 'impose_disadvantage',
+          d20Influences: options.d20Influences,
           command: serializableCombatCommand(input),
           responders: responders.map(({ actorId, effectId, effectName }) => ({
             actorId, effectId, effectName,
@@ -2067,22 +2107,22 @@ function executeCombatActionWithD20Interrupts(
     }
   }
 
-  if (options.skipCuttingWords) return executeCombatActionCore(input);
-  const recorded = recordedRng(input.rng ?? Math.random);
+  const transformedInput = {...input,rng: options.d20Influences?.length ? withD20Influences(input.rng ?? Math.random,options.d20Influences) : input.rng};
+  if (options.skipCuttingWords) return settleInfluenceConsequences(executeCombatActionCore(transformedInput),input.state,input.actorId,options.d20Influences);
+  const recorded = recordedRng(transformedInput.rng ?? Math.random);
   const previewState = executeCombatActionCore({ ...input, rng: recorded.rng });
   const heldRoll = !options.skipInfluence
     ? heldRollIn(previewState, input.state, input.actorId) : undefined;
-  const kind = rollKind === 'attack_roll' ? 'attack' : 'check';
-  const influences = heldRoll ? combatRollInfluences(input.state, input.actorId, kind, heldRoll) : [];
+  const influences = heldRoll ? combatRollInfluences(input.state, input.actorId, kind, heldRoll, context) : [];
   if (heldRoll && influences.length) return {...input.state, pendingD20Interrupt: {
     timing: 'after_roll_before_outcome', operation: 'roll_influence', command: serializableCombatCommand(input),
-    responders: influences.map(action => ({actorId: input.actorId, effectId: action.id, effectName: action.name})),
-    randomValues: recorded.values, held: {roll: heldRoll, kind},
+    responders: influences.map(action => ({actorId: action.ownerId ?? input.actorId, effectId: action.id, effectName: action.name})),
+    randomValues: recorded.values, held: {roll: heldRoll, kind}, influenceContext:context, d20Influences:options.d20Influences,
   }};
   const preview = successfulD20Preview(
     previewState, combatLogCursor(input.state), input.actorId, rollKind,
   );
-  if (!preview) return previewState;
+  if (!preview) return settleInfluenceConsequences(previewState,input.state,input.actorId,options.d20Influences);
   const responders = d20InterruptCapabilities(
     input.state, input.actorId, 'subtract_die', rollKind, preview.outcome,
   );
@@ -2098,9 +2138,10 @@ function executeCombatActionWithD20Interrupts(
       randomValues: recorded.values,
       influenceRerolledDie: options.influenceRerolledDie,
       influenceSource: options.influenceSource,
+      d20Influences: options.d20Influences,
       preview,
     },
-  } : previewState;
+  } : settleInfluenceConsequences(previewState,input.state,input.actorId,options.d20Influences);
 }
 
 /**
@@ -2177,6 +2218,7 @@ function spendD20Interrupt(
   const paid = pay(actor.runtime, capability.cost);
   const next = {
     ...state,
+    ...(capability.payload.once_per_encounter === true ? {d20InterruptUses:{...state.d20InterruptUses,[`${capability.actorId}:${capability.effectId}`]:1}} : {}),
     world: {
       ...state.world,
       actors: {
@@ -2256,29 +2298,52 @@ export function resolveD20Interrupt(
   }
   const { pendingD20Interrupt: _cleared, ...withoutPending } = state;
   let prepared = withoutPending as SoloCombatState;
+  if (pending.operation === 'roll_choice') {
+    const ownerId = pending.command.actorId;
+    const kind = pending.saveResponse ? 'save' : actionD20RollKind(prepared,prepared.catalogActions.find(action=>action.id===pending.command.actionId)!) === 'attack_roll' ? 'attack' : 'check';
+    let influences: RollInfluence[] = [];
+    if (chosen) {
+      const action = combatRollInfluences(prepared,ownerId,kind,undefined,{...pending.influenceContext,timing:'before_roll'})
+        .find(candidate=>candidate.id===chosen.effectId);
+      if (chosen.actorId!==ownerId || !action) throw new Error('Выбранное влияние больше недоступно');
+      prepared = clone(prepared);
+      const paid = spendRollInfluence(prepared.world.actors[ownerId].runtime,action);
+      prepared.world.actors[ownerId].runtime = paid.state;
+      influences = [action];
+      prepared = appendLog(prepared,ownerId,`${action.name}: выбор до броска принят.`,paid.events.map((event,ordinal)=>({kind:'engine',ordinal,sourceActorId:ownerId,actorId:ownerId,targetIds:[],event})));
+    }
+    if (pending.saveResponse) return resolvePlayerSavingThrow(prepared,pending.saveResponse,rng,{skipBefore:true,d20Influences:influences});
+    return executeCombatActionWithD20Interrupts({...pending.command,state:prepared,rng},{skipBeforeInfluence:true,d20Influences:influences});
+  }
   if (pending.operation === 'roll_influence') {
     const ownerId = pending.command.actorId;
     if (!pending.held || !pending.randomValues) throw new Error('Повреждён ожидающий бросок');
     let replacement: number | undefined;
     let source: string | undefined;
+    const transforms = [...(pending.d20Influences ?? [])];
     if (chosen) {
-      const action = combatRollInfluences(prepared, ownerId, pending.held.kind, pending.held.roll)
+      const action = combatRollInfluences(prepared, ownerId, pending.held.kind, pending.held.roll,pending.influenceContext)
         .find(candidate => candidate.id === chosen.effectId);
-      if (chosen.actorId !== ownerId || !action) throw new Error('Выбранное влияние больше недоступно');
+      if (!action || chosen.actorId !== (action.ownerId ?? ownerId)) throw new Error('Выбранное влияние больше недоступно');
       prepared = clone(prepared);
-      const paid = spendRollInfluence(prepared.world.actors[ownerId].runtime, action);
-      prepared.world.actors[ownerId].runtime = paid.state;
-      replacement = drawDie(rng, 20);
+      const payerId = action.ownerId ?? ownerId;
+      const paid = spendRollInfluence(prepared.world.actors[payerId].runtime, action);
+      prepared.world.actors[payerId].runtime = paid.state;
+      if (action.operation === 'reroll_kept_d20') replacement = drawDie(rng, 20);
+      else transforms.push(action);
       source = action.name;
-      prepared = appendLog(prepared, ownerId, `${action.name}: переброс к20 → ${replacement}.`, paid.events.map((event, ordinal) => ({kind: 'engine', ordinal, sourceActorId: ownerId, actorId: ownerId, targetIds: [], event})));
+      prepared = appendLog(prepared, payerId, `${action.name}: ${replacement === undefined ? 'влияние принято' : `переброс к20 → ${replacement}`}.`, paid.events.map((event, ordinal) => ({kind: 'engine', ordinal, sourceActorId: payerId, actorId: payerId, targetIds: [], event})));
     }
     let cursor = 0;
     const replay = () => cursor < pending.randomValues!.length ? pending.randomValues![cursor++] : rng();
     const actionRng = replacement === undefined ? replay : withD20Replacement(replay, replacement, source!);
-    if (pending.held.saveResponse) return autoResolveSystemDecisions(resolveDecision(prepared, pending.held.saveResponse, actionRng), actionRng);
+    if (pending.held.saveResponse) {
+      const transformed = withD20Influences(actionRng,transforms);
+      return autoResolveSystemDecisions(settleInfluenceConsequences(resolveDecision(prepared, pending.held.saveResponse, transformed),prepared,ownerId,transforms), transformed);
+    }
     return settlePendingMonsterOnHitGrapple(executeCombatActionWithD20Interrupts(
       {...pending.command, state: prepared, rng: actionRng},
-      {skipWardingFlare: true, skipInfluence: true, influenceRerolledDie: replacement, influenceSource: source},
+      {skipWardingFlare: true, skipInfluence: true, skipBeforeInfluence:true, influenceRerolledDie: replacement, influenceSource: source,d20Influences:transforms},
     ));
   }
   const rollKind = pending.preview?.rollKind ?? 'attack_roll';
@@ -2289,6 +2354,7 @@ export function resolveD20Interrupt(
       pending.operation,
       rollKind,
       pending.preview?.outcome,
+      pending.command.targetIds,
     );
     const capability = capabilities.find((candidate) => (
       candidate.actorId === chosen.actorId && candidate.effectId === chosen.effectId
@@ -2327,8 +2393,8 @@ export function resolveD20Interrupt(
   return settlePendingMonsterOnHitGrapple(executeCombatActionWithD20Interrupts(
     { ...pending.command, state: prepared, rng: actionRng },
     pending.operation === 'impose_disadvantage'
-      ? { skipWardingFlare: true }
-      : { skipWardingFlare: true, skipCuttingWords: true },
+      ? { skipWardingFlare: true, skipBeforeInfluence:true,d20Influences:pending.d20Influences }
+      : { skipWardingFlare: true, skipCuttingWords: true, skipBeforeInfluence:true,d20Influences:pending.d20Influences },
   ));
 }
 
@@ -2902,23 +2968,33 @@ export function resolvePlayerSavingThrow(
   state: SoloCombatState,
   response: Extract<DecisionResponse, { kind: 'roll' }>,
   rng: Rng = Math.random,
+  options: {skipBefore?: boolean; d20Influences?: RollInfluence[]} = {},
 ): SoloCombatState {
   if (state.pendingD20Interrupt) throw new Error('Сначала завершите открытый бросок к20');
   const pending = state.world.pendingResolution;
   if (!pending || pending.request.type !== 'saving_throw'
     || !isControlledCharacter(state, pending.request.actorId)) return state;
-  const recorded = recordedRng(rng);
+  const context = {ability:pending.request.ability,allowOtherActors:true};
+  if (!options.skipBefore) {
+    const choices = combatRollInfluences(state,pending.request.actorId,'save',undefined,{...context,timing:'before_roll'});
+    if (choices.length) return {...state,pendingD20Interrupt: {
+      timing:'before_roll',operation:'roll_choice',command:{actorId:pending.request.actorId,actionId:'saving-throw',targetIds:[]},
+      influenceContext:context,saveResponse:response,
+      responders:choices.map(choice=>({actorId:pending.request.actorId,effectId:choice.id,effectName:choice.name})),
+    }};
+  }
+  const recorded = recordedRng(options.d20Influences?.length ? withD20Influences(rng,options.d20Influences) : rng);
   const preview = resolveDecision(state, response, recorded.rng);
   const roll = heldRollIn(preview, state, pending.request.actorId);
   if (!roll) return autoResolveSystemDecisions(preview, rng);
   const kind = roll.kind === 'check' ? 'check' : 'save';
-  const influences = combatRollInfluences(state, pending.request.actorId, kind, roll);
-  if (!influences.length) return autoResolveSystemDecisions(preview, rng);
+  const influences = combatRollInfluences(state, pending.request.actorId, kind, roll,context);
+  if (!influences.length) return autoResolveSystemDecisions(settleInfluenceConsequences(preview,state,pending.request.actorId,options.d20Influences), rng);
   return {...state, pendingD20Interrupt: {
     timing: 'after_roll_before_outcome', operation: 'roll_influence',
     command: {actorId: pending.request.actorId, actionId: 'actionId' in pending ? pending.actionId : 'saving-throw', targetIds: []},
-    responders: influences.map(action => ({actorId: pending.request.actorId, effectId: action.id, effectName: action.name})),
-    randomValues: recorded.values, held: {roll, kind, saveResponse: response},
+    responders: influences.map(action => ({actorId: action.ownerId ?? pending.request.actorId, effectId: action.id, effectName: action.name})),
+    randomValues: recorded.values, held: {roll, kind, saveResponse: response}, influenceContext:context, d20Influences:options.d20Influences,
   }};
 }
 

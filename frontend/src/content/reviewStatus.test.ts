@@ -6,13 +6,16 @@ import {
 } from './supportStatus';
 
 describe('manual catalog review status', () => {
-  it('offers all seven distinct statuses and colors without requiring old certificates', () => {
-    expect(ENTITY_SUPPORT_STATUSES).toHaveLength(7);
-    expect(new Set(ENTITY_SUPPORT_STATUSES.map(status => supportStatusPresentation(status).color)).size).toBe(7);
+  it('offers all eight distinct statuses and colors without requiring old certificates', () => {
+    expect(ENTITY_SUPPORT_STATUSES).toHaveLength(8);
+    expect(new Set(ENTITY_SUPPORT_STATUSES.map(status => supportStatusPresentation(status).color)).size).toBe(8);
     for (const status of ENTITY_SUPPORT_STATUSES) {
       expect(supportStatusOf({ support: { status } })).toBe(status);
     }
     expect(supportStatusOf(undefined)).toBe('not_verified');
+    expect(supportStatusPresentation('partial_narrative_verified_partial')).toMatchObject({
+      label: 'Частично нарративное, механика проверена частично', color: '#ec4899',
+    });
   });
 
   it('reads historical values without modifying the historical certificate', () => {

@@ -32,6 +32,8 @@ export function normalizeMechanicsForSchema(
   const activation = (mechanics.activation as Record<string, unknown>) || { mode: 'passive' };
   const interactions = (mechanics.effects as unknown[]) || (mechanics.interactions as unknown[]) || [];
   const extensionKeys = [
+    'requires_item_source',
+    'requires_runtime_action_grant',
     'interaction',
     'primitive',
     'weapon_mastery',

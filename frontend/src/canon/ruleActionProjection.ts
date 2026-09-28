@@ -246,6 +246,7 @@ export function projectRuleAction(
     kind: 'spell',
     spell: {
       level: entity.level,
+      ...(entity.school ? { school: entity.school } : {}),
       ...(provenance.sourceClass ? { sourceClass: provenance.sourceClass } : {}),
       ritual: entity.ritual === true,
       classListIds: immutableSpellClassListIds(mechanics, entity),

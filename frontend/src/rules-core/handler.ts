@@ -33,6 +33,8 @@ import {
   rollD20,
   shortRest,
   startTurn,
+  startEncounter,
+  expireEncounterRound,
   weaponContext,
   parseWeaponProfile,
   weaponAttackModeAtDistance,
@@ -44,6 +46,8 @@ import {
   applySourceTurnBoundary,
   matchesWhen,
   activeEffectRequirementIssue,
+  matchingRuntimeActionGrants,
+  runtimeActionContext,
   disarmingSelectionIssue,
   projectActionSurgeCost,
   nonMagicActionCost,
@@ -666,6 +670,8 @@ function canonicalSpellContext(
   return {
     baseLevel: action.spell.level,
     castLevel: declaration?.castLevel ?? action.spell.level,
+    ...(action.spell.school ? { school: action.spell.school } : {}),
+    concentration: action.concentration === true,
     ...(action.spell.sourceClass ? { sourceClass: action.spell.sourceClass } : {}),
     ...(action.spell.components ? { components: { ...action.spell.components } } : {}),
     ...(prepared ? {
@@ -1052,6 +1058,8 @@ function actionDeclaredEvent(input: {
         spell: {
           baseLevel: spell.baseLevel,
           castLevel: spell.castLevel,
+          ...(spell.school ? { school: spell.school } : {}),
+          concentration: action.concentration === true,
           ...(action.spell.sourceClass ? { sourceClass: action.spell.sourceClass } : {}),
           ...(spell.components ? { components: { ...spell.components } } : {}),
           ...(spell.grantId ? { grantId: spell.grantId } : {}),
@@ -4119,7 +4127,8 @@ function pendingSaveEvents(
         facts: first.facts,
         choices: command.choices,
         triggeringAttack: command.triggeringAttack,
-        spell: command.spell,
+        spell: command.spell ?? runtimeActionContext(source.runtime, action.mechanics,
+          actionContext(source, env, target, target.runtime, first.facts)).spell,
         request: {
           id: requestId,
           type: 'saving_throw',
@@ -4575,7 +4584,7 @@ function resolvePendingSave(
     return rejected(world, 'InvalidDecision', 'Target-save continuation has an invalid shared damage roll');
   }
   const collected = collectRollModifiers(target.runtime, target.passives ?? [], {
-    roll: 'saving_throw', filter: { ability: pending.request.ability },
+    roll: 'saving_throw', filter: { ability: pending.request.ability, saveSource: pending.spell ? 'spell' : 'other' },
     formulaCtx: actorFormulaContext(target.character),
     evalCtx: {
       state: target.runtime,
@@ -4589,7 +4598,7 @@ function resolvePendingSave(
   let roll: ReturnType<typeof rollD20>;
   try {
     roll = rollD20({
-      advantage: collected.advantage,
+      advantage: collected.advantage, hasAdvantage: collected.hasAdvantage, hasDisadvantage: collected.hasDisadvantage,
       modifiers: [
         { value: base, source: ABILITY_LABEL[pending.request.ability] },
         ...(proficient ? [{ value: target.character.profBonus, source: 'БМ' }] : []),
@@ -5734,7 +5743,7 @@ function resolveMasterySave(
   let roll: ReturnType<typeof rollD20>;
   try {
     roll = rollD20({
-      advantage: collected.advantage,
+      advantage: collected.advantage, hasAdvantage: collected.hasAdvantage, hasDisadvantage: collected.hasDisadvantage,
       modifiers: [
         { value: target.character.abilityMods[ability] ?? 0, source: ABILITY_LABEL[ability] },
         ...(proficient ? [{ value: target.character.profBonus, source: 'БМ' }] : []),
@@ -5865,7 +5874,7 @@ function resolveConcentrationSave(
   let roll: ReturnType<typeof rollD20>;
   try {
     roll = rollD20({
-      advantage: collected.advantage,
+      advantage: collected.advantage, hasAdvantage: collected.hasAdvantage, hasDisadvantage: collected.hasDisadvantage,
       modifiers,
       target: { type: 'dc', value: pending.request.dc },
       rules: collected.rules,
@@ -5985,7 +5994,7 @@ function resolveHazardSave(
   let roll: ReturnType<typeof rollD20>;
   try {
     roll = rollD20({
-      advantage: collected.advantage,
+      advantage: collected.advantage, hasAdvantage: collected.hasAdvantage, hasDisadvantage: collected.hasDisadvantage,
       modifiers: [
         { value: target.character.abilityMods[ability] ?? 0, source: ABILITY_LABEL[ability] },
         ...(proficient ? [{ value: target.character.profBonus, source: 'БМ' }] : []),
@@ -6113,7 +6122,7 @@ function studyWorldObject(
   const proficiency = expertise ? actor.character.profBonus * 2
     : proficient ? actor.character.profBonus : 0;
   const roll = rollD20({
-    advantage: collected.advantage,
+    advantage: collected.advantage, hasAdvantage: collected.hasAdvantage, hasDisadvantage: collected.hasDisadvantage,
     modifiers: [
       { value: actor.character.abilityMods.int ?? 0, source: ABILITY_LABEL.int },
       ...(proficiency ? [{ value: proficiency, source: expertise ? 'Экспертиза' : 'БМ' }] : []),
@@ -6685,7 +6694,7 @@ function executeCheck(
   });
   const checkEvents: EngineEvent[] = [];
   const roll = rollD20({
-    advantage: collected.advantage,
+    advantage: collected.advantage, hasAdvantage: collected.hasAdvantage, hasDisadvantage: collected.hasDisadvantage,
     modifiers: [
       { value: base, source: ABILITY_LABEL[command.ability] },
       ...(proficiency ? [{ value: proficiency, source: expertise ? 'Экспертиза' : 'БМ' }] : []),
@@ -6739,7 +6748,7 @@ function executeSave(
     formulaCtx: actorFormulaContext(actor.character),
   });
   const roll = rollD20({
-    advantage: collected.advantage,
+    advantage: collected.advantage, hasAdvantage: collected.hasAdvantage, hasDisadvantage: collected.hasDisadvantage,
     modifiers: [
       { value: base, source: ABILITY_LABEL[command.ability] },
       ...(proficient ? [{ value: actor.character.profBonus, source: 'БМ' }] : []),
@@ -8857,7 +8866,7 @@ function targetSaveRoll(input: {
   const manual = manualDecisionRng(command);
   try {
     const roll = rollD20({
-      advantage: collected.advantage,
+      advantage: collected.advantage, hasAdvantage: collected.hasAdvantage, hasDisadvantage: collected.hasDisadvantage,
       modifiers: [
         { value: target.character.abilityMods[ability] ?? 0, source: ABILITY_LABEL[ability] },
         ...(proficient ? [{ value: target.character.profBonus, source: 'БМ' }] : []),
@@ -9603,7 +9612,7 @@ function resolveEscapeGrapple(
   let roll: ReturnType<typeof rollD20>;
   try {
     roll = rollD20({
-      advantage: collected.advantage,
+      advantage: collected.advantage, hasAdvantage: collected.hasAdvantage, hasDisadvantage: collected.hasDisadvantage,
       modifiers: [
         { value: actor.character.abilityMods[ability] ?? 0, source: ABILITY_LABEL[ability] },
         ...(proficient ? [{
@@ -11256,6 +11265,7 @@ function executeCommand(
   const actor = world.actors[command.actorId];
   switch (command.type) {
     case 'StartEncounter': {
+      if(world.scene.mode==='encounter')return rejected(world,'InvalidActionTiming','An active encounter cannot be restarted');
       const unique = new Set(command.initiative);
       if (command.initiative.length < 2 || unique.size !== command.initiative.length
         || command.initiative.some((actorId) => !world.actors[actorId])) {
@@ -11301,7 +11311,17 @@ function executeCommand(
           reason: 'initiative_rolled',
           obligations: ['system:initiative', 'system:find-familiar'],
         }));
-      return [...familiarInitiativeEvents, {
+      const encounterEvents:EventInput[]=[];
+      for(const participantId of command.initiative) {
+        const participant=world.actors[participantId];
+        const result=startEncounter(participant.runtime,actionContext(participant,env));
+        const obligations=['system:encounter-start','system:resource-recharge'];
+        encounterEvents.push(
+          ...runtimeTransition(participant.id,participant.id,participant.runtime,result.state,'action',obligations),
+          ...engineTrace(participant.id,[participant.id],result.events,obligations),
+        );
+      }
+      return [...familiarInitiativeEvents, ...encounterEvents, {
         sourceActorId: command.actorId,
         obligationIds: ['system:initiative'],
         payload: {
@@ -11324,8 +11344,8 @@ function executeCommand(
         ||before.firedThisTurn?.includes('system:death-save'))return rejected(world,'InvalidActionTiming','Death save is not due');
       const roll=rollDeathSaveDie(before,actor.passives??[],actorFormulaContext(actor.character),env.rng);
       const natural=roll.dice.find(d=>d.sides===20&&!d.discarded)!.result;
-      const result=applyDeathSaveRoll(ds,natural);
-      roll.kind='save';roll.deathSave=true;roll.target={type:'dc',value:10};roll.outcome=natural>=10?'success':'fail';
+      const result=applyDeathSaveRoll(ds,natural,roll.total,roll.outcome);
+      roll.kind='save';roll.deathSave=true;roll.target={type:'dc',value:10};roll.outcome=['revive','success','stable'].includes(result.outcome)?'success':'fail';
       roll.text=describeDeathSaveOutcome(result.outcome,natural);
       const after={...before,deathSaves:result.next,
         hp:result.outcome==='revive'?{...before.hp,current:1}:before.hp,
@@ -11352,7 +11372,7 @@ function executeCommand(
           events: [...started.events, ...commandResolution.events],
         }
         : started;
-      if(actor.kind==='playerCharacter' && before.hp.current===0 && !before.deathSaves?.dead && !before.deathSaves?.stable){
+      if(actor.kind==='playerCharacter' && result.state.hp.current===0 && !result.state.deathSaves?.dead && !result.state.deathSaves?.stable){
         result.state={...result.state,firedThisTurn:[...(result.state.firedThisTurn??[]),'system:death-save-due']};
       }
       const scene = world.scene as EncounterScene;
@@ -11494,6 +11514,19 @@ function executeCommand(
       const elapsed = scene.mode !== 'encounter' || nextRound > scene.round
         ? advanceWorldObjectRounds({ objects: sourceRelative.objects, rounds: 1 })
         : { objects: sourceRelative.objects, events: [] };
+      const roundExpiryEvents:EventInput[]=[];
+      if(scene.mode==='encounter'&&nextRound>scene.round) {
+        for(const participantId of scene.initiative) {
+          const participant=world.actors[participantId];
+          const current=participantId===actor.id?result.state:boundary.runtimes.get(participantId)??participant.runtime;
+          const expired=expireEncounterRound(current);
+          const obligations=['system:round-end'];
+          roundExpiryEvents.push(
+            ...runtimeTransition(actor.id,participantId,current,expired.state,'end_turn',obligations),
+            ...engineTrace(participantId,[participantId],expired.events,obligations,{sourceActorId:actor.id}),
+          );
+        }
+      }
       return [
         ...(openAttackAction(world, actor.id) ? [{
           sourceActorId: actor.id,
@@ -11507,6 +11540,7 @@ function executeCommand(
         ...boundary.events,
         ...runtimeTransition(actor.id, actor.id, before, result.state, 'end_turn', ['system:turn-end']),
         ...engineTrace(actor.id, [], result.events, ['system:turn-end']),
+        ...roundExpiryEvents,
         ...worldObjectEvents(
           actor.id,
           CORE_WORLD_TIME_ACTION,
@@ -11748,7 +11782,8 @@ function executeCommand(
           `${action.id} requires character level ${levelRequirement.minLevel}`,
         );
       }
-      if (!actor.capabilities.actionIds.includes(action.id)) {
+      if (!actor.capabilities.actionIds.includes(action.id)
+        && !matchingRuntimeActionGrants(actor.runtime, action.mechanics, actor.character.level).length) {
         return rejected(world, 'ActionNotGranted', `Actor ${actor.id} does not own action ${action.id}`);
       }
       if (action.attackReplacement) {

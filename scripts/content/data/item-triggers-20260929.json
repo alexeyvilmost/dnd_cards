@@ -1,0 +1,579 @@
+{
+  "CARD-0108": {
+    "append_payloads": [
+      {
+        "kind": "triggered_effect",
+        "id": "item-trigger:CARD-0108",
+        "event": "resource_spent",
+        "subject": "self",
+        "duration": {
+          "type": "while_active"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "who": "self",
+            "result": [
+              {
+                "kind": "temp_hp",
+                "amount": 10
+              }
+            ]
+          }
+        ],
+        "circumstances": [
+          {
+            "kind": "event_data_equals",
+            "key": "resource",
+            "value": "channel_divinity"
+          }
+        ]
+      }
+    ],
+    "implemented": [
+      "Расход Божественного канала владельцем даёт ему 10 временных хитов."
+    ],
+    "tested": [
+      "Срабатывает после успешной оплаты; другой ресурс/чужой владелец/недостаток ресурса не срабатывают."
+    ],
+    "limitations": [
+      "Поддерживается расход через общую оплату executeAction. Отдельные старые обработчики, напрямую списывающие пул, не создают это событие."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemTriggersAudit.test.ts"
+    ]
+  },
+  "CARD-0418": {
+    "append_payloads": [
+      {
+        "kind": "triggered_effect",
+        "id": "item-trigger:CARD-0418",
+        "event": "long_rest",
+        "subject": "self",
+        "duration": {
+          "type": "while_active"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "who": "self",
+            "result": [
+              {
+                "kind": "resource",
+                "op": "grant_capped",
+                "id": "heroic_inspiration",
+                "amount": 1,
+                "max": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "implemented": [
+      "Долгий отдых даёт одно Героическое вдохновение и не накапливает второе."
+    ],
+    "tested": [
+      "Вдохновение выдаётся обычной шиной долгого отдыха; короткий отдых его не выдаёт."
+    ],
+    "limitations": [],
+    "evidence": [
+      "frontend/src/engine/itemTriggersAudit.test.ts"
+    ]
+  },
+  "CARD-0457": {
+    "append_payloads": [
+      {
+        "kind": "triggered_effect",
+        "id": "item-trigger:CARD-0457",
+        "event": "resource_spent",
+        "subject": "self",
+        "duration": {
+          "type": "while_active"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "who": "target",
+            "result": [
+              {
+                "kind": "healing",
+                "amount": "1d6",
+                "healing_source": "item"
+              }
+            ]
+          }
+        ],
+        "circumstances": [
+          {
+            "kind": "event_data_equals",
+            "key": "resource",
+            "value": "bardic_inspiration"
+          },
+          {
+            "kind": "event_data_equals",
+            "key": "has_target",
+            "value": true
+          }
+        ]
+      }
+    ],
+    "implemented": [
+      "При расходовании бардовского вдохновения выбранная реальная цель исцеляется на 1к6."
+    ],
+    "tested": [
+      "Разные состояния барда и цели; HP и кубик принадлежат цели, ресурс списывается у барда."
+    ],
+    "limitations": [
+      "Поддерживается общий путь executeAction с явным runtime цели. Иные способы траты вдохновения без такого контекста не угадывают получателя."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemTriggersAudit.test.ts"
+    ]
+  },
+  "CARD-0577": {
+    "append_payloads": [
+      {
+        "kind": "triggered_effect",
+        "id": "item-trigger:CARD-0577",
+        "event": "healing_given",
+        "subject": "self",
+        "duration": {
+          "type": "while_active"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "who": "target",
+            "result": [
+              {
+                "kind": "temp_hp",
+                "amount": 3
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "implemented": [
+      "Фактически исцелённый получатель получает 3 временных хита; лечение себя также работает."
+    ],
+    "tested": [
+      "Чужой получатель, сам владелец, несвязанная выбранная цель и нулевое восстановление HP."
+    ],
+    "limitations": [
+      "Автоматические healing-события охватывают общий исполнитель, но не старые ручные изменения HP/отдых в обход него. Лечение при полных HP трактуется как отсутствие исцеления."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemTriggersAudit.test.ts"
+    ]
+  },
+  "CARD-0594": {
+    "append_payloads": [
+      {
+        "kind": "triggered_effect",
+        "id": "item-trigger:CARD-0594",
+        "event": "spell_cast",
+        "subject": "self",
+        "duration": {
+          "type": "while_active"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "who": "self",
+            "result": [
+              {
+                "kind": "temp_hp",
+                "amount": 8
+              }
+            ]
+          }
+        ],
+        "circumstances": [
+          {
+            "kind": "event_data_equals",
+            "key": "concentration",
+            "value": true
+          }
+        ]
+      }
+    ],
+    "implemented": [
+      "Сотворение заклинания с декларацией концентрации даёт владельцу 8 временных хитов."
+    ],
+    "tested": [
+      "Срабатывает только на подтверждённый concentration-факт; обычное заклинание и отсутствующий факт не подходят."
+    ],
+    "limitations": [
+      "Каноничный бой берёт school/concentration из каталога действия. Старые вызовы, не передающие каталоговые факты, безопасно не срабатывают."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemTriggersAudit.test.ts"
+    ]
+  },
+  "CARD-0615": {
+    "append_payloads": [
+      {
+        "kind": "triggered_effect",
+        "id": "item-trigger:CARD-0615",
+        "event": "healing_given",
+        "subject": "self",
+        "duration": {
+          "type": "while_active"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "who": "self",
+            "result": [
+              {
+                "kind": "healing",
+                "amount": 2,
+                "healing_source": "item"
+              }
+            ]
+          }
+        ],
+        "circumstances": [
+          {
+            "kind": "event_data_equals",
+            "key": "other_target",
+            "value": true
+          }
+        ]
+      }
+    ],
+    "implemented": [
+      "Фактическое лечение другого существа восстанавливает владельцу 2 хита; лечение себя не запускает бесконечную цепочку."
+    ],
+    "tested": [
+      "Разные владелец и получатель, последующее самоисцеление, отсутствие запуска при полном HP цели."
+    ],
+    "limitations": [
+      "Срабатывание привязано к каждому healing-payload общего исполнителя. Составные заклинания из нескольких отдельных healing-payload требуют явного согласования частоты."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemTriggersAudit.test.ts"
+    ]
+  },
+  "CARD-0636": {
+    "append_payloads": [
+      {
+        "kind": "triggered_effect",
+        "id": "item-trigger:CARD-0636",
+        "event": "hit",
+        "subject": "self",
+        "duration": {
+          "type": "while_active"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "who": "self",
+            "result": [
+              {
+                "kind": "healing",
+                "amount": "1d4",
+                "healing_source": "item"
+              }
+            ]
+          }
+        ],
+        "circumstances": [
+          {
+            "kind": "attack_range",
+            "value": "melee"
+          },
+          {
+            "kind": "hp_fraction_at_most",
+            "value": 0.5
+          }
+        ]
+      }
+    ],
+    "implemented": [
+      "Попадание атакой ближнего боя лечит владельца на 1к4, если до лечения у него не больше половины максимальных HP."
+    ],
+    "tested": [
+      "Ближняя атака/дальняя атака/промах, граница Окровавлен, независимый HP цели."
+    ],
+    "limitations": [
+      "Проверены атаки общего исполнителя; внешние ручные объявления попадания не создают скрытого лечения."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemTriggersAudit.test.ts"
+    ]
+  },
+  "CARD-0655": {
+    "append_payloads": [
+      {
+        "kind": "triggered_effect",
+        "id": "item-trigger:CARD-0655",
+        "event": "healing_received",
+        "subject": "self",
+        "duration": {
+          "type": "while_active"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "who": "self",
+            "result": [
+              {
+                "kind": "damage_rider",
+                "trigger": "hit_by_attack_roll",
+                "dice": "1d6",
+                "type": "poison",
+                "consume": "next_attack",
+                "duration": {
+                  "type": "until_dispelled"
+                },
+                "stack_id": "item:revenge-beads:next-attack",
+                "stack_type": "overwrite"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "implemented": [
+      "Фактическое лечение владельца готовит 1к6 ядом на следующую атаку; повторное лечение обновляет один эффект. Попадание наносит урон, промах расходует подготовку."
+    ],
+    "tested": [
+      "Эффект сохраняет sourceId/ownerId получателя, не целителя; попадание, промах и новый эффект после попадания проверяются отдельно."
+    ],
+    "limitations": [
+      "Лечение при полном HP не активирует предмет. Ручные изменения HP вне healing не создают событие."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemTriggersAudit.test.ts"
+    ]
+  },
+  "CARD-0661": {
+    "append_payloads": [
+      {
+        "kind": "triggered_effect",
+        "id": "item-trigger:CARD-0661",
+        "event": "turn_start",
+        "subject": "self",
+        "duration": {
+          "type": "while_active"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "who": "self",
+            "result": [
+              {
+                "kind": "stabilize"
+              }
+            ]
+          }
+        ],
+        "circumstances": [
+          {
+            "kind": "living_at_zero_hp"
+          }
+        ]
+      }
+    ],
+    "implemented": [
+      "В начале хода живой владелец с нулём HP стабилизируется без лечения."
+    ],
+    "tested": [
+      "Ноль HP, положительные HP и умерший персонаж; стабилизация не воскрешает и не добавляет HP."
+    ],
+    "limitations": [],
+    "evidence": [
+      "frontend/src/engine/itemTriggersAudit.test.ts"
+    ]
+  },
+  "CARD-0766": {
+    "append_payloads": [],
+    "implemented": [
+      "Первое подходящее уровневое заклинание Иллюзии до короткого отдыха делает владельца невидимым до начала следующего хода."
+    ],
+    "tested": [
+      "Иллюзия первого круга, заговор, другая школа, неизвестная школа, повтор до отдыха, сохранение счётчика и восстановление после короткого отдыха."
+    ],
+    "limitations": [
+      "Длительность «1 ход» трактуется как до начала следующего хода владельца. Старые вызовы без каталоговой школы безопасно не срабатывают."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemTriggersAudit.test.ts"
+    ],
+    "replace_mechanics": {
+      "activation": {
+        "mode": "passive",
+        "while": "equipped"
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "who": "self",
+          "result": [
+            {
+              "kind": "triggered_effect",
+              "id": "item-trigger:CARD-0766",
+              "event": "spell_cast",
+              "subject": "self",
+              "duration": {
+                "type": "while_active"
+              },
+              "effects": [
+                {
+                  "resolution": "auto",
+                  "who": "self",
+                  "result": [
+                    {
+                      "kind": "condition",
+                      "op": "apply",
+                      "value": "invisible",
+                      "duration": {
+                        "type": "until_start_of_next_turn"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "circumstances": [
+                {
+                  "kind": "event_data_equals",
+                  "key": "school",
+                  "value": "illusion"
+                },
+                {
+                  "kind": "event_data_equals",
+                  "key": "leveled",
+                  "value": true
+                }
+              ],
+              "uses": {
+                "count": 1,
+                "per": "short_rest"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "CARD-0770": {
+    "append_payloads": [
+      {
+        "kind": "triggered_effect",
+        "id": "item-trigger:CARD-0770",
+        "event": "encounter_start",
+        "subject": "self",
+        "duration": {
+          "type": "while_active"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "who": "self",
+            "result": [
+              {
+                "kind": "modifier",
+                "op": "add",
+                "value": 10,
+                "applies_to": {
+                  "roll": "speed"
+                },
+                "duration": {
+                  "type": "until_end_of_round"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "implemented": [
+      "Начало авторитетного столкновения даёт +10 футов скорости до общей границы конца первого раунда."
+    ],
+    "tested": [
+      "Бонус сохраняется на первом ходу любого участника; удаляется у всех при переходе ко второму раунду. Повтор StartEncounter не обновляет эффект.",
+      "Новый одиночный бой и доверенный roguelike initializer проходят StartEncounter до сохранения; загрузка сохранённого боя не повторяет эффекты/восстановление пулов."
+    ],
+    "limitations": [],
+    "evidence": [
+      "frontend/src/rules-core/itemEncounterLifecycle.test.ts",
+      "frontend/src/solo-combat/soloCombat.engine.integration.test.ts",
+      "frontend/src/roguelike/combatInitialization.test.ts"
+    ]
+  },
+  "CARD-0897": {
+    "append_payloads": [
+      {
+        "kind": "triggered_effect",
+        "id": "item-trigger:CARD-0897",
+        "event": "encounter_start",
+        "subject": "self",
+        "duration": {
+          "type": "while_active"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "who": "self",
+            "result": [
+              {
+                "kind": "set_value",
+                "target": "current_hp",
+                "formula": "ceil(current_hp / 2)"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "implemented": [
+      "При входе в авторитетное столкновение владелец теряет половину текущих HP (потеря округляется вниз), не тратя временные HP и не применяя сопротивления."
+    ],
+    "tested": [
+      "Разные текущие HP, независимый другой участник, временные HP/сопротивление; повтор команды и повторный StartEncounter не списывают HP снова.",
+      "Новый одиночный бой и доверенный roguelike initializer проходят StartEncounter до сохранения; загрузка сохранённого боя не повторяет эффекты/восстановление пулов."
+    ],
+    "limitations": [],
+    "evidence": [
+      "frontend/src/rules-core/itemEncounterLifecycle.test.ts",
+      "frontend/src/solo-combat/soloCombat.engine.integration.test.ts",
+      "frontend/src/roguelike/combatInitialization.test.ts"
+    ]
+  },
+  "CARD-0178": {
+    "append_payloads": [],
+    "implemented": [],
+    "tested": [],
+    "limitations": [
+      "Нет достоверного события убийства противника: падение до 0 HP не доказывает смерть и не подменяется убийством."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemTriggersAudit.test.ts"
+    ]
+  },
+  "CARD-0757": {
+    "append_payloads": [],
+    "implemented": [],
+    "tested": [],
+    "limitations": [
+      "Нет достоверного события уничтожения существа в бою с владельцем-источником. Простой урон или падение до 0 HP недостаточны."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemTriggersAudit.test.ts"
+    ]
+  },
+  "CARD-0936": {
+    "append_payloads": [],
+    "implemented": [],
+    "tested": [],
+    "limitations": [
+      "Нет отдельной сохраняемой границы дня. Подмена первого обморока за день первым падением до 0 после долгого отдыха была бы неточной; пробуждение при сне также отличается от 0 HP."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemTriggersAudit.test.ts"
+    ]
+  }
+}

@@ -924,6 +924,7 @@ export default function SheetActionsPanel({
     characterLevel: character.level,
     resolvedChoices: character.resolved_choices,
     itemMechanics: itemMechs,
+    activeEffects: runtime.activeEffects,
     disabled: Boolean(spellsOnly),
   });
   const ctx = useMemo(() => ({

@@ -18,6 +18,7 @@ import {
   rollD20BonusDice,
   rollD20FailureBonusDice,
   d20MinimumTotal,
+  d20MinimumDie,
 } from './rollRules';
 import { drawDie, type DieAwareRandomSource } from './random';
 
@@ -78,6 +79,7 @@ function buildD20Text(
 
 /** Бросок d20 с преимуществом/помехой, модификаторами и правилами бросков (см. engine/rollRules.ts). */
 export function rollD20(opts: RollD20Options): RollLog {
+  opts = (opts.rng as DieAwareRandomSource).transformD20?.(opts) ?? opts;
   (opts.rng as DieAwareRandomSource).inspectD20?.(opts);
   const rng = opts.rng;
   const advantage: AdvantageState = opts.advantage ?? 'none';
@@ -128,7 +130,10 @@ export function rollD20(opts: RollD20Options): RollLog {
   const dieBonus = d20DieBonus(rules, faces);
   const bonusDice = rollD20BonusDice(rules, rng);
   const bonusDiceTotal = bonusDice.reduce((sum, die) => sum + die.result * (die.sign ?? 1), 0);
-  const rawTotal = natural + dieBonus + bonusDiceTotal + modSum;
+  const minimumDie=d20MinimumDie(rules,faces);
+  const dieFloorBonus=minimumDie?Math.max(0,minimumDie.value-natural):0;
+  if(dieFloorBonus)modifiers.push({value:dieFloorBonus,source:minimumDie!.source});
+  const rawTotal = natural + dieFloorBonus + dieBonus + bonusDiceTotal + modSum;
   const minimumTotal = d20MinimumTotal(rules);
   const floorBonus = minimumTotal ? Math.max(0, minimumTotal.value - rawTotal) : 0;
   if (floorBonus) modifiers.push({ value: floorBonus, source: minimumTotal!.source });
@@ -148,6 +153,8 @@ export function rollD20(opts: RollD20Options): RollLog {
   // outcome-override (крит-промах 11–14 и т.п.) — по натуральному значению, поверх базовой логики.
   const forced = outcomeOverride(rules, natural);
   if (forced) outcome = forced as RollLog['outcome'];
+  if (rules.some(rule => rule.op === 'critical_on_hit') && outcome === 'hit') outcome = 'crit';
+  if (rules.some(rule => rule.op === 'force_success')) outcome = opts.target?.type === 'ac' ? 'crit' : 'success';
 
   // A data-owned after-failure boon rolls only after the base test misses or
   // fails. Forced outcomes remain authoritative and do not spend the boon.

@@ -26,6 +26,8 @@ export interface FreeuseSpec {
   recharge: string;
   /** Фиксированный круг бесплатного каста; не задан → базовый круг заклинания. */
   level?: number;
+  /** Explicit unlimited use declared by the granting entity; no resource pool. */
+  atWill?: boolean;
 }
 
 /** Ключ пула бесплатных использований заклинания. */
@@ -73,7 +75,7 @@ export function applyFreeuseCost(mech: Dict, poolKey: string): Dict {
 /** recharge-карта пулов freeuse: freeuse-<spell> → per (для короткого отдыха/дня). */
 export function collectFreeuseRecharge(specs: FreeuseSpec[]): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const s of specs) if (s.recharge) out[freeuseKey(s.spell)] = s.recharge;
+  for (const s of specs) if (!s.atWill && s.recharge) out[freeuseKey(s.spell)] = s.recharge;
   return out;
 }
 
@@ -88,6 +90,8 @@ export function parseFreeuse(raw: unknown): Omit<FreeuseSpec, 'spell'> | undefin
   if (typeof raw === 'string') return { count: raw, recharge: 'long_rest' };
   if (typeof raw === 'object') {
     const o = raw as Dict;
+    if (o.at_will === true) return { count: 0, recharge: '', atWill: true,
+      ...(typeof o.level === 'number' ? { level: o.level } : {}) };
     const count = typeof o.count === 'number' || typeof o.count === 'string' ? o.count : 1;
     const recharge = typeof o.recharge === 'string' ? o.recharge : 'long_rest';
     const level = typeof o.level === 'number' ? o.level : undefined;

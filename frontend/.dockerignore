@@ -16,6 +16,7 @@ vite.config.js
 # no access to sibling test fixtures outside this build context.
 src/**/*.test.ts
 src/**/*.test.tsx
+src/testing/featAuditFixtures.ts
 e2e
 e2e-live
 

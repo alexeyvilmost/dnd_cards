@@ -10,6 +10,11 @@ import { freshFighterState, FIGHTER_CTX } from '../mvp/fixtures';
 type Dict = Record<string, unknown>;
 
 describe('freeuse — нормализация параметра', () => {
+  it('explicit at_will has no usage pool or recharge schedule', () => {
+    const spec = parseFreeuse({ at_will: true });
+    expect(spec).toEqual({ count: 0, recharge: '', atWill: true });
+    expect(collectFreeuseRecharge([{ spell: 'test-spell', ...spec! }])).toEqual({});
+  });
   it('true → 1 раз, долгий отдых', () => {
     expect(parseFreeuse(true)).toEqual({ count: 1, recharge: 'long_rest' });
   });

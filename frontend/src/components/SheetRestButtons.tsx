@@ -181,11 +181,13 @@ export default function SheetRestButtons({
       forgeToRuntimeState(character).inventory,
     );
   }, [character, itemCards]);
+  const grantedRuntimeEffects = useMemo(() => forgeToRuntimeState(character).activeEffects, [character]);
   const loadedGrantedActions = useGrantedActions({
     assembled,
     characterLevel: character.level,
     resolvedChoices: character.resolved_choices,
     itemMechanics: grantedItemMechanics,
+    activeEffects: grantedRuntimeEffects,
     disabled: providedGrantedActions !== undefined,
   });
   const grantedActions = providedGrantedActions ?? loadedGrantedActions;

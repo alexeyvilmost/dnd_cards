@@ -153,15 +153,16 @@ describe('item library interactions', () => {
     expect(container.querySelector('.library-review-summary p')?.textContent).toContain('3 сущностей');
     expect(container.querySelector('.library-review-summary [data-status=verified] strong')?.textContent).toBe('1');
     expect(container.querySelectorAll('.library-item-row .review-status-corner')).toHaveLength(2);
-    await act(async()=>{window.dispatchEvent(new CustomEvent('entity-review-status-changed',{detail:{entity_type:'card',entity_id:rows[1].id,support:{status:'verified'}}}));});
+    await act(async()=>{window.dispatchEvent(new CustomEvent('entity-review-status-changed',{detail:{entity_type:'card',entity_id:rows[1].id,support:{status:'partial_narrative_verified_partial'}}}));});
     expect(mocks.list).toHaveBeenCalledTimes(3);
     expect(container.querySelectorAll('.library-item-row')).toHaveLength(1);
-    expect(container.querySelector('.library-review-summary [data-status=verified] strong')?.textContent).toBe('2');
+    expect(container.querySelector('.library-review-summary [data-status=verified] strong')?.textContent).toBe('1');
+    expect(container.querySelector('.library-review-summary [data-status=partial_narrative_verified_partial] strong')?.textContent).toBe('1');
     expect(new URLSearchParams(location().split('?')[1]).get('status')).toBe('not_verified,narrative');
   });
 
 
-  it('keeps the same open detail and scroll position while patching support without a catalog reload', async () => {
+  it.each(['verified', 'partial_narrative_verified_partial'])('keeps the open detail and scroll position while saving %s without a catalog reload', async status => {
     mocks.showReviewStatus=true;
     const card={...cards[0],support:{status:'not_verified'}};
     mocks.list.mockResolvedValue({cards:[card],total:1});
@@ -174,15 +175,15 @@ describe('item library interactions', () => {
     container.scrollTop=480;
     dialog.scrollTop=125;
     const url=location();
-    await act(async()=>window.dispatchEvent(new CustomEvent('entity-review-status-changed', {detail:{entity_type:'card',entity_id:card.id,support:{status:'verified'}}})));
+    await act(async()=>window.dispatchEvent(new CustomEvent('entity-review-status-changed', {detail:{entity_type:'card',entity_id:card.id,support:{status}}})));
     expect(container.querySelector('[role=dialog]')).toBe(dialog);
     expect(container.querySelector('.library-item-row')).toBe(row);
     expect(container.scrollTop).toBe(480);
     expect(dialog.scrollTop).toBe(125);
     expect(location()).toBe(url);
     expect(mocks.list).toHaveBeenCalledTimes(1);
-    expect(container.querySelector('[role=dialog]')?.getAttribute('data-support-status')).toBe('verified');
-    expect(container.querySelector('.library-item-row .review-status-corner')?.getAttribute('data-review-status')).toBe('verified');
+    expect(container.querySelector('[role=dialog]')?.getAttribute('data-support-status')).toBe(status);
+    expect(container.querySelector('.library-item-row .review-status-corner')?.getAttribute('data-review-status')).toBe(status);
   });
 
   it('ignores a saved status filter and hides its UI while the setting is off', async () => {

@@ -15,6 +15,7 @@ import { collectRollModifiers } from '../engine/modifiers';
 import { rollD20 } from '../engine/roll';
 import { finalizeSheetD20Roll } from '../character/sheetD20Roll';
 import {influencedSheetRoll} from '../character/influencedSheetRoll';
+import {readAttunedIds} from '../character/attunement';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
 import {activeRunId} from '../roguelike/navigation';
 import {commitSheetRuntimeCommand} from '../character/sheetRuntimeCommand';
@@ -113,7 +114,7 @@ const CharacterSheetV2 = ({
   combatActive, sheetActionDisabledReason, onRollInitiative, rollingInitiative,
 }: Props) => {
   const learnedActions = useGrantedActions({ assembled, characterLevel: character.level,
-    resolvedChoices: draft.resolvedChoices });
+    resolvedChoices: draft.resolvedChoices, activeEffects: runtimeState?.activeEffects });
   const abilityActions = [
     ...assembled.actions.map(({ action, origin }) => ({ action,
       sourceLabel: `${originLabel(origin.kind)} · ${origin.name}` })),
@@ -204,7 +205,8 @@ const CharacterSheetV2 = ({
       );
       plan.push(...plannedD20BonusDice(collected.rules, label, 'check'));
       const inspired = influencedSheetRoll(rollKind === 'saving_throw' ? 'save' : 'check',
-        {advantage: collected.advantage, modifiers: [...parts], rules: collected.rules}, checkState, passives);
+        {advantage: collected.advantage, hasAdvantage: 'hasAdvantage' in collected ? collected.hasAdvantage : false, hasDisadvantage: 'hasDisadvantage' in collected ? collected.hasDisadvantage : false, modifiers: [...parts], rules: collected.rules}, checkState, passives, Math.random,
+        {ability:typeof filter?.ability === 'string' ? filter.ability : undefined,character:sheetCtx ? {...sheetCtx,knownCards:[...equipCards.values()],attunedIds:readAttunedIds(character.turn_state)} : undefined});
       const decision = await diceDialog.request(
         plan,
         label,

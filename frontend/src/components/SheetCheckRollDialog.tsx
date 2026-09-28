@@ -5,8 +5,10 @@ import type { RollLog } from '../mvp/contracts';
 import CombatPresentationDialog from './CombatPresentationDialog';
 import { useCombatDialogFocus } from './useCombatDialogFocus';
 import type {RollInfluence} from '../engine/rollInfluence';
+import RollInfluenceActions from './RollInfluenceActions';
 
 export interface CompactCheckRequest { kind: 'save' | 'check'; roll: () => RollLog;
+  beforeInfluences?: () => RollInfluence[]; beforeInfluence?: (id:string) => void;
   influences?: (roll: RollLog) => RollInfluence[]; influence?: (id: string) => RollLog }
 
 export default function SheetCheckRollDialog({ title, preview, request, onComplete, onCancel }: {
@@ -15,6 +17,7 @@ export default function SheetCheckRollDialog({ title, preview, request, onComple
   const [roll, setRoll] = useState<RollLog>();
   const started = useRef(false);
   const [inspired,setInspired] = useState(false);
+  const [beforeSelected,setBeforeSelected] = useState(false);
   const ref = useCombatDialogFocus(!roll);
   if (roll) return <CombatPresentationDialog key={inspired?'inspired':'original'} modeOverride="standard" beat={{ id: 'sheet-check', sourceId: 'sheet', sourceName: '', actionName: title, rollKind: request.kind, roll, cues: [] }} onClose={() => onComplete(roll)}
     provisional={!inspired && Boolean(request.influences?.(roll).length)}
@@ -24,6 +27,7 @@ export default function SheetCheckRollDialog({ title, preview, request, onComple
     <p className="combat-presentation-kicker">{request.kind === 'save' ? 'СПАСБРОСОК' : 'ПРОВЕРКА'}</p><h2>{title}</h2>
     <Dices size={72} color="#d8b978" aria-hidden="true" />
     {preview}<p className="combat-presentation-muted">Нажмите «Бросить», чтобы запустить кубик.</p>
+    {!beforeSelected && <RollInfluenceActions actions={request.beforeInfluences?.() ?? []} onUse={id=>{request.beforeInfluence?.(id);setBeforeSelected(true);}} />}
     <div className="combat-presentation-actions"><button type="button" className="combat-presentation-continue" onClick={() => { if (started.current) return; started.current = true; setRoll(request.roll()); }}>Бросить</button><button type="button" className="combat-presentation-settings" onClick={onCancel}>Отмена</button></div>
   </section></div>, document.body);
 }

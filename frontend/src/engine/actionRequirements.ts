@@ -1,5 +1,7 @@
 import type { CharacterContext, RuntimeState } from '../mvp/contracts';
 import { activeConditionsOf, matchesWhen } from './circumstances';
+import { matchingRuntimeActionGrants } from './actionGrantContext';
+import { itemGate } from '../character/attunement';
 
 type Dict = Record<string, unknown>;
 
@@ -27,6 +29,17 @@ export function activeEffectRequirementIssue(
   if (whenIssue) return whenIssue;
   const heldIssue = heldItemRequirementIssue(mechanics, state);
   if (heldIssue) return heldIssue;
+  const itemIssue = itemSourceRequirementIssue(mechanics, state, character);
+  if (itemIssue) return itemIssue;
+  const runtimeGrant = mechanics.requires_runtime_action_grant;
+  if (runtimeGrant !== undefined) {
+    if (!Array.isArray(runtimeGrant) || runtimeGrant.length === 0
+      || runtimeGrant.some(reference => typeof reference !== 'string' || !reference.trim())) {
+      return 'Некорректный источник временного действия';
+    }
+    const available = matchingRuntimeActionGrants(state, mechanics, character?.level).length > 0;
+    if (!available) return 'Действие доступно только пока действует предоставляющий его эффект';
+  }
   const forbiddenStack = typeof mechanics.forbids_active_effect_stack === 'string'
     ? mechanics.forbids_active_effect_stack.trim()
     : '';
@@ -52,6 +65,18 @@ export function activeEffectRequirementIssue(
   return required.some((reference) => active.has(reference))
     ? null
     : 'Действие доступно только в соответствующем активном облике';
+}
+
+/** Recheck item-owned capabilities against current equipment, not the UI grant list. */
+export function itemSourceRequirementIssue(mechanics: Dict, state: RuntimeState, character?: CharacterContext): string | null {
+  const source = mechanics.requires_item_source;
+  if (source === undefined) return null;
+  if (typeof source !== 'string' || !source.trim()) return 'Некорректный источник предметного действия';
+  const card = character?.knownCards?.find(candidate => candidate.id === source);
+  if (!card || !itemGate(card, { equipment: state.equipment, inventory: state.inventory, attuned: character?.attunedIds ?? [] })) {
+    return 'Предмет больше не предоставляет это действие';
+  }
+  return null;
 }
 
 /** The same content-owned prerequisites govern previews and authoritative payment. */

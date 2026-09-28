@@ -1,4 +1,5 @@
 export {disarmingSelectionIssue} from '../../engine/heldItemDrop';
+export {startEncounter,expireEncounterRound} from '../../engine/encounter';
 export { isDamageCalculation, resolveDamageCalculation } from '../../engine/damageCalculation';
 /**
  * Temporary anti-corruption boundary around the existing single-actor engine.
@@ -31,6 +32,7 @@ export {
 export { addBonusDieToD20Roll, retargetAttackRoll, rollD20 } from '../../engine/roll';
 export { applySourceTurnBoundary } from '../../engine/sourceTurnExpiry';
 export { activeEffectRequirementIssue } from '../../engine/actionRequirements';
+export { matchingRuntimeActionGrants, runtimeActionContext } from '../../engine/actionGrantContext';
 export { nonMagicActionCost, projectActionSurgeCost, projectQuickenedSpellCost } from '../../engine/actionSurge';
 export { armBoonForNextRoll, consumeBoonAfterFailure, runtimeBoonSpec } from '../../engine/boons';
 export { payloadsOf } from '../../engine/mechanicsView';

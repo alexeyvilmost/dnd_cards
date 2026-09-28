@@ -102,10 +102,13 @@ function PreparedSpells() {
 }
 
 function Attunement() {
-  const { doc, setField } = usePaperSheet();
-  const count = Math.max(1, Math.min(MAX_ATTUNED, Math.floor(Number(doc.fields.attunementSlots) || 1)));
+  const { doc, setField, equipment } = usePaperSheet();
+  const capacity = equipment?.attunementCapacity ?? MAX_ATTUNED;
+  const saved = Math.floor(Number(doc.fields.attunementSlots) || 1);
+  const populated = Object.keys(doc.fields).flatMap(key => /^attunementName(\d+)$/.test(key) && doc.fields[key] ? [Number(key.replace('attunementName', '')) + 1] : []);
+  const count = Math.max(1, ...populated, Math.min(capacity, saved));
   return <div className="ps-attunement">
-    <div className="ps-attunement-label"><span>Настройка на магические предметы</span><button type="button" aria-label="Добавить место настройки" disabled={count >= MAX_ATTUNED} onClick={() => setField('attunementSlots', String(count + 1))}>+</button><button type="button" aria-label="Убрать место настройки" disabled={count <= 1} onClick={() => setField('attunementSlots', String(count - 1))}>−</button></div>
+    <div className="ps-attunement-label"><span>Настройка на магические предметы · {capacity}</span><button type="button" aria-label="Добавить место настройки" disabled={count >= capacity} onClick={() => setField('attunementSlots', String(count + 1))}>+</button><button type="button" aria-label="Убрать место настройки" disabled={count <= 1} onClick={() => setField('attunementSlots', String(count - 1))}>−</button></div>
     {Array.from({ length: count }, (_, index) => <div className="ps-attunement-row" key={index}><Check field={`attunement${index}`} label={`Настройка на предмет ${index + 1}`} diamond /><EntityField field={`attunementName${index}`} label={`Магический предмет ${index + 1}`} /></div>)}
   </div>;
 }

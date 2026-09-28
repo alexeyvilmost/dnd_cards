@@ -34,6 +34,10 @@ export interface ModifierQueryFacts {
   /** Damage follows a successful attack roll, including spell attacks. */
   attackDamage?: boolean;
   weaponCategory?: 'melee' | 'ranged';
+  /** Identity/type of the weapon selected by the authoritative equipment state. */
+  weaponId?: string;
+  weaponType?: string;
+  attackRange?: 'melee' | 'ranged';
   wearingArmor?: boolean;
   extraAttackSource?: 'light_property' | 'other' | 'none';
   abilityModifierAlreadyIncluded?: boolean;

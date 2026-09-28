@@ -18,6 +18,7 @@ import {
 } from '../spellcastingAbility';
 import { abilityMod, abilityOfSkill, ABILITY_IDS, SKILL_IDS, proficiencyBonusForLevel } from './foundation';
 import { bonusOf } from '../pointBuy';
+import {applyAbilityScoreGrants, type AbilityScoreGrant} from './abilityScoreGrants';
 import { getRussianName } from '../../utils/russianTranslations';
 import type {
   AppliedGrant,
@@ -330,12 +331,15 @@ function collectNumericModifier(
   // Модификатор с длительностью (Большая форма: size/speed на 10 раундов) применяется в РАНТАЙМЕ
   // при активации действия, а не пассивно на сборке — иначе временный бафф висел бы постоянно.
   if (payload.duration != null) return;
-  // Числовые роли предметов (max_hp/speed/initiative) считает канал breakdown/passives листа —
+  // Числовые роли предметов (max_hp/initiative) считает канал breakdown/passives листа —
   // там предметы уже присутствуют. Здесь их пропускаем, иначе значение задвоится (Решение 2а:
   // ruleState остаётся «голым» по числовым ролям, единый источник — breakdown). Гранты
   // (grant_ability_score/grant_sense/grant_speed) breakdown НЕ трогает — они идут своим путём.
-  if (source.type === 'item') return;
   const roll = String((payload.applies_to as Dict | undefined)?.roll ?? '');
+  // Speed also feeds movement-mode relationships and the execution context.
+  // Its display breakdown starts at baseSpeed, not at this final speed, so an
+  // item increase must reach this projection and is still counted only once.
+  if (source.type === 'item' && roll !== 'speed') return;
   if (!NUMERIC_ROLLS.has(roll)) return;
   if (payload.op != null && payload.op !== 'add') return; // advantage/disadvantage — не числовые
   if (payload.value == null) return;
@@ -356,7 +360,7 @@ type SenseEntry = { sense: string; range: number };
  *  модов: прирост должен дойти до maxHP/спасбросков/заклинательства/навыков). */
 function applyAbilityDelta(
   payload: Dict,
-  deltas: Record<AbilityKey, number>,
+  grants: Record<AbilityKey, AbilityScoreGrant[]>,
   sources: Record<AbilityKey, { value: number; source: string; reason?: string }[]>,
   source: RuleSource,
 ) {
@@ -372,7 +376,7 @@ function applyAbilityDelta(
     : Number(payload.amount ?? 0);
   if (!Number.isNaN(amount) && amount !== 0) {
     const key = ability as AbilityKey;
-    deltas[key] += amount;
+    grants[key].push({amount, cap: Number(payload.cap ?? 20)});
     sources[key].push({ value: amount, source: source.name, reason: String(payload.reason ?? 'постоянный бонус') });
   }
 }
@@ -414,11 +418,11 @@ function collectAbilityDeltas(
   effects: OriginEffect[],
   actions: OriginAction[],
 ): {
-  deltas: Record<AbilityKey, number>;
+  grants: Record<AbilityKey, AbilityScoreGrant[]>;
   sources: Record<AbilityKey, { value: number; source: string; reason?: string }[]>;
   methods: Record<AbilityKey, { value: number; name: string; reason: string }[]>;
 } {
-  const deltas = Object.fromEntries(ABILITY_KEYS.map((a) => [a, 0])) as Record<AbilityKey, number>;
+  const grants = Object.fromEntries(ABILITY_KEYS.map((a) => [a, [] as AbilityScoreGrant[]])) as Record<AbilityKey, AbilityScoreGrant[]>;
   const sources = Object.fromEntries(ABILITY_KEYS.map((a) => [a, [] as { value: number; source: string; reason?: string }[]])) as Record<AbilityKey, { value: number; source: string; reason?: string }[]>;
   const methods = Object.fromEntries(ABILITY_KEYS.map((a) => [a, [] as { value: number; name: string; reason: string }[]])) as Record<AbilityKey, { value: number; name: string; reason: string }[]>;
   const level = input.draft.level ?? 1;
@@ -450,7 +454,7 @@ function collectAbilityDeltas(
       return;
     }
     if (passesLevelGate(payload, levelForSource(input, source))) {
-      applyAbilityDelta(payload, deltas, sources, source);
+      applyAbilityDelta(payload, grants, sources, source);
       applyAbilityMethod(payload, methods, preFctx, source);
     }
   };
@@ -463,7 +467,7 @@ function collectAbilityDeltas(
   for (const runtime of input.runtimeSources || []) {
     for (const p of payloadsFromMechanics(runtime.mechanics)) walk(p, runtime.source);
   }
-  return { deltas, sources, methods };
+  return { grants, sources, methods };
 }
 
 /** Строковый размер расы (RU) → числовая категория: Крошечный 0 … Громадный 5. «Средний или
@@ -692,7 +696,7 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
 
   // D3: grant_ability_score — пред-скан ДО расчёта модов, чтобы прирост дошёл до ВСЕХ
   // производных (maxHP, спасброски, заклинательство, навыки). ASI 4 уровня, +расы/предыстории.
-  const { deltas: abilityDeltas, sources: abilityDeltaSources, methods: abilityMethods } = collectAbilityDeltas(input, buildEffects, buildActions);
+  const { grants: abilityGrants, sources: abilityDeltaSources, methods: abilityMethods } = collectAbilityDeltas(input, buildEffects, buildActions);
   const abilitySources = Object.fromEntries(
     ABILITY_KEYS.map((a) => {
       const finalDraftValue = draft.abilities[a] ?? 10;
@@ -717,11 +721,7 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   const scoresFinal = Object.fromEntries(
     ABILITY_KEYS.map((a) => {
       const base = draft.abilities[a] ?? 10;
-      const delta = abilityDeltas[a] ?? 0;
-      // Предел 2024: прирост (ASI и т.п.) не поднимает характеристику выше 20; уже-высокую
-      // базу (ручной ввод/особые источники) не режем. Уменьшения (drain) не ограничиваем.
-      const ceiling = Math.max(base, 20);
-      const additive = delta > 0 ? Math.min(base + delta, ceiling) : base + delta;
+      const additive = applyAbilityScoreGrants(base, abilityGrants[a]);
       const sourceTotal = abilitySources[a].reduce((sum, part) => sum + part.value, 0);
       if (sourceTotal !== additive) {
         abilitySources[a].push({

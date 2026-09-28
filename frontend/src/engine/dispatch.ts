@@ -14,6 +14,7 @@
  */
 import type { ReactionOffer, RuntimeState } from '../mvp/contracts';
 import { matchesWhen, type EvalContext } from './circumstances';
+import {payloadsOf} from './mechanicsView';
 
 type Dict = Record<string, unknown>;
 
@@ -22,9 +23,8 @@ export interface DomainEvent {
   timing?: 'before' | 'during' | 'after' | 'replaces';
   /** Данные события (напр. { amount } для damage_taken). */
   data?: Dict;
-  /** Провенанс актёра (groundwork под мультиактор/EncounterState): источник/цель события.
-   *  Пока одно-акторный мир — 'self'. subject-матчинг слушателей придёт со слайсом endTurn;
-   *  сейчас trigger.subject НАМЕРЕННО не фильтруется, чтобы не сломать существующий контент. */
+  /** Источник события. Явный subject:self допускает только владельца контекста;
+   * старые слушатели без subject сохраняют прежнюю область подписки. */
   source?: string;
   target?: string;
 }
@@ -85,11 +85,29 @@ export function collectListeners(
     ...state.activeEffects.map((e) => ({ name: e.name, mech: e.mechanics as Dict })),
     ...passives.map((m, i) => ({ name: String((m as Dict).name ?? `пассивка ${i}`), mech: m })),
   ];
-  for (const { name, mech } of sources) {
+  // A passive item/feature may subscribe to multiple ordinary event listeners.
+  // These remain data on the owned passive; they do not create permanent
+  // runtime effects merely because the item was assembled or previewed.
+  const expanded = sources.flatMap(({name,mech}) => {
+    const mode = (mech?.activation as Dict | undefined)?.mode;
+    if (mode !== undefined && mode !== 'passive') return [{name,mech}];
+    const nested = payloadsOf(mech).flatMap((payload,index) => {
+      if (payload.kind !== 'triggered_effect' || typeof payload.event !== 'string' || !Array.isArray(payload.effects)) return [];
+      return [{name,mech:{
+        id: String(payload.id ?? `${String(mech.id ?? name)}:trigger:${index}`),
+        activation:{mode:'triggered',trigger:{event:payload.event,subject:payload.subject ?? 'self',circumstances:payload.circumstances}},
+        effects:payload.effects,uses:payload.uses,
+      }}];
+    });
+    return [{name,mech},...nested];
+  });
+  for (const { name, mech } of expanded) {
     if (!mech || typeof mech !== 'object') continue;
     const act = mech.activation as Dict | undefined;
     const trig = act?.trigger as Dict | undefined;
     if (!trig || String(trig.event ?? '') !== ev.kind) continue;
+    if (trig.subject === 'self' && ev.source !== 'self'
+      && (!evalCtx?.rollerActorId || ev.source !== evalCtx.rollerActorId)) continue;
     const trigTiming = trig.timing != null ? String(trig.timing) : undefined;
     if (ev.timing && trigTiming && trigTiming !== ev.timing) continue;
     if (!matchesWhen(

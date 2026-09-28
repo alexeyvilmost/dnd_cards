@@ -1,0 +1,1011 @@
+{
+  "schema_version": 1,
+  "audit_id": "item-influences-20260929",
+  "source_snapshot_sha256": "079b69c5cdcbff81d9346a97a3717ef2abf48c54306d62778824bcbc96a3f291",
+  "entities": [
+    {
+      "entity_type": "action",
+      "id": "4a66067e-ef15-5240-bf58-5a1b51993b62",
+      "card_number": "ACT-item-influence-0113",
+      "name": "Ожерелье красноречия — Преимущество проверки Харизмы",
+      "description_sha256": "2ab3e0987151073235f04af74f341b38ca6644abbdf26e2591af50e608e7746d",
+      "preimage": null,
+      "patch": {
+        "id": "4a66067e-ef15-5240-bf58-5a1b51993b62",
+        "card_number": "ACT-item-influence-0113",
+        "name": "Ожерелье красноречия — Преимущество проверки Харизмы",
+        "name_en": null,
+        "description": "Харизма +1\nПроверка харизмы с преимуществом (1 р/к.о.)",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog mechanics audit 2026-09-29",
+        "mechanics": {
+          "requires_item_source": "71c45517-193d-4c3b-b2c6-a4a23be69799",
+          "activation": {
+            "mode": "triggered",
+            "optional": true,
+            "cost": [
+              {
+                "resource": "self_uses",
+                "amount": 1
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "roll_influence",
+                  "operation": "advantage",
+                  "timing": "before_roll",
+                  "eligible_rolls": [
+                    "check"
+                  ],
+                  "ability": "cha"
+                }
+              ]
+            }
+          ],
+          "uses": {
+            "count": 1,
+            "per": "short_rest"
+          }
+        },
+        "deleted_at": null
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Действие влияния, предоставляемое активным предметом.",
+        "implemented": [
+          "Преимущество проверки Харизмы",
+          "Повторная проверка источника, фазы и стоимости при принятии сохранённого решения."
+        ],
+        "tested": [
+          "Общие операции и сохранённое продолжение проверены отдельными тестами двух различных сущностей."
+        ],
+        "limitations": [
+          "Выбор до броска подключён к действиям боя, проверкам и спасброскам. Предварительный выбор при инициативе и спасброске смерти требует отдельного продолжения."
+        ],
+        "evidence": [
+          "frontend/src/engine/itemRollInfluences.test.ts",
+          "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+        ]
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "8cda6b71-2836-5ad2-b76a-d80ab77bd013",
+      "card_number": "ACT-item-influence-0378",
+      "name": "Мгновение — Переброс к20 реакцией",
+      "description_sha256": "4c5b2c1ea0feb07310d0cded12c637ece5f7dfe228f023cbb3571b1236a747e2",
+      "preimage": null,
+      "patch": {
+        "id": "8cda6b71-2836-5ad2-b76a-d80ab77bd013",
+        "card_number": "ACT-item-influence-0378",
+        "name": "Мгновение — Переброс к20 реакцией",
+        "name_en": null,
+        "description": "Вы можете потратить ответное действие, чтобы перебросить любой бросок в бою.  (1 раз/ход)\n\nВне боя вы можете отмотать время на 30 секунд назад. \n(1 раз/короткий отдых)\n\nВаша скорость увеличивается на 10 фт.\n\nВы можете использовать бонусные действия как действия и наоборот.",
+        "detailed_description": "Эти наручи позволяют носителю манипулировать временем по своему усмотрению. Песок в часах на них отмеряет время с разной скоростью.",
+        "rarity": "artifact",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "reaction",
+        "author": "System",
+        "source": "Catalog mechanics audit 2026-09-29",
+        "mechanics": {
+          "requires_item_source": "65dfa236-5297-4e40-be30-331ec1b68b37",
+          "activation": {
+            "mode": "triggered",
+            "optional": true,
+            "cost": [
+              {
+                "resource": "reaction",
+                "amount": 1
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "roll_influence",
+                  "operation": "reroll_kept_d20",
+                  "timing": "after_roll_before_outcome",
+                  "eligible_rolls": [
+                    "attack",
+                    "save",
+                    "check"
+                  ],
+                  "affects": "any",
+                  "combat_only": true,
+                  "once_per_turn": "item-0378-time"
+                }
+              ]
+            }
+          ]
+        },
+        "deleted_at": null
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Действие влияния, предоставляемое активным предметом.",
+        "implemented": [
+          "Переброс к20 реакцией",
+          "Повторная проверка источника, фазы и стоимости при принятии сохранённого решения."
+        ],
+        "tested": [
+          "Общие операции и сохранённое продолжение проверены отдельными тестами двух различных сущностей."
+        ],
+        "limitations": [
+          "Автоматизированы собственные и чужие броски к20 в бою. Переброс костей урона, откат мира на 30 секунд и обмен действия с бонусным действием не реализованы."
+        ],
+        "evidence": [
+          "frontend/src/engine/itemRollInfluences.test.ts",
+          "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+        ]
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "9b4b8e9f-df5a-55c9-af21-b15c5c5dd6f8",
+      "card_number": "ACT-item-influence-0381",
+      "name": "Кольцо хронургии — Переброс к20",
+      "description_sha256": "303d9f8dd02116c4abffda3fbe0f2388a779c23255803a9f6070a925e79ad523",
+      "preimage": null,
+      "patch": {
+        "id": "9b4b8e9f-df5a-55c9-af21-b15c5c5dd6f8",
+        "card_number": "ACT-item-influence-0381",
+        "name": "Кольцо хронургии — Переброс к20",
+        "name_en": null,
+        "description": "Вы можете перебросить любой к20.\n(1 раз в день).",
+        "detailed_description": null,
+        "rarity": "uncommon",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog mechanics audit 2026-09-29",
+        "mechanics": {
+          "requires_item_source": "9eed58ae-27db-4cf1-80ed-4af05d86e761",
+          "activation": {
+            "mode": "triggered",
+            "optional": true,
+            "cost": [
+              {
+                "resource": "self_uses",
+                "amount": 1
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "roll_influence",
+                  "operation": "reroll_kept_d20",
+                  "timing": "after_roll_before_outcome",
+                  "eligible_rolls": [
+                    "attack",
+                    "save",
+                    "check"
+                  ]
+                }
+              ]
+            }
+          ],
+          "uses": {
+            "count": 1,
+            "per": "day"
+          }
+        },
+        "deleted_at": null
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Действие влияния, предоставляемое активным предметом.",
+        "implemented": [
+          "Переброс к20",
+          "Повторная проверка источника, фазы и стоимости при принятии сохранённого решения."
+        ],
+        "tested": [
+          "Общие операции и сохранённое продолжение проверены отдельными тестами двух различных сущностей."
+        ],
+        "limitations": [
+          "Суточные заряды используют существующий цикл восстановления долгим отдыхом; независимого игрового календаря нет."
+        ],
+        "evidence": [
+          "frontend/src/engine/itemRollInfluences.test.ts",
+          "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+        ]
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "b0cfa7c0-860e-52a6-a3c2-9584a6ad5773",
+      "card_number": "ACT-item-influence-0383",
+      "name": "Длиный меч точности — Критическое попадание этим мечом",
+      "description_sha256": "5d2d92bae5cb7163bf941d482fd732c965cf81bd7de3b30822ecbaf183e71b3e",
+      "preimage": null,
+      "patch": {
+        "id": "b0cfa7c0-860e-52a6-a3c2-9584a6ad5773",
+        "card_number": "ACT-item-influence-0383",
+        "name": "Длиный меч точности — Критическое попадание этим мечом",
+        "name_en": null,
+        "description": "1 раз в день, при попадании этим мечом, вы можете сделать атаку критической.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog mechanics audit 2026-09-29",
+        "mechanics": {
+          "requires_item_source": "bc36b949-72dd-4a6c-ac73-962e2e9112d5",
+          "activation": {
+            "mode": "triggered",
+            "optional": true,
+            "cost": [
+              {
+                "resource": "self_uses",
+                "amount": 1
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "roll_influence",
+                  "operation": "critical_on_hit",
+                  "timing": "after_roll_before_outcome",
+                  "eligible_rolls": [
+                    "attack"
+                  ],
+                  "eligible_outcomes": [
+                    "hit"
+                  ],
+                  "weapon_id": "bc36b949-72dd-4a6c-ac73-962e2e9112d5"
+                }
+              ]
+            }
+          ],
+          "uses": {
+            "count": 1,
+            "per": "day"
+          }
+        },
+        "deleted_at": null
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Действие влияния, предоставляемое активным предметом.",
+        "implemented": [
+          "Критическое попадание этим мечом",
+          "Повторная проверка источника, фазы и стоимости при принятии сохранённого решения."
+        ],
+        "tested": [
+          "Общие операции и сохранённое продолжение проверены отдельными тестами двух различных сущностей."
+        ],
+        "limitations": [
+          "Суточные заряды используют существующий цикл восстановления долгим отдыхом; независимого игрового календаря нет."
+        ],
+        "evidence": [
+          "frontend/src/engine/itemRollInfluences.test.ts",
+          "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+        ]
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "02899d8b-60e1-5e07-9b65-59f7cf75b85c",
+      "card_number": "ACT-item-influence-0428",
+      "name": "Цепь соблазна — Рискованное преимущество",
+      "description_sha256": "a89f52cde89f8d909bb9aeda3dbec1180fee3f5cfad2ea7e64d9fb964b4734f0",
+      "preimage": null,
+      "patch": {
+        "id": "02899d8b-60e1-5e07-9b65-59f7cf75b85c",
+        "card_number": "ACT-item-influence-0428",
+        "name": "Цепь соблазна — Рискованное преимущество",
+        "name_en": null,
+        "description": "Любой бросок к20 по вашему выбору вы можете совершить с преимуществом.\n\nЕсли вы проваливаете проверку, используя этот эффект, до конца дня все броски к20 совершаются с помехой.",
+        "detailed_description": null,
+        "rarity": "uncommon",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog mechanics audit 2026-09-29",
+        "mechanics": {
+          "requires_item_source": "3e50f87f-2ce8-497f-86c4-b2ada45370ec",
+          "activation": {
+            "mode": "triggered",
+            "optional": true,
+            "cost": []
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "roll_influence",
+                  "operation": "advantage",
+                  "timing": "before_roll",
+                  "eligible_rolls": [
+                    "attack",
+                    "save",
+                    "check"
+                  ],
+                  "failure_disadvantage_until_rest": true
+                }
+              ]
+            }
+          ]
+        },
+        "deleted_at": null
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Действие влияния, предоставляемое активным предметом.",
+        "implemented": [
+          "Рискованное преимущество",
+          "Повторная проверка источника, фазы и стоимости при принятии сохранённого решения."
+        ],
+        "tested": [
+          "Общие операции и сохранённое продолжение проверены отдельными тестами двух различных сущностей."
+        ],
+        "limitations": [
+          "Неизвестная СЛ оставляет исход проверки игроку: штраф требует известного провала. Автоматический штраф действует до долгого отдыха; календарная граница «до конца дня» пока не моделируется.",
+          "Выбор до броска подключён к действиям боя, проверкам и спасброскам. Предварительный выбор при инициативе и спасброске смерти требует отдельного продолжения."
+        ],
+        "evidence": [
+          "frontend/src/engine/itemRollInfluences.test.ts",
+          "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+        ]
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "35aa685d-11b8-5c7f-a768-877af89063cd",
+      "card_number": "ACT-item-influence-0445",
+      "name": "Подарок от деда мороза — Критический успех до броска",
+      "description_sha256": "e1e72f5363569de8886a8504021885721e271da8d983117f0cf2547497c63d86",
+      "preimage": null,
+      "patch": {
+        "id": "35aa685d-11b8-5c7f-a768-877af89063cd",
+        "card_number": "ACT-item-influence-0445",
+        "name": "Подарок от деда мороза — Критический успех до броска",
+        "name_en": null,
+        "description": "До броска своего кубика к20 вы можете решить, что это критический успех.",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog mechanics audit 2026-09-29",
+        "mechanics": {
+          "requires_item_source": "740e8fd5-70d6-452b-8ddc-6cc7af56cfe2",
+          "activation": {
+            "mode": "triggered",
+            "optional": true,
+            "cost": [
+              {
+                "resource": "self_item",
+                "amount": 1
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "roll_influence",
+                  "operation": "force_success",
+                  "timing": "before_roll",
+                  "eligible_rolls": [
+                    "attack",
+                    "save",
+                    "check"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "deleted_at": null
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Действие влияния, предоставляемое активным предметом.",
+        "implemented": [
+          "Критический успех до броска",
+          "Повторная проверка источника, фазы и стоимости при принятии сохранённого решения."
+        ],
+        "tested": [
+          "Общие операции и сохранённое продолжение проверены отдельными тестами двух различных сущностей."
+        ],
+        "limitations": [
+          "Особая таблица критических успехов проверок и спасбросков в описании отсутствует; обычные проверки и спасброски получают успех.",
+          "Выбор до броска подключён к действиям боя, проверкам и спасброскам. Предварительный выбор при инициативе и спасброске смерти требует отдельного продолжения."
+        ],
+        "evidence": [
+          "frontend/src/engine/itemRollInfluences.test.ts",
+          "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+        ]
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "45959184-e4c6-55ad-823a-cef643eab701",
+      "card_number": "ACT-item-influence-0538",
+      "name": "Малая эгида — Помеха атаке против владельца",
+      "description_sha256": "ddb0cfc22caf54750e1e35655390753270d3d48fd0230eaa1888d648653f1f41",
+      "preimage": null,
+      "patch": {
+        "id": "45959184-e4c6-55ad-823a-cef643eab701",
+        "card_number": "ACT-item-influence-0538",
+        "name": "Малая эгида — Помеха атаке против владельца",
+        "name_en": null,
+        "description": "Реакцией вы можете наложить помеху на бросок атаки против вас. 1 раз в бой",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "reaction",
+        "author": "System",
+        "source": "Catalog mechanics audit 2026-09-29",
+        "mechanics": {
+          "requires_item_source": "525b3155-a54d-42a3-86ad-af5444188a85",
+          "activation": {
+            "mode": "triggered",
+            "optional": true,
+            "cost": [
+              {
+                "resource": "reaction",
+                "amount": 1
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "d20_interrupt",
+                  "operation": "impose_disadvantage",
+                  "timing": "before_roll",
+                  "eligible_rolls": [
+                    "attack_roll"
+                  ],
+                  "requires_line_of_sight": false,
+                  "target_self": true,
+                  "once_per_encounter": true
+                }
+              ]
+            }
+          ]
+        },
+        "deleted_at": null
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Действие влияния, предоставляемое активным предметом.",
+        "implemented": [
+          "Помеха атаке против владельца",
+          "Повторная проверка источника, фазы и стоимости при принятии сохранённого решения."
+        ],
+        "tested": [
+          "Общие операции и сохранённое продолжение проверены отдельными тестами двух различных сущностей."
+        ],
+        "limitations": [],
+        "evidence": [
+          "frontend/src/engine/itemRollInfluences.test.ts",
+          "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+        ]
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "1d361f9d-b595-57bd-b7b7-7acb84b7288e",
+      "card_number": "ACT-item-influence-0544-adv",
+      "name": "Шляпа капитана — Преимущество",
+      "description_sha256": "7cb686a870124f07a61d37eae0ebb1d63e771c476f7589ad07a33bd4d46d56ac",
+      "preimage": null,
+      "patch": {
+        "id": "1d361f9d-b595-57bd-b7b7-7acb84b7288e",
+        "card_number": "ACT-item-influence-0544-adv",
+        "name": "Шляпа капитана — Преимущество",
+        "name_en": null,
+        "description": "Перед броском к20 поправьте шляпу - и получите помеху или преимущество. *3 раза в день.*",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog mechanics audit 2026-09-29",
+        "mechanics": {
+          "requires_item_source": "a279ed6e-1f1a-4767-86dd-5d51eab4c209",
+          "activation": {
+            "mode": "triggered",
+            "optional": true,
+            "cost": [
+              {
+                "resource": "self_uses",
+                "amount": 1
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "roll_influence",
+                  "operation": "advantage",
+                  "timing": "before_roll",
+                  "eligible_rolls": [
+                    "attack",
+                    "save",
+                    "check"
+                  ]
+                }
+              ]
+            }
+          ],
+          "uses": {
+            "count": 3,
+            "per": "day"
+          }
+        },
+        "deleted_at": null
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Действие влияния, предоставляемое активным предметом.",
+        "implemented": [
+          "Преимущество",
+          "Повторная проверка источника, фазы и стоимости при принятии сохранённого решения."
+        ],
+        "tested": [
+          "Общие операции и сохранённое продолжение проверены отдельными тестами двух различных сущностей."
+        ],
+        "limitations": [
+          "Выбор до броска подключён к действиям боя, проверкам и спасброскам. Предварительный выбор при инициативе и спасброске смерти требует отдельного продолжения.",
+          "Суточные заряды используют существующий цикл восстановления долгим отдыхом; независимого игрового календаря нет."
+        ],
+        "evidence": [
+          "frontend/src/engine/itemRollInfluences.test.ts",
+          "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+        ]
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "9b129505-21cb-579e-9a6b-17abe0b9ffee",
+      "card_number": "ACT-item-influence-0544-dis",
+      "name": "Шляпа капитана — Помеха",
+      "description_sha256": "7cb686a870124f07a61d37eae0ebb1d63e771c476f7589ad07a33bd4d46d56ac",
+      "preimage": null,
+      "patch": {
+        "id": "9b129505-21cb-579e-9a6b-17abe0b9ffee",
+        "card_number": "ACT-item-influence-0544-dis",
+        "name": "Шляпа капитана — Помеха",
+        "name_en": null,
+        "description": "Перед броском к20 поправьте шляпу - и получите помеху или преимущество. *3 раза в день.*",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog mechanics audit 2026-09-29",
+        "mechanics": {
+          "requires_item_source": "a279ed6e-1f1a-4767-86dd-5d51eab4c209",
+          "activation": {
+            "mode": "triggered",
+            "optional": true,
+            "cost": [
+              {
+                "resource": "uses_ACT-item-influence-0544-adv",
+                "amount": 1
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "roll_influence",
+                  "operation": "disadvantage",
+                  "timing": "before_roll",
+                  "eligible_rolls": [
+                    "attack",
+                    "save",
+                    "check"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "deleted_at": null
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Действие влияния, предоставляемое активным предметом.",
+        "implemented": [
+          "Помеха",
+          "Повторная проверка источника, фазы и стоимости при принятии сохранённого решения."
+        ],
+        "tested": [
+          "Общие операции и сохранённое продолжение проверены отдельными тестами двух различных сущностей."
+        ],
+        "limitations": [
+          "Выбор до броска подключён к действиям боя, проверкам и спасброскам. Предварительный выбор при инициативе и спасброске смерти требует отдельного продолжения.",
+          "Суточные заряды используют существующий цикл восстановления долгим отдыхом; независимого игрового календаря нет."
+        ],
+        "evidence": [
+          "frontend/src/engine/itemRollInfluences.test.ts",
+          "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+        ]
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "9816d36f-764a-53db-9c50-51ebd4fac230",
+      "card_number": "ACT-item-influence-0640",
+      "name": "Кольцо уклонения — Успешный спасбросок Ловкости",
+      "description_sha256": "6dec760452eb72dd17993655fa7e6e908deaaf057b75836905d9c0d7e35415fd",
+      "preimage": null,
+      "patch": {
+        "id": "9816d36f-764a-53db-9c50-51ebd4fac230",
+        "card_number": "ACT-item-influence-0640",
+        "name": "Кольцо уклонения — Успешный спасбросок Ловкости",
+        "name_en": null,
+        "description": "Вы можете реакцией заменить проваленный спасбросок ЛВК на успешный. *(1 раз в день)*",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "reaction",
+        "author": "System",
+        "source": "Catalog mechanics audit 2026-09-29",
+        "mechanics": {
+          "requires_item_source": "afcc7880-57f1-407c-a7c4-c16fa5289428",
+          "activation": {
+            "mode": "triggered",
+            "optional": true,
+            "cost": [
+              {
+                "resource": "reaction",
+                "amount": 1
+              },
+              {
+                "resource": "self_uses",
+                "amount": 1
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "roll_influence",
+                  "operation": "force_success",
+                  "timing": "after_roll_before_outcome",
+                  "eligible_rolls": [
+                    "save"
+                  ],
+                  "ability": "dex",
+                  "eligible_outcomes": [
+                    "fail"
+                  ]
+                }
+              ]
+            }
+          ],
+          "uses": {
+            "count": 1,
+            "per": "day"
+          }
+        },
+        "deleted_at": null
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Действие влияния, предоставляемое активным предметом.",
+        "implemented": [
+          "Успешный спасбросок Ловкости",
+          "Повторная проверка источника, фазы и стоимости при принятии сохранённого решения."
+        ],
+        "tested": [
+          "Общие операции и сохранённое продолжение проверены отдельными тестами двух различных сущностей."
+        ],
+        "limitations": [
+          "Суточные заряды используют существующий цикл восстановления долгим отдыхом; независимого игрового календаря нет."
+        ],
+        "evidence": [
+          "frontend/src/engine/itemRollInfluences.test.ts",
+          "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+        ]
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "08e57d30-25f1-5503-a12f-6c050dd4ad09",
+      "card_number": "ACT-item-influence-0646",
+      "name": "Верный  талисман — Преимущество к20",
+      "description_sha256": "c6a60c6815d89bbdbb1cb7dd868fe41fefcfc66441a6e3bf4a16af8a1fc73b11",
+      "preimage": null,
+      "patch": {
+        "id": "08e57d30-25f1-5503-a12f-6c050dd4ad09",
+        "card_number": "ACT-item-influence-0646",
+        "name": "Верный  талисман — Преимущество к20",
+        "name_en": null,
+        "description": "Вы можете совершить бросок к20 с преимуществом.\n*(1 раз в день)*",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog mechanics audit 2026-09-29",
+        "mechanics": {
+          "requires_item_source": "6f0e7d4a-9c27-45a3-a6cc-5caa3a04c1d8",
+          "activation": {
+            "mode": "triggered",
+            "optional": true,
+            "cost": [
+              {
+                "resource": "self_uses",
+                "amount": 1
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "roll_influence",
+                  "operation": "advantage",
+                  "timing": "before_roll",
+                  "eligible_rolls": [
+                    "attack",
+                    "save",
+                    "check"
+                  ]
+                }
+              ]
+            }
+          ],
+          "uses": {
+            "count": 1,
+            "per": "day"
+          }
+        },
+        "deleted_at": null
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Действие влияния, предоставляемое активным предметом.",
+        "implemented": [
+          "Преимущество к20",
+          "Повторная проверка источника, фазы и стоимости при принятии сохранённого решения."
+        ],
+        "tested": [
+          "Общие операции и сохранённое продолжение проверены отдельными тестами двух различных сущностей."
+        ],
+        "limitations": [
+          "Выбор до броска подключён к действиям боя, проверкам и спасброскам. Предварительный выбор при инициативе и спасброске смерти требует отдельного продолжения.",
+          "Суточные заряды используют существующий цикл восстановления долгим отдыхом; независимого игрового календаря нет."
+        ],
+        "evidence": [
+          "frontend/src/engine/itemRollInfluences.test.ts",
+          "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+        ]
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "4d33ab9a-6b98-5cb9-aecb-d92bc74afc80",
+      "card_number": "ACT-item-influence-0950",
+      "name": "Кожаные наручи жадности — Штраф 2к10, критическое попадание",
+      "description_sha256": "edbdcb8fc56484fd21dc73ab679d2df9c4f9736558dbe9037de021ea0f53fcb2",
+      "preimage": null,
+      "patch": {
+        "id": "4d33ab9a-6b98-5cb9-aecb-d92bc74afc80",
+        "card_number": "ACT-item-influence-0950",
+        "name": "Кожаные наручи жадности — Штраф 2к10, критическое попадание",
+        "name_en": null,
+        "description": "Перед атакой вы можете принять штраф -2к10 к броску атаки. Если вы попадёте, удар будет критическим.",
+        "detailed_description": null,
+        "rarity": "uncommon",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog mechanics audit 2026-09-29",
+        "mechanics": {
+          "requires_item_source": "36304795-5d99-476b-8967-70d770b4580b",
+          "activation": {
+            "mode": "triggered",
+            "optional": true,
+            "cost": []
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "roll_influence",
+                  "operation": "critical_on_hit",
+                  "timing": "before_roll",
+                  "eligible_rolls": [
+                    "attack"
+                  ],
+                  "penalty_dice": "2d10"
+                }
+              ]
+            }
+          ]
+        },
+        "deleted_at": null
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Действие влияния, предоставляемое активным предметом.",
+        "implemented": [
+          "Штраф 2к10, критическое попадание",
+          "Повторная проверка источника, фазы и стоимости при принятии сохранённого решения."
+        ],
+        "tested": [
+          "Общие операции и сохранённое продолжение проверены отдельными тестами двух различных сущностей."
+        ],
+        "limitations": [],
+        "evidence": [
+          "frontend/src/engine/itemRollInfluences.test.ts",
+          "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+        ]
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "78c9ab1a-4eed-5fdb-896d-818d473fd278",
+      "card_number": "ACT-item-influence-0951",
+      "name": "Кожаные наручи жадности — Штраф 2к8, критическое попадание",
+      "description_sha256": "1f64756543d73f75d99a5def6637eeaef535a587e415387fce58b71882dac297",
+      "preimage": null,
+      "patch": {
+        "id": "78c9ab1a-4eed-5fdb-896d-818d473fd278",
+        "card_number": "ACT-item-influence-0951",
+        "name": "Кожаные наручи жадности — Штраф 2к8, критическое попадание",
+        "name_en": null,
+        "description": "Перед атакой вы можете принять штраф -2к8 к броску атаки. Если вы попадёте, удар будет критическим.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog mechanics audit 2026-09-29",
+        "mechanics": {
+          "requires_item_source": "33cc41bc-efad-43ee-ae5a-4358b895a184",
+          "activation": {
+            "mode": "triggered",
+            "optional": true,
+            "cost": []
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "roll_influence",
+                  "operation": "critical_on_hit",
+                  "timing": "before_roll",
+                  "eligible_rolls": [
+                    "attack"
+                  ],
+                  "penalty_dice": "2d8"
+                }
+              ]
+            }
+          ]
+        },
+        "deleted_at": null
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Действие влияния, предоставляемое активным предметом.",
+        "implemented": [
+          "Штраф 2к8, критическое попадание",
+          "Повторная проверка источника, фазы и стоимости при принятии сохранённого решения."
+        ],
+        "tested": [
+          "Общие операции и сохранённое продолжение проверены отдельными тестами двух различных сущностей."
+        ],
+        "limitations": [],
+        "evidence": [
+          "frontend/src/engine/itemRollInfluences.test.ts",
+          "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+        ]
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "bbc3d73b-124e-569f-bcb7-ef28f393e6ea",
+      "card_number": "ACT-item-influence-0952",
+      "name": "Кожаные наручи жадности — Штраф 2к6, критическое попадание",
+      "description_sha256": "e7bcf78d6704f74b7eb0e8bbad896878fbfb34b955851a3bab22c1554a52e7fe",
+      "preimage": null,
+      "patch": {
+        "id": "bbc3d73b-124e-569f-bcb7-ef28f393e6ea",
+        "card_number": "ACT-item-influence-0952",
+        "name": "Кожаные наручи жадности — Штраф 2к6, критическое попадание",
+        "name_en": null,
+        "description": "Перед атакой вы можете принять штраф -2к6 к броску атаки. Если вы попадёте, удар будет критическим.",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog mechanics audit 2026-09-29",
+        "mechanics": {
+          "requires_item_source": "de367d1e-d24a-4dc0-83a1-9342a9a75a89",
+          "activation": {
+            "mode": "triggered",
+            "optional": true,
+            "cost": []
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "roll_influence",
+                  "operation": "critical_on_hit",
+                  "timing": "before_roll",
+                  "eligible_rolls": [
+                    "attack"
+                  ],
+                  "penalty_dice": "2d6"
+                }
+              ]
+            }
+          ]
+        },
+        "deleted_at": null
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Действие влияния, предоставляемое активным предметом.",
+        "implemented": [
+          "Штраф 2к6, критическое попадание",
+          "Повторная проверка источника, фазы и стоимости при принятии сохранённого решения."
+        ],
+        "tested": [
+          "Общие операции и сохранённое продолжение проверены отдельными тестами двух различных сущностей."
+        ],
+        "limitations": [],
+        "evidence": [
+          "frontend/src/engine/itemRollInfluences.test.ts",
+          "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+        ]
+      }
+    }
+  ]
+}

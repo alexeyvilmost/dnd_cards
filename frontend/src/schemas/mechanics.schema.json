@@ -33,6 +33,8 @@
       "description": "Immutable stable class-list identities for a spell; display names are never interpreted as rules data."
     },
     "requires_held_item": { "type": "string", "minLength": 1, "description": "Exact item card identity that must be held and present in accessible inventory to execute this action." },
+    "requires_runtime_action_grant": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 }, "description": "Exact action references that an unexpired active effect must grant before this temporary action is usable." },
+    "requires_item_source": { "type": "string", "minLength": 1, "description": "Item-owned capability: recheck the declared item's equipment and attunement gate before execution." },
     "weapon_mastery": { "$ref": "#/$defs/weaponMasteryPrimitive" },
     "attack_replacement": { "$ref": "#/$defs/attackReplacement" },
     "rest_decision": { "$ref": "#/$defs/restDecision" },
@@ -938,10 +940,10 @@
         "requires_weapon_or_unarmed_hit": { "type": "boolean" },
         "secondary_target": { "type": "boolean" },
         "melee_counterattack": { "type": "boolean" },
-        "event": { "enum": ["action_resolved", "attack_roll_made", "hit_by_attack", "targeted_by_magic_missile", "hit", "sneak_attack_hit", "miss", "crit", "damage_dealt", "damage_taken", "saving_throw_made", "forced_save", "ability_check_made", "reduced_to_0_hp", "creature_enters_reach", "creature_leaves_reach", "creature_moves", "fall_started", "turn_start", "turn_end", "spell_cast", "condition_applied", "initiative_roll", "short_rest", "long_rest", "on_acquire", "level_gained"] },
+        "event": { "enum": ["resource_spent", "healing_given", "healing_received", "encounter_start", "action_resolved", "attack_roll_made", "hit_by_attack", "targeted_by_magic_missile", "hit", "sneak_attack_hit", "miss", "crit", "damage_dealt", "damage_taken", "saving_throw_made", "forced_save", "ability_check_made", "reduced_to_0_hp", "creature_enters_reach", "creature_leaves_reach", "creature_moves", "fall_started", "turn_start", "turn_end", "spell_cast", "condition_applied", "initiative_roll", "short_rest", "long_rest", "on_acquire", "level_gained"] },
         "events": {
           "type": "array", "minItems": 1, "uniqueItems": true,
-          "items": { "enum": ["action_resolved", "attack_roll_made", "hit_by_attack", "targeted_by_magic_missile", "hit", "sneak_attack_hit", "miss", "crit", "damage_dealt", "damage_taken", "saving_throw_made", "forced_save", "ability_check_made", "reduced_to_0_hp", "creature_enters_reach", "creature_leaves_reach", "creature_moves", "fall_started", "turn_start", "turn_end", "spell_cast", "condition_applied", "initiative_roll", "short_rest", "long_rest", "on_acquire", "level_gained"] }
+          "items": { "enum": ["resource_spent", "healing_given", "healing_received", "action_resolved", "attack_roll_made", "hit_by_attack", "targeted_by_magic_missile", "hit", "sneak_attack_hit", "miss", "crit", "damage_dealt", "damage_taken", "saving_throw_made", "forced_save", "ability_check_made", "reduced_to_0_hp", "creature_enters_reach", "creature_leaves_reach", "creature_moves", "fall_started", "turn_start", "turn_end", "spell_cast", "condition_applied", "initiative_roll", "short_rest", "long_rest", "on_acquire", "level_gained"] }
         },
         "subject": { "enum": ["self", "ally", "enemy", "attacker", "target", "any_creature"] },
         "circumstances": { "type": "array", "items": { "$ref": "#/$defs/condition" } }
@@ -1100,13 +1102,32 @@
       "type": "object",
       "required": ["kind"],
       "properties": {
-        "kind": { "enum": ["damage", "damage_rider", "triggered_effect", "fall_protection", "movement_option", "targeting_ward", "turn_command", "stabilize", "weapon_enchantment", "remote_manipulator", "communication_link", "world_interaction", "illusion", "temporary_consumable", "world_entity", "information_access", "information_reveal", "world_zone", "healing", "reduce_damage", "temp_hp", "condition", "condition_immunity", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "remove_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "spellcasting_ability", "weapon_mastery", "choice", "add_item", "unarmed_damage_profile", "turn_start_grapple_damage", "d20_interrupt"] }
+        "kind": { "enum": ["damage", "damage_rider", "triggered_effect", "fall_protection", "movement_option", "targeting_ward", "turn_command", "stabilize", "weapon_enchantment", "remote_manipulator", "communication_link", "world_interaction", "illusion", "temporary_consumable", "world_entity", "information_access", "information_reveal", "world_zone", "healing", "reduce_damage", "temp_hp", "condition", "condition_immunity", "modifier", "movement", "resource", "resistance", "grant_action", "boon", "reroll", "set_die", "set_value", "value_method", "transform", "narrative", "variable", "grant_proficiency", "grant_feat", "grant_spell", "grant_effect", "remove_effect", "grant_language", "grant_expertise", "grant_ability_score", "grant_sense", "grant_speed", "spellcasting_ability", "weapon_mastery", "choice", "add_item", "unarmed_damage_profile", "turn_start_grapple_damage", "d20_interrupt", "roll_influence", "attunement_capacity"] },
+        "bind_action_context": { "type": "boolean", "description": "grant_effect snapshots source casting facts for the actions it provides" },
+        "bind_action_target": { "type": "boolean", "description": "follow-up actions must address the original cast target" }
       },
       "allOf": [
+        {"if":{"properties":{"kind":{"const":"attunement_capacity"}}},"then":{"required":["amount"],"properties":{"amount":{"type":"integer"}}}},
+        {"if":{"properties":{"kind":{"const":"roll_influence"}}},"then":{
+          "required":["operation","timing","eligible_rolls"],
+          "properties":{
+            "operation":{"enum":["reroll_kept_d20","advantage","disadvantage","force_success","critical_on_hit"]},
+            "timing":{"enum":["before_roll","after_roll_before_outcome"]},
+            "eligible_rolls":{"type":"array","minItems":1,"uniqueItems":true,"items":{"enum":["attack","save","check"]}},
+            "ability":{"enum":["str","dex","con","int","wis","cha"]},
+            "affects":{"enum":["self","any"]},
+            "weapon_id":{"type":"string","minLength":1},
+            "eligible_outcomes":{"type":"array","minItems":1,"items":{"enum":["hit","crit","miss","success","fail"]}},
+            "penalty_dice":{"type":"string","pattern":"^[1-9][0-9]*d[1-9][0-9]*$"},
+            "once_per_turn":{"type":"string","minLength":1},
+            "failure_disadvantage_until_rest":{"type":"boolean"}
+          }
+        }},
         {
           "if": { "properties": { "kind": { "const": "d20_interrupt" } } },
           "then": {
-            "required": ["operation", "timing", "eligible_rolls", "range_ft", "requires_line_of_sight"],
+            "required": ["operation", "timing", "eligible_rolls", "requires_line_of_sight"],
+            "anyOf": [{"required":["range_ft"]},{"required":["target_self"],"properties":{"target_self":{"const":true}}}],
             "properties": {
               "operation": { "enum": ["impose_disadvantage", "subtract_die"] },
               "timing": { "enum": ["before_roll", "after_outcome"] },
@@ -1119,6 +1140,8 @@
                 "items": { "enum": ["hit", "success"] }
               },
               "range_ft": { "type": "number", "minimum": 0 },
+              "target_self": {"type":"boolean"},
+              "once_per_encounter": {"type":"boolean"},
               "requires_line_of_sight": { "type": "boolean" },
               "allowed_relations": {
                 "type": "array", "minItems": 1, "uniqueItems": true,
@@ -1192,7 +1215,7 @@
           "then": {
             "required": ["event", "effects", "duration"],
             "properties": {
-              "event": { "enum": ["hit", "crit", "damage_taken", "miss", "spell_cast", "reduced_to_0_hp", "turn_start", "turn_end", "short_rest", "long_rest"] },
+              "event": { "enum": ["resource_spent", "healing_given", "healing_received", "encounter_start", "hit", "crit", "damage_taken", "miss", "spell_cast", "reduced_to_0_hp", "turn_start", "turn_end", "short_rest", "long_rest"] },
               "effects": {
                 "type": "array",
                 "minItems": 1,
@@ -1422,7 +1445,7 @@
         },
         {
           "if": { "properties": { "kind": { "const": "healing" } } },
-          "then": { "properties": { "amount": { "$ref": "#/$defs/formula" }, "scaling": { "type": "object" } } }
+          "then": { "properties": { "amount": { "$ref": "#/$defs/formula" }, "restore_all": { "type": "boolean" }, "scaling": { "type": "object" } } }
         },
         {
           "if": { "properties": { "kind": { "const": "temp_hp" } } },
@@ -1505,7 +1528,7 @@
           "if": { "properties": { "kind": { "const": "resource" } } },
           "then": {
             "properties": {
-              "op": { "enum": ["grant", "restore", "spend"] },
+              "op": { "enum": ["grant", "restore", "spend", "grant_capped"] },
               "id": { "type": "string" },
               "amount": { "$ref": "#/$defs/formula" },
               "level": { "type": "integer" }
@@ -1611,7 +1634,8 @@
                     "type": "object",
                     "properties": {
                       "count": { "description": "Макс. бесплатных использований (число или формула).", "oneOf": [{ "type": "integer", "minimum": 1 }, { "type": "string" }] },
-                      "recharge": { "enum": ["long_rest", "short_rest", "day"], "description": "Когда перезаряжается (по умолчанию long_rest)." },
+                      "at_will": { "type": "boolean", "description": "Без ограничения числа применений и без ячейки; обычная стоимость действия сохраняется." },
+                      "recharge": { "enum": ["long_rest", "short_rest", "day", "encounter"], "description": "Когда перезаряжается (по умолчанию long_rest)." },
                       "level": { "type": "integer", "minimum": 1, "description": "Фиксированный круг бесплатного каста; не задан → базовый круг заклинания." }
                     }
                   }
@@ -1707,12 +1731,12 @@
         "applies_to": {
           "type": "object",
           "properties": {
-            "roll": { "enum": ["attack", "damage", "healing", "harm", "ability_check", "saving_throw", "ac", "speed", "size", "spell_dc", "spell_save_dc", "initiative", "carry", "max_hp", "action", "bonus_action", "reaction", "concentration", "spellcasting", "speech", "movement_toward_condition_source", "d20"] },
+            "roll": { "enum": ["attack", "damage", "healing", "healing_received", "temp_hp", "temp_hp_received", "harm", "fall_damage", "movement_cost", "ability_check", "saving_throw", "ac", "speed", "size", "spell_dc", "spell_save_dc", "initiative", "carry", "max_hp", "action", "bonus_action", "reaction", "concentration", "spellcasting", "speech", "movement_toward_condition_source", "d20"] },
             "filter": { "type": "object" },
             "die": { "type": "number", "description": "Грани кости для die_bonus/explode (напр. 8 — только к8)." }
           }
         },
-        "op": { "enum": ["add", "set", "advantage", "disadvantage", "reroll", "reroll_damage", "multiply", "upgrade", "downgrade", "auto_fail", "auto_crit", "deny", "set_die", "crit_range", "outcome", "on_roll", "minimum_die", "die_bonus", "critical_extra_die", "bonus_die", "explode"] },
+        "op": { "enum": ["add", "set", "advantage", "disadvantage", "reroll", "reroll_damage", "reroll_healing_ones", "maximize_dice", "multiply", "upgrade", "downgrade", "auto_fail", "auto_crit", "deny", "set_die", "crit_range", "outcome", "on_roll", "minimum_die", "die_bonus", "critical_extra_die", "bonus_die", "explode"] },
         "value": { "$ref": "#/$defs/formula" },
         "value_timing": { "const": "on_apply", "description": "Roll and freeze a numeric modifier value once when the effect is applied." },
         "modifier_kind": {
@@ -1741,7 +1765,7 @@
     "duration": {
       "type": "object",
       "properties": {
-        "type": { "enum": ["instantaneous", "rounds", "minutes", "hours", "while_active", "until_long_rest", "until_dispelled", "permanent", "until_start_of_next_turn", "until_start_of_source_next_turn", "until_end_of_source_next_turn", "until_end_of_source_turn", "until_end_of_turn"] },
+        "type": { "enum": ["instantaneous", "rounds", "minutes", "hours", "while_active", "until_long_rest", "until_dispelled", "permanent", "until_start_of_next_turn", "until_start_of_source_next_turn", "until_end_of_source_next_turn", "until_end_of_source_turn", "until_end_of_turn", "until_end_of_round"] },
         "amount": { "type": "number" },
         "concentration": { "type": "boolean" },
         "ends_when": { "type": "array", "items": { "$ref": "#/$defs/condition" } },

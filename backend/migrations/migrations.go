@@ -1503,6 +1503,8 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		{Version: manualContentReviewMigrationVersion, Description: "Archive certification, unlock library mechanics and reset manual review statuses", Up: enableManualContentReview274, Down: func(db *sql.DB) error { return nil }},
 		{Version: "275_seed_recommended_spell_choices", Description: "Forge spell recommendation defaults for caster classes", Up: seedRecommendedSpellChoices, Down: removeRecommendedSpellChoices},
 		{Version: "276_reusable_run_sources", Description: "Allow independent run copies of a reusable source character", Up: allowReusableRunSources276, Down: func(db *sql.DB) error { return fmt.Errorf("Existing independent run copies must be retained") }},
+		{Version: partialNarrativeReviewMigrationVersion, Description: "Add partial narrative review with partially verified mechanics without resetting saved assessments", Up: extendManualContentReview277, Down: func(db *sql.DB) error { return fmt.Errorf("Existing manual review statuses must be retained") }},
+		{Version: catalogMechanics278Version, Description: "Apply guarded catalog mechanics and explicit audit assessments atomically", Up: applyCatalogMechanics278, Down: func(db *sql.DB) error { return fmt.Errorf("Catalog audit rollback requires a reviewed inverse manifest") }},
 		// Здесь можно добавлять новые миграции
 	}
 }

@@ -1,7 +1,7 @@
 import type { AssembledCharacter } from './assemble';
 import { collectActionUsesPools, type GrantedAction } from './actionSheet';
 import { hitDiceResourceKey, initResources, resolveCount, resolveLeveledCount, resourceLevel } from '../engine/resources';
-import { freeuseKey, type FreeuseSpec } from '../engine/freeuse';
+import { freeuseKey, isFreeusePoolKey, type FreeuseSpec } from '../engine/freeuse';
 import type { ValueBreakdown } from '../mvp/contracts';
 import type { CharacterContext, RollModifier, RuntimeState } from '../mvp/contracts';
 import type { ForgeCharacter } from './types';
@@ -9,6 +9,7 @@ import type { PatchCharacterRuntimeRequest } from './api';
 import { alignRuntimeHp, forgeToRuntimeState } from './runtime';
 import { expandPassiveChoicePayloads, passiveSourceId } from '../mechanics/expandChoices';
 import type { Card } from '../types';
+import {collectItemMechanics} from './attunement';
 
 type Dict = Record<string, unknown>;
 
@@ -186,7 +187,22 @@ export function syncRuntimeResources(
   grantedActions: readonly GrantedAction[] = [],
 ): { resources: Record<string, number>; maxResources: Record<string, number>; sources: Record<string, RollModifier[]> } {
   const classRes = (assembled.klass?.resources ?? null) as Dict | null;
-  const passiveMechanics = collectPassiveMechanics(assembled);
+  const itemMechanics = collectItemMechanics(
+    existing?.equipment ?? Object.fromEntries((ctx.equippedCards ?? []).map((card,index)=>[`equipped_${index}`,card.id])),
+    new Map(itemCards.map(card=>[card.id,card])),
+    {attuned_ids:ctx.attunedIds ?? []},
+    existing?.inventory ?? [],
+  ).map(item=>item.mechanics).filter(mechanics=>{
+    const activation=mechanics.activation as Dict|undefined;
+    return !activation?.mode || activation.mode==='passive';
+  });
+  const runtimeGrants=(existing?.activeEffects ?? []).filter(effect=>effect.roundsLeft===undefined || effect.roundsLeft>0)
+    .map(effect=>({...effect.mechanics as Dict,name:effect.name}))
+    .filter(mechanics=>{
+      const activation=(mechanics as Dict).activation as Dict|undefined;
+      return !activation?.mode || activation.mode==='passive';
+    });
+  const passiveMechanics = [...collectPassiveMechanics(assembled),...itemMechanics,...runtimeGrants];
   const grantDetails = collectResourceGrantDetails(passiveMechanics);
   const grants = grantDetails.map(({ payload }) => payload);
   const fresh = initResources(ctx, classRes, grants);
@@ -236,6 +252,7 @@ export function syncRuntimeResources(
 
   // Пулы бесплатных использований заклинаний (grant_spell.freeuse → freeuse-<spell>).
   for (const spec of freeuseSpells) {
+    if (spec.atWill) continue;
     const count = resolveCount(spec.count, ctx);
     if (count > 0) {
       const key = freeuseKey(spec.spell);
@@ -249,6 +266,27 @@ export function syncRuntimeResources(
 
   const maxResources = { ...fresh.maxResources };
   const resources = { ...fresh.resources };
+  // A missing spell grant does not mean a fresh resource the next time that
+  // item is equipped/attuned. Keep its saved virtual pool dormant; live grant
+  // authority, rather than the presence of a pool, controls spell access.
+  // Keeping the old maximum also preserves any unspent charges within bounds.
+  for(const [key,maximum] of Object.entries(existing.maxResources)) {
+    if(isFreeusePoolKey(key)&&maxResources[key]===undefined) {
+      maxResources[key]=maximum;
+      resources[key]=Math.min(existing.resources[key]??0,maximum);
+    }
+  }
+  // Keep an empty slot for previously initialized item-granted pools when the
+  // item is unequipped. Equipping it again must not refill an expended resource.
+  const knownItemResourceKeys = new Set(collectResourceGrantPayloads(
+    itemCards.flatMap(card=>card.mechanics ? [card.mechanics as Dict] : []),
+  ).map(payload=>String(payload.id ?? '')));
+  for (const key of knownItemResourceKeys) {
+    if (existing.maxResources[key] !== undefined && maxResources[key] === undefined) {
+      maxResources[key]=0;
+      resources[key]=0;
+    }
+  }
 
   // Heroic Inspiration is a universal runtime-owned resource: another
   // character can grant it even when the recipient's build does not declare

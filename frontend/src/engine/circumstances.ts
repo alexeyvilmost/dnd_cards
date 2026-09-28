@@ -74,6 +74,12 @@ export function activeConditionsOf(state: RuntimeState | undefined): Set<string>
 export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
   const kind = String(cond.kind ?? '');
   switch (kind) {
+    case 'resource_at_most': {
+      const id=typeof cond.id==='string'?cond.id:'';
+      const maximum=Number(cond.value);
+      const current=id?ctx.state?.resources[id]:undefined;
+      return typeof current==='number' && Number.isFinite(current) && Number.isFinite(maximum) && current<=maximum;
+    }
     case 'any_of': {
       const of = (cond.of as Dict[]) ?? [];
       return of.length === 0 || of.some((c) => evaluateCondition(c, ctx));
@@ -119,6 +125,14 @@ export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
     }
     case 'you_have_condition':
       return ctx.activeConditions?.has(String(cond.value)) ?? false;
+    case 'concentrating':
+      return ctx.state?.activeEffects.some((entry) => (entry.mechanics as Dict)?.kind === 'concentration') ?? false;
+    case 'hp_fraction_at_most': {
+      const threshold = Number(cond.value);
+      const hp = ctx.state?.hp;
+      return Number.isFinite(threshold) && threshold >= 0 && threshold <= 1
+        && !!hp && hp.max > 0 && hp.current >= 0 && hp.current <= hp.max * threshold;
+    }
     case 'you_have_effect_stack': {
       const stackId = String(cond.value ?? cond.id ?? '').trim();
       if (!stackId || !ctx.state) return false;
@@ -197,6 +211,8 @@ export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
       if (!key || !ctx.event?.data) return false;
       return ctx.event.data[key] === cond.value;
     }
+    case 'living_at_zero_hp':
+      return ctx.state?.hp.current === 0 && ctx.state.deathSaves?.dead !== true;
     case 'roller_creature_type_in': {
       if (!Array.isArray(cond.values) || cond.values.length === 0) return false;
       return cond.values.some((candidate) => creatureTypeMatches(ctx.rollerCreatureType, candidate));

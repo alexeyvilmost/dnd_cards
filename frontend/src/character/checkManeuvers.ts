@@ -2,7 +2,7 @@ import {activeConditionsOf} from '../engine/circumstances';
 import {canonicalStringify, sha256String} from '../rules-core/determinism';
 import type {ForgeCharacter} from './types';
 import type {PreparedSheetAtomicWorldCommit} from './sheetAtomicWorldCommit';
-import {writeRulesEngineRuntimeTurnState} from './runtime';
+import {writeRulesEngineRuntimeTurnState,runtimeInventoryPayload} from './runtime';
 import type {EngineEvent} from '../mvp/contracts';
 import type {Action} from '../types';
 import type {CharacterContext, RuntimeState} from '../mvp/contracts';
@@ -66,7 +66,8 @@ export function prepareSheetCheckCommit(input: {
       errata_version: character.ruleset_version || '2024',
       content_hash: `sha256:${sha256String(canonicalStringify(input.rulesContent))}`},
     participants: [{character_id: character.id, expected_runtime_revision: Number(character.runtime_revision),
-      patch: {resources: state.resources, active_effects: state.activeEffects,
+        patch: {resources: state.resources, active_effects: state.activeEffects,
+          inventory_items:runtimeInventoryPayload(state),
         turn_state: writeRulesEngineRuntimeTurnState(character.turn_state, state)}}],
     events: input.events.map(payload => ({character_id: character.id, type: payload.type, payload})),
   }};

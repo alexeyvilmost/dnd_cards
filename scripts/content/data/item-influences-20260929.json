@@ -1,0 +1,488 @@
+{
+  "CARD-0113": {
+    "append_payloads": [
+      {
+        "kind": "grant_action",
+        "value": "ACT-item-influence-0113"
+      }
+    ],
+    "implemented": [
+      "Преимущество проверки Харизмы"
+    ],
+    "tested": [
+      "Фазы, сохранение броска, плата и проверка актуального предмета общим исполнителем."
+    ],
+    "limitations": [
+      "Выбор до броска подключён к действиям боя, проверкам и спасброскам. Предварительный выбор при инициативе и спасброске смерти требует отдельного продолжения."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemRollInfluences.test.ts",
+      "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+    ],
+    "status": "verified_partial",
+    "mechanics_set": {
+      "activation": {
+        "mode": "passive",
+        "while": "equipped"
+      }
+    },
+    "mechanics_remove": [
+      "uses"
+    ]
+  },
+  "CARD-0378": {
+    "append_payloads": [
+      {
+        "kind": "grant_action",
+        "value": "ACT-item-influence-0378"
+      }
+    ],
+    "implemented": [
+      "Переброс к20 реакцией"
+    ],
+    "tested": [
+      "Фазы, сохранение броска, плата и проверка актуального предмета общим исполнителем."
+    ],
+    "limitations": [
+      "Автоматизированы собственные и чужие броски к20 в бою. Переброс костей урона, откат мира на 30 секунд и обмен действия с бонусным действием не реализованы."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemRollInfluences.test.ts",
+      "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+    ],
+    "status": "partial_narrative_verified_partial",
+    "mechanics_set": {
+      "activation": {
+        "mode": "passive",
+        "while": "equipped"
+      }
+    },
+    "mechanics_remove": [
+      "uses"
+    ]
+  },
+  "CARD-0381": {
+    "append_payloads": [
+      {
+        "kind": "grant_action",
+        "value": "ACT-item-influence-0381"
+      }
+    ],
+    "implemented": [
+      "Переброс к20"
+    ],
+    "tested": [
+      "Фазы, сохранение броска, плата и проверка актуального предмета общим исполнителем."
+    ],
+    "limitations": [
+      "Суточные заряды используют существующий цикл восстановления долгим отдыхом; независимого игрового календаря нет."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemRollInfluences.test.ts",
+      "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+    ],
+    "status": "verified_partial",
+    "mechanics_set": {
+      "activation": {
+        "mode": "passive",
+        "while": "equipped"
+      }
+    },
+    "mechanics_remove": [
+      "uses"
+    ]
+  },
+  "CARD-0383": {
+    "append_payloads": [
+      {
+        "kind": "grant_action",
+        "value": "ACT-item-influence-0383"
+      }
+    ],
+    "implemented": [
+      "Критическое попадание этим мечом"
+    ],
+    "tested": [
+      "Фазы, сохранение броска, плата и проверка актуального предмета общим исполнителем."
+    ],
+    "limitations": [
+      "Суточные заряды используют существующий цикл восстановления долгим отдыхом; независимого игрового календаря нет."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemRollInfluences.test.ts",
+      "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+    ],
+    "status": "verified_partial",
+    "mechanics_set": {
+      "activation": {
+        "mode": "passive",
+        "while": "equipped"
+      }
+    },
+    "mechanics_remove": [
+      "uses"
+    ]
+  },
+  "CARD-0428": {
+    "append_payloads": [
+      {
+        "kind": "grant_action",
+        "value": "ACT-item-influence-0428"
+      }
+    ],
+    "implemented": [
+      "Рискованное преимущество"
+    ],
+    "tested": [
+      "Фазы, сохранение броска, плата и проверка актуального предмета общим исполнителем."
+    ],
+    "limitations": [
+      "Неизвестная СЛ оставляет исход проверки игроку: штраф требует известного провала. Автоматический штраф действует до долгого отдыха; календарная граница «до конца дня» пока не моделируется.",
+      "Выбор до броска подключён к действиям боя, проверкам и спасброскам. Предварительный выбор при инициативе и спасброске смерти требует отдельного продолжения."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemRollInfluences.test.ts",
+      "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+    ],
+    "status": "verified_partial",
+    "mechanics_set": {
+      "activation": {
+        "mode": "passive",
+        "while": "equipped"
+      }
+    },
+    "mechanics_remove": [
+      "uses"
+    ]
+  },
+  "CARD-0445": {
+    "append_payloads": [
+      {
+        "kind": "grant_action",
+        "value": "ACT-item-influence-0445"
+      }
+    ],
+    "implemented": [
+      "Критический успех до броска",
+      "Свойство single_use: принятие влияния расходует ровно один экземпляр через каноничный self_item cost."
+    ],
+    "tested": [
+      "Фазы, сохранение броска, плата и проверка актуального предмета общим исполнителем."
+    ],
+    "limitations": [
+      "Особая таблица критических успехов проверок и спасбросков в описании отсутствует; обычные проверки и спасброски получают успех.",
+      "Выбор до броска подключён к действиям боя, проверкам и спасброскам. Предварительный выбор при инициативе и спасброске смерти требует отдельного продолжения."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemRollInfluences.test.ts",
+      "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+    ],
+    "status": "verified_partial",
+    "mechanics_set": {
+      "activation": {
+        "mode": "passive",
+        "while": "carried"
+      }
+    },
+    "mechanics_remove": [
+      "uses"
+    ]
+  },
+  "CARD-0538": {
+    "append_payloads": [
+      {
+        "kind": "grant_action",
+        "value": "ACT-item-influence-0538"
+      }
+    ],
+    "implemented": [
+      "Помеха атаке против владельца"
+    ],
+    "tested": [
+      "Фазы, сохранение броска, плата и проверка актуального предмета общим исполнителем."
+    ],
+    "limitations": [],
+    "evidence": [
+      "frontend/src/engine/itemRollInfluences.test.ts",
+      "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+    ],
+    "status": "verified_partial",
+    "mechanics_set": {
+      "activation": {
+        "mode": "passive",
+        "while": "equipped"
+      }
+    },
+    "mechanics_remove": [
+      "uses"
+    ]
+  },
+  "CARD-0544": {
+    "append_payloads": [
+      {
+        "kind": "grant_action",
+        "value": "ACT-item-influence-0544-adv"
+      },
+      {
+        "kind": "grant_action",
+        "value": "ACT-item-influence-0544-dis"
+      }
+    ],
+    "implemented": [
+      "Преимущество",
+      "Помеха",
+      "Оба выбора расходуют один общий дневной запас из трёх зарядов."
+    ],
+    "tested": [
+      "Фазы, сохранение броска, плата и проверка актуального предмета общим исполнителем.",
+      "Фазы, сохранение броска, плата и проверка актуального предмета общим исполнителем."
+    ],
+    "limitations": [
+      "Выбор до броска подключён к действиям боя, проверкам и спасброскам. Предварительный выбор при инициативе и спасброске смерти требует отдельного продолжения.",
+      "Суточные заряды используют существующий цикл восстановления долгим отдыхом; независимого игрового календаря нет."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemRollInfluences.test.ts",
+      "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+    ],
+    "status": "verified_partial",
+    "mechanics_set": {
+      "activation": {
+        "mode": "passive",
+        "while": "equipped"
+      }
+    },
+    "mechanics_remove": [
+      "uses"
+    ]
+  },
+  "CARD-0640": {
+    "append_payloads": [
+      {
+        "kind": "grant_action",
+        "value": "ACT-item-influence-0640"
+      }
+    ],
+    "implemented": [
+      "Успешный спасбросок Ловкости"
+    ],
+    "tested": [
+      "Фазы, сохранение броска, плата и проверка актуального предмета общим исполнителем."
+    ],
+    "limitations": [
+      "Суточные заряды используют существующий цикл восстановления долгим отдыхом; независимого игрового календаря нет."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemRollInfluences.test.ts",
+      "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+    ],
+    "status": "verified_partial",
+    "mechanics_set": {
+      "activation": {
+        "mode": "passive",
+        "while": "equipped"
+      }
+    },
+    "mechanics_remove": [
+      "uses"
+    ]
+  },
+  "CARD-0646": {
+    "append_payloads": [
+      {
+        "kind": "grant_action",
+        "value": "ACT-item-influence-0646"
+      }
+    ],
+    "implemented": [
+      "Преимущество к20"
+    ],
+    "tested": [
+      "Фазы, сохранение броска, плата и проверка актуального предмета общим исполнителем."
+    ],
+    "limitations": [
+      "Выбор до броска подключён к действиям боя, проверкам и спасброскам. Предварительный выбор при инициативе и спасброске смерти требует отдельного продолжения.",
+      "Суточные заряды используют существующий цикл восстановления долгим отдыхом; независимого игрового календаря нет."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemRollInfluences.test.ts",
+      "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+    ],
+    "status": "verified_partial",
+    "mechanics_set": {
+      "activation": {
+        "mode": "passive",
+        "while": "equipped"
+      }
+    },
+    "mechanics_remove": [
+      "uses"
+    ]
+  },
+  "CARD-0950": {
+    "append_payloads": [
+      {
+        "kind": "grant_action",
+        "value": "ACT-item-influence-0950"
+      }
+    ],
+    "implemented": [
+      "Штраф 2к10, критическое попадание"
+    ],
+    "tested": [
+      "Фазы, сохранение броска, плата и проверка актуального предмета общим исполнителем."
+    ],
+    "limitations": [],
+    "evidence": [
+      "frontend/src/engine/itemRollInfluences.test.ts",
+      "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+    ],
+    "status": "verified_partial",
+    "mechanics_set": {
+      "activation": {
+        "mode": "passive",
+        "while": "equipped"
+      }
+    },
+    "mechanics_remove": [
+      "uses"
+    ]
+  },
+  "CARD-0951": {
+    "append_payloads": [
+      {
+        "kind": "grant_action",
+        "value": "ACT-item-influence-0951"
+      }
+    ],
+    "implemented": [
+      "Штраф 2к8, критическое попадание"
+    ],
+    "tested": [
+      "Фазы, сохранение броска, плата и проверка актуального предмета общим исполнителем."
+    ],
+    "limitations": [],
+    "evidence": [
+      "frontend/src/engine/itemRollInfluences.test.ts",
+      "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+    ],
+    "status": "verified_partial",
+    "mechanics_set": {
+      "activation": {
+        "mode": "passive",
+        "while": "equipped"
+      }
+    },
+    "mechanics_remove": [
+      "uses"
+    ]
+  },
+  "CARD-0952": {
+    "append_payloads": [
+      {
+        "kind": "grant_action",
+        "value": "ACT-item-influence-0952"
+      }
+    ],
+    "implemented": [
+      "Штраф 2к6, критическое попадание"
+    ],
+    "tested": [
+      "Фазы, сохранение броска, плата и проверка актуального предмета общим исполнителем."
+    ],
+    "limitations": [],
+    "evidence": [
+      "frontend/src/engine/itemRollInfluences.test.ts",
+      "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+    ],
+    "status": "verified_partial",
+    "mechanics_set": {
+      "activation": {
+        "mode": "passive",
+        "while": "equipped"
+      }
+    },
+    "mechanics_remove": [
+      "uses"
+    ]
+  },
+  "CARD-0637": {
+    "append_payloads": [
+      {
+        "kind": "attunement_capacity",
+        "amount": 1
+      }
+    ],
+    "implemented": [
+      "Число мест настройки изменяется на +1 через общий предметный gate."
+    ],
+    "tested": [
+      "Положительная и отрицательная ёмкость, экипировка/инвентарь/настройка, серверная проверка владения и сохранение прежних выборов."
+    ],
+    "limitations": [],
+    "evidence": [
+      "frontend/src/character/attunementCapacity.test.ts",
+      "backend/item_attunement_capacity_test.go"
+    ],
+    "status": "verified_partial"
+  },
+  "CARD-0890": {
+    "append_payloads": [
+      {
+        "kind": "attunement_capacity",
+        "amount": -1
+      }
+    ],
+    "implemented": [
+      "Число мест настройки изменяется на -1 через общий предметный gate."
+    ],
+    "tested": [
+      "Положительная и отрицательная ёмкость, экипировка/инвентарь/настройка, серверная проверка владения и сохранение прежних выборов."
+    ],
+    "limitations": [],
+    "evidence": [
+      "frontend/src/character/attunementCapacity.test.ts",
+      "backend/item_attunement_capacity_test.go"
+    ],
+    "status": "verified_partial"
+  },
+  "CARD-0954": {
+    "append_payloads": [
+      {
+        "kind": "attunement_capacity",
+        "amount": 1
+      }
+    ],
+    "implemented": [
+      "Число мест настройки изменяется на +1 через общий предметный gate."
+    ],
+    "tested": [
+      "Положительная и отрицательная ёмкость, экипировка/инвентарь/настройка, серверная проверка владения и сохранение прежних выборов."
+    ],
+    "limitations": [],
+    "evidence": [
+      "frontend/src/character/attunementCapacity.test.ts",
+      "backend/item_attunement_capacity_test.go"
+    ],
+    "status": "verified_partial",
+    "mechanics_set": {
+      "activation": {
+        "mode": "passive",
+        "while": "equipped"
+      }
+    }
+  },
+  "CARD-0504": {
+    "append_payloads": [],
+    "implemented": [],
+    "tested": [],
+    "limitations": [
+      "Постоянная потеря места настройки и восстановление всех ячеек действием не реализованы; существующий профиль посоха сохранён."
+    ],
+    "evidence": [
+      "frontend/src/engine/itemRollInfluences.test.ts",
+      "frontend/src/solo-combat/d20Interrupt.integration.test.ts"
+    ],
+    "status": "not_verified"
+  }
+}

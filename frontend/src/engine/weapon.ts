@@ -371,7 +371,7 @@ export function attackRollQueryFacts(
   hand: 'main' | 'off',
   character: CharacterContext,
   equipment?: Record<string, string | null | undefined>,
-): Pick<ModifierQueryFacts, 'attackKind' | 'weaponCategory'> {
+): Pick<ModifierQueryFacts, 'attackKind' | 'attackRange' | 'weaponCategory' | 'weaponId' | 'weaponType' | 'weaponHasThrownProperty'> {
   const declaredKind = String(effect.attack_kind ?? '').toLowerCase();
   if (declaredKind === 'unarmed') return { attackKind: 'unarmed' };
   if (declaredKind === 'spell') return { attackKind: 'spell' };
@@ -381,7 +381,13 @@ export function attackRollQueryFacts(
   const weapon = weaponContext(character, hand, equipment);
   return {
     attackKind: 'weapon',
-    ...(weapon ? { weaponCategory: weapon.defaultAttackMode } : {}),
+    attackRange: attackRangeFromEffect(effect, hand, character, equipment),
+    ...(weapon ? {
+      weaponCategory: weapon.defaultAttackMode,
+      weaponId: weapon.cardId,
+      ...(weapon.weaponType ? { weaponType: weapon.weaponType } : {}),
+      weaponHasThrownProperty: weapon.properties.includes('thrown'),
+    } : {}),
   };
 }
 

@@ -184,6 +184,60 @@ async function combat(kind: 'warding' | 'cutting', action = monsterAttack()) {
 }
 
 describe('persisted cross-actor d20 interrupts', () => {
+  it('uses a separate owner reaction to reroll another actor, keeping that actor action and dice transcript',async()=>{
+    const setup=await combat('warding',monsterCheck());
+    const owner=setup.state.world.actors[setup.responderId];
+    owner.passives=[{id:'time-reaction',name:'Time reaction',activation:{mode:'triggered',cost:[{resource:'reaction',amount:1}]},effects:[{resolution:'auto',result:[{kind:'roll_influence',operation:'reroll_kept_d20',timing:'after_roll_before_outcome',eligible_rolls:['check'],affects:'any',once_per_turn:'time'}]}]}];
+    const held=executeCombatAction({state:setup.state,actorId:setup.monsterId,actionId:setup.action.id,targetIds:[setup.monsterId],rng:()=>.8});
+    const responder=held.pendingD20Interrupt?.responders[0];
+    expect(responder?.actorId).toBe(setup.responderId);
+    const settled=resolveD20Interrupt(clone(held),setup.responderId,()=>0,responder?.effectId);
+    expect(settled.world.actors[setup.responderId].runtime.resources.reaction).toBe(0);
+    expect(settled.world.actors[setup.monsterId].runtime.hp.temp).toBe(0);
+    expect(settled.world.actors[setup.monsterId].runtime.resources.action).toBe(0);
+  });
+  it('holds item choices before any dice, persists their authority and replays the same check after a reroll offer',async()=>{
+    const setup=await combat('cutting',monsterCheck());
+    const actor=setup.state.world.actors[setup.monsterId];
+    setup.state.controlledCharacterIds=[setup.targetId,setup.monsterId];
+    actor.runtime.resources.charges=1; actor.runtime.maxResources.charges=1;
+    actor.runtime.resources.heroic_inspiration=1; actor.runtime.maxResources.heroic_inspiration=1;
+    actor.passives=[{id:'item-check',name:'Item check',activation:{mode:'triggered',cost:[{resource:'charges',amount:1}]},effects:[{resolution:'auto',result:[{kind:'roll_influence',operation:'advantage',timing:'before_roll',eligible_rolls:['check'],ability:'str'}]}]}];
+    let draws=0;
+    const pending=executeCombatAction({state:setup.state,actorId:setup.monsterId,actionId:setup.action.id,targetIds:[setup.monsterId],rng:()=>{draws++;return .5;}});
+    expect(draws).toBe(0); expect(pending.pendingD20Interrupt?.operation).toBe('roll_choice');
+    expect(actor.runtime.resources.charges).toBe(1);
+    const restored=readSoloCombatState(writeSoloCombatState({},pending),pending.characterId,pending.runtimeRevision)!;
+    const held=resolveD20Interrupt(restored,setup.monsterId,()=>.3,'item-check');
+    expect(held.pendingD20Interrupt?.held?.roll.advantage).toBe('advantage');
+    expect(held.world.actors[setup.monsterId].runtime.resources.charges).toBe(0);
+    const finished=resolveD20Interrupt(clone(held),null,()=>{throw Error('unexpected new die');});
+    expect(finished.pendingD20Interrupt).toBeUndefined();
+    expect(finished.world.actors[setup.monsterId].runtime.resources.charges).toBe(0);
+    expect(()=>resolveD20Interrupt(finished,null)).toThrow();
+  });
+
+  it('target-only encounter reactions cannot protect someone else or repeat after their payment',async()=>{
+    const setup=await combat('warding');
+    const reactor=setup.state.world.actors[setup.responderId];
+    const passive=interruptPassive('warding');
+    const payload=(passive.effects as {result:Record<string,unknown>[]}[])[0].result[1];
+    payload.target_self=true;payload.once_per_encounter=true;
+    reactor.passives=[passive];
+    const other=executeCombatAction({state:setup.state,actorId:setup.monsterId,actionId:setup.action.id,targetIds:[setup.targetId],rng:()=>.7});
+    expect(other.pendingD20Interrupt).toBeUndefined();
+    const targetPosition=setup.state.tokens[setup.targetId].position;
+    setup.state.tokens[setup.targetId].position={...setup.state.tokens[setup.responderId].position};
+    setup.state.tokens[setup.responderId].position={...targetPosition};
+    const held=executeCombatAction({state:setup.state,actorId:setup.monsterId,actionId:setup.action.id,targetIds:[setup.responderId],rng:()=>.7});
+    expect(held.pendingD20Interrupt?.operation).toBe('impose_disadvantage');
+    const spent=resolveD20Interrupt(held,setup.responderId,()=>.1);
+    expect(spent.d20InterruptUses?.[`${setup.responderId}:EFFECT-0121`]).toBe(1);
+    spent.world.actors[setup.responderId].runtime.resources.reaction=1;
+    spent.world.actors[setup.monsterId].runtime.resources.action=1;
+    const again=executeCombatAction({state:spent,actorId:setup.monsterId,actionId:setup.action.id,targetIds:[setup.responderId],rng:()=>.7});
+    expect(again.pendingD20Interrupt).toBeUndefined();
+  });
   it('accepts the data-driven interrupt contract and rejects an incomplete payload', () => {
     for (const kind of ['warding', 'cutting'] as const) {
       expect(validateMechanics(

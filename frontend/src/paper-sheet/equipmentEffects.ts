@@ -4,7 +4,7 @@ import { collectEffectGrantRefs, expandItemGrantedEffects } from '../character/a
 import { emptyDraft, type AbilityKey } from '../character/types';
 import { ABILITY_IDS, SKILL_IDS, abilityMod } from '../character/rules/foundation';
 import { resolveCharacterRules } from '../character/rules/resolveCharacterRules';
-import { collectItemMechanics, MAX_ATTUNED } from '../character/attunement';
+import { attunementCapacity, collectItemMechanics } from '../character/attunement';
 import { buildCharacterContext } from '../character/runtime';
 import { EQUIPMENT_SLOTS, isWearingArmor } from '../engine/equipment';
 import { armorClassValue, computeAC } from '../engine/ac';
@@ -37,7 +37,7 @@ function paperEquipment(document: PaperSheetDocument) {
     const id = attunement && document.checks[`attunement${attunement[1]}`] === true ? cardId(value) : undefined;
     if (id) attuned.push({ index: Number(attunement![1]), id });
   }
-  return { equipment, inventory, attuned: [...new Set(attuned.sort((a, b) => a.index - b.index).map(entry => entry.id))].slice(0, MAX_ATTUNED) };
+  return { equipment, inventory, attuned: [...new Set(attuned.sort((a, b) => a.index - b.index).map(entry => entry.id))] };
 }
 
 /** Only structured, present items are hydrated; prose and attack-row references do not imply ownership. */
@@ -167,6 +167,7 @@ export function projectPaperEquipment(
   grantedSnapshot?: PaperGrantedEffectSnapshot | null,
 ): PaperEquipmentProjection {
   const itemState = paperEquipment(document);
+  const capacity = attunementCapacity(itemState.equipment, cards, {attuned_ids: itemState.attuned}, itemState.inventory);
   const base = calculateSheet(document);
   // Invalid user formulas keep their own errors; do not replace them with fabricated character values.
   if (ABILITY_IDS.some(ability => !Number.isFinite(base.values[ability])) || !Number.isFinite(base.values.level)) return {};
@@ -252,6 +253,7 @@ export function projectPaperEquipment(
     sources.ac = [...new Set([...changedSources(beforeAc, afterAc), ...(sources.dex ?? [])])];
   }
   // No blank AC is invented merely because an unrelated item is present.
-  if (Object.keys(abilityScores).length === 0 && Object.keys(fieldOverrides).length === 0) return {};
-  return { abilityScores, fieldOverrides, sources };
+  const capacityProjection = capacity === 3 ? {} : {attunementCapacity: capacity};
+  if (Object.keys(abilityScores).length === 0 && Object.keys(fieldOverrides).length === 0) return capacityProjection;
+  return { abilityScores, fieldOverrides, sources, ...capacityProjection };
 }

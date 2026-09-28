@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { actionsApi } from '../api/client';
+import { actionsApi, effectsApi } from '../api/client';
+import type { ActiveEffectEntry } from '../mvp/contracts';
+import { loadEffectGrantedActionClosure } from './effectGrantedActions';
 import { instanceFeatureId } from '../mechanics/choiceKey';
 import type { Card } from '../types';
 import type { AssembledCharacter } from './assemble';
@@ -22,6 +24,7 @@ export interface GrantedActionRequest {
 
 const NO_RESOLVED_CHOICES: Readonly<Record<string, readonly string[]>> = {};
 const NO_ITEM_MECHANICS: readonly GrantedActionItemMechanics[] = [];
+const NO_ACTIVE_EFFECTS: readonly ActiveEffectEntry[] = [];
 
 function grantGateLevel(
   origin: AssembledCharacter['effects'][number]['origin'],
@@ -91,12 +94,14 @@ export function useGrantedActions({
   characterLevel,
   resolvedChoices,
   itemMechanics = NO_ITEM_MECHANICS,
+  activeEffects = NO_ACTIVE_EFFECTS,
   disabled = false,
 }: {
   assembled: AssembledCharacter;
   characterLevel: number;
   resolvedChoices?: Readonly<Record<string, readonly string[]>> | null;
   itemMechanics?: readonly GrantedActionItemMechanics[];
+  activeEffects?: readonly ActiveEffectEntry[];
   disabled?: boolean;
 }): GrantedAction[] {
   const requests = useMemo(
@@ -113,7 +118,7 @@ export function useGrantedActions({
   const [actions, setActions] = useState<GrantedAction[]>([]);
 
   useEffect(() => {
-    if (!requests.length) {
+    if (disabled) {
       setActions((current) => (current.length ? [] : current));
       return;
     }
@@ -126,13 +131,25 @@ export function useGrantedActions({
           group: request.group,
         }))
         .catch(() => null)
-    ))).then((loaded) => {
-      if (!stale) setActions(loaded.filter((action): action is GrantedAction => action !== null));
+    ))).then(async (loaded) => {
+      const closure = await loadEffectGrantedActionClosure({
+        roots: [
+          ...assembled.spells.map(spell => spell.mechanics),
+          ...assembled.actions.map(row => row.action.mechanics),
+          ...assembled.effects.map(row => row.effect.mechanics),
+          ...itemMechanics.map(row => row.mechanics),
+        ],
+        grantedActions: loaded.filter((action): action is GrantedAction => action !== null),
+        activeEffects, characterLevel,
+        resolveAction: reference => actionsApi.getAction(reference),
+        resolveEffect: reference => effectsApi.getEffect(reference),
+      });
+      if (!stale) setActions(closure.grantedActions);
     }).catch(() => {
       if (!stale) setActions((current) => (current.length ? [] : current));
     });
     return () => { stale = true; };
-  }, [requests]);
+  }, [requests, assembled, itemMechanics, activeEffects, characterLevel, disabled]);
 
   return actions;
 }

@@ -387,6 +387,8 @@ export type RuleActionDefinition =
     spell: {
       /** Canonical spell level: 0 for a cantrip, 1-9 for a levelled spell. */
       level: number;
+      /** Immutable spell school, used by data-owned cast listeners. */
+      school?: string;
       /** Stable class id used by class-scoped spell modifiers. */
       sourceClass?: string;
       /** Immutable Ritual tag copied from the spell entity. */
@@ -1448,6 +1450,8 @@ export interface ActionDeclaredEvent {
     baseLevel: number;
     castLevel: number;
     sourceClass?: string;
+    school?: string;
+    concentration?: boolean;
     components?: SpellComponents;
     grantId?: string;
     sourceId?: string;

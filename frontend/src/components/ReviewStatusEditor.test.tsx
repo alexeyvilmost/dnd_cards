@@ -43,9 +43,27 @@ describe('review status preference, editor and preview', () => {
     expect(host.querySelector('[data-review-status]')).toBeNull();
     await act(async () => setSetting('showReviewStatus', true));
     expect(getSettings().showReviewStatus).toBe(true);
-    expect(host.querySelectorAll('option')).toHaveLength(7);
+    expect(host.querySelectorAll('option')).toHaveLength(8);
     expect(host.querySelector('[data-review-status]')?.getAttribute('data-review-status')).toBe('not_verified');
     expect(host.querySelector('[title]')).toBeNull();
+  });
+
+  it('saves the pink status without replacing the open editor or corner', async () => {
+    setSetting('showReviewStatus', true);
+    const status = 'partial_narrative_verified_partial';
+    mocks.patch.mockResolvedValue({ data: { entity_type: 'spell', entity_id: spell.id, support: { status } } });
+    await render(<><ReviewStatusEditor entity={spell} /><ReviewStatusCorner entity={spell} /></>);
+    const editor = host.querySelector('select');
+    const corner = host.querySelector<HTMLElement>('[data-review-status]');
+    await choose(status);
+    expect(mocks.patch).toHaveBeenCalledTimes(1);
+    expect(mocks.patch).toHaveBeenCalledWith(`/api/content-review/spell/${spell.id}`, { status });
+    expect(host.querySelector('select')).toBe(editor);
+    expect(editor?.value).toBe(status);
+    expect(host.querySelector('[data-review-status]')).toBe(corner);
+    expect(corner?.dataset.reviewStatus).toBe(status);
+    expect(corner?.style.backgroundColor).toBe('rgb(236, 72, 153)');
+    expect(corner?.getAttribute('aria-label')).toBe('Статус проверки: Частично нарративное, механика проверена частично');
   });
 
   it.each(['spell', 'resource'] as const)('saves %s status authoritatively and refreshes the open corner', async type => {

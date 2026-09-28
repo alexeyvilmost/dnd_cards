@@ -111,6 +111,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
     characterLevel: character.level,
     resolvedChoices: character.resolved_choices,
     itemMechanics: grantedItemMechanics,
+    activeEffects: runtime.activeEffects,
   });
   const activeEffectGroups = useMemo(
     () => groupActiveEffectsForDisplay(runtime.activeEffects),

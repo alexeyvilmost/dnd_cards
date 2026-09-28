@@ -27,6 +27,7 @@ export interface SheetCalculation {
 
 /** Computed equipment values are a view of the document, never edits to its base fields. */
 export interface PaperEquipmentProjection {
+  attunementCapacity?: number;
   abilityScores?: Partial<Record<AbilityKey, number>>;
   fieldOverrides?: Record<string, number>;
   sources?: Record<string, string[]>;

@@ -28,11 +28,11 @@ type Dict = Record<string, unknown>;
 
 export const D20_RULE_OPS = new Set([
   'reroll', 'set_die', 'crit_range', 'outcome', 'on_roll', 'bonus_die',
-  'bonus_die_on_failure', 'minimum_total',
+  'bonus_die_on_failure', 'minimum_total', 'minimum_die',
 ]);
 export const DAMAGE_RULE_OPS = new Set([
   'minimum_die', 'die_bonus', 'critical_extra_die', 'explode',
-  'reroll_damage', 'reroll_healing_ones',
+  'reroll_damage', 'reroll_healing_ones', 'maximize_dice',
 ]);
 export const ROLL_RULE_OPS = new Set([...D20_RULE_OPS, ...DAMAGE_RULE_OPS]);
 
@@ -128,6 +128,20 @@ export function d20MinimumTotal(rules: Dict[]): { value: number; source: string 
         ? rule.source.trim()
         : 'Минимальный результат',
     };
+  }
+  return best;
+}
+
+/** A die floor contributes a visible adjustment; the physically rolled die is
+ * retained for natural 1/20 rules, replay and post-roll interventions. */
+export function d20MinimumDie(rules: Dict[], faces:number): {value:number;source:string}|undefined {
+  let best:{value:number;source:string}|undefined;
+  for(const rule of rules){
+    if(rule.op!=='minimum_die')continue;
+    const applies=rule.applies_to as Dict|undefined;
+    if(applies?.die!==undefined && Number(applies.die)!==faces)continue;
+    const value=Math.min(faces,Math.max(1,Math.floor(num(rule.value??rule.minimum,1))));
+    if(!best || value>best.value)best={value,source:String(rule.source??'Минимальный результат кости')};
   }
   return best;
 }
@@ -231,10 +245,11 @@ export function applyDamageDieRules(
 
   for (const r of rules) {
     if (r.op !== 'die_bonus') continue;
-    const dieSize = num((r.applies_to as Dict)?.die);
+    const declaredDie = (r.applies_to as Dict)?.die;
+    const dieSize = num(declaredDie);
     const v = num(r.value, 0);
-    if (!dieSize || !v) continue;
-    for (const d of out) if (!d.discarded && d.sides === dieSize) { d.result += v; delta += v; }
+    if (!v || (declaredDie !== undefined && dieSize < 2)) continue;
+    for (const d of out) if (!d.discarded && (declaredDie === undefined || d.sides === dieSize)) { d.result += v; delta += v; }
   }
 
   return { dice: out, delta, usedRuleKeys: [...new Set(usedRuleKeys)] };

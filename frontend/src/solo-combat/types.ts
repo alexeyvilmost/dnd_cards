@@ -14,6 +14,7 @@ import { activeConditionWorldFactEnabled, expandConditionSet } from '../engine/c
 import {canHear, perceivesWithoutSight} from '../engine/senses';
 import {terrainSight, type BattleMapDefinition} from './boardGeometry';
 import {creatureCoverObstacles} from './creatureCover';
+import { matchingRuntimeActionGrants } from '../engine/actionGrantContext';
 
 export const SOLO_COMBAT_KEY = 'solo_combat_v1' as const;
 export const SOLO_COMBAT_SCHEMA_VERSION = 1 as const;
@@ -143,7 +144,7 @@ export interface CombatAreaState {
   duration:
     | { type: 'permanent' }
     | { type: 'rounds'; roundsLeft: number }
-    | { type: 'concentration' };
+    | { type: 'concentration'; roundsLeft?: number };
   triggers: CombatAreaEvent[];
   hazard?: RuleHazardDefinition;
   /** Event-specific riders when one area has different resolutions at
@@ -237,7 +238,10 @@ export interface PendingInterceptionTrigger {
  */
 export interface PendingD20Interrupt {
   timing: 'before_roll' | 'after_roll_before_outcome' | 'after_outcome';
-  operation: 'impose_disadvantage' | 'subtract_die' | 'roll_influence';
+  operation: 'impose_disadvantage' | 'subtract_die' | 'roll_influence' | 'roll_choice';
+  influenceContext?: {ability?: string; weaponId?: string; allowOtherActors?: boolean};
+  d20Influences?: import('../engine/rollInfluence').RollInfluence[];
+  saveResponse?: Extract<import('../rules-core/domain').DecisionResponse, {kind:'roll'}>;
   held?: {roll: import('../mvp/contracts').RollLog; kind: import('../engine/rollInfluence').InfluenceRollKind; saveResponse?: Extract<import('../rules-core/domain').DecisionResponse, {kind: 'roll'}>};
   influenceRerolledDie?: number;
   influenceSource?: string;
@@ -362,6 +366,7 @@ export interface SoloCombatState {
   pendingInterceptionTrigger?: PendingInterceptionTrigger;
   /** Cross-actor pre/post-roll reaction continuation (for example Warding Flare or Cutting Words). */
   pendingD20Interrupt?: PendingD20Interrupt;
+  d20InterruptUses?: Record<string, number>;
   deathSavesVersion?: 1;
   pendingDeathSave?: {
     actorId:string; round:number; phase:'rolled'|'resolved';
@@ -407,11 +412,17 @@ export function isPlayerControlledCombatActor(
 }
 
 export function playerActionIdsFor(
-  state: Pick<SoloCombatState, 'characterId' | 'playerActionIds' | 'playerActionIdsByActor'>,
+  state: Pick<SoloCombatState, 'characterId' | 'playerActionIds' | 'playerActionIdsByActor'>
+    & Partial<Pick<SoloCombatState, 'world' | 'catalogActions'>>,
   actorId: string,
 ): string[] {
-  return state.playerActionIdsByActor?.[actorId]
+  const declared = state.playerActionIdsByActor?.[actorId]
     ?? (actorId === state.characterId ? state.playerActionIds : []);
+  const actor = state.world?.actors[actorId];
+  if (!actor) return declared;
+  const temporary = (state.catalogActions ?? []).filter(action =>
+    matchingRuntimeActionGrants(actor.runtime, action.mechanics, actor.character.level).length > 0).map(action => action.id);
+  return [...new Set([...declared, ...temporary])];
 }
 
 export interface TacticalActionSelection {

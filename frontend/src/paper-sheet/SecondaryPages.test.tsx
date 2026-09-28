@@ -154,13 +154,13 @@ describe('paper sheet inventory, equipment, and spell pages', () => {
     expect(label<HTMLButtonElement>('Добавить место настройки').disabled).toBe(false);
   });
 
-  it('limits legacy attunement display without rewriting saved extra slots or fields', async () => {
+  it('retains populated legacy attunement choices without allowing additions above capacity', async () => {
     const doc = createPaperSheet();
     doc.fields.attunementSlots = '12';
     doc.fields.attunementName11 = 'Старая запись о предмете';
     doc.checks.attunement11 = true;
     await render(doc, SpellPage);
-    expect(container.querySelectorAll('.ps-attunement-row')).toHaveLength(MAX_ATTUNED);
+    expect(container.querySelectorAll('.ps-attunement-row')).toHaveLength(12);
     expect(label<HTMLButtonElement>('Добавить место настройки').disabled).toBe(true);
     expect(current.fields).toEqual(doc.fields);
     expect(current.checks).toEqual(doc.checks);

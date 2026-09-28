@@ -76,7 +76,7 @@ export type EngineEvent =
   | { type: 'roll'; label: string; roll: RollLog }
   | { type: 'damage'; amount: number; damageType: string; roll?: RollLog; source?: string; calculation?: DamageCalculation; deferredConsequences?: { critical: boolean; concentrationDisadvantage: boolean } }
   | { type: 'healing'; amount: number; roll?: RollLog; source?: string }
-  | { type: 'damage_reduction'; amount: number; roll?: RollLog; source?: string }
+  | { type: 'damage_reduction'; amount: number; roll?: RollLog; source?: string; sourceEntityIds?: string[] }
   | { type: 'temp_hp'; amount: number; source?: string }
   | { type: 'resource_spent'; resource: string; amount: number; remaining: number }
   | { type: 'resource_restored'; resource: string; amount: number; current: number }
@@ -126,6 +126,9 @@ export type EngineEvent =
 
 export interface RollD20Options {
   advantage?: AdvantageState;
+  /** Retain both causes even when their folded presentation is `none`. */
+  hasAdvantage?: boolean;
+  hasDisadvantage?: boolean;
   modifiers?: RollModifier[];
   /** 20 → криты на «чистой» 20; 19 → 19–20 и т.д. */
   critRange?: number;
@@ -167,6 +170,14 @@ export interface ActiveEffectEntry {
   ownerId?: string;
   /** Id наложившего эффект существа (кастера). Для реляционных правил и source-turn lifecycle. */
   sourceId?: string;
+  /** Source-owned cast facts for data-declared follow-up actions. Persisted with
+   * the grant so slot/ability scaling cannot change on reload or transfer. */
+  actionContext?: {
+    character: Pick<CharacterContext, 'level' | 'profBonus' | 'abilityMods' | 'spellcastingMod' | 'classLevels'>;
+    spell?: SpellCastContext;
+    sourceId?: string;
+    targetId?: string;
+  };
   /**
    * PHB durations expressed relative to the source's next turn. End-boundary
    * effects are armed at that turn's start so they cannot expire on the turn
@@ -324,6 +335,9 @@ export interface SpellComponents {
 /** Authoritative spell context retained by serializable rules continuations. */
 export interface SpellCastContext {
   baseLevel: number;
+  /** Catalog-derived facts, replaced from the immutable action by authority. */
+  school?: string;
+  concentration?: boolean;
   castLevel?: number;
   sourceClass?: string;
   components?: SpellComponents;

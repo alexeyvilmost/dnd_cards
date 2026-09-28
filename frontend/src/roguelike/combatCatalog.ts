@@ -104,6 +104,7 @@ export async function prepareRoguelikeCombatParticipant(
       resolveFeat: id => get('feat', id), resolveSpell: id => get('spell', id)}),
   });
   const sheet = createSheetCombatRuntime({actionsApi, effectsApi,
+    spellsApi: {getSpell: id => get('spell', id)},
     cardsApi: {getCard: id => get('card', id)}, loadAssembly: assembly.loadAssembly,
     loadMasteryEffectsStrict: async () => {
       const effects = await listEffects('Эффект мастерства');

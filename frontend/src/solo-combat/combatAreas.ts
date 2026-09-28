@@ -1,4 +1,6 @@
 import type { ActiveEffectEntry } from '../mvp/contracts';
+import { finiteDurationRounds } from '../engine/duration';
+import {collectModifiers,foldModifiers} from '../engine/modifiers';
 import {actorFootprint, footprintCells} from './footprint';
 import type {
   RuleActionDefinition,
@@ -55,10 +57,11 @@ function strings(value: unknown): string[] {
 
 function durationOf(action: RuleActionDefinition, payload: Dict): CombatAreaState['duration'] {
   const duration = record(payload.duration) ?? {};
-  if (action.concentration || duration.concentration === true) return { type: 'concentration' };
-  if (duration.type === 'rounds' && Number.isInteger(duration.amount) && Number(duration.amount) > 0) {
-    return { type: 'rounds', roundsLeft: Number(duration.amount) };
+  const roundsLeft = finiteDurationRounds(duration);
+  if (action.concentration || duration.concentration === true) {
+    return { type: 'concentration', ...(roundsLeft !== undefined ? { roundsLeft } : {}) };
   }
+  if (roundsLeft !== undefined) return { type: 'rounds', roundsLeft };
   return { type: 'permanent' };
 }
 
@@ -470,12 +473,13 @@ export function removeInactiveCombatAreas(state: SoloCombatState): SoloCombatSta
 export function decrementSourceAreas(state: SoloCombatState, sourceActorId: string): SoloCombatState {
   const areas: Record<string, CombatAreaState> = {};
   for (const [id, area] of Object.entries(state.combatAreas ?? {})) {
-    if (area.sourceActorId !== sourceActorId || area.duration.type !== 'rounds') {
+    if (area.sourceActorId !== sourceActorId || area.duration.type === 'permanent'
+      || area.duration.roundsLeft === undefined) {
       areas[id] = area;
       continue;
     }
     const roundsLeft = area.duration.roundsLeft - 1;
-    if (roundsLeft > 0) areas[id] = { ...area, duration: { type: 'rounds', roundsLeft } };
+    if (roundsLeft > 0) areas[id] = { ...area, duration: { ...area.duration, roundsLeft } };
   }
   return reconcileInsideAreaConditions({ ...state, combatAreas: areas });
 }
@@ -490,7 +494,12 @@ export function movementCostThroughAreas(
   const difficult = Object.values(state.combatAreas ?? {}).some((area) => (
     area.difficultTerrain && movementCells(from, to).some((cell) => areaContains(area, cell, actorFootprint(actorId ? state.world.actors[actorId] : undefined, state)))
   ));
-  return difficult ? baseFeet * 2 : baseFeet;
+  if(!difficult)return baseFeet;
+  const actor=actorId?state.world.actors[actorId]:undefined;
+  if(!actor)return baseFeet*2;
+  const modifiers=collectModifiers(actor.runtime,actor.passives??[],{roll:'movement_cost',filter:{terrain:'difficult'},
+    evalCtx:{state:actor.runtime,character:actor.character}});
+  return baseFeet*Math.max(1,foldModifiers(2,modifiers).value);
 }
 
 export function enteredAndExitedAreas(

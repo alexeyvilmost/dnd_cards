@@ -24,6 +24,7 @@ var validContentReviewStatuses = map[string]bool{
 	"verified": true, "verified_partial": true, "not_verified": true,
 	"not_tested": true, "narrative": true,
 	"partial_narrative_verified": true, "partial_narrative_not_verified": true,
+	"partial_narrative_verified_partial": true,
 }
 
 // CRUD owns entity data; review has its own endpoint. Omitting Support avoids

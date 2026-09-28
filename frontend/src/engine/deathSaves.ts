@@ -31,14 +31,17 @@ export function readDeathSaves(turnState: Record<string, unknown> | null | undef
 export function applyDeathSaveRoll(
   ds: DeathSaveState,
   natural: number,
+  total = natural,
+  forcedOutcome?: RollLog['outcome'],
 ): { next: DeathSaveState; outcome: DeathSaveOutcome } {
   if (natural === 20) return { next: emptyDeathSaves(), outcome: 'revive' };
-  if (natural === 1) {
+  if (forcedOutcome === 'crit_miss' || (natural === 1 && forcedOutcome !== 'success' && forcedOutcome !== 'hit')) {
     const failures = Math.min(3, ds.failures + 2);
     const dead = failures >= 3;
     return { next: { ...ds, failures, dead }, outcome: dead ? 'dead' : 'crit_fail' };
   }
-  if (natural >= 10) {
+  if (forcedOutcome === 'success' || forcedOutcome === 'hit'
+    || (forcedOutcome !== 'fail' && forcedOutcome !== 'miss' && total >= 10)) {
     const successes = Math.min(3, ds.successes + 1);
     const stable = successes >= 3;
     return { next: { ...ds, successes, stable }, outcome: stable ? 'stable' : 'success' };
@@ -55,7 +58,7 @@ export function applyDeathSaveRoll(
  *   • беcфильтровое преимущество/помеха на спасброски.
  * Отфильтрованные спас-эффекты (напр. «преимущество на спас против яда», filter:{ability:'con'})
  * на death save НЕ распространяются — matchFilter отсекает беcфильтровый запрос. Числовые
- * модификаторы НЕ добавляем: у спасброска смерти их нет по правилам.
+ * Явные бонусы от эффектов добавляются; модификатора характеристики у этого броска нет.
  *
  * До этого хелпера лист катил rollD20({modifiers:[]}) вообще без rules/advantage — Везение
  * полурослика не срабатывало, и натуральная 1 сразу давала два провала без шанса переброса.
@@ -68,10 +71,11 @@ export function rollDeathSaveDie(
 ): RollLog {
   const collected = collectModifiers(runtime, passives, {
     roll: 'saving_throw',
-    filter: { kind: 'death' },
+    filter: { kind: 'death', firstAttempt:!runtime.deathSaves || (runtime.deathSaves.successes===0 && runtime.deathSaves.failures===0) },
     formulaCtx,
+    evalCtx:{state:runtime},
   });
-  return rollD20({ advantage: collected.advantage, rules: collected.rules, modifiers: [], rng });
+  return rollD20({ advantage: collected.advantage, hasAdvantage: collected.hasAdvantage, hasDisadvantage: collected.hasDisadvantage, rules: collected.rules, modifiers: collected.modifiers, rng });
 }
 
 /** Урон при 0 хитов: провал (критическое попадание — два провала). */

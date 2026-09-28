@@ -43,6 +43,7 @@ import {
   type SpellGrantProjection,
 } from '../canon/spellcastingAccessProjection';
 import { freeuseKey } from '../engine/freeuse';
+import { collectItemMechanics, readAttunedIds, type ItemMechanic } from './attunement';
 import { actionUsesKey, restoreSelfUsesCost } from '../engine/actionUses';
 import { preparedSpellSelectionIssues } from '../mechanics/collectChoices';
 import { passiveSourceId } from '../mechanics/expandChoices';
@@ -472,7 +473,13 @@ function appliedSpellGrants(
 function sourceFeature(input: {
   source: RuleSource;
   assembled: AssembledCharacter;
+  itemSources: readonly ItemMechanic[];
 }): { mechanics: Record<string, unknown>; cardNumber?: string; originId: string } {
+  if (input.source.type === 'item') {
+    const item = input.itemSources.find(candidate => candidate.card.id === input.source.id);
+    if (!item) throw new SheetCanonicalWorldError(`Item spell grant ${input.source.id} has no active item source`);
+    return { mechanics: cloneJson(item.mechanics), cardNumber: item.card.card_number, originId: item.card.id };
+  }
   const effectMatches = input.assembled.effects.filter(({ effect, origin }) => (
     effect.id === input.source.featureEntityId
       && passiveSourceId(origin, effect) === input.source.id
@@ -503,8 +510,9 @@ function spellGrantBinding(input: {
   spell: Spell;
   grant: AppliedGrant;
   assembled: AssembledCharacter;
+  itemSources: readonly ItemMechanic[];
 }): SpellGrantBinding {
-  const feature = sourceFeature({ source: input.grant.source, assembled: input.assembled });
+  const feature = sourceFeature({ source: input.grant.source, assembled: input.assembled, itemSources: input.itemSources });
   const castingOverride = declaredSpellCastingOverride(feature.mechanics, input.spell);
   const classId = input.assembled.klass?.id;
   const classCard = input.assembled.klass?.card_number;
@@ -576,7 +584,8 @@ function spellGrantBinding(input: {
       ...(castingOverride ? { castingOverride } : {}),
     };
   }
-  const scope = input.grant.source.featureEntityId ?? input.grant.source.originEntityId;
+  const scope = input.grant.source.featureEntityId ?? input.grant.source.originEntityId
+    ?? (input.grant.source.type === 'item' ? feature.originId : undefined);
   if (!scope) throw new SheetCanonicalWorldError(`Spell grant ${input.grant.source.id} is unscoped`);
   return {
     grant: input.grant,
@@ -595,6 +604,7 @@ function ruleActions(input: {
   ruleState: Pick<CharacterRuleState, 'appliedGrants'>;
   manualSpellIds?: ReadonlySet<string>;
   passives?: readonly Record<string, unknown>[];
+  itemSources: readonly ItemMechanic[];
 }): CompiledSheetAction[] {
   if (input.sheet.spellRef) {
     // One visual spell row may be owned by several immutable grants (for
@@ -607,8 +617,12 @@ function ruleActions(input: {
         spell: input.sheet.spellRef!,
         grant,
         assembled: input.assembled,
+        itemSources: input.itemSources,
       });
       const spell = applySpellCastingOverride(input.sheet.spellRef!, binding.castingOverride);
+      if (grant.source.type === 'item') {
+        spell.mechanics = { ...spell.mechanics, requires_item_source: grant.source.id };
+      }
       // Legacy catalog spells predate stable class-list metadata. The applied
       // grant already owns the immutable class authority, so materialize it on
       // this runtime copy rather than consulting localized spell.classes or
@@ -714,6 +728,7 @@ function accessForGrant(grant: AppliedGrant, spell: Spell, override?: SpellCasti
   // their cantrip and levelled options; normalize those cantrip rows here
   // instead of producing an invalid always-prepared level-zero grant.
   if (spell.level === 0) return 'cantrip' as const;
+  if (grant.freeuse?.atWill) return 'innate' as const;
   if (label === 'known') return 'known' as const;
   if (label === 'prepared' || label === 'always_prepared') return 'always_prepared' as const;
   if (label === 'spellbook') return 'spellbook' as const;
@@ -744,6 +759,7 @@ function declaredGrantSlotResource(
   binding: SpellGrantBinding,
   assembled: AssembledCharacter,
 ): string | undefined {
+  if (binding.grant.freeuse?.atWill) return undefined;
   const declared = declaredSlotResource(action);
   if (!declared?.startsWith('spell_slot_') || binding.source.type !== 'class') return declared;
   const owner = (assembled.classes ?? (assembled.klass ? [assembled.klass] : []))
@@ -860,7 +876,7 @@ function baseSpellAccess(input: {
         ? { freeUseResource: spellGrant.castingOverride.freeUseResource }
         : quickRitual && sheet.spellRef.ritual === true
           ? { freeUseResource: 'ritual_caster_quick_ritual' }
-        : spellGrant.grant.freeuse
+        : spellGrant.grant.freeuse && !spellGrant.grant.freeuse.atWill
           ? { freeUseResource: freeuseKey(spellGrant.grant.value) }
           : {}),
       ...(slotResource ? { slotResource } : {}),
@@ -1121,12 +1137,16 @@ export function buildSheetCanonicalRuntime(input: {
     input.character.resolved_choices?.['builder:manual_spells'] ?? [],
   );
   const bindings = pactBindings(input.assembled, input.character.resolved_choices);
+  const itemSources = collectItemMechanics(input.runtime.equipment,
+    new Map((input.cards ?? []).map(card => [card.id, card])), input.character.turn_state, input.runtime.inventory)
+    .filter(item => !['active', 'reaction'].includes(String((item.mechanics.activation as Record<string, unknown> | undefined)?.mode)));
   const compiled = input.sheetActions.flatMap((sheet) => ruleActions({
     sheet,
     assembled: input.assembled,
     ruleState: input.ruleState,
     manualSpellIds,
     passives: input.passives,
+    itemSources,
   }));
   const actions = compiled.map(({ action }) => action);
   const actionById = new Map<string, RuleActionDefinition>();
@@ -1364,6 +1384,7 @@ export function buildSheetCanonicalRuntime(input: {
   const actorCharacterContext: CharacterContext = {
     ...characterContext,
     knownCards: cards.map(cloneJson),
+    attunedIds: readAttunedIds(input.character.turn_state),
   };
   const actor: ActorState = {
     id: actorId,

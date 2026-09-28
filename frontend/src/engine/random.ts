@@ -10,6 +10,7 @@ export interface DieAwareRandomSource {
   rollDie?: (sides: number) => number;
   /** Read-only simulations can stop at the fully derived roll, before any draw. */
   inspectD20?: (options: RollD20Options) => void;
+  transformD20?: (options: RollD20Options) => RollD20Options;
   /** Trusted continuation may replace one kept d20, never the whole action. */
   rerollD20?: (dice: readonly DieRoll[]) => number | undefined;
   rerollD20Source?: string;

@@ -62,14 +62,15 @@ describe('Слайс 1 — предмет доходит до резолвера
     expect(rs.skillBonuses.athletics).toBe(4);
   });
 
-  it('АНТИ-ЗАДВОЕНИЕ: числовой modifier предмета (max_hp/speed) НЕ меняет ruleState (канал breakdown)', () => {
+  it('item max_hp remains display-owned; speed reaches execution while its breakdown base remains unchanged', () => {
     const bare = resolve(null);
     const withItem = resolve(item(
       { kind: 'modifier', applies_to: { roll: 'max_hp' }, value: '+5' },
       { kind: 'modifier', applies_to: { roll: 'speed' }, value: '+10' },
     ));
     expect(withItem.maxHP).toBe(bare.maxHP);
-    expect(withItem.speed).toBe(bare.speed);
+    expect(withItem.speed).toBe(bare.speed + 10);
+    expect(withItem.baseSpeed).toBe(bare.baseSpeed);
   });
 
   it('АНТИ-ЗАДВОЕНИЕ: КД-модификатор предмета НЕ меняет «голый» ruleState.armorClass', () => {

@@ -2,6 +2,7 @@
 export const ENTITY_SUPPORT_STATUSES = [
   'verified', 'verified_partial', 'not_verified', 'not_tested', 'narrative',
   'partial_narrative_verified', 'partial_narrative_not_verified',
+  'partial_narrative_verified_partial',
 ] as const;
 export type EntityReviewStatus = (typeof ENTITY_SUPPORT_STATUSES)[number];
 /** Старые значения сохраняются только для чтения исторических артефактов. */
@@ -150,6 +151,7 @@ const PRESENTATION: Record<EntityReviewStatus, SupportStatusPresentation> = {
   narrative: { label: 'Нарративное', tone: 'info', verified: false, color: '#38bdf8' },
   partial_narrative_verified: { label: 'Частично нарративное, механика проверена', tone: 'info', verified: true, color: '#2563eb' },
   partial_narrative_not_verified: { label: 'Частично нарративное, механика не проверена', tone: 'danger', verified: false, color: '#a855f7' },
+  partial_narrative_verified_partial: { label: 'Частично нарративное, механика проверена частично', tone: 'warning', verified: true, color: '#ec4899' },
 };
 export function supportStatusPresentation(status: EntitySupportStatus): SupportStatusPresentation {
   return PRESENTATION[normalizeSupportStatus(status)];

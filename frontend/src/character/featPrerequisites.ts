@@ -8,10 +8,10 @@ const ABILITIES: Array<[RegExp, AbilityKey]> = [
 ];
 
 export function generalFeatPrerequisiteIssue(feat: Feat, state: CharacterRuleState): string | undefined {
-  if (feat.category !== 'general') return undefined;
   const text = feat.prerequisite ?? '';
   const totalLevel = Object.values(state.classLevels ?? {}).reduce((sum, level) => sum + level, 0);
-  if (/уровень\s*4\+/iu.test(text) && totalLevel < 4) return 'Требуется уровень 4+';
+  const minimumLevel = /уровень\s*(\d+)\+/iu.exec(text);
+  if (minimumLevel && totalLevel < Number(minimumLevel[1])) return `Требуется уровень ${minimumLevel[1]}+`;
   const scoreRequirement = text.match(/(.+?)\s*13\+/u);
   if (scoreRequirement) {
     const allowed = ABILITIES.filter(([pattern]) => pattern.test(scoreRequirement[1])).map(([, key]) => key);

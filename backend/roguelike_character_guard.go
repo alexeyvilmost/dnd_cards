@@ -150,8 +150,8 @@ func validateRoguelikeCampRuntimePatch(character CharacterV3, req PatchCharacter
 			return roguelikeMutationError("roguelike_camp_state_forbidden", "в лагере через лист можно менять только настройку предметов", character.ID)
 		}
 		ids, err := roguelikeAttunedIDs(req.TurnState)
-		if err != nil || len(ids) > 3 {
-			return roguelikeMutationError("roguelike_attunement_invalid", "можно настроиться максимум на три принадлежащих предмета", character.ID)
+		if err != nil {
+			return roguelikeMutationError("roguelike_attunement_invalid", "список настроенных предметов повреждён", character.ID)
 		}
 		seen := map[string]bool{}
 		for _, id := range ids {
@@ -182,6 +182,45 @@ func validateRoguelikeCampAttunementCards(tx *gorm.DB, character CharacterV3, re
 	}
 	if !changed || len(ids) == 0 {
 		return nil
+	}
+	equipment, inventory := character.Equipment, character.InventoryItems
+	if req.Equipment != nil {
+		equipment = req.Equipment
+	}
+	if req.InventoryItems != nil {
+		inventory = req.InventoryItems
+	}
+	owned, err := roguelikeItemOwnership(equipment, inventory)
+	if err != nil {
+		return err
+	}
+	keys := make([]string, 0, len(owned))
+	for id := range owned {
+		keys = append(keys, id)
+	}
+	var cards []Card
+	if len(keys) > 0 {
+		if err := tx.Where("id IN ?", keys).Find(&cards).Error; err != nil {
+			return err
+		}
+	}
+	capacity := catalogAttunementCapacity(cards, equipment, inventory, ids)
+	before, err := roguelikeAttunedIDs(character.TurnState)
+	if err != nil {
+		return err
+	}
+	beforeSet := map[string]bool{}
+	for _, id := range before {
+		beforeSet[id] = true
+	}
+	adding := false
+	for _, id := range ids {
+		if !beforeSet[id] {
+			adding = true
+		}
+	}
+	if adding && len(ids) > capacity {
+		return roguelikeMutationError("roguelike_attunement_invalid", fmt.Sprintf("доступно мест настройки: %d", capacity), character.ID)
 	}
 	var count int64
 	if err := tx.Model(&Card{}).

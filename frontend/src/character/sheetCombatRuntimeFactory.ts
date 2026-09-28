@@ -1,11 +1,12 @@
 import { readWeaponBondObjects } from './weaponBondPersistence';
+import { loadEffectGrantedActionClosure } from './effectGrantedActions';
 import type { Action, Card, PassiveEffect } from '../types';
-import { collectPassiveMechanics } from './resourceInit';
+import { collectPassiveMechanics, syncRuntimeResources } from './resourceInit';
+import { itemSpellReferences, loadItemGrantedSpells, withItemGrantedSpells } from './itemSpellGrants';
 import {
   collectActionUsesRecharge,
   collectActionUsesRecovery,
   collectGrantActionSlugs,
-  collectGrantEffectSlugs,
   collectSheetActions,
   type GrantedAction,
   type SheetAction,
@@ -27,7 +28,9 @@ import { parseWeaponProfile } from '../rules-core/weaponProfile';
 import { weaponActionAvailability } from '../engine/weapon';
 import { armorClassValue } from '../engine/ac';
 import { buildResourceRecharge, buildResourceRecovery } from '../engine/resources';
-import { collectFreeuseRecharge } from '../engine/freeuse';
+import { collectFreeuseRecharge, isFreeusePoolKey } from '../engine/freeuse';
+import {rollInfluenceSources} from '../engine/rollInfluence';
+import {isActionUsesKey} from '../engine/actionUses';
 
 export interface SheetCombatActionInventory {
   actions: SheetAction[];
@@ -40,6 +43,7 @@ export interface SheetCombatDataSource {
   cardsApi: Pick<typeof import('../api/client')['cardsApi'], 'getCard'>;
   actionsApi: Pick<typeof import('../api/client')['actionsApi'], 'getAction'>;
   effectsApi: Pick<typeof import('../api/client')['effectsApi'], 'getEffect'>;
+  spellsApi?: Pick<typeof import('../api/client')['spellsApi'], 'getSpell'>;
   loadAssembly: (draft: import('./types').CharacterDraft) => Promise<AssembledCharacter>;
   loadMasteryEffectsStrict: () => Promise<readonly PassiveEffect[]>;
 }
@@ -182,7 +186,7 @@ async function collectSheetCombatActionInventory(input: {
       }
     }
   }
-  const grantedActions = await Promise.all([...grantRefs].map(async ([reference, grant]) => ({
+  const permanentGrantedActions = await Promise.all([...grantRefs].map(async ([reference, grant]) => ({
     ...grant,
     action: await resolveAction(reference),
   })));
@@ -200,21 +204,26 @@ async function collectSheetCombatActionInventory(input: {
       ? [card]
       : [];
   });
-  const actions = collectSheetActions(
+  const baseActions = collectSheetActions(
     input.assembled,
     itemMechanics,
     [...(input.basicActions ?? [])],
-    grantedActions,
+    permanentGrantedActions,
     containers,
     (id) => cards.get(id)?.name,
   );
 
-  const effectReferences = [...new Set(actions.flatMap((action) => (
-    collectGrantEffectSlugs(action.mechanics)
-  )))];
-  const grantedEffectRows = await Promise.all(effectReferences.map(async (reference) => (
-    [reference, await resolveEffect(reference)] as const
-  )));
+  const closure = await loadEffectGrantedActionClosure({
+    roots: baseActions.map(action => action.mechanics),
+    grantedActions: permanentGrantedActions,
+    activeEffects: input.runtime.activeEffects,
+    characterLevel: input.character.level,
+    resolveAction, resolveEffect,
+  });
+  const grantedActions = closure.grantedActions;
+  const actions = collectSheetActions(input.assembled, itemMechanics, [...(input.basicActions ?? [])],
+    grantedActions, containers, id => cards.get(id)?.name);
+  const grantedEffectRows = [...closure.effects];
   const grantedEffects: NonNullable<ActorState['grantedEffects']> = Object.fromEntries(
     grantedEffectRows.map(([reference, effect]) => [reference, {
       id: effect.id,
@@ -264,7 +273,7 @@ async function loadSheetCombatParticipant(input: {
     throw new Error(`У персонажа «${input.character.name}» нет runtime_revision`);
   }
   const draft = characterToDraft(input.character);
-  const assembled = await dependencies.loadAssembly(draft);
+  let assembled = await dependencies.loadAssembly(draft);
   const runtime = forgeToRuntimeState(input.character);
   const cardsById = await hydrateSheetCombatCards({
     character: input.character,
@@ -283,6 +292,18 @@ async function loadSheetCombatParticipant(input: {
   const ruleState = resolveCharacterRules({ draft, assembled, runtimeSources: permanentItems.map(item => ({
     source: {type: 'item' as const, id: item.card.id, name: item.card.name}, mechanics: item.mechanics,
   })) });
+  const itemSpellRefs = itemSpellReferences(ruleState);
+  if (itemSpellRefs.length) {
+    if (!dependencies.spellsApi) throw new Error('Не настроен каталог заклинаний предметов');
+    assembled = withItemGrantedSpells(assembled, await loadItemGrantedSpells(itemSpellRefs, dependencies.spellsApi.getSpell), itemSpellRefs);
+    const resourceContext = buildCharacterContext(ruleState,
+      { level: input.character.level, abilities: input.character.abilities ?? {} }, equippedCards, assembled.klass);
+    const resources = syncRuntimeResources(resourceContext, assembled, runtime, ruleState.freeuseSpells);
+    for (const key of Object.keys(resources.maxResources).filter(isFreeusePoolKey)) {
+      runtime.resources[key] = resources.resources[key];
+      runtime.maxResources[key] = resources.maxResources[key];
+    }
+  }
   const passives = [
     ...collectPassiveMechanics(assembled, input.character.resolved_choices ?? {}),
     ...permanentItems.map(item => item.mechanics),
@@ -296,6 +317,15 @@ async function loadSheetCombatParticipant(input: {
     cards: cardsById,
     requiresMasteryCatalog: ruleState.weaponMasteries.length > 0,
   });
+  passives.push(...rollInfluenceSources(inventory.actions));
+  const influenceResources = syncRuntimeResources({...buildCharacterContext(ruleState,
+    {level:input.character.level,abilities:input.character.abilities ?? {}},equippedCards,assembled.klass),
+    attunedIds: Array.isArray(input.character.turn_state?.attuned_ids) ? input.character.turn_state.attuned_ids as string[] : []},
+    assembled,runtime,ruleState.freeuseSpells,[...cardsById.values()],inventory.grantedActions);
+  for (const key of Object.keys(influenceResources.maxResources).filter(isActionUsesKey)) {
+    runtime.resources[key] = influenceResources.resources[key];
+    runtime.maxResources[key] = influenceResources.maxResources[key];
+  }
   const projection = projectRunnableSheetCanonicalActions({
     actions: inventory.actions,
     equipment: runtime.equipment,
@@ -353,7 +383,7 @@ async function loadSheetCombatParticipant(input: {
     ruleState,
     sheetActions: actions,
     runtime,
-    characterContext,
+    characterContext:restContext,
     passives,
     grantedEffects: inventory.grantedEffects,
     masteryEffects: inventory.masteryEffects,

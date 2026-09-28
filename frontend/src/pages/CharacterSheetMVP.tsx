@@ -29,10 +29,15 @@ import { loadAssembly, expandItemGrantedEffects, collectEffectGrantRefs, type As
 import { characterToDraft, resolveLineageName } from '../character/forgeHelpers';
 import { collectEquippedCards } from '../character/inventory';
 import { collectPassiveMechanics } from '../character/resourceInit';
-import { collectItemMechanics } from '../character/attunement';
+import { collectItemMechanics, readAttunedIds } from '../character/attunement';
+import {useGrantedActions} from '../character/grantedActions';
+import {collectSheetActions} from '../character/actionSheet';
+import {rollInfluenceSources} from '../engine/rollInfluence';
+import { itemSpellReferences, loadItemGrantedSpells, withItemGrantedSpells } from '../character/itemSpellGrants';
 import {
   buildCharacterContext,
   forgeToRuntimeState,
+  runtimeInventoryPayload,
   writeRulesEngineRuntimeTurnState,
 } from '../character/runtime';
 import { untrainedArmorPenaltyMechanics } from '../character/untrainedArmor';
@@ -607,37 +612,32 @@ const CharacterSheetMVP = () => {
   // строится в assemble БЕЗ предметов. Резолвим заклинания предметов в тела и подмешиваем —
   // тогда они становятся действиями (и получают freeuse-пул из ruleState.freeuseSpells).
   const [itemGrantedSpells, setItemGrantedSpells] = useState<Spell[]>([]);
+  const activeItemSpellRefs = useMemo(() => itemSpellReferences(ruleState), [ruleState]);
   useEffect(() => {
-    const values = ruleState
-      ? [...new Set(ruleState.appliedGrants.filter((g) => g.kind === 'spell' && g.source.type === 'item').map((g) => g.value))]
-      : [];
+    const values = activeItemSpellRefs;
     if (!values.length) { setItemGrantedSpells((p) => (p.length ? [] : p)); return; }
     let stale = false;
-    (async () => {
-      const byId = new Map<string, Spell>();
-      for (const v of values) {
-        try { const s = await spellsApi.getSpell(v); if (s?.id) byId.set(s.id, s); } catch { /* заклинание не найдено */ }
-      }
-      if (!stale) setItemGrantedSpells([...byId.values()]);
-    })();
+    void loadItemGrantedSpells(values, spellsApi.getSpell)
+      .then(spells => { if (!stale) setItemGrantedSpells(spells); })
+      .catch(() => { if (!stale) setItemGrantedSpells([]); });
     return () => { stale = true; };
-  }, [ruleState]);
+  }, [activeItemSpellRefs]);
 
   // assembled + кастуемые заклинания предметов (дедуп по id/card_number, чтобы дубль-грант не задваивал).
   const assembledForActions = useMemo(() => {
-    if (!assembled || !itemGrantedSpells.length) return assembled;
-    const seen = new Set<string>();
-    for (const s of assembled.spells) { seen.add(s.id); if (s.card_number) seen.add(s.card_number); }
-    const extra = itemGrantedSpells.filter((s) => !seen.has(s.id) && !(s.card_number && seen.has(s.card_number)));
-    return extra.length ? { ...assembled, spells: [...assembled.spells, ...extra] } : assembled;
-  }, [assembled, itemGrantedSpells]);
+    return assembled ? withItemGrantedSpells(assembled, itemGrantedSpells, activeItemSpellRefs) : assembled;
+  }, [assembled, itemGrantedSpells, activeItemSpellRefs]);
 
+  const influenceGrantedActions = useGrantedActions({assembled:assembled!,characterLevel:character?.level ?? 1,
+    resolvedChoices:character?.resolved_choices,itemMechanics,activeEffects:runtimeState?.activeEffects,disabled:!assembled});
+  const influenceSources = useMemo(()=>assembled ? rollInfluenceSources(collectSheetActions(assembled,itemMechanics,[],influenceGrantedActions)) : [],
+    [assembled,itemMechanics,influenceGrantedActions]);
   // Пассивки персонажа + механики надетых предметов + выданные эффекты предметов (числовой канал листа).
   const passives = useMemo(() => {
     const base = assembled ? collectPassiveMechanics(assembled, character?.resolved_choices ?? {}) : [];
     const armorPenalty = ruleState ? untrainedArmorPenaltyMechanics(ruleState) : [];
-    return [...base, ...itemMechanics.map((im) => im.mechanics), ...itemGrantedPassives, ...armorPenalty];
-  }, [assembled, character, itemMechanics, itemGrantedPassives, ruleState]);
+    return [...base, ...itemMechanics.map((im) => im.mechanics), ...itemGrantedPassives, ...armorPenalty, ...influenceSources];
+  }, [assembled, character, itemMechanics, itemGrantedPassives, ruleState, influenceSources]);
 
   const sheetCtx = useMemo(() => {
     if (!ruleState || !draft || !runtimeState) return null;
@@ -967,7 +967,8 @@ const CharacterSheetMVP = () => {
     );
     plan.push(...plannedD20BonusDice(collected.rules, label, 'check'));
     const inspired = influencedSheetRoll(rollKind === 'saving_throw' ? 'save' : 'check',
-      {advantage: collected.advantage, modifiers: [...parts], rules: collected.rules}, runtimeState, passives);
+      {advantage: collected.advantage, hasAdvantage: 'hasAdvantage' in collected ? collected.hasAdvantage : false, hasDisadvantage: 'hasDisadvantage' in collected ? collected.hasDisadvantage : false, modifiers: [...parts], rules: collected.rules}, runtimeState, passives, Math.random,
+      {ability:typeof filter?.ability === 'string' ? filter.ability : undefined,character:sheetCtx ? {...sheetCtx,knownCards:[...equipCards.values()],attunedIds:readAttunedIds(character?.turn_state)} : undefined});
     const decision = await diceDialog.request(
       plan,
       label,
@@ -991,6 +992,9 @@ const CharacterSheetMVP = () => {
       rollEvents.push(...paid.events, ...finalized.events);
       if (finalized.state !== runtimeState) {
         const updated = await persistCharacterRuntime(character, {
+          resources: finalized.state.resources,
+          inventory_items: runtimeInventoryPayload(finalized.state),
+          equipment: finalized.state.equipment,
           active_effects: finalized.state.activeEffects,
           turn_state: writeRulesEngineRuntimeTurnState(character.turn_state, finalized.state),
         }, applyEncounter);

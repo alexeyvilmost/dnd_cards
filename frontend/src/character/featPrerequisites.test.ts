@@ -5,6 +5,14 @@ const state = (level: number, str = 12): any => ({ classLevels: { fighter: level
 const feat = (prerequisite: string): any => ({ category: 'general', prerequisite });
 
 describe('generalFeatPrerequisiteIssue', () => {
+  it('reads the declared minimum for epic boons and a second category without a level-four shortcut', () => {
+    const boon = {...feat('уровень 19+'), category: 'epic_boon'};
+    expect(generalFeatPrerequisiteIssue(boon, state(18))).toContain('19+');
+    expect(generalFeatPrerequisiteIssue(boon, state(19))).toBeUndefined();
+    const other = {...feat('уровень 7+'), category: 'fighting_style'};
+    expect(generalFeatPrerequisiteIssue(other, state(6))).toContain('7+');
+    expect(generalFeatPrerequisiteIssue(other, state(7))).toBeUndefined();
+  });
   it('enforces level and alternative ability thresholds', () => {
     expect(generalFeatPrerequisiteIssue(feat('уровень 4+, Сила или Ловкость 13+'), state(3, 14))).toContain('уровень');
     expect(generalFeatPrerequisiteIssue(feat('уровень 4+, Сила или Ловкость 13+'), state(4, 12))).toContain('13+');
