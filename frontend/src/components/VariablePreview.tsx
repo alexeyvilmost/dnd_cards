@@ -21,6 +21,8 @@ const VariablePreview: React.FC<VariablePreviewProps> = ({
 }) => {
   return (
     <Bg3Card
+      entityType="variable"
+      entity={variable}
       title={variable.name || 'Название переменной'}
       titleEn={variable.name_en}
       subtype={`Переменная · ${variableTypeLabel(variable.var_type)}`}

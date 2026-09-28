@@ -41,6 +41,8 @@ export interface SiteSettings {
   /** Показывать оригинальное (английское) название под основным — в интерфейсных
    *  отображениях, детальных окнах и превью при наведении. На печатных карточках не показывается. */
   showOriginalNames: boolean;
+  /** Показывать ручные статусы проверки, фильтры и редактор. */
+  showReviewStatus: boolean;
   /** Разрешить вручную добавлять предметы, действия, эффекты, заклинания и черты из листа. */
   allowSheetEntityAdditions: boolean;
 }
@@ -73,6 +75,7 @@ const DEFAULTS: SiteSettings = {
   itemPreview: 'interface',
   playerMode: true,
   showOriginalNames: false,
+  showReviewStatus: false,
   allowSheetEntityAdditions: true,
 };
 
@@ -92,6 +95,7 @@ export function getSettings(): SiteSettings {
     for (const key of ['audioMaster','audioMusic','audioEffects','audioUI'] as const) {
       merged[key] = typeof merged[key] === 'number' && Number.isFinite(merged[key]) ? Math.max(0,Math.min(1,merged[key])) : DEFAULTS[key];
     }
+    if (typeof merged.showReviewStatus !== 'boolean') merged.showReviewStatus = false;
     if (typeof merged.audioEnabled !== 'boolean') merged.audioEnabled = DEFAULTS.audioEnabled;
     if (typeof merged.combat3d !== 'boolean') merged.combat3d = DEFAULTS.combat3d;
     // Keep the former global preference for both sides when migrating.

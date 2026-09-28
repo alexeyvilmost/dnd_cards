@@ -85,6 +85,9 @@ function fetchEntity(type: EntityRefType, id: string): Promise<EntityData> {
 
   const promise = FETCHERS[type](id)
     .then((data) => {
+      // A mutation/eviction can replace this request while it is in flight.
+      // Its caller may finish, but it must not restore either cache identity.
+      if (cache.get(key)?.promise !== promise) return data;
       const entry = { status: 'ok' as const, data, expires: Date.now() + ENTITY_CACHE_TTL_MS };
       cache.set(key, entry);
       const canonicalId = typeof data.id === 'string' ? data.id : null;
@@ -97,8 +100,10 @@ function fetchEntity(type: EntityRefType, id: string): Promise<EntityData> {
       return data;
     })
     .catch((e) => {
-      cache.set(key, { status: 'error' });
-      notify(key);
+      if (cache.get(key)?.promise === promise) {
+        cache.set(key, { status: 'error' });
+        notify(key);
+      }
       throw e;
     });
   cache.set(key, { status: 'loading', promise });
@@ -149,8 +154,8 @@ export function useEntityRef(type: EntityRefType, id: string): EntityRefState {
     }
     setState({ entity: null, loading: true, error: false });
     fetchEntity(type, id)
-      .then((data) => { if (alive) setState({ entity: data, loading: false, error: false }); })
-      .catch(() => { if (alive) setState({ entity: null, loading: false, error: true }); });
+      .then((data) => { if (alive && getCachedEntity(type, id) === data) setState({ entity: data, loading: false, error: false }); })
+      .catch(() => { if (alive && cache.get(key)?.status === 'error') setState({ entity: null, loading: false, error: true }); });
     return () => { alive = false; };
   }, [type, id, key, revision]);
 

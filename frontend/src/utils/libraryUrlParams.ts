@@ -6,6 +6,7 @@ export interface LibraryFilters {
   contentType: LibraryContentType;
   search: string;
   tag?: string;
+  statuses?: string;
   rarity: string;
   effectType: string;
   properties: string;
@@ -29,7 +30,7 @@ export interface LibraryFilters {
 }
 
 const FILTER_KEYS = [
-  'type', 'q', 'tag', 'rarity', 'effect', 'properties', 'template', 'slot', 'armor', 'resource', 'sort', 'view',
+  'type', 'q', 'tag', 'status', 'rarity', 'effect', 'properties', 'template', 'slot', 'armor', 'resource', 'sort', 'view',
   'spellLevel', 'spellClass', 'spellSubclass', 'spellSchool', 'concentration', 'ritual',
   'featCategory', 'repeatable', 'featAbility', 'backgroundAbility', 'backgroundSkill',
 ] as const;
@@ -45,6 +46,7 @@ export function parseLibrarySearchParams(params: URLSearchParams): LibraryFilter
         : 'cards',
     search: params.get('q') ?? '',
     tag: params.get('tag') ?? '',
+    statuses: params.getAll('status').join(','),
     rarity: params.get('rarity') ?? '',
     effectType: params.get('effect') ?? '',
     properties: params.get('properties') ?? '',
@@ -84,6 +86,7 @@ export function buildLibrarySearchParams(
   if (filters.search) {
     params.set('q', filters.search);
   }
+  if (filters.statuses) params.set('status', filters.statuses);
   if (filters.tag) params.set('tag', filters.tag);
   if (filters.rarity) {
     params.set('rarity', filters.rarity);

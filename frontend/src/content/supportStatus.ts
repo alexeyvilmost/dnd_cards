@@ -1,29 +1,23 @@
-/**
- * Единый продуктовый контракт поддерживаемости контента.
- *
- * Статус относится не просто к записи, а к сертифицированной версии её
- * содержимого и зависимостей. Пока backend не прислал certification, сущность
- * считается untested — наличие mechanics само по себе не доказывает корректность.
- */
+/** Ручной статус проверки. Он не ограничивает каталог или редактирование механики. */
 export const ENTITY_SUPPORT_STATUSES = [
-  'verified_mechanical',
-  'verified_partial',
-  'verified_narrative',
-  'partial',
-  'untested',
-  'known_mismatch',
+  'verified', 'verified_partial', 'not_verified', 'not_tested', 'narrative',
+  'partial_narrative_verified', 'partial_narrative_not_verified',
 ] as const;
-
-export type EntitySupportStatus = (typeof ENTITY_SUPPORT_STATUSES)[number];
-
-export const DEFAULT_VISIBLE_SUPPORT_STATUSES: ReadonlySet<EntitySupportStatus> = new Set([
-  'verified_mechanical',
-  'verified_partial',
-  'verified_narrative',
-]);
+export type EntityReviewStatus = (typeof ENTITY_SUPPORT_STATUSES)[number];
+/** Старые значения сохраняются только для чтения исторических артефактов. */
+export type EntitySupportStatus = EntityReviewStatus | 'verified_mechanical' | 'verified_narrative'
+  | 'partial' | 'untested' | 'known_mismatch';
+export const DEFAULT_VISIBLE_SUPPORT_STATUSES: ReadonlySet<EntitySupportStatus> = new Set(ENTITY_SUPPORT_STATUSES);
+export function normalizeSupportStatus(status: unknown): EntityReviewStatus {
+  if (ENTITY_SUPPORT_STATUSES.includes(status as EntityReviewStatus)) return status as EntityReviewStatus;
+  return ({ verified_mechanical: 'verified', verified_narrative: 'narrative', partial: 'not_verified',
+    untested: 'not_tested', known_mismatch: 'not_verified' } as Record<string, EntityReviewStatus>)[String(status)] ?? 'not_verified';
+}
 
 export interface EntitySupportCertification {
   status: EntitySupportStatus;
+  reviewed_at?: string | null;
+  reviewed_by?: string | null;
   /** Хэш полей самой сущности, влияющих на описание и механику. */
   content_hash?: string | null;
   /** Хэш транзитивных механических зависимостей. */
@@ -66,7 +60,7 @@ const MICRO_MVP_V3_CERTIFICATION = 'micro-mvp-l1-rules-core-v3';
 const MICRO_MVP_V4_CERTIFICATION = 'micro-mvp-l1-rules-core-v4';
 const MINI_MVP_V1_CERTIFICATION = 'mini-mvp-l1-v1';
 const BASIC_ACTIONS_CERTIFICATION = 'micro-mvp-basic-actions-v2';
-const DEPRECATED_CERTIFICATIONS = new Set(['micro-mvp-basic-actions-v1']);
+
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const UTC_RFC3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/;
@@ -146,53 +140,22 @@ export type SupportStatusPresentation = {
   label: string;
   tone: 'success' | 'info' | 'warning' | 'neutral' | 'danger';
   verified: boolean;
+  color: string;
 };
-
-const PRESENTATION: Record<EntitySupportStatus, SupportStatusPresentation> = {
-  verified_mechanical: {
-    label: 'Механика проверена',
-    tone: 'success',
-    verified: true,
-  },
-  verified_partial: {
-    label: 'Частично поддержано и проверено',
-    tone: 'info',
-    verified: true,
-  },
-  verified_narrative: {
-    label: 'Проверено как нарративное',
-    tone: 'info',
-    verified: true,
-  },
-  partial: {
-    label: 'Поддержано частично',
-    tone: 'warning',
-    verified: false,
-  },
-  untested: {
-    label: 'Не проверено',
-    tone: 'neutral',
-    verified: false,
-  },
-  known_mismatch: {
-    label: 'Есть известное несоответствие',
-    tone: 'danger',
-    verified: false,
-  },
+const PRESENTATION: Record<EntityReviewStatus, SupportStatusPresentation> = {
+  verified: { label: 'Проверено', tone: 'success', verified: true, color: '#22c55e' },
+  verified_partial: { label: 'Проверено частично', tone: 'warning', verified: true, color: '#eab308' },
+  not_verified: { label: 'Не проверено', tone: 'danger', verified: false, color: '#ef4444' },
+  not_tested: { label: 'Не тестировалось', tone: 'neutral', verified: false, color: '#9ca3af' },
+  narrative: { label: 'Нарративное', tone: 'info', verified: false, color: '#38bdf8' },
+  partial_narrative_verified: { label: 'Частично нарративное, механика проверена', tone: 'info', verified: true, color: '#2563eb' },
+  partial_narrative_not_verified: { label: 'Частично нарративное, механика не проверена', tone: 'danger', verified: false, color: '#a855f7' },
 };
-
 export function supportStatusPresentation(status: EntitySupportStatus): SupportStatusPresentation {
-  return PRESENTATION[status];
+  return PRESENTATION[normalizeSupportStatus(status)];
 }
-
-export function supportStatusOf(entity: SupportableEntity | null | undefined): EntitySupportStatus {
-  const support = entity?.support;
-  if (!support) return 'untested';
-  if (DEPRECATED_CERTIFICATIONS.has(support.certification_version ?? '')) return 'untested';
-  if (certificationContractIssues(support).length > 0) {
-    return 'untested';
-  }
-  return support.status;
+export function supportStatusOf(entity: SupportableEntity | null | undefined): EntityReviewStatus {
+  return normalizeSupportStatus(entity?.support?.status);
 }
 
 export function testCoverageOf(
@@ -207,50 +170,16 @@ export function testCoverageOf(
   return coverage;
 }
 
-export function isMechanicsLocked(
-  entity: SupportableEntity | null | undefined,
-): boolean {
-  // Match the durable server lock, even if a historical certificate is incomplete.
-  return entity?.support?.mechanics_locked === true;
-}
-
-export function isDefaultVisibleSupportStatus(status: EntitySupportStatus): boolean {
-  return DEFAULT_VISIBLE_SUPPORT_STATUSES.has(status);
-}
-
-export function isEntityVisibleBySupport(
-  entity: SupportableEntity | null | undefined,
-  showAll: boolean,
-): boolean {
-  return showAll || isDefaultVisibleSupportStatus(supportStatusOf(entity));
-}
-
+/** Историческая сертификация больше не блокирует изменения. */
+export function isMechanicsLocked(_entity: SupportableEntity | null | undefined): boolean { return false; }
+export function isDefaultVisibleSupportStatus(_status: EntitySupportStatus): boolean { return true; }
+export function isEntityVisibleBySupport(_entity: SupportableEntity | null | undefined, _showAll: boolean): boolean { return true; }
 export function filterEntitiesBySupport<T extends SupportableEntity & { id: string }>(
-  entities: T[],
-  showAll: boolean,
-  alwaysIncludeIds: Iterable<string> = [],
-): T[] {
-  const included = new Set(alwaysIncludeIds);
-  return entities.filter((entity) =>
-    included.has(entity.id) || isEntityVisibleBySupport(entity, showAll));
-}
+  entities: T[], _showAll: boolean, _alwaysIncludeIds: Iterable<string> = [],
+): T[] { return entities; }
+export function supportSelectionWarning(_entity: SupportableEntity | null | undefined): string | null { return null; }
 
-export function supportSelectionWarning(
-  entity: SupportableEntity | null | undefined,
-): string | null {
-  const status = supportStatusOf(entity);
-  if (isDefaultVisibleSupportStatus(status)) return null;
-  const presentation = supportStatusPresentation(status);
-  const note = entity?.support?.note?.trim();
-  const limitations = entity?.support?.limitations?.filter((item) => item.trim()) ?? [];
-  return [
-    `${presentation.label}. Эта сущность не входит в проверенный каталог.`,
-    note,
-    limitations.length ? `Ограничения: ${limitations.join('; ')}` : null,
-    'Вы всё равно хотите её выбрать?',
-  ].filter(Boolean).join('\n\n');
-}
-
+/** Следующие функции оставлены для чтения прежних сертификатов и истории. */
 /**
  * Проверяет, относится ли certification к текущей версии сущности.
  * Если вызывающий ещё не вычисляет хэши, переданные undefined не инвалидируют

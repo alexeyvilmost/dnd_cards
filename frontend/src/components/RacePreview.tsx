@@ -24,6 +24,8 @@ const RacePreview: React.FC<RacePreviewProps> = ({ race, parentRaceName, classNa
 
   return (
     <Bg3Card
+      entityType="race"
+      entity={race}
       title={race.name || 'Название вида'}
       titleEn={race.name_en}
       subtype={subtype}

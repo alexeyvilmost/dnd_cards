@@ -69,6 +69,7 @@ export default function SettingsPanel({initialPage='home',onTestDice}:{initialPa
         <fieldset><legend>Превью предмета при наведении</legend>{(['card','interface'] as const).map((mode,index)=><label key={mode}>
           <input type="radio" name="item-preview" checked={settings.itemPreview===mode} onChange={()=>setSetting('itemPreview',mode)}/>{['Карточка','Интерфейс'][index]}
         </label>)}</fieldset>
+        {check('showReviewStatus','Статус проверки','Цветные уголки, фильтр и статистика статусов в библиотеках; изменение статуса в детальном превью.')}
         {check('showOriginalNames','Оригинальные названия','Показывать английское название в превью и детальных окнах.')}
       </>)}
       {section('editing',<>

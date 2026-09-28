@@ -1,0 +1,17 @@
+.review-status-corner {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 22px;
+  height: 22px;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  border-bottom-right-radius: inherit;
+  pointer-events: none;
+  z-index: 4;
+}
+.review-status-editor { margin: 16px 0; display: grid; gap: 8px; color: inherit; }
+.review-status-editor label { display: grid; gap: 7px; font-size: .9rem; }
+.review-status-editor select { width: 100%; max-width: 420px; padding: 9px 12px; border-radius: 8px; border: 1px solid #80755e; color: #f3ead4; background: #241e18; }
+.review-status-editor__value { border-left: 4px solid; padding-left: 10px; }
+.review-status-editor [role="alert"] { color: #fca5a5; }
+.monster-card { position: relative; }

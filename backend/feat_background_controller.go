@@ -148,7 +148,7 @@ func (fc *FeatController) CreateFeat(c *gin.Context) {
 	if f.Author == "" {
 		f.Author = "Admin"
 	}
-	if err := fc.db.Create(&f).Error; err != nil {
+	if err := contentEntityWrite(fc.db).Create(&f).Error; err != nil {
 		writeEntityCreateDatabaseError(c, "черту", err)
 		return
 	}
@@ -221,7 +221,7 @@ func (fc *FeatController) UpdateFeat(c *gin.Context) {
 	if req.IsExtended != nil {
 		f.IsExtended = req.IsExtended
 	}
-	if err := fc.db.Save(&f).Error; err != nil {
+	if err := contentEntityWrite(fc.db).Save(&f).Error; err != nil {
 		writeEntityUpdateDatabaseError(c, "черту", err)
 		return
 	}
@@ -369,7 +369,7 @@ func (bc *BackgroundController) CreateBackground(c *gin.Context) {
 	if b.Author == "" {
 		b.Author = "Admin"
 	}
-	if err := bc.db.Create(&b).Error; err != nil {
+	if err := contentEntityWrite(bc.db).Create(&b).Error; err != nil {
 		writeEntityCreateDatabaseError(c, "предысторию", err)
 		return
 	}
@@ -442,7 +442,7 @@ func (bc *BackgroundController) UpdateBackground(c *gin.Context) {
 	if req.IsExtended != nil {
 		b.IsExtended = req.IsExtended
 	}
-	if err := bc.db.Save(&b).Error; err != nil {
+	if err := contentEntityWrite(bc.db).Save(&b).Error; err != nil {
 		writeEntityUpdateDatabaseError(c, "предысторию", err)
 		return
 	}

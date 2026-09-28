@@ -587,7 +587,7 @@ func (cc *CardController) CreateCard(c *gin.Context) {
 		CardNumber:                   cardNumber,
 	}
 
-	if err := cc.db.Create(&card).Error; err != nil {
+	if err := contentEntityWrite(cc.db).Create(&card).Error; err != nil {
 		writeEntityCreateDatabaseError(c, "карточку", err)
 		return
 	}
@@ -833,7 +833,7 @@ func (cc *CardController) UpdateCard(c *gin.Context) {
 	}
 	card.CustomRarityColor = customRarityColor
 
-	if err := cc.db.Save(&card).Error; err != nil {
+	if err := contentEntityWrite(cc.db).Save(&card).Error; err != nil {
 		writeEntityUpdateDatabaseError(c, "карточку", err)
 		return
 	}
@@ -919,7 +919,7 @@ func (cc *CardController) GenerateImage(c *gin.Context) {
 
 	// Обновление карточки с URL изображения
 	card.ImageURL = imageURL
-	if err := cc.db.Save(&card).Error; err != nil {
+	if err := contentEntityWrite(cc.db).Save(&card).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка сохранения изображения"})
 		return
 	}
@@ -1269,7 +1269,7 @@ func (ac *ActionController) CreateAction(c *gin.Context) {
 	}
 
 	log.Printf("🔍 [CREATE_ACTION] Сохранение действия в БД: Name=%s, CardNumber=%s", action.Name, action.CardNumber)
-	if err := ac.db.Create(&action).Error; err != nil {
+	if err := contentEntityWrite(ac.db).Create(&action).Error; err != nil {
 		writeEntityCreateDatabaseError(c, "действие", err)
 		return
 	}
@@ -1404,7 +1404,7 @@ func (ac *ActionController) UpdateAction(c *gin.Context) {
 		action.DetailedDescriptionFontSize = req.DetailedDescriptionFontSize
 	}
 
-	if err := ac.db.Save(&action).Error; err != nil {
+	if err := contentEntityWrite(ac.db).Save(&action).Error; err != nil {
 		writeEntityUpdateDatabaseError(c, "действие", err)
 		return
 	}
@@ -1672,7 +1672,7 @@ func (ec *EffectController) CreateEffect(c *gin.Context) {
 		effect.Author = "Admin"
 	}
 
-	if err := ec.db.Create(&effect).Error; err != nil {
+	if err := contentEntityWrite(ec.db).Create(&effect).Error; err != nil {
 		writeEntityCreateDatabaseError(c, "эффект", err)
 		return
 	}
@@ -1798,7 +1798,7 @@ func (ec *EffectController) UpdateEffect(c *gin.Context) {
 		effect.DetailedDescriptionFontSize = req.DetailedDescriptionFontSize
 	}
 
-	if err := ec.db.Save(&effect).Error; err != nil {
+	if err := contentEntityWrite(ec.db).Save(&effect).Error; err != nil {
 		writeEntityUpdateDatabaseError(c, "эффект", err)
 		return
 	}

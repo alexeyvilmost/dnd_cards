@@ -246,7 +246,7 @@ func (sc *SpellController) CreateSpell(c *gin.Context) {
 		spell.Author = "Admin"
 	}
 
-	if err := sc.db.Create(&spell).Error; err != nil {
+	if err := contentEntityWrite(sc.db).Create(&spell).Error; err != nil {
 		writeEntityCreateDatabaseError(c, "заклинание", err)
 		return
 	}
@@ -395,7 +395,7 @@ func (sc *SpellController) UpdateSpell(c *gin.Context) {
 		spell.IsExtended = req.IsExtended
 	}
 
-	if err := sc.db.Save(&spell).Error; err != nil {
+	if err := contentEntityWrite(sc.db).Save(&spell).Error; err != nil {
 		writeEntityUpdateDatabaseError(c, "заклинание", err)
 		return
 	}

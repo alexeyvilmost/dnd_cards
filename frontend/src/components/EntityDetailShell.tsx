@@ -2,9 +2,9 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import OriginalName from './OriginalName';
+import ReviewStatusEditor, { type ReviewableEntity } from './ReviewStatusEditor';
 import './entityDetailModal.css';
 import EntityTags from './EntityTags';
-import type {TaggedEntityType} from '../api/entityTags';
 import { useEntityDetail } from '../contexts/entityDetail';
 import { useContentPermissions } from '../hooks/useContentPermissions';
 
@@ -39,7 +39,7 @@ export function EntityDetailShell({
   children: ReactNode;
   maxWidth?: number;
   labelledById?: string;
-  entity?: {type:TaggedEntityType;id:string;author?:string};
+  entity?: ReviewableEntity;
 }) {
   const { readOnly = false } = useEntityDetail();
   const { canEdit } = useContentPermissions();
@@ -88,6 +88,8 @@ export function EntityDetailShell({
             </button>
           </div>
           <OriginalName nameEn={titleEn} size="detail" />
+
+          {entity && <ReviewStatusEditor entity={entity} />}
 
           {children}
 

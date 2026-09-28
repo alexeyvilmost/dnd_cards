@@ -1499,6 +1499,7 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		{Version: "270_readable_catalog_metadata", Description: "Readable spell, feat, action, and effect text, English names, and classified sources", Up: applyReadableCatalog270, Down: func(db *sql.DB) error { return nil }},
 		{Version: "271_readable_catalog_local_variants", Description: "Format prior local feat prose and fill English labels omitted by snapshot preimage guards", Up: applyReadableCatalog271, Down: func(db *sql.DB) error { return nil }},
 		{Version: "272_readable_catalog_compatibility", Description: "Fill empty English labels and shorten remaining historical feat descriptions", Up: applyReadableCatalog272, Down: func(db *sql.DB) error { return nil }},
+		{Version: manualContentReviewMigrationVersion, Description: "Archive certification, unlock library mechanics and reset manual review statuses", Up: enableManualContentReview274, Down: func(db *sql.DB) error { return nil }},
 		// Здесь можно добавлять новые миграции
 	}
 }

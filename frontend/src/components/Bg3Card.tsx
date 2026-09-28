@@ -1,7 +1,12 @@
 import React from 'react';
 import OriginalName from './OriginalName';
+import ReviewStatusCorner from './ReviewStatusCorner';
+import type {SupportableEntity} from '../content/supportStatus';
+import type {TaggedEntityType} from '../api/entityTags';
 
 interface Bg3CardProps {
+  entity?: SupportableEntity;
+  entityType?: TaggedEntityType;
   title: string;
   /** Оригинальное (английское) название — показывается под заголовком, если включена настройка. */
   titleEn?: string | null;
@@ -17,6 +22,8 @@ interface Bg3CardProps {
 // Общий тёмно-золотой «инспектор» в стиле BG3 (как у заклинаний).
 // Заголовок + подтип + произвольное тело + опциональная нижняя плашка.
 const Bg3Card: React.FC<Bg3CardProps> = ({
+  entity,
+  entityType,
   title,
   titleEn,
   subtype,
@@ -80,6 +87,7 @@ const Bg3Card: React.FC<Bg3CardProps> = ({
       {(titleEn || subtype) && (
         <div className="bg3-subtype"><OriginalName nameEn={titleEn} suffix={subtype} /></div>
       )}
+      {entity && <ReviewStatusCorner entity={entity} entityType={entityType} />}
       {children}
       {footer ? <div className="bg3-costbar">{footer}</div> : <div className="bg3-spacer" />}
     </div>

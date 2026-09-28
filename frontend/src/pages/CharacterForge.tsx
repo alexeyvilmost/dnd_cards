@@ -77,7 +77,6 @@ import BackgroundPreview from '../components/BackgroundPreview';
 import SpellPreview from '../components/SpellPreview';
 import FeatPreview from '../components/FeatPreview';
 import ForgeFeatLine from '../components/forge/ForgeFeatLine';
-import SupportStatusBadge from '../components/forge/SupportStatusBadge';
 import ImageUploader from '../components/ImageUploader';
 import { BackgroundEquipment } from '../components/BackgroundEquipment';
 import { collectChosenSpellUuids, indexSpells } from '../engine/spellRefs';
@@ -88,9 +87,7 @@ import { labelOf, SKILLS, ABILITIES, WEAPON_TYPE_PROFICIENCY_CATEGORY } from '..
 import { FormattedText } from '../utils/formattedText';
 import { writeSoloCombatState } from '../solo-combat/persistence';
 import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
-import {
-  filterEntitiesBySupport,
-} from '../content/supportStatus';
+import { loadCatalogPages } from '../api/catalogPages';
 import './CharacterForge.css';
 
 const EMPTY_BUNDLE: EntityBundle = { race: null, klass: null, background: null, feats: [], effects: [], actions: [], spells: [] };
@@ -116,7 +113,6 @@ const CharacterForge = () => {
   const [feats, setFeats] = useState<Feat[]>([]);
   const [spells, setSpells] = useState<Spell[]>([]);
   const [catalogError, setCatalogError] = useState(false);
-  const [showAllContent, setShowAllContent] = useState(false);
 
   const [draft, setDraft] = useState<CharacterDraft>(emptyDraft());
   const [restorable, setRestorable] = useState<CharacterDraft | null>(null);
@@ -161,15 +157,18 @@ const CharacterForge = () => {
 
   // Загрузка справочников. При сбое сети — честный баннер + повтор (иначе
   // игрок видит враньё «Нет видов в базе» вместо ошибки).
+  const catalogRequest = useRef(0);
   const loadCatalogs = useCallback(async () => {
+    const request = ++catalogRequest.current;
     setCatalogError(false);
     try {
       const [rr, cc, bb, ff] = await Promise.all([
-        racesApi.getRaces({ limit: 100, fields: 'list' }),
-        classesApi.getClasses({ limit: 100, fields: 'list' }),
-        backgroundsApi.getBackgrounds({ limit: 100, fields: 'list' }),
-        featsApi.getFeats({ limit: 200, fields: 'list' }),
+        loadCatalogPages((page: number) => racesApi.getRaces({ page, limit: 100, fields: 'list' }), 'races', true, () => request === catalogRequest.current),
+        loadCatalogPages((page: number) => classesApi.getClasses({ page, limit: 100, fields: 'list' }), 'classes', true, () => request === catalogRequest.current),
+        loadCatalogPages((page: number) => backgroundsApi.getBackgrounds({ page, limit: 100, fields: 'list' }), 'backgrounds', true, () => request === catalogRequest.current),
+        loadCatalogPages((page: number) => featsApi.getFeats({ page, limit: 200, fields: 'list' }), 'feats', true, () => request === catalogRequest.current),
       ]);
+      if (request !== catalogRequest.current) return;
       setRaces(rr.races || []);
       setClasses(cc.classes || []);
       setBackgrounds(bb.backgrounds || []);
@@ -177,11 +176,12 @@ const CharacterForge = () => {
       // и другие категории — как варианты choice(source:"feat").
       setFeats(ff.feats || []);
     } catch (e) {
+      if (request !== catalogRequest.current) return;
       console.error(e);
       setCatalogError(true);
     }
   }, []);
-  useEffect(() => { void loadCatalogs(); }, [loadCatalogs]);
+  useEffect(() => { void loadCatalogs(); return () => { catalogRequest.current += 1; }; }, [loadCatalogs]);
 
   // A fresh level-1 Forge used to download every spell in the database.
   // Load only cantrips and levels the current character can reach; the cap
@@ -190,7 +190,7 @@ const CharacterForge = () => {
   const forgeSpellLevelCap = Math.min(9, Math.max(1, Math.ceil((draft.level || 1) / 2)));
   useEffect(() => {
     let stale = false;
-    spellsApi.getSpells({ limit: 500, max_level: forgeSpellLevelCap, fields: 'list' })
+    loadCatalogPages((page: number) => spellsApi.getSpells({ page, limit: 500, max_level: forgeSpellLevelCap, fields: 'list' }), 'spells', true, () => !stale)
       .then((response) => { if (!stale) setSpells(response.spells || []); })
       .catch((reason) => {
         console.error(reason);
@@ -199,38 +199,10 @@ const CharacterForge = () => {
     return () => { stale = true; };
   }, [forgeSpellLevelCap]);
 
-  const runProgression = Boolean(levelUp && searchParams.get('roguelike') && draft.level <= 5);
-  const visibleRaces = useMemo(
-    () => filterEntitiesBySupport(races, showAllContent, [draft.raceId, draft.lineageId].filter(Boolean) as string[]),
-    [races, showAllContent, draft.raceId, draft.lineageId],
-  );
-  const visibleClasses = useMemo(
-    () => filterEntitiesBySupport(classes, showAllContent, [
-      ...(runProgression ? classes.filter((entry) => entry.parent_class_id === levelUp?.selectedClassId).map((entry) => entry.id) : []),
-      ...Object.keys(draftClassLevels(draft)),
-      ...Object.values(draft.subclassIds ?? {}),
-      draft.subclassId,
-    ].filter(Boolean) as string[]),
-    [classes, showAllContent, draft.classId, draft.classLevels, draft.level, draft.subclassId, draft.subclassIds, runProgression, levelUp?.selectedClassId],
-  );
-  const hiddenRootClassCount = useMemo(() => {
-    const rootCount = classes.filter((entry) => !entry.parent_class_id && !entry.is_subclass).length;
-    const visibleRootCount = visibleClasses.filter((entry) => !entry.parent_class_id && !entry.is_subclass).length;
-    return Math.max(0, rootCount - visibleRootCount);
-  }, [classes, visibleClasses]);
-  const visibleBackgrounds = useMemo(
-    () => filterEntitiesBySupport(backgrounds, showAllContent, draft.backgroundId ? [draft.backgroundId] : []),
-    [backgrounds, showAllContent, draft.backgroundId],
-  );
-  const resolvedEntityIds = useMemo(
-    () => Object.values(draft.resolvedChoices).flat(),
-    [draft.resolvedChoices],
-  );
-
-  const visibleSpells = useMemo(
-    () => filterEntitiesBySupport(spells, showAllContent, resolvedEntityIds),
-    [spells, showAllContent, resolvedEntityIds],
-  );
+  const visibleRaces = races;
+  const visibleClasses = classes;
+  const visibleBackgrounds = backgrounds;
+  const visibleSpells = spells;
   // При входе в режим создания — предложить восстановить сохранённый черновик.
   useEffect(() => {
     if (editId) { setRestorable(null); return; }
@@ -379,17 +351,7 @@ const CharacterForge = () => {
     () => ({ ...baseAssembled, spells: persistedSpells }),
     [baseAssembled, persistedSpells],
   );
-  // Run progression must expose its declared choices without claiming that the
-  // whole catalog is certified. Existing cards retain their support badges.
-  const visibleFeats = useMemo(
-    () => filterEntitiesBySupport(feats, showAllContent, [
-      ...draft.featIds, ...resolvedEntityIds,
-      ...(runProgression ? assembled.pendingChoices
-        .filter((choice) => choice.source === 'feat' && requiresInitialCharacterChoice(choice))
-        .flatMap((choice) => optionsForChoice(choice, feats).map((option) => option.id)) : []),
-    ]),
-    [feats, showAllContent, draft.featIds, resolvedEntityIds, runProgression, assembled.pendingChoices],
-  );
+  const visibleFeats = feats;
   const ruleState = useMemo(
     () => resolveCharacterRules({ draft, assembled }),
     [draft, assembled],
@@ -943,26 +905,6 @@ const CharacterForge = () => {
       savedId={savedId} error={error} onOpenSheet={() => savedId && navigate(`/characters-v3/${savedId}`)}
     />
   );
-  const supportFilterControl = (
-    <label className="forge-support-filter">
-      <input
-        type="checkbox"
-        checked={showAllContent}
-        onChange={(event) => setShowAllContent(event.target.checked)}
-      />
-      <span>
-        Показать все сущности
-        <small>
-          {showAllContent
-            ? ' Непроверенные варианты доступны без дополнительных окон.'
-            : runProgression
-              ? ' Варианты развития класса показаны со статусами проверки; остальной каталог отфильтрован.'
-              : ' Сейчас показан только проверенный каталог.'}
-        </small>
-      </span>
-    </label>
-  );
-
   // ─── Режим повышения уровня: только новое, база заблокирована ───
   if (levelUp) {
     const rootClasses = visibleClasses.filter((entry) => !entry.parent_class_id && !entry.is_subclass);
@@ -1110,7 +1052,6 @@ const CharacterForge = () => {
                 })}
               </div>
             </div>
-            {supportFilterControl}
 
             <div className="forge-block">
               <div className="forge-section-h">Новые способности</div>
@@ -1181,14 +1122,6 @@ const CharacterForge = () => {
             {subclassEditable && (
               <div className="forge-block forge-square-block">
                 <div className="forge-section-h">Подкласс</div>
-                {selectableLevelSubclasses.length === 0 && selectedLevelSubclasses.length > 0 && (
-                  <div className="forge-note forge-note--center">
-                    <p>Все доступные подклассы пока скрыты фильтром проверенного каталога.</p>
-                    <button type="button" className="forge-btn" onClick={() => setShowAllContent(true)}>
-                      Показать {selectedLevelSubclasses.length} {selectedLevelSubclasses.length === 1 ? 'вариант' : 'варианта'}
-                    </button>
-                  </div>
-                )}
                 <div className="forge-square-grid">
                   {(selectableLevelSubclasses as CharacterClass[]).map((c) => (
                     <EntitySquareCard
@@ -1382,7 +1315,6 @@ const CharacterForge = () => {
       <div className="forge-body">
         <ForgeNav sections={navSections} active={act} onSelect={setActive} />
         <div className="forge-main">
-          {supportFilterControl}
           {showOverviewInMain ? (
             <div className="forge-editor forge-editor--overview">{overviewPanel}</div>
           ) : (
@@ -1400,7 +1332,6 @@ const CharacterForge = () => {
               {act === 'class' && (
                 <>
                 <ClassSection classes={visibleClasses} draft={draft} onSelect={selectClass} assembled={assembled}
-                  showAllContent={showAllContent} hiddenClassCount={hiddenRootClassCount}
                   onToggleSkill={toggleClassSkill} choices={classOtherChoices} ownChoices={classFeatOwnChoices} resolved={draft.resolvedChoices}
                   setResolved={setResolved} ruleState={ruleState} allFeats={visibleFeats} activeFeats={assembled.feats}
                   subclasses={selectableSubclasses} subclassUnlocked={subclassUnlocked} subclassLevel={subclassLevel}
@@ -1722,7 +1653,7 @@ function RaceSection({ races, draft, onSelect, subraces, subraceUnlocked, subrac
   );
 }
 
-function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choices, ownChoices, resolved, setResolved, ruleState, allFeats, activeFeats, subclasses = [], subclassUnlocked = false, subclassLevel = 3, onPickSubclass, onEquipmentOption, showAllContent = false, hiddenClassCount = 0 }: any) {
+function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choices, ownChoices, resolved, setResolved, ruleState, allFeats, activeFeats, subclasses = [], subclassUnlocked = false, subclassLevel = 3, onPickSubclass, onEquipmentOption }: any) {
   const sc = classSkillChoice(assembled);
   const topClasses = (classes as CharacterClass[]).filter((c) => !c.is_subclass);
   const klass = classes.find((c: CharacterClass) => c.id === draft.classId) as CharacterClass | undefined;
@@ -1751,9 +1682,7 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
           ))}
           {topClasses.length === 0 && (
             <p className="forge-note">
-              {!showAllContent && hiddenClassCount > 0
-                ? `Нет проверенных классов. Фильтр скрывает классы: ${hiddenClassCount}. Включите «Показать все сущности».`
-                : 'Классы ещё не добавлены в каталог.'}
+              Классы ещё не добавлены в каталог.
             </p>
           )}
         </div>
@@ -2039,7 +1968,6 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
                   key={spell.id}
                   imageUrl={spell.image_url}
                   name={spell.name}
-                  nameSuffix={<SupportStatusBadge entity={spell} compact />}
                   detail={spellDetail(spell)}
                   title={`${spell.name} · ${getSpellLevelLabel(spell.level)}`}
                   onMouseEnter={(e) => { setHovered(spell); setMouse(previewAnchor(e.currentTarget)); }}
@@ -2056,7 +1984,6 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
                   <img src={spell.image_url?.trim() || '/default_image.png'} alt={spell.name}
                     onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
                   {spell.level > 0 && <span className="forge-spell-badge">{spell.level}</span>}
-                  <SupportStatusBadge entity={spell} compact />
                 </div>
               ))}
             </div>
@@ -2119,8 +2046,7 @@ function SpellsSection({ spells, granted, choices, ownerChoices, maxSlotLevel = 
                     <img src={spell.image_url?.trim() || '/default_image.png'} alt={spell.name}
                       onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
                     {spell.level > 0 && <span className="forge-spell-badge">{spell.level}</span>}
-                    <SupportStatusBadge entity={spell} compact />
-                  </button>
+                    </button>
                 );
               })}
               {filtered.length === 0 && <p className="forge-note">Нет доступных заклинаний по этому фильтру.</p>}

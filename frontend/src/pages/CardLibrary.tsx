@@ -1,6 +1,11 @@
+import ReviewStatusCorner from '../components/ReviewStatusCorner';
+import { loadCatalogPages } from '../api/catalogPages';
+import { LibraryReviewStatusFilter, LibraryReviewStatusSummary, filterReviewStatuses, parseReviewStatuses } from '../components/library/LibraryReviewStatus';
+import { REVIEW_STATUS_CHANGED, type ReviewStatusChange } from '../api/contentReview';
+import type { SupportableEntity } from '../content/supportStatus';
 import LibraryTagControl from '../components/library/LibraryTagControl';
 import { previewAnchor } from '../utils/previewAnchor';
-import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, type CSSProperties } from 'react';
+import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef, type CSSProperties, type Dispatch, type SetStateAction } from 'react';
 import {
   Filter, Plus, Grid3X3, List, LayoutTemplate, X, Dices, Hash, Lightbulb,
 } from 'lucide-react';
@@ -158,18 +163,18 @@ const CardLibrary = () => {
   const skipFilterUrlSync = useRef(false);
 
   const [contentType, setContentType] = useState<LibraryContentType>(initialFilters.contentType);
-  const [cards, setCards] = useState<Card[]>([]);
+  const [rawCards, setCards] = useState<Card[]>([]);
   const cardsIdentity = useRef(token);
-  const [effects, setEffects] = useState<PassiveEffect[]>([]);
-  const [actions, setActions] = useState<Action[]>([]);
-  const [spells, setSpells] = useState<Spell[]>([]);
-  const [feats, setFeats] = useState<Feat[]>([]);
-  const [backgrounds, setBackgrounds] = useState<Background[]>([]);
-  const [races, setRaces] = useState<Race[]>([]);
-  const [classes, setClasses] = useState<CharacterClass[]>([]);
-  const [resources, setResources] = useState<ResourceDefinition[]>([]);
-  const [variables, setVariables] = useState<Variable[]>([]);
-  const [concepts, setConcepts] = useState<Concept[]>([]);
+  const [rawEffects, setEffects] = useState<PassiveEffect[]>([]);
+  const [rawActions, setActions] = useState<Action[]>([]);
+  const [rawSpells, setSpells] = useState<Spell[]>([]);
+  const [rawFeats, setFeats] = useState<Feat[]>([]);
+  const [rawBackgrounds, setBackgrounds] = useState<Background[]>([]);
+  const [rawRaces, setRaces] = useState<Race[]>([]);
+  const [rawClasses, setClasses] = useState<CharacterClass[]>([]);
+  const [rawResources, setResources] = useState<ResourceDefinition[]>([]);
+  const [rawVariables, setVariables] = useState<Variable[]>([]);
+  const [rawConcepts, setConcepts] = useState<Concept[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -234,10 +239,51 @@ const CardLibrary = () => {
   const [isFeatModalOpen, setIsFeatModalOpen] = useState(false);
   const [isBackgroundModalOpen, setIsBackgroundModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalCards, setTotalCards] = useState(0);
+  const [rawTotalCards, setTotalCards] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   // Отдельная настройка: превью предмета при наведении — карточка или интерфейс (стат-блок).
-  const { itemPreview } = useSiteSettings();
+  const { itemPreview, showReviewStatus } = useSiteSettings();
+  const [reviewStatuses, setReviewStatuses] = useState(() => parseReviewStatuses(initialFilters.statuses ?? ''));
+  const activeReviewStatuses = useMemo(() => showReviewStatus ? reviewStatuses : [], [showReviewStatus, reviewStatuses]);
+  const cards = useMemo(() => filterReviewStatuses(rawCards, activeReviewStatuses), [rawCards, activeReviewStatuses]);
+  const effects = useMemo(() => filterReviewStatuses(rawEffects, activeReviewStatuses), [rawEffects, activeReviewStatuses]);
+  const actions = useMemo(() => filterReviewStatuses(rawActions, activeReviewStatuses), [rawActions, activeReviewStatuses]);
+  const spells = useMemo(() => filterReviewStatuses(rawSpells, activeReviewStatuses), [rawSpells, activeReviewStatuses]);
+  const feats = useMemo(() => filterReviewStatuses(rawFeats, activeReviewStatuses), [rawFeats, activeReviewStatuses]);
+  const backgrounds = useMemo(() => filterReviewStatuses(rawBackgrounds, activeReviewStatuses), [rawBackgrounds, activeReviewStatuses]);
+  const races = useMemo(() => filterReviewStatuses(rawRaces, activeReviewStatuses), [rawRaces, activeReviewStatuses]);
+  const classes = useMemo(() => filterReviewStatuses(rawClasses, activeReviewStatuses), [rawClasses, activeReviewStatuses]);
+  const resources = useMemo(() => filterReviewStatuses(rawResources, activeReviewStatuses), [rawResources, activeReviewStatuses]);
+  const variables = useMemo(() => filterReviewStatuses(rawVariables, activeReviewStatuses), [rawVariables, activeReviewStatuses]);
+  const concepts = useMemo(() => filterReviewStatuses(rawConcepts, activeReviewStatuses), [rawConcepts, activeReviewStatuses]);
+  const reviewCatalog: Record<string, SupportableEntity[]> = { cards: rawCards, effects: rawEffects, actions: rawActions, spells: rawSpells, feats: rawFeats, backgrounds: rawBackgrounds, races: rawRaces, classes: rawClasses, resources: rawResources, variables: rawVariables, concepts: rawConcepts };
+  const totalCards = showReviewStatus ? filterReviewStatuses(reviewCatalog[contentType] ?? [], activeReviewStatuses).length : rawTotalCards;
+  useEffect(() => {
+    const refresh = (event: Event) => {
+      const change = (event as CustomEvent<ReviewStatusChange>).detail;
+      if (change) {
+        const patch = <T extends SupportableEntity & { id: string }>(row: T): T => row.id === change.entity_id ? { ...row, support: change.support } : row;
+        const patchList = <T extends SupportableEntity & { id: string }>(set: Dispatch<SetStateAction<T[]>>) => set(rows => rows.map(patch));
+        const patchOne = <T extends SupportableEntity & { id: string }>(set: Dispatch<SetStateAction<T | null>>) => set(row => row ? patch(row) : row);
+        switch (change.entity_type) {
+          case 'card': patchList(setCards); patchOne(setSelectedCard); patchOne(setHoveredCard); break;
+          case 'effect': patchList(setEffects); patchOne(setSelectedEffect); patchOne(setHoveredEffect); break;
+          case 'action': patchList(setActions); patchOne(setSelectedAction); patchOne(setHoveredAction); break;
+          case 'spell': patchList(setSpells); patchOne(setSelectedSpell); patchOne(setHoveredSpell); break;
+          case 'feat': patchList(setFeats); patchOne(setSelectedFeat); patchOne(setHoveredFeat); break;
+          case 'background': patchList(setBackgrounds); patchOne(setSelectedBackground); patchOne(setHoveredBackground); break;
+          case 'race': patchList(setRaces); patchOne(setSelectedRace); patchOne(setHoveredRace); break;
+          case 'class': patchList(setClasses); patchOne(setSelectedClass); patchOne(setHoveredClass); break;
+          case 'resource': patchList(setResources); patchOne(setSelectedResource); patchOne(setHoveredResource); break;
+          case 'variable': patchList(setVariables); patchOne(setSelectedVariable); patchOne(setHoveredVariable); break;
+          case 'concept': patchList(setConcepts); patchOne(setSelectedConcept); patchOne(setHoveredConcept); break;
+        }
+      }
+      setTagRevision(value => value + 1);
+    };
+    window.addEventListener(REVIEW_STATUS_CHANGED, refresh);
+    return () => window.removeEventListener(REVIEW_STATUS_CHANGED, refresh);
+  }, []);
   // Режим просмотра библиотеки — её собственный, по умолчанию «Список» для всех типов
   // (см. parseLibraryParams). Настройка «Отображение сущностей» сюда НЕ влияет: она про
   // лист персонажа и кузню. Явный ?view= в URL и ручной тумблер работают поверх.
@@ -308,15 +354,15 @@ const CardLibrary = () => {
 
   const { mainRaces, subraces: subraceRaces } = useMemo(() => splitRacesByKind(races), [races]);
   const raceParentById = useMemo(
-    () => new Map(mainRaces.map((r) => [r.id, r])),
-    [mainRaces],
+    () => new Map(rawRaces.filter(race => !race.is_subrace).map((r) => [r.id, r])),
+    [rawRaces],
   );
   const spellGroups = useMemo(() => groupSpellsByLevel(spells), [spells]);
   const featGroups = useMemo(() => groupFeatsByCategory(feats), [feats]);
   const { mainClasses, subclasses: subclassClasses } = useMemo(() => splitClassesByKind(classes), [classes]);
   const classParentById = useMemo(
-    () => new Map(mainClasses.map((c) => [c.id, c])),
-    [mainClasses],
+    () => new Map(rawClasses.filter(klass => !klass.is_subclass).map((c) => [c.id, c])),
+    [rawClasses],
   );
 
   // Загрузка карточек
@@ -360,7 +406,7 @@ const CardLibrary = () => {
           break;
       }
       
-      const response = await itemLibraryApi.list(params);
+      const response = await loadCatalogPages((nextPage: number) => itemLibraryApi.list({ ...params, page: showReviewStatus ? nextPage : page }), 'cards', showReviewStatus, () => requestSequence === catalogRequestSequence.current);
       if (requestSequence !== catalogRequestSequence.current) return;
       cardsIdentity.current = token;
       
@@ -417,7 +463,7 @@ const CardLibrary = () => {
       if (search) params.search = search;
       if (rarityFilter) params.rarity = rarityFilter;
       
-      const response = await actionsApi.getActions(params);
+      const response = await loadCatalogPages((nextPage: number) => actionsApi.getActions({ ...params, page: showReviewStatus ? nextPage : page }), 'actions', showReviewStatus, () => requestSequence === catalogRequestSequence.current);
       if (requestSequence !== catalogRequestSequence.current) return;
       
       if (append) {
@@ -474,7 +520,7 @@ const CardLibrary = () => {
       if (rarityFilter) params.rarity = rarityFilter;
       if (effectTypeFilter) params.effect_type = effectTypeFilter;
       
-      const response = await effectsApi.getEffects(params);
+      const response = await loadCatalogPages((nextPage: number) => effectsApi.getEffects({ ...params, page: showReviewStatus ? nextPage : page }), 'effects', showReviewStatus, () => requestSequence === catalogRequestSequence.current);
       if (requestSequence !== catalogRequestSequence.current) return;
       
       if (append) {
@@ -529,7 +575,7 @@ const CardLibrary = () => {
       if (spellConcentration) params.concentration = spellConcentration;
       if (spellRitual) params.ritual = spellRitual;
 
-      const response = await spellsApi.getSpells(params);
+      const response = await loadCatalogPages((nextPage: number) => spellsApi.getSpells({ ...params, page: showReviewStatus ? nextPage : page }), 'spells', showReviewStatus, () => requestSequence === catalogRequestSequence.current);
       if (requestSequence !== catalogRequestSequence.current) return;
 
       if (append) {
@@ -570,7 +616,7 @@ const CardLibrary = () => {
       if (featCategory) params.category = featCategory;
       if (featRepeatable) params.repeatable = featRepeatable;
       if (featAbility) params.ability = featAbility;
-      const response = await featsApi.getFeats(params);
+      const response = await loadCatalogPages((nextPage: number) => featsApi.getFeats({ ...params, page: showReviewStatus ? nextPage : page }), 'feats', showReviewStatus, () => requestSequence === catalogRequestSequence.current);
       if (requestSequence !== catalogRequestSequence.current) return;
       if (append) {
         setFeats(prev => {
@@ -607,7 +653,7 @@ const CardLibrary = () => {
       if (search) params.search = search;
       if (bgAbility) params.ability = bgAbility;
       if (bgSkill) params.skill = bgSkill;
-      const response = await backgroundsApi.getBackgrounds(params);
+      const response = await loadCatalogPages((nextPage: number) => backgroundsApi.getBackgrounds({ ...params, page: showReviewStatus ? nextPage : page }), 'backgrounds', showReviewStatus, () => requestSequence === catalogRequestSequence.current);
       if (requestSequence !== catalogRequestSequence.current) return;
       if (append) {
         setBackgrounds(prev => {
@@ -641,7 +687,7 @@ const CardLibrary = () => {
       const params: any = { page, limit: 50 };
       if (tagFilter) params.tag = tagFilter;
       if (search) params.search = search;
-      const response = await racesApi.getRaces(params);
+      const response = await loadCatalogPages((nextPage: number) => racesApi.getRaces({ ...params, page: showReviewStatus ? nextPage : page }), 'races', showReviewStatus, () => requestSequence === catalogRequestSequence.current);
       if (requestSequence !== catalogRequestSequence.current) return;
       if (append) {
         setRaces(prev => {
@@ -675,7 +721,7 @@ const CardLibrary = () => {
       const params: any = { page, limit: 50 };
       if (tagFilter) params.tag = tagFilter;
       if (search) params.search = search;
-      const response = await classesApi.getClasses(params);
+      const response = await loadCatalogPages((nextPage: number) => classesApi.getClasses({ ...params, page: showReviewStatus ? nextPage : page }), 'classes', showReviewStatus, () => requestSequence === catalogRequestSequence.current);
       if (requestSequence !== catalogRequestSequence.current) return;
       if (append) {
         setClasses(prev => {
@@ -811,7 +857,7 @@ const CardLibrary = () => {
     }
     if (previousContentType.current !== contentType) {
       setCards([]); setEffects([]); setActions([]); setSpells([]); setFeats([]);
-      setBackgrounds([]); setRaces([]); setClasses([]); setResources([]); setConcepts([]);
+      setBackgrounds([]); setRaces([]); setClasses([]); setResources([]); setVariables([]); setConcepts([]);
       previousContentType.current = contentType;
     }
     if (contentType === 'cards') {
@@ -839,13 +885,15 @@ const CardLibrary = () => {
     } else if (contentType === 'concepts') {
       loadConcepts();
     }
-  }, [token, contentType, search, tagFilter, tagRevision, rarityFilter, effectTypeFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, resourceCategoryFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable, featAbility, bgAbility, bgSkill]);
+    return () => { catalogRequestSequence.current += 1; };
+  }, [token, showReviewStatus, contentType, search, tagFilter, tagRevision, rarityFilter, effectTypeFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, resourceCategoryFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable, featAbility, bgAbility, bgSkill]);
 
   const currentFilters = useMemo(
     () => ({
       contentType,
       search,
       tag:tagFilter,
+      statuses: reviewStatuses.join(','),
       rarity: rarityFilter,
       effectType: effectTypeFilter,
       properties: propertiesFilter,
@@ -871,6 +919,7 @@ const CardLibrary = () => {
       contentType,
       search,
       tagFilter,
+      reviewStatuses,
       rarityFilter,
       effectTypeFilter,
       propertiesFilter,
@@ -956,6 +1005,7 @@ const CardLibrary = () => {
     setSpellRitual(parsed.spellRitual);
     setFeatCategory(parsed.featCategory);
     setFeatRepeatable(parsed.featRepeatable);
+    setReviewStatuses(parseReviewStatuses(parsed.statuses ?? ''));
     setFeatAbility(parsed.featAbility);
     setBgAbility(parsed.backgroundAbility);
     setBgSkill(parsed.backgroundSkill);
@@ -1336,7 +1386,7 @@ const CardLibrary = () => {
     rarityFilter, effectTypeFilter, propertiesFilter, slotFilter,
     armorTypeFilter, resourceCategoryFilter, spellLevel, spellClass, spellSubclass,
     spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable,
-    featAbility, bgAbility, bgSkill, tagFilter,
+    featAbility, bgAbility, bgSkill, tagFilter, showReviewStatus && reviewStatuses.length > 0,
   ].filter(Boolean).length;
   const resetFilters = () => {
     setTagFilter('');
@@ -1354,6 +1404,7 @@ const CardLibrary = () => {
     setSpellRitual('');
     setFeatCategory('');
     setFeatRepeatable('');
+    setReviewStatuses([]);
     setFeatAbility('');
     setBgAbility('');
     setBgSkill('');
@@ -1738,6 +1789,7 @@ const CardLibrary = () => {
               </select>
             </div>
             )}
+              {showReviewStatus && <LibraryReviewStatusFilter value={reviewStatuses} onChange={setReviewStatuses} />}
             </div>
             {isMobile && (
               <div className="lib-filters-foot">
@@ -1753,6 +1805,8 @@ const CardLibrary = () => {
         )}
       </div>
 
+      {showReviewStatus && contentType !== 'passives' && !error && <LibraryReviewStatusSummary entities={reviewCatalog[contentType] ?? []} loading={loading} />}
+
       {/* Сообщение об ошибке */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -1761,7 +1815,7 @@ const CardLibrary = () => {
       )}
 
       {/* Загрузка */}
-      {contentType === 'passives' && <PassiveLibrary tag={tagFilter} search={search} mode={viewMode === 'list' ? 'row' : 'icon'}/>}
+      {contentType === 'passives' && <PassiveLibrary reviewStatuses={reviewStatuses} tag={tagFilter} search={search} mode={viewMode === 'list' ? 'row' : 'icon'}/>}
       {loading && (
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -1841,8 +1895,9 @@ const CardLibrary = () => {
                  onClick={() => handleVariableClick(variable)}
                   onMouseEnter={(e) => { setHoveredVariable(variable); placePreview(previewAnchor(e.currentTarget)); }}
                   onMouseLeave={leaveHover(() => setHoveredVariable(null))}
-                  className="library-entity-row w-full text-left p-3 rounded-lg transition-all duration-200"
+                  className="library-review-row library-entity-row w-full text-left p-3 rounded-lg transition-all duration-200"
                 >
+                    <ReviewStatusCorner entity={variable} entityType="variable" />
                   <div className="flex items-center gap-3">
                     {variable.image_url?.trim()
                       ? <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent"><img src={variable.image_url} alt="" className="w-full h-full object-contain" onError={(event) => { event.currentTarget.style.display = 'none'; }} /></div>
@@ -1896,8 +1951,9 @@ const CardLibrary = () => {
                     onClick={() => handleConceptClick(concept)}
                     onMouseEnter={(e) => { setHoveredConcept(concept); placePreview(previewAnchor(e.currentTarget)); }}
                     onMouseLeave={leaveHover(() => setHoveredConcept(null))}
-                    className="library-entity-row w-full text-left p-3 rounded-lg transition-all duration-200"
+                    className="library-review-row library-entity-row w-full text-left p-3 rounded-lg transition-all duration-200"
                   >
+                    <ReviewStatusCorner entity={concept} entityType="concept" />
                     <div className="flex items-center gap-3">
                       {concept.image_url?.trim()
                         ? <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent"><img src={concept.image_url} alt="" className="w-full h-full object-contain" onError={(event) => { event.currentTarget.style.display = 'none'; }} /></div>
@@ -1992,8 +2048,9 @@ const CardLibrary = () => {
                     <LibrarySelectionCheckbox selection={selection} id={card.id} name={card.name} />
                     <button
                       onClick={() => handleCardClick(card)}
-                      className={`library-item-row w-full text-left p-3 rounded-lg transition-all duration-200 border-l-4 ${getRarityBorderColor(card.rarity)}`}
+                      className={`library-review-row library-item-row w-full text-left p-3 rounded-lg transition-all duration-200 border-l-4 ${getRarityBorderColor(card.rarity)}`}
                     >
+                    <ReviewStatusCorner entity={card} entityType="card" />
                       <div className="flex items-center space-x-3">
                         {/* Картинка слева: без рамки, крупнее относительно строки */}
                         <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden">
@@ -2148,8 +2205,9 @@ const CardLibrary = () => {
                    onClick={() => handleEffectClick(effect)}
                     onMouseEnter={(e) => { setHoveredEffect(effect); placePreview(previewAnchor(e.currentTarget)); }}
                     onMouseLeave={leaveHover(() => setHoveredEffect(null))}
-                    className="library-entity-row w-full text-left p-3 rounded-lg transition-all duration-200"
+                    className="library-review-row library-entity-row w-full text-left p-3 rounded-lg transition-all duration-200"
                   >
+                    <ReviewStatusCorner entity={effect} entityType="effect" />
                     <div className="flex items-center space-x-3">
                       {/* Маленькая картинка слева */}
                       <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
@@ -2232,8 +2290,9 @@ const CardLibrary = () => {
                    onClick={() => handleActionClick(action)}
                     onMouseEnter={(e) => { setHoveredAction(action); placePreview(previewAnchor(e.currentTarget)); }}
                     onMouseLeave={leaveHover(() => setHoveredAction(null))}
-                    className="library-entity-row w-full text-left p-3 rounded-lg transition-all duration-200"
+                    className="library-review-row library-entity-row w-full text-left p-3 rounded-lg transition-all duration-200"
                   >
+                    <ReviewStatusCorner entity={action} entityType="action" />
                     <div className="flex items-center space-x-3">
                       {/* Маленькая картинка слева */}
                       <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
@@ -2327,8 +2386,9 @@ const CardLibrary = () => {
                         onClick={() => handleSpellClick(spell)}
                         onMouseEnter={(e) => { setHoveredSpell(spell); placePreview(previewAnchor(e.currentTarget)); }}
                         onMouseLeave={leaveHover(() => setHoveredSpell(null))}
-                        className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
+                        className="library-review-row w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                       >
+                    <ReviewStatusCorner entity={spell} entityType="spell" />
                         <div className="flex items-center space-x-3">
                           <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
                             <img
@@ -2407,8 +2467,9 @@ const CardLibrary = () => {
                  onClick={() => handleResourceClick(resource)}
                   onMouseEnter={(e) => { setHoveredResource(resource); placePreview(previewAnchor(e.currentTarget)); }}
                   onMouseLeave={leaveHover(() => setHoveredResource(null))}
-                  className="library-entity-row w-full text-left p-3 rounded-lg transition-all duration-200"
+                  className="library-review-row library-entity-row w-full text-left p-3 rounded-lg transition-all duration-200"
                 >
+                    <ReviewStatusCorner entity={resource} entityType="resource" />
                   <div className="flex items-center gap-3">
                     <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
                       <img
@@ -2471,8 +2532,9 @@ const CardLibrary = () => {
                         onClick={() => handleFeatClick(feat)}
                         onMouseEnter={(e) => { setHoveredFeat(feat); placePreview(previewAnchor(e.currentTarget)); }}
                         onMouseLeave={leaveHover(() => setHoveredFeat(null))}
-                        className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
+                        className="library-review-row w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                       >
+                    <ReviewStatusCorner entity={feat} entityType="feat" />
                         <div className="flex items-center space-x-3">
                           <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
                             <img src={feat.image_url && feat.image_url.trim() !== '' ? feat.image_url : '/default_image.png'} alt={feat.name} className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
@@ -2521,8 +2583,9 @@ const CardLibrary = () => {
                     onClick={() => handleBackgroundClick(bg)}
                     onMouseEnter={(e) => { setHoveredBackground(bg); placePreview(previewAnchor(e.currentTarget)); }}
                     onMouseLeave={leaveHover(() => setHoveredBackground(null))}
-                    className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
+                    className="library-review-row w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
+                    <ReviewStatusCorner entity={bg} entityType="background" />
                     <div className="flex items-center space-x-3">
                       <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
                         <img src={bg.image_url && bg.image_url.trim() !== '' ? bg.image_url : '/default_image.png'} alt={bg.name} className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
@@ -2596,8 +2659,9 @@ const CardLibrary = () => {
                     onClick={() => handleRaceClick(race)}
                     onMouseEnter={(e) => { setHoveredRace(race); placePreview(previewAnchor(e.currentTarget)); }}
                     onMouseLeave={leaveHover(() => setHoveredRace(null))}
-                    className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
+                    className="library-review-row w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
+                    <ReviewStatusCorner entity={race} entityType="race" />
                     <div className="flex items-center space-x-3">
                       <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
                         <img src={race.image_url && race.image_url.trim() !== '' ? race.image_url : '/default_image.png'} alt={race.name} className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
@@ -2620,8 +2684,9 @@ const CardLibrary = () => {
                     onClick={() => handleRaceClick(race)}
                     onMouseEnter={(e) => { setHoveredRace(race); placePreview(previewAnchor(e.currentTarget)); }}
                     onMouseLeave={leaveHover(() => setHoveredRace(null))}
-                    className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
+                    className="library-review-row w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
+                    <ReviewStatusCorner entity={race} entityType="race" />
                     <div className="flex items-center space-x-3">
                       <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
                         <img src={race.image_url && race.image_url.trim() !== '' ? race.image_url : '/default_image.png'} alt={race.name} className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = '/default_image.png'; }} />
@@ -2678,8 +2743,9 @@ const CardLibrary = () => {
                     onClick={() => handleClassClick(characterClass)}
                     onMouseEnter={(e) => { setHoveredClass(characterClass); placePreview(previewAnchor(e.currentTarget)); }}
                     onMouseLeave={leaveHover(() => setHoveredClass(null))}
-                    className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
+                    className="library-review-row w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
+                    <ReviewStatusCorner entity={characterClass} entityType="class" />
                     <div className="flex items-center space-x-3">
                       <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
                         <img
@@ -2709,8 +2775,9 @@ const CardLibrary = () => {
                     onClick={() => handleClassClick(characterClass)}
                     onMouseEnter={(e) => { setHoveredClass(characterClass); placePreview(previewAnchor(e.currentTarget)); }}
                     onMouseLeave={leaveHover(() => setHoveredClass(null))}
-                    className="w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
+                    className="library-review-row w-full text-left p-3 rounded-lg border border-[#8a7320] bg-gradient-to-br from-[#2b2520] to-[#191410] text-[#ece3d4] transition-all duration-200 hover:shadow-md hover:border-[#c9a227]"
                   >
+                    <ReviewStatusCorner entity={characterClass} entityType="class" />
                     <div className="flex items-center space-x-3">
                       <div className="flex-shrink-0 w-[55px] h-[55px] rounded overflow-hidden bg-transparent">
                         <img

@@ -26,7 +26,7 @@ const FeatDetailModal: React.FC<FeatDetailModalProps> = ({ feat, isOpen, onClose
 
   return (
     <EntityDetailShell
-      entity={{type:'feat',id:feat.id,author:feat.author}}
+      entity={{type:'feat',id:feat.id,author:feat.author,support:feat.support}}
       isOpen={isOpen}
       onClose={onClose}
       title={feat.name}

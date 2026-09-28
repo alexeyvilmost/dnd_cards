@@ -293,8 +293,8 @@ if ($Sha -ne $RemoteSha) {
 
 Он всегда проверяет diff и отсутствие известных секретов/dump-файлов в
 изменённых файлах. Для
-затронутого backend запускаются все Go-тесты; для frontend — изменённые тесты и
-три критических smoke-набора, lint только изменённых TypeScript-файлов,
+затронутого backend компилируются все пакеты и выполняются проверки авторизации
+и ручных статусов; для frontend — изменённые тесты и базовые smoke-наборы, lint только изменённых TypeScript-файлов,
 typecheck и production build. Worker проверяется только при его изменении.
 Coverage, полный Vitest и весь Playwright не дублируются перед каждой небольшой
 выкладкой.
@@ -305,12 +305,12 @@ Coverage, полный Vitest и весь Playwright не дублируются
 & scripts/release/quick-gate.ps1 -Full
 ```
 
-Он обязателен для изменений replay-critical ядра правил, схем сертификации,
-генераторов release evidence, инфраструктуры деплоя и перед крупным релизом.
-Для сертифицируемого релиза дополнительно используется полный
-`scripts/content/generate-micro-mvp-release-evidence.mjs` с изолированными
-PostgreSQL DSN. Финальный deployment-health gate этого сценария запускается уже
-после переключения production на новый SHA.
+Старые тесты конкретных сущностей, матрицы micro/mini-MVP и сертификаты
+больше не являются обязательным условием релиза. Они сохранены для ручного
+разбора и переработки. Автоматические CI и обычный gate их не запускают.
+Историческую диагностику можно явно запросить через `-LegacyEntityTests` и
+отдельные команды `test:micro:*` / `test:mini:*`; она не присваивает ручные статусы.
+Для изменений движка добавляются целевые тесты универсальных операций.
 
 ### 3. Создать архив ровно из commit и загрузить его
 
@@ -392,107 +392,15 @@ ssh -i $SshKey $Server "readlink -f /opt/bagofholding/current"
 /opt/bagofholding/releases/<SHA>
 ```
 
-### 6. Завершить вторую фазу: evidence и certification
+### 6. Проверить затронутый пользовательский сценарий
 
-Переключение контейнеров на exact SHA — только первая фаза релиза. Миграции
-могут намеренно отозвать старый `support`, поэтому зелёные health-check и SHA не
-означают, что production уже готов обслуживать сертифицированные правила.
-После изменения release identity такой deployment остаётся maintenance/release
-candidate и не считается закрытым production-релизом, пока общий composed
-readiness не станет зелёным. CI при этом только наблюдает и никогда не пишет
-сертификаты.
-Вторая фаза выполняется на неизменном SHA и в таком порядке:
-
-1. сформировать новый micro-MVP release-evidence artifact для этого deployed SHA
-   по процедуре из
-   [`micro-mvp-production-content-migration.md`](micro-mvp-production-content-migration.md);
-2. создать, проверить и атомарно применить micro-v4 certification bundle с тем
-   же evidence и `certified_at`;
-3. после проверки Forge evidence обновить только ещё не покрытые Forge-корни;
-4. выполнить общий read-only readiness predicate;
-5. только затем запускать production UX spine.
-
-Micro-v4 и Forge-v2 используют одно поле `support`. Поэтому Forge-инструмент
-никогда не заменяет валидный micro-v4 postimage текущего release/evidence:
-`--all` означает все оставшиеся корни, а не безусловную перезапись 72 строк.
-`--missing-only` выбирает исключительно `null`/отсутствующий `support`.
-Старый ненулевой сертификат с несовпавшим release или хэшами можно обновить
-только явно через `--all` либо `--card-number` после проверки evidence.
-
-Пример операторского хвоста из `frontend` (пути artifact и timestamp выбираются
-один раз на окно релиза; DSN и certification credentials берутся только из
-секретного хранилища):
-
-```powershell
-$env:MVP_CONTENT = '1'
-$env:VITE_API_URL = 'https://bagofholding.ru'
-$env:API_URL = 'https://bagofholding.ru'
-$CertifiedAt = '<UTC-RFC3339-certification-time>'
-$Evidence = '../backups/micro-mvp-production-release-evidence.json'
-$Bundle = '../backups/micro-mvp-production-certification.json'
-
-# Полный evidence gate с --source-commit и --expected-deployed-commit $Sha
-# выполняется по канонической процедуре micro-mvp-production-content-migration.md.
-
-npm run content:certify:micro -- `
-  --bundle $Bundle `
-  --evidence $Evidence `
-  --certified-at $CertifiedAt
-npm run content:certify:micro -- --apply `
-  --bundle $Bundle `
-  --evidence $Evidence `
-  --confirm-api https://bagofholding.ru `
-  --certified-at $CertifiedAt
-
-# Только после просмотра актуального Forge evidence этого же release.
-node ../scripts/content/mark-mini-mvp-forge-sheet-roots.mjs `
-  --apply --all --certified-at $CertifiedAt
-
-npm run test:production:certification-readiness
-```
-
-Последняя команда выполняет только GET: она требует 15 состояний БД, которые
-реальный runtime loader принимает для текущих compiled pins, и 72 Forge-корня,
-каждый из которых покрыт exact Forge-v2 либо более сильным current-release
-micro-v4 postimage из того же evidence apply. Она не логинится и ничего не
-сертифицирует автоматически.
-
-### 7. Пройти production UX spine до закрытия релиза
-
-Health-check подтверждает доступность контейнеров, но не пользовательский путь.
-Из `frontend` запустить однопользовательский canary с canary-учётной записью из
-секретного хранилища (не записывать пароль в репозиторий или shell history):
-
-```powershell
-$env:LIVE_BROWSER_CANARY = '1'
-$env:LIVE_BROWSER_BASE_URL = 'https://bagofholding.ru'
-$env:LIVE_BROWSER_API_URL = 'https://bagofholding.ru'
-$env:EXPECTED_DEPLOYED_COMMIT = $Sha
-$env:LIVE_BROWSER_USER_A = '<canary-user-from-secret-store>'
-$env:LIVE_BROWSER_PASSWORD_A = '<canary-password-from-secret-store>'
-
-Push-Location frontend
-npm run test:browser:live:typecheck
-npm run test:browser:live:nightly
-Pop-Location
-Remove-Item Env:LIVE_BROWSER_PASSWORD_A
-```
-
-Проверка создаёт и удаляет только своих временных персонажей. Она проходит три
-независимых пути: lineage + дальнобойная атака + реакция, martial + заклинание и
-полный заклинатель + world-domain spell. Каждый путь начинается с реальных
-контролов Кузни и проверяет наблюдаемый результат механики, а не только наличие
-кнопки. Красный canary означает незавершённый релиз и требует исправления либо
-отката; зелёные `/health` и `build-info.json` не могут его заменить. Тот же
-набор запускает `live-browser-spine` в GitHub Actions ночью и вручную с input
-`expected_deployed_commit`. Push в `main` также запускает этот job автоматически:
-после офлайн-гейта он до 45 минут ждёт появления exact SHA в production, затем
-ограниченное время повторяет **read-only** certification-readiness и только после
-него выполняет те же три пути. CI не получает certification credentials и не
-исправляет `support`: незавершённая вторая фаза оставляет job красным, а последний
-диагностический отчёт сохраняется рядом с browser artifacts. Поэтому невыкаченный
-SHA, несовпавший certificate release и выкаченный, но сломанный UX одинаково
-блокируют закрытие релиза.
+Проверить библиотеку, настройки и сохранение ручного статуса через обычный UI.
+При изменениях механик проверять соответствующий сценарий локально и выполнить
+пропорциональный production smoke после релиза. Старые entity certificates,
+composed certification readiness и production UX spine не являются release gate
+и автоматически не запускаются. Нельзя повторно сертифицировать каталог после
+миграции 274: поле `support` теперь хранит ручную проверку, старые значения
+сохранены отдельно в `content_review_support_archive`.
 
 После успешной проверки временный локальный каталог можно удалить:
 

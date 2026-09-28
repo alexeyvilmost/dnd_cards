@@ -1461,6 +1461,7 @@ func (ar ActionResources) Value() (driver.Value, error) {
 
 // ResourceDefinition — справочник ресурсов, которые тратят действия и механики.
 type ResourceDefinition struct {
+	Support     *JSONMap  `json:"support" gorm:"type:jsonb"`
 	ID          uuid.UUID `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Author      string    `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	ResourceID  string    `json:"resource_id" gorm:"uniqueIndex;not null;type:varchar(100)"`
@@ -1508,6 +1509,7 @@ type UpdateResourceRequest struct {
 // name + type + default_value; конкретные значения задают ЭФФЕКТЫ (add/set/remove),
 // привязанные к уровням класса. Доступна в формулах. См. docs/variables.md.
 type Variable struct {
+	Support      *JSONMap       `json:"support" gorm:"type:jsonb"`
 	ID           uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Author       string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	VariableID   string         `json:"variable_id" gorm:"uniqueIndex;not null;type:varchar(100)"` // slug для ссылок в формулах
@@ -1551,6 +1553,7 @@ type UpdateVariableRequest struct {
 // (напр. «Спасбросок»). На него ссылаются из текстов ([[label|concept:slug]]). Аналог
 // переменных: глобальный общий справочник (name + описание + иконка).
 type ConceptEntity struct {
+	Support     *JSONMap       `json:"support" gorm:"type:jsonb"`
 	ID          uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Author      string         `json:"author" gorm:"type:varchar(255);default:'Admin'"`
 	ConceptID   string         `json:"concept_id" gorm:"uniqueIndex;not null;type:varchar(100)"` // slug для ссылок

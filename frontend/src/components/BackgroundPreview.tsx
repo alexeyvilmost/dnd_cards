@@ -23,6 +23,8 @@ const BackgroundPreview: React.FC<BackgroundPreviewProps> = ({
 
   return (
     <Bg3Card
+      entityType="background"
+      entity={background}
       title={background.name || 'Название предыстории'}
       titleEn={background.name_en}
       subtype="Предыстория"
