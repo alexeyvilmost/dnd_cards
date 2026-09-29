@@ -1,3 +1,4 @@
+import {inherentWeaponBondRef} from './itemWeaponLifecycle';
 import { cardPropertyList } from '../utils/cardProperties';
 import type { WorldState, UncommittedRuleEvent } from './domain';
 import type { WorldObjectMutationEvent, WorldObjectState } from './worldObjects';
@@ -62,7 +63,7 @@ export function weaponBondRecallIssue(world: WorldState, actorId: string, choice
   const actor = world.actors[actorId];
   const object = world.objects[selected(choices,'weapon_bond_object') ?? ''];
   const hand = selected(choices,'weapon_bond_hand');
-  if (!actor || !hasWeaponBondPolicy(actor.passives) || activeConditionsOf(actor.runtime).has('incapacitated')) return 'Призыв связанного оружия недоступен';
+  if (!actor || (!hasWeaponBondPolicy(actor.passives)&&!(object?.itemCardId&&object.weaponBondActorId===actorId&&inherentWeaponBondRef(actor,object.itemCardId))) || activeConditionsOf(actor.runtime).has('incapacitated')) return 'Призыв связанного оружия недоступен';
   if (!object || object.weaponBondActorId !== actorId || !object.itemCardId) return 'Выберите своё связанное оружие';
   if ((object.planeId ?? 'material') !== (actor.planeId ?? 'material')) return 'Оружие находится на другом плане существования';
   if (hand !== 'main_hand' && hand !== 'off_hand') return 'Выберите свободную руку';

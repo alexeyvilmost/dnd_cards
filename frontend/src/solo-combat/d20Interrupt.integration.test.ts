@@ -16,6 +16,7 @@ import {
   createSoloCombatState,
   executeCombatAction,
   resolveD20Interrupt,
+  resolvePlayerSavingThrow,
   runMonsterTurn,
 } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
@@ -184,6 +185,36 @@ async function combat(kind: 'warding' | 'cutting', action = monsterAttack()) {
 }
 
 describe('persisted cross-actor d20 interrupts', () => {
+  it.each([{type:'force',amount:2},{type:'fire',amount:4}])('pays $type damage before reroll, preserving concentration and the paid continuation across reload',async cost=>{
+    const setup=await combat('warding');
+    setup.state.world.actors[setup.responderId].passives=[];
+    setup.state.controlledCharacterIds=[setup.targetId,setup.monsterId];
+    const actor=setup.state.world.actors[setup.monsterId],target=setup.state.world.actors[setup.targetId];
+    actor.passives=[{id:`blood-${cost.type}`,name:'Blood reroll',activation:{mode:'triggered',cost:[]},effects:[{resolution:'auto',result:[
+      {kind:'roll_influence',operation:'reroll_kept_d20',timing:'after_roll_before_outcome',eligible_rolls:['attack'],eligible_outcomes:['miss','crit_miss'],self_damage:cost},
+    ]}]},{effects:[{resolution:'auto',result:[{kind:'resistance',damage_type:cost.type,value:'resistance'}]}]}];
+    actor.runtime.activeEffects.push({id:'concentration-local',name:'Concentration',source:'Test',mechanics:{kind:'concentration',effectIds:[]}});
+    target.runtime.activeEffects.push({id:'concentration-link',name:'Linked',source:'Test',mechanics:{kind:'modifier',target:'ac',op:'add',value:0}});
+    setup.state.world.concentrations[actor.id]={id:'held-concentration',sourceActorId:actor.id,actionId:setup.action.id,startedAtRevision:0,effectLinks:[{actorId:target.id,effectId:'concentration-link'}]};
+    const beforeHp=actor.runtime.hp.current;
+    const pending=executeCombatAction({state:setup.state,actorId:actor.id,actionId:setup.action.id,targetIds:[target.id],rng:()=>0});
+    expect(pending.pendingD20Interrupt?.held?.roll.outcome).toBe('miss');
+    const paid=resolveD20Interrupt(pending,actor.id,()=>{throw Error('Damage must wait for canonical concentration decision');},`blood-${cost.type}`);
+    expect(paid.world.actors[actor.id].runtime.hp.current).toBe(beforeHp-cost.amount/2);
+    expect(paid.world.pendingResolution?.type).toBe('concentration_save');
+    expect(paid.pendingD20Interrupt).toBeUndefined();
+    expect(paid.pendingRollInfluenceResume?.pending.paidInfluence?.id).toBe(`blood-${cost.type}`);
+    const restored=readSoloCombatState(writeSoloCombatState({},paid),paid.characterId,paid.runtimeRevision)!;
+    const values=[.9,.1];let draws=0;
+    const final=resolvePlayerSavingThrow(restored,{kind:'roll',roll:{mode:'system'}},()=>{const value=values[draws++];if(value===undefined)throw Error('Extra RNG');return value;});
+    expect(draws).toBe(2);
+    expect(final.pendingRollInfluenceResume).toBeUndefined();
+    expect(final.pendingD20Interrupt).toBeUndefined();
+    expect(final.world.actors[actor.id].runtime.hp.current).toBe(beforeHp-cost.amount/2);
+    expect(final.world.actors[actor.id].runtime.resources.action).toBe(0);
+    expect(final.world.concentrations[actor.id]?.id).toBe('held-concentration');
+    expect(()=>resolveD20Interrupt(final,actor.id,()=>{throw Error('No replay');},`blood-${cost.type}`)).toThrow();
+  });
   it('uses a separate owner reaction to reroll another actor, keeping that actor action and dice transcript',async()=>{
     const setup=await combat('warding',monsterCheck());
     const owner=setup.state.world.actors[setup.responderId];
@@ -195,6 +226,57 @@ describe('persisted cross-actor d20 interrupts', () => {
     expect(settled.world.actors[setup.responderId].runtime.resources.reaction).toBe(0);
     expect(settled.world.actors[setup.monsterId].runtime.hp.temp).toBe(0);
     expect(settled.world.actors[setup.monsterId].runtime.resources.action).toBe(0);
+  });
+  it('persists a two-die damage roll and rerolls every die before committing damage',async()=>{
+    const action=monsterAttack();
+    ((action.mechanics!.effects) as Record<string,unknown>[])[0].on_hit=[{kind:'damage',dice:'2d6',ability:'str',type:'slashing'}];
+    const setup=await combat('warding',action);
+    const owner=setup.state.world.actors[setup.responderId];
+    owner.passives=[{id:'any-die-reaction',name:'Any die',activation:{mode:'triggered',cost:[{resource:'reaction',amount:1}]},
+      effects:[{resolution:'auto',result:[{kind:'roll_influence',operation:'reroll_roll',timing:'after_roll_before_outcome',
+        eligible_rolls:['damage'],affects:'any',once_per_turn:'any-die'}]}]}];
+    expect(validateMechanics(owner.passives[0] as Record<string,unknown>,{id:'any-die-reaction',name:'Any die',kind:'action'}).valid).toBe(true);
+    const before=setup.state.world.actors[setup.targetId].runtime.hp.current;
+    const held=executeCombatAction({state:setup.state,actorId:setup.monsterId,actionId:action.id,targetIds:[setup.targetId],rng:()=>.75});
+    expect(held.pendingD20Interrupt?.held).toMatchObject({kind:'damage',targetId:setup.targetId,
+      roll:{kind:'damage',dice:[{sides:6,result:5,drawOrdinal:1},{sides:6,result:5,drawOrdinal:2}]}});
+    expect(held.world.actors[setup.targetId].runtime.hp.current).toBe(before);
+    const restored=readSoloCombatState(writeSoloCombatState({},held),held.characterId,held.runtimeRevision)!;
+    const effectId=restored.pendingD20Interrupt!.responders[0].effectId;
+    const settled=resolveD20Interrupt(restored,setup.responderId,()=>0,effectId);
+    expect(settled.pendingD20Interrupt).toBeUndefined();
+    expect(settled.world.actors[setup.responderId].runtime.resources.reaction).toBe(0);
+    expect(settled.world.actors[setup.targetId].runtime.hp.current).toBe(before-2);
+    expect(settled.log.some(entry=>entry.text.includes('к6 → 1, к6 → 1'))).toBe(true);
+    expect(()=>resolveD20Interrupt(settled,setup.responderId,()=>0,effectId)).toThrow();
+  });
+  it('uses the same data-owned reroll for a healing-only action with a different die',async()=>{
+    const action=monsterCheck();
+    action.mechanics!.effects=[{resolution:'auto',who:'self',result:[{kind:'healing',amount:'1d8'}]}];
+    const setup=await combat('warding',action);
+    setup.state.world.actors[setup.responderId].passives=[];
+    const healer=setup.state.world.actors[setup.monsterId];
+    healer.runtime.hp.current=10;
+    setup.state.controlledCharacterIds=[setup.targetId,setup.monsterId];
+    healer.passives=[{id:'heal-die-reaction',name:'Healing die',activation:{mode:'triggered',cost:[{resource:'reaction',amount:1}]},
+      effects:[{resolution:'auto',result:[{kind:'roll_influence',operation:'reroll_roll',timing:'after_roll_before_outcome',eligible_rolls:['healing'],once_per_turn:'heal-die'}]}]}];
+    const held=executeCombatAction({state:setup.state,actorId:healer.id,actionId:action.id,targetIds:[healer.id],rng:()=>.9});
+    expect(held.pendingD20Interrupt?.held).toMatchObject({kind:'healing',roll:{dice:[{sides:8,result:8,drawOrdinal:0}]}});
+    expect(held.world.actors[healer.id].runtime.hp.current).toBe(10);
+    const effectId=held.pendingD20Interrupt!.responders[0].effectId;
+    const settled=resolveD20Interrupt(clone(held),healer.id,()=>0,effectId);
+    expect(settled.world.actors[healer.id].runtime.hp.current).toBe(11);
+    expect(settled.world.actors[healer.id].runtime.resources.reaction).toBe(0);
+  });
+  it('resolves an outcome-changing d20 interrupt before offering the damage dice',async()=>{
+    const setup=await combat('cutting');
+    const owner=setup.state.world.actors[setup.responderId];
+    owner.passives!.push({id:'later-damage-reroll',name:'Later damage',activation:{mode:'triggered',cost:[]},
+      effects:[{resolution:'auto',result:[{kind:'roll_influence',operation:'reroll_roll',timing:'after_roll_before_outcome',eligible_rolls:['damage'],affects:'any'}]}]});
+    const held=executeCombatAction({state:setup.state,actorId:setup.monsterId,actionId:setup.action.id,targetIds:[setup.targetId],rng:()=>.75});
+    expect(held.pendingD20Interrupt?.operation).toBe('subtract_die');
+    const afterDecline=resolveD20Interrupt(held,null,()=>{throw Error('The saved attack/damage dice must replay');});
+    expect(afterDecline.pendingD20Interrupt?.held?.kind).toBe('damage');
   });
   it('holds item choices before any dice, persists their authority and replays the same check after a reroll offer',async()=>{
     const setup=await combat('cutting',monsterCheck());

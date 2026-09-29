@@ -1,6 +1,19 @@
+import {movementEffectExpiryEvents} from './movementEffectExpiry';
+import {FACING_DIRECTIONS,FACING_LABELS,facingToward,type CombatFacing} from './facing';
+import {illuminationAt} from './combatIllumination';
+import {teleportDestinationIssue} from '../rules-core/teleportDestination';
+import {antimagicAt,magicAreaSuppressed} from './combatAntimagic';
+import {isMagicalMechanics} from '../engine/magic';
+import {emitEvent} from '../engine/execute';
 import {actorFootprint} from './footprint';
+import {recordTurnMovement} from '../engine/eventOccurrence';
+import {preventsForcedMovement} from '../engine/itemDefensePolicies';
+import {actorLongJumpFt} from './jump';
 import {boardCells, boardDimensions, terrainStepFits} from './boardGeometry';
 import {emptyDeathSaves} from '../engine/deathSaves';
+import {actorHasConsciousVitality, actorIsDead} from '../engine/lifePolicies';
+import {endEncounter} from '../engine/encounter';
+import {collectAuraExecutions, projectCombatAuras} from './combatAuras';
 import {applyHealing} from '../engine/hp';
 import {settleJourneyAuras} from '../engine/journeyAuras';
 import {shouldShowSoloCombatOutcome} from './outcomeVisibility';
@@ -14,11 +27,12 @@ import {telekineticObjectIssue} from '../rules-core/telekineticMovement';
 import {heldItemDropIssue} from '../engine/heldItemDrop';
 import {heldItemRequirementIssue,activeEffectRequirementIssue} from '../engine/actionRequirements';
 import type {EngineEvent, RollD20Options} from '../mvp/contracts';
-import {collectRollModifiers} from '../engine/modifiers';
+import {collectRollModifiers,foldModifiers} from '../engine/modifiers';
 import {activeConditionsOf} from '../engine/circumstances';
 import {rollD20} from '../engine/roll';
 import {drawDie, type DieAwareRandomSource} from '../engine/random';
-import {availableRollInfluences, spendRollInfluence, withD20Replacement, withD20Influences, applyInfluenceConsequences, type InfluenceRollKind, type InfluenceContext, type RollInfluence} from '../engine/rollInfluence';
+import {withDieReplacement, type DieReplacement} from '../engine/dieReplacement';
+import {availableRollInfluences, spendRollInfluence, rollInfluenceSelfDamage, withD20Replacement, withD20Influences, applyInfluenceConsequences, type InfluenceRollKind, type InfluenceContext, type RollInfluence} from '../engine/rollInfluence';
 import {conditionGrantedActions} from '../engine/conditionActions';
 import {rollEvent} from '../engine/events';
 import {availableCheckManeuvers, prepareCheckManeuver} from '../character/checkManeuvers';
@@ -99,6 +113,7 @@ import {
 } from './tacticalGrid';
 import {
   createCombatArea,
+  settleCombatAreaDamage,
   areaContains,
   decrementSourceAreas,
   enteredAndExitedAreas,
@@ -145,6 +160,7 @@ import {
 } from '../rules-core/generalFeatReactionRuntime';
 import { collectSoloCombatActionChoices, projectSoloCombatActionChoices, UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
 import { materializeOwnedSummon, reconcileOwnedSummons } from './ownedSummons';
+import {materializeItemOwnedActors,syncItemOwnedActorTokens} from './itemOwnedActors';
 
 type Rng = () => number;
 type CombatActionInput = {
@@ -477,6 +493,12 @@ function teleportRangeFt(action: RuleActionDefinition): number | null {
   return visit(action.mechanics.effects);
 }
 
+function commitMovementEffectExpiry(before:SoloCombatState,after:SoloCombatState):SoloCombatState {
+  const events=movementEffectExpiryEvents(before,after);if(!events.length)return after;
+  const next={...after,world:foldEvents(after.world,events)};
+  return appendLog(next,events[0].sourceActorId,'Эффекты прекращены после перемещения',projectCombatLogRecords(events));
+}
+
 function applyActionTeleport(
   before: SoloCombatState,
   after: SoloCombatState,
@@ -516,7 +538,7 @@ function applyActionTeleport(
     boardRevision: after.boardRevision + 1,
     log,
   };
-  return reanchorSourceCombatAreas(moved, actorId);
+  return commitMovementEffectExpiry(before,reanchorSourceCombatAreas(moved, actorId));
 }
 
 function actorHoldsWeaponOrShield(actor: ActorState): boolean {
@@ -687,9 +709,10 @@ function applyForcedMovement(
       && envelope.payload.event.type === 'movement'
       && (envelope.payload.event.mode === 'push' || envelope.payload.event.mode === 'pull')
       ? {
-        sourceActorId: envelope.payload.actorId,
-        targetIds: envelope.payload.targetIds,
+        sourceActorId: envelope.payload.event.relativeToActorId??envelope.payload.actorId,
+        targetIds: envelope.payload.event.recipientActorId?[envelope.payload.event.recipientActorId]:envelope.payload.targetIds,
         distanceFt: envelope.payload.event.distanceFt,
+        direction:envelope.payload.event.direction,
         mode: envelope.payload.event.mode,
       }
       : envelope.payload.type === 'ShoveApplied' && envelope.payload.outcome === 'push_5ft'
@@ -703,11 +726,14 @@ function applyForcedMovement(
     if (!forced) continue;
     const source = tokens[forced.sourceActorId]?.position;
     for (const targetId of forced.targetIds) {
+      const recipient=state.world.actors[targetId];
+      if(recipient&&preventsForcedMovement(recipient.runtime,recipient.passives??[],recipient.character))continue;
       const target = tokens[targetId]?.position;
-      if (!source || !target) continue;
+      if (!target || (!source&&!forced.direction)) continue;
+      const origin=forced.direction?{x:target.x-forced.direction.x,y:target.y-forced.direction.y}:source!;
       const position = (forced.mode === 'pull' ? pullToward : pushAway)({
         board: state,
-        source, target, distanceFt: forced.distanceFt,
+        source:origin, target, distanceFt: forced.distanceFt,
         occupied: occupiedPositions({ ...state, tokens }, targetId),
         targetSize: actorFootprint(state.world.actors[targetId], state),
       });
@@ -721,27 +747,26 @@ function applyForcedMovement(
   if (!changed) return state;
   let next = { ...state, tokens, boardRevision: state.boardRevision + 1 };
   for (const actorId of movedActorIds) next = interruptStraightMovement(reanchorSourceCombatAreas(next, actorId), actorId);
-  return next;
+  return commitMovementEffectExpiry(state,next);
 }
 
 function outcome(state: SoloCombatState): SoloCombatState {
   const partyIds = controlledCharacterIds(state);
-  const lastDamaged=partyIds.every(id=>(state.world.actors[id]?.runtime.hp.current??0)===0)?[...state.log].reverse().flatMap(entry=>[...(entry.records??[])].reverse())
+  const lastDamaged=partyIds.every(id=>!actorHasConsciousVitality(state.world.actors[id]))?[...state.log].reverse().flatMap(entry=>[...(entry.records??[])].reverse())
     .find(record=>record.event?.type==='damage'&&partyIds.includes(record.actorId))?.actorId:undefined;
   const survival=settleJourneyAuras(state.world,partyIds,'last_conscious',()=>{throw Error('Survival must not roll');},lastDamaged);
   if(survival.world!==state.world){state={...state,world:survival.world};for(const record of survival.records)state=appendLog(state,record.actorId,record.source,record.events.map((event,ordinal)=>({kind:'engine',ordinal,sourceActorId:record.actorId,actorId:record.actorId,targetIds:[record.actorId],event})));}
   if (partyIds.some(id => {
     const actor = state.world.actors[id];
-    return actor?.runtime.deathSaves?.dead || (actor?.runtime.deathSaves?.failures ?? 0) >= 3
-      || actor?.lifecycle?.status === 'dead';
+    return actorIsDead(actor);
   })) return {...state, outcome: 'defeat'};
   const livingOpponent = Object.values(state.world.actors).some((actor) => (
-    actor.runtime.hp.current > 0
+    actorHasConsciousVitality(actor)
       && combatRelation(state, state.characterId, actor.id) === 'enemy'
   ));
   if (!livingOpponent) return {...state, outcome: 'victory'};
   const livingPlayer = partyIds.some((actorId) => (
-    (state.world.actors[actorId]?.runtime.hp.current ?? 0) > 0
+    actorHasConsciousVitality(state.world.actors[actorId])
       || (state.deathSavesVersion===1 && Boolean(state.world.actors[actorId])
         && !state.world.actors[actorId].runtime.deathSaves?.dead
         && !state.world.actors[actorId].runtime.deathSaves?.stable)
@@ -757,11 +782,18 @@ export function finalizeCombatOutcome(state: SoloCombatState, rng?:()=>number): 
   let next = state.outcome === 'active' ? outcome(state) : state;
   if (!shouldShowSoloCombatOutcome(next) || next.pendingD20Interrupt || next.pendingAdditionalMovement
     || next.pendingCombatAreaTriggers?.length || next.pendingCombatAreaTurnContinuation) return next;
+  for(const [id,actor] of Object.entries(next.world.actors)){
+    let ordinal=0;
+    const result=endEncounter(actor.runtime,{character:actor.character,selfId:id,passives:actor.passives??[],grantedEffects:actor.grantedEffects,
+      rng:rng??(()=>{throw Error('Encounter aftermath requires authoritative RNG');}),nextId:()=>`${next.world.id}:encounter-end:${next.world.revision}:${id}:${ordinal++}`});
+    if(result.state===actor.runtime)continue;
+    next={...next,world:{...next.world,actors:{...next.world.actors,[id]:{...actor,runtime:result.state}}}};
+    if(result.events.length)next=appendLog(next,id,'Завершение боя',result.events.map((event,ordinal)=>({kind:'engine',ordinal,sourceActorId:id,actorId:id,targetIds:[id],event})));
+  }
   for (const id of controlledCharacterIds(next)) {
     const actor = next.world.actors[id];
     if (!actor || actor.runtime.hp.current !== 0 || actor.runtime.hp.max < 1
-      || actor.runtime.deathSaves?.dead || (actor.runtime.deathSaves?.failures ?? 0) >= 3
-      || actor.lifecycle?.status === 'dead') continue;
+      || actorIsDead(actor)) continue;
     const healed = applyHealing(actor.runtime, 1);
     const runtime = {...healed.state, deathSaves: emptyDeathSaves(),
       firedThisTurn: (actor.runtime.firedThisTurn ?? []).filter(flag => flag !== 'system:death-save-due')};
@@ -959,7 +991,7 @@ function transitionState(
   emptySummary?: string,
 ): SoloCombatState {
   const records = projectCombatLogRecords(rawEvents);
-  let next = reconcileMovementForSpeedChanges(state, nextWorld);
+  let next = settleCombatAreaDamage(reconcileMovementForSpeedChanges(state, nextWorld),rawEvents);
   next = reconcileSummonedActorProjection(next, nextWorld);
   next = reconcileOwnedSummons(next);
   const positionedObjects = next.worldObjectPositions ?? {};
@@ -971,6 +1003,14 @@ function transitionState(
   }
   for(const envelope of rawEvents){
     const payload=envelope.payload;
+    if(payload.type==='EngineEventRecorded'&&payload.event.type==='world_interaction'&&['thrown_weapon','deployed_item_position'].includes(payload.event.operation)){
+      const {objectId,returned,targetActorId}=payload.event.parameters;
+      const position=typeof targetActorId==='string'?state.tokens[targetActorId]?.position:undefined;
+      if(typeof objectId==='string'){
+        const positions={...next.worldObjectPositions};if(returned===true)delete positions[objectId];else if(position)positions[objectId]={...position};
+        next={...next,worldObjectPositions:positions,boardRevision:next.boardRevision+1};
+      }
+    }
     if(payload.type!=='WorldObjectMutationRecorded')continue;
     const event=payload.event;
     const dropped=event.type==='WorldObjectCreated'&&event.object.tags?.includes('held_item_dropped')?event.object:
@@ -983,6 +1023,10 @@ function transitionState(
   for (const envelope of rawEvents) {
     if (envelope.payload.type !== 'EngineEventRecorded') continue;
     const event = envelope.payload.event;
+    if(event.type==='resource_spent'&&event.resource==='movement'&&event.amount>0){
+      const id=envelope.payload.actorId;
+      next=withMovementBudget(next,id,signedMovementBudget(next,id,effectiveCombatActorSpeedFt(next,id))-event.amount);
+    }
     if (event.type !== 'movement' || event.mode !== 'additional') continue;
     const moverId = envelope.payload.actorId;
     const speed = effectiveCombatActorSpeedFt(next, moverId);
@@ -992,6 +1036,8 @@ function transitionState(
         pendingCombatAreaTriggers, pendingCombatAreaTurnContinuation, ...ready} = next;
       next = {...ready, pendingAdditionalMovement: {actorId: moverId, remainingFt,
         provokeOpportunityAttacks: event.provokeOpportunityAttacks !== false,
+        ...(event.traversal ? {traversal:event.traversal} : {}),
+        ...(event.onArrival ? {onArrival:event.onArrival,sourceId:label} : {}),
         interrupted: {
           ...(playerMovement ? {playerMovement} : {}),
           ...(pendingMovementStep ? {pendingMovementStep} : {}),
@@ -1012,26 +1058,66 @@ function transitionState(
   return outcome(removeInactiveCombatAreas(next));
 }
 
+/** Movement observations are committed with the tactical move and serialized runtime.
+ * Only a transition from positive allowance to exhausted can produce this event. */
+function movementExhausted(before:SoloCombatState,after:SoloCombatState,actorId:string,rng:Rng):SoloCombatState {
+  if(signedMovementBudget(before,actorId,effectiveCombatActorSpeedFt(before,actorId))<=0
+    ||signedMovementBudget(after,actorId,effectiveCombatActorSpeedFt(after,actorId))>0)return after;
+  const actor=after.world.actors[actorId];if(!actor)return after;
+  const events:EngineEvent[]=[];
+  const runtime=emitEvent({kind:'movement_exhausted',source:'self',data:{eventId:`movement:${after.boardRevision}:${after.world.revision}:${actorId}`}},actor.runtime,
+    {selfId:actorId,character:actor.character,passives:actor.passives??[],rng,grantedEffects:actor.grantedEffects},events,[],{mutated:false},[],true);
+  if(runtime===actor.runtime&&!events.length)return after;
+  const world={...after.world,actors:{...after.world.actors,[actorId]:{...actor,runtime}}};
+  const next={...reconcileMovementForSpeedChanges(after,world),world};
+  return events.length?appendLog(next,actorId,'Перемещение исчерпано',events.map((event,ordinal)=>({kind:'engine',ordinal,actorId,sourceActorId:actorId,targetIds:[],event}))):next;
+}
+
+function mirrorTacticalMovement(projected:SoloCombatState):SoloCombatState{
+ return {...projected,world:{...projected.world,actors:Object.fromEntries(Object.entries(projected.world.actors).map(([id,actor])=>{
+    const remaining=Math.max(0,signedMovementBudget(projected,id,effectiveCombatActorSpeedFt(projected,id)));
+    return [id,{...actor,runtime:{...actor.runtime,resources:{...actor.runtime.resources,movement:remaining},
+      maxResources:{...actor.runtime.maxResources,movement:Math.max(remaining,effectiveCombatActorSpeedFt(projected,id))}}}];
+  }))}};
+}
+
 function dispatch(input: {
   state: SoloCombatState;
   command: GameCommand;
   rng: Rng;
   label: string;
   emptySummary?: string;
+  extraHazards?: readonly RuleHazardDefinition[];
 }): SoloCombatState {
+  const projected = projectCombatAuras(syncItemOwnedActorTokens(input.state));
+  const prepared=mirrorTacticalMovement(projected);
   const session = new InMemoryRulesSession(
-    input.state.world,
-    buildCatalog(input.state.catalogActions, hazardCatalog(input.state)), {
+    prepared.world,
+    buildCatalog(prepared.catalogActions, [...hazardCatalog(prepared), ...(input.extraHazards ?? [])]), {
     rng: input.rng,
     clock: createLogicalClock(input.state.world.logicalClock),
     nextId: createSequentialIdFactory(`solo:${input.command.commandId}`),
   });
   const result = session.dispatch(input.command);
   if (result.status === 'rejected') throw new Error(`${result.code}: ${result.message}`);
-  return transitionState(
-    input.state, input.command.actorId, input.label,
-    session.getState(), session.getEvents(), input.emptySummary,
-  );
+  let transitioned=transitionState(prepared,input.command.actorId,input.label,session.getState(),session.getEvents(),input.emptySummary);
+  const paidMovement=new Set(session.getEvents().flatMap(envelope=>envelope.payload.type==='EngineEventRecorded'&&envelope.payload.event.type==='resource_spent'&&envelope.payload.event.resource==='movement'?[envelope.payload.actorId]:[]));
+  for(const actorId of paidMovement)transitioned=movementExhausted(prepared,transitioned,actorId,input.rng);
+  return projectCombatAuras(syncItemOwnedActorTokens(transitioned));
+}
+
+export function runCombatAuraLifecycle(state: SoloCombatState, event: 'turn_start' | 'turn_end', sourceActorId: string, rng: Rng): SoloCombatState {
+  if (state.world.scene.mode !== 'encounter') return state;
+  let next = projectCombatAuras(state);
+  const turnKey = `${state.world.scene.round}:${sourceActorId}:${event}`;
+  for (const execution of collectAuraExecutions(next, event, sourceActorId)) {
+    const key = `${execution.hazard.id}:${execution.targetActorId}`;
+    if (next.auraLifecycleReceipts?.[key] === turnKey) continue;
+    next = dispatch({ state: next, command: { ...commandBase(next, execution.targetActorId), type: 'TriggerHazard',
+      hazardId: execution.hazard.id, targetActorId: execution.targetActorId }, rng, label: execution.hazard.name, extraHazards: [execution.hazard] });
+    next = { ...next, auraLifecycleReceipts: { ...next.auraLifecycleReceipts, [key]: turnKey } };
+  }
+  return next;
 }
 
 function commandBase(state: SoloCombatState, actorId: string) {
@@ -1044,20 +1130,27 @@ function commandBase(state: SoloCombatState, actorId: string) {
   };
 }
 
-function selectedSpellDeclaration(world: WorldState, actorId: string, action: RuleActionDefinition) {
+function selectedSpellDeclaration(world: WorldState, actorId: string, action: RuleActionDefinition,choices:Readonly<Record<string,readonly string[]>>={}) {
   if (action.kind !== 'spell') return undefined;
+  const parentId=action.mechanics.variant_of_spell_id;
+  const sourceId=action.sourceEntityIds[0];
+  const accessActionId=typeof parentId==='string'?`${parentId}${action.id.startsWith(sourceId)?action.id.slice(sourceId.length):''}`:action.id;
+  const chosenLevel=choices.spell_cast_level;
+  if(chosenLevel!==undefined&&(chosenLevel.length!==1||!Number.isSafeInteger(Number(chosenLevel[0]))))throw Error('Выберите один уровень заклинания');
+  const requestedLevel=chosenLevel===undefined?undefined:Number(chosenLevel[0]);
   const actor = world.actors[actorId];
   const access = actor.spellcastingAccess;
-  const grants = access?.grants.filter((candidate) => candidate.actionId === action.id) ?? [];
+  const grants = access?.grants.filter((candidate) => candidate.actionId === accessActionId) ?? [];
   const options = grants.flatMap((grant) => {
     if (!access) return [];
     const resolved = resolveSpellAccess({
       state: access,
-      actionId: action.id,
+      actionId: accessActionId,
       grantId: grant.grantId,
       mode: 'normal',
       resources: actor.runtime.resources,
       preferFreeUse: true,
+      ...(requestedLevel!==undefined?{castLevel:requestedLevel}:{}),
     });
     return resolved.status === 'allowed' ? [{ grant, payment: resolved.payment }] : [];
   }).sort((left, right) => {
@@ -1072,7 +1165,7 @@ function selectedSpellDeclaration(world: WorldState, actorId: string, action: Ru
   return {
     grantId: selected.grant.grantId,
     mode: 'normal' as const,
-    castLevel: paidLevel === undefined ? action.spell.level : Number(paidLevel),
+    castLevel: requestedLevel??(paidLevel === undefined ? action.spell.level : Number(paidLevel)),
     ...(selected.payment.kind === 'free_use' ? { preferFreeUse: true } : {}),
     ...(selected.payment.kind === 'slot' ? { preferFreeUse: false } : {}),
   };
@@ -1104,6 +1197,9 @@ function declarationFor(
   const factsByTarget = Object.fromEntries(targetIds.map((targetId) => [
     targetId, {
       ...spatialFacts(state, actorId, targetId),
+      ...(targetIds[0] && targetId !== targetIds[0] && state.tokens[targetIds[0]] && state.tokens[targetId]
+        ? {distanceToFirstTargetFt: gridDistanceFt(state.tokens[targetIds[0]].position, state.tokens[targetId].position)}
+        : {}),
       ...(areaOrigin ? {
         areaDelivery,
         lineOfSight:!areaPointSight(state,actorId,areaOrigin,state.tokens[targetId].position,targetId).blocked,
@@ -1118,18 +1214,20 @@ function declarationFor(
     },
   ]));
   const primaryTargetId = targetIds[0];
-  const protectionCandidates = primaryTargetId
-    ? Object.values(state.world.actors)
+  const protectionCandidatesFor = (targetId:string) => Object.values(state.world.actors)
       .filter((candidate) => candidate.capabilities.featureSources?.[PROTECTION_REACTION_CAPABILITY])
       .map((candidate) => ({
         factsSource: 'board' as const,
         boardRevision: state.boardRevision,
         protectorActorId: candidate.id,
         protectorCanSeeAttacker: true,
-        protectorDistanceToTargetFt: actorDistanceFt(state, candidate.id, primaryTargetId),
-      }))
-    : [];
-  const choices = projectSoloCombatActionChoices(action, suppliedChoices);
+        protectorDistanceToTargetFt: actorDistanceFt(state, candidate.id, targetId),
+      }));
+  const protectionCandidates = primaryTargetId ? protectionCandidatesFor(primaryTargetId) : [];
+  const protectionCandidatesByTarget = targetIds.length > 1
+    ? Object.fromEntries([...new Set(targetIds)].map(targetId => [targetId,protectionCandidatesFor(targetId)]))
+    : undefined;
+  const choices = projectSoloCombatActionChoices(action,Object.fromEntries(Object.entries(suppliedChoices).filter(([key])=>key!=='spell_cast_level')));
   if (primitive === 'magic_missile' && targetIds.length) {
     const policy = (action.mechanics.primitive as Record<string, unknown>).policy as Record<string, unknown>;
     const count = Number(policy?.base_dart_count ?? 3);
@@ -1161,7 +1259,8 @@ function declarationFor(
   return {
     sceneMode: 'encounter', targetIds, factsByTarget,
     ...(protectionCandidates.length ? { protectionCandidates } : {}),
-    ...(action.kind === 'spell' ? { spell: selectedSpellDeclaration(state.world, actorId, action) } : {}),
+    ...(protectionCandidatesByTarget ? {protectionCandidatesByTarget} : {}),
+    ...(action.kind === 'spell' ? { spell: selectedSpellDeclaration(state.world, actorId, action,suppliedChoices) } : {}),
     ...(Object.keys(choices).length ? { choices } : {}),
     ...(primitive === 'burning_hands_objects' || primitive === 'area_object_push'
       ? { worldInput: { type: 'area_objects', factsByObject: {} } as const }
@@ -1192,7 +1291,7 @@ function sheetSession(state: SoloCombatState, actorId: string): SheetCombatSessi
       ...state.monsterActionIds,
     },
     resourceBindingsByActor,
-    world: state.world,
+    world: mirrorTacticalMovement(state).world,
     catalog,
   };
 }
@@ -1229,7 +1328,7 @@ function d20InterruptCapabilities(
 ): D20InterruptCapability[] {
   return Object.values(state.world.actors).flatMap((actor) => {
     if (actor.id === sourceActorId || !isControlledCharacter(state, actor.id)
-      || actor.runtime.hp.current <= 0
+      || !actorHasConsciousVitality(actor)
       || deniedCapabilities(actor.runtime, actor.passives ?? []).has('reaction')) return [];
     return (actor.passives ?? []).flatMap((mechanics) => {
       const activation = mechanics.activation as Record<string, unknown> | undefined;
@@ -1301,9 +1400,14 @@ function serializableCombatCommand(input: CombatActionInput): PendingD20Interrup
   });
 }
 
-function recordedRng(source: Rng): { rng: Rng; values: number[] } {
+function recordedRng(source: Rng): { rng: Rng; values: number[]; draws: Array<{ordinal:number; randomIndex:number; sides:number; result:number}> } {
   const values: number[] = [];
+  const draws: Array<{ordinal:number; randomIndex:number; sides:number; result:number}> = [];
   const rng: DieAwareRandomSource = () => { const value = source(); values.push(value); return value; };
+  rng.onDieDraw = (sides,result) => {
+    rng.lastDieDrawOrdinal=draws.length;
+    draws.push({ordinal:draws.length,randomIndex:values.length-1,sides,result});
+  };
   rng.inspectD20 = (source as DieAwareRandomSource).inspectD20;
   rng.transformD20 = (source as DieAwareRandomSource).transformD20;
   rng.rerollD20 = (source as DieAwareRandomSource).rerollD20;
@@ -1311,14 +1415,25 @@ function recordedRng(source: Rng): { rng: Rng; values: number[] } {
   if ((source as DieAwareRandomSource).rollDie) rng.rollDie = sides => {
     const die = drawDie(source, sides); values.push((die - .5) / sides); return die;
   };
-  return {rng, values};
+  return {rng, values, draws};
 }
 
 function heldRollIn(state: SoloCombatState, before: SoloCombatState, actorId: string) {
+  return heldRollCandidates(state,before,actorId)
+    .map(row=>row.roll)
+    .find(roll => roll.dice.some(die => die.sides === 20 && !die.discarded));
+}
+
+function heldRollCandidates(state:SoloCombatState,before:SoloCombatState,actorId:string) {
+  let attackSlotIndex = 0;
   return combatLogSince(state, combatLogCursor(before)).flatMap(entry => entry.records ?? [])
     .filter(record => record.actorId === actorId || record.sourceActorId === actorId)
-    .flatMap(record => record.event?.type === 'roll' ? [record.event.roll] : [])
-    .find(roll => roll.dice.some(die => die.sides === 20 && !die.discarded));
+    .flatMap(record => record.event && 'roll' in record.event && record.event.roll
+      ? [{roll:record.event.roll,targetId:record.targetIds[0]}] : [])
+    .map(({roll,targetId},index)=>({roll,targetId,index,
+      ...(roll.kind==='d20' ? {attackSlotIndex: ++attackSlotIndex} : {}),
+      kind:roll.kind==='d20'?'attack' as const
+      :roll.kind==='check'?'check' as const:roll.kind==='save'?'save' as const:roll.kind}));
 }
 
 export function combatRollInfluences(state: SoloCombatState, actorId: string, kind: InfluenceRollKind, roll?: import('../mvp/contracts').RollLog, context: InfluenceContext = {}) {
@@ -1328,7 +1443,7 @@ export function combatRollInfluences(state: SoloCombatState, actorId: string, ki
     ? availableRollInfluences(actor.runtime, actor.passives ?? [], kind, roll, {...context,character:actor.character}) : [];
   if (!context.allowOtherActors || context.timing === 'before_roll') return own;
   const others = Object.values(state.world.actors).flatMap(candidate => candidate.id !== actorId
-    && isControlledCharacter(state,candidate.id) && candidate.runtime.hp.current > 0
+    && isControlledCharacter(state,candidate.id) && actorHasConsciousVitality(candidate)
     ? availableRollInfluences(candidate.runtime,candidate.passives ?? [],kind,roll,{...context,character:candidate.character,otherActorRoll:true})
       .map(influence=>({...influence,id:`${candidate.id}::${influence.id}`,ownerId:candidate.id})) : []);
   return [...own,...others];
@@ -1339,6 +1454,7 @@ function actionInfluenceContext(action: RuleActionDefinition, actor?: ActorState
     && ['attack_roll','ability_check'].includes(String((row as Record<string,unknown>).resolution))) as Record<string,unknown> | undefined;
   const weapon = action.mechanics.weapon_profile as Record<string,unknown> | undefined;
   return {allowOtherActors:true,ability: typeof effect?.ability === 'string' ? effect.ability : undefined,
+    skill: typeof effect?.skill === 'string' ? effect.skill : undefined,
     weaponId: typeof weapon?.card_id === 'string' ? weapon.card_id : typeof action.mechanics.requires_held_item === 'string' ? action.mechanics.requires_held_item
       : effect?.attack_kind === 'weapon_melee' || effect?.attack_kind === 'weapon_ranged' ? actor?.runtime.equipment[Array.isArray(effect.tags) && effect.tags.includes('off_hand') ? 'off_hand' : 'main_hand'] ?? undefined : undefined};
 }
@@ -1468,7 +1584,7 @@ function removeMountedCombatantAttackProjection(
 function maneuveringAllyIds(state: SoloCombatState, sourceId: string): string[] {
   return Object.values(state.world.actors).filter(ally => {
     if (ally.id === sourceId || !isPlayerControlledCombatActor(state,ally.id) || combatRelation(state,sourceId,ally.id) !== 'ally'
-      || ally.runtime.hp.current <= 0 || (ally.runtime.resources.reaction ?? 0) < 1
+      || !actorHasConsciousVitality(ally) || (ally.runtime.resources.reaction ?? 0) < 1
       || deniedCapabilities(ally.runtime,ally.passives ?? []).has('reaction') || effectiveCombatActorSpeedFt(state,ally.id) <= 0) return false;
     const facts=spatialFacts(state,sourceId,ally.id);
     return facts.targetCanSeeSource || facts.targetCanHearSource;
@@ -1477,7 +1593,7 @@ function maneuveringAllyIds(state: SoloCombatState, sourceId: string): string[] 
 
 function commandedAttackTargets(state: SoloCombatState, actorId: string, action: RuleActionDefinition): string[] {
   return Object.values(state.world.actors).filter(target => {
-    if (target.id === actorId || target.runtime.hp.current <= 0) return false;
+    if (target.id === actorId || !actorHasConsciousVitality(target)) return false;
     const facts = spatialFacts(state, actorId, target.id);
     return facts.distanceFt <= (action.targeting?.rangeFt ?? 5) && facts.lineOfSight && facts.cover !== 'total';
   }).map(target => target.id);
@@ -1491,7 +1607,7 @@ function prepareCommandedAttack(input: CombatActionInput, learned: RuleActionDef
   const ally = state.world.actors[allyId];
   if (!ally || allyId === actorId || activeActorId(state) !== actorId
     || !isPlayerControlledCombatActor(state, allyId) || combatRelation(state, actorId, allyId) !== 'ally'
-    || ally.runtime.hp.current <= 0 || activeConditionsOf(ally.runtime).has('incapacitated')
+    || !actorHasConsciousVitality(ally) || activeConditionsOf(ally.runtime).has('incapacitated')
     || deniedCapabilities(ally.runtime, ally.passives ?? []).has('reaction') || (ally.runtime.resources.reaction ?? 0) < 1) {
     throw new Error('Нужен согласный союзник с доступной реакцией');
   }
@@ -1561,7 +1677,7 @@ function preparePositionExchange(input: CombatActionInput, action: RuleActionDef
   if (exchange !== 5 || activeActorId(state) !== actorId || !target || targetId === actorId
     || !isPlayerControlledCombatActor(state, actorId) || !isPlayerControlledCombatActor(state, targetId)
     || combatRelation(state, actorId, targetId) !== 'ally'
-    || source.runtime.hp.current <= 0 || target.runtime.hp.current <= 0 || activeConditionsOf(target.runtime).has('incapacitated')
+    || !actorHasConsciousVitality(source) || !actorHasConsciousVitality(target) || activeConditionsOf(target.runtime).has('incapacitated')
     || activeConditionsOf(source.runtime).has('incapacitated')
     || effectiveCombatActorSpeedFt(state, actorId) <= 0) throw new Error('Нужен согласный дееспособный союзник рядом и возможность перемещаться');
   const from = state.tokens[actorId]?.position;
@@ -1646,7 +1762,7 @@ function prepareTelekineticMovement(input: CombatActionInput, action: RuleAction
   }
   const target=state.world.actors[targetId];
   if(!target || actorId===targetId || !isPlayerControlledCombatActor(state,targetId)
-    || combatRelation(state,actorId,targetId)!=='ally' || target.runtime.hp.current<=0 || activeConditionsOf(target.runtime).has('incapacitated')) throw new Error('Выберите другое согласное существо');
+    || combatRelation(state,actorId,targetId)!=='ally' || !actorHasConsciousVitality(target) || activeConditionsOf(target.runtime).has('incapacitated')) throw new Error('Выберите другое согласное существо');
   const facts=spatialFacts(state,actorId,targetId);
   if(facts.distanceFt>30 || !facts.canSeeTarget) throw new Error('Цель должна быть видна в пределах 30 фт.');
   if(!worldPosition || !Number.isInteger(worldPosition.x) || !Number.isInteger(worldPosition.y)
@@ -1680,11 +1796,54 @@ function applyTelekineticMovement(before:SoloCombatState,after:SoloCombatState,p
   return autoResolveSystemDecisions(next,rng);
 }
 
+function preparePortableSpaceBoard(input:CombatActionInput,action:RuleActionDefinition):{
+  input:CombatActionInput;operation:string;objectId:string;containedObjectId?:string;holePosition:GridPosition;exitDestination?:GridPosition;
+}|undefined {
+  const primitive=action.mechanics.primitive as Record<string,unknown>|undefined;
+  const policy=primitive?.policy as Record<string,unknown>|undefined;
+  const operation=String(policy?.operation??'');
+  if(primitive?.type!=='item_tool'||!operation.startsWith('portable_')||input.worldInput?.type!=='item_tool')return undefined;
+  const {state,actorId}=input,objectId=input.worldInput.objectId;
+  const hole=state.world.objects[objectId],holePosition=state.worldObjectPositions?.[objectId],actorPosition=state.tokens[actorId]?.position;
+  if(!hole?.portableSpace||!holePosition||!actorPosition)throw Error('Переносная дыра должна находиться на поле боя');
+  const exit=operation==='portable_exit';
+  const sight=exit?undefined:objectSightFacts(state,actorId,holePosition);
+  const distanceFt=exit?0:gridDistanceFt(actorPosition,holePosition);
+  if(!exit&&(distanceFt>Number((action.mechanics.targeting as Record<string,unknown>|undefined)?.range_ft??5)
+    ||!sight?.canSeeTarget))throw Error('Переносная дыра вне досягаемости или скрыта');
+  const containedObjectId=input.worldInput.containedObjectId;
+  const containedPosition=containedObjectId?state.worldObjectPositions?.[containedObjectId]:undefined;
+  if(operation==='portable_store'&&!containedPosition)throw Error('Помещаемый предмет должен находиться на поле боя');
+  const containedObjectDistanceFt=containedPosition?gridDistanceFt(holePosition,containedPosition):undefined;
+  const worldInput:ActionWorldInput={...input.worldInput,facts:{...input.worldInput.facts,
+    factsSource:'board',boardRevision:state.boardRevision,distanceFt,lineOfSight:exit?true:!!sight?.canSeeTarget,
+    ...(operation==='portable_store'?{containedObjectDistanceFt}:{}),
+  }};
+  let exitDestination:GridPosition|undefined;
+  if(exit){
+    const range=hole.portableSpace.exitDistanceFt;
+    const {width,height}=boardDimensions(state);
+    const materialTokens=Object.fromEntries(Object.entries(state.tokens).filter(([id])=>
+      (state.world.actors[id]?.planeId??'material')===(hole.planeId??'material')));
+    const projected={...state,tokens:materialTokens};
+    const candidate=input.worldPosition?[input.worldPosition]:boardCells(state)
+      .filter(point=>gridDistanceFt(holePosition,point)<=range)
+      .sort((a,b)=>gridDistanceFt(holePosition,a)-gridDistanceFt(holePosition,b)||a.y-b.y||a.x-b.x);
+    exitDestination=candidate.find(point=>Number.isInteger(point.x)&&Number.isInteger(point.y)
+      &&point.x>=0&&point.y>=0&&point.x<width&&point.y<height
+      &&gridDistanceFt(holePosition,point)<=range&&canOccupyPosition(projected,actorId,point));
+    if(!exitDestination)throw Error('В пределах выхода из переносной дыры нет свободной клетки');
+  }
+  return {input:{...input,worldInput},operation,objectId,containedObjectId,holePosition,exitDestination};
+}
+
 function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
   if (input.state.outcome !== 'active') return input.state;
   if (!input.triggerEvent && activeActorId(input.state) !== input.actorId) throw new Error('Сейчас ход другого участника');
   const action = input.state.catalogActions.find((candidate) => candidate.id === input.actionId);
   if (!action) throw new Error('Действие отсутствует в снимке боя');
+  const portable=preparePortableSpaceBoard(input,action);
+  if(portable)input=portable.input;
   const rawTargeting=action.mechanics.targeting as Record<string,unknown> | undefined;
   if(rawTargeting?.shape==='area' && rawTargeting.actor_targets!==false && rawTargeting.domain!=='world'){
     const geometry=tacticalAreaGeometry(action);
@@ -1697,7 +1856,9 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
     const origin=areaEffectOrigin({action,sourcePosition,aimPosition});
     if(gridDistanceFt(sourcePosition,origin)>(action.targeting?.rangeFt??0))throw new Error('Центр области вне дальности');
     if(areaPointSight(input.state,input.actorId,sourcePosition,origin).blocked)throw new Error('Центр области закрыт полным укрытием');
-    const targetIds=areaActorIds({state:input.state,sourceActorId:input.actorId,aimPosition,action}).slice(0,action.targeting?.maxTargets??8);
+    const magical=action.kind==='spell'||isMagicalMechanics(action.mechanics,input.state.world.actors[input.actorId].character);
+    const targetIds=areaActorIds({state:input.state,sourceActorId:input.actorId,aimPosition,action})
+      .filter(id=>!magical||!antimagicAt(input.state,input.state.tokens[id].position,id)).slice(0,action.targeting?.maxTargets??8);
     // The board, not a client-provided list, owns which creatures are affected.
     input={...input,targetIds,worldPosition:aimPosition};
   }
@@ -1720,7 +1881,7 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
   const verbalBlocked = action.kind === 'spell' && action.spell.components?.verbal === true
     && actorPosition != null
     && Object.values(input.state.combatAreas ?? {}).some((area) => (
-      area.blocksVerbalComponents && areaContains(area, actorPosition)
+      area.blocksVerbalComponents && areaContains(area, actorPosition)&&!magicAreaSuppressed(input.state,area,actorPosition,input.actorId)
     ));
   if (verbalBlocked) throw new Error('Тишина в этой области блокирует Вербальный компонент заклинания');
   const declaration = declarationFor(
@@ -1732,6 +1893,15 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
     input.choices,
     input.worldInput,
   );
+  const teleportRange=teleportRangeFt(action);
+  if(teleportRange!==null){
+    const position=input.worldPosition,origin=input.state.tokens[input.actorId]?.position;
+    if(origin&&antimagicAt(input.state,origin,input.actorId)||position&&antimagicAt(input.state,position,input.actorId))throw Error('Поле антимагии блокирует телепортацию');
+    if(!position||!origin||!Number.isInteger(position.x)||!Number.isInteger(position.y)||gridDistanceFt(origin,position)>teleportRange||!canOccupyPosition(input.state,input.actorId,position))throw Error('Выберите свободную клетку в пределах телепортации');
+    const facts={...spatialFacts(input.state,input.actorId,input.actorId),teleportDestinationValidated:true,destinationIllumination:illuminationAt(input.state,position).level};
+    const issue=teleportDestinationIssue(action,facts);if(issue)throw Error(issue);
+    declaration.factsByTarget={...declaration.factsByTarget,[input.actorId]:facts};
+  }
   if (telekineticMovement) {
     const facts = spatialFacts(input.state,input.actorId,telekineticMovement.targetId);
     const objectFacts = telekineticMovement.objectId
@@ -1793,13 +1963,15 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
     if (open.length > 1) throw new Error('Найдено несколько открытых действий «Атака»');
     const begun = open.length ? input.state : dispatch({
       state: input.state,
-      command: { ...commandBase(input.state, input.actorId), type: 'BeginAttackAction' },
+      command: { ...commandBase(input.state, input.actorId), type: 'BeginAttackAction', afterBegin:{type:'PerformUnarmedStrike',option,targetActorId:input.targetIds[0],facts:spatialFacts(input.state,input.actorId,input.targetIds[0]),...(declaration.protectionCandidates?{protectionCandidates:declaration.protectionCandidates}:{})} },
       rng,
       label: 'Атака',
     });
+    if(!open.length)return withTriggeredAttackOffer(begun);
     const attackAction = open[0] ?? Object.values(begun.world.attackActions).find((candidate) => (
       candidate.actorId === input.actorId && candidate.status === 'open'
     ));
+    if(begun.world.pendingResolution?.type==='action_cost_policy')return begun;
     if (!attackAction) throw new Error('Не удалось открыть действие «Атака»');
     return withTriggeredAttackOffer(dispatch({
       state: begun,
@@ -1913,6 +2085,29 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
     };
   }
   let next = dispatch({ state: dispatchState, command, rng, label: action.name });
+  if(portable){
+    const positions={...(next.worldObjectPositions??{})};
+    let positioned=false;
+    if(portable.operation==='portable_store'&&portable.containedObjectId
+      &&next.world.objects[portable.containedObjectId]?.containedByObjectId===portable.objectId){
+      delete positions[portable.containedObjectId];positioned=true;
+    }
+    if(portable.operation==='portable_retrieve'&&portable.containedObjectId
+      &&next.world.objects[portable.containedObjectId]?.containedByObjectId===undefined){
+      positions[portable.containedObjectId]={...portable.holePosition};positioned=true;
+    }
+    if(positioned)next={...next,worldObjectPositions:positions,boardRevision:next.boardRevision+1};
+    if(portable.operation==='portable_exit'&&portable.exitDestination
+      &&next.world.actors[input.actorId]?.planeId===(input.state.world.objects[portable.objectId]?.planeId??'material')){
+      next={...next,tokens:{...next.tokens,[input.actorId]:{...next.tokens[input.actorId],position:{...portable.exitDestination}}},boardRevision:next.boardRevision+1};
+      next=reconcileInsideAreaConditions(reanchorSourceCombatAreas(next,input.actorId));
+    }
+  }
+  if(isAttackAction(action)&&input.targetIds.length===1){
+    const token=next.tokens[input.actorId],target=next.tokens[input.targetIds[0]];
+    const facing=token&&target?facingToward(token.position,target.position):undefined;
+    if(facing&&token.facing!==facing)next={...next,tokens:{...next.tokens,[input.actorId]:{...token,facing}},boardRevision:next.boardRevision+1};
+  }
   if (positionExchange) next = applyPositionExchange(dispatchState, next, input.actorId, positionExchange, rng);
   if (telekineticMovement) next = applyTelekineticMovement(dispatchState,next,telekineticMovement,rng);
   if (activation?.weapon_bond_recall === true) {
@@ -2040,8 +2235,12 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
   if (action.id !== next.dashActionId && activation?.counts_as !== 'dash') return withTriggeredAttackOffer(next);
   const movementBeforeDash = signedMovementBudget(input.state, input.actorId,
     effectiveCombatActorSpeedFt(input.state, input.actorId));
-  const dashAllotment = effectiveCombatActorSpeedFt(input.state, input.actorId)
-    + (actorOwnsCharger(input.state.world.actors[input.actorId]) ? 10 : 0);
+  const dasher=input.state.world.actors[input.actorId];
+  const dashRule=collectRollModifiers(dasher.runtime,dasher.passives??[],{roll:'dash_distance',
+    formulaCtx:{abilityMods:dasher.character.abilityMods,profBonus:dasher.character.profBonus,selfLevel:dasher.character.level},
+    evalCtx:{state:dasher.runtime,character:dasher.character,activeConditions:activeConditionsOf(dasher.runtime)}});
+  const dashAllotment = foldModifiers(effectiveCombatActorSpeedFt(input.state, input.actorId)
+    + (actorOwnsCharger(dasher) ? 10 : 0),dashRule).value;
   // Compatibility for retained legacy catalogs. New Dash data declares its
   // action category and never adds character_speed to the Speed statistic.
   const legacySpeedModifier = (action.mechanics.effects as Record<string, unknown>[] | undefined)?.some(effect =>
@@ -2067,7 +2266,7 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
 
 function executeCombatActionWithD20Interrupts(
   input: CombatActionInput,
-  options: { skipWardingFlare?: boolean; skipCuttingWords?: boolean; skipInfluence?: boolean; skipBeforeInfluence?: boolean; influenceRerolledDie?: number; influenceSource?: string; d20Influences?: RollInfluence[] } = {},
+  options: { skipWardingFlare?: boolean; skipCuttingWords?: boolean; skipInfluence?: boolean; skipRollCount?:number; skipBeforeInfluence?: boolean; influenceRerolledDie?: number; influenceSource?: string; d20Influences?: RollInfluence[] } = {},
 ): SoloCombatState {
   if (input.state.pendingD20Interrupt) {
     throw new Error('Сначала завершите открытую реакцию на бросок к20');
@@ -2075,10 +2274,10 @@ function executeCombatActionWithD20Interrupts(
   const action = input.state.catalogActions.find((candidate) => candidate.id === input.actionId);
   if (!action) throw new Error('Действие отсутствует в снимке боя');
   const rollKind = actionD20RollKind(input.state, action);
-  if (!rollKind) return executeCombatActionCore(input);
+  if (!rollKind && options.skipInfluence) return executeCombatActionCore(input);
   const context = actionInfluenceContext(action,input.state.world.actors[input.actorId]);
   const kind = rollKind === 'attack_roll' ? 'attack' : 'check';
-  if (!options.skipBeforeInfluence) {
+  if (rollKind && !options.skipBeforeInfluence) {
     const choices = combatRollInfluences(input.state,input.actorId,kind,undefined,{...context,timing:'before_roll'});
     if (choices.length) return {...input.state,pendingD20Interrupt: {
       timing:'before_roll',operation:'roll_choice',command:serializableCombatCommand(input),influenceContext:context,
@@ -2108,24 +2307,24 @@ function executeCombatActionWithD20Interrupts(
   }
 
   const transformedInput = {...input,rng: options.d20Influences?.length ? withD20Influences(input.rng ?? Math.random,options.d20Influences) : input.rng};
-  if (options.skipCuttingWords) return settleInfluenceConsequences(executeCombatActionCore(transformedInput),input.state,input.actorId,options.d20Influences);
   const recorded = recordedRng(transformedInput.rng ?? Math.random);
   const previewState = executeCombatActionCore({ ...input, rng: recorded.rng });
-  const heldRoll = !options.skipInfluence
-    ? heldRollIn(previewState, input.state, input.actorId) : undefined;
-  const influences = heldRoll ? combatRollInfluences(input.state, input.actorId, kind, heldRoll, context) : [];
-  if (heldRoll && influences.length) return {...input.state, pendingD20Interrupt: {
+  const eligible = !options.skipInfluence
+    ? heldRollCandidates(previewState,input.state,input.actorId).slice(options.skipRollCount??0)
+      .map(candidate=>({...candidate,influences:combatRollInfluences(input.state,input.actorId,candidate.kind,candidate.roll,context)}))
+      .find(candidate=>candidate.influences.length) : undefined;
+  const preview=rollKind?successfulD20Preview(previewState,combatLogCursor(input.state),input.actorId,rollKind):null;
+  const responders=preview&&!options.skipCuttingWords?d20InterruptCapabilities(
+    input.state,input.actorId,'subtract_die',rollKind!,preview.outcome,
+  ):[];
+  if (eligible && (eligible.kind==='attack'||eligible.kind==='save'||eligible.kind==='check'||!responders.length)) return {...input.state, pendingD20Interrupt: {
     timing: 'after_roll_before_outcome', operation: 'roll_influence', command: serializableCombatCommand(input),
-    responders: influences.map(action => ({actorId: action.ownerId ?? input.actorId, effectId: action.id, effectName: action.name})),
-    randomValues: recorded.values, held: {roll: heldRoll, kind}, influenceContext:context, d20Influences:options.d20Influences,
+    responders: eligible.influences.map(action => ({actorId: action.ownerId ?? input.actorId, effectId: action.id, effectName: action.name})),
+    randomValues: recorded.values, held: {roll: eligible.roll, kind:eligible.kind,rollIndex:eligible.index,targetId:eligible.targetId,
+      ...(eligible.kind==='attack' && input.targetIds.length>1
+        ? {targetSlotIndex:eligible.attackSlotIndex,targetSlotCount:input.targetIds.length} : {})}, influenceContext:context, d20Influences:options.d20Influences,
   }};
-  const preview = successfulD20Preview(
-    previewState, combatLogCursor(input.state), input.actorId, rollKind,
-  );
   if (!preview) return settleInfluenceConsequences(previewState,input.state,input.actorId,options.d20Influences);
-  const responders = d20InterruptCapabilities(
-    input.state, input.actorId, 'subtract_die', rollKind, preview.outcome,
-  );
   return responders.length ? {
     ...input.state,
     pendingD20Interrupt: {
@@ -2138,6 +2337,7 @@ function executeCombatActionWithD20Interrupts(
       randomValues: recorded.values,
       influenceRerolledDie: options.influenceRerolledDie,
       influenceSource: options.influenceSource,
+      skipRollCount:options.skipRollCount,
       d20Influences: options.d20Influences,
       preview,
     },
@@ -2157,8 +2357,9 @@ function interruptStraightMovement(state: SoloCombatState, actorId: string): Sol
 }
 
 export function executeCombatAction(input: CombatActionInput): SoloCombatState {
+  input = { ...input, state: projectCombatAuras(input.state) };
   if (input.state.pendingAdditionalMovement) throw new Error('Сначала завершите дополнительное перемещение');
-  return interruptStraightMovement(executeCombatActionWithD20Interrupts(input), input.actorId);
+  return syncItemOwnedActorTokens(interruptStraightMovement(executeCombatActionWithD20Interrupts(input), input.actorId));
 }
 
 /** Execute only a disposable copy, stopping before the first attack die.
@@ -2319,31 +2520,49 @@ export function resolveD20Interrupt(
     const ownerId = pending.command.actorId;
     if (!pending.held || !pending.randomValues) throw new Error('Повреждён ожидающий бросок');
     let replacement: number | undefined;
+    let replacements:DieReplacement[]|undefined;
     let source: string | undefined;
     const transforms = [...(pending.d20Influences ?? [])];
     if (chosen) {
-      const action = combatRollInfluences(prepared, ownerId, pending.held.kind, pending.held.roll,pending.influenceContext)
+      const action = pending.paidInfluence??combatRollInfluences(prepared, ownerId, pending.held.kind, pending.held.roll,pending.influenceContext)
         .find(candidate => candidate.id === chosen.effectId);
       if (!action || chosen.actorId !== (action.ownerId ?? ownerId)) throw new Error('Выбранное влияние больше недоступно');
+      if(action.id!==chosen.effectId)throw Error('Paid influence does not match its continuation');
       prepared = clone(prepared);
       const payerId = action.ownerId ?? ownerId;
-      const paid = spendRollInfluence(prepared.world.actors[payerId].runtime, action);
+      const paid = pending.paidInfluence?{state:prepared.world.actors[payerId].runtime,events:[]}:spendRollInfluence(prepared.world.actors[payerId].runtime, action);
       prepared.world.actors[payerId].runtime = paid.state;
+      const selfDamage=rollInfluenceSelfDamage(action);
+      if(selfDamage&&!pending.paidInfluence){
+        const hazard:RuleHazardDefinition={id:`roll-influence-cost:${action.id}`,name:action.name,sourceKind:'system',sourceActorId:payerId,
+          sourceEntityIds:[action.id],resolution:'automatic',damageSourceKind:'item',effects:[{kind:'damage',amount:selfDamage.amount,type:selfDamage.type,suppress_damage_modifiers:true}]};
+        prepared=dispatch({state:prepared,command:{...commandBase(prepared,payerId),type:'TriggerHazard',hazardId:hazard.id,targetActorId:payerId},rng,label:`${action.name}: цена влияния`,extraHazards:[hazard]});
+        if(prepared.world.pendingResolution){
+          return {...prepared,pendingRollInfluenceResume:{pending:{...pending,paidInfluence:action},actorId:payerId,effectId:action.id}};
+        }
+        if(deniedCapabilities(prepared.world.actors[ownerId].runtime,prepared.world.actors[ownerId].passives??[]).has('action'))return outcome(prepared);
+      }
       if (action.operation === 'reroll_kept_d20') replacement = drawDie(rng, 20);
+      else if(action.operation==='reroll_roll'){
+        const kept=pending.held.roll.dice.filter(die=>!die.discarded);
+        if(!kept.length||kept.some(die=>!Number.isSafeInteger(die.drawOrdinal)))throw Error('Бросок не имеет сохранённых костей для точного переброса');
+        replacements=kept.map(die=>({ordinal:die.drawOrdinal!,sides:die.sides,result:drawDie(rng,die.sides)}));
+      }
       else transforms.push(action);
       source = action.name;
-      prepared = appendLog(prepared, payerId, `${action.name}: ${replacement === undefined ? 'влияние принято' : `переброс к20 → ${replacement}`}.`, paid.events.map((event, ordinal) => ({kind: 'engine', ordinal, sourceActorId: payerId, actorId: payerId, targetIds: [], event})));
+      prepared = appendLog(prepared, payerId, `${action.name}: ${replacements ? `переброс ${replacements.map(die=>`к${die.sides} → ${die.result}`).join(', ')}` : replacement === undefined ? 'влияние принято' : `переброс к20 → ${replacement}`}.`, paid.events.map((event, ordinal) => ({kind: 'engine', ordinal, sourceActorId: payerId, actorId: payerId, targetIds: [], event})));
     }
     let cursor = 0;
     const replay = () => cursor < pending.randomValues!.length ? pending.randomValues![cursor++] : rng();
-    const actionRng = replacement === undefined ? replay : withD20Replacement(replay, replacement, source!);
+    const actionRng = replacements ? withDieReplacement(replay,replacements)
+      : replacement === undefined ? replay : withD20Replacement(replay, replacement, source!);
     if (pending.held.saveResponse) {
       const transformed = withD20Influences(actionRng,transforms);
       return autoResolveSystemDecisions(settleInfluenceConsequences(resolveDecision(prepared, pending.held.saveResponse, transformed),prepared,ownerId,transforms), transformed);
     }
     return settlePendingMonsterOnHitGrapple(executeCombatActionWithD20Interrupts(
       {...pending.command, state: prepared, rng: actionRng},
-      {skipWardingFlare: true, skipInfluence: true, skipBeforeInfluence:true, influenceRerolledDie: replacement, influenceSource: source,d20Influences:transforms},
+      {skipWardingFlare: true, skipRollCount:(pending.held.rollIndex??0)+1, skipBeforeInfluence:true, influenceRerolledDie: replacement, influenceSource: source,d20Influences:transforms},
     ));
   }
   const rollKind = pending.preview?.rollKind ?? 'attack_roll';
@@ -2394,7 +2613,7 @@ export function resolveD20Interrupt(
     { ...pending.command, state: prepared, rng: actionRng },
     pending.operation === 'impose_disadvantage'
       ? { skipWardingFlare: true, skipBeforeInfluence:true,d20Influences:pending.d20Influences }
-      : { skipWardingFlare: true, skipCuttingWords: true, skipBeforeInfluence:true,d20Influences:pending.d20Influences },
+      : { skipWardingFlare: true, skipCuttingWords: true, skipRollCount:pending.skipRollCount, skipBeforeInfluence:true,d20Influences:pending.d20Influences },
   ));
 }
 
@@ -2617,7 +2836,7 @@ export function triggeredSecondaryTargetIds(state: SoloCombatState, actionId: st
   return Object.values(state.world.actors).filter(actor => {
     const position = state.tokens[actor.id]?.position;
     return actor.id !== pending.sourceActorId && actor.id !== pending.triggeringAttack!.targetActorId
-      && actor.runtime.hp.current > 0 && position
+      && actorHasConsciousVitality(actor) && position
       && gridDistanceFt(first, position) <= 5 && gridDistanceFt(source, position) <= reach;
   }).map(actor => actor.id);
 }
@@ -2781,11 +3000,34 @@ function resolveDecision(
   const pending = state.world.pendingResolution;
   if (!pending) return state;
   const actorId = pending.request.actorId;
+  let targetTeleport: {targetId:string;destination:GridPosition;limit:number}|undefined;
+  if(pending.type==='event_reaction'&&response.kind==='reaction'&&response.actionId){
+    const selectedActionId: string = response.actionId;
+    const action=state.catalogActions.find(candidate=>candidate.id===selectedActionId);
+    const policy=action?.mechanics.teleport_destination as Record<string,unknown>|undefined;
+    if(policy?.relative_to==='target'){
+      const targetId=pending.opportunity.targetActorId,destination=response.teleportDestination;
+      const limit=Number(policy.max_distance_ft),origin=targetId?state.tokens[targetId]?.position:undefined;
+      if(!targetId||!origin||!destination||!Number.isInteger(destination.x)||!Number.isInteger(destination.y)
+        ||!Number.isFinite(limit)||limit<=0||gridDistanceFt(origin,destination)>limit
+        ||!canOccupyPosition(state,targetId,destination)
+        ||!objectSightFacts(state,actorId,destination).canSeeTarget)
+        throw new Error('Выберите видимое свободное место в пределах телепортации цели');
+      const facts={...spatialFacts(state,actorId,targetId),factsSource:'board' as const,
+        teleportDestinationValidated:true,destinationVisible:true,destinationDistanceFt:gridDistanceFt(origin,destination)};
+      response={...response,teleportDestinationFacts:facts};
+      targetTeleport={targetId,destination,limit};
+    }
+  }
   const command: GameCommand = {
     ...commandBase(state, actorId), type: 'ResolveDecision',
     resolutionId: pending.id, requestId: pending.request.id, response,
   };
-  return dispatch({ state, command, rng, label: 'Разрешение реакции/спасброска' });
+  const after=dispatch({ state, command, rng, label: 'Разрешение реакции/спасброска' });
+  if(!targetTeleport)return after;
+  const moved=after.log.slice(state.log.length).some(entry=>entry.records?.some(record=>record.event?.type==='movement'
+    &&record.event.mode==='teleport'&&record.event.recipientActorId===targetTeleport.targetId));
+  return moved?applyActionTeleport(state,after,targetTeleport.targetId,targetTeleport.destination,targetTeleport.limit):after;
 }
 
 function openNextCombatAreaTrigger(state: SoloCombatState, rng: Rng): SoloCombatState {
@@ -2796,6 +3038,8 @@ function openNextCombatAreaTrigger(state: SoloCombatState, rng: Rng): SoloCombat
     const [, ...rest] = next.pendingCombatAreaTriggers;
     next = { ...next, pendingCombatAreaTriggers: rest };
     if (!pending || !next.world.actors[pending.trigger.actorId]) continue;
+    const token=next.tokens[pending.trigger.actorId];
+    if(token&&magicAreaSuppressed(next,pending.area,token.position,pending.trigger.actorId))continue;
     if (!pending.hazard) {
       next = appendLog(
         next,
@@ -2821,10 +3065,25 @@ function openNextCombatAreaTrigger(state: SoloCombatState, rng: Rng): SoloCombat
   return next;
 }
 
+/** Arrival payloads are catalog snapshots retained with the movement decision.
+ * A route cancelled before displacement never reaches this branch. */
+function settleMovementArrival(state:SoloCombatState,rng:Rng):SoloCombatState {
+  const movement=state.pendingAdditionalMovement;
+  if(!movement?.arrived || monsterMovementPaused({...state,pendingAdditionalMovement:undefined})) return state;
+  const ready=finishAdditionalMovement(state);
+  if(!movement.onArrival?.length) return ready;
+  const hazard:RuleHazardDefinition={id:`movement-arrival:${movement.actorId}:${state.boardRevision}`,name:movement.sourceId??'Приземление',sourceKind:'system',
+    sourceActorId:movement.actorId,sourceEntityIds:[movement.sourceId??'system:movement-arrival'],resolution:'automatic',effects:movement.onArrival as never[],damageSourceKind:'item',
+    grantedEffects:ready.world.actors[movement.actorId]?.grantedEffects};
+  return dispatch({state:projectCombatAuras(ready),command:{...commandBase(ready,movement.actorId),type:'TriggerHazard',hazardId:hazard.id,targetActorId:movement.actorId},
+    rng,label:hazard.name,extraHazards:[hazard]});
+}
+
 export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
   if(state.pendingDeathSave)return state;
   let next = state;
   for (let guard = 0; guard < 48; guard += 1) {
+    next = settleMovementArrival(next, rng);
     next = openNextCombatAreaTrigger(next, rng);
     if (!next.world.pendingResolution) {
       const continuation = next.pendingCombatAreaTurnContinuation;
@@ -2838,14 +3097,16 @@ export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Ma
       continue;
     }
     const pending = next.world.pendingResolution;
-    if ((pending.request.type === 'reaction' || pending.request.type === 'shove_outcome' || pending.type === 'escape_grapple')
+    if ((pending.request.type === 'slot_recovery' || pending.request.type === 'action_cost_policy' || pending.request.type === 'reaction' || pending.request.type === 'shove_outcome' || pending.type === 'escape_grapple')
       && isControlledCharacter(next, pending.request.actorId)) break;
     if (pending.request.type === 'saving_throw'
       && isControlledCharacter(next, pending.request.actorId)
       && runtimeBoons(next.world.actors[pending.request.actorId].runtime).some((boon) => (
         boon.appliesTo.includes('saving_throw') && boon.timing.includes('after_failure')
       ))) break;
-    const response: DecisionResponse = pending.request.type === 'reaction'
+    const response: DecisionResponse = pending.request.type === 'slot_recovery'?{kind:'slot_recovery',slotLevels:null}:pending.request.type === 'action_cost_policy'
+      ? {kind:'action_cost_policy',policyId:null}
+      : pending.request.type === 'reaction'
       ? { kind: 'reaction', actionId: chooseMonsterReaction(next) }
       : pending.request.type === 'shove_outcome'
         ? { kind: 'shove_outcome', outcome: 'push_5ft' }
@@ -2903,6 +3164,12 @@ export function autoResolveSystemDecisions(state: SoloCombatState, rng: Rng = Ma
       isAttack: Boolean(action && isAttackAction(action)),
     });
   }
+  if(!next.world.pendingResolution&&next.pendingRollInfluenceResume){
+    const {pendingRollInfluenceResume:resume,...rest}=next;
+    const actor=rest.world.actors[resume.pending.command.actorId];
+    if(!actor||deniedCapabilities(actor.runtime,actor.passives??[]).has('action'))return outcome(rest as SoloCombatState);
+    return resolveD20Interrupt({...rest,pendingD20Interrupt:resume.pending} as SoloCombatState,resume.actorId,rng,resume.effectId);
+  }
   // Only adjudicate here. Recovery belongs to the outer command boundary, after
   // movement and post-hit choices have finished collecting their continuations.
   return prepareCombatDeathSave(outcome(next),rng);
@@ -2915,27 +3182,32 @@ export function prepareCombatDeathSave(state:SoloCombatState,rng:Rng=Math.random
     || state.world.pendingResolution || state.pendingD20Interrupt || state.pendingInterception
     || state.pendingTriggeredAction || state.pendingTurnStartGrappleDamage || state.pendingCombatAreaTriggers?.length
     || state.world.scene.mode!=='encounter' || !state.world.scene.turnStarted)return state;
-  const actor=activeActor(state);
+  const immediateActor=Object.values(state.world.actors).find(candidate=>isControlledCharacter(state,candidate.id)
+    && candidate.runtime.hp.current===0 && !candidate.runtime.deathSaves?.dead && !candidate.runtime.deathSaves?.stable
+    && candidate.runtime.firedThisTurn?.includes('system:immediate-death-save-due'));
+  const actor=immediateActor??activeActor(state);
   if(!isControlledCharacter(state,actor.id)||actor.runtime.hp.current>0)return state;
   const before=actor.runtime.deathSaves??emptyDeathSaves();
-  if(before.dead||before.stable||actor.runtime.firedThisTurn?.includes('system:death-save')
-    ||!actor.runtime.firedThisTurn?.includes('system:death-save-due'))return advanceTurn(state,rng);
+  if(before.dead||before.stable||(!immediateActor&&(actor.runtime.firedThisTurn?.includes('system:death-save')
+    ||!actor.runtime.firedThisTurn?.includes('system:death-save-due'))))return actorHasConsciousVitality(actor) ? state : advanceTurn(state,rng);
   const recorded=recordedRng(rng);
   const preview=dispatch({state,command:{...commandBase(state,actor.id),type:'DeathSavingThrow'},rng:recorded.rng,label:'Спасбросок от смерти'});
   const roll=heldRollIn(preview,state,actor.id);
   if(!roll)throw new Error('Нет результата спасброска от смерти');
-  return {...state,pendingDeathSave:{actorId:actor.id,round:state.world.scene.round,phase:'rolled',before,roll,randomValues:recorded.values}};
+  return {...state,pendingDeathSave:{actorId:actor.id,round:state.world.scene.round,phase:'rolled',before,roll,randomValues:recorded.values,
+    ...(immediateActor?{immediate:true}:{})}};
 }
 
 export function resolveCombatDeathSave(state:SoloCombatState,effectId?:string,rng:Rng=Math.random):SoloCombatState {
   const pending=state.pendingDeathSave;
-  if(!pending || activeActorId(state)!==pending.actorId || state.world.scene.mode!=='encounter'
+  if(!pending || (!pending.immediate&&activeActorId(state)!==pending.actorId) || state.world.scene.mode!=='encounter'
     ||state.world.scene.round!==pending.round)throw new Error('Нет ожидающего спасброска от смерти');
   const {pendingDeathSave:_cleared,...rest}=state;
   let ready=rest as SoloCombatState;
   if(pending.phase==='resolved'){
     if(effectId)throw new Error('Результат уже подтверждён');
-    return ready.world.actors[pending.actorId].runtime.hp.current>0 || ready.outcome!=='active' ? finalizeCombatOutcome(ready,rng) : advanceTurn(ready,rng);
+    if(pending.immediate)return prepareCombatDeathSave(finalizeCombatOutcome(ready,rng),rng);
+    return actorHasConsciousVitality(ready.world.actors[pending.actorId]) || ready.outcome!=='active' ? finalizeCombatOutcome(ready,rng) : advanceTurn(ready,rng);
   }
   let replay:Rng=transcriptRng(pending.randomValues);
   if(effectId){
@@ -2945,10 +3217,26 @@ export function resolveCombatDeathSave(state:SoloCombatState,effectId?:string,rn
     const paid=spendRollInfluence(ready.world.actors[pending.actorId].runtime,influence);
     ready.world.actors[pending.actorId].runtime=paid.state;
     ready=appendLog(ready,pending.actorId,`${influence.name}: переброс спасброска от смерти`,paid.events.map((event,ordinal)=>({kind:'engine',ordinal,sourceActorId:pending.actorId,actorId:pending.actorId,targetIds:[],event})));
-    replay=withD20Replacement(replay,drawDie(rng,20),influence.name);
+    if(influence.operation==='reroll_roll'){
+      const kept=pending.roll.dice.filter(die=>!die.discarded);
+      if(!kept.length||kept.some(die=>!Number.isSafeInteger(die.drawOrdinal)))throw Error('Бросок не имеет сохранённых костей для точного переброса');
+      replay=withDieReplacement(replay,kept.map(die=>({ordinal:die.drawOrdinal!,sides:die.sides,result:drawDie(rng,die.sides)})));
+    }else replay=withD20Replacement(replay,drawDie(rng,20),influence.name);
   }
   const next=dispatch({state:ready,command:{...commandBase(ready,pending.actorId),type:'DeathSavingThrow'},rng:replay,label:'Спасбросок от смерти'});
   return {...next,pendingDeathSave:{...pending,phase:'resolved',roll:heldRollIn(next,ready,pending.actorId)!}};
+}
+
+export function resolvePlayerSlotRecovery(state:SoloCombatState,slotLevels:number[]|null,rng:Rng=Math.random):SoloCombatState {
+  const pending=state.world.pendingResolution;
+  if(pending?.request.type!=='slot_recovery'||!isControlledCharacter(state,pending.request.actorId))throw Error('Нет ожидающего восстановления ячеек');
+  return autoResolveSystemDecisions(resolveDecision(state,{kind:'slot_recovery',slotLevels},rng),rng);
+}
+
+export function resolvePlayerActionCostPolicy(state:SoloCombatState,policyId:string|null,rng:Rng=Math.random):SoloCombatState {
+  const pending=state.world.pendingResolution;
+  if(pending?.request.type!=='action_cost_policy'||!isControlledCharacter(state,pending.request.actorId))throw Error('Нет ожидающего выбора стоимости действия');
+  return autoResolveSystemDecisions(resolveDecision(state,{kind:'action_cost_policy',policyId},rng),rng);
 }
 
 export function resolvePlayerShoveOutcome(
@@ -2985,16 +3273,15 @@ export function resolvePlayerSavingThrow(
   }
   const recorded = recordedRng(options.d20Influences?.length ? withD20Influences(rng,options.d20Influences) : rng);
   const preview = resolveDecision(state, response, recorded.rng);
-  const roll = heldRollIn(preview, state, pending.request.actorId);
-  if (!roll) return autoResolveSystemDecisions(preview, rng);
-  const kind = roll.kind === 'check' ? 'check' : 'save';
-  const influences = combatRollInfluences(state, pending.request.actorId, kind, roll,context);
-  if (!influences.length) return autoResolveSystemDecisions(settleInfluenceConsequences(preview,state,pending.request.actorId,options.d20Influences), rng);
+  const eligible=heldRollCandidates(preview,state,pending.request.actorId)
+    .map(candidate=>({...candidate,influences:combatRollInfluences(state,pending.request.actorId,candidate.kind,candidate.roll,context)}))
+    .find(candidate=>candidate.influences.length);
+  if (!eligible) return autoResolveSystemDecisions(settleInfluenceConsequences(preview,state,pending.request.actorId,options.d20Influences), rng);
   return {...state, pendingD20Interrupt: {
     timing: 'after_roll_before_outcome', operation: 'roll_influence',
     command: {actorId: pending.request.actorId, actionId: 'actionId' in pending ? pending.actionId : 'saving-throw', targetIds: []},
-    responders: influences.map(action => ({actorId: action.ownerId ?? pending.request.actorId, effectId: action.id, effectName: action.name})),
-    randomValues: recorded.values, held: {roll, kind, saveResponse: response}, influenceContext:context, d20Influences:options.d20Influences,
+    responders: eligible.influences.map(action => ({actorId: action.ownerId ?? pending.request.actorId, effectId: action.id, effectName: action.name})),
+    randomValues: recorded.values, held: {roll:eligible.roll, kind:eligible.kind,rollIndex:eligible.index,targetId:eligible.targetId,saveResponse: response}, influenceContext:context, d20Influences:options.d20Influences,
   }};
 }
 
@@ -3464,7 +3751,7 @@ export function offerZeroDamageFollowUps(before: SoloCombatState, after: SoloCom
     || after.pendingTriggeredAction || after.outcome !== 'active') return after;
   const actor = after.world.actors[pending.request.actorId];
   if (!actor || actor.id !== pending.targetActorId || !isControlledCharacter(after, actor.id)
-    || actor.runtime.hp.current <= 0 || activeConditionsOf(actor.runtime).has('incapacitated')) return after;
+    || !actorHasConsciousVitality(actor) || activeConditionsOf(actor.runtime).has('incapacitated')) return after;
   const records = combatLogSince(after, combatLogCursor(before)).flatMap(row => row.records ?? []);
   const reductions = records.filter(r => r.sourceActorId === actor.id).flatMap(r =>
     r.event?.type === 'damage_reduction' ? [r.event.amount] : []);
@@ -3501,7 +3788,7 @@ function offerTriggeredAttackActions(input: {
   const defender = after.world.actors[input.targetIds[0]];
   const attacker = after.world.actors[input.sourceActorId];
   if (!defender || !attacker || defender.id === attacker.id || !isControlledCharacter(after, defender.id)
-    || defender.runtime.hp.current <= 0 || attacker.runtime.hp.current <= 0
+    || !actorHasConsciousVitality(defender) || !actorHasConsciousVitality(attacker)
     || activeConditionsOf(defender.runtime).has('incapacitated')) return after;
   const attack = after.catalogActions.find(row => row.id === input.sourceActionId);
   const kind = attack ? weaponAttackKind(attack.mechanics) : null;
@@ -3568,7 +3855,7 @@ function offerSourceTriggeredAttackActions(input: {
     || !isControlledCharacter(after, sourceActorId)
     || !events.length) return after;
   const actor = after.world.actors[sourceActorId];
-  if (!actor || actor.runtime.hp.current <= 0 || after.outcome !== 'active') return after;
+  if (!actor || !actorHasConsciousVitality(actor) || after.outcome !== 'active') return after;
   const owned = new Set(actor.capabilities.actionIds);
   const options = after.catalogActions.flatMap((action) => {
     if (action.id === sourceActionId || !owned.has(action.id)
@@ -3714,7 +4001,7 @@ function movementOpportunityEnemies(state: SoloCombatState, moverId: string, des
   return Object.values(state.world.actors).filter(actor => (
     !state.pendingMovementStep?.processedOpportunityActorIds.includes(actor.id)
     && !(state.pendingAdditionalMovement?.actorId === moverId && state.pendingAdditionalMovement.immuneOpportunityActorIds?.includes(actor.id))
-    && combatRelation(state, moverId, actor.id) === 'enemy' && actor.runtime.hp.current > 0
+    && combatRelation(state, moverId, actor.id) === 'enemy' && actorHasConsciousVitality(actor)
     && actor.runtime.resources.reaction > 0 && !deniedCapabilities(actor.runtime, actor.passives ?? []).has('reaction')
     && (!deniesOpportunityAttack(mover) || actorOwnsSentinel(actor))
     && opportunityActionsFor(state, actor.id).some(action => {
@@ -3775,7 +4062,7 @@ function executeOpportunityAttacks(
   });
   const enemies = movementOpportunityEnemies(next, moverId, destination);
   for (const enemy of enemies) {
-    if (next.world.actors[moverId].runtime.hp.current <= 0) continue;
+    if (!actorHasConsciousVitality(next.world.actors[moverId])) continue;
     const options = eligibleActions(enemy.id);
     const action = options[0];
     if (!action) continue;
@@ -3823,7 +4110,7 @@ function executePolearmEntryAttacks(
   const eligible = Object.values(state.world.actors).filter((actor) => (
     actor.id !== moverId
       && combatRelation(state, moverId, actor.id) === 'enemy'
-      && actor.runtime.hp.current > 0
+      && actorHasConsciousVitality(actor)
       && actorOwnsPolearmMaster(actor)
       && polearmMasterEntryEligible({
         actor,
@@ -3836,7 +4123,7 @@ function executePolearmEntryAttacks(
   for (let index = 0; index < actorIds.length; index++) {
     const enemy = next.world.actors[actorIds[index]];
     next = {...next, pendingReachEntry: {...next.pendingReachEntry!, actorIds: actorIds.slice(index + 1)}};
-    if (!enemy || enemy.runtime.hp.current <= 0
+    if (!enemy || !actorHasConsciousVitality(enemy)
       || !samePosition(next.tokens[moverId].position, destination)
       || !polearmMasterEntryEligible({actor: enemy,
         startDistanceFt: actorDistanceFt(next, enemy.id, moverId, next.tokens[enemy.id].position, start),
@@ -3846,7 +4133,7 @@ function executePolearmEntryAttacks(
       ? next.catalogActions.find((candidate) => candidate.id === baseActionId)
       : undefined;
     const featSources = enemy.capabilities.featureSources?.['general_feat.polearm_master'] ?? [];
-    if (!baseAction || !featSources.length || next.world.actors[moverId].runtime.hp.current <= 0) continue;
+    if (!baseAction || !featSources.length || !actorHasConsciousVitality(next.world.actors[moverId])) continue;
     const action: RuleActionDefinition = {
       ...clone(baseAction),
       id: `${baseAction.id}:polearm-master-entry`,
@@ -3933,7 +4220,7 @@ function breakOutOfRangeGrapples(
 
 export function canEscapeActorGrapple(state: SoloCombatState, actorId: string): boolean {
   const actor = state.world.actors[actorId];
-  return Boolean(actor && actor.runtime.hp.current > 0 && canPay(actor.runtime, nonMagicActionCost(actor.runtime)).ok
+  return Boolean(actor && actorHasConsciousVitality(actor) && canPay(actor.runtime, nonMagicActionCost(actor.runtime)).ok
     && !deniedCapabilities(actor.runtime, actor.passives ?? []).has('action')
     && Object.values(state.world.grapples).some(grapple => grapple.targetActorId === actorId)
     && state.outcome === 'active' && activeActorId(state) === actorId
@@ -3960,7 +4247,7 @@ export function canUseConditionAction(state: SoloCombatState, actorId: string, a
   const actor = state.world.actors[actorId];
   const action = actor && conditionGrantedActions(actor.runtime).find(candidate => candidate.id === actionId);
   const cost = action ? Math.floor(effectiveCombatActorSpeedFt(state, actorId) * action.movementFraction) : Infinity;
-  return Boolean(actor && action && actor.runtime.hp.current > 0
+  return Boolean(actor && action && actorHasConsciousVitality(actor)
     && state.outcome === 'active' && activeActorId(state) === actorId
     && !state.world.pendingResolution && !state.pendingD20Interrupt && !state.pendingInterception
     && !state.pendingAdditionalMovement && !state.pendingTriggeredAction && !state.pendingTurnStartGrappleDamage
@@ -3995,13 +4282,22 @@ export function executeConditionAction(state: SoloCombatState, actorId: string, 
   }, actorId, `${action.name}: потрачено ${cost} фт. движения.`, result.events.map((event, ordinal) => ({kind: 'engine', ordinal, sourceActorId: actorId, actorId, targetIds: [actorId], event}))), actorId);
 }
 
+export function selectCombatFacing(state:SoloCombatState,actorId:string,facing:CombatFacing):SoloCombatState{
+  if(!Object.hasOwn(FACING_DIRECTIONS,facing)||!state.tokens[actorId]||!isPlayerControlledCombatActor(state,actorId)||state.world.actors[actorId]?.itemTurn)throw Error('Нельзя выбрать направление этого участника');
+  if(state.outcome!=='active'||activeActorId(state)!==actorId||state.world.pendingResolution||state.pendingAdditionalMovement
+    ||state.playerMovement||state.pendingMovementStep||state.pendingReachEntry||state.pendingTriggeredAction||state.pendingTurnStartGrappleDamage
+    ||state.pendingInterception||state.pendingD20Interrupt||state.pendingAlertSwapActorIds?.length)throw Error('Сначала завершите текущее решение или дождитесь своего хода');
+  if(state.tokens[actorId].facing===facing)return state;
+  return appendLog({...state,tokens:{...state.tokens,[actorId]:{...state.tokens[actorId],facing}},boardRevision:state.boardRevision+1},actorId,`Направление: ${FACING_LABELS[facing]}.`);
+}
+
 export function selectCombatMovementMode(
   state: SoloCombatState,
   actorId: string,
   mode: CombatMovementMode,
 ): SoloCombatState {
   const actor = state.world.actors[actorId];
-  if (!actor || !isPlayerControlledCombatActor(state, actorId)) {
+  if (!actor || !isPlayerControlledCombatActor(state, actorId) || actor.itemTurn) {
     throw new Error('Нельзя выбрать перемещение этого участника');
   }
   if (state.outcome !== 'active' || activeActorId(state) !== actorId
@@ -4080,6 +4376,7 @@ export function moveActor(input: {
   rng?: Rng;
   logMovement?: boolean;
 }): SoloCombatState {
+  input = { ...input, state: projectCombatAuras(input.state) };
   const token = input.state.tokens[input.actorId];
   if (!token) throw new Error('У участника нет токена на поле');
   if (!Number.isInteger(input.destination.x) || !Number.isInteger(input.destination.y)
@@ -4090,6 +4387,8 @@ export function moveActor(input: {
   const distance = gridDistanceFt(token.position, input.destination);
   const actor = input.state.world.actors[input.actorId];
   if (!actor) throw new Error('Участник перемещения отсутствует');
+  if(actor.itemTurn)throw new Error('Ход предмета не перемещается отдельно от владельца');
+  if(input.voluntary===false&&preventsForcedMovement(actor.runtime,actor.passives??[],actor.character))return input.state;
   // The turn ledger is authoritative once materialized: Dash legitimately adds
   // another speed allotment, so clamping the stored value to base speed here
   // would erase that data-driven action. Effective speed is projected whenever
@@ -4103,9 +4402,12 @@ export function moveActor(input: {
     ? (input.maxFeet ?? available) : Math.min(input.maxFeet ?? available, available);
   if (!Number.isFinite(maxFeet) || maxFeet < 0) throw new Error('Некорректный запас перемещения');
   const flies = combatActorMovementMode(input.state, input.actorId) === 'fly';
+  const jumping=combatActorMovementMode(input.state,input.actorId)==='jump'&&input.voluntary!==false;
+  if(jumping&&actorMustCrawl(actor))throw Error('Для прыжка нужно встать');
+  if(jumping&&extra?.traversal!=='jump'&&distance>actorLongJumpFt(actor,token.position,input.destination,input.state.recentStraightMovementByActor?.[input.actorId],input.state.world.scene.mode==='encounter'?input.state.world.scene.round:0))throw Error('Прыжок превышает доступную дистанцию');
   let movementCost = input.voluntary === false
     ? distance
-    : (flies ? distance : movementCostThroughAreas(input.state, token.position, input.destination, distance, input.actorId)
+    : (flies||jumping ? distance : movementCostThroughAreas(input.state, token.position, input.destination, distance, input.actorId)
       + (actorMustCrawl(actor) ? distance : 0));
   if (movementCost > maxFeet) {
     if (input.state.pendingMovementStep?.actorId === input.actorId) {
@@ -4122,7 +4424,7 @@ export function moveActor(input: {
     let previous=token.position;
     for(let n=1;n<=steps;n++){
       const cell={x:Math.round(token.position.x+(input.destination.x-token.position.x)*n/steps),y:Math.round(token.position.y+(input.destination.y-token.position.y)*n/steps)};
-      if(!terrainStepFits(input.state,previous,cell,actorFootprint(actor,input.state)))throw Error('Путь преграждает препятствие');
+      if(!terrainStepFits(input.state,previous,cell,actorFootprint(actor,input.state),actor))throw Error('Путь преграждает препятствие');
       previous=cell;
     }
   }
@@ -4155,14 +4457,14 @@ export function moveActor(input: {
     if (next.tokens[input.actorId].position.x !== token.position.x
       || next.tokens[input.actorId].position.y !== token.position.y) return next;
   }
-  if (next.world.actors[input.actorId].runtime.hp.current <= 0) return outcome(next);
+  if (!actorHasConsciousVitality(next.world.actors[input.actorId])) return outcome(next);
   if (input.voluntary !== false && effectiveCombatActorSpeedFt(next, input.actorId) === 0) {
     return appendLog(next, input.actorId, 'Перемещение остановлено попаданием провоцированной атаки Стража.');
   }
   // Reactions happen before the step: a bite can knock the mover prone.
   // Commit the resolved attacks even when the now-more-expensive step cannot finish.
   if (input.voluntary !== false) {
-    movementCost = combatActorMovementMode(next, input.actorId) === 'fly' ? distance
+    movementCost = ['fly','jump'].includes(combatActorMovementMode(next, input.actorId)) ? distance
       : movementCostThroughAreas(next, token.position, input.destination, distance, input.actorId)
         + (actorMustCrawl(next.world.actors[input.actorId]) ? distance : 0);
     if (movementCost > maxFeet) return appendLog(next, input.actorId,
@@ -4171,7 +4473,7 @@ export function moveActor(input: {
   const draggedGrapple = input.voluntary !== false && monsterAIProfile(next.world.actors[input.actorId]).free_grapple_drag
     ? Object.values(next.world.grapples).find((grapple) => (
       grapple.grapplerActorId === input.actorId
-      && next.world.actors[grapple.targetActorId]?.runtime.hp.current > 0
+      && actorHasConsciousVitality(next.world.actors[grapple.targetActorId])
       && next.tokens[grapple.targetActorId]
     ))
     : undefined;
@@ -4201,14 +4503,19 @@ export function moveActor(input: {
         distanceFt: (continuesStraight ? previousStraight!.distanceFt : 0) + distance,
         direction: { x: dx, y: dy },
         round,
+        ...(jumping?{interrupted:true}:{}),
       },
     };
   if (draggedGrapple && recentStraightMovementByActor) delete recentStraightMovementByActor[draggedGrapple.targetActorId];
   next = {
     ...next,
+    ...(input.voluntary !== false ? {world:{...next.world,actors:{...next.world.actors,
+      [input.actorId]:{...next.world.actors[input.actorId],runtime:recordTurnMovement(next.world.actors[input.actorId].runtime,distance)},
+    }}} : {}),
     tokens: {
       ...next.tokens,
-      [input.actorId]: { ...next.tokens[input.actorId], position: input.destination },
+      [input.actorId]: { ...next.tokens[input.actorId], position: input.destination,
+        ...(input.voluntary!==false?{facing:facingToward(token.position,input.destination)??token.facing}:{}) },
       ...(draggedGrapple && draggedToken ? {
         [draggedGrapple.targetActorId]: {...draggedToken, position: {...token.position}},
       } : {}),
@@ -4219,11 +4526,14 @@ export function moveActor(input: {
       [input.actorId]: extra ? (next.movementRemainingFt[input.actorId] ?? effectiveActorSpeedFt(actor))
         : input.voluntary === false ? available : Math.max(0, available - movementCost),
     },
-    ...(extra ? {pendingAdditionalMovement: {...extra, remainingFt: Math.max(0, available - movementCost)}} : {}),
+    ...(extra ? {pendingAdditionalMovement: {...extra, remainingFt: extra.traversal==='jump'?0:Math.max(0, available - movementCost), ...(extra.traversal==='jump'&&distance>0?{arrived:true}:{})}} : {}),
     ...(recentStraightMovementByActor ? { recentStraightMovementByActor } : {}),
   };
+  next=commitMovementEffectExpiry(input.state,next);
+  if(input.voluntary!==false&&!extra&&movementCost>0)next=movementExhausted(input.state,next,input.actorId,input.rng??Math.random);
   next = reanchorSourceCombatAreas(next, input.actorId);
   if (draggedGrapple) next = reanchorSourceCombatAreas(next, draggedGrapple.targetActorId);
+  next = projectCombatAuras(syncItemOwnedActorTokens(next));
   if (input.voluntary !== false) {
     next = executePolearmEntryAttacks(
       next, input.actorId, token.position, input.destination, input.rng ?? Math.random,
@@ -4333,7 +4643,7 @@ export function approachAndExecuteCombatAction(input: {
     || next.pendingInterception || next.pendingTriggeredAction || next.pendingTurnStartGrappleDamage
     || next.pendingAlertSwapActorIds?.length);
   if (!reached || interrupted || next.outcome !== 'active'
-    || (next.world.actors[input.actorId]?.runtime.hp.current ?? 0) <= 0) return next;
+    || !actorHasConsciousVitality(next.world.actors[input.actorId])) return next;
   next = executeCombatAction({
     state: next,
     actorId: input.actorId,
@@ -4357,7 +4667,7 @@ function continuePlayerRoute(state: SoloCombatState, rng: Rng): SoloCombatState 
     const route = next.playerMovement;
     const actor = next.world.actors[route.actorId];
     const position = next.tokens[route.actorId]?.position;
-    if (!actor || !position || actor.runtime.hp.current <= 0 || next.outcome !== 'active'
+    if (!actor || !position || !actorHasConsciousVitality(actor) || next.outcome !== 'active'
       || (activeActorId(next) !== route.actorId && next.pendingAdditionalMovement?.actorId !== route.actorId)) return stop(next);
     // A resumed step may already have reached its cell before an area decision.
     if (route.steps[0] && samePosition(position, route.steps[0])) {
@@ -4369,9 +4679,10 @@ function continuePlayerRoute(state: SoloCombatState, rng: Rng): SoloCombatState 
     const available = next.pendingAdditionalMovement?.actorId === route.actorId
       ? next.pendingAdditionalMovement.remainingFt
       : next.movementRemainingFt[route.actorId] ?? effectiveCombatActorSpeedFt(next, route.actorId);
-    const cost = combatActorMovementMode(next, route.actorId) === 'fly' ? 5
+    const jumping=combatActorMovementMode(next,route.actorId)==='jump';
+    const cost = jumping?gridDistanceFt(position,destination):combatActorMovementMode(next, route.actorId) === 'fly' ? 5
       : movementCostThroughAreas(next, position, destination, 5, route.actorId) + (actorMustCrawl(actor) ? 5 : 0);
-    if (!samePosition(position, route.origin) || gridDistanceFt(position, destination) !== 5
+    if (!samePosition(position, route.origin) || (!jumping&&gridDistanceFt(position, destination) !== 5)
       || effectiveCombatActorSpeedFt(next, route.actorId) === 0 || cost > available
       || !canOccupyPosition(next, route.actorId, destination)) {
       return appendLog(stop(next), route.actorId, 'Маршрут остановлен: следующий шаг больше недоступен.');
@@ -4427,7 +4738,7 @@ function resumePendingMovementOnce(state: SoloCombatState, rng: Rng): SoloCombat
   if (!pending) return continuePlayerRoute(state, rng);
   const actor = state.world.actors[pending.actorId];
   const position = state.tokens[pending.actorId]?.position;
-  if (state.outcome !== 'active' || !actor || actor.runtime.hp.current <= 0 || !position
+  if (state.outcome !== 'active' || !actor || !actorHasConsciousVitality(actor) || !position
     || position.x !== pending.from.x || position.y !== pending.from.y
     || effectiveCombatActorSpeedFt(state, pending.actorId) === 0) {
     const {pendingMovementStep: _stopped, ...stopped} = state;
@@ -4443,7 +4754,7 @@ function startTurnOrRequestGrappleDamage(
   rng: Rng,
 ): SoloCombatState {
   const actor = state.world.actors[actorId];
-  const opportunity = isControlledCharacter(state, actorId) && actor.runtime.hp.current>0
+  const opportunity = isControlledCharacter(state, actorId) && actorHasConsciousVitality(actor)
     ? turnStartGrappleDamageOpportunity({
       passives: actor.passives ?? [],
       sourceActorId: actorId,
@@ -4468,7 +4779,7 @@ function startTurnOrRequestGrappleDamage(
       next.recentStraightMovementByActor ?? {},
     ).filter(([candidateId]) => candidateId !== actorId)),
   };
-  return queueCombatAreaEvent(started, 'start_turn', [actorId]);
+  return queueCombatAreaEvent(runCombatAuraLifecycle(started, 'turn_start', actorId, rng), 'start_turn', [actorId]);
 }
 
 /** Commit the persisted optional Unarmed Fighting damage choice, or decline it. */
@@ -4497,7 +4808,7 @@ export function resolveSoloCombatTurnStart(
     label: 'Начало хода',
   });
   const started = resetTurnMovement(next, pending.actorId, effectiveCombatActorSpeedFt(next, pending.actorId));
-  return queueCombatAreaEvent(started, 'start_turn', [pending.actorId]);
+  return queueCombatAreaEvent(runCombatAuraLifecycle(started, 'turn_start', pending.actorId, rng), 'start_turn', [pending.actorId]);
 }
 
 export function advanceTurn(state: SoloCombatState, rng: Rng = Math.random): SoloCombatState {
@@ -4508,10 +4819,11 @@ export function advanceTurn(state: SoloCombatState, rng: Rng = Math.random): Sol
     || state.pendingTurnStartGrappleDamage || state.pendingInterception || state.pendingD20Interrupt
     || state.pendingAlertSwapActorIds?.length) return state;
   const endingActorId = activeActorId(state);
+  state = runCombatAuraLifecycle(state, 'turn_end', endingActorId, rng);
   let next = dispatch({
     state,
     command: { ...commandBase(state, endingActorId), type: 'EndTurn' },
-    rng: () => { throw new Error('EndTurn не должен бросать кости'); },
+    rng,
     label: 'Конец хода',
   });
   if (next.outcome !== 'active') return next;
@@ -4665,7 +4977,7 @@ export function setSoloCombatMount(
   const mountSize = mount ? effectiveActorSize(mount) : undefined;
   if (!mount || mountId === riderId || !riderPosition || !mountPosition
     || combatRelation(state, riderId, mountId) !== 'ally'
-    || mount.runtime.hp.current <= 0
+    || !actorHasConsciousVitality(mount)
     || !Number.isInteger(riderSize)
     || !Number.isInteger(mountSize)
     || mountSize! <= riderSize!
@@ -5110,7 +5422,7 @@ function executeMonsterRoute(state: SoloCombatState, actorId: string, steps: Gri
       next = {...next, monsterMovement: {actorId, steps: next.monsterMovement.steps.slice(1)}};
       continue;
     }
-    if (next.outcome !== 'active' || next.world.actors[actorId].runtime.hp.current <= 0) break;
+    if (next.outcome !== 'active' || !actorHasConsciousVitality(next.world.actors[actorId])) break;
     if (monsterMovementPaused(next)) return report(next);
     if (effectiveCombatActorSpeedFt(next, actorId) <= 0
       || !canOccupyPosition(next, actorId, step)) break;
@@ -5164,7 +5476,7 @@ function settlePendingMonsterOnHitGrapple(state: SoloCombatState): SoloCombatSta
   if (!policy || !hasHitRecord(next, pending.fromLogCursor, pending.actorId)) return next;
   const source = next.world.actors[pending.actorId];
   const target = next.world.actors[pending.targetId];
-  if (!source || !target || source.runtime.hp.current <= 0 || target.runtime.hp.current <= 0
+  if (!source || !target || !actorHasConsciousVitality(source) || !actorHasConsciousVitality(target)
     || (effectiveActorSize(target) ?? Number.POSITIVE_INFINITY) > policy.maxTargetSize
     || targetGrappledBySource(next, source.id, target.id)
     || !source.attackProfile?.graspingParts?.includes(policy.sourcePart)
@@ -5278,11 +5590,11 @@ function continueMonsterAttackSequence(state: SoloCombatState, rng: Rng): SoloCo
     if (monsterMovementPaused(next)) return next;
     const sequence = next.monsterAttackSequence;
     const source = next.world.actors[sequence.actorId];
-    if (!source || source.runtime.hp.current <= 0 || deniedCapabilities(source.runtime, source.passives ?? []).has('action')) break;
+    if (!source || !actorHasConsciousVitality(source) || deniedCapabilities(source.runtime, source.passives ?? []).has('action')) break;
     const actionId = sequence.actionIds[0];
     const action = next.catalogActions.find(row => row.id === actionId);
     if (!action || action.mechanics.npc_multiattack_followup !== true) throw new Error('Повреждена последовательность многоатаки');
-    const candidates = Object.values(next.world.actors).filter(target => target.runtime.hp.current > 0
+    const candidates = Object.values(next.world.actors).filter(target => actorHasConsciousVitality(target)
       && combatRelation(next, sequence.actorId, target.id) === 'enemy'
       && !conditionInteractionDenied({world: next.world, actorId: sequence.actorId, targetActorId: target.id, capability: 'harm'})
       && actorDistanceFt(next, sequence.actorId, target.id) <= monsterAttackRange(action)
@@ -5328,7 +5640,7 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
   }
   const monster = state.world.actors[monsterId];
   if (!monster || monster.kind !== 'monster') return state;
-  if (monster.runtime.hp.current <= 0) return advanceTurn(state, rng);
+  if (!actorHasConsciousVitality(monster)) return advanceTurn(state, rng);
   // A persisted monster turn can resume after a player reaction without the
   // original controller stack frame that would have advanced initiative. The
   // action payment is the durable proof that the planner already committed its
@@ -5339,7 +5651,8 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
   }
   const targetId = Object.keys(state.world.actors)
     .filter((actorId) => isPlayerControlledCombatActor(state, actorId))
-    .filter((actorId) => (state.world.actors[actorId]?.runtime.hp.current ?? 0) > 0)
+    .filter((actorId) => !state.world.actors[actorId].itemTurn)
+    .filter((actorId) => actorHasConsciousVitality(state.world.actors[actorId]))
     .filter((actorId) => !conditionInteractionDenied({
       world: state.world,
       actorId: monsterId,
@@ -5391,7 +5704,7 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
     }
   }
   if (plan.firstMove.length) next = executeMonsterRoute(next, monsterId, plan.firstMove, rng);
-  if (next.world.actors[monsterId].runtime.hp.current <= 0 || next.outcome !== 'active'
+  if (!actorHasConsciousVitality(next.world.actors[monsterId]) || next.outcome !== 'active'
     || monsterMovementPaused(next)) return next;
   if (plan.usesDash) {
     if (!next.dashActionId) throw new Error('В боевом каталоге нет data-driven действия «Рывок»');
@@ -5735,7 +6048,7 @@ export async function createSoloCombatState(input: {
     },
     initiative: [], log: [], outcome: 'active',
   };
-  return withInitiativeAndStart(state, input.rng ?? Math.random, input.initiativeManeuverActionIds);
+  return withInitiativeAndStart(materializeItemOwnedActors(state,input.actions), input.rng ?? Math.random, input.initiativeManeuverActionIds);
 }
 
 export function selectedTargetsForAction(input: {
@@ -5748,6 +6061,8 @@ export function selectedTargetsForAction(input: {
   const action = input.state.catalogActions.find((candidate) => candidate.id === input.actionId);
   if (!action) throw new Error('Действие отсутствует в боевом каталоге');
   const actorId = input.actorId ?? input.state.characterId;
+  if(input.clickedActorId && input.state.world.actors[input.clickedActorId]?.itemTurn)
+    throw new Error('Ход предмета не является отдельной целью');
   const rawTargeting = action.mechanics.targeting as Record<string, unknown> | undefined;
   if (rawTargeting?.domain === 'world' || rawTargeting?.actor_targets === false) return [];
   if (rawTargeting?.shape === 'self') return [actorId];

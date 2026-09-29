@@ -1,5 +1,6 @@
 import type { ActiveEffectEntry, ExecuteContext, RuntimeState } from '../mvp/contracts';
 import { collectGrantActionSlugs } from '../mechanics/actionGrants';
+import {projectRuntimeCharacter} from './runtimeCharacterProjection';
 
 type Dict = Record<string, unknown>;
 
@@ -14,6 +15,13 @@ export function matchingRuntimeActionGrants(state: RuntimeState, mechanics: Dict
 /** This snapshot was created by grant_effect in the authoritative executor and
  * travels with the recipient, including when the original caster is absent. */
 export function runtimeActionContext(state: RuntimeState, mechanics: Dict, ctx: ExecuteContext): ExecuteContext {
+  ctx={...ctx,character:projectRuntimeCharacter(ctx.character,state,ctx.passives??[]),
+    ...(ctx.target?.runtimeState&&ctx.target.characterContext?{target:{...ctx.target,characterContext:projectRuntimeCharacter(ctx.target.characterContext,ctx.target.runtimeState,ctx.target.passives??[])}}:{})};
+  const activation = mechanics.activation as Dict | undefined;
+  const trigger = activation?.trigger as Dict | undefined;
+  if (activation?.mode === 'reaction' && [trigger?.event,...(Array.isArray(trigger?.events)?trigger.events:[])].includes('opportunity_attack')) {
+    ctx={...ctx,attackFacts:{...ctx.attackFacts,opportunityAttack:true}};
+  }
   const sources = matchingRuntimeActionGrants(state, mechanics, ctx.character.level)
     .flatMap(effect => effect.actionContext ? [effect.actionContext] : []);
   if (!sources.length) return ctx;

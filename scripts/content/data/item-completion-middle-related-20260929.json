@@ -1,0 +1,6171 @@
+{
+  "schema_version": 1,
+  "audit_id": "item-completion-middle-20260929",
+  "entities": [
+    {
+      "entity_type": "effect",
+      "id": "15200000-0000-4000-8000-000000000005",
+      "card_number": "EFFECT-item-perfume-check",
+      "preimage": {
+        "mechanics": {
+          "op": "advantage",
+          "kind": "modifier",
+          "consume": "next",
+          "duration": {
+            "type": "manual"
+          },
+          "applies_to": {
+            "roll": "ability_check",
+            "filter": {
+              "skill": "persuasion"
+            }
+          }
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "kind": "modifier",
+          "op": "advantage",
+          "applies_to": {
+            "roll": "ability_check",
+            "filter": {
+              "skill": "persuasion"
+            }
+          },
+          "when": [
+            {
+              "kind": "target_creature_type_in",
+              "values": [
+                "humanoid"
+              ]
+            },
+            {
+              "kind": "target_relation_in",
+              "values": [
+                "neutral"
+              ]
+            }
+          ],
+          "duration": {
+            "type": "hours",
+            "amount": 1
+          }
+        }
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "cf725fa6-ed1c-5e74-9ccd-aa7c0483eaae",
+      "card_number": "ACT-item-completion-0413",
+      "name": "Колода крапленных карт — Заметить краплёную колоду",
+      "description_sha256": "8b028b758764923e9ec14dacef8c682eb06258d4c772ad6daa03d0d91e5cb594",
+      "preimage": null,
+      "patch": {
+        "id": "cf725fa6-ed1c-5e74-9ccd-aa7c0483eaae",
+        "card_number": "ACT-item-completion-0413",
+        "name": "Колода крапленных карт — Заметить краплёную колоду",
+        "name_en": null,
+        "description": "Если цель пройдет проверку Расследования (Сл 12), то узнает, что вы жульничаете",
+        "detailed_description": null,
+        "rarity": "common",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": []
+          },
+          "targeting": {
+            "shape": "single",
+            "domain": "actor",
+            "range_ft": 5,
+            "min_targets": 1,
+            "max_targets": 1,
+            "actor_targets": true,
+            "allowed_relations": [
+              "ally",
+              "enemy",
+              "neutral"
+            ],
+            "requires_line_of_sight": true
+          },
+          "effects": [
+            {
+              "resolution": "ability_check",
+              "who": "target",
+              "ability": "int",
+              "skill": "investigation",
+              "dc": 12,
+              "on_success": [
+                {
+                  "kind": "information_reveal",
+                  "reveal": "marked_cards_fraud",
+                  "fields": [
+                    "cheating_detected"
+                  ]
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "5ae611c0-bf15-4e7c-bc06-3b18163d06c0"
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "resource",
+      "id": "e91ef288-dfa1-595f-b572-cdd406071ffe",
+      "preimage": null,
+      "patch": {
+        "id": "e91ef288-dfa1-595f-b572-cdd406071ffe",
+        "resource_id": "item_completion_674",
+        "name": "Кулон защиты — заряды",
+        "description": "В начале боя вы получаете 1 заряд **блока**.",
+        "category": "character_resource",
+        "recharge": "encounter",
+        "sort_order": 200,
+        "author": "System",
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "8cda6b71-2836-5ad2-b76a-d80ab77bd013",
+      "card_number": "ACT-item-influence-0378",
+      "patch": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "kind": "roll_influence",
+                  "timing": "after_roll_before_outcome",
+                  "affects": "any",
+                  "operation": "reroll_roll",
+                  "combat_only": true,
+                  "once_per_turn": "item-0378-time",
+                  "eligible_rolls": [
+                    "attack",
+                    "save",
+                    "check",
+                    "damage",
+                    "healing",
+                    "other"
+                  ]
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "cost": [
+              {
+                "amount": 1,
+                "resource": "reaction"
+              }
+            ],
+            "mode": "triggered",
+            "optional": true
+          },
+          "requires_item_source": "65dfa236-5297-4e40-be30-331ec1b68b37"
+        }
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "1b927c22-3b22-52a7-8fbe-f935b10e89ed",
+      "card_number": "ACT-item-completion-0509",
+      "name": "Бусы из зубов мёртвых — Сопротивление",
+      "description_sha256": "75fa30f7bd454e4ed82414c46d86f716895f3db0d58db01f553cbc04a4f003f4",
+      "preimage": null,
+      "patch": {
+        "id": "1b927c22-3b22-52a7-8fbe-f935b10e89ed",
+        "card_number": "ACT-item-completion-0509",
+        "name": "Бусы из зубов мёртвых — Сопротивление",
+        "name_en": null,
+        "description": "Реакцией вы можете получить сопротивление холоду и некротике на 1 ход. *3 зуба.*",
+        "detailed_description": null,
+        "rarity": "uncommon",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "reaction",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "reaction"
+              },
+              {
+                "resource": "self_uses"
+              }
+            ]
+          },
+          "uses": {
+            "count": 3,
+            "per": "never"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "resistance",
+                  "value": "resistance",
+                  "damage_type": "cold",
+                  "duration": {
+                    "type": "until_start_of_next_turn"
+                  }
+                },
+                {
+                  "kind": "resistance",
+                  "value": "resistance",
+                  "damage_type": "necrotic",
+                  "duration": {
+                    "type": "until_start_of_next_turn"
+                  }
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "1c9d0b96-f035-461e-bbfe-2c62f7c800d5",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "8a0f34dc-6fef-53d8-9559-501b3a5fe538",
+      "card_number": "ACT-item-completion-0521",
+      "name": "Перо вестницы — Рывок",
+      "description_sha256": "ba5cd956773243d8220fcd273e51d08b22c46f63c7f458a0970d7470e121cb9b",
+      "preimage": null,
+      "patch": {
+        "id": "8a0f34dc-6fef-53d8-9559-501b3a5fe538",
+        "card_number": "ACT-item-completion-0521",
+        "name": "Перо вестницы — Рывок",
+        "name_en": null,
+        "description": "Вы можете использовать Рывок бонусным действием.\nВы устойчивы к падениям.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              }
+            ],
+            "counts_as": "dash"
+          },
+          "effects": [],
+          "requires_item_source": "c303fd36-b20e-43c4-84f7-bb4fa116acab",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "ec56961f-d94a-52f9-8d2f-933d784bd799",
+      "card_number": "ACT-item-completion-0542",
+      "name": "Бинты мученика — Кровавое исцеление",
+      "description_sha256": "f32e4a3cbb94091f98db10049aeb73291393591fdb4e1db160f76e7418e4f48c",
+      "preimage": null,
+      "patch": {
+        "id": "ec56961f-d94a-52f9-8d2f-933d784bd799",
+        "card_number": "ACT-item-completion-0542",
+        "name": "Бинты мученика — Кровавое исцеление",
+        "name_en": null,
+        "description": "Бонусным действием прикоснитесь к существу: [healing]исцелите его на 2к4+2:healing:[/healing], получив половину выпавшего лечения как урон. *5 зарядов.*",
+        "detailed_description": null,
+        "rarity": "uncommon",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              },
+              {
+                "resource": "self_uses"
+              }
+            ]
+          },
+          "uses": {
+            "count": 5,
+            "per": "never"
+          },
+          "targeting": {
+            "shape": "single",
+            "domain": "actor",
+            "range_ft": 5,
+            "min_targets": 1,
+            "max_targets": 1,
+            "actor_targets": true,
+            "allowed_relations": [
+              "ally",
+              "self"
+            ],
+            "requires_line_of_sight": true
+          },
+          "damage_source_kind": "item",
+          "formula_bindings": {
+            "healing_roll": "2d4+2"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "target",
+              "result": [
+                {
+                  "kind": "healing",
+                  "amount": "healing_roll"
+                }
+              ]
+            },
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "damage",
+                  "type": "untyped",
+                  "amount": "healing_roll/2"
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "73cb6af6-c701-4ecb-b853-382489090850"
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "610ead45-60f7-592e-8c58-df43aba3ebf5",
+      "card_number": "ACT-item-completion-0603",
+      "name": "Несокрушимость — Удар ногой",
+      "description_sha256": "3489342489e60ffd6ab7cfe07077379a4d26c749d6aac4a6065dcc25d4c438eb",
+      "preimage": null,
+      "patch": {
+        "id": "610ead45-60f7-592e-8c58-df43aba3ebf5",
+        "card_number": "ACT-item-completion-0603",
+        "name": "Несокрушимость — Удар ногой",
+        "name_en": null,
+        "description": "Защита +2.\n\nВы получаете устойчивость к физическому урону.\n\nВас невозможно опрокинуть или сдвинуть с места.\n\nБонусным действием вы можете совершить атаку ногой. При попадании вы наносите 3к10 дробящего урона.\n\nСила и Телосложение +2.",
+        "detailed_description": "Даже для того, чтобы просто надеть эти латные сапоги, потребуется недюжинная сила. Передвижение в них - трудная задача, но руны и зачарования немного упрощают её.",
+        "rarity": "artifact",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              }
+            ]
+          },
+          "targeting": {
+            "shape": "single",
+            "domain": "actor",
+            "range_ft": 5,
+            "min_targets": 1,
+            "max_targets": 1,
+            "actor_targets": true,
+            "allowed_relations": [
+              "enemy",
+              "neutral"
+            ],
+            "requires_line_of_sight": true
+          },
+          "effects": [
+            {
+              "resolution": "attack_roll",
+              "vs": "ac",
+              "ability": "str",
+              "attack_kind": "unarmed",
+              "on_hit": [
+                {
+                  "kind": "damage",
+                  "type": "bludgeoning",
+                  "dice": "3d10"
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "adf8cace-c2c5-44c3-a4d3-7248ea0376e2"
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "resource",
+      "id": "8e7ef3d1-03be-5f2b-856d-08aa1df76b8a",
+      "preimage": null,
+      "patch": {
+        "id": "8e7ef3d1-03be-5f2b-856d-08aa1df76b8a",
+        "resource_id": "item_completion_669",
+        "name": "Амулет восстановления — заряды",
+        "description": "Бонусным действием вы можете восстановить ячейку любого уровня. *(1 раз в день)*",
+        "category": "character_resource",
+        "recharge": "long_rest",
+        "sort_order": 200,
+        "author": "System",
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "6d9d5acc-948f-52f2-888c-35e2f9099bad",
+      "card_number": "ACT-item-completion-0669-slot-1",
+      "name": "Амулет восстановления — Восстановить ячейку 1",
+      "description_sha256": "41623ee31fc6e97f3550f6a13ef929a9c44ba89dbe018870bc8e47363858d720",
+      "preimage": null,
+      "patch": {
+        "id": "6d9d5acc-948f-52f2-888c-35e2f9099bad",
+        "card_number": "ACT-item-completion-0669-slot-1",
+        "name": "Амулет восстановления — Восстановить ячейку 1",
+        "name_en": null,
+        "description": "Бонусным действием вы можете восстановить ячейку любого уровня. *(1 раз в день)*",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              },
+              {
+                "resource": "item_completion_669"
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "spell_slot_1",
+                  "amount": 1
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "2af6b727-8da5-4256-865d-9835ad24c846",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "cdb4a53f-0f37-5a95-8b64-ee10523f1627",
+      "card_number": "ACT-item-completion-0669-slot-2",
+      "name": "Амулет восстановления — Восстановить ячейку 2",
+      "description_sha256": "41623ee31fc6e97f3550f6a13ef929a9c44ba89dbe018870bc8e47363858d720",
+      "preimage": null,
+      "patch": {
+        "id": "cdb4a53f-0f37-5a95-8b64-ee10523f1627",
+        "card_number": "ACT-item-completion-0669-slot-2",
+        "name": "Амулет восстановления — Восстановить ячейку 2",
+        "name_en": null,
+        "description": "Бонусным действием вы можете восстановить ячейку любого уровня. *(1 раз в день)*",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              },
+              {
+                "resource": "item_completion_669"
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "spell_slot_2",
+                  "amount": 1
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "2af6b727-8da5-4256-865d-9835ad24c846",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "bde62543-93fa-5ee4-b67b-60abd1412b96",
+      "card_number": "ACT-item-completion-0669-slot-3",
+      "name": "Амулет восстановления — Восстановить ячейку 3",
+      "description_sha256": "41623ee31fc6e97f3550f6a13ef929a9c44ba89dbe018870bc8e47363858d720",
+      "preimage": null,
+      "patch": {
+        "id": "bde62543-93fa-5ee4-b67b-60abd1412b96",
+        "card_number": "ACT-item-completion-0669-slot-3",
+        "name": "Амулет восстановления — Восстановить ячейку 3",
+        "name_en": null,
+        "description": "Бонусным действием вы можете восстановить ячейку любого уровня. *(1 раз в день)*",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              },
+              {
+                "resource": "item_completion_669"
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "spell_slot_3",
+                  "amount": 1
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "2af6b727-8da5-4256-865d-9835ad24c846",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "d59d969f-6f83-5b21-831b-3a4f2babdb51",
+      "card_number": "ACT-item-completion-0669-slot-4",
+      "name": "Амулет восстановления — Восстановить ячейку 4",
+      "description_sha256": "41623ee31fc6e97f3550f6a13ef929a9c44ba89dbe018870bc8e47363858d720",
+      "preimage": null,
+      "patch": {
+        "id": "d59d969f-6f83-5b21-831b-3a4f2babdb51",
+        "card_number": "ACT-item-completion-0669-slot-4",
+        "name": "Амулет восстановления — Восстановить ячейку 4",
+        "name_en": null,
+        "description": "Бонусным действием вы можете восстановить ячейку любого уровня. *(1 раз в день)*",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              },
+              {
+                "resource": "item_completion_669"
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "spell_slot_4",
+                  "amount": 1
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "2af6b727-8da5-4256-865d-9835ad24c846",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "518471cb-145b-52d0-818d-0c5442d0d0bb",
+      "card_number": "ACT-item-completion-0669-slot-5",
+      "name": "Амулет восстановления — Восстановить ячейку 5",
+      "description_sha256": "41623ee31fc6e97f3550f6a13ef929a9c44ba89dbe018870bc8e47363858d720",
+      "preimage": null,
+      "patch": {
+        "id": "518471cb-145b-52d0-818d-0c5442d0d0bb",
+        "card_number": "ACT-item-completion-0669-slot-5",
+        "name": "Амулет восстановления — Восстановить ячейку 5",
+        "name_en": null,
+        "description": "Бонусным действием вы можете восстановить ячейку любого уровня. *(1 раз в день)*",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              },
+              {
+                "resource": "item_completion_669"
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "spell_slot_5",
+                  "amount": 1
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "2af6b727-8da5-4256-865d-9835ad24c846",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "8f6a5a28-2403-5747-ba70-88c34a4ecc50",
+      "card_number": "ACT-item-completion-0669-slot-6",
+      "name": "Амулет восстановления — Восстановить ячейку 6",
+      "description_sha256": "41623ee31fc6e97f3550f6a13ef929a9c44ba89dbe018870bc8e47363858d720",
+      "preimage": null,
+      "patch": {
+        "id": "8f6a5a28-2403-5747-ba70-88c34a4ecc50",
+        "card_number": "ACT-item-completion-0669-slot-6",
+        "name": "Амулет восстановления — Восстановить ячейку 6",
+        "name_en": null,
+        "description": "Бонусным действием вы можете восстановить ячейку любого уровня. *(1 раз в день)*",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              },
+              {
+                "resource": "item_completion_669"
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "spell_slot_6",
+                  "amount": 1
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "2af6b727-8da5-4256-865d-9835ad24c846",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "944e08e0-ee20-5f66-b7c8-fe2d1e382589",
+      "card_number": "ACT-item-completion-0669-slot-7",
+      "name": "Амулет восстановления — Восстановить ячейку 7",
+      "description_sha256": "41623ee31fc6e97f3550f6a13ef929a9c44ba89dbe018870bc8e47363858d720",
+      "preimage": null,
+      "patch": {
+        "id": "944e08e0-ee20-5f66-b7c8-fe2d1e382589",
+        "card_number": "ACT-item-completion-0669-slot-7",
+        "name": "Амулет восстановления — Восстановить ячейку 7",
+        "name_en": null,
+        "description": "Бонусным действием вы можете восстановить ячейку любого уровня. *(1 раз в день)*",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              },
+              {
+                "resource": "item_completion_669"
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "spell_slot_7",
+                  "amount": 1
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "2af6b727-8da5-4256-865d-9835ad24c846",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "57237120-72f2-511a-837e-936de8c8f54f",
+      "card_number": "ACT-item-completion-0669-slot-8",
+      "name": "Амулет восстановления — Восстановить ячейку 8",
+      "description_sha256": "41623ee31fc6e97f3550f6a13ef929a9c44ba89dbe018870bc8e47363858d720",
+      "preimage": null,
+      "patch": {
+        "id": "57237120-72f2-511a-837e-936de8c8f54f",
+        "card_number": "ACT-item-completion-0669-slot-8",
+        "name": "Амулет восстановления — Восстановить ячейку 8",
+        "name_en": null,
+        "description": "Бонусным действием вы можете восстановить ячейку любого уровня. *(1 раз в день)*",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              },
+              {
+                "resource": "item_completion_669"
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "spell_slot_8",
+                  "amount": 1
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "2af6b727-8da5-4256-865d-9835ad24c846",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "86d9a5c7-1a45-57c2-b29f-8a06eccca017",
+      "card_number": "ACT-item-completion-0669-slot-9",
+      "name": "Амулет восстановления — Восстановить ячейку 9",
+      "description_sha256": "41623ee31fc6e97f3550f6a13ef929a9c44ba89dbe018870bc8e47363858d720",
+      "preimage": null,
+      "patch": {
+        "id": "86d9a5c7-1a45-57c2-b29f-8a06eccca017",
+        "card_number": "ACT-item-completion-0669-slot-9",
+        "name": "Амулет восстановления — Восстановить ячейку 9",
+        "name_en": null,
+        "description": "Бонусным действием вы можете восстановить ячейку любого уровня. *(1 раз в день)*",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              },
+              {
+                "resource": "item_completion_669"
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "spell_slot_9",
+                  "amount": 1
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "2af6b727-8da5-4256-865d-9835ad24c846",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "resource",
+      "id": "e0ee325a-2339-5026-b536-51db0e2ea69d",
+      "preimage": null,
+      "patch": {
+        "id": "e0ee325a-2339-5026-b536-51db0e2ea69d",
+        "resource_id": "item_completion_672",
+        "name": "Кулон виртуоза — заряды",
+        "description": "Вы можете использовать заговор бонусным действием.\n*(2 раза в день)*",
+        "category": "character_resource",
+        "recharge": "long_rest",
+        "sort_order": 200,
+        "author": "System",
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "ae31fe9f-cf92-592b-88d5-b0f89f21bf56",
+      "card_number": "ACT-item-completion-0354",
+      "name": "Веление Темпуса +3 — Круговая атака",
+      "description_sha256": "ea1ab5509752d9683bf58b9310bd9b79f881afa0f38e5b1b4c0d127585d52f0d",
+      "preimage": null,
+      "patch": {
+        "id": "ae31fe9f-cf92-592b-88d5-b0f89f21bf56",
+        "card_number": "ACT-item-completion-0354",
+        "name": "Веление Темпуса +3 — Круговая атака",
+        "name_en": null,
+        "description": "Ловкость +3 (вплоть до 24)\nВы можете бонусным действием совершить круговую атаку по всем врагам в радиусе 10 фт.",
+        "detailed_description": null,
+        "rarity": "artifact",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              }
+            ]
+          },
+          "requires_held_item": "05d47afd-db11-4aa5-9ce0-b7024c50c368",
+          "targeting": {
+            "shape": "area",
+            "domain": "actor",
+            "range_ft": 10,
+            "min_targets": 1,
+            "max_targets": 99,
+            "actor_targets": true,
+            "allowed_relations": [
+              "enemy"
+            ],
+            "requires_line_of_sight": true,
+            "area": {
+              "kind": "sphere",
+              "size_ft": 10
+            }
+          },
+          "effects": [
+            {
+              "resolution": "attack_roll",
+              "vs": "ac",
+              "ability": "auto",
+              "attack_kind": "weapon_melee",
+              "on_hit": [
+                {
+                  "kind": "damage",
+                  "dice": "weapon",
+                  "type": "weapon",
+                  "ability": "auto"
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "05d47afd-db11-4aa5-9ce0-b7024c50c368",
+          "magical": true
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "9ac466a2-1b35-5a22-b33a-336a038b7441",
+      "card_number": "ACT-item-completion-0440",
+      "name": "Сапоги смывки — Ускользнуть после урона",
+      "description_sha256": "6f9e4ce9b2ef8e7a8c59272fda0263cedc422cc78c42bc47c70087fe7d31e64b",
+      "preimage": null,
+      "patch": {
+        "id": "9ac466a2-1b35-5a22-b33a-336a038b7441",
+        "card_number": "ACT-item-completion-0440",
+        "name": "Сапоги смывки — Ускользнуть после урона",
+        "name_en": null,
+        "description": "Когда вы получаете урон, реакцией вы можете телепортироваться на 15 фт в видимое пространство.\n*Два раза за бой*",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "reaction",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "reaction",
+            "cost": [
+              {
+                "resource": "reaction"
+              },
+              {
+                "resource": "self_uses"
+              }
+            ],
+            "trigger": {
+              "event": "damage_taken",
+              "timing": "before"
+            }
+          },
+          "uses": {
+            "count": 2,
+            "per": "encounter"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "movement",
+                  "value": "teleport",
+                  "distance": 15
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "fb1a477a-f808-4b0a-99f8-2b8c3a94d050",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "0079cdf5-6c19-5acd-9464-9cd116f6cbe8",
+      "card_number": "ACT-item-completion-0489",
+      "name": "Простой щит — Удар щитом",
+      "description_sha256": "38b4c7594ca0458cab7cbf5949b4d1ebdc85179ed1dc240b709a9242208dfe41",
+      "preimage": null,
+      "patch": {
+        "id": "0079cdf5-6c19-5acd-9464-9cd116f6cbe8",
+        "card_number": "ACT-item-completion-0489",
+        "name": "Простой щит — Удар щитом",
+        "name_en": null,
+        "description": "Щит можно использовать для атаки бонусным действием. Он наносит 1к4 дробящего урона.",
+        "detailed_description": null,
+        "rarity": "common",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              }
+            ]
+          },
+          "requires_held_item": "db34e692-5d67-4afc-99ca-b42ce6f0dc28",
+          "targeting": {
+            "shape": "single",
+            "domain": "actor",
+            "range_ft": 5,
+            "min_targets": 1,
+            "max_targets": 1,
+            "actor_targets": true,
+            "allowed_relations": [
+              "enemy",
+              "neutral"
+            ],
+            "requires_line_of_sight": true
+          },
+          "effects": [
+            {
+              "resolution": "attack_roll",
+              "vs": "ac",
+              "ability": "str",
+              "attack_kind": "unarmed",
+              "on_hit": [
+                {
+                  "kind": "damage",
+                  "dice": "1d4",
+                  "type": "bludgeoning",
+                  "ability": "str"
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "db34e692-5d67-4afc-99ca-b42ce6f0dc28"
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "99bbb83f-3c1a-56ba-a99d-3f7e65b3df8b",
+      "card_number": "ACT-item-completion-0504",
+      "name": "Посох жажды — Восстановить все ячейки",
+      "description_sha256": "5df7efe87ace2a9836cc001d37049f29a8f5b193e37a84366bb25686306b8d46",
+      "preimage": null,
+      "patch": {
+        "id": "99bbb83f-3c1a-56ba-a99d-3f7e65b3df8b",
+        "card_number": "ACT-item-completion-0504",
+        "name": "Посох жажды — Восстановить все ячейки",
+        "name_en": null,
+        "description": "Действием вы можете восстановить все ячейки заклинаний. \nВы навсегда теряете один слот настройки.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "action"
+              }
+            ],
+            "requires_attunement_capacity": 1
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "spell_slot_1",
+                  "restore_all": true
+                },
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "spell_slot_2",
+                  "restore_all": true
+                },
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "spell_slot_3",
+                  "restore_all": true
+                },
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "spell_slot_4",
+                  "restore_all": true
+                },
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "spell_slot_5",
+                  "restore_all": true
+                },
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "spell_slot_6",
+                  "restore_all": true
+                },
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "spell_slot_7",
+                  "restore_all": true
+                },
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "spell_slot_8",
+                  "restore_all": true
+                },
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "spell_slot_9",
+                  "restore_all": true
+                },
+                {
+                  "kind": "attunement_capacity",
+                  "op": "add",
+                  "amount": -1,
+                  "duration": {
+                    "type": "permanent"
+                  }
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "86cb5129-1b8a-4397-976b-b4ef37614d4e",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "4d973aa4-a38c-5b1d-96f8-2fb0e879a83a",
+      "card_number": "ACT-item-completion-0506",
+      "name": "Амулет агностика — Божественный совет",
+      "description_sha256": "2a223d36dd20a9b4b1a665d1ab50b700cc02b5b31572f806b1fbc5b55e406181",
+      "preimage": null,
+      "patch": {
+        "id": "4d973aa4-a38c-5b1d-96f8-2fb0e879a83a",
+        "card_number": "ACT-item-completion-0506",
+        "name": "Амулет агностика — Божественный совет",
+        "name_en": null,
+        "description": "Бог, который ближе всего к вам даёт +1к6 к одному броску\n*Перезаряжается на рассвете.*",
+        "detailed_description": null,
+        "rarity": "uncommon",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "triggered",
+            "cost": [
+              {
+                "resource": "self_uses"
+              }
+            ]
+          },
+          "uses": {
+            "count": 1,
+            "per": "day"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "roll_influence",
+                  "operation": "add_modifier",
+                  "value": 0,
+                  "bonus_dice": "1d6",
+                  "eligible_rolls": [
+                    "attack",
+                    "save",
+                    "check"
+                  ],
+                  "timing": "before_roll"
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "0b775fc5-e32e-49bd-ad2f-9b11862d6c55",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "73a156da-d88e-5830-bf58-036623d919e6",
+      "card_number": "ACT-item-completion-0510",
+      "name": "Мешочек кофе Мамы Бо — Выпить порцию кофе",
+      "description_sha256": "2d0cda5de5b5c1df0e692c5c35049810ffdbe26bbd94a0dfe8e073c71b654fb9",
+      "preimage": null,
+      "patch": {
+        "id": "73a156da-d88e-5830-bf58-036623d919e6",
+        "card_number": "ACT-item-completion-0510",
+        "name": "Мешочек кофе Мамы Бо — Выпить порцию кофе",
+        "name_en": null,
+        "description": "5 порций. Выпитый кофе дает преимущество на первый бросок инициативы.",
+        "detailed_description": null,
+        "rarity": "common",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "self_uses"
+              }
+            ]
+          },
+          "uses": {
+            "count": 5,
+            "per": "never"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "modifier",
+                  "op": "advantage",
+                  "applies_to": {
+                    "roll": "initiative"
+                  },
+                  "consume": "next",
+                  "duration": {
+                    "type": "permanent"
+                  }
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "c2349fad-b9a7-4019-b9fd-53bd4167034b",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "04bb3876-8bc2-572a-85c3-4a30d7ef65b1",
+      "card_number": "ACT-item-completion-0473",
+      "name": "Перчатки ловли стрел — Отклонить выстрел",
+      "description_sha256": "9430d15659681db8746cdca9610ddc209a023accf2710ecbd23277aa1fc2f8f0",
+      "preimage": null,
+      "patch": {
+        "id": "04bb3876-8bc2-572a-85c3-4a30d7ef65b1",
+        "card_number": "ACT-item-completion-0473",
+        "name": "Перчатки ловли стрел — Отклонить выстрел",
+        "name_en": null,
+        "description": "1 раз до короткого отдыха, вы можете снизить урон от выстрела по вам на 1к10+5.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "reaction",
+            "cost": [
+              {
+                "resource": "self_uses"
+              }
+            ],
+            "trigger": {
+              "event": "damage_taken",
+              "timing": "before",
+              "circumstances": [
+                {
+                  "kind": "event_data_equals",
+                  "key": "delivery",
+                  "value": "attack"
+                },
+                {
+                  "kind": "event_data_equals",
+                  "key": "attackRange",
+                  "value": "ranged"
+                }
+              ]
+            }
+          },
+          "uses": {
+            "count": 1,
+            "per": "short_rest"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "reduce_damage",
+                  "amount": "1d10+5"
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "a0b1d1be-6fd7-497d-a0bc-57239237b91c",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "51b65d3e-879a-5f01-9a16-c2d46c3bfa07",
+      "card_number": "ACT-item-completion-0535",
+      "name": "Снежинка — Принять удар",
+      "description_sha256": "aae305cb3928a627f41721c8af9ad0d7417a43b90b1db8f4bb5364c0085d0a05",
+      "preimage": null,
+      "patch": {
+        "id": "51b65d3e-879a-5f01-9a16-c2d46c3bfa07",
+        "card_number": "ACT-item-completion-0535",
+        "name": "Снежинка — Принять удар",
+        "name_en": null,
+        "description": "Реакцией вы можете снизить урон на 1к10+5. В следующий ход ваша скорость равна нулю.\n*1 раз в день.*",
+        "detailed_description": null,
+        "rarity": "uncommon",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "reaction",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "reaction",
+            "cost": [
+              {
+                "resource": "reaction"
+              },
+              {
+                "resource": "self_uses"
+              }
+            ],
+            "trigger": {
+              "event": "damage_taken",
+              "timing": "before",
+              "circumstances": []
+            }
+          },
+          "uses": {
+            "count": 1,
+            "per": "day"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "reduce_damage",
+                  "amount": "1d10+5"
+                },
+                {
+                  "kind": "triggered_effect",
+                  "id": "item:535:next-turn",
+                  "event": "turn_start",
+                  "subject": "self",
+                  "uses": {
+                    "count": 1,
+                    "per": "turn"
+                  },
+                  "duration": {
+                    "type": "until_end_of_source_next_turn"
+                  },
+                  "effects": [
+                    {
+                      "resolution": "auto",
+                      "who": "self",
+                      "result": [
+                        {
+                          "kind": "modifier",
+                          "op": "set",
+                          "applies_to": {
+                            "roll": "speed"
+                          },
+                          "value": 0,
+                          "duration": {
+                            "type": "until_end_of_turn"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "e7db0a6a-3d55-49c2-9ec3-53057a2600e4",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "0238e7bb-7104-5df2-9627-a2ec92bc3c0c",
+      "card_number": "ACT-item-completion-0601",
+      "name": "Сапоги уворота — Невероятное уклонение",
+      "description_sha256": "3d92f0aa86d7ce6329dd6b779f0c71daa083544accecd6adfed838e5d9072a92",
+      "preimage": null,
+      "patch": {
+        "id": "0238e7bb-7104-5df2-9627-a2ec92bc3c0c",
+        "card_number": "ACT-item-completion-0601",
+        "name": "Сапоги уворота — Невероятное уклонение",
+        "name_en": null,
+        "description": "Вы получаете __Увёртливость__ и __Невероятное уклонение__.\n(6 зарядов, 1к6 на рассвете)",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "reaction",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "reaction",
+            "cost": [
+              {
+                "resource": "reaction"
+              },
+              {
+                "resource": "self_uses"
+              }
+            ],
+            "trigger": {
+              "event": "damage_taken",
+              "timing": "before",
+              "circumstances": [
+                {
+                  "kind": "event_data_equals",
+                  "key": "delivery",
+                  "value": "attack"
+                },
+                {
+                  "kind": "event_data_equals",
+                  "key": "source_visible",
+                  "value": true
+                }
+              ]
+            }
+          },
+          "uses": {
+            "count": 6,
+            "per": "day",
+            "pool": "item-completion-601",
+            "recovery": {
+              "short_rest": {
+                "mode": "none"
+              },
+              "long_rest": {
+                "mode": "dice",
+                "dice": "1d6"
+              }
+            }
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "reduce_damage",
+                  "amount": "floor(incoming_damage/2)"
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "3b24b455-c346-4c4d-8156-a5d8b189f647",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "c1604ea3-b4cf-5c84-85e9-ac39733babbb",
+      "card_number": "ACT-item-completion-0451",
+      "name": "Магические рукава — Магическое восстановление",
+      "description_sha256": "486384b7f97261122f246cc7c6fc765d6ec12b638ad7c1f82ae7cea4ae27220d",
+      "preimage": null,
+      "patch": {
+        "id": "c1604ea3-b4cf-5c84-85e9-ac39733babbb",
+        "card_number": "ACT-item-completion-0451",
+        "name": "Магические рукава — Магическое восстановление",
+        "name_en": null,
+        "description": "Вы можете использовать Магическое восстановление в бою. У него +1 заряд.",
+        "detailed_description": null,
+        "rarity": "uncommon",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": []
+          },
+          "effects": [],
+          "active_slot_recovery": {
+            "charge_resource": "magic_recovery_charge",
+            "kind": "slot_recovery",
+            "decision_type": "arcane_recovery",
+            "rest": "short_rest",
+            "capability_id": "arcane_recovery",
+            "level_source": {
+              "kind": "class_level",
+              "class_id": "wizard",
+              "minimum": 1,
+              "maximum": 20
+            },
+            "budget": {
+              "mode": "ceil_divide_level",
+              "divisor": 2
+            },
+            "slot_resource": {
+              "prefix": "spell_slot_",
+              "minimum_level": 1,
+              "maximum_level": 5,
+              "restore_amount": 1
+            },
+            "maximum_per_rest": 1
+          },
+          "requires_item_source": "f735d381-db6e-400e-87d7-9a2283789d57",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "8a8e482e-5bde-52e2-a762-88ad95eefd84",
+      "card_number": "ACT-item-completion-0601-success",
+      "name": "Сапоги уворота — Увёртливость — успех",
+      "description_sha256": "3d92f0aa86d7ce6329dd6b779f0c71daa083544accecd6adfed838e5d9072a92",
+      "preimage": null,
+      "patch": {
+        "id": "8a8e482e-5bde-52e2-a762-88ad95eefd84",
+        "card_number": "ACT-item-completion-0601-success",
+        "name": "Сапоги уворота — Увёртливость — успех",
+        "name_en": null,
+        "description": "Вы получаете __Увёртливость__ и __Невероятное уклонение__.\n(6 зарядов, 1к6 на рассвете)",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "reaction",
+            "cost": [
+              {
+                "resource": "self_uses"
+              }
+            ],
+            "trigger": {
+              "event": "damage_taken",
+              "timing": "before",
+              "circumstances": [
+                {
+                  "kind": "event_data_equals",
+                  "key": "saveAbility",
+                  "value": "dex"
+                },
+                {
+                  "kind": "event_data_equals",
+                  "key": "saveDamage",
+                  "value": "half"
+                },
+                {
+                  "kind": "event_data_equals",
+                  "key": "saveOutcome",
+                  "value": "success"
+                }
+              ]
+            }
+          },
+          "uses": {
+            "count": 6,
+            "per": "day",
+            "pool": "item-completion-601",
+            "recovery": {
+              "short_rest": {
+                "mode": "none"
+              },
+              "long_rest": {
+                "mode": "dice",
+                "dice": "1d6"
+              }
+            }
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "reduce_damage",
+                  "amount": "incoming_damage"
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "3b24b455-c346-4c4d-8156-a5d8b189f647",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "50cf573c-454e-53f6-8e7d-3de928aecb12",
+      "card_number": "ACT-item-completion-0601-failure",
+      "name": "Сапоги уворота — Увёртливость — провал",
+      "description_sha256": "3d92f0aa86d7ce6329dd6b779f0c71daa083544accecd6adfed838e5d9072a92",
+      "preimage": null,
+      "patch": {
+        "id": "50cf573c-454e-53f6-8e7d-3de928aecb12",
+        "card_number": "ACT-item-completion-0601-failure",
+        "name": "Сапоги уворота — Увёртливость — провал",
+        "name_en": null,
+        "description": "Вы получаете __Увёртливость__ и __Невероятное уклонение__.\n(6 зарядов, 1к6 на рассвете)",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "reaction",
+            "cost": [
+              {
+                "resource": "self_uses"
+              }
+            ],
+            "trigger": {
+              "event": "damage_taken",
+              "timing": "before",
+              "circumstances": [
+                {
+                  "kind": "event_data_equals",
+                  "key": "saveAbility",
+                  "value": "dex"
+                },
+                {
+                  "kind": "event_data_equals",
+                  "key": "saveDamage",
+                  "value": "half"
+                },
+                {
+                  "kind": "event_data_equals",
+                  "key": "saveOutcome",
+                  "value": "failure"
+                }
+              ]
+            }
+          },
+          "uses": {
+            "count": 6,
+            "per": "day",
+            "pool": "item-completion-601",
+            "recovery": {
+              "short_rest": {
+                "mode": "none"
+              },
+              "long_rest": {
+                "mode": "dice",
+                "dice": "1d6"
+              }
+            }
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "reduce_damage",
+                  "amount": "ceil(incoming_damage/2)"
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "3b24b455-c346-4c4d-8156-a5d8b189f647",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "0e6a6970-f20b-56e7-b478-98893284e20f",
+      "card_number": "ACT-item-completion-0382",
+      "name": "Темное ожерелье — Заменить успешный бросок",
+      "description_sha256": "9b8463c3b2ebc5bcd18f4dab39dae70f9c70bf45d0f576422adab4ade6295598",
+      "preimage": null,
+      "patch": {
+        "id": "0e6a6970-f20b-56e7-b478-98893284e20f",
+        "card_number": "ACT-item-completion-0382",
+        "name": "Темное ожерелье — Заменить успешный бросок",
+        "name_en": null,
+        "description": "Когда вы бросаете кубик, считайте что на нём выпало 1.\n\nКогда существо при взаимодействии с вами должно кинуть кубик, на нём выпадает 1.\n\n1 раз в день вы можете заменить любой успешный бросок на 1.",
+        "detailed_description": "Это ожерелье притягивает неудачу. Единственная положительная часть - оно также притягивает неудачу на всех вокруг.",
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "triggered",
+            "cost": [
+              {
+                "resource": "self_uses"
+              }
+            ]
+          },
+          "uses": {
+            "count": 1,
+            "per": "day"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "roll_influence",
+                  "operation": "set_die_result",
+                  "value": 1,
+                  "eligible_rolls": [
+                    "attack",
+                    "save",
+                    "check"
+                  ],
+                  "eligible_outcomes": [
+                    "success",
+                    "hit",
+                    "crit"
+                  ],
+                  "timing": "after_roll_before_outcome",
+                  "affects": "any"
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "fcba86df-9d73-48f8-bfdb-94816dc67a25",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "e973c64c-1b6e-5294-845e-2ef551d54ee7",
+      "card_number": "ACT-item-completion-0579",
+      "name": "Заряд Эха — Применить заряд Эха",
+      "description_sha256": "7f211d7a9f4e15b89701b11cb65b7f6b797f138eb36a13f4bd9ae62c7979ee3c",
+      "preimage": null,
+      "patch": {
+        "id": "e973c64c-1b6e-5294-845e-2ef551d54ee7",
+        "card_number": "ACT-item-completion-0579",
+        "name": "Заряд Эха — Применить заряд Эха",
+        "name_en": null,
+        "description": "Когда вы в следующий раз нанесете урон, добавьте к нему ещё две кости и уберите из результата кость с наименьшим значением.",
+        "detailed_description": null,
+        "rarity": "common",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "item",
+                "card_id": "1a9131f7-0e75-4987-8ede-664e574de81d",
+                "amount": 1,
+                "bound_self_item": true
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "modifier",
+                  "op": "add_dice_drop_lowest",
+                  "applies_to": {
+                    "roll": "damage"
+                  },
+                  "extra": 2,
+                  "drop": 1,
+                  "consume": "next",
+                  "duration": {
+                    "type": "permanent"
+                  }
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "1a9131f7-0e75-4987-8ede-664e574de81d",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "bd36e9f5-1a87-5dd3-acee-61cd249cced9",
+      "card_number": "EFFECT-item-completion-0424-state",
+      "preimage": null,
+      "patch": {
+        "id": "bd36e9f5-1a87-5dd3-acee-61cd249cced9",
+        "card_number": "EFFECT-item-completion-0424-state",
+        "name": "Шлем жестокости — Кровотечение",
+        "name_en": null,
+        "description": "Шанс критического удара +1.\nНанося критический удар, вы накладываете кровотечение.",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "effect_type": "item_effect",
+        "repeatable": false,
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "narrative",
+                  "description": "Кровотечение: именованное состояние из описания предмета."
+                }
+              ]
+            }
+          ]
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "10be73e8-e63a-5ae3-9fee-57eb72226cb1",
+      "card_number": "EFFECT-item-completion-0553-state",
+      "preimage": null,
+      "patch": {
+        "id": "10be73e8-e63a-5ae3-9fee-57eb72226cb1",
+        "card_number": "EFFECT-item-completion-0553-state",
+        "name": "Зазубренный кинжал +1 — Кровотечение",
+        "name_en": null,
+        "description": "Этот кинжал накладывает __Кровотечение__ при попадании.",
+        "detailed_description": null,
+        "rarity": "uncommon",
+        "effect_type": "item_effect",
+        "repeatable": false,
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "narrative",
+                  "description": "Кровотечение: именованное состояние из описания предмета."
+                }
+              ]
+            }
+          ],
+          "magical": true
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "c9de53da-3eee-5c8a-a623-05225fb107f1",
+      "card_number": "EFFECT-item-completion-0556-state",
+      "preimage": null,
+      "patch": {
+        "id": "c9de53da-3eee-5c8a-a623-05225fb107f1",
+        "card_number": "EFFECT-item-completion-0556-state",
+        "name": "Ледяной кинжал — Охлаждён",
+        "name_en": null,
+        "description": "__ Только во второй руке: __\nВы *охлаждаете* тех, кто промахнулся атакой по вам.\n+1 к защите.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "effect_type": "item_effect",
+        "repeatable": false,
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "narrative",
+                  "description": "Охлаждён: именованное состояние из описания предмета."
+                }
+              ]
+            }
+          ],
+          "magical": true
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "565aa88c-543d-5717-8d14-9cc85c99d564",
+      "card_number": "EFFECT-item-completion-0580-state",
+      "preimage": null,
+      "patch": {
+        "id": "565aa88c-543d-5717-8d14-9cc85c99d564",
+        "card_number": "EFFECT-item-completion-0580-state",
+        "name": "Огненные сапоги — Горение",
+        "name_en": null,
+        "description": "Нанося урон огнём, вы __поджигаете__ цели на 2 хода.",
+        "detailed_description": null,
+        "rarity": "uncommon",
+        "effect_type": "item_effect",
+        "repeatable": false,
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "narrative",
+                  "description": "Горение: именованное состояние из описания предмета."
+                }
+              ]
+            }
+          ]
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "c5522f24-8d59-59f4-8009-a8a63a728975",
+      "card_number": "ACT-item-completion-0530",
+      "name": "Чаша отраженной памяти — Воспоминание",
+      "description_sha256": "f82229c6c4035580c285cf3038142124323673deebb192c02b86cafb8554bcaf",
+      "preimage": null,
+      "patch": {
+        "id": "c5522f24-8d59-59f4-8009-a8a63a728975",
+        "card_number": "ACT-item-completion-0530",
+        "name": "Чаша отраженной памяти — Воспоминание",
+        "name_en": null,
+        "description": "Спроси об утраченном или забытом и загляни в отражение.\n*3 заряда.*",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "self_uses"
+              }
+            ]
+          },
+          "uses": {
+            "count": 3,
+            "per": "never"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "narrative",
+                  "description": "Узнать об утраченном или забытом по отражению; ответ определяет ведущий."
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "d8119143-ae99-4cd1-b1d5-35e36bba4749",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "20bd61ee-7b2b-522b-a0f2-422bfb4dc162",
+      "card_number": "ACT-item-completion-0427",
+      "name": "Лук ловца удачи — Дополнительная стрела помехи",
+      "description_sha256": "b6c360774685e0734dfad82a6af4dea8c86aeedb7453299bc6b931266a684a64",
+      "preimage": null,
+      "patch": {
+        "id": "20bd61ee-7b2b-522b-a0f2-422bfb4dc162",
+        "card_number": "ACT-item-completion-0427",
+        "name": "Лук ловца удачи — Дополнительная стрела помехи",
+        "name_en": null,
+        "description": " Когда вы должны атаковать с помехой, вместо этого вы выпускаете стрелу для каждого броска к20",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "triggered",
+            "optional": true,
+            "trigger": {
+              "event": "attack_dice_followup",
+              "subject": "self",
+              "circumstances": [
+                {
+                  "kind": "event_data_equals",
+                  "key": "weaponId",
+                  "value": "d5866b8f-d0ab-4a80-9ece-ccf8aac94f68"
+                }
+              ]
+            },
+            "cost": [
+              {
+                "resource": "equipped_weapon_ammo",
+                "amount": 1
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "attack_roll",
+              "ability": "auto",
+              "attack_kind": "weapon_ranged",
+              "attack_dice_child": true,
+              "on_hit": [
+                {
+                  "kind": "damage",
+                  "dice": "weapon",
+                  "type": "weapon",
+                  "ability": "auto"
+                }
+              ]
+            }
+          ],
+          "targeting": {
+            "shape": "single",
+            "domain": "actor",
+            "range_ft": 600,
+            "min_targets": 1,
+            "max_targets": 1,
+            "actor_targets": true,
+            "allowed_relations": [
+              "enemy",
+              "ally",
+              "neutral"
+            ],
+            "requires_line_of_sight": true
+          },
+          "requires_item_source": "d5866b8f-d0ab-4a80-9ece-ccf8aac94f68"
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "b14e00e8-c3fe-586f-b48e-e6c4380ffaba",
+      "card_number": "ACT-item-completion-0450",
+      "name": "Наручи паладина — Ослепить атакующего",
+      "description_sha256": "88f431a1fee1721fe553aad1525dfb1c54a0f90aa1a1587f621d7de741135aea",
+      "preimage": null,
+      "patch": {
+        "id": "b14e00e8-c3fe-586f-b48e-e6c4380ffaba",
+        "card_number": "ACT-item-completion-0450",
+        "name": "Наручи паладина — Ослепить атакующего",
+        "name_en": null,
+        "description": "Когда по вам наносят урон атакой, атакующий слепнет (ТЕЛ Сл 15) (1 раз в к. о.)",
+        "detailed_description": null,
+        "rarity": "uncommon",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "triggered",
+            "optional": true,
+            "cost": [
+              {
+                "resource": "self_uses"
+              }
+            ],
+            "trigger": {
+              "event": "damage_taken",
+              "timing": "after",
+              "circumstances": [
+                {
+                  "kind": "event_data_equals",
+                  "key": "delivery",
+                  "value": "attack"
+                }
+              ]
+            }
+          },
+          "uses": {
+            "count": 1,
+            "per": "short_rest"
+          },
+          "targeting": {
+            "shape": "single",
+            "domain": "actor",
+            "range_ft": 1000,
+            "min_targets": 1,
+            "max_targets": 1,
+            "actor_targets": true,
+            "allowed_relations": [
+              "enemy",
+              "ally",
+              "neutral"
+            ],
+            "requires_line_of_sight": false
+          },
+          "effects": [
+            {
+              "resolution": "save",
+              "who": "target",
+              "ability": "con",
+              "dc": 15,
+              "on_fail": [
+                {
+                  "kind": "condition",
+                  "op": "apply",
+                  "value": "blinded",
+                  "duration": {
+                    "type": "permanent"
+                  }
+                }
+              ],
+              "on_success": []
+            }
+          ],
+          "requires_item_source": "382b1199-a07f-4abe-8abe-a840c4472662"
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "e2271ce7-b234-500e-b0be-82fece31e4f7",
+      "card_number": "ACT-item-completion-0514",
+      "name": "Брошь последнего шанса — Последний шанс",
+      "description_sha256": "9efda05d679b0d5171e12a513d7c63f467db1f25c0dc783c6c3ff101e5149d46",
+      "preimage": null,
+      "patch": {
+        "id": "e2271ce7-b234-500e-b0be-82fece31e4f7",
+        "card_number": "ACT-item-completion-0514",
+        "name": "Брошь последнего шанса — Последний шанс",
+        "name_en": null,
+        "description": "Реакцией вы можете получить +7 к КД, после чего брошь теряет зачарования.",
+        "detailed_description": null,
+        "rarity": "uncommon",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "reaction",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "reaction",
+            "cost": [
+              {
+                "resource": "reaction"
+              },
+              {
+                "resource": "self_uses"
+              }
+            ],
+            "trigger": {
+              "event": "hit_by_attack"
+            }
+          },
+          "uses": {
+            "count": 1,
+            "per": "never"
+          },
+          "attack_defense": {
+            "scope": "triggering_attack",
+            "ac_bonus": 7
+          },
+          "effects": [],
+          "requires_item_source": "09f906fe-f79d-478e-97fa-889f11695528",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "98544707-3234-5798-ab3f-219d41d43802",
+      "card_number": "ACT-item-completion-0630",
+      "name": "Кольцо бдительности — Контратака",
+      "description_sha256": "fcafa02f66b14597e9210850bc56997d708b4c0bf0a7a531d58fad387f26d365",
+      "preimage": null,
+      "patch": {
+        "id": "98544707-3234-5798-ab3f-219d41d43802",
+        "card_number": "ACT-item-completion-0630",
+        "name": "Кольцо бдительности — Контратака",
+        "name_en": null,
+        "description": "Вы можете реакцией парировать входящую атаку ближнего боя и тут же контратаковать.\n*(1 раз в день)*",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "reaction",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "triggered",
+            "cost": [
+              {
+                "resource": "reaction"
+              },
+              {
+                "resource": "self_uses"
+              }
+            ],
+            "optional": true,
+            "trigger": {
+              "event": "attacked",
+              "timing": "after",
+              "circumstances": [
+                {
+                  "kind": "event_data_equals",
+                  "key": "attackRange",
+                  "value": "melee"
+                }
+              ]
+            }
+          },
+          "uses": {
+            "count": 1,
+            "per": "day"
+          },
+          "targeting": {
+            "shape": "single",
+            "domain": "actor",
+            "range_ft": 10,
+            "min_targets": 1,
+            "max_targets": 1,
+            "actor_targets": true,
+            "allowed_relations": [
+              "enemy",
+              "ally",
+              "neutral"
+            ],
+            "requires_line_of_sight": true
+          },
+          "effects": [
+            {
+              "resolution": "attack_roll",
+              "ability": "auto",
+              "attack_kind": "weapon_melee",
+              "on_hit": [
+                {
+                  "kind": "damage",
+                  "dice": "weapon",
+                  "type": "weapon",
+                  "ability": "auto"
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "f5feb3bb-67ea-4292-bd57-79bd81b5bd94"
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "f2b12e92-0350-5aca-b8a9-899bd6eaa43d",
+      "card_number": "EFFECT-item-completion-0379-lethargy",
+      "preimage": null,
+      "patch": {
+        "id": "f2b12e92-0350-5aca-b8a9-899bd6eaa43d",
+        "card_number": "EFFECT-item-completion-0379-lethargy",
+        "name": "Сапоги времени — Летаргия",
+        "name_en": null,
+        "description": "Свободным действием вы получаете Ускорение на 1 ход. После этого получите Летаргию.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "effect_type": "item_effect",
+        "repeatable": false,
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "condition",
+                  "op": "apply",
+                  "value": "incapacitated"
+                },
+                {
+                  "kind": "modifier",
+                  "op": "set",
+                  "applies_to": {
+                    "roll": "speed"
+                  },
+                  "value": 0
+                }
+              ]
+            }
+          ]
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "bdc15e9c-1f9f-5cf2-86f9-ffe88fc1318f",
+      "card_number": "EFFECT-item-completion-0379-haste",
+      "preimage": null,
+      "patch": {
+        "id": "bdc15e9c-1f9f-5cf2-86f9-ffe88fc1318f",
+        "card_number": "EFFECT-item-completion-0379-haste",
+        "name": "Сапоги времени — Ускорение",
+        "name_en": null,
+        "description": "Свободным действием вы получаете Ускорение на 1 ход. После этого получите Летаргию.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "effect_type": "item_effect",
+        "repeatable": false,
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "modifier",
+                  "op": "multiply",
+                  "applies_to": {
+                    "roll": "speed"
+                  },
+                  "value": 2
+                },
+                {
+                  "kind": "modifier",
+                  "op": "add",
+                  "applies_to": {
+                    "roll": "ac"
+                  },
+                  "value": 2
+                },
+                {
+                  "kind": "modifier",
+                  "op": "advantage",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "dex"
+                    }
+                  }
+                },
+                {
+                  "kind": "resource",
+                  "op": "grant",
+                  "id": "haste_action",
+                  "amount": 1,
+                  "recharge": "turn"
+                },
+                {
+                  "kind": "action_cost_policy",
+                  "id": "item-379-haste",
+                  "optional": true,
+                  "match": {
+                    "action_categories": [
+                      "attack",
+                      "dash",
+                      "disengage",
+                      "hide",
+                      "utilize"
+                    ]
+                  },
+                  "replace": {
+                    "action": "haste_action"
+                  },
+                  "max_attacks": 1
+                },
+                {
+                  "kind": "triggered_effect",
+                  "id": "item-completion:379:turn_end",
+                  "event": "turn_end",
+                  "subject": "self",
+                  "duration": {
+                    "type": "while_active"
+                  },
+                  "effects": [
+                    {
+                      "resolution": "auto",
+                      "who": "self",
+                      "result": [
+                        {
+                          "kind": "grant_effect",
+                          "value": "EFFECT-item-completion-0379-lethargy",
+                          "duration": {
+                            "type": "until_end_of_source_next_turn"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "56460837-773b-5bd2-9044-0c0bbd58ab43",
+      "card_number": "ACT-item-completion-0379",
+      "name": "Сапоги времени — Ускорить время",
+      "description_sha256": "66c2fbfcc17afad0dd175c70423c50f636abde46607583db7e143e77a0d5d4e0",
+      "preimage": null,
+      "patch": {
+        "id": "56460837-773b-5bd2-9044-0c0bbd58ab43",
+        "card_number": "ACT-item-completion-0379",
+        "name": "Сапоги времени — Ускорить время",
+        "name_en": null,
+        "description": "Свободным действием вы получаете Ускорение на 1 ход. После этого получите Летаргию.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": []
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "grant_effect",
+                  "value": "EFFECT-item-completion-0379-haste",
+                  "duration": {
+                    "type": "until_start_of_next_turn"
+                  }
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "fdc00044-4c63-4f32-85ea-42c12320f8e5",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "d5c8d7bc-d92f-547d-8cdd-a1e72cba4316",
+      "card_number": "ACT-item-completion-0595",
+      "name": "Сапоги решительности — Сохранить концентрацию",
+      "description_sha256": "3434a3f60bca38837eeb86f257962c4b6206fa7ddad4e89d57cc4102c27298fc",
+      "preimage": null,
+      "patch": {
+        "id": "d5c8d7bc-d92f-547d-8cdd-a1e72cba4316",
+        "card_number": "ACT-item-completion-0595",
+        "name": "Сапоги решительности — Сохранить концентрацию",
+        "name_en": null,
+        "description": "Вы можете получить степень истощения, чтобы продолжить концентрироваться после провала спасброска. *(1 раз в ход)*",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "triggered",
+            "cost": [
+              {
+                "resource": "self_uses"
+              }
+            ]
+          },
+          "uses": {
+            "count": 1,
+            "per": "turn"
+          },
+          "concentration_preservation": true,
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "condition",
+                  "op": "apply",
+                  "value": "exhaustion"
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "d5032d82-bda7-4a47-9971-a40f85d60c05",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "30043de6-a432-564a-9d9c-f7d06aa0e5b0",
+      "card_number": "ACT-item-completion-0597",
+      "name": "Сапоги с шипами — Прыжок с шипами",
+      "description_sha256": "1cee975000a3599495fe5d27ab8b9f8c87bfc8e1fd0fef5ade74ed330264fa56",
+      "preimage": null,
+      "patch": {
+        "id": "30043de6-a432-564a-9d9c-f7d06aa0e5b0",
+        "card_number": "ACT-item-completion-0597",
+        "name": "Сапоги с шипами — Прыжок с шипами",
+        "name_en": null,
+        "description": "Бонусным действием вы можете прыгнуть на 15 фт и нанести 2к6 колющего урона всем в 5 фт от точки приземления. *(1 раз в бой)*\n\n+1 к Защите.\n\n+2 к Телосложению.\n\nВы не можете упасть ничком, а ваша скорость увеличивается на 10 футов.",
+        "detailed_description": "Несмотря на внешний вид, эти сапоги очень комфортны для носителя, чего не скажешь об окружающих.",
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              },
+              {
+                "resource": "self_uses"
+              }
+            ]
+          },
+          "uses": {
+            "count": 1,
+            "per": "encounter"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "movement",
+                  "value": "additional",
+                  "distance": 15,
+                  "traversal": "jump",
+                  "on_arrival": [
+                    {
+                      "kind": "area_damage",
+                      "origin": "self",
+                      "amount": "2d6",
+                      "type": "piercing",
+                      "radius_ft": 5,
+                      "recipients": "all",
+                      "exclude_source": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "c5ce730b-11c6-4be6-85ce-c7169ddb70cb",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "df4bde2f-1b20-593a-93f8-7921ec6bf239",
+      "card_number": "ACT-item-completion-0475",
+      "name": "Перчатки хранителя — Отвергнуть новый отрицательный эффект",
+      "description_sha256": "f19c964f7a6822087c5f41aa54c388557cfedd00ed30606e86db2eec430c13da",
+      "preimage": null,
+      "patch": {
+        "id": "df4bde2f-1b20-593a-93f8-7921ec6bf239",
+        "card_number": "ACT-item-completion-0475",
+        "name": "Перчатки хранителя — Отвергнуть новый отрицательный эффект",
+        "name_en": null,
+        "description": "Когда на вас накладывают отрицательный эффект, вы можете реакцией снять его.\n*(1 раз в день)*",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "reaction",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "reaction",
+            "cost": [
+              {
+                "resource": "reaction"
+              },
+              {
+                "resource": "self_uses"
+              }
+            ],
+            "trigger": {
+              "event": "effect_received",
+              "timing": "after",
+              "circumstances": [
+                {
+                  "kind": "event_data_equals",
+                  "key": "negative",
+                  "value": true
+                }
+              ]
+            }
+          },
+          "uses": {
+            "count": 1,
+            "per": "day"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "remove_effect",
+                  "event_effect": true
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "80ca20d2-8340-458f-958d-ff54aef88c70",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "291c69ad-c87b-41b1-8728-b83f8fec9810",
+      "card_number": "COND-frightened",
+      "preimage": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "kind": "condition_source_in_line_of_sight"
+                    }
+                  ],
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "kind": "condition_source_in_line_of_sight"
+                    }
+                  ],
+                  "applies_to": {
+                    "roll": "ability_check"
+                  }
+                },
+                {
+                  "op": "deny",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "kind": "roll_target_is_condition_source"
+                    }
+                  ],
+                  "applies_to": {
+                    "roll": "movement_toward_condition_source"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "frightened"
+          },
+          "activation": {
+            "mode": "passive"
+          }
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "kind": "condition_source_in_line_of_sight"
+                    }
+                  ],
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "kind": "condition_source_in_line_of_sight"
+                    }
+                  ],
+                  "applies_to": {
+                    "roll": "ability_check"
+                  }
+                },
+                {
+                  "op": "deny",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "kind": "roll_target_is_condition_source"
+                    }
+                  ],
+                  "applies_to": {
+                    "roll": "movement_toward_condition_source"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "frightened",
+            "polarity": "negative"
+          },
+          "activation": {
+            "mode": "passive"
+          }
+        }
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "4561ee6d-aa86-49d1-8f84-2aab23bd2d9a",
+      "card_number": "COND-incapacitated",
+      "preimage": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "initiative"
+                  }
+                },
+                {
+                  "op": "deny",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "action"
+                  }
+                },
+                {
+                  "op": "deny",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "bonus_action"
+                  }
+                },
+                {
+                  "op": "deny",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "reaction"
+                  }
+                },
+                {
+                  "op": "deny",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "concentration"
+                  }
+                },
+                {
+                  "op": "deny",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "speech"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "incapacitated"
+          },
+          "activation": {
+            "mode": "passive"
+          }
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "initiative"
+                  }
+                },
+                {
+                  "op": "deny",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "action"
+                  }
+                },
+                {
+                  "op": "deny",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "bonus_action"
+                  }
+                },
+                {
+                  "op": "deny",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "reaction"
+                  }
+                },
+                {
+                  "op": "deny",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "concentration"
+                  }
+                },
+                {
+                  "op": "deny",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "speech"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "incapacitated",
+            "polarity": "negative"
+          },
+          "activation": {
+            "mode": "passive"
+          }
+        }
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "5f6ff775-a9a5-4294-acfa-99939288697f",
+      "card_number": "COND-deafened",
+      "preimage": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "ability_check",
+                    "filter": {
+                      "sense": "hearing"
+                    }
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "deafened"
+          },
+          "activation": {
+            "mode": "passive"
+          }
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "ability_check",
+                    "filter": {
+                      "sense": "hearing"
+                    }
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "deafened",
+            "polarity": "negative"
+          },
+          "activation": {
+            "mode": "passive"
+          }
+        }
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "74457eba-0f39-4f6d-90ce-ed84d3b9cda4",
+      "card_number": "COND-paralyzed",
+      "preimage": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "set",
+                  "kind": "modifier",
+                  "value": "0",
+                  "applies_to": {
+                    "roll": "speed"
+                  }
+                },
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "str"
+                    }
+                  }
+                },
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "dex"
+                    }
+                  }
+                },
+                {
+                  "op": "auto_crit",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "feet": 5,
+                      "kind": "distance_to_condition_owner",
+                      "subject": "roller",
+                      "operator": "lte"
+                    }
+                  ],
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "includes": [
+            "incapacitated"
+          ],
+          "condition": {
+            "id": "paralyzed"
+          },
+          "activation": {
+            "mode": "passive"
+          }
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "set",
+                  "kind": "modifier",
+                  "value": "0",
+                  "applies_to": {
+                    "roll": "speed"
+                  }
+                },
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "str"
+                    }
+                  }
+                },
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "dex"
+                    }
+                  }
+                },
+                {
+                  "op": "auto_crit",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "feet": 5,
+                      "kind": "distance_to_condition_owner",
+                      "subject": "roller",
+                      "operator": "lte"
+                    }
+                  ],
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "includes": [
+            "incapacitated"
+          ],
+          "condition": {
+            "id": "paralyzed",
+            "polarity": "negative"
+          },
+          "activation": {
+            "mode": "passive"
+          }
+        }
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "851ae69b-faf3-4204-91b8-ae8e451f3718",
+      "card_number": "COND-grappled",
+      "preimage": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "kind": "roll_target_is_not_condition_source"
+                    }
+                  ],
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "set",
+                  "kind": "modifier",
+                  "value": "0",
+                  "applies_to": {
+                    "roll": "speed"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "grappled"
+          },
+          "activation": {
+            "mode": "passive"
+          }
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "kind": "roll_target_is_not_condition_source"
+                    }
+                  ],
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "set",
+                  "kind": "modifier",
+                  "value": "0",
+                  "applies_to": {
+                    "roll": "speed"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "grappled",
+            "polarity": "negative"
+          },
+          "activation": {
+            "mode": "passive"
+          }
+        }
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "a33608fe-4378-465d-a81a-85920104ffc4",
+      "card_number": "COND-invisible",
+      "preimage": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "kind": "observer_can_see_condition_owner",
+                      "value": false,
+                      "observer": "roll_target"
+                    }
+                  ],
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "kind": "observer_can_see_condition_owner",
+                      "value": false,
+                      "observer": "roller"
+                    }
+                  ],
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "initiative"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "invisible"
+          },
+          "activation": {
+            "mode": "passive"
+          },
+          "world_facts": {
+            "cannot_be_targeted_by_requires_sight_unless_seen": true
+          }
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "kind": "observer_can_see_condition_owner",
+                      "value": false,
+                      "observer": "roll_target"
+                    }
+                  ],
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "kind": "observer_can_see_condition_owner",
+                      "value": false,
+                      "observer": "roller"
+                    }
+                  ],
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "initiative"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "invisible",
+            "polarity": "positive"
+          },
+          "activation": {
+            "mode": "passive"
+          },
+          "world_facts": {
+            "cannot_be_targeted_by_requires_sight_unless_seen": true
+          }
+        }
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "a9ec9210-3c51-4cd4-b1c5-0f2761fb6108",
+      "card_number": "COND-restrained",
+      "preimage": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "dex"
+                    }
+                  }
+                },
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "set",
+                  "kind": "modifier",
+                  "value": "0",
+                  "applies_to": {
+                    "roll": "speed"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "restrained"
+          },
+          "activation": {
+            "mode": "passive"
+          }
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "dex"
+                    }
+                  }
+                },
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "set",
+                  "kind": "modifier",
+                  "value": "0",
+                  "applies_to": {
+                    "roll": "speed"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "restrained",
+            "polarity": "negative"
+          },
+          "activation": {
+            "mode": "passive"
+          }
+        }
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "b22482db-5254-4528-b873-ecf41fc13c30",
+      "card_number": "COND-poisoned",
+      "preimage": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "ability_check"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "poisoned"
+          },
+          "activation": {
+            "mode": "passive"
+          }
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "ability_check"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "poisoned",
+            "polarity": "negative"
+          },
+          "activation": {
+            "mode": "passive"
+          }
+        }
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "bdcc16f4-532f-46cd-900d-b662f8e3976f",
+      "card_number": "COND-stunned",
+      "preimage": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "str"
+                    }
+                  }
+                },
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "dex"
+                    }
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "includes": [
+            "incapacitated"
+          ],
+          "condition": {
+            "id": "stunned"
+          },
+          "activation": {
+            "mode": "passive"
+          }
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "str"
+                    }
+                  }
+                },
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "dex"
+                    }
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "includes": [
+            "incapacitated"
+          ],
+          "condition": {
+            "id": "stunned",
+            "polarity": "negative"
+          },
+          "activation": {
+            "mode": "passive"
+          }
+        }
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "d0302e53-474e-407b-a1b5-bed7eb289d78",
+      "card_number": "COND-unconscious",
+      "preimage": {
+        "mechanics": {
+          "leaves": [
+            "prone"
+          ],
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "set",
+                  "kind": "modifier",
+                  "value": "0",
+                  "applies_to": {
+                    "roll": "speed"
+                  }
+                },
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "str"
+                    }
+                  }
+                },
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "dex"
+                    }
+                  }
+                },
+                {
+                  "op": "auto_crit",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "feet": 5,
+                      "kind": "distance_to_condition_owner",
+                      "subject": "roller",
+                      "operator": "lte"
+                    }
+                  ],
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "includes": [
+            "incapacitated",
+            "prone"
+          ],
+          "condition": {
+            "id": "unconscious"
+          },
+          "activation": {
+            "mode": "passive"
+          },
+          "world_facts": {
+            "drops_held_items": true,
+            "unaware_of_surroundings": true
+          }
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "leaves": [
+            "prone"
+          ],
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "set",
+                  "kind": "modifier",
+                  "value": "0",
+                  "applies_to": {
+                    "roll": "speed"
+                  }
+                },
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "str"
+                    }
+                  }
+                },
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "dex"
+                    }
+                  }
+                },
+                {
+                  "op": "auto_crit",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "feet": 5,
+                      "kind": "distance_to_condition_owner",
+                      "subject": "roller",
+                      "operator": "lte"
+                    }
+                  ],
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "includes": [
+            "incapacitated",
+            "prone"
+          ],
+          "condition": {
+            "id": "unconscious",
+            "polarity": "negative"
+          },
+          "activation": {
+            "mode": "passive"
+          },
+          "world_facts": {
+            "drops_held_items": true,
+            "unaware_of_surroundings": true
+          }
+        }
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "d10dd048-8fb8-4321-8bbe-08dd61dd82a7",
+      "card_number": "COND-blinded",
+      "preimage": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "ability_check",
+                    "filter": {
+                      "sense": "sight"
+                    }
+                  }
+                },
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "blinded"
+          },
+          "activation": {
+            "mode": "passive"
+          },
+          "world_facts": {
+            "cannot_see": true
+          }
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "ability_check",
+                    "filter": {
+                      "sense": "sight"
+                    }
+                  }
+                },
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "blinded",
+            "polarity": "negative"
+          },
+          "activation": {
+            "mode": "passive"
+          },
+          "world_facts": {
+            "cannot_see": true
+          }
+        }
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "d65ccfb8-a5db-4686-8ed7-2ac8f9e59075",
+      "card_number": "COND-exhaustion",
+      "preimage": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": "-2",
+                  "applies_to": {
+                    "roll": "d20"
+                  }
+                },
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": "-5",
+                  "applies_to": {
+                    "roll": "speed"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "stacking": {
+            "max": 6,
+            "mode": "levels"
+          },
+          "condition": {
+            "id": "exhaustion"
+          },
+          "long_rest": {
+            "remove_levels": 1
+          },
+          "activation": {
+            "mode": "passive"
+          },
+          "thresholds": [
+            {
+              "outcome": "death",
+              "at_level": 6
+            }
+          ]
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": "-2",
+                  "applies_to": {
+                    "roll": "d20"
+                  }
+                },
+                {
+                  "op": "add",
+                  "kind": "modifier",
+                  "value": "-5",
+                  "applies_to": {
+                    "roll": "speed"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "stacking": {
+            "max": 6,
+            "mode": "levels"
+          },
+          "condition": {
+            "id": "exhaustion",
+            "polarity": "negative"
+          },
+          "long_rest": {
+            "remove_levels": 1
+          },
+          "activation": {
+            "mode": "passive"
+          },
+          "thresholds": [
+            {
+              "outcome": "death",
+              "at_level": 6
+            }
+          ]
+        }
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "d7222978-b165-427c-b890-179db45a789f",
+      "card_number": "COND-prone",
+      "preimage": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "feet": 5,
+                      "kind": "distance_to_condition_owner",
+                      "subject": "roller",
+                      "operator": "lte"
+                    }
+                  ],
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "feet": 5,
+                      "kind": "distance_to_condition_owner",
+                      "subject": "roller",
+                      "operator": "gt"
+                    }
+                  ],
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "prone"
+          },
+          "activation": {
+            "mode": "passive"
+          },
+          "world_facts": {
+            "stand_cost": "half_speed",
+            "movement_options": [
+              "crawl",
+              "stand",
+              "magic"
+            ]
+          }
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "feet": 5,
+                      "kind": "distance_to_condition_owner",
+                      "subject": "roller",
+                      "operator": "lte"
+                    }
+                  ],
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "disadvantage",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "feet": 5,
+                      "kind": "distance_to_condition_owner",
+                      "subject": "roller",
+                      "operator": "gt"
+                    }
+                  ],
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "prone",
+            "polarity": "negative"
+          },
+          "activation": {
+            "mode": "passive"
+          },
+          "world_facts": {
+            "stand_cost": "half_speed",
+            "movement_options": [
+              "crawl",
+              "stand",
+              "magic"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "ed7cc8d3-1af0-4af7-af13-046341f21491",
+      "card_number": "COND-charmed",
+      "preimage": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "deny",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "kind": "roll_target_is_condition_source"
+                    }
+                  ],
+                  "applies_to": {
+                    "roll": "harm"
+                  }
+                },
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "kind": "roller_is_condition_source"
+                    }
+                  ],
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "ability_check",
+                    "filter": {
+                      "interaction": "social"
+                    }
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "charmed"
+          },
+          "activation": {
+            "mode": "passive"
+          }
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "deny",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "kind": "roll_target_is_condition_source"
+                    }
+                  ],
+                  "applies_to": {
+                    "roll": "harm"
+                  }
+                },
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "when": [
+                    {
+                      "kind": "roller_is_condition_source"
+                    }
+                  ],
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "ability_check",
+                    "filter": {
+                      "interaction": "social"
+                    }
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "condition": {
+            "id": "charmed",
+            "polarity": "negative"
+          },
+          "activation": {
+            "mode": "passive"
+          }
+        }
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "0afca9f5-5f83-4441-9f8e-ca1a805d39a6",
+      "card_number": "COND-petrified",
+      "preimage": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "set",
+                  "kind": "modifier",
+                  "value": "0",
+                  "applies_to": {
+                    "roll": "speed"
+                  }
+                },
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "str"
+                    }
+                  }
+                },
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "dex"
+                    }
+                  }
+                },
+                {
+                  "kind": "resistance",
+                  "value": "resistance",
+                  "damage_type": "all"
+                },
+                {
+                  "kind": "condition_immunity",
+                  "condition": "poisoned"
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "includes": [
+            "incapacitated"
+          ],
+          "condition": {
+            "id": "petrified"
+          },
+          "activation": {
+            "mode": "passive"
+          },
+          "world_facts": {
+            "aging_paused": true,
+            "weight_multiplier": 10,
+            "equipment_transformed_with_owner": "nonmagical_worn_and_carried",
+            "transformed_to_inanimate_substance": true
+          }
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "advantage",
+                  "kind": "modifier",
+                  "scope": "target",
+                  "applies_to": {
+                    "roll": "attack"
+                  }
+                },
+                {
+                  "op": "set",
+                  "kind": "modifier",
+                  "value": "0",
+                  "applies_to": {
+                    "roll": "speed"
+                  }
+                },
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "str"
+                    }
+                  }
+                },
+                {
+                  "op": "auto_fail",
+                  "kind": "modifier",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "dex"
+                    }
+                  }
+                },
+                {
+                  "kind": "resistance",
+                  "value": "resistance",
+                  "damage_type": "all"
+                },
+                {
+                  "kind": "condition_immunity",
+                  "condition": "poisoned"
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "includes": [
+            "incapacitated"
+          ],
+          "condition": {
+            "id": "petrified",
+            "polarity": "negative"
+          },
+          "activation": {
+            "mode": "passive"
+          },
+          "world_facts": {
+            "aging_paused": true,
+            "weight_multiplier": 10,
+            "equipment_transformed_with_owner": "nonmagical_worn_and_carried",
+            "transformed_to_inanimate_substance": true
+          }
+        }
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "43563e11-7e1c-5d2a-8960-e51d683193fb",
+      "card_number": "ACT-item-completion-0596",
+      "name": "Сапоги Тьмы — Шаг в темноту",
+      "description_sha256": "04ca033fbff9248176e47efb2a64ea9c4a5eead3fe773c86de7992dc6eecf81c",
+      "preimage": null,
+      "patch": {
+        "id": "43563e11-7e1c-5d2a-8960-e51d683193fb",
+        "card_number": "ACT-item-completion-0596",
+        "name": "Сапоги Тьмы — Шаг в темноту",
+        "name_en": null,
+        "description": "Вы можете телепортироваться в тёмное место в радиусе 40 фт.\n*(1 раз в бой, бонусное действие)*",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              },
+              {
+                "resource": "self_uses"
+              }
+            ]
+          },
+          "uses": {
+            "count": 1,
+            "per": "encounter"
+          },
+          "teleport_destination": {
+            "illumination": [
+              "dark"
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "movement",
+                  "value": "teleport",
+                  "distance": 40
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "82a7e480-16b7-4990-8c7b-3a9e8a9e9d61",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "dd772b6d-cc1a-5b05-961f-8062f5c83273",
+      "card_number": "ACT-srd52-shadow-draining-swipe",
+      "preimage": null,
+      "patch": {
+        "id": "dd772b6d-cc1a-5b05-961f-8062f5c83273",
+        "card_number": "ACT-srd52-shadow-draining-swipe",
+        "name": "Иссушающий удар",
+        "name_en": null,
+        "description": "Иссушающий удар",
+        "detailed_description": "System Reference Document 5.2.1, pp.322–323. Wizards of the Coast LLC. CC BY 4.0. https://www.dndbeyond.com/srd",
+        "image_url": "",
+        "rarity": "common",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "action",
+        "author": "System",
+        "source": "System Reference Document 5.2.1, pp.322–323. Wizards of the Coast LLC. CC BY 4.0. https://www.dndbeyond.com/srd",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "action"
+              }
+            ]
+          },
+          "targeting": {
+            "shape": "single",
+            "domain": "actor",
+            "range_ft": 5,
+            "min_targets": 1,
+            "max_targets": 1,
+            "actor_targets": true,
+            "allowed_relations": [
+              "enemy",
+              "ally",
+              "neutral"
+            ],
+            "requires_line_of_sight": true
+          },
+          "effects": [
+            {
+              "resolution": "attack_roll",
+              "attack_kind": "unarmed",
+              "ability": "dex",
+              "attack_bonus_override": 4,
+              "on_hit": [
+                {
+                  "kind": "damage",
+                  "amount": "1d6+2",
+                  "type": "necrotic"
+                },
+                {
+                  "kind": "ability_damage",
+                  "ability": "str",
+                  "amount": "1d4",
+                  "fatal_at": 0,
+                  "duration": {
+                    "type": "permanent"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "27038250-2546-5834-ad4e-b1b0659eec81",
+      "card_number": "ACT-srd52-shadow-stealth",
+      "preimage": null,
+      "patch": {
+        "id": "27038250-2546-5834-ad4e-b1b0659eec81",
+        "card_number": "ACT-srd52-shadow-stealth",
+        "name": "Теневая засада",
+        "name_en": null,
+        "description": "Теневая засада",
+        "detailed_description": "System Reference Document 5.2.1, pp.322–323. Wizards of the Coast LLC. CC BY 4.0. https://www.dndbeyond.com/srd",
+        "image_url": "",
+        "rarity": "common",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "System Reference Document 5.2.1, pp.322–323. Wizards of the Coast LLC. CC BY 4.0. https://www.dndbeyond.com/srd",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "counts_as": "hide",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              }
+            ],
+            "when": [
+              {
+                "kind": "in_dim_light_or_darkness"
+              }
+            ]
+          },
+          "targeting": {
+            "shape": "single",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 1,
+            "max_targets": 1,
+            "actor_targets": true,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": true
+          },
+          "effects": []
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "5c697e13-c436-5ba5-b991-2d6662c5364c",
+      "card_number": "EFFECT-item-completion-0369-shadow-traits",
+      "preimage": null,
+      "patch": {
+        "id": "5c697e13-c436-5ba5-b991-2d6662c5364c",
+        "card_number": "EFFECT-item-completion-0369-shadow-traits",
+        "name": "Свойства Тени",
+        "name_en": null,
+        "description": "Аморфность и слабость на солнечном свету.",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "effect_type": "item_effect",
+        "repeatable": false,
+        "author": "System",
+        "source": "System Reference Document 5.2.1, pp.322–323. Wizards of the Coast LLC. CC BY 4.0. https://www.dndbeyond.com/srd",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "modifier",
+                  "op": "disadvantage",
+                  "applies_to": {
+                    "roll": "d20"
+                  },
+                  "when": [
+                    {
+                      "kind": "in_daylight"
+                    }
+                  ]
+                },
+                {
+                  "kind": "resistance",
+                  "damage_type": "acid",
+                  "value": "resistance"
+                },
+                {
+                  "kind": "resistance",
+                  "damage_type": "cold",
+                  "value": "resistance"
+                },
+                {
+                  "kind": "resistance",
+                  "damage_type": "fire",
+                  "value": "resistance"
+                },
+                {
+                  "kind": "resistance",
+                  "damage_type": "lightning",
+                  "value": "resistance"
+                },
+                {
+                  "kind": "resistance",
+                  "damage_type": "thunder",
+                  "value": "resistance"
+                },
+                {
+                  "kind": "movement_policy",
+                  "minimum_passage_inches": 1
+                }
+              ]
+            }
+          ],
+          "magical": true
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "monster",
+      "id": "2e505b34-dffa-5218-85cd-c9245980cc5c",
+      "preimage": null,
+      "patch": {
+        "id": "2e505b34-dffa-5218-85cd-c9245980cc5c",
+        "slug": "shadow-srd52",
+        "name": "Тень",
+        "name_en": "Shadow",
+        "description": "Обычная Тень по SRD5.2.1. System Reference Document 5.2.1, pp.322–323. Wizards of the Coast LLC. CC BY 4.0. https://www.dndbeyond.com/srd",
+        "size": "medium",
+        "creature_type": "undead",
+        "alignment": "chaotic evil",
+        "challenge_rating": "1/2",
+        "armor_class": 12,
+        "max_hp": 27,
+        "speed": 40,
+        "initiative_bonus": 2,
+        "proficiency_bonus": 2,
+        "abilities": {
+          "str": 6,
+          "dex": 14,
+          "con": 13,
+          "int": 6,
+          "wis": 10,
+          "cha": 8
+        },
+        "action_ids": [
+          "dd772b6d-cc1a-5b05-961f-8062f5c83273",
+          "27038250-2546-5834-ad4e-b1b0659eec81"
+        ],
+        "effect_ids": [
+          "5c697e13-c436-5ba5-b991-2d6662c5364c"
+        ],
+        "ai": {
+          "strategy": "melee_chase",
+          "preferred_range_ft": 5,
+          "darkvision_ft": 60,
+          "skill_expertise": [
+            "stealth"
+          ],
+          "skill_proficiencies": [
+            "stealth"
+          ],
+          "damage_vulnerabilities": [
+            "radiant"
+          ],
+          "damage_immunities": [
+            "necrotic",
+            "poison"
+          ],
+          "condition_immunities": [
+            "exhaustion",
+            "frightened",
+            "grappled",
+            "paralyzed",
+            "petrified",
+            "poisoned",
+            "prone",
+            "restrained",
+            "unconscious"
+          ]
+        },
+        "token_url": "",
+        "source": "System Reference Document 5.2.1, pp.322–323. Wizards of the Coast LLC. CC BY 4.0. https://www.dndbeyond.com/srd",
+        "author": "System",
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "e9e42e7c-4f13-53f3-98e3-73b7d8749ebf",
+      "card_number": "ACT-item-completion-0369",
+      "name": "Меч рыцаря смерти +2 — Призвать обычную Тень",
+      "description_sha256": "2019f53fcf95381e1f44caabf88880da375ea7a17ae50d30641118a5afcff666",
+      "preimage": null,
+      "patch": {
+        "id": "e9e42e7c-4f13-53f3-98e3-73b7d8749ebf",
+        "card_number": "ACT-item-completion-0369",
+        "name": "Меч рыцаря смерти +2 — Призвать обычную Тень",
+        "name_en": null,
+        "description": "Действием вы можете призвать обычную Тень на вашу сторону. (1р/день)",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "action"
+              },
+              {
+                "resource": "self_uses"
+              }
+            ]
+          },
+          "uses": {
+            "count": 1,
+            "per": "day"
+          },
+          "primitive": {
+            "type": "owned_summon",
+            "summon_key": "item-369-shadow",
+            "name": "Тень",
+            "creature_type": "undead",
+            "size": 2,
+            "speed_ft": 40,
+            "armor_class": {
+              "base": 12,
+              "per_spell_level": 0
+            },
+            "hit_points": {
+              "base": 27,
+              "per_spell_level": 0,
+              "scale_from_level": 0
+            },
+            "duration": "until_destroyed",
+            "initiative": "immediately_after_owner",
+            "replace_existing": true,
+            "monster_template": {
+              "monster": {
+                "id": "2e505b34-dffa-5218-85cd-c9245980cc5c",
+                "slug": "shadow-srd52",
+                "name": "Тень",
+                "name_en": "Shadow",
+                "description": "Обычная Тень по SRD5.2.1. System Reference Document 5.2.1, pp.322–323. Wizards of the Coast LLC. CC BY 4.0. https://www.dndbeyond.com/srd",
+                "size": "medium",
+                "creature_type": "undead",
+                "alignment": "chaotic evil",
+                "challenge_rating": "1/2",
+                "armor_class": 12,
+                "max_hp": 27,
+                "speed": 40,
+                "initiative_bonus": 2,
+                "proficiency_bonus": 2,
+                "abilities": {
+                  "str": 6,
+                  "dex": 14,
+                  "con": 13,
+                  "int": 6,
+                  "wis": 10,
+                  "cha": 8
+                },
+                "action_ids": [
+                  "dd772b6d-cc1a-5b05-961f-8062f5c83273",
+                  "27038250-2546-5834-ad4e-b1b0659eec81"
+                ],
+                "effect_ids": [
+                  "5c697e13-c436-5ba5-b991-2d6662c5364c"
+                ],
+                "ai": {
+                  "strategy": "melee_chase",
+                  "preferred_range_ft": 5,
+                  "darkvision_ft": 60,
+                  "skill_expertise": [
+                    "stealth"
+                  ],
+                  "skill_proficiencies": [
+                    "stealth"
+                  ],
+                  "damage_vulnerabilities": [
+                    "radiant"
+                  ],
+                  "damage_immunities": [
+                    "necrotic",
+                    "poison"
+                  ],
+                  "condition_immunities": [
+                    "exhaustion",
+                    "frightened",
+                    "grappled",
+                    "paralyzed",
+                    "petrified",
+                    "poisoned",
+                    "prone",
+                    "restrained",
+                    "unconscious"
+                  ]
+                },
+                "token_url": "",
+                "source": "System Reference Document 5.2.1, pp.322–323. Wizards of the Coast LLC. CC BY 4.0. https://www.dndbeyond.com/srd",
+                "author": "System",
+                "deleted_at": null
+              },
+              "actions": [
+                {
+                  "id": "dd772b6d-cc1a-5b05-961f-8062f5c83273",
+                  "card_number": "ACT-srd52-shadow-draining-swipe",
+                  "name": "Иссушающий удар",
+                  "name_en": null,
+                  "description": "Иссушающий удар",
+                  "detailed_description": "System Reference Document 5.2.1, pp.322–323. Wizards of the Coast LLC. CC BY 4.0. https://www.dndbeyond.com/srd",
+                  "image_url": "",
+                  "rarity": "common",
+                  "type": "other",
+                  "action_type": "base_action",
+                  "resource": "action",
+                  "author": "System",
+                  "source": "System Reference Document 5.2.1, pp.322–323. Wizards of the Coast LLC. CC BY 4.0. https://www.dndbeyond.com/srd",
+                  "mechanics": {
+                    "activation": {
+                      "mode": "active",
+                      "cost": [
+                        {
+                          "resource": "action"
+                        }
+                      ]
+                    },
+                    "targeting": {
+                      "shape": "single",
+                      "domain": "actor",
+                      "range_ft": 5,
+                      "min_targets": 1,
+                      "max_targets": 1,
+                      "actor_targets": true,
+                      "allowed_relations": [
+                        "enemy",
+                        "ally",
+                        "neutral"
+                      ],
+                      "requires_line_of_sight": true
+                    },
+                    "effects": [
+                      {
+                        "resolution": "attack_roll",
+                        "attack_kind": "unarmed",
+                        "ability": "dex",
+                        "attack_bonus_override": 4,
+                        "on_hit": [
+                          {
+                            "kind": "damage",
+                            "amount": "1d6+2",
+                            "type": "necrotic"
+                          },
+                          {
+                            "kind": "ability_damage",
+                            "ability": "str",
+                            "amount": "1d4",
+                            "fatal_at": 0,
+                            "duration": {
+                              "type": "permanent"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "deleted_at": null
+                },
+                {
+                  "id": "27038250-2546-5834-ad4e-b1b0659eec81",
+                  "card_number": "ACT-srd52-shadow-stealth",
+                  "name": "Теневая засада",
+                  "name_en": null,
+                  "description": "Теневая засада",
+                  "detailed_description": "System Reference Document 5.2.1, pp.322–323. Wizards of the Coast LLC. CC BY 4.0. https://www.dndbeyond.com/srd",
+                  "image_url": "",
+                  "rarity": "common",
+                  "type": "other",
+                  "action_type": "base_action",
+                  "resource": "bonus_action",
+                  "author": "System",
+                  "source": "System Reference Document 5.2.1, pp.322–323. Wizards of the Coast LLC. CC BY 4.0. https://www.dndbeyond.com/srd",
+                  "mechanics": {
+                    "activation": {
+                      "mode": "active",
+                      "counts_as": "hide",
+                      "cost": [
+                        {
+                          "resource": "bonus_action"
+                        }
+                      ],
+                      "when": [
+                        {
+                          "kind": "in_dim_light_or_darkness"
+                        }
+                      ]
+                    },
+                    "targeting": {
+                      "shape": "single",
+                      "domain": "actor",
+                      "range_ft": 0,
+                      "min_targets": 1,
+                      "max_targets": 1,
+                      "actor_targets": true,
+                      "allowed_relations": [
+                        "self"
+                      ],
+                      "requires_line_of_sight": true
+                    },
+                    "effects": []
+                  },
+                  "deleted_at": null
+                }
+              ],
+              "effects": [
+                {
+                  "id": "5c697e13-c436-5ba5-b991-2d6662c5364c",
+                  "card_number": "EFFECT-item-completion-0369-shadow-traits",
+                  "name": "Свойства Тени",
+                  "name_en": null,
+                  "description": "Аморфность и слабость на солнечном свету.",
+                  "detailed_description": null,
+                  "rarity": "very_rare",
+                  "effect_type": "item_effect",
+                  "repeatable": false,
+                  "author": "System",
+                  "source": "System Reference Document 5.2.1, pp.322–323. Wizards of the Coast LLC. CC BY 4.0. https://www.dndbeyond.com/srd",
+                  "mechanics": {
+                    "activation": {
+                      "mode": "passive"
+                    },
+                    "effects": [
+                      {
+                        "resolution": "auto",
+                        "result": [
+                          {
+                            "kind": "modifier",
+                            "op": "disadvantage",
+                            "applies_to": {
+                              "roll": "d20"
+                            },
+                            "when": [
+                              {
+                                "kind": "in_daylight"
+                              }
+                            ]
+                          },
+                          {
+                            "kind": "resistance",
+                            "damage_type": "acid",
+                            "value": "resistance"
+                          },
+                          {
+                            "kind": "resistance",
+                            "damage_type": "cold",
+                            "value": "resistance"
+                          },
+                          {
+                            "kind": "resistance",
+                            "damage_type": "fire",
+                            "value": "resistance"
+                          },
+                          {
+                            "kind": "resistance",
+                            "damage_type": "lightning",
+                            "value": "resistance"
+                          },
+                          {
+                            "kind": "resistance",
+                            "damage_type": "thunder",
+                            "value": "resistance"
+                          },
+                          {
+                            "kind": "movement_policy",
+                            "minimum_passage_inches": 1
+                          }
+                        ]
+                      }
+                    ],
+                    "magical": true
+                  },
+                  "deleted_at": null
+                }
+              ]
+            }
+          },
+          "targeting": {
+            "domain": "world",
+            "shape": "single",
+            "actor_targets": false,
+            "min_targets": 0,
+            "max_targets": 0,
+            "range_ft": 5,
+            "requires_line_of_sight": false,
+            "allowed_relations": []
+          },
+          "effects": [],
+          "requires_item_source": "89858a0b-18e3-4393-8db3-82c89f2438a8",
+          "magical": true
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "341bf019-fe1a-5236-87d2-f94237152bf7",
+      "card_number": "ACT-item-completion-0362",
+      "name": "Ожерелье толкания — Позволить оттолкнуть",
+      "description_sha256": "c604c73852185573ce963884fd32385869d38332a9aaf1f2fb62ef8043cad726",
+      "preimage": null,
+      "patch": {
+        "id": "341bf019-fe1a-5236-87d2-f94237152bf7",
+        "card_number": "ACT-item-completion-0362",
+        "name": "Ожерелье толкания — Позволить оттолкнуть",
+        "name_en": null,
+        "description": "Бонусным действием вы можете позволить этому ожерелью оттолкнуть вас на 10 фт в направлении по его выбору.",
+        "detailed_description": null,
+        "rarity": "uncommon",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "movement",
+                  "value": "push",
+                  "distance": 10,
+                  "direction": "random_compass"
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "c82df800-3c40-4be7-9762-6c5c1fe0d7f5",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "3083db2a-9418-5ea8-81a2-07d442931473",
+      "card_number": "ACT-item-completion-0560-recall",
+      "name": "Кровная Месть — Призвать связанный клинок",
+      "description_sha256": "b3dd1920c94c16b2a6707636c8b38f4f83c0583649b0dd6cd107ed99c8996ae6",
+      "preimage": null,
+      "patch": {
+        "id": "3083db2a-9418-5ea8-81a2-07d442931473",
+        "card_number": "ACT-item-completion-0560-recall",
+        "name": "Кровная Месть — Призвать связанный клинок",
+        "name_en": null,
+        "description": "Зачарование +3.\n\nЭтот клинок связан с вашей кровью - вас нельзя обезоружить, а сам кинжал можно призвать бонусным действием.\n\nНаходясь во второй руке, даёт +1 к защите.\n\nНаходясь в основной руке, накладывает на цели уязвимость к колющему урону.\n\nШанс критического удара +2.",
+        "detailed_description": null,
+        "rarity": "artifact",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "bonus_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              }
+            ],
+            "weapon_bond_recall": true
+          },
+          "targeting": {
+            "shape": "single",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 1,
+            "max_targets": 1,
+            "actor_targets": true,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": true
+          },
+          "effects": [],
+          "requires_item_source": "ffcb5e10-d99b-4655-8b64-9cc6fa2ba2cf",
+          "magical": true
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "fe1421e3-1cd0-5b28-b8d0-91b209eef3d5",
+      "card_number": "EFFECT-item-completion-0627-ring-bond",
+      "preimage": null,
+      "patch": {
+        "id": "fe1421e3-1cd0-5b28-b8d0-91b209eef3d5",
+        "card_number": "EFFECT-item-completion-0627-ring-bond",
+        "name": "Кольцо уз — Охраняющая связь кольца",
+        "name_en": null,
+        "description": "Вы находитесь под эффектом __Охраняющей связи__ с владельцем второго кольца.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "effect_type": "item_effect",
+        "repeatable": false,
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "modifier",
+                  "op": "add",
+                  "applies_to": {
+                    "roll": "ac"
+                  },
+                  "value": 1
+                },
+                {
+                  "kind": "modifier",
+                  "op": "add",
+                  "applies_to": {
+                    "roll": "saving_throw"
+                  },
+                  "value": 1
+                },
+                {
+                  "kind": "resistance",
+                  "damage_type": "all",
+                  "value": "resistance"
+                },
+                {
+                  "kind": "damage_echo",
+                  "recipient": "effect_source",
+                  "fraction": 1
+                }
+              ]
+            }
+          ],
+          "bond_policy": {
+            "group": "warding_bond",
+            "max_source_distance_ft": 60,
+            "end_on_source_zero_hp": true,
+            "exclusive_on_either": true,
+            "source_item_id": "28b51f96-d1af-484a-b7df-b8d64ea72388",
+            "target_item_id": "28b51f96-d1af-484a-b7df-b8d64ea72388"
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "be510e45-041f-5769-b67b-f9a6415c5ee5",
+      "card_number": "ACT-item-completion-0627-link",
+      "name": "Кольцо уз — Защитить владельца второго кольца",
+      "description_sha256": "d98e1f4971a56a793017abc73debbc3baadb8297beffe6ada037ddc1b77c9e3e",
+      "preimage": null,
+      "patch": {
+        "id": "be510e45-041f-5769-b67b-f9a6415c5ee5",
+        "card_number": "ACT-item-completion-0627-link",
+        "name": "Кольцо уз — Защитить владельца второго кольца",
+        "name_en": null,
+        "description": "Вы находитесь под эффектом __Охраняющей связи__ с владельцем второго кольца.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [],
+            "when": [
+              {
+                "kind": "target_item_active",
+                "value": "28b51f96-d1af-484a-b7df-b8d64ea72388"
+              }
+            ]
+          },
+          "targeting": {
+            "shape": "single",
+            "domain": "actor",
+            "range_ft": 5,
+            "min_targets": 1,
+            "max_targets": 1,
+            "actor_targets": true,
+            "allowed_relations": [
+              "ally",
+              "neutral"
+            ],
+            "requires_line_of_sight": true,
+            "requires_willing": true
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "target",
+              "result": [
+                {
+                  "kind": "grant_effect",
+                  "value": "EFFECT-item-completion-0627-ring-bond",
+                  "duration": {
+                    "type": "permanent"
+                  },
+                  "bind_action_context": true
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "28b51f96-d1af-484a-b7df-b8d64ea72388"
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "6644784a-127a-5ed6-ab95-55ff9456ec37",
+      "card_number": "EFFECT-item-completion-0627-spell-bond",
+      "preimage": null,
+      "patch": {
+        "id": "6644784a-127a-5ed6-ab95-55ff9456ec37",
+        "card_number": "EFFECT-item-completion-0627-spell-bond",
+        "name": "Кольцо уз — Охраняющая связь заклинания",
+        "name_en": null,
+        "description": "Вы находитесь под эффектом __Охраняющей связи__ с владельцем второго кольца.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "effect_type": "item_effect",
+        "repeatable": false,
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "modifier",
+                  "op": "add",
+                  "applies_to": {
+                    "roll": "ac"
+                  },
+                  "value": 1
+                },
+                {
+                  "kind": "modifier",
+                  "op": "add",
+                  "applies_to": {
+                    "roll": "saving_throw"
+                  },
+                  "value": 1
+                },
+                {
+                  "kind": "resistance",
+                  "damage_type": "all",
+                  "value": "resistance"
+                },
+                {
+                  "kind": "damage_echo",
+                  "recipient": "effect_source",
+                  "fraction": 1
+                }
+              ]
+            }
+          ],
+          "bond_policy": {
+            "group": "warding_bond",
+            "max_source_distance_ft": 60,
+            "end_on_source_zero_hp": true,
+            "exclusive_on_either": true
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "spell",
+      "id": "4c6359eb-beb9-42a8-9ef0-850669d20125",
+      "card_number": "SPELL-0250",
+      "preimage": {
+        "mechanics": {
+          "effects": [
+            {
+              "who": "target",
+              "result": [
+                {
+                  "kind": "grant_effect",
+                  "value": "EFFECT-runtime-ee9ffec105301b184919"
+                },
+                {
+                  "kind": "grant_effect",
+                  "value": "EFFECT-runtime-069f4c1f5cacebf36e13"
+                },
+                {
+                  "kind": "grant_effect",
+                  "value": "EFFECT-runtime-d8ec125d7799912569d4"
+                },
+                {
+                  "kind": "narrative",
+                  "description": "Каждый раз, когда цель получает урон, заклинатель получает такое же количество урона."
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "targeting": {
+            "shape": "single",
+            "domain": "actor",
+            "range_ft": 5,
+            "max_targets": 1,
+            "min_targets": 1,
+            "actor_targets": true,
+            "allowed_relations": [
+              "ally"
+            ],
+            "requires_line_of_sight": true
+          },
+          "activation": {
+            "cost": [
+              {
+                "resource": "action"
+              },
+              {
+                "level": 2,
+                "amount": 1,
+                "resource": "spell_slot"
+              }
+            ],
+            "mode": "active",
+            "trigger": {
+              "event": "long_rest",
+              "timing": "after"
+            },
+            "duration": {
+              "type": "hours",
+              "amount": 1
+            }
+          },
+          "spell_class_list_ids": [
+            "CLASS-cleric",
+            "CLASS-paladin"
+          ]
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "target",
+              "result": [
+                {
+                  "kind": "grant_effect",
+                  "value": "EFFECT-item-completion-0627-spell-bond",
+                  "duration": {
+                    "type": "hours",
+                    "amount": 1
+                  },
+                  "bind_action_context": true
+                }
+              ]
+            }
+          ],
+          "targeting": {
+            "shape": "single",
+            "domain": "actor",
+            "range_ft": 5,
+            "max_targets": 1,
+            "min_targets": 1,
+            "actor_targets": true,
+            "allowed_relations": [
+              "ally"
+            ],
+            "requires_line_of_sight": true,
+            "requires_willing": true
+          },
+          "activation": {
+            "cost": [
+              {
+                "resource": "action"
+              },
+              {
+                "level": 2,
+                "amount": 1,
+                "resource": "spell_slot"
+              }
+            ],
+            "mode": "active",
+            "trigger": {
+              "event": "long_rest",
+              "timing": "after"
+            },
+            "duration": {
+              "type": "hours",
+              "amount": 1
+            }
+          },
+          "spell_class_list_ids": [
+            "CLASS-cleric",
+            "CLASS-paladin"
+          ]
+        }
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "47555e34-b00a-5629-bd81-e78150fb7ae7",
+      "card_number": "EFFECT-item-completion-0541",
+      "preimage": null,
+      "patch": {
+        "id": "47555e34-b00a-5629-bd81-e78150fb7ae7",
+        "card_number": "EFFECT-item-completion-0541",
+        "name": "Штандарт стойкости — Стойкость позиции",
+        "name_en": null,
+        "description": "Действием воткни штандарт в землю. Все союзники получают +1 к защите и спасброскам, пока не сдвинутся с места.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "effect_type": "item_effect",
+        "repeatable": false,
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "modifier",
+                  "op": "add",
+                  "applies_to": {
+                    "roll": "ac"
+                  },
+                  "value": 1
+                },
+                {
+                  "kind": "modifier",
+                  "op": "add",
+                  "applies_to": {
+                    "roll": "saving_throw"
+                  },
+                  "value": 1
+                }
+              ]
+            }
+          ],
+          "end_triggers": [
+            "actor_moves"
+          ]
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "472ad8c0-5dde-5e47-b54b-f0cabe157e4f",
+      "card_number": "ACT-item-completion-0541",
+      "name": "Штандарт стойкости — Установить штандарт",
+      "description_sha256": "f6c1cd5f47ae9960f464b1f17f9c4692002480b033ab2856c152d7eeef838f25",
+      "preimage": null,
+      "patch": {
+        "id": "472ad8c0-5dde-5e47-b54b-f0cabe157e4f",
+        "card_number": "ACT-item-completion-0541",
+        "name": "Штандарт стойкости — Установить штандарт",
+        "name_en": null,
+        "description": "Действием воткни штандарт в землю. Все союзники получают +1 к защите и спасброскам, пока не сдвинутся с места.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "action"
+              }
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "world_interaction",
+                  "operation": "deploy_item",
+                  "parameters": {
+                    "card_id": "89ba1873-bc69-4a3a-a1fc-cd535dcd94fd",
+                    "at": "self"
+                  }
+                },
+                {
+                  "kind": "area_effect",
+                  "all_scene": true,
+                  "recipients": "allies",
+                  "effects": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-item-completion-0541",
+                      "duration": {
+                        "type": "permanent"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "89ba1873-bc69-4a3a-a1fc-cd535dcd94fd",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "826a5717-b4af-57d8-9972-c5976ddd1947",
+      "card_number": "EFFECT-item-completion-0551-link",
+      "preimage": null,
+      "patch": {
+        "id": "826a5717-b4af-57d8-9972-c5976ddd1947",
+        "card_number": "EFFECT-item-completion-0551-link",
+        "name": "Диадема крови — Кровная связь",
+        "name_en": null,
+        "description": "Свяжи свою кровь с кровью согласного существа. Когда ему наносят урон, ты можешь реакцией получить половину от него.",
+        "detailed_description": null,
+        "rarity": "uncommon",
+        "effect_type": "item_effect",
+        "repeatable": false,
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "kind": "damage_transfer_link",
+          "key": "blood-link",
+          "polarity": "neutral",
+          "duration": {
+            "type": "permanent"
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "83b83bac-1dbc-51af-90bb-561a9816c897",
+      "card_number": "ACT-item-completion-0551-bind",
+      "name": "Диадема крови — Связать кровь",
+      "description_sha256": "27181e62a4a976b3c8151376efaad74f694e8cee7e4c1aedd8df6673f13a45a9",
+      "preimage": null,
+      "patch": {
+        "id": "83b83bac-1dbc-51af-90bb-561a9816c897",
+        "card_number": "ACT-item-completion-0551-bind",
+        "name": "Диадема крови — Связать кровь",
+        "name_en": null,
+        "description": "Свяжи свою кровь с кровью согласного существа. Когда ему наносят урон, ты можешь реакцией получить половину от него.",
+        "detailed_description": null,
+        "rarity": "uncommon",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "free_action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": []
+          },
+          "targeting": {
+            "shape": "single",
+            "domain": "actor",
+            "range_ft": 5,
+            "min_targets": 1,
+            "max_targets": 1,
+            "actor_targets": true,
+            "allowed_relations": [
+              "ally",
+              "neutral"
+            ],
+            "requires_line_of_sight": true,
+            "requires_willing": true
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "target",
+              "result": [
+                {
+                  "kind": "grant_effect",
+                  "value": "EFFECT-item-completion-0551-link",
+                  "duration": {
+                    "type": "permanent"
+                  }
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "91cc83e4-0ae1-4229-bfe8-7484234773f3"
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "e912045c-e3c9-57fa-8116-fede85d334a7",
+      "card_number": "ACT-item-completion-0551-transfer",
+      "name": "Диадема крови — Принять половину урона",
+      "description_sha256": "27181e62a4a976b3c8151376efaad74f694e8cee7e4c1aedd8df6673f13a45a9",
+      "preimage": null,
+      "patch": {
+        "id": "e912045c-e3c9-57fa-8116-fede85d334a7",
+        "card_number": "ACT-item-completion-0551-transfer",
+        "name": "Диадема крови — Принять половину урона",
+        "name_en": null,
+        "description": "Свяжи свою кровь с кровью согласного существа. Когда ему наносят урон, ты можешь реакцией получить половину от него.",
+        "detailed_description": null,
+        "rarity": "uncommon",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "reaction",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "reaction",
+            "cost": [
+              {
+                "resource": "reaction"
+              }
+            ],
+            "trigger": {
+              "event": "damage_taken",
+              "timing": "before"
+            }
+          },
+          "damage_transfer": {
+            "fraction": 0.5,
+            "requires_link": "blood-link"
+          },
+          "effects": [],
+          "requires_item_source": "91cc83e4-0ae1-4229-bfe8-7484234773f3",
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          }
+        },
+        "deleted_at": null
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "4ba1c4b3-4ac6-568f-a5d7-95d66b28bd19",
+      "card_number": "EFFECT-item-completion-0622",
+      "preimage": null,
+      "patch": {
+        "id": "4ba1c4b3-4ac6-568f-a5d7-95d66b28bd19",
+        "card_number": "EFFECT-item-completion-0622",
+        "name": "Кольцо боевого мага — Боевое плетение",
+        "name_en": null,
+        "description": "Попав атакой оружием, вы можете наложить заклинание школы __Иллюзии__ или __Очарования__ бонусным действием.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "effect_type": "item_effect",
+        "repeatable": false,
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "result": [
+                {
+                  "kind": "action_cost_policy",
+                  "id": "item-cost-622",
+                  "optional": true,
+                  "match": {
+                    "spell_schools": [
+                      "illusion",
+                      "enchantment"
+                    ],
+                    "costs_resource": "action"
+                  },
+                  "replace": {
+                    "action": "bonus_action"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "deleted_at": null
+      }
+    }
+  ]
+}

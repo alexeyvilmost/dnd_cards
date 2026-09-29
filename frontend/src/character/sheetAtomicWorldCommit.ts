@@ -154,6 +154,7 @@ function participantPatch(participant: SheetAtomicWorldParticipant) {
     expected_runtime_revision: runtimeRevision(character),
     patch: {
       current_hp: projection.runtime.hp.current,
+      ...(canonicalStringify(projection.runtime.equipment)!==canonicalStringify(character.equipment??{})?{equipment:clone(projection.runtime.equipment)}:{}),
       ...(inventoryChanged ? { inventory_items: inventoryItems } : {}),
       resources: clone(projection.runtime.resources),
       max_resources: clone(projection.runtime.maxResources),

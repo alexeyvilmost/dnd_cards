@@ -12,7 +12,7 @@ import { conditionModifierPayloads, conditionRule } from './conditions';
 import {perceivesWithoutSight} from './senses';
 import { payloadsOf } from './mechanicsView';
 import { evaluate, type FormulaContext } from './formula';
-import { matchesWhen, type EvalContext } from './circumstances';
+import { matchesWhen,suppressedConditionsOf, type EvalContext } from './circumstances';
 import { ROLL_RULE_OPS } from './rollRules';
 
 type Dict = Record<string, unknown>;
@@ -29,6 +29,7 @@ const MODIFIER_KINDS = new Set<NonNullable<RollModifier['kind']>>([
  * fields below instead of names, UI flags, or localized descriptions.
  */
 export interface ModifierQueryFacts {
+  attackFromBehind?:boolean;
   [key: string]: unknown;
   attackKind?: 'weapon' | 'spell' | 'unarmed';
   /** Damage follows a successful attack roll, including spell attacks. */
@@ -36,6 +37,7 @@ export interface ModifierQueryFacts {
   weaponCategory?: 'melee' | 'ranged';
   /** Identity/type of the weapon selected by the authoritative equipment state. */
   weaponId?: string;
+  spellId?: string;
   weaponType?: string;
   attackRange?: 'melee' | 'ranged';
   wearingArmor?: boolean;
@@ -127,6 +129,7 @@ function collectFromPayload(
   runtime: RuntimeState,
 ): void {
   if (payload.kind !== 'modifier') return;
+  if(typeof payload.once_per_turn==='string'&&runtime.firedThisTurn?.includes(payload.once_per_turn))return;
   // Health-gated modifiers belong to the carrier's live runtime, including
   // saves and reactions. Temporary hit points never change this threshold.
   if (payload.hp_fraction_at_most !== undefined) {
@@ -218,6 +221,7 @@ export function collectModifiers(
   passives: Dict[],
   opts: CollectOptions,
 ): CollectResult {
+  const suppressed=suppressedConditionsOf(state);
   const out: CollectResult = {
     modifiers: [],
     advantage: 'none',
@@ -241,7 +245,7 @@ export function collectModifiers(
         } } : {}),
       }, src, out, state);
       // Состояние (kind:'condition') влияет на броски по правилам 2024.
-      if (payload.kind === 'condition' && payload.value) {
+      if (payload.kind === 'condition' && payload.value&&!suppressed.has(String(payload.value))) {
         // Condition-owned `when` predicates are always evaluated fail-closed,
         // even at legacy call sites that omit an EvalContext.  The exact
         // source is instance data, never inferred from the condition name.

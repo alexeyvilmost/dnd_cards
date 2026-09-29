@@ -17,10 +17,13 @@ export interface SpellExecutionDeclaration {
   mode?: SpellCastMode;
   /** Set to false when the player deliberately wants to preserve a free use. */
   preferFreeUse?: boolean;
+  castLevel?:number;
 }
 
 export interface PrepareSpellExecutionInput {
   action: SpellRuleActionDefinition;
+  /** A variant casts through its parent's immutable grant. */
+  accessActionId?:string;
   accessState: SpellcastingAccessState;
   resources: Readonly<Record<string, number>>;
   declaration?: SpellExecutionDeclaration;
@@ -30,7 +33,8 @@ export interface SpellExecutionProvenance {
   grantId: string;
   sourceId: string;
   access: SpellAccessKind;
-  spellcastingAbility: Ability;
+  spellcastingAbility?: Ability;
+  fixedSpellcastingModifier?: number;
   mode: SpellCastMode;
 }
 
@@ -113,6 +117,7 @@ function canonicalActivationCost(input: {
   action: SpellRuleActionDefinition;
   accessState: SpellcastingAccessState;
   payment: ResolvedSpellAccess['payment'];
+  accessActionId?:string;
 }): JsonRecord[] | SpellExecutionDefinitionError {
   const rawActivation = input.action.mechanics.activation;
   if (rawActivation !== undefined && !isRecord(rawActivation)) {
@@ -135,7 +140,7 @@ function canonicalActivationCost(input: {
     );
   }
 
-  const sourcePayments = paymentResources(input.accessState, input.action.id);
+  const sourcePayments = paymentResources(input.accessState, input.accessActionId??input.action.id);
   const preserved = (rawCost ?? [])
     .filter((entry): entry is JsonRecord => isRecord(entry))
     .filter((entry) => {
@@ -189,13 +194,14 @@ export function prepareSpellExecution(input: PrepareSpellExecutionInput): SpellE
   const declaration = input.declaration ?? {};
   const resolution = resolveSpellAccess({
     state: input.accessState,
-    actionId: input.action.id,
+    actionId: input.accessActionId??input.action.id,
     resources: input.resources,
     ...(declaration.grantId !== undefined ? { grantId: declaration.grantId } : {}),
     ...(declaration.mode !== undefined ? { mode: declaration.mode } : {}),
     ...(declaration.preferFreeUse !== undefined
       ? { preferFreeUse: declaration.preferFreeUse }
       : {}),
+    ...(declaration.castLevel!==undefined?{castLevel:declaration.castLevel}:{}),
   });
   if (resolution.status === 'rejected') return accessError(resolution);
   if (resolution.grant.level !== input.action.spell.level) {
@@ -209,6 +215,7 @@ export function prepareSpellExecution(input: PrepareSpellExecutionInput): SpellE
     action: input.action,
     accessState: input.accessState,
     payment: resolution.payment,
+    accessActionId:input.accessActionId,
   });
   if (!Array.isArray(cost)) return cost;
 
@@ -221,6 +228,7 @@ export function prepareSpellExecution(input: PrepareSpellExecutionInput): SpellE
       sourceId: resolution.grant.sourceId,
       access: resolution.grant.access,
       spellcastingAbility: resolution.grant.spellcastingAbility,
+      ...(resolution.grant.fixedSpellcastingModifier !== undefined ? { fixedSpellcastingModifier: resolution.grant.fixedSpellcastingModifier } : {}),
       mode: declaration.mode ?? 'normal',
     },
   };

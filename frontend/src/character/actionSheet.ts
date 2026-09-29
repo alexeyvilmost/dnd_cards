@@ -10,6 +10,7 @@ import { bindSelfItemCost } from '../engine/cost';
 import type { ResourceRestRecovery } from '../mvp/contracts';
 import type { Action, Card, PassiveEffect, Spell } from '../types';
 import { upgradeLegacyActionMechanics } from './legacyActionMechanics';
+import {itemFeatActionSources} from './itemFeatGrants';
 
 type Dict = Record<string, unknown>;
 
@@ -46,12 +47,12 @@ function stableSources(...values: Array<string | null | undefined>): [string, ..
 /** uses_<key> для действия с mechanics.uses; undefined — без ограничения использований. */
 function actionUsesRef(action: Action): string | undefined {
   if (!usesFromMechanics(action.mechanics as Dict | null | undefined)) return undefined;
-  return actionUsesKey(action.card_number || action.id);
+  return actionUsesKey(action.card_number || action.id, action.mechanics);
 }
 
 function effectUsesRef(effect: PassiveEffect): string | undefined {
   if (!usesFromMechanics(effect.mechanics as Dict | null | undefined)) return undefined;
-  return actionUsesKey(effect.card_number || effect.id);
+  return actionUsesKey(effect.card_number || effect.id, effect.mechanics);
 }
 
 function normalizeActionableMechanics(
@@ -231,6 +232,7 @@ export function collectSheetActions(
 ): SheetAction[] {
   const basic: SheetAction[] = basicActions
     .map((action): SheetAction | null => {
+      if (typeof action.mechanics?.variant_of_action_id === 'string') return null;
       const mechanics = actionMechanics(action);
       if (!mechanics) return null;
       return {
@@ -249,6 +251,7 @@ export function collectSheetActions(
 
   const fromClass: SheetAction[] = assembled.actions
     .map(({ action, origin }): SheetAction | null => {
+      if (typeof action.mechanics?.variant_of_action_id === 'string') return null;
       // Direct class/species reaction and triggered action cards must reach
       // the event bus. The presentation layer excludes trigger-only rows from
       // proactive buttons, so retaining them here cannot make them clickable
@@ -293,6 +296,9 @@ export function collectSheetActions(
 
   const spells: SheetAction[] = assembled.spells
     .map((spell): SheetAction | null => {
+      // A fixed spell variant is surfaced by its parent casting dialog and
+      // compiled into the canonical catalog, not prepared as a second spell.
+      if (typeof spell.mechanics?.variant_of_spell_id === 'string') return null;
       const mechanics = spellMechanics(spell);
       if (!mechanics) return null;
       return {
@@ -322,11 +328,11 @@ export function collectSheetActions(
       // consumes_self больше не превращается здесь в скрытую стоимость.
       if (!Array.isArray(activation.cost)) return null;
       let mechanics2 = bindSelfItemCost(
-        mechanicsWithPresentationName(mechanics, card.name),
+        { ...mechanicsWithPresentationName(mechanics, card.name), damage_source_kind: 'item' },
         card.id,
       );
       const itemUsesKey = usesFromMechanics(mechanics)
-        ? actionUsesKey(card.card_number || card.id)
+        ? actionUsesKey(card.card_number || card.id, card.mechanics)
         : undefined;
       if (itemUsesKey) mechanics2 = bindActionUsesCost(mechanics2, itemUsesKey);
       return {
@@ -347,17 +353,20 @@ export function collectSheetActions(
   // (activation) и поведение — здесь только оборачиваем в строку листа с источником.
   const fromGranted: SheetAction[] = grantedActions
     .map(({ action, sourceLabel, group }): SheetAction | null => {
+      if (typeof action.mechanics?.variant_of_action_id === 'string') return null;
       const mechanics = actionMechanics(action, true, true);
       if (!mechanics) return null;
+      const itemSources=itemFeatActionSources(assembled,action);
+      if(itemSources.length)mechanics.requires_any_item_source=itemSources;
       return {
         id: `granted-${action.id}`,
         name: action.name,
-        mechanics: mechanicsWithPresentationName(mechanics, action.name),
+        mechanics: { ...mechanicsWithPresentationName(mechanics, action.name), ...(group === 'item' ? { damage_source_kind: 'item' } : {}) },
         group,
         imageUrl: action.image_url,
         sourceLabel,
         usesKey: actionUsesRef(action),
-        actionRef: action,
+        actionRef: itemSources.length?{...action,mechanics:{...action.mechanics,requires_any_item_source:itemSources}}:action,
         sourceEntityIds: stableSources(action.id, action.card_number),
       };
     })
@@ -433,7 +442,7 @@ export function collectActionUsesPools(
   for (const card of itemCards) {
     if (!isActionMech(card.mechanics)) continue;
     const key = usesFromMechanics(card.mechanics as Dict | null | undefined)
-      ? actionUsesKey(card.card_number || card.id)
+      ? actionUsesKey(card.card_number || card.id, card.mechanics)
       : undefined;
     push(key, card.mechanics, `Предмет: ${card.name}`);
   }
@@ -454,7 +463,7 @@ export function collectActionUsesRecharge(
   for (const pool of collectActionUsesPools(assembled, itemCards, grantedActions)) {
     if (pool.recovery === null) {
       out[pool.key] = 'never';
-    } else if (pool.recovery?.short_rest) {
+    } else if (pool.recovery?.short_rest.mode==='fixed') {
       out[pool.key] = 'short_rest';
     } else if (pool.per) {
       out[pool.key] = pool.per;

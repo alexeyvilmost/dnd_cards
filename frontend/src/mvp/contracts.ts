@@ -35,6 +35,8 @@ export interface DieRoll {
   role?: 'bonus';
   sides: number;
   result: number;
+  /** Saved command-local die ordinal for an exact replay of this roll. */
+  drawOrdinal?: number;
   /** true — кость отброшена (преимущество/помеха, переброс). */
   discarded?: boolean;
   /** Источник дополнительной кости (Наставление, Защита от оружия и т.п.). */
@@ -46,6 +48,12 @@ export interface DieRoll {
 export type AdvantageState = 'none' | 'advantage' | 'disadvantage';
 
 export interface RollLog {
+  automaticHit?: {reason:string;sourceEntityIds:string[]};
+  /** Canonical action payment preserved with held attack rolls. */
+  actionCostResources?: string[];
+  /** A data-owned bow replaces advantage/disadvantage with sequential arrows. */
+  separateAttackMode?:'advantage'|'disadvantage';
+  followupAttackCount?: number;
   /** System death save, with its special natural-1/20 consequences. */
   deathSave?: true;
   /** Exact learned maneuver already committed to this attack roll. */
@@ -63,20 +71,31 @@ export interface RollLog {
   triggered?: Record<string, unknown>[];
   /** A conditional after-failure die was actually rolled and must be consumed. */
   usedFailureBonus?: true;
+  /** Canonical once-per-turn die rules actually used by this saved roll. */
+  usedRuleKeys?: string[];
 }
 
 // `source` — необязательная атрибуция «кто это сделал» (напр. имя атакующего в бою). Используется
 // в журнале ЦЕЛИ, чтобы показать «Тест: Урон 6 (яд)». Не влияет на механику, только на текст.
 export interface DamageCalculation {
+  transferredDamage?: number;
+  maximumDamage?: number;
+  budgetId?: string;
   beforeResistance: number;
   adjustments: Array<{ level: 'immunity' | 'resistance' | 'vulnerability'; sourceEntityIds: string[] }>;
 }
 
 export type EngineEvent =
+  | {type:'domain_event';ownerActorId:string;targetActorId?:string;event:{kind:string;timing?:'before'|'during'|'after'|'replaces';source?:string;target?:string;data?:Record<string,unknown>}}
   | { type: 'roll'; label: string; roll: RollLog }
-  | { type: 'damage'; amount: number; damageType: string; roll?: RollLog; source?: string; calculation?: DamageCalculation; deferredConsequences?: { critical: boolean; concentrationDisadvantage: boolean } }
+  | { type: 'damage'; amount: number; damageType: string; roll?: RollLog; source?: string; calculation?: DamageCalculation; saveFacts?:{saveAbility:string;saveDamage:'half'|'other';saveOutcome:'success'|'failure'};deferredConsequences?: { critical: boolean; concentrationDisadvantage: boolean;delivery?:'attack'|'other' }; deferredSourceConsequences?: {group:string;targetHpBefore:number;data:Dict} }
   | { type: 'healing'; amount: number; roll?: RollLog; source?: string }
+  | {type:'area_effect';sourceActorId:string;targetIds:string[];source?:string;effects:Record<string,unknown>[];magicOrigin?:ActiveEffectEntry['magicOrigin']}
+  | {type:'area_healing';amount:number;sourceActorId:string;targetIds:string[];source?:string;magicOrigin?:ActiveEffectEntry['magicOrigin']}
+  | {type:'execution_cancelled';source:string}
+  | {type:'area_damage';amount:number;damageType:string;sourceActorId:string;targetIds:string[];source?:string;damageSourceKind:'item'|'spell'|'ability';transferred?:boolean;magicOrigin?:ActiveEffectEntry['magicOrigin']}
   | { type: 'damage_reduction'; amount: number; roll?: RollLog; source?: string; sourceEntityIds?: string[] }
+  | { type: 'damage_multiplier'; factor: number; source?: string }
   | { type: 'temp_hp'; amount: number; source?: string }
   | { type: 'resource_spent'; resource: string; amount: number; remaining: number }
   | { type: 'resource_restored'; resource: string; amount: number; current: number }
@@ -92,7 +111,7 @@ export type EngineEvent =
       source?: string;
     }
   /** Geometry adapter consumes this authoritative forced-movement result. */
-  | { type: 'movement'; mode: string; distanceFt: number; source?: string; speedFraction?: number; provokeOpportunityAttacks?: boolean }
+  | { type: 'movement'; mode: string; distanceFt: number; direction?: {x:number;y:number}; recipientActorId?:string; relativeToActorId?:string; source?: string; speedFraction?: number; provokeOpportunityAttacks?: boolean; traversal?: 'jump'; onArrival?: Record<string, unknown>[] }
   | { type: 'stabilized'; source?: string }
   | {
       type: 'world_interaction';
@@ -150,6 +169,12 @@ export interface FormulaRollResult {
 // ─── Фазы C/D: runtime-состояние персонажа ──────────────────────────────────
 
 export interface ActiveEffectEntry {
+  magicOrigin?: {kind:'spell'|'item'|'artifact'|'deity';sourceEntityId:string};
+  /** Dormant rules are retained while their ordinary duration keeps ticking. */
+  suppressedMechanics?: Dict;
+  /** Exact canonical spell origin, excluding secondary item triggers. */
+  spellOriginId?: string;
+  sharedSpellSource?: {actorId:string;effectKey:string};
   id: string;
   name: string;
   /** Унифицированная механика эффекта (payload-ы modifier/resistance/…). */
@@ -217,18 +242,39 @@ export interface RuntimeState {
   /** Id triggered-эффектов, сработавших с последнего долгого отдыха (uses.per: long_rest),
    *  чтобы «раз за отдых»-триггеры (Неумолимая стойкость) не срабатывали бесконечно; сброс в longRest. */
   firedThisRest?: string[];
+  /** Set by the authoritative encounter lifecycle, used by data-owned predicates. */
+  encounterActive?: boolean;
   /** Id triggered-эффектов для более коротких/особых периодов uses.per. Ключ — имя периода
    *  (сейчас short_rest); отдельные корзины не дают короткому отдыху случайно заблокировать
    *  способность до следующего долгого отдыха. */
   firedByPeriod?: Record<string, string[]>;
+  /** Data-owned trigger ordinals. Persisted with command receipts; only their
+   * declared lifecycle boundary resets them. */
+  eventOccurrences?: Record<string, { count: number; period: string; lastEventId?: string }>;
+  /** Actual voluntary distance travelled during the current turn, in feet.
+   * Spending movement without travelling does not increase this observation. */
+  turnMovementFt?: number;
 }
 
 export interface ResourceRestRecovery {
-  short_rest: { mode: 'fixed'; amount: number };
-  long_rest: { mode: 'full' };
+  short_rest: { mode: 'fixed'; amount: number } | {mode:'none'};
+  long_rest: { mode: 'full' } | {mode:'dice';dice:string};
 }
 
 export interface CharacterContext {
+  magicSuppressed?: boolean;
+  /** Sequence of committed damage and the owner's most recent completed turn. */
+  combatHistory?: {damageDealt:number;turnEnded:number};
+  creatureTags?: string[];
+  itemFeatRuleInput?: import('../character/rules/types').RuleInput;
+  /** Serializable immutable baseline for temporary stat projection across reload. */
+  runtimeProjectionBase?: Pick<CharacterContext,'abilityScores'|'abilityMods'|'profBonus'|'spellcastingMod'|'level'>;
+  /** Authoritative encounter-board observations, regenerated before commands. */
+  environmentObservations?: { openNightSky: boolean; nearestSeaFt?: number; boardRevision: number };
+  illumination?: { level: 'bright' | 'dim' | 'dark'; daylight: boolean; magicalDarkness: boolean; boardRevision: number };
+  spatialObservations?: { boardRevision: number; nearby: Array<{ actorId: string; relation: 'self' | 'ally' | 'enemy' | 'neutral'; distanceFt: number;conscious?:boolean;lineOfSight?:boolean;canSeeTarget?:boolean;targetCanSeeSource?:boolean;cover?:'none'|'half'|'three_quarters'|'total' }> };
+  /** Baseline for reversible, content-declared spatial ability grants. */
+  combatSpatialBase?: { abilityScores: NonNullable<CharacterContext['abilityScores']>; abilityMods: CharacterContext['abilityMods']; spellcastingMod?: number };
   /** Canonical creature type used by source/target-filtered mechanics. A subtype
    * may follow a colon (for example `fiend:devil`); broad filters match either
    * the exact value or its prefix. Missing data always fails closed. */
@@ -274,6 +320,8 @@ export interface CharacterContext {
   saveProficiencies?: string[];
   skillProficiencies?: string[];
   skillExpertise?: string[];
+  toolProficiencies?:string[];
+  toolExpertise?:string[];
   /**
    * Категории или конкретные виды оружия из CharacterRuleState.  undefined
    * означает legacy-контекст без проекции; [] означает явно отсутствие владений.
@@ -295,6 +343,8 @@ export interface CharacterContext {
 export interface TargetContext {
   /** Stable world actor id used by persisted cross-actor effect ownership. */
   id?: string;
+  /** Canonical actor category: player characters dying at zero are not kills. */
+  actorKind?: 'playerCharacter' | 'monster' | 'summonedActor';
   /** Tiny=0, Small=1, Medium=2, Large=3, Huge=4, Gargantuan=5. */
   size?: number;
   ac?: number;
@@ -334,6 +384,8 @@ export interface SpellComponents {
 
 /** Authoritative spell context retained by serializable rules continuations. */
 export interface SpellCastContext {
+  /** Immutable catalog entity, independent of source-scoped action identity. */
+  spellId?: string;
   baseLevel: number;
   /** Catalog-derived facts, replaced from the immutable action by authority. */
   school?: string;
@@ -347,6 +399,8 @@ export interface SpellCastContext {
   sourceId?: string;
   /** Source-specific ability; it may differ from the actor's class default. */
   spellcastingAbility?: 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
+  /** Authoritative item-grant default for a wielder without spellcasting. */
+  fixedSpellcastingModifier?: number;
   mode?: 'normal' | 'ritual';
   payment?: { kind: 'none' | 'free_use' | 'slot'; resource?: string };
 }
@@ -362,6 +416,22 @@ export interface TriggeringAttackContext {
 }
 
 export interface ExecuteContext {
+  /** The canonical failed-check continuation owns the final failure branch. */
+  deferFailedAbilityCheckEffects?:boolean;
+  /** Final defender-owned save retained by an authoritative continuation. */
+  forcedSaveRoll?: RollLog;
+  saveDamageFacts?:{saveAbility:string;saveDamage:'half'|'other';saveOutcome:'success'|'failure'};
+  /** Authoritative damage origin, retained when execution reverses source/recipient. */
+  damageSource?: { actorId?: string; kind: 'item' | 'spell' | 'ability' };
+  /** Per-execution chance results shared by typed packets of one attack. */
+  damagePolicyRollCache?: Record<string,number>;
+  /** Final retargeted attack total and КД; never recomputed from a later state. */
+  attackDamageComparison?: { total: number; ac: number };
+  /** Explicit automatic self damage is applied to the source, not a selected recipient. */
+  damageRecipientSelf?: boolean;
+  effectDurationCapRounds?: number;
+  /** Event-generated packets are distinguishable from their initiating action. */
+  triggeredConsequences?: boolean;
   /** The authoritative board has validated the complete exchange before payment. */
   positionExchangeValidated?: true;
   commandedAttackValidated?: true;
@@ -391,6 +461,8 @@ export interface ExecuteContext {
   incomingDamage?: number;
   /** Hold damage-dependent expiry and survival until the authoritative reaction resolves. */
   deferIncomingDamageConsequences?: boolean;
+  /** Canonical world owns the saved concentration decision and linked effects. */
+  deferConcentrationSaves?:boolean;
   /** Триггерные способности-СЛУШАТЕЛИ (заклинания вроде Божественной кары): пул для emitEvent/реакций.
    *  В ОТЛИЧИЕ от passives их НЕ читает collectModifiers — чтобы модификатор-эффект реакции (напр. +5 КД
    *  Щита) не применялся пассивно до активации. */
@@ -398,8 +470,10 @@ export interface ExecuteContext {
   target?: TargetContext;
   /** Explicit board/GM facts for rules that need relationships but not full geometry. */
   attackFacts?: {
+    attackFromBehind?: boolean;
     nearbyEligibleAllyToTarget?: boolean;
     immediateStraightMovementFt?: number;
+    opportunityAttack?: boolean;
   };
   /** Explicit board/GM observations keyed by the stable actor that imposed a
    * relational condition. Required by source-aware rules such as Frightened. */
@@ -428,6 +502,7 @@ export interface ExecuteContext {
   pauseAfterAttackRoll?: boolean;
   /** Reuse an already committed attack roll when a reaction window resumes. */
   forcedAttackRoll?: RollLog;
+  actionCostResources?: string[];
   /** Выборы игрока внутри действия (напр. вариант Толчка). Ключ — сырой choice.id;
    *  значение — одна опция или массив (для count>1). Собирается предпроходом на клике. */
   choices?: Record<string, string | string[]>;
@@ -450,6 +525,7 @@ export interface ExecuteContext {
    *  «стоячего» активного эффекта (напр. Доспех мага → set_value ac_base). repeatable — повторяемый
    *  эффект накапливается (не перезаписывается) при повторной выдаче. */
   grantedEffects?: Record<string, {
+    effect_type?: string;
     id?: string;
     card_number?: string;
     name?: string;
@@ -528,6 +604,8 @@ export interface ReactionOffer {
 }
 
 export interface ExecuteResult {
+  /** A completed rest advanced time but granted none of its optional benefits. */
+  restBenefitsDenied?: boolean;
   state: RuntimeState;
   events: EngineEvent[];
   /** Реакции/триггеры со стоимостью, требующие решения игрока (фаза A). */
@@ -564,7 +642,7 @@ export interface WeaponContext {
   };
   /** Вид оружия (longsword, scimitar…) — по нему гейтится искусность (выбор персонажа). */
   weaponType?: string | null;
-  proficiencyCategory: 'simple' | 'martial';
+  proficiencyCategory: 'simple' | 'martial' | 'none';
   defaultAttackMode: 'melee' | 'ranged';
   attackModes: Array<
     | { kind: 'melee'; reachFt: number }
@@ -572,6 +650,7 @@ export interface WeaponContext {
   >;
   /** Свойство искусности (Weapon Mastery 2024): id эффекта-мастерства из card.mastery. */
   mastery?: string | null;
+  masteryGranted?:boolean;
 }
 
 export interface ValueBreakdown {

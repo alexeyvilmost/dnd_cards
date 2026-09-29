@@ -1,3 +1,5 @@
+import {collectRuntimeItemChoices} from '../character/itemChoices';
+import {useItemFeatAssembly} from '../character/useItemFeatAssembly';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { cardsApi } from '../api/client';
 import {
@@ -25,6 +27,7 @@ import {
 export interface MobileCharacterData {
   character: ForgeCharacter | null;
   assembled: AssembledCharacter | null;
+  itemChoices: ReturnType<typeof collectRuntimeItemChoices>;
   ruleState: CharacterRuleState | null;
   effectiveSenses: readonly EffectiveSense[];
   runtimeState: RuntimeState | null;
@@ -54,7 +57,7 @@ export interface MobileCharacterData {
  */
 export function useMobileCharacter(id: string | undefined): MobileCharacterData {
   const [character, setCharacter] = useState<ForgeCharacter | null>(null);
-  const [assembled, setAssembled] = useState<AssembledCharacter | null>(null);
+  const [baseAssembled, setAssembled] = useState<AssembledCharacter | null>(null);
   const [equipCards, setEquipCards] = useState<Map<string, Card>>(new Map());
   const [journal, setJournal] = useState<CharacterEventRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -150,6 +153,7 @@ export function useMobileCharacter(id: string | undefined): MobileCharacterData 
     [character, equipCards, runtimeState],
   );
 
+  const assembled=useItemFeatAssembly(baseAssembled,draft,itemMechanics);
   const itemRuntimeSources = useMemo<RuntimeRuleSource[]>(
     () => itemMechanics.map((item) => ({
       source: { type: 'item', id: item.card.id, name: item.card.name },
@@ -221,6 +225,7 @@ export function useMobileCharacter(id: string | undefined): MobileCharacterData 
   return {
     character,
     assembled,
+    itemChoices:collectRuntimeItemChoices(itemRuntimeSources,draft?.resolvedChoices??{}),
     ruleState,
     effectiveSenses,
     runtimeState,

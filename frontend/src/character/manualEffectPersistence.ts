@@ -1,4 +1,5 @@
 import { canonicalStringify } from '../rules-core/determinism';
+import {concentrationProtectedUntilDeath} from '../engine/concentration';
 import { migrateWorldState } from '../rules-core/worldMigration';
 import { charactersV3Api } from './api';
 import {
@@ -59,7 +60,7 @@ export function projectDetachedManualEffectsTurnState(
   if (!actor) throw new Error('Канонический мир листа не содержит владельца.');
 
   actor.runtime.activeEffects = structuredClone([...activeEffects]) as typeof actor.runtime.activeEffects;
-  const concentration = options.endsConcentration
+  const concentration = options.endsConcentration&&!concentrationProtectedUntilDeath(actor.runtime,actor.passives??[])
     ? world.concentrations[character.id]
     : undefined;
   if (concentration) {

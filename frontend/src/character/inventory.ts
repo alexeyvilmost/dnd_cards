@@ -1,9 +1,11 @@
+import {discountedPurchaseCopper} from './purchasePricePolicy';
 import { addToInventory, forgeToRuntimeState, removeFromInventory } from './runtime';
 import type { ForgeCharacter } from './types';
 import { equipItem, planEquip, unequipSlot } from '../engine/equipment';
 import type { Card } from '../types';
 import type { RuntimeState } from '../mvp/contracts';
 import { priceInCopper, spendCopper } from '../utils/money';
+import { containerTransferIssue } from './containerCapacity';
 
 type MechanicsRecord = Record<string, unknown>;
 
@@ -45,7 +47,7 @@ export function purchasePrice(
     ? 1
     : nonmagicalPurchasePriceMultiplier(passives);
   const rate = priceInCopper(1, card.price_currency || 'gold');
-  const payable = Math.max(0, Math.ceil(listed * multiplier * rate - 1e-8) / rate);
+  const payable = discountedPurchaseCopper(Math.max(0,Math.ceil(listed*multiplier*rate-1e-8)),passives)/rate;
   return { listed, payable, multiplier, discounted: payable < listed };
 }
 
@@ -80,9 +82,10 @@ export function containerWeight(
 }
 
 /** Перенести qty предмета с ВЕРХНЕГО уровня внутрь контейнера (S4). Нельзя вложить контейнер в себя. */
-export function moveToContainer(state: RuntimeState, cardId: string, containerCardId: string, qty = 1): RuntimeState {
+export function moveToContainer(state: RuntimeState, cardId: string, containerCardId: string, qty = 1, cards?: ReadonlyMap<string, Card>): RuntimeState {
   if (!cardId || !containerCardId || cardId === containerCardId) return state;
   if(!Number.isSafeInteger(qty)||qty<1)return state;
+  if (cards && containerTransferIssue(state, cards, containerCardId, cardId, qty)) return state;
   // Moving a parent into its descendant would make its contents unreachable.
   const visited=new Set<string>();const ancestors=[containerCardId];
   while(ancestors.length){const id=ancestors.pop()!;if(id===cardId)return state;if(visited.has(id))continue;visited.add(id);for(const r of state.inventory)if(r.cardId===id&&r.containerId)ancestors.push(r.containerId);}

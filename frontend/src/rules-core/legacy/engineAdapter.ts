@@ -9,6 +9,7 @@ export { canPay, pay } from '../../engine/cost';
 export {
   applyIncomingDamage,
   applyDamageConsequences,
+  resolveDeferredSourceConsequences,
   consumeNextRollEffects,
   executeAction,
   expireEffectsForTrigger,

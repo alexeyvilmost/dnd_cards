@@ -9,6 +9,7 @@ import { resourceLabel } from '../utils/resourcePresentation';
 export type { EngineEvent, RollLog };
 
 const WORLD_INTERACTION_LABELS: Record<string, string> = {
+  reveal_information: 'Раскрытие сведений',
   move_object: 'переместить предмет',
   drop_held_item: 'предмет выпал из руки',
   open_unlocked_door: 'открыть незапертую дверь',
@@ -169,6 +170,14 @@ export function describeEngineEvent(event: EngineEvent): string {
   // Атрибуция «кто сделал» (в журнале цели): «Тест: Урон 6 (яд)».
   const src = 'source' in event && event.source ? `${event.source}: ` : '';
   switch (event.type) {
+    case 'domain_event':
+      return ({attacked:'Получена атака',damage_dealt:'Нанесён урон',kill:'Цель побеждена',healing_given:'Восстановлены хиты цели',healing_received:'Получено лечение'} as Record<string,string>)[event.event.kind]??'Событие завершено';
+    case 'area_damage':
+      return `${src}Урон по области: ${event.amount} (${getDamageLabel(event.damageType)}) · целей: ${event.targetIds.length}`;
+    case 'area_healing':
+      return `${src}Лечение по области: ${event.amount} · целей: ${event.targetIds.length}`;
+    case 'execution_cancelled':
+      return `${src}Действие отменено после расхода ресурса`;
     case 'roll':
       return `${event.label}: ${event.roll.text}`;
     case 'damage':
@@ -186,6 +195,8 @@ export function describeEngineEvent(event: EngineEvent): string {
         : roll?.text;
       return `${src}Снижение урона на ${event.amount}${detail ? ` · ${detail}` : ''}`;
     }
+    case 'damage_multiplier':
+      return `${src}Множитель входящего урона ×${event.factor}`;
     case 'temp_hp':
       return `${src}Временные HP +${event.amount}`;
     case 'resource_spent':

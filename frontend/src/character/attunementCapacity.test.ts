@@ -33,4 +33,11 @@ describe('data-owned attunement capacity', () => {
     expect(referencedPaperItemIds(doc)).toContain('fourth');
     expect(doc.checks.attunement3).toBe(true);
   });
+  it('retains two distinct permanent sacrifices across reload and item removal',()=>{
+    const effects=[1,2].map(n=>({id:`sacrifice:${n}`,name:'Sacrifice',source:'item',mechanics:{kind:'attunement_capacity',op:'add',amount:-1,duration:{type:'permanent'}}}));
+    const map=new Map([['provider',item('provider',1)]]);
+    expect(attunementCapacity({ring_1:'provider'},map,{},[],effects)).toBe(2);
+    expect(attunementCapacity({},map,{},[],JSON.parse(JSON.stringify(effects)))).toBe(1);
+  });
+
 });

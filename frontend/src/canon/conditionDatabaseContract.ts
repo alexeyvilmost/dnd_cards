@@ -122,6 +122,7 @@ export function materializeConditionRule(effect: ConditionEffectRecord): Conditi
   return {
     id,
     label: effect.name,
+    ...(['negative','positive','neutral'].includes(String(condition?.polarity))?{polarity:condition!.polarity as ConditionRule['polarity']}:{}),
     ...(typeof effect.id === 'string' && effect.id.trim()
       ? {
           entityRef: {

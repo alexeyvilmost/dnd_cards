@@ -54,7 +54,7 @@ export interface PactBladeWeaponCandidate {
   weaponCardId: string;
   name: string;
   weaponType: string;
-  category: 'simple' | 'martial';
+  category: 'simple' | 'martial' | 'none';
   melee: boolean;
   magical: boolean;
   normalDamageType: string;
@@ -108,7 +108,7 @@ export function createPactBladeBond(input: {
   if (!input.candidate.objectId.trim() || !input.candidate.weaponCardId.trim()) {
     throw new Error('Pact of the Blade requires a WorldObject and immutable weapon Card identity');
   }
-  if (!['simple', 'martial'].includes(input.candidate.category)
+  if (!['simple', 'martial',...(input.candidate.magical?['none']:[])].includes(input.candidate.category)
     || (input.conjure && !input.candidate.melee)) {
     throw new Error('Pact of the Blade requires a Simple or Martial Melee weapon');
   }

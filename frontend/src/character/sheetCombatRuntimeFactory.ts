@@ -1,4 +1,5 @@
 import { readWeaponBondObjects } from './weaponBondPersistence';
+import {itemFeatReferences,loadItemFeatAssembly,bindItemFeatSources} from './itemFeatGrants';
 import { loadEffectGrantedActionClosure } from './effectGrantedActions';
 import type { Action, Card, PassiveEffect } from '../types';
 import { collectPassiveMechanics, syncRuntimeResources } from './resourceInit';
@@ -28,7 +29,7 @@ import { parseWeaponProfile } from '../rules-core/weaponProfile';
 import { weaponActionAvailability } from '../engine/weapon';
 import { armorClassValue } from '../engine/ac';
 import { buildResourceRecharge, buildResourceRecovery } from '../engine/resources';
-import { collectFreeuseRecharge, isFreeusePoolKey } from '../engine/freeuse';
+import { collectFreeuseRecharge, collectFreeuseRecovery, isFreeusePoolKey } from '../engine/freeuse';
 import {rollInfluenceSources} from '../engine/rollInfluence';
 import {isActionUsesKey} from '../engine/actionUses';
 
@@ -229,6 +230,7 @@ async function collectSheetCombatActionInventory(input: {
       id: effect.id,
       card_number: effect.card_number,
       name: effect.name,
+      effect_type: effect.effect_type,
       mechanics: effect.mechanics,
       repeatable: effect.repeatable,
     }]),
@@ -289,6 +291,7 @@ async function loadSheetCombatParticipant(input: {
       const mode = (item.mechanics.activation as Record<string, unknown> | undefined)?.mode;
       return mode === undefined || mode === 'passive';
     });
+  assembled=bindItemFeatSources(assembled,await loadItemFeatAssembly(assembled,draft,itemFeatReferences(assembled,draft,permanentItems),dependencies.loadAssembly),draft,permanentItems);
   const ruleState = resolveCharacterRules({ draft, assembled, runtimeSources: permanentItems.map(item => ({
     source: {type: 'item' as const, id: item.card.id, name: item.card.name}, mechanics: item.mechanics,
   })) });
@@ -337,13 +340,28 @@ async function loadSheetCombatParticipant(input: {
   for (const [actionId, issue] of projection.issues) {
     const source = inventory.actions.find((action) => action.id === actionId);
     const unavailableByEquipment = source
-      ? !weaponActionAvailability(source.mechanics, runtime.equipment, cardsById).available
+      ? !weaponActionAvailability(source.mechanics, runtime.equipment, cardsById,passives).available
       : false;
     if (!unavailableByEquipment) {
       throw new Error(`Бой не может начаться: действие «${source?.name ?? actionId}» не скомпилировано (${issue})`);
     }
   }
   const actions = projection.actions;
+  const variantIds = [...new Set(actions.flatMap((action) => (
+    action.spellRef && Array.isArray(action.spellRef.mechanics?.spell_variant_ids)
+      ? action.spellRef.mechanics.spell_variant_ids.filter((id): id is string => typeof id === 'string')
+      : []
+  )))];
+  if (variantIds.length && !dependencies.spellsApi) {
+    throw new Error('Не настроен каталог вариантов заклинаний');
+  }
+  const spellVariants = await Promise.all(variantIds.map((id) => dependencies.spellsApi!.getSpell(id)));
+  const actionVariantIds = [...new Set(actions.flatMap((action) => (
+    action.actionRef && Array.isArray(action.actionRef.mechanics?.action_variant_ids)
+      ? action.actionRef.mechanics.action_variant_ids.filter((id): id is string => typeof id === 'string')
+      : []
+  )))];
+  const actionVariants = await Promise.all(actionVariantIds.map((id) => dependencies.actionsApi.getAction(id)));
   const characterContext = {
     ...buildCharacterContext(
       ruleState,
@@ -369,6 +387,7 @@ async function loadSheetCombatParticipant(input: {
       ...collectFreeuseRecharge(ruleState.freeuseSpells),
     },
     resourceRecovery: {
+      ...collectFreeuseRecovery(ruleState.freeuseSpells),
       ...buildResourceRecovery((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
       ...collectActionUsesRecovery(assembled, itemCards, inventory.grantedActions),
     },
@@ -382,6 +401,8 @@ async function loadSheetCombatParticipant(input: {
     assembled,
     ruleState,
     sheetActions: actions,
+    spellVariants,
+    actionVariants,
     runtime,
     characterContext:restContext,
     passives,
@@ -399,9 +420,10 @@ async function loadSheetCombatParticipant(input: {
     // entity, while its SheetAction id describes the grant row. Key the UI
     // projection by the executable id so combat renders the very same entity
     // icon and preview as the sheet instead of losing them at this boundary.
-    actionPresentation: Object.fromEntries(actions.flatMap((action) => (
-      (canonical.actionsFor?.(action) ?? [canonical.actionFor(action)])
-        .map((canonicalAction) => [canonicalAction.id, {
+    actionPresentation: Object.fromEntries([
+      ...actions.flatMap((action) => (
+        (canonical.actionsFor?.(action) ?? [canonical.actionFor(action)])
+          .map((canonicalAction) => [canonicalAction.id, {
         imageUrl: action.imageUrl,
         description: unboundActions.get(action.id)?.description ?? action.description,
         sourceLabel: action.sourceLabel,
@@ -415,8 +437,29 @@ async function loadSheetCombatParticipant(input: {
           mechanics: action.canonicalMechanics ?? action.actionRef.mechanics,
         } : undefined,
         spellRef: action.spellRef,
-        }] as const)
-    ))),
+          }] as const)
+      )),
+      ...spellVariants.flatMap((spell) => canonical.actions
+        .filter((action) => action.sourceEntityIds[0] === spell.id)
+        .map((action) => [action.id, {
+          imageUrl: spell.image_url,
+          description: spell.description,
+          sourceLabel: spell.school ? `Заклинание · ${spell.school}` : 'Заклинание',
+          entityType: 'spell' as const,
+          entityId: spell.id,
+          spellRef: spell,
+        }] as const)),
+      ...actionVariants.flatMap((variant) => canonical.actions
+        .filter((action) => action.sourceEntityIds[0] === variant.id)
+        .map((action) => [action.id, {
+          imageUrl: variant.image_url,
+          description: variant.description,
+          sourceLabel: 'Действие',
+          entityType: 'action' as const,
+          entityId: variant.id,
+          actionRef: variant,
+        }] as const)),
+    ]),
     canonical,
   };
 }

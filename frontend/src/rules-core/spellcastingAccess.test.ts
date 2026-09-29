@@ -31,6 +31,15 @@ function wizardState(): SpellcastingAccessState {
 }
 
 describe('source-scoped spellcasting access', () => {
+  it('pays the selected higher slot for two different spells without allowing a free use to impersonate upcasting',()=>{
+    const state=wizardState();
+    state.grants.find(grant=>grant.actionId==='shield')!.freeUseResource='shield_free';
+    for(const actionId of ['shield','burning-hands']){
+      expect(resolveSpellAccess({state,actionId,resources:{spell_slot_1:1,spell_slot_3:1,shield_free:1},castLevel:3})).toMatchObject({status:'allowed',payment:{kind:'slot',resource:'spell_slot_3'}});
+      expect(resolveSpellAccess({state,actionId,resources:{spell_slot_1:1,shield_free:1},castLevel:3})).toMatchObject({status:'rejected',code:'SpellResourceUnavailable'});
+    }
+    expect(resolveSpellAccess({state,actionId:'shield',resources:{spell_slot_1:1,shield_free:1},castLevel:1})).toMatchObject({status:'allowed',payment:{kind:'free_use'}});
+  });
   it('reports preparation across source-scoped grants without treating the visual card as prepared', () => {
     const state = wizardState();
     state.grants.push({

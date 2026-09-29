@@ -19,6 +19,7 @@ export function bindCombatWorldInputFacts(
 ): ActionWorldInput {
   switch (input.type) {
     case 'target_object':
+    case 'item_tool':
     case 'mending':
     case 'minor_illusion':
     case 'dancing_lights':

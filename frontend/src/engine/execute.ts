@@ -1,9 +1,31 @@
+import {environmentActionIssue} from './environmentAdaptation';
+import {planItemFailureCost} from './itemFailureCost';
+import {selectedSpellDamageType} from './selectedSpellDamageType';
+import {effectRollFacts} from './effectRollFacts';
+import {sourceWeaponMechanics,selectedResourcePool} from './sourceWeaponMechanics';
+import {weaponAttackPolicy} from './weaponAttackPolicies';
 import {dropHeldItem, heldItemDropIssue, selectedHeldItemHand} from './heldItemDrop';
+import {reflectsSavingEffect} from './saveReflection';
+import {triggerChance,validateTriggerChance} from './triggerChance';
+import {recoveryReplacement,validRecoveryPolicy,type RecoveryKind} from './recoveryPolicies';
+import {resourceRestrictionIssue,restrictedResourceKeys} from './resourceRestrictions';
 import {heldItemRequirementIssue, activationCircumstanceIssue, activeEffectRequirementIssue} from './actionRequirements';
 import { resolveDamageCalculation } from './damageCalculation';
-import { finiteDurationRounds } from './duration';
+import { finiteDurationRounds,cappedEffectDuration } from './duration';
 import { captureActionContext, runtimeActionContext } from './actionGrantContext';
 import {staticDamageReductions} from './staticDamageReduction';
+import {advanceEventOccurrence} from './eventOccurrence';
+import {collectLifePolicies,immediateDeathSaveRequired,zeroHpLifeConsequences,resurrectionPermitted} from './lifePolicies';
+import {weaponFormIssue,applyWeaponForm} from './weaponForms';
+import {applyDamageAtZero,emptyDeathSaves} from './deathSaves';
+import {damageEchoEvents} from './damageEcho';
+import {magicExecutionIssue,markMagicEffects} from './magic';
+import {incomingDamagePolicies} from './incomingDamagePolicies';
+import {actionFormulaBindings} from './actionFormulaBindings';
+import {rollDamageFormulaWithAdvantage} from './damageAdvantage';
+import {preventsForcedMovement,saveDamagePolicy,preventsSlip,savePolicyPayloads} from './itemDefensePolicies';
+import {reconcileTemporaryResourceGrants} from './temporaryResourceGrants';
+import {reconcileEndedEffects} from './effectLifecycle';
 import type { DamageCalculation } from '../mvp/contracts';
 /**
  * Единый исполнитель действий (фазы D4, E1–E5).
@@ -36,7 +58,7 @@ import {
   type ModifierQueryFacts,
 } from './modifiers';
 import {
-  activeConditionsOf, creatureTypeMatches, matchesWhen, type EvalContext,
+  activeConditionsOf, suppressedConditionsOf, creatureTypeMatches, matchesWhen, type EvalContext,
 } from './circumstances';
 import {
   conditionEffectEntityRef,
@@ -53,9 +75,9 @@ import { payloadsOf } from './mechanicsView';
 import {perceivesWithoutSight} from './senses';
 import { selectedChoicePayloads, normalizeChoicePayload } from '../mechanics/expandChoices';
 import { collectListeners, isAuto, toOffer, type DomainEvent } from './dispatch';
-import { concentrationDC, concentrationEntry, dropConcentration } from './concentration';
+import { concentrationDC, concentrationEntry, dropConcentration,concentrationProtectedUntilDeath } from './concentration';
 import { retargetAttackRoll, rollD20 } from './roll';
-import { applyDamageDieRules } from './rollRules';
+import { applyDamageDieRules,advantageDiceCount } from './rollRules';
 import { drawDie } from './random';
 import { hitDiceResourceKey, hitDieSides } from './resources';
 import {
@@ -196,15 +218,17 @@ function targetFormulaCtx(target: ExecuteContext['target']): FormulaContext | nu
 
 const EXECUTABLE_RESOLUTIONS = new Set(['auto', 'attack_roll', 'save', 'ability_check']);
 const EXECUTABLE_PAYLOAD_KINDS = new Set([
-  'damage', 'damage_rider', 'healing', 'reduce_damage', 'temp_hp', 'condition', 'resource',
+  'chance', 'roll_die', 'weapon_form',
+  'area_healing', 'area_damage', 'cancel_execution',
+  'damage', 'damage_rider', 'healing', 'reduce_damage', 'incoming_damage_multiplier', 'temp_hp', 'condition', 'resource',
   'modifier', 'attack_follow_up', 'grant_sense', 'resistance', 'set_value',
   'condition_immunity', 'triggered_effect', 'fall_protection', 'movement_option',
   'targeting_ward', 'turn_command',
-  'stabilize', 'weapon_enchantment', 'remote_manipulator', 'communication_link',
-  'world_interaction', 'illusion', 'temporary_consumable', 'world_entity',
-  'information_access', 'information_reveal', 'world_zone',
-  'grant_effect', 'remove_effect', 'choice', 'add_item', 'movement', 'boon', 'reroll',
-  'transform', 'narrative',
+  'stabilize', 'weapon_enchantment', 'weapon_attack_buff', 'remote_manipulator', 'communication_link',
+  'spend_cost', 'world_interaction', 'illusion', 'temporary_consumable', 'world_entity',
+  'environment_adaptation', 'information_access', 'information_reveal', 'world_zone',
+  'area_effect', 'ability_damage', 'grant_effect', 'remove_effect', 'choice', 'add_item', 'movement', 'boon', 'reroll',
+  'transform', 'narrative', 'life_policy', 'rest_policy', 'recovery_policy', 'resource_restriction', 'aura', 'attunement_capacity',
 ]);
 const ABILITY_KEYS = new Set<AbilityKey>(['str', 'dex', 'con', 'int', 'wis', 'cha']);
 const ATTACK_ABILITIES = new Set([...ABILITY_KEYS, 'auto', 'spellcasting']);
@@ -213,6 +237,8 @@ const MODIFIER_OPS = new Set([
   'downgrade', 'auto_fail', 'auto_crit', 'deny', 'set_die', 'crit_range',
   'outcome', 'on_roll', 'minimum_die', 'die_bonus', 'critical_extra_die', 'bonus_die', 'explode',
   'minimum_total', 'reroll_damage', 'reroll_healing_ones', 'maximize_dice',
+  'advantage_dice','deny_critical','deny_advantage','set_die_result',
+  'add_dice_drop_lowest','critical_on_hit',
 ]);
 const NUMERIC_MODIFIER_OPS = new Set([
   'add', 'set', 'multiply', 'upgrade', 'downgrade', 'crit_range', 'minimum_die', 'die_bonus', 'critical_extra_die',
@@ -629,11 +655,15 @@ function preflightChoice(
   }
   const options = isDict(payload.options) ? payload.options : {};
   const source = String(options.source ?? payload.source ?? '');
-  if (source === 'equipped_weapon') {
+  if (source === 'equipped_weapon' || source === 'target_equipped_weapon') {
     const filter = Array.isArray(options.filter ?? payload.filter)
       ? (options.filter ?? payload.filter) as string[]
       : [];
-    const eligible = new Set(equippedWeaponChoices(ctx.character, state.equipment, filter)
+    const owner = source === 'target_equipped_weapon'
+      ? ctx.target?.characterContext ?? ctx.character : ctx.character;
+    const equipment = source === 'target_equipped_weapon'
+      ? ctx.target?.runtimeState?.equipment ?? state.equipment : state.equipment;
+    const eligible = new Set(equippedWeaponChoices(owner, equipment, filter)
       .map((weapon) => weapon.id));
     const invalid = selected.filter((id) => !eligible.has(id));
     if (invalid.length) {
@@ -680,6 +710,25 @@ function preflightPayload(
   }
 
   switch (kind) {
+    case 'roll_die':
+      if (!Number.isInteger(value.sides) || Number(value.sides) < 2 || Number(value.sides) > 1000
+        || typeof value.label !== 'string' || !value.label.trim()) {
+        throw mechanicsError('INVALID_PAYLOAD', path, 'roll_die requires 2..1000 sides and a label');
+      }
+      break;
+    case 'incoming_damage_multiplier':
+      if(ctx.incomingDamage===undefined||!Number.isFinite(ctx.incomingDamage)
+        ||typeof value.factor!=='number'||!Number.isFinite(value.factor)||value.factor<0||value.factor>4)
+        throw mechanicsError('INVALID_PAYLOAD',path,'Damage multiplier requires a pending damage reaction and factor from 0 to 4');
+      break;
+    case 'weapon_form': {const issue=weaponFormIssue(state,value);if(issue)throw mechanicsError('INVALID_PAYLOAD',path,issue);break;}
+    case 'chance': {
+      if(!validateTriggerChance(value.chance))throw mechanicsError('INVALID_PAYLOAD',path,'Invalid chance policy');
+      if(!Array.isArray(value.on_success))throw mechanicsError('INVALID_PAYLOAD',path,'Chance requires success payloads');
+      for(const branch of ['on_success','on_fail']){if(value[branch]===undefined)continue;if(!Array.isArray(value[branch]))throw mechanicsError('INVALID_PAYLOAD',path,'Invalid chance branch');for(const [index,payload] of (value[branch] as unknown[]).entries())preflightPayload(payload,`${path}.${branch}[${index}]`,state,ctx,targetOwned,depth+1,hand);}
+      break;
+    }
+
     case 'damage': {
       const base = value.amount ?? value.dice;
       if (value.type === 'triggering_attack') {
@@ -702,7 +751,7 @@ function preflightPayload(
         );
       }
       if ((base === 'weapon' || value.type === 'weapon')
-        && !weaponContext(ctx.character, hand, state.equipment, state, ctx.passives)) {
+        && !weaponContext(weaponCharacter(ctx), hand, state.equipment, state, ctx.passives)) {
         throw mechanicsError(
           'INVALID_MECHANICS',
           'context.character.equipment',
@@ -749,6 +798,15 @@ function preflightPayload(
           'source_actor_only is valid only for a target-scoped rider',
         );
       }
+      if(value.requires_damage_dealt!==undefined&&typeof value.requires_damage_dealt!=='boolean')
+        throw mechanicsError('INVALID_PAYLOAD',`${path}.requires_damage_dealt`,'requires_damage_dealt must be boolean');
+      if(value.bound_weapon_id!==undefined&&(typeof value.bound_weapon_id!=='string'||!value.bound_weapon_id.trim()))
+        throw mechanicsError('INVALID_PAYLOAD',`${path}.bound_weapon_id`,'bound weapon id must be non-empty');
+      if(value.target_save!==undefined){
+        const save=isDict(value.target_save)?value.target_save:{};
+        if(!ABILITY_KEYS.has(save.ability as AbilityKey)||!Number.isSafeInteger(save.dc)||Number(save.dc)<1)
+          throw mechanicsError('INVALID_PAYLOAD',`${path}.target_save`,'target save requires ability and positive DC');
+      }
       break;
     }
     case 'condition_immunity': {
@@ -762,6 +820,10 @@ function preflightPayload(
       if (!isDict(value.duration)) {
         throw mechanicsError('INVALID_PAYLOAD', `${path}.duration`, 'condition_immunity requires duration');
       }
+      if(value.suppress_existing!==undefined&&typeof value.suppress_existing!=='boolean')
+        throw mechanicsError('INVALID_PAYLOAD',`${path}.suppress_existing`,'suppress_existing must be boolean');
+      if(value.requires_equipped_item_id!==undefined&&(typeof value.requires_equipped_item_id!=='string'||!value.requires_equipped_item_id.trim()))
+        throw mechanicsError('INVALID_PAYLOAD',`${path}.requires_equipped_item_id`,'equipped item id must be non-empty');
       if (value.source_creature_types !== undefined
         && (!Array.isArray(value.source_creature_types)
           || value.source_creature_types.length === 0
@@ -847,6 +909,21 @@ function preflightPayload(
       }
       break;
     }
+    case 'weapon_attack_buff': {
+      const choice = selectedChoice(ctx, value.weapon_choice_id);
+      const owner = targetOwned ? ctx.target?.characterContext ?? ctx.character : ctx.character;
+      const equipment = targetOwned ? ctx.target?.runtimeState?.equipment ?? state.equipment : state.equipment;
+      if (!choice || !equippedWeaponChoices(owner, equipment).some(weapon => weapon.id === choice))
+        throw mechanicsError('INVALID_CHOICE', `${path}.weapon_choice_id`, 'selected weapon is not equipped by the recipient');
+      if (typeof value.damage_type !== 'string' || !value.damage_type.trim()
+        || !isDict(value.duration) || !Array.isArray(value.scaling) || !value.scaling.length
+        || value.scaling.some(entry => !isDict(entry) || !Number.isInteger(entry.min_spell_level)
+          || Number(entry.min_spell_level) < 1 || !Number.isInteger(entry.attack_bonus)
+          || Number(entry.attack_bonus) < 0 || typeof entry.damage_dice !== 'string'
+          || !/^\d+d\d+$/.test(entry.damage_dice)))
+        throw mechanicsError('INVALID_PAYLOAD', path, 'weapon attack buff requires typed spell-level scaling and duration');
+      break;
+    }
     case 'remote_manipulator': {
       for (const key of ['max_distance_ft', 'move_per_action_ft', 'max_load_lb'] as const) {
         const amount = Number(value[key]);
@@ -886,6 +963,11 @@ function preflightPayload(
         || !isDict(value.parameters)) {
         throw mechanicsError('INVALID_PAYLOAD', path, 'world interaction requires operation and parameters');
       }
+      break;
+    }
+    case 'spend_cost': {
+      if(!Array.isArray(value.cost)||!value.cost.length)throw mechanicsError('INVALID_PAYLOAD',path,'spend_cost requires a declared cost');
+      preflightMechanicsExecution(targetOwned?ctx.target?.runtimeState??state:state,{activation:{mode:'active',cost:value.cost},effects:[]},ctx);
       break;
     }
     case 'illusion': {
@@ -939,6 +1021,11 @@ function preflightPayload(
       }
       break;
     }
+    case 'environment_adaptation': {
+      if(value.breathing!==undefined&&(!Array.isArray(value.breathing)||value.breathing.some(s=>!['air','water'].includes(String(s)))))throw mechanicsError('INVALID_PAYLOAD',path,'Invalid breathing media');
+      for(const key of ['weightless','can_pass_gaps','cannot_attack','cannot_cast'])if(value[key]!==undefined&&typeof value[key]!=='boolean')throw mechanicsError('INVALID_PAYLOAD',path,'Invalid environment capability');
+      break;
+    }
     case 'information_access': {
       if (typeof value.capability !== 'string' || !value.capability.trim()
         || !isDict(value.policy) || !isDict(value.duration)) {
@@ -970,6 +1057,7 @@ function preflightPayload(
       break;
     }
     case 'triggered_effect': {
+      if(value.chance!==undefined&&!validateTriggerChance(value.chance))throw mechanicsError('INVALID_PAYLOAD',`${path}.chance`,'Invalid event chance');
       const event = typeof value.event === 'string' ? value.event : '';
       if (!EMITTED_EVENTS.includes(event as (typeof EMITTED_EVENTS)[number])) {
         throw mechanicsError(
@@ -1066,10 +1154,25 @@ function preflightPayload(
       }
       break;
     }
+    case 'area_effect': {
+      if(!['allies','enemies','all'].includes(String(value.recipients))||value.all_scene!==true&&(!Number.isFinite(value.radius_ft)||Number(value.radius_ft)<0))throw mechanicsError('INVALID_PAYLOAD',path,'Area effect requires explicit recipients and geometry');
+      assertPayloadArray(value.effects,`${path}.effects`,state,ctx,true,depth,hand);break;
+    }
+    case 'area_damage':
+    case 'area_healing': {
+      if(!Number.isFinite(value.radius_ft)||Number(value.radius_ft)<0
+        ||!['allies','enemies','all'].includes(String(value.recipients)))throw mechanicsError('INVALID_PAYLOAD',path,'Area healing requires radius and recipient relationship');
+      assertFiniteFormula(value.amount,`${path}.amount`,ctx);
+      if(kind==='area_damage'&&(typeof value.type!=='string'||!value.type.trim()
+        ||!['self','target'].includes(String(value.origin))))throw mechanicsError('INVALID_PAYLOAD',path,'Area damage requires type and origin');
+      break;
+    }
     case 'healing':
     case 'reduce_damage':
     case 'temp_hp': {
-      if (kind === 'healing' && value.restore_all === true) {
+      if(kind==='healing'&&value.max_hp_fraction!==undefined){
+        if(typeof value.max_hp_fraction!=='number'||value.max_hp_fraction<=0||value.max_hp_fraction>1||value.amount!==undefined||value.restore_all!==undefined)throw mechanicsError('INVALID_PAYLOAD',path,'healing max_hp_fraction must be in (0,1] without amount');
+      } else if (kind === 'healing' && value.restore_all === true) {
         if (value.hit_die !== undefined || value.amount !== undefined || value.scaling !== undefined) {
           throw mechanicsError('INVALID_PAYLOAD', `${path}.restore_all`, 'full healing cannot also declare an amount, Hit Die or scaling');
         }
@@ -1097,7 +1200,31 @@ function preflightPayload(
       }
       break;
     }
+    case 'attunement_capacity': {
+      if(!Number.isSafeInteger(value.amount))throw mechanicsError('INVALID_PAYLOAD',path,'Capacity adjustment must be an integer');
+      break;
+    }
+    case 'aura': {
+      if(!Number.isFinite(value.radius_ft)||Number(value.radius_ft)<0||!Array.isArray(value.effects)||!value.effects.length
+        ||!['self','others','allies','enemies','all'].includes(String(value.recipients))) throw mechanicsError('INVALID_PAYLOAD',path,'Invalid aura declaration');
+      break;
+    }
+    case 'rest_policy': break;
+    case 'recovery_policy':
+      if(!validRecoveryPolicy(value))throw mechanicsError('INVALID_PAYLOAD',path,'Invalid recovery replacement policy');
+      break;
+    case 'resource_restriction':
+      restrictedResourceKeys({...state,activeEffects:[]},ctx.character,[value]);
+      break;
+    case 'life_policy': {
+      collectLifePolicies({...state,activeEffects:[]},[value],ctx.character);
+      break;
+    }
     case 'condition': {
+      if (value.on_immune !== undefined) {
+        if (!Array.isArray(value.on_immune)) throw mechanicsError('INVALID_PAYLOAD',`${path}.on_immune`,'Condition fallback must be payloads');
+        value.on_immune.forEach((fallback,index) => preflightPayload(fallback,`${path}.on_immune[${index}]`,state,ctx,targetOwned,depth+1));
+      }
       if (value.max_target_size !== undefined) {
         if (!targetOwned || !Number.isInteger(value.max_target_size)
           || Number(value.max_target_size) < 0 || Number(value.max_target_size) > 5) {
@@ -1142,6 +1269,9 @@ function preflightPayload(
       const op = String(value.op ?? 'grant');
       if (op !== 'grant' && op !== 'restore' && op !== 'grant_capped' && op !== 'spend') {
         throw mechanicsError('INVALID_PAYLOAD', `${path}.op`, `executor does not support resource operation «${op}»`);
+      }
+      if (value.restore_all !== undefined && (value.restore_all !== true || op !== 'restore' || value.amount !== undefined)) {
+        throw mechanicsError('INVALID_PAYLOAD',`${path}.restore_all`,'restore_all requires restore without amount');
       }
       if (value.amount !== undefined) assertFiniteFormula(value.amount, `${path}.amount`, ctx, targetOwned);
       break;
@@ -1219,11 +1349,21 @@ function preflightPayload(
       }
       break;
     }
+    case 'ability_damage': {
+      if(!['str','dex','con','int','wis','cha'].includes(String(value.ability)))throw mechanicsError('INVALID_PAYLOAD',path,'ability_damage requires an ability');
+      const character=targetOwned?ctx.target?.characterContext:ctx.character;
+      if(!Number.isFinite(character?.abilityScores?.[value.ability as 'str']))throw mechanicsError('INVALID_PAYLOAD',path,'ability_damage requires an actual score');
+      assertFiniteFormula(value.amount,`${path}.amount`,ctx,targetOwned);
+      if(value.fatal_at!==undefined&&(!Number.isFinite(value.fatal_at)||Number(value.fatal_at)<0))throw mechanicsError('INVALID_PAYLOAD',path,'fatal_at must be nonnegative');
+      break;
+    }
     case 'remove_effect': {
       const stackId = typeof value.stack_id === 'string' ? value.stack_id.trim() : '';
       const cardNumber = typeof value.card_number === 'string' ? value.card_number.trim() : '';
-      if (!stackId && !cardNumber) {
-        throw mechanicsError('INVALID_PAYLOAD', path, 'remove_effect requires stack_id or card_number');
+      const tags=Array.isArray(value.cause_tags)?value.cause_tags:[];
+      if(tags.some(tag=>typeof tag!=='string'||!tag.trim()))throw mechanicsError('INVALID_PAYLOAD',path,'Effect cause tags must be stable strings');
+      if (!stackId && !cardNumber && !tags.length && (typeof value.instance_id!=='string'||!value.instance_id.trim())) {
+        throw mechanicsError('INVALID_PAYLOAD', path, 'remove_effect requires stack_id, card_number, or authoritative instance_id');
       }
       break;
     }
@@ -1247,6 +1387,12 @@ function preflightPayload(
         throw mechanicsError('INVALID_PAYLOAD', `${path}.value`, `unsupported movement mode «${mode}»`);
       }
       if (value.distance !== undefined) assertFiniteFormula(value.distance, `${path}.distance`, ctx, targetOwned);
+      if(value.direction!==undefined&&(mode!=='push'||value.direction!=='random_compass'))throw mechanicsError('INVALID_PAYLOAD',`${path}.direction`,'direction requires random_compass push');
+      if (value.traversal !== undefined && (mode !== 'additional' || value.traversal !== 'jump')) throw mechanicsError('INVALID_PAYLOAD', `${path}.traversal`, 'additional traversal must be jump');
+      if (value.on_arrival !== undefined) {
+        if (mode !== 'additional' || value.traversal !== 'jump') throw mechanicsError('INVALID_PAYLOAD', `${path}.on_arrival`, 'arrival effects require additional jump movement');
+        assertPayloadArray(value.on_arrival, `${path}.on_arrival`, state, ctx, targetOwned, depth, hand);
+      }
       if (value.speed_fraction !== undefined && (mode !== 'additional'
         || typeof value.speed_fraction !== 'number' || !Number.isFinite(value.speed_fraction)
         || value.speed_fraction <= 0 || value.speed_fraction > 1)) {
@@ -1301,7 +1447,7 @@ function preflightEffect(
       ? ['on_hit', 'on_crit', 'on_miss']
       : resolution === 'save'
         ? ['on_fail', 'on_success']
-        : ['on_success'];
+        : ['on_fail','on_success'];
   if (resolution === 'auto' && value.result === undefined && value.results === undefined) {
     throw mechanicsError('INVALID_PAYLOAD', path, 'auto resolution requires result or results');
   }
@@ -1330,7 +1476,7 @@ function preflightEffect(
       );
     }
     if (ability === 'auto') {
-      const weapon = weaponContext(ctx.character, resolveHand(value), state.equipment, state, ctx.passives);
+      const weapon = weaponContext(weaponCharacter(ctx), resolveHand(value), state.equipment, state, ctx.passives);
       if (!weapon) {
         throw mechanicsError(
           'INVALID_MECHANICS',
@@ -1406,8 +1552,12 @@ function preflightEffect(
       ABILITY_KEYS,
       'ability-check resolution',
     ) as AbilityKey;
-    explicitCharacterAbilityModifier(ctx, ability);
-    explicitCharacterProficiencyBonus(ctx);
+    const checkAsTarget=value.who==='target';
+    if(checkAsTarget&&(!targetOwned||!ctx.target?.characterContext||!ctx.target.runtimeState||value.contest_vs!==undefined))
+      throw mechanicsError('INVALID_PAYLOAD',path,'Target ability check requires a target with runtime and a fixed DC');
+    const checkCtx=checkAsTarget?{...ctx,character:ctx.target!.characterContext!}:ctx;
+    explicitCharacterAbilityModifier(checkCtx, ability);
+    explicitCharacterProficiencyBonus(checkCtx);
     const hasDc = value.dc !== undefined;
     const hasContest = value.contest_vs !== undefined;
     if (hasDc === hasContest) {
@@ -1447,7 +1597,14 @@ export function preflightMechanicsExecution(
   if (!isDict(mechanics)) {
     throw mechanicsError('INVALID_MECHANICS', 'mechanics', 'mechanics must be an object');
   }
+  if(mechanics.pre_action_check!==undefined){
+    const check=isDict(mechanics.pre_action_check)?mechanics.pre_action_check:{};
+    if(!ABILITY_KEYS.has(check.ability as AbilityKey)||!Number.isSafeInteger(check.dc)||Number(check.dc)<1
+      ||(check.skill!==undefined&&(typeof check.skill!=='string'||!check.skill.trim())))
+      throw mechanicsError('INVALID_MECHANICS','mechanics.pre_action_check','pre-action check requires ability, optional skill and positive DC');
+  }
   ctx = runtimeActionContext(state, mechanics, ctx);
+  ctx = actionFormulaBindings(mechanics,ctx,true).context;
   // This executor never dispatches a world primitive. Canonical rules-core may
   // call back with the same immutable mechanics only after its own validated
   // world mutation, using an explicit one-way authority hand-off. Every direct
@@ -1475,6 +1632,8 @@ export function preflightMechanicsExecution(
   const grantIssue = activeEffectRequirementIssue(mechanics, state, ctx.character);
   if (grantIssue) throw mechanicsError('INVALID_MECHANICS', 'mechanics.requires_runtime_action_grant', grantIssue);
   const cost = preflightActivationCost(mechanics, ctx);
+  const resourceIssue=resourceRestrictionIssue(state,cost,ctx.character,ctx.passives);
+  if(resourceIssue)throw mechanicsError('INVALID_MECHANICS','mechanics.activation.cost',resourceIssue);
   if (mechanics.effects === undefined) {
     if (mechanics.kind !== undefined) {
       throw mechanicsError('INVALID_MECHANICS', 'mechanics.kind', 'a payload cannot be executed as an action');
@@ -1542,11 +1701,16 @@ export function projectedAgainst(
   const consider = (m: Dict, source: string, conditionSourceId?: string): void => {
     if (String(m.scope ?? 'self') !== 'target') return;
     const applies = m.applies_to as Dict | undefined;
-    if (!applies || applies.roll !== roll) return;
+    if (!applies || (applies.roll !== roll && !(applies.roll === 'd20'
+      && ['attack', 'saving_throw', 'ability_check', 'initiative'].includes(roll)))) return;
     const effectFilter = applies.filter as Dict | undefined;
-    if (effectFilter && Object.entries(effectFilter).some(([key, value]) => queryFilter?.[key] !== value)) return;
+    if (effectFilter && Object.entries(effectFilter).some(([key, value]) => Array.isArray(value)
+      ? !value.includes(queryFilter?.[key]) : queryFilter?.[key] !== value)) return;
     if (!matchesWhen(m.when as Dict[] | undefined, {
       ...(evalCtx ?? {}),
+      character: target?.characterContext,
+      state: st,
+      activeConditions: activeConditionsOf(st),
       conditionSourceId,
       conditionOwnerId: target?.id,
     })) return;
@@ -1558,7 +1722,7 @@ export function projectedAgainst(
     const op = String(m.op ?? '');
     if (op === 'auto_crit') {
       out.autoCrit = true;
-    } else if (op === 'bonus_die') {
+    } else if (['bonus_die', 'deny_critical', 'set_die_result', 'deny_advantage', 'advantage_dice'].includes(op)) {
       out.rules.push(m);
     } else if (op === 'advantage' || op === 'disadvantage') {
       if (op === 'advantage') out.hasAdvantage = true; else out.hasDisadvantage = true;
@@ -1575,6 +1739,7 @@ export function projectedAgainst(
   for (const e of st.activeEffects) {
     const mech = e.mechanics as Dict;
     if (mech?.kind === 'condition' && mech.value) {
+      if(suppressedConditionsOf(st).has(String(mech.value)))continue;
       const owner = target?.id;
       const other = evalCtx?.rollerActorId;
       const distance = owner && other ? evalCtx?.distancesFt?.[owner]?.[other] : undefined;
@@ -1585,6 +1750,11 @@ export function projectedAgainst(
       }
     } else {
       for (const p of payloadsOf(mech)) if (p.kind === 'modifier') consider(p, e.name, e.sourceId);
+    }
+  }
+  for (const passive of target?.passives ?? []) {
+    for (const payload of payloadsOf(passive)) {
+      if (payload.kind === 'modifier') consider(payload, String(passive.name ?? 'Цель'));
     }
   }
   return out;
@@ -1629,10 +1799,10 @@ function evalDc(formula: string, ctx: ExecuteContext): number {
   if (typeof v !== 'number') throw new FormulaError(`DC формула «${formula}» не число`);
   const spellClass = ctx.spell?.sourceClass;
   const state = ctx.selfRuntime;
-  if (!spellClass || !state) return v;
+  if (!ctx.spell || !state) return v;
   const collected = collectModifiers(state, passivesFromCtx(ctx), {
     roll: 'spell_save_dc',
-    filter: { spellClass },
+    filter: spellClass ? { spellClass } : {},
     formulaCtx: formulaCtx(ctx),
     evalCtx: evalCtxOf(state, ctx),
   });
@@ -1655,7 +1825,13 @@ function expiryFromDuration(duration: Dict | undefined): string | undefined {
  * expireStartOfTurnEffects); until_start/end_of_turn → expiry-метка; без длительности → 'manual'
  * (снимается вручную/до отдыха, как чип Ярости).
  */
-function resolveDuration(duration: Dict | undefined): { roundsLeft?: number; expiry?: string } {
+function resolveDuration(duration: Dict | undefined, ctx?: ExecuteContext): { roundsLeft?: number; expiry?: string } {
+  if (duration && typeof duration.amount === 'string') {
+    if (!ctx) throw new FormulaError('Formula duration requires an execution context');
+    const value=evaluate(duration.amount,{...formulaCtx(ctx),rng:()=>{throw new FormulaError('Duration must use a stored formula binding, not reroll dice');}});
+    if(typeof value!=='number'||!Number.isFinite(value)||value<=0)throw new FormulaError('Duration amount must be positive and finite');
+    duration={...duration,amount:value};
+  }
   const roundsLeft = finiteDurationRounds(duration);
   if (roundsLeft !== undefined) return { roundsLeft };
   // Нет длительности / until_*-метка: expiry ('start_of_next_turn'|'end_of_turn') либо 'manual'
@@ -1717,6 +1893,10 @@ function resolveHand(effect: Dict): 'main' | 'off' {
   return tags?.includes('off_hand') ? 'off' : 'main';
 }
 
+function weaponCharacter(ctx:ExecuteContext):ExecuteContext['character']{
+  return ctx.target?.characterContext?.magicSuppressed?{...ctx.character,magicSuppressed:true}:ctx.character;
+}
+
 function attackAbilityMods(effect: Dict, ctx: ExecuteContext, hand: 'main' | 'off', state: RuntimeState): RollModifier[] {
   const mods: RollModifier[] = [];
   const fixedAttackBonus = Number(effect.attack_bonus_override);
@@ -1726,7 +1906,7 @@ function attackAbilityMods(effect: Dict, ctx: ExecuteContext, hand: 'main' | 'of
   const ability = String(effect.ability);
   const attackKind = attackRollQueryFacts(effect, hand, ctx.character, state.equipment).attackKind;
   const currentWeapon = attackKind === 'weapon'
-    ? weaponContext(ctx.character, hand, state.equipment, state, ctx.passives)
+    ? weaponContext(weaponCharacter(ctx), hand, state.equipment, state, ctx.passives)
     : null;
   const proficiencyBonus = attackKind !== 'weapon'
     || (currentWeapon !== null
@@ -1744,7 +1924,7 @@ function attackAbilityMods(effect: Dict, ctx: ExecuteContext, hand: 'main' | 'of
       mods.push({ value: proficiencyBonus, source: 'БМ', reason: 'бонус мастерства' });
     }
   } else if (ability === 'auto') {
-    const w = currentWeapon ?? weaponContext(ctx.character, hand, state.equipment, state, ctx.passives);
+    const w = currentWeapon ?? weaponContext(weaponCharacter(ctx), hand, state.equipment, state, ctx.passives);
     if (w) {
       mods.push({
         value: ctx.character.abilityMods[w.ability],
@@ -1893,7 +2073,7 @@ function applyModifierPayload(
   }
   const duration = payload.duration as Dict | undefined;
   const relative = sourceTurnMetadata(duration, ctx, ownerActorId);
-  const resolved = relative ? { expiry: relative.expiry } : resolveDuration(duration);
+  const resolved = relative ? { expiry: relative.expiry } : resolveDuration(duration, ctx);
   const { roundsLeft, expiry } = resolved;
   // Deferred target saves use a generic adapter label ("действие") as their
   // execution source. Content may provide the real user-facing source so the
@@ -1903,6 +2083,7 @@ function applyModifierPayload(
   const entityRef = effectReferenceForPayload(payload, ctx);
   const entry: ActiveEffectEntry = {
     id: runtimeEffectId(ctx, 'fx', state.activeEffects.length),
+    ...(ctx.spell?.spellId&&!ctx.triggeredConsequences?{spellOriginId:ctx.spell.spellId}:{}),
     name: displaySource,
     mechanics: payload,
     roundsLeft, // C6: раньше не выставлялся — модификатор с duration.rounds не истекал
@@ -1919,7 +2100,18 @@ function applyModifierPayload(
     sourceAction: displaySource,
     ...(ownerActorId ? {ownerActorId} : {}),
   });
-  return stackApply(state, entry, payload);
+  const applied=stackApply(state, entry, payload);
+  // A permanent, once-rolled maximum-hit-point adjustment must affect the
+  // authoritative runtime immediately. The persisted numeric modifier also
+  // lets later sheet reconstruction reproduce this exact die result.
+  const applies=isDict(payload.applies_to)?payload.applies_to:undefined;
+  if(payload.value_timing==='on_apply'&&applies?.roll==='max_hp'&&payload.op==='add'){
+    const amount=Number(payload.value);
+    if(!Number.isFinite(amount))throw mechanicsError('INVALID_PAYLOAD','modifier.value','rolled max_hp adjustment must be finite');
+    const max=Math.max(1,applied.hp.max+amount);
+    return {...applied,hp:{...applied.hp,max,current:Math.min(applied.hp.current,max)}};
+  }
+  return applied;
 }
 
 /** Persist one generic on-hit damage rider. Unlike an ordinary modifier it
@@ -1933,7 +2125,7 @@ function applyDamageRiderPayload(
   ctx: ExecuteContext,
   ownerActorId?: string,
 ): RuntimeState {
-  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined, ctx);
   const entry: ActiveEffectEntry = {
     id: runtimeEffectId(ctx, 'rider', state.activeEffects.length),
     name: source,
@@ -1958,7 +2150,7 @@ function applyConditionImmunityPayload(
   ctx: ExecuteContext,
   ownerActorId?: string,
 ): RuntimeState {
-  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined, ctx);
   const entry: ActiveEffectEntry = {
     id: runtimeEffectId(ctx, 'immunity', state.activeEffects.length),
     name: source,
@@ -1993,6 +2185,9 @@ function resolveTriggeredFormulaBindings(
 function triggeredEffectMechanics(payload: Dict, ctx: ExecuteContext): Dict {
   const formulaVariables = resolveTriggeredFormulaBindings(payload, ctx);
   return {
+    damage_source_kind:ctx.damageSource?.kind,
+    chance:payload.chance,
+    ...(payload.event_formula_bindings!==undefined?{formula_bindings:payload.event_formula_bindings}:{}),
     activation: {
       mode: 'triggered',
       trigger: {
@@ -2021,7 +2216,7 @@ function applyTriggeredEffectPayload(
   ctx: ExecuteContext,
   ownerActorId?: string,
 ): RuntimeState {
-  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined, ctx);
   const mechanics = triggeredEffectMechanics(payload, ctx);
   const entry: ActiveEffectEntry = {
     id: runtimeEffectId(ctx, 'trigger', state.activeEffects.length),
@@ -2046,7 +2241,7 @@ function applyTraversalPayload(
   ctx: ExecuteContext,
   ownerActorId?: string,
 ): RuntimeState {
-  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined, ctx);
   const suffix = payload.kind === 'movement_option' ? String(payload.id) : 'fall';
   const entry: ActiveEffectEntry = {
     id: runtimeEffectId(ctx, suffix, state.activeEffects.length),
@@ -2073,7 +2268,7 @@ function applyTargetingWardPayload(
   ctx: ExecuteContext,
   ownerActorId?: string,
 ): RuntimeState {
-  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined, ctx);
   const persisted: Dict = { ...payload, dc: evalDc(String(payload.dc), ctx) };
   const entry: ActiveEffectEntry = {
     id: runtimeEffectId(ctx, 'ward', state.activeEffects.length),
@@ -2173,7 +2368,7 @@ function applyWeaponEnchantmentPayload(
     attack_ability: ability,
     damage_dice: scaledWeaponDice(payload, ctx.character.level ?? 1),
   };
-  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict);
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict, ctx);
   const entry: ActiveEffectEntry = {
     id: runtimeEffectId(ctx, 'weapon-enchantment', state.activeEffects.length),
     name: source,
@@ -2188,6 +2383,40 @@ function applyWeaponEnchantmentPayload(
   return stackApply(state, entry, persisted);
 }
 
+/** Bind a spell's attack bonus and typed on-hit dice to one chosen weapon. */
+function applyWeaponAttackBuffPayload(
+  state: RuntimeState,
+  payload: Dict,
+  source: string,
+  events: EngineEvent[],
+  ctx: ExecuteContext,
+  ownerActorId?: string,
+): RuntimeState {
+  const weaponId = selectedChoice(ctx, payload.weapon_choice_id);
+  const owner = ownerActorId && ownerActorId !== ctx.selfId
+    ? ctx.target?.characterContext ?? ctx.character : ctx.character;
+  if (!weaponId || !equippedWeaponChoices(owner, state.equipment).some(weapon => weapon.id === weaponId))
+    throw mechanicsError('INVALID_CHOICE', 'runtime.payload.weapon_choice_id', 'selected weapon is not equipped by the recipient');
+  const spellLevel = ctx.spell?.castLevel ?? ctx.spell?.baseLevel ?? 1;
+  const tier = (payload.scaling as Dict[])
+    .filter(entry => Number(entry.min_spell_level) <= spellLevel)
+    .sort((left, right) => Number(right.min_spell_level) - Number(left.min_spell_level))[0];
+  if (!tier) throw mechanicsError('INVALID_PAYLOAD', 'runtime.payload.scaling', 'no scaling tier for the cast level');
+  const duration = payload.duration as Dict;
+  const stackId = typeof payload.stack_id === 'string' ? payload.stack_id : `weapon-attack-buff:${weaponId}`;
+  const attack: Dict = { kind: 'modifier', op: 'add', value: tier.attack_bonus,
+    applies_to: { roll: 'attack', filter: { attackKind: 'weapon', weaponId } },
+    duration, stack_id: `${stackId}:attack`, stack_type: 'overwrite' };
+  const rider: Dict = { kind: 'damage_rider', trigger: 'hit_by_attack_roll', scope: 'self',
+    filter: { attackKind: 'weapon' }, bound_weapon_id: weaponId,
+    dice: tier.damage_dice, type: payload.damage_type, duration,
+    stack_id: `${stackId}:damage`, stack_type: 'overwrite' };
+  return applyDamageRiderPayload(
+    applyModifierPayload(state, attack, source, events, ctx, ownerActorId),
+    rider, source, events, ctx, ownerActorId,
+  );
+}
+
 function applyPersistentAdapterPayload(
   state: RuntimeState,
   payload: Dict,
@@ -2196,7 +2425,7 @@ function applyPersistentAdapterPayload(
   ctx: ExecuteContext,
   ownerActorId?: string,
 ): RuntimeState {
-  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined, ctx);
   const persisted: Dict = payload.kind === 'illusion' && payload.investigation_dc !== undefined
     ? { ...payload, investigation_dc: evalDc(String(payload.investigation_dc), ctx) }
     : payload.kind === 'temporary_consumable'
@@ -2239,7 +2468,7 @@ function applySensePayload(
   if (!sense || !Number.isFinite(range) || range <= 0) {
     throw mechanicsError('INVALID_PAYLOAD', 'runtime.payload', `grant_sense «${sense || '?'}» has invalid range`);
   }
-  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined, ctx);
   const entry: ActiveEffectEntry = {
     id: runtimeEffectId(ctx, 'sense', state.activeEffects.length),
     name: source,
@@ -2268,9 +2497,11 @@ function applyAcBaseMethod(
   events: EngineEvent[],
   ctx: ExecuteContext,
 ): RuntimeState {
-  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined, ctx);
   const entry: ActiveEffectEntry = {
     id: runtimeEffectId(ctx, 'ac', state.activeEffects.length),
+    ...(ctx.spell?.spellId&&!ctx.triggeredConsequences?{spellOriginId:ctx.spell.spellId}:{}),
+    sourceId:ctx.effectSourceId??ctx.selfId,
     name: source,
     mechanics: payload,
     roundsLeft,
@@ -2327,6 +2558,8 @@ function applyGrantEffect(
         value: conditionId,
         op: 'apply',
         source_entity_id: entityId,
+        ...(ctx.effectDurationCapRounds!==undefined?{duration:cappedEffectDuration(
+          (grantPayload.duration??rawMech.duration) as Dict|undefined,ctx.effectDurationCapRounds)}:{}),
       };
       delete conditionPayload.card_number;
       delete conditionPayload.values;
@@ -2359,23 +2592,26 @@ function applyGrantEffect(
       : rawMech;
     const mech: Dict = {
       ...runtimeMech,
+      ...(rec?.effect_type==='negative_effect'?{polarity:'negative'}:{}),
       ...(isDict(grantPayload.duration) ? { duration: { ...grantPayload.duration } } : {}),
       stack_id: runtimeMech.stack_id ?? slug,
       ...(rec?.repeatable ? { stack_type: 'stack' } : {}),
     };
+    if(ctx.effectDurationCapRounds!==undefined)mech.duration=cappedEffectDuration(mech.duration as Dict|undefined,ctx.effectDurationCapRounds);
     const name = String(rec?.name ?? (rawMech as Dict).name ?? slug);
     const relative = sourceTurnMetadata(mech.duration as Dict | undefined, ctx, ownerActorId);
     const { roundsLeft, expiry } = relative
       ? { roundsLeft: undefined, expiry: relative.expiry }
-      : resolveDuration(mech.duration as Dict | undefined);
+      : resolveDuration(mech.duration as Dict | undefined, ctx);
     const entry: ActiveEffectEntry = {
       id: runtimeEffectId(ctx, `grant-${slug}`, next.activeEffects.length),
+      ...(ctx.spell?.spellId&&!ctx.triggeredConsequences?{spellOriginId:ctx.spell.spellId}:{}),
       name,
       mechanics: mech,
       roundsLeft,
       expiry,
       source: name,
-      ...(grantPayload.bind_action_context === true
+      ...(grantPayload.bind_action_context === true || rawMech.on_end !== undefined
         ? { actionContext: captureActionContext(ctx, grantPayload.bind_action_target === true) } : {}),
       ...(typeof rec?.id === 'string' && rec.id.trim()
         ? { entityRef: {
@@ -2391,9 +2627,15 @@ function applyGrantEffect(
       ...(relative ?? {}),
     };
     events.push({ type: 'effect_applied', name });
-    next = stackApply(next, entry, mech);
+    const beforeMaximumDelta=next.activeEffects.reduce((sum,effect)=>sum+Number((effect.mechanics as Dict).max_hp_delta??0),0);
+    const stacked=stackApply(next, entry, mech);
+    const afterMaximumDelta=stacked.activeEffects.reduce((sum,effect)=>sum+Number((effect.mechanics as Dict).max_hp_delta??0),0);
+    const maximumDifference=afterMaximumDelta-beforeMaximumDelta;
+    if(!Number.isSafeInteger(maximumDifference))throw mechanicsError('INVALID_PAYLOAD','grant_effect.max_hp_delta','Maximum HP adjustment must be an integer');
+    next=maximumDifference===0?stacked:{...stacked,hp:{...stacked.hp,max:Math.max(1,stacked.hp.max+maximumDifference),
+      current:Math.min(stacked.hp.current,Math.max(1,stacked.hp.max+maximumDifference))}};
   }
-  return next;
+  return reconcileTemporaryResourceGrants(state,next,ownerActorId===ctx.target?.id?ctx.target?.characterContext:ctx.character);
 }
 
 /**
@@ -2408,7 +2650,7 @@ function applyResistancePayload(
   events: EngineEvent[],
   ctx: ExecuteContext,
 ): RuntimeState {
-  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined);
+  const { roundsLeft, expiry } = resolveDuration(payload.duration as Dict | undefined, ctx);
   const entry: ActiveEffectEntry = {
     id: runtimeEffectId(ctx, 'res', state.activeEffects.length),
     name: source,
@@ -2502,6 +2744,23 @@ function recoveryModifierChannels(
   };
 }
 
+function replaceRecoveryWithDamage(state:RuntimeState,kind:RecoveryKind,total:number,roll:RollLog,ctx:ExecuteContext,events:EngineEvent[],targetOwned:boolean):RuntimeState|null {
+  const character=targetOwned?ctx.target?.characterContext??ctx.character:ctx.character;
+  const passives=targetOwned?ctx.target?.passives??[]:ctx.passives??[];
+  const policy=recoveryReplacement(state,passives,character,kind);
+  if(!policy||total<=0)return null;
+  if(!validRecoveryPolicy(policy))throw mechanicsError('INVALID_PAYLOAD','recovery_policy','Invalid recovery replacement policy');
+  const chance=triggerChance(policy.chance,'Обращение восстановления',ctx.rng);events.push(...chance.events);
+  if(!chance.success)return null;
+  const selfId=targetOwned?ctx.target?.id:ctx.selfId;
+  const recipientContext:ExecuteContext={...ctx,character,passives,selfId,target:undefined,triggers:[],spell:undefined,
+    damageSource:{actorId:selfId,kind:'item'},damageRecipientSelf:true};
+  const result=applyIncomingDamage(state,total,recipientContext,{damageType:String(policy.damage_type),delivery:'other',roll:{...roll,kind:'damage'}});
+  events.push({type:'world_interaction',operation:'recovery_replacement',parameters:{recoveryKind:kind,recipientActorId:selfId,amount:total,damageType:String(policy.damage_type)}},
+    narrativeEvent('Восстановление обращено в урон.'),...result.events);
+  return result.state;
+}
+
 function applyHealing(
   state: RuntimeState,
   payload: Dict,
@@ -2510,6 +2769,9 @@ function applyHealing(
   sourceState: RuntimeState = state,
   targetOwned = false,
 ): RuntimeState {
+  if(state.hp.current===0&&!resurrectionPermitted(state,targetOwned?ctx.target?.passives:ctx.passives,targetOwned?ctx.target?.characterContext:ctx.character,ctx.spell?.spellId)){
+    events.push(narrativeEvent('Воскрешение ограничено действующим правилом.'));return state;
+  }
   const channels = recoveryModifierChannels(state, ctx, sourceState, targetOwned, 'healing', payload);
   if (collectModifiers(state, [], { roll: 'healing' }).denied || channels.incoming.denied) {
     events.push(narrativeEvent('Лечение заблокировано действующим эффектом.'));
@@ -2524,7 +2786,7 @@ function applyHealing(
     : declaredModifier === 'prof'
       ? '+prof_bonus'
       : `+${declaredModifier}`;
-  const formula = payload.restore_all === true
+  const formula = typeof payload.max_hp_fraction==='number' ? String(Math.floor(state.hp.max*payload.max_hp_fraction)) : payload.restore_all === true
     ? String(Math.max(0, state.hp.max - state.hp.current))
     : sides
     ? `1d${sides}${hitDieModifier}`
@@ -2563,6 +2825,9 @@ function applyHealing(
   const outgoing = foldModifiers(total, channels.outgoing);
   const incoming = foldModifiers(outgoing.value, channels.incoming);
   total = Math.max(0, Math.floor(incoming.value));
+  const replacement=replaceRecoveryWithDamage(next,'healing',total,formattedRoll({kind:'healing',advantage:'none',dice,
+    modifiers:[...fr.modifiers,...outgoing.parts,...incoming.parts],total}),ctx,events,targetOwned);
+  if(replacement)return replacement;
   next.hp.current = Math.min(next.hp.max, next.hp.current + total);
   // The roll remains available in the attached breakdown, while the event
   // amount reports the HP actually restored after the target's maximum-HP cap.
@@ -2617,6 +2882,9 @@ function applyTempHp(
   const incoming = foldModifiers(outgoing.value, channels.incoming);
   const total = channels.incoming.denied ? 0 : Math.max(0, Math.floor(incoming.value));
   const next = cloneState(state);
+  const replacement=replaceRecoveryWithDamage(next,'temp_hp',total,formattedRoll({kind:'other',advantage:'none',dice:fr.dice,
+    modifiers:[...fr.modifiers,...outgoing.parts,...incoming.parts],total}),ctx,events,targetOwned);
+  if(replacement)return replacement;
   next.hp.temp = Math.max(next.hp.temp, total);
   if (fr.dice.length) {
     const diceTotal = fr.dice.reduce((sum, die) => sum + (die.discarded ? 0 : die.result), 0);
@@ -2656,8 +2924,16 @@ function applyCondition(
     );
   }
   const op = String(payload.op ?? 'apply');
+  if(op!=='remove'&&preventsSlip(state,recipientContext.passives??[],payload,recipientContext.character)){
+    events.push({type:'condition_immune',condition,source,sourceEntityIds:['movement_policy:slip_immune']});return state;
+  }
 
   if (op === 'remove') {
+    const maxRemovals = payload.max_removals === undefined ? Infinity : Number(payload.max_removals);
+    if (!Number.isSafeInteger(maxRemovals) && maxRemovals !== Infinity || maxRemovals < 1) {
+      throw mechanicsError('INVALID_PAYLOAD', 'runtime.payload.max_removals', 'condition removal limit must be a positive integer');
+    }
+    let removed = 0;
     const normalizeTag = (value: string) => value.trim().toLowerCase()
       .replaceAll('-', '_').replaceAll(' ', '_');
     const requiredCauseTags = (Array.isArray(payload.required_cause_tags)
@@ -2680,8 +2956,12 @@ function applyCondition(
         && String(m.value ?? '') === condition
         && requiredCauseTags.every((tag) => causeTags.has(tag))
         && (requiredEndTrigger == null || endTriggers.includes(requiredEndTrigger));
-      if (match) events.push({ type: 'effect_expired', name: e.name });
-      return !match;
+      if (match && removed < maxRemovals) {
+        removed++;
+        events.push({ type: 'effect_expired', name: e.name });
+        return false;
+      }
+      return true;
     });
     // Остаточные состояния (Без сознания → остаётесь Опрокинутым): добавляем самостоятельными, если их ещё нет.
     const present = new Set(
@@ -2732,6 +3012,7 @@ function applyCondition(
       : payloadsOf(mechanics);
     return candidates.flatMap((candidate) => (
       candidate.kind === 'condition_immunity' && candidate.condition
+        && (typeof candidate.requires_equipped_item_id!=='string'||Object.values(state.equipment).includes(candidate.requires_equipped_item_id))
         && matchesWhen(candidate.when as Dict[] | undefined,evalCtxOf(state,recipientContext))
         ? [{
           condition: String(candidate.condition),
@@ -2765,7 +3046,7 @@ function applyCondition(
 
   const duration = payload.duration as Dict | undefined;
   const relative = sourceTurnMetadata(duration, ctx, ownerActorId);
-  const resolved = relative ? { expiry: relative.expiry } : resolveDuration(duration);
+  const resolved = relative ? { expiry: relative.expiry } : resolveDuration(duration, ctx);
   const { roundsLeft, expiry } = resolved;
   const stacking = conditionStacking(condition);
   const existingLevel = conditionLevel(state, condition);
@@ -2832,7 +3113,21 @@ function applyResource(
 ): RuntimeState {
   let key = String(payload.id ?? payload.resource ?? '');
   if (!key) throw mechanicsError('INVALID_PAYLOAD', 'runtime.payload', 'resource id is empty');
+  if(payload.select_pool!==undefined){
+    const selected=selectedResourcePool(state,payload.select_pool,(targetOwned?ctx.target?.characterContext:ctx.character)?.resourceRecharge);
+    if(!selected)return state;key=selected;
+  }
   if (key === 'spell_slot' && payload.level != null) key = `spell_slot_${payload.level}`;
+
+  if (payload.restore_all === true) {
+    if (payload.op !== 'restore' || payload.amount !== undefined) throw mechanicsError('INVALID_PAYLOAD','runtime.payload.restore_all','restore_all requires restore without amount');
+    const maximum=state.maxResources[key];
+    if (maximum===undefined) return state;
+    const amount=Math.max(0,maximum-(state.resources[key]??0));
+    if(amount===0)return state;
+    events.push(resourceRestoredEvent(key,amount,maximum));
+    return {...state,resources:{...state.resources,[key]:maximum}};
+  }
 
   const evaluated = evaluate(
     payload.amount == null ? 1 : String(payload.amount),
@@ -2891,6 +3186,7 @@ function transmutedSpellDamageType(
   return declaredDamageType;
 }
 type AttackDamageQueryFacts = Pick<ModifierQueryFacts,
+  | 'attackFromBehind'
   | 'attackKind'
   | 'attackDamage'
   | 'weaponCategory'
@@ -2981,11 +3277,17 @@ function resolveDamageAmounts(
   hand: 'main' | 'off',
   crit = false,
   attackFacts?: AttackDamageQueryFacts,
+  events:EngineEvent[]=[],
 ): DamageInstance[] {
-  const handWeapon = weaponContext(ctx.character, hand, state.equipment, state, ctx.passives);
+  const consumeDamageRoll=(filter:ModifierQueryFacts,dice:readonly unknown[])=>{
+    if(!dice.length||payload.suppress_damage_modifiers===true)return;
+    const consumed=consumeNextRollEffects(state,'damage',events,{filter,evalCtx:evalCtxOf(state,ctx)});
+    state.activeEffects=consumed.activeEffects;
+  };
+  const handWeapon = weaponContext(weaponCharacter(ctx), hand, state.equipment, state, ctx.passives);
   const declaredDamageType = payload.type === 'triggering_attack'
     ? ctx.triggeringAttack!.damageType
-    : transmutedSpellDamageType(state, ctx, String(payload.type).trim());
+    : selectedSpellDamageType(state,ctx,transmutedSpellDamageType(state, ctx, String(payload.type).trim()));
   const explodeLimit = explodeLimitOf(payload, ctx);
   const damageRng = ctx.damageRng ?? ctx.rng;
 
@@ -3004,16 +3306,18 @@ function resolveDamageAmounts(
         ? handWeapon?.ability
         : (ab !== 'none' && ab !== 'spellcasting' ? (ab as AbilityKey) : undefined);
       const damageFilter: ModifierQueryFacts = {
+        ...(typeof payload.damage_tag==='string'?{damage_tag:payload.damage_tag}:{}),
         hand,
         ...attackFacts,
         damageType: i === 0 && declaredDamageType !== 'weapon' ? declaredDamageType : line.type,
-        ...(ctx.spell ? { attackKind: 'spell' } : {}),
+        ...(ctx.spell ? { attackKind: 'spell', ...(ctx.spell.spellId?{spellId:ctx.spell.spellId}:{}) } : {}),
         ...(usedAbility ? { ability: usedAbility } : {}),
         abilityModifierAlreadyIncluded: ab !== 'none',
         weaponDamageLine: i === 0 ? 'base' : 'extra',
       };
       const dmgRules = damageRules(ctx, state, damageFilter, attackFacts?.weaponMod);
-      const fr = rollFormula(line.dice, formulaCtx(ctx), { rng: damageRng, diceMultiplier: crit ? 2 : 1 });
+      const damageAdvantage=collectModifiers(state,passivesFromCtx(ctx),{roll:'damage',filter:damageFilter,formulaCtx:formulaCtx(ctx),evalCtx:evalCtxOf(state,ctx)}).advantage;
+      const fr = rollDamageFormulaWithAdvantage(line.dice, formulaCtx(ctx), { rng: damageRng, diceMultiplier: crit ? 2 : 1,advantage:damageAdvantage });
       // Правила кости (die_bonus/explode) — на кости строки, до модов характеристики/зачарования.
       const ruled = applyDamageDieRules(fr.dice, dmgRules, { explodeLimit, rng: damageRng });
       recordUsedDamageRules(state, ruled.usedRuleKeys);
@@ -3052,11 +3356,12 @@ function resolveDamageAmounts(
         ];
         for (const m of extraMods) total += m.value;
       }
+      consumeDamageRoll(damageFilter,ruled.dice);
       return {
         amount: total,
         damageType: i === 0 && declaredDamageType !== 'weapon' ? declaredDamageType : line.type,
         roll: formattedRoll({
-          kind: 'damage', advantage: 'none', dice: ruled.dice,
+          kind: 'damage', advantage: damageAdvantage, dice: ruled.dice,
           modifiers: [...fr.modifiers, ...extraMods], total,
         }),
       };
@@ -3081,14 +3386,16 @@ function resolveDamageAmounts(
     const usedAbility = payload.ability != null && payload.ability !== 'auto' && payload.ability !== 'none'
       ? (payload.ability as AbilityKey) : undefined;
     const damageFilter: ModifierQueryFacts = {
+        ...(typeof payload.damage_tag==='string'?{damage_tag:payload.damage_tag}:{}),
       ...attackFacts,
       damageType,
-      ...(ctx.spell ? { attackKind: 'spell' } : {}),
+      ...(ctx.spell ? { attackKind: 'spell', ...(ctx.spell.spellId?{spellId:ctx.spell.spellId}:{}) } : {}),
       ...(usedAbility ? { ability: usedAbility } : {}),
       weaponDamageLine: 'none',
     };
     const dmgRules = damageRules(ctx, state, damageFilter, attackFacts?.weaponMod);
-    const fr = rollFormula(scaled, formulaCtx(ctx), { rng: damageRng, diceMultiplier: crit ? 2 : 1 });
+    const damageAdvantage=payload.suppress_damage_modifiers===true?'none':collectModifiers(state,passivesFromCtx(ctx),{roll:'damage',filter:damageFilter,formulaCtx:formulaCtx(ctx),evalCtx:evalCtxOf(state,ctx)}).advantage;
+    const fr = rollDamageFormulaWithAdvantage(scaled, formulaCtx(ctx), { rng: damageRng, diceMultiplier: crit ? 2 : 1,advantage:damageAdvantage });
     const ruled = applyDamageDieRules(fr.dice, dmgRules, { explodeLimit, rng: damageRng });
     recordUsedDamageRules(state, ruled.usedRuleKeys);
     // C1: модификаторы урона из эффектов. Для не-оружейного урона ability берём из payload,
@@ -3099,11 +3406,12 @@ function resolveDamageAmounts(
     let total = fr.total + ruled.delta;
     for (const m of extraMods) total += m.value;
     if (total === 0 && payload.omit_if_zero === true) return [];
+    consumeDamageRoll(damageFilter,ruled.dice);
     return [{
       amount: total,
       damageType,
       roll: formattedRoll({
-        kind: 'damage', advantage: 'none', dice: ruled.dice,
+        kind: 'damage', advantage: damageAdvantage, dice: ruled.dice,
         modifiers: [...fr.modifiers, ...extraMods], total,
       }),
     }];
@@ -3156,7 +3464,8 @@ function damageRiders(
       if (payload.kind !== 'damage_rider'
         || !acceptedTriggers.has(String(payload.trigger ?? ''))
         || String(payload.scope ?? 'self') !== expectedScope
-        || !riderFilterMatches(payload.filter as Dict | undefined, facts)) continue;
+        || !riderFilterMatches(payload.filter as Dict | undefined, facts)
+        || (payload.bound_weapon_id!==undefined&&payload.bound_weapon_id!==facts.weaponId)) continue;
       if (expectedScope === 'target' && payload.source_actor_only === true
         && (!ctx.selfId || sourceId !== ctx.selfId)) continue;
       if (payload.attack_maneuver === true && (ctx.forcedAttackRoll?.attackManeuverActionId
@@ -3205,10 +3514,13 @@ function applyDamageRiders(
   crit: boolean,
   facts: AttackDamageQueryFacts,
   acceptedTriggers: ReadonlySet<string>,
+  damageDealt=true,
+  deferredSaves: DeferredTargetSave[] = [],
 ): RuntimeState {
   let next = state;
   const consumedEffectIds = new Set<string>();
   for (const rider of damageRiders(next, ctx, facts, acceptedTriggers)) {
+    if(rider.payload.requires_damage_dealt===true&&!damageDealt)continue;
     const firedKey = rider.oncePerTurnKey
       ? `damage-rider:${rider.oncePerTurnKey}`
       : undefined;
@@ -3223,18 +3535,26 @@ function applyDamageRiders(
       suppress_damage_modifiers: true,
     };
     const routedTarget = targetRef.aliasesSelf ? next : targetRef.state;
-    if (routedTarget) {
+    const targetSave=isDict(rider.payload.target_save)?rider.payload.target_save:undefined;
+    if(targetSave&&routedTarget){
+      next=runSave({resolution:'save',who:'target',ability:targetSave.ability,dc:targetSave.dc,
+        on_fail:[{kind:'damage',dice:rider.payload.dice,type:rider.payload.type,suppress_damage_modifiers:true}],on_success:[]},
+      next,{...ctx,target:ctx.target?{...ctx.target,runtimeState:routedTarget}:undefined},events,rider.name,targetRef,deferredSaves);
+    } else if (routedTarget) {
       const targetContext: ExecuteContext = {
         ...ctx,
+        selfId: targetRef.aliasesSelf ? ctx.selfId : ctx.target?.id,
         character: ctx.target?.characterContext ?? ctx.character,
         passives: targetRef.aliasesSelf ? ctx.passives : ctx.target?.passives ?? [],
+        target: {id:ctx.selfId,characterContext:ctx.character,runtimeState:next,passives:ctx.passives},
       };
       let damagedTarget = routedTarget;
-      for (const damage of resolveDamageAmounts(payload, ctx, next, hand, crit, facts)) {
+      for (const damage of resolveDamageAmounts(payload, ctx, next, hand, crit, facts,events)) {
         const applied = applyIncomingDamage(damagedTarget, damage.amount, targetContext, {
           damageType: damage.damageType,
           roll: damage.roll,
           crit,
+          delivery:'attack',
           ignoreResistance: ignoresDamageResistance(ctx, damage.damageType),
         });
         damagedTarget = applied.state;
@@ -3246,7 +3566,7 @@ function applyDamageRiders(
         targetRef.mutated = true;
       }
     } else {
-      for (const damage of resolveDamageAmounts(payload, ctx, next, hand, crit, facts)) {
+      for (const damage of resolveDamageAmounts(payload, ctx, next, hand, crit, facts,events)) {
         events.push(damageEvent(damage.amount, damage.damageType, damage.roll));
       }
     }
@@ -3278,6 +3598,8 @@ function applyAttackDamageRiders(
   targetRef: TargetRef,
   crit: boolean,
   facts: AttackDamageQueryFacts,
+  damageDealt=true,
+  deferredSaves:DeferredTargetSave[] = [],
 ): RuntimeState {
   return applyDamageRiders(
     state,
@@ -3288,6 +3610,8 @@ function applyAttackDamageRiders(
     crit,
     facts,
     new Set(['hit_by_attack_roll', 'damage_by_attack_or_spell']),
+    damageDealt,
+    deferredSaves,
   );
 }
 
@@ -3404,11 +3728,41 @@ function applyPayloads(
       next = mutate(next);
     }
   };
-  for (const p of payloads) {
+  for (const originalPayload of payloads) {
+    const p=ctx.effectDurationCapRounds!==undefined
+      && ['condition','modifier','damage_rider','resistance','life_policy','aura','transform','boon','triggered_effect','condition_immunity'].includes(String(originalPayload.kind))
+      ? {...originalPayload,duration:cappedEffectDuration(originalPayload.duration as Dict|undefined,ctx.effectDurationCapRounds)} : originalPayload;
+    // Persistent modifiers carry query-time `when`; only instantaneous operations
+    // use it as an execution guard. Do not discard a future conditional bonus.
+    if (['damage','healing','resource','set_value','temp_hp','condition','grant_effect'].includes(String(p.kind))
+      && !matchesWhen(p.when as Dict[] | undefined, evalCtxOf(next, ctx))) continue;
     const kind = String(p.kind ?? '');
+    const payloadEventsStart=events.length;
     switch (kind) {
+      case 'roll_die': {
+        const sides = Number(p.sides);
+        if (!Number.isInteger(p.sides) || sides < 2 || sides > 1000
+          || typeof p.label !== 'string' || !p.label.trim()) {
+          throw mechanicsError('INVALID_PAYLOAD','roll_die','roll_die requires 2..1000 sides and a label');
+        }
+        const label = p.label;
+        const result = drawDie(ctx.rng, sides);
+        events.push({type:'roll',label,roll:{kind:'other',advantage:'none',
+          dice:[{sides,result}],modifiers:[],total:result,text:`${label}: 1d${sides} = ${result}`}});
+        break;
+      }
+      case 'chance': {
+        const chance=triggerChance(p.chance,source,ctx.rng);events.push(...chance.events);
+        next=applyPayloads((chance.success?p.on_success:p.on_fail) as Dict[]??[],next,ctx,events,source,hand,halfDamage,whoTarget,targetRef,crit,attackFacts);
+        break;
+      }
+      case 'weapon_form': route(s=>{const result=applyWeaponForm(s,p,ctx);events.push(...result.events);return result.state;});break;
+
       case 'damage': {
         const damageEventStart = events.length;
+        const targetHpBefore = whoTarget ? (targetRef.aliasesSelf ? next.hp.current : targetRef.state?.hp.current) : undefined;
+        let actualDamage = 0;
+        const packetTypes = new Set<string>();
         if (p.requires_triggering_attack_hit === true) {
           const compared = retargetAttackRoll(ctx.triggeringAttack!.roll!, ctx.target!.ac!);
           if (compared.outcome !== 'hit' && compared.outcome !== 'crit') {
@@ -3422,23 +3776,28 @@ function applyPayloads(
         // каждую наносим отдельным событием (сопротивления по типам, план кубов, №4).
         const routedTarget = whoTarget
           ? (targetRef.aliasesSelf ? next : targetRef.state)
-          : undefined;
+          : ctx.damageRecipientSelf ? next : undefined;
         if (routedTarget) {
           // C2/фаза E: урон по ВЫБРАННОЙ цели реально списывает её HP через applyIncomingDamage
           // (сопротивление/иммунитет/уязвимость цели, temp→current, авто-проверка концентрации).
           // Величину урона считаем статами АТАКУЮЩЕГО, применяем — на состоянии ЦЕЛИ с её контекстом.
           const tctx: ExecuteContext = {
             ...ctx,
-            character: ctx.target?.characterContext ?? ctx.character,
-            passives: targetRef.aliasesSelf ? ctx.passives : ctx.target?.passives ?? [],
+            damageSource:ctx.damageSource??{actorId:ctx.selfId,kind:ctx.spell?'spell':attackFacts?'item':'ability'},
+            selfId: whoTarget ? ctx.target?.id : ctx.selfId,
+            character: whoTarget ? ctx.target?.characterContext ?? ctx.character : ctx.character,
+            passives: !whoTarget || targetRef.aliasesSelf ? ctx.passives : ctx.target?.passives ?? [],
+            target:whoTarget ? {id:ctx.selfId,characterContext:ctx.character,runtimeState:next,passives:ctx.passives} : {id:ctx.selfId,characterContext:ctx.character,runtimeState:next,passives:ctx.passives},
           };
           let damagedTarget = routedTarget;
-          for (const dmg of resolveDamageAmounts(p, ctx, next, hand, damageCritical, attackFacts)) {
+          for (const dmg of resolveDamageAmounts(p, ctx, next, hand, damageCritical, attackFacts,events)) {
             const amount = halfDamage ? Math.floor(dmg.amount / 2) : dmg.amount;
             const res = applyIncomingDamage(damagedTarget, amount, tctx, {
               crit: damageCritical,
               damageType: dmg.damageType,
               roll: dmg.roll,
+              ...(p.maximum_damage!==undefined?{maximumDamage:Math.max(0,Number(p.maximum_damage)-actualDamage)}:{}),
+              ...(typeof p.damage_budget_id==='string'?{budgetId:p.damage_budget_id}:{}),
               delivery: attackFacts || p.type === 'triggering_attack' ? 'attack' : 'other',
               ignoreResistance: ignoresDamageResistance(ctx, dmg.damageType)
                 || hasGeneralSpellFeatRule(ctx, 'ignore_spell_damage_resistance', dmg.damageType),
@@ -3448,17 +3807,23 @@ function applyPayloads(
             });
             damagedTarget = res.state;
             events.push(...res.events);
+            if(res.targetState)next=res.targetState;
+            const incomingPacket=res.events.find(event=>event.type==='damage');
+            if(incomingPacket?.type==='damage')actualDamage+=incomingPacket.amount;
+            packetTypes.add(dmg.damageType);
           }
-          if (targetRef.aliasesSelf) {
+          if (targetRef.aliasesSelf || !whoTarget) {
             next = damagedTarget;
           } else {
             targetRef.state = damagedTarget;
             targetRef.mutated = true;
           }
         } else {
-          for (const dmg of resolveDamageAmounts(p, ctx, next, hand, damageCritical, attackFacts)) {
+          for (const dmg of resolveDamageAmounts(p, ctx, next, hand, damageCritical, attackFacts,events)) {
             const amount = halfDamage ? Math.floor(dmg.amount / 2) : dmg.amount;
             events.push(damageEvent(amount, dmg.damageType, dmg.roll));
+            actualDamage += amount;
+            packetTypes.add(dmg.damageType);
           }
         }
         const dealtDamage = events.slice(damageEventStart).some((entry) => (
@@ -3467,6 +3832,51 @@ function applyPayloads(
         if (dealtDamage && whoTarget && ctx.spell && !attackFacts) {
           next = applySpellDamageRiders(next, ctx, events, hand, targetRef);
         }
+        if (actualDamage > 0 && !ctx.damageRecipientSelf) {
+          const data: Dict = {amount:actualDamage, sourceActorId:ctx.selfId,
+            secondary_source:ctx.triggeredConsequences===true,
+            targetActorId:ctx.target?.id,targetId:ctx.target?.id,
+            damageType:packetTypes.size === 1 ? [...packetTypes][0] : 'mixed',
+            weaponId:attackFacts?.weaponId,attackKind:attackFacts?.attackKind ?? (ctx.spell ? 'spell' : 'other'),
+            attackRange:attackFacts?.attackRange, targetCreatureType:ctx.target?.characterContext?.creatureType};
+          if (ctx.deferIncomingDamageConsequences && targetHpBefore!==undefined) {
+            for(const event of events.slice(damageEventStart)) if(event.type==='damage') {
+              event.deferredSourceConsequences={group:`damage:${damageEventStart}`,targetHpBefore,data};
+            }
+          } else {
+          next = emitEvent({kind:'damage_dealt',source:'self',target:ctx.target?.id,data},
+            next,ctx,events,[],targetRef,[],true);
+          if (targetHpBefore !== undefined && targetHpBefore > 0 && targetRef.state?.hp.current === 0
+            && !collectLifePolicies(targetRef.state,ctx.target?.passives??[],ctx.target?.characterContext).cannotDie
+            && (targetRef.state.deathSaves?.dead || ctx.target?.actorKind === 'monster'
+              || ctx.target?.actorKind === 'summonedActor')) {
+            next = emitEvent({kind:'kill',source:'self',target:ctx.target?.id,data},
+              next,ctx,events,[],targetRef,[],true);
+          }
+          }
+        }
+        break;
+      }
+      case 'area_effect': {
+        if(!ctx.selfId||!ctx.character.spatialObservations)throw mechanicsError('INVALID_MECHANICS','context','Area effects require actual board observations');
+        const targetIds=ctx.character.spatialObservations.nearby.filter(target=>(p.all_scene===true||target.distanceFt<=Number(p.radius_ft))&&(p.recipients==='all'||p.recipients==='allies'&&target.relation==='ally'||p.recipients==='enemies'&&target.relation==='enemy')).map(target=>target.actorId);
+        if(p.include_center===true)targetIds.push(ctx.selfId);
+        events.push({type:'area_effect',sourceActorId:ctx.selfId,targetIds:[...new Set(targetIds)].sort(),source,effects:JSON.parse(JSON.stringify(p.effects)) as Dict[]});break;
+      }
+      case 'area_damage':
+      case 'area_healing': {
+        if(!ctx.selfId)throw mechanicsError('INVALID_MECHANICS','context.selfId','Area healing requires an authoritative source');
+        const result=rollFormula(String(p.amount),formulaCtx(ctx),{rng:ctx.rng});
+        if(result.dice.length)events.push(rollEvent(source,formattedRoll({kind:kind==='area_damage'?'damage':'healing',advantage:'none',...result})));
+        const center=p.origin==='target'?ctx.target?.characterContext:ctx.character;
+        const centerId=p.origin==='target'?ctx.target?.id:ctx.selfId;
+        if(!centerId)throw mechanicsError('INVALID_MECHANICS','context.target','Area origin is absent');
+        const targetIds=(center?.spatialObservations?.nearby??[]).filter(target=>target.distanceFt<=Number(p.radius_ft)
+          &&(p.recipients==='all'||p.recipients==='allies'&&target.relation==='ally'||p.recipients==='enemies'&&target.relation==='enemy')).map(target=>target.actorId);
+        if(p.include_center===true)targetIds.push(centerId);
+        const recipients=[...new Set(targetIds)].filter(id=>p.exclude_source!==true||id!==ctx.selfId).sort();
+        const common={amount:Math.max(0,Math.floor(result.total)),sourceActorId:ctx.selfId,targetIds:recipients,source};
+        events.push(kind==='area_damage'?{type:'area_damage',...common,damageType:String(p.type),damageSourceKind:ctx.damageSource?.kind??'ability'}:{type:'area_healing',...common});
         break;
       }
       case 'healing': {
@@ -3478,24 +3888,30 @@ function applyPayloads(
         // These notifications currently execute automatic listeners only.
         // Optional healing reactions require their own authoritative window;
         // never execute them or silently spend their cost here.
-        next = emitEvent({kind:'healing_given',source:'self',data:{amount,other_target:separateRecipient}},
+        const healingData = {amount,other_target:separateRecipient,spellLevel:ctx.spell?.castLevel ?? ctx.spell?.baseLevel ?? 0,
+          sourceActorId:ctx.selfId,targetActorId:separateRecipient ? ctx.target?.id : ctx.selfId,
+          targetId:separateRecipient ? ctx.target?.id : ctx.selfId};
+        next = emitEvent({kind:'healing_given',source:'self',data:healingData},
           next,ctx,events,[],separateRecipient ? targetRef : {aliasesSelf:true,mutated:false},[],true);
         if (separateRecipient) {
           const recipientContext: ExecuteContext = {
             ...ctx, character:ctx.target?.characterContext ?? ctx.character,
             selfId:ctx.target?.id, target:undefined, passives:ctx.target?.passives ?? [], triggers:[],
           };
-          targetRef.state = emitEvent({kind:'healing_received',source:'self',data:{amount,other_source:true}},
+          targetRef.state = emitEvent({kind:'healing_received',source:'self',data:{...healingData,other_source:true}},
             targetRef.state!,recipientContext,events,[],{mutated:false},[],true);
         } else {
-          next = emitEvent({kind:'healing_received',source:'self',data:{amount,other_source:false}},
+          next = emitEvent({kind:'healing_received',source:'self',data:{...healingData,other_source:false}},
             next,ctx,events,[],{mutated:false},[],true);
         }
         break;
       }
       case 'reduce_damage': route((s) => applyReduceDamage(s, p, ctx, events)); break;
+      case 'incoming_damage_multiplier': events.push({type:'damage_multiplier',factor:Number(p.factor),source});break;
       case 'temp_hp': route((s) => applyTempHp(s, p, ctx, events, next, whoTarget && !targetRef.aliasesSelf && !!targetRef.state)); break;
-      case 'condition': route((s) => applyCondition(
+      case 'condition': {
+        const beforeEvents=events.length;
+        route((s) => applyCondition(
         s,
         p,
         source,
@@ -3505,7 +3921,19 @@ function applyPayloads(
         whoTarget ? ctx.target?.id : ctx.selfId,
         whoTarget ? ctx.target?.conditionImmunities : ctx.conditionImmunities,
         whoTarget ? {...ctx, character:ctx.target?.characterContext ?? ctx.character, passives:ctx.target?.passives ?? []} : ctx,
-      )); break;
+        ));
+        if (events.slice(beforeEvents).some(event => event.type === 'condition_immune') && Array.isArray(p.on_immune)) {
+          next = applyPayloads(p.on_immune as Dict[],next,ctx,events,source,hand,false,whoTarget,targetRef,false,attackFacts);
+        }
+        break;
+      }
+      case 'environment_adaptation':
+      case 'rest_policy':
+      case 'recovery_policy':
+      case 'resource_restriction':
+      case 'life_policy':
+      case 'attunement_capacity':
+      case 'aura': route(s => applyResistancePayload(s,p,source,events,ctx)); break;
       case 'resource': route((s) => applyResource(s, p, ctx, events, whoTarget)); break;
       case 'modifier': route((s) => applyModifierPayload(
         s,
@@ -3573,6 +4001,9 @@ function applyPayloads(
         ctx,
         whoTarget ? ctx.target?.id : ctx.selfId,
       )); break;
+      case 'weapon_attack_buff': route((s) => applyWeaponAttackBuffPayload(
+        s, p, source, events, ctx, whoTarget ? ctx.target?.id : ctx.selfId,
+      )); break;
       case 'remote_manipulator':
       case 'communication_link':
       case 'illusion':
@@ -3592,7 +4023,7 @@ function applyPayloads(
           const hand=selectedHeldItemHand(ctx.choices,(p.parameters as Dict).choice_id);
           const ownerActorId=whoTarget?ctx.target?.id:ctx.selfId;
           if(!ownerActorId)throw new Error('Для разоружения требуется участник боевой сцены');
-          route(s=>{const dropped=dropHeldItem(s,hand,ownerActorId,whoTarget?ctx.target!.characterContext!:ctx.character);events.push(...dropped.events);return dropped.state;});
+          route(s=>{const dropped=dropHeldItem(s,hand,ownerActorId,whoTarget?ctx.target!.characterContext!:ctx.character,{forced:whoTarget&&ownerActorId!==ctx.selfId,passives:whoTarget?ctx.target?.passives:ctx.passives});events.push(...dropped.events);return dropped.state;});
           break;
         }
         events.push({
@@ -3602,12 +4033,18 @@ function applyPayloads(
           source,
         });
         break;
+      case 'spend_cost':
+        route(s=>{const planned=p.cause==='tool_failure'?planItemFailureCost(s,p.cost as Dict[],passivesFromCtx(ctx),source):{state:s,cost:p.cost,events:[]};
+          const paid=executeAction(planned.state,{activation:{mode:'active',cost:planned.cost},effects:[]},{...ctx,suppressSpellCastEvent:true});events.push(...planned.events,...paid.events);return paid.state;});
+        break;
       case 'information_reveal':
         events.push({
           type: 'world_interaction',
           operation: 'reveal_information',
           parameters: {
             reveal: String(p.reveal),
+            ...(typeof p.label==='string'?{object_label:p.label}:{}),
+            ...(ctx.target?.id?{targetActorId:ctx.target.id}:{}),
             fields: [...(p.fields as string[])],
           },
           source,
@@ -3659,19 +4096,36 @@ function applyPayloads(
         ));
         break;
       }
+      case 'ability_damage': {
+        const rolled=rollFormula(String(p.amount),formulaCtx(ctx),{rng:ctx.rng});
+        const amount=Math.max(0,Math.floor(rolled.total));
+        if(rolled.dice.length)events.push(rollEvent(source,formattedRoll({kind:'other',advantage:'none',...rolled})));
+        if(amount)route(routed=>({ ...routed,activeEffects:[...routed.activeEffects,{id:runtimeEffectId(ctx,'ability-damage',routed.activeEffects.length),name:source,source,
+          ...(ctx.selfId?{sourceId:ctx.selfId}:{}),mechanics:{kind:'modifier',op:'add',value:-amount,applies_to:{roll:'ability_score',filter:{ability:p.ability}},polarity:'negative',
+            ...(p.fatal_at!==undefined?{ability_fatal_threshold:{ability:p.ability,at:p.fatal_at}}:{})},...resolveDuration(p.duration as Dict|undefined,ctx)}]}));
+        break;
+      }
       case 'remove_effect': {
+        const instanceId=typeof p.instance_id==='string'?p.instance_id:'';
         const stackId = typeof p.stack_id === 'string' ? p.stack_id : '';
         const cardNumber = typeof p.card_number === 'string' ? p.card_number : '';
         route((routed) => {
           if (!matchesWhen(p.when as Dict[]|undefined,evalCtxOf(routed,whoTarget
             ? {...ctx,character:ctx.target?.characterContext??ctx.character,passives:ctx.target?.passives??[]}:ctx))) return routed;
           const removed = routed.activeEffects.filter((entry) => (
-            (stackId && (entry.mechanics as Dict | undefined)?.stack_id === stackId)
+            (instanceId && entry.id===instanceId)
+            || (stackId && (entry.mechanics as Dict | undefined)?.stack_id === stackId)
             || (cardNumber && entry.entityRef?.cardNumber === cardNumber)
+            || (Array.isArray(p.cause_tags)&&Array.isArray(entry.mechanics.cause_tags)&&p.cause_tags.some(tag=>(entry.mechanics.cause_tags as unknown[]).includes(tag)))
           ));
           if (!removed.length) return routed;
           removed.forEach((entry) => events.push({ type: 'effect_expired', name: entry.name }));
-          return { ...routed, activeEffects: routed.activeEffects.filter((entry) => !removed.includes(entry)) };
+          const after=reconcileTemporaryResourceGrants(routed,{ ...routed, activeEffects: routed.activeEffects.filter((entry) => !removed.includes(entry)) },
+            whoTarget?ctx.target?.characterContext??ctx.character:ctx.character);
+          const lifecycle=reconcileEndedEffects(routed,after,whoTarget?{...ctx,selfId:ctx.target?.id,character:ctx.target?.characterContext??ctx.character,
+            passives:ctx.target?.passives??[],target:undefined}:ctx,executeAction);
+          events.push(...lifecycle.events);
+          return lifecycle.state;
         });
         break;
       }
@@ -3736,18 +4190,36 @@ function applyPayloads(
         break;
       }
       case 'movement': {
+        const movementMode=String(p.value??p.mode??'move');
+        const recipient=whoTarget&&!targetRef.aliasesSelf?targetRef.state:next;
+        const recipientPassives=whoTarget&&!targetRef.aliasesSelf?ctx.target?.passives??[]:ctx.passives??[];
+        const recipientCharacter=whoTarget&&!targetRef.aliasesSelf?ctx.target?.characterContext:ctx.character;
+        if(['push','pull'].includes(movementMode)&&recipient&&preventsForcedMovement(recipient,recipientPassives,recipientCharacter)){
+          events.push(narrativeEvent('Принудительное перемещение предотвращено защитой цели.'));
+          break;
+        }
         const evaluated = evaluate(p.distance == null ? 0 : String(p.distance), formulaCtx(ctx));
         if (typeof evaluated !== 'number' || !Number.isFinite(evaluated)) {
           throw new FormulaError('movement distance must resolve to a finite number');
         }
+        let direction:{x:number;y:number}|undefined;
+        if(p.direction==='random_compass'){
+          const result=drawDie(ctx.rng,8);const offsets=[[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1]];
+          direction={x:offsets[result-1][0],y:offsets[result-1][1]};
+          events.push(rollEvent('Направление перемещения',{kind:'other',advantage:'none',dice:[{sides:8,result}],modifiers:[],total:result,text:`1d8 = ${result}`}));
+        }
         events.push({
-          type: 'movement',
+          type: 'movement',...(direction?{direction}:{}),
+          recipientActorId:whoTarget&&!targetRef.aliasesSelf?ctx.target?.id:ctx.selfId,
+          relativeToActorId:whoTarget&&!targetRef.aliasesSelf?ctx.selfId:ctx.target?.id,
           // `value` is the canonical schema field. `mode` is accepted as a
           // production-compatible alias because some audited content batches
           // used it before the schema and editor converged on `value`.
           mode: String(p.value ?? p.mode ?? 'move'),
           distanceFt: Math.max(0, evaluated),
           ...(p.speed_fraction !== undefined ? {speedFraction: Number(p.speed_fraction)} : {}),
+          ...(p.traversal === 'jump' ? {traversal:'jump' as const} : {}),
+          ...(Array.isArray(p.on_arrival) ? {onArrival:JSON.parse(JSON.stringify(p.on_arrival)) as Dict[]} : {}),
           ...(p.provoke_opportunity_attacks !== undefined
             ? {provokeOpportunityAttacks: p.provoke_opportunity_attacks as boolean} : {}),
         });
@@ -3763,12 +4235,35 @@ function applyPayloads(
         break;
       }
       case 'transform': route((s) => applyTransform(s, p, source, events, ctx)); break;
+      case 'cancel_execution':
+        events.push({type:'execution_cancelled',source});
+        break;
       case 'narrative':
         events.push(narrativeEvent(String(p.description ?? p.text ?? '')));
         break;
       default:
         throw mechanicsError('UNKNOWN_PAYLOAD', 'runtime.payload.kind', `executor does not own payload kind «${kind || '?'}»`);
     }
+    const appliedConditions=(kind==='condition'||kind==='grant_effect')
+      ?events.slice(payloadEventsStart).filter((event):event is Extract<EngineEvent,{type:'condition_applied'}>=>event.type==='condition_applied'):[];
+    if(whoTarget&&!targetRef.aliasesSelf){
+      for(const event of appliedConditions)next=emitEvent({kind:'condition_applied',source:'self',target:ctx.target?.id,data:{condition:event.condition}},next,ctx,events,[],targetRef,[],true);
+    }
+    if(kind==='condition'||kind==='grant_effect'){
+      const separate=whoTarget&&!targetRef.aliasesSelf&&!!targetRef.state;
+      for(const event of appliedConditions){
+        const received={kind:'condition_received',source:'self',data:{condition:event.condition,sourceActorId:ctx.selfId}};
+        if(separate){
+          const recipientContext:ExecuteContext={...ctx,selfId:ctx.target?.id,character:ctx.target?.characterContext??ctx.character,
+            passives:ctx.target?.passives??[],target:{id:ctx.selfId,characterContext:ctx.character,runtimeState:next,passives:ctx.passives},triggers:[]};
+          const reverseRef:TargetRef={state:next,mutated:false};
+          targetRef.state=emitEvent(received,targetRef.state!,recipientContext,events,[],reverseRef,[],true);
+          targetRef.mutated=true;
+          if(reverseRef.mutated&&reverseRef.state)next=reverseRef.state;
+        }else next=emitEvent(received,next,ctx,events,[],{mutated:false},[],true);
+      }
+    }
+
   }
   return next;
 }
@@ -3807,6 +4302,7 @@ export function consumeNextRollEffects(
   roll: string,
   events: EngineEvent[],
   options: {
+    usedRuleKeys?: readonly string[];
     filter?: Dict;
     evalCtx?: EvalContext;
     scope?: 'self' | 'target';
@@ -3816,6 +4312,7 @@ export function consumeNextRollEffects(
     finalFailed?: boolean;
   } = {},
 ): RuntimeState {
+  if(options.usedRuleKeys?.length)state={...state,firedThisTurn:[...new Set([...(state.firedThisTurn??[]),...options.usedRuleKeys])]};
   const expired: ActiveEffectEntry[] = [];
   const activeEffects = state.activeEffects.filter((entry) => {
     const consumes = payloadsOf(entry.mechanics).some((payload) => (
@@ -3863,9 +4360,19 @@ export function expireEffectsForTrigger(
   state: RuntimeState,
   trigger: string,
   events: EngineEvent[],
+  context?: ExecuteContext,
 ): RuntimeState {
+  const retained=new Set<string>();
+  if(context){
+    const candidates=state.activeEffects.filter(entry=>Array.isArray(entry.mechanics.hidden_end_triggers)&&entry.mechanics.hidden_end_triggers.includes(trigger));
+    if(candidates.length){
+      const policies=[...(context.passives??[]),...state.activeEffects.map(entry=>entry.mechanics)].flatMap(payloadsOf).filter(payload=>payload.kind==='effect_end_policy'&&payload.trigger===trigger&&payload.scope==='hidden'&&matchesWhen(payload.when as Dict[]|undefined,evalCtxOf(state,context)));
+      for(const policy of policies){const outcome=triggerChance(policy.retain_chance,String(policy.source??'Сохранение скрытности'),context.rng??Math.random);events.push(...outcome.events);if(outcome.success)candidates.forEach(entry=>retained.add(entry.id));}
+    }
+  }
   const expired: ActiveEffectEntry[] = [];
   const activeEffects = state.activeEffects.filter((entry) => {
+    if(retained.has(entry.id))return true;
     const mechanics = entry.mechanics as Dict;
     const triggers = [
       ...(Array.isArray(mechanics.hidden_end_triggers)
@@ -3913,6 +4420,9 @@ function runAttackRoll(
   targetRef: TargetRef = { mutated: false },
   deferredSaves: DeferredTargetSave[] = [],
 ): RuntimeState {
+  const parentCascade=cascadeBudget.get(ctx);
+  ctx={...ctx,damagePolicyRollCache:{}};
+  if(parentCascade)cascadeBudget.set(ctx,parentCascade);
   const pendingSelfRiderIds = new Set(state.activeEffects.filter(entry => {
     const payload = entry.mechanics as Dict;
     return payload.kind === 'damage_rider' && payload.consume === 'next_attack'
@@ -3928,7 +4438,15 @@ function runAttackRoll(
   const hand = resolveHand(effect);
   const ac = ctx.target!.ac!;
   const passives = passivesFromCtx(ctx);
-  const currentWeapon = weaponContext(ctx.character, hand, state.equipment, state, ctx.passives);
+  const currentWeapon = weaponContext(weaponCharacter(ctx), hand, state.equipment, state, ctx.passives);
+  const attackPolicy = weaponAttackPolicy(state,passives,currentWeapon?.cardId,ctx.character);
+  if(attackPolicy.disabled&&!ctx.forcedAttackRoll)throw mechanicsError('INVALID_MECHANICS','weapon_attack_policy','Это оружие сейчас недоступно для атаки');
+  if (!ctx.forcedAttackRoll && attackPolicy.movementCostFt > 0) {
+    const cost=[{resource:'movement',amount:attackPolicy.movementCostFt}];
+    const check=canPay(state,cost);
+    if(!check.ok)throw new InsufficientResourcesError(check.missing);
+    const paid=pay(state,cost);state=paid.state;events.push(...paid.events);
+  }
   const attackRange = attackRangeFromEffect(effect, hand, ctx.character, state.equipment);
   const heavy = currentWeapon ? evaluateWeaponHeavyRule(
     currentWeapon,
@@ -3943,10 +4461,12 @@ function runAttackRoll(
     : ABILITY_KEYS.has(declaredAttackAbility as AbilityKey)
       ? declaredAttackAbility as AbilityKey
       : undefined;
+  const actionCostResources=ctx.forcedAttackRoll?.actionCostResources??ctx.actionCostResources??[];
   const attackFilter: ModifierQueryFacts = {
-    ...attackFacts,
+    ...attackFacts,bonus_action:actionCostResources.includes('bonus_action')||extraAttackSourceFromEffect(effect,hand,ctx.character,state.equipment)==='light_property',
     ...(ctx.spell ? {spellLevel:ctx.spell.baseLevel}:{}),
     nearbyEligibleAllyToTarget: ctx.attackFacts?.nearbyEligibleAllyToTarget === true,
+    attackFromBehind:ctx.attackFacts?.attackFromBehind===true,
     ...(queryAbility ? { ability: queryAbility } : {}),
     ...(ctx.target?.id ? { targetActorId: ctx.target.id } : {}),
     ...(ctx.spell?.sourceClass ? { spellClass: ctx.spell.sourceClass } : {}),
@@ -3969,27 +4489,41 @@ function runAttackRoll(
   );
   const mods = [...attackAbilityMods(effect, ctx, hand, state), ...collected.modifiers, ...projected.modifiers];
 
+  const normalAdvantage=foldAdvantage(collected.hasAdvantage||projected.hasAdvantage,
+    collected.hasDisadvantage||projected.hasDisadvantage||Boolean(heavy?.valid&&heavy.disadvantage)||declaredAttackRangeDisadvantage(effect,ctx));
+  const followupChild=effect.attack_dice_child===true||effect.additional_attack_child===true;
+  const separateD20=!followupChild&&attackRange==='ranged'&&attackPolicy.separateD20Modes.includes(normalAdvantage);
+  const noCombinedD20=separateD20||effect.attack_dice_child===true;
   const roll = ctx.forcedAttackRoll
     ? retargetAttackRoll(ctx.forcedAttackRoll, ac)
     : rollD20({
     // C7: объединяем флаги обоих проходов — и преим., и помеха (свои + от цели) → none.
-    advantage: foldAdvantage(
+    advantage: noCombinedD20?'none':foldAdvantage(
       collected.hasAdvantage || projected.hasAdvantage,
       collected.hasDisadvantage || projected.hasDisadvantage
         || Boolean(heavy?.valid && heavy.disadvantage)
         || declaredAttackRangeDisadvantage(effect, ctx),
     ),
-    hasAdvantage: collected.hasAdvantage || projected.hasAdvantage,
-    hasDisadvantage: collected.hasDisadvantage || projected.hasDisadvantage || Boolean(heavy?.valid && heavy.disadvantage) || declaredAttackRangeDisadvantage(effect,ctx),
+    hasAdvantage: !noCombinedD20&&(collected.hasAdvantage || projected.hasAdvantage),
+    hasDisadvantage: !noCombinedD20&&(collected.hasDisadvantage || projected.hasDisadvantage || Boolean(heavy?.valid && heavy.disadvantage) || declaredAttackRangeDisadvantage(effect,ctx)),
     modifiers: mods,
     target: { type: 'ac', value: ac, ...(ctx.target?.acBreakdown ? {breakdown: ctx.target.acBreakdown} : {}) },
     rng: ctx.rng,
     rules: [...collected.rules, ...projected.rules], // свои правила + проекция цели (Blade Ward)
     });
+  if(!ctx.forcedAttackRoll&&separateD20&&normalAdvantage!=='none')roll.separateAttackMode=normalAdvantage;
+  if(!ctx.forcedAttackRoll&&!followupChild)roll.followupAttackCount=(separateD20?advantageDiceCount([...collected.rules,...projected.rules])-1:0)+attackPolicy.additionalAttacks;
+  const criticalDenied = [...collected.rules, ...projected.rules].some(rule => rule.op === 'deny_critical');
+  if (criticalDenied && roll.outcome === 'crit') {
+    roll.outcome = 'hit';
+    roll.text = formatRollBreakdown(roll);
+  }
   if (typeof effect.attack_maneuver_id === 'string') roll.attackManeuverActionId = effect.attack_maneuver_id;
+  roll.actionCostResources=[...actionCostResources];
   events.push(rollEvent('Атака', roll));
 
   let next = consumeNextRollEffects(state, 'attack', events, {
+    usedRuleKeys:roll.usedRuleKeys,
     filter: attackFilter,
     evalCtx: evalCtxOf(state, ctx),
     failed: roll.usedFailureBonus === true,
@@ -4007,25 +4541,50 @@ function runAttackRoll(
       targetRef.mutated = true;
     }
   }
-  next = expireEffectsForTrigger(next, 'actor_makes_attack_roll', events);
   if (ctx.pauseAfterAttackRoll) return next;
+  next = expireEffectsForTrigger(next, 'actor_makes_attack_roll', events,ctx);
   // on_roll-триггеры по значению кости (напр. «на 15 → парализовать цель») — не зависят от исхода.
   if (Array.isArray(roll.triggered) && roll.triggered.length) {
     next = applyPayloads(roll.triggered as Dict[], next, ctx, events, source, hand, false, whoTarget, targetRef);
   }
 
   // Автокрит (B): попадание рукопашной атакой по Парализованному/Без сознания — критическое.
-  const outcome = roll.outcome === 'hit' && projected.autoCrit ? 'crit' : roll.outcome;
-  if (roll.outcome === 'hit' && projected.autoCrit) {
+  const outcome = roll.outcome === 'hit' && projected.autoCrit && !criticalDenied ? 'crit' : roll.outcome;
+  if (roll.outcome === 'hit' && projected.autoCrit && !criticalDenied) {
     events.push(narrativeEvent('Автокрит: попадание вблизи становится критическим (состояние цели).'));
   }
+  const eventFacts: Dict = {
+    sourceActorId: ctx.selfId,
+    targetActorId: ctx.target?.id,
+    targetId: ctx.target?.id,
+    naturalRoll: roll.dice.find(die => die.sides === 20 && !die.discarded)?.result,
+    weaponId: currentWeapon?.cardId,
+    opportunityAttack: ctx.attackFacts?.opportunityAttack === true,
+    attackKind: attackFacts.attackKind,
+    attackRange: attackRange ?? 'unknown',
+    targetCreatureType: ctx.target?.characterContext?.creatureType,
+    advantage: roll.advantage,
+    critical: outcome === 'crit',
+    hit: outcome === 'hit' || outcome === 'crit',
+    outcome,
+  };
+  // Only committed rolls publish lifecycle events. A held roll is replayed by
+  // its continuation with the same dice, and must not advance item counters twice.
+  next = emitEvent({kind:'attack_roll_made',source:'self',target:ctx.target?.id,data:eventFacts},
+    next,ctx,events,pending,targetRef,deferredSaves);
+  if (targetRef.state && !targetRef.aliasesSelf) {
+    const reverseTarget: TargetRef = {state:next,mutated:false};
+    const defenderContext: ExecuteContext = {
+      ...ctx, selfId:ctx.target?.id, character:ctx.target?.characterContext ?? ctx.character,
+      passives:ctx.target?.passives ?? [], triggers:[],
+      target:{id:ctx.selfId,characterContext:ctx.character,runtimeState:next,passives:ctx.passives},
+    };
+    targetRef.state = emitEvent({kind:'attacked',source:'self',target:ctx.selfId,
+      data:{...eventFacts,targetId:ctx.selfId}},targetRef.state,defenderContext,events,[],reverseTarget,[],true);
+    targetRef.mutated = true;
+    if (reverseTarget.mutated) next = reverseTarget.state!;
+  }
 
-  if (outcome === 'hit' || outcome === 'crit') {
-    // При крите используем on_crit, если автор задал его явно (тогда он — истина, не удваиваем).
-    // Иначе берём on_hit и удваиваем кости урона движком (PHB 2024: кости броска дважды).
-    const useCritPayloads = outcome === 'crit' && Array.isArray(effect.on_crit);
-    const payloads = (useCritPayloads ? effect.on_crit : effect.on_hit) as Dict[] | undefined;
-    const critDouble = outcome === 'crit' && !useCritPayloads;
     const attackAbility = String(effect.ability);
     const usedAttackAbility = attackAbility === 'auto'
       ? currentWeapon?.ability
@@ -4038,6 +4597,7 @@ function runAttackRoll(
         ? ctx.character.abilityMods[currentWeapon!.ability]
         : ctx.character.abilityMods[attackAbility as AbilityKey];
     const attackDamageFacts: AttackDamageQueryFacts = {
+      attackFromBehind:ctx.attackFacts?.attackFromBehind===true,
       attackDamage: true,
       attackKind: attackFacts.attackKind,
       advantage: roll.advantage,
@@ -4066,6 +4626,13 @@ function runAttackRoll(
         )),
       } : {}),
     };
+  if (outcome === 'hit' || outcome === 'crit') {
+    ctx = { ...ctx, attackDamageComparison: { total: roll.total, ac } };
+    // При крите используем on_crit, если автор задал его явно (тогда он — истина, не удваиваем).
+    // Иначе берём on_hit и удваиваем кости урона движком (PHB 2024: кости броска дважды).
+    const useCritPayloads = outcome === 'crit' && Array.isArray(effect.on_crit);
+    const payloads = (useCritPayloads ? effect.on_crit : effect.on_hit) as Dict[] | undefined;
+    const critDouble = outcome === 'crit' && !useCritPayloads;
     const damageEventStart = events.length;
     if (Array.isArray(payloads)) {
       next = applyPayloads(
@@ -4086,6 +4653,7 @@ function runAttackRoll(
     const riderContext: ExecuteContext = originalDamage?.type === 'damage' && ctx.target?.id
       ? {...ctx, ...(roll.attackManeuverActionId ? {forcedAttackRoll: roll} : {}), triggeringAttack: {targetActorId: ctx.target.id, damageType: originalDamage.damageType, critical: outcome === 'crit'}}
       : ctx;
+    const baseDamageDealt = events.slice(damageEventStart).some((entry) => entry.type === 'damage' && entry.amount > 0);
     next = applyAttackDamageRiders(
       next,
       riderContext,
@@ -4094,6 +4662,8 @@ function runAttackRoll(
       targetRef,
       outcome === 'crit',
       attackDamageFacts,
+      baseDamageDealt,
+      deferredSaves,
     );
     const dealtDamage = events.slice(damageEventStart).some((entry) => (
       entry.type === 'damage' && entry.amount > 0
@@ -4120,6 +4690,7 @@ function runAttackRoll(
       kind: 'hit',
       source: 'self',
       data: {
+        ...eventFacts,
         advantage: roll.advantage,
         attackRange: attackRange ?? 'unknown',
         ...(currentWeapon?.damageType ? { damageType: currentWeapon.damageType } : {}),
@@ -4129,9 +4700,13 @@ function runAttackRoll(
       },
     }, next, ctx, events, pending, targetRef, deferredSaves);
     if (outcome === 'crit') next = emitEvent(
-      { kind: 'crit', source: 'self' }, next, ctx, events, pending, targetRef, deferredSaves,
+      { kind: 'crit', source: 'self', target:ctx.target?.id, data:eventFacts }, next, ctx, events, pending, targetRef, deferredSaves,
     );
   } else {
+    if(attackPolicy.halfDamageOnMiss && Array.isArray(effect.on_hit)) {
+      const damageOnly=(effect.on_hit as Dict[]).filter(payload=>payload.kind==='damage');
+      next=applyPayloads(damageOnly,next,ctx,events,source,hand,true,whoTarget,targetRef,false,{...attackDamageFacts,critical:false});
+    }
     // Промах: on_miss-райдеры (Graze/Vex — оружейное мастерство 2024) + событие miss.
     if (Array.isArray(effect.on_miss)) {
       next = applyPayloads(effect.on_miss as Dict[], next, ctx, events, source, hand, false, whoTarget, targetRef);
@@ -4149,7 +4724,7 @@ function runAttackRoll(
       { attackRange, dealtDamage: false },
     );
     next = emitEvent(
-      { kind: 'miss', source: 'self' }, next, ctx, events, pending, targetRef, deferredSaves,
+      { kind: 'miss', source: 'self', target:ctx.target?.id, data:eventFacts }, next, ctx, events, pending, targetRef, deferredSaves,
     );
   }
   // A next-attack rider expires after this source's roll even on a miss.
@@ -4174,6 +4749,9 @@ function runAttackRoll(
       events.push({type:'effect_expired',name:entry.name});
       return false;
     })};
+  }
+  if((roll.followupAttackCount||roll.separateAttackMode)&&ctx.selfId&&ctx.target?.id){
+    for(let index=0;index<(roll.followupAttackCount??1);index++)next=emitEvent({kind:'attack_dice_followup',source:'self',target:ctx.target.id,data:{weaponId:currentWeapon?.cardId,mode:roll.separateAttackMode??'additional',ordinal:index+1}},next,ctx,events,pending,targetRef,deferredSaves,true);
   }
   return next;
 }
@@ -4304,6 +4882,10 @@ function runSave(
   const dcFormula = String(effect.dc);
   const dc = evalDc(dcFormula, ctx);
   const ability = String(effect.ability) as AbilityKey;
+  const recipientState=whoTarget&&!targetRef.aliasesSelf?targetRef.state:state;
+  const recipientPassives=whoTarget&&!targetRef.aliasesSelf?ctx.target?.passives??[]:ctx.passives??[];
+  const recipientCharacter=whoTarget&&!targetRef.aliasesSelf?ctx.target?.characterContext:ctx.character;
+  const damagePolicy=(success:boolean)=>recipientState?saveDamagePolicy(recipientState,recipientPassives,ability,success,recipientCharacter):undefined;
   const automaticSuccess = automaticSaveSuccessReason(effect, ctx.target);
   if (automaticSuccess) {
     events.push(narrativeEvent(
@@ -4314,13 +4896,13 @@ function runSave(
     const automaticPayloads = effect.on_success as Dict[] | undefined;
     return Array.isArray(automaticPayloads)
       ? applyPayloads(
-          automaticPayloads,
+          savePolicyPayloads(automaticPayloads,damagePolicy(true)),
           state,
           ctx,
           events,
           source,
           'main',
-          automaticPayloads.some((payload) => payload.on_success === 'half'),
+          damagePolicy(true)==='half'||automaticPayloads.some((payload) => payload.on_success === 'half'),
           whoTarget,
           targetRef,
         )
@@ -4343,7 +4925,7 @@ function runSave(
   const targetState = ctx.target?.runtimeState;
   const collected = targetState
     ? collectModifiers(targetState, ctx.target?.passives ?? [], {
-        roll: 'saving_throw', filter: { ability, saveSource:ctx.spell?'spell':'other' },
+        roll: 'saving_throw', filter: { ability, saveSource:ctx.spell?'spell':'other',...effectRollFacts(effect) },
         formulaCtx:targetFormulaCtx(ctx.target) ?? {},
         evalCtx: { character:ctx.target?.characterContext,state: targetState, activeConditions: activeConditionsOf(targetState), savedConditions: new Set(savedConditionsOf(effect)) },
       })
@@ -4351,6 +4933,8 @@ function runSave(
 
   let success: boolean;
   let failureBonusUsed = false;
+  let usedRuleKeys:readonly string[]|undefined;
+  let savedRoll:RollLog|undefined=ctx.forcedSaveRoll;
   if (ctx.forceSaveOutcome != null) {
     // Онлайн-бой: исход форсирован (предрасчёт для передачи цели). d20 НЕ катим — иначе съели бы
     // из ctx.rng кости урона; событие спасброска не эмитим — бросок сделает цель на своём листе.
@@ -4370,14 +4954,18 @@ function runSave(
       rules: collected.rules,
     });
     failureBonusUsed = roll.usedFailureBonus === true;
+    usedRuleKeys=roll.usedRuleKeys;
+    savedRoll=roll;
     events.push(rollEvent('Спасбросок', { ...roll, kind: 'save' }));
     // Планирующий прогон: берём ветку провала, чтобы кости on_fail-урона попали в план кубов
     // (иначе при высоком PLANNING_RNG цель успевает спастись и урон не планируется → #8).
     success = ctx.planning ? false : roll.outcome === 'success';
   }
   let next = state;
+  if(whoTarget&&!targetRef.aliasesSelf)next=emitEvent({kind:'forced_save',source:'self',target:ctx.target?.id,data:{ability,dc,outcome:success?'success':'failure'}},next,ctx,events,[],targetRef,[],true);
   if (targetState && targetRef.state) {
     const consumedTarget = consumeNextRollEffects(targetRef.state, 'saving_throw', events, {
+      usedRuleKeys,
       filter: { ability },
       evalCtx: {
         state: targetRef.state,
@@ -4393,6 +4981,7 @@ function runSave(
     }
   } else {
     next = consumeNextRollEffects(next, 'saving_throw', events, {
+      usedRuleKeys,
       filter: { ability },
       evalCtx: evalCtxOf(next, ctx),
       failed: failureBonusUsed,
@@ -4400,11 +4989,20 @@ function runSave(
     });
   }
 
+  if(whoTarget && targetRef.state && !targetRef.aliasesSelf && reflectsSavingEffect(targetRef.state,
+    ctx.target?.passives??[],ctx.target?.characterContext,savedRoll)){
+    events.push(narrativeEvent('Результат спасброска равен СЛ: эффект отражён в источник.'));
+    return applyPayloads(Array.isArray(effect.on_fail)?effect.on_fail:[],next,{...ctx,damageRecipientSelf:true},events,source,
+      'main',false,false,{aliasesSelf:true,mutated:false});
+  }
   const payloads = (success ? effect.on_success : effect.on_fail) as Dict[] | undefined;
   if (!Array.isArray(payloads)) return next;
 
-  const half = success && payloads.some((p) => p.on_success === 'half');
-  return applyPayloads(payloads, next, ctx, events, source, 'main', half, whoTarget, targetRef);
+  const policy=damagePolicy(success);
+  const half = policy==='half'||(success && payloads.some((p) => p.on_success === 'half'));
+  const saveDamageFacts={saveAbility:ability,saveDamage:(Array.isArray(effect.on_success)&&effect.on_success.some((payload:Dict)=>payload.kind==='damage'&&payload.on_success==='half')?'half':'other') as 'half'|'other',
+    saveOutcome:(success?'success':'failure') as 'success'|'failure'};
+  return applyPayloads(savePolicyPayloads(payloads,policy), next, {...ctx,saveDamageFacts}, events, source, 'main', half, whoTarget, targetRef);
 }
 
 // readTargetSave — параметры форсируемого спасброска ЦЕЛИ из механики действия (ability, DC, half).
@@ -4458,25 +5056,35 @@ function runAbilityCheck(
 ): RuntimeState {
   const ability = String(effect.ability) as AbilityKey;
   const skill = String(effect.skill ?? '');
+  const tool = String(effect.tool ?? '');
+  const checkAsTarget=effect.who==='target';
+  const checkState=checkAsTarget?(targetRef.state??ctx.target?.runtimeState):state;
+  if(!checkState||checkAsTarget&&!ctx.target?.characterContext)throw Error('Target check has no saved target state');
+  const checkCtx=checkAsTarget?{...ctx,selfId:ctx.target!.id,character:ctx.target!.characterContext!,
+    target:{id:ctx.selfId,characterContext:ctx.character,runtimeState:state,passives:ctx.passives},
+    passives:ctx.target!.passives??[]}:ctx;
+  if(effect.check_bonus!==undefined&&!Number.isFinite(effect.check_bonus))throw Error('Invalid declared ability-check bonus');
   // C12: бонус мастерства — ТОЛЬКО при владении навыком (экспертиза ×2). «Голая» проверка
   // характеристики (без skill) бонус мастерства не получает — раньше он прибавлялся безусловно.
-  const prof = skill && ctx.character.skillExpertise?.includes(skill)
-    ? ctx.character.profBonus * 2
-    : skill && ctx.character.skillProficiencies?.includes(skill)
-      ? ctx.character.profBonus
+  const prof = skill && checkCtx.character.skillExpertise?.includes(skill)
+    ? checkCtx.character.profBonus * 2
+    : skill && checkCtx.character.skillProficiencies?.includes(skill)
+      ? checkCtx.character.profBonus
       : 0;
-  const attackerTotal = ctx.character.abilityMods[ability] + prof;
+  const toolProf=tool&&checkCtx.character.toolExpertise?.includes(tool)?checkCtx.character.profBonus*2
+    :tool&&checkCtx.character.toolProficiencies?.includes(tool)?checkCtx.character.profBonus:0;
+  const attackerTotal = checkCtx.character.abilityMods[ability] + Math.max(prof,toolProf);
   const sense = String(effect.requires_sense ?? effect.sense ?? '');
   const checkFilter: ModifierQueryFacts = {
-    ability,
+    ability,...effectRollFacts(effect,'acting'),
     ...(skill ? { skill } : {}),
     ...(sense === 'sight' || sense === 'hearing' ? { sense } : {}),
   };
-  const collected = collectModifiers(state, passivesFromCtx(ctx), {
+  const collected = collectModifiers(checkState, passivesFromCtx(checkCtx), {
     roll: 'ability_check',
     filter: checkFilter,
-    formulaCtx: formulaCtx(ctx),
-    evalCtx: evalCtxOf(state, ctx),
+    formulaCtx: formulaCtx(checkCtx),
+    evalCtx: evalCtxOf(checkState, checkCtx),
   });
   let next = state;
   let success: boolean;
@@ -4491,9 +5099,10 @@ function runAbilityCheck(
     success = false;
   } else {
     const attRoll = rollD20({
-      advantage: collected.advantage, hasAdvantage: collected.hasAdvantage, hasDisadvantage: collected.hasDisadvantage,
+      advantage: collected.advantage, hasAdvantage: collected.hasAdvantage||effect.advantage===true, hasDisadvantage: collected.hasDisadvantage||effect.disadvantage===true,
       modifiers: [
         { value: attackerTotal, source: skill || ABILITY_LABEL[ability] },
+        ...(effect.check_bonus!==undefined?[{value:Number(effect.check_bonus),source}]:[]),
         ...collected.modifiers,
       ],
       ...(effect.dc == null ? {} : { target: { type: 'dc' as const, value: evalDc(String(effect.dc), ctx) } }),
@@ -4514,7 +5123,15 @@ function runAbilityCheck(
         contestVs[0],
       );
       const defMod = checkMods[defSkill];
-      const defRoll = rollD20({ modifiers: [{ value: defMod, source: defSkill }], rng: ctx.rng });
+      const defenseState=targetRef.state??ctx.target!.runtimeState;
+      const defenseAbility=defSkill==='acrobatics'?'dex':'str';
+      const defenseFilter={ability:defenseAbility,skill:defSkill,...effectRollFacts(effect)};
+      const defenseEval=defenseState?{state:defenseState,character:ctx.target?.characterContext,activeConditions:activeConditionsOf(defenseState)}:undefined;
+      const defenseModifiers=defenseState?collectModifiers(defenseState,ctx.target?.passives??[],{roll:'ability_check',filter:defenseFilter,formulaCtx:targetFormulaCtx(ctx.target)??{},evalCtx:defenseEval}):undefined;
+      const defRoll = rollD20({ modifiers: [{ value: defMod, source: defSkill },...(defenseModifiers?.modifiers??[])],
+        advantage:defenseModifiers?.advantage,hasAdvantage:defenseModifiers?.hasAdvantage,hasDisadvantage:defenseModifiers?.hasDisadvantage,rules:defenseModifiers?.rules,rng: ctx.rng });
+      if(defenseState&&targetRef.state){targetRef.state=consumeNextRollEffects(defenseState,'ability_check',events,{usedRuleKeys:defRoll.usedRuleKeys,filter:defenseFilter,evalCtx:defenseEval,failed:defRoll.usedFailureBonus===true,finalFailed:defRoll.usedFailureBonus===true&&attRoll.total>defRoll.total});targetRef.mutated=true;}
+
       success = attRoll.total > defRoll.total;
       resolvedRoll = {
         ...attRoll,
@@ -4528,21 +5145,23 @@ function runAbilityCheck(
     if (effect.dc != null) {
       events.push(rollEvent(skill ? `Проверка (${skill})` : 'Проверка', { ...resolvedRoll, kind: 'check' }));
     }
-    next = consumeNextRollEffects(state, 'ability_check', events, {
+    const consumed = consumeNextRollEffects(checkState, 'ability_check', events, {
+      usedRuleKeys:resolvedRoll.usedRuleKeys,
       filter: checkFilter,
-      evalCtx: evalCtxOf(state, ctx),
+      evalCtx: evalCtxOf(checkState, checkCtx),
       failed: attRoll.usedFailureBonus === true,
       finalFailed: resolvedRoll.usedFailureBonus === true && !success,
     });
+    if(checkAsTarget){targetRef.state=consumed;targetRef.mutated=true;}else next=consumed;
     if (resolvedChecks && effectIndex >= 0) {
       resolvedChecks.push({effectIndex, roll: JSON.parse(JSON.stringify(resolvedRoll)) as RollLog});
     }
   }
 
-  if (!success) return next;
+  if (!success&&ctx.deferFailedAbilityCheckEffects&&resolvedRoll) return next;
   // C12: исход успеха идёт через общий роутер payload-ов — состояние (Толчок → prone),
   // перемещение, нарратив. who:'target' направляет состояние ЦЕЛИ, а не исполнителю.
-  const onSuccess = effect.on_success as Dict[] | undefined;
+  const onSuccess = (success?effect.on_success:effect.on_fail) as Dict[] | undefined;
   if (!Array.isArray(onSuccess)) return next;
   const whoTarget = String(effect.who ?? 'target') === 'target'
     && (!!targetRef.state || targetRef.aliasesSelf === true);
@@ -4584,7 +5203,10 @@ function runMechanicEffects(
         if (Array.isArray(results)) {
           const whoTarget = effectRecipient(eff, ctx, 'self') === 'target'
             && (!!targetRef.state || targetRef.aliasesSelf === true);
-          next = applyPayloads(results, next, ctx, events, sourceName, 'main', false, whoTarget, targetRef, criticalDamage);
+          const autoCtx=eff.who==='self'?{...ctx,damageRecipientSelf:true}:ctx;
+          const parentCascade=cascadeBudget.get(ctx);
+          if(parentCascade)cascadeBudget.set(autoCtx,parentCascade);
+          next = applyPayloads(results, next, autoCtx, events, sourceName, 'main', false, whoTarget, targetRef, criticalDamage);
         }
         continue;
       }
@@ -4640,19 +5262,20 @@ export const EMITTED_EVENTS = [
   // sneak_attack_hit is emitted by the multi-actor solo-combat adapter after
   // it observes the exact Sneak Attack once-per-turn ledger transition.
   'action_resolved', 'hit', 'sneak_attack_hit', 'crit', 'damage_taken', 'miss', 'spell_cast', 'reduced_to_0_hp',
-  'resource_spent', 'healing_given', 'healing_received', 'encounter_start',
+  'physical_interaction', 'equipment_changed', 'movement_exhausted', 'resource_spent', 'healing_given', 'healing_received', 'encounter_start', 'encounter_end',
+  'attack_roll_made', 'attacked', 'damage_dealt', 'kill', 'condition_applied', 'condition_received', 'forced_save',
   // Ход и отдыхи через шину (C3 слайс 2 — turn.ts startTurn/endTurn/shortRest/longRest):
   'turn_start', 'turn_end', 'short_rest', 'long_rest',
 ] as const;
 
 export const PLANNED_EVENTS = [
   // Требуют конвейера стадий атаки/урона (отдельные точки эмиссии):
-  'attack_roll_made', 'hit_by_attack', 'targeted_by_magic_missile', 'damage_dealt',
-  'saving_throw_made', 'forced_save', 'ability_check_made',
+  'hit_by_attack', 'targeted_by_magic_missile',
+  'saving_throw_made', 'ability_check_made',
   // Требуют многоактора/EncounterState (позиции, дистанции) — вне текущей модели:
   'creature_enters_reach', 'creature_leaves_reach', 'creature_moves', 'fall_started',
   // Прочее (условия/инициатива/приобретение/уровень) — отдельные слайсы:
-  'condition_applied', 'initiative_roll', 'on_acquire', 'level_gained',
+  'initiative_roll', 'on_acquire', 'level_gained',
 ] as const;
 
 // C4: страховка каскада событий (emitEvent → механика слушателя → снова emitEvent). Бюджет на ОДНО
@@ -4661,14 +5284,30 @@ export const PLANNED_EVENTS = [
 // же hit). Ключ — объект ctx (свой на каждое действие); beginCascade обнуляет на входе (защита от
 // переиспользования ctx между вызовами). Бюджет по СУММЕ эмиссий ⇒ ограничивает и глубину рекурсии.
 const MAX_EVENT_CASCADE = 16;
-const cascadeBudget = new WeakMap<object, { n: number; warned: boolean }>();
+type CascadeBudget = { n: number; warned: boolean; depth?: number };
+const cascadeBudget = new WeakMap<object, CascadeBudget>();
+const CASCADE = Symbol('execution-cascade');
+type CascadeContext = ExecuteContext & { [CASCADE]?: CascadeBudget };
+
+/** Context spreads preserve this symbol, so retaliation on another actor uses
+ * the same bounded cascade. A later independent command starts a fresh budget. */
+function inCascade<T>(context:ExecuteContext, run:()=>T):T {
+  const ctx=context as CascadeContext;
+  let budget=ctx[CASCADE];
+  if(!budget?.depth)budget={n:0,warned:false,depth:0};
+  ctx[CASCADE]=budget;
+  cascadeBudget.set(ctx,budget);
+  budget.depth=(budget.depth??0)+1;
+  try{return run();}finally{budget.depth--;}
+}
 
 function beginCascade(ctx: ExecuteContext): void {
-  cascadeBudget.set(ctx, { n: 0, warned: false });
+  const inherited=(ctx as CascadeContext)[CASCADE];
+  cascadeBudget.set(ctx,inherited??{n:0,warned:false});
 }
 
 function cascadeAllows(ctx: ExecuteContext, events: EngineEvent[]): boolean {
-  let b = cascadeBudget.get(ctx);
+  let b = (ctx as CascadeContext)[CASCADE] ?? cascadeBudget.get(ctx);
   if (!b) { b = { n: 0, warned: false }; cascadeBudget.set(ctx, b); }
   b.n += 1;
   if (b.n > MAX_EVENT_CASCADE) {
@@ -4679,6 +5318,34 @@ function cascadeAllows(ctx: ExecuteContext, events: EngineEvent[]): boolean {
     return false;
   }
   return true;
+}
+
+/** Finalize source-owned consequences only after the defender's damage choice.
+ * The pending bundle stores event facts; it never reconstructs the old attack
+ * from changed equipment or rolls its damage again. */
+export function resolveDeferredSourceConsequences(
+  state:RuntimeState, targetState:RuntimeState, ctx:ExecuteContext, packets:readonly EngineEvent[],
+):ExecuteResult {
+  const groups=new Map<string,{amount:number;targetHpBefore:number;data:Dict}>();
+  for(const packet of packets) if(packet.type==='damage'&&packet.deferredSourceConsequences){
+    const saved=packet.deferredSourceConsequences;
+    const group=groups.get(saved.group)??{amount:0,targetHpBefore:saved.targetHpBefore,data:saved.data};
+    group.amount+=packet.amount;groups.set(saved.group,group);
+  }
+  let next=state;
+  const targetRef:TargetRef={state:targetState,mutated:false};
+  const events:EngineEvent[]=[];
+  for(const group of groups.values()){
+    if(group.amount<=0)continue;
+    const data={...group.data,amount:group.amount};
+    next=emitEvent({kind:'damage_dealt',source:'self',target:ctx.target?.id,data},next,ctx,events,[],targetRef,[],true);
+    const targetLife=collectLifePolicies(targetRef.state!,ctx.target?.passives??[],ctx.target?.characterContext);
+    if(group.targetHpBefore>0&&targetRef.state!.hp.current===0&&!targetLife.cannotDie
+      &&(targetRef.state!.deathSaves?.dead||ctx.target?.actorKind==='monster'||ctx.target?.actorKind==='summonedActor')){
+      next=emitEvent({kind:'kill',source:'self',target:ctx.target?.id,data},next,ctx,events,[],targetRef,[],true);
+    }
+  }
+  return {state:next,targetState:targetRef.state,events};
 }
 
 export function emitEvent(
@@ -4692,6 +5359,10 @@ export function emitEvent(
   automaticOnly = false,
 ): RuntimeState {
   // Слушатели: пассивки + отдельный пул триггерных способностей (ctx.triggers — заклинания-реакции
+  if(ctx.selfId && (['attack_roll_made','attack_dice_followup','attacked','hit','damage_dealt','kill','healing_given','healing_received'].includes(ev.kind)||ev.kind==='damage_taken'&&ev.timing==='after')) {
+    events.push({type:'domain_event',ownerActorId:ctx.selfId,
+      ...(ctx.target?.id?{targetActorId:ctx.target.id}:{}),event:JSON.parse(JSON.stringify(ev)) as DomainEvent});
+  }
   // вроде Божественной кары; их не читает collectModifiers, чтобы не применять эффект пассивно).
   const triggers = (ctx as ExecuteContext & { triggers?: Dict[] }).triggers ?? [];
   const listeners = collectListeners(ev, state, [...passivesFromCtx(ctx), ...triggers], evalCtxOf(state, ctx));
@@ -4702,6 +5373,11 @@ export function emitEvent(
 
   let next = state;
   for (const lm of listeners) {
+    if (lm.occurrence) {
+      const occurrence = advanceEventOccurrence(next, lm, ev);
+      next = occurrence.state;
+      if (!occurrence.eligible) continue;
+    }
     if (!isAuto(lm)) { if (!automaticOnly) pending.push(toOffer(lm, ev)); continue; }
     const per = lm.usesPer;
     // Гейт «уже сработал в этом периоде»: turn и long_rest сохраняют совместимые поля,
@@ -4729,9 +5405,12 @@ export function emitEvent(
       };
     }
     const effs = (lm.mechanics.effects as Dict[]) ?? [];
+    const chance=triggerChance(lm.mechanics.chance,lm.name,ctx.rng);
+    events.push(...chance.events);
+    if(!chance.success)continue;
     if (effs.length) {
       events.push(narrativeEvent(`Сработало: ${lm.name}`));
-      const listenerCtx: ExecuteContext = lm.formulaVariables
+      let listenerCtx: ExecuteContext = lm.formulaVariables
         ? {
           ...ctx,
           character: {
@@ -4743,6 +5422,13 @@ export function emitEvent(
           },
         }
         : ctx;
+      listenerCtx={...listenerCtx,triggeredConsequences:true,
+        damageSource:{actorId:ctx.selfId,kind:lm.mechanics.damage_source_kind==='item'?'item':lm.mechanics.damage_source_kind==='spell'?'spell':'ability'}};
+      const parentCascade=cascadeBudget.get(ctx);
+      const bindings=actionFormulaBindings(lm.mechanics,listenerCtx);
+      listenerCtx=bindings.context;
+      events.push(...bindings.events);
+      if(parentCascade)cascadeBudget.set(listenerCtx,parentCascade);
       next = runMechanicEffects(
         effs,
         next,
@@ -4855,8 +5541,28 @@ export function executeAction(
   mechanics: Dict,
   ctx: ExecuteContext,
 ): ExecuteResult {
+  const magicIssue=magicExecutionIssue(mechanics,ctx);
+  if(magicIssue)throw mechanicsError('INVALID_MECHANICS','antimagic',magicIssue);
+  return inCascade(ctx,()=>markMagicEffects(state,executeActionImpl(state,mechanics,ctx),mechanics,ctx));
+}
+
+function executeActionImpl(state:RuntimeState, mechanics:Dict,ctx:ExecuteContext):ExecuteResult {
+  mechanics=sourceWeaponMechanics(mechanics,state);
+  if(mechanics.damage_source_kind!==undefined&&!['item','spell','ability'].includes(String(mechanics.damage_source_kind)))
+    throw mechanicsError('INVALID_MECHANICS','damage_source_kind','Invalid damage origin');
+  ctx={...ctx,damageSource:ctx.damageSource??{actorId:ctx.selfId,
+    kind:ctx.spell?'spell':mechanics.damage_source_kind==='item'||typeof mechanics.requires_item_source==='string'?'item':mechanics.damage_source_kind==='spell'?'spell':'ability'}};
+  ctx={...ctx,selfRuntime:state};
+  if(mechanics.duration_cap_rounds!==undefined){
+    const cap=Number(mechanics.duration_cap_rounds);
+    if(!Number.isSafeInteger(cap)||cap<1)throw mechanicsError('INVALID_MECHANICS','duration_cap_rounds','Invalid effect duration cap');
+    ctx={...ctx,effectDurationCapRounds:cap};
+  }
   ctx = runtimeActionContext(state, mechanics, ctx);
+  const environmentIssue=environmentActionIssue(state,mechanics,ctx.passives??[],ctx.character,!!ctx.spell);
+  if(environmentIssue)throw mechanicsError('INVALID_MECHANICS','environment_adaptation',environmentIssue);
   const cost = preflightMechanicsExecution(state, mechanics, ctx);
+  ctx={...ctx,actionCostResources:ctx.actionCostResources??cost.map(entry=>String(entry.resource))};
   beginCascade(ctx); // C4: свежий бюджет каскада событий на это действие
   let next = cloneState(state);
   const events: EngineEvent[] = [];
@@ -4890,6 +5596,15 @@ export function executeAction(
     }
   }
 
+  if(events.some(event=>event.type==='execution_cancelled')){
+    return {state:next,events,...(targetRef.mutated?{targetState:targetRef.state}:{})};
+  }
+  const bindings=actionFormulaBindings(mechanics,ctx);
+  const actionCascade=cascadeBudget.get(ctx);
+  ctx=bindings.context;
+  if(actionCascade)cascadeBudget.set(ctx,actionCascade);
+  events.push(...bindings.events);
+
   const targetStateForWard = targetRef.aliasesSelf
     ? next
     : targetRef.state ?? ctx.target?.runtimeState;
@@ -4906,6 +5621,17 @@ export function executeAction(
   }
 
   const effects = mechanics.effects as Dict[] | undefined;
+  if(isDict(mechanics.pre_action_check)){
+    const declared=mechanics.pre_action_check;
+    const checks:ResolvedAbilityCheck[]=[];
+    const sourceName=String(ctx.actionName??mechanics.name??'действие');
+    next=runAbilityCheck({resolution:'ability_check',who:'self',ability:declared.ability,skill:declared.skill,dc:declared.dc,
+      on_success:[],on_fail:[]},next,ctx,events,sourceName,targetRef,checks,0);
+    if(checks[0]?.roll.outcome!=='success'){
+      events.push(narrativeEvent(`${sourceName}: проверка не пройдена, эффект действия не наступил.`));
+      return {state:next,events,...(targetRef.mutated?{targetState:targetRef.state}:{})};
+    }
+  }
   if (Array.isArray(effects)) {
     const sourceName = String(ctx.actionName ?? mechanics.name ?? 'действие');
     next = runMechanicEffects(
@@ -5082,6 +5808,13 @@ function resolveAutomaticDamageReductions(
  * крите); эмитит damage_taken → реакции (Адское возмездие и т.п.) как pendingReactions.
  */
 export function applyIncomingDamage(
+  state:RuntimeState, amount:number,ctx:ExecuteContext,
+  opts?:Parameters<typeof applyIncomingDamageImpl>[3],
+):ExecuteResult {
+  return inCascade(ctx,()=>applyIncomingDamageImpl(state,amount,ctx,opts));
+}
+
+function applyIncomingDamageImpl(
   state: RuntimeState,
   amount: number,
   ctx: ExecuteContext,
@@ -5090,6 +5823,8 @@ export function applyIncomingDamage(
     damageType?: string;
     conSaveBonus?: number;
     damageReduction?: number;
+    maximumDamage?: number;
+    budgetId?: string;
     roll?: import('../mvp/contracts').RollLog;
     ignoreResistance?: boolean;
     imposeConcentrationDisadvantage?: boolean;
@@ -5101,8 +5836,17 @@ export function applyIncomingDamage(
   let next = cloneState(state);
   const events: EngineEvent[] = [];
 
-  const raw = Math.max(0, Math.floor(amount));
+  const originalRaw = Math.max(0, Math.floor(amount));
   const damageType = opts?.damageType ?? 'урон';
+  const policies=incomingDamagePolicies({amount:originalRaw,damageType,delivery:opts?.delivery??'other',
+    attackTotal:ctx.attackDamageComparison?.total,targetAC:ctx.attackDamageComparison?.ac,
+    sourceActorId:ctx.damageSource?.actorId??ctx.target?.id,recipientActorId:ctx.selfId,
+    sourceKind:ctx.damageSource?.kind??(ctx.spell?'spell':undefined),
+    attackerCreatureType:ctx.target?.characterContext?.creatureType,state:next,mechanics:passivesFromCtx(ctx),
+    conditions:evalCtxOf(next,ctx),formula:formulaCtx(ctx),rng:ctx.rng,rollCache:ctx.damagePolicyRollCache});
+  const raw=policies.amount;
+  if(ctx.damagePolicyRollCache)Object.assign(ctx.damagePolicyRollCache,policies.rollCache);
+  events.push(...policies.events);
   const automaticReduction = resolveAutomaticDamageReductions(
     next, raw, damageType, ctx, opts?.delivery ?? 'other',opts?.crit===true,
   );
@@ -5113,7 +5857,10 @@ export function applyIncomingDamage(
   if (reduction > 0) {
     events.push(narrativeEvent(`Снижение урона: ${raw} → ${beforeResistance} (−${Math.min(reduction, raw)})`));
   }
+  if(opts?.maximumDamage!==undefined&&(!Number.isSafeInteger(opts.maximumDamage)||opts.maximumDamage<0))throw new Error('Invalid final damage cap');
   const calculation: DamageCalculation = { beforeResistance,
+    ...(opts?.maximumDamage!==undefined?{maximumDamage:opts.maximumDamage}:{}),
+    ...(opts?.budgetId?{budgetId:opts.budgetId}:{}),
     adjustments: resistanceRulesFor(next, ctx, damageType).filter(rule => !(opts?.ignoreResistance && rule.level === 'resistance')),
   };
   const resolvedDamage = resolveDamageCalculation(calculation, damageType);
@@ -5123,13 +5870,15 @@ export function applyIncomingDamage(
   next.hp.temp -= absorbed;
   next.hp.current = Math.max(0, next.hp.current - (dmg - absorbed));
   events.push({ ...damageEvent(dmg, damageType, opts?.roll),
-    ...(calculation.adjustments.length ? { calculation } : {}),
+    ...(ctx.saveDamageFacts?{saveFacts:{...ctx.saveDamageFacts}}:{}),
+    ...(calculation.adjustments.length||calculation.maximumDamage!==undefined ? { calculation } : {}),
   } as EngineEvent);
   if (ctx.deferIncomingDamageConsequences) {
     const damage = [...events].reverse().find(event => event.type === 'damage');
     if (damage?.type === 'damage') damage.deferredConsequences = {
       critical: opts?.crit === true,
       concentrationDisadvantage: opts?.imposeConcentrationDisadvantage === true,
+      delivery:opts?.delivery??'other',
     };
     return { state: next, events };
   }
@@ -5139,16 +5888,24 @@ export function applyIncomingDamage(
 
 /** Apply effects of the final damage, after the defender has chosen mitigation. */
 export function applyDamageConsequences(
+  state:RuntimeState,dmg:number,hpBefore:RuntimeState['hp'],ctx:ExecuteContext,
+  opts?:Parameters<typeof applyDamageConsequencesImpl>[4],
+):ExecuteResult {
+  return inCascade(ctx,()=>applyDamageConsequencesImpl(state,dmg,hpBefore,ctx,opts));
+}
+
+function applyDamageConsequencesImpl(
   state: RuntimeState,
   dmg: number,
   hpBefore: RuntimeState['hp'],
   ctx: ExecuteContext,
-  opts?: { crit?: boolean; damageType?: string; conSaveBonus?: number; imposeConcentrationDisadvantage?: boolean },
+  opts?: { crit?: boolean; damageType?: string; conSaveBonus?: number; imposeConcentrationDisadvantage?: boolean;delivery?:'attack'|'other' },
 ): ExecuteResult {
   beginCascade(ctx);
   let next = cloneState(state);
   const events: EngineEvent[] = [];
   const pending: ReactionOffer[] = [];
+  const targetRef:TargetRef={state:ctx.target?.runtimeState?cloneState(ctx.target.runtimeState):undefined,mutated:false};
   const damageType = opts?.damageType ?? 'урон';
   if (dmg > 0) {
     next = expireEffectsForTrigger(next, 'actor_takes_damage', events);
@@ -5180,7 +5937,7 @@ export function applyDamageConsequences(
         rules: collected.rules, target: {type: 'dc', value: dc}, rng: ctx.rng});
       const label = typeof survival.name === 'string' ? survival.name : 'Стойкость';
       events.push(rollEvent(`${label}: ${ABILITY_LABEL[ability]} (СЛ ${dc})`, {...roll, kind: 'save'}));
-      next = consumeNextRollEffects(next, 'saving_throw', events, {filter: {ability}, failed: roll.outcome !== 'success'});
+      next = consumeNextRollEffects(next, 'saving_throw', events, {usedRuleKeys:roll.usedRuleKeys,filter: {ability}, failed: roll.outcome !== 'success'});
       if (roll.outcome === 'success') {
         next.hp.current = Math.min(next.hp.max, remaining);
         events.push(narrativeEvent(`${label}: остаётся ${next.hp.current} HP.`));
@@ -5194,7 +5951,7 @@ export function applyDamageConsequences(
   // При предрасчёте исходов боя (forceSaveOutcome) проверку концентрации НЕ катим: она тоже тянет
   // d20 из ctx.rng и, не будучи в плане кубов, сдвинула бы кости урона. Разрыв концентрации цели —
   // её отдельная забота (не моделируем в предрасчёте pending-спасброска).
-  if (conc && dmg > 0 && ctx.forceSaveOutcome == null) {
+  if (conc && dmg > 0 && !ctx.deferConcentrationSaves && ctx.forceSaveOutcome == null&&!concentrationProtectedUntilDeath(next,passivesFromCtx(ctx))) {
     const dc = concentrationDC(dmg);
     const collected = collectModifiers(next, passivesFromCtx(ctx), {
       roll: 'saving_throw', filter: { ability: 'con', reason: 'maintain_concentration' },
@@ -5209,11 +5966,14 @@ export function applyDamageConsequences(
     );
     const roll = rollD20({
       advantage,
+      rules:collected.rules,
       modifiers: [{ value: conMod, source: 'ТЕЛ' }, ...collected.modifiers],
       target: { type: 'dc', value: dc },
       rng: ctx.rng,
     });
     events.push(rollEvent(`Концентрация (СЛ ${dc})`, { ...roll, kind: 'save' }));
+    next=consumeNextRollEffects(next,'saving_throw',events,{usedRuleKeys:roll.usedRuleKeys,
+      filter:{ability:'con',reason:'maintain_concentration'},evalCtx:evalCtxOf(next,ctx),failed:roll.usedFailureBonus===true});
     if (roll.outcome !== 'success') {
       const dropped = dropConcentration(next, `провал спасброска СЛ ${dc}`);
       next = dropped.state;
@@ -5223,20 +5983,35 @@ export function applyDamageConsequences(
 
   // Событие получения урона → реакции (Адское возмездие, Невероятное уклонение…).
   if (dmg > 0) {
+    events.push(...damageEchoEvents(next,dmg,damageType,ctx));
     next = emitEvent({
       kind: 'damage_taken',
+      timing:'after',
       source: 'self',
-      data: { amount: dmg, damageType },
-    }, next, ctx, events, pending);
+      target:ctx.target?.id,
+      data: { amount: dmg, damageType,delivery:opts?.delivery??'other',sourceActorId:ctx.target?.id,targetActorId:ctx.selfId,targetId:ctx.target?.id },
+    }, next, ctx, events, pending,targetRef);
   }
 
   // Падение до 0 HP → триггеры «при 0 HP» (напр. Отчаянная стойкость, срабатывания черт).
   // Гейт «был >0, стал 0» — чтобы не дублировать эмиссию на добивании уже бессознательного.
   if (next.hp.current === 0 && hpBefore.current > 0) {
-    next = emitEvent({ kind: 'reduced_to_0_hp', source: 'self' }, next, ctx, events, pending);
+    next = emitEvent({ kind: 'reduced_to_0_hp', source: 'self',data:{losesConsciousness:!collectLifePolicies(next,passivesFromCtx(ctx),ctx.character).remainConsciousAtZero} }, next, ctx, events, pending);
+  }
+  const lifePolicy=collectLifePolicies(next,passivesFromCtx(ctx),ctx.character);
+  if (dmg>0 && hpBefore.current===0) {
+    next={...next,deathSaves:applyDamageAtZero(next.deathSaves??emptyDeathSaves(),opts?.crit,lifePolicy).next};
+    for (const bundle of zeroHpLifeConsequences(next,lifePolicy,'damage')) {
+      next=applyPayloads(bundle.payloads,next,ctx,events,bundle.source,'main');
+    }
+  }
+  if (immediateDeathSaveRequired({...state,hp:hpBefore},next,lifePolicy)) {
+    next={...next,firedThisTurn:[...(next.firedThisTurn??[]).filter(id=>id!=='system:immediate-death-save-due'),
+      'system:immediate-death-save-due']};
   }
 
-  return { state: next, events, ...(pending.length ? { pendingReactions: pending } : {}) };
+  return { state: next, events, ...(pending.length ? { pendingReactions: pending } : {}),
+    ...(targetRef.mutated?{targetState:targetRef.state}:{}) };
 }
 
 function activePayloadEntries(state: RuntimeState, kind: string): Array<{

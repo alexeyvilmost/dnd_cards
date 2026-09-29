@@ -1,3 +1,5 @@
+import {auraDifficultStep} from './auraTerrain';
+import {actorHasConsciousVitality} from '../engine/lifePolicies';
 import {
   combatRelation,
   TACTICAL_CELL_FT,
@@ -8,6 +10,9 @@ import {
   type SoloCombatState,
 } from './types';
 import { breakdownValue } from '../engine/breakdown';
+import {collectModifiers,foldModifiers} from '../engine/modifiers';
+import {projectRuntimeCharacter,runtimeMovementSpeeds} from '../engine/runtimeCharacterProjection';
+import {actorLongJumpFt} from './jump';
 import type { ActorState } from '../rules-core/domain';
 import { activeConditionWorldFactValues } from '../engine/conditions';
 import {actorFootprint, footprintCells, footprintFits, footprintDistanceFt} from './footprint';
@@ -38,28 +43,30 @@ export function actorDistanceFt(state: Pick<SoloCombatState, 'tokens' | 'world'>
 /** Effective tactical speed, including generic active/passive speed modifiers. */
 export function effectiveActorSpeedFt(actor: ActorState): number {
   const value = breakdownValue(
-    'speed', actor.character, actor.runtime, actor.passives ?? [],
+    'speed', projectRuntimeCharacter(actor.character,actor.runtime), actor.runtime, actor.passives ?? [],
   ).value;
   return Number.isFinite(value) ? Math.max(0, value) : 0;
 }
 
-const MOVEMENT_MODES: CombatMovementMode[] = ['walk', 'climb', 'fly', 'swim', 'burrow'];
+const MOVEMENT_MODES: CombatMovementMode[] = ['walk', 'climb', 'fly', 'swim', 'burrow','jump'];
 
 /** Every speed declared by the pinned familiar stat block. Ordinary actors
  * currently expose their already projected walking speed. */
 export function combatActorMovementSpeeds(actor: ActorState): Record<CombatMovementMode, number> {
   const walk = effectiveActorSpeedFt(actor);
   const declared = actor.familiarMetadata?.speeds;
+  const granted=runtimeMovementSpeeds(actor.character,actor.runtime,actor.passives??[],walk);
   return Object.fromEntries(MOVEMENT_MODES.map((mode) => [
     mode,
-    mode === 'walk' ? walk : Math.max(0, Number(declared?.[mode] ?? 0)),
+    mode==='jump'?(Number.isFinite(actor.character.abilityScores?.str)?walk:0):mode === 'walk' ? walk : Math.max(0, Number(declared?.[mode] ?? 0),granted[mode]??0),
   ])) as Record<CombatMovementMode, number>;
 }
 
 export function combatActorMovementMode(
-  state: Pick<SoloCombatState, 'world' | 'movementModeByActor'>,
+  state: Pick<SoloCombatState, 'world' | 'movementModeByActor'> & Partial<Pick<SoloCombatState,'pendingAdditionalMovement'>>,
   actorId: string,
 ): CombatMovementMode {
+  if(state.pendingAdditionalMovement?.actorId===actorId && state.pendingAdditionalMovement.traversal==='jump') return 'jump';
   const selected = state.movementModeByActor?.[actorId] ?? 'walk';
   const actor = state.world.actors[actorId];
   return actor && combatActorMovementSpeeds(actor)[selected] > 0 ? selected : 'walk';
@@ -67,7 +74,7 @@ export function combatActorMovementMode(
 
 /** Tactical speed also includes encounter relations such as being grappled. */
 export function effectiveCombatActorSpeedFt(
-  state: Pick<SoloCombatState, 'world' | 'movementModeByActor'>,
+  state: Pick<SoloCombatState, 'world' | 'movementModeByActor'> & Partial<Pick<SoloCombatState,'pendingAdditionalMovement'>>,
   actorId: string,
 ): number {
   const actor = state.world.actors[actorId];
@@ -75,13 +82,14 @@ export function effectiveCombatActorSpeedFt(
   const grappled = Object.values(state.world.grapples ?? {}).some((grapple) => (
     grapple.targetActorId === actorId
   ));
-  return grappled ? 0 : combatActorMovementSpeeds(actor)[combatActorMovementMode(state, actorId)];
+  return grappled ? 0 : state.pendingAdditionalMovement?.actorId===actorId&&state.pendingAdditionalMovement.traversal==='jump'
+    ? effectiveActorSpeedFt(actor) : combatActorMovementSpeeds(actor)[combatActorMovementMode(state, actorId)];
 }
 
 export function occupiedPositions(state: Pick<SoloCombatState, 'tokens' | 'world'> & BoardState, exceptActorId?: string): Set<string> {
-  return new Set([...boardObstacles(state), ...Object.values(state.tokens).flatMap((token) => {
+  return new Set([...boardObstacles(state,exceptActorId?state.world.actors[exceptActorId]:undefined), ...Object.values(state.tokens).flatMap((token) => {
     const actor = state.world.actors[token.actorId];
-    if (token.actorId === exceptActorId || !actor || actor.runtime.hp.current <= 0) return [];
+    if (token.actorId === exceptActorId || token.attachedToActorId || !actor || !actorHasConsciousVitality(actor)) return [];
     return footprintCells(token.position, actorFootprint(actor, state)).map(p => `${p.x}:${p.y}`);
   })]);
 }
@@ -93,7 +101,7 @@ export function canOccupyPosition(state: Pick<SoloCombatState, 'tokens' | 'world
 
 /** Exact destination set accepted by the current five-foot tactical movement rule. */
 export function reachablePositions(
-  state: Pick<SoloCombatState, 'tokens' | 'world' | 'combatAreas' | 'movementModeByActor'> & BoardState,
+  state: Pick<SoloCombatState, 'tokens' | 'world' | 'combatAreas' | 'movementModeByActor'|'recentStraightMovementByActor'> & Partial<Pick<SoloCombatState,'pendingAdditionalMovement'>> & BoardState,
   actorId: string,
   maximumFeet: number,
 ): GridPosition[] {
@@ -109,7 +117,7 @@ export interface TacticalRoute {
 /** Bounded Dijkstra search over the 120-cell board. Every returned step is
  * adjacent and unoccupied; cost matches the common movement executor per step. */
 export function reachableRoutes(
-  state: Pick<SoloCombatState, 'tokens' | 'world' | 'combatAreas' | 'movementModeByActor'> & BoardState,
+  state: Pick<SoloCombatState, 'tokens' | 'world' | 'combatAreas' | 'movementModeByActor'|'recentStraightMovementByActor'> & Partial<Pick<SoloCombatState,'pendingAdditionalMovement'>> & BoardState,
   actorId: string,
   maximumFeet: number,
   preferredDestination?: GridPosition,
@@ -119,12 +127,35 @@ export function reachableRoutes(
   if (!origin || !actor || maximumFeet < 5 || !Number.isFinite(maximumFeet)) return [];
   const occupied = occupiedPositions(state, actorId);
   const size = actorFootprint(actor, state);
+  if(combatActorMovementMode(state,actorId)==='jump'){
+    if(actorMustCrawl(actor))return [];
+    const round=state.world.scene?.mode==='encounter'?state.world.scene.round:0;
+    return boardCells(state).flatMap(destination=>{
+      const distance=gridDistanceFt(origin,destination);
+      if(!distance||distance>maximumFeet||distance>(state.pendingAdditionalMovement?.actorId===actorId&&state.pendingAdditionalMovement.traversal==='jump'?state.pendingAdditionalMovement.remainingFt:actorLongJumpFt(actor,origin,destination,state.recentStraightMovementByActor?.[actorId],round))
+        ||!canOccupyPosition(state,actorId,destination))return [];
+      let previous=origin;
+      for(let step=1;step<=distance/5;step++){
+        const cell={x:Math.round(origin.x+(destination.x-origin.x)*step/(distance/5)),y:Math.round(origin.y+(destination.y-origin.y)*step/(distance/5))};
+        if(!terrainStepFits(state,previous,cell,size,actor))return [];
+        previous=cell;
+      }
+      return [{destination,path:[destination],costFt:distance}];
+    });
+  }
   const {width,height}=boardDimensions(state);
   const key = (p: GridPosition) => `${p.x}:${p.y}`;
-  const difficult = new Set(Object.values(state.combatAreas ?? {}).flatMap(area =>
-    area.difficultTerrain ? area.cells.map(key) : []));
+  const difficult = new Map<string, number>();
+  for (const area of Object.values(state.combatAreas ?? {})) {
+    if (!area.difficultTerrain) continue;
+    for (const cell of area.cells) difficult.set(key(cell),
+      Math.max(difficult.get(key(cell)) ?? 1, area.movementCostMultiplier ?? 2));
+  }
   const flies = combatActorMovementMode(state, actorId) === 'fly';
   const crawl = Number(!flies && actorMustCrawl(actor));
+  const difficultModifiers=collectModifiers(actor.runtime,actor.passives??[],{
+    roll:'movement_cost',filter:{terrain:'difficult'},evalCtx:{state:actor.runtime,character:actor.character},
+  });
   // Equal-cost routes minimize geometric length BEFORE deviation from the ray.
   // Otherwise rounding a blocker can add a down/up zigzag to hug that ray.
   // Costs remain identical to the executor.
@@ -151,9 +182,11 @@ export function reachableRoutes(
       if (dx === 0 && dy === 0) continue;
       const destination = {x: current.destination.x + dx, y: current.destination.y + dy};
       if (!footprintFits(destination, size, occupied, width, height)
-        || !terrainStepFits(state, current.destination, destination, size)) continue;
-      const costFt = current.costFt + 5 * (1 + crawl
-        + Number(!flies && [...footprintCells(current.destination, size), ...footprintCells(destination, size)].some(p => difficult.has(key(p)))));
+        || !terrainStepFits(state, current.destination, destination, size,actor)) continue;
+      const areaMultiplier=Math.max(1,...[...footprintCells(current.destination,size),...footprintCells(destination,size)]
+        .map(p=>difficult.get(key(p))??1));
+      const multiplier=!flies?Math.max(areaMultiplier,auraDifficultStep(state,actorId,current.destination,destination)?2:1):1;
+      const costFt=current.costFt+5*(crawl+(multiplier>1?Math.max(1,foldModifiers(multiplier,difficultModifiers).value):1));
       if (costFt > maximumFeet) continue;
       const route: RankedRoute = {destination, costFt, path: [...current.path, destination],
         deviation: current.deviation + linePenalty(destination),
@@ -424,7 +457,7 @@ export function areaActorIds(input: {
   const allowedRelations = input.action.targeting?.allowedRelations;
   return Object.values(input.state.tokens).flatMap((token) => {
     const actor = input.state.world.actors[token.actorId];
-    if (!actor || actor.runtime.hp.current <= 0) return [];
+    if (token.attachedToActorId || !actor || !actorHasConsciousVitality(actor)) return [];
     const relation = combatRelation(input.state, input.sourceActorId, token.actorId);
     if (allowedRelations?.length && !allowedRelations.includes(relation)) return [];
     // areaPositionsForAction already clips every occupied cell against solid

@@ -1,4 +1,6 @@
 import {gridDistanceFt} from '../solo-combat/tacticalGrid';
+import {selectCombatFacing} from '../solo-combat/engine';
+import type {CombatFacing} from '../solo-combat/facing';
 import {bindCombatWorldInputFacts} from '../solo-combat/worldInput';
 import {boardDimensions, terrainSight} from '../solo-combat/boardGeometry';
 import type { DecisionResponse } from '../rules-core/domain';
@@ -11,7 +13,7 @@ import {
   resolveCombatDeathSave,
   finalizeCombatOutcome,
   moveCombatDancingLights, revealCombatMagicAura, moveActorAlongRoute, resolveD20Interrupt, resolvePlayerReaction,
-  resolvePlayerShoveOutcome, resolvePlayerSavingThrow, resolveSoloCombatAlertSwap, resolveSoloCombatInterception,
+  resolvePlayerSlotRecovery, resolvePlayerActionCostPolicy, resolvePlayerShoveOutcome, resolvePlayerSavingThrow, resolveSoloCombatAlertSwap, resolveSoloCombatInterception,
   resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectCombatMovementMode, standActor,
 } from '../solo-combat/engine';
 import { isPlayerControlledCombatActor, type CombatMovementMode, type GridPosition, type SoloCombatState } from '../solo-combat/types';
@@ -33,12 +35,15 @@ export type RoguelikeCombatIntent =
   | {type: 'approach_action'; actorId: string; actionId: string; targetActorId: string;
       choices?: ActionInput['choices']}
   | {type: 'movement_mode'; actorId: string; mode: CombatMovementMode}
+  | {type:'facing';actorId:string;facing:CombatFacing}
   | {type: 'familiar_touch'; actorId: string; familiarActorId: string; spellActionId: string;
       targetActorId: string; choices?: ActionInput['choices']}
   | {type: 'decline_movement'; actorId: string}
   | {type: 'stand'; actorId: string}
   | {type: 'escape_grapple'; actorId: string; grappleId: string; skill: 'athletics' | 'acrobatics'}
   | {type: 'end_turn'; actorId: string}
+  | {type:'action_cost_policy';policyId:string|null}
+  | {type:'slot_recovery';slotLevels:number[]|null}
   | {type: 'shove_outcome'; outcome: Extract<DecisionResponse, {kind: 'shove_outcome'}>['outcome']}
   | {type: 'reaction'; response: Extract<DecisionResponse, {kind: 'reaction'}>}
   | {type: 'saving_throw'; selectedAbility?: Extract<DecisionResponse, {kind: 'roll'}>['selectedAbility']; boonEffectId?: string}
@@ -95,7 +100,7 @@ export function stepRoguelikeCombat(
     if (!isPlayerControlledCombatActor(state, actorId)) throw new Error('Нельзя управлять этим участником боя');
   };
   if ('actorId' in intent && intent.actorId !== null) requireOwned(intent.actorId);
-  const proactive = new Set(['action', 'approach_action', 'move', 'movement_mode', 'familiar_touch', 'stand', 'condition_action', 'escape_grapple', 'end_turn', 'dancing_lights', 'detect_magic', 'remote_manipulator', 'boon']);
+  const proactive = new Set(['action', 'approach_action', 'move', 'movement_mode', 'facing', 'familiar_touch', 'stand', 'condition_action', 'escape_grapple', 'end_turn', 'dancing_lights', 'detect_magic', 'remote_manipulator', 'boon']);
   const additionalMove = intent.type === 'move' && state.pendingAdditionalMovement?.actorId === intent.actorId;
   if (proactive.has(intent.type) && 'actorId' in intent
     && (hasDecision(additionalMove ? {...state, pendingAdditionalMovement: undefined} : state)
@@ -143,6 +148,7 @@ export function stepRoguelikeCombat(
     }
     case 'move': state = moveActorAlongRoute({state, actorId: intent.actorId, destination: intent.destination, rng}); break;
     case 'movement_mode': state = selectCombatMovementMode(state, intent.actorId, intent.mode); break;
+    case 'facing':state=selectCombatFacing(state,intent.actorId,intent.facing);break;
     case 'familiar_touch': state = executeCombatTouchSpellThroughFamiliar({
       state, ownerActorId: intent.actorId, familiarActorId: intent.familiarActorId,
       actionId: intent.spellActionId, targetActorId: intent.targetActorId,
@@ -158,6 +164,8 @@ export function stepRoguelikeCombat(
       if (hasDecision(state) || activeActor(state).id !== intent.actorId) throw new Error('Сначала завершите текущее решение');
       state = advanceTurn(state, rng);
       break;
+    case 'slot_recovery': state=resolvePlayerSlotRecovery(state,intent.slotLevels,rng);break;
+    case 'action_cost_policy': state=resolvePlayerActionCostPolicy(state,intent.policyId,rng);break;
     case 'shove_outcome': state = resolvePlayerShoveOutcome(state, intent.outcome, rng); break;
     case 'reaction': state = resolvePlayerReaction(state, intent.response, rng); break;
     case 'saving_throw':

@@ -121,8 +121,8 @@ const CharacterSheetV2 = ({
     ...learnedActions.filter(({ action }) => !assembled.actions.some(entry => entry.action.id === action.id)),
   ];
   const resourceNames = new Map([
-    ...abilityActions.map(({ action }) => [actionUsesKey(action.card_number || action.id), action.name] as const),
-    ...assembled.effects.map(({ effect }) => [actionUsesKey(effect.card_number || effect.id), effect.name] as const),
+    ...abilityActions.map(({ action }) => [actionUsesKey(action.card_number || action.id, action.mechanics), action.name] as const),
+    ...assembled.effects.map(({ effect }) => [actionUsesKey(effect.card_number || effect.id, effect.mechanics), effect.name] as const),
   ]);
   const [hpOpen, setHpOpen] = useState(false);
   const [longRestOpen, setLongRestOpen] = useState(false);
@@ -206,7 +206,7 @@ const CharacterSheetV2 = ({
       plan.push(...plannedD20BonusDice(collected.rules, label, 'check'));
       const inspired = influencedSheetRoll(rollKind === 'saving_throw' ? 'save' : 'check',
         {advantage: collected.advantage, hasAdvantage: 'hasAdvantage' in collected ? collected.hasAdvantage : false, hasDisadvantage: 'hasDisadvantage' in collected ? collected.hasDisadvantage : false, modifiers: [...parts], rules: collected.rules}, checkState, passives, Math.random,
-        {ability:typeof filter?.ability === 'string' ? filter.ability : undefined,character:sheetCtx ? {...sheetCtx,knownCards:[...equipCards.values()],attunedIds:readAttunedIds(character.turn_state)} : undefined});
+        {ability:typeof filter?.ability === 'string' ? filter.ability : undefined,skill:typeof filter?.skill === 'string' ? filter.skill : undefined,character:sheetCtx ? {...sheetCtx,knownCards:[...equipCards.values()],attunedIds:readAttunedIds(character.turn_state)} : undefined});
       const decision = await diceDialog.request(
         plan,
         label,

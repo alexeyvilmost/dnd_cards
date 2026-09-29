@@ -29,7 +29,7 @@ export interface CombatBeat {
   actionName: string;
   actionId?: string;
   sourceEntryId?: string;
-  rollKind?: 'attack' | 'save' | 'check';
+  rollKind?: 'attack' | 'save' | 'check' | 'damage' | 'healing' | 'other';
   saveGroupId?: string;
   saveRows?: CombatBeat[];
   rollerName?: string;

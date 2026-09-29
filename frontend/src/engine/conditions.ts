@@ -55,6 +55,7 @@ export interface ConditionThresholdRule {
 
 export interface ConditionRule {
   id: string;
+  polarity?: 'negative' | 'positive' | 'neutral';
   label: string;
   /** Stable DB effect identity used by sheets and combat hover cards. */
   entityRef?: {
@@ -129,14 +130,14 @@ const ROLLER_CANNOT_SEE_OWNER: Dict = {
  * rule through registerConditions; these values keep offline/recovery mode exact). */
 export const BUILTIN_CONDITION_RULES: Record<string, ConditionRule> = {
   blinded: {
-    id: 'blinded', label: 'Ослеплён',
+    id: 'blinded', polarity: 'negative', label: 'Ослеплён',
     modifiers: [AUTOFAIL_CHECK('sight'), ATTACK(), ADV_AGAINST],
     worldFacts: {
       cannot_see: true,
     },
   },
   charmed: {
-    id: 'charmed', label: 'Очарован',
+    id: 'charmed', polarity: 'negative', label: 'Очарован',
     modifiers: [
       // The holder cannot attack/damage the exact source of this condition.
       { applies_to: { roll: 'harm' }, op: 'deny', when: [TARGET_IS_SOURCE] },
@@ -148,11 +149,11 @@ export const BUILTIN_CONDITION_RULES: Record<string, ConditionRule> = {
     ],
   },
   deafened: {
-    id: 'deafened', label: 'Оглохший',
+    id: 'deafened', polarity: 'negative', label: 'Оглохший',
     modifiers: [AUTOFAIL_CHECK('hearing')],
   },
   exhaustion: {
-    id: 'exhaustion', label: 'Истощение',
+    id: 'exhaustion', polarity: 'negative', label: 'Истощение',
     // One persisted condition instance == one level. Repeating these additive
     // payloads naturally gives -2/-5 per level without an Exhaustion branch.
     modifiers: [
@@ -164,7 +165,7 @@ export const BUILTIN_CONDITION_RULES: Record<string, ConditionRule> = {
     thresholds: [{ atLevel: 6, outcome: 'death' }],
   },
   frightened: {
-    id: 'frightened', label: 'Испуган',
+    id: 'frightened', polarity: 'negative', label: 'Испуган',
     modifiers: [
       ATTACK({ when: [SOURCE_VISIBLE] }),
       { applies_to: { roll: 'ability_check' }, op: 'disadvantage', when: [SOURCE_VISIBLE] },
@@ -177,18 +178,18 @@ export const BUILTIN_CONDITION_RULES: Record<string, ConditionRule> = {
     ],
   },
   grappled: {
-    id: 'grappled', label: 'Схвачен',
+    id: 'grappled', polarity: 'negative', label: 'Схвачен',
     modifiers: [ATTACK({ when: [TARGET_IS_NOT_SOURCE] }), SPEED0],
   },
   incapacitated: {
-    id: 'incapacitated', label: 'Недееспособен',
+    id: 'incapacitated', polarity: 'negative', label: 'Недееспособен',
     modifiers: [
       INIT('disadvantage'), DENY('action'), DENY('bonus_action'), DENY('reaction'),
       DENY('concentration'), DENY('speech'),
     ],
   },
   invisible: {
-    id: 'invisible', label: 'Невидим',
+    id: 'invisible', polarity: 'positive', label: 'Невидим',
     modifiers: [
       { applies_to: { roll: 'attack' }, op: 'advantage', when: [TARGET_CANNOT_SEE_OWNER] },
       {
@@ -203,12 +204,12 @@ export const BUILTIN_CONDITION_RULES: Record<string, ConditionRule> = {
     note: 'Нельзя выбрать целью эффекта, требующего видеть цель, если создатель эффекта не способен вас видеть.',
   },
   paralyzed: {
-    id: 'paralyzed', label: 'Парализован',
+    id: 'paralyzed', polarity: 'negative', label: 'Парализован',
     modifiers: [ADV_AGAINST, SPEED0, AUTOFAIL('str'), AUTOFAIL('dex'), AUTOCRIT_WITHIN_5],
     includes: ['incapacitated'],
   },
   petrified: {
-    id: 'petrified', label: 'Окаменел',
+    id: 'petrified', polarity: 'negative', label: 'Окаменел',
     modifiers: [ADV_AGAINST, SPEED0, AUTOFAIL('str'), AUTOFAIL('dex')],
     payloads: [
       { kind: 'resistance', damage_type: 'all', value: 'resistance' },
@@ -224,11 +225,11 @@ export const BUILTIN_CONDITION_RULES: Record<string, ConditionRule> = {
     note: 'Трансформация в вещество, десятикратный вес и прекращение старения остаются явными фактами мира.',
   },
   poisoned: {
-    id: 'poisoned', label: 'Отравлен',
+    id: 'poisoned', polarity: 'negative', label: 'Отравлен',
     modifiers: [ATTACK(), { applies_to: { roll: 'ability_check' }, op: 'disadvantage' }],
   },
   prone: {
-    id: 'prone', label: 'Распластан',
+    id: 'prone', polarity: 'negative', label: 'Распластан',
     modifiers: [ATTACK(), ADV_AGAINST_WITHIN_5, DIS_AGAINST_BEYOND_5],
     worldFacts: {
       movement_options: ['crawl', 'stand', 'magic'],
@@ -237,16 +238,16 @@ export const BUILTIN_CONDITION_RULES: Record<string, ConditionRule> = {
     note: 'Можно ползти, потратить половину Скорости на вставание или прекратить состояние магией.',
   },
   restrained: {
-    id: 'restrained', label: 'Опутан',
+    id: 'restrained', polarity: 'negative', label: 'Опутан',
     modifiers: [ATTACK(), { applies_to: { roll: 'saving_throw', filter: { ability: 'dex' } }, op: 'disadvantage' }, ADV_AGAINST, SPEED0],
   },
   stunned: {
-    id: 'stunned', label: 'Ошеломлён',
+    id: 'stunned', polarity: 'negative', label: 'Ошеломлён',
     modifiers: [ADV_AGAINST, AUTOFAIL('str'), AUTOFAIL('dex')],
     includes: ['incapacitated'],
   },
   unconscious: {
-    id: 'unconscious', label: 'Без сознания',
+    id: 'unconscious', polarity: 'negative', label: 'Без сознания',
     // PHB 2024 does NOT grant Paralyzed. Its mechanically similar clauses are
     // declared directly so predicates for Paralyzed never match Unconscious.
     modifiers: [ADV_AGAINST, SPEED0, AUTOFAIL('str'), AUTOFAIL('dex'), AUTOCRIT_WITHIN_5],

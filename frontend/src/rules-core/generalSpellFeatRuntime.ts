@@ -42,11 +42,38 @@ export function applyGeneralSpellFeatActionRules(
   action: RuleActionDefinition,
   passives: readonly Dict[],
 ): RuleActionDefinition {
-  if (!isSpellAttack(action) || !action.targeting || action.targeting.rangeFt < 10) return action;
+  const teleportBonuses=passives.flatMap(payloads).filter(payload=>payload.kind==='spell_teleport_range')
+    .map(payload=>Number(payload.bonus_ft)).filter(value=>Number.isFinite(value)&&value>0);
+  const teleportBonus=teleportBonuses.reduce((sum,value)=>sum+value,0);
+  const hasTeleport=action.kind==='spell'&&payloads(action.mechanics).some(payload=>payload.kind==='movement'&&payload.value==='teleport');
+  let projected=action;
+  if(hasTeleport&&teleportBonus>0){
+    projected=clone(action);
+    const apply=(value:unknown):unknown=>{
+      if(Array.isArray(value))return value.map(apply);
+      const row=record(value);
+      if(!row)return value;
+      return Object.fromEntries(Object.entries(row).map(([key,entry])=>{
+      if(key==='distance'&&row.kind==='movement'&&row.value==='teleport'
+        &&(typeof entry==='number'||typeof entry==='string'&&/^\d+$/.test(entry))){
+        const distance=Number(entry);
+        if(Number.isSafeInteger(distance)&&distance>=0)return [key,distance+teleportBonus];
+      }
+      return [key,apply(entry)];
+    }));
+    };
+    projected.mechanics=apply(projected.mechanics) as RuleActionDefinition['mechanics'];
+    if(projected.targeting&&projected.targeting.rangeFt>0){
+      projected.targeting={...projected.targeting,rangeFt:projected.targeting.rangeFt+teleportBonus};
+      const targeting=record(projected.mechanics.targeting);
+      if(targeting&&typeof targeting.range_ft==='number')projected.mechanics.targeting={...targeting,range_ft:targeting.range_ft+teleportBonus};
+    }
+  }
+  if (!isSpellAttack(projected) || !projected.targeting || projected.targeting.rangeFt < 10) return projected;
   const rangeRule = rule(passives, 'spell_sniper_range_ft');
   const bonus = Number(rangeRule?.value ?? 0);
-  if (!Number.isFinite(bonus) || bonus <= 0) return action;
-  const next = clone(action);
+  if (!Number.isFinite(bonus) || bonus <= 0) return projected;
+  const next = clone(projected);
   next.targeting = { ...next.targeting!, rangeFt: next.targeting!.rangeFt + bonus };
   const targeting = record(next.mechanics.targeting);
   if (targeting && typeof targeting.range_ft === 'number') {

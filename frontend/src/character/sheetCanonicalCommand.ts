@@ -7,6 +7,7 @@ import type {
   WorldState,
 } from '../rules-core/domain';
 import { migrateWorldState } from '../rules-core/worldMigration';
+import {targetSlotBounds} from '../rules-core/actionTargeting';
 import type { WorldObjectState } from '../rules-core/worldObjects';
 
 export type SheetSpellCastDeclaration = {
@@ -28,6 +29,7 @@ export interface SheetCanonicalCommandInput {
   factsByTarget?: Record<string, SpatialFacts>;
   /** Board observations for every Protection owner; required only in encounter transport. */
   protectionCandidates?: ProtectionReactionCandidateFacts[];
+  protectionCandidatesByTarget?: Record<string, ProtectionReactionCandidateFacts[]>;
   /** Explicit world-object declaration selected and confirmed in the sheet form. */
   worldInput?: ActionWorldInput;
   /** Scenario objects declared by the user before dispatch; committed only with an accepted action. */
@@ -62,6 +64,7 @@ function nonBlank(value: unknown): value is string {
 function assertTargetDeclaration(
   action: RuleActionDefinition,
   input: SheetCanonicalCommandInput,
+  actorLevel?: number,
 ): void {
   if (input.sceneMode !== 'exploration' && input.sceneMode !== 'encounter') {
     throw new SheetCanonicalCommandInputError('sceneMode must be explicitly declared');
@@ -73,13 +76,15 @@ function assertTargetDeclaration(
     );
   }
   if (input.targetIds.some((id) => !nonBlank(id))
-    || new Set(input.targetIds).size !== input.targetIds.length) {
-    throw new SheetCanonicalCommandInputError('targetIds must contain unique non-empty actor identities');
+    || (targeting.allowRepeatTargets !== true
+      && new Set(input.targetIds).size !== input.targetIds.length)) {
+    throw new SheetCanonicalCommandInputError('targetIds contain invalid or disallowed repeated actor identities');
   }
-  if (input.targetIds.length < targeting.minTargets
-    || input.targetIds.length > targeting.maxTargets) {
+  const {minTargets,maxTargets}=targetSlotBounds(action,input.spell?.castLevel,actorLevel);
+  if (input.targetIds.length < minTargets
+    || input.targetIds.length > maxTargets) {
     throw new SheetCanonicalCommandInputError(
-      `${action.id} requires ${targeting.minTargets}–${targeting.maxTargets} actor targets`,
+      `${action.id} requires ${minTargets}–${maxTargets} actor target slots`,
     );
   }
   const facts = input.factsByTarget ?? {};
@@ -180,7 +185,7 @@ export function buildSheetCanonicalCommand(input: {
       `${action.id} cannot accept a Pact Blade declaration`,
     );
   }
-  assertTargetDeclaration(action, declaration);
+  assertTargetDeclaration(action, declaration, world.actors[actorId]?.character.level);
   const spell = spellDeclaration(action, declaration.spell);
   return {
     ...common,
@@ -192,6 +197,9 @@ export function buildSheetCanonicalCommand(input: {
       : {}),
     ...(declaration.protectionCandidates
       ? { protectionCandidates: clone(declaration.protectionCandidates) }
+      : {}),
+    ...(declaration.protectionCandidatesByTarget
+      ? { protectionCandidatesByTarget: clone(declaration.protectionCandidatesByTarget) }
       : {}),
     ...(declaration.choices ? { choices: clone(declaration.choices) } : {}),
     ...(spell ? { spell } : {}),

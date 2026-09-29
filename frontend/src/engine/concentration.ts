@@ -4,8 +4,15 @@
  * недееспособность прерывает концентрацию.
  */
 import type { ActiveEffectEntry, EngineEvent, RuntimeState } from '../mvp/contracts';
+import {payloadsOf} from './mechanicsView';
 
 type Dict = Record<string, unknown>;
+export function concentrationProtectedUntilDeath(state:RuntimeState,passives:readonly Dict[]=[]):boolean{
+  if(state.deathSaves?.dead===true)return false;
+  return [...passives,...state.activeEffects.filter(entry=>entry.roundsLeft===undefined||entry.roundsLeft>0).map(entry=>entry.mechanics)]
+    .filter(mechanics=>!(mechanics.activation as Dict|undefined)?.mode||(mechanics.activation as Dict).mode==='passive')
+    .flatMap(payloadsOf).some(payload=>payload.kind==='concentration_policy'&&payload.loss_only_on_death===true);
+}
 
 export function concentrationEntry(state: RuntimeState): ActiveEffectEntry | null {
   return state.activeEffects.find((e) => (e.mechanics as Record<string, unknown>)?.kind === 'concentration') ?? null;
@@ -63,10 +70,12 @@ export function startConcentration(
   state: RuntimeState,
   spellName: string,
   effectIds: string[] = [],
+  passives:readonly Dict[]=[],
 ): { state: RuntimeState; events: EngineEvent[] } {
   const events: EngineEvent[] = [];
   let next = state;
   const prev = concentrationEntry(state);
+  if(prev&&concentrationProtectedUntilDeath(state,passives))throw new Error('Действующий источник разрешает потерять концентрацию только при смерти');
   if (prev) {
     const removed = removeConcentrationGroup(next, prev, new Set(effectIds));
     next = removed.state;
@@ -95,7 +104,9 @@ export function startConcentration(
 export function dropConcentration(
   state: RuntimeState,
   reason: string,
+  passives:readonly Dict[]=[],
 ): { state: RuntimeState; events: EngineEvent[] } {
+  if(concentrationProtectedUntilDeath(state,passives))return {state,events:[{type:'narrative',text:'Концентрация сохраняется: действующий источник разрешает потерять её только при смерти.'}]};
   const prev = concentrationEntry(state);
   if (!prev) return { state, events: [] };
   const removed = removeConcentrationGroup(state, prev);

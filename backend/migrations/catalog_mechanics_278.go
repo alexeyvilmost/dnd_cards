@@ -43,12 +43,14 @@ type catalogAudit278Manifest struct {
 	SchemaVersion        int                     `json:"schema_version"`
 	AuditID              string                  `json:"audit_id"`
 	SourceSnapshotSHA256 string                  `json:"source_snapshot_sha256"`
+	ExpectedActiveCards  int                     `json:"expected_active_cards,omitempty"`
 	Entities             []catalogAudit278Entity `json:"entities"`
 	Guards               []catalogAudit278Entity `json:"guards,omitempty"`
 }
 
 var catalogAudit278Tables = map[string]string{
 	"card": "cards", "feat": "feats", "spell": "spells", "action": "actions", "effect": "effects", "resource": "resources",
+	"monster": "monsters",
 }
 
 // These are database columns, not API aliases. TEXT containing JSON must stay
@@ -60,6 +62,17 @@ var catalogAudit278Columns = map[string]string{
 	"effect":   "price script weight properties repeatable effect_type condition_description",
 	"action":   "price script weight properties distance recharge resource action_type recharge_custom",
 	"resource": "category recharge sort_order",
+	"monster":  "slug size creature_type alignment challenge_rating armor_class max_hp speed initiative_bonus proficiency_bonus abilities action_ids effect_ids ai token_url token_storage_id",
+}
+
+func catalogAuditReferenceColumn(kind string) string {
+	if kind == "resource" {
+		return "resource_id"
+	}
+	if kind == "monster" {
+		return "slug"
+	}
+	return "card_number"
 }
 
 func catalogAudit278ColumnAllowed(kind, column string, insert bool) bool {
@@ -128,7 +141,7 @@ func validateCatalogAudit278(manifests []catalogAudit278Manifest) error {
 	identities, references, audits := map[string]bool{}, map[string]bool{}, map[string]bool{}
 	snapshot := ""
 	for _, manifest := range manifests {
-		if manifest.SchemaVersion != 1 || strings.TrimSpace(manifest.AuditID) == "" || !catalogAudit278SHA(manifest.SourceSnapshotSHA256) || audits[manifest.AuditID] {
+		if manifest.SchemaVersion != 1 || strings.TrimSpace(manifest.AuditID) == "" || !catalogAudit278SHA(manifest.SourceSnapshotSHA256) || audits[manifest.AuditID] || manifest.ExpectedActiveCards < 0 {
 			return fmt.Errorf("invalid/duplicate catalog audit manifest %q", manifest.AuditID)
 		}
 		audits[manifest.AuditID] = true
@@ -219,6 +232,17 @@ func applyCatalogMechanics278(db *sql.DB) error {
 }
 
 func applyCatalogAudit278(db *sql.DB, manifests []catalogAudit278Manifest) error {
+	return applyCatalogAuditVersion(db, manifests, 278, catalogMechanics278Version)
+}
+
+// Later completion batches share the guarded transaction, but own independent
+// receipts and archives. Applied manifests and human edits remain immutable.
+func applyCatalogAuditVersion(db *sql.DB, manifests []catalogAudit278Manifest, number int, version string) error {
+	if number < 278 || !strings.HasPrefix(version, fmt.Sprintf("%d_", number)) {
+		return fmt.Errorf("invalid catalog migration identity")
+	}
+	transition := fmt.Sprintf("catalog_mechanics_%d_transition", number)
+	archive := fmt.Sprintf("catalog_mechanics_%d_archive", number)
 	if err := validateCatalogAudit278(manifests); err != nil {
 		return err
 	}
@@ -233,17 +257,17 @@ func applyCatalogAudit278(db *sql.DB, manifests []catalogAudit278Manifest) error
 		return err
 	}
 	defer tx.Rollback()
-	if _, err = tx.Exec(`SELECT pg_advisory_xact_lock(278,1);
-	CREATE TABLE IF NOT EXISTS catalog_mechanics_278_transition (
+	if _, err = tx.Exec(fmt.Sprintf(`SELECT pg_advisory_xact_lock(%d,1);
+	CREATE TABLE IF NOT EXISTS %s (
 		version text PRIMARY KEY, manifest_sha256 text NOT NULL, completed_at timestamptz NOT NULL DEFAULT NOW());
-	CREATE TABLE IF NOT EXISTS catalog_mechanics_278_archive (
+	CREATE TABLE IF NOT EXISTS %s (
 		entity_type text NOT NULL, entity_id uuid NOT NULL, audit_id text NOT NULL,
 		before_fields jsonb, before_support jsonb, patch jsonb NOT NULL, review jsonb NOT NULL,
-		inserted boolean NOT NULL, archived_at timestamptz NOT NULL DEFAULT NOW(), PRIMARY KEY(entity_type,entity_id));`); err != nil {
+		inserted boolean NOT NULL, archived_at timestamptz NOT NULL DEFAULT NOW(), PRIMARY KEY(entity_type,entity_id));`, number, transition, archive)); err != nil {
 		return err
 	}
 	var priorHash string
-	err = tx.QueryRow(`SELECT manifest_sha256 FROM catalog_mechanics_278_transition WHERE version=$1`, catalogMechanics278Version).Scan(&priorHash)
+	err = tx.QueryRow("SELECT manifest_sha256 FROM "+transition+" WHERE version=$1", version).Scan(&priorHash)
 	if err == nil {
 		if priorHash != manifestHash {
 			return fmt.Errorf("completed catalog audit manifest changed")
@@ -302,6 +326,21 @@ func applyCatalogAudit278(db *sql.DB, manifests []catalogAudit278Manifest) error
 			return err
 		}
 	}
+	for _, manifest := range manifests {
+		if manifest.ExpectedActiveCards == 0 {
+			continue
+		}
+		if !tables["cards"] {
+			return fmt.Errorf("active card count guard requires a card table lock")
+		}
+		var actual int
+		if err = tx.QueryRow(`SELECT count(*) FROM cards WHERE deleted_at IS NULL`).Scan(&actual); err != nil {
+			return err
+		}
+		if actual != manifest.ExpectedActiveCards {
+			return fmt.Errorf("active item count changed: expected %d, found %d", manifest.ExpectedActiveCards, actual)
+		}
+	}
 	sort.SliceStable(plan, func(i, j int) bool {
 		return plan[i].entity.EntityType+plan[i].entity.ID < plan[j].entity.EntityType+plan[j].entity.ID
 	})
@@ -322,10 +361,7 @@ func applyCatalogAudit278(db *sql.DB, manifests []catalogAudit278Manifest) error
 				return fmt.Errorf("TEXT/enum patch must remain a JSON string: %s.%s", entity.CardNumber, column)
 			}
 		}
-		refColumn := "card_number"
-		if entity.EntityType == "resource" {
-			refColumn = "resource_id"
-		}
+		refColumn := catalogAuditReferenceColumn(entity.EntityType)
 		rows, queryErr := tx.Query("SELECT to_jsonb(e) FROM "+table+" e WHERE id=$1::uuid OR "+refColumn+"=$2 FOR UPDATE", entity.ID, entity.CardNumber)
 		if queryErr != nil {
 			return queryErr
@@ -424,10 +460,7 @@ func applyCatalogAudit278(db *sql.DB, manifests []catalogAudit278Manifest) error
 			}
 		}
 		if entity.Preimage == nil {
-			refColumn := "card_number"
-			if entity.EntityType == "resource" {
-				refColumn = "resource_id"
-			}
+			refColumn := catalogAuditReferenceColumn(entity.EntityType)
 			for column, value := range map[string]string{"id": entity.ID, refColumn: entity.CardNumber, "name": entity.Name} {
 				patch[column], _ = json.Marshal(value)
 			}
@@ -477,11 +510,11 @@ func applyCatalogAudit278(db *sql.DB, manifests []catalogAudit278Manifest) error
 			beforeSupport = entry.row["support"]
 		}
 		reviewJSON, _ := json.Marshal(entity.Review)
-		if _, err = tx.Exec(`INSERT INTO catalog_mechanics_278_archive(entity_type,entity_id,audit_id,before_fields,before_support,patch,review,inserted) VALUES($1,$2::uuid,$3,$4::jsonb,$5::jsonb,$6::jsonb,$7::jsonb,$8)`, entity.EntityType, entity.ID, entry.audit, string(beforeJSON), string(beforeSupport), string(patchJSON), string(reviewJSON), entity.Preimage == nil); err != nil {
+		if _, err = tx.Exec("INSERT INTO "+archive+`(entity_type,entity_id,audit_id,before_fields,before_support,patch,review,inserted) VALUES($1,$2::uuid,$3,$4::jsonb,$5::jsonb,$6::jsonb,$7::jsonb,$8)`, entity.EntityType, entity.ID, entry.audit, string(beforeJSON), string(beforeSupport), string(patchJSON), string(reviewJSON), entity.Preimage == nil); err != nil {
 			return err
 		}
 	}
-	if _, err = tx.Exec(`INSERT INTO catalog_mechanics_278_transition(version,manifest_sha256) VALUES($1,$2)`, catalogMechanics278Version, manifestHash); err != nil {
+	if _, err = tx.Exec("INSERT INTO "+transition+"(version,manifest_sha256) VALUES($1,$2)", version, manifestHash); err != nil {
 		return err
 	}
 	return tx.Commit()

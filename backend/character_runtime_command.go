@@ -43,6 +43,7 @@ type CharacterRuntimeCommandRulesetRef struct {
 // quantity increases and container moves. Equipment and item transfer remain
 // separate mechanics and cannot be smuggled through a combat transaction.
 type CharacterRuntimeCommandPatch struct {
+	Equipment      *JSONMap           `json:"equipment"`
 	CurrentHP      *int               `json:"current_hp"`
 	InventoryItems *InventoryItemRows `json:"inventory_items"`
 	Resources      *JSONMap           `json:"resources"`
@@ -189,7 +190,7 @@ func validateRuntimeCommandMap(name string, value *JSONMap) error {
 
 func validateRuntimeCommandPatch(patch CharacterRuntimeCommandPatch) error {
 	if patch.CurrentHP == nil && patch.Resources == nil && patch.MaxResources == nil &&
-		patch.InventoryItems == nil && patch.ActiveEffects == nil && patch.TurnState == nil && patch.Currency == nil {
+		patch.InventoryItems == nil && patch.Equipment == nil && patch.ActiveEffects == nil && patch.TurnState == nil && patch.Currency == nil {
 		return invalidRuntimeCommand("participant patch cannot be empty")
 	}
 	if patch.CurrentHP != nil && (*patch.CurrentHP < 0 || *patch.CurrentHP > maxEncounterRuntimeValue) {
@@ -215,6 +216,9 @@ func validateRuntimeCommandPatch(patch CharacterRuntimeCommandPatch) error {
 		}
 	}
 	if err := validateRuntimeCommandInventoryRows(patch.InventoryItems); err != nil {
+		return err
+	}
+	if err := validateRuntimeEquipmentMap(patch.Equipment); err != nil {
 		return err
 	}
 	return nil
@@ -385,7 +389,15 @@ func runtimeCommandUpdates(character CharacterV3, patch CharacterRuntimeCommandP
 		}
 		updates["current_hp"] = *patch.CurrentHP
 	}
-	if patch.InventoryItems != nil {
+	if patch.Equipment != nil {
+		if err := validateRuntimeEquipmentTransition(character, patch); err != nil {
+			return nil, err
+		}
+		updates["equipment"] = patch.Equipment
+		if patch.InventoryItems != nil {
+			updates["inventory_items"] = patch.InventoryItems
+		}
+	} else if patch.InventoryItems != nil {
 		if err := validateRuntimeInventoryConsumption(character.InventoryItems, patch.InventoryItems); err != nil {
 			return nil, err
 		}
@@ -560,6 +572,9 @@ func (cc *CharacterV3Controller) PostCharacterRuntimeCommand(c *gin.Context) {
 		}
 		for _, participant := range request.Participants {
 			character := byID[participant.CharacterID]
+			if err := validateItemEquipmentChange(tx, character, participant.Patch.Equipment); err != nil {
+				return err
+			}
 			if character.CharacterType == "dungeon_crawl" {
 				if len(request.Participants) != 1 {
 					return &characterRuntimeCommandError{

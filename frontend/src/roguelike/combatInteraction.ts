@@ -1,3 +1,4 @@
+import {actorHasConsciousVitality} from '../engine/lifePolicies';
 import type {RoguelikeRun} from './api';
 import type {RoguelikeCombatIntent} from './combatWorker';
 import {combatActionIsAttack, combatApproachRoute, combatMovementRoute,combatActionRangeFt} from '../solo-combat/defaultInteraction';
@@ -6,7 +7,7 @@ import type {SoloCombatState} from '../solo-combat/types';
 type Send = (run: RoguelikeRun, intent: RoguelikeCombatIntent) => Promise<RoguelikeRun>;
 
 function paused(state: SoloCombatState, actorId: string, additional: boolean) {
-  return state.outcome !== 'active' || (state.world.actors[actorId]?.runtime.hp.current ?? 0) <= 0
+  return state.outcome !== 'active' || !actorHasConsciousVitality(state.world.actors[actorId])
     || state.playerMovement || state.pendingMovementStep || state.pendingReachEntry
     || (!additional && state.pendingAdditionalMovement) || state.world.pendingResolution
     || state.pendingD20Interrupt || state.pendingInterception || state.pendingTriggeredAction

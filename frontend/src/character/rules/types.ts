@@ -73,6 +73,8 @@ export interface AbilityMethodCandidate {
 }
 
 export interface CharacterRuleState {
+  /** Original canonical build inputs for revocable item-owned feat grants. */
+  itemFeatRuleInput?: RuleInput;
   version: 1;
   abilities: Partial<AbilityScores>;
   abilityMods: Record<AbilityKey, number>;

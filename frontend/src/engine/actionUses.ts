@@ -35,8 +35,12 @@ export type ActionUsesRecoveryResolution =
   | { status: 'configured'; recovery: ResourceRestRecovery };
 
 /** Ключ виртуального пула: uses_<card_number|id>. */
-export function actionUsesKey(ref: string): string {
-  return `${ACTION_USES_PREFIX}${ref}`;
+export function actionUsesKey(ref: string, mechanics?: Dict | null): string {
+  const uses=mechanics?.uses as Dict|undefined;
+  const pool=uses?.pool;
+  if(pool===undefined)return `${ACTION_USES_PREFIX}${ref}`;
+  if(typeof pool!=='string'||!/^[A-Za-z0-9][A-Za-z0-9_:-]{0,127}$/.test(pool))throw Error('Invalid shared action uses pool');
+  return `${ACTION_USES_PREFIX}shared_${pool}`;
 }
 
 function hasExactKeys(value: Dict, expected: string[]): boolean {
@@ -65,30 +69,24 @@ export function resolveActionUsesRecovery(
   const recoveryRow = recovery as Dict;
   if (!hasExactKeys(recoveryRow, ['long_rest', 'short_rest'])) return { status: 'invalid' };
 
-  const shortRest = recoveryRow.short_rest;
-  const longRest = recoveryRow.long_rest;
-  if (!shortRest || typeof shortRest !== 'object' || Array.isArray(shortRest)
-    || !longRest || typeof longRest !== 'object' || Array.isArray(longRest)) {
-    return { status: 'invalid' };
-  }
-  const shortRestRow = shortRest as Dict;
-  const longRestRow = longRest as Dict;
-  if (!hasExactKeys(shortRestRow, ['amount', 'mode'])
-    || shortRestRow.mode !== 'fixed'
-    || !Number.isSafeInteger(shortRestRow.amount)
-    || Number(shortRestRow.amount) <= 0
-    || !hasExactKeys(longRestRow, ['mode'])
-    || longRestRow.mode !== 'full') {
-    return { status: 'invalid' };
-  }
+  const parsed=parseResourceRestRecovery(recoveryRow);
+  return parsed?{status:'configured',recovery:parsed}:{status:'invalid'};
 
-  return {
-    status: 'configured',
-    recovery: {
-      short_rest: { mode: 'fixed', amount: Number(shortRestRow.amount) },
-      long_rest: { mode: 'full' },
-    },
-  };
+}
+
+/** Strict data decoder shared by action uses and granted spell free uses. */
+export function parseResourceRestRecovery(raw:unknown):ResourceRestRecovery|undefined {
+  if(!raw||typeof raw!=='object'||Array.isArray(raw))return undefined;
+  const value=raw as Dict;
+  if(!hasExactKeys(value,['short_rest','long_rest']))return undefined;
+  const short=value.short_rest as Dict,long=value.long_rest as Dict;
+  if(!short||!long||typeof short!=='object'||typeof long!=='object')return undefined;
+  const validShort=short.mode==='none'&&hasExactKeys(short,['mode'])
+    ||short.mode==='fixed'&&hasExactKeys(short,['mode','amount'])&&Number.isSafeInteger(short.amount)&&Number(short.amount)>0;
+  const dice=typeof long.dice==='string'?/^([1-9]\d?)d([1-9]\d{0,2})$/.exec(long.dice):null;
+  const validLong=long.mode==='full'&&hasExactKeys(long,['mode'])
+    ||long.mode==='dice'&&hasExactKeys(long,['mode','dice'])&&dice&&Number(dice[2])>=2;
+  return validShort&&validLong?value as unknown as ResourceRestRecovery:undefined;
 }
 
 export function isActionUsesKey(key: string): boolean {

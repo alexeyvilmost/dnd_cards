@@ -1,4 +1,5 @@
 import type { ActionWorldInput } from '../rules-core/domain';
+import {bindItemTool,parseItemTool} from '../rules-core/itemTools';
 import type {
   WorldObjectKind,
   WorldObjectSize,
@@ -30,6 +31,9 @@ export type SheetScenarioObjectProfile =
   | 'broken'
   | 'plant'
   | 'flame'
+  | 'fuel_easy'
+  | 'fuel_slow'
+  | 'portable_space'
   | 'food'
   | 'drink';
 
@@ -46,6 +50,8 @@ export interface SheetWorldFactsDraft {
 
 export interface SheetWorldInputFormDraft {
   objectId: string;
+  containedObjectId: string;
+  containedObjectDistanceFt: string;
   selectedObjectIds: string[];
   createObject: boolean;
   newObjectId: string;
@@ -54,6 +60,7 @@ export interface SheetWorldInputFormDraft {
   newObjectSize: WorldObjectSize;
   newObjectProfile: SheetScenarioObjectProfile;
   breakDimensionFt: string;
+  toolDc:string;
   foodMagical: boolean;
   facts: SheetWorldFactsDraft;
   option: string;
@@ -121,6 +128,10 @@ export function initialSheetWorldInputDraft(
 ): SheetWorldInputFormDraft {
   const objectIds = Object.keys(context.runtime.world.objects).sort();
   const firstObject = objectIds[0] ?? '';
+  const itemPolicy=context.form==='item_tool'?parseItemTool(context.action.mechanics):null;
+  const portableSelection=itemPolicy?.operation.startsWith('portable_')
+    ?objectIds.find(id=>context.runtime.world.objects[id].itemCardId===itemPolicy.item_card_id):undefined;
+  const selectedObject=portableSelection??firstObject;
   let imageCubeSideFt = '';
   let sensoryCubeSideFt = '';
   let placementDistancesFt = '0';
@@ -151,15 +162,22 @@ export function initialSheetWorldInputDraft(
       break;
   }
   return {
-    objectId: firstObject,
-    selectedObjectIds: firstObject ? [firstObject] : [],
+    objectId: selectedObject,
+    containedObjectId: objectIds.find(id=>id!==selectedObject)??'',
+    containedObjectDistanceFt:'0',
+    selectedObjectIds: selectedObject ? [selectedObject] : [],
     createObject: objectIds.length === 0,
     newObjectId,
     newObjectName: '',
     newObjectKind: 'item',
     newObjectSize: 'tiny',
-    newObjectProfile: defaultProfile(context.form),
+    newObjectProfile:context.form==='item_tool'&&parseItemTool(context.action.mechanics).operation==='portable_open'
+      ?'portable_space'
+      :context.form==='item_tool'&&parseItemTool(context.action.mechanics).operation==='ignite'
+      ?parseItemTool(context.action.mechanics).ignition==='easy'?'fuel_easy':'fuel_slow'
+      :defaultProfile(context.form),
     breakDimensionFt,
+    toolDc:context.form==='item_tool'?String(parseItemTool(context.action.mechanics).lock_dc??''):'',
     foodMagical: false,
     facts: {
       factsSource: 'scenario',
@@ -267,6 +285,27 @@ function scenarioObject(
     kind: draft.newObjectKind,
     size: draft.newObjectSize,
   };
+  if(context.form==='item_tool'){
+    const policy=parseItemTool(context.action.mechanics);
+    if(policy.operation==='portable_open'&&draft.newObjectProfile!=='portable_space')issues.push({fieldId:'sheet-world-new-object-profile',message:'Выберите переносное пространство этого предмета.'});
+    if(draft.newObjectProfile==='portable_space'){
+      if(policy.operation!=='portable_open'||!policy.item_card_id)issues.push({fieldId:'sheet-world-new-object-profile',message:'Этот предмет не создаёт переносное пространство.'});
+      else{
+        object.kind='item';object.size='medium';object.itemCardId=policy.item_card_id;
+        object.planeId=context.runtime.world.actors[context.runtime.actorId]?.planeId??'material';
+        object.portableSpace={open:false,diameterFt:policy.diameter_ft!,depthFt:policy.depth_ft!,exitDistanceFt:policy.exit_distance_ft!,occupantActorIds:[],containedObjectIds:[]};
+      }
+    }
+    if(['unlock','lock'].includes(policy.operation)){
+      const dc=policy.lock_dc??numberValue(draft.toolDc);
+      if(!Number.isSafeInteger(dc)||Number(dc)<=0)issues.push({fieldId:'sheet-world-tool-dc',message:'Укажите положительную СЛ замка из сцены.'});
+      else object.toolState={locked:policy.operation==='unlock',lockDc:Number(dc),...(policy.lock_disadvantage?{lockDisadvantage:true}:{})};
+    }else if(policy.check_from_object){
+      const dc=numberValue(draft.toolDc);
+      if(!Number.isSafeInteger(dc)||Number(dc)<=0)issues.push({fieldId:'sheet-world-tool-dc',message:'Укажите положительную СЛ проверки из сцены.'});
+      else object.toolState={checkDc:Number(dc)};
+    }
+  }
   if (draft.newObjectProfile === 'broken') {
     const dimension = numberValue(draft.breakDimensionFt);
     const maximum = context.parsed.primitiveType === 'mending_world'
@@ -284,6 +323,9 @@ function scenarioObject(
     object.plant = { kind: 'flower', bloomed: false };
   } else if (draft.newObjectProfile === 'flame') {
     object.flame = { kind: 'candle', lit: false };
+  } else if(draft.newObjectProfile==='fuel_easy'||draft.newObjectProfile==='fuel_slow'){
+    object.flammable=true;
+    object.easyIgnition=draft.newObjectProfile==='fuel_easy';
   } else if (draft.newObjectProfile === 'food' || draft.newObjectProfile === 'drink') {
     object.foodOrDrink = {
       kind: draft.newObjectProfile,
@@ -300,7 +342,7 @@ export function sheetWorldInputNeedsObject(
   form: SheetPrimitiveWorldForm,
   draft: Pick<SheetWorldInputFormDraft, 'option'>,
 ): boolean {
-  if (form === 'target_object' || form === 'mending' || form === 'purify_food_drink') return true;
+  if (form === 'target_object' || form === 'mending' || form === 'purify_food_drink' || form==='item_tool') return true;
   if (form === 'druidcraft') return draft.option === 'bloom' || draft.option === 'fire_play';
   if (form === 'prestidigitation') {
     return ['fire_play', 'clean_or_soil', 'minor_sensation', 'magic_mark'].includes(draft.option);
@@ -361,7 +403,7 @@ export function buildSheetWorldInput(
   const scenarioObjects = created ? [created] : [];
   let worldInput: ActionWorldInput | null = null;
 
-  if (context.form === 'target_object' || context.form === 'mending') {
+  if (context.form === 'target_object' || context.form === 'mending' || context.form==='item_tool') {
     const objectId = selectedObjectId(draft, created, issues);
     const object = selectedObject(context, created, objectId, issues);
     if (context.parsed.primitiveType === 'light_world_object' && object) {
@@ -396,9 +438,14 @@ export function buildSheetWorldInput(
       });
     }
     if (facts && objectId && object && !issues.length) {
-      worldInput = context.form === 'target_object'
+      worldInput = context.form==='item_tool'?{type:'item_tool',objectId,description:draft.description,
+        containedObjectId:draft.containedObjectId||undefined,
+        facts:{...facts,...(parseItemTool(context.action.mechanics).operation==='portable_store'
+          ?{containedObjectDistanceFt:numberValue(draft.containedObjectDistanceFt)??undefined}:{})}}:context.form === 'target_object'
         ? { type: 'target_object', objectId, facts }
         : { type: 'mending', objectId, facts };
+      if(context.form==='item_tool')try{bindItemTool({...context.runtime.world,objects:{...context.runtime.world.objects,...(created?{[created.id]:created}:{})}},context.action,worldInput,context.runtime.actorId);}
+      catch(error){issues.push({fieldId:'sheet-world-description',message:error instanceof Error?error.message:String(error)});worldInput=null;}
     }
   } else if (context.form === 'minor_illusion') {
     const description = nonBlankDescription(draft, issues);

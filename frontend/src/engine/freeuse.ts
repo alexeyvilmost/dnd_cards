@@ -1,3 +1,5 @@
+import type {ResourceRestRecovery} from '../mvp/contracts';
+import {parseResourceRestRecovery} from './actionUses';
 /**
  * Бесплатные использования заклинаний (freeuse): granted-заклинание можно скастовать
  * БЕЗ траты ячейки, из ограниченного пула (по умолчанию 1 раз, перезарядка долгим отдыхом).
@@ -28,6 +30,7 @@ export interface FreeuseSpec {
   level?: number;
   /** Explicit unlimited use declared by the granting entity; no resource pool. */
   atWill?: boolean;
+  recovery?:ResourceRestRecovery|null;
 }
 
 /** Ключ пула бесплатных использований заклинания. */
@@ -95,7 +98,11 @@ export function parseFreeuse(raw: unknown): Omit<FreeuseSpec, 'spell'> | undefin
     const count = typeof o.count === 'number' || typeof o.count === 'string' ? o.count : 1;
     const recharge = typeof o.recharge === 'string' ? o.recharge : 'long_rest';
     const level = typeof o.level === 'number' ? o.level : undefined;
-    return { count, recharge, level };
+    return { count, recharge, level, ...(o.recovery===undefined?{}:{recovery:parseResourceRestRecovery(o.recovery)??null}) };
   }
   return undefined;
+}
+
+export function collectFreeuseRecovery(specs:FreeuseSpec[]):Record<string,ResourceRestRecovery|null>{
+  return Object.fromEntries(specs.filter(s=>!s.atWill&&s.recovery!==undefined).map(s=>[freeuseKey(s.spell),s.recovery??null]));
 }

@@ -261,4 +261,56 @@ describe('sheet combat declaration is mechanics-owned', () => {
       targets: [fact({ willing: false })],
     }).factsByTarget?.[TARGET]).toMatchObject({ willing: false });
   });
+
+  it('projects ordered repeat slots and upcast ray count from targeting data', () => {
+    const mechanics={targeting:{shape:'multiple',domain:'actor',actor_targets:true,
+      min_targets:3,max_targets:3,range_ft:120,requires_line_of_sight:true,
+      allowed_relations:['enemy'],allow_repeat_targets:true,
+      additional_target_slots_per_spell_slot_above_base:1},
+      activation:{mode:'active',cost:[]},effects:[]};
+    const action:RuleActionDefinition={id:'spell:repeat-rays',name:'Repeat rays',kind:'spell',
+      sourceEntityIds:['spell:repeat-rays'],spell:{level:2,sourceClass:'wizard'},
+      mechanics,targeting:compileMechanicsTargeting(mechanics)};
+    expect(sheetCombatDeclarationPolicy(action,3)).toMatchObject({minTargets:4,maxTargets:4,allowRepeatTargets:true});
+    const base={sceneMode:'encounter' as const,targetIds:[],spell:{grantId:'exact',mode:'normal' as const,castLevel:3}};
+    expect(buildSheetCombatDeclaration({action,base,targets:[fact(),fact(),fact(),fact()]}).targetIds)
+      .toEqual([TARGET,TARGET,TARGET,TARGET]);
+    expect(() => buildSheetCombatDeclaration({action,base,targets:[fact(),fact(),fact()]}))
+      .toThrow('4–4');
+  });
+
+  it('requires additional targets to be close to the first selected actor', () => {
+    const mechanics={targeting:{shape:'multiple',domain:'actor',actor_targets:true,
+      min_targets:1,max_targets:4,range_ft:150,requires_line_of_sight:true,
+      allowed_relations:['enemy'],additional_targets_within_ft_of_first:30},
+      activation:{mode:'active',cost:[]},effects:[]};
+    const action:RuleActionDefinition={id:'spell:near-first',name:'Near first',kind:'spell',
+      sourceEntityIds:['spell:near-first'],spell:{level:6,sourceClass:'wizard'},
+      mechanics,targeting:compileMechanicsTargeting(mechanics)};
+    const second='33333333-3333-4333-8333-333333333333';
+    const base={sceneMode:'encounter' as const,targetIds:[],spell:{grantId:'exact',mode:'normal' as const,castLevel:6}};
+    expect(sheetCombatDeclarationPolicy(action)).toMatchObject({additionalTargetsWithinFtOfFirst:30});
+    expect(() => buildSheetCombatDeclaration({action,base,
+      targets:[fact(),fact({targetId:second,distanceToFirstTargetFt:35})]})).toThrow('30 фт. от первой');
+    expect(buildSheetCombatDeclaration({action,base,
+      targets:[fact(),fact({targetId:second,distanceToFirstTargetFt:25})]}).factsByTarget?.[second])
+      .toMatchObject({distanceToFirstTargetFt:25});
+  });
+
+  it('uses the same character-level ray tiers in sheet policy and declaration',()=>{
+    const mechanics={targeting:{shape:'multiple',domain:'actor',actor_targets:true,
+      min_targets:1,max_targets:1,range_ft:120,requires_line_of_sight:true,
+      allowed_relations:['enemy'],allow_repeat_targets:true,
+      target_slots_by_character_level:{1:1,5:2,11:3,17:4}},
+      activation:{mode:'active',cost:[]},effects:[]};
+    const action:RuleActionDefinition={id:'spell:leveled-rays',name:'Level rays',kind:'spell',
+      sourceEntityIds:['spell:leveled-rays'],spell:{level:0,sourceClass:'warlock'},
+      mechanics,targeting:compileMechanicsTargeting(mechanics)};
+    expect(sheetCombatDeclarationPolicy(action,undefined,5)).toMatchObject({minTargets:2,maxTargets:2,allowRepeatTargets:true});
+    expect(sheetCombatDeclarationPolicy(action,undefined,17)).toMatchObject({minTargets:4,maxTargets:4});
+    const base={sceneMode:'encounter' as const,targetIds:[],spell:{grantId:'exact',mode:'normal' as const}};
+    expect(buildSheetCombatDeclaration({action,base,actorLevel:5,targets:[fact(),fact()]}).targetIds)
+      .toEqual([TARGET,TARGET]);
+    expect(()=>buildSheetCombatDeclaration({action,base,actorLevel:5,targets:[fact()]})).toThrow('2–2');
+  });
 });

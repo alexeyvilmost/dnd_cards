@@ -1,3 +1,4 @@
+import {projectRuntimeCharacter} from '../engine/runtimeCharacterProjection';
 /**
  * Rules-core adapter for condition mechanics.
  *
@@ -124,6 +125,7 @@ export function conditionTargetingSightIssue(input: {
     && !(input.canSeeTarget === true && perceivesWithoutSight(source.runtime, source.passives ?? [], input.distanceFt))) {
     return 'source_cannot_see';
   }
+  if (input.canSeeTarget === false) return 'target_unseen';
   if (activeConditionWorldFactEnabled(
     target.runtime,
     'cannot_be_targeted_by_requires_sight_unless_seen',
@@ -179,9 +181,12 @@ export function terminalConditionFacts(world: WorldState): Array<{
   outcome: 'death';
 }> {
   return Object.values(world.actors).flatMap((owner) => (
-    conditionThresholdOutcomes(owner.runtime).map((outcome) => ({
-      actorId: owner.id,
-      ...outcome,
-    }))
+    [...conditionThresholdOutcomes(owner.runtime).map((outcome) => ({actorId:owner.id,...outcome})),
+      ...owner.runtime.activeEffects.flatMap(effect=>{
+        const rule=effect.mechanics.ability_fatal_threshold as {ability?:'str'|'dex'|'con'|'int'|'wis'|'cha';at?:number}|undefined;
+        if(!rule?.ability||typeof rule.at!=='number')return [];
+        const score=projectRuntimeCharacter(owner.character,owner.runtime,owner.passives).abilityScores?.[rule.ability];
+        return score!==undefined&&score<=rule.at?[{actorId:owner.id,condition:`ability:${rule.ability}`,level:score,outcome:'death' as const}]:[];
+      })]
   ));
 }

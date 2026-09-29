@@ -1,4 +1,6 @@
 import {combatHideIssue} from '../solo-combat/hide';
+import {bindWorldItemAction} from '../rules-core/worldItemActions';
+import {bindItemLightFuel} from '../rules-core/itemLight';
 import {actorPassiveToggles} from '../character/actorPassiveToggles';
 import SheetPassiveToggle from './SheetPassiveToggle';
 import { combatActorDisplayName } from '../character/familiarLabels';
@@ -9,6 +11,7 @@ import {conditionGrantedActions} from '../engine/conditionActions';
 import {grantedActionPresentation} from '../character/actionPresentation';
 import {useSiteSettings} from '../settings';
 import { canPay, costKey } from '../engine/cost';
+import {availableResources} from '../engine/resourceRestrictions';
 import { FREEUSE_SHOWCASE_KEY, isFreeusePoolKey } from '../engine/freeuse';
 import { bindEquippedWeaponActionContext, weaponAttackPreview, weaponContext } from '../engine/weapon';
 import {
@@ -266,6 +269,7 @@ export function combatActionAvailability(
   actorId = state.characterId,
 ): { enabled: boolean; reason?: string } {
   const actor = state.world.actors[actorId];
+  action=bindItemLightFuel(state.world,actorId,bindWorldItemAction(state.world,actorId,action));
   const primitive = action.mechanics.primitive as Record<string, unknown> | undefined;
   if (primitive?.type === LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE) {
     return combatLightExtraAttackAvailability(state, actorId);
@@ -284,7 +288,7 @@ export function combatActionAvailability(
     const issue = combatHideIssue(state, actorId);
     if (issue) return {enabled: false, reason: issue};
   }
-  const activeEffectIssue = activeEffectRequirementIssue(action.mechanics, actor.runtime);
+  const activeEffectIssue = activeEffectRequirementIssue(action.mechanics, actor.runtime, actor.character);
   if (activeEffectIssue) return { enabled: false, reason: activeEffectIssue };
   const timing = combatActionTimingAvailability(action);
   if (!timing.enabled) return timing;
@@ -310,7 +314,7 @@ export function combatActionAvailability(
     const access = resolveSpellAccess({
       state: actor.spellcastingAccess,
       actionId: action.id,
-      resources: actor.runtime.resources,
+      resources: availableResources(actor.runtime,actor.character,actor.passives),
     });
     if (access.status === 'rejected') {
       const reason = access.code === 'SpellResourceUnavailable'
@@ -408,7 +412,7 @@ export default function CombatHotbar({
   const actor = state.world.actors[actorId];
   const grappled = Object.values(state.world.grapples).some(grapple => grapple.targetActorId === actorId);
   const movementRemaining = effectiveCombatActorSpeedFt(state, actorId) > 0 ? state.movementRemainingFt[actorId] ?? 0 : 0;
-  const movementLabel = ({walk: 'Движение', climb: 'Лазание', fly: 'Полёт', swim: 'Плавание', burrow: 'Рытьё'} as const)[combatActorMovementMode(state, actorId)];
+  const movementLabel = ({walk: 'Движение', climb: 'Лазание', fly: 'Полёт', swim: 'Плавание', burrow: 'Рытьё',jump:'Прыжок'} as const)[combatActorMovementMode(state, actorId)];
   const formulaContext = useMemo(() => formulaCtxFromCharacter(actor.character), [actor.character]);
   const spellcasting = actor.character.spellcastingMod == null
     ? undefined

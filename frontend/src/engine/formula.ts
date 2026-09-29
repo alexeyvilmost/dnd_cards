@@ -3,7 +3,7 @@
  * Чистый TS — без React.
  */
 
-import { drawDie } from './random';
+import { drawDie, type DieAwareRandomSource } from './random';
 
 export type FormulaMarker = 'weapon' | 'auto';
 
@@ -62,6 +62,7 @@ export interface DieRoll {
   sides: number;
   result: number;
   discarded?: boolean;
+  drawOrdinal?: number;
 }
 
 export interface FormulaModifier {
@@ -204,7 +205,9 @@ function rollDice(count: number, sides: number, sink: EvalSink): number {
   const n = Math.max(0, Math.floor(count)) * (sink.diceMultiplier ?? 1);
   for (let i = 0; i < n; i++) {
     const result = drawDie(sink.rng, sides);
-    if (sink.detailed) sink.dice.push({ sides, result });
+    if (sink.detailed) sink.dice.push({ sides, result,
+      ...((sink.rng as DieAwareRandomSource).lastDieDrawOrdinal !== undefined
+        ? {drawOrdinal:(sink.rng as DieAwareRandomSource).lastDieDrawOrdinal} : {}) });
     sum += result;
   }
   return sum;

@@ -1,3 +1,4 @@
+import {parseItemLight} from '../rules-core/itemLight';
 import type {
   ActionWorldInput,
   RuleActionDefinition,
@@ -34,6 +35,7 @@ export const PACT_BLADE_WEAPON_CHOICE = 'pact_blade_weapon_card' as const;
 export const PACT_BLADE_HAND_CHOICE = 'pact_blade_hand' as const;
 
 export const SHEET_NO_PENDING_PRIMITIVES = [
+  'item_tool',
   'pact_blade_bond',
   'find_familiar',
   WILD_COMPANION_PRIMITIVE,
@@ -41,6 +43,7 @@ export const SHEET_NO_PENDING_PRIMITIVES = [
   'detect_magic_world_sensing',
   'detect_poison_disease_world',
   'light_world_object',
+  'item_light',
   'mending_world',
   'minor_illusion_world_object',
   'dancing_lights_world',
@@ -67,6 +70,7 @@ export type SheetPendingCombatPrimitive = typeof SHEET_PENDING_COMBAT_PRIMITIVES
 const PENDING_COMBAT = new Set<string>(SHEET_PENDING_COMBAT_PRIMITIVES);
 
 export type SheetPrimitiveWorldForm =
+  | 'item_tool'
   | 'target_object'
   | 'mending'
   | 'minor_illusion'
@@ -76,6 +80,7 @@ export type SheetPrimitiveWorldForm =
   | 'purify_food_drink';
 
 const WORLD_FORMS: Readonly<Partial<Record<SheetNoPendingPrimitive, SheetPrimitiveWorldForm>>> = {
+  item_tool:'item_tool',
   light_world_object: 'target_object',
   mending_world: 'mending',
   minor_illusion_world_object: 'minor_illusion',
@@ -146,6 +151,7 @@ export function sheetPrimitiveDefinitionIssue(action: RuleActionDefinition): str
   const disabled = sheetPrimitiveDisabledReason(primitive);
   if (disabled) return disabled;
   if (!isSheetSupportedPrimitive(primitive)) return `Unsupported primitive ${primitive}`;
+  if (primitive === 'item_light') {try{parseItemLight(action.mechanics);return null;}catch(error){return String(error);}}
   if (primitive === WEAPON_ATTACK_PRIMITIVE
     || primitive === LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE) {
     const parsed = parseDeclaredWeaponActionPolicy(action, 'bound');
@@ -244,6 +250,7 @@ function worldInputMatchesForm(
 ): boolean {
   if (!value) return false;
   return (form === 'target_object' && value.type === 'target_object')
+    || (form === 'item_tool' && value.type === 'item_tool')
     || (form === 'mending' && value.type === 'mending')
     || (form === 'minor_illusion' && value.type === 'minor_illusion')
     || (form === 'dancing_lights' && value.type === 'dancing_lights')

@@ -17,6 +17,7 @@ import {
 } from '../character/runtime';
 import {
   buildResourceRuntimePatch,
+  collectPassiveMechanics,
   hpNeedsSync,
   resourcesNeedSync,
   resourceMaximumBreakdown,
@@ -25,7 +26,7 @@ import {
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { buildResourceRecharge, buildResourceRecovery } from '../engine/resources';
-import { collectFreeuseRecharge, isFreeusePoolKey } from '../engine/freeuse';
+import { collectFreeuseRecharge, collectFreeuseRecovery, isFreeusePoolKey } from '../engine/freeuse';
 import { groupActiveEffectsForDisplay } from '../engine/effects';
 import {
   executeManualEffectCommand,
@@ -75,8 +76,8 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
     [assembled.klass?.resources, ruleState.freeuseSpells],
   );
   const resourceRecovery = useMemo(
-    () => buildResourceRecovery((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
-    [assembled.klass?.resources],
+    () => ({...buildResourceRecovery((assembled.klass?.resources ?? null) as Record<string, unknown> | null),...collectFreeuseRecovery(ruleState.freeuseSpells)}),
+    [assembled.klass?.resources, ruleState.freeuseSpells],
   );
 
   const ctx = useMemo(
@@ -106,6 +107,8 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
       runtime.inventory,
     );
   }, [character.equipment, character.turn_state, itemCards, runtime.inventory]);
+  const passives = useMemo(() => [...collectPassiveMechanics(assembled,character.resolved_choices ?? {}),
+    ...grantedItemMechanics.map(item=>item.mechanics)], [assembled,character.resolved_choices,grantedItemMechanics]);
   const grantedActions = useGrantedActions({
     assembled,
     characterLevel: character.level,
@@ -208,7 +211,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
           effectId,
           ownerActorId: character.id,
           provenance: 'manual:sheet_runtime',
-        }, { nextId: nextBrowserManualEffectId });
+        }, { nextId: nextBrowserManualEffectId,passives });
         state = result.state;
         events.push(...result.events);
       }

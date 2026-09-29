@@ -22,6 +22,22 @@ function setup():SoloCombatState {
 const rng=(natural:number)=>()=> (natural-.5)/20;
 const active=(s:SoloCombatState)=>s.world.scene.mode==='encounter'?s.world.scene.initiative[s.world.scene.activeIndex]:'';
 describe('persisted combat death-save lifecycle',()=>{
+ it.each([1,2])('holds an immediate save for an inactive owner with failure limit %i',failureLimit=>{
+  const state=setup();
+  if(state.world.scene.mode==='encounter')state.world.scene.activeIndex=2;
+  state.world.actors.hero.passives=[{kind:'life_policy',max_death_failures:failureLimit,immediate_death_save:true}];
+  state.world.actors.hero.runtime.firedThisTurn=['system:immediate-death-save-due'];
+  const random=vi.fn(rng(9));
+  const held=prepareCombatDeathSave(state,random);
+  expect(held.pendingDeathSave).toMatchObject({actorId:'hero',immediate:true,phase:'rolled'});
+  expect(active(held)).toBe('enemy');expect(random).toHaveBeenCalledTimes(1);
+  const committed=resolveCombatDeathSave(JSON.parse(JSON.stringify(held)),undefined,()=>{throw Error('reroll');});
+  expect(committed.world.actors.hero.runtime.deathSaves).toMatchObject({failures:1,dead:failureLimit===1});
+  expect(committed.world.actors.hero.runtime.firedThisTurn).not.toContain('system:immediate-death-save-due');
+  expect(active(committed)).toBe('enemy');
+  const closed=resolveCombatDeathSave(committed,undefined,()=>{throw Error('reroll');});
+  expect(closed.pendingDeathSave).toBeUndefined();expect(active(closed)).toBe('enemy');
+ });
  it('commits restoration rolls after victory once, including after serialization',()=>{
   const state=setup(),aura=urvinDefinitions.auras.find(a=>a.key==='restoration')!;
   state.world.actors.enemy.runtime.hp.current=0;

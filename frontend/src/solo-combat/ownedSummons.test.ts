@@ -1,3 +1,8 @@
+import related from '../../../scripts/content/data/item-completion-middle-related-20260929.json';
+import {projectRuleAction} from '../canon/ruleActionProjection';
+import type {Action} from '../types';
+import {terrainFits} from './boardGeometry';
+import {projectCombatIllumination} from './combatIllumination';
 import { describe, expect, it } from 'vitest';
 import type { ActorState, RuleActionDefinition, RulesetReference } from '../rules-core/domain';
 import { isPlayerControlledCombatActor, type SoloCombatState } from './types';
@@ -248,4 +253,27 @@ describe('data-owned summon lifecycle', () => {
     timed.world.scene.round = 5;
     expect(reconcileOwnedSummons(timed).world.actors[summonId]).toBeUndefined();
   });
+});
+
+const pinnedAction=()=>projectRuleAction(related.entities.find(entry=>(entry.patch as Record<string,unknown>).card_number==='ACT-item-completion-0369')!.patch as unknown as Action);
+describe('pinned canonical monster templates',()=>{
+ it.each([['shadow-srd52',27,12],['test-other-shadow',39,15]] as const)('compiles %s from its own stored stat block and restores it without catalog lookups',(slug,hp,ac)=>{
+  const action=JSON.parse(JSON.stringify(pinnedAction())) as RuleActionDefinition;
+  const primitive=action.mechanics.primitive as Record<string,unknown>;
+  const template=primitive.monster_template as {monster:Record<string,unknown>};
+  template.monster.slug=slug;template.monster.max_hp=hp;template.monster.armor_class=ac;
+  (primitive.hit_points as Record<string,unknown>).base=hp;(primitive.armor_class as Record<string,unknown>).base=ac;
+  const built=materializeOwnedSummon({state:state(action),action,ownerActorId:'owner',castLevel:0,position:{x:3,y:8}});
+  const summoned=built.world.actors['owner:summon:item-369-shadow'];
+  expect(summoned.runtime.hp.max).toBe(hp);expect(summoned.ac).toBe(ac);
+  expect(summoned.character.abilityScores?.str).toBe(6);expect(summoned.character.skillExpertise).toContain('stealth');
+  expect(summoned.traits?.conditionImmunities?.some(rule=>rule.condition==='poisoned')).toBe(true);
+  expect(summoned.capabilities.actionIds.map(id=>built.catalogActions.find(a=>a.id===id)?.name)).toContain('Иссушающий удар');
+  expect(migrateWorldState(JSON.parse(JSON.stringify(built.world))).actors[summoned.id].passives).toEqual(summoned.passives);
+  built.battleMap={id:'gaps',name:'Gaps',description:'Measured opening',width:12,height:10,background:'',maxFootprint:2,maxActors:10,features:[{id:'gap',name:'Gap',x:4,y:8,width:1,height:1,sprite:'wall',blocksMovement:true,environment:{passage:'gap',passage_width_inches:1}}],environment:{openSky:true,timeOfDay:'day'}};
+  expect(terrainFits(built,{x:4,y:8},1,summoned)).toBe(true);
+  built.battleMap.features[0].environment!.passage_width_inches=.5;
+  expect(terrainFits(built,{x:4,y:8},1,summoned)).toBe(false);
+  expect(projectCombatIllumination(built).world.actors[summoned.id].character.illumination?.daylight).toBe(true);
+ });
 });

@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { WorldObjectSize } from '../rules-core/worldObjects';
+import {parseItemTool} from '../rules-core/itemTools';
 import type { DancingLightsWorldPolicy } from '../rules-core/worldSpellPolicies';
 import {
   buildSheetWorldInput,
@@ -104,6 +105,38 @@ function ObjectEditor(input: {
           </select>
         </label>
       )}
+      {context.form==='item_tool'&&['portable_store','portable_retrieve'].includes(parseItemTool(context.action.mechanics).operation)&&(
+        <>
+          <label className="dice-dialog-row" htmlFor="sheet-world-contained-object">
+            <span>{parseItemTool(context.action.mechanics).operation==='portable_store'?'Положить объект':'Достать объект'}</span>
+            <select id="sheet-world-contained-object" value={draft.containedObjectId}
+              onChange={event=>patch({containedObjectId:event.target.value})}>
+              <option value="">— выберите объект —</option>
+              {objects.filter(object=>object.id!==draft.objectId).map(object=>(
+                <option key={object.id} value={object.id}>{object.name} · {object.size}</option>
+              ))}
+            </select>
+          </label>
+          {parseItemTool(context.action.mechanics).operation==='portable_store'&&(
+            <label className="dice-dialog-row" htmlFor="sheet-world-contained-distance">
+              <span>Расстояние от объекта до дыры, футы</span>
+              <input id="sheet-world-contained-distance" type="number" min={0}
+                value={draft.containedObjectDistanceFt}
+                onChange={event=>patch({containedObjectDistanceFt:event.target.value})}/>
+            </label>
+          )}
+        </>
+      )}
+      {context.form==='item_tool'&&!draft.createObject&&context.runtime.world.objects[draft.objectId]?.toolState&&(
+        <div className="dice-dialog-list" aria-label="Сохранённое состояние объекта">
+          {context.runtime.world.objects[draft.objectId].toolState?.locked!==undefined&&<p>{context.runtime.world.objects[draft.objectId].toolState?.locked?'Заперт':'Открыт'}</p>}
+          {context.runtime.world.objects[draft.objectId].toolState?.document&&<p>{context.runtime.world.objects[draft.objectId].toolState?.document?.text}</p>}
+          {context.runtime.world.objects[draft.objectId].toolState?.anchor&&<p>Закреплён якорь.</p>}
+          {context.runtime.world.objects[draft.objectId].toolState?.jammed&&<p>Механизм заклинен.</p>}
+          {context.runtime.world.objects[draft.objectId].toolState?.ropeAttached&&<p>Верёвка привязана.</p>}
+          {context.runtime.world.objects[draft.objectId].toolState?.excavation&&<p>Выкопана яма: сторона {context.runtime.world.objects[draft.objectId].toolState?.excavation?.cubeSideFt} фт.</p>}
+        </div>
+      )}
       <label className="dice-dialog-row">
         <input
           type="checkbox"
@@ -114,6 +147,11 @@ function ObjectEditor(input: {
       </label>
       {draft.createObject && (
         <div className="dice-dialog-list">
+          {context.form==='item_tool'&&(parseItemTool(context.action.mechanics).check_from_object||['unlock','lock'].includes(parseItemTool(context.action.mechanics).operation))&&(
+            <label className="dice-dialog-row" htmlFor="sheet-world-tool-dc"><span>СЛ проверки объекта из сцены</span>
+              <input id="sheet-world-tool-dc" type="number" min={1} value={draft.toolDc} disabled={parseItemTool(context.action.mechanics).lock_dc!==undefined} onChange={event=>patch({toolDc:event.target.value})}/>
+            </label>
+          )}
           <label className="dice-dialog-row" htmlFor="sheet-world-new-object-name">
             <span>Название объекта</span>
             <input
@@ -158,6 +196,9 @@ function ObjectEditor(input: {
               <option value="broken">Разрыв или поломка</option>
               <option value="plant">Нераспустившееся растение</option>
               <option value="flame">Свеча/факел/костёр</option>
+              <option value="fuel_easy">Открытое горючее топливо</option>
+              <option value="fuel_slow">Горючий материал</option>
+              <option value="portable_space">Переносное пространство</option>
               <option value="food">Еда</option>
               <option value="drink">Напиток</option>
             </select>
@@ -278,7 +319,7 @@ function SpecificFields(input: {
           </select>
         </label>
       )}
-      {(context.form === 'minor_illusion'
+      {(context.form === 'minor_illusion'||context.form==='item_tool'
         || ['weather_sensor', 'sensory_effect', 'minor_sensation', 'magic_mark', 'minor_creation']
           .includes(draft.option)) && (
         <label className="dice-dialog-row" htmlFor="sheet-world-description">

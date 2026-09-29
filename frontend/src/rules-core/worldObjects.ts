@@ -1,4 +1,5 @@
 import type { Ability } from './domain';
+import {objectToolStateIssue,type ObjectToolState} from './itemTools';
 import type {
   BurningHandsObjectsPolicy,
   DetectMagicWorldPolicy,
@@ -26,7 +27,10 @@ export interface IlluminationAttachment {
   brightRadiusFt: number;
   dimAdditionalRadiusFt: number;
   /** One hour expressed in six-second combat rounds for deterministic expiry. */
-  roundsLeft: number;
+  roundsLeft: number | null;
+  daylight?: boolean;
+  shape?: 'sphere' | 'cone';
+  facing?: 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
   color?: string;
 }
 
@@ -97,12 +101,20 @@ export interface PrestidigitationAttachment {
 }
 
 export interface WorldObjectState {
+  /** Canonical Action UUIDs retained by this physical item instance. */
+  grantedActionRefs?:string[];
+  grantsToOwner?:boolean;
+  /** Remaining fuel survives extinguishing; only a burning source spends it. */
+  fuelRoundsLeft?:number;
+  toolState?:ObjectToolState;
   id: string;
   name: string;
   kind: WorldObjectKind;
   size: WorldObjectSize;
   /** Immutable content identity for this concrete item instance. */
   itemCardId?: string;
+  /** Actor at the committed deployment location; used by net release actions. */
+  deployedToActorId?:string;
   /** Fighter War Bond owner of this exact physical weapon. */
   weaponBondActorId?: string;
   planeId?: string;
@@ -116,6 +128,11 @@ export interface WorldObjectState {
   sourceActorId?: string;
   sourceActionId?: string;
   flammable?: boolean;
+  /** Abundant exposed fuel: a tinderbox can light it with one action. */
+  easyIgnition?: boolean;
+  /** A physical portable space keeps its contents when folded. */
+  portableSpace?:{open:boolean;diameterFt:number;depthFt:number;exitDistanceFt:number;occupantActorIds:string[];containedObjectIds:string[];entryActionRef?:string;exitActionRef?:string};
+  containedByObjectId?:string;
   unattended?: boolean;
   secured?: boolean;
   ignited?: boolean;
@@ -144,7 +161,11 @@ export interface WorldObjectFacts {
   factsSource: 'scenario' | 'board' | 'gm_ruling';
   boardRevision: number;
   distanceFt: number;
+  /** Board/GM distance between a portable space and a physical object to store. */
+  containedObjectDistanceFt?:number;
   lineOfSight: boolean;
+  /** Board/GM-declared physical load for a tool anchor or rope attachment. */
+  loadLb?: number;
   /** Explicit board/GM membership in a declared area; core never derives geometry. */
   inArea?: boolean;
   entirelyInArea?: boolean;
@@ -161,6 +182,7 @@ export interface MagicBlockingLayer {
 export type WorldObjectMutationEvent =
   | { type: 'WorldObjectCreated'; object: WorldObjectState }
   | { type: 'WorldObjectRemoved'; objectId: string; reason: string }
+  | {type:'WorldObjectsPatched';patches:Array<{objectId:string;patch:Partial<WorldObjectState>;unset?:Array<keyof WorldObjectState>}>;reason:string}
   | {
     type: 'WorldObjectPatched';
     objectId: string;
@@ -194,6 +216,22 @@ function cloneObjects(objects: Readonly<Record<string, WorldObjectState>>): Reco
 const REQUIRED_WORLD_OBJECT_KEYS = new Set<keyof WorldObjectState>(['id', 'name', 'kind', 'size']);
 
 function itemInstanceIssue(object: WorldObjectState): string | null {
+  if(object.portableSpace){const space=object.portableSpace;
+    if(object.kind!=='item'||!object.itemCardId||typeof space.open!=='boolean'
+      ||![space.diameterFt,space.depthFt,space.exitDistanceFt].every(n=>Number.isFinite(n)&&n>0)
+      ||!Array.isArray(space.occupantActorIds)||!Array.isArray(space.containedObjectIds)
+      ||(space.entryActionRef!==undefined&&(typeof space.entryActionRef!=='string'||!space.entryActionRef.trim()))
+      ||(space.exitActionRef!==undefined&&(typeof space.exitActionRef!=='string'||!space.exitActionRef.trim()))
+      ||[...space.occupantActorIds,...space.containedObjectIds].some(id=>typeof id!=='string'||!id.trim())
+      ||new Set(space.occupantActorIds).size!==space.occupantActorIds.length
+      ||new Set(space.containedObjectIds).size!==space.containedObjectIds.length)return 'Invalid portable space';
+  }
+  if(object.containedByObjectId!==undefined&&(typeof object.containedByObjectId!=='string'||!object.containedByObjectId.trim()||object.containedByObjectId===object.id))return 'Invalid contained object';
+  if(object.easyIgnition!==undefined&&(typeof object.easyIgnition!=='boolean'||object.easyIgnition&&!object.flammable))return 'Invalid easy ignition target';
+  if(object.grantedActionRefs!==undefined&&(!object.itemCardId||!Array.isArray(object.grantedActionRefs)||!object.grantedActionRefs.every(ref=>typeof ref==='string'&&ref.trim())||new Set(object.grantedActionRefs).size!==object.grantedActionRefs.length))return 'Invalid item action grants';
+  if(object.grantsToOwner!==undefined&&(typeof object.grantsToOwner!=='boolean'||!object.ownerActorId||!object.itemCardId))return 'Invalid item action owner';
+  if(object.fuelRoundsLeft!==undefined&&(!object.itemCardId||!Number.isSafeInteger(object.fuelRoundsLeft)||object.fuelRoundsLeft<0))return 'Invalid item fuel';
+  const toolIssue=objectToolStateIssue(object.toolState);if(toolIssue)return toolIssue;
   if (object.planeId !== undefined && (typeof object.planeId !== 'string' || !object.planeId.trim())) return 'Invalid plane identity';
   if (object.weaponBondActorId !== undefined && (object.kind !== 'item' || !object.itemCardId
     || typeof object.weaponBondActorId !== 'string' || !object.weaponBondActorId.trim())) return 'Weapon bond requires an item and an owner';
@@ -227,6 +265,13 @@ export function worldObjectLedgerIssue(
   for (const object of Object.values(objects)) {
     const itemIssue = itemInstanceIssue(object);
     if (itemIssue) return `${object.id}: ${itemIssue}`;
+    if(object.containedByObjectId){const space=objects[object.containedByObjectId];
+      if(!space?.portableSpace?.containedObjectIds.includes(object.id))return `${object.id}: portable-space link is inconsistent`;
+    }
+    if(object.portableSpace){
+      if(object.portableSpace.containedObjectIds.some(id=>objects[id]?.containedByObjectId!==object.id))return `${object.id}: contained-object link is inconsistent`;
+      if(actorIds&&object.portableSpace.occupantActorIds.some(id=>!actorIds.has(id)))return `${object.id}: unknown portable-space occupant`;
+    }
     if (object.weaponBondActorId) {
       const count = (bondsByActor.get(object.weaponBondActorId) ?? 0) + 1;
       if (count > 2) return 'A Fighter cannot retain more than two weapon bonds';
@@ -254,6 +299,21 @@ export function evolveWorldObjectEvent(
   event: WorldObjectMutationEvent,
 ): Record<string, WorldObjectState> {
   const next = cloneObjects(objects);
+  if(event.type==='WorldObjectsPatched'){
+    if(!event.patches.length||new Set(event.patches.map(row=>row.objectId)).size!==event.patches.length)throw Error('Invalid atomic world-object patch');
+    for(const row of event.patches){
+      const current=next[row.objectId];
+      if(!current||row.patch.id!==undefined&&row.patch.id!==row.objectId
+        ||Object.hasOwn(row.patch,'itemCardId')&&row.patch.itemCardId!==current.itemCardId
+        ||row.unset?.some(key=>REQUIRED_WORLD_OBJECT_KEYS.has(key)||key==='itemCardId'))throw Error('Invalid atomic world-object identity');
+      const patched={...current,...JSON.parse(JSON.stringify(row.patch)) as Partial<WorldObjectState>};
+      for(const key of row.unset??[])delete patched[key];
+      const issue=itemInstanceIssue(patched);if(issue)throw Error(issue);
+      next[row.objectId]=patched;
+    }
+    const issue=worldObjectLedgerIssue(next);if(issue)throw Error(issue);
+    return next;
+  }
   if (event.type === 'WorldObjectCreated') {
     if (next[event.object.id]) throw new Error(`World object ${event.object.id} already exists`);
     const issue = itemInstanceIssue(event.object);
@@ -361,19 +421,21 @@ export function advanceWorldObjectRounds(input: {
         });
       }
     }
-    if (!object.illumination) continue;
+    if (!object.illumination || object.illumination.roundsLeft === null) continue;
     if (object.illumination.roundsLeft <= input.rounds) {
       delete object.illumination;
+      if(object.fuelRoundsLeft!==undefined)object.fuelRoundsLeft=0;
       events.push({
         type: 'WorldObjectPatched', objectId: object.id,
-        patch: {}, unset: ['illumination'], reason: 'light_duration_expired',
+        patch: object.fuelRoundsLeft===undefined?{}:{fuelRoundsLeft:0}, unset: ['illumination'], reason: 'light_duration_expired',
       });
       continue;
     }
     object.illumination.roundsLeft -= input.rounds;
+    if(object.fuelRoundsLeft!==undefined)object.fuelRoundsLeft=object.illumination.roundsLeft;
     events.push({
       type: 'WorldObjectPatched', objectId: object.id,
-      patch: { illumination: cloneObject(object).illumination }, reason: 'light_duration_advanced',
+      patch: { illumination: cloneObject(object).illumination,...(object.fuelRoundsLeft!==undefined?{fuelRoundsLeft:object.fuelRoundsLeft}:{}) }, reason: 'light_duration_advanced',
     });
   }
   return { objects, events };

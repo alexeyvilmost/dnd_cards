@@ -19,7 +19,7 @@ function fixtures() {
     level: 1, school: 'evocation', casting_time: 'Действие', range: 'На себя', duration: 'Мгновенная',
     component_verbal: true, mechanics: {
       spell_class_list_ids: ['CLASS-wizard'],
-      activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }, { resource: 'spell_slot', level: 1, amount: 1 }] },
+      activation: { mode: 'active', cast_time: { unit: 'action', amount: 1 }, cost: [{ resource: 'action', amount: 1 }, { resource: 'spell_slot', level: 1, amount: 1 }] },
       targeting: { target: 'self', range: { distance: 0, unit: 'ft' } },
       effects: [{ resolution: 'auto', result: [{ kind: 'healing', amount: index + 1 }] }],
     },
@@ -52,6 +52,175 @@ function fixtures() {
 }
 
 describe('item spell grants use canonical equipment, source and payment authority', () => {
+  it('hydrates variant children into the scoped combat catalog and presentation under one parent grant', async () => {
+    const { spells, character, factory, resolve } = fixtures();
+    const parent = spells[0];
+    const child = { ...structuredClone(parent), id: 'spell-first-variant',
+      card_number: 'SPELL-VAR-first', name: 'Spell first — chosen effect',
+      mechanics: { ...structuredClone(parent.mechanics!), variant_of_spell_id: parent.id,
+        effects: [{ resolution: 'auto', result: [{ kind: 'healing', amount: 3 }] }] } } as Spell;
+    parent.mechanics = { ...parent.mechanics!, spell_variant_ids: [child.id] };
+    spells.push(child);
+    const participant = await factory.loadSheetCombatParticipant({ character, cards: new Map() });
+    expect(resolve.mock.calls.some(([reference]) => reference === child.id)).toBe(true);
+    const children = participant.canonical.actions.filter((action) => action.sourceEntityIds[0] === child.id);
+    expect(children).toHaveLength(1);
+    const childAction = children[0];
+    expect(participant.canonical.catalog.getAction(childAction.id)).toEqual(childAction);
+    expect(participant.actionPresentation?.[childAction.id]).toMatchObject({
+      entityType: 'spell', entityId: child.id, spellRef: { id: child.id },
+    });
+    expect(participant.canonical.world.actors.hero.capabilities.actionIds).not.toContain(childAction.id);
+    expect(participant.canonical.world.actors.hero.spellcastingAccess?.grants
+      .some((grant) => grant.actionId === childAction.id)).toBe(false);
+  });
+
+  it('checks an unknown cantrip before its effect and spends the shared use on a failed check',async()=>{
+    const {cards,spells,character,factory}=fixtures();
+    spells[0].level=0;
+    spells[0].mechanics!.activation={mode:'active',cast_time:{unit:'action',amount:1},cost:[{resource:'action',amount:1}]};
+    spells[0].mechanics!.effects=[{resolution:'auto',who:'self',result:[{kind:'healing',amount:2}]}];
+    const itemPayload={kind:'grant_spell',value:spells[0].id,label:'known',freeuse:{count:1,recharge:'long_rest'},
+      casting_override:{free_use_resource:'unknown_cantrip',pre_action_check:{ability:'int',skill:'arcana',dc:10},requires_unknown_spell:true}};
+    cards[0].mechanics={activation:{mode:'passive',while:'equipped'},effects:[{resolution:'auto',result:[
+      {kind:'resource',op:'grant',id:'unknown_cantrip',amount:1,recharge:'long_rest'},itemPayload]}]};
+    cards[1].mechanics={activation:{mode:'passive',while:'equipped'},effects:[{resolution:'auto',result:[
+      {kind:'grant_spell',value:spells[0].id,label:'known'}]}]};
+    character.resources={...character.resources,unknown_cantrip:1};
+    character.max_resources={...character.max_resources,unknown_cantrip:1};
+    const loaded=await factory.loadSheetCombatParticipant({character,cards:new Map()});
+    const grant=loaded.canonical.world.actors.hero.spellcastingAccess!.grants.find(row=>row.sourceId===cards[0].card_number)!;
+    const action=loaded.canonical.catalog.getAction(grant.actionId)!;
+    expect(action.mechanics.pre_action_check).toMatchObject({ability:'int',skill:'arcana',dc:10});
+    const command:UseActionCommand={schemaVersion:1,type:'UseAction',commandId:'unknown',expectedRevision:loaded.canonical.world.revision,
+      rulesetContentHash:loaded.canonical.world.ruleset.contentHash,actorId:'hero',actionId:grant.actionId,targetIds:['hero'],
+      factsByTarget:{hero:{factsSource:'scenario',boardRevision:0,distanceFt:0,lineOfSight:true,cover:'none',relation:'self'}},
+      spell:{baseLevel:0,grantId:grant.grantId}};
+    const known=new InMemoryRulesSession(structuredClone(loaded.canonical.world),loaded.canonical.catalog,
+      {rng:()=>0.95,clock:createLogicalClock(),nextId:createSequentialIdFactory('known')});
+    expect(known.dispatch(command).status).toBe('rejected');
+    character.equipment={...character.equipment,ring_right:null};
+    const unknownLoaded=await factory.loadSheetCombatParticipant({character,cards:new Map()});
+    const unknownGrant=unknownLoaded.canonical.world.actors.hero.spellcastingAccess!.grants.find(row=>row.sourceId===cards[0].card_number)!;
+    const failed=new InMemoryRulesSession(structuredClone(unknownLoaded.canonical.world),unknownLoaded.canonical.catalog,
+      {rng:()=>0,clock:createLogicalClock(),nextId:createSequentialIdFactory('failed')});
+    const unknownCommand={...command,actionId:unknownGrant.actionId,spell:{baseLevel:0,grantId:unknownGrant.grantId},
+      expectedRevision:unknownLoaded.canonical.world.revision,rulesetContentHash:unknownLoaded.canonical.world.ruleset.contentHash};
+    expect(failed.dispatch(unknownCommand).status).toBe('accepted');
+    expect(failed.getState().actors.hero.runtime.resources.unknown_cantrip).toBe(0);
+    expect(failed.getState().actors.hero.runtime.hp.current).toBe(8);
+    const success=new InMemoryRulesSession(structuredClone(unknownLoaded.canonical.world),unknownLoaded.canonical.catalog,
+      {rng:()=>0.95,clock:createLogicalClock(),nextId:createSequentialIdFactory('success')});
+    expect(success.dispatch(unknownCommand).status).toBe('accepted');
+    expect(success.getState().actors.hero.runtime.hp.current).toBe(10);
+  });
+  it('keeps one item resource across two selected cantrips instead of refreshing it when the choice changes',async()=>{
+    const {cards,spells,character,factory}=fixtures();
+    spells.forEach(spell=>{spell.level=0;const activation=spell.mechanics!.activation as Record<string,unknown>;activation.cost=[{resource:'action',amount:1}];});
+    cards[0].mechanics={activation:{mode:'passive',while:'equipped'},effects:[{resolution:'auto',result:[
+      {kind:'resource',op:'grant',id:'shared_cantrip',amount:1,recharge:'long_rest'},
+      {kind:'choice',id:'selected-cantrip',count:1,context:'in_play',options:{source:'spell',items:spells.map(spell=>({id:spell.id,name:spell.name,
+        grants:[{kind:'grant_spell',value:spell.id,label:'known',freeuse:{count:1,recharge:'long_rest'},casting_override:{free_use_resource:'shared_cantrip'}}]}))}},
+    ]}]};
+    character.resources={...character.resources,shared_cantrip:1};character.max_resources={...character.max_resources,shared_cantrip:1};
+    character.turn_state={...character.turn_state,inPlayChoices:{'item-0:selected-cantrip':[spells[0].id]}};
+    const first=await factory.loadSheetCombatParticipant({character,cards:new Map()}),owner=first.canonical.world.actors.hero;
+    const grant=owner.spellcastingAccess!.grants.find(row=>row.sourceId===cards[0].card_number)!;
+    expect(grant.freeUseResource).toBe('shared_cantrip');
+    const firstAction=first.canonical.catalog.getAction(grant.actionId)!;
+    if(firstAction.kind!=='spell')throw Error('Expected spell');
+    const prepared=prepareSpellExecution({action:firstAction,accessState:owner.spellcastingAccess!,resources:owner.runtime.resources,declaration:{grantId:grant.grantId}});
+    if(prepared.status!=='ready')throw Error(prepared.message);
+    const after=pay(owner.runtime,(prepared.executableAction.mechanics.activation as {cost:Parameters<typeof pay>[1]}).cost).state;
+    character.resources=JSON.parse(JSON.stringify(after.resources));
+    character.turn_state={...character.turn_state,inPlayChoices:{'item-0:selected-cantrip':[spells[1].id]}};
+    const second=await factory.loadSheetCombatParticipant({character,cards:new Map()}),reloaded=second.canonical.world.actors.hero;
+    const other=reloaded.spellcastingAccess!.grants.find(row=>row.sourceId===cards[0].card_number)!;
+    expect(other.actionId).not.toBe(grant.actionId);expect(other.freeUseResource).toBe('shared_cantrip');
+    const secondAction=second.canonical.catalog.getAction(other.actionId)!;
+    if(secondAction.kind!=='spell')throw Error('Expected spell');
+    expect(prepareSpellExecution({action:secondAction,accessState:reloaded.spellcastingAccess!,resources:reloaded.runtime.resources,declaration:{grantId:other.grantId}}).status).toBe('rejected');
+  });
+  it.each([0, 1])('honors a limited-use cantrip grant on item %s across reload', async index => {
+    const { cards, spells, character, factory } = fixtures();
+    const payload = ((cards[index].mechanics!.effects as Record<string, unknown>[])[0].result as Record<string, unknown>[])[0];
+    payload.freeuse = { count: 1, recharge: 'long_rest' };
+    spells[index].level = 0;
+    const { canonical } = await factory.loadSheetCombatParticipant({ character, cards: new Map() });
+    const actor = canonical.world.actors.hero;
+    const grant = actor.spellcastingAccess!.grants.find(row => row.sourceId === cards[index].card_number)!;
+    const action = canonical.catalog.getAction(grant.actionId)!;
+    if (action.kind !== 'spell') throw Error('Expected spell');
+    const prepared = prepareSpellExecution({ action, accessState: actor.spellcastingAccess!, resources: actor.runtime.resources, declaration: { grantId: grant.grantId } });
+    expect(prepared.status).toBe('ready');
+    if (prepared.status !== 'ready') throw Error(prepared.message);
+    expect(prepared.payment.kind).toBe('free_use');
+    const cost = (prepared.executableAction.mechanics.activation as { cost: { resource: string; amount: number }[] }).cost;
+    const paid = JSON.parse(JSON.stringify(pay(actor.runtime, cost).state));
+    expect(prepareSpellExecution({ action, accessState: actor.spellcastingAccess!, resources: paid.resources, declaration: { grantId: grant.grantId } }).status).toBe('rejected');
+    expect(longRest(paid, actor.character).state.resources[grant.freeUseResource!]).toBe(1);
+  });
+  it.each([0, 1])('uses modifier zero for item %s when its owner has no spellcasting ability', async index => {
+    const { cards, spells, character, factory } = fixtures();
+    const payload = ((cards[index].mechanics!.effects as Record<string, unknown>[])[0].result as Record<string, unknown>[])[0];
+    delete payload.ability;
+    spells[index].mechanics!.effects = index === 0
+      ? [{ resolution: 'auto', who: 'self', result: [{ kind: 'healing', amount: '2 + spellcasting' }] }]
+      : [{ resolution: 'save', who: 'target', ability: 'dex', dc: '8 + prof + spellcasting', on_fail: [{ kind: 'damage', amount: 1, type: 'fire' }] }];
+    const { canonical } = await factory.loadSheetCombatParticipant({ character, cards: new Map() });
+    const actor = canonical.world.actors.hero;
+    const grant = actor.spellcastingAccess!.grants.find(row => row.sourceId === cards[index].card_number)!;
+    expect(grant.fixedSpellcastingModifier).toBe(0);
+    expect(grant.spellcastingAbility).toBeUndefined();
+    const session = new InMemoryRulesSession(JSON.parse(JSON.stringify(canonical.world)), canonical.catalog,
+      { rng: () => 0.5, clock: createLogicalClock(), nextId: createSequentialIdFactory('fixed') });
+    const command: UseActionCommand = { schemaVersion: 1, type: 'UseAction', commandId: 'fixed-cast', expectedRevision: canonical.world.revision,
+      rulesetContentHash: canonical.world.ruleset.contentHash, actorId: 'hero', actionId: grant.actionId, targetIds: ['hero'],
+      factsByTarget: { hero: { factsSource: 'scenario', boardRevision: 0, distanceFt: 0, lineOfSight: true, cover: 'none', relation: 'self' } },
+      spell: { baseLevel: 1, grantId: grant.grantId } };
+    expect(session.dispatch(command).status).toBe('accepted');
+    if (index === 0) expect(session.getState().actors.hero.runtime.hp.current).toBe(10);
+    else {
+      const pending = session.getState().pendingResolution;
+      expect(pending?.type).toBe('target_save');
+      if (pending?.type !== 'target_save') throw Error('Missing save');
+      expect(pending.request.dc).toBe(10);
+      expect(pending.spell?.fixedSpellcastingModifier).toBe(0);
+    }
+    expect(session.getState().actors.hero.character).toEqual(actor.character);
+  });
+  it.each([0, 1])('casts source-scoped spell %s as a bonus-action cantrip and preserves the original', async index => {
+    const { cards, spells, character, factory } = fixtures();
+    const payload = ((cards[index].mechanics!.effects as Record<string, unknown>[])[0].result as Record<string, unknown>[])[0];
+    payload.label = 'cantrip';
+    delete payload.freeuse;
+    payload.casting_override = { spell_level: 0, remove_cost_resources: ['spell_slot'], replace_cost_resources: { action: 'bonus_action' } };
+    const { canonical } = await factory.loadSheetCombatParticipant({ character, cards: new Map() });
+    const actor = canonical.world.actors.hero;
+    const grant = actor.spellcastingAccess!.grants.find(row => row.sourceId === cards[index].card_number)!;
+    const action = canonical.catalog.getAction(grant.actionId)!;
+    expect(action.kind === 'spell' && action.spell.level).toBe(0);
+    expect(action.mechanics.activation).toMatchObject({ cast_time: { unit: 'bonus_action', amount: 1 } });
+    expect(spells[index].mechanics?.activation).toMatchObject({ cast_time: { unit: 'action', amount: 1 } });
+    expect(spells[index].level).toBe(1);
+    const tape = createStrictRngTape([]);
+    const session = new InMemoryRulesSession(JSON.parse(JSON.stringify(canonical.world)), canonical.catalog,
+      { rng: tape.rng, clock: createLogicalClock(), nextId: createSequentialIdFactory('cantrip') });
+    const command: UseActionCommand = { schemaVersion: 1, type: 'UseAction', commandId: `cast-${index}`, expectedRevision: canonical.world.revision,
+      rulesetContentHash: canonical.world.ruleset.contentHash, actorId: 'hero', actionId: grant.actionId, targetIds: ['hero'],
+      factsByTarget: { hero: { factsSource: 'scenario', boardRevision: 0, distanceFt: 0, lineOfSight: true, cover: 'none', relation: 'self' } },
+      spell: { baseLevel: 0, grantId: grant.grantId } };
+    expect(session.dispatch(command).status).toBe('accepted');
+    expect(session.getState().actors.hero.runtime.resources).toMatchObject({ action: 1, bonus_action: 0 });
+    expect(session.getState().actors.hero.runtime.hp.current).toBe(9 + index);
+    expect(session.dispatch(command).status).toBe('rejected');
+    expect(session.getState().actors.hero.runtime.hp.current).toBe(9 + index);
+    const stale = JSON.parse(JSON.stringify(canonical.world));
+    stale.actors.hero.runtime.equipment = {};
+    expect(new InMemoryRulesSession(stale, canonical.catalog, { rng: tape.rng, clock: createLogicalClock(), nextId: createSequentialIdFactory('stale') })
+      .dispatch(command).status).toBe('rejected');
+    tape.assertExhausted();
+  });
   it.each([[0,0],[0,1],[1,0],[1,1]])('keeps item %s remaining free uses %s across unequip or unattune and reload',async(index,remaining)=>{
     const {cards,spells,character,factory}=fixtures();
     const recharge=index===0?'long_rest':'encounter';

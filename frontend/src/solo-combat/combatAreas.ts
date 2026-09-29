@@ -1,3 +1,8 @@
+import {auraDifficultStep} from './auraTerrain';
+import {magicAreaSuppressed} from './combatAntimagic';
+import {actionMagicOrigin} from '../engine/magic';
+import type {UncommittedRuleEvent} from '../rules-core/domain';
+import {combatRelation} from './types';
 import type { ActiveEffectEntry } from '../mvp/contracts';
 import { finiteDurationRounds } from '../engine/duration';
 import {collectModifiers,foldModifiers} from '../engine/modifiers';
@@ -217,6 +222,8 @@ export function createCombatArea(input: {
     ? [...declaredTriggers, 'end_turn' as const]
     : declaredTriggers;
   const area: CombatAreaState = {
+    magicOrigin:actionMagicOrigin(input.action.mechanics,{character:input.state.world.actors[input.sourceActorId].character,selfId:input.sourceActorId,
+      ...(input.action.kind==='spell'?{spell:{baseLevel:input.action.spell.level,spellId:input.action.spell.entityId??input.action.id}}:{})}),
     id,
     name: input.action.name,
     zoneType: String(payload.zone_type ?? 'area'),
@@ -230,11 +237,16 @@ export function createCombatArea(input: {
       ? { sourceTurnAffectsAllInside: true } : {}),
     duration: durationOf(input.action, payload),
     triggers,
-    difficultTerrain: tactical.difficult_terrain === true,
+    difficultTerrain: tactical.difficult_terrain === true || Number(tactical.movement_cost_multiplier) > 1,
+    ...(Number.isSafeInteger(tactical.movement_cost_multiplier) && Number(tactical.movement_cost_multiplier) >= 1
+      ? { movementCostMultiplier: Number(tactical.movement_cost_multiplier) } : {}),
     lightlyObscured: tactical.lightly_obscured === true,
     heavilyObscured: tactical.heavily_obscured === true,
     blocksVerbalComponents: tactical.blocks_verbal_components === true,
     damageImmunities: strings(tactical.damage_immunities),
+    ...(tactical.damage_budget!==undefined?{damageBudgetRemaining:validDamageBudget(tactical.damage_budget)}:{}),
+    ...(tactical.shared_trigger_per_turn===true?{sharedTriggerPerTurn:true}:{}),
+    ...(['enemies','allies','all'].includes(String(tactical.recipients))?{recipients:tactical.recipients as CombatAreaState['recipients']}:{}),
     ...(insideEffect ? { insideEffect } : {}),
     ...(typeof tactical.notice === 'string' ? { notice: tactical.notice } : {}),
   };
@@ -281,12 +293,16 @@ export function queueCombatAreaEvent(
       : actorIds;
     const triggered = new Set(area.triggeredTurnKeys ?? []);
     for (const actorId of eventActorIds) {
+      const relation=combatRelation(state,area.sourceActorId,actorId);
+      if(area.recipients==='enemies'&&relation!=='enemy')continue;
+      if(area.recipients==='allies'&&relation!=='ally'&&relation!=='self')continue;
       const token = state.tokens[actorId];
+      if(token&&magicAreaSuppressed(state,area,token.position,actorId))continue;
       if (!token || (!assumeMembership && event !== 'exit' && !areaContains(area, token.position, actorFootprint(state.world.actors[actorId], state)))) continue;
       const occurrences = Math.max(1, Math.floor(occurrencesByArea[area.id] ?? 1));
       for (let occurrence = 0; occurrence < occurrences; occurrence += 1) {
         const movementIdentity = event === 'move' ? `:${state.boardRevision}:${occurrence}` : '';
-        const dedupe = `${actorId}:${event}:${key}${movementIdentity}`;
+        const dedupe = `${actorId}:${area.sharedTriggerPerTurn?'shared':event}:${key}${movementIdentity}`;
         if (triggered.has(dedupe)) continue;
         triggered.add(dedupe);
         queued.push({ areaId: area.id, actorId, event, turnKey: key, occurrence });
@@ -420,7 +436,7 @@ export function reconcileInsideAreaConditions(state: SoloCombatState): SoloComba
   const actors = Object.fromEntries(Object.entries(state.world.actors).map(([actorId, actor]) => {
     const required = areas.filter((area) => {
       const token = state.tokens[actorId];
-      return token && areaContains(area, token.position, actorFootprint(state.world.actors[actorId], state));
+      return token && !magicAreaSuppressed(state,area,token.position,actorId)&&areaContains(area, token.position, actorFootprint(state.world.actors[actorId], state));
     });
     const requiredIds = new Set(required.flatMap((area) => [
       ...(area.insideEffect ? [`combat-area:${area.id}:condition:${actorId}`] : []),
@@ -491,15 +507,17 @@ export function movementCostThroughAreas(
   baseFeet: number,
   actorId?: string,
 ): number {
-  const difficult = Object.values(state.combatAreas ?? {}).some((area) => (
-    area.difficultTerrain && movementCells(from, to).some((cell) => areaContains(area, cell, actorFootprint(actorId ? state.world.actors[actorId] : undefined, state)))
-  ));
-  if(!difficult)return baseFeet;
+  const areaMultiplier = Object.values(state.combatAreas ?? {}).reduce((maximum, area) => (
+    area.difficultTerrain && movementCells(from, to).some((cell) => (!actorId||!magicAreaSuppressed(state,area,cell,actorId))&&areaContains(area, cell, actorFootprint(actorId ? state.world.actors[actorId] : undefined, state)))
+      ? Math.max(maximum, area.movementCostMultiplier ?? 2) : maximum
+  ), 1);
+  const multiplier = Math.max(areaMultiplier, actorId&&auraDifficultStep(state,actorId,from,to)?2:1);
+  if(multiplier===1)return baseFeet;
   const actor=actorId?state.world.actors[actorId]:undefined;
-  if(!actor)return baseFeet*2;
+  if(!actor)return baseFeet*multiplier;
   const modifiers=collectModifiers(actor.runtime,actor.passives??[],{roll:'movement_cost',filter:{terrain:'difficult'},
     evalCtx:{state:actor.runtime,character:actor.character}});
-  return baseFeet*Math.max(1,foldModifiers(2,modifiers).value);
+  return baseFeet*Math.max(1,foldModifiers(multiplier,modifiers).value);
 }
 
 export function enteredAndExitedAreas(
@@ -537,8 +555,8 @@ function movementCells(from: GridPosition, to: GridPosition): GridPosition[] {
 
 export function hazardCatalog(state: Pick<SoloCombatState, 'combatAreas'>): RuleHazardDefinition[] {
   return Object.values(state.combatAreas ?? {}).flatMap((area) => [
-    ...(area.hazard ? [area.hazard] : []),
-    ...Object.values(area.eventHazards ?? {}).filter((hazard): hazard is RuleHazardDefinition => Boolean(hazard)),
+    ...(area.hazard ? [budgetedHazard(area.hazard,area)] : []),
+    ...Object.values(area.eventHazards ?? {}).filter((hazard): hazard is RuleHazardDefinition => Boolean(hazard)).map(hazard=>budgetedHazard(hazard,area)),
   ]);
 }
 
@@ -550,4 +568,33 @@ export function pendingTriggerForArea(
   const area = state.combatAreas?.[trigger.areaId];
   const hazard = area?.eventHazards?.[trigger.event] ?? area?.hazard;
   return area ? { trigger, area, ...(hazard ? { hazard } : {}) } : null;
+}
+
+function validDamageBudget(value:unknown):number{
+ if(!Number.isSafeInteger(value)||Number(value)<1)throw Error('Zone damage budget must be a positive integer');
+ return Number(value);
+}
+/** Each persisted hazard snapshot carries the budget at declaration time. */
+function budgetedHazard(hazard:RuleHazardDefinition,area:CombatAreaState):RuleHazardDefinition{
+ if(area.damageBudgetRemaining===undefined)return hazard;
+ const bound=(payloads:Dict[]):Dict[]=>payloads.map(p=>p.kind==='damage'?{...p,maximum_damage:area.damageBudgetRemaining,damage_budget_id:area.id}:p);
+ return hazard.resolution==='automatic'?{...hazard,effects:bound(hazard.effects)}:{...hazard,onFailure:bound(hazard.onFailure),onSuccess:bound(hazard.onSuccess??[])};
+}
+/** Only committed damage tagged with this immutable area identity spends its budget.
+ * Retaliation and other damage in the same command cannot charge it. */
+export function settleCombatAreaDamage(state:SoloCombatState,events:readonly UncommittedRuleEvent[]):SoloCombatState{
+ const spent=new Map<string,number>();
+ for(const envelope of events){
+  if(envelope.payload.type!=='EngineEventRecorded')continue;
+  const event=envelope.payload.event;if(event.type!=='damage'||!event.calculation?.budgetId)continue;
+  const id=event.calculation.budgetId;spent.set(id,(spent.get(id)??0)+event.amount);
+ }
+ if(!spent.size)return state;
+ const areas={...state.combatAreas};
+ for(const [id,amount] of spent){
+  const area=areas[id];if(!area||area.damageBudgetRemaining===undefined)continue;
+  const remaining=Math.max(0,area.damageBudgetRemaining-amount);
+  if(remaining===0)delete areas[id];else areas[id]={...area,damageBudgetRemaining:remaining};
+ }
+ return {...state,combatAreas:areas,pendingCombatAreaTriggers:state.pendingCombatAreaTriggers?.filter(trigger=>areas[trigger.areaId])};
 }

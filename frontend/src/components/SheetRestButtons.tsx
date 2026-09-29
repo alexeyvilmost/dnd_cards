@@ -16,7 +16,7 @@ import {
 import type { AssembledCharacter } from '../character/assemble';
 import { collectItemMechanics } from '../character/attunement';
 import { useGrantedActions } from '../character/grantedActions';
-import { collectFreeuseRecharge } from '../engine/freeuse';
+import { collectFreeuseRecharge, collectFreeuseRecovery } from '../engine/freeuse';
 import {
   buildCharacterContext,
   alignRuntimeHp,
@@ -79,6 +79,8 @@ import {
 import { commitSheetRuntimeCommand } from '../character/sheetRuntimeCommand';
 import { sheetCompanionRetryPolicy } from '../character/sheetCompanionInteraction';
 import type { Card } from '../types';
+import { prepareSheetRestCommit } from '../character/sheetRestCommit';
+import { readPendingRestCommit, writePendingRestCommit, type PendingRestCommit } from '../character/pendingRestCommit';
 
 interface Props {
   character: ForgeCharacter;
@@ -151,6 +153,8 @@ export default function SheetRestButtons({
   const [shortRestError, setShortRestError] = useState<string | null>(null);
   const hitDieRolls = useRef<number[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [pendingRest, setPendingRest] = useState<PendingRestCommit | null>(() => readPendingRestCommit(character.id));
+  const lastRestGranted = useRef(true);
   const [pendingAtomicTurn, setPendingAtomicTurn] = useState<PreparedSheetAtomicWorldCommit | null>(null);
   const syncAttemptedFor = useRef<string | null>(null);
   const diceDialog = useDiceDialog();
@@ -218,9 +222,10 @@ export default function SheetRestButtons({
     [assembled.klass?.resources, actionUseRestPolicies.recharge, ruleState.freeuseSpells],
   );
   const resourceRecovery = useMemo(() => ({
+    ...collectFreeuseRecovery(ruleState.freeuseSpells),
     ...buildResourceRecovery((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
     ...actionUseRestPolicies.recovery,
-  }), [assembled.klass?.resources, actionUseRestPolicies.recovery]);
+  }), [assembled.klass?.resources, actionUseRestPolicies.recovery, ruleState.freeuseSpells]);
 
   const ctx = useMemo(
     () => ({
@@ -247,6 +252,31 @@ export default function SheetRestButtons({
     () => alignRuntimeHp(forgeToRuntimeState(character), ruleState.maxHP),
     [character, ruleState.maxHP],
   );
+  const restCtx = useMemo(() => ({ ...ctx, selfId: character.id,
+    passives: [...passives, ...grantedItemMechanics.map(entry => ({ ...entry.mechanics, id: entry.card.id, name: entry.card.name }))],
+  }), [ctx, passives, grantedItemMechanics, character.id]);
+
+  const commitRest = useCallback(async (pending: PendingRestCommit) => {
+    let updated: ForgeCharacter;
+    if (pending.kind === 'sheet') {
+      const committed = await commitSheetRuntimeCommand({ request: pending.prepared.request,
+        commit: () => commitPreparedSheetAtomicWorld({ commit: charactersV3Api.postRuntimeCommand }, pending.prepared),
+        loadCurrent: charactersV3Api.get, viewingCharacterId: character.id, loadPersistedEvents: charactersV3Api.getEvents });
+      updated = committed.characters[character.id];
+      if (committed.persistedEvents) onPersistedEvents?.(committed.persistedEvents);
+      lastRestGranted.current = pending.granted;
+    } else {
+      const result = await roguelikeApi.command(pending.runId, pending.revision, pending.restType, pending.payload, pending.commandId);
+      const member = runCharacter(result, character.id);
+      if (!member) throw Error('Сервер не вернул лист после отдыха');
+      updated = member;
+      onPersistedEvents?.(result.command_events ?? []);
+      notifyRunUpdated();
+    }
+    writePendingRestCommit(character.id, null);
+    setPendingRest(null);
+    onUpdated(updated);
+  }, [character.id, onUpdated, onPersistedEvents]);
 
   // Отдых открывает окно смены настройки на предметы; новый ход закрывает.
   // resetDeathSaves: отдых сбрасывает спасброски смерти (KB-037). Без этого персонаж, которого
@@ -294,22 +324,42 @@ export default function SheetRestButtons({
     try {
       const runId = character.character_type === 'dungeon_crawl' ? activeRunId() : undefined;
       let updated: ForgeCharacter;
-      let persistedRestEvents: CharacterEventRow[] | undefined;
       if (runId && restType) {
         const run = await roguelikeApi.get(runId);
-        const result = await roguelikeApi.command(runId, run.revision, restType, {
+        const pending: PendingRestCommit = pendingRest ?? { kind: 'run', runId, revision: run.revision, restType, commandId: newSheetRuntimeCommandId(), payload: {
           actor_id:character.id,
           hit_die_rolls: restType === 'short_rest' ? hitDieRolls.current : [],
           ...(masteryChoices ? { mastery_choices: masteryChoices } : {}),
           ...(restChoices?.slotRecoverySelections ? { slot_recovery_selections: restChoices.slotRecoverySelections } : {}),
           ...(restChoices?.spellSwapSelections ? { spell_swap_selections: restChoices.spellSwapSelections } : {}),
           ...(restChoices?.spellPreparation ? { spell_preparation: restChoices.spellPreparation } : {}),
-        });
-        const member=runCharacter(result,character.id);
-        if (!member) throw new Error('Сервер не вернул лист после отдыха');
-        updated = member;
-        persistedRestEvents = result.command_events ?? [];
-        notifyRunUpdated();
+        } };
+        writePendingRestCommit(character.id, pending); setPendingRest(pending);
+        await commitRest(pending);
+        return true;
+      } else if (restType) {
+        let pending = pendingRest;
+        if (!pending) {
+          const [cards, basicActions] = await Promise.all([getCardsIndex(), fetchBasicActions()]);
+          const participant = await loadSheetCombatParticipant({ character, cards, basicActions });
+          const actor = participant.canonical.world.actors[character.id];
+          const context = { ...actor.character, selfId: actor.id, passives: actor.passives, rng: () => Math.random() };
+          const result = restType === 'short_rest' ? shortRest(actor.runtime, context) : longRest(actor.runtime, context);
+          if (!result.restBenefitsDenied && restType === 'short_rest') {
+            for (const roll of hitDieRolls.current) {
+              const spent = spendHitDie(result.state, context, roll); result.state = spent.state; result.events.push(...spent.events);
+            }
+            const recovered = applySheetSlotRecoverySelections({ state: result.state, classLevels: context.classLevels,
+              policies: slotRecoveryPolicies, selections: restChoices?.slotRecoverySelections ?? {} });
+            result.state = recovered.state; result.events.push(...recovered.events);
+          }
+          if (!result.restBenefitsDenied) result.events.push(...events.filter(event => event.type === 'narrative'));
+          pending = { kind: 'sheet', restType, granted: !result.restBenefitsDenied,
+            prepared: prepareSheetRestCommit({ commandId: newSheetRuntimeCommandId(), participant, result, turnState: baseTurnState }) };
+        }
+        writePendingRestCommit(character.id, pending); setPendingRest(pending);
+        await commitRest(pending);
+        return true;
       } else {
         updated = await persistCharacterRuntime(character,
           persistPayload(next, attunementUnlocked, resetDeathSaves, baseTurnState), encounterApply, true);
@@ -320,8 +370,7 @@ export default function SheetRestButtons({
         }
       }
       onUpdated(updated);
-      if (persistedRestEvents !== undefined) onPersistedEvents?.(persistedRestEvents);
-      else onEvents?.(events);
+      onEvents?.(events);
       return true;
     } catch (e) {
       console.error(e);
@@ -330,7 +379,7 @@ export default function SheetRestButtons({
     } finally {
       setBusy(false);
     }
-  }, [character, encounterApply, onUpdated, onEvents, onPersistedEvents]);
+  }, [character, encounterApply, onUpdated, onEvents, pendingRest, slotRecoveryPolicies, commitRest]);
 
   const syncResources = useCallback(async (force = false) => {
     // Run resources are recalculated by the trusted worker, never by a sheet patch.
@@ -377,7 +426,6 @@ export default function SheetRestButtons({
     syncResources();
   }, [autoSyncResources, character.id, itemResourceSignature, grantedActionResourceSignature, syncResources]);
 
-  const restCtx = useMemo(() => ({ ...ctx, passives }), [ctx, passives]);
 
   const resolveTurnReaction = async (state: RuntimeState, offer: ReactionOffer) => {
     if (!canPay(state, offer.cost).ok) return null;
@@ -506,7 +554,7 @@ export default function SheetRestButtons({
 
   const handleShortRest = () => {
     hitDieRolls.current = [];
-    const { state, events } = shortRest(runtime, restCtx);
+    const { state, events } = shortRest(runtime, restCtx, { preview: true });
     setShortRestSelections({});
     setShortRestSpellSwapSelections({});
     setShortRestError(null);
@@ -622,7 +670,7 @@ export default function SheetRestButtons({
     const turnState = preparationChoices.length
       ? writeSheetSpellPreparation(character.turn_state, picked)
       : character.turn_state;
-    const { state, events } = longRest(runtime, restCtx);
+    const { state, events } = longRest(runtime, restCtx, { preview: true });
     const ok = await apply(
       state,
       events,
@@ -635,7 +683,7 @@ export default function SheetRestButtons({
     );
     if (ok) {
       setMasteryRestDraft(null);
-      if (character.character_type !== 'dungeon_crawl') onLongRestComplete?.();
+      if (character.character_type !== 'dungeon_crawl' && lastRestGranted.current) onLongRestComplete?.();
     }
   };
   const handleLongRest = () => {
@@ -662,13 +710,13 @@ export default function SheetRestButtons({
   return (
     <>
     <div className={cls}>
-      <button type="button" className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'} disabled={busy || Boolean(lockReason)} aria-description={lockReason} onClick={() => { void handleStartTurn(); }}>
+      <button type="button" className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'} disabled={busy || Boolean(pendingRest) || Boolean(lockReason)} aria-description={lockReason} onClick={() => { void handleStartTurn(); }}>
         <Swords size={14} /> {pendingAtomicTurn ? 'Повторить ход' : 'Новый ход'}
       </button>
       <button
         type="button"
         className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'}
-        disabled={busy || Boolean(pendingAtomicTurn) || unconscious || Boolean(lockReason)}
+        disabled={busy || Boolean(pendingRest) || Boolean(pendingAtomicTurn) || unconscious || Boolean(lockReason)}
         onClick={handleShortRest}
         aria-description={lockReason ?? restTitle('Короткий отдых: добровольная трата костей хитов и заряды умений')}
       >
@@ -677,13 +725,19 @@ export default function SheetRestButtons({
       <button
         type="button"
         className={compact ? 'cs-top-rest-btn' : 'forge-btn ghost sheet-roll-btn'}
-        disabled={busy || Boolean(pendingAtomicTurn) || unconscious || Boolean(lockReason)}
+        disabled={busy || Boolean(pendingRest) || Boolean(pendingAtomicTurn) || unconscious || Boolean(lockReason)}
         onClick={handleLongRest}
         aria-description={lockReason ?? restTitle('Долгий отдых')}
       >
         <Moon size={14} /> Долгий отдых
       </button>
     </div>
+    {pendingRest && <button type="button" disabled={busy} onClick={async () => {
+      setBusy(true); setError(null);
+      try { await commitRest(pendingRest); setShortRestDraft(null); setMasteryRestDraft(null); }
+      catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); }
+      finally { setBusy(false); }
+    }}>Повторить сохранённый отдых</button>}
     {error && <p className="issues" role="alert">{error}</p>}
     {masteryRestDraft && (
       <SheetWeaponMasteryDialog choices={masteryRestChoices} resolved={masteryRestDraft}

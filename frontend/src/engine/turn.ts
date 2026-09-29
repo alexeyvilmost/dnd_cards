@@ -1,3 +1,4 @@
+import {payloadsOf} from './mechanicsView';
 /**
  * Ход и отдыхи (фаза D3 + C3 слайс 2: через шину событий).
  *
@@ -17,18 +18,25 @@ import {
   resourceAmountRestoredOnShortRest,
   resourcesRestoredOnShortRest,
 } from './resources';
-import { emitEvent, MechanicsExecutionError } from './execute';
+import { emitEvent, executeAction, MechanicsExecutionError } from './execute';
+import { collectLifePolicies, zeroHpLifeConsequences, resurrectionPermitted } from './lifePolicies';
 import { rollD20 } from './roll';
 import { collectModifiers } from './modifiers';
-import { evaluate, FormulaError, type FormulaContext } from './formula';
+import { evaluate, rollFormula, FormulaError, type FormulaContext } from './formula';
 import { activeConditionsOf } from './circumstances';
 import { conditionLabel, conditionLongRestEntries } from './conditions';
 import { ACTION_SURGE_ACTION_RESOURCE, QUICKENED_SPELL_ACTION_RESOURCE } from './actionSurge';
+import { resetEventOccurrences } from './eventOccurrence';
+import {reconcileTemporaryResourceGrants} from './temporaryResourceGrants';
+import { resolveRestPolicies } from './restPolicies';
+import { reconcileEndedEffects } from './effectLifecycle';
 
 type Dict = Record<string, unknown>;
 type AbilityKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
 
 type RestContext = CharacterContext & {
+  selfId?: string;
+  grantedEffects?: ExecuteContext['grantedEffects'];
   passives?: Dict[];
   resourceRecharge?: Record<string, string>;
   /** RNG для костей save_ends/тикающих эффектов (rest-контекст без диалога кубов). */
@@ -62,8 +70,10 @@ function passivesFromCtx(ctx: CharacterContext): Dict[] {
 function execCtxOf(ctx: CharacterContext): ExecuteContext {
   return {
     character: ctx,
+    selfId: (ctx as RestContext).selfId,
     rng: (ctx as RestContext).rng ?? (() => Math.random()),
     passives: passivesFromCtx(ctx),
+    grantedEffects:(ctx as RestContext).grantedEffects,
   } as ExecuteContext;
 }
 
@@ -91,6 +101,10 @@ function restoreTurnResources(
     if (cadence === 'turn' && state.maxResources[key] != null) {
       resources[key] = state.maxResources[key];
     }
+  }
+  for(const effect of state.activeEffects){
+    if(effect.roundsLeft!==undefined&&effect.roundsLeft<=0)continue;
+    for(const payload of payloadsOf(effect.mechanics))if(payload.kind==='resource'&&payload.op==='grant'&&payload.recharge==='turn'&&typeof payload.id==='string'&&state.maxResources[payload.id]!==undefined)resources[payload.id]=state.maxResources[payload.id];
   }
   return { ...state, resources };
 }
@@ -141,17 +155,30 @@ export function startTurn(
   const pending: ReactionOffer[] = [];
 
   // Сброс гейта «раз за ход» для triggered-эффектов (Скрытая атака и т.п.).
-  next = { ...next, firedThisTurn: [] };
+  next = resetEventOccurrences({ ...next, firedThisTurn: [] }, 'turn');
   next = restoreTurnResources(next, ctx?.resourceRecharge);
   if (options.advanceRoundDurations !== false) {
     const expired = advanceRoundEffects(next, true);
-    next = expired.state;
+    const ended = ctx ? reconcileEndedEffects(next, expired.state, execCtxOf(ctx), executeAction, { boundary: 'start' }) : expired;
+    next = reconcileTemporaryResourceGrants(next,ended.state,ctx);
+    if (ctx) events.push(...ended.events);
     events.push(...expired.events);
   }
 
   // Шина: начало хода (тикающие эффекты, будущий Recharge X–Y). Только при переданном ctx
   // (обратная совместимость: startTurn(state) в тестах шину не гонит).
-  if (ctx) next = emitEvent({ kind: 'turn_start', source: 'self' }, next, execCtxOf(ctx), events, pending);
+  if (ctx) {
+    const policy = collectLifePolicies(next, passivesFromCtx(ctx), ctx);
+    for (const consequence of zeroHpLifeConsequences(next, policy, 'turn_start')) {
+      const applied = executeAction(next, { name: consequence.source, activation: { mode: 'active', cost: [] },
+        effects: [{ resolution: 'auto', who: 'self', result: consequence.payloads }] },
+      { ...execCtxOf(ctx), actionName: consequence.source, effectSourceId: consequence.sourceId });
+      next = applied.state;
+      events.push(...applied.events);
+      pending.push(...(applied.pendingReactions ?? []));
+    }
+    next = emitEvent({ kind: 'turn_start', source: 'self' }, next, execCtxOf(ctx), events, pending);
+  }
 
   return { state: next, events, ...(pending.length ? { pendingReactions: pending } : {}) };
 }
@@ -342,13 +369,17 @@ export function endTurn(
     }
     kept.push(e);
   }
-  next = { ...next, activeEffects: kept };
+  const endedBoundary = ctx ? reconcileEndedEffects(next, {...next,activeEffects:kept}, execCtxOf(ctx), executeAction) : { state: {...next,activeEffects:kept}, events: [] };
+  next = reconcileTemporaryResourceGrants(next,endedBoundary.state,ctx);
+  events.push(...endedBoundary.events);
 
   // Списываем ход только у эффектов, существовавших до turn_end-триггеров. Эффект,
   // который сам возник «в конце хода», не должен немедленно потерять первый ход.
   if (options.advanceRoundDurations !== false) {
     const advanced = advanceRoundEffects(next);
-    next = advanced.state;
+    const ended = ctx ? reconcileEndedEffects(next, advanced.state, execCtxOf(ctx), executeAction) : advanced;
+    next = reconcileTemporaryResourceGrants(next,ended.state,ctx);
+    if (ctx) events.push(...ended.events);
     events.push(...advanced.events);
   }
 
@@ -480,14 +511,16 @@ export function spendHitDie(state: RuntimeState, ctx: CharacterContext, rolled: 
 }
 
 /** Короткий отдых: без автолечения; HP восстанавливаются только через spendHitDie. */
-export function shortRest(state: RuntimeState, ctx: CharacterContext): ExecuteResult {
+export function shortRest(state: RuntimeState, ctx: CharacterContext, options: { preview?: boolean } = {}): ExecuteResult {
   let next = cloneState(state);
   const events: EngineEvent[] = [{ type: 'short_rest' }];
+  const outcome = options.preview ? { denied: false, events: [] } : resolveRestPolicies(state, ctx, 'short');
+  events.push(...outcome.events);
   const pending: ReactionOffer[] = [];
   const recharge = (ctx as RestContext).resourceRecharge;
 
   const recovery = (ctx as RestContext).resourceRecovery;
-  for (const key of resourcesRestoredOnShortRest(next.maxResources, recharge, recovery)) {
+  for (const key of outcome.denied ? [] : resourcesRestoredOnShortRest(next.maxResources, recharge, recovery)) {
     const max = next.maxResources[key] ?? 0;
     const before = next.resources[key] ?? 0;
     const amount = resourceAmountRestoredOnShortRest(key, before, max, recovery);
@@ -504,31 +537,39 @@ export function shortRest(state: RuntimeState, ctx: CharacterContext): ExecuteRe
   for (const e of next.activeEffects) {
     if (e.roundsLeft != null && e.roundsLeft <= 600) events.push({ type: 'effect_expired', name: e.name });
   }
-  next.activeEffects = kept.map((e) => (e.roundsLeft != null ? { ...e, roundsLeft: e.roundsLeft - 600 } : e));
+  const elapsed = {...next,activeEffects:kept.map((e) => (e.roundsLeft != null ? { ...e, roundsLeft: e.roundsLeft - 600 } : e))};
+  const ended = options.preview ? { state: elapsed, events: [] } : reconcileEndedEffects(next, elapsed, execCtxOf(ctx), executeAction, { elapsedRounds: 600 });
+  next = reconcileTemporaryResourceGrants(next,ended.state,ctx);
+  events.push(...ended.events);
+  if (outcome.denied) return { state: next, events, restBenefitsDenied: true };
 
   // Новый короткий отдых открывает следующий short_rest cadence до обработки его события.
   // Поэтому слушатель самого short_rest тоже может честно сработать на каждом отдыхе.
   next.firedByPeriod = { ...(next.firedByPeriod ?? {}), short_rest: [] };
+  next = resetEventOccurrences(next, 'short_rest');
 
   // Шина: короткий отдых (отклики на отдых как данные, с circumstances/uses-гейтами).
-  next = emitEvent({ kind: 'short_rest', source: 'self' }, next, execCtxOf(ctx), events, pending);
+  if (!options.preview) next = emitEvent({ kind: 'short_rest', source: 'self' }, next, execCtxOf(ctx), events, pending);
 
   return { state: next, events, ...(pending.length ? { pendingReactions: pending } : {}) };
 }
 
-export function longRest(state: RuntimeState, ctx: CharacterContext): ExecuteResult {
+export function longRest(state: RuntimeState, ctx: CharacterContext, options: { preview?: boolean } = {}): ExecuteResult {
+  if(state.hp.current===0&&!resurrectionPermitted(state,(ctx as RestContext).passives,ctx))return {state,events:[{type:'narrative',text:'Воскрешение ограничено действующим правилом.'}],restBenefitsDenied:true};
   let next = cloneState(state);
   const events: EngineEvent[] = [{ type: 'long_rest' }];
+  const outcome = options.preview ? { denied: false, events: [] } : resolveRestPolicies(state, ctx, 'long');
+  events.push(...outcome.events);
   const pending: ReactionOffer[] = [];
 
-  next.hp.current = next.hp.max;
-  next.hp.temp = 0; // C6: временные хиты спадают после длинного отдыха (RAW 2024)
+  if (!outcome.denied) next.hp.current = next.hp.max;
+  if (!outcome.denied) next.hp.temp = 0; // C6: temporary hit points expire on successful long rest.
   // Eight hours advance 4,800 six-second rounds. Only an explicit rest expiry,
   // elapsed duration, or condition-owned rest transition may remove an effect;
   // a manual/permanent condition is never silently cured by resting.
   const afterElapsedTime: typeof next.activeEffects = [];
   for (const effect of next.activeEffects) {
-    if (effect.expiry === 'long_rest' || effect.expiry === 'until_rest') {
+    if (!outcome.denied && (effect.expiry === 'long_rest' || effect.expiry === 'until_rest')) {
       if (effect.mechanics.kind === 'temporary_inventory_item') {
         const cardId = String(effect.mechanics.card_id ?? '');
         const qty = Math.max(1, Math.floor(Number(effect.mechanics.qty ?? 1)) || 1);
@@ -556,18 +597,23 @@ export function longRest(state: RuntimeState, ctx: CharacterContext): ExecuteRes
     }
     afterElapsedTime.push(effect);
   }
-  const conditionRest = conditionLongRestEntries(afterElapsedTime);
+  const conditionRest = outcome.denied ? { retained: afterElapsedTime, removed: [] } : conditionLongRestEntries(afterElapsedTime);
   for (const removed of conditionRest.removed) {
     events.push({ type: 'effect_expired', name: removed.name });
   }
-  next.activeEffects = conditionRest.retained;
+  const elapsed = {...next,activeEffects:conditionRest.retained};
+  const ended = options.preview ? { state: elapsed, events: [] } : reconcileEndedEffects(next, elapsed, execCtxOf(ctx), executeAction, { elapsedRounds: 4800 });
+  next = reconcileTemporaryResourceGrants(next,ended.state,ctx);
+  events.push(...ended.events);
+  if (outcome.denied) return { state: next, events, restBenefitsDenied: true };
   next.firedThisRest = []; // 2.4: сброс гейта «раз за отдых»-триггеров (Неумолимая стойкость и т.п.)
   next.firedByPeriod = {};
+  next = resetEventOccurrences(next, 'long_rest');
 
   // КРИТИЧНО (C3): эмитим long_rest ДО сплошного восстановления. applyResource op:'grant'
   // = current+amount; если эмитить ПОСЛЕ restore-к-max, гранты (heroic_inspiration от
   // Находчивого) удвоятся. Здесь restore ниже нормализует значение к максимуму.
-  next = emitEvent({ kind: 'long_rest', source: 'self' }, next, execCtxOf(ctx), events, pending);
+  if (!options.preview) next = emitEvent({ kind: 'long_rest', source: 'self' }, next, execCtxOf(ctx), events, pending);
 
   for (const key of Object.keys(next.maxResources)) {
     // Inventory-like numeric resources (for example consumed spell
@@ -575,6 +621,17 @@ export function longRest(state: RuntimeState, ctx: CharacterContext): ExecuteRes
     if ((ctx as RestContext).resourceRecharge?.[key] === 'never') continue;
     const max = next.maxResources[key] ?? 0;
     const before = next.resources[key] ?? 0;
+    const bounded=(ctx as RestContext).resourceRecovery?.[key]?.long_rest;
+    if(bounded?.mode==='dice'){
+      if (options.preview) continue;
+      if(before>=max)continue;
+      const roll=rollFormula(bounded.dice,{}, {rng:(ctx as RestContext).rng});
+      const amount=Math.min(max-before,Math.max(0,Math.floor(roll.total)));
+      next.resources[key]=before+amount;
+      events.push({type:'roll',label:`Восстановление: ${key}`,roll:{...roll,kind:'other',advantage:'none'}});
+      events.push({type:'resource_restored',resource:key,amount,current:before+amount});
+      continue;
+    }
     const declared = resourceAmountRestoredOnLongRest(
       key,
       before,

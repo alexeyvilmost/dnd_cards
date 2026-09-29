@@ -1,3 +1,4 @@
+import {payloadsOf} from './mechanicsView';
 import {cardPropertyList} from '../utils/cardProperties';
 import type {CharacterContext, EngineEvent, RuntimeState} from '../mvp/contracts';
 
@@ -17,10 +18,12 @@ export function heldItemDropIssue(state: RuntimeState | undefined, hand: HeldIte
 }
 
 /** Remove the equipped instance, leaving bag contents unchanged; its physical world object is created by rules-core. */
-export function dropHeldItem(state: RuntimeState, hand: HeldItemHand, ownerActorId: string, character: CharacterContext): {state: RuntimeState; events: EngineEvent[]} {
+export function dropHeldItem(state: RuntimeState, hand: HeldItemHand, ownerActorId: string, character: CharacterContext, options:{forced?:boolean;passives?:readonly Record<string,unknown>[]}={}): {state: RuntimeState; events: EngineEvent[]} {
+  if(options.forced&&[...(options.passives??[]),...state.activeEffects.filter(e=>e.roundsLeft===undefined||e.roundsLeft>0).map(e=>e.mechanics)].flatMap(payloadsOf).some(p=>p.kind==='equipment_policy'&&p.cannot_be_disarmed===true&&(p.weapon_id===undefined||p.weapon_id===state.equipment[hand])))return {state,events:[{type:'narrative',text:'Предмет не может быть выбит из рук: действующий источник защищает владельца от обезоруживания.'}]};
   const issue=heldItemDropIssue(state,hand);if(issue)throw new Error(issue);
   const cardId=state.equipment[hand]!;
   const card=character.knownCards?.find(row=>row.id===cardId) ?? character.equippedCards?.find(row=>row.id===cardId);
+  if(card?.mechanics&&payloadsOf(card.mechanics).some(p=>p.kind==='equipment_policy'&&p.cannot_remove===true))return {state,events:[{type:'narrative',text:'Этот предмет нельзя снять: действует его собственное ограничение.'}]};
   const equipment={...state.equipment,[hand]:null};
   const other=hand==='main_hand'?'off_hand':'main_hand';
   if(equipment[other]===cardId && (card?.slot==='two_hands' || cardPropertyList(card?.properties).some(property=>property==='two_handed'||property==='two-handed'))) equipment[other]=null;

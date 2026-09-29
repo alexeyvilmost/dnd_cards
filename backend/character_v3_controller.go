@@ -920,6 +920,9 @@ func (cc *CharacterV3Controller) PatchCharacterRuntime(c *gin.Context) {
 				"roguelike_level_up_not_pending", "сначала завершите мастер повышения уровня", locked.ID,
 			)
 		}
+		if err := validateItemEquipmentChange(tx, locked, req.Equipment); err != nil {
+			return err
+		}
 		updates := runtimeUpdatesForLockedCharacter(locked, req)
 		if req.ExpectedRuntimeRevision != nil && locked.RuntimeRevision != *req.ExpectedRuntimeRevision {
 			expected := *req.ExpectedRuntimeRevision

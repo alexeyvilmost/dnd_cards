@@ -1,7 +1,9 @@
 import type { CharacterContext, RuntimeState } from '../mvp/contracts';
 import { activeConditionsOf, matchesWhen } from './circumstances';
 import { matchingRuntimeActionGrants } from './actionGrantContext';
-import { itemGate } from '../character/attunement';
+import { itemGate,attunementCapacity } from '../character/attunement';
+import {isMagicalMechanics} from './magic';
+import {resourceRestrictionIssue} from './resourceRestrictions';
 
 type Dict = Record<string, unknown>;
 
@@ -25,12 +27,17 @@ export function activeEffectRequirementIssue(
   state: RuntimeState,
   character?: CharacterContext,
 ): string | null {
+  const captured=mechanics.captured_magic_origin as {kind?:string}|undefined;
+  if(character?.magicSuppressed&&isMagicalMechanics(mechanics,character)&&!['artifact','deity'].includes(captured?.kind??''))return 'Поле антимагии не позволяет использовать магию';
   const whenIssue = activationCircumstanceIssue(mechanics, state, character);
   if (whenIssue) return whenIssue;
   const heldIssue = heldItemRequirementIssue(mechanics, state);
   if (heldIssue) return heldIssue;
   const itemIssue = itemSourceRequirementIssue(mechanics, state, character);
   if (itemIssue) return itemIssue;
+  const activation=mechanics.activation as Dict|undefined;
+  const resourceIssue=resourceRestrictionIssue(state,Array.isArray(activation?.cost)?activation.cost as Dict[]:[],character);
+  if(resourceIssue)return resourceIssue;
   const runtimeGrant = mechanics.requires_runtime_action_grant;
   if (runtimeGrant !== undefined) {
     if (!Array.isArray(runtimeGrant) || runtimeGrant.length === 0
@@ -69,6 +76,11 @@ export function activeEffectRequirementIssue(
 
 /** Recheck item-owned capabilities against current equipment, not the UI grant list. */
 export function itemSourceRequirementIssue(mechanics: Dict, state: RuntimeState, character?: CharacterContext): string | null {
+  if(mechanics.requires_any_item_source!==undefined){
+    const sources=mechanics.requires_any_item_source;
+    if(!Array.isArray(sources)||!sources.length||!sources.every(source=>typeof source==='string'&&source))return 'Некорректные источники предметной способности';
+    return sources.some(source=>itemSourceRequirementIssue({requires_item_source:source},state,character)===null)?null:'Предмет больше не предоставляет эту способность';
+  }
   const source = mechanics.requires_item_source;
   if (source === undefined) return null;
   if (typeof source !== 'string' || !source.trim()) return 'Некорректный источник предметного действия';
@@ -82,6 +94,13 @@ export function itemSourceRequirementIssue(mechanics: Dict, state: RuntimeState,
 /** The same content-owned prerequisites govern previews and authoritative payment. */
 export function activationCircumstanceIssue(mechanics: Dict, state: RuntimeState, character?: CharacterContext): string | null {
   const activation = mechanics.activation as Dict | undefined;
+  const minimumCapacity=activation?.requires_attunement_capacity;
+  if(minimumCapacity!==undefined){
+    if(!Number.isSafeInteger(minimumCapacity)||Number(minimumCapacity)<1)return 'Некорректная цена слота настройки';
+    const cards=new Map([...(character?.knownCards??[]),...(character?.equippedCards??[])].map(card=>[card.id,card]));
+    const capacity=attunementCapacity(state.equipment,cards,{attuned_ids:character?.attunedIds??[]},state.inventory,state.activeEffects);
+    if(capacity<Number(minimumCapacity))return 'Недостаточно слотов настройки';
+  }
   const when = activation?.when;
   if (when === undefined) return null;
   if (!Array.isArray(when) || !when.every(p => p && typeof p === 'object' && !Array.isArray(p))) return 'Некорректные условия действия';

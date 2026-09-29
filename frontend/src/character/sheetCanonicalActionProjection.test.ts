@@ -8,6 +8,19 @@ import type { SheetAction } from './actionSheet';
 import { projectRunnableSheetCanonicalActions } from './sheetCanonicalActionProjection';
 import { compileDeclaredMechanicsTargeting } from '../rules-core/actionTargeting';
 
+it('keeps one immutable action catalog for actors with and without a target-limit item',()=>{
+  const source=legacySpell('shared-spell');
+  source.spellRef!.mechanics={...source.spellRef!.mechanics,targeting:{shape:'single',domain:'actor',actor_targets:true,min_targets:1,max_targets:1,range_ft:30,allowed_relations:['enemy'],requires_line_of_sight:true}};
+  source.mechanics=source.spellRef!.mechanics;
+  const input={actions:[source],equipment:{},cards:new Map<string,Card>()};
+  const ordinary=projectRunnableSheetCanonicalActions(input).actions[0];
+  const boosted=projectRunnableSheetCanonicalActions({...input,passives:[{effects:[{resolution:'auto',result:[{kind:'action_target_limit',action_refs:[source.spellRef!.card_number],add:1}]}]}]}).actions[0];
+  expect(boosted.mechanics.targeting).toMatchObject({max_targets:2});
+  expect(ordinary.mechanics.targeting).toMatchObject({max_targets:1});
+  expect(boosted.canonicalMechanics).toEqual(ordinary.canonicalMechanics);
+  expect(boosted.spellRef).toEqual(ordinary.spellRef);
+});
+
 const WEAPON = {
   id: 'card:test-bow',
   card_number: 'CARD-TEST-BOW',

@@ -381,6 +381,9 @@ export function mergeSheetCombatParticipantWorlds(input: {
       turnStarted: true,
     };
   }
+  world.actors = Object.fromEntries(Object.entries(world.actors).map(([id, actor]) => [id,
+    { ...actor, runtime: { ...actor.runtime, encounterActive: input.sceneMode === 'encounter' } },
+  ]));
   return migrateWorldState(world);
 }
 
@@ -739,11 +742,11 @@ function acceptedUnarmedTransition(input: {
       expectedRevision: current.revision,
       rulesetContentHash: current.ruleset.contentHash,
       actorId: input.actorId,
+      afterBegin:{type:'PerformUnarmedStrike',targetActorId,option,facts},
     });
-    open = Object.values(session.getState().attackActions).filter((entry) => (
-      entry.actorId === input.actorId && entry.status === 'open'
-    ));
+    return {commandId:input.commandId,base:input.base,nextWorld:session.getState(),events:session.getEvents()};
   }
+  if(session.getState().pendingResolution?.type==='action_cost_policy')return {commandId:input.commandId,base:input.base,nextWorld:session.getState(),events:session.getEvents()};
   if (open.length !== 1) {
     throw new SheetCombatSessionError(
       `Unarmed Strike requires exactly one open Attack ledger; got ${open.length}`,
@@ -873,11 +876,13 @@ function acceptedWeaponTransition(input: {
         rulesetContentHash: current.ruleset.contentHash,
         actorId: input.actorId,
         declaredActionId: input.action.id,
+        afterBegin:{type:'PerformWeaponAttack',declaredActionId:input.action.id,weaponCardId,targetActorId,facts,
+          ...(input.declaration.protectionCandidates?{protectionCandidates:clone(input.declaration.protectionCandidates)}:{}),
+          ...(input.declaration.choices?{choices:clone(input.declaration.choices)}:{})},
       });
-      open = Object.values(session.getState().attackActions).filter((entry) => (
-        entry.actorId === input.actorId && entry.status === 'open'
-      ));
+      return {commandId:input.commandId,base:input.base,nextWorld:session.getState(),events:session.getEvents()};
     }
+    if(session.getState().pendingResolution?.type==='action_cost_policy')return {commandId:input.commandId,base:input.base,nextWorld:session.getState(),events:session.getEvents()};
     if (open.length !== 1) {
       throw new SheetCombatSessionError(
         `Weapon attack requires exactly one open Attack ledger; got ${open.length}`,
@@ -1083,6 +1088,7 @@ function runtimePatch(input: {
     !== canonicalStringify(persistedInventory);
   return {
     current_hp: projection.runtime.hp.current,
+    ...(canonicalStringify(projection.runtime.equipment)!==canonicalStringify(input.character.equipment??{})?{equipment:clone(projection.runtime.equipment)}:{}),
     ...(inventoryChanged ? { inventory_items: inventoryItems } : {}),
     resources: clone(projection.runtime.resources),
     max_resources: clone(projection.runtime.maxResources),

@@ -37,6 +37,7 @@ interface TargetDraft {
   boardRevision: string;
   relation: Relation | '';
   distanceFt: string;
+  distanceToFirstTargetFt: string;
   lineOfSight: 'unknown' | 'yes' | 'no';
   cover: NonNullable<SpatialFacts['cover']> | '';
   willing: 'unknown' | 'yes' | 'no';
@@ -47,8 +48,11 @@ interface DialogState {
   title: string;
   action: RuleActionDefinition;
   castLevel?: number;
+  actorLevel?: number;
   candidates: SheetCombatTargetCandidate[];
   drafts: Record<string, TargetDraft>;
+  /** Ordered attack/effect slots; a data declaration may allow repeats. */
+  slots: string[];
   requireTarget: boolean;
 }
 
@@ -57,6 +61,7 @@ export interface SheetCombatTargetDialogApi {
     title: string;
     action: RuleActionDefinition;
     castLevel?: number;
+    actorLevel?: number;
     candidates: SheetCombatTargetCandidate[];
     /** Product workflow constraint: this command must declare at least one actor target. */
     requireTarget?: boolean;
@@ -78,6 +83,9 @@ function initialDraft(
     distanceFt: candidate.defaultFacts?.distanceFt === undefined
       ? ''
       : String(candidate.defaultFacts.distanceFt),
+    distanceToFirstTargetFt: candidate.defaultFacts?.distanceToFirstTargetFt === undefined
+      ? ''
+      : String(candidate.defaultFacts.distanceToFirstTargetFt),
     lineOfSight: candidate.defaultFacts?.lineOfSight === undefined
       ? 'unknown'
       : candidate.defaultFacts.lineOfSight ? 'yes' : 'no',
@@ -109,6 +117,7 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
     title: string;
     action: RuleActionDefinition;
     castLevel?: number;
+    actorLevel?: number;
     candidates: SheetCombatTargetCandidate[];
     requireTarget?: boolean;
   }): Promise<SheetCombatTargetDialogResult | null> => new Promise((resolve) => {
@@ -128,8 +137,10 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
       title: input.title,
       action: input.action,
       castLevel: input.castLevel,
+      actorLevel: input.actorLevel,
       candidates: input.candidates,
       drafts,
+      slots: input.candidates.filter(candidate=>candidate.defaultSelected&&!candidate.disabled).map(candidate=>candidate.id),
       requireTarget: input.requireTarget ?? false,
     });
   }), []);
@@ -157,7 +168,7 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
 
   const toggleCandidate = (id: string, selected: boolean) => setState((current) => {
     if (!current) return current;
-    const policy = sheetCombatDeclarationPolicy(current.action, current.castLevel);
+    const policy = sheetCombatDeclarationPolicy(current.action, current.castLevel, current.actorLevel);
     const drafts = { ...current.drafts };
     if (selected) {
       for (const candidate of current.candidates) {
@@ -172,19 +183,38 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
       }
     }
     drafts[id] = { ...drafts[id], selected };
-    return { ...current, drafts };
+    const slots = selected
+      ? [...(policy.maxTargets === 1 ? [] : current.slots.filter((slot) => slot !== id && drafts[slot]?.selected)), id]
+      : current.slots.filter((slot) => slot !== id);
+    return { ...current, drafts, slots };
+  });
+
+  const addSlot=(id:string)=>setState(current=>{
+    if(!current)return current;
+    const policy=sheetCombatDeclarationPolicy(current.action,current.castLevel,current.actorLevel);
+    if(current.slots.length>=policy.maxTargets||current.candidates.find(candidate=>candidate.id===id)?.disabled)return current;
+    return {...current,slots:[...current.slots,id],drafts:{...current.drafts,[id]:{...current.drafts[id],selected:true}}};
+  });
+  const removeSlot=(index:number)=>setState(current=>{
+    if(!current)return current;
+    const slots=current.slots.filter((_,slotIndex)=>slotIndex!==index);
+    const id=current.slots[index];
+    return {...current,slots,drafts:{...current.drafts,[id]:{...current.drafts[id],selected:slots.includes(id)}}};
   });
 
   const submit = () => {
     if (!state) return;
     try {
-      const policy = sheetCombatDeclarationPolicy(state.action, state.castLevel);
+      const policy = sheetCombatDeclarationPolicy(state.action, state.castLevel, state.actorLevel);
       const selected = state.candidates.filter((candidate) => state.drafts[candidate.id].selected);
+      const targetSlots=state.slots;
       const minimum = state.requireTarget ? Math.max(1, policy.minTargets) : policy.minTargets;
-      if (selected.length < minimum || selected.length > policy.maxTargets) {
+      if (targetSlots.length < minimum || targetSlots.length > policy.maxTargets) {
         throw new Error(`Выберите от ${minimum} до ${policy.maxTargets} целей`);
       }
-      const targets: SheetCombatTargetFactDraft[] = selected.map((candidate) => {
+      const targets: SheetCombatTargetFactDraft[] = targetSlots.map((id, index) => {
+        const candidate=state.candidates.find(row=>row.id===id);
+        if(!candidate||candidate.disabled)throw new Error('Цель больше недоступна');
         const draft = state.drafts[candidate.id];
         return {
           targetId: candidate.id,
@@ -192,6 +222,8 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
           boardRevision: Number(draft.boardRevision),
           relation: draft.relation as Relation,
           distanceFt: Number(draft.distanceFt),
+          ...(index > 0 && policy.additionalTargetsWithinFtOfFirst !== undefined
+            ? { distanceToFirstTargetFt: Number(draft.distanceToFirstTargetFt) } : {}),
           lineOfSight: draft.lineOfSight === 'yes',
           cover: draft.cover as NonNullable<SpatialFacts['cover']>,
           ...(policy.requiresWilling ? { willing: draft.willing === 'yes' } : {}),
@@ -210,7 +242,7 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
           !== policy.dartCount) {
         throw new Error(`Распределите ровно ${policy.dartCount} дротика(ов)`);
       }
-      for (const target of targets) {
+      for (const [targetIndex, target] of targets.entries()) {
         const draft = state.drafts[target.targetId];
         if (!draft.factsSource || !draft.relation || !draft.cover
           || draft.lineOfSight === 'unknown' || draft.distanceFt.trim() === ''
@@ -225,6 +257,13 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
           || target.distanceFt > policy.rangeFt) {
           throw new Error(`Дистанция должна быть от 0 до ${policy.rangeFt} фт.`);
         }
+        if (targetIndex > 0 && policy.additionalTargetsWithinFtOfFirst !== undefined
+          && (draft.distanceToFirstTargetFt.trim() === ''
+            || !Number.isFinite(target.distanceToFirstTargetFt)
+            || target.distanceToFirstTargetFt! < 0
+            || target.distanceToFirstTargetFt! > policy.additionalTargetsWithinFtOfFirst)) {
+          throw new Error(`Дополнительная цель должна быть в пределах ${policy.additionalTargetsWithinFtOfFirst} фт. от первой`);
+        }
         if (policy.requiresLineOfSight && !target.lineOfSight) {
           throw new Error('Для этого действия нужна линия обзора');
         }
@@ -236,7 +275,7 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
   };
 
   const dialogContent = state ? (() => {
-    const policy = sheetCombatDeclarationPolicy(state.action, state.castLevel);
+    const policy = sheetCombatDeclarationPolicy(state.action, state.castLevel, state.actorLevel);
     return (
       <div className="dice-dialog-backdrop" onClick={() => finish(null)}>
         <div className="dice-dialog-wrap" onClick={(event) => event.stopPropagation()}>
@@ -248,6 +287,15 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
                 : `Дистанция: до ${policy.rangeFt} фт.`}
               {policy.dartCount ? ` Дротиков: ${policy.dartCount}.` : ''}
             </p>
+            <p className="dice-dialog-summary" aria-live="polite" data-testid="sheet-target-counter">
+              Выбрано {state.slots.length} из {policy.maxTargets}; осталось {Math.max(0,policy.maxTargets-state.slots.length)}.
+            </p>
+            {policy.allowRepeatTargets&&state.slots.length>0&&<ol className="sheet-target-slots" aria-label="Порядок целей">
+              {state.slots.map((id,index)=><li key={`${index}:${id}`}>
+                <span>{index+1}. {state.candidates.find(candidate=>candidate.id===id)?.name??id}</span>{' '}
+                <button type="button" onClick={()=>removeSlot(index)} aria-label={`Убрать цель ${index+1}`}>Убрать</button>
+              </li>)}
+            </ol>}
             <div className="sheet-target-list" data-testid="sheet-combat-target-list">
               {state.candidates.map((candidate) => {
                 const draft = state.drafts[candidate.id];
@@ -258,14 +306,19 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
                     data-target-id={candidate.id}
                   >
                     <legend>
-                      <label>
+                      {policy.allowRepeatTargets?<>
+                        <span>{candidate.name}</span>{' '}
+                        <button type="button" disabled={candidate.disabled||state.slots.length>=policy.maxTargets} onClick={()=>addSlot(candidate.id)} aria-label={`Добавить цель ${candidate.name}`}>
+                          Добавить цель{state.slots.filter(id=>id===candidate.id).length?` (${state.slots.filter(id=>id===candidate.id).length})`:''}
+                        </button>
+                      </>:<label>
                         <input
                           type="checkbox"
                           checked={draft.selected}
                           disabled={candidate.disabled}
                           onChange={(event) => toggleCandidate(candidate.id, event.target.checked)}
                         />{' '}{candidate.name}
-                      </label>
+                      </label>}
                     </legend>
                     {candidate.description && <p className="sheet-target-description">{candidate.description}</p>}
                     {candidate.disabled && <p className="sheet-target-disabled-reason">{candidate.reason}</p>}
@@ -284,6 +337,13 @@ export function useSheetCombatTargetDialog(): SheetCombatTargetDialogApi {
                           <span>Дистанция, футы</span>
                           <input type="number" min={0} max={policy.rangeFt} value={draft.distanceFt} onChange={(event) => patch(candidate.id, { distanceFt: event.target.value })} />
                         </label>
+                        {policy.additionalTargetsWithinFtOfFirst !== undefined && state.slots.indexOf(candidate.id) > 0 && (
+                          <label className="sheet-target-row">
+                            <span>Дистанция до первой цели, футы</span>
+                            <input type="number" min={0} max={policy.additionalTargetsWithinFtOfFirst} value={draft.distanceToFirstTargetFt}
+                              onChange={(event) => patch(candidate.id, { distanceToFirstTargetFt: event.target.value })} />
+                          </label>
+                        )}
                         {candidate.factEntryMode !== 'distance_only' && (
                           <>
                             <label className="sheet-target-row">

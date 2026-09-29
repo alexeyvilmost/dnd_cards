@@ -1,5 +1,6 @@
 import type {EngineEvent,ExecuteContext,ExecuteResult,RuntimeState} from '../mvp/contracts';
 import {emitEvent} from './execute';
+import {resetEventOccurrences} from './eventOccurrence';
 
 /** The caller owns the authoritative transition from exploration to encounter.
  * Calling this helper is not itself permission to restart an active encounter. */
@@ -13,9 +14,17 @@ export function startEncounter(state:RuntimeState,ctx:ExecuteContext):ExecuteRes
     resources[key]=maximum;
     if(maximum>before)events.push({type:'resource_restored',resource:key,amount:maximum-before,current:maximum});
   }
-  const prepared={...state,resources,firedByPeriod:{...state.firedByPeriod,encounter:[]}};
+  const prepared=resetEventOccurrences({...state,encounterActive:true,resources,firedByPeriod:{...state.firedByPeriod,encounter:[]}},'encounter');
   const next=emitEvent({kind:'encounter_start',source:'self'},prepared,ctx,events,[],undefined,[],true);
   return {state:next,events};
+}
+
+/** A finalized encounter owns one boundary, including after persistence/reload. */
+export function endEncounter(state:RuntimeState,ctx:ExecuteContext):ExecuteResult {
+  if(state.encounterActive!==true)return {state,events:[]};
+  const events:EngineEvent[]=[];
+  const next=emitEvent({kind:'encounter_end',source:'self'},state,ctx,events,[],undefined,[],true);
+  return {state:{...next,encounterActive:false},events};
 }
 
 /** Round duration belongs to the global initiative boundary, not the owner's
@@ -26,5 +35,5 @@ export function expireEncounterRound(state:RuntimeState):ExecuteResult {
     if(entry.expiry!=='end_of_round')return true;
     events.push({type:'effect_expired',name:entry.name});return false;
   });
-  return {state:activeEffects.length===state.activeEffects.length?state:{...state,activeEffects},events};
+  return {state:resetEventOccurrences(activeEffects.length===state.activeEffects.length?state:{...state,activeEffects},'round'),events};
 }

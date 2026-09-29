@@ -139,7 +139,7 @@ const ShopDetail = () => {
 
   useEffect(() => {
     let active = true;
-    if (!selectedCharacter || runId) {
+    if (!selectedCharacter) {
       setPurchasePassives([]);
       return () => { active = false; };
     }

@@ -17,7 +17,8 @@ export interface SpellGrantAccess {
   sourceId: string;
   access: SpellAccessKind;
   level: number;
-  spellcastingAbility: Ability;
+  spellcastingAbility?: Ability;
+  fixedSpellcastingModifier?: number;
   ritual?: boolean;
   /** Resource usable once without a slot (for example Magic Initiate). */
   freeUseResource?: string;
@@ -46,6 +47,7 @@ export type SpellAccessFailureCode =
   | 'RitualNotAllowed'
   | 'SpellNormalCastNotAllowed'
   | 'SpellResourceUnavailable';
+
 
 export type SpellPreparationFailureCode =
   | 'PreparationSourceNotFound'
@@ -106,6 +108,7 @@ export function resolveSpellAccess(input: {
   mode?: SpellCastMode;
   resources: Readonly<Record<string, number>>;
   preferFreeUse?: boolean;
+  castLevel?:number;
 }): ResolvedSpellAccess | RejectedSpellAccess {
   const candidates = input.state.grants.filter((grant) => grant.actionId === input.actionId);
   if (!candidates.length) {
@@ -164,7 +167,20 @@ export function resolveSpellAccess(input: {
     };
   }
 
-  if (grant.level === 0) return { status: 'allowed', grant, payment: { kind: 'none' } };
+  const castLevel=input.castLevel;
+  if(castLevel!==undefined){
+    if(!Number.isSafeInteger(castLevel)||castLevel<grant.level||castLevel>9||(grant.level===0&&castLevel!==0))
+      return {status:'rejected',code:'SpellResourceUnavailable',message:`Invalid casting level ${castLevel} for ${grant.actionId}`};
+    if(castLevel>grant.level){
+      const matched=grant.slotResource?.match(/^(spell_slot|pact_slot|warlock_spell_slot)_\d+$/);
+      const resource=matched?`${matched[1]}_${castLevel}`:undefined;
+      return resourceAvailable(input.resources,resource)
+        ?{status:'allowed',grant,payment:{kind:'slot',resource}}
+        :{status:'rejected',code:'SpellResourceUnavailable',message:`No level ${castLevel} slot for ${grant.actionId}`};
+    }
+  }
+
+  if (grant.level === 0 && !grant.freeUseResource) return { status: 'allowed', grant, payment: { kind: 'none' } };
   // Some immutable grants explicitly make a levelled spell at-will (for
   // example Armor of Shadows and Pact of the Chain). The compiler represents
   // that authority as an innate grant with no payment resource. An innate
@@ -180,6 +196,8 @@ export function resolveSpellAccess(input: {
     };
   }
   if (resourceAvailable(input.resources, grant.slotResource)) {
+    if(castLevel!==undefined&&/_(\d+)$/.test(grant.slotResource!)&&Number(grant.slotResource!.match(/_(\d+)$/)![1])!==castLevel)
+      return {status:'rejected',code:'SpellResourceUnavailable',message:`No level ${castLevel} slot for ${grant.actionId}`};
     return { status: 'allowed', grant, payment: { kind: 'slot', resource: grant.slotResource } };
   }
   return {

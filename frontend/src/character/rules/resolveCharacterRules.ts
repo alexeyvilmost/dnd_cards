@@ -1,3 +1,4 @@
+import {validItemChoiceSelections} from '../itemChoices';
 import type { Action, PassiveEffect } from '../../types';
 import type { OriginAction, OriginEffect } from '../assemble';
 import { computeMulticlassMaxHP, spellcasting } from '../derive';
@@ -271,7 +272,9 @@ function choiceSelectionsAllowedAtLevel(
   payload: Dict,
   selected: readonly string[],
   level: number,
+  itemOwned=false,
 ): string[] {
+  if(itemOwned)selected=validItemChoiceSelections(payload,selected);
   const options = payload.options as Dict | undefined;
   const items = Array.isArray(options?.items) ? options.items as Dict[] : [];
   if (!items.length) return [...selected];
@@ -447,6 +450,7 @@ function collectAbilityDeltas(
         payload,
         input.draft.resolvedChoices[choiceId] || input.draft.resolvedChoices[rawChoiceId] || [],
         levelForSource(input, source),
+        source.type==='item',
       );
       // Рекурсия зеркалит applyPayload: вложенный choice (ASI: режим → характеристика)
       // разворачивается, grant_ability_score из его item.grants доходит до дельт.
@@ -575,6 +579,7 @@ function applyPayload(
 			payload,
 			input.draft.resolvedChoices[choiceId] || input.draft.resolvedChoices[rawChoiceId] || [],
 			level,
+      source.type==='item',
 		);
 		for (const selectedPayload of selectedChoicePayloads(payload, selected)) {
       // Вложенный choice (напр. item.grants выбранного режима ASI → выбор характеристики):
@@ -840,7 +845,7 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
     const exact = sourceSpellcastingAbilities.get(grant.source.id);
     const sameClassOrigin = grant.source.type === 'class'
       && grant.source.originEntityId === assembled.klass?.id;
-    const ability = exact ?? (sameClassOrigin ? primarySpellcastingAbility : null);
+    const ability = exact ?? (sameClassOrigin || grant.source.type === 'item' ? primarySpellcastingAbility : null);
     if (ability) grant.spellcastingAbility = ability;
   }
   const spellDerived = spellcasting(primarySpellcastingAbility, scores, pb);
@@ -966,6 +971,8 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
 
   return {
     version: 1,
+    ...([...assembled.effects.map(row=>row.effect),...assembled.actions.map(row=>row.action)].some(row=>Array.isArray(row.mechanics?.requires_any_item_source))||input.runtimeSources?.some(row=>row.mechanics?.magical===true)
+      ? {itemFeatRuleInput: input} : {}),
     abilities: scores,
     abilityMods,
     abilitySources,

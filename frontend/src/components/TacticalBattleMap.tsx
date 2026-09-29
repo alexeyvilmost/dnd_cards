@@ -1,3 +1,7 @@
+import {auraSurfacesAt} from '../solo-combat/auraTerrain';
+import {FACING_LABELS,type CombatFacing} from '../solo-combat/facing';
+import { boardLightSources, illuminationAt } from '../solo-combat/combatIllumination';
+import './TacticalIllumination.css';
 import { combatActorDisplayName } from '../character/familiarLabels';
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {useSiteSettings} from '../settings';
@@ -49,6 +53,7 @@ export default function TacticalBattleMap({
   onInspectActor,
   onActorHover,
   onDeclineAdditionalMovement,
+  onFacing,
 }: {
   state: SoloCombatState;
   feedback?: CombatBeat | null;
@@ -67,6 +72,7 @@ export default function TacticalBattleMap({
   onInspectActor?: (actorId: string) => void;
   onActorHover?: (actorId: string | null) => void;
   onDeclineAdditionalMovement?: () => void;
+  onFacing?:(facing:CombatFacing)=>void;
 }) {
   const {combat3d} = useSiteSettings();
   const [rendererError, setRendererError] = useState<string | null>(null);
@@ -115,7 +121,7 @@ export default function TacticalBattleMap({
     ? state.world.scene.initiative[state.world.scene.activeIndex]
     : '';
   // A fallen creature does not block a cell; a living occupant must remain selectable.
-  const tokenByCell = new Map(Object.values(state.tokens).sort((a, b) =>
+  const tokenByCell = new Map(Object.values(state.tokens).filter(token=>!token.attachedToActorId).sort((a, b) =>
     Number((state.world.actors[a.actorId]?.runtime.hp.current ?? 0) > 0)
     - Number((state.world.actors[b.actorId]?.runtime.hp.current ?? 0) > 0),
   ).flatMap((token) => footprintCells(token.position, actorFootprint(state.world.actors[token.actorId], state))
@@ -276,8 +282,10 @@ export default function TacticalBattleMap({
     suppressClickRef.current = pan.moved && event.type === 'pointerup';
   };
 
+  const lightSources = boardLightSources(state);
   const cells = Array.from({length: boardWidth * boardHeight}, (_, index) => {
     const position = { x: index % boardWidth, y: Math.floor(index / boardWidth) };
+    const illumination = illuminationAt(state, position, lightSources);
     const features=featuresByCell.get(`${position.x}:${position.y}`)??[];
     const terrainLabel=features.map(f=>`${f.name}${f.blocksMovement?' · непроходимо':''}${f.blocksSight?' · закрывает обзор':''}${f.cover==='half'?' · половинное укрытие, +2 КД':f.cover==='three_quarters'?' · укрытие на три четверти, +5 КД':''}`).join('; ');
     const token = tokenByCell.get(`${position.x}:${position.y}`);
@@ -314,7 +322,7 @@ export default function TacticalBattleMap({
       return `${area.name}: ${duration}${area.sourceAnchored ? ' · следует за источником' : ''}${area.difficultTerrain ? ' · труднопроходимая местность' : ''}${area.lightlyObscured ? ' · слабо заслонённая область' : ''}${area.heavilyObscured ? ' · сильно заслонённая область' : ''}${area.blocksVerbalComponents ? ' · блокирует Вербальные компоненты' : ''}${immunities}${hazard}${triggerLabels ? ` · ${triggerLabels}` : ''}`;
     }).join(' · ');
     const key = `${position.x}:${position.y}`;
-    return {position, features, token, dancingLight, illusion, persistentAreas, actor,
+    return {position, illumination, features, token, dancingLight, illusion, persistentAreas, actor,
       tokenAnchor: Boolean(tokenAnchor), dead: Boolean(dead), terrainLabel, actorLabel, areaLabel, lightLabel, illusionLabel,
       label: [actorLabel, terrainLabel, areaLabel, lightLabel, illusionLabel,
         (groundItemsByCell.get(key) ?? []).map(item => `На земле: ${item.name}`).join(', '),
@@ -496,6 +504,9 @@ export default function TacticalBattleMap({
     >
     {rendererError && <p className="battle-map-3d-fallback" role="status">{rendererError} Используется обычная карта.</p>}
     <div className="tactical-map-controls" role="group" aria-label="Навигация по полю">
+      {onFacing&&<label>Направление <select aria-label="Направление персонажа" value={state.tokens[actorId]?.facing??''} onChange={event=>onFacing(event.target.value as CombatFacing)}>
+        <option value="" disabled>Не задано</option>{Object.entries(FACING_LABELS).map(([value,label])=><option key={value} value={value}>{label}</option>)}
+      </select></label>}
       {state.battleMap&&<details className="tactical-map-legend"><summary>{state.battleMap.name} · {boardWidth}×{boardHeight}</summary><p>{state.battleMap.description}</p></details>}
       <button type="button" onClick={() => setZoom((current) => Math.max(0.35, Number((current - 0.1).toFixed(2))))} aria-label="Уменьшить масштаб">−</button>
       <span>{Math.round(zoom * 100)}%</span>
@@ -538,15 +549,17 @@ export default function TacticalBattleMap({
           <text x={(threat.from.x + threat.to.x) / 2 + movingCenter} y={(threat.from.y + threat.to.y) / 2 + movingCenter + .05}>!</text>
         </g>)}
       </svg>}
-      {cells.map(({position, token, dancingLight, illusion, persistentAreas, actor,
+      {cells.map(({position, illumination, token, dancingLight, illusion, persistentAreas, actor,
         tokenAnchor, dead, terrainLabel, areaLabel, lightLabel, illusionLabel, label}) => {
         return (
           <button
             type="button"
             key={`${position.x}:${position.y}`}
             className={`tactical-cell${token ? ' has-token' : ''}${dancingLight || illusion ? ' has-world-object' : ''}${persistentAreas.length ? ' has-combat-area' : ''}${persistentAreas.some((area) => area.lightlyObscured) ? ' is-lightly-obscured' : ''}${persistentAreas.some((area) => area.heavilyObscured) ? ' is-heavily-obscured' : ''}${persistentAreas.some((area) => area.difficultTerrain) ? ' is-difficult-terrain' : ''}${token && token.actorId === activeId ? ' is-active' : ''}${token && token.actorId === inspectedActorId ? ' is-inspected' : ''}${token && token.actorId === highlightedActorId ? ' is-linked-highlight' : ''}${dead ? ' is-dead' : ''}${areaCells.has(`${position.x}:${position.y}`) || (token && eligibleTargetIds?.includes(token.actorId)) ? ' is-area-preview' : ''}${reachableCells.has(`${position.x}:${position.y}`) ? ' is-move-reachable' : ''}${routeCells.has(`${position.x}:${position.y}`) ? ` is-route-preview${previewRoute && !previewRoute.available ? ' is-unavailable' : ''}` : ''}`}
-            aria-label={label}
-            aria-description={terrainLabel||undefined}
+            aria-label={`${label}${auraSurfacesAt(state,position).includes('ice')?', лёд':''}`}
+            data-illumination={illumination.level}
+            data-surface={auraSurfacesAt(state,position).join(' ')}
+            aria-description={[terrainLabel, illumination.magicalDarkness ? 'Магическая тьма' : illumination.daylight ? 'Дневной свет' : illumination.level === 'dark' ? 'Тьма' : illumination.level === 'dim' ? 'Тусклый свет' : 'Яркий свет'].filter(Boolean).join('; ')}
             data-actor-id={token?.actorId}
             data-scenery-zone={persistentAreas.length>0&&persistentAreas.every(area=>area.sceneryFeatureId)?'true':undefined}
             style={token ? {'--linked-accent': combatIdentity(state, token.actorId).accent} as React.CSSProperties : undefined}
@@ -596,6 +609,7 @@ export default function TacticalBattleMap({
                 {token.tokenUrl ? <img src={token.tokenUrl} alt="" /> : <b>{combatActorDisplayName(actor).slice(0, 1)}</b>}
                 {identity.duplicateIndex && <span className="battle-token__duplicate">{identity.duplicateIndex}</span>}
                 <span className="battle-token__name">{identity.displayName}</span>
+                {token.facing&&<span className="battle-token__facing" aria-label={`Направление: ${FACING_LABELS[token.facing]}`}>{FACING_LABELS[token.facing].slice(-1)}</span>}
                 <span className="battle-token__hp"><i style={{ width: `${Math.max(0, actor.runtime.hp.current / actor.runtime.hp.max * 100)}%` }} /></span>
               </span>
               );

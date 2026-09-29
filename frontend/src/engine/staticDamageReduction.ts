@@ -43,7 +43,7 @@ export function staticDamageReductions(input: {
     if (!conditionsMatch(mechanics.when) || !conditionsMatch(activation?.when)) continue;
     const payloads = mechanics.kind === 'reduce_damage' ? [mechanics] : payloadsOf(mechanics);
     for (const payload of payloads) {
-      if (payload.kind !== 'reduce_damage' || !conditionsMatch(payload.when)) continue;
+      if (payload.kind !== 'reduce_damage' || payload.chance !== undefined || !conditionsMatch(payload.when)) continue;
       if (payload.filter !== undefined && !object(payload.filter)) continue;
       const filter = object(payload.filter) ? payload.filter : {};
       if (Object.keys(filter).some(key => !['source','damage_types','armor','critical'].includes(key))) continue;

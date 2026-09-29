@@ -18,6 +18,9 @@ export function spellMatchesChoice(
   choice: PendingChoice,
   maxSlotLevel = 0,
 ): boolean {
+  // Variant rows are executable choices of an owned parent, never new spells
+  // acquired or prepared independently by a character.
+  if (typeof spell.mechanics?.variant_of_spell_id === 'string') return false;
   if (choice.source === 'prepared_spell') {
     const allowed = new Set(choice.allowedOptionIds ?? []);
     return allowed.has(spell.id) || allowed.has(spell.card_number);

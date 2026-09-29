@@ -1,4 +1,5 @@
 import { readWeaponBondObjects, writeWeaponBondObjects, hydrateWeaponBondObjects, reconcileWeaponBondHands } from './weaponBondPersistence';
+import {hasRitualCasting} from '../engine/itemExecutionCapabilities';
 import type { AssembledCharacter } from './assemble';
 import type { SheetAction } from './actionSheet';
 import type { ForgeCharacter } from './types';
@@ -13,7 +14,7 @@ import {
   type RulesetReference,
   type WorldState,
 } from '../rules-core/domain';
-import { compileDeclaredMechanicsTargeting } from '../rules-core/actionTargeting';
+import { compileDeclaredMechanicsTargeting, materializeDeclaredMechanicsTargeting } from '../rules-core/actionTargeting';
 import { canonicalStringify, sha256String } from '../rules-core/determinism';
 import { migrateWorldState } from '../rules-core/worldMigration';
 import { bindWarlockPactDeclaration } from '../rules-core/warlockPactDeclaration';
@@ -30,7 +31,7 @@ import {
 } from '../rules-core/spellcastingAccess';
 import { FAMILIAR_ACTOR_CATALOG } from '../rules-core/familiarActorCatalog';
 import { familiarActorStateIssue } from '../rules-core/familiarRuntime';
-import type { Card, PassiveEffect, Spell } from '../types';
+import type { Action, Card, PassiveEffect, Spell } from '../types';
 import {
   applySpellCastingOverride,
   declaredSpellCastingOverride,
@@ -176,6 +177,20 @@ function assembledOriginSource(
  * to project only Warlock pact state.  That left Alert and reaction Fighting
  * Styles visible as passives while making their combat handlers unreachable.
  */
+function projectFeatureItemSources(assembled:AssembledCharacter):Record<string,string[]>{
+  const sources=new Map<string,{native:boolean;items:Set<string>}>();
+  for(const {effect} of assembled.effects){
+    const mechanics=object(effect.mechanics),items=mechanics?.requires_any_item_source;
+    for(const entry of Array.isArray(mechanics?.capabilities)?mechanics.capabilities:[]){
+      const id=object(entry)?.id;if(typeof id!=='string')continue;
+      const prior=sources.get(id)??{native:false,items:new Set<string>()};
+      if(Array.isArray(items)&&items.length)items.forEach(item=>prior.items.add(String(item)));else prior.native=true;
+      sources.set(id,prior);
+    }
+  }
+  return Object.fromEntries([...sources].filter(([,source])=>!source.native&&source.items.size).map(([id,source])=>[id,[...source.items].sort()]));
+}
+
 function projectDeclaredFeatureSources(
   assembled: AssembledCharacter,
   actions: readonly RuleActionDefinition[],
@@ -607,6 +622,7 @@ function ruleActions(input: {
   itemSources: readonly ItemMechanic[];
 }): CompiledSheetAction[] {
   if (input.sheet.spellRef) {
+    if (typeof input.sheet.spellRef.mechanics?.variant_of_spell_id === 'string') return [];
     // One visual spell row may be owned by several immutable grants (for
     // example a class spellbook and an origin feat). Compile every grant into
     // its own source-scoped action. A stale/manual row with no grant is safely
@@ -620,6 +636,9 @@ function ruleActions(input: {
         itemSources: input.itemSources,
       });
       const spell = applySpellCastingOverride(input.sheet.spellRef!, binding.castingOverride);
+      if (Array.isArray(spell.mechanics?.spell_variant_ids)) {
+        spell.mechanics = materializeDeclaredMechanicsTargeting(spell.mechanics);
+      }
       if (grant.source.type === 'item') {
         spell.mechanics = { ...spell.mechanics, requires_item_source: grant.source.id };
       }
@@ -662,6 +681,7 @@ function ruleActions(input: {
     }
     return compiled;
   }
+  if (typeof input.sheet.actionRef?.mechanics?.variant_of_action_id === 'string') return [];
 
   // Non-spell sheet actions keep their existing synthetic/item adapters. Raw
   // DB actions/effects use their immutable mechanics card through the shared
@@ -686,7 +706,7 @@ function ruleActions(input: {
         ...entity,
         mechanics: restoreSelfUsesCost(
           cloneJson(input.sheet.canonicalMechanics ?? input.sheet.mechanics),
-          actionUsesKey(entity.card_number || entity.id),
+          actionUsesKey(entity.card_number || entity.id, entity.mechanics),
         ),
       } as never, {
         sourceEntityIds: originIds,
@@ -719,15 +739,16 @@ function ruleActions(input: {
 
 function accessForGrant(grant: AppliedGrant, spell: Spell, override?: SpellCastingOverride) {
   const label = grant.label?.trim().toLowerCase();
+  const effectiveLevel = override?.spellLevel ?? spell.level;
   if (label === 'cantrip') {
-    if (spell.level !== 0) throw new SheetCanonicalWorldError(`${grant.id}: cantrip grant has level ${spell.level}`);
+    if (effectiveLevel !== 0) throw new SheetCanonicalWorldError(`${grant.id}: cantrip grant has level ${effectiveLevel}`);
     return 'cantrip' as const;
   }
   // Level-zero spells are always cantrips in the runtime access model. Some
   // legacy/data-owned choice grants share an `always_prepared` label between
   // their cantrip and levelled options; normalize those cantrip rows here
   // instead of producing an invalid always-prepared level-zero grant.
-  if (spell.level === 0) return 'cantrip' as const;
+  if (effectiveLevel === 0) return 'cantrip' as const;
   if (grant.freeuse?.atWill) return 'innate' as const;
   if (label === 'known') return 'known' as const;
   if (label === 'prepared' || label === 'always_prepared') return 'always_prepared' as const;
@@ -856,7 +877,7 @@ function baseSpellAccess(input: {
     }
     if (!spellGrant) return [];
     const ability = spellGrant.grant.spellcastingAbility;
-    if (!ability) {
+    if (!ability && spellGrant.source.type !== 'item') {
       throw new SheetCanonicalWorldError(`${spellGrant.grant.id}: spellcasting ability is missing`);
     }
     const access = accessForGrant(spellGrant.grant, sheet.spellRef, spellGrant.castingOverride);
@@ -866,9 +887,11 @@ function baseSpellAccess(input: {
       sourceId: spellGrant.sourceId,
       access,
       spellcastingAbility: ability,
+      ...(!ability && spellGrant.source.type === 'item' ? { fixedSpellcastingModifier: 0 } : {}),
       ...(sheet.spellRef.ritual === true
         && (access === 'spellbook'
           || (access === 'always_prepared' && spellGrant.source.type === 'class')
+          || hasRitualCasting(input.passives??[])
           || spellGrant.castingOverride?.ritual === true)
         ? { ritual: true }
         : {}),
@@ -1124,6 +1147,10 @@ export function buildSheetCanonicalRuntime(input: {
   assembled: AssembledCharacter;
   ruleState: Pick<CharacterRuleState, 'appliedGrants'>;
   sheetActions: readonly SheetAction[];
+  /** Detail rows for children named by an owned spell's spell_variant_ids. */
+  spellVariants?: readonly Spell[];
+  /** Detail rows for children named by an owned action's action_variant_ids. */
+  actionVariants?: readonly Action[];
   runtime: RuntimeState;
   characterContext: CharacterContext;
   passives?: Record<string, unknown>[];
@@ -1148,7 +1175,58 @@ export function buildSheetCanonicalRuntime(input: {
     passives: input.passives,
     itemSources,
   }));
-  const actions = compiled.map(({ action }) => action);
+  const variantById = new Map((input.spellVariants ?? []).map((spell) => [spell.id, spell]));
+  const variantActions = compiled.flatMap(({ sheet, action, spellGrant }) => {
+    const parent = sheet.spellRef;
+    const ids = parent?.mechanics?.spell_variant_ids;
+    if (!parent || !Array.isArray(ids) || action.kind !== 'spell') return [];
+    return ids.map((id) => {
+      if (typeof id !== 'string') throw new SheetCanonicalWorldError(`${parent.card_number}: invalid spell variant reference`);
+      const child = variantById.get(id);
+      if (!child || child.mechanics?.variant_of_spell_id !== parent.id) {
+        throw new SheetCanonicalWorldError(`${parent.card_number}: missing or unrelated spell variant ${id}`);
+      }
+      const adjusted = applySpellCastingOverride(child, spellGrant?.castingOverride);
+      if (!adjusted.mechanics) {
+        throw new SheetCanonicalWorldError(`${child.card_number}: spell variant has no mechanics`);
+      }
+      adjusted.mechanics = materializeDeclaredMechanicsTargeting(adjusted.mechanics);
+      if (spellGrant?.source.type === 'item') {
+        adjusted.mechanics = { ...adjusted.mechanics, requires_item_source: spellGrant.source.id };
+      }
+      if (adjusted.mechanics?.spell_class_list_ids === undefined && spellGrant?.sourceClass) {
+        adjusted.mechanics = { ...adjusted.mechanics, spell_class_list_ids: [spellGrant.sourceClass] };
+      }
+      return applyGeneralSpellFeatActionRules(projectRuleAction(adjusted, {
+        sourceEntityIds: action.sourceEntityIds.filter((sourceId) => sourceId !== parent.id),
+        sourceClass: action.spell.sourceClass,
+        grantScopeId: action.id.startsWith(parent.id) && action.id[parent.id.length] === '@'
+          ? action.id.slice(parent.id.length + 1) : undefined,
+      }), input.passives ?? []);
+    });
+  });
+  const actionVariantById = new Map((input.actionVariants ?? []).map((variant) => [variant.id, variant]));
+  const actionVariantActions = compiled.flatMap(({ sheet, action }) => {
+    const parent = sheet.actionRef;
+    const ids = parent?.mechanics?.action_variant_ids;
+    if (!parent || !Array.isArray(ids) || action.kind !== 'nonSpell') return [];
+    return ids.map((id) => {
+      if (typeof id !== 'string') throw new SheetCanonicalWorldError(`${parent.card_number}: invalid action variant reference`);
+      const child = actionVariantById.get(id);
+      if (!child || child.mechanics?.variant_of_action_id !== parent.id) {
+        throw new SheetCanonicalWorldError(`${parent.card_number}: missing or unrelated action variant ${id}`);
+      }
+      const sharedUsesKey = actionUsesKey(parent.card_number || parent.id, parent.mechanics);
+      const mechanics = materializeDeclaredMechanicsTargeting(restoreSelfUsesCost(
+        cloneJson(child.mechanics), sharedUsesKey));
+      return projectRuleAction({ ...child, card_number: parent.card_number, mechanics }, {
+        sourceEntityIds: action.sourceEntityIds.filter((sourceId) => sourceId !== parent.id),
+        grantScopeId: action.id.startsWith(parent.id) && action.id[parent.id.length] === '@'
+          ? action.id.slice(parent.id.length + 1) : undefined,
+      });
+    });
+  });
+  const actions = [...compiled.map(({ action }) => action), ...variantActions, ...actionVariantActions];
   const actionById = new Map<string, RuleActionDefinition>();
   for (const action of actions) {
     const previous = actionById.get(action.id);
@@ -1383,6 +1461,7 @@ export function buildSheetCanonicalRuntime(input: {
   };
   const actorCharacterContext: CharacterContext = {
     ...characterContext,
+    creatureTags:[...new Set(input.assembled.effects.flatMap(({effect})=>Array.isArray(effect.mechanics?.creature_tags)?effect.mechanics.creature_tags as string[]:[]))],
     knownCards: cards.map(cloneJson),
     attunedIds: readAttunedIds(input.character.turn_state),
   };
@@ -1393,8 +1472,9 @@ export function buildSheetCanonicalRuntime(input: {
     controllerId: `character-sheet:${actorId}`,
     ...(input.ac != null ? { ac: input.ac } : {}),
     capabilities: {
-      actionIds: uniqueActions.map((action) => action.id).sort(),
+      actionIds: compiled.map(({ action }) => action.id).sort(),
       ...(Object.keys(featureSources).length ? { featureSources } : {}),
+      featureItemSources:projectFeatureItemSources(input.assembled),
     },
     character: actorCharacterContext,
     attackProfile: {
@@ -1471,11 +1551,22 @@ export function buildSheetCanonicalRuntime(input: {
         ritualActionIds: deferredTomes[0].selected.rituals.map((action) => action.id).sort(),
       },
     } : {}),
-    actionsFor: (sheetAction) => compiled
-      .filter(({ sheet }) => sheet === sheetAction || sheet.id === sheetAction.id)
-      .map(({ action }) => action),
+    actionsFor: (sheetAction) => sheetAction.actionRef?.mechanics?.variant_of_action_id
+      ? actionVariantActions.filter((action) => action.sourceEntityIds[0] === sheetAction.actionRef?.id)
+      : sheetAction.spellRef?.mechanics?.variant_of_spell_id
+      ? variantActions.filter((action) => action.sourceEntityIds[0] === sheetAction.spellRef?.id)
+      : compiled.filter(({ sheet }) => sheet === sheetAction || sheet.id === sheetAction.id)
+        .map(({ action }) => action),
     actionFor: (sheetAction) => {
-      const matches = compiled.filter(({ sheet }) => sheet === sheetAction || sheet.id === sheetAction.id);
+      const variantParentId = sheetAction.spellRef?.mechanics?.variant_of_spell_id;
+      const actionParentId = sheetAction.actionRef?.mechanics?.variant_of_action_id;
+      const matches = typeof actionParentId === 'string'
+        ? actionVariantActions.filter((action) => action.sourceEntityIds[0] === sheetAction.actionRef?.id)
+          .map((action) => ({ sheet: sheetAction, action }))
+        : typeof variantParentId === 'string'
+        ? variantActions.filter((action) => action.sourceEntityIds[0] === sheetAction.spellRef?.id)
+          .map((action) => ({ sheet: sheetAction, action }))
+        : compiled.filter(({ sheet }) => sheet === sheetAction || sheet.id === sheetAction.id);
       if (matches.length && sheetAction.spellRef) {
         const actor = world.actors[actorId];
         if (!actor.spellcastingAccess) {
@@ -1485,24 +1576,33 @@ export function buildSheetCanonicalRuntime(input: {
         }
         const failures: string[] = [];
         const candidates = matches.flatMap((match) => {
+          const accessActionId = typeof variantParentId === 'string'
+            ? `${variantParentId}${match.action.id.slice(match.action.sourceEntityIds[0].length)}`
+            : match.action.id;
           const grants = actor.spellcastingAccess?.grants.filter((grant) => (
-            grant.actionId === match.action.id
+            grant.actionId === accessActionId
           )) ?? [];
           return grants.flatMap((grant) => {
-            const resolution = resolveSpellAccess({
-              state: actor.spellcastingAccess!,
-              actionId: match.action.id,
-              grantId: grant.grantId,
-              resources: actor.runtime.resources,
+            const baseLevel = match.action.kind === 'spell' ? match.action.spell.level : 0;
+            const castLevels = baseLevel === 0 ? [0] : Array.from({ length: 10 - baseLevel }, (_, offset) => baseLevel + offset);
+            return castLevels.flatMap((castLevel) => {
+              const resolution = resolveSpellAccess({
+                state: actor.spellcastingAccess!,
+                actionId: accessActionId,
+                grantId: grant.grantId,
+                resources: actor.runtime.resources,
+                castLevel,
+              });
+              if (resolution.status === 'rejected') failures.push(resolution.message);
+              return resolution.status === 'allowed'
+                ? [{ action: match.action, grantId: grant.grantId, payment: resolution.payment.kind, castLevel }]
+                : [];
             });
-            if (resolution.status === 'rejected') failures.push(resolution.message);
-            return resolution.status === 'allowed'
-              ? [{ action: match.action, grantId: grant.grantId, payment: resolution.payment.kind }]
-              : [];
           });
         }).sort((left, right) => {
           const priority = { free_use: 0, none: 1, slot: 2 } as const;
           return priority[left.payment] - priority[right.payment]
+            || left.castLevel - right.castLevel
             || left.grantId.localeCompare(right.grantId)
             || left.action.id.localeCompare(right.action.id);
         });

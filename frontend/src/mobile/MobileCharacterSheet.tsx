@@ -260,7 +260,7 @@ export default function MobileCharacterSheet() {
     plan.push(...plannedD20BonusDice(collected.rules,label,'check'));
     setOverlay(null);
     if (rollKind==='save' && collected.autoFail) {await appendEvents([{type:'narrative',text:`${label} — автопровал (состояние)`}]);return;}
-    const inspired = influencedSheetRoll(rollKind, options, runtimeState, data.passives);
+    const inspired = influencedSheetRoll(rollKind, options, runtimeState, data.passives, Math.random, { ability, skill, character: data.sheetCtx ?? undefined });
     const decision = await diceDialog.request(plan, label, undefined, {compactCheck:inspired.request});
     if (decision.mode === 'cancel') return;
     const rng = decision.mode === 'manual'
@@ -321,7 +321,7 @@ export default function MobileCharacterSheet() {
   // Эти вычисления идут после loading/error guard, поэтому не должны быть хуками:
   // иначе первый и второй рендеры мобильного листа вызывают разное число хуков.
   const draft = characterToDraft(character);
-  const inPlayChoices = assembled.pendingChoices.filter((pc) => pc.context === 'in_play');
+  const inPlayChoices = [...assembled.pendingChoices.filter((pc) => pc.context === 'in_play'),...data.itemChoices];
   const maxHp = data.maxHpBreakdown?.value ?? ruleState.maxHP;
   const armorClass = data.acBreakdown?.value ?? ruleState.armorClass;
   const initiative = data.initiativeBreakdown?.value ?? ruleState.initiativeBonus;

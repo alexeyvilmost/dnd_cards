@@ -5,6 +5,7 @@ import type { CharacterClass } from '../types';
 import type { CharacterRuleState } from './rules/types';
 import { readDeathSaves } from './death';
 import { untrainedArmorCategories } from './untrainedArmor';
+import { OCCURRENCE_PERIODS } from '../engine/eventOccurrence';
 
 export const RULES_ENGINE_RUNTIME_TURN_STATE_KEY = 'rules_engine_runtime_v1' as const;
 export const RULES_ENGINE_RUNTIME_TURN_STATE_VERSION = 1 as const;
@@ -13,7 +14,48 @@ type RulesEngineRuntimeTurnState = {
   schemaVersion: typeof RULES_ENGINE_RUNTIME_TURN_STATE_VERSION;
   firedThisTurn: string[];
   firedThisRest: string[];
+  firedByPeriod?: RuntimeState['firedByPeriod'];
+  eventOccurrences?: RuntimeState['eventOccurrences'];
+  turnMovementFt?: number;
+  encounterActive?: boolean;
 };
+
+function readOccurrenceState(envelope: Record<string, unknown>): Partial<RulesEngineRuntimeTurnState> {
+  const extra: Partial<RulesEngineRuntimeTurnState> = {};
+  if (envelope.encounterActive !== undefined) {
+    if (typeof envelope.encounterActive !== 'boolean') throw Error('encounterActive must be boolean');
+    extra.encounterActive = envelope.encounterActive;
+  }
+  if (envelope.turnMovementFt !== undefined) {
+    if (typeof envelope.turnMovementFt !== 'number' || !Number.isFinite(envelope.turnMovementFt) || envelope.turnMovementFt < 0) {
+      throw new Error('turnMovementFt must be finite and non-negative');
+    }
+    extra.turnMovementFt = envelope.turnMovementFt;
+  }
+  for (const key of ['firedByPeriod', 'eventOccurrences'] as const) {
+    const value = envelope[key];
+    if (value === undefined) continue;
+    if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`${key} must be an object`);
+    if (key === 'firedByPeriod') {
+      extra.firedByPeriod = Object.fromEntries(Object.entries(value).map(([period, ids]) => [period, engineLedger(ids, key)]));
+    } else {
+      const counters: NonNullable<RuntimeState['eventOccurrences']> = {};
+      for (const [id, raw] of Object.entries(value)) {
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('eventOccurrences entry must be an object');
+        const entry = raw as Record<string, unknown>;
+        if (!id || !Number.isSafeInteger(entry.count) || Number(entry.count) < 0
+          || !OCCURRENCE_PERIODS.includes(entry.period as typeof OCCURRENCE_PERIODS[number])
+          || (entry.lastEventId !== undefined && (typeof entry.lastEventId !== 'string' || !entry.lastEventId))) {
+          throw new Error('Invalid eventOccurrences entry');
+        }
+        counters[id] = {count:Number(entry.count),period:String(entry.period),
+          ...(entry.lastEventId ? {lastEventId:String(entry.lastEventId)} : {})};
+      }
+      extra.eventOccurrences = counters;
+    }
+  }
+  return extra;
+}
 
 function engineLedger(value: unknown, label: string): string[] {
   if (!Array.isArray(value)
@@ -45,13 +87,14 @@ function readRulesEngineRuntimeTurnState(
     schemaVersion: RULES_ENGINE_RUNTIME_TURN_STATE_VERSION,
     firedThisTurn: engineLedger(envelope.firedThisTurn, 'firedThisTurn'),
     firedThisRest: engineLedger(envelope.firedThisRest, 'firedThisRest'),
+    ...readOccurrenceState(envelope),
   };
 }
 
 /** Persist the trigger/mastery usage ledgers together with ordinary turn state. */
 export function writeRulesEngineRuntimeTurnState(
   turnState: Record<string, unknown> | null | undefined,
-  state: Pick<RuntimeState, 'hp' | 'firedThisTurn' | 'firedThisRest' | 'deathSaves'>,
+  state: Pick<RuntimeState, 'hp' | 'firedThisTurn' | 'firedThisRest' | 'deathSaves' | 'firedByPeriod' | 'eventOccurrences' | 'turnMovementFt' | 'encounterActive'>,
   additions: Record<string, unknown> = {},
 ): Record<string, unknown> {
   return {
@@ -63,6 +106,7 @@ export function writeRulesEngineRuntimeTurnState(
       schemaVersion: RULES_ENGINE_RUNTIME_TURN_STATE_VERSION,
       firedThisTurn: [...new Set(state.firedThisTurn ?? [])],
       firedThisRest: [...new Set(state.firedThisRest ?? [])],
+      ...readOccurrenceState(state as unknown as Record<string, unknown>),
     },
   };
 }
@@ -101,6 +145,10 @@ export function forgeToRuntimeState(c: ForgeCharacter): RuntimeState {
     deathSaves: readDeathSaves(c.turn_state),
     firedThisTurn: engineRuntime.firedThisTurn,
     firedThisRest: engineRuntime.firedThisRest,
+    ...(engineRuntime.encounterActive !== undefined ? { encounterActive: engineRuntime.encounterActive } : {}),
+    ...(engineRuntime.firedByPeriod ? {firedByPeriod:engineRuntime.firedByPeriod} : {}),
+    ...(engineRuntime.eventOccurrences ? {eventOccurrences:engineRuntime.eventOccurrences} : {}),
+    ...(engineRuntime.turnMovementFt !== undefined ? {turnMovementFt:engineRuntime.turnMovementFt} : {}),
   };
 }
 
@@ -129,6 +177,8 @@ export function buildTargetFromCharacter(c: ForgeCharacter): TargetContext {
     variables: rs.variables,
     saveProficiencies: rs.proficiencies?.savingThrows,
     skillProficiencies: rs.proficiencies?.skills,
+    toolProficiencies:rs.proficiencies?.tools,
+    toolExpertise:rs.expertise?.tools,
     skillExpertise: rs.expertise?.skills,
     ...(rs.proficiencies?.weapons
       ? { weaponProficiencies: [...rs.proficiencies.weapons] }
@@ -169,6 +219,7 @@ export function buildCharacterContext(
   const classKey = classLevelKey(klass ?? null);
   return {
     abilityScores: ruleState.abilities,
+    ...(ruleState.itemFeatRuleInput?{itemFeatRuleInput:ruleState.itemFeatRuleInput}:{}),
     abilityMods: ruleState.abilityMods,
     abilitySources: ruleState.abilitySources,
     abilityMethods: ruleState.abilityMethods,
@@ -192,6 +243,8 @@ export function buildCharacterContext(
     spellcastingAbility: ruleState.spellcasting?.ability,
     saveProficiencies: ruleState.proficiencies.savingThrows,
     skillProficiencies: ruleState.proficiencies.skills,
+    toolProficiencies:ruleState.proficiencies.tools,
+    toolExpertise:ruleState.expertise.tools,
     skillExpertise: ruleState.expertise.skills,
     weaponProficiencies: [...ruleState.proficiencies.weapons],
     untrainedArmorCategories: untrainedArmorCategories(ruleState),

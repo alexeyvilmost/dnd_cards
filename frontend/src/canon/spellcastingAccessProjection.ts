@@ -9,7 +9,8 @@ export interface SpellGrantProjection {
   action: RuleActionDefinition;
   sourceId: string;
   access: SpellAccessKind;
-  spellcastingAbility: Ability;
+  spellcastingAbility?: Ability;
+  fixedSpellcastingModifier?: number;
   ritual?: boolean;
   freeUseResource?: string;
   slotResource?: string;
@@ -52,6 +53,10 @@ export function projectSpellcastingAccess(input: {
         problems.push(`${projection.action.id}: a spell grant must reference a spell action`);
       }
       if (!projection.sourceId) problems.push(`${projection.action.id}: sourceId is required`);
+      if (projection.fixedSpellcastingModifier !== undefined && !Number.isFinite(projection.fixedSpellcastingModifier)
+        || !projection.spellcastingAbility && projection.fixedSpellcastingModifier === undefined) {
+        problems.push(`${projection.action.id}: a spell grant needs an ability or finite fixed modifier`);
+      }
       const level = projection.action.kind === 'spell' ? projection.action.spell.level : -1;
       if (level > 0 && projection.access !== 'innate' && projection.access !== 'ritual_only'
         && !projection.slotResource && !projection.freeUseResource) {
@@ -64,6 +69,7 @@ export function projectSpellcastingAccess(input: {
         access: projection.access,
         level,
         spellcastingAbility: projection.spellcastingAbility,
+        ...(projection.fixedSpellcastingModifier !== undefined ? { fixedSpellcastingModifier: projection.fixedSpellcastingModifier } : {}),
         ...(projection.ritual ? { ritual: true } : {}),
         ...(projection.freeUseResource ? { freeUseResource: projection.freeUseResource } : {}),
         ...(projection.slotResource ? { slotResource: projection.slotResource } : {}),

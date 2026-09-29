@@ -1,4 +1,4 @@
-import type { ActionTargeting, JsonObject, Relation } from './domain';
+import type { ActionTargeting, JsonObject, Relation, RuleActionDefinition } from './domain';
 
 export type MechanicsTargetDomain = 'world' | 'actor' | 'mixed';
 
@@ -36,6 +36,32 @@ function nonNegativeInteger(value: unknown, label: string): number {
     throw new ActionTargetingDefinitionError(`${label} must be a non-negative integer`);
   }
   return Number(value);
+}
+
+/** One data contract determines slot counts in the picker, sheet bridge and authority. */
+export function targetSlotBounds(action: RuleActionDefinition, castLevel?: number, actorLevel?: number): {
+  minTargets: number; maxTargets: number;
+} {
+  const targeting = action.targeting;
+  if (!targeting) throw new ActionTargetingDefinitionError(`${action.id} has no targeting`);
+  const tiers = targeting.targetSlotsByCharacterLevel;
+  if (tiers) {
+    if (!Number.isInteger(actorLevel) || Number(actorLevel) < 1 || Number(actorLevel) > 20) {
+      throw new ActionTargetingDefinitionError(`${action.id} needs actor level for target slots`);
+    }
+    const threshold = Object.keys(tiers).map(Number).sort((a, b) => a - b)
+      .filter(level => level <= Number(actorLevel)).at(-1);
+    if (threshold === undefined) throw new ActionTargetingDefinitionError(`${action.id} has no slot tier`);
+    const slots = tiers[String(threshold)];
+    return {minTargets: slots, maxTargets: slots};
+  }
+  const extra = action.kind === 'spell' && targeting.additionalTargetSlotsPerSpellSlotAboveBase
+    ? Math.max(0, (castLevel ?? action.spell.level) - action.spell.level)
+      * targeting.additionalTargetSlotsPerSpellSlotAboveBase : 0;
+  return {
+    minTargets: targeting.minTargets + (targeting.minTargets === targeting.maxTargets ? extra : 0),
+    maxTargets: targeting.maxTargets + extra,
+  };
 }
 
 function legacyRangeFt(targeting: JsonObject): number {
@@ -139,6 +165,48 @@ export function compileMechanicsTargeting(mechanics: JsonObject): ActionTargetin
   if (minTargets > maxTargets) {
     throw new ActionTargetingDefinitionError('targeting.min_targets cannot exceed targeting.max_targets');
   }
+  const additionalSlots = targeting.additional_target_slots_per_spell_slot_above_base === undefined
+    ? undefined
+    : positiveInteger(targeting.additional_target_slots_per_spell_slot_above_base, 1,
+      'targeting.additional_target_slots_per_spell_slot_above_base');
+  let levelSlots: Record<string, number> | undefined;
+  if (targeting.target_slots_by_character_level !== undefined) {
+    const declared = object(targeting.target_slots_by_character_level, 'targeting.target_slots_by_character_level');
+    const levels = Object.keys(declared).map(Number).sort((a, b) => a - b);
+    if (!levels.length || levels[0] !== 1 || levels.some(level => !Number.isInteger(level) || level < 1 || level > 20)
+      || new Set(levels).size !== levels.length || maxTargets !== minTargets || additionalSlots !== undefined) {
+      throw new ActionTargetingDefinitionError('character-level target slots require exact base slots and level 1');
+    }
+    levelSlots = {};
+    let previous = 0;
+    for (const level of levels) {
+      const key = String(level), value = declared[key];
+      if (typeof value !== 'number' || !Number.isInteger(value) || value < previous || value > 64
+        || (level === 1 && value !== maxTargets)) {
+        throw new ActionTargetingDefinitionError('character-level target slots must be monotone and match base slots');
+      }
+      levelSlots[key] = value;
+      previous = value;
+    }
+  }
+  if (targeting.allow_repeat_targets !== undefined
+    && (targeting.allow_repeat_targets !== true || !actorTargets || area || self
+      || Math.max(maxTargets, ...Object.values(levelSlots ?? {})) < 2)) {
+    throw new ActionTargetingDefinitionError('targeting.allow_repeat_targets requires multi-slot actor targeting');
+  }
+  const nearFirst = targeting.additional_targets_within_ft_of_first === undefined
+    ? undefined
+    : finiteNonNegative(targeting.additional_targets_within_ft_of_first,
+      'targeting.additional_targets_within_ft_of_first');
+  if (additionalSlots !== undefined && (!actorTargets || area || self)) {
+    throw new ActionTargetingDefinitionError('spell slot target scaling requires actor targets');
+  }
+  if (levelSlots && (!actorTargets || area || self)) {
+    throw new ActionTargetingDefinitionError('character-level slots require actor targets');
+  }
+  if (nearFirst !== undefined && (!actorTargets || area || self || maxTargets < 2 || nearFirst === 0)) {
+    throw new ActionTargetingDefinitionError('additional target distance requires multiple actor targets');
+  }
 
   const rangeFt = targeting.range_ft === undefined
     ? legacyRangeFt(targeting)
@@ -160,6 +228,12 @@ export function compileMechanicsTargeting(mechanics: JsonObject): ActionTargetin
   }
   if (targeting.requires_touch !== undefined && typeof targeting.requires_touch !== 'boolean') {
     throw new ActionTargetingDefinitionError('targeting.requires_touch must be boolean');
+  }
+  if(targeting.requires_target_conditions_any!==undefined&&(!Array.isArray(targeting.requires_target_conditions_any)
+    ||targeting.requires_target_conditions_any.length===0
+    ||targeting.requires_target_conditions_any.some((value:unknown)=>typeof value!=='string'||!value.trim())
+    ||new Set(targeting.requires_target_conditions_any).size!==targeting.requires_target_conditions_any.length)){
+    throw new ActionTargetingDefinitionError('targeting.requires_target_conditions_any must contain unique condition IDs');
   }
 
   const defaultRelations: Relation[] = self ? ['self'] : ['self', 'ally', 'enemy', 'neutral'];
@@ -188,9 +262,14 @@ export function compileMechanicsTargeting(mechanics: JsonObject): ActionTargetin
   return {
     minTargets,
     maxTargets,
+    ...(targeting.allow_repeat_targets === true ? {allowRepeatTargets: true as const} : {}),
+    ...(additionalSlots !== undefined ? {additionalTargetSlotsPerSpellSlotAboveBase: additionalSlots} : {}),
+    ...(levelSlots ? {targetSlotsByCharacterLevel: levelSlots} : {}),
+    ...(nearFirst !== undefined ? {additionalTargetsWithinFtOfFirst: nearFirst} : {}),
     rangeFt,
     requiresLineOfSight,
     ...(targeting.requires_sight === true ? { requiresSight: true } : {}),
+    ...(Array.isArray(targeting.requires_target_conditions_any)?{requiresTargetConditionsAny:[...targeting.requires_target_conditions_any] as string[]}:{}),
     ...(targeting.requires_target_perception === true ? { requiresTargetPerception: true } : {}),
     allowedRelations,
     ...(targeting.requires_willing === true ? { requiresWilling: true } : {}),

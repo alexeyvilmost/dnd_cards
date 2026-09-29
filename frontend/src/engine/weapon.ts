@@ -18,6 +18,7 @@ import {
 import { resolveUnarmedDamageProfile } from '../rules-core/fightingStyleComplexPrimitives';
 import { payloadsOf } from './mechanicsView';
 import { matchesWhen } from './circumstances';
+import {allowsOneHandedHeavyWeapon,weaponHandlingPassives} from './itemExecutionCapabilities';
 
 type Dict = Record<string, unknown>;
 
@@ -55,13 +56,15 @@ const WEAPON_GROUP_BY_TYPE = new Map<string, string>(
 export function isWeaponProficient(
   character: CharacterContext,
   weaponType: string | null | undefined,
-  declaredCategory?: 'simple' | 'martial',
+  declaredCategory?: 'simple' | 'martial' | 'none',
 ): boolean {
-  if (character.weaponProficiencies === undefined) return true;
+  if (character.weaponProficiencies === undefined) return declaredCategory!=='none';
   const normalizedType = normalizeWeaponProficiencyId(String(weaponType ?? ''));
   if (!normalizedType) return false;
   const grants = new Set(character.weaponProficiencies.map(normalizeWeaponProficiencyId));
-  if (grants.has('all') || grants.has(normalizedType)) return true;
+  if (grants.has(normalizedType)) return true;
+  if(declaredCategory==='none')return false;
+  if(grants.has('all'))return true;
   const group = WEAPON_GROUP_BY_TYPE.get(normalizedType);
   if (!group && !declaredCategory) return false;
   const broadCategory = declaredCategory ?? (group?.startsWith('simple_')
@@ -108,6 +111,7 @@ function itemBonusesActive(
   profile: WeaponProfile,
   character: CharacterContext,
 ): boolean {
+  if(character.magicSuppressed)return false;
   if (!profile.attunement.required) return true;
   if (character.attunedIds == null) return false;
   return character.attunedIds.includes(card.id);
@@ -142,7 +146,7 @@ function cardToWeapon(
   const { profile } = parsed;
   const magic = itemBonusesActive(card, profile, character);
   const damages = weaponDamages(profile, twoHandedGrip, magic);
-  const enchantment = runtime?.activeEffects
+  const enchantment = (character.magicSuppressed?[]:runtime?.activeEffects??[])
     .flatMap((entry) => {
       const mechanics = entry.mechanics as Dict;
       if (mechanics.kind === 'weapon_enchantment') return [mechanics];
@@ -211,6 +215,7 @@ function cardToWeapon(
     attackModes: profile.attackModes.map((mode) => ({ ...mode })),
     // Искусность — НЕ магическое свойство: работает и без настройки (гейт — выбор персонажа).
     mastery: profile.masteryEffectId,
+    masteryGranted:card.mechanics?.weapon_mastery_granted===true,
   };
 }
 
@@ -230,7 +235,8 @@ export function weaponContext(
     if (card?.type === 'weapon') {
       const weapon = cardToWeapon(card, character, twoHandedGrip, runtime, passives);
       const other = equipment[hand === 'main' ? 'off_hand' : 'main_hand'];
-      if (weapon?.properties.includes('two_handed') && other && other !== card.id) return null;
+      if (weapon?.properties.includes('two_handed') && other && other !== card.id
+        && !allowsOneHandedHeavyWeapon(card,equipment,new Map([...(character.knownCards??[]),...(character.equippedCards??[])].map(c=>[c.id,c])),weaponHandlingPassives(character,runtime,passives))) return null;
       return weapon;
     }
     return null;
@@ -437,6 +443,7 @@ export function weaponActionAvailability(
   mechanics: Dict | null | undefined,
   equipment: Record<string, string | null | undefined> | undefined,
   cardsById: Map<string, Card>,
+  passives: readonly unknown[] = [],
 ): ActionAvailability {
   const kind = weaponAttackKind(mechanics);
   if (!kind) return { available: true };
@@ -449,7 +456,8 @@ export function weaponActionAvailability(
   const modeAvailability = (card: Card): ActionAvailability => {
     const profile = parseWeaponProfile(card);
     const other = kind === 'main' ? offId : mainId;
-    if (profile.valid && profile.profile.properties.includes('two_handed') && other && other !== card.id) {
+    if (profile.valid && profile.profile.properties.includes('two_handed') && other && other !== card.id
+      && !allowsOneHandedHeavyWeapon(card,equipment??{},cardsById,passives)) {
       return { available: false, reason: 'Для атаки двуручным оружием освободите вторую руку' };
     }
     const requested = declaredWeaponAttackMode(mechanics);

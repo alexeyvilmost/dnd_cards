@@ -275,6 +275,7 @@ export async function saveMobileCatalogSelection(
         });
         const result = executeManualEffectCommand(runtime, command, {
           nextId: nextBrowserManualEffectId,
+          passives,
         });
         runtime = result.state;
         events.push(...result.events);

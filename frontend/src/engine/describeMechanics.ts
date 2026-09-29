@@ -114,8 +114,11 @@ function payloadPhrase(p: Dict, ctx?: FormulaContext | null): string {
     case 'healing': { const v = p.amount ?? p.dice ?? p.formula; return v != null ? `лечение ${diceRu(String(v), ctx)}` : 'лечение'; }
     case 'temp_hp': return `временные хиты ${diceRu(String(p.amount ?? ''), ctx)}`;
     case 'condition': return conditionValuePhrase(p);
+    case 'roll_die': return `бросок к${p.sides ?? '?'}: ${p.label ?? ''}`;
+    case 'item_owned_actor': return 'предмет получает отдельный ход инициативы и одно действие атаки';
     case 'roll_influence': return p.operation === 'reroll_kept_d20'
       ? `после броска, до объявления исхода: перебросить одну используемую к20; новый результат обязателен${p.die_max != null ? ` (грань не выше ${p.die_max})` : ''}${p.die_min != null ? ` (грань не ниже ${p.die_min})` : ''}`
+      : p.operation === 'reroll_roll' ? 'после броска, до объявления исхода: перебросить все используемые кости этого броска; новый результат обязателен'
       : 'неподдерживаемая операция влияния на бросок';
     case 'modifier': return modifierPhrase(p);
     case 'resistance': {
@@ -127,12 +130,14 @@ function payloadPhrase(p: Dict, ctx?: FormulaContext | null): string {
     case 'movement': return `${p.value ?? 'перемещение'} ${p.distance ?? ''} фт`.trim();
     case 'stabilize': return 'стабилизирует цель при 0 хитах';
     case 'weapon_enchantment': return 'зачаровывает выбранное оружие';
+    case 'weapon_attack_buff': return 'усиливает атаки и урон выбранного оружия';
     case 'remote_manipulator': return `создаёт дистанционный манипулятор до ${p.max_distance_ft ?? '?'} фт`;
     case 'communication_link': return `приватное сообщение до ${p.range_ft ?? '?'} фт`;
     case 'world_interaction': return `взаимодействие с миром: ${p.operation ?? ''}`;
     case 'illusion': return `создаёт иллюзию: ${p.form ?? ''}`;
     case 'temporary_consumable': return `создаёт временный предмет ×${p.count ?? '?'}`;
     case 'world_entity': return `создаёт сущность мира: ${p.entity_type ?? ''}`;
+    case 'environment_adaptation': return [Array.isArray(p.breathing)&&p.breathing.includes('water')?'Дыхание под водой':'',p.weightless?'Невесомость':'',p.can_pass_gaps?'Прохождение сквозь щели':'',p.cannot_attack?'Нельзя атаковать':'',p.cannot_cast?'Нельзя использовать заклинания':''].filter(Boolean).join('; ');
     case 'information_access': return `открывает доступ: ${p.capability ?? ''}`;
     case 'information_reveal': return `раскрывает сведения: ${p.reveal ?? ''}`;
     case 'world_zone': return `создаёт зону: ${p.zone_type ?? ''}`;
@@ -211,7 +216,8 @@ function usesDetail(uses: Dict | undefined, ctx?: FormulaContext | null): string
   const count = rawCount != null ? diceRu(String(rawCount), ctx) : '';
   const recovery = resolveActionUsesRecovery({ uses });
   if (recovery.status === 'configured') {
-    return `Использования: ${count}; короткий отдых: +${recovery.recovery.short_rest.amount}; долгий отдых: все`;
+    const short=recovery.recovery.short_rest,long=recovery.recovery.long_rest;
+    return `Использования: ${count}; короткий отдых: ${short.mode==='fixed'?'+'+short.amount:'нет'}; долгий отдых: ${long.mode==='full'?'все':'+'+long.dice}`;
   }
   if (recovery.status === 'invalid') return `Использования: ${count}; восстановление не настроено`;
   const per = uses.per != null ? `/${PER_RU[String(uses.per)] ?? uses.per}` : '';

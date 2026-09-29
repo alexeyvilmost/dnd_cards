@@ -14,6 +14,7 @@ const DECLARATIONS: Record<ManagedWorldSpellPrimitiveType, {
   targeting: JsonObject;
   primitive: JsonObject;
 }> = {
+  item_tool:{targeting:{domain:'world',actor_targets:false,range_ft:5,allowed_relations:[],requires_line_of_sight:true,shape:'single'},primitive:{type:'item_tool',policy:{operation:'anchor'}}},
   light_world_object: {
     targeting: {
       domain: 'world', actor_targets: false, range_ft: 0, allowed_relations: [],

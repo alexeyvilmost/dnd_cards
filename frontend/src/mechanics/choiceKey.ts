@@ -7,6 +7,8 @@ export interface ChoiceKeyOrigin {
   kind: string;
   id: string;
   featureId?: string;
+  /** Exact runtime source identity for item-owned choices. */
+  sourceId?: string;
 }
 
 /** featureId с учётом ЭКЗЕМПЛЯРА: `${effectId}#${instanceKey}` для повторных получений
@@ -23,5 +25,5 @@ export function sourceKey(kind: string, id: string, featureId?: string | null): 
 
 /** Instance-id выбора: `${sourceKey}:${choiceId}`. choiceId по умолчанию 'choice'. */
 export function choiceKey(origin: ChoiceKeyOrigin, choiceId: string | number | null | undefined): string {
-  return `${sourceKey(origin.kind, origin.id, origin.featureId)}:${String(choiceId ?? 'choice')}`;
+  return `${origin.sourceId ?? sourceKey(origin.kind, origin.id, origin.featureId)}:${String(choiceId ?? 'choice')}`;
 }

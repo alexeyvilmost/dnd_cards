@@ -4,8 +4,9 @@ import {
   compileDeclaredMechanicsTargeting,
   compileMechanicsTargeting,
   materializeDeclaredMechanicsTargeting,
+  targetSlotBounds,
 } from './actionTargeting';
-import type { JsonObject } from './domain';
+import type { JsonObject, RuleActionDefinition } from './domain';
 
 function explicitTargeting(overrides: JsonObject = {}): JsonObject {
   return {
@@ -22,6 +23,18 @@ function explicitTargeting(overrides: JsonObject = {}): JsonObject {
 }
 
 describe('compileMechanicsTargeting', () => {
+  it('compiles content-owned repeated slots, upcast slots and first-target proximity', () => {
+    expect(compileMechanicsTargeting(explicitTargeting({
+      shape:'multiple',min_targets:1,max_targets:3,allow_repeat_targets:true,
+      additional_target_slots_per_spell_slot_above_base:1,
+      additional_targets_within_ft_of_first:30,
+    }))).toMatchObject({allowRepeatTargets:true,additionalTargetSlotsPerSpellSlotAboveBase:1,
+      additionalTargetsWithinFtOfFirst:30});
+    expect(() => compileMechanicsTargeting(explicitTargeting({allow_repeat_targets:true,max_targets:1})))
+      .toThrow(/allow_repeat_targets/);
+    expect(() => compileMechanicsTargeting(explicitTargeting({additional_targets_within_ft_of_first:0,max_targets:3})))
+      .toThrow(/additional target distance/);
+  });
   it('compiles numeric mechanics geometry without consulting identity or display text', () => {
     const first = compileMechanicsTargeting({
       id: 'localized-a', name: 'Касание — не авторитетно',
@@ -225,5 +238,26 @@ describe('compileDeclaredMechanicsTargeting', () => {
 
     (legacy.targeting as JsonObject).area = { kind: 'cone', size_ft: 15 };
     expect(() => compileDeclaredMechanicsTargeting(legacy)).not.toThrow();
+  });
+});
+
+describe('character-level target slots', () => {
+  const mechanics=explicitTargeting({shape:'multiple',min_targets:1,max_targets:1,
+    allow_repeat_targets:true,target_slots_by_character_level:{1:1,5:2,11:3,17:4}});
+  it('compiles monotone tiers and resolves exact attack slots from actor level',()=>{
+    const targeting=compileMechanicsTargeting(mechanics);
+    const action:RuleActionDefinition={id:'spell:beams',name:'Beams',kind:'spell',
+      sourceEntityIds:['spell:beams'],spell:{level:0},mechanics,targeting};
+    expect([1,4,5,10,11,16,17,20].map(level=>targetSlotBounds(action,undefined,level).maxTargets))
+      .toEqual([1,1,2,2,3,3,4,4]);
+    expect(()=>targetSlotBounds(action)).toThrow('needs actor level');
+  });
+  it('rejects tiers that drift from the base or decrease later',()=>{
+    expect(()=>compileMechanicsTargeting(explicitTargeting({shape:'multiple',min_targets:1,max_targets:1,
+      allow_repeat_targets:true,target_slots_by_character_level:{1:2,5:3}})))
+      .toThrow('monotone');
+    expect(()=>compileMechanicsTargeting(explicitTargeting({shape:'multiple',min_targets:1,max_targets:1,
+      allow_repeat_targets:true,target_slots_by_character_level:{1:1,5:2,11:1}})))
+      .toThrow('monotone');
   });
 });

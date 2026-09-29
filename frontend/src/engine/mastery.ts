@@ -61,7 +61,7 @@ export function masteryEvent(mech: Dict | null | undefined): MasteryEvent {
  */
 export function knowsMastery(weapon: WeaponContext | null, masteries: string[] | undefined): boolean {
   if (!weapon?.mastery || !weapon.weaponType) return false;
-  return (masteries ?? []).includes(weapon.weaponType);
+  return weapon.masteryGranted===true||(masteries ?? []).includes(weapon.weaponType);
 }
 
 /**

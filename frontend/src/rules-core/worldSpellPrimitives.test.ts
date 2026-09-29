@@ -396,7 +396,7 @@ describe('Dancing Lights world primitive', () => {
       placements: [{ id: 'old-a', distanceFromCasterFt: 5 }],
     });
     expect(replaced.events.map((event) => (
-      event.type === 'WorldObjectCreated' ? `create:${event.object.id}` : `${event.type}:${event.objectId}`
+      event.type === 'WorldObjectCreated' ? `create:${event.object.id}` : `${event.type}:${event.type==='WorldObjectsPatched'?event.patches.map(row=>row.objectId).join(','):event.objectId}`
     ))).toEqual([
       'WorldObjectRemoved:old-a',
       'WorldObjectRemoved:old-b',

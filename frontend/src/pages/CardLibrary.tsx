@@ -91,15 +91,16 @@ function raceSubtypeLabel(race: Race, parentById: Map<string, Race>): string {
 }
 
 function spellGroupLabel(level: number): string {
-  return level === 0 ? 'Заговоры' : `${level}-й круг`;
+  return level === 10 ? 'Варианты заклинаний' : level === 0 ? 'Заговоры' : `${level}-й круг`;
 }
 
 function groupSpellsByLevel(list: Spell[]): { level: number; label: string; spells: Spell[] }[] {
   const byLevel = new Map<number, Spell[]>();
   for (const spell of list) {
-    const bucket = byLevel.get(spell.level);
+    const level=typeof (spell.mechanics as Record<string,unknown>|null)?.variant_of_spell_id==='string'?10:spell.level;
+    const bucket = byLevel.get(level);
     if (bucket) bucket.push(spell);
-    else byLevel.set(spell.level, [spell]);
+    else byLevel.set(level, [spell]);
   }
   return [...byLevel.entries()]
     .sort(([a], [b]) => a - b)

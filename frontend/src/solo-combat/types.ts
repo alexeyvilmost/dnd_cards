@@ -1,3 +1,7 @@
+import { illuminationAt, seesInIllumination } from './combatIllumination';
+import {isBehindFacing,type CombatFacing} from './facing';
+import {magicAreaSuppressed} from './combatAntimagic';
+import {actorHasConsciousVitality} from '../engine/lifePolicies';
 import type { EngineEvent, RollLog, TriggeringAttackContext } from '../mvp/contracts';
 import {actorFootprint, footprintDistanceFt} from './footprint';
 import type {
@@ -34,7 +38,9 @@ export interface RecentStraightMovement {
 }
 
 export interface TacticalToken {
+  facing?:CombatFacing;
   actorId: string;
+  attachedToActorId?: string;
   templateId?: string;
   tokenUrl?: string;
   color: string;
@@ -124,6 +130,10 @@ export type CombatAreaEvent = 'created' | 'enter' | 'exit' | 'move' | 'start_tur
 /** A board-owned persistent area. Creature conditions remain ordinary catalog
  * effects; this record only owns geometry, lifecycle and hazard provenance. */
 export interface CombatAreaState {
+  magicOrigin?: import('../mvp/contracts').ActiveEffectEntry['magicOrigin'];
+  damageBudgetRemaining?: number;
+  sharedTriggerPerTurn?: boolean;
+  recipients?: 'enemies' | 'allies' | 'all';
   sceneryFeatureId?: string;
   id: string;
   name: string;
@@ -151,6 +161,8 @@ export interface CombatAreaState {
    * different lifecycle boundaries (for example Hunger of Hadar). */
   eventHazards?: Partial<Record<CombatAreaEvent, RuleHazardDefinition>>;
   difficultTerrain?: boolean;
+  /** Feet paid per foot traversed through this zone; ordinary difficult terrain is 2. */
+  movementCostMultiplier?: number;
   /** Light visual obstruction is projected for inspection and later
    * sight-based Perception checks; unlike heavy obscurement it does not erase
    * line of sight or creature visibility. */
@@ -237,14 +249,16 @@ export interface PendingInterceptionTrigger {
  * refresh or a reaction choice cannot silently reroll the triggering action.
  */
 export interface PendingD20Interrupt {
+  paidInfluence?:import('../engine/rollInfluence').RollInfluence;
   timing: 'before_roll' | 'after_roll_before_outcome' | 'after_outcome';
   operation: 'impose_disadvantage' | 'subtract_die' | 'roll_influence' | 'roll_choice';
   influenceContext?: {ability?: string; weaponId?: string; allowOtherActors?: boolean};
   d20Influences?: import('../engine/rollInfluence').RollInfluence[];
   saveResponse?: Extract<import('../rules-core/domain').DecisionResponse, {kind:'roll'}>;
-  held?: {roll: import('../mvp/contracts').RollLog; kind: import('../engine/rollInfluence').InfluenceRollKind; saveResponse?: Extract<import('../rules-core/domain').DecisionResponse, {kind: 'roll'}>};
+  held?: {roll: import('../mvp/contracts').RollLog; kind: import('../engine/rollInfluence').InfluenceRollKind; rollIndex?:number; targetId?:string; targetSlotIndex?:number; targetSlotCount?:number; saveResponse?: Extract<import('../rules-core/domain').DecisionResponse, {kind: 'roll'}>};
   influenceRerolledDie?: number;
   influenceSource?: string;
+  skipRollCount?:number;
   command: {
     triggerEvent?: string;
     triggeringAttack?: TriggeringAttackContext;
@@ -273,6 +287,11 @@ export interface AdditionalCombatMovement {
   actorId: string;
   remainingFt: number;
   provokeOpportunityAttacks: boolean;
+  traversal?: 'jump';
+  onArrival?: Record<string, unknown>[];
+  /** Set only after a real move commits; survives intervening reactions and reload. */
+  arrived?: boolean;
+  sourceId?: string;
   /** A reaction is paid on the first legal step, never on decline or an invalid destination. */
   requiresReaction?: true;
   immuneOpportunityActorIds?: string[];
@@ -283,6 +302,8 @@ export interface AdditionalCombatMovement {
 }
 
 export interface SoloCombatState {
+  /** Source-turn aura receipts; replaying a boundary cannot spend RNG twice. */
+  auraLifecycleReceipts?: Record<string, string>;
   /** Capability marker; archived workers keep their historical command protocol. */
   conditionActionSchemaVersion?: 1;
   /** Immediate additional movement: consumed by one route or declined, never added to the turn ledger. */
@@ -366,10 +387,13 @@ export interface SoloCombatState {
   pendingInterceptionTrigger?: PendingInterceptionTrigger;
   /** Cross-actor pre/post-roll reaction continuation (for example Warding Flare or Cutting Words). */
   pendingD20Interrupt?: PendingD20Interrupt;
+  /** A paid influence waits for damage/concentration choices before its reroll. */
+  pendingRollInfluenceResume?:{pending:PendingD20Interrupt;actorId:string;effectId:string};
   d20InterruptUses?: Record<string, number>;
   deathSavesVersion?: 1;
   pendingDeathSave?: {
     actorId:string; round:number; phase:'rolled'|'resolved';
+    immediate?: boolean;
     roll:import('../mvp/contracts').RollLog; randomValues:number[];
     before:import('../mvp/contracts').DeathSaveState;
   };
@@ -380,7 +404,7 @@ export interface SoloCombatState {
   outcomeFinalized?: true;
 }
 
-export type CombatMovementMode = 'walk' | 'climb' | 'fly' | 'swim' | 'burrow';
+export type CombatMovementMode = 'walk' | 'climb' | 'fly' | 'swim' | 'burrow' | 'jump';
 
 export function controlledCharacterIds(state: Pick<SoloCombatState, 'characterId' | 'controlledCharacterIds'>): string[] {
   return state.controlledCharacterIds?.length
@@ -406,7 +430,7 @@ export function isPlayerControlledCombatActor(
   const ownerActorId = actor?.kind === 'summonedActor'
     ? actor.familiarState?.presence === 'present'
       ? actor.familiarState.ownerActorId
-      : actor.ownedSummon?.ownerActorId ?? null
+      : actor.ownedSummon?.ownerActorId ?? actor.itemTurn?.ownerActorId ?? null
     : null;
   return ownerActorId !== null && controlledCharacterIds(state).includes(ownerActorId);
 }
@@ -444,18 +468,19 @@ export function combatRelation(
 
 export function spatialFacts(
   state: Pick<SoloCombatState, 'tokens' | 'boardRevision' | 'sideByActorId' | 'combatAreas' | 'battleMap'>
-    & Partial<Pick<SoloCombatState, 'world' | 'recentStraightMovementByActor' | 'tacticalFootprints' | 'creatureCoverVersion'>>,
+    & Partial<Pick<SoloCombatState, 'world' | 'worldObjectPositions' | 'recentStraightMovementByActor' | 'tacticalFootprints' | 'creatureCoverVersion'>>,
   sourceActorId: string,
   targetActorId: string,
   includeDamageObservers = true,
 ): SpatialFacts {
-  const source = state.tokens[sourceActorId]?.position;
+  const effectiveSourceId = state.world?.actors[sourceActorId]?.itemTurn?.ownerActorId ?? sourceActorId;
+  const source = state.tokens[effectiveSourceId]?.position;
   const target = state.tokens[targetActorId]?.position;
   if (!source || !target) throw new Error('На поле отсутствует участник действия');
-  const terrain = terrainSight(state, source, target, actorFootprint(state.world?.actors[sourceActorId], state), actorFootprint(state.world?.actors[targetActorId], state));
-  const bodies = creatureCoverObstacles(state, sourceActorId, targetActorId);
+  const terrain = terrainSight(state, source, target, actorFootprint(state.world?.actors[effectiveSourceId], state), actorFootprint(state.world?.actors[targetActorId], state));
+  const bodies = creatureCoverObstacles(state, effectiveSourceId, targetActorId);
   const attackCover = bodies.length ? terrainSight(state, source, target,
-    actorFootprint(state.world?.actors[sourceActorId], state), actorFootprint(state.world?.actors[targetActorId], state), bodies).cover : terrain.cover;
+    actorFootprint(state.world?.actors[effectiveSourceId], state), actorFootprint(state.world?.actors[targetActorId], state), bodies).cover : terrain.cover;
   const obscured = Object.values(state.combatAreas ?? {}).some((area) => {
     if (!area.heavilyObscured) return false;
     const cells = new Set(area.cells.map((cell) => `${cell.x}:${cell.y}`));
@@ -463,26 +488,27 @@ export function spatialFacts(
     for (let index = 0; index <= steps; index += 1) {
       const ratio = steps === 0 ? 0 : index / steps;
       const cell = `${Math.round(source.x + (target.x - source.x) * ratio)}:${Math.round(source.y + (target.y - source.y) * ratio)}`;
-      if (cells.has(cell)) return true;
+      if (cells.has(cell)&&!magicAreaSuppressed(state,area,{x:Math.round(source.x+(target.x-source.x)*ratio),y:Math.round(source.y+(target.y-source.y)*ratio)},effectiveSourceId)) return true;
     }
     return false;
   });
-  const distanceFt = footprintDistanceFt(source, target, actorFootprint(state.world?.actors[sourceActorId], state), actorFootprint(state.world?.actors[targetActorId], state));
+  const distanceFt = footprintDistanceFt(source, target, actorFootprint(state.world?.actors[effectiveSourceId], state), actorFootprint(state.world?.actors[targetActorId], state));
   const sees = (observerId: string, observedId: string): boolean => {
     if (terrain.blocked) return false;
     const observer = state.world?.actors[observerId];
     const observed = state.world?.actors[observedId];
     if (observer && perceivesWithoutSight(observer.runtime, observer.passives ?? [], distanceFt)) return true;
     return !obscured
+      && seesInIllumination(observer, illuminationAt(state, state.tokens[observedId].position), distanceFt)
       && !(observer && activeConditionWorldFactEnabled(observer.runtime, 'cannot_see'))
       && !(observed && activeConditionWorldFactEnabled(observed.runtime, 'cannot_be_targeted_by_requires_sight_unless_seen'));
   };
-  const sourceActor = state.world?.actors[sourceActorId];
+  const sourceActor = state.world?.actors[effectiveSourceId];
   const sourceNonvisual = Boolean(sourceActor && perceivesWithoutSight(sourceActor.runtime, sourceActor.passives ?? [], distanceFt));
-  const sourceSide = state.sideByActorId?.[sourceActorId];
+  const sourceSide = state.sideByActorId?.[effectiveSourceId];
   const nearbyEligibleAllyToTarget = Boolean(sourceSide && state.world && Object.values(state.world.actors).some((actor) => {
-    if (actor.id === sourceActorId || state.sideByActorId?.[actor.id] !== sourceSide) return false;
-    if ((actor.runtime.hp.current ?? 0) <= 0) return false;
+    if (actor.id === effectiveSourceId || actor.itemTurn || state.sideByActorId?.[actor.id] !== sourceSide) return false;
+    if (!actorHasConsciousVitality(actor)) return false;
     const conditions = (actor.runtime.activeEffects ?? []).flatMap((effect) => {
       const mechanics = effect.mechanics as Record<string, unknown>;
       return mechanics?.kind === 'condition' ? [String(mechanics.value)] : [];
@@ -491,12 +517,12 @@ export function spatialFacts(
     const position = state.tokens[actor.id]?.position;
     return Boolean(position && footprintDistanceFt(position, target, actorFootprint(actor, state), actorFootprint(state.world?.actors[targetActorId], state)) <= 5);
   }));
-  const movement = state.recentStraightMovementByActor?.[sourceActorId];
+  const movement = state.recentStraightMovementByActor?.[effectiveSourceId];
   const immediateStraightMovementFt = movement && !movement.interrupted
     && state.world?.scene.mode === 'encounter' && movement.round === state.world.scene.round
     && movement.to.x === source.x && movement.to.y === source.y ? movement.distanceFt : 0;
   return {
-    ...(includeDamageObservers && state.world ? {damageObservers: Object.keys(state.world.actors).filter(id => state.tokens[id]).sort().map(actorId => {
+    ...(includeDamageObservers && state.world ? {damageObservers: Object.keys(state.world.actors).filter(id => state.tokens[id]&&!state.world?.actors[id]?.itemTurn).sort().map(actorId => {
       const observation = spatialFacts(state, actorId, targetActorId, false);
       return {actorId, distanceFt: observation.distanceFt, canSeeTarget: observation.canSeeTarget === true};
     })} : {}),
@@ -505,13 +531,14 @@ export function spatialFacts(
     distanceFt,
     lineOfSight: !terrain.blocked && (!obscured || sourceNonvisual),
     cover: attackCover,
-    relation: combatRelation(state, sourceActorId, targetActorId),
-    canSeeTarget: sees(sourceActorId, targetActorId),
-    targetCanSeeSource: sees(targetActorId, sourceActorId),
+    relation: combatRelation(state, effectiveSourceId, targetActorId),
+    canSeeTarget: sees(effectiveSourceId, targetActorId),
+    targetCanSeeSource: sees(targetActorId, effectiveSourceId),
     targetCanHearSource: Boolean(state.world?.actors[targetActorId])
       && canHear(state.world!.actors[targetActorId].runtime, state.world!.actors[targetActorId].passives)
       && !(sourceActor && activeConditionWorldFactEnabled(sourceActor.runtime, 'cannot_speak')),
     nearbyEligibleAllyToTarget,
+    attackFromBehind:isBehindFacing(source,target,state.tokens[targetActorId]?.facing),
     immediateStraightMovementFt,
   };
 }

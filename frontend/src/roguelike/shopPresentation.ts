@@ -1,3 +1,4 @@
+import {discountedPurchaseCopper} from '../character/purchasePricePolicy';
 import type {Card} from '../types';
 import type {RoguelikeOffer} from './api';
 import {purchasePrice} from '../character/inventory';
@@ -12,6 +13,6 @@ export function cardForOffer(card:Card,offer:RoguelikeOffer):RunShopCard {
 }
 export function shopPriceCopper(card:Card,offers:RoguelikeOffer[],passives:Record<string,unknown>[]=[]):number {
  const offer=offers.find(o=>o.id===offerId(card));
- return offer?priceInCopper(offer.price,offer.price_currency||'gold')
+ return offer?discountedPurchaseCopper(priceInCopper(offer.price,offer.price_currency||'gold'),passives)
   :priceInCopper(purchasePrice(card,passives).payable,card.price_currency||'gold');
 }

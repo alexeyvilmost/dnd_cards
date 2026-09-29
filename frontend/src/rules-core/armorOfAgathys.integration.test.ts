@@ -423,18 +423,22 @@ describe('Armor of Agathys authoritative runtime vertical', () => {
     });
     replay(initial, instance);
 
-    const forged = actor({
+    const upcasting = actor({
       id: 'warlock', actionIds: [ARMOR.id],
       spellAccess: access([grant({ actorId: 'warlock', action: ARMOR, slotResource: 'spell_slot_1' })]),
     });
-    const forgedSession = session(createWorld({
-      id: 'forged-upcast', ruleset: RULESET, actors: [forged, actor({ id: 'ally' })],
+    const upcastSession = session(createWorld({
+      id: 'available-upcast', ruleset: RULESET, actors: [upcasting, actor({ id: 'ally' })],
     }));
-    expect(forgedSession.dispatch(command({
-      ...base(forgedSession, 'forged-upcast', 'warlock'), type: 'UseAction', actionId: ARMOR.id,
+    const availableUpcast = accepted(upcastSession.dispatch(command({
+      ...base(upcastSession, 'available-upcast', 'warlock'), type: 'UseAction', actionId: ARMOR.id,
       targetIds: ['warlock'], factsByTarget: { warlock: SELF_FACTS },
       spell: { baseLevel: 1, castLevel: 2 }, choices: { temporary_hp: 'take_spell' },
-    }))).toMatchObject({ status: 'rejected', code: 'InvalidSpellDeclaration' });
+    })));
+    expect(upcastSession.getState().actors.warlock.runtime.resources).toMatchObject({spell_slot_1:1,spell_slot_2:0});
+    expect(availableUpcast.events.find(event=>event.payload.type==='ActionDeclared')?.payload).toMatchObject({
+      type:'ActionDeclared',spell:{castLevel:2,payment:{kind:'slot',resource:'spell_slot_2'}},
+    });
   });
 
   it('keeps current THP explicitly, replaces only its previous copy, and omits a zero-THP effect', () => {

@@ -30,6 +30,7 @@ import {
 } from '../engine/dicePlan';
 import { applyIncomingDamage, executeAction } from '../engine/execute';
 import { applyDamage, applyHealing, applyTempHp } from '../engine/hp';
+import { collectLifePolicies, remainsConsciousAtZero } from '../engine/lifePolicies';
 import { collectRollModifiers } from '../engine/modifiers';
 import { rollD20 } from '../engine/roll';
 import { rollEvent } from '../engine/events';
@@ -123,7 +124,9 @@ export default function SheetHpPanel({
     [character, maxHp],
   );
   const deathSaves = useMemo(() => readDeathSaves(character.turn_state), [character.turn_state]);
-  const unconscious = runtime.hp.current <= 0;
+  const lifePolicy = collectLifePolicies(runtime, passives, sheetCtx ?? undefined);
+  const atZero = runtime.hp.current <= 0;
+  const unconscious = atZero && !remainsConsciousAtZero(runtime, passives, sheetCtx ?? undefined);
   const concentration = concentrationEntry(runtime);
   const condChoices = useMemo(() => conditionOptions(), []);
 
@@ -142,7 +145,7 @@ export default function SheetHpPanel({
         resources: state.resources,
         active_effects: state.activeEffects,
         turn_state: writeRulesEngineRuntimeTurnState(character.turn_state, state, {
-          death_saves: ds ?? readDeathSaves(character.turn_state),
+          death_saves: ds ?? state.deathSaves ?? readDeathSaves(character.turn_state),
         }),
       }, encounterApply);
       onUpdated(updated);
@@ -156,14 +159,15 @@ export default function SheetHpPanel({
 
   // ── Урон: провалы при 0 HP, проверка концентрации при уроне ──
   const handleDamage = async () => {
-    if (unconscious) {
+    if (atZero && !sheetCtx) {
       // Урон по бессознательному — провал спасброска смерти; критическое попадание — ДВА провала
       // (KB-039). Галочка «крит» в этой же панели раньше не передавалась в applyDamageAtZero и
       // молча не влияла — расхождение «жив/погиб».
-      const { next, dead } = applyDamageAtZero(deathSaves, crit);
+      if (amount <= 0) return;
+      const { next, dead } = applyDamageAtZero(deathSaves, crit, lifePolicy);
       const events: EngineEvent[] = [
         { type: 'narrative', text: dead
-          ? 'Урон по бессознательному: третий провал. Персонаж погибает.'
+          ? 'Урон при 0 хитов: достигнут предел провалов. Персонаж погибает.'
           : crit
             ? 'Критический урон по бессознательному персонажу — два провала спасброска смерти.'
             : 'Урон по бессознательному персонажу — провал спасброска смерти.' },
@@ -216,11 +220,13 @@ export default function SheetHpPanel({
       let state = res.state;
       let events = [...preEvents, ...res.events];
       let ds: DeathSaveState | undefined;
-      if (state.hp.current === 0) {
+      if (runtime.hp.current > 0 && state.hp.current === 0) {
         ds = emptyDeathSaves();
-        const dropped = dropConcentration(state, 'без сознания');
-        state = dropped.state;
-        events = [...events, ...dropped.events];
+        if (!remainsConsciousAtZero(state, passives, sheetCtx)) {
+          const dropped = dropConcentration(state, 'без сознания');
+          state = dropped.state;
+          events = [...events, ...dropped.events];
+        }
       }
       // Пост-урон реакции (Адское возмездие и т.п.). Снижающие урон уже предложены ДО урона — пропускаем.
       for (const offer of res.pendingReactions ?? []) {
@@ -415,7 +421,7 @@ export default function SheetHpPanel({
       : {};
     const roll = rollDeathSaveDie(runtime, passives ?? [], formulaCtx, rng);
     const natural = roll.dice.find((d) => !d.discarded)?.result ?? roll.total;
-    const { next, outcome } = applyDeathSaveRoll(deathSaves, natural, roll.total, roll.outcome);
+    const { next, outcome } = applyDeathSaveRoll(deathSaves, natural, roll.total, roll.outcome, lifePolicy);
 
     let state = runtime;
     const events: EngineEvent[] = [
@@ -457,10 +463,10 @@ export default function SheetHpPanel({
         )}
       </div>
 
-      {unconscious && (
+      {atZero && (
         <div className="sheet-death-saves">
           <p className="sheet-hp-status">
-            {deathSaves.dead ? 'Погиб' : deathSaves.stable ? 'Стабилизирован' : 'Без сознания — спасброски смерти'}
+            {deathSaves.dead ? 'Погиб' : deathSaves.stable ? 'Стабилизирован' : unconscious ? 'Без сознания — спасброски смерти' : 'В сознании при 0 хитов — спасброски смерти'}
           </p>
           <div className="sheet-death-rows">
             <span className="sheet-death-row">
@@ -471,7 +477,7 @@ export default function SheetHpPanel({
             </span>
             <span className="sheet-death-row">
               Провалы
-              {[0, 1, 2].map((i) => (
+              {Array.from({ length: lifePolicy.failureLimit }, (_, i) => (
                 <i key={i} className={`sheet-death-dot bad ${deathSaves.failures > i ? 'on' : ''}`} />
               ))}
             </span>

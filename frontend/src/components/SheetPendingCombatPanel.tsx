@@ -1,3 +1,4 @@
+import SlotRecoveryChoices from './SlotRecoveryChoices';
 import { useEffect, useState } from 'react';
 import type {
   DecisionResponse,
@@ -8,6 +9,7 @@ import type {
 import { resourceLabel } from '../utils/resources';
 import type { RuntimeState } from '../mvp/contracts';
 import { runtimeBoons } from '../engine/boons';
+import ActionCostPolicyChoices from './ActionCostPolicyChoices';
 
 export interface SheetPendingCombatPanelProps {
   pending: PendingResolution;
@@ -95,7 +97,8 @@ export default function SheetPendingCombatPanel({
 
   if (pending.request.type !== 'saving_throw'
     && pending.request.type !== 'reaction'
-    && pending.request.type !== 'shove_outcome') {
+    && pending.request.type !== 'shove_outcome'
+    && pending.request.type !== 'action_cost_policy' && pending.request.type !== 'slot_recovery') {
     return (
       <section className="sheet-group" role="alert" data-testid="sheet-combat-unsupported-pending">
         Продолжение «{pending.type}» не поддержано этим интерфейсом. Состояние сохранено без изменений.
@@ -118,6 +121,9 @@ export default function SheetPendingCombatPanel({
       </section>
     );
   }
+
+  if(pending.request.type==='slot_recovery')return <SlotRecoveryChoices key={pending.id} request={pending.request} disabled={busy} onChoose={slotLevels=>onResolve({kind:'slot_recovery',slotLevels})}/>;
+  if(pending.request.type==='action_cost_policy')return <ActionCostPolicyChoices request={pending.request} disabled={busy} onChoose={policyId=>onResolve({kind:'action_cost_policy',policyId})}/>;
 
   if (pending.request.type === 'shove_outcome') {
     return <section className="sheet-group" role="group" aria-label="Результат толчка">
@@ -262,6 +268,10 @@ export default function SheetPendingCombatPanel({
   const sourceName = actorNames[trigger.sourceActorId] ?? trigger.sourceActorId;
   const reactionCopy = (() => {
     switch (trigger.type) {
+      case 'event':
+        if(trigger.eventKind==='concentration_save_failed'&&pending.type==='concentration_save')return {title:'Сохранить концентрацию',detail:`Бросок ${pending.heldSave?.roll.total} против СЛ ${pending.heldSave?.dc}. Концентрация сохраняется до решения; доступную способность можно применить к этому результату.`};
+        return trigger.eventKind==='attack_dice_followup'?{title:'Следующая стрела',detail:`${decidingName}: доступен отдельный выстрел с расходом боеприпаса.`}
+          :{title:'Ответное действие',detail:`${decidingName}: доступна реакция на произошедшее событие.`};
       case 'ability_check_failed':
         return {title: 'Проверка провалена', detail: `Результат ${trigger.total} против СЛ ${trigger.dc}. Можно применить способность к этому броску.`};
       case 'damage_taken':

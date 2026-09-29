@@ -1,4 +1,5 @@
 import {canPay} from '../engine/cost';
+import {actorHasConsciousVitality} from '../engine/lifePolicies';
 import {deniedCapabilities} from '../engine/modifiers';
 import {hideActionDeclarationIssue} from '../rules-core/hide';
 import type {RuleActionDefinition} from '../rules-core/domain';
@@ -7,7 +8,7 @@ import type {SoloCombatState} from './types';
 /** The controller recognizes declared action categories, never monster names. */
 export function monsterBonusActions(state: SoloCombatState, actorId: string, category: 'hide' | 'disengage'): RuleActionDefinition[] {
   const actor = state.world.actors[actorId];
-  if (!actor || actor.runtime.hp.current <= 0 || deniedCapabilities(actor.runtime, actor.passives ?? []).has('action')) return [];
+  if (!actor || !actorHasConsciousVitality(actor) || deniedCapabilities(actor.runtime, actor.passives ?? []).has('action')) return [];
   return state.catalogActions.filter(action => {
     const activation = action.mechanics.activation as Record<string, unknown> | undefined;
     const cost = activation?.cost as Record<string, unknown>[] | undefined;

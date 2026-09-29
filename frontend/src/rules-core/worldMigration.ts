@@ -1,3 +1,4 @@
+import { parseResourceRestRecovery } from '../engine/actionUses';
 import { isDamageCalculation, resolveDamageCalculation } from './legacy/engineAdapter';
 import {
   defaultAttackProfile,
@@ -172,6 +173,7 @@ function validatePendingRuntimeSnapshot(value: unknown, path: string): RuntimeSt
   if (runtime.firedThisRest !== undefined) {
     uniqueStringArray(runtime.firedThisRest, `${path}.firedThisRest`);
   }
+  if (runtime.encounterActive !== undefined && typeof runtime.encounterActive !== 'boolean') throw Error(`${path}.encounterActive must be boolean`);
   validateFiredByPeriod(runtime.firedByPeriod, `${path}.firedByPeriod`);
   if (runtime.deathSaves !== undefined) record(runtime.deathSaves, `${path}.deathSaves`);
   return runtime as unknown as RuntimeState;
@@ -223,22 +225,9 @@ function normalizeResourceRecovery(input: {
       const policyPath = `${path}.${resource}`;
       const policy = record(rawPolicy, policyPath);
       exactKeys(policy, ['short_rest', 'long_rest'], policyPath);
-      const shortRest = record(policy.short_rest, `${policyPath}.short_rest`);
-      const longRest = record(policy.long_rest, `${policyPath}.long_rest`);
-      exactKeys(shortRest, ['mode', 'amount'], `${policyPath}.short_rest`);
-      exactKeys(longRest, ['mode'], `${policyPath}.long_rest`);
-      if (shortRest.mode !== 'fixed'
-        || !Number.isSafeInteger(shortRest.amount)
-        || Number(shortRest.amount) <= 0) {
-        throw new Error(`${policyPath}.short_rest must declare a positive fixed amount`);
-      }
-      if (longRest.mode !== 'full') {
-        throw new Error(`${policyPath}.long_rest must declare full recovery`);
-      }
-      return [resource, {
-        short_rest: { mode: 'fixed', amount: Number(shortRest.amount) },
-        long_rest: { mode: 'full' },
-      } satisfies ResourceRestRecovery];
+      const normalized = parseResourceRestRecovery(policy);
+      if (!normalized) throw new Error(`${policyPath} must declare a valid bounded rest recovery`);
+      return [resource, normalized];
     }));
 }
 
@@ -285,8 +274,10 @@ function normalizeSpellcastingAccess(input: {
       throw new Error(`${grantPath}.level must be an integer from 0 to 9`);
     }
     const level = Number(grant.level);
-    if (typeof grant.spellcastingAbility !== 'string'
-      || !ABILITIES.has(grant.spellcastingAbility as Ability)) {
+    if (grant.spellcastingAbility !== undefined && (typeof grant.spellcastingAbility !== 'string'
+      || !ABILITIES.has(grant.spellcastingAbility as Ability))
+      || grant.spellcastingAbility === undefined && grant.fixedSpellcastingModifier === undefined
+      || grant.fixedSpellcastingModifier !== undefined && (typeof grant.fixedSpellcastingModifier !== 'number' || !Number.isFinite(grant.fixedSpellcastingModifier))) {
       throw new Error(`${grantPath}.spellcastingAbility is invalid`);
     }
     if (grant.ritual !== undefined && typeof grant.ritual !== 'boolean') {
@@ -303,8 +294,8 @@ function normalizeSpellcastingAccess(input: {
     if (accessKind !== 'cantrip' && level === 0) {
       throw new Error(`${grantPath}: level 0 spells require cantrip access`);
     }
-    if (level === 0 && (freeUseResource || slotResource)) {
-      throw new Error(`${grantPath}: cantrips cannot declare payment resources`);
+    if (level === 0 && slotResource) {
+      throw new Error(`${grantPath}: cantrips cannot declare spell-slot payment resources`);
     }
     if (accessKind === 'ritual_only' && grant.ritual !== true) {
       throw new Error(`${grantPath}: ritual_only access requires ritual=true`);
@@ -347,7 +338,8 @@ function normalizeSpellcastingAccess(input: {
       sourceId,
       access: accessKind,
       level,
-      spellcastingAbility: grant.spellcastingAbility as Ability,
+      ...(grant.spellcastingAbility ? { spellcastingAbility: grant.spellcastingAbility as Ability } : {}),
+      ...(grant.fixedSpellcastingModifier !== undefined ? { fixedSpellcastingModifier: grant.fixedSpellcastingModifier as number } : {}),
       ...(grant.ritual === true ? { ritual: true } : {}),
       ...(freeUseResource ? { freeUseResource } : {}),
       ...(slotResource ? { slotResource } : {}),
@@ -1206,6 +1198,10 @@ export function migrateWorldState(value: unknown): WorldState {
       )))];
       return normalized.length ? [[id, normalized as [string, ...string[]]]] : [];
     })) as NonNullable<ActorState['capabilities']['featureSources']>;
+    const featureItemSources=Object.fromEntries(Object.entries(capabilities.featureItemSources===undefined?{}:record(capabilities.featureItemSources,`world.actors.${actorId}.capabilities.featureItemSources`)).map(([id,sources])=>{
+      if(!featureSources[id]||!Array.isArray(sources)||!sources.length||sources.some(source=>typeof source!=='string'||!source.trim()))throw Error(`Invalid item sources for capability ${id}`);
+      return [id,[...new Set(sources as string[])]];
+    }));
     const normalizedSpellcastingAccess = normalizeSpellcastingAccess({
       value: actor.spellcastingAccess,
       actorPath: `world.actors.${actorId}`,
@@ -1289,6 +1285,7 @@ export function migrateWorldState(value: unknown): WorldState {
       capabilities: {
         actionIds: [...new Set(actionIds)].sort(),
         ...(featureSources && Object.keys(featureSources).length ? { featureSources } : {}),
+        ...(Object.keys(featureItemSources).length?{featureItemSources}:{}),
       },
       ...(normalizedSpellcastingAccess ? { spellcastingAccess: normalizedSpellcastingAccess } : {}),
       ...(normalizedTraits ? { traits: normalizedTraits } : {}),
@@ -1401,6 +1398,26 @@ export function migrateWorldState(value: unknown): WorldState {
       summonKey, initiative: 'immediately_after_owner', duration, createdAtWorldRevision,
     };
   }
+  for (const [actorId, actor] of Object.entries(actors)) {
+    if (actor.itemTurn === undefined) continue;
+    const path = `world.actors.${actorId}.itemTurn`;
+    const raw = record(actor.itemTurn, path);
+    if (actor.kind !== 'summonedActor') throw new Error(`${path} requires a summonedActor`);
+    const ownerActorId = nonBlankString(raw.ownerActorId, `${path}.ownerActorId`);
+    const itemCardId = nonBlankString(raw.itemCardId, `${path}.itemCardId`);
+    const actionId = nonBlankString(raw.actionId, `${path}.actionId`);
+    const owner = actors[ownerActorId];
+    if (!owner || ownerActorId === actorId || owner.controllerId !== actor.controllerId) {
+      throw new Error(`${path}.ownerActorId must reference an actor with the same controller`);
+    }
+    if (actorId !== `${ownerActorId}:item-turn:${itemCardId}`) {
+      throw new Error(`${path}.itemCardId must match the deterministic actor id`);
+    }
+    if (actor.capabilities.actionIds.length !== 1 || actor.capabilities.actionIds[0] !== actionId) {
+      throw new Error(`${path}.actionId must be the item turn's only action`);
+    }
+    actor.itemTurn = {ownerActorId,itemCardId,actionId};
+  }
   for (const ownerActorId of Object.keys(actors)) {
     const owned = familiarActorsOwnedBy({ actors }, ownerActorId);
     if (owned.length > 1) {
@@ -1461,10 +1478,53 @@ export function migrateWorldState(value: unknown): WorldState {
   }
   const attackActions = normalizeAttackActions({ value: world.attackActions, actors, legacy });
   const grapples = normalizeGrapples({ value: world.grapples, actors, legacy });
+  if(world.areaConsequences!==undefined){
+    if(!Array.isArray(world.areaConsequences))throw new Error('Area consequence queue must be an array');
+    const ids=world.areaConsequences.map(raw=>{
+      const queued=record(raw,'area consequence'),effect=record(queued.effect,'area consequence effect');
+      const id=nonBlankString(queued.id,'area consequence id');
+      if(!actors[String(queued.targetActorId)]||!actors[String(effect.sourceActorId)]
+        ||!['area_damage','area_healing','area_effect'].includes(String(effect.type))||(effect.type==='area_effect'?(!Array.isArray(effect.effects)||!effect.effects.length):(!Number.isInteger(effect.amount)||Number(effect.amount)<0))
+        ||!Array.isArray(effect.targetIds)||!effect.targetIds.includes(queued.targetActorId)
+        ||effect.type==='area_damage'&&(typeof effect.damageType!=='string'||!effect.damageType||!['item','spell','ability'].includes(String(effect.damageSourceKind))))throw new Error('Area consequence data is invalid');
+      if(queued.facts!==undefined)record(queued.facts,'area consequence facts');
+      if(effect.magicOrigin!==undefined){
+        const origin=record(effect.magicOrigin,'area consequence magic origin');
+        if(!['spell','item','artifact','deity'].includes(String(origin.kind))||typeof origin.sourceEntityId!=='string'||!origin.sourceEntityId.trim())throw new Error('Area consequence magic origin is invalid');
+      }
+      return id;
+    });
+    if(new Set(ids).size!==ids.length)throw new Error('Area consequence IDs must be unique');
+  }
+  const validateEventOpportunity=(raw:unknown)=>{
+    const opportunity=record(raw,'event reaction opportunity');
+    nonBlankString(opportunity.id,'event reaction id');
+    const actorId=nonBlankString(opportunity.actorId,'event reaction actor');
+    if(!actors[actorId]||(opportunity.targetActorId!==undefined&&!actors[String(opportunity.targetActorId)]))throw new Error('Event reaction actor is missing');
+    const event=record(opportunity.event,'event reaction event');
+    nonBlankString(event.kind,'event reaction kind');
+    if(!Array.isArray(opportunity.actionIds)||!opportunity.actionIds.length||opportunity.actionIds.some(id=>typeof id!=='string'||!id.trim())
+      ||new Set(opportunity.actionIds).size!==opportunity.actionIds.length)throw new Error('Event reaction action IDs are invalid');
+    if(opportunity.facts!==undefined)record(opportunity.facts,'event reaction facts');
+    return opportunity;
+  };
+  if(world.eventReactions!==undefined){
+    if(!Array.isArray(world.eventReactions))throw new Error('Event reaction queue must be an array');
+    const opportunities=world.eventReactions.map(validateEventOpportunity);
+    if(new Set(opportunities.map(row=>row.id)).size!==opportunities.length)throw new Error('Event reaction queue IDs must be unique');
+  }
   if (!legacy) {
     const pending = world.pendingResolution === null
       ? null
       : record(world.pendingResolution, 'world.pendingResolution');
+    if(pending?.type==='event_reaction'){
+      const opportunity=validateEventOpportunity(pending.opportunity);
+      const request=record(pending.request,'event reaction request');
+      const trigger=record(request.trigger,'event reaction trigger');
+      if(request.type!=='reaction'||request.actorId!==opportunity.actorId||trigger.type!=='event'
+        ||trigger.eventKind!==(opportunity.event as JsonRecord).kind||!Array.isArray(request.options)||!request.options.length
+        ||request.options.some(raw=>{const option=record(raw,'event reaction option');return !(opportunity.actionIds as string[]).includes(String(option.actionId));}))throw new Error('Event reaction request does not match its opportunity');
+    }
     if (pending?.type === 'check_boost') {
       const actorId = nonBlankString(pending.actorId, 'world.pendingResolution.actorId');
       const roll = record(pending.roll, 'world.pendingResolution.roll');
@@ -1568,7 +1628,7 @@ export function migrateWorldState(value: unknown): WorldState {
         pending.actionId,
         'world.pendingResolution.actionId',
       );
-      if (!actors[sourceActorId] || !actors[targetActorId] || sourceActorId === targetActorId) {
+      if (!actors[sourceActorId] || !actors[targetActorId]) {
         throw new Error('world.pendingResolution damage continuation actors are invalid');
       }
       const action = record(pending.action, 'world.pendingResolution.action');
@@ -1604,7 +1664,9 @@ export function migrateWorldState(value: unknown): WorldState {
         || JSON.stringify(triggerDamageTypes) !== JSON.stringify(damageTypes)) {
         throw new Error('world.pendingResolution damage reaction request is inconsistent');
       }
-      if (request.actorId !== targetActorId) {
+      const transferReactors=pending.transferReactorIds===undefined?[]:uniqueStringArray(pending.transferReactorIds,'damage transfer reactors');
+      if(transferReactors.some(id=>!actors[id]||id===targetActorId))throw Error('Invalid damage transfer reactor');
+      if (request.actorId !== targetActorId && !transferReactors.includes(request.actorId)) {
         const observers = (pending.facts as JsonRecord)?.damageObservers;
         if (!Array.isArray(observers) || !observers.some(row => row?.actorId === request.actorId && row.canSeeTarget === true && Number.isFinite(row.distanceFt) && row.distanceFt >= 0 && row.distanceFt <= 30)) throw new Error('Damage observer lacks valid frozen visibility');
       }
@@ -1712,6 +1774,24 @@ export function migrateWorldState(value: unknown): WorldState {
         }
       }
     }
+  }
+  if (world.attackVolley !== undefined && world.attackVolley !== null) {
+    const volley = record(world.attackVolley, 'world.attackVolley');
+    nonBlankString(volley.id, 'world.attackVolley.id');
+    const actorId = nonBlankString(volley.actorId, 'world.attackVolley.actorId');
+    const action = record(volley.action, 'world.attackVolley.action');
+    nonBlankString(action.id, 'world.attackVolley.action.id');
+    if (!actors[actorId] || !Array.isArray(volley.targetIds) || volley.targetIds.length < 2
+      || volley.targetIds.some((id) => typeof id !== 'string' || !actors[id])) {
+      throw new Error('world.attackVolley has invalid actor or ordered targets');
+    }
+    const next = Number(volley.nextSlotIndex);
+    if (!Number.isInteger(next) || next < 1 || next > volley.targetIds.length
+      || (next === volley.targetIds.length && world.pendingResolution === null)) {
+      throw new Error('world.attackVolley has invalid next slot');
+    }
+    const facts = record(volley.factsByTarget, 'world.attackVolley.factsByTarget');
+    for (const targetId of volley.targetIds) record(facts[targetId], `world.attackVolley.factsByTarget.${targetId}`);
   }
   return {
     ...(world as unknown as WorldState),

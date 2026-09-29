@@ -13,7 +13,7 @@ export interface WeaponDamageLine {
 
 export interface WeaponProfile {
   weaponType: string;
-  proficiencyCategory: 'simple' | 'martial';
+  proficiencyCategory: 'simple' | 'martial' | 'none';
   attackAbility: 'str' | 'dex' | 'finesse';
   damageLines: WeaponDamageLine[];
   versatileGrip?: WeaponDamageLine;
@@ -147,7 +147,7 @@ export function parseWeaponProfile(card: Pick<Card, 'id' | 'mechanics'>): Weapon
   if (!nonBlank(raw.weapon_type) || !STABLE_ID.test(raw.weapon_type)) {
     return { valid: false, issue: `${label}: weapon_profile.weapon_type is invalid` };
   }
-  if (raw.proficiency_category !== 'simple' && raw.proficiency_category !== 'martial') {
+  if (raw.proficiency_category !== 'simple' && raw.proficiency_category !== 'martial' && raw.proficiency_category !== 'none') {
     return { valid: false, issue: `${label}: weapon_profile.proficiency_category is invalid` };
   }
   if (!['str', 'dex', 'finesse'].includes(String(raw.attack_ability))) {
@@ -223,7 +223,7 @@ export function parseWeaponProfile(card: Pick<Card, 'id' | 'mechanics'>): Weapon
     && !raw.properties.includes('thrown')) {
     return { valid: false, issue: `${label}: ranged attack mode requires ammunition or thrown` };
   }
-  if (!nonBlank(raw.mastery_effect_id)) {
+  if (!nonBlank(raw.mastery_effect_id) && !(raw.proficiency_category==='none'&&raw.mastery_effect_id==='')) {
     return { valid: false, issue: `${label}: weapon_profile.mastery_effect_id is required` };
   }
   let ammo: WeaponProfile['ammo'];

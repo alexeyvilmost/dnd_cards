@@ -48,6 +48,7 @@ export async function executeRoguelikeCampRest(input: {
   })();
   if (!restContext) throw new Error('Нет контекста отдыха');
   const actor = canonical.world.actors[canonical.actorId];
+  const objectsBeforeRest = structuredClone(canonical.world.objects);
   if (input.bindWeapon) {
     if (input.long) throw new Error('Ритуал связи выполняется в течение короткого отдыха');
     canonical.world.objects = foldWorldObjectEvents(canonical.world.objects, prepareWeaponBond(
@@ -69,7 +70,7 @@ export async function executeRoguelikeCampRest(input: {
     if (recalled.status !== 'accepted') throw new Error(recalled.message);
     canonical.world = recalled.nextState;
     result = { state: recalled.nextState.actors[canonical.actorId].runtime, events: [], pendingReactions: [] };
-  } else result = input.long ? longRest(actor.runtime, restContext) : shortRest(actor.runtime, restContext);
+  } else result = input.long ? longRest(actor.runtime, restContext, { preview: true }) : shortRest(actor.runtime, restContext, { preview: true });
   if (result.pendingReactions?.length) throw new Error('Отдых требует разрешения реакции');
   let state = result.state;
   const events = [...result.events];
@@ -148,6 +149,31 @@ export async function executeRoguelikeCampRest(input: {
     }
   }
 
+  // Only a fully validated confirmation can draw rest/chance/recharge dice.
+  let benefitsDenied = false;
+  if (!input.recallWeapon) {
+    const confirmed = input.long ? longRest(actor.runtime, restContext) : shortRest(actor.runtime, restContext);
+    if (confirmed.pendingReactions?.length) throw Error('Отдых требует разрешения реакции');
+    benefitsDenied = confirmed.restBenefitsDenied === true;
+    const choiceEvents = events.filter(event => event.type === 'narrative');
+    state = confirmed.state;
+    events.length = 0;
+    events.push(...confirmed.events);
+    if (benefitsDenied) {
+      turnState = input.character.turn_state;
+      canonical.world.objects = objectsBeforeRest;
+    } else {
+      for (const roll of rolls) {
+        const spent = spendHitDie(state, restContext, roll); state = spent.state; events.push(...spent.events);
+      }
+      if (!input.long) {
+        const recovery = applySheetSlotRecoverySelections({ state, classLevels: restContext.classLevels, policies: slotPolicies,
+          selections: slotSelections as Record<string, number[]> });
+        state = recovery.state; events.push(...recovery.events);
+      }
+      events.push(...choiceEvents);
+    }
+  }
   canonical.world = synchronizeSheetCanonicalRuntime(canonical.world, canonical.actorId, state);
   const otherActorIds = Object.keys(canonical.world.actors).filter((id) => id !== canonical.actorId);
   const agedWorld = advanceRoguelikeCampTime({ world: canonical.world, elapsedSeconds, actorIds: otherActorIds });
@@ -164,9 +190,9 @@ export async function executeRoguelikeCampRest(input: {
   return { status: 'ready' as const, contentManifestHash: prepared.contentManifestHash, events,
     patch: { current_hp: state.hp.current, resources: state.resources, max_resources: state.maxResources,
       active_effects: state.activeEffects, inventory_items: runtimeInventoryPayload(state), equipment: state.equipment,
-      turn_state: writeRulesEngineRuntimeTurnState(mastery ? { ...turnState,
+      turn_state: writeRulesEngineRuntimeTurnState(mastery && !benefitsDenied ? { ...turnState,
         inPlayChoices: { ...(turnState?.inPlayChoices as Record<string, string[]> ?? {}), ...mastery },
-      } : turnState, state, input.recallWeapon ? {} : { attunement_unlocked: true, death_saves: emptyDeathSaves() }),
+      } : turnState, state, input.recallWeapon || benefitsDenied ? {} : { attunement_unlocked: true, death_saves: emptyDeathSaves() }),
       runtime_revision: revision },
   };
 }

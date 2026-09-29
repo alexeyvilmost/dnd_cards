@@ -15,6 +15,8 @@ import { createLogicalClock, createSequentialIdFactory, createStrictRngTape } fr
 import { foldEvents } from './reducer';
 import { InMemoryRulesSession } from './session';
 import { migrateWorldState } from './worldMigration';
+import completedItems from '../../../scripts/content/data/item-completion-high-20260929.json';
+import completedRelated from '../../../scripts/content/data/item-completion-high-related-20260929.json';
 
 const RULESET = {
   systemId: 'dnd5e-2024' as const,
@@ -328,6 +330,88 @@ function engineEvents(events: readonly UncommittedRuleEvent[]) {
 }
 
 describe('canonical pre-damage reaction lifecycle', () => {
+  it.each([12,15])('reflects the original save effect when the final total equals DC %s after reload',dc=>{
+    const initial=world([]);
+    const action:RuleActionDefinition={...DAMAGE_PULSE,mechanics:{activation:{mode:'active',cost:[{resource:'action',amount:1}]},effects:[{
+      resolution:'save',ability:'dex',dc,who:'target',on_fail:[{kind:'damage',amount:6,type:'force'}],
+      on_success:[{kind:'damage',amount:6,type:'force',on_success:'half'}],
+    }]}};
+    initial.actors.attacker.capabilities.actionIds=[action.id];
+    initial.actors.defender.passives=[{id:`mantle-${dc}`,effects:[{resolution:'auto',result:[
+      {kind:'modifier',op:'add',value:3,applies_to:{roll:'saving_throw'}},{kind:'save_reflection',on_total:'dc'},
+    ]}]}];
+    const catalog:RulesCatalog={getAction:id=>id===action.id?action:CATALOG.getAction(id)};
+    const opening=new InMemoryRulesSession(initial,catalog,{rng:()=>{throw Error('save must wait');},clock:createLogicalClock(),nextId:createSequentialIdFactory('reflect')});
+    begin(opening,[]);expect(useDamagePulse(opening).status).toBe('accepted');
+    const checkpoint=migrateWorldState(JSON.parse(JSON.stringify(opening.getState()))),pending=checkpoint.pendingResolution!;
+    const tape=createStrictRngTape([{label:'save',sides:20,value:dc-3}]);
+    const session=new InMemoryRulesSession(checkpoint,catalog,{rng:tape.rng,clock:createLogicalClock(checkpoint.logicalClock),nextId:createSequentialIdFactory('reflect-final')});
+    const command={schemaVersion:1 as const,type:'ResolveDecision' as const,commandId:'save',expectedRevision:checkpoint.revision,
+      rulesetContentHash:RULESET.contentHash,actorId:'defender',resolutionId:pending.id,requestId:pending.request.id,response:{kind:'roll' as const,roll:{mode:'system' as const}}};
+    expect(session.dispatch(command).status).toBe('accepted');tape.assertExhausted();
+    expect(session.getState().actors.defender.runtime.hp.current).toBe(20);
+    expect(session.getState().actors.attacker.runtime.hp.current).toBe(14);
+    expect(session.dispatch(command).status).toBe('rejected');
+    expect(foldEvents(initial,[...opening.getEvents(),...session.getEvents()])).toEqual(session.getState());
+  });
+  it.each(['ring-a','amulet-b'])('consumes %s atomically when death triggers full rest recovery',itemId=>{
+    const initial=world([]),defender=initial.actors.defender;
+    defender.runtime.hp.current=0;
+    defender.runtime.deathSaves={successes:0,failures:2,stable:false,dead:false};
+    defender.runtime.inventory=[{cardId:itemId,qty:1}];defender.runtime.equipment.ring_1=itemId;
+    defender.runtime.resources.spell_slot_1=0;
+    defender.passives=[{id:itemId,effects:[{resolution:'auto',result:[{kind:'life_policy',on_death:{rest:'long',
+      cost:[{resource:'item',card_id:itemId,amount:1,bound_self_item:true}]}}]}]}];
+    const tape=createStrictRngTape([{label:'attack',sides:20,value:15},{label:'damage',sides:8,value:8}]);
+    const session=new InMemoryRulesSession(initial,CATALOG,{rng:tape.rng,clock:createLogicalClock(),nextId:createSequentialIdFactory('revive')});
+    begin(session,[]);expect(useStrike(session).status).toBe('accepted');tape.assertExhausted();
+    const restored=session.getState().actors.defender;
+    expect(restored.runtime.hp.current).toBe(20);expect(restored.runtime.deathSaves?.dead).toBe(false);
+    expect(restored.runtime.resources.spell_slot_1).toBe(1);expect(restored.runtime.inventory).toEqual([]);
+    expect(restored.runtime.equipment.ring_1).toBeNull();expect(restored.lifecycle?.status).toBe('alive');
+    expect(foldEvents(initial,session.getEvents())).toEqual(session.getState());
+    expect(useStrike(session).status).toBe('rejected');
+  });
+  it.each([10,60])('resolves a zero-HP burst in %s feet for nearby living allies with one shared roll',radius=>{
+    const ally=actor('ally',[]);ally.runtime.hp.current=0;
+    const attacker=actor('attacker',[STRIKE.id]),defender=actor('defender',[]);defender.runtime.hp.current=4;
+    defender.character.spatialObservations={boardRevision:1,nearby:[{actorId:'ally',relation:'ally',distanceFt:5,conscious:false},
+      {actorId:'attacker',relation:'enemy',distanceFt:5,conscious:true}]};
+    defender.passives=[{id:'burst-item',activation:{mode:'passive'},effects:[{resolution:'auto',result:[{
+      kind:'triggered_effect',event:'reduced_to_0_hp',uses:{count:1,per:'long_rest'},event_formula_bindings:{burst:'2d6+3'},
+      effects:[{resolution:'auto',who:'self',result:[{kind:'healing',amount:'burst'},
+        {kind:'area_healing',amount:'burst',radius_ft:radius,recipients:'allies'}]}],
+    }]}]}];
+    const initial=createWorld({id:'burst',ruleset:RULESET,actors:[attacker,defender,ally]});
+    const tape=createStrictRngTape([{label:'attack',sides:20,value:15},{label:'damage',sides:8,value:8},
+      {label:'burst1',sides:6,value:2},{label:'burst2',sides:6,value:3}]);
+    const session=new InMemoryRulesSession(initial,CATALOG,{rng:tape.rng,clock:createLogicalClock(),nextId:createSequentialIdFactory('burst')});
+    begin(session,[]);expect(useStrike(session).status).toBe('accepted');tape.assertExhausted();
+    expect(session.getState().actors.defender.runtime.hp.current).toBe(8);
+    expect(session.getState().actors.ally.runtime.hp.current).toBe(8);
+    expect(session.getState().actors.attacker.runtime.hp.current).toBe(20);
+    expect(session.getState().actors.defender.runtime.firedThisRest).toHaveLength(1);
+    expect(foldEvents(initial,session.getEvents())).toEqual(session.getState());
+  });
+  it('retaliates against the attacker only after the final reduced damage survives reload',()=>{
+    const initial=world();
+    initial.actors.defender.passives=[{id:'item-retaliation',name:'Retaliation',activation:{mode:'passive'},effects:[{
+      resolution:'auto',result:[{kind:'triggered_effect',event:'damage_taken',effects:[{
+        resolution:'auto',who:'target',result:[{kind:'damage',amount:'event_amount',type:'force',suppress_damage_modifiers:true}],
+      }]}],
+    }]}];
+    const tape=createStrictRngTape([{label:'attack',sides:20,value:15},{label:'damage',sides:8,value:8}]);
+    const opening=new InMemoryRulesSession(initial,CATALOG,{rng:tape.rng,clock:createLogicalClock(),nextId:createSequentialIdFactory('retaliation')});
+    begin(opening);expect(useStrike(opening).status).toBe('accepted');tape.assertExhausted();
+    expect(opening.getState().actors.attacker.runtime.hp.current).toBe(20);
+    const checkpoint=migrateWorldState(JSON.parse(JSON.stringify(opening.getState())));
+    const reduction=createStrictRngTape([{label:'reduction',sides:12,value:5}]);
+    const restored=new InMemoryRulesSession(checkpoint,CATALOG,{rng:reduction.rng,clock:createLogicalClock(checkpoint.logicalClock),nextId:createSequentialIdFactory('retaliation-final')});
+    expect(resolveReaction(restored,STONE_ENDURANCE.id,'reduce').status).toBe('accepted');reduction.assertExhausted();
+    expect(restored.getState().actors.defender.runtime.hp.current).toBe(19);
+    expect(restored.getState().actors.attacker.runtime.hp.current).toBe(19);
+    expect(foldEvents(initial,[...opening.getEvents(),...restored.getEvents()])).toEqual(restored.getState());
+  });
   it.each(['bludgeoning','fire'])('filters held packets by the declared damage types: %s', type => {
     const reaction = structuredClone(STONE_ENDURANCE);
     reaction.id = 'different-protection';
@@ -786,6 +870,52 @@ describe('canonical pre-damage reaction lifecycle', () => {
       expect(() => migrateWorldState(corrupted), name).toThrow(expected);
     }
   });
+});
+
+describe('item damage gambling is resolved before the saved damage packet',()=>{
+ const entry=completedRelated.entities.find(row=>row.card_number==='ACT-item-completion-high-948-gamble-damage');
+ if(!entry)throw Error('Missing item damage reaction');
+ const original=projectRuleAction(entry.patch as unknown as Action);
+ const ownerId=String((original.mechanics as Record<string,unknown>).requires_item_source);
+ const sourceCard={id:ownerId,name:'Gambling armor',type:'chest',slot:'body',mechanics:completedItems['CARD-0948'].mechanics};
+ it.each([
+  {variant:'source',die:4,roll:1,expectedHp:20,factor:0},
+  {variant:'source',die:4,roll:4,expectedHp:4,factor:2},
+  {variant:'other',die:6,roll:6,expectedHp:8,factor:1.5},
+ ])('settles $variant d$die result $roll once across reload',(row)=>{
+  const action=structuredClone(original);
+  if(row.variant==='other'){
+   action.id='other-gambling-armor';
+   const chance=((action.mechanics.effects as {result:{chance:{die:number;equals:number[]};on_fail:{factor:number}[]}[]}[])[0].result[0]);
+   chance.chance={die:6,equals:[1,2,3]};chance.on_fail[0].factor=1.5;
+  }
+  const catalog:RulesCatalog={getAction:id=>id===STRIKE.id?STRIKE:id===action.id?action:undefined};
+  const initial=world([action.id]);
+  initial.actors.defender.character.knownCards=[sourceCard as unknown as NonNullable<ActorState['character']['knownCards']>[number]];
+  initial.actors.defender.runtime.inventory=[{cardId:ownerId,qty:1}];
+  initial.actors.defender.runtime.equipment.body=ownerId;
+  const openingTape=createStrictRngTape([{label:'attack',sides:20,value:15},{label:'damage',sides:8,value:8}]);
+  const session=new InMemoryRulesSession(initial,catalog,{rng:openingTape.rng,clock:createLogicalClock(),nextId:createSequentialIdFactory('gamble-open')});
+  begin(session,[action.id]);
+  expect(useStrike(session).status).toBe('accepted');openingTape.assertExhausted();
+  expect(session.getState().pendingResolution?.type).toBe('damage_reaction');
+  const checkpoint=migrateWorldState(JSON.parse(JSON.stringify(session.getState())));
+  const tape=createStrictRngTape([{label:'gamble',sides:row.die,value:row.roll}]);
+  const restored=new InMemoryRulesSession(checkpoint,catalog,{rng:tape.rng,clock:createLogicalClock(checkpoint.logicalClock),nextId:createSequentialIdFactory('gamble-resume')});
+  const pending=restored.getState().pendingResolution!;
+  const decision={schemaVersion:1 as const,type:'ResolveDecision' as const,commandId:'gamble',
+   expectedRevision:restored.getState().revision,rulesetContentHash:RULESET.contentHash,actorId:'defender',
+   resolutionId:pending.id,requestId:pending.request.id,response:{kind:'reaction' as const,actionId:action.id}};
+  expect(restored.dispatch(decision)).toMatchObject({status:'accepted'});
+  tape.assertExhausted();
+  expect(restored.getState().actors.defender.runtime.hp.current).toBe(row.expectedHp);
+  expect(restored.getState().actors.defender.runtime.resources.reaction).toBe(0);
+  const trace=restored.getEvents().flatMap(event=>event.payload.type==='EngineEventRecorded'?[event.payload.event]:[]);
+  expect(trace).toContainEqual(expect.objectContaining({type:'damage_multiplier',factor:row.factor}));
+  const committed=restored.getState();
+  expect(restored.dispatch(decision).status).toBe('rejected');
+  expect(restored.getState()).toEqual(committed);
+ });
 });
 
 const parryMechanics = JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_parry_216.go', import.meta.url), 'utf8').match(/const battleMasterParry216 = `([^`]+)`/)![1]);

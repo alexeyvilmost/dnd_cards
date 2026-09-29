@@ -11,8 +11,11 @@
  * сейчас (например «у цели состояние», а цели нет), тоже дают false — условие не выполнено.
  */
 import type { AdvantageState, CharacterContext, RuntimeState, TargetContext } from '../mvp/contracts';
+import {isHiddenByAction,targetIsUnarmored,isTransformedOrDisguised} from './itemCircumstances';
+import {itemGate} from '../character/attunement';
 import { expandConditionSet } from './conditions';
 import { isShieldCard, isWearingArmor } from './equipment';
+import { eventOccurrenceCount, OCCURRENCE_PERIODS, type OccurrencePeriod } from './eventOccurrence';
 
 type Dict = Record<string, unknown>;
 
@@ -63,17 +66,59 @@ export function creatureTypeMatches(actual: unknown, expected: unknown): boolean
 export function activeConditionsOf(state: RuntimeState | undefined): Set<string> {
   const raw: string[] = [];
   if (!state) return new Set();
+  const suppressed=suppressedConditionsOf(state);
   for (const e of state.activeEffects) {
     const m = e.mechanics as Dict;
-    if (m?.kind === 'condition' && m.value) raw.push(String(m.value));
+    if (m?.kind === 'condition' && m.value&&!suppressed.has(String(m.value))) raw.push(String(m.value));
   }
   return expandConditionSet(raw);
+}
+
+/** An item-backed suppression masks a condition without deleting its source or duration. */
+export function suppressedConditionsOf(state:RuntimeState|undefined):Set<string>{
+  const result=new Set<string>();
+  if(!state)return result;
+  for(const effect of state.activeEffects){
+    const payload=effect.mechanics as Dict;
+    if(payload?.kind!=='condition_immunity'||payload.suppress_existing!==true||typeof payload.condition!=='string')continue;
+    const required=payload.requires_equipped_item_id;
+    if(typeof required==='string'&&!Object.values(state.equipment).includes(required))continue;
+    result.add(payload.condition);
+  }
+  return result;
 }
 
 /** Вычислить один предикат обстоятельства. Нераспознанный гейт → false (closed-by-default); narrative → true. */
 export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
   const kind = String(cond.kind ?? '');
   switch (kind) {
+    case 'target_damage_since_source_turn': {
+      const owner=ctx.character?.combatHistory,target=ctx.target?.characterContext?.combatHistory;
+      if(!owner||!target)return false;
+      const dealt=target.damageDealt>owner.turnEnded;
+      return cond.value===false?!dealt:dealt;
+    }
+    case 'target_item_active': {
+      const card=ctx.target?.characterContext?.knownCards?.find(row=>row.id===cond.value),state=ctx.target?.runtimeState;
+      return !!card&&!!state&&itemGate(card,{equipment:state.equipment,inventory:state.inventory,attuned:ctx.target?.characterContext?.attunedIds??[]});
+    }
+    case 'target_illuminated': return ['bright', 'dim'].includes(ctx.target?.characterContext?.illumination?.level ?? '');
+    case 'in_dim_light_or_darkness': return ['dim', 'dark'].includes(ctx.character?.illumination?.level ?? '');
+    case 'in_open_night_sky': return ctx.character?.environmentObservations?.openNightSky === true;
+    case 'near_sea': return typeof ctx.character?.environmentObservations?.nearestSeaFt === 'number' && ctx.character.environmentObservations.nearestSeaFt <= Number(cond.range_ft);
+    case 'in_darkness': return ctx.character?.illumination?.level === 'dark';
+    case 'in_daylight': return ctx.character?.illumination?.daylight === true;
+    case 'you_are_hidden': return isHiddenByAction(ctx.state);
+    case 'target_unarmored': return targetIsUnarmored(ctx.target);
+    case 'you_transformed_or_disguised': return isTransformedOrDisguised(ctx.state);
+    case 'target_nearby_enemies':
+    case 'nearby_enemies': {
+      const radius = Number(cond.range_ft), minimum = Number(cond.min ?? 1);
+      const facts = kind==='target_nearby_enemies'?ctx.target?.characterContext?.spatialObservations:ctx.character?.spatialObservations;
+      if (!facts || !Number.isFinite(radius) || radius < 0 || !Number.isInteger(minimum) || minimum < 1) return false;
+      return facts.nearby.filter(creature => creature.relation === 'enemy' && creature.conscious!==false && creature.distanceFt <= radius).length >= minimum;
+    }
+    case 'in_encounter': return ctx.state?.encounterActive === true;
     case 'resource_at_most': {
       const id=typeof cond.id==='string'?cond.id:'';
       const maximum=Number(cond.value);
@@ -101,6 +146,10 @@ export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
       const id = String(cond.id ?? cond.value ?? '');
       if (!id || !ctx.state) return false;
       return Object.values(ctx.state.equipment ?? {}).some((v) => v === id);
+    }
+    case 'item_source_active': {
+      const card=ctx.character?.knownCards?.find(card=>card.id===(cond.id??cond.value));
+      return !!card&&!!ctx.state&&itemGate(card,{equipment:ctx.state.equipment,inventory:ctx.state.inventory,attuned:ctx.character?.attunedIds??[]});
     }
     case 'item_carried': {
       const id = String(cond.id ?? cond.value ?? '');
@@ -132,6 +181,25 @@ export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
       const hp = ctx.state?.hp;
       return Number.isFinite(threshold) && threshold >= 0 && threshold <= 1
         && !!hp && hp.max > 0 && hp.current >= 0 && hp.current <= hp.max * threshold;
+    }
+    case 'hp_fraction_below': {
+      const threshold=Number(cond.value),hp=ctx.state?.hp;
+      return Number.isFinite(threshold)&&threshold>=0&&threshold<=1&&!!hp&&hp.max>0&&hp.current>=0&&hp.current<hp.max*threshold;
+    }
+    case 'class_id_in': {
+      if(!Array.isArray(cond.values)||!cond.values.length||!ctx.character?.classLevels)return false;
+      return cond.values.some(value=>typeof value==='string'&&Number(ctx.character!.classLevels![value])>0);
+    }
+    case 'equipment_slot_equals':
+      return typeof cond.slot==='string'&&typeof cond.id==='string'&&cond.id.length>0
+        &&ctx.state?.equipment[cond.slot]===cond.id;
+    case 'character_size':
+      return typeof ctx.character?.baseSize==='number'&&Number.isFinite(Number(cond.value))&&ctx.character.baseSize===Number(cond.value);
+    case 'target_has_effect': {
+      if(typeof cond.value!=='string'||!ctx.target?.runtimeState)return false;
+      return ctx.target.runtimeState.activeEffects.some(entry=>(entry.entityRef?.id===cond.value
+        ||entry.entityRef?.cardNumber===cond.value||(entry.mechanics as Dict).stack_id===cond.value)
+        &&(cond.source!=='self'||(!!ctx.rollerActorId&&entry.sourceId===ctx.rollerActorId)));
     }
     case 'you_have_effect_stack': {
       const stackId = String(cond.value ?? cond.id ?? '').trim();
@@ -211,8 +279,41 @@ export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
       if (!key || !ctx.event?.data) return false;
       return ctx.event.data[key] === cond.value;
     }
+    case 'event_data_number': {
+      const key = typeof cond.key === 'string' ? cond.key : '';
+      const value = ctx.event?.data?.[key];
+      if (typeof value !== 'number' || !Number.isFinite(value)) return false;
+      const min = cond.min === undefined ? -Infinity : Number(cond.min);
+      const max = cond.max === undefined ? Infinity : Number(cond.max);
+      return !Number.isNaN(min) && !Number.isNaN(max) && min <= max && value >= min && value <= max;
+    }
+    case 'moved_distance_ft': {
+      const value = ctx.state?.turnMovementFt;
+      // An absent observation is unknown, particularly in imported old fights.
+      if (typeof value !== 'number' || !Number.isFinite(value)) return false;
+      const min = cond.min === undefined ? 0 : Number(cond.min);
+      const max = cond.max === undefined ? Infinity : Number(cond.max);
+      return !Number.isNaN(min) && !Number.isNaN(max) && min <= max && value >= min && value <= max;
+    }
+    case 'event_count_below': {
+      if (!ctx.state || typeof cond.id !== 'string' || !cond.id
+        || !OCCURRENCE_PERIODS.includes(cond.per as OccurrencePeriod)
+        || !Number.isSafeInteger(cond.threshold) || Number(cond.threshold) < 1) return false;
+      const target = cond.group_by === 'target' ? ctx.rollTargetActorId : undefined;
+      if (cond.group_by === 'target' && !target) return false;
+      return eventOccurrenceCount(ctx.state,cond.id,cond.per as OccurrencePeriod,target) < Number(cond.threshold);
+    }
     case 'living_at_zero_hp':
       return ctx.state?.hp.current === 0 && ctx.state.deathSaves?.dead !== true;
+    case 'target_creature_type_in':
+      return Array.isArray(cond.values)&&cond.values.some(value=>creatureTypeMatches(ctx.target?.characterContext?.creatureType,value));
+    case 'target_relation_in':
+      return Array.isArray(cond.values)&&cond.values.includes(ctx.target?.relationToSource);
+    case 'event_creature_type_in': {
+      if(typeof cond.key!=='string'||!Array.isArray(cond.values))return false;
+      const observed=ctx.event?.data?.[cond.key];
+      return typeof observed==='string'&&cond.values.some(value=>creatureTypeMatches(observed,value));
+    }
     case 'roller_creature_type_in': {
       if (!Array.isArray(cond.values) || cond.values.length === 0) return false;
       return cond.values.some((candidate) => creatureTypeMatches(ctx.rollerCreatureType, candidate));

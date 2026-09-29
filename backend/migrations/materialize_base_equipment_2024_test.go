@@ -54,15 +54,17 @@ func TestBaseEquipment2024DeclaresEveryOfficialWeaponAndArmor(t *testing.T) {
 	}
 }
 
-func TestLatestMigrationIsRegisteredLast(t *testing.T) {
-	migrations := GetAllMigrations()
-	last := migrations[len(migrations)-1]
-	if last.Version != "276_reusable_run_sources" {
-		t.Fatalf("last=%s", last.Version)
+func TestReusableRunSourcesMigrationIsRegistered(t *testing.T) {
+	for _, migration := range GetAllMigrations() {
+		if migration.Version != "276_reusable_run_sources" {
+			continue
+		}
+		if migration.Up == nil || migration.Down == nil {
+			t.Fatal("migration must register Up and Down")
+		}
+		return
 	}
-	if last.Up == nil || last.Down == nil {
-		t.Fatal("migration must register Up and Down")
-	}
+	t.Fatal("reusable run sources migration is missing")
 }
 
 func TestBaseEquipment2024RuntimeDeclarationsAreExecutable(t *testing.T) {

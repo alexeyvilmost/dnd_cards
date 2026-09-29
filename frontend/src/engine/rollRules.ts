@@ -22,17 +22,18 @@
  *                 и свойством payload-урона `explode:{limit}` (локально для конкретного заклинания).
  */
 import type { DieRoll } from '../mvp/contracts';
-import { drawDie } from './random';
+import { drawDie, type DieAwareRandomSource } from './random';
 
 type Dict = Record<string, unknown>;
 
 export const D20_RULE_OPS = new Set([
   'reroll', 'set_die', 'crit_range', 'outcome', 'on_roll', 'bonus_die',
   'bonus_die_on_failure', 'minimum_total', 'minimum_die',
+  'advantage_dice', 'deny_advantage', 'deny_critical', 'set_die_result', 'critical_on_hit',
 ]);
 export const DAMAGE_RULE_OPS = new Set([
   'minimum_die', 'die_bonus', 'critical_extra_die', 'explode',
-  'reroll_damage', 'reroll_healing_ones', 'maximize_dice',
+  'reroll_damage', 'reroll_healing_ones', 'maximize_dice', 'set_die_result', 'add_dice_drop_lowest',
 ]);
 export const ROLL_RULE_OPS = new Set([...D20_RULE_OPS, ...DAMAGE_RULE_OPS]);
 
@@ -60,6 +61,26 @@ export function d20Faces(rules: Dict[]): number {
   return faces;
 }
 
+/** Number of independently rolled dice while advantage/disadvantage is present. */
+export function advantageDiceCount(rules: Dict[]): number {
+  return rules.reduce((count, rule) => rule.op === 'advantage_dice'
+    ? Math.max(count, Math.min(10, Math.max(2, Math.floor(num(rule.value, 2))))) : count, 2);
+}
+
+/** A replacement changes the adjudicated face, not merely its numeric bonus. */
+export function declaredDieResult(rules: Dict[], faces: number): {value: number; source: string} | undefined {
+  for (const rule of rules) {
+    if (rule.op !== 'set_die_result') continue;
+    const die = (rule.applies_to as Dict | undefined)?.die;
+    if (die !== undefined && Number(die) !== faces) continue;
+    const value = Number(rule.value);
+    if (Number.isInteger(value) && value >= 1 && value <= faces) {
+      return {value, source: String(rule.source ?? 'Замена результата кости')};
+    }
+  }
+  return undefined;
+}
+
 /** Суммарное смещение диапазона крита (crit_range складывается). Отрицательное — крит легче. */
 export function critRangeShift(rules: Dict[]): number {
   let s = 0;
@@ -76,7 +97,7 @@ export function shouldReroll(rules: Dict[], natural: number): boolean {
 /** Плоский бонус к натуральной d20-кости граней faces (die_bonus с applies_to.die===faces). */
 export function d20DieBonus(rules: Dict[], faces: number): number {
   let b = 0;
-  for (const r of rules) if (r.op === 'die_bonus' && num((r.applies_to as Dict)?.die) === faces) b += num(r.value, 0);
+  for (const r of rules) if (r.op === 'die_bonus' && ((r.applies_to as Dict)?.die === undefined || num((r.applies_to as Dict)?.die) === faces)) b += num(r.value, 0);
   return b;
 }
 
@@ -94,10 +115,12 @@ export function rollD20BonusDice(rules: Dict[], rng: () => number): DieRoll[] {
       : undefined;
     const sign: 1 | -1 = num(rule.sign, 1) < 0 ? -1 : 1;
     for (let index = 0; index < count; index += 1) {
+      const rolled = drawDie(rng, faces);
       dice.push({
         role: 'bonus',
         sides: faces,
-        result: drawDie(rng, faces),
+        ...((rng as DieAwareRandomSource).lastDieDrawOrdinal===undefined?{}:{drawOrdinal:(rng as DieAwareRandomSource).lastDieDrawOrdinal}),
+        result: Math.max(declaredDieResult(rules,faces)?.value ?? rolled, d20MinimumDie(rules,faces)?.value ?? 1) + d20DieBonus(rules,faces),
         ...(source ? { source } : {}),
         ...(sign < 0 ? { sign } : {}),
       });
@@ -109,8 +132,8 @@ export function rollD20BonusDice(rules: Dict[], rng: () => number): DieRoll[] {
 /** Bonus dice whose data explicitly permits use only after the base d20 test failed. */
 export function rollD20FailureBonusDice(rules: Dict[], rng: () => number): DieRoll[] {
   return rollD20BonusDice(
-    rules.filter((rule) => rule.op === 'bonus_die_on_failure')
-      .map((rule) => ({ ...rule, op: 'bonus_die' })),
+    rules.filter((rule) => rule.op !== 'bonus_die')
+      .map((rule) => rule.op === 'bonus_die_on_failure' ? { ...rule, op: 'bonus_die' } : rule),
     rng,
   );
 }
@@ -176,6 +199,10 @@ export function applyDamageDieRules(
   rules: Dict[],
   opts: { explodeLimit?: number; rng: () => number },
 ): { dice: DieRoll[]; delta: number; usedRuleKeys: string[] } {
+  const drawn=(sides:number):DieRoll=>{
+    const result=drawDie(opts.rng,sides),ordinal=(opts.rng as DieAwareRandomSource).lastDieDrawOrdinal;
+    return {sides,result,...(ordinal===undefined?{}:{drawOrdinal:ordinal})};
+  };
   let delta = 0;
   const out = dice.map((d) => ({ ...d }));
   const usedRuleKeys: string[] = [];
@@ -187,7 +214,7 @@ export function applyDamageDieRules(
       && (!dieSize || die.sides === dieSize)
       && (rule.natural == null || matchesNatural(die.result, rule.natural)));
     if (!eligible.length) continue;
-    const rerolled = eligible.map((die) => ({ sides: die.sides, result: drawDie(opts.rng, die.sides) }));
+    const rerolled = eligible.map((die) => drawn(die.sides));
     const originalTotal = eligible.reduce((sum, die) => sum + die.result, 0);
     const rerolledTotal = rerolled.reduce((sum, die) => sum + die.result, 0);
     const keepNew = rule.keep === 'new';
@@ -210,24 +237,40 @@ export function applyDamageDieRules(
     const count = Math.max(0, Math.floor(num(rule.value, 1)));
     if (!exemplar || count === 0) continue;
     for (let index = 0; index < count; index += 1) {
-      const result = drawDie(opts.rng, exemplar.sides);
-      out.push({ sides: exemplar.sides, result });
-      delta += result;
+      const declaredFaces=Number(rule.faces);
+      const faces=Number.isInteger(declaredFaces)&&declaredFaces>=2&&declaredFaces<=100?declaredFaces:exemplar.sides;
+      const die=drawn(faces);
+      out.push(die);
+      delta += die.result;
     }
   }
 
-  const exRule = rules.find((r) => r.op === 'explode');
-  const limit = opts.explodeLimit ?? (exRule ? num(exRule.limit ?? exRule.value, 0) : 0);
-  if (limit > 0) {
-    let budget = limit;
-    // Идём по костям, включая добавленные — цепные взрывы, но не больше budget суммарно.
-    for (let i = 0; i < out.length && budget > 0; i += 1) {
-      const d = out[i];
-      if (d.discarded || d.result < d.sides) continue; // взрыв только на натуральном максимуме
-      const nv = drawDie(opts.rng, d.sides);
-      out.push({ sides: d.sides, result: nv });
-      delta += nv;
-      budget -= 1;
+  for (const rule of rules) {
+    if (rule.op !== 'add_dice_drop_lowest') continue;
+    const eligible=out.filter(die=>!die.discarded);
+    const exemplar=eligible[0];
+    if(!exemplar)continue;
+    const extra=Math.min(10,Math.max(0,Math.floor(num(rule.extra,2))));
+    for(let i=0;i<extra;i++){
+      const die=drawn(exemplar.sides);
+      out.push(die);eligible.push(die);delta+=die.result;
+    }
+    const drops=Math.min(eligible.length,Math.max(0,Math.floor(num(rule.drop,1))));
+    for(const die of eligible.sort((a,b)=>a.result-b.result).slice(0,drops)){die.discarded=true;delta-=die.result;}
+  }
+
+  // A spell's native maximum-face explosion and item-owned face rules retain
+  // independent budgets; adding a seven-face rider must not replace native eights.
+  const explosions = [
+    ...(opts.explodeLimit === undefined ? [] : [{rule:{} as Dict,budget:Math.max(0,Math.floor(opts.explodeLimit))}]),
+    ...rules.filter(rule=>rule.op==='explode').map(rule=>({rule,budget:Math.max(0,Math.floor(num(rule.limit??rule.value,0)))})),
+  ];
+  for(let i=0;i<out.length;i++){
+    const die=out[i];if(die.discarded)continue;
+    for(const entry of explosions){
+      if(entry.budget<=0||(entry.rule.natural?!matchesNatural(die.result,entry.rule.natural):die.result<die.sides))continue;
+      const extra=drawn(die.sides);out.push(extra);delta+=extra.result;entry.budget--;
+      if(typeof entry.rule.once_per_turn==='string')usedRuleKeys.push(entry.rule.once_per_turn);
     }
   }
 
@@ -241,6 +284,15 @@ export function applyDamageDieRules(
       delta += minimum - die.result;
       die.result = minimum;
     }
+  }
+
+  for (const die of out) {
+    if (die.discarded) continue;
+    const replacement = declaredDieResult(rules, die.sides);
+    if (!replacement) continue;
+    delta += replacement.value - die.result;
+    die.result = replacement.value;
+    die.source = replacement.source;
   }
 
   for (const r of rules) {

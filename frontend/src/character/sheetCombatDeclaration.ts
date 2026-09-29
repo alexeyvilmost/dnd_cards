@@ -1,4 +1,5 @@
 import type { Relation, RuleActionDefinition, SpatialFacts } from '../rules-core/domain';
+import {targetSlotBounds} from '../rules-core/actionTargeting';
 import {
   magicMissileDartCount,
   parseWorldSpellPolicy,
@@ -23,6 +24,7 @@ export interface SheetCombatTargetFactDraft {
   lineOfSight: boolean;
   cover: NonNullable<SpatialFacts['cover']>;
   willing?: boolean;
+  distanceToFirstTargetFt?: number;
 }
 
 export interface SheetCombatDeclarationPolicy {
@@ -36,6 +38,8 @@ export interface SheetCombatDeclarationPolicy {
     | 'generic_action';
   minTargets: number;
   maxTargets: number;
+  allowRepeatTargets: boolean;
+  additionalTargetsWithinFtOfFirst?: number;
   rangeFt: number;
   allowedRelations: Relation[];
   requiresLineOfSight: boolean;
@@ -69,6 +73,7 @@ function primitive(action: RuleActionDefinition): SheetCombatDeclarationPolicy['
 export function sheetCombatDeclarationPolicy(
   action: RuleActionDefinition,
   castLevel?: number,
+  actorLevel?: number,
 ): SheetCombatDeclarationPolicy {
   const primitiveType = primitive(action);
   const targeting = action.targeting;
@@ -76,10 +81,13 @@ export function sheetCombatDeclarationPolicy(
     || !targeting.allowedRelations.length) {
     throw new Error(`${action.id} has no usable actor-targeting contract`);
   }
+  const slots=targetSlotBounds(action,castLevel,actorLevel);
   const common = {
     primitiveType,
-    minTargets: targeting.minTargets,
-    maxTargets: targeting.maxTargets,
+    minTargets: slots.minTargets,
+    maxTargets: slots.maxTargets,
+    allowRepeatTargets: targeting.allowRepeatTargets === true,
+    additionalTargetsWithinFtOfFirst: targeting.additionalTargetsWithinFtOfFirst,
     rangeFt: targeting.rangeFt,
     allowedRelations: [...targeting.allowedRelations],
     requiresLineOfSight: targeting.requiresLineOfSight,
@@ -137,6 +145,10 @@ function factsFor(
   if (policy.requiresWilling && typeof draft.willing !== 'boolean') {
     throw new Error(`Для ${draft.targetId} нужно явно указать согласие`);
   }
+  if (draft.distanceToFirstTargetFt !== undefined && (!Number.isFinite(draft.distanceToFirstTargetFt)
+    || draft.distanceToFirstTargetFt < 0)) {
+    throw new Error(`Для ${draft.targetId} нужно указать расстояние от первой цели`);
+  }
   return {
     factsSource: draft.factsSource,
     boardRevision: draft.boardRevision,
@@ -144,6 +156,8 @@ function factsFor(
     distanceFt: draft.distanceFt,
     lineOfSight: draft.lineOfSight,
     cover: draft.cover,
+    ...(draft.distanceToFirstTargetFt !== undefined
+      ? {distanceToFirstTargetFt: draft.distanceToFirstTargetFt} : {}),
     ...(policy.requiresWilling ? { willing: draft.willing } : {}),
   };
 }
@@ -157,12 +171,13 @@ export function buildSheetCombatDeclaration(input: {
   action: RuleActionDefinition;
   base: SheetCanonicalCommandInput;
   targets: readonly SheetCombatTargetFactDraft[];
+  actorLevel?: number;
   /** Magic Missile only: target id -> number of darts. */
   dartAllocation?: Readonly<Record<string, number>>;
 }): SheetCanonicalCommandInput {
   const castLevel = input.base.spell?.castLevel
     ?? (input.action.kind === 'spell' ? input.action.spell.level : undefined);
-  const policy = sheetCombatDeclarationPolicy(input.action, castLevel);
+  const policy = sheetCombatDeclarationPolicy(input.action, castLevel, input.actorLevel);
   const weaponDeclaration = policy.primitiveType === WEAPON_ATTACK_PRIMITIVE
     || policy.primitiveType === LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE;
   if (weaponDeclaration && (
@@ -175,14 +190,24 @@ export function buildSheetCombatDeclaration(input: {
     throw new Error('Оружейное действие принимает только цель и явно наблюдаемые факты');
   }
   const targetIds = input.targets.map((target) => target.targetId);
-  if (new Set(targetIds).size !== targetIds.length) throw new Error('Цели не должны повторяться');
+  if (!policy.allowRepeatTargets && new Set(targetIds).size !== targetIds.length) throw new Error('Цели не должны повторяться');
   if (targetIds.length < policy.minTargets || targetIds.length > policy.maxTargets) {
     throw new Error(`Механика допускает ${policy.minTargets}–${policy.maxTargets} целей`);
   }
-  const factsByTarget = Object.fromEntries(input.targets.map((target) => [
-    target.targetId,
-    factsFor(target, policy),
-  ]));
+  for (const target of input.targets.slice(1)) {
+    if (policy.additionalTargetsWithinFtOfFirst !== undefined
+      && (target.distanceToFirstTargetFt === undefined
+        || target.distanceToFirstTargetFt > policy.additionalTargetsWithinFtOfFirst)) {
+      throw new Error(`Дополнительная цель должна быть в пределах ${policy.additionalTargetsWithinFtOfFirst} фт. от первой`);
+    }
+  }
+  const factsByTarget:Record<string,SpatialFacts>={};
+  for(const target of input.targets){
+    const facts=factsFor(target,policy),previous=factsByTarget[target.targetId];
+    if(previous && JSON.stringify(previous)!==JSON.stringify(facts))
+      throw new Error(`Для повторной цели ${target.targetId} факты должны совпадать`);
+    factsByTarget[target.targetId]=facts;
+  }
   const choices = { ...(input.base.choices ?? {}) };
   if (policy.primitiveType === 'magic_missile') {
     const allocation = input.dartAllocation ?? {};

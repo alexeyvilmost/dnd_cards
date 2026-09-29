@@ -12,7 +12,7 @@ import {
   type AbilityBonuses, type AbilityGenMethod, type AbilityKey, type CharacterDraft,
 } from './types';
 import type { Action, Feat, FeatCategory, Spell } from '../types';
-import { actionsApi } from '../api/client';
+import { actionsApi,spellsApi } from '../api/client';
 import { abilityMod } from './derive';
 import {
   POINT_BUY_BUDGET, POINT_BUY_MAX, POINT_BUY_MIN,
@@ -174,6 +174,19 @@ export function ChoiceResolver({
     return actionGrant ? [[item.id, actionGrant.value]] : [];
   }));
   const [actionPreviews, setActionPreviews] = useState<Record<string, Action>>({});
+  const spellReferences=JSON.stringify((choice.items??[]).flatMap(item=>{
+    const grant=item.grants?.find(grant=>grant.kind==='grant_spell'&&typeof grant.value==='string');
+    return grant?[[item.id,grant.value]]:[];
+  }));
+  const [spellPreviews,setSpellPreviews]=useState<Record<string,Spell>>({});
+  useEffect(()=>{
+    let stale=false;
+    const references=JSON.parse(spellReferences) as [string,string][];
+    if(!references.length)return;
+    Promise.all(references.map(async([id,ref])=>{try{return [id,await spellsApi.getSpell(ref)] as const;}catch{return null;}}))
+      .then(rows=>{if(!stale)setSpellPreviews(Object.fromEntries(rows.filter(row=>row!==null)));});
+    return ()=>{stale=true;};
+  },[spellReferences]);
   const [masteryOpen, setMasteryOpen] = useState(false);
   useEffect(() => {
     let stale = false;
@@ -223,16 +236,25 @@ export function ChoiceResolver({
         {value.length > 0 && <p>{options.filter(option=>value.includes(option.id)).map(option=>option.label).join(' · ')}</p>}
         {masteryOpen && <SheetWeaponMasteryDialog choices={[choice]} resolved={{[choice.id]:value}}
           unavailableOptions={unavailableOptions} initialShowAll onChange={(_id,next)=>onChange(next)} onClose={()=>setMasteryOpen(false)}/>}
-      </> : choice.items?.some(item=>item.previewSpell) ? (
+      </> : spellReferences!=='[]'||choice.items?.some(item=>item.previewSpell) ? (
         <div className={entityDisplay.spells === 'icon' ? 'cs-action-tiles choice-spell-entities' : 'choice-spell-entities'}>
           {options.map(option => {
-            const spell = choice.items?.find(item => item.id === option.id)?.previewSpell;
+            const spell = choice.items?.find(item => item.id === option.id)?.previewSpell??spellPreviews[option.id];
             return <SheetActionLine key={option.id} name={option.label} imageUrl={spell?.image_url}
               variant={entityDisplay.spells} spellRef={spell} level={spell?.level}
-              selected={value.includes(option.id)} sourceLabel={value.includes(option.id) ? 'Подготовлено' : 'Доступно для подготовки'}
-              detail={value.includes(option.id) ? 'Подготовлено' : spell ? `${spell.level} ур.` : undefined}
+              selected={value.includes(option.id)} sourceLabel={value.includes(option.id) ? 'Выбрано' : choice.prompt}
+              detail={value.includes(option.id) ? 'Выбрано' : spell ? `${spell.level} ур.` : undefined}
               disabled={!!unavailableOptions[option.id] && !value.includes(option.id)} disabledTitle={unavailableOptions[option.id]}
               onActivate={() => toggle(option.id)}/>;
+          })}
+        </div>
+      ) : choice.items?.some(item=>item.previewAction) ? (
+        <div className={entityDisplay.actions === 'icon' ? 'cs-action-tiles choice-entity-options' : 'choice-entity-options'}>
+          {options.map(option=>{
+            const action=choice.items?.find(item=>item.id===option.id)?.previewAction;
+            return <SheetActionLine key={option.id} name={option.label} imageUrl={action?.image_url} variant={entityDisplay.actions}
+              selected={value.includes(option.id)} disabled={!!unavailableOptions[option.id]&&!value.includes(option.id)}
+              disabledTitle={unavailableOptions[option.id]} onActivate={()=>toggle(option.id)} actionRef={action}/>;
           })}
         </div>
       ) : choice.items?.some(item=>item.previewCard) ? (

@@ -533,6 +533,7 @@ function engineEvents(
       }
       return [{ type: 'narrative', text: `${action.name}: создан объект «${mutation.object.name}»` }];
     }
+    if(mutation.type==='WorldObjectsPatched')return [{type:'narrative',text:`${action.name}: изменены объекты ${mutation.patches.map(row=>world?.objects[row.objectId]?.name??row.objectId).join(', ')}`}];
     const object = world?.objects[mutation.objectId];
     const name = object?.name ?? createdObjectNames.get(mutation.objectId);
     if (mutation.type === 'WorldObjectRemoved') {

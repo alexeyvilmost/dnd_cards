@@ -216,8 +216,20 @@ export function familiarActorStateIssue(input: {
     owner,
     summoningActionId: metadata.summoningActionId,
   });
+  // Combat history is an event-owned observation appended during the fight,
+  // not a stat from the pinned familiar form. Keep every other character
+  // property under the exact catalog comparison.
+  const { combatHistory, ...staticCharacter } = actor.character;
+  const { combatHistory: _expectedHistory, ...expectedCharacter } = expected.character;
+  if (!same(staticCharacter, expectedCharacter)) return 'Familiar actor has forged character';
+  if (combatHistory !== undefined && (!combatHistory
+    || Object.keys(combatHistory).sort().join(',') !== 'damageDealt,turnEnded'
+    || !Number.isSafeInteger(combatHistory.damageDealt) || combatHistory.damageDealt < 0
+    || !Number.isSafeInteger(combatHistory.turnEnded) || combatHistory.turnEnded < 0)) {
+    return 'Familiar actor has invalid combat history';
+  }
   for (const key of [
-    'name', 'kind', 'controllerId', 'ac', 'capabilities', 'character',
+    'name', 'kind', 'controllerId', 'ac', 'capabilities',
     'passives', 'attackProfile', 'familiarMetadata',
   ] as const) {
     if (!same(actor[key], expected[key])) return `Familiar actor has forged ${key}`;

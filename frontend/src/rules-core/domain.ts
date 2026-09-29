@@ -1,3 +1,4 @@
+import {inherentWeaponBondObjects} from './itemWeaponLifecycle';
 import type {
   CharacterContext,
   TriggeringAttackContext,
@@ -90,6 +91,7 @@ export interface ActorState {
   /** Compiled, actor-owned capabilities. Commands fail closed outside this set. */
   capabilities: {
     actionIds: string[];
+    featureItemSources?: Record<string,string[]>;
     /** Capability id -> immutable content entities proving the grant. */
     featureSources?: Record<string, readonly [string, ...string[]]>;
   };
@@ -147,6 +149,9 @@ export interface ActorState {
       | { type: 'rounds'; expiresAfterRound: number };
     createdAtWorldRevision: number;
   };
+  /** A virtual initiative participant supplied by an equipped item. Its
+   * declared attack executes with the owner's live weapon and runtime. */
+  itemTurn?: {ownerActorId:string;itemCardId:string;actionId:string};
   /**
    * Compiled Attack-action facts.  It is optional only at the TypeScript edge
    * while schema <=3 snapshots are being upgraded; createWorld/migration always
@@ -179,6 +184,7 @@ export interface AttackActionState {
   declaredActionSourceEntityIds?: [string, ...string[]];
   /** A persisted decision/reaction pauses, but does not erase, the sequence. */
   blockedByResolutionId?: string;
+  costPolicyIds?: string[];
 }
 
 export interface GrappleState {
@@ -209,6 +215,7 @@ export interface EncounterScene {
 export type SceneState = ExplorationScene | EncounterScene;
 
 export interface WorldState {
+  combatHistorySequence?: number;
   schemaVersion: 5;
   id: string;
   ruleset: RulesetReference;
@@ -220,11 +227,29 @@ export interface WorldState {
   scene: SceneState;
   processedCommandIds: string[];
   pendingResolution: PendingResolution | null;
+  /** Ordered attack slots committed by a single declaration and spell payment. */
+  attackVolley?: PendingAttackVolley | null;
+  /** Ordered, committed after-event opportunities; never reconstructed from live rolls. */
+  eventReactions?: QueuedEventReaction[];
+  areaConsequences?: QueuedAreaConsequence[];
   concentrations: Record<string, ConcentrationState>;
   /** Durable Attack-action budget ledger; closed rows remain replay-auditable. */
   attackActions: Record<string, AttackActionState>;
   /** Active grapple relations.  This relation, not a generic condition, is authoritative. */
   grapples: Record<string, GrappleState>;
+}
+
+export interface PendingAttackVolley {
+  id: string;
+  actorId: string;
+  action: RuleActionDefinition;
+  /** Duplicate IDs represent distinct attack rolls against one creature. */
+  targetIds: string[];
+  factsByTarget: Record<string, SpatialFacts>;
+  nextSlotIndex: number;
+  choices?: Record<string, string | string[]>;
+  spell?: SpellCastContext & {castLevel: number};
+  protectionCandidatesByTarget?: Record<string, ProtectionReactionCandidateFacts[]>;
 }
 
 export interface ConcentrationEffectLink {
@@ -247,6 +272,9 @@ export type Relation = 'self' | 'ally' | 'enemy' | 'neutral';
  * проверяемые факты конкретной ревизии, а не координаты и не доверенный UI patch.
  */
 export interface SpatialFacts {
+  /** Board-observed pairwise distance from this slot to the first selected target. */
+  distanceToFirstTargetFt?: number;
+  attackFromBehind?:boolean;
   damageObservers?: Array<{ actorId: string; distanceFt: number; canSeeTarget: boolean }>;
   positionExchangeValidated?: true;
   telekineticMovementValidated?: true;
@@ -279,6 +307,15 @@ export interface SpatialFacts {
    * creature. Absence is deliberately not treated as consent.
    */
   willing?: boolean;
+  teleportDestinationValidated?: boolean;
+  destinationIllumination?: 'bright'|'dim'|'dark';
+  destinationVisible?: boolean;
+  destinationDistanceFt?: number;
+  deadForDays?: number;
+  deathByOldAge?: boolean;
+  targetIsUndead?: boolean;
+  soulFree?: boolean;
+  soulWilling?: boolean;
   /**
    * Board/GM assertion used by rules such as Sneak Attack. The rules core still
    * derives weapon qualification and roll advantage itself.
@@ -333,6 +370,15 @@ export interface InitiativeSwapFacts extends ObservableFactProvenance {
 export interface ActionTargeting {
   minTargets: number;
   maxTargets: number;
+  /** Ordered target slots may name the same actor more than once. Each slot is
+   * a separate effect/attack occurrence, not another creature. */
+  allowRepeatTargets?: true;
+  /** Extra ordered slots gained for each spell level above its base level. */
+  additionalTargetSlotsPerSpellSlotAboveBase?: number;
+  /** Exact ordered slot count at character-level thresholds, beginning at 1. */
+  targetSlotsByCharacterLevel?: Record<string, number>;
+  /** Each slot after the first must be this close to the first selected actor. */
+  additionalTargetsWithinFtOfFirst?: number;
   rangeFt: number;
   requiresLineOfSight: boolean;
   /** Content-owned "a target you can see" requirement. This is distinct from
@@ -344,6 +390,8 @@ export interface ActionTargeting {
   /** Catalog-owned legality requirements, never client-declared outcomes. */
   requiresWilling?: boolean;
   requiresUnarmored?: boolean;
+  /** At least one current target condition must match this content-owned set. */
+  requiresTargetConditionsAny?: readonly string[];
   /** Exact content declaration used by delivery/origin-changing rules. */
   requiresTouch?: true;
   /** Stonecunning: actor must stand on or touch natural/worked stone. */
@@ -364,13 +412,13 @@ interface RuleActionDefinitionBase {
   concentration?: boolean;
   /**
    * Catalog-owned declaration that this action can replace one attack inside
-   * the Attack action. `totalAttacks` is compiled for the actor/root release;
+   * the Attack action. `actor` uses the authoritative current Attack budget;
    * clients cannot increase the sequence budget in a command.
    */
   attackReplacement?: {
     replacementKey: string;
     replacesAttacks: 1;
-    totalAttacks: number;
+    totalAttacks: number | 'actor';
     oncePerAttackAction: boolean;
   };
   /** Catalog-owned policy resolved only at the declared rest boundary. */
@@ -395,6 +443,7 @@ export type RuleActionDefinition =
       ritual?: boolean;
       /** Immutable class spell-list identities copied from the spell entity. */
       classListIds?: readonly string[];
+      entityId?: string;
       /** Canonical V/S/M flags copied from the immutable spell entity. */
       components?: SpellComponents;
     };
@@ -405,6 +454,8 @@ interface RuleHazardDefinitionBase {
   id: string;
   name: string;
   sourceKind: 'environment' | 'system';
+  /** Immutable catalog-owned actor origin for an aura or other owned hazard. */
+  sourceActorId?: string;
   sourceEntityIds: readonly [string, ...string[]];
   /** Catalog effects referenced by grant_effect consequences. The source actor
    * snapshots these so a monster target never needs to own the item/spell. */
@@ -426,9 +477,36 @@ export interface RuleSavingHazardDefinition extends RuleHazardDefinitionBase {
 export interface RuleAutomaticHazardDefinition extends RuleHazardDefinitionBase {
   resolution: 'automatic';
   effects: JsonObject[];
+  damageSourceKind?: 'item' | 'spell' | 'ability';
 }
 
 export type RuleHazardDefinition = RuleSavingHazardDefinition | RuleAutomaticHazardDefinition;
+
+export interface SlotRecoveryDecisionRequest {
+  id:string;type:'slot_recovery';actorId:string;budget:number;recoverableByLevel:Record<number,number>;
+}
+export interface PendingSlotRecoveryResolution {
+  id:string;type:'slot_recovery';openedByCommandId:string;openedAtRevision:number;deadlineLogicalClock:number;
+  actorId:string;continuation:UseActionCommand;request:SlotRecoveryDecisionRequest;
+}
+
+export interface ActionCostPolicyDecisionRequest {
+  id: string;
+  type: 'action_cost_policy';
+  actorId: string;
+  options: Array<{policyId:string;label:string;sourceEntity?:{type:'card'|'effect';id:string}}>;
+}
+
+export interface PendingActionCostPolicyResolution {
+  id:string;
+  type:'action_cost_policy';
+  openedByCommandId:string;
+  openedAtRevision:number;
+  deadlineLogicalClock:number;
+  actorId:string;
+  continuation:UseActionCommand|BeginAttackActionCommand|AttemptHideCommand;
+  request:ActionCostPolicyDecisionRequest;
+}
 
 export interface SavingThrowDecisionRequest {
   id: string;
@@ -453,6 +531,7 @@ export interface ReactionDecisionRequest {
   type: 'reaction';
   actorId: string;
   trigger:
+    | {type:'event';sourceActorId:string;eventKind:string}
     | {
       type: 'hit_by_attack' | 'attack_missed';
       sourceActorId: string;
@@ -494,7 +573,8 @@ export interface ReactionDecisionRequest {
 export interface ReactionSpellSourceOption {
   grantId: string;
   sourceId: string;
-  spellcastingAbility: Ability;
+  spellcastingAbility?: Ability;
+  fixedSpellcastingModifier?: number;
   payment: { kind: 'none' | 'free_use' | 'slot'; resource?: string };
 }
 
@@ -583,6 +663,12 @@ export interface PendingAttackReactionResolution {
 }
 
 export interface PendingDamageReactionResolution {
+  transferReactorIds?: string[];
+  targetSaveContinuation?: {
+    pending: PendingTargetSaveResolution;
+    saveRoll: RollLog;
+    sharedDamageRolls: Array<{sides:number;value:number}>;
+  };
   remainingReactorIds?: string[];
   id: string;
   type: 'damage_reaction';
@@ -741,7 +827,8 @@ export interface PendingConcentrationSaveResolution {
   actorId: string;
   concentrationId: string;
   damage: number;
-  request: SavingThrowDecisionRequest;
+  request: SavingThrowDecisionRequest | ReactionDecisionRequest;
+  heldSave?: { roll: RollLog; dc: number };
   followUps?: PendingResolutionFollowUp[];
 }
 
@@ -813,6 +900,7 @@ export interface PendingCheckBoostResolution {
     | {type: 'hide'} | {type: 'study'; objectId: string}
     | {
       type: 'action_ability_check';
+      worldInput?:ActionWorldInput;
       actionId: string;
       effectIndex: number;
       targetActorId?: string;
@@ -822,7 +910,33 @@ export interface PendingCheckBoostResolution {
     };
   request: ReactionDecisionRequest;
 }
+export interface QueuedEventReaction {
+  id:string;
+  actorId:string;
+  targetActorId?:string;
+  event:{kind:string;timing?:'before'|'during'|'after'|'replaces';source?:string;target?:string;data?:Record<string,unknown>};
+  facts?:SpatialFacts;
+  actionIds:string[];
+}
+export interface QueuedAreaConsequence {
+  id:string;
+  effect:Extract<EngineEvent,{type:'area_damage'|'area_healing'|'area_effect'}>;
+  targetActorId:string;
+  facts?:SpatialFacts;
+}
+export interface PendingEventReactionResolution {
+  id:string;
+  type:'event_reaction';
+  openedByCommandId:string;
+  openedAtRevision:number;
+  deadlineLogicalClock:number;
+  opportunity:QueuedEventReaction;
+  request:ReactionDecisionRequest;
+}
 export type PendingResolution =
+  | PendingEventReactionResolution
+  | PendingActionCostPolicyResolution
+  | PendingSlotRecoveryResolution
   | PendingCheckBoostResolution
   | PendingTargetSaveResolution
   | PendingAttackReactionResolution
@@ -858,6 +972,11 @@ export interface StartEncounterCommand extends CommandBase {
   initiative: string[];
 }
 
+export interface ChangeEquipmentCommand extends CommandBase {
+  type:'ChangeEquipment';
+  operation:{equip:string}|{unequip:string};
+}
+
 export interface StartTurnCommand extends CommandBase {
   type: 'StartTurn';
   /** Optional data-owned start-of-turn capability choices; omission declines them. */
@@ -869,6 +988,7 @@ export interface EndTurnCommand extends CommandBase {
 }
 
 export type ActionWorldInput =
+  | {type:'item_tool';objectId:string;containedObjectId?:string;description:string;facts:WorldObjectFacts}
   | { type: 'target_object'; objectId: string; facts: WorldObjectFacts }
   | { type: 'area_objects'; factsByObject: Record<string, WorldObjectFacts> }
   | {
@@ -935,10 +1055,15 @@ export interface FamiliarObservableFacts {
 export interface ProtectionAttackWindowInput {
   /** One authoritative geometry/visibility observation per Protection owner in the world. */
   protectionCandidates?: ProtectionReactionCandidateFacts[];
+  /** Per-slot observations for attacks whose ordered target slots differ. */
+  protectionCandidatesByTarget?: Record<string, ProtectionReactionCandidateFacts[]>;
 }
 
 export interface UseActionCommand extends CommandBase, ProtectionAttackWindowInput {
   type: 'UseAction';
+  /** A persisted, validated selection; null explicitly keeps the standard payment. */
+  selectedCostPolicyId?: string | null;
+  selectedSlotRecovery?: number[];
   actionId: string;
   targetIds: string[];
   factsByTarget?: Record<string, SpatialFacts>;
@@ -1000,6 +1125,9 @@ export interface UseAttackReplacementCommand extends CommandBase {
 /** Ruleset-owned Attack action.  The client cannot provide its attack count. */
 export interface BeginAttackActionCommand extends CommandBase {
   type: 'BeginAttackAction';
+  selectedCostPolicyId?: string | null;
+  /** The first entry survives the optional cost decision without a second UI declaration. */
+  afterBegin?: Omit<PerformWeaponAttackCommand,'schemaVersion'|'expectedRevision'|'rulesetContentHash'|'commandId'|'actorId'|'attackActionId'> | Omit<PerformUnarmedStrikeCommand,'schemaVersion'|'expectedRevision'|'rulesetContentHash'|'commandId'|'actorId'|'attackActionId'>;
   /** Optional for legacy/system callers; required by the real-sheet weapon bridge. */
   declaredActionId?: string;
 }
@@ -1105,6 +1233,7 @@ export interface AbilityCheckCommand extends CommandBase {
 
 export interface AttemptHideCommand extends CommandBase {
   type: 'AttemptHide';
+  selectedCostPolicyId?: string | null;
   /** Owned catalog declaration for an alternate action cost; outcomes stay canonical. */
   actionId?: string;
   eligibility: HideEligibilityFacts;
@@ -1310,12 +1439,17 @@ export type DecisionRoll =
   | { mode: 'manual'; dice: Array<{ sides: number; value: number }> };
 
 export type DecisionResponse =
+  | {kind:'action_cost_policy';policyId:string|null}
+  | {kind:'slot_recovery';slotLevels:number[]|null}
   | { kind: 'roll'; roll: DecisionRoll; selectedAbility?: Ability; boonEffectId?: string }
   | { kind: 'voluntary_fail'; selectedAbility?: Ability }
   | { kind: 'shove_outcome'; outcome: ShoveOutcome }
   | {
     kind: 'reaction';
     actionId: string | null;
+    /** Board-selected destination for a reaction that moves its triggering target. */
+    teleportDestination?: {x:number;y:number};
+    teleportDestinationFacts?: SpatialFacts;
     /** Source selection is required when the action has several owned grants. */
     spell?: {
       grantId?: string;
@@ -1340,6 +1474,7 @@ export interface ArmBoonCommand extends CommandBase {
 }
 
 export type GameCommand =
+  | ChangeEquipmentCommand
   | (CommandBase & {type:'DeathSavingThrow'})
   | StartEncounterCommand
   | StartTurnCommand
@@ -1395,6 +1530,9 @@ export interface ActorRuntimePatch {
   firedThisTurn?: string[] | null;
   firedThisRest?: string[] | null;
   firedByPeriod?: Record<string, string[]> | null;
+  eventOccurrences?: RuntimeState['eventOccurrences'] | null;
+  encounterActive?: boolean;
+  turnMovementFt?: number | null;
 }
 
 export interface ActorRuntimePatchedEvent {
@@ -1402,6 +1540,13 @@ export interface ActorRuntimePatchedEvent {
   actorId: string;
   patch: ActorRuntimePatch;
   reason: 'start_turn' | 'end_turn' | 'action' | 'ability_check' | 'hazard' | 'short_rest' | 'long_rest' | 'boon';
+}
+export interface ActorPlaneChangedEvent {
+  type:'ActorPlaneChanged';
+  actorId:string;
+  planeId:string;
+  sourceObjectId:string;
+  exitDistanceFt?:number;
 }
 
 /**
@@ -1456,6 +1601,7 @@ export interface ActionDeclaredEvent {
     grantId?: string;
     sourceId?: string;
     spellcastingAbility?: Ability;
+    fixedSpellcastingModifier?: number;
     mode?: SpellCastMode;
     payment?: { kind: 'none' | 'free_use' | 'slot'; resource?: string };
     /** Ritual casting adds exactly ten minutes and spends no slot. */
@@ -1479,6 +1625,11 @@ export interface CommandCommittedEvent {
 export interface ResolutionOpenedEvent {
   type: 'ResolutionOpened';
   resolution: PendingResolution;
+}
+
+export interface AttackVolleyChangedEvent {
+  type: 'AttackVolleyChanged';
+  volley: PendingAttackVolley | null;
 }
 
 export interface ResolutionClosedEvent {
@@ -1622,14 +1773,21 @@ export interface ProtectionEffectEndedEvent {
 }
 
 export type RuleEventPayload =
+  | {type:'ActorEquipmentProjectionChanged';actorId:string;passives:Record<string,unknown>[];equippedCards:Card[]}
+  | {type:'ActorMagicProjectionChanged';actorId:string;suppressed:boolean;passives:Record<string,unknown>[];effects:RuntimeState['activeEffects'];knownCards?:Card[];equippedCards?:Card[]}
+  | {type:'AreaConsequenceQueueChanged';queue:QueuedAreaConsequence[]}
+  | {type:'EventReactionQueueChanged';queue:QueuedEventReaction[]}
+  | {type:'ActorRevived';actorId:string;sourceEntityId:string;provenance:'canonical_actor_lifecycle'}
   | {type: 'ActorItemContentRecorded'; actorId: string; card: Card}
   | ActorRuntimePatchedEvent
+  | ActorPlaneChangedEvent
   | ActorDeathAdjudicatedEvent
   | EquipmentChangedEvent
   | SceneSetEvent
   | ActionDeclaredEvent
   | EngineEventRecordedEvent
   | ResolutionOpenedEvent
+  | AttackVolleyChangedEvent
   | DecisionRecordedEvent
   | AttackActionStartedEvent
   | AttackEntryCommittedEvent
@@ -1762,6 +1920,7 @@ export function createWorld(input: {
   if (Object.keys(objects).length !== objectList.length) {
     throw new Error('World object IDs must be unique');
   }
+  for(const object of inherentWeaponBondObjects(actors,objects))objects[object.id]=object;
   return {
     schemaVersion: 5,
     id: input.id,

@@ -5,7 +5,7 @@ import { runCampTargetIssue, sheetTargetBelongsToScope } from '../character/shee
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { charactersV3Api, type CharacterEventRow } from '../character/api';
-import { cardsApi, effectsApi } from '../api/client';
+import { actionsApi, cardsApi, effectsApi, spellsApi } from '../api/client';
 import type { AssembledCharacter } from '../character/assemble';
 import {
   actionInteractsWithTarget,
@@ -19,6 +19,8 @@ import {
 import { useGrantedActions } from '../character/grantedActions';
 import { useBasicActions } from '../character/basicActions';
 import { collectItemMechanics, readAttunedIds } from '../character/attunement';
+import {bindWorldItemAction} from '../rules-core/worldItemActions';
+import {bindItemLightFuel} from '../rules-core/itemLight';
 import { collectPassiveMechanics } from '../character/resourceInit';
 import {
   buildCharacterContext,
@@ -60,7 +62,7 @@ import { useToast } from '../contexts/ToastContext';
 import { collectInPlayActionChoices } from '../mechanics/collectChoices';
 import { findResource, useResourceOptions } from '../utils/resources';
 import { useSiteSettings } from '../settings';
-import { getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, type Card } from '../types';
+import { getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, type Action, type Card, type Spell } from '../types';
 import { isSpellActionPrepared } from '../rules-core/spellcastingAccess';
 import { collectSheetSpellCastOptions, type SheetSpellCastOption } from '../character/sheetSpellCastingUi';
 import type { EngineEvent, ExecuteContext, ReactionOffer, RollLog, RuntimeState, TargetContext } from '../mvp/contracts';
@@ -907,8 +909,9 @@ export default function SheetActionsPanel({
       passives,
       // Настройка на предметы: ненастроенный магический предмет даёт только чистые статы.
       attunedIds: readAttunedIds(character.turn_state),
+      knownCards: [...equipCards.values()],
     }),
-    [ruleState, character, equippedCards, assembled.klass, passives],
+    [ruleState, character, equippedCards, equipCards, assembled.klass, passives],
   );
 
   const itemMechs = useMemo(
@@ -1041,6 +1044,33 @@ export default function SheetActionsPanel({
     return { actions: projected, issues };
   }, [collectedActions, runtime.equipment, equipCards, passives, ctx.variables, ctx.abilityMods]);
   const allActions = contextualCostProjection.actions;
+  const spellVariantIds = [...new Set(allActions.flatMap((candidate) => {
+    const ids = candidate.mechanics.spell_variant_ids;
+    return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string') : [];
+  }))].sort();
+  const actionVariantIds = [...new Set(allActions.flatMap((candidate) => {
+    const ids = candidate.mechanics.action_variant_ids;
+    return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string') : [];
+  }))].sort();
+  const [spellVariantsById, setSpellVariantsById] = useState<Record<string, Spell>>({});
+  const [actionVariantsById, setActionVariantsById] = useState<Record<string, Action>>({});
+  const [variantLoadError, setVariantLoadError] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    const missingSpells = spellVariantIds.filter((id) => !spellVariantsById[id]);
+    const missingActions = actionVariantIds.filter((id) => !actionVariantsById[id]);
+    if (!missingSpells.length && !missingActions.length) return;
+    void Promise.all([
+      Promise.all(missingSpells.map((id) => spellsApi.getSpell(id))),
+      Promise.all(missingActions.map((id) => actionsApi.getAction(id))),
+    ]).then(([spells, actions]) => {
+      if (!active) return;
+      setSpellVariantsById((current) => ({ ...current, ...Object.fromEntries(spells.map((spell) => [spell.id, spell])) }));
+      setActionVariantsById((current) => ({ ...current, ...Object.fromEntries(actions.map((action) => [action.id, action])) }));
+      setVariantLoadError(null);
+    }).catch((cause) => { if (active) setVariantLoadError(cause instanceof Error ? cause.message : String(cause)); });
+    return () => { active = false; };
+  }, [spellVariantIds.join('|'), actionVariantIds.join('|'), spellVariantsById, actionVariantsById]);
 
   // Триггерные способности-СЛУШАТЕЛИ (interrupt): mode reaction/triggered + activation.trigger.event
   // (Божественная кара при попадании, особенности Голиафа). Отдаём движку как ctx.triggers; из
@@ -1113,6 +1143,9 @@ export default function SheetActionsPanel({
   }, [grantEffectSlugs.join('|')]);
 
   const canonicalBuild = useMemo(() => {
+    if (variantLoadError) return { runtime: null, error: new Error(`Не удалось загрузить варианты: ${variantLoadError}`) };
+    if (spellVariantIds.some((id) => !spellVariantsById[id]) || actionVariantIds.some((id) => !actionVariantsById[id]))
+      return { runtime: null, error: new Error('Варианты заклинаний и действий загружаются') };
     const needsCanonical = allActions.some((candidate) => (
       sheetActionNeedsCanonicalAvailability(candidate)
     )) || assembled.effects.some(({ effect }) => (
@@ -1134,6 +1167,8 @@ export default function SheetActionsPanel({
           assembled,
           ruleState,
           sheetActions: canonicalSheetActions,
+          spellVariants: spellVariantIds.map((id) => spellVariantsById[id]),
+          actionVariants: actionVariantIds.map((id) => actionVariantsById[id]),
           runtime,
           characterContext: ctx,
           passives,
@@ -1155,6 +1190,11 @@ export default function SheetActionsPanel({
     }
   }, [
     allActions,
+    spellVariantIds.join('|'),
+    actionVariantIds.join('|'),
+    spellVariantsById,
+    actionVariantsById,
+    variantLoadError,
     canonicalSheetActions,
     assembled,
     character,
@@ -1868,6 +1908,7 @@ export default function SheetActionsPanel({
         title: `${action.name}: цели и факты`,
         action: canonical.action,
         castLevel: base.spell?.castLevel,
+        actorLevel: character.level,
         candidates: targetCandidates,
         requireTarget: true,
       });
@@ -1902,6 +1943,7 @@ export default function SheetActionsPanel({
       const declaration = buildSheetCombatDeclaration({
         action: canonical.action,
         base,
+        actorLevel: character.level,
         targets: declarationFacts.targets,
         dartAllocation: declarationFacts.dartAllocation,
       });
@@ -1940,7 +1982,65 @@ export default function SheetActionsPanel({
     if(campParty.length<2)return false;
     try{return canonicalBuild.runtime?.actionFor(action).targeting?.allowedRelations.includes('ally')===true;}catch{return false;}
   };
-  const runAction = async (action: SheetAction) => {
+  const runAction = async (requestedAction: SheetAction) => {
+    try {
+      let action = requestedAction;
+      let selectedSpellOption: SheetSpellCastOption | undefined;
+      if (action.spellRef) {
+        const canonical = canonicalFor(action);
+        if (!canonical) throw new Error('Заклинание ещё загружается');
+        const options = collectSheetSpellCastOptions({ runtime: canonical.runtime, action: canonical.action });
+        if (!options.length) throw new Error('Нет доступного способа сотворить заклинание');
+        if (options.length === 1) selectedSpellOption = options[0];
+        else {
+          const picked = await choiceDialog.request([{
+            id: 'sheet_spell_cast_level', prompt: 'Выберите уровень и способ сотворения', count: 1,
+            source: 'explicit', context: 'in_play',
+            origin: { kind: 'other', id: action.id, name: action.name },
+            items: options.map((option) => ({ id: option.id, name: `${option.declaration.castLevel ?? action.spellRef!.level}-й уровень · ${option.label}` })),
+          }], action.name);
+          if (!picked) return;
+          selectedSpellOption = options.find((option) => option.id === picked.sheet_spell_cast_level?.[0]);
+          if (!selectedSpellOption) throw new Error('Выбранный способ сотворения больше недоступен');
+        }
+      }
+      const spellIds = action.mechanics.spell_variant_ids;
+      const actionIds = action.mechanics.action_variant_ids;
+      const variantIds = Array.isArray(spellIds) ? spellIds : Array.isArray(actionIds) ? actionIds : [];
+      if (variantIds.length) {
+        if (variantIds.some((id) => typeof id !== 'string')) throw new Error('Некорректный список вариантов');
+        const spellVariants = Array.isArray(spellIds);
+        const entries = variantIds.map((id) => spellVariants ? spellVariantsById[id as string] : actionVariantsById[id as string]);
+        if (entries.some((entry) => !entry)) throw new Error('Варианты ещё загружаются');
+        const picked = await choiceDialog.request([{
+          id: 'sheet_action_variant', prompt: spellVariants ? 'Выберите вариант заклинания' : 'Выберите вариант действия', count: 1,
+          source: 'explicit', context: 'in_play', origin: { kind: 'other', id: action.id, name: action.name },
+          items: entries.map((entry) => ({ id: entry!.id, name: entry!.name,
+            ...(spellVariants ? { previewSpell: entry as Spell } : { previewAction: entry as Action }),
+          })),
+        }], action.name);
+        if (!picked) return;
+        const selectedId = picked.sheet_action_variant?.[0];
+        const selected = entries.find((entry) => entry?.id === selectedId);
+        if (!selected) throw new Error('Выбранный вариант больше недоступен');
+        action = spellVariants ? {
+          ...action, id: selected.id, name: selected.name,
+          mechanics: (selected.mechanics ?? {}) as Record<string, unknown>,
+          canonicalMechanics: (selected.mechanics ?? {}) as Record<string, unknown>,
+          spellRef: selected as Spell, sourceEntityIds: [selected.id], imageUrl: selected.image_url,
+        } : {
+          ...action, id: selected.id, name: selected.name,
+          mechanics: (selected.mechanics ?? {}) as Record<string, unknown>,
+          canonicalMechanics: (selected.mechanics ?? {}) as Record<string, unknown>,
+          actionRef: selected as Action, sourceEntityIds: [selected.id], imageUrl: selected.image_url,
+        };
+      }
+      await runResolvedAction(action, selectedSpellOption);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  };
+  const runResolvedAction = async (action: SheetAction, selectedSpellOption?: SheetSpellCastOption) => {
     const campIssue = campActionAllowsAlly(action)?null:runCampTargetIssue(character.character_type,
       actionInteractsWithTarget(action.mechanics), sheetMechanicsAllowsSelfTarget(action.mechanics));
     if (campIssue) { setError(campIssue); return; }
@@ -1984,8 +2084,8 @@ export default function SheetActionsPanel({
         } else if (definition.kind === 'spell') {
           const options = collectSheetSpellCastOptions({ runtime: canonical, action: definition });
           if (!options.length) throw new Error('Нет доступного способа сотворить заклинание');
-          let option = options[0];
-          if (options.length > 1) {
+          let option = selectedSpellOption ?? options[0];
+          if (!selectedSpellOption && options.length > 1) {
             const picked = await choiceDialog.request([{ id: 'camp_spell_cast', prompt: 'Как сотворить заклинание?', count: 1,
               source: 'explicit', context: 'in_play', origin: { kind: 'other', id: definition.id, name: action.name },
               items: options.map((entry) => ({ id: entry.id, name: entry.declaration.mode === 'ritual' ? 'Ритуал'
@@ -2053,7 +2153,7 @@ export default function SheetActionsPanel({
     let cost = (activation?.cost as Record<string, unknown>[]) ?? [];
     let canonicalSpellOption: SheetSpellCastOption | undefined;
     if (action.spellRef && canonical) {
-      canonicalSpellOption = collectSheetSpellCastOptions({
+      canonicalSpellOption = selectedSpellOption ?? collectSheetSpellCastOptions({
         runtime: canonical.runtime,
         action: canonical.action,
       }).sort((left, right) => {
@@ -2087,7 +2187,7 @@ export default function SheetActionsPanel({
     const freeuse = freeuseFor(action);
     if (!authoritativePrimitive && cost.length && !payableWithUpcast(runtime, cost, !!freeuse)) return;
     // Оружейное действие без нужного оружия в руке — не запускаем.
-    if (!weaponActionAvailability(action.mechanics, runtime.equipment, equipCards).available) return;
+    if (!weaponActionAvailability(action.mechanics, runtime.equipment, equipCards,passives).available) return;
     const requiresActorTarget = canonical
       ? sheetActionRequiresActorTargets(canonical.action)
       : actionInteractsWithTarget(mech);
@@ -2122,10 +2222,12 @@ export default function SheetActionsPanel({
         setError('Каноническое заклинание не содержит targeting-контракт');
         return;
       }
-      const ordinaryInPlayChoices = collectInPlayActionChoices(
+      const allOrdinaryInPlayChoices = collectInPlayActionChoices(
         mech,
         { kind: 'other', id: 'action', name: action.name },
-      ).map((choice) => choice.source === 'equipped_weapon'
+      );
+      const targetEquipmentChoices = allOrdinaryInPlayChoices.filter((choice) => choice.source === 'target_equipped_weapon');
+      const ordinaryInPlayChoices = allOrdinaryInPlayChoices.filter((choice) => choice.source !== 'target_equipped_weapon').map((choice) => choice.source === 'equipped_weapon'
         ? {
             ...choice,
             items: equippedWeaponChoices(
@@ -2202,6 +2304,7 @@ export default function SheetActionsPanel({
           title: `${action.name}: цели и факты`,
           action: canonical.action,
           castLevel: canonicalSpellOption.declaration.castLevel,
+          actorLevel: character.level,
           candidates: targetCandidates,
           requireTarget: targeting.minTargets > 0,
         });
@@ -2209,6 +2312,7 @@ export default function SheetActionsPanel({
         declaration = buildSheetCombatDeclaration({
           action: canonical.action,
           base: baseDeclaration,
+          actorLevel: character.level,
           targets: declared.targets,
         });
         canonicalTargetId = declaration.targetIds[0];
@@ -2266,6 +2370,26 @@ export default function SheetActionsPanel({
             targetActors.push(participant.canonical.world.actors[participant.character.id]);
           }
         }
+        if (targetEquipmentChoices.length) {
+          const targetId = declaration.targetIds[0];
+          const targetRuntime = targetId === character.id ? canonical.runtime
+            : targetParticipants.find((participant) => participant.character.id === targetId)?.canonical;
+          const targetActor = targetRuntime?.world.actors[targetId];
+          if (!targetRuntime || !targetActor) throw new Error('Для выбора оружия нужен доступный лист цели');
+          const weaponChoices = targetEquipmentChoices.map((choice) => ({
+            ...choice,
+            items: equippedWeaponChoices(targetActor.character, targetActor.runtime.equipment,
+              Array.isArray(choice.filter) ? choice.filter : [])
+              .map((weapon) => ({ ...weapon,
+                previewCard: targetRuntime.cards.find((card) => card.id === weapon.id),
+              })),
+          }));
+          if (weaponChoices.some((choice) => !choice.items.length)) throw new Error('У цели нет подходящего экипированного оружия');
+          const picked = await choiceDialog.request(weaponChoices, action.name);
+          if (!picked) return;
+          for (const [id, selected] of Object.entries(picked)) if (selected.length) ordinaryChoices[id] = selected;
+          declaration = { ...declaration, choices: { ...declaration.choices, ...ordinaryChoices } };
+        }
         validateSheetCanonicalAction({
           canonical,
           state: runtime,
@@ -2298,6 +2422,7 @@ export default function SheetActionsPanel({
       const declaration = await combatTargetDialog.request({
         title: `${action.name}: цели и факты`,
         action: unarmedTargetAction,
+        actorLevel: character.level,
         candidates: [{
           id: TRAINING_DUMMY.id,
           name: TRAINING_DUMMY.name,
@@ -2817,6 +2942,10 @@ export default function SheetActionsPanel({
 
   // Доступность + причина недоступности: сперва экипировка (оружие в руке), затем ресурсы.
   const disabledInfo = (action: SheetAction): { disabled: boolean; reason?: string } => {
+    const canonical=canonicalBuild.runtime;
+    if(canonical)action=bindItemLightFuel(canonical.world,canonical.actorId,bindWorldItemAction(canonical.world,canonical.actorId,{
+      ...action,sourceEntityIds:[action.actionRef?.id??action.id],
+    }));
     const campIssue = campActionAllowsAlly(action)?null:runCampTargetIssue(character.character_type,
       actionInteractsWithTarget(action.mechanics), sheetMechanicsAllowsSelfTarget(action.mechanics));
     if (campIssue) return { disabled: true, reason: campIssue };
@@ -2831,7 +2960,7 @@ export default function SheetActionsPanel({
     if ((action.mechanics.activation as Record<string, unknown> | undefined)?.counts_as === 'hide') {
       return {disabled: true, reason: 'Засада требует данных карты: используйте панель боя'};
     }
-    const activeEffectIssue = activeEffectRequirementIssue(action.mechanics, runtime);
+    const activeEffectIssue = activeEffectRequirementIssue(action.mechanics, runtime, ctx);
     if (activeEffectIssue) return { disabled: true, reason: activeEffectIssue };
     if (action.spellRef && ctx.untrainedArmorCategories?.length) {
       return { disabled: true, reason: UNTRAINED_ARMOR_SPELL_REASON };
@@ -2908,7 +3037,7 @@ export default function SheetActionsPanel({
         };
       }
     }
-    const avail = weaponActionAvailability(action.mechanics, runtime.equipment, equipCards);
+    const avail = weaponActionAvailability(action.mechanics, runtime.equipment, equipCards,passives);
     if (!avail.available) return { disabled: true, reason: avail.reason };
     if (!primitive
       && !legacyUnarmedTargetAction(action)

@@ -9,6 +9,7 @@ import { collectModifiers } from './modifiers';
 import { rollD20 } from './roll';
 import type { FormulaContext } from './formula';
 import type { DeathSaveState, RollLog, RuntimeState } from '../mvp/contracts';
+import type { LifePolicy } from './lifePolicies';
 export type { DeathSaveState } from '../mvp/contracts';
 
 export type DeathSaveOutcome =
@@ -33,11 +34,13 @@ export function applyDeathSaveRoll(
   natural: number,
   total = natural,
   forcedOutcome?: RollLog['outcome'],
+  policy?: Pick<LifePolicy, 'failureLimit' | 'cannotDie' | 'reviveAtNatural'>,
 ): { next: DeathSaveState; outcome: DeathSaveOutcome } {
-  if (natural === 20) return { next: emptyDeathSaves(), outcome: 'revive' };
+  const failureLimit = policy?.failureLimit ?? 3;
+  if (natural >= (policy?.reviveAtNatural ?? 20)) return { next: emptyDeathSaves(), outcome: 'revive' };
   if (forcedOutcome === 'crit_miss' || (natural === 1 && forcedOutcome !== 'success' && forcedOutcome !== 'hit')) {
     const failures = Math.min(3, ds.failures + 2);
-    const dead = failures >= 3;
+    const dead = failures >= failureLimit && policy?.cannotDie !== true;
     return { next: { ...ds, failures, dead }, outcome: dead ? 'dead' : 'crit_fail' };
   }
   if (forcedOutcome === 'success' || forcedOutcome === 'hit'
@@ -47,7 +50,7 @@ export function applyDeathSaveRoll(
     return { next: { ...ds, successes, stable }, outcome: stable ? 'stable' : 'success' };
   }
   const failures = Math.min(3, ds.failures + 1);
-  const dead = failures >= 3;
+  const dead = failures >= failureLimit && policy?.cannotDie !== true;
   return { next: { ...ds, failures, dead }, outcome: dead ? 'dead' : 'fail' };
 }
 
@@ -82,17 +85,18 @@ export function rollDeathSaveDie(
 export function applyDamageAtZero(
   ds: DeathSaveState,
   crit = false,
+  policy?: Pick<LifePolicy, 'failureLimit' | 'cannotDie'>,
 ): { next: DeathSaveState; dead: boolean } {
   const failures = Math.min(3, ds.failures + (crit ? 2 : 1));
-  const dead = failures >= 3;
+  const dead = failures >= (policy?.failureLimit ?? 3) && policy?.cannotDie !== true;
   return { next: { ...ds, failures, dead, stable: false }, dead };
 }
 
 export function describeDeathSaveOutcome(outcome: DeathSaveOutcome, natural: number): string {
   switch (outcome) {
-    case 'revive': return `Спасбросок смерти: нат. 20 — вы приходите в себя с 1 хитом!`;
+    case 'revive': return `Спасбросок смерти: нат. ${natural} — вы приходите в себя с 1 хитом!`;
     case 'stable': return `Спасбросок смерти: ${natural} — третий успех, вы стабилизированы.`;
-    case 'dead': return `Спасбросок смерти: ${natural} — третий провал. Персонаж погибает.`;
+    case 'dead': return `Спасбросок смерти: ${natural} — достигнут предел провалов. Персонаж погибает.`;
     case 'crit_fail': return `Спасбросок смерти: нат. 1 — два провала!`;
     case 'success': return `Спасбросок смерти: ${natural} — успех.`;
     case 'fail': return `Спасбросок смерти: ${natural} — провал.`;

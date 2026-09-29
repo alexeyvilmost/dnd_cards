@@ -1,3 +1,4 @@
+import {actorHasConsciousVitality} from '../engine/lifePolicies';
 import { combatActorDisplayName } from '../character/familiarLabels';
 import {combatRollInfluences,resolveCombatDeathSave,finalizeCombatOutcome} from '../solo-combat/engine';
 import {emptyDeathSaves} from '../engine/deathSaves';
@@ -17,10 +18,11 @@ import DecisionPolicyToggles from '../components/DecisionPolicyToggles';
 import AttackRollEquation from '../components/AttackRollEquation';
 import RollCalculationDetails from '../components/RollCalculationDetails';
 import {previewAttackDefense} from '../rules-core/handler';
+import {resolveSpellAccess} from '../rules-core/spellcastingAccess';
 import {useSiteSettings} from '../settings';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
-import { actionsApi, effectsApi, ApiRequestError } from '../api/client';
+import { actionsApi, effectsApi, spellsApi, ApiRequestError } from '../api/client';
 import { charactersV3Api } from '../character/api';
 import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
 import { playerFacingSheetActionError } from '../character/sheetActionError';
@@ -38,6 +40,7 @@ function combatBootstrapError(reason: unknown): string {
 import { newSheetRuntimeCommandId } from '../character/sheetCombatSession';
 import type { SheetCanonicalRuntime } from '../character/sheetCanonicalWorld';
 import { sheetWorldInputFormContext } from '../character/sheetWorldInputForm';
+import {sheetCombatDeclarationPolicy} from '../character/sheetCombatDeclaration';
 import type { ForgeCharacter } from '../character/types';
 import CombatHotbar, { combatActionAvailability } from '../components/CombatHotbar';
 import { WorkspaceExpandButton } from '../components/WorkspaceNavigation';
@@ -72,11 +75,12 @@ import {
   moveCombatDancingLights,
   moveActorAlongRoute,
   selectCombatMovementMode,
+  selectCombatFacing,
   executeConditionAction, escapeActorGrapple,
   refreshSoloCombatParticipants,
   revealCombatMagicAura,
   resolvePlayerReaction,
-  resolvePlayerShoveOutcome, resolvePlayerSavingThrow,
+  resolvePlayerSlotRecovery, resolvePlayerActionCostPolicy, resolvePlayerShoveOutcome, resolvePlayerSavingThrow,
   resolveD20Interrupt,
   resolveSoloCombatAlertSwap,
   resolveSoloCombatInterception,
@@ -93,6 +97,7 @@ import { writeDedicatedCombatTurnState } from '../solo-combat/turnState';
 import {
   controlledCharacterIds,
   combatRelation,
+  spatialFacts,
   isControlledCharacter,
   isPlayerControlledCombatActor,
   type GridPosition,
@@ -123,7 +128,12 @@ import './SoloCombatPage.css';
 
 const FAMILIAR_TOUCH_DELIVERY_CHOICE_ID = 'combat_familiar_touch_delivery';
 const MOVEMENT_MODE_CHOICE_ID = 'combat_movement_mode';
-const movementModeLabels = {walk: 'Ходьба', climb: 'Лазание', fly: 'Полёт', swim: 'Плавание', burrow: 'Рытьё'} as const;
+const movementModeLabels = {walk: 'Ходьба', climb: 'Лазание', fly: 'Полёт', swim: 'Плавание', burrow: 'Рытьё',jump:'Прыжок'} as const;
+function hasManualTargetSlots(action:SoloCombatState['catalogActions'][number],castLevel?:number,actorLevel?:number):boolean {
+  const targeting=action.mechanics.targeting as Record<string,unknown>|undefined;
+  return Boolean(action.targeting&&sheetCombatDeclarationPolicy(action,castLevel,actorLevel).maxTargets>1)&&targeting?.domain!=='world'&&targeting?.actor_targets!==false
+    &&targeting?.shape!=='area'&&targeting?.shape!=='self';
+}
 
 
 function querySelection(params: URLSearchParams): Array<{ id: string; quantity: number }> {
@@ -208,6 +218,8 @@ export default function SoloCombatPage() {
   const [selectedMovementTargetId, setSelectedMovementTargetId] = useState<string | null>(null);
   const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
   const [selectedActionChoices, setSelectedActionChoices] = useState<Record<string, string[]>>({});
+  const [selectedMultiTargetIds,setSelectedMultiTargetIds]=useState<string[]>([]);
+  const [selectedMissileDarts,setSelectedMissileDarts]=useState<Record<string,number>>({});
   const [movementMode, setMovementMode] = useState(false);
   const [dancingLightsMoveGroupId, setDancingLightsMoveGroupId] = useState<string | null>(null);
   const [inspectedActorId, setInspectedActorId] = useState<string | null>(null);
@@ -637,7 +649,7 @@ export default function SoloCombatPage() {
   const activeControlledActorId = state?.pendingAdditionalMovement?.actorId ?? (state && isPlayerControlledCombatActor(state, activeActor(state).id)
     ? activeActor(state).id
     : state?.characterId ?? '');
-  const playerTurn = state ? isPlayerControlledCombatActor(state, activeActor(state).id) && activeActor(state).runtime.hp.current>0 && !state.pendingDeathSave : false;
+  const playerTurn = state ? isPlayerControlledCombatActor(state, activeActor(state).id) && actorHasConsciousVitality(activeActor(state)) && !state.pendingDeathSave : false;
   const deathResumeKey=useRef<string|null>(null);
   useEffect(()=>{
     if(!state||state.deathSavesVersion!==1||state.outcome!=='active'||busy||error||presentation.blocked
@@ -722,8 +734,40 @@ export default function SoloCombatPage() {
     setDancingLightsMoveGroupId(null);
     setSelectedActionId(null);
     setSelectedActionChoices({});
+    setSelectedMultiTargetIds([]);setSelectedMissileDarts({});
     if (wasSelected) return;
     try {
+      const actor = state.world.actors[activeControlledActorId];
+      let spellLevelChoice:Record<string,string[]>={};
+      if(action.kind==='spell'&&actor.spellcastingAccess&&action.spell.level>0){
+        const baseLevel=action.spell.level;
+        const levels=Array.from({length:10-baseLevel},(_,index)=>baseLevel+index)
+          .filter(level=>actor.spellcastingAccess!.grants.some(grant=>grant.actionId===action.id
+            &&resolveSpellAccess({state:actor.spellcastingAccess!,actionId:action.id,grantId:grant.grantId,resources:actor.runtime.resources,castLevel:level}).status==='allowed'));
+        if(levels.length>1){
+          const picked=await choiceDialog.request([{id:'spell_cast_level',prompt:'На каком уровне наложить заклинание?',count:1,source:'explicit',context:'in_play',
+            origin:{kind:'other',id:action.id,name:action.name},items:levels.map(level=>({id:String(level),name:`${level}-й уровень`}))}],action.name);
+          if(!picked)return;
+          spellLevelChoice={spell_cast_level:picked.spell_cast_level};
+        }else if(levels.length===1)spellLevelChoice={spell_cast_level:[String(levels[0])]};
+      }
+      const variantIds=action.kind==='spell'?action.mechanics.spell_variant_ids:action.mechanics.action_variant_ids;
+      if(Array.isArray(variantIds)&&variantIds.length){
+        if(variantIds.some(id=>typeof id!=='string'))throw Error('Некорректные варианты заклинания');
+        const scope=action.id.startsWith(action.sourceEntityIds[0])?action.id.slice(action.sourceEntityIds[0].length):'';
+        const variants=variantIds.map(id=>state.catalogActions.find(candidate=>candidate.id===`${id}${scope}`)
+          ??state.catalogActions.find(candidate=>candidate.id===id));
+        if(variants.some(candidate=>candidate?.kind!==action.kind))throw Error('Варианты отсутствуют в боевом каталоге');
+        const previewEntities=await Promise.all(variantIds.map(id=>action.kind==='spell'?spellsApi.getSpell(id as string):actionsApi.getAction(id as string)));
+        const variantChoiceId=action.kind==='spell'?'spell_variant':'action_variant';
+        const picked=await choiceDialog.request([{id:variantChoiceId,prompt:action.kind==='spell'?'Выберите вариант заклинания':'Выберите вариант действия',count:1,source:'explicit',context:'in_play',
+          origin:{kind:'other',id:action.id,name:action.name},items:variants.map((candidate,index)=>({id:candidate!.id,name:candidate!.name,
+            ...(action.kind==='spell'?{previewSpell:previewEntities[index] as import('../types').Spell}:{previewAction:previewEntities[index] as Action})}))}],action.name);
+        if(!picked)return;
+        const selected=variants.find(candidate=>candidate?.id===picked[variantChoiceId]?.[0]);
+        if(!selected)throw Error('Выбранный вариант недоступен');
+        action=selected;
+      }
       const familiarDeliveryChoices = canonicalTouchSpell(action)
         ? familiarActorsOwnedBy(state.world, activeControlledActorId).filter((familiar) => (
           familiar.familiarState?.presence === 'present'
@@ -731,7 +775,6 @@ export default function SoloCombatPage() {
             && Boolean(state.tokens[familiar.id])
         ))
         : [];
-      const actor = state.world.actors[activeControlledActorId];
       const cardNumber = state.actionPresentation?.[action.id]?.actionRef?.card_number;
       const baseChoices = collectSoloCombatActionChoices(
         state.world.actors[activeControlledActorId],
@@ -767,7 +810,7 @@ export default function SoloCombatPage() {
         ? await choiceDialog.request(requiredChoices, action.name)
         : {};
       if (!selectedChoices) return;
-      const choices = {...passiveChoices.automatic, ...selectedChoices};
+      const choices = {...spellLevelChoice,...passiveChoices.automatic, ...selectedChoices};
       const immediateTargets = immediateSoloCombatTargetIds(action, activeControlledActorId, state);
       if (immediateTargets) {
         const familiarActorId = choices[FAMILIAR_TOUCH_DELIVERY_CHOICE_ID]?.[0];
@@ -794,6 +837,27 @@ export default function SoloCombatPage() {
       setSelectedActionId(action.id);
       setSelectedActionChoices(choices);
     } catch (reason) { setError(playerFacingSheetActionError(reason)); }
+  };
+
+  const confirmMultipleTargets=()=>{
+    if(!state||!selectedActionId||busy)return;
+    const action=state.catalogActions.find(candidate=>candidate.id===selectedActionId);
+    if(!action||!hasManualTargetSlots(action,selectedActionChoices.spell_cast_level?.[0]===undefined?undefined:Number(selectedActionChoices.spell_cast_level[0]),state.world.actors[activeControlledActorId]?.character.level))return;
+    try{
+      const policy=sheetCombatDeclarationPolicy(action,selectedActionChoices.spell_cast_level?.[0]===undefined?undefined:Number(selectedActionChoices.spell_cast_level[0]),state.world.actors[activeControlledActorId]?.character.level);
+      if(selectedMultiTargetIds.length<policy.minTargets||selectedMultiTargetIds.length>policy.maxTargets)
+        throw Error(`Выберите от ${policy.minTargets} до ${policy.maxTargets} целей`);
+      const choices={...selectedActionChoices};
+      if(policy.dartCount!==undefined){
+        const allocated=selectedMultiTargetIds.reduce((sum,id)=>sum+(selectedMissileDarts[id]??0),0);
+        if(allocated!==policy.dartCount)throw Error(`Распределите ровно ${policy.dartCount} дротика(ов)`);
+        choices[policy.allocationChoiceId!]=selectedMultiTargetIds.flatMap(id=>Array(selectedMissileDarts[id]).fill(id) as string[]);
+      }
+      const targetIds=[...selectedMultiTargetIds];
+      const next=()=>autoResolveSystemDecisions(executeCombatAction({state,actorId:activeControlledActorId,actionId:action.id,targetIds,choices}));
+      applyIntent({type:'action',actorId:activeControlledActorId,actionId:action.id,targetIds,choices},next);
+      setSelectedActionId(null);setSelectedActionChoices({});setSelectedMultiTargetIds([]);setSelectedMissileDarts({});
+    }catch(reason){setError(playerFacingSheetActionError(reason));}
   };
 
   const clickCell = async (position: GridPosition, actorId?: string) => {
@@ -842,7 +906,7 @@ export default function SoloCombatPage() {
           return;
         }
         if (combatRelation(state, activeControlledActorId, actorId) !== 'enemy') return;
-        if ((state.world.actors[actorId]?.runtime.hp.current ?? 0) <= 0) return;
+        if (!actorHasConsciousVitality(state.world.actors[actorId])) return;
         const action = defaultCombatAttackAction(state, activeControlledActorId);
         if (!action) throw new Error('Нет доступной атаки оружием или безоружного удара');
         const availability = combatActionAvailability(state, action, activeControlledActorId);
@@ -906,6 +970,25 @@ export default function SoloCombatPage() {
         const next=()=>autoResolveSystemDecisions(executeCombatAction({state,actorId:activeControlledActorId,actionId:selectedActionId,targetIds,worldPosition:position,choices}));
         applyIntent({type:'action',actorId:activeControlledActorId,actionId:selectedActionId,targetIds,worldPosition:position,choices},next);
         setSelectedActionId(null);setSelectedMovementTargetId(null);setSelectedActionChoices({});return;
+      }
+      if(hasManualTargetSlots(selectedAction,selectedActionChoices.spell_cast_level?.[0]===undefined?undefined:Number(selectedActionChoices.spell_cast_level[0]),state.world.actors[activeControlledActorId]?.character.level)){
+        if(!actorId)throw Error('Выберите существо на поле');
+        const policy=sheetCombatDeclarationPolicy(selectedAction,selectedActionChoices.spell_cast_level?.[0]===undefined?undefined:Number(selectedActionChoices.spell_cast_level[0]),state.world.actors[activeControlledActorId]?.character.level);
+        const candidates=selectedTargetsForAction({state,actorId:activeControlledActorId,actionId:selectedAction.id,clickedActorId:actorId,clickedPosition:position});
+        if(candidates.length!==1||candidates[0]!==actorId)throw Error('Эта цель недоступна');
+        const facts=spatialFacts(state,activeControlledActorId,actorId);
+        if(facts.distanceFt>policy.rangeFt||policy.requiresLineOfSight&&!facts.canSeeTarget||facts.cover==='total')
+          throw Error('Цель вне дальности или закрыта от заклинания');
+        if(selectedMultiTargetIds.length&&policy.additionalTargetsWithinFtOfFirst!==undefined){
+          const first=state.tokens[selectedMultiTargetIds[0]]?.position,target=state.tokens[actorId]?.position;
+          if(!first||!target||gridDistanceFt(first,target)>policy.additionalTargetsWithinFtOfFirst)
+            throw Error(`Дополнительная цель должна быть в пределах ${policy.additionalTargetsWithinFtOfFirst} фт. от первой`);
+        }
+        if(selectedMultiTargetIds.length>=policy.maxTargets)throw Error('Все цели уже выбраны');
+        if(!policy.allowRepeatTargets&&selectedMultiTargetIds.includes(actorId))throw Error('Это существо уже выбрано');
+        setSelectedMultiTargetIds([...selectedMultiTargetIds,actorId]);
+        if(policy.dartCount!==undefined)setSelectedMissileDarts(current=>({...current,[actorId]:current[actorId]??1}));
+        return;
       }
       const familiarActorId = selectedActionChoices[FAMILIAR_TOUCH_DELIVERY_CHOICE_ID]?.[0];
       const deliveryActorId = familiarActorId && familiarActorId !== 'self' ? familiarActorId : null;
@@ -1138,7 +1221,7 @@ export default function SoloCombatPage() {
     && !state.pendingInterception && !pendingD20Interrupt && state.outcome === 'active';
   // On a failed automatic decline keep controls available for an explicit retry.
   const reactionOptions = policyReactionOptions.filter(option => option.visible || error);
-  const controlledSavePending = (pending?.request.type === 'saving_throw' || pending?.request.type === 'shove_outcome')
+  const controlledSavePending = (pending?.request.type === 'saving_throw' || pending?.request.type === 'shove_outcome' || pending?.request.type==='action_cost_policy' || pending?.request.type==='slot_recovery')
     && isControlledCharacter(state, pending.request.actorId)
     ? pending
     : null;
@@ -1178,8 +1261,10 @@ export default function SoloCombatPage() {
         modeOverride={heldForDisplay?.held ? 'standard' : undefined}
         beat={heldForDisplay?.held ? {id: 'roll-influence-pending', sourceId: heldForDisplay.command.actorId,
           sourceName: state.world.actors[heldForDisplay.command.actorId]?.name ?? '',
-          targetName: heldForDisplay.command.targetIds.map(id => state.world.actors[id]?.name).filter(Boolean).join(', '),
-          actionName: state.catalogActions.find(action => action.id === heldForDisplay.command.actionId)?.name ?? 'Бросок к20',
+          targetName: heldForDisplay.held.targetId
+            ? state.world.actors[heldForDisplay.held.targetId]?.name
+            : heldForDisplay.command.targetIds.map(id => state.world.actors[id]?.name).filter(Boolean).join(', '),
+          actionName: `${state.catalogActions.find(action => action.id === heldForDisplay.command.actionId)?.name ?? 'Бросок к20'}${heldForDisplay.held.targetSlotIndex!==undefined?` · атака ${heldForDisplay.held.targetSlotIndex} из ${heldForDisplay.held.targetSlotCount}`:''}`,
           rollKind: heldForDisplay.held.kind, roll: heldForDisplay.held.roll, cues: []} : presentation.beat}
         onClose={heldForDisplay?.held ? () => applyIntent({type: 'd20_interrupt', actorId: null}, () => resolveD20Interrupt(state, null)) : presentation.closeAttack}
         busy={busy} provisional={Boolean(heldForDisplay?.held)}
@@ -1196,7 +1281,7 @@ export default function SoloCombatPage() {
             const isActive = actor.id === entry.actorId;
             const identity = combatIdentity(state, entry.actorId);
             return <button type="button" key={entry.actorId}
-              className={`initiative-card is-${identity.side}${isActive ? ' is-active' : ''}${participant.runtime.hp.current <= 0 ? ' is-dead' : ''}${hoveredActorId === entry.actorId ? ' is-linked-highlight' : ''}`}
+              className={`initiative-card is-${identity.side}${isActive ? ' is-active' : ''}${!actorHasConsciousVitality(participant) ? ' is-dead' : ''}${hoveredActorId === entry.actorId ? ' is-linked-highlight' : ''}`}
               style={{'--combat-accent': identity.accent} as CSSProperties}
               aria-description={`${identity.displayName} · инициатива: ${initiativeLabel(entry)}`}
               aria-label={`${index + 1}. ${identity.displayName}${isActive ? ', текущий ход' : ''}`}
@@ -1232,6 +1317,7 @@ export default function SoloCombatPage() {
             highlightedActorId={hoveredActorId}
             onActorHover={setCombatHoveredActorId}
             onCell={clickCell}
+            onFacing={!busy&&!presentation.blocked&&playerTurn&&!pending&&!pendingTriggered&&!pendingD20Interrupt?facing=>applyIntent({type:'facing',actorId:activeControlledActorId,facing},()=>selectCombatFacing(state,activeControlledActorId,facing)):undefined}
             onDeclineAdditionalMovement={state.pendingAdditionalMovement && !state.playerMovement
               && !busy && !pending && !pendingTriggered && !pendingD20Interrupt && !state.pendingInterception ? () => {
                 setMovementMode(false);
@@ -1246,6 +1332,29 @@ export default function SoloCombatPage() {
               setInspectedActorId((current) => current === actorId ? null : actorId);
             }}
           />
+          {selectedActionId&&(()=>{
+            const action=state.catalogActions.find(row=>row.id===selectedActionId);
+            if(!action||!hasManualTargetSlots(action,selectedActionChoices.spell_cast_level?.[0]===undefined?undefined:Number(selectedActionChoices.spell_cast_level[0]),state.world.actors[activeControlledActorId]?.character.level))return null;
+            const policy=sheetCombatDeclarationPolicy(action,selectedActionChoices.spell_cast_level?.[0]===undefined?undefined:Number(selectedActionChoices.spell_cast_level[0]),state.world.actors[activeControlledActorId]?.character.level);
+            const selected=selectedMultiTargetIds.length;
+            return <section className="combat-world-control combat-world-control--selection" aria-label="Выбор целей заклинания">
+              <span aria-live="polite">Выбрано {selected} из {policy.maxTargets}; осталось {Math.max(0,policy.maxTargets-selected)}.</span>
+              <ol>{selectedMultiTargetIds.map((id,index)=><li key={`${id}:${index}`}>
+                {index+1}. {state.world.actors[id]?.name??id}{' '}
+                <button type="button" disabled={busy} onClick={()=>{
+                  const next=selectedMultiTargetIds.filter((_,slot)=>slot!==index);
+                  setSelectedMultiTargetIds(next);
+                  if(!next.includes(id))setSelectedMissileDarts(current=>{const copy={...current};delete copy[id];return copy;});
+                }} aria-label={`Убрать цель ${index+1}`}>×</button>
+              </li>)}</ol>
+              {policy.dartCount!==undefined&&<div>Распределите {policy.dartCount} дротика(ов): {[...new Set(selectedMultiTargetIds)].map(id=><label key={id}>{state.world.actors[id]?.name??id}{' '}
+                <input type="number" min={1} max={policy.dartCount} step={1} value={selectedMissileDarts[id]??1}
+                  onChange={event=>setSelectedMissileDarts(current=>({...current,[id]:Number(event.target.value)}))}/>
+              </label>)}</div>}
+              <button type="button" disabled={busy||selected<policy.minTargets} onClick={confirmMultipleTargets}>Применить к выбранным</button>
+              <button type="button" disabled={busy} onClick={()=>{setSelectedActionId(null);setSelectedActionChoices({});setSelectedMultiTargetIds([]);setSelectedMissileDarts({});}}>Отмена</button>
+            </section>;
+          })()}
           {selectedActionId && (state.catalogActions.find(row=>row.id===selectedActionId)?.mechanics.activation as Record<string,unknown>|undefined)?.telekinetic_movement===true && <section className="combat-world-control combat-world-control--selection" aria-label="Выбор перемещения">
             <em>{selectedMovementTargetId ? `Выберите свободную клетку в пределах 30 фт. от ${selectedActionChoices.telekinetic_object_id ? 'предмета' : 'цели'}.${state.world.objects[selectedActionChoices.telekinetic_object_id?.[0]]?.size === 'tiny' && !selectedActionChoices.telekinetic_hand_mode ? ' Чтобы взять предмет в руку, выберите себя.' : ''}` : 'Выберите согласного союзника или свободный предмет в пределах 30 фт. Для переноса из своей руки выберите себя.'}</em>
             <button type="button" onClick={()=>{setSelectedActionId(null);setSelectedMovementTargetId(null);}}>Отмена</button>
@@ -1410,6 +1519,8 @@ export default function SoloCombatPage() {
           decidingRuntime={state.world.actors[controlledSavePending.request.actorId].runtime}
           busy={busy}
           onResolve={(response) => {
+            if(response.kind==='slot_recovery')applyIntent({type:'slot_recovery',slotLevels:response.slotLevels},()=>resolvePlayerSlotRecovery(state,response.slotLevels));
+            else if(response.kind==='action_cost_policy')applyIntent({type:'action_cost_policy',policyId:response.policyId},()=>resolvePlayerActionCostPolicy(state,response.policyId));
             if (response.kind === 'shove_outcome') applyIntent({type: 'shove_outcome', outcome: response.outcome}, () => resolvePlayerShoveOutcome(state, response.outcome));
             if (response.kind === 'roll') applyIntent({type: 'saving_throw', selectedAbility: response.selectedAbility, boonEffectId: response.boonEffectId}, () => resolvePlayerSavingThrow(state, response));
           }}

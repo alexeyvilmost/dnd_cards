@@ -1097,6 +1097,10 @@ func buyRoguelikeQuantity(tx *gorm.DB, run *RoguelikeRun, offerID string, quanti
 	if err != nil {
 		return err
 	}
+	cost, err = catalogPurchaseCopper(tx, run.Character, cost)
+	if err != nil {
+		return err
+	}
 	if err = spendRunCopper(run, cost*quantity); err != nil {
 		return err
 	}

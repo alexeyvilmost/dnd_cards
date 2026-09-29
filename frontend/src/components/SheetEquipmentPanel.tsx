@@ -1,4 +1,11 @@
+import {itemEquipmentChangeIssue} from '../engine/itemEquipmentPolicy';
+import {prepareSheetEquipmentCommand} from '../character/sheetEquipmentCommand';
+import {loadSheetCombatParticipant} from '../character/sheetCombatTargetRuntime';
+import {newSheetRuntimeCommandId} from '../character/sheetCombatSession';
+import {commitSheetRuntimeCommand} from '../character/sheetRuntimeCommand';
+import type {CharacterRuntimeCommandRequest} from '../character/api';
 import { previewAnchor } from '../utils/previewAnchor';
+import { containerTransferIssue } from '../character/containerCapacity';
 import { hasWeaponBondPolicy } from '../rules-core/weaponBond';
 import { readWeaponBondObjects } from '../character/weaponBondPersistence';
 import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
@@ -8,6 +15,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePinMode } from '../hooks/usePinMode';
 import { Sparkles } from 'lucide-react';
 import { attunementCapacity, attunementUnlocked, readAttunedIds, toggleAttuned } from '../character/attunement';
+import {collectItemMechanics} from '../character/attunement';
+import {liftingCapacity} from '../engine/physicalCapacity';
 import { cardsApi } from '../api/client';
 import { charactersV3Api } from '../character/api';
 import type { EncounterApply } from '../battle/encountersApi';
@@ -20,10 +29,8 @@ import {
 } from '../character/runtime';
 import {
   characterCurrency,
-  equipCardSwapping,
   moveOutOfContainer,
   moveToContainer,
-  unequipToInventory,
 } from '../character/inventory';
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
@@ -96,6 +103,10 @@ export default function SheetEquipmentPanel({
 }: Props) {
   const [cards, setCards] = useState<Map<string, Card>>(new Map());
   const [busy, setBusy] = useState(false);
+  const pendingKey=`dnd:pending-equipment:v1:${character.id}`;
+  const [pendingEquipment,setPendingEquipment]=useState<CharacterRuntimeCommandRequest|null>(()=>{
+    const raw=localStorage.getItem(pendingKey);return raw?JSON.parse(raw):null;
+  });
   const choiceDialog = useChoiceDialog();
   const weaponBonds = readWeaponBondObjects(character.turn_state, character.id);
   const canBindWeapons = character.character_type === 'dungeon_crawl' && hasWeaponBondPolicy(passives);
@@ -149,12 +160,15 @@ export default function SheetEquipmentPanel({
   const strScore = character.abilities?.str ?? 10;
   // Грузоподъёмность с учётом размера (Мощное телосложение Голиафа удваивает через carry-модификатор).
   const capacity = ruleState.carryingCapacity ?? carryingCapacity(strScore, ruleState.size ?? 2);
+  const liftLimit=liftingCapacity(capacity,runtime,collectItemMechanics(runtime.equipment,cardMap,character.turn_state,runtime.inventory).map(row=>row.mechanics));
   const asIcons = entityDisplay.items === 'icon';
   // Отдельная настройка: при наведении показывать стат-блок (ItemPreview) вместо карточки.
   const previewInterface = itemPreview === 'interface';
 
   const persist = useCallback(async (next: RuntimeState) => {
-    if (readOnly) return false;
+    if (readOnly||pendingEquipment) return false;
+    const equipmentIssue=itemEquipmentChangeIssue(runtime,next,[...cardMap.values()]);
+    if(equipmentIssue){setError(equipmentIssue);return false;}
     setBusy(true);
     setError(null);
     try {
@@ -174,7 +188,7 @@ export default function SheetEquipmentPanel({
     } finally {
       setBusy(false);
     }
-  }, [character, encounterApply, onUpdated, readOnly]);
+  }, [character, encounterApply, onUpdated, readOnly, runtime, cardMap,pendingEquipment]);
 
   // S5 контейнеры: положить предмет в контейнер / достать обратно (хелперы S4 + общий persist).
   const transferQuantity=(request:NonNullable<typeof transfer>)=>runtime.inventory.find(r=>r.cardId===request.card.id&&(request.direction==='in'?!r.containerId:r.containerId===request.containerId))?.qty??0;
@@ -189,33 +203,39 @@ export default function SheetEquipmentPanel({
   const transferMax=transfer?transferQuantity(transfer):0;
   const confirmTransfer=async(quantity:number,request=transfer)=>{
     if(!request||readOnly||busy||transferSaving.current||!Number.isSafeInteger(quantity)||quantity<1||quantity>transferQuantity(request))return;
-    const next=request.direction==='in'?moveToContainer(runtime,request.card.id,request.containerId,quantity):moveOutOfContainer(runtime,request.card.id,request.containerId,quantity);
+    if (request.direction==='in') { const issue=containerTransferIssue(runtime,cardMap,request.containerId,request.card.id,quantity);if(issue){setError(issue);return;} }
+    const next=request.direction==='in'?moveToContainer(runtime,request.card.id,request.containerId,quantity,cardMap):moveOutOfContainer(runtime,request.card.id,request.containerId,quantity);
     if(next===runtime){setError('Перемещение недоступно. Проверьте содержимое инвентаря.');return;}
     transferSaving.current=true;
     try {if(await persist(next))setTransfer(null);}finally{transferSaving.current=false;}
   };
 
   const attuned = readAttunedIds(character.turn_state);
-  const maxAttuned = attunementCapacity(runtime.equipment, cardMap, character.turn_state, runtime.inventory);
+  const maxAttuned = attunementCapacity(runtime.equipment, cardMap, character.turn_state, runtime.inventory, runtime.activeEffects);
   const canChangeAttunement = !readOnly && attunementUnlocked(character.turn_state);
   // Списки для окна настройки: настроенные предметы и те, на что можно настроиться.
   const presentCards = cardIds.map((id) => cardMap.get(id)).filter((c): c is Card => !!c);
   const attunedCards = attuned.map((id) => cardMap.get(id)).filter((c): c is Card => !!c);
   const attunableCards = presentCards.filter((c) => c.requires_attunement && !attuned.includes(c.id));
 
-  const handleEquip = async (card: Card) => {
-    registerCard(card);
-    setCards((prev) => new Map(prev).set(card.id, card));
-    const res = equipCardSwapping(runtime, card);
-    if (res.error) { setError(res.error); return; }
-    await persist(res.state);
-    setDialog(null);
+  const commitEquipment=async(operation?:{equip:string}|{unequip:string})=>{
+    if(readOnly||busy)return;setBusy(true);setError(null);setDialog(null);
+    try{
+      let request=pendingEquipment;
+      if(!request){
+        if(!operation)return;
+        const participant=await loadSheetCombatParticipant({character,cards:cardMap});
+        request=prepareSheetEquipmentCommand(participant,newSheetRuntimeCommandId(),operation,Math.random).request;
+        localStorage.setItem(pendingKey,JSON.stringify(request));setPendingEquipment(request);
+      }
+      const immutable=request;
+      const result=await commitSheetRuntimeCommand({request:immutable,commit:()=>charactersV3Api.postRuntimeCommand(immutable),loadCurrent:charactersV3Api.get,viewingCharacterId:character.id});
+      localStorage.removeItem(pendingKey);setPendingEquipment(null);onUpdated(result.characters[character.id]);
+    }catch(cause){setError(cause instanceof Error?cause.message:'Не удалось сохранить экипировку');}
+    finally{setBusy(false);}
   };
-
-  const handleUnequip = async (slot: string) => {
-    await persist(unequipToInventory(runtime, slot));
-    setDialog(null);
-  };
+  const handleEquip=async(card:Card)=>{registerCard(card);await commitEquipment({equip:card.id});};
+  const handleUnequip=async(slot:string)=>{await commitEquipment({unequip:slot});};
 
   const handleBindWeapon = async (card: Card) => {
     if (readOnly) return;
@@ -252,7 +272,7 @@ export default function SheetEquipmentPanel({
     setError(null);
     try {
       const next = toggleAttuned(attuned, cardId);
-      const capacity = attunementCapacity(runtime.equipment, cardMap, {...character.turn_state, attuned_ids: next}, runtime.inventory);
+      const capacity = attunementCapacity(runtime.equipment, cardMap, {...character.turn_state, attuned_ids: next}, runtime.inventory, runtime.activeEffects);
       if (next.length > attuned.length && next.length > capacity) {
         setError(`Доступно мест настройки: ${capacity}`);
         return;
@@ -438,9 +458,11 @@ export default function SheetEquipmentPanel({
   const body = (
     <>
       {error && <p className="issues">{error}</p>}
+      {pendingEquipment&&<p className="issues">Изменение экипировки ожидает подтверждения. <button type="button" disabled={busy||readOnly} onClick={()=>void commitEquipment()}>Повторить сохранение</button></p>}
 
       <div className="sheet-equip-topbar">
         <div className="sheet-stat"><span>Вес</span><strong>{weight.toFixed(1)} / {capacity} фн</strong></div>
+        <div className="sheet-stat"><span>Подъём</span><strong>{liftLimit} фн</strong></div>
         <button
           type="button"
           className="sheet-stat sheet-attune-open"

@@ -66,6 +66,7 @@ export type ManualEffectCommand =
 
 export interface ManualEffectCommandOptions {
   nextId: (prefix: string) => string;
+  passives?:Dict[];
 }
 
 export interface ManualEffectCommandResult {
@@ -454,7 +455,7 @@ function applyCondition(
     }
   }
   if (conditionDeniesConcentration(conditionId)) {
-    const dropped = dropConcentration(next, 'недееспособность');
+    const dropped = dropConcentration(next, 'недееспособность',options.passives);
     next = dropped.state;
     events.push(...dropped.events);
   }
@@ -476,7 +477,7 @@ function removeEffect(
   }
   if (!isRecord(removed.mechanics)) throw new Error(`active effect «${effectId}» has malformed mechanics`);
   if (removed.mechanics.kind === 'concentration') {
-    return dropConcentration(cloneState(state), provenance);
+    return dropConcentration(cloneState(state), provenance,options.passives);
   }
 
   const removedCondition = conditionValueOf(removed, `active effect «${effectId}»`);
@@ -524,7 +525,7 @@ function removeEffect(
     next = { ...next, activeEffects: [...next.activeEffects, leaveEntry] };
     events.push({ type: 'condition_applied', condition: leave });
     if (conditionDeniesConcentration(leave)) {
-      const dropped = dropConcentration(next, 'недееспособность');
+      const dropped = dropConcentration(next, 'недееспособность',options.passives);
       next = dropped.state;
       events.push(...dropped.events);
     }

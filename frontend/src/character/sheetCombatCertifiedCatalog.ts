@@ -241,7 +241,7 @@ function parseGrantProjection(value: unknown, label: string): CertifiedSpellGran
   const spellcastingAbility = requiredString(
     raw.spellcastingAbility,
     `${label}.spellcastingAbility`,
-  ) as SpellGrantAccess['spellcastingAbility'];
+  ) as NonNullable<SpellGrantAccess['spellcastingAbility']>;
   if (!['str', 'dex', 'con', 'int', 'wis', 'cha'].includes(spellcastingAbility)) {
     throw new Error(`Sheet combat certification ${label}.spellcastingAbility is unsupported`);
   }

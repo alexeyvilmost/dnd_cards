@@ -78,6 +78,26 @@ function world() {
 }
 
 describe('typed canonical sheet command declaration', () => {
+  it('uses the world actor level when validating repeated cantrip beam slots',()=>{
+    const mechanics={activation:{mode:'active',cost:[{resource:'action'}]},
+      targeting:{shape:'multiple',domain:'actor',actor_targets:true,min_targets:1,max_targets:1,
+        range_ft:120,requires_line_of_sight:true,allowed_relations:['enemy'],allow_repeat_targets:true,
+        target_slots_by_character_level:{1:1,5:2,11:3,17:4}},effects:[]};
+    const action:RuleActionDefinition={id:'compiled:level-beams',name:'Level beams',kind:'spell',
+      sourceEntityIds:['entity:level-beams'],spell:{level:0},mechanics,
+      targeting:compileMechanicsTargeting(mechanics)};
+    const state=world();
+    state.actors['pc:self'].character.level=11;
+    const declaration={sceneMode:'encounter' as const,targetIds:['pc:target','pc:target','pc:target'],
+      factsByTarget:{'pc:target':{factsSource:'board' as const,boardRevision:1,distanceFt:10,
+        lineOfSight:true,cover:'none' as const,relation:'enemy' as const}},
+      spell:{grantId:'grant:beams',mode:'normal' as const}};
+    const input={world:state,actorId:'pc:self',action,primitiveType:'generic_action',
+      commandId:'command:beams'};
+    expect(buildSheetCanonicalCommand({...input,declaration})).toMatchObject({targetIds:declaration.targetIds});
+    expect(()=>buildSheetCanonicalCommand({...input,declaration:{...declaration,targetIds:['pc:target']}}))
+      .toThrow('requires 3–3');
+  });
   it.each([
     ['temporary_hp_melee_retaliation', { temporary_hp: 'take_spell' }],
     ['find_familiar', {

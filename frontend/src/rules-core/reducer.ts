@@ -1,3 +1,5 @@
+import {attackActionBudget} from './attackActionBudget';
+import {beginCombatHistory,recordCombatHistory} from './combatHistory';
 import type { RuleEventPayload, UncommittedRuleEvent, WorldState } from './domain';
 import { evolveWorldObjectEvent, worldObjectLedgerIssue } from './worldObjects';
 import {
@@ -109,6 +111,22 @@ function sameJson(left: unknown, right: unknown): boolean {
 
 export function evolve(world: WorldState, payload: RuleEventPayload): WorldState {
   switch (payload.type) {
+    case 'ActorEquipmentProjectionChanged': {
+      const actor=world.actors[payload.actorId];if(!actor)throw Error('Unknown equipment actor');
+      return {...world,actors:{...world.actors,[actor.id]:{...actor,passives:payload.passives,character:{...actor.character,equippedCards:payload.equippedCards}}}};
+    }
+    case 'ActorMagicProjectionChanged': {
+      const actor=world.actors[payload.actorId];if(!actor)throw Error('Unknown antimagic recipient');
+      return {...world,actors:{...world.actors,[actor.id]:{...actor,passives:payload.passives,
+        runtime:{...actor.runtime,activeEffects:payload.effects},character:{...actor.character,magicSuppressed:payload.suppressed,
+          ...(payload.knownCards?{knownCards:payload.knownCards}:{}),...(payload.equippedCards?{equippedCards:payload.equippedCards}:{})}}}};
+    }
+    case 'ActorRevived': {
+      const actor=world.actors[payload.actorId];
+      if(!actor||payload.provenance!=='canonical_actor_lifecycle'||!payload.sourceEntityId
+        ||actor.runtime.hp.current<=0||actor.runtime.deathSaves?.dead)throw Error('Invalid restored actor lifecycle');
+      return {...world,actors:{...world.actors,[actor.id]:{...actor,lifecycle:{status:'alive'}}}};
+    }
     case 'ActorDeathAdjudicated': {
       const actor = world.actors[payload.actorId];
       if (!actor || actor.lifecycle?.status !== 'alive') {
@@ -143,6 +161,11 @@ export function evolve(world: WorldState, payload: RuleEventPayload): WorldState
       return {...world, actors: {...world.actors, [actor.id]: {...actor,
         character: {...actor.character, knownCards: [...knownCards, payload.card]}}}};
     }
+    case 'ActorPlaneChanged': {
+      const actor=world.actors[payload.actorId];
+      if(!actor||!payload.planeId.trim()||!world.objects[payload.sourceObjectId])throw Error('Invalid portable-space plane transition');
+      return {...world,actors:{...world.actors,[actor.id]:{...actor,planeId:payload.planeId}}};
+    }
     case 'ActorRuntimePatched': {
       const actor = world.actors[payload.actorId];
       if (!actor) throw new Error(`Cannot evolve unknown actor ${payload.actorId}`);
@@ -150,6 +173,8 @@ export function evolve(world: WorldState, payload: RuleEventPayload): WorldState
         firedThisTurn,
         firedThisRest,
         firedByPeriod,
+        eventOccurrences,
+        turnMovementFt,
         ...regularPatch
       } = payload.patch;
       const runtime = { ...actor.runtime, ...regularPatch };
@@ -159,6 +184,10 @@ export function evolve(world: WorldState, payload: RuleEventPayload): WorldState
       else if (firedThisRest !== undefined) runtime.firedThisRest = firedThisRest;
       if (firedByPeriod === null) delete runtime.firedByPeriod;
       else if (firedByPeriod !== undefined) runtime.firedByPeriod = firedByPeriod;
+      if (eventOccurrences === null) delete runtime.eventOccurrences;
+      else if (eventOccurrences !== undefined) runtime.eventOccurrences = eventOccurrences;
+      if (turnMovementFt === null) delete runtime.turnMovementFt;
+      else if (turnMovementFt !== undefined) runtime.turnMovementFt = turnMovementFt;
       return {
         ...world,
         actors: {
@@ -217,10 +246,15 @@ export function evolve(world: WorldState, payload: RuleEventPayload): WorldState
         },
       };
     }
-    case 'SceneSet':
-      return { ...world, scene: payload.scene };
-    case 'ActionDeclared':
+    case 'SceneSet': {
+      const prepared=world.scene.mode!=='encounter'&&payload.scene.mode==='encounter'?beginCombatHistory(world):world;
+      return { ...prepared, scene: payload.scene, actors: Object.fromEntries(Object.entries(prepared.actors).map(([id, actor]) => [id,
+        { ...actor, runtime: { ...actor.runtime, encounterActive: payload.scene.mode === 'encounter' } },
+      ])) };
+    }
     case 'EngineEventRecorded':
+      return recordCombatHistory(world,payload);
+    case 'ActionDeclared':
     case 'DecisionRecorded':
       return world;
     case 'AttackActionStarted': {
@@ -232,7 +266,7 @@ export function evolve(world: WorldState, payload: RuleEventPayload): WorldState
         || value.sequence.actorId !== value.actorId
         || value.sequence.id !== value.id
         || value.sequence.entries.length !== 0
-        || value.sequence.totalAttacks !== actor.attackProfile?.attacksPerAction
+        || value.sequence.totalAttacks !== attackActionBudget(actor,value.costPolicyIds??[],[...(value.declaredActionId?[value.declaredActionId]:[]),...(value.declaredActionSourceEntityIds??[])]).value
         || ((value.declaredActionId === undefined)
           !== (value.declaredActionSourceEntityIds === undefined))
         || (value.declaredActionId !== undefined
@@ -472,11 +506,17 @@ export function evolve(world: WorldState, payload: RuleEventPayload): WorldState
         },
       };
     }
+    case 'EventReactionQueueChanged':
+      return {...world,eventReactions:payload.queue};
+    case 'AreaConsequenceQueueChanged':
+      return {...world,areaConsequences:payload.queue};
     case 'ResolutionOpened':
       if (world.pendingResolution) {
         throw new Error(`Cannot replace active resolution ${world.pendingResolution.id}`);
       }
       return { ...world, pendingResolution: payload.resolution };
+    case 'AttackVolleyChanged':
+      return {...world, attackVolley: payload.volley};
     case 'ResolutionClosed':
       if (world.pendingResolution?.id !== payload.resolutionId) {
         throw new Error(`Cannot close inactive resolution ${payload.resolutionId}`);

@@ -5,6 +5,9 @@ export function isDamageCalculation(value: unknown): value is DamageCalculation 
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const row = value as Record<string, unknown>;
   if (!Number.isSafeInteger(row.beforeResistance) || Number(row.beforeResistance) < 0 || !Array.isArray(row.adjustments)) return false;
+  if(row.maximumDamage!==undefined&&(!Number.isSafeInteger(row.maximumDamage)||Number(row.maximumDamage)<0))return false;
+  if(row.transferredDamage!==undefined&&(!Number.isSafeInteger(row.transferredDamage)||Number(row.transferredDamage)<0))return false;
+  if(row.budgetId!==undefined&&(typeof row.budgetId!=='string'||!row.budgetId))return false;
   const levels: string[] = [];
   for (const rule of row.adjustments) {
     if (!rule || typeof rule !== 'object' || !['immunity', 'resistance', 'vulnerability'].includes(rule.level)
@@ -30,6 +33,15 @@ export function resolveDamageCalculation(calculation: DamageCalculation, damageT
       damageAdjustment: { damageType, adjustment: rule.level, before, after: amount,
         sourceEntityIds: rule.sourceEntityIds },
     });
+  }
+  if(calculation.maximumDamage!==undefined&&amount>calculation.maximumDamage){
+    events.push({type:'narrative',text:`Оставшийся предел урона источника: ${amount} → ${calculation.maximumDamage}`});
+    amount=calculation.maximumDamage;
+  }
+  if(calculation.transferredDamage){
+    const remaining=Math.max(0,amount-calculation.transferredDamage);
+    events.push({type:'narrative',text:`Передача урона другому существу: ${amount} → ${remaining}`});
+    amount=remaining;
   }
   return { amount, events };
 }

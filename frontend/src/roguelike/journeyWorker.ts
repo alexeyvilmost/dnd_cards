@@ -2,7 +2,7 @@ import type {ForgeCharacter} from '../character/types';
 import type {EngineEvent, RollLog} from '../mvp/contracts';
 import type {Ability, GameCommand, WorldState, UncommittedRuleEvent, RuleAutomaticHazardDefinition} from '../rules-core/domain';
 import {handleCommand} from '../rules-core/handler';
-import {availableRollInfluences, spendRollInfluence, withD20Replacement, type RollInfluence} from '../engine/rollInfluence';
+import {availableRollInfluences, spendRollInfluence, withD20Replacement, withD20Influences, type RollInfluence} from '../engine/rollInfluence';
 import {prepareRoguelikeCombatParticipant, type FrozenCombatCatalog} from './combatCatalog';
 import {createRoguelikeCombatRandom} from './combatWorker';
 import {runtimeInventoryPayload, writeRulesEngineRuntimeTurnState} from '../character/runtime';
@@ -65,11 +65,12 @@ export async function executeJourneyCheck(input: Input) {
     if(e.phase==='influence'){
       if(input.effectId){
         const rt=e.before.actors[input.character.id].runtime;
-        const influence=availableRollInfluences(rt,sources,'check',e.roll).find(a=>a.id===input.effectId);
+        const influence=availableRollInfluences(rt,sources,'check',e.roll,{ability:input.check.ability,skill:input.check.skill,character:e.before.actors[input.character.id].character}).find(a=>a.id===input.effectId);
         if(!influence||e.influenced)throw Error('Воздействие недоступно');
         e.before.actors[input.character.id].runtime=spendRollInfluence(rt,influence).state;
-        const replacement=1+Math.floor(random.rng()*20);let cursor=0;
-        const result=execute(e.before,{type:'AbilityCheck',...input.check},withD20Replacement(()=>e.values[cursor++]??random.rng(),replacement,influence.name));
+        const replacement=influence.operation==='reroll_kept_d20'?1+Math.floor(random.rng()*20):undefined;let cursor=0;
+        const replay=()=>e.values[cursor++]??random.rng();
+        const result=execute(e.before,{type:'AbilityCheck',...input.check},replacement===undefined?withD20Influences(replay,[influence]):withD20Replacement(replay,replacement,influence.name));
         e.after=result.nextState;events=engineEvents(result.events);e.roll=resultRoll(events);e.influenced=true;
       }
       e.phase=e.after.pendingResolution?.type==='check_boost'?'boost':'resolved';
@@ -83,7 +84,7 @@ export async function executeJourneyCheck(input: Input) {
   }
   e.cursor=random.cursor;
   let influences:RollInfluence[]=[];
-  if(e.phase==='influence')influences=availableRollInfluences(e.before.actors[input.character.id].runtime,sources,'check',e.roll);
+  if(e.phase==='influence')influences=availableRollInfluences(e.before.actors[input.character.id].runtime,sources,'check',e.roll,{ability:input.check.ability,skill:input.check.skill,character:e.before.actors[input.character.id].character});
   if(e.phase==='boost'&&e.after.pendingResolution?.type==='check_boost'){
     influences=e.after.pendingResolution.request.options.flatMap(option=>{
       const action=canonical.actions.find(a=>a.id===option.actionId);if(!action)return [];

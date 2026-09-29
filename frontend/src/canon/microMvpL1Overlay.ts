@@ -23,7 +23,7 @@ import {
 import { buildCharacterContext } from '../character/runtime';
 import { ABILITY_KEYS, type CharacterDraft } from '../character/types';
 import {
-  collectFreeuseRecharge,
+  collectFreeuseRecharge, collectFreeuseRecovery,
   findFreeusePoolKey,
 } from '../engine/freeuse';
 import {
@@ -2255,7 +2255,7 @@ function compileRoot(
     ...collectActionUsesRecharge(assembled),
     ...collectFreeuseRecharge(ruleState.freeuseSpells),
   };
-  const resourceRecovery = collectActionUsesRecovery(assembled);
+  const resourceRecovery = {...collectActionUsesRecovery(assembled),...collectFreeuseRecovery(ruleState.freeuseSpells)};
   const classSpellIds = classSpellEntityIds(raw, assembled, draft, catalogs);
   const selectedInvocation = selectedWarlockInvocation(assembled);
   const pactDeclaration = declaredWarlockPact(selectedInvocation);

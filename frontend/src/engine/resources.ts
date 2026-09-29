@@ -183,7 +183,7 @@ export function resourcesRestoredOnShortRest(
     if (TURN_KEYS.includes(k as typeof TURN_KEYS[number])) return false;
     if (k.startsWith('hit_dice_')) return false;
     if (recovery && Object.prototype.hasOwnProperty.call(recovery, k)) {
-      return recovery[k]?.short_rest != null;
+      return recovery[k]?.short_rest.mode === 'fixed';
     }
     if (!recharge) return k !== 'heroic_inspiration';
     return recharge[k] === 'short_rest';

@@ -15,6 +15,7 @@
 import type { ReactionOffer, RuntimeState } from '../mvp/contracts';
 import { matchesWhen, type EvalContext } from './circumstances';
 import {payloadsOf} from './mechanicsView';
+import { validateEventOccurrence, type EventOccurrence } from './eventOccurrence';
 
 type Dict = Record<string, unknown>;
 
@@ -42,6 +43,7 @@ export interface ListenerMatch {
   optional?: boolean;
   /** Formulas snapshotted when a durable triggered effect was applied. */
   formulaVariables?: Record<string, number>;
+  occurrence?: EventOccurrence;
 }
 
 function listenerFrom(mech: Dict, name: string): ListenerMatch | null {
@@ -50,6 +52,8 @@ function listenerFrom(mech: Dict, name: string): ListenerMatch | null {
   if (mode !== 'triggered' && mode !== 'reaction') return null;
   const uses = mech.uses as Dict | undefined;
   const trig = act?.trigger as Dict | undefined;
+  const occurrence = mech.occurrence ?? trig?.occurrence;
+  if (occurrence !== undefined && !validateEventOccurrence(occurrence)) throw new Error('Invalid event occurrence declaration');
   const rawFormulaVariables = mech.formula_variables;
   const formulaVariables = rawFormulaVariables && typeof rawFormulaVariables === 'object'
     && !Array.isArray(rawFormulaVariables)
@@ -65,6 +69,7 @@ function listenerFrom(mech: Dict, name: string): ListenerMatch | null {
     cost: (act?.cost as Dict[]) ?? [],
     usesPer: uses?.per != null ? String(uses.per) : undefined,
     optional: act?.optional === true || trig?.prompt === true,
+    ...(occurrence ? { occurrence: occurrence as EventOccurrence } : {}),
     ...(formulaVariables && Object.keys(formulaVariables).length ? { formulaVariables } : {}),
   };
 }
@@ -95,8 +100,13 @@ export function collectListeners(
       if (payload.kind !== 'triggered_effect' || typeof payload.event !== 'string' || !Array.isArray(payload.effects)) return [];
       return [{name,mech:{
         id: String(payload.id ?? `${String(mech.id ?? name)}:trigger:${index}`),
-        activation:{mode:'triggered',trigger:{event:payload.event,subject:payload.subject ?? 'self',circumstances:payload.circumstances}},
-        effects:payload.effects,uses:payload.uses,
+        activation:{mode:payload.mode === 'reaction' ? 'reaction' : 'triggered',
+          cost:payload.cost,optional:payload.optional,
+          trigger:{event:payload.event,subject:payload.subject ?? 'self',circumstances:payload.circumstances}},
+        effects:payload.effects,uses:payload.uses,occurrence:payload.occurrence,
+        formula_variables:mech.formula_variables,
+        damage_source_kind:mech.damage_source_kind,
+        formula_bindings:payload.event_formula_bindings,chance:payload.chance,
       }}];
     });
     return [{name,mech},...nested];
@@ -115,7 +125,17 @@ export function collectListeners(
       { ...(evalCtx ?? {}), event: { kind: ev.kind, ...(ev.data ? { data: ev.data } : {}) } },
     )) continue;
     const lm = listenerFrom(mech, name);
-    if (lm) out.push(lm);
+    if (lm) {
+      // Only finite numbers from the authoritative event are bound. Arbitrary
+      // command strings cannot inject formulas or replace character variables.
+      const bindings: Record<string, number> = {};
+      for (const [key, field] of [['event_amount', 'amount'], ['event_natural_roll', 'naturalRoll'], ['event_spell_level', 'spellLevel']] as const) {
+        const value = ev.data?.[field];
+        if (typeof value === 'number' && Number.isFinite(value)) bindings[key] = value;
+      }
+      lm.formulaVariables = { ...lm.formulaVariables, ...bindings };
+      out.push(lm);
+    }
   }
   return out;
 }

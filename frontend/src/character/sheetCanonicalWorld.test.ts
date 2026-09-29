@@ -1112,6 +1112,78 @@ describe('real sheet canonical world materialization', () => {
     });
   });
 
+  it('catalogs a child spell through its parent and accepts an available higher slot', () => {
+    const spellcasting = patchEffect('EFF-wizard-spellcasting');
+    const root = clone(generated.roots.wizard);
+    const source = root.actions
+      .filter((candidate): candidate is Extract<RuleActionDefinition, { kind: 'spell' }> => (
+        candidate.kind === 'spell' && candidate.spell.level === 1
+      ))
+      .map(sheetSpell)[0];
+    const parent = clone(source.spellRef!);
+    const child: Spell = { ...clone(parent), id: 'spell:variant:child', card_number: 'SPELL-VAR-test-child',
+      name: 'Выбранный эффект', mechanics: { ...clone(parent.mechanics!), variant_of_spell_id: parent.id } };
+    parent.mechanics = { ...clone(parent.mechanics!), spell_variant_ids: [child.id] };
+    const parentSheet: SheetAction = { ...source, spellRef: parent, mechanics: clone(parent.mechanics) };
+    const childSheet: SheetAction = { ...source, id: child.id, name: child.name,
+      spellRef: child, mechanics: clone(child.mechanics!) };
+    const runtime = clone(root.actor.runtime);
+    runtime.resources.spell_slot_1 = 0;
+    runtime.resources.spell_slot_2 = 1;
+    runtime.maxResources.spell_slot_2 = 1;
+    const built = buildSheetCanonicalRuntime({
+      character: character('sheet-variant-parent', { 'builder:manual_spells': [parent.id] }),
+      assembled: assembled({ effect: spellcasting, spells: [parent] }),
+      ruleState: { appliedGrants: [] },
+      sheetActions: [parentSheet], spellVariants: [child],
+      runtime, characterContext: root.actor.character, cards: [], ac: root.actor.ac,
+    });
+    const childAction = built.actionFor(childSheet);
+    expect(childAction.id).toBe(`${child.id}@manual-spell:${parent.id}`);
+    expect(built.catalog.getAction(childAction.id)).toEqual(childAction);
+    expect(built.world.actors[built.actorId].capabilities.actionIds).not.toContain(childAction.id);
+    expect(built.world.actors[built.actorId].spellcastingAccess?.grants
+      .some((grant) => grant.actionId === childAction.id)).toBe(false);
+
+    const direct = buildSheetCanonicalRuntime({
+      character: character('sheet-variant-direct', { 'builder:manual_spells': [child.id] }),
+      assembled: assembled({ effect: spellcasting, spells: [child] }),
+      ruleState: { appliedGrants: [] },
+      sheetActions: [childSheet], spellVariants: [child],
+      runtime, characterContext: root.actor.character, cards: [], ac: root.actor.ac,
+    });
+    expect(() => direct.actionFor(childSheet)).toThrow();
+  });
+
+  it('catalogs a child action without granting it independently', () => {
+    const root = clone(generated.roots.wizard);
+    const feature = patchEffect('EFF-wizard-spellcasting');
+    const targeting = { domain: 'actor', shape: 'self', actor_targets: false,
+      min_targets: 0, max_targets: 1, range_ft: 0,
+      requires_line_of_sight: false, allowed_relations: ['self'] };
+    const mechanics = { activation: { mode: 'active', cost: [{ resource: 'action', amount: 1 }] },
+      targeting, effects: [{ resolution: 'auto', who: 'self', result: [{ kind: 'healing', amount: 1 }] }] };
+    const parent = { id: 'action:variant:parent', card_number: 'ACT-VAR-parent',
+      name: 'Родительский выбор', description: '', rarity: 'common', resource: 'action',
+      action_type: 'base_action', type: 'basic', created_at: '', updated_at: '',
+      mechanics: { ...mechanics, action_variant_ids: ['action:variant:child'] } } as Action;
+    const child = { ...parent, id: 'action:variant:child', card_number: 'ACT-VAR-child',
+      name: 'Дочернее действие', mechanics: { ...mechanics, variant_of_action_id: parent.id } } as Action;
+    const parentSheet: SheetAction = { id: parent.id, name: parent.name, group: 'basic',
+      mechanics: clone(parent.mechanics!), actionRef: parent, sourceEntityIds: [parent.id, parent.card_number] };
+    const childSheet: SheetAction = { ...parentSheet, id: child.id, name: child.name,
+      mechanics: clone(child.mechanics!), actionRef: child, sourceEntityIds: [child.id, child.card_number] };
+    const built = buildSheetCanonicalRuntime({
+      character: character('sheet-action-variant'), assembled: assembled({ effect: feature }),
+      ruleState: { appliedGrants: [] }, sheetActions: [parentSheet], actionVariants: [child],
+      runtime: root.actor.runtime, characterContext: root.actor.character, cards: [], ac: root.actor.ac,
+    });
+    expect(built.actionFor(childSheet).id).toBe(child.id);
+    expect(built.catalog.getAction(child.id)).toBeDefined();
+    expect(built.world.actors[built.actorId].capabilities.actionIds).toContain(parent.id);
+    expect(built.world.actors[built.actorId].capabilities.actionIds).not.toContain(child.id);
+  });
+
   it('compiles a levelled species spell as always prepared with free-use and slot payments', () => {
     const root = clone(generated.roots.wizard);
     const sheetAction = root.actions

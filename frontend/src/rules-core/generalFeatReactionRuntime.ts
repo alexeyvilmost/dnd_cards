@@ -187,7 +187,7 @@ export function mountedCombatantAttackAdvantage(input: {
   if (!actorOwnsMountedCombatant(rider)
     || !mount || !target
     || actorIsIncapacitated(rider) || actorIsIncapacitated(mount)
-    || mount.runtime.hp.current <= 0 || target.runtime.hp.current <= 0
+    || !actorHasConsciousVitality(mount) || !actorHasConsciousVitality(target)
     || !Number.isInteger(input.mountSize)
     || !Number.isInteger(input.targetSize)
     || input.targetSize! >= input.mountSize!
@@ -246,3 +246,4 @@ export function chargerApproachEligible(input: {
   return moveX * targetY - moveY * targetX === 0
     && moveX * targetX + moveY * targetY > 0;
 }
+import {actorHasConsciousVitality} from '../engine/lifePolicies';

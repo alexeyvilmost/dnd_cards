@@ -1,3 +1,6 @@
+import {compileMonsterInstance} from './monsterCompiler';
+import type {Action,PassiveEffect} from '../types';
+import type {Monster} from '../monsters/types';
 import type { ActorState, RuleActionDefinition } from '../rules-core/domain';
 import type { GridPosition, InitiativeEntry, SoloCombatState } from './types';
 import {boardDimensions, terrainFits,terrainSight} from './boardGeometry';
@@ -14,6 +17,7 @@ export interface OwnedSummonPolicy {
   armorClass: { base: number; perSpellLevel: number };
   hitPoints: { base: number; perSpellLevel: number; scaleFromLevel: number };
   duration: 'until_destroyed' | 'concentration' | { rounds: number };
+  template?: {monster:Monster;actions:Action[];effects:PassiveEffect[]};
 }
 
 const BASIC_ACTION_CARDS = new Set([
@@ -65,7 +69,14 @@ export function ownedSummonPolicy(action: RuleActionDefinition): OwnedSummonPoli
     if (rounds === null || !Number.isInteger(rounds)) throw new Error(`${action.id}.duration rounds are invalid`);
     duration = { rounds };
   } else throw new Error(`${action.id}.duration is invalid`);
+  const template=primitive.monster_template as OwnedSummonPolicy['template'];
+  if(template){
+    if(!template.monster||!Array.isArray(template.actions)||!Array.isArray(template.effects))throw Error('Malformed pinned monster template');
+    compileMonsterInstance({...template,instanceId:'validation'});
+    if(template.monster.name!==name||template.monster.speed!==speedFt||template.monster.max_hp!==hitPoints.base||template.monster.armor_class!==armorClass.base)throw Error('Summon profile disagrees with its canonical monster template');
+  }
   return {
+    ...(template?{template}:{}),
     summonKey, name, creatureType, size, speedFt, armorClass,
     hitPoints: { ...hitPoints, scaleFromLevel }, duration,
   };
@@ -264,7 +275,8 @@ export function materializeOwnedSummon(input: {
     && state.world.concentrations[owner.id]?.actionId !== input.action.id) {
     throw new Error(`${input.action.name}: концентрация не была зафиксирована`);
   }
-  const actionIds = basicActionIds(state);
+  const compiled=policy.template?compileMonsterInstance({...policy.template,instanceId:actorId}):undefined;
+  const actionIds = [...new Set([...basicActionIds(state),...(compiled?.actor.capabilities.actionIds??[])])];
   const hp = stat(policy.hitPoints, input.castLevel, policy.hitPoints.scaleFromLevel);
   const ac = stat(policy.armorClass, input.castLevel);
   const duration = policy.duration === 'until_destroyed'
@@ -277,7 +289,7 @@ export function materializeOwnedSummon(input: {
           + policy.duration.rounds,
       };
   const sourceEntityIds = [...new Set([input.action.id, ...input.action.sourceEntityIds])] as [string, ...string[]];
-  const scores = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+  const scores = compiled?.actor.character.abilityScores??{ str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
   const actor: ActorState = {
     id: actorId,
     name: policy.name,
@@ -291,12 +303,12 @@ export function materializeOwnedSummon(input: {
     character: {
       creatureType: policy.creatureType,
       abilityScores: scores,
-      abilityMods: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
-      profBonus: owner.character.profBonus,
+      abilityMods: compiled?.actor.character.abilityMods??{ str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+      profBonus: compiled?.actor.character.profBonus??owner.character.profBonus,
       level: input.castLevel,
       characterSpeed: policy.speedFt,
       baseSpeed: policy.speedFt,
-      saveProficiencies: [], skillProficiencies: [], skillExpertise: [],
+      saveProficiencies: compiled?.actor.character.saveProficiencies??[], skillProficiencies: compiled?.actor.character.skillProficiencies??[], skillExpertise: compiled?.actor.character.skillExpertise??[],
     },
     runtime: {
       hp: { current: hp, max: hp, temp: 0 },
@@ -304,6 +316,7 @@ export function materializeOwnedSummon(input: {
       maxResources: { action: 1, bonus_action: 1, reaction: 1 },
       equipment: {}, inventory: [], activeEffects: [],
     },
+    ...(compiled?{passives:compiled.actor.passives,traits:compiled.actor.traits}:{}),
     lifecycle: { status: 'alive' },
     attackProfile: {
       attacksPerAction: 1, size: policy.size, reachFt: 5, graspingParts: [], sourceEntityIds,
@@ -325,6 +338,8 @@ export function materializeOwnedSummon(input: {
     : duration.type === 'concentration' ? 'концентрация' : `${policy.duration && typeof policy.duration === 'object' ? policy.duration.rounds : 0} раундов`;
   return reconcileOwnedSummons({
     ...state,
+    ...(compiled?{catalogActions:[...state.catalogActions,...compiled.actions.filter(action=>!state.catalogActions.some(old=>old.id===action.id))],
+      actionPresentation:{...state.actionPresentation,...Object.fromEntries(policy.template!.actions.map(action=>[action.id,{imageUrl:action.image_url,description:action.description,sourceLabel:policy.name,entityType:'action' as const,entityId:action.id,actionRef:action}]))}}:{}),
     world: {
       ...state.world,
       actors: { ...state.world.actors, [actorId]: actor },
@@ -347,7 +362,7 @@ export function materializeOwnedSummon(input: {
         creatureType: policy.creatureType,
         source: input.action.name,
         actionIds,
-        traits: [],
+        traits: policy.template?.effects.flatMap(effect=>effect.mechanics?[{id:effect.id,name:effect.name,description:effect.description,imageUrl:effect.image_url,mechanics:effect.mechanics}]:[])??[],
       },
     },
     playerActionIdsByActor: { ...(state.playerActionIdsByActor ?? {}), [actorId]: actionIds },

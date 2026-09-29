@@ -34,6 +34,7 @@ export interface Monster {
     skill_proficiencies?: string[];
     skill_expertise?: string[];
     darkvision_ft?: number;
+    creature_tags?: string[];
     blindsight_ft?: number;
     movement_speeds?: Partial<Record<'walk' | 'climb' | 'fly' | 'swim' | 'burrow', number>>;
     movement_traits?: Array<{

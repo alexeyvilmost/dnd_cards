@@ -1,6 +1,37 @@
+import {recipientBindingEvents} from './recipientBindings';
+import {changeEquipment} from './equipmentChange';
+import {inherentWeaponBondEvents,thrownWeaponEvents,deployedItemEvents} from './itemWeaponLifecycle';
+import {emitEvent as emitEngineEvent} from '../engine/execute';
+import {teleportDestinationIssue} from './teleportDestination';
+import {effectReactionActor,bindReceivedEffectAction,receivedEffectEvents} from './effectReceived';
+import {effectRollFacts} from '../engine/effectRollFacts';
+import {bindItemTool,itemToolMutationEvents,itemToolWorkSeconds} from './itemTools';
+import {advanceEffectTime} from '../engine/elapsedTime';
+import {reconcileEndedEffects} from '../engine/effectLifecycle';
+import {reconcileTemporaryResourceGrants} from '../engine/temporaryResourceGrants';
+import {damageTransferSpec,damageTransferEligible,transferDamageEvents} from './damageTransfer';
+import {projectileReflection,hasProjectileReflection} from './projectileReflection';
+import {attackRedirectionRules,redirectedAttackTarget} from './attackRedirection';
+import {endedBondEffects} from './bondLifecycle';
+import {magicProjectionEvents,magicActionIssue} from './magicSuppression';
+import { applyItemSpellProjectiles } from '../engine/itemSpellProjectiles';
+import {attackActionBudget} from './attackActionBudget';
+import { itemLightEvents,bindItemLightFuel } from './itemLight';
+import {bindWorldItemAction,worldItemActionSource} from './worldItemActions';
+import {itemMaterialFocusEvents} from './itemMaterialFocus';
+import {projectRuntimeCharacter} from '../engine/runtimeCharacterProjection';
+import {availableResources} from '../engine/resourceRestrictions';
+import {weaponActionAvailability,weaponAttackKind} from '../engine/weapon';
+import {activeSlotRecoveryChoice,applyActiveSlotRecovery} from './activeSlotRecovery';
+import {recoverAfterDeath} from './deathRecovery';
 import {hideEligibilityIssue, hideActionDeclarationIssue} from './hide';
+import {availableActionCostPolicies,applyActionCostPolicies} from '../engine/actionCostPolicy';
+import {collectLifePolicies,actorHasConsciousVitality} from '../engine/lifePolicies';
+import {payloadsOf} from '../engine/mechanicsView';
+import {applyItemActionTargetLimit} from '../engine/itemExecutionCapabilities';
 import {applyFailedCheckBoost, failedCheckBoostActions} from './failedCheckBoost';
 import { weaponBondProtectsHand, weaponBondRecallIssue, weaponBondRecallEvents } from './weaponBond';
+import {concentrationProtectedUntilDeath} from '../engine/concentration';
 import {telekineticObjectIssue, telekineticHandEvents} from './telekineticMovement';
 import {heldItemDropWorldEvents, consumedHeldItemWorldEvents} from './heldItemWorld';
 import {effectiveArmorClass, effectiveArmorClassBreakdown} from './actorArmorClass';
@@ -14,6 +45,7 @@ import {
   canHear,
   applyIncomingDamage,
   applyDamageConsequences,
+  resolveDeferredSourceConsequences,
   breakdownValue,
   bindEquippedWeaponActionContext,
   canPay,
@@ -26,7 +58,6 @@ import {
   isArmorCard,
   isWeaponProficient,
   longRest,
-  pay,
   readTargetSave,
   retargetAttackRoll,
   resolveNextTurnCommand,
@@ -57,7 +88,7 @@ import {
   consumeBoonAfterFailure,
   runtimeBoonSpec,
 } from './legacy/engineAdapter';
-import { compileDeclaredMechanicsTargeting } from './actionTargeting';
+import { compileDeclaredMechanicsTargeting, targetSlotBounds } from './actionTargeting';
 import { generalFeatRangedDeclaration } from './generalFeatAttackDeclaration';
 import {
   DUAL_WIELDER_CAPABILITY,
@@ -85,11 +116,14 @@ import type {
   ActorState,
   CommandRejectionCode,
   CommandResult,
+  ActionWorldInput,
   ConcentrationEffectLink,
   DeterministicEnvironment,
   EncounterScene,
   GameCommand,
+  PendingAttackVolley,
   PendingResolutionFollowUp,
+  PendingTargetSaveResolution,
   PendingProtectionReactionResolution,
   PactBladeAttackContinuationProjection,
   ProtectionAttackContinuationKind,
@@ -282,12 +316,14 @@ const SKILL_ABILITY: Record<string,Ability> = {
   sleight_of_hand:'dex',stealth:'dex',survival:'wis',
 };
 
+function liveCharacter(actor:ActorState){return projectRuntimeCharacter(actor.character,actor.runtime,actor.passives??[]);}
+
 function actorCheckMods(actor:ActorState):Record<string,number>{
   return Object.fromEntries(Object.entries(SKILL_ABILITY).map(([skill,ability])=>{
     const proficiency=actor.character.skillExpertise?.includes(skill)
-      ? actor.character.profBonus*2
-      : actor.character.skillProficiencies?.includes(skill) ? actor.character.profBonus : 0;
-    return [skill,(actor.character.abilityMods[ability]??0)+proficiency];
+      ? liveCharacter(actor).profBonus*2
+      : actor.character.skillProficiencies?.includes(skill) ? liveCharacter(actor).profBonus : 0;
+    return [skill,(liveCharacter(actor).abilityMods[ability]??0)+proficiency];
   }));
 }
 
@@ -326,6 +362,7 @@ function validateCommon(world: WorldState, command: GameCommand): CommandResult 
 
 function validateTurn(world: WorldState, command: GameCommand): CommandResult | null {
   if (command.type === 'ResolveDecision') return null;
+  if (command.type === 'DeathSavingThrow' && world.actors[command.actorId]?.runtime.firedThisTurn?.includes('system:immediate-death-save-due')) return null;
   // Reaction actions are catalog-gated in the UseReactionAction handler below.
   if (command.type === 'UseReactionAction' || command.type === 'UseTriggeredAction') return null;
   if (command.type === 'SwapInitiative') return null;
@@ -438,13 +475,22 @@ function actionValidation(
   targetIds: string[],
   factsByTarget: Record<string, SpatialFacts> | undefined,
   sourceActorId: string,
+  spellCastLevel?: number,
 ): CommandResult | null {
   const targeting = action.targeting;
-  if (new Set(targetIds).size !== targetIds.length) {
+  if (targeting?.allowRepeatTargets !== true && new Set(targetIds).size !== targetIds.length) {
     return rejected(world, 'InvalidTargets', 'Each target actor may appear only once in an action');
   }
-  if (targeting && (targetIds.length < targeting.minTargets || targetIds.length > targeting.maxTargets)) {
-    return rejected(world, 'InvalidTargets', `${action.id} requires ${targeting.minTargets}-${targeting.maxTargets} targets`);
+  let minTargets=0,maxTargets=0;
+  if(targeting){
+    try{
+      ({minTargets,maxTargets}=targetSlotBounds(action,spellCastLevel,world.actors[sourceActorId]?.character.level));
+    }catch(error){
+      return rejected(world,'InvalidActionDefinition',error instanceof Error?error.message:String(error));
+    }
+  }
+  if (targeting && (targetIds.length < minTargets || targetIds.length > maxTargets)) {
+    return rejected(world, 'InvalidTargets', `${action.id} requires ${minTargets}-${maxTargets} target slots`);
   }
   if (sourceActorId && targeting?.allowedRelations.length === 1
     && targeting.allowedRelations[0] === 'self'
@@ -452,16 +498,32 @@ function actionValidation(
     return rejected(world, 'InvalidTargets', `${action.id} can target only its acting actor`);
   }
   if (targetIds.length > 1) {
-    if (hasAttackRoll(action)) {
-      return rejected(world, 'InvalidTargets', 'Multi-target attack sequences require a dedicated attack-sequence primitive');
-    }
-    if (!hasTargetSave(action) && !hasIndependentTargetAutoEffects(action) && !magicMissileSpec(action)) {
+    if (!hasAttackRoll(action) && !hasTargetSave(action)
+      && !hasIndependentTargetAutoEffects(action) && !magicMissileSpec(action)) {
       return rejected(world, 'InvalidTargets', `${action.id} cannot be executed independently for multiple targets`);
+    }
+  }
+  if (targeting?.additionalTargetsWithinFtOfFirst !== undefined) {
+    for (const targetId of targetIds.slice(1)) {
+      const distance = factsByTarget?.[targetId]?.distanceToFirstTargetFt;
+      if (distance === undefined || !Number.isFinite(distance) || distance < 0) {
+        return rejected(world, 'MissingSpatialFacts', `Missing distance from ${targetId} to first target`);
+      }
+      if (distance > targeting.additionalTargetsWithinFtOfFirst) {
+        return rejected(world, 'OutOfRange', `${targetId} is too far from the first target`);
+      }
     }
   }
   for (const targetId of targetIds) {
     const target = world.actors[targetId];
     if (!target) return rejected(world, 'ActorNotFound', `Unknown target ${targetId}`);
+    const source=world.actors[sourceActorId];
+    if(source&&source.id!==target.id&&(source.planeId??'material')!==(target.planeId??'material')
+      &&(action.mechanics.targeting as Record<string,unknown>|undefined)?.allow_cross_plane!==true)
+      return rejected(world,'InvalidTargets',`${targetId} находится на другой плоскости`);
+    if (target.itemTurn && targetId !== sourceActorId) {
+      return rejected(world, 'InvalidTargets', 'An item initiative slot is not a creature target');
+    }
     const issue = factsIssue(action, targetId, factsByTarget?.[targetId]);
     if (issue) return rejected(world, issue[0], issue[1]);
     if (targeting?.requiresTargetPerception) {
@@ -494,6 +556,9 @@ function actionValidation(
     }
     if (sightIssue === 'target_unseen') {
       return rejected(world, 'CapabilityDenied', `${targetId} cannot be seen by ${sourceActorId}`);
+    }
+    if(targeting?.requiresTargetConditionsAny?.length&&!targeting.requiresTargetConditionsAny.some(condition=>activeConditionsOf(target.runtime).has(condition))){
+      return rejected(world,'InvalidTargets',`${targetId} lacks a required condition for ${action.id}`);
     }
     if (targeting?.requiresUnarmored) {
       const state = armorState(target);
@@ -556,8 +621,8 @@ function actionDefinitionIssue(action: RuleActionDefinition): string | null {
       return `${action.id} has an invalid attack-replacement key`;
     }
     if (replacement.replacesAttacks !== 1
-      || !Number.isInteger(replacement.totalAttacks)
-      || replacement.totalAttacks < 1
+      || replacement.totalAttacks!=='actor'&&(!Number.isInteger(replacement.totalAttacks)
+      || replacement.totalAttacks < 1)
       || typeof replacement.oncePerAttackAction !== 'boolean') {
       return `${action.id} has an invalid attack-replacement policy`;
     }
@@ -668,6 +733,7 @@ function canonicalSpellContext(
 ): CanonicalSpellContext | undefined {
   if (action.kind !== 'spell') return undefined;
   return {
+    spellId: action.spell.entityId ?? action.id,
     baseLevel: action.spell.level,
     castLevel: declaration?.castLevel ?? action.spell.level,
     ...(action.spell.school ? { school: action.spell.school } : {}),
@@ -678,6 +744,7 @@ function canonicalSpellContext(
       grantId: prepared.provenance.grantId,
       sourceId: prepared.provenance.sourceId,
       spellcastingAbility: prepared.provenance.spellcastingAbility,
+      ...(prepared.provenance.fixedSpellcastingModifier !== undefined ? { fixedSpellcastingModifier: prepared.provenance.fixedSpellcastingModifier } : {}),
       mode: prepared.provenance.mode,
       payment: { ...prepared.payment },
     } : {}),
@@ -710,6 +777,8 @@ function stableSourceEntityIds(value: unknown): value is readonly [string, ...st
 }
 
 type WorldActionPrimitive =
+  | 'item_tool'
+  | 'item_light'
   | 'light_world_object'
   | 'minor_illusion_world_object'
   | 'burning_hands_objects'
@@ -727,6 +796,8 @@ type WorldActionPrimitive =
 function worldActionPrimitive(action: RuleActionDefinition): WorldActionPrimitive | null {
   const primitive = action.mechanics.primitive as Record<string, unknown> | undefined;
   switch (primitive?.type) {
+    case 'item_tool':
+    case 'item_light':
     case 'light_world_object':
     case 'minor_illusion_world_object':
     case 'burning_hands_objects':
@@ -974,6 +1045,8 @@ function hazardDefinitionIssue(hazard: RuleHazardDefinition): string | null {
   if (hazard.sourceKind !== 'environment' && hazard.sourceKind !== 'system') {
     return `${hazard.id} has an invalid source kind`;
   }
+  if (hazard.sourceActorId !== undefined && (typeof hazard.sourceActorId !== 'string' || !hazard.sourceActorId.trim()
+    || hazard.resolution !== 'automatic')) return `${hazard.id} has an invalid actor origin`;
   if (!Array.isArray(hazard.sourceEntityIds) || hazard.sourceEntityIds.length === 0
     || hazard.sourceEntityIds.some((id) => typeof id !== 'string' || id.trim().length === 0)) {
     return `${hazard.id} must have at least one stable sourceEntityId`;
@@ -982,6 +1055,7 @@ function hazardDefinitionIssue(hazard: RuleHazardDefinition): string | null {
     return `${hazard.id} contains duplicate sourceEntityIds`;
   }
   if (hazard.resolution === 'automatic') {
+    if (hazard.damageSourceKind !== undefined && !['item','spell','ability'].includes(hazard.damageSourceKind)) return `${hazard.id} has invalid damage source kind`;
     if (!Array.isArray(hazard.effects) || hazard.effects.length === 0) {
       return `${hazard.id} must define at least one automatic consequence`;
     }
@@ -1012,7 +1086,7 @@ function cloneHazard(hazard: RuleHazardDefinition): RuleHazardDefinition {
 }
 
 function hazardSourceId(hazard: RuleHazardDefinition): string {
-  return `${hazard.sourceKind}:${hazard.id}`;
+  return hazard.sourceActorId ?? `${hazard.sourceKind}:${hazard.id}`;
 }
 
 function hazardObligationIds(hazard: RuleHazardDefinition): string[] {
@@ -1065,6 +1139,7 @@ function actionDeclaredEvent(input: {
           ...(spell.grantId ? { grantId: spell.grantId } : {}),
           ...(spell.sourceId ? { sourceId: spell.sourceId } : {}),
           ...(spell.spellcastingAbility ? { spellcastingAbility: spell.spellcastingAbility } : {}),
+          ...(spell.fixedSpellcastingModifier !== undefined ? { fixedSpellcastingModifier: spell.fixedSpellcastingModifier } : {}),
           ...(spell.mode ? { mode: spell.mode } : {}),
           ...(spell.payment ? { payment: { ...spell.payment } } : {}),
           ...(spell.castingTimeAddedSeconds !== undefined
@@ -1081,8 +1156,8 @@ function actionDeclaredEvent(input: {
   };
 }
 
-function actorContext(actor: ActorState): CharacterContext & { passives?: Record<string, unknown>[] } {
-  return { ...actor.character, ...(actor.passives?.length ? { passives: actor.passives } : {}) };
+function actorContext(actor: ActorState): CharacterContext & { selfId: string; passives?: Record<string, unknown>[]; grantedEffects?:ExecuteContext['grantedEffects'] } {
+  return { ...actor.character, selfId: actor.id, grantedEffects:actor.grantedEffects, ...(actor.passives?.length ? { passives: actor.passives } : {}) };
 }
 
 /**
@@ -1147,17 +1222,22 @@ function actionContext(
   facts?: SpatialFacts,
   spell?: SpellCastContext,
 ): ExecuteContext & { passives?: Record<string, unknown>[] } {
+  source={...source,character:liveCharacter(source)};
+  if(target)target={...target,character:projectRuntimeCharacter(target.character,targetRuntime??target.runtime,target.passives??[])};
   const spellcastingAbility = spell?.spellcastingAbility;
-  const character = spellcastingAbility
+  const character = spell?.fixedSpellcastingModifier !== undefined
+    ? { ...source.character, spellcastingMod: spell.fixedSpellcastingModifier }
+    : spellcastingAbility
     ? {
       ...source.character,
       spellcastingAbility,
-      spellcastingMod: source.character.abilityMods[spellcastingAbility] ?? 0,
+      spellcastingMod: liveCharacter(source).abilityMods[spellcastingAbility] ?? 0,
     }
     : source.character;
   return {
     character,
     selfRuntime: source.runtime,
+    deferConcentrationSaves:true,
     selfId: source.id,
     passives: source.passives,
     conditionImmunities: source.traits?.conditionImmunities,
@@ -1166,6 +1246,7 @@ function actionContext(
     rng: env.rng,
     nextId: env.nextId,
     ...(facts ? {attackFacts: {nearbyEligibleAllyToTarget: facts.nearbyEligibleAllyToTarget,
+      attackFromBehind:facts.attackFromBehind,
       immediateStraightMovementFt: facts.immediateStraightMovementFt}} : {}),
     ...(facts?.positionExchangeValidated ? {positionExchangeValidated: true as const} : {}),
     ...(facts?.commandedAttackValidated ? {commandedAttackValidated: true as const} : {}),
@@ -1191,6 +1272,7 @@ function actionContext(
     ...(target ? {
       target: {
         id: target.id,
+        actorKind: target.kind,
         checkMods:actorCheckMods(target),
         ...(Number.isInteger(effectiveActorSize(target, targetRuntime))
           ? { size: effectiveActorSize(target, targetRuntime)! }
@@ -1267,6 +1349,9 @@ function runtimePatch(before: ActorState['runtime'], after: ActorState['runtime'
   if (differs(before.firedThisTurn, after.firedThisTurn)) patch.firedThisTurn = after.firedThisTurn ?? null;
   if (differs(before.firedThisRest, after.firedThisRest)) patch.firedThisRest = after.firedThisRest ?? null;
   if (differs(before.firedByPeriod, after.firedByPeriod)) patch.firedByPeriod = after.firedByPeriod ?? null;
+  if (differs(before.eventOccurrences, after.eventOccurrences)) patch.eventOccurrences = after.eventOccurrences ?? null;
+  if (differs(before.turnMovementFt, after.turnMovementFt)) patch.turnMovementFt = after.turnMovementFt ?? 0;
+  if (before.encounterActive !== after.encounterActive) patch.encounterActive = after.encounterActive === true;
   // Regaining HP ends this dying episode, regardless of which entity healed.
   if(before.hp.current===0 && after.hp.current>0 && !after.deathSaves?.dead){
     patch.deathSaves=emptyDeathSaves();
@@ -1387,7 +1472,14 @@ function concentrationWorldObjectCleanup(
  * modifier ends the spell, so the concentration ledger and every sibling
  * effect must be removed in the same committed command.
  */
+function removeConcentrationEffects(actor: ActorState, before: ActorState['runtime'], ids: ReadonlySet<string>, env: DeterministicEnvironment) {
+  const stripped = { ...before, activeEffects: before.activeEffects.filter(effect => !ids.has(effect.id)) };
+  const ended = reconcileEndedEffects(before, stripped, actionContext({ ...actor, runtime: before }, env), executeAction);
+  return { ...ended, state: reconcileTemporaryResourceGrants(before, ended.state, actorContext(actor)) };
+}
+
 function consumedConcentrationLifecycle(input: {
+  env: DeterministicEnvironment;
   world: WorldState;
   actingActorId: string;
   changedActorId: string;
@@ -1395,6 +1487,10 @@ function consumedConcentrationLifecycle(input: {
   after: ActorState['runtime'];
   obligations: string[];
 }): { transitions: EventInput[]; lifecycle: EventInput[] } {
+  const changedActor = input.world.actors[input.changedActorId];
+  const consumed = reconcileEndedEffects(input.before, input.after,
+    actionContext({ ...changedActor, runtime: input.before }, input.env), executeAction);
+  const after = reconcileTemporaryResourceGrants(input.before, consumed.state, actorContext(changedActor));
   const afterIds = new Set(input.after.activeEffects.map((effect) => effect.id));
   const removedIds = new Set(input.before.activeEffects
     .filter((effect) => !afterIds.has(effect.id))
@@ -1411,11 +1507,11 @@ function consumedConcentrationLifecycle(input: {
         input.actingActorId,
         input.changedActorId,
         input.before,
-        input.after,
+        after,
         'ability_check',
         input.obligations,
       ),
-      lifecycle: [],
+      lifecycle: engineTrace(input.actingActorId, [input.changedActorId], consumed.events, input.obligations),
     };
   }
 
@@ -1424,9 +1520,9 @@ function consumedConcentrationLifecycle(input: {
     'system:concentration-effect-consumed',
   ])];
   const runtimes = new Map<string, ActorState['runtime']>([
-    [input.changedActorId, input.after],
+    [input.changedActorId, after],
   ]);
-  const lifecycle: EventInput[] = [];
+  const lifecycle: EventInput[] = engineTrace(input.actingActorId, [input.changedActorId], consumed.events, obligations);
 
   for (const concentration of concentrations) {
     for (const link of concentration.effectLinks) {
@@ -1435,10 +1531,9 @@ function consumedConcentrationLifecycle(input: {
       const current = runtimes.get(link.actorId) ?? linkedActor.runtime;
       const linkedEffect = current.activeEffects.find((effect) => effect.id === link.effectId);
       if (!linkedEffect) continue;
-      runtimes.set(link.actorId, {
-        ...current,
-        activeEffects: current.activeEffects.filter((effect) => effect.id !== link.effectId),
-      });
+      const ended = removeConcentrationEffects(linkedActor, current, new Set([link.effectId]), input.env);
+      runtimes.set(link.actorId, ended.state);
+      lifecycle.push(...engineTrace(concentration.sourceActorId, [link.actorId], ended.events, obligations));
       lifecycle.push(...engineTrace(concentration.sourceActorId, [link.actorId], [{
         type: 'effect_expired',
         name: linkedEffect.name,
@@ -1473,6 +1568,7 @@ function consumedConcentrationLifecycle(input: {
 }
 
 function actionStateEvents(input: {
+  env: DeterministicEnvironment;
   world: WorldState;
   commandId: string;
   source: ActorState;
@@ -1506,10 +1602,9 @@ function actionStateEvents(input: {
         const current = runtimes.get(link.actorId) ?? actor.runtime;
         const removed = current.activeEffects.find((effect) => effect.id === link.effectId);
         if (!removed) continue;
-        runtimes.set(link.actorId, {
-          ...current,
-          activeEffects: current.activeEffects.filter((effect) => effect.id !== link.effectId),
-        });
+        const ended = removeConcentrationEffects(actor, current, new Set([link.effectId]), input.env);
+        runtimes.set(link.actorId, ended.state);
+        expired.push(...ended.events);
         expired.push({ type: 'effect_expired', name: removed.name });
       }
       if (expired.length) lifecycleEvents.push(...engineTrace(source.id, [], expired, obligations));
@@ -1569,6 +1664,7 @@ function actionStateEvents(input: {
     const concentratingActor = world.actors[actorId];
     const concentration = world.concentrations[actorId];
     if (!concentratingActor || !concentration) continue;
+    if(concentrationProtectedUntilDeath(after,concentratingActor.passives??[]))continue;
     if (!deniedCapabilities(after, concentratingActor.passives ?? []).has('concentration')) continue;
 
     for (const link of concentration.effectLinks) {
@@ -1577,10 +1673,9 @@ function actionStateEvents(input: {
       const current = runtimes.get(link.actorId) ?? linkedActor.runtime;
       const removed = current.activeEffects.find((effect) => effect.id === link.effectId);
       if (!removed) continue;
-      runtimes.set(link.actorId, {
-        ...current,
-        activeEffects: current.activeEffects.filter((effect) => effect.id !== link.effectId),
-      });
+      const ended = removeConcentrationEffects(linkedActor, current, new Set([link.effectId]), input.env);
+      runtimes.set(link.actorId, ended.state);
+      lifecycleEvents.push(...engineTrace(source.id, [link.actorId], ended.events, obligations));
       lifecycleEvents.push(...engineTrace(source.id, [link.actorId], [{
         type: 'effect_expired',
         name: removed.name,
@@ -1624,6 +1719,7 @@ function concentrationSaveFollowUp(input: {
   const { world, actor, actorAfter, obligations } = input;
   const concentration = world.concentrations[actor.id];
   if (!concentration || !actorAfter) return null;
+  if(concentrationProtectedUntilDeath(actorAfter,actor.passives??[]))return null;
   const damage = damageTaken(actor.runtime, actorAfter);
   if (damage <= 0) return null;
   const dc = Math.min(30, Math.max(10, Math.floor(damage / 2)));
@@ -1830,7 +1926,7 @@ function attackFollowUpEvents(input: {
   const queue: PendingResolutionFollowUp[] = [
     ...masterySaves,
     ...(concentration ? [concentration] : []),
-    ...(sourceConcentration ? [sourceConcentration] : []),
+    ...(sourceConcentration && (!concentration || input.source.id!==input.target.id) ? [sourceConcentration] : []),
   ];
   return followUpOpenedEvents({
     world: input.world,
@@ -1882,6 +1978,11 @@ function executeWorldActionPrimitive(
   }
 
   try {
+    if(primitive==='item_tool'){bindItemTool(world,action,command.worldInput,command.actorId);return [];}
+    if (primitive === 'item_light') {
+      if (command.worldInput) return rejected(world, 'InvalidFacts', 'An item light uses its canonical inventory source');
+      return worldObjectEvents(source.id, action, itemLightEvents({ actor: source, objects: world.objects, mechanics: action.mechanics, actionId: action.id, name: action.name, nextId: env.nextId }), 'system:item-light');
+    }
     if (primitive === 'light_world_object') {
       if (command.worldInput?.type !== 'target_object') {
         return rejected(world, 'InvalidFacts', 'Light requires one explicit target-object input');
@@ -1928,11 +2029,11 @@ function executeWorldActionPrimitive(
         sourceActionId: action.id,
         form: command.worldInput.form,
         description: command.worldInput.description,
-        spellSaveDc: 8 + source.character.profBonus + (
+        spellSaveDc: 8 + liveCharacter(source).profBonus + (command.spell?.fixedSpellcastingModifier ?? (
           command.spell?.spellcastingAbility
-            ? source.character.abilityMods[command.spell.spellcastingAbility] ?? 0
+            ? liveCharacter(source).abilityMods[command.spell.spellcastingAbility] ?? 0
             : source.character.spellcastingMod ?? 0
-        ),
+        )),
         ...(command.worldInput.imageCubeSideFt === undefined
           ? {}
           : { imageCubeSideFt: command.worldInput.imageCubeSideFt }),
@@ -2211,11 +2312,15 @@ function executeUseAction(
   options: {
     skipReplacedConcentrationWorldObjectCleanup?: boolean;
     externalPrimitiveHandled?: true;
+    triggeredConsequences?:boolean;
+    suppressSpellCastEvent?: boolean;
   } = {},
 ): EventInput[] {
   const source = world.actors[command.actorId];
   const targets = command.targetIds.map((targetId) => world.actors[targetId]);
   const executionTargets: Array<ActorState | undefined> = targets.length ? targets : [undefined];
+  const deferredCheckFailure=executionTargets.length===1&&Array.isArray(action.mechanics.effects)&&action.mechanics.effects.length===1
+    && (action.mechanics.effects[0] as Record<string,unknown>).resolution==='ability_check';
   let sourceAfter = source.runtime;
   const executions: Array<{
     target?: ActorState;
@@ -2256,6 +2361,7 @@ function executeUseAction(
           command.spell,
         ),
         actionName: action.name,
+        deferFailedAbilityCheckEffects:deferredCheckFailure,
         // Ordinary stat-block attacks use this generic path as well. Damage
         // reducers must receive the same command identity as weapon attacks,
         // including when one attack emits multiple damage packets.
@@ -2263,7 +2369,8 @@ function executeUseAction(
         choices: command.choices,
         triggeringAttack: command.triggeringAttack,
         spell: command.spell,
-        suppressSpellCastEvent: index > 0,
+        suppressSpellCastEvent: index > 0 || options.suppressSpellCastEvent === true,
+        ...(options.triggeredConsequences?{triggeredConsequences:true}:{}),
         deferIncomingDamageConsequences: executions.length === 0 && executionTargets.length === 1
           && shouldDeferDamageConsequences(sourceAtStep, target, action, catalog, target ? command.factsByTarget?.[target.id] : undefined, world),
         deferTargetSaves: true,
@@ -2341,13 +2448,15 @@ function executeUseAction(
       });
       if (opened) return opened;
       if (execution.result.targetState) {
-        const completed = settleDamageConsequences(target, execution.result.targetState, execution.result.events, env);
+        const completed = settleDamageConsequences(target, execution.result.targetState, execution.result.events, env, {...source,runtime:execution.result.state});
         execution.result.targetState = completed.state;
         execution.result.events = completed.events;
+        sourceAfter=execution.result.state=completed.sourceState??execution.result.state;
       }
     }
   }
   const events: EventInput[] = actionStateEvents({
+    env,
     world,
     commandId: command.commandId,
     source,
@@ -2388,7 +2497,10 @@ function executeUseAction(
     });
     return [...masterySaves, ...(concentration ? [concentration] : [])];
   });
-  if (executions.some(({ retaliationEvents }) => retaliationEvents.length)) {
+  const sourceTookDamage=executions.some(({target,result,retaliationEvents})=>retaliationEvents.length
+    ||(!target&&result.events.some(event=>event.type==='damage'))
+    ||result.events.some(event=>event.type==='world_interaction'&&event.operation==='recovery_replacement'&&event.parameters.recipientActorId===source.id));
+  if (sourceTookDamage&&!followUps.some(entry=>entry.type==='concentration_save'&&entry.actorId===source.id)) {
     const attackerConcentration = concentrationSaveFollowUp({
       world,
       actor: source,
@@ -2408,12 +2520,13 @@ function executeUseAction(
   ));
   if (followUps.length === 0 && embeddedChecks.length === 1) {
     const [{target,check}] = embeddedChecks;
-    events.push(...openFailedCheckBoost(
+    const boostEvents=openFailedCheckBoost(
       world,
       {...source,runtime:sourceAfter},
       check.roll,
       {
         type:'action_ability_check',
+        ...(command.worldInput?{worldInput:JSON.parse(JSON.stringify(command.worldInput)) as ActionWorldInput}:{}),
         actionId:action.id,
         effectIndex:check.effectIndex,
         ...(target ? {targetActorId:target.id} : {}),
@@ -2424,14 +2537,85 @@ function executeUseAction(
       command.commandId,
       catalog,
       env,
-    ));
+    );
+    events.push(...boostEvents);
+    if(deferredCheckFailure&&check.roll.outcome==='fail'&&!boostEvents.length){
+      const effect=(action.mechanics.effects as Record<string,unknown>[])[check.effectIndex];
+      if(Array.isArray(effect.on_fail)&&effect.on_fail.length){
+        const after=foldEvents(world,events.map((event,ordinal)=>({...event,ordinal}))),actor=after.actors[source.id],recipient=target?after.actors[target.id]:undefined;
+        const failed=executeAction(actor.runtime,{activation:{mode:'active',cost:[]},effects:[{...effect,resolution:'auto',result:effect.on_fail}]},
+          {...actionContext(actor,env,recipient,recipient?.runtime,target?command.factsByTarget?.[target.id]:undefined,command.spell),choices:command.choices,suppressSpellCastEvent:true});
+        events.push(...actionStateEvents({env,world:after,commandId:command.commandId,source:actor,action,sourceAfter:failed.state,target:recipient,targetAfter:failed.targetState,manageConcentration:false,obligations:obligationIds}),
+          ...engineTrace(source.id,target?[target.id]:[],failed.events,obligationIds));
+      }
+    }
   }
   return events;
+}
+
+/** An equipped item can own an independent initiative turn without owning a
+ * second copy of its wielder's statistics. The virtual actor pays its Action;
+ * the canonical action executor resolves the attack from the live owner. */
+function executeItemTurnAction(
+  world:WorldState,
+  command:AuthoritativeUseActionCommand,
+  action:RuleActionDefinition,
+  catalog:RulesCatalog,
+  env:DeterministicEnvironment,
+):CommandResult|EventInput[]{
+  const turnActor=world.actors[command.actorId];
+  const policy=turnActor.itemTurn;
+  if(!policy||command.actionId!==policy.actionId||!turnActor.capabilities.actionIds.includes(action.id))
+    return rejected(world,'ActionNotGranted','The item turn owns only its declared attack');
+  if(command.spell||command.worldInput||command.choices)
+    return rejected(world,'InvalidActionDefinition','Item-owned weapon attacks do not accept spell or action choices');
+  const owner=world.actors[policy.ownerActorId];
+  if(!owner||owner.lifecycle?.status==='dead'||!actorHasConsciousVitality(owner))
+    return rejected(world,'InvalidActionTiming','The wielder cannot direct this weapon');
+  if(owner.runtime.equipment.main_hand!==policy.itemCardId
+    ||![...(owner.character.equippedCards??[]),...(owner.character.knownCards??[])]
+      .some(card=>card.id===policy.itemCardId))
+    return rejected(world,'InvalidEquipmentState','The item is no longer held by its wielder');
+  const activation=action.mechanics.activation as Record<string,unknown>|undefined;
+  const costs=activationCost(action);
+  if(action.kind!=='nonSpell'||activation?.mode!=='active'||costs.length!==1
+    ||costs[0].resource!=='action'||Number(costs[0].amount??1)!==1
+    ||action.mechanics.requires_held_item!==policy.itemCardId
+    ||action.mechanics.weapon_source_id!==policy.itemCardId
+    ||!hasAttackRoll(action)||action.attackReplacement){
+    return rejected(world,'InvalidActionDefinition','Malformed item-owned weapon attack');
+  }
+  if(deniedCapabilities(owner.runtime,owner.passives??[]).has('action'))
+    return rejected(world,'CapabilityDenied','The wielder cannot attack');
+  const targetIssue=actionValidation(world,action,command.targetIds,command.factsByTarget,owner.id);
+  if(targetIssue)return targetIssue;
+  const payable=canPay(turnActor.runtime,costs);
+  if(!payable.ok)return rejected(world,'InsufficientResources','The item has already attacked this turn');
+  const paid=payCommandCost(turnActor,costs,env);
+  const cancelled=cancelledCostEvents(turnActor,paid);
+  if(cancelled)return cancelled;
+  const obligations=actionObligationIds(action,'system:item-owned-actor','system:attack-resolution');
+  const payment=[...runtimeTransition(turnActor.id,turnActor.id,turnActor.runtime,paid.state,'action',obligations),
+    ...engineTrace(turnActor.id,[turnActor.id],paid.events,obligations)];
+  const {spell:_spell,...itemCommand}=command;
+  const delegated:AuthoritativeUseActionCommand={...itemCommand,actorId:owner.id};
+  const withoutCost:RuleActionDefinition={...action,mechanics:withoutActivationCost(action.mechanics)};
+  return [...payment,...executeUseAction(world,delegated,withoutCost,catalog,env)];
 }
 
 function activationCost(action: RuleActionDefinition): Record<string, unknown>[] {
   const activation = action.mechanics.activation as Record<string, unknown> | undefined;
   return Array.isArray(activation?.cost) ? activation.cost as Record<string, unknown>[] : [];
+}
+
+/** Cost-only phases use the same resource listeners as ordinary actions. */
+function payCommandCost(actor:ActorState,cost:Record<string,unknown>[],env:DeterministicEnvironment){
+  return executeAction(actor.runtime,{activation:{mode:'active',cost},effects:[]},actionContext(actor,env));
+}
+function cancelledCostEvents(actor:ActorState,paid:ReturnType<typeof payCommandCost>):EventInput[]|null{
+  if(!paid.events.some(event=>event.type==='execution_cancelled'))return null;
+  const obligations=['system:resource-spent','system:cancel-execution'];
+  return [...runtimeTransition(actor.id,actor.id,actor.runtime,paid.state,'action',obligations),...engineTrace(actor.id,[],paid.events,obligations)];
 }
 
 function activationMode(action: RuleActionDefinition): string {
@@ -2442,7 +2626,7 @@ function activationMode(action: RuleActionDefinition): string {
 function reactionTriggers(action: RuleActionDefinition): string[] {
   const activation = action.mechanics.activation as Record<string, unknown> | undefined;
   const trigger = activation?.trigger as Record<string, unknown> | undefined;
-  if (activationMode(action) !== 'reaction') return [];
+  if (activationMode(action) !== 'reaction' && activationMode(action)!=='triggered') return [];
   const declared = [
     ...(typeof trigger?.event === 'string' ? [trigger.event] : []),
     ...(Array.isArray(trigger?.events) ? trigger.events.map(String) : []),
@@ -2462,8 +2646,13 @@ function requiredActionCapability(action: RuleActionDefinition): 'action' | 'bon
 
 function withoutActivationCost(mechanics: Record<string, unknown>): Record<string, unknown> {
   const activation = mechanics.activation as Record<string, unknown> | undefined;
+  // A saved continuation has already passed the source check and paid its
+  // item/charge cost. The last consumable may therefore be gone by the time a
+  // target answers the save; do not reinterpret that as a revoked action.
+  const {requires_item_source: _itemSource, requires_any_item_source: _itemSources,
+    requires_runtime_action_grant: _runtimeGrant, ...settled} = mechanics;
   return {
-    ...mechanics,
+    ...settled,
     activation: { ...(activation ?? { mode: 'active' }), cost: [] },
   };
 }
@@ -2548,7 +2737,7 @@ function attackSequenceContinuationIssue(
   if (sequence.actorId !== pending.sourceActorId) {
     return 'Attack sequence source actor disagrees with the saving-throw continuation';
   }
-  if (sequence.totalAttacks !== replacement.totalAttacks || !attackSequenceComplete(sequence)) {
+  if ((replacement.totalAttacks!=='actor'&&sequence.totalAttacks !== replacement.totalAttacks) || !attackSequenceComplete(sequence)) {
     return 'Attack sequence budget is incomplete or disagrees with the compiled action';
   }
   const matchingEntries = sequence.entries.filter((entry) => (
@@ -2822,7 +3011,7 @@ function prepareReactionExecution(
   const preparation = prepareSpellExecution({
     action,
     accessState: actor.spellcastingAccess,
-    resources: actor.runtime.resources,
+    resources: availableResources(actor.runtime,actor.character,actor.passives),
     declaration,
   });
   if (preparation.status === 'rejected') {
@@ -2872,7 +3061,7 @@ function sourceScopedReactionOptions(
     const execution = prepareSpellExecution({
       action,
       accessState: target.spellcastingAccess!,
-      resources: target.runtime.resources,
+      resources: availableResources(target.runtime,target.character,target.passives),
       declaration: { grantId },
     });
     if (execution.status === 'rejected'
@@ -2882,6 +3071,7 @@ function sourceScopedReactionOptions(
       grantId: execution.provenance.grantId,
       sourceId: execution.provenance.sourceId,
       spellcastingAbility: execution.provenance.spellcastingAbility,
+      ...(execution.provenance.fixedSpellcastingModifier !== undefined ? { fixedSpellcastingModifier: execution.provenance.fixedSpellcastingModifier } : {}),
       payment: { ...execution.payment },
     }];
   });
@@ -2926,6 +3116,12 @@ function catalogActionForActor(
   actor: ActorState,
   action: RuleActionDefinition,
 ): RuleActionDefinition {
+  const refs=[action.id,...action.sourceEntityIds];
+  const mechanics=applyItemSpellProjectiles(applyItemActionTargetLimit(action.mechanics,refs,actor.passives??[],action.kind==='spell',action.spell?.level),refs,actor.passives??[]);
+  if(mechanics!==action.mechanics && action.targeting){
+    const targeting=mechanics.targeting as Record<string,unknown>;
+    action={...action,mechanics,targeting:{...action.targeting,maxTargets:Number(targeting.max_targets)}};
+  }
   const holdsWeapon = (['main_hand', 'off_hand'] as const).some((slot) => {
     const cardId = actor.runtime.equipment[slot];
     return !!cardId && actorCard(actor, cardId)?.type === 'weapon';
@@ -2935,7 +3131,7 @@ function catalogActionForActor(
     wearingArmorOrShield: Object.values(actor.runtime.equipment).some(cardId =>
       !!cardId && actorCard(actor, cardId)?.defense_type != null),
     variables: actor.character.variables,
-    abilityMods: actor.character.abilityMods,
+    abilityMods: liveCharacter(actor).abilityMods,
   });
 }
 
@@ -2944,10 +3140,10 @@ function damageReactionOptions(
   catalog: RulesCatalog,
   eventData: Record<string, unknown>,
 ): Array<{ action: RuleActionDefinition; option: ReactionActionOption }> {
-  if (deniedCapabilities(target.runtime, target.passives ?? []).has('reaction')) return [];
   return target.capabilities.actionIds.flatMap((actionId) => {
     const action = catalog.getAction(actionId);
     if (!action || !hasReactionTrigger(action, 'damage_taken')) return [];
+    if(deniedCapabilities(target.runtime,target.passives??[]).has(requiredActionCapability(action)))return [];
     const activation = action.mechanics.activation as Record<string, unknown> | undefined;
     const trigger = activation?.trigger as Record<string, unknown> | undefined;
     // Incoming damage is held before HP mutation. Reactions declared for an
@@ -2970,24 +3166,28 @@ function damageReactionOptions(
 }
 
 function damageReactors(world: WorldState, target: ActorState, catalog: RulesCatalog, facts: SpatialFacts, action: RuleActionDefinition, damageEvents?: readonly EngineEvent[]): Array<{actor: ActorState; options: Array<{action: RuleActionDefinition; option: ReactionActionOption}>}> {
+  const savedFacts=damageEvents?.find((event):event is Extract<EngineEvent,{type:'damage'}>=>event.type==='damage'&&!!event.saveFacts)?.saveFacts;
   const eventData = {delivery: hasAttackRoll(action) ? 'attack' : 'other', melee_attack: isMeleeAttackRollAction(action), source_visible: facts.targetCanSeeSource ?? true,
+    ...savedFacts,
     ...(damageEvents ? {damage_types: damagePackets(damageEvents).map(p => p.damageType)} : {})};
   return [target, ...Object.values(world.actors).filter(actor => actor.id !== target.id).sort((a,b) => a.id.localeCompare(b.id))].flatMap(actor => {
     const observer = actor.id !== target.id;
     const ownedObserver = actor.capabilities.actionIds.some(id => {
       const definition = catalog.getAction(id);
       const trigger = (definition?.mechanics.activation as Record<string,unknown>|undefined)?.trigger as Record<string,unknown>|undefined;
-      return trigger?.protective_field === true;
+      return trigger?.protective_field === true || !!definition&&!!damageTransferSpec(definition)&&action.mechanics.damage_transfer_origin!==true;
     });
     if(observer && !ownedObserver) return [];
     if(observer) {
       const observations = facts.damageObservers?.filter(row => row.actorId === actor.id) ?? [];
-      if(observations.length !== 1 || !Number.isFinite(observations[0].distanceFt) || observations[0].distanceFt < 0) throw new Error('Protective Field requires one valid distance and visibility observation per owner');
-      if(observations[0].distanceFt > 30 || !observations[0].canSeeTarget) return [];
+      if(actor.capabilities.actionIds.some(id=>((catalog.getAction(id)?.mechanics.activation as Record<string,unknown>|undefined)?.trigger as Record<string,unknown>|undefined)?.protective_field===true)
+        &&(observations.length!==1||!Number.isFinite(observations[0].distanceFt)||observations[0].distanceFt<0))throw new Error('Protective Field requires one valid distance and visibility observation per owner');
     }
     const options = damageReactionOptions(actor,catalog,eventData).filter(({action:reaction}) => {
       const trigger=(reaction.mechanics.activation as Record<string,unknown>|undefined)?.trigger as Record<string,unknown>|undefined;
-      return !observer || trigger?.protective_field === true;
+      if(damageTransferSpec(reaction))return observer&&action.mechanics.damage_transfer_origin!==true&&damageTransferEligible(actor,target,reaction,facts);
+      const observation=facts.damageObservers?.find(row=>row.actorId===actor.id);
+      return !observer || trigger?.protective_field === true&&!!observation&&observation.distanceFt<=30&&observation.canSeeTarget;
     });
     return options.length ? [{actor,options}] : [];
   });
@@ -3030,6 +3230,7 @@ function sameHp(
 function adjustedDamageEvents(
   events: readonly EngineEvent[],
   reduction: number,
+  multiplier = 1,
 ): { events: EngineEvent[]; amount: number } {
   let remainingReduction = Math.max(0, Math.floor(reduction));
   let amount = 0;
@@ -3041,7 +3242,7 @@ function adjustedDamageEvents(
       adjusted.push(JSON.parse(JSON.stringify(event)) as EngineEvent);
       continue;
     }
-    const before = event.calculation?.beforeResistance ?? event.amount;
+    const before = Math.floor((event.calculation?.beforeResistance ?? event.amount)*multiplier);
     const applied = Math.min(before, remainingReduction);
     remainingReduction -= applied;
     const calculation = event.calculation ? { ...event.calculation, beforeResistance: before - applied } : undefined;
@@ -3082,14 +3283,16 @@ function applyReactionRuntimeDelta(
     ...(patch.firedByPeriod !== undefined
       ? { firedByPeriod: patch.firedByPeriod ?? undefined }
       : {}),
+    ...(patch.eventOccurrences !== undefined ? {eventOccurrences:patch.eventOccurrences ?? undefined} : {}),
+    ...(patch.turnMovementFt !== undefined ? {turnMovementFt:patch.turnMovementFt ?? undefined} : {}),
   };
 }
 
 function shouldDeferDamageConsequences(
-  source: ActorState, target: ActorState | undefined, action: RuleActionDefinition,
-  catalog: RulesCatalog, facts?: SpatialFacts, world?: WorldState,
+  _source: ActorState, target: ActorState | undefined, action: RuleActionDefinition,
+  catalog: RulesCatalog, facts?: SpatialFacts, world?: WorldState, includeSaveReactions=false,
 ): boolean {
-  if (!target || source.id === target.id || !facts) return false;
+  if (!target || !facts) return false;
   // Mixed healing/damage transitions cannot use the exact-HP continuation.
   const changesHpOtherwise = (value: unknown): boolean => {
     if (Array.isArray(value)) return value.some(changesHpOtherwise);
@@ -3098,7 +3301,7 @@ function shouldDeferDamageConsequences(
     return ['healing', 'heal', 'temp_hp'].includes(String(record.kind))
       || Object.values(record).some(changesHpOtherwise);
   };
-  return !changesHpOtherwise(action.mechanics) && (world ? damageReactors(world,target,catalog,facts,action).length > 0 : damageReactionOptions(target,catalog,{delivery:hasAttackRoll(action)?'attack':'other',melee_attack:isMeleeAttackRollAction(action),source_visible:facts.targetCanSeeSource??true}).length > 0);
+  return !changesHpOtherwise(action.mechanics) && (includeSaveReactions && target.capabilities.actionIds.some(id=>{const reaction=catalog.getAction(id);return !!reaction&&hasReactionTrigger(reaction,'damage_taken');}) || (world ? damageReactors(world,target,catalog,facts,action).length > 0 : damageReactionOptions(target,catalog,{delivery:hasAttackRoll(action)?'attack':'other',melee_attack:isMeleeAttackRollAction(action),source_visible:facts.targetCanSeeSource??true}).length > 0));
 }
 
 function settleDamageConsequences(
@@ -3106,11 +3309,13 @@ function settleDamageConsequences(
   after: ActorState['runtime'],
   events: readonly EngineEvent[],
   env: DeterministicEnvironment,
-): { state: ActorState['runtime']; events: EngineEvent[] } {
+  source?:ActorState,
+): { state: ActorState['runtime']; events: EngineEvent[]; sourceState?:ActorState['runtime'] } {
   if (!events.some(event => event.type === 'damage' && event.deferredConsequences)) {
     return { state: after, events: [...events] };
   }
   let state = { ...after, hp: { ...target.runtime.hp } };
+  let sourceState=source?.runtime;
   const completed: EngineEvent[] = [];
   for (const event of events) {
     completed.push(event);
@@ -3119,13 +3324,19 @@ function settleDamageConsequences(
     state = { ...state, hp: hpAfterDamage(hpBefore, event.amount) };
     if (!event.deferredConsequences) continue;
     const consequence = applyDamageConsequences(state, event.amount, hpBefore,
-      actionContext({ ...target, runtime: state }, env), {
+      actionContext({ ...target, runtime: state }, env,source?{...source,runtime:sourceState!}:undefined,sourceState), {
         damageType: event.damageType,
         crit: event.deferredConsequences.critical,
         imposeConcentrationDisadvantage: event.deferredConsequences.concentrationDisadvantage,
+        delivery:event.deferredConsequences.delivery,
       });
     state = consequence.state;
+    sourceState=consequence.targetState??sourceState;
     completed.push(...consequence.events);
+  }
+  if(source){
+    const lifecycle=resolveDeferredSourceConsequences(sourceState!,state,actionContext({...source,runtime:sourceState!},env,target,state),completed);
+    return {state:lifecycle.targetState??state,sourceState:lifecycle.state,events:[...completed,...lifecycle.events]};
   }
   return { state, events: completed };
 }
@@ -3160,7 +3371,7 @@ interface DamageReactionContinuationInput {
 function damageReactionOpenedEvents(
   input: DamageReactionContinuationInput,
 ): EventInput[] | null {
-  if (!input.targetRuntimeAfter || input.source.id === input.target.id) return null;
+  if (!input.targetRuntimeAfter) return null;
   const packets = damagePackets(input.attackEvents);
   const amount = packets.reduce((sum, packet) => sum + packet.amount, 0);
   if (amount <= 0) return null;
@@ -3200,6 +3411,7 @@ function damageReactionOpenedEvents(
       resolution: {
         id: resolutionId,
         type: 'damage_reaction',
+        transferReactorIds:reactors.filter(row=>row.options.some(option=>damageTransferSpec(option.action))).map(row=>row.actor.id),
         remainingReactorIds: reactors.slice(1).map(row=>row.actor.id),
         openedByCommandId: input.commandId,
         openedAtRevision: input.world.revision,
@@ -3239,6 +3451,9 @@ function damageReactionOpenedEvents(
 }
 
 interface PendingAttackOptions {
+  projectileChecked?: boolean;
+  prepaidCostResources?: string[];
+  reflectedProjectile?: boolean;
   attackActionId?: string;
   preRollDisadvantageReasons?: readonly string[];
   protectionWindowResolved?: boolean;
@@ -3249,6 +3464,7 @@ interface PendingAttackOptions {
   pactBladeProjection?: PactBladeAttackContinuationProjection;
   /** World primitive was already validated/applied before this continuation. */
   externalPrimitiveHandled?: true;
+  suppressSpellCastEvent?: boolean;
 }
 
 function protectionCapabilitySource(actor: ActorState): Protection2024CapabilitySource | null {
@@ -3476,13 +3692,15 @@ function pendingAttackEvents(
   env: DeterministicEnvironment,
   options: PendingAttackOptions = {},
 ): CommandResult | EventInput[] | null {
-  const targetId = command.targetIds[0];
+  let targetId = command.targetIds[0];
   if (!targetId || !hasAttackRoll(action)) return null;
   const originalSource = world.actors[command.actorId];
   const originalTarget = world.actors[targetId];
-  const facts = command.factsByTarget?.[targetId];
+  let facts = command.factsByTarget?.[targetId];
   if (!facts) return rejected(world, 'MissingSpatialFacts', `Missing spatial facts for target ${targetId}`);
-  const protection = protectionCandidatesForAttack({
+  const antimagicIssue=magicActionIssue(originalSource,action,[originalTarget]);
+  if(antimagicIssue)return rejected(world,'InvalidActionTiming',antimagicIssue);
+  const protection = options.reflectedProjectile?{candidates:[],queued:[]}:protectionCandidatesForAttack({
     world, command, source: originalSource, target: originalTarget, facts,
   });
   if ('status' in protection) return protection;
@@ -3492,7 +3710,7 @@ function pendingAttackEvents(
   )));
   let protectionDisadvantage = false;
   const protectionLifecycleEvents: EventInput[] = [];
-  for (const protector of Object.values(world.actors)) {
+  for (const protector of options.reflectedProjectile?[]:Object.values(world.actors)) {
     const candidate = candidateByProtector.get(protector.id);
     for (const effect of actorProtectionEffects(protector).filter((active) => (
       active.protectedTargetActorId === targetId
@@ -3530,7 +3748,7 @@ function pendingAttackEvents(
     && spellAttackIgnoresCover(source.passives ?? [], facts.cover)
     ? 'none'
     : facts.cover;
-  const target = action.kind === 'spell'
+  let target = action.kind === 'spell'
     ? attackTargetWithCover(effectiveWorld.actors[targetId], spellCover)
     : options.protectionWindowResolved || !options.continuationKind || options.continuationKind === 'catalog'
       ? attackTargetWithCover(effectiveWorld.actors[targetId], facts.cover)
@@ -3549,7 +3767,9 @@ function pendingAttackEvents(
     if (!payable.ok) {
       return rejected(world, 'InsufficientResources', `Missing resources: ${payable.missing.join(', ')}`);
     }
-    const paid = pay(source.runtime, activationCost(action));
+    const paid = payCommandCost(source, activationCost(action),env);
+  const cancelled = cancelledCostEvents(source,paid);
+  if(cancelled)return cancelled;
     const [current, ...remaining] = protection.queued;
     return [
       ...protectionLifecycleEvents,
@@ -3573,8 +3793,26 @@ function pendingAttackEvents(
   // once.  The normal path now defers nested mastery saves itself; previewing
   // and replaying a multiattack would otherwise duplicate attack rolls and
   // incorrectly reuse the first roll for later attacks.
-  const availableAdjustments = attackAdjustmentOptions(source, target, catalog);
-  const availableReactions = hitReactionOptions(target, catalog, action, facts);
+  if(!options.projectileChecked&&source.id!==target.id&&hasProjectileReflection(target,action)){
+    const cost=activationCost(action),payable=canPay(source.runtime,cost);
+    if(!payable.ok)return rejected(world,'InsufficientResources',`Missing resources: ${payable.missing.join(', ')}`);
+    const paid=payCommandCost(source,cost,env),cancelled=cancelledCostEvents(source,paid);
+    if(cancelled)return cancelled;
+    const payment=[...runtimeTransition(source.id,source.id,source.runtime,paid.state,'action',obligations),...engineTrace(source.id,[target.id],paid.events,obligations)];
+    const paidWorld=foldEvents(effectiveWorld,payment.map((event,ordinal)=>({...event,ordinal})));
+    const reflection=projectileReflection(target,action,env.rng);
+    if(reflection){
+      const nextCommand=reflection.reflected?{...command,targetIds:[source.id],factsByTarget:{[source.id]:{...facts,cover:'none' as const,relation:'self' as const,targetCanSeeSource:true}}}:command;
+      const result=pendingAttackEvents(paidWorld,nextCommand,{...action,mechanics:withoutActivationCost(action.mechanics)},catalog,env,{...options,projectileChecked:true,reflectedProjectile:reflection.reflected,
+        prepaidCostResources:options.prepaidCostResources??cost.map(entry=>String(entry.resource)),
+        protectionWindowResolved:true,forceExecution:true});
+      if(result&&!Array.isArray(result))return result;
+      return [...protectionLifecycleEvents,...payment,...engineTrace(target.id,[source.id],reflection.events,obligations),...(result??[])];
+    }
+  }
+  const redirectionRules=attackRedirectionRules(source,action,options.weaponCardId);
+  let availableAdjustments = attackAdjustmentOptions(source, target, catalog);
+  let availableReactions = hitReactionOptions(target, catalog, action, facts);
   const availableDamageReactions = damageReactionOptions(target, catalog, {
     delivery: 'attack',
     melee_attack: isMeleeAttackRollAction(action),
@@ -3584,6 +3822,7 @@ function pendingAttackEvents(
     && !availableAdjustments.length
     && !availableDamageReactions.length
     && !options.forceExecution
+    && !redirectionRules.length
     && !protectionDisadvantage
     && !protectionLifecycleEvents.length) return null;
 
@@ -3592,7 +3831,9 @@ function pendingAttackEvents(
   if (!payable.ok) {
     return rejected(world, 'InsufficientResources', `Missing resources: ${payable.missing.join(', ')}`);
   }
-  const paid = pay(source.runtime, cost);
+  const paid = payCommandCost(source, cost,env);
+  const cancelled = cancelledCostEvents(source,paid);
+  if(cancelled)return cancelled;
   const continuationDisadvantages = options.protectionWindowResolved
     ? [...(options.preRollDisadvantageReasons ?? [])]
     : [];
@@ -3612,11 +3853,22 @@ function pendingAttackEvents(
     attackCommandId: command.commandId,
     choices: command.choices,
     spell: command.spell,
+    suppressSpellCastEvent: options.suppressSpellCastEvent === true,
     pauseAfterAttackRoll: true,
+    actionCostResources: options.prepaidCostResources??cost.map(entry=>String(entry.resource)),
     ...(options.externalPrimitiveHandled ? { externalPrimitiveHandled: true as const } : {}),
   });
-  const attackRoll = attackRollFrom(preview.events);
+  let attackRoll = attackRollFrom(preview.events);
   if (!attackRoll) return rejected(world, 'InvalidDecision', `${action.id} did not produce an attack roll`);
+  const redirected=redirectedAttackTarget(effectiveWorld,source,target,redirectionRules,attackRoll);
+  if(redirected){
+    targetId=redirected.target.id;facts=redirected.facts;target=attackTargetWithCover(redirected.target,facts.cover);
+    attackRoll=retargetAttackRoll(redirected.roll,effectiveArmorClass(target));
+    preview.events=preview.events.map(event=>event.type==='roll'&&event.roll.kind==='d20'?{...event,roll:attackRoll!}:event);
+    preview.events.push({type:'narrative',text:`Атака перенаправлена: ${target.name}.`});
+    command={...command,targetIds:[targetId],factsByTarget:{[targetId]:facts}};
+    availableAdjustments=[];availableReactions=hitReactionOptions(target,catalog,action,facts);
+  }
 
   const reactions = attackRoll.outcome === 'hit' || attackRoll.outcome === 'crit'
     ? availableReactions
@@ -3692,6 +3944,7 @@ function pendingAttackEvents(
     attackCommandId: command.commandId,
     choices: command.choices,
     spell: command.spell,
+    suppressSpellCastEvent: true,
     forcedAttackRoll: attackRoll,
     deferIncomingDamageConsequences: shouldDeferDamageConsequences(sourceForRoll, target, action, catalog, facts, world),
     deferTargetSaves: true,
@@ -3709,9 +3962,9 @@ function pendingAttackEvents(
     target,
     action,
     facts,
-    targetRuntimeBeforeDamage: target.runtime,
+    targetRuntimeBeforeDamage: source.id===target.id?preview.state:target.runtime,
     sourceRuntimeAfter: resumed.state,
-    targetRuntimeAfter: resumed.targetState,
+    targetRuntimeAfter: source.id===target.id?resumed.state:resumed.targetState,
     attackEvents: resumedEvents,
     deferredTargetSaves: resumed.deferredTargetSaves,
     attackActionId: options.attackActionId,
@@ -3721,13 +3974,15 @@ function pendingAttackEvents(
   });
   if (damageWindow) return [...protectionLifecycleEvents, ...damageWindow];
   if (resumed.targetState) {
-    const completed = settleDamageConsequences(target, resumed.targetState, resumedEvents, env);
+    const completed = settleDamageConsequences(target, resumed.targetState, resumedEvents, env,{...source,runtime:resumed.state});
     resumed.targetState = completed.state;
+    resumed.state=completed.sourceState??resumed.state;
     resumedEvents.splice(0, resumedEvents.length, ...completed.events);
   }
   const events: EventInput[] = [
     ...protectionLifecycleEvents,
     ...actionStateEvents({
+    env,
       world: effectiveWorld,
       commandId: command.commandId,
       source,
@@ -3744,6 +3999,7 @@ function pendingAttackEvents(
     commandId: command.commandId,
     source,
     target,
+    sourceAfter:resumed.state,
     targetAfter: resumed.targetState,
     action,
     deferred: resumed.deferredTargetSaves,
@@ -3751,6 +4007,59 @@ function pendingAttackEvents(
     obligations,
   }));
   return events;
+}
+
+/** One ordered attack occurrence. The volley is persisted before a reaction
+ * can suspend execution, so a reload never rolls or pays an earlier slot again. */
+function attackVolleyStep(
+  world: WorldState,
+  volley: PendingAttackVolley,
+  catalog: RulesCatalog,
+  env: DeterministicEnvironment,
+): CommandResult | EventInput[] {
+  const index = volley.nextSlotIndex;
+  if (index === volley.targetIds.length) return [{
+    sourceActorId: volley.actorId,
+    obligationIds: ['system:attack-volley'],
+    payload: {type:'AttackVolleyChanged',volley:null},
+  }];
+  const targetId = volley.targetIds[index];
+  if (!targetId) return rejected(world, 'InvalidDecision', 'Attack volley has no next target slot');
+  const action = index === 0 ? volley.action : {
+    ...volley.action,
+    mechanics: withoutActivationCost(volley.action.mechanics),
+  };
+  const command: AuthoritativeUseActionCommand = {
+    schemaVersion: 1,
+    type: 'UseAction',
+    commandId: `${volley.id}:slot:${index}`,
+    actorId: volley.actorId,
+    expectedRevision: world.revision,
+    rulesetContentHash: world.ruleset.contentHash,
+    actionId: action.id,
+    targetIds: [targetId],
+    factsByTarget: {[targetId]: volley.factsByTarget[targetId]},
+    ...(volley.choices ? {choices: JSON.parse(JSON.stringify(volley.choices))} : {}),
+    ...(volley.spell ? {spell: {...volley.spell}} : {}),
+    ...(volley.protectionCandidatesByTarget?.[targetId]
+      ? {protectionCandidates: volley.protectionCandidatesByTarget[targetId].map(row => ({...row}))}
+      : {}),
+  };
+  const pending = pendingAttackEvents(world, command, action, catalog, env, {
+    suppressSpellCastEvent: index > 0,
+  });
+  if (pending && !Array.isArray(pending)) return pending;
+  const events = pending ?? executeUseAction(world, command, action, catalog, env, {
+    suppressSpellCastEvent: index > 0,
+  });
+  const nextIndex = index + 1;
+  const holdsResolution = events.some(event => event.payload.type === 'ResolutionOpened');
+  return [...events, {
+    sourceActorId: volley.actorId,
+    obligationIds: ['system:attack-volley'],
+    payload: {type: 'AttackVolleyChanged', volley: nextIndex < volley.targetIds.length || holdsResolution
+      ? {...volley, nextSlotIndex: nextIndex} : null},
+  }];
 }
 
 function magicMissileReactionOptions(
@@ -3889,6 +4198,7 @@ function magicMissileDamageEvents(input: {
   });
 
   const events: EventInput[] = actionStateEvents({
+    env: input.env,
     world: input.world,
     commandId: input.actionCommandId,
     source,
@@ -4075,7 +4385,9 @@ function pendingSaveEvents(
   if (!payable.ok) {
     return rejected(world, 'InsufficientResources', `Missing resources: ${payable.missing.join(', ')}`);
   }
-  const paid = pay(source.runtime, cost);
+  const paid = payCommandCost(source, cost,env);
+  const cancelled = cancelledCostEvents(source,paid);
+  if(cancelled)return cancelled;
   const declarationEvents = [...paid.events];
   const sourceAfterDeclaration = command.spell?.components?.verbal === true
     ? expireEffectsForTrigger(
@@ -4176,7 +4488,13 @@ function executeHide(
       sourceEntityIds: declared.sourceEntityIds,
       mechanics: {...CORE_HIDE_ACTION.mechanics, name: declared.name, activation: declared.mechanics.activation}};
   }
-  const mechanics = projectActionSurgeCost(hideAction.mechanics, actor.runtime, 'nonspell');
+  const costContext={state:actor.runtime,character:actor.character,passives:actor.passives??[],actionRefs:[hideAction.id,...hideAction.sourceEntityIds],actionCategory:'hide'};
+  const optional=availableActionCostPolicies(hideAction.mechanics,costContext).filter(policy=>policy.optional);
+  if(command.selectedCostPolicyId===undefined&&optional.length)return actionCostChoice(world,command,actor.id,optional,env);
+  let hideMechanics:Record<string,unknown>;
+  try{hideMechanics=applyActionCostPolicies(hideAction.mechanics,costContext,command.selectedCostPolicyId).mechanics;}
+  catch(error){return rejected(world,'InvalidDecision',error instanceof Error?error.message:'Invalid Hide cost policy');}
+  const mechanics = projectActionSurgeCost(hideMechanics, actor.runtime, 'nonspell');
   const payable = canPay(actor.runtime, activationCost({...hideAction, mechanics}));
   if (!payable.ok) {
     return rejected(world, 'InsufficientResources', `Missing resources: ${payable.missing.join(', ')}`);
@@ -4359,27 +4677,36 @@ function triggerHazard(
   if (hazard.resolution === 'automatic') {
     const target = world.actors[command.targetActorId];
     if (!target) return rejected(world, 'ActorNotFound', `Unknown actor ${command.targetActorId}`);
+    const owner = hazard.sourceActorId ? world.actors[hazard.sourceActorId] : target;
+    if (!owner) return rejected(world, 'ActorNotFound', `Unknown hazard origin ${hazard.sourceActorId}`);
     try {
-      const result = executeAction(target.runtime, {
+      const result = executeAction(owner.runtime, {
         name: hazard.name,
+        ...(hazard.damageSourceKind ? { damage_source_kind: hazard.damageSourceKind } : {}),
         activation: { mode: 'passive', cost: [] },
         effects: [{ resolution: 'auto', who: 'target', result: hazard.effects }],
       }, {
-        ...actionContext(target, env, target),
-        grantedEffects: { ...(target.grantedEffects ?? {}), ...(hazard.grantedEffects ?? {}) },
-        selfId: target.id,
+        ...actionContext(owner, env, target),
+        grantedEffects: { ...(owner.grantedEffects ?? {}), ...(hazard.grantedEffects ?? {}) },
+        selfId: owner.id,
         effectSourceId: sourceActorId,
       });
+      const affected=owner.id===target.id?result.state:result.targetState??target.runtime;
+      const concentration=concentrationSaveFollowUp({world,actor:target,actorAfter:affected,obligations});
       return [
+        ...(owner.id === target.id ? [] : runtimeTransition(
+          owner.id, owner.id, owner.runtime, result.state, 'hazard', obligations,
+        )),
         ...runtimeTransition(
           sourceActorId,
           target.id,
           target.runtime,
-          result.state,
+          owner.id === target.id ? result.state : result.targetState ?? target.runtime,
           'hazard',
           obligations,
         ),
         ...engineTrace(sourceActorId, [target.id], result.events, obligations),
+        ...(concentration?followUpOpenedEvents({world,commandId:command.commandId,followUps:[concentration],env}):[]),
       ];
     } catch (error) {
       return rejected(
@@ -4584,7 +4911,7 @@ function resolvePendingSave(
     return rejected(world, 'InvalidDecision', 'Target-save continuation has an invalid shared damage roll');
   }
   const collected = collectRollModifiers(target.runtime, target.passives ?? [], {
-    roll: 'saving_throw', filter: { ability: pending.request.ability, saveSource: pending.spell ? 'spell' : 'other' },
+    roll: 'saving_throw', filter: { ability: pending.request.ability, saveSource: pending.spell ? 'spell' : 'other',...effectRollFacts(action.mechanics) },
     formulaCtx: actorFormulaContext(target.character),
     evalCtx: {
       state: target.runtime,
@@ -4636,9 +4963,44 @@ function resolvePendingSave(
       suppressSpellCastEvent: pending.spellCastEmitted === true,
       damageRng: sharedDamage.rng,
       forceSaveOutcome: roll.outcome === 'success' ? 'success' : 'fail',
+      forcedSaveRoll:roll,
+      deferIncomingDamageConsequences:shouldDeferDamageConsequences(source,targetForResolution,action,catalog,pending.facts,world,true),
       ...(worldActionPrimitive(action) ? { externalPrimitiveHandled: true as const } : {}),
     },
   );
+  const obligations=actionObligationIds(action,'system:target-save','system:pending-resolution');
+  const held=damageReactionOpenedEvents({world,commandId:pending.openedByCommandId,source,target:targetForResolution,action,facts:pending.facts,
+    targetRuntimeBeforeDamage:targetRuntimeForResolution,sourceRuntimeAfter:result.state,targetRuntimeAfter:result.targetState,
+    attackEvents:result.events,catalog,env,obligations,...(pending.attackActionId?{attackActionId:pending.attackActionId}:{}),
+  });
+  if(held){
+    const opened=held.find(e=>e.payload.type==='ResolutionOpened');
+    if(opened?.payload.type!=='ResolutionOpened'||opened.payload.resolution.type!=='damage_reaction')throw Error('Invalid damage continuation');
+    opened.payload.resolution.targetSaveContinuation={pending:JSON.parse(JSON.stringify(pending)),saveRoll:JSON.parse(JSON.stringify(roll)),sharedDamageRolls:sharedDamage.rolls.map(row=>({...row}))};
+    const events:EventInput[]=[...runtimeTransition(target.id,target.id,target.runtime,targetRuntimeForResolution,'action',obligations),
+      ...engineTrace(target.id,[source.id],[{type:'roll',label:`${action.name}: спасбросок ${ABILITY_LABEL[pending.request.ability]}`,roll:{...roll,kind:'save'}},...boonEvents],obligations),
+      {sourceActorId:target.id,obligationIds:obligations,payload:{type:'DecisionRecorded',resolutionId:pending.id,requestId:pending.request.id,actorId:target.id,response:command.response}},
+      {sourceActorId:target.id,obligationIds:obligations,payload:{type:'ResolutionClosed',resolutionId:pending.id}},
+    ];
+    if(pending.attackActionId)events.push(...attackResolutionFinishedEvents({attackAction:world.attackActions[pending.attackActionId],resolutionId:pending.id,actorId:source.id,obligations,closeIfComplete:false}));
+    events.push(...held);
+    if(pending.attackActionId)events.push(blockAttackActionEvent({actorId:source.id,attackActionId:pending.attackActionId,resolutionId:opened.payload.resolution.id,obligations}));
+    return events;
+  }
+  if(result.targetState){
+    const completed=settleDamageConsequences(targetForResolution,result.targetState,result.events,env,{...source,runtime:result.state});
+    result.targetState=completed.state;result.state=completed.sourceState??result.state;result.events=completed.events;
+  }
+  return finalizeTargetSave({world,command,pending,action,source,target,result,targetRuntimeForResolution,roll,boonEvents,sharedDamage,env});
+}
+
+function finalizeTargetSave(input:{
+  world:WorldState;command:Extract<GameCommand,{type:'ResolveDecision'}>;pending:PendingTargetSaveResolution;
+  action:RuleActionDefinition;source:ActorState;target:ActorState;result:ReturnType<typeof executeAction>;
+  targetRuntimeForResolution:ActorState['runtime'];roll:RollLog;boonEvents:EngineEvent[];
+  sharedDamage:{rolls:Array<{sides:number;value:number}>};env:DeterministicEnvironment;alreadyRecorded?:boolean;
+}):EventInput[]{
+  const {world,command,pending,action,source,target,result,targetRuntimeForResolution,roll,boonEvents,sharedDamage,env,alreadyRecorded}=input;
   const obligationIds = actionObligationIds(
     action,
     'system:target-save',
@@ -4684,8 +5046,9 @@ function resolvePendingSave(
   // its outcome. Sheet-only targets (for example the training dummy) have no
   // persisted journal of their own, so omitting the source here reduced a
   // successful save to a bare resource-spend row on the caster's sheet.
-  const events: EventInput[] = engineTrace(target.id, [source.id], [saveEvent, ...boonEvents], obligationIds);
+  const events: EventInput[] = alreadyRecorded ? [] : engineTrace(target.id, [source.id], [saveEvent, ...boonEvents], obligationIds);
   events.push(...actionStateEvents({
+    env,
     world,
     commandId: pending.openedByCommandId,
     source,
@@ -4710,7 +5073,7 @@ function resolvePendingSave(
     resultObligations,
     damageAdjustments.length ? { facts: { damageAdjustments } } : undefined,
   ));
-  events.push({
+  if(!alreadyRecorded) events.push({
     sourceActorId: target.id,
     obligationIds,
     payload: {
@@ -4836,8 +5199,8 @@ function resolveAttackAdjustment(
     }
     const activation = chosen.mechanics.activation as Record<string, unknown>;
     const trigger = activation.trigger as Record<string, unknown>;
-    const paid = pay(source.runtime,activationCost(chosen));
-    attackRoll = {...addBonusDieToD20Roll(attackRoll,Number(trigger.attack_roll_bonus_die),chosen.name,env.rng),attackManeuverActionId:chosen.id};
+    const paid = payCommandCost(source,activationCost(chosen),env);
+    if(!paid.events.some(event=>event.type==='execution_cancelled')) attackRoll = {...addBonusDieToD20Roll(attackRoll,Number(trigger.attack_roll_bonus_die),chosen.name,env.rng),attackManeuverActionId:chosen.id};
     prefix.push(...runtimeTransition(source.id,source.id,source.runtime,paid.state,'action',obligations),
       ...engineTrace(source.id,[target.id],paid.events,obligations));
   }
@@ -5031,12 +5394,14 @@ function resolvePendingAttack(
   const attackAcOffset = (pending.attackRoll.target?.value ?? effectiveArmorClass(target)) - effectiveArmorClass(target);
   const targetForResolution: ActorState = attackAcOffset ? {...targetAfterReaction,
     ac: (targetAfterReaction.ac ?? effectiveArmorClass(targetAfterReaction, {...targetRuntime, activeEffects: []})) + attackAcOffset} : targetAfterReaction;
+  if(source.id===target.id)sourceForAttack={...sourceForAttack,runtime:targetRuntime};
   const resumed = executeAction(sourceForAttack.runtime, withoutActivationCost(attack.mechanics), {
     ...actionContext(sourceForAttack, env, targetForResolution, targetRuntime, pending.facts, pending.spell),
     ...(pending.attackActionId ? { attackActionId: pending.attackActionId } : {}),
     attackCommandId: pending.openedByCommandId,
     choices: pending.choices,
     spell: pending.spell,
+    suppressSpellCastEvent: true,
     forcedAttackRoll: pending.attackRoll,
     deferIncomingDamageConsequences: shouldDeferDamageConsequences(sourceForAttack, targetAfterReaction, attack, catalog, pending.facts, world),
     deferTargetSaves: true,
@@ -5052,10 +5417,10 @@ function resolvePendingAttack(
     attackEvents: resumed.events,
     env,
   });
-  const sourceAfter = pending.pactBladeProjection
+  let sourceAfter = pending.pactBladeProjection
     ? withoutPactBladeEquipmentProjection(armor.attackerAfter, source.runtime)
     : armor.attackerAfter;
-  let finalTargetRuntime = armor.defenderAfter ?? targetRuntime;
+  let finalTargetRuntime = source.id===target.id?sourceAfter:armor.defenderAfter ?? targetRuntime;
   const obligations = [...new Set([
     ...actionObligationIds(
       attack,
@@ -5148,7 +5513,8 @@ function resolvePendingAttack(
     }
     return chained;
   }
-  const completedDamage = settleDamageConsequences(targetAfterReaction, finalTargetRuntime, resumedAttackEvents, env);
+  const completedDamage = settleDamageConsequences(targetAfterReaction, finalTargetRuntime, resumedAttackEvents, env,{...source,runtime:sourceAfter});
+  sourceAfter=completedDamage.sourceState??sourceAfter;
   finalTargetRuntime = completedDamage.state;
   resumedAttackEvents.splice(0, resumedAttackEvents.length, ...completedDamage.events);
 
@@ -5175,6 +5541,7 @@ function resolvePendingAttack(
     }));
   }
   events.push(...actionStateEvents({
+    env,
     world,
     commandId: pending.openedByCommandId,
     source: sourceForAttack,
@@ -5298,7 +5665,7 @@ function resolvePendingDamageReaction(
     const targetAtWindow: ActorState = { ...reactor, runtime: reactorRuntime };
     const available = damageReactors({...world, actors:{...world.actors,[reactor.id]:targetAtWindow}}, {...target,runtime:targetReactionRuntime}, catalog, pending.facts, pending.action,pending.attackEvents);
     if (!available.some(row=>row.actor.id===reactor.id && row.options.some(option=>option.action.id===selectedId))) return rejected(world,'InvalidDecision','Damage reaction is no longer eligible');
-    if (deniedCapabilities(reactorRuntime, reactor.passives ?? []).has('reaction')) {
+    if (deniedCapabilities(reactorRuntime, reactor.passives ?? []).has(requiredActionCapability(reaction))) {
       return rejected(world, 'CapabilityDenied', `${reactor.id} cannot take reactions in its current state`);
     }
     const prepared = prepareReactionExecution(targetAtWindow, reaction, command.response.spell);
@@ -5337,9 +5704,18 @@ function resolvePendingDamageReaction(
   const rolledReduction = reactionEvents.reduce((sum, event) => (
     event.type === 'damage_reduction' ? sum + event.amount : sum
   ), 0);
+  const multipliers=reactionEvents.filter(event=>event.type==='damage_multiplier');
+  if(multipliers.length>1)throw new Error('Only one incoming damage multiplier may resolve in a reaction');
+  const multiplier=multipliers[0]?.factor??1;
   const originalAmount = pending.damage.reduce((sum, packet) => sum + packet.amount, 0);
-  const reduction = Math.min(damageBeforeResistance(pending.attackEvents), Math.max(0, Math.floor(rolledReduction)));
-  const adjusted = adjustedDamageEvents(pending.attackEvents, reduction);
+  const reduction = Math.min(damageBeforeResistance(pending.attackEvents)*multiplier, Math.max(0, Math.floor(rolledReduction)));
+  let adjusted = adjustedDamageEvents(pending.attackEvents, reduction,multiplier);
+  const transfer=selectedReaction?damageTransferSpec(selectedReaction):null;
+  if(transfer&&!reactionEvents.some(event=>event.type==='execution_cancelled')){
+    const moved=transferDamageEvents(adjusted.events,transfer.fraction,source.id,reactor.id,selectedReaction!.name);
+    adjusted={events:moved.events,amount:moved.amount};
+    reactionEvents.push(...moved.transferred);
+  }
   let targetAfter = applyReactionRuntimeDelta(
     pending.targetRuntimeAfter,
     pending.targetRuntimeBeforeDamage,
@@ -5373,10 +5749,24 @@ function resolvePendingDamageReaction(
     ];
   }
   const completedDamage = settleDamageConsequences(
-    { ...target, runtime: targetReactionRuntime }, targetAfter, adjusted.events, env,
+    { ...target, runtime: targetReactionRuntime }, targetAfter, adjusted.events, env,{...source,runtime:sourceAfter},
   );
   targetAfter = completedDamage.state;
+  sourceAfter=completedDamage.sourceState??sourceAfter;
+  if(source.id===target.id)sourceAfter=targetAfter;
   adjusted.events = completedDamage.events;
+  if(pending.targetSaveContinuation){
+    const saved=pending.targetSaveContinuation;
+    const prefix:EventInput[]=[{sourceActorId:reactor.id,obligationIds:reactionObligations,payload:{type:'DecisionRecorded',resolutionId:pending.id,requestId:pending.request.id,actorId:reactor.id,response:command.response}},
+      ...(selectedReaction?[actionDeclaredEvent({actorId:reactor.id,action:selectedReaction,targetIds:reactionTargetIds,timing:'reaction',spell:selectedReactionSpell,obligationIds:reactionObligations})]:[]),
+      ...engineTrace(reactor.id,reactionTargetIds,reactionEvents,reactionObligations),
+    ];
+    if(!isTargetReactor&&reactor.id!==source.id)prefix.push(...runtimeTransition(reactor.id,reactor.id,reactor.runtime,reactorRuntime,'action',reactionObligations));
+    return [...prefix,...finalizeTargetSave({world,command,pending:{...saved.pending,id:pending.id},action:pending.action,source,target,
+      result:{state:sourceAfter,targetState:targetAfter,events:adjusted.events},targetRuntimeForResolution:targetReactionRuntime,
+      roll:saved.saveRoll,boonEvents:[],sharedDamage:{rolls:saved.sharedDamageRolls},env,alreadyRecorded:true,
+    })];
+  }
   const obligations = [...new Set([
     ...pending.obligationIds,
     ...(selectedReaction ? actionObligationIds(selectedReaction) : []),
@@ -5404,6 +5794,7 @@ function resolvePendingDamageReaction(
   }
   if (!isTargetReactor && reactor.id !== source.id) events.push(...runtimeTransition(reactor.id,reactor.id,reactor.runtime,reactorRuntime,'action',obligations));
   events.push(...actionStateEvents({
+    env,
     world,
     commandId: pending.openedByCommandId,
     source,
@@ -5464,7 +5855,7 @@ function resolvePendingDamageReaction(
     actorAfter: sourceAfter,
     obligations,
   });
-  if (sourceConcentration) followUps.push(sourceConcentration);
+  if (sourceConcentration && source.id!==target.id) followUps.push(sourceConcentration);
   events.push(...followUpOpenedEvents({
     world,
     commandId: command.commandId,
@@ -5499,7 +5890,7 @@ function resolveMagicMissileReaction(
   const source = world.actors[pending.sourceActorId];
   const target = world.actors[pending.targetActorId];
   const action = catalog.getAction(pending.actionId);
-  const spec = action ? magicMissileSpec(action) : null;
+  const spec = action && source ? magicMissileSpec(catalogActionForActor(source, action)) : null;
   if (!source || !target) return rejected(world, 'ActorNotFound', 'Magic Missile continuation actor is missing');
   if (!action) return rejected(world, 'ActionNotFound', `Unknown action ${pending.actionId}`);
   const expectedDartCount = spec && typeof pending.spell.castLevel === 'number'
@@ -5639,6 +6030,7 @@ function resolveMagicMissileReaction(
   if (nextReaction) {
     if (selectedReaction && selectedRuntime) {
       events.push(...actionStateEvents({
+    env,
         world,
         commandId: command.commandId,
         source: target,
@@ -5730,7 +6122,7 @@ function resolveMasterySave(
 
   const ability = pending.request.ability;
   const collected = collectRollModifiers(target.runtime, target.passives ?? [], {
-    roll: 'saving_throw', filter: { ability },
+    roll: 'saving_throw', filter: { ability,...effectRollFacts(pending.mastery.effect) },
     formulaCtx: actorFormulaContext(target.character),
     evalCtx: {
       state: target.runtime,
@@ -5787,6 +6179,7 @@ function resolveMasterySave(
     roll: { ...roll, kind: 'save' },
   }, ...boonResolution.events], obligations);
   events.push(...actionStateEvents({
+    env,
     world,
     commandId: command.commandId,
     source,
@@ -5837,10 +6230,69 @@ function resolveMasterySave(
   return events;
 }
 
+function concentrationPreservationActions(actor:ActorState,catalog:RulesCatalog):RuleActionDefinition[]{
+  return actor.capabilities.actionIds.flatMap(id=>{
+    const action=catalog.getAction(id);
+    return action?.kind==='nonSpell'&&action.mechanics.concentration_preservation===true
+      && !activeEffectRequirementIssue(action.mechanics,actor.runtime,actor.character)
+      && canPay(actor.runtime,activationCost(action)).ok ? [action] : [];
+  });
+}
+
+function finishConcentrationSave(world: WorldState, pending: Extract<NonNullable<WorldState['pendingResolution']>, {type:'concentration_save'}>, command: Extract<GameCommand, {type:'ResolveDecision'}>, env: DeterministicEnvironment, preserved: boolean, events: EventInput[]): EventInput[] {
+  // Earlier roll/boon and cost events already changed the runtime used for cleanup.
+  world=foldEvents(world,events.map((event,ordinal)=>({...event,ordinal})));
+  const actor=world.actors[pending.actorId], concentration=world.concentrations[pending.actorId];
+  const obligations=['system:concentration-damage-save','system:pending-resolution'];
+  if (!preserved) {
+    const linkedIdsByActor = new Map<string, Set<string>>();
+    for (const link of concentration.effectLinks) {
+      const ids = linkedIdsByActor.get(link.actorId) ?? new Set<string>();
+      ids.add(link.effectId);
+      linkedIdsByActor.set(link.actorId, ids);
+    }
+    for (const [linkedActorId, linkedEffectIds] of [...linkedIdsByActor.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))) {
+      const linkedActor = world.actors[linkedActorId];
+      if (!linkedActor) continue;
+      const ended = removeConcentrationEffects(linkedActor, linkedActor.runtime, linkedEffectIds, env);
+      const after = ended.state;
+      events.push(...engineTrace(actor.id, [linkedActor.id], ended.events, obligations));
+      events.push(...runtimeTransition(actor.id, linkedActor.id, linkedActor.runtime, after, 'action', obligations));
+    }
+    events.push(...concentrationWorldObjectCleanup(world, concentration, obligations), {
+      sourceActorId: actor.id,
+      obligationIds: obligations,
+      payload: {
+        type: 'ConcentrationCleared',
+        sourceActorId: actor.id,
+        concentrationId: concentration.id,
+        reason: 'failed_save',
+      },
+    });
+  }
+  events.push({
+    sourceActorId: actor.id,
+    obligationIds: obligations,
+    payload: { type: 'ResolutionClosed', resolutionId: pending.id },
+  });
+  events.push(...followUpOpenedEvents({
+    world,
+    commandId: command.commandId,
+    followUps: pending.followUps ?? [],
+    env,
+    ...(preserved ? {} : {
+      invalidConcentrationIds: new Set([pending.concentrationId]),
+    }),
+  }));
+  return events;
+}
+
 function resolveConcentrationSave(
   world: WorldState,
   command: Extract<GameCommand, { type: 'ResolveDecision' }>,
   env: DeterministicEnvironment,
+  catalog: RulesCatalog,
 ): CommandResult | EventInput[] {
   const pending = world.pendingResolution;
   if (!pending || pending.type !== 'concentration_save') {
@@ -5851,6 +6303,22 @@ function resolveConcentrationSave(
   }
   if (pending.actorId !== command.actorId || pending.request.actorId !== command.actorId) {
     return rejected(world, 'InvalidDecision', 'Only the concentrating actor can resolve this save');
+  }
+  if (pending.request.type==='reaction') {
+    if(command.response.kind!=='reaction'||!pending.heldSave)return rejected(world,'InvalidDecision','A held concentration outcome requires its saved action choice');
+    const concentration=world.concentrations[pending.actorId],actor=world.actors[pending.actorId];
+    if(!actor||!concentration||concentration.id!==pending.concentrationId)return rejected(world,'StaleDecision','The referenced concentration is no longer active');
+    const obligations=['system:concentration-damage-save','system:pending-resolution'];
+    const events:EventInput[]=[];
+    if(command.response.actionId!==null){
+      const selectedActionId=command.response.actionId;
+      const action=concentrationPreservationActions(actor,catalog).find(row=>row.id===selectedActionId);
+      if(!action||!pending.request.options.some(option=>option.actionId===action.id))return rejected(world,'InvalidDecision','The concentration preservation action is no longer available');
+      const result=executeAction(actor.runtime,action.mechanics,{...actionContext(actor,env),actionName:action.name});
+      events.push(...engineTrace(actor.id,[],result.events,actionObligationIds(action)),...runtimeTransition(actor.id,actor.id,actor.runtime,result.state,'action',actionObligationIds(action)));
+    }
+    events.push({sourceActorId:actor.id,obligationIds:obligations,payload:{type:'DecisionRecorded',resolutionId:pending.id,requestId:pending.request.id,actorId:actor.id,response:command.response}});
+    return finishConcentrationSave(world,pending,command,env,command.response.actionId!==null,events);
   }
   if (command.response.kind !== 'roll') {
     return rejected(world, 'InvalidDecision', 'A concentration save requires a roll response');
@@ -5866,8 +6334,8 @@ function resolveConcentrationSave(
   });
   const proficient = actor.character.saveProficiencies?.includes('con');
   const modifiers = [
-    { value: actor.character.abilityMods.con ?? 0, source: ABILITY_LABEL.con },
-    ...(proficient ? [{ value: actor.character.profBonus, source: 'БМ' }] : []),
+    { value: liveCharacter(actor).abilityMods.con ?? 0, source: ABILITY_LABEL.con },
+    ...(proficient ? [{ value: liveCharacter(actor).profBonus, source: 'БМ' }] : []),
     ...collected.modifiers,
   ];
   const manual = manualDecisionRng(command);
@@ -5913,48 +6381,17 @@ function resolveConcentrationSave(
     },
   });
   if (roll.outcome !== 'success') {
-    const linkedIdsByActor = new Map<string, Set<string>>();
-    for (const link of concentration.effectLinks) {
-      const ids = linkedIdsByActor.get(link.actorId) ?? new Set<string>();
-      ids.add(link.effectId);
-      linkedIdsByActor.set(link.actorId, ids);
+    const candidates=concentrationPreservationActions({...actor,runtime:boonResolution.runtime},catalog);
+    if(candidates.length){
+      events.push({sourceActorId:actor.id,obligationIds:obligations,payload:{type:'ResolutionClosed',resolutionId:pending.id}},
+        {sourceActorId:actor.id,obligationIds:obligations,payload:{type:'ResolutionOpened',resolution:{...pending,id:env.nextId(),
+          openedByCommandId:command.commandId,openedAtRevision:world.revision+1,heldSave:{roll:{...roll,kind:'save'},dc:pending.request.dc},
+          request:{id:env.nextId(),type:'reaction',actorId:actor.id,trigger:{type:'event',sourceActorId:actor.id,eventKind:'concentration_save_failed'},
+            options:candidates.flatMap(action=>sourceScopedReactionOptions({...actor,runtime:boonResolution.runtime},action))}}}});
+      return events;
     }
-    for (const [linkedActorId, linkedEffectIds] of [...linkedIdsByActor.entries()]
-      .sort(([left], [right]) => left.localeCompare(right))) {
-      const linkedActor = world.actors[linkedActorId];
-      if (!linkedActor) continue;
-      const after = {
-        ...linkedActor.runtime,
-        activeEffects: linkedActor.runtime.activeEffects.filter((effect) => !linkedEffectIds.has(effect.id)),
-      };
-      events.push(...runtimeTransition(actor.id, linkedActor.id, linkedActor.runtime, after, 'action', obligations));
-    }
-    events.push(...concentrationWorldObjectCleanup(world, concentration, obligations), {
-      sourceActorId: actor.id,
-      obligationIds: obligations,
-      payload: {
-        type: 'ConcentrationCleared',
-        sourceActorId: actor.id,
-        concentrationId: concentration.id,
-        reason: 'failed_save',
-      },
-    });
   }
-  events.push({
-    sourceActorId: actor.id,
-    obligationIds: obligations,
-    payload: { type: 'ResolutionClosed', resolutionId: pending.id },
-  });
-  events.push(...followUpOpenedEvents({
-    world,
-    commandId: command.commandId,
-    followUps: pending.followUps ?? [],
-    env,
-    ...(roll.outcome === 'success' ? {} : {
-      invalidConcentrationIds: new Set([pending.concentrationId]),
-    }),
-  }));
-  return events;
+  return finishConcentrationSave(world,pending,command,env,roll.outcome==='success',events);
 }
 
 function resolveHazardSave(
@@ -5981,7 +6418,7 @@ function resolveHazardSave(
   const target = world.actors[pending.targetActorId];
   const ability = pending.request.ability;
   const collected = collectRollModifiers(target.runtime, target.passives ?? [], {
-    roll: 'saving_throw', filter: { ability },
+    roll: 'saving_throw', filter: { ability,...effectRollFacts(pending.hazard) },
     formulaCtx: actorFormulaContext(target.character),
     evalCtx: {
       state: target.runtime,
@@ -6110,7 +6547,9 @@ function studyWorldObject(
   if (!payable.ok) {
     return rejected(world, 'InsufficientResources', `Missing resources: ${payable.missing.join(', ')}`);
   }
-  const paid = pay(actor.runtime, cost);
+  const paid = payCommandCost(actor, cost,env);
+  const cancelled = cancelledCostEvents(actor,paid);
+  if(cancelled)return cancelled;
   const skill = 'investigation';
   const proficient = actor.character.skillProficiencies?.includes(skill);
   const expertise = actor.character.skillExpertise?.includes(skill);
@@ -6119,12 +6558,12 @@ function studyWorldObject(
     filter: { ability: 'int', skill },
     formulaCtx: actorFormulaContext(actor.character),
   });
-  const proficiency = expertise ? actor.character.profBonus * 2
-    : proficient ? actor.character.profBonus : 0;
+  const proficiency = expertise ? liveCharacter(actor).profBonus * 2
+    : proficient ? liveCharacter(actor).profBonus : 0;
   const roll = rollD20({
     advantage: collected.advantage, hasAdvantage: collected.hasAdvantage, hasDisadvantage: collected.hasDisadvantage,
     modifiers: [
-      { value: actor.character.abilityMods.int ?? 0, source: ABILITY_LABEL.int },
+      { value: liveCharacter(actor).abilityMods.int ?? 0, source: ABILITY_LABEL.int },
       ...(proficiency ? [{ value: proficiency, source: expertise ? 'Экспертиза' : 'БМ' }] : []),
       ...collected.modifiers,
     ],
@@ -6137,6 +6576,7 @@ function studyWorldObject(
     { type: 'roll', label: 'Study (Investigation)', roll: { ...roll, kind: 'check' } },
   ];
   const after = consumeNextRollEffects(paid.state, 'ability_check', checkEvents, {
+    usedRuleKeys:roll.usedRuleKeys,
     filter: { ability: 'int', skill },
     failed: roll.usedFailureBonus === true,
     finalFailed: roll.usedFailureBonus === true && roll.outcome === 'fail',
@@ -6154,6 +6594,7 @@ function studyWorldObject(
     'system:minor-illusion',
   );
   const concentration = consumedConcentrationLifecycle({
+    env,
     world,
     actingActorId: actor.id,
     changedActorId: actor.id,
@@ -6266,6 +6707,7 @@ function revealMagicAura(
   world: WorldState,
   command: Extract<GameCommand, { type: 'RevealMagicAura' }>,
   catalog: RulesCatalog,
+  env: DeterministicEnvironment,
 ): CommandResult | EventInput[] {
   const actor = world.actors[command.actorId];
   const concentration = world.concentrations[actor.id];
@@ -6334,7 +6776,9 @@ function revealMagicAura(
     });
   }
 
-  const paid = pay(actor.runtime, cost);
+  const paid = payCommandCost(actor, cost,env);
+  const cancelled = cancelledCostEvents(actor,paid);
+  if(cancelled)return cancelled;
   const followUpAction: RuleActionDefinition = {
     id: 'core.action.detect-magic-aura',
     name: 'Detect Magic: reveal aura',
@@ -6380,6 +6824,7 @@ function moveActiveDancingLights(
   world: WorldState,
   command: Extract<GameCommand, { type: 'MoveDancingLights' }>,
   catalog: RulesCatalog,
+  env: DeterministicEnvironment,
 ): CommandResult | EventInput[] {
   const actor = world.actors[command.actorId];
   const concentration = world.concentrations[actor.id];
@@ -6433,7 +6878,9 @@ function moveActiveDancingLights(
       policy: parsedPolicy.policy as DancingLightsWorldPolicy,
       targeting: parsedPolicy.targeting,
     });
-    const paid = pay(actor.runtime, cost);
+    const paid = payCommandCost(actor, cost,env);
+  const cancelled = cancelledCostEvents(actor,paid);
+  if(cancelled)return cancelled;
     const followUpAction: RuleActionDefinition = {
       id: 'core.bonus-action.dancing-lights-move',
       name: 'Dancing Lights: move lights',
@@ -6597,7 +7044,11 @@ function resolveFailedCheckBoost(
   const studyObject = pending.continuation.type === 'study' ? world.objects[pending.continuation.objectId] : undefined;
   if (pending.continuation.type === 'study' && studyObject?.illusion?.spellSaveDc !== trigger.dc) return rejected(world, 'InvalidDecision', 'Иллюзия для проверки изменилась');
   const actionContinuation = pending.continuation.type === 'action_ability_check' ? pending.continuation : undefined;
-  const continuedAction = actionContinuation ? catalog.getAction(actionContinuation.actionId) : undefined;
+  let continuedAction = actionContinuation ? catalog.getAction(actionContinuation.actionId) : undefined;
+  if(continuedAction&&worldActionPrimitive(continuedAction)==='item_tool'){
+    try{continuedAction=bindItemTool(world,continuedAction,actionContinuation?.worldInput,actor.id);}
+    catch(error){return rejected(world,'InvalidDecision',error instanceof Error?error.message:String(error));}
+  }
   const continuedEffect = actionContinuation && continuedAction
     && Array.isArray(continuedAction.mechanics.effects)
     ? continuedAction.mechanics.effects[actionContinuation.effectIndex] as Record<string,unknown>|undefined
@@ -6639,14 +7090,14 @@ function resolveFailedCheckBoost(
     const mutation = studyMinorIllusion({objects: world.objects, objectId: studyObject.id, actorId: actor.id, checkTotal: roll.total});
     events.push(...worldObjectEvents(actor.id, CORE_STUDY_WORLD_OBJECT_ACTION, mutation.events, 'system:study-action', 'system:minor-illusion'));
   }
-  if (roll.outcome === 'success' && actionContinuation && continuedAction && continuedEffect) {
+  if (actionContinuation && continuedAction && continuedEffect) {
     const target = actionContinuation.targetActorId ? world.actors[actionContinuation.targetActorId] : undefined;
     const resumed = executeAction(runtime, {
       name:continuedAction.name,
       activation:{mode:'active',cost:[]},
       effects:[{
         resolution:'auto',
-        result:continuedEffect.on_success,
+        result:(roll.outcome==='success'?continuedEffect.on_success:continuedEffect.on_fail)??[],
         ...(continuedEffect.who !== undefined ? {who:continuedEffect.who} : {}),
         ...(continuedEffect.who_choice_id !== undefined ? {who_choice_id:continuedEffect.who_choice_id} : {}),
       }],
@@ -6681,8 +7132,8 @@ function executeCheck(
   const skill = command.skill?.trim().toLowerCase();
   const proficient = !!skill && actor.character.skillProficiencies?.includes(skill);
   const expertise = !!skill && actor.character.skillExpertise?.includes(skill);
-  const base = actor.character.abilityMods[command.ability] ?? 0;
-  const proficiency = expertise ? actor.character.profBonus * 2 : proficient ? actor.character.profBonus : 0;
+  const base = liveCharacter(actor).abilityMods[command.ability] ?? 0;
+  const proficiency = expertise ? liveCharacter(actor).profBonus * 2 : proficient ? liveCharacter(actor).profBonus : 0;
   const collected = collectRollModifiers(actor.runtime, actor.passives ?? [], {
     roll: 'ability_check',
     filter: {
@@ -6710,6 +7161,7 @@ function executeCheck(
     roll: { ...roll, kind: 'check' },
   });
   const after = consumeNextRollEffects(actor.runtime, 'ability_check', checkEvents, {
+    usedRuleKeys:roll.usedRuleKeys,
     filter: {
       ability: command.ability,
       ...(skill ? { skill } : {}),
@@ -6720,6 +7172,7 @@ function executeCheck(
   });
   const obligations = ['system:ability-check', 'system:next-roll-effect'];
   const concentration = consumedConcentrationLifecycle({
+    env,
     world,
     actingActorId: actor.id,
     changedActorId: actor.id,
@@ -6742,7 +7195,7 @@ function executeSave(
 ): EventInput[] {
   const actor = world.actors[command.actorId];
   const proficient = actor.character.saveProficiencies?.includes(command.ability);
-  const base = actor.character.abilityMods[command.ability] ?? 0;
+  const base = liveCharacter(actor).abilityMods[command.ability] ?? 0;
   const collected = collectRollModifiers(actor.runtime, actor.passives ?? [], {
     roll: 'saving_throw', filter: { ability: command.ability },
     formulaCtx: actorFormulaContext(actor.character),
@@ -6751,7 +7204,7 @@ function executeSave(
     advantage: collected.advantage, hasAdvantage: collected.hasAdvantage, hasDisadvantage: collected.hasDisadvantage,
     modifiers: [
       { value: base, source: ABILITY_LABEL[command.ability] },
-      ...(proficient ? [{ value: actor.character.profBonus, source: 'БМ' }] : []),
+      ...(proficient ? [{ value: liveCharacter(actor).profBonus, source: 'БМ' }] : []),
       ...collected.modifiers,
     ],
     target: { type: 'dc', value: command.dc },
@@ -6912,6 +7365,13 @@ function completedAttackActionEvent(input: {
   }] : [];
 }
 
+function actionCostChoice(world:WorldState,command:Extract<GameCommand,{type:'BeginAttackAction'|'AttemptHide'}>,actorId:string,policies:ReturnType<typeof availableActionCostPolicies>,env:DeterministicEnvironment):EventInput[]{
+ return [{sourceActorId:actorId,obligationIds:['system:action-cost-policy'],payload:{type:'ResolutionOpened',resolution:{
+  id:env.nextId(),type:'action_cost_policy',openedByCommandId:command.commandId,openedAtRevision:world.revision,deadlineLogicalClock:world.logicalClock+10,actorId,
+  continuation:JSON.parse(JSON.stringify(command)),request:{id:env.nextId(),type:'action_cost_policy',actorId,options:policies.map(({policyId,label,sourceEntity})=>({policyId,label,...(sourceEntity?{sourceEntity}:{})}))},
+ }}}];
+}
+
 function beginAttackAction(
   world: WorldState,
   command: Extract<GameCommand, { type: 'BeginAttackAction' }>,
@@ -6933,6 +7393,7 @@ function beginAttackAction(
     || !profile.sourceEntityIds.length) {
     return rejected(world, 'InvalidActionDefinition', `${actor.id} has no canonical Attack profile`);
   }
+
   const mainWeaponCardId = actor.runtime.equipment.main_hand;
   const declared = resolveDeclaredWeaponAction({
     actor,
@@ -6949,24 +7410,28 @@ function beginAttackAction(
     ? declared.cost.filter((entry) => entry.resource === 'action')
     : activationCost(CORE_ATTACK_ACTION);
   const declarationActivation = declarationAction.mechanics.activation as Record<string, unknown> | undefined;
-  const timingAction: RuleActionDefinition = {
-    ...declarationAction,
-    mechanics: projectActionSurgeCost({
-      ...declarationAction.mechanics,
-      activation: { ...(declarationActivation ?? {}), cost: declaredTimingCost },
-    }, actor.runtime, 'nonspell'),
-  };
+  const originalTimingMechanics={...declarationAction.mechanics,activation:{...(declarationActivation??{}),cost:declaredTimingCost}};
+  const policyContext={state:actor.runtime,character:actor.character,passives:actor.passives??[],actionRefs:[declarationAction.id,...declarationAction.sourceEntityIds],actionCategory:'attack'};
+  const optional=availableActionCostPolicies(originalTimingMechanics,policyContext).filter(policy=>policy.optional);
+  if(command.selectedCostPolicyId===undefined&&optional.length)return actionCostChoice(world,command,actor.id,optional,env);
+  let applied:ReturnType<typeof applyActionCostPolicies>;
+  try{applied=applyActionCostPolicies(originalTimingMechanics,policyContext,command.selectedCostPolicyId);}
+  catch(error){return rejected(world,'InvalidDecision',error instanceof Error?error.message:'Invalid attack cost policy');}
+  const attackBudget=attackActionBudget(actor,applied.appliedPolicyIds,policyContext.actionRefs);
+  const timingAction:RuleActionDefinition={...declarationAction,mechanics:projectActionSurgeCost(applied.mechanics,actor.runtime,'nonspell')};
   const timingCost = activationCost(timingAction);
   const payable = canPay(actor.runtime, timingCost);
   if (!payable.ok) {
     return rejected(world, 'InsufficientResources', `Missing resources: ${payable.missing.join(', ')}`);
   }
-  const paid = pay(actor.runtime, timingCost);
+  const paid = payCommandCost(actor, timingCost,env);
+  const cancelled = cancelledCostEvents(actor,paid);
+  if(cancelled)return cancelled;
   const attackActionId = env.nextId();
   const sequence = beginAttackSequence({
     id: attackActionId,
     actorId: actor.id,
-    totalAttacks: profile.attacksPerAction,
+    totalAttacks: attackBudget.value,
   });
   const attackAction: AttackActionState = {
     id: attackActionId,
@@ -6975,6 +7440,7 @@ function beginAttackAction(
     turnKey: attackTurnKey(world, actor.id),
     status: 'open',
     sequence,
+    ...(applied.appliedPolicyIds.length?{costPolicyIds:applied.appliedPolicyIds}:{}),
     ...(declared.status === 'valid' ? {
       declaredActionId: declared.action.id,
       declaredActionSourceEntityIds: [...declared.action.sourceEntityIds] as [string, ...string[]],
@@ -6987,7 +7453,7 @@ function beginAttackAction(
     ...declarationAction.sourceEntityIds.map((id) => `entity:${id}`),
     ...profile.sourceEntityIds.map((id) => `entity:${id}`),
   ];
-  return [
+  const events:EventInput[] = [
     actionDeclaredEvent({
       actorId: actor.id,
       action: declarationAction,
@@ -6995,7 +7461,7 @@ function beginAttackAction(
       timing: 'active',
       facts: {
         attackActionId,
-        attacksPerAction: profile.attacksPerAction,
+        attacksPerAction: attackBudget.value, attackCountSources:attackBudget.sources,
         ...(declared.status === 'valid' ? { declaredActionId: declared.action.id } : {}),
         attackProfileSourceEntityIds: [...profile.sourceEntityIds],
       },
@@ -7009,6 +7475,13 @@ function beginAttackAction(
       payload: { type: 'AttackActionStarted', attackAction },
     },
   ];
+  if(command.afterBegin){
+    if(!['PerformWeaponAttack','PerformUnarmedStrike'].includes(command.afterBegin.type))return rejected(world,'InvalidActionDefinition','Invalid first Attack entry');
+    const ready=foldEvents(world,events.map((event,ordinal)=>({...event,ordinal})));
+    const continuation=executeCommand(ready,{...command,...command.afterBegin,attackActionId},catalog,env);
+    return Array.isArray(continuation)?[...events,...continuation]:continuation;
+  }
+  return events;
 }
 
 function weaponRanges(
@@ -7206,7 +7679,7 @@ function lightWeaponExtraAttackAction(
   const onHit = Array.isArray(effect.on_hit)
     ? effect.on_hit as Record<string, unknown>[]
     : [];
-  const abilityModifier = source.character.abilityMods[weapon.ability] ?? 0;
+  const abilityModifier = liveCharacter(source).abilityMods[weapon.ability] ?? 0;
   return {
     ...CORE_LIGHT_WEAPON_EXTRA_ATTACK,
     mechanics: {
@@ -7283,7 +7756,7 @@ function cleaveWeaponAttackAction(
   const onHit = Array.isArray(effect.on_hit)
     ? effect.on_hit as Record<string, unknown>[]
     : [];
-  const abilityModifier = source.character.abilityMods[weapon.ability] ?? 0;
+  const abilityModifier = liveCharacter(source).abilityMods[weapon.ability] ?? 0;
   return {
     ...base,
     mechanics: {
@@ -7471,7 +7944,9 @@ function performWeaponAttack(
       `Cannot pay ${command.declaredActionId}: ${payable.missing.join(', ')}`,
     );
   }
-  const declaredPayment = pay(source.runtime, declaredCost);
+  const declaredPayment = payCommandCost(source, declaredCost,env);
+  const cancelled = cancelledCostEvents(source,declaredPayment);
+  if(cancelled)return cancelled;
   const target = world.actors[command.targetActorId];
   if (!target) return rejected(world, 'ActorNotFound', `Unknown target ${command.targetActorId}`);
   if (target.id === source.id) return rejected(world, 'InvalidTargets', 'A weapon attack cannot target its attacker');
@@ -7822,6 +8297,7 @@ function performWeaponAttack(
     entryEvent,
     ...paymentEvents,
     ...actionStateEvents({
+    env,
       world,
       commandId: command.commandId,
       source: sourceForAttack,
@@ -8031,7 +8507,9 @@ function performLightWeaponExtraAttack(
       `Cannot pay ${command.declaredActionId}: ${payable.missing.join(', ')}`,
     );
   }
-  const declaredPayment = pay(source.runtime, declaredCost);
+  const declaredPayment = payCommandCost(source, declaredCost,env);
+  const cancelled = cancelledCostEvents(source,declaredPayment);
+  if(cancelled)return cancelled;
   const markedRuntime = {
     ...declaredPayment.state,
     firedThisTurn: [
@@ -8088,7 +8566,7 @@ function performLightWeaponExtraAttack(
     },
     formulaCtx: {
       ...actorFormulaContext(source.character),
-      weaponMod: source.character.abilityMods[selectedWeapon.ability] ?? 0,
+      weaponMod: liveCharacter(source).abilityMods[selectedWeapon.ability] ?? 0,
     },
     evalCtx: { character: source.character, state: source.runtime },
   });
@@ -8206,6 +8684,7 @@ function performLightWeaponExtraAttack(
   return [
     declaration,
     ...actionStateEvents({
+    env,
       world,
       commandId: command.commandId,
       source,
@@ -8448,6 +8927,7 @@ function performWeaponMasteryCleaveAttack(
   return [
     declaration,
     ...actionStateEvents({
+    env,
       world,
       commandId: command.commandId,
       source,
@@ -8529,8 +9009,10 @@ function executeReactionUnarmedControl(
     return rejected(world, 'NoFreeGraspingPart', `${source.id} has no free part to maintain a grapple`);
   }
   const cost = activationCost(action);
-  const paid = pay(source.runtime, cost);
-  const dc = 8 + (source.character.abilityMods.str ?? 0) + source.character.profBonus;
+  const paid = payCommandCost(source, cost,env);
+  const cancelled = cancelledCostEvents(source,paid);
+  if(cancelled)return cancelled;
+  const dc = 8 + (liveCharacter(source).abilityMods.str ?? 0) + liveCharacter(source).profBonus;
   const obligations = actionObligationIds(
     action,
     'system:unarmed-strike',
@@ -8764,6 +9246,7 @@ function executeUnarmedStrike(
       declaration,
       entryEvent,
       ...actionStateEvents({
+    env,
         world,
         commandId: command.commandId,
         source,
@@ -8802,7 +9285,7 @@ function executeUnarmedStrike(
   }
 
   const resolutionId = env.nextId();
-  const dc = 8 + (source.character.abilityMods.str ?? 0) + source.character.profBonus;
+  const dc = 8 + (liveCharacter(source).abilityMods.str ?? 0) + liveCharacter(source).profBonus;
   return [
     declaration,
     entryEvent,
@@ -8850,11 +9333,12 @@ function targetSaveRoll(input: {
   dc: number;
   command: Extract<GameCommand, { type: 'ResolveDecision' }>;
   env: DeterministicEnvironment;
+  purpose?:'grapple'|'shove';
 }): { roll: RollLog; event: EngineEvent } | { issue: string } {
   const { target, ability, dc, command, env } = input;
   const collected = collectRollModifiers(target.runtime, target.passives ?? [], {
     roll: 'saving_throw',
-    filter: { ability },
+    filter: { ability,...(input.purpose?{purpose:input.purpose,against_forced_movement:input.purpose==='shove',against_prone:input.purpose==='shove'}:{}) },
     formulaCtx: actorFormulaContext(target.character),
     evalCtx: {
       state: target.runtime,
@@ -9285,6 +9769,7 @@ function resolveUnarmedSave(
       dc: pending.request.dc,
       command,
       env,
+      purpose:pending.option,
     });
     if ('issue' in rolled) return rejected(world, 'InvalidDecision', rolled.issue);
     const boonResolution = afterFailureSavingThrowBoon({
@@ -9419,6 +9904,43 @@ function resolveUnarmedSave(
   return events;
 }
 
+function resolveActionCostPolicy(
+  world:WorldState, command:Extract<GameCommand,{type:'ResolveDecision'}>,
+  catalog:RulesCatalog, env:DeterministicEnvironment,
+):CommandResult|EventInput[] {
+  const pending=world.pendingResolution;
+  if (pending?.type!=='action_cost_policy') return rejected(world,'NoPendingResolution','No pending action cost choice');
+  if (pending.id!==command.resolutionId || pending.request.id!==command.requestId) return rejected(world,'StaleDecision','Action cost choice changed');
+  if (pending.actorId!==command.actorId || command.response.kind!=='action_cost_policy') return rejected(world,'InvalidDecision','Only the action owner may choose its cost');
+  const policyId=command.response.policyId;
+  if (policyId!==null && !pending.request.options.some(option=>option.policyId===policyId)) return rejected(world,'InvalidDecision','Unknown action cost choice');
+  const obligations=['system:action-cost-policy'];
+  const closed:EventInput[]=[
+    {sourceActorId:command.actorId,obligationIds:obligations,payload:{type:'DecisionRecorded',resolutionId:pending.id,
+      requestId:pending.request.id,actorId:command.actorId,response:command.response}},
+    {sourceActorId:command.actorId,obligationIds:obligations,payload:{type:'ResolutionClosed',resolutionId:pending.id}},
+  ];
+  const ready=foldEvents(world,closed.map((event,ordinal)=>({...event,ordinal})));
+  const continued=executeCommand(ready,{...pending.continuation,commandId:command.commandId,
+    selectedCostPolicyId:policyId},catalog,env);
+  return Array.isArray(continued)?[...closed,...continued]:continued;
+}
+
+function resolveActiveSlotRecovery(world:WorldState,command:Extract<GameCommand,{type:'ResolveDecision'}>,catalog:RulesCatalog,env:DeterministicEnvironment):CommandResult|EventInput[]{
+  const pending=world.pendingResolution;
+  if(pending?.type!=='slot_recovery')return rejected(world,'NoPendingResolution','No pending slot recovery');
+  if(pending.id!==command.resolutionId||pending.request.id!==command.requestId)return rejected(world,'StaleDecision','Slot recovery choice changed');
+  if(pending.actorId!==command.actorId||command.response.kind!=='slot_recovery')return rejected(world,'InvalidDecision','Only the owner may select recovered slots');
+  const obligations=['system:active-slot-recovery'];
+  const closed:EventInput[]=[{sourceActorId:command.actorId,obligationIds:obligations,payload:{type:'DecisionRecorded',resolutionId:pending.id,requestId:pending.request.id,actorId:command.actorId,response:command.response}},
+    {sourceActorId:command.actorId,obligationIds:obligations,payload:{type:'ResolutionClosed',resolutionId:pending.id}}];
+  if(command.response.slotLevels===null)return closed;
+  if(!Array.isArray(command.response.slotLevels)||command.response.slotLevels.some(n=>!Number.isSafeInteger(n)))return rejected(world,'InvalidDecision','Invalid slot selection');
+  const ready=foldEvents(world,closed.map((event,ordinal)=>({...event,ordinal})));
+  const continued=executeCommand(ready,{...pending.continuation,commandId:command.commandId,selectedSlotRecovery:command.response.slotLevels},catalog,env);
+  return Array.isArray(continued)?[...closed,...continued]:continued;
+}
+
 function resolveShoveOutcome(
   world: WorldState,
   command: Extract<GameCommand, { type: 'ResolveDecision' }>,
@@ -9529,7 +10051,9 @@ function openEscapeGrapple(
   if (!payable.ok) {
     return rejected(world, 'InsufficientResources', `Missing resources: ${payable.missing.join(', ')}`);
   }
-  const paid = pay(actor.runtime, cost);
+  const paid = payCommandCost(actor, cost,env);
+  const cancelled = cancelledCostEvents(actor,paid);
+  if(cancelled)return cancelled;
   const action = systemActionAsRuleDefinition(SYSTEM_ACTION_IDS.escapeGrapple, {
     activation: { mode: 'active', cost },
   });
@@ -9614,9 +10138,9 @@ function resolveEscapeGrapple(
     roll = rollD20({
       advantage: collected.advantage, hasAdvantage: collected.hasAdvantage, hasDisadvantage: collected.hasDisadvantage,
       modifiers: [
-        { value: actor.character.abilityMods[ability] ?? 0, source: ABILITY_LABEL[ability] },
+        { value: liveCharacter(actor).abilityMods[ability] ?? 0, source: ABILITY_LABEL[ability] },
         ...(proficient ? [{
-          value: actor.character.profBonus * (expertise ? 2 : 1),
+          value: liveCharacter(actor).profBonus * (expertise ? 2 : 1),
           source: expertise ? 'Экспертиза' : 'БМ',
         }] : []),
         ...collected.modifiers,
@@ -9640,11 +10164,13 @@ function resolveEscapeGrapple(
     roll: { ...roll, kind: 'check' },
   }];
   const after = consumeNextRollEffects(actor.runtime, 'ability_check', checkEvents, {
+    usedRuleKeys:roll.usedRuleKeys,
     filter: { ability, skill: pending.skill },
     failed: roll.usedFailureBonus === true,
     finalFailed: roll.usedFailureBonus === true && roll.outcome === 'fail',
   });
   const concentration = consumedConcentrationLifecycle({
+    env,
     world, actingActorId: actor.id, changedActorId: actor.id,
     before: actor.runtime, after, obligations,
   });
@@ -10020,7 +10546,9 @@ function executeFindFamiliarCast(input: {
       owner,
       summoningActionId: action.id,
     });
-    const paid = pay(owner.runtime, activationCost(action));
+    const paid = payCommandCost(owner, activationCost(action),env);
+  const cancelled = cancelledCostEvents(owner,paid);
+  if(cancelled)return cancelled;
     const ownerAfter = paid.state;
     const obligations = actionObligationIds(
       action,
@@ -10134,7 +10662,9 @@ function executeWildCompanionCast(input: {
       owner,
       summoningActionId: action.id,
     });
-    const paid = pay(owner.runtime, activationCost(action));
+    const paid = payCommandCost(owner, activationCost(action),env);
+  const cancelled = cancelledCostEvents(owner,paid);
+  if(cancelled)return cancelled;
     const obligations = actionObligationIds(
       action,
       'system:wild-companion',
@@ -10211,6 +10741,7 @@ function activateOwnedFamiliarSharedSenses(
   world: WorldState,
   command: Extract<GameCommand, { type: 'UseFamiliarSharedSenses' }>,
   catalog: RulesCatalog,
+  env: DeterministicEnvironment,
 ): CommandResult | EventInput[] {
   const owner = world.actors[command.actorId];
   const familiar = requireOwnedFamiliar(world, owner.id, command.familiarActorId);
@@ -10236,7 +10767,9 @@ function activateOwnedFamiliarSharedSenses(
       ownerTurn,
       mechanicsPolicy: declaredPolicy.policy,
     });
-    const paid = pay(owner.runtime, activationCost(FAMILIAR_SHARED_SENSES_ACTION));
+    const paid = payCommandCost(owner, activationCost(FAMILIAR_SHARED_SENSES_ACTION),env);
+  const cancelled = cancelledCostEvents(owner,paid);
+  if(cancelled)return cancelled;
     const obligations = actionObligationIds(
       FAMILIAR_SHARED_SENSES_ACTION,
       'system:find-familiar',
@@ -10269,6 +10802,7 @@ function activateOwnedFamiliarSharedSenses(
 function dismissOwnedFamiliar(
   world: WorldState,
   command: Extract<GameCommand, { type: 'DismissFamiliar' }>,
+  env: DeterministicEnvironment,
 ): CommandResult | EventInput[] {
   const owner = world.actors[command.actorId];
   const familiar = requireOwnedFamiliar(world, owner.id, command.familiarActorId);
@@ -10283,7 +10817,9 @@ function dismissOwnedFamiliar(
       ownerActorId: owner.id,
       mode: command.mode,
     });
-    const paid = pay(owner.runtime, activationCost(FAMILIAR_DISMISS_ACTION));
+    const paid = payCommandCost(owner, activationCost(FAMILIAR_DISMISS_ACTION),env);
+  const cancelled = cancelledCostEvents(owner,paid);
+  if(cancelled)return cancelled;
     const obligations = actionObligationIds(
       FAMILIAR_DISMISS_ACTION,
       'system:find-familiar',
@@ -10360,7 +10896,9 @@ function reappearOwnedFamiliar(
         rng: env.rng,
       });
     }
-    const paid = pay(owner.runtime, activationCost(FAMILIAR_REAPPEAR_ACTION));
+    const paid = payCommandCost(owner, activationCost(FAMILIAR_REAPPEAR_ACTION),env);
+  const cancelled = cancelledCostEvents(owner,paid);
+  if(cancelled)return cancelled;
     const obligations = actionObligationIds(
       FAMILIAR_REAPPEAR_ACTION,
       'system:find-familiar',
@@ -10430,13 +10968,14 @@ function deliverTouchSpell(
   const preparation = prepareSpellExecution({
     action,
     accessState: owner.spellcastingAccess,
-    resources: owner.runtime.resources,
+    resources: availableResources(owner.runtime,owner.character,owner.passives),
     declaration: {
       ...(command.spell?.grantId ? { grantId: command.spell.grantId } : {}),
       ...(command.spell?.mode ? { mode: command.spell.mode } : {}),
       ...(command.spell?.preferFreeUse !== undefined
         ? { preferFreeUse: command.spell.preferFreeUse }
         : {}),
+      ...(command.spell?.castLevel!==undefined?{castLevel:command.spell.castLevel}:{}),
     },
   });
   if (preparation.status === 'rejected') {
@@ -10724,6 +11263,7 @@ function performPactChainFamiliarAttack(
       declaration,
       entryEvent,
       ...actionStateEvents({
+    env,
         world,
         commandId: command.commandId,
         source: familiar,
@@ -10783,6 +11323,8 @@ function executeAttackReplacement(
   if (!actor.capabilities.actionIds.includes(action.id)) {
     return rejected(world, 'ActionNotGranted', `Actor ${actor.id} does not own action ${action.id}`);
   }
+  const sourceIssue=activeEffectRequirementIssue(action.mechanics,actor.runtime,actor.character);
+  if(sourceIssue)return rejected(world,'CapabilityDenied',sourceIssue);
   if (deniedCapabilities(actor.runtime, actor.passives ?? []).has('action')) {
     return rejected(world, 'CapabilityDenied', `${actor.id} cannot take the Attack action`);
   }
@@ -10814,7 +11356,7 @@ function executeAttackReplacement(
     if ('rejection' in validated) return validated.rejection;
     attackAction = validated.attackAction;
   } else {
-    const started = beginAttackAction(world, { ...command, type: 'BeginAttackAction' }, catalog, env);
+    const started = beginAttackAction(world, { ...command, type: 'BeginAttackAction', selectedCostPolicyId:null }, catalog, env);
     if (!Array.isArray(started)) return started;
     startEvents = started;
     worldWithAttack = foldEvents(
@@ -10827,6 +11369,7 @@ function executeAttackReplacement(
     }
   }
 
+  if(attackAction.costPolicyIds?.length)return rejected(world,'InvalidActionTiming','Restricted additional Attack action cannot be replaced by another action');
   let nextSequence: AttackSequenceState;
   try {
     nextSequence = replaceSequenceAttack({
@@ -11077,6 +11620,7 @@ function pactBladeDistanceEvents(input: {
 }
 
 function adjudicateActorDeathEvents(input: {
+  env: DeterministicEnvironment;
   world: WorldState;
   command: Extract<GameCommand, { type: 'AdjudicateActorDeath' }>;
   catalog: RulesCatalog;
@@ -11166,10 +11710,9 @@ function adjudicateActorDeathEvents(input: {
       const current = linkedRuntimes.get(link.actorId) ?? linkedActor.runtime;
       const linkedEffect = current.activeEffects.find((effect) => effect.id === link.effectId);
       if (!linkedEffect) continue;
-      linkedRuntimes.set(link.actorId, {
-        ...current,
-        activeEffects: current.activeEffects.filter((effect) => effect.id !== link.effectId),
-      });
+      const ended = removeConcentrationEffects(linkedActor, current, new Set([link.effectId]), input.env);
+      linkedRuntimes.set(link.actorId, ended.state);
+      events.push(...engineTrace(actor.id, [link.actorId], ended.events, obligations));
       events.push(...engineTrace(actor.id, [link.actorId], [{
         type: 'effect_expired',
         name: linkedEffect.name,
@@ -11233,6 +11776,7 @@ function automaticTerminalConditionDeaths(input: {
       rulesetContentHash: current.ruleset.contentHash,
     };
     const planned = adjudicateActorDeathEvents({
+    env: input.env,
       world: current,
       command: {
         schemaVersion: input.command.schemaVersion,
@@ -11256,6 +11800,37 @@ function automaticTerminalConditionDeaths(input: {
   return { events, world: current };
 }
 
+/** Invoke an existing owned self action at an explicit lifecycle boundary.
+ * The same command validates equipment, resources, conditions and payment;
+ * an item cannot grant or invent the referenced class feature. */
+function encounterAutomaticActions(world:WorldState,command:GameCommand,catalog:RulesCatalog,env:DeterministicEnvironment):EventInput[]{
+  let current=world;const changes:EventInput[]=[];
+  for(const initial of Object.values(world.actors)){
+    const rules=[...initial.passives??[],...initial.runtime.activeEffects.map(effect=>effect.mechanics)].flatMap(payloadsOf)
+      .filter(payload=>payload.kind==='automatic_action'&&payload.event==='encounter_start');
+    for(const rule of rules){
+      const actor=current.actors[initial.id];
+      if(rule.requires_owned!==true||rule.target!=='self'||!Array.isArray(rule.action_refs)||!rule.action_refs.every(ref=>typeof ref==='string'))throw Error('Invalid automatic owned action policy');
+      if(!matchesWhen(rule.when as Record<string,unknown>[]|undefined,{state:actor.runtime,character:actor.character}))continue;
+      const action=actor.capabilities.actionIds.map(id=>catalog.getAction(id)).find(candidate=>candidate&&candidate.kind==='nonSpell'
+        &&(rule.action_refs as string[]).some(ref=>candidate.id===ref||candidate.sourceEntityIds.includes(ref)));
+      if(!action||!actorHasConsciousVitality(actor))continue;
+      if(activeEffectRequirementIssue(action.mechanics,actor.runtime,liveCharacter(actor))||!canPay(actor.runtime,activationCost(action)).ok)continue;
+      const invoked:AuthoritativeUseActionCommand={schemaVersion:1,commandId:command.commandId,expectedRevision:current.revision,
+        rulesetContentHash:command.rulesetContentHash,type:'UseAction',actorId:actor.id,actionId:action.id,targetIds:[actor.id],
+        factsByTarget:{[actor.id]:{factsSource:'scenario',boardRevision:current.revision,distanceFt:0,relation:'self',cover:'none',lineOfSight:true}}};
+      const executed=executeCommand(current,invoked,catalog,env);
+      if(!Array.isArray(executed)){
+        if(executed.status==='rejected'&&['InsufficientResources','InvalidActionTiming','InvalidEquipmentState','InvalidTarget','ForbiddenAction'].includes(executed.code))continue;
+        throw Error(executed.status==='rejected'?executed.message:'Invalid automatic action result');
+      }
+      changes.push(...executed);current=foldEvents(current,executed.map((event,ordinal)=>({...event,ordinal})));
+      if(current.pendingResolution)throw Error('Automatic lifecycle actions cannot silently answer player choices');
+    }
+  }
+  return changes;
+}
+
 function executeCommand(
   world: WorldState,
   command: GameCommand,
@@ -11263,7 +11838,19 @@ function executeCommand(
   env: DeterministicEnvironment,
 ): CommandResult | EventInput[] {
   const actor = world.actors[command.actorId];
+  if(actor.itemTurn&&!['StartTurn','EndTurn','UseAction'].includes(command.type))
+    return rejected(world,'InvalidActionTiming','Item initiative permits only its declared attack and turn boundaries');
   switch (command.type) {
+    case 'ChangeEquipment': {
+      const result=changeEquipment(actor,command.operation,env),obligations=['system:equipment-change'];
+      if(result.seconds){
+        const elapsed=advanceEffectTime(result.state,result.seconds,{...actionContext(actor,env),character:result.character,passives:result.passives});
+        result.state=elapsed.state;result.events.push(...elapsed.events,{type:'narrative',text:`Смена экипировки: прошло ${result.seconds} секунд.`});
+      }
+      return [...runtimeTransition(actor.id,actor.id,actor.runtime,result.state,'action',obligations),
+        {sourceActorId:actor.id,obligationIds:obligations,payload:{type:'ActorEquipmentProjectionChanged',actorId:actor.id,passives:result.passives,equippedCards:result.character.equippedCards}},
+        ...engineTrace(actor.id,[actor.id],result.events,obligations)];
+    }
     case 'StartEncounter': {
       if(world.scene.mode==='encounter')return rejected(world,'InvalidActionTiming','An active encounter cannot be restarted');
       const unique = new Set(command.initiative);
@@ -11321,7 +11908,7 @@ function executeCommand(
           ...engineTrace(participant.id,[participant.id],result.events,obligations),
         );
       }
-      return [...familiarInitiativeEvents, ...encounterEvents, {
+      const started:EventInput[]=[...familiarInitiativeEvents, ...encounterEvents, {
         sourceActorId: command.actorId,
         obligationIds: ['system:initiative'],
         payload: {
@@ -11336,20 +11923,23 @@ function executeCommand(
           },
         },
       }];
+      return [...started,...encounterAutomaticActions(foldEvents(world,started.map((event,ordinal)=>({...event,ordinal}))),command,catalog,env)];
     }
     case 'DeathSavingThrow': {
       const before=actor.runtime,ds=before.deathSaves??emptyDeathSaves();
+      const immediate=before.firedThisTurn?.includes('system:immediate-death-save-due');
       if(actor.kind!=='playerCharacter'||before.hp.current!==0||ds.dead||ds.stable
-        ||!before.firedThisTurn?.includes('system:death-save-due')
-        ||before.firedThisTurn?.includes('system:death-save'))return rejected(world,'InvalidActionTiming','Death save is not due');
+        ||(!immediate && (!before.firedThisTurn?.includes('system:death-save-due')
+          ||before.firedThisTurn?.includes('system:death-save'))))return rejected(world,'InvalidActionTiming','Death save is not due');
       const roll=rollDeathSaveDie(before,actor.passives??[],actorFormulaContext(actor.character),env.rng);
       const natural=roll.dice.find(d=>d.sides===20&&!d.discarded)!.result;
-      const result=applyDeathSaveRoll(ds,natural,roll.total,roll.outcome);
+      const result=applyDeathSaveRoll(ds,natural,roll.total,roll.outcome,collectLifePolicies(before,actor.passives??[],actor.character));
       roll.kind='save';roll.deathSave=true;roll.target={type:'dc',value:10};roll.outcome=['revive','success','stable'].includes(result.outcome)?'success':'fail';
       roll.text=describeDeathSaveOutcome(result.outcome,natural);
       const after={...before,deathSaves:result.next,
         hp:result.outcome==='revive'?{...before.hp,current:1}:before.hp,
-        firedThisTurn:[...(before.firedThisTurn??[]),'system:death-save']};
+        firedThisTurn:immediate?(before.firedThisTurn??[]).filter(id=>id!=='system:immediate-death-save-due')
+          :[...(before.firedThisTurn??[]),'system:death-save']};
       return [...runtimeTransition(actor.id,actor.id,before,after,'start_turn',['system:death-save']),
         ...engineTrace(actor.id,[],[{type:'roll',label:'Спасбросок от смерти',roll}],['system:death-save'])];
     }
@@ -11562,7 +12152,7 @@ function executeCommand(
     }
     case 'TakeShortRest': {
       const context = { ...actorContext(actor), rng: env.rng };
-      const result = shortRest(actor.runtime, context);
+      const preview = shortRest(actor.runtime, context, { preview: true });
       const rawDecisions: unknown = command.decisions ?? [];
       if (!Array.isArray(rawDecisions)
         || rawDecisions.some((decision) => (
@@ -11612,7 +12202,7 @@ function executeCommand(
         }
         countsByAction.set(selection.action.id, count);
       }
-      let stateAfterRest = result.state;
+      let stateAfterRest = preview.state;
       const recoveryEvents: EngineEvent[] = [];
       for (let index = 0; index < decisions.length; index += 1) {
         const selection = selectedPolicies[index];
@@ -11656,10 +12246,21 @@ function executeCommand(
         })
         : [];
       if (!Array.isArray(tomeEvents)) return tomeEvents;
+      // Validate all choices before the one authoritative rest/chance draw.
+      const result = shortRest(actor.runtime, context);
+      stateAfterRest = result.state;
+      recoveryEvents.length = 0;
+      if (!result.restBenefitsDenied) for (let index = 0; index < decisions.length; index += 1) {
+        const recovery = resolveSlotRecoveryRestDecision({ state: stateAfterRest, classLevels: actor.character.classLevels,
+          policy: selectedPolicies[index].policy, decision: decisions[index] });
+        if (recovery.status === 'rejected') throw Error(recovery.message);
+        stateAfterRest = recovery.state;
+        recoveryEvents.push({ type: 'resource_spent', ...recovery.spentResource }, ...recovery.restoredResources.map(restored => ({ type: 'resource_restored' as const, ...restored })));
+      }
       return [
         ...runtimeTransition(actor.id, actor.id, actor.runtime, stateAfterRest, 'short_rest', obligations),
         ...engineTrace(actor.id, [], [...result.events, ...recoveryEvents], obligations),
-        ...tomeEvents,
+        ...(result.restBenefitsDenied ? [] : tomeEvents),
       ];
     }
     case 'TakeLongRest': {
@@ -11673,7 +12274,6 @@ function executeCommand(
         );
       }
       const context = { ...actorContext(actor), rng: env.rng };
-      const result = longRest(actor.runtime, context);
       const obligations = [
         'system:long-rest',
         'system:resource-recharge',
@@ -11715,10 +12315,11 @@ function executeCommand(
           ].sort((left, right) => left.localeCompare(right)),
         },
       }] : [];
+      const result = longRest(actor.runtime, context);
       return [
         ...runtimeTransition(actor.id, actor.id, actor.runtime, result.state, 'long_rest', obligations),
         ...engineTrace(actor.id, [], result.events, obligations),
-        ...tomeEvents,
+        ...(result.restBenefitsDenied ? [] : tomeEvents),
         ...wildCompanionEnd,
       ];
     }
@@ -11741,7 +12342,7 @@ function executeCommand(
     case 'ObservePactBladeDistance':
       return pactBladeDistanceEvents({ world, command, catalog });
     case 'AdjudicateActorDeath':
-      return adjudicateActorDeathEvents({ world, command, catalog });
+      return adjudicateActorDeathEvents({ world, command, catalog, env });
     case 'ForfeitAttackAction':
       return forfeitAttackAction(world, command);
     case 'EscapeGrapple':
@@ -11768,6 +12369,14 @@ function executeCommand(
       }
       const action = catalog.getAction(command.actionId);
       if (!action) return rejected(world, 'ActionNotFound', `Unknown action ${command.actionId}`);
+      if(actor.itemTurn){
+        if(command.type!=='UseAction')return rejected(world,'InvalidActionTiming','Item initiative permits only its declared attack');
+        const {spell:_spell,...itemCommand}=command;
+        return executeItemTurnAction(world,itemCommand,action,catalog,env);
+      }
+      if(action.concentration && world.concentrations[actor.id] && concentrationProtectedUntilDeath(actor.runtime,actor.passives??[])) {
+        return rejected(world,'InvalidActionTiming','Concentration can be lost only upon death while this source is active');
+      }
       const definitionIssue = actionDefinitionIssue(action);
       if (definitionIssue) return rejected(world, 'InvalidActionDefinition', definitionIssue);
       const levelRequirement = parseActivationLevelRequirement(action.mechanics);
@@ -11782,8 +12391,33 @@ function executeCommand(
           `${action.id} requires character level ${levelRequirement.minLevel}`,
         );
       }
-      if (!actor.capabilities.actionIds.includes(action.id)
-        && !matchingRuntimeActionGrants(actor.runtime, action.mechanics, actor.character.level).length) {
+      const variantParentId=action.mechanics.variant_of_spell_id;
+      const variantScope=action.sourceEntityIds[0]&&action.id.startsWith(action.sourceEntityIds[0])
+        ?action.id.slice(action.sourceEntityIds[0].length):'';
+      const variantParent=typeof variantParentId==='string'
+        ?catalog.getAction(`${variantParentId}${variantScope}`)??catalog.getAction(variantParentId):undefined;
+      const actionParentId=action.mechanics.variant_of_action_id;
+      const actionVariantParent=typeof actionParentId==='string'
+        ?catalog.getAction(`${actionParentId}${variantScope}`)??catalog.getAction(actionParentId):undefined;
+      if(variantParentId!==undefined&&(
+        action.kind!=='spell'||!variantParent||variantParent.kind!=='spell'
+        ||!Array.isArray(variantParent.mechanics.spell_variant_ids)
+        ||!action.sourceEntityIds.some(id=>(variantParent.mechanics.spell_variant_ids as string[]).includes(id))
+        ||variantParent.spell.level!==action.spell.level))
+        return rejected(world,'InvalidActionDefinition','Вариант не связан с родительским заклинанием');
+      if(actionParentId!==undefined&&(
+        action.kind!=='nonSpell'||!actionVariantParent||actionVariantParent.kind!=='nonSpell'
+        ||!Array.isArray(actionVariantParent.mechanics.action_variant_ids)
+        ||!action.sourceEntityIds.some(id=>(actionVariantParent.mechanics.action_variant_ids as string[]).includes(id))))
+        return rejected(world,'InvalidActionDefinition','Вариант не связан с родительским действием');
+      if(action.kind==='spell'&&Array.isArray(action.mechanics.spell_variant_ids))
+        return rejected(world,'InvalidDecision','Выберите вариант заклинания до его применения');
+      if(action.kind==='nonSpell'&&Array.isArray(action.mechanics.action_variant_ids))
+        return rejected(world,'InvalidDecision','Выберите вариант действия до его применения');
+      const grantAction=variantParent??actionVariantParent??action;
+      if (!actor.capabilities.actionIds.includes(grantAction.id)
+        && !matchingRuntimeActionGrants(actor.runtime,grantAction.mechanics,actor.character.level).length
+        && !worldItemActionSource(world,actor.id,grantAction)) {
         return rejected(world, 'ActionNotGranted', `Actor ${actor.id} does not own action ${action.id}`);
       }
       if (action.attackReplacement) {
@@ -11830,14 +12464,16 @@ function executeCommand(
       if (action.kind === 'spell' && actor.spellcastingAccess) {
         const preparation = prepareSpellExecution({
           action,
+          ...(variantParent?{accessActionId:variantParent.id}:{}),
           accessState: actor.spellcastingAccess,
-          resources: actor.runtime.resources,
+          resources: availableResources(actor.runtime,actor.character,actor.passives),
           declaration: {
             ...(command.spell?.grantId ? { grantId: command.spell.grantId } : {}),
             ...(command.spell?.mode ? { mode: command.spell.mode } : {}),
             ...(command.spell?.preferFreeUse !== undefined
               ? { preferFreeUse: command.spell.preferFreeUse }
               : {}),
+            ...(command.spell?.castLevel!==undefined?{castLevel:command.spell.castLevel}:{}),
           },
         });
         if (preparation.status === 'rejected') {
@@ -11858,7 +12494,7 @@ function executeCommand(
         const tomeAudit = pactTomeSpellCastAudit({
           world,
           actorId: actor.id,
-          actionId: preparation.executableAction.id,
+          actionId: variantParent?.id??preparation.executableAction.id,
           grantId: preparation.provenance.grantId,
           sourceId: preparation.provenance.sourceId,
           mode: preparation.provenance.mode,
@@ -11880,7 +12516,46 @@ function executeCommand(
           : undefined;
         preparedSpell = preparation;
         executableAction = preparation.executableAction;
+        if (executableAction.mechanics.requires_unknown_spell === true) {
+          const spellEntityId = executableAction.spell?.entityId;
+          const alreadyKnown = actor.spellcastingAccess.grants.some((grant) => {
+            if (grant.grantId === preparation.provenance.grantId) return false;
+            const other = catalog.getAction(grant.actionId);
+            return spellEntityId !== undefined && other?.kind === 'spell'
+              && other.spell.entityId === spellEntityId;
+          });
+          if (alreadyKnown) {
+            return rejected(world, 'InvalidSpellDeclaration', 'Выбранный заговор уже известен персонажу');
+          }
+        }
       }
+	      const teleportPolicy=action.mechanics.teleport_destination as Record<string,unknown>|undefined;
+	      const teleportIssue=teleportDestinationIssue(action,command.factsByTarget?.[
+	        teleportPolicy?.relative_to==='target'?command.targetIds[0]:actor.id]);
+      if(teleportIssue)return rejected(world,'InvalidFacts',teleportIssue);
+	      const beneficiaryPolicy=action.mechanics.beneficiary_policy as Record<string,unknown>|undefined;
+	      if(beneficiaryPolicy){
+	        const group=beneficiaryPolicy.group,limit=Number(beneficiaryPolicy.max_targets);
+	        if(typeof group!=='string'||!group||!Number.isSafeInteger(limit)||limit<1)
+	          return rejected(world,'InvalidActionDefinition','Invalid beneficiary policy');
+	        const already=new Set(Object.values(world.actors).filter(candidate=>candidate.runtime.activeEffects.some(effect=>
+	          effect.sourceId===actor.id&&(effect.mechanics.bond_policy as Record<string,unknown>|undefined)?.group===group)).map(candidate=>candidate.id));
+	        const chosen=new Set([...already,...command.targetIds]);
+	        if(command.targetIds.includes(actor.id)||chosen.size>limit)
+	          return rejected(world,'InvalidDecision',`Выберите не более ${limit} других существ для благословения`);
+	      }
+	      const resurrectionPolicy=action.mechanics.resurrection_policy as Record<string,unknown>|undefined;
+	      if(resurrectionPolicy){
+	        const target=world.actors[command.targetIds[0]],facts=command.factsByTarget?.[command.targetIds[0]];
+	        const maxDays=Number(resurrectionPolicy.max_dead_days);
+	        if(command.targetIds.length!==1||!Number.isFinite(maxDays)||maxDays<=0||resurrectionPolicy.restore_full_hp!==true)
+	          return rejected(world,'InvalidActionDefinition','Invalid resurrection policy');
+	        if(!target||(target.lifecycle?.status!=='dead'&&target.runtime.deathSaves?.dead!==true)
+	          ||!facts||!['scenario','gm_ruling'].includes(facts.factsSource)
+	          ||!Number.isFinite(facts.deadForDays)||Number(facts.deadForDays)<0||Number(facts.deadForDays)>maxDays
+	          ||facts.deathByOldAge!==false||facts.targetIsUndead!==false||facts.soulFree!==true||facts.soulWilling!==true)
+	          return rejected(world,'InvalidFacts','Воскрешение требует подходящего мёртвого тела, свободной согласной души и подтверждённых обстоятельств смерти');
+	      }
       if ((action.mechanics.activation as Record<string,unknown>|undefined)?.telekinetic_movement === true) {
         const targetId=command.targetIds.length===1?command.targetIds[0]:'';
         const observed=command.factsByTarget?.[targetId];
@@ -11897,7 +12572,10 @@ function executeCommand(
         const hand = Array.isArray(selected) ? selected[0] : selected;
         if (typeof hand === 'string' && weaponBondProtectsHand(world, command.targetIds[0], hand)) return rejected(world, 'InvalidDecision', 'Связанное оружие нельзя выбить из рук');
       }
-      const activeEffectIssue = activeEffectRequirementIssue(action.mechanics, actor.runtime, actor.character);
+      executableAction=bindItemLightFuel(world,actor.id,bindWorldItemAction(world,actor.id,executableAction));
+      const magicIssue=magicActionIssue(actor,executableAction,command.targetIds.map(id=>world.actors[id]).filter(Boolean));
+      if(magicIssue)return rejected(world,'InvalidActionTiming',magicIssue);
+      const activeEffectIssue = activeEffectRequirementIssue(executableAction.mechanics, actor.runtime, actor.character);
       if (activeEffectIssue) {
         return rejected(world, 'InvalidActionTiming', activeEffectIssue);
       }
@@ -11914,6 +12592,24 @@ function executeCommand(
           executableAction.kind === 'spell' ? 'spell' : 'nonspell',
         ),
       };
+      const costPolicyContext={state:actor.runtime,character:actor.character,passives:actor.passives??[],
+        actionRefs:[executableAction.id,...executableAction.sourceEntityIds],
+        ...(executableAction.kind==='spell' ? {spell:{baseLevel:executableAction.spell?.level??0,school:executableAction.spell?.school,concentration:executableAction.concentration===true}} : {})};
+      const optionalPolicies=availableActionCostPolicies(executableAction.mechanics,costPolicyContext).filter(policy=>policy.optional);
+      if (command.selectedCostPolicyId===undefined && optionalPolicies.length) {
+        return [{sourceActorId:actor.id,obligationIds:['system:action-cost-policy'],payload:{type:'ResolutionOpened',resolution:{
+          id:env.nextId(),type:'action_cost_policy',openedByCommandId:command.commandId,
+          openedAtRevision:world.revision,deadlineLogicalClock:world.logicalClock+10,actorId:actor.id,
+          continuation:JSON.parse(JSON.stringify(command)),request:{id:env.nextId(),type:'action_cost_policy',actorId:actor.id,
+            options:optionalPolicies.map(({policyId,label,sourceEntity})=>({policyId,label,...(sourceEntity?{sourceEntity}:{})}))},
+        }}}];
+      }
+      try {
+        const costPolicy=applyActionCostPolicies(executableAction.mechanics,costPolicyContext,command.selectedCostPolicyId);
+        executableAction={...executableAction,mechanics:{...costPolicy.mechanics,
+          ...(costPolicy.spellOverrides?.durationCapRounds!==undefined?{duration_cap_rounds:costPolicy.spellOverrides.durationCapRounds}:{})},
+          ...(costPolicy.spellOverrides?{concentration:false}:{})};
+      } catch(error) {return rejected(world,'InvalidDecision',error instanceof Error?error.message:'Invalid action cost policy');}
       const requestedBladeFocus = command.spell?.focusObjectId !== undefined
         || command.spell?.focusHand !== undefined;
       if (requestedBladeFocus) {
@@ -12026,6 +12722,7 @@ function executeCommand(
         command.targetIds,
         command.factsByTarget,
         actor.id,
+        command.spell?.castLevel,
       );
       if (validation) return validation;
       if (actionDeclaresHarmfulInteraction(executableAction)) {
@@ -12036,6 +12733,18 @@ function executeCommand(
         });
         if (conditionDenial) return conditionDenial;
       }
+      try {
+        const recovery=activeSlotRecoveryChoice(executableAction.mechanics,actor.runtime,actor.character);
+        if(recovery){
+          if(command.type!=='UseAction')return rejected(world,'InvalidActionTiming','Slot recovery requires an ordinary action');
+          if(!recovery.available)return rejected(world,'InsufficientResources','No recoverable slots or recovery budget');
+          if(command.selectedSlotRecovery===undefined)return [{sourceActorId:actor.id,obligationIds:['system:active-slot-recovery'],payload:{type:'ResolutionOpened',resolution:{
+            id:env.nextId(),type:'slot_recovery',actorId:actor.id,openedByCommandId:command.commandId,openedAtRevision:world.revision,deadlineLogicalClock:world.logicalClock+10,
+            continuation:JSON.parse(JSON.stringify(command)),request:{id:env.nextId(),type:'slot_recovery',actorId:actor.id,budget:recovery.budget,recoverableByLevel:recovery.recoverableByLevel},
+          }}}];
+          applyActiveSlotRecovery(executableAction.mechanics,actor.runtime,actor.character,command.selectedSlotRecovery);
+        }else if(command.selectedSlotRecovery!==undefined)return rejected(world,'InvalidDecision','This action cannot restore selected slots');
+      }catch(error){return rejected(world,'InvalidDecision',error instanceof Error?error.message:'Invalid slot recovery');}
       const unarmedOpportunityOption = executableAction.mechanics.unarmed_opportunity_option;
       if (unarmedOpportunityOption !== undefined) {
         if (command.type !== 'UseReactionAction'
@@ -12089,6 +12798,10 @@ function executeCommand(
       if (missileAllocation && 'issue' in missileAllocation) {
         return rejected(world, 'InvalidTargets', missileAllocation.issue);
       }
+      if(worldActionPrimitive(executableAction)==='item_tool'){
+        try{executableAction=bindItemTool(world,executableAction,authoritativeCommand.worldInput,actor.id);}
+        catch(error){return rejected(world,'InvalidFacts',error instanceof Error?error.message:String(error));}
+      }
       const worldExecution = executeWorldActionPrimitive(
         world,
         authoritativeCommand,
@@ -12134,6 +12847,36 @@ function executeCommand(
           ? [...pactBladeFocusEvents, declaration, ...missile, ...worldExecution]
           : missile;
       }
+      if (authoritativeCommand.targetIds.length > 1 && hasAttackRoll(executableAction)) {
+        const volley: PendingAttackVolley = {
+          id: authoritativeCommand.commandId,
+          actorId: authoritativeCommand.actorId,
+          action: executableAction,
+          targetIds: [...authoritativeCommand.targetIds],
+          factsByTarget: JSON.parse(JSON.stringify(authoritativeCommand.factsByTarget ?? {})),
+          nextSlotIndex: 0,
+          ...(authoritativeCommand.choices
+            ? {choices: JSON.parse(JSON.stringify(authoritativeCommand.choices))} : {}),
+          ...(authoritativeCommand.spell ? {spell: {...authoritativeCommand.spell}} : {}),
+          ...(authoritativeCommand.protectionCandidatesByTarget
+            ? {protectionCandidatesByTarget: JSON.parse(JSON.stringify(authoritativeCommand.protectionCandidatesByTarget))} : {}),
+        };
+        const first = attackVolleyStep(world, volley, catalog, env);
+        return Array.isArray(first)
+          ? [...pactBladeFocusEvents, declaration, ...first, ...worldExecution]
+          : first;
+      }
+      if(executableAction.mechanics.active_slot_recovery!==undefined){
+        try{
+          const recovered=applyActiveSlotRecovery(executableAction.mechanics,actor.runtime,actor.character,command.selectedSlotRecovery??[]);
+          const obligations=actionObligationIds(executableAction,'system:active-slot-recovery');
+          const changed:EventInput[]=[...runtimeTransition(actor.id,actor.id,actor.runtime,recovered.state,'action',obligations),
+            ...engineTrace(actor.id,[],recovered.events,obligations)];
+          const ready=foldEvents(world,changed.map((event,ordinal)=>({...event,ordinal})));
+          const executed=executeUseAction(ready,authoritativeCommand,executableAction,catalog,env);
+          return [declaration,...changed,...executed];
+        }catch(error){return rejected(world,'InvalidDecision',error instanceof Error?error.message:'Invalid slot recovery');}
+      }
       const pending = pendingSaveEvents(world, authoritativeCommand, executableAction, env);
       if (pending) return Array.isArray(pending)
         ? [...pactBladeFocusEvents, declaration, ...pending, ...worldExecution]
@@ -12151,7 +12894,18 @@ function executeCommand(
       if (pendingAttack) return Array.isArray(pendingAttack)
         ? [...pactBladeFocusEvents, declaration, ...pendingAttack, ...worldExecution]
         : pendingAttack;
-      return [
+	      if(resurrectionPolicy){
+	        const executed=executeUseAction(world,authoritativeCommand,executableAction,catalog,env);
+	        const committed=foldEvents(world,executed.map((event,ordinal)=>({...event,ordinal})));
+	        const recipient=committed.actors[command.targetIds[0]];
+	        const restored={...recipient.runtime,hp:{...recipient.runtime.hp,current:recipient.runtime.hp.max},deathSaves:emptyDeathSaves()};
+	        const obligations=actionObligationIds(executableAction,'system:resurrection');
+	        return [...pactBladeFocusEvents,declaration,...executed,
+	          ...runtimeTransition(actor.id,recipient.id,recipient.runtime,restored,'action',obligations),
+	          {sourceActorId:actor.id,obligationIds:obligations,payload:{type:'ActorRevived',actorId:recipient.id,
+	            sourceEntityId:executableAction.sourceEntityIds[0]??executableAction.id,provenance:'canonical_actor_lifecycle'}},...worldExecution];
+	      }
+	      return [
         ...pactBladeFocusEvents,
         declaration,
         ...executeUseAction(world, authoritativeCommand, executableAction, catalog, env, {
@@ -12204,23 +12958,29 @@ function executeCommand(
     case 'PhysicallyInteractWorldObject':
       return physicallyInteractWorldObject(world, command);
     case 'RevealMagicAura':
-      return revealMagicAura(world, command, catalog);
+      return revealMagicAura(world, command, catalog, env);
     case 'MoveDancingLights':
-      return moveActiveDancingLights(world, command, catalog);
+      return moveActiveDancingLights(world, command, catalog, env);
     case 'ObservePoisonDisease':
       return observeActivePoisonDisease(world, command, catalog);
     case 'DonArmor':
       return donArmor(world, command);
     case 'UseFamiliarSharedSenses':
-      return activateOwnedFamiliarSharedSenses(world, command, catalog);
+      return activateOwnedFamiliarSharedSenses(world, command, catalog, env);
     case 'DismissFamiliar':
-      return dismissOwnedFamiliar(world, command);
+      return dismissOwnedFamiliar(world, command, env);
     case 'ReappearFamiliar':
       return reappearOwnedFamiliar(world, command, catalog, env);
     case 'DeliverTouchSpellThroughFamiliar':
       return deliverTouchSpell(world, command, catalog, env);
     case 'ResolveDecision':
-      return world.pendingResolution?.type === 'check_boost'
+      return world.pendingResolution?.type === 'event_reaction'
+        ? resolveEventReaction(world,command,catalog,env)
+        : world.pendingResolution?.type === 'slot_recovery'
+        ? resolveActiveSlotRecovery(world,command,catalog,env)
+        : world.pendingResolution?.type === 'action_cost_policy'
+        ? resolveActionCostPolicy(world,command,catalog,env)
+        : world.pendingResolution?.type === 'check_boost'
         ? resolveFailedCheckBoost(world, command, catalog, env)
         : world.pendingResolution?.type === 'protection_reaction'
         ? resolvePendingProtection(world, command, catalog, env)
@@ -12239,11 +12999,236 @@ function executeCommand(
         : world.pendingResolution?.type === 'mastery_save'
           ? resolveMasterySave(world, command, env)
         : world.pendingResolution?.type === 'concentration_save'
-          ? resolveConcentrationSave(world, command, env)
+          ? resolveConcentrationSave(world, command, env, catalog)
           : world.pendingResolution?.type === 'hazard_save'
             ? resolveHazardSave(world, command, env)
             : resolvePendingSave(world, command, catalog, env);
   }
+}
+
+function bindEventReaction(actor:ActorState,action:RuleActionDefinition):RuleActionDefinition|null{
+  if(!weaponAttackKind(action.mechanics))return action;
+  const cards=new Map([...(actor.character.knownCards??[]),...(actor.character.equippedCards??[])].map(card=>[card.id,card]));
+  if(!weaponActionAvailability(action.mechanics,actor.runtime.equipment,cards,actor.passives??[]).available)return null;
+  try{
+    const mechanics=bindEquippedWeaponActionContext(action.mechanics,actor.runtime.equipment,cards);
+    return {...action,mechanics,targeting:mechanics.targeting?compileDeclaredMechanicsTargeting(mechanics):action.targeting};
+  }catch{return null;}
+}
+function eventReactionOptions(world:WorldState,opportunity:import('./domain').QueuedEventReaction,catalog:RulesCatalog):ReactionActionOption[]{
+  const actor=effectReactionActor(world.actors[opportunity.actorId],opportunity);
+  if(!actor||actor.lifecycle?.status==='dead')return [];
+  return opportunity.actionIds.flatMap(id=>{
+    if(!actor.capabilities.actionIds.includes(id))return [];
+    const raw=catalog.getAction(id),action=raw?bindEventReaction(actor,raw):null;
+    if(!action||!hasReactionTrigger(action,opportunity.event.kind)||actionDefinitionIssue(action))return [];
+    if(deniedCapabilities(actor.runtime,actor.passives??[]).has(requiredActionCapability(action)))return [];
+    const activation=action.mechanics.activation as Record<string,unknown>;
+    const trigger=activation.trigger as Record<string,unknown>;
+    if(trigger.observer_range_ft!==undefined){
+      const affected=opportunity.event.data?.targetActorId;
+      if(trigger.exclude_self_target===true&&affected===actor.id)return [];
+      const observation=actor.character.spatialObservations?.nearby.find(row=>row.actorId===opportunity.targetActorId);
+      if(!observation||observation.distanceFt>Number(trigger.observer_range_ft)
+        ||Array.isArray(trigger.observer_relations)&&!trigger.observer_relations.includes(observation.relation))return [];
+    }
+    if(trigger.timing!==undefined&&opportunity.event.timing!==undefined&&trigger.timing!==opportunity.event.timing)return [];
+    if(opportunity.event.kind==='damage_taken'&&trigger.timing!=='after')return [];
+    if(!matchesWhen(trigger.circumstances as Record<string,unknown>[]|undefined,{
+      character:liveCharacter(actor),state:actor.runtime,activeConditions:activeConditionsOf(actor.runtime),event:opportunity.event}))return [];
+    const targetId=action.targeting?.allowedRelations.every(relation=>relation==='self')?actor.id:opportunity.targetActorId;
+    const targetFacts=targetId===actor.id?{factsSource:'scenario' as const,boardRevision:0,distanceFt:0,relation:'self' as const,cover:'none' as const,lineOfSight:true}:opportunity.facts;
+    if(targetId&&actionValidation(world,action,[targetId],targetFacts?{[targetId]:targetFacts}:undefined,actor.id))return [];
+    return sourceScopedReactionOptions(actor,action);
+  });
+}
+
+function resolveEventReaction(world:WorldState,command:Extract<GameCommand,{type:'ResolveDecision'}>,catalog:RulesCatalog,env:DeterministicEnvironment):CommandResult|EventInput[]{
+  const pending=world.pendingResolution;
+  if(pending?.type!=='event_reaction')return rejected(world,'NoPendingResolution','No event reaction');
+  if(command.resolutionId!==pending.id||command.requestId!==pending.request.id)return rejected(world,'StaleDecision','Event reaction has changed');
+  if(command.actorId!==pending.request.actorId||command.response.kind!=='reaction')return rejected(world,'InvalidDecision','Only the requested actor can resolve this reaction');
+  const obligations=['system:event-reaction'];
+  const events:EventInput[]=[{sourceActorId:command.actorId,obligationIds:obligations,payload:{type:'DecisionRecorded',resolutionId:pending.id,requestId:pending.request.id,actorId:command.actorId,response:command.response}},
+    {sourceActorId:command.actorId,obligationIds:obligations,payload:{type:'ResolutionClosed',resolutionId:pending.id}}];
+  const selected=command.response.actionId;
+  if(selected===null){
+    if(command.response.spell)return rejected(world,'InvalidDecision','A declined reaction cannot select a spell');
+    return events;
+  }
+  if(!pending.request.options.some(option=>option.actionId===selected)||!eventReactionOptions(world,pending.opportunity,catalog).some(option=>option.actionId===selected))return rejected(world,'InvalidDecision','Reaction is no longer available');
+  const actor=world.actors[command.actorId];
+  const bound=bindEventReaction(actor,catalog.getAction(selected)!);
+  if(!bound)return rejected(world,'InvalidEquipmentState','Reaction weapon is no longer available');
+  const prepared=prepareReactionExecution(actor,bound,command.response.spell);
+  if(prepared.status==='rejected')return rejected(world,prepared.code,prepared.message);
+  const effectAction=bindReceivedEffectAction(prepared.action,pending.opportunity);
+  if(effectAction){
+    const result=executeAction(actor.runtime,effectAction.mechanics,{...actionContext(actor,env),actionName:effectAction.name});
+    return [...events,actionDeclaredEvent({actorId:actor.id,action:effectAction,targetIds:[actor.id],timing:'reaction',obligationIds:obligations}),
+      ...engineTrace(actor.id,[actor.id],result.events,actionObligationIds(effectAction)),...runtimeTransition(actor.id,actor.id,actor.runtime,result.state,'action',actionObligationIds(effectAction))];
+  }
+  const action=prepared.action;
+  const targetId=action.targeting?.allowedRelations.every(relation=>relation==='self')?actor.id:pending.opportunity.targetActorId;
+  const ready={...world,pendingResolution:null};
+	  const teleportPolicy=action.mechanics.teleport_destination as Record<string,unknown>|undefined;
+	  const destinationFacts=command.response.teleportDestinationFacts;
+	  if(teleportPolicy?.relative_to==='target'&&(!command.response.teleportDestination||!destinationFacts))
+	    return rejected(world,'InvalidDecision','Выберите место телепортации цели');
+	  const actionCommand:AuthoritativeUseActionCommand={...command,type:'UseAction',actionId:selected,targetIds:targetId?[targetId]:[],
+	    ...(targetId&&(destinationFacts??pending.opportunity.facts)?{factsByTarget:{[targetId]:destinationFacts??pending.opportunity.facts!}}:{}),...(prepared.spell?{spell:prepared.spell}:{})};
+	  const destinationIssue=teleportDestinationIssue(action,targetId?actionCommand.factsByTarget?.[targetId]:undefined);
+	  if(destinationIssue)return rejected(world,'InvalidFacts',destinationIssue);
+  events.push(actionDeclaredEvent({actorId:actor.id,action,targetIds:actionCommand.targetIds,timing:'reaction',spell:prepared.spell,obligationIds:obligations}));
+  const held=pendingAttackEvents(ready,actionCommand,action,catalog,env);
+  if(held&&!Array.isArray(held))return held;
+  return [...events,...(held??executeUseAction(ready,actionCommand,action,catalog,env))];
+}
+
+function queueEventReactions(world:WorldState,execution:EventInput[],command:GameCommand,catalog:RulesCatalog,env:DeterministicEnvironment,originalWorld:WorldState):EventInput[]{
+  const queue=[...(world.eventReactions??[])];
+  let currentWorld=world;
+  const append=(inputs:EventInput[])=>{for(const recorded of inputs){
+    if(recorded.payload.type!=='EngineEventRecorded'||recorded.payload.event.type!=='domain_event')continue;
+    const ev=recorded.payload.event;
+    for(const actor of Object.values(currentWorld.actors)){
+    const observer=actor.id!==ev.ownerActorId;
+    const actionIds=actor.capabilities.actionIds.filter(id=>{
+      const action=catalog.getAction(id),trigger=(action?.mechanics.activation as Record<string,unknown>|undefined)?.trigger as Record<string,unknown>|undefined;
+      return !!action&&hasReactionTrigger(action,ev.event.kind)&&(!observer||trigger?.observer_range_ft!==undefined&&trigger?.target_event==='source');
+    });
+    if(!actionIds.length)continue;
+    const declaration=command as unknown as {facts?:SpatialFacts;factsByTarget?:Record<string,SpatialFacts>};
+    const previous=originalWorld.pendingResolution as unknown as {facts?:SpatialFacts;opportunity?:{facts?:SpatialFacts}}|null;
+    const targetActorId=observer?String(ev.event.data?.sourceActorId??ev.targetActorId??''):ev.targetActorId;
+    const observation=actor.character.spatialObservations?.nearby.find(row=>row.actorId===targetActorId);
+    const observerFacts:SpatialFacts|undefined=observation?{factsSource:'board',boardRevision:actor.character.spatialObservations!.boardRevision,distanceFt:observation.distanceFt,
+      relation:observation.relation,cover:observation.cover??'none',lineOfSight:observation.lineOfSight===true,
+      canSeeTarget:observation.canSeeTarget===true,targetCanSeeSource:observation.targetCanSeeSource===true}:undefined;
+    const facts=observer?observerFacts:declaration.facts??(ev.targetActorId?declaration.factsByTarget?.[ev.targetActorId]:undefined)
+      ??declaration.factsByTarget?.[ev.ownerActorId]??previous?.facts??previous?.opportunity?.facts;
+    const opportunity:import('./domain').QueuedEventReaction={id:env.nextId(),actorId:actor.id,targetActorId,event:ev.event,actionIds,
+      ...(facts?{facts:JSON.parse(JSON.stringify(facts)) as SpatialFacts}:{})};
+    if(eventReactionOptions(currentWorld,opportunity,catalog).length)queue.push(opportunity);
+    }
+  }};
+  append(execution);
+  const result:EventInput[]=[];
+  if(!currentWorld.pendingResolution){
+    for(let count=0;queue.length&&!currentWorld.pendingResolution;count++){
+      if(count>=128)throw Error('Event action cascade exceeded its budget');
+      const opportunity=queue.shift()!,options=eventReactionOptions(currentWorld,opportunity,catalog);
+      if(!options.length)continue;
+      const automatic=options.find(option=>{
+        const activation=catalog.getAction(option.actionId)?.mechanics.activation as Record<string,unknown>|undefined;
+        return activation?.mode==='triggered'&&activation.optional===false;
+      });
+      if(automatic){
+        const actor=currentWorld.actors[opportunity.actorId],bound=bindEventReaction(actor,catalog.getAction(automatic.actionId)!);
+        if(!bound)continue;
+        const actionCommand:AuthoritativeUseActionCommand={schemaVersion:1,commandId:command.commandId,expectedRevision:command.expectedRevision,rulesetContentHash:command.rulesetContentHash,
+          type:'UseAction',actorId:actor.id,actionId:bound.id,targetIds:opportunity.targetActorId?[opportunity.targetActorId]:[],
+          ...(opportunity.targetActorId&&opportunity.facts?{factsByTarget:{[opportunity.targetActorId]:opportunity.facts}}:{})};
+        const held=pendingAttackEvents(currentWorld,actionCommand,bound,catalog,env);
+        if(held&&!Array.isArray(held))throw Error(`Automatic event action failed: ${held.status==='rejected'?held.message:held.status}`);
+        const changes=[actionDeclaredEvent({actorId:actor.id,action:bound,targetIds:actionCommand.targetIds,timing:'reaction',obligationIds:['system:event-action']}),
+          ...(held??executeUseAction(currentWorld,actionCommand,bound,catalog,env))];
+        result.push(...changes);
+        currentWorld=foldEvents(currentWorld,changes.map((event,ordinal)=>({...event,ordinal})));
+        append(changes);
+        continue;
+      }
+      result.push({sourceActorId:opportunity.actorId,obligationIds:['system:event-reaction'],payload:{type:'ResolutionOpened',resolution:{
+        id:env.nextId(),type:'event_reaction',openedByCommandId:command.commandId,openedAtRevision:world.revision+1,deadlineLogicalClock:env.clock()+60000,
+        opportunity,request:{id:env.nextId(),type:'reaction',actorId:opportunity.actorId,trigger:{type:'event',sourceActorId:opportunity.targetActorId??opportunity.actorId,eventKind:opportunity.event.kind},options}}}});
+      break;
+    }
+  }
+  if(JSON.stringify(queue)!==JSON.stringify(world.eventReactions??[]))result.unshift({sourceActorId:command.actorId,obligationIds:['system:event-reaction'],payload:{type:'EventReactionQueueChanged',queue}});
+  return result;
+}
+
+function resolveAreaConsequences(world:WorldState,incoming:EventInput[],command:GameCommand,catalog:RulesCatalog,env:DeterministicEnvironment):{world:WorldState;events:EventInput[]}{
+  let provisional=world;
+  const execution:EventInput[]=[];
+  const areaQueue=[...(world.areaConsequences??[])];
+  const appendAreas=(events:EventInput[])=>{
+    for(const row of events){
+      if(row.payload.type!=='EngineEventRecorded'||!['area_damage','area_healing','area_effect'].includes(row.payload.event.type))continue;
+      const effect=row.payload.event as Extract<EngineEvent,{type:'area_damage'|'area_healing'|'area_effect'}>;
+      const source=provisional.actors[effect.sourceActorId];
+      for(const targetId of effect.targetIds){
+        const observation=source?.character.spatialObservations?.nearby.find(entry=>entry.actorId===targetId);
+        const declaration=command as unknown as {factsByTarget?:Record<string,SpatialFacts>;facts?:SpatialFacts;targetActorId?:string};
+        const observedFacts=declaration.factsByTarget?.[targetId]??(declaration.targetActorId===targetId?declaration.facts:undefined);
+        const facts:SpatialFacts|undefined=observedFacts??(targetId===source?.id?{factsSource:'scenario',boardRevision:source.character.spatialObservations?.boardRevision??0,distanceFt:0,relation:'self',cover:'none',lineOfSight:true}:
+          observation?{factsSource:'board',boardRevision:source.character.spatialObservations!.boardRevision,distanceFt:observation.distanceFt,relation:observation.relation,cover:'none',lineOfSight:false,targetCanSeeSource:false}:undefined);
+        areaQueue.push({id:env.nextId(),effect,targetActorId:targetId,...(facts?{facts}:{})});
+      }
+    }
+  };
+  appendAreas(incoming);
+  for(let index=0;areaQueue.length&&!provisional.pendingResolution;index++){
+    if(index>=256)throw Error('Area consequences exceeded the cascade budget');
+    const queued=areaQueue.shift()!,effect=queued.effect;
+    const source=provisional.actors[effect.sourceActorId],target=provisional.actors[queued.targetActorId];
+    if(!source||!target||target.lifecycle?.status==='dead'||target.runtime.deathSaves?.dead)continue;
+    if(effect.magicOrigin&&!['artifact','deity'].includes(effect.magicOrigin.kind)
+      &&(source.character.magicSuppressed||target.character.magicSuppressed))continue;
+    const payload=effect.type==='area_effect'?null:effect.type==='area_healing'?{kind:'healing',amount:effect.amount}
+      :{kind:'damage',amount:effect.amount,type:effect.damageType,suppress_damage_modifiers:true};
+    const action:RuleActionDefinition={id:`system:area:${queued.id}`,name:effect.source??'Эффект по области',kind:'nonSpell',sourceEntityIds:['system:area-consequences'],
+      mechanics:{activation:{mode:'active',cost:[]},...(effect.magicOrigin?{magical:true,captured_magic_origin:effect.magicOrigin}:{}),...(effect.type==='area_damage'?{damage_source_kind:effect.damageSourceKind,...effect.transferred?{damage_transfer_origin:true}:{}}:{}),effects:[{resolution:'auto',who:'target',result:effect.type==='area_effect'?effect.effects:[payload]}]}};
+    const areaCommand:AuthoritativeUseActionCommand={schemaVersion:1,commandId:command.commandId,expectedRevision:command.expectedRevision,rulesetContentHash:command.rulesetContentHash,type:'UseAction',actorId:source.id,actionId:action.id,targetIds:[target.id],
+      ...(queued.facts?{factsByTarget:{[target.id]:queued.facts}}:{})};
+    const changes=executeUseAction(provisional,areaCommand,action,catalog,env,{triggeredConsequences:true});
+    execution.push(...changes);
+    provisional=foldEvents(provisional,changes.map((event,ordinal)=>({...event,ordinal})));
+    appendAreas(changes);
+  }
+  if(JSON.stringify(areaQueue)!==JSON.stringify(world.areaConsequences??[])){
+    const queueEvent:EventInput={sourceActorId:command.actorId,obligationIds:['system:area-consequences'],payload:{type:'AreaConsequenceQueueChanged',queue:areaQueue}};
+    execution.push(queueEvent);
+    provisional=foldEvents(provisional,[{...queueEvent,ordinal:0}]);
+  }
+  return {world:provisional,events:execution};
+}
+
+/** These facts describe committed interaction outcomes, never a UI label. */
+function physicalInteractionConsequences(world:WorldState,events:EventInput[],env:DeterministicEnvironment):EventInput[]{
+  let current=foldEvents(world,events.map((event,ordinal)=>({...event,ordinal})));
+  const changes:EventInput[]=[];
+  for(const envelope of events){
+    const p=envelope.payload;
+    if(p.type!=='GrappleApplied'&&p.type!=='ShoveApplied')continue;
+    const kind=p.type==='GrappleApplied'?'grapple':'shove';
+    const sourceId=p.type==='GrappleApplied'?p.grapple.grapplerActorId:p.sourceActorId;
+    const targetId=p.type==='GrappleApplied'?p.grapple.targetActorId:p.targetActorId;
+    const source=current.actors[sourceId],target=current.actors[targetId];
+    if(!source||!target)continue;
+    const trace:EngineEvent[]=[];
+    const recipient={state:target.runtime,mutated:false};
+    const ctx=actionContext(source,env,target,target.runtime);
+    const state=emitEngineEvent({kind:'physical_interaction',source:'self',target:targetId,data:{kind,targetActorId:targetId,sourceActorId:sourceId}},source.runtime,ctx,trace,[],recipient,[],true);
+    const obligations=['system:physical-interaction'];
+    const next=[...engineTrace(sourceId,[targetId],trace,obligations),
+      ...runtimeTransition(sourceId,sourceId,source.runtime,state,'action',obligations),
+      ...runtimeTransition(sourceId,targetId,target.runtime,recipient.state,'action',obligations)];
+    changes.push(...next);current=foldEvents(current,next.map((event,ordinal)=>({...event,ordinal})));
+  }
+  return changes;
+}
+
+function bondLifecycleEvents(world:WorldState,env:DeterministicEnvironment,before?:WorldState):EventInput[]{
+ const changes:EventInput[]=[],obligations=['system:bond-lifecycle'];
+ for(const [id,removed] of endedBondEffects(world,before)){
+  const actor=world.actors[id];
+  const raw={...actor.runtime,activeEffects:actor.runtime.activeEffects.filter(effect=>!removed.has(effect.id))};
+  const ended=reconcileEndedEffects(actor.runtime,raw,actionContext(actor,env),executeAction);
+  const trace:EngineEvent[]=[...actor.runtime.activeEffects.filter(effect=>removed.has(effect.id)).map(effect=>({type:'effect_expired' as const,name:effect.name})),...ended.events];
+  changes.push(...runtimeTransition(id,id,actor.runtime,ended.state,'action',obligations),...engineTrace(id,[id],trace,obligations));
+ }
+ return changes;
 }
 
 export function handleCommand(
@@ -12266,8 +13251,26 @@ export function handleCommand(
     ...env,
     nextId: () => `${command.commandId}:id:${++generatedIdOrdinal}`,
   };
-  const execution = executeCommand(world, command, catalog, commandEnv);
+  const magicBefore=magicProjectionEvents(world);
+  const magicWorld=magicBefore.length?foldEvents(world,magicBefore.map((event,ordinal)=>({...event,ordinal}))):world;
+  const expiredBonds=bondLifecycleEvents(magicWorld,commandEnv);
+  const preparedWorld=expiredBonds.length?foldEvents(magicWorld,expiredBonds.map((event,ordinal)=>({...event,ordinal}))):magicWorld;
+  const execution = executeCommand(preparedWorld, command, catalog, commandEnv);
   if (!Array.isArray(execution)) return execution;
+  execution.unshift(...magicBefore,...expiredBonds);
+  execution.push(...itemMaterialFocusEvents(preparedWorld,execution,catalog));
+  execution.push(...physicalInteractionConsequences(world,execution,commandEnv));
+  execution.push(...recipientBindingEvents(world,foldEvents(world,execution.map((event,ordinal)=>({...event,ordinal}))),execution,catalog,commandEnv));
+  execution.push(...itemToolMutationEvents(world,execution));
+  const toolWorkSeconds=itemToolWorkSeconds(execution);
+  if(toolWorkSeconds){
+    const beforeWork=foldEvents(world,execution.map((event,ordinal)=>({...event,ordinal}))),obligations=['system:item-tool-work-time'];
+    for(const actor of Object.values(beforeWork.actors).sort((a,b)=>a.id.localeCompare(b.id))){
+      const elapsed=advanceEffectTime(actor.runtime,toolWorkSeconds,actionContext(actor,commandEnv));
+      execution.push(...runtimeTransition(command.actorId,actor.id,actor.runtime,elapsed.state,'action',obligations),...engineTrace(actor.id,[],elapsed.events,obligations));
+    }
+    execution.push(...advanceWorldObjectRounds({objects:beforeWork.objects,rounds:Math.floor(toolWorkSeconds/6)}).events.map(event=>({sourceActorId:command.actorId,obligationIds:obligations,payload:{type:'WorldObjectMutationRecorded' as const,event}})));
+  }
   if (command.type === 'UseAction' && (catalog.getAction(command.actionId)?.mechanics.activation as Record<string, unknown> | undefined)?.telekinetic_movement === true) {
     const facts = command.factsByTarget?.[command.actorId];
     if (facts?.telekineticObjectId && facts.telekineticHandMode) {
@@ -12284,7 +13287,49 @@ export function handleCommand(
   // Cross-cutting lifecycle rules are generic post-conditions of every
   // accepted command, so individual spells/features cannot forget them.
   const provisionalEvents = execution.map((event, ordinal) => ({ ...event, ordinal }));
-  const provisional = foldEvents(world, provisionalEvents);
+  let provisional = foldEvents(world, provisionalEvents);
+  const magicAfter=magicProjectionEvents(provisional);
+  execution.push(...magicAfter);
+  provisional=foldEvents(provisional,magicAfter.map((event,ordinal)=>({...event,ordinal})));
+  const endedBonds=bondLifecycleEvents(provisional,commandEnv,world);
+  execution.push(...endedBonds);
+  provisional=foldEvents(provisional,endedBonds.map((event,ordinal)=>({...event,ordinal})));
+  let incomingConsequences=execution.slice();
+  let receivedSnapshot=world;
+  for (let volleyPass = 0; volleyPass < 128; volleyPass++) {
+    for(let cascade=0;cascade<128;cascade++){
+      const areas=resolveAreaConsequences(provisional,incomingConsequences,command,catalog,commandEnv);
+      const closedBonds=bondLifecycleEvents(areas.world,commandEnv,provisional);
+      areas.events.push(...closedBonds);
+      areas.world=foldEvents(areas.world,closedBonds.map((event,ordinal)=>({...event,ordinal})));
+      const received=receivedEffectEvents(receivedSnapshot,areas.world);
+      receivedSnapshot=areas.world;
+      const reactions=queueEventReactions(areas.world,[...(cascade===0?incomingConsequences:[]),...areas.events,...received],command,catalog,commandEnv,world);
+      execution.push(...areas.events,...received,...reactions);
+      provisional=foldEvents(areas.world,reactions.map((event,ordinal)=>({...event,ordinal})));
+      if(!areas.events.length&&!received.length&&!reactions.length)break;
+      incomingConsequences=reactions;
+      if(cascade===127)return rejected(world,'InvalidActionDefinition','Consequence cascade exceeded its budget');
+    }
+    const volley = provisional.attackVolley;
+    if (!volley || provisional.pendingResolution) break;
+    const next = attackVolleyStep(provisional, volley, catalog, commandEnv);
+    if (!Array.isArray(next)) return next.status === 'rejected'
+      ? rejected(world, next.code, next.message)
+      : rejected(world, 'InvalidDecision', 'Attack volley returned an invalid nested acceptance');
+    const beforeStep = provisional;
+    execution.push(...next);
+    provisional = foldEvents(provisional, next.map((event,ordinal) => ({...event,ordinal})));
+    const projected = magicProjectionEvents(provisional);
+    execution.push(...projected);
+    provisional = foldEvents(provisional, projected.map((event,ordinal) => ({...event,ordinal})));
+    incomingConsequences = next;
+    receivedSnapshot = beforeStep;
+    if (volleyPass === 127) return rejected(world,'InvalidActionDefinition','Attack volley exceeded its slot budget');
+  }
+  const finalMagic=magicProjectionEvents(provisional);
+  execution.push(...finalMagic);
+  provisional=foldEvents(provisional,finalMagic.map((event,ordinal)=>({...event,ordinal})));
   const terminal = automaticTerminalConditionDeaths({
     world: provisional,
     command,
@@ -12297,7 +13342,21 @@ export function handleCommand(
     }
     return rejected(world, terminal.code, terminal.message);
   }
-  const postTerminal = terminal.world;
+  let postTerminal = terminal.world;
+  const recoveryEvents:EventInput[]=[];
+  for(const actor of Object.values(postTerminal.actors).sort((left,right)=>left.id.localeCompare(right.id))){
+    const before=world.actors[actor.id];
+    if(!before)continue;
+    const recovered=recoverAfterDeath(before,actor,commandEnv);
+    if(!recovered)continue;
+    const obligations=['system:death-recovery',`entity:${recovered.sourceId}`];
+    const changes:EventInput[]=[...runtimeTransition(actor.id,actor.id,actor.runtime,recovered.state,'long_rest',obligations),
+      ...engineTrace(actor.id,[actor.id],recovered.events,obligations),
+      {sourceActorId:actor.id,obligationIds:obligations,payload:{type:'ActorRevived',actorId:actor.id,
+        sourceEntityId:recovered.sourceId,provenance:'canonical_actor_lifecycle'}}];
+    recoveryEvents.push(...changes);
+    postTerminal=foldEvents(postTerminal,changes.map((event,ordinal)=>({...event,ordinal})));
+  }
   const automaticArmorOfAgathysEnds: EventInput[] = Object.values(postTerminal.actors)
     .flatMap((actor) => {
       if (actor.runtime.hp.temp > 0) return [];
@@ -12361,15 +13420,21 @@ export function handleCommand(
       },
     }));
 
+  const eventReactions:EventInput[]=[];
   const nextRevision = world.revision + 1;
   const rawEvents: EventInput[] = [
     ...execution,
     ...terminal.events,
+    ...recoveryEvents,
+    ...inherentWeaponBondEvents(postTerminal),
+    ...thrownWeaponEvents(world,postTerminal,execution,command.commandId),
+    ...deployedItemEvents(world,postTerminal,execution,command.commandId),
     ...heldItemDropWorldEvents(world, postTerminal, execution, command.commandId),
     ...consumedHeldItemWorldEvents(postTerminal, execution),
     ...automaticArmorOfAgathysEnds,
     ...automaticFamiliarDisappears,
     ...automaticGrappleEnds,
+    ...eventReactions,
     {
       sourceActorId: command.actorId,
       obligationIds: ['system:command-commit'],

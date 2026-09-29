@@ -15,6 +15,7 @@ import {
 } from './combatAreas';
 import { spatialFacts, type CombatAreaState, type SoloCombatState } from './types';
 import { autoResolveSystemDecisions, executeCombatAction, moveActor, moveActorAlongRoute } from './engine';
+import { reachableRoutes } from './tacticalGrid';
 
 function state(): SoloCombatState {
   const runtime = () => ({
@@ -88,6 +89,49 @@ const grease: RuleActionDefinition = {
 afterEach(() => resetConditionsToOfflineFixture('combat_area_test_cleanup'));
 
 describe('persistent combat areas', () => {
+  it.each([3,4])('uses an authored %i-fold area movement cost in execution and route preview',multiplier=>{
+    const snapshot=state();
+    snapshot.tokens.caster.position={x:2,y:3};
+    snapshot.tokens.target.position={x:9,y:9};
+    const action:RuleActionDefinition={...grease,id:`growth-${multiplier}`,
+      mechanics:{targeting:grease.mechanics.targeting,effects:[{resolution:'auto',result:[{
+        kind:'world_zone',zone_type:'growth',geometry:{shape:'cube',size_ft:5},
+        tactical:{movement_cost_multiplier:multiplier},
+      }]}]}};
+    const area=createCombatArea({state:snapshot,action,sourceActorId:'caster',origin:{x:3,y:3}})!;
+    snapshot.combatAreas={[area.id]:area};
+    expect(area.movementCostMultiplier).toBe(multiplier);
+    expect(movementCostThroughAreas(snapshot,{x:2,y:3},{x:3,y:3},5,'caster')).toBe(5*multiplier);
+    expect(reachableRoutes(snapshot,'caster',30).find(route=>route.destination.x===3&&route.destination.y===3)?.costFt)
+      .toBe(5*multiplier);
+  });
+  it.each([{budget:17,damage:20,id:'guardian-a'},{budget:9,damage:10,id:'guardian-b'}])('spends the shared actual-damage budget of $id after defenses across reload and expires at zero',spec=>{
+    let current=state();current.world.actors.target.runtime.hp={current:100,max:100,temp:0};
+    current.world.actors.target.passives=[{kind:'reduce_damage',amount:4},{kind:'resistance',value:'resistance',damage_type:'radiant'}];
+    const action={...grease,id:spec.id,name:spec.id,mechanics:{targeting:grease.mechanics.targeting,effects:[{resolution:'auto',result:[{
+      kind:'world_zone',zone_type:'guardian',geometry:{shape:'cube',size_ft:10},duration:{type:'hours',amount:8},
+      tactical:{triggers:['enter','start_turn'],recipients:'enemies',shared_trigger_per_turn:true,damage_budget:spec.budget,
+        save:{ability:'dex',dc:15},on_failure:[{kind:'damage',amount:spec.damage,type:'radiant'}],on_success:[{kind:'damage',amount:spec.damage/2,type:'radiant'}]},
+    }]}]}} as RuleActionDefinition;
+    const area=createCombatArea({state:current,action,sourceActorId:'caster',origin:{x:3,y:3}})!;
+    current.combatAreas={[area.id]:area};
+    expect(area.duration).toEqual({type:'rounds',roundsLeft:4800});
+    current=queueCombatAreaEvent(current,'enter',['caster','target'],undefined,true);
+    current=queueCombatAreaEvent(current,'start_turn',['target']);
+    expect(current.pendingCombatAreaTriggers).toHaveLength(1);
+    for(let turn=0;turn<12&&current.combatAreas?.[area.id];turn++){
+      current=autoResolveSystemDecisions(JSON.parse(JSON.stringify(current)),()=>0);
+      if(!current.combatAreas?.[area.id])break;
+      if(current.world.scene.mode==='encounter')current.world.scene.round++;
+      current=queueCombatAreaEvent(current,'enter',['target']);
+    }
+    expect(current.world.actors.target.runtime.hp.current).toBe(100-spec.budget);
+    expect(current.combatAreas?.[area.id]).toBeUndefined();
+    expect(current.pendingCombatAreaTriggers??[]).toHaveLength(0);
+    const repeated=autoResolveSystemDecisions(JSON.parse(JSON.stringify(current)),()=>0);
+    expect(repeated.world.actors.target.runtime.hp.current).toBe(100-spec.budget);
+  });
+
   it('takes terrain cost from two distinct actor-owned declarations, keeping hazards and other actors intact',()=>{
     const snapshot=state();
     snapshot.combatAreas={mud:{id:'mud',cells:[{x:3,y:3}],difficultTerrain:true} as CombatAreaState};

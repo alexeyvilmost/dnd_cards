@@ -1,0 +1,2730 @@
+[
+  {
+    "entity_type": "spell",
+    "id": "33c69e7d-7524-421a-9d68-521e1b7fb57a",
+    "card_number": "SPELL-0163",
+    "name": "Благословение",
+    "description_sha256": "27f001d99ea5c60f90bb0e7e4bc8a6cea96ca6c68cfb77d7c0a771a18cc8e311",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-runtime-013c48cc11a703d0985f"
+              },
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-runtime-7ffb84d97c88eb28d0d3"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "range": "30 футов",
+          "shape": "multiple",
+          "domain": "actor",
+          "filter": "creature",
+          "range_ft": 30,
+          "max_targets": 3,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 1,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active",
+          "cast_time": {
+            "unit": "action",
+            "amount": 1
+          }
+        },
+        "spell_class_list_ids": [
+          "CLASS-cleric",
+          "CLASS-paladin"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-runtime-013c48cc11a703d0985f"
+              },
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-runtime-7ffb84d97c88eb28d0d3"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "range": "30 футов",
+          "shape": "multiple",
+          "domain": "actor",
+          "filter": "creature",
+          "range_ft": 30,
+          "max_targets": 3,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true,
+          "additional_target_slots_per_spell_slot_above_base": 1
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 1,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active",
+          "cast_time": {
+            "unit": "action",
+            "amount": 1
+          }
+        },
+        "spell_class_list_ids": [
+          "CLASS-cleric",
+          "CLASS-paladin"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Число отдельных целей определяется исходным и повышенным уровнем ячейки.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "a4491a9d-8a2d-4212-abc1-c92d3f0b85ed",
+    "card_number": "SPELL-0181",
+    "name": "Героизм",
+    "description_sha256": "0968e78bf778f460a5368b768230ee5311565713487ee515e71a007bed59bcb2",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-runtime-98215f034afaf073ddaa"
+              },
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-runtime-faa29f30da3df86359ca"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "requires_touch": true,
+          "allowed_relations": [
+            "self",
+            "ally"
+          ],
+          "requires_line_of_sight": false
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 1,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-paladin"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-runtime-98215f034afaf073ddaa"
+              },
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-runtime-faa29f30da3df86359ca"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "multiple",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "requires_touch": true,
+          "allowed_relations": [
+            "self",
+            "ally"
+          ],
+          "requires_line_of_sight": false,
+          "additional_target_slots_per_spell_slot_above_base": 1
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 1,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-paladin"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Число отдельных целей определяется исходным и повышенным уровнем ячейки.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "c2e3cd80-463a-4a0f-a918-ed9a302efe5b",
+    "card_number": "SPELL-0193",
+    "name": "Дружба с животными",
+    "description_sha256": "019874aefe6f72f8b489f25e763bd2e52f1eff1a0f7cdc7ef42ca336893efb9b",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "dc": "8 + prof + spellcasting",
+            "who": "target",
+            "ability": "wis",
+            "on_fail": [
+              {
+                "op": "apply",
+                "kind": "condition",
+                "value": "charmed"
+              },
+              {
+                "kind": "narrative",
+                "description": "Очарование длится 24 часа; обрывается, если вы или ваши союзники нанесёте цели урон."
+              }
+            ],
+            "on_success": [],
+            "resolution": "save"
+          }
+        ],
+        "targeting": {
+          "range": "30 футов",
+          "shape": "single",
+          "filter": "creature_type:beast"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 1,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-ranger"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "dc": "8 + prof + spellcasting",
+            "who": "target",
+            "ability": "wis",
+            "on_fail": [
+              {
+                "op": "apply",
+                "kind": "condition",
+                "value": "charmed"
+              },
+              {
+                "kind": "narrative",
+                "description": "Очарование длится 24 часа; обрывается, если вы или ваши союзники нанесёте цели урон."
+              }
+            ],
+            "on_success": [],
+            "resolution": "save"
+          }
+        ],
+        "targeting": {
+          "range": "30 футов",
+          "shape": "multiple",
+          "filter": "creature_type:beast",
+          "additional_target_slots_per_spell_slot_above_base": 1
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 1,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-ranger"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Число отдельных целей определяется исходным и повышенным уровнем ячейки.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "4abefac8-329b-4c70-a59a-84dca2d194d3",
+    "card_number": "SPELL-0199",
+    "name": "Жуткий смех Таши",
+    "description_sha256": "0c3729a9051d34766d2c4c16973c976da5be9e809437b267d32291ef0b458bf2",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "dc": "8 + prof + spellcasting",
+            "who": "target",
+            "ability": "wis",
+            "on_fail": [
+              {
+                "op": "apply",
+                "kind": "condition",
+                "value": "prone",
+                "duration": {
+                  "type": "rounds",
+                  "amount": 10
+                },
+                "save_ends": {
+                  "dc": "8 + prof + spellcasting",
+                  "ability": "wis"
+                }
+              },
+              {
+                "op": "apply",
+                "kind": "condition",
+                "value": "incapacitated",
+                "duration": {
+                  "type": "rounds",
+                  "amount": 10
+                },
+                "save_ends": {
+                  "dc": "8 + prof + spellcasting",
+                  "ability": "wis"
+                }
+              },
+              {
+                "kind": "narrative",
+                "description": "Повторный спасбросок также при получении урона — с Преимуществом."
+              }
+            ],
+            "on_success": [],
+            "resolution": "save"
+          }
+        ],
+        "targeting": {
+          "range": "30 футов",
+          "shape": "single",
+          "filter": "any"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 1,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "dc": "8 + prof + spellcasting",
+            "who": "target",
+            "ability": "wis",
+            "on_fail": [
+              {
+                "op": "apply",
+                "kind": "condition",
+                "value": "prone",
+                "duration": {
+                  "type": "rounds",
+                  "amount": 10
+                },
+                "save_ends": {
+                  "dc": "8 + prof + spellcasting",
+                  "ability": "wis"
+                }
+              },
+              {
+                "op": "apply",
+                "kind": "condition",
+                "value": "incapacitated",
+                "duration": {
+                  "type": "rounds",
+                  "amount": 10
+                },
+                "save_ends": {
+                  "dc": "8 + prof + spellcasting",
+                  "ability": "wis"
+                }
+              },
+              {
+                "kind": "narrative",
+                "description": "Повторный спасбросок также при получении урона — с Преимуществом."
+              }
+            ],
+            "on_success": [],
+            "resolution": "save"
+          }
+        ],
+        "targeting": {
+          "range": "30 футов",
+          "shape": "multiple",
+          "filter": "any",
+          "additional_target_slots_per_spell_slot_above_base": 1
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 1,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Число отдельных целей определяется исходным и повышенным уровнем ячейки.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "0f0eca67-f241-4f1a-b01b-37c6f16adea2",
+    "card_number": "SPELL-0226",
+    "name": "Мистический заряд",
+    "description_sha256": "fce464654a4628a6485f56eaf492f50552d07f4ad2d4037af8c01c78899a57ea",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "vs": "ac",
+            "on_hit": [
+              {
+                "dice": "1d10",
+                "kind": "damage",
+                "type": "force",
+                "scaling": {
+                  "per": "character_level",
+                  "dice": "1d10"
+                }
+              }
+            ],
+            "ability": "spellcasting",
+            "resolution": "attack_roll",
+            "attack_kind": "spell_ranged"
+          }
+        ],
+        "targeting": {
+          "range": "120 футов",
+          "shape": "single",
+          "filter": "any"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-warlock"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "vs": "ac",
+            "on_hit": [
+              {
+                "dice": "1d10",
+                "kind": "damage",
+                "type": "force"
+              }
+            ],
+            "ability": "spellcasting",
+            "resolution": "attack_roll",
+            "attack_kind": "spell_ranged"
+          }
+        ],
+        "targeting": {
+          "range": "120 футов",
+          "shape": "multiple",
+          "filter": "any",
+          "min_targets": 1,
+          "max_targets": 1,
+          "domain": "actor",
+          "actor_targets": true,
+          "range_ft": 120,
+          "requires_line_of_sight": true,
+          "allowed_relations": [
+            "self",
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "allow_repeat_targets": true,
+          "target_slots_by_character_level": {
+            "1": 1,
+            "5": 2,
+            "11": 3,
+            "17": 4
+          }
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-warlock"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "По уровням персонажа 1/5/11/17 создаётся 1/2/3/4 отдельных луча по 1к10; цель можно повторить.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29;",
+        "SRD 5.2.1: https://media.dndbeyond.com/compendium-images/srd/5.2/SRD_CC_v5.2.1.pdf"
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "d98811c6-47e5-4250-96de-cc64ea893754",
+    "card_number": "SPELL-0231",
+    "name": "Невидимость",
+    "description_sha256": "961694e84c58d87a56ed002ef905dbb392a4cab666949e59e59a218a5eb6157b",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "COND-invisible",
+                "duration": {
+                  "type": "rounds",
+                  "amount": 600,
+                  "concentration": true
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 2,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-sorcerer",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "COND-invisible",
+                "duration": {
+                  "type": "rounds",
+                  "amount": 600,
+                  "concentration": true
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "multiple",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally"
+          ],
+          "requires_line_of_sight": true,
+          "additional_target_slots_per_spell_slot_above_base": 1
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 2,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-sorcerer",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Число отдельных целей определяется исходным и повышенным уровнем ячейки.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "a6c7db7d-f35c-4072-a5eb-29d4d58be93e",
+    "card_number": "SPELL-0251",
+    "name": "Очарование личности",
+    "description_sha256": "aa389bf60029e4879b6e89630bc927ef9e8789cb1f91b16f2ef4ddbbe3dd30ad",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "dc": "8 + prof + spellcasting",
+            "who": "target",
+            "ability": "wis",
+            "on_fail": [
+              {
+                "op": "apply",
+                "kind": "condition",
+                "value": "charmed",
+                "duration": {
+                  "type": "rounds",
+                  "amount": 600
+                }
+              },
+              {
+                "kind": "narrative",
+                "description": "Очарованная цель Дружелюбна к вам. Заклинание заканчивается, если вы или ваши союзники нанесёте цели урон. Цель совершает спасбросок с Преимуществом, если вы или ваши союзники сражаетесь с ней. Когда заклинание заканчивается, цель знает, что была Очарована вами. Ячейкой выше 1-го уровня — одна дополнительная цель за уровень."
+              }
+            ],
+            "on_success": [],
+            "resolution": "save"
+          }
+        ],
+        "targeting": {
+          "range": "30 футов",
+          "shape": "single",
+          "filter": "creature_type:humanoid"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 1,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-sorcerer",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "dc": "8 + prof + spellcasting",
+            "who": "target",
+            "ability": "wis",
+            "on_fail": [
+              {
+                "op": "apply",
+                "kind": "condition",
+                "value": "charmed",
+                "duration": {
+                  "type": "rounds",
+                  "amount": 600
+                }
+              },
+              {
+                "kind": "narrative",
+                "description": "Очарованная цель Дружелюбна к вам. Заклинание заканчивается, если вы или ваши союзники нанесёте цели урон. Цель совершает спасбросок с Преимуществом, если вы или ваши союзники сражаетесь с ней. Когда заклинание заканчивается, цель знает, что была Очарована вами. Ячейкой выше 1-го уровня — одна дополнительная цель за уровень."
+              }
+            ],
+            "on_success": [],
+            "resolution": "save"
+          }
+        ],
+        "targeting": {
+          "range": "30 футов",
+          "shape": "multiple",
+          "filter": "creature_type:humanoid",
+          "additional_target_slots_per_spell_slot_above_base": 1
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 1,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-sorcerer",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Число отдельных целей определяется исходным и повышенным уровнем ячейки.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "f1037ba6-438f-4694-8634-116620aa9e0f",
+    "card_number": "SPELL-0255",
+    "name": "Палящий луч",
+    "description_sha256": "90824bac60d49c9c37424e16ecb6cb6c548698caa6ff31f99af6a4b2b9b340ba",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "vs": "ac",
+            "on_hit": [
+              {
+                "dice": "2d6",
+                "kind": "damage",
+                "type": "fire",
+                "scaling": {
+                  "per": "spell_slot_above",
+                  "dice": "1d6"
+                }
+              }
+            ],
+            "ability": "spellcasting",
+            "resolution": "attack_roll",
+            "attack_kind": "spell_ranged"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 120,
+          "max_targets": 3,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 2,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "vs": "ac",
+            "on_hit": [
+              {
+                "dice": "2d6",
+                "kind": "damage",
+                "type": "fire"
+              }
+            ],
+            "ability": "spellcasting",
+            "resolution": "attack_roll",
+            "attack_kind": "spell_ranged"
+          }
+        ],
+        "targeting": {
+          "shape": "multiple",
+          "domain": "actor",
+          "range_ft": 120,
+          "max_targets": 3,
+          "min_targets": 3,
+          "actor_targets": true,
+          "allowed_relations": [
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true,
+          "additional_target_slots_per_spell_slot_above_base": 1,
+          "allow_repeat_targets": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 2,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Каждый луч — отдельная дальнобойная атака 2к6; одну цель можно выбрать повторно.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "b6c78aaa-1ad9-46df-8eb7-d12850dce865",
+    "card_number": "SPELL-0258",
+    "name": "Паучье лазание",
+    "description_sha256": "8df45927069a684f53324234c5b2843b93c14004f517d1f18b391661ee87867c",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-runtime-402ee30f76716341c242"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 2,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-runtime-402ee30f76716341c242"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "multiple",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally"
+          ],
+          "requires_line_of_sight": true,
+          "additional_target_slots_per_spell_slot_above_base": 1
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 2,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Число отдельных целей определяется исходным и повышенным уровнем ячейки.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "d7218ea6-2062-4ef3-8680-c8f9c657fda9",
+    "card_number": "SPELL-0267",
+    "name": "Порча",
+    "description_sha256": "2a420452d22eb57ca01fcb5030ac13bd2d9e095f4946c1e3bbcc1d5dec4f27cb",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "dc": "8 + prof + spellcasting",
+            "who": "target",
+            "ability": "cha",
+            "on_fail": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-runtime-77cfd2e6375a2dfc9667"
+              },
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-runtime-66e9d1ac1a98be18b2c9"
+              }
+            ],
+            "on_success": [],
+            "resolution": "save"
+          }
+        ],
+        "targeting": {
+          "shape": "multiple",
+          "domain": "actor",
+          "range_ft": 30,
+          "max_targets": 3,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 1,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "interaction": {
+          "intent": "harmful"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-cleric",
+          "CLASS-warlock"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "dc": "8 + prof + spellcasting",
+            "who": "target",
+            "ability": "cha",
+            "on_fail": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-runtime-77cfd2e6375a2dfc9667"
+              },
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-runtime-66e9d1ac1a98be18b2c9"
+              }
+            ],
+            "on_success": [],
+            "resolution": "save"
+          }
+        ],
+        "targeting": {
+          "shape": "multiple",
+          "domain": "actor",
+          "range_ft": 30,
+          "max_targets": 3,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true,
+          "additional_target_slots_per_spell_slot_above_base": 1
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 1,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "interaction": {
+          "intent": "harmful"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-cleric",
+          "CLASS-warlock"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Число отдельных целей определяется исходным и повышенным уровнем ячейки.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "0cee5f3c-e943-46dd-96bc-ced618b90454",
+    "card_number": "SPELL-0274",
+    "name": "Прыжок",
+    "description_sha256": "4a8f07780a146481414815c841b94b3d37a93b341af99041000da2c54d3b8557",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-runtime-a1f10e60101b285640a2"
+              },
+              {
+                "kind": "narrative",
+                "description": "При сотворении ячейкой выше 1-го круга можно выбрать ещё одну цель за каждый дополнительный круг; масштабирование числа целей пока требует multi-target адаптера слота."
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "requires_touch": true,
+          "allowed_relations": [
+            "self",
+            "ally"
+          ],
+          "requires_line_of_sight": false
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "level": 1,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-druid",
+          "CLASS-ranger",
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-runtime-a1f10e60101b285640a2"
+              },
+              {
+                "kind": "narrative",
+                "description": "При сотворении ячейкой выше 1-го круга можно выбрать ещё одну цель за каждый дополнительный круг; масштабирование числа целей пока требует multi-target адаптера слота."
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "multiple",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "requires_touch": true,
+          "allowed_relations": [
+            "self",
+            "ally"
+          ],
+          "requires_line_of_sight": false,
+          "additional_target_slots_per_spell_slot_above_base": 1
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "level": 1,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-druid",
+          "CLASS-ranger",
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Число отдельных целей определяется исходным и повышенным уровнем ячейки.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "bcfad1fc-ef46-4fe0-94da-a520397cf642",
+    "card_number": "banishment",
+    "name": "Изгнание",
+    "description_sha256": "98e6166369d89e89ccb15b508002cd070832f5e0ff95a6f8d6c02e45e8635c29",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "dc": "8 + prof + spellcasting",
+            "who": "target",
+            "ability": "cha",
+            "on_fail": [
+              {
+                "op": "apply",
+                "kind": "condition",
+                "value": "incapacitated",
+                "duration": {
+                  "type": "rounds",
+                  "amount": 10,
+                  "concentration": true
+                }
+              },
+              {
+                "kind": "narrative",
+                "description": "Цель перенесена на безопасный демиплан до конца заклинания, затем возвращается. Аберрация, Исчадие, Небожитель, Фея или Элементаль после полной минуты не возвращается, а попадает на план своего типа."
+              }
+            ],
+            "on_success": [],
+            "resolution": "save"
+          }
+        ],
+        "targeting": {
+          "range": "30 футов",
+          "shape": "single",
+          "filter": "any"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 4,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-cleric",
+          "CLASS-paladin",
+          "CLASS-sorcerer",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "dc": "8 + prof + spellcasting",
+            "who": "target",
+            "ability": "cha",
+            "on_fail": [
+              {
+                "op": "apply",
+                "kind": "condition",
+                "value": "incapacitated",
+                "duration": {
+                  "type": "rounds",
+                  "amount": 10,
+                  "concentration": true
+                }
+              },
+              {
+                "kind": "narrative",
+                "description": "Цель перенесена на безопасный демиплан до конца заклинания, затем возвращается. Аберрация, Исчадие, Небожитель, Фея или Элементаль после полной минуты не возвращается, а попадает на план своего типа."
+              }
+            ],
+            "on_success": [],
+            "resolution": "save"
+          }
+        ],
+        "targeting": {
+          "range": "30 футов",
+          "shape": "multiple",
+          "filter": "any",
+          "additional_target_slots_per_spell_slot_above_base": 1
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 4,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-cleric",
+          "CLASS-paladin",
+          "CLASS-sorcerer",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Число отдельных целей определяется исходным и повышенным уровнем ячейки.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "67105091-a8ac-41c9-b549-1455f3c8c0ad",
+    "card_number": "chain_lightning",
+    "name": "Цепная молния",
+    "description_sha256": "18c6ccd539dcd0538689e4bed818070d331c5dce5ed0e97aaa58512cd8eec394",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "dc": "8 + prof + spellcasting",
+            "who": "target",
+            "ability": "dex",
+            "on_fail": [
+              {
+                "dice": "10d8",
+                "kind": "damage",
+                "type": "lightning",
+                "on_success": "half"
+              }
+            ],
+            "on_success": [
+              {
+                "dice": "10d8",
+                "kind": "damage",
+                "type": "lightning",
+                "on_success": "half"
+              }
+            ],
+            "resolution": "save"
+          },
+          {
+            "result": [
+              {
+                "kind": "narrative",
+                "description": "Три разряда перепрыгивают с первой цели на до трёх целей в пределах 30 фт от неё (по одному разряду на цель); каждая совершает такой же спасбросок. +1 разряд за уровень ячейки выше 6-го."
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 150,
+          "max_targets": 4,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 6,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "dc": "8 + prof + spellcasting",
+            "who": "target",
+            "ability": "dex",
+            "on_fail": [
+              {
+                "dice": "10d8",
+                "kind": "damage",
+                "type": "lightning",
+                "on_success": "half"
+              }
+            ],
+            "on_success": [
+              {
+                "dice": "10d8",
+                "kind": "damage",
+                "type": "lightning",
+                "on_success": "half"
+              }
+            ],
+            "resolution": "save"
+          },
+          {
+            "result": [
+              {
+                "kind": "narrative",
+                "description": "Три разряда перепрыгивают с первой цели на до трёх целей в пределах 30 фт от неё (по одному разряду на цель); каждая совершает такой же спасбросок. +1 разряд за уровень ячейки выше 6-го."
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "multiple",
+          "domain": "actor",
+          "range_ft": 150,
+          "max_targets": 4,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true,
+          "additional_target_slots_per_spell_slot_above_base": 1,
+          "additional_targets_within_ft_of_first": 30
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 6,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Дополнительные цели находятся не дальше 30 футов от первой; при повышении уровня добавляется одна.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "de40c4f1-afd2-4e2a-878d-0f452e28f4a5",
+    "card_number": "charm_monster",
+    "name": "Очарование чудовища",
+    "description_sha256": "101996e218f0071219f3f0704f1321ab485f679d3c2869c3e47a99ad601d6b3a",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "dc": "8 + prof + spellcasting",
+            "who": "target",
+            "ability": "wis",
+            "on_fail": [
+              {
+                "op": "apply",
+                "kind": "condition",
+                "value": "charmed",
+                "duration": {
+                  "type": "rounds",
+                  "amount": 600
+                }
+              },
+              {
+                "kind": "narrative",
+                "description": "Цель Дружелюбна к вам; эффект длится 1 час и заканчивается, если вы или союзники нанесёте цели урон. Спасбросок с Преимуществом, если вы или союзники сражаетесь с целью."
+              }
+            ],
+            "on_success": [],
+            "resolution": "save"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 30,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 4,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-sorcerer",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "dc": "8 + prof + spellcasting",
+            "who": "target",
+            "ability": "wis",
+            "on_fail": [
+              {
+                "op": "apply",
+                "kind": "condition",
+                "value": "charmed",
+                "duration": {
+                  "type": "rounds",
+                  "amount": 600
+                }
+              },
+              {
+                "kind": "narrative",
+                "description": "Цель Дружелюбна к вам; эффект длится 1 час и заканчивается, если вы или союзники нанесёте цели урон. Спасбросок с Преимуществом, если вы или союзники сражаетесь с целью."
+              }
+            ],
+            "on_success": [],
+            "resolution": "save"
+          }
+        ],
+        "targeting": {
+          "shape": "multiple",
+          "domain": "actor",
+          "range_ft": 30,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true,
+          "additional_target_slots_per_spell_slot_above_base": 1
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 4,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-sorcerer",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Число отдельных целей определяется исходным и повышенным уровнем ячейки.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "bff3eeea-fcda-4393-858b-2edf276af8af",
+    "card_number": "fly",
+    "name": "Полёт",
+    "description_sha256": "a5ae40b04fc69577b210225c0c5ad8e3f9a582221088f2b9a9faad413b068a75",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "narrative",
+                "description": "Согласное существо получает скорость полёта 60 футов и может парить на время концентрации (до 10 минут). При окончании заклинания цель падает, если она в воздухе. Ячейка выше 3 уровня: +1 цель за уровень."
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 3,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "narrative",
+                "description": "Согласное существо получает скорость полёта 60 футов и может парить на время концентрации (до 10 минут). При окончании заклинания цель падает, если она в воздухе. Ячейка выше 3 уровня: +1 цель за уровень."
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "multiple",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally"
+          ],
+          "requires_line_of_sight": true,
+          "additional_target_slots_per_spell_slot_above_base": 1
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 3,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Число отдельных целей определяется исходным и повышенным уровнем ячейки.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "b2ec2315-ca37-48e0-9406-1e532ef2a375",
+    "card_number": "freedom_of_movement",
+    "name": "Свобода перемещения",
+    "description_sha256": "638491e922a5bc697cdf316ba4f175ede5e351549b9b84727889562218cc9dd6",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "narrative",
+                "description": "На 1 час цель игнорирует Труднопроходимую местность; магия не может снизить её Скорость, Парализовать или Опутать её; Скорость плавания равна Скорости; 5 футов перемещения освобождают от немагических оков и Захвата."
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "range": "touch",
+          "shape": "single",
+          "filter": "ally"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 4,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-cleric",
+          "CLASS-druid",
+          "CLASS-ranger"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "narrative",
+                "description": "На 1 час цель игнорирует Труднопроходимую местность; магия не может снизить её Скорость, Парализовать или Опутать её; Скорость плавания равна Скорости; 5 футов перемещения освобождают от немагических оков и Захвата."
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "range": "touch",
+          "shape": "multiple",
+          "filter": "ally",
+          "additional_target_slots_per_spell_slot_above_base": 1
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 4,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-cleric",
+          "CLASS-druid",
+          "CLASS-ranger"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Число отдельных целей определяется исходным и повышенным уровнем ячейки.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "ebae8188-98e5-423d-841b-29b67b900688",
+    "card_number": "gaseous_form",
+    "name": "Газообразная форма",
+    "description_sha256": "2ba14d6fff75c13242b4a4ac6fc7f72cd599aeb73375fe2bdd3cb901f354a8a4",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "narrative",
+                "description": "Согласное существо превращается в туманное облако: только Полёт 10 фт (парит), Сопротивление Дробящему/Колющему/Рубящему, иммунитет к Сбиванию с ног, Преимущество на спасброски Сил/Лов/Тел; не может говорить, атаковать, колдовать и использовать предметы."
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 3,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "narrative",
+                "description": "Согласное существо превращается в туманное облако: только Полёт 10 фт (парит), Сопротивление Дробящему/Колющему/Рубящему, иммунитет к Сбиванию с ног, Преимущество на спасброски Сил/Лов/Тел; не может говорить, атаковать, колдовать и использовать предметы."
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "multiple",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally"
+          ],
+          "requires_line_of_sight": true,
+          "additional_target_slots_per_spell_slot_above_base": 1
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 3,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-sorcerer",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Число отдельных целей определяется исходным и повышенным уровнем ячейки.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "8b2cec60-9b60-49e4-9284-e3a1c794a387",
+    "card_number": "hold_monster",
+    "name": "Удержание чудовища",
+    "description_sha256": "e090084e40ed2f3c1c2d51848eeb14edc0140f860f17fe936d6ffdf8a27279ba",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "dc": "8 + prof + spellcasting",
+            "who": "target",
+            "ability": "wis",
+            "on_fail": [
+              {
+                "op": "apply",
+                "kind": "condition",
+                "value": "paralyzed",
+                "duration": {
+                  "type": "rounds",
+                  "amount": 10,
+                  "concentration": true
+                },
+                "save_ends": {
+                  "dc": "8 + prof + spellcasting",
+                  "timing": "end_of_turn",
+                  "ability": "wis"
+                }
+              },
+              {
+                "kind": "narrative",
+                "description": "Цель Парализована на время действия заклинания; повторяет спасбросок Мудрости в конце каждого своего хода, при успехе эффект заканчивается."
+              }
+            ],
+            "on_success": [],
+            "resolution": "save"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 90,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 5,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-sorcerer",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "dc": "8 + prof + spellcasting",
+            "who": "target",
+            "ability": "wis",
+            "on_fail": [
+              {
+                "op": "apply",
+                "kind": "condition",
+                "value": "paralyzed",
+                "duration": {
+                  "type": "rounds",
+                  "amount": 10,
+                  "concentration": true
+                },
+                "save_ends": {
+                  "dc": "8 + prof + spellcasting",
+                  "timing": "end_of_turn",
+                  "ability": "wis"
+                }
+              },
+              {
+                "kind": "narrative",
+                "description": "Цель Парализована на время действия заклинания; повторяет спасбросок Мудрости в конце каждого своего хода, при успехе эффект заканчивается."
+              }
+            ],
+            "on_success": [],
+            "resolution": "save"
+          }
+        ],
+        "targeting": {
+          "shape": "multiple",
+          "domain": "actor",
+          "range_ft": 90,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true,
+          "additional_target_slots_per_spell_slot_above_base": 1
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 5,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-sorcerer",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Число отдельных целей определяется исходным и повышенным уровнем ячейки.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "725ed0f6-99f8-4ebb-bbe2-87ac3e382d99",
+    "card_number": "hold_person",
+    "name": "Удержание личности",
+    "description_sha256": "c318e93b1c82e2ef07b5ae3da1e77f241b7278791c580393406b9870be344ae1",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "dc": "8 + prof + spellcasting",
+            "who": "target",
+            "ability": "wis",
+            "on_fail": [
+              {
+                "op": "apply",
+                "kind": "condition",
+                "value": "paralyzed",
+                "duration": {
+                  "type": "rounds",
+                  "amount": 10,
+                  "concentration": true
+                },
+                "save_ends": {
+                  "dc": "8 + prof + spellcasting",
+                  "timing": "end_of_turn",
+                  "ability": "wis"
+                }
+              },
+              {
+                "kind": "narrative",
+                "description": "Цель должна повторить спасбросок в конце каждого своего хода, заканчивая действие при успехе."
+              }
+            ],
+            "on_success": [
+              {
+                "kind": "narrative",
+                "description": "Цель освобождается от эффекта."
+              }
+            ],
+            "resolution": "save"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 60,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 2,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-cleric",
+          "CLASS-druid",
+          "CLASS-sorcerer",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "dc": "8 + prof + spellcasting",
+            "who": "target",
+            "ability": "wis",
+            "on_fail": [
+              {
+                "op": "apply",
+                "kind": "condition",
+                "value": "paralyzed",
+                "duration": {
+                  "type": "rounds",
+                  "amount": 10,
+                  "concentration": true
+                },
+                "save_ends": {
+                  "dc": "8 + prof + spellcasting",
+                  "timing": "end_of_turn",
+                  "ability": "wis"
+                }
+              },
+              {
+                "kind": "narrative",
+                "description": "Цель должна повторить спасбросок в конце каждого своего хода, заканчивая действие при успехе."
+              }
+            ],
+            "on_success": [
+              {
+                "kind": "narrative",
+                "description": "Цель освобождается от эффекта."
+              }
+            ],
+            "resolution": "save"
+          }
+        ],
+        "targeting": {
+          "shape": "multiple",
+          "domain": "actor",
+          "range_ft": 60,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true,
+          "additional_target_slots_per_spell_slot_above_base": 1
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 2,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-cleric",
+          "CLASS-druid",
+          "CLASS-sorcerer",
+          "CLASS-warlock",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Число отдельных целей определяется исходным и повышенным уровнем ячейки.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "f8ad3edb-c0e2-4321-9a91-172bf19e2ec7",
+    "card_number": "longstrider",
+    "name": "Скороход",
+    "description_sha256": "741e0915ab3c6047fa83f1a055a9a196027eadc387faf5219a65c327afe2ae85",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "op": "add",
+                "kind": "modifier",
+                "value": 10,
+                "duration": {
+                  "type": "rounds",
+                  "amount": 600
+                },
+                "applies_to": {
+                  "roll": "speed"
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "range": "Касание",
+          "shape": "single",
+          "filter": "ally_and_self"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 1,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-ranger",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "op": "add",
+                "kind": "modifier",
+                "value": 10,
+                "duration": {
+                  "type": "rounds",
+                  "amount": 600
+                },
+                "applies_to": {
+                  "roll": "speed"
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "range": "Касание",
+          "shape": "multiple",
+          "filter": "ally_and_self",
+          "additional_target_slots_per_spell_slot_above_base": 1
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 1,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-druid",
+          "CLASS-ranger",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Число отдельных целей определяется исходным и повышенным уровнем ячейки.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  },
+  {
+    "entity_type": "spell",
+    "id": "4c7c589e-b82f-44d1-a612-39137c3bb755",
+    "card_number": "steel_wind_strike",
+    "name": "Удар стального ветра",
+    "description_sha256": "7a21290174e7f5560ad49a5551c9091486147949661a743f4adb2d9ecdb09154",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "vs": "ac",
+            "on_hit": [
+              {
+                "dice": "6d10",
+                "kind": "damage",
+                "type": "force"
+              }
+            ],
+            "ability": "spellcasting",
+            "resolution": "attack_roll",
+            "attack_kind": "spell_melee"
+          },
+          {
+            "result": [
+              {
+                "kind": "narrative",
+                "description": "До пяти целей — отдельный бросок атаки по каждой. После атак можно телепортироваться в незанятое пространство в пределах 5 футов от одной из целей."
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 30,
+          "max_targets": 5,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 5,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-ranger",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "vs": "ac",
+            "on_hit": [
+              {
+                "dice": "6d10",
+                "kind": "damage",
+                "type": "force"
+              }
+            ],
+            "ability": "spellcasting",
+            "resolution": "attack_roll",
+            "attack_kind": "spell_melee"
+          },
+          {
+            "result": [
+              {
+                "kind": "narrative",
+                "description": "До пяти целей — отдельный бросок атаки по каждой. После атак можно телепортироваться в незанятое пространство в пределах 5 футов от одной из целей."
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "multiple",
+          "domain": "actor",
+          "range_ft": 30,
+          "max_targets": 5,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 5,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-ranger",
+          "CLASS-wizard"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Каждое из максимум пяти существ получает отдельную атаку 6к10.",
+      "implemented": [
+        "Контракт выбора целей хранится в данных; авторитетный движок проверяет количество и геометрию."
+      ],
+      "tested": [],
+      "limitations": [
+        "Телепортация после атак остаётся нарративным выбором до задания точки на поле."
+      ],
+      "evidence": [
+        "Свежий production snapshot 2026-09-29; описание и upcast_description сущности."
+      ]
+    }
+  }
+]

@@ -1,0 +1,3842 @@
+[
+  {
+    "entity_type": "action",
+    "id": "62563212-85c5-56c4-aea1-e4eec9e3b3d3",
+    "card_number": "ACT-VAR-ACT-metamagic-transmuted-acid",
+    "name": "Подготовить Преобразованное заклинание — Кислота",
+    "preimage": null,
+    "patch": {
+      "id": "62563212-85c5-56c4-aea1-e4eec9e3b3d3",
+      "name": "Подготовить Преобразованное заклинание — Кислота",
+      "type": "class_feature",
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Prepare Transmuted Spell",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Кислота» действия «Подготовить Преобразованное заклинание».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "free_action",
+      "mechanics": {
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-metamagic-transmuted-acid"
+              }
+            ]
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ]
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "sorcery_points"
+            }
+          ],
+          "mode": "active"
+        },
+        "forbids_active_effect_stack": "metamagic_next_spell",
+        "variant_of_action_id": "16200000-0000-4000-8000-000000000402"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-metamagic-transmuted-acid",
+      "description": "Без действия потратьте 1 очко чародейства и выберите тип урона для следующего подходящего заклинания.\n\nВариант: Кислота.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Кислота» родительского действия «Подготовить Преобразованное заклинание».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "72b7a4ec-761b-52bf-a597-fa3af45ab4da",
+    "card_number": "ACT-VAR-ACT-metamagic-transmuted-cold",
+    "name": "Подготовить Преобразованное заклинание — Холод",
+    "preimage": null,
+    "patch": {
+      "id": "72b7a4ec-761b-52bf-a597-fa3af45ab4da",
+      "name": "Подготовить Преобразованное заклинание — Холод",
+      "type": "class_feature",
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Prepare Transmuted Spell",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Холод» действия «Подготовить Преобразованное заклинание».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "free_action",
+      "mechanics": {
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-metamagic-transmuted-cold"
+              }
+            ]
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ]
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "sorcery_points"
+            }
+          ],
+          "mode": "active"
+        },
+        "forbids_active_effect_stack": "metamagic_next_spell",
+        "variant_of_action_id": "16200000-0000-4000-8000-000000000402"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-metamagic-transmuted-cold",
+      "description": "Без действия потратьте 1 очко чародейства и выберите тип урона для следующего подходящего заклинания.\n\nВариант: Холод.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Холод» родительского действия «Подготовить Преобразованное заклинание».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "fba82b98-8732-5b23-ad0a-d5f2f34561ca",
+    "card_number": "ACT-VAR-ACT-metamagic-transmuted-fire",
+    "name": "Подготовить Преобразованное заклинание — Огонь",
+    "preimage": null,
+    "patch": {
+      "id": "fba82b98-8732-5b23-ad0a-d5f2f34561ca",
+      "name": "Подготовить Преобразованное заклинание — Огонь",
+      "type": "class_feature",
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Prepare Transmuted Spell",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Огонь» действия «Подготовить Преобразованное заклинание».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "free_action",
+      "mechanics": {
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-metamagic-transmuted-fire"
+              }
+            ]
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ]
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "sorcery_points"
+            }
+          ],
+          "mode": "active"
+        },
+        "forbids_active_effect_stack": "metamagic_next_spell",
+        "variant_of_action_id": "16200000-0000-4000-8000-000000000402"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-metamagic-transmuted-fire",
+      "description": "Без действия потратьте 1 очко чародейства и выберите тип урона для следующего подходящего заклинания.\n\nВариант: Огонь.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Огонь» родительского действия «Подготовить Преобразованное заклинание».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "adf91a43-3085-59b8-ac3b-ede38034fb00",
+    "card_number": "ACT-VAR-ACT-metamagic-transmuted-lightning",
+    "name": "Подготовить Преобразованное заклинание — Молния",
+    "preimage": null,
+    "patch": {
+      "id": "adf91a43-3085-59b8-ac3b-ede38034fb00",
+      "name": "Подготовить Преобразованное заклинание — Молния",
+      "type": "class_feature",
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Prepare Transmuted Spell",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Молния» действия «Подготовить Преобразованное заклинание».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "free_action",
+      "mechanics": {
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-metamagic-transmuted-lightning"
+              }
+            ]
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ]
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "sorcery_points"
+            }
+          ],
+          "mode": "active"
+        },
+        "forbids_active_effect_stack": "metamagic_next_spell",
+        "variant_of_action_id": "16200000-0000-4000-8000-000000000402"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-metamagic-transmuted-lightning",
+      "description": "Без действия потратьте 1 очко чародейства и выберите тип урона для следующего подходящего заклинания.\n\nВариант: Молния.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Молния» родительского действия «Подготовить Преобразованное заклинание».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "83799659-f232-5ab4-a2d1-5e3dd710c82f",
+    "card_number": "ACT-VAR-ACT-metamagic-transmuted-poison",
+    "name": "Подготовить Преобразованное заклинание — Яд",
+    "preimage": null,
+    "patch": {
+      "id": "83799659-f232-5ab4-a2d1-5e3dd710c82f",
+      "name": "Подготовить Преобразованное заклинание — Яд",
+      "type": "class_feature",
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Prepare Transmuted Spell",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Яд» действия «Подготовить Преобразованное заклинание».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "free_action",
+      "mechanics": {
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-metamagic-transmuted-poison"
+              }
+            ]
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ]
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "sorcery_points"
+            }
+          ],
+          "mode": "active"
+        },
+        "forbids_active_effect_stack": "metamagic_next_spell",
+        "variant_of_action_id": "16200000-0000-4000-8000-000000000402"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-metamagic-transmuted-poison",
+      "description": "Без действия потратьте 1 очко чародейства и выберите тип урона для следующего подходящего заклинания.\n\nВариант: Яд.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Яд» родительского действия «Подготовить Преобразованное заклинание».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "c1e5077d-f7d9-580d-a20d-c70ef7ba2f38",
+    "card_number": "ACT-VAR-ACT-metamagic-transmuted-thunder",
+    "name": "Подготовить Преобразованное заклинание — Гром",
+    "preimage": null,
+    "patch": {
+      "id": "c1e5077d-f7d9-580d-a20d-c70ef7ba2f38",
+      "name": "Подготовить Преобразованное заклинание — Гром",
+      "type": "class_feature",
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Prepare Transmuted Spell",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Гром» действия «Подготовить Преобразованное заклинание».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "free_action",
+      "mechanics": {
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-metamagic-transmuted-thunder"
+              }
+            ]
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ]
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "sorcery_points"
+            }
+          ],
+          "mode": "active"
+        },
+        "forbids_active_effect_stack": "metamagic_next_spell",
+        "variant_of_action_id": "16200000-0000-4000-8000-000000000402"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-metamagic-transmuted-thunder",
+      "description": "Без действия потратьте 1 очко чародейства и выберите тип урона для следующего подходящего заклинания.\n\nВариант: Гром.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Гром» родительского действия «Подготовить Преобразованное заклинание».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "16200000-0000-4000-8000-000000000402",
+    "card_number": "ACT-metamagic-transmuted",
+    "name": "Подготовить Преобразованное заклинание",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "id": "transmuted_damage_type",
+            "kind": "choice",
+            "count": 1,
+            "prompt": "Новый тип урона",
+            "context": "in_play",
+            "options": {
+              "items": [
+                {
+                  "id": "acid",
+                  "name": "Кислота",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-metamagic-transmuted-acid"
+                    }
+                  ]
+                },
+                {
+                  "id": "cold",
+                  "name": "Холод",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-metamagic-transmuted-cold"
+                    }
+                  ]
+                },
+                {
+                  "id": "fire",
+                  "name": "Огонь",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-metamagic-transmuted-fire"
+                    }
+                  ]
+                },
+                {
+                  "id": "lightning",
+                  "name": "Молния",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-metamagic-transmuted-lightning"
+                    }
+                  ]
+                },
+                {
+                  "id": "poison",
+                  "name": "Яд",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-metamagic-transmuted-poison"
+                    }
+                  ]
+                },
+                {
+                  "id": "thunder",
+                  "name": "Гром",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-metamagic-transmuted-thunder"
+                    }
+                  ]
+                }
+              ],
+              "source": "explicit"
+            }
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ]
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "sorcery_points"
+            }
+          ],
+          "mode": "active"
+        },
+        "forbids_active_effect_stack": "metamagic_next_spell"
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "id": "transmuted_damage_type",
+            "kind": "choice",
+            "count": 1,
+            "prompt": "Новый тип урона",
+            "context": "in_play",
+            "options": {
+              "items": [
+                {
+                  "id": "acid",
+                  "name": "Кислота",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-metamagic-transmuted-acid"
+                    }
+                  ]
+                },
+                {
+                  "id": "cold",
+                  "name": "Холод",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-metamagic-transmuted-cold"
+                    }
+                  ]
+                },
+                {
+                  "id": "fire",
+                  "name": "Огонь",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-metamagic-transmuted-fire"
+                    }
+                  ]
+                },
+                {
+                  "id": "lightning",
+                  "name": "Молния",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-metamagic-transmuted-lightning"
+                    }
+                  ]
+                },
+                {
+                  "id": "poison",
+                  "name": "Яд",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-metamagic-transmuted-poison"
+                    }
+                  ]
+                },
+                {
+                  "id": "thunder",
+                  "name": "Гром",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-metamagic-transmuted-thunder"
+                    }
+                  ]
+                }
+              ],
+              "source": "explicit"
+            }
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ]
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "sorcery_points"
+            }
+          ],
+          "mode": "active"
+        },
+        "forbids_active_effect_stack": "metamagic_next_spell",
+        "action_variant_ids": [
+          "62563212-85c5-56c4-aea1-e4eec9e3b3d3",
+          "72b7a4ec-761b-52bf-a597-fa3af45ab4da",
+          "fba82b98-8732-5b23-ad0a-d5f2f34561ca",
+          "adf91a43-3085-59b8-ac3b-ede38034fb00",
+          "83799659-f232-5ab4-a2d1-5e3dd710c82f",
+          "c1e5077d-f7d9-580d-a20d-c70ef7ba2f38"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Родительское действие выбирает один из 6 вариантов до исполнения.",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "6833b4e2-5442-59e1-acdf-aece6b813a1e",
+    "card_number": "ACT-VAR-ACT-bm-bait-switch-self",
+    "name": "Приманка и подмена — Я",
+    "preimage": null,
+    "patch": {
+      "id": "6833b4e2-5442-59e1-acdf-aece6b813a1e",
+      "name": "Приманка и подмена — Я",
+      "type": "class_feature",
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Bait and Switch",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Я» действия «Приманка и подмена».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "free_action",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "narrative",
+                "description": "Защитный бонус получает исполнитель."
+              }
+            ],
+            "resolution": "auto"
+          },
+          {
+            "who": "self",
+            "result": [
+              {
+                "op": "add",
+                "kind": "modifier",
+                "value": "superiority_die",
+                "duration": {
+                  "type": "until_start_of_source_next_turn"
+                },
+                "stack_id": "maneuver:bait-switch",
+                "applies_to": {
+                  "roll": "ac"
+                },
+                "value_timing": "on_apply"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "requires_willing": true,
+          "allowed_relations": [
+            "ally"
+          ],
+          "requires_line_of_sight": false
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "superiority_die"
+            }
+          ],
+          "mode": "active",
+          "position_exchange_ft": 5
+        },
+        "variant_of_action_id": "22600000-0000-4000-8000-000000000001"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-bm-bait-switch-self",
+      "description": "В свой ход потратьте кость превосходства и не менее 5 футов перемещения, чтобы поменяться местами с согласным существом в 5 футах, которое не Недееспособно. Это перемещение не провоцирует атак. Вы или союзник получаете бонус к [[КД|concept:armor_class]], равный броску кости, до начала вашего следующего хода.\n\nВариант: Я.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Я» родительского действия «Приманка и подмена».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "ef1163a9-4d12-5357-a323-acaacbf921b4",
+    "card_number": "ACT-VAR-ACT-bm-bait-switch-target",
+    "name": "Приманка и подмена — Союзник",
+    "preimage": null,
+    "patch": {
+      "id": "ef1163a9-4d12-5357-a323-acaacbf921b4",
+      "name": "Приманка и подмена — Союзник",
+      "type": "class_feature",
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Bait and Switch",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Союзник» действия «Приманка и подмена».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "free_action",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "narrative",
+                "description": "Защитный бонус получает союзник."
+              }
+            ],
+            "resolution": "auto"
+          },
+          {
+            "who": "target",
+            "result": [
+              {
+                "op": "add",
+                "kind": "modifier",
+                "value": "superiority_die",
+                "duration": {
+                  "type": "until_start_of_source_next_turn"
+                },
+                "stack_id": "maneuver:bait-switch",
+                "applies_to": {
+                  "roll": "ac"
+                },
+                "value_timing": "on_apply"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "requires_willing": true,
+          "allowed_relations": [
+            "ally"
+          ],
+          "requires_line_of_sight": false
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "superiority_die"
+            }
+          ],
+          "mode": "active",
+          "position_exchange_ft": 5
+        },
+        "variant_of_action_id": "22600000-0000-4000-8000-000000000001"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-bm-bait-switch-target",
+      "description": "В свой ход потратьте кость превосходства и не менее 5 футов перемещения, чтобы поменяться местами с согласным существом в 5 футах, которое не Недееспособно. Это перемещение не провоцирует атак. Вы или союзник получаете бонус к [[КД|concept:armor_class]], равный броску кости, до начала вашего следующего хода.\n\nВариант: Союзник.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Союзник» родительского действия «Приманка и подмена».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "22600000-0000-4000-8000-000000000001",
+    "card_number": "ACT-bm-bait-switch",
+    "name": "Приманка и подмена",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "id": "bait_ac_recipient",
+                "kind": "choice",
+                "count": 1,
+                "prompt": "Кто получает бонус к КЗ?",
+                "context": "in_play",
+                "options": {
+                  "items": [
+                    {
+                      "id": "self",
+                      "name": "Я",
+                      "grants": [
+                        {
+                          "kind": "narrative",
+                          "description": "Защитный бонус получает исполнитель."
+                        }
+                      ]
+                    },
+                    {
+                      "id": "target",
+                      "name": "Союзник",
+                      "grants": [
+                        {
+                          "kind": "narrative",
+                          "description": "Защитный бонус получает союзник."
+                        }
+                      ]
+                    }
+                  ],
+                  "source": "explicit"
+                }
+              }
+            ],
+            "resolution": "auto"
+          },
+          {
+            "who": "target",
+            "result": [
+              {
+                "op": "add",
+                "kind": "modifier",
+                "value": "superiority_die",
+                "duration": {
+                  "type": "until_start_of_source_next_turn"
+                },
+                "stack_id": "maneuver:bait-switch",
+                "applies_to": {
+                  "roll": "ac"
+                },
+                "value_timing": "on_apply"
+              }
+            ],
+            "resolution": "auto",
+            "who_choice_id": "bait_ac_recipient"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "requires_willing": true,
+          "allowed_relations": [
+            "ally"
+          ],
+          "requires_line_of_sight": false
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "superiority_die"
+            }
+          ],
+          "mode": "active",
+          "position_exchange_ft": 5
+        }
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "id": "bait_ac_recipient",
+                "kind": "choice",
+                "count": 1,
+                "prompt": "Кто получает бонус к КЗ?",
+                "context": "in_play",
+                "options": {
+                  "items": [
+                    {
+                      "id": "self",
+                      "name": "Я",
+                      "grants": [
+                        {
+                          "kind": "narrative",
+                          "description": "Защитный бонус получает исполнитель."
+                        }
+                      ]
+                    },
+                    {
+                      "id": "target",
+                      "name": "Союзник",
+                      "grants": [
+                        {
+                          "kind": "narrative",
+                          "description": "Защитный бонус получает союзник."
+                        }
+                      ]
+                    }
+                  ],
+                  "source": "explicit"
+                }
+              }
+            ],
+            "resolution": "auto"
+          },
+          {
+            "who": "target",
+            "result": [
+              {
+                "op": "add",
+                "kind": "modifier",
+                "value": "superiority_die",
+                "duration": {
+                  "type": "until_start_of_source_next_turn"
+                },
+                "stack_id": "maneuver:bait-switch",
+                "applies_to": {
+                  "roll": "ac"
+                },
+                "value_timing": "on_apply"
+              }
+            ],
+            "resolution": "auto",
+            "who_choice_id": "bait_ac_recipient"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "requires_willing": true,
+          "allowed_relations": [
+            "ally"
+          ],
+          "requires_line_of_sight": false
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "superiority_die"
+            }
+          ],
+          "mode": "active",
+          "position_exchange_ft": 5
+        },
+        "action_variant_ids": [
+          "6833b4e2-5442-59e1-acdf-aece6b813a1e",
+          "ef1163a9-4d12-5357-a323-acaacbf921b4"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Родительское действие выбирает один из 2 вариантов до исполнения.",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "69e2affe-7938-5e0c-af47-45ab32fba7f7",
+    "card_number": "ACT-VAR-ACT-bm-pushing-attack-0",
+    "name": "Толкающая атака — Не отталкивать",
+    "preimage": null,
+    "patch": {
+      "id": "69e2affe-7938-5e0c-af47-45ab32fba7f7",
+      "name": "Толкающая атака — Не отталкивать",
+      "type": "class_feature",
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Pushing Attack",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Не отталкивать» действия «Толкающая атака».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "free_action",
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "damage",
+                "type": "triggering_attack",
+                "amount": "superiority_die",
+                "suppress_damage_modifiers": true
+              }
+            ],
+            "resolution": "auto"
+          },
+          {
+            "dc": "8 + prof + max(str, dex)",
+            "who": "target",
+            "ability": "str",
+            "on_fail": [
+              {
+                "kind": "movement",
+                "value": "push",
+                "distance": 0
+              }
+            ],
+            "resolution": "save",
+            "automatic_success": {
+              "if_target_size_greater_than": 3
+            }
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 600,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "enemy"
+          ],
+          "requires_line_of_sight": false
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "superiority_die"
+            }
+          ],
+          "mode": "triggered",
+          "trigger": {
+            "events": [
+              "hit"
+            ],
+            "requires_weapon_or_unarmed_hit": true
+          }
+        },
+        "variant_of_action_id": "21800000-0000-4000-8000-000000000001"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-bm-pushing-attack-0",
+      "description": "После попадания оружием или безоружным ударом потратьте кость превосходства и добавьте её к урону атаки. Цель Большого размера или меньше совершает [[спасбросок|concept:saving_throw_]] Силы; при провале оттолкните её по прямой от себя на выбранное расстояние до 15 футов. СЛ использует большую из Силы и Ловкости.\n\nВариант: Не отталкивать.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Не отталкивать» родительского действия «Толкающая атака».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "b318a782-af35-543d-a536-0ff8b5717887",
+    "card_number": "ACT-VAR-ACT-bm-pushing-attack-5",
+    "name": "Толкающая атака — 5 фт.",
+    "preimage": null,
+    "patch": {
+      "id": "b318a782-af35-543d-a536-0ff8b5717887",
+      "name": "Толкающая атака — 5 фт.",
+      "type": "class_feature",
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Pushing Attack",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «5 фт.» действия «Толкающая атака».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "free_action",
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "damage",
+                "type": "triggering_attack",
+                "amount": "superiority_die",
+                "suppress_damage_modifiers": true
+              }
+            ],
+            "resolution": "auto"
+          },
+          {
+            "dc": "8 + prof + max(str, dex)",
+            "who": "target",
+            "ability": "str",
+            "on_fail": [
+              {
+                "kind": "movement",
+                "value": "push",
+                "distance": 5
+              }
+            ],
+            "resolution": "save",
+            "automatic_success": {
+              "if_target_size_greater_than": 3
+            }
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 600,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "enemy"
+          ],
+          "requires_line_of_sight": false
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "superiority_die"
+            }
+          ],
+          "mode": "triggered",
+          "trigger": {
+            "events": [
+              "hit"
+            ],
+            "requires_weapon_or_unarmed_hit": true
+          }
+        },
+        "variant_of_action_id": "21800000-0000-4000-8000-000000000001"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-bm-pushing-attack-5",
+      "description": "После попадания оружием или безоружным ударом потратьте кость превосходства и добавьте её к урону атаки. Цель Большого размера или меньше совершает [[спасбросок|concept:saving_throw_]] Силы; при провале оттолкните её по прямой от себя на выбранное расстояние до 15 футов. СЛ использует большую из Силы и Ловкости.\n\nВариант: 5 фт..",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «5 фт.» родительского действия «Толкающая атака».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "53ddcaa8-50ae-502c-a6a0-75c22ab60c4f",
+    "card_number": "ACT-VAR-ACT-bm-pushing-attack-10",
+    "name": "Толкающая атака — 10 фт.",
+    "preimage": null,
+    "patch": {
+      "id": "53ddcaa8-50ae-502c-a6a0-75c22ab60c4f",
+      "name": "Толкающая атака — 10 фт.",
+      "type": "class_feature",
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Pushing Attack",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «10 фт.» действия «Толкающая атака».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "free_action",
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "damage",
+                "type": "triggering_attack",
+                "amount": "superiority_die",
+                "suppress_damage_modifiers": true
+              }
+            ],
+            "resolution": "auto"
+          },
+          {
+            "dc": "8 + prof + max(str, dex)",
+            "who": "target",
+            "ability": "str",
+            "on_fail": [
+              {
+                "kind": "movement",
+                "value": "push",
+                "distance": 10
+              }
+            ],
+            "resolution": "save",
+            "automatic_success": {
+              "if_target_size_greater_than": 3
+            }
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 600,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "enemy"
+          ],
+          "requires_line_of_sight": false
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "superiority_die"
+            }
+          ],
+          "mode": "triggered",
+          "trigger": {
+            "events": [
+              "hit"
+            ],
+            "requires_weapon_or_unarmed_hit": true
+          }
+        },
+        "variant_of_action_id": "21800000-0000-4000-8000-000000000001"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-bm-pushing-attack-10",
+      "description": "После попадания оружием или безоружным ударом потратьте кость превосходства и добавьте её к урону атаки. Цель Большого размера или меньше совершает [[спасбросок|concept:saving_throw_]] Силы; при провале оттолкните её по прямой от себя на выбранное расстояние до 15 футов. СЛ использует большую из Силы и Ловкости.\n\nВариант: 10 фт..",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «10 фт.» родительского действия «Толкающая атака».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "83eb1ddf-764d-519e-aa4d-1fd782982a2b",
+    "card_number": "ACT-VAR-ACT-bm-pushing-attack-15",
+    "name": "Толкающая атака — 15 фт.",
+    "preimage": null,
+    "patch": {
+      "id": "83eb1ddf-764d-519e-aa4d-1fd782982a2b",
+      "name": "Толкающая атака — 15 фт.",
+      "type": "class_feature",
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Pushing Attack",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «15 фт.» действия «Толкающая атака».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "free_action",
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "damage",
+                "type": "triggering_attack",
+                "amount": "superiority_die",
+                "suppress_damage_modifiers": true
+              }
+            ],
+            "resolution": "auto"
+          },
+          {
+            "dc": "8 + prof + max(str, dex)",
+            "who": "target",
+            "ability": "str",
+            "on_fail": [
+              {
+                "kind": "movement",
+                "value": "push",
+                "distance": 15
+              }
+            ],
+            "resolution": "save",
+            "automatic_success": {
+              "if_target_size_greater_than": 3
+            }
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 600,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "enemy"
+          ],
+          "requires_line_of_sight": false
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "superiority_die"
+            }
+          ],
+          "mode": "triggered",
+          "trigger": {
+            "events": [
+              "hit"
+            ],
+            "requires_weapon_or_unarmed_hit": true
+          }
+        },
+        "variant_of_action_id": "21800000-0000-4000-8000-000000000001"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-bm-pushing-attack-15",
+      "description": "После попадания оружием или безоружным ударом потратьте кость превосходства и добавьте её к урону атаки. Цель Большого размера или меньше совершает [[спасбросок|concept:saving_throw_]] Силы; при провале оттолкните её по прямой от себя на выбранное расстояние до 15 футов. СЛ использует большую из Силы и Ловкости.\n\nВариант: 15 фт..",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «15 фт.» родительского действия «Толкающая атака».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "21800000-0000-4000-8000-000000000001",
+    "card_number": "ACT-bm-pushing-attack",
+    "name": "Толкающая атака",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "damage",
+                "type": "triggering_attack",
+                "amount": "superiority_die",
+                "suppress_damage_modifiers": true
+              }
+            ],
+            "resolution": "auto"
+          },
+          {
+            "dc": "8 + prof + max(str, dex)",
+            "who": "target",
+            "ability": "str",
+            "on_fail": [
+              {
+                "id": "pushing_attack_distance",
+                "kind": "choice",
+                "count": 1,
+                "prompt": "Расстояние отталкивания",
+                "context": "in_play",
+                "options": {
+                  "items": [
+                    {
+                      "id": "0",
+                      "name": "Не отталкивать",
+                      "grants": [
+                        {
+                          "kind": "movement",
+                          "value": "push",
+                          "distance": 0
+                        }
+                      ]
+                    },
+                    {
+                      "id": "5",
+                      "name": "5 фт.",
+                      "grants": [
+                        {
+                          "kind": "movement",
+                          "value": "push",
+                          "distance": 5
+                        }
+                      ]
+                    },
+                    {
+                      "id": "10",
+                      "name": "10 фт.",
+                      "grants": [
+                        {
+                          "kind": "movement",
+                          "value": "push",
+                          "distance": 10
+                        }
+                      ]
+                    },
+                    {
+                      "id": "15",
+                      "name": "15 фт.",
+                      "grants": [
+                        {
+                          "kind": "movement",
+                          "value": "push",
+                          "distance": 15
+                        }
+                      ]
+                    }
+                  ],
+                  "source": "explicit"
+                }
+              }
+            ],
+            "resolution": "save",
+            "automatic_success": {
+              "if_target_size_greater_than": 3
+            }
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 600,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "enemy"
+          ],
+          "requires_line_of_sight": false
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "superiority_die"
+            }
+          ],
+          "mode": "triggered",
+          "trigger": {
+            "events": [
+              "hit"
+            ],
+            "requires_weapon_or_unarmed_hit": true
+          }
+        }
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "damage",
+                "type": "triggering_attack",
+                "amount": "superiority_die",
+                "suppress_damage_modifiers": true
+              }
+            ],
+            "resolution": "auto"
+          },
+          {
+            "dc": "8 + prof + max(str, dex)",
+            "who": "target",
+            "ability": "str",
+            "on_fail": [
+              {
+                "id": "pushing_attack_distance",
+                "kind": "choice",
+                "count": 1,
+                "prompt": "Расстояние отталкивания",
+                "context": "in_play",
+                "options": {
+                  "items": [
+                    {
+                      "id": "0",
+                      "name": "Не отталкивать",
+                      "grants": [
+                        {
+                          "kind": "movement",
+                          "value": "push",
+                          "distance": 0
+                        }
+                      ]
+                    },
+                    {
+                      "id": "5",
+                      "name": "5 фт.",
+                      "grants": [
+                        {
+                          "kind": "movement",
+                          "value": "push",
+                          "distance": 5
+                        }
+                      ]
+                    },
+                    {
+                      "id": "10",
+                      "name": "10 фт.",
+                      "grants": [
+                        {
+                          "kind": "movement",
+                          "value": "push",
+                          "distance": 10
+                        }
+                      ]
+                    },
+                    {
+                      "id": "15",
+                      "name": "15 фт.",
+                      "grants": [
+                        {
+                          "kind": "movement",
+                          "value": "push",
+                          "distance": 15
+                        }
+                      ]
+                    }
+                  ],
+                  "source": "explicit"
+                }
+              }
+            ],
+            "resolution": "save",
+            "automatic_success": {
+              "if_target_size_greater_than": 3
+            }
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 600,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "enemy"
+          ],
+          "requires_line_of_sight": false
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "superiority_die"
+            }
+          ],
+          "mode": "triggered",
+          "trigger": {
+            "events": [
+              "hit"
+            ],
+            "requires_weapon_or_unarmed_hit": true
+          }
+        },
+        "action_variant_ids": [
+          "69e2affe-7938-5e0c-af47-45ab32fba7f7",
+          "b318a782-af35-543d-a536-0ff8b5717887",
+          "53ddcaa8-50ae-502c-a6a0-75c22ab60c4f",
+          "83eb1ddf-764d-519e-aa4d-1fd782982a2b"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Родительское действие выбирает один из 4 вариантов до исполнения.",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "ac062e13-e05c-5e8d-ac23-78c12fa6aed5",
+    "card_number": "ACT-VAR-ACT-wild-shape-rat",
+    "name": "Дикая форма — Крыса",
+    "preimage": null,
+    "patch": {
+      "id": "ac062e13-e05c-5e8d-ac23-78c12fa6aed5",
+      "name": "Дикая форма — Крыса",
+      "type": null,
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Wild Shape",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Крыса» действия «Дикая форма».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "action",
+      "mechanics": {
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-wild-shape-rat"
+              },
+              {
+                "kind": "temp_hp",
+                "amount": 2
+              }
+            ]
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ]
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "resource": "wild_shape"
+            }
+          ],
+          "mode": "active"
+        },
+        "variant_of_action_id": "e45cb3ed-827d-49d7-b52d-8cd29c681897"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-wild-shape-rat",
+      "description": ":bonus_action:Бонусным действием примите один из четырёх известных обликов зверя с ПО не выше 1/4 и без скорости полёта. Получите 2 [[временных хит|concept:temporary_hit_points]]а и сохраняйте облик 1 час.\n\nВариант: Крыса.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Крыса» родительского действия «Дикая форма».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "48a971f3-82d1-5f29-a00c-f146fee26315",
+    "card_number": "ACT-VAR-ACT-wild-shape-riding-horse",
+    "name": "Дикая форма — Верховая лошадь",
+    "preimage": null,
+    "patch": {
+      "id": "48a971f3-82d1-5f29-a00c-f146fee26315",
+      "name": "Дикая форма — Верховая лошадь",
+      "type": null,
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Wild Shape",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Верховая лошадь» действия «Дикая форма».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "action",
+      "mechanics": {
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-wild-shape-riding-horse"
+              },
+              {
+                "kind": "temp_hp",
+                "amount": 2
+              }
+            ]
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ]
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "resource": "wild_shape"
+            }
+          ],
+          "mode": "active"
+        },
+        "variant_of_action_id": "e45cb3ed-827d-49d7-b52d-8cd29c681897"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-wild-shape-riding-horse",
+      "description": ":bonus_action:Бонусным действием примите один из четырёх известных обликов зверя с ПО не выше 1/4 и без скорости полёта. Получите 2 [[временных хит|concept:temporary_hit_points]]а и сохраняйте облик 1 час.\n\nВариант: Верховая лошадь.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Верховая лошадь» родительского действия «Дикая форма».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "018a043c-ddc3-5378-a942-8b95e2e567ab",
+    "card_number": "ACT-VAR-ACT-wild-shape-spider",
+    "name": "Дикая форма — Паук",
+    "preimage": null,
+    "patch": {
+      "id": "018a043c-ddc3-5378-a942-8b95e2e567ab",
+      "name": "Дикая форма — Паук",
+      "type": null,
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Wild Shape",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Паук» действия «Дикая форма».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "action",
+      "mechanics": {
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-wild-shape-spider"
+              },
+              {
+                "kind": "temp_hp",
+                "amount": 2
+              }
+            ]
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ]
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "resource": "wild_shape"
+            }
+          ],
+          "mode": "active"
+        },
+        "variant_of_action_id": "e45cb3ed-827d-49d7-b52d-8cd29c681897"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-wild-shape-spider",
+      "description": ":bonus_action:Бонусным действием примите один из четырёх известных обликов зверя с ПО не выше 1/4 и без скорости полёта. Получите 2 [[временных хит|concept:temporary_hit_points]]а и сохраняйте облик 1 час.\n\nВариант: Паук.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Паук» родительского действия «Дикая форма».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "72fd68ef-c608-5ef5-a409-8843d7853047",
+    "card_number": "ACT-VAR-ACT-wild-shape-wolf",
+    "name": "Дикая форма — Волк",
+    "preimage": null,
+    "patch": {
+      "id": "72fd68ef-c608-5ef5-a409-8843d7853047",
+      "name": "Дикая форма — Волк",
+      "type": null,
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Wild Shape",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Волк» действия «Дикая форма».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "action",
+      "mechanics": {
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "EFFECT-wild-shape-wolf"
+              },
+              {
+                "kind": "temp_hp",
+                "amount": 2
+              }
+            ]
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ]
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "resource": "wild_shape"
+            }
+          ],
+          "mode": "active"
+        },
+        "variant_of_action_id": "e45cb3ed-827d-49d7-b52d-8cd29c681897"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-wild-shape-wolf",
+      "description": ":bonus_action:Бонусным действием примите один из четырёх известных обликов зверя с ПО не выше 1/4 и без скорости полёта. Получите 2 [[временных хит|concept:temporary_hit_points]]а и сохраняйте облик 1 час.\n\nВариант: Волк.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Волк» родительского действия «Дикая форма».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "e45cb3ed-827d-49d7-b52d-8cd29c681897",
+    "card_number": "ACT-wild-shape",
+    "name": "Дикая форма",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "id": "wild_shape_form",
+            "kind": "choice",
+            "count": 1,
+            "prompt": "Выберите известный облик зверя",
+            "context": "in_play",
+            "options": {
+              "items": [
+                {
+                  "id": "rat",
+                  "name": "Крыса",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-wild-shape-rat"
+                    },
+                    {
+                      "kind": "temp_hp",
+                      "amount": 2
+                    }
+                  ]
+                },
+                {
+                  "id": "riding_horse",
+                  "name": "Верховая лошадь",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-wild-shape-riding-horse"
+                    },
+                    {
+                      "kind": "temp_hp",
+                      "amount": 2
+                    }
+                  ]
+                },
+                {
+                  "id": "spider",
+                  "name": "Паук",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-wild-shape-spider"
+                    },
+                    {
+                      "kind": "temp_hp",
+                      "amount": 2
+                    }
+                  ]
+                },
+                {
+                  "id": "wolf",
+                  "name": "Волк",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-wild-shape-wolf"
+                    },
+                    {
+                      "kind": "temp_hp",
+                      "amount": 2
+                    }
+                  ]
+                }
+              ],
+              "source": "explicit"
+            },
+            "resolution": "on_use"
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ]
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "resource": "wild_shape"
+            }
+          ],
+          "mode": "active"
+        }
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "id": "wild_shape_form",
+            "kind": "choice",
+            "count": 1,
+            "prompt": "Выберите известный облик зверя",
+            "context": "in_play",
+            "options": {
+              "items": [
+                {
+                  "id": "rat",
+                  "name": "Крыса",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-wild-shape-rat"
+                    },
+                    {
+                      "kind": "temp_hp",
+                      "amount": 2
+                    }
+                  ]
+                },
+                {
+                  "id": "riding_horse",
+                  "name": "Верховая лошадь",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-wild-shape-riding-horse"
+                    },
+                    {
+                      "kind": "temp_hp",
+                      "amount": 2
+                    }
+                  ]
+                },
+                {
+                  "id": "spider",
+                  "name": "Паук",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-wild-shape-spider"
+                    },
+                    {
+                      "kind": "temp_hp",
+                      "amount": 2
+                    }
+                  ]
+                },
+                {
+                  "id": "wolf",
+                  "name": "Волк",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-wild-shape-wolf"
+                    },
+                    {
+                      "kind": "temp_hp",
+                      "amount": 2
+                    }
+                  ]
+                }
+              ],
+              "source": "explicit"
+            },
+            "resolution": "on_use"
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ]
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "resource": "wild_shape"
+            }
+          ],
+          "mode": "active"
+        },
+        "action_variant_ids": [
+          "ac062e13-e05c-5e8d-ac23-78c12fa6aed5",
+          "48a971f3-82d1-5f29-a00c-f146fee26315",
+          "018a043c-ddc3-5378-a942-8b95e2e567ab",
+          "72fd68ef-c608-5ef5-a409-8843d7853047"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Родительское действие выбирает один из 4 вариантов до исполнения.",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "5bb76d24-02d0-5c15-a8f1-f259177e8f53",
+    "card_number": "ACT-VAR-action-help-assist-check",
+    "name": "Помощь — Помочь с проверкой характеристики",
+    "preimage": null,
+    "patch": {
+      "id": "5bb76d24-02d0-5c15-a8f1-f259177e8f53",
+      "name": "Помощь — Помочь с проверкой характеристики",
+      "type": "basic",
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Help",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Помочь с проверкой характеристики» действия «Помощь».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": "5 фт",
+      "recharge": null,
+      "resource": "main_action",
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "op": "advantage",
+                "kind": "modifier",
+                "consume": "next",
+                "duration": {
+                  "type": "until_start_of_next_turn"
+                },
+                "applies_to": {
+                  "roll": "ability_check"
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "ally"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            }
+          ],
+          "mode": "active"
+        },
+        "variant_of_action_id": "2863e54d-0d7e-4d2c-8291-0f222a7ce662"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "base_action",
+      "card_number": "ACT-VAR-action-help-assist-check",
+      "description": "Помогаете союзнику: он получает [[преимущество|concept:advantage]] на свой следующий бросок к20 ([[проверку характеристики|concept:ability_check]] или атаку) до начала вашего следующего хода. Либо стабилизируете умирающее существо (проверка Медицины УС 10).\n\nВариант: Помочь с проверкой характеристики.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Помочь с проверкой характеристики» родительского действия «Помощь».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "adfbead9-cd0a-5626-a4f1-df0cd7406fd5",
+    "card_number": "ACT-VAR-action-help-assist-attack",
+    "name": "Помощь — Помочь с броском атаки",
+    "preimage": null,
+    "patch": {
+      "id": "adfbead9-cd0a-5626-a4f1-df0cd7406fd5",
+      "name": "Помощь — Помочь с броском атаки",
+      "type": "basic",
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Help",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Помочь с броском атаки» действия «Помощь».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": "5 фт",
+      "recharge": null,
+      "resource": "main_action",
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "op": "advantage",
+                "kind": "modifier",
+                "consume": "next",
+                "duration": {
+                  "type": "until_start_of_next_turn"
+                },
+                "applies_to": {
+                  "roll": "attack"
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "ally"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            }
+          ],
+          "mode": "active"
+        },
+        "variant_of_action_id": "2863e54d-0d7e-4d2c-8291-0f222a7ce662"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "base_action",
+      "card_number": "ACT-VAR-action-help-assist-attack",
+      "description": "Помогаете союзнику: он получает [[преимущество|concept:advantage]] на свой следующий бросок к20 ([[проверку характеристики|concept:ability_check]] или атаку) до начала вашего следующего хода. Либо стабилизируете умирающее существо (проверка Медицины УС 10).\n\nВариант: Помочь с броском атаки.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Помочь с броском атаки» родительского действия «Помощь».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "30c665c2-70c8-5e92-a2f3-ed739c257a1f",
+    "card_number": "ACT-VAR-action-help-wake-sleeping-target",
+    "name": "Помощь — Разбудить цель",
+    "preimage": null,
+    "patch": {
+      "id": "30c665c2-70c8-5e92-a2f3-ed739c257a1f",
+      "name": "Помощь — Разбудить цель",
+      "type": "basic",
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Help",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Разбудить цель» действия «Помощь».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": "5 фт",
+      "recharge": null,
+      "resource": "main_action",
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "op": "remove",
+                "kind": "condition",
+                "value": "incapacitated",
+                "required_cause_tags": [
+                  "magical",
+                  "sleep"
+                ],
+                "required_end_trigger": "wake_action_within_5_ft"
+              },
+              {
+                "op": "remove",
+                "kind": "condition",
+                "value": "unconscious",
+                "required_cause_tags": [
+                  "magical",
+                  "sleep"
+                ],
+                "required_end_trigger": "wake_action_within_5_ft"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "ally"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            }
+          ],
+          "mode": "active"
+        },
+        "variant_of_action_id": "2863e54d-0d7e-4d2c-8291-0f222a7ce662"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "base_action",
+      "card_number": "ACT-VAR-action-help-wake-sleeping-target",
+      "description": "Помогаете союзнику: он получает [[преимущество|concept:advantage]] на свой следующий бросок к20 ([[проверку характеристики|concept:ability_check]] или атаку) до начала вашего следующего хода. Либо стабилизируете умирающее существо (проверка Медицины УС 10).\n\nВариант: Разбудить цель.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Разбудить цель» родительского действия «Помощь».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "69a1d4a8-f732-5dee-ae9f-d4ead24322e4",
+    "card_number": "ACT-VAR-action-help-stabilize",
+    "name": "Помощь — Стабилизировать",
+    "preimage": null,
+    "patch": {
+      "id": "69a1d4a8-f732-5dee-ae9f-d4ead24322e4",
+      "name": "Помощь — Стабилизировать",
+      "type": "basic",
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Help",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Стабилизировать» действия «Помощь».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": "5 фт",
+      "recharge": null,
+      "resource": "main_action",
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "kind": "stabilize",
+                "who": "target"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "ally"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            }
+          ],
+          "mode": "active"
+        },
+        "pre_action_check": {
+          "ability": "wis",
+          "skill": "medicine",
+          "dc": 10
+        },
+        "variant_of_action_id": "2863e54d-0d7e-4d2c-8291-0f222a7ce662"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "base_action",
+      "card_number": "ACT-VAR-action-help-stabilize",
+      "description": "Помогаете союзнику: он получает [[преимущество|concept:advantage]] на свой следующий бросок к20 ([[проверку характеристики|concept:ability_check]] или атаку) до начала вашего следующего хода. Либо стабилизируете умирающее существо (проверка Медицины УС 10).\n\nВариант: Стабилизировать.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Стабилизировать» родительского действия «Помощь».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "2863e54d-0d7e-4d2c-8291-0f222a7ce662",
+    "card_number": "action_help",
+    "name": "Помощь",
+    "preimage": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "id": "help_mode",
+                "kind": "choice",
+                "count": 1,
+                "prompt": "Как вы помогаете цели?",
+                "context": "in_play",
+                "options": {
+                  "items": [
+                    {
+                      "id": "assist_check",
+                      "name": "Помочь с проверкой характеристики",
+                      "grants": [
+                        {
+                          "op": "advantage",
+                          "kind": "modifier",
+                          "consume": "next",
+                          "duration": {
+                            "type": "until_start_of_next_turn"
+                          },
+                          "applies_to": {
+                            "roll": "ability_check"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "assist_attack",
+                      "name": "Помочь с броском атаки",
+                      "grants": [
+                        {
+                          "op": "advantage",
+                          "kind": "modifier",
+                          "consume": "next",
+                          "duration": {
+                            "type": "until_start_of_next_turn"
+                          },
+                          "applies_to": {
+                            "roll": "attack"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "wake_sleeping_target",
+                      "name": "Разбудить цель",
+                      "grants": [
+                        {
+                          "op": "remove",
+                          "kind": "condition",
+                          "value": "incapacitated",
+                          "required_cause_tags": [
+                            "magical",
+                            "sleep"
+                          ],
+                          "required_end_trigger": "wake_action_within_5_ft"
+                        },
+                        {
+                          "op": "remove",
+                          "kind": "condition",
+                          "value": "unconscious",
+                          "required_cause_tags": [
+                            "magical",
+                            "sleep"
+                          ],
+                          "required_end_trigger": "wake_action_within_5_ft"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "stabilize",
+                      "name": "Стабилизировать",
+                      "grants": [
+                        {
+                          "kind": "narrative",
+                          "description": "Совершите проверку Мудрости (Медицина) УС 10, чтобы стабилизировать умирающую цель."
+                        }
+                      ]
+                    }
+                  ],
+                  "source": "explicit"
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "ally"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            }
+          ],
+          "mode": "active"
+        }
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "effects": [
+          {
+            "who": "target",
+            "result": [
+              {
+                "id": "help_mode",
+                "kind": "choice",
+                "count": 1,
+                "prompt": "Как вы помогаете цели?",
+                "context": "in_play",
+                "options": {
+                  "items": [
+                    {
+                      "id": "assist_check",
+                      "name": "Помочь с проверкой характеристики",
+                      "grants": [
+                        {
+                          "op": "advantage",
+                          "kind": "modifier",
+                          "consume": "next",
+                          "duration": {
+                            "type": "until_start_of_next_turn"
+                          },
+                          "applies_to": {
+                            "roll": "ability_check"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "assist_attack",
+                      "name": "Помочь с броском атаки",
+                      "grants": [
+                        {
+                          "op": "advantage",
+                          "kind": "modifier",
+                          "consume": "next",
+                          "duration": {
+                            "type": "until_start_of_next_turn"
+                          },
+                          "applies_to": {
+                            "roll": "attack"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "wake_sleeping_target",
+                      "name": "Разбудить цель",
+                      "grants": [
+                        {
+                          "op": "remove",
+                          "kind": "condition",
+                          "value": "incapacitated",
+                          "required_cause_tags": [
+                            "magical",
+                            "sleep"
+                          ],
+                          "required_end_trigger": "wake_action_within_5_ft"
+                        },
+                        {
+                          "op": "remove",
+                          "kind": "condition",
+                          "value": "unconscious",
+                          "required_cause_tags": [
+                            "magical",
+                            "sleep"
+                          ],
+                          "required_end_trigger": "wake_action_within_5_ft"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "stabilize",
+                      "name": "Стабилизировать",
+                      "grants": [
+                        {
+                          "kind": "narrative",
+                          "description": "Совершите проверку Мудрости (Медицина) УС 10, чтобы стабилизировать умирающую цель."
+                        }
+                      ]
+                    }
+                  ],
+                  "source": "explicit"
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "shape": "single",
+          "domain": "actor",
+          "range_ft": 5,
+          "max_targets": 1,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "ally"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            }
+          ],
+          "mode": "active"
+        },
+        "action_variant_ids": [
+          "5bb76d24-02d0-5c15-a8f1-f259177e8f53",
+          "adfbead9-cd0a-5626-a4f1-df0cd7406fd5",
+          "30c665c2-70c8-5e92-a2f3-ed739c257a1f",
+          "69a1d4a8-f732-5dee-ae9f-d4ead24322e4"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Родительское действие выбирает один из 4 вариантов до исполнения.",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "48af7804-ad4f-5570-ac7e-2be061980886",
+    "card_number": "ACT-VAR-ACT-aasimar-revelation-wings",
+    "name": "Небесное откровение — Небесные крылья",
+    "preimage": null,
+    "patch": {
+      "id": "48af7804-ad4f-5570-ac7e-2be061980886",
+      "name": "Небесное откровение — Небесные крылья",
+      "type": null,
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Celestial Revelation",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Небесные крылья» действия «Небесное откровение».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "bonus_action",
+      "mechanics": {
+        "uses": {
+          "per": "long_rest",
+          "count": 1
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "RE-sub-wings"
+              }
+            ]
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "range_ft": 0,
+          "max_targets": 1,
+          "min_targets": 0,
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ],
+          "requires_line_of_sight": false
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "resource": "self_uses"
+            }
+          ],
+          "mode": "active",
+          "requirements": [
+            {
+              "type": "level",
+              "min_level": 3
+            }
+          ]
+        },
+        "variant_of_action_id": "49301c1f-4e30-40fc-b44c-ed5ecf304eaf"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-aasimar-revelation-wings",
+      "description": "С 3 уровня :bonus_action:бонусным действием вы преображаетесь, выбирая одно из трёх проявлений (Небесные крылья, Внутренний свет, Некротический покров) на 1 минуту. Можно использовать один раз, восстанавливается после [[долгого отдыха|concept:long_rest]].\n\nВариант: Небесные крылья.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Небесные крылья» родительского действия «Небесное откровение».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "a357149f-913f-5cb8-ae05-814c627ca232",
+    "card_number": "ACT-VAR-ACT-aasimar-revelation-radiance",
+    "name": "Небесное откровение — Внутренний свет",
+    "preimage": null,
+    "patch": {
+      "id": "a357149f-913f-5cb8-ae05-814c627ca232",
+      "name": "Небесное откровение — Внутренний свет",
+      "type": null,
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Celestial Revelation",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Внутренний свет» действия «Небесное откровение».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "bonus_action",
+      "mechanics": {
+        "uses": {
+          "per": "long_rest",
+          "count": 1
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "RE-sub-radiance"
+              },
+              {
+                "kind": "world_zone",
+                "duration": {
+                  "type": "rounds",
+                  "amount": 10
+                },
+                "geometry": {
+                  "shape": "emanation",
+                  "size_ft": 10
+                },
+                "tactical": {
+                  "anchor": "source",
+                  "notice": "Эманация следует за аасимаром; в конце его хода каждое существо в пределах 10 футов получает урон излучением, равный бонусу мастерства.",
+                  "triggers": [
+                    "end_turn"
+                  ],
+                  "auto_effects": [
+                    {
+                      "dice": "prof_bonus",
+                      "kind": "damage",
+                      "type": "radiant"
+                    }
+                  ],
+                  "trigger_scope": "source_turn_all_inside"
+                },
+                "zone_type": "aasimar_radiance"
+              }
+            ]
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "range_ft": 0,
+          "max_targets": 1,
+          "min_targets": 0,
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ],
+          "requires_line_of_sight": false
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "resource": "self_uses"
+            }
+          ],
+          "mode": "active",
+          "requirements": [
+            {
+              "type": "level",
+              "min_level": 3
+            }
+          ]
+        },
+        "variant_of_action_id": "49301c1f-4e30-40fc-b44c-ed5ecf304eaf"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-aasimar-revelation-radiance",
+      "description": "С 3 уровня :bonus_action:бонусным действием вы преображаетесь, выбирая одно из трёх проявлений (Небесные крылья, Внутренний свет, Некротический покров) на 1 минуту. Можно использовать один раз, восстанавливается после [[долгого отдыха|concept:long_rest]].\n\nВариант: Внутренний свет.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Внутренний свет» родительского действия «Небесное откровение».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "2a688422-dc0e-5413-a5c6-0c9513d15384",
+    "card_number": "ACT-VAR-ACT-aasimar-revelation-shroud",
+    "name": "Небесное откровение — Некротический покров",
+    "preimage": null,
+    "patch": {
+      "id": "2a688422-dc0e-5413-a5c6-0c9513d15384",
+      "name": "Небесное откровение — Некротический покров",
+      "type": null,
+      "price": null,
+      "author": "System",
+      "rarity": "common",
+      "script": null,
+      "source": "Catalog action variants 2026-09-29",
+      "weight": null,
+      "name_en": "Celestial Revelation",
+      "support": {
+        "audit_id": "action-variants-20260929",
+        "status": "not_verified",
+        "review": {
+          "status": "not_verified",
+          "summary": "Фиксированный вариант «Некротический покров» действия «Небесное откровение».",
+          "tested": [],
+          "implemented": [],
+          "limitations": [],
+          "evidence": [
+            "frontend/src/character/actionVariantsData.test.ts"
+          ]
+        }
+      },
+      "distance": null,
+      "recharge": null,
+      "resource": "bonus_action",
+      "mechanics": {
+        "uses": {
+          "per": "long_rest",
+          "count": 1
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "grant_effect",
+                "value": "RE-sub-necrotic"
+              }
+            ]
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "range_ft": 0,
+          "max_targets": 1,
+          "min_targets": 0,
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ],
+          "requires_line_of_sight": false
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "resource": "self_uses"
+            }
+          ],
+          "mode": "active",
+          "requirements": [
+            {
+              "type": "level",
+              "min_level": 3
+            }
+          ]
+        },
+        "variant_of_action_id": "49301c1f-4e30-40fc-b44c-ed5ecf304eaf"
+      },
+      "deleted_at": null,
+      "properties": null,
+      "action_type": "class_feature",
+      "card_number": "ACT-VAR-ACT-aasimar-revelation-shroud",
+      "description": "С 3 уровня :bonus_action:бонусным действием вы преображаетесь, выбирая одно из трёх проявлений (Небесные крылья, Внутренний свет, Некротический покров) на 1 минуту. Можно использовать один раз, восстанавливается после [[долгого отдыха|concept:long_rest]].\n\nВариант: Некротический покров.",
+      "is_extended": false,
+      "legacy_tags": null,
+      "related_cards": null,
+      "text_alignment": null,
+      "text_font_size": null,
+      "image_generated": false,
+      "recharge_custom": null,
+      "related_actions": null,
+      "detailed_description": null,
+      "description_font_size": null,
+      "show_detailed_description": false,
+      "detailed_description_alignment": null,
+      "detailed_description_font_size": null
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Исполнимый вариант «Некротический покров» родительского действия «Небесное откровение».",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  },
+  {
+    "entity_type": "action",
+    "id": "49301c1f-4e30-40fc-b44c-ed5ecf304eaf",
+    "card_number": "ACT-aasimar-revelation",
+    "name": "Небесное откровение",
+    "preimage": {
+      "mechanics": {
+        "uses": {
+          "per": "long_rest",
+          "count": 1
+        },
+        "effects": [
+          {
+            "id": "revelation",
+            "kind": "choice",
+            "count": 1,
+            "prompt": "Выберите проявление Небесного откровения (на 1 минуту)",
+            "context": "in_play",
+            "options": {
+              "items": [
+                {
+                  "id": "wings",
+                  "name": "Небесные крылья",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "RE-sub-wings"
+                    }
+                  ]
+                },
+                {
+                  "id": "radiance",
+                  "name": "Внутренний свет",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "RE-sub-radiance"
+                    },
+                    {
+                      "kind": "world_zone",
+                      "duration": {
+                        "type": "rounds",
+                        "amount": 10
+                      },
+                      "geometry": {
+                        "shape": "emanation",
+                        "size_ft": 10
+                      },
+                      "tactical": {
+                        "anchor": "source",
+                        "notice": "Эманация следует за аасимаром; в конце его хода каждое существо в пределах 10 футов получает урон излучением, равный бонусу мастерства.",
+                        "triggers": [
+                          "end_turn"
+                        ],
+                        "auto_effects": [
+                          {
+                            "dice": "prof_bonus",
+                            "kind": "damage",
+                            "type": "radiant"
+                          }
+                        ],
+                        "trigger_scope": "source_turn_all_inside"
+                      },
+                      "zone_type": "aasimar_radiance"
+                    }
+                  ]
+                },
+                {
+                  "id": "shroud",
+                  "name": "Некротический покров",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "RE-sub-necrotic"
+                    }
+                  ]
+                }
+              ],
+              "source": "explicit"
+            }
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "range_ft": 0,
+          "max_targets": 1,
+          "min_targets": 0,
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ],
+          "requires_line_of_sight": false
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "resource": "self_uses"
+            }
+          ],
+          "mode": "active",
+          "requirements": [
+            {
+              "type": "level",
+              "min_level": 3
+            }
+          ]
+        }
+      }
+    },
+    "patch": {
+      "mechanics": {
+        "uses": {
+          "per": "long_rest",
+          "count": 1
+        },
+        "effects": [
+          {
+            "id": "revelation",
+            "kind": "choice",
+            "count": 1,
+            "prompt": "Выберите проявление Небесного откровения (на 1 минуту)",
+            "context": "in_play",
+            "options": {
+              "items": [
+                {
+                  "id": "wings",
+                  "name": "Небесные крылья",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "RE-sub-wings"
+                    }
+                  ]
+                },
+                {
+                  "id": "radiance",
+                  "name": "Внутренний свет",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "RE-sub-radiance"
+                    },
+                    {
+                      "kind": "world_zone",
+                      "duration": {
+                        "type": "rounds",
+                        "amount": 10
+                      },
+                      "geometry": {
+                        "shape": "emanation",
+                        "size_ft": 10
+                      },
+                      "tactical": {
+                        "anchor": "source",
+                        "notice": "Эманация следует за аасимаром; в конце его хода каждое существо в пределах 10 футов получает урон излучением, равный бонусу мастерства.",
+                        "triggers": [
+                          "end_turn"
+                        ],
+                        "auto_effects": [
+                          {
+                            "dice": "prof_bonus",
+                            "kind": "damage",
+                            "type": "radiant"
+                          }
+                        ],
+                        "trigger_scope": "source_turn_all_inside"
+                      },
+                      "zone_type": "aasimar_radiance"
+                    }
+                  ]
+                },
+                {
+                  "id": "shroud",
+                  "name": "Некротический покров",
+                  "grants": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "RE-sub-necrotic"
+                    }
+                  ]
+                }
+              ],
+              "source": "explicit"
+            }
+          }
+        ],
+        "targeting": {
+          "shape": "self",
+          "domain": "actor",
+          "range_ft": 0,
+          "max_targets": 1,
+          "min_targets": 0,
+          "actor_targets": false,
+          "allowed_relations": [
+            "self"
+          ],
+          "requires_line_of_sight": false
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "resource": "self_uses"
+            }
+          ],
+          "mode": "active",
+          "requirements": [
+            {
+              "type": "level",
+              "min_level": 3
+            }
+          ]
+        },
+        "action_variant_ids": [
+          "48af7804-ad4f-5570-ac7e-2be061980886",
+          "a357149f-913f-5cb8-ae05-814c627ca232",
+          "2a688422-dc0e-5413-a5c6-0c9513d15384"
+        ]
+      }
+    },
+    "review": {
+      "status": "not_verified",
+      "summary": "Родительское действие выбирает один из 3 вариантов до исполнения.",
+      "implemented": [],
+      "tested": [],
+      "limitations": [],
+      "evidence": [
+        "frontend/src/character/actionVariantsData.test.ts"
+      ]
+    }
+  }
+]

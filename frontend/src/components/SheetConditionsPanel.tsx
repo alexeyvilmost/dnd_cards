@@ -116,6 +116,7 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, p
       );
       const result = executeManualEffectCommand(runtime, command, {
         nextId: nextBrowserManualEffectId,
+        passives,
       });
       void persist(
         result.state.activeEffects,
@@ -138,7 +139,7 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, p
           effectId: id,
           ownerActorId: character.id,
           provenance: 'manual:sheet_conditions',
-        }, { nextId: nextBrowserManualEffectId });
+        }, { nextId: nextBrowserManualEffectId,passives });
         state = result.state;
         events.push(...result.events);
       }

@@ -78,7 +78,7 @@ export interface PactBladeImmutableWeaponCardSnapshot {
   cardNumber: string;
   name: string;
   weaponType: string;
-  category: 'simple' | 'martial';
+  category: 'simple' | 'martial' | 'none';
   range: 'melee' | 'ranged';
   normalDamageType: string;
   properties: string[];
@@ -400,7 +400,7 @@ function magicWeaponFromFacts(
 function weaponSnapshotIssue(card: PactBladeImmutableWeaponCardSnapshot): string | null {
   if (!nonBlank(card.id) || !nonBlank(card.cardNumber) || !nonBlank(card.name)
     || !nonBlank(card.weaponType) || !nonBlank(card.normalDamageType)
-    || !['simple', 'martial'].includes(card.category)
+    || !['simple', 'martial','none'].includes(card.category)
     || !['melee', 'ranged'].includes(card.range)
     || !Array.isArray(card.properties) || !Array.isArray(card.tags) || card.tags.length !== 0
     || card.properties.some((value) => !nonBlank(value))

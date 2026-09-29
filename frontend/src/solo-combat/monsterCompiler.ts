@@ -164,6 +164,7 @@ export function compileMonsterInstance(input: {
       capabilities: { actionIds: actions.map((action) => action.id).sort() },
       character: {
         creatureType: input.monster.creature_type,
+        creatureTags: [...input.monster.ai.creature_tags??[]],
         abilityScores: scores,
         abilityMods: mods,
         profBonus: input.monster.proficiency_bonus,

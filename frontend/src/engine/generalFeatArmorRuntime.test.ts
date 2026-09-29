@@ -40,4 +40,9 @@ describe('Medium Armor Master data-owned AC cap', () => {
     const active = { ...mediumArmorMaster, activation: { mode: 'active' } };
     expect(computeAC(character(16), state, [active]).value).toBe(17);
   });
+  it.each([18,24])('allows the full Dexterity modifier from an item-owned formula at score %s',dex=>{
+    const fullDex={activation:{mode:'passive'},effects:[{resolution:'auto',result:[{kind:'modifier',op:'set',value:'dex',applies_to:{stat:'medium_armor_dex_cap'}}]}]};
+    expect(computeAC(character(dex),state,[fullDex]).value).toBe(15+Math.floor((dex-10)/2));
+  });
+
 });

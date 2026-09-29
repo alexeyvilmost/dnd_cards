@@ -1,5 +1,6 @@
 import type { ActorState } from './domain';
 import type { WeaponProfile } from './weaponProfile';
+import {itemSourceRequirementIssue} from '../engine/actionRequirements';
 
 type Dict = Record<string, unknown>;
 
@@ -16,6 +17,8 @@ export const PIERCER_USE_KEY = 'general_feat.piercer.reroll';
 export const SLASHER_USE_KEY = 'general_feat.slasher.slow';
 
 export function ownsGeneralFeatCapability(actor: ActorState, capabilityId: string): boolean {
+  const items=actor.capabilities.featureItemSources?.[capabilityId];
+  if(items&&itemSourceRequirementIssue({requires_any_item_source:items},actor.runtime,actor.character))return false;
   const sources = actor.capabilities.featureSources?.[capabilityId];
   return Array.isArray(sources) && sources.length > 0
     && sources.every((sourceId) => typeof sourceId === 'string' && sourceId.trim().length > 0);

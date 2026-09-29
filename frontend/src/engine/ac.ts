@@ -145,8 +145,8 @@ function mediumArmorDexCap(
       const requiredDex = Number(requirement?.dex ?? 0);
       if (!Number.isFinite(requiredDex)
         || Number(character.abilityScores?.dex ?? 0) < requiredDex) continue;
-      const value = Number(payload.value);
-      if (Number.isFinite(value)) cap = Math.max(cap, value);
+      const value = tryEvalNum(String(payload.value), character);
+      if (value !== null && Number.isFinite(value)) cap = Math.max(cap, value);
     }
   }
   return cap;

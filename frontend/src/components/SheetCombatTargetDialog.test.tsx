@@ -106,6 +106,50 @@ describe('SheetCombatTargetDialog explicit facts', () => {
     container.remove();
   });
 
+  it('keeps the ordered selection of repeated targets and shows remaining attack slots',async()=>{
+    const repeatAction:RuleActionDefinition={...blessAction,id:'repeat-rays',name:'Three rays',mechanics:{...blessAction.mechanics,targeting:{shape:'multiple',allow_repeat_targets:true}},
+      targeting:{...blessAction.targeting!,allowedRelations:['enemy'],allowRepeatTargets:true}};
+    let pending!:Promise<unknown>;
+    await act(async()=>{pending=api.request({title:'Three rays',action:repeatAction,candidates:['a','b'].map(id=>({id,name:id,defaultFacts:{factsSource:'scenario' as const,boardRevision:0,relation:'enemy' as const,distanceFt:10,lineOfSight:true,cover:'none' as const}})),requireTarget:true});});
+    const add=(id:string)=>document.querySelector<HTMLButtonElement>(`[aria-label="Добавить цель ${id}"]`)!.click();
+    await act(async()=>{add('a');add('b');add('a');});
+    expect(document.querySelector('[data-testid="sheet-target-counter"]')?.textContent).toContain('Выбрано 3 из 3; осталось 0');
+    expect([...document.querySelectorAll('.sheet-target-slots li span')].map(node=>node.textContent)).toEqual(['1. a','2. b','3. a']);
+    await act(async()=>document.querySelector<HTMLButtonElement>('.dice-dialog-btn.primary')!.click());
+    expect((await pending as {targets:Array<{targetId:string}>}).targets.map(target=>target.targetId)).toEqual(['a','b','a']);
+  });
+
+  it('shows the caster-level ray count before selecting repeatable targets',async()=>{
+    const beams:RuleActionDefinition={...blessAction,id:'levelled-beams',name:'Beams',spell:{level:0},
+      mechanics:{targeting:{shape:'multiple',allow_repeat_targets:true,target_slots_by_character_level:{1:1,5:2,11:3,17:4}}},
+      targeting:{...blessAction.targeting!,minTargets:1,maxTargets:1,allowRepeatTargets:true,
+        targetSlotsByCharacterLevel:{'1':1,'5':2,'11':3,'17':4}}};
+    let pending!:Promise<unknown>;
+    await act(async()=>{pending=api.request({title:'Beams',action:beams,actorLevel:11,
+      candidates:[{id:'target',name:'Target',defaultFacts:{factsSource:'scenario',boardRevision:0,relation:'ally',distanceFt:10,lineOfSight:true,cover:'none'}}]});});
+    expect(document.querySelector('[data-testid="sheet-target-counter"]')?.textContent).toContain('Выбрано 0 из 3; осталось 3');
+    await act(async()=>{document.querySelector<HTMLButtonElement>('[aria-label="Добавить цель Target"]')!.click();document.querySelector<HTMLButtonElement>('[aria-label="Добавить цель Target"]')!.click();document.querySelector<HTMLButtonElement>('[aria-label="Добавить цель Target"]')!.click();});
+    expect(document.querySelector('[data-testid="sheet-target-counter"]')?.textContent).toContain('Выбрано 3 из 3; осталось 0');
+    await act(async()=>{document.querySelector<HTMLButtonElement>('.dice-dialog-btn.primary')!.click();});
+    expect((await pending as {targets:Array<{targetId:string}>}).targets.map(target=>target.targetId)).toEqual(['target','target','target']);
+  });
+
+  it('requires an observed distance from each additional target to the first',async()=>{
+    const chain:RuleActionDefinition={...blessAction,id:'chain',name:'Chain',targeting:{...blessAction.targeting!,additionalTargetsWithinFtOfFirst:30}};
+    let pending!:Promise<unknown>;
+    await act(async()=>{pending=api.request({title:'Chain targets',action:chain,candidates:['a','b'].map(id=>({id,name:id,defaultFacts:{factsSource:'scenario' as const,boardRevision:0,relation:'ally' as const,distanceFt:10,lineOfSight:true,cover:'none' as const}})),requireTarget:true});});
+    const fields=[...document.querySelectorAll<HTMLFieldSetElement>('fieldset')];
+    await act(async()=>{fields[0].querySelector<HTMLInputElement>('input[type="checkbox"]')!.click();fields[1].querySelector<HTMLInputElement>('input[type="checkbox"]')!.click();});
+    expect(document.querySelector('[data-testid="sheet-target-counter"]')?.textContent).toContain('Выбрано 2 из 3');
+    await act(async()=>document.querySelector<HTMLButtonElement>('.dice-dialog-btn.primary')!.click());
+    expect(document.querySelector('[role="alert"]')?.textContent).toContain('от первой');
+    const distance=[...fields[1].querySelectorAll<HTMLInputElement>('input[type="number"]')]
+      .find(input=>input.closest('label')?.textContent?.includes('до первой'))!;
+    await act(async()=>{changeValue(distance,'25');document.querySelector<HTMLButtonElement>('.dice-dialog-btn.primary')!.click();});
+    expect((await pending as {targets:Array<{targetId:string;distanceToFirstTargetFt?:number}>}).targets)
+      .toMatchObject([{targetId:'a'},{targetId:'b',distanceToFirstTargetFt:25}]);
+  });
+
   it('does not predeclare a target, geometry, provenance, relation, sight, cover, or revision', async () => {
     let pending!: Promise<unknown>;
     await act(async () => {

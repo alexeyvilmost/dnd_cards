@@ -1,4 +1,5 @@
 import type { RuleActionDefinition } from '../rules-core/domain';
+import {availableResources} from '../engine/resourceRestrictions';
 import {
   resolveSpellAccess,
   type ResolvedSpellAccess,
@@ -38,16 +39,10 @@ function paymentLabel(payment: ResolvedSpellAccess['payment']): string {
   return `ячейка ${payment.resource?.match(/_(\d+)$/)?.[1] ?? 1}-го круга`;
 }
 
-function castLevel(action: Extract<RuleActionDefinition, { kind: 'spell' }>, resource?: string): number {
-  const suffix = resource?.match(/_(\d+)$/)?.[1];
-  const parsed = suffix === undefined ? action.spell.level : Number(suffix);
-  return Number.isInteger(parsed) && parsed >= action.spell.level
-    ? parsed
-    : action.spell.level;
-}
-
 function resolvedOption(input: {
   action: Extract<RuleActionDefinition, { kind: 'spell' }>;
+  accessActionId: string;
+  castAtLevel: number;
   grant: SpellGrantAccess;
   mode: 'normal' | 'ritual';
   preferFreeUse?: boolean;
@@ -57,21 +52,21 @@ function resolvedOption(input: {
 }): SheetSpellCastOption | null {
   const resolved = resolveSpellAccess({
     state: input.access,
-    actionId: input.action.id,
+    actionId: input.accessActionId,
     grantId: input.grant.grantId,
     mode: input.mode,
     resources: input.resources,
+    castLevel: input.castAtLevel,
     ...(input.preferFreeUse === undefined ? {} : { preferFreeUse: input.preferFreeUse }),
   });
   if (resolved.status === 'rejected') return null;
-  const level = castLevel(input.action, resolved.payment.resource);
   return {
     id: optionId(input.grant, input.mode, resolved.payment),
     label: `${input.sourceLabel} · ${input.mode === 'ritual' ? 'ритуал' : paymentLabel(resolved.payment)}`,
     declaration: {
       grantId: input.grant.grantId,
       mode: input.mode,
-      ...(level === input.action.spell.level ? {} : { castLevel: level }),
+      ...(input.castAtLevel === input.action.spell.level ? {} : { castLevel: input.castAtLevel }),
       ...(input.preferFreeUse === undefined ? {} : { preferFreeUse: input.preferFreeUse }),
     },
     grant: { ...input.grant },
@@ -93,8 +88,12 @@ export function collectSheetSpellCastOptions(input: {
       `Canonical spell ${input.action.id} has no source-scoped spell access`,
     );
   }
+  const variantParentId = input.action.mechanics.variant_of_spell_id;
+  const accessActionId = typeof variantParentId === 'string'
+    ? `${variantParentId}${input.action.id.slice(input.action.sourceEntityIds[0].length)}`
+    : input.action.id;
   const grants = access.grants
-    .filter((grant) => grant.actionId === input.action.id)
+    .filter((grant) => grant.actionId === accessActionId)
     .sort((left, right) => left.grantId.localeCompare(right.grantId));
   const result: SheetSpellCastOption[] = [];
   for (const grant of grants) {
@@ -102,32 +101,40 @@ export function collectSheetSpellCastOptions(input: {
     const sourceLabel = typeof source?.name === 'string' ? source.name : 'Сотворение заклинаний';
     const freeOrNone = resolvedOption({
       action: input.action,
+      accessActionId,
+      castAtLevel: input.action.spell.level,
       grant,
       sourceLabel,
       mode: 'normal',
       preferFreeUse: true,
       access,
-      resources: actor.runtime.resources,
+      resources: availableResources(actor.runtime,actor.character,actor.passives),
     });
     if (freeOrNone) result.push(freeOrNone);
-    const slot = resolvedOption({
-      action: input.action,
-      grant,
-      sourceLabel,
-      mode: 'normal',
-      preferFreeUse: false,
-      access,
-      resources: actor.runtime.resources,
-    });
-    if (slot && !result.some((candidate) => candidate.id === slot.id)) result.push(slot);
+    for (let level = input.action.spell.level; level <= (input.action.spell.level === 0 ? 0 : 9); level++) {
+      const slot = resolvedOption({
+        action: input.action,
+        accessActionId,
+        castAtLevel: level,
+        grant,
+        sourceLabel,
+        mode: 'normal',
+        preferFreeUse: false,
+        access,
+        resources: availableResources(actor.runtime,actor.character,actor.passives),
+      });
+      if (slot && !result.some((candidate) => candidate.id === slot.id)) result.push(slot);
+    }
     if (grant.ritual) {
       const ritual = resolvedOption({
         action: input.action,
+        accessActionId,
+        castAtLevel: input.action.spell.level,
         grant,
         sourceLabel,
         mode: 'ritual',
         access,
-        resources: actor.runtime.resources,
+        resources: availableResources(actor.runtime,actor.character,actor.passives),
       });
       if (ritual) result.push(ritual);
     }

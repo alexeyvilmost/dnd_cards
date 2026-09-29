@@ -1,3 +1,5 @@
+import {collectRuntimeItemChoices} from '../character/itemChoices';
+import {useItemFeatAssembly} from '../character/useItemFeatAssembly';
 import SheetFeatureSections from '../components/SheetFeatureSections';
 import SheetTogglePassives from '../components/SheetTogglePassives';
 import { WorkspaceExpandButton } from '../components/WorkspaceNavigation';
@@ -135,7 +137,7 @@ const CharacterSheetMVP = () => {
     return () => { active = false; };
   }, [character?.id, character?.character_type, roguelikeRunId, navigate]);
   characterRef.current = character;
-  const [assembled, setAssembled] = useState<AssembledCharacter | null>(null);
+  const [baseAssembled, setAssembled] = useState<AssembledCharacter | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [entityAddOpen, setEntityAddOpen] = useState(false);
   const [speedDialogOpen, setSpeedDialogOpen] = useState(false);
@@ -393,6 +395,8 @@ const CharacterSheetMVP = () => {
     () => (character ? collectItemMechanics(character.equipment ?? {}, equipCards, character.turn_state, runtimeState?.inventory ?? []) : []),
     [character, equipCards, runtimeState],
   );
+
+  const assembled=useItemFeatAssembly(baseAssembled,draft,itemMechanics);
 
   // S3 «предмет=эффект»: grant_effect предметов (повязка → эффект «Тёмное зрение», пока надета).
   // Разворачиваем выданные эффекты ТОЙ ЖЕ машинерией, что эффекты класса/черт, и подмешиваем как
@@ -757,7 +761,7 @@ const CharacterSheetMVP = () => {
   const initiative = initBreakdown?.value ?? ruleState.initiativeBonus;
   const spellcasting = ruleState.spellcasting;
   // Слайс 5: выборы «в игре» (context:'in_play') — разрешаются на листе, а не в кузне.
-  const inPlayChoices = assembled.pendingChoices.filter((pc) => pc.context === 'in_play');
+  const inPlayChoices = [...assembled.pendingChoices.filter((pc) => pc.context === 'in_play'), ...collectRuntimeItemChoices(itemRuntimeSources,draft.resolvedChoices)];
 
   // Входящая реакция «когда по вам попадают»: атакующий доставил pending-«атакован»; цель на
   // СВОЁМ листе решает применить ли реакцию. Если declarative modifier меняет итоговый КД так,
@@ -968,7 +972,7 @@ const CharacterSheetMVP = () => {
     plan.push(...plannedD20BonusDice(collected.rules, label, 'check'));
     const inspired = influencedSheetRoll(rollKind === 'saving_throw' ? 'save' : 'check',
       {advantage: collected.advantage, hasAdvantage: 'hasAdvantage' in collected ? collected.hasAdvantage : false, hasDisadvantage: 'hasDisadvantage' in collected ? collected.hasDisadvantage : false, modifiers: [...parts], rules: collected.rules}, runtimeState, passives, Math.random,
-      {ability:typeof filter?.ability === 'string' ? filter.ability : undefined,character:sheetCtx ? {...sheetCtx,knownCards:[...equipCards.values()],attunedIds:readAttunedIds(character?.turn_state)} : undefined});
+      {ability:typeof filter?.ability === 'string' ? filter.ability : undefined,skill:typeof filter?.skill === 'string' ? filter.skill : undefined,character:sheetCtx ? {...sheetCtx,knownCards:[...equipCards.values()],attunedIds:readAttunedIds(character?.turn_state)} : undefined});
     const decision = await diceDialog.request(
       plan,
       label,

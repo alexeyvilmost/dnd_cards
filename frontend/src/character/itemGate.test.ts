@@ -43,8 +43,9 @@ describe('S2 — itemGate (единый гейт данными)', () => {
   });
 
   it('while:attuned → активна только пока настроены', () => {
-    expect(itemGate(card('a', { while: 'attuned' }), gc({ attuned: ['a'] }))).toBe(true);
+    expect(itemGate(card('a', { while: 'attuned' }), gc({ inventory:[{cardId:'a',qty:1}],attuned: ['a'] }))).toBe(true);
     expect(itemGate(card('a', { while: 'attuned' }), gc({ attuned: [] }))).toBe(false);
+    expect(itemGate(card('a', { while: 'attuned' }), gc({ attuned: ['a'] }))).toBe(false);
   });
 
   it('настройка — жёсткое требование поверх любой локации', () => {

@@ -1,10 +1,12 @@
 import { compileMechanicsTargeting, type MechanicsTargetDomain } from './actionTargeting';
+import {parseItemTool,type ItemToolPolicy} from './itemTools';
 import type { JsonObject, Relation } from './domain';
 import { preflightMechanicsExecution } from './legacy/engineAdapter';
 import type { CharacterContext, RuntimeState } from './legacy/engineAdapter';
 import type { MagicBlockingLayer, WorldObjectSize } from './worldObjects';
 
 export type ManagedWorldSpellPrimitiveType =
+  | 'item_tool'
   | 'light_world_object'
   | 'burning_hands_objects'
   | 'detect_magic_world_sensing'
@@ -114,6 +116,7 @@ export interface MagicMissilePolicy {
 }
 
 export type ManagedWorldSpellPolicy =
+  | ItemToolPolicy
   | LightWorldPolicy
   | BurningHandsObjectsPolicy
   | DetectMagicWorldPolicy
@@ -137,6 +140,7 @@ export type WorldSpellPolicyParseResult =
   };
 
 const MANAGED_TYPES = new Set<ManagedWorldSpellPrimitiveType>([
+  'item_tool',
   'light_world_object',
   'burning_hands_objects',
   'detect_magic_world_sensing',
@@ -342,6 +346,7 @@ export function parseWorldSpellPolicy(mechanics: JsonObject): WorldSpellPolicyPa
 
     let policy: ManagedWorldSpellPolicy;
     switch (primitiveType) {
+      case 'item_tool':policy=parseItemTool(mechanics);break;
       case 'light_world_object': {
         exactKeys(raw, [
           'max_object_size', 'exclude_carried_by_other', 'bright_radius_ft',

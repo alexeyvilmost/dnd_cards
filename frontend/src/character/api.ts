@@ -257,6 +257,7 @@ export interface CharacterRuntimeCommandRulesetRef {
 export type CharacterRuntimeCommandPatch = Pick<
   PatchCharacterRuntimeRequest,
   | 'current_hp'
+  | 'equipment'
   | 'inventory_items'
   | 'resources'
   | 'max_resources'

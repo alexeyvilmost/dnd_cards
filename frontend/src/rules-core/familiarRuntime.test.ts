@@ -407,6 +407,12 @@ describe('persisted familiar actor integrity', () => {
     const maxResources = actorBundle();
     maxResources.familiar.runtime.maxResources.action = 2;
     expect(bundleIssue(maxResources)).toMatch(/maximum resources/);
+
+    const history = actorBundle();
+    history.familiar.character.combatHistory = { damageDealt: 2, turnEnded: 1 };
+    expect(bundleIssue(history)).toBeNull();
+    history.familiar.character.combatHistory.damageDealt = -1;
+    expect(bundleIssue(history)).toMatch(/invalid combat history/);
   });
 
   it('enforces pinned HP bounds, Reaction mirror, and disappearance lifecycle', () => {

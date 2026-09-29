@@ -8,7 +8,9 @@ export function effectiveArmorClass(actor: Pick<ActorState, 'character' | 'runti
 
 export function effectiveArmorClassBreakdown(actor: Pick<ActorState, 'character' | 'runtime' | 'ac' | 'passives'>, runtime = actor.runtime) {
   const withoutTransient = { ...runtime, activeEffects: [] };
-  const baseline = armorClassValue(actor.character, withoutTransient, actor.passives ?? []).value;
+  const originalCharacter = { ...actor.character, spatialObservations: undefined,
+    ...(actor.character.combatSpatialBase ?? {}) };
+  const baseline = armorClassValue(originalCharacter, withoutTransient, (actor.passives ?? []).filter(passive => passive.combat_aura_projection !== true)).value;
   const projected = armorClassValue(actor.character, runtime, actor.passives ?? []);
   const offset = (actor.ac ?? baseline) - baseline;
   return {...projected, value: projected.value + offset,

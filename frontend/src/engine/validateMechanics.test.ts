@@ -430,7 +430,7 @@ describe('C13: контракт схема ↔ рантайм (payload.kind)', (
   const HANDLED = [
     'damage', 'damage_rider', 'triggered_effect', 'fall_protection', 'movement_option',
     'targeting_ward', 'turn_command', 'healing', 'reduce_damage', 'temp_hp', 'condition', 'resource', 'modifier',
-    'stabilize', 'weapon_enchantment', 'remote_manipulator', 'communication_link', 'world_interaction',
+    'stabilize', 'weapon_enchantment', 'weapon_attack_buff', 'remote_manipulator', 'communication_link', 'world_interaction',
     'illusion', 'temporary_consumable', 'world_entity', 'information_access',
     'information_reveal', 'world_zone',
     'condition_immunity', 'resistance', 'set_value',    // condition-owned defense + урон/AC runtime
@@ -445,6 +445,25 @@ describe('C13: контракт схема ↔ рантайм (payload.kind)', (
     'unarmed_damage_profile', 'turn_start_grapple_damage', // каноническая Attack/StartTurn RulesSession
     'd20_interrupt',                                  // persisted cross-actor solo-combat d20 continuation
     'choice',                                           // мета-kind (ChoiceResolver / expandChoices)
+    // execute.ts routes these into rolls, cost, state changes, or authoritative
+    // area events; the area events are applied to each actor by rules-core/handler.ts.
+    'cancel_execution', 'area_damage', 'area_healing', 'area_effect',
+    'chance', 'roll_die', 'spend_cost', 'incoming_damage_multiplier',
+    'ability_damage', 'weapon_form',
+    // Persistent runtime policies: execute.ts stores them; their named readers
+    // run at rest, recovery, concentration, defense, and equipment boundaries.
+    'rest_policy', 'life_policy', 'environment_adaptation', 'attunement_capacity',
+    'aura', 'recovery_policy', 'resource_restriction', 'effect_end_policy',
+    'magic_suppression', 'concentration_policy', 'save_damage_policy',
+    'movement_policy', 'equipment_policy', 'item_failure_policy',
+    // Source-owned passive projections and authoritative rule hooks. Each has
+    // a concrete reader (rather than being accepted solely by the schema).
+    'spell_projectiles', 'save_reflection', 'weapon_handling', 'ritual_casting',
+    'action_target_limit', 'weapon_attack_policy', 'purchase_price_policy',
+    'damage_type_policy', 'recipient_binding', 'spell_effect_share',
+    'spell_teleport_range', 'action_cost_policy', 'projectile_reflection',
+    'effective_level', 'damage_echo', 'weapon_return', 'attack_redirection',
+    'automatic_action', 'roll_influence',
   ];
   // ЧАСТИЧНО: kind исполняется, но не полностью (чип+нарратив, один путь, лог-only).
   // Для классификатора покрытия такие фичи — категория «partial» / «needs_engine».
@@ -454,6 +473,9 @@ describe('C13: контракт схема ↔ рантайм (payload.kind)', (
     'transform',   // execute.ts: чип+нарратив, стат-блок зверя не подменяется
     'movement',    // execute.ts: лог-only (нет модели позиций → ярус 4 EncounterState)
     'grant_action',// работает на ЛИСТЕ (доступ к действию по slug), НЕ в рантайм-роутере (#28)
+    'item_owned_actor', // отдельный актор и инициатива реализованы в Solo combat; лист не создаёт ход предмета
+    'illumination', // свет/тьма влияют на Solo combat и world objects, нет общей световой сцены листа
+    'terrain', // геометрия и эффект местности вычисляются на Solo combat board
   ];
   // НЕ реализованы: no-op/заглушка. Category needs_engine (ENG-01/ENG-02).
   const PLANNED = [

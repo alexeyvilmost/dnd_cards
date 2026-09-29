@@ -1,0 +1,2173 @@
+{
+  "schema_version": 1,
+  "audit_id": "item-completion-low-20260929",
+  "source_snapshot_sha256": "e31510bab0db19721390633ef9e87fabf14ab233a07d5066315cd7a9ff0ba2e6",
+  "entities": [
+    {
+      "entity_type": "effect",
+      "id": "22ebb338-5faa-5d1a-a88f-587ad802b681",
+      "card_number": "EFFECT-item-completion-low-0038",
+      "name": "Зелье долголетия",
+      "description_sha256": "9bd7961676288fa174493627217c36cdf6189f34230f9f4606debe50219377a0",
+      "preimage": null,
+      "patch": {
+        "id": "22ebb338-5faa-5d1a-a88f-587ad802b681",
+        "card_number": "EFFECT-item-completion-low-0038",
+        "name": "Зелье долголетия",
+        "name_en": null,
+        "description": "Зелье долголетия - это редкое магическое зелье, которое замедляет процесс старения. При употреблении персонаж получает эффект, который может продлить его жизнь на годы или даже десятилетия. Зелье имеет горький вкус и золотистый цвет. Эффект зелья необратим и действует на протяжении всей жизни персонажа.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "effect_type": "item_effect",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "duration": {
+            "type": "permanent"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "narrative",
+                  "description": "Старение замедлено до конца жизни; число лет в описании не задано."
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Временная механика предмета с явным сроком и каноничным источником.",
+        "implemented": [
+          "Временные способности и отзыв при истечении."
+        ],
+        "tested": [
+          "frontend/src/engine/runtimeCharacterProjection.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "0b817b4a-a7db-5735-9cc3-ac4dd75ca15f",
+      "card_number": "EFFECT-item-completion-low-0041",
+      "name": "Зелье скорости",
+      "description_sha256": "f8b0168dddfa5eff97242ba82cac054411ea4afbe90fda52eb36f64df99803d9",
+      "preimage": null,
+      "patch": {
+        "id": "0b817b4a-a7db-5735-9cc3-ac4dd75ca15f",
+        "card_number": "EFFECT-item-completion-low-0041",
+        "name": "Зелье скорости",
+        "name_en": null,
+        "description": "Зелье скорости значительно увеличивает скорость передвижения персонажа. При употреблении скорость увеличивается в два раза, а также персонаж получает дополнительное действие в каждом раунде боя. Зелье имеет серебристый цвет и острый вкус. Эффект длится 1 минуту.",
+        "detailed_description": null,
+        "rarity": "common",
+        "effect_type": "item_effect",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "duration": {
+            "type": "minutes",
+            "amount": 1
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "modifier",
+                  "op": "multiply",
+                  "applies_to": {
+                    "roll": "speed"
+                  },
+                  "value": 2
+                },
+                {
+                  "kind": "resource",
+                  "op": "grant",
+                  "id": "action",
+                  "amount": 1
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Временная механика предмета с явным сроком и каноничным источником.",
+        "implemented": [
+          "Временные способности и отзыв при истечении."
+        ],
+        "tested": [
+          "frontend/src/engine/runtimeCharacterProjection.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "9ab73356-9679-5552-aa6e-ecc686f7717b",
+      "card_number": "EFFECT-item-completion-low-0055",
+      "name": "Зелье лазания",
+      "description_sha256": "d018e39f62db6cdb4824dd1125ccb059a5aaa9c629ab536c08cd8697d99075de",
+      "preimage": null,
+      "patch": {
+        "id": "9ab73356-9679-5552-aa6e-ecc686f7717b",
+        "card_number": "EFFECT-item-completion-low-0055",
+        "name": "Зелье лазания",
+        "name_en": null,
+        "description": "Зелье лазания улучшает способность персонажа к лазанию. При употреблении персонаж получает скорость лазания, равную его скорости ходьбы, и преимущество на проверки Атлетики для лазания. Зелье имеет зеленый цвет и травяной вкус. Эффект длится 1 час. Персонаж может легко взбираться по стенам и деревьям.",
+        "detailed_description": null,
+        "rarity": "common",
+        "effect_type": "item_effect",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "duration": {
+            "type": "hours",
+            "amount": 1
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "grant_speed",
+                  "mode": "climb",
+                  "value": "character_speed"
+                },
+                {
+                  "kind": "modifier",
+                  "op": "advantage",
+                  "applies_to": {
+                    "roll": "ability_check",
+                    "filter": {
+                      "skill": "athletics",
+                      "reason": "climbing"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Временная механика предмета с явным сроком и каноничным источником.",
+        "implemented": [
+          "Временные способности и отзыв при истечении."
+        ],
+        "tested": [
+          "frontend/src/engine/runtimeCharacterProjection.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "af883db0-cab6-58f1-9681-4d1c5337ee8e",
+      "card_number": "ACT-item-completion-low-0186",
+      "name": "Посох колдуна",
+      "description_sha256": "38453118e139159c12846bcf72bd7f0b015b72c1a97211689460fb7fdcebd0d3",
+      "preimage": null,
+      "patch": {
+        "id": "af883db0-cab6-58f1-9681-4d1c5337ee8e",
+        "card_number": "ACT-item-completion-low-0186",
+        "name": "Посох колдуна",
+        "name_en": null,
+        "description": "Вы можете бонусным действием восстановить ячейку колдуна. (1 раз в день)",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              },
+              {
+                "resource": "self_uses"
+              }
+            ]
+          },
+          "uses": {
+            "count": 1,
+            "per": "long_rest"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "resource",
+                  "op": "restore",
+                  "id": "selected_pool",
+                  "amount": 1,
+                  "select_pool": {
+                    "prefix": "spell_slot_",
+                    "recharge": "short_rest",
+                    "take": "highest_level"
+                  }
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "64cb2688-5e50-42e5-8166-785717ca7ef8",
+          "damage_source_kind": "item"
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Предметное действие с канонической стоимостью и проверкой источника.",
+        "implemented": [
+          "Проверка актуального предмета при выполнении действия."
+        ],
+        "tested": [
+          "frontend/src/engine/itemCompletionLow.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "1f6182f0-3a90-5dcc-943d-8dee9304538d",
+      "card_number": "ACT-item-completion-low-0264",
+      "name": "Рапира скорости +2",
+      "description_sha256": "00be051aa631214eb288b98ea7ceb6c3b123cd439f17339edbd804f4f9284858",
+      "preimage": null,
+      "patch": {
+        "id": "1f6182f0-3a90-5dcc-943d-8dee9304538d",
+        "card_number": "ACT-item-completion-low-0264",
+        "name": "Рапира скорости +2",
+        "name_en": null,
+        "description": "Бонусным действием вы можете совершить ещё одну атаку этой рапирой.",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              }
+            ]
+          },
+          "requires_held_item": "0b031e77-8ab2-4503-a911-09acdfa2e140",
+          "weapon_source_id": "0b031e77-8ab2-4503-a911-09acdfa2e140",
+          "effects": [
+            {
+              "resolution": "attack_roll",
+              "ability": "auto",
+              "attack_kind": "weapon_melee",
+              "on_hit": [
+                {
+                  "kind": "damage",
+                  "dice": "weapon",
+                  "type": "weapon",
+                  "ability": "auto"
+                }
+              ]
+            }
+          ],
+          "targeting": {
+            "shape": "single",
+            "domain": "actor",
+            "actor_targets": true,
+            "min_targets": 1,
+            "max_targets": 1,
+            "range_ft": 5,
+            "requires_line_of_sight": true,
+            "allowed_relations": [
+              "enemy",
+              "neutral"
+            ]
+          },
+          "requires_item_source": "0b031e77-8ab2-4503-a911-09acdfa2e140",
+          "damage_source_kind": "item"
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Предметное действие с канонической стоимостью и проверкой источника.",
+        "implemented": [
+          "Проверка актуального предмета при выполнении действия."
+        ],
+        "tested": [
+          "frontend/src/engine/itemCompletionLow.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "spell",
+      "id": "2a04f1ac-3c98-4c78-95f3-0c771238028e",
+      "card_number": "guardian_of_faith",
+      "name": "Страж веры",
+      "description_sha256": "8fcf97f731b56b3f4d800d5d4fe2528dcd344fa7a983d783bd40ea330969fb57",
+      "preimage": {
+        "description": "В незанятом пространстве, которое вы можете видеть в пределах дистанции, появляется и парит Большой призрачный страж, пока заклинание активно. Страж занимает своё пространство, неуязвим и имеет облик, подходящий вашему божеству или пантеону.",
+        "detailed_description": "В незанятом пространстве, которое вы можете видеть в пределах дистанции, появляется и парит Большой призрачный страж, пока заклинание активно. Страж занимает своё пространство, неуязвим и имеет облик, подходящий вашему божеству или пантеону.\n\nВсе враги, впервые за ход перемещающиеся в пространство в пределах 10 футов от стража или начинающие там свой ход, совершают [[спасбросок|concept:saving_throw_]] Ловкости, получая 20 урона [radiant]:radiant:Излучением[/radiant] при провале или половину этого урона при успехе. Страж исчезает, когда нанесёт суммарно 60 урона.",
+        "mechanics": {
+          "effects": [
+            {
+              "result": [
+                {
+                  "kind": "narrative",
+                  "description": "Призывает неуязвимого Большого призрачного стража на 8 часов. Враг, впервые за ход входящий в пределы 10 футов от стража или начинающий там ход, совершает спасбросок Ловкости: 20 урона Излучением при провале, половина при успехе. Страж исчезает, нанеся суммарно 60 урона."
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "targeting": {
+            "shape": "single",
+            "domain": "world",
+            "range_ft": 30,
+            "max_targets": 0,
+            "min_targets": 0,
+            "actor_targets": false,
+            "allowed_relations": [],
+            "requires_line_of_sight": true
+          },
+          "activation": {
+            "cost": [
+              {
+                "resource": "action"
+              },
+              {
+                "level": 4,
+                "amount": 1,
+                "resource": "spell_slot"
+              }
+            ],
+            "mode": "active"
+          },
+          "spell_class_list_ids": [
+            "CLASS-cleric"
+          ]
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "world_zone",
+                  "zone_type": "guardian_of_faith",
+                  "geometry": {
+                    "shape": "sphere",
+                    "radius_ft": 10,
+                    "size_ft": 10
+                  },
+                  "duration": {
+                    "type": "hours",
+                    "amount": 8
+                  },
+                  "tactical": {
+                    "triggers": [
+                      "enter",
+                      "start_turn"
+                    ],
+                    "recipients": "enemies",
+                    "shared_trigger_per_turn": true,
+                    "damage_budget": 60,
+                    "save": {
+                      "ability": "dex",
+                      "dc": "spell_save_dc"
+                    },
+                    "on_failure": [
+                      {
+                        "kind": "damage",
+                        "amount": 20,
+                        "type": "radiant",
+                        "suppress_damage_modifiers": true
+                      }
+                    ],
+                    "on_success": [
+                      {
+                        "kind": "damage",
+                        "amount": 10,
+                        "type": "radiant",
+                        "suppress_damage_modifiers": true
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "targeting": {
+            "shape": "area",
+            "domain": "world",
+            "actor_targets": false,
+            "range_ft": 30,
+            "max_targets": 0,
+            "min_targets": 0,
+            "allowed_relations": [],
+            "requires_line_of_sight": true,
+            "area": {
+              "kind": "sphere",
+              "radius_ft": 10
+            }
+          },
+          "activation": {
+            "cost": [
+              {
+                "resource": "action"
+              },
+              {
+                "level": 4,
+                "amount": 1,
+                "resource": "spell_slot"
+              }
+            ],
+            "mode": "active"
+          },
+          "spell_class_list_ids": [
+            "CLASS-cleric"
+          ]
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Зона стража: 10фт, враги, Dex20/10, один запуск за ход, 8ч, общий предел фактического урона60 с сохранением.",
+        "implemented": [
+          "Зона стража: 10фт, враги, Dex20/10, один запуск за ход, 8ч, общий предел фактического урона60 с сохранением."
+        ],
+        "tested": [
+          "frontend/src/solo-combat/combatAreas.test.ts"
+        ],
+        "limitations": [],
+        "evidence": [
+          "frontend/src/solo-combat/combatAreas.test.ts"
+        ]
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "78f6128d-c673-5145-83c1-f0b2f6dd14e1",
+      "card_number": "EFFECT-item-completion-low-0121",
+      "name": "Молот Защитника Света",
+      "description_sha256": "17e147c720abbd6eaa65846b9c49213f8a68091ea945fa90558f3bf3d0c9e0ed",
+      "preimage": null,
+      "patch": {
+        "id": "78f6128d-c673-5145-83c1-f0b2f6dd14e1",
+        "card_number": "EFFECT-item-completion-low-0121",
+        "name": "Молот Защитника Света",
+        "name_en": null,
+        "description": "Этот молот имеет зачарование +4 и наносит лучистый, а не дробящий урон.\n\nВы можете использовать \"Страж Веры\" без траты действия (1 раз/бой)\n\nУбив врага, вы получаете эффекты Ускорения без последующей летаргии.",
+        "detailed_description": null,
+        "rarity": "artifact",
+        "effect_type": "item_effect",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "duration": {
+            "type": "minutes",
+            "amount": 1
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "modifier",
+                  "op": "multiply",
+                  "applies_to": {
+                    "roll": "speed"
+                  },
+                  "value": 2
+                },
+                {
+                  "kind": "modifier",
+                  "op": "add",
+                  "applies_to": {
+                    "roll": "ac"
+                  },
+                  "value": 2
+                },
+                {
+                  "kind": "modifier",
+                  "op": "advantage",
+                  "applies_to": {
+                    "roll": "saving_throw",
+                    "filter": {
+                      "ability": "dex"
+                    }
+                  }
+                },
+                {
+                  "kind": "resource",
+                  "op": "grant",
+                  "id": "haste_action",
+                  "amount": 1,
+                  "recharge": "turn"
+                },
+                {
+                  "kind": "action_cost_policy",
+                  "id": "CARD-0121:haste-action",
+                  "match": {
+                    "action_categories": [
+                      "attack",
+                      "dash",
+                      "disengage",
+                      "hide",
+                      "utilize"
+                    ]
+                  },
+                  "replace": {
+                    "action": "haste_action"
+                  },
+                  "optional": true,
+                  "max_attacks": 1
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Временная механика предмета с явным сроком и каноничным источником.",
+        "implemented": [
+          "Временные способности и отзыв при истечении."
+        ],
+        "tested": [
+          "frontend/src/engine/runtimeCharacterProjection.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "a62f30c3-bf2b-419d-b823-e9e819683e07",
+      "card_number": "action_basic_disengage",
+      "name": "Отход",
+      "description_sha256": "8ca1c0657be51bf46e61e3e88f9f0e35d040bf2985934a06c5f4079fb36bd86b",
+      "preimage": {
+        "description": "До начала вашего следующего хода ваше перемещение не провоцирует атаки.",
+        "detailed_description": null,
+        "mechanics": {
+          "name": "Отход",
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "deny",
+                  "kind": "modifier",
+                  "duration": {
+                    "type": "until_start_of_next_turn"
+                  },
+                  "stack_id": "basic-action:disengage",
+                  "applies_to": {
+                    "trigger": "self_movement",
+                    "interaction": "opportunity_attack"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "max_targets": 1,
+            "min_targets": 0,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          },
+          "activation": {
+            "cost": [
+              {
+                "resource": "action"
+              }
+            ],
+            "mode": "active"
+          }
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "name": "Отход",
+          "effects": [
+            {
+              "result": [
+                {
+                  "op": "deny",
+                  "kind": "modifier",
+                  "duration": {
+                    "type": "until_start_of_next_turn"
+                  },
+                  "stack_id": "basic-action:disengage",
+                  "applies_to": {
+                    "trigger": "self_movement",
+                    "interaction": "opportunity_attack"
+                  }
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "max_targets": 1,
+            "min_targets": 0,
+            "actor_targets": false,
+            "allowed_relations": [
+              "self"
+            ],
+            "requires_line_of_sight": false
+          },
+          "activation": {
+            "cost": [
+              {
+                "resource": "action"
+              }
+            ],
+            "mode": "active",
+            "counts_as": "disengage"
+          }
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Категория канонического Отхода для ограниченного дополнительного действия.",
+        "implemented": [
+          "Общий action_cost_policy распознаёт Отход из данных."
+        ],
+        "tested": [
+          "frontend/src/rules-core/restrictedAdditionalActions.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "26e90427-70ba-4fc4-b7d3-a19d88449bd5",
+      "card_number": "EFF-sneak-attack",
+      "name": "Скрытая атака",
+      "description_sha256": "2a299d1733b0625dc847ddfad6a3bbd8922749dbf7417512ef682655faab78bd",
+      "preimage": {
+        "description": "Дополнительный урон при условиях.",
+        "detailed_description": null,
+        "mechanics": {
+          "id": "EFF-sneak-attack",
+          "uses": {
+            "per": "turn",
+            "count": 1
+          },
+          "effects": [
+            {
+              "who": "target",
+              "result": [
+                {
+                  "dice": "class_level:rogue/2 d6",
+                  "kind": "damage",
+                  "type": "weapon",
+                  "ability": "none"
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "mode": "triggered",
+            "trigger": {
+              "event": "hit",
+              "timing": "during",
+              "circumstances": [
+                {
+                  "of": [
+                    {
+                      "of": [
+                        {
+                          "kind": "attack_weapon_property",
+                          "value": "finesse"
+                        },
+                        {
+                          "kind": "attack_range",
+                          "value": "ranged"
+                        }
+                      ],
+                      "kind": "any_of"
+                    },
+                    {
+                      "of": [
+                        {
+                          "kind": "attack_advantage_state",
+                          "value": "advantage"
+                        },
+                        {
+                          "of": [
+                            {
+                              "kind": "nearby_eligible_ally_to_target"
+                            },
+                            {
+                              "of": {
+                                "kind": "attack_advantage_state",
+                                "value": "disadvantage"
+                              },
+                              "kind": "not"
+                            }
+                          ],
+                          "kind": "all_of"
+                        }
+                      ],
+                      "kind": "any_of"
+                    }
+                  ],
+                  "kind": "all_of"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "patch": {
+        "mechanics": {
+          "id": "EFF-sneak-attack",
+          "uses": {
+            "per": "turn",
+            "count": 1
+          },
+          "effects": [
+            {
+              "who": "target",
+              "result": [
+                {
+                  "dice": "class_level:rogue/2 d6",
+                  "kind": "damage",
+                  "type": "weapon",
+                  "ability": "none",
+                  "damage_tag": "sneak_attack"
+                }
+              ],
+              "resolution": "auto"
+            }
+          ],
+          "activation": {
+            "mode": "triggered",
+            "trigger": {
+              "event": "hit",
+              "timing": "during",
+              "circumstances": [
+                {
+                  "of": [
+                    {
+                      "of": [
+                        {
+                          "kind": "attack_weapon_property",
+                          "value": "finesse"
+                        },
+                        {
+                          "kind": "attack_range",
+                          "value": "ranged"
+                        }
+                      ],
+                      "kind": "any_of"
+                    },
+                    {
+                      "of": [
+                        {
+                          "kind": "attack_advantage_state",
+                          "value": "advantage"
+                        },
+                        {
+                          "of": [
+                            {
+                              "kind": "nearby_eligible_ally_to_target"
+                            },
+                            {
+                              "of": {
+                                "kind": "attack_advantage_state",
+                                "value": "disadvantage"
+                              },
+                              "kind": "not"
+                            }
+                          ],
+                          "kind": "all_of"
+                        }
+                      ],
+                      "kind": "any_of"
+                    }
+                  ],
+                  "kind": "all_of"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Тег собственного пакета урона для адресного бонуса Скрытой атаки.",
+        "implemented": [
+          "damage_tag фильтрует бонус в том же пакете урона."
+        ],
+        "tested": [
+          "frontend/src/engine/effectRollFacts.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "b0550cb2-9fee-57dc-9cfb-3cc482d878d4",
+      "card_number": "ACT-item-completion-low-0098",
+      "name": "Доблесть защитника",
+      "description_sha256": "8f391a372044f9d7aa68c2ac1aea8a299d81bb9ad7eaa0e4e50daf3fa41a953c",
+      "preimage": null,
+      "patch": {
+        "id": "b0550cb2-9fee-57dc-9cfb-3cc482d878d4",
+        "card_number": "ACT-item-completion-low-0098",
+        "name": "Доблесть защитника",
+        "name_en": null,
+        "description": "Вы можете принимать урон, наносимый союзникам в радиусе 10 фт, на себя.\n\n",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "damage_transfer": {
+            "fraction": 1
+          },
+          "activation": {
+            "mode": "triggered",
+            "optional": true,
+            "cost": [],
+            "trigger": {
+              "event": "damage_taken",
+              "timing": "before",
+              "observer_range_ft": 10,
+              "observer_relations": [
+                "ally"
+              ],
+              "requires_visibility": false
+            }
+          },
+          "targeting": {
+            "domain": "actor",
+            "shape": "single",
+            "actor_targets": true,
+            "range_ft": 10,
+            "min_targets": 1,
+            "max_targets": 1,
+            "allowed_relations": [
+              "ally"
+            ],
+            "requires_line_of_sight": false
+          },
+          "effects": [],
+          "requires_item_source": "e1128b4a-bd46-4c13-b0ac-17566af63e21",
+          "damage_source_kind": "item"
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Предметное действие с канонической стоимостью и проверкой источника.",
+        "implemented": [
+          "Проверка актуального предмета при выполнении действия."
+        ],
+        "tested": [
+          "frontend/src/engine/itemCompletionLow.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "287c6d13-4dbe-5cb8-be3e-05d0d488b09c",
+      "card_number": "ACT-item-completion-low-0122",
+      "name": "Меч мести +2",
+      "description_sha256": "ab165e375bd08a9d66658786bec0b1acfdad4617523a57df17825d277c5685d7",
+      "preimage": null,
+      "patch": {
+        "id": "287c6d13-4dbe-5cb8-be3e-05d0d488b09c",
+        "card_number": "ACT-item-completion-low-0122",
+        "name": "Меч мести +2",
+        "name_en": null,
+        "description": "Когда противник в радиусе 5 фт атакует не вас, вы совершаете по нему атаку.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "weapon_source_id": "d8058901-9cb3-4171-8893-1a868c1ee859",
+          "requires_held_item": "d8058901-9cb3-4171-8893-1a868c1ee859",
+          "activation": {
+            "mode": "triggered",
+            "optional": false,
+            "cost": [],
+            "trigger": {
+              "event": "attacked",
+              "observer_range_ft": 5,
+              "observer_relations": [
+                "enemy"
+              ],
+              "exclude_self_target": true,
+              "target_event": "source"
+            }
+          },
+          "targeting": {
+            "domain": "actor",
+            "shape": "single",
+            "actor_targets": true,
+            "range_ft": 5,
+            "min_targets": 1,
+            "max_targets": 1,
+            "allowed_relations": [
+              "enemy"
+            ],
+            "requires_line_of_sight": true
+          },
+          "effects": [
+            {
+              "resolution": "attack_roll",
+              "attack_kind": "weapon_melee",
+              "ability": "auto",
+              "on_hit": [
+                {
+                  "kind": "damage",
+                  "dice": "weapon",
+                  "type": "weapon"
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "d8058901-9cb3-4171-8893-1a868c1ee859",
+          "damage_source_kind": "item"
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Предметное действие с канонической стоимостью и проверкой источника.",
+        "implemented": [
+          "Проверка актуального предмета при выполнении действия."
+        ],
+        "tested": [
+          "frontend/src/engine/itemCompletionLow.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "57641cdb-fe98-5ab1-85bf-b06e2539073b",
+      "card_number": "ACT-item-completion-low-0185-strike",
+      "name": "Меч-мимик +1",
+      "description_sha256": "9122d47b3f82a6aac33f0aaa2eb77028bda5a7721c4be3ae6de86c8fa7c600f1",
+      "preimage": null,
+      "patch": {
+        "id": "57641cdb-fe98-5ab1-85bf-b06e2539073b",
+        "card_number": "ACT-item-completion-low-0185-strike",
+        "name": "Меч-мимик +1",
+        "name_en": null,
+        "description": "Меч ходит отдельно в бою, и в свой ход совершает ещё одну атаку из ваших рук.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "action"
+              }
+            ]
+          },
+          "requires_held_item": "1306e224-89d9-48e9-a43a-7eef12fcbec2",
+          "weapon_source_id": "1306e224-89d9-48e9-a43a-7eef12fcbec2",
+          "targeting": {
+            "shape": "single",
+            "domain": "actor",
+            "actor_targets": true,
+            "min_targets": 1,
+            "max_targets": 1,
+            "range_ft": 5,
+            "requires_line_of_sight": true,
+            "allowed_relations": [
+              "enemy",
+              "neutral"
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "attack_roll",
+              "ability": "auto",
+              "attack_kind": "weapon_melee",
+              "on_hit": [
+                {
+                  "kind": "damage",
+                  "dice": "weapon",
+                  "type": "weapon",
+                  "ability": "auto"
+                }
+              ]
+            }
+          ],
+          "damage_source_kind": "item"
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Предметное действие с канонической стоимостью и проверкой источника.",
+        "implemented": [
+          "Проверка актуального предмета при выполнении действия."
+        ],
+        "tested": [
+          "frontend/src/engine/itemCompletionLow.test.ts",
+          "frontend/src/rules-core/itemOwnedActor.integration.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "696af660-37b1-5968-86e9-4f339adb9fde",
+      "card_number": "EFFECT-item-completion-low-0199",
+      "name": "Наручи ловкого мага",
+      "description_sha256": "2f6cef7fb239cfa9e7520cf79096c237b6e5027dc7755efa17a37292cf5bbb59",
+      "preimage": null,
+      "patch": {
+        "id": "696af660-37b1-5968-86e9-4f339adb9fde",
+        "card_number": "EFFECT-item-completion-low-0199",
+        "name": "Наручи ловкого мага",
+        "name_en": null,
+        "description": "Бонусным действием бросьте к4. При 4, можете использовать заговор или заклинание.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "effect_type": "item_effect",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "duration": {
+            "type": "until_end_of_turn"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "resource",
+                  "op": "grant",
+                  "id": "random_bonus_spell_action",
+                  "amount": 1
+                },
+                {
+                  "kind": "action_cost_policy",
+                  "id": "CARD-0199:extra-spell",
+                  "optional": true,
+                  "match": {
+                    "action_categories": [
+                      "spell"
+                    ]
+                  },
+                  "replace": {
+                    "action": "random_bonus_spell_action",
+                    "bonus_action": "random_bonus_spell_action"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Временная механика предмета с явным сроком и каноничным источником.",
+        "implemented": [
+          "Временные способности и отзыв при истечении."
+        ],
+        "tested": [
+          "frontend/src/engine/runtimeCharacterProjection.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "16cd258f-2240-55d6-a4e9-846c10a38043",
+      "card_number": "ACT-item-completion-low-0199",
+      "name": "Наручи ловкого мага",
+      "description_sha256": "2f6cef7fb239cfa9e7520cf79096c237b6e5027dc7755efa17a37292cf5bbb59",
+      "preimage": null,
+      "patch": {
+        "id": "16cd258f-2240-55d6-a4e9-846c10a38043",
+        "card_number": "ACT-item-completion-low-0199",
+        "name": "Наручи ловкого мага",
+        "name_en": null,
+        "description": "Бонусным действием бросьте к4. При 4, можете использовать заговор или заклинание.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "bonus_action"
+              }
+            ]
+          },
+          "targeting": {
+            "shape": "self",
+            "domain": "actor",
+            "range_ft": 0,
+            "actor_targets": false,
+            "min_targets": 0,
+            "max_targets": 1,
+            "allowed_relations": [
+              "self"
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "chance",
+                  "chance": {
+                    "die": 4,
+                    "equals": [
+                      4
+                    ]
+                  },
+                  "on_success": [
+                    {
+                      "kind": "grant_effect",
+                      "value": "EFFECT-item-completion-low-0199"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "2bf1e39d-aa78-4a93-9e68-d1c94311e3fa",
+          "damage_source_kind": "item"
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Предметное действие с канонической стоимостью и проверкой источника.",
+        "implemented": [
+          "Проверка актуального предмета при выполнении действия."
+        ],
+        "tested": [
+          "frontend/src/engine/itemCompletionLow.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "c0c07949-6388-5b87-bc0d-65b5175dd159",
+      "card_number": "ACT-item-completion-low-0088",
+      "name": "Длинный лук Шар +1",
+      "description_sha256": "dc6ef1d18a5fd0f658880477b25b03364500c0aa2ee5d169c277cdd8a3a387eb",
+      "preimage": null,
+      "patch": {
+        "id": "c0c07949-6388-5b87-bc0d-65b5175dd159",
+        "card_number": "ACT-item-completion-low-0088",
+        "name": "Длинный лук Шар +1",
+        "name_en": null,
+        "description": "При атаке из тьмы вы выпускаете две стрелы. Совершите атаку для каждой.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "weapon_source_id": "cbd4144f-6a3c-42e9-ac9f-dd0f3f0fdec8",
+          "requires_held_item": "cbd4144f-6a3c-42e9-ac9f-dd0f3f0fdec8",
+          "activation": {
+            "mode": "triggered",
+            "optional": false,
+            "cost": [
+              {
+                "resource": "equipped_weapon_ammo",
+                "amount": 1
+              }
+            ],
+            "trigger": {
+              "event": "attack_dice_followup",
+              "subject": "self",
+              "circumstances": [
+                {
+                  "kind": "event_data_equals",
+                  "key": "weaponId",
+                  "value": "cbd4144f-6a3c-42e9-ac9f-dd0f3f0fdec8"
+                },
+                {
+                  "kind": "event_data_equals",
+                  "key": "mode",
+                  "value": "additional"
+                }
+              ]
+            }
+          },
+          "targeting": {
+            "domain": "actor",
+            "shape": "single",
+            "actor_targets": true,
+            "range_ft": 600,
+            "min_targets": 1,
+            "max_targets": 1,
+            "allowed_relations": [
+              "enemy"
+            ],
+            "requires_line_of_sight": true
+          },
+          "effects": [
+            {
+              "resolution": "attack_roll",
+              "attack_kind": "weapon_ranged",
+              "ability": "auto",
+              "additional_attack_child": true,
+              "on_hit": [
+                {
+                  "kind": "damage",
+                  "dice": "weapon",
+                  "type": "weapon"
+                }
+              ]
+            }
+          ],
+          "requires_item_source": "cbd4144f-6a3c-42e9-ac9f-dd0f3f0fdec8",
+          "damage_source_kind": "item"
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Предметное действие с канонической стоимостью и проверкой источника.",
+        "implemented": [
+          "Проверка актуального предмета при выполнении действия."
+        ],
+        "tested": [
+          "frontend/src/engine/itemCompletionLow.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "2cde1d02-a605-5fed-b4b7-c29792eb8147",
+      "card_number": "EFFECT-item-completion-low-0133",
+      "name": "Бандана тьмы",
+      "description_sha256": "faca03df78d22c320699ed14c304c3fbc4ef0db82e3dc10dc35fc4091147076a",
+      "preimage": null,
+      "patch": {
+        "id": "2cde1d02-a605-5fed-b4b7-c29792eb8147",
+        "card_number": "EFFECT-item-completion-low-0133",
+        "name": "Бандана тьмы",
+        "name_en": null,
+        "description": "Вы выпускаете __Тьму__ вокруг себя на 2 хода, начиная ход во __Тьме__. Вас нельзя ослепить.",
+        "detailed_description": null,
+        "rarity": "very_rare",
+        "effect_type": "item_effect",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "duration": {
+            "type": "rounds",
+            "amount": 2
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "illumination",
+                  "darkness_radius_ft": 15,
+                  "magical": true
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Временная механика предмета с явным сроком и каноничным источником.",
+        "implemented": [
+          "Временные способности и отзыв при истечении."
+        ],
+        "tested": [
+          "frontend/src/engine/runtimeCharacterProjection.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "88451ca0-0580-5c25-a92c-066887eedd0e",
+      "card_number": "EFFECT-item-completion-low-0040",
+      "name": "Зелье подводного дыхания",
+      "description_sha256": "7788cd2d0e1ffcb5ce9d88c979605296862e75e24246d3b05d18eb2e18ddef93",
+      "preimage": null,
+      "patch": {
+        "id": "88451ca0-0580-5c25-a92c-066887eedd0e",
+        "card_number": "EFFECT-item-completion-low-0040",
+        "name": "Зелье подводного дыхания",
+        "name_en": null,
+        "description": "Зелье подводного дыхания позволяет персонажу дышать под водой в течение 1 часа. При употреблении персонаж может свободно плавать и дышать в любой водной среде, включая океаны, озера и реки. Зелье имеет голубой цвет и соленый вкус. Эффект не защищает от давления на больших глубинах.",
+        "detailed_description": null,
+        "rarity": "common",
+        "effect_type": "item_effect",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "duration": {
+            "type": "hours",
+            "amount": 1
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "environment_adaptation",
+                  "breathing": [
+                    "water"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Временная механика предмета с явным сроком и каноничным источником.",
+        "implemented": [
+          "Временные способности и отзыв при истечении."
+        ],
+        "tested": [
+          "frontend/src/engine/runtimeCharacterProjection.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "7d1c57e9-4397-574c-a451-58586b89f4ea",
+      "card_number": "EFFECT-item-completion-low-0048",
+      "name": "Зелье газообразной формы",
+      "description_sha256": "fbacfc996470a21b4d209b6ce773e447197b46410da5cf53d08727c15058be89",
+      "preimage": null,
+      "patch": {
+        "id": "7d1c57e9-4397-574c-a451-58586b89f4ea",
+        "card_number": "EFFECT-item-completion-low-0048",
+        "name": "Зелье газообразной формы",
+        "name_en": null,
+        "description": "Зелье газообразной формы превращает персонажа в газообразное состояние. При употреблении персонаж становится невесомым газом, который может проходить через трещины и отверстия. Зелье имеет серый цвет и безвкусное. Эффект длится 1 час. В газообразной форме персонаж не может атаковать или использовать заклинания.",
+        "detailed_description": null,
+        "rarity": "common",
+        "effect_type": "item_effect",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "duration": {
+            "type": "hours",
+            "amount": 1
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "environment_adaptation",
+                  "weightless": true,
+                  "can_pass_gaps": true,
+                  "cannot_attack": true,
+                  "cannot_cast": true
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Временная механика предмета с явным сроком и каноничным источником.",
+        "implemented": [
+          "Временные способности и отзыв при истечении."
+        ],
+        "tested": [
+          "frontend/src/engine/runtimeCharacterProjection.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "3e26be59-4337-50df-bfb4-c907a65f2997",
+      "card_number": "ACT-item-completion-low-0042",
+      "name": "Зелье чтения мыслей",
+      "description_sha256": "280079651a536f679a35b5bd975f938f0d7a2d7608dc783ce8290e328ed140c5",
+      "preimage": null,
+      "patch": {
+        "id": "3e26be59-4337-50df-bfb4-c907a65f2997",
+        "card_number": "ACT-item-completion-low-0042",
+        "name": "Зелье чтения мыслей",
+        "name_en": null,
+        "description": "Зелье чтения мыслей дает персонажу способность читать мысли других существ. При употреблении персонаж может использовать действие для чтения мыслей существа в радиусе 30 футов. Зелье имеет фиолетовый цвет и металлический вкус. Эффект длится 1 час.",
+        "detailed_description": null,
+        "rarity": "common",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "action"
+              }
+            ]
+          },
+          "targeting": {
+            "domain": "actor",
+            "shape": "single",
+            "actor_targets": true,
+            "range_ft": 30,
+            "min_targets": 1,
+            "max_targets": 1,
+            "allowed_relations": [
+              "self",
+              "ally",
+              "enemy",
+              "neutral"
+            ],
+            "requires_line_of_sight": false
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "target",
+              "result": [
+                {
+                  "kind": "information_reveal",
+                  "reveal": "thoughts",
+                  "label": "Мысли выбранного существа; содержание сообщает ведущий.",
+                  "fields": [
+                    "thoughts"
+                  ]
+                }
+              ]
+            }
+          ],
+          "damage_source_kind": "item"
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Предметное действие с канонической стоимостью и проверкой источника.",
+        "implemented": [
+          "Проверка актуального предмета при выполнении действия."
+        ],
+        "tested": [
+          "frontend/src/engine/itemCompletionLow.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "4ad4d856-835a-5d1d-8533-29cbe20a0324",
+      "card_number": "EFFECT-item-completion-low-0042",
+      "name": "Зелье чтения мыслей",
+      "description_sha256": "280079651a536f679a35b5bd975f938f0d7a2d7608dc783ce8290e328ed140c5",
+      "preimage": null,
+      "patch": {
+        "id": "4ad4d856-835a-5d1d-8533-29cbe20a0324",
+        "card_number": "EFFECT-item-completion-low-0042",
+        "name": "Зелье чтения мыслей",
+        "name_en": null,
+        "description": "Зелье чтения мыслей дает персонажу способность читать мысли других существ. При употреблении персонаж может использовать действие для чтения мыслей существа в радиусе 30 футов. Зелье имеет фиолетовый цвет и металлический вкус. Эффект длится 1 час.",
+        "detailed_description": null,
+        "rarity": "common",
+        "effect_type": "item_effect",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "duration": {
+            "type": "hours",
+            "amount": 1
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "grant_action",
+                  "value": "ACT-item-completion-low-0042"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Временная механика предмета с явным сроком и каноничным источником.",
+        "implemented": [
+          "Временные способности и отзыв при истечении."
+        ],
+        "tested": [
+          "frontend/src/engine/runtimeCharacterProjection.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "e02d2c35-03f1-56c7-aa1a-5a98ea6384dc",
+      "card_number": "EFFECT-item-completion-low-0043",
+      "name": "Зелье дружбы с животными",
+      "description_sha256": "aaa44cc113a702fc4b554fb76400c5fbc928af03e91abecfbb9ac05dc2332743",
+      "preimage": null,
+      "patch": {
+        "id": "e02d2c35-03f1-56c7-aa1a-5a98ea6384dc",
+        "card_number": "EFFECT-item-completion-low-0043",
+        "name": "Зелье дружбы с животными",
+        "name_en": null,
+        "description": "Зелье дружбы с животными делает всех животных в радиусе 30 футов дружелюбными к пьющему. При употреблении персонаж может общаться с животными и получает преимущество на проверки Харизмы против них. Зелье имеет зеленый цвет и травяной вкус. Эффект длится 1 час.",
+        "detailed_description": null,
+        "rarity": "common",
+        "effect_type": "item_effect",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "duration": {
+            "type": "hours",
+            "amount": 1
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "modifier",
+                  "op": "advantage",
+                  "applies_to": {
+                    "roll": "ability_check",
+                    "filter": {
+                      "ability": "cha"
+                    }
+                  },
+                  "when": [
+                    {
+                      "kind": "target_creature_type_in",
+                      "values": [
+                        "beast"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "information_access",
+                  "capability": "beast_communication",
+                  "policy": {
+                    "creature_types": [
+                      "beast"
+                    ],
+                    "range_ft": 30,
+                    "attitude": "friendly"
+                  },
+                  "duration": {
+                    "type": "hours",
+                    "amount": 1
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Временная механика предмета с явным сроком и каноничным источником.",
+        "implemented": [
+          "Временные способности и отзыв при истечении."
+        ],
+        "tested": [
+          "frontend/src/engine/runtimeCharacterProjection.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "082f16e1-25ec-578d-a1ea-3c33a0f5695b",
+      "card_number": "ACT-item-completion-low-0056",
+      "name": "Зелье огненного дыхания",
+      "description_sha256": "a2d1a3612a217e9bff64cfcf57ed22118cb649b5c9fb7f9a0ec63b7efe0ee23d",
+      "preimage": null,
+      "patch": {
+        "id": "082f16e1-25ec-578d-a1ea-3c33a0f5695b",
+        "card_number": "ACT-item-completion-low-0056",
+        "name": "Зелье огненного дыхания",
+        "name_en": null,
+        "description": "Зелье огненного дыхания дает персонажу способность дышать огнем. При употреблении персонаж может использовать действие для дыхания огнем в конусе 15 футов, нанося урон огнем всем существам в области. Зелье имеет оранжевый цвет и острый вкус. Эффект длится 1 час.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "action"
+              }
+            ]
+          },
+          "targeting": {
+            "domain": "actor",
+            "shape": "area",
+            "actor_targets": true,
+            "range_ft": 15,
+            "min_targets": 0,
+            "max_targets": 64,
+            "allowed_relations": [
+              "self",
+              "ally",
+              "enemy",
+              "neutral"
+            ],
+            "requires_line_of_sight": true,
+            "area": {
+              "kind": "cone",
+              "size_ft": 15
+            }
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "target",
+              "result": [
+                {
+                  "kind": "narrative",
+                  "description": "Огненное дыхание в конусе 15 футов. Урон огнём не указан в источнике: его определяет ведущий."
+                }
+              ]
+            }
+          ],
+          "damage_source_kind": "item"
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Предметное действие с канонической стоимостью и проверкой источника.",
+        "implemented": [
+          "Проверка актуального предмета при выполнении действия."
+        ],
+        "tested": [
+          "frontend/src/engine/itemCompletionLow.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "ad50181b-0cbe-5d2a-b970-1df9fdb4e741",
+      "card_number": "EFFECT-item-completion-low-0056",
+      "name": "Зелье огненного дыхания",
+      "description_sha256": "a2d1a3612a217e9bff64cfcf57ed22118cb649b5c9fb7f9a0ec63b7efe0ee23d",
+      "preimage": null,
+      "patch": {
+        "id": "ad50181b-0cbe-5d2a-b970-1df9fdb4e741",
+        "card_number": "EFFECT-item-completion-low-0056",
+        "name": "Зелье огненного дыхания",
+        "name_en": null,
+        "description": "Зелье огненного дыхания дает персонажу способность дышать огнем. При употреблении персонаж может использовать действие для дыхания огнем в конусе 15 футов, нанося урон огнем всем существам в области. Зелье имеет оранжевый цвет и острый вкус. Эффект длится 1 час.",
+        "detailed_description": null,
+        "rarity": "rare",
+        "effect_type": "item_effect",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "duration": {
+            "type": "hours",
+            "amount": 1
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "grant_action",
+                  "value": "ACT-item-completion-low-0056"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Временная механика предмета с явным сроком и каноничным источником.",
+        "implemented": [
+          "Временные способности и отзыв при истечении."
+        ],
+        "tested": [
+          "frontend/src/engine/runtimeCharacterProjection.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "monster",
+      "id": "c1000000-0000-4000-8000-000000000002",
+      "card_number": "goblin-minion",
+      "name": "Гоблин-прислужник",
+      "description_sha256": "90649dcad196115786b543a15b5bc180590abc287190ca521f16f4100a084b06",
+      "preimage": {
+        "description": "Простой противник ближнего боя с кинжалом.",
+        "ai": {
+          "strategy": "melee_chase",
+          "preferred_range_ft": 5
+        }
+      },
+      "patch": {
+        "ai": {
+          "strategy": "melee_chase",
+          "preferred_range_ft": 5,
+          "creature_tags": [
+            "goblin"
+          ]
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Явный типовой тег гоблина для правил выбора цели.",
+        "implemented": [
+          "Каноничная creature_tags разметка без веток по имени."
+        ],
+        "tested": [
+          "frontend/src/rules-core/itemEventReactions.integration.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "monster",
+      "id": "c1000000-0000-4000-8000-000000000001",
+      "card_number": "goblin-warrior",
+      "name": "Гоблин-воин",
+      "description_sha256": "16fe3ba212f0937b0b973178a751089c4e3b175d7ab5dad96dd293e6c2d671de",
+      "preimage": {
+        "description": "Подвижный стрелок со скимитаром и коротким луком.",
+        "ai": {
+          "strategy": "tactical",
+          "darkvision_ft": 60,
+          "skill_expertise": [
+            "stealth"
+          ],
+          "preferred_range_ft": 80,
+          "skill_proficiencies": [
+            "stealth"
+          ]
+        }
+      },
+      "patch": {
+        "ai": {
+          "strategy": "tactical",
+          "darkvision_ft": 60,
+          "skill_expertise": [
+            "stealth"
+          ],
+          "preferred_range_ft": 80,
+          "skill_proficiencies": [
+            "stealth"
+          ],
+          "creature_tags": [
+            "goblin"
+          ]
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Явный типовой тег гоблина для правил выбора цели.",
+        "implemented": [
+          "Каноничная creature_tags разметка без веток по имени."
+        ],
+        "tested": [
+          "frontend/src/rules-core/itemEventReactions.integration.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "0cc62e0a-12e4-5654-ab04-84228a34a496",
+      "card_number": "ACT-item-completion-low-0141",
+      "name": "Ожерелье Лилли",
+      "description_sha256": "d4eeac5a5b6a06c06861ba981043aff5d2664969ae1757b5b4997af5eb2372ec",
+      "preimage": null,
+      "patch": {
+        "id": "0cc62e0a-12e4-5654-ab04-84228a34a496",
+        "card_number": "ACT-item-completion-low-0141",
+        "name": "Ожерелье Лилли",
+        "name_en": null,
+        "description": "Это ожерелье выполнено с большой заботой и любовью, мастер-ювелир был искусен, а сами камни необычайно хорошо огранены.",
+        "detailed_description": null,
+        "rarity": "artifact",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "recipient_binding": {
+            "key": "lilly-segments",
+            "max_recipients": 6
+          },
+          "activation": {
+            "mode": "active",
+            "cost": []
+          },
+          "targeting": {
+            "domain": "actor",
+            "shape": "multi",
+            "actor_targets": true,
+            "range_ft": 5,
+            "min_targets": 0,
+            "max_targets": 6,
+            "allowed_relations": [
+              "ally",
+              "neutral"
+            ],
+            "requires_line_of_sight": false
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "target",
+              "result": []
+            }
+          ],
+          "requires_item_source": "b92bf21c-a5b5-4587-bf50-22b36e793ce4",
+          "damage_source_kind": "item"
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Предметное действие с канонической стоимостью и проверкой источника.",
+        "implemented": [
+          "Проверка актуального предмета при выполнении действия."
+        ],
+        "tested": [
+          "frontend/src/engine/itemCompletionLow.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "action",
+      "id": "7abb5b89-3bdf-5036-b7b7-9aa99068312c",
+      "card_number": "ACT-item-completion-low-0330-escape",
+      "name": "Сеть",
+      "description_sha256": "a710bbd5afca832abb1d5b97b0f7feb0374cda3fc4bb436697fa8948afe1b2d3",
+      "preimage": null,
+      "patch": {
+        "id": "7abb5b89-3bdf-5036-b7b7-9aa99068312c",
+        "card_number": "ACT-item-completion-low-0330-escape",
+        "name": "Сеть",
+        "name_en": null,
+        "description": " ",
+        "detailed_description": null,
+        "rarity": "common",
+        "type": "other",
+        "action_type": "base_action",
+        "resource": "action",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "active",
+            "cost": [
+              {
+                "resource": "action"
+              }
+            ]
+          },
+          "targeting": {
+            "domain": "actor",
+            "shape": "self",
+            "actor_targets": false,
+            "range_ft": 0,
+            "min_targets": 0,
+            "max_targets": 1,
+            "allowed_relations": [
+              "self"
+            ]
+          },
+          "effects": [
+            {
+              "resolution": "ability_check",
+              "ability": "str",
+              "dc": 10,
+              "on_success": [
+                {
+                  "kind": "remove_effect",
+                  "card_number": "EFFECT-item-completion-low-0330"
+                },
+                {
+                  "kind": "world_interaction",
+                  "operation": "destroy_deployed_item",
+                  "parameters": {
+                    "card_id": "c2912cfa-f4ef-477e-ba9b-215a57a1640f",
+                    "source_effect_ref": "EFFECT-item-completion-low-0330"
+                  }
+                }
+              ],
+              "on_fail": []
+            }
+          ],
+          "damage_source_kind": "item"
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Предметное действие с канонической стоимостью и проверкой источника.",
+        "implemented": [
+          "Проверка актуального предмета при выполнении действия."
+        ],
+        "tested": [
+          "frontend/src/engine/itemCompletionLow.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "ef3c7371-4908-51da-96c1-1be8a4451002",
+      "card_number": "EFFECT-item-completion-low-0330",
+      "name": "Сеть",
+      "description_sha256": "a710bbd5afca832abb1d5b97b0f7feb0374cda3fc4bb436697fa8948afe1b2d3",
+      "preimage": null,
+      "patch": {
+        "id": "ef3c7371-4908-51da-96c1-1be8a4451002",
+        "card_number": "EFFECT-item-completion-low-0330",
+        "name": "Сеть",
+        "name_en": null,
+        "description": " ",
+        "detailed_description": null,
+        "rarity": "common",
+        "effect_type": "item_effect",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "duration": {
+            "type": "until_removed"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "condition",
+                  "value": "restrained",
+                  "duration": {
+                    "type": "until_removed"
+                  }
+                },
+                {
+                  "kind": "grant_action",
+                  "value": "ACT-item-completion-low-0330-escape"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Временная механика предмета с явным сроком и каноничным источником.",
+        "implemented": [
+          "Временные способности и отзыв при истечении."
+        ],
+        "tested": [
+          "frontend/src/engine/runtimeCharacterProjection.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    },
+    {
+      "entity_type": "effect",
+      "id": "e5d9ea99-fe03-5641-a8b6-21c704b008a1",
+      "card_number": "EFFECT-item-completion-low-0063",
+      "name": "Кревой кароткий меч",
+      "description_sha256": "0056d1007f44c090c2e3a781ad08f71c9512dd6396d6e75481dff824d243b702",
+      "preimage": null,
+      "patch": {
+        "id": "e5d9ea99-fe03-5641-a8b6-21c704b008a1",
+        "card_number": "EFFECT-item-completion-low-0063",
+        "name": "Кревой кароткий меч",
+        "name_en": null,
+        "description": "Меч может застрять, тогда надо тащить.\n1к6: застривает при 2 или 5",
+        "detailed_description": null,
+        "rarity": "common",
+        "effect_type": "item_effect",
+        "author": "System",
+        "source": "Catalog completion 2026-09-29",
+        "mechanics": {
+          "activation": {
+            "mode": "passive"
+          },
+          "duration": {
+            "type": "until_removed"
+          },
+          "effects": [
+            {
+              "resolution": "auto",
+              "who": "self",
+              "result": [
+                {
+                  "kind": "weapon_attack_policy",
+                  "weapon_id": "3c92efeb-13e1-4221-b502-ff30db47e5bb",
+                  "disabled": true
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "review": {
+        "status": "verified_partial",
+        "summary": "Временная механика предмета с явным сроком и каноничным источником.",
+        "implemented": [
+          "Временные способности и отзыв при истечении."
+        ],
+        "tested": [
+          "frontend/src/engine/runtimeCharacterProjection.test.ts"
+        ],
+        "limitations": [],
+        "evidence": []
+      }
+    }
+  ]
+}

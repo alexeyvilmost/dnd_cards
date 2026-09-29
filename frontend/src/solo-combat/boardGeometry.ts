@@ -1,3 +1,5 @@
+import type {ActorState} from '../rules-core/domain';
+import {environmentAdaptation} from '../engine/environmentAdaptation';
 import type {CombatAreaState, GridPosition, SoloCombatState} from './types';
 import type {SpatialFacts, RuleSavingHazardDefinition, RuleAutomaticHazardDefinition} from '../rules-core/domain';
 import {footprintCells, footprintFits} from './footprint';
@@ -9,6 +11,7 @@ export interface BattleMapFeature extends GridPosition {
   cells?: GridPosition[];
   /** Baked scenery has mechanics but no second floating sprite over the background. */
   baked?: boolean;
+  environment?: {requires_breathing?: 'water'; passage?: 'gap'; passage_width_inches?: number; requires_weightless?: boolean};
   blocksMovement?: boolean; blocksSight?: boolean; cover?: 'half'|'three_quarters';
   zone?: {zoneType: string; triggers: CombatAreaState['triggers']; difficultTerrain?: boolean;
     lightlyObscured?: boolean; hazard?: Omit<RuleSavingHazardDefinition, 'id'|'name'|'sourceKind'|'sourceEntityIds'> | Omit<RuleAutomaticHazardDefinition, 'id'|'name'|'sourceKind'|'sourceEntityIds'>};
@@ -20,6 +23,9 @@ export interface BattleMapSpawnZone {
 export interface BattleMapDefinition {
   id: string; name: string; description: string; width: number; height: number;
   background: string; maxFootprint: number; maxActors: number; features: BattleMapFeature[];
+  ambientLight?: 'bright' | 'dim' | 'dark';
+  /** Scenario-authored world observations; absence never implies a favorable fact. */
+  environment?: { openSky?: boolean; timeOfDay?: 'day' | 'night'; seaCells?: GridPosition[] };
   spawnZones?: BattleMapSpawnZone[];
   artVersion?: 2;
   procedural?: {movable: string[]};
@@ -37,21 +43,30 @@ export function featureCells(feature: Pick<BattleMapFeature,'x'|'y'|'width'|'hei
   return Array.from({length:feature.width*feature.height},(_,i)=>({x:feature.x+i%feature.width,y:feature.y+Math.floor(i/feature.width)}));
 }
 const obstacleCache=new WeakMap<BattleMapDefinition, ReadonlySet<string>>();
-export function boardObstacles(state: BoardState): ReadonlySet<string> {
+export function boardObstacles(state: BoardState, actor?:ActorState): ReadonlySet<string> {
   const map=state.battleMap;
   if (!map) return new Set();
+  if(actor&&map.features.some(feature=>feature.environment)){
+    const adaptation=environmentAdaptation(actor.runtime,actor.passives??[],actor.character);
+    return new Set(map.features.filter(feature=>{
+      const env=feature.environment;
+      return feature.blocksMovement&&!(env?.passage==='gap'&&(adaptation.canPassGaps||(adaptation.minPassageInches!==undefined&&typeof env.passage_width_inches==='number'&&env.passage_width_inches>=adaptation.minPassageInches)))
+        ||env?.requires_breathing!==undefined&&!adaptation.breathing.includes(env.requires_breathing)
+        ||env?.requires_weightless===true&&!adaptation.weightless;
+    }).flatMap(featureCells).map(p=>`${p.x}:${p.y}`));
+  }
   let cells=obstacleCache.get(map);
   if (!cells) {cells=new Set(map.features.filter(f=>f.blocksMovement).flatMap(featureCells).map(p=>`${p.x}:${p.y}`));obstacleCache.set(map,cells);}
   return cells;
 }
-export function terrainFits(state: BoardState, position: GridPosition, size=1): boolean {
+export function terrainFits(state: BoardState, position: GridPosition, size=1,actor?:ActorState): boolean {
   const {width,height}=boardDimensions(state);
-  return footprintFits(position,size,boardObstacles(state),width,height);
+  return footprintFits(position,size,boardObstacles(state,actor),width,height);
 }
 /** No corner cutting through a wall, including the full footprint of a giant. */
-export function terrainStepFits(state: BoardState, from: GridPosition, to: GridPosition, size=1): boolean {
-  if(!terrainFits(state,to,size))return false;
-  if(from.x!==to.x&&from.y!==to.y) return terrainFits(state,{x:from.x,y:to.y},size)&&terrainFits(state,{x:to.x,y:from.y},size);
+export function terrainStepFits(state: BoardState, from: GridPosition, to: GridPosition, size=1,actor?:ActorState): boolean {
+  if(!terrainFits(state,to,size,actor))return false;
+  if(from.x!==to.x&&from.y!==to.y) return terrainFits(state,{x:from.x,y:to.y},size,actor)&&terrainFits(state,{x:to.x,y:from.y},size,actor);
   return true;
 }
 

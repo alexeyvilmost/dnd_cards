@@ -200,7 +200,7 @@ describe('deterministic world-object primitives', () => {
       sourceActorId: 'wizard', sourceActionId: 'light', attachmentId: 'light-target',
     });
     expect(replacementLight.events.map((event) => (
-      'objectId' in event ? event.objectId : event.object.id
+      event.type==='WorldObjectCreated'?event.object.id:event.type==='WorldObjectsPatched'?event.patches.map(row=>row.objectId).join(','):event.objectId
     ))).toEqual(['a', 'z', 'target']);
 
     const illusionPolicy = { ...ILLUSION_POLICY, maxActivePerSource: 2 };
@@ -219,7 +219,7 @@ describe('deterministic world-object primitives', () => {
       sourceActionId: 'minor-illusion', form: 'sound', description: 'current', spellSaveDc: 13,
     });
     expect(replacementIllusion.events.slice(0, 2).map((event) => (
-      'objectId' in event ? event.objectId : event.object.id
+      event.type==='WorldObjectCreated'?event.object.id:event.type==='WorldObjectsPatched'?event.patches.map(row=>row.objectId).join(','):event.objectId
     )))
       .toEqual(['a-illusion', 'z-illusion']);
     expect(replacementIllusion.events[2]).toMatchObject({

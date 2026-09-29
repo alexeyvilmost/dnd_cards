@@ -24,6 +24,11 @@ export interface SpellCastingOverride {
   components?: Partial<Record<'verbal' | 'somatic' | 'material', boolean>>;
   freeUseResource?: string;
   ritual?: boolean;
+  spellLevel?: number;
+  replaceCostResources?: Readonly<Record<string, string>>;
+  addCosts?: readonly JsonObject[];
+  preActionCheck?:{ability:'str'|'dex'|'con'|'int'|'wis'|'cha';skill?:string;dc:number};
+  requiresUnknownSpell?: boolean;
 }
 
 export class RuleActionProjectionError extends Error {
@@ -81,14 +86,14 @@ function compileAttackReplacement(
   if (!value
     || typeof value.replacement_key !== 'string' || value.replacement_key.length === 0
     || value.replaces_attacks !== 1
-    || !Number.isInteger(value.total_attacks) || Number(value.total_attacks) < 1
+    || value.total_attacks!=='actor'&&(!Number.isInteger(value.total_attacks) || Number(value.total_attacks) < 1)
     || typeof value.once_per_attack_action !== 'boolean') {
     throw new RuleActionProjectionError('attack_replacement is malformed');
   }
   return {
     replacementKey: value.replacement_key,
     replacesAttacks: 1,
-    totalAttacks: Number(value.total_attacks),
+    totalAttacks: value.total_attacks==='actor'?'actor':Number(value.total_attacks),
     oncePerAttackAction: value.once_per_attack_action,
   };
 }
@@ -204,7 +209,7 @@ export function projectRuleAction(
       `${usesRef}: active/reaction mechanics.uses and activation.cost self_uses must be declared together`,
     );
   }
-  const mechanics = bindActionUsesCost(baseMechanics, actionUsesKey(usesRef));
+  const mechanics = bindActionUsesCost(baseMechanics, actionUsesKey(usesRef, baseMechanics));
   const mode = record(mechanics.activation)?.mode;
   if ((mode === 'active' || mode === 'reaction') && mechanics.targeting === undefined) {
     throw new RuleActionProjectionError(
@@ -245,6 +250,7 @@ export function projectRuleAction(
     ...common,
     kind: 'spell',
     spell: {
+      entityId: entity.id,
       level: entity.level,
       ...(entity.school ? { school: entity.school } : {}),
       ...(provenance.sourceClass ? { sourceClass: provenance.sourceClass } : {}),
@@ -297,7 +303,7 @@ export function declaredSpellCastingOverride(
     throw new RuleActionProjectionError(`${spell.card_number}: casting_override must be an object`);
   }
   const allowedKeys = new Set([
-    'remove_cost_resources', 'targeting', 'range_bonus_ft', 'components', 'free_use_resource', 'ritual',
+    'remove_cost_resources', 'targeting', 'range_bonus_ft', 'components', 'free_use_resource', 'ritual', 'spell_level', 'replace_cost_resources', 'add_costs', 'pre_action_check', 'requires_unknown_spell',
   ]);
   if (Object.keys(raw).some((key) => !allowedKeys.has(key))) {
     throw new RuleActionProjectionError(`${spell.card_number}: casting_override has unsupported fields`);
@@ -332,6 +338,31 @@ export function declaredSpellCastingOverride(
   if (raw.ritual !== undefined && typeof raw.ritual !== 'boolean') {
     throw new RuleActionProjectionError(`${spell.card_number}: casting_override.ritual must be boolean`);
   }
+  const spellLevel = raw.spell_level;
+  if (spellLevel !== undefined && (typeof spellLevel !== 'number' || !Number.isInteger(spellLevel) || spellLevel < 0 || spellLevel > 9)) {
+    throw new RuleActionProjectionError(`${spell.card_number}: casting_override.spell_level must be between 0 and 9`);
+  }
+  const replacements = record(raw.replace_cost_resources);
+  const actionResources = ['action', 'bonus_action', 'reaction'];
+  if (raw.replace_cost_resources !== undefined && (!replacements || Object.entries(replacements).some(([from, to]) =>
+    !actionResources.includes(from) || typeof to !== 'string' || !actionResources.includes(to) || from === to || resources.includes(from)))) {
+    throw new RuleActionProjectionError(`${spell.card_number}: casting_override.replace_cost_resources must replace distinct action resources`);
+  }
+  const addCosts=raw.add_costs;
+  if(addCosts!==undefined&&(!Array.isArray(addCosts)||addCosts.some(entry=>{
+    const cost=record(entry);
+    if(!cost||typeof cost.resource!=='string'||!cost.resource.trim()||!Number.isSafeInteger(cost.amount)||Number(cost.amount)<1)return true;
+    if(cost.resource==='item')return typeof cost.card_id!=='string'||!cost.card_id.trim()||cost.bound_self_item!==true;
+    return cost.card_id!==undefined||cost.bound_self_item!==undefined;
+  })))throw new RuleActionProjectionError(`${spell.card_number}: casting_override.add_costs is malformed`);
+  const preActionCheck=raw.pre_action_check;
+  if(preActionCheck!==undefined&&(!record(preActionCheck)||!['str','dex','con','int','wis','cha'].includes(String(record(preActionCheck)?.ability))
+    ||!Number.isSafeInteger(record(preActionCheck)?.dc)||Number(record(preActionCheck)?.dc)<1
+    ||(record(preActionCheck)?.skill!==undefined&&(typeof record(preActionCheck)?.skill!=='string'||!String(record(preActionCheck)?.skill).trim()))))
+    throw new RuleActionProjectionError(`${spell.card_number}: casting_override.pre_action_check is malformed`);
+  if (raw.requires_unknown_spell !== undefined && typeof raw.requires_unknown_spell !== 'boolean') {
+    throw new RuleActionProjectionError(`${spell.card_number}: casting_override.requires_unknown_spell must be boolean`);
+  }
   return {
     removeCostResources: [...resources] as string[],
     ...(targeting !== undefined ? { targeting: cloneJson(targeting as JsonObject) } : {}),
@@ -341,6 +372,11 @@ export function declaredSpellCastingOverride(
     } : {}),
     ...(freeUseResource !== undefined ? { freeUseResource } : {}),
     ...(raw.ritual !== undefined ? { ritual: raw.ritual } : {}),
+    ...(spellLevel !== undefined ? { spellLevel } : {}),
+    ...(replacements ? { replaceCostResources: cloneJson(replacements) as Record<string, string> } : {}),
+    ...(addCosts ? { addCosts: cloneJson(addCosts) as JsonObject[] } : {}),
+    ...(preActionCheck ? {preActionCheck:cloneJson(preActionCheck) as SpellCastingOverride['preActionCheck']} : {}),
+    ...(raw.requires_unknown_spell === true ? {requiresUnknownSpell:true} : {}),
   };
 }
 
@@ -362,8 +398,18 @@ export function applySpellCastingOverride(
       `${spell.card_number}: casting_override cannot remove absent cost resources: ${missing.join(', ')}`,
     );
   }
-  activation.cost = cost.filter((entry) => !removed.has(String(entry.resource ?? '')));
+  for (const from of Object.keys(override.replaceCostResources ?? {})) {
+    if (!declaredResources.has(from)) throw new RuleActionProjectionError(`${spell.card_number}: casting_override cannot replace absent cost resource: ${from}`);
+  }
+  activation.cost = [...cost.filter((entry) => !removed.has(String(entry.resource ?? ''))).map(entry => ({
+    ...entry, resource: override.replaceCostResources?.[String(entry.resource)] ?? entry.resource,
+  })),...cloneJson(override.addCosts??[]) as JsonObject[]];
+  const castTime = record(activation.cast_time);
+  const replacementTime = castTime && override.replaceCostResources?.[String(castTime.unit)];
+  if (replacementTime) activation.cast_time = { ...castTime, unit: replacementTime };
   mechanics.activation = activation;
+  if(override.preActionCheck)mechanics.pre_action_check=cloneJson(override.preActionCheck);
+  if(override.requiresUnknownSpell)mechanics.requires_unknown_spell=true;
   if (override.targeting !== undefined) mechanics.targeting = cloneJson(override.targeting);
   if (override.rangeBonusFt !== undefined) {
     const targeting = record(mechanics.targeting);
@@ -379,6 +425,7 @@ export function applySpellCastingOverride(
     if (override.components.somatic !== undefined) next.component_somatic = override.components.somatic;
     if (override.components.material !== undefined) next.component_material = override.components.material;
   }
+  if (override.spellLevel !== undefined) next.level = override.spellLevel;
   next.mechanics = mechanics;
   return next;
 }

@@ -6,6 +6,7 @@
  * Состояние — в turn_state (attuned_ids, attunement_unlocked).
  */
 import type { Card } from '../types';
+import type {ActiveEffectEntry} from '../mvp/contracts';
 import { payloadsOf } from '../engine/mechanicsView';
 
 export const MAX_ATTUNED = 3;
@@ -16,6 +17,7 @@ export function attunementCapacity(
   equipment: ItemGateContext['equipment'], cardMap: Map<string, Card>,
   turnState: Record<string, unknown> | null | undefined,
   inventory: ItemGateContext['inventory'] = [],
+  activeEffects: readonly ActiveEffectEntry[] = [],
 ): number {
   let capacity = MAX_ATTUNED;
   for (const {mechanics} of collectItemMechanics(equipment, cardMap, turnState, inventory)) {
@@ -25,6 +27,12 @@ export function attunementCapacity(
       if (payload.kind === 'attunement_capacity' && Number.isSafeInteger(payload.amount)) {
         capacity += Number(payload.amount);
       }
+    }
+  }
+  for(const effect of activeEffects){
+    if(effect.roundsLeft!==undefined&&effect.roundsLeft<=0)continue;
+    for(const payload of payloadsOf(effect.mechanics as Dict)){
+      if(payload.kind==='attunement_capacity'&&Number.isSafeInteger(payload.amount))capacity+=Number(payload.amount);
     }
   }
   return Math.max(0, capacity);
@@ -87,10 +95,11 @@ const isCarried = (ctx: ItemGateContext, id: string): boolean =>
  */
 export function itemGate(card: Card, ctx: ItemGateContext): boolean {
   if (!card.mechanics || typeof card.mechanics !== 'object') return false;
+  if(card.mechanics.magic_suppressed===true)return false;
   if (card.requires_attunement && !ctx.attuned.includes(card.id)) return false;
   const w = itemWhile(card);
   if (w === 'carried') return isCarried(ctx, card.id);
-  if (w === 'attuned') return ctx.attuned.includes(card.id);
+  if (w === 'attuned') return ctx.attuned.includes(card.id) && isCarried(ctx, card.id);
   return isEquipped(ctx.equipment, card.id);
 }
 
@@ -122,10 +131,45 @@ export function collectItemMechanics(
       card,
       mechanics: {
         ...(card.mechanics as Record<string, unknown>),
+        damage_source_kind: 'item',
         id: card.id,
         name: String((card.mechanics as Record<string, unknown>).name ?? card.name),
       },
     });
+  }
+  const envelope = turnState?.canonical_rules_world_v1 as {
+    primaryActorId?: string;
+    world?: {
+      objects?: Record<string, {
+        itemCardId?: string;
+        carriedByActorId?: string;
+        heldByActorId?: string;
+        ownerActorId?: string;
+        grantsToOwner?: boolean;
+        grantedActionRefs?: string[];
+        portableSpace?: {
+          open: boolean;
+          occupantActorIds: string[];
+          entryActionRef?: string;
+          exitActionRef?: string;
+        };
+      }>;
+      actors?: Record<string, { character?: { knownCards?: Card[] } }>;
+    };
+  } | undefined;
+  const actorId=envelope?.primaryActorId;
+  if(actorId)for(const object of Object.values(envelope?.world?.objects??{})){
+    if(!object.itemCardId||!object.grantedActionRefs?.length)continue;
+    const owner=object.carriedByActorId===actorId||object.heldByActorId===actorId||(object.grantsToOwner===true&&object.ownerActorId===actorId);
+    const refs=owner?object.grantedActionRefs:[
+      ...(object.portableSpace?.open&&object.portableSpace.entryActionRef?[object.portableSpace.entryActionRef]:[]),
+      ...(object.portableSpace?.occupantActorIds.includes(actorId)&&object.portableSpace.exitActionRef?[object.portableSpace.exitActionRef]:[]),
+    ];
+    if(!refs.length)continue;
+    const card=cardMap.get(object.itemCardId)??envelope?.world?.actors?.[actorId]?.character?.knownCards?.find(row=>row.id===object.itemCardId);
+    if(!card)continue;
+    out.push({card,mechanics:{activation:{mode:'passive',while:'carried'},id:`world-item:${object.itemCardId}`,name:card.name,
+      effects:[{resolution:'auto',result:refs.map(value=>({kind:'grant_action',value}))}]}});
   }
   return out;
 }

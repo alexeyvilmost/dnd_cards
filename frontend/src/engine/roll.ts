@@ -10,6 +10,8 @@ import type {
 } from '../mvp/contracts';
 import {
   d20Faces,
+  advantageDiceCount,
+  declaredDieResult,
   critRangeShift,
   shouldReroll,
   d20DieBonus,
@@ -82,34 +84,40 @@ export function rollD20(opts: RollD20Options): RollLog {
   opts = (opts.rng as DieAwareRandomSource).transformD20?.(opts) ?? opts;
   (opts.rng as DieAwareRandomSource).inspectD20?.(opts);
   const rng = opts.rng;
-  const advantage: AdvantageState = opts.advantage ?? 'none';
+  const rules = opts.rules ?? [];
+  const deniedAdvantage = rules.some(rule => rule.op === 'deny_advantage');
+  const hasAdvantage = !deniedAdvantage && (opts.hasAdvantage ?? opts.advantage === 'advantage');
+  const hasDisadvantage = opts.hasDisadvantage ?? opts.advantage === 'disadvantage';
+  const advantage: AdvantageState = hasAdvantage === hasDisadvantage ? 'none'
+    : hasAdvantage ? 'advantage' : 'disadvantage';
   const modifiers = [...(opts.modifiers ?? [])];
   const modSum = modifiers.reduce((s, m) => s + m.value, 0);
-  const rules = opts.rules ?? [];
   const faces = d20Faces(rules); // set_die: к24 вместо к20
   const dice: DieRoll[] = [];
+  const usedRuleKeys:string[]=[];
 
-  let natural: number;
-  if (advantage === 'advantage' || advantage === 'disadvantage') {
-    const d1 = drawDie(rng, faces);
-    const d2 = drawDie(rng, faces);
-    const takeHigh = advantage === 'advantage';
-    const kept = takeHigh ? Math.max(d1, d2) : Math.min(d1, d2);
-    const dropped = takeHigh ? Math.min(d1, d2) : Math.max(d1, d2);
-    dice.push({ sides: faces, result: kept });
-    dice.push({ sides: faces, result: dropped, discarded: true });
-    natural = kept;
-  } else {
-    natural = drawDie(rng, faces);
-    dice.push({ sides: faces, result: natural });
-  }
+  const count = advantage === 'none' ? 1 : advantageDiceCount(rules);
+  const primaryDice = Array.from({length: count}, () => {
+    const result=drawDie(rng,faces),ordinal=(rng as DieAwareRandomSource).lastDieDrawOrdinal;
+    return {sides:faces,result,...(ordinal===undefined?{}:{drawOrdinal:ordinal})} as DieRoll;
+  });
+  const ordered = [...primaryDice].sort((left, right) => advantage === 'disadvantage'
+    ? left.result - right.result : right.result - left.result);
+  const primaryKept = ordered[0];
+  const comparisonDice = ordered.slice(1);
+  for (const die of comparisonDice) die.discarded = true;
+  dice.push(...ordered);
+  let natural = primaryKept.result;
 
   // reroll (Везение полурослика): натуральную кость по правилу перебрасываем ОДИН раз, берём новую.
-  if (shouldReroll(rules, natural)) {
+  const rerollRule=rules.find(rule=>shouldReroll([rule],natural));
+  if (rerollRule) {
+    if(typeof rerollRule.once_per_turn==='string'&&rerollRule.once_per_turn.trim())usedRuleKeys.push(rerollRule.once_per_turn);
     const kept = dice.find((d) => !d.discarded);
     if (kept) kept.discarded = true;
     natural = drawDie(rng, faces);
-    dice.push({ sides: faces, result: natural });
+    dice.push({ sides: faces, result: natural,
+      ...((rng as DieAwareRandomSource).lastDieDrawOrdinal===undefined?{}:{drawOrdinal:(rng as DieAwareRandomSource).lastDieDrawOrdinal}) });
   }
 
   const inspired = faces === 20 ? (rng as DieAwareRandomSource).rerollD20?.(dice) : undefined;
@@ -119,11 +127,19 @@ export function rollD20(opts: RollD20Options): RollLog {
     kept.discarded = true;
     const replacement: DieRoll = {sides: 20, result: inspired, source: (rng as DieAwareRandomSource).rerollD20Source ?? 'Переброс'};
     // Only one die is rerolled. The other advantage/disadvantage die remains.
-    const other = dice.length === 2 && advantage !== 'none' ? dice[1] : undefined;
+    const other = advantage !== 'none' ? comparisonDice[0] : undefined;
     const useOther = other && (advantage === 'advantage' ? other.result > inspired : other.result < inspired);
     if (useOther) {other.discarded = false; replacement.discarded = true;}
     dice.push(replacement);
     natural = useOther ? other.result : inspired;
+  }
+
+  const declared = declaredDieResult(rules, faces);
+  if (declared && natural !== declared.value) {
+    const kept = dice.find(die => !die.discarded)!;
+    kept.discarded = true;
+    dice.push({sides: faces, result: declared.value, source: declared.source});
+    natural = declared.value;
   }
 
   // die_bonus к самой d20-кости (+N к каждой к20/к24) — в total, детекцию крита не меняет.
@@ -170,6 +186,8 @@ export function rollD20(opts: RollD20Options): RollLog {
     }
   }
 
+  if (outcome === 'crit' && rules.some(rule => rule.op === 'deny_critical')) outcome = 'hit';
+
   // on_roll-триггеры (на 15 при атаке → парализовать) — payload-ы отдаём вызывающему для применения.
   const triggered = rollTriggers(rules, natural);
 
@@ -185,6 +203,7 @@ export function rollD20(opts: RollD20Options): RollLog {
       dice, modifiers, total, opts.target, outcome, dieBonus, [...bonusDice, ...failureBonusDice],
     ),
     ...(failureBonusDice.length ? { usedFailureBonus: true as const } : {}),
+    ...(usedRuleKeys.length?{usedRuleKeys}:{}),
     ...(triggered.length ? { triggered } : {}),
   };
 }
@@ -236,7 +255,7 @@ export function retargetAttackRoll(roll: RollLog, targetAc: number): RollLog {
   const natural = roll.dice.find((die) => !die.discarded)?.result;
   if (natural == null) throw new Error('Attack roll has no kept die');
 
-  const outcome: RollLog['outcome'] = roll.outcome === 'crit' || roll.outcome === 'crit_miss'
+  const outcome: RollLog['outcome'] = roll.automaticHit ? 'hit' : roll.outcome === 'crit' || roll.outcome === 'crit_miss'
     ? roll.outcome
     : natural <= 1
       ? 'miss'

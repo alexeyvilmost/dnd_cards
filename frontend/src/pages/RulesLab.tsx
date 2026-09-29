@@ -172,8 +172,11 @@ function resolutionDecisionActorId(resolution: PendingResolution): string {
     case 'mastery_save':
     case 'hazard_save':
       return resolution.targetActorId;
+    case 'event_reaction':
     case 'protection_reaction':
       return resolution.request.actorId;
+    case 'slot_recovery':
+    case 'action_cost_policy':
     case 'check_boost':
     case 'escape_grapple':
     case 'concentration_save':
@@ -198,6 +201,12 @@ function summarizeEvent(event: UncommittedRuleEvent, world: WorldState | null): 
       return `${payload.actorId}: состояние изменено (${payload.reason})`;
     case 'ActorDeathAdjudicated':
       return `${actorName(world, payload.actorId)}: смерть подтверждена явным фактом ${payload.factId}`;
+    case 'ActorRevived':
+      return `${actorName(world,payload.actorId)}: возвращается к жизни`;
+    case 'EventReactionQueueChanged':
+      return `Ответные действия: ${payload.queue.length}`;
+    case 'AreaConsequenceQueueChanged':
+      return `Цели эффекта по области: ${payload.queue.length}`;
     case 'EquipmentChanged':
       return `${payload.actorId}: надет доспех ${payload.cardId}`;
     case 'ActionDeclared': {
@@ -260,9 +269,16 @@ function summarizeEvent(event: UncommittedRuleEvent, world: WorldState | null): 
       return `${actorName(world, payload.actorId)}: договорное оружие ${payload.weaponObjectId} использовано как материальный фокус`;
     case 'WorldObjectMutationRecorded': {
       const mutation = payload.event;
-      const objectId = mutation.type === 'WorldObjectCreated' ? mutation.object.id : mutation.objectId;
+      const objectId = mutation.type === 'WorldObjectCreated' ? mutation.object.id
+        : mutation.type==='WorldObjectsPatched'?mutation.patches.map(row=>row.objectId).join(', '):mutation.objectId;
       return `Объект ${objectId}: ${mutation.type}`;
     }
+    case 'ActorPlaneChanged':
+      return `${actorName(world,payload.actorId)}: ${payload.planeId.startsWith('portable-space:')?'вошёл в переносное пространство':'вышел из переносного пространства'}${payload.exitDistanceFt?` на ${payload.exitDistanceFt} фт`:''}`;
+    case 'AttackVolleyChanged':
+      return payload.volley
+        ? `Серия атак ${payload.volley.actorId}: цель ${payload.volley.nextSlotIndex + 1}/${payload.volley.targetIds.length} (${payload.volley.targetIds[payload.volley.nextSlotIndex] ?? ''})`
+        : 'Серия атак завершена';
     case 'EngineEventRecorded': {
       const engineEvent = payload.event;
       const sourceName = actorName(world, payload.actorId);
@@ -297,6 +313,10 @@ function summarizeEvent(event: UncommittedRuleEvent, world: WorldState | null): 
           return `${affectedPrefix}: событие ${engineEvent.type}`;
       }
     }
+    case 'ActorEquipmentProjectionChanged':
+      return `${payload.actorId}: экипировка обновлена`;
+    case 'ActorMagicProjectionChanged':
+      return `${payload.actorId}: магические свойства ${payload.suppressed?'подавлены':'восстановлены'}`;
     default:
       return assertNever(payload);
   }

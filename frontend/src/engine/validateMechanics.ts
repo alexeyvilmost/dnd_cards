@@ -32,7 +32,14 @@ export function normalizeMechanicsForSchema(
   const activation = (mechanics.activation as Record<string, unknown>) || { mode: 'passive' };
   const interactions = (mechanics.effects as unknown[]) || (mechanics.interactions as unknown[]) || [];
   const extensionKeys = [
-    'requires_item_source',
+    'duration', 'on_end',
+    'storage_profile', 'physical_profile', 'spell_focus',
+    'damage_source_kind', 'duration_cap_rounds',
+    'formula_bindings',
+    'concentration_preservation', 'polarity', 'teleport_destination',
+    'attack_defense',
+    'active_slot_recovery',
+    'requires_item_source', 'requires_any_item_source', 'world_item_reuse', 'variant_of_spell_id', 'spell_variant_ids', 'variant_of_action_id', 'action_variant_ids', 'creature_tags',
     'requires_runtime_action_grant',
     'interaction',
     'primitive',
