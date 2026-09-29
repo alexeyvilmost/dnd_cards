@@ -9,6 +9,10 @@ export interface LibraryFilters {
   statuses?: string;
   rarity: string;
   effectType: string;
+  referenceState?: string;
+  referenceType?: string;
+  referenceId?: string;
+  referenceLevel?: string;
   properties: string;
   templateType: string;
   slot: string;
@@ -30,7 +34,7 @@ export interface LibraryFilters {
 }
 
 const FILTER_KEYS = [
-  'type', 'q', 'tag', 'status', 'rarity', 'effect', 'properties', 'template', 'slot', 'armor', 'resource', 'sort', 'view',
+  'type', 'q', 'tag', 'status', 'rarity', 'effect', 'referenceState', 'referenceType', 'referenceId', 'referenceLevel', 'properties', 'template', 'slot', 'armor', 'resource', 'sort', 'view',
   'spellLevel', 'spellClass', 'spellSubclass', 'spellSchool', 'concentration', 'ritual',
   'featCategory', 'repeatable', 'featAbility', 'backgroundAbility', 'backgroundSkill',
 ] as const;
@@ -49,6 +53,10 @@ export function parseLibrarySearchParams(params: URLSearchParams): LibraryFilter
     statuses: params.getAll('status').join(','),
     rarity: params.get('rarity') ?? '',
     effectType: params.get('effect') ?? '',
+    referenceState: params.get('referenceState') ?? '',
+    referenceType: params.get('referenceType') ?? '',
+    referenceId: params.get('referenceId') ?? '',
+    referenceLevel: params.get('referenceLevel') ?? '',
     properties: params.get('properties') ?? '',
     templateType: params.get('template') ?? 'cards',
     slot: params.get('slot') ?? '',
@@ -94,6 +102,10 @@ export function buildLibrarySearchParams(
   if (filters.effectType) {
     params.set('effect', filters.effectType);
   }
+  if (filters.referenceState) params.set('referenceState', filters.referenceState);
+  if (filters.referenceType) params.set('referenceType', filters.referenceType);
+  if (filters.referenceId) params.set('referenceId', filters.referenceId);
+  if (filters.referenceLevel) params.set('referenceLevel', filters.referenceLevel);
   if (filters.properties) {
     params.set('properties', filters.properties);
   }

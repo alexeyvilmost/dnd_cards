@@ -40,6 +40,24 @@ function reverseCollections(catalogs: SnapshotCatalogs): SnapshotCatalogs {
 }
 
 describe('live micro-MVP compiled certification boundary', () => {
+  it('ignores HTTP reference metadata without changing the live compiled release', async () => {
+    const plain = reviewedCatalogs();
+    const live = copy(plain);
+    live.effects[0].references = [{ entity_type: 'class', entity_id: live.classes[0].id, paths: ['mechanics.source'] }];
+    live.classes[0].referenced_by = [{ entity_type: 'effect', entity_id: live.effects[0].id, paths: ['mechanics.source'] }];
+    expect(microMvpCatalogInputHash(live)).toBe(microMvpCatalogInputHash(plain));
+    expect(microMvpRawCatalogInputHash(live)).toBe(microMvpRawCatalogInputHash(plain));
+    const result = await compileLiveMicroMvpCertification({ catalogs: live, certificationVersion: 'micro-mvp-l1-rules-core-v4' });
+    expect(result.catalogInput.liveSemanticProjectionHash).toBe(result.catalogInput.reviewedSemanticProjectionHash);
+    expect(result.catalogInput.fullCatalog.rawMatchesReviewed).toBe(true);
+    expect(result.provider.release.contentHash).toBe(PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH);
+    expect(live.effects[0].references).toHaveLength(1);
+
+    // An identically named nested field still belongs to the declared mechanics.
+    live.effects[0].mechanics = { ...live.effects[0].mechanics, references: ['new-mechanical-value'] };
+    expect(microMvpCatalogInputHash(live)).not.toBe(microMvpCatalogInputHash(plain));
+  }, 60_000);
+
   it('attests the exact migration 241 upgrade without changing the L1 fighting style', async () => {
     const live = reviewedCatalogs();
     const style = live.effects.find((effect) => effect.card_number === 'EFF-fighting-style');

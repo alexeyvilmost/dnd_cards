@@ -146,7 +146,11 @@ export async function fetchAll(path, key, {
       }
       seenIds.add(item.id);
     }
-    items.push(...batch);
+    // Catalog HTTP responses include an identity-dependent presentation index.
+    // Content scripts consume persisted entity records for canonical hashes,
+    // migration preimages and snapshots, so discard only this root decoration.
+    // Nested mechanic fields with the same names remain executable input.
+    items.push(...batch.map(({ references: _outgoing, referenced_by: _incoming, ...entity }) => entity));
     if (expectedTotal !== null) {
       if (items.length > expectedTotal) {
         throw new PaginationError(path, `received ${items.length} records, response total is ${expectedTotal}`);

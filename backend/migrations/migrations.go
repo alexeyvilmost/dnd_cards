@@ -1504,9 +1504,20 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		{Version: "275_seed_recommended_spell_choices", Description: "Forge spell recommendation defaults for caster classes", Up: seedRecommendedSpellChoices, Down: removeRecommendedSpellChoices},
 		{Version: "276_reusable_run_sources", Description: "Allow independent run copies of a reusable source character", Up: allowReusableRunSources276, Down: func(db *sql.DB) error { return fmt.Errorf("Existing independent run copies must be retained") }},
 		{Version: partialNarrativeReviewMigrationVersion, Description: "Add partial narrative review with partially verified mechanics without resetting saved assessments", Up: extendManualContentReview277, Down: func(db *sql.DB) error { return fmt.Errorf("Existing manual review statuses must be retained") }},
-		{Version: catalogMechanics278Version, Description: "Apply guarded catalog mechanics and explicit audit assessments atomically", Up: applyCatalogMechanics278, Down: func(db *sql.DB) error { return fmt.Errorf("Catalog audit rollback requires a reviewed inverse manifest") }},
-		{Version: catalogCompletion279Version, Description: "Complete guarded item mechanics and manual review assessments from the audited production snapshot", Up: applyCatalogCompletion279, Down: func(db *sql.DB) error { return fmt.Errorf("Item completion rollback requires a reviewed inverse manifest") }},
-		{Version: catalogVariants280Version, Description: "Add guarded spell/action variants and multi-target mechanics", Up: applyCatalogVariants280, Down: func(db *sql.DB) error { return fmt.Errorf("Catalog variants rollback requires a reviewed inverse manifest") }},
+		{Version: catalogMechanics278Version, Description: "Apply guarded catalog mechanics and explicit audit assessments atomically", Up: applyCatalogMechanics278, Down: func(db *sql.DB) error {
+			return fmt.Errorf("Catalog audit rollback requires a reviewed inverse manifest")
+		}},
+		{Version: catalogCompletion279Version, Description: "Complete guarded item mechanics and manual review assessments from the audited production snapshot", Up: applyCatalogCompletion279, Down: func(db *sql.DB) error {
+			return fmt.Errorf("Item completion rollback requires a reviewed inverse manifest")
+		}},
+		{Version: catalogVariants280Version, Description: "Add guarded spell/action variants and multi-target mechanics", Up: applyCatalogVariants280, Down: func(db *sql.DB) error {
+			return fmt.Errorf("Catalog variants rollback requires a reviewed inverse manifest")
+		}},
+		{Version: "281_entity_references", Description: "Index mechanical library references and level-aware inverse links", Up: enableEntityReferences277, Down: func(db *sql.DB) error { return fmt.Errorf("Entity reference index must be retained") }},
+		{Version: "282_effect_classification", Description: "Apply reviewed library effect categories without changing mechanics or manual review", Up: classifyLibraryEffects278, Down: refuseEffectClassification278Down},
+		{Version: "283_explicit_reference_levels", Description: "Keep levels only on explicitly level-bound class and species references", Up: correctEntityReferenceLevels279, Down: func(db *sql.DB) error { return fmt.Errorf("Explicit reference levels must be retained") }},
+		{Version: "284_entity_reference_coverage", Description: "Index current formula, item and variant references and reject ambiguous aliases", Up: expandEntityReferenceCoverage284, Down: func(db *sql.DB) error { return fmt.Errorf("Mechanical reference coverage must be retained") }},
+		{Version: "285_production_effect_classification", Description: "Review new production effects and classify the spell-bond by its mechanical source", Up: classifyProductionEffects285, Down: refuseEffectClassification285Down},
 		// Здесь можно добавлять новые миграции
 	}
 }

@@ -51,6 +51,7 @@ backups/
 dump*.sql
 *.dump
 /outputs/
+/.local-postgres/
 /bestiary/
 *.tsbuildinfo
 

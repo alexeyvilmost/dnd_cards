@@ -1,3 +1,4 @@
+import EntityReferences from '../components/EntityReferences';
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -315,6 +316,7 @@ const ActionCreator = () => {
         {/* Форма */}
         <div className="flex-1 min-w-0">
           <form onSubmit={handleSubmit(onSubmit)} className="site-creator-form space-y-6">
+        <EntityReferences type="action" id={editId} draft={previewAction} author={formData.author} />
             {activeSection === 'main' && (
               <div className="site-surface p-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4">Основная информация</h2>

@@ -5,14 +5,14 @@ import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CardLibrary from '../../pages/CardLibrary';
 
-const mocks = vi.hoisted(() => ({ token: 'admin' as string | null, canManage: true, mobile: false, showReviewStatus: false, list: vi.fn(), detail: vi.fn(), bulk: vi.fn(), catalog: vi.fn() }));
+const mocks = vi.hoisted(() => ({ token: 'admin' as string | null, canManage: true, mobile: false, showReviewStatus: false, list: vi.fn(), detail: vi.fn(), bulk: vi.fn(), catalog: vi.fn(), effects: vi.fn(), feats: vi.fn(), classes: vi.fn(), races: vi.fn() }));
 vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ token: mocks.token }) }));
 vi.mock('../../hooks/useContentPermissions', () => ({ useContentPermissions: () => ({ admin: mocks.canManage, canEdit: (entity: {author?: string}) => mocks.canManage || entity.author === 'player', canCreate: (kind: string) => Boolean(mocks.token && (mocks.canManage || kind === 'cards' || kind === 'spells')) }) }));
 vi.mock('../../settings', () => ({ useSiteSettings: () => ({ itemPreview: 'interface', showReviewStatus: mocks.showReviewStatus }) }));
 vi.mock('../../hooks/useIsMobile', () => ({ useIsMobile: () => mocks.mobile }));
 vi.mock('../../hooks/usePinMode', () => ({ usePinMode: () => ({ pinModeActive: false }) }));
 vi.mock('../../utils/resources', () => ({ useResourceOptions: () => [], resourceIcon: () => '', resourceLabel: () => '' }));
-vi.mock('../../api/client', () => ({ cardsApi: {}, effectsApi: {}, actionsApi: {}, spellsApi: {}, featsApi: {}, backgroundsApi: {}, racesApi: {}, classesApi: {}, resourcesApi: {}, variablesApi: {}, conceptsApi: {} }));
+vi.mock('../../api/client', () => ({ cardsApi: {}, effectsApi: { getEffects: mocks.effects }, actionsApi: {}, spellsApi: {}, featsApi: { getFeats: mocks.feats }, backgroundsApi: {}, racesApi: { getRaces: mocks.races }, classesApi: { getClasses: mocks.classes }, resourcesApi: {}, variablesApi: {}, conceptsApi: {} }));
 vi.mock('../../api/entityTags', () => ({ entityTagsApi: { list: mocks.catalog, bulk: mocks.bulk }, tagError: (e: Error) => e.message }));
 vi.mock('./itemLibraryApi', () => ({ itemLibraryApi: { list: mocks.list, detail: mocks.detail } }));
 vi.mock('../LibraryTagFilter', () => ({ default: ({value,onChange}:{value:string;onChange:(v:string)=>void}) => <select aria-label="Фильтр по тегу" value={value} onChange={e=>onChange(e.target.value)}><option value="">Все теги</option><option value="d2620000-0000-4000-8000-000000000001">Available for Players</option></select> }));
@@ -56,6 +56,8 @@ describe('item library interactions', () => {
     vi.clearAllMocks(); mocks.token='admin'; mocks.canManage=true; mocks.mobile=false; mocks.showReviewStatus=false;
     mocks.catalog.mockImplementation(async () => ({tags:[], can_manage:mocks.canManage}));
     mocks.list.mockResolvedValue({cards,total:2}); mocks.detail.mockResolvedValue(cards[0]); mocks.bulk.mockResolvedValue(undefined);
+    mocks.effects.mockResolvedValue({ effects: [], total: 0 }); mocks.feats.mockResolvedValue({ feats: [], total: 0 });
+    mocks.classes.mockResolvedValue({ classes: [], total: 0 }); mocks.races.mockResolvedValue({ races: [], total: 0 });
     container=document.createElement('div'); document.body.append(container); root=createRoot(container);
   });
   afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.useRealTimers(); });
@@ -68,6 +70,84 @@ describe('item library interactions', () => {
   }
   async function click(label:string) { await act(async () => button(label).click()); }
   const location=()=>container.querySelector('[data-location]')!.textContent!;
+
+  it.each(['list', 'grid'])('groups effects in the requested priority in %s view and sends server sorting', async view => {
+    mocks.effects.mockResolvedValue({ effects: [
+      { id: 'spell', name: 'Заклинание', effect_type: 'spell_effect' },
+      { id: 'item', name: 'Предмет', effect_type: 'item_effect' },
+      { id: 'feat', name: 'Черта', effect_type: 'feat_ability' },
+      { id: 'style', name: 'Стиль', effect_type: 'fighting_style' },
+      { id: 'mastery', name: 'Мастерство', effect_type: 'weapon_mastery' },
+      { id: 'state', name: 'Состояние', effect_type: 'condition' },
+      { id: 'elf', name: 'Умение эльфа', effect_type: 'species_ability', referenced_by: [{ entity_type: 'race', entity_id: 'elf', name: 'Эльф', level: 3, paths: [] }] },
+    ], total: 7 });
+    await render(`/library?type=effects&view=${view}&sort=name_asc`);
+    expect(mocks.effects).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, limit: 50, sort_by: 'name_asc' }));
+    expect([...container.querySelectorAll('h2')].map(el => el.textContent)).toEqual([
+      'Состояния', 'Мастерство оружия', 'Боевой стиль', 'Эффект черты', 'Эффект предмета', 'Эффект заклинания', 'Способность вида',
+    ]);
+    if (view === 'list') expect(container.textContent).toContain('Эльф, 3 уровень');
+    expect(container.textContent).not.toContain('Используется: Эльф');
+    expect(container.querySelectorAll('.effect-reference-summary')).toHaveLength(6);
+  });
+
+  it('loads every source page and combines class/species and level filters in API and URL', async () => {
+    mocks.classes.mockImplementation(async ({ page }: { page: number }) => ({ classes: page === 1 ? [{ id: 'sorcerer', name: 'Чародей' }] : [{ id: 'fighter', name: 'Воин' }], total: 2 }));
+    mocks.races.mockImplementation(async ({ page }: { page: number }) => ({ races: page === 1 ? [{ id: 'dwarf', name: 'Дварф' }] : [{ id: 'elf', name: 'Эльф' }], total: 2 }));
+    await render('/library?type=effects'); await click('Фильтры');
+    expect(mocks.classes).toHaveBeenCalledTimes(2); expect(mocks.races).toHaveBeenCalledTimes(2);
+    async function select(label: string, value: string) {
+      await act(async () => {
+        const element = container.querySelector<HTMLSelectElement>(`select[aria-label="${label}"]`)!;
+        element.value = value; element.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    }
+    await select('Уровень получения', '3');
+    expect(mocks.effects).toHaveBeenLastCalledWith(expect.objectContaining({ reference_level: '3' }));
+    expect(mocks.effects.mock.lastCall![0]).not.toHaveProperty('reference_type');
+    await select('Класс или вид', 'race:elf');
+    expect(mocks.effects).toHaveBeenLastCalledWith(expect.objectContaining({ reference_type: 'race', reference_id: 'elf', reference_level: '3' }));
+    const params = new URLSearchParams(location().split('?')[1]);
+    expect(params.get('referenceId')).toBe('elf'); expect(params.get('referenceLevel')).toBe('3');
+    await select('Тип источника', 'class');
+    expect(mocks.effects.mock.lastCall![0]).not.toHaveProperty('reference_id');
+    await select('Класс или вид', 'class:fighter');
+    await select('Уровень получения', '');
+    expect(mocks.effects).toHaveBeenLastCalledWith(expect.objectContaining({ reference_type: 'class', reference_id: 'fighter' }));
+    expect(mocks.effects.mock.lastCall![0]).not.toHaveProperty('reference_level');
+    await select('Связи механик', 'unlinked');
+    const last = mocks.effects.mock.lastCall![0];
+    expect(last).toHaveProperty('reference_state', 'unlinked');
+    expect(last).not.toHaveProperty('reference_type'); expect(last).not.toHaveProperty('reference_id');
+    expect(last).not.toHaveProperty('reference_level');
+  });
+
+  it('hydrates source and level filters from a direct link and keeps feat sorting on the server', async () => {
+    await render('/library?type=effects&referenceType=class&referenceId=fighter&referenceLevel=5');
+    expect(mocks.effects).toHaveBeenLastCalledWith(expect.objectContaining({ reference_type: 'class', reference_id: 'fighter', reference_level: '5' }));
+    await click('Черты');
+    expect(mocks.feats).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, limit: 50, sort_by: 'created_desc' }));
+  });
+
+  it('keeps the latest source filters when scrolling after an immediately resolved filtered first page', async () => {
+    vi.useFakeTimers();
+    mocks.effects.mockImplementation(async (params: { page: number; reference_level: string }) => ({
+      effects: Array.from({ length: 50 }, (_, index) => ({ id: `${params.reference_level}-${params.page}-${index}`, name: `Эффект ${index}`, effect_type: 'species_ability' })), total: 100,
+    }));
+    await render('/library?type=effects&referenceType=race&referenceId=elf&referenceLevel=3');
+    await click('Фильтры');
+    // A timer queued under the old filter must also use the new filter when it runs.
+    await act(async () => window.dispatchEvent(new Event('scroll')));
+    await act(async () => {
+      const level = container.querySelector<HTMLSelectElement>('select[aria-label="Уровень получения"]')!;
+      level.value = '5'; level.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(mocks.effects).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, reference_level: '5' }));
+    await act(async () => { await vi.advanceTimersByTimeAsync(100); });
+    expect(mocks.effects).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2, reference_type: 'race', reference_id: 'elf', reference_level: '5' }));
+    expect(container.querySelectorAll('.library-entity-row')).toHaveLength(100);
+    expect(container.textContent).toContain('Показано: 100 из 100 эффектов');
+  });
 
   it('ORs checkbox rarities, preserves tag/deep links and navigates from the legacy root to /library', async () => {
     await render('/?rarity=common&tag=stable');

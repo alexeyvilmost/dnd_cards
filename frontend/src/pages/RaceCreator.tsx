@@ -1,3 +1,4 @@
+import EntityReferences from '../components/EntityReferences';
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -195,6 +196,7 @@ const RaceCreator = () => {
       preview={<RacePreview race={previewRace} parentRaceName={parentRace?.name} disableHover />}
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <EntityReferences type="race" id={editId} draft={{ ...previewRace, related_effects: relatedEffects, related_actions: relatedActions }} />
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className={labelCls}>Название *</label>

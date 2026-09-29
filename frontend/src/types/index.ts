@@ -1,3 +1,4 @@
+import type { EntityReferences } from '../api/entityReferences';
 import type { EntitySupportCertification } from '../content/supportStatus';
 export type {
   EntitySupportCertification,
@@ -58,7 +59,7 @@ export interface ActiveEffect {
   script?: Record<string, any> | null;
 }
 
-export interface Card {
+export interface Card extends EntityReferences {
   support?: EntitySupportCertification | null;
   id: string;
   name: string;
@@ -685,7 +686,7 @@ export type ActionResource = 'action' | 'bonus_action' | 'reaction' | 'free_acti
 export type ActionRecharge = 'custom' | 'per_turn' | 'per_battle' | 'short_rest' | 'long_rest';
 export type ActionType = 'base_action' | 'class_feature' | 'item_property';
 
-export interface ResourceDefinition {
+export interface ResourceDefinition extends EntityReferences {
   support?: EntitySupportCertification | null;
   id: string;
   author?: string;
@@ -726,7 +727,7 @@ export type UpdateResourceRequest = Partial<CreateResourceRequest>;
 // Переменная персонажа: name + type + default_value. Значения задают ЭФФЕКТЫ
 // (payload kind:'variable', op set/add/remove), привязанные к уровням класса.
 // См. docs/variables.md.
-export interface Variable {
+export interface Variable extends EntityReferences {
   support?: EntitySupportCertification | null;
   id: string;
   author?: string;
@@ -764,7 +765,7 @@ export type UpdateVariableRequest = Partial<CreateVariableRequest>;
 
 // Понятие (глоссарий) — пояснение, не выражаемое отдельной сущностью (напр. «Спасбросок»).
 // На него ссылаются из текстов: [[Спасбросок|concept:saving_throw]]. Аналог переменных.
-export interface Concept {
+export interface Concept extends EntityReferences {
   support?: EntitySupportCertification | null;
   id: string;
   author?: string;
@@ -796,7 +797,7 @@ export interface CreateConceptRequest {
 
 export type UpdateConceptRequest = Partial<CreateConceptRequest>;
 
-export interface Action {
+export interface Action extends EntityReferences {
   support?: EntitySupportCertification | null;
   id: string;
   name: string;
@@ -939,13 +940,18 @@ export type PassiveEffectType =
   | 'species_ability'
   | 'class_ability'
   | 'feat_ability'
+  | 'eldritch_invocation'
+  | 'fighting_style'
+  | 'maneuver_variant'
+  | 'weapon_mastery'
+  | 'run_aura'
   | 'item_effect'
   | 'spell_effect'
   | 'negative_effect'
   | 'positive_effect'
   | 'condition';
 
-export interface PassiveEffect {
+export interface PassiveEffect extends EntityReferences {
   support?: EntitySupportCertification | null;
   id: string;
   name: string;
@@ -1054,17 +1060,22 @@ export interface PassiveEffectsResponse {
 }
 
 export const PASSIVE_EFFECT_TYPE_OPTIONS = [
+  { value: 'condition', label: 'Состояние' },
+  { value: 'weapon_mastery', label: 'Мастерство оружия' },
+  { value: 'fighting_style', label: 'Боевой стиль' },
+  { value: 'feat_ability', label: 'Эффект черты' },
+  { value: 'item_effect', label: 'Эффект предмета' },
+  { value: 'spell_effect', label: 'Эффект заклинания' },
+  { value: 'eldritch_invocation', label: 'Воззвание колдуна' },
+  { value: 'maneuver_variant', label: 'Вариант приёма' },
+  { value: 'class_ability', label: 'Способность класса' },
+  { value: 'species_ability', label: 'Способность вида' },
+  { value: 'run_aura', label: 'Аура забега' },
   { value: 'passive', label: 'Пассивный' },
   { value: 'conditional', label: 'Условный' },
   { value: 'triggered', label: 'Срабатывающий' },
-  { value: 'species_ability', label: 'Способность вида' },
-  { value: 'class_ability', label: 'Способность класса' },
-  { value: 'feat_ability', label: 'Способность черты' },
-  { value: 'item_effect', label: 'Эффект предмета' },
-  { value: 'spell_effect', label: 'Эффект заклинания' },
-  { value: 'negative_effect', label: 'Отрицательный эффект' },
   { value: 'positive_effect', label: 'Положительный эффект' },
-  { value: 'condition', label: 'Состояние' },
+  { value: 'negative_effect', label: 'Отрицательный эффект' },
 ] as const;
 
 // ─── Заклинания ───────────────────────────────────────────────────────────────
@@ -1074,7 +1085,7 @@ export interface SpellDamageEntry {
   damage_type: string; // Тип урона, например "cold"
 }
 
-export interface Spell {
+export interface Spell extends EntityReferences {
   support?: EntitySupportCertification | null;
   id: string;
   name: string;
@@ -1283,7 +1294,7 @@ export const SKILL_OPTIONS = [
 
 export type FeatCategory = 'origin' | 'general' | 'fighting_style' | 'epic_boon';
 
-export interface Feat {
+export interface Feat extends EntityReferences {
   support?: EntitySupportCertification | null;
   id: string;
   name: string;
@@ -1350,7 +1361,7 @@ export const getFeatCategoryLabel = (v: string): string =>
 
 // ─── Предыстории (Background) ────────────────────────────────────────────────
 
-export interface Background {
+export interface Background extends EntityReferences {
   support?: EntitySupportCertification | null;
   id: string;
   name: string;
@@ -1419,7 +1430,7 @@ export interface LevelAbilityProgression {
 
 export type LevelProgression = Record<string, LevelAbilityProgression>;
 
-export interface Race {
+export interface Race extends EntityReferences {
   support?: EntitySupportCertification | null;
   id: string;
   name: string;
@@ -1490,7 +1501,7 @@ export interface RacesResponse {
 
 // ─── Классы ──────────────────────────────────────────────────────────────────
 
-export interface CharacterClass {
+export interface CharacterClass extends EntityReferences {
   support?: EntitySupportCertification | null;
   id: string;
   name: string;

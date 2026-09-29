@@ -152,6 +152,7 @@ func main() {
 	api := r.Group("/api")
 	api.Use(MutationAuditMiddleware())
 	api.Use(JSONBodyLimitMiddleware(2 << 20))
+	api.Use(EntityReferenceResponseMiddleware(db))
 	registerPaperDocumentRoutes(r, authService, db)
 	{
 		// Публичные маршруты (без авторизации)
@@ -161,6 +162,7 @@ func main() {
 		// строгий JWT без public fallback и UUID из server-side admin allowlist.
 		contentAdminAuth := ContentAdminAuthMiddleware(authService)
 		registerEntityTagRoutes(api, authService, db)
+		registerEntityReferenceRoutes(api, authService, db)
 		registerOwnedItemRoutes(api, authService, db)
 		registerRoguelikeShopSettingsRoutes(api, authService, db)
 		// The atomic certification request contains exact full API preimages for

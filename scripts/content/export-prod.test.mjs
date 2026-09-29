@@ -26,6 +26,7 @@ const response = (body) => ({
 function onePageCatalogFetch({
   breakCollection,
   conditionCardNumbers = REQUIRED_CONDITION_CARD_NUMBERS,
+  decorateReferences = false,
 } = {}) {
   return async (input) => {
     const url = new URL(input);
@@ -42,7 +43,7 @@ function onePageCatalogFetch({
       }))
       : [{ id: `${name}-id`, card_number: `${name}-card`, name }];
     return response({
-      [key]: items,
+      [key]: decorateReferences ? items.map(entity => ({ ...entity, references: [], referenced_by: [{ entity_type: 'class', entity_id: 'unrelated-source', level: 3 }] })) : items,
       total: items.length,
       page: 1,
       limit: 100,
@@ -124,7 +125,7 @@ test('production export pins the complete condition declaration set independentl
   );
 });
 
-test('production export atomically publishes every authoritative collection and index', async () => {
+test('production export atomically publishes entity data without API reference metadata', async () => {
   const root = mkdtempSync(join(tmpdir(), 'dnd-export-success-'));
   const outDir = join(root, 'prod-snapshot');
   mkdirSync(outDir);
@@ -133,7 +134,7 @@ test('production export atomically publishes every authoritative collection and 
     const index = await exportProductionSnapshot({
       baseUrl: 'https://catalog.example.test',
       outDir,
-      fetchImpl: onePageCatalogFetch(),
+      fetchImpl: onePageCatalogFetch({ decorateReferences: true }),
       log: () => {},
     });
     const expectedCollections = PROD_SNAPSHOT_ENTITIES.map(([name]) => name).sort();
@@ -147,6 +148,12 @@ test('production export atomically publishes every authoritative collection and 
     const persistedIndex = JSON.parse(readFileSync(join(outDir, 'index.json'), 'utf8'));
     assert.equal(persistedIndex.source, 'https://catalog.example.test');
     assert.deepEqual(Object.keys(persistedIndex.entities).sort(), expectedCollections);
+    for (const name of expectedCollections) {
+      for (const entity of JSON.parse(readFileSync(join(outDir, `${name}.json`), 'utf8'))) {
+        assert.equal(Object.hasOwn(entity, 'references'), false);
+        assert.equal(Object.hasOwn(entity, 'referenced_by'), false);
+      }
+    }
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

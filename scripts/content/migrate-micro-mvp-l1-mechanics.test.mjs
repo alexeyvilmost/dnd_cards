@@ -22,6 +22,7 @@ import {
   buildMigrationOperations,
   createMigrationBundle,
   exactSupportRollbackRequest,
+  fetchMigrationCatalogs,
   migrationPlanHash,
   migrationUpdateInvalidatesSupport,
   MIGRATION_WRITE_PROTOCOL,
@@ -57,6 +58,23 @@ function readJson(path) {
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
+
+test('migration API ingress preserves existing preimage hashes after reference metadata is added', async () => {
+  const original = { id: 'entity-one', card_number: 'TEST-one', name: 'Test', support: null, mechanics: { effects: [] } };
+  const catalogs = await fetchMigrationCatalogs({
+    baseUrl: 'https://catalog.example.test',
+    fetchImpl: async input => {
+      const key = new URL(input).pathname.split('/').pop();
+      return { ok: true, status: 200, json: async () => ({
+        [key]: [{ ...original, references: [{ entity_id: 'target' }], referenced_by: [{ entity_id: 'source', level: 4 }] }], total: 1, page: 1,
+      }) };
+    },
+  });
+  for (const rows of Object.values(catalogs)) {
+    assert.deepEqual(rows, [original]);
+    assert.equal(sha256Canonical(rows[0]), sha256Canonical(original));
+  }
+});
 
 test('migration progress bundle uses a unique crash-durable atomic writer', () => {
   const directory = mkdtempSync(join(tmpdir(), 'micro-mvp-durable-bundle-'));

@@ -23,4 +23,16 @@ describe('library URL filters', () => {
     expect(rebuilt.get('concentration')).toBeNull();
     expect(rebuilt.get('card')).toBe('kept');
   });
+
+  it('preserves mechanic source filters on reload and removes them on reset', () => {
+    const source = new URLSearchParams('type=effects&referenceState=linked&referenceType=class&referenceId=fighter&referenceLevel=3');
+    const filters = parseLibrarySearchParams(source);
+    expect(filters).toMatchObject({ referenceState: 'linked', referenceType: 'class', referenceId: 'fighter', referenceLevel: '3' });
+    expect(parseLibrarySearchParams(buildLibrarySearchParams(filters))).toEqual(filters);
+    const reset = buildLibrarySearchParams({ ...filters, referenceState: '', referenceType: '', referenceId: '', referenceLevel: '' }, source);
+    expect(reset.has('referenceState')).toBe(false);
+    expect(reset.has('referenceType')).toBe(false);
+    expect(reset.has('referenceId')).toBe(false);
+    expect(reset.has('referenceLevel')).toBe(false);
+  });
 });

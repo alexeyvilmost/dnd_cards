@@ -1,16 +1,5 @@
 const PUBLIC_CATALOG_ROOTS = new Set([
-  'actions',
-  'backgrounds',
-  'classes',
-  'concepts',
   'content-images',
-  'effects',
-  'feats',
-  'monsters',
-  'races',
-  'resources',
-  'spells',
-  'variables',
 ]);
 
 function apiRoot(url: string | undefined): string | null {
@@ -33,7 +22,7 @@ function apiPath(url: string | undefined): string | null {
   }
 }
 
-/** Item reads are identity-aware; other public catalogs remain anonymous. */
+/** Catalogs include private-source references; optional identity applies to all entity reads. */
 export function shouldAttachAuthToken(method: string | undefined, url: string | undefined): boolean {
   const normalizedMethod = (method ?? 'get').toLowerCase();
   if (normalizedMethod !== 'get' && normalizedMethod !== 'head') return true;

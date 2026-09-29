@@ -1929,17 +1929,22 @@ func (at ActionType) GetLocalizedName() string {
 type EffectType string
 
 const (
-	EffectTypePassive        EffectType = "passive"         // Пассивный (всегда активен)
-	EffectTypeConditional    EffectType = "conditional"     // Условный (активен при условиях)
-	EffectTypeTriggered      EffectType = "triggered"       // Срабатывающий (активируется при событиях)
-	EffectTypeSpeciesAbility EffectType = "species_ability" // Способность вида
-	EffectTypeClassAbility   EffectType = "class_ability"   // Способность класса
-	EffectTypeFeatAbility    EffectType = "feat_ability"    // Способность черты
-	EffectTypeItemEffect     EffectType = "item_effect"     // Эффект предмета
-	EffectTypeSpellEffect    EffectType = "spell_effect"    // Эффект заклинания
-	EffectTypeNegativeEffect EffectType = "negative_effect" // Отрицательный эффект
-	EffectTypePositiveEffect EffectType = "positive_effect" // Положительный эффект
-	EffectTypeCondition      EffectType = "condition"       // Состояние (D&D condition)
+	EffectTypePassive            EffectType = "passive"             // Пассивный (всегда активен)
+	EffectTypeConditional        EffectType = "conditional"         // Условный (активен при условиях)
+	EffectTypeTriggered          EffectType = "triggered"           // Срабатывающий (активируется при событиях)
+	EffectTypeSpeciesAbility     EffectType = "species_ability"     // Способность вида
+	EffectTypeClassAbility       EffectType = "class_ability"       // Способность класса
+	EffectTypeFeatAbility        EffectType = "feat_ability"        // Эффект черты
+	EffectTypeEldritchInvocation EffectType = "eldritch_invocation" // Воззвание колдуна
+	EffectTypeFightingStyle      EffectType = "fighting_style"      // Боевой стиль
+	EffectTypeManeuverVariant    EffectType = "maneuver_variant"    // Вариант приёма
+	EffectTypeWeaponMastery      EffectType = "weapon_mastery"      // Мастерство оружия
+	EffectTypeRunAura            EffectType = "run_aura"            // Аура забега
+	EffectTypeItemEffect         EffectType = "item_effect"         // Эффект предмета
+	EffectTypeSpellEffect        EffectType = "spell_effect"        // Эффект заклинания
+	EffectTypeNegativeEffect     EffectType = "negative_effect"     // Отрицательный эффект
+	EffectTypePositiveEffect     EffectType = "positive_effect"     // Положительный эффект
+	EffectTypeCondition          EffectType = "condition"           // Состояние (D&D condition)
 )
 
 // Effect - модель пассивного эффекта D&D
@@ -2124,7 +2129,17 @@ func (et EffectType) GetLocalizedName() string {
 	case EffectTypeClassAbility:
 		return "Способность класса"
 	case EffectTypeFeatAbility:
-		return "Способность черты"
+		return "Эффект черты"
+	case EffectTypeEldritchInvocation:
+		return "Воззвание колдуна"
+	case EffectTypeFightingStyle:
+		return "Боевой стиль"
+	case EffectTypeManeuverVariant:
+		return "Вариант приёма"
+	case EffectTypeWeaponMastery:
+		return "Мастерство оружия"
+	case EffectTypeRunAura:
+		return "Аура забега"
 	case EffectTypeItemEffect:
 		return "Эффект предмета"
 	case EffectTypeSpellEffect:

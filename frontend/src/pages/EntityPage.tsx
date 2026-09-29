@@ -1,31 +1,20 @@
+import CanonicalPreview from '../components/CanonicalEntityPreview';
+import EntityReferences from '../components/EntityReferences';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { REVIEW_STATUS_CHANGED, type ReviewStatusChange } from '../api/contentReview';
-import { RARITY_OPTIONS, SPELL_SCHOOL_OPTIONS, SPELL_CLASS_OPTIONS, getSpellLevelLabel, type Action, type Background, type Card, type CharacterClass, type Concept, type Feat, type PassiveEffect, type Race, type ResourceDefinition, type Spell, type Variable } from '../types';
-import type { Monster } from '../monsters/types';
+import { RARITY_OPTIONS, SPELL_SCHOOL_OPTIONS, SPELL_CLASS_OPTIONS, PASSIVE_EFFECT_TYPE_OPTIONS, getSpellLevelLabel, type Spell } from '../types';
+import { effectTypeLabel } from '../utils/effectPresentation';
 import { useContentPermissions } from '../hooks/useContentPermissions';
 import { FormattedText } from '../utils/formattedText';
 import HoverCard from '../components/HoverCard';
-import CardPreview from '../components/CardPreview';
-import ItemPreview from '../components/ItemPreview';
-import SpellPreview from '../components/SpellPreview';
-import ActionPreview from '../components/ActionPreview';
-import EffectPreview from '../components/EffectPreview';
-import FeatPreview from '../components/FeatPreview';
-import BackgroundPreview from '../components/BackgroundPreview';
-import RacePreview from '../components/RacePreview';
-import ClassPreview from '../components/ClassPreview';
-import ResourcePreview from '../components/ResourcePreview';
-import VariablePreview from '../components/VariablePreview';
-import ConceptPreview from '../components/ConceptPreview';
-import MonsterPreview from '../components/MonsterPreview';
 import EntityTags from '../components/EntityTags';
 import ReviewStatusEditor from '../components/ReviewStatusEditor';
 import type {EntitySupportCertification} from '../content/supportStatus';
 import type { TaggedEntityType } from '../api/entityTags';
 import CurrencyPriceInline from '../components/CurrencyPriceInline';
-import { passivePresentationEffect, savePassivePresentation, type PassivePresentation } from '../character/passiveCatalog';
+import { savePassivePresentation, type PassivePresentation } from '../character/passiveCatalog';
 import { getDamageTypeLabel, getPropertyLabel } from '../utils/propertyLabels';
 import { allWeaponTypeOptions } from '../utils/weaponTypeCatalog';
 import { parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
@@ -67,9 +56,9 @@ const FIELD_LABELS: Record<string, string> = {
   elemental_damage_value: 'Стихийный урон', elemental_damage_type: 'Тип стихийного урона',
   enchant_bonus: 'Бонус зачарования', defense_type: 'Тип защиты',
 };
-const EDIT_SKIP = new Set(['id', 'key', 'author', 'created_at', 'updated_at', 'deleted_at', 'support', 'tags', 'version', 'image_cloudinary_url', 'image_storage_id', 'token_storage_id']);
-const VIEW_SKIP = new Set(['id', 'key', 'name', 'name_en', 'description', 'detailed_description', 'image_url', 'token_url', 'created_at', 'updated_at', 'deleted_at', 'support', 'tags', 'mechanics', 'ai', 'abilities', 'contents', 'battle_profile', 'image_storage_id', 'image_cloudinary_url', 'token_storage_id', 'price_currency', 'price_abbreviated', 'custom_rarity_color', 'description_font_size', 'text_alignment', 'text_font_size', 'show_detailed_description', 'detailed_description_alignment', 'detailed_description_font_size', 'is_extended']);
-const COMPLEX_SKIP = new Set(['tags', 'properties', 'related_cards', 'related_actions', 'related_effects', 'related_spells', 'action_ids', 'effect_ids']);
+const EDIT_SKIP = new Set(['id', 'key', 'author', 'created_at', 'updated_at', 'deleted_at', 'support', 'references', 'referenced_by', 'tags', 'version', 'image_cloudinary_url', 'image_storage_id', 'token_storage_id']);
+const VIEW_SKIP = new Set(['id', 'key', 'name', 'name_en', 'description', 'detailed_description', 'image_url', 'token_url', 'created_at', 'updated_at', 'deleted_at', 'support', 'references', 'referenced_by', 'tags', 'mechanics', 'ai', 'abilities', 'contents', 'battle_profile', 'image_storage_id', 'image_cloudinary_url', 'token_storage_id', 'price_currency', 'price_abbreviated', 'custom_rarity_color', 'description_font_size', 'text_alignment', 'text_font_size', 'show_detailed_description', 'detailed_description_alignment', 'detailed_description_font_size', 'is_extended']);
+const COMPLEX_SKIP = new Set(['references', 'referenced_by', 'tags', 'properties', 'related_cards', 'related_actions', 'related_effects', 'related_spells', 'action_ids', 'effect_ids']);
 const SPELL_FACT_SKIP = new Set(['level', 'school', 'casting_time', 'range', 'area', 'duration', 'concentration', 'ritual', 'component_verbal', 'component_somatic', 'component_material', 'material_text', 'classes', 'resources', 'damage', 'is_healing', 'heal_dice', 'save_outcome', 'upcast_description', 'source']);
 const MAIN_FIELDS = ['name', 'name_en', 'description', 'detailed_description', 'image_url', 'token_url', 'source'];
 const WEAPON_NAMES = new Map(allWeaponTypeOptions().map((option) => [option.id, option.label]));
@@ -99,86 +88,15 @@ async function loadEntity(kind: EntityKind, id: string): Promise<Entity> {
   return data;
 }
 
-function CanonicalPreview({ kind, entity }: { kind: EntityKind; entity: Entity }) {
-  const asInterface = useSiteSettings().itemPreview === 'interface';
-  switch (kind) {
-    case 'cards': return asInterface ? <ItemPreview card={entity as unknown as Card} disableHover /> : <CardPreview card={entity as unknown as Card} disableHover />;
-    case 'spells': return <SpellPreview spell={entity as unknown as Spell} disableHover />;
-    case 'actions': return <ActionPreview action={entity as unknown as Action} disableHover />;
-    case 'effects': return <EffectPreview effect={entity as unknown as PassiveEffect} disableHover />;
-    case 'feats': return <FeatPreview feat={entity as unknown as Feat} disableHover />;
-    case 'backgrounds': return <BackgroundPreview background={entity as unknown as Background} disableHover />;
-    case 'races': return <RacePreview race={entity as unknown as Race} disableHover />;
-    case 'classes': return <ClassPreview characterClass={entity as unknown as CharacterClass} disableHover />;
-    case 'resources': return <ResourcePreview resource={entity as unknown as ResourceDefinition} disableHover />;
-    case 'variables': return <VariablePreview variable={entity as unknown as Variable} disableHover />;
-    case 'concepts': return <ConceptPreview concept={entity as unknown as Concept} disableHover />;
-    case 'monsters': return <MonsterPreview monster={entity as unknown as Monster} />;
-    case 'passives': return <EffectPreview reviewEntityType="passive" effect={passivePresentationEffect(entity as unknown as PassivePresentation)} disableHover />;
-  }
-}
-
-type Relation = { kind: EntityKind; id: string };
-const RELATED_FIELDS: Record<string, EntityKind> = {
+const RELATED_FIELDS: Record<string, string> = {
   related_cards: 'cards', related_actions: 'actions', related_effects: 'effects', related_spells: 'spells',
   action_ids: 'actions', effect_ids: 'effects', mastery: 'effects', parent_race_id: 'races', parent_class_id: 'classes',
 };
-const INLINE_REF = /\[\[[^\]|]+\|(card|spell|action|effect|concept|resource|variable|feat|background|race|class|monster):([^\]]+)\]\]/g;
 const SINGULAR_KIND: Record<string, EntityKind> = {
   card: 'cards', spell: 'spells', action: 'actions', effect: 'effects', concept: 'concepts',
   resource: 'resources', variable: 'variables', feat: 'feats', background: 'backgrounds',
   race: 'races', class: 'classes', monster: 'monsters',
 };
-function relatedEntities(entity: Entity): Relation[] {
-  const entries: Relation[] = [];
-  for (const [field, kind] of Object.entries(RELATED_FIELDS)) {
-    const value = entity[field];
-    for (const id of Array.isArray(value) ? value : typeof value === 'string' ? [value] : []) {
-      if (typeof id === 'string' && id.trim()) entries.push({ kind, id });
-    }
-  }
-  for (const field of ['description', 'detailed_description', 'upcast_description', 'enabled_description', 'disabled_description']) {
-    const value = asText(entity[field]);
-    for (const match of value.matchAll(INLINE_REF)) entries.push({ kind: SINGULAR_KIND[match[1]], id: match[2] });
-  }
-  const mechanicKinds: Record<string, EntityKind> = {
-    action_id: 'actions', action_ids: 'actions', effect_id: 'effects', effect_ids: 'effects',
-    mastery_effect_id: 'effects', card_id: 'cards', card_ids: 'cards', spell_id: 'spells',
-    spell_ids: 'spells', resource_id: 'resources', variable_id: 'variables', concept_id: 'concepts',
-  };
-  const inspect = (value: unknown, depth: number) => {
-    if (!value || depth > 6 || entries.length > 32) return;
-    if (Array.isArray(value)) { value.forEach((part) => inspect(part, depth + 1)); return; }
-    if (typeof value !== 'object') return;
-    for (const [field, part] of Object.entries(value)) {
-      const kind = mechanicKinds[field];
-      if (kind) for (const id of Array.isArray(part) ? part : [part]) {
-        if (typeof id === 'string' && id.trim()) entries.push({ kind, id });
-      }
-      else inspect(part, depth + 1);
-    }
-  };
-  inspect(entity.mechanics, 0);
-  inspect(entity.battle_profile, 0);
-  return [...new Map(entries.map((row) => [`${row.kind}:${row.id}`, row])).values()];
-}
-
-function RelatedIcon({ relation }: { relation: Relation }) {
-  const [entity, setEntity] = useState<Entity | null>(null);
-  useEffect(() => {
-    let active = true;
-    void loadEntity(relation.kind, relation.id).then((value) => { if (active) setEntity(value); }).catch(() => {});
-    return () => { active = false; };
-  }, [relation.kind, relation.id]);
-  if (!entity) return null;
-  const name = asText(entity.name) || LABELS[relation.kind];
-  return <HoverCard content={<CanonicalPreview kind={relation.kind} entity={entity} />} className="entity-page__related-hover">
-    <Link to={pagePath(relation.kind, asText(entity.id || entity.key) || relation.id)} className={`entity-page__icon ${relation.kind === 'passives' ? 'entity-page__icon--passive' : ''}`} aria-label={name}>
-      <EntityImage src={imageOf(entity)} name={name} />
-    </Link>
-  </HoverCard>;
-}
-
 function visibleValue(key: string, value: unknown): string | null {
   if (value === null || value === undefined || value === '') return null;
   if (key === 'is_template' && (value === false || value === 'false')) return null;
@@ -187,6 +105,7 @@ function visibleValue(key: string, value: unknown): string | null {
   if (typeof value === 'object') return null;
   if (key === 'rarity') return RARITY_OPTIONS.find((option) => option.value === value)?.label || String(value);
   if (key === 'school') return SPELL_SCHOOL_OPTIONS.find((option) => option.value === value)?.label || String(value);
+  if (key === 'effect_type') return effectTypeLabel(String(value));
   if (key === 'damage_type') return getDamageTypeLabel(String(value));
   if (key === 'weapon_type') return WEAPON_NAMES.get(String(value)) || String(value);
   if (key === 'bonus_type') return ({ damage: 'Урон', defense: 'Защита' } as Record<string, string>)[String(value)] || String(value);
@@ -256,7 +175,6 @@ export default function EntityPage({ fixedType }: { fixedType?: EntityKind }) {
 
   const shown = (editing ? draft : entity) || entity;
   const canManage = Boolean(shown && (kind === 'passives' ? canEdit({}) : canEdit(shown as { author?: string })));
-  const relations = useMemo(() => shown ? relatedEntities(shown) : [], [shown]);
   const editKeys = useMemo(() => entity ? Object.keys(entity).filter((key) => !EDIT_SKIP.has(key) && !key.startsWith('image_cloudinary_')) : [], [entity]);
   const extraKeys = editKeys.filter((key) => !MAIN_FIELDS.includes(key));
   const setField = (key: string, value: unknown) => setDraft((current) => current ? { ...current, [key]: value } : current);
@@ -264,6 +182,10 @@ export default function EntityPage({ fixedType }: { fixedType?: EntityKind }) {
     if (!draft) return null;
     const value = draft[key];
     const label = FIELD_LABELS[key] || key.replaceAll('_', ' ');
+    if (kind === 'effects' && key === 'effect_type') return <label key={key} className="entity-page__field"><span>{label}</span>
+      <select value={asText(value)} onChange={event => setField(key, event.target.value)}>
+        {PASSIVE_EFFECT_TYPE_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+      </select></label>;
     if (Array.isArray(value) || (value !== null && typeof value === 'object')) {
       const text = complexText[key] ?? JSON.stringify(value, null, 2);
       return <label key={key} className="entity-page__field"><span>{label}</span><textarea value={text} rows={4}
@@ -351,12 +273,12 @@ export default function EntityPage({ fixedType }: { fixedType?: EntityKind }) {
           <section className="entity-page__panel"><h2>В библиотеке</h2><HoverCard content={<CanonicalPreview kind={kind} entity={shown} />} className="entity-page__own-hover">
             <span className={`entity-page__icon ${kind === 'passives' ? 'entity-page__icon--passive' : ''}`} role="img" aria-label={`Превью: ${name}`}><EntityImage src={image} name={name} /></span>
           </HoverCard>
-          {relations.length > 0 && <><h3>См. также</h3><div className="entity-page__related">{relations.map((relation) => <RelatedIcon key={`${relation.kind}:${relation.id}`} relation={relation} />)}</div></>}
           </section>
           <section className="entity-page__panel entity-page__facts"><h2>Сведения</h2>{Object.entries(shown).filter(([key, value]) => !VIEW_SKIP.has(key) && !(kind === 'spells' && SPELL_FACT_SKIP.has(key)) && !RELATED_FIELDS[key] && visibleValue(key, value)).map(([key, value]) =>
             <div key={key}><span>{FIELD_LABELS[key] || key.replaceAll('_', ' ')}</span><strong>{key === 'price' && typeof value === 'number'
               ? <CurrencyPriceInline price={value} currency={asText(shown.price_currency)} abbreviate={shown.price_abbreviated !== false} iconClassName="entity-page__coin" />
               : visibleValue(key, value)}</strong></div>)}</section>
+          <EntityReferences type={TAG_KIND[kind]} id={asText(shown.id || shown.key) || id} draft={editing ? shown : undefined} author={asText(shown.author)} />
           <ReviewStatusEditor entity={{type:TAG_KIND[kind],id:asText(shown.id || shown.key) || id,author:asText(shown.author),support:shown.support as EntitySupportCertification | undefined}} />
           {!playerMode && <section className="entity-page__panel"><EntityTags type={TAG_KIND[kind]} id={asText(shown.id || shown.key) || id} /></section>}
         </aside>

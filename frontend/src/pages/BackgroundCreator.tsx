@@ -1,3 +1,4 @@
+import EntityReferences from '../components/EntityReferences';
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -155,6 +156,7 @@ const BackgroundCreator = () => {
       preview={<BackgroundPreview background={previewBg} disableHover={true} />}
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <EntityReferences type="background" id={editId} draft={previewBg} />
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className={labelCls}>Название *</label>

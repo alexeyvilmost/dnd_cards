@@ -1,9 +1,10 @@
+import type { EntityReferences } from '../api/entityReferences';
 import type { EntitySupportCertification } from '../content/supportStatus';
 import type {Card} from '../types';
 
 export type MonsterAbility = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
 
-export interface Monster {
+export interface Monster extends EntityReferences {
   id: string;
   author?: string;
   slug: string;

@@ -1,3 +1,4 @@
+import EntityReferences from '../components/EntityReferences';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -100,6 +101,7 @@ const ResourceCreator = () => {
       </h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg shadow p-6 space-y-5 mb-6">
+        <EntityReferences type="resource" id={editId} draft={watch()} />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">ID ресурса *</label>
           <input

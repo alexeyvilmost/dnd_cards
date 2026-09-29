@@ -1,3 +1,4 @@
+import EntityReferences from '../components/EntityReferences';
 import {useEffect, useState} from 'react';
 import {Link, useSearchParams} from 'react-router-dom';
 import {usePassiveCatalog, savePassivePresentation, passivePresentationEffect, type PassivePresentation} from '../character/passiveCatalog';
@@ -19,6 +20,7 @@ export default function PassiveCreator() {
   const field=(name:keyof PassivePresentation,value:string)=>setDraft({...draft,[name]:value});
   return <div className="space-y-5"><Link to="/?type=passives">← Переключаемые пассивы</Link>
     <h1 className="text-2xl font-fantasy">Конструктор пассива</h1>
+    <EntityReferences type="passive" id={draft.key} draft={draft} />
     <EntityTags type="passive" id={draft.key}/>
     <p>Редактируется только оформление. Правила предложения выбора и сохранённые настройки игроков не меняются.</p>
     {catalog.error && <p role="alert">{catalog.error}</p>}

@@ -1,3 +1,4 @@
+import EntityReferences from '../components/EntityReferences';
 import { useCallback, useEffect, useState } from 'react';
 import EntityTags from '../components/EntityTags';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -120,6 +121,7 @@ export default function MonsterCreator() {
         </div>
       </header>
       {error && <p className="monster-error" role="alert">{error}</p>}
+      <EntityReferences type="monster" id={savedId} draft={form} />
       {savedId&&<EntityTags type="monster" id={savedId}/>}
       <div className="monster-forge__layout">
         <div className="monster-forge__main">

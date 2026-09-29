@@ -3,8 +3,6 @@ import { shouldAttachAuthToken } from './authPolicy';
 
 describe('catalog authentication policy', () => {
   it.each([
-    ['/api/spells?fields=list&limit=500'],
-    ['/api/backgrounds/e3505422-e7f8-479b-928e-b5dbbbc694b3'],
     ['/api/content-images/classes/one'],
     ['/api/integrations/ttg/bestiary/skeleton-mm'],
   ])('keeps public read anonymous: %s', (url) => {
@@ -14,6 +12,11 @@ describe('catalog authentication policy', () => {
   it.each(['/api/cards', '/api/cards?fields=list&rarity=rare', 'https://bagofholding.ru/api/cards/one', '/api/cards/one/battle-stats'])('attaches the current identity for item read: %s', url => {
     expect(shouldAttachAuthToken('get', url)).toBe(true);
     expect(shouldAttachAuthToken('head', url)).toBe(true);
+  });
+
+  it.each(['effects', 'actions', 'spells', 'backgrounds', 'classes', 'races', 'feats', 'resources', 'variables', 'concepts', 'monsters', 'passive-presentations', 'entity-references'])('attaches identity to %s reference metadata', root => {
+    expect(shouldAttachAuthToken('get', `/api/${root}?reference_state=unlinked`)).toBe(true);
+    expect(shouldAttachAuthToken('get', `/api/${root}/entity`)).toBe(true);
   });
 
   it('keeps authentication on user data and every mutation', () => {

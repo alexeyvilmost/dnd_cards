@@ -61,6 +61,10 @@ import './CardLibrary.css';
 import ItemPreview from '../components/ItemPreview';
 import PassiveLibrary from '../components/PassiveLibrary';
 import { useSiteSettings } from '../settings';
+import { referenceSummary } from '../api/entityReferences';
+import { effectCategoryLabel, groupEffectsByType, hasEffectSourceCategory } from '../utils/effectPresentation';
+import EffectReferenceFilters from '../components/library/EffectReferenceFilters';
+import '../components/EntityReferences.css';
 
 /** «Интерфейс» рисуем только для предметов; для прочих типов (в т.ч. из ссылки) — «Список». */
 const clampView = (v: LibraryViewMode, type: LibraryContentType): LibraryViewMode =>
@@ -187,6 +191,10 @@ const CardLibrary = () => {
   const previousContentType = useRef<LibraryContentType>(initialFilters.contentType);
   const [rarityFilter, setRarityFilter] = useState<string>(initialFilters.rarity);
   const [effectTypeFilter, setEffectTypeFilter] = useState<string>(initialFilters.effectType);
+  const [referenceState, setReferenceState] = useState(initialFilters.referenceState || '');
+  const [referenceType, setReferenceType] = useState(initialFilters.referenceType || '');
+  const [referenceId, setReferenceId] = useState(initialFilters.referenceId || '');
+  const [referenceLevel, setReferenceLevel] = useState(initialFilters.referenceLevel || '');
   const [propertiesFilter, setPropertiesFilter] = useState<string>(initialFilters.properties);
   const [templateTypeFilter, setTemplateTypeFilter] = useState<string>(initialFilters.templateType);
 
@@ -199,6 +207,7 @@ const CardLibrary = () => {
   const [armorTypeFilter, setArmorTypeFilter] = useState<string>(initialFilters.armorType);
   const [resourceCategoryFilter, setResourceCategoryFilter] = useState<string>(initialFilters.resourceCategory);
   const [sortBy, setSortBy] = useState<string>(initialFilters.sortBy);
+  const groupedSortBy = sortBy === 'created_desc' ? 'created_desc' : 'name_asc';
   // Фильтры заклинаний
   const [spellLevel, setSpellLevel] = useState<string>(initialFilters.spellLevel);
   const [spellClass, setSpellClass] = useState<string>(initialFilters.spellClass);
@@ -359,6 +368,7 @@ const CardLibrary = () => {
   );
   const spellGroups = useMemo(() => groupSpellsByLevel(spells), [spells]);
   const featGroups = useMemo(() => groupFeatsByCategory(feats), [feats]);
+  const effectGroups = useMemo(() => groupEffectsByType(effects), [effects]);
   const { mainClasses, subclasses: subclassClasses } = useMemo(() => splitClassesByKind(classes), [classes]);
   const classParentById = useMemo(
     () => new Map(rawClasses.filter(klass => !klass.is_subclass).map((c) => [c.id, c])),
@@ -519,6 +529,11 @@ const CardLibrary = () => {
       if (search) params.search = search;
       if (rarityFilter) params.rarity = rarityFilter;
       if (effectTypeFilter) params.effect_type = effectTypeFilter;
+      if (referenceState) params.reference_state = referenceState;
+      if (referenceType) params.reference_type = referenceType;
+      if (referenceId) params.reference_id = referenceId;
+      if (referenceLevel) params.reference_level = referenceLevel;
+      params.sort_by = groupedSortBy;
       
       const response = await loadCatalogPages((nextPage: number) => effectsApi.getEffects({ ...params, page: showReviewStatus ? nextPage : page }), 'effects', showReviewStatus, () => requestSequence === catalogRequestSequence.current);
       if (requestSequence !== catalogRequestSequence.current) return;
@@ -616,6 +631,7 @@ const CardLibrary = () => {
       if (featCategory) params.category = featCategory;
       if (featRepeatable) params.repeatable = featRepeatable;
       if (featAbility) params.ability = featAbility;
+      params.sort_by = groupedSortBy;
       const response = await loadCatalogPages((nextPage: number) => featsApi.getFeats({ ...params, page: showReviewStatus ? nextPage : page }), 'feats', showReviewStatus, () => requestSequence === catalogRequestSequence.current);
       if (requestSequence !== catalogRequestSequence.current) return;
       if (append) {
@@ -886,7 +902,7 @@ const CardLibrary = () => {
       loadConcepts();
     }
     return () => { catalogRequestSequence.current += 1; };
-  }, [token, showReviewStatus, contentType, search, tagFilter, tagRevision, rarityFilter, effectTypeFilter, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, resourceCategoryFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable, featAbility, bgAbility, bgSkill]);
+  }, [token, showReviewStatus, contentType, search, tagFilter, tagRevision, rarityFilter, effectTypeFilter, referenceState, referenceType, referenceId, referenceLevel, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, resourceCategoryFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable, featAbility, bgAbility, bgSkill]);
 
   const currentFilters = useMemo(
     () => ({
@@ -896,6 +912,10 @@ const CardLibrary = () => {
       statuses: reviewStatuses.join(','),
       rarity: rarityFilter,
       effectType: effectTypeFilter,
+      referenceState,
+      referenceType,
+      referenceId,
+      referenceLevel,
       properties: propertiesFilter,
       templateType: templateTypeFilter,
       slot: slotFilter,
@@ -922,6 +942,10 @@ const CardLibrary = () => {
       reviewStatuses,
       rarityFilter,
       effectTypeFilter,
+      referenceState,
+      referenceType,
+      referenceId,
+      referenceLevel,
       propertiesFilter,
       templateTypeFilter,
       slotFilter,
@@ -990,6 +1014,10 @@ const CardLibrary = () => {
     setTagFilter(parsed.tag??"");
     setRarityFilter(parsed.rarity);
     setEffectTypeFilter(parsed.effectType);
+    setReferenceState(parsed.referenceState || '');
+    setReferenceType(parsed.referenceType || '');
+    setReferenceId(parsed.referenceId || '');
+    setReferenceLevel(parsed.referenceLevel || '');
     setPropertiesFilter(parsed.properties);
     setTemplateTypeFilter(parsed.templateType);
     setSlotFilter(parsed.slot);
@@ -1019,6 +1047,7 @@ const CardLibrary = () => {
   }, [searchParams, navigate]);
 
   // Автоматическая подгрузка при прокрутке
+  const loadMoreCardsRef = useRef<() => void>(() => {});
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout>;
     
@@ -1030,9 +1059,7 @@ const CardLibrary = () => {
       timeoutId = setTimeout(() => {
         // Проверяем, когда пользователь прокрутил до конца страницы (с запасом в 1000px)
         if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 1000) {
-          if (hasMore && !loadingMore && !loading) {
-            loadMoreCards();
-          }
+          loadMoreCardsRef.current();
         }
       }, 100);
     };
@@ -1045,7 +1072,7 @@ const CardLibrary = () => {
       window.removeEventListener('scroll', handleScroll);
       clearTimeout(timeoutId);
     };
-  }, [hasMore, loadingMore, loading, currentPage]);
+  }, []);
 
   // Функция для загрузки следующей страницы
   const loadMoreCards = () => {
@@ -1070,6 +1097,9 @@ const CardLibrary = () => {
       }
     }
   };
+  // Cached first pages can leave pagination flags unchanged while filters change.
+  // The scroll listener must always use the filters of the latest committed render.
+  useLayoutEffect(() => { loadMoreCardsRef.current = loadMoreCards; });
 
   // Удаление карточки
   const handleDeleteCard = async (cardId: string) => {
@@ -1313,10 +1343,6 @@ const CardLibrary = () => {
   };
 
   // Получение типа эффекта для отображения
-  const getEffectTypeLabel = (effectType: string) => {
-    return PASSIVE_EFFECT_TYPE_OPTIONS.find((opt) => opt.value === effectType)?.label || effectType;
-  };
-
   // Получение метки ресурса действия для отображения
   const getActionResourceLabel = (resource: string) => {
     return resourceLabel(resourceOptions, resource);
@@ -1383,7 +1409,7 @@ const CardLibrary = () => {
   // Счётчик активных фильтров — бейдж на кнопке «Фильтры». (Тип шаблона и
   // сортировка всегда заданы, поэтому в счётчик не входят.)
   const activeFilterCount = [
-    rarityFilter, effectTypeFilter, propertiesFilter, slotFilter,
+    rarityFilter, effectTypeFilter, referenceState, referenceType, referenceId, referenceLevel, propertiesFilter, slotFilter,
     armorTypeFilter, resourceCategoryFilter, spellLevel, spellClass, spellSubclass,
     spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable,
     featAbility, bgAbility, bgSkill, tagFilter, showReviewStatus && reviewStatuses.length > 0,
@@ -1392,6 +1418,10 @@ const CardLibrary = () => {
     setTagFilter('');
     setRarityFilter('');
     setEffectTypeFilter('');
+    setReferenceState('');
+    setReferenceType('');
+    setReferenceId('');
+    setReferenceLevel('');
     setPropertiesFilter('');
     setSlotFilter('');
     setArmorTypeFilter('');
@@ -1541,11 +1571,12 @@ const CardLibrary = () => {
             )}
 
             {contentType === 'effects' && (
-              <div>
+              <><div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Тип эффекта
                 </label>
                 <select
+                  aria-label="Тип эффекта"
                   value={effectTypeFilter}
                   onChange={(e) => setEffectTypeFilter(e.target.value)}
                   className="input-field"
@@ -1558,6 +1589,12 @@ const CardLibrary = () => {
                   ))}
                 </select>
               </div>
+              <EffectReferenceFilters value={{ referenceState, referenceType, referenceId, referenceLevel }} onChange={next => {
+                setReferenceState(next.referenceState);
+                setReferenceType(next.referenceType);
+                setReferenceId(next.referenceId);
+                setReferenceLevel(next.referenceLevel);
+              }} /></>
             )}
 
             {/* ── Фильтры заклинаний ── */}
@@ -1774,11 +1811,13 @@ const CardLibrary = () => {
                 Сортировка
               </label>
               <select
-                value={sortBy}
+                value={contentType === 'effects' || contentType === 'feats' ? groupedSortBy : sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className="input-field"
               >
+                {(contentType === 'effects' || contentType === 'feats') && <option value="name_asc">По названию (А–Я)</option>}
                 <option value="created_desc">По дате добавления (новые)</option>
+                {contentType !== 'effects' && contentType !== 'feats' && <>
                 <option value="created_asc">По дате добавления (старые)</option>
                 <option value="updated_desc">По дате изменения (новые)</option>
                 <option value="updated_asc">По дате изменения (старые)</option>
@@ -1786,6 +1825,7 @@ const CardLibrary = () => {
                 <option value="rarity_desc">По редкости (артефакты)</option>
                 <option value="price_asc">По стоимости (дешевые)</option>
                 <option value="price_desc">По стоимости (дорогие)</option>
+                </>}
               </select>
             </div>
             )}
@@ -2189,17 +2229,27 @@ const CardLibrary = () => {
           {viewMode === 'grid' ? (
             /* Сетка эффектов */
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {effects.map((effect) => (
-                <div key={effect.id} className="flex justify-center">
+              {effectGroups.map((group, groupIndex) => <Fragment key={group.type}>
+                <div className={`col-span-full ${groupIndex > 0 ? 'border-t border-gray-300 my-2 pt-6' : ''}`}>
+                  <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">{group.label}</h2>
+                </div>
+              {group.effects.map((effect) => (
+                <div key={effect.id} className="flex flex-col items-center">
                   <EffectPreview effect={effect} onClick={() => handleEffectClick(effect)} />
+                  {!hasEffectSourceCategory(effect) && <span className="effect-reference-summary">{referenceSummary(effect)}</span>}
                 </div>
               ))}
+              </Fragment>)}
             </div>
           ) : (
             /* Список эффектов */
             <div className="relative">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
-                {effects.map((effect) => (
+                {effectGroups.map((group, groupIndex) => <Fragment key={group.type}>
+                  <div className={`col-span-full ${groupIndex > 0 ? 'border-t border-[#8a7320]/40 my-3 pt-4' : ''} pb-1`}>
+                    <h2 className="text-xs font-medium uppercase tracking-wide text-[#a59886]">{group.label}</h2>
+                  </div>
+                {group.effects.map((effect) => (
                   <button
                     key={effect.id}
                    onClick={() => handleEffectClick(effect)}
@@ -2239,13 +2289,15 @@ const CardLibrary = () => {
                         {/* Нижняя панель с типом эффекта */}
                         <div className="flex items-center mt-1 text-xs">
                           <div className="text-gray-300">
-                            {getEffectTypeLabel(effect.effect_type)}
+                            {effectCategoryLabel(effect)}
                           </div>
                         </div>
+                        {!hasEffectSourceCategory(effect) && <span className="effect-reference-summary">{referenceSummary(effect)}</span>}
                       </div>
                     </div>
                   </button>
                 ))}
+                </Fragment>)}
               </div>
               
               {/* Индикатор загрузки при автоматической подгрузке */}

@@ -41,7 +41,7 @@
 .entity-page__editor > p { margin: -2px 0 14px; color: var(--site-muted, #a9b0a5); font-size: .87rem; }
 .entity-page__field { display: flex; flex-direction: column; gap: 5px; margin: 10px 0; font-size: .87rem; }
 .entity-page__field > span { color: var(--site-gold, #c9ad74); }
-.entity-page__field input, .entity-page__field textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--site-line, #bfa6714a); border-radius: 8px; background: var(--site-bg, #101513); color: var(--site-text, #eee4d2); font: inherit; }
+.entity-page__field input, .entity-page__field textarea, .entity-page__field select { width: 100%; padding: 9px 10px; border: 1px solid var(--site-line, #bfa6714a); border-radius: 8px; background: var(--site-bg, #101513); color: var(--site-text, #eee4d2); font: inherit; }
 .entity-page__field textarea { resize: vertical; line-height: 1.45; }
 .entity-page__check { display: flex; align-items: center; gap: 8px; margin: 9px 0; }
 .entity-page__editor details { margin-top: 15px; border-top: 1px solid var(--site-line, #bfa6714a); padding-top: 12px; }

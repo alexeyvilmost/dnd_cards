@@ -1,3 +1,4 @@
+import EntityReferences from '../components/EntityReferences';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -133,6 +134,10 @@ const ClassCreator = () => {
   const inputCls = CREATOR_INPUT_CLS;
   const labelCls = CREATOR_LABEL_CLS;
 
+  // Invalid JSON remains editable; a draft reference preview waits for valid objects.
+  const referenceJson = (raw: string | undefined) => { try { return raw?.trim() ? JSON.parse(raw) : null; } catch { return null; } };
+  const referenceResources = referenceJson(fd.resources_json);
+  const referenceSkillChoices = referenceJson(fd.skill_choices_json);
   const previewClass: CharacterClass = {
     id: '',
     name: fd.name || 'Название класса',
@@ -212,6 +217,7 @@ const ClassCreator = () => {
       preview={<ClassPreview characterClass={previewClass} disableHover />}
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <EntityReferences type="class" id={editId} draft={{ ...previewClass, equipment_options: isSubclass ? null : equipmentOptions, parent_class_id: isSubclass ? parentClassId : null, resources: referenceResources, skill_choices: referenceSkillChoices }} />
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className={labelCls}>Название *</label>
