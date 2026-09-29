@@ -28,7 +28,7 @@ import type { ActorState } from '../rules-core/domain';
 import { parseWeaponProfile } from '../rules-core/weaponProfile';
 import { weaponActionAvailability } from '../engine/weapon';
 import { armorClassValue } from '../engine/ac';
-import { buildResourceRecharge, buildResourceRecovery } from '../engine/resources';
+import { buildResourceRecharge, buildResourceRecovery, resolveLeveledCount } from '../engine/resources';
 import { collectFreeuseRecharge, collectFreeuseRecovery, isFreeusePoolKey } from '../engine/freeuse';
 import {rollInfluenceSources} from '../engine/rollInfluence';
 import {isActionUsesKey} from '../engine/actionUses';
@@ -321,10 +321,36 @@ async function loadSheetCombatParticipant(input: {
     requiresMasteryCatalog: ruleState.weaponMasteries.length > 0,
   });
   passives.push(...rollInfluenceSources(inventory.actions));
-  const influenceResources = syncRuntimeResources({...buildCharacterContext(ruleState,
+  const resourceContext = {...buildCharacterContext(ruleState,
     {level:input.character.level,abilities:input.character.abilities ?? {}},equippedCards,assembled.klass),
-    attunedIds: Array.isArray(input.character.turn_state?.attuned_ids) ? input.character.turn_state.attuned_ids as string[] : []},
+    attunedIds: Array.isArray(input.character.turn_state?.attuned_ids) ? input.character.turn_state.attuned_ids as string[] : []};
+  const influenceResources = syncRuntimeResources(resourceContext,
     assembled,runtime,ruleState.freeuseSpells,[...cardsById.values()],inventory.grantedActions);
+  // Class declarations may describe resources unlocked at a later level. A
+  // dormant declaration cannot carry a rest policy into a world that has no
+  // corresponding pool. Reconcile active pools from the same resource builder
+  // used by the sheet, preserving the saved remaining charges.
+  const classResources = (assembled.klass?.resources ?? null) as Record<string, unknown> | null;
+  const activeClassResources = Object.fromEntries(Object.entries(classResources ?? {})
+    .filter(([, definition]) => resolveLeveledCount(definition as Record<string, unknown>, resourceContext) > 0));
+  for (const key of Object.keys(classResources ?? {})) {
+    const maximum = influenceResources.maxResources[key];
+    const remaining = influenceResources.resources[key];
+    if (maximum === undefined && remaining === undefined) {
+      if (key in activeClassResources) throw new Error(`Активный ресурс класса ${key} не инициализирован`);
+      // A class can replace one slot tier with another at level-up. Saved
+      // charges from the retired tier must not remain usable after it vanishes
+      // from the authoritative resource projection.
+      delete runtime.resources[key];
+      delete runtime.maxResources[key];
+      continue;
+    }
+    if (maximum === undefined || remaining === undefined) {
+      throw new Error(`Ресурс класса ${key} не имеет согласованного количества и максимума`);
+    }
+    runtime.resources[key] = remaining;
+    runtime.maxResources[key] = maximum;
+  }
   for (const key of Object.keys(influenceResources.maxResources).filter(isActionUsesKey)) {
     runtime.resources[key] = influenceResources.resources[key];
     runtime.maxResources[key] = influenceResources.maxResources[key];
@@ -382,13 +408,13 @@ async function loadSheetCombatParticipant(input: {
   const restContext = {
     ...characterContext,
     resourceRecharge: {
-      ...buildResourceRecharge((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
+      ...buildResourceRecharge(activeClassResources),
       ...collectActionUsesRecharge(assembled, itemCards, inventory.grantedActions),
       ...collectFreeuseRecharge(ruleState.freeuseSpells),
     },
     resourceRecovery: {
       ...collectFreeuseRecovery(ruleState.freeuseSpells),
-      ...buildResourceRecovery((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
+      ...buildResourceRecovery(activeClassResources),
       ...collectActionUsesRecovery(assembled, itemCards, inventory.grantedActions),
     },
   };

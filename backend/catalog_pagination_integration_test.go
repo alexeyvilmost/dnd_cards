@@ -245,3 +245,92 @@ func TestEffectCatalogUsesIDAsPaginationTieBreaker(t *testing.T) {
 		t.Fatalf("effect pages are not stable: got %v, want %v", got, want)
 	}
 }
+
+func TestSpellCatalogGroupsBeforePagination(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db := openCatalogPaginationTestDB(t)
+	if err := db.Exec(`CREATE TABLE spells (
+		id UUID PRIMARY KEY,
+		name TEXT NOT NULL,
+		description TEXT NOT NULL,
+		rarity TEXT NOT NULL,
+		card_number TEXT NOT NULL UNIQUE,
+		level INTEGER NOT NULL,
+		mechanics JSONB,
+		created_at TIMESTAMPTZ NOT NULL,
+		updated_at TIMESTAMPTZ NOT NULL,
+		deleted_at TIMESTAMPTZ
+	)`).Error; err != nil {
+		t.Fatal(err)
+	}
+	rows := []struct {
+		id, name string
+		level    int
+		variant  bool
+	}{
+		{"1", "Alpha", 3, false},
+		{"2", "Beta", 0, false},
+		{"3", "Zeta", 0, true},
+		{"4", "Beta", 1, false},
+		{"5", "Alpha", 0, false},
+		{"6", "Alpha", 9, false},
+		{"7", "Alpha", 1, true},
+		{"8", "Alpha", 1, false},
+	}
+	for _, row := range rows {
+		id := "00000000-0000-4000-8000-00000000000" + row.id
+		mechanics := `{}`
+		if row.variant {
+			mechanics = `{"variant_of_spell_id":"parent-spell"}`
+		}
+		if err := db.Exec(`INSERT INTO spells (
+			id, name, description, rarity, card_number, level, mechanics, created_at, updated_at
+		) VALUES (?, ?, 'test', 'common', ?, ?, ?::jsonb, '2026-09-06T00:00:00Z', '2026-09-06T00:00:00Z')`,
+			id, row.name, "SPELL-PAGE-"+row.id, row.level, mechanics).Error; err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	router := gin.New()
+	router.GET("/spells", NewSpellController(db).GetSpells)
+	readPage := func(path string, wantTotal int64) []string {
+		t.Helper()
+		recorder := httptest.NewRecorder()
+		router.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, path, nil))
+		if recorder.Code != http.StatusOK {
+			t.Fatalf("%s returned %d: %s", path, recorder.Code, recorder.Body.String())
+		}
+		var response struct {
+			Spells []struct {
+				CardNumber string `json:"card_number"`
+			} `json:"spells"`
+			Total int64 `json:"total"`
+		}
+		if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
+			t.Fatal(err)
+		}
+		if response.Total != wantTotal {
+			t.Fatalf("%s total=%d, want %d", path, response.Total, wantTotal)
+		}
+		out := make([]string, 0, len(response.Spells))
+		for _, spell := range response.Spells {
+			out = append(out, spell.CardNumber)
+		}
+		return out
+	}
+	got := make([]string, 0, len(rows))
+	for page := 1; page <= 4; page++ {
+		got = append(got, readPage(fmt.Sprintf("/spells?page=%d&limit=2", page), 8)...)
+	}
+	want := []string{"SPELL-PAGE-5", "SPELL-PAGE-2", "SPELL-PAGE-8", "SPELL-PAGE-4",
+		"SPELL-PAGE-1", "SPELL-PAGE-6", "SPELL-PAGE-3", "SPELL-PAGE-7"}
+	if fmt.Sprint(got) != fmt.Sprint(want) {
+		t.Fatalf("spell order across pages: got %v, want %v", got, want)
+	}
+	filtered := append(readPage("/spells?level=1&page=1&limit=2", 3),
+		readPage("/spells?level=1&page=2&limit=2", 3)...)
+	filteredWant := []string{"SPELL-PAGE-8", "SPELL-PAGE-4", "SPELL-PAGE-7"}
+	if fmt.Sprint(filtered) != fmt.Sprint(filteredWant) {
+		t.Fatalf("level-filtered spell order: got %v, want %v", filtered, filteredWant)
+	}
+}

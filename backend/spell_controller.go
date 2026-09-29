@@ -93,8 +93,9 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 	var total int64
 	query.Count(&total)
 
-	// Получение заклинаний (по умолчанию сортировка по уровню, затем по названию)
-	sortClause := "level ASC, name ASC"
+	// The library renders child variants after ordinary levels. Apply that same
+	// order in PostgreSQL before LIMIT/OFFSET so pages cannot interleave them.
+	sortClause := "CASE WHEN NULLIF(mechanics->>'variant_of_spell_id', '') IS NULL THEN 0 ELSE 1 END ASC, level ASC, name ASC"
 	if c.Query("sort_by") == "created_desc" {
 		sortClause = "created_at DESC"
 	}

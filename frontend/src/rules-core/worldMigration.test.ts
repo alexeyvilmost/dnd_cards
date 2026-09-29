@@ -213,7 +213,7 @@ describe('persisted WorldState migration', () => {
       },
     };
     expect(() => migrateWorldState(malformed))
-      .toThrow(/short_rest must declare a positive fixed amount/);
+      .toThrow(/resourceRecovery\.uses_arbitrary-action must declare a valid bounded rest recovery/);
 
     const orphaned = clone(serialized) as unknown as MutableRecord;
     const orphanedCharacter = rawActor(orphaned).character as MutableRecord;
@@ -247,7 +247,7 @@ describe('persisted WorldState migration', () => {
       },
     };
     expect(() => migrateWorldState(malformedLongRest))
-      .toThrow(/long_rest must declare full recovery/);
+      .toThrow(/resourceRecovery\.uses_arbitrary-action must declare a valid bounded rest recovery/);
   });
 
   it('round-trips cadence ledgers and rejects malformed period buckets', () => {
@@ -692,7 +692,7 @@ describe('persisted WorldState migration', () => {
       {
         label: 'cantrip has payment',
         mutate: (world) => { rawGrants(world)[5].slotResource = 'spell_slot_1'; },
-        message: /cantrips cannot declare payment resources/,
+        message: /cantrips cannot declare spell-slot payment resources/,
       },
       {
         label: 'ritual only lacks ritual provenance',
