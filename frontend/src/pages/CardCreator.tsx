@@ -1,3 +1,4 @@
+import EntityReferences from '../components/EntityReferences';
 import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import {
@@ -526,6 +527,7 @@ const CardCreator = () => {
         <div className="flex-1 min-w-0">
           <div className="site-surface site-creator-form p-3 sm:p-4 md:p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <EntityReferences type="card" id={id || createdCardId} draft={{ ...buildCardPayload(watchedValues), mechanics }} />
               {/* Рендер активной секции */}
               {activeSection === 'main' && (
                 <MainSection

@@ -1,10 +1,11 @@
+import { withoutEntityReferences, type EntityReferences } from '../api/entityReferences';
 import {useEffect, useSyncExternalStore} from 'react';
 import {apiClient} from '../api/client';
 import type {PassiveEffect} from '../types';
 import type {EntitySupportCertification, SupportableEntity} from '../content/supportStatus';
 import {REVIEW_STATUS_CHANGED, type ReviewStatusChange} from '../api/contentReview';
 
-export type PassivePresentation = SupportableEntity & {key: string; name: string; description: string; image_url: string;
+export type PassivePresentation = EntityReferences & SupportableEntity & {key: string; name: string; description: string; image_url: string;
   enabled_description: string; disabled_description: string; version: number};
 type Catalog = {passives: PassivePresentation[]; can_manage: boolean; loading?: boolean; error?: string};
 // Defaults live in the server catalog. Until it loads, battle toggles keep their
@@ -39,7 +40,7 @@ export function usePassiveCatalog() {
   return catalog;
 }
 export async function savePassivePresentation(row: PassivePresentation) {
-  const {key,...body}=row;
+  const {key,...body}=withoutEntityReferences(row);
   const saved=(await apiClient.put<PassivePresentation>(`/api/passive-presentations/${encodeURIComponent(key)}`,body)).data;
   publish({...snapshot,passives:snapshot.passives.map(candidate=>candidate.key===key?saved:candidate)});
   return saved;

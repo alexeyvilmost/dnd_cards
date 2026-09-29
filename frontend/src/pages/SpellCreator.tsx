@@ -1,3 +1,4 @@
+import EntityReferences from '../components/EntityReferences';
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -328,6 +329,7 @@ const SpellCreator = () => {
           <div className="flex-1 min-w-0">
           <div className="site-surface site-creator-form p-3 sm:p-4 md:p-6">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <EntityReferences type="spell" id={editId} draft={{ ...previewSpell, mechanics }} />
                 {/* ── Основное ── */}
                 {activeSection === 'main' && (
                   <div className="space-y-4">

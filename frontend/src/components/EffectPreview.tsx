@@ -1,7 +1,7 @@
 import ReviewStatusCorner from './ReviewStatusCorner';
 import React from 'react';
 import type { PassiveEffect } from '../types';
-import { PASSIVE_EFFECT_TYPE_OPTIONS } from '../types';
+import { effectCategoryLabel } from '../utils/effectPresentation';
 import { getDamageColorOnDark, getDamageLabel, getDamageIconPath } from '../utils/damageTypes';
 import { FormattedText } from '../utils/formattedText';
 import { SPELL_CARD_CSS } from './spellCardStyle';
@@ -26,16 +26,13 @@ interface EffectPreviewProps {
   sourceLabel?: string;
 }
 
-const effectTypeLabel = (effectType: string) =>
-  PASSIVE_EFFECT_TYPE_OPTIONS.find((opt) => opt.value === effectType)?.label || effectType;
-
 const EffectPreview = ({ effect, reviewEntityType = 'effect', className = '', disableHover = false, onClick, sourceLabel }: EffectPreviewProps) => {
   const resources = useResourceOptions();
   const { playerMode } = useSiteSettings();
   const formulaCtx = useCharacterFormulaCtx();
   const fmt = (s: string) => formatFormulaDisplay(s, formulaCtx);
 
-  const subtype = [sourceLabel || effectTypeLabel(effect.effect_type), effect.type]
+  const subtype = [sourceLabel || effectCategoryLabel(effect), effect.type]
     .filter(Boolean)
     .join(' · ');
 

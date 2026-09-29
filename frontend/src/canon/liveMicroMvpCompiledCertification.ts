@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { withoutEntityReferences } from '../utils/entityReferenceMetadata';
 import { canonicalStringify } from '../rules-core/determinism';
 import {
   createMicroMvpCoverageDenominator,
@@ -183,13 +184,24 @@ function entityOrderKey(value: unknown): string {
 
 function normalizedCollection(values: readonly unknown[]): unknown[] {
   return values
+    .map(catalogEntityValue)
     .map(semanticValue)
     .sort((left, right) => entityOrderKey(left).localeCompare(entityOrderKey(right)));
 }
 
 function rawCollection(values: readonly unknown[]): unknown[] {
-  return [...values]
+  return values.map(catalogEntityValue)
     .sort((left, right) => entityOrderKey(left).localeCompare(entityOrderKey(right)));
+}
+
+function catalogEntityValue(value: unknown): unknown {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? withoutEntityReferences(value) : value;
+}
+
+function executableCatalogInput(catalogs: SnapshotCatalogs): SnapshotCatalogs {
+  return Object.fromEntries(Object.entries(catalogs).map(([key, records]) =>
+    [key, records.map(catalogEntityValue)])) as unknown as SnapshotCatalogs;
 }
 
 function canonicalHash(value: unknown): string {
@@ -213,8 +225,8 @@ export function microMvpCatalogInputHash(catalogs: SnapshotCatalogs): string {
 
 /**
  * Full raw catalog fingerprint used only for diagnostics in this layer. It
- * includes persistence/support fields while ignoring only top-level response
- * order. The release-evidence CLI owns the authoritative TOCTOU fingerprint
+ * includes persistence/support fields while ignoring top-level response order
+ * and the HTTP-only reference index. The release-evidence CLI owns the authoritative TOCTOU fingerprint
  * and compares it against the same live catalog before certification writes.
  */
 export function microMvpRawCatalogInputHash(catalogs: SnapshotCatalogs): string {
@@ -252,8 +264,9 @@ export function microMvpCompiledSemanticProjectionHash(
 
 export function microMvpCompiledSemanticProjection(
   provider: CompiledMicroMvpL1Provider,
-  catalogs: SnapshotCatalogs,
+  catalogInput: SnapshotCatalogs,
 ): JsonObject {
+  const catalogs = executableCatalogInput(catalogInput);
   const aliases = catalogReferenceAliases(catalogs);
   const grantedEffects = buildMaterializedRuntimeEffectRegistry(catalogs.effects);
   const roots = [...provider.roots]
@@ -602,15 +615,18 @@ export async function compileLiveMicroMvpCertification(input: {
   certificationVersion: string;
 }): Promise<LiveMicroMvpCompiledCertification> {
   if (!input.certificationVersion.trim()) throw new Error('certificationVersion is required');
+  // The compiler consumes persisted entity data, never the live, user-specific
+  // cross-reference index decorating current catalog responses.
+  const liveCatalogs = executableCatalogInput(input.catalogs);
   const reviewedCatalogs = materializeReviewedPostMigrationCatalogs(readProdSnapshotCatalogs());
   const [reviewedProvider, provider] = await Promise.all([
     compileMicroMvpL1MaterializedCatalogs(reviewedCatalogs),
     // Never compensate live DB rows with the apply-mode compatibility adapter.
-    compileMicroMvpL1MaterializedCatalogs(input.catalogs),
+    compileMicroMvpL1MaterializedCatalogs(liveCatalogs),
   ]);
   assertMicroMvpL1OverlayReady(reviewedProvider);
   const catalogInput = attestLiveMicroMvpCatalogInput({
-    liveCatalogs: input.catalogs,
+    liveCatalogs,
     reviewedCatalogs,
     liveProvider: provider,
     reviewedProvider,

@@ -7,6 +7,7 @@ import {
 import { payloadsOf } from '../engine/mechanicsView';
 import { canonicalSha256 } from '../rules-core/determinism';
 import { certifiedExecutableRootProjection } from './certifiedContentProjection';
+import { withoutEntityReferences } from '../utils/entityReferenceMetadata';
 
 export interface ConditionEffectRecord {
   id?: string;
@@ -153,7 +154,7 @@ export async function conditionRecordContentHash(
   effect: ConditionEffectRecord,
 ): Promise<string> {
   return canonicalSha256(certifiedExecutableRootProjection(
-    effect,
+    withoutEntityReferences(effect),
     CERTIFICATION_VOLATILE_FIELDS,
   ));
 }

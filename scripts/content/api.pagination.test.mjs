@@ -14,6 +14,21 @@ const jsonResponse = (body, { ok = true, status = 200 } = {}) => ({
   json: async () => body,
 });
 
+test('content ingress omits API reference decoration without changing nested mechanics', async () => {
+  for (const collection of ['effects', 'classes']) {
+    const mechanics = { result: [{ kind: 'custom', references: ['mechanical-value'] }] };
+    const entity = { id: `${collection}-one`, name: collection, mechanics, support: { status: 'not_verified' } };
+    const decorated = { ...entity, references: [{ entity_id: 'outgoing' }], referenced_by: [{ entity_id: 'source', level: 3 }] };
+    const result = await fetchAll(`/api/${collection}`, collection, {
+      baseUrl: 'https://catalog.example.test', retries: 1,
+      fetchImpl: async () => jsonResponse({ [collection]: [decorated], total: 1, page: 1 }),
+    });
+    assert.deepEqual(result, [entity]);
+    assert.deepEqual(decorated.referenced_by, [{ entity_id: 'source', level: 3 }]);
+    assert.deepEqual(result[0].mechanics.result[0].references, ['mechanical-value']);
+  }
+});
+
 test('fetchAll reads all 766 records when the server clamps limit 1000 to 500', async () => {
   const records = Array.from({ length: 766 }, (_, index) => ({ id: `card-${index + 1}` }));
   const requests = [];

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { effectsApi } from './client';
-import { certifiedConditionEffectEntity, loadConditions, MICRO_MVP_CONDITION_CERTIFICATION_VERSION, type ConditionEffectRecord } from './conditionsApi';
+import { certifiedConditionEffectEntity, conditionRecordContentHash, loadConditions, MICRO_MVP_CONDITION_CERTIFICATION_VERSION, type ConditionEffectRecord } from './conditionsApi';
 import { BUILTIN_CONDITION_RULES, resetConditionsToOfflineFixture } from '../engine/conditions';
 
 const hash = `sha256:${'a'.repeat(64)}`;
@@ -30,6 +30,32 @@ describe('manual review does not gate database conditions', () => {
     expect(await loadConditions({ expectedRelease })).toEqual(before);
     effects[0].mechanics = { condition: { id: 'blinded' }, effects: [{ kind: 'modifier', op: 'add', value: '1', applies_to: { roll: 'attack' } }] };
     expect(await loadConditions({ expectedRelease })).not.toEqual(before);
+  });
+  it('keeps hashes and runtime snapshots independent of library cross-references', async () => {
+    const effects = rows(); serve(effects);
+    const before = await loadConditions({ expectedRelease });
+    const blindedBefore = certifiedConditionEffectEntity('blinded');
+    const proneBefore = certifiedConditionEffectEntity('prone');
+    const enriched = effects.map((effect, index) => ({
+      ...effect,
+      references: [{ entity_type: 'action', entity_id: `action:${index}`, paths: ['mechanics.actions'] }],
+      referenced_by: [{ entity_type: 'card', entity_id: `private-item:${index}`, paths: ['related_effects'] }],
+    }));
+    for (const index of [0, 1]) {
+      expect(await conditionRecordContentHash(enriched[index])).toBe(await conditionRecordContentHash(effects[index]));
+    }
+    vi.mocked(effectsApi.getEffects).mockResolvedValue({ effects: enriched, total: enriched.length } as never);
+
+    expect(await loadConditions({ expectedRelease })).toEqual(before);
+    expect(certifiedConditionEffectEntity('blinded')).toEqual(blindedBefore);
+    expect(certifiedConditionEffectEntity('prone')).toEqual(proneBefore);
+    expect(enriched[0].referenced_by).toHaveLength(1);
+
+    vi.mocked(effectsApi.getEffects).mockResolvedValue({
+      effects: enriched.map(effect => ({ ...effect, references: [], referenced_by: [] })),
+      total: effects.length,
+    } as never);
+    expect(await loadConditions({ expectedRelease })).toEqual(before);
   });
   it('still rejects duplicate and incomplete definitions', async () => {
     const effects = rows(); serve([...effects, effects[0]]);

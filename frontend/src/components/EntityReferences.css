@@ -1,0 +1,13 @@
+.entity-references { margin: 16px 0; padding: 14px 16px; border: 1px solid #81725266; border-radius: 12px; background: var(--surface-panel, #201e1be8); color: #e8dfce; min-width: 0; }
+.entity-references > summary { cursor: pointer; font-weight: 600; }
+.entity-references p { margin: 10px 0; font-size: 13px; line-height: 1.5; color: #c7baa5; }
+.entity-references h3 { margin: 12px 0 8px; font-size: 14px; }
+.entity-references__list { display: flex; flex-wrap: wrap; gap: 12px; align-items: start; }
+.entity-references__item { min-width: 0; max-width: 100%; }
+.entity-references__item .sheet-item-row { min-width: min(230px, 100%); }
+.entity-references__item small, .entity-references__pending small { display: block; color: #c7baa5; font-size: 11px; margin-top: 4px; }
+.entity-references__paths { font-size: 11px; max-width: 300px; overflow-wrap: anywhere; margin-top: 6px; color: #b4a88f; }
+.entity-references__paths ul { list-style: none; padding: 0; }
+.entity-references > button { margin-top: 14px; border: 1px solid #817252; border-radius: 6px; padding: 6px 12px; font-size: 13px; }
+.entity-references__pending { font-size: 13px; }
+.effect-reference-summary { display: block; margin-top: 6px; color: #c9b689; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }

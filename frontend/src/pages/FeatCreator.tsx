@@ -1,3 +1,4 @@
+import EntityReferences from '../components/EntityReferences';
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -139,6 +140,7 @@ const FeatCreator = () => {
       preview={<FeatPreview feat={previewFeat} disableHover={true} />}
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <EntityReferences type="feat" id={editId} draft={{ ...previewFeat, related_effects: relatedEffects, related_actions: relatedActions }} />
         <div>
           <label className={labelCls}>Название *</label>
           <input {...register('name', { required: 'Название обязательно' })} className={inputCls} placeholder="Меткий стрелок" />

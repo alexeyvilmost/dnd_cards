@@ -1,3 +1,4 @@
+import EntityReferences from '../components/EntityReferences';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -22,7 +23,7 @@ const VariableCreator = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [variables, setVariables] = useState<Variable[]>([]);
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<CreateVariableRequest>({
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<CreateVariableRequest>({
     defaultValues: { var_type: 'number', default_value: '0', sort_order: 100 },
   });
 
@@ -87,6 +88,7 @@ const VariableCreator = () => {
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg shadow p-6 space-y-5 mb-6">
+        <EntityReferences type="variable" id={editId} draft={watch()} />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">ID переменной *</label>
           <input

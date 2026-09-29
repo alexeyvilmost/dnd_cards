@@ -44,13 +44,16 @@ func (fc *FeatController) GetFeats(c *gin.Context) {
 	page, limit, offset := parseListPagination(c)
 
 	var total int64
-	query.Count(&total)
+	if err := query.Count(&total).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения черт"})
+		return
+	}
 
 	sortClause := "name ASC"
 	if c.Query("sort_by") == "created_desc" {
 		sortClause = "created_at DESC"
 	}
-	if err := query.Order(sortClause).Order("id ASC").Offset(offset).Limit(limit).Find(&feats).Error; err != nil {
+	if err := query.Order(featCatalogGroupOrder).Order("category ASC").Order(sortClause).Order("id ASC").Offset(offset).Limit(limit).Find(&feats).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения черт"})
 		return
 	}

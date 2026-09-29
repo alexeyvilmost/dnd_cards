@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { cached, bustPrefix } from './apiCache';
+import { bustPrefix } from './apiCache';
 import { readPersistedAuthToken, signalUnauthorized } from './authSession';
-import { cachedItemRead } from './ownedItemCache';
+import { cachedCatalogRead as cached, cachedItemRead } from './ownedItemCache';
 import { shouldAttachAuthToken } from './authPolicy';
 import {
   isTransientReadFailure,
@@ -121,9 +121,13 @@ apiClient.interceptors.response.use(
     // B7: любой успешный не-GET сбрасывает кэш затронутой сущности
     // (напр. PUT /api/cards/<id> → сброс префикса '/api/cards') — правки видны сразу.
     const method = (response.config.method || 'get').toLowerCase();
-    if (method !== 'get') {
+    const requestURL = response.config.url || '';
+    const referencePreview = /\/api\/entity-references\/[^/]+\/preview$/.test(requestURL);
+    if (method !== 'get' && !referencePreview) {
       const m = (response.config.url || '').match(/\/api\/[^/?]+/);
       if (m) bustPrefix(m[0]);
+      // A mechanic edit changes reverse references in catalogs of other types.
+      if (/\/api\/(cards|actions|effects|spells|feats|backgrounds|races|classes|resources|variables|concepts|monsters|passive-presentations|entity-references)(?:\/|$)/.test(requestURL)) bustPrefix('/api/');
     }
     return response;
   },
@@ -276,6 +280,11 @@ export const effectsApi = {
     type?: string;
     search?: string;
     fields?: 'list' | 'runtime';
+    reference_state?: 'linked' | 'unlinked';
+    reference_type?: string;
+    reference_id?: string;
+    reference_level?: string | number;
+    sort_by?: string;
   }, request?: { timeoutMs?: number }): Promise<PassiveEffectsResponse> => cached(
     catalogListCacheKey('/api/effects', params),
     60_000,

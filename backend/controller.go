@@ -1461,6 +1461,12 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 
 	query := ec.db.Model(&Effect{})
 	query = entityTagFilter(query, c, "effect", "effects")
+	var filterErr error
+	query, filterErr = entityReferenceFilter(query, c, "effect", "effects")
+	if filterErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": filterErr.Error()})
+		return
+	}
 	light := wantsListView(c)
 	runtimeView := wantsRuntimeView(c)
 	if light {
@@ -1494,10 +1500,17 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 
 	// Подсчет общего количества
 	var total int64
-	query.Count(&total)
+	if err := query.Count(&total).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения эффектов"})
+		return
+	}
 
 	// Получение эффектов
-	if err := query.Order("created_at DESC").Order("id ASC").Offset(offset).Limit(limit).Find(&effects).Error; err != nil {
+	sortClause := "name ASC"
+	if c.Query("sort_by") == "created_desc" {
+		sortClause = "created_at DESC"
+	}
+	if err := query.Order(effectCatalogGroupOrder).Order("effect_type ASC").Order(sortClause).Order("id ASC").Offset(offset).Limit(limit).Find(&effects).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения эффектов"})
 		return
 	}

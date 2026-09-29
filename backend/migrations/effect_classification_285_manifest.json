@@ -1,0 +1,1891 @@
+{
+  "schema_version": 1,
+  "reviewed_date": "2026-09-29",
+  "inventory_count": 54,
+  "baseline_inventory_count": 707,
+  "total_inventory_count": 761,
+  "baseline_manifest_sha256": "e031dad90de0404c19ff7b9ac820c4c2a4b98075f13e43dbe5266cd3e9929d60",
+  "source_catalog_sha256": "df506cf99a2bfb1765f0bd8bf72ada94e5786101e417c277b6c6938665259b58",
+  "source_references_sha256": "6ad841cf036f7b58676ad5e07da9953cff2896e535ce6a44839df2d3aff50190",
+  "notes": [
+    "Данные просмотрены на локальной копии свежего production snapshot. Миграция 285 меняет только effect_type; описание, механика и статус ручного ревью сохраняются.",
+    "53 новых эффекта уже имеют правильный тип. Один spell-bond переклассифицируется по фактическому источнику SPELL-0250, а не по имени или префиксу.",
+    "Манифест исходных 707 эффектов сохранён без изменений; все его UUID/card_number и допустимые before/after типы совпадают с новым снапшотом.",
+    "mechanical_evidence содержит прямые механические ссылки. origin_evidence содержит цепочки через вспомогательные действия/эффекты до предмета, черты или заклинания. Текстовые ссылки не использованы."
+  ],
+  "expected_final_type_counts": {
+    "feat_ability": 75,
+    "passive": 3,
+    "class_ability": 388,
+    "condition": 16,
+    "species_ability": 75,
+    "eldritch_invocation": 21,
+    "fighting_style": 15,
+    "weapon_mastery": 8,
+    "spell_effect": 106,
+    "item_effect": 39,
+    "maneuver_variant": 10,
+    "run_aura": 5
+  },
+  "effects": [
+    {
+      "id": "653e1cd5-4432-5661-b35f-80221eae2596",
+      "card_number": "EFF-audit-FEAT-0064",
+      "name": "Дар боевой удали",
+      "before": "feat_ability",
+      "after": "feat_ability",
+      "reason": "Выдаётся чертой FEAT-0064 через related_effects; mechanics содержат выбор повышения характеристики эпического дара и его дополнительные свойства.",
+      "mechanical_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "a3584f5e-f768-44c1-970d-5ba0d9eb77da",
+          "source_card_number": "FEAT-0064",
+          "path": "related_effects[0]"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "a3584f5e-f768-44c1-970d-5ba0d9eb77da",
+          "source_card_number": "FEAT-0064",
+          "path": [
+            {
+              "source_type": "feat",
+              "source_id": "a3584f5e-f768-44c1-970d-5ba0d9eb77da",
+              "source_card_number": "FEAT-0064",
+              "path": "related_effects[0]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d077e53e-396f-57e7-9986-9e7e660acbb6",
+      "card_number": "EFF-audit-FEAT-0065",
+      "name": "Дар восстановления",
+      "before": "feat_ability",
+      "after": "feat_ability",
+      "reason": "Выдаётся чертой FEAT-0065 через related_effects; mechanics содержат выбор повышения характеристики эпического дара и его дополнительные свойства.",
+      "mechanical_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "c6c5adb0-6985-4e0b-bd68-fb0dbcf9fcb0",
+          "source_card_number": "FEAT-0065",
+          "path": "related_effects[0]"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "c6c5adb0-6985-4e0b-bd68-fb0dbcf9fcb0",
+          "source_card_number": "FEAT-0065",
+          "path": [
+            {
+              "source_type": "feat",
+              "source_id": "c6c5adb0-6985-4e0b-bd68-fb0dbcf9fcb0",
+              "source_card_number": "FEAT-0065",
+              "path": "related_effects[0]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "569f024f-4e57-5698-87ba-8870d907b5ca",
+      "card_number": "EFF-audit-FEAT-0066",
+      "name": "Дар восстановления заклинаний",
+      "before": "feat_ability",
+      "after": "feat_ability",
+      "reason": "Выдаётся чертой FEAT-0066 через related_effects; mechanics содержат выбор повышения характеристики эпического дара и его дополнительные свойства.",
+      "mechanical_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "cbc9eac2-0058-420a-aabd-a8dcddca291f",
+          "source_card_number": "FEAT-0066",
+          "path": "related_effects[0]"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "cbc9eac2-0058-420a-aabd-a8dcddca291f",
+          "source_card_number": "FEAT-0066",
+          "path": [
+            {
+              "source_type": "feat",
+              "source_id": "cbc9eac2-0058-420a-aabd-a8dcddca291f",
+              "source_card_number": "FEAT-0066",
+              "path": "related_effects[0]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "42d6d235-e136-50db-b668-0871789343ef",
+      "card_number": "EFF-audit-FEAT-0067",
+      "name": "Дар истинного зрения",
+      "before": "feat_ability",
+      "after": "feat_ability",
+      "reason": "Выдаётся чертой FEAT-0067 через related_effects; mechanics содержат выбор повышения характеристики эпического дара и его дополнительные свойства.",
+      "mechanical_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "57d86b4c-6447-4c11-a85f-110d2cd0399c",
+          "source_card_number": "FEAT-0067",
+          "path": "related_effects[0]"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "57d86b4c-6447-4c11-a85f-110d2cd0399c",
+          "source_card_number": "FEAT-0067",
+          "path": [
+            {
+              "source_type": "feat",
+              "source_id": "57d86b4c-6447-4c11-a85f-110d2cd0399c",
+              "source_card_number": "FEAT-0067",
+              "path": "related_effects[0]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "e1752b25-3a82-5fbe-a9bc-bfcba59df6e7",
+      "card_number": "EFF-audit-FEAT-0068",
+      "name": "Дар межпространственного перемещения",
+      "before": "feat_ability",
+      "after": "feat_ability",
+      "reason": "Выдаётся чертой FEAT-0068 через related_effects; mechanics содержат выбор повышения характеристики эпического дара и его дополнительные свойства.",
+      "mechanical_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "081c3cc4-f4fc-40f5-acce-f1b2e1997966",
+          "source_card_number": "FEAT-0068",
+          "path": "related_effects[0]"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "081c3cc4-f4fc-40f5-acce-f1b2e1997966",
+          "source_card_number": "FEAT-0068",
+          "path": [
+            {
+              "source_type": "feat",
+              "source_id": "081c3cc4-f4fc-40f5-acce-f1b2e1997966",
+              "source_card_number": "FEAT-0068",
+              "path": "related_effects[0]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3d57800f-362c-5f4b-844e-f067f64dcba3",
+      "card_number": "EFF-audit-FEAT-0069",
+      "name": "Дар неотразимого нападения",
+      "before": "feat_ability",
+      "after": "feat_ability",
+      "reason": "Выдаётся чертой FEAT-0069 через related_effects; mechanics содержат выбор повышения характеристики эпического дара и его дополнительные свойства.",
+      "mechanical_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "7b987d6f-6df5-49fd-a230-24b978a327a5",
+          "source_card_number": "FEAT-0069",
+          "path": "related_effects[0]"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "7b987d6f-6df5-49fd-a230-24b978a327a5",
+          "source_card_number": "FEAT-0069",
+          "path": [
+            {
+              "source_type": "feat",
+              "source_id": "7b987d6f-6df5-49fd-a230-24b978a327a5",
+              "source_card_number": "FEAT-0069",
+              "path": "related_effects[0]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "aee34ca8-6397-5b0b-a132-5375ba09aca0",
+      "card_number": "EFF-audit-FEAT-0070",
+      "name": "Дар ночного духа",
+      "before": "feat_ability",
+      "after": "feat_ability",
+      "reason": "Выдаётся чертой FEAT-0070 через related_effects; mechanics содержат выбор повышения характеристики эпического дара и его дополнительные свойства.",
+      "mechanical_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "c6d667ae-021a-4f5a-bcf6-bc43934cec1b",
+          "source_card_number": "FEAT-0070",
+          "path": "related_effects[0]"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "c6d667ae-021a-4f5a-bcf6-bc43934cec1b",
+          "source_card_number": "FEAT-0070",
+          "path": [
+            {
+              "source_type": "feat",
+              "source_id": "c6d667ae-021a-4f5a-bcf6-bc43934cec1b",
+              "source_card_number": "FEAT-0070",
+              "path": "related_effects[0]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1f40b6b3-2ad9-5a0e-b6e1-179490d7963e",
+      "card_number": "EFF-audit-FEAT-0071",
+      "name": "Дар скорости",
+      "before": "feat_ability",
+      "after": "feat_ability",
+      "reason": "Выдаётся чертой FEAT-0071 через related_effects; mechanics содержат выбор повышения характеристики эпического дара и его дополнительные свойства.",
+      "mechanical_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "12a6549d-60eb-433d-be82-c42d0bf72716",
+          "source_card_number": "FEAT-0071",
+          "path": "related_effects[0]"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "12a6549d-60eb-433d-be82-c42d0bf72716",
+          "source_card_number": "FEAT-0071",
+          "path": [
+            {
+              "source_type": "feat",
+              "source_id": "12a6549d-60eb-433d-be82-c42d0bf72716",
+              "source_card_number": "FEAT-0071",
+              "path": "related_effects[0]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1db83f22-f979-5cf7-8889-278ad2cf0b73",
+      "card_number": "EFF-audit-FEAT-0072",
+      "name": "Дар сопротивления энергии",
+      "before": "feat_ability",
+      "after": "feat_ability",
+      "reason": "Выдаётся чертой FEAT-0072 через related_effects; mechanics содержат выбор повышения характеристики эпического дара и его дополнительные свойства.",
+      "mechanical_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "4cf52ceb-5f19-4337-846f-159c15cbb55f",
+          "source_card_number": "FEAT-0072",
+          "path": "related_effects[0]"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "4cf52ceb-5f19-4337-846f-159c15cbb55f",
+          "source_card_number": "FEAT-0072",
+          "path": [
+            {
+              "source_type": "feat",
+              "source_id": "4cf52ceb-5f19-4337-846f-159c15cbb55f",
+              "source_card_number": "FEAT-0072",
+              "path": "related_effects[0]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8a14e932-46c2-54d9-9c24-d71029b7540d",
+      "card_number": "EFF-audit-FEAT-0073",
+      "name": "Дар стойкости",
+      "before": "feat_ability",
+      "after": "feat_ability",
+      "reason": "Выдаётся чертой FEAT-0073 через related_effects; mechanics содержат выбор повышения характеристики эпического дара и его дополнительные свойства.",
+      "mechanical_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "cdb602d5-2607-4a88-b028-830f704b3cde",
+          "source_card_number": "FEAT-0073",
+          "path": "related_effects[0]"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "cdb602d5-2607-4a88-b028-830f704b3cde",
+          "source_card_number": "FEAT-0073",
+          "path": [
+            {
+              "source_type": "feat",
+              "source_id": "cdb602d5-2607-4a88-b028-830f704b3cde",
+              "source_card_number": "FEAT-0073",
+              "path": "related_effects[0]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b34fc67c-cd1e-5cb7-a846-a0a3a197359e",
+      "card_number": "EFF-audit-FEAT-0074",
+      "name": "Дар судьбы",
+      "before": "feat_ability",
+      "after": "feat_ability",
+      "reason": "Выдаётся чертой FEAT-0074 через related_effects; mechanics содержат выбор повышения характеристики эпического дара и его дополнительные свойства.",
+      "mechanical_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "a71c3805-0929-48af-9ba1-4e2d9ad873b0",
+          "source_card_number": "FEAT-0074",
+          "path": "related_effects[0]"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "a71c3805-0929-48af-9ba1-4e2d9ad873b0",
+          "source_card_number": "FEAT-0074",
+          "path": [
+            {
+              "source_type": "feat",
+              "source_id": "a71c3805-0929-48af-9ba1-4e2d9ad873b0",
+              "source_card_number": "FEAT-0074",
+              "path": "related_effects[0]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b35395d2-73fa-54a5-8582-5d521f939692",
+      "card_number": "EFF-audit-FEAT-0075",
+      "name": "Дар умелости",
+      "before": "feat_ability",
+      "after": "feat_ability",
+      "reason": "Выдаётся чертой FEAT-0075 через related_effects; mechanics содержат выбор повышения характеристики эпического дара и его дополнительные свойства.",
+      "mechanical_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "63800537-0399-4bf9-b024-fa8f0f355b49",
+          "source_card_number": "FEAT-0075",
+          "path": "related_effects[0]"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "feat",
+          "source_id": "63800537-0399-4bf9-b024-fa8f0f355b49",
+          "source_card_number": "FEAT-0075",
+          "path": [
+            {
+              "source_type": "feat",
+              "source_id": "63800537-0399-4bf9-b024-fa8f0f355b49",
+              "source_card_number": "FEAT-0075",
+              "path": "related_effects[0]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b0b7d0a6-c128-53eb-9c0a-ae0b1f6bd641",
+      "card_number": "EFFECT-item-audit-45",
+      "name": "Зелье полёта",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0045 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "89e0fea1-6bde-41e4-98d2-c9ad54ac33a8",
+          "source_card_number": "CARD-0045",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "89e0fea1-6bde-41e4-98d2-c9ad54ac33a8",
+          "source_card_number": "CARD-0045",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "89e0fea1-6bde-41e4-98d2-c9ad54ac33a8",
+              "source_card_number": "CARD-0045",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "481af128-d2f0-528f-8268-04f017f267e1",
+      "card_number": "EFFECT-item-audit-51",
+      "name": "Зелье силы великана",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0051 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "7a92f5c8-681d-4184-9b01-f1c27e2f3c70",
+          "source_card_number": "CARD-0051",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "7a92f5c8-681d-4184-9b01-f1c27e2f3c70",
+          "source_card_number": "CARD-0051",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "7a92f5c8-681d-4184-9b01-f1c27e2f3c70",
+              "source_card_number": "CARD-0051",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1f8d5096-f165-545d-9751-e289be79fa09",
+      "card_number": "EFFECT-item-audit-57",
+      "name": "Зелье силы холмового великана",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0057 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "5f7f6b4a-355c-4b27-9a82-7fb027a732f4",
+          "source_card_number": "CARD-0057",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "5f7f6b4a-355c-4b27-9a82-7fb027a732f4",
+          "source_card_number": "CARD-0057",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "5f7f6b4a-355c-4b27-9a82-7fb027a732f4",
+              "source_card_number": "CARD-0057",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "e5aaa5e9-5d44-5a02-a040-5dd41cd7bf4c",
+      "card_number": "EFFECT-item-audit-885",
+      "name": "Огненное дыхание зелья",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0885 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "367d455f-be62-484b-b77b-4813809c4d17",
+          "source_card_number": "CARD-0885",
+          "path": "mechanics.effects[0].result[0].value"
+        },
+        {
+          "source_type": "action",
+          "source_id": "1c132a06-07db-5836-93dc-6c343c727e4a",
+          "source_card_number": "ACT-item-audit-fire-breath",
+          "path": "mechanics.effects[1].result[0].card_number"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "367d455f-be62-484b-b77b-4813809c4d17",
+          "source_card_number": "CARD-0885",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "367d455f-be62-484b-b77b-4813809c4d17",
+              "source_card_number": "CARD-0885",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5c697e13-c436-5ba5-b991-2d6662c5364c",
+      "card_number": "EFFECT-item-completion-0369-shadow-traits",
+      "name": "Свойства Тени",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Свойства призванной Тени находятся в шаблоне действия, предоставленного CARD-0369. Это вспомогательный эффект предмета, не новая универсальная категория состояния.",
+      "mechanical_evidence": [
+        {
+          "source_type": "action",
+          "source_id": "e9e42e7c-4f13-53f3-98e3-73b7d8749ebf",
+          "source_card_number": "ACT-item-completion-0369",
+          "path": "mechanics.primitive.monster_template.monster.effect_ids[0]"
+        },
+        {
+          "source_type": "action",
+          "source_id": "e9e42e7c-4f13-53f3-98e3-73b7d8749ebf",
+          "source_card_number": "ACT-item-completion-0369",
+          "path": "mechanics.primitive.monster_template.effects[0].id"
+        },
+        {
+          "source_type": "monster",
+          "source_id": "2e505b34-dffa-5218-85cd-c9245980cc5c",
+          "source_card_number": null,
+          "path": "effect_ids[0]"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "89858a0b-18e3-4393-8db3-82c89f2438a8",
+          "source_card_number": "CARD-0369",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "89858a0b-18e3-4393-8db3-82c89f2438a8",
+              "source_card_number": "CARD-0369",
+              "path": "mechanics.effects[0].result[0].value"
+            },
+            {
+              "source_type": "action",
+              "source_id": "e9e42e7c-4f13-53f3-98e3-73b7d8749ebf",
+              "source_card_number": "ACT-item-completion-0369",
+              "path": "mechanics.primitive.monster_template.monster.effect_ids[0]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bdc15e9c-1f9f-5cf2-86f9-ffe88fc1318f",
+      "card_number": "EFFECT-item-completion-0379-haste",
+      "name": "Сапоги времени — Ускорение",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0379 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "action",
+          "source_id": "56460837-773b-5bd2-9044-0c0bbd58ab43",
+          "source_card_number": "ACT-item-completion-0379",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "fdc00044-4c63-4f32-85ea-42c12320f8e5",
+          "source_card_number": "CARD-0379",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "fdc00044-4c63-4f32-85ea-42c12320f8e5",
+              "source_card_number": "CARD-0379",
+              "path": "mechanics.effects[0].result[0].value"
+            },
+            {
+              "source_type": "action",
+              "source_id": "56460837-773b-5bd2-9044-0c0bbd58ab43",
+              "source_card_number": "ACT-item-completion-0379",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "f2b12e92-0350-5aca-b8a9-899bd6eaa43d",
+      "card_number": "EFFECT-item-completion-0379-lethargy",
+      "name": "Сапоги времени — Летаргия",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Последствие окончания ускорения CARD-0379 через отдельный эффект haste. Содержит применение состояния incapacitated, но само остаётся эффектом предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "effect",
+          "source_id": "bdc15e9c-1f9f-5cf2-86f9-ffe88fc1318f",
+          "source_card_number": "EFFECT-item-completion-0379-haste",
+          "path": "mechanics.effects[0].result[5].effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "fdc00044-4c63-4f32-85ea-42c12320f8e5",
+          "source_card_number": "CARD-0379",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "fdc00044-4c63-4f32-85ea-42c12320f8e5",
+              "source_card_number": "CARD-0379",
+              "path": "mechanics.effects[0].result[0].value"
+            },
+            {
+              "source_type": "action",
+              "source_id": "56460837-773b-5bd2-9044-0c0bbd58ab43",
+              "source_card_number": "ACT-item-completion-0379",
+              "path": "mechanics.effects[0].result[0].value"
+            },
+            {
+              "source_type": "effect",
+              "source_id": "bdc15e9c-1f9f-5cf2-86f9-ffe88fc1318f",
+              "source_card_number": "EFFECT-item-completion-0379-haste",
+              "path": "mechanics.effects[0].result[5].effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bd36e9f5-1a87-5dd3-acee-61cd249cced9",
+      "card_number": "EFFECT-item-completion-0424-state",
+      "name": "Шлем жестокости — Кровотечение",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Именованный эффект предмета CARD-0424, выдаваемый вложенным triggered_effect. Описание состояния остаётся narrative; это не каноничное состояние общего справочника.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "b7b2006e-0b5e-4198-b41d-9bfb9f00592b",
+          "source_card_number": "CARD-0424",
+          "path": "mechanics.effects[1].result[0].effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "b7b2006e-0b5e-4198-b41d-9bfb9f00592b",
+          "source_card_number": "CARD-0424",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "b7b2006e-0b5e-4198-b41d-9bfb9f00592b",
+              "source_card_number": "CARD-0424",
+              "path": "mechanics.effects[1].result[0].effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "47555e34-b00a-5629-bd81-e78150fb7ae7",
+      "card_number": "EFFECT-item-completion-0541",
+      "name": "Штандарт стойкости — Стойкость позиции",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0541 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "action",
+          "source_id": "472ad8c0-5dde-5e47-b54b-f0cabe157e4f",
+          "source_card_number": "ACT-item-completion-0541",
+          "path": "mechanics.effects[0].result[1].effects[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "89ba1873-bc69-4a3a-a1fc-cd535dcd94fd",
+          "source_card_number": "CARD-0541",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "89ba1873-bc69-4a3a-a1fc-cd535dcd94fd",
+              "source_card_number": "CARD-0541",
+              "path": "mechanics.effects[1].result[0].value"
+            },
+            {
+              "source_type": "action",
+              "source_id": "472ad8c0-5dde-5e47-b54b-f0cabe157e4f",
+              "source_card_number": "ACT-item-completion-0541",
+              "path": "mechanics.effects[0].result[1].effects[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "826a5717-b4af-57d8-9972-c5976ddd1947",
+      "card_number": "EFFECT-item-completion-0551-link",
+      "name": "Диадема крови — Кровная связь",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0551 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "action",
+          "source_id": "83b83bac-1dbc-51af-90bb-561a9816c897",
+          "source_card_number": "ACT-item-completion-0551-bind",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "91cc83e4-0ae1-4229-bfe8-7484234773f3",
+          "source_card_number": "CARD-0551",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "91cc83e4-0ae1-4229-bfe8-7484234773f3",
+              "source_card_number": "CARD-0551",
+              "path": "mechanics.effects[0].result[0].value"
+            },
+            {
+              "source_type": "action",
+              "source_id": "83b83bac-1dbc-51af-90bb-561a9816c897",
+              "source_card_number": "ACT-item-completion-0551-bind",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "10be73e8-e63a-5ae3-9fee-57eb72226cb1",
+      "card_number": "EFFECT-item-completion-0553-state",
+      "name": "Зазубренный кинжал +1 — Кровотечение",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Именованный эффект предмета CARD-0553, выдаваемый вложенным triggered_effect. Описание состояния остаётся narrative; это не каноничное состояние общего справочника.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "b58e1855-cf6c-49b4-990c-b9e6333345b8",
+          "source_card_number": "CARD-0553",
+          "path": "mechanics.effects[1].result[0].effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "b58e1855-cf6c-49b4-990c-b9e6333345b8",
+          "source_card_number": "CARD-0553",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "b58e1855-cf6c-49b4-990c-b9e6333345b8",
+              "source_card_number": "CARD-0553",
+              "path": "mechanics.effects[1].result[0].effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c9de53da-3eee-5c8a-a623-05225fb107f1",
+      "card_number": "EFFECT-item-completion-0556-state",
+      "name": "Ледяной кинжал — Охлаждён",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Именованный эффект предмета CARD-0556, выдаваемый вложенным triggered_effect. Описание состояния остаётся narrative; это не каноничное состояние общего справочника.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "c8a82591-f2a4-4976-80be-6811328e83b6",
+          "source_card_number": "CARD-0556",
+          "path": "mechanics.effects[1].result[0].effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "c8a82591-f2a4-4976-80be-6811328e83b6",
+          "source_card_number": "CARD-0556",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "c8a82591-f2a4-4976-80be-6811328e83b6",
+              "source_card_number": "CARD-0556",
+              "path": "mechanics.effects[1].result[0].effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "565aa88c-543d-5717-8d14-9cc85c99d564",
+      "card_number": "EFFECT-item-completion-0580-state",
+      "name": "Огненные сапоги — Горение",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Именованный эффект предмета CARD-0580, выдаваемый вложенным triggered_effect. Описание состояния остаётся narrative; это не каноничное состояние общего справочника.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "c3f74c85-1d26-4d8c-8570-229b3c1c77cd",
+          "source_card_number": "CARD-0580",
+          "path": "mechanics.effects[0].result[0].effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "c3f74c85-1d26-4d8c-8570-229b3c1c77cd",
+          "source_card_number": "CARD-0580",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "c3f74c85-1d26-4d8c-8570-229b3c1c77cd",
+              "source_card_number": "CARD-0580",
+              "path": "mechanics.effects[0].result[0].effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4ba1c4b3-4ac6-568f-a5d7-95d66b28bd19",
+      "card_number": "EFFECT-item-completion-0622",
+      "name": "Кольцо боевого мага — Боевое плетение",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0622 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "71344e35-dd5f-4a59-b2a6-33a592ea51e2",
+          "source_card_number": "CARD-0622",
+          "path": "mechanics.effects[0].result[0].effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "71344e35-dd5f-4a59-b2a6-33a592ea51e2",
+          "source_card_number": "CARD-0622",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "71344e35-dd5f-4a59-b2a6-33a592ea51e2",
+              "source_card_number": "CARD-0622",
+              "path": "mechanics.effects[0].result[0].effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fe1421e3-1cd0-5b28-b8d0-91b209eef3d5",
+      "card_number": "EFFECT-item-completion-0627-ring-bond",
+      "name": "Кольцо уз — Охраняющая связь кольца",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся действием CARD-0627. bond_policy требует source_item_id и target_item_id кольца, поэтому это эффект предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "action",
+          "source_id": "be510e45-041f-5769-b67b-f9a6415c5ee5",
+          "source_card_number": "ACT-item-completion-0627-link",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "28b51f96-d1af-484a-b7df-b8d64ea72388",
+          "source_card_number": "CARD-0627",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "28b51f96-d1af-484a-b7df-b8d64ea72388",
+              "source_card_number": "CARD-0627",
+              "path": "mechanics.effects[0].result[0].value"
+            },
+            {
+              "source_type": "action",
+              "source_id": "be510e45-041f-5769-b67b-f9a6415c5ee5",
+              "source_card_number": "ACT-item-completion-0627-link",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6644784a-127a-5ed6-ab95-55ff9456ec37",
+      "card_number": "EFFECT-item-completion-0627-spell-bond",
+      "name": "Кольцо уз — Охраняющая связь заклинания",
+      "before": "item_effect",
+      "after": "spell_effect",
+      "reason": "Выдаётся SPELL-0250 через mechanics.effects[0].result[0].value. bond_policy не содержит source_item_id/target_item_id; кольцо выдаёт отдельный ring-bond. Префикс и скопированное название не определяют категорию: это эффект заклинания.",
+      "mechanical_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "4c6359eb-beb9-42a8-9ef0-850669d20125",
+          "source_card_number": "SPELL-0250",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "4c6359eb-beb9-42a8-9ef0-850669d20125",
+          "source_card_number": "SPELL-0250",
+          "path": [
+            {
+              "source_type": "spell",
+              "source_id": "4c6359eb-beb9-42a8-9ef0-850669d20125",
+              "source_card_number": "SPELL-0250",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "f6593ddf-9007-5b82-a98b-d1fd654214ad",
+      "card_number": "EFFECT-item-completion-high-829-chained",
+      "name": "Цепь — Скован цепью",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Создаётся применением CARD-0829, предоставляет состояние restrained и действие освобождения. Обёртка предмета не заменяет каноничное состояние.",
+      "mechanical_evidence": [
+        {
+          "source_type": "action",
+          "source_id": "41697b56-3461-5e76-a7b3-8b4e37403ede",
+          "source_card_number": "ACT-item-completion-high-829-bind",
+          "path": "mechanics.effects[0].result[1].value"
+        },
+        {
+          "source_type": "action",
+          "source_id": "bd95f872-33b6-50bb-a034-f4ae4403caad",
+          "source_card_number": "ACT-item-completion-high-829-escape",
+          "path": "mechanics.effects[0].on_success[0].card_number"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "3e3dadcb-0324-4065-a52f-7e174147b1f9",
+          "source_card_number": "CARD-0829",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "3e3dadcb-0324-4065-a52f-7e174147b1f9",
+              "source_card_number": "CARD-0829",
+              "path": "mechanics.effects[0].result[0].value"
+            },
+            {
+              "source_type": "action",
+              "source_id": "41697b56-3461-5e76-a7b3-8b4e37403ede",
+              "source_card_number": "ACT-item-completion-high-829-bind",
+              "path": "mechanics.effects[0].result[1].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a886aa58-5b68-57a8-af8b-86b830815bc0",
+      "card_number": "EFFECT-item-completion-high-883-haste",
+      "name": "Ускорение зелья",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0883 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "3e6ec993-b5c0-48d0-a136-6b61a47086de",
+          "source_card_number": "CARD-0883",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "3e6ec993-b5c0-48d0-a136-6b61a47086de",
+          "source_card_number": "CARD-0883",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "3e6ec993-b5c0-48d0-a136-6b61a47086de",
+              "source_card_number": "CARD-0883",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ccd5616f-ce0c-5e10-a920-5d7ca17ec7ba",
+      "card_number": "EFFECT-item-completion-high-937-vitality",
+      "name": "Кадуцей — Жизненная сила",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0937 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "action",
+          "source_id": "e45a57f1-0777-50d0-a8e6-6086c8036235",
+          "source_card_number": "ACT-item-completion-high-937-bless-six",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "b12e383a-6802-42ac-aabe-365c05229395",
+          "source_card_number": "CARD-0937",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "b12e383a-6802-42ac-aabe-365c05229395",
+              "source_card_number": "CARD-0937",
+              "path": "mechanics.effects[0].result[2].value"
+            },
+            {
+              "source_type": "action",
+              "source_id": "e45a57f1-0777-50d0-a8e6-6086c8036235",
+              "source_card_number": "ACT-item-completion-high-937-bless-six",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "22ebb338-5faa-5d1a-a88f-587ad802b681",
+      "card_number": "EFFECT-item-completion-low-0038",
+      "name": "Зелье долголетия",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0038 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "677d0096-5466-4d86-a1ec-0e852cd3584e",
+          "source_card_number": "CARD-0038",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "677d0096-5466-4d86-a1ec-0e852cd3584e",
+          "source_card_number": "CARD-0038",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "677d0096-5466-4d86-a1ec-0e852cd3584e",
+              "source_card_number": "CARD-0038",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "88451ca0-0580-5c25-a92c-066887eedd0e",
+      "card_number": "EFFECT-item-completion-low-0040",
+      "name": "Зелье подводного дыхания",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0040 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "c121b4aa-77d4-4734-a6a8-0d69c45e638e",
+          "source_card_number": "CARD-0040",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "c121b4aa-77d4-4734-a6a8-0d69c45e638e",
+          "source_card_number": "CARD-0040",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "c121b4aa-77d4-4734-a6a8-0d69c45e638e",
+              "source_card_number": "CARD-0040",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "0b817b4a-a7db-5735-9cc3-ac4dd75ca15f",
+      "card_number": "EFFECT-item-completion-low-0041",
+      "name": "Зелье скорости",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0041 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "70ccdf0c-7081-427f-9c3a-c451d0e2ea01",
+          "source_card_number": "CARD-0041",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "70ccdf0c-7081-427f-9c3a-c451d0e2ea01",
+          "source_card_number": "CARD-0041",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "70ccdf0c-7081-427f-9c3a-c451d0e2ea01",
+              "source_card_number": "CARD-0041",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4ad4d856-835a-5d1d-8533-29cbe20a0324",
+      "card_number": "EFFECT-item-completion-low-0042",
+      "name": "Зелье чтения мыслей",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0042 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "c462309e-8d58-471c-a4b5-9407fc87e632",
+          "source_card_number": "CARD-0042",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "c462309e-8d58-471c-a4b5-9407fc87e632",
+          "source_card_number": "CARD-0042",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "c462309e-8d58-471c-a4b5-9407fc87e632",
+              "source_card_number": "CARD-0042",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "e02d2c35-03f1-56c7-aa1a-5a98ea6384dc",
+      "card_number": "EFFECT-item-completion-low-0043",
+      "name": "Зелье дружбы с животными",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0043 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "0f320088-0264-467a-a9e8-5e487f8eb52f",
+          "source_card_number": "CARD-0043",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "0f320088-0264-467a-a9e8-5e487f8eb52f",
+          "source_card_number": "CARD-0043",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "0f320088-0264-467a-a9e8-5e487f8eb52f",
+              "source_card_number": "CARD-0043",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7d1c57e9-4397-574c-a451-58586b89f4ea",
+      "card_number": "EFFECT-item-completion-low-0048",
+      "name": "Зелье газообразной формы",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0048 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "194adf80-7417-4ae7-95cf-abd076399e7e",
+          "source_card_number": "CARD-0048",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "194adf80-7417-4ae7-95cf-abd076399e7e",
+          "source_card_number": "CARD-0048",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "194adf80-7417-4ae7-95cf-abd076399e7e",
+              "source_card_number": "CARD-0048",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "9ab73356-9679-5552-aa6e-ecc686f7717b",
+      "card_number": "EFFECT-item-completion-low-0055",
+      "name": "Зелье лазания",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0055 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "a7bb4b55-3895-4f45-8637-06d6f948ee10",
+          "source_card_number": "CARD-0055",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "a7bb4b55-3895-4f45-8637-06d6f948ee10",
+          "source_card_number": "CARD-0055",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "a7bb4b55-3895-4f45-8637-06d6f948ee10",
+              "source_card_number": "CARD-0055",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ad50181b-0cbe-5d2a-b970-1df9fdb4e741",
+      "card_number": "EFFECT-item-completion-low-0056",
+      "name": "Зелье огненного дыхания",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0056 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "7c6105e5-b14a-4e05-a85f-a42fdf9e5441",
+          "source_card_number": "CARD-0056",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "7c6105e5-b14a-4e05-a85f-a42fdf9e5441",
+          "source_card_number": "CARD-0056",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "7c6105e5-b14a-4e05-a85f-a42fdf9e5441",
+              "source_card_number": "CARD-0056",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "e5d9ea99-fe03-5641-a8b6-21c704b008a1",
+      "card_number": "EFFECT-item-completion-low-0063",
+      "name": "Кревой кароткий меч",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0063 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "3c92efeb-13e1-4221-b502-ff30db47e5bb",
+          "source_card_number": "CARD-0063",
+          "path": "mechanics.effects[0].result[0].effects[0].result[0].on_success[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "3c92efeb-13e1-4221-b502-ff30db47e5bb",
+          "source_card_number": "CARD-0063",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "3c92efeb-13e1-4221-b502-ff30db47e5bb",
+              "source_card_number": "CARD-0063",
+              "path": "mechanics.effects[0].result[0].effects[0].result[0].on_success[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "78f6128d-c673-5145-83c1-f0b2f6dd14e1",
+      "card_number": "EFFECT-item-completion-low-0121",
+      "name": "Молот Защитника Света",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0121 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "8f48feb0-58d8-4f74-b1bf-7456c271a777",
+          "source_card_number": "CARD-0121",
+          "path": "mechanics.effects[1].result[2].effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "8f48feb0-58d8-4f74-b1bf-7456c271a777",
+          "source_card_number": "CARD-0121",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "8f48feb0-58d8-4f74-b1bf-7456c271a777",
+              "source_card_number": "CARD-0121",
+              "path": "mechanics.effects[1].result[2].effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2cde1d02-a605-5fed-b4b7-c29792eb8147",
+      "card_number": "EFFECT-item-completion-low-0133",
+      "name": "Бандана тьмы",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0133 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "97f30d65-3ae7-436b-9f4e-3424b47b5634",
+          "source_card_number": "CARD-0133",
+          "path": "mechanics.effects[1].result[0].effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "97f30d65-3ae7-436b-9f4e-3424b47b5634",
+          "source_card_number": "CARD-0133",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "97f30d65-3ae7-436b-9f4e-3424b47b5634",
+              "source_card_number": "CARD-0133",
+              "path": "mechanics.effects[1].result[0].effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "696af660-37b1-5968-86e9-4f339adb9fde",
+      "card_number": "EFFECT-item-completion-low-0199",
+      "name": "Наручи ловкого мага",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Выдаётся предметом CARD-0199 напрямую либо через предоставленное действие; mechanics описывают свойства или последствия этого предмета.",
+      "mechanical_evidence": [
+        {
+          "source_type": "action",
+          "source_id": "16cd258f-2240-55d6-a4e9-846c10a38043",
+          "source_card_number": "ACT-item-completion-low-0199",
+          "path": "mechanics.effects[0].result[0].on_success[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "2bf1e39d-aa78-4a93-9e68-d1c94311e3fa",
+          "source_card_number": "CARD-0199",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "2bf1e39d-aa78-4a93-9e68-d1c94311e3fa",
+              "source_card_number": "CARD-0199",
+              "path": "mechanics.effects[0].result[0].value"
+            },
+            {
+              "source_type": "action",
+              "source_id": "16cd258f-2240-55d6-a4e9-846c10a38043",
+              "source_card_number": "ACT-item-completion-low-0199",
+              "path": "mechanics.effects[0].result[0].on_success[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ef3c7371-4908-51da-96c1-1be8a4451002",
+      "card_number": "EFFECT-item-completion-low-0330",
+      "name": "Сеть",
+      "before": "item_effect",
+      "after": "item_effect",
+      "reason": "Создаётся применением CARD-0330, предоставляет состояние restrained и действие освобождения. Обёртка предмета не заменяет каноничное состояние.",
+      "mechanical_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "c2912cfa-f4ef-477e-ba9b-215a57a1640f",
+          "source_card_number": "CARD-0330",
+          "path": "mechanics.effects[1].on_fail[0].value"
+        },
+        {
+          "source_type": "action",
+          "source_id": "7abb5b89-3bdf-5036-b7b7-9aa99068312c",
+          "source_card_number": "ACT-item-completion-low-0330-escape",
+          "path": "mechanics.effects[0].on_success[0].card_number"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "card",
+          "source_id": "c2912cfa-f4ef-477e-ba9b-215a57a1640f",
+          "source_card_number": "CARD-0330",
+          "path": [
+            {
+              "source_type": "card",
+              "source_id": "c2912cfa-f4ef-477e-ba9b-215a57a1640f",
+              "source_card_number": "CARD-0330",
+              "path": "mechanics.effects[1].on_fail[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "37dfedbb-8c2c-5c30-af9a-3c93b787bef1",
+      "card_number": "EFFECT-spell-audit-call-lightning",
+      "name": "Вызвать повторную молнию",
+      "before": "spell_effect",
+      "after": "spell_effect",
+      "reason": "Выдаётся заклинанием call_lightning; mechanics предоставляют действие для поддержания или повторного применения эффекта заклинания.",
+      "mechanical_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "54d24fb4-16c8-4120-ba77-c7db79da021b",
+          "source_card_number": "call_lightning",
+          "path": "mechanics.effects[1].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "54d24fb4-16c8-4120-ba77-c7db79da021b",
+          "source_card_number": "call_lightning",
+          "path": [
+            {
+              "source_type": "spell",
+              "source_id": "54d24fb4-16c8-4120-ba77-c7db79da021b",
+              "source_card_number": "call_lightning",
+              "path": "mechanics.effects[1].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1fe2af25-c89b-50d7-8806-bcf8a59dca0d",
+      "card_number": "EFFECT-spell-audit-dragon-breath-acid",
+      "name": "Дыхание дракона: кислота",
+      "before": "spell_effect",
+      "after": "spell_effect",
+      "reason": "Выдаётся заклинанием SPELL-0197, SPELL-VAR-SPELL-0197-acid; mechanics предоставляют действие для поддержания или повторного применения эффекта заклинания.",
+      "mechanical_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "4b581002-ef9f-54ce-a325-070fcefe05e9",
+          "source_card_number": "SPELL-VAR-SPELL-0197-acid",
+          "path": "mechanics.effects[0].result[0].value"
+        },
+        {
+          "source_type": "spell",
+          "source_id": "88e84740-222b-4f37-bae8-0fdaefea06f4",
+          "source_card_number": "SPELL-0197",
+          "path": "mechanics.effects[0].options.items[0].grants[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "88e84740-222b-4f37-bae8-0fdaefea06f4",
+          "source_card_number": "SPELL-0197",
+          "path": [
+            {
+              "source_type": "spell",
+              "source_id": "88e84740-222b-4f37-bae8-0fdaefea06f4",
+              "source_card_number": "SPELL-0197",
+              "path": "mechanics.effects[0].options.items[0].grants[0].value"
+            }
+          ]
+        },
+        {
+          "source_type": "spell",
+          "source_id": "4b581002-ef9f-54ce-a325-070fcefe05e9",
+          "source_card_number": "SPELL-VAR-SPELL-0197-acid",
+          "path": [
+            {
+              "source_type": "spell",
+              "source_id": "4b581002-ef9f-54ce-a325-070fcefe05e9",
+              "source_card_number": "SPELL-VAR-SPELL-0197-acid",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "24221f6e-01f1-568a-bf8b-2180953e738a",
+      "card_number": "EFFECT-spell-audit-dragon-breath-cold",
+      "name": "Дыхание дракона: холод",
+      "before": "spell_effect",
+      "after": "spell_effect",
+      "reason": "Выдаётся заклинанием SPELL-0197, SPELL-VAR-SPELL-0197-cold; mechanics предоставляют действие для поддержания или повторного применения эффекта заклинания.",
+      "mechanical_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "0501111e-76ab-598e-adc8-10049dc71d98",
+          "source_card_number": "SPELL-VAR-SPELL-0197-cold",
+          "path": "mechanics.effects[0].result[0].value"
+        },
+        {
+          "source_type": "spell",
+          "source_id": "88e84740-222b-4f37-bae8-0fdaefea06f4",
+          "source_card_number": "SPELL-0197",
+          "path": "mechanics.effects[0].options.items[1].grants[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "88e84740-222b-4f37-bae8-0fdaefea06f4",
+          "source_card_number": "SPELL-0197",
+          "path": [
+            {
+              "source_type": "spell",
+              "source_id": "88e84740-222b-4f37-bae8-0fdaefea06f4",
+              "source_card_number": "SPELL-0197",
+              "path": "mechanics.effects[0].options.items[1].grants[0].value"
+            }
+          ]
+        },
+        {
+          "source_type": "spell",
+          "source_id": "0501111e-76ab-598e-adc8-10049dc71d98",
+          "source_card_number": "SPELL-VAR-SPELL-0197-cold",
+          "path": [
+            {
+              "source_type": "spell",
+              "source_id": "0501111e-76ab-598e-adc8-10049dc71d98",
+              "source_card_number": "SPELL-VAR-SPELL-0197-cold",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "c4c48fd5-d3c5-5cdb-9439-f755efd5bd34",
+      "card_number": "EFFECT-spell-audit-dragon-breath-fire",
+      "name": "Дыхание дракона: огонь",
+      "before": "spell_effect",
+      "after": "spell_effect",
+      "reason": "Выдаётся заклинанием SPELL-0197, SPELL-VAR-SPELL-0197-fire; mechanics предоставляют действие для поддержания или повторного применения эффекта заклинания.",
+      "mechanical_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "5321e30a-a9bf-5d47-a43f-891fa4af57fc",
+          "source_card_number": "SPELL-VAR-SPELL-0197-fire",
+          "path": "mechanics.effects[0].result[0].value"
+        },
+        {
+          "source_type": "spell",
+          "source_id": "88e84740-222b-4f37-bae8-0fdaefea06f4",
+          "source_card_number": "SPELL-0197",
+          "path": "mechanics.effects[0].options.items[2].grants[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "88e84740-222b-4f37-bae8-0fdaefea06f4",
+          "source_card_number": "SPELL-0197",
+          "path": [
+            {
+              "source_type": "spell",
+              "source_id": "88e84740-222b-4f37-bae8-0fdaefea06f4",
+              "source_card_number": "SPELL-0197",
+              "path": "mechanics.effects[0].options.items[2].grants[0].value"
+            }
+          ]
+        },
+        {
+          "source_type": "spell",
+          "source_id": "5321e30a-a9bf-5d47-a43f-891fa4af57fc",
+          "source_card_number": "SPELL-VAR-SPELL-0197-fire",
+          "path": [
+            {
+              "source_type": "spell",
+              "source_id": "5321e30a-a9bf-5d47-a43f-891fa4af57fc",
+              "source_card_number": "SPELL-VAR-SPELL-0197-fire",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dc6f28f9-42f0-53ca-8417-16c1ab25f7fc",
+      "card_number": "EFFECT-spell-audit-dragon-breath-lightning",
+      "name": "Дыхание дракона: электричество",
+      "before": "spell_effect",
+      "after": "spell_effect",
+      "reason": "Выдаётся заклинанием SPELL-0197, SPELL-VAR-SPELL-0197-lightning; mechanics предоставляют действие для поддержания или повторного применения эффекта заклинания.",
+      "mechanical_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "b79eeafb-776c-5d04-a262-e6dff4df84e0",
+          "source_card_number": "SPELL-VAR-SPELL-0197-lightning",
+          "path": "mechanics.effects[0].result[0].value"
+        },
+        {
+          "source_type": "spell",
+          "source_id": "88e84740-222b-4f37-bae8-0fdaefea06f4",
+          "source_card_number": "SPELL-0197",
+          "path": "mechanics.effects[0].options.items[3].grants[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "88e84740-222b-4f37-bae8-0fdaefea06f4",
+          "source_card_number": "SPELL-0197",
+          "path": [
+            {
+              "source_type": "spell",
+              "source_id": "88e84740-222b-4f37-bae8-0fdaefea06f4",
+              "source_card_number": "SPELL-0197",
+              "path": "mechanics.effects[0].options.items[3].grants[0].value"
+            }
+          ]
+        },
+        {
+          "source_type": "spell",
+          "source_id": "b79eeafb-776c-5d04-a262-e6dff4df84e0",
+          "source_card_number": "SPELL-VAR-SPELL-0197-lightning",
+          "path": [
+            {
+              "source_type": "spell",
+              "source_id": "b79eeafb-776c-5d04-a262-e6dff4df84e0",
+              "source_card_number": "SPELL-VAR-SPELL-0197-lightning",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "87cd7675-012a-5126-a5e5-d313f5848a14",
+      "card_number": "EFFECT-spell-audit-dragon-breath-poison",
+      "name": "Дыхание дракона: яд",
+      "before": "spell_effect",
+      "after": "spell_effect",
+      "reason": "Выдаётся заклинанием SPELL-0197, SPELL-VAR-SPELL-0197-poison; mechanics предоставляют действие для поддержания или повторного применения эффекта заклинания.",
+      "mechanical_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "2e175499-84ff-5fe2-a20c-d6102a1897a9",
+          "source_card_number": "SPELL-VAR-SPELL-0197-poison",
+          "path": "mechanics.effects[0].result[0].value"
+        },
+        {
+          "source_type": "spell",
+          "source_id": "88e84740-222b-4f37-bae8-0fdaefea06f4",
+          "source_card_number": "SPELL-0197",
+          "path": "mechanics.effects[0].options.items[4].grants[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "88e84740-222b-4f37-bae8-0fdaefea06f4",
+          "source_card_number": "SPELL-0197",
+          "path": [
+            {
+              "source_type": "spell",
+              "source_id": "88e84740-222b-4f37-bae8-0fdaefea06f4",
+              "source_card_number": "SPELL-0197",
+              "path": "mechanics.effects[0].options.items[4].grants[0].value"
+            }
+          ]
+        },
+        {
+          "source_type": "spell",
+          "source_id": "2e175499-84ff-5fe2-a20c-d6102a1897a9",
+          "source_card_number": "SPELL-VAR-SPELL-0197-poison",
+          "path": [
+            {
+              "source_type": "spell",
+              "source_id": "2e175499-84ff-5fe2-a20c-d6102a1897a9",
+              "source_card_number": "SPELL-VAR-SPELL-0197-poison",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1a83baec-cc4e-5471-b51f-895c6beffcd2",
+      "card_number": "EFFECT-spell-audit-expeditious-retreat",
+      "name": "Рывок поспешного отступления",
+      "before": "spell_effect",
+      "after": "spell_effect",
+      "reason": "Выдаётся заклинанием SPELL-0269; mechanics предоставляют действие для поддержания или повторного применения эффекта заклинания.",
+      "mechanical_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "bc90dc67-8fac-41b8-b3bf-a1e218013929",
+          "source_card_number": "SPELL-0269",
+          "path": "mechanics.effects[0].result[1].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "bc90dc67-8fac-41b8-b3bf-a1e218013929",
+          "source_card_number": "SPELL-0269",
+          "path": [
+            {
+              "source_type": "spell",
+              "source_id": "bc90dc67-8fac-41b8-b3bf-a1e218013929",
+              "source_card_number": "SPELL-0269",
+              "path": "mechanics.effects[0].result[1].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5733a820-4f4a-5a0c-8bfc-0927e80d7e4a",
+      "card_number": "EFFECT-spell-audit-flame-blade",
+      "name": "Атаковать горящим клинком",
+      "before": "spell_effect",
+      "after": "spell_effect",
+      "reason": "Выдаётся заклинанием SPELL-0184; mechanics предоставляют действие для поддержания или повторного применения эффекта заклинания.",
+      "mechanical_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "b1aeb74d-2158-44ba-a2b2-c0f709a6caa3",
+          "source_card_number": "SPELL-0184",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "b1aeb74d-2158-44ba-a2b2-c0f709a6caa3",
+          "source_card_number": "SPELL-0184",
+          "path": [
+            {
+              "source_type": "spell",
+              "source_id": "b1aeb74d-2158-44ba-a2b2-c0f709a6caa3",
+              "source_card_number": "SPELL-0184",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "9fa23201-3754-5653-9ef6-001f85b3f90f",
+      "card_number": "EFFECT-spell-audit-produce-flame",
+      "name": "Метнуть сотворённое пламя",
+      "before": "spell_effect",
+      "after": "spell_effect",
+      "reason": "Выдаётся заклинанием SPELL-0297; mechanics предоставляют действие для поддержания или повторного применения эффекта заклинания.",
+      "mechanical_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "ba23242c-eb9c-46a6-ba01-ebdc3b5b9618",
+          "source_card_number": "SPELL-0297",
+          "path": "mechanics.effects[0].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "ba23242c-eb9c-46a6-ba01-ebdc3b5b9618",
+          "source_card_number": "SPELL-0297",
+          "path": [
+            {
+              "source_type": "spell",
+              "source_id": "ba23242c-eb9c-46a6-ba01-ebdc3b5b9618",
+              "source_card_number": "SPELL-0297",
+              "path": "mechanics.effects[0].result[0].value"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "10ce05bf-4a21-5e0d-8b43-b0752afb9bad",
+      "card_number": "EFFECT-spell-audit-witch-bolt",
+      "name": "Поддержать ведьмин разряд",
+      "before": "spell_effect",
+      "after": "spell_effect",
+      "reason": "Выдаётся заклинанием SPELL-0167; mechanics предоставляют действие для поддержания или повторного применения эффекта заклинания.",
+      "mechanical_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "96a02044-6274-4e68-a06e-853c206824b8",
+          "source_card_number": "SPELL-0167",
+          "path": "mechanics.effects[1].result[0].value"
+        }
+      ],
+      "origin_evidence": [
+        {
+          "source_type": "spell",
+          "source_id": "96a02044-6274-4e68-a06e-853c206824b8",
+          "source_card_number": "SPELL-0167",
+          "path": [
+            {
+              "source_type": "spell",
+              "source_id": "96a02044-6274-4e68-a06e-853c206824b8",
+              "source_card_number": "SPELL-0167",
+              "path": "mechanics.effects[1].result[0].value"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

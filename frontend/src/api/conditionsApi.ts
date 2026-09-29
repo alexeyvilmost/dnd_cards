@@ -1,4 +1,5 @@
 import { effectsApi } from './client';
+import { withoutEntityReferences } from '../utils/entityReferenceMetadata';
 import {
   BUILTIN_CONDITION_RULES,
   conditionRegistryAuthority,
@@ -99,7 +100,9 @@ async function fetchAllConditionRows(timeoutMs?: number): Promise<ConditionEffec
     if (expectedTotal !== total) {
       throw new Error('condition API total changed during pagination');
     }
-    rows.push(...response.effects as ConditionEffectRecord[]);
+    // Library links vary with other entities and caller visibility. Keep the
+    // condition runtime snapshot independent of this response metadata.
+    rows.push(...(response.effects as ConditionEffectRecord[]).map(withoutEntityReferences));
     if (rows.length === expectedTotal) return rows;
     if (rows.length > expectedTotal) {
       throw new Error('condition API returned more rows than advertised');
