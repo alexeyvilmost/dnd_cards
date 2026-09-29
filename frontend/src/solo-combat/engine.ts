@@ -91,8 +91,10 @@ import { runtimeBoons } from '../engine/boons';
 import { compileMonsterInstance } from './monsterCompiler';
 import { planMonsterTurn, chooseMonsterReaction } from './monsterAi';
 import { projectCombatLogRecords } from './combatLog';
+import { combatAnimationAction, combatAttackPresentation } from './animationProfiles';
 import {
   areaActorIds,
+  areaPositionsForAction,
   areaEffectOrigin,
   areaPointSight,
   tacticalAreaGeometry,
@@ -996,15 +998,27 @@ function transitionState(
   // an action or changing any authoritative rule event.
   const pending = state.world.pendingResolution;
   if (pending && 'actionId' in pending && 'sourceActorId' in pending) {
-    const action = state.catalogActions.find(row => row.id === pending.actionId);
+    const original = [...state.log].reverse().flatMap(entry => [...(entry.records ?? [])].reverse())
+      .find(record => record.kind === 'action' && record.actionId === pending.actionId && record.sourceActorId === pending.sourceActorId);
+    const action = combatAnimationAction(state, original) ?? state.catalogActions.find(row => row.id === pending.actionId);
     const spell = 'spell' in pending ? pending.spell : undefined;
-    records = records.map(record => record.actionId || !action || (
+    records = records.map(record => record.actionId || (!action && !original) || (
       record.sourceActorId !== pending.sourceActorId && record.event?.type !== 'roll'
-    ) ? record : {...record, actionId: action.id, actionKind: action.kind,
-      sourceEntityIds: [...(action.sourceEntityIds ?? [])],
+    ) ? record : {...record, actionId: original?.actionId ?? action?.id, actionKind: original?.actionKind ?? action?.kind,
+      sourceEntityIds: [...(original?.sourceEntityIds ?? action?.sourceEntityIds ?? [])],
+      ...(original?.facts ? {facts: {...original.facts, ...record.facts}} : {}),
+      ...(original?.attackPresentation ? {attackPresentation: {...original.attackPresentation}} : {}),
+      ...(original?.area ? {area: clone(original.area)} : {}),
+      ...(original?.targetPosition ? {targetPosition: {...original.targetPosition}} : {}),
       ...(spell ? {spell: {baseLevel: spell.baseLevel, castLevel: spell.castLevel ?? spell.baseLevel}} : {}),
     });
   }
+  records = records.map(record => {
+    if (record.attackPresentation || (record.kind !== 'action'
+      && !(record.event?.type === 'roll' && record.event.roll.target?.type === 'ac'))) return record;
+    const projection = combatAttackPresentation(combatAnimationAction(state, record), state.world.actors[record.sourceActorId], record);
+    return projection.visual || projection.weaponCardId ? {...record, attackPresentation: projection} : record;
+  });
   let next = settleCombatAreaDamage(reconcileMovementForSpeedChanges(state, nextWorld),rawEvents);
   next = reconcileSummonedActorProjection(next, nextWorld);
   next = reconcileOwnedSummons(next);
@@ -1955,6 +1969,11 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
   const withTriggeredAttackOffer = (next: SoloCombatState) => {
     if (input.worldPosition) {
       const cursor = combatLogCursor(input.state);
+      const geometry = tacticalAreaGeometry(action);
+      const sourcePosition = input.state.tokens[input.actorId]?.position;
+      const areaInput = sourcePosition ? {board: input.state, action, sourcePosition, aimPosition: input.worldPosition} : undefined;
+      const area = geometry && areaInput ? {geometry, sourcePosition: {...areaInput.sourcePosition},
+        origin: {...areaEffectOrigin(areaInput)}, aim: {...input.worldPosition}, cells: areaPositionsForAction(areaInput)} : undefined;
       next = {...next, log: next.log.map((entry, index) => {
         // Enrich only this execution's new declaration; retained history and
         // authoritative rule payloads are never edited for presentation.
@@ -1963,7 +1982,7 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
           && record.actionId === action.id && record.sourceActorId === input.actorId;
         if (!entry.records?.some(matches)) return entry;
         return {...entry, records: entry.records.map(record => matches(record)
-          ? {...record, targetPosition: {...input.worldPosition!}} : record)};
+          ? {...record, targetPosition: {...input.worldPosition!}, ...(area ? {area} : {})} : record)};
       })};
     }
     const intercepted = offerInterception({

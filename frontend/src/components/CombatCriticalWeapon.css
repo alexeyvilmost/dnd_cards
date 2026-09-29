@@ -1,0 +1,67 @@
+/* A deliberate draw-back, fast delivery, short contact hold, then heavy recoil.
+   No screen shake or repeated flashes: only the confirmed attack's local FX. */
+.combat-animation.is-critical-weapon{--critical-recovery:calc(var(--fx-duration) - var(--fx-contact-delay));--critical-hold:75ms}
+.combat-critical-slash,.combat-critical-pierce,.combat-critical-bash{stroke:var(--fx-secondary);stroke-width:2;fill:var(--fx-primary)}
+.combat-critical-slash-hilt{fill-opacity:.48;animation:critical-slash-hilt var(--fx-contact-delay) cubic-bezier(.65,0,.9,.5) both,critical-weapon-fade 160ms linear calc(var(--fx-contact-delay) + var(--critical-hold)) forwards;transform-origin:-72px 63px}
+.combat-critical-slash-cut{animation:critical-slash-delivery var(--fx-flight-duration) cubic-bezier(.8,0,.88,.5) var(--fx-launch-delay) both,critical-slash-follow var(--critical-recovery) ease-out calc(var(--fx-contact-delay) + var(--critical-hold)) forwards;transform-origin:0 0}
+.combat-critical-cut-shadow{fill:var(--fx-primary);fill-opacity:.64;stroke:none}
+.combat-critical-cut-edge{fill:none;stroke:var(--fx-primary);stroke-width:13;opacity:.85}
+.combat-critical-cut-core{fill:none;stroke:var(--fx-secondary);stroke-width:5}
+.combat-critical-cut-splinter{fill:none;stroke-width:2;opacity:.75}
+.combat-critical-scar{fill:none;stroke-width:4;animation:critical-scar var(--critical-recovery) ease-out var(--fx-contact-delay) both}
+.combat-critical-pierce-weapon{fill-opacity:.9;animation:critical-pierce-delivery var(--fx-contact-delay) cubic-bezier(.85,0,.93,.5) both,critical-pierce-exit var(--critical-recovery) ease-out calc(var(--fx-contact-delay) + var(--critical-hold)) forwards}
+.combat-critical-pierce-rush{stroke:var(--fx-primary);stroke-width:4;fill:none;animation:critical-pierce-rush var(--fx-flight-duration) ease-in var(--fx-launch-delay) both,critical-weapon-fade 180ms ease-out var(--fx-contact-delay) forwards}
+.combat-critical-puncture,.combat-critical-penetration{fill:var(--fx-secondary);fill-opacity:.6;stroke:var(--fx-primary);stroke-width:2;animation:critical-penetration var(--critical-recovery) ease-out var(--fx-contact-delay) both}
+.combat-critical-bash-weapon{fill-opacity:.85;stroke-width:2.5;animation:critical-bash-delivery var(--fx-contact-delay) cubic-bezier(.8,0,.92,.42) both,critical-bash-recovery var(--critical-recovery) ease-out calc(var(--fx-contact-delay) + var(--critical-hold)) forwards;transform-origin:-83px 0}
+.combat-critical-hammer-handle{fill:var(--fx-secondary);fill-opacity:.7}
+.combat-critical-bash-trail{fill:none;stroke:var(--fx-primary);stroke-width:9;animation:critical-bash-trail var(--fx-flight-duration) ease-in var(--fx-launch-delay) both,critical-weapon-fade 180ms ease-out var(--fx-contact-delay) forwards}
+.combat-critical-crater{fill:none;stroke:var(--fx-primary);stroke-width:3;animation:critical-crater var(--critical-recovery) ease-out var(--fx-contact-delay) both}
+.combat-critical-crater ellipse{fill:var(--fx-primary);fill-opacity:.12;stroke-width:5}
+.combat-critical-impact{stroke:var(--fx-primary);fill:none}
+.combat-critical-pressure{stroke-width:4;animation:critical-pressure var(--critical-recovery) cubic-bezier(.13,.65,.25,1) var(--fx-contact-delay) both;transform-origin:0 0}
+.combat-critical-contact{fill:var(--fx-secondary);stroke:none;animation:critical-contact 220ms ease-out var(--fx-contact-delay) both;transform-origin:0 0}
+.combat-critical-burst{fill:var(--fx-primary);fill-opacity:.55;stroke:var(--fx-secondary);stroke-width:1.5;animation:critical-burst 330ms ease-out var(--fx-contact-delay) both;transform-origin:0 0}
+.combat-critical-fragment{fill:var(--fx-primary);stroke:var(--fx-secondary);stroke-width:1;animation:critical-fragment var(--critical-recovery) cubic-bezier(.09,.57,.23,1) calc(var(--fx-contact-delay) + var(--fragment-delay)) both;transform-origin:0 0}
+.combat-critical-impact-streak{stroke:var(--fx-secondary);stroke-width:2.5;stroke-dasharray:1;animation:critical-streak 310ms ease-out var(--fx-contact-delay) both}
+.combat-critical-impact-glyph{fill:var(--fx-primary);stroke:var(--fx-secondary);stroke-width:1.8;animation:critical-glyph var(--critical-recovery) ease-out var(--fx-contact-delay) both;transform-origin:0 0}
+.is-critical-weapon .combat-fx-windup{stroke-width:5;animation-duration:var(--fx-launch-delay)}
+.is-critical-weapon .combat-fx-bow{stroke-width:4;animation:critical-bow-draw var(--fx-contact-delay) ease-in-out both}
+.is-critical-weapon .combat-fx-projectile{animation-timing-function:cubic-bezier(.6,0,.9,.6)}
+.is-critical-weapon .combat-fx-trail{stroke-width:4;opacity:.9}
+.combat-critical-projectile-wake{stroke:var(--fx-primary);stroke-width:3;fill:none;opacity:.85}
+.is-critical-weapon .combat-fx-arrow{stroke-width:2.5;scale:1.25}
+.is-critical-weapon .combat-thrown-weapon{scale:1.3;animation-duration:var(--fx-flight-duration);animation-timing-function:cubic-bezier(.5,.05,.8,.6)}
+.is-critical-weapon .combat-firearm-flash{scale:1.7;transform-box:fill-box;transform-origin:center}
+.is-critical-weapon .combat-firearm-bullet{scale:1.7}
+.battle-token.is-critical-source{animation:critical-token-windup var(--token-contact-delay) ease-in-out both,critical-token-settle 350ms ease-out calc(var(--token-contact-delay) + 75ms) forwards}
+.battle-token.is-critical-target{animation:critical-token-hit 520ms ease-out var(--token-impact-delay) both}
+.battle-token.is-critical-shot{animation:critical-token-shot 350ms ease-out var(--token-launch-delay) both}
+@keyframes critical-slash-hilt{0%{opacity:0;rotate:-65deg}30%{opacity:.65;rotate:-77deg}60%{rotate:-84deg}100%{opacity:.8;rotate:0deg}}
+@keyframes critical-weapon-fade{to{opacity:0}}
+@keyframes critical-slash-delivery{0%{opacity:0;rotate:-115deg;scale:.7}15%{opacity:1}100%{opacity:1;rotate:0deg;scale:1}}
+@keyframes critical-slash-follow{0%{opacity:1;rotate:0deg;scale:1}65%,100%{opacity:0;rotate:38deg;scale:1.18}}
+@keyframes critical-scar{0%,13%{opacity:.9}100%{opacity:0}}
+@keyframes critical-pierce-delivery{0%{opacity:0;translate:-45px 0}20%{opacity:.8;translate:-57px 0}65%{translate:-73px 0}100%{opacity:1;translate:0 0}}
+@keyframes critical-pierce-exit{0%{opacity:1;translate:0 0}50%{translate:18px 0}100%{opacity:0;translate:-15px 0}}
+@keyframes critical-pierce-rush{0%{opacity:0;translate:-45px 0}70%,100%{opacity:.7;translate:0 0}}
+@keyframes critical-penetration{0%{opacity:0;scale:.3 1}10%{opacity:1;scale:1 1}100%{opacity:0;scale:1.35 .25;translate:40px 0}}
+@keyframes critical-bash-delivery{0%{opacity:0;rotate:-95deg}25%{opacity:.9;rotate:-112deg}62%{rotate:-130deg}100%{opacity:1;rotate:0deg}}
+@keyframes critical-bash-recovery{0%{opacity:1;rotate:0deg}24%{rotate:8deg}100%{opacity:0;rotate:-25deg;translate:8px 14px}}
+@keyframes critical-bash-trail{0%{opacity:0;rotate:-70deg}100%{opacity:.8;rotate:0deg}}
+@keyframes critical-crater{0%{opacity:0;scale:.65}10%,40%{opacity:.85;scale:1}100%{opacity:0;scale:1.05}}
+@keyframes critical-pressure{0%{opacity:0;scale:.15}9%{opacity:.9}100%{opacity:0;scale:1.8}}
+@keyframes critical-contact{0%{opacity:0;scale:.25}15%,30%{opacity:.95;scale:1}100%{opacity:0;scale:1.45}}
+@keyframes critical-burst{0%{opacity:0;scale:.3}8%,28%{opacity:1;scale:1}100%{opacity:0;scale:1.25}}
+@keyframes critical-fragment{0%{opacity:0;translate:0 0;rotate:0deg}6%{opacity:1}100%{opacity:0;translate:var(--fragment-distance) 0;rotate:var(--fragment-turn)}}
+@keyframes critical-streak{0%{opacity:0;stroke-dashoffset:1}15%{opacity:1}100%{opacity:0;stroke-dashoffset:-.5}}
+@keyframes critical-glyph{0%{opacity:0;scale:.45}15%,30%{opacity:.9;scale:1.3}100%{opacity:0;scale:1.7}}
+@keyframes critical-bow-draw{0%{opacity:0;scale:1 .8}25%,55%{opacity:1;scale:1.35 1.1}70%{scale:.7 1.05}100%{opacity:0;scale:1 1}}
+@keyframes critical-token-windup{0%{translate:0 0}60%{translate:calc(var(--lunge-x)*-.85) calc(var(--lunge-y)*-.85);rotate:-7deg}100%{translate:calc(var(--lunge-x)*1.6) calc(var(--lunge-y)*1.6);rotate:4deg}}
+@keyframes critical-token-settle{to{translate:0 0;rotate:0deg}}
+@keyframes critical-token-hit{0%,12%{translate:0 0}24%,36%{translate:calc(var(--lunge-x)*2) calc(var(--lunge-y)*2);rotate:8deg;filter:brightness(1.35)}60%{translate:calc(var(--lunge-x)*-.5) calc(var(--lunge-y)*-.5);rotate:-4deg}100%{translate:0 0;rotate:0deg}}
+@keyframes critical-token-shot{0%{translate:0 0}15%,30%{translate:calc(var(--lunge-x)*-.85) calc(var(--lunge-y)*-.85);rotate:-4deg}100%{translate:0 0;rotate:0deg}}
+@media(prefers-reduced-motion:reduce){
+  .is-critical-weapon *,.battle-token[class*="is-critical-"]{animation:none!important}
+  .combat-critical-slash-hilt,.combat-critical-pierce-rush,.combat-critical-bash-trail,.combat-critical-fragment,.combat-critical-impact-streak,.combat-critical-contact,.combat-critical-burst,.combat-critical-projectile-wake{display:none}
+  .combat-critical-pressure{opacity:.35}.combat-critical-slash-cut,.combat-critical-pierce-weapon,.combat-critical-bash-weapon,.combat-critical-crater,.combat-critical-penetration,.combat-critical-puncture,.combat-critical-impact-glyph{opacity:.55}
+}

@@ -1,9 +1,15 @@
 import type {CSSProperties} from 'react';
 import type {CombatBeat} from '../solo-combat/presentation';
 import type {CombatAnimationProfile} from '../solo-combat/animationProfiles';
+import {combatAnimationTimingStyle} from '../solo-combat/animationTiming';
 import type {GridPosition} from '../solo-combat/types';
 import CombatAnimationGlyph from './CombatAnimationGlyph';
 import CombatSpellCircle from './CombatSpellCircle';
+import CombatChargedBeam from './CombatChargedBeam';
+import CombatAreaAnimation from './CombatAreaAnimation';
+import {CriticalWeaponImpact, CriticalWeaponStrike} from './CombatCriticalWeapon';
+import {CriticalMagicBeamTrail, CriticalMagicFocus, CriticalMagicImpact, CriticalMagicProjectile} from './CombatCriticalMagic';
+import './CombatAdvancedAnimations.css';
 
 function Sparks({count=10}: {count?:number}) {
   return <g className="combat-fx-sparks">{Array.from({length:count},(_,i)=><g key={i} transform={`rotate(${i*360/count+13})`}>
@@ -41,46 +47,74 @@ function Utility({primitive,motif}: {primitive:string;motif?:string}) {
   }
 }
 
-export default function CombatAnimationLayer({beat,profile,from,to,sourceSize=1,targetSize=1,showCasterCircle=true}: {
+export default function CombatAnimationLayer({beat,profile,from,to,sourceSize=1,targetSize=1,showCasterCircle=true,showArea=true}: {
   beat:CombatBeat;profile:CombatAnimationProfile;from:GridPosition;to:GridPosition;sourceSize?:number;targetSize?:number;showCasterCircle?:boolean;
+  showArea?:boolean;
 }) {
   const primitive=profile.primitive;
   const miss=beat.cues.some(c=>c.kind==='miss')||['miss','crit_miss'].includes(beat.roll?.outcome??'');
+  const critical=profile.strikeStyle==='critical'&&beat.roll?.outcome==='crit'&&beat.rollPhase!=='before-reaction'&&!miss;
+  const criticalMagic=critical&&profile.criticalEffect==='magic';
+  const criticalWeapon=critical&&!criticalMagic;
   const angle=Math.atan2(to.y-from.y,to.x-from.x)*180/Math.PI;
   const distance=Math.hypot(to.x-from.x,to.y-from.y)*100;
-  const directional=['melee_slash','melee_pierce','melee_bash','ranged_arrow','bite','projectile','beam'].includes(primitive);
+  const directional=['melee_slash','melee_pierce','melee_bash','ranged_arrow','bite','projectile','beam','charged_beam','claws','tail','tentacle','sting','natural_slam','weapon_throw','firearm'].includes(primitive);
+  const areaPrimitive=['area_cone','area_line','area_wave','area_burst'].includes(primitive);
   const endpoint={x:to.x*100+(miss?-Math.sin(angle*Math.PI/180)*44:0),y:to.y*100+(miss?Math.cos(angle*Math.PI/180)*44:0)};
   const deliveryAngle=Math.atan2(endpoint.y-from.y*100,endpoint.x-from.x*100)*180/Math.PI;
   const deliveryDistance=Math.hypot(endpoint.x-from.x*100,endpoint.y-from.y*100);
   const style={'--fx-primary':profile.palette.primary,'--fx-secondary':profile.palette.secondary,
-    '--fx-duration':`${profile.motion.durationMs}ms`,'--fx-distance':`${distance}px`,
+    ...combatAnimationTimingStyle(profile),'--fx-distance':`${distance}px`,
     '--fx-scale':profile.motion.scale??1} as CSSProperties;
-  return <g className={`combat-animation is-${primitive}${miss?' is-miss':''}`} data-animation-profile={profile.key} style={style}>
+  return <g className={`combat-animation is-${primitive}${miss?' is-miss':''}${criticalWeapon?' is-critical-weapon':''}${criticalMagic?' is-critical-magic':''}`} data-animation-profile={profile.key} data-strike-style={critical?'critical':undefined} data-critical-effect={criticalMagic?'magic':criticalWeapon?'weapon':undefined} style={style}>
     {profile.casterCircle&&showCasterCircle&&<CombatSpellCircle x={from.x*100} y={from.y*100} level={beat.spellLevel??0} footprint={sourceSize} profile={profile}/>}
+    {areaPrimitive&&showArea&&beat.area&&<CombatAreaAnimation area={beat.area} profile={profile}/>}
     {directional&&<>
       <g transform={`translate(${from.x*100} ${from.y*100}) rotate(${angle})`}>
-        <g className="combat-fx-windup"><path d="M-33 -28Q-53 0 -33 28"/><path d="M-45 -18Q-60 0 -45 18"/></g>
+        {primitive!=='charged_beam'&&<g className="combat-fx-windup"><path d="M-33 -28Q-53 0 -33 28"/><path d="M-45 -18Q-60 0 -45 18"/></g>}
         {primitive==='ranged_arrow'&&<g className="combat-fx-bow"><path d="M-8 -33Q33 0 -8 33L-23 0Z"/></g>}
+        {primitive==='firearm'&&<g className="combat-firearm-flash" transform={`translate(${sourceSize*44} 0)`}><path d="M-12 -5L13 -15L7 -4L33 0L7 4L13 15L-12 5Z"/></g>}
       </g>
-      {(primitive==='projectile'||primitive==='ranged_arrow')&&<g transform={`translate(${from.x*100} ${from.y*100}) rotate(${deliveryAngle})`} style={{'--fx-distance':`${deliveryDistance}px`} as CSSProperties}>
+      {['projectile','ranged_arrow','weapon_throw','firearm'].includes(primitive)&&<g transform={`translate(${from.x*100} ${from.y*100}) rotate(${deliveryAngle})`} style={{'--fx-distance':`${deliveryDistance}px`} as CSSProperties}>
         <g className="combat-fx-projectile">
           <path className="combat-fx-trail" d="M-95 0H-5M-73 -6H-12M-67 6H-12"/>
-          {primitive==='ranged_arrow'?<g className="combat-fx-arrow"><path className="combat-fx-arrow-shaft" d="M-55 0H10"/><path d="M15 0L-3 -7L0 0L-3 7Z M-48 0L-63 -9L-55 0L-63 9Z"/></g>:
-            <g className="combat-fx-orb"><circle r="22" className="combat-fx-orb-halo"/><circle r="13"/><g transform="scale(.5)"><CombatAnimationGlyph motif={profile.motif}/></g></g>}
+          {criticalWeapon&&<g className="combat-critical-projectile-wake"><path d="M-139 -15L-37 -8M-139 15L-37 8M-159 0H-78"/><path d="M-53 -20L-23 0L-53 20"/></g>}
+          {criticalMagic&&<CriticalMagicProjectile profile={profile} weapon={primitive!=='projectile'}/>}
+          {primitive==='weapon_throw'?<g className={`combat-thrown-weapon is-${profile.weaponShape??'blade'}`}>
+            {profile.weaponShape==='axe'?<><path d="M-24 22L19 -21"/><path d="M3 -21Q34 -31 32 -2L11 2Z"/></>:
+              profile.weaponShape==='hammer'?<><path d="M-22 22L10 -10"/><path d="M-3 -24L11 -10L23 -23L9 -37Z"/></>:
+                profile.weaponShape==='stone'?<path d="M-13 -9L4 -15L16 -4L12 11L-8 14L-17 2Z"/>:
+                  profile.weaponShape==='spear'?<><path d="M-47 0H17"/><path d="M10 -7L32 0L10 7Z"/></>:
+                    <><path d="M-19 -5L26 0L-19 5Z"/><path d="M-20 -10V10M-20 0H-32"/></>}
+          </g>:primitive==='firearm'?<path className="combat-firearm-bullet" d="M-13 -3H2Q13 0 2 3H-13Z"/>:
+          primitive==='ranged_arrow'?<g className="combat-fx-arrow"><path className="combat-fx-arrow-shaft" d="M-55 0H10"/><path d="M15 0L-3 -7L0 0L-3 7Z M-48 0L-63 -9L-55 0L-63 9Z"/></g>:
+            !criticalMagic&&<g className="combat-fx-orb"><circle r="22" className="combat-fx-orb-halo"/><circle r="13"/><g transform="scale(.5)"><CombatAnimationGlyph motif={profile.motif}/></g></g>}
         </g>
       </g>}
       {primitive==='beam'&&<g transform={`translate(${from.x*100} ${from.y*100}) rotate(${deliveryAngle})`}>
+        {criticalMagic&&<><CriticalMagicFocus/><CriticalMagicBeamTrail distance={deliveryDistance}/></>}
         <g className="combat-fx-beam"><path className="combat-fx-beam-glow" d={`M0 0L${deliveryDistance} 0`}/><path className="combat-fx-beam-core" d={profile.motif==='lightning'?`M0 0L${deliveryDistance*.25} -12L${deliveryDistance*.32} 10L${deliveryDistance*.59} -9L${deliveryDistance*.67} 13L${deliveryDistance} 0`:`M0 0L${deliveryDistance} 0`}/></g>
       </g>}
+      {primitive==='charged_beam'&&<g transform={`translate(${from.x*100} ${from.y*100}) rotate(${deliveryAngle})`}>
+        <CombatChargedBeam distance={deliveryDistance} sourceSize={sourceSize} profile={profile} critical={criticalMagic}/>
+      </g>}
       <g transform={`translate(${endpoint.x} ${endpoint.y}) rotate(${angle}) scale(${Math.max(1,Math.sqrt(targetSize))*(profile.motion.scale??1)})`}>
-        {primitive==='melee_slash'&&<g className="combat-fx-slash"><path className="combat-fx-slash-trail" d="M-71 56C-101 -42 0 -93 74 -44C5 -70 -61 -16 -71 56Z"/><path className="combat-fx-slash-edge" d="M-71 56C-101 -42 0 -93 74 -44"/><path className="combat-fx-slash-follow" d="M-45 65C-65 -7 -3 -56 61 -35"/></g>}
-        {primitive==='melee_pierce'&&<g className="combat-fx-thrust"><path className="combat-fx-blade" d="M-90 -5H-10L32 0L-10 5H-90Z"/><path d="M-71 -16V16M-105 0H-76"/><path className="combat-fx-thrust-trail" d="M-124 -13H-75M-133 13H-78"/></g>}
-        {primitive==='melee_bash'&&<g className="combat-fx-bash"><path className="combat-fx-hammer" d="M-62 -7H-11V-24H17V24H-11V7H-62Z"/><path d="M-56 -36Q-12 -58 26 -27"/></g>}
+        {primitive==='melee_slash'&&!criticalWeapon&&<g className="combat-fx-slash"><path className="combat-fx-slash-trail" d="M-71 56C-101 -42 0 -93 74 -44C5 -70 -61 -16 -71 56Z"/><path className="combat-fx-slash-edge" d="M-71 56C-101 -42 0 -93 74 -44"/><path className="combat-fx-slash-follow" d="M-45 65C-65 -7 -3 -56 61 -35"/></g>}
+        {primitive==='melee_pierce'&&!criticalWeapon&&<g className="combat-fx-thrust"><path className="combat-fx-blade" d="M-90 -5H-10L32 0L-10 5H-90Z"/><path d="M-71 -16V16M-105 0H-76"/><path className="combat-fx-thrust-trail" d="M-124 -13H-75M-133 13H-78"/></g>}
+        {primitive==='melee_bash'&&!criticalWeapon&&<g className="combat-fx-bash"><path className="combat-fx-hammer" d="M-62 -7H-11V-24H17V24H-11V7H-62Z"/><path d="M-56 -36Q-12 -58 26 -27"/></g>}
         {primitive==='bite'&&<g className="combat-fx-bite"><g className="combat-fx-jaw is-upper"><path d="M-43 -25Q0 -56 43 -25L31 -5L21 -23L11 1L0 -22L-12 1L-22 -23L-32 -5Z"/></g><g className="combat-fx-jaw is-lower"><path d="M-43 25Q0 56 43 25L31 5L21 23L11 -1L0 22L-12 -1L-22 23L-32 5Z"/></g></g>}
-        {!miss&&<Impact motif={profile.motif} critical={beat.roll?.outcome==='crit'}/>}
+        {primitive==='claws'&&<g className="combat-natural-claws">{[-1,0,1].map((lane,i)=><g key={lane} transform={`translate(${lane*19} ${lane*9})`}><path className="combat-claw-cut" d="M-32 -50Q-20 -5 20 44Q-11 21 -32 -50Z" style={{'--claw-delay':i*.05} as CSSProperties}/></g>)}</g>}
+        {primitive==='tail'&&<g className="combat-natural-tail"><path d="M-93 43C-79 -56 -25 -58 12 -9Q24 8 48 -14Q43 24 16 20C-25 1 -35 -12 -48 2Q-62 18 -64 44Z"/><path className="combat-tail-spine" d="M-79 33Q-57 -40 -10 -13L28 9"/></g>}
+        {primitive==='tentacle'&&<g className="combat-natural-tentacle"><path d="M-81 33C-35 26 -69 -39 -6 -32C47 -25 27 44 -4 23C-26 9 -2 -6 7 5"/><path d="M-69 29L-62 33M-51 13L-42 15M-41 -6L-32 -4M-21 -23L-19 -13M6 -20L4 -11M19 -2L10 1" className="combat-tentacle-suckers"/></g>}
+        {primitive==='sting'&&<g className="combat-natural-sting"><path d="M-76 -16Q-36 -47 -16 -8L21 0L-17 7Q-48 -24 -76 -16Z"/><path d="M26 -11L32 -22M32 0H46M26 11L32 22"/></g>}
+        {primitive==='natural_slam'&&<g className="combat-natural-slam"><path d="M-45 10L-45 -12Q-42 -26 -32 -17V-23Q-26 -35 -18 -24Q-10 -34 -2 -22Q7 -28 12 -17L17 4Q28 15 9 33L-14 38Z"/><path d="M-31 -17L-28 -2M-18 -24L-13 -5M-2 -22L3 -4M-26 18L-13 8L4 13"/><path className="combat-slam-cracks" d="M-34 46L-47 61L-43 69M0 48L10 64L7 74M33 25L48 32L53 45"/></g>}
+        {criticalWeapon&&<><CriticalWeaponStrike primitive={primitive}/><CriticalWeaponImpact profile={profile}/></>}
+        {criticalMagic&&<CriticalMagicImpact profile={profile}/>}
+        {!miss&&!critical&&<Impact motif={profile.motif} critical={beat.roll?.outcome==='crit'}/>}
         {miss&&<path className="combat-fx-miss-wisp" d="M-25 -35Q30 -47 44 0Q49 22 70 30"/>}
       </g>
     </>}
-    {!directional&&<g transform={`translate(${to.x*100} ${to.y*100}) rotate(${['move','dash','disengage'].includes(primitive)?angle:0}) scale(${Math.max(1,Math.sqrt(targetSize))*(profile.motion.scale??1)})`}><Utility primitive={primitive} motif={profile.motif}/></g>}
+    {!directional&&!areaPrimitive&&<g transform={`translate(${to.x*100} ${to.y*100}) rotate(${['move','dash','disengage'].includes(primitive)?angle:0}) scale(${Math.max(1,Math.sqrt(targetSize))*(profile.motion.scale??1)})`}><Utility primitive={primitive} motif={profile.motif}/></g>}
+    {areaPrimitive&&!beat.area&&showArea&&<g transform={`translate(${to.x*100} ${to.y*100})`}><Impact motif={profile.motif}/></g>}
   </g>;
 }

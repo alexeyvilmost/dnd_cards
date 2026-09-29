@@ -28,6 +28,26 @@ export const TACTICAL_HEIGHT = 10;
 
 export interface GridPosition { x: number; y: number }
 
+/** Snapshot of the board's validated area, shared by delivery and result FX. */
+export interface CombatAnimationArea {
+  geometry: NonNullable<ReturnType<typeof import('./tacticalGrid').tacticalAreaGeometry>>;
+  sourcePosition: GridPosition;
+  origin: GridPosition;
+  aim: GridPosition;
+  /** The same terrain-clipped cells used by authoritative targeting. */
+  cells: GridPosition[];
+}
+
+export interface CombatAttackPresentation {
+  visual?: 'slashing' | 'piercing' | 'bludgeoning' | 'ranged' | 'magic';
+  damageType?: string;
+  weaponCardId?: string;
+  attackKind?: string;
+  weaponType?: string;
+  weaponProperties?: string[];
+  weaponDamageType?: string;
+}
+
 export interface RecentStraightMovement {
   interrupted?: boolean;
   from: GridPosition;
@@ -84,6 +104,9 @@ export interface CombatLogEventRecord {
   spell?: { baseLevel: number; castLevel: number };
   /** Selected board point captured for a new utility/area declaration. */
   targetPosition?: GridPosition;
+  area?: CombatAnimationArea;
+  /** Resolved before commitment so later equipment changes cannot alter replay. */
+  attackPresentation?: CombatAttackPresentation;
   /** Board coordinates at the committed movement, independent of later moves. */
   movement?: { from: GridPosition; to: GridPosition };
 }

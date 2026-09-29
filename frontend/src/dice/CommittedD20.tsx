@@ -2,7 +2,7 @@ import {useEffect, useRef, useState, type CSSProperties} from 'react';
 import {createCommittedDieRenderer} from './d20Renderer';
 import {supportedDieSides} from './polyhedralGeometry';
 import './CommittedD20.css';
-import {soundPlayer} from '../audio/player';
+import {useDiceVisualStart} from './DiceStage';
 
 export const D20_ROLL_DURATION_MS = 1450;
 export const D20_SELECTION_DURATION_MS = 400;
@@ -12,7 +12,7 @@ type DieProps = {value: number; rolling: boolean; discarded?: boolean; selection
 export default function CommittedD20(props: DieProps) { return <CommittedDie {...props} sides={20}/>; }
 
 export function CommittedDie({value, rolling, sides, discarded = false, selectionPending = false, critical, animateEffects = true}: DieProps & {sides: number}) {
-  useEffect(()=>{if(rolling)soundPlayer.play('dice.roll');},[rolling,value]);
+  const onVisualStart = useDiceVisualStart(`${sides}:${value}`);
   const canvas = useRef<HTMLCanvasElement>(null);
   const renderer = useRef<ReturnType<typeof createCommittedDieRenderer>>(null);
   const [unavailable, setUnavailable] = useState(false);
@@ -43,12 +43,16 @@ export function CommittedDie({value, rolling, sides, discarded = false, selectio
     const draw = (time: number) => {
       const progress = rolling && !reduced ? Math.min(1, (time - start) / D20_ROLL_DURATION_MS) : 1;
       latest.current = {value, progress};
-      if (renderer.current && !renderer.current.draw(value, progress)) setUnavailable(true);
+      if (renderer.current) {
+        const drawn = renderer.current.draw(value, progress);
+        if (!drawn) setUnavailable(true);
+        else if (progress < 1) onVisualStart();
+      }
       if (progress < 1) frame = requestAnimationFrame(draw);
     };
     draw(start);
     return () => cancelAnimationFrame(frame);
-  }, [value, rolling, sides]);
+  }, [value, rolling, sides, onVisualStart]);
   const revealedDiscard = !rolling && !selectionPending && discarded;
   const revealedCritical = !rolling && !selectionPending && !discarded && sides===20 ? critical : undefined;
   return <div className={`committed-die${rolling ? ' is-rolling' : ''}${revealedDiscard ? ' is-discarded' : ''}${revealedCritical ? ` is-critical-${revealedCritical}${animateEffects ? ' has-critical-motion' : ''}` : ''}`}

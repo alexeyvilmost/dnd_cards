@@ -51,6 +51,7 @@ const Layout = ({ children, landing = false, workspace = false }: LayoutProps) =
       submenu: [
         { path: '/templates', label: 'Шаблоны' },
         { path: '/export', label: 'Экспорт' },
+        ...(!user ? [{ path: '/settings', label: 'Настройки' }] : []),
       ],
     },
     user ? {

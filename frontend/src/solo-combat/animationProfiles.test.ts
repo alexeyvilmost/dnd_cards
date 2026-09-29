@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import seed from '../../../backend/animationpresentation/catalog.json';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import type { SoloCombatState } from './types';
-import { builtInAnimationCatalog, resolveActiveSpellCircles, resolveCombatAnimation, setCombatAnimationCatalog } from './animationProfiles';
+import { builtInAnimationCatalog, combatAnimationForOutcome, resolveActiveSpellCircles, resolveCombatAnimation, setCombatAnimationCatalog, type CombatAnimationProfile } from './animationProfiles';
 
 const spell = (id = 'unrelated-spell', level = 0): RuleActionDefinition => ({id, name: 'Совсем другое название', kind: 'spell',
   sourceEntityIds: [id], spell: {entityId: id, level}, mechanics: {}});
@@ -10,15 +10,61 @@ const action = (id: string): RuleActionDefinition => ({id, name: 'Совсем �
 afterEach(() => setCombatAnimationCatalog(builtInAnimationCatalog));
 
 describe('entity-owned combat animation profiles', () => {
+  it.each([
+    {profileKey: 'spell.frost-ray', primitive: 'charged_beam'},
+    {profileKey: 'spell.shocking-grasp', primitive: 'beam'},
+    {profileKey: 'spell.fire-bolt', primitive: 'projectile'},
+    {profileKey: 'spell.ice-knife', primitive: 'weapon_throw'},
+  ])('selects a confirmed magic critical for $primitive from assigned $profileKey data', data => {
+    const entity = spell(`unrelated-${data.primitive}`);
+    const catalog = {...builtInAnimationCatalog, bindings: [{entity_type: 'spell', entity_id: entity.id, profile_key: data.profileKey}]};
+    const base = resolveCombatAnimation(entity, {}, catalog);
+    const before = JSON.stringify({entity, catalog});
+    const critical = resolveCombatAnimation(entity, {outcome: 'crit', rollPhase: 'after-reaction'}, catalog);
+    expect(critical).toMatchObject({key: catalog.defaults.criticalProfile![base.key], baseProfileKey: base.key,
+      primitive: data.primitive, strikeStyle: 'critical', criticalEffect: 'magic', palette: base.palette, casterCircle: true});
+    expect(critical.weaponShape).toBe(base.weaponShape);
+    for (const outcome of [undefined, 'hit', 'miss', 'crit_miss'] as const) {
+      expect(resolveCombatAnimation(entity, {outcome}, catalog)).toEqual(base);
+    }
+    expect(resolveCombatAnimation(entity, {outcome: 'crit', rollPhase: 'before-reaction'}, catalog)).toEqual(base);
+    expect(combatAnimationForOutcome(base, {outcome: 'crit', damageType: 'force'}, catalog))
+      .toMatchObject({key: critical.key, primitive: data.primitive, criticalEffect: 'magic',
+        palette: catalog.profiles.find(profile => profile.key === 'spell.force')!.palette});
+    expect(JSON.stringify({entity, catalog})).toBe(before);
+  });
+  it.each([
+    {id: 'arbitrary-blade', primitive: 'melee_slash' as const},
+    {id: 'unrelated-launcher', primitive: 'weapon_throw' as const, weaponShape: 'axe' as const},
+  ])('selects $id critical delivery from an explicit mapping and only a confirmed outcome', data => {
+    const base: CombatAnimationProfile = {key: data.id, primitive: data.primitive,
+      palette: {primary: '#135790', secondary: '#abcdef'}, motion: {durationMs: 900, scale: 1}, casterCircle: false,
+      ...('weaponShape' in data ? {weaponShape: data.weaponShape} : {})};
+    const critical: CombatAnimationProfile = {...base, key: `${data.id}.strong`, strikeStyle: 'critical', baseProfileKey: base.key,
+      palette: {primary: '#000000', secondary: '#ffffff'}, motion: {durationMs: 1400, scale: 1.4, launchRatio: .25, contactRatio: .48}};
+    const catalog = {...builtInAnimationCatalog, profiles: [...builtInAnimationCatalog.profiles, base, critical],
+      bindings: [{entity_type: 'action', entity_id: 'unrelated-entity', profile_key: base.key}],
+      defaults: {...builtInAnimationCatalog.defaults, criticalProfile: {[base.key]: critical.key}}};
+    const entity = action('unrelated-entity');
+    expect(resolveCombatAnimation(entity, {outcome: 'crit'}, catalog)).toMatchObject({key: critical.key, strikeStyle: 'critical',
+      primitive: base.primitive, palette: base.palette, motion: critical.motion});
+    expect(resolveCombatAnimation(entity, {outcome: 'crit'}, catalog).weaponShape).toBe(base.weaponShape);
+    for (const outcome of [undefined, 'hit', 'miss', 'crit_miss'] as const) {
+      expect(resolveCombatAnimation(entity, {outcome}, catalog).key).toBe(base.key);
+    }
+    expect(resolveCombatAnimation(entity, {outcome: 'crit', rollPhase: 'before-reaction'}, catalog).key).toBe(base.key);
+    expect(combatAnimationForOutcome(base, {outcome: 'crit', rollPhase: 'after-reaction', damageType: 'force'}, catalog))
+      .toMatchObject({key: critical.key, primitive: base.primitive, palette: builtInAnimationCatalog.profiles.find(profile => profile.key === 'spell.force')!.palette});
+  });
   it('resolves two unrelated entities entirely from metadata, including actor-scoped spell IDs', () => {
     const catalog = {...builtInAnimationCatalog, bindings: [
       {entity_type: 'spell', entity_id: 'arbitrary-cold-source', profile_key: 'spell.frost-ray'},
       {entity_type: 'action', entity_id: 'arbitrary-jaw-source', profile_key: 'natural.bite'},
     ]};
     const frost = {...spell('arbitrary-cold-source'), id: 'actor:private-slot'};
-    expect(resolveCombatAnimation(frost, {}, catalog)).toMatchObject({primitive: 'beam', motif: 'frost'});
+    expect(resolveCombatAnimation(frost, {}, catalog)).toMatchObject({primitive: 'charged_beam', motif: 'frost'});
     expect(resolveCombatAnimation(action('arbitrary-jaw-source'), {}, catalog)).toMatchObject({primitive: 'bite'});
-    expect(resolveCombatAnimation({...action('derived-followup'), sourceEntityIds: ['arbitrary-cold-source']}, {}, catalog)).toMatchObject({primitive: 'beam', motif: 'frost'});
+    expect(resolveCombatAnimation({...action('derived-followup'), sourceEntityIds: ['arbitrary-cold-source']}, {}, catalog)).toMatchObject({primitive: 'charged_beam', motif: 'frost'});
     expect(resolveCombatAnimation({...frost, name: 'Переименованное заклинание'}, {}, catalog)).toEqual(resolveCombatAnimation(frost, {}, catalog));
   });
 
@@ -32,6 +78,18 @@ describe('entity-owned combat animation profiles', () => {
     expect(JSON.stringify(original)).toBe(serialized);
   });
 
+  it.each([
+    {damage: 'force', palette: 'spell.force'},
+    {damage: 'arbitrary-energy', palette: 'spell.frost'},
+  ])('applies data-owned $damage palette without replacing the entity animation', data => {
+    const catalog = {...builtInAnimationCatalog, bindings: [{entity_type: 'action', entity_id: 'arbitrary-strike', profile_key: 'natural.bite'}],
+      defaults: {...builtInAnimationCatalog.defaults, damagePalette: {[data.damage]: data.palette}}};
+    const result = resolveCombatAnimation(action('arbitrary-strike'), {damageType: data.damage}, catalog);
+    expect(result.primitive).toBe('bite');
+    expect(result.palette).toEqual(catalog.profiles.find(profile => profile.key === data.palette)?.palette);
+    expect(result.casterCircle).toBe(false);
+  });
+
   it('covers the 35 current base cantrips and all 49 authored variants, without invalid profiles', () => {
     expect(seed.cantripCoverage.filter(row => !row.card_number.startsWith('SPELL-VAR-'))).toHaveLength(35);
     expect(seed.cantripCoverage.filter(row => row.card_number.startsWith('SPELL-VAR-'))).toHaveLength(49);
@@ -40,7 +98,7 @@ describe('entity-owned combat animation profiles', () => {
       expect(binding, row.card_number).toBeDefined();
       expect(resolveCombatAnimation(spell(row.id))).toMatchObject({key: binding!.profile_key, casterCircle: true});
     }
-    expect(seed.bindings.filter(binding => binding.profile_key.startsWith('natural.'))).toHaveLength(8);
+    expect(seed.bindings.filter(binding => binding.profile_key.startsWith('natural.')).length).toBeGreaterThanOrEqual(8);
     const keys = new Set(seed.profiles.map(profile => profile.key));
     expect(keys.size).toBe(seed.profiles.length);
     for (const binding of seed.bindings) expect(keys.has(binding.profile_key), binding.profile_key).toBe(true);

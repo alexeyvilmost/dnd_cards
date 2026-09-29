@@ -100,6 +100,11 @@ export default function Dice3DOverlay({
   const [lastPower, setLastPower] = useState(0.55);
   const [lastGesture, setLastGesture] = useState<ThrowGesture>({ strength: 0.55 });
   const autoThrownRequestRef = useRef('');
+  const currentRequest = useRef({active, requestKey});
+  currentRequest.current = {active, requestKey};
+  const throwSequence = useRef(0);
+  const visualFrame = useRef(0);
+  const throwing = useRef(false);
   const mustPickTarget = !!needsTarget && !!targets?.length && !targetId;
 
   const grouped = useMemo(() => groupDiceResults(plan, values), [plan, values]);
@@ -159,6 +164,15 @@ export default function Dice3DOverlay({
   }, []);
 
   useEffect(() => {
+    return () => {
+      ++throwSequence.current;
+      throwing.current = false;
+      cancelAnimationFrame(visualFrame.current);
+      if (diceBoxRef.current) diceBoxRef.current.onBeforeRoll = () => {};
+    };
+  }, [active, requestKey]);
+
+  useEffect(() => {
     if (!active) return;
     let stale = false;
     setValues([]);
@@ -192,9 +206,13 @@ export default function Dice3DOverlay({
   }, [active, onCancel]);
 
   const roll = useCallback(async (gesture: ThrowGesture = { strength: 0.55 }) => {
-    if (stage === 'rolling' || !plan.length) return;
+    if (!active || throwing.current || stage === 'rolling' || !plan.length) return;
+    throwing.current = true;
+    const sequence = ++throwSequence.current;
+    const isCurrent = () => sequence === throwSequence.current && currentRequest.current.active && currentRequest.current.requestKey === requestKey;
     try {
       const box = await ensureBox();
+      if (!isCurrent()) return;
       const throwConfig = diceThrowConfig(gesture.strength);
       const hasReleasePoint = gesture.releaseX != null && gesture.releaseY != null;
       const startPosition = hasReleasePoint
@@ -209,13 +227,21 @@ export default function Dice3DOverlay({
       setValues([]);
       setDrag(null);
       setStage('rolling');
-      soundPlayer.play('dice.roll');
-      box.updateConfig({
+      await box.updateConfig({
         throwForce: throwConfig.throwForce,
         spinForce: throwConfig.spinForce,
         startingHeight: throwConfig.startingHeight,
         ...(startPosition ? { startPosition } : {}),
       });
+      if (!isCurrent()) return;
+      // init/updateConfig have loaded the theme. The library's public callback
+      // now starts the physical throw; wait for its first rendering frame.
+      box.onBeforeRoll = () => {
+        box.onBeforeRoll = () => {};
+        visualFrame.current = requestAnimationFrame(() => {
+          if (isCurrent() && box.isVisible && !document.hidden) soundPlayer.playDefault(plan.length > 1 ? 'diceRoll' : 'diceSingle', `dice-box:${requestKey}:${sequence}`);
+        });
+      };
       const result = await box.roll(
         plan.map((die) => ({
           qty: 1,
@@ -227,6 +253,7 @@ export default function Dice3DOverlay({
         // Быстрый клик и клавиатура используют штатную случайную границу стола.
         { newStartPoint: !startPosition },
       );
+      if (!isCurrent()) return;
       const rolled = readValues(result);
       if (rolled.length !== plan.length || rolled.some((value) => !Number.isFinite(value))) {
         throw new Error(`Dice result mismatch: ${rolled.length}/${plan.length}`);
@@ -234,10 +261,14 @@ export default function Dice3DOverlay({
       setValues(rolled);
       setStage('settled');
     } catch (error) {
+      if (!isCurrent()) return;
+      cancelAnimationFrame(visualFrame.current);
       console.error('3D dice roll failed', error);
       setStage('error');
+    } finally {
+      if (sequence === throwSequence.current) throwing.current = false;
     }
-  }, [ensureBox, plan, stage]);
+  }, [active, ensureBox, plan, requestKey, stage]);
 
   useEffect(() => {
     if (!active || !autoThrow || stage !== 'ready' || autoThrownRequestRef.current === requestKey) return;

@@ -3,7 +3,10 @@ import { groupCombatSaveBeats, presentCombatEntries } from './presentation';
 import type { CombatLogEntry, SoloCombatState } from './types';
 import type { EngineEvent, RollLog } from '../mvp/contracts';
 import compiled from '../pages/rulesLabFixture.generated.json';
-import { builtInAnimationCatalog, setCombatAnimationCatalog } from './animationProfiles';
+import { builtInAnimationCatalog, setCombatAnimationCatalog, type CombatAnimationProfile } from './animationProfiles';
+import { withDeclaredTestWeaponProfile } from '../testing/weaponProfileFixtures';
+import { MECH_WEAPON_ATTACK, MECH_OFFHAND_ATTACK, CARD_LONGSWORD } from '../mvp/fixtures';
+import type { RuleActionDefinition } from '../rules-core/domain';
 
 const roll: RollLog = {kind: 'd20', dice: [{sides: 20, result: 15}], total: 20,
   modifiers: [{source: 'Атака', value: 5}], advantage: 'none', outcome: 'hit', target: {type: 'ac', value: 14}, text: 'к20: 15 +5 = 20'};
@@ -17,6 +20,82 @@ const entry = (events: EngineEvent[], text = 'Герой: Удар: выполн
 
 describe('combat presentation from committed events', () => {
   afterEach(() => setCombatAnimationCatalog(builtInAnimationCatalog));
+  it.each([
+    {id: 'unrelated-critical-blade', primitive: 'melee_slash' as const, visual: 'slashing' as const},
+    {id: 'unrelated-critical-launcher', primitive: 'weapon_throw' as const, visual: 'ranged' as const, weaponShape: 'axe' as const},
+  ])('replays only the saved confirmed critical result for $id and retains its weapon and damage palette', data => {
+    const base: CombatAnimationProfile = {key: `${data.id}.base`, primitive: data.primitive, casterCircle: false,
+      palette: {primary: '#135790', secondary: '#abcdef'}, motion: {durationMs: 900, scale: 1},
+      ...('weaponShape' in data ? {weaponShape: data.weaponShape} : {})};
+    const critical: CombatAnimationProfile = {...base, key: `${data.id}.heavy`, strikeStyle: 'critical', baseProfileKey: base.key,
+      motion: {durationMs: 1400, scale: 1.4, launchRatio: .25, contactRatio: .48}};
+    const definition: RuleActionDefinition = {id: data.id, name: 'Не зависит от названия', kind: 'nonSpell', sourceEntityIds: [data.id], mechanics: {}};
+    setCombatAnimationCatalog({...builtInAnimationCatalog, profiles: [...builtInAnimationCatalog.profiles, base, critical],
+      bindings: [{entity_type: 'action', entity_id: definition.id, profile_key: base.key}],
+      defaults: {...builtInAnimationCatalog.defaults, criticalProfile: {[base.key]: critical.key}}});
+    const makeLog = (id: string, outcome: RollLog['outcome'], face: number, label = 'Атака'): CombatLogEntry => ({
+      id, round: 1, actorId: 'hero', text: 'Сохранённая команда', records: [{kind: 'engine', ordinal: 0, sourceActorId: 'hero', actorId: 'hero', targetIds: ['enemy'],
+      actionId: definition.id, attackPresentation: {visual: data.visual, damageType: 'slashing'},
+      event: {type: 'roll', label, roll: {...roll, dice: [{sides: 20, result: face}], outcome}}}]});
+    // A recorded natural 20 does not determine delivery; an actual expanded-range
+    // critical on 19 does. Pending defensive influence withholds either visual.
+    const before = makeLog('before', 'crit', 19, 'Атака — до реакции');
+    const after = makeLog('after', 'crit', 19, 'Атака — после реакции');
+    after.records!.push({kind: 'engine', ordinal: 1, sourceActorId: 'hero', actorId: 'hero', targetIds: ['enemy'],
+      actionId: definition.id, event: {type: 'damage', amount: 12, damageType: 'force'}});
+    const logs = [makeLog('ordinary-20', 'hit', 20), makeLog('critical-miss', 'crit_miss', 1), before, after];
+    const combat = {...state, catalogActions: [definition], log: logs};
+    const saved = JSON.stringify(combat);
+    const beats = presentCombatEntries(combat, logs);
+    expect(beats.map(beat => beat.animation?.key)).toEqual([base.key, base.key, undefined, critical.key]);
+    expect(beats[2]).toMatchObject({rollPhase: 'before-reaction', cues: []});
+    expect(beats[3]).toMatchObject({rollPhase: 'after-reaction', animation: {primitive: data.primitive, strikeStyle: 'critical',
+      palette: builtInAnimationCatalog.profiles.find(profile => profile.key === 'spell.force')!.palette}, damage: [{amount: 12, damageType: 'force'}]});
+    expect(beats[3].animation?.weaponShape).toBe(base.weaponShape);
+    expect(beats[3].roll?.dice).toEqual(beats[2].roll?.dice);
+    const reloaded = JSON.parse(saved) as SoloCombatState;
+    expect(presentCombatEntries(reloaded, reloaded.log)).toEqual(beats);
+    expect(JSON.stringify(combat)).toBe(saved);
+  });
+  it.each([
+    {id: 'unrelated-main', damage: 'slashing', hand: 'main_hand', mechanics: MECH_WEAPON_ATTACK, primitive: 'melee_slash'},
+    {id: 'unrelated-off', damage: 'piercing', hand: 'off_hand', mechanics: MECH_OFFHAND_ATTACK, primitive: 'melee_pierce'},
+    {id: 'pact-main', damage: 'slashing', hand: 'main_hand', mechanics: MECH_WEAPON_ATTACK, primitive: 'melee_slash', pactDamage: 'necrotic'},
+    {id: 'pact-off', damage: 'piercing', hand: 'off_hand', mechanics: MECH_OFFHAND_ATTACK, primitive: 'melee_pierce', pactDamage: 'radiant'},
+    {id: 'pact-force', damage: 'slashing', hand: 'main_hand', mechanics: MECH_WEAPON_ATTACK, primitive: 'melee_slash', pactDamage: 'force'},
+  ])('resolves a canonical weapon entry through concrete provenance and the committed $hand card', data => {
+    const weapon = withDeclaredTestWeaponProfile({...CARD_LONGSWORD, id: data.id, name: 'Переименовано'}, {
+      weaponType: 'arbitrary', proficiencyCategory: 'martial', attackAbility: 'str', damageLines: [{dice: '1d8', type: data.damage}],
+      defaultAttackMode: 'melee', attackModes: [{kind: 'melee', reach_ft: 5}], properties: [], masteryEffectId: 'test-mastery',
+    });
+    const definition = {id: `sheet-${data.id}`, name: 'Не связано с именем оружия', kind: 'nonSpell', sourceEntityIds: [`sheet-${data.id}`],
+      mechanics: data.mechanics} as RuleActionDefinition;
+    // The currently equipped card has already changed; the event selects its own card.
+    const character = {...state.world.actors.hero.character, knownCards: [weapon], equippedCards: []};
+    const combat = {...state, catalogActions: [definition], world: {...state.world, actors: {...state.world.actors,
+      hero: {...state.world.actors.hero, character, runtime: {...state.world.actors.hero.runtime, equipment: {main_hand: 'later-item', off_hand: null}}}}}};
+    const log = entry([{type: 'roll', label: 'Атака', roll: {...roll, outcome: 'miss'}}], 'Произвольный текст');
+    log.records = log.records!.map(record => ({...record, actionId: 'canonical-attack-entry',
+      sourceEntityIds: [definition.id, `card:${weapon.id}`], facts: {weaponCardId: weapon.id,
+        ...('pactDamage' in data ? {pactBlade: {damageType: data.pactDamage}} : {})}}));
+    const previous = JSON.stringify({combat, log});
+    const beat = presentCombatEntries(combat, [log])[0];
+    expect(beat).toMatchObject({actionId: definition.id, visual: data.damage, animation: {primitive: data.primitive}});
+    if ('pactDamage' in data && data.pactDamage === 'force') expect(beat.animation?.palette).toEqual(builtInAnimationCatalog.profiles.find(profile => profile.key === 'spell.force')?.palette);
+    expect(JSON.stringify({combat, log})).toBe(previous);
+  });
+  it.each([
+    {id: 'arbitrary-fang', profile: 'natural.bite', damage: 'fire', primitive: 'bite'},
+    {id: 'arbitrary-pincer', profile: 'natural.claws', damage: 'slashing', primitive: 'claws'},
+  ])('preserves an assigned natural attack for a derived reaction regardless of its damage ($id)', data => {
+    setCombatAnimationCatalog({...builtInAnimationCatalog, bindings: [{entity_type: 'action', entity_id: data.id, profile_key: data.profile}]});
+    const definition = {id: `${data.id}:reaction`, name: 'Произвольное имя', kind: 'nonSpell', sourceEntityIds: [data.id], mechanics: {
+      effects: [{resolution: 'attack_roll', attack_kind: 'weapon_melee', attack_bonus_override: 5,
+        on_hit: [{kind: 'damage', type: data.damage, amount: '2d6'}]}]}} as RuleActionDefinition;
+    const log = entry([{type: 'roll', label: 'Атака', roll}], 'Действие');
+    log.records![0].actionId = definition.id;
+    expect(presentCombatEntries({...state, catalogActions: [definition]}, [log])[0].animation?.primitive).toBe(data.primitive);
+  });
   it.each([
     {id: 'arbitrary-lantern', name: 'Световой знак', entityId: 'lamp-entity', baseLevel: 0, castLevel: 0, profile: 'spell.light', position: {x: 9, y: 4}},
     {id: 'arbitrary-protection', name: 'Другая защита', entityId: 'protection-entity', baseLevel: 1, castLevel: 5, profile: 'spell.blade-ward', position: {x: 0, y: 1}},
@@ -127,6 +206,12 @@ describe('combat presentation from committed events', () => {
     expect(beats[0].cues.filter(cue => cue.kind === 'damage')).toHaveLength(2);
     expect(beats[0].cues).toContainEqual({actorId: 'enemy', text: 'Скорость снижена (Луч холода)', kind: 'effect'});
     expect(beats[0].cues).toContainEqual({actorId: 'hero', text: 'Уклонение', kind: 'effect'});
+  });
+  it('colors a confirmed chosen damage type while retaining the physical attack primitive', () => {
+    const [beat] = presentCombatEntries(state, [entry([{type: 'roll', label: 'Атака', roll},
+      {type: 'damage', amount: 4, damageType: 'force'}])]);
+    expect(beat.animation?.primitive).toBe('melee_slash');
+    expect(beat.animation?.palette).toEqual(builtInAnimationCatalog.profiles.find(profile => profile.key === 'spell.force')?.palette);
   });
   it('keeps multiattack rolls separate and displays misses', () => {
     const beats = presentCombatEntries(state, [entry([{type: 'roll', label: 'Атака', roll}, {type: 'damage', amount: 6, damageType: 'piercing'},

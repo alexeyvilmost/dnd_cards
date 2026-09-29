@@ -15,6 +15,7 @@ RUN if [ -f package-lock.json ]; then npm ci --ignore-scripts --include=dev --no
 COPY frontend/ ./
 # Keep the source tree layout used by the shared presentation catalog import.
 COPY backend/animationpresentation/catalog.json /app/backend/animationpresentation/catalog.json
+COPY backend/audiopresentation/catalog.json /app/backend/audiopresentation/catalog.json
 
 ARG VITE_API_URL
 ENV VITE_API_URL=${VITE_API_URL}

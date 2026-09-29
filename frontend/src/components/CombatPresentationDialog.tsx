@@ -6,6 +6,7 @@ import type { CombatBeat } from '../solo-combat/presentation';
 import { combatActorDisplayName } from '../character/familiarLabels';
 import {CommittedDie, D20_ROLL_DURATION_MS, D20_SELECTION_DURATION_MS} from '../dice/CommittedD20';
 import D20RollTray from '../dice/D20RollTray';
+import DiceStage from '../dice/DiceStage';
 import SheetSettingsDialog from './SheetSettingsDialog';
 import { combatRollModeFor, useSiteSettings, type CombatRollMode } from '../settings';
 import { useCombatDialogFocus } from './useCombatDialogFocus';
@@ -84,7 +85,7 @@ export default function CombatPresentationDialog({initiative, beat, onClose, mod
       <h2>{initiative?'Инициатива':beat?.actionName}</h2>
       {initiative ? <>
         <p className="combat-presentation-muted">Участники бросают к20. Сражение начнётся в порядке инициативы.</p>
-        <div className="combat-initiative-list">{initiative.initiative.map(entry=>{
+        <DiceStage rollKey="initiative" diceCount={initiative.initiative.reduce((sum,entry)=>sum+(entry.roll?.dice.length??1),0)}><div className="combat-initiative-list">{initiative.initiative.map(entry=>{
           const actor=initiative.world.actors[entry.actorId];
           const entryRoll=entry.roll ?? {kind:'d20' as const,dice:[{sides:20,result:entry.die}],advantage:'none' as const,total:entry.total,modifiers:[],text:''};
           return <div className="combat-initiative-row" key={entry.actorId}>
@@ -93,18 +94,18 @@ export default function CombatPresentationDialog({initiative, beat, onClose, mod
             <div className="combat-initiative-dice"><D20RollTray roll={entryRoll} rolling={animate&&!landed} selecting={!rolled} animate={animate}/></div>
             <strong className="combat-initiative-total">{rolled?entry.total:'…'}</strong>
           </div>;
-        })}</div>
+        })}</div></DiceStage>
       </> : saveRows ? <>
         <p className="combat-presentation-muted">{beat?.sourceName} · Целей: {saveRows.length}</p>
-        <div className="combat-save-rows">{saveRows.map(row => <div className="combat-save-row" key={row.id}>
+        <DiceStage rollKey={rollKey} diceCount={saveRows.reduce((sum,row)=>sum+(row.roll?.dice.length??0),0)}><div className="combat-save-rows">{saveRows.map(row => <div className="combat-save-row" key={row.id}>
           <div className="combat-save-name"><b>{row.rollerName ?? row.targetName}</b><small>{row.rollLabel}</small></div>
           {row.roll && <D20RollTray key={`${row.id}:${rollKey}`} roll={row.roll} rolling={animate&&!landed} selecting={!attackReady} animate={animate}/>}
           <div className="combat-save-outcome">{attackReady ? <><strong>{row.roll?.total} / СЛ {row.roll?.target?.value}</strong><span>{row.roll?.outcome==='success'?'Успех':'Провал'}</span><small>{row.roll?.text}</small></> : 'Спасбросок…'}</div>
           <div className="combat-save-damage" aria-label={`Урон: ${row.targetName}`}>{attackReady ? row.damage?.length ? row.damage.map((packet,i)=><div key={i}>
-            <div className="combat-save-dice">{packet.roll?.dice.map((die,j)=><CommittedDie key={j} sides={die.sides} value={die.result} discarded={die.discarded} rolling={animateDamage&&!damageRolled}/>)}</div>
+            <DiceStage independent rollKey={JSON.stringify(packet.roll?.dice)} diceCount={packet.roll?.dice.length??0}><div className="combat-save-dice">{packet.roll?.dice.map((die,j)=><CommittedDie key={j} sides={die.sides} value={die.result} discarded={die.discarded} rolling={animateDamage&&!damageRolled}/>)}</div></DiceStage>
             {ready ? <><strong>{packet.amount} · {getDamageLabel(packet.damageType)}</strong><small>{packet.roll?.text ?? `Фиксированный урон: ${packet.amount}`}</small>{packet.beforeResistance!==undefined&&packet.beforeResistance!==packet.amount&&<small>{packet.beforeResistance} → {packet.amount} после {packet.adjustment==='immunity'?'иммунитета':packet.adjustment==='vulnerability'?'уязвимости':'сопротивления'}</small>}</> : <small>Бросок урона…</small>}
           </div>) : <small>Без урона</small> : <small>Урон после спасброска</small>}</div>
-        </div>)}</div>
+        </div>)}</div></DiceStage>
       </> : <>
         {beat?.sourceName&&<p className="combat-attack-versus"><b>{beat.sourceName}</b>{beat.targetName&&<><Swords size={18}/><b>{beat.targetName}</b></>}</p>}
         {isSave&&beat?.rollerName&&<p className="combat-presentation-muted">Бросает: {beat.rollerName} · {beat.rollLabel}</p>}
@@ -125,7 +126,7 @@ export default function CombatPresentationDialog({initiative, beat, onClose, mod
             {beat.deathSave.stable&&<p>Стабилизирован — спасброски больше не требуются.</p>}
             {beat.deathSave.dead&&<p>Персонаж погиб.</p>}
           </div>}
-          {hasDamage && beat?.damage?.length ? <div className="combat-damage-breakdown" aria-label="Расчёт урона">
+          {hasDamage && beat?.damage?.length ? <DiceStage rollKey={damageKey} diceCount={beat.damage.reduce((sum,packet)=>sum+(packet.roll?.dice.length??0),0)}><div className="combat-damage-breakdown" aria-label="Расчёт урона">
             <h4>Бросок урона</h4>
             {beat.damage.map((packet, packetIndex) => <div className="combat-damage-packet" key={`${packet.damageType}:${packetIndex}`}>
               {packet.roll?.dice.length ? <div className="combat-damage-rolls">{packet.roll.dice.map((die, dieIndex) => <div className="combat-damage-die" key={dieIndex}><CommittedDie sides={die.sides} value={die.result} discarded={die.discarded} rolling={animateDamage&&!damageRolled}/><small>к{die.sides}</small></div>)}</div> : null}
@@ -134,7 +135,7 @@ export default function CombatPresentationDialog({initiative, beat, onClose, mod
                 {packet.beforeResistance !== undefined && packet.beforeResistance !== packet.amount && <small>{packet.beforeResistance} до {packet.adjustment === 'immunity' ? 'иммунитета' : packet.adjustment === 'vulnerability' ? 'уязвимости' : 'сопротивления'} → {packet.amount}</small>}</>
                 : <p role="status">Бросок урона…</p>}
             </div>)}
-          </div> : null}
+          </div></DiceStage> : null}
         </div>:<p className="combat-rolling-label">Кубик летит…</p>}
       </>}
       {!ready && <button type="button" className="combat-reveal-result" onClick={()=>{revealKey.current=revealResultKey;setLanded(true);setRolled(true);setDamageRolled(true);}}>Показать результат</button>}

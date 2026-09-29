@@ -50,6 +50,7 @@ describe('structured solo-combat log', () => {
       {ordinal: 1, sourceActorId: 'hero', obligationIds: [], payload: {
         type: 'ActionDeclared', actorId: 'hero', actionId: 'unknown-spell-action', actionKind: 'spell',
         sourceEntityIds: ['spell-entity', 'class-entity'], targetIds: ['ally'], timing: 'active',
+        facts: {weaponCardId: 'committed-card', hand: 'off', range: {kind: 'ranged'}},
         spell: {baseLevel: 1, castLevel: 4},
       }},
       {ordinal: 2, sourceActorId: 'hero', obligationIds: [], payload: {
@@ -59,6 +60,7 @@ describe('structured solo-combat log', () => {
     expect(records).toHaveLength(2);
     for (const record of records) expect(record).toMatchObject({actionId: 'unknown-spell-action', actionKind: 'spell',
       sourceEntityIds: ['spell-entity', 'class-entity'], spell: {baseLevel: 1, castLevel: 4}, targetIds: ['ally']});
+    for (const record of records) expect(record.facts).toEqual({weaponCardId: 'committed-card', hand: 'off', range: {kind: 'ranged'}});
     expect(records[0].kind).toBe('action');
     expect(combatLogDetails(records[0], state)).toEqual([]);
   });

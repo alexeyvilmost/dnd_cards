@@ -51,6 +51,8 @@ declare module '@3d-dice/dice-box' {
   }
 
   export default class DiceBox {
+    isVisible: boolean;
+    onBeforeRoll: (notation: unknown) => void;
     constructor(config: DiceBoxConfig);
     init(): Promise<void>;
     roll(
@@ -58,6 +60,6 @@ declare module '@3d-dice/dice-box' {
       options?: { theme?: string; newStartPoint?: boolean },
     ): Promise<Array<DiceResultGroup | DiceResult>>;
     clear(): this;
-    updateConfig(config: Partial<DiceBoxConfig>): void;
+    updateConfig(config: Partial<DiceBoxConfig>): Promise<this>;
   }
 }

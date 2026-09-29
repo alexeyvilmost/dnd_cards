@@ -5,8 +5,10 @@ import {MemoryRouter, Route, Routes} from 'react-router-dom';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {readFileSync} from 'node:fs';
 import type {BattleSceneProps} from '../battle3d/types';
+import type {Card} from '../types';
 import type {ActorState, RuleActionDefinition, RulesetReference} from '../rules-core/domain';
 import {createWorld} from '../rules-core/domain';
+import {WEAPON_ATTACK_PRIMITIVE} from '../rules-core/weaponActionPolicies';
 import {stepRoguelikeCombat, type RoguelikeCombatEnvelope, type RoguelikeCombatIntent} from '../roguelike/combatWorker';
 import type {RoguelikeRun} from '../roguelike/api';
 import type {ForgeCharacter} from '../character/types';
@@ -55,6 +57,49 @@ function attack(id:string, name:string, range=60):RuleActionDefinition {
       targeting:{domain:'actor',actor_targets:true,shape:'single',min_targets:1,max_targets:1,range_ft:range,allowed_relations:['enemy'],requires_line_of_sight:true},
       effects:[{resolution:'attack_roll',ability:'dex',attack_kind:range>5?'weapon_ranged':'weapon_melee',attack_bonus_override:50,vs:'ac',
         on_hit:[{kind:'damage',amount:'3',type:'piercing'}]}]}};
+}
+
+function neutralWeaponAttack():RuleActionDefinition {
+  return {id:'parity-weapon-attack',name:'Атака оружием',kind:'nonSpell',sourceEntityIds:['source:weapon-attack'],
+    targeting:{minTargets:1,maxTargets:1,rangeFt:1,requiresLineOfSight:true,allowedRelations:['enemy']},
+    mechanics:{primitive:{type:WEAPON_ATTACK_PRIMITIVE},activation:{mode:'active',cost:[
+      {resource:'action',amount:1},{resource:'equipped_weapon_ammo',amount:1},
+    ]},targeting:{domain:'actor',actor_targets:true,shape:'single',min_targets:1,max_targets:1,
+      range_ft:1,requires_line_of_sight:true,allowed_relations:['enemy']},
+    effects:[{resolution:'attack_roll',ability:'auto',attack_kind:'weapon_ranged',vs:'ac',
+      on_hit:[{kind:'damage',dice:'weapon',type:'weapon',ability:'auto'}]}]}};
+}
+
+function equippedWeaponState(weaponId:string,ammoId:string,rangeFt:number):SoloCombatState {
+  const state=fixtureState();
+  const action=neutralWeaponAttack();
+  for(const actor of Object.values(state.world.actors)){
+    actor.spellcastingAccess=undefined;
+    actor.character.resourceRecovery={};
+    actor.character.resourceRecharge={};
+  }
+  const weaponType=weaponId.replace(/[^a-z0-9]/g,'_');
+  const otherAmmoId=ammoId==='card:parity-bolt'?'card:parity-arrow':'card:parity-bolt';
+  const ammo={id:ammoId,name:ammoId,type:'ammunition',mechanics:{}} as unknown as Card;
+  const otherAmmo={id:otherAmmoId,name:otherAmmoId,type:'ammunition',mechanics:{}} as unknown as Card;
+  const weapon={id:weaponId,name:weaponId,type:'weapon',mechanics:{weapon_profile:{
+    weapon_type:weaponType,proficiency_category:'simple',attack_ability:'dex',
+    damage_lines:[{dice:'1d6',type:'piercing'}],default_attack_mode:'ranged',
+    attack_modes:[{kind:'ranged',normal_ft:rangeFt/2,long_ft:rangeFt}],properties:['ammunition'],
+    mastery_effect_id:`mastery:${weaponId}`,ammo:{card_id:ammoId,name:ammoId},
+    enchantment:{attack_bonus:0,damage_bonus:0,extra_damage_lines:[]},attunement:{required:false},
+  }}} as unknown as Card;
+  const hero=state.world.actors[HERO];
+  hero.character.knownCards=[weapon,ammo,otherAmmo];
+  hero.character.equippedCards=[weapon];
+  hero.character.weaponProficiencies=[weaponType];
+  hero.runtime.equipment={main_hand:weaponId};
+  hero.runtime.inventory=[{cardId:weaponId,qty:1},{cardId:ammoId,qty:3},{cardId:otherAmmoId,qty:3}];
+  hero.capabilities.actionIds=[action.id];
+  state.catalogActions=[action,...state.catalogActions.filter(row=>row.id==='parity-spear')];
+  state.playerActionIds=[action.id];
+  state.certifiedPlayerActionIds=[action.id];
+  return state;
 }
 
 function fixtureState():SoloCombatState {
@@ -142,7 +187,11 @@ describe('real combat page uses one canonical pipeline in 2D and 3D', () => {
     await click(button('Настройки боя'));
     const dialog=document.querySelector('[role="dialog"][aria-label="Настройки"]')!;
     expect(dialog.textContent).toContain('Монетки на поле');
-    await click(dialog.querySelector<HTMLInputElement>('input[type="checkbox"]')!);
+    const rendererToggle = [...dialog.querySelectorAll('label')]
+      .find(label => label.textContent?.startsWith('Монетки на поле'))?.control as HTMLInputElement;
+    expect(rendererToggle).toBeInstanceOf(HTMLInputElement);
+    expect(rendererToggle.checked).toBe(false);
+    await click(rendererToggle);
     expect(container.querySelector('[data-testid="mock-r3f"]')).not.toBeNull();
     expect(container.querySelector('[data-action-id="parity-shot"]')!.className).toContain('is-selected');
     expect(container.querySelector('.initiative-ribbon')!.innerHTML).toBe(initiative);
@@ -181,7 +230,34 @@ describe('real combat page uses one canonical pipeline in 2D and 3D', () => {
     expect(envelope.state.world.actors[HERO].runtime.resources.action).toBe(0);
     expect(envelope.state.tokens[HERO].position).toEqual({x:2,y:5});
     expect(document.querySelector('[role="dialog"][aria-label="Бросок атаки"]')).not.toBeNull();
+    expect(document.querySelector('[role="dialog"][aria-label="Бросок атаки"]')?.textContent)
+      .not.toContain('Результат ещё не подтверждён');
     expect(envelope.state.log.some(entry=>entry.records?.some(record=>record.event?.type==='roll'))).toBe(true);
+  });
+
+  it.each([
+    ['card:parity-crossbow','card:parity-bolt',120],
+    ['card:parity-bow','card:parity-arrow',320],
+  ])('binds the shared weapon template to %s and consumes its own ammo', async (weaponId,ammoId,rangeFt) => {
+    const state=equippedWeaponState(weaponId,ammoId,rangeFt);
+    const template=structuredClone(state.catalogActions[0]);
+    await mount(true,state);
+    await choose(template.id);
+    const actionRow=container.querySelector(`[data-action-id="${template.id}"]`);
+    expect(actionRow?.className, actionRow?.outerHTML).toContain('is-selected');
+    expect(container.querySelector('.combat-error')?.textContent).toBeFalsy();
+    await click(actorButton(ENEMY));
+    expect(mocks.command).toHaveBeenCalled();
+    expect(mocks.command.mock.calls[0]?.[3].intent).toMatchObject({
+      type:'approach_action',actorId:HERO,actionId:template.id,targetActorId:ENEMY,
+    });
+    expect(container.querySelector('.combat-error')?.textContent).toBeFalsy();
+    const ammoQty=envelope.state.world.actors[HERO].runtime.inventory.find(row=>row.cardId===ammoId)?.qty;
+    expect(ammoQty).toBe(2);
+    const otherAmmoId=ammoId==='card:parity-bolt'?'card:parity-arrow':'card:parity-bolt';
+    expect(envelope.state.world.actors[HERO].runtime.inventory.find(row=>row.cardId===otherAmmoId)?.qty).toBe(3);
+    expect(envelope.state.world.actors[HERO].runtime.resources.action).toBe(0);
+    expect(envelope.state.catalogActions[0]).toEqual(template);
   });
 
   it.each([false,true])('empty-cell area targeting and movement use canonical geometry with 3D=%s', async three => {

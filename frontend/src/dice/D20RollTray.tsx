@@ -2,6 +2,7 @@ import {useState} from 'react';
 import type {RollLog} from '../mvp/contracts';
 import {CommittedDie} from './CommittedD20';
 import {splitD20Dice} from './rollTray';
+import DiceStage from './DiceStage';
 import './D20RollTray.css';
 
 /** Only lays out committed dice: cosmetic ordering never samples a game result. */
@@ -15,7 +16,7 @@ export default function D20RollTray({roll, rolling, selecting = false, critical,
   const paired = roll.advantage !== 'none' && primary.length > 1;
   const ready = !rolling && !selecting;
   const label = roll.advantage === 'advantage' ? 'Преимущество' : 'Помеха';
-  return <div className={`d20-roll-tray${paired ? ` is-${roll.advantage}` : ''}${animate ? ' is-animated' : ''}${ready ? ' is-resolved' : rolling ? ' is-tumbling' : ' is-comparing'}`}>
+  return <DiceStage rollKey={JSON.stringify(roll.dice)} diceCount={primary.length + bonus.length}><div className={`d20-roll-tray${paired ? ` is-${roll.advantage}` : ''}${animate ? ' is-animated' : ''}${ready ? ' is-resolved' : rolling ? ' is-tumbling' : ' is-comparing'}`}>
     {paired && <div className="d20-pair-label">{label}<small>{ready ? (roll.advantage === 'advantage' ? 'Выбрана большая кость' : 'Выбрана меньшая кость') : 'Выбор после остановки обеих костей'}</small></div>}
     <div className="d20-primary-dice">{ordered.map(({die,index}) => <div className={`d20-primary-slot${ready && paired ? die.discarded ? ' is-rejected' : ' is-kept' : ''}`} key={index}>
       <CommittedDie sides={die.sides} value={die.result} discarded={die.discarded} rolling={rolling} selectionPending={selecting} critical={critical} animateEffects={animate}/>
@@ -28,5 +29,5 @@ export default function D20RollTray({roll, rolling, selecting = false, critical,
         <small>{die.sign === -1 ? '−' : '+'} к{die.sides}{!rolling && `: ${die.result}`}</small>
       </div>)}</div>
     </section>}
-  </div>;
+  </div></DiceStage>;
 }

@@ -11,9 +11,9 @@ export default function EntitySoundEditor({type,id}:{type:string;id:string}){
  return <details className="entity-tag-editor entity-sound-editor"><summary>Звуковое оформление</summary><div className="entity-tag-form">
   <p>Это оформление сущности, не изменение её механики. Пустое значение — общий звук соответствующего события.</p>
   {!AUDIO_AVAILABLE&&<p>Воспроизведение звука временно отключено на время доработки.</p>}
-  {([['cast','Применение'],['hit','Попадание'],['miss','Промах'],['healing','Лечение']] as [SoundEvent,string][]).map(([event,label])=>{
+  {([['charge','Подготовка'],['launch','Взмах / выпуск'],['hit','Попадание'],['miss','Промах'],['healing','Лечение'],['activate','Активация'],['cast','Применение (совместимость)']] as [SoundEvent,string][]).map(([event,label])=>{
    const key=catalog.bindings.find(b=>b.entity_type===type&&b.entity_id===id&&b.event===event)?.cue_key??'';
-   return <div key={event}><label>{label}<select aria-label={label} value={key} disabled={busy} onChange={async e=>{setBusy(true);setError('');try{await audioApi.bind(type,id,event,e.target.value);await refresh();}catch{setError('Не удалось сохранить звуковое оформление');}finally{setBusy(false);}}}><option value="">Стандартный звук</option>{catalog.cues.filter(c=>c.channel!=='music').map(c=><option key={c.key} value={c.key}>{c.name}</option>)}</select></label><button type="button" disabled={!AUDIO_AVAILABLE||!key} onClick={()=>{soundPlayer.setCatalog(catalog);soundPlayer.unlock();soundPlayer.play(key);}}>Прослушать</button></div>;
+   return <div key={event}><label>{label}<select aria-label={label} value={key} disabled={busy} onChange={async e=>{setBusy(true);setError('');try{await audioApi.bind(type,id,event,e.target.value);await refresh();}catch{setError('Не удалось сохранить звуковое оформление');}finally{setBusy(false);}}}><option value="">Стандартный звук</option>{catalog.cues.filter(c=>c.channel==='effects').map(c=><option key={c.key} value={c.key}>{c.name}</option>)}</select></label><button type="button" disabled={!AUDIO_AVAILABLE||!key} onClick={()=>{soundPlayer.setCatalog(catalog);soundPlayer.unlock();soundPlayer.play(key);}}>Прослушать</button></div>;
   })}
   <h4>Загрузить свой звук</h4>
   <label>Название<input value={name} maxLength={200} onChange={e=>setName(e.target.value)}/></label>

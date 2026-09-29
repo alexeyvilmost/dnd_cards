@@ -1,6 +1,7 @@
 package main
 
 import (
+	"dnd-cards-backend/audiopresentation"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,28 +15,10 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-type AudioCue struct {
-	Key     string  `json:"key" gorm:"primaryKey"`
-	Name    string  `json:"name"`
-	Channel string  `json:"channel"`
-	URL     string  `json:"url"`
-	Gain    float64 `json:"gain"`
-	Loop    bool    `json:"loop"`
-	License string  `json:"license"`
-	Version int     `json:"version"`
-}
-type EntityAudioBinding struct {
-	EntityType string `json:"entity_type" gorm:"primaryKey"`
-	EntityID   string `json:"entity_id" gorm:"primaryKey"`
-	Event      string `json:"event" gorm:"primaryKey"`
-	CueKey     string `json:"cue_key"`
-}
+type AudioCue = audiopresentation.Cue
+type EntityAudioBinding = audiopresentation.Binding
 
-func (AudioCue) TableName() string           { return "audio_cues" }
-func (EntityAudioBinding) TableName() string { return "entity_audio_bindings" }
-func validAudioEvent(event string) bool {
-	return event == "cast" || event == "hit" || event == "miss" || event == "healing"
-}
+func validAudioEvent(event string) bool { return audiopresentation.ValidEvent(event) }
 func audioMediaType(data []byte) (string, string) {
 	if len(data) > 12 && string(data[:4]) == "RIFF" && string(data[8:12]) == "WAVE" {
 		return "audio/wav", ".wav"
@@ -53,11 +36,12 @@ func registerAudioRoutes(api *gin.RouterGroup, auth *AuthService, db *gorm.DB) {
 	routes.GET("", func(c *gin.Context) {
 		cues := []AudioCue{}
 		bindings := []EntityAudioBinding{}
-		if db.Order("name").Find(&cues).Error != nil || db.Find(&bindings).Error != nil {
+		defaults, err := audiopresentation.Defaults()
+		if err != nil || db.Where("active = ?", true).Order("name").Find(&cues).Error != nil || db.Where("EXISTS (SELECT 1 FROM audio_cues WHERE audio_cues.key = entity_audio_bindings.cue_key AND audio_cues.active = ?)", true).Order("entity_type, entity_id, event").Find(&bindings).Error != nil {
 			c.JSON(500, gin.H{"error": "Не удалось загрузить звуки"})
 			return
 		}
-		c.JSON(200, gin.H{"cues": cues, "bindings": bindings, "can_manage": canManageEntityTags(c)})
+		c.JSON(200, gin.H{"version": defaults.Version, "cues": cues, "bindings": bindings, "profiles": defaults.Profiles, "defaults": defaults.Defaults, "music": defaults.Music, "can_manage": canManageEntityTags(c)})
 	})
 	routes.PUT("/entities/:type/:id/:event", ContentAdminAuthMiddleware(auth), JSONBodyLimitMiddleware(4096), func(c *gin.Context) {
 		kind, id, event := c.Param("type"), c.Param("id"), c.Param("event")
@@ -82,7 +66,7 @@ func registerAudioRoutes(api *gin.RouterGroup, auth *AuthService, db *gorm.DB) {
 				return tx.Where("entity_type=? AND entity_id=? AND event=?", kind, id, event).Delete(&EntityAudioBinding{}).Error
 			}
 			var cue AudioCue
-			if tx.First(&cue, "key = ?", input.CueKey).Error != nil || cue.Channel == "music" {
+			if tx.First(&cue, "key = ? AND active = ?", input.CueKey, true).Error != nil || cue.Channel == "music" {
 				return fmt.Errorf("выберите существующий звуковой эффект")
 			}
 			row := EntityAudioBinding{kind, id, event, input.CueKey}

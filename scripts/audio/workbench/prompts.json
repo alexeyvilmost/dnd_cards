@@ -1,0 +1,1182 @@
+{
+  "version": 1,
+  "created": "2026-09-29",
+  "status": "generation_catalog",
+  "service": "ElevenLabs Sound Effects",
+  "firstPassVariants": 4,
+  "entries": [
+    {
+      "key": "dice.roll",
+      "nameRu": "Бросок нескольких кубиков",
+      "phase": "roll",
+      "durationSeconds": 1.3,
+      "variants": 4,
+      "pilot": true,
+      "prompt": "A handful of hard resin polyhedral tabletop dice tumble into a shallow leather-lined wooden dice tray. Distinct irregular clacks and small bounces slow down and settle naturally. Close dry Foley, intimate tabletop scale, one roll lasting about 1.3 seconds. No voices, music, coins, glass, room ambience or added magical sounds.",
+      "animationPrimitives": [],
+      "filename": "dice_roll_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "dice.single",
+      "nameRu": "Бросок одного кубика",
+      "phase": "roll",
+      "durationSeconds": 1,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One hard resin twenty-sided tabletop die rolls across a leather-lined wooden dice tray. A short irregular series of small crisp clacks and softer settling bounces from a single object. Close dry Foley, about one second. No other dice, voices, music, coins, glass or room ambience.",
+      "animationPrimitives": [],
+      "filename": "dice_single_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "weapon.blade.launch",
+      "nameRu": "Взмах клинком",
+      "phase": "launch",
+      "durationSeconds": 0.3,
+      "variants": 4,
+      "pilot": true,
+      "prompt": "One fast steel sword swing through the air, a compact airy swish with subtle metal movement. Close dry fantasy game Foley, about 0.3 seconds. No contact, impact, clang, vocalization, music or long reverb. Only the weapon swing.",
+      "animationPrimitives": [
+        "melee_slash"
+      ],
+      "filename": "weapon_blade_launch_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "weapon.blade.hit",
+      "nameRu": "Попадание клинком",
+      "phase": "hit",
+      "durationSeconds": 0.35,
+      "variants": 4,
+      "pilot": true,
+      "prompt": "One compact steel blade impact on a padded leather training target, a crisp cut with a restrained dull contact underneath. Close dry fantasy game Foley, about 0.35 seconds. Immediate attack, short natural decay. No preceding swing, scream, gore, music or long reverb.",
+      "animationPrimitives": [
+        "melee_slash",
+        "weapon_throw"
+      ],
+      "filename": "weapon_blade_hit_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "weapon.pierce.launch",
+      "nameRu": "Выпад колющим оружием",
+      "phase": "launch",
+      "durationSeconds": 0.3,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One quick spear thrust through the air: a narrow tight forward swish with a faint wooden shaft creak. A precise light motion, not a broad sword sweep. Close dry fantasy Foley, about 0.3 seconds. No contact, impact, voices, music or reverb.",
+      "animationPrimitives": [
+        "melee_pierce",
+        "weapon_throw"
+      ],
+      "filename": "weapon_pierce_launch_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "weapon.pierce.hit",
+      "nameRu": "Колющий контакт",
+      "phase": "hit",
+      "durationSeconds": 0.3,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One metal spear tip punctures a dense padded leather training target. A small sharp puncture tick over a short muted thump, close dry Foley with an immediate attack. About 0.3 seconds. No preceding thrust, scraping withdrawal, gore, voices, music or long reverb.",
+      "animationPrimitives": [
+        "melee_pierce",
+        "weapon_throw"
+      ],
+      "filename": "weapon_pierce_hit_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "weapon.blunt.launch",
+      "nameRu": "Взмах тяжёлым оружием",
+      "phase": "launch",
+      "durationSeconds": 0.4,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One heavy warhammer swings through the air. A broad low airy rush with a brief leather grip creak, suggesting a slow weighty head accelerating. Close dry fantasy Foley, about 0.4 seconds. No impact, metallic ringing, voices, music or echo.",
+      "animationPrimitives": [
+        "melee_bash"
+      ],
+      "filename": "weapon_blunt_launch_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "weapon.blunt.hit",
+      "nameRu": "Дробящий удар",
+      "phase": "hit",
+      "durationSeconds": 0.4,
+      "variants": 4,
+      "pilot": true,
+      "prompt": "One weighty wooden warhammer impact on a dense padded training target. A solid low thud with a brief textured crack, powerful but small in scale. Close dry Foley, about 0.4 seconds. No preceding swing, explosion, voices, music or long reverb.",
+      "animationPrimitives": [
+        "melee_bash",
+        "natural_slam",
+        "tail"
+      ],
+      "filename": "weapon_blunt_hit_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "weapon.melee.miss",
+      "nameRu": "Оружие проходит мимо",
+      "phase": "miss",
+      "durationSeconds": 0.3,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "The brief trailing air displacement of a melee weapon passing close by without contact, a restrained soft low swish fading quickly. One dry close sound, about 0.3 seconds. No initial windup, impact, footsteps, voices, music or echo.",
+      "animationPrimitives": [
+        "melee_slash",
+        "melee_pierce",
+        "melee_bash",
+        "claws",
+        "tail",
+        "sting",
+        "natural_slam"
+      ],
+      "filename": "weapon_melee_miss_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "weapon.bow.launch",
+      "nameRu": "Выстрел из лука",
+      "phase": "launch",
+      "durationSeconds": 0.3,
+      "variants": 4,
+      "pilot": true,
+      "prompt": "One wooden recurve bow releases an arrow. A tight natural bowstring snap with a brief woody resonance and a tiny air flick. Close dry Foley, about 0.3 seconds. No arrow impact, distant landing, metal gun mechanism, voices, music or echo.",
+      "animationPrimitives": [
+        "ranged_arrow"
+      ],
+      "filename": "weapon_bow_launch_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "weapon.crossbow.launch",
+      "nameRu": "Выстрел из арбалета",
+      "phase": "launch",
+      "durationSeconds": 0.35,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One medieval crossbow fires: a compact metal trigger latch click and a stiff short bowstring snap with a dry wooden stock knock. One crisp mechanical discharge, about 0.35 seconds. Close Foley. No reload sequence, projectile impact, gunpowder, voices, music or echo.",
+      "animationPrimitives": [
+        "ranged_arrow"
+      ],
+      "filename": "weapon_crossbow_launch_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "weapon.arrow.hit",
+      "nameRu": "Попадание стрелы или болта",
+      "phase": "hit",
+      "durationSeconds": 0.3,
+      "variants": 4,
+      "pilot": true,
+      "prompt": "One wooden arrow strikes a dense leather archery target with a sharp small thock and a very short shaft vibration. Close dry Foley, about 0.3 seconds. Immediate contact, no bow release, flight buildup, voices, music or long reverb.",
+      "animationPrimitives": [
+        "ranged_arrow"
+      ],
+      "filename": "weapon_arrow_hit_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "weapon.projectile.miss",
+      "nameRu": "Пролёт снаряда мимо",
+      "phase": "miss",
+      "durationSeconds": 0.3,
+      "variants": 4,
+      "pilot": true,
+      "prompt": "One small fast projectile whistles past without touching anything. A brief narrow airy whoosh, about 0.3 seconds, restrained fantasy game Foley. No collision, landing, explosion, voices, music or long reverb.",
+      "animationPrimitives": [
+        "ranged_arrow",
+        "weapon_throw",
+        "firearm"
+      ],
+      "filename": "weapon_projectile_miss_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "weapon.throw.launch",
+      "nameRu": "Бросок метательного оружия",
+      "phase": "launch",
+      "durationSeconds": 0.4,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One compact metal throwing axe leaves a hand and spins briefly through the air. A short textured air swish with a subtle rhythmic flutter from the rotating blade. Close dry fantasy Foley, about 0.4 seconds. No catch, impact, ricochet, voice, music or reverb.",
+      "animationPrimitives": [
+        "weapon_throw"
+      ],
+      "filename": "weapon_throw_launch_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "weapon.stone.launch",
+      "nameRu": "Выпуск камня",
+      "phase": "launch",
+      "durationSeconds": 0.35,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "A single small stone is released from a leather sling, a tight leather flick followed by a brief rounded air rush. Close dry fantasy Foley, about 0.35 seconds. Only release, no repeated swinging, contact, breaking glass, voices, music or echo.",
+      "animationPrimitives": [
+        "weapon_throw"
+      ],
+      "filename": "weapon_stone_launch_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "weapon.stone.hit",
+      "nameRu": "Попадание камня",
+      "phase": "hit",
+      "durationSeconds": 0.3,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One fist-sized stone hits a dense padded target with a dry hard clack over a short dull thud and two tiny grit clicks. Immediate close impact, about 0.3 seconds. No preceding flight, large debris fall, voices, music or reverb.",
+      "animationPrimitives": [
+        "weapon_throw"
+      ],
+      "filename": "weapon_stone_hit_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "weapon.firearm.launch",
+      "nameRu": "Выстрел чёрного пороха",
+      "phase": "launch",
+      "durationSeconds": 0.55,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One antique flintlock pistol discharge: a tiny flint click immediately followed by a compact dry black-powder report and a short soft smoke hiss. Close fantasy game Foley at a restrained level, about 0.55 seconds. No target impact, reload, modern automatic fire, voices, music or outdoor echo.",
+      "animationPrimitives": [
+        "firearm"
+      ],
+      "filename": "weapon_firearm_launch_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "weapon.firearm.hit",
+      "nameRu": "Контакт пули",
+      "phase": "hit",
+      "durationSeconds": 0.3,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One small fast metal pellet strikes a dense padded leather target: a tight dry punch with a brief leather snap. Immediate close contact, about 0.3 seconds. No gunshot, flight, ricochet, gore, voices, music or echo.",
+      "animationPrimitives": [
+        "firearm"
+      ],
+      "filename": "weapon_firearm_hit_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "natural.bite.launch",
+      "nameRu": "Щелчок челюстей",
+      "phase": "launch",
+      "durationSeconds": 0.35,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One large animal jaw snaps shut in the air, a compact tooth clack with a small breath puff. Close dry creature Foley, about 0.35 seconds. No bite contact, growl, bark, roar, human voice, chewing, music or reverb.",
+      "animationPrimitives": [
+        "bite"
+      ],
+      "filename": "natural_bite_launch_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "natural.bite.hit",
+      "nameRu": "Контакт укуса",
+      "phase": "hit",
+      "durationSeconds": 0.35,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One animal bite clamps onto a tough leather training pad, a short leathery compression and small crisp crunch. Immediate dry close Foley, about 0.35 seconds. No jaw windup, chewing, wet gore, growls, screams, music or echo.",
+      "animationPrimitives": [
+        "bite"
+      ],
+      "filename": "natural_bite_hit_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "natural.claws.launch",
+      "nameRu": "Взмах когтями",
+      "phase": "launch",
+      "durationSeconds": 0.3,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One clawed creature paw swipes through the air with three closely layered fine airy swishes and a faint fur rustle. One compact gesture, close dry Foley, about 0.3 seconds. No scratching contact, growl, roar, voices, music or echo.",
+      "animationPrimitives": [
+        "claws"
+      ],
+      "filename": "natural_claws_launch_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "natural.claws.hit",
+      "nameRu": "Контакт когтей",
+      "phase": "hit",
+      "durationSeconds": 0.4,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One claw strike across a tough leather training pad, several parallel coarse scratches compressed into one short rasp with a muted contact thump. Close dry Foley, about 0.4 seconds. No initial swing, prolonged scratching, gore, growling, voices, music or echo.",
+      "animationPrimitives": [
+        "claws"
+      ],
+      "filename": "natural_claws_hit_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "natural.tail.launch",
+      "nameRu": "Взмах хвостом",
+      "phase": "launch",
+      "durationSeconds": 0.45,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One thick reptile tail sweeps through the air, a broad flexible low whoosh with a faint dry scale rustle. Heavy organic movement, close dry Foley, about 0.45 seconds. No contact, whip crack, roar, voices, music or echo.",
+      "animationPrimitives": [
+        "tail"
+      ],
+      "filename": "natural_tail_launch_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "natural.tentacle.launch",
+      "nameRu": "Выпад щупальцем",
+      "phase": "launch",
+      "durationSeconds": 0.45,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One flexible rubbery tentacle extends quickly through the air, a low soft swish with a subtle moist elastic stretch. Close creature Foley, about 0.45 seconds. No contact, suction attachment, large splash, voices, music or long reverb.",
+      "animationPrimitives": [
+        "tentacle"
+      ],
+      "filename": "natural_tentacle_launch_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "natural.tentacle.hit",
+      "nameRu": "Контакт щупальца",
+      "phase": "hit",
+      "durationSeconds": 0.45,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One fleshy tentacle lands on a firm leather surface, a compact damp slap with a brief soft suction pop. Immediate close creature Foley, about 0.45 seconds. No preceding stretch or swing, gore, sustained squelching, voices, music or echo.",
+      "animationPrimitives": [
+        "tentacle"
+      ],
+      "filename": "natural_tentacle_hit_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "natural.sting.launch",
+      "nameRu": "Выпад жалом",
+      "phase": "launch",
+      "durationSeconds": 0.3,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One scorpion-like stinger darts forward, a tiny dry chitin joint click followed immediately by a narrow quick air flick. Close dry creature Foley, about 0.3 seconds. No puncture contact, insect buzzing, voices, music or echo.",
+      "animationPrimitives": [
+        "sting"
+      ],
+      "filename": "natural_sting_launch_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "natural.sting.hit",
+      "nameRu": "Контакт жала",
+      "phase": "hit",
+      "durationSeconds": 0.3,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One hard pointed chitin stinger punctures a taut leather pad with a small dry tick and a muted short pressure thump. Immediate close Foley, about 0.3 seconds. No preceding movement, poison spray, gore, voices, music or echo.",
+      "animationPrimitives": [
+        "sting"
+      ],
+      "filename": "natural_sting_hit_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "natural.slam.hit",
+      "nameRu": "Удар телом или лапой",
+      "phase": "hit",
+      "durationSeconds": 0.45,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One heavy creature limb strikes a padded solid target, a deep compact organic thump with a brief leathery surface slap. Immediate close dry Foley, about 0.45 seconds. Weight without metal or wood ringing. No windup, explosion, roar, voices, music or echo.",
+      "animationPrimitives": [
+        "natural_slam"
+      ],
+      "filename": "natural_slam_hit_01.mp3",
+      "animationMotifs": []
+    },
+    {
+      "key": "magic.fire.launch",
+      "nameRu": "Огонь — выпуск снаряда",
+      "phase": "launch",
+      "durationSeconds": 0.65,
+      "variants": 4,
+      "pilot": true,
+      "prompt": "A single compact firebolt leaving a mage's hand: a quick breath of pressurized hot air, a coarse flame flutter, then a short trailing ember hiss. Close, dry, tactile fantasy game effect with warm low-mid body. Only the release and departure; no charging, collision, explosion or second event. No voices, music, electronic UI tones, piercing whistles or long reverb.",
+      "animationMotifs": [
+        "fire"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "burst"
+      ],
+      "filename": "magic_fire_launch_01.mp3"
+    },
+    {
+      "key": "magic.fire.hit",
+      "nameRu": "Огонь — попадание",
+      "phase": "hit",
+      "durationSeconds": 0.6,
+      "variants": 4,
+      "pilot": true,
+      "prompt": "One small magical flame impact: a compact padded combustion thump with a rough burst of flame and a few rapidly fading ember crackles. Warm and substantial without a huge explosion or heavy sub-bass. A single close, dry contact event, starting immediately; no projectile flight or charging. No voices, music, electronic UI tones, piercing highs or long reverb.",
+      "animationMotifs": [
+        "fire"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "burst",
+        "melee_slash"
+      ],
+      "filename": "magic_fire_hit_01.mp3"
+    },
+    {
+      "key": "magic.force.charge",
+      "nameRu": "Силовая магия — накопление заряда",
+      "phase": "charge",
+      "durationSeconds": 0.6,
+      "variants": 4,
+      "pilot": true,
+      "prompt": "A single arcane force charge gathering into a small dense point: soft air being drawn inward around a low-mid resonant pressure vibration, growing tighter and grainier. An organic fantasy texture, like air compressed inside thick glass, without a musical pitch sweep. End with the energy still contained and a brief natural fade; no discharge or impact. Dry and close, no voices, music, UI bleeps, shrill ringing or long reverb.",
+      "animationMotifs": [
+        "force"
+      ],
+      "animationPrimitives": [
+        "charged_beam"
+      ],
+      "filename": "magic_force_charge_01.mp3"
+    },
+    {
+      "key": "magic.force.launch",
+      "nameRu": "Силовая магия — выпуск луча",
+      "phase": "launch",
+      "durationSeconds": 0.55,
+      "variants": 4,
+      "pilot": true,
+      "prompt": "One focused bolt of arcane force releasing: a rounded pressure snap followed by a tight rushing ribbon of textured air, with a restrained hollow low-mid resonance. Dense, controlled and magical, not a laser gun. Only release and departure; no gathering charge, target strike or explosion. Close and dry, no voices, music, electronic bleeps, piercing squeals or long reverb.",
+      "animationMotifs": [
+        "force"
+      ],
+      "animationPrimitives": [
+        "charged_beam",
+        "projectile",
+        "beam"
+      ],
+      "filename": "magic_force_launch_01.mp3"
+    },
+    {
+      "key": "magic.force.hit",
+      "nameRu": "Силовая магия — попадание",
+      "phase": "hit",
+      "durationSeconds": 0.55,
+      "variants": 4,
+      "pilot": true,
+      "prompt": "A single concentrated arcane force impact: a solid rounded air-thump with a short brittle magical pressure crack and a tiny hollow resonance that closes quickly. Weighty low-mid texture, no enormous bass boom, no metallic clang. Immediate contact only; no beam flight, wind-up or follow-up strike. Isolated dry fantasy effect, no voices, music, electronic UI tones, piercing highs or long reverb.",
+      "animationMotifs": [
+        "force"
+      ],
+      "animationPrimitives": [
+        "charged_beam",
+        "projectile",
+        "beam",
+        "burst"
+      ],
+      "filename": "magic_force_hit_01.mp3"
+    },
+    {
+      "key": "magic.frost.launch",
+      "nameRu": "Холод — выпуск снаряда",
+      "phase": "launch",
+      "durationSeconds": 0.65,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "A single frost spell released as a narrow stream of cold air: a soft compressed exhale threaded with fine ice-grain friction and a restrained crystalline rattle. Crisp but rounded, with audible midrange and no sharp high whistle. Only the outward release; no charge-up, ice breaking on a target or landing. Close dry fantasy sound, no voices, music, electronic tones or long reverb.",
+      "animationMotifs": [
+        "frost"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "charged_beam",
+        "weapon_throw"
+      ],
+      "filename": "magic_frost_launch_01.mp3"
+    },
+    {
+      "key": "magic.frost.hit",
+      "nameRu": "Холод — попадание",
+      "phase": "hit",
+      "durationSeconds": 0.7,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One compact magical ice impact: a firm frozen crack with several thick ice fragments crumbling in place, finishing with a short powdery frost hiss. Give it a solid midrange body rather than tinkling glass. Immediate contact only, no approaching projectile or repeated strikes. Isolated and dry, no voices, music, electronic bleeps, shrill ringing or long reverb.",
+      "animationMotifs": [
+        "frost"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "charged_beam",
+        "weapon_throw"
+      ],
+      "filename": "magic_frost_hit_01.mp3"
+    },
+    {
+      "key": "magic.lightning.launch",
+      "nameRu": "Молния — выпуск разряда",
+      "phase": "launch",
+      "durationSeconds": 0.45,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One short magical lightning discharge leaving the caster: a dry electrical snap opening into a compact braided crackle with a little displaced air. Textured and alive, with controlled treble and no sustained buzzing pitch. The release only; no thunder impact, charging stage or second discharge. Close isolated fantasy effect, no voices, music, UI bleeps, piercing squeals or long reverb.",
+      "animationMotifs": [
+        "lightning"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "charged_beam",
+        "beam"
+      ],
+      "filename": "magic_lightning_launch_01.mp3"
+    },
+    {
+      "key": "magic.lightning.hit",
+      "nameRu": "Молния — попадание",
+      "phase": "hit",
+      "durationSeconds": 0.5,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "A single close lightning contact: a dense low-mid electrical crack with a brief rough sizzling fracture that dies quickly. A small contained arc striking, not a distant storm or giant cinematic explosion. Start at the contact; no travel sound or charging. Dry fantasy combat effect, no voices, music, electronic UI tones, high-pitched whine or long reverb.",
+      "animationMotifs": [
+        "lightning"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "charged_beam",
+        "beam"
+      ],
+      "filename": "magic_lightning_hit_01.mp3"
+    },
+    {
+      "key": "magic.acid.launch",
+      "nameRu": "Кислота — выпуск сгустка",
+      "phase": "launch",
+      "durationSeconds": 0.6,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "A single small glob of magical acid expelled from an invisible source: a thick wet pressure flick with a short sticky liquid stretch and a faint airy hiss behind it. Close, tactile and viscous, without a creature vocalization. Release only; no splash onto a surface or corrosive impact. Dry fantasy effect, no voices, music, UI bleeps, shrill frequencies or long reverb.",
+      "animationMotifs": [
+        "acid"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "area_burst"
+      ],
+      "filename": "magic_acid_launch_01.mp3"
+    },
+    {
+      "key": "magic.acid.hit",
+      "nameRu": "Кислота — попадание",
+      "phase": "hit",
+      "durationSeconds": 0.9,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One small corrosive magic impact: a heavy wet splat immediately blooming into coarse close bubbling and a short granular fizz. The liquid texture is thick and chemically restless, distinct from clean water. A single contact event with a rapidly decaying tail; no launch or travel. Isolated and dry, no voices, music, electronic tones, piercing sizzle or long reverb.",
+      "animationMotifs": [
+        "acid"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "area_burst"
+      ],
+      "filename": "magic_acid_hit_01.mp3"
+    },
+    {
+      "key": "magic.poison.launch",
+      "nameRu": "Яд — выпуск облачка",
+      "phase": "launch",
+      "durationSeconds": 0.75,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "A single toxic magic puff leaving its source: a muffled pressurized gas exhalation mixed with a few dull moist bubbles and soft powdery particles. Opaque, heavy and organic rather than fiery or electrical. Release only, with no creature breath or vocalization, no target contact. Close dry fantasy effect, no voices, music, electronic bleeps, high whistle or long reverb.",
+      "animationMotifs": [
+        "poison"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "charged_beam",
+        "burst"
+      ],
+      "filename": "magic_poison_launch_01.mp3"
+    },
+    {
+      "key": "magic.poison.hit",
+      "nameRu": "Яд — попадание",
+      "phase": "hit",
+      "durationSeconds": 0.75,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One compact poison magic contact: a soft damp pop folding into a dense gaseous puff and a few muted bubbling grains. Unsettling and close, with almost no hard metallic transient; the texture quickly collapses. Contact only, no projectile passage or spray being launched. Dry isolated fantasy effect, no voices, music, UI tones, piercing hiss or long reverb.",
+      "animationMotifs": [
+        "poison"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "charged_beam",
+        "burst",
+        "sting",
+        "bite"
+      ],
+      "filename": "magic_poison_hit_01.mp3"
+    },
+    {
+      "key": "magic.radiant.launch",
+      "nameRu": "Свет — выпуск снаряда",
+      "phase": "launch",
+      "durationSeconds": 0.7,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "A single radiant spell release: a smooth warm rush of air with a brief broad glassy shimmer embedded in the midrange, opening cleanly and leaving a soft luminous trail. Noble and clear without bells, melody or a heavenly choir. Release only, no impact or charging. Close dry fantasy effect, no voices, music, electronic UI bleeps, piercing sparkle or long reverb.",
+      "animationMotifs": [
+        "radiant"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "burst"
+      ],
+      "filename": "magic_radiant_launch_01.mp3"
+    },
+    {
+      "key": "magic.radiant.hit",
+      "nameRu": "Свет — попадание",
+      "phase": "hit",
+      "durationSeconds": 0.65,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One radiant magical contact: a clean rounded pressure strike surrounded by a brief airy crystalline bloom, then a gentle rapid fade. Bright in character but warm in frequency, not a bell note or achievement jingle. Immediate contact only, no approaching bolt or charge. Dry isolated fantasy combat effect, no voices, music, electronic UI tones, sharp ringing or long reverb.",
+      "animationMotifs": [
+        "radiant"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "burst",
+        "melee_slash",
+        "aura"
+      ],
+      "filename": "magic_radiant_hit_01.mp3"
+    },
+    {
+      "key": "magic.necrotic.launch",
+      "nameRu": "Некротическая магия — выпуск",
+      "phase": "launch",
+      "durationSeconds": 0.75,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One necrotic spell release: a low dry hollow air pull turning outward into a brittle dust-laden rush, with a restrained fibrous creak. Ancient, drained and papery rather than demonic; keep the bass compact. Only the departure, no strike or creature vocalization. Close dry fantasy effect, no whispers, voices, music, electronic bleeps, shrill squeals or long reverb.",
+      "animationMotifs": [
+        "necrotic"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "spectral_hand",
+        "beam"
+      ],
+      "filename": "magic_necrotic_launch_01.mp3"
+    },
+    {
+      "key": "magic.necrotic.hit",
+      "nameRu": "Некротическая магия — попадание",
+      "phase": "hit",
+      "durationSeconds": 0.8,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "A single necrotic magic contact: a muted hollow thud that crumbles into dry fibrous crackling and a short inward draught, as if vitality is being drained from dead leaves. No gore or human sounds. Start at contact with no projectile flight. Isolated dry fantasy effect, no voices, whispers, music, electronic UI tones, piercing highs or long reverb.",
+      "animationMotifs": [
+        "necrotic"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "spectral_hand",
+        "melee_slash",
+        "burst"
+      ],
+      "filename": "magic_necrotic_hit_01.mp3"
+    },
+    {
+      "key": "magic.psychic.launch",
+      "nameRu": "Психическая магия — выпуск импульса",
+      "phase": "launch",
+      "durationSeconds": 0.7,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One psychic magic pulse leaving its source: a narrow hollow swell with softly rubbing glass-like friction and a subtly warped midrange air texture. Uncanny and weightless, not a synthesizer note or science-fiction scanner. The outward pulse only, no target strike or voices. Close dry fantasy effect, no whispers, music, UI bleeps, high ringing or long reverb.",
+      "animationMotifs": [
+        "psychic"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "beam",
+        "thunder"
+      ],
+      "filename": "magic_psychic_launch_01.mp3"
+    },
+    {
+      "key": "magic.psychic.hit",
+      "nameRu": "Психическая магия — попадание",
+      "phase": "hit",
+      "durationSeconds": 0.6,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One psychic magical contact: a soft internal pressure knock with a brief glassy bending texture that pinches closed, intimate and disorienting without physical debris. A compact nonmusical midrange resonance; avoid tinnitus-like ringing. Immediate contact only, no approach or charge. Dry isolated fantasy effect, no voices, whispers, music, electronic UI bleeps or long reverb.",
+      "animationMotifs": [
+        "psychic"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "beam",
+        "thunder"
+      ],
+      "filename": "magic_psychic_hit_01.mp3"
+    },
+    {
+      "key": "magic.thunder.launch",
+      "nameRu": "Гром — выпуск волны",
+      "phase": "launch",
+      "durationSeconds": 0.65,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "A single narrow thunder spell release: a taut compressed-air push with a short raspy flutter and a rounded low-mid pressure body. Suggest a forceful outward air packet, not a storm recording or electrical lightning. Departure only, without a separate collision or trailing thunder roll. Close dry fantasy effect, no voices, music, UI tones, piercing highs or long reverb.",
+      "animationMotifs": [
+        "thunder"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "thunder"
+      ],
+      "filename": "magic_thunder_launch_01.mp3"
+    },
+    {
+      "key": "magic.thunder.hit",
+      "nameRu": "Гром — попадание",
+      "phase": "hit",
+      "durationSeconds": 0.75,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One compact thunder magic impact: a deep but restrained pressure clap with rough vibrating air at its edges, decaying quickly without distant rumbling. Strong low-mid punch, no huge cinematic sub-bass drop. The contact only, no wind-up or preceding whoosh. Dry close fantasy combat effect, no voices, music, electronic UI tones, shrill crack or long reverb.",
+      "animationMotifs": [
+        "thunder"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "thunder",
+        "melee_slash",
+        "area_wave"
+      ],
+      "filename": "magic_thunder_hit_01.mp3"
+    },
+    {
+      "key": "magic.nature.launch",
+      "nameRu": "Природа — выпуск лозы или шипа",
+      "phase": "launch",
+      "durationSeconds": 0.65,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One magical thorn or slender vine snapping outward: a taut green-fiber flick with a short leaf rush and a small woody flex. Fresh and tactile, with a soft airy departure rather than a heavy whip crack. Release only; no target strike or rustling sequence. Close dry fantasy effect, no animal sounds, voices, music, electronic UI tones, piercing highs or long reverb.",
+      "animationMotifs": [
+        "nature"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "vines"
+      ],
+      "filename": "magic_nature_launch_01.mp3"
+    },
+    {
+      "key": "magic.nature.hit",
+      "nameRu": "Природа — попадание",
+      "phase": "hit",
+      "durationSeconds": 0.65,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One nature magic contact: a compact woody knock entwined with a close green-stem snap and a brief crumple of leaves. A small thorny or vine-like impact, dry enough to read clearly without sounding like bones. Contact only, no whip travel or follow-up hit. Isolated dry fantasy effect, no voices, animals, music, electronic bleeps, piercing highs or long reverb.",
+      "animationMotifs": [
+        "nature"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "vines"
+      ],
+      "filename": "magic_nature_hit_01.mp3"
+    },
+    {
+      "key": "magic.water.launch",
+      "nameRu": "Вода — выпуск струи",
+      "phase": "launch",
+      "durationSeconds": 0.7,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "A single compact water spell jet leaving its source: a clean pressurized liquid swish with a rounded gulp of motion and fine droplets trailing away. Fluid and fresh, not foamy acid, steam or a faucet loop. Only the release; no splash onto a target. Close dry fantasy game effect, no voices, music, electronic UI tones, sharp hiss or long reverb.",
+      "animationMotifs": [
+        "water"
+      ],
+      "animationPrimitives": [
+        "projectile"
+      ],
+      "filename": "magic_water_launch_01.mp3"
+    },
+    {
+      "key": "magic.water.hit",
+      "nameRu": "Вода — попадание",
+      "phase": "hit",
+      "durationSeconds": 0.8,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One small forceful water impact: a rounded liquid slap opening into a compact clean splash with a few thick droplets immediately settling. Clear fresh-water texture, no fizz, plumbing resonance or lingering stream. Start at contact, with no projectile approach. Close dry fantasy effect, no voices, music, electronic UI bleeps, piercing highs or long reverb.",
+      "animationMotifs": [
+        "water"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "area_burst"
+      ],
+      "filename": "magic_water_hit_01.mp3"
+    },
+    {
+      "key": "magic.earth.launch",
+      "nameRu": "Земля — выпуск каменного снаряда",
+      "phase": "launch",
+      "durationSeconds": 0.65,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One magically propelled stone leaving its source: a brief compact rock scrape and gritty pressure rush, with a few tiny mineral grains trailing in the air. Dense and earthy without a huge boulder rumble. Departure only; no landing, target impact or second rock. Close dry fantasy effect, no voices, music, electronic UI tones, piercing grit or long reverb.",
+      "animationMotifs": [
+        "earth"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "weapon_throw"
+      ],
+      "filename": "magic_earth_launch_01.mp3"
+    },
+    {
+      "key": "magic.earth.hit",
+      "nameRu": "Земля — попадание",
+      "phase": "hit",
+      "durationSeconds": 0.65,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One compact stone magic impact: a firm low-mid mineral knock with a short gritty crunch and a few small chips settling immediately. Weighty but small in scale, no building collapse or metallic ring. Contact only, without an approaching rock or repeated hits. Dry isolated fantasy combat effect, no voices, music, electronic bleeps, shrill highs or long reverb.",
+      "animationMotifs": [
+        "earth"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "weapon_throw",
+        "natural_slam"
+      ],
+      "filename": "magic_earth_hit_01.mp3"
+    },
+    {
+      "key": "magic.wind.launch",
+      "nameRu": "Ветер — выпуск порыва",
+      "phase": "launch",
+      "durationSeconds": 0.55,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One focused magical wind gust released forward: a smooth tightly shaped rush of air with a soft low flutter, quick attack and clean taper. Air alone, without leaves, feathers or a tonal whistle. Only the outward departure; no target contact. Close dry fantasy effect, no voices, music, electronic UI tones, piercing frequencies or long reverb.",
+      "animationMotifs": [
+        "wind"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "beam",
+        "dash"
+      ],
+      "filename": "magic_wind_launch_01.mp3"
+    },
+    {
+      "key": "magic.wind.hit",
+      "nameRu": "Ветер — попадание",
+      "phase": "hit",
+      "durationSeconds": 0.5,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "A single concentrated wind magic contact: a soft rounded air slap followed by a compact turbulent flutter, as a small pressure cushion collapses. No solid debris, thunder clap or breathy vocal sound. Immediate contact only, no long preceding whoosh. Isolated dry fantasy effect, no voices, music, electronic bleeps, high whistle or long reverb.",
+      "animationMotifs": [
+        "wind"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "beam",
+        "burst"
+      ],
+      "filename": "magic_wind_hit_01.mp3"
+    },
+    {
+      "key": "magic.illusion.activate",
+      "nameRu": "Иллюзия — проявление",
+      "phase": "activate",
+      "durationSeconds": 1,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One small illusion materializing: a silky translucent air unfurl with softly rubbing glass texture and a few muted granular sparkles, gently slipping into focus. Light, deceptive and nonmusical, without bells or a rising synth note. A single contained manifestation, no strike or disappearance afterward. Close dry fantasy effect, no voices, whispers, music, UI bleeps, shrill ringing or long reverb.",
+      "animationMotifs": [
+        "illusion"
+      ],
+      "animationPrimitives": [
+        "illusion",
+        "aura",
+        "burst"
+      ],
+      "filename": "magic_illusion_activate_01.mp3"
+    },
+    {
+      "key": "magic.healing.activate",
+      "nameRu": "Исцеление — мягкая волна",
+      "phase": "activate",
+      "durationSeconds": 1.2,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One gentle healing magic bloom: a warm softly swelling current of air with a subtle liquid-glass texture and a cushioned settling finish. Reassuring and organic, without a musical chord, bell sequence, choir or heartbeat. One continuous small restorative event, no impact. Close dry fantasy effect, no voices, music, UI notification sounds, piercing shimmer or long reverb.",
+      "animationMotifs": [
+        "healing"
+      ],
+      "animationPrimitives": [
+        "heal",
+        "recover",
+        "vines",
+        "area_burst"
+      ],
+      "filename": "magic_healing_activate_01.mp3"
+    },
+    {
+      "key": "magic.ward.activate",
+      "nameRu": "Защитная магия — создание барьера",
+      "phase": "activate",
+      "durationSeconds": 0.85,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "A single translucent magical shield forming: a smooth circular pressure swell with a low rounded glass-like resonance that gently locks into place. Compact and protective, not a metallic shield clang or electronic force-field hum. Formation only, without an incoming attack or impact against the barrier. Close dry fantasy effect, no voices, music, UI bleeps, shrill ringing or long reverb.",
+      "animationMotifs": [
+        "force",
+        "radiant",
+        "frost"
+      ],
+      "animationPrimitives": [
+        "ward"
+      ],
+      "filename": "magic_ward_activate_01.mp3"
+    },
+    {
+      "key": "magic.miss.flyby",
+      "nameRu": "Магия — пролёт мимо",
+      "phase": "miss",
+      "durationSeconds": 0.45,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One small magical projectile passing just beside the listener: a brief rounded air swish with a faint grainy energy edge, approaching and fading away in one compact movement. Neutral elemental character and no sharp whistle. Miss only; nothing strikes, explodes or lands. Isolated dry fantasy effect, no voices, music, electronic UI bleeps, piercing highs or long reverb.",
+      "animationMotifs": [
+        "fire",
+        "frost",
+        "lightning",
+        "acid",
+        "poison",
+        "radiant",
+        "necrotic",
+        "psychic",
+        "force",
+        "thunder",
+        "nature",
+        "water",
+        "earth",
+        "wind"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "beam",
+        "charged_beam",
+        "weapon_throw"
+      ],
+      "filename": "magic_miss_flyby_01.mp3"
+    },
+    {
+      "key": "magic.miss.dissipate",
+      "nameRu": "Магия — рассеивание без попадания",
+      "phase": "miss",
+      "durationSeconds": 0.7,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One small packet of spent magic quietly losing cohesion: a soft hollow air texture breaking into fine dusty grains, then thinning naturally to silence. A gentle fizzing collapse with no obvious element and no musical pitch. Dissipation only; no launch, impact or explosion. Close dry fantasy effect, no voices, music, UI bleeps, sharp hiss, piercing ringing or long reverb.",
+      "animationMotifs": [
+        "fire",
+        "frost",
+        "lightning",
+        "acid",
+        "poison",
+        "radiant",
+        "necrotic",
+        "psychic",
+        "force",
+        "thunder",
+        "nature",
+        "water",
+        "earth",
+        "wind",
+        "illusion"
+      ],
+      "animationPrimitives": [
+        "projectile",
+        "beam",
+        "charged_beam",
+        "burst",
+        "illusion"
+      ],
+      "filename": "magic_miss_dissipate_01.mp3"
+    },
+    {
+      "key": "magic.breath.fire.launch",
+      "nameRu": "Огненное дыхание — выброс пламени",
+      "phase": "launch",
+      "durationSeconds": 1.4,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One short broad cone of magical flame expelled outward: a dense low rushing burn with turbulent rolling flame and coarse ember crackle woven through it. Powerful but controlled, without a cinematic bass blast. One continuous emission with a natural short taper; no inhalation, creature roar, target strike or separate explosion. Close dry fantasy effect, no voices, music, UI tones, piercing highs or long reverb.",
+      "animationMotifs": [
+        "fire"
+      ],
+      "animationPrimitives": [
+        "area_cone",
+        "area_line"
+      ],
+      "filename": "magic_breath_fire_launch_01.mp3"
+    },
+    {
+      "key": "magic.breath.frost.launch",
+      "nameRu": "Ледяное дыхание — выброс холода",
+      "phase": "launch",
+      "durationSeconds": 1.35,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One short broad torrent of supernatural cold: a dense rushing frost cloud carrying a fine midrange rattle of ice grains, with a cool rounded airy body. Brittle texture without glass chimes or piercing whistles. A single outward emission that tapers away; no inhalation, creature voice, target breakage or impact. Close dry fantasy effect, no music, electronic UI tones or long reverb.",
+      "animationMotifs": [
+        "frost"
+      ],
+      "animationPrimitives": [
+        "area_cone",
+        "area_line"
+      ],
+      "filename": "magic_breath_frost_launch_01.mp3"
+    },
+    {
+      "key": "magic.breath.lightning.launch",
+      "nameRu": "Грозовое дыхание — поток разрядов",
+      "phase": "launch",
+      "durationSeconds": 1.25,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One short broad stream of magical lightning released outward: dense interwoven electrical crackles riding a low-mid pressure rush, continuously active for a moment before fading. Irregular organic energy, no sustained electronic buzz. One emission only; no charging, creature roar, target hit or distant thunder. Close dry fantasy effect, no voices, music, UI bleeps, piercing squeals or long reverb.",
+      "animationMotifs": [
+        "lightning"
+      ],
+      "animationPrimitives": [
+        "area_cone",
+        "area_line"
+      ],
+      "filename": "magic_breath_lightning_launch_01.mp3"
+    },
+    {
+      "key": "magic.breath.acid.launch",
+      "nameRu": "Кислотное дыхание — едкая струя",
+      "phase": "launch",
+      "durationSeconds": 1.4,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One short broad pressurized jet of magical acid: thick liquid rushing outward with ragged wet bubbles and a restrained coarse chemical hiss. Viscous and forceful, distinct from clean water or fire. One continuous emission only, without inhale, creature vocalization, surface splash or corrosive impact afterward. Close dry fantasy effect, no voices, music, electronic tones, piercing sizzle or long reverb.",
+      "animationMotifs": [
+        "acid"
+      ],
+      "animationPrimitives": [
+        "area_cone",
+        "area_line"
+      ],
+      "filename": "magic_breath_acid_launch_01.mp3"
+    },
+    {
+      "key": "magic.breath.poison.launch",
+      "nameRu": "Ядовитое дыхание — густое облако",
+      "phase": "launch",
+      "durationSeconds": 1.4,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One short heavy cone of toxic magical vapor: a low muffled pressurized gas rush with damp churning bubbles and soft grainy particles suspended within it. Dense and suffocating in texture, without respiratory or human sounds. One outward emission, no inhalation, creature roar, target impact or explosion. Close dry fantasy effect, no voices, music, UI bleeps, high whistle or long reverb.",
+      "animationMotifs": [
+        "poison"
+      ],
+      "animationPrimitives": [
+        "area_cone",
+        "area_line"
+      ],
+      "filename": "magic_breath_poison_launch_01.mp3"
+    },
+    {
+      "key": "magic.area.thunder.launch",
+      "nameRu": "Громовая волна — расширение области",
+      "phase": "launch",
+      "durationSeconds": 1,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One broad magical pressure wave expanding away from its source: a rounded low-mid air burst opening into a wide rippling rush that quickly loses energy. A single expanding envelope, with no repeated pulses or giant sub-bass drop. Emission only, no separate target collision or distant storm. Close dry fantasy effect, no voices, music, electronic UI tones, piercing highs or long reverb.",
+      "animationMotifs": [
+        "thunder"
+      ],
+      "animationPrimitives": [
+        "area_wave"
+      ],
+      "filename": "magic_area_thunder_launch_01.mp3"
+    },
+    {
+      "key": "magic.area.nature.activate",
+      "nameRu": "Область природы — рост переплетающихся корней",
+      "phase": "activate",
+      "durationSeconds": 1.35,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One small patch of magical roots rapidly unfurling from the ground: intertwined woody flexes, green stem creaks, a little crumbling soil and a soft leafy finish. One continuous organic emergence, not repeated footsteps or a forest ambience. No target strike, entrapment scream or falling tree. Close dry fantasy effect, no voices, animals, music, electronic tones, sharp squeals or long reverb.",
+      "animationMotifs": [
+        "nature"
+      ],
+      "animationPrimitives": [
+        "area_burst",
+        "vines"
+      ],
+      "filename": "magic_area_nature_activate_01.mp3"
+    },
+    {
+      "key": "magic.area.illusion.activate",
+      "nameRu": "Область иллюзии — раскрытие светящейся пелены",
+      "phase": "activate",
+      "durationSeconds": 1.1,
+      "variants": 4,
+      "pilot": false,
+      "prompt": "One shimmering veil of illusion spreading across a small area: a broad soft fabric-like air unfurl with finely scattered glassy grains that briefly bloom and settle. Weightless colorful magic expressed as a nonmusical texture, without chimes or a synth sweep. One manifestation only, no target impact. Close dry fantasy effect, no voices, music, UI notification tones, piercing sparkle or long reverb.",
+      "animationMotifs": [
+        "illusion"
+      ],
+      "animationPrimitives": [
+        "area_burst",
+        "area_cone",
+        "illusion"
+      ],
+      "filename": "magic_area_illusion_activate_01.mp3"
+    }
+  ]
+}

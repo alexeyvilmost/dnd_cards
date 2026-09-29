@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "modelId": "music_v2_5",
+  "tracks": [
+    {
+      "key": "music.site",
+      "nameRu": "Тихие страницы — сайт и главное меню",
+      "role": "site",
+      "durationMs": 30000,
+      "prompt": "Original acoustic fantasy game instrumental. Only period-inspired acoustic instruments: lute, harp, wooden flute, bowed viols, natural horns, dulcimer and hand-played frame drums where appropriate. No voices or choir, no electric guitar, bass guitar, drum kit, piano, synthesizer, electronics or modern production effects. Clean balanced mix with space for game sound effects. A cyclic musical passage, start directly with the texture, end on the opening harmony and rhythm for looping; no introductory silence, big final cadence or fade to silence. Quiet unobtrusive background for reading a fantasy character library and main menu. 68 BPM. Soft harp, very sparse lute notes, gentle low bowed viol and occasional breathy wooden flute. Warm candlelit study, welcoming wonder. Almost no percussion, no prominent melody or solo, no dramatic swells, steady low energy and narrow dynamics."
+    },
+    {
+      "key": "music.run",
+      "nameRu": "Дорога приключений — забег",
+      "role": "run",
+      "durationMs": 30000,
+      "prompt": "Original acoustic fantasy game instrumental. Only period-inspired acoustic instruments: lute, harp, wooden flute, bowed viols, natural horns, dulcimer and hand-played frame drums where appropriate. No voices or choir, no electric guitar, bass guitar, drum kit, piano, synthesizer, electronics or modern production effects. Clean balanced mix with space for game sound effects. A cyclic musical passage, start directly with the texture, end on the opening harmony and rhythm for looping; no introductory silence, big final cadence or fade to silence. Subtle background for planning a roguelike fantasy expedition, choosing routes and resting between fights. 82 BPM. A soft repeated lute pattern, warm viol texture, sparse harp and occasional subdued frame drum pulse. Quiet curiosity, travel and anticipation, reassuring but mysterious. Keep the melody peripheral, no solos, no big crescendos, steady low energy."
+    },
+    {
+      "key": "music.battle.forest-v2",
+      "nameRu": "Бой: Мшистый лес",
+      "role": "battle",
+      "mapId": "forest-v2",
+      "durationMs": 30000,
+      "prompt": "Original acoustic fantasy game instrumental. Only period-inspired acoustic instruments: lute, harp, wooden flute, bowed viols, natural horns, dulcimer and hand-played frame drums where appropriate. No voices or choir, no electric guitar, bass guitar, drum kit, piano, synthesizer, electronics or modern production effects. Clean balanced mix with space for game sound effects. A cyclic musical passage, start directly with the texture, end on the opening harmony and rhythm for looping; no introductory silence, big final cadence or fade to silence. A tactical skirmish in a deep mossy oak forest. 116 BPM. Interlocking soft frame drums, agile low viol ostinato, small wooden flute phrases and sparse harp accents. Ancient woodland tension, alert and earthy, active but never bombastic."
+    },
+    {
+      "key": "music.battle.crypt-v2",
+      "nameRu": "Бой: Забытый склеп",
+      "role": "battle",
+      "mapId": "crypt-v2",
+      "durationMs": 30000,
+      "prompt": "Original acoustic fantasy game instrumental. Only period-inspired acoustic instruments: lute, harp, wooden flute, bowed viols, natural horns, dulcimer and hand-played frame drums where appropriate. No voices or choir, no electric guitar, bass guitar, drum kit, piano, synthesizer, electronics or modern production effects. Clean balanced mix with space for game sound effects. A cyclic musical passage, start directly with the texture, end on the opening harmony and rhythm for looping; no introductory silence, big final cadence or fade to silence. Battle in a forgotten stone crypt among cobwebs and sarcophagi. 98 BPM. Dark low bowed viols, dry muted frame drum pulse, sparse hammered dulcimer and uneasy flute harmonics. Ominous ancient burial chamber, restrained menace, no horror jump stings."
+    },
+    {
+      "key": "music.battle.goblin-camp-v2",
+      "nameRu": "Бой: Лагерь в долине",
+      "role": "battle",
+      "mapId": "goblin-camp-v2",
+      "durationMs": 30000,
+      "prompt": "Original acoustic fantasy game instrumental. Only period-inspired acoustic instruments: lute, harp, wooden flute, bowed viols, natural horns, dulcimer and hand-played frame drums where appropriate. No voices or choir, no electric guitar, bass guitar, drum kit, piano, synthesizer, electronics or modern production effects. Clean balanced mix with space for game sound effects. A cyclic musical passage, start directly with the texture, end on the opening harmony and rhythm for looping; no introductory silence, big final cadence or fade to silence. A lively ambush at a rough camp beside a shallow river in a valley. 126 BPM. Nimble lute rhythm, irregular hand drums, low fiddles and earthy reed flute. Mischievous and scrappy adventure, strong forward motion, no comedy sound effects."
+    },
+    {
+      "key": "music.battle.tavern-v2",
+      "nameRu": "Бой: Таверна «Последний привал»",
+      "role": "battle",
+      "mapId": "tavern-v2",
+      "durationMs": 30000,
+      "prompt": "Original acoustic fantasy game instrumental. Only period-inspired acoustic instruments: lute, harp, wooden flute, bowed viols, natural horns, dulcimer and hand-played frame drums where appropriate. No voices or choir, no electric guitar, bass guitar, drum kit, piano, synthesizer, electronics or modern production effects. Clean balanced mix with space for game sound effects. A cyclic musical passage, start directly with the texture, end on the opening harmony and rhythm for looping; no introductory silence, big final cadence or fade to silence. An energetic tavern brawl in a warm wooden medieval inn. 132 BPM. Rustic fiddle and lute with bodhran-like frame drums, a memorable short folk battle motif. Swashbuckling and spirited, not a drinking song, no crowd or vocals."
+    },
+    {
+      "key": "music.battle.sanctuary-v1",
+      "nameRu": "Бой: Заросшее святилище",
+      "role": "battle",
+      "mapId": "sanctuary-v1",
+      "durationMs": 30000,
+      "prompt": "Original acoustic fantasy game instrumental. Only period-inspired acoustic instruments: lute, harp, wooden flute, bowed viols, natural horns, dulcimer and hand-played frame drums where appropriate. No voices or choir, no electric guitar, bass guitar, drum kit, piano, synthesizer, electronics or modern production effects. Clean balanced mix with space for game sound effects. A cyclic musical passage, start directly with the texture, end on the opening harmony and rhythm for looping; no introductory silence, big final cadence or fade to silence. Battle among overgrown sanctuary ruins and broken stone columns. 110 BPM. Minor-modal strings, solemn natural horn fragments, harp and layered hand drums. Sacred forgotten grandeur entwined with creeping vines, martial but contemplative."
+    },
+    {
+      "key": "music.battle.quarry-v1",
+      "nameRu": "Бой: Заброшенный карьер",
+      "role": "battle",
+      "mapId": "quarry-v1",
+      "durationMs": 30000,
+      "prompt": "Original acoustic fantasy game instrumental. Only period-inspired acoustic instruments: lute, harp, wooden flute, bowed viols, natural horns, dulcimer and hand-played frame drums where appropriate. No voices or choir, no electric guitar, bass guitar, drum kit, piano, synthesizer, electronics or modern production effects. Clean balanced mix with space for game sound effects. A cyclic musical passage, start directly with the texture, end on the opening harmony and rhythm for looping; no introductory silence, big final cadence or fade to silence. A dangerous fight between huge rocks in an abandoned quarry. 112 BPM. Heavy low viol ostinato, deep frame drums and short natural horn calls, with dry wooden percussion. Massive stone and weight, rugged grounded momentum, no metallic industrial sounds."
+    },
+    {
+      "key": "music.battle.cavern-v1",
+      "nameRu": "Бой: Светящийся грот",
+      "role": "battle",
+      "mapId": "cavern-v1",
+      "durationMs": 30000,
+      "prompt": "Original acoustic fantasy game instrumental. Only period-inspired acoustic instruments: lute, harp, wooden flute, bowed viols, natural horns, dulcimer and hand-played frame drums where appropriate. No voices or choir, no electric guitar, bass guitar, drum kit, piano, synthesizer, electronics or modern production effects. Clean balanced mix with space for game sound effects. A cyclic musical passage, start directly with the texture, end on the opening harmony and rhythm for looping; no introductory silence, big final cadence or fade to silence. Battle in a glowing fungal grotto amid rock formations and webs. 108 BPM. Delicate high dulcimer sparks above deep bowed strings and complex quiet hand drums. Otherworldly acoustic texture, subterranean mystery, quick nervous movement."
+    },
+    {
+      "key": "music.battle.snow-pass-v1",
+      "nameRu": "Бой: Снежный перевал",
+      "role": "battle",
+      "mapId": "snow-pass-v1",
+      "durationMs": 30000,
+      "prompt": "Original acoustic fantasy game instrumental. Only period-inspired acoustic instruments: lute, harp, wooden flute, bowed viols, natural horns, dulcimer and hand-played frame drums where appropriate. No voices or choir, no electric guitar, bass guitar, drum kit, piano, synthesizer, electronics or modern production effects. Clean balanced mix with space for game sound effects. A cyclic musical passage, start directly with the texture, end on the opening harmony and rhythm for looping; no introductory silence, big final cadence or fade to silence. Battle in a windswept snowy mountain pass. 104 BPM. Broad low strings, distant natural horns, thin wooden flute phrases and heavy measured frame drums. Icy resolve and exposed highland danger, courageous and austere, no wind sound effects."
+    },
+    {
+      "key": "music.battle.clearing-v1",
+      "nameRu": "Бой: Лесная поляна",
+      "role": "battle",
+      "mapId": "clearing-v1",
+      "durationMs": 30000,
+      "prompt": "Original acoustic fantasy game instrumental. Only period-inspired acoustic instruments: lute, harp, wooden flute, bowed viols, natural horns, dulcimer and hand-played frame drums where appropriate. No voices or choir, no electric guitar, bass guitar, drum kit, piano, synthesizer, electronics or modern production effects. Clean balanced mix with space for game sound effects. A cyclic musical passage, start directly with the texture, end on the opening harmony and rhythm for looping; no introductory silence, big final cadence or fade to silence. A fast intimate skirmish in a small woodland clearing with fallen logs. 122 BPM. Quick plucked lute, short fiddle figures, light frame drums and playful but tense flute. Compact and agile, bright forest light with real danger."
+    },
+    {
+      "key": "music.battle.courtyard-small-v1",
+      "nameRu": "Бой: Тихий внутренний двор",
+      "role": "battle",
+      "mapId": "courtyard-small-v1",
+      "durationMs": 30000,
+      "prompt": "Original acoustic fantasy game instrumental. Only period-inspired acoustic instruments: lute, harp, wooden flute, bowed viols, natural horns, dulcimer and hand-played frame drums where appropriate. No voices or choir, no electric guitar, bass guitar, drum kit, piano, synthesizer, electronics or modern production effects. Clean balanced mix with space for game sound effects. A cyclic musical passage, start directly with the texture, end on the opening harmony and rhythm for looping; no introductory silence, big final cadence or fade to silence. A close sword fight in a quiet small cobbled courtyard. 118 BPM. Precise plucked viol and lute patterns, tight hand drum rhythm, brief restrained horn motifs. Noble urban fantasy tension, elegant duelling motion, modest scale."
+    },
+    {
+      "key": "music.battle.watchpost-rooms-v1",
+      "nameRu": "Бой: Караульные палаты",
+      "role": "battle",
+      "mapId": "watchpost-rooms-v1",
+      "durationMs": 30000,
+      "prompt": "Original acoustic fantasy game instrumental. Only period-inspired acoustic instruments: lute, harp, wooden flute, bowed viols, natural horns, dulcimer and hand-played frame drums where appropriate. No voices or choir, no electric guitar, bass guitar, drum kit, piano, synthesizer, electronics or modern production effects. Clean balanced mix with space for game sound effects. A cyclic musical passage, start directly with the texture, end on the opening harmony and rhythm for looping; no introductory silence, big final cadence or fade to silence. A claustrophobic fight through two connected medieval guard rooms and a narrow passage. 124 BPM. Clipped low string figures, urgent small hand drums, muted natural horn and dry lute patterns. Tactical pursuit and corners, no huge symphonic climax."
+    },
+    {
+      "key": "music.battle.crypt-annex-rooms-v1",
+      "nameRu": "Бой: Крипта трёх залов",
+      "role": "battle",
+      "mapId": "crypt-annex-rooms-v1",
+      "durationMs": 30000,
+      "prompt": "Original acoustic fantasy game instrumental. Only period-inspired acoustic instruments: lute, harp, wooden flute, bowed viols, natural horns, dulcimer and hand-played frame drums where appropriate. No voices or choir, no electric guitar, bass guitar, drum kit, piano, synthesizer, electronics or modern production effects. Clean balanced mix with space for game sound effects. A cyclic musical passage, start directly with the texture, end on the opening harmony and rhythm for looping; no introductory silence, big final cadence or fade to silence. A tense fight across three ancient crypt halls linked by twisting corridors. 102 BPM in asymmetrical phrases. Echo-like acoustic dulcimer, low viol drones, soft rapid frame drum subdivisions. Labyrinthine and haunted, more elusive than a funeral march."
+    },
+    {
+      "key": "music.battle.urvin-archive-v1",
+      "nameRu": "Бой: Зал безмолвных летописей",
+      "role": "battle",
+      "mapId": "urvin-archive-v1",
+      "durationMs": 30000,
+      "prompt": "Original acoustic fantasy game instrumental. Only period-inspired acoustic instruments: lute, harp, wooden flute, bowed viols, natural horns, dulcimer and hand-played frame drums where appropriate. No voices or choir, no electric guitar, bass guitar, drum kit, piano, synthesizer, electronics or modern production effects. Clean balanced mix with space for game sound effects. A cyclic musical passage, start directly with the texture, end on the opening harmony and rhythm for looping; no introductory silence, big final cadence or fade to silence. Battle in the Hall of Silent Chronicles, a vast ancient stone archive with shattered tablets. 106 BPM. Restrained solemn strings, sparse harp arpeggios and grave natural horns with deliberate frame drums. Lost memory, dust, formidable ancient knowledge, dignified dark fantasy."
+    },
+    {
+      "key": "music.battle.urvin-causeway-v1",
+      "nameRu": "Бой: Пепельный тракт",
+      "role": "battle",
+      "mapId": "urvin-causeway-v1",
+      "durationMs": 30000,
+      "prompt": "Original acoustic fantasy game instrumental. Only period-inspired acoustic instruments: lute, harp, wooden flute, bowed viols, natural horns, dulcimer and hand-played frame drums where appropriate. No voices or choir, no electric guitar, bass guitar, drum kit, piano, synthesizer, electronics or modern production effects. Clean balanced mix with space for game sound effects. A cyclic musical passage, start directly with the texture, end on the opening harmony and rhythm for looping; no introductory silence, big final cadence or fade to silence. Battle on the Ashen Causeway, an open scorched road with glowing ember fissures and dark boulders. 120 BPM. Driving low strings, harsh breathy wooden reeds and layered deep hand drums, occasional short natural horn calls. Relentless ash-grey journey and smouldering peril, no electronic or fire sound effects."
+    },
+    {
+      "key": "music.battle.urvin-court-v1",
+      "nameRu": "Бой: Двор Чёрных врат",
+      "role": "battle",
+      "mapId": "urvin-court-v1",
+      "durationMs": 30000,
+      "prompt": "Original acoustic fantasy game instrumental. Only period-inspired acoustic instruments: lute, harp, wooden flute, bowed viols, natural horns, dulcimer and hand-played frame drums where appropriate. No voices or choir, no electric guitar, bass guitar, drum kit, piano, synthesizer, electronics or modern production effects. Clean balanced mix with space for game sound effects. A cyclic musical passage, start directly with the texture, end on the opening harmony and rhythm for looping; no introductory silence, big final cadence or fade to silence. A formidable guardian battle in the Court of the Black Gates, a wide ruined fortress courtyard. 116 BPM. Powerful acoustic war drums, low string ostinatos, solemn natural horn chords and a clear short heroic motif. Dark medieval grandeur and resolve, active and compelling without modern trailer impacts."
+    }
+  ]
+}

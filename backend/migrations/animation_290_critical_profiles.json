@@ -1,0 +1,297 @@
+{
+  "profiles": [
+    {
+      "key": "weapon.slash.critical",
+      "primitive": "melee_slash",
+      "palette": {
+        "primary": "#f8dfaa",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.25,
+        "contactRatio": 0.48
+      },
+      "casterCircle": false,
+      "motif": "weapon",
+      "strikeStyle": "critical",
+      "baseProfileKey": "weapon.slash"
+    },
+    {
+      "key": "weapon.pierce.critical",
+      "primitive": "melee_pierce",
+      "palette": {
+        "primary": "#f8dfaa",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1350,
+        "scale": 1.25,
+        "launchRatio": 0.22,
+        "contactRatio": 0.4
+      },
+      "casterCircle": false,
+      "motif": "weapon",
+      "strikeStyle": "critical",
+      "baseProfileKey": "weapon.pierce"
+    },
+    {
+      "key": "weapon.bash.critical",
+      "primitive": "melee_bash",
+      "palette": {
+        "primary": "#f8dfaa",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1550,
+        "scale": 1.25,
+        "launchRatio": 0.31,
+        "contactRatio": 0.54
+      },
+      "casterCircle": false,
+      "motif": "weapon",
+      "strikeStyle": "critical",
+      "baseProfileKey": "weapon.bash"
+    },
+    {
+      "key": "weapon.arrow.critical",
+      "primitive": "ranged_arrow",
+      "palette": {
+        "primary": "#f8dfaa",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1350,
+        "scale": 1.25,
+        "launchRatio": 0.3,
+        "contactRatio": 0.48
+      },
+      "casterCircle": false,
+      "motif": "weapon",
+      "strikeStyle": "critical",
+      "baseProfileKey": "weapon.arrow"
+    },
+    {
+      "key": "spell.true-strike.critical",
+      "primitive": "melee_slash",
+      "palette": {
+        "primary": "#ffe99b",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.25,
+        "contactRatio": 0.48
+      },
+      "casterCircle": true,
+      "motif": "radiant",
+      "strikeStyle": "critical",
+      "baseProfileKey": "spell.true-strike"
+    },
+    {
+      "key": "weapon.poison-arrow.critical",
+      "primitive": "ranged_arrow",
+      "palette": {
+        "primary": "#7ce56e",
+        "secondary": "#c3fba2"
+      },
+      "motion": {
+        "durationMs": 1350,
+        "scale": 1.25,
+        "launchRatio": 0.3,
+        "contactRatio": 0.48
+      },
+      "casterCircle": false,
+      "motif": "poison",
+      "strikeStyle": "critical",
+      "baseProfileKey": "weapon.poison-arrow"
+    },
+    {
+      "key": "weapon.firearm.critical",
+      "primitive": "firearm",
+      "palette": {
+        "primary": "#f8dfaa",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.36
+      },
+      "casterCircle": false,
+      "motif": "weapon",
+      "strikeStyle": "critical",
+      "baseProfileKey": "weapon.firearm"
+    },
+    {
+      "key": "weapon.throw-blade.critical",
+      "primitive": "weapon_throw",
+      "palette": {
+        "primary": "#f8dfaa",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.26,
+        "contactRatio": 0.5
+      },
+      "casterCircle": false,
+      "motif": "weapon",
+      "weaponShape": "blade",
+      "strikeStyle": "critical",
+      "baseProfileKey": "weapon.throw-blade"
+    },
+    {
+      "key": "weapon.throw-axe.critical",
+      "primitive": "weapon_throw",
+      "palette": {
+        "primary": "#f8dfaa",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.26,
+        "contactRatio": 0.5
+      },
+      "casterCircle": false,
+      "motif": "weapon",
+      "weaponShape": "axe",
+      "strikeStyle": "critical",
+      "baseProfileKey": "weapon.throw-axe"
+    },
+    {
+      "key": "weapon.throw-hammer.critical",
+      "primitive": "weapon_throw",
+      "palette": {
+        "primary": "#f8dfaa",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.26,
+        "contactRatio": 0.5
+      },
+      "casterCircle": false,
+      "motif": "weapon",
+      "weaponShape": "hammer",
+      "strikeStyle": "critical",
+      "baseProfileKey": "weapon.throw-hammer"
+    },
+    {
+      "key": "weapon.throw-spear.critical",
+      "primitive": "weapon_throw",
+      "palette": {
+        "primary": "#f8dfaa",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.26,
+        "contactRatio": 0.5
+      },
+      "casterCircle": false,
+      "motif": "weapon",
+      "weaponShape": "spear",
+      "strikeStyle": "critical",
+      "baseProfileKey": "weapon.throw-spear"
+    },
+    {
+      "key": "weapon.throw-stone.critical",
+      "primitive": "weapon_throw",
+      "palette": {
+        "primary": "#f8dfaa",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.26,
+        "contactRatio": 0.5
+      },
+      "casterCircle": false,
+      "motif": "weapon",
+      "weaponShape": "stone",
+      "strikeStyle": "critical",
+      "baseProfileKey": "weapon.throw-stone"
+    },
+    {
+      "key": "spell.searing-smite.critical",
+      "primitive": "melee_slash",
+      "palette": {
+        "primary": "#ff7a29",
+        "secondary": "#ffe9a0"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.25,
+        "contactRatio": 0.48
+      },
+      "casterCircle": true,
+      "motif": "fire",
+      "strikeStyle": "critical",
+      "baseProfileKey": "spell.searing-smite"
+    },
+    {
+      "key": "spell.wrathful-smite.critical",
+      "primitive": "melee_slash",
+      "palette": {
+        "primary": "#aa87d8",
+        "secondary": "#69dba7"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.25,
+        "contactRatio": 0.48
+      },
+      "casterCircle": true,
+      "motif": "necrotic",
+      "strikeStyle": "critical",
+      "baseProfileKey": "spell.wrathful-smite"
+    },
+    {
+      "key": "spell.thunderous-smite.critical",
+      "primitive": "melee_slash",
+      "palette": {
+        "primary": "#b7d2ff",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.25,
+        "contactRatio": 0.48
+      },
+      "casterCircle": true,
+      "motif": "thunder",
+      "strikeStyle": "critical",
+      "baseProfileKey": "spell.thunderous-smite"
+    },
+    {
+      "key": "spell.divine-smite.critical",
+      "primitive": "melee_slash",
+      "palette": {
+        "primary": "#ffe99b",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.25,
+        "contactRatio": 0.48
+      },
+      "casterCircle": true,
+      "motif": "radiant",
+      "strikeStyle": "critical",
+      "baseProfileKey": "spell.divine-smite"
+    }
+  ]
+}

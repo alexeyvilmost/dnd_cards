@@ -1,0 +1,83 @@
+/* Delivery and contact markers come from animationTiming.ts, also used by audio. */
+.combat-charged-ray{stroke:var(--fx-primary);fill:none}
+.combat-ray-charge-halo{stroke:none;animation:combat-ray-gather var(--fx-duration) ease-out both;transform-origin:0 0}
+.combat-ray-focus-rings{stroke:var(--fx-secondary);stroke-width:1.5;animation:combat-ray-focus var(--fx-duration) ease-in-out both;transform-origin:0 0}
+.combat-ray-focus-core{fill:var(--fx-secondary);stroke-width:3;animation:combat-ray-core var(--fx-duration) ease-out both;transform-origin:0 0}
+.combat-ray-inflow{stroke:var(--fx-primary);stroke-width:2.5;animation:combat-ray-inflow calc(var(--fx-duration)*.36) cubic-bezier(.7,0,.9,.4) calc(var(--fx-duration)*var(--ray-particle-delay)) both}
+.combat-ray-release{animation:combat-ray-release var(--fx-release-duration) linear var(--fx-launch-delay) both}
+.combat-ray-corona{opacity:.26;stroke-linecap:butt}.combat-ray-body{opacity:.85;stroke-linecap:butt}
+.combat-ray-thread{stroke:var(--fx-secondary);stroke-linecap:butt}
+.combat-ray-corona,.combat-ray-body,.combat-ray-thread,.combat-ray-ribbon{stroke-dasharray:1;stroke-dashoffset:1;animation:combat-ray-shoot var(--fx-flight-duration) cubic-bezier(.7,0,.9,.55) var(--fx-launch-delay) both}
+.combat-ray-ribbon{stroke:var(--fx-secondary);stroke-width:1.2;opacity:.65}
+.combat-ray-tip{fill:var(--fx-secondary);stroke:var(--fx-primary);stroke-width:2;animation:combat-ray-tip var(--fx-flight-duration) cubic-bezier(.7,0,.9,.55) var(--fx-launch-delay) both}
+.combat-ray-recoil-ring{stroke:var(--fx-secondary);stroke-width:2;animation:combat-ray-recoil var(--fx-duration) ease-out both;transform-origin:0 0}
+.combat-area-fx{stroke:var(--fx-secondary);stroke-linecap:round;fill:none}
+.combat-area-ground{animation:combat-area-ground var(--fx-duration) ease-out both}
+.combat-area-bloom{animation:combat-area-bloom-grow var(--fx-contact-delay) ease-out both,combat-area-bloom-fade var(--fx-duration) ease-out both;transform-origin:0 0}
+.combat-area-breath{animation:combat-area-envelope var(--fx-duration) ease-out both}
+.combat-area-breath-sheet{stroke:none;animation:combat-area-pour var(--fx-flight-duration) ease-out var(--fx-launch-delay) both;transform-origin:0 0}
+.combat-area-stream{stroke:var(--fx-secondary);fill:none;stroke-dasharray:.28 .72;animation:combat-area-stream calc(var(--fx-duration)*.77) ease-out calc(var(--fx-duration)*var(--stream-delay)) both;opacity:.65}
+.combat-area-element{stroke-width:1.3;fill:var(--fx-primary);animation:combat-area-element calc(var(--fx-duration)*.57) ease-out calc(var(--fx-duration)*var(--element-delay)) both}
+.combat-area-fx.motif-frost .combat-area-stream{stroke-width:3;opacity:.6}.combat-area-fx.motif-lightning .combat-area-stream{stroke-width:3;opacity:.9}
+.combat-area-fx.motif-poison .combat-area-breath-sheet{opacity:.6}.combat-area-fx.motif-poison .combat-area-element{fill-opacity:.45;stroke:var(--fx-primary)}
+.combat-area-pressure-ring{stroke:var(--fx-secondary);stroke-width:5;animation:combat-area-pressure var(--fx-contact-delay) cubic-bezier(.14,.48,.32,1) calc(var(--fx-duration)*var(--wave-offset)) both;transform-origin:0 0}
+.combat-area-pressure-ray{stroke:var(--fx-primary);stroke-width:3;stroke-dasharray:1;animation:combat-area-pressure-ray var(--fx-duration) ease-out both}
+.combat-area-wave-seal{stroke-width:3;animation:combat-area-seal var(--fx-duration) ease-out both;transform-origin:0 0}
+.combat-area-splash-ring{stroke:var(--fx-primary);stroke-width:7;animation:combat-area-pressure calc(var(--fx-duration)*.7) ease-out calc(var(--fx-duration)*.16) both;transform-origin:0 0}
+.combat-area-droplet{fill:var(--fx-primary);stroke:var(--fx-secondary);stroke-width:1;animation:combat-area-drop calc(var(--fx-duration)*.77) cubic-bezier(.16,.62,.29,1) calc(var(--fx-duration)*var(--drop-delay)) both}
+.combat-area-puddle{fill:var(--fx-primary);fill-opacity:.34;stroke-width:1;animation:combat-area-puddle calc(var(--fx-duration)*.56) ease-out calc(var(--fx-duration)*var(--puddle-delay)) both;transform-origin:center;transform-box:fill-box}
+.combat-area-splash-core{fill:var(--fx-primary);stroke-width:2;animation:combat-area-seal var(--fx-duration) ease-out both;transform-origin:0 0}
+.combat-area-vine{stroke:var(--fx-primary);stroke-width:9;fill:none;stroke-dasharray:1;animation:combat-area-vine var(--fx-duration) ease-out both}
+.combat-area-tendril{stroke:var(--fx-primary);stroke-width:14;fill:none;stroke-dasharray:1;animation:combat-area-vine var(--fx-duration) ease-out both}
+.combat-area-leaf{fill:var(--fx-primary);stroke:var(--fx-secondary);stroke-width:1;animation:combat-area-element calc(var(--fx-duration)*.65) ease-out calc(var(--fx-duration)*.22) both}
+.combat-area-mist{fill:var(--fx-primary);fill-opacity:.15;stroke:none;animation:combat-area-mist var(--fx-duration) ease-out both;transform-origin:center;transform-box:fill-box}
+.combat-area-mote{stroke:var(--fx-secondary);fill:var(--fx-primary);stroke-width:1.7;animation:combat-area-mote var(--fx-duration) ease-out both}
+.combat-thrown-weapon{fill:var(--fx-primary);stroke:var(--fx-secondary);stroke-width:2;animation:combat-weapon-spin calc(var(--fx-duration)*.52) linear both;transform-origin:0 0}
+.combat-thrown-weapon.is-spear{animation:none}
+.combat-firearm-bullet{fill:var(--fx-secondary);stroke:var(--fx-primary);stroke-width:1}
+.combat-firearm-flash{fill:var(--fx-secondary);stroke:none;animation:combat-gun-flash var(--fx-flight-duration) ease-out var(--fx-launch-delay) both}
+.combat-natural-claws{stroke:var(--fx-secondary);stroke-width:1.5;fill:var(--fx-primary)}
+.combat-claw-cut{animation:combat-claw-cut calc(var(--fx-duration)*.67) ease-out calc(var(--fx-duration)*var(--claw-delay)) both;transform-origin:0 0}
+.combat-natural-tail{fill:var(--fx-primary);fill-opacity:.6;stroke:var(--fx-secondary);stroke-width:1.5;animation:combat-tail-sweep calc(var(--fx-duration)*.75) ease-out both;transform-origin:-70px 40px}
+.combat-tail-spine{fill:none;stroke-width:2;stroke-dasharray:3 5}
+.combat-natural-tentacle>path:first-child{stroke:var(--fx-primary);stroke-width:13;fill:none;stroke-dasharray:200;animation:combat-tentacle-grasp calc(var(--fx-duration)*.8) ease-out both}
+.combat-tentacle-suckers{stroke:var(--fx-secondary);stroke-width:3;animation:combat-area-seal var(--fx-duration) ease-out both}
+.combat-natural-sting{fill:var(--fx-primary);stroke:var(--fx-secondary);stroke-width:1.5;animation:combat-fx-thrust calc(var(--fx-duration)*.65) ease-out both}
+.combat-natural-slam{fill:var(--fx-primary);fill-opacity:.55;stroke:var(--fx-secondary);stroke-width:2;animation:combat-natural-slam calc(var(--fx-duration)*.8) ease-out both;transform-origin:0 0}
+.combat-slam-cracks{fill:none;stroke:var(--fx-primary);stroke-width:3}
+@keyframes combat-ray-gather{0%{opacity:0;scale:1.8}15%{opacity:.45}34%{opacity:1;scale:.7}44%{opacity:.8;scale:1.5}66%,100%{opacity:0;scale:1.7}}
+@keyframes combat-ray-focus{0%{opacity:0;scale:1.8;rotate:-40deg}15%{opacity:.7}34%{opacity:1;scale:.78;rotate:15deg}45%{opacity:1;scale:1.06;rotate:0deg}65%,100%{opacity:0;scale:1.3}}
+@keyframes combat-ray-core{0%{opacity:0;scale:.1}18%{opacity:.7;scale:.5}34%{opacity:1;scale:1.3}42%{scale:.65}55%,100%{opacity:0;scale:.15}}
+@keyframes combat-ray-inflow{0%{opacity:0;translate:20px 0}20%{opacity:.9}100%{opacity:0;translate:-46px 0}}
+@keyframes combat-ray-release{0%{opacity:0}3%,36%{opacity:1}64%,100%{opacity:0}}
+@keyframes combat-ray-shoot{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes combat-ray-tip{0%{opacity:0;translate:0 0}10%{opacity:1}99%{opacity:1}100%{opacity:0;translate:var(--ray-length) 0}}
+@keyframes combat-ray-recoil{0%,35%{opacity:0;scale:.7}44%{opacity:.8}75%,100%{opacity:0;scale:1.6;translate:-18px 0}}
+@keyframes combat-area-ground{0%,8%{opacity:0}35%,64%{opacity:.1}100%{opacity:0}}
+@keyframes combat-area-bloom-grow{from{scale:.05}to{scale:1}}
+@keyframes combat-area-bloom-fade{0%{opacity:0}35%{opacity:.9}67%{opacity:.5}100%{opacity:0}}
+@keyframes combat-area-envelope{0%{opacity:0}17%,65%{opacity:.9}100%{opacity:0}}
+@keyframes combat-area-pour{from{scale:.03 .03}to{scale:1 1}}
+@keyframes combat-area-stream{0%{opacity:0;stroke-dashoffset:1}18%{opacity:.8}70%{opacity:.6;stroke-dashoffset:0}100%{opacity:0;stroke-dashoffset:-.3}}
+@keyframes combat-area-element{0%{opacity:0;scale:.4;translate:-15px 0}25%{opacity:.85;scale:1}100%{opacity:0;scale:.4;translate:25px 0}}
+@keyframes combat-area-pressure{0%{opacity:0;scale:.05}15%{opacity:.9}85%{opacity:.35}100%{opacity:0;scale:1}}
+@keyframes combat-area-pressure-ray{0%,10%{opacity:0;stroke-dashoffset:1}30%{opacity:.7}73%,100%{opacity:0;stroke-dashoffset:0}}
+@keyframes combat-area-seal{0%{opacity:0;scale:.2}25%{opacity:.85;scale:1.25}65%,100%{opacity:0;scale:1.7}}
+@keyframes combat-area-drop{0%,14%{opacity:0;translate:0 0;scale:.3}25%{opacity:1;scale:1}80%{opacity:.7}100%{opacity:0;translate:var(--drop-distance) 0;scale:.45}}
+@keyframes combat-area-puddle{0%{opacity:0;scale:.3}28%{opacity:.8;scale:1}100%{opacity:0;scale:1.25}}
+@keyframes combat-area-vine{0%{opacity:0;stroke-dashoffset:1}18%{opacity:.9}63%{stroke-dashoffset:0;opacity:.85}100%{stroke-dashoffset:0;opacity:0}}
+@keyframes combat-area-mist{0%{opacity:0;scale:.5}33%,60%{opacity:.9;scale:1}100%{opacity:0;scale:1.4}}
+@keyframes combat-area-mote{0%{opacity:0;translate:0 14px}30%,65%{opacity:.9}100%{opacity:0;translate:0 -25px}}
+@keyframes combat-weapon-spin{from{rotate:-90deg}to{rotate:360deg}}
+@keyframes combat-gun-flash{0%{opacity:0}4%{opacity:1}76%,100%{opacity:0}}
+@keyframes combat-claw-cut{0%{opacity:0;scale:.5;translate:-25px -38px}27%{opacity:1}68%{opacity:1;scale:1;translate:3px 7px}100%{opacity:0;translate:15px 23px}}
+@keyframes combat-tail-sweep{0%{opacity:0;rotate:-70deg}25%{opacity:1}62%{rotate:18deg;opacity:.9}100%{rotate:45deg;opacity:0}}
+@keyframes combat-tentacle-grasp{0%{opacity:0;stroke-dashoffset:200}25%{opacity:1}65%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:0;opacity:0}}
+@keyframes combat-natural-slam{0%{opacity:0;translate:-40px -30px;scale:1.35}27%{opacity:.9}51%{translate:0 3px;scale:1}70%{opacity:.85}100%{opacity:0;translate:5px 10px}}
+@media(prefers-reduced-motion:reduce){
+  .combat-charged-ray *,.combat-area-fx *{animation:none!important}
+  .combat-ray-inflow,.combat-ray-tip,.combat-ray-charge-halo,.combat-ray-recoil-ring,.combat-area-stream,.combat-area-element,.combat-area-droplet{display:none}
+  .combat-ray-release{opacity:.5}.combat-ray-corona,.combat-ray-body,.combat-ray-thread,.combat-ray-ribbon{stroke-dashoffset:0}
+  .combat-area-ground{opacity:.1}.combat-area-bloom{opacity:.25}.combat-area-pressure-ring{opacity:.3}.combat-area-breath-sheet{opacity:.25}
+  .combat-area-mist,.combat-area-puddle,.combat-area-vine,.combat-area-tendril{opacity:.3}
+}

@@ -1,0 +1,172 @@
+[
+  {
+    "key": "music.site",
+    "name": "Тихие страницы — сайт и главное меню",
+    "channel": "music",
+    "url": "/audio/music-v3/music_site.c6b6fc3095ec.mp3",
+    "gain": 0.28,
+    "loop": true,
+    "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+    "version": 3
+  },
+  {
+    "key": "music.run",
+    "name": "Дорога приключений — забег",
+    "channel": "music",
+    "url": "/audio/music-v3/music_run.f308cbb191dc.mp3",
+    "gain": 0.28,
+    "loop": true,
+    "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+    "version": 3
+  },
+  {
+    "key": "music.battle.forest-v2",
+    "name": "Бой: Мшистый лес",
+    "channel": "music",
+    "url": "/audio/music-v3/music_battle_forest-v2.48fa5ce8e10d.mp3",
+    "gain": 0.38,
+    "loop": true,
+    "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+    "version": 3
+  },
+  {
+    "key": "music.battle.crypt-v2",
+    "name": "Бой: Забытый склеп",
+    "channel": "music",
+    "url": "/audio/music-v3/music_battle_crypt-v2.83e37a2cf495.mp3",
+    "gain": 0.38,
+    "loop": true,
+    "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+    "version": 3
+  },
+  {
+    "key": "music.battle.goblin-camp-v2",
+    "name": "Бой: Лагерь в долине",
+    "channel": "music",
+    "url": "/audio/music-v3/music_battle_goblin-camp-v2.7b7914a11066.mp3",
+    "gain": 0.38,
+    "loop": true,
+    "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+    "version": 3
+  },
+  {
+    "key": "music.battle.tavern-v2",
+    "name": "Бой: Таверна «Последний привал»",
+    "channel": "music",
+    "url": "/audio/music-v3/music_battle_tavern-v2.e188bb9cde22.mp3",
+    "gain": 0.38,
+    "loop": true,
+    "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+    "version": 3
+  },
+  {
+    "key": "music.battle.sanctuary-v1",
+    "name": "Бой: Заросшее святилище",
+    "channel": "music",
+    "url": "/audio/music-v3/music_battle_sanctuary-v1.5d96688fcc0c.mp3",
+    "gain": 0.38,
+    "loop": true,
+    "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+    "version": 3
+  },
+  {
+    "key": "music.battle.quarry-v1",
+    "name": "Бой: Заброшенный карьер",
+    "channel": "music",
+    "url": "/audio/music-v3/music_battle_quarry-v1.3ea40887ce80.mp3",
+    "gain": 0.38,
+    "loop": true,
+    "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+    "version": 3
+  },
+  {
+    "key": "music.battle.cavern-v1",
+    "name": "Бой: Светящийся грот",
+    "channel": "music",
+    "url": "/audio/music-v3/music_battle_cavern-v1.1992c5305f66.mp3",
+    "gain": 0.38,
+    "loop": true,
+    "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+    "version": 3
+  },
+  {
+    "key": "music.battle.snow-pass-v1",
+    "name": "Бой: Снежный перевал",
+    "channel": "music",
+    "url": "/audio/music-v3/music_battle_snow-pass-v1.dba3ab622458.mp3",
+    "gain": 0.38,
+    "loop": true,
+    "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+    "version": 3
+  },
+  {
+    "key": "music.battle.clearing-v1",
+    "name": "Бой: Лесная поляна",
+    "channel": "music",
+    "url": "/audio/music-v3/music_battle_clearing-v1.37fa516de5f6.mp3",
+    "gain": 0.38,
+    "loop": true,
+    "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+    "version": 3
+  },
+  {
+    "key": "music.battle.courtyard-small-v1",
+    "name": "Бой: Тихий внутренний двор",
+    "channel": "music",
+    "url": "/audio/music-v3/music_battle_courtyard-small-v1.5c314b5d16ca.mp3",
+    "gain": 0.38,
+    "loop": true,
+    "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+    "version": 3
+  },
+  {
+    "key": "music.battle.watchpost-rooms-v1",
+    "name": "Бой: Караульные палаты",
+    "channel": "music",
+    "url": "/audio/music-v3/music_battle_watchpost-rooms-v1.a50a85477df8.mp3",
+    "gain": 0.38,
+    "loop": true,
+    "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+    "version": 3
+  },
+  {
+    "key": "music.battle.crypt-annex-rooms-v1",
+    "name": "Бой: Крипта трёх залов",
+    "channel": "music",
+    "url": "/audio/music-v3/music_battle_crypt-annex-rooms-v1.bcc15159a288.mp3",
+    "gain": 0.38,
+    "loop": true,
+    "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+    "version": 3
+  },
+  {
+    "key": "music.battle.urvin-archive-v1",
+    "name": "Бой: Зал безмолвных летописей",
+    "channel": "music",
+    "url": "/audio/music-v3/music_battle_urvin-archive-v1.ddbfebd8d819.mp3",
+    "gain": 0.38,
+    "loop": true,
+    "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+    "version": 3
+  },
+  {
+    "key": "music.battle.urvin-causeway-v1",
+    "name": "Бой: Пепельный тракт",
+    "channel": "music",
+    "url": "/audio/music-v3/music_battle_urvin-causeway-v1.40ca1482270c.mp3",
+    "gain": 0.38,
+    "loop": true,
+    "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+    "version": 3
+  },
+  {
+    "key": "music.battle.urvin-court-v1",
+    "name": "Бой: Двор Чёрных врат",
+    "channel": "music",
+    "url": "/audio/music-v3/music_battle_urvin-court-v1.5decb99802a7.mp3",
+    "gain": 0.38,
+    "loop": true,
+    "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+    "version": 3
+  }
+]

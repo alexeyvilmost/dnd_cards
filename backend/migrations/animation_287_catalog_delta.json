@@ -1,0 +1,2249 @@
+{
+  "profiles": [
+    {
+      "definition": {
+        "key": "spell.acid-splash",
+        "primitive": "area_burst",
+        "palette": {
+          "primary": "#bdf84a",
+          "secondary": "#edffab"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "acid"
+      },
+      "previous_definition": {
+        "key": "spell.acid-splash",
+        "primitive": "burst",
+        "palette": {
+          "primary": "#bdf84a",
+          "secondary": "#edffab"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "acid"
+      }
+    },
+    {
+      "definition": {
+        "key": "spell.frost-ray",
+        "primitive": "charged_beam",
+        "palette": {
+          "primary": "#8ceaff",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1250,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "frost"
+      },
+      "previous_definition": {
+        "key": "spell.frost-ray",
+        "primitive": "beam",
+        "palette": {
+          "primary": "#8ceaff",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "frost"
+      }
+    },
+    {
+      "definition": {
+        "key": "spell.eldritch-blast",
+        "primitive": "charged_beam",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1250,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "spell.eldritch-blast",
+        "primitive": "beam",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      }
+    },
+    {
+      "definition": {
+        "key": "natural.fire-bite",
+        "primitive": "bite",
+        "palette": {
+          "primary": "#ff7a29",
+          "secondary": "#ffe9a0"
+        },
+        "motion": {
+          "durationMs": 1050,
+          "scale": 1.18
+        },
+        "casterCircle": false,
+        "motif": "fire"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "natural.slam",
+        "primitive": "natural_slam",
+        "palette": {
+          "primary": "#f8dfaa",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1050,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "weapon"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "natural.stone-slam",
+        "primitive": "natural_slam",
+        "palette": {
+          "primary": "#c9a77d",
+          "secondary": "#ecdbad"
+        },
+        "motion": {
+          "durationMs": 1050,
+          "scale": 1.3
+        },
+        "casterCircle": false,
+        "motif": "earth"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "natural.grab",
+        "primitive": "spectral_hand",
+        "palette": {
+          "primary": "#f8dfaa",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1050,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "weapon"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "natural.claws",
+        "primitive": "claws",
+        "palette": {
+          "primary": "#f8dfaa",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1050,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "weapon"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "natural.tail",
+        "primitive": "tail",
+        "palette": {
+          "primary": "#f8dfaa",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1050,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "weapon"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "natural.tentacle",
+        "primitive": "tentacle",
+        "palette": {
+          "primary": "#f8dfaa",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1050,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "weapon"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "natural.sting",
+        "primitive": "sting",
+        "palette": {
+          "primary": "#7ce56e",
+          "secondary": "#c3fba2"
+        },
+        "motion": {
+          "durationMs": 1050,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "poison"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "natural.necrotic-touch",
+        "primitive": "spectral_hand",
+        "palette": {
+          "primary": "#aa87d8",
+          "secondary": "#69dba7"
+        },
+        "motion": {
+          "durationMs": 1050,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "necrotic"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "weapon.poison-arrow",
+        "primitive": "ranged_arrow",
+        "palette": {
+          "primary": "#7ce56e",
+          "secondary": "#c3fba2"
+        },
+        "motion": {
+          "durationMs": 1050,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "poison"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "weapon.firearm",
+        "primitive": "firearm",
+        "palette": {
+          "primary": "#f8dfaa",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 820,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "weapon"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "weapon.throw-blade",
+        "primitive": "weapon_throw",
+        "palette": {
+          "primary": "#f8dfaa",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 950,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "weapon",
+        "weaponShape": "blade"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "weapon.throw-axe",
+        "primitive": "weapon_throw",
+        "palette": {
+          "primary": "#f8dfaa",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 950,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "weapon",
+        "weaponShape": "axe"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "weapon.throw-hammer",
+        "primitive": "weapon_throw",
+        "palette": {
+          "primary": "#f8dfaa",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 950,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "weapon",
+        "weaponShape": "hammer"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "weapon.throw-spear",
+        "primitive": "weapon_throw",
+        "palette": {
+          "primary": "#f8dfaa",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 950,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "weapon",
+        "weaponShape": "spear"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "weapon.throw-stone",
+        "primitive": "weapon_throw",
+        "palette": {
+          "primary": "#f8dfaa",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 950,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "weapon",
+        "weaponShape": "stone"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "weapon.parry",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#f8dfaa",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1050,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "weapon"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.burning-hands",
+        "primitive": "area_cone",
+        "palette": {
+          "primary": "#ff7a29",
+          "secondary": "#ffe9a0"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "fire"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.thunderwave",
+        "primitive": "area_wave",
+        "palette": {
+          "primary": "#b7d2ff",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "thunder"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.sleep",
+        "primitive": "area_burst",
+        "palette": {
+          "primary": "#e599ff",
+          "secondary": "#a7b8ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "psychic"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.grease",
+        "primitive": "area_burst",
+        "palette": {
+          "primary": "#c9a77d",
+          "secondary": "#ecdbad"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "earth"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.water-shaping",
+        "primitive": "area_burst",
+        "palette": {
+          "primary": "#67d6f4",
+          "secondary": "#daffff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "water"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.faerie-fire",
+        "primitive": "area_burst",
+        "palette": {
+          "primary": "#d5aaff",
+          "secondary": "#9cdcff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "illusion"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.entangle",
+        "primitive": "area_burst",
+        "palette": {
+          "primary": "#98e685",
+          "secondary": "#f5e5a0"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "nature"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.fog-cloud",
+        "primitive": "area_burst",
+        "palette": {
+          "primary": "#d2efff",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "wind"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.color-spray",
+        "primitive": "area_cone",
+        "palette": {
+          "primary": "#d5aaff",
+          "secondary": "#9cdcff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "illusion"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.hadar-arms",
+        "primitive": "area_burst",
+        "palette": {
+          "primary": "#aa87d8",
+          "secondary": "#69dba7"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "necrotic"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.searing-smite",
+        "primitive": "melee_slash",
+        "palette": {
+          "primary": "#ff7a29",
+          "secondary": "#ffe9a0"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "fire"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.wrathful-smite",
+        "primitive": "melee_slash",
+        "palette": {
+          "primary": "#aa87d8",
+          "secondary": "#69dba7"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "necrotic"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.thunderous-smite",
+        "primitive": "melee_slash",
+        "palette": {
+          "primary": "#b7d2ff",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "thunder"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.divine-smite",
+        "primitive": "melee_slash",
+        "palette": {
+          "primary": "#ffe99b",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "radiant"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.curse",
+        "primitive": "aura",
+        "palette": {
+          "primary": "#aa87d8",
+          "secondary": "#69dba7"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "necrotic"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.blessing",
+        "primitive": "aura",
+        "palette": {
+          "primary": "#ffe99b",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "radiant"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.charm",
+        "primitive": "aura",
+        "palette": {
+          "primary": "#e599ff",
+          "secondary": "#a7b8ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "psychic"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.command",
+        "primitive": "thunder",
+        "palette": {
+          "primary": "#e599ff",
+          "secondary": "#a7b8ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "psychic"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.dissonant-whispers",
+        "primitive": "thunder",
+        "palette": {
+          "primary": "#e599ff",
+          "secondary": "#a7b8ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "psychic"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.hellish-rebuke",
+        "primitive": "burst",
+        "palette": {
+          "primary": "#ff7a29",
+          "secondary": "#ffe9a0"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "fire"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.ray-of-sickness",
+        "primitive": "charged_beam",
+        "palette": {
+          "primary": "#7ce56e",
+          "secondary": "#c3fba2"
+        },
+        "motion": {
+          "durationMs": 1250,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "poison"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.witch-bolt",
+        "primitive": "charged_beam",
+        "palette": {
+          "primary": "#a7ceff",
+          "secondary": "#f4eaff"
+        },
+        "motion": {
+          "durationMs": 1250,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "lightning"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.guiding-bolt",
+        "primitive": "projectile",
+        "palette": {
+          "primary": "#ffe99b",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "radiant"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.magic-missile",
+        "primitive": "projectile",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.chromatic-orb",
+        "primitive": "projectile",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.ice-knife",
+        "primitive": "weapon_throw",
+        "palette": {
+          "primary": "#8ceaff",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "frost",
+        "weaponShape": "blade"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.hail-of-thorns",
+        "primitive": "area_burst",
+        "palette": {
+          "primary": "#98e685",
+          "secondary": "#f5e5a0"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "nature"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.ensnaring-strike",
+        "primitive": "vines",
+        "palette": {
+          "primary": "#98e685",
+          "secondary": "#f5e5a0"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "nature"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.cure-wounds",
+        "primitive": "heal",
+        "palette": {
+          "primary": "#7aebbe",
+          "secondary": "#fff6b5"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "healing"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.healing-word",
+        "primitive": "heal",
+        "palette": {
+          "primary": "#7aebbe",
+          "secondary": "#fff6b5"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "healing"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.sanctuary",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#ffe99b",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "radiant"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.shield",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.mage-armor",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.armor-of-agathys",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#8ceaff",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "frost"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.false-life",
+        "primitive": "aura",
+        "palette": {
+          "primary": "#aa87d8",
+          "secondary": "#69dba7"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "necrotic"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.feather-fall",
+        "primitive": "aura",
+        "palette": {
+          "primary": "#d2efff",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "wind"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.mobility",
+        "primitive": "aura",
+        "palette": {
+          "primary": "#d2efff",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "wind"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.detect",
+        "primitive": "search",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.detect-poison",
+        "primitive": "search",
+        "palette": {
+          "primary": "#7ce56e",
+          "secondary": "#c3fba2"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "poison"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.detect-presence",
+        "primitive": "search",
+        "palette": {
+          "primary": "#ffe99b",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "radiant"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.hunter-mark",
+        "primitive": "search",
+        "palette": {
+          "primary": "#98e685",
+          "secondary": "#f5e5a0"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "nature"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.goodberry",
+        "primitive": "vines",
+        "palette": {
+          "primary": "#7aebbe",
+          "secondary": "#fff6b5"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "healing"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.nature-communion",
+        "primitive": "aura",
+        "palette": {
+          "primary": "#98e685",
+          "secondary": "#f5e5a0"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "nature"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.familiar",
+        "primitive": "aura",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.floating-disk",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.unseen-servant",
+        "primitive": "spectral_hand",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.alarm",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.purify",
+        "primitive": "area_burst",
+        "palette": {
+          "primary": "#7aebbe",
+          "secondary": "#fff6b5"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "healing"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.knowledge",
+        "primitive": "search",
+        "palette": {
+          "primary": "#ffe99b",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "radiant"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.illusory-script",
+        "primitive": "illusion",
+        "palette": {
+          "primary": "#d5aaff",
+          "secondary": "#9cdcff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "illusion"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.silent-image",
+        "primitive": "illusion",
+        "palette": {
+          "primary": "#d5aaff",
+          "secondary": "#9cdcff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "illusion"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "spell.disguise",
+        "primitive": "illusion",
+        "palette": {
+          "primary": "#d5aaff",
+          "secondary": "#9cdcff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "illusion"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "breath.fire",
+        "primitive": "area_cone",
+        "palette": {
+          "primary": "#ff7a29",
+          "secondary": "#ffe9a0"
+        },
+        "motion": {
+          "durationMs": 1400,
+          "scale": 1.15
+        },
+        "casterCircle": false,
+        "motif": "fire"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "breath.fire-line",
+        "primitive": "area_line",
+        "palette": {
+          "primary": "#ff7a29",
+          "secondary": "#ffe9a0"
+        },
+        "motion": {
+          "durationMs": 1250,
+          "scale": 1.15
+        },
+        "casterCircle": false,
+        "motif": "fire"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "breath.frost",
+        "primitive": "area_cone",
+        "palette": {
+          "primary": "#8ceaff",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1400,
+          "scale": 1.15
+        },
+        "casterCircle": false,
+        "motif": "frost"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "breath.frost-line",
+        "primitive": "area_line",
+        "palette": {
+          "primary": "#8ceaff",
+          "secondary": "#ffffff"
+        },
+        "motion": {
+          "durationMs": 1250,
+          "scale": 1.15
+        },
+        "casterCircle": false,
+        "motif": "frost"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "breath.acid",
+        "primitive": "area_cone",
+        "palette": {
+          "primary": "#bdf84a",
+          "secondary": "#edffab"
+        },
+        "motion": {
+          "durationMs": 1400,
+          "scale": 1.15
+        },
+        "casterCircle": false,
+        "motif": "acid"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "breath.acid-line",
+        "primitive": "area_line",
+        "palette": {
+          "primary": "#bdf84a",
+          "secondary": "#edffab"
+        },
+        "motion": {
+          "durationMs": 1250,
+          "scale": 1.15
+        },
+        "casterCircle": false,
+        "motif": "acid"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "breath.lightning",
+        "primitive": "area_cone",
+        "palette": {
+          "primary": "#a7ceff",
+          "secondary": "#f4eaff"
+        },
+        "motion": {
+          "durationMs": 1400,
+          "scale": 1.15
+        },
+        "casterCircle": false,
+        "motif": "lightning"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "breath.lightning-line",
+        "primitive": "area_line",
+        "palette": {
+          "primary": "#a7ceff",
+          "secondary": "#f4eaff"
+        },
+        "motion": {
+          "durationMs": 1250,
+          "scale": 1.15
+        },
+        "casterCircle": false,
+        "motif": "lightning"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "breath.poison",
+        "primitive": "area_cone",
+        "palette": {
+          "primary": "#7ce56e",
+          "secondary": "#c3fba2"
+        },
+        "motion": {
+          "durationMs": 1400,
+          "scale": 1.15
+        },
+        "casterCircle": false,
+        "motif": "poison"
+      },
+      "previous_definition": null
+    },
+    {
+      "definition": {
+        "key": "breath.poison-line",
+        "primitive": "area_line",
+        "palette": {
+          "primary": "#7ce56e",
+          "secondary": "#c3fba2"
+        },
+        "motion": {
+          "durationMs": 1250,
+          "scale": 1.15
+        },
+        "casterCircle": false,
+        "motif": "poison"
+      },
+      "previous_definition": null
+    }
+  ],
+  "bindings": [
+    {
+      "entity_type": "action",
+      "entity_id": "4720c0d0-6610-40e2-812b-4aa0a1bb8449",
+      "profile_key": "natural.slam",
+      "previous_profile_key": "weapon.bash"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b1000000-0000-4000-8000-000000000002",
+      "profile_key": "weapon.pierce",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b1000000-0000-4000-8000-000000000001",
+      "profile_key": "weapon.slash",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000001",
+      "profile_key": "weapon.slash",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000002",
+      "profile_key": "weapon.arrow",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000003",
+      "profile_key": "weapon.throw-spear",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2010000-0000-4000-8000-000000000001",
+      "profile_key": "weapon.pierce",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000005",
+      "profile_key": "weapon.throw-blade",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2010000-0000-4000-8000-000000000002",
+      "profile_key": "weapon.pierce",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000006",
+      "profile_key": "weapon.slash",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000007",
+      "profile_key": "weapon.arrow",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000008",
+      "profile_key": "weapon.pierce",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000009",
+      "profile_key": "weapon.arrow",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000010",
+      "profile_key": "natural.slam",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000013",
+      "profile_key": "weapon.slash",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000014",
+      "profile_key": "weapon.poison-arrow",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000015",
+      "profile_key": "weapon.bash",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000016",
+      "profile_key": "weapon.arrow",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000017",
+      "profile_key": "natural.slam",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000019",
+      "profile_key": "natural.grab",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000020",
+      "profile_key": "weapon.throw-hammer",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2010000-0000-4000-8000-000000000003",
+      "profile_key": "weapon.bash",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000021",
+      "profile_key": "weapon.bash",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000022",
+      "profile_key": "weapon.throw-spear",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2010000-0000-4000-8000-000000000004",
+      "profile_key": "weapon.pierce",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000023",
+      "profile_key": "weapon.slash",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000024",
+      "profile_key": "weapon.slash",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000025",
+      "profile_key": "weapon.firearm",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000026",
+      "profile_key": "weapon.slash",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000027",
+      "profile_key": "weapon.arrow",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2040000-0000-4000-8000-000000000001",
+      "profile_key": "weapon.parry",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000001",
+      "profile_key": "weapon.pierce",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000002",
+      "profile_key": "natural.stone-slam",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000003",
+      "profile_key": "natural.fire-bite",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000004",
+      "profile_key": "natural.necrotic-touch",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000005",
+      "profile_key": "weapon.slash",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "442ba733-5af0-4680-a411-05e15adc8a4d",
+      "profile_key": "natural.slam",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "bbe6b9f3-3a63-4ad9-97d8-5c61ed884d24",
+      "profile_key": "natural.claws",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "12900000-0000-4000-8000-000000000001",
+      "profile_key": "natural.slam",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "12900000-0000-4000-8000-000000000002",
+      "profile_key": "natural.slam",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "25600000-0000-4000-8000-000000000001",
+      "profile_key": "natural.slam",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "d7e549b7-8468-48ff-a762-850b328d9d1e",
+      "profile_key": "breath.fire",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "17e13187-d809-4357-a467-4116b30eb359",
+      "profile_key": "breath.fire",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b7f8278d-b902-42c7-ad04-3a8f694542e1",
+      "profile_key": "breath.frost",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "3ea9a83b-20f6-4fa7-b2d7-011f1942a7bb",
+      "profile_key": "breath.acid",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "a227f2bf-6e88-45f7-83f9-44a709aa6f2b",
+      "profile_key": "breath.lightning",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "523934b2-926d-491d-b209-58ba1a8f66e3",
+      "profile_key": "breath.poison",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",
+      "profile_key": "spell.silent-image",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "33c69e7d-7524-421a-9d68-521e1b7fb57a",
+      "profile_key": "spell.blessing",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "fe0a8d3c-318c-4308-9ff0-3838367f75e6",
+      "profile_key": "spell.divine-smite",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a66ca78f-af5f-4310-85c3-01c300e06581",
+      "profile_key": "spell.blessing",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "96a02044-6274-4e68-a06e-853c206824b8",
+      "profile_key": "spell.witch-bolt",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "34518f38-b737-4a91-88ac-d5858d2d04a0",
+      "profile_key": "spell.thunderwave",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59",
+      "profile_key": "spell.magic-missile",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d6a193e8-0204-4277-9a6a-75a86c2d15cd",
+      "profile_key": "spell.command",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a4491a9d-8a2d-4212-abc1-c92d3f0b85ed",
+      "profile_key": "spell.blessing",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "857500cb-45e7-4cce-9fd3-61116e10814f",
+      "profile_key": "spell.wrathful-smite",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a438dcc1-94d0-420c-ae29-35b2cafd2f7a",
+      "profile_key": "spell.hail-of-thorns",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ae684edc-08c3-4f00-94ab-5c11c6b05f4e",
+      "profile_key": "spell.thunderous-smite",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8821d595-ec03-42b8-aeaf-f50f7d72b726",
+      "profile_key": "spell.dissonant-whispers",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "4291b817-6869-4f87-afae-5bd1a37aee3f",
+      "profile_key": "spell.goodberry",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f55f58e8-a6f9-4c97-ab6f-8e7f385591d0",
+      "profile_key": "spell.armor-of-agathys",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "db6433bf-f779-4b65-8766-0feffefd1930",
+      "profile_key": "spell.mage-armor",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "c2e3cd80-463a-4a0f-a918-ed9a302efe5b",
+      "profile_key": "spell.nature-communion",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "4abefac8-329b-4c70-a59a-84dca2d194d3",
+      "profile_key": "spell.mockery",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "85b05dba-9662-43a2-afb9-050ce2bf6136",
+      "profile_key": "spell.sanctuary",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "befe393c-7463-40df-a888-d74f1e6e186c",
+      "profile_key": "spell.illusory-script",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f1eb548c-2299-4f6f-9417-6dda19ded14c",
+      "profile_key": "spell.ice-knife",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ddb5e045-045c-45ce-ab5e-4d6a489be913",
+      "profile_key": "spell.healing-word",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8d98d8f6-7085-48cd-b2a4-1f18cd8470d9",
+      "profile_key": "spell.cure-wounds",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "5a8cc8b7-8f5c-49d7-a66d-ba31a273c65c",
+      "profile_key": "spell.disguise",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8c2702cd-4cfa-4c02-919a-178bd2196ca4",
+      "profile_key": "spell.hunter-mark",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "487e3b6a-ac09-47dc-a7a7-08c17665c60f",
+      "profile_key": "spell.chill-touch",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "851027a9-0b6a-49d1-9f61-5eef831bf297",
+      "profile_key": "spell.guiding-bolt",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "13018914-f220-48c5-8aff-902b1fbfff73",
+      "profile_key": "spell.unseen-servant",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a8bb857d-cfaf-49d4-9f95-04a71a997a03",
+      "profile_key": "spell.detect-poison",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "c6f10945-84d5-422f-bb70-98177142d90e",
+      "profile_key": "spell.detect-presence",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "aa2adb3d-101b-4e70-97f1-69dc9f0debf8",
+      "profile_key": "spell.familiar",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "732c2287-dd4d-46cd-9315-67447549abfa",
+      "profile_key": "spell.burning-hands",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8e26c8a3-c545-4524-98d5-35acc5d29ca5",
+      "profile_key": "spell.knowledge",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "b347be07-68e7-4cd1-8a5a-222e206711c2",
+      "profile_key": "spell.entangle",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "9afc306d-3f3d-4a05-8cb8-dfcd53b10b50",
+      "profile_key": "spell.ensnaring-strike",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a6c7db7d-f35c-4072-a5eb-29d4d58be93e",
+      "profile_key": "spell.charm",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "677a3abf-5fc7-472f-b789-418dcba6dd88",
+      "profile_key": "spell.purify",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "33e73716-4d61-4669-b9d4-b0e2f6fcc63f",
+      "profile_key": "spell.feather-fall",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "04dc8ba1-388f-4acc-ab4b-5a6784faeeaa",
+      "profile_key": "spell.searing-smite",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3b1316f0-02e7-496b-8146-602f4bd8284a",
+      "profile_key": "spell.floating-disk",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "bf6dbc16-d7bc-4abd-9a85-f204858b9396",
+      "profile_key": "spell.knowledge",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d7218ea6-2062-4ef3-8680-c8f9c657fda9",
+      "profile_key": "spell.curse",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "bc90dc67-8fac-41b8-b3bf-a1e218013929",
+      "profile_key": "spell.mobility",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a931ec6f-40ad-4f5d-beb4-4893f3c66c08",
+      "profile_key": "spell.command",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0cee5f3c-e943-46dd-96bc-ced618b90454",
+      "profile_key": "spell.mobility",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "b6254e87-7bd3-4aaa-b937-5b793926128b",
+      "profile_key": "spell.nature-communion",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e75790cb-b03f-4a24-98a3-ef86a4756535",
+      "profile_key": "spell.hadar-arms",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "c5a6892f-d388-4075-9da6-6cfb0989ba26",
+      "profile_key": "spell.color-spray",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "b6cb9612-8dea-4949-bbd5-595bd5501beb",
+      "profile_key": "spell.curse",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ac198b93-04d7-4633-831e-b0050330cccf",
+      "profile_key": "spell.alarm",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "2a6cab0a-ee77-4ac4-8148-80743fc8e8ea",
+      "profile_key": "spell.grease",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "2ac56edb-1620-4cf1-9533-77f590b08afd",
+      "profile_key": "spell.water-shaping",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d4a2b512-06fc-420f-ae35-1c4867d0e04e",
+      "profile_key": "spell.fog-cloud",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "52d5507e-4350-4dcb-a5fd-c4a11bd91b67",
+      "profile_key": "spell.sanctuary",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0f81f3e2-ff95-4629-9292-e81332a57282",
+      "profile_key": "spell.sleep",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f0256294-e692-4695-8e29-d8288139a7ad",
+      "profile_key": "spell.chromatic-orb",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d87f4507-849f-450b-b328-0198cb011587",
+      "profile_key": "spell.shield",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "656f3c28-9fdd-44c7-88df-ce032a501e52",
+      "profile_key": "spell.sanctuary",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "40112dc3-2fc5-5ee3-ac19-0e17fb5afe37",
+      "profile_key": "spell.command",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "c10da6ea-2be1-5a84-af2a-a2f4a4d26efd",
+      "profile_key": "spell.command",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a3dceaca-ad3a-5091-aef1-5675f6468914",
+      "profile_key": "spell.command",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f475a573-09fb-59cb-a11f-0d8807a29aa1",
+      "profile_key": "spell.command",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e6ab931a-3566-595d-ad2e-099bf56e3139",
+      "profile_key": "spell.command",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "c44ae524-54b7-58f4-a1d0-92762302ff82",
+      "profile_key": "spell.curse",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "06d80c8e-0532-5249-a8a3-8c46c2217172",
+      "profile_key": "spell.curse",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "056587df-cce9-5b81-a282-38b53e463d31",
+      "profile_key": "spell.curse",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "41c92f87-d495-53a0-a34d-997b3290d419",
+      "profile_key": "spell.curse",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "5bbd0670-0505-5931-a1e5-184bc46c3ce7",
+      "profile_key": "spell.curse",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e4ccb3c5-42c0-528e-a226-1b184b5095ee",
+      "profile_key": "spell.curse",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d0ff40bd-53e0-56bb-abc7-8455c1103629",
+      "profile_key": "spell.alarm",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e930597a-382e-5c5c-a685-5a285cb8fc7e",
+      "profile_key": "spell.alarm",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f4ad27d1-60ae-5016-ab9e-8192bb9afe08",
+      "profile_key": "spell.water-shaping",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "542a85a9-c355-5836-a814-79ef86c4b16e",
+      "profile_key": "spell.water-shaping",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f163a24a-ab0c-584c-a9b1-091d7cccbfd7",
+      "profile_key": "spell.water-shaping",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ba4b7687-7f38-5447-a8ff-d85a9ac707bf",
+      "profile_key": "spell.water-shaping",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "647342b1-443b-5e1c-a06f-996db5939e31",
+      "profile_key": "spell.acid",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "9eb10faa-a968-5d31-a8ec-224f8962855d",
+      "profile_key": "spell.frost",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "06916d19-07d4-5594-aba6-3da14976e081",
+      "profile_key": "spell.fire",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "09e5726d-fdcb-552c-a8ce-23b4b887da51",
+      "profile_key": "spell.lightning",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "11c92d2a-8cc3-51e1-ac70-7315dee88ec0",
+      "profile_key": "spell.poison",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f7fa96a0-4960-5ace-a948-b4f9da471632",
+      "profile_key": "spell.thunder",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "25d868ad-0714-4fce-b5b2-2931dd5646bc",
+      "profile_key": "spell.detect",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "b132a28e-f6c9-4832-924b-1a680390e7fb",
+      "profile_key": "spell.faerie-fire",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f3098f61-1ea7-4816-9819-1903388cfe06",
+      "profile_key": "spell.false-life",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3f618918-5477-4526-a123-da9dda136c7e",
+      "profile_key": "spell.hellish-rebuke",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f8ad3edb-c0e2-4321-9a91-172bf19e2ec7",
+      "profile_key": "spell.mobility",
+      "previous_profile_key": null
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "92bcd9dd-2b4f-4264-9d8f-ba16722051e0",
+      "profile_key": "spell.ray-of-sickness",
+      "previous_profile_key": null
+    }
+  ]
+}

@@ -1,0 +1,544 @@
+{
+  "profiles": [
+    {
+      "definition": {
+        "key": "spell.force",
+        "primitive": "projectile",
+        "palette": {
+          "primary": "#ef4444",
+          "secondary": "#fecaca"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "spell.force",
+        "primitive": "projectile",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      }
+    },
+    {
+      "definition": {
+        "key": "spell.mage-hand",
+        "primitive": "spectral_hand",
+        "palette": {
+          "primary": "#ef4444",
+          "secondary": "#fecaca"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "spell.mage-hand",
+        "primitive": "spectral_hand",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      }
+    },
+    {
+      "definition": {
+        "key": "spell.blade-ward",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#ef4444",
+          "secondary": "#fecaca"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "spell.blade-ward",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      }
+    },
+    {
+      "definition": {
+        "key": "spell.eldritch-blast",
+        "primitive": "charged_beam",
+        "palette": {
+          "primary": "#ef4444",
+          "secondary": "#fecaca"
+        },
+        "motion": {
+          "durationMs": 1250,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "spell.eldritch-blast",
+        "primitive": "charged_beam",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1250,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      }
+    },
+    {
+      "definition": {
+        "key": "spell.sorcerous-burst",
+        "primitive": "burst",
+        "palette": {
+          "primary": "#ef4444",
+          "secondary": "#fecaca"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "spell.sorcerous-burst",
+        "primitive": "burst",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      }
+    },
+    {
+      "definition": {
+        "key": "spell.astral-rush",
+        "primitive": "dash",
+        "palette": {
+          "primary": "#ef4444",
+          "secondary": "#fecaca"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "spell.astral-rush",
+        "primitive": "dash",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      }
+    },
+    {
+      "definition": {
+        "key": "spell.mending",
+        "primitive": "recover",
+        "palette": {
+          "primary": "#ef4444",
+          "secondary": "#fecaca"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "spell.mending",
+        "primitive": "recover",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      }
+    },
+    {
+      "definition": {
+        "key": "action.ward",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#ef4444",
+          "secondary": "#fecaca"
+        },
+        "motion": {
+          "durationMs": 850,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "action.ward",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 850,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "force"
+      }
+    },
+    {
+      "definition": {
+        "key": "action.effect",
+        "primitive": "aura",
+        "palette": {
+          "primary": "#ef4444",
+          "secondary": "#fecaca"
+        },
+        "motion": {
+          "durationMs": 850,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "action.effect",
+        "primitive": "aura",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 850,
+          "scale": 1
+        },
+        "casterCircle": false,
+        "motif": "force"
+      }
+    },
+    {
+      "definition": {
+        "key": "spell.magic-missile",
+        "primitive": "projectile",
+        "palette": {
+          "primary": "#ef4444",
+          "secondary": "#fecaca"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "spell.magic-missile",
+        "primitive": "projectile",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      }
+    },
+    {
+      "definition": {
+        "key": "spell.chromatic-orb",
+        "primitive": "projectile",
+        "palette": {
+          "primary": "#ef4444",
+          "secondary": "#fecaca"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "spell.chromatic-orb",
+        "primitive": "projectile",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      }
+    },
+    {
+      "definition": {
+        "key": "spell.shield",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#ef4444",
+          "secondary": "#fecaca"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "spell.shield",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      }
+    },
+    {
+      "definition": {
+        "key": "spell.mage-armor",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#ef4444",
+          "secondary": "#fecaca"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "spell.mage-armor",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      }
+    },
+    {
+      "definition": {
+        "key": "spell.detect",
+        "primitive": "search",
+        "palette": {
+          "primary": "#ef4444",
+          "secondary": "#fecaca"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "spell.detect",
+        "primitive": "search",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      }
+    },
+    {
+      "definition": {
+        "key": "spell.familiar",
+        "primitive": "aura",
+        "palette": {
+          "primary": "#ef4444",
+          "secondary": "#fecaca"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "spell.familiar",
+        "primitive": "aura",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      }
+    },
+    {
+      "definition": {
+        "key": "spell.floating-disk",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#ef4444",
+          "secondary": "#fecaca"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "spell.floating-disk",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      }
+    },
+    {
+      "definition": {
+        "key": "spell.unseen-servant",
+        "primitive": "spectral_hand",
+        "palette": {
+          "primary": "#ef4444",
+          "secondary": "#fecaca"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "spell.unseen-servant",
+        "primitive": "spectral_hand",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      }
+    },
+    {
+      "definition": {
+        "key": "spell.alarm",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#ef4444",
+          "secondary": "#fecaca"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      },
+      "previous_definition": {
+        "key": "spell.alarm",
+        "primitive": "ward",
+        "palette": {
+          "primary": "#b7a5ff",
+          "secondary": "#e5f4ff"
+        },
+        "motion": {
+          "durationMs": 1150,
+          "scale": 1
+        },
+        "casterCircle": true,
+        "motif": "force"
+      }
+    }
+  ]
+}

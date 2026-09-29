@@ -112,7 +112,7 @@ import {
 import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
 import { getCardsIndex } from '../utils/cardsIndex';
 import { combatActorMovementMode, combatActorMovementSpeeds, effectiveActorSpeedFt, gridDistanceFt } from '../solo-combat/tacticalGrid';
-import { combatActionIsAttack, combatApproachRoute, defaultCombatAttackAction,combatActionRangeFt } from '../solo-combat/defaultInteraction';
+import { combatActionForActor, combatActionIsAttack, combatApproachRoute, defaultCombatAttackAction,combatActionRangeFt } from '../solo-combat/defaultInteraction';
 import { combatIdentity } from '../solo-combat/combatIdentity';
 import { canonicalTouchSpell, familiarActorsOwnedBy } from '../rules-core/familiarRuntime';
 import { familiarFormLabel } from '../character/familiarLabels';
@@ -600,8 +600,11 @@ export default function SoloCombatPage() {
         {changesOutcome: preview?.changesOutcome})};
     });
   }, [state, combatPassiveEnabled]);
+  // A provisional window is useful only when there is an actionable choice to
+  // make. Continue stale/empty offers through the normal revision-checked
+  // command so the saved roll proceeds to its confirmed presentation.
   const skipInfluence = Boolean(heldDecision?.held && (!influenceOfferVisible
-    || (availableHeldInfluences.length>0&&offeredHeldInfluences.length===0)));
+    || offeredHeldInfluences.length===0));
   const skipReaction = policyReactionOptions.length > 0 && policyReactionOptions.every(option => !option.visible);
   useAutomaticCombatDecision(state, skipInfluence ? 'roll_influence' : skipReaction ? 'reaction' : null,
     busy || Boolean(error) || presentation.blocked, kind => {
@@ -841,7 +844,8 @@ export default function SoloCombatPage() {
 
   const confirmMultipleTargets=()=>{
     if(!state||!selectedActionId||busy)return;
-    const action=state.catalogActions.find(candidate=>candidate.id===selectedActionId);
+    const template=state.catalogActions.find(candidate=>candidate.id===selectedActionId);
+    const action=template&&combatActionForActor(state,activeControlledActorId,template);
     if(!action||!hasManualTargetSlots(action,selectedActionChoices.spell_cast_level?.[0]===undefined?undefined:Number(selectedActionChoices.spell_cast_level[0]),state.world.actors[activeControlledActorId]?.character.level))return;
     try{
       const policy=sheetCombatDeclarationPolicy(action,selectedActionChoices.spell_cast_level?.[0]===undefined?undefined:Number(selectedActionChoices.spell_cast_level[0]),state.world.actors[activeControlledActorId]?.character.level);
@@ -925,7 +929,7 @@ export default function SoloCombatPage() {
         })));
         return;
       }
-      const selectedAction=state.catalogActions.find(row=>row.id===selectedActionId)!;
+      const selectedAction=combatActionForActor(state,activeControlledActorId,state.catalogActions.find(row=>row.id===selectedActionId)!);
       if (!actorId && combatActionIsAttack(state, selectedAction)
         && selectedAction.targeting?.maxTargets === 1
         && !combatWorldInputContext(state, activeControlledActorId, selectedAction)) {
@@ -1016,7 +1020,7 @@ export default function SoloCombatPage() {
         clickedActorId: actorId,
         clickedPosition: position,
       });
-      const action = state.catalogActions.find((candidate) => candidate.id === selectedActionId)!;
+      const action = selectedAction;
       if (!targetIds.length && (action.targeting?.minTargets ?? 0) > 0) throw new Error('В выбранной области нет допустимой цели');
       let worldInput: ActionWorldInput | undefined;
       let scenarioObjects: WorldObjectState[] = [];
@@ -1240,7 +1244,8 @@ export default function SoloCombatPage() {
       ? ` · ${[...new Set(pending.damage.map((packet) => getDamageLabel(packet.damageType).toLocaleLowerCase('ru-RU')))].join(', ')}`
       : ''}`
     : null;
-  const heldForDisplay = influenceOfferVisible || error ? heldDecision : undefined;
+  const heldForDisplay = (influenceOfferVisible && offeredHeldInfluences.length>0) || error
+    ? heldDecision : undefined;
   // Cosmetic projection only: a refreshed library portrait never patches the archived combat envelope.
   const displayState = {...state,tokens:Object.fromEntries(Object.entries(state.tokens).map(([actorId,token]) => [actorId,
     {...token,tokenUrl:participantCharacters[actorId]?.avatar_url || (token.templateId && monsterPortraits[token.templateId]) || token.tokenUrl}]))};
@@ -1333,7 +1338,8 @@ export default function SoloCombatPage() {
             }}
           />
           {selectedActionId&&(()=>{
-            const action=state.catalogActions.find(row=>row.id===selectedActionId);
+            const template=state.catalogActions.find(row=>row.id===selectedActionId);
+            const action=template&&combatActionForActor(state,activeControlledActorId,template);
             if(!action||!hasManualTargetSlots(action,selectedActionChoices.spell_cast_level?.[0]===undefined?undefined:Number(selectedActionChoices.spell_cast_level[0]),state.world.actors[activeControlledActorId]?.character.level))return null;
             const policy=sheetCombatDeclarationPolicy(action,selectedActionChoices.spell_cast_level?.[0]===undefined?undefined:Number(selectedActionChoices.spell_cast_level[0]),state.world.actors[activeControlledActorId]?.character.level);
             const selected=selectedMultiTargetIds.length;

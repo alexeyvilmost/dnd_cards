@@ -6,7 +6,7 @@ import {randomUUID} from 'node:crypto';
 import {createRequire} from 'node:module';
 const require = createRequire(new URL('../../frontend/package.json', import.meta.url));
 const {chromium, expect} = require('@playwright/test');
-const base = 'http://127.0.0.1:3001', out = 'outputs/combat-animation-286';
+const base = 'http://127.0.0.1:3002', out = 'outputs/combat-animation-286';
 let token;
 async function api(method, path, body, expected = 200) {
   const response = await fetch(`${base}/api${path}`, {method, headers: {'Content-Type': 'application/json', ...(token ? {Authorization: `Bearer ${token}`} : {})}, body: body === undefined ? undefined : JSON.stringify(body)});
@@ -20,7 +20,7 @@ token = process.env.API_TOKEN;
 assert(token, 'Supply API_TOKEN for an existing non-admin account in the local clone');
 const auth = {token, user: await api('GET', '/auth/profile')};
 const catalog = await api('GET', '/animations');
-assert.equal(catalog.profiles.length, 70);
+assert.equal(catalog.profiles.length, JSON.parse(await readFile('backend/animationpresentation/catalog.json', 'utf8')).profiles.length);
 assert.equal(catalog.can_manage, false);
 const targetBinding = catalog.bindings[0];
 await api('PUT', `/animations/entities/${targetBinding.entity_type}/${targetBinding.entity_id}`, {profile_key: targetBinding.profile_key}, 403);

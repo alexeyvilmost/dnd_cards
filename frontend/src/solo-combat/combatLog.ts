@@ -30,6 +30,7 @@ export function projectCombatLogRecords(
         actorId: action.actorId, targetIds: [...action.targetIds],
         actionId: action.actionId, actionKind: action.actionKind,
         sourceEntityIds: [...action.sourceEntityIds],
+        ...(action.facts ? {facts: {...action.facts}} : {}),
         ...(action.spell ? {spell: {baseLevel: action.spell.baseLevel, castLevel: action.spell.castLevel}} : {}),
       }];
     }
@@ -43,7 +44,7 @@ export function projectCombatLogRecords(
         actorId: envelope.payload.actorId,
         targetIds: [...envelope.payload.targetIds],
         event: envelope.payload.event,
-        ...(envelope.payload.facts ? { facts: envelope.payload.facts } : {}),
+        ...(action?.facts || envelope.payload.facts ? { facts: {...action?.facts, ...envelope.payload.facts} } : {}),
         ...(action ? {
           actionId: action.actionId, actionKind: action.actionKind, sourceEntityIds: [...action.sourceEntityIds],
           ...(action.spell ? {spell: {baseLevel: action.spell.baseLevel, castLevel: action.spell.castLevel}} : {}),

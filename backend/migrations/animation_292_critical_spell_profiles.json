@@ -1,0 +1,556 @@
+{
+  "profiles": [
+    {
+      "key": "spell.fire.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#ff7a29",
+        "secondary": "#ffe9a0"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "fire",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.fire"
+    },
+    {
+      "key": "spell.frost.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#8ceaff",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "frost",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.frost"
+    },
+    {
+      "key": "spell.lightning.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#a7ceff",
+        "secondary": "#f4eaff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "lightning",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.lightning"
+    },
+    {
+      "key": "spell.acid.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#bdf84a",
+        "secondary": "#edffab"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "acid",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.acid"
+    },
+    {
+      "key": "spell.poison.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#7ce56e",
+        "secondary": "#c3fba2"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "poison",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.poison"
+    },
+    {
+      "key": "spell.radiant.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#ffe99b",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "radiant",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.radiant"
+    },
+    {
+      "key": "spell.necrotic.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#aa87d8",
+        "secondary": "#69dba7"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "necrotic",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.necrotic"
+    },
+    {
+      "key": "spell.psychic.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#e599ff",
+        "secondary": "#a7b8ff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "psychic",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.psychic"
+    },
+    {
+      "key": "spell.force.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#ef4444",
+        "secondary": "#fecaca"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "force",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.force"
+    },
+    {
+      "key": "spell.thunder.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#b7d2ff",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "thunder",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.thunder"
+    },
+    {
+      "key": "spell.nature.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#98e685",
+        "secondary": "#f5e5a0"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "nature",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.nature"
+    },
+    {
+      "key": "spell.water.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#67d6f4",
+        "secondary": "#daffff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "water",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.water"
+    },
+    {
+      "key": "spell.earth.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#c9a77d",
+        "secondary": "#ecdbad"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "earth",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.earth"
+    },
+    {
+      "key": "spell.wind.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#d2efff",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "wind",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.wind"
+    },
+    {
+      "key": "spell.illusion.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#d5aaff",
+        "secondary": "#9cdcff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "illusion",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.illusion"
+    },
+    {
+      "key": "spell.healing.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#7aebbe",
+        "secondary": "#fff6b5"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "healing",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.healing"
+    },
+    {
+      "key": "spell.starry-wisp.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#ffe99b",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "radiant",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.starry-wisp"
+    },
+    {
+      "key": "spell.frost-ray.critical",
+      "primitive": "charged_beam",
+      "palette": {
+        "primary": "#8ceaff",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1550,
+        "scale": 1.25,
+        "launchRatio": 0.4,
+        "contactRatio": 0.54
+      },
+      "casterCircle": true,
+      "motif": "frost",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.frost-ray"
+    },
+    {
+      "key": "spell.eldritch-blast.critical",
+      "primitive": "charged_beam",
+      "palette": {
+        "primary": "#ef4444",
+        "secondary": "#fecaca"
+      },
+      "motion": {
+        "durationMs": 1550,
+        "scale": 1.25,
+        "launchRatio": 0.4,
+        "contactRatio": 0.54
+      },
+      "casterCircle": true,
+      "motif": "force",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.eldritch-blast"
+    },
+    {
+      "key": "spell.mind-sliver.critical",
+      "primitive": "beam",
+      "palette": {
+        "primary": "#e599ff",
+        "secondary": "#a7b8ff"
+      },
+      "motion": {
+        "durationMs": 1250,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.44
+      },
+      "casterCircle": true,
+      "motif": "psychic",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.mind-sliver"
+    },
+    {
+      "key": "spell.message.critical",
+      "primitive": "beam",
+      "palette": {
+        "primary": "#d2efff",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1250,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.44
+      },
+      "casterCircle": true,
+      "motif": "wind",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.message"
+    },
+    {
+      "key": "spell.shocking-grasp.critical",
+      "primitive": "beam",
+      "palette": {
+        "primary": "#a7ceff",
+        "secondary": "#f4eaff"
+      },
+      "motion": {
+        "durationMs": 1250,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.44
+      },
+      "casterCircle": true,
+      "motif": "lightning",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.shocking-grasp"
+    },
+    {
+      "key": "spell.fire-bolt.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#ff7a29",
+        "secondary": "#ffe9a0"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "fire",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.fire-bolt"
+    },
+    {
+      "key": "spell.ray-of-sickness.critical",
+      "primitive": "charged_beam",
+      "palette": {
+        "primary": "#7ce56e",
+        "secondary": "#c3fba2"
+      },
+      "motion": {
+        "durationMs": 1550,
+        "scale": 1.25,
+        "launchRatio": 0.4,
+        "contactRatio": 0.54
+      },
+      "casterCircle": true,
+      "motif": "poison",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.ray-of-sickness"
+    },
+    {
+      "key": "spell.witch-bolt.critical",
+      "primitive": "charged_beam",
+      "palette": {
+        "primary": "#a7ceff",
+        "secondary": "#f4eaff"
+      },
+      "motion": {
+        "durationMs": 1550,
+        "scale": 1.25,
+        "launchRatio": 0.4,
+        "contactRatio": 0.54
+      },
+      "casterCircle": true,
+      "motif": "lightning",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.witch-bolt"
+    },
+    {
+      "key": "spell.guiding-bolt.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#ffe99b",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "radiant",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.guiding-bolt"
+    },
+    {
+      "key": "spell.magic-missile.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#ef4444",
+        "secondary": "#fecaca"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "force",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.magic-missile"
+    },
+    {
+      "key": "spell.chromatic-orb.critical",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#ef4444",
+        "secondary": "#fecaca"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "force",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.chromatic-orb"
+    },
+    {
+      "key": "spell.ice-knife.critical",
+      "primitive": "weapon_throw",
+      "palette": {
+        "primary": "#8ceaff",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1450,
+        "scale": 1.25,
+        "launchRatio": 0.24,
+        "contactRatio": 0.5
+      },
+      "casterCircle": true,
+      "motif": "frost",
+      "weaponShape": "blade",
+      "strikeStyle": "critical",
+      "criticalEffect": "magic",
+      "baseProfileKey": "spell.ice-knife"
+    }
+  ]
+}

@@ -6,6 +6,7 @@ COPY frontend/src ./src
 COPY frontend/utils ./utils
 COPY frontend/charges ./charges
 COPY frontend/worker ./worker
+COPY backend/animationpresentation/catalog.json /app/backend/animationpresentation/catalog.json
 COPY scripts /app/scripts
 RUN node worker/build.mjs
 

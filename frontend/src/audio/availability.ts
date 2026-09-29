@@ -1,2 +1,2 @@
-/** Temporary release switch. Keep assets, bindings and personal mixer settings. */
-export const AUDIO_AVAILABLE = false;
+/** The server catalog supplies the approved release assets and presentation bindings. */
+export const AUDIO_AVAILABLE = true;

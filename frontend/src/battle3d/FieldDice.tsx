@@ -2,6 +2,7 @@ import {useEffect,useState} from 'react';
 import type {CombatBeat} from '../solo-combat/presentation';
 import {CommittedDie} from '../dice/CommittedD20';
 import D20RollTray from '../dice/D20RollTray';
+import DiceStage from '../dice/DiceStage';
 
 /** Plays saved combat dice over the map; this component never determines a result. */
 export default function FieldDice({beat}:{beat:CombatBeat}) {
@@ -28,9 +29,9 @@ export default function FieldDice({beat}:{beat:CombatBeat}) {
     </div>}
     {showDamage&&<div className="battle-scene-3d__field-dice-row">
       <strong>Урон · {beat.actionName}</strong>
-      <div className="battle-scene-3d__field-damage">{damage.map((die,index)=><CommittedDie
+      <DiceStage rollKey={JSON.stringify(damage)} diceCount={damage.length}><div className="battle-scene-3d__field-damage">{damage.map((die,index)=><CommittedDie
         key={`${beat.id}:${index}`} sides={die.sides} value={die.result} discarded={die.discarded}
-        rolling={elapsed<(attack?3100:1450)}/>)}</div>
+        rolling={elapsed<(attack?3100:1450)}/>)}</div></DiceStage>
       {elapsed>=(attack?3100:1450)&&<span>{packets.reduce((sum,packet)=>sum+packet.amount,0)} урона</span>}
     </div>}
   </div>;

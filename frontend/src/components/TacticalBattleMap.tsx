@@ -26,6 +26,7 @@ import {
 import { combatIdentity } from '../solo-combat/combatIdentity';
 import { attackHitProbability } from '../engine/attackProbability';
 import type { CombatBeat } from '../solo-combat/presentation';
+import {combatAnimationTiming} from '../solo-combat/animationTiming';
 import CombatMapFeedback from './CombatMapFeedback';
 import {useAnimationCatalog} from '../solo-combat/useAnimationCatalog';
 import {createPortal} from 'react-dom';
@@ -81,13 +82,18 @@ export default function TacticalBattleMap({
   const animationPrimitive=committedFeedback?.animation?.primitive;
   const animationFrom=committedFeedback?.from,animationTo=committedFeedback?.to;
   const animationAngle=animationFrom&&animationTo?Math.atan2(animationTo.y-animationFrom.y,animationTo.x-animationFrom.x):0;
+  const tokenTiming=combatAnimationTiming(committedFeedback?.animation);
+  const tokenImpactDelay=committedFeedback?.suppressAnimation?0:tokenTiming.contactMs;
+  const criticalStrike=committedFeedback?.animation?.strikeStyle==='critical'&&committedFeedback.roll?.outcome==='crit'&&!committedFeedback.suppressAnimation;
   const tokenAnimation=(id:string)=>{
     if(!committedFeedback)return '';
     if(committedFeedback.targetId===id&&animationPrimitive==='death')return ' is-animating-death';
-    if(committedFeedback.sourceId===id){
+    if(criticalStrike&&committedFeedback.targetId===id)return ' is-critical-target';
+    if(committedFeedback.sourceId===id&&!committedFeedback.suppressAnimation){
+      if(criticalStrike)return ['melee_slash','melee_pierce','melee_bash'].includes(animationPrimitive??'')?' is-critical-source':' is-critical-shot';
       if(animationPrimitive==='hide')return ' is-animating-hide';
       if(animationPrimitive==='dodge')return ' is-animating-dodge';
-      if(['melee_slash','melee_pierce','melee_bash','bite'].includes(animationPrimitive??''))return ' is-animating-source';
+      if(['melee_slash','melee_pierce','melee_bash','bite','claws','tail','tentacle','sting','natural_slam'].includes(animationPrimitive??''))return ' is-animating-source';
     }
     return committedFeedback.cues.some(cue=>cue.actorId===id&&cue.kind==='damage')?' is-animating-target':'';
   };
@@ -624,6 +630,8 @@ export default function TacticalBattleMap({
               <span key={tokenAnimation(token.actorId)?committedFeedback?.id:token.actorId}
                 className={`battle-token is-${identity.side}${tokenAnimation(token.actorId)}`}
                 style={{ '--token-color': identity.accent, '--token-size': actorFootprint(actor, state),
+                  '--token-impact-delay':`${tokenImpactDelay}ms`,
+                  '--token-contact-delay':`${tokenTiming.contactMs}ms`,'--token-launch-delay':`${tokenTiming.launchMs}ms`,
                   '--lunge-x':`${Math.cos(animationAngle)*9}px`,'--lunge-y':`${Math.sin(animationAngle)*9}px` } as React.CSSProperties}>
                 {token.tokenUrl ? <img src={token.tokenUrl} alt="" /> : <b>{combatActorDisplayName(actor).slice(0, 1)}</b>}
                 {identity.duplicateIndex && <span className="battle-token__duplicate">{identity.duplicateIndex}</span>}

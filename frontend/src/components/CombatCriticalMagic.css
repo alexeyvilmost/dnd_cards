@@ -1,0 +1,57 @@
+.combat-animation.is-critical-magic{--magic-recovery:calc(var(--fx-duration) - var(--fx-contact-delay))}
+.combat-critical-magic-focus{fill:none;stroke:var(--fx-secondary);stroke-width:2;animation:critical-magic-gather var(--fx-launch-delay) ease-in both,critical-magic-collapse 260ms ease-out var(--fx-launch-delay) forwards;transform-origin:0 0}
+.combat-critical-focus-disc{fill:var(--fx-primary);fill-opacity:.24;stroke-width:4}
+.combat-critical-focus-orbits{stroke:var(--fx-primary);animation:critical-magic-orbit var(--fx-launch-delay) ease-in both;transform-origin:0 0}
+.combat-critical-focus-spikes{stroke-width:3}
+.is-critical-magic .combat-ray-corona{stroke-width:43;opacity:.34}
+.is-critical-magic .combat-ray-body{stroke-width:18;opacity:.95}
+.is-critical-magic .combat-ray-thread{stroke-width:5}
+.is-critical-magic .combat-ray-ribbon{stroke-width:2.5}
+.is-critical-magic .combat-ray-charge-halo,.is-critical-magic .combat-ray-focus-rings,.is-critical-magic .combat-ray-focus-core{animation:critical-magic-gather var(--fx-launch-delay) ease-in both,critical-magic-collapse 260ms ease-out var(--fx-launch-delay) forwards}
+.is-critical-magic .combat-ray-inflow{animation-duration:var(--fx-launch-delay)}
+.is-critical-magic .combat-ray-recoil-ring{animation:critical-magic-backblast 350ms ease-out var(--fx-launch-delay) both}
+.combat-critical-magic-beam-trail{fill:none;stroke:var(--fx-primary);stroke-width:3;animation:critical-magic-beam-envelope var(--fx-release-duration) linear var(--fx-launch-delay) both}
+.combat-critical-magic-beam-trail>path{stroke-dasharray:1;animation:critical-magic-beam-draw var(--fx-flight-duration) cubic-bezier(.7,0,.9,.55) var(--fx-launch-delay) both}
+.combat-critical-magic-beam-trail .combat-critical-beam-pressure{stroke:var(--fx-secondary);stroke-width:2;opacity:.75}
+.is-critical-magic .combat-fx-beam-glow{stroke-width:35;opacity:.45}
+.is-critical-magic .combat-fx-beam-core{stroke-width:9}
+.is-critical-magic .combat-fx-beam{animation:critical-magic-beam-grow var(--fx-flight-duration) cubic-bezier(.7,0,.9,.55) var(--fx-launch-delay) both,critical-magic-beam-fade var(--magic-recovery) ease-out var(--fx-contact-delay) forwards;transform-origin:0 0}
+.is-critical-magic .combat-fx-projectile{animation-timing-function:cubic-bezier(.6,0,.9,.6)}
+.is-critical-magic .combat-fx-trail{stroke-width:4;opacity:.8}
+.combat-critical-magic-projectile{fill:none;stroke:var(--fx-secondary);stroke-width:2}
+.combat-critical-magic-wake{stroke:var(--fx-primary);stroke-width:4;opacity:.85}
+.combat-critical-projectile-envelope{fill:var(--fx-primary);fill-opacity:.24;stroke:var(--fx-primary);stroke-width:3}
+.combat-critical-projectile-orbit{animation:critical-magic-projectile-orbit var(--fx-flight-duration) linear var(--fx-launch-delay) both;transform-origin:0 0}
+.combat-critical-projectile-core{fill:var(--fx-primary);stroke-width:3}
+.combat-critical-projectile-glyph{fill:var(--fx-secondary);stroke-width:1.5}
+.is-critical-magic .combat-thrown-weapon{scale:1.4;animation-duration:var(--fx-flight-duration)}
+.combat-critical-magic-impact{fill:none;stroke:var(--fx-primary);stroke-width:2}
+.combat-critical-magic-shock{stroke-width:5;animation:critical-magic-shock var(--magic-recovery) cubic-bezier(.13,.65,.25,1) var(--fx-contact-delay) both;transform-origin:0 0}
+.combat-critical-magic-seal{stroke:var(--fx-secondary);animation:critical-magic-seal var(--magic-recovery) ease-out var(--fx-contact-delay) both;transform-origin:0 0}
+.combat-critical-magic-seal>path:first-child{fill:var(--fx-primary);fill-opacity:.1;stroke-width:3}
+.combat-critical-magic-fracture{stroke-width:3;animation:critical-magic-fracture var(--magic-recovery) ease-out var(--fx-contact-delay) both;transform-origin:0 0}
+.combat-critical-magic-flare{fill:var(--fx-secondary);stroke:none;animation:critical-magic-flare 240ms ease-out var(--fx-contact-delay) both;transform-origin:0 0}
+.combat-critical-magic-shard{fill:var(--fx-primary);stroke:var(--fx-secondary);stroke-width:1.2;animation:critical-magic-shard var(--magic-recovery) cubic-bezier(.13,.65,.25,1) var(--fx-contact-delay) both;transform-origin:0 0}
+.combat-critical-magic-ray{stroke:var(--fx-secondary);stroke-width:3;stroke-dasharray:1;animation:critical-magic-ray 340ms ease-out var(--fx-contact-delay) both}
+.combat-critical-magic-mark{fill:var(--fx-primary);stroke:var(--fx-secondary);animation:critical-magic-mark var(--magic-recovery) ease-out var(--fx-contact-delay) both;transform-origin:0 0}
+@keyframes critical-magic-gather{0%{opacity:0;scale:1.65 .4}18%{opacity:.5}70%{opacity:.85;scale:.85 1.15}100%{opacity:1;scale:1.2}}
+@keyframes critical-magic-collapse{0%{opacity:1;scale:1.2}35%{opacity:.85;scale:.55 1.5}100%{opacity:0;scale:.2 1.9}}
+@keyframes critical-magic-orbit{from{rotate:-45deg}to{rotate:22deg}}
+@keyframes critical-magic-backblast{0%{opacity:0;scale:.5}15%{opacity:.9}100%{opacity:0;scale:2.2;translate:-32px 0}}
+@keyframes critical-magic-beam-envelope{0%{opacity:0}3%,36%{opacity:.95}70%,100%{opacity:0}}
+@keyframes critical-magic-beam-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes critical-magic-beam-grow{0%{opacity:0;scale:0 .5}12%{opacity:1}100%{opacity:1;scale:1 1}}
+@keyframes critical-magic-beam-fade{0%,15%{opacity:1;scale:1 1}70%,100%{opacity:0;scale:1 .2}}
+@keyframes critical-magic-projectile-orbit{from{rotate:-30deg}to{rotate:150deg}}
+@keyframes critical-magic-shock{0%{opacity:0;scale:.15}9%{opacity:.9}100%{opacity:0;scale:1.9}}
+@keyframes critical-magic-seal{0%{opacity:0;scale:.2;rotate:-25deg}16%,35%{opacity:.85;scale:1;rotate:0deg}100%{opacity:0;scale:1.25;rotate:18deg}}
+@keyframes critical-magic-fracture{0%{opacity:0;scale:.25}12%,38%{opacity:.85;scale:1}100%{opacity:0;scale:1.1}}
+@keyframes critical-magic-flare{0%{opacity:0;scale:.2}16%,30%{opacity:.95;scale:1}100%{opacity:0;scale:1.6}}
+@keyframes critical-magic-shard{0%{opacity:0;translate:0 0;rotate:0deg}8%{opacity:1}100%{opacity:0;translate:var(--magic-shard-distance) 0;rotate:var(--magic-shard-turn)}}
+@keyframes critical-magic-ray{0%{opacity:0;stroke-dashoffset:1}18%{opacity:1}100%{opacity:0;stroke-dashoffset:-.6}}
+@keyframes critical-magic-mark{0%{opacity:0;scale:.4}18%,35%{opacity:1;scale:1.3}100%{opacity:0;scale:1.9}}
+@media(prefers-reduced-motion:reduce){
+  .is-critical-magic *{animation:none!important}
+  .combat-critical-magic-focus,.combat-critical-magic-beam-trail,.combat-critical-magic-wake,.combat-critical-projectile-orbit,.combat-critical-magic-flare,.combat-critical-magic-shard,.combat-critical-magic-ray{display:none}
+  .combat-critical-magic-shock,.combat-critical-magic-seal,.combat-critical-magic-fracture,.combat-critical-magic-mark{opacity:.4}
+}

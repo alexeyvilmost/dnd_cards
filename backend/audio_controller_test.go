@@ -2,11 +2,13 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"dnd-cards-backend/audiopresentation"
 	"dnd-cards-backend/passivepresentation"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -72,13 +74,74 @@ func TestAudioUploadSniffsBytesNotFileExtension(t *testing.T) {
 			t.Fatalf("%q: %s", row.data, ext)
 		}
 	}
-	for _, event := range []string{"cast", "hit", "miss", "healing"} {
+	for _, event := range []string{"cast", "charge", "launch", "hit", "miss", "healing", "activate"} {
 		if !validAudioEvent(event) {
 			t.Fatal(event)
 		}
 	}
 	if validAudioEvent("spend_resource") {
 		t.Fatal("mechanics accepted")
+	}
+}
+
+func TestAudioCatalogExposesActiveCuesAndDataOwnedPhasesForTwoEntities(t *testing.T) {
+	t.Setenv("JWT_SECRET", characterV3AccessTestSecret)
+	f := openCharacterV3AccessFixture(t)
+	t.Setenv("CONTENT_ADMIN_USER_IDS", f.owner.ID.String())
+	if err := f.db.AutoMigrate(&AudioCue{}, &EntityAudioBinding{}, &passivepresentation.Presentation{}); err != nil {
+		t.Fatal(err)
+	}
+	for _, key := range []string{"entity-first", "unrelated-entity-second"} {
+		if err := f.db.Create(&passivepresentation.Presentation{Key: key, Name: key, Version: 1}).Error; err != nil {
+			t.Fatal(err)
+		}
+		if err := f.db.Create(&AudioCue{Key: key, Name: key, Channel: "effects", URL: "/audio/custom.mp3", Gain: 0.8, Version: 2, License: "Owned"}).Error; err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := f.db.Create(&AudioCue{Key: "retired", Name: "Old recording", Channel: "effects", URL: "/audio/old.wav", Gain: 0.5, Version: 1}).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := f.db.Model(&AudioCue{}).Where("key = ?", "retired").Update("active", false).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := f.db.Create(&EntityAudioBinding{EntityType: "passive", EntityID: "historical-entity", Event: "cast", CueKey: "retired"}).Error; err != nil {
+		t.Fatal(err)
+	}
+	registerAudioRoutes(f.router.Group("/api"), f.auth, f.db)
+	for _, entity := range []string{"entity-first", "unrelated-entity-second"} {
+		for _, event := range []string{"cast", "charge", "launch", "hit", "miss", "healing", "activate"} {
+			response := performCharacterV3Request(t, f.router, "PUT", "/api/audio/entities/passive/"+entity+"/"+event, f.token(t, f.owner), map[string]any{"cue_key": entity})
+			if response.Code != 200 {
+				t.Fatalf("%s/%s: %d %s", entity, event, response.Code, response.Body.String())
+			}
+		}
+	}
+	response := performCharacterV3Request(t, f.router, "GET", "/api/audio", f.token(t, f.other), nil)
+	if response.Code != 200 {
+		t.Fatalf("catalog: %d %s", response.Code, response.Body.String())
+	}
+	var actual struct {
+		audiopresentation.Catalog
+		CanManage bool `json:"can_manage"`
+	}
+	if err := json.Unmarshal(response.Body.Bytes(), &actual); err != nil {
+		t.Fatal(err)
+	}
+	want, err := audiopresentation.Defaults()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(actual.Cues) != 2 || len(actual.Bindings) != 14 || actual.Defaults != want.Defaults || len(actual.Profiles) != len(want.Profiles) || actual.CanManage {
+		t.Fatalf("unexpected catalog: cues=%d bindings=%d profiles=%d", len(actual.Cues), len(actual.Bindings), len(actual.Profiles))
+	}
+	response = performCharacterV3Request(t, f.router, "PUT", "/api/audio/entities/passive/entity-first/launch", f.token(t, f.owner), map[string]any{"cue_key": "retired"})
+	if response.Code != 400 {
+		t.Fatalf("inactive cue assignment accepted: %d", response.Code)
+	}
+	var count int64
+	if err := f.db.Model(&EntityAudioBinding{}).Where("cue_key = ?", "retired").Count(&count).Error; err != nil || count != 1 {
+		t.Fatalf("historical assignment was removed: count=%d err=%v", count, err)
 	}
 }
 

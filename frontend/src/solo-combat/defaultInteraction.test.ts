@@ -3,7 +3,10 @@ import compiled from '../pages/rulesLabFixture.generated.json';
 import pinned from '../roguelike/pinnedFighter.fixture.json';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import type { SoloCombatState } from './types';
+import {sheetCombatDeclarationPolicy} from '../character/sheetCombatDeclaration';
+import type {Card} from '../types';
 import {
+  combatActionForActor,
   combatActionIsAttack,
   combatActionIsRanged,
   combatActionRangeFt,
@@ -31,7 +34,7 @@ function state(): SoloCombatState {
   return {
     characterId: 'hero',
     sideByActorId: {hero: 'party', ally: 'party', enemy1: 'enemy', enemy2: 'enemy'},
-    world: {actors: {
+    world: {objects: {}, actors: {
       hero,
       ally: {...actor, id: 'ally', name: 'Союзник'},
       enemy1: {...actor, id: 'enemy1', name: 'Гоблин'},
@@ -64,6 +67,39 @@ describe('contextual combat interaction', () => {
     value.world.actors.hero.character.knownCards=[card as any];value.world.actors.hero.character.equippedCards=[];
     value.world.actors.hero.runtime.equipment={main_hand:card.id};
     expect(combatActionRangeFt(value,'hero',action)).toBe(reach);
+  });
+  it('binds targeting and ammunition separately for two actors without changing their shared action',()=>{
+    const value=state();
+    const source=pinned.catalog.entities.action.find(a=>a.id==='ae7b59a2-2eee-412f-aee6-6323b4c1fb4d')!;
+    const mechanics=structuredClone(source.mechanics) as Record<string,any>;
+    mechanics.effects[0].attack_kind='weapon_ranged';
+    mechanics.activation.cost.push({resource:'equipped_weapon_ammo',amount:1});
+    const template={...weapon,mechanics,targeting:{...weapon.targeting,rangeFt:600}} as RuleActionDefinition;
+    const original=structuredClone(template);
+    const weapons=[120,320].map((range,index)=>{
+      const card=structuredClone(pinned.catalog.entities.card[0]) as unknown as Card;
+      card.id=`ranged-weapon-${index}`;
+      const profile=(card.mechanics as Record<string,any>).weapon_profile;
+      profile.attack_modes=[{kind:'ranged',normal_ft:range/4,long_ft:range}];
+      profile.default_attack_mode='ranged';
+      profile.properties=['ammunition'];
+      delete profile.versatile_grip;
+      profile.ammo={card_id:`ammo-${index}`};
+      return card;
+    });
+    for(const [index,id] of ['hero','ally'].entries()){
+      const participant=value.world.actors[id];
+      participant.character={...participant.character,knownCards:weapons,equippedCards:[]};
+      participant.runtime={...participant.runtime,equipment:{main_hand:weapons[index].id}};
+      const bound=combatActionForActor(value,id,template);
+      expect(sheetCombatDeclarationPolicy(bound)).toMatchObject({minTargets:1,maxTargets:1,rangeFt:[120,320][index]});
+      expect((bound.mechanics.activation as Record<string,unknown>).cost)
+        .toEqual([{resource:'action'},{resource:'item',card_id:`ammo-${index}`,amount:1}]);
+      expect(template).toEqual(original);
+    }
+    value.world.actors.hero.runtime.equipment.main_hand=weapons[1].id;
+    expect(sheetCombatDeclarationPolicy(combatActionForActor(value,'hero',template)).rangeFt).toBe(320);
+    expect(template).toEqual(original);
   });
   it('does not return to the diagonal after rounding the blocker in the reported screenshot',()=>{
     const value=state();

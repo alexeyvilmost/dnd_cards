@@ -27,6 +27,11 @@ html,body,#root{margin:0;min-height:100%;background:#101511;color:#e7e6d4}
 .animation-workshop__step button{flex:1;border:0;padding:8px 0;background:none;color:#a7b59e;font-size:10px}
 .animation-workshop__step button:hover{color:#ece0ba}
 .animation-workshop__note{padding-top:20px;border-top:1px solid #354331;color:#71836b}
+.animation-workshop__snapshot{margin:18px 0;line-height:1.6;letter-spacing:0}
+.animation-workshop__snapshot input{display:block;width:100%;margin-top:8px;font-size:10px;color:#8f9e86}
+.animation-workshop__reset{margin-top:14px;padding:8px 0;color:#c9ad79;border:0;background:none;font-size:11px!important}
+.animation-workshop__area{margin-top:20px;display:grid;gap:16px}
+.animation-workshop__error{color:#ffb2a8;font-size:11px;line-height:1.5}
 .animation-workshop__stage{min-width:0;overflow:hidden;border:1px solid #42513a;border-radius:15px;background:#141c15}
 .animation-workshop__stage-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 19px;color:#dacda7}
 .animation-workshop__stage-heading span{font-size:13px}

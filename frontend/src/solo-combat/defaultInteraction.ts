@@ -17,12 +17,20 @@ function records(value: unknown): Record<string, unknown>[] {
   return [record, ...Object.values(record).flatMap(records)];
 }
 
-/** The same equipped-weapon binding used by authoritative attack execution. */
-export function combatActionRangeFt(state:SoloCombatState,actorId:string,action:RuleActionDefinition):number {
+/** Project a shared catalog action for the current actor without changing the saved catalog. */
+export function combatActionForActor(state:SoloCombatState,actorId:string,action:RuleActionDefinition):RuleActionDefinition {
   const actor=state.world.actors[actorId];
+  if(!actor)throw new Error(`Unknown combat actor ${actorId}`);
   const cards=new Map([...(actor.character.knownCards??[]),...(actor.character.equippedCards??[])].map(c=>[c.id,c]));
   const mechanics=bindEquippedWeaponActionContext(action.mechanics,actor.runtime.equipment,cards);
-  return mechanics===action.mechanics ? action.targeting?.rangeFt??5 : compileDeclaredMechanicsTargeting(mechanics).rangeFt;
+  return mechanics===action.mechanics ? action : {
+    ...action,mechanics,targeting:compileDeclaredMechanicsTargeting(mechanics),
+  };
+}
+
+/** The same equipped-weapon binding used by authoritative attack execution. */
+export function combatActionRangeFt(state:SoloCombatState,actorId:string,action:RuleActionDefinition):number {
+  return combatActionForActor(state,actorId,action).targeting?.rangeFt??5;
 }
 
 export function combatActionIsAttack(
@@ -42,8 +50,7 @@ export function combatActionIsAttack(
 export function combatActionIsRanged(state:SoloCombatState,actorId:string,action:RuleActionDefinition):boolean {
   const actor=state.world.actors[actorId];
   if(!actor)return false;
-  const cards=new Map([...(actor.character.knownCards??[]),...(actor.character.equippedCards??[])].map(c=>[c.id,c]));
-  const mechanics=bindEquippedWeaponActionContext(action.mechanics,actor.runtime.equipment,cards);
+  const {mechanics}=combatActionForActor(state,actorId,action);
   return records(mechanics.effects).some(effect=>effect.resolution==='attack_roll'
     && (effect.attack_kind==='weapon_ranged'||effect.attack_kind==='spell_ranged'));
 }

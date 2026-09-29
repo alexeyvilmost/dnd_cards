@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Звуки боя — Sound Atelier</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="masthead">
+    <a class="brand" href="/" aria-label="Sound Atelier, главная"><span class="brand-mark" aria-hidden="true">♮</span><span>SOUND ATELIER<small>DND CARDS · ЛОКАЛЬНАЯ СТУДИЯ</small></span></a>
+    <div class="header-actions"><span id="connection-state" class="connection-state">Загрузка…</span><button id="open-settings" class="button subtle">Как это работает <span aria-hidden="true">↗</span></button></div>
+  </header>
+
+  <main>
+    <section class="intro" aria-labelledby="page-heading">
+      <div><p class="eyebrow">КУБИКИ. СТАЛЬ. МАГИЯ.</p><h1 id="page-heading">У каждого действия<br>есть <em>свой звук.</em></h1><p class="intro-copy">Четыре варианта. Один точный выбор.<br>Соберите звуковую палитру вашего приключения.</p></div>
+      <div class="session-summary"><div class="summary-top"><span class="eyebrow">ВАША КОЛЛЕКЦИЯ</span><span class="live-dot" aria-hidden="true"></span></div><div class="progress-number"><strong id="selected-count">0</strong><span>/ <span id="total-count">—</span><small>звуков выбрано</small></span></div><div class="progress-track"><progress id="progress-fill" max="100" value="0" aria-label="Доля выбранных звуков"></progress></div><p id="queue-summary">Подключаем локальную галерею…</p><div class="summary-actions"><button id="queue-toggle" class="button small subtle" disabled>Продолжить очередь</button><a class="text-link" href="/api/export" download>Экспорт выбора <span aria-hidden="true">↓</span></a></div></div>
+    </section>
+
+    <div id="notice" class="notice" role="status" hidden><span id="notice-text"></span><button id="dismiss-notice" aria-label="Скрыть сообщение">×</button></div>
+
+    <section class="collection" aria-labelledby="collection-heading">
+      <div class="collection-heading"><div><p class="eyebrow">БИБЛИОТЕКА ЭФФЕКТОВ</p><h2 id="collection-heading">Выбирайте на слух</h2></div><label class="volume-control"><span aria-hidden="true">◖))</span><span>Громкость</span><input id="master-volume" type="range" min="0" max="100" value="65" aria-label="Громкость всех звуков"><output id="volume-value">65%</output></label></div>
+
+      <div class="toolbar"><div class="category-tabs" role="group" aria-label="Категория звука"><button data-category="all" class="category-tab active" aria-pressed="true">Все звуки <span id="all-count">—</span></button><button data-category="dice" class="category-tab" aria-pressed="false">Кубики</button><button data-category="weapon" class="category-tab" aria-pressed="false">Оружие</button><button data-category="natural" class="category-tab" aria-pressed="false">Естественные атаки</button><button data-category="magic" class="category-tab" aria-pressed="false">Магия</button></div><div class="filter-controls"><label class="search-box"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Найти звук…" aria-label="Поиск звука"></label><select id="status-filter" aria-label="Статус звуков"><option value="all">Все статусы</option><option value="unselected">Без выбора</option><option value="selected">Выбранные</option><option value="empty">Ещё не созданы</option><option value="active">В очереди / генерация</option><option value="failed">С ошибками</option></select><label class="pilot-filter"><input id="pilot-filter" type="checkbox"><span>Первые 12</span></label></div></div>
+
+      <div class="collection-meta"><span id="results-count">Загружаем библиотеку…</span><button id="generate-visible" class="button small primary" disabled>Создать недостающие варианты</button></div>
+      <div id="entries" class="entries"></div>
+      <div id="empty-state" class="empty-state" hidden><span aria-hidden="true">⌕</span><h3>Здесь пока тихо</h3><p>Попробуйте другое название или измените фильтры.</p><button id="reset-filters" class="button subtle">Сбросить фильтры</button></div>
+    </section>
+  </main>
+
+  <footer><span>SOUND ATELIER <i>×</i> DND CARDS</span><p>Выбор сохраняется локально · Генерация через ElevenLabs</p><span id="save-state" role="status">Локальная галерея</span></footer>
+
+  <dialog id="settings-dialog" aria-labelledby="settings-heading"><div class="dialog-inner"><button id="close-settings" class="close-dialog" aria-label="Закрыть настройки">×</button><p class="eyebrow">ИСТОЧНИК ЗВУКА</p><h2 id="settings-heading">Звуки из ElevenLabs</h2><p class="dialog-copy">На сайте ElevenLabs один запрос предлагает четыре варианта. В API один запрос возвращает один файл — студия объединяет четыре запроса в набор для сравнения.</p><div id="browser-settings"><div class="connected-banner"><span class="live-dot" aria-hidden="true"></span>Генерация через открытый ElevenLabs</div><p class="dialog-copy browser-description">Нажмите «Заказать 4 варианта» или «Перегенерировать». Запрос сохранится в локальной очереди. Codex выполняет его в открытом браузере и добавляет четыре файла в галерею.</p><p class="field-help">Сама галерея не управляет браузером. После завершения работы Codex новые запросы будут ждать продолжения в чате. API-ключ для этого режима не требуется.</p><a class="text-link" href="https://elevenlabs.io/app/sound-effects" target="_blank" rel="noopener noreferrer">Открыть Sound Effects <span aria-hidden="true">↗</span></a></div><div class="estimate"><span class="eyebrow">ОБЪЁМ ГЕНЕРАЦИИ</span><strong id="estimate-requests">— запросов</strong><p id="estimate-duration">Данные появятся после загрузки библиотеки.</p><p>Стоимость по тарифу ElevenLabs. Эта галерея не оценивает списание кредитов.</p><a class="text-link" href="https://elevenlabs.io/pricing/api" target="_blank" rel="noopener noreferrer">Тарифы ElevenLabs API ↗</a></div><form id="connect-form" hidden><label class="field-label" for="api-key">API-ключ ElevenLabs</label><input id="api-key" type="password" placeholder="Вставьте ключ" autocomplete="off" spellcheck="false" required><p class="field-help">Введённый здесь ключ хранится только в памяти сервера. При запуске ключ также автоматически читается из ELEVENLABS_TOKEN или ELEVENLABS_API_KEY в окружении или локальном .env.</p><a class="text-link" href="https://elevenlabs.io/app/developers/api-keys" target="_blank" rel="noopener noreferrer">Создать ключ в ElevenLabs <span aria-hidden="true">↗</span></a><button class="button primary full" type="submit" name="scope" value="all">Подключить и создать 4 варианта для каждого звука</button><button class="button subtle full" type="submit" name="scope" value="pilot">Подключить и создать первые 12 звуков</button><button class="button text-button full" type="submit" name="scope" value="none">Только подключить</button></form><div id="connected-settings" hidden><div class="connected-banner"><span class="live-dot" aria-hidden="true"></span>ElevenLabs API подключён</div><p class="field-help">Ключ из поля хранится до остановки сервера. Ключ из окружения или локального .env загружается при каждом запуске.</p><button id="disconnect" class="button subtle full">Забыть ключ и приостановить очередь</button></div><p class="docs-link"><a href="https://elevenlabs.io/docs/api-reference/text-to-sound-effects/convert" target="_blank" rel="noopener noreferrer">Документация Sound Effects API ↗</a></p></div></dialog>
+</body>
+</html>

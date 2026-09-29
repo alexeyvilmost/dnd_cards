@@ -22,7 +22,7 @@ export default function CombatMapFeedback({beat,state}: {beat:CombatBeat|null;st
   const toPosition=committed&&(committed.to??state.tokens[committed.targetId??'']?.position??fromPosition);
   const from=fromPosition&&centre(fromPosition,committed?.sourceId);
   const to=toPosition&&centre(toPosition,committed?.targetIsPoint?undefined:committed?.targetId??committed?.sourceId);
-  const profile=committed?.animation??(committed?.visual?resolveCombatAnimation(undefined,{visual:committed.visual}):undefined);
+  const profile=committed?.suppressAnimation?undefined:committed?.animation??(committed?.visual?resolveCombatAnimation(undefined,{visual:committed.visual}):undefined);
   const grouped=new Map<string,CombatBeat['cues']>();
   for(const cue of committed?.cues??[])grouped.set(cue.actorId,[...(grouped.get(cue.actorId)??[]),cue]);
   const circles=resolveActiveSpellCircles(state);
@@ -35,9 +35,10 @@ export default function CombatMapFeedback({beat,state}: {beat:CombatBeat|null;st
           footprint={actorFootprint(state.world.actors[circle.actorId],state)} profile={circle.profile} persistent/>;
       })}
       {committed&&profile&&from&&to&&(committed.saveRows??[committed]).map((row,index)=>{
+        if(row.suppressAnimation)return null;
         const targetPosition=row.to??state.tokens[row.targetId??'']?.position;
         const target=targetPosition?centre(targetPosition,row.targetIsPoint?undefined:row.targetId):to;
-        return <CombatAnimationLayer key={row.id} beat={row} profile={row.animation??profile} from={from} to={target} showCasterCircle={index===0}
+        return <CombatAnimationLayer key={row.id} beat={row} profile={row.animation??profile} from={from} to={target} showCasterCircle={index===0} showArea={index===0}
           sourceSize={actorFootprint(state.world.actors[row.sourceId],state)}
           targetSize={row.targetIsPoint?1:actorFootprint(state.world.actors[row.targetId??row.sourceId],state)}/>;
       })}

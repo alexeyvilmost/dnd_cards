@@ -1,0 +1,4655 @@
+{
+  "version": 3,
+  "cues": [
+    {
+      "key": "dice.roll",
+      "name": "Бросок нескольких кубиков",
+      "channel": "effects",
+      "url": "/audio/combat-v2/dice_roll.47aa77d5fc6f.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "dice.single",
+      "name": "Бросок одного кубика",
+      "channel": "effects",
+      "url": "/audio/combat-v2/dice_single.7ee4afd31075.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "weapon.blade.launch",
+      "name": "Взмах клинком",
+      "channel": "effects",
+      "url": "/audio/combat-v2/weapon_blade_launch.e871e097b25c.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "weapon.blade.hit",
+      "name": "Попадание клинком",
+      "channel": "effects",
+      "url": "/audio/combat-v2/weapon_blade_hit.3bfe26e6473b.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "weapon.pierce.launch",
+      "name": "Выпад колющим оружием",
+      "channel": "effects",
+      "url": "/audio/combat-v2/weapon_pierce_launch.86d2a69a2fdf.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "weapon.pierce.hit",
+      "name": "Колющий контакт",
+      "channel": "effects",
+      "url": "/audio/combat-v2/weapon_pierce_hit.7ed8d9b172b1.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "weapon.blunt.launch",
+      "name": "Взмах тяжёлым оружием",
+      "channel": "effects",
+      "url": "/audio/combat-v2/weapon_blunt_launch.c559abe0ee81.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "weapon.blunt.hit",
+      "name": "Дробящий удар",
+      "channel": "effects",
+      "url": "/audio/combat-v2/weapon_blunt_hit.4fa3488ac629.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "weapon.melee.miss",
+      "name": "Оружие проходит мимо",
+      "channel": "effects",
+      "url": "/audio/combat-v2/weapon_melee_miss.d2ae6e615c38.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "weapon.bow.launch",
+      "name": "Выстрел из лука",
+      "channel": "effects",
+      "url": "/audio/combat-v2/weapon_bow_launch.00863cf03679.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "weapon.crossbow.launch",
+      "name": "Выстрел из арбалета",
+      "channel": "effects",
+      "url": "/audio/combat-v2/weapon_crossbow_launch.35e0e6487fc7.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "weapon.arrow.hit",
+      "name": "Попадание стрелы или болта",
+      "channel": "effects",
+      "url": "/audio/combat-v2/weapon_arrow_hit.14d64f13e8c2.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "weapon.projectile.miss",
+      "name": "Пролёт снаряда мимо",
+      "channel": "effects",
+      "url": "/audio/combat-v2/weapon_projectile_miss.10b7c80a46a5.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "weapon.throw.launch",
+      "name": "Бросок метательного оружия",
+      "channel": "effects",
+      "url": "/audio/combat-v2/weapon_throw_launch.58de899be34d.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "weapon.stone.launch",
+      "name": "Выпуск камня",
+      "channel": "effects",
+      "url": "/audio/combat-v2/weapon_stone_launch.eee27d9a89ef.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "weapon.stone.hit",
+      "name": "Попадание камня",
+      "channel": "effects",
+      "url": "/audio/combat-v2/weapon_stone_hit.f03123da9abb.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "weapon.firearm.launch",
+      "name": "Выстрел чёрного пороха",
+      "channel": "effects",
+      "url": "/audio/combat-v2/weapon_firearm_launch.9785913ea4ff.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "weapon.firearm.hit",
+      "name": "Контакт пули",
+      "channel": "effects",
+      "url": "/audio/combat-v2/weapon_firearm_hit.55e92230bf06.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "natural.bite.launch",
+      "name": "Щелчок челюстей",
+      "channel": "effects",
+      "url": "/audio/combat-v2/natural_bite_launch.78d1aa4a96d5.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "natural.bite.hit",
+      "name": "Контакт укуса",
+      "channel": "effects",
+      "url": "/audio/combat-v2/natural_bite_hit.6ba7a44fc2d9.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "natural.claws.launch",
+      "name": "Взмах когтями",
+      "channel": "effects",
+      "url": "/audio/combat-v2/natural_claws_launch.49fea95a0a2a.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "natural.claws.hit",
+      "name": "Контакт когтей",
+      "channel": "effects",
+      "url": "/audio/combat-v2/natural_claws_hit.f7e6f29ca60e.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "natural.tail.launch",
+      "name": "Взмах хвостом",
+      "channel": "effects",
+      "url": "/audio/combat-v2/natural_tail_launch.a72582fd0d15.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "natural.tentacle.launch",
+      "name": "Выпад щупальцем",
+      "channel": "effects",
+      "url": "/audio/combat-v2/natural_tentacle_launch.80ad3eb3fe1e.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "natural.tentacle.hit",
+      "name": "Контакт щупальца",
+      "channel": "effects",
+      "url": "/audio/combat-v2/natural_tentacle_hit.98f1b80d1daf.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "natural.sting.launch",
+      "name": "Выпад жалом",
+      "channel": "effects",
+      "url": "/audio/combat-v2/natural_sting_launch.a8555c03b074.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "natural.sting.hit",
+      "name": "Контакт жала",
+      "channel": "effects",
+      "url": "/audio/combat-v2/natural_sting_hit.3aeef4dbd6ed.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "natural.slam.hit",
+      "name": "Удар телом или лапой",
+      "channel": "effects",
+      "url": "/audio/combat-v2/natural_slam_hit.c1a63959e4ad.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.fire.launch",
+      "name": "Огонь — выпуск снаряда",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_fire_launch.2cc9a0774329.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.fire.hit",
+      "name": "Огонь — попадание",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_fire_hit.6d2d39e0381a.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.force.charge",
+      "name": "Силовая магия — накопление заряда",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_force_charge.37c64a45e5ba.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.force.launch",
+      "name": "Силовая магия — выпуск луча",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_force_launch.eecdb68b02bf.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.force.hit",
+      "name": "Силовая магия — попадание",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_force_hit.b64ef8e8230a.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.frost.launch",
+      "name": "Холод — выпуск снаряда",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_frost_launch.2d2016224750.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.frost.hit",
+      "name": "Холод — попадание",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_frost_hit.306fb439b0f7.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.lightning.launch",
+      "name": "Молния — выпуск разряда",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_lightning_launch.2f6d7a117b1f.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.lightning.hit",
+      "name": "Молния — попадание",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_lightning_hit.310bbabb2d00.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.acid.launch",
+      "name": "Кислота — выпуск сгустка",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_acid_launch.7ee66d03cd78.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.acid.hit",
+      "name": "Кислота — попадание",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_acid_hit.f0ad64741152.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.poison.launch",
+      "name": "Яд — выпуск облачка",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_poison_launch.7cc18d58a136.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.poison.hit",
+      "name": "Яд — попадание",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_poison_hit.7c1417917fa4.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.radiant.launch",
+      "name": "Свет — выпуск снаряда",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_radiant_launch.563c06e0b584.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.radiant.hit",
+      "name": "Свет — попадание",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_radiant_hit.f231b2c86309.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.necrotic.launch",
+      "name": "Некротическая магия — выпуск",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_necrotic_launch.629ebb838407.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.necrotic.hit",
+      "name": "Некротическая магия — попадание",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_necrotic_hit.343769c9e533.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.psychic.launch",
+      "name": "Психическая магия — выпуск импульса",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_psychic_launch.54b42e4a71d6.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.psychic.hit",
+      "name": "Психическая магия — попадание",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_psychic_hit.80427365a766.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.thunder.launch",
+      "name": "Гром — выпуск волны",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_thunder_launch.99d423f71a84.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.thunder.hit",
+      "name": "Гром — попадание",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_thunder_hit.60c959cbe4df.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.nature.launch",
+      "name": "Природа — выпуск лозы или шипа",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_nature_launch.f33263db1a23.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.nature.hit",
+      "name": "Природа — попадание",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_nature_hit.08817e6e976b.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.water.launch",
+      "name": "Вода — выпуск струи",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_water_launch.f88d085fd054.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.water.hit",
+      "name": "Вода — попадание",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_water_hit.e994dbb9b12e.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.earth.launch",
+      "name": "Земля — выпуск каменного снаряда",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_earth_launch.c78fd8e5a06a.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.earth.hit",
+      "name": "Земля — попадание",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_earth_hit.b37bdb022f5d.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.wind.launch",
+      "name": "Ветер — выпуск порыва",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_wind_launch.65b665af4b70.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.wind.hit",
+      "name": "Ветер — попадание",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_wind_hit.aafb263e973a.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.illusion.activate",
+      "name": "Иллюзия — проявление",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_illusion_activate.279e8585b9d5.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.healing.activate",
+      "name": "Исцеление — мягкая волна",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_healing_activate.a497f3c462fb.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.ward.activate",
+      "name": "Защитная магия — создание барьера",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_ward_activate.8d17eb7ea825.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.miss.flyby",
+      "name": "Магия — пролёт мимо",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_miss_flyby.0ced9ab31a13.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.miss.dissipate",
+      "name": "Магия — рассеивание без попадания",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_miss_dissipate.015a6d7142dc.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.breath.fire.launch",
+      "name": "Огненное дыхание — выброс пламени",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_breath_fire_launch.0f562047a080.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.breath.frost.launch",
+      "name": "Ледяное дыхание — выброс холода",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_breath_frost_launch.605e13fe51b2.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.breath.lightning.launch",
+      "name": "Грозовое дыхание — поток разрядов",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_breath_lightning_launch.477cf13e0756.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.breath.acid.launch",
+      "name": "Кислотное дыхание — едкая струя",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_breath_acid_launch.c774ceb783f0.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.breath.poison.launch",
+      "name": "Ядовитое дыхание — густое облако",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_breath_poison_launch.613c49c58823.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.area.thunder.launch",
+      "name": "Громовая волна — расширение области",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_area_thunder_launch.92e0486403b7.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.area.nature.activate",
+      "name": "Область природы — рост переплетающихся корней",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_area_nature_activate.f70966fdb458.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "magic.area.illusion.activate",
+      "name": "Область иллюзии — раскрытие светящейся пелены",
+      "channel": "effects",
+      "url": "/audio/combat-v2/magic_area_illusion_activate.f386cb4d1a95.mp3",
+      "gain": 0.72,
+      "loop": false,
+      "license": "Generated with ElevenLabs Sound Effects; source and generation details in audiopresentation/provenance.json",
+      "version": 2
+    },
+    {
+      "key": "music.site",
+      "name": "Тихие страницы — сайт и главное меню",
+      "channel": "music",
+      "url": "/audio/music-v3/music_site.c6b6fc3095ec.mp3",
+      "gain": 0.28,
+      "loop": true,
+      "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+      "version": 3
+    },
+    {
+      "key": "music.run",
+      "name": "Дорога приключений — забег",
+      "channel": "music",
+      "url": "/audio/music-v3/music_run.f308cbb191dc.mp3",
+      "gain": 0.28,
+      "loop": true,
+      "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+      "version": 3
+    },
+    {
+      "key": "music.battle.forest-v2",
+      "name": "Бой: Мшистый лес",
+      "channel": "music",
+      "url": "/audio/music-v3/music_battle_forest-v2.48fa5ce8e10d.mp3",
+      "gain": 0.38,
+      "loop": true,
+      "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+      "version": 3
+    },
+    {
+      "key": "music.battle.crypt-v2",
+      "name": "Бой: Забытый склеп",
+      "channel": "music",
+      "url": "/audio/music-v3/music_battle_crypt-v2.83e37a2cf495.mp3",
+      "gain": 0.38,
+      "loop": true,
+      "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+      "version": 3
+    },
+    {
+      "key": "music.battle.goblin-camp-v2",
+      "name": "Бой: Лагерь в долине",
+      "channel": "music",
+      "url": "/audio/music-v3/music_battle_goblin-camp-v2.7b7914a11066.mp3",
+      "gain": 0.38,
+      "loop": true,
+      "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+      "version": 3
+    },
+    {
+      "key": "music.battle.tavern-v2",
+      "name": "Бой: Таверна «Последний привал»",
+      "channel": "music",
+      "url": "/audio/music-v3/music_battle_tavern-v2.e188bb9cde22.mp3",
+      "gain": 0.38,
+      "loop": true,
+      "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+      "version": 3
+    },
+    {
+      "key": "music.battle.sanctuary-v1",
+      "name": "Бой: Заросшее святилище",
+      "channel": "music",
+      "url": "/audio/music-v3/music_battle_sanctuary-v1.5d96688fcc0c.mp3",
+      "gain": 0.38,
+      "loop": true,
+      "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+      "version": 3
+    },
+    {
+      "key": "music.battle.quarry-v1",
+      "name": "Бой: Заброшенный карьер",
+      "channel": "music",
+      "url": "/audio/music-v3/music_battle_quarry-v1.3ea40887ce80.mp3",
+      "gain": 0.38,
+      "loop": true,
+      "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+      "version": 3
+    },
+    {
+      "key": "music.battle.cavern-v1",
+      "name": "Бой: Светящийся грот",
+      "channel": "music",
+      "url": "/audio/music-v3/music_battle_cavern-v1.1992c5305f66.mp3",
+      "gain": 0.38,
+      "loop": true,
+      "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+      "version": 3
+    },
+    {
+      "key": "music.battle.snow-pass-v1",
+      "name": "Бой: Снежный перевал",
+      "channel": "music",
+      "url": "/audio/music-v3/music_battle_snow-pass-v1.dba3ab622458.mp3",
+      "gain": 0.38,
+      "loop": true,
+      "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+      "version": 3
+    },
+    {
+      "key": "music.battle.clearing-v1",
+      "name": "Бой: Лесная поляна",
+      "channel": "music",
+      "url": "/audio/music-v3/music_battle_clearing-v1.37fa516de5f6.mp3",
+      "gain": 0.38,
+      "loop": true,
+      "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+      "version": 3
+    },
+    {
+      "key": "music.battle.courtyard-small-v1",
+      "name": "Бой: Тихий внутренний двор",
+      "channel": "music",
+      "url": "/audio/music-v3/music_battle_courtyard-small-v1.5c314b5d16ca.mp3",
+      "gain": 0.38,
+      "loop": true,
+      "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+      "version": 3
+    },
+    {
+      "key": "music.battle.watchpost-rooms-v1",
+      "name": "Бой: Караульные палаты",
+      "channel": "music",
+      "url": "/audio/music-v3/music_battle_watchpost-rooms-v1.a50a85477df8.mp3",
+      "gain": 0.38,
+      "loop": true,
+      "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+      "version": 3
+    },
+    {
+      "key": "music.battle.crypt-annex-rooms-v1",
+      "name": "Бой: Крипта трёх залов",
+      "channel": "music",
+      "url": "/audio/music-v3/music_battle_crypt-annex-rooms-v1.bcc15159a288.mp3",
+      "gain": 0.38,
+      "loop": true,
+      "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+      "version": 3
+    },
+    {
+      "key": "music.battle.urvin-archive-v1",
+      "name": "Бой: Зал безмолвных летописей",
+      "channel": "music",
+      "url": "/audio/music-v3/music_battle_urvin-archive-v1.ddbfebd8d819.mp3",
+      "gain": 0.38,
+      "loop": true,
+      "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+      "version": 3
+    },
+    {
+      "key": "music.battle.urvin-causeway-v1",
+      "name": "Бой: Пепельный тракт",
+      "channel": "music",
+      "url": "/audio/music-v3/music_battle_urvin-causeway-v1.40ca1482270c.mp3",
+      "gain": 0.38,
+      "loop": true,
+      "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+      "version": 3
+    },
+    {
+      "key": "music.battle.urvin-court-v1",
+      "name": "Бой: Двор Чёрных врат",
+      "channel": "music",
+      "url": "/audio/music-v3/music_battle_urvin-court-v1.5decb99802a7.mp3",
+      "gain": 0.38,
+      "loop": true,
+      "license": "Generated with ElevenLabs Music; source and generation details in audiopresentation/music-provenance-v3.json",
+      "version": 3
+    }
+  ],
+  "bindings": [
+    {
+      "entity_type": "spell",
+      "entity_id": "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+      "event": "launch",
+      "cue_key": "magic.acid.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+      "event": "hit",
+      "cue_key": "magic.acid.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "70e35366-5446-49ff-b0b9-759dbbff347e",
+      "event": "launch",
+      "cue_key": "magic.force.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "70e35366-5446-49ff-b0b9-759dbbff347e",
+      "event": "hit",
+      "cue_key": "magic.force.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "70e35366-5446-49ff-b0b9-759dbbff347e",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2",
+      "event": "activate",
+      "cue_key": "magic.psychic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d3a05e09-7f80-44ea-be21-dfdd3408d528",
+      "event": "launch",
+      "cue_key": "magic.nature.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d3a05e09-7f80-44ea-be21-dfdd3408d528",
+      "event": "hit",
+      "cue_key": "magic.nature.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d3a05e09-7f80-44ea-be21-dfdd3408d528",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d3a05e09-7f80-44ea-be21-dfdd3408d528",
+      "event": "activate",
+      "cue_key": "magic.area.nature.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "73d4195c-5da4-444d-a0c1-19572df641b2",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7f7d92ed-0d5c-4567-990b-3395247b9266",
+      "event": "launch",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7f7d92ed-0d5c-4567-990b-3395247b9266",
+      "event": "hit",
+      "cue_key": "magic.radiant.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7f7d92ed-0d5c-4567-990b-3395247b9266",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "bdeda1c3-6574-4946-8b91-5faf0f76072c",
+      "event": "launch",
+      "cue_key": "magic.psychic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "bdeda1c3-6574-4946-8b91-5faf0f76072c",
+      "event": "hit",
+      "cue_key": "magic.psychic.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "bdeda1c3-6574-4946-8b91-5faf0f76072c",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ebe432dd-c124-4f79-a39b-db14ca2ed741",
+      "event": "launch",
+      "cue_key": "magic.frost.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ebe432dd-c124-4f79-a39b-db14ca2ed741",
+      "event": "hit",
+      "cue_key": "magic.frost.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ebe432dd-c124-4f79-a39b-db14ca2ed741",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f5d4b18f-6212-47e7-ae0b-8dda2f84d4c2",
+      "event": "launch",
+      "cue_key": "weapon.blade.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f5d4b18f-6212-47e7-ae0b-8dda2f84d4c2",
+      "event": "hit",
+      "cue_key": "magic.radiant.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f5d4b18f-6212-47e7-ae0b-8dda2f84d4c2",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0f0eca67-f241-4f1a-b01b-37c6f16adea2",
+      "event": "launch",
+      "cue_key": "magic.force.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0f0eca67-f241-4f1a-b01b-37c6f16adea2",
+      "event": "hit",
+      "cue_key": "magic.force.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0f0eca67-f241-4f1a-b01b-37c6f16adea2",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0f0eca67-f241-4f1a-b01b-37c6f16adea2",
+      "event": "charge",
+      "cue_key": "magic.force.charge"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a9a0d114-ad46-435e-a3c9-128b305b8a5d",
+      "event": "launch",
+      "cue_key": "magic.necrotic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a9a0d114-ad46-435e-a3c9-128b305b8a5d",
+      "event": "hit",
+      "cue_key": "magic.necrotic.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a9a0d114-ad46-435e-a3c9-128b305b8a5d",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "13e456fc-cf29-4c46-8aeb-c282a9cbcd5f",
+      "event": "launch",
+      "cue_key": "magic.area.thunder.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "13e456fc-cf29-4c46-8aeb-c282a9cbcd5f",
+      "event": "hit",
+      "cue_key": "magic.thunder.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "13e456fc-cf29-4c46-8aeb-c282a9cbcd5f",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "c3fc969b-ba03-443f-a222-46f6b9a53bd6",
+      "event": "launch",
+      "cue_key": "magic.psychic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "c3fc969b-ba03-443f-a222-46f6b9a53bd6",
+      "event": "hit",
+      "cue_key": "magic.psychic.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "c3fc969b-ba03-443f-a222-46f6b9a53bd6",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8cddf152-e406-4c7a-8d34-cc8bcbfc0dfa",
+      "event": "launch",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8cddf152-e406-4c7a-8d34-cc8bcbfc0dfa",
+      "event": "hit",
+      "cue_key": "magic.radiant.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8cddf152-e406-4c7a-8d34-cc8bcbfc0dfa",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "78eb6e5c-5d2a-42ad-8e6e-6bf3be3f96c0",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "35d36558-8a47-49a1-9099-387bee37b8a2",
+      "event": "launch",
+      "cue_key": "magic.wind.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "35d36558-8a47-49a1-9099-387bee37b8a2",
+      "event": "hit",
+      "cue_key": "magic.wind.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "35d36558-8a47-49a1-9099-387bee37b8a2",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "bd99466f-46ab-4af5-a41d-b2b804b9f1e3",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ba23242c-eb9c-46a6-ba01-ebdc3b5b9618",
+      "event": "activate",
+      "cue_key": "magic.fire.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "b84d904f-4768-4a05-8803-7a0d0da28a00",
+      "event": "launch",
+      "cue_key": "magic.nature.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "b84d904f-4768-4a05-8803-7a0d0da28a00",
+      "event": "hit",
+      "cue_key": "magic.nature.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "b84d904f-4768-4a05-8803-7a0d0da28a00",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "1c966901-b84a-435c-8950-1da774d72210",
+      "event": "launch",
+      "cue_key": "magic.nature.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "1c966901-b84a-435c-8950-1da774d72210",
+      "event": "hit",
+      "cue_key": "magic.nature.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "1c966901-b84a-435c-8950-1da774d72210",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "1c966901-b84a-435c-8950-1da774d72210",
+      "event": "activate",
+      "cue_key": "magic.area.nature.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d3177c17-b0c9-4691-a2ba-5ef24a28c1aa",
+      "event": "healing",
+      "cue_key": "magic.healing.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d3177c17-b0c9-4691-a2ba-5ef24a28c1aa",
+      "event": "activate",
+      "cue_key": "magic.healing.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "9c7cec56-53ed-43f1-8ba7-67d768cf28de",
+      "event": "launch",
+      "cue_key": "magic.force.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "9c7cec56-53ed-43f1-8ba7-67d768cf28de",
+      "event": "hit",
+      "cue_key": "magic.force.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "9c7cec56-53ed-43f1-8ba7-67d768cf28de",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "30530b80-5db9-4fd9-bae8-1cb092c05730",
+      "event": "launch",
+      "cue_key": "magic.lightning.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "30530b80-5db9-4fd9-bae8-1cb092c05730",
+      "event": "hit",
+      "cue_key": "magic.lightning.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "30530b80-5db9-4fd9-bae8-1cb092c05730",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "742c2f7b-b72a-444c-8868-efbe8cd74c70",
+      "event": "activate",
+      "cue_key": "magic.force.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "48f07634-634c-562c-a9c6-7e2e73cbb9d3",
+      "event": "launch",
+      "cue_key": "weapon.blade.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "48f07634-634c-562c-a9c6-7e2e73cbb9d3",
+      "event": "hit",
+      "cue_key": "magic.radiant.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "48f07634-634c-562c-a9c6-7e2e73cbb9d3",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "39400cef-bf13-50b6-a3c9-cf470dda1219",
+      "event": "launch",
+      "cue_key": "weapon.blade.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "39400cef-bf13-50b6-a3c9-cf470dda1219",
+      "event": "hit",
+      "cue_key": "magic.radiant.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "39400cef-bf13-50b6-a3c9-cf470dda1219",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8147c9f6-bd43-50bb-ad1b-01d743908448",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "cfa10828-bdd6-56df-ad9e-4f3d5d0e76ba",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ecdf1283-2502-5020-a519-93d3eb6256d4",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "542c18e6-3fa0-5c48-af17-838c91038a32",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "13f6c6d9-0210-5762-a9c6-01cd17d55bcc",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "72138e78-30bb-5168-a675-3756cf794729",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0a279ad1-5550-58ab-a228-e399338babcf",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "9d02f061-7ec1-5fc5-a864-9cc5628c0f3e",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e751f556-e126-5fb0-a80c-3a475c3b89f3",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "98bf10f9-89a9-5f82-aff0-0fd2d82ff619",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d1097558-c304-5031-a3e6-ce64823e3b1d",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "75ed8f25-6c75-5118-a600-550ffe73266c",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "6915159b-fda2-5bf6-a5d2-e1dd18f23879",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "44a42525-26d1-5131-ae52-57007fc85ae3",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "88507518-d783-5b87-aa5d-b12f17d7e32e",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "6d0575be-1c0d-5bbf-a303-0db0da313f06",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "08d508e6-e862-5434-a860-1a75137bb5ed",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a6d69f47-121f-5925-a3f2-f1036e604752",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "08f4c37f-980a-590a-a0e5-4e62e323e481",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "be19a61e-0211-54fc-a0c3-d50c16fffc4f",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "36259a69-93ba-5cc5-a537-425a8a2cc23f",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3865ca56-0441-55e9-a9ce-88040b0fdae2",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "97535295-7d5d-5f99-a2b1-88113829a7ca",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "21de53ce-4dbb-556b-a84a-fe259ad6d5fe",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "634b6e23-8df5-54cb-afeb-92d1dca9f0df",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "4c77e278-5d20-5fde-a269-4a5fdd81cc4f",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0268d1de-8593-536d-aa12-7530cbac9243",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "554a002c-5736-5c9e-a01c-1a063fc28c39",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "5ec6b2d4-587e-501f-ab09-0a175a591828",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a87f09ed-536d-5530-ab0b-cb4fb5dddbc8",
+      "event": "launch",
+      "cue_key": "magic.wind.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a87f09ed-536d-5530-ab0b-cb4fb5dddbc8",
+      "event": "hit",
+      "cue_key": "magic.wind.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a87f09ed-536d-5530-ab0b-cb4fb5dddbc8",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "554cdc1f-a23f-559d-aed4-c8338c75ee4c",
+      "event": "launch",
+      "cue_key": "magic.earth.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "554cdc1f-a23f-559d-aed4-c8338c75ee4c",
+      "event": "hit",
+      "cue_key": "magic.earth.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "554cdc1f-a23f-559d-aed4-c8338c75ee4c",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "5b149d6e-f0e4-5e4c-a300-675d2b90f343",
+      "event": "launch",
+      "cue_key": "magic.fire.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "5b149d6e-f0e4-5e4c-a300-675d2b90f343",
+      "event": "hit",
+      "cue_key": "magic.fire.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "5b149d6e-f0e4-5e4c-a300-675d2b90f343",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "213f9e6a-6000-5aac-accb-ae7f98588a7d",
+      "event": "launch",
+      "cue_key": "magic.earth.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "213f9e6a-6000-5aac-accb-ae7f98588a7d",
+      "event": "hit",
+      "cue_key": "magic.earth.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "213f9e6a-6000-5aac-accb-ae7f98588a7d",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "2385cc5f-2ca9-571b-a78c-04670c59771c",
+      "event": "launch",
+      "cue_key": "magic.water.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "2385cc5f-2ca9-571b-a78c-04670c59771c",
+      "event": "hit",
+      "cue_key": "magic.water.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "2385cc5f-2ca9-571b-a78c-04670c59771c",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "39c2b232-0719-565c-a403-cd8a96e974d2",
+      "event": "launch",
+      "cue_key": "magic.acid.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "39c2b232-0719-565c-a403-cd8a96e974d2",
+      "event": "hit",
+      "cue_key": "magic.acid.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "39c2b232-0719-565c-a403-cd8a96e974d2",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e25e99b5-da59-5c37-a161-8e9f0e841b83",
+      "event": "launch",
+      "cue_key": "magic.frost.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e25e99b5-da59-5c37-a161-8e9f0e841b83",
+      "event": "hit",
+      "cue_key": "magic.frost.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e25e99b5-da59-5c37-a161-8e9f0e841b83",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "4b3dd04d-a5dd-5361-affc-adad6b910faa",
+      "event": "launch",
+      "cue_key": "magic.fire.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "4b3dd04d-a5dd-5361-affc-adad6b910faa",
+      "event": "hit",
+      "cue_key": "magic.fire.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "4b3dd04d-a5dd-5361-affc-adad6b910faa",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e8999ba5-b479-51f2-aa66-6a9494d746f4",
+      "event": "launch",
+      "cue_key": "magic.lightning.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e8999ba5-b479-51f2-aa66-6a9494d746f4",
+      "event": "hit",
+      "cue_key": "magic.lightning.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e8999ba5-b479-51f2-aa66-6a9494d746f4",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "1ab7d99f-165c-537a-ae3a-b4f25992a97c",
+      "event": "launch",
+      "cue_key": "magic.poison.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "1ab7d99f-165c-537a-ae3a-b4f25992a97c",
+      "event": "hit",
+      "cue_key": "magic.poison.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "1ab7d99f-165c-537a-ae3a-b4f25992a97c",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3c5011ec-6d21-56c2-a0be-579d075624e8",
+      "event": "launch",
+      "cue_key": "magic.psychic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3c5011ec-6d21-56c2-a0be-579d075624e8",
+      "event": "hit",
+      "cue_key": "magic.psychic.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3c5011ec-6d21-56c2-a0be-579d075624e8",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7f25634e-602d-5bfa-af57-acc04336b535",
+      "event": "launch",
+      "cue_key": "magic.thunder.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7f25634e-602d-5bfa-af57-acc04336b535",
+      "event": "hit",
+      "cue_key": "magic.thunder.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7f25634e-602d-5bfa-af57-acc04336b535",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0809ec29-873b-56c3-afdf-645a949daccd",
+      "event": "launch",
+      "cue_key": "magic.area.thunder.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0809ec29-873b-56c3-afdf-645a949daccd",
+      "event": "hit",
+      "cue_key": "magic.thunder.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0809ec29-873b-56c3-afdf-645a949daccd",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7e5a24b6-bc9f-519c-aa71-9dfb366933f4",
+      "event": "launch",
+      "cue_key": "magic.force.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7e5a24b6-bc9f-519c-aa71-9dfb366933f4",
+      "event": "hit",
+      "cue_key": "magic.force.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7e5a24b6-bc9f-519c-aa71-9dfb366933f4",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "55f6d406-658f-58b2-a85d-96c34c4d377a",
+      "event": "activate",
+      "cue_key": "magic.illusion.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d485e17e-1dc5-5827-aed6-5240193aec9e",
+      "event": "activate",
+      "cue_key": "magic.fire.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0f854698-9ece-5dc5-a8fd-00dd1b38bdd1",
+      "event": "launch",
+      "cue_key": "magic.wind.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0f854698-9ece-5dc5-a8fd-00dd1b38bdd1",
+      "event": "hit",
+      "cue_key": "magic.wind.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0f854698-9ece-5dc5-a8fd-00dd1b38bdd1",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7fc187b2-1653-591b-a718-629cef79848b",
+      "event": "launch",
+      "cue_key": "magic.area.thunder.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7fc187b2-1653-591b-a718-629cef79848b",
+      "event": "hit",
+      "cue_key": "magic.thunder.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7fc187b2-1653-591b-a718-629cef79848b",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e300a1f2-91ae-4c82-9904-057f93a013ba",
+      "event": "launch",
+      "cue_key": "magic.necrotic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e300a1f2-91ae-4c82-9904-057f93a013ba",
+      "event": "hit",
+      "cue_key": "magic.necrotic.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e300a1f2-91ae-4c82-9904-057f93a013ba",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "b2c5ebf4-facc-4521-948f-55b30746bfa5",
+      "event": "activate",
+      "cue_key": "magic.illusion.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3c68b9a7-d143-4b39-b06c-3d78e3276117",
+      "event": "launch",
+      "cue_key": "magic.nature.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3c68b9a7-d143-4b39-b06c-3d78e3276117",
+      "event": "hit",
+      "cue_key": "magic.nature.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3c68b9a7-d143-4b39-b06c-3d78e3276117",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3c68b9a7-d143-4b39-b06c-3d78e3276117",
+      "event": "activate",
+      "cue_key": "magic.area.nature.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "50626b5a-33c5-46e0-af0e-50599f4306a0",
+      "event": "launch",
+      "cue_key": "magic.fire.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "50626b5a-33c5-46e0-af0e-50599f4306a0",
+      "event": "hit",
+      "cue_key": "magic.fire.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "50626b5a-33c5-46e0-af0e-50599f4306a0",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "1e9cb7db-f4dc-4215-ad57-0e3407b78913",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "5b79a37b-e7a9-482a-9efc-46b57e3a79de",
+      "event": "activate",
+      "cue_key": "magic.force.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "dc59ce91-4e89-4f1d-89a5-e25650f3a6b7",
+      "event": "activate",
+      "cue_key": "magic.illusion.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7d0c00e7-0cfa-4f3f-8650-aac70150538c",
+      "event": "launch",
+      "cue_key": "magic.poison.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7d0c00e7-0cfa-4f3f-8650-aac70150538c",
+      "event": "hit",
+      "cue_key": "magic.poison.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7d0c00e7-0cfa-4f3f-8650-aac70150538c",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e47e71cb-f44e-402e-91af-e6fad63982dc",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8b708d7b-097e-4624-8a41-c8c8e00f044c",
+      "event": "launch",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8b708d7b-097e-4624-8a41-c8c8e00f044c",
+      "event": "hit",
+      "cue_key": "magic.radiant.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8b708d7b-097e-4624-8a41-c8c8e00f044c",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "15400000-0000-4000-8000-000000000014",
+      "event": "activate",
+      "cue_key": "magic.illusion.activate"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "16200000-0000-4000-8000-000000000201",
+      "event": "launch",
+      "cue_key": "natural.bite.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "16200000-0000-4000-8000-000000000201",
+      "event": "hit",
+      "cue_key": "natural.bite.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "16200000-0000-4000-8000-000000000201",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "16200000-0000-4000-8000-000000000203",
+      "event": "launch",
+      "cue_key": "natural.bite.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "16200000-0000-4000-8000-000000000203",
+      "event": "hit",
+      "cue_key": "magic.poison.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "16200000-0000-4000-8000-000000000203",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "16200000-0000-4000-8000-000000000204",
+      "event": "launch",
+      "cue_key": "natural.bite.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "16200000-0000-4000-8000-000000000204",
+      "event": "hit",
+      "cue_key": "natural.bite.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "16200000-0000-4000-8000-000000000204",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b1000000-0000-4000-8000-000000000003",
+      "event": "launch",
+      "cue_key": "natural.bite.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b1000000-0000-4000-8000-000000000003",
+      "event": "hit",
+      "cue_key": "natural.bite.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b1000000-0000-4000-8000-000000000003",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000018",
+      "event": "launch",
+      "cue_key": "natural.bite.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000018",
+      "event": "hit",
+      "cue_key": "natural.bite.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000018",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "24500000-0000-4000-8000-000000000001",
+      "event": "activate",
+      "cue_key": "magic.illusion.activate"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000004",
+      "event": "launch",
+      "cue_key": "natural.bite.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000004",
+      "event": "hit",
+      "cue_key": "natural.bite.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000004",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000012",
+      "event": "launch",
+      "cue_key": "natural.bite.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000012",
+      "event": "hit",
+      "cue_key": "magic.poison.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000012",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000011",
+      "event": "launch",
+      "cue_key": "natural.bite.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000011",
+      "event": "hit",
+      "cue_key": "natural.bite.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000011",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "24400000-0000-4000-8000-000000000001",
+      "event": "activate",
+      "cue_key": "magic.illusion.activate"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "10800000-0000-4000-8000-000000000001",
+      "event": "launch",
+      "cue_key": "weapon.bow.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "10800000-0000-4000-8000-000000000001",
+      "event": "hit",
+      "cue_key": "weapon.arrow.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "10800000-0000-4000-8000-000000000001",
+      "event": "miss",
+      "cue_key": "weapon.projectile.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "4720c0d0-6610-40e2-812b-4aa0a1bb8449",
+      "event": "hit",
+      "cue_key": "natural.slam.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "4720c0d0-6610-40e2-812b-4aa0a1bb8449",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b1000000-0000-4000-8000-000000000002",
+      "event": "launch",
+      "cue_key": "weapon.pierce.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b1000000-0000-4000-8000-000000000002",
+      "event": "hit",
+      "cue_key": "weapon.pierce.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b1000000-0000-4000-8000-000000000002",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b1000000-0000-4000-8000-000000000001",
+      "event": "launch",
+      "cue_key": "weapon.blade.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b1000000-0000-4000-8000-000000000001",
+      "event": "hit",
+      "cue_key": "weapon.blade.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b1000000-0000-4000-8000-000000000001",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000001",
+      "event": "launch",
+      "cue_key": "weapon.blade.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000001",
+      "event": "hit",
+      "cue_key": "weapon.blade.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000001",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000002",
+      "event": "launch",
+      "cue_key": "weapon.bow.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000002",
+      "event": "hit",
+      "cue_key": "weapon.arrow.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000002",
+      "event": "miss",
+      "cue_key": "weapon.projectile.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000003",
+      "event": "launch",
+      "cue_key": "weapon.throw.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000003",
+      "event": "hit",
+      "cue_key": "weapon.pierce.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000003",
+      "event": "miss",
+      "cue_key": "weapon.projectile.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2010000-0000-4000-8000-000000000001",
+      "event": "launch",
+      "cue_key": "weapon.pierce.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2010000-0000-4000-8000-000000000001",
+      "event": "hit",
+      "cue_key": "weapon.pierce.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2010000-0000-4000-8000-000000000001",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000005",
+      "event": "launch",
+      "cue_key": "weapon.throw.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000005",
+      "event": "hit",
+      "cue_key": "weapon.blade.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000005",
+      "event": "miss",
+      "cue_key": "weapon.projectile.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2010000-0000-4000-8000-000000000002",
+      "event": "launch",
+      "cue_key": "weapon.pierce.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2010000-0000-4000-8000-000000000002",
+      "event": "hit",
+      "cue_key": "weapon.pierce.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2010000-0000-4000-8000-000000000002",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000006",
+      "event": "launch",
+      "cue_key": "weapon.blade.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000006",
+      "event": "hit",
+      "cue_key": "weapon.blade.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000006",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000007",
+      "event": "launch",
+      "cue_key": "weapon.bow.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000007",
+      "event": "hit",
+      "cue_key": "weapon.arrow.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000007",
+      "event": "miss",
+      "cue_key": "weapon.projectile.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000008",
+      "event": "launch",
+      "cue_key": "weapon.pierce.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000008",
+      "event": "hit",
+      "cue_key": "weapon.pierce.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000008",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000009",
+      "event": "launch",
+      "cue_key": "weapon.bow.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000009",
+      "event": "hit",
+      "cue_key": "weapon.arrow.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000009",
+      "event": "miss",
+      "cue_key": "weapon.projectile.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000010",
+      "event": "hit",
+      "cue_key": "natural.slam.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000010",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000013",
+      "event": "launch",
+      "cue_key": "weapon.blade.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000013",
+      "event": "hit",
+      "cue_key": "weapon.blade.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000013",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000014",
+      "event": "launch",
+      "cue_key": "weapon.bow.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000014",
+      "event": "hit",
+      "cue_key": "magic.poison.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000014",
+      "event": "miss",
+      "cue_key": "weapon.projectile.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000015",
+      "event": "launch",
+      "cue_key": "weapon.blunt.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000015",
+      "event": "hit",
+      "cue_key": "weapon.blunt.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000015",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000016",
+      "event": "launch",
+      "cue_key": "weapon.bow.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000016",
+      "event": "hit",
+      "cue_key": "weapon.arrow.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000016",
+      "event": "miss",
+      "cue_key": "weapon.projectile.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000017",
+      "event": "hit",
+      "cue_key": "natural.slam.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000017",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000019",
+      "event": "activate",
+      "cue_key": "natural.tentacle.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000020",
+      "event": "launch",
+      "cue_key": "weapon.throw.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000020",
+      "event": "hit",
+      "cue_key": "weapon.blunt.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000020",
+      "event": "miss",
+      "cue_key": "weapon.projectile.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2010000-0000-4000-8000-000000000003",
+      "event": "launch",
+      "cue_key": "weapon.blunt.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2010000-0000-4000-8000-000000000003",
+      "event": "hit",
+      "cue_key": "weapon.blunt.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2010000-0000-4000-8000-000000000003",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000021",
+      "event": "launch",
+      "cue_key": "weapon.blunt.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000021",
+      "event": "hit",
+      "cue_key": "weapon.blunt.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000021",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000022",
+      "event": "launch",
+      "cue_key": "weapon.throw.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000022",
+      "event": "hit",
+      "cue_key": "weapon.pierce.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000022",
+      "event": "miss",
+      "cue_key": "weapon.projectile.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2010000-0000-4000-8000-000000000004",
+      "event": "launch",
+      "cue_key": "weapon.pierce.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2010000-0000-4000-8000-000000000004",
+      "event": "hit",
+      "cue_key": "weapon.pierce.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2010000-0000-4000-8000-000000000004",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000023",
+      "event": "launch",
+      "cue_key": "weapon.blade.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000023",
+      "event": "hit",
+      "cue_key": "weapon.blade.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000023",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000024",
+      "event": "launch",
+      "cue_key": "weapon.blade.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000024",
+      "event": "hit",
+      "cue_key": "weapon.blade.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000024",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000025",
+      "event": "launch",
+      "cue_key": "weapon.firearm.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000025",
+      "event": "hit",
+      "cue_key": "weapon.firearm.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000025",
+      "event": "miss",
+      "cue_key": "weapon.projectile.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000026",
+      "event": "launch",
+      "cue_key": "weapon.blade.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000026",
+      "event": "hit",
+      "cue_key": "weapon.blade.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000026",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000027",
+      "event": "launch",
+      "cue_key": "weapon.bow.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000027",
+      "event": "hit",
+      "cue_key": "weapon.arrow.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000027",
+      "event": "miss",
+      "cue_key": "weapon.projectile.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000001",
+      "event": "launch",
+      "cue_key": "weapon.pierce.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000001",
+      "event": "hit",
+      "cue_key": "weapon.pierce.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000001",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000002",
+      "event": "hit",
+      "cue_key": "magic.earth.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000002",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000003",
+      "event": "launch",
+      "cue_key": "natural.bite.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000003",
+      "event": "hit",
+      "cue_key": "magic.fire.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000003",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000004",
+      "event": "launch",
+      "cue_key": "magic.necrotic.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000004",
+      "event": "hit",
+      "cue_key": "magic.necrotic.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000004",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000005",
+      "event": "launch",
+      "cue_key": "weapon.blade.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000005",
+      "event": "hit",
+      "cue_key": "weapon.blade.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2730000-0000-4000-8000-000000000005",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "442ba733-5af0-4680-a411-05e15adc8a4d",
+      "event": "hit",
+      "cue_key": "natural.slam.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "442ba733-5af0-4680-a411-05e15adc8a4d",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "bbe6b9f3-3a63-4ad9-97d8-5c61ed884d24",
+      "event": "launch",
+      "cue_key": "natural.claws.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "bbe6b9f3-3a63-4ad9-97d8-5c61ed884d24",
+      "event": "hit",
+      "cue_key": "natural.claws.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "bbe6b9f3-3a63-4ad9-97d8-5c61ed884d24",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "12900000-0000-4000-8000-000000000001",
+      "event": "hit",
+      "cue_key": "natural.slam.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "12900000-0000-4000-8000-000000000001",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "12900000-0000-4000-8000-000000000002",
+      "event": "hit",
+      "cue_key": "natural.slam.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "12900000-0000-4000-8000-000000000002",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "25600000-0000-4000-8000-000000000001",
+      "event": "hit",
+      "cue_key": "natural.slam.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "25600000-0000-4000-8000-000000000001",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "d7e549b7-8468-48ff-a762-850b328d9d1e",
+      "event": "launch",
+      "cue_key": "magic.breath.fire.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "d7e549b7-8468-48ff-a762-850b328d9d1e",
+      "event": "hit",
+      "cue_key": "magic.fire.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "d7e549b7-8468-48ff-a762-850b328d9d1e",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "17e13187-d809-4357-a467-4116b30eb359",
+      "event": "launch",
+      "cue_key": "magic.breath.fire.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "17e13187-d809-4357-a467-4116b30eb359",
+      "event": "hit",
+      "cue_key": "magic.fire.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "17e13187-d809-4357-a467-4116b30eb359",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b7f8278d-b902-42c7-ad04-3a8f694542e1",
+      "event": "launch",
+      "cue_key": "magic.breath.frost.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b7f8278d-b902-42c7-ad04-3a8f694542e1",
+      "event": "hit",
+      "cue_key": "magic.frost.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b7f8278d-b902-42c7-ad04-3a8f694542e1",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "3ea9a83b-20f6-4fa7-b2d7-011f1942a7bb",
+      "event": "launch",
+      "cue_key": "magic.breath.acid.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "3ea9a83b-20f6-4fa7-b2d7-011f1942a7bb",
+      "event": "hit",
+      "cue_key": "magic.acid.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "3ea9a83b-20f6-4fa7-b2d7-011f1942a7bb",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "a227f2bf-6e88-45f7-83f9-44a709aa6f2b",
+      "event": "launch",
+      "cue_key": "magic.breath.lightning.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "a227f2bf-6e88-45f7-83f9-44a709aa6f2b",
+      "event": "hit",
+      "cue_key": "magic.lightning.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "a227f2bf-6e88-45f7-83f9-44a709aa6f2b",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "523934b2-926d-491d-b209-58ba1a8f66e3",
+      "event": "launch",
+      "cue_key": "magic.breath.poison.launch"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "523934b2-926d-491d-b209-58ba1a8f66e3",
+      "event": "hit",
+      "cue_key": "magic.poison.hit"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "523934b2-926d-491d-b209-58ba1a8f66e3",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",
+      "event": "activate",
+      "cue_key": "magic.illusion.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "33c69e7d-7524-421a-9d68-521e1b7fb57a",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "fe0a8d3c-318c-4308-9ff0-3838367f75e6",
+      "event": "launch",
+      "cue_key": "weapon.blade.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "fe0a8d3c-318c-4308-9ff0-3838367f75e6",
+      "event": "hit",
+      "cue_key": "magic.radiant.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "fe0a8d3c-318c-4308-9ff0-3838367f75e6",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a66ca78f-af5f-4310-85c3-01c300e06581",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "96a02044-6274-4e68-a06e-853c206824b8",
+      "event": "launch",
+      "cue_key": "magic.lightning.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "96a02044-6274-4e68-a06e-853c206824b8",
+      "event": "hit",
+      "cue_key": "magic.lightning.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "96a02044-6274-4e68-a06e-853c206824b8",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "34518f38-b737-4a91-88ac-d5858d2d04a0",
+      "event": "launch",
+      "cue_key": "magic.area.thunder.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "34518f38-b737-4a91-88ac-d5858d2d04a0",
+      "event": "hit",
+      "cue_key": "magic.thunder.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "34518f38-b737-4a91-88ac-d5858d2d04a0",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59",
+      "event": "launch",
+      "cue_key": "magic.force.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59",
+      "event": "hit",
+      "cue_key": "magic.force.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d6a193e8-0204-4277-9a6a-75a86c2d15cd",
+      "event": "launch",
+      "cue_key": "magic.psychic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d6a193e8-0204-4277-9a6a-75a86c2d15cd",
+      "event": "hit",
+      "cue_key": "magic.psychic.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d6a193e8-0204-4277-9a6a-75a86c2d15cd",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a4491a9d-8a2d-4212-abc1-c92d3f0b85ed",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "857500cb-45e7-4cce-9fd3-61116e10814f",
+      "event": "launch",
+      "cue_key": "weapon.blade.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "857500cb-45e7-4cce-9fd3-61116e10814f",
+      "event": "hit",
+      "cue_key": "magic.necrotic.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "857500cb-45e7-4cce-9fd3-61116e10814f",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a438dcc1-94d0-420c-ae29-35b2cafd2f7a",
+      "event": "launch",
+      "cue_key": "magic.nature.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a438dcc1-94d0-420c-ae29-35b2cafd2f7a",
+      "event": "hit",
+      "cue_key": "magic.nature.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a438dcc1-94d0-420c-ae29-35b2cafd2f7a",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a438dcc1-94d0-420c-ae29-35b2cafd2f7a",
+      "event": "activate",
+      "cue_key": "magic.area.nature.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ae684edc-08c3-4f00-94ab-5c11c6b05f4e",
+      "event": "launch",
+      "cue_key": "weapon.blade.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ae684edc-08c3-4f00-94ab-5c11c6b05f4e",
+      "event": "hit",
+      "cue_key": "magic.thunder.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ae684edc-08c3-4f00-94ab-5c11c6b05f4e",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8821d595-ec03-42b8-aeaf-f50f7d72b726",
+      "event": "launch",
+      "cue_key": "magic.psychic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8821d595-ec03-42b8-aeaf-f50f7d72b726",
+      "event": "hit",
+      "cue_key": "magic.psychic.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8821d595-ec03-42b8-aeaf-f50f7d72b726",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "4291b817-6869-4f87-afae-5bd1a37aee3f",
+      "event": "healing",
+      "cue_key": "magic.healing.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "4291b817-6869-4f87-afae-5bd1a37aee3f",
+      "event": "activate",
+      "cue_key": "magic.healing.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f55f58e8-a6f9-4c97-ab6f-8e7f385591d0",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "db6433bf-f779-4b65-8766-0feffefd1930",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "c2e3cd80-463a-4a0f-a918-ed9a302efe5b",
+      "event": "activate",
+      "cue_key": "magic.nature.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "4abefac8-329b-4c70-a59a-84dca2d194d3",
+      "event": "launch",
+      "cue_key": "magic.psychic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "4abefac8-329b-4c70-a59a-84dca2d194d3",
+      "event": "hit",
+      "cue_key": "magic.psychic.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "4abefac8-329b-4c70-a59a-84dca2d194d3",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "85b05dba-9662-43a2-afb9-050ce2bf6136",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "befe393c-7463-40df-a888-d74f1e6e186c",
+      "event": "activate",
+      "cue_key": "magic.illusion.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f1eb548c-2299-4f6f-9417-6dda19ded14c",
+      "event": "launch",
+      "cue_key": "weapon.throw.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f1eb548c-2299-4f6f-9417-6dda19ded14c",
+      "event": "hit",
+      "cue_key": "magic.frost.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f1eb548c-2299-4f6f-9417-6dda19ded14c",
+      "event": "miss",
+      "cue_key": "weapon.projectile.miss"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ddb5e045-045c-45ce-ab5e-4d6a489be913",
+      "event": "healing",
+      "cue_key": "magic.healing.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ddb5e045-045c-45ce-ab5e-4d6a489be913",
+      "event": "activate",
+      "cue_key": "magic.healing.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8d98d8f6-7085-48cd-b2a4-1f18cd8470d9",
+      "event": "healing",
+      "cue_key": "magic.healing.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8d98d8f6-7085-48cd-b2a4-1f18cd8470d9",
+      "event": "activate",
+      "cue_key": "magic.healing.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "5a8cc8b7-8f5c-49d7-a66d-ba31a273c65c",
+      "event": "activate",
+      "cue_key": "magic.illusion.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8c2702cd-4cfa-4c02-919a-178bd2196ca4",
+      "event": "activate",
+      "cue_key": "magic.nature.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "487e3b6a-ac09-47dc-a7a7-08c17665c60f",
+      "event": "launch",
+      "cue_key": "magic.necrotic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "487e3b6a-ac09-47dc-a7a7-08c17665c60f",
+      "event": "hit",
+      "cue_key": "magic.necrotic.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "487e3b6a-ac09-47dc-a7a7-08c17665c60f",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "851027a9-0b6a-49d1-9f61-5eef831bf297",
+      "event": "launch",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "851027a9-0b6a-49d1-9f61-5eef831bf297",
+      "event": "hit",
+      "cue_key": "magic.radiant.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "851027a9-0b6a-49d1-9f61-5eef831bf297",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "13018914-f220-48c5-8aff-902b1fbfff73",
+      "event": "launch",
+      "cue_key": "magic.force.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "13018914-f220-48c5-8aff-902b1fbfff73",
+      "event": "hit",
+      "cue_key": "magic.force.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "13018914-f220-48c5-8aff-902b1fbfff73",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a8bb857d-cfaf-49d4-9f95-04a71a997a03",
+      "event": "activate",
+      "cue_key": "magic.poison.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "c6f10945-84d5-422f-bb70-98177142d90e",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "aa2adb3d-101b-4e70-97f1-69dc9f0debf8",
+      "event": "activate",
+      "cue_key": "magic.force.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "732c2287-dd4d-46cd-9315-67447549abfa",
+      "event": "launch",
+      "cue_key": "magic.breath.fire.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "732c2287-dd4d-46cd-9315-67447549abfa",
+      "event": "hit",
+      "cue_key": "magic.fire.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "732c2287-dd4d-46cd-9315-67447549abfa",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8e26c8a3-c545-4524-98d5-35acc5d29ca5",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "b347be07-68e7-4cd1-8a5a-222e206711c2",
+      "event": "launch",
+      "cue_key": "magic.nature.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "b347be07-68e7-4cd1-8a5a-222e206711c2",
+      "event": "hit",
+      "cue_key": "magic.nature.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "b347be07-68e7-4cd1-8a5a-222e206711c2",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "b347be07-68e7-4cd1-8a5a-222e206711c2",
+      "event": "activate",
+      "cue_key": "magic.area.nature.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "9afc306d-3f3d-4a05-8cb8-dfcd53b10b50",
+      "event": "launch",
+      "cue_key": "magic.nature.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "9afc306d-3f3d-4a05-8cb8-dfcd53b10b50",
+      "event": "hit",
+      "cue_key": "magic.nature.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "9afc306d-3f3d-4a05-8cb8-dfcd53b10b50",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "9afc306d-3f3d-4a05-8cb8-dfcd53b10b50",
+      "event": "activate",
+      "cue_key": "magic.area.nature.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a6c7db7d-f35c-4072-a5eb-29d4d58be93e",
+      "event": "activate",
+      "cue_key": "magic.psychic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "677a3abf-5fc7-472f-b789-418dcba6dd88",
+      "event": "healing",
+      "cue_key": "magic.healing.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "677a3abf-5fc7-472f-b789-418dcba6dd88",
+      "event": "activate",
+      "cue_key": "magic.healing.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "33e73716-4d61-4669-b9d4-b0e2f6fcc63f",
+      "event": "activate",
+      "cue_key": "magic.wind.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "04dc8ba1-388f-4acc-ab4b-5a6784faeeaa",
+      "event": "launch",
+      "cue_key": "weapon.blade.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "04dc8ba1-388f-4acc-ab4b-5a6784faeeaa",
+      "event": "hit",
+      "cue_key": "magic.fire.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "04dc8ba1-388f-4acc-ab4b-5a6784faeeaa",
+      "event": "miss",
+      "cue_key": "weapon.melee.miss"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3b1316f0-02e7-496b-8146-602f4bd8284a",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "bf6dbc16-d7bc-4abd-9a85-f204858b9396",
+      "event": "activate",
+      "cue_key": "magic.radiant.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d7218ea6-2062-4ef3-8680-c8f9c657fda9",
+      "event": "activate",
+      "cue_key": "magic.necrotic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "bc90dc67-8fac-41b8-b3bf-a1e218013929",
+      "event": "activate",
+      "cue_key": "magic.wind.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a931ec6f-40ad-4f5d-beb4-4893f3c66c08",
+      "event": "launch",
+      "cue_key": "magic.psychic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a931ec6f-40ad-4f5d-beb4-4893f3c66c08",
+      "event": "hit",
+      "cue_key": "magic.psychic.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a931ec6f-40ad-4f5d-beb4-4893f3c66c08",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0cee5f3c-e943-46dd-96bc-ced618b90454",
+      "event": "activate",
+      "cue_key": "magic.wind.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "b6254e87-7bd3-4aaa-b937-5b793926128b",
+      "event": "activate",
+      "cue_key": "magic.nature.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e75790cb-b03f-4a24-98a3-ef86a4756535",
+      "event": "launch",
+      "cue_key": "magic.necrotic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e75790cb-b03f-4a24-98a3-ef86a4756535",
+      "event": "hit",
+      "cue_key": "magic.necrotic.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e75790cb-b03f-4a24-98a3-ef86a4756535",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "c5a6892f-d388-4075-9da6-6cfb0989ba26",
+      "event": "activate",
+      "cue_key": "magic.area.illusion.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "b6cb9612-8dea-4949-bbd5-595bd5501beb",
+      "event": "activate",
+      "cue_key": "magic.necrotic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ac198b93-04d7-4633-831e-b0050330cccf",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "2a6cab0a-ee77-4ac4-8148-80743fc8e8ea",
+      "event": "launch",
+      "cue_key": "magic.earth.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "2a6cab0a-ee77-4ac4-8148-80743fc8e8ea",
+      "event": "hit",
+      "cue_key": "magic.earth.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "2a6cab0a-ee77-4ac4-8148-80743fc8e8ea",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "2ac56edb-1620-4cf1-9533-77f590b08afd",
+      "event": "launch",
+      "cue_key": "magic.water.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "2ac56edb-1620-4cf1-9533-77f590b08afd",
+      "event": "hit",
+      "cue_key": "magic.water.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "2ac56edb-1620-4cf1-9533-77f590b08afd",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d4a2b512-06fc-420f-ae35-1c4867d0e04e",
+      "event": "launch",
+      "cue_key": "magic.wind.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d4a2b512-06fc-420f-ae35-1c4867d0e04e",
+      "event": "hit",
+      "cue_key": "magic.wind.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d4a2b512-06fc-420f-ae35-1c4867d0e04e",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "52d5507e-4350-4dcb-a5fd-c4a11bd91b67",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0f81f3e2-ff95-4629-9292-e81332a57282",
+      "event": "launch",
+      "cue_key": "magic.psychic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0f81f3e2-ff95-4629-9292-e81332a57282",
+      "event": "hit",
+      "cue_key": "magic.psychic.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0f81f3e2-ff95-4629-9292-e81332a57282",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f0256294-e692-4695-8e29-d8288139a7ad",
+      "event": "launch",
+      "cue_key": "magic.force.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f0256294-e692-4695-8e29-d8288139a7ad",
+      "event": "hit",
+      "cue_key": "magic.force.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f0256294-e692-4695-8e29-d8288139a7ad",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d87f4507-849f-450b-b328-0198cb011587",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "656f3c28-9fdd-44c7-88df-ce032a501e52",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "40112dc3-2fc5-5ee3-ac19-0e17fb5afe37",
+      "event": "launch",
+      "cue_key": "magic.psychic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "40112dc3-2fc5-5ee3-ac19-0e17fb5afe37",
+      "event": "hit",
+      "cue_key": "magic.psychic.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "40112dc3-2fc5-5ee3-ac19-0e17fb5afe37",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "c10da6ea-2be1-5a84-af2a-a2f4a4d26efd",
+      "event": "launch",
+      "cue_key": "magic.psychic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "c10da6ea-2be1-5a84-af2a-a2f4a4d26efd",
+      "event": "hit",
+      "cue_key": "magic.psychic.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "c10da6ea-2be1-5a84-af2a-a2f4a4d26efd",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a3dceaca-ad3a-5091-aef1-5675f6468914",
+      "event": "launch",
+      "cue_key": "magic.psychic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a3dceaca-ad3a-5091-aef1-5675f6468914",
+      "event": "hit",
+      "cue_key": "magic.psychic.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a3dceaca-ad3a-5091-aef1-5675f6468914",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f475a573-09fb-59cb-a11f-0d8807a29aa1",
+      "event": "launch",
+      "cue_key": "magic.psychic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f475a573-09fb-59cb-a11f-0d8807a29aa1",
+      "event": "hit",
+      "cue_key": "magic.psychic.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f475a573-09fb-59cb-a11f-0d8807a29aa1",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e6ab931a-3566-595d-ad2e-099bf56e3139",
+      "event": "launch",
+      "cue_key": "magic.psychic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e6ab931a-3566-595d-ad2e-099bf56e3139",
+      "event": "hit",
+      "cue_key": "magic.psychic.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e6ab931a-3566-595d-ad2e-099bf56e3139",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "c44ae524-54b7-58f4-a1d0-92762302ff82",
+      "event": "activate",
+      "cue_key": "magic.necrotic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "06d80c8e-0532-5249-a8a3-8c46c2217172",
+      "event": "activate",
+      "cue_key": "magic.necrotic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "056587df-cce9-5b81-a282-38b53e463d31",
+      "event": "activate",
+      "cue_key": "magic.necrotic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "41c92f87-d495-53a0-a34d-997b3290d419",
+      "event": "activate",
+      "cue_key": "magic.necrotic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "5bbd0670-0505-5931-a1e5-184bc46c3ce7",
+      "event": "activate",
+      "cue_key": "magic.necrotic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e4ccb3c5-42c0-528e-a226-1b184b5095ee",
+      "event": "activate",
+      "cue_key": "magic.necrotic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d0ff40bd-53e0-56bb-abc7-8455c1103629",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e930597a-382e-5c5c-a685-5a285cb8fc7e",
+      "event": "activate",
+      "cue_key": "magic.ward.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f4ad27d1-60ae-5016-ab9e-8192bb9afe08",
+      "event": "launch",
+      "cue_key": "magic.water.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f4ad27d1-60ae-5016-ab9e-8192bb9afe08",
+      "event": "hit",
+      "cue_key": "magic.water.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f4ad27d1-60ae-5016-ab9e-8192bb9afe08",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "542a85a9-c355-5836-a814-79ef86c4b16e",
+      "event": "launch",
+      "cue_key": "magic.water.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "542a85a9-c355-5836-a814-79ef86c4b16e",
+      "event": "hit",
+      "cue_key": "magic.water.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "542a85a9-c355-5836-a814-79ef86c4b16e",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f163a24a-ab0c-584c-a9b1-091d7cccbfd7",
+      "event": "launch",
+      "cue_key": "magic.water.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f163a24a-ab0c-584c-a9b1-091d7cccbfd7",
+      "event": "hit",
+      "cue_key": "magic.water.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f163a24a-ab0c-584c-a9b1-091d7cccbfd7",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ba4b7687-7f38-5447-a8ff-d85a9ac707bf",
+      "event": "launch",
+      "cue_key": "magic.water.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ba4b7687-7f38-5447-a8ff-d85a9ac707bf",
+      "event": "hit",
+      "cue_key": "magic.water.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ba4b7687-7f38-5447-a8ff-d85a9ac707bf",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "647342b1-443b-5e1c-a06f-996db5939e31",
+      "event": "launch",
+      "cue_key": "magic.acid.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "647342b1-443b-5e1c-a06f-996db5939e31",
+      "event": "hit",
+      "cue_key": "magic.acid.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "647342b1-443b-5e1c-a06f-996db5939e31",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "9eb10faa-a968-5d31-a8ec-224f8962855d",
+      "event": "launch",
+      "cue_key": "magic.frost.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "9eb10faa-a968-5d31-a8ec-224f8962855d",
+      "event": "hit",
+      "cue_key": "magic.frost.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "9eb10faa-a968-5d31-a8ec-224f8962855d",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "06916d19-07d4-5594-aba6-3da14976e081",
+      "event": "launch",
+      "cue_key": "magic.fire.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "06916d19-07d4-5594-aba6-3da14976e081",
+      "event": "hit",
+      "cue_key": "magic.fire.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "06916d19-07d4-5594-aba6-3da14976e081",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "09e5726d-fdcb-552c-a8ce-23b4b887da51",
+      "event": "launch",
+      "cue_key": "magic.lightning.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "09e5726d-fdcb-552c-a8ce-23b4b887da51",
+      "event": "hit",
+      "cue_key": "magic.lightning.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "09e5726d-fdcb-552c-a8ce-23b4b887da51",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "11c92d2a-8cc3-51e1-ac70-7315dee88ec0",
+      "event": "launch",
+      "cue_key": "magic.poison.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "11c92d2a-8cc3-51e1-ac70-7315dee88ec0",
+      "event": "hit",
+      "cue_key": "magic.poison.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "11c92d2a-8cc3-51e1-ac70-7315dee88ec0",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f7fa96a0-4960-5ace-a948-b4f9da471632",
+      "event": "launch",
+      "cue_key": "magic.thunder.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f7fa96a0-4960-5ace-a948-b4f9da471632",
+      "event": "hit",
+      "cue_key": "magic.thunder.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f7fa96a0-4960-5ace-a948-b4f9da471632",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "25d868ad-0714-4fce-b5b2-2931dd5646bc",
+      "event": "activate",
+      "cue_key": "magic.force.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "b132a28e-f6c9-4832-924b-1a680390e7fb",
+      "event": "activate",
+      "cue_key": "magic.area.illusion.activate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f3098f61-1ea7-4816-9819-1903388cfe06",
+      "event": "activate",
+      "cue_key": "magic.necrotic.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3f618918-5477-4526-a123-da9dda136c7e",
+      "event": "launch",
+      "cue_key": "magic.fire.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3f618918-5477-4526-a123-da9dda136c7e",
+      "event": "hit",
+      "cue_key": "magic.fire.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3f618918-5477-4526-a123-da9dda136c7e",
+      "event": "miss",
+      "cue_key": "magic.miss.dissipate"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f8ad3edb-c0e2-4321-9a91-172bf19e2ec7",
+      "event": "activate",
+      "cue_key": "magic.wind.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "92bcd9dd-2b4f-4264-9d8f-ba16722051e0",
+      "event": "launch",
+      "cue_key": "magic.poison.launch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "92bcd9dd-2b4f-4264-9d8f-ba16722051e0",
+      "event": "hit",
+      "cue_key": "magic.poison.hit"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "92bcd9dd-2b4f-4264-9d8f-ba16722051e0",
+      "event": "miss",
+      "cue_key": "magic.miss.flyby"
+    },
+    {
+      "entity_type": "card",
+      "entity_id": "8ff10d0b-3bfb-42ea-8ae6-83d8ab96caea",
+      "event": "launch",
+      "cue_key": "weapon.crossbow.launch"
+    },
+    {
+      "entity_type": "card",
+      "entity_id": "f8254f92-c628-492e-ae8a-49ce6fc4bd43",
+      "event": "launch",
+      "cue_key": "weapon.crossbow.launch"
+    },
+    {
+      "entity_type": "card",
+      "entity_id": "1ee5aa51-f14e-42cb-bed0-d1834a790233",
+      "event": "launch",
+      "cue_key": "weapon.crossbow.launch"
+    },
+    {
+      "entity_type": "card",
+      "entity_id": "7546b502-5f6c-42f9-b1e9-4ac76c406695",
+      "event": "launch",
+      "cue_key": "weapon.crossbow.launch"
+    },
+    {
+      "entity_type": "card",
+      "entity_id": "d38f39dc-6787-45a1-8b07-1ba8f5212daa",
+      "event": "launch",
+      "cue_key": "weapon.crossbow.launch"
+    },
+    {
+      "entity_type": "card",
+      "entity_id": "d73678a7-9f90-4f9e-86af-987465a1e612",
+      "event": "launch",
+      "cue_key": "weapon.crossbow.launch"
+    },
+    {
+      "entity_type": "card",
+      "entity_id": "2b0507f3-c3f3-4d05-a432-6bdfad13a025",
+      "event": "launch",
+      "cue_key": "weapon.crossbow.launch"
+    },
+    {
+      "entity_type": "card",
+      "entity_id": "a90e83cf-8916-4c9d-ba2f-087f70f0bb33",
+      "event": "launch",
+      "cue_key": "weapon.crossbow.launch"
+    }
+  ],
+  "profiles": {
+    "weapon.slash": {
+      "launch": "weapon.blade.launch",
+      "hit": "weapon.blade.hit",
+      "miss": "weapon.melee.miss"
+    },
+    "weapon.pierce": {
+      "launch": "weapon.pierce.launch",
+      "hit": "weapon.pierce.hit",
+      "miss": "weapon.melee.miss"
+    },
+    "weapon.bash": {
+      "launch": "weapon.blunt.launch",
+      "hit": "weapon.blunt.hit",
+      "miss": "weapon.melee.miss"
+    },
+    "weapon.arrow": {
+      "launch": "weapon.bow.launch",
+      "hit": "weapon.arrow.hit",
+      "miss": "weapon.projectile.miss"
+    },
+    "natural.bite": {
+      "launch": "natural.bite.launch",
+      "hit": "natural.bite.hit",
+      "miss": "weapon.melee.miss"
+    },
+    "natural.poison-bite": {
+      "launch": "natural.bite.launch",
+      "hit": "magic.poison.hit",
+      "miss": "weapon.melee.miss"
+    },
+    "spell.fire": {
+      "launch": "magic.fire.launch",
+      "hit": "magic.fire.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.frost": {
+      "launch": "magic.frost.launch",
+      "hit": "magic.frost.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.lightning": {
+      "launch": "magic.lightning.launch",
+      "hit": "magic.lightning.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.acid": {
+      "launch": "magic.acid.launch",
+      "hit": "magic.acid.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.poison": {
+      "launch": "magic.poison.launch",
+      "hit": "magic.poison.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.radiant": {
+      "launch": "magic.radiant.launch",
+      "hit": "magic.radiant.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.necrotic": {
+      "launch": "magic.necrotic.launch",
+      "hit": "magic.necrotic.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.psychic": {
+      "launch": "magic.psychic.launch",
+      "hit": "magic.psychic.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.force": {
+      "launch": "magic.force.launch",
+      "hit": "magic.force.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.thunder": {
+      "launch": "magic.thunder.launch",
+      "hit": "magic.thunder.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.nature": {
+      "launch": "magic.nature.launch",
+      "hit": "magic.nature.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.water": {
+      "launch": "magic.water.launch",
+      "hit": "magic.water.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.earth": {
+      "launch": "magic.earth.launch",
+      "hit": "magic.earth.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.wind": {
+      "launch": "magic.wind.launch",
+      "hit": "magic.wind.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.illusion": {
+      "miss": "magic.miss.flyby"
+    },
+    "spell.healing": {
+      "healing": "magic.healing.activate",
+      "activate": "magic.healing.activate"
+    },
+    "spell.acid-splash": {
+      "launch": "magic.acid.launch",
+      "hit": "magic.acid.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.mage-hand": {
+      "launch": "magic.force.launch",
+      "hit": "magic.force.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.friends": {
+      "activate": "magic.psychic.launch"
+    },
+    "spell.shillelagh": {
+      "launch": "magic.nature.launch",
+      "hit": "magic.nature.hit",
+      "miss": "magic.miss.dissipate",
+      "activate": "magic.area.nature.activate"
+    },
+    "spell.blade-ward": {
+      "activate": "magic.ward.activate"
+    },
+    "spell.starry-wisp": {
+      "launch": "magic.radiant.launch",
+      "hit": "magic.radiant.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.mockery": {
+      "launch": "magic.psychic.launch",
+      "hit": "magic.psychic.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.frost-ray": {
+      "launch": "magic.frost.launch",
+      "hit": "magic.frost.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.true-strike": {
+      "launch": "weapon.blade.launch",
+      "hit": "magic.radiant.hit",
+      "miss": "weapon.melee.miss"
+    },
+    "spell.eldritch-blast": {
+      "launch": "magic.force.launch",
+      "hit": "magic.force.hit",
+      "miss": "magic.miss.flyby",
+      "charge": "magic.force.charge"
+    },
+    "spell.guidance": {
+      "activate": "magic.radiant.launch"
+    },
+    "spell.death-bell": {
+      "launch": "magic.necrotic.launch",
+      "hit": "magic.necrotic.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.thunderclap": {
+      "launch": "magic.area.thunder.launch",
+      "hit": "magic.thunder.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.mind-sliver": {
+      "launch": "magic.psychic.launch",
+      "hit": "magic.psychic.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.sacred-flame": {
+      "launch": "magic.radiant.launch",
+      "hit": "magic.radiant.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.radiant-word": {
+      "activate": "magic.radiant.launch"
+    },
+    "spell.message": {
+      "launch": "magic.wind.launch",
+      "hit": "magic.wind.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.resistance": {
+      "activate": "magic.ward.activate"
+    },
+    "spell.produce-flame": {
+      "activate": "magic.fire.launch"
+    },
+    "spell.elementalism": {
+      "launch": "magic.nature.launch",
+      "hit": "magic.nature.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.thorn-whip": {
+      "launch": "magic.nature.launch",
+      "hit": "magic.nature.hit",
+      "miss": "magic.miss.dissipate",
+      "activate": "magic.area.nature.activate"
+    },
+    "spell.spare-dying": {
+      "healing": "magic.healing.activate",
+      "activate": "magic.healing.activate"
+    },
+    "spell.sorcerous-burst": {
+      "launch": "magic.force.launch",
+      "hit": "magic.force.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.shocking-grasp": {
+      "launch": "magic.lightning.launch",
+      "hit": "magic.lightning.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.astral-rush": {
+      "activate": "magic.force.launch"
+    },
+    "spell.chill-touch": {
+      "launch": "magic.necrotic.launch",
+      "hit": "magic.necrotic.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.dancing-lights": {
+      "activate": "magic.illusion.activate"
+    },
+    "spell.druidcraft": {
+      "launch": "magic.nature.launch",
+      "hit": "magic.nature.hit",
+      "miss": "magic.miss.dissipate",
+      "activate": "magic.area.nature.activate"
+    },
+    "spell.fire-bolt": {
+      "launch": "magic.fire.launch",
+      "hit": "magic.fire.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.light": {
+      "activate": "magic.radiant.launch"
+    },
+    "spell.mending": {
+      "activate": "magic.force.launch"
+    },
+    "spell.minor-illusion": {
+      "activate": "magic.illusion.activate"
+    },
+    "spell.poison-spray": {
+      "launch": "magic.poison.launch",
+      "hit": "magic.poison.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.prestidigitation": {
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.thaumaturgy": {
+      "launch": "magic.radiant.launch",
+      "hit": "magic.radiant.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "action.dash": {},
+    "action.hide": {
+      "activate": "magic.illusion.activate"
+    },
+    "action.disengage": {},
+    "action.dodge": {},
+    "action.help": {},
+    "action.search": {},
+    "action.interact": {},
+    "action.move": {},
+    "action.death": {},
+    "action.recover": {
+      "healing": "magic.healing.activate"
+    },
+    "action.heal": {
+      "healing": "magic.healing.activate",
+      "activate": "magic.healing.activate"
+    },
+    "action.ward": {
+      "activate": "magic.ward.activate"
+    },
+    "action.effect": {
+      "activate": "magic.force.launch"
+    },
+    "natural.fire-bite": {
+      "launch": "natural.bite.launch",
+      "hit": "magic.fire.hit",
+      "miss": "weapon.melee.miss"
+    },
+    "natural.slam": {
+      "hit": "natural.slam.hit",
+      "miss": "weapon.melee.miss"
+    },
+    "natural.stone-slam": {
+      "hit": "magic.earth.hit",
+      "miss": "weapon.melee.miss"
+    },
+    "natural.grab": {
+      "activate": "natural.tentacle.hit"
+    },
+    "natural.claws": {
+      "launch": "natural.claws.launch",
+      "hit": "natural.claws.hit",
+      "miss": "weapon.melee.miss"
+    },
+    "natural.tail": {
+      "launch": "natural.tail.launch",
+      "hit": "natural.slam.hit",
+      "miss": "weapon.melee.miss"
+    },
+    "natural.tentacle": {
+      "launch": "natural.tentacle.launch",
+      "hit": "natural.tentacle.hit",
+      "miss": "weapon.melee.miss"
+    },
+    "natural.sting": {
+      "launch": "natural.sting.launch",
+      "hit": "natural.sting.hit",
+      "miss": "weapon.melee.miss"
+    },
+    "natural.necrotic-touch": {
+      "launch": "magic.necrotic.launch",
+      "hit": "magic.necrotic.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "weapon.poison-arrow": {
+      "launch": "weapon.bow.launch",
+      "hit": "magic.poison.hit",
+      "miss": "weapon.projectile.miss"
+    },
+    "weapon.firearm": {
+      "launch": "weapon.firearm.launch",
+      "hit": "weapon.firearm.hit",
+      "miss": "weapon.projectile.miss"
+    },
+    "weapon.throw-blade": {
+      "launch": "weapon.throw.launch",
+      "hit": "weapon.blade.hit",
+      "miss": "weapon.projectile.miss"
+    },
+    "weapon.throw-axe": {
+      "launch": "weapon.throw.launch",
+      "hit": "weapon.blade.hit",
+      "miss": "weapon.projectile.miss"
+    },
+    "weapon.throw-hammer": {
+      "launch": "weapon.throw.launch",
+      "hit": "weapon.blunt.hit",
+      "miss": "weapon.projectile.miss"
+    },
+    "weapon.throw-spear": {
+      "launch": "weapon.throw.launch",
+      "hit": "weapon.pierce.hit",
+      "miss": "weapon.projectile.miss"
+    },
+    "weapon.throw-stone": {
+      "launch": "weapon.stone.launch",
+      "hit": "weapon.stone.hit",
+      "miss": "weapon.projectile.miss"
+    },
+    "weapon.parry": {},
+    "spell.burning-hands": {
+      "launch": "magic.breath.fire.launch",
+      "hit": "magic.fire.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.thunderwave": {
+      "launch": "magic.area.thunder.launch",
+      "hit": "magic.thunder.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.sleep": {
+      "launch": "magic.psychic.launch",
+      "hit": "magic.psychic.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.grease": {
+      "launch": "magic.earth.launch",
+      "hit": "magic.earth.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.water-shaping": {
+      "launch": "magic.water.launch",
+      "hit": "magic.water.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.faerie-fire": {
+      "activate": "magic.area.illusion.activate"
+    },
+    "spell.entangle": {
+      "launch": "magic.nature.launch",
+      "hit": "magic.nature.hit",
+      "miss": "magic.miss.dissipate",
+      "activate": "magic.area.nature.activate"
+    },
+    "spell.fog-cloud": {
+      "launch": "magic.wind.launch",
+      "hit": "magic.wind.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.color-spray": {
+      "activate": "magic.area.illusion.activate"
+    },
+    "spell.hadar-arms": {
+      "launch": "magic.necrotic.launch",
+      "hit": "magic.necrotic.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.searing-smite": {
+      "launch": "weapon.blade.launch",
+      "hit": "magic.fire.hit",
+      "miss": "weapon.melee.miss"
+    },
+    "spell.wrathful-smite": {
+      "launch": "weapon.blade.launch",
+      "hit": "magic.necrotic.hit",
+      "miss": "weapon.melee.miss"
+    },
+    "spell.thunderous-smite": {
+      "launch": "weapon.blade.launch",
+      "hit": "magic.thunder.hit",
+      "miss": "weapon.melee.miss"
+    },
+    "spell.divine-smite": {
+      "launch": "weapon.blade.launch",
+      "hit": "magic.radiant.hit",
+      "miss": "weapon.melee.miss"
+    },
+    "spell.curse": {
+      "activate": "magic.necrotic.launch"
+    },
+    "spell.blessing": {
+      "activate": "magic.radiant.launch"
+    },
+    "spell.charm": {
+      "activate": "magic.psychic.launch"
+    },
+    "spell.command": {
+      "launch": "magic.psychic.launch",
+      "hit": "magic.psychic.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.dissonant-whispers": {
+      "launch": "magic.psychic.launch",
+      "hit": "magic.psychic.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.hellish-rebuke": {
+      "launch": "magic.fire.launch",
+      "hit": "magic.fire.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.ray-of-sickness": {
+      "launch": "magic.poison.launch",
+      "hit": "magic.poison.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.witch-bolt": {
+      "launch": "magic.lightning.launch",
+      "hit": "magic.lightning.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.guiding-bolt": {
+      "launch": "magic.radiant.launch",
+      "hit": "magic.radiant.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.magic-missile": {
+      "launch": "magic.force.launch",
+      "hit": "magic.force.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.chromatic-orb": {
+      "launch": "magic.force.launch",
+      "hit": "magic.force.hit",
+      "miss": "magic.miss.flyby"
+    },
+    "spell.ice-knife": {
+      "launch": "weapon.throw.launch",
+      "hit": "magic.frost.hit",
+      "miss": "weapon.projectile.miss"
+    },
+    "spell.hail-of-thorns": {
+      "launch": "magic.nature.launch",
+      "hit": "magic.nature.hit",
+      "miss": "magic.miss.dissipate",
+      "activate": "magic.area.nature.activate"
+    },
+    "spell.ensnaring-strike": {
+      "launch": "magic.nature.launch",
+      "hit": "magic.nature.hit",
+      "miss": "magic.miss.dissipate",
+      "activate": "magic.area.nature.activate"
+    },
+    "spell.cure-wounds": {
+      "healing": "magic.healing.activate",
+      "activate": "magic.healing.activate"
+    },
+    "spell.healing-word": {
+      "healing": "magic.healing.activate",
+      "activate": "magic.healing.activate"
+    },
+    "spell.sanctuary": {
+      "activate": "magic.ward.activate"
+    },
+    "spell.shield": {
+      "activate": "magic.ward.activate"
+    },
+    "spell.mage-armor": {
+      "activate": "magic.ward.activate"
+    },
+    "spell.armor-of-agathys": {
+      "activate": "magic.ward.activate"
+    },
+    "spell.false-life": {
+      "activate": "magic.necrotic.launch"
+    },
+    "spell.feather-fall": {
+      "activate": "magic.wind.launch"
+    },
+    "spell.mobility": {
+      "activate": "magic.wind.launch"
+    },
+    "spell.detect": {
+      "activate": "magic.force.launch"
+    },
+    "spell.detect-poison": {
+      "activate": "magic.poison.launch"
+    },
+    "spell.detect-presence": {
+      "activate": "magic.radiant.launch"
+    },
+    "spell.hunter-mark": {
+      "activate": "magic.nature.launch"
+    },
+    "spell.goodberry": {
+      "healing": "magic.healing.activate",
+      "activate": "magic.healing.activate"
+    },
+    "spell.nature-communion": {
+      "activate": "magic.nature.launch"
+    },
+    "spell.familiar": {
+      "activate": "magic.force.launch"
+    },
+    "spell.floating-disk": {
+      "activate": "magic.ward.activate"
+    },
+    "spell.unseen-servant": {
+      "launch": "magic.force.launch",
+      "hit": "magic.force.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "spell.alarm": {
+      "activate": "magic.ward.activate"
+    },
+    "spell.purify": {
+      "healing": "magic.healing.activate",
+      "activate": "magic.healing.activate"
+    },
+    "spell.knowledge": {
+      "activate": "magic.radiant.launch"
+    },
+    "spell.illusory-script": {
+      "activate": "magic.illusion.activate"
+    },
+    "spell.silent-image": {
+      "activate": "magic.illusion.activate"
+    },
+    "spell.disguise": {
+      "activate": "magic.illusion.activate"
+    },
+    "breath.fire": {
+      "launch": "magic.breath.fire.launch",
+      "hit": "magic.fire.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "breath.fire-line": {
+      "launch": "magic.breath.fire.launch",
+      "hit": "magic.fire.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "breath.frost": {
+      "launch": "magic.breath.frost.launch",
+      "hit": "magic.frost.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "breath.frost-line": {
+      "launch": "magic.breath.frost.launch",
+      "hit": "magic.frost.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "breath.acid": {
+      "launch": "magic.breath.acid.launch",
+      "hit": "magic.acid.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "breath.acid-line": {
+      "launch": "magic.breath.acid.launch",
+      "hit": "magic.acid.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "breath.lightning": {
+      "launch": "magic.breath.lightning.launch",
+      "hit": "magic.lightning.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "breath.lightning-line": {
+      "launch": "magic.breath.lightning.launch",
+      "hit": "magic.lightning.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "breath.poison": {
+      "launch": "magic.breath.poison.launch",
+      "hit": "magic.poison.hit",
+      "miss": "magic.miss.dissipate"
+    },
+    "breath.poison-line": {
+      "launch": "magic.breath.poison.launch",
+      "hit": "magic.poison.hit",
+      "miss": "magic.miss.dissipate"
+    }
+  },
+  "defaults": {
+    "diceSingle": "dice.single",
+    "diceRoll": "dice.roll"
+  },
+  "music": {
+    "site": "music.site",
+    "run": "music.run",
+    "battles": {
+      "forest-v2": "music.battle.forest-v2",
+      "crypt-v2": "music.battle.crypt-v2",
+      "goblin-camp-v2": "music.battle.goblin-camp-v2",
+      "tavern-v2": "music.battle.tavern-v2",
+      "sanctuary-v1": "music.battle.sanctuary-v1",
+      "quarry-v1": "music.battle.quarry-v1",
+      "cavern-v1": "music.battle.cavern-v1",
+      "snow-pass-v1": "music.battle.snow-pass-v1",
+      "clearing-v1": "music.battle.clearing-v1",
+      "courtyard-small-v1": "music.battle.courtyard-small-v1",
+      "watchpost-rooms-v1": "music.battle.watchpost-rooms-v1",
+      "crypt-annex-rooms-v1": "music.battle.crypt-annex-rooms-v1",
+      "urvin-archive-v1": "music.battle.urvin-archive-v1",
+      "urvin-causeway-v1": "music.battle.urvin-causeway-v1",
+      "urvin-court-v1": "music.battle.urvin-court-v1"
+    }
+  },
+  "bindingOverrides": [
+    {
+      "entity_type": "card",
+      "entity_id": "8ff10d0b-3bfb-42ea-8ae6-83d8ab96caea",
+      "event": "launch",
+      "cue_key": "weapon.crossbow.launch"
+    },
+    {
+      "entity_type": "card",
+      "entity_id": "f8254f92-c628-492e-ae8a-49ce6fc4bd43",
+      "event": "launch",
+      "cue_key": "weapon.crossbow.launch"
+    },
+    {
+      "entity_type": "card",
+      "entity_id": "1ee5aa51-f14e-42cb-bed0-d1834a790233",
+      "event": "launch",
+      "cue_key": "weapon.crossbow.launch"
+    },
+    {
+      "entity_type": "card",
+      "entity_id": "7546b502-5f6c-42f9-b1e9-4ac76c406695",
+      "event": "launch",
+      "cue_key": "weapon.crossbow.launch"
+    },
+    {
+      "entity_type": "card",
+      "entity_id": "d38f39dc-6787-45a1-8b07-1ba8f5212daa",
+      "event": "launch",
+      "cue_key": "weapon.crossbow.launch"
+    },
+    {
+      "entity_type": "card",
+      "entity_id": "d73678a7-9f90-4f9e-86af-987465a1e612",
+      "event": "launch",
+      "cue_key": "weapon.crossbow.launch"
+    },
+    {
+      "entity_type": "card",
+      "entity_id": "2b0507f3-c3f3-4d05-a432-6bdfad13a025",
+      "event": "launch",
+      "cue_key": "weapon.crossbow.launch"
+    },
+    {
+      "entity_type": "card",
+      "entity_id": "a90e83cf-8916-4c9d-ba2f-087f70f0bb33",
+      "event": "launch",
+      "cue_key": "weapon.crossbow.launch"
+    }
+  ]
+}

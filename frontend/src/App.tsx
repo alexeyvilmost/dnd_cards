@@ -103,10 +103,11 @@ function RulesAuthorityBoundary({ ready, children }: { ready: boolean; children:
   );
 }
 
-function App() {
+const isRulesLabPath = (path: string) => path === '/rules-lab' || path.startsWith('/rules-lab/');
+
+function AppContent() {
   const location = useLocation();
-  const isRulesLab = location.pathname === '/rules-lab'
-    || location.pathname.startsWith('/rules-lab/');
+  const isRulesLab = isRulesLabPath(location.pathname);
   const isPaperSheet = /^\/paper-sheet(?:\/[^/]+)?\/?$/.test(location.pathname);
   const isHome = location.pathname === '/';
   const [conditionsReady, setConditionsReady] = useState(false);
@@ -173,7 +174,6 @@ function App() {
   // Reuse the catalog's previews and detail host without bootstrapping game rules.
   if (isPaperSheet) {
     return (
-      <AuthProvider>
         <ErrorBoundary resetKey={location.pathname}>
           <CharacterFormulaRoot>
             <PinModeProvider>
@@ -187,7 +187,6 @@ function App() {
             </PinModeProvider>
           </CharacterFormulaRoot>
         </ErrorBoundary>
-      </AuthProvider>
     );
   }
 
@@ -214,8 +213,6 @@ function App() {
         )}
       </div>
     )}
-    <AuthProvider>
-      <AudioDirector/>
       <ToastProvider>
         <CharacterV3AccessNotice />
         <CharacterFormulaRoot>
@@ -426,11 +423,9 @@ function App() {
         
         {/* Настройки сайта */}
         <Route path="/settings" element={
-          <ProtectedRoute>
-            <Layout>
-              <Settings />
-            </Layout>
-          </ProtectedRoute>
+          <Layout>
+            <Settings />
+          </Layout>
         } />
 
         <Route path="/initiative" element={
@@ -569,9 +564,16 @@ function App() {
         </DiceDialogProvider>
         </CharacterFormulaRoot>
       </ToastProvider>
-    </AuthProvider>
     </>
   );
+}
+
+function App() {
+  const {pathname} = useLocation();
+  if (isRulesLabPath(pathname)) return <AppContent/>;
+  // Keep one director mounted across the normal and paper-sheet branches.
+  // The isolated rules lab still unmounts it and stops any previous theme.
+  return <AuthProvider><AudioDirector/><AppContent/></AuthProvider>;
 }
 
 export default App;

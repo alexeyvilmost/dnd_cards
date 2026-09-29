@@ -1,17 +1,34 @@
-import {useEffect,useRef} from 'react';
+import {useEffect,useState,useSyncExternalStore} from 'react';
 import type {SoloCombatState} from '../solo-combat/types';
 import type {CombatBeat} from '../solo-combat/presentation';
-import {playCombatBeat,enteredTerrainSounds} from './combatSounds';
-import {soundPlayer} from './player';
-export function useCombatAudio(state:SoloCombatState|null,playing:CombatBeat|null,opening:SoloCombatState|null,blocked:boolean){
- const previous=useRef<SoloCombatState|null>(null),ending=useRef<'victory'|'defeat'|null>(null);
- useEffect(()=>{if(opening)soundPlayer.play('combat.start',`initiative:${opening.world.id}:${opening.log[0]?.id}`);},[opening]);
- useEffect(()=>{if(state&&playing)playCombatBeat(state,playing);},[state,playing]);
+import {combatBeatAudioPlan} from './combatSounds';
+import {soundPlayer,type ScheduledSound} from './player';
+
+function useReducedMotion(){
+ const [reduced,setReduced]=useState(()=>typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches);
  useEffect(()=>{
-  const old=previous.current;previous.current=state;
-  if(!state||!old)return;
-  for(const cue of enteredTerrainSounds(old,state))soundPlayer.play(cue,`${cue}:${state.boardRevision}:${state.log.at(-1)?.id}`);
-  if(old.outcome==='active'&&state.outcome!=='active')ending.current=state.outcome;
- },[state]);
- useEffect(()=>{if(!blocked&&ending.current&&state){const result=ending.current;ending.current=null;soundPlayer.play(`combat.${result}`,`outcome:${state.characterId}:${state.log.at(-1)?.id}`);soundPlayer.setMusic('music.camp');}},[blocked,state]);
+  if(typeof matchMedia!=='function')return;
+  const media=matchMedia('(prefers-reduced-motion: reduce)'),change=()=>setReduced(media.matches);
+  change();media.addEventListener('change',change);return()=>media.removeEventListener('change',change);
+ },[]);
+ return reduced;
+}
+
+/** Only the currently displayed accepted beat has audio. Loading history,
+ * movement, initiative and encounter outcomes do not manufacture effects. */
+export function useCombatAudio(state:SoloCombatState|null,playing:CombatBeat|null,_opening:SoloCombatState|null,_blocked:boolean){
+ const catalog=useSyncExternalStore(soundPlayer.subscribeCatalog,soundPlayer.getCatalog,soundPlayer.getCatalog);
+ const reducedMotion=useReducedMotion();
+ const signature=JSON.stringify(state&&playing?combatBeatAudioPlan(state,playing,catalog,reducedMotion):[]);
+ // A board refresh with the same accepted beat must not restart its phase clock.
+ useEffect(()=>soundPlayer.schedule(JSON.parse(signature) as ScheduledSound[]),[signature]);
+ const map=state?.battleMap;
+ const mapId=map?.generation?.templateId??map?.id;
+ const music=mapId?catalog.music?.battles?.[mapId]:undefined;
+ // The combat page remains visible through the final blow, reward dialog and
+ // defeat screen. Only unmounting that page releases its music priority.
+ // A transient null state while loading must not replace a visible map theme.
+ const hasState=state!==null;
+ useEffect(()=>{if(hasState)soundPlayer.setCombatMusic(music??null);},[hasState,music]);
+ useEffect(()=>()=>soundPlayer.setCombatMusic(undefined),[]);
 }
