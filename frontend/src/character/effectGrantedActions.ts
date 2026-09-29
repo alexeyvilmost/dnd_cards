@@ -23,6 +23,7 @@ export async function loadEffectGrantedActionClosure(input: {
   const actionReferences = new Set(input.grantedActions.flatMap(row => [row.action.id, row.action.card_number].filter(Boolean)));
   const effects = new Map<string, PassiveEffect>();
   const effectReferences = new Set<string>();
+  const resolutionErrors: unknown[] = [];
   const pending: Array<{ mechanics: Dict; name: string; grantsActions: boolean }> = [];
   for (const mechanics of [...input.roots, ...input.grantedActions.map(row => row.action.mechanics)]) {
     if (mechanics) pending.push({ mechanics, name: '', grantsActions: false });
@@ -37,7 +38,16 @@ export async function loadEffectGrantedActionClosure(input: {
     for (const reference of collectGrantEffectSlugs(entry.mechanics)) {
       if (effectReferences.has(reference)) continue;
       effectReferences.add(reference);
-      const effect = await input.resolveEffect(reference);
+      let effect: PassiveEffect;
+      try {
+        effect = await input.resolveEffect(reference);
+      } catch (error) {
+        // The frozen catalog records each missing reference while resolving.
+        // Finish the known branches so siblings are requested in one batch,
+        // then fail the build rather than accepting an incomplete closure.
+        resolutionErrors.push(error);
+        continue;
+      }
       effects.set(reference, effect);
       if (effect.mechanics) pending.push({ mechanics: effect.mechanics, name: effect.name, grantsActions: true });
     }
@@ -45,7 +55,13 @@ export async function loadEffectGrantedActionClosure(input: {
     for (const reference of collectGrantActionSlugs(entry.mechanics, input.characterLevel)) {
       if (actionReferences.has(reference)) continue;
       actionReferences.add(reference);
-      const action = await input.resolveAction(reference);
+      let action: Action;
+      try {
+        action = await input.resolveAction(reference);
+      } catch (error) {
+        resolutionErrors.push(error);
+        continue;
+      }
       if (actions.has(action.id)) continue;
       const references = [...new Set([reference, action.id, action.card_number].filter((value): value is string => Boolean(value)))];
       const projected: Action = { ...action, mechanics: {
@@ -56,5 +72,6 @@ export async function loadEffectGrantedActionClosure(input: {
       pending.push({ mechanics: projected.mechanics!, name: action.name, grantsActions: false });
     }
   }
+  if (resolutionErrors.length) throw resolutionErrors[0];
   return { grantedActions: [...actions.values()], effects };
 }

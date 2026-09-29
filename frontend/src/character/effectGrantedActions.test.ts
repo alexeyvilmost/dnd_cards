@@ -69,6 +69,28 @@ describe('temporary library action closure', () => {
     expect(resolver).toHaveBeenCalledTimes(1);
   });
 
+  it.each(['effect', 'action'] as const)('keeps a failed %s lookup fatal after discovering the other reachable dependencies', async kind => {
+    const failure = new Error('Library lookup failed');
+    const effectReferences = ['EFFECT-unavailable', 'EFFECT-available'];
+    const actionReferences = ['ACT-unavailable', 'ACT-available'];
+    const resolveEffect = vi.fn(async (reference: string) => {
+      if (kind === 'effect' && reference === effectReferences[0]) throw failure;
+      return {id: `${reference}-id`, card_number: reference, name: reference, mechanics: {
+        effects: [{resolution: 'auto', result: actionReferences.map(value => ({kind: 'grant_action', value}))}],
+      }} as unknown as PassiveEffect;
+    });
+    const resolveAction = vi.fn(async (reference: string) => {
+      if (kind === 'action' && reference === actionReferences[0]) throw failure;
+      return {id: `${reference}-id`, card_number: reference, name: reference, mechanics: {effects: []}} as unknown as Action;
+    });
+    await expect(loadEffectGrantedActionClosure({
+      roots: [{effects: [{resolution: 'auto', result: effectReferences.map(value => ({kind: 'grant_effect', value}))}]}],
+      grantedActions: [], characterLevel: 1, resolveAction, resolveEffect,
+    })).rejects.toBe(failure);
+    expect(resolveEffect.mock.calls.map(([reference]) => reference)).toEqual(effectReferences);
+    expect(resolveAction.mock.calls.map(([reference]) => reference)).toEqual(actionReferences);
+  });
+
   it('does not mistake a same-name effect or expired grant for authority', () => {
     const state = runtime();
     const mechanics = { requires_runtime_action_grant: ['ACT-right'] };

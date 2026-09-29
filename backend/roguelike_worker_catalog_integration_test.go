@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"errors"
 	"os"
 	"testing"
@@ -71,31 +73,67 @@ func TestRoguelikeCatalogResolvesEnglishSpellSlugFromSnapshot(t *testing.T) {
 	}
 }
 
-// Exercises the user's previously failing Urvin encounter without committing
-// any run state: initialization only reads the snapshot and calls the worker.
+// Exercises a captured encounter without committing any run state. A run file
+// permits replaying a fresh production capture against a local catalog snapshot
+// without importing its character/run rows into the local database.
 func TestRoguelikeExistingRunCanInitializeCombatReadOnly(t *testing.T) {
 	dsn := os.Getenv("ROGUELIKE_ALIAS_TEST_DATABASE_URL")
 	runID := os.Getenv("ROGUELIKE_WORKER_INIT_RUN_ID")
+	runFile := os.Getenv("ROGUELIKE_WORKER_INIT_RUN_FILE")
 	workerURL := os.Getenv("RULES_WORKER_URL")
 	token := os.Getenv("RULES_WORKER_TOKEN")
-	if dsn == "" || runID == "" || workerURL == "" || token == "" {
+	if dsn == "" || (runID == "" && runFile == "") || workerURL == "" || token == "" {
 		t.Skip("local snapshot run and worker configuration are required")
 	}
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
 	if err != nil {
 		t.Fatal(err)
 	}
-	var run RoguelikeRun
-	if err = db.Preload("Character").First(&run, "id = ?", runID).Error; err != nil {
+	sqlDB, err := db.DB()
+	if err != nil {
 		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = sqlDB.Close() })
+	readOnly := db.Begin(&sql.TxOptions{ReadOnly: true})
+	if readOnly.Error != nil {
+		t.Fatal(readOnly.Error)
+	}
+	defer readOnly.Rollback()
+	var run RoguelikeRun
+	if runFile != "" {
+		captured, readErr := os.ReadFile(runFile)
+		if readErr != nil {
+			t.Fatal(readErr)
+		}
+		if err = json.Unmarshal(captured, &run); err != nil {
+			t.Fatal(err)
+		}
+	} else {
+		if err = readOnly.Preload("Character").First(&run, "id = ?", runID).Error; err != nil {
+			t.Fatal(err)
+		}
+		if roguelikePartySize(&run) > 1 {
+			if err = loadRoguelikeParty(readOnly, &run, false); err != nil {
+				t.Fatal(err)
+			}
+		}
 	}
 	if run.Character == nil || run.Phase != RoguelikePhaseCombat {
 		t.Fatalf("expected existing run in combat with its clone loaded; phase=%s character=%v", run.Phase, run.Character != nil)
 	}
 	run.Character.AccessMode = characterV3AccessOwner
-	_, _, err = initializeRoguelikeWorker(context.Background(), db,
+	for _, character := range run.Characters {
+		if character == nil {
+			t.Fatal("captured party contains a missing character")
+		}
+		character.AccessMode = characterV3AccessOwner
+	}
+	result, catalog, err := initializeRoguelikeWorker(context.Background(), readOnly,
 		roguelikeWorkerClient{URL: workerURL, Token: token}, &run, "read-only-init-regression", "")
 	if err != nil {
 		t.Fatal(err)
+	}
+	if result.Status != "ready" || catalog["artifactHash"] == nil {
+		t.Fatalf("initialization did not return a ready frozen catalog: status=%s", result.Status)
 	}
 }
