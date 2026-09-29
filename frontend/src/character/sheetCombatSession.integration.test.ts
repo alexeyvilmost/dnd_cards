@@ -12,13 +12,13 @@ import type {
   CharacterRuntimeCommandRequest,
   CharacterRuntimeCommandResponse,
 } from './api';
-import { buildSheetCombatDeclaration } from './sheetCombatDeclaration';
+import { buildSheetCombatDeclaration, UNARMED_STRIKE_CHOICE_ID } from './sheetCombatDeclaration';
 import { loadCertifiedSheetCombatCatalog } from './sheetCombatCertifiedCatalog';
-import { applyUnarmedDamageProfileToAction } from '../rules-core/fightingStyleComplexPrimitives';
 import type { SheetCanonicalRuntime } from './sheetCanonicalWorld';
 import {
   acceptedSheetCombatCharacters,
   advanceSheetCombatTurn,
+  assertLiveSheetCombatSession,
   assertCertifiedSheetCombatSession,
   clearSheetCombatSession,
   commitPreparedSheetCombat,
@@ -283,26 +283,109 @@ describe('CharacterV3 atomic pending-combat session', () => {
     expect(hasSheetCombatSession(clearSheetCombatSession(turnState))).toBe(false);
     expect(turnState).toHaveProperty(SHEET_COMBAT_SESSION_KEY);
   });
-  it('shares an actor-neutral unarmed template across different die and ability profiles', async () => {
+  it('shares a live unarmed action across actor-owned damage profiles', async () => {
     const certified = await loadCertifiedSheetCombatCatalog();
     const template = certified.catalog.listActions!().find(a => primitive(a) === 'unarmed_strike')!;
     expect(template).toBeDefined();
-    const participants = [IDS.source, IDS.target].map((id, index) => {
-      const value = actor('fighter', id);
-      const profile = { effects: [{ resolution: 'auto', result: [{
-        kind: 'unarmed_damage_profile', dice: index ? '1d8' : '1d6',
-        ability: index ? 'str' : 'dex', damage_type: 'bludgeoning', source: `profile-${index}`,
-      }] }] };
-      value.passives = [profile];
-      value.capabilities.actionIds = [template.id];
-      const bound = applyUnarmedDamageProfileToAction(template, [profile], { holdingWeaponOrShield: false });
-      return { character: character(value), canonical: canonical(value, [bound]) };
+    const profile = { effects: [{ resolution: 'auto', result: [{
+      kind: 'unarmed_damage_profile', dice: '1d8', ability: 'str',
+      damage_type: 'bludgeoning', source: 'test-profile',
+    }] }] };
+    const damage: number[] = [];
+    for (const sourceHasProfile of [true, false]) {
+      const participants = [IDS.source, IDS.target].map((id, index) => {
+        const value = actor('fighter', id);
+        value.passives = (index === 0) === sourceHasProfile ? [profile] : [];
+        value.capabilities.actionIds = [template.id];
+        value.ac = 1;
+        value.runtime.hp = { current: 100, max: 100, temp: 0 };
+        return { character: character(value), canonical: canonical(value, [template]) };
+      });
+      const session = await createSheetCombatSession({ source: participants[0], targets: [participants[1]] });
+      expect(session.catalogActions).toHaveLength(1);
+      expect(session.catalogActions[0].mechanics).toEqual(template.mechanics);
+      const restored = readSheetCombatSession(writeSheetCombatSession({}, session), IDS.source, 0)!;
+      expect(() => assertLiveSheetCombatSession(restored)).not.toThrow();
+      const next = executeSheetCombatAction({
+        session: restored,
+        actorId: IDS.source,
+        actionId: template.id,
+        declaration: {
+          sceneMode: 'encounter',
+          targetIds: [IDS.target],
+          factsByTarget: { [IDS.target]: targetFacts(IDS.target, 5)[0] },
+          choices: { [UNARMED_STRIKE_CHOICE_ID]: 'damage' },
+        },
+        commandId: sourceHasProfile
+          ? '13131313-1313-4313-8313-131313131313'
+          : '14141414-1414-4414-8414-141414141414',
+        rng: () => 0.5,
+      });
+      damage.push(100 - next.nextWorld.actors[IDS.target].runtime.hp.current);
+    }
+    expect(damage[0]).toBeGreaterThan(damage[1]);
+  });
+
+  it('accepts two compiled spell entities with live identity metadata and freezes their catalog', async () => {
+    const source = seed('wizard', IDS.source);
+    const actorState = source.canonical.world.actors[IDS.source];
+    const updated = clone([...source.canonical.actions]);
+    const spellActions = updated.filter((candidate) => (
+      ['burning_hands_objects', 'magic_missile'].includes(primitive(candidate) ?? '')
+    ));
+    expect(spellActions).toHaveLength(2);
+    for (const candidate of spellActions) {
+      candidate.spell = { ...candidate.spell!, entityId: candidate.sourceEntityIds[0] };
+    }
+    source.canonical = canonical(actorState, updated);
+    const session = await createSheetCombatSession({ source, targets: [] });
+    expect(session.catalogAuthority).toBe('live');
+    for (const candidate of spellActions) {
+      expect(session.catalog.getAction(candidate.id)?.spell?.entityId).toBe(candidate.sourceEntityIds[0]);
+    }
+    const saved = writeSheetCombatSession({}, session);
+    expect(() => readSheetCombatSession(saved, IDS.source, 0)).not.toThrow();
+    const tampered = clone(saved);
+    const envelope = tampered[SHEET_COMBAT_SESSION_KEY] as { catalogActions: RuleActionDefinition[] };
+    envelope.catalogActions.find((candidate) => candidate.id === spellActions[0].id)!.spell!.entityId = IDS.target;
+    expect(() => readSheetCombatSession(tampered, IDS.source, 0))
+      .toThrow('live catalog or ruleset is inconsistent');
+  });
+
+  it('drops completed L1 snapshots but keeps pending decisions under their original certificate', async () => {
+    const source = seed('wizard', IDS.source);
+    const live = await createSheetCombatSession({
+      source, targets: [], sceneActors: [createSheetSceneTargetActor(TRAINING_DUMMY)],
     });
-    const session = await createSheetCombatSession({ source: participants[0], targets: [participants[1]] });
-    expect(session.catalogActions).toHaveLength(1);
-    expect(session.catalogActions[0].mechanics).toEqual(template.mechanics);
-    const restored = readSheetCombatSession(writeSheetCombatSession({}, session), IDS.source, 0)!;
-    expect(restored.world.actors[IDS.source].passives).not.toEqual(restored.world.actors[IDS.target].passives);
+    const certified = await loadCertifiedSheetCombatCatalog();
+    const catalogActions = [...live.catalogActions].map((action) => certified.catalog.getAction(action.id)!);
+    expect(catalogActions.every(Boolean)).toBe(true);
+    const legacy = {
+      ...live,
+      catalogAuthority: undefined,
+      catalogManifestHash: undefined,
+      catalogActions,
+      world: { ...live.world, ruleset: certified.ruleset },
+      catalog: {
+        getAction: (id: string) => catalogActions.find((action) => action.id === id),
+        listActions: () => catalogActions,
+      },
+    };
+    expect(readSheetCombatSession(writeSheetCombatSession({}, legacy), IDS.source, 0, certified.ruleset))
+      .toBeNull();
+    const thunderwave = action('area_object_push');
+    const pending = executeSheetCombatAction({
+      session: legacy,
+      actorId: IDS.source,
+      actionId: thunderwave.id,
+      declaration: declaration(source, thunderwave, TRAINING_DUMMY_TARGET_ID),
+      commandId: '15151515-1515-4515-8515-151515151515',
+      rng: () => 0,
+    });
+    const restored = readSheetCombatSession(writeSheetCombatSession({}, {
+      ...legacy, world: pending.nextWorld,
+    }), IDS.source, 0, certified.ruleset)!;
+    expect(restored.catalogAuthority).toBeUndefined();
     expect(() => assertCertifiedSheetCombatSession(restored, certified)).not.toThrow();
   });
   it('drops a completed continuation after an ordinary sheet revision changes', async () => {
@@ -314,21 +397,13 @@ describe('CharacterV3 atomic pending-combat session', () => {
     expect(readSheetCombatSession(turnState, IDS.source, 1)).toBeNull();
   });
 
-  it('drops a completed continuation from a previous certified release', async () => {
+  it('drops a completed continuation from another live runtime release', async () => {
     const source = seed('wizard', IDS.source);
     const session = await createSheetCombatSession({ source, targets: [] });
     const turnState = writeSheetCombatSession({}, session);
-    const nextRuleset = {
-      ...fixture.source.ruleset,
-      contentHash: 'sha256:next-certified-release',
-    };
-
-    expect(readSheetCombatSession(
-      turnState,
-      IDS.source,
-      0,
-      nextRuleset,
-    )).toBeNull();
+    const envelope = turnState[SHEET_COMBAT_SESSION_KEY] as { world: { ruleset: RulesetReference } };
+    envelope.world.ruleset.releaseId = 'sheet:2024:outdated-runtime';
+    expect(readSheetCombatSession(turnState, IDS.source, 0)).toBeNull();
   });
 
   it('fails closed when a sheet changes during a pending target decision', async () => {
@@ -351,15 +426,14 @@ describe('CharacterV3 atomic pending-combat session', () => {
       ...session,
       world: pending.nextWorld,
     });
+    const staleRelease = clone(turnState);
+    const envelope = staleRelease[SHEET_COMBAT_SESSION_KEY] as { world: { ruleset: RulesetReference } };
+    envelope.world.ruleset.releaseId = 'sheet:2024:outdated-runtime';
 
     expect(() => readSheetCombatSession(turnState, IDS.source, 1))
       .toThrow('Ожидающее боевое решение устарело');
-    expect(() => readSheetCombatSession(
-      turnState,
-      IDS.source,
-      0,
-      { ...fixture.source.ruleset, contentHash: 'sha256:next-certified-release' },
-    )).toThrow('Ожидающее боевое решение относится к другой версии правил');
+    expect(() => readSheetCombatSession(staleRelease, IDS.source, 0))
+      .toThrow('Ожидающее боевое решение относится к другой версии правил');
   });
 
   it('runs Thunderwave against a scene target and persists only the source sheet', async () => {
@@ -433,10 +507,7 @@ describe('CharacterV3 atomic pending-combat session', () => {
       content_hash: opened.transition.nextWorld.ruleset.contentHash,
       errata_version: opened.transition.nextWorld.ruleset.errataVersion,
     });
-    // The checked-in certification artifact is regenerated from the same
-    // certified release that pins every newly opened session.
-    expect(prepared.request.ruleset_ref.content_hash)
-      .toBe(fixture.source.ruleset.contentHash);
+    expect(prepared.request.ruleset_ref.content_hash).toMatch(/^sha256:[0-9a-f]{64}$/);
     expect(prepared.request.participants.map((row) => row.character_id)).toEqual([
       IDS.source,
       IDS.target,
@@ -596,11 +667,10 @@ describe('CharacterV3 atomic pending-combat session', () => {
     })).toThrow('is not certified to execute');
   });
 
-  it('fails closed when a reloaded actor grant drifts from the certified release', async () => {
+  it('fails closed when a reloaded actor grant drifts from the frozen live manifest', async () => {
     const source = seed('wizard', IDS.source);
     const target = seed('fighter', IDS.target);
     const session = await createSheetCombatSession({ source, targets: [target] });
-    const certified = await loadCertifiedSheetCombatCatalog();
     const drifted: typeof session = {
       ...session,
       world: clone(session.world),
@@ -612,7 +682,7 @@ describe('CharacterV3 atomic pending-combat session', () => {
     ));
     if (!grant) throw new Error('Expected a certified spell grant in the wizard fixture');
     grant.slotResource = 'invented_slot_namespace';
-    expect(() => assertCertifiedSheetCombatSession(drifted, certified))
-      .toThrow('differs from certified access');
+    expect(() => assertLiveSheetCombatSession(drifted))
+      .toThrow('live catalog or ruleset is inconsistent');
   });
 });

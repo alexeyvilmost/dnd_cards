@@ -12,6 +12,7 @@ import {
   type WorldState,
 } from '../rules-core/domain';
 import {
+  canonicalSha256Sync,
   canonicalStringify,
   createLogicalClock,
   createSequentialIdFactory,
@@ -52,7 +53,6 @@ import {
   actionBelongsToSheetCombatSlice,
   assertCertifiedSheetCombatActorAccess,
   assertCertifiedSheetCombatActorAction,
-  loadCertifiedSheetCombatCatalog,
   type CertifiedSheetCombatCatalog,
 } from './sheetCombatCertifiedCatalog';
 
@@ -76,6 +76,9 @@ export interface SheetCombatSessionEnvelope {
   participantRevisions: Record<string, number>;
   catalogActions: RuleActionDefinition[];
   certifiedActionIdsByActor: Record<string, string[]>;
+  /** Absent on saved L1 continuations, which retain their original certificate gate. */
+  catalogAuthority?: 'live';
+  catalogManifestHash?: string;
   resourceBindingsByActor: Record<string, SheetCanonicalResourceBindings>;
   world: WorldState;
 }
@@ -85,6 +88,8 @@ export interface SheetCombatSession {
   participantRevisions: Record<string, number>;
   catalogActions: readonly RuleActionDefinition[];
   certifiedActionIdsByActor: Readonly<Record<string, readonly string[]>>;
+  catalogAuthority?: 'live';
+  catalogManifestHash?: string;
   resourceBindingsByActor: Readonly<Record<string, SheetCanonicalResourceBindings>>;
   world: WorldState;
   catalog: RulesCatalog;
@@ -142,6 +147,35 @@ function cloneActorActionIds(
     actorId,
     [...actionIds],
   ]));
+}
+
+function liveRuleset(reference: RulesetReference): RulesetReference {
+  const releaseId = 'sheet:2024:combat-runtime-v2';
+  return {
+    systemId: reference.systemId,
+    releaseId,
+    contentHash: canonicalSha256Sync({
+      releaseId,
+      systemId: reference.systemId,
+      errataVersion: reference.errataVersion,
+    }),
+    errataVersion: reference.errataVersion,
+  };
+}
+
+function liveManifestHash(
+  actions: readonly RuleActionDefinition[],
+  actionIdsByActor: Readonly<Record<string, readonly string[]>>,
+  world: WorldState,
+): string {
+  return canonicalSha256Sync({
+    actions: [...actions].sort((left, right) => left.id.localeCompare(right.id)),
+    actionIdsByActor: Object.fromEntries(Object.entries(actionIdsByActor).sort(([left], [right]) => left.localeCompare(right))
+      .map(([actorId, ids]) => [actorId, [...ids].sort()])),
+    spellcastingAccessByActor: Object.fromEntries(Object.keys(actionIdsByActor).sort().map((actorId) => [
+      actorId, world.actors[actorId]?.spellcastingAccess ?? null,
+    ])),
+  });
 }
 
 function object(value: unknown): Record<string, unknown> | null {
@@ -388,6 +422,12 @@ export function mergeSheetCombatParticipantWorlds(input: {
 }
 
 function sessionFromEnvelope(envelope: SheetCombatSessionEnvelope): SheetCombatSession {
+  if (envelope.catalogAuthority !== undefined && envelope.catalogAuthority !== 'live') {
+    throw new SheetCombatSessionError('Combat continuation has an unknown catalog authority');
+  }
+  if (envelope.catalogAuthority === 'live' && typeof envelope.catalogManifestHash !== 'string') {
+    throw new SheetCombatSessionError('Combat continuation misses its frozen catalog manifest');
+  }
   const catalogActions = clone(envelope.catalogActions)
     .sort((left, right) => left.id.localeCompare(right.id));
   const world = migrateWorldState(clone(envelope.world));
@@ -425,6 +465,8 @@ function sessionFromEnvelope(envelope: SheetCombatSessionEnvelope): SheetCombatS
     participantRevisions: clone(envelope.participantRevisions),
     catalogActions,
     certifiedActionIdsByActor: clone(envelope.certifiedActionIdsByActor),
+    catalogAuthority: envelope.catalogAuthority,
+    catalogManifestHash: envelope.catalogManifestHash,
     resourceBindingsByActor: clone(envelope.resourceBindingsByActor),
     world,
     catalog,
@@ -454,8 +496,15 @@ export function readSheetCombatSession(
   if (!(viewingCharacterId in session.participantRevisions)) {
     throw new SheetCombatSessionError('This sheet is not a combat-continuation participant');
   }
-  if (expectedRuleset
-    && canonicalStringify(session.world.ruleset) !== canonicalStringify(expectedRuleset)) {
+  // A completed L1 continuation is a disposable view of already committed
+  // CharacterV3 runtime. New actions must compile against the live catalog;
+  // unresolved historical decisions retain their original certificate gate.
+  if (session.catalogAuthority !== 'live' && !session.world.pendingResolution) return null;
+  const currentRuleset = session.catalogAuthority === 'live'
+    ? liveRuleset(session.world.ruleset)
+    : expectedRuleset;
+  if (currentRuleset
+    && canonicalStringify(session.world.ruleset) !== canonicalStringify(currentRuleset)) {
     // A completed continuation is only a convenience snapshot: actor runtime
     // has already been committed to CharacterV3 and a new action may safely
     // create a session from the current certified release. An unresolved
@@ -476,6 +525,7 @@ export function readSheetCombatSession(
       'Ожидающее боевое решение устарело после изменения листа; перезагрузите участников боя',
     );
   }
+  if (session.catalogAuthority === 'live') assertLiveSheetCombatSession(session);
   return session;
 }
 
@@ -490,6 +540,8 @@ export function writeSheetCombatSession(
     participantRevisions: clone(session.participantRevisions),
     catalogActions: clone([...session.catalogActions]),
     certifiedActionIdsByActor: cloneActorActionIds(session.certifiedActionIdsByActor),
+    catalogAuthority: session.catalogAuthority,
+    catalogManifestHash: session.catalogManifestHash,
     resourceBindingsByActor: clone(session.resourceBindingsByActor),
     world: migrateWorldState(clone(session.world)),
   };
@@ -548,6 +600,40 @@ export function assertCertifiedSheetCombatSession(
   }
 }
 
+/** A newly created continuation is authorized by its compiled actor capabilities and frozen manifest. */
+export function assertLiveSheetCombatActorAction(
+  action: RuleActionDefinition,
+  actor: ActorState,
+): RuleActionDefinition {
+  if (!actionBelongsToSheetCombatSlice(action)
+    || !actor.capabilities.actionIds.includes(action.id)) {
+    throw new SheetCombatSessionError(`Actor ${actor.id} cannot execute combat action ${action.id}`);
+  }
+  return action;
+}
+
+export function assertLiveSheetCombatSession(session: SheetCombatSession): void {
+  if (session.catalogAuthority !== 'live'
+    || canonicalStringify(session.world.ruleset) !== canonicalStringify(liveRuleset(session.world.ruleset))
+    || session.catalogManifestHash !== liveManifestHash(
+      session.catalogActions, session.certifiedActionIdsByActor, session.world,
+    )) {
+    throw new SheetCombatSessionError('Combat continuation live catalog or ruleset is inconsistent');
+  }
+  for (const action of session.catalogActions) {
+    const owners = Object.entries(session.certifiedActionIdsByActor)
+      .filter(([, ids]) => ids.includes(action.id));
+    if (!owners.length) {
+      throw new SheetCombatSessionError(`Combat continuation action ${action.id} has no actor owner`);
+    }
+    for (const [actorId] of owners) {
+      const actor = session.world.actors[actorId];
+      if (!actor) throw new SheetCombatSessionError(`Combat continuation misses actor ${actorId}`);
+      assertLiveSheetCombatActorAction(action, actor);
+    }
+  }
+}
+
 export async function createSheetCombatSession(input: {
   source: SheetCombatParticipantSeed;
   targets: readonly SheetCombatParticipantSeed[];
@@ -574,31 +660,68 @@ export async function createSheetCombatSession(input: {
     requireRuntimeRevision(character);
   }
 
-  const certified = await loadCertifiedSheetCombatCatalog();
   const systemIds = new Set(seeds.map(({ character }) => character.system_id));
-  if (systemIds.size !== 1 || !systemIds.has(certified.ruleset.systemId)) {
+  const versions = new Set(seeds.map(({ character }) => character.ruleset_version));
+  const releaseIds = new Set(seeds.map(({ canonical }) => canonical.world.ruleset.releaseId));
+  const errataVersions = new Set(seeds.map(({ canonical }) => canonical.world.ruleset.errataVersion));
+  if (systemIds.size !== 1 || !systemIds.has('dnd5e-2024')
+    || versions.size !== 1 || releaseIds.size !== 1 || errataVersions.size !== 1
+    || seeds.some(({ character, canonical }) => canonical.world.ruleset.systemId !== character.system_id)) {
     throw new SheetCombatSessionError('Combat participants use incompatible rulesets');
   }
-  const certifiedActionsByActor = Object.fromEntries(seeds.map(({ character, canonical }) => [
+  const actionsByActor = Object.fromEntries(seeds.map(({ character, canonical }) => [
     character.id,
     canonical.actions
       .filter(actionBelongsToSheetCombatSlice)
-      .filter(action => !input.allowAdditionalActorActions || certified.catalog.getAction(action.id) !== undefined)
-      .map((action) => assertCertifiedSheetCombatActorAction(
-        action,
-        canonical.world.actors[character.id],
-        certified,
-      )),
+      .map((action) => {
+        const compiled = canonical.catalog.getAction(action.id);
+        if (!compiled || canonicalStringify(compiled) !== canonicalStringify(action)) {
+          throw new SheetCombatSessionError(`Combat action ${action.id} differs from its canonical catalog`);
+        }
+        assertLiveSheetCombatActorAction(action, canonical.world.actors[character.id]);
+        const template = canonical.combatActionTemplates?.[action.id] ?? action;
+        if (template.id !== action.id || !actionBelongsToSheetCombatSlice(template)) {
+          throw new SheetCombatSessionError(`Combat template ${action.id} differs from its runnable action`);
+        }
+        const primitive = object(template.mechanics.primitive)?.type;
+        if (primitive === WEAPON_ATTACK_PRIMITIVE
+          || primitive === LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE) {
+          const cards = new Map(canonical.cards.map((card) => [card.id, card] as const));
+          let rebound: RuleActionDefinition;
+          try {
+            const mechanics = bindEquippedWeaponActionContext(
+              template.mechanics, canonical.world.actors[character.id].runtime.equipment, cards,
+            );
+            rebound = { ...template, mechanics, targeting: compileDeclaredMechanicsTargeting(mechanics) };
+          } catch (cause) {
+            throw new SheetCombatSessionError(
+              `Combat template ${action.id} cannot bind to ${character.id}: ${cause instanceof Error ? cause.message : String(cause)}`,
+            );
+          }
+          if (canonicalStringify(rebound) !== canonicalStringify(action)) {
+            throw new SheetCombatSessionError(`Combat template ${action.id} differs from its actor binding`);
+          }
+        } else if (canonicalStringify(template) !== canonicalStringify(action)) {
+          throw new SheetCombatSessionError(`Combat template ${action.id} differs from its runnable action`);
+        }
+        return template;
+      }),
   ]));
-  const actions = Object.values(certifiedActionsByActor).flat();
-  for (const { character, canonical } of seeds) {
-    const actor = canonical.world.actors[character.id];
-    const relevantActionIds = certifiedActionsByActor[character.id].map((action) => action.id);
-    assertCertifiedSheetCombatActorAccess(actor, relevantActionIds, certified);
+  const sharedActions = new Map<string, RuleActionDefinition>();
+  for (const { character } of seeds) {
+    for (const action of actionsByActor[character.id]) {
+      const previous = sharedActions.get(action.id);
+      if (!previous) {
+        sharedActions.set(action.id, action);
+      } else if (canonicalStringify(previous) !== canonicalStringify(action)) {
+        throw new SheetCombatSessionError(`Conflicting combat action ${action.id}`);
+      }
+    }
   }
+  const actions = [...sharedActions.values()];
   const catalog = buildCatalog(actions);
   const catalogActions = [...(catalog.listActions?.() ?? [])];
-  const ruleset = clone(certified.ruleset);
+  const ruleset = liveRuleset(input.source.canonical.world.ruleset);
   const world = mergeSheetCombatParticipantWorlds({
     seeds,
     sceneActors: input.sceneActors,
@@ -613,7 +736,7 @@ export async function createSheetCombatSession(input: {
       requireRuntimeRevision(character),
     ])),
     catalogActions: clone(catalogActions),
-    certifiedActionIdsByActor: Object.fromEntries(Object.entries(certifiedActionsByActor).map(
+    certifiedActionIdsByActor: Object.fromEntries(Object.entries(actionsByActor).map(
       ([actorId, actorActions]) => [actorId, actorActions.map((action) => action.id).sort()],
     )),
     resourceBindingsByActor: Object.fromEntries(seeds.map(({ character, canonical }) => [
@@ -622,9 +745,14 @@ export async function createSheetCombatSession(input: {
     ])),
     world,
     catalog,
+    catalogAuthority: 'live' as const,
   };
-  assertCertifiedSheetCombatSession(session, certified);
-  return session;
+  const liveSession = {
+    ...session,
+    catalogManifestHash: liveManifestHash(session.catalogActions, session.certifiedActionIdsByActor, session.world),
+  };
+  assertLiveSheetCombatSession(liveSession);
+  return liveSession;
 }
 
 function acceptedTransition(
@@ -1116,6 +1244,8 @@ export function prepareSheetCombatCommit(input: {
     certifiedActionIdsByActor: cloneActorActionIds(
       input.transition.base.certifiedActionIdsByActor,
     ),
+    catalogAuthority: input.transition.base.catalogAuthority,
+    catalogManifestHash: input.transition.base.catalogManifestHash,
     resourceBindingsByActor: clone(input.transition.base.resourceBindingsByActor),
     world: clone(input.transition.nextWorld),
   });

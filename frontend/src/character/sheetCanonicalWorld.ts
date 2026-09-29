@@ -88,6 +88,8 @@ export interface SheetCanonicalRuntime {
   actorId: string;
   world: WorldState;
   actions: readonly RuleActionDefinition[];
+  /** Data-owned actions before actor equipment binding; same identity as actions. */
+  combatActionTemplates?: Readonly<Record<string, RuleActionDefinition>>;
   catalog: RulesCatalog;
   cards: readonly Card[];
   resourceBindings: SheetCanonicalResourceBindings;
@@ -472,6 +474,7 @@ type SpellGrantBinding = {
 type CompiledSheetAction = {
   sheet: SheetAction;
   action: RuleActionDefinition;
+  combatTemplateAction?: RuleActionDefinition;
   spellGrant?: SpellGrantBinding;
   manualSpell?: boolean;
 };
@@ -696,22 +699,26 @@ function ruleActions(input: {
         `Action ${entity.id} has ambiguous immutable grant origins: ${originIds.length}`,
       );
     }
+    const options = {
+      sourceEntityIds: originIds,
+      ...(originIds[0] ? { grantScopeId: originIds[0] } : {}),
+    };
+    const project = (mechanics: Record<string, unknown>) => projectRuleAction({
+      ...entity,
+      mechanics: restoreSelfUsesCost(
+        cloneJson(mechanics), actionUsesKey(entity.card_number || entity.id, entity.mechanics),
+      ),
+    } as never, options);
     return [{
       sheet: input.sheet,
       // Contextual costs (for example equipped_weapon_ammo) have already
       // resolved against the sheet's selected equipment. Project that bound
       // mechanics through the same canonical compiler; the immutable entity
       // still owns identity, display data, and provenance.
-      action: projectRuleAction({
-        ...entity,
-        mechanics: restoreSelfUsesCost(
-          cloneJson(input.sheet.canonicalMechanics ?? input.sheet.mechanics),
-          actionUsesKey(entity.card_number || entity.id, entity.mechanics),
-        ),
-      } as never, {
-        sourceEntityIds: originIds,
-        ...(originIds[0] ? { grantScopeId: originIds[0] } : {}),
-      }),
+      action: project(input.sheet.canonicalMechanics ?? input.sheet.mechanics),
+      ...(input.sheet.catalogTemplateMechanics ? {
+        combatTemplateAction: project(input.sheet.catalogTemplateMechanics),
+      } : {}),
     }];
   }
   const mechanics = cloneJson(input.sheet.canonicalMechanics ?? input.sheet.mechanics);
@@ -722,18 +729,22 @@ function ruleActions(input: {
       `Primitive ${primitive} on ${input.sheet.id} requires explicit mechanics.targeting`,
     );
   }
-  return [{
-    sheet: input.sheet,
-    action: {
+  const synthetic = (sourceMechanics: Record<string, unknown>): RuleActionDefinition => ({
       id: input.sheet.id,
       name: input.sheet.name,
-      mechanics,
+      mechanics: sourceMechanics,
       sourceEntityIds: stableIds(input.sheet.sourceEntityIds ?? []),
       kind: 'nonSpell',
-      ...(targetingDeclaration
-        ? { targeting: compileDeclaredMechanicsTargeting(mechanics) }
+      ...(object(sourceMechanics.targeting)
+        ? { targeting: compileDeclaredMechanicsTargeting(sourceMechanics) }
         : {}),
-    },
+    });
+  return [{
+    sheet: input.sheet,
+    action: synthetic(mechanics),
+    ...(input.sheet.catalogTemplateMechanics ? {
+      combatTemplateAction: synthetic(cloneJson(input.sheet.catalogTemplateMechanics)),
+    } : {}),
   }];
 }
 
@@ -1553,6 +1564,9 @@ export function buildSheetCanonicalRuntime(input: {
     actorId,
     world,
     actions: uniqueActions,
+    combatActionTemplates: Object.fromEntries(compiled.flatMap(({ action, combatTemplateAction }) => (
+      combatTemplateAction ? [[action.id, combatTemplateAction]] : []
+    ))),
     catalog,
     cards,
     resourceBindings,

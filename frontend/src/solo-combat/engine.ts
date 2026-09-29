@@ -5202,6 +5202,9 @@ export async function addSoloCombatCharacter(input: {
   }
   const actor = clone(isolated.world.actors[actorId]);
   const catalogActions = [...input.state.catalogActions];
+  for (const action of isolated.catalogActions) {
+    if (!catalogActions.some((candidate) => candidate.id === action.id)) catalogActions.push(clone(action));
+  }
   for (const action of input.participant.canonical.actions) {
     if (!catalogActions.some((candidate) => candidate.id === action.id)) catalogActions.push(clone(action));
   }
@@ -5321,6 +5324,9 @@ export async function refreshSoloCombatParticipants(input: {
 
   const actors = { ...input.state.world.actors };
   const catalogActions = [...input.state.catalogActions];
+  for (const action of base.catalogActions) {
+    if (!catalogActions.some((candidate) => candidate.id === action.id)) catalogActions.push(clone(action));
+  }
   const basicActionIds = Object.entries(input.state.actionPresentation ?? {}).flatMap(([actionId, row]) => (
     row.actionRef && TACTICAL_BASIC_ACTIONS.has(row.actionRef.card_number) ? [actionId] : []
   ));

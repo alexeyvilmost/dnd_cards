@@ -180,9 +180,10 @@ echo "[3/7] Building backend, frontend and rules worker images"
 docker build -f "$build_root/infra/Dockerfile.rules-worker" -t "bagofholding-rules-worker:$sha" "$build_root"
 docker build -t "bagofholding-backend:$sha" "$build_root/backend"
 docker build \
+  -f "$build_root/frontend/Dockerfile" \
   --build-arg VITE_API_URL= \
   -t "bagofholding-frontend:$sha" \
-  "$build_root/frontend"
+  "$build_root"
 
 # Keep the old tab's hashed imports available after the atomic switch. These
 # files are public build output; nginx exposes only immutable asset paths.

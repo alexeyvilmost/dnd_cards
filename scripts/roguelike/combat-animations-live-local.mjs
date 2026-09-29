@@ -1,7 +1,7 @@
-// Actual authoritative commands on a new QA account/run in the animation clone.
+// Actual authoritative commands on a new QA run for an existing local account.
 // No combat state, outcome, resources or dice are patched directly.
 import assert from 'node:assert/strict';
-import {readFile, writeFile, mkdir} from 'node:fs/promises';
+import {writeFile, mkdir} from 'node:fs/promises';
 import {randomUUID} from 'node:crypto';
 import {createRequire} from 'node:module';
 const require = createRequire(new URL('../../frontend/package.json', import.meta.url));
@@ -16,17 +16,9 @@ async function api(method, path, body, expected = 200) {
 }
 await mkdir(out, {recursive: true});
 await api('GET', '/animations', undefined, 401);
-let credentials;
-try {credentials = JSON.parse(await readFile(`${out}/credentials.json`, 'utf8'));}
-catch {
-  const suffix = randomUUID().slice(0, 8);
-  credentials = {username: `qa_animation_${suffix}`, password: `${randomUUID()}Aa1!`};
-  await api('POST', '/auth/register', {...credentials, email: `${credentials.username}@example.test`, display_name: 'Локальная проверка анимаций'}, 201);
-  await writeFile(`${out}/credentials.json`, JSON.stringify(credentials));
-}
-const auth = await api('POST', '/auth/login', credentials);
-token = auth.token;
-assert(token);
+token = process.env.API_TOKEN;
+assert(token, 'Supply API_TOKEN for an existing non-admin account in the local clone');
+const auth = {token, user: await api('GET', '/auth/profile')};
 const catalog = await api('GET', '/animations');
 assert.equal(catalog.profiles.length, 70);
 assert.equal(catalog.can_manage, false);

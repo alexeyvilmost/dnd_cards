@@ -1,9 +1,9 @@
 # Этап 1: сборка production-бандла
 FROM node:20-slim AS build
 
-WORKDIR /app
+WORKDIR /app/frontend
 
-COPY package*.json .npmrc ./
+COPY frontend/package*.json frontend/.npmrc ./
 
 RUN npm config set cache /tmp/.npm && \
     npm config set fetch-retry-mintimeout 20000 && \
@@ -12,7 +12,9 @@ RUN npm config set cache /tmp/.npm && \
 
 RUN if [ -f package-lock.json ]; then npm ci --ignore-scripts --include=dev --no-audit --no-fund; else npm install --ignore-scripts --include=dev --no-audit --no-fund; fi
 
-COPY . .
+COPY frontend/ ./
+# Keep the source tree layout used by the shared presentation catalog import.
+COPY backend/animationpresentation/catalog.json /app/backend/animationpresentation/catalog.json
 
 ARG VITE_API_URL
 ENV VITE_API_URL=${VITE_API_URL}
@@ -28,9 +30,9 @@ FROM nginx:alpine
 
 RUN rm -f /etc/nginx/conf.d/default.conf
 
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf.template /etc/nginx/templates/app.conf.template
-COPY start.sh /start.sh
+COPY --from=build /app/frontend/dist /usr/share/nginx/html
+COPY frontend/nginx.conf.template /etc/nginx/templates/app.conf.template
+COPY frontend/start.sh /start.sh
 # Keep the image executable even when the checkout was produced on Windows.
 RUN sed -i 's/\r$//' /start.sh && chmod +x /start.sh
 

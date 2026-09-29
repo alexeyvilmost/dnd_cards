@@ -2015,6 +2015,12 @@ describe('solo combat engine vertical integration', () => {
   it('scene constructor adds fresh monsters and owned characters without replacing the retained fight', async () => {
     const participant = fighterSeed();
     const ally = wizardSeed();
+    ally.canonical.world.ruleset = {
+      ...ally.canonical.world.ruleset,
+      contentHash: `sha256:${'c'.repeat(64)}`,
+    };
+    expect(ally.canonical.world.ruleset.contentHash)
+      .not.toBe(participant.canonical.world.ruleset.contentHash);
     let state = await createSoloCombatState({
       character: participant.character,
       participant,

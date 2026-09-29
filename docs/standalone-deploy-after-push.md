@@ -166,9 +166,10 @@ echo "[3/7] Building backend and frontend images"
 docker build -t "bagofholding-backend:$sha" "$build_root/backend"
 # Пустой VITE_API_URL означает same-origin /api через Caddy.
 docker build \
+  -f "$build_root/frontend/Dockerfile" \
   --build-arg VITE_API_URL= \
   -t "bagofholding-frontend:$sha" \
-  "$build_root/frontend"
+  "$build_root"
 
 echo "[4/7] Preparing release directory"
 mkdir "$release"

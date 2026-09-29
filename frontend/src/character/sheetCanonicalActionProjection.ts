@@ -150,8 +150,9 @@ export function projectRunnableSheetCanonicalActions(input: {
       && !declaredActive
       && !sheetActionNeedsCanonicalRuntime(action.mechanics)) continue;
     try {
+      const templateMechanics = canonicalMechanics(action);
       const mechanics = bindEquippedWeaponActionContext(
-        canonicalMechanics(action),
+        templateMechanics,
         input.equipment,
         cards,
       );
@@ -184,6 +185,7 @@ export function projectRunnableSheetCanonicalActions(input: {
         // Keep the catalog actor-neutral. The rules handler reapplies the
         // profile from the acting participant, including after equipment changes.
         canonicalMechanics: mechanics,
+        catalogTemplateMechanics: templateMechanics,
         mechanics: applyItemSpellProjectiles(applyItemActionTargetLimit(profiled.mechanics,[action.id,action.actionRef?.id??'',action.actionRef?.card_number??'',action.spellRef?.id??'',action.spellRef?.card_number??''],input.passives??[],action.spellRef!==undefined,action.spellRef?.level),[action.id,action.spellRef?.id??'',action.spellRef?.card_number??''],input.passives??[]),
         ...(profiledActionRef
           ? { actionRef: { ...profiledActionRef, mechanics: profiled.mechanics } }

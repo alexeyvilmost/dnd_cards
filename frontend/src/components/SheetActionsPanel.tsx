@@ -150,6 +150,8 @@ import {
   prepareSheetCombatCommit,
   readSheetCombatSession,
   assertCertifiedSheetCombatSession,
+  assertLiveSheetCombatActorAction,
+  assertLiveSheetCombatSession,
   resolveSheetCombatDecision,
   type PreparedSheetCombatCommit,
   type SheetCombatParticipantSeed,
@@ -1750,7 +1752,11 @@ export default function SheetActionsPanel({
     return commitCombat(prepared);
   };
 
-  const requireCertifiedCombatSession = (session: SheetCombatSession) => {
+  const requireCombatSessionAuthority = (session: SheetCombatSession) => {
+    if (session.catalogAuthority === 'live') {
+      assertLiveSheetCombatSession(session);
+      return;
+    }
     if (!certifiedCombat.catalog) {
       throw certifiedCombat.error
         ?? new Error(certifiedCombat.loading
@@ -1758,14 +1764,13 @@ export default function SheetActionsPanel({
           : 'Сертифицированный combat release недоступен');
     }
     assertCertifiedSheetCombatSession(session, certifiedCombat.catalog);
-    return certifiedCombat.catalog;
   };
 
   const resolveCombatDecision = async (response: DecisionResponse) => {
     const session = combatContinuation.session;
     if (!session?.world.pendingResolution) return;
     try {
-      requireCertifiedCombatSession(session);
+      requireCombatSessionAuthority(session);
       const characters = await combatCharacters(session);
       const transition = resolveSheetCombatDecision({
         session,
@@ -1786,7 +1791,7 @@ export default function SheetActionsPanel({
     const activeActorId = session.world.scene.initiative[session.world.scene.activeIndex];
     if (activeActorId !== character.id) return;
     try {
-      requireCertifiedCombatSession(session);
+      requireCombatSessionAuthority(session);
       const characters = await combatCharacters(session);
       const transition = advanceSheetCombatTurn({
         session,
@@ -1830,15 +1835,16 @@ export default function SheetActionsPanel({
       }
     }
     try {
-      if (!certifiedCombat.catalog) {
-        throw certifiedCombat.error ?? new Error('Сертифицированный combat release ещё не загружен');
+      if (existing) requireCombatSessionAuthority(existing);
+      if (!existing || existing.catalogAuthority === 'live') {
+        assertLiveSheetCombatActorAction(canonical.action, canonical.runtime.world.actors[character.id]);
+      } else {
+        assertCertifiedSheetCombatActorAction(
+          canonical.action,
+          canonical.runtime.world.actors[character.id],
+          certifiedCombat.catalog!,
+        );
       }
-      assertCertifiedSheetCombatActorAction(
-        canonical.action,
-        canonical.runtime.world.actors[character.id],
-        certifiedCombat.catalog,
-      );
-      if (existing) assertCertifiedSheetCombatSession(existing, certifiedCombat.catalog);
       const requested = collectSheetPrimitiveChoices(canonical, 'encounter');
       const selectedChoices: Record<string, string[]> = {};
       if (requested.length) {
@@ -3000,18 +3006,26 @@ export default function SheetActionsPanel({
         if (pendingCombat && encounterId) {
           return { disabled: true, reason: 'Двухлистовая атомарная команда пока недоступна внутри онлайн-боя' };
         }
-        if (pendingCombat && certifiedCombat.loading) {
+        const legacyCombat = pendingCombat && combatContinuation.session?.catalogAuthority !== 'live'
+          && !!combatContinuation.session;
+        if (legacyCombat && certifiedCombat.loading) {
           return { disabled: true, reason: 'Проверяется сертифицированный combat release' };
         }
-        if (pendingCombat && certifiedCombat.error) {
+        if (legacyCombat && certifiedCombat.error) {
           return { disabled: true, reason: certifiedCombat.error.message };
         }
-        if (pendingCombat && canonical && certifiedCombat.catalog) {
-          assertCertifiedSheetCombatActorAction(
-            canonical.action,
-            canonical.runtime.world.actors[character.id],
-            certifiedCombat.catalog,
-          );
+        if (pendingCombat && canonical) {
+          const existing = combatContinuation.session;
+          if (existing) requireCombatSessionAuthority(existing);
+          if (!existing || existing.catalogAuthority === 'live') {
+            assertLiveSheetCombatActorAction(canonical.action, canonical.runtime.world.actors[character.id]);
+          } else {
+            assertCertifiedSheetCombatActorAction(
+              canonical.action,
+              canonical.runtime.world.actors[character.id],
+              certifiedCombat.catalog!,
+            );
+          }
         }
         if (pendingCombat && !Number.isSafeInteger(character.runtime_revision)) {
           return { disabled: true, reason: 'Сервер не вернул runtime_revision персонажа' };
@@ -3175,12 +3189,12 @@ export default function SheetActionsPanel({
   const activeCombatActorId = combatScene
     ? combatScene.initiative[combatScene.activeIndex]
     : null;
-  let combatSessionCertificationError: Error | null = null;
+  let combatSessionAuthorityError: Error | null = null;
   if (combatSession) {
     try {
-      requireCertifiedCombatSession(combatSession);
+      requireCombatSessionAuthority(combatSession);
     } catch (cause) {
-      combatSessionCertificationError = cause instanceof Error
+      combatSessionAuthorityError = cause instanceof Error
         ? cause
         : new Error(String(cause));
     }
@@ -3239,13 +3253,13 @@ export default function SheetActionsPanel({
           </button>
         </section>
       )}
-      {!spellsOnly && combatSession && combatSessionCertificationError && (
+      {!spellsOnly && combatSession && combatSessionAuthorityError && (
         <section className="sheet-group" role="alert" data-testid="sheet-combat-certification-error">
           <h3 className="sheet-h3">Продолжение боя заблокировано</h3>
-          <p>{combatSessionCertificationError.message}</p>
+          <p>{combatSessionAuthorityError.message}</p>
         </section>
       )}
-      {!spellsOnly && combatSession?.world.pendingResolution && !combatSessionCertificationError && (
+      {!spellsOnly && combatSession?.world.pendingResolution && !combatSessionAuthorityError && (
         <SheetPendingCombatPanel
           pending={combatSession.world.pendingResolution}
           viewingCharacterId={character.id}
@@ -3263,7 +3277,7 @@ export default function SheetActionsPanel({
           onResolve={resolveCombatDecision}
         />
       )}
-      {!spellsOnly && combatScene && !combatSession?.world.pendingResolution && !combatSessionCertificationError && (
+      {!spellsOnly && combatScene && !combatSession?.world.pendingResolution && !combatSessionAuthorityError && (
         <section className="sheet-group" role="status" data-testid="sheet-combat-turn-state">
           <h3 className="sheet-h3">Последовательность ходов · раунд {combatScene.round}</h3>
           <p>

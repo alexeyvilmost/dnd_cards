@@ -270,6 +270,11 @@ describe('runnable canonical sheet-action projection', () => {
 
     expect(projection.actions.map((action) => action.id)).toEqual(['main']);
     expect(projection.actions[0].mechanics.targeting).toMatchObject({ range_ft: 320 });
+    expect(projection.actions[0].catalogTemplateMechanics?.targeting).toMatchObject({ range_ft: 1 });
+    expect((projection.actions[0].catalogTemplateMechanics?.activation as Record<string, unknown>).cost)
+      .toContainEqual({ resource: 'equipped_weapon_ammo', amount: 1 });
+    expect((projection.actions[0].canonicalMechanics?.activation as Record<string, unknown>).cost)
+      .toContainEqual({ resource: 'item', card_id: 'card:test-arrow', amount: 1 });
     expect(projection.issues.get('off')).toMatch(/off hand/);
     expect(projection.issues.has('legacy')).toBe(false);
   });

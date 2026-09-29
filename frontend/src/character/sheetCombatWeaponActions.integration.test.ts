@@ -12,11 +12,18 @@ import {
   WEAPON_ATTACK_PRIMITIVE,
 } from '../rules-core/weaponActionPolicies';
 import { lightWeaponExtraAttackUseKey } from '../rules-core/lightWeaponExtraAttack';
+import { compileDeclaredMechanicsTargeting } from '../rules-core/actionTargeting';
+import { bindEquippedWeaponActionContext } from '../engine/weapon';
 import {
+  createSheetCombatSession,
   executeSheetCombatAction,
   prepareSheetCombatCommit,
+  readSheetCombatSession,
+  writeSheetCombatSession,
   type SheetCombatSession,
+  type SheetCombatParticipantSeed,
 } from './sheetCombatSession';
+import type { SheetCanonicalRuntime } from './sheetCanonicalWorld';
 import type { ForgeCharacter } from './types';
 
 const MAIN = 'action:weapon-main';
@@ -243,6 +250,95 @@ function persistedCharacter(id: string): ForgeCharacter {
 }
 
 describe('sheet weapon actions use one atomic canonical session', () => {
+  it.each([false, true])('keeps a neutral weapon template when two actors use different ammo, reversed=%s', async (reversed) => {
+    const template = declaredAction({ id: MAIN });
+    const secondAmmo = { ...BOLT, id: 'card:other-bolt', name: 'Other bolt' } as Card;
+    const secondWeapon = JSON.parse(JSON.stringify(MAIN_WEAPON)) as Card;
+    secondWeapon.id = 'card:other-crossbow';
+    const profile = (secondWeapon.mechanics as Record<string, unknown>).weapon_profile as Record<string, unknown>;
+    profile.ammo = { card_id: secondAmmo.id, name: secondAmmo.name };
+    profile.attack_modes = [{ kind: 'ranged', normal_ft: 20, long_ft: 60 }];
+    const weapons = reversed
+      ? [[secondWeapon, secondAmmo], [MAIN_WEAPON, BOLT]]
+      : [[MAIN_WEAPON, BOLT], [secondWeapon, secondAmmo]];
+    const seeds = [ATTACKER, TARGET].map((id, index): SheetCombatParticipantSeed => {
+      const [weapon, ammo] = weapons[index];
+      const value = actor(ATTACKER);
+      value.id = id;
+      value.controllerId = `controller:${id}`;
+      value.capabilities.actionIds = [MAIN];
+      value.character.knownCards = [weapon, ammo];
+      value.character.equippedCards = [weapon];
+      value.runtime.equipment = { main_hand: weapon.id };
+      value.runtime.inventory = [{ cardId: weapon.id, qty: 1 }, { cardId: ammo.id, qty: 3 }];
+      const mechanics = bindEquippedWeaponActionContext(
+        template.mechanics, value.runtime.equipment, new Map([[weapon.id, weapon], [ammo.id, ammo]]),
+      );
+      const bound = { ...template, mechanics, targeting: compileDeclaredMechanicsTargeting(mechanics) };
+      const catalog: RulesCatalog = {
+        getAction: (actionId) => actionId === MAIN ? bound : undefined,
+        listActions: () => [bound],
+      };
+      const canonical: SheetCanonicalRuntime = {
+        actorId: id,
+        world: createWorld({
+          id: `sheet:${id}`,
+          ruleset: {
+            systemId: 'dnd5e-2024', releaseId: 'sheet:canonical-v1',
+            contentHash: `sha256:${String(index + 1).repeat(64)}`, errataVersion: '2024',
+          },
+          actors: [value],
+        }),
+        actions: [bound], catalog, cards: [weapon, ammo], resourceBindings: {},
+        combatActionTemplates: { [MAIN]: template },
+        actionFor: () => bound,
+      };
+      return {
+        character: {
+          ...persistedCharacter(id), system_id: 'dnd5e-2024', ruleset_version: '2024',
+        } as ForgeCharacter,
+        canonical,
+      };
+    });
+    const session = await createSheetCombatSession({ source: seeds[0], targets: [seeds[1]] });
+    expect(session.catalog.getAction(MAIN)?.mechanics).toEqual(template.mechanics);
+    const restored = readSheetCombatSession(writeSheetCombatSession({}, session), ATTACKER, 0)!;
+    for (const [index, id] of [ATTACKER, TARGET].entries()) {
+      const value = restored.world.actors[id];
+      const cards = new Map(seeds[index].canonical.cards.map((card) => [card.id, card] as const));
+      const rebound = bindEquippedWeaponActionContext(template.mechanics, value.runtime.equipment, cards);
+      expect((rebound.targeting as Record<string, unknown>).range_ft)
+        .toBe(weapons[index][0].id === MAIN_WEAPON.id ? 120 : 60);
+    }
+    const transition = executeSheetCombatAction({
+      session: restored, actorId: ATTACKER, actionId: MAIN,
+      declaration: declaration(),
+      commandId: reversed
+        ? '16161616-1616-4616-8616-161616161616'
+        : '17171717-1717-4717-8717-171717171717',
+      rng: () => 0.99,
+    });
+    const sourceAmmo = weapons[0][1].id;
+    const targetAmmo = weapons[1][1].id;
+    expect(transition.nextWorld.actors[ATTACKER].runtime.inventory.find((row) => row.cardId === sourceAmmo)?.qty)
+      .toBe(2);
+    expect(transition.nextWorld.actors[TARGET].runtime.inventory.find((row) => row.cardId === targetAmmo)?.qty)
+      .toBe(3);
+  });
+
+  it('materializes each weapon default attack mode from a neutral declaration', () => {
+    const template = declaredAction({ id: MAIN });
+    const effect = (template.mechanics.effects as Record<string, unknown>[])[0];
+    effect.attack_kind = 'weapon';
+    const bow = bindEquippedWeaponActionContext(template.mechanics,
+      { main_hand: MAIN_WEAPON.id }, new Map([[MAIN_WEAPON.id, MAIN_WEAPON]]));
+    const blade = bindEquippedWeaponActionContext(template.mechanics,
+      { main_hand: OFF_WEAPON.id }, new Map([[OFF_WEAPON.id, OFF_WEAPON]]));
+    expect((bow.effects as Record<string, unknown>[])[0].attack_kind).toBe('weapon_ranged');
+    expect((blade.effects as Record<string, unknown>[])[0].attack_kind).toBe('weapon_melee');
+    expect((blade.activation as Record<string, unknown>).cost).toEqual([{ resource: 'action' }]);
+  });
+
   it('forwards complete Protection observations through the weapon bridge', () => {
     const initial = session();
     initial.world.actors[ATTACKER].capabilities.featureSources = {
