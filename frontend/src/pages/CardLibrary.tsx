@@ -61,10 +61,8 @@ import './CardLibrary.css';
 import ItemPreview from '../components/ItemPreview';
 import PassiveLibrary from '../components/PassiveLibrary';
 import { useSiteSettings } from '../settings';
-import { referenceSummary } from '../api/entityReferences';
-import { effectCategoryLabel, groupEffectsByType, hasEffectSourceCategory } from '../utils/effectPresentation';
+import { effectTypeLabel, groupEffectsByType } from '../utils/effectPresentation';
 import EffectReferenceFilters from '../components/library/EffectReferenceFilters';
-import '../components/EntityReferences.css';
 
 /** «Интерфейс» рисуем только для предметов; для прочих типов (в т.ч. из ссылки) — «Список». */
 const clampView = (v: LibraryViewMode, type: LibraryContentType): LibraryViewMode =>
@@ -2234,9 +2232,8 @@ const CardLibrary = () => {
                   <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">{group.label}</h2>
                 </div>
               {group.effects.map((effect) => (
-                <div key={effect.id} className="flex flex-col items-center">
+                <div key={effect.id} className="flex justify-center">
                   <EffectPreview effect={effect} onClick={() => handleEffectClick(effect)} />
-                  {!hasEffectSourceCategory(effect) && <span className="effect-reference-summary">{referenceSummary(effect)}</span>}
                 </div>
               ))}
               </Fragment>)}
@@ -2289,10 +2286,9 @@ const CardLibrary = () => {
                         {/* Нижняя панель с типом эффекта */}
                         <div className="flex items-center mt-1 text-xs">
                           <div className="text-gray-300">
-                            {effectCategoryLabel(effect)}
+                            {effectTypeLabel(effect.effect_type)}
                           </div>
                         </div>
-                        {!hasEffectSourceCategory(effect) && <span className="effect-reference-summary">{referenceSummary(effect)}</span>}
                       </div>
                     </div>
                   </button>

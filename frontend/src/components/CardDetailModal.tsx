@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
 import EntityTags from './EntityTags';
-import EntityReferences from './EntityReferences';
 import ReviewStatusEditor from './ReviewStatusEditor';
 import { createPortal } from 'react-dom';
 import { X, Edit, Trash2, Shield, ShieldOff, ClipboardPaste, Loader2, Download, Copy } from 'lucide-react';
@@ -418,7 +417,6 @@ const CardDetailModal: React.FC<CardDetailModalProps> = ({
               </p>
             )}
             <ReviewStatusEditor entity={{type:"card",id:card.id,author:card.author,support:card.support}} />
-            <EntityReferences type="card" id={card.id} author={card.author} onNavigate={onClose} />
             <EntityTags type="card" id={card.id}/>
             {card.attunement && (
               <div>

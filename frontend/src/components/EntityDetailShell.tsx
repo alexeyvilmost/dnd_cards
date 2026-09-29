@@ -5,7 +5,6 @@ import OriginalName from './OriginalName';
 import ReviewStatusEditor, { type ReviewableEntity } from './ReviewStatusEditor';
 import './entityDetailModal.css';
 import EntityTags from './EntityTags';
-import EntityReferences from './EntityReferences';
 import { useEntityDetail } from '../contexts/entityDetail';
 import { useContentPermissions } from '../hooks/useContentPermissions';
 
@@ -94,7 +93,6 @@ export function EntityDetailShell({
 
           {children}
 
-          {entity && <EntityReferences type={entity.type} id={entity.id} author={entity.author} onNavigate={onClose} />}
           {entity && <EntityTags type={entity.type} id={entity.id}/>}
 
           {entity && pageType && <div className="edm-actions"><Link className="edm-btn" to={`/entity/${pageType}/${encodeURIComponent(entity.id)}`} onClick={onClose}>На полную страницу</Link></div>}

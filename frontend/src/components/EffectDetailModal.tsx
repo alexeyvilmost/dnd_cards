@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Edit, Trash2, Copy } from 'lucide-react';
 import type { PassiveEffect } from '../types';
-import { effectCategoryLabel, effectTypeLabel } from '../utils/effectPresentation';
+import { effectTypeLabel } from '../utils/effectPresentation';
 import { effectsApi } from '../api/client';
 import { FormattedText } from '../utils/formattedText';
 import EffectPreview from './EffectPreview';
@@ -27,7 +27,6 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
   if (!isOpen || !effect) return null;
 
   const typeLabel = effectTypeLabel(effect.effect_type);
-  const categoryLabel = effectCategoryLabel(effect);
 
   return (
     <EntityDetailShell
@@ -67,7 +66,6 @@ const EffectDetailModal: React.FC<EffectDetailModalProps> = ({
 
       <EdmFields>
         <EdmField label="Тип эффекта">{typeLabel}</EdmField>
-        <EdmField label="Категория" hidden={categoryLabel === typeLabel}>{categoryLabel}</EdmField>
         <EdmField label="Условие" hidden={!effect.condition_description}>{effect.condition_description}</EdmField>
         <EdmField label="Автор" hidden={!effect.author}>{effect.author}</EdmField>
         <EdmField label="Источник" hidden={!effect.source}>{effect.source}</EdmField>

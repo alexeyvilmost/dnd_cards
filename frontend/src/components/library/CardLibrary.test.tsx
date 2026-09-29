@@ -86,9 +86,9 @@ describe('item library interactions', () => {
     expect([...container.querySelectorAll('h2')].map(el => el.textContent)).toEqual([
       'Состояния', 'Мастерство оружия', 'Боевой стиль', 'Эффект черты', 'Эффект предмета', 'Эффект заклинания', 'Способность вида',
     ]);
-    if (view === 'list') expect(container.textContent).toContain('Эльф, 3 уровень');
-    expect(container.textContent).not.toContain('Используется: Эльф');
-    expect(container.querySelectorAll('.effect-reference-summary')).toHaveLength(6);
+    expect(container.textContent).not.toContain('Эльф, 3 уровень');
+    expect(container.textContent).not.toContain('Используется:');
+    expect(container.querySelectorAll('.effect-reference-summary')).toHaveLength(0);
   });
 
   it('loads every source page and combines class/species and level filters in API and URL', async () => {
