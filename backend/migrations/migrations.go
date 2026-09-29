@@ -1518,6 +1518,7 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		{Version: "283_explicit_reference_levels", Description: "Keep levels only on explicitly level-bound class and species references", Up: correctEntityReferenceLevels279, Down: func(db *sql.DB) error { return fmt.Errorf("Explicit reference levels must be retained") }},
 		{Version: "284_entity_reference_coverage", Description: "Index current formula, item and variant references and reject ambiguous aliases", Up: expandEntityReferenceCoverage284, Down: func(db *sql.DB) error { return fmt.Errorf("Mechanical reference coverage must be retained") }},
 		{Version: "285_production_effect_classification", Description: "Review new production effects and classify the spell-bond by its mechanical source", Up: classifyProductionEffects285, Down: refuseEffectClassification285Down},
+		{Version: "286_combat_animation_metadata", Description: "Separate 2D animation profiles and authored entity bindings from immutable rules", Up: createCombatAnimation286, Down: func(db *sql.DB) error { return fmt.Errorf("Animation profiles and entity assignments must be retained") }},
 		// Здесь можно добавлять новые миграции
 	}
 }

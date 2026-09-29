@@ -1,0 +1,36 @@
+html,body,#root{margin:0;min-height:100%;background:#101511;color:#e7e6d4}
+.animation-workshop{box-sizing:border-box;min-height:100vh;padding:32px clamp(16px,3vw,48px);font:14px Inter,system-ui,sans-serif;background:radial-gradient(ellipse at 80% 0,#263626 0,transparent 55%),#101511}
+.animation-workshop *{box-sizing:border-box}
+.animation-workshop__header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 auto 26px;max-width:1600px}
+.animation-workshop__eyebrow{color:#a3b796;font-size:10px;letter-spacing:2.5px;margin:0 0 9px}
+.animation-workshop h1{font:400 clamp(26px,3vw,42px) Georgia,serif;color:#eee6cb;margin:0}
+.animation-workshop__intro{color:#a1ad9b;margin:9px 0 0;font-size:13px}
+.animation-workshop__count{border:1px solid #50634b;padding:9px 12px;border-radius:22px;white-space:nowrap;color:#b4c6a9;font-size:11px}
+.animation-workshop__layout{max-width:1600px;margin:auto;display:grid;grid-template-columns:280px minmax(0,1fr);gap:22px;align-items:start}
+.animation-workshop__panel{padding:22px;border:1px solid #354431;background:#19221bbf;border-radius:15px}
+.animation-workshop__field{display:block;color:#b7c5af;font-size:11px;font-weight:600;letter-spacing:.3px}
+.animation-workshop__field select{display:block;width:100%;margin-top:9px;padding:11px 9px;background:#121b15;border:1px solid #516049;border-radius:7px;color:#eceddc;font:12px Inter,system-ui,sans-serif}
+.animation-workshop__field output{float:right;color:#d7b886;font-size:11px}
+.animation-workshop__field input[type=range]{display:block;width:100%;accent-color:#c9ad79;margin:15px 0 10px}
+.animation-workshop__palette{display:flex;align-items:center;gap:6px;margin:14px 0 30px}
+.animation-workshop__palette span{height:12px;width:12px;border-radius:50%;box-shadow:0 0 12px #ffffff16}
+.animation-workshop__palette b{font:10px ui-monospace,monospace;color:#92a289;margin-left:4px}
+.animation-workshop__hint,.animation-workshop__note{font-size:11px;line-height:1.7;color:#91a08a;margin:0}
+.animation-workshop__toggles{display:flex;flex-direction:column;gap:12px;padding:22px 0;color:#c0cbb9;font-size:12px}
+.animation-workshop__toggles label{display:flex;align-items:center;gap:8px}
+.animation-workshop__toggles input{accent-color:#c9ad79;margin:0}
+.animation-workshop button{font:inherit;cursor:pointer}
+.animation-workshop__play{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:12px;border:1px solid #a18d66;border-radius:7px;background:#c4ab79;color:#1a2118;font-size:12px!important;font-weight:600!important}
+.animation-workshop__play:hover{background:#dbc18b}
+.animation-workshop__play span{font-size:21px;line-height:1}
+.animation-workshop__step{display:flex;gap:10px;margin:10px 0 22px}
+.animation-workshop__step button{flex:1;border:0;padding:8px 0;background:none;color:#a7b59e;font-size:10px}
+.animation-workshop__step button:hover{color:#ece0ba}
+.animation-workshop__note{padding-top:20px;border-top:1px solid #354331;color:#71836b}
+.animation-workshop__stage{min-width:0;overflow:hidden;border:1px solid #42513a;border-radius:15px;background:#141c15}
+.animation-workshop__stage-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 19px;color:#dacda7}
+.animation-workshop__stage-heading span{font-size:13px}
+.animation-workshop__stage-heading output{color:#8b9c83;font:10px ui-monospace,monospace}
+.animation-workshop .combat-map-wrap{height:clamp(420px,66vh,740px);border-top:1px solid #3c4935;border-bottom:1px solid #3c4935}
+.animation-workshop__caption{font-size:10px;color:#8f9e86;margin:0;padding:12px 19px}
+@media(max-width:850px){.animation-workshop{padding:22px 14px}.animation-workshop__layout{grid-template-columns:1fr;gap:15px}.animation-workshop__panel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;padding:17px}.animation-workshop__palette{margin:0}.animation-workshop__hint,.animation-workshop__note{display:none}.animation-workshop__toggles{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;padding:0}.animation-workshop__play{font-size:11px!important}.animation-workshop__step{margin:0;align-items:center}.animation-workshop__count{display:none}.animation-workshop__stage-heading{flex-wrap:wrap;padding:12px}.animation-workshop__caption{line-height:1.5;padding:10px 12px}.animation-workshop .combat-map-wrap{height:56vh;min-height:340px}}

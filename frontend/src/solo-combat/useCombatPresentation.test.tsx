@@ -11,6 +11,8 @@ vi.mock('./presentation',async importOriginal=>({...await importOriginal<typeof 
 (globalThis as typeof globalThis & {IS_REACT_ACT_ENVIRONMENT:boolean}).IS_REACT_ACT_ENVIRONMENT=true;
 const roll:CombatBeat['roll']={kind:'d20',dice:[{sides:20,result:10}],modifiers:[],total:10,advantage:'none',outcome:'miss',text:'10'};
 const beats:CombatBeat[]=['own','enemy','own'].map((audience,i)=>({id:String(i),sourceId:String(i),sourceName:'Actor',audience:audience as 'own'|'enemy',actionName:'Attack',roll,cues:[]}));
+const animation=(durationMs:number):NonNullable<CombatBeat['animation']>=>({key:'test',primitive:'aura',
+  palette:{primary:'#ffffff',secondary:'#99ccff'},motion:{durationMs,scale:1},casterCircle:false});
 const state=(log:CombatBeat[])=>({log} as unknown as SoloCombatState);
 let current:ReturnType<typeof useCombatPresentation>;
 function Harness({combat}:{combat:SoloCombatState}) { current=useCombatPresentation(combat,null);return null; }
@@ -23,6 +25,74 @@ describe('per-source combat presentation queue',()=>{
     container=document.createElement('div');document.body.append(container);root=createRoot(container);
   });
   afterEach(async()=>{await act(async()=>root.unmount());container.remove();vi.useRealTimers();vi.unstubAllGlobals();});
+  it('does not replay historical visual events when an encounter is reloaded', async()=>{
+    await act(async()=>root.render(<Harness combat={state(beats)}/>));
+    expect(current.playing).toBeNull(); expect(current.beat).toBeUndefined(); expect(current.blocked).toBe(false);
+  });
+  it('uses the entity profile duration for a utility animation with no roll', async()=>{
+    const utility:CombatBeat={...beats[0],roll:undefined,animation:{key:'utility',primitive:'aura',
+      palette:{primary:'#ffffff',secondary:'#99ccff'},motion:{durationMs:2400,scale:1},casterCircle:true}};
+    await act(async()=>root.render(<Harness combat={state([])}/>));
+    await act(async()=>root.render(<Harness combat={state([utility])}/>));
+    await act(async()=>vi.advanceTimersByTime(1800));
+    expect(current.playing?.id).toBe(utility.id);
+    await act(async()=>vi.advanceTimersByTime(600));
+    expect(current.playing).toBeNull();
+  });
+  it('shortens decorative animation time for reduced motion', async()=>{
+    vi.stubGlobal('matchMedia',()=>({matches:true}));
+    const utility:CombatBeat={...beats[0],roll:undefined};
+    await act(async()=>root.render(<Harness combat={state([])}/>));
+    await act(async()=>root.render(<Harness combat={state([utility])}/>));
+    await act(async()=>vi.advanceTimersByTime(240));
+    expect(current.playing).toBeNull();
+  });
+  it.each([false,true])('keeps captions readable after a short weapon animation, reduced motion=%s', async reduced=>{
+    vi.stubGlobal('matchMedia',()=>({matches:reduced}));
+    const result:CombatBeat={...beats[0],roll:undefined,animation:animation(920),
+      cues:[{actorId:'target',text:'8',kind:'damage'}]};
+    await act(async()=>root.render(<Harness combat={state([])}/>));
+    await act(async()=>root.render(<Harness combat={state([result])}/>));
+    await act(async()=>vi.advanceTimersByTime(1799));
+    expect(current.playing?.id).toBe(result.id);
+    await act(async()=>vi.advanceTimersByTime(1));
+    expect(current.playing).toBeNull();
+  });
+  it('lets the longest grouped target animation finish', async()=>{
+    const first:CombatBeat={...beats[0],roll:undefined,rollKind:'save',saveGroupId:'cast',targetId:'a',animation:animation(920)};
+    const second:CombatBeat={...first,id:'long',targetId:'b',animation:animation(2600)};
+    await act(async()=>root.render(<Harness combat={state([])}/>));
+    await act(async()=>root.render(<Harness combat={state([first,second])}/>));
+    expect(current.playing?.saveRows).toHaveLength(2);
+    await act(async()=>vi.advanceTimersByTime(2599));
+    expect(current.playing).not.toBeNull();
+    await act(async()=>vi.advanceTimersByTime(1));
+    expect(current.playing).toBeNull();
+  });
+  it('coalesces route trails without blocking input and immediately yields to an action', async()=>{
+    const first:CombatBeat={...beats[0],id:'step-1',roll:undefined,blocksInput:false,animation:animation(850)};
+    const second:CombatBeat={...first,id:'step-2'};
+    const last:CombatBeat={...first,id:'step-10'};
+    await act(async()=>root.render(<Harness combat={state([])}/>));
+    await act(async()=>root.render(<Harness combat={state([first])}/>));
+    expect(current.playing?.id).toBe(first.id);expect(current.blocked).toBe(false);
+    await act(async()=>root.render(<Harness combat={state([first,second,last])}/>));
+    expect(current.playing?.id).toBe(last.id);expect(current.blocked).toBe(false);
+    const attack={...beats[0],id:'attack'};
+    await act(async()=>root.render(<Harness combat={state([first,second,last,attack])}/>));
+    expect(current.playing).toBeNull();expect(current.beat?.id).toBe(attack.id);expect(current.blocked).toBe(true);
+    await act(async()=>current.closeAttack());
+    await act(async()=>vi.advanceTimersByTime(1800));
+    expect(current.playing).toBeNull();expect(current.blocked).toBe(false);
+  });
+  it('does not replay a confirmed animation when a command returns the same log again', async()=>{
+    const utility:CombatBeat={...beats[0],roll:undefined,animation:animation(920)};
+    await act(async()=>root.render(<Harness combat={state([])}/>));
+    await act(async()=>root.render(<Harness combat={state([utility])}/>));
+    await act(async()=>vi.advanceTimersByTime(920));
+    await act(async()=>root.render(<Harness combat={state([{...utility}])}/>));
+    expect(current.playing).toBeNull();expect(current.blocked).toBe(false);
+  });
   it('shows own attacks on both sides of a skipped enemy beat and keeps the map feedback',async()=>{
     setSetting('enemyCombatRollMode','skip');
     await act(async()=>root.render(<Harness combat={state([])}/>));

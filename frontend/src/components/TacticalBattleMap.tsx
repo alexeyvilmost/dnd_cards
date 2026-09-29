@@ -27,6 +27,7 @@ import { combatIdentity } from '../solo-combat/combatIdentity';
 import { attackHitProbability } from '../engine/attackProbability';
 import type { CombatBeat } from '../solo-combat/presentation';
 import CombatMapFeedback from './CombatMapFeedback';
+import {useAnimationCatalog} from '../solo-combat/useAnimationCatalog';
 import {createPortal} from 'react-dom';
 import {useViewportPopoverPosition} from '../hooks/useViewportPopoverPosition';
 import {projectileTrajectory} from '../solo-combat/projectilePreview';
@@ -75,6 +76,21 @@ export default function TacticalBattleMap({
   onFacing?:(facing:CombatFacing)=>void;
 }) {
   const {combat3d} = useSiteSettings();
+  useAnimationCatalog();
+  const committedFeedback=feedback?.rollPhase==='before-reaction'?null:feedback;
+  const animationPrimitive=committedFeedback?.animation?.primitive;
+  const animationFrom=committedFeedback?.from,animationTo=committedFeedback?.to;
+  const animationAngle=animationFrom&&animationTo?Math.atan2(animationTo.y-animationFrom.y,animationTo.x-animationFrom.x):0;
+  const tokenAnimation=(id:string)=>{
+    if(!committedFeedback)return '';
+    if(committedFeedback.targetId===id&&animationPrimitive==='death')return ' is-animating-death';
+    if(committedFeedback.sourceId===id){
+      if(animationPrimitive==='hide')return ' is-animating-hide';
+      if(animationPrimitive==='dodge')return ' is-animating-dodge';
+      if(['melee_slash','melee_pierce','melee_bash','bite'].includes(animationPrimitive??''))return ' is-animating-source';
+    }
+    return committedFeedback.cues.some(cue=>cue.actorId===id&&cue.kind==='damage')?' is-animating-target':'';
+  };
   const [rendererError, setRendererError] = useState<string | null>(null);
   useEffect(() => { setRendererError(null); }, [combat3d]);
   const [hovered, setHovered] = useState<GridPosition | null>(null);
@@ -605,7 +621,10 @@ export default function TacticalBattleMap({
             {token && actor && tokenAnchor && (() => {
               const identity = combatIdentity(state, token.actorId);
               return (
-              <span className={`battle-token is-${identity.side}`} style={{ '--token-color': identity.accent, '--token-size': actorFootprint(actor, state) } as React.CSSProperties}>
+              <span key={tokenAnimation(token.actorId)?committedFeedback?.id:token.actorId}
+                className={`battle-token is-${identity.side}${tokenAnimation(token.actorId)}`}
+                style={{ '--token-color': identity.accent, '--token-size': actorFootprint(actor, state),
+                  '--lunge-x':`${Math.cos(animationAngle)*9}px`,'--lunge-y':`${Math.sin(animationAngle)*9}px` } as React.CSSProperties}>
                 {token.tokenUrl ? <img src={token.tokenUrl} alt="" /> : <b>{combatActorDisplayName(actor).slice(0, 1)}</b>}
                 {identity.duplicateIndex && <span className="battle-token__duplicate">{identity.duplicateIndex}</span>}
                 <span className="battle-token__name">{identity.displayName}</span>

@@ -524,7 +524,7 @@ function applyActionTeleport(
       text: last.text.replace(`телепортация ${maxDistanceFt} фт.`, `телепортация ${distanceFt} фт.`),
       records: last.records?.map((record) => (
         record.event?.type === 'movement' && record.event.mode === 'teleport'
-          ? { ...record, event: { ...record.event, distanceFt } }
+          ? { ...record, event: { ...record.event, distanceFt }, movement: {from: {...source}, to: {...destination}} }
           : record
       )),
     };
@@ -990,7 +990,21 @@ function transitionState(
   rawEvents: readonly UncommittedRuleEvent[],
   emptySummary?: string,
 ): SoloCombatState {
-  const records = projectCombatLogRecords(rawEvents);
+  let records = projectCombatLogRecords(rawEvents);
+  // A resumed save/reaction has no second declaration. Retain the original
+  // entity and cast level in the new presentation records without re-declaring
+  // an action or changing any authoritative rule event.
+  const pending = state.world.pendingResolution;
+  if (pending && 'actionId' in pending && 'sourceActorId' in pending) {
+    const action = state.catalogActions.find(row => row.id === pending.actionId);
+    const spell = 'spell' in pending ? pending.spell : undefined;
+    records = records.map(record => record.actionId || !action || (
+      record.sourceActorId !== pending.sourceActorId && record.event?.type !== 'roll'
+    ) ? record : {...record, actionId: action.id, actionKind: action.kind,
+      sourceEntityIds: [...(action.sourceEntityIds ?? [])],
+      ...(spell ? {spell: {baseLevel: spell.baseLevel, castLevel: spell.castLevel ?? spell.baseLevel}} : {}),
+    });
+  }
   let next = settleCombatAreaDamage(reconcileMovementForSpeedChanges(state, nextWorld),rawEvents);
   next = reconcileSummonedActorProjection(next, nextWorld);
   next = reconcileOwnedSummons(next);
@@ -1020,6 +1034,13 @@ function transitionState(
     if(dropped&&position)next={...next,worldObjectPositions:{...next.worldObjectPositions,[dropped.id]:{...position}},boardRevision:next.boardRevision+1};
   }
   next = applyForcedMovement(next, rawEvents);
+  records = records.map(record => {
+    if (record.event?.type !== 'movement') return record;
+    const moverId = record.event.recipientActorId ?? record.targetIds[0] ?? record.actorId;
+    const from = state.tokens[moverId]?.position, to = next.tokens[moverId]?.position;
+    return from && to && (from.x !== to.x || from.y !== to.y)
+      ? {...record, movement: {from: {...from}, to: {...to}}} : record;
+  });
   for (const envelope of rawEvents) {
     if (envelope.payload.type !== 'EngineEventRecorded') continue;
     const event = envelope.payload.event;
@@ -1932,6 +1953,19 @@ function executeCombatActionCore(input: CombatActionInput): SoloCombatState {
   if (mountedProjection.projected) input = { ...input, state: mountedProjection.state };
   const rng = input.rng ?? Math.random;
   const withTriggeredAttackOffer = (next: SoloCombatState) => {
+    if (input.worldPosition) {
+      const cursor = combatLogCursor(input.state);
+      next = {...next, log: next.log.map((entry, index) => {
+        // Enrich only this execution's new declaration; retained history and
+        // authoritative rule payloads are never edited for presentation.
+        if ((entry.sequence ?? index + 1) <= cursor) return entry;
+        const matches = (record: CombatLogEventRecord) => record.kind === 'action'
+          && record.actionId === action.id && record.sourceActorId === input.actorId;
+        if (!entry.records?.some(matches)) return entry;
+        return {...entry, records: entry.records.map(record => matches(record)
+          ? {...record, targetPosition: {...input.worldPosition!}} : record)};
+      })};
+    }
     const intercepted = offerInterception({
       before: input.state,
       after: next,
@@ -4567,7 +4601,10 @@ export function moveActor(input: {
   }
   next = autoResolveSystemDecisions(next, input.rng ?? Math.random);
   next = breakOutOfRangeGrapples(next, input.actorId, input.rng ?? Math.random);
-  return input.logMovement === false ? next : appendLog(next, input.actorId, `Перемещение на ${distance} фт.${movementCost > distance ? ` С учётом условий движения: потрачено ${movementCost} фт.` : ''}`);
+  return input.logMovement === false ? next : appendLog(next, input.actorId, `Перемещение на ${distance} фт.${movementCost > distance ? ` С учётом условий движения: потрачено ${movementCost} фт.` : ''}`, [{
+    kind: 'movement', ordinal: 0, sourceActorId: input.actorId, actorId: input.actorId,
+    targetIds: [input.actorId], movement: {from: {...token.position}, to: {...input.destination}},
+  }]);
 }
 
 /** Plan once using the shared grid, then execute every cell through normal
@@ -5412,7 +5449,10 @@ function executeMonsterRoute(state: SoloCombatState, actorId: string, steps: Gri
   const report = (value: SoloCombatState) => {
     if (!traveled) return value;
     const cost = Math.max(0, initialFeet - (value.movementRemainingFt[actorId] ?? 0));
-    return appendLog(value, actorId, `Перемещение на ${traveled} фт.${cost > traveled ? ` С учётом условий движения: потрачено ${cost} фт.` : ''}`);
+    return appendLog(value, actorId, `Перемещение на ${traveled} фт.${cost > traveled ? ` С учётом условий движения: потрачено ${cost} фт.` : ''}`, [{
+      kind: 'movement', ordinal: 0, sourceActorId: actorId, actorId,
+      targetIds: [actorId], movement: {from: {...state.tokens[actorId].position}, to: {...value.tokens[actorId].position}},
+    }]);
   };
   let next = {...state, monsterMovement: {actorId, steps}};
   while (next.monsterMovement?.steps.length) {

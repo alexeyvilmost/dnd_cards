@@ -1,0 +1,2011 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "key": "weapon.slash",
+      "primitive": "melee_slash",
+      "palette": {
+        "primary": "#f8dfaa",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 920,
+        "scale": 1
+      },
+      "casterCircle": false,
+      "motif": "weapon"
+    },
+    {
+      "key": "weapon.pierce",
+      "primitive": "melee_pierce",
+      "palette": {
+        "primary": "#f8dfaa",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 920,
+        "scale": 1
+      },
+      "casterCircle": false,
+      "motif": "weapon"
+    },
+    {
+      "key": "weapon.bash",
+      "primitive": "melee_bash",
+      "palette": {
+        "primary": "#f8dfaa",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 920,
+        "scale": 1
+      },
+      "casterCircle": false,
+      "motif": "weapon"
+    },
+    {
+      "key": "weapon.arrow",
+      "primitive": "ranged_arrow",
+      "palette": {
+        "primary": "#f8dfaa",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 920,
+        "scale": 1
+      },
+      "casterCircle": false,
+      "motif": "weapon"
+    },
+    {
+      "key": "natural.bite",
+      "primitive": "bite",
+      "palette": {
+        "primary": "#f8dfaa",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 900,
+        "scale": 1.15
+      },
+      "casterCircle": false,
+      "motif": "weapon"
+    },
+    {
+      "key": "natural.poison-bite",
+      "primitive": "bite",
+      "palette": {
+        "primary": "#7ce56e",
+        "secondary": "#c3fba2"
+      },
+      "motion": {
+        "durationMs": 1000,
+        "scale": 1.15
+      },
+      "casterCircle": false,
+      "motif": "poison"
+    },
+    {
+      "key": "spell.fire",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#ff7a29",
+        "secondary": "#ffe9a0"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "fire"
+    },
+    {
+      "key": "spell.frost",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#8ceaff",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "frost"
+    },
+    {
+      "key": "spell.lightning",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#a7ceff",
+        "secondary": "#f4eaff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "lightning"
+    },
+    {
+      "key": "spell.acid",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#bdf84a",
+        "secondary": "#edffab"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "acid"
+    },
+    {
+      "key": "spell.poison",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#7ce56e",
+        "secondary": "#c3fba2"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "poison"
+    },
+    {
+      "key": "spell.radiant",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#ffe99b",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "radiant"
+    },
+    {
+      "key": "spell.necrotic",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#aa87d8",
+        "secondary": "#69dba7"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "necrotic"
+    },
+    {
+      "key": "spell.psychic",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#e599ff",
+        "secondary": "#a7b8ff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "psychic"
+    },
+    {
+      "key": "spell.force",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#b7a5ff",
+        "secondary": "#e5f4ff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "force"
+    },
+    {
+      "key": "spell.thunder",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#b7d2ff",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "thunder"
+    },
+    {
+      "key": "spell.nature",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#98e685",
+        "secondary": "#f5e5a0"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "nature"
+    },
+    {
+      "key": "spell.water",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#67d6f4",
+        "secondary": "#daffff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "water"
+    },
+    {
+      "key": "spell.earth",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#c9a77d",
+        "secondary": "#ecdbad"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "earth"
+    },
+    {
+      "key": "spell.wind",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#d2efff",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "wind"
+    },
+    {
+      "key": "spell.illusion",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#d5aaff",
+        "secondary": "#9cdcff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "illusion"
+    },
+    {
+      "key": "spell.healing",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#7aebbe",
+        "secondary": "#fff6b5"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "healing"
+    },
+    {
+      "key": "spell.acid-splash",
+      "primitive": "burst",
+      "palette": {
+        "primary": "#bdf84a",
+        "secondary": "#edffab"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "acid"
+    },
+    {
+      "key": "spell.mage-hand",
+      "primitive": "spectral_hand",
+      "palette": {
+        "primary": "#b7a5ff",
+        "secondary": "#e5f4ff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "force"
+    },
+    {
+      "key": "spell.friends",
+      "primitive": "aura",
+      "palette": {
+        "primary": "#e599ff",
+        "secondary": "#a7b8ff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "psychic"
+    },
+    {
+      "key": "spell.shillelagh",
+      "primitive": "vines",
+      "palette": {
+        "primary": "#98e685",
+        "secondary": "#f5e5a0"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "nature"
+    },
+    {
+      "key": "spell.blade-ward",
+      "primitive": "ward",
+      "palette": {
+        "primary": "#b7a5ff",
+        "secondary": "#e5f4ff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "force"
+    },
+    {
+      "key": "spell.starry-wisp",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#ffe99b",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "radiant"
+    },
+    {
+      "key": "spell.mockery",
+      "primitive": "thunder",
+      "palette": {
+        "primary": "#e599ff",
+        "secondary": "#a7b8ff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "psychic"
+    },
+    {
+      "key": "spell.frost-ray",
+      "primitive": "beam",
+      "palette": {
+        "primary": "#8ceaff",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "frost"
+    },
+    {
+      "key": "spell.true-strike",
+      "primitive": "melee_slash",
+      "palette": {
+        "primary": "#ffe99b",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "radiant"
+    },
+    {
+      "key": "spell.eldritch-blast",
+      "primitive": "beam",
+      "palette": {
+        "primary": "#b7a5ff",
+        "secondary": "#e5f4ff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "force"
+    },
+    {
+      "key": "spell.guidance",
+      "primitive": "aura",
+      "palette": {
+        "primary": "#ffe99b",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "radiant"
+    },
+    {
+      "key": "spell.death-bell",
+      "primitive": "thunder",
+      "palette": {
+        "primary": "#aa87d8",
+        "secondary": "#69dba7"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "necrotic"
+    },
+    {
+      "key": "spell.thunderclap",
+      "primitive": "thunder",
+      "palette": {
+        "primary": "#b7d2ff",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "thunder"
+    },
+    {
+      "key": "spell.mind-sliver",
+      "primitive": "beam",
+      "palette": {
+        "primary": "#e599ff",
+        "secondary": "#a7b8ff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "psychic"
+    },
+    {
+      "key": "spell.sacred-flame",
+      "primitive": "burst",
+      "palette": {
+        "primary": "#ffe99b",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "radiant"
+    },
+    {
+      "key": "spell.radiant-word",
+      "primitive": "aura",
+      "palette": {
+        "primary": "#ffe99b",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "radiant"
+    },
+    {
+      "key": "spell.message",
+      "primitive": "beam",
+      "palette": {
+        "primary": "#d2efff",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "wind"
+    },
+    {
+      "key": "spell.resistance",
+      "primitive": "ward",
+      "palette": {
+        "primary": "#ffe99b",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "radiant"
+    },
+    {
+      "key": "spell.produce-flame",
+      "primitive": "aura",
+      "palette": {
+        "primary": "#ff7a29",
+        "secondary": "#ffe9a0"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "fire"
+    },
+    {
+      "key": "spell.elementalism",
+      "primitive": "burst",
+      "palette": {
+        "primary": "#98e685",
+        "secondary": "#f5e5a0"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "nature"
+    },
+    {
+      "key": "spell.thorn-whip",
+      "primitive": "vines",
+      "palette": {
+        "primary": "#98e685",
+        "secondary": "#f5e5a0"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "nature"
+    },
+    {
+      "key": "spell.spare-dying",
+      "primitive": "heal",
+      "palette": {
+        "primary": "#7aebbe",
+        "secondary": "#fff6b5"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "healing"
+    },
+    {
+      "key": "spell.sorcerous-burst",
+      "primitive": "burst",
+      "palette": {
+        "primary": "#b7a5ff",
+        "secondary": "#e5f4ff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "force"
+    },
+    {
+      "key": "spell.shocking-grasp",
+      "primitive": "beam",
+      "palette": {
+        "primary": "#a7ceff",
+        "secondary": "#f4eaff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "lightning"
+    },
+    {
+      "key": "spell.astral-rush",
+      "primitive": "dash",
+      "palette": {
+        "primary": "#b7a5ff",
+        "secondary": "#e5f4ff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "force"
+    },
+    {
+      "key": "spell.chill-touch",
+      "primitive": "spectral_hand",
+      "palette": {
+        "primary": "#aa87d8",
+        "secondary": "#69dba7"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "necrotic"
+    },
+    {
+      "key": "spell.dancing-lights",
+      "primitive": "aura",
+      "palette": {
+        "primary": "#d5aaff",
+        "secondary": "#9cdcff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "illusion"
+    },
+    {
+      "key": "spell.druidcraft",
+      "primitive": "vines",
+      "palette": {
+        "primary": "#98e685",
+        "secondary": "#f5e5a0"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "nature"
+    },
+    {
+      "key": "spell.fire-bolt",
+      "primitive": "projectile",
+      "palette": {
+        "primary": "#ff7a29",
+        "secondary": "#ffe9a0"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "fire"
+    },
+    {
+      "key": "spell.light",
+      "primitive": "aura",
+      "palette": {
+        "primary": "#ffe99b",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "radiant"
+    },
+    {
+      "key": "spell.mending",
+      "primitive": "recover",
+      "palette": {
+        "primary": "#b7a5ff",
+        "secondary": "#e5f4ff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "force"
+    },
+    {
+      "key": "spell.minor-illusion",
+      "primitive": "illusion",
+      "palette": {
+        "primary": "#d5aaff",
+        "secondary": "#9cdcff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "illusion"
+    },
+    {
+      "key": "spell.poison-spray",
+      "primitive": "burst",
+      "palette": {
+        "primary": "#7ce56e",
+        "secondary": "#c3fba2"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "poison"
+    },
+    {
+      "key": "spell.prestidigitation",
+      "primitive": "burst",
+      "palette": {
+        "primary": "#d5aaff",
+        "secondary": "#9cdcff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "illusion"
+    },
+    {
+      "key": "spell.thaumaturgy",
+      "primitive": "thunder",
+      "palette": {
+        "primary": "#ffe99b",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 1150,
+        "scale": 1
+      },
+      "casterCircle": true,
+      "motif": "radiant"
+    },
+    {
+      "key": "action.dash",
+      "primitive": "dash",
+      "palette": {
+        "primary": "#d2efff",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 850,
+        "scale": 1
+      },
+      "casterCircle": false,
+      "motif": "wind"
+    },
+    {
+      "key": "action.hide",
+      "primitive": "hide",
+      "palette": {
+        "primary": "#d5aaff",
+        "secondary": "#9cdcff"
+      },
+      "motion": {
+        "durationMs": 850,
+        "scale": 1
+      },
+      "casterCircle": false,
+      "motif": "illusion"
+    },
+    {
+      "key": "action.disengage",
+      "primitive": "disengage",
+      "palette": {
+        "primary": "#d2efff",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 850,
+        "scale": 1
+      },
+      "casterCircle": false,
+      "motif": "wind"
+    },
+    {
+      "key": "action.dodge",
+      "primitive": "dodge",
+      "palette": {
+        "primary": "#d2efff",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 850,
+        "scale": 1
+      },
+      "casterCircle": false,
+      "motif": "wind"
+    },
+    {
+      "key": "action.help",
+      "primitive": "help",
+      "palette": {
+        "primary": "#ffe99b",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 850,
+        "scale": 1
+      },
+      "casterCircle": false,
+      "motif": "radiant"
+    },
+    {
+      "key": "action.search",
+      "primitive": "search",
+      "palette": {
+        "primary": "#ffe99b",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 850,
+        "scale": 1
+      },
+      "casterCircle": false,
+      "motif": "radiant"
+    },
+    {
+      "key": "action.interact",
+      "primitive": "interact",
+      "palette": {
+        "primary": "#f8dfaa",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 850,
+        "scale": 1
+      },
+      "casterCircle": false,
+      "motif": "weapon"
+    },
+    {
+      "key": "action.move",
+      "primitive": "move",
+      "palette": {
+        "primary": "#d2efff",
+        "secondary": "#ffffff"
+      },
+      "motion": {
+        "durationMs": 850,
+        "scale": 1
+      },
+      "casterCircle": false,
+      "motif": "wind"
+    },
+    {
+      "key": "action.death",
+      "primitive": "death",
+      "palette": {
+        "primary": "#aa87d8",
+        "secondary": "#69dba7"
+      },
+      "motion": {
+        "durationMs": 850,
+        "scale": 1
+      },
+      "casterCircle": false,
+      "motif": "necrotic"
+    },
+    {
+      "key": "action.recover",
+      "primitive": "recover",
+      "palette": {
+        "primary": "#7aebbe",
+        "secondary": "#fff6b5"
+      },
+      "motion": {
+        "durationMs": 850,
+        "scale": 1
+      },
+      "casterCircle": false,
+      "motif": "healing"
+    },
+    {
+      "key": "action.heal",
+      "primitive": "heal",
+      "palette": {
+        "primary": "#7aebbe",
+        "secondary": "#fff6b5"
+      },
+      "motion": {
+        "durationMs": 850,
+        "scale": 1
+      },
+      "casterCircle": false,
+      "motif": "healing"
+    },
+    {
+      "key": "action.ward",
+      "primitive": "ward",
+      "palette": {
+        "primary": "#b7a5ff",
+        "secondary": "#e5f4ff"
+      },
+      "motion": {
+        "durationMs": 850,
+        "scale": 1
+      },
+      "casterCircle": false,
+      "motif": "force"
+    },
+    {
+      "key": "action.effect",
+      "primitive": "aura",
+      "palette": {
+        "primary": "#b7a5ff",
+        "secondary": "#e5f4ff"
+      },
+      "motion": {
+        "durationMs": 850,
+        "scale": 1
+      },
+      "casterCircle": false,
+      "motif": "force"
+    }
+  ],
+  "bindings": [
+    {
+      "entity_type": "spell",
+      "entity_id": "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+      "profile_key": "spell.acid-splash"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "70e35366-5446-49ff-b0b9-759dbbff347e",
+      "profile_key": "spell.mage-hand"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2",
+      "profile_key": "spell.friends"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d3a05e09-7f80-44ea-be21-dfdd3408d528",
+      "profile_key": "spell.shillelagh"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "73d4195c-5da4-444d-a0c1-19572df641b2",
+      "profile_key": "spell.blade-ward"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7f7d92ed-0d5c-4567-990b-3395247b9266",
+      "profile_key": "spell.starry-wisp"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "bdeda1c3-6574-4946-8b91-5faf0f76072c",
+      "profile_key": "spell.mockery"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ebe432dd-c124-4f79-a39b-db14ca2ed741",
+      "profile_key": "spell.frost-ray"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "f5d4b18f-6212-47e7-ae0b-8dda2f84d4c2",
+      "profile_key": "spell.true-strike"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0f0eca67-f241-4f1a-b01b-37c6f16adea2",
+      "profile_key": "spell.eldritch-blast"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a9a0d114-ad46-435e-a3c9-128b305b8a5d",
+      "profile_key": "spell.death-bell"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "13e456fc-cf29-4c46-8aeb-c282a9cbcd5f",
+      "profile_key": "spell.thunderclap"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "c3fc969b-ba03-443f-a222-46f6b9a53bd6",
+      "profile_key": "spell.mind-sliver"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8cddf152-e406-4c7a-8d34-cc8bcbfc0dfa",
+      "profile_key": "spell.sacred-flame"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "78eb6e5c-5d2a-42ad-8e6e-6bf3be3f96c0",
+      "profile_key": "spell.radiant-word"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "35d36558-8a47-49a1-9099-387bee37b8a2",
+      "profile_key": "spell.message"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "bd99466f-46ab-4af5-a41d-b2b804b9f1e3",
+      "profile_key": "spell.resistance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ba23242c-eb9c-46a6-ba01-ebdc3b5b9618",
+      "profile_key": "spell.produce-flame"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "b84d904f-4768-4a05-8803-7a0d0da28a00",
+      "profile_key": "spell.elementalism"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "1c966901-b84a-435c-8950-1da774d72210",
+      "profile_key": "spell.thorn-whip"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d3177c17-b0c9-4691-a2ba-5ef24a28c1aa",
+      "profile_key": "spell.spare-dying"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "9c7cec56-53ed-43f1-8ba7-67d768cf28de",
+      "profile_key": "spell.sorcerous-burst"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "30530b80-5db9-4fd9-bae8-1cb092c05730",
+      "profile_key": "spell.shocking-grasp"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "742c2f7b-b72a-444c-8868-efbe8cd74c70",
+      "profile_key": "spell.astral-rush"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "48f07634-634c-562c-a9c6-7e2e73cbb9d3",
+      "profile_key": "spell.true-strike"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "39400cef-bf13-50b6-a3c9-cf470dda1219",
+      "profile_key": "spell.true-strike"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8147c9f6-bd43-50bb-ad1b-01d743908448",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "cfa10828-bdd6-56df-ad9e-4f3d5d0e76ba",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "ecdf1283-2502-5020-a519-93d3eb6256d4",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "542c18e6-3fa0-5c48-af17-838c91038a32",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "13f6c6d9-0210-5762-a9c6-01cd17d55bcc",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "72138e78-30bb-5168-a675-3756cf794729",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0a279ad1-5550-58ab-a228-e399338babcf",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "9d02f061-7ec1-5fc5-a864-9cc5628c0f3e",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e751f556-e126-5fb0-a80c-3a475c3b89f3",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "98bf10f9-89a9-5f82-aff0-0fd2d82ff619",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d1097558-c304-5031-a3e6-ce64823e3b1d",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "75ed8f25-6c75-5118-a600-550ffe73266c",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "6915159b-fda2-5bf6-a5d2-e1dd18f23879",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "44a42525-26d1-5131-ae52-57007fc85ae3",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "88507518-d783-5b87-aa5d-b12f17d7e32e",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "6d0575be-1c0d-5bbf-a303-0db0da313f06",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "08d508e6-e862-5434-a860-1a75137bb5ed",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a6d69f47-121f-5925-a3f2-f1036e604752",
+      "profile_key": "spell.guidance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "08f4c37f-980a-590a-a0e5-4e62e323e481",
+      "profile_key": "spell.resistance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "be19a61e-0211-54fc-a0c3-d50c16fffc4f",
+      "profile_key": "spell.resistance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "36259a69-93ba-5cc5-a537-425a8a2cc23f",
+      "profile_key": "spell.resistance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3865ca56-0441-55e9-a9ce-88040b0fdae2",
+      "profile_key": "spell.resistance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "97535295-7d5d-5f99-a2b1-88113829a7ca",
+      "profile_key": "spell.resistance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "21de53ce-4dbb-556b-a84a-fe259ad6d5fe",
+      "profile_key": "spell.resistance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "634b6e23-8df5-54cb-afeb-92d1dca9f0df",
+      "profile_key": "spell.resistance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "4c77e278-5d20-5fde-a269-4a5fdd81cc4f",
+      "profile_key": "spell.resistance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0268d1de-8593-536d-aa12-7530cbac9243",
+      "profile_key": "spell.resistance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "554a002c-5736-5c9e-a01c-1a063fc28c39",
+      "profile_key": "spell.resistance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "5ec6b2d4-587e-501f-ab09-0a175a591828",
+      "profile_key": "spell.resistance"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "a87f09ed-536d-5530-ab0b-cb4fb5dddbc8",
+      "profile_key": "spell.wind"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "554cdc1f-a23f-559d-aed4-c8338c75ee4c",
+      "profile_key": "spell.earth"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "5b149d6e-f0e4-5e4c-a300-675d2b90f343",
+      "profile_key": "spell.fire"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "213f9e6a-6000-5aac-accb-ae7f98588a7d",
+      "profile_key": "spell.earth"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "2385cc5f-2ca9-571b-a78c-04670c59771c",
+      "profile_key": "spell.water"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "39c2b232-0719-565c-a403-cd8a96e974d2",
+      "profile_key": "spell.acid"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e25e99b5-da59-5c37-a161-8e9f0e841b83",
+      "profile_key": "spell.frost"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "4b3dd04d-a5dd-5361-affc-adad6b910faa",
+      "profile_key": "spell.fire"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e8999ba5-b479-51f2-aa66-6a9494d746f4",
+      "profile_key": "spell.lightning"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "1ab7d99f-165c-537a-ae3a-b4f25992a97c",
+      "profile_key": "spell.poison"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3c5011ec-6d21-56c2-a0be-579d075624e8",
+      "profile_key": "spell.psychic"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7f25634e-602d-5bfa-af57-acc04336b535",
+      "profile_key": "spell.thunder"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0809ec29-873b-56c3-afdf-645a949daccd",
+      "profile_key": "spell.thunderclap"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7e5a24b6-bc9f-519c-aa71-9dfb366933f4",
+      "profile_key": "spell.mage-hand"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "55f6d406-658f-58b2-a85d-96c34c4d377a",
+      "profile_key": "spell.minor-illusion"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "d485e17e-1dc5-5827-aed6-5240193aec9e",
+      "profile_key": "spell.produce-flame"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "0f854698-9ece-5dc5-a8fd-00dd1b38bdd1",
+      "profile_key": "spell.message"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7fc187b2-1653-591b-a718-629cef79848b",
+      "profile_key": "spell.thunderclap"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e300a1f2-91ae-4c82-9904-057f93a013ba",
+      "profile_key": "spell.chill-touch"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "b2c5ebf4-facc-4521-948f-55b30746bfa5",
+      "profile_key": "spell.dancing-lights"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "3c68b9a7-d143-4b39-b06c-3d78e3276117",
+      "profile_key": "spell.druidcraft"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "50626b5a-33c5-46e0-af0e-50599f4306a0",
+      "profile_key": "spell.fire-bolt"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "1e9cb7db-f4dc-4215-ad57-0e3407b78913",
+      "profile_key": "spell.light"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "5b79a37b-e7a9-482a-9efc-46b57e3a79de",
+      "profile_key": "spell.mending"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "dc59ce91-4e89-4f1d-89a5-e25650f3a6b7",
+      "profile_key": "spell.minor-illusion"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "7d0c00e7-0cfa-4f3f-8650-aac70150538c",
+      "profile_key": "spell.poison-spray"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "e47e71cb-f44e-402e-91af-e6fad63982dc",
+      "profile_key": "spell.prestidigitation"
+    },
+    {
+      "entity_type": "spell",
+      "entity_id": "8b708d7b-097e-4624-8a41-c8c8e00f044c",
+      "profile_key": "spell.thaumaturgy"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "15400000-0000-4000-8000-000000000012",
+      "profile_key": "action.dash"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "15400000-0000-4000-8000-000000000013",
+      "profile_key": "action.disengage"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "15400000-0000-4000-8000-000000000014",
+      "profile_key": "action.hide"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "16200000-0000-4000-8000-000000000201",
+      "profile_key": "natural.bite"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "16200000-0000-4000-8000-000000000203",
+      "profile_key": "natural.poison-bite"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "16200000-0000-4000-8000-000000000204",
+      "profile_key": "natural.bite"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "5ec851a1-0818-4937-874e-887e813ba459",
+      "profile_key": "action.dash"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b1000000-0000-4000-8000-000000000003",
+      "profile_key": "natural.bite"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000018",
+      "profile_key": "natural.bite"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "24500000-0000-4000-8000-000000000002",
+      "profile_key": "action.disengage"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "24500000-0000-4000-8000-000000000001",
+      "profile_key": "action.hide"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000004",
+      "profile_key": "natural.bite"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000012",
+      "profile_key": "natural.poison-bite"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b2000000-0000-4000-8000-000000000011",
+      "profile_key": "natural.bite"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "63cbe0ad-f230-4156-9c10-af2242a59964",
+      "profile_key": "action.dash"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "a62f30c3-bf2b-419d-b823-e9e819683e07",
+      "profile_key": "action.disengage"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "b0085bf7-130a-41c9-956d-54a093a1df99",
+      "profile_key": "action.dodge"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "24400000-0000-4000-8000-000000000001",
+      "profile_key": "action.hide"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "10800000-0000-4000-8000-000000000001",
+      "profile_key": "weapon.arrow"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "070e89cf-ef2e-4d5a-9526-e2d6e7c9fc6e",
+      "profile_key": "action.dodge"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "2863e54d-0d7e-4d2c-8291-0f222a7ce662",
+      "profile_key": "action.help"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "92a32f25-558f-47c5-bddc-7ea97f83be04",
+      "profile_key": "action.interact"
+    },
+    {
+      "entity_type": "action",
+      "entity_id": "4720c0d0-6610-40e2-812b-4aa0a1bb8449",
+      "profile_key": "weapon.bash"
+    }
+  ],
+  "defaults": {
+    "visual": {
+      "slashing": "weapon.slash",
+      "piercing": "weapon.pierce",
+      "bludgeoning": "weapon.bash",
+      "ranged": "weapon.arrow",
+      "magic": "spell.force"
+    },
+    "event": {
+      "healing": "action.heal",
+      "temp_hp": "action.ward",
+      "effect_expired": "action.recover",
+      "stabilized": "action.recover",
+      "movement": "action.move",
+      "death": "action.death",
+      "condition_removed": "action.recover",
+      "effect_applied": "action.effect",
+      "condition_applied": "action.effect",
+      "resource_restored": "action.recover",
+      "damage_reduction": "action.ward",
+      "condition_immune": "action.ward",
+      "world_interaction": "action.interact",
+      "communication": "action.help",
+      "turn_started": "action.effect"
+    },
+    "spellEvent": {
+      "healing": "spell.spare-dying",
+      "stabilized": "spell.spare-dying",
+      "temp_hp": "spell.blade-ward",
+      "damage_reduction": "spell.blade-ward",
+      "condition_immune": "spell.resistance",
+      "resource_restored": "spell.guidance",
+      "communication": "spell.message"
+    },
+    "activation": {
+      "dash": "action.dash",
+      "hide": "action.hide",
+      "disengage": "action.disengage",
+      "dodge": "action.dodge",
+      "help": "action.help",
+      "search": "action.search",
+      "study": "action.search",
+      "utilize": "action.interact"
+    },
+    "school": {
+      "abjuration": "spell.resistance",
+      "conjuration": "spell.force",
+      "divination": "spell.guidance",
+      "enchantment": "spell.friends",
+      "evocation": "spell.force",
+      "illusion": "spell.minor-illusion",
+      "necromancy": "spell.necrotic",
+      "transmutation": "spell.elementalism"
+    },
+    "damage": {
+      "cold": "spell.frost",
+      "fire": "spell.fire",
+      "lightning": "spell.lightning",
+      "acid": "spell.acid",
+      "poison": "spell.poison",
+      "radiant": "spell.radiant",
+      "necrotic": "spell.necrotic",
+      "psychic": "spell.psychic",
+      "force": "spell.force",
+      "thunder": "spell.thunder"
+    }
+  },
+  "cantripCoverage": [
+    {
+      "id": "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+      "card_number": "SPELL-0166",
+      "name": "Брызги кислоты"
+    },
+    {
+      "id": "70e35366-5446-49ff-b0b9-759dbbff347e",
+      "card_number": "SPELL-0173",
+      "name": "Волшебная рука"
+    },
+    {
+      "id": "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2",
+      "card_number": "SPELL-0192",
+      "name": "Дружба"
+    },
+    {
+      "id": "d3a05e09-7f80-44ea-be21-dfdd3408d528",
+      "card_number": "SPELL-0194",
+      "name": "Дубинка"
+    },
+    {
+      "id": "73d4195c-5da4-444d-a0c1-19572df641b2",
+      "card_number": "SPELL-0202",
+      "name": "Защита от оружия"
+    },
+    {
+      "id": "7f7d92ed-0d5c-4567-990b-3395247b9266",
+      "card_number": "SPELL-0204",
+      "name": "Звёздный светлячок"
+    },
+    {
+      "id": "bdeda1c3-6574-4946-8b91-5faf0f76072c",
+      "card_number": "SPELL-0205",
+      "name": "Злая насмешка"
+    },
+    {
+      "id": "ebe432dd-c124-4f79-a39b-db14ca2ed741",
+      "card_number": "SPELL-0218",
+      "name": "Луч холода"
+    },
+    {
+      "id": "f5d4b18f-6212-47e7-ae0b-8dda2f84d4c2",
+      "card_number": "SPELL-0224",
+      "name": "Меткий удар"
+    },
+    {
+      "id": "0f0eca67-f241-4f1a-b01b-37c6f16adea2",
+      "card_number": "SPELL-0226",
+      "name": "Мистический заряд"
+    },
+    {
+      "id": "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7",
+      "card_number": "SPELL-0230",
+      "name": "Наставление"
+    },
+    {
+      "id": "a9a0d114-ad46-435e-a3c9-128b305b8a5d",
+      "card_number": "SPELL-0260",
+      "name": "Погребальный звон"
+    },
+    {
+      "id": "13e456fc-cf29-4c46-8aeb-c282a9cbcd5f",
+      "card_number": "SPELL-0280",
+      "name": "Раскат грома"
+    },
+    {
+      "id": "c3fc969b-ba03-443f-a222-46f6b9a53bd6",
+      "card_number": "SPELL-0281",
+      "name": "Расщепление разума"
+    },
+    {
+      "id": "8cddf152-e406-4c7a-8d34-cc8bcbfc0dfa",
+      "card_number": "SPELL-0286",
+      "name": "Священное пламя"
+    },
+    {
+      "id": "78eb6e5c-5d2a-42ad-8e6e-6bf3be3f96c0",
+      "card_number": "SPELL-0291",
+      "name": "Слово сияния"
+    },
+    {
+      "id": "35d36558-8a47-49a1-9099-387bee37b8a2",
+      "card_number": "SPELL-0294",
+      "name": "Сообщение"
+    },
+    {
+      "id": "bd99466f-46ab-4af5-a41d-b2b804b9f1e3",
+      "card_number": "SPELL-0295",
+      "name": "Сопротивление"
+    },
+    {
+      "id": "ba23242c-eb9c-46a6-ba01-ebdc3b5b9618",
+      "card_number": "SPELL-0297",
+      "name": "Сотворение пламени"
+    },
+    {
+      "id": "b84d904f-4768-4a05-8803-7a0d0da28a00",
+      "card_number": "SPELL-0298",
+      "name": "Стихийность"
+    },
+    {
+      "id": "1c966901-b84a-435c-8950-1da774d72210",
+      "card_number": "SPELL-0300",
+      "name": "Терновый кнут"
+    },
+    {
+      "id": "d3177c17-b0c9-4691-a2ba-5ef24a28c1aa",
+      "card_number": "SPELL-0312",
+      "name": "Уход за умирающим"
+    },
+    {
+      "id": "9c7cec56-53ed-43f1-8ba7-67d768cf28de",
+      "card_number": "SPELL-0315",
+      "name": "Чародейский выброс"
+    },
+    {
+      "id": "30530b80-5db9-4fd9-bae8-1cb092c05730",
+      "card_number": "SPELL-0319",
+      "name": "Электрошок"
+    },
+    {
+      "id": "742c2f7b-b72a-444c-8868-efbe8cd74c70",
+      "card_number": "SPELL-0482",
+      "name": "Астральный рывок"
+    },
+    {
+      "id": "48f07634-634c-562c-a9c6-7e2e73cbb9d3",
+      "card_number": "SPELL-VAR-SPELL-0224-radiant",
+      "name": "Меткий удар — Излучение"
+    },
+    {
+      "id": "39400cef-bf13-50b6-a3c9-cf470dda1219",
+      "card_number": "SPELL-VAR-SPELL-0224-weapon",
+      "name": "Меткий удар — Обычный тип оружия"
+    },
+    {
+      "id": "8147c9f6-bd43-50bb-ad1b-01d743908448",
+      "card_number": "SPELL-VAR-SPELL-0230-acrobatics",
+      "name": "Наставление — Акробатика"
+    },
+    {
+      "id": "cfa10828-bdd6-56df-ad9e-4f3d5d0e76ba",
+      "card_number": "SPELL-VAR-SPELL-0230-animal-handling",
+      "name": "Наставление — Уход за животными"
+    },
+    {
+      "id": "ecdf1283-2502-5020-a519-93d3eb6256d4",
+      "card_number": "SPELL-VAR-SPELL-0230-arcana",
+      "name": "Наставление — Магия"
+    },
+    {
+      "id": "542c18e6-3fa0-5c48-af17-838c91038a32",
+      "card_number": "SPELL-VAR-SPELL-0230-athletics",
+      "name": "Наставление — Атлетика"
+    },
+    {
+      "id": "13f6c6d9-0210-5762-a9c6-01cd17d55bcc",
+      "card_number": "SPELL-VAR-SPELL-0230-deception",
+      "name": "Наставление — Обман"
+    },
+    {
+      "id": "72138e78-30bb-5168-a675-3756cf794729",
+      "card_number": "SPELL-VAR-SPELL-0230-history",
+      "name": "Наставление — История"
+    },
+    {
+      "id": "0a279ad1-5550-58ab-a228-e399338babcf",
+      "card_number": "SPELL-VAR-SPELL-0230-insight",
+      "name": "Наставление — Проницательность"
+    },
+    {
+      "id": "9d02f061-7ec1-5fc5-a864-9cc5628c0f3e",
+      "card_number": "SPELL-VAR-SPELL-0230-intimidation",
+      "name": "Наставление — Запугивание"
+    },
+    {
+      "id": "e751f556-e126-5fb0-a80c-3a475c3b89f3",
+      "card_number": "SPELL-VAR-SPELL-0230-investigation",
+      "name": "Наставление — Расследование"
+    },
+    {
+      "id": "98bf10f9-89a9-5f82-aff0-0fd2d82ff619",
+      "card_number": "SPELL-VAR-SPELL-0230-medicine",
+      "name": "Наставление — Медицина"
+    },
+    {
+      "id": "d1097558-c304-5031-a3e6-ce64823e3b1d",
+      "card_number": "SPELL-VAR-SPELL-0230-nature",
+      "name": "Наставление — Природа"
+    },
+    {
+      "id": "75ed8f25-6c75-5118-a600-550ffe73266c",
+      "card_number": "SPELL-VAR-SPELL-0230-perception",
+      "name": "Наставление — Восприятие"
+    },
+    {
+      "id": "6915159b-fda2-5bf6-a5d2-e1dd18f23879",
+      "card_number": "SPELL-VAR-SPELL-0230-performance",
+      "name": "Наставление — Выступление"
+    },
+    {
+      "id": "44a42525-26d1-5131-ae52-57007fc85ae3",
+      "card_number": "SPELL-VAR-SPELL-0230-persuasion",
+      "name": "Наставление — Убеждение"
+    },
+    {
+      "id": "88507518-d783-5b87-aa5d-b12f17d7e32e",
+      "card_number": "SPELL-VAR-SPELL-0230-religion",
+      "name": "Наставление — Религия"
+    },
+    {
+      "id": "6d0575be-1c0d-5bbf-a303-0db0da313f06",
+      "card_number": "SPELL-VAR-SPELL-0230-sleight-of-hand",
+      "name": "Наставление — Ловкость рук"
+    },
+    {
+      "id": "08d508e6-e862-5434-a860-1a75137bb5ed",
+      "card_number": "SPELL-VAR-SPELL-0230-stealth",
+      "name": "Наставление — Скрытность"
+    },
+    {
+      "id": "a6d69f47-121f-5925-a3f2-f1036e604752",
+      "card_number": "SPELL-VAR-SPELL-0230-survival",
+      "name": "Наставление — Выживание"
+    },
+    {
+      "id": "08f4c37f-980a-590a-a0e5-4e62e323e481",
+      "card_number": "SPELL-VAR-SPELL-0295-acid",
+      "name": "Сопротивление — Кислота"
+    },
+    {
+      "id": "be19a61e-0211-54fc-a0c3-d50c16fffc4f",
+      "card_number": "SPELL-VAR-SPELL-0295-bludgeoning",
+      "name": "Сопротивление — Дробящий"
+    },
+    {
+      "id": "36259a69-93ba-5cc5-a537-425a8a2cc23f",
+      "card_number": "SPELL-VAR-SPELL-0295-cold",
+      "name": "Сопротивление — Холод"
+    },
+    {
+      "id": "3865ca56-0441-55e9-a9ce-88040b0fdae2",
+      "card_number": "SPELL-VAR-SPELL-0295-fire",
+      "name": "Сопротивление — Огонь"
+    },
+    {
+      "id": "97535295-7d5d-5f99-a2b1-88113829a7ca",
+      "card_number": "SPELL-VAR-SPELL-0295-lightning",
+      "name": "Сопротивление — Молния"
+    },
+    {
+      "id": "21de53ce-4dbb-556b-a84a-fe259ad6d5fe",
+      "card_number": "SPELL-VAR-SPELL-0295-necrotic",
+      "name": "Сопротивление — Некротический"
+    },
+    {
+      "id": "634b6e23-8df5-54cb-afeb-92d1dca9f0df",
+      "card_number": "SPELL-VAR-SPELL-0295-piercing",
+      "name": "Сопротивление — Колющий"
+    },
+    {
+      "id": "4c77e278-5d20-5fde-a269-4a5fdd81cc4f",
+      "card_number": "SPELL-VAR-SPELL-0295-poison",
+      "name": "Сопротивление — Яд"
+    },
+    {
+      "id": "0268d1de-8593-536d-aa12-7530cbac9243",
+      "card_number": "SPELL-VAR-SPELL-0295-radiant",
+      "name": "Сопротивление — Излучение"
+    },
+    {
+      "id": "554a002c-5736-5c9e-a01c-1a063fc28c39",
+      "card_number": "SPELL-VAR-SPELL-0295-slashing",
+      "name": "Сопротивление — Рубящий"
+    },
+    {
+      "id": "5ec6b2d4-587e-501f-ab09-0a175a591828",
+      "card_number": "SPELL-VAR-SPELL-0295-thunder",
+      "name": "Сопротивление — Гром"
+    },
+    {
+      "id": "a87f09ed-536d-5530-ab0b-cb4fb5dddbc8",
+      "card_number": "SPELL-VAR-SPELL-0298-air",
+      "name": "Стихийность — Призыв воздуха"
+    },
+    {
+      "id": "554cdc1f-a23f-559d-aed4-c8338c75ee4c",
+      "card_number": "SPELL-VAR-SPELL-0298-earth",
+      "name": "Стихийность — Призыв земли"
+    },
+    {
+      "id": "5b149d6e-f0e4-5e4c-a300-675d2b90f343",
+      "card_number": "SPELL-VAR-SPELL-0298-fire",
+      "name": "Стихийность — Призыв огня"
+    },
+    {
+      "id": "213f9e6a-6000-5aac-accb-ae7f98588a7d",
+      "card_number": "SPELL-VAR-SPELL-0298-sculpt",
+      "name": "Стихийность — Ваяние стихии"
+    },
+    {
+      "id": "2385cc5f-2ca9-571b-a78c-04670c59771c",
+      "card_number": "SPELL-VAR-SPELL-0298-water",
+      "name": "Стихийность — Призыв воды"
+    },
+    {
+      "id": "39c2b232-0719-565c-a403-cd8a96e974d2",
+      "card_number": "SPELL-VAR-SPELL-0315-acid",
+      "name": "Чародейский выброс — Кислота"
+    },
+    {
+      "id": "e25e99b5-da59-5c37-a161-8e9f0e841b83",
+      "card_number": "SPELL-VAR-SPELL-0315-cold",
+      "name": "Чародейский выброс — Холод"
+    },
+    {
+      "id": "4b3dd04d-a5dd-5361-affc-adad6b910faa",
+      "card_number": "SPELL-VAR-SPELL-0315-fire",
+      "name": "Чародейский выброс — Огонь"
+    },
+    {
+      "id": "e8999ba5-b479-51f2-aa66-6a9494d746f4",
+      "card_number": "SPELL-VAR-SPELL-0315-lightning",
+      "name": "Чародейский выброс — Электричество"
+    },
+    {
+      "id": "1ab7d99f-165c-537a-ae3a-b4f25992a97c",
+      "card_number": "SPELL-VAR-SPELL-0315-poison",
+      "name": "Чародейский выброс — Яд"
+    },
+    {
+      "id": "3c5011ec-6d21-56c2-a0be-579d075624e8",
+      "card_number": "SPELL-VAR-SPELL-0315-psychic",
+      "name": "Чародейский выброс — Психическая энергия"
+    },
+    {
+      "id": "7f25634e-602d-5bfa-af57-acc04336b535",
+      "card_number": "SPELL-VAR-SPELL-0315-thunder",
+      "name": "Чародейский выброс — Звук"
+    },
+    {
+      "id": "0809ec29-873b-56c3-afdf-645a949daccd",
+      "card_number": "SPELL-VAR-thaumaturgy-booming-voice",
+      "name": "Чудотворство — Раскатистый голос"
+    },
+    {
+      "id": "7e5a24b6-bc9f-519c-aa71-9dfb366933f4",
+      "card_number": "SPELL-VAR-thaumaturgy-door",
+      "name": "Чудотворство — Невидимая рука"
+    },
+    {
+      "id": "55f6d406-658f-58b2-a85d-96c34c4d377a",
+      "card_number": "SPELL-VAR-thaumaturgy-eyes",
+      "name": "Чудотворство — Изменённые глаза"
+    },
+    {
+      "id": "d485e17e-1dc5-5827-aed6-5240193aec9e",
+      "card_number": "SPELL-VAR-thaumaturgy-flame",
+      "name": "Чудотворство — Игра с огнём"
+    },
+    {
+      "id": "0f854698-9ece-5dc5-a8fd-00dd1b38bdd1",
+      "card_number": "SPELL-VAR-thaumaturgy-sound",
+      "name": "Чудотворство — Фантомный звук"
+    },
+    {
+      "id": "7fc187b2-1653-591b-a718-629cef79848b",
+      "card_number": "SPELL-VAR-thaumaturgy-tremor",
+      "name": "Чудотворство — Дрожь"
+    },
+    {
+      "id": "e300a1f2-91ae-4c82-9904-057f93a013ba",
+      "card_number": "chill_touch",
+      "name": "Леденящее прикосновение"
+    },
+    {
+      "id": "b2c5ebf4-facc-4521-948f-55b30746bfa5",
+      "card_number": "dancing_lights",
+      "name": "Пляшущие огоньки"
+    },
+    {
+      "id": "3c68b9a7-d143-4b39-b06c-3d78e3276117",
+      "card_number": "druidcraft",
+      "name": "Искусство друидов"
+    },
+    {
+      "id": "50626b5a-33c5-46e0-af0e-50599f4306a0",
+      "card_number": "fire_bolt",
+      "name": "Огненный снаряд"
+    },
+    {
+      "id": "1e9cb7db-f4dc-4215-ad57-0e3407b78913",
+      "card_number": "light",
+      "name": "Свет"
+    },
+    {
+      "id": "5b79a37b-e7a9-482a-9efc-46b57e3a79de",
+      "card_number": "mending",
+      "name": "Починка"
+    },
+    {
+      "id": "dc59ce91-4e89-4f1d-89a5-e25650f3a6b7",
+      "card_number": "minor_illusion",
+      "name": "Малая иллюзия"
+    },
+    {
+      "id": "7d0c00e7-0cfa-4f3f-8650-aac70150538c",
+      "card_number": "poison_spray",
+      "name": "Ядовитые брызги"
+    },
+    {
+      "id": "e47e71cb-f44e-402e-91af-e6fad63982dc",
+      "card_number": "prestidigitation",
+      "name": "Фокусы"
+    },
+    {
+      "id": "8b708d7b-097e-4624-8a41-c8c8e00f044c",
+      "card_number": "thaumaturgy",
+      "name": "Чудотворство"
+    }
+  ]
+}
