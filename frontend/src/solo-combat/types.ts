@@ -70,13 +70,22 @@ export type CombatLogTone =
  * migrated into this shape by persistence.ts.
  */
 export interface CombatLogEventRecord {
-  kind: 'engine' | 'death';
+  kind: 'engine' | 'death' | 'action' | 'movement';
   ordinal: number;
   sourceActorId: string;
   actorId: string;
   targetIds: string[];
   event?: EngineEvent;
   facts?: Record<string, unknown>;
+  /** Presentation provenance projected from the committed declaration. */
+  actionId?: string;
+  actionKind?: RuleActionDefinition['kind'];
+  sourceEntityIds?: string[];
+  spell?: { baseLevel: number; castLevel: number };
+  /** Selected board point captured for a new utility/area declaration. */
+  targetPosition?: GridPosition;
+  /** Board coordinates at the committed movement, independent of later moves. */
+  movement?: { from: GridPosition; to: GridPosition };
 }
 
 export interface CombatLogEntry {

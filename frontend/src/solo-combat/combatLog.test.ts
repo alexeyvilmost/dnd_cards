@@ -45,6 +45,23 @@ function engineRecord(
 }
 
 describe('structured solo-combat log', () => {
+  it('projects stable entity and cast provenance for utility declarations and their engine events', () => {
+    const records = projectCombatLogRecords([
+      {ordinal: 1, sourceActorId: 'hero', obligationIds: [], payload: {
+        type: 'ActionDeclared', actorId: 'hero', actionId: 'unknown-spell-action', actionKind: 'spell',
+        sourceEntityIds: ['spell-entity', 'class-entity'], targetIds: ['ally'], timing: 'active',
+        spell: {baseLevel: 1, castLevel: 4},
+      }},
+      {ordinal: 2, sourceActorId: 'hero', obligationIds: [], payload: {
+        type: 'EngineEventRecorded', actorId: 'hero', targetIds: ['ally'], event: {type: 'temp_hp', amount: 12},
+      }},
+    ] as UncommittedRuleEvent[]);
+    expect(records).toHaveLength(2);
+    for (const record of records) expect(record).toMatchObject({actionId: 'unknown-spell-action', actionKind: 'spell',
+      sourceEntityIds: ['spell-entity', 'class-entity'], spell: {baseLevel: 1, castLevel: 4}, targetIds: ['ally']});
+    expect(records[0].kind).toBe('action');
+    expect(combatLogDetails(records[0], state)).toEqual([]);
+  });
   it('retains source, targets, roll detail, and discarded dice from rule envelopes', () => {
     const records = projectCombatLogRecords([{
       ordinal: 7,

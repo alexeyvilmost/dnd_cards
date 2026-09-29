@@ -20,8 +20,22 @@ export interface CombatLogDetail {
 export function projectCombatLogRecords(
   events: readonly UncommittedRuleEvent[],
 ): CombatLogEventRecord[] {
+  const declarations = events.flatMap(envelope => envelope.payload.type === 'ActionDeclared'
+    ? [{ordinal: envelope.ordinal, action: envelope.payload}] : []);
   return events.flatMap<CombatLogEventRecord>((envelope): CombatLogEventRecord[] => {
+    if (envelope.payload.type === 'ActionDeclared') {
+      const action = envelope.payload;
+      return [{
+        kind: 'action', ordinal: envelope.ordinal, sourceActorId: action.actorId,
+        actorId: action.actorId, targetIds: [...action.targetIds],
+        actionId: action.actionId, actionKind: action.actionKind,
+        sourceEntityIds: [...action.sourceEntityIds],
+        ...(action.spell ? {spell: {baseLevel: action.spell.baseLevel, castLevel: action.spell.castLevel}} : {}),
+      }];
+    }
     if (envelope.payload.type === 'EngineEventRecorded') {
+      const action = [...declarations].reverse().find(row => row.ordinal <= envelope.ordinal
+        && row.action.actorId === envelope.sourceActorId)?.action;
       return [{
         kind: 'engine' as const,
         ordinal: envelope.ordinal,
@@ -30,6 +44,10 @@ export function projectCombatLogRecords(
         targetIds: [...envelope.payload.targetIds],
         event: envelope.payload.event,
         ...(envelope.payload.facts ? { facts: envelope.payload.facts } : {}),
+        ...(action ? {
+          actionId: action.actionId, actionKind: action.actionKind, sourceEntityIds: [...action.sourceEntityIds],
+          ...(action.spell ? {spell: {baseLevel: action.spell.baseLevel, castLevel: action.spell.castLevel}} : {}),
+        } : {}),
       }];
     }
     if (envelope.payload.type === 'ActorDeathAdjudicated') {

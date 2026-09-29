@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { groupCombatSaveBeats, presentCombatEntries } from './presentation';
 import type { CombatLogEntry, SoloCombatState } from './types';
 import type { EngineEvent, RollLog } from '../mvp/contracts';
 import compiled from '../pages/rulesLabFixture.generated.json';
+import { builtInAnimationCatalog, setCombatAnimationCatalog } from './animationProfiles';
 
 const roll: RollLog = {kind: 'd20', dice: [{sides: 20, result: 15}], total: 20,
   modifiers: [{source: 'Атака', value: 5}], advantage: 'none', outcome: 'hit', target: {type: 'ac', value: 14}, text: 'к20: 15 +5 = 20'};
@@ -15,6 +16,63 @@ const entry = (events: EngineEvent[], text = 'Герой: Удар: выполн
   records: events.map((event, ordinal) => ({kind: 'engine', ordinal, sourceActorId: 'hero', actorId: 'hero', targetIds: ['enemy'], event}))});
 
 describe('combat presentation from committed events', () => {
+  afterEach(() => setCombatAnimationCatalog(builtInAnimationCatalog));
+  it.each([
+    {id: 'arbitrary-lantern', name: 'Световой знак', entityId: 'lamp-entity', baseLevel: 0, castLevel: 0, profile: 'spell.light', position: {x: 9, y: 4}},
+    {id: 'arbitrary-protection', name: 'Другая защита', entityId: 'protection-entity', baseLevel: 1, castLevel: 5, profile: 'spell.blade-ward', position: {x: 0, y: 1}},
+  ])('animates a utility entity from its declaration, independent of log names ($id)', data => {
+    setCombatAnimationCatalog({...builtInAnimationCatalog, bindings: [{entity_type: 'spell', entity_id: data.entityId, profile_key: data.profile}]});
+    const utility = {id: data.id, name: data.name, kind: 'spell' as const, sourceEntityIds: [data.entityId] as [string],
+      spell: {level: data.baseLevel, entityId: data.entityId}, mechanics: {}};
+    const log: CombatLogEntry = {id: 'utility', round: 1, actorId: 'hero', text: 'Произвольный текст без названия', records: [{
+      kind: 'action', ordinal: 0, sourceActorId: 'hero', actorId: 'hero', targetIds: [],
+      actionId: utility.id, actionKind: 'spell', sourceEntityIds: [data.entityId], spell: {baseLevel: data.baseLevel, castLevel: data.castLevel},
+      targetPosition: data.position,
+    }, {kind: 'engine', ordinal: 1, sourceActorId: 'hero', actorId: 'hero', targetIds: [], actionId: utility.id,
+      sourceEntityIds: [data.entityId], spell: {baseLevel: data.baseLevel, castLevel: data.castLevel},
+      event: {type: 'world_interaction', operation: 'visual_effect', parameters: {}}}]};
+    const [beat] = presentCombatEntries({...state, catalogActions: [utility]}, [log]);
+    expect(beat).toMatchObject({actionId: data.id, actionName: data.name, spellLevel: data.castLevel,
+      sourceEntityIds: [data.entityId], entityRef: {kind: 'spell', id: data.entityId}, from: {x: 2, y: 2}, to: data.position, targetIsPoint: true});
+    expect(beat.animation?.key).toBe(data.profile);
+    expect(beat.roll).toBeUndefined();
+  });
+  it('starts the turn with a quiet nonblocking self pulse and keeps later damage separate', () => {
+    const [turn, damage] = presentCombatEntries(state, [entry([{type: 'turn_started'}, {type: 'damage', amount: 4, damageType: 'fire'}], 'Начало')]);
+    expect(turn).toMatchObject({sourceId: 'hero', targetId: 'hero', actionName: 'Начало хода',
+      blocksInput: false, cues: [], animation: {key: 'action.effect'}, from: {x: 2, y: 2}, to: {x: 2, y: 2}});
+    expect(turn.damage).toBeUndefined();
+    expect(damage).toMatchObject({targetId: 'enemy', damage: [{amount: 4, damageType: 'fire'}]});
+  });
+  it('does not turn a declaration awaiting a save into a completed utility animation', () => {
+    const spell = {id: 'spell', name: 'Ожидание', kind: 'spell' as const, sourceEntityIds: ['spell'] as [string], spell: {level: 0}, mechanics: {}};
+    const log: CombatLogEntry = {id: 'waiting', round: 1, actorId: 'hero', text: 'Произвольный текст', records: [{
+      kind: 'action', ordinal: 0, sourceActorId: 'hero', actorId: 'hero', targetIds: ['enemy'], actionId: spell.id,
+    }]};
+    const waiting = {...state, catalogActions: [spell], world: {...state.world,
+      pendingResolution: {type: 'target_save', actionId: spell.id, sourceActorId: 'hero'}}} as unknown as SoloCombatState;
+    expect(presentCombatEntries(waiting, [log])).toEqual([]);
+  });
+  it('retains temporary HP, stabilization, expiry and death as committed visual results', () => {
+    const log = entry([{type: 'temp_hp', amount: 7}, {type: 'stabilized'}, {type: 'effect_expired', name: 'Защита'}], 'Обновление');
+    log.records!.push({kind: 'death', ordinal: 3, sourceActorId: 'hero', actorId: 'enemy', targetIds: ['enemy']});
+    const beats = presentCombatEntries(state, [log]);
+    expect(beats[0].cues.map(cue => cue.text)).toEqual(['+7 врем. HP', 'Стабилизирован', 'Защита: завершено']);
+    expect(beats[0].animation).toBeDefined();
+    expect(beats[1]).toMatchObject({targetId: 'enemy', animation: {primitive: 'death'}, cues: [{actorId: 'enemy', text: 'Погибает'}]});
+  });
+  it('uses movement coordinates captured by the log after the token has moved again', () => {
+    const log: CombatLogEntry = {id: 'move', round: 1, actorId: 'hero', text: 'Произвольный текст', records: [{
+      kind: 'movement', ordinal: 0, sourceActorId: 'hero', actorId: 'hero', targetIds: ['hero'],
+      movement: {from: {x: 0, y: 0}, to: {x: 1, y: 0}},
+    }]};
+    expect(presentCombatEntries(state, [log])[0]).toMatchObject({from: {x: 0, y: 0}, to: {x: 1, y: 0}, animation: {primitive: 'move'}});
+  });
+  it('withholds miss cues as well as the strike before a defensive reaction', () => {
+    const [beat] = presentCombatEntries(state, [entry([{type: 'roll', label: 'Атака — до реакции', roll: {...roll, outcome: 'miss'}}])]);
+    expect(beat.rollPhase).toBe('before-reaction');
+    expect(beat.cues).toEqual([]); expect(beat.animation).toBeUndefined();
+  });
   it.each(['success','fail'] as const)('presents a defender-owned %s save followed by the caster-owned damage',outcome=>{
     const save={...roll,kind:'save' as const,outcome,target:{type:'dc' as const,value:15}};
     const log:CombatLogEntry={id:'save',round:1,actorId:'enemy',text:'Разрешение спасброска',records:[

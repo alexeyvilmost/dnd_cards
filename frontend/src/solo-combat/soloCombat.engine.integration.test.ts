@@ -2546,6 +2546,7 @@ describe('solo combat engine vertical integration', () => {
     const source = state.tokens[actorId].position;
     const castPosition = { x: source.x < 10 ? source.x + 2 : source.x - 2, y: source.y };
     const boardRevisionBeforeCast = state.boardRevision;
+    const castLogBefore = clone(state.log);
 
     state = executeCombatAction({
       state,
@@ -2573,6 +2574,12 @@ describe('solo combat engine vertical integration', () => {
     const lights = Object.values(state.world.objects).filter((object) => (
       object.sourceActorId === actorId && object.sourceActionId === dancingLights!.id && object.dancingLight
     ));
+    const castLog = state.log.slice(castLogBefore.length);
+    expect(state.log.slice(0, castLogBefore.length)).toEqual(castLogBefore);
+    expect(castLog.flatMap(row => row.records ?? []).find(record => record.kind === 'action' && record.actionId === dancingLights!.id))
+      .toMatchObject({targetIds: [], targetPosition: castPosition});
+    expect(presentCombatEntries(state, castLog).find(beat => beat.actionId === dancingLights!.id))
+      .toMatchObject({from: source, to: castPosition, targetIsPoint: true});
     expect(lights).toHaveLength(4);
     const light = lights[0];
     expect(lights.map((candidate) => state.worldObjectPositions?.[candidate.id]))
@@ -2669,6 +2676,7 @@ describe('solo combat engine vertical integration', () => {
     const castPosition = { x: source.x < 9 ? source.x + 3 : source.x - 3, y: source.y };
     const distanceFt = gridDistanceFt(source, castPosition);
     const boardRevisionBeforeCast = state.boardRevision;
+    const castLogBefore = clone(state.log);
 
     state = executeCombatAction({
       state,
@@ -2695,6 +2703,12 @@ describe('solo combat engine vertical integration', () => {
       && object.sourceActionId === minorIllusion!.id
       && object.illusion
     ));
+    const castLog = state.log.slice(castLogBefore.length);
+    expect(state.log.slice(0, castLogBefore.length)).toEqual(castLogBefore);
+    expect(castLog.flatMap(row => row.records ?? []).find(record => record.kind === 'action' && record.actionId === minorIllusion!.id))
+      .toMatchObject({targetIds: [], targetPosition: castPosition});
+    expect(presentCombatEntries(state, castLog).find(beat => beat.actionId === minorIllusion!.id))
+      .toMatchObject({from: source, to: castPosition, targetIsPoint: true});
     expect(illusion?.illusion).toMatchObject({
       form: 'sound',
       description: 'Звон серебряного колокольчика',
