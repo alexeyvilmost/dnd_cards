@@ -1,0 +1,31 @@
+# Shared repository-root context for frontend and rules-worker builds.
+# Keep this at the context root: the production host uses the legacy Docker
+# builder, which does not honor Dockerfile-specific ignore files.
+.git
+outputs
+.env
+.env.*
+
+frontend/node_modules
+frontend/dist
+frontend/.env
+frontend/.env.*
+frontend/README.md
+frontend/tsconfig.tsbuildinfo
+frontend/tsconfig.node.tsbuildinfo
+frontend/vite.config.d.ts
+frontend/vite.config.js
+
+# Production typechecking must not require local snapshots or sibling test
+# fixtures. Engine source, shared metadata, and scripts remain build inputs.
+frontend/**/*.test.ts
+frontend/**/*.test.tsx
+frontend/src/testing/featAuditFixtures.ts
+frontend/test-fixtures
+frontend/e2e
+frontend/e2e-live
+frontend/.micro-mvp-evidence
+frontend/coverage
+frontend/test-results
+frontend/playwright-report
+frontend/blob-report
