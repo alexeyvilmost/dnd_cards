@@ -753,7 +753,13 @@ function accessForGrant(grant: AppliedGrant, spell: Spell, override?: SpellCasti
   if (label === 'known') return 'known' as const;
   if (label === 'prepared' || label === 'always_prepared') return 'always_prepared' as const;
   if (label === 'spellbook') return 'spellbook' as const;
+  // An item that declares its own limited casting pool, but no spell-list
+  // access, grants only those item casts. It must not borrow the actor's slots.
+  if (grant.source.type === 'item' && !label && (grant.freeuse || override?.freeUseResource)) return 'innate' as const;
   if (override?.removeCostResources.includes('spell_slot')) return 'innate' as const;
+  // Keep an incomplete item grant and its source visible in the canonical
+  // world, but never guess whether the item grants slots or free casts.
+  if (grant.source.type === 'item') return 'unavailable' as const;
   throw new SheetCanonicalWorldError(`${grant.id}: levelled spell grant requires an explicit access label`);
 }
 
@@ -881,21 +887,26 @@ function baseSpellAccess(input: {
       throw new SheetCanonicalWorldError(`${spellGrant.grant.id}: spellcasting ability is missing`);
     }
     const access = accessForGrant(spellGrant.grant, sheet.spellRef, spellGrant.castingOverride);
-    const slotResource = declaredGrantSlotResource(action, spellGrant, input.assembled);
+    const slotResource = access === 'innate' || access === 'unavailable'
+      ? undefined
+      : declaredGrantSlotResource(action, spellGrant, input.assembled);
+    const unavailableReason = access === 'unavailable'
+      ? 'У предмета не указан способ сотворения заклинания: частота применения или доступ к ячейкам.'
+      : undefined;
     return [{
       action,
       sourceId: spellGrant.sourceId,
       access,
       spellcastingAbility: ability,
       ...(!ability && spellGrant.source.type === 'item' ? { fixedSpellcastingModifier: 0 } : {}),
-      ...(sheet.spellRef.ritual === true
+      ...(access !== 'unavailable' && sheet.spellRef.ritual === true
         && (access === 'spellbook'
           || (access === 'always_prepared' && spellGrant.source.type === 'class')
           || hasRitualCasting(input.passives??[])
           || spellGrant.castingOverride?.ritual === true)
         ? { ritual: true }
         : {}),
-      ...(spellGrant.castingOverride?.freeUseResource
+      ...(access === 'unavailable' ? {} : spellGrant.castingOverride?.freeUseResource
         ? { freeUseResource: spellGrant.castingOverride.freeUseResource }
         : quickRitual && sheet.spellRef.ritual === true
           ? { freeUseResource: 'ritual_caster_quick_ritual' }
@@ -903,6 +914,7 @@ function baseSpellAccess(input: {
           ? { freeUseResource: freeuseKey(spellGrant.grant.value) }
           : {}),
       ...(slotResource ? { slotResource } : {}),
+      ...(unavailableReason ? { unavailableReason } : {}),
     }];
   });
   return projectSpellcastingAccess({

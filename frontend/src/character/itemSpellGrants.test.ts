@@ -3,6 +3,7 @@ import type { Card, Spell } from '../types';
 import type { ForgeCharacter } from './types';
 import type { AssembledCharacter } from './assemble';
 import { createSheetCombatRuntime } from './sheetCombatRuntimeFactory';
+import { prepareSheetEquipmentCommand } from './sheetEquipmentCommand';
 import { loadItemGrantedSpells, withItemGrantedSpells } from './itemSpellGrants';
 import { prepareSpellExecution } from '../rules-core/spellcastingExecution';
 import { activeEffectRequirementIssue } from '../engine/actionRequirements';
@@ -52,6 +53,101 @@ function fixtures() {
 }
 
 describe('item spell grants use canonical equipment, source and payment authority', () => {
+  it('retains two undefined item spells across equipment reloads and denies casting without a cost', async () => {
+    const { cards, character, factory } = fixtures();
+    for (const card of cards) {
+      const effects = card.mechanics?.effects as Array<{ result: Array<Record<string, unknown>> }>;
+      delete effects[0].result[0].label;
+      delete effects[0].result[0].freeuse;
+    }
+    character.equipment = {};
+    character.resources = { ...character.resources, spell_slot_1: 2 };
+    character.max_resources = { ...character.max_resources, spell_slot_1: 2 };
+    let current = character;
+
+    for (const [index, card] of cards.entries()) {
+      const before = await factory.loadSheetCombatParticipant({ character: current, cards: new Map() });
+      const commandId = `00000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`;
+      const prepared = prepareSheetEquipmentCommand(before, commandId, { equip: card.id }, () => 0.5);
+      current = { ...current, ...prepared.request.participants[0].patch,
+        runtime_revision: (current.runtime_revision ?? 0) + 1 } as ForgeCharacter;
+      const reloaded = await factory.loadSheetCombatParticipant({ character: current, cards: new Map() });
+      const actor = reloaded.canonical.world.actors.hero;
+      const grant = actor.spellcastingAccess!.grants.find((row) => row.sourceId === card.card_number)!;
+      expect(grant).toMatchObject({ access: 'unavailable', sourceId: card.card_number });
+      expect(grant.unavailableReason).toContain('не указан способ сотворения');
+      expect(grant.freeUseResource).toBeUndefined();
+      expect(grant.slotResource).toBeUndefined();
+      const action = reloaded.canonical.catalog.getAction(grant.actionId)!;
+      expect(prepareSpellExecution({ action: action as Extract<typeof action, { kind: 'spell' }>,
+        accessState: actor.spellcastingAccess!, resources: actor.runtime.resources,
+        declaration: { grantId: grant.grantId, castLevel: 1 } })).toMatchObject({
+        status: 'rejected', code: 'SpellGrantUnavailable', message: grant.unavailableReason,
+      });
+      const session = new InMemoryRulesSession(structuredClone(reloaded.canonical.world), reloaded.canonical.catalog,
+        { rng: () => 0.5, clock: createLogicalClock(), nextId: createSequentialIdFactory(commandId) });
+      const beforeResources = structuredClone(session.getState().actors.hero.runtime.resources);
+      const result = session.dispatch({ schemaVersion: 1, type: 'UseAction', commandId,
+        expectedRevision: session.getState().revision, rulesetContentHash: session.getState().ruleset.contentHash,
+        actorId: 'hero', actionId: action.id, targetIds: ['hero'],
+        factsByTarget: { hero: { factsSource: 'scenario', boardRevision: 0, distanceFt: 0,
+          lineOfSight: true, cover: 'none', relation: 'self' } },
+        spell: { baseLevel: 1, grantId: grant.grantId } });
+      expect(result).toMatchObject({ status: 'rejected', code: 'InvalidSpellDeclaration', message: grant.unavailableReason });
+      expect(session.getState().actors.hero.runtime.resources).toEqual(beforeResources);
+    }
+  });
+
+  it('casts two unlabeled item spells from their declared uses without borrowing class slots', async () => {
+    const { cards, character, factory } = fixtures();
+    for (const [index, card] of cards.entries()) {
+      const effects = card.mechanics?.effects as Array<{ result: Array<Record<string, unknown>> }>;
+      const grant = effects[0].result[0];
+      delete grant.label;
+      grant.freeuse = { count: index + 1, recharge: 'long_rest' };
+    }
+    character.resources = { ...character.resources, spell_slot_1: 2 };
+    character.max_resources = { ...character.max_resources, spell_slot_1: 2 };
+
+    const participant = await factory.loadSheetCombatParticipant({ character, cards: new Map() });
+    const actor = participant.canonical.world.actors.hero;
+    const grants = actor.spellcastingAccess!.grants.filter((grant) => grant.sourceId.startsWith('ITEM-'));
+    expect(grants).toHaveLength(2);
+    for (const grant of grants) {
+      expect(grant.access).toBe('innate');
+      expect(grant.slotResource).toBeUndefined();
+      expect(grant.freeUseResource).toBeTruthy();
+      const action = participant.canonical.catalog.getAction(grant.actionId)!;
+      const ready = prepareSpellExecution({ action: action as Extract<typeof action, { kind: 'spell' }>,
+        accessState: actor.spellcastingAccess!, resources: actor.runtime.resources,
+        declaration: { grantId: grant.grantId } });
+      expect(ready.status).toBe('ready');
+      if (ready.status === 'ready') expect(ready.payment).toEqual({ kind: 'free_use', resource: grant.freeUseResource });
+      const exhausted = prepareSpellExecution({ action: action as Extract<typeof action, { kind: 'spell' }>,
+        accessState: actor.spellcastingAccess!,
+        resources: { ...actor.runtime.resources, [grant.freeUseResource!]: 0, spell_slot_1: 2 },
+        declaration: { grantId: grant.grantId } });
+      expect(exhausted).toMatchObject({ status: 'rejected', code: 'SpellResourceUnavailable' });
+    }
+  });
+
+  it('retains slot casting when an item explicitly labels its grant known', async () => {
+    const { character, factory } = fixtures();
+    character.resources = { ...character.resources, spell_slot_1: 2 };
+    character.max_resources = { ...character.max_resources, spell_slot_1: 2 };
+    const participant = await factory.loadSheetCombatParticipant({ character, cards: new Map() });
+    const actor = participant.canonical.world.actors.hero;
+    const grant = actor.spellcastingAccess!.grants.find((row) => row.sourceId === 'ITEM-1')!;
+    expect(grant.access).toBe('known');
+    expect(grant.slotResource).toBe('spell_slot_1');
+    const action = participant.canonical.catalog.getAction(grant.actionId)!;
+    const exhausted = prepareSpellExecution({ action: action as Extract<typeof action, { kind: 'spell' }>,
+      accessState: actor.spellcastingAccess!,
+      resources: { ...actor.runtime.resources, [grant.freeUseResource!]: 0, spell_slot_1: 2 },
+      declaration: { grantId: grant.grantId } });
+    expect(exhausted).toMatchObject({ status: 'ready', payment: { kind: 'slot', resource: 'spell_slot_1' } });
+  });
+
   it('hydrates variant children into the scoped combat catalog and presentation under one parent grant', async () => {
     const { spells, character, factory, resolve } = fixtures();
     const parent = spells[0];

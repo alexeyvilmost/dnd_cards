@@ -16,6 +16,7 @@ import {
   CARD_CHAIN_MAIL, FIGHTER_CTX_EQUIPPED, freshFighterState,
 } from '../mvp/fixtures';
 import { equipItem } from '../mvp/contracts';
+import { weaponActionAvailability } from '../engine/weapon';
 
 const active = (cost = 'action', result: Record<string, unknown>[] = [{ kind: 'narrative' }]) => ({
   activation: { mode: 'active', cost: [{ resource: cost, amount: 1 }] },
@@ -87,20 +88,28 @@ describe('sheet -> combat action inventory adapter', () => {
     expect(cards.get(shallow.id)?.mechanics).toEqual(detail.mechanics);
   });
 
-  it('fails combat initialization explicitly when an equipped weapon detail has no profile', async () => {
+  it.each([
+    ['special-item', active('action', [{ kind: 'narrative' }])],
+    ['unfinished-item', {}],
+  ])('hydrates %s without inventing an ordinary weapon attack', async (id, mechanics) => {
     const weapon = {
-      id: 'item:broken-weapon', name: 'Broken weapon', card_number: 'ITEM-broken',
-      type: 'weapon', mechanics: {},
+      id, name: id, card_number: `ITEM-${id}`, type: 'weapon', mechanics,
     } as unknown as Card;
-    await expect(hydrateSheetCombatCards({
+    const equipment = { main_hand: weapon.id };
+    const cards = await hydrateSheetCombatCards({
       character: {
-        name: 'Fail-closed hero',
-        equipment: { main_hand: weapon.id },
+        name: 'Special item hero', equipment,
         inventory_items: [{ card_id: weapon.id, qty: 1 }],
       },
       cards: new Map([[weapon.id, weapon]]),
       loadCard: async () => weapon,
-    })).rejects.toThrow(/weapon_profile is required/);
+    });
+    expect(cards.get(weapon.id)).toBe(weapon);
+    expect(weaponActionAvailability({ effects: [{ resolution: 'attack_roll',
+      attack_kind: 'weapon_melee', on_hit: [{ kind: 'damage', dice: 'weapon' }],
+    }] }, equipment, cards)).toEqual({ available: false,
+      reason: 'У предмета не задан корректный профиль обычной атаки' });
+    expect(weaponActionAvailability(weapon.mechanics, equipment, cards).available).toBe(true);
   });
 
   it('fails combat inventory construction when an owned mastery catalog cannot load', async () => {

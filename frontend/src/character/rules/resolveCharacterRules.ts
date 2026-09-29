@@ -1,4 +1,5 @@
 import {validItemChoiceSelections} from '../itemChoices';
+import { mechanicalRuleInput } from './mechanicalRuleInput';
 import type { Action, PassiveEffect } from '../../types';
 import type { OriginAction, OriginEffect } from '../assemble';
 import { computeMulticlassMaxHP, spellcasting } from '../derive';
@@ -972,7 +973,7 @@ export function resolveCharacterRules(input: RuleInput): CharacterRuleState {
   return {
     version: 1,
     ...([...assembled.effects.map(row=>row.effect),...assembled.actions.map(row=>row.action)].some(row=>Array.isArray(row.mechanics?.requires_any_item_source))||input.runtimeSources?.some(row=>row.mechanics?.magical===true)
-      ? {itemFeatRuleInput: input} : {}),
+      ? {itemFeatRuleInput: mechanicalRuleInput(input)} : {}),
     abilities: scores,
     abilityMods,
     abilitySources,

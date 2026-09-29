@@ -25,7 +25,6 @@ import { isCharacterReadOnly, type ForgeCharacter } from './types';
 import { projectRunnableSheetCanonicalActions } from './sheetCanonicalActionProjection';
 import type { CharacterContext, RuntimeState } from '../mvp/contracts';
 import type { ActorState } from '../rules-core/domain';
-import { parseWeaponProfile } from '../rules-core/weaponProfile';
 import { weaponActionAvailability } from '../engine/weapon';
 import { armorClassValue } from '../engine/ac';
 import { buildResourceRecharge, buildResourceRecovery, resolveLeveledCount } from '../engine/resources';
@@ -106,12 +105,9 @@ async function hydrateSheetCombatCards(input: {
     if (!card) {
       throw new Error(`Экипированный предмет ${cardId} не загружен для боя`);
     }
-    if (card.type === 'weapon') {
-      const parsed = parseWeaponProfile(card);
-      if (!parsed.valid) {
-        throw new Error(`Бой не может начаться: ${parsed.issue}`);
-      }
-    }
+    // A carried/equipped item may provide special actions without an ordinary
+    // weapon attack profile. Validate that profile at the attack boundary;
+    // otherwise equipping a net (or incomplete catalog item) locks the sheet.
   }
   return hydrated;
 }

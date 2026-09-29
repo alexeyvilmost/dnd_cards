@@ -55,7 +55,7 @@ const WORLD_OBJECT_SIZES = new Set<WorldObjectSize>([
 ]);
 const ABILITIES = new Set<Ability>(['str', 'dex', 'con', 'int', 'wis', 'cha']);
 const SPELL_ACCESS_KINDS = new Set<SpellAccessKind>([
-  'cantrip', 'known', 'spellbook', 'always_prepared', 'innate', 'ritual_only',
+  'cantrip', 'known', 'spellbook', 'always_prepared', 'innate', 'unavailable', 'ritual_only',
 ]);
 const ATTACK_ACTION_STATUSES = new Set(['open', 'completed', 'forfeited']);
 
@@ -288,6 +288,15 @@ function normalizeSpellcastingAccess(input: {
       `${grantPath}.freeUseResource`,
     );
     const slotResource = optionalResource(grant.slotResource, `${grantPath}.slotResource`);
+    const unavailableReason = grant.unavailableReason;
+    if (accessKind === 'unavailable') {
+      if (typeof unavailableReason !== 'string' || !unavailableReason.trim()
+        || unavailableReason.length > 512 || freeUseResource || slotResource || grant.ritual === true) {
+        throw new Error(`${grantPath}: unavailable grant requires a bounded reason and no casting payment`);
+      }
+    } else if (unavailableReason !== undefined) {
+      throw new Error(`${grantPath}: available grant cannot declare an unavailable reason`);
+    }
     if (accessKind === 'cantrip' && level !== 0) {
       throw new Error(`${grantPath}: cantrip access requires spell level 0`);
     }
@@ -343,6 +352,7 @@ function normalizeSpellcastingAccess(input: {
       ...(grant.ritual === true ? { ritual: true } : {}),
       ...(freeUseResource ? { freeUseResource } : {}),
       ...(slotResource ? { slotResource } : {}),
+      ...(accessKind === 'unavailable' ? { unavailableReason: unavailableReason as string } : {}),
     };
   }).sort((left, right) => left.sourceId.localeCompare(right.sourceId)
     || left.actionId.localeCompare(right.actionId)

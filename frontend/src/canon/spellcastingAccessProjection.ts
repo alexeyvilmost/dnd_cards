@@ -14,6 +14,7 @@ export interface SpellGrantProjection {
   ritual?: boolean;
   freeUseResource?: string;
   slotResource?: string;
+  unavailableReason?: string;
 }
 
 export interface PreparedSourceProjection {
@@ -58,7 +59,17 @@ export function projectSpellcastingAccess(input: {
         problems.push(`${projection.action.id}: a spell grant needs an ability or finite fixed modifier`);
       }
       const level = projection.action.kind === 'spell' ? projection.action.spell.level : -1;
+      if (projection.access === 'unavailable') {
+        if (typeof projection.unavailableReason !== 'string'
+          || !projection.unavailableReason.trim()
+          || projection.freeUseResource || projection.slotResource || projection.ritual) {
+          problems.push(`${projection.sourceId}:${projection.action.id}: unavailable grant requires a reason and no casting payment`);
+        }
+      } else if (projection.unavailableReason !== undefined) {
+        problems.push(`${projection.sourceId}:${projection.action.id}: available grant cannot declare an unavailable reason`);
+      }
       if (level > 0 && projection.access !== 'innate' && projection.access !== 'ritual_only'
+        && projection.access !== 'unavailable'
         && !projection.slotResource && !projection.freeUseResource) {
         problems.push(`${projection.sourceId}:${projection.action.id}: a levelled grant needs a payment resource`);
       }
@@ -73,6 +84,7 @@ export function projectSpellcastingAccess(input: {
         ...(projection.ritual ? { ritual: true } : {}),
         ...(projection.freeUseResource ? { freeUseResource: projection.freeUseResource } : {}),
         ...(projection.slotResource ? { slotResource: projection.slotResource } : {}),
+        ...(projection.unavailableReason ? { unavailableReason: projection.unavailableReason } : {}),
       };
     });
 

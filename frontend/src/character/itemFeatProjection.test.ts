@@ -13,7 +13,19 @@ describe('revocable item feat static grants',()=>{
   const effect=(id:string,result:Record<string,unknown>[],bound=false)=>({origin:{kind:'feat',id:'origin-'+id,name:id},effect:{id,name:id,mechanics:{...(bound?{requires_any_item_source:['provider']}:{}),activation:{mode:'passive'},effects:[{resolution:'auto',result}]}}});
   const skill={kind:'grant_proficiency',prof:'skill',value:'perception'};
   const assembled={race:{id:'race',name:'Race',speed:30},klass:{id:'klass',name:'Class',hit_die:'d10'},feats:[],actions:[],spells:[],pendingChoices:[],featAbilityIncreases:[],derived:{},effects:[effect('base',[skill]),effect('item',[{kind:'grant_ability_score',ability,amount,cap},skill,{kind:'grant_expertise',prof:'skill',value:'perception'},{kind:'grant_proficiency',prof:'skill',value:'stealth'}],true)] as unknown as OriginEffect[]} as unknown as AssembledCharacter;
+  // Library artwork must not be copied into every persisted rules command.
+  // Exercise two different grants through removal, JSON reload and restoration
+  // with enough uploaded artwork to exceed the server's command-size limit.
+  const portrait=`data:image/png;base64,${'A'.repeat(2 * 1024 * 1024)}`;
+  draft.avatarUrl=portrait;
+  assembled.race!.image_url=portrait;
+  assembled.klass!.image_url=portrait;
+  assembled.classes=[assembled.klass!];
   const rules=resolveCharacterRules({draft,assembled});
+  expect(JSON.stringify(rules.itemFeatRuleInput).length).toBeLessThan(16 * 1024);
+  expect(assembled.race!.image_url).toBe(portrait);
+  expect(assembled.klass!.image_url).toBe(portrait);
+  expect(draft.avatarUrl).toBe(portrait);
   const card={id:'provider',name:'Provider',mechanics:{activation:{mode:'passive',while:'equipped'}}} as unknown as Card;
   const character={...buildCharacterContext(rules,draft,[card]),knownCards:[card]};
   const state:RuntimeState={hp:{current:30,max:30,temp:0},resources:{},maxResources:{},equipment:{main_hand:'provider'},inventory:[],activeEffects:[]};

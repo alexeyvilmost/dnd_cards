@@ -6,6 +6,7 @@ export type SpellAccessKind =
   | 'spellbook'
   | 'always_prepared'
   | 'innate'
+  | 'unavailable'
   | 'ritual_only';
 
 export type SpellCastMode = 'normal' | 'ritual';
@@ -24,6 +25,8 @@ export interface SpellGrantAccess {
   freeUseResource?: string;
   /** Resource normally spent by a levelled cast from this grant. */
   slotResource?: string;
+  /** Authored item spell with no defined casting access or cost. */
+  unavailableReason?: string;
 }
 
 export interface PreparedSpellSource {
@@ -46,6 +49,7 @@ export type SpellAccessFailureCode =
   | 'SpellNotPrepared'
   | 'RitualNotAllowed'
   | 'SpellNormalCastNotAllowed'
+  | 'SpellGrantUnavailable'
   | 'SpellResourceUnavailable';
 
 
@@ -137,6 +141,14 @@ export function resolveSpellAccess(input: {
     };
   } else {
     [grant] = candidates;
+  }
+
+  if (grant.access === 'unavailable') {
+    return {
+      status: 'rejected',
+      code: 'SpellGrantUnavailable',
+      message: grant.unavailableReason ?? `Spell grant ${grant.grantId} has no defined casting access`,
+    };
   }
 
   const mode = input.mode ?? 'normal';

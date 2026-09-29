@@ -428,7 +428,7 @@ export interface ActionAvailability {
 }
 
 function isWeaponCard(card: Card | undefined): boolean {
-  return card?.type === 'weapon' && parseWeaponProfile(card).valid;
+  return card?.type === 'weapon';
 }
 
 /**
@@ -455,16 +455,15 @@ export function weaponActionAvailability(
 
   const modeAvailability = (card: Card): ActionAvailability => {
     const profile = parseWeaponProfile(card);
+    if (!profile.valid) return { available: false, reason: 'У предмета не задан корректный профиль обычной атаки' };
     const other = kind === 'main' ? offId : mainId;
-    if (profile.valid && profile.profile.properties.includes('two_handed') && other && other !== card.id
+    if (profile.profile.properties.includes('two_handed') && other && other !== card.id
       && !allowsOneHandedHeavyWeapon(card,equipment??{},cardsById,passives)) {
       return { available: false, reason: 'Для атаки двуручным оружием освободите вторую руку' };
     }
     const requested = declaredWeaponAttackMode(mechanics);
     if (!requested) return { available: true };
-    const parsed = parseWeaponProfile(card);
-    if (!parsed.valid) return { available: false, reason: parsed.issue };
-    if (!parsed.profile.attackModes.some((mode) => mode.kind === requested)) {
+    if (!profile.profile.attackModes.some((mode) => mode.kind === requested)) {
       return {
         available: false,
         reason: requested === 'ranged'

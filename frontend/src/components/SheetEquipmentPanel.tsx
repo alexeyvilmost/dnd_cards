@@ -2,8 +2,9 @@ import {itemEquipmentChangeIssue} from '../engine/itemEquipmentPolicy';
 import {prepareSheetEquipmentCommand} from '../character/sheetEquipmentCommand';
 import {loadSheetCombatParticipant} from '../character/sheetCombatTargetRuntime';
 import {newSheetRuntimeCommandId} from '../character/sheetCombatSession';
-import {commitSheetRuntimeCommand} from '../character/sheetRuntimeCommand';
+import {commitSheetEquipmentRequest} from '../character/sheetEquipmentCommit';
 import type {CharacterRuntimeCommandRequest} from '../character/api';
+import {characterV3ErrorMessage} from '../character/api';
 import { previewAnchor } from '../utils/previewAnchor';
 import { containerTransferIssue } from '../character/containerCapacity';
 import { hasWeaponBondPolicy } from '../rules-core/weaponBond';
@@ -105,7 +106,10 @@ export default function SheetEquipmentPanel({
   const [busy, setBusy] = useState(false);
   const pendingKey=`dnd:pending-equipment:v1:${character.id}`;
   const [pendingEquipment,setPendingEquipment]=useState<CharacterRuntimeCommandRequest|null>(()=>{
-    const raw=localStorage.getItem(pendingKey);return raw?JSON.parse(raw):null;
+    const raw=localStorage.getItem(pendingKey);
+    if(!raw)return null;
+    try{return JSON.parse(raw) as CharacterRuntimeCommandRequest;}
+    catch{localStorage.removeItem(pendingKey);return null;}
   });
   const choiceDialog = useChoiceDialog();
   const weaponBonds = readWeaponBondObjects(character.turn_state, character.id);
@@ -219,7 +223,13 @@ export default function SheetEquipmentPanel({
   const attunableCards = presentCards.filter((c) => c.requires_attunement && !attuned.includes(c.id));
 
   const commitEquipment=async(operation?:{equip:string}|{unequip:string})=>{
-    if(readOnly||busy)return;setBusy(true);setError(null);setDialog(null);
+    if(readOnly||busy)return;
+    if(pendingEquipment&&operation){
+      setError('Предыдущее изменение ещё не подтверждено. Повторите сохранение перед новым выбором.');
+      return;
+    }
+    setBusy(true);setError(null);setDialog(null);
+    let definitelyRejected=false;
     try{
       let request=pendingEquipment;
       if(!request){
@@ -229,9 +239,15 @@ export default function SheetEquipmentPanel({
         localStorage.setItem(pendingKey,JSON.stringify(request));setPendingEquipment(request);
       }
       const immutable=request;
-      const result=await commitSheetRuntimeCommand({request:immutable,commit:()=>charactersV3Api.postRuntimeCommand(immutable),loadCurrent:charactersV3Api.get,viewingCharacterId:character.id});
+      const result=await commitSheetEquipmentRequest({request:immutable,commit:()=>charactersV3Api.postRuntimeCommand(immutable),loadCurrent:charactersV3Api.get,viewingCharacterId:character.id,
+        onDefinitiveRejection:()=>{definitelyRejected=true;localStorage.removeItem(pendingKey);setPendingEquipment(null);}});
       localStorage.removeItem(pendingKey);setPendingEquipment(null);onUpdated(result.characters[character.id]);
-    }catch(cause){setError(cause instanceof Error?cause.message:'Не удалось сохранить экипировку');}
+    }catch(cause){
+      if(definitelyRejected){
+        try{onUpdated(await charactersV3Api.get(character.id));}catch{/* Preserve the POST error. */}
+      }
+      setError(cause instanceof Error?cause.message:'Не удалось сохранить экипировку');
+    }
     finally{setBusy(false);}
   };
   const handleEquip=async(card:Card)=>{registerCard(card);await commitEquipment({equip:card.id});};
@@ -283,7 +299,7 @@ export default function SheetEquipmentPanel({
       onUpdated(updated);
     } catch (e) {
       console.error(e);
-      setError('Не удалось изменить настройку');
+      setError(characterV3ErrorMessage(e,'Не удалось изменить настройку'));
     } finally {
       setBusy(false);
     }

@@ -399,7 +399,8 @@ describe('sheet weapon actions use one atomic canonical session', () => {
       } else {
         expect(movements).toContainEqual(expect.objectContaining({
           payload: expect.objectContaining({
-            event: { type: 'movement', mode: 'push', distanceFt: 5 },
+            event: { type: 'movement', mode: 'push', distanceFt: 5,
+              recipientActorId: TARGET, relativeToActorId: ATTACKER },
           }),
         }));
       }
