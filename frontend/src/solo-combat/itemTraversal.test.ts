@@ -5,7 +5,7 @@ import {executeCombatAction,moveActor,moveActorAlongRoute,selectCombatMovementMo
 import {spatialFacts} from './types';
 import {reachableRoutes} from './tacticalGrid';
 import {movementCostThroughAreas} from './combatAreas';
-import {actorLongJumpFt} from './jump';
+import {actorLongJumpFt,maximumActorLongJumpFt} from './jump';
 import type {SoloCombatState} from './types';
 type Dict=Record<string,unknown>;
 function setup(payloads:Dict[]):SoloCombatState{
@@ -138,6 +138,16 @@ describe('item traversal on the authoritative combat board',()=>{
   expect(actorLongJumpFt(actor,from,{x:0,y:0},runup,1)).toBe(5);
   expect(actorLongJumpFt(actor,from,to,runup,2)).toBe(5);
   expect(()=>moveActor({state:selectCombatMovementMode(setup([]),'hero','jump'),actorId:'hero',destination:{x:3,y:0},maxFeet:100})).toThrow(/Прыжок/);
+ });
+ it.each([[17,8],[20,10]])('reports STR %i jump capacity instead of walking speed and respects run-up direction', (strength,standing) => {
+  const state=setup([]),actor=state.world.actors.hero,from={x:2,y:0};
+  actor.character.abilityScores={...actor.character.abilityScores,str:strength};
+  expect(maximumActorLongJumpFt(actor,from,undefined,1)).toBe(standing);
+  const runup={from:{x:0,y:0},to:from,direction:{x:1,y:0} as const,distanceFt:10,round:1};
+  expect(maximumActorLongJumpFt(actor,from,runup,1)).toBe(strength);
+  expect(actorLongJumpFt(actor,from,{x:1,y:0},runup,1)).toBe(standing);
+  expect(maximumActorLongJumpFt(actor,from,runup,2)).toBe(standing);
+  expect(maximumActorLongJumpFt(actor,from,{...runup,interrupted:true},1)).toBe(standing);
  });
  it.each([2,3])('uses the same ×%i difficult-terrain modifier in preview and execution',factor=>{
   const state=setup([{kind:'modifier',op:'multiply',value:factor,applies_to:{roll:'movement_cost',filter:{terrain:'difficult'}}}]);

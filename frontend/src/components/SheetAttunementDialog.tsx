@@ -12,11 +12,12 @@ interface Props {
   max: number;
   canChange: boolean;
   busy?: boolean;
+  error?: string | null;
   onToggle: (cardId: string) => void;
   onClose: () => void;
 }
 
-export default function SheetAttunementDialog({ attunedCards, attunableCards, max, canChange, busy, onToggle, onClose }: Props) {
+export default function SheetAttunementDialog({ attunedCards, attunableCards, max, canChange, busy, error, onToggle, onClose }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
@@ -35,6 +36,7 @@ export default function SheetAttunementDialog({ attunedCards, attunableCards, ma
           <Sparkles size={17} style={{ verticalAlign: '-3px', marginRight: 6 }} />
           Настройка на предметы <span className="sheet-attune-count">{attunedCards.length} / {max}</span>
         </h2>
+        {error && <p className="issues" role="alert">{error}</p>}
         {!canChange && (
           <p className="sheet-settings-hint">Менять настройку можно только на коротком или долгом отдыхе.</p>
         )}
@@ -49,6 +51,7 @@ export default function SheetAttunementDialog({ attunedCards, attunableCards, ma
                 <SheetItemRow
                   key={c.id}
                   card={c}
+                  disabled={!canChange || busy}
                   onClick={() => { if (canChange && !busy) onToggle(c.id); }}
                   right={<span className={`sheet-attune-tag is-on${canChange ? '' : ' is-locked'}`}>Прервать</span>}
                 />
@@ -70,6 +73,7 @@ export default function SheetAttunementDialog({ attunedCards, attunableCards, ma
                     key={c.id}
                     card={c}
                     dimmed={blocked}
+                    disabled={blocked || busy}
                     onClick={() => { if (!blocked && !busy) onToggle(c.id); }}
                     right={<span className={`sheet-attune-tag${blocked ? ' is-locked' : ''}`}>Настроиться</span>}
                   />

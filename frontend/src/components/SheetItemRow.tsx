@@ -55,6 +55,7 @@ interface Props {
   card: Card;
   qty?: number;
   dimmed?: boolean;
+  disabled?: boolean;
   selected?: boolean;
   onClick?: () => void;
   right?: ReactNode;
@@ -64,7 +65,7 @@ interface Props {
   onMouseLeave?: () => void;
 }
 
-export default function SheetItemRow({ card, qty, dimmed, selected, onClick, right, stamp, onMouseEnter, onMouseMove, onMouseLeave }: Props) {
+export default function SheetItemRow({ card, qty, dimmed, disabled, selected, onClick, right, stamp, onMouseEnter, onMouseMove, onMouseLeave }: Props) {
   return (
     <SheetEntityRow
       imageUrl={card.image_url}
@@ -72,6 +73,7 @@ export default function SheetItemRow({ card, qty, dimmed, selected, onClick, rig
       accent={rarityColor(card)}
       qty={qty}
       dimmed={dimmed}
+      disabled={disabled}
       selected={selected}
       onClick={onClick}
       right={right}

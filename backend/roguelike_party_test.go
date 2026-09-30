@@ -77,6 +77,52 @@ func TestRoguelikePartyCheckpointRestoresEveryMember(t *testing.T) {
 		t.Fatal("party checkpoint mismatch")
 	}
 }
+
+func TestRoguelikePartyLevelConfirmationAllowsSequentialCatchup(t *testing.T) {
+	for _, mode := range []string{"classic", urvinMode} {
+		t.Run(mode, func(t *testing.T) {
+			user := uuid.New()
+			leader := &CharacterV3{ID: uuid.New(), UserID: user, Level: 2}
+			ally := &CharacterV3{ID: uuid.New(), UserID: user, Level: 1}
+			run := &RoguelikeRun{
+				Mode: mode, UserID: user, CharacterID: leader.ID, Character: leader,
+				Characters: []*CharacterV3{leader, ally}, Experience: 900, PendingLevel: 2,
+				Phase: RoguelikePhaseCamp, Status: RoguelikeStatusActive,
+			}
+			run.Party, _ = mapFromJSON(map[string]any{"members": []roguelikePartyMember{
+				{CharacterID: leader.ID}, {CharacterID: ally.ID},
+			}})
+			if err := confirmRoguelikeLevelUp(run); err != nil || run.PendingLevel != 2 {
+				t.Fatalf("first member could not wait for the level-2 party: pending=%d err=%v", run.PendingLevel, err)
+			}
+			ally.Level = 2
+			if err := confirmRoguelikeLevelUp(run); err != nil || run.PendingLevel != 0 || len(run.Checkpoint) == 0 {
+				t.Fatalf("earned level 3 blocked completed level 2: pending=%d err=%v", run.PendingLevel, err)
+			}
+			if err := startRoguelikeEncounter(nil, run); err == nil {
+				t.Fatal("level-2 party could bypass the earned level-3 requirement")
+			}
+			run.PendingLevel = 3
+			leader.Level = 3
+			if err := confirmRoguelikeLevelUp(run); err != nil || run.PendingLevel != 3 {
+				t.Fatalf("first member could not wait for level 3: pending=%d err=%v", run.PendingLevel, err)
+			}
+			ally.Level = 3
+			if err := confirmRoguelikeLevelUp(run); err != nil || run.PendingLevel != 0 {
+				t.Fatalf("earned level-3 party did not finish: pending=%d err=%v", run.PendingLevel, err)
+			}
+		})
+	}
+}
+
+func TestRoguelikePartyLevelConfirmationRejectsUnearnedPendingLevel(t *testing.T) {
+	leader, ally := &CharacterV3{ID: uuid.New(), Level: 3}, &CharacterV3{ID: uuid.New(), Level: 3}
+	run := &RoguelikeRun{CharacterID: leader.ID, Character: leader, Characters: []*CharacterV3{leader, ally}, Experience: 300, PendingLevel: 3}
+	run.Party, _ = mapFromJSON(map[string]any{"members": []roguelikePartyMember{{CharacterID: leader.ID}, {CharacterID: ally.ID}}})
+	if err := confirmRoguelikeLevelUp(run); err == nil || run.PendingLevel != 3 {
+		t.Fatalf("unearned pending level was accepted: pending=%d err=%v", run.PendingLevel, err)
+	}
+}
 func TestRoguelikePartyBoundItemsUseWorldObjectIdentity(t *testing.T) {
 	id := uuid.NewString()
 	if !roguelikePartyBoundItem(map[string]any{"objects": []any{map[string]any{"itemCardId": id, "weaponBondActorId": "hero"}}}, id) {

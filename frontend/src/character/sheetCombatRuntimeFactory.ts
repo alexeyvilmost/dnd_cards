@@ -266,6 +266,18 @@ async function loadSheetCombatParticipant(input: {
   if (input.character.current_encounter_id) {
     throw new Error(`Персонаж «${input.character.name}» уже связан с онлайн-боем`);
   }
+  return loadSheetCanonicalParticipant(input);
+}
+
+/** Complete canonical projection shared by sheet presentation and combat.
+ * Presentation may inspect a read-only or encounter-linked character without
+ * granting permission to enter another combat or execute a command. */
+async function loadSheetCanonicalParticipant(input: {
+  character: ForgeCharacter;
+  basicActions?: readonly Action[];
+  cards: ReadonlyMap<string, Card>;
+  loadCard?: (id: string) => Promise<Card>;
+}): Promise<SheetCombatParticipantSeed> {
   if (!Number.isSafeInteger(input.character.runtime_revision)
     || Number(input.character.runtime_revision) < 0) {
     throw new Error(`У персонажа «${input.character.name}» нет runtime_revision`);
@@ -485,5 +497,5 @@ async function loadSheetCombatParticipant(input: {
     canonical,
   };
 }
- return {resolveSheetCombatArmorClass, hydrateSheetCombatCards, collectSheetCombatActionInventory, loadSheetCombatParticipant};
+ return {resolveSheetCombatArmorClass, hydrateSheetCombatCards, collectSheetCombatActionInventory, loadSheetCanonicalParticipant, loadSheetCombatParticipant};
 }

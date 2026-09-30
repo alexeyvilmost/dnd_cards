@@ -2,8 +2,7 @@ import {itemEquipmentChangeIssue} from '../engine/itemEquipmentPolicy';
 import {prepareSheetEquipmentCommand} from '../character/sheetEquipmentCommand';
 import {loadSheetCombatParticipant} from '../character/sheetCombatTargetRuntime';
 import {newSheetRuntimeCommandId} from '../character/sheetCombatSession';
-import {commitSheetEquipmentRequest} from '../character/sheetEquipmentCommit';
-import type {CharacterRuntimeCommandRequest} from '../character/api';
+import { useSheetEquipmentSave } from '../character/useSheetEquipmentSave';
 import {characterV3ErrorMessage} from '../character/api';
 import { previewAnchor } from '../utils/previewAnchor';
 import { containerTransferIssue } from '../character/containerCapacity';
@@ -92,7 +91,12 @@ type Dialog =
   | { card: Card; mode: 'inventory'; occupant: Card | null }
   | { card: Card; mode: 'equipped'; slot: string };
 
-export default function SheetEquipmentPanel({
+export default function SheetEquipmentPanel(props: Props) {
+  // Inventory dialogs and immutable pending requests belong to one character.
+  return <CharacterEquipmentPanel key={props.character.id} {...props} />;
+}
+
+function CharacterEquipmentPanel({
   character,
   ruleState,
   onUpdated,
@@ -103,14 +107,7 @@ export default function SheetEquipmentPanel({
   readOnly = false,
 }: Props) {
   const [cards, setCards] = useState<Map<string, Card>>(new Map());
-  const [busy, setBusy] = useState(false);
-  const pendingKey=`dnd:pending-equipment:v1:${character.id}`;
-  const [pendingEquipment,setPendingEquipment]=useState<CharacterRuntimeCommandRequest|null>(()=>{
-    const raw=localStorage.getItem(pendingKey);
-    if(!raw)return null;
-    try{return JSON.parse(raw) as CharacterRuntimeCommandRequest;}
-    catch{localStorage.removeItem(pendingKey);return null;}
-  });
+  const [otherBusy, setBusy] = useState(false);
   const choiceDialog = useChoiceDialog();
   const weaponBonds = readWeaponBondObjects(character.turn_state, character.id);
   const canBindWeapons = character.character_type === 'dungeon_crawl' && hasWeaponBondPolicy(passives);
@@ -150,6 +147,21 @@ export default function SheetEquipmentPanel({
   }, [cardIds.join('|')]);
 
   const cardMap = cards;
+  const equipmentSave = useSheetEquipmentSave({
+    characterId: character.id,
+    disabled: readOnly || otherBusy,
+    prepare: async (operation) => {
+      const runId = activeRunId();
+      const participant = await loadSheetCombatParticipant({ character, cards: cardMap });
+      const request = prepareSheetEquipmentCommand(participant, newSheetRuntimeCommandId(), operation, Math.random).request;
+      return runId ? { ...request, roguelike_run_id: runId, roguelike_intent: 'camp' } : request;
+    },
+    commit: request => charactersV3Api.postRuntimeCommand(request, { preserveRoguelikeContext: true }),
+    loadCurrent: charactersV3Api.get,
+    onUpdated,
+  });
+  const pendingEquipment = equipmentSave.pending;
+  const busy = otherBusy || equipmentSave.saving;
   // Контейнеры-цели «убрать в контейнер»: носимые предметы type='container' на верхнем уровне.
   // Используются и в списке (индикатор), и в диалоге предмета (перенос «в контейнер»).
   const containerTargets = useMemo(
@@ -216,7 +228,7 @@ export default function SheetEquipmentPanel({
 
   const attuned = readAttunedIds(character.turn_state);
   const maxAttuned = attunementCapacity(runtime.equipment, cardMap, character.turn_state, runtime.inventory, runtime.activeEffects);
-  const canChangeAttunement = !readOnly && attunementUnlocked(character.turn_state);
+  const canChangeAttunement = !readOnly && !pendingEquipment && attunementUnlocked(character.turn_state);
   // Списки для окна настройки: настроенные предметы и те, на что можно настроиться.
   const presentCards = cardIds.map((id) => cardMap.get(id)).filter((c): c is Card => !!c);
   const attunedCards = attuned.map((id) => cardMap.get(id)).filter((c): c is Card => !!c);
@@ -224,31 +236,8 @@ export default function SheetEquipmentPanel({
 
   const commitEquipment=async(operation?:{equip:string}|{unequip:string})=>{
     if(readOnly||busy)return;
-    if(pendingEquipment&&operation){
-      setError('Предыдущее изменение ещё не подтверждено. Повторите сохранение перед новым выбором.');
-      return;
-    }
-    setBusy(true);setError(null);setDialog(null);
-    let definitelyRejected=false;
-    try{
-      let request=pendingEquipment;
-      if(!request){
-        if(!operation)return;
-        const participant=await loadSheetCombatParticipant({character,cards:cardMap});
-        request=prepareSheetEquipmentCommand(participant,newSheetRuntimeCommandId(),operation,Math.random).request;
-        localStorage.setItem(pendingKey,JSON.stringify(request));setPendingEquipment(request);
-      }
-      const immutable=request;
-      const result=await commitSheetEquipmentRequest({request:immutable,commit:()=>charactersV3Api.postRuntimeCommand(immutable),loadCurrent:charactersV3Api.get,viewingCharacterId:character.id,
-        onDefinitiveRejection:()=>{definitelyRejected=true;localStorage.removeItem(pendingKey);setPendingEquipment(null);}});
-      localStorage.removeItem(pendingKey);setPendingEquipment(null);onUpdated(result.characters[character.id]);
-    }catch(cause){
-      if(definitelyRejected){
-        try{onUpdated(await charactersV3Api.get(character.id));}catch{/* Preserve the POST error. */}
-      }
-      setError(cause instanceof Error?cause.message:'Не удалось сохранить экипировку');
-    }
-    finally{setBusy(false);}
+    setError(null);setDialog(null);
+    await equipmentSave.save(operation);
   };
   const handleEquip=async(card:Card)=>{registerCard(card);await commitEquipment({equip:card.id});};
   const handleUnequip=async(slot:string)=>{await commitEquipment({unequip:slot});};
@@ -283,7 +272,7 @@ export default function SheetEquipmentPanel({
   };
 
   const handleToggleAttune = async (cardId: string) => {
-    if (readOnly) return;
+    if (!canChangeAttunement || busy) return;
     setBusy(true);
     setError(null);
     try {
@@ -294,6 +283,7 @@ export default function SheetEquipmentPanel({
         return;
       }
       const updated = await charactersV3Api.patchRuntime(character.id, {
+        expected_runtime_revision: character.runtime_revision ?? undefined,
         turn_state: { ...(character.turn_state ?? {}), attuned_ids: next },
       });
       onUpdated(updated);
@@ -473,7 +463,7 @@ export default function SheetEquipmentPanel({
 
   const body = (
     <>
-      {error && <p className="issues">{error}</p>}
+      {(error || equipmentSave.error) && <p className="issues">{error || equipmentSave.error}</p>}
       {pendingEquipment&&<p className="issues">Изменение экипировки ожидает подтверждения. <button type="button" disabled={busy||readOnly} onClick={()=>void commitEquipment()}>Повторить сохранение</button></p>}
 
       <div className="sheet-equip-topbar">
@@ -579,6 +569,7 @@ export default function SheetEquipmentPanel({
           max={maxAttuned}
           canChange={canChangeAttunement}
           busy={busy}
+          error={error}
           onToggle={handleToggleAttune}
           onClose={() => setAttuneOpen(false)}
         />

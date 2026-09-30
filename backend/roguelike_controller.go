@@ -1398,11 +1398,14 @@ func useRoguelikeItem(tx *gorm.DB, run *RoguelikeRun, request RoguelikeCommandRe
 func confirmRoguelikeLevelUp(run *RoguelikeRun) error {
 	if roguelikePartySize(run) > 1 {
 		earned := roguelikeLevelForXP(run.Experience)
-		if run.PendingLevel != earned || earned < 2 {
+		// A reward can earn several levels; the Forge still saves them one at
+		// a time, with every member confirming the same pending advancement.
+		pending := run.PendingLevel
+		if pending < 2 || pending > earned {
 			return roguelikeError(409, "level_up_not_pending", "Сначала завершите повышение уровня")
 		}
 		for _, member := range roguelikeCharacters(run) {
-			if member.Level != earned {
+			if member.Level != pending {
 				return nil
 			}
 		}

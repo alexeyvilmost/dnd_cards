@@ -17,3 +17,10 @@ export function actorLongJumpFt(actor:ActorState,from:GridPosition,to:GridPositi
  const modifiers=collectModifiers(actor.runtime,actor.passives??[],{roll:'jump_distance',evalCtx:context,formulaCtx:{abilityMods:character.abilityMods,profBonus:character.profBonus,selfLevel:character.level}});
  return Math.max(0,Math.floor(foldModifiers(running||standing?strength:strength/2,modifiers).value));
 }
+
+/** Upper limit for the movement picker. A valid run-up can extend only its
+ * own direction; route previews and execution still check each destination. */
+export function maximumActorLongJumpFt(actor:ActorState,from:GridPosition,runup?:RecentStraightMovement,round?:number):number{
+ const direction=runup?.direction??{x:1,y:0};
+ return actorLongJumpFt(actor,from,{x:from.x+direction.x,y:from.y+direction.y},runup,round);
+}

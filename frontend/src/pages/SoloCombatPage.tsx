@@ -1,4 +1,5 @@
 import {actorHasConsciousVitality} from '../engine/lifePolicies';
+import {maximumActorLongJumpFt} from '../solo-combat/jump';
 import { combatActorDisplayName } from '../character/familiarLabels';
 import {combatRollInfluences,resolveCombatDeathSave,finalizeCombatOutcome} from '../solo-combat/engine';
 import {emptyDeathSaves} from '../engine/deathSaves';
@@ -1449,7 +1450,13 @@ export default function SoloCombatPage() {
               source: 'explicit',
               context: 'in_play',
               origin: {kind: 'other', id: 'combat-movement', name: 'Перемещение'},
-              items: availableModes.map(([mode, speed]) => ({id: mode, name: `${movementModeLabels[mode]} · ${speed} фт.`})),
+              items: availableModes.map(([mode, speed]) => {
+                const actorId = activeControlledActorId;
+                const distance = mode === 'jump' ? Math.min(state.movementRemainingFt[actorId] ?? speed,
+                  maximumActorLongJumpFt(state.world.actors[actorId], state.tokens[actorId].position,
+                    state.recentStraightMovementByActor?.[actorId], state.world.scene.mode === 'encounter' ? state.world.scene.round : 0)) : speed;
+                return {id: mode, name: `${movementModeLabels[mode]} · ${mode === 'jump' ? 'до ' : ''}${distance} фт.`};
+              }),
               recommended: [currentMode],
             }], 'Перемещение');
             if (!selection) return;

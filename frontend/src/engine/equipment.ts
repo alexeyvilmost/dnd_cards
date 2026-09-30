@@ -100,9 +100,8 @@ function wearableSlot(card: Card, equipment: Record<string, string | null>): Equ
 
 function pickOneHandSlot(equipment: Record<string, string | null>, card: Card): 'main_hand' | 'off_hand' | null {
   if (isShield(card)) {
-    if (equipment.main_hand && !equipment.off_hand) return 'off_hand';
-    if (!equipment.main_hand) return 'main_hand';
     if (!equipment.off_hand) return 'off_hand';
+    if (!equipment.main_hand) return 'main_hand';
     return null;
   }
   if (!equipment.main_hand) return 'main_hand';

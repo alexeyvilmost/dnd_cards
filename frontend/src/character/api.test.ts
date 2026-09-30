@@ -79,6 +79,22 @@ function rejectAllRequests(error: unknown): void {
 describe('charactersV3Api access handling', () => {
   afterEach(() => vi.restoreAllMocks());
 
+  it('keeps an equipment retry context immutable when the current route changes', async () => {
+    const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: {
+      command_id: runtimeCommand.command_id, replayed: true, participants: [],
+    } } as never);
+    const runId = '8f13483e-05ea-4ac2-ad21-7cdd6ba21f72';
+    window.history.replaceState({}, '', `/characters-v3/character-id?roguelike=${runId}`);
+    try {
+      await charactersV3Api.postRuntimeCommand(runtimeCommand, { preserveRoguelikeContext: true });
+      expect(post).toHaveBeenLastCalledWith('/api/characters-v3/runtime-commands', runtimeCommand);
+      const campCommand: CharacterRuntimeCommandRequest = { ...runtimeCommand, roguelike_run_id: runId, roguelike_intent: 'camp' };
+      window.history.replaceState({}, '', '/characters-v3/character-id');
+      await charactersV3Api.postRuntimeCommand(campCommand, { preserveRoguelikeContext: true });
+      expect(post).toHaveBeenLastCalledWith('/api/characters-v3/runtime-commands', campCommand);
+    } finally { window.history.replaceState({}, '', '/'); }
+  });
+
   it.each(accessCases)('maps 401 for %s to an actionable session error', async (operation, execute) => {
     rejectAllRequests(new ApiRequestError('raw unauthorized', 401));
     const notices: CharacterV3AccessErrorDetail[] = [];

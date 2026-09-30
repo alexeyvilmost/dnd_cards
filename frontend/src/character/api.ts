@@ -211,10 +211,11 @@ export const charactersV3Api = {
   }),
   postRuntimeCommand: (
     payload: CharacterRuntimeCommandRequest,
+    options?: { preserveRoguelikeContext?: boolean },
   ): Promise<CharacterRuntimeCommandResponse> => characterV3Request('runtime_command', async () => {
     const { data } = await apiClient.post<CharacterRuntimeCommandResponse>(
       '/api/characters-v3/runtime-commands',
-      activeRunId() && !payload.roguelike_run_id
+      !options?.preserveRoguelikeContext && activeRunId() && !payload.roguelike_run_id
         ? { ...payload, roguelike_run_id: activeRunId(), roguelike_intent: 'camp' }
         : payload,
     );

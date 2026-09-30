@@ -1056,7 +1056,7 @@ const CharacterForge = () => {
       .filter((c) => c.severity === 'error')
       .map((c) => c.message);
     blockingIssues.unshift(...multiclassIssues.map((issue) => `Требование мультикласса: ${issue}`));
-    const canConfirm = blockingIssues.length === 0 && !!levelUp.selectedClassId;
+    const canConfirm = bundleReady && blockingIssues.length === 0 && !!levelUp.selectedClassId;
 
     return (
       <CharacterFormulaProvider value={formulaCtx}>

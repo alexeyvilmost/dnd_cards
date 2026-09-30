@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { equipItem, totalWeight } from './equipment';
+import { equipItem, planEquip, totalWeight } from './equipment';
 import { computeAC } from './ac';
 import { weaponContext } from './weapon';
 import { clearCardRegistry } from './cardRegistry';
@@ -18,6 +18,19 @@ describe('equipment', () => {
     ({ state } = equipItem(state, CARD_SHIELD));
     expect(state.equipment.main_hand).toBe(CARD_LONGSWORD.id);
     expect(state.equipment.off_hand).toBe(CARD_SHIELD.id);
+  });
+
+  it.each([
+    CARD_SHIELD,
+    { ...CARD_SHIELD, id: 'second-shield', name: 'Second shield', type: 'item', defense_type: 'shield' } as unknown as Card,
+  ])('keeps the attack hand free when $name is equipped before a weapon', (shield) => {
+    const initial = freshFighterState();
+    expect(planEquip(initial, shield).slots).toEqual(['off_hand']);
+    let { state } = equipItem(initial, shield);
+    expect(planEquip(state, CARD_LONGSWORD).slots).toEqual(['main_hand']);
+    ({ state } = equipItem(state, CARD_LONGSWORD));
+    expect(state.equipment.main_hand).toBe(CARD_LONGSWORD.id);
+    expect(state.equipment.off_hand).toBe(shield.id);
   });
 
   it('totalWeight from inventory', () => {
